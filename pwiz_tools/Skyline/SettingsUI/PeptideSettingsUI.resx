@@ -117,21 +117,21 @@
   <resheader name="writer">
     <value>System.Resources.ResXResourceWriter, System.Windows.Forms, Version=4.0.0.0, Culture=neutral, PublicKeyToken=b77a5c561934e089</value>
   </resheader>
-  <metadata name="modeUIHandler.TrayLocation" type="System.Drawing.Point, System.Drawing, Version=4.0.0.0, Culture=neutral, PublicKeyToken=b03f5f7f11d50a3a">
-    <value>17, 17</value>
-  </metadata>
   <assembly alias="System.Windows.Forms" name="System.Windows.Forms, Version=4.0.0.0, Culture=neutral, PublicKeyToken=b77a5c561934e089" />
+  <assembly alias="System.Drawing" name="System.Drawing, Version=4.0.0.0, Culture=neutral, PublicKeyToken=b03f5f7f11d50a3a" />
+  <assembly alias="mscorlib" name="mscorlib, Version=4.0.0.0, Culture=neutral, PublicKeyToken=b77a5c561934e089" />
+  <metadata name="$this.Localizable" type="System.Boolean, mscorlib, Version=4.0.0.0, Culture=neutral, PublicKeyToken=b77a5c561934e089">
+    <value>True</value>
+  </metadata>
   <data name="btnOk.Anchor" type="System.Windows.Forms.AnchorStyles, System.Windows.Forms">
     <value>Bottom, Right</value>
   </data>
-  <assembly alias="System.Drawing" name="System.Drawing, Version=4.0.0.0, Culture=neutral, PublicKeyToken=b03f5f7f11d50a3a" />
   <data name="btnOk.Location" type="System.Drawing.Point, System.Drawing">
     <value>227, 506</value>
   </data>
   <data name="btnOk.Size" type="System.Drawing.Size, System.Drawing">
     <value>75, 23</value>
   </data>
-  <assembly alias="mscorlib" name="mscorlib, Version=4.0.0.0, Culture=neutral, PublicKeyToken=b77a5c561934e089" />
   <data name="btnOk.TabIndex" type="System.Int32, mscorlib">
     <value>1</value>
   </data>
@@ -140,9 +140,6 @@
   </data>
   <data name="&gt;&gt;btnOk.Name" xml:space="preserve">
     <value>btnOk</value>
-  </data>
-  <data name="&gt;&gt;btnOk.Type" xml:space="preserve">
-    <value>System.Windows.Forms.Button, System.Windows.Forms, Version=4.0.0.0, Culture=neutral, PublicKeyToken=b77a5c561934e089</value>
   </data>
   <data name="&gt;&gt;btnOk.Parent" xml:space="preserve">
     <value>$this</value>
@@ -168,18 +165,12 @@
   <data name="&gt;&gt;btnCancel.Name" xml:space="preserve">
     <value>btnCancel</value>
   </data>
-  <data name="&gt;&gt;btnCancel.Type" xml:space="preserve">
-    <value>System.Windows.Forms.Button, System.Windows.Forms, Version=4.0.0.0, Culture=neutral, PublicKeyToken=b77a5c561934e089</value>
-  </data>
   <data name="&gt;&gt;btnCancel.Parent" xml:space="preserve">
     <value>$this</value>
   </data>
   <data name="&gt;&gt;btnCancel.ZOrder" xml:space="preserve">
     <value>1</value>
   </data>
-  <metadata name="helpTip.TrayLocation" type="System.Drawing.Point, System.Drawing, Version=4.0.0.0, Culture=neutral, PublicKeyToken=b03f5f7f11d50a3a">
-    <value>155, 17</value>
-  </metadata>
   <data name="comboStandardType.Location" type="System.Drawing.Point, System.Drawing">
     <value>28, 395</value>
   </data>
@@ -195,9 +186,6 @@ in peak area ratios.</value>
   </data>
   <data name="&gt;&gt;comboStandardType.Name" xml:space="preserve">
     <value>comboStandardType</value>
-  </data>
-  <data name="&gt;&gt;comboStandardType.Type" xml:space="preserve">
-    <value>System.Windows.Forms.ComboBox, System.Windows.Forms, Version=4.0.0.0, Culture=neutral, PublicKeyToken=b77a5c561934e089</value>
   </data>
   <data name="&gt;&gt;comboStandardType.Parent" xml:space="preserve">
     <value>tabModifications</value>
@@ -220,9 +208,6 @@ modifications are being chosen.</value>
   </data>
   <data name="&gt;&gt;comboLabelType.Name" xml:space="preserve">
     <value>comboLabelType</value>
-  </data>
-  <data name="&gt;&gt;comboLabelType.Type" xml:space="preserve">
-    <value>System.Windows.Forms.ComboBox, System.Windows.Forms, Version=4.0.0.0, Culture=neutral, PublicKeyToken=b77a5c561934e089</value>
   </data>
   <data name="&gt;&gt;comboLabelType.Parent" xml:space="preserve">
     <value>tabModifications</value>
@@ -247,9 +232,6 @@ molecules, with no impact on structure.</value>
   <data name="&gt;&gt;listHeavyMods.Name" xml:space="preserve">
     <value>listHeavyMods</value>
   </data>
-  <data name="&gt;&gt;listHeavyMods.Type" xml:space="preserve">
-    <value>System.Windows.Forms.CheckedListBox, System.Windows.Forms, Version=4.0.0.0, Culture=neutral, PublicKeyToken=b77a5c561934e089</value>
-  </data>
   <data name="&gt;&gt;listHeavyMods.Parent" xml:space="preserve">
     <value>tabModifications</value>
   </data>
@@ -273,9 +255,6 @@ structure of the peptide.</value>
   <data name="&gt;&gt;listStaticMods.Name" xml:space="preserve">
     <value>listStaticMods</value>
   </data>
-  <data name="&gt;&gt;listStaticMods.Type" xml:space="preserve">
-    <value>System.Windows.Forms.CheckedListBox, System.Windows.Forms, Version=4.0.0.0, Culture=neutral, PublicKeyToken=b77a5c561934e089</value>
-  </data>
   <data name="&gt;&gt;listStaticMods.Parent" xml:space="preserve">
     <value>tabModifications</value>
   </data>
@@ -297,9 +276,6 @@ in peak area ratios calculated for other types.</value>
   </data>
   <data name="&gt;&gt;listStandardTypes.Name" xml:space="preserve">
     <value>listStandardTypes</value>
-  </data>
-  <data name="&gt;&gt;listStandardTypes.Type" xml:space="preserve">
-    <value>System.Windows.Forms.CheckedListBox, System.Windows.Forms, Version=4.0.0.0, Culture=neutral, PublicKeyToken=b77a5c561934e089</value>
   </data>
   <data name="&gt;&gt;listStandardTypes.Parent" xml:space="preserve">
     <value>tabModifications</value>
@@ -323,9 +299,6 @@ to occur in combination on any peptide instance.</value>
   <data name="&gt;&gt;textMaxVariableMods.Name" xml:space="preserve">
     <value>textMaxVariableMods</value>
   </data>
-  <data name="&gt;&gt;textMaxVariableMods.Type" xml:space="preserve">
-    <value>System.Windows.Forms.TextBox, System.Windows.Forms, Version=4.0.0.0, Culture=neutral, PublicKeyToken=b77a5c561934e089</value>
-  </data>
   <data name="&gt;&gt;textMaxVariableMods.Parent" xml:space="preserve">
     <value>tabModifications</value>
   </data>
@@ -348,9 +321,6 @@ to occur in combination on any fragment instance.</value>
   <data name="&gt;&gt;textMaxNeutralLosses.Name" xml:space="preserve">
     <value>textMaxNeutralLosses</value>
   </data>
-  <data name="&gt;&gt;textMaxNeutralLosses.Type" xml:space="preserve">
-    <value>System.Windows.Forms.TextBox, System.Windows.Forms, Version=4.0.0.0, Culture=neutral, PublicKeyToken=b77a5c561934e089</value>
-  </data>
   <data name="&gt;&gt;textMaxNeutralLosses.Parent" xml:space="preserve">
     <value>tabModifications</value>
   </data>
@@ -372,9 +342,6 @@ considering protein digestion.</value>
   </data>
   <data name="&gt;&gt;comboMissedCleavages.Name" xml:space="preserve">
     <value>comboMissedCleavages</value>
-  </data>
-  <data name="&gt;&gt;comboMissedCleavages.Type" xml:space="preserve">
-    <value>System.Windows.Forms.ComboBox, System.Windows.Forms, Version=4.0.0.0, Culture=neutral, PublicKeyToken=b77a5c561934e089</value>
   </data>
   <data name="&gt;&gt;comboMissedCleavages.Parent" xml:space="preserve">
     <value>tabDigestion</value>
@@ -399,9 +366,6 @@ to injection into the mass spectrometer
   <data name="&gt;&gt;comboEnzyme.Name" xml:space="preserve">
     <value>comboEnzyme</value>
   </data>
-  <data name="&gt;&gt;comboEnzyme.Type" xml:space="preserve">
-    <value>System.Windows.Forms.ComboBox, System.Windows.Forms, Version=4.0.0.0, Culture=neutral, PublicKeyToken=b77a5c561934e089</value>
-  </data>
   <data name="&gt;&gt;comboEnzyme.Parent" xml:space="preserve">
     <value>tabDigestion</value>
   </data>
@@ -425,9 +389,6 @@ injected into the mass spectrometer.</value>
   <data name="&gt;&gt;comboBackgroundProteome.Name" xml:space="preserve">
     <value>comboBackgroundProteome</value>
   </data>
-  <data name="&gt;&gt;comboBackgroundProteome.Type" xml:space="preserve">
-    <value>System.Windows.Forms.ComboBox, System.Windows.Forms, Version=4.0.0.0, Culture=neutral, PublicKeyToken=b77a5c561934e089</value>
-  </data>
   <data name="&gt;&gt;comboBackgroundProteome.Parent" xml:space="preserve">
     <value>tabDigestion</value>
   </data>
@@ -449,9 +410,6 @@ used in scheduling future peptide measurements.</value>
   </data>
   <data name="&gt;&gt;textMeasureRTWindow.Name" xml:space="preserve">
     <value>textMeasureRTWindow</value>
-  </data>
-  <data name="&gt;&gt;textMeasureRTWindow.Type" xml:space="preserve">
-    <value>System.Windows.Forms.TextBox, System.Windows.Forms, Version=4.0.0.0, Culture=neutral, PublicKeyToken=b77a5c561934e089</value>
   </data>
   <data name="&gt;&gt;textMeasureRTWindow.Parent" xml:space="preserve">
     <value>tabPrediction</value>
@@ -481,9 +439,6 @@ to predict retention times for scheduling of future peptide measurements.</value
   <data name="&gt;&gt;cbUseMeasuredRT.Name" xml:space="preserve">
     <value>cbUseMeasuredRT</value>
   </data>
-  <data name="&gt;&gt;cbUseMeasuredRT.Type" xml:space="preserve">
-    <value>System.Windows.Forms.CheckBox, System.Windows.Forms, Version=4.0.0.0, Culture=neutral, PublicKeyToken=b77a5c561934e089</value>
-  </data>
   <data name="&gt;&gt;cbUseMeasuredRT.Parent" xml:space="preserve">
     <value>tabPrediction</value>
   </data>
@@ -505,9 +460,6 @@ times from a peptide specific hydrophobicity score.</value>
   </data>
   <data name="&gt;&gt;comboRetentionTime.Name" xml:space="preserve">
     <value>comboRetentionTime</value>
-  </data>
-  <data name="&gt;&gt;comboRetentionTime.Type" xml:space="preserve">
-    <value>System.Windows.Forms.ComboBox, System.Windows.Forms, Version=4.0.0.0, Culture=neutral, PublicKeyToken=b77a5c561934e089</value>
   </data>
   <data name="&gt;&gt;comboRetentionTime.Parent" xml:space="preserve">
     <value>tabPrediction</value>
@@ -538,9 +490,6 @@ selection must be done by manual document editing.</value>
   <data name="&gt;&gt;cbAutoSelect.Name" xml:space="preserve">
     <value>cbAutoSelect</value>
   </data>
-  <data name="&gt;&gt;cbAutoSelect.Type" xml:space="preserve">
-    <value>System.Windows.Forms.CheckBox, System.Windows.Forms, Version=4.0.0.0, Culture=neutral, PublicKeyToken=b77a5c561934e089</value>
-  </data>
   <data name="&gt;&gt;cbAutoSelect.Parent" xml:space="preserve">
     <value>tabFilter</value>
   </data>
@@ -562,9 +511,6 @@ in each protein</value>
   </data>
   <data name="&gt;&gt;textExcludeAAs.Name" xml:space="preserve">
     <value>textExcludeAAs</value>
-  </data>
-  <data name="&gt;&gt;textExcludeAAs.Type" xml:space="preserve">
-    <value>System.Windows.Forms.TextBox, System.Windows.Forms, Version=4.0.0.0, Culture=neutral, PublicKeyToken=b77a5c561934e089</value>
   </data>
   <data name="&gt;&gt;textExcludeAAs.Parent" xml:space="preserve">
     <value>tabFilter</value>
@@ -594,9 +540,6 @@ preceding or following cleavage sites. e.g. RR, KK, RK, KR for trypsin</value>
   <data name="&gt;&gt;cbRaggedEnds.Name" xml:space="preserve">
     <value>cbRaggedEnds</value>
   </data>
-  <data name="&gt;&gt;cbRaggedEnds.Type" xml:space="preserve">
-    <value>System.Windows.Forms.CheckBox, System.Windows.Forms, Version=4.0.0.0, Culture=neutral, PublicKeyToken=b77a5c561934e089</value>
-  </data>
   <data name="&gt;&gt;cbRaggedEnds.Parent" xml:space="preserve">
     <value>tabFilter</value>
   </data>
@@ -621,9 +564,6 @@ preceding or following cleavage sites. e.g. RR, KK, RK, KR for trypsin</value>
   <data name="&gt;&gt;btnEditExlusions.Name" xml:space="preserve">
     <value>btnEditExlusions</value>
   </data>
-  <data name="&gt;&gt;btnEditExlusions.Type" xml:space="preserve">
-    <value>System.Windows.Forms.Button, System.Windows.Forms, Version=4.0.0.0, Culture=neutral, PublicKeyToken=b77a5c561934e089</value>
-  </data>
   <data name="&gt;&gt;btnEditExlusions.Parent" xml:space="preserve">
     <value>tabFilter</value>
   </data>
@@ -644,9 +584,6 @@ preceding or following cleavage sites. e.g. RR, KK, RK, KR for trypsin</value>
   </data>
   <data name="&gt;&gt;listboxExclusions.Name" xml:space="preserve">
     <value>listboxExclusions</value>
-  </data>
-  <data name="&gt;&gt;listboxExclusions.Type" xml:space="preserve">
-    <value>System.Windows.Forms.CheckedListBox, System.Windows.Forms, Version=4.0.0.0, Culture=neutral, PublicKeyToken=b77a5c561934e089</value>
   </data>
   <data name="&gt;&gt;listboxExclusions.Parent" xml:space="preserve">
     <value>tabFilter</value>
@@ -670,9 +607,6 @@ this filter</value>
   <data name="&gt;&gt;textMaxLength.Name" xml:space="preserve">
     <value>textMaxLength</value>
   </data>
-  <data name="&gt;&gt;textMaxLength.Type" xml:space="preserve">
-    <value>System.Windows.Forms.TextBox, System.Windows.Forms, Version=4.0.0.0, Culture=neutral, PublicKeyToken=b77a5c561934e089</value>
-  </data>
   <data name="&gt;&gt;textMaxLength.Parent" xml:space="preserve">
     <value>tabFilter</value>
   </data>
@@ -694,9 +628,6 @@ this filter</value>
   </data>
   <data name="&gt;&gt;textMinLength.Name" xml:space="preserve">
     <value>textMinLength</value>
-  </data>
-  <data name="&gt;&gt;textMinLength.Type" xml:space="preserve">
-    <value>System.Windows.Forms.TextBox, System.Windows.Forms, Version=4.0.0.0, Culture=neutral, PublicKeyToken=b77a5c561934e089</value>
   </data>
   <data name="&gt;&gt;textMinLength.Parent" xml:space="preserve">
     <value>tabFilter</value>
@@ -721,9 +652,6 @@ this filter</value>
   </data>
   <data name="&gt;&gt;btnExplore.Name" xml:space="preserve">
     <value>btnExplore</value>
-  </data>
-  <data name="&gt;&gt;btnExplore.Type" xml:space="preserve">
-    <value>System.Windows.Forms.Button, System.Windows.Forms, Version=4.0.0.0, Culture=neutral, PublicKeyToken=b77a5c561934e089</value>
   </data>
   <data name="&gt;&gt;btnExplore.Parent" xml:space="preserve">
     <value>tabLibrary</value>
@@ -750,9 +678,6 @@ from various peptide search engines.</value>
   <data name="&gt;&gt;btnBuildLibrary.Name" xml:space="preserve">
     <value>btnBuildLibrary</value>
   </data>
-  <data name="&gt;&gt;btnBuildLibrary.Type" xml:space="preserve">
-    <value>System.Windows.Forms.Button, System.Windows.Forms, Version=4.0.0.0, Culture=neutral, PublicKeyToken=b77a5c561934e089</value>
-  </data>
   <data name="&gt;&gt;btnBuildLibrary.Parent" xml:space="preserve">
     <value>tabLibrary</value>
   </data>
@@ -776,9 +701,6 @@ same values for ranking.</value>
   <data name="&gt;&gt;comboRank.Name" xml:space="preserve">
     <value>comboRank</value>
   </data>
-  <data name="&gt;&gt;comboRank.Type" xml:space="preserve">
-    <value>System.Windows.Forms.ComboBox, System.Windows.Forms, Version=4.0.0.0, Culture=neutral, PublicKeyToken=b77a5c561934e089</value>
-  </data>
   <data name="&gt;&gt;comboRank.Parent" xml:space="preserve">
     <value>panelPick</value>
   </data>
@@ -799,9 +721,6 @@ same values for ranking.</value>
   </data>
   <data name="&gt;&gt;textPeptideCount.Name" xml:space="preserve">
     <value>textPeptideCount</value>
-  </data>
-  <data name="&gt;&gt;textPeptideCount.Type" xml:space="preserve">
-    <value>System.Windows.Forms.TextBox, System.Windows.Forms, Version=4.0.0.0, Culture=neutral, PublicKeyToken=b77a5c561934e089</value>
   </data>
   <data name="&gt;&gt;textPeptideCount.Parent" xml:space="preserve">
     <value>panelPick</value>
@@ -840,9 +759,6 @@ Library or Filter - picks peptides that match either a library spectrum or the f
   <data name="&gt;&gt;comboMatching.Name" xml:space="preserve">
     <value>comboMatching</value>
   </data>
-  <data name="&gt;&gt;comboMatching.Type" xml:space="preserve">
-    <value>System.Windows.Forms.ComboBox, System.Windows.Forms, Version=4.0.0.0, Culture=neutral, PublicKeyToken=b77a5c561934e089</value>
-  </data>
   <data name="&gt;&gt;comboMatching.Parent" xml:space="preserve">
     <value>panelPick</value>
   </data>
@@ -871,9 +787,6 @@ picked for each protein.</value>
   <data name="&gt;&gt;cbLimitPeptides.Name" xml:space="preserve">
     <value>cbLimitPeptides</value>
   </data>
-  <data name="&gt;&gt;cbLimitPeptides.Type" xml:space="preserve">
-    <value>System.Windows.Forms.CheckBox, System.Windows.Forms, Version=4.0.0.0, Culture=neutral, PublicKeyToken=b77a5c561934e089</value>
-  </data>
   <data name="&gt;&gt;cbLimitPeptides.Parent" xml:space="preserve">
     <value>panelPick</value>
   </data>
@@ -897,9 +810,6 @@ picked for each protein.</value>
   </data>
   <data name="&gt;&gt;editLibraries.Name" xml:space="preserve">
     <value>editLibraries</value>
-  </data>
-  <data name="&gt;&gt;editLibraries.Type" xml:space="preserve">
-    <value>System.Windows.Forms.Button, System.Windows.Forms, Version=4.0.0.0, Culture=neutral, PublicKeyToken=b77a5c561934e089</value>
   </data>
   <data name="&gt;&gt;editLibraries.Parent" xml:space="preserve">
     <value>tabLibrary</value>
@@ -929,9 +839,6 @@ modifications tab.</value>
   <data name="&gt;&gt;listLibraries.Name" xml:space="preserve">
     <value>listLibraries</value>
   </data>
-  <data name="&gt;&gt;listLibraries.Type" xml:space="preserve">
-    <value>System.Windows.Forms.CheckedListBox, System.Windows.Forms, Version=4.0.0.0, Culture=neutral, PublicKeyToken=b77a5c561934e089</value>
-  </data>
   <data name="&gt;&gt;listLibraries.Parent" xml:space="preserve">
     <value>tabLibrary</value>
   </data>
@@ -952,9 +859,6 @@ modifications tab.</value>
   </data>
   <data name="&gt;&gt;btnUpdateCalculator.Name" xml:space="preserve">
     <value>btnUpdateCalculator</value>
-  </data>
-  <data name="&gt;&gt;btnUpdateCalculator.Type" xml:space="preserve">
-    <value>System.Windows.Forms.Button, System.Windows.Forms, Version=4.0.0.0, Culture=neutral, PublicKeyToken=b77a5c561934e089</value>
   </data>
   <data name="&gt;&gt;btnUpdateCalculator.Parent" xml:space="preserve">
     <value>tabPrediction</value>
@@ -977,9 +881,6 @@ times from a peptide specific hydrophobicity score.</value>
   </data>
   <data name="&gt;&gt;comboPeakScoringModel.Name" xml:space="preserve">
     <value>comboPeakScoringModel</value>
-  </data>
-  <data name="&gt;&gt;comboPeakScoringModel.Type" xml:space="preserve">
-    <value>System.Windows.Forms.ComboBox, System.Windows.Forms, Version=4.0.0.0, Culture=neutral, PublicKeyToken=b77a5c561934e089</value>
   </data>
   <data name="&gt;&gt;comboPeakScoringModel.Parent" xml:space="preserve">
     <value>tabIntegration</value>
@@ -1016,9 +917,6 @@ times from a peptide specific hydrophobicity score.</value>
   <data name="&gt;&gt;comboBoxPeptideUniquenessConstraint.Name" xml:space="preserve">
     <value>comboBoxPeptideUniquenessConstraint</value>
   </data>
-  <data name="&gt;&gt;comboBoxPeptideUniquenessConstraint.Type" xml:space="preserve">
-    <value>System.Windows.Forms.ComboBox, System.Windows.Forms, Version=4.0.0.0, Culture=neutral, PublicKeyToken=b77a5c561934e089</value>
-  </data>
   <data name="&gt;&gt;comboBoxPeptideUniquenessConstraint.Parent" xml:space="preserve">
     <value>tabDigestion</value>
   </data>
@@ -1046,9 +944,6 @@ times from a peptide specific hydrophobicity score.</value>
   <data name="&gt;&gt;btnFilter.Name" xml:space="preserve">
     <value>btnFilter</value>
   </data>
-  <data name="&gt;&gt;btnFilter.Type" xml:space="preserve">
-    <value>System.Windows.Forms.Button, System.Windows.Forms, Version=4.0.0.0, Culture=neutral, PublicKeyToken=b77a5c561934e089</value>
-  </data>
   <data name="&gt;&gt;btnFilter.Parent" xml:space="preserve">
     <value>tabLibrary</value>
   </data>
@@ -1072,9 +967,6 @@ of quantification (LOQ)</value>
   <data name="&gt;&gt;tbxMaxLoqBias.Name" xml:space="preserve">
     <value>tbxMaxLoqBias</value>
   </data>
-  <data name="&gt;&gt;tbxMaxLoqBias.Type" xml:space="preserve">
-    <value>System.Windows.Forms.TextBox, System.Windows.Forms, Version=4.0.0.0, Culture=neutral, PublicKeyToken=b77a5c561934e089</value>
-  </data>
   <data name="&gt;&gt;tbxMaxLoqBias.Parent" xml:space="preserve">
     <value>groupBoxFiguresOfMerit</value>
   </data>
@@ -1095,9 +987,6 @@ of quantification (LOQ)</value>
   </data>
   <data name="&gt;&gt;comboLodMethod.Name" xml:space="preserve">
     <value>comboLodMethod</value>
-  </data>
-  <data name="&gt;&gt;comboLodMethod.Type" xml:space="preserve">
-    <value>System.Windows.Forms.ComboBox, System.Windows.Forms, Version=4.0.0.0, Culture=neutral, PublicKeyToken=b77a5c561934e089</value>
   </data>
   <data name="&gt;&gt;comboLodMethod.Parent" xml:space="preserve">
     <value>groupBoxFiguresOfMerit</value>
@@ -1121,9 +1010,6 @@ the lower limit of quantification (LOQ)</value>
   <data name="&gt;&gt;tbxMaxLoqCv.Name" xml:space="preserve">
     <value>tbxMaxLoqCv</value>
   </data>
-  <data name="&gt;&gt;tbxMaxLoqCv.Type" xml:space="preserve">
-    <value>System.Windows.Forms.TextBox, System.Windows.Forms, Version=4.0.0.0, Culture=neutral, PublicKeyToken=b77a5c561934e089</value>
-  </data>
   <data name="&gt;&gt;tbxMaxLoqCv.Parent" xml:space="preserve">
     <value>groupBoxFiguresOfMerit</value>
   </data>
@@ -1144,9 +1030,6 @@ the lower limit of quantification (LOQ)</value>
   </data>
   <data name="&gt;&gt;tbxQuantUnits.Name" xml:space="preserve">
     <value>tbxQuantUnits</value>
-  </data>
-  <data name="&gt;&gt;tbxQuantUnits.Type" xml:space="preserve">
-    <value>System.Windows.Forms.TextBox, System.Windows.Forms, Version=4.0.0.0, Culture=neutral, PublicKeyToken=b77a5c561934e089</value>
   </data>
   <data name="&gt;&gt;tbxQuantUnits.Parent" xml:space="preserve">
     <value>tabQuantification</value>
@@ -1178,9 +1061,6 @@ the lower limit of quantification (LOQ)</value>
   <data name="&gt;&gt;comboQuantMsLevel.Name" xml:space="preserve">
     <value>comboQuantMsLevel</value>
   </data>
-  <data name="&gt;&gt;comboQuantMsLevel.Type" xml:space="preserve">
-    <value>System.Windows.Forms.ComboBox, System.Windows.Forms, Version=4.0.0.0, Culture=neutral, PublicKeyToken=b77a5c561934e089</value>
-  </data>
   <data name="&gt;&gt;comboQuantMsLevel.Parent" xml:space="preserve">
     <value>tabQuantification</value>
   </data>
@@ -1201,9 +1081,6 @@ the lower limit of quantification (LOQ)</value>
   </data>
   <data name="&gt;&gt;comboNormalizationMethod.Name" xml:space="preserve">
     <value>comboNormalizationMethod</value>
-  </data>
-  <data name="&gt;&gt;comboNormalizationMethod.Type" xml:space="preserve">
-    <value>System.Windows.Forms.ComboBox, System.Windows.Forms, Version=4.0.0.0, Culture=neutral, PublicKeyToken=b77a5c561934e089</value>
   </data>
   <data name="&gt;&gt;comboNormalizationMethod.Parent" xml:space="preserve">
     <value>tabQuantification</value>
@@ -1226,9 +1103,6 @@ the lower limit of quantification (LOQ)</value>
   <data name="&gt;&gt;comboRegressionFit.Name" xml:space="preserve">
     <value>comboRegressionFit</value>
   </data>
-  <data name="&gt;&gt;comboRegressionFit.Type" xml:space="preserve">
-    <value>System.Windows.Forms.ComboBox, System.Windows.Forms, Version=4.0.0.0, Culture=neutral, PublicKeyToken=b77a5c561934e089</value>
-  </data>
   <data name="&gt;&gt;comboRegressionFit.Parent" xml:space="preserve">
     <value>tabQuantification</value>
   </data>
@@ -1249,9 +1123,6 @@ the lower limit of quantification (LOQ)</value>
   </data>
   <data name="&gt;&gt;comboWeighting.Name" xml:space="preserve">
     <value>comboWeighting</value>
-  </data>
-  <data name="&gt;&gt;comboWeighting.Type" xml:space="preserve">
-    <value>System.Windows.Forms.ComboBox, System.Windows.Forms, Version=4.0.0.0, Culture=neutral, PublicKeyToken=b77a5c561934e089</value>
   </data>
   <data name="&gt;&gt;comboWeighting.Parent" xml:space="preserve">
     <value>tabQuantification</value>
@@ -1275,9 +1146,6 @@ The Target Qualitative Ion Ratio is the average of the Qualitative Ion Ratios ac
   </data>
   <data name="&gt;&gt;tbxIonRatioThreshold.Name" xml:space="preserve">
     <value>tbxIonRatioThreshold</value>
-  </data>
-  <data name="&gt;&gt;tbxIonRatioThreshold.Type" xml:space="preserve">
-    <value>System.Windows.Forms.TextBox, System.Windows.Forms, Version=4.0.0.0, Culture=neutral, PublicKeyToken=b77a5c561934e089</value>
   </data>
   <data name="&gt;&gt;tbxIonRatioThreshold.Parent" xml:space="preserve">
     <value>groupBoxFiguresOfMerit</value>
@@ -1306,9 +1174,6 @@ Transitions from the two precursors will not be paired with each other for the p
   </data>
   <data name="&gt;&gt;cbxSimpleRatios.Name" xml:space="preserve">
     <value>cbxSimpleRatios</value>
-  </data>
-  <data name="&gt;&gt;cbxSimpleRatios.Type" xml:space="preserve">
-    <value>System.Windows.Forms.CheckBox, System.Windows.Forms, Version=4.0.0.0, Culture=neutral, PublicKeyToken=b77a5c561934e089</value>
   </data>
   <data name="&gt;&gt;cbxSimpleRatios.Parent" xml:space="preserve">
     <value>tabQuantification</value>
@@ -1340,9 +1205,6 @@ Transitions from the two precursors will not be paired with each other for the p
   <data name="&gt;&gt;labelPeptideUniquenessConstraint.Name" xml:space="preserve">
     <value>labelPeptideUniquenessConstraint</value>
   </data>
-  <data name="&gt;&gt;labelPeptideUniquenessConstraint.Type" xml:space="preserve">
-    <value>System.Windows.Forms.Label, System.Windows.Forms, Version=4.0.0.0, Culture=neutral, PublicKeyToken=b77a5c561934e089</value>
-  </data>
   <data name="&gt;&gt;labelPeptideUniquenessConstraint.Parent" xml:space="preserve">
     <value>tabDigestion</value>
   </data>
@@ -1366,9 +1228,6 @@ Transitions from the two precursors will not be paired with each other for the p
   </data>
   <data name="&gt;&gt;label2.Name" xml:space="preserve">
     <value>label2</value>
-  </data>
-  <data name="&gt;&gt;label2.Type" xml:space="preserve">
-    <value>System.Windows.Forms.Label, System.Windows.Forms, Version=4.0.0.0, Culture=neutral, PublicKeyToken=b77a5c561934e089</value>
   </data>
   <data name="&gt;&gt;label2.Parent" xml:space="preserve">
     <value>tabDigestion</value>
@@ -1394,9 +1253,6 @@ Transitions from the two precursors will not be paired with each other for the p
   <data name="&gt;&gt;label1.Name" xml:space="preserve">
     <value>label1</value>
   </data>
-  <data name="&gt;&gt;label1.Type" xml:space="preserve">
-    <value>System.Windows.Forms.Label, System.Windows.Forms, Version=4.0.0.0, Culture=neutral, PublicKeyToken=b77a5c561934e089</value>
-  </data>
   <data name="&gt;&gt;label1.Parent" xml:space="preserve">
     <value>tabDigestion</value>
   </data>
@@ -1420,9 +1276,6 @@ Transitions from the two precursors will not be paired with each other for the p
   </data>
   <data name="&gt;&gt;label15.Name" xml:space="preserve">
     <value>label15</value>
-  </data>
-  <data name="&gt;&gt;label15.Type" xml:space="preserve">
-    <value>System.Windows.Forms.Label, System.Windows.Forms, Version=4.0.0.0, Culture=neutral, PublicKeyToken=b77a5c561934e089</value>
   </data>
   <data name="&gt;&gt;label15.Parent" xml:space="preserve">
     <value>tabDigestion</value>
@@ -1448,9 +1301,6 @@ Transitions from the two precursors will not be paired with each other for the p
   <data name="&gt;&gt;tabDigestion.Name" xml:space="preserve">
     <value>tabDigestion</value>
   </data>
-  <data name="&gt;&gt;tabDigestion.Type" xml:space="preserve">
-    <value>System.Windows.Forms.TabPage, System.Windows.Forms, Version=4.0.0.0, Culture=neutral, PublicKeyToken=b77a5c561934e089</value>
-  </data>
   <data name="&gt;&gt;tabDigestion.Parent" xml:space="preserve">
     <value>tabControl1</value>
   </data>
@@ -1474,9 +1324,6 @@ Transitions from the two precursors will not be paired with each other for the p
   </data>
   <data name="&gt;&gt;label14.Name" xml:space="preserve">
     <value>label14</value>
-  </data>
-  <data name="&gt;&gt;label14.Type" xml:space="preserve">
-    <value>System.Windows.Forms.Label, System.Windows.Forms, Version=4.0.0.0, Culture=neutral, PublicKeyToken=b77a5c561934e089</value>
   </data>
   <data name="&gt;&gt;label14.Parent" xml:space="preserve">
     <value>tabPrediction</value>
@@ -1502,9 +1349,6 @@ Transitions from the two precursors will not be paired with each other for the p
   <data name="&gt;&gt;label13.Name" xml:space="preserve">
     <value>label13</value>
   </data>
-  <data name="&gt;&gt;label13.Type" xml:space="preserve">
-    <value>System.Windows.Forms.Label, System.Windows.Forms, Version=4.0.0.0, Culture=neutral, PublicKeyToken=b77a5c561934e089</value>
-  </data>
   <data name="&gt;&gt;label13.Parent" xml:space="preserve">
     <value>tabPrediction</value>
   </data>
@@ -1529,9 +1373,6 @@ Transitions from the two precursors will not be paired with each other for the p
   <data name="&gt;&gt;label9.Name" xml:space="preserve">
     <value>label9</value>
   </data>
-  <data name="&gt;&gt;label9.Type" xml:space="preserve">
-    <value>System.Windows.Forms.Label, System.Windows.Forms, Version=4.0.0.0, Culture=neutral, PublicKeyToken=b77a5c561934e089</value>
-  </data>
   <data name="&gt;&gt;label9.Parent" xml:space="preserve">
     <value>tabPrediction</value>
   </data>
@@ -1552,9 +1393,6 @@ Transitions from the two precursors will not be paired with each other for the p
   </data>
   <data name="&gt;&gt;tabPrediction.Name" xml:space="preserve">
     <value>tabPrediction</value>
-  </data>
-  <data name="&gt;&gt;tabPrediction.Type" xml:space="preserve">
-    <value>System.Windows.Forms.TabPage, System.Windows.Forms, Version=4.0.0.0, Culture=neutral, PublicKeyToken=b77a5c561934e089</value>
   </data>
   <data name="&gt;&gt;tabPrediction.Parent" xml:space="preserve">
     <value>tabControl1</value>
@@ -1580,9 +1418,6 @@ Transitions from the two precursors will not be paired with each other for the p
   <data name="&gt;&gt;label3.Name" xml:space="preserve">
     <value>label3</value>
   </data>
-  <data name="&gt;&gt;label3.Type" xml:space="preserve">
-    <value>System.Windows.Forms.Label, System.Windows.Forms, Version=4.0.0.0, Culture=neutral, PublicKeyToken=b77a5c561934e089</value>
-  </data>
   <data name="&gt;&gt;label3.Parent" xml:space="preserve">
     <value>tabFilter</value>
   </data>
@@ -1606,9 +1441,6 @@ Transitions from the two precursors will not be paired with each other for the p
   </data>
   <data name="&gt;&gt;label6.Name" xml:space="preserve">
     <value>label6</value>
-  </data>
-  <data name="&gt;&gt;label6.Type" xml:space="preserve">
-    <value>System.Windows.Forms.Label, System.Windows.Forms, Version=4.0.0.0, Culture=neutral, PublicKeyToken=b77a5c561934e089</value>
   </data>
   <data name="&gt;&gt;label6.Parent" xml:space="preserve">
     <value>tabFilter</value>
@@ -1634,9 +1466,6 @@ Transitions from the two precursors will not be paired with each other for the p
   <data name="&gt;&gt;label5.Name" xml:space="preserve">
     <value>label5</value>
   </data>
-  <data name="&gt;&gt;label5.Type" xml:space="preserve">
-    <value>System.Windows.Forms.Label, System.Windows.Forms, Version=4.0.0.0, Culture=neutral, PublicKeyToken=b77a5c561934e089</value>
-  </data>
   <data name="&gt;&gt;label5.Parent" xml:space="preserve">
     <value>tabFilter</value>
   </data>
@@ -1660,9 +1489,6 @@ Transitions from the two precursors will not be paired with each other for the p
   </data>
   <data name="&gt;&gt;label4.Name" xml:space="preserve">
     <value>label4</value>
-  </data>
-  <data name="&gt;&gt;label4.Type" xml:space="preserve">
-    <value>System.Windows.Forms.Label, System.Windows.Forms, Version=4.0.0.0, Culture=neutral, PublicKeyToken=b77a5c561934e089</value>
   </data>
   <data name="&gt;&gt;label4.Parent" xml:space="preserve">
     <value>tabFilter</value>
@@ -1688,9 +1514,6 @@ Transitions from the two precursors will not be paired with each other for the p
   <data name="&gt;&gt;tabFilter.Name" xml:space="preserve">
     <value>tabFilter</value>
   </data>
-  <data name="&gt;&gt;tabFilter.Type" xml:space="preserve">
-    <value>System.Windows.Forms.TabPage, System.Windows.Forms, Version=4.0.0.0, Culture=neutral, PublicKeyToken=b77a5c561934e089</value>
-  </data>
   <data name="&gt;&gt;tabFilter.Parent" xml:space="preserve">
     <value>tabControl1</value>
   </data>
@@ -1714,9 +1537,6 @@ Transitions from the two precursors will not be paired with each other for the p
   </data>
   <data name="&gt;&gt;labelPeptides.Name" xml:space="preserve">
     <value>labelPeptides</value>
-  </data>
-  <data name="&gt;&gt;labelPeptides.Type" xml:space="preserve">
-    <value>System.Windows.Forms.Label, System.Windows.Forms, Version=4.0.0.0, Culture=neutral, PublicKeyToken=b77a5c561934e089</value>
   </data>
   <data name="&gt;&gt;labelPeptides.Parent" xml:space="preserve">
     <value>panelPick</value>
@@ -1742,9 +1562,6 @@ Transitions from the two precursors will not be paired with each other for the p
   <data name="&gt;&gt;label12.Name" xml:space="preserve">
     <value>label12</value>
   </data>
-  <data name="&gt;&gt;label12.Type" xml:space="preserve">
-    <value>System.Windows.Forms.Label, System.Windows.Forms, Version=4.0.0.0, Culture=neutral, PublicKeyToken=b77a5c561934e089</value>
-  </data>
   <data name="&gt;&gt;label12.Parent" xml:space="preserve">
     <value>panelPick</value>
   </data>
@@ -1769,9 +1586,6 @@ Transitions from the two precursors will not be paired with each other for the p
   <data name="&gt;&gt;label7.Name" xml:space="preserve">
     <value>label7</value>
   </data>
-  <data name="&gt;&gt;label7.Type" xml:space="preserve">
-    <value>System.Windows.Forms.Label, System.Windows.Forms, Version=4.0.0.0, Culture=neutral, PublicKeyToken=b77a5c561934e089</value>
-  </data>
   <data name="&gt;&gt;label7.Parent" xml:space="preserve">
     <value>panelPick</value>
   </data>
@@ -1789,9 +1603,6 @@ Transitions from the two precursors will not be paired with each other for the p
   </data>
   <data name="&gt;&gt;panelPick.Name" xml:space="preserve">
     <value>panelPick</value>
-  </data>
-  <data name="&gt;&gt;panelPick.Type" xml:space="preserve">
-    <value>System.Windows.Forms.Panel, System.Windows.Forms, Version=4.0.0.0, Culture=neutral, PublicKeyToken=b77a5c561934e089</value>
   </data>
   <data name="&gt;&gt;panelPick.Parent" xml:space="preserve">
     <value>tabLibrary</value>
@@ -1817,9 +1628,6 @@ Transitions from the two precursors will not be paired with each other for the p
   <data name="&gt;&gt;label11.Name" xml:space="preserve">
     <value>label11</value>
   </data>
-  <data name="&gt;&gt;label11.Type" xml:space="preserve">
-    <value>System.Windows.Forms.Label, System.Windows.Forms, Version=4.0.0.0, Culture=neutral, PublicKeyToken=b77a5c561934e089</value>
-  </data>
   <data name="&gt;&gt;label11.Parent" xml:space="preserve">
     <value>tabLibrary</value>
   </data>
@@ -1840,9 +1648,6 @@ Transitions from the two precursors will not be paired with each other for the p
   </data>
   <data name="&gt;&gt;tabLibrary.Name" xml:space="preserve">
     <value>tabLibrary</value>
-  </data>
-  <data name="&gt;&gt;tabLibrary.Type" xml:space="preserve">
-    <value>System.Windows.Forms.TabPage, System.Windows.Forms, Version=4.0.0.0, Culture=neutral, PublicKeyToken=b77a5c561934e089</value>
   </data>
   <data name="&gt;&gt;tabLibrary.Parent" xml:space="preserve">
     <value>tabControl1</value>
@@ -1868,9 +1673,6 @@ Transitions from the two precursors will not be paired with each other for the p
   <data name="&gt;&gt;label18.Name" xml:space="preserve">
     <value>label18</value>
   </data>
-  <data name="&gt;&gt;label18.Type" xml:space="preserve">
-    <value>System.Windows.Forms.Label, System.Windows.Forms, Version=4.0.0.0, Culture=neutral, PublicKeyToken=b77a5c561934e089</value>
-  </data>
   <data name="&gt;&gt;label18.Parent" xml:space="preserve">
     <value>tabModifications</value>
   </data>
@@ -1894,9 +1696,6 @@ Transitions from the two precursors will not be paired with each other for the p
   </data>
   <data name="&gt;&gt;label17.Name" xml:space="preserve">
     <value>label17</value>
-  </data>
-  <data name="&gt;&gt;label17.Type" xml:space="preserve">
-    <value>System.Windows.Forms.Label, System.Windows.Forms, Version=4.0.0.0, Culture=neutral, PublicKeyToken=b77a5c561934e089</value>
   </data>
   <data name="&gt;&gt;label17.Parent" xml:space="preserve">
     <value>tabModifications</value>
@@ -1922,9 +1721,6 @@ Transitions from the two precursors will not be paired with each other for the p
   <data name="&gt;&gt;labelStandardType.Name" xml:space="preserve">
     <value>labelStandardType</value>
   </data>
-  <data name="&gt;&gt;labelStandardType.Type" xml:space="preserve">
-    <value>System.Windows.Forms.Label, System.Windows.Forms, Version=4.0.0.0, Culture=neutral, PublicKeyToken=b77a5c561934e089</value>
-  </data>
   <data name="&gt;&gt;labelStandardType.Parent" xml:space="preserve">
     <value>tabModifications</value>
   </data>
@@ -1949,9 +1745,6 @@ Transitions from the two precursors will not be paired with each other for the p
   <data name="&gt;&gt;label16.Name" xml:space="preserve">
     <value>label16</value>
   </data>
-  <data name="&gt;&gt;label16.Type" xml:space="preserve">
-    <value>System.Windows.Forms.Label, System.Windows.Forms, Version=4.0.0.0, Culture=neutral, PublicKeyToken=b77a5c561934e089</value>
-  </data>
   <data name="&gt;&gt;label16.Parent" xml:space="preserve">
     <value>tabModifications</value>
   </data>
@@ -1972,9 +1765,6 @@ Transitions from the two precursors will not be paired with each other for the p
   </data>
   <data name="&gt;&gt;btnEditHeavyMods.Name" xml:space="preserve">
     <value>btnEditHeavyMods</value>
-  </data>
-  <data name="&gt;&gt;btnEditHeavyMods.Type" xml:space="preserve">
-    <value>System.Windows.Forms.Button, System.Windows.Forms, Version=4.0.0.0, Culture=neutral, PublicKeyToken=b77a5c561934e089</value>
   </data>
   <data name="&gt;&gt;btnEditHeavyMods.Parent" xml:space="preserve">
     <value>tabModifications</value>
@@ -2000,9 +1790,6 @@ Transitions from the two precursors will not be paired with each other for the p
   <data name="&gt;&gt;label10.Name" xml:space="preserve">
     <value>label10</value>
   </data>
-  <data name="&gt;&gt;label10.Type" xml:space="preserve">
-    <value>System.Windows.Forms.Label, System.Windows.Forms, Version=4.0.0.0, Culture=neutral, PublicKeyToken=b77a5c561934e089</value>
-  </data>
   <data name="&gt;&gt;label10.Parent" xml:space="preserve">
     <value>tabModifications</value>
   </data>
@@ -2023,9 +1810,6 @@ Transitions from the two precursors will not be paired with each other for the p
   </data>
   <data name="&gt;&gt;btnEditStaticMods.Name" xml:space="preserve">
     <value>btnEditStaticMods</value>
-  </data>
-  <data name="&gt;&gt;btnEditStaticMods.Type" xml:space="preserve">
-    <value>System.Windows.Forms.Button, System.Windows.Forms, Version=4.0.0.0, Culture=neutral, PublicKeyToken=b77a5c561934e089</value>
   </data>
   <data name="&gt;&gt;btnEditStaticMods.Parent" xml:space="preserve">
     <value>tabModifications</value>
@@ -2051,9 +1835,6 @@ Transitions from the two precursors will not be paired with each other for the p
   <data name="&gt;&gt;label8.Name" xml:space="preserve">
     <value>label8</value>
   </data>
-  <data name="&gt;&gt;label8.Type" xml:space="preserve">
-    <value>System.Windows.Forms.Label, System.Windows.Forms, Version=4.0.0.0, Culture=neutral, PublicKeyToken=b77a5c561934e089</value>
-  </data>
   <data name="&gt;&gt;label8.Parent" xml:space="preserve">
     <value>tabModifications</value>
   </data>
@@ -2074,9 +1855,6 @@ Transitions from the two precursors will not be paired with each other for the p
   </data>
   <data name="&gt;&gt;tabModifications.Name" xml:space="preserve">
     <value>tabModifications</value>
-  </data>
-  <data name="&gt;&gt;tabModifications.Type" xml:space="preserve">
-    <value>System.Windows.Forms.TabPage, System.Windows.Forms, Version=4.0.0.0, Culture=neutral, PublicKeyToken=b77a5c561934e089</value>
   </data>
   <data name="&gt;&gt;tabModifications.Parent" xml:space="preserve">
     <value>tabControl1</value>
@@ -2101,9 +1879,6 @@ Transitions from the two precursors will not be paired with each other for the p
   </data>
   <data name="&gt;&gt;buttonEditListSmallMolInternalStandardTypes.Name" xml:space="preserve">
     <value>buttonEditListSmallMolInternalStandardTypes</value>
-  </data>
-  <data name="&gt;&gt;buttonEditListSmallMolInternalStandardTypes.Type" xml:space="preserve">
-    <value>System.Windows.Forms.Button, System.Windows.Forms, Version=4.0.0.0, Culture=neutral, PublicKeyToken=b77a5c561934e089</value>
   </data>
   <data name="&gt;&gt;buttonEditListSmallMolInternalStandardTypes.Parent" xml:space="preserve">
     <value>tabLabels</value>
@@ -2132,9 +1907,6 @@ Transitions from the two precursors will not be paired with each other for the p
   <data name="&gt;&gt;labelSmallMolInternalStandardTypes.Name" xml:space="preserve">
     <value>labelSmallMolInternalStandardTypes</value>
   </data>
-  <data name="&gt;&gt;labelSmallMolInternalStandardTypes.Type" xml:space="preserve">
-    <value>System.Windows.Forms.Label, System.Windows.Forms, Version=4.0.0.0, Culture=neutral, PublicKeyToken=b77a5c561934e089</value>
-  </data>
   <data name="&gt;&gt;labelSmallMolInternalStandardTypes.Parent" xml:space="preserve">
     <value>tabLabels</value>
   </data>
@@ -2152,9 +1924,6 @@ Transitions from the two precursors will not be paired with each other for the p
   </data>
   <data name="&gt;&gt;listBoxSmallMolInternalStandardTypes.Name" xml:space="preserve">
     <value>listBoxSmallMolInternalStandardTypes</value>
-  </data>
-  <data name="&gt;&gt;listBoxSmallMolInternalStandardTypes.Type" xml:space="preserve">
-    <value>System.Windows.Forms.CheckedListBox, System.Windows.Forms, Version=4.0.0.0, Culture=neutral, PublicKeyToken=b77a5c561934e089</value>
   </data>
   <data name="&gt;&gt;listBoxSmallMolInternalStandardTypes.Parent" xml:space="preserve">
     <value>tabLabels</value>
@@ -2176,9 +1945,6 @@ Transitions from the two precursors will not be paired with each other for the p
   </data>
   <data name="&gt;&gt;tabLabels.Name" xml:space="preserve">
     <value>tabLabels</value>
-  </data>
-  <data name="&gt;&gt;tabLabels.Type" xml:space="preserve">
-    <value>System.Windows.Forms.TabPage, System.Windows.Forms, Version=4.0.0.0, Culture=neutral, PublicKeyToken=b77a5c561934e089</value>
   </data>
   <data name="&gt;&gt;tabLabels.Parent" xml:space="preserve">
     <value>tabControl1</value>
@@ -2207,9 +1973,6 @@ Transitions from the two precursors will not be paired with each other for the p
   <data name="&gt;&gt;label36.Name" xml:space="preserve">
     <value>label36</value>
   </data>
-  <data name="&gt;&gt;label36.Type" xml:space="preserve">
-    <value>System.Windows.Forms.Label, System.Windows.Forms, Version=4.0.0.0, Culture=neutral, PublicKeyToken=b77a5c561934e089</value>
-  </data>
   <data name="&gt;&gt;label36.Parent" xml:space="preserve">
     <value>tabIntegration</value>
   </data>
@@ -2233,9 +1996,6 @@ Transitions from the two precursors will not be paired with each other for the p
   </data>
   <data name="&gt;&gt;tabIntegration.Name" xml:space="preserve">
     <value>tabIntegration</value>
-  </data>
-  <data name="&gt;&gt;tabIntegration.Type" xml:space="preserve">
-    <value>System.Windows.Forms.TabPage, System.Windows.Forms, Version=4.0.0.0, Culture=neutral, PublicKeyToken=b77a5c561934e089</value>
   </data>
   <data name="&gt;&gt;tabIntegration.Parent" xml:space="preserve">
     <value>tabControl1</value>
@@ -2267,9 +2027,6 @@ Transitions from the two precursors will not be paired with each other for the p
   <data name="&gt;&gt;label20.Name" xml:space="preserve">
     <value>label20</value>
   </data>
-  <data name="&gt;&gt;label20.Type" xml:space="preserve">
-    <value>System.Windows.Forms.Label, System.Windows.Forms, Version=4.0.0.0, Culture=neutral, PublicKeyToken=b77a5c561934e089</value>
-  </data>
   <data name="&gt;&gt;label20.Parent" xml:space="preserve">
     <value>groupBoxFiguresOfMerit</value>
   </data>
@@ -2293,9 +2050,6 @@ Transitions from the two precursors will not be paired with each other for the p
   </data>
   <data name="&gt;&gt;lblIonRatioThreshold.Name" xml:space="preserve">
     <value>lblIonRatioThreshold</value>
-  </data>
-  <data name="&gt;&gt;lblIonRatioThreshold.Type" xml:space="preserve">
-    <value>System.Windows.Forms.Label, System.Windows.Forms, Version=4.0.0.0, Culture=neutral, PublicKeyToken=b77a5c561934e089</value>
   </data>
   <data name="&gt;&gt;lblIonRatioThreshold.Parent" xml:space="preserve">
     <value>groupBoxFiguresOfMerit</value>
@@ -2321,9 +2075,6 @@ Transitions from the two precursors will not be paired with each other for the p
   <data name="&gt;&gt;lblCaclulateLodBy.Name" xml:space="preserve">
     <value>lblCaclulateLodBy</value>
   </data>
-  <data name="&gt;&gt;lblCaclulateLodBy.Type" xml:space="preserve">
-    <value>System.Windows.Forms.Label, System.Windows.Forms, Version=4.0.0.0, Culture=neutral, PublicKeyToken=b77a5c561934e089</value>
-  </data>
   <data name="&gt;&gt;lblCaclulateLodBy.Parent" xml:space="preserve">
     <value>groupBoxFiguresOfMerit</value>
   </data>
@@ -2348,9 +2099,6 @@ Transitions from the two precursors will not be paired with each other for the p
   <data name="&gt;&gt;lblMaxLoqBias.Name" xml:space="preserve">
     <value>lblMaxLoqBias</value>
   </data>
-  <data name="&gt;&gt;lblMaxLoqBias.Type" xml:space="preserve">
-    <value>System.Windows.Forms.Label, System.Windows.Forms, Version=4.0.0.0, Culture=neutral, PublicKeyToken=b77a5c561934e089</value>
-  </data>
   <data name="&gt;&gt;lblMaxLoqBias.Parent" xml:space="preserve">
     <value>groupBoxFiguresOfMerit</value>
   </data>
@@ -2374,9 +2122,6 @@ Transitions from the two precursors will not be paired with each other for the p
   </data>
   <data name="&gt;&gt;lblMaxLoqBiasPct.Name" xml:space="preserve">
     <value>lblMaxLoqBiasPct</value>
-  </data>
-  <data name="&gt;&gt;lblMaxLoqBiasPct.Type" xml:space="preserve">
-    <value>System.Windows.Forms.Label, System.Windows.Forms, Version=4.0.0.0, Culture=neutral, PublicKeyToken=b77a5c561934e089</value>
   </data>
   <data name="&gt;&gt;lblMaxLoqBiasPct.Parent" xml:space="preserve">
     <value>groupBoxFiguresOfMerit</value>
@@ -2405,9 +2150,6 @@ Transitions from the two precursors will not be paired with each other for the p
   <data name="&gt;&gt;lblMaxLoqCvPct.Name" xml:space="preserve">
     <value>lblMaxLoqCvPct</value>
   </data>
-  <data name="&gt;&gt;lblMaxLoqCvPct.Type" xml:space="preserve">
-    <value>System.Windows.Forms.Label, System.Windows.Forms, Version=4.0.0.0, Culture=neutral, PublicKeyToken=b77a5c561934e089</value>
-  </data>
   <data name="&gt;&gt;lblMaxLoqCvPct.Parent" xml:space="preserve">
     <value>groupBoxFiguresOfMerit</value>
   </data>
@@ -2432,9 +2174,6 @@ Transitions from the two precursors will not be paired with each other for the p
   <data name="&gt;&gt;lblMaxLoqCv.Name" xml:space="preserve">
     <value>lblMaxLoqCv</value>
   </data>
-  <data name="&gt;&gt;lblMaxLoqCv.Type" xml:space="preserve">
-    <value>System.Windows.Forms.Label, System.Windows.Forms, Version=4.0.0.0, Culture=neutral, PublicKeyToken=b77a5c561934e089</value>
-  </data>
   <data name="&gt;&gt;lblMaxLoqCv.Parent" xml:space="preserve">
     <value>groupBoxFiguresOfMerit</value>
   </data>
@@ -2455,9 +2194,6 @@ Transitions from the two precursors will not be paired with each other for the p
   </data>
   <data name="&gt;&gt;groupBoxFiguresOfMerit.Name" xml:space="preserve">
     <value>groupBoxFiguresOfMerit</value>
-  </data>
-  <data name="&gt;&gt;groupBoxFiguresOfMerit.Type" xml:space="preserve">
-    <value>System.Windows.Forms.GroupBox, System.Windows.Forms, Version=4.0.0.0, Culture=neutral, PublicKeyToken=b77a5c561934e089</value>
   </data>
   <data name="&gt;&gt;groupBoxFiguresOfMerit.Parent" xml:space="preserve">
     <value>tabQuantification</value>
@@ -2486,9 +2222,6 @@ Transitions from the two precursors will not be paired with each other for the p
   <data name="&gt;&gt;lblQuantUnits.Name" xml:space="preserve">
     <value>lblQuantUnits</value>
   </data>
-  <data name="&gt;&gt;lblQuantUnits.Type" xml:space="preserve">
-    <value>System.Windows.Forms.Label, System.Windows.Forms, Version=4.0.0.0, Culture=neutral, PublicKeyToken=b77a5c561934e089</value>
-  </data>
   <data name="&gt;&gt;lblQuantUnits.Parent" xml:space="preserve">
     <value>tabQuantification</value>
   </data>
@@ -2512,9 +2245,6 @@ Transitions from the two precursors will not be paired with each other for the p
   </data>
   <data name="&gt;&gt;lblMsLevel.Name" xml:space="preserve">
     <value>lblMsLevel</value>
-  </data>
-  <data name="&gt;&gt;lblMsLevel.Type" xml:space="preserve">
-    <value>System.Windows.Forms.Label, System.Windows.Forms, Version=4.0.0.0, Culture=neutral, PublicKeyToken=b77a5c561934e089</value>
   </data>
   <data name="&gt;&gt;lblMsLevel.Parent" xml:space="preserve">
     <value>tabQuantification</value>
@@ -2540,9 +2270,6 @@ Transitions from the two precursors will not be paired with each other for the p
   <data name="&gt;&gt;lblNormalizationMethod.Name" xml:space="preserve">
     <value>lblNormalizationMethod</value>
   </data>
-  <data name="&gt;&gt;lblNormalizationMethod.Type" xml:space="preserve">
-    <value>System.Windows.Forms.Label, System.Windows.Forms, Version=4.0.0.0, Culture=neutral, PublicKeyToken=b77a5c561934e089</value>
-  </data>
   <data name="&gt;&gt;lblNormalizationMethod.Parent" xml:space="preserve">
     <value>tabQuantification</value>
   </data>
@@ -2566,9 +2293,6 @@ Transitions from the two precursors will not be paired with each other for the p
   </data>
   <data name="&gt;&gt;lblRegressionFit.Name" xml:space="preserve">
     <value>lblRegressionFit</value>
-  </data>
-  <data name="&gt;&gt;lblRegressionFit.Type" xml:space="preserve">
-    <value>System.Windows.Forms.Label, System.Windows.Forms, Version=4.0.0.0, Culture=neutral, PublicKeyToken=b77a5c561934e089</value>
   </data>
   <data name="&gt;&gt;lblRegressionFit.Parent" xml:space="preserve">
     <value>tabQuantification</value>
@@ -2594,9 +2318,6 @@ Transitions from the two precursors will not be paired with each other for the p
   <data name="&gt;&gt;lblRegressionWeighting.Name" xml:space="preserve">
     <value>lblRegressionWeighting</value>
   </data>
-  <data name="&gt;&gt;lblRegressionWeighting.Type" xml:space="preserve">
-    <value>System.Windows.Forms.Label, System.Windows.Forms, Version=4.0.0.0, Culture=neutral, PublicKeyToken=b77a5c561934e089</value>
-  </data>
   <data name="&gt;&gt;lblRegressionWeighting.Parent" xml:space="preserve">
     <value>tabQuantification</value>
   </data>
@@ -2621,9 +2342,6 @@ Transitions from the two precursors will not be paired with each other for the p
   <data name="&gt;&gt;tabQuantification.Name" xml:space="preserve">
     <value>tabQuantification</value>
   </data>
-  <data name="&gt;&gt;tabQuantification.Type" xml:space="preserve">
-    <value>System.Windows.Forms.TabPage, System.Windows.Forms, Version=4.0.0.0, Culture=neutral, PublicKeyToken=b77a5c561934e089</value>
-  </data>
   <data name="&gt;&gt;tabQuantification.Parent" xml:space="preserve">
     <value>tabControl1</value>
   </data>
@@ -2642,18 +2360,12 @@ Transitions from the two precursors will not be paired with each other for the p
   <data name="&gt;&gt;tabControl1.Name" xml:space="preserve">
     <value>tabControl1</value>
   </data>
-  <data name="&gt;&gt;tabControl1.Type" xml:space="preserve">
-    <value>System.Windows.Forms.TabControl, System.Windows.Forms, Version=4.0.0.0, Culture=neutral, PublicKeyToken=b77a5c561934e089</value>
-  </data>
   <data name="&gt;&gt;tabControl1.Parent" xml:space="preserve">
     <value>$this</value>
   </data>
   <data name="&gt;&gt;tabControl1.ZOrder" xml:space="preserve">
     <value>3</value>
   </data>
-  <metadata name="contextMenuCalculator.TrayLocation" type="System.Drawing.Point, System.Drawing, Version=4.0.0.0, Culture=neutral, PublicKeyToken=b03f5f7f11d50a3a">
-    <value>247, 17</value>
-  </metadata>
   <data name="addCalculatorContextMenuItem.Size" type="System.Drawing.Size, System.Drawing">
     <value>146, 22</value>
   </data>
@@ -2678,15 +2390,6 @@ Transitions from the two precursors will not be paired with each other for the p
   <data name="&gt;&gt;contextMenuCalculator.Name" xml:space="preserve">
     <value>contextMenuCalculator</value>
   </data>
-  <data name="&gt;&gt;contextMenuCalculator.Type" xml:space="preserve">
-    <value>System.Windows.Forms.ContextMenuStrip, System.Windows.Forms, Version=4.0.0.0, Culture=neutral, PublicKeyToken=b77a5c561934e089</value>
-  </data>
-  <metadata name="$this.Localizable" type="System.Boolean, mscorlib, Version=4.0.0.0, Culture=neutral, PublicKeyToken=b77a5c561934e089">
-    <value>True</value>
-  </metadata>
-  <metadata name="$this.TrayHeight" type="System.Int32, mscorlib, Version=4.0.0.0, Culture=neutral, PublicKeyToken=b77a5c561934e089">
-    <value>97</value>
-  </metadata>
   <data name="$this.AutoScaleDimensions" type="System.Drawing.SizeF, System.Drawing">
     <value>6, 13</value>
   </data>
@@ -2702,37 +2405,19 @@ Transitions from the two precursors will not be paired with each other for the p
   <data name="&gt;&gt;modeUIHandler.Name" xml:space="preserve">
     <value>modeUIHandler</value>
   </data>
-  <data name="&gt;&gt;modeUIHandler.Type" xml:space="preserve">
-    <value>pwiz.Skyline.Util.Helpers+ModeUIExtender, Skyline-daily, Version=22.2.1.276, Culture=neutral, PublicKeyToken=null</value>
-  </data>
   <data name="&gt;&gt;helpTip.Name" xml:space="preserve">
     <value>helpTip</value>
-  </data>
-  <data name="&gt;&gt;helpTip.Type" xml:space="preserve">
-    <value>System.Windows.Forms.ToolTip, System.Windows.Forms, Version=4.0.0.0, Culture=neutral, PublicKeyToken=b77a5c561934e089</value>
   </data>
   <data name="&gt;&gt;addCalculatorContextMenuItem.Name" xml:space="preserve">
     <value>addCalculatorContextMenuItem</value>
   </data>
-  <data name="&gt;&gt;addCalculatorContextMenuItem.Type" xml:space="preserve">
-    <value>System.Windows.Forms.ToolStripMenuItem, System.Windows.Forms, Version=4.0.0.0, Culture=neutral, PublicKeyToken=b77a5c561934e089</value>
-  </data>
   <data name="&gt;&gt;editCalculatorCurrentContextMenuItem.Name" xml:space="preserve">
     <value>editCalculatorCurrentContextMenuItem</value>
-  </data>
-  <data name="&gt;&gt;editCalculatorCurrentContextMenuItem.Type" xml:space="preserve">
-    <value>System.Windows.Forms.ToolStripMenuItem, System.Windows.Forms, Version=4.0.0.0, Culture=neutral, PublicKeyToken=b77a5c561934e089</value>
   </data>
   <data name="&gt;&gt;editCalculatorListContextMenuItem.Name" xml:space="preserve">
     <value>editCalculatorListContextMenuItem</value>
   </data>
-  <data name="&gt;&gt;editCalculatorListContextMenuItem.Type" xml:space="preserve">
-    <value>System.Windows.Forms.ToolStripMenuItem, System.Windows.Forms, Version=4.0.0.0, Culture=neutral, PublicKeyToken=b77a5c561934e089</value>
-  </data>
   <data name="&gt;&gt;$this.Name" xml:space="preserve">
     <value>PeptideSettingsUI</value>
-  </data>
-  <data name="&gt;&gt;$this.Type" xml:space="preserve">
-    <value>pwiz.Skyline.Util.FormEx, Skyline-daily, Version=22.2.1.276, Culture=neutral, PublicKeyToken=null</value>
   </data>
 </root>

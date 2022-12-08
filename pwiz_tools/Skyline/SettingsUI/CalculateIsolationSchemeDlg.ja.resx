@@ -118,20 +118,23 @@
     <value>System.Resources.ResXResourceWriter, System.Windows.Forms, Version=4.0.0.0, Culture=neutral, PublicKeyToken=b77a5c561934e089</value>
   </resheader>
   <assembly alias="System.Windows.Forms" name="System.Windows.Forms, Version=4.0.0.0, Culture=neutral, PublicKeyToken=b77a5c561934e089" />
+  <assembly alias="System.Drawing" name="System.Drawing, Version=4.0.0.0, Culture=neutral, PublicKeyToken=b03f5f7f11d50a3a" />
+  <assembly alias="mscorlib" name="mscorlib, Version=4.0.0.0, Culture=neutral, PublicKeyToken=b77a5c561934e089" />
+  <metadata name="$this.Localizable" type="System.Boolean, mscorlib, Version=4.0.0.0, Culture=neutral, PublicKeyToken=b77a5c561934e089">
+    <value>True</value>
+  </metadata>
   <data name="btnOk.Anchor" type="System.Windows.Forms.AnchorStyles, System.Windows.Forms">
     <value>Top, Right</value>
   </data>
   <data name="btnOk.ImeMode" type="System.Windows.Forms.ImeMode, System.Windows.Forms">
     <value>NoControl</value>
   </data>
-  <assembly alias="System.Drawing" name="System.Drawing, Version=4.0.0.0, Culture=neutral, PublicKeyToken=b03f5f7f11d50a3a" />
   <data name="btnOk.Location" type="System.Drawing.Point, System.Drawing">
     <value>222, 9</value>
   </data>
   <data name="btnOk.Size" type="System.Drawing.Size, System.Drawing">
     <value>75, 23</value>
   </data>
-  <assembly alias="mscorlib" name="mscorlib, Version=4.0.0.0, Culture=neutral, PublicKeyToken=b77a5c561934e089" />
   <data name="btnOk.TabIndex" type="System.Int32, mscorlib">
     <value>19</value>
   </data>
@@ -140,9 +143,6 @@
   </data>
   <data name="&gt;&gt;btnOk.Name" xml:space="preserve">
     <value>btnOk</value>
-  </data>
-  <data name="&gt;&gt;btnOk.Type" xml:space="preserve">
-    <value>System.Windows.Forms.Button, System.Windows.Forms, Version=4.0.0.0, Culture=neutral, PublicKeyToken=b77a5c561934e089</value>
   </data>
   <data name="&gt;&gt;btnOk.Parent" xml:space="preserve">
     <value>$this</value>
@@ -171,9 +171,6 @@
   <data name="&gt;&gt;btnCancel.Name" xml:space="preserve">
     <value>btnCancel</value>
   </data>
-  <data name="&gt;&gt;btnCancel.Type" xml:space="preserve">
-    <value>System.Windows.Forms.Button, System.Windows.Forms, Version=4.0.0.0, Culture=neutral, PublicKeyToken=b77a5c561934e089</value>
-  </data>
   <data name="&gt;&gt;btnCancel.Parent" xml:space="preserve">
     <value>$this</value>
   </data>
@@ -191,9 +188,6 @@
   </data>
   <data name="&gt;&gt;comboWindowType.Name" xml:space="preserve">
     <value>comboWindowType</value>
-  </data>
-  <data name="&gt;&gt;comboWindowType.Type" xml:space="preserve">
-    <value>System.Windows.Forms.ComboBox, System.Windows.Forms, Version=4.0.0.0, Culture=neutral, PublicKeyToken=b77a5c561934e089</value>
   </data>
   <data name="&gt;&gt;comboWindowType.Parent" xml:space="preserve">
     <value>$this</value>
@@ -222,9 +216,6 @@
   <data name="&gt;&gt;labelWindowType.Name" xml:space="preserve">
     <value>labelWindowType</value>
   </data>
-  <data name="&gt;&gt;labelWindowType.Type" xml:space="preserve">
-    <value>System.Windows.Forms.Label, System.Windows.Forms, Version=4.0.0.0, Culture=neutral, PublicKeyToken=b77a5c561934e089</value>
-  </data>
   <data name="&gt;&gt;labelWindowType.Parent" xml:space="preserve">
     <value>$this</value>
   </data>
@@ -245,9 +236,6 @@
   </data>
   <data name="&gt;&gt;textWindowsPerScan.Name" xml:space="preserve">
     <value>textWindowsPerScan</value>
-  </data>
-  <data name="&gt;&gt;textWindowsPerScan.Type" xml:space="preserve">
-    <value>System.Windows.Forms.TextBox, System.Windows.Forms, Version=4.0.0.0, Culture=neutral, PublicKeyToken=b77a5c561934e089</value>
   </data>
   <data name="&gt;&gt;textWindowsPerScan.Parent" xml:space="preserve">
     <value>$this</value>
@@ -279,9 +267,6 @@
   <data name="&gt;&gt;labelWindowsPerScan.Name" xml:space="preserve">
     <value>labelWindowsPerScan</value>
   </data>
-  <data name="&gt;&gt;labelWindowsPerScan.Type" xml:space="preserve">
-    <value>System.Windows.Forms.Label, System.Windows.Forms, Version=4.0.0.0, Culture=neutral, PublicKeyToken=b77a5c561934e089</value>
-  </data>
   <data name="&gt;&gt;labelWindowsPerScan.Parent" xml:space="preserve">
     <value>$this</value>
   </data>
@@ -305,9 +290,6 @@
   </data>
   <data name="&gt;&gt;labelWindowCount.Name" xml:space="preserve">
     <value>labelWindowCount</value>
-  </data>
-  <data name="&gt;&gt;labelWindowCount.Type" xml:space="preserve">
-    <value>System.Windows.Forms.Label, System.Windows.Forms, Version=4.0.0.0, Culture=neutral, PublicKeyToken=b77a5c561934e089</value>
   </data>
   <data name="&gt;&gt;labelWindowCount.Parent" xml:space="preserve">
     <value>$this</value>
@@ -336,9 +318,6 @@
   <data name="&gt;&gt;cbOptimizeWindowPlacement.Name" xml:space="preserve">
     <value>cbOptimizeWindowPlacement</value>
   </data>
-  <data name="&gt;&gt;cbOptimizeWindowPlacement.Type" xml:space="preserve">
-    <value>System.Windows.Forms.CheckBox, System.Windows.Forms, Version=4.0.0.0, Culture=neutral, PublicKeyToken=b77a5c561934e089</value>
-  </data>
   <data name="&gt;&gt;cbOptimizeWindowPlacement.Parent" xml:space="preserve">
     <value>$this</value>
   </data>
@@ -366,9 +345,6 @@
   <data name="&gt;&gt;label8.Name" xml:space="preserve">
     <value>label8</value>
   </data>
-  <data name="&gt;&gt;label8.Type" xml:space="preserve">
-    <value>System.Windows.Forms.Label, System.Windows.Forms, Version=4.0.0.0, Culture=neutral, PublicKeyToken=b77a5c561934e089</value>
-  </data>
   <data name="&gt;&gt;label8.Parent" xml:space="preserve">
     <value>$this</value>
   </data>
@@ -386,9 +362,6 @@
   </data>
   <data name="&gt;&gt;textMargin.Name" xml:space="preserve">
     <value>textMargin</value>
-  </data>
-  <data name="&gt;&gt;textMargin.Type" xml:space="preserve">
-    <value>System.Windows.Forms.TextBox, System.Windows.Forms, Version=4.0.0.0, Culture=neutral, PublicKeyToken=b77a5c561934e089</value>
   </data>
   <data name="&gt;&gt;textMargin.Parent" xml:space="preserve">
     <value>$this</value>
@@ -417,9 +390,6 @@
   <data name="&gt;&gt;label4.Name" xml:space="preserve">
     <value>label4</value>
   </data>
-  <data name="&gt;&gt;label4.Type" xml:space="preserve">
-    <value>System.Windows.Forms.Label, System.Windows.Forms, Version=4.0.0.0, Culture=neutral, PublicKeyToken=b77a5c561934e089</value>
-  </data>
   <data name="&gt;&gt;label4.Parent" xml:space="preserve">
     <value>$this</value>
   </data>
@@ -437,9 +407,6 @@
   </data>
   <data name="&gt;&gt;textWidth.Name" xml:space="preserve">
     <value>textWidth</value>
-  </data>
-  <data name="&gt;&gt;textWidth.Type" xml:space="preserve">
-    <value>System.Windows.Forms.TextBox, System.Windows.Forms, Version=4.0.0.0, Culture=neutral, PublicKeyToken=b77a5c561934e089</value>
   </data>
   <data name="&gt;&gt;textWidth.Parent" xml:space="preserve">
     <value>$this</value>
@@ -468,9 +435,6 @@
   <data name="&gt;&gt;label3.Name" xml:space="preserve">
     <value>label3</value>
   </data>
-  <data name="&gt;&gt;label3.Type" xml:space="preserve">
-    <value>System.Windows.Forms.Label, System.Windows.Forms, Version=4.0.0.0, Culture=neutral, PublicKeyToken=b77a5c561934e089</value>
-  </data>
   <data name="&gt;&gt;label3.Parent" xml:space="preserve">
     <value>$this</value>
   </data>
@@ -488,9 +452,6 @@
   </data>
   <data name="&gt;&gt;textEnd.Name" xml:space="preserve">
     <value>textEnd</value>
-  </data>
-  <data name="&gt;&gt;textEnd.Type" xml:space="preserve">
-    <value>System.Windows.Forms.TextBox, System.Windows.Forms, Version=4.0.0.0, Culture=neutral, PublicKeyToken=b77a5c561934e089</value>
   </data>
   <data name="&gt;&gt;textEnd.Parent" xml:space="preserve">
     <value>$this</value>
@@ -519,9 +480,6 @@
   <data name="&gt;&gt;label2.Name" xml:space="preserve">
     <value>label2</value>
   </data>
-  <data name="&gt;&gt;label2.Type" xml:space="preserve">
-    <value>System.Windows.Forms.Label, System.Windows.Forms, Version=4.0.0.0, Culture=neutral, PublicKeyToken=b77a5c561934e089</value>
-  </data>
   <data name="&gt;&gt;label2.Parent" xml:space="preserve">
     <value>$this</value>
   </data>
@@ -539,9 +497,6 @@
   </data>
   <data name="&gt;&gt;textStart.Name" xml:space="preserve">
     <value>textStart</value>
-  </data>
-  <data name="&gt;&gt;textStart.Type" xml:space="preserve">
-    <value>System.Windows.Forms.TextBox, System.Windows.Forms, Version=4.0.0.0, Culture=neutral, PublicKeyToken=b77a5c561934e089</value>
   </data>
   <data name="&gt;&gt;textStart.Parent" xml:space="preserve">
     <value>$this</value>
@@ -570,9 +525,6 @@
   <data name="&gt;&gt;label1.Name" xml:space="preserve">
     <value>label1</value>
   </data>
-  <data name="&gt;&gt;label1.Type" xml:space="preserve">
-    <value>System.Windows.Forms.Label, System.Windows.Forms, Version=4.0.0.0, Culture=neutral, PublicKeyToken=b77a5c561934e089</value>
-  </data>
   <data name="&gt;&gt;label1.Parent" xml:space="preserve">
     <value>$this</value>
   </data>
@@ -590,9 +542,6 @@
   </data>
   <data name="&gt;&gt;comboDeconv.Name" xml:space="preserve">
     <value>comboDeconv</value>
-  </data>
-  <data name="&gt;&gt;comboDeconv.Type" xml:space="preserve">
-    <value>System.Windows.Forms.ComboBox, System.Windows.Forms, Version=4.0.0.0, Culture=neutral, PublicKeyToken=b77a5c561934e089</value>
   </data>
   <data name="&gt;&gt;comboDeconv.Parent" xml:space="preserve">
     <value>$this</value>
@@ -618,9 +567,6 @@
   <data name="&gt;&gt;label6.Name" xml:space="preserve">
     <value>label6</value>
   </data>
-  <data name="&gt;&gt;label6.Type" xml:space="preserve">
-    <value>System.Windows.Forms.Label, System.Windows.Forms, Version=4.0.0.0, Culture=neutral, PublicKeyToken=b77a5c561934e089</value>
-  </data>
   <data name="&gt;&gt;label6.Parent" xml:space="preserve">
     <value>$this</value>
   </data>
@@ -638,9 +584,6 @@
   </data>
   <data name="&gt;&gt;textCERange.Name" xml:space="preserve">
     <value>textCERange</value>
-  </data>
-  <data name="&gt;&gt;textCERange.Type" xml:space="preserve">
-    <value>System.Windows.Forms.TextBox, System.Windows.Forms, Version=4.0.0.0, Culture=neutral, PublicKeyToken=b77a5c561934e089</value>
   </data>
   <data name="&gt;&gt;textCERange.Parent" xml:space="preserve">
     <value>$this</value>
@@ -669,18 +612,12 @@
   <data name="&gt;&gt;label5.Name" xml:space="preserve">
     <value>label5</value>
   </data>
-  <data name="&gt;&gt;label5.Type" xml:space="preserve">
-    <value>System.Windows.Forms.Label, System.Windows.Forms, Version=4.0.0.0, Culture=neutral, PublicKeyToken=b77a5c561934e089</value>
-  </data>
   <data name="&gt;&gt;label5.Parent" xml:space="preserve">
     <value>$this</value>
   </data>
   <data name="&gt;&gt;label5.ZOrder" xml:space="preserve">
     <value>1</value>
   </data>
-  <metadata name="$this.Localizable" type="System.Boolean, mscorlib, Version=4.0.0.0, Culture=neutral, PublicKeyToken=b77a5c561934e089">
-    <value>True</value>
-  </metadata>
   <data name="$this.AutoScaleDimensions" type="System.Drawing.SizeF, System.Drawing">
     <value>6, 13</value>
   </data>
@@ -695,8 +632,5 @@
   </data>
   <data name="&gt;&gt;$this.Name" xml:space="preserve">
     <value>CalculateIsolationSchemeDlg</value>
-  </data>
-  <data name="&gt;&gt;$this.Type" xml:space="preserve">
-    <value>pwiz.Skyline.Util.FormEx, Skyline, Version=1.0.0.0, Culture=neutral, PublicKeyToken=null</value>
   </data>
 </root>

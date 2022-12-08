@@ -117,13 +117,21 @@
   <resheader name="writer">
     <value>System.Resources.ResXResourceWriter, System.Windows.Forms, Version=4.0.0.0, Culture=neutral, PublicKeyToken=b77a5c561934e089</value>
   </resheader>
+  <assembly alias="mscorlib" name="mscorlib, Version=4.0.0.0, Culture=neutral, PublicKeyToken=b77a5c561934e089" />
+  <assembly alias="System.Drawing" name="System.Drawing, Version=4.0.0.0, Culture=neutral, PublicKeyToken=b03f5f7f11d50a3a" />
+  <assembly alias="System.Windows.Forms" name="System.Windows.Forms, Version=4.0.0.0, Culture=neutral, PublicKeyToken=b77a5c561934e089" />
+  <metadata name="$this.Localizable" type="System.Boolean, mscorlib, Version=4.0.0.0, Culture=neutral, PublicKeyToken=b77a5c561934e089">
+    <value>True</value>
+  </metadata>
+  <metadata name="$this.Language" type="System.Globalization.CultureInfo, mscorlib, Version=4.0.0.0, Culture=neutral, PublicKeyToken=b77a5c561934e089">
+    <value>zh-CHS</value>
+  </metadata>
   <data name="&gt;&gt;modeUIHandler.Name" xml:space="preserve">
     <value>modeUIHandler</value>
   </data>
   <data name="&gt;&gt;textBoxLanguages.Name" xml:space="preserve">
     <value>textBoxLanguages</value>
   </data>
-  <assembly alias="mscorlib" name="mscorlib, Version=4.0.0.0, Culture=neutral, PublicKeyToken=b77a5c561934e089" />
   <data name="labelProvider.TabIndex" type="System.Int32, mscorlib">
     <value>7</value>
   </data>
@@ -136,7 +144,6 @@
   <data name="&gt;&gt;labelProvider.ZOrder" xml:space="preserve">
     <value>14</value>
   </data>
-  <assembly alias="System.Drawing" name="System.Drawing, Version=4.0.0.0, Culture=neutral, PublicKeyToken=b03f5f7f11d50a3a" />
   <data name="textBoxOrganization.Location" type="System.Drawing.Point, System.Drawing">
     <value>268, 31</value>
   </data>
@@ -161,9 +168,6 @@
   <data name="&gt;&gt;labelStatus.Name" xml:space="preserve">
     <value>labelStatus</value>
   </data>
-  <data name="&gt;&gt;labelOrganization.Type" xml:space="preserve">
-    <value>System.Windows.Forms.Label, System.Windows.Forms, Version=4.0.0.0, Culture=neutral, PublicKeyToken=b77a5c561934e089</value>
-  </data>
   <data name="labelProvider.AutoSize" type="System.Boolean, mscorlib">
     <value>True</value>
   </data>
@@ -175,9 +179,6 @@
   </data>
   <data name="linkLabelProvider.TabIndex" type="System.Int32, mscorlib">
     <value>8</value>
-  </data>
-  <data name="&gt;&gt;labelLanguages.Type" xml:space="preserve">
-    <value>System.Windows.Forms.Label, System.Windows.Forms, Version=4.0.0.0, Culture=neutral, PublicKeyToken=b77a5c561934e089</value>
   </data>
   <data name="&gt;&gt;textBoxDescription.Name" xml:space="preserve">
     <value>textBoxDescription</value>
@@ -197,9 +198,6 @@
   <data name="buttonExit.Text" xml:space="preserve">
     <value>閉じる(&amp;C)</value>
   </data>
-  <data name="&gt;&gt;textBoxOrganization.Type" xml:space="preserve">
-    <value>System.Windows.Forms.TextBox, System.Windows.Forms, Version=4.0.0.0, Culture=neutral, PublicKeyToken=b77a5c561934e089</value>
-  </data>
   <data name="pictureBoxTool.Size" type="System.Drawing.Size, System.Drawing">
     <value>128, 128</value>
   </data>
@@ -212,16 +210,12 @@
   <data name="&gt;&gt;buttonToolStore.Name" xml:space="preserve">
     <value>buttonToolStore</value>
   </data>
-  <data name="&gt;&gt;pictureBoxTool.Type" xml:space="preserve">
-    <value>System.Windows.Forms.PictureBox, System.Windows.Forms, Version=4.0.0.0, Culture=neutral, PublicKeyToken=b77a5c561934e089</value>
-  </data>
   <data name="&gt;&gt;listBoxTools.Parent" xml:space="preserve">
     <value>$this</value>
   </data>
   <data name="&gt;&gt;labelOrganization.Name" xml:space="preserve">
     <value>labelOrganization</value>
   </data>
-  <assembly alias="System.Windows.Forms" name="System.Windows.Forms, Version=4.0.0.0, Culture=neutral, PublicKeyToken=b77a5c561934e089" />
   <data name="labelOrganization.ImeMode" type="System.Windows.Forms.ImeMode, System.Windows.Forms">
     <value>NoControl</value>
   </data>
@@ -266,9 +260,6 @@
   </data>
   <data name="textBoxStatus.Location" type="System.Drawing.Point, System.Drawing">
     <value>132, 195</value>
-  </data>
-  <data name="&gt;&gt;labelAuthors.Type" xml:space="preserve">
-    <value>System.Windows.Forms.Label, System.Windows.Forms, Version=4.0.0.0, Culture=neutral, PublicKeyToken=b77a5c561934e089</value>
   </data>
   <data name="labelStatus.TabIndex" type="System.Int32, mscorlib">
     <value>9</value>
@@ -342,14 +333,8 @@
   <data name="&gt;&gt;pictureBoxTool.ZOrder" xml:space="preserve">
     <value>16</value>
   </data>
-  <data name="&gt;&gt;textBoxDescription.Type" xml:space="preserve">
-    <value>System.Windows.Forms.TextBox, System.Windows.Forms, Version=4.0.0.0, Culture=neutral, PublicKeyToken=b77a5c561934e089</value>
-  </data>
   <data name="&gt;&gt;labelProvider.Parent" xml:space="preserve">
     <value>$this</value>
-  </data>
-  <data name="&gt;&gt;buttonInstallUpdate.Type" xml:space="preserve">
-    <value>System.Windows.Forms.Button, System.Windows.Forms, Version=4.0.0.0, Culture=neutral, PublicKeyToken=b77a5c561934e089</value>
   </data>
   <data name="&gt;&gt;labelOrganization.ZOrder" xml:space="preserve">
     <value>4</value>
@@ -357,14 +342,8 @@
   <data name="&gt;&gt;buttonInstallUpdate.Name" xml:space="preserve">
     <value>buttonInstallUpdate</value>
   </data>
-  <data name="&gt;&gt;labelDescription.Type" xml:space="preserve">
-    <value>System.Windows.Forms.Label, System.Windows.Forms, Version=4.0.0.0, Culture=neutral, PublicKeyToken=b77a5c561934e089</value>
-  </data>
   <data name="textBoxOrganization.Size" type="System.Drawing.Size, System.Drawing">
     <value>306, 20</value>
-  </data>
-  <data name="&gt;&gt;buttonToolStore.Type" xml:space="preserve">
-    <value>System.Windows.Forms.Button, System.Windows.Forms, Version=4.0.0.0, Culture=neutral, PublicKeyToken=b77a5c561934e089</value>
   </data>
   <data name="textBoxDescription.Size" type="System.Drawing.Size, System.Drawing">
     <value>443, 120</value>
@@ -435,9 +414,6 @@
   <data name="buttonExit.Size" type="System.Drawing.Size, System.Drawing">
     <value>75, 23</value>
   </data>
-  <data name="&gt;&gt;textBoxLanguages.Type" xml:space="preserve">
-    <value>System.Windows.Forms.TextBox, System.Windows.Forms, Version=4.0.0.0, Culture=neutral, PublicKeyToken=b77a5c561934e089</value>
-  </data>
   <data name="labelStatus.Size" type="System.Drawing.Size, System.Drawing">
     <value>40, 13</value>
   </data>
@@ -455,12 +431,6 @@
   </data>
   <data name="labelOrganization.Text" xml:space="preserve">
     <value>所属：</value>
-  </data>
-  <data name="&gt;&gt;labelStatus.Type" xml:space="preserve">
-    <value>System.Windows.Forms.Label, System.Windows.Forms, Version=4.0.0.0, Culture=neutral, PublicKeyToken=b77a5c561934e089</value>
-  </data>
-  <data name="&gt;&gt;$this.Type" xml:space="preserve">
-    <value>pwiz.Skyline.Util.FormEx, Skyline, Version=1.0.0.0, Culture=neutral, PublicKeyToken=null</value>
   </data>
   <data name="textBoxOrganization.TabIndex" type="System.Int32, mscorlib">
     <value>2</value>
@@ -501,9 +471,6 @@
   <data name="buttonInstallUpdate.Location" type="System.Drawing.Point, System.Drawing">
     <value>418, 366</value>
   </data>
-  <data name="&gt;&gt;listBoxTools.Type" xml:space="preserve">
-    <value>System.Windows.Forms.ListBox, System.Windows.Forms, Version=4.0.0.0, Culture=neutral, PublicKeyToken=b77a5c561934e089</value>
-  </data>
   <data name="labelOrganization.Size" type="System.Drawing.Size, System.Drawing">
     <value>69, 13</value>
   </data>
@@ -540,9 +507,6 @@
   <data name="$this.ClientSize" type="System.Drawing.Size, System.Drawing">
     <value>587, 398</value>
   </data>
-  <data name="&gt;&gt;labelProvider.Type" xml:space="preserve">
-    <value>System.Windows.Forms.Label, System.Windows.Forms, Version=4.0.0.0, Culture=neutral, PublicKeyToken=b77a5c561934e089</value>
-  </data>
   <data name="&gt;&gt;labelAuthors.Parent" xml:space="preserve">
     <value>$this</value>
   </data>
@@ -557,12 +521,6 @@
   </data>
   <data name="labelDescription.Text" xml:space="preserve">
     <value>表記：</value>
-  </data>
-  <data name="&gt;&gt;linkLabelProvider.Type" xml:space="preserve">
-    <value>System.Windows.Forms.LinkLabel, System.Windows.Forms, Version=4.0.0.0, Culture=neutral, PublicKeyToken=b77a5c561934e089</value>
-  </data>
-  <data name="&gt;&gt;textBoxAuthors.Type" xml:space="preserve">
-    <value>System.Windows.Forms.TextBox, System.Windows.Forms, Version=4.0.0.0, Culture=neutral, PublicKeyToken=b77a5c561934e089</value>
   </data>
   <data name="labelProvider.Text" xml:space="preserve">
     <value>詳細情報：</value>
@@ -579,9 +537,6 @@
   <data name="&gt;&gt;labelProvider.Name" xml:space="preserve">
     <value>labelProvider</value>
   </data>
-  <data name="&gt;&gt;modeUIHandler.Type" xml:space="preserve">
-    <value>pwiz.Skyline.Util.Helpers+ModeUIExtender, Skyline, Version=1.0.0.0, Culture=neutral, PublicKeyToken=null</value>
-  </data>
   <data name="&gt;&gt;labelLanguages.Parent" xml:space="preserve">
     <value>$this</value>
   </data>
@@ -594,22 +549,7 @@
   <data name="textBoxLanguages.Anchor" type="System.Windows.Forms.AnchorStyles, System.Windows.Forms">
     <value>Top, Left, Right</value>
   </data>
-  <data name="&gt;&gt;buttonExit.Type" xml:space="preserve">
-    <value>System.Windows.Forms.Button, System.Windows.Forms, Version=4.0.0.0, Culture=neutral, PublicKeyToken=b77a5c561934e089</value>
-  </data>
-  <data name="&gt;&gt;textBoxStatus.Type" xml:space="preserve">
-    <value>System.Windows.Forms.TextBox, System.Windows.Forms, Version=4.0.0.0, Culture=neutral, PublicKeyToken=b77a5c561934e089</value>
-  </data>
   <data name="&gt;&gt;labelStatus.ZOrder" xml:space="preserve">
     <value>8</value>
   </data>
-  <metadata name="modeUIHandler.TrayLocation" type="System.Drawing.Point, System.Drawing, Version=4.0.0.0, Culture=neutral, PublicKeyToken=b03f5f7f11d50a3a">
-    <value>17, 17</value>
-  </metadata>
-  <metadata name="$this.Localizable" type="System.Boolean, mscorlib, Version=4.0.0.0, Culture=neutral, PublicKeyToken=b77a5c561934e089">
-    <value>True</value>
-  </metadata>
-  <metadata name="$this.Language" type="System.Globalization.CultureInfo, mscorlib, Version=4.0.0.0, Culture=neutral, PublicKeyToken=b77a5c561934e089">
-    <value>zh-CHS</value>
-  </metadata>
 </root>

@@ -118,17 +118,20 @@
     <value>System.Resources.ResXResourceWriter, System.Windows.Forms, Version=4.0.0.0, Culture=neutral, PublicKeyToken=b77a5c561934e089</value>
   </resheader>
   <assembly alias="System.Windows.Forms" name="System.Windows.Forms, Version=4.0.0.0, Culture=neutral, PublicKeyToken=b77a5c561934e089" />
+  <assembly alias="System.Drawing" name="System.Drawing, Version=4.0.0.0, Culture=neutral, PublicKeyToken=b03f5f7f11d50a3a" />
+  <assembly alias="mscorlib" name="mscorlib, Version=4.0.0.0, Culture=neutral, PublicKeyToken=b77a5c561934e089" />
+  <metadata name="$this.Localizable" type="System.Boolean, mscorlib, Version=4.0.0.0, Culture=neutral, PublicKeyToken=b77a5c561934e089">
+    <value>True</value>
+  </metadata>
   <data name="btnOk.Anchor" type="System.Windows.Forms.AnchorStyles, System.Windows.Forms">
     <value>Bottom, Right</value>
   </data>
-  <assembly alias="System.Drawing" name="System.Drawing, Version=4.0.0.0, Culture=neutral, PublicKeyToken=b03f5f7f11d50a3a" />
   <data name="btnOk.Location" type="System.Drawing.Point, System.Drawing">
     <value>241, 351</value>
   </data>
   <data name="btnOk.Size" type="System.Drawing.Size, System.Drawing">
     <value>75, 23</value>
   </data>
-  <assembly alias="mscorlib" name="mscorlib, Version=4.0.0.0, Culture=neutral, PublicKeyToken=b77a5c561934e089" />
   <data name="btnOk.TabIndex" type="System.Int32, mscorlib">
     <value>2</value>
   </data>
@@ -137,9 +140,6 @@
   </data>
   <data name="&gt;&gt;btnOk.Name" xml:space="preserve">
     <value>btnOk</value>
-  </data>
-  <data name="&gt;&gt;btnOk.Type" xml:space="preserve">
-    <value>System.Windows.Forms.Button, System.Windows.Forms, Version=4.0.0.0, Culture=neutral, PublicKeyToken=b77a5c561934e089</value>
   </data>
   <data name="&gt;&gt;btnOk.Parent" xml:space="preserve">
     <value>$this</value>
@@ -165,9 +165,6 @@
   <data name="&gt;&gt;btnCancel.Name" xml:space="preserve">
     <value>btnCancel</value>
   </data>
-  <data name="&gt;&gt;btnCancel.Type" xml:space="preserve">
-    <value>System.Windows.Forms.Button, System.Windows.Forms, Version=4.0.0.0, Culture=neutral, PublicKeyToken=b77a5c561934e089</value>
-  </data>
   <data name="&gt;&gt;btnCancel.Parent" xml:space="preserve">
     <value>$this</value>
   </data>
@@ -192,9 +189,6 @@
   <data name="&gt;&gt;label1.Name" xml:space="preserve">
     <value>label1</value>
   </data>
-  <data name="&gt;&gt;label1.Type" xml:space="preserve">
-    <value>System.Windows.Forms.Label, System.Windows.Forms, Version=4.0.0.0, Culture=neutral, PublicKeyToken=b77a5c561934e089</value>
-  </data>
   <data name="&gt;&gt;label1.Parent" xml:space="preserve">
     <value>splitContainer.Panel1</value>
   </data>
@@ -215,9 +209,6 @@
   </data>
   <data name="&gt;&gt;listMatched.Name" xml:space="preserve">
     <value>listMatched</value>
-  </data>
-  <data name="&gt;&gt;listMatched.Type" xml:space="preserve">
-    <value>System.Windows.Forms.CheckedListBox, System.Windows.Forms, Version=4.0.0.0, Culture=neutral, PublicKeyToken=b77a5c561934e089</value>
   </data>
   <data name="&gt;&gt;listMatched.Parent" xml:space="preserve">
     <value>splitContainer.Panel1</value>
@@ -243,18 +234,12 @@
   <data name="&gt;&gt;btnAdd.Name" xml:space="preserve">
     <value>btnAdd</value>
   </data>
-  <data name="&gt;&gt;btnAdd.Type" xml:space="preserve">
-    <value>System.Windows.Forms.Button, System.Windows.Forms, Version=4.0.0.0, Culture=neutral, PublicKeyToken=b77a5c561934e089</value>
-  </data>
   <data name="&gt;&gt;btnAdd.Parent" xml:space="preserve">
     <value>$this</value>
   </data>
   <data name="&gt;&gt;btnAdd.ZOrder" xml:space="preserve">
     <value>2</value>
   </data>
-  <metadata name="menuAdd.TrayLocation" type="System.Drawing.Point, System.Drawing, Version=4.0.0.0, Culture=neutral, PublicKeyToken=b03f5f7f11d50a3a">
-    <value>17, 17</value>
-  </metadata>
   <data name="addSelectedModificationsToolStripMenuItem.Size" type="System.Drawing.Size, System.Drawing">
     <value>229, 22</value>
   </data>
@@ -278,9 +263,6 @@
   </data>
   <data name="&gt;&gt;menuAdd.Name" xml:space="preserve">
     <value>menuAdd</value>
-  </data>
-  <data name="&gt;&gt;menuAdd.Type" xml:space="preserve">
-    <value>System.Windows.Forms.ContextMenuStrip, System.Windows.Forms, Version=4.0.0.0, Culture=neutral, PublicKeyToken=b77a5c561934e089</value>
   </data>
   <data name="splitContainer.Anchor" type="System.Windows.Forms.AnchorStyles, System.Windows.Forms">
     <value>Top, Bottom, Left, Right</value>
@@ -312,9 +294,6 @@
   <data name="&gt;&gt;cbSelectAll.Name" xml:space="preserve">
     <value>cbSelectAll</value>
   </data>
-  <data name="&gt;&gt;cbSelectAll.Type" xml:space="preserve">
-    <value>System.Windows.Forms.CheckBox, System.Windows.Forms, Version=4.0.0.0, Culture=neutral, PublicKeyToken=b77a5c561934e089</value>
-  </data>
   <data name="&gt;&gt;cbSelectAll.Parent" xml:space="preserve">
     <value>splitContainer.Panel1</value>
   </data>
@@ -323,9 +302,6 @@
   </data>
   <data name="&gt;&gt;splitContainer.Panel1.Name" xml:space="preserve">
     <value>splitContainer.Panel1</value>
-  </data>
-  <data name="&gt;&gt;splitContainer.Panel1.Type" xml:space="preserve">
-    <value>System.Windows.Forms.SplitterPanel, System.Windows.Forms, Version=4.0.0.0, Culture=neutral, PublicKeyToken=b77a5c561934e089</value>
   </data>
   <data name="&gt;&gt;splitContainer.Panel1.Parent" xml:space="preserve">
     <value>splitContainer</value>
@@ -347,9 +323,6 @@
   </data>
   <data name="&gt;&gt;listUnmatched.Name" xml:space="preserve">
     <value>listUnmatched</value>
-  </data>
-  <data name="&gt;&gt;listUnmatched.Type" xml:space="preserve">
-    <value>System.Windows.Forms.ListBox, System.Windows.Forms, Version=4.0.0.0, Culture=neutral, PublicKeyToken=b77a5c561934e089</value>
   </data>
   <data name="&gt;&gt;listUnmatched.Parent" xml:space="preserve">
     <value>splitContainer.Panel2</value>
@@ -375,9 +348,6 @@
   <data name="&gt;&gt;label2.Name" xml:space="preserve">
     <value>label2</value>
   </data>
-  <data name="&gt;&gt;label2.Type" xml:space="preserve">
-    <value>System.Windows.Forms.Label, System.Windows.Forms, Version=4.0.0.0, Culture=neutral, PublicKeyToken=b77a5c561934e089</value>
-  </data>
   <data name="&gt;&gt;label2.Parent" xml:space="preserve">
     <value>splitContainer.Panel2</value>
   </data>
@@ -386,9 +356,6 @@
   </data>
   <data name="&gt;&gt;splitContainer.Panel2.Name" xml:space="preserve">
     <value>splitContainer.Panel2</value>
-  </data>
-  <data name="&gt;&gt;splitContainer.Panel2.Type" xml:space="preserve">
-    <value>System.Windows.Forms.SplitterPanel, System.Windows.Forms, Version=4.0.0.0, Culture=neutral, PublicKeyToken=b77a5c561934e089</value>
   </data>
   <data name="&gt;&gt;splitContainer.Panel2.Parent" xml:space="preserve">
     <value>splitContainer</value>
@@ -408,18 +375,12 @@
   <data name="&gt;&gt;splitContainer.Name" xml:space="preserve">
     <value>splitContainer</value>
   </data>
-  <data name="&gt;&gt;splitContainer.Type" xml:space="preserve">
-    <value>System.Windows.Forms.SplitContainer, System.Windows.Forms, Version=4.0.0.0, Culture=neutral, PublicKeyToken=b77a5c561934e089</value>
-  </data>
   <data name="&gt;&gt;splitContainer.Parent" xml:space="preserve">
     <value>$this</value>
   </data>
   <data name="&gt;&gt;splitContainer.ZOrder" xml:space="preserve">
     <value>1</value>
   </data>
-  <metadata name="$this.Localizable" type="System.Boolean, mscorlib, Version=4.0.0.0, Culture=neutral, PublicKeyToken=b77a5c561934e089">
-    <value>True</value>
-  </metadata>
   <data name="$this.AutoScaleDimensions" type="System.Drawing.SizeF, System.Drawing">
     <value>6, 13</value>
   </data>
@@ -438,25 +399,13 @@
   <data name="&gt;&gt;addSelectedModificationsToolStripMenuItem.Name" xml:space="preserve">
     <value>addSelectedModificationsToolStripMenuItem</value>
   </data>
-  <data name="&gt;&gt;addSelectedModificationsToolStripMenuItem.Type" xml:space="preserve">
-    <value>System.Windows.Forms.ToolStripMenuItem, System.Windows.Forms, Version=4.0.0.0, Culture=neutral, PublicKeyToken=b77a5c561934e089</value>
-  </data>
   <data name="&gt;&gt;addStructuralModificationToolStripMenuItem.Name" xml:space="preserve">
     <value>addStructuralModificationToolStripMenuItem</value>
-  </data>
-  <data name="&gt;&gt;addStructuralModificationToolStripMenuItem.Type" xml:space="preserve">
-    <value>System.Windows.Forms.ToolStripMenuItem, System.Windows.Forms, Version=4.0.0.0, Culture=neutral, PublicKeyToken=b77a5c561934e089</value>
   </data>
   <data name="&gt;&gt;addHeavyModificationToolStripMenuItem.Name" xml:space="preserve">
     <value>addHeavyModificationToolStripMenuItem</value>
   </data>
-  <data name="&gt;&gt;addHeavyModificationToolStripMenuItem.Type" xml:space="preserve">
-    <value>System.Windows.Forms.ToolStripMenuItem, System.Windows.Forms, Version=4.0.0.0, Culture=neutral, PublicKeyToken=b77a5c561934e089</value>
-  </data>
   <data name="&gt;&gt;$this.Name" xml:space="preserve">
     <value>AddModificationsDlg</value>
-  </data>
-  <data name="&gt;&gt;$this.Type" xml:space="preserve">
-    <value>System.Windows.Forms.Form, System.Windows.Forms, Version=4.0.0.0, Culture=neutral, PublicKeyToken=b77a5c561934e089</value>
   </data>
 </root>

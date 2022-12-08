@@ -118,14 +118,17 @@
     <value>System.Resources.ResXResourceWriter, System.Windows.Forms, Version=4.0.0.0, Culture=neutral, PublicKeyToken=b77a5c561934e089</value>
   </resheader>
   <assembly alias="mscorlib" name="mscorlib, Version=4.0.0.0, Culture=neutral, PublicKeyToken=b77a5c561934e089" />
+  <assembly alias="System.Windows.Forms" name="System.Windows.Forms, Version=4.0.0.0, Culture=neutral, PublicKeyToken=b77a5c561934e089" />
+  <assembly alias="System.Drawing" name="System.Drawing, Version=4.0.0.0, Culture=neutral, PublicKeyToken=b03f5f7f11d50a3a" />
+  <metadata name="$this.Localizable" type="System.Boolean, mscorlib, Version=4.0.0.0, Culture=neutral, PublicKeyToken=b77a5c561934e089">
+    <value>True</value>
+  </metadata>
   <data name="labelOptimizationsAdded.AutoSize" type="System.Boolean, mscorlib">
     <value>True</value>
   </data>
-  <assembly alias="System.Windows.Forms" name="System.Windows.Forms, Version=4.0.0.0, Culture=neutral, PublicKeyToken=b77a5c561934e089" />
   <data name="labelOptimizationsAdded.ImeMode" type="System.Windows.Forms.ImeMode, System.Windows.Forms">
     <value>NoControl</value>
   </data>
-  <assembly alias="System.Drawing" name="System.Drawing, Version=4.0.0.0, Culture=neutral, PublicKeyToken=b03f5f7f11d50a3a" />
   <data name="labelOptimizationsAdded.Location" type="System.Drawing.Point, System.Drawing">
     <value>12, 13</value>
   </data>
@@ -140,9 +143,6 @@
   </data>
   <data name="&gt;&gt;labelOptimizationsAdded.Name" xml:space="preserve">
     <value>labelOptimizationsAdded</value>
-  </data>
-  <data name="&gt;&gt;labelOptimizationsAdded.Type" xml:space="preserve">
-    <value>System.Windows.Forms.Label, System.Windows.Forms, Version=4.0.0.0, Culture=neutral, PublicKeyToken=b77a5c561934e089</value>
   </data>
   <data name="&gt;&gt;labelOptimizationsAdded.Parent" xml:space="preserve">
     <value>$this</value>
@@ -177,9 +177,6 @@
   <data name="&gt;&gt;radioAverage.Name" xml:space="preserve">
     <value>radioAverage</value>
   </data>
-  <data name="&gt;&gt;radioAverage.Type" xml:space="preserve">
-    <value>System.Windows.Forms.RadioButton, System.Windows.Forms, Version=4.0.0.0, Culture=neutral, PublicKeyToken=b77a5c561934e089</value>
-  </data>
   <data name="&gt;&gt;radioAverage.Parent" xml:space="preserve">
     <value>panelExisting</value>
   </data>
@@ -209,9 +206,6 @@
   </data>
   <data name="&gt;&gt;radioReplace.Name" xml:space="preserve">
     <value>radioReplace</value>
-  </data>
-  <data name="&gt;&gt;radioReplace.Type" xml:space="preserve">
-    <value>System.Windows.Forms.RadioButton, System.Windows.Forms, Version=4.0.0.0, Culture=neutral, PublicKeyToken=b77a5c561934e089</value>
   </data>
   <data name="&gt;&gt;radioReplace.Parent" xml:space="preserve">
     <value>panelExisting</value>
@@ -243,9 +237,6 @@
   <data name="&gt;&gt;radioSkip.Name" xml:space="preserve">
     <value>radioSkip</value>
   </data>
-  <data name="&gt;&gt;radioSkip.Type" xml:space="preserve">
-    <value>System.Windows.Forms.RadioButton, System.Windows.Forms, Version=4.0.0.0, Culture=neutral, PublicKeyToken=b77a5c561934e089</value>
-  </data>
   <data name="&gt;&gt;radioSkip.Parent" xml:space="preserve">
     <value>panelExisting</value>
   </data>
@@ -276,9 +267,6 @@
   <data name="&gt;&gt;labelChoice.Name" xml:space="preserve">
     <value>labelChoice</value>
   </data>
-  <data name="&gt;&gt;labelChoice.Type" xml:space="preserve">
-    <value>System.Windows.Forms.Label, System.Windows.Forms, Version=4.0.0.0, Culture=neutral, PublicKeyToken=b77a5c561934e089</value>
-  </data>
   <data name="&gt;&gt;labelChoice.Parent" xml:space="preserve">
     <value>panelExisting</value>
   </data>
@@ -306,9 +294,6 @@
   <data name="&gt;&gt;labelExisting.Name" xml:space="preserve">
     <value>labelExisting</value>
   </data>
-  <data name="&gt;&gt;labelExisting.Type" xml:space="preserve">
-    <value>System.Windows.Forms.Label, System.Windows.Forms, Version=4.0.0.0, Culture=neutral, PublicKeyToken=b77a5c561934e089</value>
-  </data>
   <data name="&gt;&gt;labelExisting.Parent" xml:space="preserve">
     <value>panelExisting</value>
   </data>
@@ -330,9 +315,6 @@
   <data name="&gt;&gt;listExisting.Name" xml:space="preserve">
     <value>listExisting</value>
   </data>
-  <data name="&gt;&gt;listExisting.Type" xml:space="preserve">
-    <value>System.Windows.Forms.ListBox, System.Windows.Forms, Version=4.0.0.0, Culture=neutral, PublicKeyToken=b77a5c561934e089</value>
-  </data>
   <data name="&gt;&gt;listExisting.Parent" xml:space="preserve">
     <value>panelExisting</value>
   </data>
@@ -350,9 +332,6 @@
   </data>
   <data name="&gt;&gt;panelExisting.Name" xml:space="preserve">
     <value>panelExisting</value>
-  </data>
-  <data name="&gt;&gt;panelExisting.Type" xml:space="preserve">
-    <value>System.Windows.Forms.Panel, System.Windows.Forms, Version=4.0.0.0, Culture=neutral, PublicKeyToken=b77a5c561934e089</value>
   </data>
   <data name="&gt;&gt;panelExisting.Parent" xml:space="preserve">
     <value>$this</value>
@@ -381,9 +360,6 @@
   <data name="&gt;&gt;btnCancel.Name" xml:space="preserve">
     <value>btnCancel</value>
   </data>
-  <data name="&gt;&gt;btnCancel.Type" xml:space="preserve">
-    <value>System.Windows.Forms.Button, System.Windows.Forms, Version=4.0.0.0, Culture=neutral, PublicKeyToken=b77a5c561934e089</value>
-  </data>
   <data name="&gt;&gt;btnCancel.Parent" xml:space="preserve">
     <value>$this</value>
   </data>
@@ -411,18 +387,12 @@
   <data name="&gt;&gt;btnOk.Name" xml:space="preserve">
     <value>btnOk</value>
   </data>
-  <data name="&gt;&gt;btnOk.Type" xml:space="preserve">
-    <value>System.Windows.Forms.Button, System.Windows.Forms, Version=4.0.0.0, Culture=neutral, PublicKeyToken=b77a5c561934e089</value>
-  </data>
   <data name="&gt;&gt;btnOk.Parent" xml:space="preserve">
     <value>$this</value>
   </data>
   <data name="&gt;&gt;btnOk.ZOrder" xml:space="preserve">
     <value>3</value>
   </data>
-  <metadata name="$this.Localizable" type="System.Boolean, mscorlib, Version=4.0.0.0, Culture=neutral, PublicKeyToken=b77a5c561934e089">
-    <value>True</value>
-  </metadata>
   <data name="$this.AutoScaleDimensions" type="System.Drawing.SizeF, System.Drawing">
     <value>6, 13</value>
   </data>
@@ -437,8 +407,5 @@
   </data>
   <data name="&gt;&gt;$this.Name" xml:space="preserve">
     <value>AddOptimizationsDlg</value>
-  </data>
-  <data name="&gt;&gt;$this.Type" xml:space="preserve">
-    <value>pwiz.Skyline.Util.FormEx, Skyline, Version=1.0.0.0, Culture=neutral, PublicKeyToken=null</value>
   </data>
 </root>

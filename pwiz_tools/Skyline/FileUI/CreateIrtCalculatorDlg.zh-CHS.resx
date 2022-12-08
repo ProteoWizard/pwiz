@@ -118,13 +118,17 @@
     <value>System.Resources.ResXResourceWriter, System.Windows.Forms, Version=4.0.0.0, Culture=neutral, PublicKeyToken=b77a5c561934e089</value>
   </resheader>
   <assembly alias="System.Drawing" name="System.Drawing, Version=4.0.0.0, Culture=neutral, PublicKeyToken=b03f5f7f11d50a3a" />
+  <assembly alias="mscorlib" name="mscorlib, Version=4.0.0.0, Culture=neutral, PublicKeyToken=b77a5c561934e089" />
+  <assembly alias="System.Windows.Forms" name="System.Windows.Forms, Version=4.0.0.0, Culture=neutral, PublicKeyToken=b77a5c561934e089" />
+  <metadata name="$this.Localizable" type="System.Boolean, mscorlib, Version=4.0.0.0, Culture=neutral, PublicKeyToken=b77a5c561934e089">
+    <value>True</value>
+  </metadata>
   <data name="label2.Location" type="System.Drawing.Point, System.Drawing">
     <value>9, 13</value>
   </data>
   <data name="label2.Size" type="System.Drawing.Size, System.Drawing">
     <value>255, 55</value>
   </data>
-  <assembly alias="mscorlib" name="mscorlib, Version=4.0.0.0, Culture=neutral, PublicKeyToken=b77a5c561934e089" />
   <data name="label2.TabIndex" type="System.Int32, mscorlib">
     <value>0</value>
   </data>
@@ -134,16 +138,12 @@
   <data name="&gt;&gt;label2.Name" xml:space="preserve">
     <value>label2</value>
   </data>
-  <data name="&gt;&gt;label2.Type" xml:space="preserve">
-    <value>System.Windows.Forms.Label, System.Windows.Forms, Version=4.0.0.0, Culture=neutral, PublicKeyToken=b77a5c561934e089</value>
-  </data>
   <data name="&gt;&gt;label2.Parent" xml:space="preserve">
     <value>$this</value>
   </data>
   <data name="&gt;&gt;label2.ZOrder" xml:space="preserve">
     <value>21</value>
   </data>
-  <assembly alias="System.Windows.Forms" name="System.Windows.Forms, Version=4.0.0.0, Culture=neutral, PublicKeyToken=b77a5c561934e089" />
   <data name="btnCreateDb.ImeMode" type="System.Windows.Forms.ImeMode, System.Windows.Forms">
     <value>NoControl</value>
   </data>
@@ -161,9 +161,6 @@
   </data>
   <data name="&gt;&gt;btnCreateDb.Name" xml:space="preserve">
     <value>btnCreateDb</value>
-  </data>
-  <data name="&gt;&gt;btnCreateDb.Type" xml:space="preserve">
-    <value>System.Windows.Forms.Button, System.Windows.Forms, Version=4.0.0.0, Culture=neutral, PublicKeyToken=b77a5c561934e089</value>
   </data>
   <data name="&gt;&gt;btnCreateDb.Parent" xml:space="preserve">
     <value>$this</value>
@@ -192,9 +189,6 @@
   <data name="&gt;&gt;btnCancel.Name" xml:space="preserve">
     <value>btnCancel</value>
   </data>
-  <data name="&gt;&gt;btnCancel.Type" xml:space="preserve">
-    <value>System.Windows.Forms.Button, System.Windows.Forms, Version=4.0.0.0, Culture=neutral, PublicKeyToken=b77a5c561934e089</value>
-  </data>
   <data name="&gt;&gt;btnCancel.Parent" xml:space="preserve">
     <value>$this</value>
   </data>
@@ -222,9 +216,6 @@
   <data name="&gt;&gt;btnOk.Name" xml:space="preserve">
     <value>btnOk</value>
   </data>
-  <data name="&gt;&gt;btnOk.Type" xml:space="preserve">
-    <value>System.Windows.Forms.Button, System.Windows.Forms, Version=4.0.0.0, Culture=neutral, PublicKeyToken=b77a5c561934e089</value>
-  </data>
   <data name="&gt;&gt;btnOk.Parent" xml:space="preserve">
     <value>$this</value>
   </data>
@@ -249,9 +240,6 @@
   <data name="&gt;&gt;btnBrowseDb.Name" xml:space="preserve">
     <value>btnBrowseDb</value>
   </data>
-  <data name="&gt;&gt;btnBrowseDb.Type" xml:space="preserve">
-    <value>System.Windows.Forms.Button, System.Windows.Forms, Version=4.0.0.0, Culture=neutral, PublicKeyToken=b77a5c561934e089</value>
-  </data>
   <data name="&gt;&gt;btnBrowseDb.Parent" xml:space="preserve">
     <value>$this</value>
   </data>
@@ -269,9 +257,6 @@
   </data>
   <data name="&gt;&gt;textOpenDatabase.Name" xml:space="preserve">
     <value>textOpenDatabase</value>
-  </data>
-  <data name="&gt;&gt;textOpenDatabase.Type" xml:space="preserve">
-    <value>System.Windows.Forms.TextBox, System.Windows.Forms, Version=4.0.0.0, Culture=neutral, PublicKeyToken=b77a5c561934e089</value>
   </data>
   <data name="&gt;&gt;textOpenDatabase.Parent" xml:space="preserve">
     <value>$this</value>
@@ -300,9 +285,6 @@
   <data name="&gt;&gt;label4.Name" xml:space="preserve">
     <value>label4</value>
   </data>
-  <data name="&gt;&gt;label4.Type" xml:space="preserve">
-    <value>System.Windows.Forms.Label, System.Windows.Forms, Version=4.0.0.0, Culture=neutral, PublicKeyToken=b77a5c561934e089</value>
-  </data>
   <data name="&gt;&gt;label4.Parent" xml:space="preserve">
     <value>$this</value>
   </data>
@@ -320,9 +302,6 @@
   </data>
   <data name="&gt;&gt;textCalculatorName.Name" xml:space="preserve">
     <value>textCalculatorName</value>
-  </data>
-  <data name="&gt;&gt;textCalculatorName.Type" xml:space="preserve">
-    <value>System.Windows.Forms.TextBox, System.Windows.Forms, Version=4.0.0.0, Culture=neutral, PublicKeyToken=b77a5c561934e089</value>
   </data>
   <data name="&gt;&gt;textCalculatorName.Parent" xml:space="preserve">
     <value>$this</value>
@@ -351,9 +330,6 @@
   <data name="&gt;&gt;label5.Name" xml:space="preserve">
     <value>label5</value>
   </data>
-  <data name="&gt;&gt;label5.Type" xml:space="preserve">
-    <value>System.Windows.Forms.Label, System.Windows.Forms, Version=4.0.0.0, Culture=neutral, PublicKeyToken=b77a5c561934e089</value>
-  </data>
   <data name="&gt;&gt;label5.Parent" xml:space="preserve">
     <value>$this</value>
   </data>
@@ -377,9 +353,6 @@
   </data>
   <data name="&gt;&gt;radioUseExisting.Name" xml:space="preserve">
     <value>radioUseExisting</value>
-  </data>
-  <data name="&gt;&gt;radioUseExisting.Type" xml:space="preserve">
-    <value>System.Windows.Forms.RadioButton, System.Windows.Forms, Version=4.0.0.0, Culture=neutral, PublicKeyToken=b77a5c561934e089</value>
   </data>
   <data name="&gt;&gt;radioUseExisting.Parent" xml:space="preserve">
     <value>$this</value>
@@ -405,9 +378,6 @@
   <data name="&gt;&gt;radioUseList.Name" xml:space="preserve">
     <value>radioUseList</value>
   </data>
-  <data name="&gt;&gt;radioUseList.Type" xml:space="preserve">
-    <value>System.Windows.Forms.RadioButton, System.Windows.Forms, Version=4.0.0.0, Culture=neutral, PublicKeyToken=b77a5c561934e089</value>
-  </data>
   <data name="&gt;&gt;radioUseList.Parent" xml:space="preserve">
     <value>$this</value>
   </data>
@@ -425,9 +395,6 @@
   </data>
   <data name="&gt;&gt;textNewDatabase.Name" xml:space="preserve">
     <value>textNewDatabase</value>
-  </data>
-  <data name="&gt;&gt;textNewDatabase.Type" xml:space="preserve">
-    <value>System.Windows.Forms.TextBox, System.Windows.Forms, Version=4.0.0.0, Culture=neutral, PublicKeyToken=b77a5c561934e089</value>
   </data>
   <data name="&gt;&gt;textNewDatabase.Parent" xml:space="preserve">
     <value>$this</value>
@@ -456,9 +423,6 @@
   <data name="&gt;&gt;label1.Name" xml:space="preserve">
     <value>label1</value>
   </data>
-  <data name="&gt;&gt;label1.Type" xml:space="preserve">
-    <value>System.Windows.Forms.Label, System.Windows.Forms, Version=4.0.0.0, Culture=neutral, PublicKeyToken=b77a5c561934e089</value>
-  </data>
   <data name="&gt;&gt;label1.Parent" xml:space="preserve">
     <value>$this</value>
   </data>
@@ -486,9 +450,6 @@
   <data name="&gt;&gt;label3.Name" xml:space="preserve">
     <value>label3</value>
   </data>
-  <data name="&gt;&gt;label3.Type" xml:space="preserve">
-    <value>System.Windows.Forms.Label, System.Windows.Forms, Version=4.0.0.0, Culture=neutral, PublicKeyToken=b77a5c561934e089</value>
-  </data>
   <data name="&gt;&gt;label3.Parent" xml:space="preserve">
     <value>$this</value>
   </data>
@@ -506,9 +467,6 @@
   </data>
   <data name="&gt;&gt;textImportText.Name" xml:space="preserve">
     <value>textImportText</value>
-  </data>
-  <data name="&gt;&gt;textImportText.Type" xml:space="preserve">
-    <value>System.Windows.Forms.TextBox, System.Windows.Forms, Version=4.0.0.0, Culture=neutral, PublicKeyToken=b77a5c561934e089</value>
   </data>
   <data name="&gt;&gt;textImportText.Parent" xml:space="preserve">
     <value>$this</value>
@@ -534,9 +492,6 @@
   <data name="&gt;&gt;btnBrowseText.Name" xml:space="preserve">
     <value>btnBrowseText</value>
   </data>
-  <data name="&gt;&gt;btnBrowseText.Type" xml:space="preserve">
-    <value>System.Windows.Forms.Button, System.Windows.Forms, Version=4.0.0.0, Culture=neutral, PublicKeyToken=b77a5c561934e089</value>
-  </data>
   <data name="&gt;&gt;btnBrowseText.Parent" xml:space="preserve">
     <value>$this</value>
   </data>
@@ -560,9 +515,6 @@
   </data>
   <data name="&gt;&gt;radioUseProtein.Name" xml:space="preserve">
     <value>radioUseProtein</value>
-  </data>
-  <data name="&gt;&gt;radioUseProtein.Type" xml:space="preserve">
-    <value>System.Windows.Forms.RadioButton, System.Windows.Forms, Version=4.0.0.0, Culture=neutral, PublicKeyToken=b77a5c561934e089</value>
   </data>
   <data name="&gt;&gt;radioUseProtein.Parent" xml:space="preserve">
     <value>$this</value>
@@ -591,9 +543,6 @@
   <data name="&gt;&gt;label6.Name" xml:space="preserve">
     <value>label6</value>
   </data>
-  <data name="&gt;&gt;label6.Type" xml:space="preserve">
-    <value>System.Windows.Forms.Label, System.Windows.Forms, Version=4.0.0.0, Culture=neutral, PublicKeyToken=b77a5c561934e089</value>
-  </data>
   <data name="&gt;&gt;label6.Parent" xml:space="preserve">
     <value>$this</value>
   </data>
@@ -611,9 +560,6 @@
   </data>
   <data name="&gt;&gt;textNewDatabaseProteins.Name" xml:space="preserve">
     <value>textNewDatabaseProteins</value>
-  </data>
-  <data name="&gt;&gt;textNewDatabaseProteins.Type" xml:space="preserve">
-    <value>System.Windows.Forms.TextBox, System.Windows.Forms, Version=4.0.0.0, Culture=neutral, PublicKeyToken=b77a5c561934e089</value>
   </data>
   <data name="&gt;&gt;textNewDatabaseProteins.Parent" xml:space="preserve">
     <value>$this</value>
@@ -638,9 +584,6 @@
   </data>
   <data name="&gt;&gt;btnCreateDbProteins.Name" xml:space="preserve">
     <value>btnCreateDbProteins</value>
-  </data>
-  <data name="&gt;&gt;btnCreateDbProteins.Type" xml:space="preserve">
-    <value>System.Windows.Forms.Button, System.Windows.Forms, Version=4.0.0.0, Culture=neutral, PublicKeyToken=b77a5c561934e089</value>
   </data>
   <data name="&gt;&gt;btnCreateDbProteins.Parent" xml:space="preserve">
     <value>$this</value>
@@ -669,9 +612,6 @@
   <data name="&gt;&gt;label7.Name" xml:space="preserve">
     <value>label7</value>
   </data>
-  <data name="&gt;&gt;label7.Type" xml:space="preserve">
-    <value>System.Windows.Forms.Label, System.Windows.Forms, Version=4.0.0.0, Culture=neutral, PublicKeyToken=b77a5c561934e089</value>
-  </data>
   <data name="&gt;&gt;label7.Parent" xml:space="preserve">
     <value>$this</value>
   </data>
@@ -690,18 +630,12 @@
   <data name="&gt;&gt;comboBoxProteins.Name" xml:space="preserve">
     <value>comboBoxProteins</value>
   </data>
-  <data name="&gt;&gt;comboBoxProteins.Type" xml:space="preserve">
-    <value>System.Windows.Forms.ComboBox, System.Windows.Forms, Version=4.0.0.0, Culture=neutral, PublicKeyToken=b77a5c561934e089</value>
-  </data>
   <data name="&gt;&gt;comboBoxProteins.Parent" xml:space="preserve">
     <value>$this</value>
   </data>
   <data name="&gt;&gt;comboBoxProteins.ZOrder" xml:space="preserve">
     <value>0</value>
   </data>
-  <metadata name="$this.Localizable" type="System.Boolean, mscorlib, Version=4.0.0.0, Culture=neutral, PublicKeyToken=b77a5c561934e089">
-    <value>True</value>
-  </metadata>
   <data name="$this.AutoScaleDimensions" type="System.Drawing.SizeF, System.Drawing">
     <value>6, 13</value>
   </data>
@@ -716,8 +650,5 @@
   </data>
   <data name="&gt;&gt;$this.Name" xml:space="preserve">
     <value>CreateIrtCalculatorDlg</value>
-  </data>
-  <data name="&gt;&gt;$this.Type" xml:space="preserve">
-    <value>pwiz.Skyline.Util.FormEx, Skyline, Version=1.0.0.0, Culture=neutral, PublicKeyToken=null</value>
   </data>
 </root>

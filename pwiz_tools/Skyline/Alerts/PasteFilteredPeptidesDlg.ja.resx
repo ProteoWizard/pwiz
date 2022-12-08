@@ -118,17 +118,20 @@
     <value>System.Resources.ResXResourceWriter, System.Windows.Forms, Version=4.0.0.0, Culture=neutral, PublicKeyToken=b77a5c561934e089</value>
   </resheader>
   <assembly alias="System.Windows.Forms" name="System.Windows.Forms, Version=4.0.0.0, Culture=neutral, PublicKeyToken=b77a5c561934e089" />
+  <assembly alias="System.Drawing" name="System.Drawing, Version=4.0.0.0, Culture=neutral, PublicKeyToken=b03f5f7f11d50a3a" />
+  <assembly alias="mscorlib" name="mscorlib, Version=4.0.0.0, Culture=neutral, PublicKeyToken=b77a5c561934e089" />
+  <metadata name="$this.Localizable" type="System.Boolean, mscorlib, Version=4.0.0.0, Culture=neutral, PublicKeyToken=b77a5c561934e089">
+    <value>True</value>
+  </metadata>
   <data name="btnFilter.Anchor" type="System.Windows.Forms.AnchorStyles, System.Windows.Forms">
     <value>Bottom, Left</value>
   </data>
-  <assembly alias="System.Drawing" name="System.Drawing, Version=4.0.0.0, Culture=neutral, PublicKeyToken=b03f5f7f11d50a3a" />
   <data name="btnFilter.Location" type="System.Drawing.Point, System.Drawing">
     <value>16, 96</value>
   </data>
   <data name="btnFilter.Size" type="System.Drawing.Size, System.Drawing">
     <value>75, 23</value>
   </data>
-  <assembly alias="mscorlib" name="mscorlib, Version=4.0.0.0, Culture=neutral, PublicKeyToken=b77a5c561934e089" />
   <data name="btnFilter.TabIndex" type="System.Int32, mscorlib">
     <value>0</value>
   </data>
@@ -137,9 +140,6 @@
   </data>
   <data name="&gt;&gt;btnFilter.Name" xml:space="preserve">
     <value>btnFilter</value>
-  </data>
-  <data name="&gt;&gt;btnFilter.Type" xml:space="preserve">
-    <value>System.Windows.Forms.Button, System.Windows.Forms, Version=4.0.0.0, Culture=neutral, PublicKeyToken=b77a5c561934e089</value>
   </data>
   <data name="&gt;&gt;btnFilter.Parent" xml:space="preserve">
     <value>$this</value>
@@ -165,9 +165,6 @@
   <data name="&gt;&gt;btnKeep.Name" xml:space="preserve">
     <value>btnKeep</value>
   </data>
-  <data name="&gt;&gt;btnKeep.Type" xml:space="preserve">
-    <value>System.Windows.Forms.Button, System.Windows.Forms, Version=4.0.0.0, Culture=neutral, PublicKeyToken=b77a5c561934e089</value>
-  </data>
   <data name="&gt;&gt;btnKeep.Parent" xml:space="preserve">
     <value>$this</value>
   </data>
@@ -192,9 +189,6 @@
   <data name="&gt;&gt;btnCancel.Name" xml:space="preserve">
     <value>btnCancel</value>
   </data>
-  <data name="&gt;&gt;btnCancel.Type" xml:space="preserve">
-    <value>System.Windows.Forms.Button, System.Windows.Forms, Version=4.0.0.0, Culture=neutral, PublicKeyToken=b77a5c561934e089</value>
-  </data>
   <data name="&gt;&gt;btnCancel.Parent" xml:space="preserve">
     <value>$this</value>
   </data>
@@ -218,9 +212,6 @@
   </data>
   <data name="&gt;&gt;labelIssue.Name" xml:space="preserve">
     <value>labelIssue</value>
-  </data>
-  <data name="&gt;&gt;labelIssue.Type" xml:space="preserve">
-    <value>System.Windows.Forms.Label, System.Windows.Forms, Version=4.0.0.0, Culture=neutral, PublicKeyToken=b77a5c561934e089</value>
   </data>
   <data name="&gt;&gt;labelIssue.Parent" xml:space="preserve">
     <value>$this</value>
@@ -248,9 +239,6 @@
   </data>
   <data name="&gt;&gt;labelQuestion.Name" xml:space="preserve">
     <value>labelQuestion</value>
-  </data>
-  <data name="&gt;&gt;labelQuestion.Type" xml:space="preserve">
-    <value>System.Windows.Forms.Label, System.Windows.Forms, Version=4.0.0.0, Culture=neutral, PublicKeyToken=b77a5c561934e089</value>
   </data>
   <data name="&gt;&gt;labelQuestion.Parent" xml:space="preserve">
     <value>$this</value>
@@ -282,9 +270,6 @@
   <data name="&gt;&gt;labelList.Name" xml:space="preserve">
     <value>labelList</value>
   </data>
-  <data name="&gt;&gt;labelList.Type" xml:space="preserve">
-    <value>System.Windows.Forms.Label, System.Windows.Forms, Version=4.0.0.0, Culture=neutral, PublicKeyToken=b77a5c561934e089</value>
-  </data>
   <data name="&gt;&gt;labelList.Parent" xml:space="preserve">
     <value>panelList</value>
   </data>
@@ -303,18 +288,12 @@
   <data name="&gt;&gt;panelList.Name" xml:space="preserve">
     <value>panelList</value>
   </data>
-  <data name="&gt;&gt;panelList.Type" xml:space="preserve">
-    <value>System.Windows.Forms.Panel, System.Windows.Forms, Version=4.0.0.0, Culture=neutral, PublicKeyToken=b77a5c561934e089</value>
-  </data>
   <data name="&gt;&gt;panelList.Parent" xml:space="preserve">
     <value>$this</value>
   </data>
   <data name="&gt;&gt;panelList.ZOrder" xml:space="preserve">
     <value>0</value>
   </data>
-  <metadata name="$this.Localizable" type="System.Boolean, mscorlib, Version=4.0.0.0, Culture=neutral, PublicKeyToken=b77a5c561934e089">
-    <value>True</value>
-  </metadata>
   <data name="$this.AutoScaleDimensions" type="System.Drawing.SizeF, System.Drawing">
     <value>6, 13</value>
   </data>
@@ -332,8 +311,5 @@
   </data>
   <data name="&gt;&gt;$this.Name" xml:space="preserve">
     <value>PasteFilteredPeptidesDlg</value>
-  </data>
-  <data name="&gt;&gt;$this.Type" xml:space="preserve">
-    <value>pwiz.Skyline.Util.FormEx, Skyline, Version=1.0.0.0, Culture=neutral, PublicKeyToken=null</value>
   </data>
 </root>

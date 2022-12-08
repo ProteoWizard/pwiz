@@ -117,18 +117,18 @@
   <resheader name="writer">
     <value>System.Resources.ResXResourceWriter, System.Windows.Forms, Version=4.0.0.0, Culture=neutral, PublicKeyToken=b77a5c561934e089</value>
   </resheader>
-  <metadata name="helpTip.TrayLocation" type="System.Drawing.Point, System.Drawing, Version=4.0.0.0, Culture=neutral, PublicKeyToken=b03f5f7f11d50a3a">
-    <value>17, 17</value>
-  </metadata>
   <assembly alias="mscorlib" name="mscorlib, Version=4.0.0.0, Culture=neutral, PublicKeyToken=b77a5c561934e089" />
+  <assembly alias="System.Windows.Forms" name="System.Windows.Forms, Version=4.0.0.0, Culture=neutral, PublicKeyToken=b77a5c561934e089" />
+  <assembly alias="System.Drawing" name="System.Drawing, Version=4.0.0.0, Culture=neutral, PublicKeyToken=b03f5f7f11d50a3a" />
+  <metadata name="$this.Localizable" type="System.Boolean, mscorlib, Version=4.0.0.0, Culture=neutral, PublicKeyToken=b77a5c561934e089">
+    <value>True</value>
+  </metadata>
   <data name="radioCreateMultipleMulti.AutoSize" type="System.Boolean, mscorlib">
     <value>True</value>
   </data>
-  <assembly alias="System.Windows.Forms" name="System.Windows.Forms, Version=4.0.0.0, Culture=neutral, PublicKeyToken=b77a5c561934e089" />
   <data name="radioCreateMultipleMulti.ImeMode" type="System.Windows.Forms.ImeMode, System.Windows.Forms">
     <value>NoControl</value>
   </data>
-  <assembly alias="System.Drawing" name="System.Drawing, Version=4.0.0.0, Culture=neutral, PublicKeyToken=b03f5f7f11d50a3a" />
   <data name="radioCreateMultipleMulti.Location" type="System.Drawing.Point, System.Drawing">
     <value>16, 103</value>
   </data>
@@ -154,9 +154,6 @@
   </data>
   <data name="&gt;&gt;radioCreateMultipleMulti.Name" xml:space="preserve">
     <value>radioCreateMultipleMulti</value>
-  </data>
-  <data name="&gt;&gt;radioCreateMultipleMulti.Type" xml:space="preserve">
-    <value>System.Windows.Forms.RadioButton, System.Windows.Forms, Version=4.0.0.0, Culture=neutral, PublicKeyToken=b77a5c561934e089</value>
   </data>
   <data name="&gt;&gt;radioCreateMultipleMulti.Parent" xml:space="preserve">
     <value>$this</value>
@@ -192,9 +189,6 @@
   <data name="&gt;&gt;radioCreateMultiple.Name" xml:space="preserve">
     <value>radioCreateMultiple</value>
   </data>
-  <data name="&gt;&gt;radioCreateMultiple.Type" xml:space="preserve">
-    <value>System.Windows.Forms.RadioButton, System.Windows.Forms, Version=4.0.0.0, Culture=neutral, PublicKeyToken=b77a5c561934e089</value>
-  </data>
   <data name="&gt;&gt;radioCreateMultiple.Parent" xml:space="preserve">
     <value>$this</value>
   </data>
@@ -227,9 +221,6 @@
   <data name="&gt;&gt;radioAddExisting.Name" xml:space="preserve">
     <value>radioAddExisting</value>
   </data>
-  <data name="&gt;&gt;radioAddExisting.Type" xml:space="preserve">
-    <value>System.Windows.Forms.RadioButton, System.Windows.Forms, Version=4.0.0.0, Culture=neutral, PublicKeyToken=b77a5c561934e089</value>
-  </data>
   <data name="&gt;&gt;radioAddExisting.Parent" xml:space="preserve">
     <value>$this</value>
   </data>
@@ -261,9 +252,6 @@
   <data name="&gt;&gt;radioCreateNew.Name" xml:space="preserve">
     <value>radioCreateNew</value>
   </data>
-  <data name="&gt;&gt;radioCreateNew.Type" xml:space="preserve">
-    <value>System.Windows.Forms.RadioButton, System.Windows.Forms, Version=4.0.0.0, Culture=neutral, PublicKeyToken=b77a5c561934e089</value>
-  </data>
   <data name="&gt;&gt;radioCreateNew.Parent" xml:space="preserve">
     <value>$this</value>
   </data>
@@ -291,9 +279,6 @@
   <data name="&gt;&gt;btnOk.Name" xml:space="preserve">
     <value>btnOk</value>
   </data>
-  <data name="&gt;&gt;btnOk.Type" xml:space="preserve">
-    <value>System.Windows.Forms.Button, System.Windows.Forms, Version=4.0.0.0, Culture=neutral, PublicKeyToken=b77a5c561934e089</value>
-  </data>
   <data name="&gt;&gt;btnOk.Parent" xml:space="preserve">
     <value>$this</value>
   </data>
@@ -320,9 +305,6 @@
   </data>
   <data name="&gt;&gt;btnCancel.Name" xml:space="preserve">
     <value>btnCancel</value>
-  </data>
-  <data name="&gt;&gt;btnCancel.Type" xml:space="preserve">
-    <value>System.Windows.Forms.Button, System.Windows.Forms, Version=4.0.0.0, Culture=neutral, PublicKeyToken=b77a5c561934e089</value>
   </data>
   <data name="&gt;&gt;btnCancel.Parent" xml:space="preserve">
     <value>$this</value>
@@ -354,9 +336,6 @@
   <data name="&gt;&gt;labelTuning.Name" xml:space="preserve">
     <value>labelTuning</value>
   </data>
-  <data name="&gt;&gt;labelTuning.Type" xml:space="preserve">
-    <value>System.Windows.Forms.Label, System.Windows.Forms, Version=4.0.0.0, Culture=neutral, PublicKeyToken=b77a5c561934e089</value>
-  </data>
   <data name="&gt;&gt;labelTuning.Parent" xml:space="preserve">
     <value>$this</value>
   </data>
@@ -377,9 +356,6 @@
   </data>
   <data name="&gt;&gt;comboTuning.Name" xml:space="preserve">
     <value>comboTuning</value>
-  </data>
-  <data name="&gt;&gt;comboTuning.Type" xml:space="preserve">
-    <value>System.Windows.Forms.ComboBox, System.Windows.Forms, Version=4.0.0.0, Culture=neutral, PublicKeyToken=b77a5c561934e089</value>
   </data>
   <data name="&gt;&gt;comboTuning.Parent" xml:space="preserve">
     <value>$this</value>
@@ -408,9 +384,6 @@
   <data name="&gt;&gt;cbShowAllChromatograms.Name" xml:space="preserve">
     <value>cbShowAllChromatograms</value>
   </data>
-  <data name="&gt;&gt;cbShowAllChromatograms.Type" xml:space="preserve">
-    <value>System.Windows.Forms.CheckBox, System.Windows.Forms, Version=4.0.0.0, Culture=neutral, PublicKeyToken=b77a5c561934e089</value>
-  </data>
   <data name="&gt;&gt;cbShowAllChromatograms.Parent" xml:space="preserve">
     <value>panel1</value>
   </data>
@@ -438,9 +411,6 @@
   <data name="&gt;&gt;labelOptimizing.Name" xml:space="preserve">
     <value>labelOptimizing</value>
   </data>
-  <data name="&gt;&gt;labelOptimizing.Type" xml:space="preserve">
-    <value>System.Windows.Forms.Label, System.Windows.Forms, Version=4.0.0.0, Culture=neutral, PublicKeyToken=b77a5c561934e089</value>
-  </data>
   <data name="&gt;&gt;labelOptimizing.Parent" xml:space="preserve">
     <value>$this</value>
   </data>
@@ -458,9 +428,6 @@
   </data>
   <data name="&gt;&gt;comboOptimizing.Name" xml:space="preserve">
     <value>comboOptimizing</value>
-  </data>
-  <data name="&gt;&gt;comboOptimizing.Type" xml:space="preserve">
-    <value>System.Windows.Forms.ComboBox, System.Windows.Forms, Version=4.0.0.0, Culture=neutral, PublicKeyToken=b77a5c561934e089</value>
   </data>
   <data name="&gt;&gt;comboOptimizing.Parent" xml:space="preserve">
     <value>$this</value>
@@ -482,9 +449,6 @@
   </data>
   <data name="&gt;&gt;comboName.Name" xml:space="preserve">
     <value>comboName</value>
-  </data>
-  <data name="&gt;&gt;comboName.Type" xml:space="preserve">
-    <value>System.Windows.Forms.ComboBox, System.Windows.Forms, Version=4.0.0.0, Culture=neutral, PublicKeyToken=b77a5c561934e089</value>
   </data>
   <data name="&gt;&gt;comboName.Parent" xml:space="preserve">
     <value>$this</value>
@@ -516,9 +480,6 @@
   <data name="&gt;&gt;labelNameAdd.Name" xml:space="preserve">
     <value>labelNameAdd</value>
   </data>
-  <data name="&gt;&gt;labelNameAdd.Type" xml:space="preserve">
-    <value>System.Windows.Forms.Label, System.Windows.Forms, Version=4.0.0.0, Culture=neutral, PublicKeyToken=b77a5c561934e089</value>
-  </data>
   <data name="&gt;&gt;labelNameAdd.Parent" xml:space="preserve">
     <value>$this</value>
   </data>
@@ -539,9 +500,6 @@
   </data>
   <data name="&gt;&gt;textName.Name" xml:space="preserve">
     <value>textName</value>
-  </data>
-  <data name="&gt;&gt;textName.Type" xml:space="preserve">
-    <value>System.Windows.Forms.TextBox, System.Windows.Forms, Version=4.0.0.0, Culture=neutral, PublicKeyToken=b77a5c561934e089</value>
   </data>
   <data name="&gt;&gt;textName.Parent" xml:space="preserve">
     <value>$this</value>
@@ -573,9 +531,6 @@
   <data name="&gt;&gt;labelNameNew.Name" xml:space="preserve">
     <value>labelNameNew</value>
   </data>
-  <data name="&gt;&gt;labelNameNew.Type" xml:space="preserve">
-    <value>System.Windows.Forms.Label, System.Windows.Forms, Version=4.0.0.0, Culture=neutral, PublicKeyToken=b77a5c561934e089</value>
-  </data>
   <data name="&gt;&gt;labelNameNew.Parent" xml:space="preserve">
     <value>$this</value>
   </data>
@@ -599,9 +554,6 @@
   </data>
   <data name="&gt;&gt;label1.Name" xml:space="preserve">
     <value>label1</value>
-  </data>
-  <data name="&gt;&gt;label1.Type" xml:space="preserve">
-    <value>System.Windows.Forms.Label, System.Windows.Forms, Version=4.0.0.0, Culture=neutral, PublicKeyToken=b77a5c561934e089</value>
   </data>
   <data name="&gt;&gt;label1.Parent" xml:space="preserve">
     <value>panel1</value>
@@ -630,9 +582,6 @@
   <data name="&gt;&gt;comboSimultaneousFiles.Name" xml:space="preserve">
     <value>comboSimultaneousFiles</value>
   </data>
-  <data name="&gt;&gt;comboSimultaneousFiles.Type" xml:space="preserve">
-    <value>System.Windows.Forms.ComboBox, System.Windows.Forms, Version=4.0.0.0, Culture=neutral, PublicKeyToken=b77a5c561934e089</value>
-  </data>
   <data name="&gt;&gt;comboSimultaneousFiles.Parent" xml:space="preserve">
     <value>panel1</value>
   </data>
@@ -660,9 +609,6 @@
   <data name="&gt;&gt;cbAutoRetry.Name" xml:space="preserve">
     <value>cbAutoRetry</value>
   </data>
-  <data name="&gt;&gt;cbAutoRetry.Type" xml:space="preserve">
-    <value>System.Windows.Forms.CheckBox, System.Windows.Forms, Version=4.0.0.0, Culture=neutral, PublicKeyToken=b77a5c561934e089</value>
-  </data>
   <data name="&gt;&gt;cbAutoRetry.Parent" xml:space="preserve">
     <value>panel1</value>
   </data>
@@ -681,18 +627,12 @@
   <data name="&gt;&gt;panel1.Name" xml:space="preserve">
     <value>panel1</value>
   </data>
-  <data name="&gt;&gt;panel1.Type" xml:space="preserve">
-    <value>System.Windows.Forms.Panel, System.Windows.Forms, Version=4.0.0.0, Culture=neutral, PublicKeyToken=b77a5c561934e089</value>
-  </data>
   <data name="&gt;&gt;panel1.Parent" xml:space="preserve">
     <value>$this</value>
   </data>
   <data name="&gt;&gt;panel1.ZOrder" xml:space="preserve">
     <value>0</value>
   </data>
-  <metadata name="$this.Localizable" type="System.Boolean, mscorlib, Version=4.0.0.0, Culture=neutral, PublicKeyToken=b77a5c561934e089">
-    <value>True</value>
-  </metadata>
   <data name="$this.AutoScaleDimensions" type="System.Drawing.SizeF, System.Drawing">
     <value>6, 13</value>
   </data>
@@ -708,13 +648,7 @@
   <data name="&gt;&gt;helpTip.Name" xml:space="preserve">
     <value>helpTip</value>
   </data>
-  <data name="&gt;&gt;helpTip.Type" xml:space="preserve">
-    <value>System.Windows.Forms.ToolTip, System.Windows.Forms, Version=4.0.0.0, Culture=neutral, PublicKeyToken=b77a5c561934e089</value>
-  </data>
   <data name="&gt;&gt;$this.Name" xml:space="preserve">
     <value>ImportResultsDlg</value>
-  </data>
-  <data name="&gt;&gt;$this.Type" xml:space="preserve">
-    <value>pwiz.Skyline.Util.FormEx, Skyline, Version=1.0.0.0, Culture=neutral, PublicKeyToken=null</value>
   </data>
 </root>

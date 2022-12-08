@@ -118,17 +118,20 @@
     <value>System.Resources.ResXResourceWriter, System.Windows.Forms, Version=4.0.0.0, Culture=neutral, PublicKeyToken=b77a5c561934e089</value>
   </resheader>
   <assembly alias="System.Windows.Forms" name="System.Windows.Forms, Version=4.0.0.0, Culture=neutral, PublicKeyToken=b77a5c561934e089" />
+  <assembly alias="System.Drawing" name="System.Drawing, Version=4.0.0.0, Culture=neutral, PublicKeyToken=b03f5f7f11d50a3a" />
+  <assembly alias="mscorlib" name="mscorlib, Version=4.0.0.0, Culture=neutral, PublicKeyToken=b77a5c561934e089" />
+  <metadata name="$this.Localizable" type="System.Boolean, mscorlib, Version=4.0.0.0, Culture=neutral, PublicKeyToken=b77a5c561934e089">
+    <value>True</value>
+  </metadata>
   <data name="buttonSave.Anchor" type="System.Windows.Forms.AnchorStyles, System.Windows.Forms">
     <value>Bottom, Right</value>
   </data>
-  <assembly alias="System.Drawing" name="System.Drawing, Version=4.0.0.0, Culture=neutral, PublicKeyToken=b03f5f7f11d50a3a" />
   <data name="buttonSave.Location" type="System.Drawing.Point, System.Drawing">
     <value>183, 391</value>
   </data>
   <data name="buttonSave.Size" type="System.Drawing.Size, System.Drawing">
     <value>75, 23</value>
   </data>
-  <assembly alias="mscorlib" name="mscorlib, Version=4.0.0.0, Culture=neutral, PublicKeyToken=b77a5c561934e089" />
   <data name="buttonSave.TabIndex" type="System.Int32, mscorlib">
     <value>5</value>
   </data>
@@ -137,9 +140,6 @@
   </data>
   <data name="&gt;&gt;buttonSave.Name" xml:space="preserve">
     <value>buttonSave</value>
-  </data>
-  <data name="&gt;&gt;buttonSave.Type" xml:space="preserve">
-    <value>System.Windows.Forms.Button, System.Windows.Forms, Version=4.0.0.0, Culture=neutral, PublicKeyToken=b77a5c561934e089</value>
   </data>
   <data name="&gt;&gt;buttonSave.Parent" xml:space="preserve">
     <value>$this</value>
@@ -165,9 +165,6 @@
   <data name="&gt;&gt;buttonCancel.Name" xml:space="preserve">
     <value>buttonCancel</value>
   </data>
-  <data name="&gt;&gt;buttonCancel.Type" xml:space="preserve">
-    <value>System.Windows.Forms.Button, System.Windows.Forms, Version=4.0.0.0, Culture=neutral, PublicKeyToken=b77a5c561934e089</value>
-  </data>
   <data name="&gt;&gt;buttonCancel.Parent" xml:space="preserve">
     <value>$this</value>
   </data>
@@ -191,9 +188,6 @@
   </data>
   <data name="&gt;&gt;comboBoxCategory.Name" xml:space="preserve">
     <value>comboBoxCategory</value>
-  </data>
-  <data name="&gt;&gt;comboBoxCategory.Type" xml:space="preserve">
-    <value>System.Windows.Forms.ComboBox, System.Windows.Forms, Version=4.0.0.0, Culture=neutral, PublicKeyToken=b77a5c561934e089</value>
   </data>
   <data name="&gt;&gt;comboBoxCategory.Parent" xml:space="preserve">
     <value>$this</value>
@@ -228,9 +222,6 @@
   <data name="&gt;&gt;lableColorCount.Name" xml:space="preserve">
     <value>lableColorCount</value>
   </data>
-  <data name="&gt;&gt;lableColorCount.Type" xml:space="preserve">
-    <value>System.Windows.Forms.Label, System.Windows.Forms, Version=4.0.0.0, Culture=neutral, PublicKeyToken=b77a5c561934e089</value>
-  </data>
   <data name="&gt;&gt;lableColorCount.Parent" xml:space="preserve">
     <value>groupBoxCategory</value>
   </data>
@@ -251,9 +242,6 @@
   </data>
   <data name="&gt;&gt;colorGrid1.Name" xml:space="preserve">
     <value>colorGrid1</value>
-  </data>
-  <data name="&gt;&gt;colorGrid1.Type" xml:space="preserve">
-    <value>pwiz.Skyline.ToolsUI.StandardColorGrid, Skyline, Version=1.0.0.0, Culture=neutral, PublicKeyToken=null</value>
   </data>
   <data name="&gt;&gt;colorGrid1.Parent" xml:space="preserve">
     <value>groupBoxCategory</value>
@@ -276,9 +264,6 @@
   <data name="&gt;&gt;groupBoxCategory.Name" xml:space="preserve">
     <value>groupBoxCategory</value>
   </data>
-  <data name="&gt;&gt;groupBoxCategory.Type" xml:space="preserve">
-    <value>System.Windows.Forms.GroupBox, System.Windows.Forms, Version=4.0.0.0, Culture=neutral, PublicKeyToken=b77a5c561934e089</value>
-  </data>
   <data name="&gt;&gt;groupBoxCategory.Parent" xml:space="preserve">
     <value>$this</value>
   </data>
@@ -296,9 +281,6 @@
   </data>
   <data name="&gt;&gt;textBoxName.Name" xml:space="preserve">
     <value>textBoxName</value>
-  </data>
-  <data name="&gt;&gt;textBoxName.Type" xml:space="preserve">
-    <value>System.Windows.Forms.TextBox, System.Windows.Forms, Version=4.0.0.0, Culture=neutral, PublicKeyToken=b77a5c561934e089</value>
   </data>
   <data name="&gt;&gt;textBoxName.Parent" xml:space="preserve">
     <value>$this</value>
@@ -324,9 +306,6 @@
   <data name="&gt;&gt;labelName.Name" xml:space="preserve">
     <value>labelName</value>
   </data>
-  <data name="&gt;&gt;labelName.Type" xml:space="preserve">
-    <value>System.Windows.Forms.Label, System.Windows.Forms, Version=4.0.0.0, Culture=neutral, PublicKeyToken=b77a5c561934e089</value>
-  </data>
   <data name="&gt;&gt;labelName.Parent" xml:space="preserve">
     <value>$this</value>
   </data>
@@ -351,9 +330,6 @@
   <data name="&gt;&gt;labelCategory.Name" xml:space="preserve">
     <value>labelCategory</value>
   </data>
-  <data name="&gt;&gt;labelCategory.Type" xml:space="preserve">
-    <value>System.Windows.Forms.Label, System.Windows.Forms, Version=4.0.0.0, Culture=neutral, PublicKeyToken=b77a5c561934e089</value>
-  </data>
   <data name="&gt;&gt;labelCategory.Parent" xml:space="preserve">
     <value>$this</value>
   </data>
@@ -372,9 +348,6 @@
   <data name="dataGridViewTextBoxColumn3.HeaderText" xml:space="preserve">
     <value>十六进制</value>
   </data>
-  <metadata name="$this.Localizable" type="System.Boolean, mscorlib, Version=4.0.0.0, Culture=neutral, PublicKeyToken=b77a5c561934e089">
-    <value>True</value>
-  </metadata>
   <data name="$this.AutoScaleDimensions" type="System.Drawing.SizeF, System.Drawing">
     <value>6, 13</value>
   </data>
@@ -390,25 +363,13 @@
   <data name="&gt;&gt;dataGridViewTextBoxColumn1.Name" xml:space="preserve">
     <value>dataGridViewTextBoxColumn1</value>
   </data>
-  <data name="&gt;&gt;dataGridViewTextBoxColumn1.Type" xml:space="preserve">
-    <value>System.Windows.Forms.DataGridViewTextBoxColumn, System.Windows.Forms, Version=4.0.0.0, Culture=neutral, PublicKeyToken=b77a5c561934e089</value>
-  </data>
   <data name="&gt;&gt;dataGridViewTextBoxColumn2.Name" xml:space="preserve">
     <value>dataGridViewTextBoxColumn2</value>
-  </data>
-  <data name="&gt;&gt;dataGridViewTextBoxColumn2.Type" xml:space="preserve">
-    <value>System.Windows.Forms.DataGridViewTextBoxColumn, System.Windows.Forms, Version=4.0.0.0, Culture=neutral, PublicKeyToken=b77a5c561934e089</value>
   </data>
   <data name="&gt;&gt;dataGridViewTextBoxColumn3.Name" xml:space="preserve">
     <value>dataGridViewTextBoxColumn3</value>
   </data>
-  <data name="&gt;&gt;dataGridViewTextBoxColumn3.Type" xml:space="preserve">
-    <value>System.Windows.Forms.DataGridViewTextBoxColumn, System.Windows.Forms, Version=4.0.0.0, Culture=neutral, PublicKeyToken=b77a5c561934e089</value>
-  </data>
   <data name="&gt;&gt;$this.Name" xml:space="preserve">
     <value>EditCustomThemeDlg</value>
-  </data>
-  <data name="&gt;&gt;$this.Type" xml:space="preserve">
-    <value>pwiz.Skyline.Util.FormEx, Skyline, Version=1.0.0.0, Culture=neutral, PublicKeyToken=null</value>
   </data>
 </root>

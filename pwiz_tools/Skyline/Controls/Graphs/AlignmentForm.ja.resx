@@ -118,17 +118,50 @@
     <value>System.Resources.ResXResourceWriter, System.Windows.Forms, Version=4.0.0.0, Culture=neutral, PublicKeyToken=b77a5c561934e089</value>
   </resheader>
   <assembly alias="System.Windows.Forms" name="System.Windows.Forms, Version=4.0.0.0, Culture=neutral, PublicKeyToken=b77a5c561934e089" />
+  <assembly alias="System.Drawing" name="System.Drawing, Version=4.0.0.0, Culture=neutral, PublicKeyToken=b03f5f7f11d50a3a" />
+  <assembly alias="mscorlib" name="mscorlib, Version=4.0.0.0, Culture=neutral, PublicKeyToken=b77a5c561934e089" />
+  <metadata name="colLibrary.UserAddedColumn" type="System.Boolean, mscorlib, Version=4.0.0.0, Culture=neutral, PublicKeyToken=b77a5c561934e089">
+    <value>True</value>
+  </metadata>
+  <metadata name="colDataFile.UserAddedColumn" type="System.Boolean, mscorlib, Version=4.0.0.0, Culture=neutral, PublicKeyToken=b77a5c561934e089">
+    <value>True</value>
+  </metadata>
+  <metadata name="colSlope.UserAddedColumn" type="System.Boolean, mscorlib, Version=4.0.0.0, Culture=neutral, PublicKeyToken=b77a5c561934e089">
+    <value>True</value>
+  </metadata>
+  <metadata name="colIntercept.UserAddedColumn" type="System.Boolean, mscorlib, Version=4.0.0.0, Culture=neutral, PublicKeyToken=b77a5c561934e089">
+    <value>True</value>
+  </metadata>
+  <metadata name="colCorrelationCoefficient.UserAddedColumn" type="System.Boolean, mscorlib, Version=4.0.0.0, Culture=neutral, PublicKeyToken=b77a5c561934e089">
+    <value>True</value>
+  </metadata>
+  <metadata name="colOutlierCount.UserAddedColumn" type="System.Boolean, mscorlib, Version=4.0.0.0, Culture=neutral, PublicKeyToken=b77a5c561934e089">
+    <value>True</value>
+  </metadata>
+  <metadata name="colUnrefinedSlope.UserAddedColumn" type="System.Boolean, mscorlib, Version=4.0.0.0, Culture=neutral, PublicKeyToken=b77a5c561934e089">
+    <value>True</value>
+  </metadata>
+  <metadata name="colUnrefinedIntercept.UserAddedColumn" type="System.Boolean, mscorlib, Version=4.0.0.0, Culture=neutral, PublicKeyToken=b77a5c561934e089">
+    <value>True</value>
+  </metadata>
+  <metadata name="colUnrefinedCorrelationCoefficient.UserAddedColumn" type="System.Boolean, mscorlib, Version=4.0.0.0, Culture=neutral, PublicKeyToken=b77a5c561934e089">
+    <value>True</value>
+  </metadata>
+  <metadata name="colTotalPoints.UserAddedColumn" type="System.Boolean, mscorlib, Version=4.0.0.0, Culture=neutral, PublicKeyToken=b77a5c561934e089">
+    <value>True</value>
+  </metadata>
+  <metadata name="$this.Localizable" type="System.Boolean, mscorlib, Version=4.0.0.0, Culture=neutral, PublicKeyToken=b77a5c561934e089">
+    <value>True</value>
+  </metadata>
   <data name="lblFormDescription.Anchor" type="System.Windows.Forms.AnchorStyles, System.Windows.Forms">
     <value>Top, Left, Right</value>
   </data>
-  <assembly alias="System.Drawing" name="System.Drawing, Version=4.0.0.0, Culture=neutral, PublicKeyToken=b03f5f7f11d50a3a" />
   <data name="lblFormDescription.Location" type="System.Drawing.Point, System.Drawing">
     <value>12, 9</value>
   </data>
   <data name="lblFormDescription.Size" type="System.Drawing.Size, System.Drawing">
     <value>1056, 58</value>
   </data>
-  <assembly alias="mscorlib" name="mscorlib, Version=4.0.0.0, Culture=neutral, PublicKeyToken=b77a5c561934e089" />
   <data name="lblFormDescription.TabIndex" type="System.Int32, mscorlib">
     <value>2</value>
   </data>
@@ -137,9 +170,6 @@
   </data>
   <data name="&gt;&gt;lblFormDescription.Name" xml:space="preserve">
     <value>lblFormDescription</value>
-  </data>
-  <data name="&gt;&gt;lblFormDescription.Type" xml:space="preserve">
-    <value>System.Windows.Forms.Label, System.Windows.Forms, Version=4.0.0.0, Culture=neutral, PublicKeyToken=b77a5c561934e089</value>
   </data>
   <data name="&gt;&gt;lblFormDescription.Parent" xml:space="preserve">
     <value>panel1</value>
@@ -158,9 +188,6 @@
   </data>
   <data name="&gt;&gt;comboAlignAgainst.Name" xml:space="preserve">
     <value>comboAlignAgainst</value>
-  </data>
-  <data name="&gt;&gt;comboAlignAgainst.Type" xml:space="preserve">
-    <value>System.Windows.Forms.ComboBox, System.Windows.Forms, Version=4.0.0.0, Culture=neutral, PublicKeyToken=b77a5c561934e089</value>
   </data>
   <data name="&gt;&gt;comboAlignAgainst.Parent" xml:space="preserve">
     <value>panel1</value>
@@ -186,9 +213,6 @@
   <data name="&gt;&gt;label1.Name" xml:space="preserve">
     <value>label1</value>
   </data>
-  <data name="&gt;&gt;label1.Type" xml:space="preserve">
-    <value>System.Windows.Forms.Label, System.Windows.Forms, Version=4.0.0.0, Culture=neutral, PublicKeyToken=b77a5c561934e089</value>
-  </data>
   <data name="&gt;&gt;label1.Parent" xml:space="preserve">
     <value>panel1</value>
   </data>
@@ -210,54 +234,30 @@
   <data name="&gt;&gt;panel1.Name" xml:space="preserve">
     <value>panel1</value>
   </data>
-  <data name="&gt;&gt;panel1.Type" xml:space="preserve">
-    <value>System.Windows.Forms.Panel, System.Windows.Forms, Version=4.0.0.0, Culture=neutral, PublicKeyToken=b77a5c561934e089</value>
-  </data>
   <data name="&gt;&gt;panel1.Parent" xml:space="preserve">
     <value>$this</value>
   </data>
   <data name="&gt;&gt;panel1.ZOrder" xml:space="preserve">
     <value>1</value>
   </data>
-  <metadata name="colLibrary.UserAddedColumn" type="System.Boolean, mscorlib, Version=4.0.0.0, Culture=neutral, PublicKeyToken=b77a5c561934e089">
-    <value>True</value>
-  </metadata>
   <data name="colLibrary.HeaderText" xml:space="preserve">
     <value>ライブラリ</value>
   </data>
-  <metadata name="colDataFile.UserAddedColumn" type="System.Boolean, mscorlib, Version=4.0.0.0, Culture=neutral, PublicKeyToken=b77a5c561934e089">
-    <value>True</value>
-  </metadata>
   <data name="colDataFile.HeaderText" xml:space="preserve">
     <value>データファイル</value>
   </data>
-  <metadata name="colSlope.UserAddedColumn" type="System.Boolean, mscorlib, Version=4.0.0.0, Culture=neutral, PublicKeyToken=b77a5c561934e089">
-    <value>True</value>
-  </metadata>
   <data name="colSlope.HeaderText" xml:space="preserve">
     <value>傾き</value>
   </data>
-  <metadata name="colIntercept.UserAddedColumn" type="System.Boolean, mscorlib, Version=4.0.0.0, Culture=neutral, PublicKeyToken=b77a5c561934e089">
-    <value>True</value>
-  </metadata>
   <data name="colIntercept.HeaderText" xml:space="preserve">
     <value>切片</value>
   </data>
-  <metadata name="colCorrelationCoefficient.UserAddedColumn" type="System.Boolean, mscorlib, Version=4.0.0.0, Culture=neutral, PublicKeyToken=b77a5c561934e089">
-    <value>True</value>
-  </metadata>
   <data name="colCorrelationCoefficient.HeaderText" xml:space="preserve">
     <value>R</value>
   </data>
-  <metadata name="colOutlierCount.UserAddedColumn" type="System.Boolean, mscorlib, Version=4.0.0.0, Culture=neutral, PublicKeyToken=b77a5c561934e089">
-    <value>True</value>
-  </metadata>
   <data name="colOutlierCount.HeaderText" xml:space="preserve">
     <value>異常値の数</value>
   </data>
-  <metadata name="colUnrefinedSlope.UserAddedColumn" type="System.Boolean, mscorlib, Version=4.0.0.0, Culture=neutral, PublicKeyToken=b77a5c561934e089">
-    <value>True</value>
-  </metadata>
   <data name="colUnrefinedSlope.HeaderText" xml:space="preserve">
     <value>最適化されていない傾き</value>
   </data>
@@ -267,9 +267,6 @@
   <data name="colUnrefinedSlope.Width" type="System.Int32, mscorlib">
     <value>120</value>
   </data>
-  <metadata name="colUnrefinedIntercept.UserAddedColumn" type="System.Boolean, mscorlib, Version=4.0.0.0, Culture=neutral, PublicKeyToken=b77a5c561934e089">
-    <value>True</value>
-  </metadata>
   <data name="colUnrefinedIntercept.HeaderText" xml:space="preserve">
     <value>最適化されていない切片</value>
   </data>
@@ -279,24 +276,15 @@
   <data name="colUnrefinedIntercept.Width" type="System.Int32, mscorlib">
     <value>125</value>
   </data>
-  <metadata name="colUnrefinedCorrelationCoefficient.UserAddedColumn" type="System.Boolean, mscorlib, Version=4.0.0.0, Culture=neutral, PublicKeyToken=b77a5c561934e089">
-    <value>True</value>
-  </metadata>
   <data name="colUnrefinedCorrelationCoefficient.HeaderText" xml:space="preserve">
     <value>最適されていないR</value>
   </data>
   <data name="colUnrefinedCorrelationCoefficient.Visible" type="System.Boolean, mscorlib">
     <value>False</value>
   </data>
-  <metadata name="colTotalPoints.UserAddedColumn" type="System.Boolean, mscorlib, Version=4.0.0.0, Culture=neutral, PublicKeyToken=b77a5c561934e089">
-    <value>True</value>
-  </metadata>
   <data name="colTotalPoints.HeaderText" xml:space="preserve">
     <value>ポイントの数</value>
   </data>
-  <metadata name="bindingSource.TrayLocation" type="System.Drawing.Point, System.Drawing, Version=4.0.0.0, Culture=neutral, PublicKeyToken=b03f5f7f11d50a3a">
-    <value>17, 17</value>
-  </metadata>
   <data name="dataGridView1.Dock" type="System.Windows.Forms.DockStyle, System.Windows.Forms">
     <value>Fill</value>
   </data>
@@ -311,9 +299,6 @@
   </data>
   <data name="&gt;&gt;dataGridView1.Name" xml:space="preserve">
     <value>dataGridView1</value>
-  </data>
-  <data name="&gt;&gt;dataGridView1.Type" xml:space="preserve">
-    <value>System.Windows.Forms.DataGridView, System.Windows.Forms, Version=4.0.0.0, Culture=neutral, PublicKeyToken=b77a5c561934e089</value>
   </data>
   <data name="&gt;&gt;dataGridView1.Parent" xml:space="preserve">
     <value>splitContainer1.Panel1</value>
@@ -330,9 +315,6 @@
   <data name="splitContainer1.Orientation" type="System.Windows.Forms.Orientation, System.Windows.Forms">
     <value>Horizontal</value>
   </data>
-  <metadata name="bindingNavigator1.TrayLocation" type="System.Drawing.Point, System.Drawing, Version=4.0.0.0, Culture=neutral, PublicKeyToken=b03f5f7f11d50a3a">
-    <value>148, 17</value>
-  </metadata>
   <data name="bindingNavigatorAddNewItem.Image" type="System.Drawing.Bitmap, System.Drawing" mimetype="application/x-microsoft.net.object.bytearray.base64">
     <value>
         iVBORw0KGgoAAAANSUhEUgAAABAAAAAQCAYAAAAf8/9hAAAAAXNSR0IArs4c6QAAAARnQU1BAACxjwv8
@@ -496,9 +478,6 @@
   <data name="&gt;&gt;bindingNavigator1.Name" xml:space="preserve">
     <value>bindingNavigator1</value>
   </data>
-  <data name="&gt;&gt;bindingNavigator1.Type" xml:space="preserve">
-    <value>System.Windows.Forms.BindingNavigator, System.Windows.Forms, Version=4.0.0.0, Culture=neutral, PublicKeyToken=b77a5c561934e089</value>
-  </data>
   <data name="&gt;&gt;bindingNavigator1.Parent" xml:space="preserve">
     <value>splitContainer1.Panel1</value>
   </data>
@@ -507,9 +486,6 @@
   </data>
   <data name="&gt;&gt;splitContainer1.Panel1.Name" xml:space="preserve">
     <value>splitContainer1.Panel1</value>
-  </data>
-  <data name="&gt;&gt;splitContainer1.Panel1.Type" xml:space="preserve">
-    <value>System.Windows.Forms.SplitterPanel, System.Windows.Forms, Version=4.0.0.0, Culture=neutral, PublicKeyToken=b77a5c561934e089</value>
   </data>
   <data name="&gt;&gt;splitContainer1.Panel1.Parent" xml:space="preserve">
     <value>splitContainer1</value>
@@ -532,9 +508,6 @@
   <data name="&gt;&gt;zedGraphControl.Name" xml:space="preserve">
     <value>zedGraphControl</value>
   </data>
-  <data name="&gt;&gt;zedGraphControl.Type" xml:space="preserve">
-    <value>ZedGraph.ZedGraphControl, ZedGraph, Version=5.1.5.35439, Culture=neutral, PublicKeyToken=8b2485f42e5e887d</value>
-  </data>
   <data name="&gt;&gt;zedGraphControl.Parent" xml:space="preserve">
     <value>splitContainer1.Panel2</value>
   </data>
@@ -543,9 +516,6 @@
   </data>
   <data name="&gt;&gt;splitContainer1.Panel2.Name" xml:space="preserve">
     <value>splitContainer1.Panel2</value>
-  </data>
-  <data name="&gt;&gt;splitContainer1.Panel2.Type" xml:space="preserve">
-    <value>System.Windows.Forms.SplitterPanel, System.Windows.Forms, Version=4.0.0.0, Culture=neutral, PublicKeyToken=b77a5c561934e089</value>
   </data>
   <data name="&gt;&gt;splitContainer1.Panel2.Parent" xml:space="preserve">
     <value>splitContainer1</value>
@@ -565,26 +535,17 @@
   <data name="&gt;&gt;splitContainer1.Name" xml:space="preserve">
     <value>splitContainer1</value>
   </data>
-  <data name="&gt;&gt;splitContainer1.Type" xml:space="preserve">
-    <value>System.Windows.Forms.SplitContainer, System.Windows.Forms, Version=4.0.0.0, Culture=neutral, PublicKeyToken=b77a5c561934e089</value>
-  </data>
   <data name="&gt;&gt;splitContainer1.Parent" xml:space="preserve">
     <value>$this</value>
   </data>
   <data name="&gt;&gt;splitContainer1.ZOrder" xml:space="preserve">
     <value>0</value>
   </data>
-  <metadata name="contextMenuGraph.TrayLocation" type="System.Drawing.Point, System.Drawing, Version=4.0.0.0, Culture=neutral, PublicKeyToken=b03f5f7f11d50a3a">
-    <value>332, 17</value>
-  </metadata>
   <data name="contextMenuGraph.Size" type="System.Drawing.Size, System.Drawing">
     <value>105, 28</value>
   </data>
   <data name="&gt;&gt;contextMenuGraph.Name" xml:space="preserve">
     <value>contextMenuGraph</value>
-  </data>
-  <data name="&gt;&gt;contextMenuGraph.Type" xml:space="preserve">
-    <value>System.Windows.Forms.ContextMenuStrip, System.Windows.Forms, Version=4.0.0.0, Culture=neutral, PublicKeyToken=b77a5c561934e089</value>
   </data>
   <data name="timePlotContextMenuItem.Size" type="System.Drawing.Size, System.Drawing">
     <value>104, 24</value>
@@ -604,12 +565,6 @@
   <data name="timeResidualsContextMenuItem.Text" xml:space="preserve">
     <value>残余</value>
   </data>
-  <metadata name="$this.Localizable" type="System.Boolean, mscorlib, Version=4.0.0.0, Culture=neutral, PublicKeyToken=b77a5c561934e089">
-    <value>True</value>
-  </metadata>
-  <metadata name="$this.TrayHeight" type="System.Int32, mscorlib, Version=4.0.0.0, Culture=neutral, PublicKeyToken=b77a5c561934e089">
-    <value>43</value>
-  </metadata>
   <data name="$this.AutoScaleDimensions" type="System.Drawing.SizeF, System.Drawing">
     <value>6, 13</value>
   </data>
@@ -628,157 +583,79 @@
   <data name="&gt;&gt;colLibrary.Name" xml:space="preserve">
     <value>colLibrary</value>
   </data>
-  <data name="&gt;&gt;colLibrary.Type" xml:space="preserve">
-    <value>System.Windows.Forms.DataGridViewTextBoxColumn, System.Windows.Forms, Version=4.0.0.0, Culture=neutral, PublicKeyToken=b77a5c561934e089</value>
-  </data>
   <data name="&gt;&gt;colDataFile.Name" xml:space="preserve">
     <value>colDataFile</value>
-  </data>
-  <data name="&gt;&gt;colDataFile.Type" xml:space="preserve">
-    <value>System.Windows.Forms.DataGridViewTextBoxColumn, System.Windows.Forms, Version=4.0.0.0, Culture=neutral, PublicKeyToken=b77a5c561934e089</value>
   </data>
   <data name="&gt;&gt;colSlope.Name" xml:space="preserve">
     <value>colSlope</value>
   </data>
-  <data name="&gt;&gt;colSlope.Type" xml:space="preserve">
-    <value>System.Windows.Forms.DataGridViewTextBoxColumn, System.Windows.Forms, Version=4.0.0.0, Culture=neutral, PublicKeyToken=b77a5c561934e089</value>
-  </data>
   <data name="&gt;&gt;colIntercept.Name" xml:space="preserve">
     <value>colIntercept</value>
-  </data>
-  <data name="&gt;&gt;colIntercept.Type" xml:space="preserve">
-    <value>System.Windows.Forms.DataGridViewTextBoxColumn, System.Windows.Forms, Version=4.0.0.0, Culture=neutral, PublicKeyToken=b77a5c561934e089</value>
   </data>
   <data name="&gt;&gt;colCorrelationCoefficient.Name" xml:space="preserve">
     <value>colCorrelationCoefficient</value>
   </data>
-  <data name="&gt;&gt;colCorrelationCoefficient.Type" xml:space="preserve">
-    <value>System.Windows.Forms.DataGridViewTextBoxColumn, System.Windows.Forms, Version=4.0.0.0, Culture=neutral, PublicKeyToken=b77a5c561934e089</value>
-  </data>
   <data name="&gt;&gt;colOutlierCount.Name" xml:space="preserve">
     <value>colOutlierCount</value>
-  </data>
-  <data name="&gt;&gt;colOutlierCount.Type" xml:space="preserve">
-    <value>System.Windows.Forms.DataGridViewTextBoxColumn, System.Windows.Forms, Version=4.0.0.0, Culture=neutral, PublicKeyToken=b77a5c561934e089</value>
   </data>
   <data name="&gt;&gt;colUnrefinedSlope.Name" xml:space="preserve">
     <value>colUnrefinedSlope</value>
   </data>
-  <data name="&gt;&gt;colUnrefinedSlope.Type" xml:space="preserve">
-    <value>System.Windows.Forms.DataGridViewTextBoxColumn, System.Windows.Forms, Version=4.0.0.0, Culture=neutral, PublicKeyToken=b77a5c561934e089</value>
-  </data>
   <data name="&gt;&gt;colUnrefinedIntercept.Name" xml:space="preserve">
     <value>colUnrefinedIntercept</value>
-  </data>
-  <data name="&gt;&gt;colUnrefinedIntercept.Type" xml:space="preserve">
-    <value>System.Windows.Forms.DataGridViewTextBoxColumn, System.Windows.Forms, Version=4.0.0.0, Culture=neutral, PublicKeyToken=b77a5c561934e089</value>
   </data>
   <data name="&gt;&gt;colUnrefinedCorrelationCoefficient.Name" xml:space="preserve">
     <value>colUnrefinedCorrelationCoefficient</value>
   </data>
-  <data name="&gt;&gt;colUnrefinedCorrelationCoefficient.Type" xml:space="preserve">
-    <value>System.Windows.Forms.DataGridViewTextBoxColumn, System.Windows.Forms, Version=4.0.0.0, Culture=neutral, PublicKeyToken=b77a5c561934e089</value>
-  </data>
   <data name="&gt;&gt;colTotalPoints.Name" xml:space="preserve">
     <value>colTotalPoints</value>
-  </data>
-  <data name="&gt;&gt;colTotalPoints.Type" xml:space="preserve">
-    <value>System.Windows.Forms.DataGridViewTextBoxColumn, System.Windows.Forms, Version=4.0.0.0, Culture=neutral, PublicKeyToken=b77a5c561934e089</value>
   </data>
   <data name="&gt;&gt;bindingSource.Name" xml:space="preserve">
     <value>bindingSource</value>
   </data>
-  <data name="&gt;&gt;bindingSource.Type" xml:space="preserve">
-    <value>System.Windows.Forms.BindingSource, System.Windows.Forms, Version=4.0.0.0, Culture=neutral, PublicKeyToken=b77a5c561934e089</value>
-  </data>
   <data name="&gt;&gt;bindingNavigatorAddNewItem.Name" xml:space="preserve">
     <value>bindingNavigatorAddNewItem</value>
-  </data>
-  <data name="&gt;&gt;bindingNavigatorAddNewItem.Type" xml:space="preserve">
-    <value>System.Windows.Forms.ToolStripButton, System.Windows.Forms, Version=4.0.0.0, Culture=neutral, PublicKeyToken=b77a5c561934e089</value>
   </data>
   <data name="&gt;&gt;bindingNavigatorCountItem.Name" xml:space="preserve">
     <value>bindingNavigatorCountItem</value>
   </data>
-  <data name="&gt;&gt;bindingNavigatorCountItem.Type" xml:space="preserve">
-    <value>System.Windows.Forms.ToolStripLabel, System.Windows.Forms, Version=4.0.0.0, Culture=neutral, PublicKeyToken=b77a5c561934e089</value>
-  </data>
   <data name="&gt;&gt;bindingNavigatorDeleteItem.Name" xml:space="preserve">
     <value>bindingNavigatorDeleteItem</value>
-  </data>
-  <data name="&gt;&gt;bindingNavigatorDeleteItem.Type" xml:space="preserve">
-    <value>System.Windows.Forms.ToolStripButton, System.Windows.Forms, Version=4.0.0.0, Culture=neutral, PublicKeyToken=b77a5c561934e089</value>
   </data>
   <data name="&gt;&gt;bindingNavigatorMoveFirstItem.Name" xml:space="preserve">
     <value>bindingNavigatorMoveFirstItem</value>
   </data>
-  <data name="&gt;&gt;bindingNavigatorMoveFirstItem.Type" xml:space="preserve">
-    <value>System.Windows.Forms.ToolStripButton, System.Windows.Forms, Version=4.0.0.0, Culture=neutral, PublicKeyToken=b77a5c561934e089</value>
-  </data>
   <data name="&gt;&gt;bindingNavigatorMovePreviousItem.Name" xml:space="preserve">
     <value>bindingNavigatorMovePreviousItem</value>
-  </data>
-  <data name="&gt;&gt;bindingNavigatorMovePreviousItem.Type" xml:space="preserve">
-    <value>System.Windows.Forms.ToolStripButton, System.Windows.Forms, Version=4.0.0.0, Culture=neutral, PublicKeyToken=b77a5c561934e089</value>
   </data>
   <data name="&gt;&gt;bindingNavigatorSeparator.Name" xml:space="preserve">
     <value>bindingNavigatorSeparator</value>
   </data>
-  <data name="&gt;&gt;bindingNavigatorSeparator.Type" xml:space="preserve">
-    <value>System.Windows.Forms.ToolStripSeparator, System.Windows.Forms, Version=4.0.0.0, Culture=neutral, PublicKeyToken=b77a5c561934e089</value>
-  </data>
   <data name="&gt;&gt;bindingNavigatorPositionItem.Name" xml:space="preserve">
     <value>bindingNavigatorPositionItem</value>
-  </data>
-  <data name="&gt;&gt;bindingNavigatorPositionItem.Type" xml:space="preserve">
-    <value>System.Windows.Forms.ToolStripTextBox, System.Windows.Forms, Version=4.0.0.0, Culture=neutral, PublicKeyToken=b77a5c561934e089</value>
   </data>
   <data name="&gt;&gt;bindingNavigatorSeparator1.Name" xml:space="preserve">
     <value>bindingNavigatorSeparator1</value>
   </data>
-  <data name="&gt;&gt;bindingNavigatorSeparator1.Type" xml:space="preserve">
-    <value>System.Windows.Forms.ToolStripSeparator, System.Windows.Forms, Version=4.0.0.0, Culture=neutral, PublicKeyToken=b77a5c561934e089</value>
-  </data>
   <data name="&gt;&gt;bindingNavigatorMoveNextItem.Name" xml:space="preserve">
     <value>bindingNavigatorMoveNextItem</value>
-  </data>
-  <data name="&gt;&gt;bindingNavigatorMoveNextItem.Type" xml:space="preserve">
-    <value>System.Windows.Forms.ToolStripButton, System.Windows.Forms, Version=4.0.0.0, Culture=neutral, PublicKeyToken=b77a5c561934e089</value>
   </data>
   <data name="&gt;&gt;bindingNavigatorMoveLastItem.Name" xml:space="preserve">
     <value>bindingNavigatorMoveLastItem</value>
   </data>
-  <data name="&gt;&gt;bindingNavigatorMoveLastItem.Type" xml:space="preserve">
-    <value>System.Windows.Forms.ToolStripButton, System.Windows.Forms, Version=4.0.0.0, Culture=neutral, PublicKeyToken=b77a5c561934e089</value>
-  </data>
   <data name="&gt;&gt;bindingNavigatorSeparator2.Name" xml:space="preserve">
     <value>bindingNavigatorSeparator2</value>
-  </data>
-  <data name="&gt;&gt;bindingNavigatorSeparator2.Type" xml:space="preserve">
-    <value>System.Windows.Forms.ToolStripSeparator, System.Windows.Forms, Version=4.0.0.0, Culture=neutral, PublicKeyToken=b77a5c561934e089</value>
   </data>
   <data name="&gt;&gt;timePlotContextMenuItem.Name" xml:space="preserve">
     <value>timePlotContextMenuItem</value>
   </data>
-  <data name="&gt;&gt;timePlotContextMenuItem.Type" xml:space="preserve">
-    <value>System.Windows.Forms.ToolStripMenuItem, System.Windows.Forms, Version=4.0.0.0, Culture=neutral, PublicKeyToken=b77a5c561934e089</value>
-  </data>
   <data name="&gt;&gt;timeCorrelationContextMenuItem.Name" xml:space="preserve">
     <value>timeCorrelationContextMenuItem</value>
-  </data>
-  <data name="&gt;&gt;timeCorrelationContextMenuItem.Type" xml:space="preserve">
-    <value>System.Windows.Forms.ToolStripMenuItem, System.Windows.Forms, Version=4.0.0.0, Culture=neutral, PublicKeyToken=b77a5c561934e089</value>
   </data>
   <data name="&gt;&gt;timeResidualsContextMenuItem.Name" xml:space="preserve">
     <value>timeResidualsContextMenuItem</value>
   </data>
-  <data name="&gt;&gt;timeResidualsContextMenuItem.Type" xml:space="preserve">
-    <value>System.Windows.Forms.ToolStripMenuItem, System.Windows.Forms, Version=4.0.0.0, Culture=neutral, PublicKeyToken=b77a5c561934e089</value>
-  </data>
   <data name="&gt;&gt;$this.Name" xml:space="preserve">
     <value>AlignmentForm</value>
-  </data>
-  <data name="&gt;&gt;$this.Type" xml:space="preserve">
-    <value>pwiz.Skyline.Util.FormEx, Skyline, Version=1.0.0.0, Culture=neutral, PublicKeyToken=null</value>
   </data>
 </root>

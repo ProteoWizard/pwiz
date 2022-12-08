@@ -118,10 +118,14 @@
     <value>System.Resources.ResXResourceWriter, System.Windows.Forms, Version=4.0.0.0, Culture=neutral, PublicKeyToken=b77a5c561934e089</value>
   </resheader>
   <assembly alias="mscorlib" name="mscorlib, Version=4.0.0.0, Culture=neutral, PublicKeyToken=b77a5c561934e089" />
+  <assembly alias="System.Drawing" name="System.Drawing, Version=4.0.0.0, Culture=neutral, PublicKeyToken=b03f5f7f11d50a3a" />
+  <assembly alias="System.Windows.Forms" name="System.Windows.Forms, Version=4.0.0.0, Culture=neutral, PublicKeyToken=b77a5c561934e089" />
+  <metadata name="$this.Localizable" type="System.Boolean, mscorlib, Version=4.0.0.0, Culture=neutral, PublicKeyToken=b77a5c561934e089">
+    <value>True</value>
+  </metadata>
   <data name="label1.AutoSize" type="System.Boolean, mscorlib">
     <value>True</value>
   </data>
-  <assembly alias="System.Drawing" name="System.Drawing, Version=4.0.0.0, Culture=neutral, PublicKeyToken=b03f5f7f11d50a3a" />
   <data name="label1.Location" type="System.Drawing.Point, System.Drawing">
     <value>30, 97</value>
   </data>
@@ -136,9 +140,6 @@
   </data>
   <data name="&gt;&gt;label1.Name" xml:space="preserve">
     <value>label1</value>
-  </data>
-  <data name="&gt;&gt;label1.Type" xml:space="preserve">
-    <value>System.Windows.Forms.Label, System.Windows.Forms, Version=4.0.0.0, Culture=neutral, PublicKeyToken=b77a5c561934e089</value>
   </data>
   <data name="&gt;&gt;label1.Parent" xml:space="preserve">
     <value>$this</value>
@@ -157,9 +158,6 @@
   </data>
   <data name="&gt;&gt;textFragment.Name" xml:space="preserve">
     <value>textFragment</value>
-  </data>
-  <data name="&gt;&gt;textFragment.Type" xml:space="preserve">
-    <value>System.Windows.Forms.TextBox, System.Windows.Forms, Version=4.0.0.0, Culture=neutral, PublicKeyToken=b77a5c561934e089</value>
   </data>
   <data name="&gt;&gt;textFragment.Parent" xml:space="preserve">
     <value>$this</value>
@@ -185,9 +183,6 @@
   <data name="&gt;&gt;label2.Name" xml:space="preserve">
     <value>label2</value>
   </data>
-  <data name="&gt;&gt;label2.Type" xml:space="preserve">
-    <value>System.Windows.Forms.Label, System.Windows.Forms, Version=4.0.0.0, Culture=neutral, PublicKeyToken=b77a5c561934e089</value>
-  </data>
   <data name="&gt;&gt;label2.Parent" xml:space="preserve">
     <value>$this</value>
   </data>
@@ -205,9 +200,6 @@
   </data>
   <data name="&gt;&gt;textRestrict.Name" xml:space="preserve">
     <value>textRestrict</value>
-  </data>
-  <data name="&gt;&gt;textRestrict.Type" xml:space="preserve">
-    <value>System.Windows.Forms.TextBox, System.Windows.Forms, Version=4.0.0.0, Culture=neutral, PublicKeyToken=b77a5c561934e089</value>
   </data>
   <data name="&gt;&gt;textRestrict.Parent" xml:space="preserve">
     <value>$this</value>
@@ -233,9 +225,6 @@
   <data name="&gt;&gt;comboDirection.Name" xml:space="preserve">
     <value>comboDirection</value>
   </data>
-  <data name="&gt;&gt;comboDirection.Type" xml:space="preserve">
-    <value>System.Windows.Forms.ComboBox, System.Windows.Forms, Version=4.0.0.0, Culture=neutral, PublicKeyToken=b77a5c561934e089</value>
-  </data>
   <data name="&gt;&gt;comboDirection.Parent" xml:space="preserve">
     <value>$this</value>
   </data>
@@ -260,16 +249,12 @@
   <data name="&gt;&gt;label3.Name" xml:space="preserve">
     <value>label3</value>
   </data>
-  <data name="&gt;&gt;label3.Type" xml:space="preserve">
-    <value>System.Windows.Forms.Label, System.Windows.Forms, Version=4.0.0.0, Culture=neutral, PublicKeyToken=b77a5c561934e089</value>
-  </data>
   <data name="&gt;&gt;label3.Parent" xml:space="preserve">
     <value>$this</value>
   </data>
   <data name="&gt;&gt;label3.ZOrder" xml:space="preserve">
     <value>10</value>
   </data>
-  <assembly alias="System.Windows.Forms" name="System.Windows.Forms, Version=4.0.0.0, Culture=neutral, PublicKeyToken=b77a5c561934e089" />
   <data name="btnOk.Anchor" type="System.Windows.Forms.AnchorStyles, System.Windows.Forms">
     <value>Top, Right</value>
   </data>
@@ -287,9 +272,6 @@
   </data>
   <data name="&gt;&gt;btnOk.Name" xml:space="preserve">
     <value>btnOk</value>
-  </data>
-  <data name="&gt;&gt;btnOk.Type" xml:space="preserve">
-    <value>System.Windows.Forms.Button, System.Windows.Forms, Version=4.0.0.0, Culture=neutral, PublicKeyToken=b77a5c561934e089</value>
   </data>
   <data name="&gt;&gt;btnOk.Parent" xml:space="preserve">
     <value>$this</value>
@@ -315,9 +297,6 @@
   <data name="&gt;&gt;btnCancel.Name" xml:space="preserve">
     <value>btnCancel</value>
   </data>
-  <data name="&gt;&gt;btnCancel.Type" xml:space="preserve">
-    <value>System.Windows.Forms.Button, System.Windows.Forms, Version=4.0.0.0, Culture=neutral, PublicKeyToken=b77a5c561934e089</value>
-  </data>
   <data name="&gt;&gt;btnCancel.Parent" xml:space="preserve">
     <value>$this</value>
   </data>
@@ -338,9 +317,6 @@
   </data>
   <data name="&gt;&gt;textName.Name" xml:space="preserve">
     <value>textName</value>
-  </data>
-  <data name="&gt;&gt;textName.Type" xml:space="preserve">
-    <value>System.Windows.Forms.TextBox, System.Windows.Forms, Version=4.0.0.0, Culture=neutral, PublicKeyToken=b77a5c561934e089</value>
   </data>
   <data name="&gt;&gt;textName.Parent" xml:space="preserve">
     <value>$this</value>
@@ -366,9 +342,6 @@
   <data name="&gt;&gt;labelName.Name" xml:space="preserve">
     <value>labelName</value>
   </data>
-  <data name="&gt;&gt;labelName.Type" xml:space="preserve">
-    <value>System.Windows.Forms.Label, System.Windows.Forms, Version=4.0.0.0, Culture=neutral, PublicKeyToken=b77a5c561934e089</value>
-  </data>
   <data name="&gt;&gt;labelName.Parent" xml:space="preserve">
     <value>$this</value>
   </data>
@@ -392,9 +365,6 @@
   </data>
   <data name="&gt;&gt;radioFragment.Name" xml:space="preserve">
     <value>radioFragment</value>
-  </data>
-  <data name="&gt;&gt;radioFragment.Type" xml:space="preserve">
-    <value>System.Windows.Forms.RadioButton, System.Windows.Forms, Version=4.0.0.0, Culture=neutral, PublicKeyToken=b77a5c561934e089</value>
   </data>
   <data name="&gt;&gt;radioFragment.Parent" xml:space="preserve">
     <value>$this</value>
@@ -420,9 +390,6 @@
   <data name="&gt;&gt;radioReporter.Name" xml:space="preserve">
     <value>radioReporter</value>
   </data>
-  <data name="&gt;&gt;radioReporter.Type" xml:space="preserve">
-    <value>System.Windows.Forms.RadioButton, System.Windows.Forms, Version=4.0.0.0, Culture=neutral, PublicKeyToken=b77a5c561934e089</value>
-  </data>
   <data name="&gt;&gt;radioReporter.Parent" xml:space="preserve">
     <value>$this</value>
   </data>
@@ -440,9 +407,6 @@
   </data>
   <data name="&gt;&gt;textMinAas.Name" xml:space="preserve">
     <value>textMinAas</value>
-  </data>
-  <data name="&gt;&gt;textMinAas.Type" xml:space="preserve">
-    <value>System.Windows.Forms.TextBox, System.Windows.Forms, Version=4.0.0.0, Culture=neutral, PublicKeyToken=b77a5c561934e089</value>
   </data>
   <data name="&gt;&gt;textMinAas.Parent" xml:space="preserve">
     <value>$this</value>
@@ -468,9 +432,6 @@
   <data name="&gt;&gt;label4.Name" xml:space="preserve">
     <value>label4</value>
   </data>
-  <data name="&gt;&gt;label4.Type" xml:space="preserve">
-    <value>System.Windows.Forms.Label, System.Windows.Forms, Version=4.0.0.0, Culture=neutral, PublicKeyToken=b77a5c561934e089</value>
-  </data>
   <data name="&gt;&gt;label4.Parent" xml:space="preserve">
     <value>$this</value>
   </data>
@@ -495,9 +456,6 @@
   <data name="&gt;&gt;labelCharge.Name" xml:space="preserve">
     <value>labelCharge</value>
   </data>
-  <data name="&gt;&gt;labelCharge.Type" xml:space="preserve">
-    <value>System.Windows.Forms.Label, System.Windows.Forms, Version=4.0.0.0, Culture=neutral, PublicKeyToken=b77a5c561934e089</value>
-  </data>
   <data name="&gt;&gt;labelCharge.Parent" xml:space="preserve">
     <value>$this</value>
   </data>
@@ -516,18 +474,12 @@
   <data name="&gt;&gt;textCharge.Name" xml:space="preserve">
     <value>textCharge</value>
   </data>
-  <data name="&gt;&gt;textCharge.Type" xml:space="preserve">
-    <value>System.Windows.Forms.TextBox, System.Windows.Forms, Version=4.0.0.0, Culture=neutral, PublicKeyToken=b77a5c561934e089</value>
-  </data>
   <data name="&gt;&gt;textCharge.Parent" xml:space="preserve">
     <value>$this</value>
   </data>
   <data name="&gt;&gt;textCharge.ZOrder" xml:space="preserve">
     <value>0</value>
   </data>
-  <metadata name="$this.Localizable" type="System.Boolean, mscorlib, Version=4.0.0.0, Culture=neutral, PublicKeyToken=b77a5c561934e089">
-    <value>True</value>
-  </metadata>
   <data name="$this.AutoScaleDimensions" type="System.Drawing.SizeF, System.Drawing">
     <value>6, 13</value>
   </data>
@@ -542,8 +494,5 @@
   </data>
   <data name="&gt;&gt;$this.Name" xml:space="preserve">
     <value>EditMeasuredIonDlg</value>
-  </data>
-  <data name="&gt;&gt;$this.Type" xml:space="preserve">
-    <value>pwiz.Skyline.Util.FormEx, Skyline, Version=1.0.0.0, Culture=neutral, PublicKeyToken=null</value>
   </data>
 </root>

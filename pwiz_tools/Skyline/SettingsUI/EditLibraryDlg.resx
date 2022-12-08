@@ -118,25 +118,25 @@
     <value>System.Resources.ResXResourceWriter, System.Windows.Forms, Version=4.0.0.0, Culture=neutral, PublicKeyToken=b77a5c561934e089</value>
   </resheader>
   <assembly alias="System.Windows.Forms" name="System.Windows.Forms, Version=4.0.0.0, Culture=neutral, PublicKeyToken=b77a5c561934e089" />
+  <assembly alias="System.Drawing" name="System.Drawing, Version=4.0.0.0, Culture=neutral, PublicKeyToken=b03f5f7f11d50a3a" />
+  <assembly alias="mscorlib" name="mscorlib, Version=4.0.0.0, Culture=neutral, PublicKeyToken=b77a5c561934e089" />
+  <metadata name="$this.Localizable" type="System.Boolean, mscorlib, Version=4.0.0.0, Culture=neutral, PublicKeyToken=b77a5c561934e089">
+    <value>True</value>
+  </metadata>
   <data name="textName.Anchor" type="System.Windows.Forms.AnchorStyles, System.Windows.Forms">
     <value>Top, Left, Right</value>
   </data>
-  <assembly alias="System.Drawing" name="System.Drawing, Version=4.0.0.0, Culture=neutral, PublicKeyToken=b03f5f7f11d50a3a" />
   <data name="textName.Location" type="System.Drawing.Point, System.Drawing">
     <value>15, 28</value>
   </data>
   <data name="textName.Size" type="System.Drawing.Size, System.Drawing">
     <value>247, 20</value>
   </data>
-  <assembly alias="mscorlib" name="mscorlib, Version=4.0.0.0, Culture=neutral, PublicKeyToken=b77a5c561934e089" />
   <data name="textName.TabIndex" type="System.Int32, mscorlib">
     <value>3</value>
   </data>
   <data name="&gt;&gt;textName.Name" xml:space="preserve">
     <value>textName</value>
-  </data>
-  <data name="&gt;&gt;textName.Type" xml:space="preserve">
-    <value>System.Windows.Forms.TextBox, System.Windows.Forms, Version=4.0.0.0, Culture=neutral, PublicKeyToken=b77a5c561934e089</value>
   </data>
   <data name="&gt;&gt;textName.Parent" xml:space="preserve">
     <value>$this</value>
@@ -162,9 +162,6 @@
   <data name="&gt;&gt;label4.Name" xml:space="preserve">
     <value>label4</value>
   </data>
-  <data name="&gt;&gt;label4.Type" xml:space="preserve">
-    <value>System.Windows.Forms.Label, System.Windows.Forms, Version=4.0.0.0, Culture=neutral, PublicKeyToken=b77a5c561934e089</value>
-  </data>
   <data name="&gt;&gt;label4.Parent" xml:space="preserve">
     <value>$this</value>
   </data>
@@ -188,9 +185,6 @@
   </data>
   <data name="&gt;&gt;btnCancel.Name" xml:space="preserve">
     <value>btnCancel</value>
-  </data>
-  <data name="&gt;&gt;btnCancel.Type" xml:space="preserve">
-    <value>System.Windows.Forms.Button, System.Windows.Forms, Version=4.0.0.0, Culture=neutral, PublicKeyToken=b77a5c561934e089</value>
   </data>
   <data name="&gt;&gt;btnCancel.Parent" xml:space="preserve">
     <value>$this</value>
@@ -216,9 +210,6 @@
   <data name="&gt;&gt;btnOk.Name" xml:space="preserve">
     <value>btnOk</value>
   </data>
-  <data name="&gt;&gt;btnOk.Type" xml:space="preserve">
-    <value>System.Windows.Forms.Button, System.Windows.Forms, Version=4.0.0.0, Culture=neutral, PublicKeyToken=b77a5c561934e089</value>
-  </data>
   <data name="&gt;&gt;btnOk.Parent" xml:space="preserve">
     <value>$this</value>
   </data>
@@ -236,9 +227,6 @@
   </data>
   <data name="&gt;&gt;textPath.Name" xml:space="preserve">
     <value>textPath</value>
-  </data>
-  <data name="&gt;&gt;textPath.Type" xml:space="preserve">
-    <value>System.Windows.Forms.TextBox, System.Windows.Forms, Version=4.0.0.0, Culture=neutral, PublicKeyToken=b77a5c561934e089</value>
   </data>
   <data name="&gt;&gt;textPath.Parent" xml:space="preserve">
     <value>$this</value>
@@ -264,9 +252,6 @@
   <data name="&gt;&gt;label2.Name" xml:space="preserve">
     <value>label2</value>
   </data>
-  <data name="&gt;&gt;label2.Type" xml:space="preserve">
-    <value>System.Windows.Forms.Label, System.Windows.Forms, Version=4.0.0.0, Culture=neutral, PublicKeyToken=b77a5c561934e089</value>
-  </data>
   <data name="&gt;&gt;label2.Parent" xml:space="preserve">
     <value>$this</value>
   </data>
@@ -287,9 +272,6 @@
   </data>
   <data name="&gt;&gt;btnBrowse.Name" xml:space="preserve">
     <value>btnBrowse</value>
-  </data>
-  <data name="&gt;&gt;btnBrowse.Type" xml:space="preserve">
-    <value>System.Windows.Forms.Button, System.Windows.Forms, Version=4.0.0.0, Culture=neutral, PublicKeyToken=b77a5c561934e089</value>
   </data>
   <data name="&gt;&gt;btnBrowse.Parent" xml:space="preserve">
     <value>$this</value>
@@ -315,9 +297,6 @@
   <data name="&gt;&gt;labelSpecLibLinks.Name" xml:space="preserve">
     <value>labelSpecLibLinks</value>
   </data>
-  <data name="&gt;&gt;labelSpecLibLinks.Type" xml:space="preserve">
-    <value>System.Windows.Forms.Label, System.Windows.Forms, Version=4.0.0.0, Culture=neutral, PublicKeyToken=b77a5c561934e089</value>
-  </data>
   <data name="&gt;&gt;labelSpecLibLinks.Parent" xml:space="preserve">
     <value>$this</value>
   </data>
@@ -341,9 +320,6 @@
   </data>
   <data name="&gt;&gt;linkPeptideAtlas.Name" xml:space="preserve">
     <value>linkPeptideAtlas</value>
-  </data>
-  <data name="&gt;&gt;linkPeptideAtlas.Type" xml:space="preserve">
-    <value>System.Windows.Forms.LinkLabel, System.Windows.Forms, Version=4.0.0.0, Culture=neutral, PublicKeyToken=b77a5c561934e089</value>
   </data>
   <data name="&gt;&gt;linkPeptideAtlas.Parent" xml:space="preserve">
     <value>$this</value>
@@ -369,9 +345,6 @@
   <data name="&gt;&gt;linkNIST.Name" xml:space="preserve">
     <value>linkNIST</value>
   </data>
-  <data name="&gt;&gt;linkNIST.Type" xml:space="preserve">
-    <value>System.Windows.Forms.LinkLabel, System.Windows.Forms, Version=4.0.0.0, Culture=neutral, PublicKeyToken=b77a5c561934e089</value>
-  </data>
   <data name="&gt;&gt;linkNIST.Parent" xml:space="preserve">
     <value>$this</value>
   </data>
@@ -395,9 +368,6 @@
   </data>
   <data name="&gt;&gt;linkGPM.Name" xml:space="preserve">
     <value>linkGPM</value>
-  </data>
-  <data name="&gt;&gt;linkGPM.Type" xml:space="preserve">
-    <value>System.Windows.Forms.LinkLabel, System.Windows.Forms, Version=4.0.0.0, Culture=neutral, PublicKeyToken=b77a5c561934e089</value>
   </data>
   <data name="&gt;&gt;linkGPM.Parent" xml:space="preserve">
     <value>$this</value>
@@ -423,18 +393,12 @@
   <data name="&gt;&gt;cbxUseExplicitPeakBounds.Name" xml:space="preserve">
     <value>cbxUseExplicitPeakBounds</value>
   </data>
-  <data name="&gt;&gt;cbxUseExplicitPeakBounds.Type" xml:space="preserve">
-    <value>System.Windows.Forms.CheckBox, System.Windows.Forms, Version=4.0.0.0, Culture=neutral, PublicKeyToken=b77a5c561934e089</value>
-  </data>
   <data name="&gt;&gt;cbxUseExplicitPeakBounds.Parent" xml:space="preserve">
     <value>$this</value>
   </data>
   <data name="&gt;&gt;cbxUseExplicitPeakBounds.ZOrder" xml:space="preserve">
     <value>0</value>
   </data>
-  <metadata name="$this.Localizable" type="System.Boolean, mscorlib, Version=4.0.0.0, Culture=neutral, PublicKeyToken=b77a5c561934e089">
-    <value>True</value>
-  </metadata>
   <data name="$this.AutoScaleDimensions" type="System.Drawing.SizeF, System.Drawing">
     <value>6, 13</value>
   </data>
@@ -449,8 +413,5 @@
   </data>
   <data name="&gt;&gt;$this.Name" xml:space="preserve">
     <value>EditLibraryDlg</value>
-  </data>
-  <data name="&gt;&gt;$this.Type" xml:space="preserve">
-    <value>pwiz.Skyline.Util.FormEx, Skyline, Version=1.0.0.0, Culture=neutral, PublicKeyToken=null</value>
   </data>
 </root>

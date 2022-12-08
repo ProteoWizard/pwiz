@@ -796,7 +796,7 @@ The areas are normalized according to the Normalization Method specified in the 
 The Molecule List Abundance will be blank if any transitions have missing values in this replicate, unless the normalization method is ratio to a label.</value>
   </data>
   <data name="MoleculeListLocator">
-      <value>Unique identifier of the molecule list within the document. This begins with "MoleculeGroup:".</value>
+    <value>Unique identifier of the molecule list within the document. This begins with "MoleculeGroup:".</value>
     <comment>Do not translate "MoleculeGroup:".</comment>
   </data>
   <data name="MoleculeListName">

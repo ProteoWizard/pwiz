@@ -117,14 +117,15 @@
   <resheader name="writer">
     <value>System.Resources.ResXResourceWriter, System.Windows.Forms, Version=4.0.0.0, Culture=neutral, PublicKeyToken=b77a5c561934e089</value>
   </resheader>
-  <metadata name="modeUIHandler.TrayLocation" type="System.Drawing.Point, System.Drawing, Version=4.0.0.0, Culture=neutral, PublicKeyToken=b03f5f7f11d50a3a">
-    <value>17, 17</value>
-  </metadata>
   <assembly alias="mscorlib" name="mscorlib, Version=4.0.0.0, Culture=neutral, PublicKeyToken=b77a5c561934e089" />
+  <assembly alias="System.Drawing" name="System.Drawing, Version=4.0.0.0, Culture=neutral, PublicKeyToken=b03f5f7f11d50a3a" />
+  <assembly alias="System.Windows.Forms" name="System.Windows.Forms, Version=4.0.0.0, Culture=neutral, PublicKeyToken=b77a5c561934e089" />
+  <metadata name="$this.Localizable" type="System.Boolean, mscorlib, Version=4.0.0.0, Culture=neutral, PublicKeyToken=b77a5c561934e089">
+    <value>True</value>
+  </metadata>
   <data name="lblName.AutoSize" type="System.Boolean, mscorlib">
     <value>True</value>
   </data>
-  <assembly alias="System.Drawing" name="System.Drawing, Version=4.0.0.0, Culture=neutral, PublicKeyToken=b03f5f7f11d50a3a" />
   <data name="lblName.Location" type="System.Drawing.Point, System.Drawing">
     <value>12, 9</value>
   </data>
@@ -140,16 +141,12 @@
   <data name="&gt;&gt;lblName.Name" xml:space="preserve">
     <value>lblName</value>
   </data>
-  <data name="&gt;&gt;lblName.Type" xml:space="preserve">
-    <value>System.Windows.Forms.Label, System.Windows.Forms, Version=4.0.0.0, Culture=neutral, PublicKeyToken=b77a5c561934e089</value>
-  </data>
   <data name="&gt;&gt;lblName.Parent" xml:space="preserve">
     <value>$this</value>
   </data>
   <data name="&gt;&gt;lblName.ZOrder" xml:space="preserve">
     <value>0</value>
   </data>
-  <assembly alias="System.Windows.Forms" name="System.Windows.Forms, Version=4.0.0.0, Culture=neutral, PublicKeyToken=b77a5c561934e089" />
   <data name="tbxName.Anchor" type="System.Windows.Forms.AnchorStyles, System.Windows.Forms">
     <value>Top, Left, Right</value>
   </data>
@@ -164,9 +161,6 @@
   </data>
   <data name="&gt;&gt;tbxName.Name" xml:space="preserve">
     <value>tbxName</value>
-  </data>
-  <data name="&gt;&gt;tbxName.Type" xml:space="preserve">
-    <value>System.Windows.Forms.TextBox, System.Windows.Forms, Version=4.0.0.0, Culture=neutral, PublicKeyToken=b77a5c561934e089</value>
   </data>
   <data name="&gt;&gt;tbxName.Parent" xml:space="preserve">
     <value>$this</value>
@@ -185,9 +179,6 @@
   </data>
   <data name="&gt;&gt;comboType.Name" xml:space="preserve">
     <value>comboType</value>
-  </data>
-  <data name="&gt;&gt;comboType.Type" xml:space="preserve">
-    <value>System.Windows.Forms.ComboBox, System.Windows.Forms, Version=4.0.0.0, Culture=neutral, PublicKeyToken=b77a5c561934e089</value>
   </data>
   <data name="&gt;&gt;comboType.Parent" xml:space="preserve">
     <value>tabPageEditable</value>
@@ -212,9 +203,6 @@
   </data>
   <data name="&gt;&gt;lblType.Name" xml:space="preserve">
     <value>lblType</value>
-  </data>
-  <data name="&gt;&gt;lblType.Type" xml:space="preserve">
-    <value>System.Windows.Forms.Label, System.Windows.Forms, Version=4.0.0.0, Culture=neutral, PublicKeyToken=b77a5c561934e089</value>
   </data>
   <data name="&gt;&gt;lblType.Parent" xml:space="preserve">
     <value>tabPageEditable</value>
@@ -243,9 +231,6 @@
   <data name="&gt;&gt;tbxValues.Name" xml:space="preserve">
     <value>tbxValues</value>
   </data>
-  <data name="&gt;&gt;tbxValues.Type" xml:space="preserve">
-    <value>System.Windows.Forms.TextBox, System.Windows.Forms, Version=4.0.0.0, Culture=neutral, PublicKeyToken=b77a5c561934e089</value>
-  </data>
   <data name="&gt;&gt;tbxValues.Parent" xml:space="preserve">
     <value>tabPageEditable</value>
   </data>
@@ -270,9 +255,6 @@
   <data name="&gt;&gt;lblValues.Name" xml:space="preserve">
     <value>lblValues</value>
   </data>
-  <data name="&gt;&gt;lblValues.Type" xml:space="preserve">
-    <value>System.Windows.Forms.Label, System.Windows.Forms, Version=4.0.0.0, Culture=neutral, PublicKeyToken=b77a5c561934e089</value>
-  </data>
   <data name="&gt;&gt;lblValues.Parent" xml:space="preserve">
     <value>tabPageEditable</value>
   </data>
@@ -293,9 +275,6 @@
   </data>
   <data name="&gt;&gt;checkedListBoxAppliesTo.Name" xml:space="preserve">
     <value>checkedListBoxAppliesTo</value>
-  </data>
-  <data name="&gt;&gt;checkedListBoxAppliesTo.Type" xml:space="preserve">
-    <value>System.Windows.Forms.CheckedListBox, System.Windows.Forms, Version=4.0.0.0, Culture=neutral, PublicKeyToken=b77a5c561934e089</value>
   </data>
   <data name="&gt;&gt;checkedListBoxAppliesTo.Parent" xml:space="preserve">
     <value>tabPageEditable</value>
@@ -321,9 +300,6 @@
   <data name="&gt;&gt;btnOK.Name" xml:space="preserve">
     <value>btnOK</value>
   </data>
-  <data name="&gt;&gt;btnOK.Type" xml:space="preserve">
-    <value>System.Windows.Forms.Button, System.Windows.Forms, Version=4.0.0.0, Culture=neutral, PublicKeyToken=b77a5c561934e089</value>
-  </data>
   <data name="&gt;&gt;btnOK.Parent" xml:space="preserve">
     <value>$this</value>
   </data>
@@ -347,9 +323,6 @@
   </data>
   <data name="&gt;&gt;btnCancel.Name" xml:space="preserve">
     <value>btnCancel</value>
-  </data>
-  <data name="&gt;&gt;btnCancel.Type" xml:space="preserve">
-    <value>System.Windows.Forms.Button, System.Windows.Forms, Version=4.0.0.0, Culture=neutral, PublicKeyToken=b77a5c561934e089</value>
   </data>
   <data name="&gt;&gt;btnCancel.Parent" xml:space="preserve">
     <value>$this</value>
@@ -377,9 +350,6 @@
   </data>
   <data name="&gt;&gt;lblAppliesTo.Name" xml:space="preserve">
     <value>lblAppliesTo</value>
-  </data>
-  <data name="&gt;&gt;lblAppliesTo.Type" xml:space="preserve">
-    <value>System.Windows.Forms.Label, System.Windows.Forms, Version=4.0.0.0, Culture=neutral, PublicKeyToken=b77a5c561934e089</value>
   </data>
   <data name="&gt;&gt;lblAppliesTo.Parent" xml:space="preserve">
     <value>tabPageEditable</value>
@@ -411,9 +381,6 @@
   <data name="&gt;&gt;tabPageEditable.Name" xml:space="preserve">
     <value>tabPageEditable</value>
   </data>
-  <data name="&gt;&gt;tabPageEditable.Type" xml:space="preserve">
-    <value>System.Windows.Forms.TabPage, System.Windows.Forms, Version=4.0.0.0, Culture=neutral, PublicKeyToken=b77a5c561934e089</value>
-  </data>
   <data name="&gt;&gt;tabPageEditable.Parent" xml:space="preserve">
     <value>tabControl1</value>
   </data>
@@ -441,9 +408,6 @@
   <data name="&gt;&gt;lblAggregateOperation.Name" xml:space="preserve">
     <value>lblAggregateOperation</value>
   </data>
-  <data name="&gt;&gt;lblAggregateOperation.Type" xml:space="preserve">
-    <value>System.Windows.Forms.Label, System.Windows.Forms, Version=4.0.0.0, Culture=neutral, PublicKeyToken=b77a5c561934e089</value>
-  </data>
   <data name="&gt;&gt;lblAggregateOperation.Parent" xml:space="preserve">
     <value>tabPageCalculated</value>
   </data>
@@ -464,9 +428,6 @@
   </data>
   <data name="&gt;&gt;comboAggregateOperation.Name" xml:space="preserve">
     <value>comboAggregateOperation</value>
-  </data>
-  <data name="&gt;&gt;comboAggregateOperation.Type" xml:space="preserve">
-    <value>System.Windows.Forms.ComboBox, System.Windows.Forms, Version=4.0.0.0, Culture=neutral, PublicKeyToken=b77a5c561934e089</value>
   </data>
   <data name="&gt;&gt;comboAggregateOperation.Parent" xml:space="preserve">
     <value>tabPageCalculated</value>
@@ -495,9 +456,6 @@
   <data name="&gt;&gt;availableFieldsTree1.Name" xml:space="preserve">
     <value>availableFieldsTree1</value>
   </data>
-  <data name="&gt;&gt;availableFieldsTree1.Type" xml:space="preserve">
-    <value>pwiz.Common.DataBinding.Controls.Editor.AvailableFieldsTree, pwiz.Common, Version=1.0.0.0, Culture=neutral, PublicKeyToken=null</value>
-  </data>
   <data name="&gt;&gt;availableFieldsTree1.Parent" xml:space="preserve">
     <value>tabPageCalculated</value>
   </data>
@@ -525,9 +483,6 @@
   <data name="&gt;&gt;lblCalculatedAppliesTo.Name" xml:space="preserve">
     <value>lblCalculatedAppliesTo</value>
   </data>
-  <data name="&gt;&gt;lblCalculatedAppliesTo.Type" xml:space="preserve">
-    <value>System.Windows.Forms.Label, System.Windows.Forms, Version=4.0.0.0, Culture=neutral, PublicKeyToken=b77a5c561934e089</value>
-  </data>
   <data name="&gt;&gt;lblCalculatedAppliesTo.Parent" xml:space="preserve">
     <value>tabPageCalculated</value>
   </data>
@@ -545,9 +500,6 @@
   </data>
   <data name="&gt;&gt;comboAppliesTo.Name" xml:space="preserve">
     <value>comboAppliesTo</value>
-  </data>
-  <data name="&gt;&gt;comboAppliesTo.Type" xml:space="preserve">
-    <value>System.Windows.Forms.ComboBox, System.Windows.Forms, Version=4.0.0.0, Culture=neutral, PublicKeyToken=b77a5c561934e089</value>
   </data>
   <data name="&gt;&gt;comboAppliesTo.Parent" xml:space="preserve">
     <value>tabPageCalculated</value>
@@ -573,9 +525,6 @@
   <data name="&gt;&gt;tabPageCalculated.Name" xml:space="preserve">
     <value>tabPageCalculated</value>
   </data>
-  <data name="&gt;&gt;tabPageCalculated.Type" xml:space="preserve">
-    <value>System.Windows.Forms.TabPage, System.Windows.Forms, Version=4.0.0.0, Culture=neutral, PublicKeyToken=b77a5c561934e089</value>
-  </data>
   <data name="&gt;&gt;tabPageCalculated.Parent" xml:space="preserve">
     <value>tabControl1</value>
   </data>
@@ -594,18 +543,12 @@
   <data name="&gt;&gt;tabControl1.Name" xml:space="preserve">
     <value>tabControl1</value>
   </data>
-  <data name="&gt;&gt;tabControl1.Type" xml:space="preserve">
-    <value>System.Windows.Forms.TabControl, System.Windows.Forms, Version=4.0.0.0, Culture=neutral, PublicKeyToken=b77a5c561934e089</value>
-  </data>
   <data name="&gt;&gt;tabControl1.Parent" xml:space="preserve">
     <value>$this</value>
   </data>
   <data name="&gt;&gt;tabControl1.ZOrder" xml:space="preserve">
     <value>2</value>
   </data>
-  <metadata name="$this.Localizable" type="System.Boolean, mscorlib, Version=4.0.0.0, Culture=neutral, PublicKeyToken=b77a5c561934e089">
-    <value>True</value>
-  </metadata>
   <data name="$this.AutoScaleDimensions" type="System.Drawing.SizeF, System.Drawing">
     <value>6, 13</value>
   </data>
@@ -621,13 +564,7 @@
   <data name="&gt;&gt;modeUIHandler.Name" xml:space="preserve">
     <value>modeUIHandler</value>
   </data>
-  <data name="&gt;&gt;modeUIHandler.Type" xml:space="preserve">
-    <value>pwiz.Skyline.Util.Helpers+ModeUIExtender, Skyline, Version=1.0.0.0, Culture=neutral, PublicKeyToken=null</value>
-  </data>
   <data name="&gt;&gt;$this.Name" xml:space="preserve">
     <value>DefineAnnotationDlg</value>
-  </data>
-  <data name="&gt;&gt;$this.Type" xml:space="preserve">
-    <value>pwiz.Skyline.Util.FormEx, Skyline, Version=1.0.0.0, Culture=neutral, PublicKeyToken=null</value>
   </data>
 </root>

@@ -117,10 +117,12 @@
   <resheader name="writer">
     <value>System.Resources.ResXResourceWriter, System.Windows.Forms, Version=4.0.0.0, Culture=neutral, PublicKeyToken=b77a5c561934e089</value>
   </resheader>
-  <metadata name="toolTip1.TrayLocation" type="System.Drawing.Point, System.Drawing, Version=4.0.0.0, Culture=neutral, PublicKeyToken=b03f5f7f11d50a3a">
-    <value>17, 17</value>
-  </metadata>
   <assembly alias="System.Drawing" name="System.Drawing, Version=4.0.0.0, Culture=neutral, PublicKeyToken=b03f5f7f11d50a3a" />
+  <assembly alias="mscorlib" name="mscorlib, Version=4.0.0.0, Culture=neutral, PublicKeyToken=b77a5c561934e089" />
+  <assembly alias="System.Windows.Forms" name="System.Windows.Forms, Version=4.0.0.0, Culture=neutral, PublicKeyToken=b77a5c561934e089" />
+  <metadata name="$this.Localizable" type="System.Boolean, mscorlib, Version=4.0.0.0, Culture=neutral, PublicKeyToken=b77a5c561934e089">
+    <value>True</value>
+  </metadata>
   <data name="textIonMobility.Anchor" type="System.Windows.Forms.AnchorStyles, System.Windows.Forms">
     <value>Bottom, Left</value>
   </data>
@@ -130,7 +132,6 @@
   <data name="textIonMobility.Size" type="System.Drawing.Size, System.Drawing">
     <value>135, 20</value>
   </data>
-  <assembly alias="mscorlib" name="mscorlib, Version=4.0.0.0, Culture=neutral, PublicKeyToken=b77a5c561934e089" />
   <data name="textIonMobility.TabIndex" type="System.Int32, mscorlib">
     <value>13</value>
   </data>
@@ -139,9 +140,6 @@
   </data>
   <data name="&gt;&gt;textIonMobility.Name" xml:space="preserve">
     <value>textIonMobility</value>
-  </data>
-  <data name="&gt;&gt;textIonMobility.Type" xml:space="preserve">
-    <value>System.Windows.Forms.TextBox, System.Windows.Forms, Version=4.0.0.0, Culture=neutral, PublicKeyToken=b77a5c561934e089</value>
   </data>
   <data name="&gt;&gt;textIonMobility.Parent" xml:space="preserve">
     <value>groupBoxOptionalValues</value>
@@ -167,9 +165,6 @@
   <data name="&gt;&gt;textIonMobilityHighEnergyOffset.Name" xml:space="preserve">
     <value>textIonMobilityHighEnergyOffset</value>
   </data>
-  <data name="&gt;&gt;textIonMobilityHighEnergyOffset.Type" xml:space="preserve">
-    <value>System.Windows.Forms.TextBox, System.Windows.Forms, Version=4.0.0.0, Culture=neutral, PublicKeyToken=b77a5c561934e089</value>
-  </data>
   <data name="&gt;&gt;textIonMobilityHighEnergyOffset.Parent" xml:space="preserve">
     <value>groupBoxOptionalValues</value>
   </data>
@@ -191,9 +186,6 @@
   <data name="&gt;&gt;textRetentionTime.Name" xml:space="preserve">
     <value>textRetentionTime</value>
   </data>
-  <data name="&gt;&gt;textRetentionTime.Type" xml:space="preserve">
-    <value>System.Windows.Forms.TextBox, System.Windows.Forms, Version=4.0.0.0, Culture=neutral, PublicKeyToken=b77a5c561934e089</value>
-  </data>
   <data name="&gt;&gt;textRetentionTime.Parent" xml:space="preserve">
     <value>groupBoxOptionalValues</value>
   </data>
@@ -214,9 +206,6 @@
   </data>
   <data name="&gt;&gt;textRetentionTimeWindow.Name" xml:space="preserve">
     <value>textRetentionTimeWindow</value>
-  </data>
-  <data name="&gt;&gt;textRetentionTimeWindow.Type" xml:space="preserve">
-    <value>System.Windows.Forms.TextBox, System.Windows.Forms, Version=4.0.0.0, Culture=neutral, PublicKeyToken=b77a5c561934e089</value>
   </data>
   <data name="&gt;&gt;textRetentionTimeWindow.Parent" xml:space="preserve">
     <value>groupBoxOptionalValues</value>
@@ -242,9 +231,6 @@
   <data name="&gt;&gt;textCollisionEnergy.Name" xml:space="preserve">
     <value>textCollisionEnergy</value>
   </data>
-  <data name="&gt;&gt;textCollisionEnergy.Type" xml:space="preserve">
-    <value>System.Windows.Forms.TextBox, System.Windows.Forms, Version=4.0.0.0, Culture=neutral, PublicKeyToken=b77a5c561934e089</value>
-  </data>
   <data name="&gt;&gt;textCollisionEnergy.Parent" xml:space="preserve">
     <value>groupBoxOptionalValues</value>
   </data>
@@ -257,7 +243,6 @@
   <data name="labelSLens.AutoSize" type="System.Boolean, mscorlib">
     <value>True</value>
   </data>
-  <assembly alias="System.Windows.Forms" name="System.Windows.Forms, Version=4.0.0.0, Culture=neutral, PublicKeyToken=b77a5c561934e089" />
   <data name="labelSLens.ImeMode" type="System.Windows.Forms.ImeMode, System.Windows.Forms">
     <value>NoControl</value>
   </data>
@@ -278,9 +263,6 @@
   </data>
   <data name="&gt;&gt;labelSLens.Name" xml:space="preserve">
     <value>labelSLens</value>
-  </data>
-  <data name="&gt;&gt;labelSLens.Type" xml:space="preserve">
-    <value>System.Windows.Forms.Label, System.Windows.Forms, Version=4.0.0.0, Culture=neutral, PublicKeyToken=b77a5c561934e089</value>
   </data>
   <data name="&gt;&gt;labelSLens.Parent" xml:space="preserve">
     <value>groupBoxOptionalValues</value>
@@ -305,9 +287,6 @@
   </data>
   <data name="&gt;&gt;textSLens.Name" xml:space="preserve">
     <value>textSLens</value>
-  </data>
-  <data name="&gt;&gt;textSLens.Type" xml:space="preserve">
-    <value>System.Windows.Forms.TextBox, System.Windows.Forms, Version=4.0.0.0, Culture=neutral, PublicKeyToken=b77a5c561934e089</value>
   </data>
   <data name="&gt;&gt;textSLens.Parent" xml:space="preserve">
     <value>groupBoxOptionalValues</value>
@@ -342,9 +321,6 @@
   <data name="&gt;&gt;labelConeVoltage.Name" xml:space="preserve">
     <value>labelConeVoltage</value>
   </data>
-  <data name="&gt;&gt;labelConeVoltage.Type" xml:space="preserve">
-    <value>System.Windows.Forms.Label, System.Windows.Forms, Version=4.0.0.0, Culture=neutral, PublicKeyToken=b77a5c561934e089</value>
-  </data>
   <data name="&gt;&gt;labelConeVoltage.Parent" xml:space="preserve">
     <value>groupBoxOptionalValues</value>
   </data>
@@ -368,9 +344,6 @@
   </data>
   <data name="&gt;&gt;textConeVoltage.Name" xml:space="preserve">
     <value>textConeVoltage</value>
-  </data>
-  <data name="&gt;&gt;textConeVoltage.Type" xml:space="preserve">
-    <value>System.Windows.Forms.TextBox, System.Windows.Forms, Version=4.0.0.0, Culture=neutral, PublicKeyToken=b77a5c561934e089</value>
   </data>
   <data name="&gt;&gt;textConeVoltage.Parent" xml:space="preserve">
     <value>groupBoxOptionalValues</value>
@@ -396,9 +369,6 @@
   <data name="&gt;&gt;textDeclusteringPotential.Name" xml:space="preserve">
     <value>textDeclusteringPotential</value>
   </data>
-  <data name="&gt;&gt;textDeclusteringPotential.Type" xml:space="preserve">
-    <value>System.Windows.Forms.TextBox, System.Windows.Forms, Version=4.0.0.0, Culture=neutral, PublicKeyToken=b77a5c561934e089</value>
-  </data>
   <data name="&gt;&gt;textDeclusteringPotential.Parent" xml:space="preserve">
     <value>groupBoxOptionalValues</value>
   </data>
@@ -420,9 +390,6 @@
   <data name="&gt;&gt;textCharge.Name" xml:space="preserve">
     <value>textCharge</value>
   </data>
-  <data name="&gt;&gt;textCharge.Type" xml:space="preserve">
-    <value>System.Windows.Forms.TextBox, System.Windows.Forms, Version=4.0.0.0, Culture=neutral, PublicKeyToken=b77a5c561934e089</value>
-  </data>
   <data name="&gt;&gt;textCharge.Parent" xml:space="preserve">
     <value>$this</value>
   </data>
@@ -443,9 +410,6 @@
   </data>
   <data name="&gt;&gt;textName.Name" xml:space="preserve">
     <value>textName</value>
-  </data>
-  <data name="&gt;&gt;textName.Type" xml:space="preserve">
-    <value>System.Windows.Forms.TextBox, System.Windows.Forms, Version=4.0.0.0, Culture=neutral, PublicKeyToken=b77a5c561934e089</value>
   </data>
   <data name="&gt;&gt;textName.Parent" xml:space="preserve">
     <value>$this</value>
@@ -471,9 +435,6 @@
   <data name="&gt;&gt;textBoxCCS.Name" xml:space="preserve">
     <value>textBoxCCS</value>
   </data>
-  <data name="&gt;&gt;textBoxCCS.Type" xml:space="preserve">
-    <value>System.Windows.Forms.TextBox, System.Windows.Forms, Version=4.0.0.0, Culture=neutral, PublicKeyToken=b77a5c561934e089</value>
-  </data>
   <data name="&gt;&gt;textBoxCCS.Parent" xml:space="preserve">
     <value>groupBoxOptionalValues</value>
   </data>
@@ -497,9 +458,6 @@
   </data>
   <data name="&gt;&gt;textBoxPrecursorCollisionEnergy.Name" xml:space="preserve">
     <value>textBoxPrecursorCollisionEnergy</value>
-  </data>
-  <data name="&gt;&gt;textBoxPrecursorCollisionEnergy.Type" xml:space="preserve">
-    <value>System.Windows.Forms.TextBox, System.Windows.Forms, Version=4.0.0.0, Culture=neutral, PublicKeyToken=b77a5c561934e089</value>
   </data>
   <data name="&gt;&gt;textBoxPrecursorCollisionEnergy.Parent" xml:space="preserve">
     <value>groupBoxOptionalValues</value>
@@ -528,9 +486,6 @@
   <data name="&gt;&gt;btnOK.Name" xml:space="preserve">
     <value>btnOK</value>
   </data>
-  <data name="&gt;&gt;btnOK.Type" xml:space="preserve">
-    <value>System.Windows.Forms.Button, System.Windows.Forms, Version=4.0.0.0, Culture=neutral, PublicKeyToken=b77a5c561934e089</value>
-  </data>
   <data name="&gt;&gt;btnOK.Parent" xml:space="preserve">
     <value>$this</value>
   </data>
@@ -557,9 +512,6 @@
   </data>
   <data name="&gt;&gt;btnCancel.Name" xml:space="preserve">
     <value>btnCancel</value>
-  </data>
-  <data name="&gt;&gt;btnCancel.Type" xml:space="preserve">
-    <value>System.Windows.Forms.Button, System.Windows.Forms, Version=4.0.0.0, Culture=neutral, PublicKeyToken=b77a5c561934e089</value>
   </data>
   <data name="&gt;&gt;btnCancel.Parent" xml:space="preserve">
     <value>$this</value>
@@ -591,9 +543,6 @@
   <data name="&gt;&gt;labelPrecursorCollisionEnergy.Name" xml:space="preserve">
     <value>labelPrecursorCollisionEnergy</value>
   </data>
-  <data name="&gt;&gt;labelPrecursorCollisionEnergy.Type" xml:space="preserve">
-    <value>System.Windows.Forms.Label, System.Windows.Forms, Version=4.0.0.0, Culture=neutral, PublicKeyToken=b77a5c561934e089</value>
-  </data>
   <data name="&gt;&gt;labelPrecursorCollisionEnergy.Parent" xml:space="preserve">
     <value>groupBoxOptionalValues</value>
   </data>
@@ -614,9 +563,6 @@
   </data>
   <data name="&gt;&gt;comboBoxIonMobilityUnits.Name" xml:space="preserve">
     <value>comboBoxIonMobilityUnits</value>
-  </data>
-  <data name="&gt;&gt;comboBoxIonMobilityUnits.Type" xml:space="preserve">
-    <value>System.Windows.Forms.ComboBox, System.Windows.Forms, Version=4.0.0.0, Culture=neutral, PublicKeyToken=b77a5c561934e089</value>
   </data>
   <data name="&gt;&gt;comboBoxIonMobilityUnits.Parent" xml:space="preserve">
     <value>groupBoxOptionalValues</value>
@@ -648,9 +594,6 @@
   <data name="&gt;&gt;labelIonMobilityUnits.Name" xml:space="preserve">
     <value>labelIonMobilityUnits</value>
   </data>
-  <data name="&gt;&gt;labelIonMobilityUnits.Type" xml:space="preserve">
-    <value>System.Windows.Forms.Label, System.Windows.Forms, Version=4.0.0.0, Culture=neutral, PublicKeyToken=b77a5c561934e089</value>
-  </data>
   <data name="&gt;&gt;labelIonMobilityUnits.Parent" xml:space="preserve">
     <value>groupBoxOptionalValues</value>
   </data>
@@ -680,9 +623,6 @@
   </data>
   <data name="&gt;&gt;labelCCS.Name" xml:space="preserve">
     <value>labelCCS</value>
-  </data>
-  <data name="&gt;&gt;labelCCS.Type" xml:space="preserve">
-    <value>System.Windows.Forms.Label, System.Windows.Forms, Version=4.0.0.0, Culture=neutral, PublicKeyToken=b77a5c561934e089</value>
   </data>
   <data name="&gt;&gt;labelCCS.Parent" xml:space="preserve">
     <value>groupBoxOptionalValues</value>
@@ -714,9 +654,6 @@
   <data name="&gt;&gt;labelDeclusteringPotential.Name" xml:space="preserve">
     <value>labelDeclusteringPotential</value>
   </data>
-  <data name="&gt;&gt;labelDeclusteringPotential.Type" xml:space="preserve">
-    <value>System.Windows.Forms.Label, System.Windows.Forms, Version=4.0.0.0, Culture=neutral, PublicKeyToken=b77a5c561934e089</value>
-  </data>
   <data name="&gt;&gt;labelDeclusteringPotential.Parent" xml:space="preserve">
     <value>groupBoxOptionalValues</value>
   </data>
@@ -746,9 +683,6 @@
   </data>
   <data name="&gt;&gt;labelIonMobility.Name" xml:space="preserve">
     <value>labelIonMobility</value>
-  </data>
-  <data name="&gt;&gt;labelIonMobility.Type" xml:space="preserve">
-    <value>System.Windows.Forms.Label, System.Windows.Forms, Version=4.0.0.0, Culture=neutral, PublicKeyToken=b77a5c561934e089</value>
   </data>
   <data name="&gt;&gt;labelIonMobility.Parent" xml:space="preserve">
     <value>groupBoxOptionalValues</value>
@@ -780,9 +714,6 @@
   <data name="&gt;&gt;labelIonMobilityHighEnergyOffset.Name" xml:space="preserve">
     <value>labelIonMobilityHighEnergyOffset</value>
   </data>
-  <data name="&gt;&gt;labelIonMobilityHighEnergyOffset.Type" xml:space="preserve">
-    <value>System.Windows.Forms.Label, System.Windows.Forms, Version=4.0.0.0, Culture=neutral, PublicKeyToken=b77a5c561934e089</value>
-  </data>
   <data name="&gt;&gt;labelIonMobilityHighEnergyOffset.Parent" xml:space="preserve">
     <value>groupBoxOptionalValues</value>
   </data>
@@ -810,9 +741,6 @@
   <data name="&gt;&gt;labelRetentionTime.Name" xml:space="preserve">
     <value>labelRetentionTime</value>
   </data>
-  <data name="&gt;&gt;labelRetentionTime.Type" xml:space="preserve">
-    <value>System.Windows.Forms.Label, System.Windows.Forms, Version=4.0.0.0, Culture=neutral, PublicKeyToken=b77a5c561934e089</value>
-  </data>
   <data name="&gt;&gt;labelRetentionTime.Parent" xml:space="preserve">
     <value>groupBoxOptionalValues</value>
   </data>
@@ -839,9 +767,6 @@
   </data>
   <data name="&gt;&gt;labelRetentionTimeWindow.Name" xml:space="preserve">
     <value>labelRetentionTimeWindow</value>
-  </data>
-  <data name="&gt;&gt;labelRetentionTimeWindow.Type" xml:space="preserve">
-    <value>System.Windows.Forms.Label, System.Windows.Forms, Version=4.0.0.0, Culture=neutral, PublicKeyToken=b77a5c561934e089</value>
   </data>
   <data name="&gt;&gt;labelRetentionTimeWindow.Parent" xml:space="preserve">
     <value>groupBoxOptionalValues</value>
@@ -873,9 +798,6 @@
   <data name="&gt;&gt;labelCollisionEnergy.Name" xml:space="preserve">
     <value>labelCollisionEnergy</value>
   </data>
-  <data name="&gt;&gt;labelCollisionEnergy.Type" xml:space="preserve">
-    <value>System.Windows.Forms.Label, System.Windows.Forms, Version=4.0.0.0, Culture=neutral, PublicKeyToken=b77a5c561934e089</value>
-  </data>
   <data name="&gt;&gt;labelCollisionEnergy.Parent" xml:space="preserve">
     <value>groupBoxOptionalValues</value>
   </data>
@@ -896,9 +818,6 @@
   </data>
   <data name="&gt;&gt;groupBoxOptionalValues.Name" xml:space="preserve">
     <value>groupBoxOptionalValues</value>
-  </data>
-  <data name="&gt;&gt;groupBoxOptionalValues.Type" xml:space="preserve">
-    <value>System.Windows.Forms.GroupBox, System.Windows.Forms, Version=4.0.0.0, Culture=neutral, PublicKeyToken=b77a5c561934e089</value>
   </data>
   <data name="&gt;&gt;groupBoxOptionalValues.Parent" xml:space="preserve">
     <value>$this</value>
@@ -927,9 +846,6 @@
   <data name="&gt;&gt;labelCharge.Name" xml:space="preserve">
     <value>labelCharge</value>
   </data>
-  <data name="&gt;&gt;labelCharge.Type" xml:space="preserve">
-    <value>System.Windows.Forms.Label, System.Windows.Forms, Version=4.0.0.0, Culture=neutral, PublicKeyToken=b77a5c561934e089</value>
-  </data>
   <data name="&gt;&gt;labelCharge.Parent" xml:space="preserve">
     <value>$this</value>
   </data>
@@ -956,9 +872,6 @@
   </data>
   <data name="&gt;&gt;label1.Name" xml:space="preserve">
     <value>label1</value>
-  </data>
-  <data name="&gt;&gt;label1.Type" xml:space="preserve">
-    <value>System.Windows.Forms.Label, System.Windows.Forms, Version=4.0.0.0, Culture=neutral, PublicKeyToken=b77a5c561934e089</value>
   </data>
   <data name="&gt;&gt;label1.Parent" xml:space="preserve">
     <value>$this</value>
@@ -987,9 +900,6 @@
   <data name="&gt;&gt;labelIsotopeLabelType.Name" xml:space="preserve">
     <value>labelIsotopeLabelType</value>
   </data>
-  <data name="&gt;&gt;labelIsotopeLabelType.Type" xml:space="preserve">
-    <value>System.Windows.Forms.Label, System.Windows.Forms, Version=4.0.0.0, Culture=neutral, PublicKeyToken=b77a5c561934e089</value>
-  </data>
   <data name="&gt;&gt;labelIsotopeLabelType.Parent" xml:space="preserve">
     <value>$this</value>
   </data>
@@ -1008,18 +918,12 @@
   <data name="&gt;&gt;comboIsotopeLabelType.Name" xml:space="preserve">
     <value>comboIsotopeLabelType</value>
   </data>
-  <data name="&gt;&gt;comboIsotopeLabelType.Type" xml:space="preserve">
-    <value>System.Windows.Forms.ComboBox, System.Windows.Forms, Version=4.0.0.0, Culture=neutral, PublicKeyToken=b77a5c561934e089</value>
-  </data>
   <data name="&gt;&gt;comboIsotopeLabelType.Parent" xml:space="preserve">
     <value>$this</value>
   </data>
   <data name="&gt;&gt;comboIsotopeLabelType.ZOrder" xml:space="preserve">
     <value>0</value>
   </data>
-  <metadata name="$this.Localizable" type="System.Boolean, mscorlib, Version=4.0.0.0, Culture=neutral, PublicKeyToken=b77a5c561934e089">
-    <value>True</value>
-  </metadata>
   <data name="$this.ClientSize" type="System.Drawing.Size, System.Drawing">
     <value>396, 568</value>
   </data>
@@ -1029,13 +933,7 @@
   <data name="&gt;&gt;toolTip1.Name" xml:space="preserve">
     <value>toolTip1</value>
   </data>
-  <data name="&gt;&gt;toolTip1.Type" xml:space="preserve">
-    <value>System.Windows.Forms.ToolTip, System.Windows.Forms, Version=4.0.0.0, Culture=neutral, PublicKeyToken=b77a5c561934e089</value>
-  </data>
   <data name="&gt;&gt;$this.Name" xml:space="preserve">
     <value>EditCustomMoleculeDlg</value>
-  </data>
-  <data name="&gt;&gt;$this.Type" xml:space="preserve">
-    <value>pwiz.Skyline.Util.FormEx, Skyline, Version=1.0.0.0, Culture=neutral, PublicKeyToken=null</value>
   </data>
 </root>

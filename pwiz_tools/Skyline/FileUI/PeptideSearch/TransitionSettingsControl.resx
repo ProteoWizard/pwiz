@@ -118,10 +118,14 @@
     <value>System.Resources.ResXResourceWriter, System.Windows.Forms, Version=4.0.0.0, Culture=neutral, PublicKeyToken=b77a5c561934e089</value>
   </resheader>
   <assembly alias="mscorlib" name="mscorlib, Version=4.0.0.0, Culture=neutral, PublicKeyToken=b77a5c561934e089" />
+  <assembly alias="System.Drawing" name="System.Drawing, Version=4.0.0.0, Culture=neutral, PublicKeyToken=b03f5f7f11d50a3a" />
+  <assembly alias="System.Windows.Forms" name="System.Windows.Forms, Version=4.0.0.0, Culture=neutral, PublicKeyToken=b77a5c561934e089" />
+  <metadata name="$this.Localizable" type="System.Boolean, mscorlib, Version=4.0.0.0, Culture=neutral, PublicKeyToken=b77a5c561934e089">
+    <value>True</value>
+  </metadata>
   <data name="lblPrecursorCharges.AutoSize" type="System.Boolean, mscorlib">
     <value>True</value>
   </data>
-  <assembly alias="System.Drawing" name="System.Drawing, Version=4.0.0.0, Culture=neutral, PublicKeyToken=b03f5f7f11d50a3a" />
   <data name="lblPrecursorCharges.Location" type="System.Drawing.Point, System.Drawing">
     <value>14, 3</value>
   </data>
@@ -136,9 +140,6 @@
   </data>
   <data name="&gt;&gt;lblPrecursorCharges.Name" xml:space="preserve">
     <value>lblPrecursorCharges</value>
-  </data>
-  <data name="&gt;&gt;lblPrecursorCharges.Type" xml:space="preserve">
-    <value>System.Windows.Forms.Label, System.Windows.Forms, Version=4.0.0.0, Culture=neutral, PublicKeyToken=b77a5c561934e089</value>
   </data>
   <data name="&gt;&gt;lblPrecursorCharges.Parent" xml:space="preserve">
     <value>$this</value>
@@ -157,9 +158,6 @@
   </data>
   <data name="&gt;&gt;txtPeptidePrecursorCharges.Name" xml:space="preserve">
     <value>txtPeptidePrecursorCharges</value>
-  </data>
-  <data name="&gt;&gt;txtPeptidePrecursorCharges.Type" xml:space="preserve">
-    <value>System.Windows.Forms.TextBox, System.Windows.Forms, Version=4.0.0.0, Culture=neutral, PublicKeyToken=b77a5c561934e089</value>
   </data>
   <data name="&gt;&gt;txtPeptidePrecursorCharges.Parent" xml:space="preserve">
     <value>$this</value>
@@ -185,9 +183,6 @@
   <data name="&gt;&gt;lblIonCharges.Name" xml:space="preserve">
     <value>lblIonCharges</value>
   </data>
-  <data name="&gt;&gt;lblIonCharges.Type" xml:space="preserve">
-    <value>System.Windows.Forms.Label, System.Windows.Forms, Version=4.0.0.0, Culture=neutral, PublicKeyToken=b77a5c561934e089</value>
-  </data>
   <data name="&gt;&gt;lblIonCharges.Parent" xml:space="preserve">
     <value>$this</value>
   </data>
@@ -205,9 +200,6 @@
   </data>
   <data name="&gt;&gt;txtPrecursorIonCharges.Name" xml:space="preserve">
     <value>txtPrecursorIonCharges</value>
-  </data>
-  <data name="&gt;&gt;txtPrecursorIonCharges.Type" xml:space="preserve">
-    <value>System.Windows.Forms.TextBox, System.Windows.Forms, Version=4.0.0.0, Culture=neutral, PublicKeyToken=b77a5c561934e089</value>
   </data>
   <data name="&gt;&gt;txtPrecursorIonCharges.Parent" xml:space="preserve">
     <value>$this</value>
@@ -233,9 +225,6 @@
   <data name="&gt;&gt;lblIonTypes.Name" xml:space="preserve">
     <value>lblIonTypes</value>
   </data>
-  <data name="&gt;&gt;lblIonTypes.Type" xml:space="preserve">
-    <value>System.Windows.Forms.Label, System.Windows.Forms, Version=4.0.0.0, Culture=neutral, PublicKeyToken=b77a5c561934e089</value>
-  </data>
   <data name="&gt;&gt;lblIonTypes.Parent" xml:space="preserve">
     <value>$this</value>
   </data>
@@ -254,9 +243,6 @@
   <data name="&gt;&gt;txtIonTypes.Name" xml:space="preserve">
     <value>txtIonTypes</value>
   </data>
-  <data name="&gt;&gt;txtIonTypes.Type" xml:space="preserve">
-    <value>System.Windows.Forms.TextBox, System.Windows.Forms, Version=4.0.0.0, Culture=neutral, PublicKeyToken=b77a5c561934e089</value>
-  </data>
   <data name="&gt;&gt;txtIonTypes.Parent" xml:space="preserve">
     <value>$this</value>
   </data>
@@ -266,7 +252,6 @@
   <data name="lblTolerance.AutoSize" type="System.Boolean, mscorlib">
     <value>True</value>
   </data>
-  <assembly alias="System.Windows.Forms" name="System.Windows.Forms, Version=4.0.0.0, Culture=neutral, PublicKeyToken=b77a5c561934e089" />
   <data name="lblTolerance.ImeMode" type="System.Windows.Forms.ImeMode, System.Windows.Forms">
     <value>NoControl</value>
   </data>
@@ -285,9 +270,6 @@
   <data name="&gt;&gt;lblTolerance.Name" xml:space="preserve">
     <value>lblTolerance</value>
   </data>
-  <data name="&gt;&gt;lblTolerance.Type" xml:space="preserve">
-    <value>System.Windows.Forms.Label, System.Windows.Forms, Version=4.0.0.0, Culture=neutral, PublicKeyToken=b77a5c561934e089</value>
-  </data>
   <data name="&gt;&gt;lblTolerance.Parent" xml:space="preserve">
     <value>$this</value>
   </data>
@@ -305,9 +287,6 @@
   </data>
   <data name="&gt;&gt;txtTolerance.Name" xml:space="preserve">
     <value>txtTolerance</value>
-  </data>
-  <data name="&gt;&gt;txtTolerance.Type" xml:space="preserve">
-    <value>System.Windows.Forms.TextBox, System.Windows.Forms, Version=4.0.0.0, Culture=neutral, PublicKeyToken=b77a5c561934e089</value>
   </data>
   <data name="&gt;&gt;txtTolerance.Parent" xml:space="preserve">
     <value>$this</value>
@@ -339,9 +318,6 @@
   <data name="&gt;&gt;lblToleranceUnits.Name" xml:space="preserve">
     <value>lblToleranceUnits</value>
   </data>
-  <data name="&gt;&gt;lblToleranceUnits.Type" xml:space="preserve">
-    <value>System.Windows.Forms.Label, System.Windows.Forms, Version=4.0.0.0, Culture=neutral, PublicKeyToken=b77a5c561934e089</value>
-  </data>
   <data name="&gt;&gt;lblToleranceUnits.Parent" xml:space="preserve">
     <value>$this</value>
   </data>
@@ -368,9 +344,6 @@
   </data>
   <data name="&gt;&gt;lblIonCount.Name" xml:space="preserve">
     <value>lblIonCount</value>
-  </data>
-  <data name="&gt;&gt;lblIonCount.Type" xml:space="preserve">
-    <value>System.Windows.Forms.Label, System.Windows.Forms, Version=4.0.0.0, Culture=neutral, PublicKeyToken=b77a5c561934e089</value>
   </data>
   <data name="&gt;&gt;lblIonCount.Parent" xml:space="preserve">
     <value>$this</value>
@@ -399,9 +372,6 @@
   <data name="&gt;&gt;lblIonCountUnits.Name" xml:space="preserve">
     <value>lblIonCountUnits</value>
   </data>
-  <data name="&gt;&gt;lblIonCountUnits.Type" xml:space="preserve">
-    <value>System.Windows.Forms.Label, System.Windows.Forms, Version=4.0.0.0, Culture=neutral, PublicKeyToken=b77a5c561934e089</value>
-  </data>
   <data name="&gt;&gt;lblIonCountUnits.Parent" xml:space="preserve">
     <value>$this</value>
   </data>
@@ -419,9 +389,6 @@
   </data>
   <data name="&gt;&gt;txtIonCount.Name" xml:space="preserve">
     <value>txtIonCount</value>
-  </data>
-  <data name="&gt;&gt;txtIonCount.Type" xml:space="preserve">
-    <value>System.Windows.Forms.TextBox, System.Windows.Forms, Version=4.0.0.0, Culture=neutral, PublicKeyToken=b77a5c561934e089</value>
   </data>
   <data name="&gt;&gt;txtIonCount.Parent" xml:space="preserve">
     <value>$this</value>
@@ -450,9 +417,6 @@
   <data name="&gt;&gt;cbExclusionUseDIAWindow.Name" xml:space="preserve">
     <value>cbExclusionUseDIAWindow</value>
   </data>
-  <data name="&gt;&gt;cbExclusionUseDIAWindow.Type" xml:space="preserve">
-    <value>System.Windows.Forms.CheckBox, System.Windows.Forms, Version=4.0.0.0, Culture=neutral, PublicKeyToken=b77a5c561934e089</value>
-  </data>
   <data name="&gt;&gt;cbExclusionUseDIAWindow.Parent" xml:space="preserve">
     <value>$this</value>
   </data>
@@ -480,9 +444,6 @@
   <data name="&gt;&gt;lblMinIonCountUnits.Name" xml:space="preserve">
     <value>lblMinIonCountUnits</value>
   </data>
-  <data name="&gt;&gt;lblMinIonCountUnits.Type" xml:space="preserve">
-    <value>System.Windows.Forms.Label, System.Windows.Forms, Version=4.0.0.0, Culture=neutral, PublicKeyToken=b77a5c561934e089</value>
-  </data>
   <data name="&gt;&gt;lblMinIonCountUnits.Parent" xml:space="preserve">
     <value>$this</value>
   </data>
@@ -500,9 +461,6 @@
   </data>
   <data name="&gt;&gt;txtMinIonCount.Name" xml:space="preserve">
     <value>txtMinIonCount</value>
-  </data>
-  <data name="&gt;&gt;txtMinIonCount.Type" xml:space="preserve">
-    <value>System.Windows.Forms.TextBox, System.Windows.Forms, Version=4.0.0.0, Culture=neutral, PublicKeyToken=b77a5c561934e089</value>
   </data>
   <data name="&gt;&gt;txtMinIonCount.Parent" xml:space="preserve">
     <value>$this</value>
@@ -528,9 +486,6 @@
   <data name="&gt;&gt;label1.Name" xml:space="preserve">
     <value>label1</value>
   </data>
-  <data name="&gt;&gt;label1.Type" xml:space="preserve">
-    <value>System.Windows.Forms.Label, System.Windows.Forms, Version=4.0.0.0, Culture=neutral, PublicKeyToken=b77a5c561934e089</value>
-  </data>
   <data name="&gt;&gt;label1.Parent" xml:space="preserve">
     <value>panelIonFilter</value>
   </data>
@@ -548,9 +503,6 @@
   </data>
   <data name="&gt;&gt;comboRangeFrom.Name" xml:space="preserve">
     <value>comboRangeFrom</value>
-  </data>
-  <data name="&gt;&gt;comboRangeFrom.Type" xml:space="preserve">
-    <value>System.Windows.Forms.ComboBox, System.Windows.Forms, Version=4.0.0.0, Culture=neutral, PublicKeyToken=b77a5c561934e089</value>
   </data>
   <data name="&gt;&gt;comboRangeFrom.Parent" xml:space="preserve">
     <value>panelIonFilter</value>
@@ -579,9 +531,6 @@
   <data name="&gt;&gt;label2.Name" xml:space="preserve">
     <value>label2</value>
   </data>
-  <data name="&gt;&gt;label2.Type" xml:space="preserve">
-    <value>System.Windows.Forms.Label, System.Windows.Forms, Version=4.0.0.0, Culture=neutral, PublicKeyToken=b77a5c561934e089</value>
-  </data>
   <data name="&gt;&gt;label2.Parent" xml:space="preserve">
     <value>panelIonFilter</value>
   </data>
@@ -599,9 +548,6 @@
   </data>
   <data name="&gt;&gt;comboRangeTo.Name" xml:space="preserve">
     <value>comboRangeTo</value>
-  </data>
-  <data name="&gt;&gt;comboRangeTo.Type" xml:space="preserve">
-    <value>System.Windows.Forms.ComboBox, System.Windows.Forms, Version=4.0.0.0, Culture=neutral, PublicKeyToken=b77a5c561934e089</value>
   </data>
   <data name="&gt;&gt;comboRangeTo.Parent" xml:space="preserve">
     <value>panelIonFilter</value>
@@ -627,9 +573,6 @@
   <data name="&gt;&gt;label3.Name" xml:space="preserve">
     <value>label3</value>
   </data>
-  <data name="&gt;&gt;label3.Type" xml:space="preserve">
-    <value>System.Windows.Forms.Label, System.Windows.Forms, Version=4.0.0.0, Culture=neutral, PublicKeyToken=b77a5c561934e089</value>
-  </data>
   <data name="&gt;&gt;label3.Parent" xml:space="preserve">
     <value>panelIonFilter</value>
   </data>
@@ -647,9 +590,6 @@
   </data>
   <data name="&gt;&gt;txtMinMz.Name" xml:space="preserve">
     <value>txtMinMz</value>
-  </data>
-  <data name="&gt;&gt;txtMinMz.Type" xml:space="preserve">
-    <value>System.Windows.Forms.TextBox, System.Windows.Forms, Version=4.0.0.0, Culture=neutral, PublicKeyToken=b77a5c561934e089</value>
   </data>
   <data name="&gt;&gt;txtMinMz.Parent" xml:space="preserve">
     <value>panelIonFilter</value>
@@ -681,9 +621,6 @@
   <data name="&gt;&gt;label4.Name" xml:space="preserve">
     <value>label4</value>
   </data>
-  <data name="&gt;&gt;label4.Type" xml:space="preserve">
-    <value>System.Windows.Forms.Label, System.Windows.Forms, Version=4.0.0.0, Culture=neutral, PublicKeyToken=b77a5c561934e089</value>
-  </data>
   <data name="&gt;&gt;label4.Parent" xml:space="preserve">
     <value>panelIonFilter</value>
   </data>
@@ -714,9 +651,6 @@
   <data name="&gt;&gt;label5.Name" xml:space="preserve">
     <value>label5</value>
   </data>
-  <data name="&gt;&gt;label5.Type" xml:space="preserve">
-    <value>System.Windows.Forms.Label, System.Windows.Forms, Version=4.0.0.0, Culture=neutral, PublicKeyToken=b77a5c561934e089</value>
-  </data>
   <data name="&gt;&gt;label5.Parent" xml:space="preserve">
     <value>panelIonFilter</value>
   </data>
@@ -734,9 +668,6 @@
   </data>
   <data name="&gt;&gt;txtMaxMz.Name" xml:space="preserve">
     <value>txtMaxMz</value>
-  </data>
-  <data name="&gt;&gt;txtMaxMz.Type" xml:space="preserve">
-    <value>System.Windows.Forms.TextBox, System.Windows.Forms, Version=4.0.0.0, Culture=neutral, PublicKeyToken=b77a5c561934e089</value>
   </data>
   <data name="&gt;&gt;txtMaxMz.Parent" xml:space="preserve">
     <value>panelIonFilter</value>
@@ -765,9 +696,6 @@
   <data name="&gt;&gt;label6.Name" xml:space="preserve">
     <value>label6</value>
   </data>
-  <data name="&gt;&gt;label6.Type" xml:space="preserve">
-    <value>System.Windows.Forms.Label, System.Windows.Forms, Version=4.0.0.0, Culture=neutral, PublicKeyToken=b77a5c561934e089</value>
-  </data>
   <data name="&gt;&gt;label6.Parent" xml:space="preserve">
     <value>panelIonFilter</value>
   </data>
@@ -786,18 +714,12 @@
   <data name="&gt;&gt;panelIonFilter.Name" xml:space="preserve">
     <value>panelIonFilter</value>
   </data>
-  <data name="&gt;&gt;panelIonFilter.Type" xml:space="preserve">
-    <value>System.Windows.Forms.Panel, System.Windows.Forms, Version=4.0.0.0, Culture=neutral, PublicKeyToken=b77a5c561934e089</value>
-  </data>
   <data name="&gt;&gt;panelIonFilter.Parent" xml:space="preserve">
     <value>$this</value>
   </data>
   <data name="&gt;&gt;panelIonFilter.ZOrder" xml:space="preserve">
     <value>0</value>
   </data>
-  <metadata name="$this.Localizable" type="System.Boolean, mscorlib, Version=4.0.0.0, Culture=neutral, PublicKeyToken=b77a5c561934e089">
-    <value>True</value>
-  </metadata>
   <data name="$this.AutoScaleDimensions" type="System.Drawing.SizeF, System.Drawing">
     <value>6, 13</value>
   </data>
@@ -806,8 +728,5 @@
   </data>
   <data name="&gt;&gt;$this.Name" xml:space="preserve">
     <value>TransitionSettingsControl</value>
-  </data>
-  <data name="&gt;&gt;$this.Type" xml:space="preserve">
-    <value>System.Windows.Forms.UserControl, System.Windows.Forms, Version=4.0.0.0, Culture=neutral, PublicKeyToken=b77a5c561934e089</value>
   </data>
 </root>

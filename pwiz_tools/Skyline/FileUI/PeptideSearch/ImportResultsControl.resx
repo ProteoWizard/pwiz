@@ -118,17 +118,20 @@
     <value>System.Resources.ResXResourceWriter, System.Windows.Forms, Version=4.0.0.0, Culture=neutral, PublicKeyToken=b77a5c561934e089</value>
   </resheader>
   <assembly alias="System.Windows.Forms" name="System.Windows.Forms, Version=4.0.0.0, Culture=neutral, PublicKeyToken=b77a5c561934e089" />
+  <assembly alias="System.Drawing" name="System.Drawing, Version=4.0.0.0, Culture=neutral, PublicKeyToken=b03f5f7f11d50a3a" />
+  <assembly alias="mscorlib" name="mscorlib, Version=4.0.0.0, Culture=neutral, PublicKeyToken=b77a5c561934e089" />
+  <metadata name="$this.Localizable" type="System.Boolean, mscorlib, Version=4.0.0.0, Culture=neutral, PublicKeyToken=b77a5c561934e089">
+    <value>True</value>
+  </metadata>
   <data name="resultsSplitContainer.Anchor" type="System.Windows.Forms.AnchorStyles, System.Windows.Forms">
     <value>Top, Bottom, Left, Right</value>
   </data>
-  <assembly alias="System.Drawing" name="System.Drawing, Version=4.0.0.0, Culture=neutral, PublicKeyToken=b03f5f7f11d50a3a" />
   <data name="resultsSplitContainer.Location" type="System.Drawing.Point, System.Drawing">
     <value>0, 0</value>
   </data>
   <data name="resultsSplitContainer.Orientation" type="System.Windows.Forms.Orientation, System.Windows.Forms">
     <value>Horizontal</value>
   </data>
-  <assembly alias="mscorlib" name="mscorlib, Version=4.0.0.0, Culture=neutral, PublicKeyToken=b77a5c561934e089" />
   <data name="label2.AutoSize" type="System.Boolean, mscorlib">
     <value>True</value>
   </data>
@@ -146,9 +149,6 @@
   </data>
   <data name="&gt;&gt;label2.Name" xml:space="preserve">
     <value>label2</value>
-  </data>
-  <data name="&gt;&gt;label2.Type" xml:space="preserve">
-    <value>System.Windows.Forms.Label, System.Windows.Forms, Version=4.0.0.0, Culture=neutral, PublicKeyToken=b77a5c561934e089</value>
   </data>
   <data name="&gt;&gt;label2.Parent" xml:space="preserve">
     <value>resultsSplitContainer.Panel1</value>
@@ -170,9 +170,6 @@
   </data>
   <data name="&gt;&gt;listResultsFilesFound.Name" xml:space="preserve">
     <value>listResultsFilesFound</value>
-  </data>
-  <data name="&gt;&gt;listResultsFilesFound.Type" xml:space="preserve">
-    <value>System.Windows.Forms.ListBox, System.Windows.Forms, Version=4.0.0.0, Culture=neutral, PublicKeyToken=b77a5c561934e089</value>
   </data>
   <data name="&gt;&gt;listResultsFilesFound.Parent" xml:space="preserve">
     <value>resultsSplitContainer.Panel1</value>
@@ -198,9 +195,6 @@
   <data name="cbExcludeSourceFiles.Text" xml:space="preserve">
     <value>&amp;Exclude spectrum source files</value>
   </data>
-  <metadata name="toolTip1.TrayLocation" type="System.Drawing.Point, System.Drawing, Version=4.0.0.0, Culture=neutral, PublicKeyToken=b03f5f7f11d50a3a">
-    <value>17, 17</value>
-  </metadata>
   <data name="cbExcludeSourceFiles.ToolTip" xml:space="preserve">
     <value>Check this to exclude processed spectra files (i.e. mzXML, mzML etc.) in favor of original raw data when available</value>
   </data>
@@ -210,9 +204,6 @@
   <data name="&gt;&gt;cbExcludeSourceFiles.Name" xml:space="preserve">
     <value>cbExcludeSourceFiles</value>
   </data>
-  <data name="&gt;&gt;cbExcludeSourceFiles.Type" xml:space="preserve">
-    <value>System.Windows.Forms.CheckBox, System.Windows.Forms, Version=4.0.0.0, Culture=neutral, PublicKeyToken=b77a5c561934e089</value>
-  </data>
   <data name="&gt;&gt;cbExcludeSourceFiles.Parent" xml:space="preserve">
     <value>resultsSplitContainer.Panel1</value>
   </data>
@@ -221,9 +212,6 @@
   </data>
   <data name="&gt;&gt;resultsSplitContainer.Panel1.Name" xml:space="preserve">
     <value>resultsSplitContainer.Panel1</value>
-  </data>
-  <data name="&gt;&gt;resultsSplitContainer.Panel1.Type" xml:space="preserve">
-    <value>System.Windows.Forms.SplitterPanel, System.Windows.Forms, Version=4.0.0.0, Culture=neutral, PublicKeyToken=b77a5c561934e089</value>
   </data>
   <data name="&gt;&gt;resultsSplitContainer.Panel1.Parent" xml:space="preserve">
     <value>resultsSplitContainer</value>
@@ -249,9 +237,6 @@
   <data name="&gt;&gt;browseToResultsFileButton.Name" xml:space="preserve">
     <value>browseToResultsFileButton</value>
   </data>
-  <data name="&gt;&gt;browseToResultsFileButton.Type" xml:space="preserve">
-    <value>System.Windows.Forms.Button, System.Windows.Forms, Version=4.0.0.0, Culture=neutral, PublicKeyToken=b77a5c561934e089</value>
-  </data>
   <data name="&gt;&gt;browseToResultsFileButton.Parent" xml:space="preserve">
     <value>resultsSplitContainer.Panel2</value>
   </data>
@@ -275,9 +260,6 @@
   </data>
   <data name="&gt;&gt;label3.Name" xml:space="preserve">
     <value>label3</value>
-  </data>
-  <data name="&gt;&gt;label3.Type" xml:space="preserve">
-    <value>System.Windows.Forms.Label, System.Windows.Forms, Version=4.0.0.0, Culture=neutral, PublicKeyToken=b77a5c561934e089</value>
   </data>
   <data name="&gt;&gt;label3.Parent" xml:space="preserve">
     <value>resultsSplitContainer.Panel2</value>
@@ -303,9 +285,6 @@
   <data name="&gt;&gt;findResultsFilesButton.Name" xml:space="preserve">
     <value>findResultsFilesButton</value>
   </data>
-  <data name="&gt;&gt;findResultsFilesButton.Type" xml:space="preserve">
-    <value>System.Windows.Forms.Button, System.Windows.Forms, Version=4.0.0.0, Culture=neutral, PublicKeyToken=b77a5c561934e089</value>
-  </data>
   <data name="&gt;&gt;findResultsFilesButton.Parent" xml:space="preserve">
     <value>resultsSplitContainer.Panel2</value>
   </data>
@@ -327,9 +306,6 @@
   <data name="&gt;&gt;listResultsFilesMissing.Name" xml:space="preserve">
     <value>listResultsFilesMissing</value>
   </data>
-  <data name="&gt;&gt;listResultsFilesMissing.Type" xml:space="preserve">
-    <value>System.Windows.Forms.ListBox, System.Windows.Forms, Version=4.0.0.0, Culture=neutral, PublicKeyToken=b77a5c561934e089</value>
-  </data>
   <data name="&gt;&gt;listResultsFilesMissing.Parent" xml:space="preserve">
     <value>resultsSplitContainer.Panel2</value>
   </data>
@@ -338,9 +314,6 @@
   </data>
   <data name="&gt;&gt;resultsSplitContainer.Panel2.Name" xml:space="preserve">
     <value>resultsSplitContainer.Panel2</value>
-  </data>
-  <data name="&gt;&gt;resultsSplitContainer.Panel2.Type" xml:space="preserve">
-    <value>System.Windows.Forms.SplitterPanel, System.Windows.Forms, Version=4.0.0.0, Culture=neutral, PublicKeyToken=b77a5c561934e089</value>
   </data>
   <data name="&gt;&gt;resultsSplitContainer.Panel2.Parent" xml:space="preserve">
     <value>resultsSplitContainer</value>
@@ -359,9 +332,6 @@
   </data>
   <data name="&gt;&gt;resultsSplitContainer.Name" xml:space="preserve">
     <value>resultsSplitContainer</value>
-  </data>
-  <data name="&gt;&gt;resultsSplitContainer.Type" xml:space="preserve">
-    <value>System.Windows.Forms.SplitContainer, System.Windows.Forms, Version=4.0.0.0, Culture=neutral, PublicKeyToken=b77a5c561934e089</value>
   </data>
   <data name="&gt;&gt;resultsSplitContainer.Parent" xml:space="preserve">
     <value>$this</value>
@@ -389,9 +359,6 @@
   </data>
   <data name="&gt;&gt;label1.Name" xml:space="preserve">
     <value>label1</value>
-  </data>
-  <data name="&gt;&gt;label1.Type" xml:space="preserve">
-    <value>System.Windows.Forms.Label, System.Windows.Forms, Version=4.0.0.0, Culture=neutral, PublicKeyToken=b77a5c561934e089</value>
   </data>
   <data name="&gt;&gt;label1.Parent" xml:space="preserve">
     <value>$this</value>
@@ -423,9 +390,6 @@
   <data name="&gt;&gt;comboSimultaneousFiles.Name" xml:space="preserve">
     <value>comboSimultaneousFiles</value>
   </data>
-  <data name="&gt;&gt;comboSimultaneousFiles.Type" xml:space="preserve">
-    <value>System.Windows.Forms.ComboBox, System.Windows.Forms, Version=4.0.0.0, Culture=neutral, PublicKeyToken=b77a5c561934e089</value>
-  </data>
   <data name="&gt;&gt;comboSimultaneousFiles.Parent" xml:space="preserve">
     <value>$this</value>
   </data>
@@ -456,18 +420,12 @@
   <data name="&gt;&gt;cbAutoRetry.Name" xml:space="preserve">
     <value>cbAutoRetry</value>
   </data>
-  <data name="&gt;&gt;cbAutoRetry.Type" xml:space="preserve">
-    <value>System.Windows.Forms.CheckBox, System.Windows.Forms, Version=4.0.0.0, Culture=neutral, PublicKeyToken=b77a5c561934e089</value>
-  </data>
   <data name="&gt;&gt;cbAutoRetry.Parent" xml:space="preserve">
     <value>$this</value>
   </data>
   <data name="&gt;&gt;cbAutoRetry.ZOrder" xml:space="preserve">
     <value>0</value>
   </data>
-  <metadata name="$this.Localizable" type="System.Boolean, mscorlib, Version=4.0.0.0, Culture=neutral, PublicKeyToken=b77a5c561934e089">
-    <value>True</value>
-  </metadata>
   <data name="$this.AutoScaleDimensions" type="System.Drawing.SizeF, System.Drawing">
     <value>6, 13</value>
   </data>
@@ -477,13 +435,7 @@
   <data name="&gt;&gt;toolTip1.Name" xml:space="preserve">
     <value>toolTip1</value>
   </data>
-  <data name="&gt;&gt;toolTip1.Type" xml:space="preserve">
-    <value>System.Windows.Forms.ToolTip, System.Windows.Forms, Version=4.0.0.0, Culture=neutral, PublicKeyToken=b77a5c561934e089</value>
-  </data>
   <data name="&gt;&gt;$this.Name" xml:space="preserve">
     <value>ImportResultsControl</value>
-  </data>
-  <data name="&gt;&gt;$this.Type" xml:space="preserve">
-    <value>System.Windows.Forms.UserControl, System.Windows.Forms, Version=4.0.0.0, Culture=neutral, PublicKeyToken=b77a5c561934e089</value>
   </data>
 </root>

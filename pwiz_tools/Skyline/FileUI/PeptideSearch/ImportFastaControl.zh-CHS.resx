@@ -118,14 +118,17 @@
     <value>System.Resources.ResXResourceWriter, System.Windows.Forms, Version=4.0.0.0, Culture=neutral, PublicKeyToken=b77a5c561934e089</value>
   </resheader>
   <assembly alias="System.Windows.Forms" name="System.Windows.Forms, Version=4.0.0.0, Culture=neutral, PublicKeyToken=b77a5c561934e089" />
+  <assembly alias="System.Drawing" name="System.Drawing, Version=4.0.0.0, Culture=neutral, PublicKeyToken=b03f5f7f11d50a3a" />
+  <assembly alias="mscorlib" name="mscorlib, Version=4.0.0.0, Culture=neutral, PublicKeyToken=b77a5c561934e089" />
+  <metadata name="$this.Localizable" type="System.Boolean, mscorlib, Version=4.0.0.0, Culture=neutral, PublicKeyToken=b77a5c561934e089">
+    <value>True</value>
+  </metadata>
   <data name="tbxFasta.Anchor" type="System.Windows.Forms.AnchorStyles, System.Windows.Forms">
     <value>Top, Bottom, Left, Right</value>
   </data>
-  <assembly alias="System.Drawing" name="System.Drawing, Version=4.0.0.0, Culture=neutral, PublicKeyToken=b03f5f7f11d50a3a" />
   <data name="tbxFasta.Location" type="System.Drawing.Point, System.Drawing">
     <value>14, 80</value>
   </data>
-  <assembly alias="mscorlib" name="mscorlib, Version=4.0.0.0, Culture=neutral, PublicKeyToken=b77a5c561934e089" />
   <data name="tbxFasta.MaxLength" type="System.Int32, mscorlib">
     <value>2147483647</value>
   </data>
@@ -141,9 +144,6 @@
   <data name="tbxFasta.TabIndex" type="System.Int32, mscorlib">
     <value>5</value>
   </data>
-  <metadata name="helpTipFasta.TrayLocation" type="System.Drawing.Point, System.Drawing, Version=4.0.0.0, Culture=neutral, PublicKeyToken=b03f5f7f11d50a3a">
-    <value>17, 17</value>
-  </metadata>
   <data name="tbxFasta.ToolTip" xml:space="preserve">
     <value>从文件中粘贴或加载的 FASTA 序列文本</value>
   </data>
@@ -152,9 +152,6 @@
   </data>
   <data name="&gt;&gt;tbxFasta.Name" xml:space="preserve">
     <value>tbxFasta</value>
-  </data>
-  <data name="&gt;&gt;tbxFasta.Type" xml:space="preserve">
-    <value>System.Windows.Forms.TextBox, System.Windows.Forms, Version=4.0.0.0, Culture=neutral, PublicKeyToken=b77a5c561934e089</value>
   </data>
   <data name="&gt;&gt;tbxFasta.Parent" xml:space="preserve">
     <value>$this</value>
@@ -179,9 +176,6 @@
   </data>
   <data name="&gt;&gt;browseFastaBtn.Name" xml:space="preserve">
     <value>browseFastaBtn</value>
-  </data>
-  <data name="&gt;&gt;browseFastaBtn.Type" xml:space="preserve">
-    <value>System.Windows.Forms.Button, System.Windows.Forms, Version=4.0.0.0, Culture=neutral, PublicKeyToken=b77a5c561934e089</value>
   </data>
   <data name="&gt;&gt;browseFastaBtn.Parent" xml:space="preserve">
     <value>$this</value>
@@ -213,9 +207,6 @@
   <data name="&gt;&gt;tbxError.Name" xml:space="preserve">
     <value>tbxError</value>
   </data>
-  <data name="&gt;&gt;tbxError.Type" xml:space="preserve">
-    <value>System.Windows.Forms.TextBox, System.Windows.Forms, Version=4.0.0.0, Culture=neutral, PublicKeyToken=b77a5c561934e089</value>
-  </data>
   <data name="&gt;&gt;tbxError.Parent" xml:space="preserve">
     <value>panelError</value>
   </data>
@@ -236,9 +227,6 @@
   </data>
   <data name="&gt;&gt;panelError.Name" xml:space="preserve">
     <value>panelError</value>
-  </data>
-  <data name="&gt;&gt;panelError.Type" xml:space="preserve">
-    <value>System.Windows.Forms.Panel, System.Windows.Forms, Version=4.0.0.0, Culture=neutral, PublicKeyToken=b77a5c561934e089</value>
   </data>
   <data name="&gt;&gt;panelError.Parent" xml:space="preserve">
     <value>$this</value>
@@ -268,9 +256,6 @@
   <data name="&gt;&gt;txtNumDecoys.Name" xml:space="preserve">
     <value>txtNumDecoys</value>
   </data>
-  <data name="&gt;&gt;txtNumDecoys.Type" xml:space="preserve">
-    <value>System.Windows.Forms.TextBox, System.Windows.Forms, Version=4.0.0.0, Culture=neutral, PublicKeyToken=b77a5c561934e089</value>
-  </data>
   <data name="&gt;&gt;txtNumDecoys.Parent" xml:space="preserve">
     <value>panelDecoys</value>
   </data>
@@ -294,9 +279,6 @@
   </data>
   <data name="&gt;&gt;clearBtn.Name" xml:space="preserve">
     <value>clearBtn</value>
-  </data>
-  <data name="&gt;&gt;clearBtn.Type" xml:space="preserve">
-    <value>System.Windows.Forms.Button, System.Windows.Forms, Version=4.0.0.0, Culture=neutral, PublicKeyToken=b77a5c561934e089</value>
   </data>
   <data name="&gt;&gt;clearBtn.Parent" xml:space="preserve">
     <value>$this</value>
@@ -322,9 +304,6 @@
   <data name="&gt;&gt;label1.Name" xml:space="preserve">
     <value>label1</value>
   </data>
-  <data name="&gt;&gt;label1.Type" xml:space="preserve">
-    <value>System.Windows.Forms.Label, System.Windows.Forms, Version=4.0.0.0, Culture=neutral, PublicKeyToken=b77a5c561934e089</value>
-  </data>
   <data name="&gt;&gt;label1.Parent" xml:space="preserve">
     <value>$this</value>
   </data>
@@ -348,9 +327,6 @@
   </data>
   <data name="&gt;&gt;label2.Name" xml:space="preserve">
     <value>label2</value>
-  </data>
-  <data name="&gt;&gt;label2.Type" xml:space="preserve">
-    <value>System.Windows.Forms.Label, System.Windows.Forms, Version=4.0.0.0, Culture=neutral, PublicKeyToken=b77a5c561934e089</value>
   </data>
   <data name="&gt;&gt;label2.Parent" xml:space="preserve">
     <value>$this</value>
@@ -400,9 +376,6 @@
   <data name="&gt;&gt;cbMissedCleavages.Name" xml:space="preserve">
     <value>cbMissedCleavages</value>
   </data>
-  <data name="&gt;&gt;cbMissedCleavages.Type" xml:space="preserve">
-    <value>System.Windows.Forms.ComboBox, System.Windows.Forms, Version=4.0.0.0, Culture=neutral, PublicKeyToken=b77a5c561934e089</value>
-  </data>
   <data name="&gt;&gt;cbMissedCleavages.Parent" xml:space="preserve">
     <value>$this</value>
   </data>
@@ -427,9 +400,6 @@
   <data name="&gt;&gt;label3.Name" xml:space="preserve">
     <value>label3</value>
   </data>
-  <data name="&gt;&gt;label3.Type" xml:space="preserve">
-    <value>System.Windows.Forms.Label, System.Windows.Forms, Version=4.0.0.0, Culture=neutral, PublicKeyToken=b77a5c561934e089</value>
-  </data>
   <data name="&gt;&gt;label3.Parent" xml:space="preserve">
     <value>$this</value>
   </data>
@@ -447,9 +417,6 @@
   </data>
   <data name="&gt;&gt;comboEnzyme.Name" xml:space="preserve">
     <value>comboEnzyme</value>
-  </data>
-  <data name="&gt;&gt;comboEnzyme.Type" xml:space="preserve">
-    <value>System.Windows.Forms.ComboBox, System.Windows.Forms, Version=4.0.0.0, Culture=neutral, PublicKeyToken=b77a5c561934e089</value>
   </data>
   <data name="&gt;&gt;comboEnzyme.Parent" xml:space="preserve">
     <value>$this</value>
@@ -478,9 +445,6 @@
   <data name="&gt;&gt;label4.Name" xml:space="preserve">
     <value>label4</value>
   </data>
-  <data name="&gt;&gt;label4.Type" xml:space="preserve">
-    <value>System.Windows.Forms.Label, System.Windows.Forms, Version=4.0.0.0, Culture=neutral, PublicKeyToken=b77a5c561934e089</value>
-  </data>
   <data name="&gt;&gt;label4.Parent" xml:space="preserve">
     <value>panelDecoys</value>
   </data>
@@ -508,9 +472,6 @@
   <data name="&gt;&gt;label5.Name" xml:space="preserve">
     <value>label5</value>
   </data>
-  <data name="&gt;&gt;label5.Type" xml:space="preserve">
-    <value>System.Windows.Forms.Label, System.Windows.Forms, Version=4.0.0.0, Culture=neutral, PublicKeyToken=b77a5c561934e089</value>
-  </data>
   <data name="&gt;&gt;label5.Parent" xml:space="preserve">
     <value>panelDecoys</value>
   </data>
@@ -528,9 +489,6 @@
   </data>
   <data name="&gt;&gt;cbDecoyMethod.Name" xml:space="preserve">
     <value>cbDecoyMethod</value>
-  </data>
-  <data name="&gt;&gt;cbDecoyMethod.Type" xml:space="preserve">
-    <value>System.Windows.Forms.ComboBox, System.Windows.Forms, Version=4.0.0.0, Culture=neutral, PublicKeyToken=b77a5c561934e089</value>
   </data>
   <data name="&gt;&gt;cbDecoyMethod.Parent" xml:space="preserve">
     <value>panelDecoys</value>
@@ -562,9 +520,6 @@
   <data name="&gt;&gt;cbAutoTrain.Name" xml:space="preserve">
     <value>cbAutoTrain</value>
   </data>
-  <data name="&gt;&gt;cbAutoTrain.Type" xml:space="preserve">
-    <value>System.Windows.Forms.CheckBox, System.Windows.Forms, Version=4.0.0.0, Culture=neutral, PublicKeyToken=b77a5c561934e089</value>
-  </data>
   <data name="&gt;&gt;cbAutoTrain.Parent" xml:space="preserve">
     <value>panelDecoys</value>
   </data>
@@ -582,9 +537,6 @@
   </data>
   <data name="&gt;&gt;panelDecoys.Name" xml:space="preserve">
     <value>panelDecoys</value>
-  </data>
-  <data name="&gt;&gt;panelDecoys.Type" xml:space="preserve">
-    <value>System.Windows.Forms.Panel, System.Windows.Forms, Version=4.0.0.0, Culture=neutral, PublicKeyToken=b77a5c561934e089</value>
   </data>
   <data name="&gt;&gt;panelDecoys.Parent" xml:space="preserve">
     <value>$this</value>
@@ -613,9 +565,6 @@
   <data name="&gt;&gt;cbImportFromSeparateFasta.Name" xml:space="preserve">
     <value>cbImportFromSeparateFasta</value>
   </data>
-  <data name="&gt;&gt;cbImportFromSeparateFasta.Type" xml:space="preserve">
-    <value>System.Windows.Forms.CheckBox, System.Windows.Forms, Version=4.0.0.0, Culture=neutral, PublicKeyToken=b77a5c561934e089</value>
-  </data>
   <data name="&gt;&gt;cbImportFromSeparateFasta.Parent" xml:space="preserve">
     <value>targetFastaPanel</value>
   </data>
@@ -642,9 +591,6 @@
   </data>
   <data name="&gt;&gt;tbxFastaTargets.Name" xml:space="preserve">
     <value>tbxFastaTargets</value>
-  </data>
-  <data name="&gt;&gt;tbxFastaTargets.Type" xml:space="preserve">
-    <value>System.Windows.Forms.TextBox, System.Windows.Forms, Version=4.0.0.0, Culture=neutral, PublicKeyToken=b77a5c561934e089</value>
   </data>
   <data name="&gt;&gt;tbxFastaTargets.Parent" xml:space="preserve">
     <value>targetFastaPanel</value>
@@ -679,9 +625,6 @@
   <data name="&gt;&gt;browseFastaTargetsBtn.Name" xml:space="preserve">
     <value>browseFastaTargetsBtn</value>
   </data>
-  <data name="&gt;&gt;browseFastaTargetsBtn.Type" xml:space="preserve">
-    <value>System.Windows.Forms.Button, System.Windows.Forms, Version=4.0.0.0, Culture=neutral, PublicKeyToken=b77a5c561934e089</value>
-  </data>
   <data name="&gt;&gt;browseFastaTargetsBtn.Parent" xml:space="preserve">
     <value>targetFastaPanel</value>
   </data>
@@ -706,18 +649,12 @@
   <data name="&gt;&gt;targetFastaPanel.Name" xml:space="preserve">
     <value>targetFastaPanel</value>
   </data>
-  <data name="&gt;&gt;targetFastaPanel.Type" xml:space="preserve">
-    <value>System.Windows.Forms.Panel, System.Windows.Forms, Version=4.0.0.0, Culture=neutral, PublicKeyToken=b77a5c561934e089</value>
-  </data>
   <data name="&gt;&gt;targetFastaPanel.Parent" xml:space="preserve">
     <value>$this</value>
   </data>
   <data name="&gt;&gt;targetFastaPanel.ZOrder" xml:space="preserve">
     <value>0</value>
   </data>
-  <metadata name="$this.Localizable" type="System.Boolean, mscorlib, Version=4.0.0.0, Culture=neutral, PublicKeyToken=b77a5c561934e089">
-    <value>True</value>
-  </metadata>
   <data name="$this.AutoScaleDimensions" type="System.Drawing.SizeF, System.Drawing">
     <value>6, 13</value>
   </data>
@@ -727,13 +664,7 @@
   <data name="&gt;&gt;helpTipFasta.Name" xml:space="preserve">
     <value>helpTipFasta</value>
   </data>
-  <data name="&gt;&gt;helpTipFasta.Type" xml:space="preserve">
-    <value>System.Windows.Forms.ToolTip, System.Windows.Forms, Version=4.0.0.0, Culture=neutral, PublicKeyToken=b77a5c561934e089</value>
-  </data>
   <data name="&gt;&gt;$this.Name" xml:space="preserve">
     <value>ImportFastaControl</value>
-  </data>
-  <data name="&gt;&gt;$this.Type" xml:space="preserve">
-    <value>System.Windows.Forms.UserControl, System.Windows.Forms, Version=4.0.0.0, Culture=neutral, PublicKeyToken=b77a5c561934e089</value>
   </data>
 </root>

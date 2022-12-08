@@ -117,10 +117,12 @@
   <resheader name="writer">
     <value>System.Resources.ResXResourceWriter, System.Windows.Forms, Version=4.0.0.0, Culture=neutral, PublicKeyToken=b77a5c561934e089</value>
   </resheader>
-  <metadata name="modeUIHandler.TrayLocation" type="System.Drawing.Point, System.Drawing, Version=4.0.0.0, Culture=neutral, PublicKeyToken=b03f5f7f11d50a3a">
-    <value>17, 17</value>
-  </metadata>
   <assembly alias="System.Windows.Forms" name="System.Windows.Forms, Version=4.0.0.0, Culture=neutral, PublicKeyToken=b77a5c561934e089" />
+  <assembly alias="System.Drawing" name="System.Drawing, Version=4.0.0.0, Culture=neutral, PublicKeyToken=b03f5f7f11d50a3a" />
+  <assembly alias="mscorlib" name="mscorlib, Version=4.0.0.0, Culture=neutral, PublicKeyToken=b77a5c561934e089" />
+  <metadata name="$this.Localizable" type="System.Boolean, mscorlib, Version=4.0.0.0, Culture=neutral, PublicKeyToken=b77a5c561934e089">
+    <value>True</value>
+  </metadata>
   <data name="tabControl.Anchor" type="System.Windows.Forms.AnchorStyles, System.Windows.Forms">
     <value>Top, Bottom, Left, Right</value>
   </data>
@@ -130,14 +132,12 @@
   <data name="btnAddAnnotation.ImeMode" type="System.Windows.Forms.ImeMode, System.Windows.Forms">
     <value>NoControl</value>
   </data>
-  <assembly alias="System.Drawing" name="System.Drawing, Version=4.0.0.0, Culture=neutral, PublicKeyToken=b03f5f7f11d50a3a" />
   <data name="btnAddAnnotation.Location" type="System.Drawing.Point, System.Drawing">
     <value>516, 48</value>
   </data>
   <data name="btnAddAnnotation.Size" type="System.Drawing.Size, System.Drawing">
     <value>100, 23</value>
   </data>
-  <assembly alias="mscorlib" name="mscorlib, Version=4.0.0.0, Culture=neutral, PublicKeyToken=b77a5c561934e089" />
   <data name="btnAddAnnotation.TabIndex" type="System.Int32, mscorlib">
     <value>8</value>
   </data>
@@ -146,9 +146,6 @@
   </data>
   <data name="&gt;&gt;btnAddAnnotation.Name" xml:space="preserve">
     <value>btnAddAnnotation</value>
-  </data>
-  <data name="&gt;&gt;btnAddAnnotation.Type" xml:space="preserve">
-    <value>System.Windows.Forms.Button, System.Windows.Forms, Version=4.0.0.0, Culture=neutral, PublicKeyToken=b77a5c561934e089</value>
   </data>
   <data name="&gt;&gt;btnAddAnnotation.Parent" xml:space="preserve">
     <value>tabPageAnnotations</value>
@@ -177,9 +174,6 @@
   <data name="&gt;&gt;label1.Name" xml:space="preserve">
     <value>label1</value>
   </data>
-  <data name="&gt;&gt;label1.Type" xml:space="preserve">
-    <value>System.Windows.Forms.Label, System.Windows.Forms, Version=4.0.0.0, Culture=neutral, PublicKeyToken=b77a5c561934e089</value>
-  </data>
   <data name="&gt;&gt;label1.Parent" xml:space="preserve">
     <value>tabPageAnnotations</value>
   </data>
@@ -207,9 +201,6 @@
   <data name="&gt;&gt;btnEditAnnotationList.Name" xml:space="preserve">
     <value>btnEditAnnotationList</value>
   </data>
-  <data name="&gt;&gt;btnEditAnnotationList.Type" xml:space="preserve">
-    <value>System.Windows.Forms.Button, System.Windows.Forms, Version=4.0.0.0, Culture=neutral, PublicKeyToken=b77a5c561934e089</value>
-  </data>
   <data name="&gt;&gt;btnEditAnnotationList.Parent" xml:space="preserve">
     <value>tabPageAnnotations</value>
   </data>
@@ -230,9 +221,6 @@
   </data>
   <data name="&gt;&gt;checkedListBoxAnnotations.Name" xml:space="preserve">
     <value>checkedListBoxAnnotations</value>
-  </data>
-  <data name="&gt;&gt;checkedListBoxAnnotations.Type" xml:space="preserve">
-    <value>System.Windows.Forms.CheckedListBox, System.Windows.Forms, Version=4.0.0.0, Culture=neutral, PublicKeyToken=b77a5c561934e089</value>
   </data>
   <data name="&gt;&gt;checkedListBoxAnnotations.Parent" xml:space="preserve">
     <value>tabPageAnnotations</value>
@@ -257,9 +245,6 @@
   </data>
   <data name="&gt;&gt;tabPageAnnotations.Name" xml:space="preserve">
     <value>tabPageAnnotations</value>
-  </data>
-  <data name="&gt;&gt;tabPageAnnotations.Type" xml:space="preserve">
-    <value>System.Windows.Forms.TabPage, System.Windows.Forms, Version=4.0.0.0, Culture=neutral, PublicKeyToken=b77a5c561934e089</value>
   </data>
   <data name="&gt;&gt;tabPageAnnotations.Parent" xml:space="preserve">
     <value>tabControl</value>
@@ -288,9 +273,6 @@
   <data name="&gt;&gt;btnAddMetadataRuleSet.Name" xml:space="preserve">
     <value>btnAddMetadataRuleSet</value>
   </data>
-  <data name="&gt;&gt;btnAddMetadataRuleSet.Type" xml:space="preserve">
-    <value>System.Windows.Forms.Button, System.Windows.Forms, Version=4.0.0.0, Culture=neutral, PublicKeyToken=b77a5c561934e089</value>
-  </data>
   <data name="&gt;&gt;btnAddMetadataRuleSet.Parent" xml:space="preserve">
     <value>tabPageResultFileRules</value>
   </data>
@@ -318,9 +300,6 @@
   <data name="&gt;&gt;btnEditMetadataRuleSetList.Name" xml:space="preserve">
     <value>btnEditMetadataRuleSetList</value>
   </data>
-  <data name="&gt;&gt;btnEditMetadataRuleSetList.Type" xml:space="preserve">
-    <value>System.Windows.Forms.Button, System.Windows.Forms, Version=4.0.0.0, Culture=neutral, PublicKeyToken=b77a5c561934e089</value>
-  </data>
   <data name="&gt;&gt;btnEditMetadataRuleSetList.Parent" xml:space="preserve">
     <value>tabPageResultFileRules</value>
   </data>
@@ -345,9 +324,6 @@
   <data name="&gt;&gt;lblMetadataRulesDescription.Name" xml:space="preserve">
     <value>lblMetadataRulesDescription</value>
   </data>
-  <data name="&gt;&gt;lblMetadataRulesDescription.Type" xml:space="preserve">
-    <value>System.Windows.Forms.Label, System.Windows.Forms, Version=4.0.0.0, Culture=neutral, PublicKeyToken=b77a5c561934e089</value>
-  </data>
   <data name="&gt;&gt;lblMetadataRulesDescription.Parent" xml:space="preserve">
     <value>tabPageResultFileRules</value>
   </data>
@@ -368,9 +344,6 @@
   </data>
   <data name="&gt;&gt;checkedListBoxRuleSets.Name" xml:space="preserve">
     <value>checkedListBoxRuleSets</value>
-  </data>
-  <data name="&gt;&gt;checkedListBoxRuleSets.Type" xml:space="preserve">
-    <value>System.Windows.Forms.CheckedListBox, System.Windows.Forms, Version=4.0.0.0, Culture=neutral, PublicKeyToken=b77a5c561934e089</value>
   </data>
   <data name="&gt;&gt;checkedListBoxRuleSets.Parent" xml:space="preserve">
     <value>tabPageResultFileRules</value>
@@ -396,9 +369,6 @@
   <data name="&gt;&gt;tabPageResultFileRules.Name" xml:space="preserve">
     <value>tabPageResultFileRules</value>
   </data>
-  <data name="&gt;&gt;tabPageResultFileRules.Type" xml:space="preserve">
-    <value>System.Windows.Forms.TabPage, System.Windows.Forms, Version=4.0.0.0, Culture=neutral, PublicKeyToken=b77a5c561934e089</value>
-  </data>
   <data name="&gt;&gt;tabPageResultFileRules.Parent" xml:space="preserve">
     <value>tabControl</value>
   </data>
@@ -419,9 +389,6 @@
   </data>
   <data name="&gt;&gt;lblListsDescription.Name" xml:space="preserve">
     <value>lblListsDescription</value>
-  </data>
-  <data name="&gt;&gt;lblListsDescription.Type" xml:space="preserve">
-    <value>System.Windows.Forms.Label, System.Windows.Forms, Version=4.0.0.0, Culture=neutral, PublicKeyToken=b77a5c561934e089</value>
   </data>
   <data name="&gt;&gt;lblListsDescription.Parent" xml:space="preserve">
     <value>tabPageLists</value>
@@ -450,9 +417,6 @@
   <data name="&gt;&gt;btnAddList.Name" xml:space="preserve">
     <value>btnAddList</value>
   </data>
-  <data name="&gt;&gt;btnAddList.Type" xml:space="preserve">
-    <value>System.Windows.Forms.Button, System.Windows.Forms, Version=4.0.0.0, Culture=neutral, PublicKeyToken=b77a5c561934e089</value>
-  </data>
   <data name="&gt;&gt;btnAddList.Parent" xml:space="preserve">
     <value>tabPageLists</value>
   </data>
@@ -480,9 +444,6 @@
   <data name="&gt;&gt;btnManageLists.Name" xml:space="preserve">
     <value>btnManageLists</value>
   </data>
-  <data name="&gt;&gt;btnManageLists.Type" xml:space="preserve">
-    <value>System.Windows.Forms.Button, System.Windows.Forms, Version=4.0.0.0, Culture=neutral, PublicKeyToken=b77a5c561934e089</value>
-  </data>
   <data name="&gt;&gt;btnManageLists.Parent" xml:space="preserve">
     <value>tabPageLists</value>
   </data>
@@ -503,9 +464,6 @@
   </data>
   <data name="&gt;&gt;checkedListBoxLists.Name" xml:space="preserve">
     <value>checkedListBoxLists</value>
-  </data>
-  <data name="&gt;&gt;checkedListBoxLists.Type" xml:space="preserve">
-    <value>System.Windows.Forms.CheckedListBox, System.Windows.Forms, Version=4.0.0.0, Culture=neutral, PublicKeyToken=b77a5c561934e089</value>
   </data>
   <data name="&gt;&gt;checkedListBoxLists.Parent" xml:space="preserve">
     <value>tabPageLists</value>
@@ -531,9 +489,6 @@
   <data name="&gt;&gt;tabPageLists.Name" xml:space="preserve">
     <value>tabPageLists</value>
   </data>
-  <data name="&gt;&gt;tabPageLists.Type" xml:space="preserve">
-    <value>System.Windows.Forms.TabPage, System.Windows.Forms, Version=4.0.0.0, Culture=neutral, PublicKeyToken=b77a5c561934e089</value>
-  </data>
   <data name="&gt;&gt;tabPageLists.Parent" xml:space="preserve">
     <value>tabControl</value>
   </data>
@@ -557,9 +512,6 @@
   </data>
   <data name="&gt;&gt;lblGroupComparisonsDescription.Name" xml:space="preserve">
     <value>lblGroupComparisonsDescription</value>
-  </data>
-  <data name="&gt;&gt;lblGroupComparisonsDescription.Type" xml:space="preserve">
-    <value>System.Windows.Forms.Label, System.Windows.Forms, Version=4.0.0.0, Culture=neutral, PublicKeyToken=b77a5c561934e089</value>
   </data>
   <data name="&gt;&gt;lblGroupComparisonsDescription.Parent" xml:space="preserve">
     <value>tabPageGroupComparisons</value>
@@ -588,9 +540,6 @@
   <data name="&gt;&gt;btnAddGroupComparison.Name" xml:space="preserve">
     <value>btnAddGroupComparison</value>
   </data>
-  <data name="&gt;&gt;btnAddGroupComparison.Type" xml:space="preserve">
-    <value>System.Windows.Forms.Button, System.Windows.Forms, Version=4.0.0.0, Culture=neutral, PublicKeyToken=b77a5c561934e089</value>
-  </data>
   <data name="&gt;&gt;btnAddGroupComparison.Parent" xml:space="preserve">
     <value>tabPageGroupComparisons</value>
   </data>
@@ -618,9 +567,6 @@
   <data name="&gt;&gt;btnEditGroupComparisonList.Name" xml:space="preserve">
     <value>btnEditGroupComparisonList</value>
   </data>
-  <data name="&gt;&gt;btnEditGroupComparisonList.Type" xml:space="preserve">
-    <value>System.Windows.Forms.Button, System.Windows.Forms, Version=4.0.0.0, Culture=neutral, PublicKeyToken=b77a5c561934e089</value>
-  </data>
   <data name="&gt;&gt;btnEditGroupComparisonList.Parent" xml:space="preserve">
     <value>tabPageGroupComparisons</value>
   </data>
@@ -641,9 +587,6 @@
   </data>
   <data name="&gt;&gt;checkedListBoxGroupComparisons.Name" xml:space="preserve">
     <value>checkedListBoxGroupComparisons</value>
-  </data>
-  <data name="&gt;&gt;checkedListBoxGroupComparisons.Type" xml:space="preserve">
-    <value>System.Windows.Forms.CheckedListBox, System.Windows.Forms, Version=4.0.0.0, Culture=neutral, PublicKeyToken=b77a5c561934e089</value>
   </data>
   <data name="&gt;&gt;checkedListBoxGroupComparisons.Parent" xml:space="preserve">
     <value>tabPageGroupComparisons</value>
@@ -668,9 +611,6 @@
   </data>
   <data name="&gt;&gt;tabPageGroupComparisons.Name" xml:space="preserve">
     <value>tabPageGroupComparisons</value>
-  </data>
-  <data name="&gt;&gt;tabPageGroupComparisons.Type" xml:space="preserve">
-    <value>System.Windows.Forms.TabPage, System.Windows.Forms, Version=4.0.0.0, Culture=neutral, PublicKeyToken=b77a5c561934e089</value>
   </data>
   <data name="&gt;&gt;tabPageGroupComparisons.Parent" xml:space="preserve">
     <value>tabControl</value>
@@ -699,9 +639,6 @@
   <data name="&gt;&gt;btnAddReport.Name" xml:space="preserve">
     <value>btnAddReport</value>
   </data>
-  <data name="&gt;&gt;btnAddReport.Type" xml:space="preserve">
-    <value>System.Windows.Forms.Button, System.Windows.Forms, Version=4.0.0.0, Culture=neutral, PublicKeyToken=b77a5c561934e089</value>
-  </data>
   <data name="&gt;&gt;btnAddReport.Parent" xml:space="preserve">
     <value>tabPageReports</value>
   </data>
@@ -728,9 +665,6 @@
   </data>
   <data name="&gt;&gt;btnEditReportList.Name" xml:space="preserve">
     <value>btnEditReportList</value>
-  </data>
-  <data name="&gt;&gt;btnEditReportList.Type" xml:space="preserve">
-    <value>System.Windows.Forms.Button, System.Windows.Forms, Version=4.0.0.0, Culture=neutral, PublicKeyToken=b77a5c561934e089</value>
   </data>
   <data name="&gt;&gt;btnEditReportList.Parent" xml:space="preserve">
     <value>tabPageReports</value>
@@ -759,9 +693,6 @@
   <data name="&gt;&gt;labelReports.Name" xml:space="preserve">
     <value>labelReports</value>
   </data>
-  <data name="&gt;&gt;labelReports.Type" xml:space="preserve">
-    <value>System.Windows.Forms.Label, System.Windows.Forms, Version=4.0.0.0, Culture=neutral, PublicKeyToken=b77a5c561934e089</value>
-  </data>
   <data name="&gt;&gt;labelReports.Parent" xml:space="preserve">
     <value>tabPageReports</value>
   </data>
@@ -782,9 +713,6 @@
   </data>
   <data name="&gt;&gt;chooseViewsControl.Name" xml:space="preserve">
     <value>chooseViewsControl</value>
-  </data>
-  <data name="&gt;&gt;chooseViewsControl.Type" xml:space="preserve">
-    <value>pwiz.Common.DataBinding.Controls.Editor.ChooseViewsControl, pwiz.Common, Version=1.0.0.0, Culture=neutral, PublicKeyToken=null</value>
   </data>
   <data name="&gt;&gt;chooseViewsControl.Parent" xml:space="preserve">
     <value>tabPageReports</value>
@@ -810,9 +738,6 @@
   <data name="&gt;&gt;tabPageReports.Name" xml:space="preserve">
     <value>tabPageReports</value>
   </data>
-  <data name="&gt;&gt;tabPageReports.Type" xml:space="preserve">
-    <value>System.Windows.Forms.TabPage, System.Windows.Forms, Version=4.0.0.0, Culture=neutral, PublicKeyToken=b77a5c561934e089</value>
-  </data>
   <data name="&gt;&gt;tabPageReports.Parent" xml:space="preserve">
     <value>tabControl</value>
   </data>
@@ -830,9 +755,6 @@
   </data>
   <data name="&gt;&gt;tabControl.Name" xml:space="preserve">
     <value>tabControl</value>
-  </data>
-  <data name="&gt;&gt;tabControl.Type" xml:space="preserve">
-    <value>System.Windows.Forms.TabControl, System.Windows.Forms, Version=4.0.0.0, Culture=neutral, PublicKeyToken=b77a5c561934e089</value>
   </data>
   <data name="&gt;&gt;tabControl.Parent" xml:space="preserve">
     <value>$this</value>
@@ -861,9 +783,6 @@
   <data name="&gt;&gt;btnCancel.Name" xml:space="preserve">
     <value>btnCancel</value>
   </data>
-  <data name="&gt;&gt;btnCancel.Type" xml:space="preserve">
-    <value>System.Windows.Forms.Button, System.Windows.Forms, Version=4.0.0.0, Culture=neutral, PublicKeyToken=b77a5c561934e089</value>
-  </data>
   <data name="&gt;&gt;btnCancel.Parent" xml:space="preserve">
     <value>$this</value>
   </data>
@@ -891,18 +810,12 @@
   <data name="&gt;&gt;btnOK.Name" xml:space="preserve">
     <value>btnOK</value>
   </data>
-  <data name="&gt;&gt;btnOK.Type" xml:space="preserve">
-    <value>System.Windows.Forms.Button, System.Windows.Forms, Version=4.0.0.0, Culture=neutral, PublicKeyToken=b77a5c561934e089</value>
-  </data>
   <data name="&gt;&gt;btnOK.Parent" xml:space="preserve">
     <value>$this</value>
   </data>
   <data name="&gt;&gt;btnOK.ZOrder" xml:space="preserve">
     <value>1</value>
   </data>
-  <metadata name="$this.Localizable" type="System.Boolean, mscorlib, Version=4.0.0.0, Culture=neutral, PublicKeyToken=b77a5c561934e089">
-    <value>True</value>
-  </metadata>
   <data name="$this.AutoScaleDimensions" type="System.Drawing.SizeF, System.Drawing">
     <value>6, 13</value>
   </data>
@@ -918,13 +831,7 @@
   <data name="&gt;&gt;modeUIHandler.Name" xml:space="preserve">
     <value>modeUIHandler</value>
   </data>
-  <data name="&gt;&gt;modeUIHandler.Type" xml:space="preserve">
-    <value>pwiz.Skyline.Util.Helpers+ModeUIExtender, Skyline, Version=1.0.0.0, Culture=neutral, PublicKeyToken=null</value>
-  </data>
   <data name="&gt;&gt;$this.Name" xml:space="preserve">
     <value>DocumentSettingsDlg</value>
-  </data>
-  <data name="&gt;&gt;$this.Type" xml:space="preserve">
-    <value>pwiz.Skyline.Util.FormEx, Skyline, Version=1.0.0.0, Culture=neutral, PublicKeyToken=null</value>
   </data>
 </root>

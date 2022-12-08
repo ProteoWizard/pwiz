@@ -117,17 +117,18 @@
   <resheader name="writer">
     <value>System.Resources.ResXResourceWriter, System.Windows.Forms, Version=4.0.0.0, Culture=neutral, PublicKeyToken=b77a5c561934e089</value>
   </resheader>
-  <metadata name="modeUIHandler.TrayLocation" type="System.Drawing.Point, System.Drawing, Version=4.0.0.0, Culture=neutral, PublicKeyToken=b03f5f7f11d50a3a">
-    <value>17, 17</value>
-  </metadata>
   <assembly alias="System.Windows.Forms" name="System.Windows.Forms, Version=4.0.0.0, Culture=neutral, PublicKeyToken=b77a5c561934e089" />
+  <assembly alias="mscorlib" name="mscorlib, Version=4.0.0.0, Culture=neutral, PublicKeyToken=b77a5c561934e089" />
+  <assembly alias="System.Drawing" name="System.Drawing, Version=4.0.0.0, Culture=neutral, PublicKeyToken=b03f5f7f11d50a3a" />
+  <metadata name="$this.Localizable" type="System.Boolean, mscorlib, Version=4.0.0.0, Culture=neutral, PublicKeyToken=b77a5c561934e089">
+    <value>True</value>
+  </metadata>
   <data name="listView.Anchor" type="System.Windows.Forms.AnchorStyles, System.Windows.Forms">
     <value>Top, Bottom, Left, Right</value>
   </data>
   <data name="SourceName.Text" xml:space="preserve">
     <value>名称</value>
   </data>
-  <assembly alias="mscorlib" name="mscorlib, Version=4.0.0.0, Culture=neutral, PublicKeyToken=b77a5c561934e089" />
   <data name="SourceName.Width" type="System.Int32, mscorlib">
     <value>-1</value>
   </data>
@@ -146,7 +147,6 @@
   <data name="DateModified.Width" type="System.Int32, mscorlib">
     <value>120</value>
   </data>
-  <assembly alias="System.Drawing" name="System.Drawing, Version=4.0.0.0, Culture=neutral, PublicKeyToken=b03f5f7f11d50a3a" />
   <data name="listView.Location" type="System.Drawing.Point, System.Drawing">
     <value>118, 45</value>
   </data>
@@ -158,9 +158,6 @@
   </data>
   <data name="&gt;&gt;listView.Name" xml:space="preserve">
     <value>listView</value>
-  </data>
-  <data name="&gt;&gt;listView.Type" xml:space="preserve">
-    <value>System.Windows.Forms.ListView, System.Windows.Forms, Version=4.0.0.0, Culture=neutral, PublicKeyToken=b77a5c561934e089</value>
   </data>
   <data name="&gt;&gt;listView.Parent" xml:space="preserve">
     <value>$this</value>
@@ -182,9 +179,6 @@
   </data>
   <data name="&gt;&gt;lookInComboBox.Name" xml:space="preserve">
     <value>lookInComboBox</value>
-  </data>
-  <data name="&gt;&gt;lookInComboBox.Type" xml:space="preserve">
-    <value>System.Windows.Forms.ComboBox, System.Windows.Forms, Version=4.0.0.0, Culture=neutral, PublicKeyToken=b77a5c561934e089</value>
   </data>
   <data name="&gt;&gt;lookInComboBox.Parent" xml:space="preserve">
     <value>$this</value>
@@ -210,9 +204,6 @@
   <data name="&gt;&gt;labelLookIn.Name" xml:space="preserve">
     <value>labelLookIn</value>
   </data>
-  <data name="&gt;&gt;labelLookIn.Type" xml:space="preserve">
-    <value>System.Windows.Forms.Label, System.Windows.Forms, Version=4.0.0.0, Culture=neutral, PublicKeyToken=b77a5c561934e089</value>
-  </data>
   <data name="&gt;&gt;labelLookIn.Parent" xml:space="preserve">
     <value>$this</value>
   </data>
@@ -233,9 +224,6 @@
   </data>
   <data name="&gt;&gt;sourcePathTextBox.Name" xml:space="preserve">
     <value>sourcePathTextBox</value>
-  </data>
-  <data name="&gt;&gt;sourcePathTextBox.Type" xml:space="preserve">
-    <value>System.Windows.Forms.TextBox, System.Windows.Forms, Version=4.0.0.0, Culture=neutral, PublicKeyToken=b77a5c561934e089</value>
   </data>
   <data name="&gt;&gt;sourcePathTextBox.Parent" xml:space="preserve">
     <value>$this</value>
@@ -267,9 +255,6 @@
   <data name="&gt;&gt;labelSourcePath.Name" xml:space="preserve">
     <value>labelSourcePath</value>
   </data>
-  <data name="&gt;&gt;labelSourcePath.Type" xml:space="preserve">
-    <value>System.Windows.Forms.Label, System.Windows.Forms, Version=4.0.0.0, Culture=neutral, PublicKeyToken=b77a5c561934e089</value>
-  </data>
   <data name="&gt;&gt;labelSourcePath.Parent" xml:space="preserve">
     <value>$this</value>
   </data>
@@ -290,9 +275,6 @@
   </data>
   <data name="&gt;&gt;sourceTypeComboBox.Name" xml:space="preserve">
     <value>sourceTypeComboBox</value>
-  </data>
-  <data name="&gt;&gt;sourceTypeComboBox.Type" xml:space="preserve">
-    <value>System.Windows.Forms.ComboBox, System.Windows.Forms, Version=4.0.0.0, Culture=neutral, PublicKeyToken=b77a5c561934e089</value>
   </data>
   <data name="&gt;&gt;sourceTypeComboBox.Parent" xml:space="preserve">
     <value>$this</value>
@@ -324,9 +306,6 @@
   <data name="&gt;&gt;label1.Name" xml:space="preserve">
     <value>label1</value>
   </data>
-  <data name="&gt;&gt;label1.Type" xml:space="preserve">
-    <value>System.Windows.Forms.Label, System.Windows.Forms, Version=4.0.0.0, Culture=neutral, PublicKeyToken=b77a5c561934e089</value>
-  </data>
   <data name="&gt;&gt;label1.Parent" xml:space="preserve">
     <value>$this</value>
   </data>
@@ -350,9 +329,6 @@
   </data>
   <data name="&gt;&gt;openButton.Name" xml:space="preserve">
     <value>openButton</value>
-  </data>
-  <data name="&gt;&gt;openButton.Type" xml:space="preserve">
-    <value>System.Windows.Forms.Button, System.Windows.Forms, Version=4.0.0.0, Culture=neutral, PublicKeyToken=b77a5c561934e089</value>
   </data>
   <data name="&gt;&gt;openButton.Parent" xml:space="preserve">
     <value>$this</value>
@@ -378,18 +354,12 @@
   <data name="&gt;&gt;cancelButton.Name" xml:space="preserve">
     <value>cancelButton</value>
   </data>
-  <data name="&gt;&gt;cancelButton.Type" xml:space="preserve">
-    <value>System.Windows.Forms.Button, System.Windows.Forms, Version=4.0.0.0, Culture=neutral, PublicKeyToken=b77a5c561934e089</value>
-  </data>
   <data name="&gt;&gt;cancelButton.Parent" xml:space="preserve">
     <value>$this</value>
   </data>
   <data name="&gt;&gt;cancelButton.ZOrder" xml:space="preserve">
     <value>2</value>
   </data>
-  <metadata name="navToolStrip.TrayLocation" type="System.Drawing.Point, System.Drawing, Version=4.0.0.0, Culture=neutral, PublicKeyToken=b03f5f7f11d50a3a">
-    <value>155, 17</value>
-  </metadata>
   <data name="navToolStrip.Anchor" type="System.Windows.Forms.AnchorStyles, System.Windows.Forms">
     <value>Top, Right</value>
   </data>
@@ -509,9 +479,6 @@
   <data name="&gt;&gt;navToolStrip.Name" xml:space="preserve">
     <value>navToolStrip</value>
   </data>
-  <data name="&gt;&gt;navToolStrip.Type" xml:space="preserve">
-    <value>System.Windows.Forms.ToolStrip, System.Windows.Forms, Version=4.0.0.0, Culture=neutral, PublicKeyToken=b77a5c561934e089</value>
-  </data>
   <data name="&gt;&gt;navToolStrip.Parent" xml:space="preserve">
     <value>$this</value>
   </data>
@@ -527,9 +494,6 @@
   <data name="remoteAccountsButton.ImageIndex" type="System.Int32, mscorlib">
     <value>4</value>
   </data>
-  <metadata name="lookInImageList.TrayLocation" type="System.Drawing.Point, System.Drawing, Version=4.0.0.0, Culture=neutral, PublicKeyToken=b03f5f7f11d50a3a">
-    <value>275, 17</value>
-  </metadata>
   <data name="lookInImageList.ImageStream" mimetype="application/x-microsoft.net.object.binary.base64">
     <value>
         AAEAAAD/////AQAAAAAAAAAMAgAAAFdTeXN0ZW0uV2luZG93cy5Gb3JtcywgVmVyc2lvbj00LjAuMC4w
@@ -1466,9 +1430,6 @@
   <data name="&gt;&gt;remoteAccountsButton.Name" xml:space="preserve">
     <value>remoteAccountsButton</value>
   </data>
-  <data name="&gt;&gt;remoteAccountsButton.Type" xml:space="preserve">
-    <value>System.Windows.Forms.Button, System.Windows.Forms, Version=4.0.0.0, Culture=neutral, PublicKeyToken=b77a5c561934e089</value>
-  </data>
   <data name="&gt;&gt;remoteAccountsButton.Parent" xml:space="preserve">
     <value>flowLayoutPanel1</value>
   </data>
@@ -1508,9 +1469,6 @@
   <data name="&gt;&gt;recentDocumentsButton.Name" xml:space="preserve">
     <value>recentDocumentsButton</value>
   </data>
-  <data name="&gt;&gt;recentDocumentsButton.Type" xml:space="preserve">
-    <value>System.Windows.Forms.Button, System.Windows.Forms, Version=4.0.0.0, Culture=neutral, PublicKeyToken=b77a5c561934e089</value>
-  </data>
   <data name="&gt;&gt;recentDocumentsButton.Parent" xml:space="preserve">
     <value>flowLayoutPanel1</value>
   </data>
@@ -1546,9 +1504,6 @@
   </data>
   <data name="&gt;&gt;desktopButton.Name" xml:space="preserve">
     <value>desktopButton</value>
-  </data>
-  <data name="&gt;&gt;desktopButton.Type" xml:space="preserve">
-    <value>System.Windows.Forms.Button, System.Windows.Forms, Version=4.0.0.0, Culture=neutral, PublicKeyToken=b77a5c561934e089</value>
   </data>
   <data name="&gt;&gt;desktopButton.Parent" xml:space="preserve">
     <value>flowLayoutPanel1</value>
@@ -1586,9 +1541,6 @@
   <data name="&gt;&gt;myDocumentsButton.Name" xml:space="preserve">
     <value>myDocumentsButton</value>
   </data>
-  <data name="&gt;&gt;myDocumentsButton.Type" xml:space="preserve">
-    <value>System.Windows.Forms.Button, System.Windows.Forms, Version=4.0.0.0, Culture=neutral, PublicKeyToken=b77a5c561934e089</value>
-  </data>
   <data name="&gt;&gt;myDocumentsButton.Parent" xml:space="preserve">
     <value>flowLayoutPanel1</value>
   </data>
@@ -1625,9 +1577,6 @@
   <data name="&gt;&gt;myComputerButton.Name" xml:space="preserve">
     <value>myComputerButton</value>
   </data>
-  <data name="&gt;&gt;myComputerButton.Type" xml:space="preserve">
-    <value>System.Windows.Forms.Button, System.Windows.Forms, Version=4.0.0.0, Culture=neutral, PublicKeyToken=b77a5c561934e089</value>
-  </data>
   <data name="&gt;&gt;myComputerButton.Parent" xml:space="preserve">
     <value>flowLayoutPanel1</value>
   </data>
@@ -1646,18 +1595,12 @@
   <data name="&gt;&gt;flowLayoutPanel1.Name" xml:space="preserve">
     <value>flowLayoutPanel1</value>
   </data>
-  <data name="&gt;&gt;flowLayoutPanel1.Type" xml:space="preserve">
-    <value>System.Windows.Forms.FlowLayoutPanel, System.Windows.Forms, Version=4.0.0.0, Culture=neutral, PublicKeyToken=b77a5c561934e089</value>
-  </data>
   <data name="&gt;&gt;flowLayoutPanel1.Parent" xml:space="preserve">
     <value>$this</value>
   </data>
   <data name="&gt;&gt;flowLayoutPanel1.ZOrder" xml:space="preserve">
     <value>0</value>
   </data>
-  <metadata name="$this.Localizable" type="System.Boolean, mscorlib, Version=4.0.0.0, Culture=neutral, PublicKeyToken=b77a5c561934e089">
-    <value>True</value>
-  </metadata>
   <data name="$this.AutoScaleDimensions" type="System.Drawing.SizeF, System.Drawing">
     <value>6, 13</value>
   </data>
@@ -1673,79 +1616,40 @@
   <data name="&gt;&gt;modeUIHandler.Name" xml:space="preserve">
     <value>modeUIHandler</value>
   </data>
-  <data name="&gt;&gt;modeUIHandler.Type" xml:space="preserve">
-    <value>pwiz.Skyline.Util.Helpers+ModeUIExtender, Skyline, Version=19.1.1.298, Culture=neutral, PublicKeyToken=null</value>
-  </data>
   <data name="&gt;&gt;SourceName.Name" xml:space="preserve">
     <value>SourceName</value>
-  </data>
-  <data name="&gt;&gt;SourceName.Type" xml:space="preserve">
-    <value>System.Windows.Forms.ColumnHeader, System.Windows.Forms, Version=4.0.0.0, Culture=neutral, PublicKeyToken=b77a5c561934e089</value>
   </data>
   <data name="&gt;&gt;FileType.Name" xml:space="preserve">
     <value>FileType</value>
   </data>
-  <data name="&gt;&gt;FileType.Type" xml:space="preserve">
-    <value>System.Windows.Forms.ColumnHeader, System.Windows.Forms, Version=4.0.0.0, Culture=neutral, PublicKeyToken=b77a5c561934e089</value>
-  </data>
   <data name="&gt;&gt;SourceSize.Name" xml:space="preserve">
     <value>SourceSize</value>
-  </data>
-  <data name="&gt;&gt;SourceSize.Type" xml:space="preserve">
-    <value>System.Windows.Forms.ColumnHeader, System.Windows.Forms, Version=4.0.0.0, Culture=neutral, PublicKeyToken=b77a5c561934e089</value>
   </data>
   <data name="&gt;&gt;DateModified.Name" xml:space="preserve">
     <value>DateModified</value>
   </data>
-  <data name="&gt;&gt;DateModified.Type" xml:space="preserve">
-    <value>System.Windows.Forms.ColumnHeader, System.Windows.Forms, Version=4.0.0.0, Culture=neutral, PublicKeyToken=b77a5c561934e089</value>
-  </data>
   <data name="&gt;&gt;backButton.Name" xml:space="preserve">
     <value>backButton</value>
-  </data>
-  <data name="&gt;&gt;backButton.Type" xml:space="preserve">
-    <value>System.Windows.Forms.ToolStripButton, System.Windows.Forms, Version=4.0.0.0, Culture=neutral, PublicKeyToken=b77a5c561934e089</value>
   </data>
   <data name="&gt;&gt;upOneLevelButton.Name" xml:space="preserve">
     <value>upOneLevelButton</value>
   </data>
-  <data name="&gt;&gt;upOneLevelButton.Type" xml:space="preserve">
-    <value>System.Windows.Forms.ToolStripButton, System.Windows.Forms, Version=4.0.0.0, Culture=neutral, PublicKeyToken=b77a5c561934e089</value>
-  </data>
   <data name="&gt;&gt;viewsDropDownButton.Name" xml:space="preserve">
     <value>viewsDropDownButton</value>
-  </data>
-  <data name="&gt;&gt;viewsDropDownButton.Type" xml:space="preserve">
-    <value>System.Windows.Forms.ToolStripDropDownButton, System.Windows.Forms, Version=4.0.0.0, Culture=neutral, PublicKeyToken=b77a5c561934e089</value>
   </data>
   <data name="&gt;&gt;tilesToolStripMenuItem.Name" xml:space="preserve">
     <value>tilesToolStripMenuItem</value>
   </data>
-  <data name="&gt;&gt;tilesToolStripMenuItem.Type" xml:space="preserve">
-    <value>System.Windows.Forms.ToolStripMenuItem, System.Windows.Forms, Version=4.0.0.0, Culture=neutral, PublicKeyToken=b77a5c561934e089</value>
-  </data>
   <data name="&gt;&gt;listToolStripMenuItem.Name" xml:space="preserve">
     <value>listToolStripMenuItem</value>
-  </data>
-  <data name="&gt;&gt;listToolStripMenuItem.Type" xml:space="preserve">
-    <value>System.Windows.Forms.ToolStripMenuItem, System.Windows.Forms, Version=4.0.0.0, Culture=neutral, PublicKeyToken=b77a5c561934e089</value>
   </data>
   <data name="&gt;&gt;detailsToolStripMenuItem.Name" xml:space="preserve">
     <value>detailsToolStripMenuItem</value>
   </data>
-  <data name="&gt;&gt;detailsToolStripMenuItem.Type" xml:space="preserve">
-    <value>System.Windows.Forms.ToolStripMenuItem, System.Windows.Forms, Version=4.0.0.0, Culture=neutral, PublicKeyToken=b77a5c561934e089</value>
-  </data>
   <data name="&gt;&gt;lookInImageList.Name" xml:space="preserve">
     <value>lookInImageList</value>
   </data>
-  <data name="&gt;&gt;lookInImageList.Type" xml:space="preserve">
-    <value>System.Windows.Forms.ImageList, System.Windows.Forms, Version=4.0.0.0, Culture=neutral, PublicKeyToken=b77a5c561934e089</value>
-  </data>
   <data name="&gt;&gt;$this.Name" xml:space="preserve">
     <value>OpenDataSourceDialog</value>
-  </data>
-  <data name="&gt;&gt;$this.Type" xml:space="preserve">
-    <value>pwiz.Skyline.Util.FormEx, Skyline, Version=1.0.0.0, Culture=neutral, PublicKeyToken=null</value>
   </data>
 </root>

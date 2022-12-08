@@ -117,6 +117,7 @@
   <resheader name="writer">
     <value>System.Resources.ResXResourceWriter, System.Windows.Forms, Version=4.0.0.0, Culture=neutral, PublicKeyToken=b77a5c561934e089</value>
   </resheader>
+  <assembly alias="System.Windows.Forms" name="System.Windows.Forms, Version=4.0.0.0, Culture=neutral, PublicKeyToken=b77a5c561934e089" />
   <data name="ChromatogramLibrarySpec_PEPTIDE_RANK_PEAK_AREA_Peak_Area" xml:space="preserve">
     <value>Peak Area</value>
   </data>
@@ -147,7 +148,6 @@
   <data name="EditRemoteAccountDlg_ValidateValues_There_is_already_an_account_defined_for_the_user__0__on_the_server__1_" xml:space="preserve">
     <value>There is already an account defined for the user {0} on the server {1}</value>
   </data>
-  <assembly alias="System.Windows.Forms" name="System.Windows.Forms, Version=4.0.0.0, Culture=neutral, PublicKeyToken=b77a5c561934e089" />
   <data name="FragmentLib" type="System.Resources.ResXFileRef, System.Windows.Forms">
     <value>..\resources\fragmentlib.bmp;System.Drawing.Bitmap, System.Drawing, Version=2.0.0.0, Culture=neutral, PublicKeyToken=b03f5f7f11d50a3a</value>
   </data>
@@ -2968,7 +2968,7 @@ Are you sure you want to continue?</value>
     <value>&amp;Dwell time (ms):</value>
   </data>
   <data name="ExportMethodDlg_ACCUMULATION_TIME_TXT" xml:space="preserve">
-      <value>Accumulation time (sec):</value>
+    <value>Accumulation time (sec):</value>
   </data>
   <data name="CommandLine_ExportInstrumentFile_Error__the_instrument_type__0__does_not_support_triggered_acquisition_" xml:space="preserve">
     <value>Error: the instrument type {0} does not support triggered acquisition.</value>
@@ -11682,13 +11682,13 @@ If you do not have the original file, you may build the library with embedded sp
     <value>Associate Proteins</value>
   </data>
   <data name="SciexOsMethodExporter_EnsureSciexOs_Waiting_for_SCIEX_OS_to_start" xml:space="preserve">
-      <value>Waiting for SCIEX OS to start</value>
+    <value>Waiting for SCIEX OS to start</value>
   </data>
   <data name="SciexOsMethodExporter_EnsureSciexOs_Working___" xml:space="preserve">
-      <value>Working...</value>
+    <value>Working...</value>
   </data>
   <data name="SciexOsMethodExporter_EnsureSciexOs_Failed_to_find_a_valid_SCIEX_OS_installation_" xml:space="preserve">
-      <value>Failed to find a valid SCIEX OS installation.</value>
+    <value>Failed to find a valid SCIEX OS installation.</value>
   </data>
   <data name="BuildLibraryGridView__colFile_File" xml:space="preserve">
     <value>File</value>
@@ -11833,94 +11833,94 @@ If you do not have the original file, you may build the library with embedded sp
     <value>The value {0} for {1} is not valid: it must be greater than or equal to {2}.</value>
   </data>
   <data name="BuildLibraryGridView_GridUpdateScoreInfo_Score_type_not_found_" xml:space="preserve">
-      <value>Score type not found.</value>
+    <value>Score type not found.</value>
   </data>
   <data name="BrukerTimsTofIsolationListExporter_CheckIonMobilities__0____1_____2__" xml:space="preserve">
-      <value>{0} ({1} - {2})</value>
+    <value>{0} ({1} - {2})</value>
   </data>
-    <data name="BrukerTimsTofIsolationListExporter_CheckIonMobilities_All_targets_must_have_an_ion_mobility_between__0__and__1__as_specified_in_the_template_method__Either_use_a_different_template_method__or_change_the_ion_mobility_values_for_the_following_targets_" xml:space="preserve">
-      <value>All targets must have an ion mobility between {0} and {1} as specified in the template method. Either use a different template method, or change the ion mobility values for the following targets:</value>
+  <data name="BrukerTimsTofIsolationListExporter_CheckIonMobilities_All_targets_must_have_an_ion_mobility_between__0__and__1__as_specified_in_the_template_method__Either_use_a_different_template_method__or_change_the_ion_mobility_values_for_the_following_targets_" xml:space="preserve">
+    <value>All targets must have an ion mobility between {0} and {1} as specified in the template method. Either use a different template method, or change the ion mobility values for the following targets:</value>
   </data>
   <data name="SkylineWindow_submitErrorReportMenuItem_Click_Submitting_an_unhandled_error_report" xml:space="preserve">
-      <value>Submitting an unhandled error report</value>
+    <value>Submitting an unhandled error report</value>
   </data>
   <data name="GraphChromatogram_UpdateUI_No_MS1_spectra_found_in_base_peak_chromatogram" xml:space="preserve">
-      <value>No MS1 spectra found in base peak chromatogram</value>
+    <value>No MS1 spectra found in base peak chromatogram</value>
   </data>
   <data name="GraphChromatogram_UpdateUI_No_MS1_spectra_found_in_TIC_chromatogram" xml:space="preserve">
-      <value>No MS1 spectra found in TIC chromatogram</value>
+    <value>No MS1 spectra found in TIC chromatogram</value>
   </data>
   <data name="CommandLine_CreateImsDb_Creating_ion_mobility_library___0___in___1_____" xml:space="preserve">
-      <value>Creating ion mobility library "{0}" in "{1}"...</value>
+    <value>Creating ion mobility library "{0}" in "{1}"...</value>
   </data>
   <data name="TextUtil_DeterminDsvSeparator_Unable_to_determine_format_of_delimiter_separated_value_file" xml:space="preserve">
-      <value>Unable to determine format of delimiter separated value file</value>
+    <value>Unable to determine format of delimiter separated value file</value>
   </data>
   <data name="PrositIntensityModel_CreatePrositInputRow_UnsupportedCharge" xml:space="preserve">
-      <value>The charge {0} is not supported by Prosit. The maximum supported charge is {1}.</value>
+    <value>The charge {0} is not supported by Prosit. The maximum supported charge is {1}.</value>
   </data>
   <data name="CommandLine_ImportSkyr_Error__Reports_could_not_be_imported_from__0_" xml:space="preserve">
-      <value>Error: Reports could not be imported from {0}</value>
+    <value>Error: Reports could not be imported from {0}</value>
   </data>
   <data name="AssociateProteinsDlg_UseFastaFile_An_error_occurred_during_protein_association_" xml:space="preserve">
-	  <value>An error occurred during protein association.</value>
+    <value>An error occurred during protein association.</value>
   </data>
   <data name="ColonSeparator" xml:space="preserve">
-	  <value>{0}: {1}</value>
+    <value>{0}: {1}</value>
   </data>
   <data name="ColonEndOfLine" xml:space="preserve">
-	  <value>:</value>
+    <value>:</value>
   </data>
   <data name="FragmentLoss_ItemDescription_Include_by_default" xml:space="preserve">
-	  <value>Include by default</value>
+    <value>Include by default</value>
   </data>
   <data name="StaticMod_ItemDescription_Neutral_loss" xml:space="preserve">
-	  <value>Neutral loss</value>
+    <value>Neutral loss</value>
   </data>
   <data name="StaticMod_ItemDescription_Loss" xml:space="preserve">
-	  <value>Loss</value>
+    <value>Loss</value>
   </data>
   <data name="StaticMod_ItemDescription_Neutral_losses" xml:space="preserve">
-	  <value>Neutral losses</value>
+    <value>Neutral losses</value>
   </data>
   <data name="StaticMod_ItemDescription__0__neutral_losses" xml:space="preserve">
-	  <value>{0} neutral losses</value>
+    <value>{0} neutral losses</value>
   </data>
   <data name="StaticMod_ItemDescription_Losses" xml:space="preserve">
-	  <value>Losses</value>
+    <value>Losses</value>
   </data>
   <data name="StaticMod_ItemDescription__0__losses" xml:space="preserve">
-	  <value>{0} losses</value>
+    <value>{0} losses</value>
   </data>
   <data name="StaticMod_FormatMass_Mass" xml:space="preserve">
-	  <value>Mass</value>
+    <value>Mass</value>
   </data>
   <data name="StaticMod_ItemDescription_Empty" xml:space="preserve">
-	  <value>Empty</value>
+    <value>Empty</value>
   </data>
   <data name="StaticMod_FormatMass_Unknown_mass" xml:space="preserve">
-	  <value>Unknown mass</value>
+    <value>Unknown mass</value>
   </data>
   <data name="LibrarySpec_ItemDescription_Ignore_explicit_peak_boundaries" xml:space="preserve">
-	  <value>Ignore explicit peak boundaries</value>
+    <value>Ignore explicit peak boundaries</value>
   </data>
   <data name="ToolService_ImportProperties_Import_Properties_from_external_tool" xml:space="preserve">
-	  <value>Import Properties from external tool</value>
+    <value>Import Properties from external tool</value>
   </data>
   <data name="ToolService_DeleteElementsNow_Unsupported_element__0_" xml:space="preserve">
-	  <value>Unsupported element {0}</value>
+    <value>Unsupported element {0}</value>
   </data>
   <data name="ToolService_GetSelectedElementRefNow_Unsupported_element_type___0__" xml:space="preserve">
-	  <value>Unsupported element type '{0}'</value>
+    <value>Unsupported element type '{0}'</value>
   </data>
   <data name="SciexOsMethodExporter_SciexOsMethodExporter_Invalid_instrument_type_for_SCIEX_OS_method_export_" xml:space="preserve">
-      <value>Invalid instrument type for SCIEX OS method export.</value>
+    <value>Invalid instrument type for SCIEX OS method export.</value>
   </data>
   <data name="PeptideSettingsUI_ShowFilterMidasDlg_Failed_loading_MIDAS_library__0__" xml:space="preserve">
-      <value>Failed loading MIDAS library {0}.</value>
+    <value>Failed loading MIDAS library {0}.</value>
   </data>
   <data name="StaticMod_FormatFormulaOrMass___0__Da_" xml:space="preserve">
-	  <value>({0} Da)</value>
-	  <comment>"Da" stands for "Daltons". Example: (+57.2 Da)</comment>
+    <value>({0} Da)</value>
+    <comment>"Da" stands for "Daltons". Example: (+57.2 Da)</comment>
   </data>
 </root>

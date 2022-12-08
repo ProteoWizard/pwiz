@@ -117,47 +117,44 @@
   <resheader name="writer">
     <value>System.Resources.ResXResourceWriter, System.Windows.Forms, Version=4.0.0.0, Culture=neutral, PublicKeyToken=b77a5c561934e089</value>
   </resheader>
-  <metadata name="bindingSource1.TrayLocation" type="System.Drawing.Point, System.Drawing, Version=4.0.0.0, Culture=neutral, PublicKeyToken=b03f5f7f11d50a3a">
-    <value>17, 17</value>
-  </metadata>
   <assembly alias="System.Windows.Forms" name="System.Windows.Forms, Version=4.0.0.0, Culture=neutral, PublicKeyToken=b77a5c561934e089" />
-  <data name="dataGridViewSizes.Anchor" type="System.Windows.Forms.AnchorStyles, System.Windows.Forms">
-    <value>Top, Bottom, Left, Right</value>
-  </data>
+  <assembly alias="System.Drawing" name="System.Drawing, Version=4.0.0.0, Culture=neutral, PublicKeyToken=b03f5f7f11d50a3a" />
+  <assembly alias="mscorlib" name="mscorlib, Version=4.0.0.0, Culture=neutral, PublicKeyToken=b77a5c561934e089" />
   <metadata name="colReplicateName.UserAddedColumn" type="System.Boolean, mscorlib, Version=4.0.0.0, Culture=neutral, PublicKeyToken=b77a5c561934e089">
     <value>True</value>
   </metadata>
-  <data name="colReplicateName.HeaderText" xml:space="preserve">
-    <value>重复测定</value>
-  </data>
   <metadata name="colCacheFileSize.UserAddedColumn" type="System.Boolean, mscorlib, Version=4.0.0.0, Culture=neutral, PublicKeyToken=b77a5c561934e089">
     <value>True</value>
   </metadata>
-  <data name="colCacheFileSize.HeaderText" xml:space="preserve">
-    <value>当前尺寸</value>
-  </data>
   <metadata name="colMinimizedRatio.UserAddedColumn" type="System.Boolean, mscorlib, Version=4.0.0.0, Culture=neutral, PublicKeyToken=b77a5c561934e089">
     <value>True</value>
   </metadata>
+  <metadata name="$this.Localizable" type="System.Boolean, mscorlib, Version=4.0.0.0, Culture=neutral, PublicKeyToken=b77a5c561934e089">
+    <value>True</value>
+  </metadata>
+  <data name="dataGridViewSizes.Anchor" type="System.Windows.Forms.AnchorStyles, System.Windows.Forms">
+    <value>Top, Bottom, Left, Right</value>
+  </data>
+  <data name="colReplicateName.HeaderText" xml:space="preserve">
+    <value>重复测定</value>
+  </data>
+  <data name="colCacheFileSize.HeaderText" xml:space="preserve">
+    <value>当前尺寸</value>
+  </data>
   <data name="colMinimizedRatio.HeaderText" xml:space="preserve">
     <value>最小化尺寸</value>
   </data>
-  <assembly alias="System.Drawing" name="System.Drawing, Version=4.0.0.0, Culture=neutral, PublicKeyToken=b03f5f7f11d50a3a" />
   <data name="dataGridViewSizes.Location" type="System.Drawing.Point, System.Drawing, Version=4.0.0.0, Culture=neutral, PublicKeyToken=b03f5f7f11d50a3a">
     <value>12, 170</value>
   </data>
   <data name="dataGridViewSizes.Size" type="System.Drawing.Size, System.Drawing, Version=4.0.0.0, Culture=neutral, PublicKeyToken=b03f5f7f11d50a3a">
     <value>438, 176</value>
   </data>
-  <assembly alias="mscorlib" name="mscorlib, Version=4.0.0.0, Culture=neutral, PublicKeyToken=b77a5c561934e089" />
   <data name="dataGridViewSizes.TabIndex" type="System.Int32, mscorlib">
     <value>5</value>
   </data>
   <data name="&gt;&gt;dataGridViewSizes.Name" xml:space="preserve">
     <value>dataGridViewSizes</value>
-  </data>
-  <data name="&gt;&gt;dataGridViewSizes.Type" xml:space="preserve">
-    <value>System.Windows.Forms.DataGridView, System.Windows.Forms, Version=4.0.0.0, Culture=neutral, PublicKeyToken=b77a5c561934e089</value>
   </data>
   <data name="&gt;&gt;dataGridViewSizes.Parent" xml:space="preserve">
     <value>$this</value>
@@ -183,9 +180,6 @@
   <data name="&gt;&gt;cbxDiscardUnmatchedChromatograms.Name" xml:space="preserve">
     <value>cbxDiscardUnmatchedChromatograms</value>
   </data>
-  <data name="&gt;&gt;cbxDiscardUnmatchedChromatograms.Type" xml:space="preserve">
-    <value>System.Windows.Forms.CheckBox, System.Windows.Forms, Version=4.0.0.0, Culture=neutral, PublicKeyToken=b77a5c561934e089</value>
-  </data>
   <data name="&gt;&gt;cbxDiscardUnmatchedChromatograms.Parent" xml:space="preserve">
     <value>$this</value>
   </data>
@@ -209,9 +203,6 @@
   </data>
   <data name="&gt;&gt;tbxNoiseTimeRange.Name" xml:space="preserve">
     <value>tbxNoiseTimeRange</value>
-  </data>
-  <data name="&gt;&gt;tbxNoiseTimeRange.Type" xml:space="preserve">
-    <value>System.Windows.Forms.TextBox, System.Windows.Forms, Version=4.0.0.0, Culture=neutral, PublicKeyToken=b77a5c561934e089</value>
   </data>
   <data name="&gt;&gt;tbxNoiseTimeRange.Parent" xml:space="preserve">
     <value>flowLayoutPanel1</value>
@@ -240,9 +231,6 @@
   <data name="&gt;&gt;cbxLimitNoiseTime.Name" xml:space="preserve">
     <value>cbxLimitNoiseTime</value>
   </data>
-  <data name="&gt;&gt;cbxLimitNoiseTime.Type" xml:space="preserve">
-    <value>System.Windows.Forms.CheckBox, System.Windows.Forms, Version=4.0.0.0, Culture=neutral, PublicKeyToken=b77a5c561934e089</value>
-  </data>
   <data name="&gt;&gt;cbxLimitNoiseTime.Parent" xml:space="preserve">
     <value>flowLayoutPanel1</value>
   </data>
@@ -266,9 +254,6 @@
   </data>
   <data name="&gt;&gt;btnCancel.Name" xml:space="preserve">
     <value>btnCancel</value>
-  </data>
-  <data name="&gt;&gt;btnCancel.Type" xml:space="preserve">
-    <value>System.Windows.Forms.Button, System.Windows.Forms, Version=4.0.0.0, Culture=neutral, PublicKeyToken=b77a5c561934e089</value>
   </data>
   <data name="&gt;&gt;btnCancel.Parent" xml:space="preserve">
     <value>$this</value>
@@ -294,9 +279,6 @@
   <data name="&gt;&gt;btnMinimize.Name" xml:space="preserve">
     <value>btnMinimize</value>
   </data>
-  <data name="&gt;&gt;btnMinimize.Type" xml:space="preserve">
-    <value>System.Windows.Forms.Button, System.Windows.Forms, Version=4.0.0.0, Culture=neutral, PublicKeyToken=b77a5c561934e089</value>
-  </data>
   <data name="&gt;&gt;btnMinimize.Parent" xml:space="preserve">
     <value>$this</value>
   </data>
@@ -317,9 +299,6 @@
   </data>
   <data name="&gt;&gt;label2.Name" xml:space="preserve">
     <value>label2</value>
-  </data>
-  <data name="&gt;&gt;label2.Type" xml:space="preserve">
-    <value>System.Windows.Forms.Label, System.Windows.Forms, Version=4.0.0.0, Culture=neutral, PublicKeyToken=b77a5c561934e089</value>
   </data>
   <data name="&gt;&gt;label2.Parent" xml:space="preserve">
     <value>$this</value>
@@ -348,9 +327,6 @@
   <data name="&gt;&gt;label3.Name" xml:space="preserve">
     <value>label3</value>
   </data>
-  <data name="&gt;&gt;label3.Type" xml:space="preserve">
-    <value>System.Windows.Forms.Label, System.Windows.Forms, Version=4.0.0.0, Culture=neutral, PublicKeyToken=b77a5c561934e089</value>
-  </data>
   <data name="&gt;&gt;label3.Parent" xml:space="preserve">
     <value>flowLayoutPanel1</value>
   </data>
@@ -374,9 +350,6 @@
   </data>
   <data name="&gt;&gt;lblCurrentCacheFileSize.Name" xml:space="preserve">
     <value>lblCurrentCacheFileSize</value>
-  </data>
-  <data name="&gt;&gt;lblCurrentCacheFileSize.Type" xml:space="preserve">
-    <value>System.Windows.Forms.Label, System.Windows.Forms, Version=4.0.0.0, Culture=neutral, PublicKeyToken=b77a5c561934e089</value>
   </data>
   <data name="&gt;&gt;lblCurrentCacheFileSize.Parent" xml:space="preserve">
     <value>$this</value>
@@ -402,9 +375,6 @@
   <data name="&gt;&gt;lblSpaceSavings.Name" xml:space="preserve">
     <value>lblSpaceSavings</value>
   </data>
-  <data name="&gt;&gt;lblSpaceSavings.Type" xml:space="preserve">
-    <value>System.Windows.Forms.Label, System.Windows.Forms, Version=4.0.0.0, Culture=neutral, PublicKeyToken=b77a5c561934e089</value>
-  </data>
   <data name="&gt;&gt;lblSpaceSavings.Parent" xml:space="preserve">
     <value>$this</value>
   </data>
@@ -429,9 +399,6 @@
   <data name="&gt;&gt;btnMinimizeAs.Name" xml:space="preserve">
     <value>btnMinimizeAs</value>
   </data>
-  <data name="&gt;&gt;btnMinimizeAs.Type" xml:space="preserve">
-    <value>System.Windows.Forms.Button, System.Windows.Forms, Version=4.0.0.0, Culture=neutral, PublicKeyToken=b77a5c561934e089</value>
-  </data>
   <data name="&gt;&gt;btnMinimizeAs.Parent" xml:space="preserve">
     <value>$this</value>
   </data>
@@ -450,18 +417,12 @@
   <data name="&gt;&gt;flowLayoutPanel1.Name" xml:space="preserve">
     <value>flowLayoutPanel1</value>
   </data>
-  <data name="&gt;&gt;flowLayoutPanel1.Type" xml:space="preserve">
-    <value>System.Windows.Forms.FlowLayoutPanel, System.Windows.Forms, Version=4.0.0.0, Culture=neutral, PublicKeyToken=b77a5c561934e089</value>
-  </data>
   <data name="&gt;&gt;flowLayoutPanel1.Parent" xml:space="preserve">
     <value>$this</value>
   </data>
   <data name="&gt;&gt;flowLayoutPanel1.ZOrder" xml:space="preserve">
     <value>0</value>
   </data>
-  <metadata name="$this.Localizable" type="System.Boolean, mscorlib, Version=4.0.0.0, Culture=neutral, PublicKeyToken=b77a5c561934e089">
-    <value>True</value>
-  </metadata>
   <data name="$this.AutoScaleDimensions" type="System.Drawing.SizeF, System.Drawing">
     <value>6, 13</value>
   </data>
@@ -477,31 +438,16 @@
   <data name="&gt;&gt;bindingSource1.Name" xml:space="preserve">
     <value>bindingSource1</value>
   </data>
-  <data name="&gt;&gt;bindingSource1.Type" xml:space="preserve">
-    <value>System.Windows.Forms.BindingSource, System.Windows.Forms, Version=4.0.0.0, Culture=neutral, PublicKeyToken=b77a5c561934e089</value>
-  </data>
   <data name="&gt;&gt;colReplicateName.Name" xml:space="preserve">
     <value>colReplicateName</value>
-  </data>
-  <data name="&gt;&gt;colReplicateName.Type" xml:space="preserve">
-    <value>System.Windows.Forms.DataGridViewTextBoxColumn, System.Windows.Forms, Version=4.0.0.0, Culture=neutral, PublicKeyToken=b77a5c561934e089</value>
   </data>
   <data name="&gt;&gt;colCacheFileSize.Name" xml:space="preserve">
     <value>colCacheFileSize</value>
   </data>
-  <data name="&gt;&gt;colCacheFileSize.Type" xml:space="preserve">
-    <value>System.Windows.Forms.DataGridViewTextBoxColumn, System.Windows.Forms, Version=4.0.0.0, Culture=neutral, PublicKeyToken=b77a5c561934e089</value>
-  </data>
   <data name="&gt;&gt;colMinimizedRatio.Name" xml:space="preserve">
     <value>colMinimizedRatio</value>
   </data>
-  <data name="&gt;&gt;colMinimizedRatio.Type" xml:space="preserve">
-    <value>System.Windows.Forms.DataGridViewTextBoxColumn, System.Windows.Forms, Version=4.0.0.0, Culture=neutral, PublicKeyToken=b77a5c561934e089</value>
-  </data>
   <data name="&gt;&gt;$this.Name" xml:space="preserve">
     <value>MinimizeResultsDlg</value>
-  </data>
-  <data name="&gt;&gt;$this.Type" xml:space="preserve">
-    <value>pwiz.Skyline.Util.FormEx, Skyline, Version=1.0.0.0, Culture=neutral, PublicKeyToken=null</value>
   </data>
 </root>

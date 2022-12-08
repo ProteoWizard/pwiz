@@ -117,24 +117,36 @@
   <resheader name="writer">
     <value>System.Resources.ResXResourceWriter, System.Windows.Forms, Version=4.0.0.0, Culture=neutral, PublicKeyToken=b77a5c561934e089</value>
   </resheader>
-  <metadata name="modeUIHandler.TrayLocation" type="System.Drawing.Point, System.Drawing, Version=4.0.0.0, Culture=neutral, PublicKeyToken=b03f5f7f11d50a3a">
-    <value>17, 17</value>
-  </metadata>
   <assembly alias="System.Windows.Forms" name="System.Windows.Forms, Version=4.0.0.0, Culture=neutral, PublicKeyToken=b77a5c561934e089" />
+  <assembly alias="System.Drawing" name="System.Drawing, Version=4.0.0.0, Culture=neutral, PublicKeyToken=b03f5f7f11d50a3a" />
+  <assembly alias="mscorlib" name="mscorlib, Version=4.0.0.0, Culture=neutral, PublicKeyToken=b77a5c561934e089" />
+  <metadata name="headerColumn.UserAddedColumn" type="System.Boolean, mscorlib, Version=4.0.0.0, Culture=neutral, PublicKeyToken=b77a5c561934e089">
+    <value>True</value>
+  </metadata>
+  <metadata name="mappedColumn.UserAddedColumn" type="System.Boolean, mscorlib, Version=4.0.0.0, Culture=neutral, PublicKeyToken=b77a5c561934e089">
+    <value>True</value>
+  </metadata>
+  <metadata name="unmappedColumn.UserAddedColumn" type="System.Boolean, mscorlib, Version=4.0.0.0, Culture=neutral, PublicKeyToken=b77a5c561934e089">
+    <value>True</value>
+  </metadata>
+  <metadata name="targetsColumn.UserAddedColumn" type="System.Boolean, mscorlib, Version=4.0.0.0, Culture=neutral, PublicKeyToken=b77a5c561934e089">
+    <value>True</value>
+  </metadata>
+  <metadata name="$this.Localizable" type="System.Boolean, mscorlib, Version=4.0.0.0, Culture=neutral, PublicKeyToken=b77a5c561934e089">
+    <value>True</value>
+  </metadata>
   <data name="btnCancel.Anchor" type="System.Windows.Forms.AnchorStyles, System.Windows.Forms">
     <value>Bottom, Right</value>
   </data>
   <data name="btnCancel.ImeMode" type="System.Windows.Forms.ImeMode, System.Windows.Forms">
     <value>NoControl</value>
   </data>
-  <assembly alias="System.Drawing" name="System.Drawing, Version=4.0.0.0, Culture=neutral, PublicKeyToken=b03f5f7f11d50a3a" />
   <data name="btnCancel.Location" type="System.Drawing.Point, System.Drawing">
     <value>420, 507</value>
   </data>
   <data name="btnCancel.Size" type="System.Drawing.Size, System.Drawing">
     <value>75, 23</value>
   </data>
-  <assembly alias="mscorlib" name="mscorlib, Version=4.0.0.0, Culture=neutral, PublicKeyToken=b77a5c561934e089" />
   <data name="btnCancel.TabIndex" type="System.Int32, mscorlib">
     <value>7</value>
   </data>
@@ -143,9 +155,6 @@
   </data>
   <data name="&gt;&gt;btnCancel.Name" xml:space="preserve">
     <value>btnCancel</value>
-  </data>
-  <data name="&gt;&gt;btnCancel.Type" xml:space="preserve">
-    <value>System.Windows.Forms.Button, System.Windows.Forms, Version=4.0.0.0, Culture=neutral, PublicKeyToken=b77a5c561934e089</value>
   </data>
   <data name="&gt;&gt;btnCancel.Parent" xml:space="preserve">
     <value>$this</value>
@@ -174,9 +183,6 @@
   <data name="&gt;&gt;lblDescription.Name" xml:space="preserve">
     <value>lblDescription</value>
   </data>
-  <data name="&gt;&gt;lblDescription.Type" xml:space="preserve">
-    <value>System.Windows.Forms.Label, System.Windows.Forms, Version=4.0.0.0, Culture=neutral, PublicKeyToken=b77a5c561934e089</value>
-  </data>
   <data name="&gt;&gt;lblDescription.Parent" xml:space="preserve">
     <value>$this</value>
   </data>
@@ -203,9 +209,6 @@
   </data>
   <data name="&gt;&gt;btnOk.Name" xml:space="preserve">
     <value>btnOk</value>
-  </data>
-  <data name="&gt;&gt;btnOk.Type" xml:space="preserve">
-    <value>System.Windows.Forms.Button, System.Windows.Forms, Version=4.0.0.0, Culture=neutral, PublicKeyToken=b77a5c561934e089</value>
   </data>
   <data name="&gt;&gt;btnOk.Parent" xml:space="preserve">
     <value>$this</value>
@@ -237,9 +240,6 @@
   <data name="&gt;&gt;cbGroupProteins.Name" xml:space="preserve">
     <value>cbGroupProteins</value>
   </data>
-  <data name="&gt;&gt;cbGroupProteins.Type" xml:space="preserve">
-    <value>System.Windows.Forms.CheckBox, System.Windows.Forms, Version=4.0.0.0, Culture=neutral, PublicKeyToken=b77a5c561934e089</value>
-  </data>
   <data name="&gt;&gt;cbGroupProteins.Parent" xml:space="preserve">
     <value>flowLayoutPanel</value>
   </data>
@@ -264,17 +264,11 @@
   <data name="lblGroupProteins.Text" xml:space="preserve">
     <value>タンパク質グループを作成(&amp;G)</value>
   </data>
-  <metadata name="helpTip.TrayLocation" type="System.Drawing.Point, System.Drawing, Version=4.0.0.0, Culture=neutral, PublicKeyToken=b03f5f7f11d50a3a">
-    <value>155, 17</value>
-  </metadata>
   <data name="lblGroupProteins.ToolTip" xml:space="preserve">
     <value>同じペプチド群に一致するタンパク質はドキュメント内の単一のターゲットに組み入れられます。</value>
   </data>
   <data name="&gt;&gt;lblGroupProteins.Name" xml:space="preserve">
     <value>lblGroupProteins</value>
-  </data>
-  <data name="&gt;&gt;lblGroupProteins.Type" xml:space="preserve">
-    <value>System.Windows.Forms.Label, System.Windows.Forms, Version=4.0.0.0, Culture=neutral, PublicKeyToken=b77a5c561934e089</value>
   </data>
   <data name="&gt;&gt;lblGroupProteins.Parent" xml:space="preserve">
     <value>flowLayoutPanel</value>
@@ -305,9 +299,6 @@
   </data>
   <data name="&gt;&gt;lnkHelpProteinGroups.Name" xml:space="preserve">
     <value>lnkHelpProteinGroups</value>
-  </data>
-  <data name="&gt;&gt;lnkHelpProteinGroups.Type" xml:space="preserve">
-    <value>System.Windows.Forms.LinkLabel, System.Windows.Forms, Version=4.0.0.0, Culture=neutral, PublicKeyToken=b77a5c561934e089</value>
   </data>
   <data name="&gt;&gt;lnkHelpProteinGroups.Parent" xml:space="preserve">
     <value>flowLayoutPanel</value>
@@ -345,9 +336,6 @@
   <data name="&gt;&gt;lblSharedPeptides.Name" xml:space="preserve">
     <value>lblSharedPeptides</value>
   </data>
-  <data name="&gt;&gt;lblSharedPeptides.Type" xml:space="preserve">
-    <value>System.Windows.Forms.Label, System.Windows.Forms, Version=4.0.0.0, Culture=neutral, PublicKeyToken=b77a5c561934e089</value>
-  </data>
   <data name="&gt;&gt;lblSharedPeptides.Parent" xml:space="preserve">
     <value>flowLayoutPanel</value>
   </data>
@@ -381,9 +369,6 @@
   <data name="&gt;&gt;lnkHelpSharedPeptides.Name" xml:space="preserve">
     <value>lnkHelpSharedPeptides</value>
   </data>
-  <data name="&gt;&gt;lnkHelpSharedPeptides.Type" xml:space="preserve">
-    <value>System.Windows.Forms.LinkLabel, System.Windows.Forms, Version=4.0.0.0, Culture=neutral, PublicKeyToken=b77a5c561934e089</value>
-  </data>
   <data name="&gt;&gt;lnkHelpSharedPeptides.Parent" xml:space="preserve">
     <value>flowLayoutPanel</value>
   </data>
@@ -414,9 +399,6 @@
   <data name="&gt;&gt;cbMinimalProteinList.Name" xml:space="preserve">
     <value>cbMinimalProteinList</value>
   </data>
-  <data name="&gt;&gt;cbMinimalProteinList.Type" xml:space="preserve">
-    <value>System.Windows.Forms.CheckBox, System.Windows.Forms, Version=4.0.0.0, Culture=neutral, PublicKeyToken=b77a5c561934e089</value>
-  </data>
   <data name="&gt;&gt;cbMinimalProteinList.Parent" xml:space="preserve">
     <value>flowLayoutPanel</value>
   </data>
@@ -446,9 +428,6 @@
   </data>
   <data name="&gt;&gt;lblMinimalProteinList.Name" xml:space="preserve">
     <value>lblMinimalProteinList</value>
-  </data>
-  <data name="&gt;&gt;lblMinimalProteinList.Type" xml:space="preserve">
-    <value>System.Windows.Forms.Label, System.Windows.Forms, Version=4.0.0.0, Culture=neutral, PublicKeyToken=b77a5c561934e089</value>
   </data>
   <data name="&gt;&gt;lblMinimalProteinList.Parent" xml:space="preserve">
     <value>flowLayoutPanel</value>
@@ -483,9 +462,6 @@
   <data name="&gt;&gt;lnkHelpFindMinimalProteinList.Name" xml:space="preserve">
     <value>lnkHelpFindMinimalProteinList</value>
   </data>
-  <data name="&gt;&gt;lnkHelpFindMinimalProteinList.Type" xml:space="preserve">
-    <value>System.Windows.Forms.LinkLabel, System.Windows.Forms, Version=4.0.0.0, Culture=neutral, PublicKeyToken=b77a5c561934e089</value>
-  </data>
   <data name="&gt;&gt;lnkHelpFindMinimalProteinList.Parent" xml:space="preserve">
     <value>flowLayoutPanel</value>
   </data>
@@ -515,9 +491,6 @@
   </data>
   <data name="&gt;&gt;cbRemoveSubsetProteins.Name" xml:space="preserve">
     <value>cbRemoveSubsetProteins</value>
-  </data>
-  <data name="&gt;&gt;cbRemoveSubsetProteins.Type" xml:space="preserve">
-    <value>System.Windows.Forms.CheckBox, System.Windows.Forms, Version=4.0.0.0, Culture=neutral, PublicKeyToken=b77a5c561934e089</value>
   </data>
   <data name="&gt;&gt;cbRemoveSubsetProteins.Parent" xml:space="preserve">
     <value>flowLayoutPanel</value>
@@ -552,9 +525,6 @@
   <data name="&gt;&gt;lblRemoveSubsetProteins.Name" xml:space="preserve">
     <value>lblRemoveSubsetProteins</value>
   </data>
-  <data name="&gt;&gt;lblRemoveSubsetProteins.Type" xml:space="preserve">
-    <value>System.Windows.Forms.Label, System.Windows.Forms, Version=4.0.0.0, Culture=neutral, PublicKeyToken=b77a5c561934e089</value>
-  </data>
   <data name="&gt;&gt;lblRemoveSubsetProteins.Parent" xml:space="preserve">
     <value>flowLayoutPanel</value>
   </data>
@@ -587,9 +557,6 @@
   </data>
   <data name="&gt;&gt;lnkHelpRemoveSubsetProteins.Name" xml:space="preserve">
     <value>lnkHelpRemoveSubsetProteins</value>
-  </data>
-  <data name="&gt;&gt;lnkHelpRemoveSubsetProteins.Type" xml:space="preserve">
-    <value>System.Windows.Forms.LinkLabel, System.Windows.Forms, Version=4.0.0.0, Culture=neutral, PublicKeyToken=b77a5c561934e089</value>
   </data>
   <data name="&gt;&gt;lnkHelpRemoveSubsetProteins.Parent" xml:space="preserve">
     <value>flowLayoutPanel</value>
@@ -627,9 +594,6 @@
   <data name="&gt;&gt;lblMinPeptides.Name" xml:space="preserve">
     <value>lblMinPeptides</value>
   </data>
-  <data name="&gt;&gt;lblMinPeptides.Type" xml:space="preserve">
-    <value>System.Windows.Forms.Label, System.Windows.Forms, Version=4.0.0.0, Culture=neutral, PublicKeyToken=b77a5c561934e089</value>
-  </data>
   <data name="&gt;&gt;lblMinPeptides.Parent" xml:space="preserve">
     <value>flowLayoutPanel</value>
   </data>
@@ -650,9 +614,6 @@
   </data>
   <data name="&gt;&gt;numMinPeptides.Name" xml:space="preserve">
     <value>numMinPeptides</value>
-  </data>
-  <data name="&gt;&gt;numMinPeptides.Type" xml:space="preserve">
-    <value>System.Windows.Forms.NumericUpDown, System.Windows.Forms, Version=4.0.0.0, Culture=neutral, PublicKeyToken=b77a5c561934e089</value>
   </data>
   <data name="&gt;&gt;numMinPeptides.Parent" xml:space="preserve">
     <value>flowLayoutPanel</value>
@@ -675,9 +636,6 @@
   <data name="&gt;&gt;flowLayoutPanel.Name" xml:space="preserve">
     <value>flowLayoutPanel</value>
   </data>
-  <data name="&gt;&gt;flowLayoutPanel.Type" xml:space="preserve">
-    <value>System.Windows.Forms.FlowLayoutPanel, System.Windows.Forms, Version=4.0.0.0, Culture=neutral, PublicKeyToken=b77a5c561934e089</value>
-  </data>
   <data name="&gt;&gt;flowLayoutPanel.Parent" xml:space="preserve">
     <value>gbParsimonyOptions</value>
   </data>
@@ -695,9 +653,6 @@
   </data>
   <data name="&gt;&gt;comboSharedPeptides.Name" xml:space="preserve">
     <value>comboSharedPeptides</value>
-  </data>
-  <data name="&gt;&gt;comboSharedPeptides.Type" xml:space="preserve">
-    <value>System.Windows.Forms.ComboBox, System.Windows.Forms, Version=4.0.0.0, Culture=neutral, PublicKeyToken=b77a5c561934e089</value>
   </data>
   <data name="&gt;&gt;comboSharedPeptides.Parent" xml:space="preserve">
     <value>flowLayoutPanel</value>
@@ -722,9 +677,6 @@
   </data>
   <data name="&gt;&gt;gbParsimonyOptions.Name" xml:space="preserve">
     <value>gbParsimonyOptions</value>
-  </data>
-  <data name="&gt;&gt;gbParsimonyOptions.Type" xml:space="preserve">
-    <value>System.Windows.Forms.GroupBox, System.Windows.Forms, Version=4.0.0.0, Culture=neutral, PublicKeyToken=b77a5c561934e089</value>
   </data>
   <data name="&gt;&gt;gbParsimonyOptions.Parent" xml:space="preserve">
     <value>$this</value>
@@ -753,9 +705,6 @@
   <data name="&gt;&gt;rbFASTA.Name" xml:space="preserve">
     <value>rbFASTA</value>
   </data>
-  <data name="&gt;&gt;rbFASTA.Type" xml:space="preserve">
-    <value>System.Windows.Forms.RadioButton, System.Windows.Forms, Version=4.0.0.0, Culture=neutral, PublicKeyToken=b77a5c561934e089</value>
-  </data>
   <data name="&gt;&gt;rbFASTA.Parent" xml:space="preserve">
     <value>proteinSourcePanel</value>
   </data>
@@ -783,9 +732,6 @@
   <data name="&gt;&gt;rbBackgroundProteome.Name" xml:space="preserve">
     <value>rbBackgroundProteome</value>
   </data>
-  <data name="&gt;&gt;rbBackgroundProteome.Type" xml:space="preserve">
-    <value>System.Windows.Forms.RadioButton, System.Windows.Forms, Version=4.0.0.0, Culture=neutral, PublicKeyToken=b77a5c561934e089</value>
-  </data>
   <data name="&gt;&gt;rbBackgroundProteome.Parent" xml:space="preserve">
     <value>proteinSourcePanel</value>
   </data>
@@ -806,9 +752,6 @@
   </data>
   <data name="&gt;&gt;comboBackgroundProteome.Name" xml:space="preserve">
     <value>comboBackgroundProteome</value>
-  </data>
-  <data name="&gt;&gt;comboBackgroundProteome.Type" xml:space="preserve">
-    <value>System.Windows.Forms.ComboBox, System.Windows.Forms, Version=4.0.0.0, Culture=neutral, PublicKeyToken=b77a5c561934e089</value>
   </data>
   <data name="&gt;&gt;comboBackgroundProteome.Parent" xml:space="preserve">
     <value>proteinSourcePanel</value>
@@ -833,9 +776,6 @@
   </data>
   <data name="&gt;&gt;tbxFastaTargets.Name" xml:space="preserve">
     <value>tbxFastaTargets</value>
-  </data>
-  <data name="&gt;&gt;tbxFastaTargets.Type" xml:space="preserve">
-    <value>System.Windows.Forms.TextBox, System.Windows.Forms, Version=4.0.0.0, Culture=neutral, PublicKeyToken=b77a5c561934e089</value>
   </data>
   <data name="&gt;&gt;tbxFastaTargets.Parent" xml:space="preserve">
     <value>proteinSourcePanel</value>
@@ -867,9 +807,6 @@
   <data name="&gt;&gt;browseFastaTargetsBtn.Name" xml:space="preserve">
     <value>browseFastaTargetsBtn</value>
   </data>
-  <data name="&gt;&gt;browseFastaTargetsBtn.Type" xml:space="preserve">
-    <value>System.Windows.Forms.Button, System.Windows.Forms, Version=4.0.0.0, Culture=neutral, PublicKeyToken=b77a5c561934e089</value>
-  </data>
   <data name="&gt;&gt;browseFastaTargetsBtn.Parent" xml:space="preserve">
     <value>proteinSourcePanel</value>
   </data>
@@ -879,27 +816,15 @@
   <data name="dgvAssociateResults.Anchor" type="System.Windows.Forms.AnchorStyles, System.Windows.Forms">
     <value>Bottom, Left, Right</value>
   </data>
-  <metadata name="headerColumn.UserAddedColumn" type="System.Boolean, mscorlib, Version=4.0.0.0, Culture=neutral, PublicKeyToken=b77a5c561934e089">
-    <value>True</value>
-  </metadata>
   <data name="headerColumn.HeaderText" xml:space="preserve">
     <value />
   </data>
-  <metadata name="mappedColumn.UserAddedColumn" type="System.Boolean, mscorlib, Version=4.0.0.0, Culture=neutral, PublicKeyToken=b77a5c561934e089">
-    <value>True</value>
-  </metadata>
   <data name="mappedColumn.HeaderText" xml:space="preserve">
     <value>マップ済み</value>
   </data>
-  <metadata name="unmappedColumn.UserAddedColumn" type="System.Boolean, mscorlib, Version=4.0.0.0, Culture=neutral, PublicKeyToken=b77a5c561934e089">
-    <value>True</value>
-  </metadata>
   <data name="unmappedColumn.HeaderText" xml:space="preserve">
     <value>マップ解除</value>
   </data>
-  <metadata name="targetsColumn.UserAddedColumn" type="System.Boolean, mscorlib, Version=4.0.0.0, Culture=neutral, PublicKeyToken=b77a5c561934e089">
-    <value>True</value>
-  </metadata>
   <data name="targetsColumn.HeaderText" xml:space="preserve">
     <value>ターゲット</value>
   </data>
@@ -914,9 +839,6 @@
   </data>
   <data name="&gt;&gt;dgvAssociateResults.Name" xml:space="preserve">
     <value>dgvAssociateResults</value>
-  </data>
-  <data name="&gt;&gt;dgvAssociateResults.Type" xml:space="preserve">
-    <value>pwiz.Common.Controls.CommonDataGridView, pwiz.Common, Version=1.0.0.0, Culture=neutral, PublicKeyToken=null</value>
   </data>
   <data name="&gt;&gt;dgvAssociateResults.Parent" xml:space="preserve">
     <value>$this</value>
@@ -947,9 +869,6 @@
   </data>
   <data name="&gt;&gt;lblResults.Name" xml:space="preserve">
     <value>lblResults</value>
-  </data>
-  <data name="&gt;&gt;lblResults.Type" xml:space="preserve">
-    <value>System.Windows.Forms.Label, System.Windows.Forms, Version=4.0.0.0, Culture=neutral, PublicKeyToken=b77a5c561934e089</value>
   </data>
   <data name="&gt;&gt;lblResults.Parent" xml:space="preserve">
     <value>$this</value>
@@ -983,9 +902,6 @@
   </data>
   <data name="&gt;&gt;lblStatusBarResult.Name" xml:space="preserve">
     <value>lblStatusBarResult</value>
-  </data>
-  <data name="&gt;&gt;lblStatusBarResult.Type" xml:space="preserve">
-    <value>System.Windows.Forms.Label, System.Windows.Forms, Version=4.0.0.0, Culture=neutral, PublicKeyToken=b77a5c561934e089</value>
   </data>
   <data name="&gt;&gt;lblStatusBarResult.Parent" xml:space="preserve">
     <value>panelStatusBarResult</value>
@@ -1035,9 +951,6 @@
   <data name="&gt;&gt;panelStatusBarResult.Name" xml:space="preserve">
     <value>panelStatusBarResult</value>
   </data>
-  <data name="&gt;&gt;panelStatusBarResult.Type" xml:space="preserve">
-    <value>System.Windows.Forms.FlowLayoutPanel, System.Windows.Forms, Version=4.0.0.0, Culture=neutral, PublicKeyToken=b77a5c561934e089</value>
-  </data>
   <data name="&gt;&gt;panelStatusBarResult.Parent" xml:space="preserve">
     <value>$this</value>
   </data>
@@ -1059,18 +972,12 @@
   <data name="&gt;&gt;proteinSourcePanel.Name" xml:space="preserve">
     <value>proteinSourcePanel</value>
   </data>
-  <data name="&gt;&gt;proteinSourcePanel.Type" xml:space="preserve">
-    <value>System.Windows.Forms.Panel, System.Windows.Forms, Version=4.0.0.0, Culture=neutral, PublicKeyToken=b77a5c561934e089</value>
-  </data>
   <data name="&gt;&gt;proteinSourcePanel.Parent" xml:space="preserve">
     <value>$this</value>
   </data>
   <data name="&gt;&gt;proteinSourcePanel.ZOrder" xml:space="preserve">
     <value>0</value>
   </data>
-  <metadata name="$this.Localizable" type="System.Boolean, mscorlib, Version=4.0.0.0, Culture=neutral, PublicKeyToken=b77a5c561934e089">
-    <value>True</value>
-  </metadata>
   <data name="$this.AutoScaleDimensions" type="System.Drawing.SizeF, System.Drawing">
     <value>6, 13</value>
   </data>
@@ -1089,67 +996,34 @@
   <data name="&gt;&gt;modeUIHandler.Name" xml:space="preserve">
     <value>modeUIHandler</value>
   </data>
-  <data name="&gt;&gt;modeUIHandler.Type" xml:space="preserve">
-    <value>pwiz.Skyline.Util.Helpers+ModeUIExtender, Skyline, Version=1.0.0.0, Culture=neutral, PublicKeyToken=null</value>
-  </data>
   <data name="&gt;&gt;headerColumn.Name" xml:space="preserve">
     <value>headerColumn</value>
-  </data>
-  <data name="&gt;&gt;headerColumn.Type" xml:space="preserve">
-    <value>System.Windows.Forms.DataGridViewTextBoxColumn, System.Windows.Forms, Version=4.0.0.0, Culture=neutral, PublicKeyToken=b77a5c561934e089</value>
   </data>
   <data name="&gt;&gt;mappedColumn.Name" xml:space="preserve">
     <value>mappedColumn</value>
   </data>
-  <data name="&gt;&gt;mappedColumn.Type" xml:space="preserve">
-    <value>System.Windows.Forms.DataGridViewTextBoxColumn, System.Windows.Forms, Version=4.0.0.0, Culture=neutral, PublicKeyToken=b77a5c561934e089</value>
-  </data>
   <data name="&gt;&gt;unmappedColumn.Name" xml:space="preserve">
     <value>unmappedColumn</value>
-  </data>
-  <data name="&gt;&gt;unmappedColumn.Type" xml:space="preserve">
-    <value>System.Windows.Forms.DataGridViewTextBoxColumn, System.Windows.Forms, Version=4.0.0.0, Culture=neutral, PublicKeyToken=b77a5c561934e089</value>
   </data>
   <data name="&gt;&gt;targetsColumn.Name" xml:space="preserve">
     <value>targetsColumn</value>
   </data>
-  <data name="&gt;&gt;targetsColumn.Type" xml:space="preserve">
-    <value>System.Windows.Forms.DataGridViewTextBoxColumn, System.Windows.Forms, Version=4.0.0.0, Culture=neutral, PublicKeyToken=b77a5c561934e089</value>
-  </data>
   <data name="&gt;&gt;dataGridViewTextBoxColumn1.Name" xml:space="preserve">
     <value>dataGridViewTextBoxColumn1</value>
-  </data>
-  <data name="&gt;&gt;dataGridViewTextBoxColumn1.Type" xml:space="preserve">
-    <value>System.Windows.Forms.DataGridViewTextBoxColumn, System.Windows.Forms, Version=4.0.0.0, Culture=neutral, PublicKeyToken=b77a5c561934e089</value>
   </data>
   <data name="&gt;&gt;dataGridViewTextBoxColumn2.Name" xml:space="preserve">
     <value>dataGridViewTextBoxColumn2</value>
   </data>
-  <data name="&gt;&gt;dataGridViewTextBoxColumn2.Type" xml:space="preserve">
-    <value>System.Windows.Forms.DataGridViewTextBoxColumn, System.Windows.Forms, Version=4.0.0.0, Culture=neutral, PublicKeyToken=b77a5c561934e089</value>
-  </data>
   <data name="&gt;&gt;dataGridViewTextBoxColumn3.Name" xml:space="preserve">
     <value>dataGridViewTextBoxColumn3</value>
-  </data>
-  <data name="&gt;&gt;dataGridViewTextBoxColumn3.Type" xml:space="preserve">
-    <value>System.Windows.Forms.DataGridViewTextBoxColumn, System.Windows.Forms, Version=4.0.0.0, Culture=neutral, PublicKeyToken=b77a5c561934e089</value>
   </data>
   <data name="&gt;&gt;dataGridViewTextBoxColumn4.Name" xml:space="preserve">
     <value>dataGridViewTextBoxColumn4</value>
   </data>
-  <data name="&gt;&gt;dataGridViewTextBoxColumn4.Type" xml:space="preserve">
-    <value>System.Windows.Forms.DataGridViewTextBoxColumn, System.Windows.Forms, Version=4.0.0.0, Culture=neutral, PublicKeyToken=b77a5c561934e089</value>
-  </data>
   <data name="&gt;&gt;helpTip.Name" xml:space="preserve">
     <value>helpTip</value>
   </data>
-  <data name="&gt;&gt;helpTip.Type" xml:space="preserve">
-    <value>System.Windows.Forms.ToolTip, System.Windows.Forms, Version=4.0.0.0, Culture=neutral, PublicKeyToken=b77a5c561934e089</value>
-  </data>
   <data name="&gt;&gt;$this.Name" xml:space="preserve">
     <value>AssociateProteinsDlg</value>
-  </data>
-  <data name="&gt;&gt;$this.Type" xml:space="preserve">
-    <value>pwiz.Skyline.Util.ModeUIInvariantFormEx, Skyline, Version=1.0.0.0, Culture=neutral, PublicKeyToken=null</value>
   </data>
 </root>

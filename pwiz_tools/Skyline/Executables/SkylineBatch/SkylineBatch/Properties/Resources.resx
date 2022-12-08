@@ -117,6 +117,7 @@
   <resheader name="writer">
     <value>System.Resources.ResXResourceWriter, System.Windows.Forms, Version=4.0.0.0, Culture=neutral, PublicKeyToken=b77a5c561934e089</value>
   </resheader>
+  <assembly alias="System.Windows.Forms" name="System.Windows.Forms, Version=4.0.0.0, Culture=neutral, PublicKeyToken=b77a5c561934e089" />
   <data name="Program_Main_Error_details_may_be_found_in_the_file__0_" xml:space="preserve">
     <value>Error details may be found in the file: {0}.</value>
   </data>
@@ -144,7 +145,6 @@
   <data name="ReportInfo_ValidateRScriptPath_R_script_path__0__is_not_a_valid_path_" xml:space="preserve">
     <value>R script path {0} is not a valid path.</value>
   </data>
-  <assembly alias="System.Windows.Forms" name="System.Windows.Forms, Version=4.0.0.0, Culture=neutral, PublicKeyToken=b77a5c561934e089" />
   <data name="downloadSelected" type="System.Resources.ResXFileRef, System.Windows.Forms">
     <value>..\Resources\downloadSelected.png;System.Drawing.Bitmap, System.Drawing, Version=4.0.0.0, Culture=neutral, PublicKeyToken=b03f5f7f11d50a3a</value>
   </data>

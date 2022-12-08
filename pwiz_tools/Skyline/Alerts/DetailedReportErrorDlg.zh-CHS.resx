@@ -118,14 +118,17 @@
     <value>System.Resources.ResXResourceWriter, System.Windows.Forms, Version=4.0.0.0, Culture=neutral, PublicKeyToken=b77a5c561934e089</value>
   </resheader>
   <assembly alias="mscorlib" name="mscorlib, Version=4.0.0.0, Culture=neutral, PublicKeyToken=b77a5c561934e089" />
+  <assembly alias="System.Drawing" name="System.Drawing, Version=4.0.0.0, Culture=neutral, PublicKeyToken=b03f5f7f11d50a3a" />
+  <assembly alias="System.Windows.Forms" name="System.Windows.Forms, Version=4.0.0.0, Culture=neutral, PublicKeyToken=b77a5c561934e089" />
+  <metadata name="$this.Localizable" type="System.Boolean, mscorlib, Version=4.0.0.0, Culture=neutral, PublicKeyToken=b77a5c561934e089">
+    <value>True</value>
+  </metadata>
   <data name="lblReportError.AutoSize" type="System.Boolean, mscorlib">
     <value>True</value>
   </data>
-  <assembly alias="System.Drawing" name="System.Drawing, Version=4.0.0.0, Culture=neutral, PublicKeyToken=b03f5f7f11d50a3a" />
   <data name="lblReportError.Font" type="System.Drawing.Font, System.Drawing">
     <value>Microsoft Sans Serif, 9.75pt</value>
   </data>
-  <assembly alias="System.Windows.Forms" name="System.Windows.Forms, Version=4.0.0.0, Culture=neutral, PublicKeyToken=b77a5c561934e089" />
   <data name="lblReportError.ImeMode" type="System.Windows.Forms.ImeMode, System.Windows.Forms">
     <value>NoControl</value>
   </data>
@@ -146,9 +149,6 @@
   <data name="&gt;&gt;lblReportError.Name" xml:space="preserve">
     <value>lblReportError</value>
   </data>
-  <data name="&gt;&gt;lblReportError.Type" xml:space="preserve">
-    <value>System.Windows.Forms.Label, System.Windows.Forms, Version=4.0.0.0, Culture=neutral, PublicKeyToken=b77a5c561934e089</value>
-  </data>
   <data name="&gt;&gt;lblReportError.Parent" xml:space="preserve">
     <value>$this</value>
   </data>
@@ -166,9 +166,6 @@
   </data>
   <data name="&gt;&gt;textBoxEmail.Name" xml:space="preserve">
     <value>textBoxEmail</value>
-  </data>
-  <data name="&gt;&gt;textBoxEmail.Type" xml:space="preserve">
-    <value>System.Windows.Forms.TextBox, System.Windows.Forms, Version=4.0.0.0, Culture=neutral, PublicKeyToken=b77a5c561934e089</value>
   </data>
   <data name="&gt;&gt;textBoxEmail.Parent" xml:space="preserve">
     <value>$this</value>
@@ -197,9 +194,6 @@
   <data name="&gt;&gt;lblEmail.Name" xml:space="preserve">
     <value>lblEmail</value>
   </data>
-  <data name="&gt;&gt;lblEmail.Type" xml:space="preserve">
-    <value>System.Windows.Forms.Label, System.Windows.Forms, Version=4.0.0.0, Culture=neutral, PublicKeyToken=b77a5c561934e089</value>
-  </data>
   <data name="&gt;&gt;lblEmail.Parent" xml:space="preserve">
     <value>$this</value>
   </data>
@@ -227,9 +221,6 @@
   <data name="&gt;&gt;lblCommentBox.Name" xml:space="preserve">
     <value>lblCommentBox</value>
   </data>
-  <data name="&gt;&gt;lblCommentBox.Type" xml:space="preserve">
-    <value>System.Windows.Forms.Label, System.Windows.Forms, Version=4.0.0.0, Culture=neutral, PublicKeyToken=b77a5c561934e089</value>
-  </data>
   <data name="&gt;&gt;lblCommentBox.Parent" xml:space="preserve">
     <value>$this</value>
   </data>
@@ -250,9 +241,6 @@
   </data>
   <data name="&gt;&gt;textBoxMsg.Name" xml:space="preserve">
     <value>textBoxMsg</value>
-  </data>
-  <data name="&gt;&gt;textBoxMsg.Type" xml:space="preserve">
-    <value>System.Windows.Forms.RichTextBox, System.Windows.Forms, Version=4.0.0.0, Culture=neutral, PublicKeyToken=b77a5c561934e089</value>
   </data>
   <data name="&gt;&gt;textBoxMsg.Parent" xml:space="preserve">
     <value>$this</value>
@@ -281,9 +269,6 @@
   <data name="&gt;&gt;btnOK.Name" xml:space="preserve">
     <value>btnOK</value>
   </data>
-  <data name="&gt;&gt;btnOK.Type" xml:space="preserve">
-    <value>System.Windows.Forms.Button, System.Windows.Forms, Version=4.0.0.0, Culture=neutral, PublicKeyToken=b77a5c561934e089</value>
-  </data>
   <data name="&gt;&gt;btnOK.Parent" xml:space="preserve">
     <value>$this</value>
   </data>
@@ -308,9 +293,6 @@
   <data name="&gt;&gt;checkBoxSkyFile.Name" xml:space="preserve">
     <value>checkBoxSkyFile</value>
   </data>
-  <data name="&gt;&gt;checkBoxSkyFile.Type" xml:space="preserve">
-    <value>System.Windows.Forms.CheckBox, System.Windows.Forms, Version=4.0.0.0, Culture=neutral, PublicKeyToken=b77a5c561934e089</value>
-  </data>
   <data name="&gt;&gt;checkBoxSkyFile.Parent" xml:space="preserve">
     <value>$this</value>
   </data>
@@ -334,9 +316,6 @@
   </data>
   <data name="&gt;&gt;checkBoxScreenShot.Name" xml:space="preserve">
     <value>checkBoxScreenShot</value>
-  </data>
-  <data name="&gt;&gt;checkBoxScreenShot.Type" xml:space="preserve">
-    <value>System.Windows.Forms.CheckBox, System.Windows.Forms, Version=4.0.0.0, Culture=neutral, PublicKeyToken=b77a5c561934e089</value>
   </data>
   <data name="&gt;&gt;checkBoxScreenShot.Parent" xml:space="preserve">
     <value>$this</value>
@@ -365,9 +344,6 @@
   <data name="&gt;&gt;label1.Name" xml:space="preserve">
     <value>label1</value>
   </data>
-  <data name="&gt;&gt;label1.Type" xml:space="preserve">
-    <value>System.Windows.Forms.Label, System.Windows.Forms, Version=4.0.0.0, Culture=neutral, PublicKeyToken=b77a5c561934e089</value>
-  </data>
   <data name="&gt;&gt;label1.Parent" xml:space="preserve">
     <value>$this</value>
   </data>
@@ -394,9 +370,6 @@
   </data>
   <data name="&gt;&gt;label2.Name" xml:space="preserve">
     <value>label2</value>
-  </data>
-  <data name="&gt;&gt;label2.Type" xml:space="preserve">
-    <value>System.Windows.Forms.Label, System.Windows.Forms, Version=4.0.0.0, Culture=neutral, PublicKeyToken=b77a5c561934e089</value>
   </data>
   <data name="&gt;&gt;label2.Parent" xml:space="preserve">
     <value>$this</value>
@@ -425,9 +398,6 @@
   <data name="&gt;&gt;btnOkAnon.Name" xml:space="preserve">
     <value>btnOkAnon</value>
   </data>
-  <data name="&gt;&gt;btnOkAnon.Type" xml:space="preserve">
-    <value>System.Windows.Forms.Button, System.Windows.Forms, Version=4.0.0.0, Culture=neutral, PublicKeyToken=b77a5c561934e089</value>
-  </data>
   <data name="&gt;&gt;btnOkAnon.Parent" xml:space="preserve">
     <value>$this</value>
   </data>
@@ -446,18 +416,12 @@
   <data name="&gt;&gt;pictureBox1.Name" xml:space="preserve">
     <value>pictureBox1</value>
   </data>
-  <data name="&gt;&gt;pictureBox1.Type" xml:space="preserve">
-    <value>System.Windows.Forms.PictureBox, System.Windows.Forms, Version=4.0.0.0, Culture=neutral, PublicKeyToken=b77a5c561934e089</value>
-  </data>
   <data name="&gt;&gt;pictureBox1.Parent" xml:space="preserve">
     <value>$this</value>
   </data>
   <data name="&gt;&gt;pictureBox1.ZOrder" xml:space="preserve">
     <value>0</value>
   </data>
-  <metadata name="$this.Localizable" type="System.Boolean, mscorlib, Version=4.0.0.0, Culture=neutral, PublicKeyToken=b77a5c561934e089">
-    <value>True</value>
-  </metadata>
   <data name="$this.AutoScaleDimensions" type="System.Drawing.SizeF, System.Drawing">
     <value>6, 13</value>
   </data>
@@ -469,8 +433,5 @@
   </data>
   <data name="&gt;&gt;$this.Name" xml:space="preserve">
     <value>DetailedReportErrorDlg</value>
-  </data>
-  <data name="&gt;&gt;$this.Type" xml:space="preserve">
-    <value>pwiz.Skyline.Util.FormEx, Skyline, Version=1.0.0.0, Culture=neutral, PublicKeyToken=null</value>
   </data>
 </root>

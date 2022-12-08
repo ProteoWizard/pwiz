@@ -118,17 +118,20 @@
     <value>System.Resources.ResXResourceWriter, System.Windows.Forms, Version=4.0.0.0, Culture=neutral, PublicKeyToken=b77a5c561934e089</value>
   </resheader>
   <assembly alias="System.Windows.Forms" name="System.Windows.Forms, Version=4.0.0.0, Culture=neutral, PublicKeyToken=b77a5c561934e089" />
+  <assembly alias="System.Drawing" name="System.Drawing, Version=4.0.0.0, Culture=neutral, PublicKeyToken=b03f5f7f11d50a3a" />
+  <assembly alias="mscorlib" name="mscorlib, Version=4.0.0.0, Culture=neutral, PublicKeyToken=b77a5c561934e089" />
+  <metadata name="$this.Localizable" type="System.Boolean, mscorlib, Version=4.0.0.0, Culture=neutral, PublicKeyToken=b77a5c561934e089">
+    <value>True</value>
+  </metadata>
   <data name="btnAdditionalSettings.Anchor" type="System.Windows.Forms.AnchorStyles, System.Windows.Forms">
     <value>Bottom, Left</value>
   </data>
-  <assembly alias="System.Drawing" name="System.Drawing, Version=4.0.0.0, Culture=neutral, PublicKeyToken=b03f5f7f11d50a3a" />
   <data name="btnAdditionalSettings.Location" type="System.Drawing.Point, System.Drawing">
     <value>6, 335</value>
   </data>
   <data name="btnAdditionalSettings.Size" type="System.Drawing.Size, System.Drawing">
     <value>107, 23</value>
   </data>
-  <assembly alias="mscorlib" name="mscorlib, Version=4.0.0.0, Culture=neutral, PublicKeyToken=b77a5c561934e089" />
   <data name="btnAdditionalSettings.TabIndex" type="System.Int32, mscorlib">
     <value>11</value>
   </data>
@@ -137,9 +140,6 @@
   </data>
   <data name="&gt;&gt;btnAdditionalSettings.Name" xml:space="preserve">
     <value>btnAdditionalSettings</value>
-  </data>
-  <data name="&gt;&gt;btnAdditionalSettings.Type" xml:space="preserve">
-    <value>System.Windows.Forms.Button, System.Windows.Forms, Version=4.0.0.0, Culture=neutral, PublicKeyToken=b77a5c561934e089</value>
   </data>
   <data name="&gt;&gt;btnAdditionalSettings.Parent" xml:space="preserve">
     <value>diaUmpireTabPage</value>
@@ -168,9 +168,6 @@
   <data name="&gt;&gt;msconvertTabPage.Name" xml:space="preserve">
     <value>msconvertTabPage</value>
   </data>
-  <data name="&gt;&gt;msconvertTabPage.Type" xml:space="preserve">
-    <value>System.Windows.Forms.TabPage, System.Windows.Forms, Version=4.0.0.0, Culture=neutral, PublicKeyToken=b77a5c561934e089</value>
-  </data>
   <data name="&gt;&gt;msconvertTabPage.Parent" xml:space="preserve">
     <value>converterTabControl</value>
   </data>
@@ -192,17 +189,11 @@
   <data name="cbEstimateBg.Text" xml:space="preserve">
     <value>推定バックグラウンド(&amp;E)</value>
   </data>
-  <metadata name="toolTip.TrayLocation" type="System.Drawing.Point, System.Drawing, Version=4.0.0.0, Culture=neutral, PublicKeyToken=b03f5f7f11d50a3a">
-    <value>17, 17</value>
-  </metadata>
   <data name="cbEstimateBg.ToolTip" xml:space="preserve">
     <value>推定バックグラウンド信号は、精度を多少犠牲にしてDIA-Umpireプロセスを大幅に高速にします。（EstimageBG）</value>
   </data>
   <data name="&gt;&gt;cbEstimateBg.Name" xml:space="preserve">
     <value>cbEstimateBg</value>
-  </data>
-  <data name="&gt;&gt;cbEstimateBg.Type" xml:space="preserve">
-    <value>System.Windows.Forms.CheckBox, System.Windows.Forms, Version=4.0.0.0, Culture=neutral, PublicKeyToken=b77a5c561934e089</value>
   </data>
   <data name="&gt;&gt;cbEstimateBg.Parent" xml:space="preserve">
     <value>diaUmpireTabPage</value>
@@ -231,9 +222,6 @@
   <data name="&gt;&gt;label1.Name" xml:space="preserve">
     <value>label1</value>
   </data>
-  <data name="&gt;&gt;label1.Type" xml:space="preserve">
-    <value>System.Windows.Forms.Label, System.Windows.Forms, Version=4.0.0.0, Culture=neutral, PublicKeyToken=b77a5c561934e089</value>
-  </data>
   <data name="&gt;&gt;label1.Parent" xml:space="preserve">
     <value>diaUmpireTabPage</value>
   </data>
@@ -251,9 +239,6 @@
   </data>
   <data name="&gt;&gt;cbInstrumentPreset.Name" xml:space="preserve">
     <value>cbInstrumentPreset</value>
-  </data>
-  <data name="&gt;&gt;cbInstrumentPreset.Type" xml:space="preserve">
-    <value>System.Windows.Forms.ComboBox, System.Windows.Forms, Version=4.0.0.0, Culture=neutral, PublicKeyToken=b77a5c561934e089</value>
   </data>
   <data name="&gt;&gt;cbInstrumentPreset.Parent" xml:space="preserve">
     <value>diaUmpireTabPage</value>
@@ -282,9 +267,6 @@
   <data name="&gt;&gt;lblInstrumentPreset.Name" xml:space="preserve">
     <value>lblInstrumentPreset</value>
   </data>
-  <data name="&gt;&gt;lblInstrumentPreset.Type" xml:space="preserve">
-    <value>System.Windows.Forms.Label, System.Windows.Forms, Version=4.0.0.0, Culture=neutral, PublicKeyToken=b77a5c561934e089</value>
-  </data>
   <data name="&gt;&gt;lblInstrumentPreset.Parent" xml:space="preserve">
     <value>diaUmpireTabPage</value>
   </data>
@@ -309,9 +291,6 @@
   <data name="&gt;&gt;diaUmpireTabPage.Name" xml:space="preserve">
     <value>diaUmpireTabPage</value>
   </data>
-  <data name="&gt;&gt;diaUmpireTabPage.Type" xml:space="preserve">
-    <value>System.Windows.Forms.TabPage, System.Windows.Forms, Version=4.0.0.0, Culture=neutral, PublicKeyToken=b77a5c561934e089</value>
-  </data>
   <data name="&gt;&gt;diaUmpireTabPage.Parent" xml:space="preserve">
     <value>converterTabControl</value>
   </data>
@@ -330,18 +309,12 @@
   <data name="&gt;&gt;converterTabControl.Name" xml:space="preserve">
     <value>converterTabControl</value>
   </data>
-  <data name="&gt;&gt;converterTabControl.Type" xml:space="preserve">
-    <value>System.Windows.Forms.TabControl, System.Windows.Forms, Version=4.0.0.0, Culture=neutral, PublicKeyToken=b77a5c561934e089</value>
-  </data>
   <data name="&gt;&gt;converterTabControl.Parent" xml:space="preserve">
     <value>$this</value>
   </data>
   <data name="&gt;&gt;converterTabControl.ZOrder" xml:space="preserve">
     <value>0</value>
   </data>
-  <metadata name="$this.Localizable" type="System.Boolean, mscorlib, Version=4.0.0.0, Culture=neutral, PublicKeyToken=b77a5c561934e089">
-    <value>True</value>
-  </metadata>
   <data name="$this.AutoScaleDimensions" type="System.Drawing.SizeF, System.Drawing">
     <value>6, 13</value>
   </data>
@@ -351,13 +324,7 @@
   <data name="&gt;&gt;toolTip.Name" xml:space="preserve">
     <value>toolTip</value>
   </data>
-  <data name="&gt;&gt;toolTip.Type" xml:space="preserve">
-    <value>System.Windows.Forms.ToolTip, System.Windows.Forms, Version=4.0.0.0, Culture=neutral, PublicKeyToken=b77a5c561934e089</value>
-  </data>
   <data name="&gt;&gt;$this.Name" xml:space="preserve">
     <value>ConverterSettingsControl</value>
-  </data>
-  <data name="&gt;&gt;$this.Type" xml:space="preserve">
-    <value>System.Windows.Forms.UserControl, System.Windows.Forms, Version=4.0.0.0, Culture=neutral, PublicKeyToken=b77a5c561934e089</value>
   </data>
 </root>

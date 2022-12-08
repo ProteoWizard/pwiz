@@ -117,18 +117,18 @@
   <resheader name="writer">
     <value>System.Resources.ResXResourceWriter, System.Windows.Forms, Version=4.0.0.0, Culture=neutral, PublicKeyToken=b77a5c561934e089</value>
   </resheader>
-  <metadata name="modeUIHandler.TrayLocation" type="System.Drawing.Point, System.Drawing, Version=4.0.0.0, Culture=neutral, PublicKeyToken=b03f5f7f11d50a3a">
-    <value>17, 17</value>
-  </metadata>
   <assembly alias="System.Windows.Forms" name="System.Windows.Forms, Version=4.0.0.0, Culture=neutral, PublicKeyToken=b77a5c561934e089" />
+  <assembly alias="mscorlib" name="mscorlib, Version=4.0.0.0, Culture=neutral, PublicKeyToken=b77a5c561934e089" />
+  <assembly alias="System.Drawing" name="System.Drawing, Version=4.0.0.0, Culture=neutral, PublicKeyToken=b03f5f7f11d50a3a" />
+  <metadata name="$this.Localizable" type="System.Boolean, mscorlib, Version=4.0.0.0, Culture=neutral, PublicKeyToken=b77a5c561934e089">
+    <value>True</value>
+  </metadata>
   <data name="splitPeptideList.Dock" type="System.Windows.Forms.DockStyle, System.Windows.Forms">
     <value>Fill</value>
   </data>
-  <assembly alias="mscorlib" name="mscorlib, Version=4.0.0.0, Culture=neutral, PublicKeyToken=b77a5c561934e089" />
   <data name="splitPeptideList.IsSplitterFixed" type="System.Boolean, mscorlib">
     <value>True</value>
   </data>
-  <assembly alias="System.Drawing" name="System.Drawing, Version=4.0.0.0, Culture=neutral, PublicKeyToken=b03f5f7f11d50a3a" />
   <data name="splitPeptideList.Location" type="System.Drawing.Point, System.Drawing">
     <value>0, 77</value>
   </data>
@@ -152,9 +152,6 @@
   </data>
   <data name="&gt;&gt;listPeptide.Name" xml:space="preserve">
     <value>listPeptide</value>
-  </data>
-  <data name="&gt;&gt;listPeptide.Type" xml:space="preserve">
-    <value>System.Windows.Forms.ListBox, System.Windows.Forms, Version=4.0.0.0, Culture=neutral, PublicKeyToken=b77a5c561934e089</value>
   </data>
   <data name="&gt;&gt;listPeptide.Parent" xml:space="preserve">
     <value>PeptideListPanel</value>
@@ -186,9 +183,6 @@
   <data name="&gt;&gt;cbShowModMasses.Name" xml:space="preserve">
     <value>cbShowModMasses</value>
   </data>
-  <data name="&gt;&gt;cbShowModMasses.Type" xml:space="preserve">
-    <value>System.Windows.Forms.CheckBox, System.Windows.Forms, Version=4.0.0.0, Culture=neutral, PublicKeyToken=b77a5c561934e089</value>
-  </data>
   <data name="&gt;&gt;cbShowModMasses.Parent" xml:space="preserve">
     <value>PeptideListPanel</value>
   </data>
@@ -210,9 +204,6 @@
   <data name="&gt;&gt;PeptideListPanel.Name" xml:space="preserve">
     <value>PeptideListPanel</value>
   </data>
-  <data name="&gt;&gt;PeptideListPanel.Type" xml:space="preserve">
-    <value>System.Windows.Forms.Panel, System.Windows.Forms, Version=4.0.0.0, Culture=neutral, PublicKeyToken=b77a5c561934e089</value>
-  </data>
   <data name="&gt;&gt;PeptideListPanel.Parent" xml:space="preserve">
     <value>splitPeptideList.Panel1</value>
   </data>
@@ -224,9 +215,6 @@
   </data>
   <data name="&gt;&gt;splitPeptideList.Panel1.Name" xml:space="preserve">
     <value>splitPeptideList.Panel1</value>
-  </data>
-  <data name="&gt;&gt;splitPeptideList.Panel1.Type" xml:space="preserve">
-    <value>System.Windows.Forms.SplitterPanel, System.Windows.Forms, Version=4.0.0.0, Culture=neutral, PublicKeyToken=b77a5c561934e089</value>
   </data>
   <data name="&gt;&gt;splitPeptideList.Panel1.Parent" xml:space="preserve">
     <value>splitPeptideList</value>
@@ -255,9 +243,6 @@
   <data name="&gt;&gt;PageCount.Name" xml:space="preserve">
     <value>PageCount</value>
   </data>
-  <data name="&gt;&gt;PageCount.Type" xml:space="preserve">
-    <value>System.Windows.Forms.Label, System.Windows.Forms, Version=4.0.0.0, Culture=neutral, PublicKeyToken=b77a5c561934e089</value>
-  </data>
   <data name="&gt;&gt;PageCount.Parent" xml:space="preserve">
     <value>splitPeptideList.Panel2</value>
   </data>
@@ -284,9 +269,6 @@
   </data>
   <data name="&gt;&gt;PeptideCount.Name" xml:space="preserve">
     <value>PeptideCount</value>
-  </data>
-  <data name="&gt;&gt;PeptideCount.Type" xml:space="preserve">
-    <value>System.Windows.Forms.Label, System.Windows.Forms, Version=4.0.0.0, Culture=neutral, PublicKeyToken=b77a5c561934e089</value>
   </data>
   <data name="&gt;&gt;PeptideCount.Parent" xml:space="preserve">
     <value>splitPeptideList.Panel2</value>
@@ -315,9 +297,6 @@
   <data name="&gt;&gt;NextLink.Name" xml:space="preserve">
     <value>NextLink</value>
   </data>
-  <data name="&gt;&gt;NextLink.Type" xml:space="preserve">
-    <value>System.Windows.Forms.LinkLabel, System.Windows.Forms, Version=4.0.0.0, Culture=neutral, PublicKeyToken=b77a5c561934e089</value>
-  </data>
   <data name="&gt;&gt;NextLink.Parent" xml:space="preserve">
     <value>splitPeptideList.Panel2</value>
   </data>
@@ -345,9 +324,6 @@
   <data name="&gt;&gt;PreviousLink.Name" xml:space="preserve">
     <value>PreviousLink</value>
   </data>
-  <data name="&gt;&gt;PreviousLink.Type" xml:space="preserve">
-    <value>System.Windows.Forms.LinkLabel, System.Windows.Forms, Version=4.0.0.0, Culture=neutral, PublicKeyToken=b77a5c561934e089</value>
-  </data>
   <data name="&gt;&gt;PreviousLink.Parent" xml:space="preserve">
     <value>splitPeptideList.Panel2</value>
   </data>
@@ -356,9 +332,6 @@
   </data>
   <data name="&gt;&gt;splitPeptideList.Panel2.Name" xml:space="preserve">
     <value>splitPeptideList.Panel2</value>
-  </data>
-  <data name="&gt;&gt;splitPeptideList.Panel2.Type" xml:space="preserve">
-    <value>System.Windows.Forms.SplitterPanel, System.Windows.Forms, Version=4.0.0.0, Culture=neutral, PublicKeyToken=b77a5c561934e089</value>
   </data>
   <data name="&gt;&gt;splitPeptideList.Panel2.Parent" xml:space="preserve">
     <value>splitPeptideList</value>
@@ -380,9 +353,6 @@
   </data>
   <data name="&gt;&gt;splitPeptideList.Name" xml:space="preserve">
     <value>splitPeptideList</value>
-  </data>
-  <data name="&gt;&gt;splitPeptideList.Type" xml:space="preserve">
-    <value>System.Windows.Forms.SplitContainer, System.Windows.Forms, Version=4.0.0.0, Culture=neutral, PublicKeyToken=b77a5c561934e089</value>
   </data>
   <data name="&gt;&gt;splitPeptideList.Parent" xml:space="preserve">
     <value>splitMain.Panel1</value>
@@ -417,9 +387,6 @@
   <data name="&gt;&gt;byLabel.Name" xml:space="preserve">
     <value>byLabel</value>
   </data>
-  <data name="&gt;&gt;byLabel.Type" xml:space="preserve">
-    <value>System.Windows.Forms.Label, System.Windows.Forms, Version=4.0.0.0, Culture=neutral, PublicKeyToken=b77a5c561934e089</value>
-  </data>
   <data name="&gt;&gt;byLabel.Parent" xml:space="preserve">
     <value>PeptideEditPanel</value>
   </data>
@@ -440,9 +407,6 @@
   </data>
   <data name="&gt;&gt;comboFilterCategory.Name" xml:space="preserve">
     <value>comboFilterCategory</value>
-  </data>
-  <data name="&gt;&gt;comboFilterCategory.Type" xml:space="preserve">
-    <value>System.Windows.Forms.ComboBox, System.Windows.Forms, Version=4.0.0.0, Culture=neutral, PublicKeyToken=b77a5c561934e089</value>
   </data>
   <data name="&gt;&gt;comboFilterCategory.Parent" xml:space="preserve">
     <value>PeptideEditPanel</value>
@@ -467,9 +431,6 @@
   </data>
   <data name="&gt;&gt;filterLabel.Name" xml:space="preserve">
     <value>filterLabel</value>
-  </data>
-  <data name="&gt;&gt;filterLabel.Type" xml:space="preserve">
-    <value>System.Windows.Forms.Label, System.Windows.Forms, Version=4.0.0.0, Culture=neutral, PublicKeyToken=b77a5c561934e089</value>
   </data>
   <data name="&gt;&gt;filterLabel.Parent" xml:space="preserve">
     <value>PeptideEditPanel</value>
@@ -501,9 +462,6 @@
   <data name="&gt;&gt;MoleculeLabel.Name" xml:space="preserve">
     <value>MoleculeLabel</value>
   </data>
-  <data name="&gt;&gt;MoleculeLabel.Type" xml:space="preserve">
-    <value>System.Windows.Forms.Label, System.Windows.Forms, Version=4.0.0.0, Culture=neutral, PublicKeyToken=b77a5c561934e089</value>
-  </data>
   <data name="&gt;&gt;MoleculeLabel.Parent" xml:space="preserve">
     <value>PeptideEditPanel</value>
   </data>
@@ -531,9 +489,6 @@
   <data name="&gt;&gt;comboLibrary.Name" xml:space="preserve">
     <value>comboLibrary</value>
   </data>
-  <data name="&gt;&gt;comboLibrary.Type" xml:space="preserve">
-    <value>System.Windows.Forms.ComboBox, System.Windows.Forms, Version=4.0.0.0, Culture=neutral, PublicKeyToken=b77a5c561934e089</value>
-  </data>
   <data name="&gt;&gt;comboLibrary.Parent" xml:space="preserve">
     <value>tableLayoutPanel1</value>
   </data>
@@ -557,9 +512,6 @@
   </data>
   <data name="&gt;&gt;btnLibDetails.Name" xml:space="preserve">
     <value>btnLibDetails</value>
-  </data>
-  <data name="&gt;&gt;btnLibDetails.Type" xml:space="preserve">
-    <value>System.Windows.Forms.Button, System.Windows.Forms, Version=4.0.0.0, Culture=neutral, PublicKeyToken=b77a5c561934e089</value>
   </data>
   <data name="&gt;&gt;btnLibDetails.Parent" xml:space="preserve">
     <value>tableLayoutPanel1</value>
@@ -588,9 +540,6 @@
   <data name="&gt;&gt;tableLayoutPanel1.Name" xml:space="preserve">
     <value>tableLayoutPanel1</value>
   </data>
-  <data name="&gt;&gt;tableLayoutPanel1.Type" xml:space="preserve">
-    <value>System.Windows.Forms.TableLayoutPanel, System.Windows.Forms, Version=4.0.0.0, Culture=neutral, PublicKeyToken=b77a5c561934e089</value>
-  </data>
   <data name="&gt;&gt;tableLayoutPanel1.Parent" xml:space="preserve">
     <value>PeptideEditPanel</value>
   </data>
@@ -618,9 +567,6 @@
   <data name="&gt;&gt;PeptideLabel.Name" xml:space="preserve">
     <value>PeptideLabel</value>
   </data>
-  <data name="&gt;&gt;PeptideLabel.Type" xml:space="preserve">
-    <value>System.Windows.Forms.Label, System.Windows.Forms, Version=4.0.0.0, Culture=neutral, PublicKeyToken=b77a5c561934e089</value>
-  </data>
   <data name="&gt;&gt;PeptideLabel.Parent" xml:space="preserve">
     <value>PeptideEditPanel</value>
   </data>
@@ -641,9 +587,6 @@
   </data>
   <data name="&gt;&gt;textPeptide.Name" xml:space="preserve">
     <value>textPeptide</value>
-  </data>
-  <data name="&gt;&gt;textPeptide.Type" xml:space="preserve">
-    <value>System.Windows.Forms.TextBox, System.Windows.Forms, Version=4.0.0.0, Culture=neutral, PublicKeyToken=b77a5c561934e089</value>
   </data>
   <data name="&gt;&gt;textPeptide.Parent" xml:space="preserve">
     <value>PeptideEditPanel</value>
@@ -666,9 +609,6 @@
   <data name="&gt;&gt;PeptideEditPanel.Name" xml:space="preserve">
     <value>PeptideEditPanel</value>
   </data>
-  <data name="&gt;&gt;PeptideEditPanel.Type" xml:space="preserve">
-    <value>System.Windows.Forms.Panel, System.Windows.Forms, Version=4.0.0.0, Culture=neutral, PublicKeyToken=b77a5c561934e089</value>
-  </data>
   <data name="&gt;&gt;PeptideEditPanel.Parent" xml:space="preserve">
     <value>splitMain.Panel1</value>
   </data>
@@ -677,9 +617,6 @@
   </data>
   <data name="&gt;&gt;splitMain.Panel1.Name" xml:space="preserve">
     <value>splitMain.Panel1</value>
-  </data>
-  <data name="&gt;&gt;splitMain.Panel1.Type" xml:space="preserve">
-    <value>System.Windows.Forms.SplitterPanel, System.Windows.Forms, Version=4.0.0.0, Culture=neutral, PublicKeyToken=b77a5c561934e089</value>
   </data>
   <data name="&gt;&gt;splitMain.Panel1.Parent" xml:space="preserve">
     <value>splitMain</value>
@@ -702,18 +639,12 @@
   <data name="&gt;&gt;msGraphExtension1.Name" xml:space="preserve">
     <value>msGraphExtension1</value>
   </data>
-  <data name="&gt;&gt;msGraphExtension1.Type" xml:space="preserve">
-    <value>pwiz.Skyline.SettingsUI.MsGraphExtension, Skyline-daily, Version=21.2.1.579, Culture=neutral, PublicKeyToken=null</value>
-  </data>
   <data name="&gt;&gt;msGraphExtension1.Parent" xml:space="preserve">
     <value>GraphPanel</value>
   </data>
   <data name="&gt;&gt;msGraphExtension1.ZOrder" xml:space="preserve">
     <value>0</value>
   </data>
-  <metadata name="toolStrip1.TrayLocation" type="System.Drawing.Point, System.Drawing, Version=4.0.0.0, Culture=neutral, PublicKeyToken=b03f5f7f11d50a3a">
-    <value>448, 17</value>
-  </metadata>
   <data name="toolStrip1.Dock" type="System.Windows.Forms.DockStyle, System.Windows.Forms">
     <value>Right</value>
   </data>
@@ -864,9 +795,6 @@
   <data name="&gt;&gt;toolStrip1.Name" xml:space="preserve">
     <value>toolStrip1</value>
   </data>
-  <data name="&gt;&gt;toolStrip1.Type" xml:space="preserve">
-    <value>System.Windows.Forms.ToolStrip, System.Windows.Forms, Version=4.0.0.0, Culture=neutral, PublicKeyToken=b77a5c561934e089</value>
-  </data>
   <data name="&gt;&gt;toolStrip1.Parent" xml:space="preserve">
     <value>GraphPanel</value>
   </data>
@@ -887,9 +815,6 @@
   </data>
   <data name="&gt;&gt;GraphPanel.Name" xml:space="preserve">
     <value>GraphPanel</value>
-  </data>
-  <data name="&gt;&gt;GraphPanel.Type" xml:space="preserve">
-    <value>System.Windows.Forms.Panel, System.Windows.Forms, Version=4.0.0.0, Culture=neutral, PublicKeyToken=b77a5c561934e089</value>
   </data>
   <data name="&gt;&gt;GraphPanel.Parent" xml:space="preserve">
     <value>splitMain.Panel2</value>
@@ -930,9 +855,6 @@
   <data name="&gt;&gt;labelFilename.Name" xml:space="preserve">
     <value>labelFilename</value>
   </data>
-  <data name="&gt;&gt;labelFilename.Type" xml:space="preserve">
-    <value>System.Windows.Forms.Label, System.Windows.Forms, Version=4.0.0.0, Culture=neutral, PublicKeyToken=b77a5c561934e089</value>
-  </data>
   <data name="&gt;&gt;labelFilename.Parent" xml:space="preserve">
     <value>tableLayoutPanel2</value>
   </data>
@@ -956,9 +878,6 @@
   </data>
   <data name="&gt;&gt;comboRedundantSpectra.Name" xml:space="preserve">
     <value>comboRedundantSpectra</value>
-  </data>
-  <data name="&gt;&gt;comboRedundantSpectra.Type" xml:space="preserve">
-    <value>System.Windows.Forms.ComboBox, System.Windows.Forms, Version=4.0.0.0, Culture=neutral, PublicKeyToken=b77a5c561934e089</value>
   </data>
   <data name="&gt;&gt;comboRedundantSpectra.Parent" xml:space="preserve">
     <value>tableLayoutPanel2</value>
@@ -990,9 +909,6 @@
   <data name="&gt;&gt;labelRT.Name" xml:space="preserve">
     <value>labelRT</value>
   </data>
-  <data name="&gt;&gt;labelRT.Type" xml:space="preserve">
-    <value>System.Windows.Forms.Label, System.Windows.Forms, Version=4.0.0.0, Culture=neutral, PublicKeyToken=b77a5c561934e089</value>
-  </data>
   <data name="&gt;&gt;labelRT.Parent" xml:space="preserve">
     <value>tableLayoutPanel2</value>
   </data>
@@ -1013,9 +929,6 @@
   </data>
   <data name="&gt;&gt;tableLayoutPanel2.Name" xml:space="preserve">
     <value>tableLayoutPanel2</value>
-  </data>
-  <data name="&gt;&gt;tableLayoutPanel2.Type" xml:space="preserve">
-    <value>System.Windows.Forms.TableLayoutPanel, System.Windows.Forms, Version=4.0.0.0, Culture=neutral, PublicKeyToken=b77a5c561934e089</value>
   </data>
   <data name="&gt;&gt;tableLayoutPanel2.Parent" xml:space="preserve">
     <value>panel2</value>
@@ -1044,9 +957,6 @@
   <data name="&gt;&gt;cbAssociateProteins.Name" xml:space="preserve">
     <value>cbAssociateProteins</value>
   </data>
-  <data name="&gt;&gt;cbAssociateProteins.Type" xml:space="preserve">
-    <value>System.Windows.Forms.CheckBox, System.Windows.Forms, Version=4.0.0.0, Culture=neutral, PublicKeyToken=b77a5c561934e089</value>
-  </data>
   <data name="&gt;&gt;cbAssociateProteins.Parent" xml:space="preserve">
     <value>panel2</value>
   </data>
@@ -1070,9 +980,6 @@
   </data>
   <data name="&gt;&gt;btnAdd.Name" xml:space="preserve">
     <value>btnAdd</value>
-  </data>
-  <data name="&gt;&gt;btnAdd.Type" xml:space="preserve">
-    <value>System.Windows.Forms.Button, System.Windows.Forms, Version=4.0.0.0, Culture=neutral, PublicKeyToken=b77a5c561934e089</value>
   </data>
   <data name="&gt;&gt;btnAdd.Parent" xml:space="preserve">
     <value>panel2</value>
@@ -1098,9 +1005,6 @@
   <data name="&gt;&gt;btnAddAll.Name" xml:space="preserve">
     <value>btnAddAll</value>
   </data>
-  <data name="&gt;&gt;btnAddAll.Type" xml:space="preserve">
-    <value>System.Windows.Forms.Button, System.Windows.Forms, Version=4.0.0.0, Culture=neutral, PublicKeyToken=b77a5c561934e089</value>
-  </data>
   <data name="&gt;&gt;btnAddAll.Parent" xml:space="preserve">
     <value>panel2</value>
   </data>
@@ -1125,9 +1029,6 @@
   <data name="&gt;&gt;btnCancel.Name" xml:space="preserve">
     <value>btnCancel</value>
   </data>
-  <data name="&gt;&gt;btnCancel.Type" xml:space="preserve">
-    <value>System.Windows.Forms.Button, System.Windows.Forms, Version=4.0.0.0, Culture=neutral, PublicKeyToken=b77a5c561934e089</value>
-  </data>
   <data name="&gt;&gt;btnCancel.Parent" xml:space="preserve">
     <value>panel2</value>
   </data>
@@ -1149,9 +1050,6 @@
   <data name="&gt;&gt;panel2.Name" xml:space="preserve">
     <value>panel2</value>
   </data>
-  <data name="&gt;&gt;panel2.Type" xml:space="preserve">
-    <value>System.Windows.Forms.Panel, System.Windows.Forms, Version=4.0.0.0, Culture=neutral, PublicKeyToken=b77a5c561934e089</value>
-  </data>
   <data name="&gt;&gt;panel2.Parent" xml:space="preserve">
     <value>splitMain.Panel2</value>
   </data>
@@ -1160,9 +1058,6 @@
   </data>
   <data name="&gt;&gt;splitMain.Panel2.Name" xml:space="preserve">
     <value>splitMain.Panel2</value>
-  </data>
-  <data name="&gt;&gt;splitMain.Panel2.Type" xml:space="preserve">
-    <value>System.Windows.Forms.SplitterPanel, System.Windows.Forms, Version=4.0.0.0, Culture=neutral, PublicKeyToken=b77a5c561934e089</value>
   </data>
   <data name="&gt;&gt;splitMain.Panel2.Parent" xml:space="preserve">
     <value>splitMain</value>
@@ -1181,9 +1076,6 @@
   </data>
   <data name="&gt;&gt;splitMain.Name" xml:space="preserve">
     <value>splitMain</value>
-  </data>
-  <data name="&gt;&gt;splitMain.Type" xml:space="preserve">
-    <value>System.Windows.Forms.SplitContainer, System.Windows.Forms, Version=4.0.0.0, Culture=neutral, PublicKeyToken=b77a5c561934e089</value>
   </data>
   <data name="&gt;&gt;splitMain.Parent" xml:space="preserve">
     <value>ViewLibraryPanel</value>
@@ -1205,9 +1097,6 @@
   </data>
   <data name="&gt;&gt;ViewLibraryPanel.Name" xml:space="preserve">
     <value>ViewLibraryPanel</value>
-  </data>
-  <data name="&gt;&gt;ViewLibraryPanel.Type" xml:space="preserve">
-    <value>System.Windows.Forms.Panel, System.Windows.Forms, Version=4.0.0.0, Culture=neutral, PublicKeyToken=b77a5c561934e089</value>
   </data>
   <data name="&gt;&gt;ViewLibraryPanel.Parent" xml:space="preserve">
     <value>$this</value>
@@ -1233,18 +1122,12 @@
   <data name="&gt;&gt;LibraryLabel.Name" xml:space="preserve">
     <value>LibraryLabel</value>
   </data>
-  <data name="&gt;&gt;LibraryLabel.Type" xml:space="preserve">
-    <value>System.Windows.Forms.Label, System.Windows.Forms, Version=4.0.0.0, Culture=neutral, PublicKeyToken=b77a5c561934e089</value>
-  </data>
   <data name="&gt;&gt;LibraryLabel.Parent" xml:space="preserve">
     <value>$this</value>
   </data>
   <data name="&gt;&gt;LibraryLabel.ZOrder" xml:space="preserve">
     <value>1</value>
   </data>
-  <metadata name="contextMenuSpectrum.TrayLocation" type="System.Drawing.Point, System.Drawing, Version=4.0.0.0, Culture=neutral, PublicKeyToken=b03f5f7f11d50a3a">
-    <value>200, 17</value>
-  </metadata>
   <data name="ionTypesContextMenuItem.Size" type="System.Drawing.Size, System.Drawing">
     <value>263, 32</value>
   </data>
@@ -1356,15 +1239,6 @@
   <data name="&gt;&gt;contextMenuSpectrum.Name" xml:space="preserve">
     <value>contextMenuSpectrum</value>
   </data>
-  <data name="&gt;&gt;contextMenuSpectrum.Type" xml:space="preserve">
-    <value>System.Windows.Forms.ContextMenuStrip, System.Windows.Forms, Version=4.0.0.0, Culture=neutral, PublicKeyToken=b77a5c561934e089</value>
-  </data>
-  <metadata name="$this.Localizable" type="System.Boolean, mscorlib, Version=4.0.0.0, Culture=neutral, PublicKeyToken=b77a5c561934e089">
-    <value>True</value>
-  </metadata>
-  <metadata name="$this.TrayHeight" type="System.Int32, mscorlib, Version=4.0.0.0, Culture=neutral, PublicKeyToken=b77a5c561934e089">
-    <value>25</value>
-  </metadata>
   <data name="$this.AutoScaleDimensions" type="System.Drawing.SizeF, System.Drawing">
     <value>6, 13</value>
   </data>
@@ -1380,283 +1254,142 @@
   <data name="&gt;&gt;modeUIHandler.Name" xml:space="preserve">
     <value>modeUIHandler</value>
   </data>
-  <data name="&gt;&gt;modeUIHandler.Type" xml:space="preserve">
-    <value>pwiz.Skyline.Util.Helpers+ModeUIExtender, Skyline-daily, Version=21.2.1.579, Culture=neutral, PublicKeyToken=null</value>
-  </data>
   <data name="&gt;&gt;btnAIons.Name" xml:space="preserve">
     <value>btnAIons</value>
-  </data>
-  <data name="&gt;&gt;btnAIons.Type" xml:space="preserve">
-    <value>System.Windows.Forms.ToolStripButton, System.Windows.Forms, Version=4.0.0.0, Culture=neutral, PublicKeyToken=b77a5c561934e089</value>
   </data>
   <data name="&gt;&gt;btnBIons.Name" xml:space="preserve">
     <value>btnBIons</value>
   </data>
-  <data name="&gt;&gt;btnBIons.Type" xml:space="preserve">
-    <value>System.Windows.Forms.ToolStripButton, System.Windows.Forms, Version=4.0.0.0, Culture=neutral, PublicKeyToken=b77a5c561934e089</value>
-  </data>
   <data name="&gt;&gt;btnCIons.Name" xml:space="preserve">
     <value>btnCIons</value>
-  </data>
-  <data name="&gt;&gt;btnCIons.Type" xml:space="preserve">
-    <value>System.Windows.Forms.ToolStripButton, System.Windows.Forms, Version=4.0.0.0, Culture=neutral, PublicKeyToken=b77a5c561934e089</value>
   </data>
   <data name="&gt;&gt;btnXIons.Name" xml:space="preserve">
     <value>btnXIons</value>
   </data>
-  <data name="&gt;&gt;btnXIons.Type" xml:space="preserve">
-    <value>System.Windows.Forms.ToolStripButton, System.Windows.Forms, Version=4.0.0.0, Culture=neutral, PublicKeyToken=b77a5c561934e089</value>
-  </data>
   <data name="&gt;&gt;btnYIons.Name" xml:space="preserve">
     <value>btnYIons</value>
-  </data>
-  <data name="&gt;&gt;btnYIons.Type" xml:space="preserve">
-    <value>System.Windows.Forms.ToolStripButton, System.Windows.Forms, Version=4.0.0.0, Culture=neutral, PublicKeyToken=b77a5c561934e089</value>
   </data>
   <data name="&gt;&gt;btnZIons.Name" xml:space="preserve">
     <value>btnZIons</value>
   </data>
-  <data name="&gt;&gt;btnZIons.Type" xml:space="preserve">
-    <value>System.Windows.Forms.ToolStripButton, System.Windows.Forms, Version=4.0.0.0, Culture=neutral, PublicKeyToken=b77a5c561934e089</value>
-  </data>
   <data name="&gt;&gt;btnFragmentIons.Name" xml:space="preserve">
     <value>btnFragmentIons</value>
-  </data>
-  <data name="&gt;&gt;btnFragmentIons.Type" xml:space="preserve">
-    <value>System.Windows.Forms.ToolStripButton, System.Windows.Forms, Version=4.0.0.0, Culture=neutral, PublicKeyToken=b77a5c561934e089</value>
   </data>
   <data name="&gt;&gt;toolStripSeparator1.Name" xml:space="preserve">
     <value>toolStripSeparator1</value>
   </data>
-  <data name="&gt;&gt;toolStripSeparator1.Type" xml:space="preserve">
-    <value>System.Windows.Forms.ToolStripSeparator, System.Windows.Forms, Version=4.0.0.0, Culture=neutral, PublicKeyToken=b77a5c561934e089</value>
-  </data>
   <data name="&gt;&gt;charge1Button.Name" xml:space="preserve">
     <value>charge1Button</value>
-  </data>
-  <data name="&gt;&gt;charge1Button.Type" xml:space="preserve">
-    <value>System.Windows.Forms.ToolStripButton, System.Windows.Forms, Version=4.0.0.0, Culture=neutral, PublicKeyToken=b77a5c561934e089</value>
   </data>
   <data name="&gt;&gt;charge2Button.Name" xml:space="preserve">
     <value>charge2Button</value>
   </data>
-  <data name="&gt;&gt;charge2Button.Type" xml:space="preserve">
-    <value>System.Windows.Forms.ToolStripButton, System.Windows.Forms, Version=4.0.0.0, Culture=neutral, PublicKeyToken=b77a5c561934e089</value>
-  </data>
   <data name="&gt;&gt;toolStripSeparator2.Name" xml:space="preserve">
     <value>toolStripSeparator2</value>
-  </data>
-  <data name="&gt;&gt;toolStripSeparator2.Type" xml:space="preserve">
-    <value>System.Windows.Forms.ToolStripSeparator, System.Windows.Forms, Version=4.0.0.0, Culture=neutral, PublicKeyToken=b77a5c561934e089</value>
   </data>
   <data name="&gt;&gt;propertiesButton.Name" xml:space="preserve">
     <value>propertiesButton</value>
   </data>
-  <data name="&gt;&gt;propertiesButton.Type" xml:space="preserve">
-    <value>System.Windows.Forms.ToolStripButton, System.Windows.Forms, Version=4.0.0.0, Culture=neutral, PublicKeyToken=b77a5c561934e089</value>
-  </data>
   <data name="&gt;&gt;toolStripSeparator3.Name" xml:space="preserve">
     <value>toolStripSeparator3</value>
-  </data>
-  <data name="&gt;&gt;toolStripSeparator3.Type" xml:space="preserve">
-    <value>System.Windows.Forms.ToolStripSeparator, System.Windows.Forms, Version=4.0.0.0, Culture=neutral, PublicKeyToken=b77a5c561934e089</value>
   </data>
   <data name="&gt;&gt;copyMetafileButton.Name" xml:space="preserve">
     <value>copyMetafileButton</value>
   </data>
-  <data name="&gt;&gt;copyMetafileButton.Type" xml:space="preserve">
-    <value>System.Windows.Forms.ToolStripButton, System.Windows.Forms, Version=4.0.0.0, Culture=neutral, PublicKeyToken=b77a5c561934e089</value>
-  </data>
   <data name="&gt;&gt;btnCopy.Name" xml:space="preserve">
     <value>btnCopy</value>
-  </data>
-  <data name="&gt;&gt;btnCopy.Type" xml:space="preserve">
-    <value>System.Windows.Forms.ToolStripButton, System.Windows.Forms, Version=4.0.0.0, Culture=neutral, PublicKeyToken=b77a5c561934e089</value>
   </data>
   <data name="&gt;&gt;btnSave.Name" xml:space="preserve">
     <value>btnSave</value>
   </data>
-  <data name="&gt;&gt;btnSave.Type" xml:space="preserve">
-    <value>System.Windows.Forms.ToolStripButton, System.Windows.Forms, Version=4.0.0.0, Culture=neutral, PublicKeyToken=b77a5c561934e089</value>
-  </data>
   <data name="&gt;&gt;btnPrint.Name" xml:space="preserve">
     <value>btnPrint</value>
-  </data>
-  <data name="&gt;&gt;btnPrint.Type" xml:space="preserve">
-    <value>System.Windows.Forms.ToolStripButton, System.Windows.Forms, Version=4.0.0.0, Culture=neutral, PublicKeyToken=b77a5c561934e089</value>
   </data>
   <data name="&gt;&gt;aionsContextMenuItem.Name" xml:space="preserve">
     <value>aionsContextMenuItem</value>
   </data>
-  <data name="&gt;&gt;aionsContextMenuItem.Type" xml:space="preserve">
-    <value>System.Windows.Forms.ToolStripMenuItem, System.Windows.Forms, Version=4.0.0.0, Culture=neutral, PublicKeyToken=b77a5c561934e089</value>
-  </data>
   <data name="&gt;&gt;bionsContextMenuItem.Name" xml:space="preserve">
     <value>bionsContextMenuItem</value>
-  </data>
-  <data name="&gt;&gt;bionsContextMenuItem.Type" xml:space="preserve">
-    <value>System.Windows.Forms.ToolStripMenuItem, System.Windows.Forms, Version=4.0.0.0, Culture=neutral, PublicKeyToken=b77a5c561934e089</value>
   </data>
   <data name="&gt;&gt;cionsContextMenuItem.Name" xml:space="preserve">
     <value>cionsContextMenuItem</value>
   </data>
-  <data name="&gt;&gt;cionsContextMenuItem.Type" xml:space="preserve">
-    <value>System.Windows.Forms.ToolStripMenuItem, System.Windows.Forms, Version=4.0.0.0, Culture=neutral, PublicKeyToken=b77a5c561934e089</value>
-  </data>
   <data name="&gt;&gt;xionsContextMenuItem.Name" xml:space="preserve">
     <value>xionsContextMenuItem</value>
-  </data>
-  <data name="&gt;&gt;xionsContextMenuItem.Type" xml:space="preserve">
-    <value>System.Windows.Forms.ToolStripMenuItem, System.Windows.Forms, Version=4.0.0.0, Culture=neutral, PublicKeyToken=b77a5c561934e089</value>
   </data>
   <data name="&gt;&gt;yionsContextMenuItem.Name" xml:space="preserve">
     <value>yionsContextMenuItem</value>
   </data>
-  <data name="&gt;&gt;yionsContextMenuItem.Type" xml:space="preserve">
-    <value>System.Windows.Forms.ToolStripMenuItem, System.Windows.Forms, Version=4.0.0.0, Culture=neutral, PublicKeyToken=b77a5c561934e089</value>
-  </data>
   <data name="&gt;&gt;zionsContextMenuItem.Name" xml:space="preserve">
     <value>zionsContextMenuItem</value>
-  </data>
-  <data name="&gt;&gt;zionsContextMenuItem.Type" xml:space="preserve">
-    <value>System.Windows.Forms.ToolStripMenuItem, System.Windows.Forms, Version=4.0.0.0, Culture=neutral, PublicKeyToken=b77a5c561934e089</value>
   </data>
   <data name="&gt;&gt;fragmentionsContextMenuItem.Name" xml:space="preserve">
     <value>fragmentionsContextMenuItem</value>
   </data>
-  <data name="&gt;&gt;fragmentionsContextMenuItem.Type" xml:space="preserve">
-    <value>System.Windows.Forms.ToolStripMenuItem, System.Windows.Forms, Version=4.0.0.0, Culture=neutral, PublicKeyToken=b77a5c561934e089</value>
-  </data>
   <data name="&gt;&gt;precursorIonContextMenuItem.Name" xml:space="preserve">
     <value>precursorIonContextMenuItem</value>
-  </data>
-  <data name="&gt;&gt;precursorIonContextMenuItem.Type" xml:space="preserve">
-    <value>System.Windows.Forms.ToolStripMenuItem, System.Windows.Forms, Version=4.0.0.0, Culture=neutral, PublicKeyToken=b77a5c561934e089</value>
   </data>
   <data name="&gt;&gt;toolStripSeparator11.Name" xml:space="preserve">
     <value>toolStripSeparator11</value>
   </data>
-  <data name="&gt;&gt;toolStripSeparator11.Type" xml:space="preserve">
-    <value>System.Windows.Forms.ToolStripSeparator, System.Windows.Forms, Version=4.0.0.0, Culture=neutral, PublicKeyToken=b77a5c561934e089</value>
-  </data>
   <data name="&gt;&gt;chargesContextMenuItem.Name" xml:space="preserve">
     <value>chargesContextMenuItem</value>
-  </data>
-  <data name="&gt;&gt;chargesContextMenuItem.Type" xml:space="preserve">
-    <value>System.Windows.Forms.ToolStripMenuItem, System.Windows.Forms, Version=4.0.0.0, Culture=neutral, PublicKeyToken=b77a5c561934e089</value>
   </data>
   <data name="&gt;&gt;charge1ContextMenuItem.Name" xml:space="preserve">
     <value>charge1ContextMenuItem</value>
   </data>
-  <data name="&gt;&gt;charge1ContextMenuItem.Type" xml:space="preserve">
-    <value>System.Windows.Forms.ToolStripMenuItem, System.Windows.Forms, Version=4.0.0.0, Culture=neutral, PublicKeyToken=b77a5c561934e089</value>
-  </data>
   <data name="&gt;&gt;charge2ContextMenuItem.Name" xml:space="preserve">
     <value>charge2ContextMenuItem</value>
-  </data>
-  <data name="&gt;&gt;charge2ContextMenuItem.Type" xml:space="preserve">
-    <value>System.Windows.Forms.ToolStripMenuItem, System.Windows.Forms, Version=4.0.0.0, Culture=neutral, PublicKeyToken=b77a5c561934e089</value>
   </data>
   <data name="&gt;&gt;charge3ContextMenuItem.Name" xml:space="preserve">
     <value>charge3ContextMenuItem</value>
   </data>
-  <data name="&gt;&gt;charge3ContextMenuItem.Type" xml:space="preserve">
-    <value>System.Windows.Forms.ToolStripMenuItem, System.Windows.Forms, Version=4.0.0.0, Culture=neutral, PublicKeyToken=b77a5c561934e089</value>
-  </data>
   <data name="&gt;&gt;charge4ContextMenuItem.Name" xml:space="preserve">
     <value>charge4ContextMenuItem</value>
-  </data>
-  <data name="&gt;&gt;charge4ContextMenuItem.Type" xml:space="preserve">
-    <value>System.Windows.Forms.ToolStripMenuItem, System.Windows.Forms, Version=4.0.0.0, Culture=neutral, PublicKeyToken=b77a5c561934e089</value>
   </data>
   <data name="&gt;&gt;toolStripSeparator12.Name" xml:space="preserve">
     <value>toolStripSeparator12</value>
   </data>
-  <data name="&gt;&gt;toolStripSeparator12.Type" xml:space="preserve">
-    <value>System.Windows.Forms.ToolStripSeparator, System.Windows.Forms, Version=4.0.0.0, Culture=neutral, PublicKeyToken=b77a5c561934e089</value>
-  </data>
   <data name="&gt;&gt;ranksContextMenuItem.Name" xml:space="preserve">
     <value>ranksContextMenuItem</value>
-  </data>
-  <data name="&gt;&gt;ranksContextMenuItem.Type" xml:space="preserve">
-    <value>System.Windows.Forms.ToolStripMenuItem, System.Windows.Forms, Version=4.0.0.0, Culture=neutral, PublicKeyToken=b77a5c561934e089</value>
   </data>
   <data name="&gt;&gt;scoreContextMenuItem.Name" xml:space="preserve">
     <value>scoreContextMenuItem</value>
   </data>
-  <data name="&gt;&gt;scoreContextMenuItem.Type" xml:space="preserve">
-    <value>System.Windows.Forms.ToolStripMenuItem, System.Windows.Forms, Version=4.0.0.0, Culture=neutral, PublicKeyToken=b77a5c561934e089</value>
-  </data>
   <data name="&gt;&gt;ionMzValuesContextMenuItem.Name" xml:space="preserve">
     <value>ionMzValuesContextMenuItem</value>
-  </data>
-  <data name="&gt;&gt;ionMzValuesContextMenuItem.Type" xml:space="preserve">
-    <value>System.Windows.Forms.ToolStripMenuItem, System.Windows.Forms, Version=4.0.0.0, Culture=neutral, PublicKeyToken=b77a5c561934e089</value>
   </data>
   <data name="&gt;&gt;observedMzValuesContextMenuItem.Name" xml:space="preserve">
     <value>observedMzValuesContextMenuItem</value>
   </data>
-  <data name="&gt;&gt;observedMzValuesContextMenuItem.Type" xml:space="preserve">
-    <value>System.Windows.Forms.ToolStripMenuItem, System.Windows.Forms, Version=4.0.0.0, Culture=neutral, PublicKeyToken=b77a5c561934e089</value>
-  </data>
   <data name="&gt;&gt;duplicatesContextMenuItem.Name" xml:space="preserve">
     <value>duplicatesContextMenuItem</value>
-  </data>
-  <data name="&gt;&gt;duplicatesContextMenuItem.Type" xml:space="preserve">
-    <value>System.Windows.Forms.ToolStripMenuItem, System.Windows.Forms, Version=4.0.0.0, Culture=neutral, PublicKeyToken=b77a5c561934e089</value>
   </data>
   <data name="&gt;&gt;toolStripSeparator13.Name" xml:space="preserve">
     <value>toolStripSeparator13</value>
   </data>
-  <data name="&gt;&gt;toolStripSeparator13.Type" xml:space="preserve">
-    <value>System.Windows.Forms.ToolStripSeparator, System.Windows.Forms, Version=4.0.0.0, Culture=neutral, PublicKeyToken=b77a5c561934e089</value>
-  </data>
   <data name="&gt;&gt;lockYaxisContextMenuItem.Name" xml:space="preserve">
     <value>lockYaxisContextMenuItem</value>
-  </data>
-  <data name="&gt;&gt;lockYaxisContextMenuItem.Type" xml:space="preserve">
-    <value>System.Windows.Forms.ToolStripMenuItem, System.Windows.Forms, Version=4.0.0.0, Culture=neutral, PublicKeyToken=b77a5c561934e089</value>
   </data>
   <data name="&gt;&gt;toolStripSeparator14.Name" xml:space="preserve">
     <value>toolStripSeparator14</value>
   </data>
-  <data name="&gt;&gt;toolStripSeparator14.Type" xml:space="preserve">
-    <value>System.Windows.Forms.ToolStripSeparator, System.Windows.Forms, Version=4.0.0.0, Culture=neutral, PublicKeyToken=b77a5c561934e089</value>
-  </data>
   <data name="&gt;&gt;spectrumPropsContextMenuItem.Name" xml:space="preserve">
     <value>spectrumPropsContextMenuItem</value>
-  </data>
-  <data name="&gt;&gt;spectrumPropsContextMenuItem.Type" xml:space="preserve">
-    <value>System.Windows.Forms.ToolStripMenuItem, System.Windows.Forms, Version=4.0.0.0, Culture=neutral, PublicKeyToken=b77a5c561934e089</value>
   </data>
   <data name="&gt;&gt;showChromatogramsContextMenuItem.Name" xml:space="preserve">
     <value>showChromatogramsContextMenuItem</value>
   </data>
-  <data name="&gt;&gt;showChromatogramsContextMenuItem.Type" xml:space="preserve">
-    <value>System.Windows.Forms.ToolStripMenuItem, System.Windows.Forms, Version=4.0.0.0, Culture=neutral, PublicKeyToken=b77a5c561934e089</value>
-  </data>
   <data name="&gt;&gt;toolStripSeparator15.Name" xml:space="preserve">
     <value>toolStripSeparator15</value>
-  </data>
-  <data name="&gt;&gt;toolStripSeparator15.Type" xml:space="preserve">
-    <value>System.Windows.Forms.ToolStripSeparator, System.Windows.Forms, Version=4.0.0.0, Culture=neutral, PublicKeyToken=b77a5c561934e089</value>
   </data>
   <data name="&gt;&gt;zoomSpectrumContextMenuItem.Name" xml:space="preserve">
     <value>zoomSpectrumContextMenuItem</value>
   </data>
-  <data name="&gt;&gt;zoomSpectrumContextMenuItem.Type" xml:space="preserve">
-    <value>System.Windows.Forms.ToolStripMenuItem, System.Windows.Forms, Version=4.0.0.0, Culture=neutral, PublicKeyToken=b77a5c561934e089</value>
-  </data>
   <data name="&gt;&gt;toolStripSeparator27.Name" xml:space="preserve">
     <value>toolStripSeparator27</value>
   </data>
-  <data name="&gt;&gt;toolStripSeparator27.Type" xml:space="preserve">
-    <value>System.Windows.Forms.ToolStripSeparator, System.Windows.Forms, Version=4.0.0.0, Culture=neutral, PublicKeyToken=b77a5c561934e089</value>
-  </data>
   <data name="&gt;&gt;$this.Name" xml:space="preserve">
     <value>ViewLibraryDlg</value>
-  </data>
-  <data name="&gt;&gt;$this.Type" xml:space="preserve">
-    <value>pwiz.Skyline.Util.FormEx, Skyline-daily, Version=21.2.1.579, Culture=neutral, PublicKeyToken=null</value>
   </data>
 </root>

@@ -118,37 +118,37 @@
     <value>System.Resources.ResXResourceWriter, System.Windows.Forms, Version=4.0.0.0, Culture=neutral, PublicKeyToken=b77a5c561934e089</value>
   </resheader>
   <assembly alias="System.Windows.Forms" name="System.Windows.Forms, Version=4.0.0.0, Culture=neutral, PublicKeyToken=b77a5c561934e089" />
-  <data name="dataGridView1.Anchor" type="System.Windows.Forms.AnchorStyles, System.Windows.Forms">
-    <value>Top, Bottom, Left, Right</value>
-  </data>
+  <assembly alias="System.Drawing" name="System.Drawing, Version=4.0.0.0, Culture=neutral, PublicKeyToken=b03f5f7f11d50a3a" />
+  <assembly alias="mscorlib" name="mscorlib, Version=4.0.0.0, Culture=neutral, PublicKeyToken=b77a5c561934e089" />
   <metadata name="PeptideIncludedColumn.UserAddedColumn" type="System.Boolean, mscorlib, Version=4.0.0.0, Culture=neutral, PublicKeyToken=b77a5c561934e089">
     <value>True</value>
   </metadata>
-  <data name="PeptideIncludedColumn.HeaderText" xml:space="preserve">
-    <value>含まれている</value>
-  </data>
   <metadata name="PeptideColumn.UserAddedColumn" type="System.Boolean, mscorlib, Version=4.0.0.0, Culture=neutral, PublicKeyToken=b77a5c561934e089">
     <value>True</value>
   </metadata>
+  <metadata name="$this.Localizable" type="System.Boolean, mscorlib, Version=4.0.0.0, Culture=neutral, PublicKeyToken=b77a5c561934e089">
+    <value>True</value>
+  </metadata>
+  <data name="dataGridView1.Anchor" type="System.Windows.Forms.AnchorStyles, System.Windows.Forms">
+    <value>Top, Bottom, Left, Right</value>
+  </data>
+  <data name="PeptideIncludedColumn.HeaderText" xml:space="preserve">
+    <value>含まれている</value>
+  </data>
   <data name="PeptideColumn.HeaderText" xml:space="preserve">
     <value>ペプチド</value>
   </data>
-  <assembly alias="System.Drawing" name="System.Drawing, Version=4.0.0.0, Culture=neutral, PublicKeyToken=b03f5f7f11d50a3a" />
   <data name="dataGridView1.Location" type="System.Drawing.Point, System.Drawing">
     <value>-1, -2</value>
   </data>
   <data name="dataGridView1.Size" type="System.Drawing.Size, System.Drawing">
     <value>705, 330</value>
   </data>
-  <assembly alias="mscorlib" name="mscorlib, Version=4.0.0.0, Culture=neutral, PublicKeyToken=b77a5c561934e089" />
   <data name="dataGridView1.TabIndex" type="System.Int32, mscorlib">
     <value>0</value>
   </data>
   <data name="&gt;&gt;dataGridView1.Name" xml:space="preserve">
     <value>dataGridView1</value>
-  </data>
-  <data name="&gt;&gt;dataGridView1.Type" xml:space="preserve">
-    <value>pwiz.Common.Controls.CommonDataGridView, pwiz.Common, Version=1.0.0.0, Culture=neutral, PublicKeyToken=null</value>
   </data>
   <data name="&gt;&gt;dataGridView1.Parent" xml:space="preserve">
     <value>$this</value>
@@ -156,9 +156,6 @@
   <data name="&gt;&gt;dataGridView1.ZOrder" xml:space="preserve">
     <value>4</value>
   </data>
-  <metadata name="contextMenuStrip1.TrayLocation" type="System.Drawing.Point, System.Drawing, Version=4.0.0.0, Culture=neutral, PublicKeyToken=b03f5f7f11d50a3a">
-    <value>17, 17</value>
-  </metadata>
   <data name="includeToolStripMenuItem.Size" type="System.Drawing.Size, System.Drawing">
     <value>236, 22</value>
   </data>
@@ -234,9 +231,6 @@
   <data name="&gt;&gt;contextMenuStrip1.Name" xml:space="preserve">
     <value>contextMenuStrip1</value>
   </data>
-  <data name="&gt;&gt;contextMenuStrip1.Type" xml:space="preserve">
-    <value>System.Windows.Forms.ContextMenuStrip, System.Windows.Forms, Version=4.0.0.0, Culture=neutral, PublicKeyToken=b77a5c561934e089</value>
-  </data>
   <data name="btnOK.Anchor" type="System.Windows.Forms.AnchorStyles, System.Windows.Forms">
     <value>Bottom, Right</value>
   </data>
@@ -254,9 +248,6 @@
   </data>
   <data name="&gt;&gt;btnOK.Name" xml:space="preserve">
     <value>btnOK</value>
-  </data>
-  <data name="&gt;&gt;btnOK.Type" xml:space="preserve">
-    <value>System.Windows.Forms.Button, System.Windows.Forms, Version=4.0.0.0, Culture=neutral, PublicKeyToken=b77a5c561934e089</value>
   </data>
   <data name="&gt;&gt;btnOK.Parent" xml:space="preserve">
     <value>$this</value>
@@ -281,9 +272,6 @@
   </data>
   <data name="&gt;&gt;btnCancel.Name" xml:space="preserve">
     <value>btnCancel</value>
-  </data>
-  <data name="&gt;&gt;btnCancel.Type" xml:space="preserve">
-    <value>System.Windows.Forms.Button, System.Windows.Forms, Version=4.0.0.0, Culture=neutral, PublicKeyToken=b77a5c561934e089</value>
   </data>
   <data name="&gt;&gt;btnCancel.Parent" xml:space="preserve">
     <value>$this</value>
@@ -312,9 +300,6 @@
   <data name="&gt;&gt;label1.Name" xml:space="preserve">
     <value>label1</value>
   </data>
-  <data name="&gt;&gt;label1.Type" xml:space="preserve">
-    <value>System.Windows.Forms.Label, System.Windows.Forms, Version=4.0.0.0, Culture=neutral, PublicKeyToken=b77a5c561934e089</value>
-  </data>
   <data name="&gt;&gt;label1.Parent" xml:space="preserve">
     <value>$this</value>
   </data>
@@ -336,9 +321,6 @@
   <data name="&gt;&gt;tbxProteinName.Name" xml:space="preserve">
     <value>tbxProteinName</value>
   </data>
-  <data name="&gt;&gt;tbxProteinName.Type" xml:space="preserve">
-    <value>System.Windows.Forms.TextBox, System.Windows.Forms, Version=4.0.0.0, Culture=neutral, PublicKeyToken=b77a5c561934e089</value>
-  </data>
   <data name="&gt;&gt;tbxProteinName.Parent" xml:space="preserve">
     <value>$this</value>
   </data>
@@ -359,9 +341,6 @@
   </data>
   <data name="&gt;&gt;tbxProteinDescription.Name" xml:space="preserve">
     <value>tbxProteinDescription</value>
-  </data>
-  <data name="&gt;&gt;tbxProteinDescription.Type" xml:space="preserve">
-    <value>System.Windows.Forms.TextBox, System.Windows.Forms, Version=4.0.0.0, Culture=neutral, PublicKeyToken=b77a5c561934e089</value>
   </data>
   <data name="&gt;&gt;tbxProteinDescription.Parent" xml:space="preserve">
     <value>$this</value>
@@ -390,9 +369,6 @@
   <data name="&gt;&gt;label2.Name" xml:space="preserve">
     <value>label2</value>
   </data>
-  <data name="&gt;&gt;label2.Type" xml:space="preserve">
-    <value>System.Windows.Forms.Label, System.Windows.Forms, Version=4.0.0.0, Culture=neutral, PublicKeyToken=b77a5c561934e089</value>
-  </data>
   <data name="&gt;&gt;label2.Parent" xml:space="preserve">
     <value>$this</value>
   </data>
@@ -420,9 +396,6 @@
   <data name="&gt;&gt;label3.Name" xml:space="preserve">
     <value>label3</value>
   </data>
-  <data name="&gt;&gt;label3.Type" xml:space="preserve">
-    <value>System.Windows.Forms.Label, System.Windows.Forms, Version=4.0.0.0, Culture=neutral, PublicKeyToken=b77a5c561934e089</value>
-  </data>
   <data name="&gt;&gt;label3.Parent" xml:space="preserve">
     <value>$this</value>
   </data>
@@ -447,9 +420,6 @@
   <data name="&gt;&gt;richTextBoxSequence.Name" xml:space="preserve">
     <value>richTextBoxSequence</value>
   </data>
-  <data name="&gt;&gt;richTextBoxSequence.Type" xml:space="preserve">
-    <value>System.Windows.Forms.RichTextBox, System.Windows.Forms, Version=4.0.0.0, Culture=neutral, PublicKeyToken=b77a5c561934e089</value>
-  </data>
   <data name="&gt;&gt;richTextBoxSequence.Parent" xml:space="preserve">
     <value>$this</value>
   </data>
@@ -470,9 +440,6 @@
   </data>
   <data name="&gt;&gt;tbxProteinDetails.Name" xml:space="preserve">
     <value>tbxProteinDetails</value>
-  </data>
-  <data name="&gt;&gt;tbxProteinDetails.Type" xml:space="preserve">
-    <value>System.Windows.Forms.TextBox, System.Windows.Forms, Version=4.0.0.0, Culture=neutral, PublicKeyToken=b77a5c561934e089</value>
   </data>
   <data name="&gt;&gt;tbxProteinDetails.Parent" xml:space="preserve">
     <value>$this</value>
@@ -504,18 +471,12 @@
   <data name="&gt;&gt;labelProteinDetails.Name" xml:space="preserve">
     <value>labelProteinDetails</value>
   </data>
-  <data name="&gt;&gt;labelProteinDetails.Type" xml:space="preserve">
-    <value>System.Windows.Forms.Label, System.Windows.Forms, Version=4.0.0.0, Culture=neutral, PublicKeyToken=b77a5c561934e089</value>
-  </data>
   <data name="&gt;&gt;labelProteinDetails.Parent" xml:space="preserve">
     <value>$this</value>
   </data>
   <data name="&gt;&gt;labelProteinDetails.ZOrder" xml:space="preserve">
     <value>2</value>
   </data>
-  <metadata name="$this.Localizable" type="System.Boolean, mscorlib, Version=4.0.0.0, Culture=neutral, PublicKeyToken=b77a5c561934e089">
-    <value>True</value>
-  </metadata>
   <data name="$this.AutoScaleDimensions" type="System.Drawing.SizeF, System.Drawing">
     <value>6, 13</value>
   </data>
@@ -531,85 +492,43 @@
   <data name="&gt;&gt;PeptideIncludedColumn.Name" xml:space="preserve">
     <value>PeptideIncludedColumn</value>
   </data>
-  <data name="&gt;&gt;PeptideIncludedColumn.Type" xml:space="preserve">
-    <value>System.Windows.Forms.DataGridViewCheckBoxColumn, System.Windows.Forms, Version=4.0.0.0, Culture=neutral, PublicKeyToken=b77a5c561934e089</value>
-  </data>
   <data name="&gt;&gt;PeptideColumn.Name" xml:space="preserve">
     <value>PeptideColumn</value>
-  </data>
-  <data name="&gt;&gt;PeptideColumn.Type" xml:space="preserve">
-    <value>System.Windows.Forms.DataGridViewTextBoxColumn, System.Windows.Forms, Version=4.0.0.0, Culture=neutral, PublicKeyToken=b77a5c561934e089</value>
   </data>
   <data name="&gt;&gt;includeToolStripMenuItem.Name" xml:space="preserve">
     <value>includeToolStripMenuItem</value>
   </data>
-  <data name="&gt;&gt;includeToolStripMenuItem.Type" xml:space="preserve">
-    <value>System.Windows.Forms.ToolStripMenuItem, System.Windows.Forms, Version=4.0.0.0, Culture=neutral, PublicKeyToken=b77a5c561934e089</value>
-  </data>
   <data name="&gt;&gt;excludeToolStripMenuItem.Name" xml:space="preserve">
     <value>excludeToolStripMenuItem</value>
-  </data>
-  <data name="&gt;&gt;excludeToolStripMenuItem.Type" xml:space="preserve">
-    <value>System.Windows.Forms.ToolStripMenuItem, System.Windows.Forms, Version=4.0.0.0, Culture=neutral, PublicKeyToken=b77a5c561934e089</value>
   </data>
   <data name="&gt;&gt;toolStripSeparator1.Name" xml:space="preserve">
     <value>toolStripSeparator1</value>
   </data>
-  <data name="&gt;&gt;toolStripSeparator1.Type" xml:space="preserve">
-    <value>System.Windows.Forms.ToolStripSeparator, System.Windows.Forms, Version=4.0.0.0, Culture=neutral, PublicKeyToken=b77a5c561934e089</value>
-  </data>
   <data name="&gt;&gt;uniqueOnlyToolStripMenuItem.Name" xml:space="preserve">
     <value>uniqueOnlyToolStripMenuItem</value>
-  </data>
-  <data name="&gt;&gt;uniqueOnlyToolStripMenuItem.Type" xml:space="preserve">
-    <value>System.Windows.Forms.ToolStripMenuItem, System.Windows.Forms, Version=4.0.0.0, Culture=neutral, PublicKeyToken=b77a5c561934e089</value>
   </data>
   <data name="&gt;&gt;uniqueProteinsToolStripMenuItem.Name" xml:space="preserve">
     <value>uniqueProteinsToolStripMenuItem</value>
   </data>
-  <data name="&gt;&gt;uniqueProteinsToolStripMenuItem.Type" xml:space="preserve">
-    <value>System.Windows.Forms.ToolStripMenuItem, System.Windows.Forms, Version=4.0.0.0, Culture=neutral, PublicKeyToken=b77a5c561934e089</value>
-  </data>
   <data name="&gt;&gt;uniqueGenesToolStripMenuItem.Name" xml:space="preserve">
     <value>uniqueGenesToolStripMenuItem</value>
-  </data>
-  <data name="&gt;&gt;uniqueGenesToolStripMenuItem.Type" xml:space="preserve">
-    <value>System.Windows.Forms.ToolStripMenuItem, System.Windows.Forms, Version=4.0.0.0, Culture=neutral, PublicKeyToken=b77a5c561934e089</value>
   </data>
   <data name="&gt;&gt;uniqueSpeciesToolStripMenuItem.Name" xml:space="preserve">
     <value>uniqueSpeciesToolStripMenuItem</value>
   </data>
-  <data name="&gt;&gt;uniqueSpeciesToolStripMenuItem.Type" xml:space="preserve">
-    <value>System.Windows.Forms.ToolStripMenuItem, System.Windows.Forms, Version=4.0.0.0, Culture=neutral, PublicKeyToken=b77a5c561934e089</value>
-  </data>
   <data name="&gt;&gt;excludeBackgroundProteomeToolStripMenuItem.Name" xml:space="preserve">
     <value>excludeBackgroundProteomeToolStripMenuItem</value>
-  </data>
-  <data name="&gt;&gt;excludeBackgroundProteomeToolStripMenuItem.Type" xml:space="preserve">
-    <value>System.Windows.Forms.ToolStripMenuItem, System.Windows.Forms, Version=4.0.0.0, Culture=neutral, PublicKeyToken=b77a5c561934e089</value>
   </data>
   <data name="&gt;&gt;toolStripSeparator2.Name" xml:space="preserve">
     <value>toolStripSeparator2</value>
   </data>
-  <data name="&gt;&gt;toolStripSeparator2.Type" xml:space="preserve">
-    <value>System.Windows.Forms.ToolStripSeparator, System.Windows.Forms, Version=4.0.0.0, Culture=neutral, PublicKeyToken=b77a5c561934e089</value>
-  </data>
   <data name="&gt;&gt;includeAllToolStripMenuItem.Name" xml:space="preserve">
     <value>includeAllToolStripMenuItem</value>
-  </data>
-  <data name="&gt;&gt;includeAllToolStripMenuItem.Type" xml:space="preserve">
-    <value>System.Windows.Forms.ToolStripMenuItem, System.Windows.Forms, Version=4.0.0.0, Culture=neutral, PublicKeyToken=b77a5c561934e089</value>
   </data>
   <data name="&gt;&gt;excludeAllToolStripMenuItem.Name" xml:space="preserve">
     <value>excludeAllToolStripMenuItem</value>
   </data>
-  <data name="&gt;&gt;excludeAllToolStripMenuItem.Type" xml:space="preserve">
-    <value>System.Windows.Forms.ToolStripMenuItem, System.Windows.Forms, Version=4.0.0.0, Culture=neutral, PublicKeyToken=b77a5c561934e089</value>
-  </data>
   <data name="&gt;&gt;$this.Name" xml:space="preserve">
     <value>UniquePeptidesDlg</value>
-  </data>
-  <data name="&gt;&gt;$this.Type" xml:space="preserve">
-    <value>pwiz.Skyline.Util.FormEx, Skyline, Version=1.0.0.0, Culture=neutral, PublicKeyToken=null</value>
   </data>
 </root>

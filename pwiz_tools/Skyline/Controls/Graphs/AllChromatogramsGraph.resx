@@ -117,8 +117,11 @@
   <resheader name="writer">
     <value>System.Resources.ResXResourceWriter, System.Windows.Forms, Version=4.0.0.0, Culture=neutral, PublicKeyToken=b77a5c561934e089</value>
   </resheader>
-  <metadata name="imageListLock.TrayLocation" type="System.Drawing.Point, System.Drawing, Version=4.0.0.0, Culture=neutral, PublicKeyToken=b03f5f7f11d50a3a">
-    <value>17, 17</value>
+  <assembly alias="System.Windows.Forms" name="System.Windows.Forms, Version=4.0.0.0, Culture=neutral, PublicKeyToken=b77a5c561934e089" />
+  <assembly alias="System.Drawing" name="System.Drawing, Version=4.0.0.0, Culture=neutral, PublicKeyToken=b03f5f7f11d50a3a" />
+  <assembly alias="mscorlib" name="mscorlib, Version=4.0.0.0, Culture=neutral, PublicKeyToken=b77a5c561934e089" />
+  <metadata name="$this.Localizable" type="System.Boolean, mscorlib, Version=4.0.0.0, Culture=neutral, PublicKeyToken=b77a5c561934e089">
+    <value>True</value>
   </metadata>
   <data name="imageListLock.ImageStream" mimetype="application/x-microsoft.net.object.binary.base64">
     <value>
@@ -283,17 +286,12 @@
         A///AP8AAwAL
 </value>
   </data>
-  <metadata name="toolTip1.TrayLocation" type="System.Drawing.Point, System.Drawing, Version=4.0.0.0, Culture=neutral, PublicKeyToken=b03f5f7f11d50a3a">
-    <value>120, 17</value>
-  </metadata>
-  <assembly alias="System.Windows.Forms" name="System.Windows.Forms, Version=4.0.0.0, Culture=neutral, PublicKeyToken=b77a5c561934e089" />
   <data name="btnHide.Anchor" type="System.Windows.Forms.AnchorStyles, System.Windows.Forms">
     <value>Top, Bottom, Right</value>
   </data>
   <data name="btnHide.ImeMode" type="System.Windows.Forms.ImeMode, System.Windows.Forms">
     <value>NoControl</value>
   </data>
-  <assembly alias="System.Drawing" name="System.Drawing, Version=4.0.0.0, Culture=neutral, PublicKeyToken=b03f5f7f11d50a3a" />
   <data name="btnHide.Location" type="System.Drawing.Point, System.Drawing">
     <value>608, 0</value>
   </data>
@@ -303,7 +301,6 @@
   <data name="btnHide.Size" type="System.Drawing.Size, System.Drawing">
     <value>94, 21</value>
   </data>
-  <assembly alias="mscorlib" name="mscorlib, Version=4.0.0.0, Culture=neutral, PublicKeyToken=b77a5c561934e089" />
   <data name="btnHide.TabIndex" type="System.Int32, mscorlib">
     <value>1</value>
   </data>
@@ -316,18 +313,12 @@
   <data name="&gt;&gt;btnHide.Name" xml:space="preserve">
     <value>btnHide</value>
   </data>
-  <data name="&gt;&gt;btnHide.Type" xml:space="preserve">
-    <value>System.Windows.Forms.Button, System.Windows.Forms, Version=4.0.0.0, Culture=neutral, PublicKeyToken=b77a5c561934e089</value>
-  </data>
   <data name="&gt;&gt;btnHide.Parent" xml:space="preserve">
     <value>panel2</value>
   </data>
   <data name="&gt;&gt;btnHide.ZOrder" xml:space="preserve">
     <value>2</value>
   </data>
-  <metadata name="imageListPushPin.TrayLocation" type="System.Drawing.Point, System.Drawing, Version=4.0.0.0, Culture=neutral, PublicKeyToken=b03f5f7f11d50a3a">
-    <value>322, 17</value>
-  </metadata>
   <data name="imageListPushPin.ImageStream" mimetype="application/x-microsoft.net.object.binary.base64">
     <value>
         AAEAAAD/////AQAAAAAAAAAMAgAAAFdTeXN0ZW0uV2luZG93cy5Gb3JtcywgVmVyc2lvbj00LjAuMC4w
@@ -512,9 +503,6 @@
   <data name="&gt;&gt;btnCancel.Name" xml:space="preserve">
     <value>btnCancel</value>
   </data>
-  <data name="&gt;&gt;btnCancel.Type" xml:space="preserve">
-    <value>System.Windows.Forms.Button, System.Windows.Forms, Version=4.0.0.0, Culture=neutral, PublicKeyToken=b77a5c561934e089</value>
-  </data>
   <data name="&gt;&gt;btnCancel.Parent" xml:space="preserve">
     <value>panel2</value>
   </data>
@@ -548,9 +536,6 @@
   <data name="&gt;&gt;labelFileName.Name" xml:space="preserve">
     <value>labelFileName</value>
   </data>
-  <data name="&gt;&gt;labelFileName.Type" xml:space="preserve">
-    <value>System.Windows.Forms.Label, System.Windows.Forms, Version=4.0.0.0, Culture=neutral, PublicKeyToken=b77a5c561934e089</value>
-  </data>
   <data name="&gt;&gt;labelFileName.Parent" xml:space="preserve">
     <value>$this</value>
   </data>
@@ -559,9 +544,6 @@
   </data>
   <data name="&gt;&gt;textBoxError.Name" xml:space="preserve">
     <value>textBoxError</value>
-  </data>
-  <data name="&gt;&gt;textBoxError.Type" xml:space="preserve">
-    <value>pwiz.Skyline.Controls.Graphs.DisabledRichTextBox, Skyline, Version=1.0.0.0, Culture=neutral, PublicKeyToken=null</value>
   </data>
   <data name="&gt;&gt;textBoxError.Parent" xml:space="preserve">
     <value>panelError</value>
@@ -572,9 +554,6 @@
   <data name="&gt;&gt;btnCopyText.Name" xml:space="preserve">
     <value>btnCopyText</value>
   </data>
-  <data name="&gt;&gt;btnCopyText.Type" xml:space="preserve">
-    <value>System.Windows.Forms.Button, System.Windows.Forms, Version=4.0.0.0, Culture=neutral, PublicKeyToken=b77a5c561934e089</value>
-  </data>
   <data name="&gt;&gt;btnCopyText.Parent" xml:space="preserve">
     <value>panelError</value>
   </data>
@@ -583,9 +562,6 @@
   </data>
   <data name="&gt;&gt;cbMoreInfo.Name" xml:space="preserve">
     <value>cbMoreInfo</value>
-  </data>
-  <data name="&gt;&gt;cbMoreInfo.Type" xml:space="preserve">
-    <value>System.Windows.Forms.CheckBox, System.Windows.Forms, Version=4.0.0.0, Culture=neutral, PublicKeyToken=b77a5c561934e089</value>
   </data>
   <data name="&gt;&gt;cbMoreInfo.Parent" xml:space="preserve">
     <value>panelError</value>
@@ -607,9 +583,6 @@
   </data>
   <data name="&gt;&gt;panelError.Name" xml:space="preserve">
     <value>panelError</value>
-  </data>
-  <data name="&gt;&gt;panelError.Type" xml:space="preserve">
-    <value>System.Windows.Forms.Panel, System.Windows.Forms, Version=4.0.0.0, Culture=neutral, PublicKeyToken=b77a5c561934e089</value>
   </data>
   <data name="&gt;&gt;panelError.Parent" xml:space="preserve">
     <value>$this</value>
@@ -635,9 +608,6 @@
   <data name="&gt;&gt;textBoxError.Name" xml:space="preserve">
     <value>textBoxError</value>
   </data>
-  <data name="&gt;&gt;textBoxError.Type" xml:space="preserve">
-    <value>pwiz.Skyline.Controls.Graphs.DisabledRichTextBox, Skyline, Version=1.0.0.0, Culture=neutral, PublicKeyToken=null</value>
-  </data>
   <data name="&gt;&gt;textBoxError.Parent" xml:space="preserve">
     <value>panelError</value>
   </data>
@@ -661,9 +631,6 @@
   </data>
   <data name="&gt;&gt;btnCopyText.Name" xml:space="preserve">
     <value>btnCopyText</value>
-  </data>
-  <data name="&gt;&gt;btnCopyText.Type" xml:space="preserve">
-    <value>System.Windows.Forms.Button, System.Windows.Forms, Version=4.0.0.0, Culture=neutral, PublicKeyToken=b77a5c561934e089</value>
   </data>
   <data name="&gt;&gt;btnCopyText.Parent" xml:space="preserve">
     <value>panelError</value>
@@ -689,18 +656,12 @@
   <data name="&gt;&gt;cbMoreInfo.Name" xml:space="preserve">
     <value>cbMoreInfo</value>
   </data>
-  <data name="&gt;&gt;cbMoreInfo.Type" xml:space="preserve">
-    <value>System.Windows.Forms.CheckBox, System.Windows.Forms, Version=4.0.0.0, Culture=neutral, PublicKeyToken=b77a5c561934e089</value>
-  </data>
   <data name="&gt;&gt;cbMoreInfo.Parent" xml:space="preserve">
     <value>panelError</value>
   </data>
   <data name="&gt;&gt;cbMoreInfo.ZOrder" xml:space="preserve">
     <value>2</value>
   </data>
-  <metadata name="toolStrip1.TrayLocation" type="System.Drawing.Point, System.Drawing, Version=4.0.0.0, Culture=neutral, PublicKeyToken=b03f5f7f11d50a3a">
-    <value>468, 17</value>
-  </metadata>
   <data name="toolStrip1.Dock" type="System.Windows.Forms.DockStyle, System.Windows.Forms">
     <value>Right</value>
   </data>
@@ -721,9 +682,6 @@
   </data>
   <data name="&gt;&gt;toolStrip1.Name" xml:space="preserve">
     <value>toolStrip1</value>
-  </data>
-  <data name="&gt;&gt;toolStrip1.Type" xml:space="preserve">
-    <value>System.Windows.Forms.ToolStrip, System.Windows.Forms, Version=4.0.0.0, Culture=neutral, PublicKeyToken=b77a5c561934e089</value>
   </data>
   <data name="&gt;&gt;toolStrip1.Parent" xml:space="preserve">
     <value>$this</value>
@@ -782,9 +740,6 @@
   <data name="&gt;&gt;flowFileStatus.Name" xml:space="preserve">
     <value>flowFileStatus</value>
   </data>
-  <data name="&gt;&gt;flowFileStatus.Type" xml:space="preserve">
-    <value>System.Windows.Forms.FlowLayoutPanel, System.Windows.Forms, Version=4.0.0.0, Culture=neutral, PublicKeyToken=b77a5c561934e089</value>
-  </data>
   <data name="&gt;&gt;flowFileStatus.Parent" xml:space="preserve">
     <value>panelFileList</value>
   </data>
@@ -805,9 +760,6 @@
   </data>
   <data name="&gt;&gt;panelFileList.Name" xml:space="preserve">
     <value>panelFileList</value>
-  </data>
-  <data name="&gt;&gt;panelFileList.Type" xml:space="preserve">
-    <value>System.Windows.Forms.Panel, System.Windows.Forms, Version=4.0.0.0, Culture=neutral, PublicKeyToken=b77a5c561934e089</value>
   </data>
   <data name="&gt;&gt;panelFileList.Parent" xml:space="preserve">
     <value>$this</value>
@@ -854,9 +806,6 @@
   <data name="&gt;&gt;flowFileStatus.Name" xml:space="preserve">
     <value>flowFileStatus</value>
   </data>
-  <data name="&gt;&gt;flowFileStatus.Type" xml:space="preserve">
-    <value>System.Windows.Forms.FlowLayoutPanel, System.Windows.Forms, Version=4.0.0.0, Culture=neutral, PublicKeyToken=b77a5c561934e089</value>
-  </data>
   <data name="&gt;&gt;flowFileStatus.Parent" xml:space="preserve">
     <value>panelFileList</value>
   </data>
@@ -865,9 +814,6 @@
   </data>
   <data name="&gt;&gt;panel2.Name" xml:space="preserve">
     <value>panel2</value>
-  </data>
-  <data name="&gt;&gt;panel2.Type" xml:space="preserve">
-    <value>System.Windows.Forms.Panel, System.Windows.Forms, Version=4.0.0.0, Culture=neutral, PublicKeyToken=b77a5c561934e089</value>
   </data>
   <data name="&gt;&gt;panel2.Parent" xml:space="preserve">
     <value>panelStatus</value>
@@ -890,9 +836,6 @@
   <data name="&gt;&gt;panelStatus.Name" xml:space="preserve">
     <value>panelStatus</value>
   </data>
-  <data name="&gt;&gt;panelStatus.Type" xml:space="preserve">
-    <value>System.Windows.Forms.Panel, System.Windows.Forms, Version=4.0.0.0, Culture=neutral, PublicKeyToken=b77a5c561934e089</value>
-  </data>
   <data name="&gt;&gt;panelStatus.Parent" xml:space="preserve">
     <value>$this</value>
   </data>
@@ -905,9 +848,6 @@
   <data name="&gt;&gt;lblDuration.Name" xml:space="preserve">
     <value>lblDuration</value>
   </data>
-  <data name="&gt;&gt;lblDuration.Type" xml:space="preserve">
-    <value>System.Windows.Forms.Label, System.Windows.Forms, Version=4.0.0.0, Culture=neutral, PublicKeyToken=b77a5c561934e089</value>
-  </data>
   <data name="&gt;&gt;lblDuration.Parent" xml:space="preserve">
     <value>panel2</value>
   </data>
@@ -916,9 +856,6 @@
   </data>
   <data name="&gt;&gt;progressBarTotal.Name" xml:space="preserve">
     <value>progressBarTotal</value>
-  </data>
-  <data name="&gt;&gt;progressBarTotal.Type" xml:space="preserve">
-    <value>System.Windows.Forms.ProgressBar, System.Windows.Forms, Version=4.0.0.0, Culture=neutral, PublicKeyToken=b77a5c561934e089</value>
   </data>
   <data name="&gt;&gt;progressBarTotal.Parent" xml:space="preserve">
     <value>panel2</value>
@@ -940,9 +877,6 @@
   </data>
   <data name="&gt;&gt;panel2.Name" xml:space="preserve">
     <value>panel2</value>
-  </data>
-  <data name="&gt;&gt;panel2.Type" xml:space="preserve">
-    <value>System.Windows.Forms.Panel, System.Windows.Forms, Version=4.0.0.0, Culture=neutral, PublicKeyToken=b77a5c561934e089</value>
   </data>
   <data name="&gt;&gt;panel2.Parent" xml:space="preserve">
     <value>panelStatus</value>
@@ -971,9 +905,6 @@
   <data name="&gt;&gt;lblDuration.Name" xml:space="preserve">
     <value>lblDuration</value>
   </data>
-  <data name="&gt;&gt;lblDuration.Type" xml:space="preserve">
-    <value>System.Windows.Forms.Label, System.Windows.Forms, Version=4.0.0.0, Culture=neutral, PublicKeyToken=b77a5c561934e089</value>
-  </data>
   <data name="&gt;&gt;lblDuration.Parent" xml:space="preserve">
     <value>panel2</value>
   </data>
@@ -1001,9 +932,6 @@
   <data name="&gt;&gt;progressBarTotal.Name" xml:space="preserve">
     <value>progressBarTotal</value>
   </data>
-  <data name="&gt;&gt;progressBarTotal.Type" xml:space="preserve">
-    <value>System.Windows.Forms.ProgressBar, System.Windows.Forms, Version=4.0.0.0, Culture=neutral, PublicKeyToken=b77a5c561934e089</value>
-  </data>
   <data name="&gt;&gt;progressBarTotal.Parent" xml:space="preserve">
     <value>panel2</value>
   </data>
@@ -1028,21 +956,12 @@
   <data name="&gt;&gt;graphChromatograms.Name" xml:space="preserve">
     <value>graphChromatograms</value>
   </data>
-  <data name="&gt;&gt;graphChromatograms.Type" xml:space="preserve">
-    <value>pwiz.Skyline.Controls.Graphs.AsyncChromatogramsGraph2, Skyline, Version=1.0.0.0, Culture=neutral, PublicKeyToken=null</value>
-  </data>
   <data name="&gt;&gt;graphChromatograms.Parent" xml:space="preserve">
     <value>$this</value>
   </data>
   <data name="&gt;&gt;graphChromatograms.ZOrder" xml:space="preserve">
     <value>1</value>
   </data>
-  <metadata name="elapsedTimer.TrayLocation" type="System.Drawing.Point, System.Drawing, Version=4.0.0.0, Culture=neutral, PublicKeyToken=b03f5f7f11d50a3a">
-    <value>573, 17</value>
-  </metadata>
-  <metadata name="$this.Localizable" type="System.Boolean, mscorlib, Version=4.0.0.0, Culture=neutral, PublicKeyToken=b77a5c561934e089">
-    <value>True</value>
-  </metadata>
   <data name="$this.AutoScaleDimensions" type="System.Drawing.SizeF, System.Drawing">
     <value>6, 13</value>
   </data>
@@ -1058,43 +977,22 @@
   <data name="&gt;&gt;imageListLock.Name" xml:space="preserve">
     <value>imageListLock</value>
   </data>
-  <data name="&gt;&gt;imageListLock.Type" xml:space="preserve">
-    <value>System.Windows.Forms.ImageList, System.Windows.Forms, Version=4.0.0.0, Culture=neutral, PublicKeyToken=b77a5c561934e089</value>
-  </data>
   <data name="&gt;&gt;toolTip1.Name" xml:space="preserve">
     <value>toolTip1</value>
-  </data>
-  <data name="&gt;&gt;toolTip1.Type" xml:space="preserve">
-    <value>System.Windows.Forms.ToolTip, System.Windows.Forms, Version=4.0.0.0, Culture=neutral, PublicKeyToken=b77a5c561934e089</value>
   </data>
   <data name="&gt;&gt;imageListPushPin.Name" xml:space="preserve">
     <value>imageListPushPin</value>
   </data>
-  <data name="&gt;&gt;imageListPushPin.Type" xml:space="preserve">
-    <value>System.Windows.Forms.ImageList, System.Windows.Forms, Version=4.0.0.0, Culture=neutral, PublicKeyToken=b77a5c561934e089</value>
-  </data>
   <data name="&gt;&gt;btnAutoCloseWindow.Name" xml:space="preserve">
     <value>btnAutoCloseWindow</value>
-  </data>
-  <data name="&gt;&gt;btnAutoCloseWindow.Type" xml:space="preserve">
-    <value>System.Windows.Forms.ToolStripButton, System.Windows.Forms, Version=4.0.0.0, Culture=neutral, PublicKeyToken=b77a5c561934e089</value>
   </data>
   <data name="&gt;&gt;btnAutoScaleGraphs.Name" xml:space="preserve">
     <value>btnAutoScaleGraphs</value>
   </data>
-  <data name="&gt;&gt;btnAutoScaleGraphs.Type" xml:space="preserve">
-    <value>System.Windows.Forms.ToolStripButton, System.Windows.Forms, Version=4.0.0.0, Culture=neutral, PublicKeyToken=b77a5c561934e089</value>
-  </data>
   <data name="&gt;&gt;elapsedTimer.Name" xml:space="preserve">
     <value>elapsedTimer</value>
   </data>
-  <data name="&gt;&gt;elapsedTimer.Type" xml:space="preserve">
-    <value>System.Windows.Forms.Timer, System.Windows.Forms, Version=4.0.0.0, Culture=neutral, PublicKeyToken=b77a5c561934e089</value>
-  </data>
   <data name="&gt;&gt;$this.Name" xml:space="preserve">
     <value>AllChromatogramsGraph</value>
-  </data>
-  <data name="&gt;&gt;$this.Type" xml:space="preserve">
-    <value>pwiz.Skyline.Util.FormEx, Skyline, Version=1.0.0.0, Culture=neutral, PublicKeyToken=null</value>
   </data>
 </root>

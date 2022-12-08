@@ -118,14 +118,17 @@
     <value>System.Resources.ResXResourceWriter, System.Windows.Forms, Version=4.0.0.0, Culture=neutral, PublicKeyToken=b77a5c561934e089</value>
   </resheader>
   <assembly alias="System.Windows.Forms" name="System.Windows.Forms, Version=4.0.0.0, Culture=neutral, PublicKeyToken=b77a5c561934e089" />
+  <assembly alias="mscorlib" name="mscorlib, Version=4.0.0.0, Culture=neutral, PublicKeyToken=b77a5c561934e089" />
+  <assembly alias="System.Drawing" name="System.Drawing, Version=4.0.0.0, Culture=neutral, PublicKeyToken=b03f5f7f11d50a3a" />
+  <metadata name="$this.Localizable" type="System.Boolean, mscorlib, Version=4.0.0.0, Culture=neutral, PublicKeyToken=b77a5c561934e089">
+    <value>True</value>
+  </metadata>
   <data name="labelPercent.Anchor" type="System.Windows.Forms.AnchorStyles, System.Windows.Forms">
     <value>Top, Right</value>
   </data>
-  <assembly alias="mscorlib" name="mscorlib, Version=4.0.0.0, Culture=neutral, PublicKeyToken=b77a5c561934e089" />
   <data name="labelPercent.AutoSize" type="System.Boolean, mscorlib">
     <value>True</value>
   </data>
-  <assembly alias="System.Drawing" name="System.Drawing, Version=4.0.0.0, Culture=neutral, PublicKeyToken=b03f5f7f11d50a3a" />
   <data name="labelPercent.Location" type="System.Drawing.Point, System.Drawing">
     <value>123, 21</value>
   </data>
@@ -143,9 +146,6 @@
   </data>
   <data name="&gt;&gt;labelPercent.Name" xml:space="preserve">
     <value>labelPercent</value>
-  </data>
-  <data name="&gt;&gt;labelPercent.Type" xml:space="preserve">
-    <value>System.Windows.Forms.Label, System.Windows.Forms, Version=4.0.0.0, Culture=neutral, PublicKeyToken=b77a5c561934e089</value>
   </data>
   <data name="&gt;&gt;labelPercent.Parent" xml:space="preserve">
     <value>$this</value>
@@ -171,9 +171,6 @@
   <data name="&gt;&gt;progressBar.Name" xml:space="preserve">
     <value>progressBar</value>
   </data>
-  <data name="&gt;&gt;progressBar.Type" xml:space="preserve">
-    <value>System.Windows.Forms.ProgressBar, System.Windows.Forms, Version=4.0.0.0, Culture=neutral, PublicKeyToken=b77a5c561934e089</value>
-  </data>
   <data name="&gt;&gt;progressBar.Parent" xml:space="preserve">
     <value>$this</value>
   </data>
@@ -197,9 +194,6 @@
   </data>
   <data name="&gt;&gt;labelFileName.Name" xml:space="preserve">
     <value>labelFileName</value>
-  </data>
-  <data name="&gt;&gt;labelFileName.Type" xml:space="preserve">
-    <value>System.Windows.Forms.Label, System.Windows.Forms, Version=4.0.0.0, Culture=neutral, PublicKeyToken=b77a5c561934e089</value>
   </data>
   <data name="&gt;&gt;labelFileName.Parent" xml:space="preserve">
     <value>$this</value>
@@ -231,9 +225,6 @@
   <data name="&gt;&gt;labelStatus.Name" xml:space="preserve">
     <value>labelStatus</value>
   </data>
-  <data name="&gt;&gt;labelStatus.Type" xml:space="preserve">
-    <value>System.Windows.Forms.Label, System.Windows.Forms, Version=4.0.0.0, Culture=neutral, PublicKeyToken=b77a5c561934e089</value>
-  </data>
   <data name="&gt;&gt;labelStatus.Parent" xml:space="preserve">
     <value>$this</value>
   </data>
@@ -261,9 +252,6 @@
   <data name="&gt;&gt;btnRetry.Name" xml:space="preserve">
     <value>btnRetry</value>
   </data>
-  <data name="&gt;&gt;btnRetry.Type" xml:space="preserve">
-    <value>System.Windows.Forms.Button, System.Windows.Forms, Version=4.0.0.0, Culture=neutral, PublicKeyToken=b77a5c561934e089</value>
-  </data>
   <data name="&gt;&gt;btnRetry.Parent" xml:space="preserve">
     <value>$this</value>
   </data>
@@ -285,18 +273,12 @@
   <data name="&gt;&gt;warningIcon.Name" xml:space="preserve">
     <value>warningIcon</value>
   </data>
-  <data name="&gt;&gt;warningIcon.Type" xml:space="preserve">
-    <value>System.Windows.Forms.PictureBox, System.Windows.Forms, Version=4.0.0.0, Culture=neutral, PublicKeyToken=b77a5c561934e089</value>
-  </data>
   <data name="&gt;&gt;warningIcon.Parent" xml:space="preserve">
     <value>$this</value>
   </data>
   <data name="&gt;&gt;warningIcon.ZOrder" xml:space="preserve">
     <value>0</value>
   </data>
-  <metadata name="$this.Localizable" type="System.Boolean, mscorlib, Version=4.0.0.0, Culture=neutral, PublicKeyToken=b77a5c561934e089">
-    <value>True</value>
-  </metadata>
   <data name="$this.AutoScaleDimensions" type="System.Drawing.SizeF, System.Drawing">
     <value>6, 13</value>
   </data>
@@ -308,8 +290,5 @@
   </data>
   <data name="&gt;&gt;$this.Name" xml:space="preserve">
     <value>FileProgressControl</value>
-  </data>
-  <data name="&gt;&gt;$this.Type" xml:space="preserve">
-    <value>System.Windows.Forms.UserControl, System.Windows.Forms, Version=4.0.0.0, Culture=neutral, PublicKeyToken=b77a5c561934e089</value>
   </data>
 </root>

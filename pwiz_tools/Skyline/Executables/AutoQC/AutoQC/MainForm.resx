@@ -118,10 +118,14 @@
     <value>System.Resources.ResXResourceWriter, System.Windows.Forms, Version=4.0.0.0, Culture=neutral, PublicKeyToken=b77a5c561934e089</value>
   </resheader>
   <assembly alias="System.Windows.Forms" name="System.Windows.Forms, Version=4.0.0.0, Culture=neutral, PublicKeyToken=b77a5c561934e089" />
+  <assembly alias="System.Drawing" name="System.Drawing, Version=4.0.0.0, Culture=neutral, PublicKeyToken=b03f5f7f11d50a3a" />
+  <assembly alias="mscorlib" name="mscorlib, Version=4.0.0.0, Culture=neutral, PublicKeyToken=b77a5c561934e089" />
+  <metadata name="$this.Localizable" type="System.Boolean, mscorlib, Version=4.0.0.0, Culture=neutral, PublicKeyToken=b77a5c561934e089">
+    <value>True</value>
+  </metadata>
   <data name="btnEdit.ImeMode" type="System.Windows.Forms.ImeMode, System.Windows.Forms">
     <value>NoControl</value>
   </data>
-  <assembly alias="System.Drawing" name="System.Drawing, Version=4.0.0.0, Culture=neutral, PublicKeyToken=b03f5f7f11d50a3a" />
   <data name="btnEdit.Location" type="System.Drawing.Point, System.Drawing">
     <value>26, 32</value>
   </data>
@@ -131,7 +135,6 @@
   <data name="btnEdit.Size" type="System.Drawing.Size, System.Drawing">
     <value>75, 23</value>
   </data>
-  <assembly alias="mscorlib" name="mscorlib, Version=4.0.0.0, Culture=neutral, PublicKeyToken=b77a5c561934e089" />
   <data name="btnEdit.TabIndex" type="System.Int32, mscorlib">
     <value>2</value>
   </data>
@@ -140,9 +143,6 @@
   </data>
   <data name="&gt;&gt;btnEdit.Name" xml:space="preserve">
     <value>btnEdit</value>
-  </data>
-  <data name="&gt;&gt;btnEdit.Type" xml:space="preserve">
-    <value>System.Windows.Forms.Button, System.Windows.Forms, Version=4.0.0.0, Culture=neutral, PublicKeyToken=b77a5c561934e089</value>
   </data>
   <data name="&gt;&gt;btnEdit.Parent" xml:space="preserve">
     <value>panel1</value>
@@ -170,9 +170,6 @@
   </data>
   <data name="&gt;&gt;btnCopy.Name" xml:space="preserve">
     <value>btnCopy</value>
-  </data>
-  <data name="&gt;&gt;btnCopy.Type" xml:space="preserve">
-    <value>System.Windows.Forms.Button, System.Windows.Forms, Version=4.0.0.0, Culture=neutral, PublicKeyToken=b77a5c561934e089</value>
   </data>
   <data name="&gt;&gt;btnCopy.Parent" xml:space="preserve">
     <value>panel1</value>
@@ -210,9 +207,6 @@
   <data name="&gt;&gt;lblNoConfigs.Name" xml:space="preserve">
     <value>lblNoConfigs</value>
   </data>
-  <data name="&gt;&gt;lblNoConfigs.Type" xml:space="preserve">
-    <value>System.Windows.Forms.Label, System.Windows.Forms, Version=4.0.0.0, Culture=neutral, PublicKeyToken=b77a5c561934e089</value>
-  </data>
   <data name="&gt;&gt;lblNoConfigs.Parent" xml:space="preserve">
     <value>panel4</value>
   </data>
@@ -242,9 +236,6 @@
   </data>
   <data name="&gt;&gt;labelSavedConfigurations.Name" xml:space="preserve">
     <value>labelSavedConfigurations</value>
-  </data>
-  <data name="&gt;&gt;labelSavedConfigurations.Type" xml:space="preserve">
-    <value>System.Windows.Forms.Label, System.Windows.Forms, Version=4.0.0.0, Culture=neutral, PublicKeyToken=b77a5c561934e089</value>
   </data>
   <data name="&gt;&gt;labelSavedConfigurations.Parent" xml:space="preserve">
     <value>panel4</value>
@@ -279,9 +270,6 @@
   <data name="&gt;&gt;btnViewLog.Name" xml:space="preserve">
     <value>btnViewLog</value>
   </data>
-  <data name="&gt;&gt;btnViewLog.Type" xml:space="preserve">
-    <value>System.Windows.Forms.Button, System.Windows.Forms, Version=4.0.0.0, Culture=neutral, PublicKeyToken=b77a5c561934e089</value>
-  </data>
   <data name="&gt;&gt;btnViewLog.Parent" xml:space="preserve">
     <value>panel1</value>
   </data>
@@ -302,9 +290,6 @@
   </data>
   <data name="&gt;&gt;panel4.Name" xml:space="preserve">
     <value>panel4</value>
-  </data>
-  <data name="&gt;&gt;panel4.Type" xml:space="preserve">
-    <value>System.Windows.Forms.Panel, System.Windows.Forms, Version=4.0.0.0, Culture=neutral, PublicKeyToken=b77a5c561934e089</value>
   </data>
   <data name="&gt;&gt;panel4.Parent" xml:space="preserve">
     <value>tabConfigs</value>
@@ -351,9 +336,6 @@
   <data name="&gt;&gt;listViewConfigs.Name" xml:space="preserve">
     <value>listViewConfigs</value>
   </data>
-  <data name="&gt;&gt;listViewConfigs.Type" xml:space="preserve">
-    <value>AutoQC.MyListView, AutoQC, Version=21.1.0.158, Culture=neutral, PublicKeyToken=null</value>
-  </data>
   <data name="&gt;&gt;listViewConfigs.Parent" xml:space="preserve">
     <value>tabConfigs</value>
   </data>
@@ -384,18 +366,12 @@
   <data name="&gt;&gt;btnAdd.Name" xml:space="preserve">
     <value>btnAdd</value>
   </data>
-  <data name="&gt;&gt;btnAdd.Type" xml:space="preserve">
-    <value>System.Windows.Forms.Button, System.Windows.Forms, Version=4.0.0.0, Culture=neutral, PublicKeyToken=b77a5c561934e089</value>
-  </data>
   <data name="&gt;&gt;btnAdd.Parent" xml:space="preserve">
     <value>panel1</value>
   </data>
   <data name="&gt;&gt;btnAdd.ZOrder" xml:space="preserve">
     <value>1</value>
   </data>
-  <metadata name="toolStrip.TrayLocation" type="System.Drawing.Point, System.Drawing, Version=4.0.0.0, Culture=neutral, PublicKeyToken=b03f5f7f11d50a3a">
-    <value>285, 17</value>
-  </metadata>
   <data name="toolStrip.Dock" type="System.Windows.Forms.DockStyle, System.Windows.Forms">
     <value>Left</value>
   </data>
@@ -462,9 +438,6 @@
   <data name="&gt;&gt;toolStrip.Name" xml:space="preserve">
     <value>toolStrip</value>
   </data>
-  <data name="&gt;&gt;toolStrip.Type" xml:space="preserve">
-    <value>System.Windows.Forms.ToolStrip, System.Windows.Forms, Version=4.0.0.0, Culture=neutral, PublicKeyToken=b77a5c561934e089</value>
-  </data>
   <data name="&gt;&gt;toolStrip.Parent" xml:space="preserve">
     <value>panel1</value>
   </data>
@@ -489,17 +462,11 @@
   <data name="btnImportConfigs.Text" xml:space="preserve">
     <value>I&amp;mport...</value>
   </data>
-  <metadata name="toolTip_MainForm.TrayLocation" type="System.Drawing.Point, System.Drawing, Version=4.0.0.0, Culture=neutral, PublicKeyToken=b03f5f7f11d50a3a">
-    <value>17, 17</value>
-  </metadata>
   <data name="btnImportConfigs.ToolTip" xml:space="preserve">
     <value>Import saved configurations...</value>
   </data>
   <data name="&gt;&gt;btnImportConfigs.Name" xml:space="preserve">
     <value>btnImportConfigs</value>
-  </data>
-  <data name="&gt;&gt;btnImportConfigs.Type" xml:space="preserve">
-    <value>System.Windows.Forms.Button, System.Windows.Forms, Version=4.0.0.0, Culture=neutral, PublicKeyToken=b77a5c561934e089</value>
   </data>
   <data name="&gt;&gt;btnImportConfigs.Parent" xml:space="preserve">
     <value>panel1</value>
@@ -531,9 +498,6 @@
   <data name="&gt;&gt;btnExportConfigs.Name" xml:space="preserve">
     <value>btnExportConfigs</value>
   </data>
-  <data name="&gt;&gt;btnExportConfigs.Type" xml:space="preserve">
-    <value>System.Windows.Forms.Button, System.Windows.Forms, Version=4.0.0.0, Culture=neutral, PublicKeyToken=b77a5c561934e089</value>
-  </data>
   <data name="&gt;&gt;btnExportConfigs.Parent" xml:space="preserve">
     <value>panel1</value>
   </data>
@@ -554,9 +518,6 @@
   </data>
   <data name="&gt;&gt;panel1.Name" xml:space="preserve">
     <value>panel1</value>
-  </data>
-  <data name="&gt;&gt;panel1.Type" xml:space="preserve">
-    <value>System.Windows.Forms.Panel, System.Windows.Forms, Version=4.0.0.0, Culture=neutral, PublicKeyToken=b77a5c561934e089</value>
   </data>
   <data name="&gt;&gt;panel1.Parent" xml:space="preserve">
     <value>tabConfigs</value>
@@ -584,9 +545,6 @@
   </data>
   <data name="&gt;&gt;tabConfigs.Name" xml:space="preserve">
     <value>tabConfigs</value>
-  </data>
-  <data name="&gt;&gt;tabConfigs.Type" xml:space="preserve">
-    <value>System.Windows.Forms.TabPage, System.Windows.Forms, Version=4.0.0.0, Culture=neutral, PublicKeyToken=b77a5c561934e089</value>
   </data>
   <data name="&gt;&gt;tabConfigs.Parent" xml:space="preserve">
     <value>tabMain</value>
@@ -624,9 +582,6 @@
   <data name="&gt;&gt;btnOpenLogFolder.Name" xml:space="preserve">
     <value>btnOpenLogFolder</value>
   </data>
-  <data name="&gt;&gt;btnOpenLogFolder.Type" xml:space="preserve">
-    <value>System.Windows.Forms.Button, System.Windows.Forms, Version=4.0.0.0, Culture=neutral, PublicKeyToken=b77a5c561934e089</value>
-  </data>
   <data name="&gt;&gt;btnOpenLogFolder.Parent" xml:space="preserve">
     <value>panel3</value>
   </data>
@@ -657,9 +612,6 @@
   <data name="&gt;&gt;lblConfigSelect.Name" xml:space="preserve">
     <value>lblConfigSelect</value>
   </data>
-  <data name="&gt;&gt;lblConfigSelect.Type" xml:space="preserve">
-    <value>System.Windows.Forms.Label, System.Windows.Forms, Version=4.0.0.0, Culture=neutral, PublicKeyToken=b77a5c561934e089</value>
-  </data>
   <data name="&gt;&gt;lblConfigSelect.Parent" xml:space="preserve">
     <value>panel3</value>
   </data>
@@ -684,9 +636,6 @@
   <data name="&gt;&gt;comboConfigs.Name" xml:space="preserve">
     <value>comboConfigs</value>
   </data>
-  <data name="&gt;&gt;comboConfigs.Type" xml:space="preserve">
-    <value>System.Windows.Forms.ComboBox, System.Windows.Forms, Version=4.0.0.0, Culture=neutral, PublicKeyToken=b77a5c561934e089</value>
-  </data>
   <data name="&gt;&gt;comboConfigs.Parent" xml:space="preserve">
     <value>panel3</value>
   </data>
@@ -704,9 +653,6 @@
   </data>
   <data name="&gt;&gt;panel3.Name" xml:space="preserve">
     <value>panel3</value>
-  </data>
-  <data name="&gt;&gt;panel3.Type" xml:space="preserve">
-    <value>System.Windows.Forms.Panel, System.Windows.Forms, Version=4.0.0.0, Culture=neutral, PublicKeyToken=b77a5c561934e089</value>
   </data>
   <data name="&gt;&gt;panel3.Parent" xml:space="preserve">
     <value>tabLog</value>
@@ -735,9 +681,6 @@
   <data name="&gt;&gt;textBoxLog.Name" xml:space="preserve">
     <value>textBoxLog</value>
   </data>
-  <data name="&gt;&gt;textBoxLog.Type" xml:space="preserve">
-    <value>System.Windows.Forms.RichTextBox, System.Windows.Forms, Version=4.0.0.0, Culture=neutral, PublicKeyToken=b77a5c561934e089</value>
-  </data>
   <data name="&gt;&gt;textBoxLog.Parent" xml:space="preserve">
     <value>tabLog</value>
   </data>
@@ -764,9 +707,6 @@
   </data>
   <data name="&gt;&gt;tabLog.Name" xml:space="preserve">
     <value>tabLog</value>
-  </data>
-  <data name="&gt;&gt;tabLog.Type" xml:space="preserve">
-    <value>System.Windows.Forms.TabPage, System.Windows.Forms, Version=4.0.0.0, Culture=neutral, PublicKeyToken=b77a5c561934e089</value>
   </data>
   <data name="&gt;&gt;tabLog.Parent" xml:space="preserve">
     <value>tabMain</value>
@@ -800,9 +740,6 @@
   </data>
   <data name="&gt;&gt;cb_minimizeToSysTray.Name" xml:space="preserve">
     <value>cb_minimizeToSysTray</value>
-  </data>
-  <data name="&gt;&gt;cb_minimizeToSysTray.Type" xml:space="preserve">
-    <value>System.Windows.Forms.CheckBox, System.Windows.Forms, Version=4.0.0.0, Culture=neutral, PublicKeyToken=b77a5c561934e089</value>
   </data>
   <data name="&gt;&gt;cb_minimizeToSysTray.Parent" xml:space="preserve">
     <value>groupBoxAutoQcSettings</value>
@@ -840,9 +777,6 @@ Any configurations that were running when AutoQC Loader was last running are als
   <data name="&gt;&gt;cb_keepRunning.Name" xml:space="preserve">
     <value>cb_keepRunning</value>
   </data>
-  <data name="&gt;&gt;cb_keepRunning.Type" xml:space="preserve">
-    <value>System.Windows.Forms.CheckBox, System.Windows.Forms, Version=4.0.0.0, Culture=neutral, PublicKeyToken=b77a5c561934e089</value>
-  </data>
   <data name="&gt;&gt;cb_keepRunning.Parent" xml:space="preserve">
     <value>groupBoxAutoQcSettings</value>
   </data>
@@ -869,9 +803,6 @@ Any configurations that were running when AutoQC Loader was last running are als
   </data>
   <data name="&gt;&gt;groupBoxAutoQcSettings.Name" xml:space="preserve">
     <value>groupBoxAutoQcSettings</value>
-  </data>
-  <data name="&gt;&gt;groupBoxAutoQcSettings.Type" xml:space="preserve">
-    <value>System.Windows.Forms.GroupBox, System.Windows.Forms, Version=4.0.0.0, Culture=neutral, PublicKeyToken=b77a5c561934e089</value>
   </data>
   <data name="&gt;&gt;groupBoxAutoQcSettings.Parent" xml:space="preserve">
     <value>tabSettings</value>
@@ -900,9 +831,6 @@ Any configurations that were running when AutoQC Loader was last running are als
   <data name="&gt;&gt;tabSettings.Name" xml:space="preserve">
     <value>tabSettings</value>
   </data>
-  <data name="&gt;&gt;tabSettings.Type" xml:space="preserve">
-    <value>System.Windows.Forms.TabPage, System.Windows.Forms, Version=4.0.0.0, Culture=neutral, PublicKeyToken=b77a5c561934e089</value>
-  </data>
   <data name="&gt;&gt;tabSettings.Parent" xml:space="preserve">
     <value>tabMain</value>
   </data>
@@ -924,18 +852,12 @@ Any configurations that were running when AutoQC Loader was last running are als
   <data name="&gt;&gt;tabMain.Name" xml:space="preserve">
     <value>tabMain</value>
   </data>
-  <data name="&gt;&gt;tabMain.Type" xml:space="preserve">
-    <value>System.Windows.Forms.TabControl, System.Windows.Forms, Version=4.0.0.0, Culture=neutral, PublicKeyToken=b77a5c561934e089</value>
-  </data>
   <data name="&gt;&gt;tabMain.Parent" xml:space="preserve">
     <value>$this</value>
   </data>
   <data name="&gt;&gt;tabMain.ZOrder" xml:space="preserve">
     <value>1</value>
   </data>
-  <metadata name="systray_icon.TrayLocation" type="System.Drawing.Point, System.Drawing, Version=4.0.0.0, Culture=neutral, PublicKeyToken=b03f5f7f11d50a3a">
-    <value>168, 17</value>
-  </metadata>
   <data name="systray_icon.Icon" type="System.Drawing.Icon, System.Drawing" mimetype="application/x-microsoft.net.object.bytearray.base64">
     <value>
         AAABAAQAEBAAAAAAIABoBAAARgAAACAgAAAAACAAqBAAAK4EAAAwMAAAAAAgAKglAABWFQAAQEAAAAAA
@@ -1477,9 +1399,6 @@ Any configurations that were running when AutoQC Loader was last running are als
   <data name="systray_icon.Text" xml:space="preserve">
     <value>AutoQC Loader</value>
   </data>
-  <metadata name="openFolderMenuStrip.TrayLocation" type="System.Drawing.Point, System.Drawing, Version=4.0.0.0, Culture=neutral, PublicKeyToken=b03f5f7f11d50a3a">
-    <value>383, 17</value>
-  </metadata>
   <data name="toolStripFolderToWatch.RightToLeft" type="System.Windows.Forms.RightToLeft, System.Windows.Forms">
     <value>No</value>
   </data>
@@ -1507,15 +1426,6 @@ Any configurations that were running when AutoQC Loader was last running are als
   <data name="&gt;&gt;openFolderMenuStrip.Name" xml:space="preserve">
     <value>openFolderMenuStrip</value>
   </data>
-  <data name="&gt;&gt;openFolderMenuStrip.Type" xml:space="preserve">
-    <value>System.Windows.Forms.ContextMenuStrip, System.Windows.Forms, Version=4.0.0.0, Culture=neutral, PublicKeyToken=b77a5c561934e089</value>
-  </data>
-  <metadata name="$this.Localizable" type="System.Boolean, mscorlib, Version=4.0.0.0, Culture=neutral, PublicKeyToken=b77a5c561934e089">
-    <value>True</value>
-  </metadata>
-  <metadata name="$this.TrayHeight" type="System.Int32, mscorlib, Version=4.0.0.0, Culture=neutral, PublicKeyToken=b77a5c561934e089">
-    <value>25</value>
-  </metadata>
   <data name="$this.AutoScaleDimensions" type="System.Drawing.SizeF, System.Drawing">
     <value>6, 13</value>
   </data>
@@ -1939,79 +1849,40 @@ Any configurations that were running when AutoQC Loader was last running are als
   <data name="&gt;&gt;columnName2.Name" xml:space="preserve">
     <value>columnName2</value>
   </data>
-  <data name="&gt;&gt;columnName2.Type" xml:space="preserve">
-    <value>System.Windows.Forms.ColumnHeader, System.Windows.Forms, Version=4.0.0.0, Culture=neutral, PublicKeyToken=b77a5c561934e089</value>
-  </data>
   <data name="&gt;&gt;columnUser2.Name" xml:space="preserve">
     <value>columnUser2</value>
-  </data>
-  <data name="&gt;&gt;columnUser2.Type" xml:space="preserve">
-    <value>System.Windows.Forms.ColumnHeader, System.Windows.Forms, Version=4.0.0.0, Culture=neutral, PublicKeyToken=b77a5c561934e089</value>
   </data>
   <data name="&gt;&gt;columnCreated2.Name" xml:space="preserve">
     <value>columnCreated2</value>
   </data>
-  <data name="&gt;&gt;columnCreated2.Type" xml:space="preserve">
-    <value>System.Windows.Forms.ColumnHeader, System.Windows.Forms, Version=4.0.0.0, Culture=neutral, PublicKeyToken=b77a5c561934e089</value>
-  </data>
   <data name="&gt;&gt;columnStatus2.Name" xml:space="preserve">
     <value>columnStatus2</value>
-  </data>
-  <data name="&gt;&gt;columnStatus2.Type" xml:space="preserve">
-    <value>System.Windows.Forms.ColumnHeader, System.Windows.Forms, Version=4.0.0.0, Culture=neutral, PublicKeyToken=b77a5c561934e089</value>
   </data>
   <data name="&gt;&gt;btnDelete.Name" xml:space="preserve">
     <value>btnDelete</value>
   </data>
-  <data name="&gt;&gt;btnDelete.Type" xml:space="preserve">
-    <value>System.Windows.Forms.ToolStripButton, System.Windows.Forms, Version=4.0.0.0, Culture=neutral, PublicKeyToken=b77a5c561934e089</value>
-  </data>
   <data name="&gt;&gt;btnOpenResults.Name" xml:space="preserve">
     <value>btnOpenResults</value>
-  </data>
-  <data name="&gt;&gt;btnOpenResults.Type" xml:space="preserve">
-    <value>System.Windows.Forms.ToolStripButton, System.Windows.Forms, Version=4.0.0.0, Culture=neutral, PublicKeyToken=b77a5c561934e089</value>
   </data>
   <data name="&gt;&gt;btnOpenPanoramaFolder.Name" xml:space="preserve">
     <value>btnOpenPanoramaFolder</value>
   </data>
-  <data name="&gt;&gt;btnOpenPanoramaFolder.Type" xml:space="preserve">
-    <value>System.Windows.Forms.ToolStripButton, System.Windows.Forms, Version=4.0.0.0, Culture=neutral, PublicKeyToken=b77a5c561934e089</value>
-  </data>
   <data name="&gt;&gt;btnOpenFolder.Name" xml:space="preserve">
     <value>btnOpenFolder</value>
-  </data>
-  <data name="&gt;&gt;btnOpenFolder.Type" xml:space="preserve">
-    <value>System.Windows.Forms.ToolStripButton, System.Windows.Forms, Version=4.0.0.0, Culture=neutral, PublicKeyToken=b77a5c561934e089</value>
   </data>
   <data name="&gt;&gt;toolTip_MainForm.Name" xml:space="preserve">
     <value>toolTip_MainForm</value>
   </data>
-  <data name="&gt;&gt;toolTip_MainForm.Type" xml:space="preserve">
-    <value>System.Windows.Forms.ToolTip, System.Windows.Forms, Version=4.0.0.0, Culture=neutral, PublicKeyToken=b77a5c561934e089</value>
-  </data>
   <data name="&gt;&gt;systray_icon.Name" xml:space="preserve">
     <value>systray_icon</value>
-  </data>
-  <data name="&gt;&gt;systray_icon.Type" xml:space="preserve">
-    <value>System.Windows.Forms.NotifyIcon, System.Windows.Forms, Version=4.0.0.0, Culture=neutral, PublicKeyToken=b77a5c561934e089</value>
   </data>
   <data name="&gt;&gt;toolStripFolderToWatch.Name" xml:space="preserve">
     <value>toolStripFolderToWatch</value>
   </data>
-  <data name="&gt;&gt;toolStripFolderToWatch.Type" xml:space="preserve">
-    <value>System.Windows.Forms.ToolStripMenuItem, System.Windows.Forms, Version=4.0.0.0, Culture=neutral, PublicKeyToken=b77a5c561934e089</value>
-  </data>
   <data name="&gt;&gt;toolStripLogFolder.Name" xml:space="preserve">
     <value>toolStripLogFolder</value>
   </data>
-  <data name="&gt;&gt;toolStripLogFolder.Type" xml:space="preserve">
-    <value>System.Windows.Forms.ToolStripMenuItem, System.Windows.Forms, Version=4.0.0.0, Culture=neutral, PublicKeyToken=b77a5c561934e089</value>
-  </data>
   <data name="&gt;&gt;$this.Name" xml:space="preserve">
     <value>MainForm</value>
-  </data>
-  <data name="&gt;&gt;$this.Type" xml:space="preserve">
-    <value>System.Windows.Forms.Form, System.Windows.Forms, Version=4.0.0.0, Culture=neutral, PublicKeyToken=b77a5c561934e089</value>
   </data>
 </root>

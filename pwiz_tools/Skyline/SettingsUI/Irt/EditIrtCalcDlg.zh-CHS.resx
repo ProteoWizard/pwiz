@@ -117,14 +117,27 @@
   <resheader name="writer">
     <value>System.Resources.ResXResourceWriter, System.Windows.Forms, Version=4.0.0.0, Culture=neutral, PublicKeyToken=b77a5c561934e089</value>
   </resheader>
-  <metadata name="modeUIHandler.TrayLocation" type="System.Drawing.Point, System.Drawing, Version=4.0.0.0, Culture=neutral, PublicKeyToken=b03f5f7f11d50a3a">
-    <value>17, 17</value>
-  </metadata>
   <assembly alias="mscorlib" name="mscorlib, Version=4.0.0.0, Culture=neutral, PublicKeyToken=b77a5c561934e089" />
+  <assembly alias="System.Drawing" name="System.Drawing, Version=4.0.0.0, Culture=neutral, PublicKeyToken=b03f5f7f11d50a3a" />
+  <assembly alias="System.Windows.Forms" name="System.Windows.Forms, Version=4.0.0.0, Culture=neutral, PublicKeyToken=b77a5c561934e089" />
+  <metadata name="columnStandardSequence.UserAddedColumn" type="System.Boolean, mscorlib, Version=4.0.0.0, Culture=neutral, PublicKeyToken=b77a5c561934e089">
+    <value>True</value>
+  </metadata>
+  <metadata name="columnStandardIrt.UserAddedColumn" type="System.Boolean, mscorlib, Version=4.0.0.0, Culture=neutral, PublicKeyToken=b77a5c561934e089">
+    <value>True</value>
+  </metadata>
+  <metadata name="columnLibrarySequence.UserAddedColumn" type="System.Boolean, mscorlib, Version=4.0.0.0, Culture=neutral, PublicKeyToken=b77a5c561934e089">
+    <value>True</value>
+  </metadata>
+  <metadata name="columnLibraryIrt.UserAddedColumn" type="System.Boolean, mscorlib, Version=4.0.0.0, Culture=neutral, PublicKeyToken=b77a5c561934e089">
+    <value>True</value>
+  </metadata>
+  <metadata name="$this.Localizable" type="System.Boolean, mscorlib, Version=4.0.0.0, Culture=neutral, PublicKeyToken=b77a5c561934e089">
+    <value>True</value>
+  </metadata>
   <data name="label1.AutoSize" type="System.Boolean, mscorlib">
     <value>True</value>
   </data>
-  <assembly alias="System.Drawing" name="System.Drawing, Version=4.0.0.0, Culture=neutral, PublicKeyToken=b03f5f7f11d50a3a" />
   <data name="label1.Location" type="System.Drawing.Point, System.Drawing">
     <value>9, 13</value>
   </data>
@@ -139,9 +152,6 @@
   </data>
   <data name="&gt;&gt;label1.Name" xml:space="preserve">
     <value>label1</value>
-  </data>
-  <data name="&gt;&gt;label1.Type" xml:space="preserve">
-    <value>System.Windows.Forms.Label, System.Windows.Forms, Version=4.0.0.0, Culture=neutral, PublicKeyToken=b77a5c561934e089</value>
   </data>
   <data name="&gt;&gt;label1.Parent" xml:space="preserve">
     <value>$this</value>
@@ -160,9 +170,6 @@
   </data>
   <data name="&gt;&gt;textCalculatorName.Name" xml:space="preserve">
     <value>textCalculatorName</value>
-  </data>
-  <data name="&gt;&gt;textCalculatorName.Type" xml:space="preserve">
-    <value>System.Windows.Forms.TextBox, System.Windows.Forms, Version=4.0.0.0, Culture=neutral, PublicKeyToken=b77a5c561934e089</value>
   </data>
   <data name="&gt;&gt;textCalculatorName.Parent" xml:space="preserve">
     <value>$this</value>
@@ -188,16 +195,12 @@
   <data name="&gt;&gt;label2.Name" xml:space="preserve">
     <value>label2</value>
   </data>
-  <data name="&gt;&gt;label2.Type" xml:space="preserve">
-    <value>System.Windows.Forms.Label, System.Windows.Forms, Version=4.0.0.0, Culture=neutral, PublicKeyToken=b77a5c561934e089</value>
-  </data>
   <data name="&gt;&gt;label2.Parent" xml:space="preserve">
     <value>$this</value>
   </data>
   <data name="&gt;&gt;label2.ZOrder" xml:space="preserve">
     <value>13</value>
   </data>
-  <assembly alias="System.Windows.Forms" name="System.Windows.Forms, Version=4.0.0.0, Culture=neutral, PublicKeyToken=b77a5c561934e089" />
   <data name="textDatabase.Anchor" type="System.Windows.Forms.AnchorStyles, System.Windows.Forms">
     <value>Top, Left, Right</value>
   </data>
@@ -212,9 +215,6 @@
   </data>
   <data name="&gt;&gt;textDatabase.Name" xml:space="preserve">
     <value>textDatabase</value>
-  </data>
-  <data name="&gt;&gt;textDatabase.Type" xml:space="preserve">
-    <value>System.Windows.Forms.TextBox, System.Windows.Forms, Version=4.0.0.0, Culture=neutral, PublicKeyToken=b77a5c561934e089</value>
   </data>
   <data name="&gt;&gt;textDatabase.Parent" xml:space="preserve">
     <value>$this</value>
@@ -236,9 +236,6 @@
   </data>
   <data name="&gt;&gt;btnBrowseDb.Name" xml:space="preserve">
     <value>btnBrowseDb</value>
-  </data>
-  <data name="&gt;&gt;btnBrowseDb.Type" xml:space="preserve">
-    <value>System.Windows.Forms.Button, System.Windows.Forms, Version=4.0.0.0, Culture=neutral, PublicKeyToken=b77a5c561934e089</value>
   </data>
   <data name="&gt;&gt;btnBrowseDb.Parent" xml:space="preserve">
     <value>$this</value>
@@ -264,9 +261,6 @@
   <data name="&gt;&gt;label3.Name" xml:space="preserve">
     <value>label3</value>
   </data>
-  <data name="&gt;&gt;label3.Type" xml:space="preserve">
-    <value>System.Windows.Forms.Label, System.Windows.Forms, Version=4.0.0.0, Culture=neutral, PublicKeyToken=b77a5c561934e089</value>
-  </data>
   <data name="&gt;&gt;label3.Parent" xml:space="preserve">
     <value>$this</value>
   </data>
@@ -290,9 +284,6 @@
   </data>
   <data name="&gt;&gt;btnOk.Name" xml:space="preserve">
     <value>btnOk</value>
-  </data>
-  <data name="&gt;&gt;btnOk.Type" xml:space="preserve">
-    <value>System.Windows.Forms.Button, System.Windows.Forms, Version=4.0.0.0, Culture=neutral, PublicKeyToken=b77a5c561934e089</value>
   </data>
   <data name="&gt;&gt;btnOk.Parent" xml:space="preserve">
     <value>$this</value>
@@ -318,9 +309,6 @@
   <data name="&gt;&gt;btnCancel.Name" xml:space="preserve">
     <value>btnCancel</value>
   </data>
-  <data name="&gt;&gt;btnCancel.Type" xml:space="preserve">
-    <value>System.Windows.Forms.Button, System.Windows.Forms, Version=4.0.0.0, Culture=neutral, PublicKeyToken=b77a5c561934e089</value>
-  </data>
   <data name="&gt;&gt;btnCancel.Parent" xml:space="preserve">
     <value>$this</value>
   </data>
@@ -344,9 +332,6 @@
   </data>
   <data name="&gt;&gt;btnCalibrate.Name" xml:space="preserve">
     <value>btnCalibrate</value>
-  </data>
-  <data name="&gt;&gt;btnCalibrate.Type" xml:space="preserve">
-    <value>System.Windows.Forms.Button, System.Windows.Forms, Version=4.0.0.0, Culture=neutral, PublicKeyToken=b77a5c561934e089</value>
   </data>
   <data name="&gt;&gt;btnCalibrate.Parent" xml:space="preserve">
     <value>splitContainer1.Panel2</value>
@@ -372,9 +357,6 @@
   <data name="&gt;&gt;btnAddResults.Name" xml:space="preserve">
     <value>btnAddResults</value>
   </data>
-  <data name="&gt;&gt;btnAddResults.Type" xml:space="preserve">
-    <value>System.Windows.Forms.Button, System.Windows.Forms, Version=4.0.0.0, Culture=neutral, PublicKeyToken=b77a5c561934e089</value>
-  </data>
   <data name="&gt;&gt;btnAddResults.Parent" xml:space="preserve">
     <value>$this</value>
   </data>
@@ -398,9 +380,6 @@
   </data>
   <data name="&gt;&gt;label4.Name" xml:space="preserve">
     <value>label4</value>
-  </data>
-  <data name="&gt;&gt;label4.Type" xml:space="preserve">
-    <value>System.Windows.Forms.Label, System.Windows.Forms, Version=4.0.0.0, Culture=neutral, PublicKeyToken=b77a5c561934e089</value>
   </data>
   <data name="&gt;&gt;label4.Parent" xml:space="preserve">
     <value>splitContainer1.Panel2</value>
@@ -429,9 +408,6 @@
   <data name="&gt;&gt;labelNumPeptides.Name" xml:space="preserve">
     <value>labelNumPeptides</value>
   </data>
-  <data name="&gt;&gt;labelNumPeptides.Type" xml:space="preserve">
-    <value>System.Windows.Forms.Label, System.Windows.Forms, Version=4.0.0.0, Culture=neutral, PublicKeyToken=b77a5c561934e089</value>
-  </data>
   <data name="&gt;&gt;labelNumPeptides.Parent" xml:space="preserve">
     <value>$this</value>
   </data>
@@ -453,24 +429,12 @@
   <data name="&gt;&gt;btnCreateDb.Name" xml:space="preserve">
     <value>btnCreateDb</value>
   </data>
-  <data name="&gt;&gt;btnCreateDb.Type" xml:space="preserve">
-    <value>System.Windows.Forms.Button, System.Windows.Forms, Version=4.0.0.0, Culture=neutral, PublicKeyToken=b77a5c561934e089</value>
-  </data>
   <data name="&gt;&gt;btnCreateDb.Parent" xml:space="preserve">
     <value>$this</value>
   </data>
   <data name="&gt;&gt;btnCreateDb.ZOrder" xml:space="preserve">
     <value>5</value>
   </data>
-  <metadata name="bindingSourceLibrary.TrayLocation" type="System.Drawing.Point, System.Drawing, Version=4.0.0.0, Culture=neutral, PublicKeyToken=b03f5f7f11d50a3a">
-    <value>335, 17</value>
-  </metadata>
-  <metadata name="bindingSourceStandard.TrayLocation" type="System.Drawing.Point, System.Drawing, Version=4.0.0.0, Culture=neutral, PublicKeyToken=b03f5f7f11d50a3a">
-    <value>155, 17</value>
-  </metadata>
-  <metadata name="contextMenuAdd.TrayLocation" type="System.Drawing.Point, System.Drawing, Version=4.0.0.0, Culture=neutral, PublicKeyToken=b03f5f7f11d50a3a">
-    <value>503, 17</value>
-  </metadata>
   <data name="addResultsContextMenuItem.Size" type="System.Drawing.Size, System.Drawing">
     <value>189, 22</value>
   </data>
@@ -495,9 +459,6 @@
   <data name="&gt;&gt;contextMenuAdd.Name" xml:space="preserve">
     <value>contextMenuAdd</value>
   </data>
-  <data name="&gt;&gt;contextMenuAdd.Type" xml:space="preserve">
-    <value>System.Windows.Forms.ContextMenuStrip, System.Windows.Forms, Version=4.0.0.0, Culture=neutral, PublicKeyToken=b77a5c561934e089</value>
-  </data>
   <data name="btnPeptides.Anchor" type="System.Windows.Forms.AnchorStyles, System.Windows.Forms">
     <value>Top, Right</value>
   </data>
@@ -519,9 +480,6 @@
   <data name="&gt;&gt;btnPeptides.Name" xml:space="preserve">
     <value>btnPeptides</value>
   </data>
-  <data name="&gt;&gt;btnPeptides.Type" xml:space="preserve">
-    <value>System.Windows.Forms.Button, System.Windows.Forms, Version=4.0.0.0, Culture=neutral, PublicKeyToken=b77a5c561934e089</value>
-  </data>
   <data name="&gt;&gt;btnPeptides.Parent" xml:space="preserve">
     <value>splitContainer1.Panel2</value>
   </data>
@@ -540,15 +498,9 @@
   <data name="gridViewStandard.Anchor" type="System.Windows.Forms.AnchorStyles, System.Windows.Forms">
     <value>Top, Bottom, Left, Right</value>
   </data>
-  <metadata name="columnStandardSequence.UserAddedColumn" type="System.Boolean, mscorlib, Version=4.0.0.0, Culture=neutral, PublicKeyToken=b77a5c561934e089">
-    <value>True</value>
-  </metadata>
   <data name="columnStandardSequence.HeaderText" xml:space="preserve">
     <value>目标</value>
   </data>
-  <metadata name="columnStandardIrt.UserAddedColumn" type="System.Boolean, mscorlib, Version=4.0.0.0, Culture=neutral, PublicKeyToken=b77a5c561934e089">
-    <value>True</value>
-  </metadata>
   <data name="columnStandardIrt.HeaderText" xml:space="preserve">
     <value>iRT 值</value>
   </data>
@@ -564,9 +516,6 @@
   <data name="&gt;&gt;gridViewStandard.Name" xml:space="preserve">
     <value>gridViewStandard</value>
   </data>
-  <data name="&gt;&gt;gridViewStandard.Type" xml:space="preserve">
-    <value>pwiz.Skyline.Controls.DataGridViewEx, Skyline, Version=1.0.0.0, Culture=neutral, PublicKeyToken=null</value>
-  </data>
   <data name="&gt;&gt;gridViewStandard.Parent" xml:space="preserve">
     <value>splitContainer1.Panel1</value>
   </data>
@@ -575,9 +524,6 @@
   </data>
   <data name="&gt;&gt;splitContainer1.Panel1.Name" xml:space="preserve">
     <value>splitContainer1.Panel1</value>
-  </data>
-  <data name="&gt;&gt;splitContainer1.Panel1.Type" xml:space="preserve">
-    <value>System.Windows.Forms.SplitterPanel, System.Windows.Forms, Version=4.0.0.0, Culture=neutral, PublicKeyToken=b77a5c561934e089</value>
   </data>
   <data name="&gt;&gt;splitContainer1.Panel1.Parent" xml:space="preserve">
     <value>splitContainer1</value>
@@ -603,9 +549,6 @@
   <data name="&gt;&gt;labelNumStandards.Name" xml:space="preserve">
     <value>labelNumStandards</value>
   </data>
-  <data name="&gt;&gt;labelNumStandards.Type" xml:space="preserve">
-    <value>System.Windows.Forms.Label, System.Windows.Forms, Version=4.0.0.0, Culture=neutral, PublicKeyToken=b77a5c561934e089</value>
-  </data>
   <data name="&gt;&gt;labelNumStandards.Parent" xml:space="preserve">
     <value>splitContainer1.Panel2</value>
   </data>
@@ -615,15 +558,9 @@
   <data name="gridViewLibrary.Anchor" type="System.Windows.Forms.AnchorStyles, System.Windows.Forms">
     <value>Top, Bottom, Left, Right</value>
   </data>
-  <metadata name="columnLibrarySequence.UserAddedColumn" type="System.Boolean, mscorlib, Version=4.0.0.0, Culture=neutral, PublicKeyToken=b77a5c561934e089">
-    <value>True</value>
-  </metadata>
   <data name="columnLibrarySequence.HeaderText" xml:space="preserve">
     <value>目标</value>
   </data>
-  <metadata name="columnLibraryIrt.UserAddedColumn" type="System.Boolean, mscorlib, Version=4.0.0.0, Culture=neutral, PublicKeyToken=b77a5c561934e089">
-    <value>True</value>
-  </metadata>
   <data name="columnLibraryIrt.HeaderText" xml:space="preserve">
     <value>iRT 值</value>
   </data>
@@ -639,9 +576,6 @@
   <data name="&gt;&gt;gridViewLibrary.Name" xml:space="preserve">
     <value>gridViewLibrary</value>
   </data>
-  <data name="&gt;&gt;gridViewLibrary.Type" xml:space="preserve">
-    <value>pwiz.Skyline.Controls.DataGridViewEx, Skyline, Version=1.0.0.0, Culture=neutral, PublicKeyToken=null</value>
-  </data>
   <data name="&gt;&gt;gridViewLibrary.Parent" xml:space="preserve">
     <value>splitContainer1.Panel2</value>
   </data>
@@ -650,9 +584,6 @@
   </data>
   <data name="&gt;&gt;splitContainer1.Panel2.Name" xml:space="preserve">
     <value>splitContainer1.Panel2</value>
-  </data>
-  <data name="&gt;&gt;splitContainer1.Panel2.Type" xml:space="preserve">
-    <value>System.Windows.Forms.SplitterPanel, System.Windows.Forms, Version=4.0.0.0, Culture=neutral, PublicKeyToken=b77a5c561934e089</value>
   </data>
   <data name="&gt;&gt;splitContainer1.Panel2.Parent" xml:space="preserve">
     <value>splitContainer1</value>
@@ -671,9 +602,6 @@
   </data>
   <data name="&gt;&gt;splitContainer1.Name" xml:space="preserve">
     <value>splitContainer1</value>
-  </data>
-  <data name="&gt;&gt;splitContainer1.Type" xml:space="preserve">
-    <value>System.Windows.Forms.SplitContainer, System.Windows.Forms, Version=4.0.0.0, Culture=neutral, PublicKeyToken=b77a5c561934e089</value>
   </data>
   <data name="&gt;&gt;splitContainer1.Parent" xml:space="preserve">
     <value>$this</value>
@@ -696,9 +624,6 @@
   <data name="&gt;&gt;comboStandards.Name" xml:space="preserve">
     <value>comboStandards</value>
   </data>
-  <data name="&gt;&gt;comboStandards.Type" xml:space="preserve">
-    <value>System.Windows.Forms.ComboBox, System.Windows.Forms, Version=4.0.0.0, Culture=neutral, PublicKeyToken=b77a5c561934e089</value>
-  </data>
   <data name="&gt;&gt;comboStandards.Parent" xml:space="preserve">
     <value>$this</value>
   </data>
@@ -716,9 +641,6 @@
   </data>
   <data name="&gt;&gt;comboRegressionType.Name" xml:space="preserve">
     <value>comboRegressionType</value>
-  </data>
-  <data name="&gt;&gt;comboRegressionType.Type" xml:space="preserve">
-    <value>System.Windows.Forms.ComboBox, System.Windows.Forms, Version=4.0.0.0, Culture=neutral, PublicKeyToken=b77a5c561934e089</value>
   </data>
   <data name="&gt;&gt;comboRegressionType.Parent" xml:space="preserve">
     <value>$this</value>
@@ -744,9 +666,6 @@
   <data name="&gt;&gt;label5.Name" xml:space="preserve">
     <value>label5</value>
   </data>
-  <data name="&gt;&gt;label5.Type" xml:space="preserve">
-    <value>System.Windows.Forms.Label, System.Windows.Forms, Version=4.0.0.0, Culture=neutral, PublicKeyToken=b77a5c561934e089</value>
-  </data>
   <data name="&gt;&gt;label5.Parent" xml:space="preserve">
     <value>$this</value>
   </data>
@@ -771,18 +690,12 @@
   <data name="&gt;&gt;cbRedundant.Name" xml:space="preserve">
     <value>cbRedundant</value>
   </data>
-  <data name="&gt;&gt;cbRedundant.Type" xml:space="preserve">
-    <value>System.Windows.Forms.CheckBox, System.Windows.Forms, Version=4.0.0.0, Culture=neutral, PublicKeyToken=b77a5c561934e089</value>
-  </data>
   <data name="&gt;&gt;cbRedundant.Parent" xml:space="preserve">
     <value>$this</value>
   </data>
   <data name="&gt;&gt;cbRedundant.ZOrder" xml:space="preserve">
     <value>0</value>
   </data>
-  <metadata name="$this.Localizable" type="System.Boolean, mscorlib, Version=4.0.0.0, Culture=neutral, PublicKeyToken=b77a5c561934e089">
-    <value>True</value>
-  </metadata>
   <data name="$this.AutoScaleDimensions" type="System.Drawing.SizeF, System.Drawing">
     <value>6, 13</value>
   </data>
@@ -804,67 +717,34 @@
   <data name="&gt;&gt;modeUIHandler.Name" xml:space="preserve">
     <value>modeUIHandler</value>
   </data>
-  <data name="&gt;&gt;modeUIHandler.Type" xml:space="preserve">
-    <value>pwiz.Skyline.Util.Helpers+ModeUIExtender, Skyline, Version=1.0.0.0, Culture=neutral, PublicKeyToken=null</value>
-  </data>
   <data name="&gt;&gt;bindingSourceLibrary.Name" xml:space="preserve">
     <value>bindingSourceLibrary</value>
-  </data>
-  <data name="&gt;&gt;bindingSourceLibrary.Type" xml:space="preserve">
-    <value>System.Windows.Forms.BindingSource, System.Windows.Forms, Version=4.0.0.0, Culture=neutral, PublicKeyToken=b77a5c561934e089</value>
   </data>
   <data name="&gt;&gt;bindingSourceStandard.Name" xml:space="preserve">
     <value>bindingSourceStandard</value>
   </data>
-  <data name="&gt;&gt;bindingSourceStandard.Type" xml:space="preserve">
-    <value>System.Windows.Forms.BindingSource, System.Windows.Forms, Version=4.0.0.0, Culture=neutral, PublicKeyToken=b77a5c561934e089</value>
-  </data>
   <data name="&gt;&gt;addResultsContextMenuItem.Name" xml:space="preserve">
     <value>addResultsContextMenuItem</value>
-  </data>
-  <data name="&gt;&gt;addResultsContextMenuItem.Type" xml:space="preserve">
-    <value>System.Windows.Forms.ToolStripMenuItem, System.Windows.Forms, Version=4.0.0.0, Culture=neutral, PublicKeyToken=b77a5c561934e089</value>
   </data>
   <data name="&gt;&gt;addSpectralLibraryContextMenuItem.Name" xml:space="preserve">
     <value>addSpectralLibraryContextMenuItem</value>
   </data>
-  <data name="&gt;&gt;addSpectralLibraryContextMenuItem.Type" xml:space="preserve">
-    <value>System.Windows.Forms.ToolStripMenuItem, System.Windows.Forms, Version=4.0.0.0, Culture=neutral, PublicKeyToken=b77a5c561934e089</value>
-  </data>
   <data name="&gt;&gt;addIRTDatabaseContextMenuItem.Name" xml:space="preserve">
     <value>addIRTDatabaseContextMenuItem</value>
-  </data>
-  <data name="&gt;&gt;addIRTDatabaseContextMenuItem.Type" xml:space="preserve">
-    <value>System.Windows.Forms.ToolStripMenuItem, System.Windows.Forms, Version=4.0.0.0, Culture=neutral, PublicKeyToken=b77a5c561934e089</value>
   </data>
   <data name="&gt;&gt;columnStandardSequence.Name" xml:space="preserve">
     <value>columnStandardSequence</value>
   </data>
-  <data name="&gt;&gt;columnStandardSequence.Type" xml:space="preserve">
-    <value>pwiz.Skyline.Controls.TargetColumn, Skyline, Version=1.0.0.0, Culture=neutral, PublicKeyToken=null</value>
-  </data>
   <data name="&gt;&gt;columnStandardIrt.Name" xml:space="preserve">
     <value>columnStandardIrt</value>
-  </data>
-  <data name="&gt;&gt;columnStandardIrt.Type" xml:space="preserve">
-    <value>System.Windows.Forms.DataGridViewTextBoxColumn, System.Windows.Forms, Version=4.0.0.0, Culture=neutral, PublicKeyToken=b77a5c561934e089</value>
   </data>
   <data name="&gt;&gt;columnLibrarySequence.Name" xml:space="preserve">
     <value>columnLibrarySequence</value>
   </data>
-  <data name="&gt;&gt;columnLibrarySequence.Type" xml:space="preserve">
-    <value>pwiz.Skyline.Controls.TargetColumn, Skyline, Version=1.0.0.0, Culture=neutral, PublicKeyToken=null</value>
-  </data>
   <data name="&gt;&gt;columnLibraryIrt.Name" xml:space="preserve">
     <value>columnLibraryIrt</value>
   </data>
-  <data name="&gt;&gt;columnLibraryIrt.Type" xml:space="preserve">
-    <value>System.Windows.Forms.DataGridViewTextBoxColumn, System.Windows.Forms, Version=4.0.0.0, Culture=neutral, PublicKeyToken=b77a5c561934e089</value>
-  </data>
   <data name="&gt;&gt;$this.Name" xml:space="preserve">
     <value>EditIrtCalcDlg</value>
-  </data>
-  <data name="&gt;&gt;$this.Type" xml:space="preserve">
-    <value>pwiz.Skyline.Util.FormEx, Skyline, Version=1.0.0.0, Culture=neutral, PublicKeyToken=null</value>
   </data>
 </root>

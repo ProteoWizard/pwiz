@@ -117,10 +117,12 @@
   <resheader name="writer">
     <value>System.Resources.ResXResourceWriter, System.Windows.Forms, Version=4.0.0.0, Culture=neutral, PublicKeyToken=b77a5c561934e089</value>
   </resheader>
-  <metadata name="ModeUIExtender.TrayLocation" type="System.Drawing.Point, System.Drawing, Version=4.0.0.0, Culture=neutral, PublicKeyToken=b03f5f7f11d50a3a">
-    <value>17, 17</value>
-  </metadata>
   <assembly alias="System.Drawing" name="System.Drawing, Version=4.0.0.0, Culture=neutral, PublicKeyToken=b03f5f7f11d50a3a" />
+  <assembly alias="System.Windows.Forms" name="System.Windows.Forms, Version=4.0.0.0, Culture=neutral, PublicKeyToken=b77a5c561934e089" />
+  <assembly alias="mscorlib" name="mscorlib, Version=4.0.0.0, Culture=neutral, PublicKeyToken=b77a5c561934e089" />
+  <metadata name="$this.Localizable" type="System.Boolean, mscorlib, Version=4.0.0.0, Culture=neutral, PublicKeyToken=b77a5c561934e089">
+    <value>True</value>
+  </metadata>
   <data name="toolStripLabel1.Size" type="System.Drawing.Size, System.Drawing">
     <value>61, 22</value>
   </data>
@@ -130,7 +132,6 @@
   <data name="comboSpectrum.Size" type="System.Drawing.Size, System.Drawing">
     <value>121, 28</value>
   </data>
-  <assembly alias="System.Windows.Forms" name="System.Windows.Forms, Version=4.0.0.0, Culture=neutral, PublicKeyToken=b77a5c561934e089" />
   <data name="graphControl.Dock" type="System.Windows.Forms.DockStyle, System.Windows.Forms">
     <value>Fill</value>
   </data>
@@ -143,15 +144,11 @@
   <data name="graphControl.Size" type="System.Drawing.Size, System.Drawing">
     <value>642, 452</value>
   </data>
-  <assembly alias="mscorlib" name="mscorlib, Version=4.0.0.0, Culture=neutral, PublicKeyToken=b77a5c561934e089" />
   <data name="graphControl.TabIndex" type="System.Int32, mscorlib">
     <value>1</value>
   </data>
   <data name="&gt;&gt;graphControl.Name" xml:space="preserve">
     <value>graphControl</value>
-  </data>
-  <data name="&gt;&gt;graphControl.Type" xml:space="preserve">
-    <value>pwiz.MSGraph.MSGraphControl, MSGraph, Version=1.0.0.0, Culture=neutral, PublicKeyToken=e57071561ce779d9</value>
   </data>
   <data name="&gt;&gt;graphControl.Parent" xml:space="preserve">
     <value>GraphPanel</value>
@@ -159,9 +156,6 @@
   <data name="&gt;&gt;graphControl.ZOrder" xml:space="preserve">
     <value>0</value>
   </data>
-  <metadata name="toolBar.TrayLocation" type="System.Drawing.Point, System.Drawing, Version=4.0.0.0, Culture=neutral, PublicKeyToken=b03f5f7f11d50a3a">
-    <value>160, 17</value>
-  </metadata>
   <data name="toolStripLabel2.Size" type="System.Drawing.Size, System.Drawing">
     <value>61, 22</value>
   </data>
@@ -310,9 +304,6 @@
   <data name="&gt;&gt;toolBar.Name" xml:space="preserve">
     <value>toolBar</value>
   </data>
-  <data name="&gt;&gt;toolBar.Type" xml:space="preserve">
-    <value>System.Windows.Forms.ToolStrip, System.Windows.Forms, Version=4.0.0.0, Culture=neutral, PublicKeyToken=b77a5c561934e089</value>
-  </data>
   <data name="&gt;&gt;toolBar.Parent" xml:space="preserve">
     <value>GraphPanel</value>
   </data>
@@ -337,18 +328,12 @@
   <data name="&gt;&gt;GraphPanel.Name" xml:space="preserve">
     <value>GraphPanel</value>
   </data>
-  <data name="&gt;&gt;GraphPanel.Type" xml:space="preserve">
-    <value>System.Windows.Forms.Panel, System.Windows.Forms, Version=4.0.0.0, Culture=neutral, PublicKeyToken=b77a5c561934e089</value>
-  </data>
   <data name="&gt;&gt;GraphPanel.Parent" xml:space="preserve">
     <value>$this</value>
   </data>
   <data name="&gt;&gt;GraphPanel.ZOrder" xml:space="preserve">
     <value>1</value>
   </data>
-  <metadata name="contextMenuStrip1.TrayLocation" type="System.Drawing.Point, System.Drawing, Version=4.0.0.0, Culture=neutral, PublicKeyToken=b03f5f7f11d50a3a">
-    <value>251, 17</value>
-  </metadata>
   <data name="showScanNumberContextMenuItem.Size" type="System.Drawing.Size, System.Drawing">
     <value>191, 22</value>
   </data>
@@ -373,12 +358,6 @@
   <data name="&gt;&gt;contextMenuStrip1.Name" xml:space="preserve">
     <value>contextMenuStrip1</value>
   </data>
-  <data name="&gt;&gt;contextMenuStrip1.Type" xml:space="preserve">
-    <value>System.Windows.Forms.ContextMenuStrip, System.Windows.Forms, Version=4.0.0.0, Culture=neutral, PublicKeyToken=b77a5c561934e089</value>
-  </data>
-  <metadata name="$this.Localizable" type="System.Boolean, mscorlib, Version=4.0.0.0, Culture=neutral, PublicKeyToken=b77a5c561934e089">
-    <value>True</value>
-  </metadata>
   <data name="$this.AutoScaleDimensions" type="System.Drawing.SizeF, System.Drawing">
     <value>6, 13</value>
   </data>
@@ -397,104 +376,53 @@
   <data name="&gt;&gt;ModeUIExtender.Name" xml:space="preserve">
     <value>ModeUIExtender</value>
   </data>
-  <data name="&gt;&gt;ModeUIExtender.Type" xml:space="preserve">
-    <value>pwiz.Skyline.Util.Helpers+ModeUIExtender, Skyline, Version=1.0.0.0, Culture=neutral, PublicKeyToken=null</value>
-  </data>
   <data name="&gt;&gt;toolStripLabel1.Name" xml:space="preserve">
     <value>toolStripLabel1</value>
-  </data>
-  <data name="&gt;&gt;toolStripLabel1.Type" xml:space="preserve">
-    <value>System.Windows.Forms.ToolStripLabel, System.Windows.Forms, Version=4.0.0.0, Culture=neutral, PublicKeyToken=b77a5c561934e089</value>
   </data>
   <data name="&gt;&gt;comboSpectrum.Name" xml:space="preserve">
     <value>comboSpectrum</value>
   </data>
-  <data name="&gt;&gt;comboSpectrum.Type" xml:space="preserve">
-    <value>System.Windows.Forms.ToolStripComboBox, System.Windows.Forms, Version=4.0.0.0, Culture=neutral, PublicKeyToken=b77a5c561934e089</value>
-  </data>
   <data name="&gt;&gt;toolStripLabel2.Name" xml:space="preserve">
     <value>toolStripLabel2</value>
-  </data>
-  <data name="&gt;&gt;toolStripLabel2.Type" xml:space="preserve">
-    <value>System.Windows.Forms.ToolStripLabel, System.Windows.Forms, Version=4.0.0.0, Culture=neutral, PublicKeyToken=b77a5c561934e089</value>
   </data>
   <data name="&gt;&gt;comboBoxScanType.Name" xml:space="preserve">
     <value>comboBoxScanType</value>
   </data>
-  <data name="&gt;&gt;comboBoxScanType.Type" xml:space="preserve">
-    <value>System.Windows.Forms.ToolStripComboBox, System.Windows.Forms, Version=4.0.0.0, Culture=neutral, PublicKeyToken=b77a5c561934e089</value>
-  </data>
   <data name="&gt;&gt;rightButton.Name" xml:space="preserve">
     <value>rightButton</value>
-  </data>
-  <data name="&gt;&gt;rightButton.Type" xml:space="preserve">
-    <value>System.Windows.Forms.ToolStripButton, System.Windows.Forms, Version=4.0.0.0, Culture=neutral, PublicKeyToken=b77a5c561934e089</value>
   </data>
   <data name="&gt;&gt;leftButton.Name" xml:space="preserve">
     <value>leftButton</value>
   </data>
-  <data name="&gt;&gt;leftButton.Type" xml:space="preserve">
-    <value>System.Windows.Forms.ToolStripButton, System.Windows.Forms, Version=4.0.0.0, Culture=neutral, PublicKeyToken=b77a5c561934e089</value>
-  </data>
   <data name="&gt;&gt;magnifyBtn.Name" xml:space="preserve">
     <value>magnifyBtn</value>
-  </data>
-  <data name="&gt;&gt;magnifyBtn.Type" xml:space="preserve">
-    <value>System.Windows.Forms.ToolStripButton, System.Windows.Forms, Version=4.0.0.0, Culture=neutral, PublicKeyToken=b77a5c561934e089</value>
   </data>
   <data name="&gt;&gt;spectrumBtn.Name" xml:space="preserve">
     <value>spectrumBtn</value>
   </data>
-  <data name="&gt;&gt;spectrumBtn.Type" xml:space="preserve">
-    <value>System.Windows.Forms.ToolStripButton, System.Windows.Forms, Version=4.0.0.0, Culture=neutral, PublicKeyToken=b77a5c561934e089</value>
-  </data>
   <data name="&gt;&gt;filterBtn.Name" xml:space="preserve">
     <value>filterBtn</value>
-  </data>
-  <data name="&gt;&gt;filterBtn.Type" xml:space="preserve">
-    <value>System.Windows.Forms.ToolStripButton, System.Windows.Forms, Version=4.0.0.0, Culture=neutral, PublicKeyToken=b77a5c561934e089</value>
   </data>
   <data name="&gt;&gt;lblScanId.Name" xml:space="preserve">
     <value>lblScanId</value>
   </data>
-  <data name="&gt;&gt;lblScanId.Type" xml:space="preserve">
-    <value>System.Windows.Forms.ToolStripLabel, System.Windows.Forms, Version=4.0.0.0, Culture=neutral, PublicKeyToken=b77a5c561934e089</value>
-  </data>
   <data name="&gt;&gt;btnIsolationWindow.Name" xml:space="preserve">
     <value>btnIsolationWindow</value>
-  </data>
-  <data name="&gt;&gt;btnIsolationWindow.Type" xml:space="preserve">
-    <value>System.Windows.Forms.ToolStripButton, System.Windows.Forms, Version=4.0.0.0, Culture=neutral, PublicKeyToken=b77a5c561934e089</value>
   </data>
   <data name="&gt;&gt;toolStripButtonShowAnnotations.Name" xml:space="preserve">
     <value>toolStripButtonShowAnnotations</value>
   </data>
-  <data name="&gt;&gt;toolStripButtonShowAnnotations.Type" xml:space="preserve">
-    <value>System.Windows.Forms.ToolStripButton, System.Windows.Forms, Version=4.0.0.0, Culture=neutral, PublicKeyToken=b77a5c561934e089</value>
-  </data>
   <data name="&gt;&gt;toolStripLabelPeakType.Name" xml:space="preserve">
     <value>toolStripLabelPeakType</value>
-  </data>
-  <data name="&gt;&gt;toolStripLabelPeakType.Type" xml:space="preserve">
-    <value>System.Windows.Forms.ToolStripLabel, System.Windows.Forms, Version=4.0.0.0, Culture=neutral, PublicKeyToken=b77a5c561934e089</value>
   </data>
   <data name="&gt;&gt;comboBoxPeakType.Name" xml:space="preserve">
     <value>comboBoxPeakType</value>
   </data>
-  <data name="&gt;&gt;comboBoxPeakType.Type" xml:space="preserve">
-    <value>System.Windows.Forms.ToolStripComboBox, System.Windows.Forms, Version=4.0.0.0, Culture=neutral, PublicKeyToken=b77a5c561934e089</value>
-  </data>
   <data name="&gt;&gt;showScanNumberContextMenuItem.Name" xml:space="preserve">
     <value>showScanNumberContextMenuItem</value>
   </data>
-  <data name="&gt;&gt;showScanNumberContextMenuItem.Type" xml:space="preserve">
-    <value>System.Windows.Forms.ToolStripMenuItem, System.Windows.Forms, Version=4.0.0.0, Culture=neutral, PublicKeyToken=b77a5c561934e089</value>
-  </data>
   <data name="&gt;&gt;showIonTypesRanksToolStripMenuItem.Name" xml:space="preserve">
     <value>showIonTypesRanksToolStripMenuItem</value>
-  </data>
-  <data name="&gt;&gt;showIonTypesRanksToolStripMenuItem.Type" xml:space="preserve">
-    <value>System.Windows.Forms.ToolStripMenuItem, System.Windows.Forms, Version=4.0.0.0, Culture=neutral, PublicKeyToken=b77a5c561934e089</value>
   </data>
   <data name="toolStripSeparator1.Size" type="System.Drawing.Size, System.Drawing">
     <value>188, 6</value>
@@ -502,19 +430,10 @@
   <data name="&gt;&gt;toolStripSeparator1.Name" xml:space="preserve">
     <value>toolStripSeparator1</value>
   </data>
-  <data name="&gt;&gt;toolStripSeparator1.Type" xml:space="preserve">
-    <value>System.Windows.Forms.ToolStripSeparator, System.Windows.Forms, Version=4.0.0.0, Culture=neutral, PublicKeyToken=b77a5c561934e089</value>
-  </data>
   <data name="&gt;&gt;showCollisionEnergyContextMenuItem.Name" xml:space="preserve">
     <value>showCollisionEnergyContextMenuItem</value>
   </data>
-  <data name="&gt;&gt;showCollisionEnergyContextMenuItem.Type" xml:space="preserve">
-    <value>System.Windows.Forms.ToolStripMenuItem, System.Windows.Forms, Version=4.0.0.0, Culture=neutral, PublicKeyToken=b77a5c561934e089</value>
-  </data>
   <data name="&gt;&gt;$this.Name" xml:space="preserve">
     <value>GraphFullScan</value>
-  </data>
-  <data name="&gt;&gt;$this.Type" xml:space="preserve">
-    <value>pwiz.Skyline.Util.DockableFormEx, Skyline, Version=1.0.0.0, Culture=neutral, PublicKeyToken=null</value>
   </data>
 </root>

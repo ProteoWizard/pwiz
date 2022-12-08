@@ -118,14 +118,17 @@
     <value>System.Resources.ResXResourceWriter, System.Windows.Forms, Version=4.0.0.0, Culture=neutral, PublicKeyToken=b77a5c561934e089</value>
   </resheader>
   <assembly alias="mscorlib" name="mscorlib, Version=4.0.0.0, Culture=neutral, PublicKeyToken=b77a5c561934e089" />
+  <assembly alias="System.Windows.Forms" name="System.Windows.Forms, Version=4.0.0.0, Culture=neutral, PublicKeyToken=b77a5c561934e089" />
+  <assembly alias="System.Drawing" name="System.Drawing, Version=4.0.0.0, Culture=neutral, PublicKeyToken=b03f5f7f11d50a3a" />
+  <metadata name="$this.Localizable" type="System.Boolean, mscorlib, Version=4.0.0.0, Culture=neutral, PublicKeyToken=b77a5c561934e089">
+    <value>True</value>
+  </metadata>
   <data name="lblServerUrl.AutoSize" type="System.Boolean, mscorlib">
     <value>True</value>
   </data>
-  <assembly alias="System.Windows.Forms" name="System.Windows.Forms, Version=4.0.0.0, Culture=neutral, PublicKeyToken=b77a5c561934e089" />
   <data name="lblServerUrl.ImeMode" type="System.Windows.Forms.ImeMode, System.Windows.Forms">
     <value>NoControl</value>
   </data>
-  <assembly alias="System.Drawing" name="System.Drawing, Version=4.0.0.0, Culture=neutral, PublicKeyToken=b03f5f7f11d50a3a" />
   <data name="lblServerUrl.Location" type="System.Drawing.Point, System.Drawing">
     <value>12, 138</value>
   </data>
@@ -140,9 +143,6 @@
   </data>
   <data name="&gt;&gt;lblServerUrl.Name" xml:space="preserve">
     <value>lblServerUrl</value>
-  </data>
-  <data name="&gt;&gt;lblServerUrl.Type" xml:space="preserve">
-    <value>System.Windows.Forms.Label, System.Windows.Forms, Version=4.0.0.0, Culture=neutral, PublicKeyToken=b77a5c561934e089</value>
   </data>
   <data name="&gt;&gt;lblServerUrl.Parent" xml:space="preserve">
     <value>$this</value>
@@ -171,9 +171,6 @@
   <data name="&gt;&gt;btnCancel.Name" xml:space="preserve">
     <value>btnCancel</value>
   </data>
-  <data name="&gt;&gt;btnCancel.Type" xml:space="preserve">
-    <value>System.Windows.Forms.Button, System.Windows.Forms, Version=4.0.0.0, Culture=neutral, PublicKeyToken=b77a5c561934e089</value>
-  </data>
   <data name="&gt;&gt;btnCancel.Parent" xml:space="preserve">
     <value>$this</value>
   </data>
@@ -201,9 +198,6 @@
   <data name="&gt;&gt;btnOK.Name" xml:space="preserve">
     <value>btnOK</value>
   </data>
-  <data name="&gt;&gt;btnOK.Type" xml:space="preserve">
-    <value>System.Windows.Forms.Button, System.Windows.Forms, Version=4.0.0.0, Culture=neutral, PublicKeyToken=b77a5c561934e089</value>
-  </data>
   <data name="&gt;&gt;btnOK.Parent" xml:space="preserve">
     <value>$this</value>
   </data>
@@ -228,9 +222,6 @@
   <data name="&gt;&gt;textServerURL.Name" xml:space="preserve">
     <value>textServerURL</value>
   </data>
-  <data name="&gt;&gt;textServerURL.Type" xml:space="preserve">
-    <value>System.Windows.Forms.TextBox, System.Windows.Forms, Version=4.0.0.0, Culture=neutral, PublicKeyToken=b77a5c561934e089</value>
-  </data>
   <data name="&gt;&gt;textServerURL.Parent" xml:space="preserve">
     <value>$this</value>
   </data>
@@ -254,9 +245,6 @@
   </data>
   <data name="&gt;&gt;textPassword.Name" xml:space="preserve">
     <value>textPassword</value>
-  </data>
-  <data name="&gt;&gt;textPassword.Type" xml:space="preserve">
-    <value>System.Windows.Forms.TextBox, System.Windows.Forms, Version=4.0.0.0, Culture=neutral, PublicKeyToken=b77a5c561934e089</value>
   </data>
   <data name="&gt;&gt;textPassword.Parent" xml:space="preserve">
     <value>$this</value>
@@ -285,9 +273,6 @@
   <data name="&gt;&gt;lblPassword.Name" xml:space="preserve">
     <value>lblPassword</value>
   </data>
-  <data name="&gt;&gt;lblPassword.Type" xml:space="preserve">
-    <value>System.Windows.Forms.Label, System.Windows.Forms, Version=4.0.0.0, Culture=neutral, PublicKeyToken=b77a5c561934e089</value>
-  </data>
   <data name="&gt;&gt;lblPassword.Parent" xml:space="preserve">
     <value>$this</value>
   </data>
@@ -315,9 +300,6 @@
   <data name="&gt;&gt;lblUsername.Name" xml:space="preserve">
     <value>lblUsername</value>
   </data>
-  <data name="&gt;&gt;lblUsername.Type" xml:space="preserve">
-    <value>System.Windows.Forms.Label, System.Windows.Forms, Version=4.0.0.0, Culture=neutral, PublicKeyToken=b77a5c561934e089</value>
-  </data>
   <data name="&gt;&gt;lblUsername.Parent" xml:space="preserve">
     <value>$this</value>
   </data>
@@ -338,9 +320,6 @@
   </data>
   <data name="&gt;&gt;textUsername.Name" xml:space="preserve">
     <value>textUsername</value>
-  </data>
-  <data name="&gt;&gt;textUsername.Type" xml:space="preserve">
-    <value>System.Windows.Forms.TextBox, System.Windows.Forms, Version=4.0.0.0, Culture=neutral, PublicKeyToken=b77a5c561934e089</value>
   </data>
   <data name="&gt;&gt;textUsername.Parent" xml:space="preserve">
     <value>$this</value>
@@ -366,9 +345,6 @@
   <data name="&gt;&gt;btnTest.Name" xml:space="preserve">
     <value>btnTest</value>
   </data>
-  <data name="&gt;&gt;btnTest.Type" xml:space="preserve">
-    <value>System.Windows.Forms.Button, System.Windows.Forms, Version=4.0.0.0, Culture=neutral, PublicKeyToken=b77a5c561934e089</value>
-  </data>
   <data name="&gt;&gt;btnTest.Parent" xml:space="preserve">
     <value>$this</value>
   </data>
@@ -386,9 +362,6 @@
   </data>
   <data name="&gt;&gt;comboAccountType.Name" xml:space="preserve">
     <value>comboAccountType</value>
-  </data>
-  <data name="&gt;&gt;comboAccountType.Type" xml:space="preserve">
-    <value>System.Windows.Forms.ComboBox, System.Windows.Forms, Version=4.0.0.0, Culture=neutral, PublicKeyToken=b77a5c561934e089</value>
   </data>
   <data name="&gt;&gt;comboAccountType.Parent" xml:space="preserve">
     <value>$this</value>
@@ -413,9 +386,6 @@
   </data>
   <data name="&gt;&gt;label1.Name" xml:space="preserve">
     <value>label1</value>
-  </data>
-  <data name="&gt;&gt;label1.Type" xml:space="preserve">
-    <value>System.Windows.Forms.Label, System.Windows.Forms, Version=4.0.0.0, Culture=neutral, PublicKeyToken=b77a5c561934e089</value>
   </data>
   <data name="&gt;&gt;label1.Parent" xml:space="preserve">
     <value>$this</value>
@@ -444,9 +414,6 @@
   <data name="&gt;&gt;tbxClientSecret.Name" xml:space="preserve">
     <value>tbxClientSecret</value>
   </data>
-  <data name="&gt;&gt;tbxClientSecret.Type" xml:space="preserve">
-    <value>System.Windows.Forms.TextBox, System.Windows.Forms, Version=4.0.0.0, Culture=neutral, PublicKeyToken=b77a5c561934e089</value>
-  </data>
   <data name="&gt;&gt;tbxClientSecret.Parent" xml:space="preserve">
     <value>groupBoxUnifi</value>
   </data>
@@ -471,9 +438,6 @@
   <data name="&gt;&gt;lblClientSecret.Name" xml:space="preserve">
     <value>lblClientSecret</value>
   </data>
-  <data name="&gt;&gt;lblClientSecret.Type" xml:space="preserve">
-    <value>System.Windows.Forms.Label, System.Windows.Forms, Version=4.0.0.0, Culture=neutral, PublicKeyToken=b77a5c561934e089</value>
-  </data>
   <data name="&gt;&gt;lblClientSecret.Parent" xml:space="preserve">
     <value>groupBoxUnifi</value>
   </data>
@@ -494,9 +458,6 @@
   </data>
   <data name="&gt;&gt;tbxClientScope.Name" xml:space="preserve">
     <value>tbxClientScope</value>
-  </data>
-  <data name="&gt;&gt;tbxClientScope.Type" xml:space="preserve">
-    <value>System.Windows.Forms.TextBox, System.Windows.Forms, Version=4.0.0.0, Culture=neutral, PublicKeyToken=b77a5c561934e089</value>
   </data>
   <data name="&gt;&gt;tbxClientScope.Parent" xml:space="preserve">
     <value>groupBoxUnifi</value>
@@ -522,9 +483,6 @@
   <data name="&gt;&gt;lblClientScope.Name" xml:space="preserve">
     <value>lblClientScope</value>
   </data>
-  <data name="&gt;&gt;lblClientScope.Type" xml:space="preserve">
-    <value>System.Windows.Forms.Label, System.Windows.Forms, Version=4.0.0.0, Culture=neutral, PublicKeyToken=b77a5c561934e089</value>
-  </data>
   <data name="&gt;&gt;lblClientScope.Parent" xml:space="preserve">
     <value>groupBoxUnifi</value>
   </data>
@@ -545,9 +503,6 @@
   </data>
   <data name="&gt;&gt;tbxIdentityServer.Name" xml:space="preserve">
     <value>tbxIdentityServer</value>
-  </data>
-  <data name="&gt;&gt;tbxIdentityServer.Type" xml:space="preserve">
-    <value>System.Windows.Forms.TextBox, System.Windows.Forms, Version=4.0.0.0, Culture=neutral, PublicKeyToken=b77a5c561934e089</value>
   </data>
   <data name="&gt;&gt;tbxIdentityServer.Parent" xml:space="preserve">
     <value>groupBoxUnifi</value>
@@ -573,9 +528,6 @@
   <data name="&gt;&gt;lblIdentityServer.Name" xml:space="preserve">
     <value>lblIdentityServer</value>
   </data>
-  <data name="&gt;&gt;lblIdentityServer.Type" xml:space="preserve">
-    <value>System.Windows.Forms.Label, System.Windows.Forms, Version=4.0.0.0, Culture=neutral, PublicKeyToken=b77a5c561934e089</value>
-  </data>
   <data name="&gt;&gt;lblIdentityServer.Parent" xml:space="preserve">
     <value>groupBoxUnifi</value>
   </data>
@@ -597,18 +549,12 @@
   <data name="&gt;&gt;groupBoxUnifi.Name" xml:space="preserve">
     <value>groupBoxUnifi</value>
   </data>
-  <data name="&gt;&gt;groupBoxUnifi.Type" xml:space="preserve">
-    <value>System.Windows.Forms.GroupBox, System.Windows.Forms, Version=4.0.0.0, Culture=neutral, PublicKeyToken=b77a5c561934e089</value>
-  </data>
   <data name="&gt;&gt;groupBoxUnifi.Parent" xml:space="preserve">
     <value>$this</value>
   </data>
   <data name="&gt;&gt;groupBoxUnifi.ZOrder" xml:space="preserve">
     <value>0</value>
   </data>
-  <metadata name="$this.Localizable" type="System.Boolean, mscorlib, Version=4.0.0.0, Culture=neutral, PublicKeyToken=b77a5c561934e089">
-    <value>True</value>
-  </metadata>
   <data name="$this.AutoScaleDimensions" type="System.Drawing.SizeF, System.Drawing">
     <value>6, 13</value>
   </data>
@@ -623,8 +569,5 @@
   </data>
   <data name="&gt;&gt;$this.Name" xml:space="preserve">
     <value>EditRemoteAccountDlg</value>
-  </data>
-  <data name="&gt;&gt;$this.Type" xml:space="preserve">
-    <value>pwiz.Skyline.Util.FormEx, Skyline, Version=1.0.0.0, Culture=neutral, PublicKeyToken=null</value>
   </data>
 </root>

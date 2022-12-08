@@ -117,21 +117,21 @@
   <resheader name="writer">
     <value>System.Resources.ResXResourceWriter, System.Windows.Forms, Version=4.0.0.0, Culture=neutral, PublicKeyToken=b77a5c561934e089</value>
   </resheader>
-  <metadata name="modeUIHandler.TrayLocation" type="System.Drawing.Point, System.Drawing, Version=4.0.0.0, Culture=neutral, PublicKeyToken=b03f5f7f11d50a3a">
-    <value>17, 17</value>
-  </metadata>
   <assembly alias="System.Windows.Forms" name="System.Windows.Forms, Version=4.0.0.0, Culture=neutral, PublicKeyToken=b77a5c561934e089" />
+  <assembly alias="System.Drawing" name="System.Drawing, Version=4.0.0.0, Culture=neutral, PublicKeyToken=b03f5f7f11d50a3a" />
+  <assembly alias="mscorlib" name="mscorlib, Version=4.0.0.0, Culture=neutral, PublicKeyToken=b77a5c561934e089" />
+  <metadata name="$this.Localizable" type="System.Boolean, mscorlib, Version=4.0.0.0, Culture=neutral, PublicKeyToken=b77a5c561934e089">
+    <value>True</value>
+  </metadata>
   <data name="btnCancel.Anchor" type="System.Windows.Forms.AnchorStyles, System.Windows.Forms">
     <value>Bottom, Right</value>
   </data>
-  <assembly alias="System.Drawing" name="System.Drawing, Version=4.0.0.0, Culture=neutral, PublicKeyToken=b03f5f7f11d50a3a" />
   <data name="btnCancel.Location" type="System.Drawing.Point, System.Drawing">
     <value>308, 535</value>
   </data>
   <data name="btnCancel.Size" type="System.Drawing.Size, System.Drawing">
     <value>75, 23</value>
   </data>
-  <assembly alias="mscorlib" name="mscorlib, Version=4.0.0.0, Culture=neutral, PublicKeyToken=b77a5c561934e089" />
   <data name="btnCancel.TabIndex" type="System.Int32, mscorlib">
     <value>2</value>
   </data>
@@ -140,9 +140,6 @@
   </data>
   <data name="&gt;&gt;btnCancel.Name" xml:space="preserve">
     <value>btnCancel</value>
-  </data>
-  <data name="&gt;&gt;btnCancel.Type" xml:space="preserve">
-    <value>System.Windows.Forms.Button, System.Windows.Forms, Version=4.0.0.0, Culture=neutral, PublicKeyToken=b77a5c561934e089</value>
   </data>
   <data name="&gt;&gt;btnCancel.Parent" xml:space="preserve">
     <value>$this</value>
@@ -168,9 +165,6 @@
   <data name="&gt;&gt;btnOk.Name" xml:space="preserve">
     <value>btnOk</value>
   </data>
-  <data name="&gt;&gt;btnOk.Type" xml:space="preserve">
-    <value>System.Windows.Forms.Button, System.Windows.Forms, Version=4.0.0.0, Culture=neutral, PublicKeyToken=b77a5c561934e089</value>
-  </data>
   <data name="&gt;&gt;btnOk.Parent" xml:space="preserve">
     <value>$this</value>
   </data>
@@ -183,9 +177,6 @@
   <data name="&gt;&gt;tabGeneral.Name" xml:space="preserve">
     <value>tabGeneral</value>
   </data>
-  <data name="&gt;&gt;tabGeneral.Type" xml:space="preserve">
-    <value>System.Windows.Forms.TabPage, System.Windows.Forms, Version=4.0.0.0, Culture=neutral, PublicKeyToken=b77a5c561934e089</value>
-  </data>
   <data name="&gt;&gt;tabGeneral.Parent" xml:space="preserve">
     <value>tabControl1</value>
   </data>
@@ -194,9 +185,6 @@
   </data>
   <data name="&gt;&gt;tabFilter.Name" xml:space="preserve">
     <value>tabFilter</value>
-  </data>
-  <data name="&gt;&gt;tabFilter.Type" xml:space="preserve">
-    <value>System.Windows.Forms.TabPage, System.Windows.Forms, Version=4.0.0.0, Culture=neutral, PublicKeyToken=b77a5c561934e089</value>
   </data>
   <data name="&gt;&gt;tabFilter.Parent" xml:space="preserve">
     <value>tabControl1</value>
@@ -207,9 +195,6 @@
   <data name="&gt;&gt;tabLibrary.Name" xml:space="preserve">
     <value>tabLibrary</value>
   </data>
-  <data name="&gt;&gt;tabLibrary.Type" xml:space="preserve">
-    <value>System.Windows.Forms.TabPage, System.Windows.Forms, Version=4.0.0.0, Culture=neutral, PublicKeyToken=b77a5c561934e089</value>
-  </data>
   <data name="&gt;&gt;tabLibrary.Parent" xml:space="preserve">
     <value>tabControl1</value>
   </data>
@@ -218,9 +203,6 @@
   </data>
   <data name="&gt;&gt;tabInstrument.Name" xml:space="preserve">
     <value>tabInstrument</value>
-  </data>
-  <data name="&gt;&gt;tabInstrument.Type" xml:space="preserve">
-    <value>System.Windows.Forms.TabPage, System.Windows.Forms, Version=4.0.0.0, Culture=neutral, PublicKeyToken=b77a5c561934e089</value>
   </data>
   <data name="&gt;&gt;tabInstrument.Parent" xml:space="preserve">
     <value>tabControl1</value>
@@ -231,9 +213,6 @@
   <data name="&gt;&gt;tabFullScan.Name" xml:space="preserve">
     <value>tabFullScan</value>
   </data>
-  <data name="&gt;&gt;tabFullScan.Type" xml:space="preserve">
-    <value>System.Windows.Forms.TabPage, System.Windows.Forms, Version=4.0.0.0, Culture=neutral, PublicKeyToken=b77a5c561934e089</value>
-  </data>
   <data name="&gt;&gt;tabFullScan.Parent" xml:space="preserve">
     <value>tabControl1</value>
   </data>
@@ -242,9 +221,6 @@
   </data>
   <data name="&gt;&gt;tabIonMobility.Name" xml:space="preserve">
     <value>tabIonMobility</value>
-  </data>
-  <data name="&gt;&gt;tabIonMobility.Type" xml:space="preserve">
-    <value>System.Windows.Forms.TabPage, System.Windows.Forms, Version=4.0.0.0, Culture=neutral, PublicKeyToken=b77a5c561934e089</value>
   </data>
   <data name="&gt;&gt;tabIonMobility.Parent" xml:space="preserve">
     <value>tabControl1</value>
@@ -264,9 +240,6 @@
   <data name="&gt;&gt;tabControl1.Name" xml:space="preserve">
     <value>tabControl1</value>
   </data>
-  <data name="&gt;&gt;tabControl1.Type" xml:space="preserve">
-    <value>System.Windows.Forms.TabControl, System.Windows.Forms, Version=4.0.0.0, Culture=neutral, PublicKeyToken=b77a5c561934e089</value>
-  </data>
   <data name="&gt;&gt;tabControl1.Parent" xml:space="preserve">
     <value>$this</value>
   </data>
@@ -275,9 +248,6 @@
   </data>
   <data name="&gt;&gt;comboCompensationVoltage.Name" xml:space="preserve">
     <value>comboCompensationVoltage</value>
-  </data>
-  <data name="&gt;&gt;comboCompensationVoltage.Type" xml:space="preserve">
-    <value>System.Windows.Forms.ComboBox, System.Windows.Forms, Version=4.0.0.0, Culture=neutral, PublicKeyToken=b77a5c561934e089</value>
   </data>
   <data name="&gt;&gt;comboCompensationVoltage.Parent" xml:space="preserve">
     <value>tabGeneral</value>
@@ -288,9 +258,6 @@
   <data name="&gt;&gt;label19.Name" xml:space="preserve">
     <value>label19</value>
   </data>
-  <data name="&gt;&gt;label19.Type" xml:space="preserve">
-    <value>System.Windows.Forms.Label, System.Windows.Forms, Version=4.0.0.0, Culture=neutral, PublicKeyToken=b77a5c561934e089</value>
-  </data>
   <data name="&gt;&gt;label19.Parent" xml:space="preserve">
     <value>tabGeneral</value>
   </data>
@@ -299,9 +266,6 @@
   </data>
   <data name="&gt;&gt;comboOptimizationLibrary.Name" xml:space="preserve">
     <value>comboOptimizationLibrary</value>
-  </data>
-  <data name="&gt;&gt;comboOptimizationLibrary.Type" xml:space="preserve">
-    <value>System.Windows.Forms.ComboBox, System.Windows.Forms, Version=4.0.0.0, Culture=neutral, PublicKeyToken=b77a5c561934e089</value>
   </data>
   <data name="&gt;&gt;comboOptimizationLibrary.Parent" xml:space="preserve">
     <value>tabGeneral</value>
@@ -312,9 +276,6 @@
   <data name="&gt;&gt;label20.Name" xml:space="preserve">
     <value>label20</value>
   </data>
-  <data name="&gt;&gt;label20.Type" xml:space="preserve">
-    <value>System.Windows.Forms.Label, System.Windows.Forms, Version=4.0.0.0, Culture=neutral, PublicKeyToken=b77a5c561934e089</value>
-  </data>
   <data name="&gt;&gt;label20.Parent" xml:space="preserve">
     <value>tabGeneral</value>
   </data>
@@ -323,9 +284,6 @@
   </data>
   <data name="&gt;&gt;labelOptimizeType.Name" xml:space="preserve">
     <value>labelOptimizeType</value>
-  </data>
-  <data name="&gt;&gt;labelOptimizeType.Type" xml:space="preserve">
-    <value>System.Windows.Forms.Label, System.Windows.Forms, Version=4.0.0.0, Culture=neutral, PublicKeyToken=b77a5c561934e089</value>
   </data>
   <data name="&gt;&gt;labelOptimizeType.Parent" xml:space="preserve">
     <value>tabGeneral</value>
@@ -336,9 +294,6 @@
   <data name="&gt;&gt;comboOptimizeType.Name" xml:space="preserve">
     <value>comboOptimizeType</value>
   </data>
-  <data name="&gt;&gt;comboOptimizeType.Type" xml:space="preserve">
-    <value>System.Windows.Forms.ComboBox, System.Windows.Forms, Version=4.0.0.0, Culture=neutral, PublicKeyToken=b77a5c561934e089</value>
-  </data>
   <data name="&gt;&gt;comboOptimizeType.Parent" xml:space="preserve">
     <value>tabGeneral</value>
   </data>
@@ -347,9 +302,6 @@
   </data>
   <data name="&gt;&gt;cbUseOptimized.Name" xml:space="preserve">
     <value>cbUseOptimized</value>
-  </data>
-  <data name="&gt;&gt;cbUseOptimized.Type" xml:space="preserve">
-    <value>System.Windows.Forms.CheckBox, System.Windows.Forms, Version=4.0.0.0, Culture=neutral, PublicKeyToken=b77a5c561934e089</value>
   </data>
   <data name="&gt;&gt;cbUseOptimized.Parent" xml:space="preserve">
     <value>tabGeneral</value>
@@ -360,9 +312,6 @@
   <data name="&gt;&gt;comboDeclusterPotential.Name" xml:space="preserve">
     <value>comboDeclusterPotential</value>
   </data>
-  <data name="&gt;&gt;comboDeclusterPotential.Type" xml:space="preserve">
-    <value>System.Windows.Forms.ComboBox, System.Windows.Forms, Version=4.0.0.0, Culture=neutral, PublicKeyToken=b77a5c561934e089</value>
-  </data>
   <data name="&gt;&gt;comboDeclusterPotential.Parent" xml:space="preserve">
     <value>tabGeneral</value>
   </data>
@@ -371,9 +320,6 @@
   </data>
   <data name="&gt;&gt;label12.Name" xml:space="preserve">
     <value>label12</value>
-  </data>
-  <data name="&gt;&gt;label12.Type" xml:space="preserve">
-    <value>System.Windows.Forms.Label, System.Windows.Forms, Version=4.0.0.0, Culture=neutral, PublicKeyToken=b77a5c561934e089</value>
   </data>
   <data name="&gt;&gt;label12.Parent" xml:space="preserve">
     <value>tabGeneral</value>
@@ -384,9 +330,6 @@
   <data name="&gt;&gt;comboCollisionEnergy.Name" xml:space="preserve">
     <value>comboCollisionEnergy</value>
   </data>
-  <data name="&gt;&gt;comboCollisionEnergy.Type" xml:space="preserve">
-    <value>System.Windows.Forms.ComboBox, System.Windows.Forms, Version=4.0.0.0, Culture=neutral, PublicKeyToken=b77a5c561934e089</value>
-  </data>
   <data name="&gt;&gt;comboCollisionEnergy.Parent" xml:space="preserve">
     <value>tabGeneral</value>
   </data>
@@ -395,9 +338,6 @@
   </data>
   <data name="&gt;&gt;label7.Name" xml:space="preserve">
     <value>label7</value>
-  </data>
-  <data name="&gt;&gt;label7.Type" xml:space="preserve">
-    <value>System.Windows.Forms.Label, System.Windows.Forms, Version=4.0.0.0, Culture=neutral, PublicKeyToken=b77a5c561934e089</value>
   </data>
   <data name="&gt;&gt;label7.Parent" xml:space="preserve">
     <value>tabGeneral</value>
@@ -408,9 +348,6 @@
   <data name="&gt;&gt;comboIonMass.Name" xml:space="preserve">
     <value>comboIonMass</value>
   </data>
-  <data name="&gt;&gt;comboIonMass.Type" xml:space="preserve">
-    <value>System.Windows.Forms.ComboBox, System.Windows.Forms, Version=4.0.0.0, Culture=neutral, PublicKeyToken=b77a5c561934e089</value>
-  </data>
   <data name="&gt;&gt;comboIonMass.Parent" xml:space="preserve">
     <value>tabGeneral</value>
   </data>
@@ -419,9 +356,6 @@
   </data>
   <data name="&gt;&gt;label2.Name" xml:space="preserve">
     <value>label2</value>
-  </data>
-  <data name="&gt;&gt;label2.Type" xml:space="preserve">
-    <value>System.Windows.Forms.Label, System.Windows.Forms, Version=4.0.0.0, Culture=neutral, PublicKeyToken=b77a5c561934e089</value>
   </data>
   <data name="&gt;&gt;label2.Parent" xml:space="preserve">
     <value>tabGeneral</value>
@@ -432,9 +366,6 @@
   <data name="&gt;&gt;comboPrecursorMass.Name" xml:space="preserve">
     <value>comboPrecursorMass</value>
   </data>
-  <data name="&gt;&gt;comboPrecursorMass.Type" xml:space="preserve">
-    <value>System.Windows.Forms.ComboBox, System.Windows.Forms, Version=4.0.0.0, Culture=neutral, PublicKeyToken=b77a5c561934e089</value>
-  </data>
   <data name="&gt;&gt;comboPrecursorMass.Parent" xml:space="preserve">
     <value>tabGeneral</value>
   </data>
@@ -443,9 +374,6 @@
   </data>
   <data name="&gt;&gt;label1.Name" xml:space="preserve">
     <value>label1</value>
-  </data>
-  <data name="&gt;&gt;label1.Type" xml:space="preserve">
-    <value>System.Windows.Forms.Label, System.Windows.Forms, Version=4.0.0.0, Culture=neutral, PublicKeyToken=b77a5c561934e089</value>
   </data>
   <data name="&gt;&gt;label1.Parent" xml:space="preserve">
     <value>tabGeneral</value>
@@ -471,9 +399,6 @@
   <data name="&gt;&gt;tabGeneral.Name" xml:space="preserve">
     <value>tabGeneral</value>
   </data>
-  <data name="&gt;&gt;tabGeneral.Type" xml:space="preserve">
-    <value>System.Windows.Forms.TabPage, System.Windows.Forms, Version=4.0.0.0, Culture=neutral, PublicKeyToken=b77a5c561934e089</value>
-  </data>
   <data name="&gt;&gt;tabGeneral.Parent" xml:space="preserve">
     <value>tabControl1</value>
   </data>
@@ -491,9 +416,6 @@
   </data>
   <data name="&gt;&gt;comboCompensationVoltage.Name" xml:space="preserve">
     <value>comboCompensationVoltage</value>
-  </data>
-  <data name="&gt;&gt;comboCompensationVoltage.Type" xml:space="preserve">
-    <value>System.Windows.Forms.ComboBox, System.Windows.Forms, Version=4.0.0.0, Culture=neutral, PublicKeyToken=b77a5c561934e089</value>
   </data>
   <data name="&gt;&gt;comboCompensationVoltage.Parent" xml:space="preserve">
     <value>tabGeneral</value>
@@ -522,9 +444,6 @@
   <data name="&gt;&gt;label19.Name" xml:space="preserve">
     <value>label19</value>
   </data>
-  <data name="&gt;&gt;label19.Type" xml:space="preserve">
-    <value>System.Windows.Forms.Label, System.Windows.Forms, Version=4.0.0.0, Culture=neutral, PublicKeyToken=b77a5c561934e089</value>
-  </data>
   <data name="&gt;&gt;label19.Parent" xml:space="preserve">
     <value>tabGeneral</value>
   </data>
@@ -542,9 +461,6 @@
   </data>
   <data name="&gt;&gt;comboOptimizationLibrary.Name" xml:space="preserve">
     <value>comboOptimizationLibrary</value>
-  </data>
-  <data name="&gt;&gt;comboOptimizationLibrary.Type" xml:space="preserve">
-    <value>System.Windows.Forms.ComboBox, System.Windows.Forms, Version=4.0.0.0, Culture=neutral, PublicKeyToken=b77a5c561934e089</value>
   </data>
   <data name="&gt;&gt;comboOptimizationLibrary.Parent" xml:space="preserve">
     <value>tabGeneral</value>
@@ -573,9 +489,6 @@
   <data name="&gt;&gt;label20.Name" xml:space="preserve">
     <value>label20</value>
   </data>
-  <data name="&gt;&gt;label20.Type" xml:space="preserve">
-    <value>System.Windows.Forms.Label, System.Windows.Forms, Version=4.0.0.0, Culture=neutral, PublicKeyToken=b77a5c561934e089</value>
-  </data>
   <data name="&gt;&gt;label20.Parent" xml:space="preserve">
     <value>tabGeneral</value>
   </data>
@@ -603,18 +516,12 @@
   <data name="&gt;&gt;labelOptimizeType.Name" xml:space="preserve">
     <value>labelOptimizeType</value>
   </data>
-  <data name="&gt;&gt;labelOptimizeType.Type" xml:space="preserve">
-    <value>System.Windows.Forms.Label, System.Windows.Forms, Version=4.0.0.0, Culture=neutral, PublicKeyToken=b77a5c561934e089</value>
-  </data>
   <data name="&gt;&gt;labelOptimizeType.Parent" xml:space="preserve">
     <value>tabGeneral</value>
   </data>
   <data name="&gt;&gt;labelOptimizeType.ZOrder" xml:space="preserve">
     <value>4</value>
   </data>
-  <metadata name="helpTip.TrayLocation" type="System.Drawing.Point, System.Drawing, Version=4.0.0.0, Culture=neutral, PublicKeyToken=b03f5f7f11d50a3a">
-    <value>155, 17</value>
-  </metadata>
   <data name="comboOptimizeType.Items" xml:space="preserve">
     <value>母离子</value>
   </data>
@@ -639,9 +546,6 @@
   </data>
   <data name="&gt;&gt;comboOptimizeType.Name" xml:space="preserve">
     <value>comboOptimizeType</value>
-  </data>
-  <data name="&gt;&gt;comboOptimizeType.Type" xml:space="preserve">
-    <value>System.Windows.Forms.ComboBox, System.Windows.Forms, Version=4.0.0.0, Culture=neutral, PublicKeyToken=b77a5c561934e089</value>
   </data>
   <data name="&gt;&gt;comboOptimizeType.Parent" xml:space="preserve">
     <value>tabGeneral</value>
@@ -673,9 +577,6 @@
   <data name="&gt;&gt;cbUseOptimized.Name" xml:space="preserve">
     <value>cbUseOptimized</value>
   </data>
-  <data name="&gt;&gt;cbUseOptimized.Type" xml:space="preserve">
-    <value>System.Windows.Forms.CheckBox, System.Windows.Forms, Version=4.0.0.0, Culture=neutral, PublicKeyToken=b77a5c561934e089</value>
-  </data>
   <data name="&gt;&gt;cbUseOptimized.Parent" xml:space="preserve">
     <value>tabGeneral</value>
   </data>
@@ -698,9 +599,6 @@
   </data>
   <data name="&gt;&gt;comboDeclusterPotential.Name" xml:space="preserve">
     <value>comboDeclusterPotential</value>
-  </data>
-  <data name="&gt;&gt;comboDeclusterPotential.Type" xml:space="preserve">
-    <value>System.Windows.Forms.ComboBox, System.Windows.Forms, Version=4.0.0.0, Culture=neutral, PublicKeyToken=b77a5c561934e089</value>
   </data>
   <data name="&gt;&gt;comboDeclusterPotential.Parent" xml:space="preserve">
     <value>tabGeneral</value>
@@ -726,9 +624,6 @@
   <data name="&gt;&gt;label12.Name" xml:space="preserve">
     <value>label12</value>
   </data>
-  <data name="&gt;&gt;label12.Type" xml:space="preserve">
-    <value>System.Windows.Forms.Label, System.Windows.Forms, Version=4.0.0.0, Culture=neutral, PublicKeyToken=b77a5c561934e089</value>
-  </data>
   <data name="&gt;&gt;label12.Parent" xml:space="preserve">
     <value>tabGeneral</value>
   </data>
@@ -751,9 +646,6 @@
   </data>
   <data name="&gt;&gt;comboCollisionEnergy.Name" xml:space="preserve">
     <value>comboCollisionEnergy</value>
-  </data>
-  <data name="&gt;&gt;comboCollisionEnergy.Type" xml:space="preserve">
-    <value>System.Windows.Forms.ComboBox, System.Windows.Forms, Version=4.0.0.0, Culture=neutral, PublicKeyToken=b77a5c561934e089</value>
   </data>
   <data name="&gt;&gt;comboCollisionEnergy.Parent" xml:space="preserve">
     <value>tabGeneral</value>
@@ -778,9 +670,6 @@
   </data>
   <data name="&gt;&gt;label7.Name" xml:space="preserve">
     <value>label7</value>
-  </data>
-  <data name="&gt;&gt;label7.Type" xml:space="preserve">
-    <value>System.Windows.Forms.Label, System.Windows.Forms, Version=4.0.0.0, Culture=neutral, PublicKeyToken=b77a5c561934e089</value>
   </data>
   <data name="&gt;&gt;label7.Parent" xml:space="preserve">
     <value>tabGeneral</value>
@@ -810,9 +699,6 @@
   <data name="&gt;&gt;comboIonMass.Name" xml:space="preserve">
     <value>comboIonMass</value>
   </data>
-  <data name="&gt;&gt;comboIonMass.Type" xml:space="preserve">
-    <value>System.Windows.Forms.ComboBox, System.Windows.Forms, Version=4.0.0.0, Culture=neutral, PublicKeyToken=b77a5c561934e089</value>
-  </data>
   <data name="&gt;&gt;comboIonMass.Parent" xml:space="preserve">
     <value>tabGeneral</value>
   </data>
@@ -836,9 +722,6 @@
   </data>
   <data name="&gt;&gt;label2.Name" xml:space="preserve">
     <value>label2</value>
-  </data>
-  <data name="&gt;&gt;label2.Type" xml:space="preserve">
-    <value>System.Windows.Forms.Label, System.Windows.Forms, Version=4.0.0.0, Culture=neutral, PublicKeyToken=b77a5c561934e089</value>
   </data>
   <data name="&gt;&gt;label2.Parent" xml:space="preserve">
     <value>tabGeneral</value>
@@ -868,9 +751,6 @@
   <data name="&gt;&gt;comboPrecursorMass.Name" xml:space="preserve">
     <value>comboPrecursorMass</value>
   </data>
-  <data name="&gt;&gt;comboPrecursorMass.Type" xml:space="preserve">
-    <value>System.Windows.Forms.ComboBox, System.Windows.Forms, Version=4.0.0.0, Culture=neutral, PublicKeyToken=b77a5c561934e089</value>
-  </data>
   <data name="&gt;&gt;comboPrecursorMass.Parent" xml:space="preserve">
     <value>tabGeneral</value>
   </data>
@@ -895,9 +775,6 @@
   <data name="&gt;&gt;label1.Name" xml:space="preserve">
     <value>label1</value>
   </data>
-  <data name="&gt;&gt;label1.Type" xml:space="preserve">
-    <value>System.Windows.Forms.Label, System.Windows.Forms, Version=4.0.0.0, Culture=neutral, PublicKeyToken=b77a5c561934e089</value>
-  </data>
   <data name="&gt;&gt;label1.Parent" xml:space="preserve">
     <value>tabGeneral</value>
   </data>
@@ -906,9 +783,6 @@
   </data>
   <data name="&gt;&gt;cbExclusionUseDIAWindow.Name" xml:space="preserve">
     <value>cbExclusionUseDIAWindow</value>
-  </data>
-  <data name="&gt;&gt;cbExclusionUseDIAWindow.Type" xml:space="preserve">
-    <value>System.Windows.Forms.CheckBox, System.Windows.Forms, Version=4.0.0.0, Culture=neutral, PublicKeyToken=b77a5c561934e089</value>
   </data>
   <data name="&gt;&gt;cbExclusionUseDIAWindow.Parent" xml:space="preserve">
     <value>tabFilter</value>
@@ -919,9 +793,6 @@
   <data name="&gt;&gt;lbMZ.Name" xml:space="preserve">
     <value>lbMZ</value>
   </data>
-  <data name="&gt;&gt;lbMZ.Type" xml:space="preserve">
-    <value>System.Windows.Forms.Label, System.Windows.Forms, Version=4.0.0.0, Culture=neutral, PublicKeyToken=b77a5c561934e089</value>
-  </data>
   <data name="&gt;&gt;lbMZ.Parent" xml:space="preserve">
     <value>tabFilter</value>
   </data>
@@ -930,9 +801,6 @@
   </data>
   <data name="&gt;&gt;tabControlPeptidesSmallMols.Name" xml:space="preserve">
     <value>tabControlPeptidesSmallMols</value>
-  </data>
-  <data name="&gt;&gt;tabControlPeptidesSmallMols.Type" xml:space="preserve">
-    <value>System.Windows.Forms.TabControl, System.Windows.Forms, Version=4.0.0.0, Culture=neutral, PublicKeyToken=b77a5c561934e089</value>
   </data>
   <data name="&gt;&gt;tabControlPeptidesSmallMols.Parent" xml:space="preserve">
     <value>tabFilter</value>
@@ -943,9 +811,6 @@
   <data name="&gt;&gt;textExclusionWindow.Name" xml:space="preserve">
     <value>textExclusionWindow</value>
   </data>
-  <data name="&gt;&gt;textExclusionWindow.Type" xml:space="preserve">
-    <value>System.Windows.Forms.TextBox, System.Windows.Forms, Version=4.0.0.0, Culture=neutral, PublicKeyToken=b77a5c561934e089</value>
-  </data>
   <data name="&gt;&gt;textExclusionWindow.Parent" xml:space="preserve">
     <value>tabFilter</value>
   </data>
@@ -955,9 +820,6 @@
   <data name="&gt;&gt;cbAutoSelect.Name" xml:space="preserve">
     <value>cbAutoSelect</value>
   </data>
-  <data name="&gt;&gt;cbAutoSelect.Type" xml:space="preserve">
-    <value>System.Windows.Forms.CheckBox, System.Windows.Forms, Version=4.0.0.0, Culture=neutral, PublicKeyToken=b77a5c561934e089</value>
-  </data>
   <data name="&gt;&gt;cbAutoSelect.Parent" xml:space="preserve">
     <value>tabFilter</value>
   </data>
@@ -966,9 +828,6 @@
   </data>
   <data name="&gt;&gt;lbPrecursorMzWindow.Name" xml:space="preserve">
     <value>lbPrecursorMzWindow</value>
-  </data>
-  <data name="&gt;&gt;lbPrecursorMzWindow.Type" xml:space="preserve">
-    <value>System.Windows.Forms.Label, System.Windows.Forms, Version=4.0.0.0, Culture=neutral, PublicKeyToken=b77a5c561934e089</value>
   </data>
   <data name="&gt;&gt;lbPrecursorMzWindow.Parent" xml:space="preserve">
     <value>tabFilter</value>
@@ -993,9 +852,6 @@
   </data>
   <data name="&gt;&gt;tabFilter.Name" xml:space="preserve">
     <value>tabFilter</value>
-  </data>
-  <data name="&gt;&gt;tabFilter.Type" xml:space="preserve">
-    <value>System.Windows.Forms.TabPage, System.Windows.Forms, Version=4.0.0.0, Culture=neutral, PublicKeyToken=b77a5c561934e089</value>
   </data>
   <data name="&gt;&gt;tabFilter.Parent" xml:space="preserve">
     <value>tabControl1</value>
@@ -1030,9 +886,6 @@
   <data name="&gt;&gt;cbExclusionUseDIAWindow.Name" xml:space="preserve">
     <value>cbExclusionUseDIAWindow</value>
   </data>
-  <data name="&gt;&gt;cbExclusionUseDIAWindow.Type" xml:space="preserve">
-    <value>System.Windows.Forms.CheckBox, System.Windows.Forms, Version=4.0.0.0, Culture=neutral, PublicKeyToken=b77a5c561934e089</value>
-  </data>
   <data name="&gt;&gt;cbExclusionUseDIAWindow.Parent" xml:space="preserve">
     <value>tabFilter</value>
   </data>
@@ -1060,9 +913,6 @@
   <data name="&gt;&gt;lbMZ.Name" xml:space="preserve">
     <value>lbMZ</value>
   </data>
-  <data name="&gt;&gt;lbMZ.Type" xml:space="preserve">
-    <value>System.Windows.Forms.Label, System.Windows.Forms, Version=4.0.0.0, Culture=neutral, PublicKeyToken=b77a5c561934e089</value>
-  </data>
   <data name="&gt;&gt;lbMZ.Parent" xml:space="preserve">
     <value>tabFilter</value>
   </data>
@@ -1072,9 +922,6 @@
   <data name="&gt;&gt;tabPage1.Name" xml:space="preserve">
     <value>tabPage1</value>
   </data>
-  <data name="&gt;&gt;tabPage1.Type" xml:space="preserve">
-    <value>System.Windows.Forms.TabPage, System.Windows.Forms, Version=4.0.0.0, Culture=neutral, PublicKeyToken=b77a5c561934e089</value>
-  </data>
   <data name="&gt;&gt;tabPage1.Parent" xml:space="preserve">
     <value>tabControlPeptidesSmallMols</value>
   </data>
@@ -1083,9 +930,6 @@
   </data>
   <data name="&gt;&gt;tabPage2.Name" xml:space="preserve">
     <value>tabPage2</value>
-  </data>
-  <data name="&gt;&gt;tabPage2.Type" xml:space="preserve">
-    <value>System.Windows.Forms.TabPage, System.Windows.Forms, Version=4.0.0.0, Culture=neutral, PublicKeyToken=b77a5c561934e089</value>
   </data>
   <data name="&gt;&gt;tabPage2.Parent" xml:space="preserve">
     <value>tabControlPeptidesSmallMols</value>
@@ -1105,9 +949,6 @@
   <data name="&gt;&gt;tabControlPeptidesSmallMols.Name" xml:space="preserve">
     <value>tabControlPeptidesSmallMols</value>
   </data>
-  <data name="&gt;&gt;tabControlPeptidesSmallMols.Type" xml:space="preserve">
-    <value>System.Windows.Forms.TabControl, System.Windows.Forms, Version=4.0.0.0, Culture=neutral, PublicKeyToken=b77a5c561934e089</value>
-  </data>
   <data name="&gt;&gt;tabControlPeptidesSmallMols.Parent" xml:space="preserve">
     <value>tabFilter</value>
   </data>
@@ -1116,9 +957,6 @@
   </data>
   <data name="&gt;&gt;label5.Name" xml:space="preserve">
     <value>label5</value>
-  </data>
-  <data name="&gt;&gt;label5.Type" xml:space="preserve">
-    <value>System.Windows.Forms.Label, System.Windows.Forms, Version=4.0.0.0, Culture=neutral, PublicKeyToken=b77a5c561934e089</value>
   </data>
   <data name="&gt;&gt;label5.Parent" xml:space="preserve">
     <value>tabPage1</value>
@@ -1129,9 +967,6 @@
   <data name="&gt;&gt;textPeptideIonTypes.Name" xml:space="preserve">
     <value>textPeptideIonTypes</value>
   </data>
-  <data name="&gt;&gt;textPeptideIonTypes.Type" xml:space="preserve">
-    <value>System.Windows.Forms.TextBox, System.Windows.Forms, Version=4.0.0.0, Culture=neutral, PublicKeyToken=b77a5c561934e089</value>
-  </data>
   <data name="&gt;&gt;textPeptideIonTypes.Parent" xml:space="preserve">
     <value>tabPage1</value>
   </data>
@@ -1140,9 +975,6 @@
   </data>
   <data name="&gt;&gt;groupBox1.Name" xml:space="preserve">
     <value>groupBox1</value>
-  </data>
-  <data name="&gt;&gt;groupBox1.Type" xml:space="preserve">
-    <value>System.Windows.Forms.GroupBox, System.Windows.Forms, Version=4.0.0.0, Culture=neutral, PublicKeyToken=b77a5c561934e089</value>
   </data>
   <data name="&gt;&gt;groupBox1.Parent" xml:space="preserve">
     <value>tabPage1</value>
@@ -1153,9 +985,6 @@
   <data name="&gt;&gt;label6.Name" xml:space="preserve">
     <value>label6</value>
   </data>
-  <data name="&gt;&gt;label6.Type" xml:space="preserve">
-    <value>System.Windows.Forms.Label, System.Windows.Forms, Version=4.0.0.0, Culture=neutral, PublicKeyToken=b77a5c561934e089</value>
-  </data>
   <data name="&gt;&gt;label6.Parent" xml:space="preserve">
     <value>tabPage1</value>
   </data>
@@ -1164,9 +993,6 @@
   </data>
   <data name="&gt;&gt;label8.Name" xml:space="preserve">
     <value>label8</value>
-  </data>
-  <data name="&gt;&gt;label8.Type" xml:space="preserve">
-    <value>System.Windows.Forms.Label, System.Windows.Forms, Version=4.0.0.0, Culture=neutral, PublicKeyToken=b77a5c561934e089</value>
   </data>
   <data name="&gt;&gt;label8.Parent" xml:space="preserve">
     <value>tabPage1</value>
@@ -1177,9 +1003,6 @@
   <data name="&gt;&gt;textPeptidePrecursorCharges.Name" xml:space="preserve">
     <value>textPeptidePrecursorCharges</value>
   </data>
-  <data name="&gt;&gt;textPeptidePrecursorCharges.Type" xml:space="preserve">
-    <value>System.Windows.Forms.TextBox, System.Windows.Forms, Version=4.0.0.0, Culture=neutral, PublicKeyToken=b77a5c561934e089</value>
-  </data>
   <data name="&gt;&gt;textPeptidePrecursorCharges.Parent" xml:space="preserve">
     <value>tabPage1</value>
   </data>
@@ -1188,9 +1011,6 @@
   </data>
   <data name="&gt;&gt;textPeptideIonCharges.Name" xml:space="preserve">
     <value>textPeptideIonCharges</value>
-  </data>
-  <data name="&gt;&gt;textPeptideIonCharges.Type" xml:space="preserve">
-    <value>System.Windows.Forms.TextBox, System.Windows.Forms, Version=4.0.0.0, Culture=neutral, PublicKeyToken=b77a5c561934e089</value>
   </data>
   <data name="&gt;&gt;textPeptideIonCharges.Parent" xml:space="preserve">
     <value>tabPage1</value>
@@ -1216,9 +1036,6 @@
   <data name="&gt;&gt;tabPage1.Name" xml:space="preserve">
     <value>tabPage1</value>
   </data>
-  <data name="&gt;&gt;tabPage1.Type" xml:space="preserve">
-    <value>System.Windows.Forms.TabPage, System.Windows.Forms, Version=4.0.0.0, Culture=neutral, PublicKeyToken=b77a5c561934e089</value>
-  </data>
   <data name="&gt;&gt;tabPage1.Parent" xml:space="preserve">
     <value>tabControlPeptidesSmallMols</value>
   </data>
@@ -1243,9 +1060,6 @@
   <data name="&gt;&gt;label5.Name" xml:space="preserve">
     <value>label5</value>
   </data>
-  <data name="&gt;&gt;label5.Type" xml:space="preserve">
-    <value>System.Windows.Forms.Label, System.Windows.Forms, Version=4.0.0.0, Culture=neutral, PublicKeyToken=b77a5c561934e089</value>
-  </data>
   <data name="&gt;&gt;label5.Parent" xml:space="preserve">
     <value>tabPage1</value>
   </data>
@@ -1267,9 +1081,6 @@
   <data name="&gt;&gt;textPeptideIonTypes.Name" xml:space="preserve">
     <value>textPeptideIonTypes</value>
   </data>
-  <data name="&gt;&gt;textPeptideIonTypes.Type" xml:space="preserve">
-    <value>System.Windows.Forms.TextBox, System.Windows.Forms, Version=4.0.0.0, Culture=neutral, PublicKeyToken=b77a5c561934e089</value>
-  </data>
   <data name="&gt;&gt;textPeptideIonTypes.Parent" xml:space="preserve">
     <value>tabPage1</value>
   </data>
@@ -1278,9 +1089,6 @@
   </data>
   <data name="&gt;&gt;btnEditSpecialTransitions.Name" xml:space="preserve">
     <value>btnEditSpecialTransitions</value>
-  </data>
-  <data name="&gt;&gt;btnEditSpecialTransitions.Type" xml:space="preserve">
-    <value>System.Windows.Forms.Button, System.Windows.Forms, Version=4.0.0.0, Culture=neutral, PublicKeyToken=b77a5c561934e089</value>
   </data>
   <data name="&gt;&gt;btnEditSpecialTransitions.Parent" xml:space="preserve">
     <value>groupBox1</value>
@@ -1291,9 +1099,6 @@
   <data name="&gt;&gt;label18.Name" xml:space="preserve">
     <value>label18</value>
   </data>
-  <data name="&gt;&gt;label18.Type" xml:space="preserve">
-    <value>System.Windows.Forms.Label, System.Windows.Forms, Version=4.0.0.0, Culture=neutral, PublicKeyToken=b77a5c561934e089</value>
-  </data>
   <data name="&gt;&gt;label18.Parent" xml:space="preserve">
     <value>groupBox1</value>
   </data>
@@ -1302,9 +1107,6 @@
   </data>
   <data name="&gt;&gt;listAlwaysAdd.Name" xml:space="preserve">
     <value>listAlwaysAdd</value>
-  </data>
-  <data name="&gt;&gt;listAlwaysAdd.Type" xml:space="preserve">
-    <value>System.Windows.Forms.CheckedListBox, System.Windows.Forms, Version=4.0.0.0, Culture=neutral, PublicKeyToken=b77a5c561934e089</value>
   </data>
   <data name="&gt;&gt;listAlwaysAdd.Parent" xml:space="preserve">
     <value>groupBox1</value>
@@ -1315,9 +1117,6 @@
   <data name="&gt;&gt;comboRangeFrom.Name" xml:space="preserve">
     <value>comboRangeFrom</value>
   </data>
-  <data name="&gt;&gt;comboRangeFrom.Type" xml:space="preserve">
-    <value>System.Windows.Forms.ComboBox, System.Windows.Forms, Version=4.0.0.0, Culture=neutral, PublicKeyToken=b77a5c561934e089</value>
-  </data>
   <data name="&gt;&gt;comboRangeFrom.Parent" xml:space="preserve">
     <value>groupBox1</value>
   </data>
@@ -1326,9 +1125,6 @@
   </data>
   <data name="&gt;&gt;label3.Name" xml:space="preserve">
     <value>label3</value>
-  </data>
-  <data name="&gt;&gt;label3.Type" xml:space="preserve">
-    <value>System.Windows.Forms.Label, System.Windows.Forms, Version=4.0.0.0, Culture=neutral, PublicKeyToken=b77a5c561934e089</value>
   </data>
   <data name="&gt;&gt;label3.Parent" xml:space="preserve">
     <value>groupBox1</value>
@@ -1339,9 +1135,6 @@
   <data name="&gt;&gt;comboRangeTo.Name" xml:space="preserve">
     <value>comboRangeTo</value>
   </data>
-  <data name="&gt;&gt;comboRangeTo.Type" xml:space="preserve">
-    <value>System.Windows.Forms.ComboBox, System.Windows.Forms, Version=4.0.0.0, Culture=neutral, PublicKeyToken=b77a5c561934e089</value>
-  </data>
   <data name="&gt;&gt;comboRangeTo.Parent" xml:space="preserve">
     <value>groupBox1</value>
   </data>
@@ -1350,9 +1143,6 @@
   </data>
   <data name="&gt;&gt;label4.Name" xml:space="preserve">
     <value>label4</value>
-  </data>
-  <data name="&gt;&gt;label4.Type" xml:space="preserve">
-    <value>System.Windows.Forms.Label, System.Windows.Forms, Version=4.0.0.0, Culture=neutral, PublicKeyToken=b77a5c561934e089</value>
   </data>
   <data name="&gt;&gt;label4.Parent" xml:space="preserve">
     <value>groupBox1</value>
@@ -1374,9 +1164,6 @@
   </data>
   <data name="&gt;&gt;groupBox1.Name" xml:space="preserve">
     <value>groupBox1</value>
-  </data>
-  <data name="&gt;&gt;groupBox1.Type" xml:space="preserve">
-    <value>System.Windows.Forms.GroupBox, System.Windows.Forms, Version=4.0.0.0, Culture=neutral, PublicKeyToken=b77a5c561934e089</value>
   </data>
   <data name="&gt;&gt;groupBox1.Parent" xml:space="preserve">
     <value>tabPage1</value>
@@ -1402,9 +1189,6 @@
   <data name="&gt;&gt;btnEditSpecialTransitions.Name" xml:space="preserve">
     <value>btnEditSpecialTransitions</value>
   </data>
-  <data name="&gt;&gt;btnEditSpecialTransitions.Type" xml:space="preserve">
-    <value>System.Windows.Forms.Button, System.Windows.Forms, Version=4.0.0.0, Culture=neutral, PublicKeyToken=b77a5c561934e089</value>
-  </data>
   <data name="&gt;&gt;btnEditSpecialTransitions.Parent" xml:space="preserve">
     <value>groupBox1</value>
   </data>
@@ -1429,9 +1213,6 @@
   <data name="&gt;&gt;label18.Name" xml:space="preserve">
     <value>label18</value>
   </data>
-  <data name="&gt;&gt;label18.Type" xml:space="preserve">
-    <value>System.Windows.Forms.Label, System.Windows.Forms, Version=4.0.0.0, Culture=neutral, PublicKeyToken=b77a5c561934e089</value>
-  </data>
   <data name="&gt;&gt;label18.Parent" xml:space="preserve">
     <value>groupBox1</value>
   </data>
@@ -1454,9 +1235,6 @@
   <data name="&gt;&gt;listAlwaysAdd.Name" xml:space="preserve">
     <value>listAlwaysAdd</value>
   </data>
-  <data name="&gt;&gt;listAlwaysAdd.Type" xml:space="preserve">
-    <value>System.Windows.Forms.CheckedListBox, System.Windows.Forms, Version=4.0.0.0, Culture=neutral, PublicKeyToken=b77a5c561934e089</value>
-  </data>
   <data name="&gt;&gt;listAlwaysAdd.Parent" xml:space="preserve">
     <value>groupBox1</value>
   </data>
@@ -1477,9 +1255,6 @@
   </data>
   <data name="&gt;&gt;comboRangeFrom.Name" xml:space="preserve">
     <value>comboRangeFrom</value>
-  </data>
-  <data name="&gt;&gt;comboRangeFrom.Type" xml:space="preserve">
-    <value>System.Windows.Forms.ComboBox, System.Windows.Forms, Version=4.0.0.0, Culture=neutral, PublicKeyToken=b77a5c561934e089</value>
   </data>
   <data name="&gt;&gt;comboRangeFrom.Parent" xml:space="preserve">
     <value>groupBox1</value>
@@ -1505,9 +1280,6 @@
   <data name="&gt;&gt;label3.Name" xml:space="preserve">
     <value>label3</value>
   </data>
-  <data name="&gt;&gt;label3.Type" xml:space="preserve">
-    <value>System.Windows.Forms.Label, System.Windows.Forms, Version=4.0.0.0, Culture=neutral, PublicKeyToken=b77a5c561934e089</value>
-  </data>
   <data name="&gt;&gt;label3.Parent" xml:space="preserve">
     <value>groupBox1</value>
   </data>
@@ -1528,9 +1300,6 @@
   </data>
   <data name="&gt;&gt;comboRangeTo.Name" xml:space="preserve">
     <value>comboRangeTo</value>
-  </data>
-  <data name="&gt;&gt;comboRangeTo.Type" xml:space="preserve">
-    <value>System.Windows.Forms.ComboBox, System.Windows.Forms, Version=4.0.0.0, Culture=neutral, PublicKeyToken=b77a5c561934e089</value>
   </data>
   <data name="&gt;&gt;comboRangeTo.Parent" xml:space="preserve">
     <value>groupBox1</value>
@@ -1556,9 +1325,6 @@
   <data name="&gt;&gt;label4.Name" xml:space="preserve">
     <value>label4</value>
   </data>
-  <data name="&gt;&gt;label4.Type" xml:space="preserve">
-    <value>System.Windows.Forms.Label, System.Windows.Forms, Version=4.0.0.0, Culture=neutral, PublicKeyToken=b77a5c561934e089</value>
-  </data>
   <data name="&gt;&gt;label4.Parent" xml:space="preserve">
     <value>groupBox1</value>
   </data>
@@ -1582,9 +1348,6 @@
   </data>
   <data name="&gt;&gt;label6.Name" xml:space="preserve">
     <value>label6</value>
-  </data>
-  <data name="&gt;&gt;label6.Type" xml:space="preserve">
-    <value>System.Windows.Forms.Label, System.Windows.Forms, Version=4.0.0.0, Culture=neutral, PublicKeyToken=b77a5c561934e089</value>
   </data>
   <data name="&gt;&gt;label6.Parent" xml:space="preserve">
     <value>tabPage1</value>
@@ -1610,9 +1373,6 @@
   <data name="&gt;&gt;label8.Name" xml:space="preserve">
     <value>label8</value>
   </data>
-  <data name="&gt;&gt;label8.Type" xml:space="preserve">
-    <value>System.Windows.Forms.Label, System.Windows.Forms, Version=4.0.0.0, Culture=neutral, PublicKeyToken=b77a5c561934e089</value>
-  </data>
   <data name="&gt;&gt;label8.Parent" xml:space="preserve">
     <value>tabPage1</value>
   </data>
@@ -1634,9 +1394,6 @@
   </data>
   <data name="&gt;&gt;textPeptidePrecursorCharges.Name" xml:space="preserve">
     <value>textPeptidePrecursorCharges</value>
-  </data>
-  <data name="&gt;&gt;textPeptidePrecursorCharges.Type" xml:space="preserve">
-    <value>System.Windows.Forms.TextBox, System.Windows.Forms, Version=4.0.0.0, Culture=neutral, PublicKeyToken=b77a5c561934e089</value>
   </data>
   <data name="&gt;&gt;textPeptidePrecursorCharges.Parent" xml:space="preserve">
     <value>tabPage1</value>
@@ -1660,9 +1417,6 @@
   <data name="&gt;&gt;textPeptideIonCharges.Name" xml:space="preserve">
     <value>textPeptideIonCharges</value>
   </data>
-  <data name="&gt;&gt;textPeptideIonCharges.Type" xml:space="preserve">
-    <value>System.Windows.Forms.TextBox, System.Windows.Forms, Version=4.0.0.0, Culture=neutral, PublicKeyToken=b77a5c561934e089</value>
-  </data>
   <data name="&gt;&gt;textPeptideIonCharges.Parent" xml:space="preserve">
     <value>tabPage1</value>
   </data>
@@ -1671,9 +1425,6 @@
   </data>
   <data name="&gt;&gt;btnPrecursorAdduct.Name" xml:space="preserve">
     <value>btnPrecursorAdduct</value>
-  </data>
-  <data name="&gt;&gt;btnPrecursorAdduct.Type" xml:space="preserve">
-    <value>System.Windows.Forms.Button, System.Windows.Forms, Version=4.0.0.0, Culture=neutral, PublicKeyToken=b77a5c561934e089</value>
   </data>
   <data name="&gt;&gt;btnPrecursorAdduct.Parent" xml:space="preserve">
     <value>tabPage2</value>
@@ -1684,9 +1435,6 @@
   <data name="&gt;&gt;btnFragmentAdduct.Name" xml:space="preserve">
     <value>btnFragmentAdduct</value>
   </data>
-  <data name="&gt;&gt;btnFragmentAdduct.Type" xml:space="preserve">
-    <value>System.Windows.Forms.Button, System.Windows.Forms, Version=4.0.0.0, Culture=neutral, PublicKeyToken=b77a5c561934e089</value>
-  </data>
   <data name="&gt;&gt;btnFragmentAdduct.Parent" xml:space="preserve">
     <value>tabPage2</value>
   </data>
@@ -1695,9 +1443,6 @@
   </data>
   <data name="&gt;&gt;textSmallMoleculeFragmentAdducts.Name" xml:space="preserve">
     <value>textSmallMoleculeFragmentAdducts</value>
-  </data>
-  <data name="&gt;&gt;textSmallMoleculeFragmentAdducts.Type" xml:space="preserve">
-    <value>System.Windows.Forms.TextBox, System.Windows.Forms, Version=4.0.0.0, Culture=neutral, PublicKeyToken=b77a5c561934e089</value>
   </data>
   <data name="&gt;&gt;textSmallMoleculeFragmentAdducts.Parent" xml:space="preserve">
     <value>tabPage2</value>
@@ -1708,9 +1453,6 @@
   <data name="&gt;&gt;labelSmallMoleculeFragmentAdducts.Name" xml:space="preserve">
     <value>labelSmallMoleculeFragmentAdducts</value>
   </data>
-  <data name="&gt;&gt;labelSmallMoleculeFragmentAdducts.Type" xml:space="preserve">
-    <value>System.Windows.Forms.Label, System.Windows.Forms, Version=4.0.0.0, Culture=neutral, PublicKeyToken=b77a5c561934e089</value>
-  </data>
   <data name="&gt;&gt;labelSmallMoleculeFragmentAdducts.Parent" xml:space="preserve">
     <value>tabPage2</value>
   </data>
@@ -1719,9 +1461,6 @@
   </data>
   <data name="&gt;&gt;textSmallMoleculeIonTypes.Name" xml:space="preserve">
     <value>textSmallMoleculeIonTypes</value>
-  </data>
-  <data name="&gt;&gt;textSmallMoleculeIonTypes.Type" xml:space="preserve">
-    <value>System.Windows.Forms.TextBox, System.Windows.Forms, Version=4.0.0.0, Culture=neutral, PublicKeyToken=b77a5c561934e089</value>
   </data>
   <data name="&gt;&gt;textSmallMoleculeIonTypes.Parent" xml:space="preserve">
     <value>tabPage2</value>
@@ -1732,9 +1471,6 @@
   <data name="&gt;&gt;labelSmallMoleculeIonTypes.Name" xml:space="preserve">
     <value>labelSmallMoleculeIonTypes</value>
   </data>
-  <data name="&gt;&gt;labelSmallMoleculeIonTypes.Type" xml:space="preserve">
-    <value>System.Windows.Forms.Label, System.Windows.Forms, Version=4.0.0.0, Culture=neutral, PublicKeyToken=b77a5c561934e089</value>
-  </data>
   <data name="&gt;&gt;labelSmallMoleculeIonTypes.Parent" xml:space="preserve">
     <value>tabPage2</value>
   </data>
@@ -1744,9 +1480,6 @@
   <data name="&gt;&gt;textSmallMoleculePrecursorAdducts.Name" xml:space="preserve">
     <value>textSmallMoleculePrecursorAdducts</value>
   </data>
-  <data name="&gt;&gt;textSmallMoleculePrecursorAdducts.Type" xml:space="preserve">
-    <value>System.Windows.Forms.TextBox, System.Windows.Forms, Version=4.0.0.0, Culture=neutral, PublicKeyToken=b77a5c561934e089</value>
-  </data>
   <data name="&gt;&gt;textSmallMoleculePrecursorAdducts.Parent" xml:space="preserve">
     <value>tabPage2</value>
   </data>
@@ -1755,9 +1488,6 @@
   </data>
   <data name="&gt;&gt;lblSmallMoleculePrecursorAdducts.Name" xml:space="preserve">
     <value>lblSmallMoleculePrecursorAdducts</value>
-  </data>
-  <data name="&gt;&gt;lblSmallMoleculePrecursorAdducts.Type" xml:space="preserve">
-    <value>System.Windows.Forms.Label, System.Windows.Forms, Version=4.0.0.0, Culture=neutral, PublicKeyToken=b77a5c561934e089</value>
   </data>
   <data name="&gt;&gt;lblSmallMoleculePrecursorAdducts.Parent" xml:space="preserve">
     <value>tabPage2</value>
@@ -1783,9 +1513,6 @@
   <data name="&gt;&gt;tabPage2.Name" xml:space="preserve">
     <value>tabPage2</value>
   </data>
-  <data name="&gt;&gt;tabPage2.Type" xml:space="preserve">
-    <value>System.Windows.Forms.TabPage, System.Windows.Forms, Version=4.0.0.0, Culture=neutral, PublicKeyToken=b77a5c561934e089</value>
-  </data>
   <data name="&gt;&gt;tabPage2.Parent" xml:space="preserve">
     <value>tabControlPeptidesSmallMols</value>
   </data>
@@ -1803,9 +1530,6 @@
   </data>
   <data name="&gt;&gt;btnPrecursorAdduct.Name" xml:space="preserve">
     <value>btnPrecursorAdduct</value>
-  </data>
-  <data name="&gt;&gt;btnPrecursorAdduct.Type" xml:space="preserve">
-    <value>System.Windows.Forms.Button, System.Windows.Forms, Version=4.0.0.0, Culture=neutral, PublicKeyToken=b77a5c561934e089</value>
   </data>
   <data name="&gt;&gt;btnPrecursorAdduct.Parent" xml:space="preserve">
     <value>tabPage2</value>
@@ -1827,9 +1551,6 @@
   </data>
   <data name="&gt;&gt;btnFragmentAdduct.Name" xml:space="preserve">
     <value>btnFragmentAdduct</value>
-  </data>
-  <data name="&gt;&gt;btnFragmentAdduct.Type" xml:space="preserve">
-    <value>System.Windows.Forms.Button, System.Windows.Forms, Version=4.0.0.0, Culture=neutral, PublicKeyToken=b77a5c561934e089</value>
   </data>
   <data name="&gt;&gt;btnFragmentAdduct.Parent" xml:space="preserve">
     <value>tabPage2</value>
@@ -1864,9 +1585,6 @@ H (+1)、K (+1)、Na (+1)、Li (+1)、Br (-1)、Cl (-1)、F (-1)、CH3COO (-1)�
   <data name="&gt;&gt;textSmallMoleculeFragmentAdducts.Name" xml:space="preserve">
     <value>textSmallMoleculeFragmentAdducts</value>
   </data>
-  <data name="&gt;&gt;textSmallMoleculeFragmentAdducts.Type" xml:space="preserve">
-    <value>System.Windows.Forms.TextBox, System.Windows.Forms, Version=4.0.0.0, Culture=neutral, PublicKeyToken=b77a5c561934e089</value>
-  </data>
   <data name="&gt;&gt;textSmallMoleculeFragmentAdducts.Parent" xml:space="preserve">
     <value>tabPage2</value>
   </data>
@@ -1894,9 +1612,6 @@ H (+1)、K (+1)、Na (+1)、Li (+1)、Br (-1)、Cl (-1)、F (-1)、CH3COO (-1)�
   <data name="&gt;&gt;labelSmallMoleculeFragmentAdducts.Name" xml:space="preserve">
     <value>labelSmallMoleculeFragmentAdducts</value>
   </data>
-  <data name="&gt;&gt;labelSmallMoleculeFragmentAdducts.Type" xml:space="preserve">
-    <value>System.Windows.Forms.Label, System.Windows.Forms, Version=4.0.0.0, Culture=neutral, PublicKeyToken=b77a5c561934e089</value>
-  </data>
   <data name="&gt;&gt;labelSmallMoleculeFragmentAdducts.Parent" xml:space="preserve">
     <value>tabPage2</value>
   </data>
@@ -1918,9 +1633,6 @@ H (+1)、K (+1)、Na (+1)、Li (+1)、Br (-1)、Cl (-1)、F (-1)、CH3COO (-1)�
   </data>
   <data name="&gt;&gt;textSmallMoleculeIonTypes.Name" xml:space="preserve">
     <value>textSmallMoleculeIonTypes</value>
-  </data>
-  <data name="&gt;&gt;textSmallMoleculeIonTypes.Type" xml:space="preserve">
-    <value>System.Windows.Forms.TextBox, System.Windows.Forms, Version=4.0.0.0, Culture=neutral, PublicKeyToken=b77a5c561934e089</value>
   </data>
   <data name="&gt;&gt;textSmallMoleculeIonTypes.Parent" xml:space="preserve">
     <value>tabPage2</value>
@@ -1948,9 +1660,6 @@ H (+1)、K (+1)、Na (+1)、Li (+1)、Br (-1)、Cl (-1)、F (-1)、CH3COO (-1)�
   </data>
   <data name="&gt;&gt;labelSmallMoleculeIonTypes.Name" xml:space="preserve">
     <value>labelSmallMoleculeIonTypes</value>
-  </data>
-  <data name="&gt;&gt;labelSmallMoleculeIonTypes.Type" xml:space="preserve">
-    <value>System.Windows.Forms.Label, System.Windows.Forms, Version=4.0.0.0, Culture=neutral, PublicKeyToken=b77a5c561934e089</value>
   </data>
   <data name="&gt;&gt;labelSmallMoleculeIonTypes.Parent" xml:space="preserve">
     <value>tabPage2</value>
@@ -1985,9 +1694,6 @@ H (+1)、K (+1)、Na (+1)、Li (+1)、Br (-1)、Cl (-1)、F (-1)、CH3COO (-1)�
   <data name="&gt;&gt;textSmallMoleculePrecursorAdducts.Name" xml:space="preserve">
     <value>textSmallMoleculePrecursorAdducts</value>
   </data>
-  <data name="&gt;&gt;textSmallMoleculePrecursorAdducts.Type" xml:space="preserve">
-    <value>System.Windows.Forms.TextBox, System.Windows.Forms, Version=4.0.0.0, Culture=neutral, PublicKeyToken=b77a5c561934e089</value>
-  </data>
   <data name="&gt;&gt;textSmallMoleculePrecursorAdducts.Parent" xml:space="preserve">
     <value>tabPage2</value>
   </data>
@@ -2018,9 +1724,6 @@ H (+1)、K (+1)、Na (+1)、Li (+1)、Br (-1)、Cl (-1)、F (-1)、CH3COO (-1)�
   <data name="&gt;&gt;lblSmallMoleculePrecursorAdducts.Name" xml:space="preserve">
     <value>lblSmallMoleculePrecursorAdducts</value>
   </data>
-  <data name="&gt;&gt;lblSmallMoleculePrecursorAdducts.Type" xml:space="preserve">
-    <value>System.Windows.Forms.Label, System.Windows.Forms, Version=4.0.0.0, Culture=neutral, PublicKeyToken=b77a5c561934e089</value>
-  </data>
   <data name="&gt;&gt;lblSmallMoleculePrecursorAdducts.Parent" xml:space="preserve">
     <value>tabPage2</value>
   </data>
@@ -2043,9 +1746,6 @@ H (+1)、K (+1)、Na (+1)、Li (+1)、Br (-1)、Cl (-1)、F (-1)、CH3COO (-1)�
   </data>
   <data name="&gt;&gt;textExclusionWindow.Name" xml:space="preserve">
     <value>textExclusionWindow</value>
-  </data>
-  <data name="&gt;&gt;textExclusionWindow.Type" xml:space="preserve">
-    <value>System.Windows.Forms.TextBox, System.Windows.Forms, Version=4.0.0.0, Culture=neutral, PublicKeyToken=b77a5c561934e089</value>
   </data>
   <data name="&gt;&gt;textExclusionWindow.Parent" xml:space="preserve">
     <value>tabFilter</value>
@@ -2076,9 +1776,6 @@ H (+1)、K (+1)、Na (+1)、Li (+1)、Br (-1)、Cl (-1)、F (-1)、CH3COO (-1)�
   <data name="&gt;&gt;cbAutoSelect.Name" xml:space="preserve">
     <value>cbAutoSelect</value>
   </data>
-  <data name="&gt;&gt;cbAutoSelect.Type" xml:space="preserve">
-    <value>System.Windows.Forms.CheckBox, System.Windows.Forms, Version=4.0.0.0, Culture=neutral, PublicKeyToken=b77a5c561934e089</value>
-  </data>
   <data name="&gt;&gt;cbAutoSelect.Parent" xml:space="preserve">
     <value>tabFilter</value>
   </data>
@@ -2103,9 +1800,6 @@ H (+1)、K (+1)、Na (+1)、Li (+1)、Br (-1)、Cl (-1)、F (-1)、CH3COO (-1)�
   <data name="&gt;&gt;lbPrecursorMzWindow.Name" xml:space="preserve">
     <value>lbPrecursorMzWindow</value>
   </data>
-  <data name="&gt;&gt;lbPrecursorMzWindow.Type" xml:space="preserve">
-    <value>System.Windows.Forms.Label, System.Windows.Forms, Version=4.0.0.0, Culture=neutral, PublicKeyToken=b77a5c561934e089</value>
-  </data>
   <data name="&gt;&gt;lbPrecursorMzWindow.Parent" xml:space="preserve">
     <value>tabFilter</value>
   </data>
@@ -2114,9 +1808,6 @@ H (+1)、K (+1)、Na (+1)、Li (+1)、Br (-1)、Cl (-1)、F (-1)、CH3COO (-1)�
   </data>
   <data name="&gt;&gt;label9.Name" xml:space="preserve">
     <value>label9</value>
-  </data>
-  <data name="&gt;&gt;label9.Type" xml:space="preserve">
-    <value>System.Windows.Forms.Label, System.Windows.Forms, Version=4.0.0.0, Culture=neutral, PublicKeyToken=b77a5c561934e089</value>
   </data>
   <data name="&gt;&gt;label9.Parent" xml:space="preserve">
     <value>tabLibrary</value>
@@ -2127,9 +1818,6 @@ H (+1)、K (+1)、Na (+1)、Li (+1)、Br (-1)、Cl (-1)、F (-1)、CH3COO (-1)�
   <data name="&gt;&gt;panelPick.Name" xml:space="preserve">
     <value>panelPick</value>
   </data>
-  <data name="&gt;&gt;panelPick.Type" xml:space="preserve">
-    <value>System.Windows.Forms.Panel, System.Windows.Forms, Version=4.0.0.0, Culture=neutral, PublicKeyToken=b77a5c561934e089</value>
-  </data>
   <data name="&gt;&gt;panelPick.Parent" xml:space="preserve">
     <value>tabLibrary</value>
   </data>
@@ -2138,9 +1826,6 @@ H (+1)、K (+1)、Na (+1)、Li (+1)、Br (-1)、Cl (-1)、F (-1)、CH3COO (-1)�
   </data>
   <data name="&gt;&gt;textTolerance.Name" xml:space="preserve">
     <value>textTolerance</value>
-  </data>
-  <data name="&gt;&gt;textTolerance.Type" xml:space="preserve">
-    <value>System.Windows.Forms.TextBox, System.Windows.Forms, Version=4.0.0.0, Culture=neutral, PublicKeyToken=b77a5c561934e089</value>
   </data>
   <data name="&gt;&gt;textTolerance.Parent" xml:space="preserve">
     <value>tabLibrary</value>
@@ -2151,9 +1836,6 @@ H (+1)、K (+1)、Na (+1)、Li (+1)、Br (-1)、Cl (-1)、F (-1)、CH3COO (-1)�
   <data name="&gt;&gt;cbLibraryPick.Name" xml:space="preserve">
     <value>cbLibraryPick</value>
   </data>
-  <data name="&gt;&gt;cbLibraryPick.Type" xml:space="preserve">
-    <value>System.Windows.Forms.CheckBox, System.Windows.Forms, Version=4.0.0.0, Culture=neutral, PublicKeyToken=b77a5c561934e089</value>
-  </data>
   <data name="&gt;&gt;cbLibraryPick.Parent" xml:space="preserve">
     <value>tabLibrary</value>
   </data>
@@ -2162,9 +1844,6 @@ H (+1)、K (+1)、Na (+1)、Li (+1)、Br (-1)、Cl (-1)、F (-1)、CH3COO (-1)�
   </data>
   <data name="&gt;&gt;label13.Name" xml:space="preserve">
     <value>label13</value>
-  </data>
-  <data name="&gt;&gt;label13.Type" xml:space="preserve">
-    <value>System.Windows.Forms.Label, System.Windows.Forms, Version=4.0.0.0, Culture=neutral, PublicKeyToken=b77a5c561934e089</value>
   </data>
   <data name="&gt;&gt;label13.Parent" xml:space="preserve">
     <value>tabLibrary</value>
@@ -2190,9 +1869,6 @@ H (+1)、K (+1)、Na (+1)、Li (+1)、Br (-1)、Cl (-1)、F (-1)、CH3COO (-1)�
   <data name="&gt;&gt;tabLibrary.Name" xml:space="preserve">
     <value>tabLibrary</value>
   </data>
-  <data name="&gt;&gt;tabLibrary.Type" xml:space="preserve">
-    <value>System.Windows.Forms.TabPage, System.Windows.Forms, Version=4.0.0.0, Culture=neutral, PublicKeyToken=b77a5c561934e089</value>
-  </data>
   <data name="&gt;&gt;tabLibrary.Parent" xml:space="preserve">
     <value>tabControl1</value>
   </data>
@@ -2217,9 +1893,6 @@ H (+1)、K (+1)、Na (+1)、Li (+1)、Br (-1)、Cl (-1)、F (-1)、CH3COO (-1)�
   <data name="&gt;&gt;label9.Name" xml:space="preserve">
     <value>label9</value>
   </data>
-  <data name="&gt;&gt;label9.Type" xml:space="preserve">
-    <value>System.Windows.Forms.Label, System.Windows.Forms, Version=4.0.0.0, Culture=neutral, PublicKeyToken=b77a5c561934e089</value>
-  </data>
   <data name="&gt;&gt;label9.Parent" xml:space="preserve">
     <value>tabLibrary</value>
   </data>
@@ -2228,9 +1901,6 @@ H (+1)、K (+1)、Na (+1)、Li (+1)、Br (-1)、Cl (-1)、F (-1)、CH3COO (-1)�
   </data>
   <data name="&gt;&gt;label22.Name" xml:space="preserve">
     <value>label22</value>
-  </data>
-  <data name="&gt;&gt;label22.Type" xml:space="preserve">
-    <value>System.Windows.Forms.Label, System.Windows.Forms, Version=4.0.0.0, Culture=neutral, PublicKeyToken=b77a5c561934e089</value>
   </data>
   <data name="&gt;&gt;label22.Parent" xml:space="preserve">
     <value>panelPick</value>
@@ -2241,9 +1911,6 @@ H (+1)、K (+1)、Na (+1)、Li (+1)、Br (-1)、Cl (-1)、F (-1)、CH3COO (-1)�
   <data name="&gt;&gt;textMinIonCount.Name" xml:space="preserve">
     <value>textMinIonCount</value>
   </data>
-  <data name="&gt;&gt;textMinIonCount.Type" xml:space="preserve">
-    <value>System.Windows.Forms.TextBox, System.Windows.Forms, Version=4.0.0.0, Culture=neutral, PublicKeyToken=b77a5c561934e089</value>
-  </data>
   <data name="&gt;&gt;textMinIonCount.Parent" xml:space="preserve">
     <value>panelPick</value>
   </data>
@@ -2252,9 +1919,6 @@ H (+1)、K (+1)、Na (+1)、Li (+1)、Br (-1)、Cl (-1)、F (-1)、CH3COO (-1)�
   </data>
   <data name="&gt;&gt;radioAllAndFiltered.Name" xml:space="preserve">
     <value>radioAllAndFiltered</value>
-  </data>
-  <data name="&gt;&gt;radioAllAndFiltered.Type" xml:space="preserve">
-    <value>System.Windows.Forms.RadioButton, System.Windows.Forms, Version=4.0.0.0, Culture=neutral, PublicKeyToken=b77a5c561934e089</value>
   </data>
   <data name="&gt;&gt;radioAllAndFiltered.Parent" xml:space="preserve">
     <value>panelPick</value>
@@ -2265,9 +1929,6 @@ H (+1)、K (+1)、Na (+1)、Li (+1)、Br (-1)、Cl (-1)、F (-1)、CH3COO (-1)�
   <data name="&gt;&gt;radioFiltered.Name" xml:space="preserve">
     <value>radioFiltered</value>
   </data>
-  <data name="&gt;&gt;radioFiltered.Type" xml:space="preserve">
-    <value>System.Windows.Forms.RadioButton, System.Windows.Forms, Version=4.0.0.0, Culture=neutral, PublicKeyToken=b77a5c561934e089</value>
-  </data>
   <data name="&gt;&gt;radioFiltered.Parent" xml:space="preserve">
     <value>panelPick</value>
   </data>
@@ -2276,9 +1937,6 @@ H (+1)、K (+1)、Na (+1)、Li (+1)、Br (-1)、Cl (-1)、F (-1)、CH3COO (-1)�
   </data>
   <data name="&gt;&gt;radioAll.Name" xml:space="preserve">
     <value>radioAll</value>
-  </data>
-  <data name="&gt;&gt;radioAll.Type" xml:space="preserve">
-    <value>System.Windows.Forms.RadioButton, System.Windows.Forms, Version=4.0.0.0, Culture=neutral, PublicKeyToken=b77a5c561934e089</value>
   </data>
   <data name="&gt;&gt;radioAll.Parent" xml:space="preserve">
     <value>panelPick</value>
@@ -2289,9 +1947,6 @@ H (+1)、K (+1)、Na (+1)、Li (+1)、Br (-1)、Cl (-1)、F (-1)、CH3COO (-1)�
   <data name="&gt;&gt;label14.Name" xml:space="preserve">
     <value>label14</value>
   </data>
-  <data name="&gt;&gt;label14.Type" xml:space="preserve">
-    <value>System.Windows.Forms.Label, System.Windows.Forms, Version=4.0.0.0, Culture=neutral, PublicKeyToken=b77a5c561934e089</value>
-  </data>
   <data name="&gt;&gt;label14.Parent" xml:space="preserve">
     <value>panelPick</value>
   </data>
@@ -2301,9 +1956,6 @@ H (+1)、K (+1)、Na (+1)、Li (+1)、Br (-1)、Cl (-1)、F (-1)、CH3COO (-1)�
   <data name="&gt;&gt;label15.Name" xml:space="preserve">
     <value>label15</value>
   </data>
-  <data name="&gt;&gt;label15.Type" xml:space="preserve">
-    <value>System.Windows.Forms.Label, System.Windows.Forms, Version=4.0.0.0, Culture=neutral, PublicKeyToken=b77a5c561934e089</value>
-  </data>
   <data name="&gt;&gt;label15.Parent" xml:space="preserve">
     <value>panelPick</value>
   </data>
@@ -2312,9 +1964,6 @@ H (+1)、K (+1)、Na (+1)、Li (+1)、Br (-1)、Cl (-1)、F (-1)、CH3COO (-1)�
   </data>
   <data name="&gt;&gt;textIonCount.Name" xml:space="preserve">
     <value>textIonCount</value>
-  </data>
-  <data name="&gt;&gt;textIonCount.Type" xml:space="preserve">
-    <value>System.Windows.Forms.TextBox, System.Windows.Forms, Version=4.0.0.0, Culture=neutral, PublicKeyToken=b77a5c561934e089</value>
   </data>
   <data name="&gt;&gt;textIonCount.Parent" xml:space="preserve">
     <value>panelPick</value>
@@ -2333,9 +1982,6 @@ H (+1)、K (+1)、Na (+1)、Li (+1)、Br (-1)、Cl (-1)、F (-1)、CH3COO (-1)�
   </data>
   <data name="&gt;&gt;panelPick.Name" xml:space="preserve">
     <value>panelPick</value>
-  </data>
-  <data name="&gt;&gt;panelPick.Type" xml:space="preserve">
-    <value>System.Windows.Forms.Panel, System.Windows.Forms, Version=4.0.0.0, Culture=neutral, PublicKeyToken=b77a5c561934e089</value>
   </data>
   <data name="&gt;&gt;panelPick.Parent" xml:space="preserve">
     <value>tabLibrary</value>
@@ -2364,9 +2010,6 @@ H (+1)、K (+1)、Na (+1)、Li (+1)、Br (-1)、Cl (-1)、F (-1)、CH3COO (-1)�
   <data name="&gt;&gt;label22.Name" xml:space="preserve">
     <value>label22</value>
   </data>
-  <data name="&gt;&gt;label22.Type" xml:space="preserve">
-    <value>System.Windows.Forms.Label, System.Windows.Forms, Version=4.0.0.0, Culture=neutral, PublicKeyToken=b77a5c561934e089</value>
-  </data>
   <data name="&gt;&gt;label22.Parent" xml:space="preserve">
     <value>panelPick</value>
   </data>
@@ -2387,9 +2030,6 @@ H (+1)、K (+1)、Na (+1)、Li (+1)、Br (-1)、Cl (-1)、F (-1)、CH3COO (-1)�
   </data>
   <data name="&gt;&gt;textMinIonCount.Name" xml:space="preserve">
     <value>textMinIonCount</value>
-  </data>
-  <data name="&gt;&gt;textMinIonCount.Type" xml:space="preserve">
-    <value>System.Windows.Forms.TextBox, System.Windows.Forms, Version=4.0.0.0, Culture=neutral, PublicKeyToken=b77a5c561934e089</value>
   </data>
   <data name="&gt;&gt;textMinIonCount.Parent" xml:space="preserve">
     <value>panelPick</value>
@@ -2421,9 +2061,6 @@ H (+1)、K (+1)、Na (+1)、Li (+1)、Br (-1)、Cl (-1)、F (-1)、CH3COO (-1)�
   <data name="&gt;&gt;radioAllAndFiltered.Name" xml:space="preserve">
     <value>radioAllAndFiltered</value>
   </data>
-  <data name="&gt;&gt;radioAllAndFiltered.Type" xml:space="preserve">
-    <value>System.Windows.Forms.RadioButton, System.Windows.Forms, Version=4.0.0.0, Culture=neutral, PublicKeyToken=b77a5c561934e089</value>
-  </data>
   <data name="&gt;&gt;radioAllAndFiltered.Parent" xml:space="preserve">
     <value>panelPick</value>
   </data>
@@ -2451,9 +2088,6 @@ H (+1)、K (+1)、Na (+1)、Li (+1)、Br (-1)、Cl (-1)、F (-1)、CH3COO (-1)�
   </data>
   <data name="&gt;&gt;radioFiltered.Name" xml:space="preserve">
     <value>radioFiltered</value>
-  </data>
-  <data name="&gt;&gt;radioFiltered.Type" xml:space="preserve">
-    <value>System.Windows.Forms.RadioButton, System.Windows.Forms, Version=4.0.0.0, Culture=neutral, PublicKeyToken=b77a5c561934e089</value>
   </data>
   <data name="&gt;&gt;radioFiltered.Parent" xml:space="preserve">
     <value>panelPick</value>
@@ -2483,9 +2117,6 @@ H (+1)、K (+1)、Na (+1)、Li (+1)、Br (-1)、Cl (-1)、F (-1)、CH3COO (-1)�
   <data name="&gt;&gt;radioAll.Name" xml:space="preserve">
     <value>radioAll</value>
   </data>
-  <data name="&gt;&gt;radioAll.Type" xml:space="preserve">
-    <value>System.Windows.Forms.RadioButton, System.Windows.Forms, Version=4.0.0.0, Culture=neutral, PublicKeyToken=b77a5c561934e089</value>
-  </data>
   <data name="&gt;&gt;radioAll.Parent" xml:space="preserve">
     <value>panelPick</value>
   </data>
@@ -2509,9 +2140,6 @@ H (+1)、K (+1)、Na (+1)、Li (+1)、Br (-1)、Cl (-1)、F (-1)、CH3COO (-1)�
   </data>
   <data name="&gt;&gt;label14.Name" xml:space="preserve">
     <value>label14</value>
-  </data>
-  <data name="&gt;&gt;label14.Type" xml:space="preserve">
-    <value>System.Windows.Forms.Label, System.Windows.Forms, Version=4.0.0.0, Culture=neutral, PublicKeyToken=b77a5c561934e089</value>
   </data>
   <data name="&gt;&gt;label14.Parent" xml:space="preserve">
     <value>panelPick</value>
@@ -2537,9 +2165,6 @@ H (+1)、K (+1)、Na (+1)、Li (+1)、Br (-1)、Cl (-1)、F (-1)、CH3COO (-1)�
   <data name="&gt;&gt;label15.Name" xml:space="preserve">
     <value>label15</value>
   </data>
-  <data name="&gt;&gt;label15.Type" xml:space="preserve">
-    <value>System.Windows.Forms.Label, System.Windows.Forms, Version=4.0.0.0, Culture=neutral, PublicKeyToken=b77a5c561934e089</value>
-  </data>
   <data name="&gt;&gt;label15.Parent" xml:space="preserve">
     <value>panelPick</value>
   </data>
@@ -2562,9 +2187,6 @@ H (+1)、K (+1)、Na (+1)、Li (+1)、Br (-1)、Cl (-1)、F (-1)、CH3COO (-1)�
   <data name="&gt;&gt;textIonCount.Name" xml:space="preserve">
     <value>textIonCount</value>
   </data>
-  <data name="&gt;&gt;textIonCount.Type" xml:space="preserve">
-    <value>System.Windows.Forms.TextBox, System.Windows.Forms, Version=4.0.0.0, Culture=neutral, PublicKeyToken=b77a5c561934e089</value>
-  </data>
   <data name="&gt;&gt;textIonCount.Parent" xml:space="preserve">
     <value>panelPick</value>
   </data>
@@ -2586,9 +2208,6 @@ H (+1)、K (+1)、Na (+1)、Li (+1)、Br (-1)、Cl (-1)、F (-1)、CH3COO (-1)�
   </data>
   <data name="&gt;&gt;textTolerance.Name" xml:space="preserve">
     <value>textTolerance</value>
-  </data>
-  <data name="&gt;&gt;textTolerance.Type" xml:space="preserve">
-    <value>System.Windows.Forms.TextBox, System.Windows.Forms, Version=4.0.0.0, Culture=neutral, PublicKeyToken=b77a5c561934e089</value>
   </data>
   <data name="&gt;&gt;textTolerance.Parent" xml:space="preserve">
     <value>tabLibrary</value>
@@ -2618,9 +2237,6 @@ H (+1)、K (+1)、Na (+1)、Li (+1)、Br (-1)、Cl (-1)、F (-1)、CH3COO (-1)�
   <data name="&gt;&gt;cbLibraryPick.Name" xml:space="preserve">
     <value>cbLibraryPick</value>
   </data>
-  <data name="&gt;&gt;cbLibraryPick.Type" xml:space="preserve">
-    <value>System.Windows.Forms.CheckBox, System.Windows.Forms, Version=4.0.0.0, Culture=neutral, PublicKeyToken=b77a5c561934e089</value>
-  </data>
   <data name="&gt;&gt;cbLibraryPick.Parent" xml:space="preserve">
     <value>tabLibrary</value>
   </data>
@@ -2648,9 +2264,6 @@ H (+1)、K (+1)、Na (+1)、Li (+1)、Br (-1)、Cl (-1)、F (-1)、CH3COO (-1)�
   <data name="&gt;&gt;label13.Name" xml:space="preserve">
     <value>label13</value>
   </data>
-  <data name="&gt;&gt;label13.Type" xml:space="preserve">
-    <value>System.Windows.Forms.Label, System.Windows.Forms, Version=4.0.0.0, Culture=neutral, PublicKeyToken=b77a5c561934e089</value>
-  </data>
   <data name="&gt;&gt;label13.Parent" xml:space="preserve">
     <value>tabLibrary</value>
   </data>
@@ -2659,9 +2272,6 @@ H (+1)、K (+1)、Na (+1)、Li (+1)、Br (-1)、Cl (-1)、F (-1)、CH3COO (-1)�
   </data>
   <data name="&gt;&gt;cbxTriggeredAcquisition.Name" xml:space="preserve">
     <value>cbxTriggeredAcquisition</value>
-  </data>
-  <data name="&gt;&gt;cbxTriggeredAcquisition.Type" xml:space="preserve">
-    <value>System.Windows.Forms.CheckBox, System.Windows.Forms, Version=4.0.0.0, Culture=neutral, PublicKeyToken=b77a5c561934e089</value>
   </data>
   <data name="&gt;&gt;cbxTriggeredAcquisition.Parent" xml:space="preserve">
     <value>tabInstrument</value>
@@ -2672,9 +2282,6 @@ H (+1)、K (+1)、Na (+1)、Li (+1)、Br (-1)、Cl (-1)、F (-1)、CH3COO (-1)�
   <data name="&gt;&gt;textMaxInclusions.Name" xml:space="preserve">
     <value>textMaxInclusions</value>
   </data>
-  <data name="&gt;&gt;textMaxInclusions.Type" xml:space="preserve">
-    <value>System.Windows.Forms.TextBox, System.Windows.Forms, Version=4.0.0.0, Culture=neutral, PublicKeyToken=b77a5c561934e089</value>
-  </data>
   <data name="&gt;&gt;textMaxInclusions.Parent" xml:space="preserve">
     <value>tabInstrument</value>
   </data>
@@ -2683,9 +2290,6 @@ H (+1)、K (+1)、Na (+1)、Li (+1)、Br (-1)、Cl (-1)、F (-1)、CH3COO (-1)�
   </data>
   <data name="&gt;&gt;label21.Name" xml:space="preserve">
     <value>label21</value>
-  </data>
-  <data name="&gt;&gt;label21.Type" xml:space="preserve">
-    <value>System.Windows.Forms.Label, System.Windows.Forms, Version=4.0.0.0, Culture=neutral, PublicKeyToken=b77a5c561934e089</value>
   </data>
   <data name="&gt;&gt;label21.Parent" xml:space="preserve">
     <value>tabInstrument</value>
@@ -2696,9 +2300,6 @@ H (+1)、K (+1)、Na (+1)、Li (+1)、Br (-1)、Cl (-1)、F (-1)、CH3COO (-1)�
   <data name="&gt;&gt;label30.Name" xml:space="preserve">
     <value>label30</value>
   </data>
-  <data name="&gt;&gt;label30.Type" xml:space="preserve">
-    <value>System.Windows.Forms.Label, System.Windows.Forms, Version=4.0.0.0, Culture=neutral, PublicKeyToken=b77a5c561934e089</value>
-  </data>
   <data name="&gt;&gt;label30.Parent" xml:space="preserve">
     <value>tabInstrument</value>
   </data>
@@ -2707,9 +2308,6 @@ H (+1)、K (+1)、Na (+1)、Li (+1)、Br (-1)、Cl (-1)、F (-1)、CH3COO (-1)�
   </data>
   <data name="&gt;&gt;label31.Name" xml:space="preserve">
     <value>label31</value>
-  </data>
-  <data name="&gt;&gt;label31.Type" xml:space="preserve">
-    <value>System.Windows.Forms.Label, System.Windows.Forms, Version=4.0.0.0, Culture=neutral, PublicKeyToken=b77a5c561934e089</value>
   </data>
   <data name="&gt;&gt;label31.Parent" xml:space="preserve">
     <value>tabInstrument</value>
@@ -2720,9 +2318,6 @@ H (+1)、K (+1)、Na (+1)、Li (+1)、Br (-1)、Cl (-1)、F (-1)、CH3COO (-1)�
   <data name="&gt;&gt;label33.Name" xml:space="preserve">
     <value>label33</value>
   </data>
-  <data name="&gt;&gt;label33.Type" xml:space="preserve">
-    <value>System.Windows.Forms.Label, System.Windows.Forms, Version=4.0.0.0, Culture=neutral, PublicKeyToken=b77a5c561934e089</value>
-  </data>
   <data name="&gt;&gt;label33.Parent" xml:space="preserve">
     <value>tabInstrument</value>
   </data>
@@ -2731,9 +2326,6 @@ H (+1)、K (+1)、Na (+1)、Li (+1)、Br (-1)、Cl (-1)、F (-1)、CH3COO (-1)�
   </data>
   <data name="&gt;&gt;label34.Name" xml:space="preserve">
     <value>label34</value>
-  </data>
-  <data name="&gt;&gt;label34.Type" xml:space="preserve">
-    <value>System.Windows.Forms.Label, System.Windows.Forms, Version=4.0.0.0, Culture=neutral, PublicKeyToken=b77a5c561934e089</value>
   </data>
   <data name="&gt;&gt;label34.Parent" xml:space="preserve">
     <value>tabInstrument</value>
@@ -2744,9 +2336,6 @@ H (+1)、K (+1)、Na (+1)、Li (+1)、Br (-1)、Cl (-1)、F (-1)、CH3COO (-1)�
   <data name="&gt;&gt;textMaxTime.Name" xml:space="preserve">
     <value>textMaxTime</value>
   </data>
-  <data name="&gt;&gt;textMaxTime.Type" xml:space="preserve">
-    <value>System.Windows.Forms.TextBox, System.Windows.Forms, Version=4.0.0.0, Culture=neutral, PublicKeyToken=b77a5c561934e089</value>
-  </data>
   <data name="&gt;&gt;textMaxTime.Parent" xml:space="preserve">
     <value>tabInstrument</value>
   </data>
@@ -2755,9 +2344,6 @@ H (+1)、K (+1)、Na (+1)、Li (+1)、Br (-1)、Cl (-1)、F (-1)、CH3COO (-1)�
   </data>
   <data name="&gt;&gt;textMinTime.Name" xml:space="preserve">
     <value>textMinTime</value>
-  </data>
-  <data name="&gt;&gt;textMinTime.Type" xml:space="preserve">
-    <value>System.Windows.Forms.TextBox, System.Windows.Forms, Version=4.0.0.0, Culture=neutral, PublicKeyToken=b77a5c561934e089</value>
   </data>
   <data name="&gt;&gt;textMinTime.Parent" xml:space="preserve">
     <value>tabInstrument</value>
@@ -2768,9 +2354,6 @@ H (+1)、K (+1)、Na (+1)、Li (+1)、Br (-1)、Cl (-1)、F (-1)、CH3COO (-1)�
   <data name="&gt;&gt;label26.Name" xml:space="preserve">
     <value>label26</value>
   </data>
-  <data name="&gt;&gt;label26.Type" xml:space="preserve">
-    <value>System.Windows.Forms.Label, System.Windows.Forms, Version=4.0.0.0, Culture=neutral, PublicKeyToken=b77a5c561934e089</value>
-  </data>
   <data name="&gt;&gt;label26.Parent" xml:space="preserve">
     <value>tabInstrument</value>
   </data>
@@ -2779,9 +2362,6 @@ H (+1)、K (+1)、Na (+1)、Li (+1)、Br (-1)、Cl (-1)、F (-1)、CH3COO (-1)�
   </data>
   <data name="&gt;&gt;label25.Name" xml:space="preserve">
     <value>label25</value>
-  </data>
-  <data name="&gt;&gt;label25.Type" xml:space="preserve">
-    <value>System.Windows.Forms.Label, System.Windows.Forms, Version=4.0.0.0, Culture=neutral, PublicKeyToken=b77a5c561934e089</value>
   </data>
   <data name="&gt;&gt;label25.Parent" xml:space="preserve">
     <value>tabInstrument</value>
@@ -2792,9 +2372,6 @@ H (+1)、K (+1)、Na (+1)、Li (+1)、Br (-1)、Cl (-1)、F (-1)、CH3COO (-1)�
   <data name="&gt;&gt;label24.Name" xml:space="preserve">
     <value>label24</value>
   </data>
-  <data name="&gt;&gt;label24.Type" xml:space="preserve">
-    <value>System.Windows.Forms.Label, System.Windows.Forms, Version=4.0.0.0, Culture=neutral, PublicKeyToken=b77a5c561934e089</value>
-  </data>
   <data name="&gt;&gt;label24.Parent" xml:space="preserve">
     <value>tabInstrument</value>
   </data>
@@ -2803,9 +2380,6 @@ H (+1)、K (+1)、Na (+1)、Li (+1)、Br (-1)、Cl (-1)、F (-1)、CH3COO (-1)�
   </data>
   <data name="&gt;&gt;cbDynamicMinimum.Name" xml:space="preserve">
     <value>cbDynamicMinimum</value>
-  </data>
-  <data name="&gt;&gt;cbDynamicMinimum.Type" xml:space="preserve">
-    <value>System.Windows.Forms.CheckBox, System.Windows.Forms, Version=4.0.0.0, Culture=neutral, PublicKeyToken=b77a5c561934e089</value>
   </data>
   <data name="&gt;&gt;cbDynamicMinimum.Parent" xml:space="preserve">
     <value>tabInstrument</value>
@@ -2816,9 +2390,6 @@ H (+1)、K (+1)、Na (+1)、Li (+1)、Br (-1)、Cl (-1)、F (-1)、CH3COO (-1)�
   <data name="&gt;&gt;textMaxTrans.Name" xml:space="preserve">
     <value>textMaxTrans</value>
   </data>
-  <data name="&gt;&gt;textMaxTrans.Type" xml:space="preserve">
-    <value>System.Windows.Forms.TextBox, System.Windows.Forms, Version=4.0.0.0, Culture=neutral, PublicKeyToken=b77a5c561934e089</value>
-  </data>
   <data name="&gt;&gt;textMaxTrans.Parent" xml:space="preserve">
     <value>tabInstrument</value>
   </data>
@@ -2827,9 +2398,6 @@ H (+1)、K (+1)、Na (+1)、Li (+1)、Br (-1)、Cl (-1)、F (-1)、CH3COO (-1)�
   </data>
   <data name="&gt;&gt;label17.Name" xml:space="preserve">
     <value>label17</value>
-  </data>
-  <data name="&gt;&gt;label17.Type" xml:space="preserve">
-    <value>System.Windows.Forms.Label, System.Windows.Forms, Version=4.0.0.0, Culture=neutral, PublicKeyToken=b77a5c561934e089</value>
   </data>
   <data name="&gt;&gt;label17.Parent" xml:space="preserve">
     <value>tabInstrument</value>
@@ -2840,9 +2408,6 @@ H (+1)、K (+1)、Na (+1)、Li (+1)、Br (-1)、Cl (-1)、F (-1)、CH3COO (-1)�
   <data name="&gt;&gt;textMzMatchTolerance.Name" xml:space="preserve">
     <value>textMzMatchTolerance</value>
   </data>
-  <data name="&gt;&gt;textMzMatchTolerance.Type" xml:space="preserve">
-    <value>System.Windows.Forms.TextBox, System.Windows.Forms, Version=4.0.0.0, Culture=neutral, PublicKeyToken=b77a5c561934e089</value>
-  </data>
   <data name="&gt;&gt;textMzMatchTolerance.Parent" xml:space="preserve">
     <value>tabInstrument</value>
   </data>
@@ -2851,9 +2416,6 @@ H (+1)、K (+1)、Na (+1)、Li (+1)、Br (-1)、Cl (-1)、F (-1)、CH3COO (-1)�
   </data>
   <data name="&gt;&gt;lblMethodMatchTolerance.Name" xml:space="preserve">
     <value>lblMethodMatchTolerance</value>
-  </data>
-  <data name="&gt;&gt;lblMethodMatchTolerance.Type" xml:space="preserve">
-    <value>System.Windows.Forms.Label, System.Windows.Forms, Version=4.0.0.0, Culture=neutral, PublicKeyToken=b77a5c561934e089</value>
   </data>
   <data name="&gt;&gt;lblMethodMatchTolerance.Parent" xml:space="preserve">
     <value>tabInstrument</value>
@@ -2864,9 +2426,6 @@ H (+1)、K (+1)、Na (+1)、Li (+1)、Br (-1)、Cl (-1)、F (-1)、CH3COO (-1)�
   <data name="&gt;&gt;label10.Name" xml:space="preserve">
     <value>label10</value>
   </data>
-  <data name="&gt;&gt;label10.Type" xml:space="preserve">
-    <value>System.Windows.Forms.Label, System.Windows.Forms, Version=4.0.0.0, Culture=neutral, PublicKeyToken=b77a5c561934e089</value>
-  </data>
   <data name="&gt;&gt;label10.Parent" xml:space="preserve">
     <value>tabInstrument</value>
   </data>
@@ -2875,9 +2434,6 @@ H (+1)、K (+1)、Na (+1)、Li (+1)、Br (-1)、Cl (-1)、F (-1)、CH3COO (-1)�
   </data>
   <data name="&gt;&gt;label11.Name" xml:space="preserve">
     <value>label11</value>
-  </data>
-  <data name="&gt;&gt;label11.Type" xml:space="preserve">
-    <value>System.Windows.Forms.Label, System.Windows.Forms, Version=4.0.0.0, Culture=neutral, PublicKeyToken=b77a5c561934e089</value>
   </data>
   <data name="&gt;&gt;label11.Parent" xml:space="preserve">
     <value>tabInstrument</value>
@@ -2888,9 +2444,6 @@ H (+1)、K (+1)、Na (+1)、Li (+1)、Br (-1)、Cl (-1)、F (-1)、CH3COO (-1)�
   <data name="&gt;&gt;textMaxMz.Name" xml:space="preserve">
     <value>textMaxMz</value>
   </data>
-  <data name="&gt;&gt;textMaxMz.Type" xml:space="preserve">
-    <value>System.Windows.Forms.TextBox, System.Windows.Forms, Version=4.0.0.0, Culture=neutral, PublicKeyToken=b77a5c561934e089</value>
-  </data>
   <data name="&gt;&gt;textMaxMz.Parent" xml:space="preserve">
     <value>tabInstrument</value>
   </data>
@@ -2899,9 +2452,6 @@ H (+1)、K (+1)、Na (+1)、Li (+1)、Br (-1)、Cl (-1)、F (-1)、CH3COO (-1)�
   </data>
   <data name="&gt;&gt;textMinMz.Name" xml:space="preserve">
     <value>textMinMz</value>
-  </data>
-  <data name="&gt;&gt;textMinMz.Type" xml:space="preserve">
-    <value>System.Windows.Forms.TextBox, System.Windows.Forms, Version=4.0.0.0, Culture=neutral, PublicKeyToken=b77a5c561934e089</value>
   </data>
   <data name="&gt;&gt;textMinMz.Parent" xml:space="preserve">
     <value>tabInstrument</value>
@@ -2923,9 +2473,6 @@ H (+1)、K (+1)、Na (+1)、Li (+1)、Br (-1)、Cl (-1)、F (-1)、CH3COO (-1)�
   </data>
   <data name="&gt;&gt;tabInstrument.Name" xml:space="preserve">
     <value>tabInstrument</value>
-  </data>
-  <data name="&gt;&gt;tabInstrument.Type" xml:space="preserve">
-    <value>System.Windows.Forms.TabPage, System.Windows.Forms, Version=4.0.0.0, Culture=neutral, PublicKeyToken=b77a5c561934e089</value>
   </data>
   <data name="&gt;&gt;tabInstrument.Parent" xml:space="preserve">
     <value>tabControl1</value>
@@ -2955,9 +2502,6 @@ H (+1)、K (+1)、Na (+1)、Li (+1)、Br (-1)、Cl (-1)、F (-1)、CH3COO (-1)�
   <data name="&gt;&gt;cbxTriggeredAcquisition.Name" xml:space="preserve">
     <value>cbxTriggeredAcquisition</value>
   </data>
-  <data name="&gt;&gt;cbxTriggeredAcquisition.Type" xml:space="preserve">
-    <value>System.Windows.Forms.CheckBox, System.Windows.Forms, Version=4.0.0.0, Culture=neutral, PublicKeyToken=b77a5c561934e089</value>
-  </data>
   <data name="&gt;&gt;cbxTriggeredAcquisition.Parent" xml:space="preserve">
     <value>tabInstrument</value>
   </data>
@@ -2979,9 +2523,6 @@ H (+1)、K (+1)、Na (+1)、Li (+1)、Br (-1)、Cl (-1)、F (-1)、CH3COO (-1)�
   </data>
   <data name="&gt;&gt;textMaxInclusions.Name" xml:space="preserve">
     <value>textMaxInclusions</value>
-  </data>
-  <data name="&gt;&gt;textMaxInclusions.Type" xml:space="preserve">
-    <value>System.Windows.Forms.TextBox, System.Windows.Forms, Version=4.0.0.0, Culture=neutral, PublicKeyToken=b77a5c561934e089</value>
   </data>
   <data name="&gt;&gt;textMaxInclusions.Parent" xml:space="preserve">
     <value>tabInstrument</value>
@@ -3007,9 +2548,6 @@ H (+1)、K (+1)、Na (+1)、Li (+1)、Br (-1)、Cl (-1)、F (-1)、CH3COO (-1)�
   <data name="&gt;&gt;label21.Name" xml:space="preserve">
     <value>label21</value>
   </data>
-  <data name="&gt;&gt;label21.Type" xml:space="preserve">
-    <value>System.Windows.Forms.Label, System.Windows.Forms, Version=4.0.0.0, Culture=neutral, PublicKeyToken=b77a5c561934e089</value>
-  </data>
   <data name="&gt;&gt;label21.Parent" xml:space="preserve">
     <value>tabInstrument</value>
   </data>
@@ -3033,9 +2571,6 @@ H (+1)、K (+1)、Na (+1)、Li (+1)、Br (-1)、Cl (-1)、F (-1)、CH3COO (-1)�
   </data>
   <data name="&gt;&gt;label30.Name" xml:space="preserve">
     <value>label30</value>
-  </data>
-  <data name="&gt;&gt;label30.Type" xml:space="preserve">
-    <value>System.Windows.Forms.Label, System.Windows.Forms, Version=4.0.0.0, Culture=neutral, PublicKeyToken=b77a5c561934e089</value>
   </data>
   <data name="&gt;&gt;label30.Parent" xml:space="preserve">
     <value>tabInstrument</value>
@@ -3061,9 +2596,6 @@ H (+1)、K (+1)、Na (+1)、Li (+1)、Br (-1)、Cl (-1)、F (-1)、CH3COO (-1)�
   <data name="&gt;&gt;label31.Name" xml:space="preserve">
     <value>label31</value>
   </data>
-  <data name="&gt;&gt;label31.Type" xml:space="preserve">
-    <value>System.Windows.Forms.Label, System.Windows.Forms, Version=4.0.0.0, Culture=neutral, PublicKeyToken=b77a5c561934e089</value>
-  </data>
   <data name="&gt;&gt;label31.Parent" xml:space="preserve">
     <value>tabInstrument</value>
   </data>
@@ -3087,9 +2619,6 @@ H (+1)、K (+1)、Na (+1)、Li (+1)、Br (-1)、Cl (-1)、F (-1)、CH3COO (-1)�
   </data>
   <data name="&gt;&gt;label33.Name" xml:space="preserve">
     <value>label33</value>
-  </data>
-  <data name="&gt;&gt;label33.Type" xml:space="preserve">
-    <value>System.Windows.Forms.Label, System.Windows.Forms, Version=4.0.0.0, Culture=neutral, PublicKeyToken=b77a5c561934e089</value>
   </data>
   <data name="&gt;&gt;label33.Parent" xml:space="preserve">
     <value>tabInstrument</value>
@@ -3115,9 +2644,6 @@ H (+1)、K (+1)、Na (+1)、Li (+1)、Br (-1)、Cl (-1)、F (-1)、CH3COO (-1)�
   <data name="&gt;&gt;label34.Name" xml:space="preserve">
     <value>label34</value>
   </data>
-  <data name="&gt;&gt;label34.Type" xml:space="preserve">
-    <value>System.Windows.Forms.Label, System.Windows.Forms, Version=4.0.0.0, Culture=neutral, PublicKeyToken=b77a5c561934e089</value>
-  </data>
   <data name="&gt;&gt;label34.Parent" xml:space="preserve">
     <value>tabInstrument</value>
   </data>
@@ -3141,9 +2667,6 @@ H (+1)、K (+1)、Na (+1)、Li (+1)、Br (-1)、Cl (-1)、F (-1)、CH3COO (-1)�
   <data name="&gt;&gt;textMaxTime.Name" xml:space="preserve">
     <value>textMaxTime</value>
   </data>
-  <data name="&gt;&gt;textMaxTime.Type" xml:space="preserve">
-    <value>System.Windows.Forms.TextBox, System.Windows.Forms, Version=4.0.0.0, Culture=neutral, PublicKeyToken=b77a5c561934e089</value>
-  </data>
   <data name="&gt;&gt;textMaxTime.Parent" xml:space="preserve">
     <value>tabInstrument</value>
   </data>
@@ -3166,9 +2689,6 @@ H (+1)、K (+1)、Na (+1)、Li (+1)、Br (-1)、Cl (-1)、F (-1)、CH3COO (-1)�
   </data>
   <data name="&gt;&gt;textMinTime.Name" xml:space="preserve">
     <value>textMinTime</value>
-  </data>
-  <data name="&gt;&gt;textMinTime.Type" xml:space="preserve">
-    <value>System.Windows.Forms.TextBox, System.Windows.Forms, Version=4.0.0.0, Culture=neutral, PublicKeyToken=b77a5c561934e089</value>
   </data>
   <data name="&gt;&gt;textMinTime.Parent" xml:space="preserve">
     <value>tabInstrument</value>
@@ -3197,9 +2717,6 @@ H (+1)、K (+1)、Na (+1)、Li (+1)、Br (-1)、Cl (-1)、F (-1)、CH3COO (-1)�
   <data name="&gt;&gt;label26.Name" xml:space="preserve">
     <value>label26</value>
   </data>
-  <data name="&gt;&gt;label26.Type" xml:space="preserve">
-    <value>System.Windows.Forms.Label, System.Windows.Forms, Version=4.0.0.0, Culture=neutral, PublicKeyToken=b77a5c561934e089</value>
-  </data>
   <data name="&gt;&gt;label26.Parent" xml:space="preserve">
     <value>tabInstrument</value>
   </data>
@@ -3227,9 +2744,6 @@ H (+1)、K (+1)、Na (+1)、Li (+1)、Br (-1)、Cl (-1)、F (-1)、CH3COO (-1)�
   <data name="&gt;&gt;label25.Name" xml:space="preserve">
     <value>label25</value>
   </data>
-  <data name="&gt;&gt;label25.Type" xml:space="preserve">
-    <value>System.Windows.Forms.Label, System.Windows.Forms, Version=4.0.0.0, Culture=neutral, PublicKeyToken=b77a5c561934e089</value>
-  </data>
   <data name="&gt;&gt;label25.Parent" xml:space="preserve">
     <value>tabInstrument</value>
   </data>
@@ -3256,9 +2770,6 @@ H (+1)、K (+1)、Na (+1)、Li (+1)、Br (-1)、Cl (-1)、F (-1)、CH3COO (-1)�
   </data>
   <data name="&gt;&gt;label24.Name" xml:space="preserve">
     <value>label24</value>
-  </data>
-  <data name="&gt;&gt;label24.Type" xml:space="preserve">
-    <value>System.Windows.Forms.Label, System.Windows.Forms, Version=4.0.0.0, Culture=neutral, PublicKeyToken=b77a5c561934e089</value>
   </data>
   <data name="&gt;&gt;label24.Parent" xml:space="preserve">
     <value>tabInstrument</value>
@@ -3289,9 +2800,6 @@ H (+1)、K (+1)、Na (+1)、Li (+1)、Br (-1)、Cl (-1)、F (-1)、CH3COO (-1)�
   <data name="&gt;&gt;cbDynamicMinimum.Name" xml:space="preserve">
     <value>cbDynamicMinimum</value>
   </data>
-  <data name="&gt;&gt;cbDynamicMinimum.Type" xml:space="preserve">
-    <value>System.Windows.Forms.CheckBox, System.Windows.Forms, Version=4.0.0.0, Culture=neutral, PublicKeyToken=b77a5c561934e089</value>
-  </data>
   <data name="&gt;&gt;cbDynamicMinimum.Parent" xml:space="preserve">
     <value>tabInstrument</value>
   </data>
@@ -3313,9 +2821,6 @@ H (+1)、K (+1)、Na (+1)、Li (+1)、Br (-1)、Cl (-1)、F (-1)、CH3COO (-1)�
   </data>
   <data name="&gt;&gt;textMaxTrans.Name" xml:space="preserve">
     <value>textMaxTrans</value>
-  </data>
-  <data name="&gt;&gt;textMaxTrans.Type" xml:space="preserve">
-    <value>System.Windows.Forms.TextBox, System.Windows.Forms, Version=4.0.0.0, Culture=neutral, PublicKeyToken=b77a5c561934e089</value>
   </data>
   <data name="&gt;&gt;textMaxTrans.Parent" xml:space="preserve">
     <value>tabInstrument</value>
@@ -3341,9 +2846,6 @@ H (+1)、K (+1)、Na (+1)、Li (+1)、Br (-1)、Cl (-1)、F (-1)、CH3COO (-1)�
   <data name="&gt;&gt;label17.Name" xml:space="preserve">
     <value>label17</value>
   </data>
-  <data name="&gt;&gt;label17.Type" xml:space="preserve">
-    <value>System.Windows.Forms.Label, System.Windows.Forms, Version=4.0.0.0, Culture=neutral, PublicKeyToken=b77a5c561934e089</value>
-  </data>
   <data name="&gt;&gt;label17.Parent" xml:space="preserve">
     <value>tabInstrument</value>
   </data>
@@ -3366,9 +2868,6 @@ H (+1)、K (+1)、Na (+1)、Li (+1)、Br (-1)、Cl (-1)、F (-1)、CH3COO (-1)�
   </data>
   <data name="&gt;&gt;textMzMatchTolerance.Name" xml:space="preserve">
     <value>textMzMatchTolerance</value>
-  </data>
-  <data name="&gt;&gt;textMzMatchTolerance.Type" xml:space="preserve">
-    <value>System.Windows.Forms.TextBox, System.Windows.Forms, Version=4.0.0.0, Culture=neutral, PublicKeyToken=b77a5c561934e089</value>
   </data>
   <data name="&gt;&gt;textMzMatchTolerance.Parent" xml:space="preserve">
     <value>tabInstrument</value>
@@ -3394,9 +2893,6 @@ H (+1)、K (+1)、Na (+1)、Li (+1)、Br (-1)、Cl (-1)、F (-1)、CH3COO (-1)�
   <data name="&gt;&gt;lblMethodMatchTolerance.Name" xml:space="preserve">
     <value>lblMethodMatchTolerance</value>
   </data>
-  <data name="&gt;&gt;lblMethodMatchTolerance.Type" xml:space="preserve">
-    <value>System.Windows.Forms.Label, System.Windows.Forms, Version=4.0.0.0, Culture=neutral, PublicKeyToken=b77a5c561934e089</value>
-  </data>
   <data name="&gt;&gt;lblMethodMatchTolerance.Parent" xml:space="preserve">
     <value>tabInstrument</value>
   </data>
@@ -3420,9 +2916,6 @@ H (+1)、K (+1)、Na (+1)、Li (+1)、Br (-1)、Cl (-1)、F (-1)、CH3COO (-1)�
   </data>
   <data name="&gt;&gt;label10.Name" xml:space="preserve">
     <value>label10</value>
-  </data>
-  <data name="&gt;&gt;label10.Type" xml:space="preserve">
-    <value>System.Windows.Forms.Label, System.Windows.Forms, Version=4.0.0.0, Culture=neutral, PublicKeyToken=b77a5c561934e089</value>
   </data>
   <data name="&gt;&gt;label10.Parent" xml:space="preserve">
     <value>tabInstrument</value>
@@ -3448,9 +2941,6 @@ H (+1)、K (+1)、Na (+1)、Li (+1)、Br (-1)、Cl (-1)、F (-1)、CH3COO (-1)�
   <data name="&gt;&gt;label11.Name" xml:space="preserve">
     <value>label11</value>
   </data>
-  <data name="&gt;&gt;label11.Type" xml:space="preserve">
-    <value>System.Windows.Forms.Label, System.Windows.Forms, Version=4.0.0.0, Culture=neutral, PublicKeyToken=b77a5c561934e089</value>
-  </data>
   <data name="&gt;&gt;label11.Parent" xml:space="preserve">
     <value>tabInstrument</value>
   </data>
@@ -3472,9 +2962,6 @@ H (+1)、K (+1)、Na (+1)、Li (+1)、Br (-1)、Cl (-1)、F (-1)、CH3COO (-1)�
   <data name="&gt;&gt;textMaxMz.Name" xml:space="preserve">
     <value>textMaxMz</value>
   </data>
-  <data name="&gt;&gt;textMaxMz.Type" xml:space="preserve">
-    <value>System.Windows.Forms.TextBox, System.Windows.Forms, Version=4.0.0.0, Culture=neutral, PublicKeyToken=b77a5c561934e089</value>
-  </data>
   <data name="&gt;&gt;textMaxMz.Parent" xml:space="preserve">
     <value>tabInstrument</value>
   </data>
@@ -3495,9 +2982,6 @@ H (+1)、K (+1)、Na (+1)、Li (+1)、Br (-1)、Cl (-1)、F (-1)、CH3COO (-1)�
   </data>
   <data name="&gt;&gt;textMinMz.Name" xml:space="preserve">
     <value>textMinMz</value>
-  </data>
-  <data name="&gt;&gt;textMinMz.Type" xml:space="preserve">
-    <value>System.Windows.Forms.TextBox, System.Windows.Forms, Version=4.0.0.0, Culture=neutral, PublicKeyToken=b77a5c561934e089</value>
   </data>
   <data name="&gt;&gt;textMinMz.Parent" xml:space="preserve">
     <value>tabInstrument</value>
@@ -3523,9 +3007,6 @@ H (+1)、K (+1)、Na (+1)、Li (+1)、Br (-1)、Cl (-1)、F (-1)、CH3COO (-1)�
   <data name="&gt;&gt;tabFullScan.Name" xml:space="preserve">
     <value>tabFullScan</value>
   </data>
-  <data name="&gt;&gt;tabFullScan.Type" xml:space="preserve">
-    <value>System.Windows.Forms.TabPage, System.Windows.Forms, Version=4.0.0.0, Culture=neutral, PublicKeyToken=b77a5c561934e089</value>
-  </data>
   <data name="&gt;&gt;tabFullScan.Parent" xml:space="preserve">
     <value>tabControl1</value>
   </data>
@@ -3534,9 +3015,6 @@ H (+1)、K (+1)、Na (+1)、Li (+1)、Br (-1)、Cl (-1)、F (-1)、CH3COO (-1)�
   </data>
   <data name="&gt;&gt;ionMobilityFilteringControl.Name" xml:space="preserve">
     <value>ionMobilityFilteringControl</value>
-  </data>
-  <data name="&gt;&gt;ionMobilityFilteringControl.Type" xml:space="preserve">
-    <value>pwiz.Skyline.SettingsUI.IonMobility.IonMobilityFilteringUserControl, Skyline, Version=1.0.0.0, Culture=neutral, PublicKeyToken=null</value>
   </data>
   <data name="&gt;&gt;ionMobilityFilteringControl.Parent" xml:space="preserve">
     <value>tabIonMobility</value>
@@ -3559,9 +3037,6 @@ H (+1)、K (+1)、Na (+1)、Li (+1)、Br (-1)、Cl (-1)、F (-1)、CH3COO (-1)�
   <data name="&gt;&gt;tabIonMobility.Name" xml:space="preserve">
     <value>tabIonMobility</value>
   </data>
-  <data name="&gt;&gt;tabIonMobility.Type" xml:space="preserve">
-    <value>System.Windows.Forms.TabPage, System.Windows.Forms, Version=4.0.0.0, Culture=neutral, PublicKeyToken=b77a5c561934e089</value>
-  </data>
   <data name="&gt;&gt;tabIonMobility.Parent" xml:space="preserve">
     <value>tabControl1</value>
   </data>
@@ -3580,48 +3055,24 @@ H (+1)、K (+1)、Na (+1)、Li (+1)、Br (-1)、Cl (-1)、F (-1)、CH3COO (-1)�
   <data name="&gt;&gt;ionMobilityFilteringControl.Name" xml:space="preserve">
     <value>ionMobilityFilteringControl</value>
   </data>
-  <data name="&gt;&gt;ionMobilityFilteringControl.Type" xml:space="preserve">
-    <value>pwiz.Skyline.SettingsUI.IonMobility.IonMobilityFilteringUserControl, Skyline, Version=1.0.0.0, Culture=neutral, PublicKeyToken=null</value>
-  </data>
   <data name="&gt;&gt;ionMobilityFilteringControl.Parent" xml:space="preserve">
     <value>tabIonMobility</value>
   </data>
   <data name="&gt;&gt;ionMobilityFilteringControl.ZOrder" xml:space="preserve">
     <value>0</value>
   </data>
-  <metadata name="helpTip.TrayLocation" type="System.Drawing.Point, System.Drawing, Version=4.0.0.0, Culture=neutral, PublicKeyToken=b03f5f7f11d50a3a">
-    <value>155, 17</value>
-  </metadata>
-  <metadata name="contextMenuStripPrecursorAdduct.TrayLocation" type="System.Drawing.Point, System.Drawing, Version=4.0.0.0, Culture=neutral, PublicKeyToken=b03f5f7f11d50a3a">
-    <value>247, 17</value>
-  </metadata>
   <data name="contextMenuStripPrecursorAdduct.Size" type="System.Drawing.Size, System.Drawing">
     <value>61, 4</value>
   </data>
   <data name="&gt;&gt;contextMenuStripPrecursorAdduct.Name" xml:space="preserve">
     <value>contextMenuStripPrecursorAdduct</value>
   </data>
-  <data name="&gt;&gt;contextMenuStripPrecursorAdduct.Type" xml:space="preserve">
-    <value>System.Windows.Forms.ContextMenuStrip, System.Windows.Forms, Version=4.0.0.0, Culture=neutral, PublicKeyToken=b77a5c561934e089</value>
-  </data>
-  <metadata name="contextMenuStripFragmentAdduct.TrayLocation" type="System.Drawing.Point, System.Drawing, Version=4.0.0.0, Culture=neutral, PublicKeyToken=b03f5f7f11d50a3a">
-    <value>487, 17</value>
-  </metadata>
   <data name="contextMenuStripFragmentAdduct.Size" type="System.Drawing.Size, System.Drawing">
     <value>61, 4</value>
   </data>
   <data name="&gt;&gt;contextMenuStripFragmentAdduct.Name" xml:space="preserve">
     <value>contextMenuStripFragmentAdduct</value>
   </data>
-  <data name="&gt;&gt;contextMenuStripFragmentAdduct.Type" xml:space="preserve">
-    <value>System.Windows.Forms.ContextMenuStrip, System.Windows.Forms, Version=4.0.0.0, Culture=neutral, PublicKeyToken=b77a5c561934e089</value>
-  </data>
-  <metadata name="$this.Localizable" type="System.Boolean, mscorlib, Version=4.0.0.0, Culture=neutral, PublicKeyToken=b77a5c561934e089">
-    <value>True</value>
-  </metadata>
-  <metadata name="$this.TrayHeight" type="System.Int32, mscorlib, Version=4.0.0.0, Culture=neutral, PublicKeyToken=b77a5c561934e089">
-    <value>97</value>
-  </metadata>
   <data name="$this.AutoScaleDimensions" type="System.Drawing.SizeF, System.Drawing">
     <value>6, 13</value>
   </data>
@@ -3637,19 +3088,10 @@ H (+1)、K (+1)、Na (+1)、Li (+1)、Br (-1)、Cl (-1)、F (-1)、CH3COO (-1)�
   <data name="&gt;&gt;modeUIHandler.Name" xml:space="preserve">
     <value>modeUIHandler</value>
   </data>
-  <data name="&gt;&gt;modeUIHandler.Type" xml:space="preserve">
-    <value>pwiz.Skyline.Util.Helpers+ModeUIExtender, Skyline, Version=1.0.0.0, Culture=neutral, PublicKeyToken=null</value>
-  </data>
   <data name="&gt;&gt;helpTip.Name" xml:space="preserve">
     <value>helpTip</value>
   </data>
-  <data name="&gt;&gt;helpTip.Type" xml:space="preserve">
-    <value>System.Windows.Forms.ToolTip, System.Windows.Forms, Version=4.0.0.0, Culture=neutral, PublicKeyToken=b77a5c561934e089</value>
-  </data>
   <data name="&gt;&gt;$this.Name" xml:space="preserve">
     <value>TransitionSettingsUI</value>
-  </data>
-  <data name="&gt;&gt;$this.Type" xml:space="preserve">
-    <value>pwiz.Skyline.Util.FormEx, Skyline, Version=1.0.0.0, Culture=neutral, PublicKeyToken=null</value>
   </data>
 </root>
