@@ -128,7 +128,7 @@ namespace pwiz.Skyline.SettingsUI
             }
         }
 
-        public int PeptidesCount { get { return _peptides.Count; } }
+        public int PeptidesCount { get { return _peptides != null ? _peptides.Count : 0; } }
 
         public bool HasSmallMolecules { get; private set; }
         public bool HasPeptides { get; private set;  }
