@@ -310,23 +310,23 @@ namespace pwiz.SkylineTestUtil
         /// this does not wait until the action which displayed the dialog returns.
         /// </summary>
         /// <param name="showAction">Action which causes the dialog to appear</param>
-        /// <param name="dismissAction">Action which dismisses the dialog. If null, the dialog
-        /// will be dismissed by calling PerformClick on its cancel button.</param>
+        /// <param name="dismissAction">Action which causes the dialog to close.</param>
         protected static void ShowAndDismissDlg<TDlg>(Action showAction,
-            Action<TDlg> dismissAction = null) where TDlg : Form
+            Action<TDlg> dismissAction) where TDlg : Form
         {
             TDlg dlg = ShowDialog<TDlg>(showAction);
             OkDialog(dlg, () =>
             {
-                if (dismissAction == null)
-                {
-                    dlg.CancelButton.PerformClick();
-                }
-                else
-                {
-                    dismissAction(dlg);
-                }
+                dismissAction(dlg);
             });
+        }
+
+        /// <summary>
+        /// Invoke an action which displays a dialog and then click that dialog's cancel button.
+        /// </summary>
+        protected static void ShowAndCancelDlg<TDlg>(Action showAction) where TDlg : Form
+        {
+            ShowAndDismissDlg<TDlg>(showAction, dlg=>dlg.CancelButton.PerformClick());
         }
 
         protected static void SelectNode(SrmDocument.Level level, int iNode)

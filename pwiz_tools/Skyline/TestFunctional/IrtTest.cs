@@ -781,14 +781,14 @@ namespace pwiz.SkylineTestFunctional
                 Assert.IsTrue(regressionOptions.Select(opt => opt.Name).Contains(IrtStandard.PIERCE.Name));
                 Assert.IsTrue(ReferenceEquals(calibrateIrtDlg.SelectedRegressionOption, regressionOptions[0]));
             });
-            ShowAndDismissDlg<MessageDlg>(() => calibrateIrtDlg.GraphRegression());
-            ShowAndDismissDlg<MessageDlg>(() => calibrateIrtDlg.GraphIrts());
+            ShowAndCancelDlg<MessageDlg>(() => calibrateIrtDlg.GraphRegression());
+            ShowAndCancelDlg<MessageDlg>(() => calibrateIrtDlg.GraphIrts());
             var addIrtDlg = ShowDialog<AddIrtStandardsDlg>(calibrateIrtDlg.UseResults);
-            ShowAndDismissDlg<MessageDlg>(() => addIrtDlg.OkDialog()); // try empty textbox
+            ShowAndCancelDlg<MessageDlg>(() => addIrtDlg.OkDialog()); // try empty textbox
             RunUI(() => addIrtDlg.StandardCount = CalibrateIrtDlg.MIN_STANDARD_PEPTIDES - 1);
-            ShowAndDismissDlg<MessageDlg>(() => addIrtDlg.OkDialog()); // try below minimum
+            ShowAndCancelDlg<MessageDlg>(() => addIrtDlg.OkDialog()); // try below minimum
             RunUI(() => addIrtDlg.StandardCount = SkylineWindow.Document.PeptideCount + 1);
-            ShowAndDismissDlg<MessageDlg>(() => addIrtDlg.OkDialog()); // try above maximum
+            ShowAndCancelDlg<MessageDlg>(() => addIrtDlg.OkDialog()); // try above maximum
             RunUI(() => addIrtDlg.StandardCount = 10);
             OkDialog(addIrtDlg, addIrtDlg.OkDialog);
             RunUI(() => Assert.AreEqual(10, calibrateIrtDlg.StandardPeptideCount));
