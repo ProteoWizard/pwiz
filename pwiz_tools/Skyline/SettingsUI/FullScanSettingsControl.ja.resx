@@ -117,14 +117,11 @@
   <resheader name="writer">
     <value>System.Resources.ResXResourceWriter, System.Windows.Forms, Version=4.0.0.0, Culture=neutral, PublicKeyToken=b77a5c561934e089</value>
   </resheader>
-  <assembly alias="System.Drawing" name="System.Drawing, Version=4.0.0.0, Culture=neutral, PublicKeyToken=b03f5f7f11d50a3a" />
-  <assembly alias="mscorlib" name="mscorlib, Version=4.0.0.0, Culture=neutral, PublicKeyToken=b77a5c561934e089" />
-  <assembly alias="System.Windows.Forms" name="System.Windows.Forms, Version=4.0.0.0, Culture=neutral, PublicKeyToken=b77a5c561934e089" />
-  <metadata name="$this.Localizable" type="System.Boolean, mscorlib, Version=4.0.0.0, Culture=neutral, PublicKeyToken=b77a5c561934e089">
-    <value>True</value>
-  </metadata>
   <data name="&gt;&gt;flowLayoutPanelUseSchedulingWindow.Name" xml:space="preserve">
     <value>flowLayoutPanelUseSchedulingWindow</value>
+  </data>
+  <data name="&gt;&gt;flowLayoutPanelUseSchedulingWindow.Type" xml:space="preserve">
+    <value>System.Windows.Forms.FlowLayoutPanel, System.Windows.Forms, Version=4.0.0.0, Culture=neutral, PublicKeyToken=b77a5c561934e089</value>
   </data>
   <data name="&gt;&gt;flowLayoutPanelUseSchedulingWindow.Parent" xml:space="preserve">
     <value>groupBoxRetentionTimeToKeep</value>
@@ -135,6 +132,9 @@
   <data name="&gt;&gt;radioTimeAroundMs2Ids.Name" xml:space="preserve">
     <value>radioTimeAroundMs2Ids</value>
   </data>
+  <data name="&gt;&gt;radioTimeAroundMs2Ids.Type" xml:space="preserve">
+    <value>System.Windows.Forms.RadioButton, System.Windows.Forms, Version=4.0.0.0, Culture=neutral, PublicKeyToken=b77a5c561934e089</value>
+  </data>
   <data name="&gt;&gt;radioTimeAroundMs2Ids.Parent" xml:space="preserve">
     <value>groupBoxRetentionTimeToKeep</value>
   </data>
@@ -143,6 +143,9 @@
   </data>
   <data name="&gt;&gt;flowLayoutPanelTimeAroundMs2Ids.Name" xml:space="preserve">
     <value>flowLayoutPanelTimeAroundMs2Ids</value>
+  </data>
+  <data name="&gt;&gt;flowLayoutPanelTimeAroundMs2Ids.Type" xml:space="preserve">
+    <value>System.Windows.Forms.FlowLayoutPanel, System.Windows.Forms, Version=4.0.0.0, Culture=neutral, PublicKeyToken=b77a5c561934e089</value>
   </data>
   <data name="&gt;&gt;flowLayoutPanelTimeAroundMs2Ids.Parent" xml:space="preserve">
     <value>groupBoxRetentionTimeToKeep</value>
@@ -153,6 +156,9 @@
   <data name="&gt;&gt;radioUseSchedulingWindow.Name" xml:space="preserve">
     <value>radioUseSchedulingWindow</value>
   </data>
+  <data name="&gt;&gt;radioUseSchedulingWindow.Type" xml:space="preserve">
+    <value>System.Windows.Forms.RadioButton, System.Windows.Forms, Version=4.0.0.0, Culture=neutral, PublicKeyToken=b77a5c561934e089</value>
+  </data>
   <data name="&gt;&gt;radioUseSchedulingWindow.Parent" xml:space="preserve">
     <value>groupBoxRetentionTimeToKeep</value>
   </data>
@@ -162,18 +168,23 @@
   <data name="&gt;&gt;radioKeepAllTime.Name" xml:space="preserve">
     <value>radioKeepAllTime</value>
   </data>
+  <data name="&gt;&gt;radioKeepAllTime.Type" xml:space="preserve">
+    <value>System.Windows.Forms.RadioButton, System.Windows.Forms, Version=4.0.0.0, Culture=neutral, PublicKeyToken=b77a5c561934e089</value>
+  </data>
   <data name="&gt;&gt;radioKeepAllTime.Parent" xml:space="preserve">
     <value>groupBoxRetentionTimeToKeep</value>
   </data>
   <data name="&gt;&gt;radioKeepAllTime.ZOrder" xml:space="preserve">
     <value>4</value>
   </data>
+  <assembly alias="System.Drawing" name="System.Drawing, Version=4.0.0.0, Culture=neutral, PublicKeyToken=b03f5f7f11d50a3a" />
   <data name="groupBoxRetentionTimeToKeep.Location" type="System.Drawing.Point, System.Drawing">
     <value>17, 380</value>
   </data>
   <data name="groupBoxRetentionTimeToKeep.Size" type="System.Drawing.Size, System.Drawing">
     <value>326, 97</value>
   </data>
+  <assembly alias="mscorlib" name="mscorlib, Version=4.0.0.0, Culture=neutral, PublicKeyToken=b77a5c561934e089" />
   <data name="groupBoxRetentionTimeToKeep.TabIndex" type="System.Int32, mscorlib">
     <value>4</value>
   </data>
@@ -183,12 +194,16 @@
   <data name="&gt;&gt;groupBoxRetentionTimeToKeep.Name" xml:space="preserve">
     <value>groupBoxRetentionTimeToKeep</value>
   </data>
+  <data name="&gt;&gt;groupBoxRetentionTimeToKeep.Type" xml:space="preserve">
+    <value>System.Windows.Forms.GroupBox, System.Windows.Forms, Version=4.0.0.0, Culture=neutral, PublicKeyToken=b77a5c561934e089</value>
+  </data>
   <data name="&gt;&gt;groupBoxRetentionTimeToKeep.Parent" xml:space="preserve">
     <value>$this</value>
   </data>
   <data name="&gt;&gt;groupBoxRetentionTimeToKeep.ZOrder" xml:space="preserve">
     <value>4</value>
   </data>
+  <assembly alias="System.Windows.Forms" name="System.Windows.Forms, Version=4.0.0.0, Culture=neutral, PublicKeyToken=b77a5c561934e089" />
   <data name="flowLayoutPanelUseSchedulingWindow.Anchor" type="System.Windows.Forms.AnchorStyles, System.Windows.Forms">
     <value>Top, Left, Right</value>
   </data>
@@ -216,6 +231,9 @@
   <data name="&gt;&gt;label1.Name" xml:space="preserve">
     <value>label1</value>
   </data>
+  <data name="&gt;&gt;label1.Type" xml:space="preserve">
+    <value>System.Windows.Forms.Label, System.Windows.Forms, Version=4.0.0.0, Culture=neutral, PublicKeyToken=b77a5c561934e089</value>
+  </data>
   <data name="&gt;&gt;label1.Parent" xml:space="preserve">
     <value>flowLayoutPanelUseSchedulingWindow</value>
   </data>
@@ -236,6 +254,9 @@
   </data>
   <data name="&gt;&gt;tbxTimeAroundPrediction.Name" xml:space="preserve">
     <value>tbxTimeAroundPrediction</value>
+  </data>
+  <data name="&gt;&gt;tbxTimeAroundPrediction.Type" xml:space="preserve">
+    <value>System.Windows.Forms.TextBox, System.Windows.Forms, Version=4.0.0.0, Culture=neutral, PublicKeyToken=b77a5c561934e089</value>
   </data>
   <data name="&gt;&gt;tbxTimeAroundPrediction.Parent" xml:space="preserve">
     <value>flowLayoutPanelUseSchedulingWindow</value>
@@ -267,6 +288,9 @@
   <data name="&gt;&gt;label2.Name" xml:space="preserve">
     <value>label2</value>
   </data>
+  <data name="&gt;&gt;label2.Type" xml:space="preserve">
+    <value>System.Windows.Forms.Label, System.Windows.Forms, Version=4.0.0.0, Culture=neutral, PublicKeyToken=b77a5c561934e089</value>
+  </data>
   <data name="&gt;&gt;label2.Parent" xml:space="preserve">
     <value>flowLayoutPanelUseSchedulingWindow</value>
   </data>
@@ -287,6 +311,9 @@
   </data>
   <data name="&gt;&gt;flowLayoutPanelUseSchedulingWindow.Name" xml:space="preserve">
     <value>flowLayoutPanelUseSchedulingWindow</value>
+  </data>
+  <data name="&gt;&gt;flowLayoutPanelUseSchedulingWindow.Type" xml:space="preserve">
+    <value>System.Windows.Forms.FlowLayoutPanel, System.Windows.Forms, Version=4.0.0.0, Culture=neutral, PublicKeyToken=b77a5c561934e089</value>
   </data>
   <data name="&gt;&gt;flowLayoutPanelUseSchedulingWindow.Parent" xml:space="preserve">
     <value>groupBoxRetentionTimeToKeep</value>
@@ -315,6 +342,9 @@
   <data name="&gt;&gt;radioTimeAroundMs2Ids.Name" xml:space="preserve">
     <value>radioTimeAroundMs2Ids</value>
   </data>
+  <data name="&gt;&gt;radioTimeAroundMs2Ids.Type" xml:space="preserve">
+    <value>System.Windows.Forms.RadioButton, System.Windows.Forms, Version=4.0.0.0, Culture=neutral, PublicKeyToken=b77a5c561934e089</value>
+  </data>
   <data name="&gt;&gt;radioTimeAroundMs2Ids.Parent" xml:space="preserve">
     <value>groupBoxRetentionTimeToKeep</value>
   </data>
@@ -327,6 +357,9 @@
   <data name="&gt;&gt;labelTimeAroundMs2Ids1.Name" xml:space="preserve">
     <value>labelTimeAroundMs2Ids1</value>
   </data>
+  <data name="&gt;&gt;labelTimeAroundMs2Ids1.Type" xml:space="preserve">
+    <value>System.Windows.Forms.Label, System.Windows.Forms, Version=4.0.0.0, Culture=neutral, PublicKeyToken=b77a5c561934e089</value>
+  </data>
   <data name="&gt;&gt;labelTimeAroundMs2Ids1.Parent" xml:space="preserve">
     <value>flowLayoutPanelTimeAroundMs2Ids</value>
   </data>
@@ -336,6 +369,9 @@
   <data name="&gt;&gt;tbxTimeAroundMs2Ids.Name" xml:space="preserve">
     <value>tbxTimeAroundMs2Ids</value>
   </data>
+  <data name="&gt;&gt;tbxTimeAroundMs2Ids.Type" xml:space="preserve">
+    <value>System.Windows.Forms.TextBox, System.Windows.Forms, Version=4.0.0.0, Culture=neutral, PublicKeyToken=b77a5c561934e089</value>
+  </data>
   <data name="&gt;&gt;tbxTimeAroundMs2Ids.Parent" xml:space="preserve">
     <value>flowLayoutPanelTimeAroundMs2Ids</value>
   </data>
@@ -344,6 +380,9 @@
   </data>
   <data name="&gt;&gt;labelTimeAroundMs2Ids2.Name" xml:space="preserve">
     <value>labelTimeAroundMs2Ids2</value>
+  </data>
+  <data name="&gt;&gt;labelTimeAroundMs2Ids2.Type" xml:space="preserve">
+    <value>System.Windows.Forms.Label, System.Windows.Forms, Version=4.0.0.0, Culture=neutral, PublicKeyToken=b77a5c561934e089</value>
   </data>
   <data name="&gt;&gt;labelTimeAroundMs2Ids2.Parent" xml:space="preserve">
     <value>flowLayoutPanelTimeAroundMs2Ids</value>
@@ -365,6 +404,9 @@
   </data>
   <data name="&gt;&gt;flowLayoutPanelTimeAroundMs2Ids.Name" xml:space="preserve">
     <value>flowLayoutPanelTimeAroundMs2Ids</value>
+  </data>
+  <data name="&gt;&gt;flowLayoutPanelTimeAroundMs2Ids.Type" xml:space="preserve">
+    <value>System.Windows.Forms.FlowLayoutPanel, System.Windows.Forms, Version=4.0.0.0, Culture=neutral, PublicKeyToken=b77a5c561934e089</value>
   </data>
   <data name="&gt;&gt;flowLayoutPanelTimeAroundMs2Ids.Parent" xml:space="preserve">
     <value>groupBoxRetentionTimeToKeep</value>
@@ -396,6 +438,9 @@
   <data name="&gt;&gt;labelTimeAroundMs2Ids1.Name" xml:space="preserve">
     <value>labelTimeAroundMs2Ids1</value>
   </data>
+  <data name="&gt;&gt;labelTimeAroundMs2Ids1.Type" xml:space="preserve">
+    <value>System.Windows.Forms.Label, System.Windows.Forms, Version=4.0.0.0, Culture=neutral, PublicKeyToken=b77a5c561934e089</value>
+  </data>
   <data name="&gt;&gt;labelTimeAroundMs2Ids1.Parent" xml:space="preserve">
     <value>flowLayoutPanelTimeAroundMs2Ids</value>
   </data>
@@ -416,6 +461,9 @@
   </data>
   <data name="&gt;&gt;tbxTimeAroundMs2Ids.Name" xml:space="preserve">
     <value>tbxTimeAroundMs2Ids</value>
+  </data>
+  <data name="&gt;&gt;tbxTimeAroundMs2Ids.Type" xml:space="preserve">
+    <value>System.Windows.Forms.TextBox, System.Windows.Forms, Version=4.0.0.0, Culture=neutral, PublicKeyToken=b77a5c561934e089</value>
   </data>
   <data name="&gt;&gt;tbxTimeAroundMs2Ids.Parent" xml:space="preserve">
     <value>flowLayoutPanelTimeAroundMs2Ids</value>
@@ -447,6 +495,9 @@
   <data name="&gt;&gt;labelTimeAroundMs2Ids2.Name" xml:space="preserve">
     <value>labelTimeAroundMs2Ids2</value>
   </data>
+  <data name="&gt;&gt;labelTimeAroundMs2Ids2.Type" xml:space="preserve">
+    <value>System.Windows.Forms.Label, System.Windows.Forms, Version=4.0.0.0, Culture=neutral, PublicKeyToken=b77a5c561934e089</value>
+  </data>
   <data name="&gt;&gt;labelTimeAroundMs2Ids2.Parent" xml:space="preserve">
     <value>flowLayoutPanelTimeAroundMs2Ids</value>
   </data>
@@ -470,6 +521,9 @@
   </data>
   <data name="&gt;&gt;radioUseSchedulingWindow.Name" xml:space="preserve">
     <value>radioUseSchedulingWindow</value>
+  </data>
+  <data name="&gt;&gt;radioUseSchedulingWindow.Type" xml:space="preserve">
+    <value>System.Windows.Forms.RadioButton, System.Windows.Forms, Version=4.0.0.0, Culture=neutral, PublicKeyToken=b77a5c561934e089</value>
   </data>
   <data name="&gt;&gt;radioUseSchedulingWindow.Parent" xml:space="preserve">
     <value>groupBoxRetentionTimeToKeep</value>
@@ -498,6 +552,9 @@
   <data name="&gt;&gt;radioKeepAllTime.Name" xml:space="preserve">
     <value>radioKeepAllTime</value>
   </data>
+  <data name="&gt;&gt;radioKeepAllTime.Type" xml:space="preserve">
+    <value>System.Windows.Forms.RadioButton, System.Windows.Forms, Version=4.0.0.0, Culture=neutral, PublicKeyToken=b77a5c561934e089</value>
+  </data>
   <data name="&gt;&gt;radioKeepAllTime.Parent" xml:space="preserve">
     <value>groupBoxRetentionTimeToKeep</value>
   </data>
@@ -506,6 +563,9 @@
   </data>
   <data name="&gt;&gt;cbIgnoreSim.Name" xml:space="preserve">
     <value>cbIgnoreSim</value>
+  </data>
+  <data name="&gt;&gt;cbIgnoreSim.Type" xml:space="preserve">
+    <value>System.Windows.Forms.CheckBox, System.Windows.Forms, Version=4.0.0.0, Culture=neutral, PublicKeyToken=b77a5c561934e089</value>
   </data>
   <data name="&gt;&gt;cbIgnoreSim.Parent" xml:space="preserve">
     <value>groupBoxMS1</value>
@@ -516,6 +576,9 @@
   <data name="&gt;&gt;labelPrecursorPPM.Name" xml:space="preserve">
     <value>labelPrecursorPPM</value>
   </data>
+  <data name="&gt;&gt;labelPrecursorPPM.Type" xml:space="preserve">
+    <value>System.Windows.Forms.Label, System.Windows.Forms, Version=4.0.0.0, Culture=neutral, PublicKeyToken=b77a5c561934e089</value>
+  </data>
   <data name="&gt;&gt;labelPrecursorPPM.Parent" xml:space="preserve">
     <value>groupBoxMS1</value>
   </data>
@@ -524,6 +587,9 @@
   </data>
   <data name="&gt;&gt;comboEnrichments.Name" xml:space="preserve">
     <value>comboEnrichments</value>
+  </data>
+  <data name="&gt;&gt;comboEnrichments.Type" xml:space="preserve">
+    <value>System.Windows.Forms.ComboBox, System.Windows.Forms, Version=4.0.0.0, Culture=neutral, PublicKeyToken=b77a5c561934e089</value>
   </data>
   <data name="&gt;&gt;comboEnrichments.Parent" xml:space="preserve">
     <value>groupBoxMS1</value>
@@ -534,6 +600,9 @@
   <data name="&gt;&gt;labelEnrichments.Name" xml:space="preserve">
     <value>labelEnrichments</value>
   </data>
+  <data name="&gt;&gt;labelEnrichments.Type" xml:space="preserve">
+    <value>System.Windows.Forms.Label, System.Windows.Forms, Version=4.0.0.0, Culture=neutral, PublicKeyToken=b77a5c561934e089</value>
+  </data>
   <data name="&gt;&gt;labelEnrichments.Parent" xml:space="preserve">
     <value>groupBoxMS1</value>
   </data>
@@ -542,6 +611,9 @@
   </data>
   <data name="&gt;&gt;labelPrecursorIsotopeFilterPercent.Name" xml:space="preserve">
     <value>labelPrecursorIsotopeFilterPercent</value>
+  </data>
+  <data name="&gt;&gt;labelPrecursorIsotopeFilterPercent.Type" xml:space="preserve">
+    <value>System.Windows.Forms.Label, System.Windows.Forms, Version=4.0.0.0, Culture=neutral, PublicKeyToken=b77a5c561934e089</value>
   </data>
   <data name="&gt;&gt;labelPrecursorIsotopeFilterPercent.Parent" xml:space="preserve">
     <value>groupBoxMS1</value>
@@ -552,6 +624,9 @@
   <data name="&gt;&gt;textPrecursorIsotopeFilter.Name" xml:space="preserve">
     <value>textPrecursorIsotopeFilter</value>
   </data>
+  <data name="&gt;&gt;textPrecursorIsotopeFilter.Type" xml:space="preserve">
+    <value>System.Windows.Forms.TextBox, System.Windows.Forms, Version=4.0.0.0, Culture=neutral, PublicKeyToken=b77a5c561934e089</value>
+  </data>
   <data name="&gt;&gt;textPrecursorIsotopeFilter.Parent" xml:space="preserve">
     <value>groupBoxMS1</value>
   </data>
@@ -560,6 +635,9 @@
   </data>
   <data name="&gt;&gt;labelPrecursorIsotopeFilter.Name" xml:space="preserve">
     <value>labelPrecursorIsotopeFilter</value>
+  </data>
+  <data name="&gt;&gt;labelPrecursorIsotopeFilter.Type" xml:space="preserve">
+    <value>System.Windows.Forms.Label, System.Windows.Forms, Version=4.0.0.0, Culture=neutral, PublicKeyToken=b77a5c561934e089</value>
   </data>
   <data name="&gt;&gt;labelPrecursorIsotopeFilter.Parent" xml:space="preserve">
     <value>groupBoxMS1</value>
@@ -570,6 +648,9 @@
   <data name="&gt;&gt;label23.Name" xml:space="preserve">
     <value>label23</value>
   </data>
+  <data name="&gt;&gt;label23.Type" xml:space="preserve">
+    <value>System.Windows.Forms.Label, System.Windows.Forms, Version=4.0.0.0, Culture=neutral, PublicKeyToken=b77a5c561934e089</value>
+  </data>
   <data name="&gt;&gt;label23.Parent" xml:space="preserve">
     <value>groupBoxMS1</value>
   </data>
@@ -578,6 +659,9 @@
   </data>
   <data name="&gt;&gt;comboPrecursorIsotopes.Name" xml:space="preserve">
     <value>comboPrecursorIsotopes</value>
+  </data>
+  <data name="&gt;&gt;comboPrecursorIsotopes.Type" xml:space="preserve">
+    <value>System.Windows.Forms.ComboBox, System.Windows.Forms, Version=4.0.0.0, Culture=neutral, PublicKeyToken=b77a5c561934e089</value>
   </data>
   <data name="&gt;&gt;comboPrecursorIsotopes.Parent" xml:space="preserve">
     <value>groupBoxMS1</value>
@@ -588,6 +672,9 @@
   <data name="&gt;&gt;labelPrecursorAt.Name" xml:space="preserve">
     <value>labelPrecursorAt</value>
   </data>
+  <data name="&gt;&gt;labelPrecursorAt.Type" xml:space="preserve">
+    <value>System.Windows.Forms.Label, System.Windows.Forms, Version=4.0.0.0, Culture=neutral, PublicKeyToken=b77a5c561934e089</value>
+  </data>
   <data name="&gt;&gt;labelPrecursorAt.Parent" xml:space="preserve">
     <value>groupBoxMS1</value>
   </data>
@@ -596,6 +683,9 @@
   </data>
   <data name="&gt;&gt;textPrecursorAt.Name" xml:space="preserve">
     <value>textPrecursorAt</value>
+  </data>
+  <data name="&gt;&gt;textPrecursorAt.Type" xml:space="preserve">
+    <value>System.Windows.Forms.TextBox, System.Windows.Forms, Version=4.0.0.0, Culture=neutral, PublicKeyToken=b77a5c561934e089</value>
   </data>
   <data name="&gt;&gt;textPrecursorAt.Parent" xml:space="preserve">
     <value>groupBoxMS1</value>
@@ -606,6 +696,9 @@
   <data name="&gt;&gt;labelPrecursorTh.Name" xml:space="preserve">
     <value>labelPrecursorTh</value>
   </data>
+  <data name="&gt;&gt;labelPrecursorTh.Type" xml:space="preserve">
+    <value>System.Windows.Forms.Label, System.Windows.Forms, Version=4.0.0.0, Culture=neutral, PublicKeyToken=b77a5c561934e089</value>
+  </data>
   <data name="&gt;&gt;labelPrecursorTh.Parent" xml:space="preserve">
     <value>groupBoxMS1</value>
   </data>
@@ -614,6 +707,9 @@
   </data>
   <data name="&gt;&gt;textPrecursorRes.Name" xml:space="preserve">
     <value>textPrecursorRes</value>
+  </data>
+  <data name="&gt;&gt;textPrecursorRes.Type" xml:space="preserve">
+    <value>System.Windows.Forms.TextBox, System.Windows.Forms, Version=4.0.0.0, Culture=neutral, PublicKeyToken=b77a5c561934e089</value>
   </data>
   <data name="&gt;&gt;textPrecursorRes.Parent" xml:space="preserve">
     <value>groupBoxMS1</value>
@@ -624,6 +720,9 @@
   <data name="&gt;&gt;labelPrecursorRes.Name" xml:space="preserve">
     <value>labelPrecursorRes</value>
   </data>
+  <data name="&gt;&gt;labelPrecursorRes.Type" xml:space="preserve">
+    <value>System.Windows.Forms.Label, System.Windows.Forms, Version=4.0.0.0, Culture=neutral, PublicKeyToken=b77a5c561934e089</value>
+  </data>
   <data name="&gt;&gt;labelPrecursorRes.Parent" xml:space="preserve">
     <value>groupBoxMS1</value>
   </data>
@@ -633,6 +732,9 @@
   <data name="&gt;&gt;comboPrecursorAnalyzerType.Name" xml:space="preserve">
     <value>comboPrecursorAnalyzerType</value>
   </data>
+  <data name="&gt;&gt;comboPrecursorAnalyzerType.Type" xml:space="preserve">
+    <value>System.Windows.Forms.ComboBox, System.Windows.Forms, Version=4.0.0.0, Culture=neutral, PublicKeyToken=b77a5c561934e089</value>
+  </data>
   <data name="&gt;&gt;comboPrecursorAnalyzerType.Parent" xml:space="preserve">
     <value>groupBoxMS1</value>
   </data>
@@ -641,6 +743,9 @@
   </data>
   <data name="&gt;&gt;label32.Name" xml:space="preserve">
     <value>label32</value>
+  </data>
+  <data name="&gt;&gt;label32.Type" xml:space="preserve">
+    <value>System.Windows.Forms.Label, System.Windows.Forms, Version=4.0.0.0, Culture=neutral, PublicKeyToken=b77a5c561934e089</value>
   </data>
   <data name="&gt;&gt;label32.Parent" xml:space="preserve">
     <value>groupBoxMS1</value>
@@ -663,12 +768,18 @@
   <data name="&gt;&gt;groupBoxMS1.Name" xml:space="preserve">
     <value>groupBoxMS1</value>
   </data>
+  <data name="&gt;&gt;groupBoxMS1.Type" xml:space="preserve">
+    <value>System.Windows.Forms.GroupBox, System.Windows.Forms, Version=4.0.0.0, Culture=neutral, PublicKeyToken=b77a5c561934e089</value>
+  </data>
   <data name="&gt;&gt;groupBoxMS1.Parent" xml:space="preserve">
     <value>$this</value>
   </data>
   <data name="&gt;&gt;groupBoxMS1.ZOrder" xml:space="preserve">
     <value>5</value>
   </data>
+  <metadata name="toolTip.TrayLocation" type="System.Drawing.Point, System.Drawing, Version=4.0.0.0, Culture=neutral, PublicKeyToken=b03f5f7f11d50a3a">
+    <value>17, 17</value>
+  </metadata>
   <data name="cbIgnoreSim.AutoSize" type="System.Boolean, mscorlib">
     <value>True</value>
   </data>
@@ -692,6 +803,9 @@
   </data>
   <data name="&gt;&gt;cbIgnoreSim.Name" xml:space="preserve">
     <value>cbIgnoreSim</value>
+  </data>
+  <data name="&gt;&gt;cbIgnoreSim.Type" xml:space="preserve">
+    <value>System.Windows.Forms.CheckBox, System.Windows.Forms, Version=4.0.0.0, Culture=neutral, PublicKeyToken=b77a5c561934e089</value>
   </data>
   <data name="&gt;&gt;cbIgnoreSim.Parent" xml:space="preserve">
     <value>groupBoxMS1</value>
@@ -723,6 +837,9 @@
   <data name="&gt;&gt;labelPrecursorPPM.Name" xml:space="preserve">
     <value>labelPrecursorPPM</value>
   </data>
+  <data name="&gt;&gt;labelPrecursorPPM.Type" xml:space="preserve">
+    <value>System.Windows.Forms.Label, System.Windows.Forms, Version=4.0.0.0, Culture=neutral, PublicKeyToken=b77a5c561934e089</value>
+  </data>
   <data name="&gt;&gt;labelPrecursorPPM.Parent" xml:space="preserve">
     <value>groupBoxMS1</value>
   </data>
@@ -740,6 +857,9 @@
   </data>
   <data name="&gt;&gt;comboEnrichments.Name" xml:space="preserve">
     <value>comboEnrichments</value>
+  </data>
+  <data name="&gt;&gt;comboEnrichments.Type" xml:space="preserve">
+    <value>System.Windows.Forms.ComboBox, System.Windows.Forms, Version=4.0.0.0, Culture=neutral, PublicKeyToken=b77a5c561934e089</value>
   </data>
   <data name="&gt;&gt;comboEnrichments.Parent" xml:space="preserve">
     <value>groupBoxMS1</value>
@@ -767,6 +887,9 @@
   </data>
   <data name="&gt;&gt;labelEnrichments.Name" xml:space="preserve">
     <value>labelEnrichments</value>
+  </data>
+  <data name="&gt;&gt;labelEnrichments.Type" xml:space="preserve">
+    <value>System.Windows.Forms.Label, System.Windows.Forms, Version=4.0.0.0, Culture=neutral, PublicKeyToken=b77a5c561934e089</value>
   </data>
   <data name="&gt;&gt;labelEnrichments.Parent" xml:space="preserve">
     <value>groupBoxMS1</value>
@@ -798,6 +921,9 @@
   <data name="&gt;&gt;labelPrecursorIsotopeFilterPercent.Name" xml:space="preserve">
     <value>labelPrecursorIsotopeFilterPercent</value>
   </data>
+  <data name="&gt;&gt;labelPrecursorIsotopeFilterPercent.Type" xml:space="preserve">
+    <value>System.Windows.Forms.Label, System.Windows.Forms, Version=4.0.0.0, Culture=neutral, PublicKeyToken=b77a5c561934e089</value>
+  </data>
   <data name="&gt;&gt;labelPrecursorIsotopeFilterPercent.Parent" xml:space="preserve">
     <value>groupBoxMS1</value>
   </data>
@@ -815,6 +941,9 @@
   </data>
   <data name="&gt;&gt;textPrecursorIsotopeFilter.Name" xml:space="preserve">
     <value>textPrecursorIsotopeFilter</value>
+  </data>
+  <data name="&gt;&gt;textPrecursorIsotopeFilter.Type" xml:space="preserve">
+    <value>System.Windows.Forms.TextBox, System.Windows.Forms, Version=4.0.0.0, Culture=neutral, PublicKeyToken=b77a5c561934e089</value>
   </data>
   <data name="&gt;&gt;textPrecursorIsotopeFilter.Parent" xml:space="preserve">
     <value>groupBoxMS1</value>
@@ -843,6 +972,9 @@
   <data name="&gt;&gt;labelPrecursorIsotopeFilter.Name" xml:space="preserve">
     <value>labelPrecursorIsotopeFilter</value>
   </data>
+  <data name="&gt;&gt;labelPrecursorIsotopeFilter.Type" xml:space="preserve">
+    <value>System.Windows.Forms.Label, System.Windows.Forms, Version=4.0.0.0, Culture=neutral, PublicKeyToken=b77a5c561934e089</value>
+  </data>
   <data name="&gt;&gt;labelPrecursorIsotopeFilter.Parent" xml:space="preserve">
     <value>groupBoxMS1</value>
   </data>
@@ -870,6 +1002,9 @@
   <data name="&gt;&gt;label23.Name" xml:space="preserve">
     <value>label23</value>
   </data>
+  <data name="&gt;&gt;label23.Type" xml:space="preserve">
+    <value>System.Windows.Forms.Label, System.Windows.Forms, Version=4.0.0.0, Culture=neutral, PublicKeyToken=b77a5c561934e089</value>
+  </data>
   <data name="&gt;&gt;label23.Parent" xml:space="preserve">
     <value>groupBoxMS1</value>
   </data>
@@ -887,6 +1022,9 @@
   </data>
   <data name="&gt;&gt;comboPrecursorIsotopes.Name" xml:space="preserve">
     <value>comboPrecursorIsotopes</value>
+  </data>
+  <data name="&gt;&gt;comboPrecursorIsotopes.Type" xml:space="preserve">
+    <value>System.Windows.Forms.ComboBox, System.Windows.Forms, Version=4.0.0.0, Culture=neutral, PublicKeyToken=b77a5c561934e089</value>
   </data>
   <data name="&gt;&gt;comboPrecursorIsotopes.Parent" xml:space="preserve">
     <value>groupBoxMS1</value>
@@ -915,6 +1053,9 @@
   <data name="&gt;&gt;labelPrecursorAt.Name" xml:space="preserve">
     <value>labelPrecursorAt</value>
   </data>
+  <data name="&gt;&gt;labelPrecursorAt.Type" xml:space="preserve">
+    <value>System.Windows.Forms.Label, System.Windows.Forms, Version=4.0.0.0, Culture=neutral, PublicKeyToken=b77a5c561934e089</value>
+  </data>
   <data name="&gt;&gt;labelPrecursorAt.Parent" xml:space="preserve">
     <value>groupBoxMS1</value>
   </data>
@@ -932,6 +1073,9 @@
   </data>
   <data name="&gt;&gt;textPrecursorAt.Name" xml:space="preserve">
     <value>textPrecursorAt</value>
+  </data>
+  <data name="&gt;&gt;textPrecursorAt.Type" xml:space="preserve">
+    <value>System.Windows.Forms.TextBox, System.Windows.Forms, Version=4.0.0.0, Culture=neutral, PublicKeyToken=b77a5c561934e089</value>
   </data>
   <data name="&gt;&gt;textPrecursorAt.Parent" xml:space="preserve">
     <value>groupBoxMS1</value>
@@ -963,6 +1107,9 @@
   <data name="&gt;&gt;labelPrecursorTh.Name" xml:space="preserve">
     <value>labelPrecursorTh</value>
   </data>
+  <data name="&gt;&gt;labelPrecursorTh.Type" xml:space="preserve">
+    <value>System.Windows.Forms.Label, System.Windows.Forms, Version=4.0.0.0, Culture=neutral, PublicKeyToken=b77a5c561934e089</value>
+  </data>
   <data name="&gt;&gt;labelPrecursorTh.Parent" xml:space="preserve">
     <value>groupBoxMS1</value>
   </data>
@@ -983,6 +1130,9 @@
   </data>
   <data name="&gt;&gt;textPrecursorRes.Name" xml:space="preserve">
     <value>textPrecursorRes</value>
+  </data>
+  <data name="&gt;&gt;textPrecursorRes.Type" xml:space="preserve">
+    <value>System.Windows.Forms.TextBox, System.Windows.Forms, Version=4.0.0.0, Culture=neutral, PublicKeyToken=b77a5c561934e089</value>
   </data>
   <data name="&gt;&gt;textPrecursorRes.Parent" xml:space="preserve">
     <value>groupBoxMS1</value>
@@ -1011,6 +1161,9 @@
   <data name="&gt;&gt;labelPrecursorRes.Name" xml:space="preserve">
     <value>labelPrecursorRes</value>
   </data>
+  <data name="&gt;&gt;labelPrecursorRes.Type" xml:space="preserve">
+    <value>System.Windows.Forms.Label, System.Windows.Forms, Version=4.0.0.0, Culture=neutral, PublicKeyToken=b77a5c561934e089</value>
+  </data>
   <data name="&gt;&gt;labelPrecursorRes.Parent" xml:space="preserve">
     <value>groupBoxMS1</value>
   </data>
@@ -1034,6 +1187,9 @@
   </data>
   <data name="&gt;&gt;comboPrecursorAnalyzerType.Name" xml:space="preserve">
     <value>comboPrecursorAnalyzerType</value>
+  </data>
+  <data name="&gt;&gt;comboPrecursorAnalyzerType.Type" xml:space="preserve">
+    <value>System.Windows.Forms.ComboBox, System.Windows.Forms, Version=4.0.0.0, Culture=neutral, PublicKeyToken=b77a5c561934e089</value>
   </data>
   <data name="&gt;&gt;comboPrecursorAnalyzerType.Parent" xml:space="preserve">
     <value>groupBoxMS1</value>
@@ -1062,6 +1218,9 @@
   <data name="&gt;&gt;label32.Name" xml:space="preserve">
     <value>label32</value>
   </data>
+  <data name="&gt;&gt;label32.Type" xml:space="preserve">
+    <value>System.Windows.Forms.Label, System.Windows.Forms, Version=4.0.0.0, Culture=neutral, PublicKeyToken=b77a5c561934e089</value>
+  </data>
   <data name="&gt;&gt;label32.Parent" xml:space="preserve">
     <value>groupBoxMS1</value>
   </data>
@@ -1070,6 +1229,9 @@
   </data>
   <data name="&gt;&gt;labelProductPPM.Name" xml:space="preserve">
     <value>labelProductPPM</value>
+  </data>
+  <data name="&gt;&gt;labelProductPPM.Type" xml:space="preserve">
+    <value>System.Windows.Forms.Label, System.Windows.Forms, Version=4.0.0.0, Culture=neutral, PublicKeyToken=b77a5c561934e089</value>
   </data>
   <data name="&gt;&gt;labelProductPPM.Parent" xml:space="preserve">
     <value>groupBoxMS2</value>
@@ -1080,6 +1242,9 @@
   <data name="&gt;&gt;comboIsolationScheme.Name" xml:space="preserve">
     <value>comboIsolationScheme</value>
   </data>
+  <data name="&gt;&gt;comboIsolationScheme.Type" xml:space="preserve">
+    <value>System.Windows.Forms.ComboBox, System.Windows.Forms, Version=4.0.0.0, Culture=neutral, PublicKeyToken=b77a5c561934e089</value>
+  </data>
   <data name="&gt;&gt;comboIsolationScheme.Parent" xml:space="preserve">
     <value>groupBoxMS2</value>
   </data>
@@ -1088,6 +1253,9 @@
   </data>
   <data name="&gt;&gt;labelProductAt.Name" xml:space="preserve">
     <value>labelProductAt</value>
+  </data>
+  <data name="&gt;&gt;labelProductAt.Type" xml:space="preserve">
+    <value>System.Windows.Forms.Label, System.Windows.Forms, Version=4.0.0.0, Culture=neutral, PublicKeyToken=b77a5c561934e089</value>
   </data>
   <data name="&gt;&gt;labelProductAt.Parent" xml:space="preserve">
     <value>groupBoxMS2</value>
@@ -1098,6 +1266,9 @@
   <data name="&gt;&gt;textProductAt.Name" xml:space="preserve">
     <value>textProductAt</value>
   </data>
+  <data name="&gt;&gt;textProductAt.Type" xml:space="preserve">
+    <value>System.Windows.Forms.TextBox, System.Windows.Forms, Version=4.0.0.0, Culture=neutral, PublicKeyToken=b77a5c561934e089</value>
+  </data>
   <data name="&gt;&gt;textProductAt.Parent" xml:space="preserve">
     <value>groupBoxMS2</value>
   </data>
@@ -1106,6 +1277,9 @@
   </data>
   <data name="&gt;&gt;labelProductTh.Name" xml:space="preserve">
     <value>labelProductTh</value>
+  </data>
+  <data name="&gt;&gt;labelProductTh.Type" xml:space="preserve">
+    <value>System.Windows.Forms.Label, System.Windows.Forms, Version=4.0.0.0, Culture=neutral, PublicKeyToken=b77a5c561934e089</value>
   </data>
   <data name="&gt;&gt;labelProductTh.Parent" xml:space="preserve">
     <value>groupBoxMS2</value>
@@ -1116,6 +1290,9 @@
   <data name="&gt;&gt;textProductRes.Name" xml:space="preserve">
     <value>textProductRes</value>
   </data>
+  <data name="&gt;&gt;textProductRes.Type" xml:space="preserve">
+    <value>System.Windows.Forms.TextBox, System.Windows.Forms, Version=4.0.0.0, Culture=neutral, PublicKeyToken=b77a5c561934e089</value>
+  </data>
   <data name="&gt;&gt;textProductRes.Parent" xml:space="preserve">
     <value>groupBoxMS2</value>
   </data>
@@ -1124,6 +1301,9 @@
   </data>
   <data name="&gt;&gt;labelProductRes.Name" xml:space="preserve">
     <value>labelProductRes</value>
+  </data>
+  <data name="&gt;&gt;labelProductRes.Type" xml:space="preserve">
+    <value>System.Windows.Forms.Label, System.Windows.Forms, Version=4.0.0.0, Culture=neutral, PublicKeyToken=b77a5c561934e089</value>
   </data>
   <data name="&gt;&gt;labelProductRes.Parent" xml:space="preserve">
     <value>groupBoxMS2</value>
@@ -1134,6 +1314,9 @@
   <data name="&gt;&gt;comboProductAnalyzerType.Name" xml:space="preserve">
     <value>comboProductAnalyzerType</value>
   </data>
+  <data name="&gt;&gt;comboProductAnalyzerType.Type" xml:space="preserve">
+    <value>System.Windows.Forms.ComboBox, System.Windows.Forms, Version=4.0.0.0, Culture=neutral, PublicKeyToken=b77a5c561934e089</value>
+  </data>
   <data name="&gt;&gt;comboProductAnalyzerType.Parent" xml:space="preserve">
     <value>groupBoxMS2</value>
   </data>
@@ -1142,6 +1325,9 @@
   </data>
   <data name="&gt;&gt;label22.Name" xml:space="preserve">
     <value>label22</value>
+  </data>
+  <data name="&gt;&gt;label22.Type" xml:space="preserve">
+    <value>System.Windows.Forms.Label, System.Windows.Forms, Version=4.0.0.0, Culture=neutral, PublicKeyToken=b77a5c561934e089</value>
   </data>
   <data name="&gt;&gt;label22.Parent" xml:space="preserve">
     <value>groupBoxMS2</value>
@@ -1152,6 +1338,9 @@
   <data name="&gt;&gt;labelIsolationScheme.Name" xml:space="preserve">
     <value>labelIsolationScheme</value>
   </data>
+  <data name="&gt;&gt;labelIsolationScheme.Type" xml:space="preserve">
+    <value>System.Windows.Forms.Label, System.Windows.Forms, Version=4.0.0.0, Culture=neutral, PublicKeyToken=b77a5c561934e089</value>
+  </data>
   <data name="&gt;&gt;labelIsolationScheme.Parent" xml:space="preserve">
     <value>groupBoxMS2</value>
   </data>
@@ -1161,6 +1350,9 @@
   <data name="&gt;&gt;comboAcquisitionMethod.Name" xml:space="preserve">
     <value>comboAcquisitionMethod</value>
   </data>
+  <data name="&gt;&gt;comboAcquisitionMethod.Type" xml:space="preserve">
+    <value>System.Windows.Forms.ComboBox, System.Windows.Forms, Version=4.0.0.0, Culture=neutral, PublicKeyToken=b77a5c561934e089</value>
+  </data>
   <data name="&gt;&gt;comboAcquisitionMethod.Parent" xml:space="preserve">
     <value>groupBoxMS2</value>
   </data>
@@ -1169,6 +1361,9 @@
   </data>
   <data name="&gt;&gt;label20.Name" xml:space="preserve">
     <value>label20</value>
+  </data>
+  <data name="&gt;&gt;label20.Type" xml:space="preserve">
+    <value>System.Windows.Forms.Label, System.Windows.Forms, Version=4.0.0.0, Culture=neutral, PublicKeyToken=b77a5c561934e089</value>
   </data>
   <data name="&gt;&gt;label20.Parent" xml:space="preserve">
     <value>groupBoxMS2</value>
@@ -1190,6 +1385,9 @@
   </data>
   <data name="&gt;&gt;groupBoxMS2.Name" xml:space="preserve">
     <value>groupBoxMS2</value>
+  </data>
+  <data name="&gt;&gt;groupBoxMS2.Type" xml:space="preserve">
+    <value>System.Windows.Forms.GroupBox, System.Windows.Forms, Version=4.0.0.0, Culture=neutral, PublicKeyToken=b77a5c561934e089</value>
   </data>
   <data name="&gt;&gt;groupBoxMS2.Parent" xml:space="preserve">
     <value>$this</value>
@@ -1221,6 +1419,9 @@
   <data name="&gt;&gt;labelProductPPM.Name" xml:space="preserve">
     <value>labelProductPPM</value>
   </data>
+  <data name="&gt;&gt;labelProductPPM.Type" xml:space="preserve">
+    <value>System.Windows.Forms.Label, System.Windows.Forms, Version=4.0.0.0, Culture=neutral, PublicKeyToken=b77a5c561934e089</value>
+  </data>
   <data name="&gt;&gt;labelProductPPM.Parent" xml:space="preserve">
     <value>groupBoxMS2</value>
   </data>
@@ -1238,6 +1439,9 @@
   </data>
   <data name="&gt;&gt;comboIsolationScheme.Name" xml:space="preserve">
     <value>comboIsolationScheme</value>
+  </data>
+  <data name="&gt;&gt;comboIsolationScheme.Type" xml:space="preserve">
+    <value>System.Windows.Forms.ComboBox, System.Windows.Forms, Version=4.0.0.0, Culture=neutral, PublicKeyToken=b77a5c561934e089</value>
   </data>
   <data name="&gt;&gt;comboIsolationScheme.Parent" xml:space="preserve">
     <value>groupBoxMS2</value>
@@ -1266,6 +1470,9 @@
   <data name="&gt;&gt;labelProductAt.Name" xml:space="preserve">
     <value>labelProductAt</value>
   </data>
+  <data name="&gt;&gt;labelProductAt.Type" xml:space="preserve">
+    <value>System.Windows.Forms.Label, System.Windows.Forms, Version=4.0.0.0, Culture=neutral, PublicKeyToken=b77a5c561934e089</value>
+  </data>
   <data name="&gt;&gt;labelProductAt.Parent" xml:space="preserve">
     <value>groupBoxMS2</value>
   </data>
@@ -1283,6 +1490,9 @@
   </data>
   <data name="&gt;&gt;textProductAt.Name" xml:space="preserve">
     <value>textProductAt</value>
+  </data>
+  <data name="&gt;&gt;textProductAt.Type" xml:space="preserve">
+    <value>System.Windows.Forms.TextBox, System.Windows.Forms, Version=4.0.0.0, Culture=neutral, PublicKeyToken=b77a5c561934e089</value>
   </data>
   <data name="&gt;&gt;textProductAt.Parent" xml:space="preserve">
     <value>groupBoxMS2</value>
@@ -1314,6 +1524,9 @@
   <data name="&gt;&gt;labelProductTh.Name" xml:space="preserve">
     <value>labelProductTh</value>
   </data>
+  <data name="&gt;&gt;labelProductTh.Type" xml:space="preserve">
+    <value>System.Windows.Forms.Label, System.Windows.Forms, Version=4.0.0.0, Culture=neutral, PublicKeyToken=b77a5c561934e089</value>
+  </data>
   <data name="&gt;&gt;labelProductTh.Parent" xml:space="preserve">
     <value>groupBoxMS2</value>
   </data>
@@ -1334,6 +1547,9 @@
   </data>
   <data name="&gt;&gt;textProductRes.Name" xml:space="preserve">
     <value>textProductRes</value>
+  </data>
+  <data name="&gt;&gt;textProductRes.Type" xml:space="preserve">
+    <value>System.Windows.Forms.TextBox, System.Windows.Forms, Version=4.0.0.0, Culture=neutral, PublicKeyToken=b77a5c561934e089</value>
   </data>
   <data name="&gt;&gt;textProductRes.Parent" xml:space="preserve">
     <value>groupBoxMS2</value>
@@ -1362,6 +1578,9 @@
   <data name="&gt;&gt;labelProductRes.Name" xml:space="preserve">
     <value>labelProductRes</value>
   </data>
+  <data name="&gt;&gt;labelProductRes.Type" xml:space="preserve">
+    <value>System.Windows.Forms.Label, System.Windows.Forms, Version=4.0.0.0, Culture=neutral, PublicKeyToken=b77a5c561934e089</value>
+  </data>
   <data name="&gt;&gt;labelProductRes.Parent" xml:space="preserve">
     <value>groupBoxMS2</value>
   </data>
@@ -1385,6 +1604,9 @@
   </data>
   <data name="&gt;&gt;comboProductAnalyzerType.Name" xml:space="preserve">
     <value>comboProductAnalyzerType</value>
+  </data>
+  <data name="&gt;&gt;comboProductAnalyzerType.Type" xml:space="preserve">
+    <value>System.Windows.Forms.ComboBox, System.Windows.Forms, Version=4.0.0.0, Culture=neutral, PublicKeyToken=b77a5c561934e089</value>
   </data>
   <data name="&gt;&gt;comboProductAnalyzerType.Parent" xml:space="preserve">
     <value>groupBoxMS2</value>
@@ -1413,6 +1635,9 @@
   <data name="&gt;&gt;label22.Name" xml:space="preserve">
     <value>label22</value>
   </data>
+  <data name="&gt;&gt;label22.Type" xml:space="preserve">
+    <value>System.Windows.Forms.Label, System.Windows.Forms, Version=4.0.0.0, Culture=neutral, PublicKeyToken=b77a5c561934e089</value>
+  </data>
   <data name="&gt;&gt;label22.Parent" xml:space="preserve">
     <value>groupBoxMS2</value>
   </data>
@@ -1440,6 +1665,9 @@
   <data name="&gt;&gt;labelIsolationScheme.Name" xml:space="preserve">
     <value>labelIsolationScheme</value>
   </data>
+  <data name="&gt;&gt;labelIsolationScheme.Type" xml:space="preserve">
+    <value>System.Windows.Forms.Label, System.Windows.Forms, Version=4.0.0.0, Culture=neutral, PublicKeyToken=b77a5c561934e089</value>
+  </data>
   <data name="&gt;&gt;labelIsolationScheme.Parent" xml:space="preserve">
     <value>groupBoxMS2</value>
   </data>
@@ -1457,6 +1685,9 @@
   </data>
   <data name="&gt;&gt;comboAcquisitionMethod.Name" xml:space="preserve">
     <value>comboAcquisitionMethod</value>
+  </data>
+  <data name="&gt;&gt;comboAcquisitionMethod.Type" xml:space="preserve">
+    <value>System.Windows.Forms.ComboBox, System.Windows.Forms, Version=4.0.0.0, Culture=neutral, PublicKeyToken=b77a5c561934e089</value>
   </data>
   <data name="&gt;&gt;comboAcquisitionMethod.Parent" xml:space="preserve">
     <value>groupBoxMS2</value>
@@ -1484,6 +1715,9 @@
   </data>
   <data name="&gt;&gt;label20.Name" xml:space="preserve">
     <value>label20</value>
+  </data>
+  <data name="&gt;&gt;label20.Type" xml:space="preserve">
+    <value>System.Windows.Forms.Label, System.Windows.Forms, Version=4.0.0.0, Culture=neutral, PublicKeyToken=b77a5c561934e089</value>
   </data>
   <data name="&gt;&gt;label20.Parent" xml:space="preserve">
     <value>groupBoxMS2</value>
@@ -1515,6 +1749,9 @@
   <data name="&gt;&gt;lblPrecursorCharges.Name" xml:space="preserve">
     <value>lblPrecursorCharges</value>
   </data>
+  <data name="&gt;&gt;lblPrecursorCharges.Type" xml:space="preserve">
+    <value>System.Windows.Forms.Label, System.Windows.Forms, Version=4.0.0.0, Culture=neutral, PublicKeyToken=b77a5c561934e089</value>
+  </data>
   <data name="&gt;&gt;lblPrecursorCharges.Parent" xml:space="preserve">
     <value>$this</value>
   </data>
@@ -1536,12 +1773,18 @@
   <data name="&gt;&gt;textPrecursorCharges.Name" xml:space="preserve">
     <value>textPrecursorCharges</value>
   </data>
+  <data name="&gt;&gt;textPrecursorCharges.Type" xml:space="preserve">
+    <value>System.Windows.Forms.TextBox, System.Windows.Forms, Version=4.0.0.0, Culture=neutral, PublicKeyToken=b77a5c561934e089</value>
+  </data>
   <data name="&gt;&gt;textPrecursorCharges.Parent" xml:space="preserve">
     <value>$this</value>
   </data>
   <data name="&gt;&gt;textPrecursorCharges.ZOrder" xml:space="preserve">
     <value>2</value>
   </data>
+  <metadata name="toolTip.TrayLocation" type="System.Drawing.Point, System.Drawing, Version=4.0.0.0, Culture=neutral, PublicKeyToken=b03f5f7f11d50a3a">
+    <value>17, 17</value>
+  </metadata>
   <data name="cbHighSelectivity.AutoSize" type="System.Boolean, mscorlib">
     <value>True</value>
   </data>
@@ -1567,6 +1810,9 @@
   <data name="&gt;&gt;cbHighSelectivity.Name" xml:space="preserve">
     <value>cbHighSelectivity</value>
   </data>
+  <data name="&gt;&gt;cbHighSelectivity.Type" xml:space="preserve">
+    <value>System.Windows.Forms.CheckBox, System.Windows.Forms, Version=4.0.0.0, Culture=neutral, PublicKeyToken=b77a5c561934e089</value>
+  </data>
   <data name="&gt;&gt;cbHighSelectivity.Parent" xml:space="preserve">
     <value>$this</value>
   </data>
@@ -1585,12 +1831,18 @@
   <data name="&gt;&gt;usercontrolIonMobilityFiltering.Name" xml:space="preserve">
     <value>usercontrolIonMobilityFiltering</value>
   </data>
+  <data name="&gt;&gt;usercontrolIonMobilityFiltering.Type" xml:space="preserve">
+    <value>pwiz.Skyline.SettingsUI.IonMobility.IonMobilityFilteringUserControl, Skyline, Version=1.0.0.0, Culture=neutral, PublicKeyToken=null</value>
+  </data>
   <data name="&gt;&gt;usercontrolIonMobilityFiltering.Parent" xml:space="preserve">
     <value>$this</value>
   </data>
   <data name="&gt;&gt;usercontrolIonMobilityFiltering.ZOrder" xml:space="preserve">
     <value>0</value>
   </data>
+  <metadata name="$this.Localizable" type="System.Boolean, mscorlib, Version=4.0.0.0, Culture=neutral, PublicKeyToken=b77a5c561934e089">
+    <value>True</value>
+  </metadata>
   <data name="$this.AutoScaleDimensions" type="System.Drawing.SizeF, System.Drawing">
     <value>6, 13</value>
   </data>
@@ -1603,7 +1855,13 @@
   <data name="&gt;&gt;toolTip.Name" xml:space="preserve">
     <value>toolTip</value>
   </data>
+  <data name="&gt;&gt;toolTip.Type" xml:space="preserve">
+    <value>System.Windows.Forms.ToolTip, System.Windows.Forms, Version=4.0.0.0, Culture=neutral, PublicKeyToken=b77a5c561934e089</value>
+  </data>
   <data name="&gt;&gt;$this.Name" xml:space="preserve">
     <value>FullScanSettingsControl</value>
+  </data>
+  <data name="&gt;&gt;$this.Type" xml:space="preserve">
+    <value>System.Windows.Forms.UserControl, System.Windows.Forms, Version=4.0.0.0, Culture=neutral, PublicKeyToken=b77a5c561934e089</value>
   </data>
 </root>

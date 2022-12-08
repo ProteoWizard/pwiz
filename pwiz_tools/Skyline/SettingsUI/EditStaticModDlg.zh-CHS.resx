@@ -117,26 +117,29 @@
   <resheader name="writer">
     <value>System.Resources.ResXResourceWriter, System.Windows.Forms, Version=4.0.0.0, Culture=neutral, PublicKeyToken=b77a5c561934e089</value>
   </resheader>
-  <assembly alias="System.Windows.Forms" name="System.Windows.Forms, Version=4.0.0.0, Culture=neutral, PublicKeyToken=b77a5c561934e089" />
-  <assembly alias="System.Drawing" name="System.Drawing, Version=4.0.0.0, Culture=neutral, PublicKeyToken=b03f5f7f11d50a3a" />
-  <assembly alias="mscorlib" name="mscorlib, Version=4.0.0.0, Culture=neutral, PublicKeyToken=b77a5c561934e089" />
-  <metadata name="$this.Localizable" type="System.Boolean, mscorlib, Version=4.0.0.0, Culture=neutral, PublicKeyToken=b77a5c561934e089">
-    <value>True</value>
+  <metadata name="modeUIHandler.TrayLocation" type="System.Drawing.Point, System.Drawing, Version=4.0.0.0, Culture=neutral, PublicKeyToken=b03f5f7f11d50a3a">
+    <value>17, 17</value>
   </metadata>
+  <assembly alias="System.Windows.Forms" name="System.Windows.Forms, Version=4.0.0.0, Culture=neutral, PublicKeyToken=b77a5c561934e089" />
   <data name="textName.Anchor" type="System.Windows.Forms.AnchorStyles, System.Windows.Forms">
     <value>Top, Left, Right</value>
   </data>
+  <assembly alias="System.Drawing" name="System.Drawing, Version=4.0.0.0, Culture=neutral, PublicKeyToken=b03f5f7f11d50a3a" />
   <data name="textName.Location" type="System.Drawing.Point, System.Drawing">
     <value>9, 29</value>
   </data>
   <data name="textName.Size" type="System.Drawing.Size, System.Drawing">
     <value>238, 20</value>
   </data>
+  <assembly alias="mscorlib" name="mscorlib, Version=4.0.0.0, Culture=neutral, PublicKeyToken=b77a5c561934e089" />
   <data name="textName.TabIndex" type="System.Int32, mscorlib">
     <value>1</value>
   </data>
   <data name="&gt;&gt;textName.Name" xml:space="preserve">
     <value>textName</value>
+  </data>
+  <data name="&gt;&gt;textName.Type" xml:space="preserve">
+    <value>System.Windows.Forms.TextBox, System.Windows.Forms, Version=4.0.0.0, Culture=neutral, PublicKeyToken=b77a5c561934e089</value>
   </data>
   <data name="&gt;&gt;textName.Parent" xml:space="preserve">
     <value>$this</value>
@@ -162,6 +165,9 @@
   <data name="&gt;&gt;label4.Name" xml:space="preserve">
     <value>label4</value>
   </data>
+  <data name="&gt;&gt;label4.Type" xml:space="preserve">
+    <value>System.Windows.Forms.Label, System.Windows.Forms, Version=4.0.0.0, Culture=neutral, PublicKeyToken=b77a5c561934e089</value>
+  </data>
   <data name="&gt;&gt;label4.Parent" xml:space="preserve">
     <value>$this</value>
   </data>
@@ -185,6 +191,9 @@
   </data>
   <data name="&gt;&gt;btnCancel.Name" xml:space="preserve">
     <value>btnCancel</value>
+  </data>
+  <data name="&gt;&gt;btnCancel.Type" xml:space="preserve">
+    <value>System.Windows.Forms.Button, System.Windows.Forms, Version=4.0.0.0, Culture=neutral, PublicKeyToken=b77a5c561934e089</value>
   </data>
   <data name="&gt;&gt;btnCancel.Parent" xml:space="preserve">
     <value>$this</value>
@@ -210,6 +219,9 @@
   <data name="&gt;&gt;btnOk.Name" xml:space="preserve">
     <value>btnOk</value>
   </data>
+  <data name="&gt;&gt;btnOk.Type" xml:space="preserve">
+    <value>System.Windows.Forms.Button, System.Windows.Forms, Version=4.0.0.0, Culture=neutral, PublicKeyToken=b77a5c561934e089</value>
+  </data>
   <data name="&gt;&gt;btnOk.Parent" xml:space="preserve">
     <value>$this</value>
   </data>
@@ -234,6 +246,9 @@
   <data name="&gt;&gt;labelAA.Name" xml:space="preserve">
     <value>labelAA</value>
   </data>
+  <data name="&gt;&gt;labelAA.Type" xml:space="preserve">
+    <value>System.Windows.Forms.Label, System.Windows.Forms, Version=4.0.0.0, Culture=neutral, PublicKeyToken=b77a5c561934e089</value>
+  </data>
   <data name="&gt;&gt;labelAA.Parent" xml:space="preserve">
     <value>$this</value>
   </data>
@@ -251,6 +266,9 @@
   </data>
   <data name="&gt;&gt;comboAA.Name" xml:space="preserve">
     <value>comboAA</value>
+  </data>
+  <data name="&gt;&gt;comboAA.Type" xml:space="preserve">
+    <value>System.Windows.Forms.ComboBox, System.Windows.Forms, Version=4.0.0.0, Culture=neutral, PublicKeyToken=b77a5c561934e089</value>
   </data>
   <data name="&gt;&gt;comboAA.Parent" xml:space="preserve">
     <value>$this</value>
@@ -272,6 +290,9 @@
   </data>
   <data name="&gt;&gt;comboTerm.Name" xml:space="preserve">
     <value>comboTerm</value>
+  </data>
+  <data name="&gt;&gt;comboTerm.Type" xml:space="preserve">
+    <value>System.Windows.Forms.ComboBox, System.Windows.Forms, Version=4.0.0.0, Culture=neutral, PublicKeyToken=b77a5c561934e089</value>
   </data>
   <data name="&gt;&gt;comboTerm.Parent" xml:space="preserve">
     <value>$this</value>
@@ -300,6 +321,9 @@
   <data name="&gt;&gt;label6.Name" xml:space="preserve">
     <value>label6</value>
   </data>
+  <data name="&gt;&gt;label6.Type" xml:space="preserve">
+    <value>System.Windows.Forms.Label, System.Windows.Forms, Version=4.0.0.0, Culture=neutral, PublicKeyToken=b77a5c561934e089</value>
+  </data>
   <data name="&gt;&gt;label6.Parent" xml:space="preserve">
     <value>$this</value>
   </data>
@@ -323,6 +347,9 @@
   </data>
   <data name="&gt;&gt;cb2H.Name" xml:space="preserve">
     <value>cb2H</value>
+  </data>
+  <data name="&gt;&gt;cb2H.Type" xml:space="preserve">
+    <value>System.Windows.Forms.CheckBox, System.Windows.Forms, Version=4.0.0.0, Culture=neutral, PublicKeyToken=b77a5c561934e089</value>
   </data>
   <data name="&gt;&gt;cb2H.Parent" xml:space="preserve">
     <value>panelAtoms</value>
@@ -348,6 +375,9 @@
   <data name="&gt;&gt;cb18O.Name" xml:space="preserve">
     <value>cb18O</value>
   </data>
+  <data name="&gt;&gt;cb18O.Type" xml:space="preserve">
+    <value>System.Windows.Forms.CheckBox, System.Windows.Forms, Version=4.0.0.0, Culture=neutral, PublicKeyToken=b77a5c561934e089</value>
+  </data>
   <data name="&gt;&gt;cb18O.Parent" xml:space="preserve">
     <value>panelAtoms</value>
   </data>
@@ -371,6 +401,9 @@
   </data>
   <data name="&gt;&gt;cb15N.Name" xml:space="preserve">
     <value>cb15N</value>
+  </data>
+  <data name="&gt;&gt;cb15N.Type" xml:space="preserve">
+    <value>System.Windows.Forms.CheckBox, System.Windows.Forms, Version=4.0.0.0, Culture=neutral, PublicKeyToken=b77a5c561934e089</value>
   </data>
   <data name="&gt;&gt;cb15N.Parent" xml:space="preserve">
     <value>panelAtoms</value>
@@ -396,6 +429,9 @@
   <data name="&gt;&gt;cb13C.Name" xml:space="preserve">
     <value>cb13C</value>
   </data>
+  <data name="&gt;&gt;cb13C.Type" xml:space="preserve">
+    <value>System.Windows.Forms.CheckBox, System.Windows.Forms, Version=4.0.0.0, Culture=neutral, PublicKeyToken=b77a5c561934e089</value>
+  </data>
   <data name="&gt;&gt;cb13C.Parent" xml:space="preserve">
     <value>panelAtoms</value>
   </data>
@@ -419,6 +455,9 @@
   </data>
   <data name="&gt;&gt;cb37Cl.Name" xml:space="preserve">
     <value>cb37Cl</value>
+  </data>
+  <data name="&gt;&gt;cb37Cl.Type" xml:space="preserve">
+    <value>System.Windows.Forms.CheckBox, System.Windows.Forms, Version=4.0.0.0, Culture=neutral, PublicKeyToken=b77a5c561934e089</value>
   </data>
   <data name="&gt;&gt;cb37Cl.Parent" xml:space="preserve">
     <value>panelAtoms</value>
@@ -444,6 +483,9 @@
   <data name="&gt;&gt;cb81Br.Name" xml:space="preserve">
     <value>cb81Br</value>
   </data>
+  <data name="&gt;&gt;cb81Br.Type" xml:space="preserve">
+    <value>System.Windows.Forms.CheckBox, System.Windows.Forms, Version=4.0.0.0, Culture=neutral, PublicKeyToken=b77a5c561934e089</value>
+  </data>
   <data name="&gt;&gt;cb81Br.Parent" xml:space="preserve">
     <value>panelAtoms</value>
   </data>
@@ -461,6 +503,9 @@
   </data>
   <data name="&gt;&gt;panelAtoms.Name" xml:space="preserve">
     <value>panelAtoms</value>
+  </data>
+  <data name="&gt;&gt;panelAtoms.Type" xml:space="preserve">
+    <value>System.Windows.Forms.Panel, System.Windows.Forms, Version=4.0.0.0, Culture=neutral, PublicKeyToken=b77a5c561934e089</value>
   </data>
   <data name="&gt;&gt;panelAtoms.Parent" xml:space="preserve">
     <value>$this</value>
@@ -489,6 +534,9 @@
   <data name="&gt;&gt;cbChemicalFormula.Name" xml:space="preserve">
     <value>cbChemicalFormula</value>
   </data>
+  <data name="&gt;&gt;cbChemicalFormula.Type" xml:space="preserve">
+    <value>System.Windows.Forms.CheckBox, System.Windows.Forms, Version=4.0.0.0, Culture=neutral, PublicKeyToken=b77a5c561934e089</value>
+  </data>
   <data name="&gt;&gt;cbChemicalFormula.Parent" xml:space="preserve">
     <value>$this</value>
   </data>
@@ -513,6 +561,9 @@
   <data name="&gt;&gt;btnLoss.Name" xml:space="preserve">
     <value>btnLoss</value>
   </data>
+  <data name="&gt;&gt;btnLoss.Type" xml:space="preserve">
+    <value>System.Windows.Forms.Button, System.Windows.Forms, Version=4.0.0.0, Culture=neutral, PublicKeyToken=b77a5c561934e089</value>
+  </data>
   <data name="&gt;&gt;btnLoss.Parent" xml:space="preserve">
     <value>$this</value>
   </data>
@@ -530,6 +581,9 @@
   </data>
   <data name="&gt;&gt;comboRelativeRT.Name" xml:space="preserve">
     <value>comboRelativeRT</value>
+  </data>
+  <data name="&gt;&gt;comboRelativeRT.Type" xml:space="preserve">
+    <value>System.Windows.Forms.ComboBox, System.Windows.Forms, Version=4.0.0.0, Culture=neutral, PublicKeyToken=b77a5c561934e089</value>
   </data>
   <data name="&gt;&gt;comboRelativeRT.Parent" xml:space="preserve">
     <value>$this</value>
@@ -555,6 +609,9 @@
   <data name="&gt;&gt;labelRelativeRT.Name" xml:space="preserve">
     <value>labelRelativeRT</value>
   </data>
+  <data name="&gt;&gt;labelRelativeRT.Type" xml:space="preserve">
+    <value>System.Windows.Forms.Label, System.Windows.Forms, Version=4.0.0.0, Culture=neutral, PublicKeyToken=b77a5c561934e089</value>
+  </data>
   <data name="&gt;&gt;labelRelativeRT.Parent" xml:space="preserve">
     <value>$this</value>
   </data>
@@ -579,6 +636,9 @@
   <data name="&gt;&gt;cbVariableMod.Name" xml:space="preserve">
     <value>cbVariableMod</value>
   </data>
+  <data name="&gt;&gt;cbVariableMod.Type" xml:space="preserve">
+    <value>System.Windows.Forms.CheckBox, System.Windows.Forms, Version=4.0.0.0, Culture=neutral, PublicKeyToken=b77a5c561934e089</value>
+  </data>
   <data name="&gt;&gt;cbVariableMod.Parent" xml:space="preserve">
     <value>$this</value>
   </data>
@@ -599,6 +659,9 @@
   </data>
   <data name="&gt;&gt;listLosses.Name" xml:space="preserve">
     <value>listLosses</value>
+  </data>
+  <data name="&gt;&gt;listLosses.Type" xml:space="preserve">
+    <value>System.Windows.Forms.ListBox, System.Windows.Forms, Version=4.0.0.0, Culture=neutral, PublicKeyToken=b77a5c561934e089</value>
   </data>
   <data name="&gt;&gt;listLosses.Parent" xml:space="preserve">
     <value>panelLoss</value>
@@ -624,12 +687,18 @@
   <data name="&gt;&gt;labelLoss.Name" xml:space="preserve">
     <value>labelLoss</value>
   </data>
+  <data name="&gt;&gt;labelLoss.Type" xml:space="preserve">
+    <value>System.Windows.Forms.Label, System.Windows.Forms, Version=4.0.0.0, Culture=neutral, PublicKeyToken=b77a5c561934e089</value>
+  </data>
   <data name="&gt;&gt;labelLoss.Parent" xml:space="preserve">
     <value>$this</value>
   </data>
   <data name="&gt;&gt;labelLoss.ZOrder" xml:space="preserve">
     <value>3</value>
   </data>
+  <metadata name="toolBarLosses.TrayLocation" type="System.Drawing.Point, System.Drawing, Version=4.0.0.0, Culture=neutral, PublicKeyToken=b03f5f7f11d50a3a">
+    <value>155, 17</value>
+  </metadata>
   <data name="toolBarLosses.Dock" type="System.Windows.Forms.DockStyle, System.Windows.Forms">
     <value>Right</value>
   </data>
@@ -678,6 +747,9 @@
   <data name="&gt;&gt;toolBarLosses.Name" xml:space="preserve">
     <value>toolBarLosses</value>
   </data>
+  <data name="&gt;&gt;toolBarLosses.Type" xml:space="preserve">
+    <value>System.Windows.Forms.ToolStrip, System.Windows.Forms, Version=4.0.0.0, Culture=neutral, PublicKeyToken=b77a5c561934e089</value>
+  </data>
   <data name="&gt;&gt;toolBarLosses.Parent" xml:space="preserve">
     <value>panelLoss</value>
   </data>
@@ -695,6 +767,9 @@
   </data>
   <data name="&gt;&gt;panelLoss.Name" xml:space="preserve">
     <value>panelLoss</value>
+  </data>
+  <data name="&gt;&gt;panelLoss.Type" xml:space="preserve">
+    <value>System.Windows.Forms.Panel, System.Windows.Forms, Version=4.0.0.0, Culture=neutral, PublicKeyToken=b77a5c561934e089</value>
   </data>
   <data name="&gt;&gt;panelLoss.Parent" xml:space="preserve">
     <value>$this</value>
@@ -720,6 +795,9 @@
   <data name="&gt;&gt;comboMod.Name" xml:space="preserve">
     <value>comboMod</value>
   </data>
+  <data name="&gt;&gt;comboMod.Type" xml:space="preserve">
+    <value>System.Windows.Forms.ComboBox, System.Windows.Forms, Version=4.0.0.0, Culture=neutral, PublicKeyToken=b77a5c561934e089</value>
+  </data>
   <data name="&gt;&gt;comboMod.Parent" xml:space="preserve">
     <value>$this</value>
   </data>
@@ -744,12 +822,18 @@
   <data name="&gt;&gt;cbCrosslinker.Name" xml:space="preserve">
     <value>cbCrosslinker</value>
   </data>
+  <data name="&gt;&gt;cbCrosslinker.Type" xml:space="preserve">
+    <value>System.Windows.Forms.CheckBox, System.Windows.Forms, Version=4.0.0.0, Culture=neutral, PublicKeyToken=b77a5c561934e089</value>
+  </data>
   <data name="&gt;&gt;cbCrosslinker.Parent" xml:space="preserve">
     <value>$this</value>
   </data>
   <data name="&gt;&gt;cbCrosslinker.ZOrder" xml:space="preserve">
     <value>0</value>
   </data>
+  <metadata name="$this.Localizable" type="System.Boolean, mscorlib, Version=4.0.0.0, Culture=neutral, PublicKeyToken=b77a5c561934e089">
+    <value>True</value>
+  </metadata>
   <data name="$this.AutoScaleDimensions" type="System.Drawing.SizeF, System.Drawing">
     <value>6, 13</value>
   </data>
@@ -765,16 +849,31 @@
   <data name="&gt;&gt;modeUIHandler.Name" xml:space="preserve">
     <value>modeUIHandler</value>
   </data>
+  <data name="&gt;&gt;modeUIHandler.Type" xml:space="preserve">
+    <value>pwiz.Skyline.Util.Helpers+ModeUIExtender, Skyline, Version=1.0.0.0, Culture=neutral, PublicKeyToken=null</value>
+  </data>
   <data name="&gt;&gt;tbbAddLoss.Name" xml:space="preserve">
     <value>tbbAddLoss</value>
+  </data>
+  <data name="&gt;&gt;tbbAddLoss.Type" xml:space="preserve">
+    <value>System.Windows.Forms.ToolStripButton, System.Windows.Forms, Version=4.0.0.0, Culture=neutral, PublicKeyToken=b77a5c561934e089</value>
   </data>
   <data name="&gt;&gt;tbbEditLoss.Name" xml:space="preserve">
     <value>tbbEditLoss</value>
   </data>
+  <data name="&gt;&gt;tbbEditLoss.Type" xml:space="preserve">
+    <value>System.Windows.Forms.ToolStripButton, System.Windows.Forms, Version=4.0.0.0, Culture=neutral, PublicKeyToken=b77a5c561934e089</value>
+  </data>
   <data name="&gt;&gt;tbbDeleteLoss.Name" xml:space="preserve">
     <value>tbbDeleteLoss</value>
   </data>
+  <data name="&gt;&gt;tbbDeleteLoss.Type" xml:space="preserve">
+    <value>System.Windows.Forms.ToolStripButton, System.Windows.Forms, Version=4.0.0.0, Culture=neutral, PublicKeyToken=b77a5c561934e089</value>
+  </data>
   <data name="&gt;&gt;$this.Name" xml:space="preserve">
     <value>EditStaticModDlg</value>
+  </data>
+  <data name="&gt;&gt;$this.Type" xml:space="preserve">
+    <value>pwiz.Skyline.Util.FormEx, Skyline, Version=1.0.0.0, Culture=neutral, PublicKeyToken=null</value>
   </data>
 </root>

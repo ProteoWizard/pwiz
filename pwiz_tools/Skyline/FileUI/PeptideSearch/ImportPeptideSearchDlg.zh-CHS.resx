@@ -117,21 +117,21 @@
   <resheader name="writer">
     <value>System.Resources.ResXResourceWriter, System.Windows.Forms, Version=4.0.0.0, Culture=neutral, PublicKeyToken=b77a5c561934e089</value>
   </resheader>
-  <assembly alias="System.Windows.Forms" name="System.Windows.Forms, Version=4.0.0.0, Culture=neutral, PublicKeyToken=b77a5c561934e089" />
-  <assembly alias="System.Drawing" name="System.Drawing, Version=4.0.0.0, Culture=neutral, PublicKeyToken=b03f5f7f11d50a3a" />
-  <assembly alias="mscorlib" name="mscorlib, Version=4.0.0.0, Culture=neutral, PublicKeyToken=b77a5c561934e089" />
-  <metadata name="$this.Localizable" type="System.Boolean, mscorlib, Version=4.0.0.0, Culture=neutral, PublicKeyToken=b77a5c561934e089">
-    <value>True</value>
+  <metadata name="modeUIHandler.TrayLocation" type="System.Drawing.Point, System.Drawing, Version=4.0.0.0, Culture=neutral, PublicKeyToken=b03f5f7f11d50a3a">
+    <value>17, 17</value>
   </metadata>
+  <assembly alias="System.Windows.Forms" name="System.Windows.Forms, Version=4.0.0.0, Culture=neutral, PublicKeyToken=b77a5c561934e089" />
   <data name="btnCancel.Anchor" type="System.Windows.Forms.AnchorStyles, System.Windows.Forms">
     <value>Bottom, Right</value>
   </data>
+  <assembly alias="System.Drawing" name="System.Drawing, Version=4.0.0.0, Culture=neutral, PublicKeyToken=b03f5f7f11d50a3a" />
   <data name="btnCancel.Location" type="System.Drawing.Point, System.Drawing">
     <value>497, 605</value>
   </data>
   <data name="btnCancel.Size" type="System.Drawing.Size, System.Drawing">
     <value>75, 23</value>
   </data>
+  <assembly alias="mscorlib" name="mscorlib, Version=4.0.0.0, Culture=neutral, PublicKeyToken=b77a5c561934e089" />
   <data name="btnCancel.TabIndex" type="System.Int32, mscorlib">
     <value>4</value>
   </data>
@@ -140,6 +140,9 @@
   </data>
   <data name="&gt;&gt;btnCancel.Name" xml:space="preserve">
     <value>btnCancel</value>
+  </data>
+  <data name="&gt;&gt;btnCancel.Type" xml:space="preserve">
+    <value>System.Windows.Forms.Button, System.Windows.Forms, Version=4.0.0.0, Culture=neutral, PublicKeyToken=b77a5c561934e089</value>
   </data>
   <data name="&gt;&gt;btnCancel.Parent" xml:space="preserve">
     <value>$this</value>
@@ -165,12 +168,18 @@
   <data name="&gt;&gt;btnNext.Name" xml:space="preserve">
     <value>btnNext</value>
   </data>
+  <data name="&gt;&gt;btnNext.Type" xml:space="preserve">
+    <value>System.Windows.Forms.Button, System.Windows.Forms, Version=4.0.0.0, Culture=neutral, PublicKeyToken=b77a5c561934e089</value>
+  </data>
   <data name="&gt;&gt;btnNext.Parent" xml:space="preserve">
     <value>$this</value>
   </data>
   <data name="&gt;&gt;btnNext.ZOrder" xml:space="preserve">
     <value>4</value>
   </data>
+  <metadata name="helpTip.TrayLocation" type="System.Drawing.Point, System.Drawing, Version=4.0.0.0, Culture=neutral, PublicKeyToken=b03f5f7f11d50a3a">
+    <value>155, 17</value>
+  </metadata>
   <data name="cbMissedCleavages.Items" xml:space="preserve">
     <value>0</value>
   </data>
@@ -217,6 +226,9 @@
   <data name="&gt;&gt;cbMissedCleavages.Name" xml:space="preserve">
     <value>cbMissedCleavages</value>
   </data>
+  <data name="&gt;&gt;cbMissedCleavages.Type" xml:space="preserve">
+    <value>System.Windows.Forms.ComboBox, System.Windows.Forms, Version=4.0.0.0, Culture=neutral, PublicKeyToken=b77a5c561934e089</value>
+  </data>
   <data name="comboEnzyme.Location" type="System.Drawing.Point, System.Drawing">
     <value>28, 36</value>
   </data>
@@ -234,6 +246,9 @@
   <data name="&gt;&gt;comboEnzyme.Name" xml:space="preserve">
     <value>comboEnzyme</value>
   </data>
+  <data name="&gt;&gt;comboEnzyme.Type" xml:space="preserve">
+    <value>System.Windows.Forms.ComboBox, System.Windows.Forms, Version=4.0.0.0, Culture=neutral, PublicKeyToken=b77a5c561934e089</value>
+  </data>
   <data name="comboBackgroundProteome.Location" type="System.Drawing.Point, System.Drawing">
     <value>28, 158</value>
   </data>
@@ -250,6 +265,9 @@
   </data>
   <data name="&gt;&gt;comboBackgroundProteome.Name" xml:space="preserve">
     <value>comboBackgroundProteome</value>
+  </data>
+  <data name="&gt;&gt;comboBackgroundProteome.Type" xml:space="preserve">
+    <value>System.Windows.Forms.ComboBox, System.Windows.Forms, Version=4.0.0.0, Culture=neutral, PublicKeyToken=b77a5c561934e089</value>
   </data>
   <data name="comboBox1.Items" xml:space="preserve">
     <value>0</value>
@@ -297,6 +315,9 @@
   <data name="&gt;&gt;comboBox1.Name" xml:space="preserve">
     <value>comboBox1</value>
   </data>
+  <data name="&gt;&gt;comboBox1.Type" xml:space="preserve">
+    <value>System.Windows.Forms.ComboBox, System.Windows.Forms, Version=4.0.0.0, Culture=neutral, PublicKeyToken=b77a5c561934e089</value>
+  </data>
   <data name="comboBox2.Location" type="System.Drawing.Point, System.Drawing">
     <value>28, 36</value>
   </data>
@@ -314,6 +335,9 @@
   <data name="&gt;&gt;comboBox2.Name" xml:space="preserve">
     <value>comboBox2</value>
   </data>
+  <data name="&gt;&gt;comboBox2.Type" xml:space="preserve">
+    <value>System.Windows.Forms.ComboBox, System.Windows.Forms, Version=4.0.0.0, Culture=neutral, PublicKeyToken=b77a5c561934e089</value>
+  </data>
   <data name="comboBox3.Location" type="System.Drawing.Point, System.Drawing">
     <value>28, 158</value>
   </data>
@@ -330,6 +354,9 @@
   </data>
   <data name="&gt;&gt;comboBox3.Name" xml:space="preserve">
     <value>comboBox3</value>
+  </data>
+  <data name="&gt;&gt;comboBox3.Type" xml:space="preserve">
+    <value>System.Windows.Forms.ComboBox, System.Windows.Forms, Version=4.0.0.0, Culture=neutral, PublicKeyToken=b77a5c561934e089</value>
   </data>
   <data name="label4.AutoSize" type="System.Boolean, mscorlib">
     <value>True</value>
@@ -349,6 +376,9 @@
   <data name="&gt;&gt;label4.Name" xml:space="preserve">
     <value>label4</value>
   </data>
+  <data name="&gt;&gt;label4.Type" xml:space="preserve">
+    <value>System.Windows.Forms.Label, System.Windows.Forms, Version=4.0.0.0, Culture=neutral, PublicKeyToken=b77a5c561934e089</value>
+  </data>
   <data name="label5.AutoSize" type="System.Boolean, mscorlib">
     <value>True</value>
   </data>
@@ -366,6 +396,9 @@
   </data>
   <data name="&gt;&gt;label5.Name" xml:space="preserve">
     <value>label5</value>
+  </data>
+  <data name="&gt;&gt;label5.Type" xml:space="preserve">
+    <value>System.Windows.Forms.Label, System.Windows.Forms, Version=4.0.0.0, Culture=neutral, PublicKeyToken=b77a5c561934e089</value>
   </data>
   <data name="label15.AutoSize" type="System.Boolean, mscorlib">
     <value>True</value>
@@ -385,6 +418,9 @@
   <data name="&gt;&gt;label15.Name" xml:space="preserve">
     <value>label15</value>
   </data>
+  <data name="&gt;&gt;label15.Type" xml:space="preserve">
+    <value>System.Windows.Forms.Label, System.Windows.Forms, Version=4.0.0.0, Culture=neutral, PublicKeyToken=b77a5c561934e089</value>
+  </data>
   <data name="label6.AutoSize" type="System.Boolean, mscorlib">
     <value>True</value>
   </data>
@@ -402,6 +438,9 @@
   </data>
   <data name="&gt;&gt;label6.Name" xml:space="preserve">
     <value>label6</value>
+  </data>
+  <data name="&gt;&gt;label6.Type" xml:space="preserve">
+    <value>System.Windows.Forms.Label, System.Windows.Forms, Version=4.0.0.0, Culture=neutral, PublicKeyToken=b77a5c561934e089</value>
   </data>
   <data name="label8.AutoSize" type="System.Boolean, mscorlib">
     <value>True</value>
@@ -421,6 +460,9 @@
   <data name="&gt;&gt;label8.Name" xml:space="preserve">
     <value>label8</value>
   </data>
+  <data name="&gt;&gt;label8.Type" xml:space="preserve">
+    <value>System.Windows.Forms.Label, System.Windows.Forms, Version=4.0.0.0, Culture=neutral, PublicKeyToken=b77a5c561934e089</value>
+  </data>
   <data name="label9.AutoSize" type="System.Boolean, mscorlib">
     <value>True</value>
   </data>
@@ -438,6 +480,9 @@
   </data>
   <data name="&gt;&gt;label9.Name" xml:space="preserve">
     <value>label9</value>
+  </data>
+  <data name="&gt;&gt;label9.Type" xml:space="preserve">
+    <value>System.Windows.Forms.Label, System.Windows.Forms, Version=4.0.0.0, Culture=neutral, PublicKeyToken=b77a5c561934e089</value>
   </data>
   <data name="btnEarlyFinish.Anchor" type="System.Windows.Forms.AnchorStyles, System.Windows.Forms">
     <value>Bottom, Right</value>
@@ -459,6 +504,9 @@
   </data>
   <data name="&gt;&gt;btnEarlyFinish.Name" xml:space="preserve">
     <value>btnEarlyFinish</value>
+  </data>
+  <data name="&gt;&gt;btnEarlyFinish.Type" xml:space="preserve">
+    <value>System.Windows.Forms.Button, System.Windows.Forms, Version=4.0.0.0, Culture=neutral, PublicKeyToken=b77a5c561934e089</value>
   </data>
   <data name="&gt;&gt;btnEarlyFinish.Parent" xml:space="preserve">
     <value>$this</value>
@@ -487,6 +535,9 @@
   <data name="&gt;&gt;buildLibraryPanel.Name" xml:space="preserve">
     <value>buildLibraryPanel</value>
   </data>
+  <data name="&gt;&gt;buildLibraryPanel.Type" xml:space="preserve">
+    <value>System.Windows.Forms.Panel, System.Windows.Forms, Version=4.0.0.0, Culture=neutral, PublicKeyToken=b77a5c561934e089</value>
+  </data>
   <data name="&gt;&gt;buildLibraryPanel.Parent" xml:space="preserve">
     <value>buildSearchSpecLibPage</value>
   </data>
@@ -514,6 +565,9 @@
   <data name="&gt;&gt;label14.Name" xml:space="preserve">
     <value>label14</value>
   </data>
+  <data name="&gt;&gt;label14.Type" xml:space="preserve">
+    <value>System.Windows.Forms.Label, System.Windows.Forms, Version=4.0.0.0, Culture=neutral, PublicKeyToken=b77a5c561934e089</value>
+  </data>
   <data name="&gt;&gt;label14.Parent" xml:space="preserve">
     <value>buildSpectralLibraryTitlePanel</value>
   </data>
@@ -534,6 +588,9 @@
   </data>
   <data name="&gt;&gt;buildSpectralLibraryTitlePanel.Name" xml:space="preserve">
     <value>buildSpectralLibraryTitlePanel</value>
+  </data>
+  <data name="&gt;&gt;buildSpectralLibraryTitlePanel.Type" xml:space="preserve">
+    <value>System.Windows.Forms.Panel, System.Windows.Forms, Version=4.0.0.0, Culture=neutral, PublicKeyToken=b77a5c561934e089</value>
   </data>
   <data name="&gt;&gt;buildSpectralLibraryTitlePanel.Parent" xml:space="preserve">
     <value>buildSearchSpecLibPage</value>
@@ -558,6 +615,9 @@
   </data>
   <data name="&gt;&gt;buildSearchSpecLibPage.Name" xml:space="preserve">
     <value>buildSearchSpecLibPage</value>
+  </data>
+  <data name="&gt;&gt;buildSearchSpecLibPage.Type" xml:space="preserve">
+    <value>System.Windows.Forms.TabPage, System.Windows.Forms, Version=4.0.0.0, Culture=neutral, PublicKeyToken=b77a5c561934e089</value>
   </data>
   <data name="&gt;&gt;buildSearchSpecLibPage.Parent" xml:space="preserve">
     <value>wizardPagesImportPeptideSearch</value>
@@ -586,6 +646,9 @@
   <data name="&gt;&gt;label20.Name" xml:space="preserve">
     <value>label20</value>
   </data>
+  <data name="&gt;&gt;label20.Type" xml:space="preserve">
+    <value>System.Windows.Forms.Label, System.Windows.Forms, Version=4.0.0.0, Culture=neutral, PublicKeyToken=b77a5c561934e089</value>
+  </data>
   <data name="&gt;&gt;label20.Parent" xml:space="preserve">
     <value>extractChromatogramsTitlePanel</value>
   </data>
@@ -606,6 +669,9 @@
   </data>
   <data name="&gt;&gt;extractChromatogramsTitlePanel.Name" xml:space="preserve">
     <value>extractChromatogramsTitlePanel</value>
+  </data>
+  <data name="&gt;&gt;extractChromatogramsTitlePanel.Type" xml:space="preserve">
+    <value>System.Windows.Forms.Panel, System.Windows.Forms, Version=4.0.0.0, Culture=neutral, PublicKeyToken=b77a5c561934e089</value>
   </data>
   <data name="&gt;&gt;extractChromatogramsTitlePanel.Parent" xml:space="preserve">
     <value>getChromatogramsPage</value>
@@ -630,6 +696,9 @@
   </data>
   <data name="&gt;&gt;getChromatogramsPage.Name" xml:space="preserve">
     <value>getChromatogramsPage</value>
+  </data>
+  <data name="&gt;&gt;getChromatogramsPage.Type" xml:space="preserve">
+    <value>System.Windows.Forms.TabPage, System.Windows.Forms, Version=4.0.0.0, Culture=neutral, PublicKeyToken=b77a5c561934e089</value>
   </data>
   <data name="&gt;&gt;getChromatogramsPage.Parent" xml:space="preserve">
     <value>wizardPagesImportPeptideSearch</value>
@@ -658,6 +727,9 @@
   <data name="&gt;&gt;label16.Name" xml:space="preserve">
     <value>label16</value>
   </data>
+  <data name="&gt;&gt;label16.Type" xml:space="preserve">
+    <value>System.Windows.Forms.Label, System.Windows.Forms, Version=4.0.0.0, Culture=neutral, PublicKeyToken=b77a5c561934e089</value>
+  </data>
   <data name="&gt;&gt;label16.Parent" xml:space="preserve">
     <value>addModsTitlePanel</value>
   </data>
@@ -678,6 +750,9 @@
   </data>
   <data name="&gt;&gt;addModsTitlePanel.Name" xml:space="preserve">
     <value>addModsTitlePanel</value>
+  </data>
+  <data name="&gt;&gt;addModsTitlePanel.Type" xml:space="preserve">
+    <value>System.Windows.Forms.Panel, System.Windows.Forms, Version=4.0.0.0, Culture=neutral, PublicKeyToken=b77a5c561934e089</value>
   </data>
   <data name="&gt;&gt;addModsTitlePanel.Parent" xml:space="preserve">
     <value>matchModificationsPage</value>
@@ -702,6 +777,9 @@
   </data>
   <data name="&gt;&gt;matchModificationsPage.Name" xml:space="preserve">
     <value>matchModificationsPage</value>
+  </data>
+  <data name="&gt;&gt;matchModificationsPage.Type" xml:space="preserve">
+    <value>System.Windows.Forms.TabPage, System.Windows.Forms, Version=4.0.0.0, Culture=neutral, PublicKeyToken=b77a5c561934e089</value>
   </data>
   <data name="&gt;&gt;matchModificationsPage.Parent" xml:space="preserve">
     <value>wizardPagesImportPeptideSearch</value>
@@ -733,6 +811,9 @@
   <data name="&gt;&gt;label1.Name" xml:space="preserve">
     <value>label1</value>
   </data>
+  <data name="&gt;&gt;label1.Type" xml:space="preserve">
+    <value>System.Windows.Forms.Label, System.Windows.Forms, Version=4.0.0.0, Culture=neutral, PublicKeyToken=b77a5c561934e089</value>
+  </data>
   <data name="&gt;&gt;label1.Parent" xml:space="preserve">
     <value>panel1</value>
   </data>
@@ -754,6 +835,9 @@
   <data name="&gt;&gt;panel1.Name" xml:space="preserve">
     <value>panel1</value>
   </data>
+  <data name="&gt;&gt;panel1.Type" xml:space="preserve">
+    <value>System.Windows.Forms.Panel, System.Windows.Forms, Version=4.0.0.0, Culture=neutral, PublicKeyToken=b77a5c561934e089</value>
+  </data>
   <data name="&gt;&gt;panel1.Parent" xml:space="preserve">
     <value>transitionSettingsUiPage</value>
   </data>
@@ -774,6 +858,9 @@
   </data>
   <data name="&gt;&gt;transitionSettingsUiPage.Name" xml:space="preserve">
     <value>transitionSettingsUiPage</value>
+  </data>
+  <data name="&gt;&gt;transitionSettingsUiPage.Type" xml:space="preserve">
+    <value>System.Windows.Forms.TabPage, System.Windows.Forms, Version=4.0.0.0, Culture=neutral, PublicKeyToken=b77a5c561934e089</value>
   </data>
   <data name="&gt;&gt;transitionSettingsUiPage.Parent" xml:space="preserve">
     <value>wizardPagesImportPeptideSearch</value>
@@ -802,6 +889,9 @@
   <data name="&gt;&gt;label19.Name" xml:space="preserve">
     <value>label19</value>
   </data>
+  <data name="&gt;&gt;label19.Type" xml:space="preserve">
+    <value>System.Windows.Forms.Label, System.Windows.Forms, Version=4.0.0.0, Culture=neutral, PublicKeyToken=b77a5c561934e089</value>
+  </data>
   <data name="&gt;&gt;label19.Parent" xml:space="preserve">
     <value>ms1FullScanSettingsTitlePanel</value>
   </data>
@@ -822,6 +912,9 @@
   </data>
   <data name="&gt;&gt;ms1FullScanSettingsTitlePanel.Name" xml:space="preserve">
     <value>ms1FullScanSettingsTitlePanel</value>
+  </data>
+  <data name="&gt;&gt;ms1FullScanSettingsTitlePanel.Type" xml:space="preserve">
+    <value>System.Windows.Forms.Panel, System.Windows.Forms, Version=4.0.0.0, Culture=neutral, PublicKeyToken=b77a5c561934e089</value>
   </data>
   <data name="&gt;&gt;ms1FullScanSettingsTitlePanel.Parent" xml:space="preserve">
     <value>ms1FullScanSettingsPage</value>
@@ -847,6 +940,9 @@
   <data name="&gt;&gt;ms1FullScanSettingsPage.Name" xml:space="preserve">
     <value>ms1FullScanSettingsPage</value>
   </data>
+  <data name="&gt;&gt;ms1FullScanSettingsPage.Type" xml:space="preserve">
+    <value>System.Windows.Forms.TabPage, System.Windows.Forms, Version=4.0.0.0, Culture=neutral, PublicKeyToken=b77a5c561934e089</value>
+  </data>
   <data name="&gt;&gt;ms1FullScanSettingsPage.Parent" xml:space="preserve">
     <value>wizardPagesImportPeptideSearch</value>
   </data>
@@ -871,6 +967,9 @@
   <data name="&gt;&gt;lblFasta.Name" xml:space="preserve">
     <value>lblFasta</value>
   </data>
+  <data name="&gt;&gt;lblFasta.Type" xml:space="preserve">
+    <value>System.Windows.Forms.Label, System.Windows.Forms, Version=4.0.0.0, Culture=neutral, PublicKeyToken=b77a5c561934e089</value>
+  </data>
   <data name="&gt;&gt;lblFasta.Parent" xml:space="preserve">
     <value>importFASTATitlePanel</value>
   </data>
@@ -891,6 +990,9 @@
   </data>
   <data name="&gt;&gt;importFASTATitlePanel.Name" xml:space="preserve">
     <value>importFASTATitlePanel</value>
+  </data>
+  <data name="&gt;&gt;importFASTATitlePanel.Type" xml:space="preserve">
+    <value>System.Windows.Forms.Panel, System.Windows.Forms, Version=4.0.0.0, Culture=neutral, PublicKeyToken=b77a5c561934e089</value>
   </data>
   <data name="&gt;&gt;importFASTATitlePanel.Parent" xml:space="preserve">
     <value>importFastaPage</value>
@@ -915,6 +1017,9 @@
   </data>
   <data name="&gt;&gt;importFastaPage.Name" xml:space="preserve">
     <value>importFastaPage</value>
+  </data>
+  <data name="&gt;&gt;importFastaPage.Type" xml:space="preserve">
+    <value>System.Windows.Forms.TabPage, System.Windows.Forms, Version=4.0.0.0, Culture=neutral, PublicKeyToken=b77a5c561934e089</value>
   </data>
   <data name="&gt;&gt;importFastaPage.Parent" xml:space="preserve">
     <value>wizardPagesImportPeptideSearch</value>
@@ -943,6 +1048,9 @@
   <data name="&gt;&gt;label2.Name" xml:space="preserve">
     <value>label2</value>
   </data>
+  <data name="&gt;&gt;label2.Type" xml:space="preserve">
+    <value>System.Windows.Forms.Label, System.Windows.Forms, Version=4.0.0.0, Culture=neutral, PublicKeyToken=b77a5c561934e089</value>
+  </data>
   <data name="&gt;&gt;label2.Parent" xml:space="preserve">
     <value>converterSettingsTitlePanel</value>
   </data>
@@ -963,6 +1071,9 @@
   </data>
   <data name="&gt;&gt;converterSettingsTitlePanel.Name" xml:space="preserve">
     <value>converterSettingsTitlePanel</value>
+  </data>
+  <data name="&gt;&gt;converterSettingsTitlePanel.Type" xml:space="preserve">
+    <value>System.Windows.Forms.Panel, System.Windows.Forms, Version=4.0.0.0, Culture=neutral, PublicKeyToken=b77a5c561934e089</value>
   </data>
   <data name="&gt;&gt;converterSettingsTitlePanel.Parent" xml:space="preserve">
     <value>converterSettingsPage</value>
@@ -987,6 +1098,9 @@
   </data>
   <data name="&gt;&gt;converterSettingsPage.Name" xml:space="preserve">
     <value>converterSettingsPage</value>
+  </data>
+  <data name="&gt;&gt;converterSettingsPage.Type" xml:space="preserve">
+    <value>System.Windows.Forms.TabPage, System.Windows.Forms, Version=4.0.0.0, Culture=neutral, PublicKeyToken=b77a5c561934e089</value>
   </data>
   <data name="&gt;&gt;converterSettingsPage.Parent" xml:space="preserve">
     <value>wizardPagesImportPeptideSearch</value>
@@ -1015,6 +1129,9 @@
   <data name="&gt;&gt;lblSearchSettings.Name" xml:space="preserve">
     <value>lblSearchSettings</value>
   </data>
+  <data name="&gt;&gt;lblSearchSettings.Type" xml:space="preserve">
+    <value>System.Windows.Forms.Label, System.Windows.Forms, Version=4.0.0.0, Culture=neutral, PublicKeyToken=b77a5c561934e089</value>
+  </data>
   <data name="&gt;&gt;lblSearchSettings.Parent" xml:space="preserve">
     <value>searchSettingsTitlePanel</value>
   </data>
@@ -1036,6 +1153,9 @@
   <data name="&gt;&gt;searchSettingsTitlePanel.Name" xml:space="preserve">
     <value>searchSettingsTitlePanel</value>
   </data>
+  <data name="&gt;&gt;searchSettingsTitlePanel.Type" xml:space="preserve">
+    <value>System.Windows.Forms.Panel, System.Windows.Forms, Version=4.0.0.0, Culture=neutral, PublicKeyToken=b77a5c561934e089</value>
+  </data>
   <data name="&gt;&gt;searchSettingsTitlePanel.Parent" xml:space="preserve">
     <value>ddaSearchSettingsPage</value>
   </data>
@@ -1056,6 +1176,9 @@
   </data>
   <data name="&gt;&gt;ddaSearchSettingsPage.Name" xml:space="preserve">
     <value>ddaSearchSettingsPage</value>
+  </data>
+  <data name="&gt;&gt;ddaSearchSettingsPage.Type" xml:space="preserve">
+    <value>System.Windows.Forms.TabPage, System.Windows.Forms, Version=4.0.0.0, Culture=neutral, PublicKeyToken=b77a5c561934e089</value>
   </data>
   <data name="&gt;&gt;ddaSearchSettingsPage.Parent" xml:space="preserve">
     <value>wizardPagesImportPeptideSearch</value>
@@ -1084,6 +1207,9 @@
   <data name="&gt;&gt;lblDDASearch.Name" xml:space="preserve">
     <value>lblDDASearch</value>
   </data>
+  <data name="&gt;&gt;lblDDASearch.Type" xml:space="preserve">
+    <value>System.Windows.Forms.Label, System.Windows.Forms, Version=4.0.0.0, Culture=neutral, PublicKeyToken=b77a5c561934e089</value>
+  </data>
   <data name="&gt;&gt;lblDDASearch.Parent" xml:space="preserve">
     <value>ddaSearchTitlePanel</value>
   </data>
@@ -1104,6 +1230,9 @@
   </data>
   <data name="&gt;&gt;ddaSearchTitlePanel.Name" xml:space="preserve">
     <value>ddaSearchTitlePanel</value>
+  </data>
+  <data name="&gt;&gt;ddaSearchTitlePanel.Type" xml:space="preserve">
+    <value>System.Windows.Forms.Panel, System.Windows.Forms, Version=4.0.0.0, Culture=neutral, PublicKeyToken=b77a5c561934e089</value>
   </data>
   <data name="&gt;&gt;ddaSearchTitlePanel.Parent" xml:space="preserve">
     <value>ddaSearch</value>
@@ -1126,6 +1255,9 @@
   <data name="&gt;&gt;ddaSearch.Name" xml:space="preserve">
     <value>ddaSearch</value>
   </data>
+  <data name="&gt;&gt;ddaSearch.Type" xml:space="preserve">
+    <value>System.Windows.Forms.TabPage, System.Windows.Forms, Version=4.0.0.0, Culture=neutral, PublicKeyToken=b77a5c561934e089</value>
+  </data>
   <data name="&gt;&gt;ddaSearch.Parent" xml:space="preserve">
     <value>wizardPagesImportPeptideSearch</value>
   </data>
@@ -1143,6 +1275,9 @@
   </data>
   <data name="&gt;&gt;wizardPagesImportPeptideSearch.Name" xml:space="preserve">
     <value>wizardPagesImportPeptideSearch</value>
+  </data>
+  <data name="&gt;&gt;wizardPagesImportPeptideSearch.Type" xml:space="preserve">
+    <value>pwiz.Skyline.Controls.WizardPages, Skyline, Version=1.0.0.0, Culture=neutral, PublicKeyToken=null</value>
   </data>
   <data name="&gt;&gt;wizardPagesImportPeptideSearch.Parent" xml:space="preserve">
     <value>$this</value>
@@ -1174,12 +1309,21 @@
   <data name="&gt;&gt;btnBack.Name" xml:space="preserve">
     <value>btnBack</value>
   </data>
+  <data name="&gt;&gt;btnBack.Type" xml:space="preserve">
+    <value>System.Windows.Forms.Button, System.Windows.Forms, Version=4.0.0.0, Culture=neutral, PublicKeyToken=b77a5c561934e089</value>
+  </data>
   <data name="&gt;&gt;btnBack.Parent" xml:space="preserve">
     <value>$this</value>
   </data>
   <data name="&gt;&gt;btnBack.ZOrder" xml:space="preserve">
     <value>0</value>
   </data>
+  <metadata name="$this.Localizable" type="System.Boolean, mscorlib, Version=4.0.0.0, Culture=neutral, PublicKeyToken=b77a5c561934e089">
+    <value>True</value>
+  </metadata>
+  <metadata name="$this.TrayHeight" type="System.Int32, mscorlib, Version=4.0.0.0, Culture=neutral, PublicKeyToken=b77a5c561934e089">
+    <value>51</value>
+  </metadata>
   <data name="$this.AutoScaleDimensions" type="System.Drawing.SizeF, System.Drawing">
     <value>6, 13</value>
   </data>
@@ -1198,10 +1342,19 @@
   <data name="&gt;&gt;modeUIHandler.Name" xml:space="preserve">
     <value>modeUIHandler</value>
   </data>
+  <data name="&gt;&gt;modeUIHandler.Type" xml:space="preserve">
+    <value>pwiz.Skyline.Util.Helpers+ModeUIExtender, Skyline, Version=1.0.0.0, Culture=neutral, PublicKeyToken=null</value>
+  </data>
   <data name="&gt;&gt;helpTip.Name" xml:space="preserve">
     <value>helpTip</value>
   </data>
+  <data name="&gt;&gt;helpTip.Type" xml:space="preserve">
+    <value>System.Windows.Forms.ToolTip, System.Windows.Forms, Version=4.0.0.0, Culture=neutral, PublicKeyToken=b77a5c561934e089</value>
+  </data>
   <data name="&gt;&gt;$this.Name" xml:space="preserve">
     <value>ImportPeptideSearchDlg</value>
+  </data>
+  <data name="&gt;&gt;$this.Type" xml:space="preserve">
+    <value>pwiz.Skyline.Util.FormEx, Skyline, Version=1.0.0.0, Culture=neutral, PublicKeyToken=null</value>
   </data>
 </root>

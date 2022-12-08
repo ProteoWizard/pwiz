@@ -118,20 +118,17 @@
     <value>System.Resources.ResXResourceWriter, System.Windows.Forms, Version=4.0.0.0, Culture=neutral, PublicKeyToken=b77a5c561934e089</value>
   </resheader>
   <assembly alias="System.Windows.Forms" name="System.Windows.Forms, Version=4.0.0.0, Culture=neutral, PublicKeyToken=b77a5c561934e089" />
-  <assembly alias="System.Drawing" name="System.Drawing, Version=4.0.0.0, Culture=neutral, PublicKeyToken=b03f5f7f11d50a3a" />
-  <assembly alias="mscorlib" name="mscorlib, Version=4.0.0.0, Culture=neutral, PublicKeyToken=b77a5c561934e089" />
-  <metadata name="$this.Localizable" type="System.Boolean, mscorlib, Version=4.0.0.0, Culture=neutral, PublicKeyToken=b77a5c561934e089">
-    <value>True</value>
-  </metadata>
   <data name="btnCancel.Anchor" type="System.Windows.Forms.AnchorStyles, System.Windows.Forms">
     <value>Bottom, Right</value>
   </data>
+  <assembly alias="System.Drawing" name="System.Drawing, Version=4.0.0.0, Culture=neutral, PublicKeyToken=b03f5f7f11d50a3a" />
   <data name="btnCancel.Location" type="System.Drawing.Point, System.Drawing">
     <value>314, 367</value>
   </data>
   <data name="btnCancel.Size" type="System.Drawing.Size, System.Drawing">
     <value>75, 23</value>
   </data>
+  <assembly alias="mscorlib" name="mscorlib, Version=4.0.0.0, Culture=neutral, PublicKeyToken=b77a5c561934e089" />
   <data name="btnCancel.TabIndex" type="System.Int32, mscorlib">
     <value>2</value>
   </data>
@@ -140,6 +137,9 @@
   </data>
   <data name="&gt;&gt;btnCancel.Name" xml:space="preserve">
     <value>btnCancel</value>
+  </data>
+  <data name="&gt;&gt;btnCancel.Type" xml:space="preserve">
+    <value>System.Windows.Forms.Button, System.Windows.Forms, Version=4.0.0.0, Culture=neutral, PublicKeyToken=b77a5c561934e089</value>
   </data>
   <data name="&gt;&gt;btnCancel.Parent" xml:space="preserve">
     <value>$this</value>
@@ -164,6 +164,9 @@
   </data>
   <data name="&gt;&gt;btnOk.Name" xml:space="preserve">
     <value>btnOk</value>
+  </data>
+  <data name="&gt;&gt;btnOk.Type" xml:space="preserve">
+    <value>System.Windows.Forms.Button, System.Windows.Forms, Version=4.0.0.0, Culture=neutral, PublicKeyToken=b77a5c561934e089</value>
   </data>
   <data name="&gt;&gt;btnOk.Parent" xml:space="preserve">
     <value>$this</value>
@@ -192,6 +195,9 @@
   <data name="&gt;&gt;btnDown.Name" xml:space="preserve">
     <value>btnDown</value>
   </data>
+  <data name="&gt;&gt;btnDown.Type" xml:space="preserve">
+    <value>System.Windows.Forms.Button, System.Windows.Forms, Version=4.0.0.0, Culture=neutral, PublicKeyToken=b77a5c561934e089</value>
+  </data>
   <data name="&gt;&gt;btnDown.Parent" xml:space="preserve">
     <value>replicatesTab</value>
   </data>
@@ -218,6 +224,9 @@
   </data>
   <data name="&gt;&gt;btnUp.Name" xml:space="preserve">
     <value>btnUp</value>
+  </data>
+  <data name="&gt;&gt;btnUp.Type" xml:space="preserve">
+    <value>System.Windows.Forms.Button, System.Windows.Forms, Version=4.0.0.0, Culture=neutral, PublicKeyToken=b77a5c561934e089</value>
   </data>
   <data name="&gt;&gt;btnUp.Parent" xml:space="preserve">
     <value>replicatesTab</value>
@@ -246,6 +255,9 @@
   <data name="&gt;&gt;btnRemove.Name" xml:space="preserve">
     <value>btnRemove</value>
   </data>
+  <data name="&gt;&gt;btnRemove.Type" xml:space="preserve">
+    <value>System.Windows.Forms.Button, System.Windows.Forms, Version=4.0.0.0, Culture=neutral, PublicKeyToken=b77a5c561934e089</value>
+  </data>
   <data name="&gt;&gt;btnRemove.Parent" xml:space="preserve">
     <value>replicatesTab</value>
   </data>
@@ -272,6 +284,9 @@
   </data>
   <data name="&gt;&gt;btnRemoveAll.Name" xml:space="preserve">
     <value>btnRemoveAll</value>
+  </data>
+  <data name="&gt;&gt;btnRemoveAll.Type" xml:space="preserve">
+    <value>System.Windows.Forms.Button, System.Windows.Forms, Version=4.0.0.0, Culture=neutral, PublicKeyToken=b77a5c561934e089</value>
   </data>
   <data name="&gt;&gt;btnRemoveAll.Parent" xml:space="preserve">
     <value>replicatesTab</value>
@@ -300,6 +315,9 @@
   <data name="&gt;&gt;btnRename.Name" xml:space="preserve">
     <value>btnRename</value>
   </data>
+  <data name="&gt;&gt;btnRename.Type" xml:space="preserve">
+    <value>System.Windows.Forms.Button, System.Windows.Forms, Version=4.0.0.0, Culture=neutral, PublicKeyToken=b77a5c561934e089</value>
+  </data>
   <data name="&gt;&gt;btnRename.Parent" xml:space="preserve">
     <value>replicatesTab</value>
   </data>
@@ -320,6 +338,9 @@
   </data>
   <data name="&gt;&gt;listResults.Name" xml:space="preserve">
     <value>listResults</value>
+  </data>
+  <data name="&gt;&gt;listResults.Type" xml:space="preserve">
+    <value>System.Windows.Forms.ListBox, System.Windows.Forms, Version=4.0.0.0, Culture=neutral, PublicKeyToken=b77a5c561934e089</value>
   </data>
   <data name="&gt;&gt;listResults.Parent" xml:space="preserve">
     <value>replicatesTab</value>
@@ -345,6 +366,9 @@
   <data name="&gt;&gt;btnReimport.Name" xml:space="preserve">
     <value>btnReimport</value>
   </data>
+  <data name="&gt;&gt;btnReimport.Type" xml:space="preserve">
+    <value>System.Windows.Forms.Button, System.Windows.Forms, Version=4.0.0.0, Culture=neutral, PublicKeyToken=b77a5c561934e089</value>
+  </data>
   <data name="&gt;&gt;btnReimport.Parent" xml:space="preserve">
     <value>replicatesTab</value>
   </data>
@@ -368,6 +392,9 @@
   </data>
   <data name="&gt;&gt;btnMinimize.Name" xml:space="preserve">
     <value>btnMinimize</value>
+  </data>
+  <data name="&gt;&gt;btnMinimize.Type" xml:space="preserve">
+    <value>System.Windows.Forms.Button, System.Windows.Forms, Version=4.0.0.0, Culture=neutral, PublicKeyToken=b77a5c561934e089</value>
   </data>
   <data name="&gt;&gt;btnMinimize.Parent" xml:space="preserve">
     <value>replicatesTab</value>
@@ -395,6 +422,9 @@
   </data>
   <data name="&gt;&gt;btnRescore.Name" xml:space="preserve">
     <value>btnRescore</value>
+  </data>
+  <data name="&gt;&gt;btnRescore.Type" xml:space="preserve">
+    <value>System.Windows.Forms.Button, System.Windows.Forms, Version=4.0.0.0, Culture=neutral, PublicKeyToken=b77a5c561934e089</value>
   </data>
   <data name="&gt;&gt;btnRescore.Parent" xml:space="preserve">
     <value>replicatesTab</value>
@@ -426,6 +456,9 @@
   <data name="&gt;&gt;checkBoxRemoveLibraryRuns.Name" xml:space="preserve">
     <value>checkBoxRemoveLibraryRuns</value>
   </data>
+  <data name="&gt;&gt;checkBoxRemoveLibraryRuns.Type" xml:space="preserve">
+    <value>System.Windows.Forms.CheckBox, System.Windows.Forms, Version=4.0.0.0, Culture=neutral, PublicKeyToken=b77a5c561934e089</value>
+  </data>
   <data name="&gt;&gt;checkBoxRemoveLibraryRuns.Parent" xml:space="preserve">
     <value>replicatesTab</value>
   </data>
@@ -449,6 +482,9 @@
   </data>
   <data name="&gt;&gt;replicatesTab.Name" xml:space="preserve">
     <value>replicatesTab</value>
+  </data>
+  <data name="&gt;&gt;replicatesTab.Type" xml:space="preserve">
+    <value>System.Windows.Forms.TabPage, System.Windows.Forms, Version=4.0.0.0, Culture=neutral, PublicKeyToken=b77a5c561934e089</value>
   </data>
   <data name="&gt;&gt;replicatesTab.Parent" xml:space="preserve">
     <value>manageResultsTabControl</value>
@@ -480,6 +516,9 @@
   <data name="&gt;&gt;checkBoxRemoveReplicates.Name" xml:space="preserve">
     <value>checkBoxRemoveReplicates</value>
   </data>
+  <data name="&gt;&gt;checkBoxRemoveReplicates.Type" xml:space="preserve">
+    <value>System.Windows.Forms.CheckBox, System.Windows.Forms, Version=4.0.0.0, Culture=neutral, PublicKeyToken=b77a5c561934e089</value>
+  </data>
   <data name="&gt;&gt;checkBoxRemoveReplicates.Parent" xml:space="preserve">
     <value>libRunsTab</value>
   </data>
@@ -509,6 +548,9 @@
   </data>
   <data name="&gt;&gt;btnRemoveLibRun.Name" xml:space="preserve">
     <value>btnRemoveLibRun</value>
+  </data>
+  <data name="&gt;&gt;btnRemoveLibRun.Type" xml:space="preserve">
+    <value>System.Windows.Forms.Button, System.Windows.Forms, Version=4.0.0.0, Culture=neutral, PublicKeyToken=b77a5c561934e089</value>
   </data>
   <data name="&gt;&gt;btnRemoveLibRun.Parent" xml:space="preserve">
     <value>libRunsTab</value>
@@ -540,6 +582,9 @@
   <data name="&gt;&gt;btnRemoveAllLibs.Name" xml:space="preserve">
     <value>btnRemoveAllLibs</value>
   </data>
+  <data name="&gt;&gt;btnRemoveAllLibs.Type" xml:space="preserve">
+    <value>System.Windows.Forms.Button, System.Windows.Forms, Version=4.0.0.0, Culture=neutral, PublicKeyToken=b77a5c561934e089</value>
+  </data>
   <data name="&gt;&gt;btnRemoveAllLibs.Parent" xml:space="preserve">
     <value>libRunsTab</value>
   </data>
@@ -560,6 +605,9 @@
   </data>
   <data name="&gt;&gt;listLibraries.Name" xml:space="preserve">
     <value>listLibraries</value>
+  </data>
+  <data name="&gt;&gt;listLibraries.Type" xml:space="preserve">
+    <value>System.Windows.Forms.ListBox, System.Windows.Forms, Version=4.0.0.0, Culture=neutral, PublicKeyToken=b77a5c561934e089</value>
   </data>
   <data name="&gt;&gt;listLibraries.Parent" xml:space="preserve">
     <value>libRunsTab</value>
@@ -585,6 +633,9 @@
   <data name="&gt;&gt;libRunsTab.Name" xml:space="preserve">
     <value>libRunsTab</value>
   </data>
+  <data name="&gt;&gt;libRunsTab.Type" xml:space="preserve">
+    <value>System.Windows.Forms.TabPage, System.Windows.Forms, Version=4.0.0.0, Culture=neutral, PublicKeyToken=b77a5c561934e089</value>
+  </data>
   <data name="&gt;&gt;libRunsTab.Parent" xml:space="preserve">
     <value>manageResultsTabControl</value>
   </data>
@@ -603,12 +654,18 @@
   <data name="&gt;&gt;manageResultsTabControl.Name" xml:space="preserve">
     <value>manageResultsTabControl</value>
   </data>
+  <data name="&gt;&gt;manageResultsTabControl.Type" xml:space="preserve">
+    <value>System.Windows.Forms.TabControl, System.Windows.Forms, Version=4.0.0.0, Culture=neutral, PublicKeyToken=b77a5c561934e089</value>
+  </data>
   <data name="&gt;&gt;manageResultsTabControl.Parent" xml:space="preserve">
     <value>$this</value>
   </data>
   <data name="&gt;&gt;manageResultsTabControl.ZOrder" xml:space="preserve">
     <value>0</value>
   </data>
+  <metadata name="$this.Localizable" type="System.Boolean, mscorlib, Version=4.0.0.0, Culture=neutral, PublicKeyToken=b77a5c561934e089">
+    <value>True</value>
+  </metadata>
   <data name="$this.AutoScaleDimensions" type="System.Drawing.SizeF, System.Drawing">
     <value>6, 13</value>
   </data>
@@ -623,5 +680,8 @@
   </data>
   <data name="&gt;&gt;$this.Name" xml:space="preserve">
     <value>ManageResultsDlg</value>
+  </data>
+  <data name="&gt;&gt;$this.Type" xml:space="preserve">
+    <value>pwiz.Skyline.Util.FormEx, Skyline, Version=1.0.0.0, Culture=neutral, PublicKeyToken=null</value>
   </data>
 </root>

@@ -117,15 +117,14 @@
   <resheader name="writer">
     <value>System.Resources.ResXResourceWriter, System.Windows.Forms, Version=4.0.0.0, Culture=neutral, PublicKeyToken=b77a5c561934e089</value>
   </resheader>
-  <assembly alias="mscorlib" name="mscorlib, Version=4.0.0.0, Culture=neutral, PublicKeyToken=b77a5c561934e089" />
-  <assembly alias="System.Drawing" name="System.Drawing, Version=4.0.0.0, Culture=neutral, PublicKeyToken=b03f5f7f11d50a3a" />
-  <assembly alias="System.Windows.Forms" name="System.Windows.Forms, Version=4.0.0.0, Culture=neutral, PublicKeyToken=b77a5c561934e089" />
-  <metadata name="$this.Localizable" type="System.Boolean, mscorlib, Version=4.0.0.0, Culture=neutral, PublicKeyToken=b77a5c561934e089">
-    <value>True</value>
+  <metadata name="modeUIHandler.TrayLocation" type="System.Drawing.Point, System.Drawing, Version=4.0.0.0, Culture=neutral, PublicKeyToken=b03f5f7f11d50a3a">
+    <value>17, 17</value>
   </metadata>
+  <assembly alias="mscorlib" name="mscorlib, Version=4.0.0.0, Culture=neutral, PublicKeyToken=b77a5c561934e089" />
   <data name="radioSingle.AutoSize" type="System.Boolean, mscorlib">
     <value>True</value>
   </data>
+  <assembly alias="System.Drawing" name="System.Drawing, Version=4.0.0.0, Culture=neutral, PublicKeyToken=b03f5f7f11d50a3a" />
   <data name="radioSingle.Location" type="System.Drawing.Point, System.Drawing">
     <value>13, 69</value>
   </data>
@@ -138,12 +137,18 @@
   <data name="radioSingle.Text" xml:space="preserve">
     <value>シングルメソッド(&amp;S)</value>
   </data>
+  <metadata name="helpTip.TrayLocation" type="System.Drawing.Point, System.Drawing, Version=4.0.0.0, Culture=neutral, PublicKeyToken=b03f5f7f11d50a3a">
+    <value>155, 17</value>
+  </metadata>
   <data name="radioSingle.ToolTip" xml:space="preserve">
     <value>すべてのトランジションを含む単一のファイルを作成します。実際に分析する場合は、
 お使いの装置がすべてのトランジションを処理できることを確認してください。</value>
   </data>
   <data name="&gt;&gt;radioSingle.Name" xml:space="preserve">
     <value>radioSingle</value>
+  </data>
+  <data name="&gt;&gt;radioSingle.Type" xml:space="preserve">
+    <value>System.Windows.Forms.RadioButton, System.Windows.Forms, Version=4.0.0.0, Culture=neutral, PublicKeyToken=b77a5c561934e089</value>
   </data>
   <data name="&gt;&gt;radioSingle.Parent" xml:space="preserve">
     <value>$this</value>
@@ -173,6 +178,9 @@
   <data name="&gt;&gt;radioProtein.Name" xml:space="preserve">
     <value>radioProtein</value>
   </data>
+  <data name="&gt;&gt;radioProtein.Type" xml:space="preserve">
+    <value>System.Windows.Forms.RadioButton, System.Windows.Forms, Version=4.0.0.0, Culture=neutral, PublicKeyToken=b77a5c561934e089</value>
+  </data>
   <data name="&gt;&gt;radioProtein.Parent" xml:space="preserve">
     <value>$this</value>
   </data>
@@ -200,6 +208,9 @@
   <data name="&gt;&gt;radioBuckets.Name" xml:space="preserve">
     <value>radioBuckets</value>
   </data>
+  <data name="&gt;&gt;radioBuckets.Type" xml:space="preserve">
+    <value>System.Windows.Forms.RadioButton, System.Windows.Forms, Version=4.0.0.0, Culture=neutral, PublicKeyToken=b77a5c561934e089</value>
+  </data>
   <data name="&gt;&gt;radioBuckets.Parent" xml:space="preserve">
     <value>$this</value>
   </data>
@@ -221,6 +232,9 @@
   </data>
   <data name="&gt;&gt;textMaxTransitions.Name" xml:space="preserve">
     <value>textMaxTransitions</value>
+  </data>
+  <data name="&gt;&gt;textMaxTransitions.Type" xml:space="preserve">
+    <value>System.Windows.Forms.TextBox, System.Windows.Forms, Version=4.0.0.0, Culture=neutral, PublicKeyToken=b77a5c561934e089</value>
   </data>
   <data name="&gt;&gt;textMaxTransitions.Parent" xml:space="preserve">
     <value>$this</value>
@@ -246,6 +260,9 @@
   <data name="&gt;&gt;labelMaxTransitions.Name" xml:space="preserve">
     <value>labelMaxTransitions</value>
   </data>
+  <data name="&gt;&gt;labelMaxTransitions.Type" xml:space="preserve">
+    <value>System.Windows.Forms.Label, System.Windows.Forms, Version=4.0.0.0, Culture=neutral, PublicKeyToken=b77a5c561934e089</value>
+  </data>
   <data name="&gt;&gt;labelMaxTransitions.Parent" xml:space="preserve">
     <value>$this</value>
   </data>
@@ -267,6 +284,9 @@
   <data name="&gt;&gt;btnCancel.Name" xml:space="preserve">
     <value>btnCancel</value>
   </data>
+  <data name="&gt;&gt;btnCancel.Type" xml:space="preserve">
+    <value>System.Windows.Forms.Button, System.Windows.Forms, Version=4.0.0.0, Culture=neutral, PublicKeyToken=b77a5c561934e089</value>
+  </data>
   <data name="&gt;&gt;btnCancel.Parent" xml:space="preserve">
     <value>$this</value>
   </data>
@@ -287,6 +307,9 @@
   </data>
   <data name="&gt;&gt;btnOk.Name" xml:space="preserve">
     <value>btnOk</value>
+  </data>
+  <data name="&gt;&gt;btnOk.Type" xml:space="preserve">
+    <value>System.Windows.Forms.Button, System.Windows.Forms, Version=4.0.0.0, Culture=neutral, PublicKeyToken=b77a5c561934e089</value>
   </data>
   <data name="&gt;&gt;btnOk.Parent" xml:space="preserve">
     <value>$this</value>
@@ -312,6 +335,9 @@
   <data name="&gt;&gt;label2.Name" xml:space="preserve">
     <value>label2</value>
   </data>
+  <data name="&gt;&gt;label2.Type" xml:space="preserve">
+    <value>System.Windows.Forms.Label, System.Windows.Forms, Version=4.0.0.0, Culture=neutral, PublicKeyToken=b77a5c561934e089</value>
+  </data>
   <data name="&gt;&gt;label2.Parent" xml:space="preserve">
     <value>$this</value>
   </data>
@@ -335,6 +361,9 @@
   </data>
   <data name="&gt;&gt;comboTargetType.Name" xml:space="preserve">
     <value>comboTargetType</value>
+  </data>
+  <data name="&gt;&gt;comboTargetType.Type" xml:space="preserve">
+    <value>System.Windows.Forms.ComboBox, System.Windows.Forms, Version=4.0.0.0, Culture=neutral, PublicKeyToken=b77a5c561934e089</value>
   </data>
   <data name="&gt;&gt;comboTargetType.Parent" xml:space="preserve">
     <value>$this</value>
@@ -360,6 +389,9 @@
   <data name="&gt;&gt;textRunLength.Name" xml:space="preserve">
     <value>textRunLength</value>
   </data>
+  <data name="&gt;&gt;textRunLength.Type" xml:space="preserve">
+    <value>System.Windows.Forms.TextBox, System.Windows.Forms, Version=4.0.0.0, Culture=neutral, PublicKeyToken=b77a5c561934e089</value>
+  </data>
   <data name="&gt;&gt;textRunLength.Parent" xml:space="preserve">
     <value>$this</value>
   </data>
@@ -383,6 +415,9 @@
   </data>
   <data name="&gt;&gt;textDwellTime.Name" xml:space="preserve">
     <value>textDwellTime</value>
+  </data>
+  <data name="&gt;&gt;textDwellTime.Type" xml:space="preserve">
+    <value>System.Windows.Forms.TextBox, System.Windows.Forms, Version=4.0.0.0, Culture=neutral, PublicKeyToken=b77a5c561934e089</value>
   </data>
   <data name="&gt;&gt;textDwellTime.Parent" xml:space="preserve">
     <value>$this</value>
@@ -410,6 +445,9 @@
   </data>
   <data name="&gt;&gt;labelDwellTime.Name" xml:space="preserve">
     <value>labelDwellTime</value>
+  </data>
+  <data name="&gt;&gt;labelDwellTime.Type" xml:space="preserve">
+    <value>System.Windows.Forms.Label, System.Windows.Forms, Version=4.0.0.0, Culture=neutral, PublicKeyToken=b77a5c561934e089</value>
   </data>
   <data name="&gt;&gt;labelDwellTime.Parent" xml:space="preserve">
     <value>$this</value>
@@ -444,6 +482,9 @@
   <data name="&gt;&gt;comboInstrument.Name" xml:space="preserve">
     <value>comboInstrument</value>
   </data>
+  <data name="&gt;&gt;comboInstrument.Type" xml:space="preserve">
+    <value>System.Windows.Forms.ComboBox, System.Windows.Forms, Version=4.0.0.0, Culture=neutral, PublicKeyToken=b77a5c561934e089</value>
+  </data>
   <data name="&gt;&gt;comboInstrument.Parent" xml:space="preserve">
     <value>$this</value>
   </data>
@@ -467,6 +508,9 @@
   </data>
   <data name="&gt;&gt;label4.Name" xml:space="preserve">
     <value>label4</value>
+  </data>
+  <data name="&gt;&gt;label4.Type" xml:space="preserve">
+    <value>System.Windows.Forms.Label, System.Windows.Forms, Version=4.0.0.0, Culture=neutral, PublicKeyToken=b77a5c561934e089</value>
   </data>
   <data name="&gt;&gt;label4.Parent" xml:space="preserve">
     <value>$this</value>
@@ -492,6 +536,9 @@
   <data name="&gt;&gt;labelTemplateFile.Name" xml:space="preserve">
     <value>labelTemplateFile</value>
   </data>
+  <data name="&gt;&gt;labelTemplateFile.Type" xml:space="preserve">
+    <value>System.Windows.Forms.Label, System.Windows.Forms, Version=4.0.0.0, Culture=neutral, PublicKeyToken=b77a5c561934e089</value>
+  </data>
   <data name="&gt;&gt;labelTemplateFile.Parent" xml:space="preserve">
     <value>$this</value>
   </data>
@@ -514,6 +561,9 @@ Skylineで制御されないトランジション値に対しては、単一の�
   <data name="&gt;&gt;textTemplateFile.Name" xml:space="preserve">
     <value>textTemplateFile</value>
   </data>
+  <data name="&gt;&gt;textTemplateFile.Type" xml:space="preserve">
+    <value>System.Windows.Forms.TextBox, System.Windows.Forms, Version=4.0.0.0, Culture=neutral, PublicKeyToken=b77a5c561934e089</value>
+  </data>
   <data name="&gt;&gt;textTemplateFile.Parent" xml:space="preserve">
     <value>$this</value>
   </data>
@@ -534,6 +584,9 @@ Skylineで制御されないトランジション値に対しては、単一の�
   </data>
   <data name="&gt;&gt;btnBrowseTemplate.Name" xml:space="preserve">
     <value>btnBrowseTemplate</value>
+  </data>
+  <data name="&gt;&gt;btnBrowseTemplate.Type" xml:space="preserve">
+    <value>System.Windows.Forms.Button, System.Windows.Forms, Version=4.0.0.0, Culture=neutral, PublicKeyToken=b77a5c561934e089</value>
   </data>
   <data name="&gt;&gt;btnBrowseTemplate.Parent" xml:space="preserve">
     <value>$this</value>
@@ -566,6 +619,9 @@ Skylineで制御されないトランジション値に対しては、単一の�
   <data name="&gt;&gt;cbIgnoreProteins.Name" xml:space="preserve">
     <value>cbIgnoreProteins</value>
   </data>
+  <data name="&gt;&gt;cbIgnoreProteins.Type" xml:space="preserve">
+    <value>System.Windows.Forms.CheckBox, System.Windows.Forms, Version=4.0.0.0, Culture=neutral, PublicKeyToken=b77a5c561934e089</value>
+  </data>
   <data name="&gt;&gt;cbIgnoreProteins.Parent" xml:space="preserve">
     <value>$this</value>
   </data>
@@ -594,6 +650,9 @@ Skylineで制御されないトランジション値に対しては、単一の�
   <data name="&gt;&gt;cbEnergyRamp.Name" xml:space="preserve">
     <value>cbEnergyRamp</value>
   </data>
+  <data name="&gt;&gt;cbEnergyRamp.Type" xml:space="preserve">
+    <value>System.Windows.Forms.CheckBox, System.Windows.Forms, Version=4.0.0.0, Culture=neutral, PublicKeyToken=b77a5c561934e089</value>
+  </data>
   <data name="&gt;&gt;cbEnergyRamp.Parent" xml:space="preserve">
     <value>panelThermoColumns</value>
   </data>
@@ -620,6 +679,9 @@ Skylineで制御されないトランジション値に対しては、単一の�
   </data>
   <data name="&gt;&gt;cbTriggerRefColumns.Name" xml:space="preserve">
     <value>cbTriggerRefColumns</value>
+  </data>
+  <data name="&gt;&gt;cbTriggerRefColumns.Type" xml:space="preserve">
+    <value>System.Windows.Forms.CheckBox, System.Windows.Forms, Version=4.0.0.0, Culture=neutral, PublicKeyToken=b77a5c561934e089</value>
   </data>
   <data name="&gt;&gt;cbTriggerRefColumns.Parent" xml:space="preserve">
     <value>panelThermoColumns</value>
@@ -649,6 +711,9 @@ Skylineで制御されないトランジション値に対しては、単一の�
   <data name="&gt;&gt;cbExportMultiQuant.Name" xml:space="preserve">
     <value>cbExportMultiQuant</value>
   </data>
+  <data name="&gt;&gt;cbExportMultiQuant.Type" xml:space="preserve">
+    <value>System.Windows.Forms.CheckBox, System.Windows.Forms, Version=4.0.0.0, Culture=neutral, PublicKeyToken=b77a5c561934e089</value>
+  </data>
   <data name="&gt;&gt;cbExportMultiQuant.Parent" xml:space="preserve">
     <value>panelAbSciexTOF</value>
   </data>
@@ -658,6 +723,7 @@ Skylineで制御されないトランジション値に対しては、単一の�
   <data name="cbUseStartAndEndRts.AutoSize" type="System.Boolean, mscorlib">
     <value>True</value>
   </data>
+  <assembly alias="System.Windows.Forms" name="System.Windows.Forms, Version=4.0.0.0, Culture=neutral, PublicKeyToken=b77a5c561934e089" />
   <data name="cbUseStartAndEndRts.ImeMode" type="System.Windows.Forms.ImeMode, System.Windows.Forms">
     <value>NoControl</value>
   </data>
@@ -678,6 +744,9 @@ Skylineで制御されないトランジション値に対しては、単一の�
   </data>
   <data name="&gt;&gt;cbUseStartAndEndRts.Name" xml:space="preserve">
     <value>cbUseStartAndEndRts</value>
+  </data>
+  <data name="&gt;&gt;cbUseStartAndEndRts.Type" xml:space="preserve">
+    <value>System.Windows.Forms.CheckBox, System.Windows.Forms, Version=4.0.0.0, Culture=neutral, PublicKeyToken=b77a5c561934e089</value>
   </data>
   <data name="&gt;&gt;cbUseStartAndEndRts.Parent" xml:space="preserve">
     <value>panelThermoRt</value>
@@ -715,6 +784,9 @@ Skylineで制御されないトランジション値に対しては、単一の�
   <data name="&gt;&gt;comboPolarityFilter.Name" xml:space="preserve">
     <value>comboPolarityFilter</value>
   </data>
+  <data name="&gt;&gt;comboPolarityFilter.Type" xml:space="preserve">
+    <value>System.Windows.Forms.ComboBox, System.Windows.Forms, Version=4.0.0.0, Culture=neutral, PublicKeyToken=b77a5c561934e089</value>
+  </data>
   <data name="&gt;&gt;comboPolarityFilter.Parent" xml:space="preserve">
     <value>$this</value>
   </data>
@@ -744,6 +816,9 @@ Skylineで制御されないトランジション値に対しては、単一の�
   </data>
   <data name="&gt;&gt;cbTune3.Name" xml:space="preserve">
     <value>cbTune3</value>
+  </data>
+  <data name="&gt;&gt;cbTune3.Type" xml:space="preserve">
+    <value>System.Windows.Forms.CheckBox, System.Windows.Forms, Version=4.0.0.0, Culture=neutral, PublicKeyToken=b77a5c561934e089</value>
   </data>
   <data name="&gt;&gt;cbTune3.Parent" xml:space="preserve">
     <value>panelTuneColumns</value>
@@ -775,6 +850,9 @@ Skylineで制御されないトランジション値に対しては、単一の�
   <data name="&gt;&gt;cbSortByMz.Name" xml:space="preserve">
     <value>cbSortByMz</value>
   </data>
+  <data name="&gt;&gt;cbSortByMz.Type" xml:space="preserve">
+    <value>System.Windows.Forms.CheckBox, System.Windows.Forms, Version=4.0.0.0, Culture=neutral, PublicKeyToken=b77a5c561934e089</value>
+  </data>
   <data name="&gt;&gt;cbSortByMz.Parent" xml:space="preserve">
     <value>$this</value>
   </data>
@@ -800,6 +878,9 @@ Skylineで制御されないトランジション値に対しては、単一の�
   <data name="&gt;&gt;cbSlens.Name" xml:space="preserve">
     <value>cbSlens</value>
   </data>
+  <data name="&gt;&gt;cbSlens.Type" xml:space="preserve">
+    <value>System.Windows.Forms.CheckBox, System.Windows.Forms, Version=4.0.0.0, Culture=neutral, PublicKeyToken=b77a5c561934e089</value>
+  </data>
   <data name="&gt;&gt;cbSlens.Parent" xml:space="preserve">
     <value>$this</value>
   </data>
@@ -820,6 +901,9 @@ Skylineで制御されないトランジション値に対しては、単一の�
   </data>
   <data name="&gt;&gt;comboTuning.Name" xml:space="preserve">
     <value>comboTuning</value>
+  </data>
+  <data name="&gt;&gt;comboTuning.Type" xml:space="preserve">
+    <value>System.Windows.Forms.ComboBox, System.Windows.Forms, Version=4.0.0.0, Culture=neutral, PublicKeyToken=b77a5c561934e089</value>
   </data>
   <data name="&gt;&gt;comboTuning.Parent" xml:space="preserve">
     <value>panelSciexTune</value>
@@ -849,6 +933,9 @@ Skylineで制御されないトランジション値に対しては、単一の�
   </data>
   <data name="&gt;&gt;cbExportEdcMass.Name" xml:space="preserve">
     <value>cbExportEdcMass</value>
+  </data>
+  <data name="&gt;&gt;cbExportEdcMass.Type" xml:space="preserve">
+    <value>System.Windows.Forms.CheckBox, System.Windows.Forms, Version=4.0.0.0, Culture=neutral, PublicKeyToken=b77a5c561934e089</value>
   </data>
   <data name="&gt;&gt;cbExportEdcMass.Parent" xml:space="preserve">
     <value>panelWaters</value>
@@ -883,6 +970,9 @@ Skylineで制御されないトランジション値に対しては、単一の�
   <data name="&gt;&gt;cbWriteCoV.Name" xml:space="preserve">
     <value>cbWriteCoV</value>
   </data>
+  <data name="&gt;&gt;cbWriteCoV.Type" xml:space="preserve">
+    <value>System.Windows.Forms.CheckBox, System.Windows.Forms, Version=4.0.0.0, Culture=neutral, PublicKeyToken=b77a5c561934e089</value>
+  </data>
   <data name="&gt;&gt;cbWriteCoV.Parent" xml:space="preserve">
     <value>$this</value>
   </data>
@@ -903,6 +993,9 @@ Skylineで制御されないトランジション値に対しては、単一の�
   </data>
   <data name="&gt;&gt;textPrimaryCount.Name" xml:space="preserve">
     <value>textPrimaryCount</value>
+  </data>
+  <data name="&gt;&gt;textPrimaryCount.Type" xml:space="preserve">
+    <value>System.Windows.Forms.TextBox, System.Windows.Forms, Version=4.0.0.0, Culture=neutral, PublicKeyToken=b77a5c561934e089</value>
   </data>
   <data name="&gt;&gt;textPrimaryCount.Parent" xml:space="preserve">
     <value>panelTriggered</value>
@@ -925,6 +1018,9 @@ Skylineで制御されないトランジション値に対しては、単一の�
   <data name="&gt;&gt;textMs1RepetitionTime.Name" xml:space="preserve">
     <value>textMs1RepetitionTime</value>
   </data>
+  <data name="&gt;&gt;textMs1RepetitionTime.Type" xml:space="preserve">
+    <value>System.Windows.Forms.TextBox, System.Windows.Forms, Version=4.0.0.0, Culture=neutral, PublicKeyToken=b77a5c561934e089</value>
+  </data>
   <data name="&gt;&gt;textMs1RepetitionTime.Parent" xml:space="preserve">
     <value>panelBrukerTimsTof</value>
   </data>
@@ -946,6 +1042,9 @@ Skylineで制御されないトランジション値に対しては、単一の�
   <data name="&gt;&gt;textIntensityThresholdMin.Name" xml:space="preserve">
     <value>textIntensityThresholdMin</value>
   </data>
+  <data name="&gt;&gt;textIntensityThresholdMin.Type" xml:space="preserve">
+    <value>System.Windows.Forms.TextBox, System.Windows.Forms, Version=4.0.0.0, Culture=neutral, PublicKeyToken=b77a5c561934e089</value>
+  </data>
   <data name="&gt;&gt;textIntensityThresholdMin.Parent" xml:space="preserve">
     <value>panelSureQuant</value>
   </data>
@@ -964,6 +1063,9 @@ Skylineで制御されないトランジション値に対しては、単一の�
   <data name="&gt;&gt;textIntensityThreshold.Name" xml:space="preserve">
     <value>textIntensityThreshold</value>
   </data>
+  <data name="&gt;&gt;textIntensityThreshold.Type" xml:space="preserve">
+    <value>System.Windows.Forms.TextBox, System.Windows.Forms, Version=4.0.0.0, Culture=neutral, PublicKeyToken=b77a5c561934e089</value>
+  </data>
   <data name="&gt;&gt;textIntensityThreshold.Parent" xml:space="preserve">
     <value>panelSureQuant</value>
   </data>
@@ -981,6 +1083,9 @@ Skylineで制御されないトランジション値に対しては、単一の�
   </data>
   <data name="&gt;&gt;comboOptimizing.Name" xml:space="preserve">
     <value>comboOptimizing</value>
+  </data>
+  <data name="&gt;&gt;comboOptimizing.Type" xml:space="preserve">
+    <value>System.Windows.Forms.ComboBox, System.Windows.Forms, Version=4.0.0.0, Culture=neutral, PublicKeyToken=b77a5c561934e089</value>
   </data>
   <data name="&gt;&gt;comboOptimizing.Parent" xml:space="preserve">
     <value>$this</value>
@@ -1006,6 +1111,9 @@ Skylineで制御されないトランジション値に対しては、単一の�
   <data name="&gt;&gt;labelOptimizing.Name" xml:space="preserve">
     <value>labelOptimizing</value>
   </data>
+  <data name="&gt;&gt;labelOptimizing.Type" xml:space="preserve">
+    <value>System.Windows.Forms.Label, System.Windows.Forms, Version=4.0.0.0, Culture=neutral, PublicKeyToken=b77a5c561934e089</value>
+  </data>
   <data name="&gt;&gt;labelOptimizing.Parent" xml:space="preserve">
     <value>$this</value>
   </data>
@@ -1029,6 +1137,9 @@ Skylineで制御されないトランジション値に対しては、単一の�
   </data>
   <data name="&gt;&gt;labelMethods.Name" xml:space="preserve">
     <value>labelMethods</value>
+  </data>
+  <data name="&gt;&gt;labelMethods.Type" xml:space="preserve">
+    <value>System.Windows.Forms.Label, System.Windows.Forms, Version=4.0.0.0, Culture=neutral, PublicKeyToken=b77a5c561934e089</value>
   </data>
   <data name="&gt;&gt;labelMethods.Parent" xml:space="preserve">
     <value>$this</value>
@@ -1054,6 +1165,9 @@ Skylineで制御されないトランジション値に対しては、単一の�
   <data name="&gt;&gt;labelMethodNum.Name" xml:space="preserve">
     <value>labelMethodNum</value>
   </data>
+  <data name="&gt;&gt;labelMethodNum.Type" xml:space="preserve">
+    <value>System.Windows.Forms.Label, System.Windows.Forms, Version=4.0.0.0, Culture=neutral, PublicKeyToken=b77a5c561934e089</value>
+  </data>
   <data name="&gt;&gt;labelMethodNum.Parent" xml:space="preserve">
     <value>$this</value>
   </data>
@@ -1075,6 +1189,9 @@ Skylineで制御されないトランジション値に対しては、単一の�
   <data name="&gt;&gt;panelThermoColumns.Name" xml:space="preserve">
     <value>panelThermoColumns</value>
   </data>
+  <data name="&gt;&gt;panelThermoColumns.Type" xml:space="preserve">
+    <value>System.Windows.Forms.Panel, System.Windows.Forms, Version=4.0.0.0, Culture=neutral, PublicKeyToken=b77a5c561934e089</value>
+  </data>
   <data name="&gt;&gt;panelThermoColumns.Parent" xml:space="preserve">
     <value>$this</value>
   </data>
@@ -1095,6 +1212,9 @@ Skylineで制御されないトランジション値に対しては、単一の�
   </data>
   <data name="&gt;&gt;panelAbSciexTOF.Name" xml:space="preserve">
     <value>panelAbSciexTOF</value>
+  </data>
+  <data name="&gt;&gt;panelAbSciexTOF.Type" xml:space="preserve">
+    <value>System.Windows.Forms.Panel, System.Windows.Forms, Version=4.0.0.0, Culture=neutral, PublicKeyToken=b77a5c561934e089</value>
   </data>
   <data name="&gt;&gt;panelAbSciexTOF.Parent" xml:space="preserve">
     <value>$this</value>
@@ -1120,6 +1240,9 @@ Skylineで制御されないトランジション値に対しては、単一の�
   <data name="&gt;&gt;label5.Name" xml:space="preserve">
     <value>label5</value>
   </data>
+  <data name="&gt;&gt;label5.Type" xml:space="preserve">
+    <value>System.Windows.Forms.Label, System.Windows.Forms, Version=4.0.0.0, Culture=neutral, PublicKeyToken=b77a5c561934e089</value>
+  </data>
   <data name="&gt;&gt;label5.Parent" xml:space="preserve">
     <value>panelTriggered</value>
   </data>
@@ -1144,6 +1267,9 @@ Skylineで制御されないトランジション値に対しては、単一の�
   <data name="&gt;&gt;label3.Name" xml:space="preserve">
     <value>label3</value>
   </data>
+  <data name="&gt;&gt;label3.Type" xml:space="preserve">
+    <value>System.Windows.Forms.Label, System.Windows.Forms, Version=4.0.0.0, Culture=neutral, PublicKeyToken=b77a5c561934e089</value>
+  </data>
   <data name="&gt;&gt;label3.Parent" xml:space="preserve">
     <value>panelTriggered</value>
   </data>
@@ -1165,6 +1291,9 @@ Skylineで制御されないトランジション値に対しては、単一の�
   <data name="&gt;&gt;panelTriggered.Name" xml:space="preserve">
     <value>panelTriggered</value>
   </data>
+  <data name="&gt;&gt;panelTriggered.Type" xml:space="preserve">
+    <value>System.Windows.Forms.Panel, System.Windows.Forms, Version=4.0.0.0, Culture=neutral, PublicKeyToken=b77a5c561934e089</value>
+  </data>
   <data name="&gt;&gt;panelTriggered.Parent" xml:space="preserve">
     <value>$this</value>
   </data>
@@ -1185,6 +1314,9 @@ Skylineで制御されないトランジション値に対しては、単一の�
   </data>
   <data name="&gt;&gt;panelThermoRt.Name" xml:space="preserve">
     <value>panelThermoRt</value>
+  </data>
+  <data name="&gt;&gt;panelThermoRt.Type" xml:space="preserve">
+    <value>System.Windows.Forms.Panel, System.Windows.Forms, Version=4.0.0.0, Culture=neutral, PublicKeyToken=b77a5c561934e089</value>
   </data>
   <data name="&gt;&gt;panelThermoRt.Parent" xml:space="preserve">
     <value>$this</value>
@@ -1210,6 +1342,9 @@ Skylineで制御されないトランジション値に対しては、単一の�
   <data name="&gt;&gt;label6.Name" xml:space="preserve">
     <value>label6</value>
   </data>
+  <data name="&gt;&gt;label6.Type" xml:space="preserve">
+    <value>System.Windows.Forms.Label, System.Windows.Forms, Version=4.0.0.0, Culture=neutral, PublicKeyToken=b77a5c561934e089</value>
+  </data>
   <data name="&gt;&gt;label6.Parent" xml:space="preserve">
     <value>panelSciexTune</value>
   </data>
@@ -1231,6 +1366,9 @@ Skylineで制御されないトランジション値に対しては、単一の�
   <data name="&gt;&gt;panelSciexTune.Name" xml:space="preserve">
     <value>panelSciexTune</value>
   </data>
+  <data name="&gt;&gt;panelSciexTune.Type" xml:space="preserve">
+    <value>System.Windows.Forms.Panel, System.Windows.Forms, Version=4.0.0.0, Culture=neutral, PublicKeyToken=b77a5c561934e089</value>
+  </data>
   <data name="&gt;&gt;panelSciexTune.Parent" xml:space="preserve">
     <value>$this</value>
   </data>
@@ -1251,6 +1389,9 @@ Skylineで制御されないトランジション値に対しては、単一の�
   </data>
   <data name="&gt;&gt;panelWaters.Name" xml:space="preserve">
     <value>panelWaters</value>
+  </data>
+  <data name="&gt;&gt;panelWaters.Type" xml:space="preserve">
+    <value>System.Windows.Forms.Panel, System.Windows.Forms, Version=4.0.0.0, Culture=neutral, PublicKeyToken=b77a5c561934e089</value>
   </data>
   <data name="&gt;&gt;panelWaters.Parent" xml:space="preserve">
     <value>$this</value>
@@ -1279,6 +1420,9 @@ Skylineで制御されないトランジション値に対しては、単一の�
   <data name="&gt;&gt;labelPolarityFilter.Name" xml:space="preserve">
     <value>labelPolarityFilter</value>
   </data>
+  <data name="&gt;&gt;labelPolarityFilter.Type" xml:space="preserve">
+    <value>System.Windows.Forms.Label, System.Windows.Forms, Version=4.0.0.0, Culture=neutral, PublicKeyToken=b77a5c561934e089</value>
+  </data>
   <data name="&gt;&gt;labelPolarityFilter.Parent" xml:space="preserve">
     <value>$this</value>
   </data>
@@ -1303,6 +1447,9 @@ Skylineで制御されないトランジション値に対しては、単一の�
   <data name="&gt;&gt;panelTuneColumns.Name" xml:space="preserve">
     <value>panelTuneColumns</value>
   </data>
+  <data name="&gt;&gt;panelTuneColumns.Type" xml:space="preserve">
+    <value>System.Windows.Forms.Panel, System.Windows.Forms, Version=4.0.0.0, Culture=neutral, PublicKeyToken=b77a5c561934e089</value>
+  </data>
   <data name="&gt;&gt;panelTuneColumns.Parent" xml:space="preserve">
     <value>$this</value>
   </data>
@@ -1323,6 +1470,9 @@ Skylineで制御されないトランジション値に対しては、単一の�
   </data>
   <data name="&gt;&gt;btnGraph.Name" xml:space="preserve">
     <value>btnGraph</value>
+  </data>
+  <data name="&gt;&gt;btnGraph.Type" xml:space="preserve">
+    <value>System.Windows.Forms.Button, System.Windows.Forms, Version=4.0.0.0, Culture=neutral, PublicKeyToken=b77a5c561934e089</value>
   </data>
   <data name="&gt;&gt;btnGraph.Parent" xml:space="preserve">
     <value>$this</value>
@@ -1348,6 +1498,9 @@ Skylineで制御されないトランジション値に対しては、単一の�
   <data name="&gt;&gt;label1.Name" xml:space="preserve">
     <value>label1</value>
   </data>
+  <data name="&gt;&gt;label1.Type" xml:space="preserve">
+    <value>System.Windows.Forms.Label, System.Windows.Forms, Version=4.0.0.0, Culture=neutral, PublicKeyToken=b77a5c561934e089</value>
+  </data>
   <data name="&gt;&gt;label1.Parent" xml:space="preserve">
     <value>panelBrukerTimsTof</value>
   </data>
@@ -1368,6 +1521,9 @@ Skylineで制御されないトランジション値に対しては、単一の�
   </data>
   <data name="&gt;&gt;panelBrukerTimsTof.Name" xml:space="preserve">
     <value>panelBrukerTimsTof</value>
+  </data>
+  <data name="&gt;&gt;panelBrukerTimsTof.Type" xml:space="preserve">
+    <value>System.Windows.Forms.Panel, System.Windows.Forms, Version=4.0.0.0, Culture=neutral, PublicKeyToken=b77a5c561934e089</value>
   </data>
   <data name="&gt;&gt;panelBrukerTimsTof.Parent" xml:space="preserve">
     <value>$this</value>
@@ -1393,6 +1549,9 @@ Skylineで制御されないトランジション値に対しては、単一の�
   <data name="&gt;&gt;cbSureQuant.Name" xml:space="preserve">
     <value>cbSureQuant</value>
   </data>
+  <data name="&gt;&gt;cbSureQuant.Type" xml:space="preserve">
+    <value>System.Windows.Forms.CheckBox, System.Windows.Forms, Version=4.0.0.0, Culture=neutral, PublicKeyToken=b77a5c561934e089</value>
+  </data>
   <data name="&gt;&gt;cbSureQuant.Parent" xml:space="preserve">
     <value>panelSureQuant</value>
   </data>
@@ -1416,6 +1575,9 @@ Skylineで制御されないトランジション値に対しては、単一の�
   </data>
   <data name="&gt;&gt;lblIntensityThresholdMin.Name" xml:space="preserve">
     <value>lblIntensityThresholdMin</value>
+  </data>
+  <data name="&gt;&gt;lblIntensityThresholdMin.Type" xml:space="preserve">
+    <value>System.Windows.Forms.Label, System.Windows.Forms, Version=4.0.0.0, Culture=neutral, PublicKeyToken=b77a5c561934e089</value>
   </data>
   <data name="&gt;&gt;lblIntensityThresholdMin.Parent" xml:space="preserve">
     <value>panelSureQuant</value>
@@ -1441,6 +1603,9 @@ Skylineで制御されないトランジション値に対しては、単一の�
   <data name="&gt;&gt;lblIntensityThresholdType.Name" xml:space="preserve">
     <value>lblIntensityThresholdType</value>
   </data>
+  <data name="&gt;&gt;lblIntensityThresholdType.Type" xml:space="preserve">
+    <value>System.Windows.Forms.Label, System.Windows.Forms, Version=4.0.0.0, Culture=neutral, PublicKeyToken=b77a5c561934e089</value>
+  </data>
   <data name="&gt;&gt;lblIntensityThresholdType.Parent" xml:space="preserve">
     <value>panelSureQuant</value>
   </data>
@@ -1465,6 +1630,9 @@ Skylineで制御されないトランジション値に対しては、単一の�
   <data name="&gt;&gt;label7.Name" xml:space="preserve">
     <value>label7</value>
   </data>
+  <data name="&gt;&gt;label7.Type" xml:space="preserve">
+    <value>System.Windows.Forms.Label, System.Windows.Forms, Version=4.0.0.0, Culture=neutral, PublicKeyToken=b77a5c561934e089</value>
+  </data>
   <data name="&gt;&gt;label7.Parent" xml:space="preserve">
     <value>panelSureQuant</value>
   </data>
@@ -1483,12 +1651,18 @@ Skylineで制御されないトランジション値に対しては、単一の�
   <data name="&gt;&gt;panelSureQuant.Name" xml:space="preserve">
     <value>panelSureQuant</value>
   </data>
+  <data name="&gt;&gt;panelSureQuant.Type" xml:space="preserve">
+    <value>System.Windows.Forms.Panel, System.Windows.Forms, Version=4.0.0.0, Culture=neutral, PublicKeyToken=b77a5c561934e089</value>
+  </data>
   <data name="&gt;&gt;panelSureQuant.Parent" xml:space="preserve">
     <value>$this</value>
   </data>
   <data name="&gt;&gt;panelSureQuant.ZOrder" xml:space="preserve">
     <value>0</value>
   </data>
+  <metadata name="$this.Localizable" type="System.Boolean, mscorlib, Version=4.0.0.0, Culture=neutral, PublicKeyToken=b77a5c561934e089">
+    <value>True</value>
+  </metadata>
   <data name="$this.AutoScaleDimensions" type="System.Drawing.SizeF, System.Drawing">
     <value>6, 13</value>
   </data>
@@ -1504,10 +1678,19 @@ Skylineで制御されないトランジション値に対しては、単一の�
   <data name="&gt;&gt;modeUIHandler.Name" xml:space="preserve">
     <value>modeUIHandler</value>
   </data>
+  <data name="&gt;&gt;modeUIHandler.Type" xml:space="preserve">
+    <value>pwiz.Skyline.Util.Helpers+ModeUIExtender, Skyline, Version=1.0.0.0, Culture=neutral, PublicKeyToken=null</value>
+  </data>
   <data name="&gt;&gt;helpTip.Name" xml:space="preserve">
     <value>helpTip</value>
   </data>
+  <data name="&gt;&gt;helpTip.Type" xml:space="preserve">
+    <value>System.Windows.Forms.ToolTip, System.Windows.Forms, Version=4.0.0.0, Culture=neutral, PublicKeyToken=b77a5c561934e089</value>
+  </data>
   <data name="&gt;&gt;$this.Name" xml:space="preserve">
     <value>ExportMethodDlg</value>
+  </data>
+  <data name="&gt;&gt;$this.Type" xml:space="preserve">
+    <value>pwiz.Skyline.Util.CreateHandleDebugBase, Skyline, Version=1.0.0.0, Culture=neutral, PublicKeyToken=null</value>
   </data>
 </root>

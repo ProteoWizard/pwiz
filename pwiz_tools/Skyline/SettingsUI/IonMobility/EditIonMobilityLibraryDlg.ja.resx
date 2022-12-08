@@ -117,33 +117,14 @@
   <resheader name="writer">
     <value>System.Resources.ResXResourceWriter, System.Windows.Forms, Version=4.0.0.0, Culture=neutral, PublicKeyToken=b77a5c561934e089</value>
   </resheader>
+  <metadata name="modeUIHandler.TrayLocation" type="System.Drawing.Point, System.Drawing, Version=4.0.0.0, Culture=neutral, PublicKeyToken=b03f5f7f11d50a3a">
+    <value>17, 17</value>
+  </metadata>
   <assembly alias="mscorlib" name="mscorlib, Version=4.0.0.0, Culture=neutral, PublicKeyToken=b77a5c561934e089" />
-  <assembly alias="System.Drawing" name="System.Drawing, Version=4.0.0.0, Culture=neutral, PublicKeyToken=b03f5f7f11d50a3a" />
-  <assembly alias="System.Windows.Forms" name="System.Windows.Forms, Version=4.0.0.0, Culture=neutral, PublicKeyToken=b77a5c561934e089" />
-  <metadata name="columnTarget.UserAddedColumn" type="System.Boolean, mscorlib, Version=4.0.0.0, Culture=neutral, PublicKeyToken=b77a5c561934e089">
-    <value>True</value>
-  </metadata>
-  <metadata name="columnAdduct.UserAddedColumn" type="System.Boolean, mscorlib, Version=4.0.0.0, Culture=neutral, PublicKeyToken=b77a5c561934e089">
-    <value>True</value>
-  </metadata>
-  <metadata name="columnCollisionalCrossSection.UserAddedColumn" type="System.Boolean, mscorlib, Version=4.0.0.0, Culture=neutral, PublicKeyToken=b77a5c561934e089">
-    <value>True</value>
-  </metadata>
-  <metadata name="columnIonMobility.UserAddedColumn" type="System.Boolean, mscorlib, Version=4.0.0.0, Culture=neutral, PublicKeyToken=b77a5c561934e089">
-    <value>True</value>
-  </metadata>
-  <metadata name="columnIonMobilityUnits.UserAddedColumn" type="System.Boolean, mscorlib, Version=4.0.0.0, Culture=neutral, PublicKeyToken=b77a5c561934e089">
-    <value>True</value>
-  </metadata>
-  <metadata name="columnHighEnergyIonMobilityOffset.UserAddedColumn" type="System.Boolean, mscorlib, Version=4.0.0.0, Culture=neutral, PublicKeyToken=b77a5c561934e089">
-    <value>True</value>
-  </metadata>
-  <metadata name="$this.Localizable" type="System.Boolean, mscorlib, Version=4.0.0.0, Culture=neutral, PublicKeyToken=b77a5c561934e089">
-    <value>True</value>
-  </metadata>
   <data name="label1.AutoSize" type="System.Boolean, mscorlib">
     <value>True</value>
   </data>
+  <assembly alias="System.Drawing" name="System.Drawing, Version=4.0.0.0, Culture=neutral, PublicKeyToken=b03f5f7f11d50a3a" />
   <data name="label1.Location" type="System.Drawing.Point, System.Drawing">
     <value>9, 13</value>
   </data>
@@ -158,6 +139,9 @@
   </data>
   <data name="&gt;&gt;label1.Name" xml:space="preserve">
     <value>label1</value>
+  </data>
+  <data name="&gt;&gt;label1.Type" xml:space="preserve">
+    <value>System.Windows.Forms.Label, System.Windows.Forms, Version=4.0.0.0, Culture=neutral, PublicKeyToken=b77a5c561934e089</value>
   </data>
   <data name="&gt;&gt;label1.Parent" xml:space="preserve">
     <value>$this</value>
@@ -176,6 +160,9 @@
   </data>
   <data name="&gt;&gt;textLibraryName.Name" xml:space="preserve">
     <value>textLibraryName</value>
+  </data>
+  <data name="&gt;&gt;textLibraryName.Type" xml:space="preserve">
+    <value>System.Windows.Forms.TextBox, System.Windows.Forms, Version=4.0.0.0, Culture=neutral, PublicKeyToken=b77a5c561934e089</value>
   </data>
   <data name="&gt;&gt;textLibraryName.Parent" xml:space="preserve">
     <value>$this</value>
@@ -201,12 +188,16 @@
   <data name="&gt;&gt;label2.Name" xml:space="preserve">
     <value>label2</value>
   </data>
+  <data name="&gt;&gt;label2.Type" xml:space="preserve">
+    <value>System.Windows.Forms.Label, System.Windows.Forms, Version=4.0.0.0, Culture=neutral, PublicKeyToken=b77a5c561934e089</value>
+  </data>
   <data name="&gt;&gt;label2.Parent" xml:space="preserve">
     <value>$this</value>
   </data>
   <data name="&gt;&gt;label2.ZOrder" xml:space="preserve">
     <value>12</value>
   </data>
+  <assembly alias="System.Windows.Forms" name="System.Windows.Forms, Version=4.0.0.0, Culture=neutral, PublicKeyToken=b77a5c561934e089" />
   <data name="textDatabase.Anchor" type="System.Windows.Forms.AnchorStyles, System.Windows.Forms">
     <value>Top, Left, Right</value>
   </data>
@@ -221,6 +212,9 @@
   </data>
   <data name="&gt;&gt;textDatabase.Name" xml:space="preserve">
     <value>textDatabase</value>
+  </data>
+  <data name="&gt;&gt;textDatabase.Type" xml:space="preserve">
+    <value>System.Windows.Forms.TextBox, System.Windows.Forms, Version=4.0.0.0, Culture=neutral, PublicKeyToken=b77a5c561934e089</value>
   </data>
   <data name="&gt;&gt;textDatabase.Parent" xml:space="preserve">
     <value>$this</value>
@@ -242,6 +236,9 @@
   </data>
   <data name="&gt;&gt;btnBrowseDb.Name" xml:space="preserve">
     <value>btnBrowseDb</value>
+  </data>
+  <data name="&gt;&gt;btnBrowseDb.Type" xml:space="preserve">
+    <value>System.Windows.Forms.Button, System.Windows.Forms, Version=4.0.0.0, Culture=neutral, PublicKeyToken=b77a5c561934e089</value>
   </data>
   <data name="&gt;&gt;btnBrowseDb.Parent" xml:space="preserve">
     <value>$this</value>
@@ -267,6 +264,9 @@
   <data name="&gt;&gt;btnOk.Name" xml:space="preserve">
     <value>btnOk</value>
   </data>
+  <data name="&gt;&gt;btnOk.Type" xml:space="preserve">
+    <value>System.Windows.Forms.Button, System.Windows.Forms, Version=4.0.0.0, Culture=neutral, PublicKeyToken=b77a5c561934e089</value>
+  </data>
   <data name="&gt;&gt;btnOk.Parent" xml:space="preserve">
     <value>$this</value>
   </data>
@@ -291,6 +291,9 @@
   <data name="&gt;&gt;btnCancel.Name" xml:space="preserve">
     <value>btnCancel</value>
   </data>
+  <data name="&gt;&gt;btnCancel.Type" xml:space="preserve">
+    <value>System.Windows.Forms.Button, System.Windows.Forms, Version=4.0.0.0, Culture=neutral, PublicKeyToken=b77a5c561934e089</value>
+  </data>
   <data name="&gt;&gt;btnCancel.Parent" xml:space="preserve">
     <value>$this</value>
   </data>
@@ -312,11 +315,17 @@
   <data name="btnImportFromLibrary.Text" xml:space="preserve">
     <value>インポート(&amp;I)...</value>
   </data>
+  <metadata name="toolTipImportBtn.TrayLocation" type="System.Drawing.Point, System.Drawing, Version=4.0.0.0, Culture=neutral, PublicKeyToken=b03f5f7f11d50a3a">
+    <value>155, 17</value>
+  </metadata>
   <data name="btnImportFromLibrary.ToolTip" xml:space="preserve">
     <value>外部ファイルから衝突断面積データをインポート</value>
   </data>
   <data name="&gt;&gt;btnImportFromLibrary.Name" xml:space="preserve">
     <value>btnImportFromLibrary</value>
+  </data>
+  <data name="&gt;&gt;btnImportFromLibrary.Type" xml:space="preserve">
+    <value>System.Windows.Forms.Button, System.Windows.Forms, Version=4.0.0.0, Culture=neutral, PublicKeyToken=b77a5c561934e089</value>
   </data>
   <data name="&gt;&gt;btnImportFromLibrary.Parent" xml:space="preserve">
     <value>$this</value>
@@ -345,6 +354,9 @@
   <data name="&gt;&gt;labelNumPrecursorIons.Name" xml:space="preserve">
     <value>labelNumPrecursorIons</value>
   </data>
+  <data name="&gt;&gt;labelNumPrecursorIons.Type" xml:space="preserve">
+    <value>System.Windows.Forms.Label, System.Windows.Forms, Version=4.0.0.0, Culture=neutral, PublicKeyToken=b77a5c561934e089</value>
+  </data>
   <data name="&gt;&gt;labelNumPrecursorIons.Parent" xml:space="preserve">
     <value>$this</value>
   </data>
@@ -366,12 +378,24 @@
   <data name="&gt;&gt;btnCreateDb.Name" xml:space="preserve">
     <value>btnCreateDb</value>
   </data>
+  <data name="&gt;&gt;btnCreateDb.Type" xml:space="preserve">
+    <value>System.Windows.Forms.Button, System.Windows.Forms, Version=4.0.0.0, Culture=neutral, PublicKeyToken=b77a5c561934e089</value>
+  </data>
   <data name="&gt;&gt;btnCreateDb.Parent" xml:space="preserve">
     <value>$this</value>
   </data>
   <data name="&gt;&gt;btnCreateDb.ZOrder" xml:space="preserve">
     <value>5</value>
   </data>
+  <metadata name="bindingSourceLibrary.TrayLocation" type="System.Drawing.Point, System.Drawing, Version=4.0.0.0, Culture=neutral, PublicKeyToken=b03f5f7f11d50a3a">
+    <value>694, 17</value>
+  </metadata>
+  <metadata name="bindingSourceStandard.TrayLocation" type="System.Drawing.Point, System.Drawing, Version=4.0.0.0, Culture=neutral, PublicKeyToken=b03f5f7f11d50a3a">
+    <value>514, 17</value>
+  </metadata>
+  <metadata name="contextMenuAdd.TrayLocation" type="System.Drawing.Point, System.Drawing, Version=4.0.0.0, Culture=neutral, PublicKeyToken=b03f5f7f11d50a3a">
+    <value>862, 17</value>
+  </metadata>
   <data name="addResultsContextMenuItem.Size" type="System.Drawing.Size, System.Drawing">
     <value>189, 22</value>
   </data>
@@ -396,6 +420,9 @@
   <data name="&gt;&gt;contextMenuAdd.Name" xml:space="preserve">
     <value>contextMenuAdd</value>
   </data>
+  <data name="&gt;&gt;contextMenuAdd.Type" xml:space="preserve">
+    <value>System.Windows.Forms.ContextMenuStrip, System.Windows.Forms, Version=4.0.0.0, Culture=neutral, PublicKeyToken=b77a5c561934e089</value>
+  </data>
   <data name="label4.AutoSize" type="System.Boolean, mscorlib">
     <value>True</value>
   </data>
@@ -417,6 +444,9 @@
   <data name="&gt;&gt;label4.Name" xml:space="preserve">
     <value>label4</value>
   </data>
+  <data name="&gt;&gt;label4.Type" xml:space="preserve">
+    <value>System.Windows.Forms.Label, System.Windows.Forms, Version=4.0.0.0, Culture=neutral, PublicKeyToken=b77a5c561934e089</value>
+  </data>
   <data name="&gt;&gt;label4.Parent" xml:space="preserve">
     <value>$this</value>
   </data>
@@ -426,27 +456,45 @@
   <data name="gridViewIonMobilities.Anchor" type="System.Windows.Forms.AnchorStyles, System.Windows.Forms">
     <value>Top, Bottom, Left, Right</value>
   </data>
+  <metadata name="columnTarget.UserAddedColumn" type="System.Boolean, mscorlib, Version=4.0.0.0, Culture=neutral, PublicKeyToken=b77a5c561934e089">
+    <value>True</value>
+  </metadata>
   <data name="columnTarget.HeaderText" xml:space="preserve">
     <value>修飾シークエンス</value>
   </data>
   <data name="columnTarget.Width" type="System.Int32, mscorlib">
     <value>260</value>
   </data>
+  <metadata name="columnAdduct.UserAddedColumn" type="System.Boolean, mscorlib, Version=4.0.0.0, Culture=neutral, PublicKeyToken=b77a5c561934e089">
+    <value>True</value>
+  </metadata>
   <data name="columnAdduct.HeaderText" xml:space="preserve">
     <value>電荷</value>
   </data>
+  <metadata name="columnCollisionalCrossSection.UserAddedColumn" type="System.Boolean, mscorlib, Version=4.0.0.0, Culture=neutral, PublicKeyToken=b77a5c561934e089">
+    <value>True</value>
+  </metadata>
   <data name="columnCollisionalCrossSection.HeaderText" xml:space="preserve">
     <value>衝突断面積（sqA）</value>
   </data>
   <data name="columnCollisionalCrossSection.Width" type="System.Int32, mscorlib">
     <value>135</value>
   </data>
+  <metadata name="columnIonMobility.UserAddedColumn" type="System.Boolean, mscorlib, Version=4.0.0.0, Culture=neutral, PublicKeyToken=b77a5c561934e089">
+    <value>True</value>
+  </metadata>
   <data name="columnIonMobility.HeaderText" xml:space="preserve">
     <value>イオン移動度</value>
   </data>
+  <metadata name="columnIonMobilityUnits.UserAddedColumn" type="System.Boolean, mscorlib, Version=4.0.0.0, Culture=neutral, PublicKeyToken=b77a5c561934e089">
+    <value>True</value>
+  </metadata>
   <data name="columnIonMobilityUnits.HeaderText" xml:space="preserve">
     <value>イオン移動度の単位</value>
   </data>
+  <metadata name="columnHighEnergyIonMobilityOffset.UserAddedColumn" type="System.Boolean, mscorlib, Version=4.0.0.0, Culture=neutral, PublicKeyToken=b77a5c561934e089">
+    <value>True</value>
+  </metadata>
   <data name="columnHighEnergyIonMobilityOffset.HeaderText" xml:space="preserve">
     <value>高エネルギーイオン移動度オフセット</value>
   </data>
@@ -462,12 +510,18 @@
   <data name="&gt;&gt;gridViewIonMobilities.Name" xml:space="preserve">
     <value>gridViewIonMobilities</value>
   </data>
+  <data name="&gt;&gt;gridViewIonMobilities.Type" xml:space="preserve">
+    <value>pwiz.Skyline.Controls.DataGridViewEx, Skyline, Version=1.0.0.0, Culture=neutral, PublicKeyToken=null</value>
+  </data>
   <data name="&gt;&gt;gridViewIonMobilities.Parent" xml:space="preserve">
     <value>$this</value>
   </data>
   <data name="&gt;&gt;gridViewIonMobilities.ZOrder" xml:space="preserve">
     <value>3</value>
   </data>
+  <metadata name="toolTipMeasuredPeptidesGrid.TrayLocation" type="System.Drawing.Point, System.Drawing, Version=4.0.0.0, Culture=neutral, PublicKeyToken=b03f5f7f11d50a3a">
+    <value>300, 17</value>
+  </metadata>
   <data name="btnUseResults.Anchor" type="System.Windows.Forms.AnchorStyles, System.Windows.Forms">
     <value>Bottom, Right</value>
   </data>
@@ -494,6 +548,9 @@
   </data>
   <data name="&gt;&gt;btnUseResults.Name" xml:space="preserve">
     <value>btnUseResults</value>
+  </data>
+  <data name="&gt;&gt;btnUseResults.Type" xml:space="preserve">
+    <value>System.Windows.Forms.Button, System.Windows.Forms, Version=4.0.0.0, Culture=neutral, PublicKeyToken=b77a5c561934e089</value>
   </data>
   <data name="&gt;&gt;btnUseResults.Parent" xml:space="preserve">
     <value>$this</value>
@@ -531,12 +588,21 @@
   <data name="&gt;&gt;cbOffsetHighEnergySpectra.Name" xml:space="preserve">
     <value>cbOffsetHighEnergySpectra</value>
   </data>
+  <data name="&gt;&gt;cbOffsetHighEnergySpectra.Type" xml:space="preserve">
+    <value>System.Windows.Forms.CheckBox, System.Windows.Forms, Version=4.0.0.0, Culture=neutral, PublicKeyToken=b77a5c561934e089</value>
+  </data>
   <data name="&gt;&gt;cbOffsetHighEnergySpectra.Parent" xml:space="preserve">
     <value>$this</value>
   </data>
   <data name="&gt;&gt;cbOffsetHighEnergySpectra.ZOrder" xml:space="preserve">
     <value>2</value>
   </data>
+  <metadata name="$this.Localizable" type="System.Boolean, mscorlib, Version=4.0.0.0, Culture=neutral, PublicKeyToken=b77a5c561934e089">
+    <value>True</value>
+  </metadata>
+  <metadata name="$this.TrayHeight" type="System.Int32, mscorlib, Version=4.0.0.0, Culture=neutral, PublicKeyToken=b77a5c561934e089">
+    <value>30</value>
+  </metadata>
   <data name="$this.AutoScaleDimensions" type="System.Drawing.SizeF, System.Drawing">
     <value>6, 13</value>
   </data>
@@ -555,46 +621,91 @@
   <data name="&gt;&gt;modeUIHandler.Name" xml:space="preserve">
     <value>modeUIHandler</value>
   </data>
+  <data name="&gt;&gt;modeUIHandler.Type" xml:space="preserve">
+    <value>pwiz.Skyline.Util.Helpers+ModeUIExtender, Skyline, Version=1.0.0.0, Culture=neutral, PublicKeyToken=null</value>
+  </data>
   <data name="&gt;&gt;bindingSourceLibrary.Name" xml:space="preserve">
     <value>bindingSourceLibrary</value>
+  </data>
+  <data name="&gt;&gt;bindingSourceLibrary.Type" xml:space="preserve">
+    <value>System.Windows.Forms.BindingSource, System.Windows.Forms, Version=4.0.0.0, Culture=neutral, PublicKeyToken=b77a5c561934e089</value>
   </data>
   <data name="&gt;&gt;bindingSourceStandard.Name" xml:space="preserve">
     <value>bindingSourceStandard</value>
   </data>
+  <data name="&gt;&gt;bindingSourceStandard.Type" xml:space="preserve">
+    <value>System.Windows.Forms.BindingSource, System.Windows.Forms, Version=4.0.0.0, Culture=neutral, PublicKeyToken=b77a5c561934e089</value>
+  </data>
   <data name="&gt;&gt;addResultsContextMenuItem.Name" xml:space="preserve">
     <value>addResultsContextMenuItem</value>
+  </data>
+  <data name="&gt;&gt;addResultsContextMenuItem.Type" xml:space="preserve">
+    <value>System.Windows.Forms.ToolStripMenuItem, System.Windows.Forms, Version=4.0.0.0, Culture=neutral, PublicKeyToken=b77a5c561934e089</value>
   </data>
   <data name="&gt;&gt;addSpectralLibraryContextMenuItem.Name" xml:space="preserve">
     <value>addSpectralLibraryContextMenuItem</value>
   </data>
+  <data name="&gt;&gt;addSpectralLibraryContextMenuItem.Type" xml:space="preserve">
+    <value>System.Windows.Forms.ToolStripMenuItem, System.Windows.Forms, Version=4.0.0.0, Culture=neutral, PublicKeyToken=b77a5c561934e089</value>
+  </data>
   <data name="&gt;&gt;addIonMobilityDatabaseContextMenuItem.Name" xml:space="preserve">
     <value>addIonMobilityDatabaseContextMenuItem</value>
+  </data>
+  <data name="&gt;&gt;addIonMobilityDatabaseContextMenuItem.Type" xml:space="preserve">
+    <value>System.Windows.Forms.ToolStripMenuItem, System.Windows.Forms, Version=4.0.0.0, Culture=neutral, PublicKeyToken=b77a5c561934e089</value>
   </data>
   <data name="&gt;&gt;columnTarget.Name" xml:space="preserve">
     <value>columnTarget</value>
   </data>
+  <data name="&gt;&gt;columnTarget.Type" xml:space="preserve">
+    <value>pwiz.Skyline.Controls.TargetColumn, Skyline, Version=1.0.0.0, Culture=neutral, PublicKeyToken=null</value>
+  </data>
   <data name="&gt;&gt;columnAdduct.Name" xml:space="preserve">
     <value>columnAdduct</value>
+  </data>
+  <data name="&gt;&gt;columnAdduct.Type" xml:space="preserve">
+    <value>System.Windows.Forms.DataGridViewTextBoxColumn, System.Windows.Forms, Version=4.0.0.0, Culture=neutral, PublicKeyToken=b77a5c561934e089</value>
   </data>
   <data name="&gt;&gt;columnCollisionalCrossSection.Name" xml:space="preserve">
     <value>columnCollisionalCrossSection</value>
   </data>
+  <data name="&gt;&gt;columnCollisionalCrossSection.Type" xml:space="preserve">
+    <value>System.Windows.Forms.DataGridViewTextBoxColumn, System.Windows.Forms, Version=4.0.0.0, Culture=neutral, PublicKeyToken=b77a5c561934e089</value>
+  </data>
   <data name="&gt;&gt;columnIonMobility.Name" xml:space="preserve">
     <value>columnIonMobility</value>
+  </data>
+  <data name="&gt;&gt;columnIonMobility.Type" xml:space="preserve">
+    <value>System.Windows.Forms.DataGridViewTextBoxColumn, System.Windows.Forms, Version=4.0.0.0, Culture=neutral, PublicKeyToken=b77a5c561934e089</value>
   </data>
   <data name="&gt;&gt;columnIonMobilityUnits.Name" xml:space="preserve">
     <value>columnIonMobilityUnits</value>
   </data>
+  <data name="&gt;&gt;columnIonMobilityUnits.Type" xml:space="preserve">
+    <value>System.Windows.Forms.DataGridViewComboBoxColumn, System.Windows.Forms, Version=4.0.0.0, Culture=neutral, PublicKeyToken=b77a5c561934e089</value>
+  </data>
   <data name="&gt;&gt;columnHighEnergyIonMobilityOffset.Name" xml:space="preserve">
     <value>columnHighEnergyIonMobilityOffset</value>
+  </data>
+  <data name="&gt;&gt;columnHighEnergyIonMobilityOffset.Type" xml:space="preserve">
+    <value>System.Windows.Forms.DataGridViewTextBoxColumn, System.Windows.Forms, Version=4.0.0.0, Culture=neutral, PublicKeyToken=b77a5c561934e089</value>
   </data>
   <data name="&gt;&gt;toolTipImportBtn.Name" xml:space="preserve">
     <value>toolTipImportBtn</value>
   </data>
+  <data name="&gt;&gt;toolTipImportBtn.Type" xml:space="preserve">
+    <value>System.Windows.Forms.ToolTip, System.Windows.Forms, Version=4.0.0.0, Culture=neutral, PublicKeyToken=b77a5c561934e089</value>
+  </data>
   <data name="&gt;&gt;toolTipMeasuredPeptidesGrid.Name" xml:space="preserve">
     <value>toolTipMeasuredPeptidesGrid</value>
   </data>
+  <data name="&gt;&gt;toolTipMeasuredPeptidesGrid.Type" xml:space="preserve">
+    <value>System.Windows.Forms.ToolTip, System.Windows.Forms, Version=4.0.0.0, Culture=neutral, PublicKeyToken=b77a5c561934e089</value>
+  </data>
   <data name="&gt;&gt;$this.Name" xml:space="preserve">
     <value>EditIonMobilityLibraryDlg</value>
+  </data>
+  <data name="&gt;&gt;$this.Type" xml:space="preserve">
+    <value>pwiz.Skyline.Util.FormEx, Skyline, Version=1.0.0.0, Culture=neutral, PublicKeyToken=null</value>
   </data>
 </root>

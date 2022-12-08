@@ -118,20 +118,17 @@
     <value>System.Resources.ResXResourceWriter, System.Windows.Forms, Version=4.0.0.0, Culture=neutral, PublicKeyToken=b77a5c561934e089</value>
   </resheader>
   <assembly alias="System.Windows.Forms" name="System.Windows.Forms, Version=4.0.0.0, Culture=neutral, PublicKeyToken=b77a5c561934e089" />
-  <assembly alias="System.Drawing" name="System.Drawing, Version=4.0.0.0, Culture=neutral, PublicKeyToken=b03f5f7f11d50a3a" />
-  <assembly alias="mscorlib" name="mscorlib, Version=4.0.0.0, Culture=neutral, PublicKeyToken=b77a5c561934e089" />
-  <metadata name="$this.Localizable" type="System.Boolean, mscorlib, Version=4.0.0.0, Culture=neutral, PublicKeyToken=b77a5c561934e089">
-    <value>True</value>
-  </metadata>
   <data name="exportButton.Anchor" type="System.Windows.Forms.AnchorStyles, System.Windows.Forms">
     <value>Bottom, Right</value>
   </data>
+  <assembly alias="System.Drawing" name="System.Drawing, Version=4.0.0.0, Culture=neutral, PublicKeyToken=b03f5f7f11d50a3a" />
   <data name="exportButton.Location" type="System.Drawing.Point, System.Drawing">
     <value>230, 487</value>
   </data>
   <data name="exportButton.Size" type="System.Drawing.Size, System.Drawing">
     <value>75, 23</value>
   </data>
+  <assembly alias="mscorlib" name="mscorlib, Version=4.0.0.0, Culture=neutral, PublicKeyToken=b77a5c561934e089" />
   <data name="exportButton.TabIndex" type="System.Int32, mscorlib">
     <value>2</value>
   </data>
@@ -140,6 +137,9 @@
   </data>
   <data name="&gt;&gt;exportButton.Name" xml:space="preserve">
     <value>exportButton</value>
+  </data>
+  <data name="&gt;&gt;exportButton.Type" xml:space="preserve">
+    <value>System.Windows.Forms.Button, System.Windows.Forms, Version=4.0.0.0, Culture=neutral, PublicKeyToken=b77a5c561934e089</value>
   </data>
   <data name="&gt;&gt;exportButton.Parent" xml:space="preserve">
     <value>$this</value>
@@ -161,6 +161,9 @@
   </data>
   <data name="&gt;&gt;labelResult.Name" xml:space="preserve">
     <value>labelResult</value>
+  </data>
+  <data name="&gt;&gt;labelResult.Type" xml:space="preserve">
+    <value>System.Windows.Forms.Label, System.Windows.Forms, Version=4.0.0.0, Culture=neutral, PublicKeyToken=b77a5c561934e089</value>
   </data>
   <data name="&gt;&gt;labelResult.Parent" xml:space="preserve">
     <value>$this</value>
@@ -185,6 +188,9 @@
   </data>
   <data name="&gt;&gt;cancelButton.Name" xml:space="preserve">
     <value>cancelButton</value>
+  </data>
+  <data name="&gt;&gt;cancelButton.Type" xml:space="preserve">
+    <value>System.Windows.Forms.Button, System.Windows.Forms, Version=4.0.0.0, Culture=neutral, PublicKeyToken=b77a5c561934e089</value>
   </data>
   <data name="&gt;&gt;cancelButton.Parent" xml:space="preserve">
     <value>$this</value>
@@ -216,6 +222,9 @@
   <data name="&gt;&gt;radioButtonIntensityAvg.Name" xml:space="preserve">
     <value>radioButtonIntensityAvg</value>
   </data>
+  <data name="&gt;&gt;radioButtonIntensityAvg.Type" xml:space="preserve">
+    <value>System.Windows.Forms.RadioButton, System.Windows.Forms, Version=4.0.0.0, Culture=neutral, PublicKeyToken=b77a5c561934e089</value>
+  </data>
   <data name="&gt;&gt;radioButtonIntensityAvg.Parent" xml:space="preserve">
     <value>groupBoxSort</value>
   </data>
@@ -240,6 +249,9 @@
   <data name="&gt;&gt;radioButtonIntensityFromFile.Name" xml:space="preserve">
     <value>radioButtonIntensityFromFile</value>
   </data>
+  <data name="&gt;&gt;radioButtonIntensityFromFile.Type" xml:space="preserve">
+    <value>System.Windows.Forms.RadioButton, System.Windows.Forms, Version=4.0.0.0, Culture=neutral, PublicKeyToken=b77a5c561934e089</value>
+  </data>
   <data name="&gt;&gt;radioButtonIntensityFromFile.Parent" xml:space="preserve">
     <value>groupBoxSort</value>
   </data>
@@ -261,6 +273,9 @@
   <data name="&gt;&gt;comboBoxDataSetIntensitySort.Name" xml:space="preserve">
     <value>comboBoxDataSetIntensitySort</value>
   </data>
+  <data name="&gt;&gt;comboBoxDataSetIntensitySort.Type" xml:space="preserve">
+    <value>System.Windows.Forms.ComboBox, System.Windows.Forms, Version=4.0.0.0, Culture=neutral, PublicKeyToken=b77a5c561934e089</value>
+  </data>
   <data name="&gt;&gt;comboBoxDataSetIntensitySort.Parent" xml:space="preserve">
     <value>groupBoxSort</value>
   </data>
@@ -281,6 +296,9 @@
   </data>
   <data name="&gt;&gt;groupBoxSort.Name" xml:space="preserve">
     <value>groupBoxSort</value>
+  </data>
+  <data name="&gt;&gt;groupBoxSort.Type" xml:space="preserve">
+    <value>System.Windows.Forms.GroupBox, System.Windows.Forms, Version=4.0.0.0, Culture=neutral, PublicKeyToken=b77a5c561934e089</value>
   </data>
   <data name="&gt;&gt;groupBoxSort.Parent" xml:space="preserve">
     <value>groupBoxImportOptions</value>
@@ -309,6 +327,9 @@
   <data name="&gt;&gt;radioButtonRTAvg.Name" xml:space="preserve">
     <value>radioButtonRTAvg</value>
   </data>
+  <data name="&gt;&gt;radioButtonRTAvg.Type" xml:space="preserve">
+    <value>System.Windows.Forms.RadioButton, System.Windows.Forms, Version=4.0.0.0, Culture=neutral, PublicKeyToken=b77a5c561934e089</value>
+  </data>
   <data name="&gt;&gt;radioButtonRTAvg.Parent" xml:space="preserve">
     <value>groupBoxRT</value>
   </data>
@@ -333,6 +354,9 @@
   <data name="&gt;&gt;radioButtonUseDataSet.Name" xml:space="preserve">
     <value>radioButtonUseDataSet</value>
   </data>
+  <data name="&gt;&gt;radioButtonUseDataSet.Type" xml:space="preserve">
+    <value>System.Windows.Forms.RadioButton, System.Windows.Forms, Version=4.0.0.0, Culture=neutral, PublicKeyToken=b77a5c561934e089</value>
+  </data>
   <data name="&gt;&gt;radioButtonUseDataSet.Parent" xml:space="preserve">
     <value>groupBoxRT</value>
   </data>
@@ -353,6 +377,9 @@
   </data>
   <data name="&gt;&gt;comboBoxRTFiles.Name" xml:space="preserve">
     <value>comboBoxRTFiles</value>
+  </data>
+  <data name="&gt;&gt;comboBoxRTFiles.Type" xml:space="preserve">
+    <value>System.Windows.Forms.ComboBox, System.Windows.Forms, Version=4.0.0.0, Culture=neutral, PublicKeyToken=b77a5c561934e089</value>
   </data>
   <data name="&gt;&gt;comboBoxRTFiles.Parent" xml:space="preserve">
     <value>groupBoxRT</value>
@@ -378,6 +405,9 @@
   <data name="&gt;&gt;label5.Name" xml:space="preserve">
     <value>label5</value>
   </data>
+  <data name="&gt;&gt;label5.Type" xml:space="preserve">
+    <value>System.Windows.Forms.Label, System.Windows.Forms, Version=4.0.0.0, Culture=neutral, PublicKeyToken=b77a5c561934e089</value>
+  </data>
   <data name="&gt;&gt;label5.Parent" xml:space="preserve">
     <value>groupBoxRT</value>
   </data>
@@ -395,6 +425,9 @@
   </data>
   <data name="&gt;&gt;numericUpDown1.Name" xml:space="preserve">
     <value>numericUpDown1</value>
+  </data>
+  <data name="&gt;&gt;numericUpDown1.Type" xml:space="preserve">
+    <value>System.Windows.Forms.NumericUpDown, System.Windows.Forms, Version=4.0.0.0, Culture=neutral, PublicKeyToken=b77a5c561934e089</value>
   </data>
   <data name="&gt;&gt;numericUpDown1.Parent" xml:space="preserve">
     <value>groupBoxRT</value>
@@ -416,6 +449,9 @@
   </data>
   <data name="&gt;&gt;groupBoxRT.Name" xml:space="preserve">
     <value>groupBoxRT</value>
+  </data>
+  <data name="&gt;&gt;groupBoxRT.Type" xml:space="preserve">
+    <value>System.Windows.Forms.GroupBox, System.Windows.Forms, Version=4.0.0.0, Culture=neutral, PublicKeyToken=b77a5c561934e089</value>
   </data>
   <data name="&gt;&gt;groupBoxRT.Parent" xml:space="preserve">
     <value>groupBoxImportOptions</value>
@@ -440,6 +476,9 @@
   </data>
   <data name="&gt;&gt;label4.Name" xml:space="preserve">
     <value>label4</value>
+  </data>
+  <data name="&gt;&gt;label4.Type" xml:space="preserve">
+    <value>System.Windows.Forms.Label, System.Windows.Forms, Version=4.0.0.0, Culture=neutral, PublicKeyToken=b77a5c561934e089</value>
   </data>
   <data name="&gt;&gt;label4.Parent" xml:space="preserve">
     <value>groupBoxImportOptions</value>
@@ -468,6 +507,9 @@
   <data name="&gt;&gt;comboBoxStandard.Name" xml:space="preserve">
     <value>comboBoxStandard</value>
   </data>
+  <data name="&gt;&gt;comboBoxStandard.Type" xml:space="preserve">
+    <value>System.Windows.Forms.ComboBox, System.Windows.Forms, Version=4.0.0.0, Culture=neutral, PublicKeyToken=b77a5c561934e089</value>
+  </data>
   <data name="&gt;&gt;comboBoxStandard.Parent" xml:space="preserve">
     <value>groupBoxImportOptions</value>
   </data>
@@ -491,6 +533,9 @@
   </data>
   <data name="&gt;&gt;label3.Name" xml:space="preserve">
     <value>label3</value>
+  </data>
+  <data name="&gt;&gt;label3.Type" xml:space="preserve">
+    <value>System.Windows.Forms.Label, System.Windows.Forms, Version=4.0.0.0, Culture=neutral, PublicKeyToken=b77a5c561934e089</value>
   </data>
   <data name="&gt;&gt;label3.Parent" xml:space="preserve">
     <value>groupBoxImportOptions</value>
@@ -516,6 +561,9 @@
   <data name="&gt;&gt;radioButtonAll.Name" xml:space="preserve">
     <value>radioButtonAll</value>
   </data>
+  <data name="&gt;&gt;radioButtonAll.Type" xml:space="preserve">
+    <value>System.Windows.Forms.RadioButton, System.Windows.Forms, Version=4.0.0.0, Culture=neutral, PublicKeyToken=b77a5c561934e089</value>
+  </data>
   <data name="&gt;&gt;radioButtonAll.Parent" xml:space="preserve">
     <value>flowLayoutPanel1</value>
   </data>
@@ -540,6 +588,9 @@
   <data name="&gt;&gt;radioButtonOne.Name" xml:space="preserve">
     <value>radioButtonOne</value>
   </data>
+  <data name="&gt;&gt;radioButtonOne.Type" xml:space="preserve">
+    <value>System.Windows.Forms.RadioButton, System.Windows.Forms, Version=4.0.0.0, Culture=neutral, PublicKeyToken=b77a5c561934e089</value>
+  </data>
   <data name="&gt;&gt;radioButtonOne.Parent" xml:space="preserve">
     <value>flowLayoutPanel1</value>
   </data>
@@ -557,6 +608,9 @@
   </data>
   <data name="&gt;&gt;flowLayoutPanel1.Name" xml:space="preserve">
     <value>flowLayoutPanel1</value>
+  </data>
+  <data name="&gt;&gt;flowLayoutPanel1.Type" xml:space="preserve">
+    <value>System.Windows.Forms.FlowLayoutPanel, System.Windows.Forms, Version=4.0.0.0, Culture=neutral, PublicKeyToken=b77a5c561934e089</value>
   </data>
   <data name="&gt;&gt;flowLayoutPanel1.Parent" xml:space="preserve">
     <value>groupBoxImportOptions</value>
@@ -581,6 +635,9 @@
   </data>
   <data name="&gt;&gt;label2.Name" xml:space="preserve">
     <value>label2</value>
+  </data>
+  <data name="&gt;&gt;label2.Type" xml:space="preserve">
+    <value>System.Windows.Forms.Label, System.Windows.Forms, Version=4.0.0.0, Culture=neutral, PublicKeyToken=b77a5c561934e089</value>
   </data>
   <data name="&gt;&gt;label2.Parent" xml:space="preserve">
     <value>groupBoxImportOptions</value>
@@ -609,6 +666,9 @@
   <data name="&gt;&gt;radioButtonConfirming.Name" xml:space="preserve">
     <value>radioButtonConfirming</value>
   </data>
+  <data name="&gt;&gt;radioButtonConfirming.Type" xml:space="preserve">
+    <value>System.Windows.Forms.RadioButton, System.Windows.Forms, Version=4.0.0.0, Culture=neutral, PublicKeyToken=b77a5c561934e089</value>
+  </data>
   <data name="&gt;&gt;radioButtonConfirming.Parent" xml:space="preserve">
     <value>flowLayoutPanel2</value>
   </data>
@@ -636,6 +696,9 @@
   <data name="&gt;&gt;radioButtonFragment.Name" xml:space="preserve">
     <value>radioButtonFragment</value>
   </data>
+  <data name="&gt;&gt;radioButtonFragment.Type" xml:space="preserve">
+    <value>System.Windows.Forms.RadioButton, System.Windows.Forms, Version=4.0.0.0, Culture=neutral, PublicKeyToken=b77a5c561934e089</value>
+  </data>
   <data name="&gt;&gt;radioButtonFragment.Parent" xml:space="preserve">
     <value>flowLayoutPanel2</value>
   </data>
@@ -653,6 +716,9 @@
   </data>
   <data name="&gt;&gt;flowLayoutPanel2.Name" xml:space="preserve">
     <value>flowLayoutPanel2</value>
+  </data>
+  <data name="&gt;&gt;flowLayoutPanel2.Type" xml:space="preserve">
+    <value>System.Windows.Forms.FlowLayoutPanel, System.Windows.Forms, Version=4.0.0.0, Culture=neutral, PublicKeyToken=b77a5c561934e089</value>
   </data>
   <data name="&gt;&gt;flowLayoutPanel2.Parent" xml:space="preserve">
     <value>groupBoxImportOptions</value>
@@ -678,6 +744,9 @@
   <data name="&gt;&gt;label1.Name" xml:space="preserve">
     <value>label1</value>
   </data>
+  <data name="&gt;&gt;label1.Type" xml:space="preserve">
+    <value>System.Windows.Forms.Label, System.Windows.Forms, Version=4.0.0.0, Culture=neutral, PublicKeyToken=b77a5c561934e089</value>
+  </data>
   <data name="&gt;&gt;label1.Parent" xml:space="preserve">
     <value>groupBoxImportOptions</value>
   </data>
@@ -698,6 +767,9 @@
   </data>
   <data name="&gt;&gt;groupBoxImportOptions.Name" xml:space="preserve">
     <value>groupBoxImportOptions</value>
+  </data>
+  <data name="&gt;&gt;groupBoxImportOptions.Type" xml:space="preserve">
+    <value>System.Windows.Forms.GroupBox, System.Windows.Forms, Version=4.0.0.0, Culture=neutral, PublicKeyToken=b77a5c561934e089</value>
   </data>
   <data name="&gt;&gt;groupBoxImportOptions.Parent" xml:space="preserve">
     <value>$this</value>
@@ -724,12 +796,18 @@ The options below can be used to quickly populate certain columns.</value>
   <data name="&gt;&gt;labelDescription.Name" xml:space="preserve">
     <value>labelDescription</value>
   </data>
+  <data name="&gt;&gt;labelDescription.Type" xml:space="preserve">
+    <value>System.Windows.Forms.Label, System.Windows.Forms, Version=4.0.0.0, Culture=neutral, PublicKeyToken=b77a5c561934e089</value>
+  </data>
   <data name="&gt;&gt;labelDescription.Parent" xml:space="preserve">
     <value>$this</value>
   </data>
   <data name="&gt;&gt;labelDescription.ZOrder" xml:space="preserve">
     <value>0</value>
   </data>
+  <metadata name="$this.Localizable" type="System.Boolean, mscorlib, Version=4.0.0.0, Culture=neutral, PublicKeyToken=b77a5c561934e089">
+    <value>True</value>
+  </metadata>
   <data name="$this.AutoScaleDimensions" type="System.Drawing.SizeF, System.Drawing">
     <value>6, 13</value>
   </data>
@@ -741,5 +819,8 @@ The options below can be used to quickly populate certain columns.</value>
   </data>
   <data name="&gt;&gt;$this.Name" xml:space="preserve">
     <value>TFExportDlg</value>
+  </data>
+  <data name="&gt;&gt;$this.Type" xml:space="preserve">
+    <value>System.Windows.Forms.Form, System.Windows.Forms, Version=4.0.0.0, Culture=neutral, PublicKeyToken=b77a5c561934e089</value>
   </data>
 </root>

@@ -118,14 +118,10 @@
     <value>System.Resources.ResXResourceWriter, System.Windows.Forms, Version=4.0.0.0, Culture=neutral, PublicKeyToken=b77a5c561934e089</value>
   </resheader>
   <assembly alias="mscorlib" name="mscorlib, Version=4.0.0.0, Culture=neutral, PublicKeyToken=b77a5c561934e089" />
-  <assembly alias="System.Drawing" name="System.Drawing, Version=4.0.0.0, Culture=neutral, PublicKeyToken=b03f5f7f11d50a3a" />
-  <assembly alias="System.Windows.Forms" name="System.Windows.Forms, Version=4.0.0.0, Culture=neutral, PublicKeyToken=b77a5c561934e089" />
-  <metadata name="$this.Localizable" type="System.Boolean, mscorlib, Version=4.0.0.0, Culture=neutral, PublicKeyToken=b77a5c561934e089">
-    <value>True</value>
-  </metadata>
   <data name="radioNoDuplicates.AutoSize" type="System.Boolean, mscorlib">
     <value>True</value>
   </data>
+  <assembly alias="System.Drawing" name="System.Drawing, Version=4.0.0.0, Culture=neutral, PublicKeyToken=b03f5f7f11d50a3a" />
   <data name="radioNoDuplicates.Location" type="System.Drawing.Point, System.Drawing">
     <value>6, 26</value>
   </data>
@@ -140,6 +136,9 @@
   </data>
   <data name="&gt;&gt;radioNoDuplicates.Name" xml:space="preserve">
     <value>radioNoDuplicates</value>
+  </data>
+  <data name="&gt;&gt;radioNoDuplicates.Type" xml:space="preserve">
+    <value>System.Windows.Forms.RadioButton, System.Windows.Forms, Version=4.0.0.0, Culture=neutral, PublicKeyToken=b77a5c561934e089</value>
   </data>
   <data name="&gt;&gt;radioNoDuplicates.Parent" xml:space="preserve">
     <value>panelMultiple</value>
@@ -165,6 +164,9 @@
   <data name="&gt;&gt;radioFirstOccurence.Name" xml:space="preserve">
     <value>radioFirstOccurence</value>
   </data>
+  <data name="&gt;&gt;radioFirstOccurence.Type" xml:space="preserve">
+    <value>System.Windows.Forms.RadioButton, System.Windows.Forms, Version=4.0.0.0, Culture=neutral, PublicKeyToken=b77a5c561934e089</value>
+  </data>
   <data name="&gt;&gt;radioFirstOccurence.Parent" xml:space="preserve">
     <value>panelMultiple</value>
   </data>
@@ -188,6 +190,9 @@
   </data>
   <data name="&gt;&gt;radioAddToAll.Name" xml:space="preserve">
     <value>radioAddToAll</value>
+  </data>
+  <data name="&gt;&gt;radioAddToAll.Type" xml:space="preserve">
+    <value>System.Windows.Forms.RadioButton, System.Windows.Forms, Version=4.0.0.0, Culture=neutral, PublicKeyToken=b77a5c561934e089</value>
   </data>
   <data name="&gt;&gt;radioAddToAll.Parent" xml:space="preserve">
     <value>panelMultiple</value>
@@ -213,6 +218,9 @@
   <data name="&gt;&gt;radioFilterUnmatched.Name" xml:space="preserve">
     <value>radioFilterUnmatched</value>
   </data>
+  <data name="&gt;&gt;radioFilterUnmatched.Type" xml:space="preserve">
+    <value>System.Windows.Forms.RadioButton, System.Windows.Forms, Version=4.0.0.0, Culture=neutral, PublicKeyToken=b77a5c561934e089</value>
+  </data>
   <data name="&gt;&gt;radioFilterUnmatched.Parent" xml:space="preserve">
     <value>panelUnmatched</value>
   </data>
@@ -237,12 +245,16 @@
   <data name="&gt;&gt;radioAddUnmatched.Name" xml:space="preserve">
     <value>radioAddUnmatched</value>
   </data>
+  <data name="&gt;&gt;radioAddUnmatched.Type" xml:space="preserve">
+    <value>System.Windows.Forms.RadioButton, System.Windows.Forms, Version=4.0.0.0, Culture=neutral, PublicKeyToken=b77a5c561934e089</value>
+  </data>
   <data name="&gt;&gt;radioAddUnmatched.Parent" xml:space="preserve">
     <value>panelUnmatched</value>
   </data>
   <data name="&gt;&gt;radioAddUnmatched.ZOrder" xml:space="preserve">
     <value>0</value>
   </data>
+  <assembly alias="System.Windows.Forms" name="System.Windows.Forms, Version=4.0.0.0, Culture=neutral, PublicKeyToken=b77a5c561934e089" />
   <data name="msgUnmatchedPeptides.Anchor" type="System.Windows.Forms.AnchorStyles, System.Windows.Forms">
     <value>Top, Left, Right</value>
   </data>
@@ -260,6 +272,9 @@
   </data>
   <data name="&gt;&gt;msgUnmatchedPeptides.Name" xml:space="preserve">
     <value>msgUnmatchedPeptides</value>
+  </data>
+  <data name="&gt;&gt;msgUnmatchedPeptides.Type" xml:space="preserve">
+    <value>System.Windows.Forms.Label, System.Windows.Forms, Version=4.0.0.0, Culture=neutral, PublicKeyToken=b77a5c561934e089</value>
   </data>
   <data name="&gt;&gt;msgUnmatchedPeptides.Parent" xml:space="preserve">
     <value>panelUnmatched</value>
@@ -285,6 +300,9 @@
   <data name="&gt;&gt;msgDuplicatePeptides.Name" xml:space="preserve">
     <value>msgDuplicatePeptides</value>
   </data>
+  <data name="&gt;&gt;msgDuplicatePeptides.Type" xml:space="preserve">
+    <value>System.Windows.Forms.Label, System.Windows.Forms, Version=4.0.0.0, Culture=neutral, PublicKeyToken=b77a5c561934e089</value>
+  </data>
   <data name="&gt;&gt;msgDuplicatePeptides.Parent" xml:space="preserve">
     <value>panelMultiple</value>
   </data>
@@ -308,6 +326,9 @@
   </data>
   <data name="&gt;&gt;msgFilteredPeptides.Name" xml:space="preserve">
     <value>msgFilteredPeptides</value>
+  </data>
+  <data name="&gt;&gt;msgFilteredPeptides.Type" xml:space="preserve">
+    <value>System.Windows.Forms.Label, System.Windows.Forms, Version=4.0.0.0, Culture=neutral, PublicKeyToken=b77a5c561934e089</value>
   </data>
   <data name="&gt;&gt;msgFilteredPeptides.Parent" xml:space="preserve">
     <value>panelFiltered</value>
@@ -333,6 +354,9 @@
   <data name="&gt;&gt;radioKeepFiltered.Name" xml:space="preserve">
     <value>radioKeepFiltered</value>
   </data>
+  <data name="&gt;&gt;radioKeepFiltered.Type" xml:space="preserve">
+    <value>System.Windows.Forms.RadioButton, System.Windows.Forms, Version=4.0.0.0, Culture=neutral, PublicKeyToken=b77a5c561934e089</value>
+  </data>
   <data name="&gt;&gt;radioKeepFiltered.Parent" xml:space="preserve">
     <value>panelFiltered</value>
   </data>
@@ -356,6 +380,9 @@
   </data>
   <data name="&gt;&gt;radioDoNotAddFiltered.Name" xml:space="preserve">
     <value>radioDoNotAddFiltered</value>
+  </data>
+  <data name="&gt;&gt;radioDoNotAddFiltered.Type" xml:space="preserve">
+    <value>System.Windows.Forms.RadioButton, System.Windows.Forms, Version=4.0.0.0, Culture=neutral, PublicKeyToken=b77a5c561934e089</value>
   </data>
   <data name="&gt;&gt;radioDoNotAddFiltered.Parent" xml:space="preserve">
     <value>panelFiltered</value>
@@ -381,6 +408,9 @@
   <data name="&gt;&gt;btnCancel.Name" xml:space="preserve">
     <value>btnCancel</value>
   </data>
+  <data name="&gt;&gt;btnCancel.Type" xml:space="preserve">
+    <value>System.Windows.Forms.Button, System.Windows.Forms, Version=4.0.0.0, Culture=neutral, PublicKeyToken=b77a5c561934e089</value>
+  </data>
   <data name="&gt;&gt;btnCancel.Parent" xml:space="preserve">
     <value>$this</value>
   </data>
@@ -405,6 +435,9 @@
   <data name="&gt;&gt;btnOK.Name" xml:space="preserve">
     <value>btnOK</value>
   </data>
+  <data name="&gt;&gt;btnOK.Type" xml:space="preserve">
+    <value>System.Windows.Forms.Button, System.Windows.Forms, Version=4.0.0.0, Culture=neutral, PublicKeyToken=b77a5c561934e089</value>
+  </data>
   <data name="&gt;&gt;btnOK.Parent" xml:space="preserve">
     <value>$this</value>
   </data>
@@ -422,6 +455,9 @@
   </data>
   <data name="&gt;&gt;panelMultiple.Name" xml:space="preserve">
     <value>panelMultiple</value>
+  </data>
+  <data name="&gt;&gt;panelMultiple.Type" xml:space="preserve">
+    <value>System.Windows.Forms.Panel, System.Windows.Forms, Version=4.0.0.0, Culture=neutral, PublicKeyToken=b77a5c561934e089</value>
   </data>
   <data name="&gt;&gt;panelMultiple.Parent" xml:space="preserve">
     <value>$this</value>
@@ -441,6 +477,9 @@
   <data name="&gt;&gt;panelUnmatched.Name" xml:space="preserve">
     <value>panelUnmatched</value>
   </data>
+  <data name="&gt;&gt;panelUnmatched.Type" xml:space="preserve">
+    <value>System.Windows.Forms.Panel, System.Windows.Forms, Version=4.0.0.0, Culture=neutral, PublicKeyToken=b77a5c561934e089</value>
+  </data>
   <data name="&gt;&gt;panelUnmatched.Parent" xml:space="preserve">
     <value>$this</value>
   </data>
@@ -458,6 +497,9 @@
   </data>
   <data name="&gt;&gt;panelFiltered.Name" xml:space="preserve">
     <value>panelFiltered</value>
+  </data>
+  <data name="&gt;&gt;panelFiltered.Type" xml:space="preserve">
+    <value>System.Windows.Forms.Panel, System.Windows.Forms, Version=4.0.0.0, Culture=neutral, PublicKeyToken=b77a5c561934e089</value>
   </data>
   <data name="&gt;&gt;panelFiltered.Parent" xml:space="preserve">
     <value>$this</value>
@@ -483,12 +525,18 @@
   <data name="&gt;&gt;label1.Name" xml:space="preserve">
     <value>label1</value>
   </data>
+  <data name="&gt;&gt;label1.Type" xml:space="preserve">
+    <value>System.Windows.Forms.Label, System.Windows.Forms, Version=4.0.0.0, Culture=neutral, PublicKeyToken=b77a5c561934e089</value>
+  </data>
   <data name="&gt;&gt;label1.Parent" xml:space="preserve">
     <value>$this</value>
   </data>
   <data name="&gt;&gt;label1.ZOrder" xml:space="preserve">
     <value>0</value>
   </data>
+  <metadata name="$this.Localizable" type="System.Boolean, mscorlib, Version=4.0.0.0, Culture=neutral, PublicKeyToken=b77a5c561934e089">
+    <value>True</value>
+  </metadata>
   <data name="$this.AutoScaleDimensions" type="System.Drawing.SizeF, System.Drawing">
     <value>6, 13</value>
   </data>
@@ -503,5 +551,8 @@
   </data>
   <data name="&gt;&gt;$this.Name" xml:space="preserve">
     <value>FilterMatchedPeptidesDlg</value>
+  </data>
+  <data name="&gt;&gt;$this.Type" xml:space="preserve">
+    <value>pwiz.Skyline.Util.FormEx, Skyline, Version=1.0.0.0, Culture=neutral, PublicKeyToken=null</value>
   </data>
 </root>

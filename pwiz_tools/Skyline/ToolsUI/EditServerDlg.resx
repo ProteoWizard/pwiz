@@ -118,20 +118,17 @@
     <value>System.Resources.ResXResourceWriter, System.Windows.Forms, Version=4.0.0.0, Culture=neutral, PublicKeyToken=b77a5c561934e089</value>
   </resheader>
   <assembly alias="System.Windows.Forms" name="System.Windows.Forms, Version=4.0.0.0, Culture=neutral, PublicKeyToken=b77a5c561934e089" />
-  <assembly alias="System.Drawing" name="System.Drawing, Version=4.0.0.0, Culture=neutral, PublicKeyToken=b03f5f7f11d50a3a" />
-  <assembly alias="mscorlib" name="mscorlib, Version=4.0.0.0, Culture=neutral, PublicKeyToken=b77a5c561934e089" />
-  <metadata name="$this.Localizable" type="System.Boolean, mscorlib, Version=4.0.0.0, Culture=neutral, PublicKeyToken=b77a5c561934e089">
-    <value>True</value>
-  </metadata>
   <data name="btnOK.Anchor" type="System.Windows.Forms.AnchorStyles, System.Windows.Forms">
     <value>Bottom, Right</value>
   </data>
+  <assembly alias="System.Drawing" name="System.Drawing, Version=4.0.0.0, Culture=neutral, PublicKeyToken=b03f5f7f11d50a3a" />
   <data name="btnOK.Location" type="System.Drawing.Point, System.Drawing">
     <value>178, 194</value>
   </data>
   <data name="btnOK.Size" type="System.Drawing.Size, System.Drawing">
     <value>75, 23</value>
   </data>
+  <assembly alias="mscorlib" name="mscorlib, Version=4.0.0.0, Culture=neutral, PublicKeyToken=b77a5c561934e089" />
   <data name="btnOK.TabIndex" type="System.Int32, mscorlib">
     <value>8</value>
   </data>
@@ -140,6 +137,9 @@
   </data>
   <data name="&gt;&gt;btnOK.Name" xml:space="preserve">
     <value>btnOK</value>
+  </data>
+  <data name="&gt;&gt;btnOK.Type" xml:space="preserve">
+    <value>System.Windows.Forms.Button, System.Windows.Forms, Version=4.0.0.0, Culture=neutral, PublicKeyToken=b77a5c561934e089</value>
   </data>
   <data name="&gt;&gt;btnOK.Parent" xml:space="preserve">
     <value>InputPanel</value>
@@ -164,6 +164,9 @@
   </data>
   <data name="&gt;&gt;btnCancel.Name" xml:space="preserve">
     <value>btnCancel</value>
+  </data>
+  <data name="&gt;&gt;btnCancel.Type" xml:space="preserve">
+    <value>System.Windows.Forms.Button, System.Windows.Forms, Version=4.0.0.0, Culture=neutral, PublicKeyToken=b77a5c561934e089</value>
   </data>
   <data name="&gt;&gt;btnCancel.Parent" xml:space="preserve">
     <value>InputPanel</value>
@@ -190,6 +193,9 @@ user account below.</value>
   </data>
   <data name="&gt;&gt;instructionLabel.Name" xml:space="preserve">
     <value>instructionLabel</value>
+  </data>
+  <data name="&gt;&gt;instructionLabel.Type" xml:space="preserve">
+    <value>System.Windows.Forms.Label, System.Windows.Forms, Version=4.0.0.0, Culture=neutral, PublicKeyToken=b77a5c561934e089</value>
   </data>
   <data name="&gt;&gt;instructionLabel.Parent" xml:space="preserve">
     <value>InstructionPanel</value>
@@ -218,6 +224,9 @@ user account below.</value>
   <data name="&gt;&gt;lblProjectInfo.Name" xml:space="preserve">
     <value>lblProjectInfo</value>
   </data>
+  <data name="&gt;&gt;lblProjectInfo.Type" xml:space="preserve">
+    <value>System.Windows.Forms.Label, System.Windows.Forms, Version=4.0.0.0, Culture=neutral, PublicKeyToken=b77a5c561934e089</value>
+  </data>
   <data name="&gt;&gt;lblProjectInfo.Parent" xml:space="preserve">
     <value>InputPanel</value>
   </data>
@@ -239,6 +248,9 @@ user account below.</value>
   <data name="&gt;&gt;textServerURL.Name" xml:space="preserve">
     <value>textServerURL</value>
   </data>
+  <data name="&gt;&gt;textServerURL.Type" xml:space="preserve">
+    <value>System.Windows.Forms.TextBox, System.Windows.Forms, Version=4.0.0.0, Culture=neutral, PublicKeyToken=b77a5c561934e089</value>
+  </data>
   <data name="&gt;&gt;textServerURL.Parent" xml:space="preserve">
     <value>InputPanel</value>
   </data>
@@ -259,6 +271,9 @@ user account below.</value>
   </data>
   <data name="&gt;&gt;textPassword.Name" xml:space="preserve">
     <value>textPassword</value>
+  </data>
+  <data name="&gt;&gt;textPassword.Type" xml:space="preserve">
+    <value>System.Windows.Forms.TextBox, System.Windows.Forms, Version=4.0.0.0, Culture=neutral, PublicKeyToken=b77a5c561934e089</value>
   </data>
   <data name="&gt;&gt;textPassword.Parent" xml:space="preserve">
     <value>InputPanel</value>
@@ -284,6 +299,9 @@ user account below.</value>
   <data name="&gt;&gt;lblPassword.Name" xml:space="preserve">
     <value>lblPassword</value>
   </data>
+  <data name="&gt;&gt;lblPassword.Type" xml:space="preserve">
+    <value>System.Windows.Forms.Label, System.Windows.Forms, Version=4.0.0.0, Culture=neutral, PublicKeyToken=b77a5c561934e089</value>
+  </data>
   <data name="&gt;&gt;lblPassword.Parent" xml:space="preserve">
     <value>InputPanel</value>
   </data>
@@ -308,6 +326,9 @@ user account below.</value>
   <data name="&gt;&gt;lblUsername.Name" xml:space="preserve">
     <value>lblUsername</value>
   </data>
+  <data name="&gt;&gt;lblUsername.Type" xml:space="preserve">
+    <value>System.Windows.Forms.Label, System.Windows.Forms, Version=4.0.0.0, Culture=neutral, PublicKeyToken=b77a5c561934e089</value>
+  </data>
   <data name="&gt;&gt;lblUsername.Parent" xml:space="preserve">
     <value>InputPanel</value>
   </data>
@@ -326,6 +347,9 @@ user account below.</value>
   <data name="&gt;&gt;textUsername.Name" xml:space="preserve">
     <value>textUsername</value>
   </data>
+  <data name="&gt;&gt;textUsername.Type" xml:space="preserve">
+    <value>System.Windows.Forms.TextBox, System.Windows.Forms, Version=4.0.0.0, Culture=neutral, PublicKeyToken=b77a5c561934e089</value>
+  </data>
   <data name="&gt;&gt;textUsername.Parent" xml:space="preserve">
     <value>InputPanel</value>
   </data>
@@ -343,6 +367,9 @@ user account below.</value>
   </data>
   <data name="&gt;&gt;InputPanel.Name" xml:space="preserve">
     <value>InputPanel</value>
+  </data>
+  <data name="&gt;&gt;InputPanel.Type" xml:space="preserve">
+    <value>System.Windows.Forms.Panel, System.Windows.Forms, Version=4.0.0.0, Culture=neutral, PublicKeyToken=b77a5c561934e089</value>
   </data>
   <data name="&gt;&gt;InputPanel.Parent" xml:space="preserve">
     <value>ComponentOrganizer</value>
@@ -370,6 +397,9 @@ user account below.</value>
   </data>
   <data name="&gt;&gt;InstructionPanel.Name" xml:space="preserve">
     <value>InstructionPanel</value>
+  </data>
+  <data name="&gt;&gt;InstructionPanel.Type" xml:space="preserve">
+    <value>System.Windows.Forms.Panel, System.Windows.Forms, Version=4.0.0.0, Culture=neutral, PublicKeyToken=b77a5c561934e089</value>
   </data>
   <data name="&gt;&gt;InstructionPanel.Parent" xml:space="preserve">
     <value>ComponentOrganizer</value>
@@ -404,6 +434,9 @@ user account below.</value>
   <data name="&gt;&gt;ComponentOrganizer.Name" xml:space="preserve">
     <value>ComponentOrganizer</value>
   </data>
+  <data name="&gt;&gt;ComponentOrganizer.Type" xml:space="preserve">
+    <value>System.Windows.Forms.TableLayoutPanel, System.Windows.Forms, Version=4.0.0.0, Culture=neutral, PublicKeyToken=b77a5c561934e089</value>
+  </data>
   <data name="&gt;&gt;ComponentOrganizer.Parent" xml:space="preserve">
     <value>$this</value>
   </data>
@@ -413,6 +446,9 @@ user account below.</value>
   <data name="ComponentOrganizer.LayoutSettings" type="System.Windows.Forms.TableLayoutSettings, System.Windows.Forms">
     <value>&lt;?xml version="1.0" encoding="utf-16"?&gt;&lt;TableLayoutSettings&gt;&lt;Controls&gt;&lt;Control Name="InstructionPanel" Row="0" RowSpan="1" Column="0" ColumnSpan="1" /&gt;&lt;Control Name="InputPanel" Row="1" RowSpan="1" Column="0" ColumnSpan="1" /&gt;&lt;/Controls&gt;&lt;Columns Styles="Percent,50" /&gt;&lt;Rows Styles="Percent,50,Absolute,226" /&gt;&lt;/TableLayoutSettings&gt;</value>
   </data>
+  <metadata name="$this.Localizable" type="System.Boolean, mscorlib, Version=4.0.0.0, Culture=neutral, PublicKeyToken=b77a5c561934e089">
+    <value>True</value>
+  </metadata>
   <data name="$this.AutoScaleDimensions" type="System.Drawing.SizeF, System.Drawing">
     <value>6, 13</value>
   </data>
@@ -433,5 +469,8 @@ user account below.</value>
   </data>
   <data name="&gt;&gt;$this.Name" xml:space="preserve">
     <value>EditServerDlg</value>
+  </data>
+  <data name="&gt;&gt;$this.Type" xml:space="preserve">
+    <value>pwiz.Skyline.Util.FormEx, Skyline, Version=1.0.0.0, Culture=neutral, PublicKeyToken=null</value>
   </data>
 </root>

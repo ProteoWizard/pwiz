@@ -118,20 +118,17 @@
     <value>System.Resources.ResXResourceWriter, System.Windows.Forms, Version=4.0.0.0, Culture=neutral, PublicKeyToken=b77a5c561934e089</value>
   </resheader>
   <assembly alias="System.Windows.Forms" name="System.Windows.Forms, Version=4.0.0.0, Culture=neutral, PublicKeyToken=b77a5c561934e089" />
-  <assembly alias="System.Drawing" name="System.Drawing, Version=4.0.0.0, Culture=neutral, PublicKeyToken=b03f5f7f11d50a3a" />
-  <assembly alias="mscorlib" name="mscorlib, Version=4.0.0.0, Culture=neutral, PublicKeyToken=b77a5c561934e089" />
-  <metadata name="$this.Localizable" type="System.Boolean, mscorlib, Version=4.0.0.0, Culture=neutral, PublicKeyToken=b77a5c561934e089">
-    <value>True</value>
-  </metadata>
   <data name="btnCancel.Anchor" type="System.Windows.Forms.AnchorStyles, System.Windows.Forms">
     <value>Bottom, Right</value>
   </data>
+  <assembly alias="System.Drawing" name="System.Drawing, Version=4.0.0.0, Culture=neutral, PublicKeyToken=b03f5f7f11d50a3a" />
   <data name="btnCancel.Location" type="System.Drawing.Point, System.Drawing">
     <value>597, 344</value>
   </data>
   <data name="btnCancel.Size" type="System.Drawing.Size, System.Drawing">
     <value>75, 23</value>
   </data>
+  <assembly alias="mscorlib" name="mscorlib, Version=4.0.0.0, Culture=neutral, PublicKeyToken=b77a5c561934e089" />
   <data name="btnCancel.TabIndex" type="System.Int32, mscorlib">
     <value>1</value>
   </data>
@@ -140,6 +137,9 @@
   </data>
   <data name="&gt;&gt;btnCancel.Name" xml:space="preserve">
     <value>btnCancel</value>
+  </data>
+  <data name="&gt;&gt;btnCancel.Type" xml:space="preserve">
+    <value>System.Windows.Forms.Button, System.Windows.Forms, Version=4.0.0.0, Culture=neutral, PublicKeyToken=b77a5c561934e089</value>
   </data>
   <data name="&gt;&gt;btnCancel.Parent" xml:space="preserve">
     <value>$this</value>
@@ -165,6 +165,9 @@
   <data name="&gt;&gt;btnOK.Name" xml:space="preserve">
     <value>btnOK</value>
   </data>
+  <data name="&gt;&gt;btnOK.Type" xml:space="preserve">
+    <value>System.Windows.Forms.Button, System.Windows.Forms, Version=4.0.0.0, Culture=neutral, PublicKeyToken=b77a5c561934e089</value>
+  </data>
   <data name="&gt;&gt;btnOK.Parent" xml:space="preserve">
     <value>$this</value>
   </data>
@@ -188,6 +191,9 @@
   </data>
   <data name="&gt;&gt;btnPopulate.Name" xml:space="preserve">
     <value>btnPopulate</value>
+  </data>
+  <data name="&gt;&gt;btnPopulate.Type" xml:space="preserve">
+    <value>System.Windows.Forms.Button, System.Windows.Forms, Version=4.0.0.0, Culture=neutral, PublicKeyToken=b77a5c561934e089</value>
   </data>
   <data name="&gt;&gt;btnPopulate.Parent" xml:space="preserve">
     <value>$this</value>
@@ -213,6 +219,9 @@
   <data name="&gt;&gt;btnFASTA.Name" xml:space="preserve">
     <value>btnFASTA</value>
   </data>
+  <data name="&gt;&gt;btnFASTA.Type" xml:space="preserve">
+    <value>System.Windows.Forms.Button, System.Windows.Forms, Version=4.0.0.0, Culture=neutral, PublicKeyToken=b77a5c561934e089</value>
+  </data>
   <data name="&gt;&gt;btnFASTA.Parent" xml:space="preserve">
     <value>$this</value>
   </data>
@@ -228,6 +237,9 @@
   <data name="newNameDataGridViewTextBoxColumn.HeaderText" xml:space="preserve">
     <value>新名称</value>
   </data>
+  <metadata name="renameProteinsWindowBindingSource.TrayLocation" type="System.Drawing.Point, System.Drawing, Version=4.0.0.0, Culture=neutral, PublicKeyToken=b03f5f7f11d50a3a">
+    <value>17, 17</value>
+  </metadata>
   <data name="dataGridViewRename.Location" type="System.Drawing.Point, System.Drawing">
     <value>13, 12</value>
   </data>
@@ -239,6 +251,9 @@
   </data>
   <data name="&gt;&gt;dataGridViewRename.Name" xml:space="preserve">
     <value>dataGridViewRename</value>
+  </data>
+  <data name="&gt;&gt;dataGridViewRename.Type" xml:space="preserve">
+    <value>pwiz.Skyline.Controls.DataGridViewEx, Skyline, Version=1.0.0.0, Culture=neutral, PublicKeyToken=null</value>
   </data>
   <data name="&gt;&gt;dataGridViewRename.Parent" xml:space="preserve">
     <value>$this</value>
@@ -263,6 +278,9 @@
   </data>
   <data name="&gt;&gt;btnAccession.Name" xml:space="preserve">
     <value>btnAccession</value>
+  </data>
+  <data name="&gt;&gt;btnAccession.Type" xml:space="preserve">
+    <value>System.Windows.Forms.Button, System.Windows.Forms, Version=4.0.0.0, Culture=neutral, PublicKeyToken=b77a5c561934e089</value>
   </data>
   <data name="&gt;&gt;btnAccession.Parent" xml:space="preserve">
     <value>$this</value>
@@ -291,6 +309,9 @@
   <data name="&gt;&gt;btnGene.Name" xml:space="preserve">
     <value>btnGene</value>
   </data>
+  <data name="&gt;&gt;btnGene.Type" xml:space="preserve">
+    <value>System.Windows.Forms.Button, System.Windows.Forms, Version=4.0.0.0, Culture=neutral, PublicKeyToken=b77a5c561934e089</value>
+  </data>
   <data name="&gt;&gt;btnGene.Parent" xml:space="preserve">
     <value>$this</value>
   </data>
@@ -318,12 +339,18 @@
   <data name="&gt;&gt;btnPreferredName.Name" xml:space="preserve">
     <value>btnPreferredName</value>
   </data>
+  <data name="&gt;&gt;btnPreferredName.Type" xml:space="preserve">
+    <value>System.Windows.Forms.Button, System.Windows.Forms, Version=4.0.0.0, Culture=neutral, PublicKeyToken=b77a5c561934e089</value>
+  </data>
   <data name="&gt;&gt;btnPreferredName.Parent" xml:space="preserve">
     <value>$this</value>
   </data>
   <data name="&gt;&gt;btnPreferredName.ZOrder" xml:space="preserve">
     <value>0</value>
   </data>
+  <metadata name="$this.Localizable" type="System.Boolean, mscorlib, Version=4.0.0.0, Culture=neutral, PublicKeyToken=b77a5c561934e089">
+    <value>True</value>
+  </metadata>
   <data name="$this.AutoScaleDimensions" type="System.Drawing.SizeF, System.Drawing">
     <value>6, 13</value>
   </data>
@@ -339,13 +366,25 @@
   <data name="&gt;&gt;currentNameDataGridViewTextBoxColumn.Name" xml:space="preserve">
     <value>currentNameDataGridViewTextBoxColumn</value>
   </data>
+  <data name="&gt;&gt;currentNameDataGridViewTextBoxColumn.Type" xml:space="preserve">
+    <value>System.Windows.Forms.DataGridViewTextBoxColumn, System.Windows.Forms, Version=4.0.0.0, Culture=neutral, PublicKeyToken=b77a5c561934e089</value>
+  </data>
   <data name="&gt;&gt;newNameDataGridViewTextBoxColumn.Name" xml:space="preserve">
     <value>newNameDataGridViewTextBoxColumn</value>
+  </data>
+  <data name="&gt;&gt;newNameDataGridViewTextBoxColumn.Type" xml:space="preserve">
+    <value>System.Windows.Forms.DataGridViewTextBoxColumn, System.Windows.Forms, Version=4.0.0.0, Culture=neutral, PublicKeyToken=b77a5c561934e089</value>
   </data>
   <data name="&gt;&gt;renameProteinsWindowBindingSource.Name" xml:space="preserve">
     <value>renameProteinsWindowBindingSource</value>
   </data>
+  <data name="&gt;&gt;renameProteinsWindowBindingSource.Type" xml:space="preserve">
+    <value>System.Windows.Forms.BindingSource, System.Windows.Forms, Version=4.0.0.0, Culture=neutral, PublicKeyToken=b77a5c561934e089</value>
+  </data>
   <data name="&gt;&gt;$this.Name" xml:space="preserve">
     <value>RenameProteinsDlg</value>
+  </data>
+  <data name="&gt;&gt;$this.Type" xml:space="preserve">
+    <value>pwiz.Skyline.Util.FormEx, Skyline, Version=1.0.0.0, Culture=neutral, PublicKeyToken=null</value>
   </data>
 </root>

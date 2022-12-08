@@ -118,20 +118,17 @@
     <value>System.Resources.ResXResourceWriter, System.Windows.Forms, Version=4.0.0.0, Culture=neutral, PublicKeyToken=b77a5c561934e089</value>
   </resheader>
   <assembly alias="System.Windows.Forms" name="System.Windows.Forms, Version=4.0.0.0, Culture=neutral, PublicKeyToken=b77a5c561934e089" />
-  <assembly alias="System.Drawing" name="System.Drawing, Version=4.0.0.0, Culture=neutral, PublicKeyToken=b03f5f7f11d50a3a" />
-  <assembly alias="mscorlib" name="mscorlib, Version=4.0.0.0, Culture=neutral, PublicKeyToken=b77a5c561934e089" />
-  <metadata name="$this.Localizable" type="System.Boolean, mscorlib, Version=4.0.0.0, Culture=neutral, PublicKeyToken=b77a5c561934e089">
-    <value>True</value>
-  </metadata>
   <data name="btnLater.Anchor" type="System.Windows.Forms.AnchorStyles, System.Windows.Forms">
     <value>Bottom, Right</value>
   </data>
+  <assembly alias="System.Drawing" name="System.Drawing, Version=4.0.0.0, Culture=neutral, PublicKeyToken=b03f5f7f11d50a3a" />
   <data name="btnLater.Location" type="System.Drawing.Point, System.Drawing">
     <value>217, 193</value>
   </data>
   <data name="btnLater.Size" type="System.Drawing.Size, System.Drawing">
     <value>101, 23</value>
   </data>
+  <assembly alias="mscorlib" name="mscorlib, Version=4.0.0.0, Culture=neutral, PublicKeyToken=b77a5c561934e089" />
   <data name="btnLater.TabIndex" type="System.Int32, mscorlib">
     <value>1</value>
   </data>
@@ -140,6 +137,9 @@
   </data>
   <data name="&gt;&gt;btnLater.Name" xml:space="preserve">
     <value>btnLater</value>
+  </data>
+  <data name="&gt;&gt;btnLater.Type" xml:space="preserve">
+    <value>System.Windows.Forms.Button, System.Windows.Forms, Version=4.0.0.0, Culture=neutral, PublicKeyToken=b77a5c561934e089</value>
   </data>
   <data name="&gt;&gt;btnLater.Parent" xml:space="preserve">
     <value>$this</value>
@@ -171,6 +171,9 @@
   <data name="&gt;&gt;linkReleaseNotes.Name" xml:space="preserve">
     <value>linkReleaseNotes</value>
   </data>
+  <data name="&gt;&gt;linkReleaseNotes.Type" xml:space="preserve">
+    <value>System.Windows.Forms.LinkLabel, System.Windows.Forms, Version=4.0.0.0, Culture=neutral, PublicKeyToken=b77a5c561934e089</value>
+  </data>
   <data name="&gt;&gt;linkReleaseNotes.Parent" xml:space="preserve">
     <value>panel1</value>
   </data>
@@ -198,6 +201,9 @@
   <data name="&gt;&gt;labelDetailAutomatic.Name" xml:space="preserve">
     <value>labelDetailAutomatic</value>
   </data>
+  <data name="&gt;&gt;labelDetailAutomatic.Type" xml:space="preserve">
+    <value>System.Windows.Forms.Label, System.Windows.Forms, Version=4.0.0.0, Culture=neutral, PublicKeyToken=b77a5c561934e089</value>
+  </data>
   <data name="&gt;&gt;labelDetailAutomatic.Parent" xml:space="preserve">
     <value>panel1</value>
   </data>
@@ -222,6 +228,9 @@
   <data name="&gt;&gt;labelDirections.Name" xml:space="preserve">
     <value>labelDirections</value>
   </data>
+  <data name="&gt;&gt;labelDirections.Type" xml:space="preserve">
+    <value>System.Windows.Forms.Label, System.Windows.Forms, Version=4.0.0.0, Culture=neutral, PublicKeyToken=b77a5c561934e089</value>
+  </data>
   <data name="&gt;&gt;labelDirections.Parent" xml:space="preserve">
     <value>panel1</value>
   </data>
@@ -245,6 +254,9 @@
   </data>
   <data name="&gt;&gt;labelDetail.Name" xml:space="preserve">
     <value>labelDetail</value>
+  </data>
+  <data name="&gt;&gt;labelDetail.Type" xml:space="preserve">
+    <value>System.Windows.Forms.Label, System.Windows.Forms, Version=4.0.0.0, Culture=neutral, PublicKeyToken=b77a5c561934e089</value>
   </data>
   <data name="&gt;&gt;labelDetail.Parent" xml:space="preserve">
     <value>panel1</value>
@@ -273,6 +285,9 @@
   <data name="&gt;&gt;labelRelease.Name" xml:space="preserve">
     <value>labelRelease</value>
   </data>
+  <data name="&gt;&gt;labelRelease.Type" xml:space="preserve">
+    <value>System.Windows.Forms.Label, System.Windows.Forms, Version=4.0.0.0, Culture=neutral, PublicKeyToken=b77a5c561934e089</value>
+  </data>
   <data name="&gt;&gt;labelRelease.Parent" xml:space="preserve">
     <value>panel1</value>
   </data>
@@ -294,6 +309,9 @@
   <data name="&gt;&gt;pictureSkyline.Name" xml:space="preserve">
     <value>pictureSkyline</value>
   </data>
+  <data name="&gt;&gt;pictureSkyline.Type" xml:space="preserve">
+    <value>System.Windows.Forms.PictureBox, System.Windows.Forms, Version=4.0.0.0, Culture=neutral, PublicKeyToken=b77a5c561934e089</value>
+  </data>
   <data name="&gt;&gt;pictureSkyline.Parent" xml:space="preserve">
     <value>panel1</value>
   </data>
@@ -311,6 +329,9 @@
   </data>
   <data name="&gt;&gt;panel1.Name" xml:space="preserve">
     <value>panel1</value>
+  </data>
+  <data name="&gt;&gt;panel1.Type" xml:space="preserve">
+    <value>System.Windows.Forms.Panel, System.Windows.Forms, Version=4.0.0.0, Culture=neutral, PublicKeyToken=b77a5c561934e089</value>
   </data>
   <data name="&gt;&gt;panel1.Parent" xml:space="preserve">
     <value>$this</value>
@@ -336,6 +357,9 @@
   <data name="&gt;&gt;btnInstall.Name" xml:space="preserve">
     <value>btnInstall</value>
   </data>
+  <data name="&gt;&gt;btnInstall.Type" xml:space="preserve">
+    <value>System.Windows.Forms.Button, System.Windows.Forms, Version=4.0.0.0, Culture=neutral, PublicKeyToken=b77a5c561934e089</value>
+  </data>
   <data name="&gt;&gt;btnInstall.Parent" xml:space="preserve">
     <value>$this</value>
   </data>
@@ -360,12 +384,18 @@
   <data name="&gt;&gt;cbAtStartup.Name" xml:space="preserve">
     <value>cbAtStartup</value>
   </data>
+  <data name="&gt;&gt;cbAtStartup.Type" xml:space="preserve">
+    <value>System.Windows.Forms.CheckBox, System.Windows.Forms, Version=4.0.0.0, Culture=neutral, PublicKeyToken=b77a5c561934e089</value>
+  </data>
   <data name="&gt;&gt;cbAtStartup.Parent" xml:space="preserve">
     <value>$this</value>
   </data>
   <data name="&gt;&gt;cbAtStartup.ZOrder" xml:space="preserve">
     <value>0</value>
   </data>
+  <metadata name="$this.Localizable" type="System.Boolean, mscorlib, Version=4.0.0.0, Culture=neutral, PublicKeyToken=b77a5c561934e089">
+    <value>True</value>
+  </metadata>
   <data name="$this.AutoScaleDimensions" type="System.Drawing.SizeF, System.Drawing">
     <value>6, 13</value>
   </data>
@@ -383,5 +413,8 @@
   </data>
   <data name="&gt;&gt;$this.Name" xml:space="preserve">
     <value>UpgradeDlg</value>
+  </data>
+  <data name="&gt;&gt;$this.Type" xml:space="preserve">
+    <value>pwiz.Skyline.Util.FormEx, Skyline, Version=1.0.0.0, Culture=neutral, PublicKeyToken=null</value>
   </data>
 </root>

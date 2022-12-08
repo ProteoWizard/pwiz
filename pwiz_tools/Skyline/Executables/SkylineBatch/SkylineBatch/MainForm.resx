@@ -117,15 +117,14 @@
   <resheader name="writer">
     <value>System.Resources.ResXResourceWriter, System.Windows.Forms, Version=4.0.0.0, Culture=neutral, PublicKeyToken=b77a5c561934e089</value>
   </resheader>
-  <assembly alias="System.Windows.Forms" name="System.Windows.Forms, Version=4.0.0.0, Culture=neutral, PublicKeyToken=b77a5c561934e089" />
-  <assembly alias="System.Drawing" name="System.Drawing, Version=4.0.0.0, Culture=neutral, PublicKeyToken=b03f5f7f11d50a3a" />
-  <assembly alias="mscorlib" name="mscorlib, Version=4.0.0.0, Culture=neutral, PublicKeyToken=b77a5c561934e089" />
-  <metadata name="$this.Localizable" type="System.Boolean, mscorlib, Version=4.0.0.0, Culture=neutral, PublicKeyToken=b77a5c561934e089">
-    <value>True</value>
+  <metadata name="toolTip_MainForm.TrayLocation" type="System.Drawing.Point, System.Drawing, Version=4.0.0.0, Culture=neutral, PublicKeyToken=b03f5f7f11d50a3a">
+    <value>17, 17</value>
   </metadata>
+  <assembly alias="System.Windows.Forms" name="System.Windows.Forms, Version=4.0.0.0, Culture=neutral, PublicKeyToken=b77a5c561934e089" />
   <data name="btnDeleteLogs.ImeMode" type="System.Windows.Forms.ImeMode, System.Windows.Forms">
     <value>NoControl</value>
   </data>
+  <assembly alias="System.Drawing" name="System.Drawing, Version=4.0.0.0, Culture=neutral, PublicKeyToken=b03f5f7f11d50a3a" />
   <data name="btnDeleteLogs.Location" type="System.Drawing.Point, System.Drawing">
     <value>265, 22</value>
   </data>
@@ -135,6 +134,7 @@
   <data name="btnDeleteLogs.Size" type="System.Drawing.Size, System.Drawing">
     <value>94, 23</value>
   </data>
+  <assembly alias="mscorlib" name="mscorlib, Version=4.0.0.0, Culture=neutral, PublicKeyToken=b77a5c561934e089" />
   <data name="btnDeleteLogs.TabIndex" type="System.Int32, mscorlib">
     <value>22</value>
   </data>
@@ -146,6 +146,9 @@
   </data>
   <data name="&gt;&gt;btnDeleteLogs.Name" xml:space="preserve">
     <value>btnDeleteLogs</value>
+  </data>
+  <data name="&gt;&gt;btnDeleteLogs.Type" xml:space="preserve">
+    <value>System.Windows.Forms.Button, System.Windows.Forms, Version=4.0.0.0, Culture=neutral, PublicKeyToken=b77a5c561934e089</value>
   </data>
   <data name="&gt;&gt;btnDeleteLogs.Parent" xml:space="preserve">
     <value>tabLog</value>
@@ -177,6 +180,9 @@
   <data name="&gt;&gt;btnExportConfigs.Name" xml:space="preserve">
     <value>btnExportConfigs</value>
   </data>
+  <data name="&gt;&gt;btnExportConfigs.Type" xml:space="preserve">
+    <value>System.Windows.Forms.Button, System.Windows.Forms, Version=4.0.0.0, Culture=neutral, PublicKeyToken=b77a5c561934e089</value>
+  </data>
   <data name="&gt;&gt;btnExportConfigs.Parent" xml:space="preserve">
     <value>panel1</value>
   </data>
@@ -207,6 +213,9 @@
   <data name="&gt;&gt;btnImportConfigs.Name" xml:space="preserve">
     <value>btnImportConfigs</value>
   </data>
+  <data name="&gt;&gt;btnImportConfigs.Type" xml:space="preserve">
+    <value>System.Windows.Forms.Button, System.Windows.Forms, Version=4.0.0.0, Culture=neutral, PublicKeyToken=b77a5c561934e089</value>
+  </data>
   <data name="&gt;&gt;btnImportConfigs.Parent" xml:space="preserve">
     <value>panel1</value>
   </data>
@@ -236,6 +245,9 @@
   </data>
   <data name="&gt;&gt;btnRunBatch.Name" xml:space="preserve">
     <value>btnRunBatch</value>
+  </data>
+  <data name="&gt;&gt;btnRunBatch.Type" xml:space="preserve">
+    <value>System.Windows.Forms.Button, System.Windows.Forms, Version=4.0.0.0, Culture=neutral, PublicKeyToken=b77a5c561934e089</value>
   </data>
   <data name="&gt;&gt;btnRunBatch.Parent" xml:space="preserve">
     <value>panel2</value>
@@ -270,6 +282,9 @@
   <data name="&gt;&gt;btnStop.Name" xml:space="preserve">
     <value>btnStop</value>
   </data>
+  <data name="&gt;&gt;btnStop.Type" xml:space="preserve">
+    <value>System.Windows.Forms.Button, System.Windows.Forms, Version=4.0.0.0, Culture=neutral, PublicKeyToken=b77a5c561934e089</value>
+  </data>
   <data name="&gt;&gt;btnStop.Parent" xml:space="preserve">
     <value>panel2</value>
   </data>
@@ -299,6 +314,9 @@
   </data>
   <data name="&gt;&gt;btnOpenFolder.Name" xml:space="preserve">
     <value>btnOpenFolder</value>
+  </data>
+  <data name="&gt;&gt;btnOpenFolder.Type" xml:space="preserve">
+    <value>System.Windows.Forms.Button, System.Windows.Forms, Version=4.0.0.0, Culture=neutral, PublicKeyToken=b77a5c561934e089</value>
   </data>
   <data name="&gt;&gt;btnOpenFolder.Parent" xml:space="preserve">
     <value>tabLog</value>
@@ -336,12 +354,18 @@
   <data name="&gt;&gt;btnLogStop.Name" xml:space="preserve">
     <value>btnLogStop</value>
   </data>
+  <data name="&gt;&gt;btnLogStop.Type" xml:space="preserve">
+    <value>System.Windows.Forms.Button, System.Windows.Forms, Version=4.0.0.0, Culture=neutral, PublicKeyToken=b77a5c561934e089</value>
+  </data>
   <data name="&gt;&gt;btnLogStop.Parent" xml:space="preserve">
     <value>tabLog</value>
   </data>
   <data name="&gt;&gt;btnLogStop.ZOrder" xml:space="preserve">
     <value>0</value>
   </data>
+  <metadata name="systray_icon.TrayLocation" type="System.Drawing.Point, System.Drawing, Version=4.0.0.0, Culture=neutral, PublicKeyToken=b03f5f7f11d50a3a">
+    <value>168, 17</value>
+  </metadata>
   <data name="systray_icon.Icon" type="System.Drawing.Icon, System.Drawing" mimetype="application/x-microsoft.net.object.bytearray.base64">
     <value>
         AAABAAQAEBAAAAAAGABoAwAARgAAACAgAAAAABgAqAwAAK4DAAAwMAAAAAAYAKgcAABWEAAAQEAAAAAA
@@ -767,11 +791,20 @@
   <data name="&gt;&gt;panelSkylineType.Name" xml:space="preserve">
     <value>panelSkylineType</value>
   </data>
+  <data name="&gt;&gt;panelSkylineType.Type" xml:space="preserve">
+    <value>System.Windows.Forms.Panel, System.Windows.Forms, Version=4.0.0.0, Culture=neutral, PublicKeyToken=b77a5c561934e089</value>
+  </data>
+  <metadata name="batchRunDropDown.TrayLocation" type="System.Drawing.Point, System.Drawing, Version=4.0.0.0, Culture=neutral, PublicKeyToken=b03f5f7f11d50a3a">
+    <value>285, 17</value>
+  </metadata>
   <data name="batchRunDropDown.Size" type="System.Drawing.Size, System.Drawing">
     <value>61, 4</value>
   </data>
   <data name="&gt;&gt;batchRunDropDown.Name" xml:space="preserve">
     <value>batchRunDropDown</value>
+  </data>
+  <data name="&gt;&gt;batchRunDropDown.Type" xml:space="preserve">
+    <value>System.Windows.Forms.ContextMenuStrip, System.Windows.Forms, Version=4.0.0.0, Culture=neutral, PublicKeyToken=b77a5c561934e089</value>
   </data>
   <data name="label1.AutoSize" type="System.Boolean, mscorlib">
     <value>True</value>
@@ -797,6 +830,9 @@
   <data name="&gt;&gt;label1.Name" xml:space="preserve">
     <value>label1</value>
   </data>
+  <data name="&gt;&gt;label1.Type" xml:space="preserve">
+    <value>System.Windows.Forms.Label, System.Windows.Forms, Version=4.0.0.0, Culture=neutral, PublicKeyToken=b77a5c561934e089</value>
+  </data>
   <data name="&gt;&gt;label1.Parent" xml:space="preserve">
     <value>tabLog</value>
   </data>
@@ -817,6 +853,9 @@
   </data>
   <data name="&gt;&gt;comboLogList.Name" xml:space="preserve">
     <value>comboLogList</value>
+  </data>
+  <data name="&gt;&gt;comboLogList.Type" xml:space="preserve">
+    <value>System.Windows.Forms.ComboBox, System.Windows.Forms, Version=4.0.0.0, Culture=neutral, PublicKeyToken=b77a5c561934e089</value>
   </data>
   <data name="&gt;&gt;comboLogList.Parent" xml:space="preserve">
     <value>tabLog</value>
@@ -848,6 +887,9 @@
   <data name="&gt;&gt;textBoxLog.Name" xml:space="preserve">
     <value>textBoxLog</value>
   </data>
+  <data name="&gt;&gt;textBoxLog.Type" xml:space="preserve">
+    <value>System.Windows.Forms.RichTextBox, System.Windows.Forms, Version=4.0.0.0, Culture=neutral, PublicKeyToken=b77a5c561934e089</value>
+  </data>
   <data name="&gt;&gt;textBoxLog.Parent" xml:space="preserve">
     <value>tabLog</value>
   </data>
@@ -874,6 +916,9 @@
   </data>
   <data name="&gt;&gt;tabLog.Name" xml:space="preserve">
     <value>tabLog</value>
+  </data>
+  <data name="&gt;&gt;tabLog.Type" xml:space="preserve">
+    <value>System.Windows.Forms.TabPage, System.Windows.Forms, Version=4.0.0.0, Culture=neutral, PublicKeyToken=b77a5c561934e089</value>
   </data>
   <data name="&gt;&gt;tabLog.Parent" xml:space="preserve">
     <value>tabMain</value>
@@ -929,6 +974,9 @@
   <data name="&gt;&gt;listViewConfigs.Name" xml:space="preserve">
     <value>listViewConfigs</value>
   </data>
+  <data name="&gt;&gt;listViewConfigs.Type" xml:space="preserve">
+    <value>SkylineBatch.MyListView, SkylineBatch, Version=1.0.0.0, Culture=neutral, PublicKeyToken=null</value>
+  </data>
   <data name="&gt;&gt;listViewConfigs.Parent" xml:space="preserve">
     <value>tabConfigs</value>
   </data>
@@ -959,6 +1007,9 @@
   <data name="&gt;&gt;labelSavedConfigurations.Name" xml:space="preserve">
     <value>labelSavedConfigurations</value>
   </data>
+  <data name="&gt;&gt;labelSavedConfigurations.Type" xml:space="preserve">
+    <value>System.Windows.Forms.Label, System.Windows.Forms, Version=4.0.0.0, Culture=neutral, PublicKeyToken=b77a5c561934e089</value>
+  </data>
   <data name="&gt;&gt;labelSavedConfigurations.Parent" xml:space="preserve">
     <value>tabConfigs</value>
   </data>
@@ -985,6 +1036,9 @@
   </data>
   <data name="&gt;&gt;btnRunOptions.Name" xml:space="preserve">
     <value>btnRunOptions</value>
+  </data>
+  <data name="&gt;&gt;btnRunOptions.Type" xml:space="preserve">
+    <value>System.Windows.Forms.Button, System.Windows.Forms, Version=4.0.0.0, Culture=neutral, PublicKeyToken=b77a5c561934e089</value>
   </data>
   <data name="&gt;&gt;btnRunOptions.Parent" xml:space="preserve">
     <value>panel2</value>
@@ -1019,6 +1073,9 @@
   <data name="&gt;&gt;lblNoConfigs.Name" xml:space="preserve">
     <value>lblNoConfigs</value>
   </data>
+  <data name="&gt;&gt;lblNoConfigs.Type" xml:space="preserve">
+    <value>System.Windows.Forms.Label, System.Windows.Forms, Version=4.0.0.0, Culture=neutral, PublicKeyToken=b77a5c561934e089</value>
+  </data>
   <data name="&gt;&gt;lblNoConfigs.Parent" xml:space="preserve">
     <value>panel2</value>
   </data>
@@ -1039,6 +1096,9 @@
   </data>
   <data name="&gt;&gt;panel2.Name" xml:space="preserve">
     <value>panel2</value>
+  </data>
+  <data name="&gt;&gt;panel2.Type" xml:space="preserve">
+    <value>System.Windows.Forms.Panel, System.Windows.Forms, Version=4.0.0.0, Culture=neutral, PublicKeyToken=b77a5c561934e089</value>
   </data>
   <data name="&gt;&gt;panel2.Parent" xml:space="preserve">
     <value>tabConfigs</value>
@@ -1067,12 +1127,18 @@
   <data name="&gt;&gt;button1.Name" xml:space="preserve">
     <value>button1</value>
   </data>
+  <data name="&gt;&gt;button1.Type" xml:space="preserve">
+    <value>System.Windows.Forms.Button, System.Windows.Forms, Version=4.0.0.0, Culture=neutral, PublicKeyToken=b77a5c561934e089</value>
+  </data>
   <data name="&gt;&gt;button1.Parent" xml:space="preserve">
     <value>panel1</value>
   </data>
   <data name="&gt;&gt;button1.ZOrder" xml:space="preserve">
     <value>0</value>
   </data>
+  <metadata name="toolStrip1.TrayLocation" type="System.Drawing.Point, System.Drawing, Version=4.0.0.0, Culture=neutral, PublicKeyToken=b03f5f7f11d50a3a">
+    <value>448, 17</value>
+  </metadata>
   <data name="toolStrip1.Dock" type="System.Windows.Forms.DockStyle, System.Windows.Forms">
     <value>Left</value>
   </data>
@@ -1205,6 +1271,9 @@
   <data name="&gt;&gt;toolStrip1.Name" xml:space="preserve">
     <value>toolStrip1</value>
   </data>
+  <data name="&gt;&gt;toolStrip1.Type" xml:space="preserve">
+    <value>System.Windows.Forms.ToolStrip, System.Windows.Forms, Version=4.0.0.0, Culture=neutral, PublicKeyToken=b77a5c561934e089</value>
+  </data>
   <data name="&gt;&gt;toolStrip1.Parent" xml:space="preserve">
     <value>panel1</value>
   </data>
@@ -1231,6 +1300,9 @@
   </data>
   <data name="&gt;&gt;btnAddConfig.Name" xml:space="preserve">
     <value>btnAddConfig</value>
+  </data>
+  <data name="&gt;&gt;btnAddConfig.Type" xml:space="preserve">
+    <value>System.Windows.Forms.Button, System.Windows.Forms, Version=4.0.0.0, Culture=neutral, PublicKeyToken=b77a5c561934e089</value>
   </data>
   <data name="&gt;&gt;btnAddConfig.Parent" xml:space="preserve">
     <value>panel1</value>
@@ -1259,6 +1331,9 @@
   <data name="&gt;&gt;btnEdit.Name" xml:space="preserve">
     <value>btnEdit</value>
   </data>
+  <data name="&gt;&gt;btnEdit.Type" xml:space="preserve">
+    <value>System.Windows.Forms.Button, System.Windows.Forms, Version=4.0.0.0, Culture=neutral, PublicKeyToken=b77a5c561934e089</value>
+  </data>
   <data name="&gt;&gt;btnEdit.Parent" xml:space="preserve">
     <value>panel1</value>
   </data>
@@ -1286,6 +1361,9 @@
   <data name="&gt;&gt;btnCopy.Name" xml:space="preserve">
     <value>btnCopy</value>
   </data>
+  <data name="&gt;&gt;btnCopy.Type" xml:space="preserve">
+    <value>System.Windows.Forms.Button, System.Windows.Forms, Version=4.0.0.0, Culture=neutral, PublicKeyToken=b77a5c561934e089</value>
+  </data>
   <data name="&gt;&gt;btnCopy.Parent" xml:space="preserve">
     <value>panel1</value>
   </data>
@@ -1306,6 +1384,9 @@
   </data>
   <data name="&gt;&gt;panel1.Name" xml:space="preserve">
     <value>panel1</value>
+  </data>
+  <data name="&gt;&gt;panel1.Type" xml:space="preserve">
+    <value>System.Windows.Forms.Panel, System.Windows.Forms, Version=4.0.0.0, Culture=neutral, PublicKeyToken=b77a5c561934e089</value>
   </data>
   <data name="&gt;&gt;panel1.Parent" xml:space="preserve">
     <value>tabConfigs</value>
@@ -1334,6 +1415,9 @@
   <data name="&gt;&gt;tabConfigs.Name" xml:space="preserve">
     <value>tabConfigs</value>
   </data>
+  <data name="&gt;&gt;tabConfigs.Type" xml:space="preserve">
+    <value>System.Windows.Forms.TabPage, System.Windows.Forms, Version=4.0.0.0, Culture=neutral, PublicKeyToken=b77a5c561934e089</value>
+  </data>
   <data name="&gt;&gt;tabConfigs.Parent" xml:space="preserve">
     <value>tabMain</value>
   </data>
@@ -1358,12 +1442,21 @@
   <data name="&gt;&gt;tabMain.Name" xml:space="preserve">
     <value>tabMain</value>
   </data>
+  <data name="&gt;&gt;tabMain.Type" xml:space="preserve">
+    <value>System.Windows.Forms.TabControl, System.Windows.Forms, Version=4.0.0.0, Culture=neutral, PublicKeyToken=b77a5c561934e089</value>
+  </data>
   <data name="&gt;&gt;tabMain.Parent" xml:space="preserve">
     <value>$this</value>
   </data>
   <data name="&gt;&gt;tabMain.ZOrder" xml:space="preserve">
     <value>1</value>
   </data>
+  <metadata name="$this.Localizable" type="System.Boolean, mscorlib, Version=4.0.0.0, Culture=neutral, PublicKeyToken=b77a5c561934e089">
+    <value>True</value>
+  </metadata>
+  <metadata name="$this.TrayHeight" type="System.Int32, mscorlib, Version=4.0.0.0, Culture=neutral, PublicKeyToken=b77a5c561934e089">
+    <value>37</value>
+  </metadata>
   <data name="$this.AutoScaleDimensions" type="System.Drawing.SizeF, System.Drawing">
     <value>6, 13</value>
   </data>
@@ -1795,49 +1888,97 @@
   <data name="&gt;&gt;toolTip_MainForm.Name" xml:space="preserve">
     <value>toolTip_MainForm</value>
   </data>
+  <data name="&gt;&gt;toolTip_MainForm.Type" xml:space="preserve">
+    <value>System.Windows.Forms.ToolTip, System.Windows.Forms, Version=4.0.0.0, Culture=neutral, PublicKeyToken=b77a5c561934e089</value>
+  </data>
   <data name="&gt;&gt;systray_icon.Name" xml:space="preserve">
     <value>systray_icon</value>
+  </data>
+  <data name="&gt;&gt;systray_icon.Type" xml:space="preserve">
+    <value>System.Windows.Forms.NotifyIcon, System.Windows.Forms, Version=4.0.0.0, Culture=neutral, PublicKeyToken=b77a5c561934e089</value>
   </data>
   <data name="&gt;&gt;columnConfigName.Name" xml:space="preserve">
     <value>columnConfigName</value>
   </data>
+  <data name="&gt;&gt;columnConfigName.Type" xml:space="preserve">
+    <value>System.Windows.Forms.ColumnHeader, System.Windows.Forms, Version=4.0.0.0, Culture=neutral, PublicKeyToken=b77a5c561934e089</value>
+  </data>
   <data name="&gt;&gt;columnModified.Name" xml:space="preserve">
     <value>columnModified</value>
+  </data>
+  <data name="&gt;&gt;columnModified.Type" xml:space="preserve">
+    <value>System.Windows.Forms.ColumnHeader, System.Windows.Forms, Version=4.0.0.0, Culture=neutral, PublicKeyToken=b77a5c561934e089</value>
   </data>
   <data name="&gt;&gt;columnStatus.Name" xml:space="preserve">
     <value>columnStatus</value>
   </data>
+  <data name="&gt;&gt;columnStatus.Type" xml:space="preserve">
+    <value>System.Windows.Forms.ColumnHeader, System.Windows.Forms, Version=4.0.0.0, Culture=neutral, PublicKeyToken=b77a5c561934e089</value>
+  </data>
   <data name="&gt;&gt;columnStartTime.Name" xml:space="preserve">
     <value>columnStartTime</value>
+  </data>
+  <data name="&gt;&gt;columnStartTime.Type" xml:space="preserve">
+    <value>System.Windows.Forms.ColumnHeader, System.Windows.Forms, Version=4.0.0.0, Culture=neutral, PublicKeyToken=b77a5c561934e089</value>
   </data>
   <data name="&gt;&gt;columnRunTime.Name" xml:space="preserve">
     <value>columnRunTime</value>
   </data>
+  <data name="&gt;&gt;columnRunTime.Type" xml:space="preserve">
+    <value>System.Windows.Forms.ColumnHeader, System.Windows.Forms, Version=4.0.0.0, Culture=neutral, PublicKeyToken=b77a5c561934e089</value>
+  </data>
   <data name="&gt;&gt;btnUpArrow.Name" xml:space="preserve">
     <value>btnUpArrow</value>
+  </data>
+  <data name="&gt;&gt;btnUpArrow.Type" xml:space="preserve">
+    <value>System.Windows.Forms.ToolStripButton, System.Windows.Forms, Version=4.0.0.0, Culture=neutral, PublicKeyToken=b77a5c561934e089</value>
   </data>
   <data name="&gt;&gt;btnDownArrow.Name" xml:space="preserve">
     <value>btnDownArrow</value>
   </data>
+  <data name="&gt;&gt;btnDownArrow.Type" xml:space="preserve">
+    <value>System.Windows.Forms.ToolStripButton, System.Windows.Forms, Version=4.0.0.0, Culture=neutral, PublicKeyToken=b77a5c561934e089</value>
+  </data>
   <data name="&gt;&gt;btnDelete.Name" xml:space="preserve">
     <value>btnDelete</value>
+  </data>
+  <data name="&gt;&gt;btnDelete.Type" xml:space="preserve">
+    <value>System.Windows.Forms.ToolStripButton, System.Windows.Forms, Version=4.0.0.0, Culture=neutral, PublicKeyToken=b77a5c561934e089</value>
   </data>
   <data name="&gt;&gt;btnOpenTemplate.Name" xml:space="preserve">
     <value>btnOpenTemplate</value>
   </data>
+  <data name="&gt;&gt;btnOpenTemplate.Type" xml:space="preserve">
+    <value>System.Windows.Forms.ToolStripButton, System.Windows.Forms, Version=4.0.0.0, Culture=neutral, PublicKeyToken=b77a5c561934e089</value>
+  </data>
   <data name="&gt;&gt;btnOpenResults.Name" xml:space="preserve">
     <value>btnOpenResults</value>
+  </data>
+  <data name="&gt;&gt;btnOpenResults.Type" xml:space="preserve">
+    <value>System.Windows.Forms.ToolStripButton, System.Windows.Forms, Version=4.0.0.0, Culture=neutral, PublicKeyToken=b77a5c561934e089</value>
   </data>
   <data name="&gt;&gt;btnOpenAnalysis.Name" xml:space="preserve">
     <value>btnOpenAnalysis</value>
   </data>
+  <data name="&gt;&gt;btnOpenAnalysis.Type" xml:space="preserve">
+    <value>System.Windows.Forms.ToolStripButton, System.Windows.Forms, Version=4.0.0.0, Culture=neutral, PublicKeyToken=b77a5c561934e089</value>
+  </data>
   <data name="&gt;&gt;btnUndo.Name" xml:space="preserve">
     <value>btnUndo</value>
+  </data>
+  <data name="&gt;&gt;btnUndo.Type" xml:space="preserve">
+    <value>System.Windows.Forms.ToolStripButton, System.Windows.Forms, Version=4.0.0.0, Culture=neutral, PublicKeyToken=b77a5c561934e089</value>
   </data>
   <data name="&gt;&gt;btnRedo.Name" xml:space="preserve">
     <value>btnRedo</value>
   </data>
+  <data name="&gt;&gt;btnRedo.Type" xml:space="preserve">
+    <value>System.Windows.Forms.ToolStripButton, System.Windows.Forms, Version=4.0.0.0, Culture=neutral, PublicKeyToken=b77a5c561934e089</value>
+  </data>
   <data name="&gt;&gt;$this.Name" xml:space="preserve">
     <value>MainForm</value>
+  </data>
+  <data name="&gt;&gt;$this.Type" xml:space="preserve">
+    <value>System.Windows.Forms.Form, System.Windows.Forms, Version=4.0.0.0, Culture=neutral, PublicKeyToken=b77a5c561934e089</value>
   </data>
 </root>

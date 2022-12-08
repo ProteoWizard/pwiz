@@ -117,29 +117,32 @@
   <resheader name="writer">
     <value>System.Resources.ResXResourceWriter, System.Windows.Forms, Version=4.0.0.0, Culture=neutral, PublicKeyToken=b77a5c561934e089</value>
   </resheader>
-  <assembly alias="System.Windows.Forms" name="System.Windows.Forms, Version=4.0.0.0, Culture=neutral, PublicKeyToken=b77a5c561934e089" />
-  <assembly alias="System.Drawing" name="System.Drawing, Version=4.0.0.0, Culture=neutral, PublicKeyToken=b03f5f7f11d50a3a" />
-  <assembly alias="mscorlib" name="mscorlib, Version=4.0.0.0, Culture=neutral, PublicKeyToken=b77a5c561934e089" />
-  <metadata name="$this.Localizable" type="System.Boolean, mscorlib, Version=4.0.0.0, Culture=neutral, PublicKeyToken=b77a5c561934e089">
-    <value>True</value>
+  <metadata name="modeUIHandler.TrayLocation" type="System.Drawing.Point, System.Drawing, Version=4.0.0.0, Culture=neutral, PublicKeyToken=b03f5f7f11d50a3a">
+    <value>17, 17</value>
   </metadata>
+  <assembly alias="System.Windows.Forms" name="System.Windows.Forms, Version=4.0.0.0, Culture=neutral, PublicKeyToken=b77a5c561934e089" />
   <data name="tabControl.Anchor" type="System.Windows.Forms.AnchorStyles, System.Windows.Forms">
     <value>Top, Bottom, Left, Right</value>
   </data>
   <data name="listboxServers.Anchor" type="System.Windows.Forms.AnchorStyles, System.Windows.Forms">
     <value>Top, Bottom, Left, Right</value>
   </data>
+  <assembly alias="System.Drawing" name="System.Drawing, Version=4.0.0.0, Culture=neutral, PublicKeyToken=b03f5f7f11d50a3a" />
   <data name="listboxServers.Location" type="System.Drawing.Point, System.Drawing">
     <value>9, 22</value>
   </data>
   <data name="listboxServers.Size" type="System.Drawing.Size, System.Drawing">
     <value>293, 199</value>
   </data>
+  <assembly alias="mscorlib" name="mscorlib, Version=4.0.0.0, Culture=neutral, PublicKeyToken=b77a5c561934e089" />
   <data name="listboxServers.TabIndex" type="System.Int32, mscorlib">
     <value>1</value>
   </data>
   <data name="&gt;&gt;listboxServers.Name" xml:space="preserve">
     <value>listboxServers</value>
+  </data>
+  <data name="&gt;&gt;listboxServers.Type" xml:space="preserve">
+    <value>System.Windows.Forms.ListBox, System.Windows.Forms, Version=4.0.0.0, Culture=neutral, PublicKeyToken=b77a5c561934e089</value>
   </data>
   <data name="&gt;&gt;listboxServers.Parent" xml:space="preserve">
     <value>tabPanorama</value>
@@ -165,6 +168,9 @@
   <data name="&gt;&gt;lblServers.Name" xml:space="preserve">
     <value>lblServers</value>
   </data>
+  <data name="&gt;&gt;lblServers.Type" xml:space="preserve">
+    <value>System.Windows.Forms.Label, System.Windows.Forms, Version=4.0.0.0, Culture=neutral, PublicKeyToken=b77a5c561934e089</value>
+  </data>
   <data name="&gt;&gt;lblServers.Parent" xml:space="preserve">
     <value>tabPanorama</value>
   </data>
@@ -188,6 +194,9 @@
   </data>
   <data name="&gt;&gt;btnEditServers.Name" xml:space="preserve">
     <value>btnEditServers</value>
+  </data>
+  <data name="&gt;&gt;btnEditServers.Type" xml:space="preserve">
+    <value>System.Windows.Forms.Button, System.Windows.Forms, Version=4.0.0.0, Culture=neutral, PublicKeyToken=b77a5c561934e089</value>
   </data>
   <data name="&gt;&gt;btnEditServers.Parent" xml:space="preserve">
     <value>tabPanorama</value>
@@ -213,6 +222,9 @@
   <data name="&gt;&gt;tabPanorama.Name" xml:space="preserve">
     <value>tabPanorama</value>
   </data>
+  <data name="&gt;&gt;tabPanorama.Type" xml:space="preserve">
+    <value>System.Windows.Forms.TabPage, System.Windows.Forms, Version=4.0.0.0, Culture=neutral, PublicKeyToken=b77a5c561934e089</value>
+  </data>
   <data name="&gt;&gt;tabPanorama.Parent" xml:space="preserve">
     <value>tabControl</value>
   </data>
@@ -233,6 +245,9 @@
   </data>
   <data name="&gt;&gt;listBoxRemoteAccounts.Name" xml:space="preserve">
     <value>listBoxRemoteAccounts</value>
+  </data>
+  <data name="&gt;&gt;listBoxRemoteAccounts.Type" xml:space="preserve">
+    <value>System.Windows.Forms.ListBox, System.Windows.Forms, Version=4.0.0.0, Culture=neutral, PublicKeyToken=b77a5c561934e089</value>
   </data>
   <data name="&gt;&gt;listBoxRemoteAccounts.Parent" xml:space="preserve">
     <value>tabRemote</value>
@@ -261,6 +276,9 @@
   <data name="&gt;&gt;lblRemoteAccounts.Name" xml:space="preserve">
     <value>lblRemoteAccounts</value>
   </data>
+  <data name="&gt;&gt;lblRemoteAccounts.Type" xml:space="preserve">
+    <value>System.Windows.Forms.Label, System.Windows.Forms, Version=4.0.0.0, Culture=neutral, PublicKeyToken=b77a5c561934e089</value>
+  </data>
   <data name="&gt;&gt;lblRemoteAccounts.Parent" xml:space="preserve">
     <value>tabRemote</value>
   </data>
@@ -288,6 +306,9 @@
   <data name="&gt;&gt;btnEditRemoteAccountList.Name" xml:space="preserve">
     <value>btnEditRemoteAccountList</value>
   </data>
+  <data name="&gt;&gt;btnEditRemoteAccountList.Type" xml:space="preserve">
+    <value>System.Windows.Forms.Button, System.Windows.Forms, Version=4.0.0.0, Culture=neutral, PublicKeyToken=b77a5c561934e089</value>
+  </data>
   <data name="&gt;&gt;btnEditRemoteAccountList.Parent" xml:space="preserve">
     <value>tabRemote</value>
   </data>
@@ -312,6 +333,9 @@
   <data name="&gt;&gt;tabRemote.Name" xml:space="preserve">
     <value>tabRemote</value>
   </data>
+  <data name="&gt;&gt;tabRemote.Type" xml:space="preserve">
+    <value>System.Windows.Forms.TabPage, System.Windows.Forms, Version=4.0.0.0, Culture=neutral, PublicKeyToken=b77a5c561934e089</value>
+  </data>
   <data name="&gt;&gt;tabRemote.Parent" xml:space="preserve">
     <value>tabControl</value>
   </data>
@@ -329,6 +353,9 @@
   </data>
   <data name="&gt;&gt;tbxPrositServer.Name" xml:space="preserve">
     <value>tbxPrositServer</value>
+  </data>
+  <data name="&gt;&gt;tbxPrositServer.Type" xml:space="preserve">
+    <value>System.Windows.Forms.TextBox, System.Windows.Forms, Version=4.0.0.0, Culture=neutral, PublicKeyToken=b77a5c561934e089</value>
   </data>
   <data name="&gt;&gt;tbxPrositServer.Parent" xml:space="preserve">
     <value>tabProsit</value>
@@ -357,6 +384,9 @@
   <data name="&gt;&gt;ceLabel.Name" xml:space="preserve">
     <value>ceLabel</value>
   </data>
+  <data name="&gt;&gt;ceLabel.Type" xml:space="preserve">
+    <value>System.Windows.Forms.Label, System.Windows.Forms, Version=4.0.0.0, Culture=neutral, PublicKeyToken=b77a5c561934e089</value>
+  </data>
   <data name="&gt;&gt;ceLabel.Parent" xml:space="preserve">
     <value>tabProsit</value>
   </data>
@@ -374,6 +404,9 @@
   </data>
   <data name="&gt;&gt;ceCombo.Name" xml:space="preserve">
     <value>ceCombo</value>
+  </data>
+  <data name="&gt;&gt;ceCombo.Type" xml:space="preserve">
+    <value>System.Windows.Forms.ComboBox, System.Windows.Forms, Version=4.0.0.0, Culture=neutral, PublicKeyToken=b77a5c561934e089</value>
   </data>
   <data name="&gt;&gt;ceCombo.Parent" xml:space="preserve">
     <value>tabProsit</value>
@@ -402,6 +435,9 @@
   <data name="&gt;&gt;prositServerStatusLabel.Name" xml:space="preserve">
     <value>prositServerStatusLabel</value>
   </data>
+  <data name="&gt;&gt;prositServerStatusLabel.Type" xml:space="preserve">
+    <value>System.Windows.Forms.Label, System.Windows.Forms, Version=4.0.0.0, Culture=neutral, PublicKeyToken=b77a5c561934e089</value>
+  </data>
   <data name="&gt;&gt;prositServerStatusLabel.Parent" xml:space="preserve">
     <value>tabProsit</value>
   </data>
@@ -429,6 +465,9 @@
   <data name="&gt;&gt;label3.Name" xml:space="preserve">
     <value>label3</value>
   </data>
+  <data name="&gt;&gt;label3.Type" xml:space="preserve">
+    <value>System.Windows.Forms.Label, System.Windows.Forms, Version=4.0.0.0, Culture=neutral, PublicKeyToken=b77a5c561934e089</value>
+  </data>
   <data name="&gt;&gt;label3.Parent" xml:space="preserve">
     <value>tabProsit</value>
   </data>
@@ -446,6 +485,9 @@
   </data>
   <data name="&gt;&gt;iRTModelCombo.Name" xml:space="preserve">
     <value>iRTModelCombo</value>
+  </data>
+  <data name="&gt;&gt;iRTModelCombo.Type" xml:space="preserve">
+    <value>System.Windows.Forms.ComboBox, System.Windows.Forms, Version=4.0.0.0, Culture=neutral, PublicKeyToken=b77a5c561934e089</value>
   </data>
   <data name="&gt;&gt;iRTModelCombo.Parent" xml:space="preserve">
     <value>tabProsit</value>
@@ -474,6 +516,9 @@
   <data name="&gt;&gt;label2.Name" xml:space="preserve">
     <value>label2</value>
   </data>
+  <data name="&gt;&gt;label2.Type" xml:space="preserve">
+    <value>System.Windows.Forms.Label, System.Windows.Forms, Version=4.0.0.0, Culture=neutral, PublicKeyToken=b77a5c561934e089</value>
+  </data>
   <data name="&gt;&gt;label2.Parent" xml:space="preserve">
     <value>tabProsit</value>
   </data>
@@ -491,6 +536,9 @@
   </data>
   <data name="&gt;&gt;intensityModelCombo.Name" xml:space="preserve">
     <value>intensityModelCombo</value>
+  </data>
+  <data name="&gt;&gt;intensityModelCombo.Type" xml:space="preserve">
+    <value>System.Windows.Forms.ComboBox, System.Windows.Forms, Version=4.0.0.0, Culture=neutral, PublicKeyToken=b77a5c561934e089</value>
   </data>
   <data name="&gt;&gt;intensityModelCombo.Parent" xml:space="preserve">
     <value>tabProsit</value>
@@ -518,6 +566,9 @@
   </data>
   <data name="&gt;&gt;prositServerLabel.Name" xml:space="preserve">
     <value>prositServerLabel</value>
+  </data>
+  <data name="&gt;&gt;prositServerLabel.Type" xml:space="preserve">
+    <value>System.Windows.Forms.Label, System.Windows.Forms, Version=4.0.0.0, Culture=neutral, PublicKeyToken=b77a5c561934e089</value>
   </data>
   <data name="&gt;&gt;prositServerLabel.Parent" xml:space="preserve">
     <value>tabProsit</value>
@@ -552,6 +603,9 @@
   <data name="&gt;&gt;prositDescrLabel.Name" xml:space="preserve">
     <value>prositDescrLabel</value>
   </data>
+  <data name="&gt;&gt;prositDescrLabel.Type" xml:space="preserve">
+    <value>System.Windows.Forms.LinkLabel, System.Windows.Forms, Version=4.0.0.0, Culture=neutral, PublicKeyToken=b77a5c561934e089</value>
+  </data>
   <data name="&gt;&gt;prositDescrLabel.Parent" xml:space="preserve">
     <value>tabProsit</value>
   </data>
@@ -578,6 +632,9 @@
   </data>
   <data name="&gt;&gt;pictureBox1.Name" xml:space="preserve">
     <value>pictureBox1</value>
+  </data>
+  <data name="&gt;&gt;pictureBox1.Type" xml:space="preserve">
+    <value>System.Windows.Forms.PictureBox, System.Windows.Forms, Version=4.0.0.0, Culture=neutral, PublicKeyToken=b77a5c561934e089</value>
   </data>
   <data name="&gt;&gt;pictureBox1.Parent" xml:space="preserve">
     <value>tabProsit</value>
@@ -606,6 +663,9 @@
   <data name="&gt;&gt;tabProsit.Name" xml:space="preserve">
     <value>tabProsit</value>
   </data>
+  <data name="&gt;&gt;tabProsit.Type" xml:space="preserve">
+    <value>System.Windows.Forms.TabPage, System.Windows.Forms, Version=4.0.0.0, Culture=neutral, PublicKeyToken=b77a5c561934e089</value>
+  </data>
   <data name="&gt;&gt;tabProsit.Parent" xml:space="preserve">
     <value>tabControl</value>
   </data>
@@ -630,6 +690,9 @@
   <data name="&gt;&gt;labelDisplayLanguage.Name" xml:space="preserve">
     <value>labelDisplayLanguage</value>
   </data>
+  <data name="&gt;&gt;labelDisplayLanguage.Type" xml:space="preserve">
+    <value>System.Windows.Forms.Label, System.Windows.Forms, Version=4.0.0.0, Culture=neutral, PublicKeyToken=b77a5c561934e089</value>
+  </data>
   <data name="&gt;&gt;labelDisplayLanguage.Parent" xml:space="preserve">
     <value>tabLanguage</value>
   </data>
@@ -650,6 +713,9 @@
   </data>
   <data name="&gt;&gt;listBoxLanguages.Name" xml:space="preserve">
     <value>listBoxLanguages</value>
+  </data>
+  <data name="&gt;&gt;listBoxLanguages.Type" xml:space="preserve">
+    <value>System.Windows.Forms.ListBox, System.Windows.Forms, Version=4.0.0.0, Culture=neutral, PublicKeyToken=b77a5c561934e089</value>
   </data>
   <data name="&gt;&gt;listBoxLanguages.Parent" xml:space="preserve">
     <value>tabLanguage</value>
@@ -675,6 +741,9 @@
   <data name="&gt;&gt;tabLanguage.Name" xml:space="preserve">
     <value>tabLanguage</value>
   </data>
+  <data name="&gt;&gt;tabLanguage.Type" xml:space="preserve">
+    <value>System.Windows.Forms.TabPage, System.Windows.Forms, Version=4.0.0.0, Culture=neutral, PublicKeyToken=b77a5c561934e089</value>
+  </data>
   <data name="&gt;&gt;tabLanguage.Parent" xml:space="preserve">
     <value>tabControl</value>
   </data>
@@ -696,6 +765,9 @@
   <data name="&gt;&gt;btnResetSettings.Name" xml:space="preserve">
     <value>btnResetSettings</value>
   </data>
+  <data name="&gt;&gt;btnResetSettings.Type" xml:space="preserve">
+    <value>System.Windows.Forms.Button, System.Windows.Forms, Version=4.0.0.0, Culture=neutral, PublicKeyToken=b77a5c561934e089</value>
+  </data>
   <data name="&gt;&gt;btnResetSettings.Parent" xml:space="preserve">
     <value>tabMisc</value>
   </data>
@@ -713,6 +785,9 @@
   </data>
   <data name="&gt;&gt;comboCompactFormatOption.Name" xml:space="preserve">
     <value>comboCompactFormatOption</value>
+  </data>
+  <data name="&gt;&gt;comboCompactFormatOption.Type" xml:space="preserve">
+    <value>System.Windows.Forms.ComboBox, System.Windows.Forms, Version=4.0.0.0, Culture=neutral, PublicKeyToken=b77a5c561934e089</value>
   </data>
   <data name="&gt;&gt;comboCompactFormatOption.Parent" xml:space="preserve">
     <value>tabMisc</value>
@@ -737,6 +812,9 @@
   </data>
   <data name="&gt;&gt;lblCompactDocumentFormat.Name" xml:space="preserve">
     <value>lblCompactDocumentFormat</value>
+  </data>
+  <data name="&gt;&gt;lblCompactDocumentFormat.Type" xml:space="preserve">
+    <value>System.Windows.Forms.Label, System.Windows.Forms, Version=4.0.0.0, Culture=neutral, PublicKeyToken=b77a5c561934e089</value>
   </data>
   <data name="&gt;&gt;lblCompactDocumentFormat.Parent" xml:space="preserve">
     <value>tabMisc</value>
@@ -765,6 +843,9 @@
   <data name="&gt;&gt;checkBoxShowWizard.Name" xml:space="preserve">
     <value>checkBoxShowWizard</value>
   </data>
+  <data name="&gt;&gt;checkBoxShowWizard.Type" xml:space="preserve">
+    <value>System.Windows.Forms.CheckBox, System.Windows.Forms, Version=4.0.0.0, Culture=neutral, PublicKeyToken=b77a5c561934e089</value>
+  </data>
   <data name="&gt;&gt;checkBoxShowWizard.Parent" xml:space="preserve">
     <value>tabMisc</value>
   </data>
@@ -789,6 +870,9 @@
   <data name="&gt;&gt;tabMisc.Name" xml:space="preserve">
     <value>tabMisc</value>
   </data>
+  <data name="&gt;&gt;tabMisc.Type" xml:space="preserve">
+    <value>System.Windows.Forms.TabPage, System.Windows.Forms, Version=4.0.0.0, Culture=neutral, PublicKeyToken=b77a5c561934e089</value>
+  </data>
   <data name="&gt;&gt;tabMisc.Parent" xml:space="preserve">
     <value>tabControl</value>
   </data>
@@ -806,6 +890,9 @@
   </data>
   <data name="&gt;&gt;comboColorScheme.Name" xml:space="preserve">
     <value>comboColorScheme</value>
+  </data>
+  <data name="&gt;&gt;comboColorScheme.Type" xml:space="preserve">
+    <value>System.Windows.Forms.ComboBox, System.Windows.Forms, Version=4.0.0.0, Culture=neutral, PublicKeyToken=b77a5c561934e089</value>
   </data>
   <data name="&gt;&gt;comboColorScheme.Parent" xml:space="preserve">
     <value>tabDisplay</value>
@@ -831,6 +918,9 @@
   <data name="&gt;&gt;label1.Name" xml:space="preserve">
     <value>label1</value>
   </data>
+  <data name="&gt;&gt;label1.Type" xml:space="preserve">
+    <value>System.Windows.Forms.Label, System.Windows.Forms, Version=4.0.0.0, Culture=neutral, PublicKeyToken=b77a5c561934e089</value>
+  </data>
   <data name="&gt;&gt;label1.Parent" xml:space="preserve">
     <value>tabDisplay</value>
   </data>
@@ -854,6 +944,9 @@
   </data>
   <data name="&gt;&gt;powerOfTenCheckBox.Name" xml:space="preserve">
     <value>powerOfTenCheckBox</value>
+  </data>
+  <data name="&gt;&gt;powerOfTenCheckBox.Type" xml:space="preserve">
+    <value>System.Windows.Forms.CheckBox, System.Windows.Forms, Version=4.0.0.0, Culture=neutral, PublicKeyToken=b77a5c561934e089</value>
   </data>
   <data name="&gt;&gt;powerOfTenCheckBox.Parent" xml:space="preserve">
     <value>tabDisplay</value>
@@ -879,6 +972,9 @@
   <data name="&gt;&gt;tabDisplay.Name" xml:space="preserve">
     <value>tabDisplay</value>
   </data>
+  <data name="&gt;&gt;tabDisplay.Type" xml:space="preserve">
+    <value>System.Windows.Forms.TabPage, System.Windows.Forms, Version=4.0.0.0, Culture=neutral, PublicKeyToken=b77a5c561934e089</value>
+  </data>
   <data name="&gt;&gt;tabDisplay.Parent" xml:space="preserve">
     <value>tabControl</value>
   </data>
@@ -896,6 +992,9 @@
   </data>
   <data name="&gt;&gt;tabControl.Name" xml:space="preserve">
     <value>tabControl</value>
+  </data>
+  <data name="&gt;&gt;tabControl.Type" xml:space="preserve">
+    <value>System.Windows.Forms.TabControl, System.Windows.Forms, Version=4.0.0.0, Culture=neutral, PublicKeyToken=b77a5c561934e089</value>
   </data>
   <data name="&gt;&gt;tabControl.Parent" xml:space="preserve">
     <value>$this</value>
@@ -921,6 +1020,9 @@
   <data name="&gt;&gt;btnCancel.Name" xml:space="preserve">
     <value>btnCancel</value>
   </data>
+  <data name="&gt;&gt;btnCancel.Type" xml:space="preserve">
+    <value>System.Windows.Forms.Button, System.Windows.Forms, Version=4.0.0.0, Culture=neutral, PublicKeyToken=b77a5c561934e089</value>
+  </data>
   <data name="&gt;&gt;btnCancel.Parent" xml:space="preserve">
     <value>$this</value>
   </data>
@@ -945,12 +1047,18 @@
   <data name="&gt;&gt;btnOK.Name" xml:space="preserve">
     <value>btnOK</value>
   </data>
+  <data name="&gt;&gt;btnOK.Type" xml:space="preserve">
+    <value>System.Windows.Forms.Button, System.Windows.Forms, Version=4.0.0.0, Culture=neutral, PublicKeyToken=b77a5c561934e089</value>
+  </data>
   <data name="&gt;&gt;btnOK.Parent" xml:space="preserve">
     <value>$this</value>
   </data>
   <data name="&gt;&gt;btnOK.ZOrder" xml:space="preserve">
     <value>0</value>
   </data>
+  <metadata name="$this.Localizable" type="System.Boolean, mscorlib, Version=4.0.0.0, Culture=neutral, PublicKeyToken=b77a5c561934e089">
+    <value>True</value>
+  </metadata>
   <data name="$this.AutoScaleDimensions" type="System.Drawing.SizeF, System.Drawing">
     <value>6, 13</value>
   </data>
@@ -966,7 +1074,13 @@
   <data name="&gt;&gt;modeUIHandler.Name" xml:space="preserve">
     <value>modeUIHandler</value>
   </data>
+  <data name="&gt;&gt;modeUIHandler.Type" xml:space="preserve">
+    <value>pwiz.Skyline.Util.Helpers+ModeUIExtender, Skyline, Version=19.1.1.298, Culture=neutral, PublicKeyToken=null</value>
+  </data>
   <data name="&gt;&gt;$this.Name" xml:space="preserve">
     <value>ToolOptionsUI</value>
+  </data>
+  <data name="&gt;&gt;$this.Type" xml:space="preserve">
+    <value>pwiz.Skyline.Util.FormEx, Skyline, Version=1.0.0.0, Culture=neutral, PublicKeyToken=null</value>
   </data>
 </root>

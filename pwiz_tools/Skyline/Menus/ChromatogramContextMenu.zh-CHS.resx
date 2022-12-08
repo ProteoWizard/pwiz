@@ -117,10 +117,13 @@
   <resheader name="writer">
     <value>System.Resources.ResXResourceWriter, System.Windows.Forms, Version=4.0.0.0, Culture=neutral, PublicKeyToken=b77a5c561934e089</value>
   </resheader>
-  <assembly alias="System.Drawing" name="System.Drawing, Version=4.0.0.0, Culture=neutral, PublicKeyToken=b03f5f7f11d50a3a" />
-  <metadata name="$this.Localizable" type="System.Boolean, mscorlib, Version=4.0.0.0, Culture=neutral, PublicKeyToken=b77a5c561934e089">
-    <value>True</value>
+  <metadata name="modeUIHandler.TrayLocation" type="System.Drawing.Point, System.Drawing, Version=4.0.0.0, Culture=neutral, PublicKeyToken=b03f5f7f11d50a3a">
+    <value>17, 17</value>
   </metadata>
+  <metadata name="contextMenuChromatogram.TrayLocation" type="System.Drawing.Point, System.Drawing, Version=4.0.0.0, Culture=neutral, PublicKeyToken=b03f5f7f11d50a3a">
+    <value>155, 17</value>
+  </metadata>
+  <assembly alias="System.Drawing" name="System.Drawing, Version=4.0.0.0, Culture=neutral, PublicKeyToken=b03f5f7f11d50a3a" />
   <data name="applyPeakAllGraphMenuItem.Size" type="System.Drawing.Size, System.Drawing">
     <value>212, 22</value>
   </data>
@@ -267,6 +270,9 @@
   </data>
   <data name="&gt;&gt;contextMenuChromatogram.Name" xml:space="preserve">
     <value>contextMenuChromatogram</value>
+  </data>
+  <data name="&gt;&gt;contextMenuChromatogram.Type" xml:space="preserve">
+    <value>System.Windows.Forms.ContextMenuStrip, System.Windows.Forms, Version=4.0.0.0, Culture=neutral, PublicKeyToken=b77a5c561934e089</value>
   </data>
   <data name="allRTContextMenuItem.Size" type="System.Drawing.Size, System.Drawing">
     <value>172, 22</value>
@@ -448,190 +454,376 @@
   <data name="autoZoomBothContextMenuItem.Text" xml:space="preserve">
     <value>两个都是</value>
   </data>
+  <metadata name="$this.Localizable" type="System.Boolean, mscorlib, Version=4.0.0.0, Culture=neutral, PublicKeyToken=b77a5c561934e089">
+    <value>True</value>
+  </metadata>
   <data name="$this.AutoScaleDimensions" type="System.Drawing.SizeF, System.Drawing">
     <value>6, 13</value>
   </data>
   <data name="&gt;&gt;modeUIHandler.Name" xml:space="preserve">
     <value>modeUIHandler</value>
   </data>
+  <data name="&gt;&gt;modeUIHandler.Type" xml:space="preserve">
+    <value>pwiz.Skyline.Util.Helpers+ModeUIExtender, Skyline, Version=1.0.0.0, Culture=neutral, PublicKeyToken=null</value>
+  </data>
   <data name="&gt;&gt;applyPeakAllGraphMenuItem.Name" xml:space="preserve">
     <value>applyPeakAllGraphMenuItem</value>
+  </data>
+  <data name="&gt;&gt;applyPeakAllGraphMenuItem.Type" xml:space="preserve">
+    <value>System.Windows.Forms.ToolStripMenuItem, System.Windows.Forms, Version=4.0.0.0, Culture=neutral, PublicKeyToken=b77a5c561934e089</value>
   </data>
   <data name="&gt;&gt;applyPeakSubsequentGraphMenuItem.Name" xml:space="preserve">
     <value>applyPeakSubsequentGraphMenuItem</value>
   </data>
+  <data name="&gt;&gt;applyPeakSubsequentGraphMenuItem.Type" xml:space="preserve">
+    <value>System.Windows.Forms.ToolStripMenuItem, System.Windows.Forms, Version=4.0.0.0, Culture=neutral, PublicKeyToken=b77a5c561934e089</value>
+  </data>
   <data name="&gt;&gt;applyPeakGroupGraphMenuItem.Name" xml:space="preserve">
     <value>applyPeakGroupGraphMenuItem</value>
+  </data>
+  <data name="&gt;&gt;applyPeakGroupGraphMenuItem.Type" xml:space="preserve">
+    <value>System.Windows.Forms.ToolStripMenuItem, System.Windows.Forms, Version=4.0.0.0, Culture=neutral, PublicKeyToken=b77a5c561934e089</value>
   </data>
   <data name="&gt;&gt;groupApplyToByGraphMenuItem.Name" xml:space="preserve">
     <value>groupApplyToByGraphMenuItem</value>
   </data>
+  <data name="&gt;&gt;groupApplyToByGraphMenuItem.Type" xml:space="preserve">
+    <value>System.Windows.Forms.ToolStripMenuItem, System.Windows.Forms, Version=4.0.0.0, Culture=neutral, PublicKeyToken=b77a5c561934e089</value>
+  </data>
   <data name="&gt;&gt;removePeakGraphMenuItem.Name" xml:space="preserve">
     <value>removePeakGraphMenuItem</value>
+  </data>
+  <data name="&gt;&gt;removePeakGraphMenuItem.Type" xml:space="preserve">
+    <value>System.Windows.Forms.ToolStripMenuItem, System.Windows.Forms, Version=4.0.0.0, Culture=neutral, PublicKeyToken=b77a5c561934e089</value>
   </data>
   <data name="&gt;&gt;toolStripSeparator1.Name" xml:space="preserve">
     <value>toolStripSeparator1</value>
   </data>
+  <data name="&gt;&gt;toolStripSeparator1.Type" xml:space="preserve">
+    <value>System.Windows.Forms.ToolStripSeparator, System.Windows.Forms, Version=4.0.0.0, Culture=neutral, PublicKeyToken=b77a5c561934e089</value>
+  </data>
   <data name="&gt;&gt;synchronizeIntegrationContextMenuItem.Name" xml:space="preserve">
     <value>synchronizeIntegrationContextMenuItem</value>
+  </data>
+  <data name="&gt;&gt;synchronizeIntegrationContextMenuItem.Type" xml:space="preserve">
+    <value>System.Windows.Forms.ToolStripMenuItem, System.Windows.Forms, Version=4.0.0.0, Culture=neutral, PublicKeyToken=b77a5c561934e089</value>
   </data>
   <data name="&gt;&gt;toolStripSeparator33.Name" xml:space="preserve">
     <value>toolStripSeparator33</value>
   </data>
+  <data name="&gt;&gt;toolStripSeparator33.Type" xml:space="preserve">
+    <value>System.Windows.Forms.ToolStripSeparator, System.Windows.Forms, Version=4.0.0.0, Culture=neutral, PublicKeyToken=b77a5c561934e089</value>
+  </data>
   <data name="&gt;&gt;legendChromContextMenuItem.Name" xml:space="preserve">
     <value>legendChromContextMenuItem</value>
+  </data>
+  <data name="&gt;&gt;legendChromContextMenuItem.Type" xml:space="preserve">
+    <value>System.Windows.Forms.ToolStripMenuItem, System.Windows.Forms, Version=4.0.0.0, Culture=neutral, PublicKeyToken=b77a5c561934e089</value>
   </data>
   <data name="&gt;&gt;peakBoundariesContextMenuItem.Name" xml:space="preserve">
     <value>peakBoundariesContextMenuItem</value>
   </data>
+  <data name="&gt;&gt;peakBoundariesContextMenuItem.Type" xml:space="preserve">
+    <value>System.Windows.Forms.ToolStripMenuItem, System.Windows.Forms, Version=4.0.0.0, Culture=neutral, PublicKeyToken=b77a5c561934e089</value>
+  </data>
   <data name="&gt;&gt;originalPeakMenuItem.Name" xml:space="preserve">
     <value>originalPeakMenuItem</value>
+  </data>
+  <data name="&gt;&gt;originalPeakMenuItem.Type" xml:space="preserve">
+    <value>System.Windows.Forms.ToolStripMenuItem, System.Windows.Forms, Version=4.0.0.0, Culture=neutral, PublicKeyToken=b77a5c561934e089</value>
   </data>
   <data name="&gt;&gt;massErrorContextMenuItem.Name" xml:space="preserve">
     <value>massErrorContextMenuItem</value>
   </data>
+  <data name="&gt;&gt;massErrorContextMenuItem.Type" xml:space="preserve">
+    <value>System.Windows.Forms.ToolStripMenuItem, System.Windows.Forms, Version=4.0.0.0, Culture=neutral, PublicKeyToken=b77a5c561934e089</value>
+  </data>
   <data name="&gt;&gt;retentionTimesContextMenuItem.Name" xml:space="preserve">
     <value>retentionTimesContextMenuItem</value>
+  </data>
+  <data name="&gt;&gt;retentionTimesContextMenuItem.Type" xml:space="preserve">
+    <value>System.Windows.Forms.ToolStripMenuItem, System.Windows.Forms, Version=4.0.0.0, Culture=neutral, PublicKeyToken=b77a5c561934e089</value>
   </data>
   <data name="&gt;&gt;allRTContextMenuItem.Name" xml:space="preserve">
     <value>allRTContextMenuItem</value>
   </data>
+  <data name="&gt;&gt;allRTContextMenuItem.Type" xml:space="preserve">
+    <value>System.Windows.Forms.ToolStripMenuItem, System.Windows.Forms, Version=4.0.0.0, Culture=neutral, PublicKeyToken=b77a5c561934e089</value>
+  </data>
   <data name="&gt;&gt;bestRTContextMenuItem.Name" xml:space="preserve">
     <value>bestRTContextMenuItem</value>
+  </data>
+  <data name="&gt;&gt;bestRTContextMenuItem.Type" xml:space="preserve">
+    <value>System.Windows.Forms.ToolStripMenuItem, System.Windows.Forms, Version=4.0.0.0, Culture=neutral, PublicKeyToken=b77a5c561934e089</value>
   </data>
   <data name="&gt;&gt;thresholdRTContextMenuItem.Name" xml:space="preserve">
     <value>thresholdRTContextMenuItem</value>
   </data>
+  <data name="&gt;&gt;thresholdRTContextMenuItem.Type" xml:space="preserve">
+    <value>System.Windows.Forms.ToolStripMenuItem, System.Windows.Forms, Version=4.0.0.0, Culture=neutral, PublicKeyToken=b77a5c561934e089</value>
+  </data>
   <data name="&gt;&gt;noneRTContextMenuItem.Name" xml:space="preserve">
     <value>noneRTContextMenuItem</value>
+  </data>
+  <data name="&gt;&gt;noneRTContextMenuItem.Type" xml:space="preserve">
+    <value>System.Windows.Forms.ToolStripMenuItem, System.Windows.Forms, Version=4.0.0.0, Culture=neutral, PublicKeyToken=b77a5c561934e089</value>
   </data>
   <data name="&gt;&gt;rawTimesMenuItemSplitter.Name" xml:space="preserve">
     <value>rawTimesMenuItemSplitter</value>
   </data>
+  <data name="&gt;&gt;rawTimesMenuItemSplitter.Type" xml:space="preserve">
+    <value>System.Windows.Forms.ToolStripSeparator, System.Windows.Forms, Version=4.0.0.0, Culture=neutral, PublicKeyToken=b77a5c561934e089</value>
+  </data>
   <data name="&gt;&gt;rawTimesContextMenuItem.Name" xml:space="preserve">
     <value>rawTimesContextMenuItem</value>
+  </data>
+  <data name="&gt;&gt;rawTimesContextMenuItem.Type" xml:space="preserve">
+    <value>System.Windows.Forms.ToolStripMenuItem, System.Windows.Forms, Version=4.0.0.0, Culture=neutral, PublicKeyToken=b77a5c561934e089</value>
   </data>
   <data name="&gt;&gt;retentionTimePredContextMenuItem.Name" xml:space="preserve">
     <value>retentionTimePredContextMenuItem</value>
   </data>
+  <data name="&gt;&gt;retentionTimePredContextMenuItem.Type" xml:space="preserve">
+    <value>System.Windows.Forms.ToolStripMenuItem, System.Windows.Forms, Version=4.0.0.0, Culture=neutral, PublicKeyToken=b77a5c561934e089</value>
+  </data>
   <data name="&gt;&gt;peptideIDTimesContextMenuItem.Name" xml:space="preserve">
     <value>peptideIDTimesContextMenuItem</value>
+  </data>
+  <data name="&gt;&gt;peptideIDTimesContextMenuItem.Type" xml:space="preserve">
+    <value>System.Windows.Forms.ToolStripMenuItem, System.Windows.Forms, Version=4.0.0.0, Culture=neutral, PublicKeyToken=b77a5c561934e089</value>
   </data>
   <data name="&gt;&gt;idTimesNoneContextMenuItem.Name" xml:space="preserve">
     <value>idTimesNoneContextMenuItem</value>
   </data>
+  <data name="&gt;&gt;idTimesNoneContextMenuItem.Type" xml:space="preserve">
+    <value>System.Windows.Forms.ToolStripMenuItem, System.Windows.Forms, Version=4.0.0.0, Culture=neutral, PublicKeyToken=b77a5c561934e089</value>
+  </data>
   <data name="&gt;&gt;idTimesMatchingContextMenuItem.Name" xml:space="preserve">
     <value>idTimesMatchingContextMenuItem</value>
+  </data>
+  <data name="&gt;&gt;idTimesMatchingContextMenuItem.Type" xml:space="preserve">
+    <value>System.Windows.Forms.ToolStripMenuItem, System.Windows.Forms, Version=4.0.0.0, Culture=neutral, PublicKeyToken=b77a5c561934e089</value>
   </data>
   <data name="&gt;&gt;idTimesAlignedContextMenuItem.Name" xml:space="preserve">
     <value>idTimesAlignedContextMenuItem</value>
   </data>
+  <data name="&gt;&gt;idTimesAlignedContextMenuItem.Type" xml:space="preserve">
+    <value>System.Windows.Forms.ToolStripMenuItem, System.Windows.Forms, Version=4.0.0.0, Culture=neutral, PublicKeyToken=b77a5c561934e089</value>
+  </data>
   <data name="&gt;&gt;idTimesOtherContextMenuItem.Name" xml:space="preserve">
     <value>idTimesOtherContextMenuItem</value>
+  </data>
+  <data name="&gt;&gt;idTimesOtherContextMenuItem.Type" xml:space="preserve">
+    <value>System.Windows.Forms.ToolStripMenuItem, System.Windows.Forms, Version=4.0.0.0, Culture=neutral, PublicKeyToken=b77a5c561934e089</value>
   </data>
   <data name="&gt;&gt;toolStripSeparator16.Name" xml:space="preserve">
     <value>toolStripSeparator16</value>
   </data>
+  <data name="&gt;&gt;toolStripSeparator16.Type" xml:space="preserve">
+    <value>System.Windows.Forms.ToolStripSeparator, System.Windows.Forms, Version=4.0.0.0, Culture=neutral, PublicKeyToken=b77a5c561934e089</value>
+  </data>
   <data name="&gt;&gt;transitionsContextMenuItem.Name" xml:space="preserve">
     <value>transitionsContextMenuItem</value>
+  </data>
+  <data name="&gt;&gt;transitionsContextMenuItem.Type" xml:space="preserve">
+    <value>System.Windows.Forms.ToolStripMenuItem, System.Windows.Forms, Version=4.0.0.0, Culture=neutral, PublicKeyToken=b77a5c561934e089</value>
   </data>
   <data name="&gt;&gt;allTranContextMenuItem.Name" xml:space="preserve">
     <value>allTranContextMenuItem</value>
   </data>
+  <data name="&gt;&gt;allTranContextMenuItem.Type" xml:space="preserve">
+    <value>System.Windows.Forms.ToolStripMenuItem, System.Windows.Forms, Version=4.0.0.0, Culture=neutral, PublicKeyToken=b77a5c561934e089</value>
+  </data>
   <data name="&gt;&gt;precursorsTranContextMenuItem.Name" xml:space="preserve">
     <value>precursorsTranContextMenuItem</value>
+  </data>
+  <data name="&gt;&gt;precursorsTranContextMenuItem.Type" xml:space="preserve">
+    <value>System.Windows.Forms.ToolStripMenuItem, System.Windows.Forms, Version=4.0.0.0, Culture=neutral, PublicKeyToken=b77a5c561934e089</value>
   </data>
   <data name="&gt;&gt;productsTranContextMenuItem.Name" xml:space="preserve">
     <value>productsTranContextMenuItem</value>
   </data>
+  <data name="&gt;&gt;productsTranContextMenuItem.Type" xml:space="preserve">
+    <value>System.Windows.Forms.ToolStripMenuItem, System.Windows.Forms, Version=4.0.0.0, Culture=neutral, PublicKeyToken=b77a5c561934e089</value>
+  </data>
   <data name="&gt;&gt;singleTranContextMenuItem.Name" xml:space="preserve">
     <value>singleTranContextMenuItem</value>
+  </data>
+  <data name="&gt;&gt;singleTranContextMenuItem.Type" xml:space="preserve">
+    <value>System.Windows.Forms.ToolStripMenuItem, System.Windows.Forms, Version=4.0.0.0, Culture=neutral, PublicKeyToken=b77a5c561934e089</value>
   </data>
   <data name="&gt;&gt;totalTranContextMenuItem.Name" xml:space="preserve">
     <value>totalTranContextMenuItem</value>
   </data>
+  <data name="&gt;&gt;totalTranContextMenuItem.Type" xml:space="preserve">
+    <value>System.Windows.Forms.ToolStripMenuItem, System.Windows.Forms, Version=4.0.0.0, Culture=neutral, PublicKeyToken=b77a5c561934e089</value>
+  </data>
   <data name="&gt;&gt;toolStripSeparatorTran.Name" xml:space="preserve">
     <value>toolStripSeparatorTran</value>
+  </data>
+  <data name="&gt;&gt;toolStripSeparatorTran.Type" xml:space="preserve">
+    <value>System.Windows.Forms.ToolStripSeparator, System.Windows.Forms, Version=4.0.0.0, Culture=neutral, PublicKeyToken=b77a5c561934e089</value>
   </data>
   <data name="&gt;&gt;basePeakContextMenuItem.Name" xml:space="preserve">
     <value>basePeakContextMenuItem</value>
   </data>
+  <data name="&gt;&gt;basePeakContextMenuItem.Type" xml:space="preserve">
+    <value>System.Windows.Forms.ToolStripMenuItem, System.Windows.Forms, Version=4.0.0.0, Culture=neutral, PublicKeyToken=b77a5c561934e089</value>
+  </data>
   <data name="&gt;&gt;ticContextMenuItem.Name" xml:space="preserve">
     <value>ticContextMenuItem</value>
+  </data>
+  <data name="&gt;&gt;ticContextMenuItem.Type" xml:space="preserve">
+    <value>System.Windows.Forms.ToolStripMenuItem, System.Windows.Forms, Version=4.0.0.0, Culture=neutral, PublicKeyToken=b77a5c561934e089</value>
   </data>
   <data name="&gt;&gt;qcContextMenuItem.Name" xml:space="preserve">
     <value>qcContextMenuItem</value>
   </data>
+  <data name="&gt;&gt;qcContextMenuItem.Type" xml:space="preserve">
+    <value>System.Windows.Forms.ToolStripMenuItem, System.Windows.Forms, Version=4.0.0.0, Culture=neutral, PublicKeyToken=b77a5c561934e089</value>
+  </data>
   <data name="&gt;&gt;toolStripSeparatorOnlyQuantitative.Name" xml:space="preserve">
     <value>toolStripSeparatorOnlyQuantitative</value>
+  </data>
+  <data name="&gt;&gt;toolStripSeparatorOnlyQuantitative.Type" xml:space="preserve">
+    <value>System.Windows.Forms.ToolStripSeparator, System.Windows.Forms, Version=4.0.0.0, Culture=neutral, PublicKeyToken=b77a5c561934e089</value>
   </data>
   <data name="&gt;&gt;onlyQuantitativeContextMenuItem.Name" xml:space="preserve">
     <value>onlyQuantitativeContextMenuItem</value>
   </data>
+  <data name="&gt;&gt;onlyQuantitativeContextMenuItem.Type" xml:space="preserve">
+    <value>System.Windows.Forms.ToolStripMenuItem, System.Windows.Forms, Version=4.0.0.0, Culture=neutral, PublicKeyToken=b77a5c561934e089</value>
+  </data>
   <data name="&gt;&gt;toolStripSeparatorSplitGraph.Name" xml:space="preserve">
     <value>toolStripSeparatorSplitGraph</value>
+  </data>
+  <data name="&gt;&gt;toolStripSeparatorSplitGraph.Type" xml:space="preserve">
+    <value>System.Windows.Forms.ToolStripSeparator, System.Windows.Forms, Version=4.0.0.0, Culture=neutral, PublicKeyToken=b77a5c561934e089</value>
   </data>
   <data name="&gt;&gt;splitGraphContextMenuItem.Name" xml:space="preserve">
     <value>splitGraphContextMenuItem</value>
   </data>
+  <data name="&gt;&gt;splitGraphContextMenuItem.Type" xml:space="preserve">
+    <value>System.Windows.Forms.ToolStripMenuItem, System.Windows.Forms, Version=4.0.0.0, Culture=neutral, PublicKeyToken=b77a5c561934e089</value>
+  </data>
   <data name="&gt;&gt;transformChromContextMenuItem.Name" xml:space="preserve">
     <value>transformChromContextMenuItem</value>
+  </data>
+  <data name="&gt;&gt;transformChromContextMenuItem.Type" xml:space="preserve">
+    <value>System.Windows.Forms.ToolStripMenuItem, System.Windows.Forms, Version=4.0.0.0, Culture=neutral, PublicKeyToken=b77a5c561934e089</value>
   </data>
   <data name="&gt;&gt;transformChromNoneContextMenuItem.Name" xml:space="preserve">
     <value>transformChromNoneContextMenuItem</value>
   </data>
+  <data name="&gt;&gt;transformChromNoneContextMenuItem.Type" xml:space="preserve">
+    <value>System.Windows.Forms.ToolStripMenuItem, System.Windows.Forms, Version=4.0.0.0, Culture=neutral, PublicKeyToken=b77a5c561934e089</value>
+  </data>
   <data name="&gt;&gt;transformChromInterpolatedContextMenuItem.Name" xml:space="preserve">
     <value>transformChromInterpolatedContextMenuItem</value>
+  </data>
+  <data name="&gt;&gt;transformChromInterpolatedContextMenuItem.Type" xml:space="preserve">
+    <value>System.Windows.Forms.ToolStripMenuItem, System.Windows.Forms, Version=4.0.0.0, Culture=neutral, PublicKeyToken=b77a5c561934e089</value>
   </data>
   <data name="&gt;&gt;secondDerivativeContextMenuItem.Name" xml:space="preserve">
     <value>secondDerivativeContextMenuItem</value>
   </data>
+  <data name="&gt;&gt;secondDerivativeContextMenuItem.Type" xml:space="preserve">
+    <value>System.Windows.Forms.ToolStripMenuItem, System.Windows.Forms, Version=4.0.0.0, Culture=neutral, PublicKeyToken=b77a5c561934e089</value>
+  </data>
   <data name="&gt;&gt;firstDerivativeContextMenuItem.Name" xml:space="preserve">
     <value>firstDerivativeContextMenuItem</value>
+  </data>
+  <data name="&gt;&gt;firstDerivativeContextMenuItem.Type" xml:space="preserve">
+    <value>System.Windows.Forms.ToolStripMenuItem, System.Windows.Forms, Version=4.0.0.0, Culture=neutral, PublicKeyToken=b77a5c561934e089</value>
   </data>
   <data name="&gt;&gt;smoothSGChromContextMenuItem.Name" xml:space="preserve">
     <value>smoothSGChromContextMenuItem</value>
   </data>
+  <data name="&gt;&gt;smoothSGChromContextMenuItem.Type" xml:space="preserve">
+    <value>System.Windows.Forms.ToolStripMenuItem, System.Windows.Forms, Version=4.0.0.0, Culture=neutral, PublicKeyToken=b77a5c561934e089</value>
+  </data>
   <data name="&gt;&gt;toolStripSeparator17.Name" xml:space="preserve">
     <value>toolStripSeparator17</value>
+  </data>
+  <data name="&gt;&gt;toolStripSeparator17.Type" xml:space="preserve">
+    <value>System.Windows.Forms.ToolStripSeparator, System.Windows.Forms, Version=4.0.0.0, Culture=neutral, PublicKeyToken=b77a5c561934e089</value>
   </data>
   <data name="&gt;&gt;autoZoomContextMenuItem.Name" xml:space="preserve">
     <value>autoZoomContextMenuItem</value>
   </data>
+  <data name="&gt;&gt;autoZoomContextMenuItem.Type" xml:space="preserve">
+    <value>System.Windows.Forms.ToolStripMenuItem, System.Windows.Forms, Version=4.0.0.0, Culture=neutral, PublicKeyToken=b77a5c561934e089</value>
+  </data>
   <data name="&gt;&gt;autoZoomNoneContextMenuItem.Name" xml:space="preserve">
     <value>autoZoomNoneContextMenuItem</value>
+  </data>
+  <data name="&gt;&gt;autoZoomNoneContextMenuItem.Type" xml:space="preserve">
+    <value>System.Windows.Forms.ToolStripMenuItem, System.Windows.Forms, Version=4.0.0.0, Culture=neutral, PublicKeyToken=b77a5c561934e089</value>
   </data>
   <data name="&gt;&gt;autoZoomBestPeakContextMenuItem.Name" xml:space="preserve">
     <value>autoZoomBestPeakContextMenuItem</value>
   </data>
+  <data name="&gt;&gt;autoZoomBestPeakContextMenuItem.Type" xml:space="preserve">
+    <value>System.Windows.Forms.ToolStripMenuItem, System.Windows.Forms, Version=4.0.0.0, Culture=neutral, PublicKeyToken=b77a5c561934e089</value>
+  </data>
   <data name="&gt;&gt;autoZoomRTWindowContextMenuItem.Name" xml:space="preserve">
     <value>autoZoomRTWindowContextMenuItem</value>
+  </data>
+  <data name="&gt;&gt;autoZoomRTWindowContextMenuItem.Type" xml:space="preserve">
+    <value>System.Windows.Forms.ToolStripMenuItem, System.Windows.Forms, Version=4.0.0.0, Culture=neutral, PublicKeyToken=b77a5c561934e089</value>
   </data>
   <data name="&gt;&gt;autoZoomBothContextMenuItem.Name" xml:space="preserve">
     <value>autoZoomBothContextMenuItem</value>
   </data>
+  <data name="&gt;&gt;autoZoomBothContextMenuItem.Type" xml:space="preserve">
+    <value>System.Windows.Forms.ToolStripMenuItem, System.Windows.Forms, Version=4.0.0.0, Culture=neutral, PublicKeyToken=b77a5c561934e089</value>
+  </data>
   <data name="&gt;&gt;lockYChromContextMenuItem.Name" xml:space="preserve">
     <value>lockYChromContextMenuItem</value>
+  </data>
+  <data name="&gt;&gt;lockYChromContextMenuItem.Type" xml:space="preserve">
+    <value>System.Windows.Forms.ToolStripMenuItem, System.Windows.Forms, Version=4.0.0.0, Culture=neutral, PublicKeyToken=b77a5c561934e089</value>
   </data>
   <data name="&gt;&gt;synchronizeZoomingContextMenuItem.Name" xml:space="preserve">
     <value>synchronizeZoomingContextMenuItem</value>
   </data>
+  <data name="&gt;&gt;synchronizeZoomingContextMenuItem.Type" xml:space="preserve">
+    <value>System.Windows.Forms.ToolStripMenuItem, System.Windows.Forms, Version=4.0.0.0, Culture=neutral, PublicKeyToken=b77a5c561934e089</value>
+  </data>
   <data name="&gt;&gt;toolStripSeparator18.Name" xml:space="preserve">
     <value>toolStripSeparator18</value>
+  </data>
+  <data name="&gt;&gt;toolStripSeparator18.Type" xml:space="preserve">
+    <value>System.Windows.Forms.ToolStripSeparator, System.Windows.Forms, Version=4.0.0.0, Culture=neutral, PublicKeyToken=b77a5c561934e089</value>
   </data>
   <data name="&gt;&gt;chromPropsContextMenuItem.Name" xml:space="preserve">
     <value>chromPropsContextMenuItem</value>
   </data>
+  <data name="&gt;&gt;chromPropsContextMenuItem.Type" xml:space="preserve">
+    <value>System.Windows.Forms.ToolStripMenuItem, System.Windows.Forms, Version=4.0.0.0, Culture=neutral, PublicKeyToken=b77a5c561934e089</value>
+  </data>
   <data name="&gt;&gt;toolStripSeparator19.Name" xml:space="preserve">
     <value>toolStripSeparator19</value>
+  </data>
+  <data name="&gt;&gt;toolStripSeparator19.Type" xml:space="preserve">
+    <value>System.Windows.Forms.ToolStripSeparator, System.Windows.Forms, Version=4.0.0.0, Culture=neutral, PublicKeyToken=b77a5c561934e089</value>
   </data>
   <data name="&gt;&gt;zoomChromContextMenuItem.Name" xml:space="preserve">
     <value>zoomChromContextMenuItem</value>
   </data>
+  <data name="&gt;&gt;zoomChromContextMenuItem.Type" xml:space="preserve">
+    <value>System.Windows.Forms.ToolStripMenuItem, System.Windows.Forms, Version=4.0.0.0, Culture=neutral, PublicKeyToken=b77a5c561934e089</value>
+  </data>
   <data name="&gt;&gt;toolStripSeparator26.Name" xml:space="preserve">
     <value>toolStripSeparator26</value>
   </data>
+  <data name="&gt;&gt;toolStripSeparator26.Type" xml:space="preserve">
+    <value>System.Windows.Forms.ToolStripSeparator, System.Windows.Forms, Version=4.0.0.0, Culture=neutral, PublicKeyToken=b77a5c561934e089</value>
+  </data>
   <data name="&gt;&gt;$this.Name" xml:space="preserve">
     <value>ChromatogramContextMenu</value>
+  </data>
+  <data name="&gt;&gt;$this.Type" xml:space="preserve">
+    <value>pwiz.Skyline.Menus.SkylineControl, Skyline, Version=1.0.0.0, Culture=neutral, PublicKeyToken=null</value>
   </data>
 </root>

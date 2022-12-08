@@ -118,22 +118,25 @@
     <value>System.Resources.ResXResourceWriter, System.Windows.Forms, Version=4.0.0.0, Culture=neutral, PublicKeyToken=b77a5c561934e089</value>
   </resheader>
   <assembly alias="System.Windows.Forms" name="System.Windows.Forms, Version=4.0.0.0, Culture=neutral, PublicKeyToken=b77a5c561934e089" />
-  <assembly alias="System.Drawing" name="System.Drawing, Version=4.0.0.0, Culture=neutral, PublicKeyToken=b03f5f7f11d50a3a" />
-  <assembly alias="mscorlib" name="mscorlib, Version=4.0.0.0, Culture=neutral, PublicKeyToken=b77a5c561934e089" />
   <data name="modificationsListBox.Anchor" type="System.Windows.Forms.AnchorStyles, System.Windows.Forms">
     <value>Top, Bottom, Left, Right</value>
   </data>
+  <assembly alias="System.Drawing" name="System.Drawing, Version=4.0.0.0, Culture=neutral, PublicKeyToken=b03f5f7f11d50a3a" />
   <data name="modificationsListBox.Location" type="System.Drawing.Point, System.Drawing">
     <value>19, 42</value>
   </data>
   <data name="modificationsListBox.Size" type="System.Drawing.Size, System.Drawing">
     <value>340, 199</value>
   </data>
+  <assembly alias="mscorlib" name="mscorlib, Version=4.0.0.0, Culture=neutral, PublicKeyToken=b77a5c561934e089" />
   <data name="modificationsListBox.TabIndex" type="System.Int32, mscorlib">
     <value>1</value>
   </data>
   <data name="&gt;&gt;modificationsListBox.Name" xml:space="preserve">
     <value>modificationsListBox</value>
+  </data>
+  <data name="&gt;&gt;modificationsListBox.Type" xml:space="preserve">
+    <value>System.Windows.Forms.CheckedListBox, System.Windows.Forms, Version=4.0.0.0, Culture=neutral, PublicKeyToken=b77a5c561934e089</value>
   </data>
   <data name="&gt;&gt;modificationsListBox.Parent" xml:space="preserve">
     <value>splitContainer.Panel1</value>
@@ -159,6 +162,9 @@
   <data name="&gt;&gt;labelModifications.Name" xml:space="preserve">
     <value>labelModifications</value>
   </data>
+  <data name="&gt;&gt;labelModifications.Type" xml:space="preserve">
+    <value>System.Windows.Forms.Label, System.Windows.Forms, Version=4.0.0.0, Culture=neutral, PublicKeyToken=b77a5c561934e089</value>
+  </data>
   <data name="&gt;&gt;labelModifications.Parent" xml:space="preserve">
     <value>splitContainer.Panel1</value>
   </data>
@@ -179,6 +185,9 @@
   </data>
   <data name="&gt;&gt;unmatchedListBox.Name" xml:space="preserve">
     <value>unmatchedListBox</value>
+  </data>
+  <data name="&gt;&gt;unmatchedListBox.Type" xml:space="preserve">
+    <value>System.Windows.Forms.ListBox, System.Windows.Forms, Version=4.0.0.0, Culture=neutral, PublicKeyToken=b77a5c561934e089</value>
   </data>
   <data name="&gt;&gt;unmatchedListBox.Parent" xml:space="preserve">
     <value>splitContainer.Panel2</value>
@@ -219,6 +228,9 @@
   <data name="&gt;&gt;cbSelectAll.Name" xml:space="preserve">
     <value>cbSelectAll</value>
   </data>
+  <data name="&gt;&gt;cbSelectAll.Type" xml:space="preserve">
+    <value>System.Windows.Forms.CheckBox, System.Windows.Forms, Version=4.0.0.0, Culture=neutral, PublicKeyToken=b77a5c561934e089</value>
+  </data>
   <data name="&gt;&gt;cbSelectAll.Parent" xml:space="preserve">
     <value>splitContainer.Panel1</value>
   </data>
@@ -227,6 +239,9 @@
   </data>
   <data name="&gt;&gt;splitContainer.Panel1.Name" xml:space="preserve">
     <value>splitContainer.Panel1</value>
+  </data>
+  <data name="&gt;&gt;splitContainer.Panel1.Type" xml:space="preserve">
+    <value>System.Windows.Forms.SplitterPanel, System.Windows.Forms, Version=4.0.0.0, Culture=neutral, PublicKeyToken=b77a5c561934e089</value>
   </data>
   <data name="&gt;&gt;splitContainer.Panel1.Parent" xml:space="preserve">
     <value>splitContainer</value>
@@ -252,6 +267,9 @@
   <data name="&gt;&gt;label1.Name" xml:space="preserve">
     <value>label1</value>
   </data>
+  <data name="&gt;&gt;label1.Type" xml:space="preserve">
+    <value>System.Windows.Forms.Label, System.Windows.Forms, Version=4.0.0.0, Culture=neutral, PublicKeyToken=b77a5c561934e089</value>
+  </data>
   <data name="&gt;&gt;label1.Parent" xml:space="preserve">
     <value>splitContainer.Panel2</value>
   </data>
@@ -260,6 +278,9 @@
   </data>
   <data name="&gt;&gt;splitContainer.Panel2.Name" xml:space="preserve">
     <value>splitContainer.Panel2</value>
+  </data>
+  <data name="&gt;&gt;splitContainer.Panel2.Type" xml:space="preserve">
+    <value>System.Windows.Forms.SplitterPanel, System.Windows.Forms, Version=4.0.0.0, Culture=neutral, PublicKeyToken=b77a5c561934e089</value>
   </data>
   <data name="&gt;&gt;splitContainer.Panel2.Parent" xml:space="preserve">
     <value>splitContainer</value>
@@ -278,6 +299,9 @@
   </data>
   <data name="&gt;&gt;splitContainer.Name" xml:space="preserve">
     <value>splitContainer</value>
+  </data>
+  <data name="&gt;&gt;splitContainer.Type" xml:space="preserve">
+    <value>System.Windows.Forms.SplitContainer, System.Windows.Forms, Version=4.0.0.0, Culture=neutral, PublicKeyToken=b77a5c561934e089</value>
   </data>
   <data name="&gt;&gt;splitContainer.Parent" xml:space="preserve">
     <value>$this</value>
@@ -302,6 +326,9 @@
   </data>
   <data name="&gt;&gt;btnAddModification.Name" xml:space="preserve">
     <value>btnAddModification</value>
+  </data>
+  <data name="&gt;&gt;btnAddModification.Type" xml:space="preserve">
+    <value>System.Windows.Forms.Button, System.Windows.Forms, Version=4.0.0.0, Culture=neutral, PublicKeyToken=b77a5c561934e089</value>
   </data>
   <data name="&gt;&gt;btnAddModification.Parent" xml:space="preserve">
     <value>$this</value>
@@ -330,6 +357,9 @@
   <data name="&gt;&gt;menuAddModification.Name" xml:space="preserve">
     <value>menuAddModification</value>
   </data>
+  <data name="&gt;&gt;menuAddModification.Type" xml:space="preserve">
+    <value>System.Windows.Forms.ContextMenuStrip, System.Windows.Forms, Version=4.0.0.0, Culture=neutral, PublicKeyToken=b77a5c561934e089</value>
+  </data>
   <data name="$this.Localizable" type="System.Boolean, mscorlib">
     <value>True</value>
   </data>
@@ -342,10 +372,19 @@
   <data name="&gt;&gt;menuItemAddStructuralModification.Name" xml:space="preserve">
     <value>menuItemAddStructuralModification</value>
   </data>
+  <data name="&gt;&gt;menuItemAddStructuralModification.Type" xml:space="preserve">
+    <value>System.Windows.Forms.ToolStripMenuItem, System.Windows.Forms, Version=4.0.0.0, Culture=neutral, PublicKeyToken=b77a5c561934e089</value>
+  </data>
   <data name="&gt;&gt;menuItemAddHeavyModification.Name" xml:space="preserve">
     <value>menuItemAddHeavyModification</value>
   </data>
+  <data name="&gt;&gt;menuItemAddHeavyModification.Type" xml:space="preserve">
+    <value>System.Windows.Forms.ToolStripMenuItem, System.Windows.Forms, Version=4.0.0.0, Culture=neutral, PublicKeyToken=b77a5c561934e089</value>
+  </data>
   <data name="&gt;&gt;$this.Name" xml:space="preserve">
     <value>MatchModificationsControl</value>
+  </data>
+  <data name="&gt;&gt;$this.Type" xml:space="preserve">
+    <value>System.Windows.Forms.UserControl, System.Windows.Forms, Version=4.0.0.0, Culture=neutral, PublicKeyToken=b77a5c561934e089</value>
   </data>
 </root>

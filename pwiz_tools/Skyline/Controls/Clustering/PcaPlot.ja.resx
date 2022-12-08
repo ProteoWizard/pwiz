@@ -118,14 +118,10 @@
     <value>System.Resources.ResXResourceWriter, System.Windows.Forms, Version=4.0.0.0, Culture=neutral, PublicKeyToken=b77a5c561934e089</value>
   </resheader>
   <assembly alias="mscorlib" name="mscorlib, Version=4.0.0.0, Culture=neutral, PublicKeyToken=b77a5c561934e089" />
-  <assembly alias="System.Drawing" name="System.Drawing, Version=4.0.0.0, Culture=neutral, PublicKeyToken=b03f5f7f11d50a3a" />
-  <assembly alias="System.Windows.Forms" name="System.Windows.Forms, Version=4.0.0.0, Culture=neutral, PublicKeyToken=b77a5c561934e089" />
-  <metadata name="$this.Localizable" type="System.Boolean, mscorlib, Version=4.0.0.0, Culture=neutral, PublicKeyToken=b77a5c561934e089">
-    <value>True</value>
-  </metadata>
   <data name="lblXAxis.AutoSize" type="System.Boolean, mscorlib">
     <value>True</value>
   </data>
+  <assembly alias="System.Drawing" name="System.Drawing, Version=4.0.0.0, Culture=neutral, PublicKeyToken=b03f5f7f11d50a3a" />
   <data name="lblXAxis.Location" type="System.Drawing.Point, System.Drawing">
     <value>12, 9</value>
   </data>
@@ -140,6 +136,9 @@
   </data>
   <data name="&gt;&gt;lblXAxis.Name" xml:space="preserve">
     <value>lblXAxis</value>
+  </data>
+  <data name="&gt;&gt;lblXAxis.Type" xml:space="preserve">
+    <value>System.Windows.Forms.Label, System.Windows.Forms, Version=4.0.0.0, Culture=neutral, PublicKeyToken=b77a5c561934e089</value>
   </data>
   <data name="&gt;&gt;lblXAxis.Parent" xml:space="preserve">
     <value>$this</value>
@@ -158,6 +157,9 @@
   </data>
   <data name="&gt;&gt;numericUpDownXAxis.Name" xml:space="preserve">
     <value>numericUpDownXAxis</value>
+  </data>
+  <data name="&gt;&gt;numericUpDownXAxis.Type" xml:space="preserve">
+    <value>System.Windows.Forms.NumericUpDown, System.Windows.Forms, Version=4.0.0.0, Culture=neutral, PublicKeyToken=b77a5c561934e089</value>
   </data>
   <data name="&gt;&gt;numericUpDownXAxis.Parent" xml:space="preserve">
     <value>$this</value>
@@ -183,6 +185,9 @@
   <data name="&gt;&gt;lblYAxis.Name" xml:space="preserve">
     <value>lblYAxis</value>
   </data>
+  <data name="&gt;&gt;lblYAxis.Type" xml:space="preserve">
+    <value>System.Windows.Forms.Label, System.Windows.Forms, Version=4.0.0.0, Culture=neutral, PublicKeyToken=b77a5c561934e089</value>
+  </data>
   <data name="&gt;&gt;lblYAxis.Parent" xml:space="preserve">
     <value>$this</value>
   </data>
@@ -201,12 +206,16 @@
   <data name="&gt;&gt;numericUpDownYAxis.Name" xml:space="preserve">
     <value>numericUpDownYAxis</value>
   </data>
+  <data name="&gt;&gt;numericUpDownYAxis.Type" xml:space="preserve">
+    <value>System.Windows.Forms.NumericUpDown, System.Windows.Forms, Version=4.0.0.0, Culture=neutral, PublicKeyToken=b77a5c561934e089</value>
+  </data>
   <data name="&gt;&gt;numericUpDownYAxis.Parent" xml:space="preserve">
     <value>$this</value>
   </data>
   <data name="&gt;&gt;numericUpDownYAxis.ZOrder" xml:space="preserve">
     <value>3</value>
   </data>
+  <assembly alias="System.Windows.Forms" name="System.Windows.Forms, Version=4.0.0.0, Culture=neutral, PublicKeyToken=b77a5c561934e089" />
   <data name="zedGraphControl1.Anchor" type="System.Windows.Forms.AnchorStyles, System.Windows.Forms">
     <value>Top, Bottom, Left, Right</value>
   </data>
@@ -221,6 +230,9 @@
   </data>
   <data name="&gt;&gt;zedGraphControl1.Name" xml:space="preserve">
     <value>zedGraphControl1</value>
+  </data>
+  <data name="&gt;&gt;zedGraphControl1.Type" xml:space="preserve">
+    <value>ZedGraph.ZedGraphControl, ZedGraph, Version=5.1.7662.26562, Culture=neutral, PublicKeyToken=8b2485f42e5e887d</value>
   </data>
   <data name="&gt;&gt;zedGraphControl1.Parent" xml:space="preserve">
     <value>$this</value>
@@ -246,6 +258,9 @@
   <data name="&gt;&gt;lblDataset.Name" xml:space="preserve">
     <value>lblDataset</value>
   </data>
+  <data name="&gt;&gt;lblDataset.Type" xml:space="preserve">
+    <value>System.Windows.Forms.Label, System.Windows.Forms, Version=4.0.0.0, Culture=neutral, PublicKeyToken=b77a5c561934e089</value>
+  </data>
   <data name="&gt;&gt;lblDataset.Parent" xml:space="preserve">
     <value>$this</value>
   </data>
@@ -267,12 +282,18 @@
   <data name="&gt;&gt;comboDataset.Name" xml:space="preserve">
     <value>comboDataset</value>
   </data>
+  <data name="&gt;&gt;comboDataset.Type" xml:space="preserve">
+    <value>System.Windows.Forms.ComboBox, System.Windows.Forms, Version=4.0.0.0, Culture=neutral, PublicKeyToken=b77a5c561934e089</value>
+  </data>
   <data name="&gt;&gt;comboDataset.Parent" xml:space="preserve">
     <value>$this</value>
   </data>
   <data name="&gt;&gt;comboDataset.ZOrder" xml:space="preserve">
     <value>0</value>
   </data>
+  <metadata name="$this.Localizable" type="System.Boolean, mscorlib, Version=4.0.0.0, Culture=neutral, PublicKeyToken=b77a5c561934e089">
+    <value>True</value>
+  </metadata>
   <data name="$this.AutoScaleDimensions" type="System.Drawing.SizeF, System.Drawing">
     <value>6, 13</value>
   </data>
@@ -287,5 +308,8 @@
   </data>
   <data name="&gt;&gt;$this.Name" xml:space="preserve">
     <value>PcaPlot</value>
+  </data>
+  <data name="&gt;&gt;$this.Type" xml:space="preserve">
+    <value>System.Windows.Forms.Form, System.Windows.Forms, Version=4.0.0.0, Culture=neutral, PublicKeyToken=b77a5c561934e089</value>
   </data>
 </root>

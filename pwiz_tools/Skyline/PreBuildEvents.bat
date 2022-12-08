@@ -10,7 +10,8 @@ echo "%~dp0Executables\SortRESX\SortRESX.exe" %%~f
 REM folders where the .resx files get processed by SortRESX.exe but the element order is preserved
 REM so that it just normalizes whitespace and removes elements such as "TrayLocation" or "Type"
 for %%f in (
-"%~dp0..\..\pwiz_tools\Skyline"
+"%~dp0..\..\pwiz_tools\Skyline\Properties"
+"%~dp0..\..\pwiz_tools\Skyline\Controls\AuditLog"
 ) do (
 echo "%~dp0Executables\SortRESX\SortRESX.exe" --preserveElementOrder %%~f 
 "%~dp0Executables\SortRESX\SortRESX.exe" --preserveElementOrder %%~f

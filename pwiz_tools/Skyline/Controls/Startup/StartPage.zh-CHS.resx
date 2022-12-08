@@ -117,21 +117,21 @@
   <resheader name="writer">
     <value>System.Resources.ResXResourceWriter, System.Windows.Forms, Version=4.0.0.0, Culture=neutral, PublicKeyToken=b77a5c561934e089</value>
   </resheader>
-  <assembly alias="mscorlib" name="mscorlib, Version=4.0.0.0, Culture=neutral, PublicKeyToken=b77a5c561934e089" />
-  <assembly alias="System.Windows.Forms" name="System.Windows.Forms, Version=4.0.0.0, Culture=neutral, PublicKeyToken=b77a5c561934e089" />
-  <assembly alias="System.Drawing" name="System.Drawing, Version=4.0.0.0, Culture=neutral, PublicKeyToken=b03f5f7f11d50a3a" />
-  <metadata name="$this.Localizable" type="System.Boolean, mscorlib, Version=4.0.0.0, Culture=neutral, PublicKeyToken=b77a5c561934e089">
-    <value>True</value>
+  <metadata name="toolTip.TrayLocation" type="System.Drawing.Point, System.Drawing, Version=4.0.0.0, Culture=neutral, PublicKeyToken=b03f5f7f11d50a3a">
+    <value>189, 17</value>
   </metadata>
+  <assembly alias="mscorlib" name="mscorlib, Version=4.0.0.0, Culture=neutral, PublicKeyToken=b77a5c561934e089" />
   <data name="flowLayoutPanelWizard.AutoScroll" type="System.Boolean, mscorlib">
     <value>True</value>
   </data>
+  <assembly alias="System.Windows.Forms" name="System.Windows.Forms, Version=4.0.0.0, Culture=neutral, PublicKeyToken=b77a5c561934e089" />
   <data name="flowLayoutPanelWizard.AutoSizeMode" type="System.Windows.Forms.AutoSizeMode, System.Windows.Forms">
     <value>GrowAndShrink</value>
   </data>
   <data name="flowLayoutPanelWizard.Dock" type="System.Windows.Forms.DockStyle, System.Windows.Forms">
     <value>Fill</value>
   </data>
+  <assembly alias="System.Drawing" name="System.Drawing, Version=4.0.0.0, Culture=neutral, PublicKeyToken=b03f5f7f11d50a3a" />
   <data name="flowLayoutPanelWizard.Location" type="System.Drawing.Point, System.Drawing">
     <value>3, 3</value>
   </data>
@@ -143,6 +143,9 @@
   </data>
   <data name="&gt;&gt;flowLayoutPanelWizard.Name" xml:space="preserve">
     <value>flowLayoutPanelWizard</value>
+  </data>
+  <data name="&gt;&gt;flowLayoutPanelWizard.Type" xml:space="preserve">
+    <value>System.Windows.Forms.FlowLayoutPanel, System.Windows.Forms, Version=4.0.0.0, Culture=neutral, PublicKeyToken=b77a5c561934e089</value>
   </data>
   <data name="&gt;&gt;flowLayoutPanelWizard.Parent" xml:space="preserve">
     <value>wizardTabPage</value>
@@ -167,6 +170,9 @@
   </data>
   <data name="&gt;&gt;wizardTabPage.Name" xml:space="preserve">
     <value>wizardTabPage</value>
+  </data>
+  <data name="&gt;&gt;wizardTabPage.Type" xml:space="preserve">
+    <value>System.Windows.Forms.TabPage, System.Windows.Forms, Version=4.0.0.0, Culture=neutral, PublicKeyToken=b77a5c561934e089</value>
   </data>
   <data name="&gt;&gt;wizardTabPage.Parent" xml:space="preserve">
     <value>tabControlMain</value>
@@ -195,6 +201,9 @@
   <data name="&gt;&gt;flowLayoutPanelTutorials.Name" xml:space="preserve">
     <value>flowLayoutPanelTutorials</value>
   </data>
+  <data name="&gt;&gt;flowLayoutPanelTutorials.Type" xml:space="preserve">
+    <value>System.Windows.Forms.FlowLayoutPanel, System.Windows.Forms, Version=4.0.0.0, Culture=neutral, PublicKeyToken=b77a5c561934e089</value>
+  </data>
   <data name="&gt;&gt;flowLayoutPanelTutorials.Parent" xml:space="preserve">
     <value>tutorialsTabPage</value>
   </data>
@@ -218,6 +227,9 @@
   </data>
   <data name="&gt;&gt;tutorialsTabPage.Name" xml:space="preserve">
     <value>tutorialsTabPage</value>
+  </data>
+  <data name="&gt;&gt;tutorialsTabPage.Type" xml:space="preserve">
+    <value>System.Windows.Forms.TabPage, System.Windows.Forms, Version=4.0.0.0, Culture=neutral, PublicKeyToken=b77a5c561934e089</value>
   </data>
   <data name="&gt;&gt;tutorialsTabPage.Parent" xml:space="preserve">
     <value>tabControlMain</value>
@@ -245,6 +257,9 @@
   </data>
   <data name="&gt;&gt;tabControlMain.Name" xml:space="preserve">
     <value>tabControlMain</value>
+  </data>
+  <data name="&gt;&gt;tabControlMain.Type" xml:space="preserve">
+    <value>System.Windows.Forms.TabControl, System.Windows.Forms, Version=4.0.0.0, Culture=neutral, PublicKeyToken=b77a5c561934e089</value>
   </data>
   <data name="&gt;&gt;tabControlMain.Parent" xml:space="preserve">
     <value>$this</value>
@@ -276,6 +291,9 @@
   <data name="&gt;&gt;skyline.Name" xml:space="preserve">
     <value>skyline</value>
   </data>
+  <data name="&gt;&gt;skyline.Type" xml:space="preserve">
+    <value>System.Windows.Forms.Label, System.Windows.Forms, Version=4.0.0.0, Culture=neutral, PublicKeyToken=b77a5c561934e089</value>
+  </data>
   <data name="&gt;&gt;skyline.Parent" xml:space="preserve">
     <value>leftPanel</value>
   </data>
@@ -306,6 +324,9 @@
   <data name="&gt;&gt;lblRecent.Name" xml:space="preserve">
     <value>lblRecent</value>
   </data>
+  <data name="&gt;&gt;lblRecent.Type" xml:space="preserve">
+    <value>System.Windows.Forms.Label, System.Windows.Forms, Version=4.0.0.0, Culture=neutral, PublicKeyToken=b77a5c561934e089</value>
+  </data>
   <data name="&gt;&gt;lblRecent.Parent" xml:space="preserve">
     <value>leftPanel</value>
   </data>
@@ -329,6 +350,9 @@
   </data>
   <data name="&gt;&gt;recentFilesPanel.Name" xml:space="preserve">
     <value>recentFilesPanel</value>
+  </data>
+  <data name="&gt;&gt;recentFilesPanel.Type" xml:space="preserve">
+    <value>System.Windows.Forms.Panel, System.Windows.Forms, Version=4.0.0.0, Culture=neutral, PublicKeyToken=b77a5c561934e089</value>
   </data>
   <data name="&gt;&gt;recentFilesPanel.Parent" xml:space="preserve">
     <value>leftPanel</value>
@@ -360,6 +384,9 @@
   <data name="&gt;&gt;checkBoxShowStartup.Name" xml:space="preserve">
     <value>checkBoxShowStartup</value>
   </data>
+  <data name="&gt;&gt;checkBoxShowStartup.Type" xml:space="preserve">
+    <value>System.Windows.Forms.CheckBox, System.Windows.Forms, Version=4.0.0.0, Culture=neutral, PublicKeyToken=b77a5c561934e089</value>
+  </data>
   <data name="&gt;&gt;checkBoxShowStartup.Parent" xml:space="preserve">
     <value>leftBottomPanel</value>
   </data>
@@ -380,6 +407,9 @@
   </data>
   <data name="&gt;&gt;openFileIcon.Name" xml:space="preserve">
     <value>openFileIcon</value>
+  </data>
+  <data name="&gt;&gt;openFileIcon.Type" xml:space="preserve">
+    <value>System.Windows.Forms.PictureBox, System.Windows.Forms, Version=4.0.0.0, Culture=neutral, PublicKeyToken=b77a5c561934e089</value>
   </data>
   <data name="&gt;&gt;openFileIcon.Parent" xml:space="preserve">
     <value>openFilePanel</value>
@@ -411,6 +441,9 @@
   <data name="&gt;&gt;openFileLabel.Name" xml:space="preserve">
     <value>openFileLabel</value>
   </data>
+  <data name="&gt;&gt;openFileLabel.Type" xml:space="preserve">
+    <value>System.Windows.Forms.Label, System.Windows.Forms, Version=4.0.0.0, Culture=neutral, PublicKeyToken=b77a5c561934e089</value>
+  </data>
   <data name="&gt;&gt;openFileLabel.Parent" xml:space="preserve">
     <value>openFilePanel</value>
   </data>
@@ -428,6 +461,9 @@
   </data>
   <data name="&gt;&gt;openFilePanel.Name" xml:space="preserve">
     <value>openFilePanel</value>
+  </data>
+  <data name="&gt;&gt;openFilePanel.Type" xml:space="preserve">
+    <value>System.Windows.Forms.Panel, System.Windows.Forms, Version=4.0.0.0, Culture=neutral, PublicKeyToken=b77a5c561934e089</value>
   </data>
   <data name="&gt;&gt;openFilePanel.Parent" xml:space="preserve">
     <value>leftBottomPanel</value>
@@ -450,6 +486,9 @@
   <data name="&gt;&gt;leftBottomPanel.Name" xml:space="preserve">
     <value>leftBottomPanel</value>
   </data>
+  <data name="&gt;&gt;leftBottomPanel.Type" xml:space="preserve">
+    <value>System.Windows.Forms.Panel, System.Windows.Forms, Version=4.0.0.0, Culture=neutral, PublicKeyToken=b77a5c561934e089</value>
+  </data>
   <data name="&gt;&gt;leftBottomPanel.Parent" xml:space="preserve">
     <value>leftPanel</value>
   </data>
@@ -471,12 +510,18 @@
   <data name="&gt;&gt;leftPanel.Name" xml:space="preserve">
     <value>leftPanel</value>
   </data>
+  <data name="&gt;&gt;leftPanel.Type" xml:space="preserve">
+    <value>System.Windows.Forms.Panel, System.Windows.Forms, Version=4.0.0.0, Culture=neutral, PublicKeyToken=b77a5c561934e089</value>
+  </data>
   <data name="&gt;&gt;leftPanel.Parent" xml:space="preserve">
     <value>$this</value>
   </data>
   <data name="&gt;&gt;leftPanel.ZOrder" xml:space="preserve">
     <value>1</value>
   </data>
+  <metadata name="tooStripModeUI.TrayLocation" type="System.Drawing.Point, System.Drawing, Version=4.0.0.0, Culture=neutral, PublicKeyToken=b03f5f7f11d50a3a">
+    <value>279, 0</value>
+  </metadata>
   <data name="tooStripModeUI.Anchor" type="System.Windows.Forms.AnchorStyles, System.Windows.Forms">
     <value>Top, Right</value>
   </data>
@@ -507,12 +552,21 @@
   <data name="&gt;&gt;tooStripModeUI.Name" xml:space="preserve">
     <value>tooStripModeUI</value>
   </data>
+  <data name="&gt;&gt;tooStripModeUI.Type" xml:space="preserve">
+    <value>System.Windows.Forms.ToolStrip, System.Windows.Forms, Version=4.0.0.0, Culture=neutral, PublicKeyToken=b77a5c561934e089</value>
+  </data>
   <data name="&gt;&gt;tooStripModeUI.Parent" xml:space="preserve">
     <value>$this</value>
   </data>
   <data name="&gt;&gt;tooStripModeUI.ZOrder" xml:space="preserve">
     <value>2</value>
   </data>
+  <metadata name="$this.Localizable" type="System.Boolean, mscorlib, Version=4.0.0.0, Culture=neutral, PublicKeyToken=b77a5c561934e089">
+    <value>True</value>
+  </metadata>
+  <metadata name="$this.TrayHeight" type="System.Int32, mscorlib, Version=4.0.0.0, Culture=neutral, PublicKeyToken=b77a5c561934e089">
+    <value>32</value>
+  </metadata>
   <data name="$this.AutoScaleDimensions" type="System.Drawing.SizeF, System.Drawing">
     <value>6, 13</value>
   </data>
@@ -525,13 +579,25 @@
   <data name="&gt;&gt;toolTip.Name" xml:space="preserve">
     <value>toolTip</value>
   </data>
+  <data name="&gt;&gt;toolTip.Type" xml:space="preserve">
+    <value>System.Windows.Forms.ToolTip, System.Windows.Forms, Version=4.0.0.0, Culture=neutral, PublicKeyToken=b77a5c561934e089</value>
+  </data>
   <data name="&gt;&gt;toolStripButtonProteomicModeUI.Name" xml:space="preserve">
     <value>toolStripButtonProteomicModeUI</value>
+  </data>
+  <data name="&gt;&gt;toolStripButtonProteomicModeUI.Type" xml:space="preserve">
+    <value>System.Windows.Forms.ToolStripButton, System.Windows.Forms, Version=4.0.0.0, Culture=neutral, PublicKeyToken=b77a5c561934e089</value>
   </data>
   <data name="&gt;&gt;toolStripButtonSmallMoleculeModeUI.Name" xml:space="preserve">
     <value>toolStripButtonSmallMoleculeModeUI</value>
   </data>
+  <data name="&gt;&gt;toolStripButtonSmallMoleculeModeUI.Type" xml:space="preserve">
+    <value>System.Windows.Forms.ToolStripButton, System.Windows.Forms, Version=4.0.0.0, Culture=neutral, PublicKeyToken=b77a5c561934e089</value>
+  </data>
   <data name="&gt;&gt;$this.Name" xml:space="preserve">
     <value>StartPage</value>
+  </data>
+  <data name="&gt;&gt;$this.Type" xml:space="preserve">
+    <value>pwiz.Skyline.Util.FormEx, Skyline, Version=1.0.0.0, Culture=neutral, PublicKeyToken=null</value>
   </data>
 </root>

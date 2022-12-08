@@ -117,24 +117,24 @@
   <resheader name="writer">
     <value>System.Resources.ResXResourceWriter, System.Windows.Forms, Version=4.0.0.0, Culture=neutral, PublicKeyToken=b77a5c561934e089</value>
   </resheader>
-  <assembly alias="System.Windows.Forms" name="System.Windows.Forms, Version=4.0.0.0, Culture=neutral, PublicKeyToken=b77a5c561934e089" />
-  <assembly alias="System.Drawing" name="System.Drawing, Version=4.0.0.0, Culture=neutral, PublicKeyToken=b03f5f7f11d50a3a" />
-  <assembly alias="mscorlib" name="mscorlib, Version=4.0.0.0, Culture=neutral, PublicKeyToken=b77a5c561934e089" />
-  <metadata name="$this.Localizable" type="System.Boolean, mscorlib, Version=4.0.0.0, Culture=neutral, PublicKeyToken=b77a5c561934e089">
-    <value>True</value>
+  <metadata name="modeUIHandler.TrayLocation" type="System.Drawing.Point, System.Drawing, Version=4.0.0.0, Culture=neutral, PublicKeyToken=b03f5f7f11d50a3a">
+    <value>17, 17</value>
   </metadata>
+  <assembly alias="System.Windows.Forms" name="System.Windows.Forms, Version=4.0.0.0, Culture=neutral, PublicKeyToken=b77a5c561934e089" />
   <data name="btnOK.Anchor" type="System.Windows.Forms.AnchorStyles, System.Windows.Forms">
     <value>Bottom, Right</value>
   </data>
   <data name="btnOK.ImeMode" type="System.Windows.Forms.ImeMode, System.Windows.Forms">
     <value>NoControl</value>
   </data>
+  <assembly alias="System.Drawing" name="System.Drawing, Version=4.0.0.0, Culture=neutral, PublicKeyToken=b03f5f7f11d50a3a" />
   <data name="btnOK.Location" type="System.Drawing.Point, System.Drawing">
     <value>342, 6</value>
   </data>
   <data name="btnOK.Size" type="System.Drawing.Size, System.Drawing">
     <value>75, 23</value>
   </data>
+  <assembly alias="mscorlib" name="mscorlib, Version=4.0.0.0, Culture=neutral, PublicKeyToken=b77a5c561934e089" />
   <data name="btnOK.TabIndex" type="System.Int32, mscorlib">
     <value>17</value>
   </data>
@@ -143,6 +143,9 @@
   </data>
   <data name="&gt;&gt;btnOK.Name" xml:space="preserve">
     <value>btnOK</value>
+  </data>
+  <data name="&gt;&gt;btnOK.Type" xml:space="preserve">
+    <value>System.Windows.Forms.Button, System.Windows.Forms, Version=4.0.0.0, Culture=neutral, PublicKeyToken=b77a5c561934e089</value>
   </data>
   <data name="&gt;&gt;btnOK.Parent" xml:space="preserve">
     <value>panelButtons</value>
@@ -171,6 +174,9 @@
   <data name="&gt;&gt;btnCancel.Name" xml:space="preserve">
     <value>btnCancel</value>
   </data>
+  <data name="&gt;&gt;btnCancel.Type" xml:space="preserve">
+    <value>System.Windows.Forms.Button, System.Windows.Forms, Version=4.0.0.0, Culture=neutral, PublicKeyToken=b77a5c561934e089</value>
+  </data>
   <data name="&gt;&gt;btnCancel.Parent" xml:space="preserve">
     <value>panelButtons</value>
   </data>
@@ -191,6 +197,9 @@
   </data>
   <data name="&gt;&gt;btnAdvanced.Name" xml:space="preserve">
     <value>btnAdvanced</value>
+  </data>
+  <data name="&gt;&gt;btnAdvanced.Type" xml:space="preserve">
+    <value>System.Windows.Forms.Button, System.Windows.Forms, Version=4.0.0.0, Culture=neutral, PublicKeyToken=b77a5c561934e089</value>
   </data>
   <data name="&gt;&gt;btnAdvanced.Parent" xml:space="preserve">
     <value>panelMain</value>
@@ -219,6 +228,9 @@
   <data name="&gt;&gt;lblControlAnnotation.Name" xml:space="preserve">
     <value>lblControlAnnotation</value>
   </data>
+  <data name="&gt;&gt;lblControlAnnotation.Type" xml:space="preserve">
+    <value>System.Windows.Forms.Label, System.Windows.Forms, Version=4.0.0.0, Culture=neutral, PublicKeyToken=b77a5c561934e089</value>
+  </data>
   <data name="&gt;&gt;lblControlAnnotation.Parent" xml:space="preserve">
     <value>panelMain</value>
   </data>
@@ -239,6 +251,9 @@
   </data>
   <data name="&gt;&gt;comboControlAnnotation.Name" xml:space="preserve">
     <value>comboControlAnnotation</value>
+  </data>
+  <data name="&gt;&gt;comboControlAnnotation.Type" xml:space="preserve">
+    <value>System.Windows.Forms.ComboBox, System.Windows.Forms, Version=4.0.0.0, Culture=neutral, PublicKeyToken=b77a5c561934e089</value>
   </data>
   <data name="&gt;&gt;comboControlAnnotation.Parent" xml:space="preserve">
     <value>panelMain</value>
@@ -270,6 +285,9 @@
   <data name="&gt;&gt;radioScopePeptide.Name" xml:space="preserve">
     <value>radioScopePeptide</value>
   </data>
+  <data name="&gt;&gt;radioScopePeptide.Type" xml:space="preserve">
+    <value>System.Windows.Forms.RadioButton, System.Windows.Forms, Version=4.0.0.0, Culture=neutral, PublicKeyToken=b77a5c561934e089</value>
+  </data>
   <data name="&gt;&gt;radioScopePeptide.Parent" xml:space="preserve">
     <value>flowLayoutPanel1</value>
   </data>
@@ -297,6 +315,9 @@
   <data name="&gt;&gt;radioScopeProtein.Name" xml:space="preserve">
     <value>radioScopeProtein</value>
   </data>
+  <data name="&gt;&gt;radioScopeProtein.Type" xml:space="preserve">
+    <value>System.Windows.Forms.RadioButton, System.Windows.Forms, Version=4.0.0.0, Culture=neutral, PublicKeyToken=b77a5c561934e089</value>
+  </data>
   <data name="&gt;&gt;radioScopeProtein.Parent" xml:space="preserve">
     <value>flowLayoutPanel1</value>
   </data>
@@ -318,6 +339,9 @@
   <data name="&gt;&gt;flowLayoutPanel1.Name" xml:space="preserve">
     <value>flowLayoutPanel1</value>
   </data>
+  <data name="&gt;&gt;flowLayoutPanel1.Type" xml:space="preserve">
+    <value>System.Windows.Forms.FlowLayoutPanel, System.Windows.Forms, Version=4.0.0.0, Culture=neutral, PublicKeyToken=b77a5c561934e089</value>
+  </data>
   <data name="&gt;&gt;flowLayoutPanel1.Parent" xml:space="preserve">
     <value>groupBoxScope</value>
   </data>
@@ -338,6 +362,9 @@
   </data>
   <data name="&gt;&gt;groupBoxScope.Name" xml:space="preserve">
     <value>groupBoxScope</value>
+  </data>
+  <data name="&gt;&gt;groupBoxScope.Type" xml:space="preserve">
+    <value>System.Windows.Forms.GroupBox, System.Windows.Forms, Version=4.0.0.0, Culture=neutral, PublicKeyToken=b77a5c561934e089</value>
   </data>
   <data name="&gt;&gt;groupBoxScope.Parent" xml:space="preserve">
     <value>panelMain</value>
@@ -366,6 +393,9 @@
   <data name="&gt;&gt;lblPercent.Name" xml:space="preserve">
     <value>lblPercent</value>
   </data>
+  <data name="&gt;&gt;lblPercent.Type" xml:space="preserve">
+    <value>System.Windows.Forms.Label, System.Windows.Forms, Version=4.0.0.0, Culture=neutral, PublicKeyToken=b77a5c561934e089</value>
+  </data>
   <data name="&gt;&gt;lblPercent.Parent" xml:space="preserve">
     <value>panelMain</value>
   </data>
@@ -387,6 +417,9 @@
   <data name="&gt;&gt;comboControlValue.Name" xml:space="preserve">
     <value>comboControlValue</value>
   </data>
+  <data name="&gt;&gt;comboControlValue.Type" xml:space="preserve">
+    <value>System.Windows.Forms.ComboBox, System.Windows.Forms, Version=4.0.0.0, Culture=neutral, PublicKeyToken=b77a5c561934e089</value>
+  </data>
   <data name="&gt;&gt;comboControlValue.Parent" xml:space="preserve">
     <value>panelMain</value>
   </data>
@@ -404,6 +437,9 @@
   </data>
   <data name="&gt;&gt;tbxConfidenceLevel.Name" xml:space="preserve">
     <value>tbxConfidenceLevel</value>
+  </data>
+  <data name="&gt;&gt;tbxConfidenceLevel.Type" xml:space="preserve">
+    <value>System.Windows.Forms.TextBox, System.Windows.Forms, Version=4.0.0.0, Culture=neutral, PublicKeyToken=b77a5c561934e089</value>
   </data>
   <data name="&gt;&gt;tbxConfidenceLevel.Parent" xml:space="preserve">
     <value>panelMain</value>
@@ -432,6 +468,9 @@
   <data name="&gt;&gt;lblConfidenceLevel.Name" xml:space="preserve">
     <value>lblConfidenceLevel</value>
   </data>
+  <data name="&gt;&gt;lblConfidenceLevel.Type" xml:space="preserve">
+    <value>System.Windows.Forms.Label, System.Windows.Forms, Version=4.0.0.0, Culture=neutral, PublicKeyToken=b77a5c561934e089</value>
+  </data>
   <data name="&gt;&gt;lblConfidenceLevel.Parent" xml:space="preserve">
     <value>panelMain</value>
   </data>
@@ -458,6 +497,9 @@
   </data>
   <data name="&gt;&gt;lblControlValue.Name" xml:space="preserve">
     <value>lblControlValue</value>
+  </data>
+  <data name="&gt;&gt;lblControlValue.Type" xml:space="preserve">
+    <value>System.Windows.Forms.Label, System.Windows.Forms, Version=4.0.0.0, Culture=neutral, PublicKeyToken=b77a5c561934e089</value>
   </data>
   <data name="&gt;&gt;lblControlValue.Parent" xml:space="preserve">
     <value>panelMain</value>
@@ -486,6 +528,9 @@
   <data name="&gt;&gt;lblCompareAgainst.Name" xml:space="preserve">
     <value>lblCompareAgainst</value>
   </data>
+  <data name="&gt;&gt;lblCompareAgainst.Type" xml:space="preserve">
+    <value>System.Windows.Forms.Label, System.Windows.Forms, Version=4.0.0.0, Culture=neutral, PublicKeyToken=b77a5c561934e089</value>
+  </data>
   <data name="&gt;&gt;lblCompareAgainst.Parent" xml:space="preserve">
     <value>panelMain</value>
   </data>
@@ -506,6 +551,9 @@
   </data>
   <data name="&gt;&gt;comboCaseValue.Name" xml:space="preserve">
     <value>comboCaseValue</value>
+  </data>
+  <data name="&gt;&gt;comboCaseValue.Type" xml:space="preserve">
+    <value>System.Windows.Forms.ComboBox, System.Windows.Forms, Version=4.0.0.0, Culture=neutral, PublicKeyToken=b77a5c561934e089</value>
   </data>
   <data name="&gt;&gt;comboCaseValue.Parent" xml:space="preserve">
     <value>panelMain</value>
@@ -543,6 +591,9 @@
   <data name="&gt;&gt;comboNormalizationMethod.Name" xml:space="preserve">
     <value>comboNormalizationMethod</value>
   </data>
+  <data name="&gt;&gt;comboNormalizationMethod.Type" xml:space="preserve">
+    <value>System.Windows.Forms.ComboBox, System.Windows.Forms, Version=4.0.0.0, Culture=neutral, PublicKeyToken=b77a5c561934e089</value>
+  </data>
   <data name="&gt;&gt;comboNormalizationMethod.Parent" xml:space="preserve">
     <value>panelMain</value>
   </data>
@@ -570,6 +621,9 @@
   <data name="&gt;&gt;label2.Name" xml:space="preserve">
     <value>label2</value>
   </data>
+  <data name="&gt;&gt;label2.Type" xml:space="preserve">
+    <value>System.Windows.Forms.Label, System.Windows.Forms, Version=4.0.0.0, Culture=neutral, PublicKeyToken=b77a5c561934e089</value>
+  </data>
   <data name="&gt;&gt;label2.Parent" xml:space="preserve">
     <value>panelMain</value>
   </data>
@@ -590,6 +644,9 @@
   </data>
   <data name="&gt;&gt;comboIdentityAnnotation.Name" xml:space="preserve">
     <value>comboIdentityAnnotation</value>
+  </data>
+  <data name="&gt;&gt;comboIdentityAnnotation.Type" xml:space="preserve">
+    <value>System.Windows.Forms.ComboBox, System.Windows.Forms, Version=4.0.0.0, Culture=neutral, PublicKeyToken=b77a5c561934e089</value>
   </data>
   <data name="&gt;&gt;comboIdentityAnnotation.Parent" xml:space="preserve">
     <value>panelMain</value>
@@ -618,6 +675,9 @@
   <data name="&gt;&gt;lblNormalizationMethod.Name" xml:space="preserve">
     <value>lblNormalizationMethod</value>
   </data>
+  <data name="&gt;&gt;lblNormalizationMethod.Type" xml:space="preserve">
+    <value>System.Windows.Forms.Label, System.Windows.Forms, Version=4.0.0.0, Culture=neutral, PublicKeyToken=b77a5c561934e089</value>
+  </data>
   <data name="&gt;&gt;lblNormalizationMethod.Parent" xml:space="preserve">
     <value>panelMain</value>
   </data>
@@ -639,6 +699,9 @@
   <data name="&gt;&gt;panelMain.Name" xml:space="preserve">
     <value>panelMain</value>
   </data>
+  <data name="&gt;&gt;panelMain.Type" xml:space="preserve">
+    <value>System.Windows.Forms.Panel, System.Windows.Forms, Version=4.0.0.0, Culture=neutral, PublicKeyToken=b77a5c561934e089</value>
+  </data>
   <data name="&gt;&gt;panelMain.Parent" xml:space="preserve">
     <value>$this</value>
   </data>
@@ -659,6 +722,9 @@
   </data>
   <data name="&gt;&gt;tbxQValueCutoff.Name" xml:space="preserve">
     <value>tbxQValueCutoff</value>
+  </data>
+  <data name="&gt;&gt;tbxQValueCutoff.Type" xml:space="preserve">
+    <value>System.Windows.Forms.TextBox, System.Windows.Forms, Version=4.0.0.0, Culture=neutral, PublicKeyToken=b77a5c561934e089</value>
   </data>
   <data name="&gt;&gt;tbxQValueCutoff.Parent" xml:space="preserve">
     <value>groupBoxQValueCutoff</value>
@@ -684,6 +750,9 @@
   <data name="&gt;&gt;lblQValueCutoff.Name" xml:space="preserve">
     <value>lblQValueCutoff</value>
   </data>
+  <data name="&gt;&gt;lblQValueCutoff.Type" xml:space="preserve">
+    <value>System.Windows.Forms.Label, System.Windows.Forms, Version=4.0.0.0, Culture=neutral, PublicKeyToken=b77a5c561934e089</value>
+  </data>
   <data name="&gt;&gt;lblQValueCutoff.Parent" xml:space="preserve">
     <value>groupBoxQValueCutoff</value>
   </data>
@@ -704,6 +773,9 @@
   </data>
   <data name="&gt;&gt;groupBoxQValueCutoff.Name" xml:space="preserve">
     <value>groupBoxQValueCutoff</value>
+  </data>
+  <data name="&gt;&gt;groupBoxQValueCutoff.Type" xml:space="preserve">
+    <value>System.Windows.Forms.GroupBox, System.Windows.Forms, Version=4.0.0.0, Culture=neutral, PublicKeyToken=b77a5c561934e089</value>
   </data>
   <data name="&gt;&gt;groupBoxQValueCutoff.Parent" xml:space="preserve">
     <value>panelAdvanced</value>
@@ -732,6 +804,9 @@
   <data name="&gt;&gt;lblSummaryMethod.Name" xml:space="preserve">
     <value>lblSummaryMethod</value>
   </data>
+  <data name="&gt;&gt;lblSummaryMethod.Type" xml:space="preserve">
+    <value>System.Windows.Forms.Label, System.Windows.Forms, Version=4.0.0.0, Culture=neutral, PublicKeyToken=b77a5c561934e089</value>
+  </data>
   <data name="&gt;&gt;lblSummaryMethod.Parent" xml:space="preserve">
     <value>panelAdvanced</value>
   </data>
@@ -752,6 +827,9 @@
   </data>
   <data name="&gt;&gt;comboSummaryMethod.Name" xml:space="preserve">
     <value>comboSummaryMethod</value>
+  </data>
+  <data name="&gt;&gt;comboSummaryMethod.Type" xml:space="preserve">
+    <value>System.Windows.Forms.ComboBox, System.Windows.Forms, Version=4.0.0.0, Culture=neutral, PublicKeyToken=b77a5c561934e089</value>
   </data>
   <data name="&gt;&gt;comboSummaryMethod.Parent" xml:space="preserve">
     <value>panelAdvanced</value>
@@ -780,6 +858,9 @@
   <data name="&gt;&gt;cbxUseZeroForMissingPeaks.Name" xml:space="preserve">
     <value>cbxUseZeroForMissingPeaks</value>
   </data>
+  <data name="&gt;&gt;cbxUseZeroForMissingPeaks.Type" xml:space="preserve">
+    <value>System.Windows.Forms.CheckBox, System.Windows.Forms, Version=4.0.0.0, Culture=neutral, PublicKeyToken=b77a5c561934e089</value>
+  </data>
   <data name="&gt;&gt;cbxUseZeroForMissingPeaks.Parent" xml:space="preserve">
     <value>panelAdvanced</value>
   </data>
@@ -807,6 +888,9 @@
   <data name="&gt;&gt;label1.Name" xml:space="preserve">
     <value>label1</value>
   </data>
+  <data name="&gt;&gt;label1.Type" xml:space="preserve">
+    <value>System.Windows.Forms.Label, System.Windows.Forms, Version=4.0.0.0, Culture=neutral, PublicKeyToken=b77a5c561934e089</value>
+  </data>
   <data name="&gt;&gt;label1.Parent" xml:space="preserve">
     <value>panelName</value>
   </data>
@@ -827,6 +911,9 @@
   </data>
   <data name="&gt;&gt;tbxName.Name" xml:space="preserve">
     <value>tbxName</value>
+  </data>
+  <data name="&gt;&gt;tbxName.Type" xml:space="preserve">
+    <value>System.Windows.Forms.TextBox, System.Windows.Forms, Version=4.0.0.0, Culture=neutral, PublicKeyToken=b77a5c561934e089</value>
   </data>
   <data name="&gt;&gt;tbxName.Parent" xml:space="preserve">
     <value>panelName</value>
@@ -855,6 +942,9 @@
   <data name="&gt;&gt;btnPreview.Name" xml:space="preserve">
     <value>btnPreview</value>
   </data>
+  <data name="&gt;&gt;btnPreview.Type" xml:space="preserve">
+    <value>System.Windows.Forms.Button, System.Windows.Forms, Version=4.0.0.0, Culture=neutral, PublicKeyToken=b77a5c561934e089</value>
+  </data>
   <data name="&gt;&gt;btnPreview.Parent" xml:space="preserve">
     <value>panelName</value>
   </data>
@@ -875,6 +965,9 @@
   </data>
   <data name="&gt;&gt;panelName.Name" xml:space="preserve">
     <value>panelName</value>
+  </data>
+  <data name="&gt;&gt;panelName.Type" xml:space="preserve">
+    <value>System.Windows.Forms.Panel, System.Windows.Forms, Version=4.0.0.0, Culture=neutral, PublicKeyToken=b77a5c561934e089</value>
   </data>
   <data name="&gt;&gt;panelName.Parent" xml:space="preserve">
     <value>$this</value>
@@ -897,6 +990,9 @@
   <data name="&gt;&gt;panelButtons.Name" xml:space="preserve">
     <value>panelButtons</value>
   </data>
+  <data name="&gt;&gt;panelButtons.Type" xml:space="preserve">
+    <value>System.Windows.Forms.Panel, System.Windows.Forms, Version=4.0.0.0, Culture=neutral, PublicKeyToken=b77a5c561934e089</value>
+  </data>
   <data name="&gt;&gt;panelButtons.Parent" xml:space="preserve">
     <value>$this</value>
   </data>
@@ -918,12 +1014,18 @@
   <data name="&gt;&gt;panelAdvanced.Name" xml:space="preserve">
     <value>panelAdvanced</value>
   </data>
+  <data name="&gt;&gt;panelAdvanced.Type" xml:space="preserve">
+    <value>System.Windows.Forms.Panel, System.Windows.Forms, Version=4.0.0.0, Culture=neutral, PublicKeyToken=b77a5c561934e089</value>
+  </data>
   <data name="&gt;&gt;panelAdvanced.Parent" xml:space="preserve">
     <value>$this</value>
   </data>
   <data name="&gt;&gt;panelAdvanced.ZOrder" xml:space="preserve">
     <value>0</value>
   </data>
+  <metadata name="$this.Localizable" type="System.Boolean, mscorlib, Version=4.0.0.0, Culture=neutral, PublicKeyToken=b77a5c561934e089">
+    <value>True</value>
+  </metadata>
   <data name="$this.AutoScaleDimensions" type="System.Drawing.SizeF, System.Drawing">
     <value>6, 13</value>
   </data>
@@ -939,7 +1041,13 @@
   <data name="&gt;&gt;modeUIHandler.Name" xml:space="preserve">
     <value>modeUIHandler</value>
   </data>
+  <data name="&gt;&gt;modeUIHandler.Type" xml:space="preserve">
+    <value>pwiz.Skyline.Util.Helpers+ModeUIExtender, Skyline, Version=19.1.1.295, Culture=neutral, PublicKeyToken=null</value>
+  </data>
   <data name="&gt;&gt;$this.Name" xml:space="preserve">
     <value>EditGroupComparisonDlg</value>
+  </data>
+  <data name="&gt;&gt;$this.Type" xml:space="preserve">
+    <value>pwiz.Skyline.Util.FormEx, Skyline, Version=19.1.1.295, Culture=neutral, PublicKeyToken=null</value>
   </data>
 </root>

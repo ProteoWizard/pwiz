@@ -118,22 +118,21 @@
     <value>System.Resources.ResXResourceWriter, System.Windows.Forms, Version=4.0.0.0, Culture=neutral, PublicKeyToken=b77a5c561934e089</value>
   </resheader>
   <assembly alias="System.Drawing" name="System.Drawing, Version=4.0.0.0, Culture=neutral, PublicKeyToken=b03f5f7f11d50a3a" />
-  <assembly alias="mscorlib" name="mscorlib, Version=4.0.0.0, Culture=neutral, PublicKeyToken=b77a5c561934e089" />
-  <assembly alias="System.Windows.Forms" name="System.Windows.Forms, Version=4.0.0.0, Culture=neutral, PublicKeyToken=b77a5c561934e089" />
-  <metadata name="$this.Localizable" type="System.Boolean, mscorlib, Version=4.0.0.0, Culture=neutral, PublicKeyToken=b77a5c561934e089">
-    <value>True</value>
-  </metadata>
   <data name="cbMS1TolUnit.Location" type="System.Drawing.Point, System.Drawing">
     <value>153, 106</value>
   </data>
   <data name="cbMS1TolUnit.Size" type="System.Drawing.Size, System.Drawing">
     <value>70, 21</value>
   </data>
+  <assembly alias="mscorlib" name="mscorlib, Version=4.0.0.0, Culture=neutral, PublicKeyToken=b77a5c561934e089" />
   <data name="cbMS1TolUnit.TabIndex" type="System.Int32, mscorlib">
     <value>3</value>
   </data>
   <data name="&gt;&gt;cbMS1TolUnit.Name" xml:space="preserve">
     <value>cbMS1TolUnit</value>
+  </data>
+  <data name="&gt;&gt;cbMS1TolUnit.Type" xml:space="preserve">
+    <value>System.Windows.Forms.ComboBox, System.Windows.Forms, Version=4.0.0.0, Culture=neutral, PublicKeyToken=b77a5c561934e089</value>
   </data>
   <data name="&gt;&gt;cbMS1TolUnit.Parent" xml:space="preserve">
     <value>$this</value>
@@ -159,6 +158,9 @@
   <data name="&gt;&gt;lblMs1Tolerance.Name" xml:space="preserve">
     <value>lblMs1Tolerance</value>
   </data>
+  <data name="&gt;&gt;lblMs1Tolerance.Type" xml:space="preserve">
+    <value>System.Windows.Forms.Label, System.Windows.Forms, Version=4.0.0.0, Culture=neutral, PublicKeyToken=b77a5c561934e089</value>
+  </data>
   <data name="&gt;&gt;lblMs1Tolerance.Parent" xml:space="preserve">
     <value>$this</value>
   </data>
@@ -177,6 +179,9 @@
   <data name="&gt;&gt;txtMS1Tolerance.Name" xml:space="preserve">
     <value>txtMS1Tolerance</value>
   </data>
+  <data name="&gt;&gt;txtMS1Tolerance.Type" xml:space="preserve">
+    <value>System.Windows.Forms.TextBox, System.Windows.Forms, Version=4.0.0.0, Culture=neutral, PublicKeyToken=b77a5c561934e089</value>
+  </data>
   <data name="&gt;&gt;txtMS1Tolerance.Parent" xml:space="preserve">
     <value>$this</value>
   </data>
@@ -194,6 +199,9 @@
   </data>
   <data name="&gt;&gt;txtMS2Tolerance.Name" xml:space="preserve">
     <value>txtMS2Tolerance</value>
+  </data>
+  <data name="&gt;&gt;txtMS2Tolerance.Type" xml:space="preserve">
+    <value>System.Windows.Forms.TextBox, System.Windows.Forms, Version=4.0.0.0, Culture=neutral, PublicKeyToken=b77a5c561934e089</value>
   </data>
   <data name="&gt;&gt;txtMS2Tolerance.Parent" xml:space="preserve">
     <value>$this</value>
@@ -219,6 +227,9 @@
   <data name="&gt;&gt;lblMs2Tolerance.Name" xml:space="preserve">
     <value>lblMs2Tolerance</value>
   </data>
+  <data name="&gt;&gt;lblMs2Tolerance.Type" xml:space="preserve">
+    <value>System.Windows.Forms.Label, System.Windows.Forms, Version=4.0.0.0, Culture=neutral, PublicKeyToken=b77a5c561934e089</value>
+  </data>
   <data name="&gt;&gt;lblMs2Tolerance.Parent" xml:space="preserve">
     <value>$this</value>
   </data>
@@ -236,6 +247,9 @@
   </data>
   <data name="&gt;&gt;cbMS2TolUnit.Name" xml:space="preserve">
     <value>cbMS2TolUnit</value>
+  </data>
+  <data name="&gt;&gt;cbMS2TolUnit.Type" xml:space="preserve">
+    <value>System.Windows.Forms.ComboBox, System.Windows.Forms, Version=4.0.0.0, Culture=neutral, PublicKeyToken=b77a5c561934e089</value>
   </data>
   <data name="&gt;&gt;cbMS2TolUnit.Parent" xml:space="preserve">
     <value>$this</value>
@@ -261,6 +275,9 @@
   <data name="&gt;&gt;lblFragmentIons.Name" xml:space="preserve">
     <value>lblFragmentIons</value>
   </data>
+  <data name="&gt;&gt;lblFragmentIons.Type" xml:space="preserve">
+    <value>System.Windows.Forms.Label, System.Windows.Forms, Version=4.0.0.0, Culture=neutral, PublicKeyToken=b77a5c561934e089</value>
+  </data>
   <data name="&gt;&gt;lblFragmentIons.Parent" xml:space="preserve">
     <value>$this</value>
   </data>
@@ -279,12 +296,16 @@
   <data name="&gt;&gt;cbFragmentIons.Name" xml:space="preserve">
     <value>cbFragmentIons</value>
   </data>
+  <data name="&gt;&gt;cbFragmentIons.Type" xml:space="preserve">
+    <value>System.Windows.Forms.ComboBox, System.Windows.Forms, Version=4.0.0.0, Culture=neutral, PublicKeyToken=b77a5c561934e089</value>
+  </data>
   <data name="&gt;&gt;cbFragmentIons.Parent" xml:space="preserve">
     <value>$this</value>
   </data>
   <data name="&gt;&gt;cbFragmentIons.ZOrder" xml:space="preserve">
     <value>10</value>
   </data>
+  <assembly alias="System.Windows.Forms" name="System.Windows.Forms, Version=4.0.0.0, Culture=neutral, PublicKeyToken=b77a5c561934e089" />
   <data name="btnAdditionalSettings.Anchor" type="System.Windows.Forms.AnchorStyles, System.Windows.Forms">
     <value>Bottom, Left</value>
   </data>
@@ -302,6 +323,9 @@
   </data>
   <data name="&gt;&gt;btnAdditionalSettings.Name" xml:space="preserve">
     <value>btnAdditionalSettings</value>
+  </data>
+  <data name="&gt;&gt;btnAdditionalSettings.Type" xml:space="preserve">
+    <value>System.Windows.Forms.Button, System.Windows.Forms, Version=4.0.0.0, Culture=neutral, PublicKeyToken=b77a5c561934e089</value>
   </data>
   <data name="&gt;&gt;btnAdditionalSettings.Parent" xml:space="preserve">
     <value>$this</value>
@@ -323,6 +347,9 @@
   </data>
   <data name="&gt;&gt;pBLogo.Name" xml:space="preserve">
     <value>pBLogo</value>
+  </data>
+  <data name="&gt;&gt;pBLogo.Type" xml:space="preserve">
+    <value>System.Windows.Forms.PictureBox, System.Windows.Forms, Version=4.0.0.0, Culture=neutral, PublicKeyToken=b77a5c561934e089</value>
   </data>
   <data name="&gt;&gt;pBLogo.Parent" xml:space="preserve">
     <value>$this</value>
@@ -348,6 +375,9 @@
   <data name="&gt;&gt;label1.Name" xml:space="preserve">
     <value>label1</value>
   </data>
+  <data name="&gt;&gt;label1.Type" xml:space="preserve">
+    <value>System.Windows.Forms.Label, System.Windows.Forms, Version=4.0.0.0, Culture=neutral, PublicKeyToken=b77a5c561934e089</value>
+  </data>
   <data name="&gt;&gt;label1.Parent" xml:space="preserve">
     <value>$this</value>
   </data>
@@ -371,6 +401,9 @@
   </data>
   <data name="&gt;&gt;label3.Name" xml:space="preserve">
     <value>label3</value>
+  </data>
+  <data name="&gt;&gt;label3.Type" xml:space="preserve">
+    <value>System.Windows.Forms.Label, System.Windows.Forms, Version=4.0.0.0, Culture=neutral, PublicKeyToken=b77a5c561934e089</value>
   </data>
   <data name="&gt;&gt;label3.Parent" xml:space="preserve">
     <value>$this</value>
@@ -398,6 +431,9 @@
   </data>
   <data name="&gt;&gt;lblMaxVariableMods.Name" xml:space="preserve">
     <value>lblMaxVariableMods</value>
+  </data>
+  <data name="&gt;&gt;lblMaxVariableMods.Type" xml:space="preserve">
+    <value>System.Windows.Forms.Label, System.Windows.Forms, Version=4.0.0.0, Culture=neutral, PublicKeyToken=b77a5c561934e089</value>
   </data>
   <data name="&gt;&gt;lblMaxVariableMods.Parent" xml:space="preserve">
     <value>$this</value>
@@ -447,6 +483,9 @@
   <data name="&gt;&gt;cbMaxVariableMods.Name" xml:space="preserve">
     <value>cbMaxVariableMods</value>
   </data>
+  <data name="&gt;&gt;cbMaxVariableMods.Type" xml:space="preserve">
+    <value>System.Windows.Forms.ComboBox, System.Windows.Forms, Version=4.0.0.0, Culture=neutral, PublicKeyToken=b77a5c561934e089</value>
+  </data>
   <data name="&gt;&gt;cbMaxVariableMods.Parent" xml:space="preserve">
     <value>$this</value>
   </data>
@@ -473,6 +512,9 @@
   </data>
   <data name="&gt;&gt;searchEngineComboBox.Name" xml:space="preserve">
     <value>searchEngineComboBox</value>
+  </data>
+  <data name="&gt;&gt;searchEngineComboBox.Type" xml:space="preserve">
+    <value>System.Windows.Forms.ComboBox, System.Windows.Forms, Version=4.0.0.0, Culture=neutral, PublicKeyToken=b77a5c561934e089</value>
   </data>
   <data name="&gt;&gt;searchEngineComboBox.Parent" xml:space="preserve">
     <value>$this</value>
@@ -501,6 +543,9 @@
   <data name="&gt;&gt;label2.Name" xml:space="preserve">
     <value>label2</value>
   </data>
+  <data name="&gt;&gt;label2.Type" xml:space="preserve">
+    <value>System.Windows.Forms.Label, System.Windows.Forms, Version=4.0.0.0, Culture=neutral, PublicKeyToken=b77a5c561934e089</value>
+  </data>
   <data name="&gt;&gt;label2.Parent" xml:space="preserve">
     <value>$this</value>
   </data>
@@ -518,6 +563,9 @@
   </data>
   <data name="&gt;&gt;cbMs2Analyzer.Name" xml:space="preserve">
     <value>cbMs2Analyzer</value>
+  </data>
+  <data name="&gt;&gt;cbMs2Analyzer.Type" xml:space="preserve">
+    <value>System.Windows.Forms.ComboBox, System.Windows.Forms, Version=4.0.0.0, Culture=neutral, PublicKeyToken=b77a5c561934e089</value>
   </data>
   <data name="&gt;&gt;cbMs2Analyzer.Parent" xml:space="preserve">
     <value>$this</value>
@@ -546,12 +594,18 @@
   <data name="&gt;&gt;lblMs2Analyzer.Name" xml:space="preserve">
     <value>lblMs2Analyzer</value>
   </data>
+  <data name="&gt;&gt;lblMs2Analyzer.Type" xml:space="preserve">
+    <value>System.Windows.Forms.Label, System.Windows.Forms, Version=4.0.0.0, Culture=neutral, PublicKeyToken=b77a5c561934e089</value>
+  </data>
   <data name="&gt;&gt;lblMs2Analyzer.Parent" xml:space="preserve">
     <value>$this</value>
   </data>
   <data name="&gt;&gt;lblMs2Analyzer.ZOrder" xml:space="preserve">
     <value>1</value>
   </data>
+  <metadata name="$this.Localizable" type="System.Boolean, mscorlib, Version=4.0.0.0, Culture=neutral, PublicKeyToken=b77a5c561934e089">
+    <value>True</value>
+  </metadata>
   <data name="$this.AutoScaleDimensions" type="System.Drawing.SizeF, System.Drawing">
     <value>6, 13</value>
   </data>
@@ -560,5 +614,8 @@
   </data>
   <data name="&gt;&gt;$this.Name" xml:space="preserve">
     <value>SearchSettingsControl</value>
+  </data>
+  <data name="&gt;&gt;$this.Type" xml:space="preserve">
+    <value>System.Windows.Forms.UserControl, System.Windows.Forms, Version=4.0.0.0, Culture=neutral, PublicKeyToken=b77a5c561934e089</value>
   </data>
 </root>

@@ -117,27 +117,18 @@
   <resheader name="writer">
     <value>System.Resources.ResXResourceWriter, System.Windows.Forms, Version=4.0.0.0, Culture=neutral, PublicKeyToken=b77a5c561934e089</value>
   </resheader>
+  <metadata name="toolTip1.TrayLocation" type="System.Drawing.Point, System.Drawing, Version=4.0.0.0, Culture=neutral, PublicKeyToken=b03f5f7f11d50a3a">
+    <value>122, 17</value>
+  </metadata>
   <assembly alias="mscorlib" name="mscorlib, Version=4.0.0.0, Culture=neutral, PublicKeyToken=b77a5c561934e089" />
-  <assembly alias="System.Windows.Forms" name="System.Windows.Forms, Version=4.0.0.0, Culture=neutral, PublicKeyToken=b77a5c561934e089" />
-  <assembly alias="System.Drawing" name="System.Drawing, Version=4.0.0.0, Culture=neutral, PublicKeyToken=b03f5f7f11d50a3a" />
-  <metadata name="columnName.UserAddedColumn" type="System.Boolean, mscorlib, Version=4.0.0.0, Culture=neutral, PublicKeyToken=b77a5c561934e089">
-    <value>True</value>
-  </metadata>
-  <metadata name="columnScripts.UserAddedColumn" type="System.Boolean, mscorlib, Version=4.0.0.0, Culture=neutral, PublicKeyToken=b77a5c561934e089">
-    <value>True</value>
-  </metadata>
-  <metadata name="columnFile.UserAddedColumn" type="System.Boolean, mscorlib, Version=4.0.0.0, Culture=neutral, PublicKeyToken=b77a5c561934e089">
-    <value>True</value>
-  </metadata>
-  <metadata name="$this.Localizable" type="System.Boolean, mscorlib, Version=4.0.0.0, Culture=neutral, PublicKeyToken=b77a5c561934e089">
-    <value>True</value>
-  </metadata>
   <data name="linkLabelRegex.AutoSize" type="System.Boolean, mscorlib">
     <value>True</value>
   </data>
+  <assembly alias="System.Windows.Forms" name="System.Windows.Forms, Version=4.0.0.0, Culture=neutral, PublicKeyToken=b77a5c561934e089" />
   <data name="linkLabelRegex.LinkArea" type="System.Windows.Forms.LinkArea, System.Windows.Forms">
     <value>36, 18</value>
   </data>
+  <assembly alias="System.Drawing" name="System.Drawing, Version=4.0.0.0, Culture=neutral, PublicKeyToken=b03f5f7f11d50a3a" />
   <data name="linkLabelRegex.Location" type="System.Drawing.Point, System.Drawing">
     <value>10, 271</value>
   </data>
@@ -158,6 +149,9 @@
   </data>
   <data name="&gt;&gt;linkLabelRegex.Name" xml:space="preserve">
     <value>linkLabelRegex</value>
+  </data>
+  <data name="&gt;&gt;linkLabelRegex.Type" xml:space="preserve">
+    <value>System.Windows.Forms.LinkLabel, System.Windows.Forms, Version=4.0.0.0, Culture=neutral, PublicKeyToken=b77a5c561934e089</value>
   </data>
   <data name="&gt;&gt;linkLabelRegex.Parent" xml:space="preserve">
     <value>tabFiles</value>
@@ -187,6 +181,9 @@ See Help &gt;Documentation &gt;Command Line in Skyline.</value>
   <data name="&gt;&gt;label5.Name" xml:space="preserve">
     <value>label5</value>
   </data>
+  <data name="&gt;&gt;label5.Type" xml:space="preserve">
+    <value>System.Windows.Forms.Label, System.Windows.Forms, Version=4.0.0.0, Culture=neutral, PublicKeyToken=b77a5c561934e089</value>
+  </data>
   <data name="&gt;&gt;label5.Parent" xml:space="preserve">
     <value>tabSettings</value>
   </data>
@@ -214,6 +211,9 @@ See Help &gt;Documentation &gt;Command Line in Skyline.</value>
   </data>
   <data name="&gt;&gt;label4.Name" xml:space="preserve">
     <value>label4</value>
+  </data>
+  <data name="&gt;&gt;label4.Type" xml:space="preserve">
+    <value>System.Windows.Forms.Label, System.Windows.Forms, Version=4.0.0.0, Culture=neutral, PublicKeyToken=b77a5c561934e089</value>
   </data>
   <data name="&gt;&gt;label4.Parent" xml:space="preserve">
     <value>tabSettings</value>
@@ -246,6 +246,9 @@ See Help &gt;Documentation &gt;Command Line in Skyline.</value>
   <data name="&gt;&gt;radioShuffleDecoys.Name" xml:space="preserve">
     <value>radioShuffleDecoys</value>
   </data>
+  <data name="&gt;&gt;radioShuffleDecoys.Type" xml:space="preserve">
+    <value>System.Windows.Forms.RadioButton, System.Windows.Forms, Version=4.0.0.0, Culture=neutral, PublicKeyToken=b77a5c561934e089</value>
+  </data>
   <data name="&gt;&gt;radioShuffleDecoys.Parent" xml:space="preserve">
     <value>tabSettings</value>
   </data>
@@ -277,6 +280,9 @@ See Help &gt;Documentation &gt;Command Line in Skyline.</value>
   <data name="&gt;&gt;radioReverseDecoys.Name" xml:space="preserve">
     <value>radioReverseDecoys</value>
   </data>
+  <data name="&gt;&gt;radioReverseDecoys.Type" xml:space="preserve">
+    <value>System.Windows.Forms.RadioButton, System.Windows.Forms, Version=4.0.0.0, Culture=neutral, PublicKeyToken=b77a5c561934e089</value>
+  </data>
   <data name="&gt;&gt;radioReverseDecoys.Parent" xml:space="preserve">
     <value>tabSettings</value>
   </data>
@@ -305,6 +311,9 @@ See Help &gt;Documentation &gt;Command Line in Skyline.</value>
   <data name="&gt;&gt;checkBoxDecoys.Name" xml:space="preserve">
     <value>checkBoxDecoys</value>
   </data>
+  <data name="&gt;&gt;checkBoxDecoys.Type" xml:space="preserve">
+    <value>System.Windows.Forms.CheckBox, System.Windows.Forms, Version=4.0.0.0, Culture=neutral, PublicKeyToken=b77a5c561934e089</value>
+  </data>
   <data name="&gt;&gt;checkBoxDecoys.Parent" xml:space="preserve">
     <value>tabSettings</value>
   </data>
@@ -327,6 +336,9 @@ See Help &gt;Documentation &gt;Command Line in Skyline.</value>
   <data name="&gt;&gt;textMsOneResolvingPower.Name" xml:space="preserve">
     <value>textMsOneResolvingPower</value>
   </data>
+  <data name="&gt;&gt;textMsOneResolvingPower.Type" xml:space="preserve">
+    <value>System.Windows.Forms.TextBox, System.Windows.Forms, Version=4.0.0.0, Culture=neutral, PublicKeyToken=b77a5c561934e089</value>
+  </data>
   <data name="&gt;&gt;textMsOneResolvingPower.Parent" xml:space="preserve">
     <value>tabSettings</value>
   </data>
@@ -348,6 +360,9 @@ See Help &gt;Documentation &gt;Command Line in Skyline.</value>
   </data>
   <data name="&gt;&gt;textRetentionTime.Name" xml:space="preserve">
     <value>textRetentionTime</value>
+  </data>
+  <data name="&gt;&gt;textRetentionTime.Type" xml:space="preserve">
+    <value>System.Windows.Forms.TextBox, System.Windows.Forms, Version=4.0.0.0, Culture=neutral, PublicKeyToken=b77a5c561934e089</value>
   </data>
   <data name="&gt;&gt;textRetentionTime.Parent" xml:space="preserve">
     <value>tabSettings</value>
@@ -380,6 +395,9 @@ See Help &gt;Documentation &gt;Command Line in Skyline.</value>
   <data name="&gt;&gt;label9.Name" xml:space="preserve">
     <value>label9</value>
   </data>
+  <data name="&gt;&gt;label9.Type" xml:space="preserve">
+    <value>System.Windows.Forms.Label, System.Windows.Forms, Version=4.0.0.0, Culture=neutral, PublicKeyToken=b77a5c561934e089</value>
+  </data>
   <data name="&gt;&gt;label9.Parent" xml:space="preserve">
     <value>tabSettings</value>
   </data>
@@ -401,6 +419,9 @@ See Help &gt;Documentation &gt;Command Line in Skyline.</value>
   </data>
   <data name="&gt;&gt;textMsMsResolvingPower.Name" xml:space="preserve">
     <value>textMsMsResolvingPower</value>
+  </data>
+  <data name="&gt;&gt;textMsMsResolvingPower.Type" xml:space="preserve">
+    <value>System.Windows.Forms.TextBox, System.Windows.Forms, Version=4.0.0.0, Culture=neutral, PublicKeyToken=b77a5c561934e089</value>
   </data>
   <data name="&gt;&gt;textMsMsResolvingPower.Parent" xml:space="preserve">
     <value>tabSettings</value>
@@ -429,6 +450,9 @@ See Help &gt;Documentation &gt;Command Line in Skyline.</value>
   </data>
   <data name="&gt;&gt;checkBoxMProphet.Name" xml:space="preserve">
     <value>checkBoxMProphet</value>
+  </data>
+  <data name="&gt;&gt;checkBoxMProphet.Type" xml:space="preserve">
+    <value>System.Windows.Forms.CheckBox, System.Windows.Forms, Version=4.0.0.0, Culture=neutral, PublicKeyToken=b77a5c561934e089</value>
   </data>
   <data name="&gt;&gt;checkBoxMProphet.Parent" xml:space="preserve">
     <value>tabSettings</value>
@@ -463,6 +487,9 @@ See Help &gt;Documentation &gt;Command Line in Skyline.</value>
   <data name="&gt;&gt;labelConfigName.Name" xml:space="preserve">
     <value>labelConfigName</value>
   </data>
+  <data name="&gt;&gt;labelConfigName.Type" xml:space="preserve">
+    <value>System.Windows.Forms.Label, System.Windows.Forms, Version=4.0.0.0, Culture=neutral, PublicKeyToken=b77a5c561934e089</value>
+  </data>
   <data name="&gt;&gt;labelConfigName.Parent" xml:space="preserve">
     <value>tabFiles</value>
   </data>
@@ -495,6 +522,9 @@ See Help &gt;Documentation &gt;Command Line in Skyline.</value>
   </data>
   <data name="&gt;&gt;label2.Name" xml:space="preserve">
     <value>label2</value>
+  </data>
+  <data name="&gt;&gt;label2.Type" xml:space="preserve">
+    <value>System.Windows.Forms.Label, System.Windows.Forms, Version=4.0.0.0, Culture=neutral, PublicKeyToken=b77a5c561934e089</value>
   </data>
   <data name="&gt;&gt;label2.Parent" xml:space="preserve">
     <value>tabFiles</value>
@@ -532,6 +562,9 @@ See Help &gt;Documentation &gt;Command Line in Skyline.</value>
   <data name="&gt;&gt;label8.Name" xml:space="preserve">
     <value>label8</value>
   </data>
+  <data name="&gt;&gt;label8.Type" xml:space="preserve">
+    <value>System.Windows.Forms.Label, System.Windows.Forms, Version=4.0.0.0, Culture=neutral, PublicKeyToken=b77a5c561934e089</value>
+  </data>
   <data name="&gt;&gt;label8.Parent" xml:space="preserve">
     <value>tabRefine</value>
   </data>
@@ -561,6 +594,9 @@ See Help &gt;Documentation &gt;Command Line in Skyline.</value>
   </data>
   <data name="&gt;&gt;checkBoxRemoveDecoys.Name" xml:space="preserve">
     <value>checkBoxRemoveDecoys</value>
+  </data>
+  <data name="&gt;&gt;checkBoxRemoveDecoys.Type" xml:space="preserve">
+    <value>System.Windows.Forms.CheckBox, System.Windows.Forms, Version=4.0.0.0, Culture=neutral, PublicKeyToken=b77a5c561934e089</value>
   </data>
   <data name="&gt;&gt;checkBoxRemoveDecoys.Parent" xml:space="preserve">
     <value>splitContainer2.Panel2</value>
@@ -594,6 +630,9 @@ See Help &gt;Documentation &gt;Command Line in Skyline.</value>
   </data>
   <data name="&gt;&gt;checkBoxRemoveData.Name" xml:space="preserve">
     <value>checkBoxRemoveData</value>
+  </data>
+  <data name="&gt;&gt;checkBoxRemoveData.Type" xml:space="preserve">
+    <value>System.Windows.Forms.CheckBox, System.Windows.Forms, Version=4.0.0.0, Culture=neutral, PublicKeyToken=b77a5c561934e089</value>
   </data>
   <data name="&gt;&gt;checkBoxRemoveData.Parent" xml:space="preserve">
     <value>splitContainer2.Panel1</value>
@@ -631,6 +670,9 @@ See Help &gt;Documentation &gt;Command Line in Skyline.</value>
   <data name="&gt;&gt;label1.Name" xml:space="preserve">
     <value>label1</value>
   </data>
+  <data name="&gt;&gt;label1.Type" xml:space="preserve">
+    <value>System.Windows.Forms.Label, System.Windows.Forms, Version=4.0.0.0, Culture=neutral, PublicKeyToken=b77a5c561934e089</value>
+  </data>
   <data name="&gt;&gt;label1.Parent" xml:space="preserve">
     <value>tabFiles</value>
   </data>
@@ -654,6 +696,9 @@ See Help &gt;Documentation &gt;Command Line in Skyline.</value>
   </data>
   <data name="&gt;&gt;textAnalysisPath.Name" xml:space="preserve">
     <value>textAnalysisPath</value>
+  </data>
+  <data name="&gt;&gt;textAnalysisPath.Type" xml:space="preserve">
+    <value>System.Windows.Forms.TextBox, System.Windows.Forms, Version=4.0.0.0, Culture=neutral, PublicKeyToken=b77a5c561934e089</value>
   </data>
   <data name="&gt;&gt;textAnalysisPath.Parent" xml:space="preserve">
     <value>tabFiles</value>
@@ -694,6 +739,9 @@ See Help &gt;Documentation &gt;Command Line in Skyline.</value>
   <data name="&gt;&gt;checkBoxUseFolderName.Name" xml:space="preserve">
     <value>checkBoxUseFolderName</value>
   </data>
+  <data name="&gt;&gt;checkBoxUseFolderName.Type" xml:space="preserve">
+    <value>System.Windows.Forms.CheckBox, System.Windows.Forms, Version=4.0.0.0, Culture=neutral, PublicKeyToken=b77a5c561934e089</value>
+  </data>
   <data name="&gt;&gt;checkBoxUseFolderName.Parent" xml:space="preserve">
     <value>tabFiles</value>
   </data>
@@ -714,6 +762,9 @@ See Help &gt;Documentation &gt;Command Line in Skyline.</value>
   </data>
   <data name="&gt;&gt;textAnalysisFileName.Name" xml:space="preserve">
     <value>textAnalysisFileName</value>
+  </data>
+  <data name="&gt;&gt;textAnalysisFileName.Type" xml:space="preserve">
+    <value>System.Windows.Forms.TextBox, System.Windows.Forms, Version=4.0.0.0, Culture=neutral, PublicKeyToken=b77a5c561934e089</value>
   </data>
   <data name="&gt;&gt;textAnalysisFileName.Parent" xml:space="preserve">
     <value>tabFiles</value>
@@ -739,6 +790,9 @@ See Help &gt;Documentation &gt;Command Line in Skyline.</value>
   <data name="&gt;&gt;comboTemplateFile.Name" xml:space="preserve">
     <value>comboTemplateFile</value>
   </data>
+  <data name="&gt;&gt;comboTemplateFile.Type" xml:space="preserve">
+    <value>System.Windows.Forms.ComboBox, System.Windows.Forms, Version=4.0.0.0, Culture=neutral, PublicKeyToken=b77a5c561934e089</value>
+  </data>
   <data name="&gt;&gt;comboTemplateFile.Parent" xml:space="preserve">
     <value>tabFiles</value>
   </data>
@@ -756,6 +810,9 @@ See Help &gt;Documentation &gt;Command Line in Skyline.</value>
   </data>
   <data name="&gt;&gt;textReplicateNamingPattern.Name" xml:space="preserve">
     <value>textReplicateNamingPattern</value>
+  </data>
+  <data name="&gt;&gt;textReplicateNamingPattern.Type" xml:space="preserve">
+    <value>System.Windows.Forms.TextBox, System.Windows.Forms, Version=4.0.0.0, Culture=neutral, PublicKeyToken=b77a5c561934e089</value>
   </data>
   <data name="&gt;&gt;textReplicateNamingPattern.Parent" xml:space="preserve">
     <value>tabFiles</value>
@@ -780,6 +837,9 @@ See Help &gt;Documentation &gt;Command Line in Skyline.</value>
   </data>
   <data name="&gt;&gt;textConfigName.Name" xml:space="preserve">
     <value>textConfigName</value>
+  </data>
+  <data name="&gt;&gt;textConfigName.Type" xml:space="preserve">
+    <value>System.Windows.Forms.TextBox, System.Windows.Forms, Version=4.0.0.0, Culture=neutral, PublicKeyToken=b77a5c561934e089</value>
   </data>
   <data name="&gt;&gt;textConfigName.Parent" xml:space="preserve">
     <value>tabFiles</value>
@@ -808,6 +868,9 @@ See Help &gt;Documentation &gt;Command Line in Skyline.</value>
   <data name="&gt;&gt;btnAnalysisPath.Name" xml:space="preserve">
     <value>btnAnalysisPath</value>
   </data>
+  <data name="&gt;&gt;btnAnalysisPath.Type" xml:space="preserve">
+    <value>System.Windows.Forms.Button, System.Windows.Forms, Version=4.0.0.0, Culture=neutral, PublicKeyToken=b77a5c561934e089</value>
+  </data>
   <data name="&gt;&gt;btnAnalysisPath.Parent" xml:space="preserve">
     <value>tabFiles</value>
   </data>
@@ -831,6 +894,9 @@ See Help &gt;Documentation &gt;Command Line in Skyline.</value>
   </data>
   <data name="&gt;&gt;panelAnnotations.Name" xml:space="preserve">
     <value>panelAnnotations</value>
+  </data>
+  <data name="&gt;&gt;panelAnnotations.Type" xml:space="preserve">
+    <value>System.Windows.Forms.Panel, System.Windows.Forms, Version=4.0.0.0, Culture=neutral, PublicKeyToken=b77a5c561934e089</value>
   </data>
   <data name="&gt;&gt;panelAnnotations.Parent" xml:space="preserve">
     <value>tabFiles</value>
@@ -856,6 +922,9 @@ See Help &gt;Documentation &gt;Command Line in Skyline.</value>
   <data name="&gt;&gt;panelTemplate.Name" xml:space="preserve">
     <value>panelTemplate</value>
   </data>
+  <data name="&gt;&gt;panelTemplate.Type" xml:space="preserve">
+    <value>System.Windows.Forms.Panel, System.Windows.Forms, Version=4.0.0.0, Culture=neutral, PublicKeyToken=b77a5c561934e089</value>
+  </data>
   <data name="&gt;&gt;panelTemplate.Parent" xml:space="preserve">
     <value>tabFiles</value>
   </data>
@@ -879,6 +948,9 @@ See Help &gt;Documentation &gt;Command Line in Skyline.</value>
   </data>
   <data name="&gt;&gt;panelData.Name" xml:space="preserve">
     <value>panelData</value>
+  </data>
+  <data name="&gt;&gt;panelData.Type" xml:space="preserve">
+    <value>System.Windows.Forms.Panel, System.Windows.Forms, Version=4.0.0.0, Culture=neutral, PublicKeyToken=b77a5c561934e089</value>
   </data>
   <data name="&gt;&gt;panelData.Parent" xml:space="preserve">
     <value>tabFiles</value>
@@ -904,6 +976,9 @@ See Help &gt;Documentation &gt;Command Line in Skyline.</value>
   <data name="&gt;&gt;tabFiles.Name" xml:space="preserve">
     <value>tabFiles</value>
   </data>
+  <data name="&gt;&gt;tabFiles.Type" xml:space="preserve">
+    <value>System.Windows.Forms.TabPage, System.Windows.Forms, Version=4.0.0.0, Culture=neutral, PublicKeyToken=b77a5c561934e089</value>
+  </data>
   <data name="&gt;&gt;tabFiles.Parent" xml:space="preserve">
     <value>tabsConfig</value>
   </data>
@@ -912,6 +987,9 @@ See Help &gt;Documentation &gt;Command Line in Skyline.</value>
   </data>
   <data name="&gt;&gt;label6.Name" xml:space="preserve">
     <value>label6</value>
+  </data>
+  <data name="&gt;&gt;label6.Type" xml:space="preserve">
+    <value>System.Windows.Forms.Label, System.Windows.Forms, Version=4.0.0.0, Culture=neutral, PublicKeyToken=b77a5c561934e089</value>
   </data>
   <data name="&gt;&gt;label6.Parent" xml:space="preserve">
     <value>tabSettings</value>
@@ -937,6 +1015,9 @@ See Help &gt;Documentation &gt;Command Line in Skyline.</value>
   <data name="&gt;&gt;tabSettings.Name" xml:space="preserve">
     <value>tabSettings</value>
   </data>
+  <data name="&gt;&gt;tabSettings.Type" xml:space="preserve">
+    <value>System.Windows.Forms.TabPage, System.Windows.Forms, Version=4.0.0.0, Culture=neutral, PublicKeyToken=b77a5c561934e089</value>
+  </data>
   <data name="&gt;&gt;tabSettings.Parent" xml:space="preserve">
     <value>tabsConfig</value>
   </data>
@@ -945,6 +1026,9 @@ See Help &gt;Documentation &gt;Command Line in Skyline.</value>
   </data>
   <data name="&gt;&gt;splitContainer2.Name" xml:space="preserve">
     <value>splitContainer2</value>
+  </data>
+  <data name="&gt;&gt;splitContainer2.Type" xml:space="preserve">
+    <value>System.Windows.Forms.SplitContainer, System.Windows.Forms, Version=4.0.0.0, Culture=neutral, PublicKeyToken=b77a5c561934e089</value>
   </data>
   <data name="&gt;&gt;splitContainer2.Parent" xml:space="preserve">
     <value>tabRefine</value>
@@ -955,6 +1039,9 @@ See Help &gt;Documentation &gt;Command Line in Skyline.</value>
   <data name="&gt;&gt;gridRefineInputs.Name" xml:space="preserve">
     <value>gridRefineInputs</value>
   </data>
+  <data name="&gt;&gt;gridRefineInputs.Type" xml:space="preserve">
+    <value>System.Windows.Forms.PropertyGrid, System.Windows.Forms, Version=4.0.0.0, Culture=neutral, PublicKeyToken=b77a5c561934e089</value>
+  </data>
   <data name="&gt;&gt;gridRefineInputs.Parent" xml:space="preserve">
     <value>tabRefine</value>
   </data>
@@ -964,6 +1051,9 @@ See Help &gt;Documentation &gt;Command Line in Skyline.</value>
   <data name="&gt;&gt;btnRefinedFilePath.Name" xml:space="preserve">
     <value>btnRefinedFilePath</value>
   </data>
+  <data name="&gt;&gt;btnRefinedFilePath.Type" xml:space="preserve">
+    <value>System.Windows.Forms.Button, System.Windows.Forms, Version=4.0.0.0, Culture=neutral, PublicKeyToken=b77a5c561934e089</value>
+  </data>
   <data name="&gt;&gt;btnRefinedFilePath.Parent" xml:space="preserve">
     <value>tabRefine</value>
   </data>
@@ -972,6 +1062,9 @@ See Help &gt;Documentation &gt;Command Line in Skyline.</value>
   </data>
   <data name="&gt;&gt;textRefinedFilePath.Name" xml:space="preserve">
     <value>textRefinedFilePath</value>
+  </data>
+  <data name="&gt;&gt;textRefinedFilePath.Type" xml:space="preserve">
+    <value>System.Windows.Forms.TextBox, System.Windows.Forms, Version=4.0.0.0, Culture=neutral, PublicKeyToken=b77a5c561934e089</value>
   </data>
   <data name="&gt;&gt;textRefinedFilePath.Parent" xml:space="preserve">
     <value>tabRefine</value>
@@ -994,14 +1087,23 @@ See Help &gt;Documentation &gt;Command Line in Skyline.</value>
   <data name="&gt;&gt;tabRefine.Name" xml:space="preserve">
     <value>tabRefine</value>
   </data>
+  <data name="&gt;&gt;tabRefine.Type" xml:space="preserve">
+    <value>System.Windows.Forms.TabPage, System.Windows.Forms, Version=4.0.0.0, Culture=neutral, PublicKeyToken=b77a5c561934e089</value>
+  </data>
   <data name="&gt;&gt;tabRefine.Parent" xml:space="preserve">
     <value>tabsConfig</value>
   </data>
   <data name="&gt;&gt;tabRefine.ZOrder" xml:space="preserve">
     <value>2</value>
   </data>
+  <metadata name="toolBar.TrayLocation" type="System.Drawing.Point, System.Drawing, Version=4.0.0.0, Culture=neutral, PublicKeyToken=b03f5f7f11d50a3a">
+    <value>393, 17</value>
+  </metadata>
   <data name="&gt;&gt;toolBar.Name" xml:space="preserve">
     <value>toolBar</value>
+  </data>
+  <data name="&gt;&gt;toolBar.Type" xml:space="preserve">
+    <value>System.Windows.Forms.ToolStrip, System.Windows.Forms, Version=4.0.0.0, Culture=neutral, PublicKeyToken=b77a5c561934e089</value>
   </data>
   <data name="&gt;&gt;toolBar.Parent" xml:space="preserve">
     <value>tabReports</value>
@@ -1011,6 +1113,9 @@ See Help &gt;Documentation &gt;Command Line in Skyline.</value>
   </data>
   <data name="&gt;&gt;gridReportSettings.Name" xml:space="preserve">
     <value>gridReportSettings</value>
+  </data>
+  <data name="&gt;&gt;gridReportSettings.Type" xml:space="preserve">
+    <value>System.Windows.Forms.DataGridView, System.Windows.Forms, Version=4.0.0.0, Culture=neutral, PublicKeyToken=b77a5c561934e089</value>
   </data>
   <data name="&gt;&gt;gridReportSettings.Parent" xml:space="preserve">
     <value>tabReports</value>
@@ -1039,6 +1144,9 @@ See Help &gt;Documentation &gt;Command Line in Skyline.</value>
   <data name="&gt;&gt;tabReports.Name" xml:space="preserve">
     <value>tabReports</value>
   </data>
+  <data name="&gt;&gt;tabReports.Type" xml:space="preserve">
+    <value>System.Windows.Forms.TabPage, System.Windows.Forms, Version=4.0.0.0, Culture=neutral, PublicKeyToken=b77a5c561934e089</value>
+  </data>
   <data name="&gt;&gt;tabReports.Parent" xml:space="preserve">
     <value>tabsConfig</value>
   </data>
@@ -1048,6 +1156,9 @@ See Help &gt;Documentation &gt;Command Line in Skyline.</value>
   <data name="&gt;&gt;checkBoxLogTestFormat.Name" xml:space="preserve">
     <value>checkBoxLogTestFormat</value>
   </data>
+  <data name="&gt;&gt;checkBoxLogTestFormat.Type" xml:space="preserve">
+    <value>System.Windows.Forms.CheckBox, System.Windows.Forms, Version=4.0.0.0, Culture=neutral, PublicKeyToken=b77a5c561934e089</value>
+  </data>
   <data name="&gt;&gt;checkBoxLogTestFormat.Parent" xml:space="preserve">
     <value>tabSkyline</value>
   </data>
@@ -1056,6 +1167,9 @@ See Help &gt;Documentation &gt;Command Line in Skyline.</value>
   </data>
   <data name="&gt;&gt;panelSkylineSettings.Name" xml:space="preserve">
     <value>panelSkylineSettings</value>
+  </data>
+  <data name="&gt;&gt;panelSkylineSettings.Type" xml:space="preserve">
+    <value>System.Windows.Forms.Panel, System.Windows.Forms, Version=4.0.0.0, Culture=neutral, PublicKeyToken=b77a5c561934e089</value>
   </data>
   <data name="&gt;&gt;panelSkylineSettings.Parent" xml:space="preserve">
     <value>tabSkyline</value>
@@ -1081,6 +1195,9 @@ See Help &gt;Documentation &gt;Command Line in Skyline.</value>
   <data name="&gt;&gt;tabSkyline.Name" xml:space="preserve">
     <value>tabSkyline</value>
   </data>
+  <data name="&gt;&gt;tabSkyline.Type" xml:space="preserve">
+    <value>System.Windows.Forms.TabPage, System.Windows.Forms, Version=4.0.0.0, Culture=neutral, PublicKeyToken=b77a5c561934e089</value>
+  </data>
   <data name="&gt;&gt;tabSkyline.Parent" xml:space="preserve">
     <value>tabsConfig</value>
   </data>
@@ -1105,6 +1222,9 @@ See Help &gt;Documentation &gt;Command Line in Skyline.</value>
   <data name="&gt;&gt;tabsConfig.Name" xml:space="preserve">
     <value>tabsConfig</value>
   </data>
+  <data name="&gt;&gt;tabsConfig.Type" xml:space="preserve">
+    <value>System.Windows.Forms.TabControl, System.Windows.Forms, Version=4.0.0.0, Culture=neutral, PublicKeyToken=b77a5c561934e089</value>
+  </data>
   <data name="&gt;&gt;tabsConfig.Parent" xml:space="preserve">
     <value>splitContainer1.Panel1</value>
   </data>
@@ -1113,6 +1233,9 @@ See Help &gt;Documentation &gt;Command Line in Skyline.</value>
   </data>
   <data name="&gt;&gt;splitContainer1.Panel1.Name" xml:space="preserve">
     <value>splitContainer1.Panel1</value>
+  </data>
+  <data name="&gt;&gt;splitContainer1.Panel1.Type" xml:space="preserve">
+    <value>System.Windows.Forms.SplitterPanel, System.Windows.Forms, Version=4.0.0.0, Culture=neutral, PublicKeyToken=b77a5c561934e089</value>
   </data>
   <data name="&gt;&gt;splitContainer1.Panel1.Parent" xml:space="preserve">
     <value>splitContainer1</value>
@@ -1140,6 +1263,9 @@ See Help &gt;Documentation &gt;Command Line in Skyline.</value>
   </data>
   <data name="&gt;&gt;btnCancelConfig.Name" xml:space="preserve">
     <value>btnCancelConfig</value>
+  </data>
+  <data name="&gt;&gt;btnCancelConfig.Type" xml:space="preserve">
+    <value>System.Windows.Forms.Button, System.Windows.Forms, Version=4.0.0.0, Culture=neutral, PublicKeyToken=b77a5c561934e089</value>
   </data>
   <data name="&gt;&gt;btnCancelConfig.Parent" xml:space="preserve">
     <value>splitContainer1.Panel2</value>
@@ -1172,6 +1298,9 @@ See Help &gt;Documentation &gt;Command Line in Skyline.</value>
   <data name="&gt;&gt;lblConfigRunning.Name" xml:space="preserve">
     <value>lblConfigRunning</value>
   </data>
+  <data name="&gt;&gt;lblConfigRunning.Type" xml:space="preserve">
+    <value>System.Windows.Forms.Label, System.Windows.Forms, Version=4.0.0.0, Culture=neutral, PublicKeyToken=b77a5c561934e089</value>
+  </data>
   <data name="&gt;&gt;lblConfigRunning.Parent" xml:space="preserve">
     <value>splitContainer1.Panel2</value>
   </data>
@@ -1201,6 +1330,9 @@ See Help &gt;Documentation &gt;Command Line in Skyline.</value>
   </data>
   <data name="&gt;&gt;btnSaveConfig.Name" xml:space="preserve">
     <value>btnSaveConfig</value>
+  </data>
+  <data name="&gt;&gt;btnSaveConfig.Type" xml:space="preserve">
+    <value>System.Windows.Forms.Button, System.Windows.Forms, Version=4.0.0.0, Culture=neutral, PublicKeyToken=b77a5c561934e089</value>
   </data>
   <data name="&gt;&gt;btnSaveConfig.Parent" xml:space="preserve">
     <value>splitContainer1.Panel2</value>
@@ -1235,6 +1367,9 @@ See Help &gt;Documentation &gt;Command Line in Skyline.</value>
   <data name="&gt;&gt;btnOkConfig.Name" xml:space="preserve">
     <value>btnOkConfig</value>
   </data>
+  <data name="&gt;&gt;btnOkConfig.Type" xml:space="preserve">
+    <value>System.Windows.Forms.Button, System.Windows.Forms, Version=4.0.0.0, Culture=neutral, PublicKeyToken=b77a5c561934e089</value>
+  </data>
   <data name="&gt;&gt;btnOkConfig.Parent" xml:space="preserve">
     <value>splitContainer1.Panel2</value>
   </data>
@@ -1243,6 +1378,9 @@ See Help &gt;Documentation &gt;Command Line in Skyline.</value>
   </data>
   <data name="&gt;&gt;splitContainer1.Panel2.Name" xml:space="preserve">
     <value>splitContainer1.Panel2</value>
+  </data>
+  <data name="&gt;&gt;splitContainer1.Panel2.Type" xml:space="preserve">
+    <value>System.Windows.Forms.SplitterPanel, System.Windows.Forms, Version=4.0.0.0, Culture=neutral, PublicKeyToken=b77a5c561934e089</value>
   </data>
   <data name="&gt;&gt;splitContainer1.Panel2.Parent" xml:space="preserve">
     <value>splitContainer1</value>
@@ -1264,6 +1402,9 @@ See Help &gt;Documentation &gt;Command Line in Skyline.</value>
   </data>
   <data name="&gt;&gt;splitContainer1.Name" xml:space="preserve">
     <value>splitContainer1</value>
+  </data>
+  <data name="&gt;&gt;splitContainer1.Type" xml:space="preserve">
+    <value>System.Windows.Forms.SplitContainer, System.Windows.Forms, Version=4.0.0.0, Culture=neutral, PublicKeyToken=b77a5c561934e089</value>
   </data>
   <data name="&gt;&gt;splitContainer1.Parent" xml:space="preserve">
     <value>$this</value>
@@ -1292,6 +1433,9 @@ See Help &gt;Documentation &gt;Command Line in Skyline.</value>
   <data name="&gt;&gt;label6.Name" xml:space="preserve">
     <value>label6</value>
   </data>
+  <data name="&gt;&gt;label6.Type" xml:space="preserve">
+    <value>System.Windows.Forms.Label, System.Windows.Forms, Version=4.0.0.0, Culture=neutral, PublicKeyToken=b77a5c561934e089</value>
+  </data>
   <data name="&gt;&gt;label6.Parent" xml:space="preserve">
     <value>tabSettings</value>
   </data>
@@ -1307,6 +1451,9 @@ See Help &gt;Documentation &gt;Command Line in Skyline.</value>
   <data name="&gt;&gt;splitContainer2.Panel1.Name" xml:space="preserve">
     <value>splitContainer2.Panel1</value>
   </data>
+  <data name="&gt;&gt;splitContainer2.Panel1.Type" xml:space="preserve">
+    <value>System.Windows.Forms.SplitterPanel, System.Windows.Forms, Version=4.0.0.0, Culture=neutral, PublicKeyToken=b77a5c561934e089</value>
+  </data>
   <data name="&gt;&gt;splitContainer2.Panel1.Parent" xml:space="preserve">
     <value>splitContainer2</value>
   </data>
@@ -1315,6 +1462,9 @@ See Help &gt;Documentation &gt;Command Line in Skyline.</value>
   </data>
   <data name="&gt;&gt;splitContainer2.Panel2.Name" xml:space="preserve">
     <value>splitContainer2.Panel2</value>
+  </data>
+  <data name="&gt;&gt;splitContainer2.Panel2.Type" xml:space="preserve">
+    <value>System.Windows.Forms.SplitterPanel, System.Windows.Forms, Version=4.0.0.0, Culture=neutral, PublicKeyToken=b77a5c561934e089</value>
   </data>
   <data name="&gt;&gt;splitContainer2.Panel2.Parent" xml:space="preserve">
     <value>splitContainer2</value>
@@ -1333,6 +1483,9 @@ See Help &gt;Documentation &gt;Command Line in Skyline.</value>
   </data>
   <data name="&gt;&gt;splitContainer2.Name" xml:space="preserve">
     <value>splitContainer2</value>
+  </data>
+  <data name="&gt;&gt;splitContainer2.Type" xml:space="preserve">
+    <value>System.Windows.Forms.SplitContainer, System.Windows.Forms, Version=4.0.0.0, Culture=neutral, PublicKeyToken=b77a5c561934e089</value>
   </data>
   <data name="&gt;&gt;splitContainer2.Parent" xml:space="preserve">
     <value>tabRefine</value>
@@ -1354,6 +1507,9 @@ See Help &gt;Documentation &gt;Command Line in Skyline.</value>
   </data>
   <data name="&gt;&gt;gridRefineInputs.Name" xml:space="preserve">
     <value>gridRefineInputs</value>
+  </data>
+  <data name="&gt;&gt;gridRefineInputs.Type" xml:space="preserve">
+    <value>System.Windows.Forms.PropertyGrid, System.Windows.Forms, Version=4.0.0.0, Culture=neutral, PublicKeyToken=b77a5c561934e089</value>
   </data>
   <data name="&gt;&gt;gridRefineInputs.Parent" xml:space="preserve">
     <value>tabRefine</value>
@@ -1385,6 +1541,9 @@ See Help &gt;Documentation &gt;Command Line in Skyline.</value>
   <data name="&gt;&gt;btnRefinedFilePath.Name" xml:space="preserve">
     <value>btnRefinedFilePath</value>
   </data>
+  <data name="&gt;&gt;btnRefinedFilePath.Type" xml:space="preserve">
+    <value>System.Windows.Forms.Button, System.Windows.Forms, Version=4.0.0.0, Culture=neutral, PublicKeyToken=b77a5c561934e089</value>
+  </data>
   <data name="&gt;&gt;btnRefinedFilePath.Parent" xml:space="preserve">
     <value>tabRefine</value>
   </data>
@@ -1409,12 +1568,18 @@ See Help &gt;Documentation &gt;Command Line in Skyline.</value>
   <data name="&gt;&gt;textRefinedFilePath.Name" xml:space="preserve">
     <value>textRefinedFilePath</value>
   </data>
+  <data name="&gt;&gt;textRefinedFilePath.Type" xml:space="preserve">
+    <value>System.Windows.Forms.TextBox, System.Windows.Forms, Version=4.0.0.0, Culture=neutral, PublicKeyToken=b77a5c561934e089</value>
+  </data>
   <data name="&gt;&gt;textRefinedFilePath.Parent" xml:space="preserve">
     <value>tabRefine</value>
   </data>
   <data name="&gt;&gt;textRefinedFilePath.ZOrder" xml:space="preserve">
     <value>4</value>
   </data>
+  <metadata name="toolBar.TrayLocation" type="System.Drawing.Point, System.Drawing, Version=4.0.0.0, Culture=neutral, PublicKeyToken=b03f5f7f11d50a3a">
+    <value>393, 17</value>
+  </metadata>
   <data name="toolBar.Anchor" type="System.Windows.Forms.AnchorStyles, System.Windows.Forms">
     <value>Top, Right</value>
   </data>
@@ -1435,6 +1600,9 @@ See Help &gt;Documentation &gt;Command Line in Skyline.</value>
   </data>
   <data name="&gt;&gt;toolBar.Name" xml:space="preserve">
     <value>toolBar</value>
+  </data>
+  <data name="&gt;&gt;toolBar.Type" xml:space="preserve">
+    <value>System.Windows.Forms.ToolStrip, System.Windows.Forms, Version=4.0.0.0, Culture=neutral, PublicKeyToken=b77a5c561934e089</value>
   </data>
   <data name="&gt;&gt;toolBar.Parent" xml:space="preserve">
     <value>tabReports</value>
@@ -1496,12 +1664,21 @@ See Help &gt;Documentation &gt;Command Line in Skyline.</value>
   <data name="gridReportSettings.Anchor" type="System.Windows.Forms.AnchorStyles, System.Windows.Forms">
     <value>Top, Bottom, Left, Right</value>
   </data>
+  <metadata name="columnName.UserAddedColumn" type="System.Boolean, mscorlib, Version=4.0.0.0, Culture=neutral, PublicKeyToken=b77a5c561934e089">
+    <value>True</value>
+  </metadata>
   <data name="columnName.HeaderText" xml:space="preserve">
     <value>Name</value>
   </data>
+  <metadata name="columnScripts.UserAddedColumn" type="System.Boolean, mscorlib, Version=4.0.0.0, Culture=neutral, PublicKeyToken=b77a5c561934e089">
+    <value>True</value>
+  </metadata>
   <data name="columnScripts.HeaderText" xml:space="preserve">
     <value>Scripts</value>
   </data>
+  <metadata name="columnFile.UserAddedColumn" type="System.Boolean, mscorlib, Version=4.0.0.0, Culture=neutral, PublicKeyToken=b77a5c561934e089">
+    <value>True</value>
+  </metadata>
   <data name="columnFile.HeaderText" xml:space="preserve">
     <value>File</value>
   </data>
@@ -1519,6 +1696,9 @@ See Help &gt;Documentation &gt;Command Line in Skyline.</value>
   </data>
   <data name="&gt;&gt;gridReportSettings.Name" xml:space="preserve">
     <value>gridReportSettings</value>
+  </data>
+  <data name="&gt;&gt;gridReportSettings.Type" xml:space="preserve">
+    <value>System.Windows.Forms.DataGridView, System.Windows.Forms, Version=4.0.0.0, Culture=neutral, PublicKeyToken=b77a5c561934e089</value>
   </data>
   <data name="&gt;&gt;gridReportSettings.Parent" xml:space="preserve">
     <value>tabReports</value>
@@ -1547,6 +1727,9 @@ See Help &gt;Documentation &gt;Command Line in Skyline.</value>
   <data name="&gt;&gt;checkBoxLogTestFormat.Name" xml:space="preserve">
     <value>checkBoxLogTestFormat</value>
   </data>
+  <data name="&gt;&gt;checkBoxLogTestFormat.Type" xml:space="preserve">
+    <value>System.Windows.Forms.CheckBox, System.Windows.Forms, Version=4.0.0.0, Culture=neutral, PublicKeyToken=b77a5c561934e089</value>
+  </data>
   <data name="&gt;&gt;checkBoxLogTestFormat.Parent" xml:space="preserve">
     <value>tabSkyline</value>
   </data>
@@ -1568,12 +1751,18 @@ See Help &gt;Documentation &gt;Command Line in Skyline.</value>
   <data name="&gt;&gt;panelSkylineSettings.Name" xml:space="preserve">
     <value>panelSkylineSettings</value>
   </data>
+  <data name="&gt;&gt;panelSkylineSettings.Type" xml:space="preserve">
+    <value>System.Windows.Forms.Panel, System.Windows.Forms, Version=4.0.0.0, Culture=neutral, PublicKeyToken=b77a5c561934e089</value>
+  </data>
   <data name="&gt;&gt;panelSkylineSettings.Parent" xml:space="preserve">
     <value>tabSkyline</value>
   </data>
   <data name="&gt;&gt;panelSkylineSettings.ZOrder" xml:space="preserve">
     <value>1</value>
   </data>
+  <metadata name="imageListToolbarIcons.TrayLocation" type="System.Drawing.Point, System.Drawing, Version=4.0.0.0, Culture=neutral, PublicKeyToken=b03f5f7f11d50a3a">
+    <value>219, 17</value>
+  </metadata>
   <data name="imageListToolbarIcons.ImageStream" mimetype="application/x-microsoft.net.object.binary.base64">
     <value>
         AAEAAAD/////AQAAAAAAAAAMAgAAAFdTeXN0ZW0uV2luZG93cy5Gb3JtcywgVmVyc2lvbj00LjAuMC4w
@@ -1627,6 +1816,12 @@ See Help &gt;Documentation &gt;Command Line in Skyline.</value>
         AfAIAAf/AfAIAAf/AfAIAAf/AfAIAAf/AfAIAAf/AfAIAAf/AfAIAAs=
 </value>
   </data>
+  <metadata name="$this.Localizable" type="System.Boolean, mscorlib, Version=4.0.0.0, Culture=neutral, PublicKeyToken=b77a5c561934e089">
+    <value>True</value>
+  </metadata>
+  <metadata name="$this.TrayHeight" type="System.Int32, mscorlib, Version=4.0.0.0, Culture=neutral, PublicKeyToken=b77a5c561934e089">
+    <value>28</value>
+  </metadata>
   <data name="$this.AutoScaleDimensions" type="System.Drawing.SizeF, System.Drawing">
     <value>6, 13</value>
   </data>
@@ -2058,28 +2253,55 @@ See Help &gt;Documentation &gt;Command Line in Skyline.</value>
   <data name="&gt;&gt;toolTip1.Name" xml:space="preserve">
     <value>toolTip1</value>
   </data>
+  <data name="&gt;&gt;toolTip1.Type" xml:space="preserve">
+    <value>System.Windows.Forms.ToolTip, System.Windows.Forms, Version=4.0.0.0, Culture=neutral, PublicKeyToken=b77a5c561934e089</value>
+  </data>
   <data name="&gt;&gt;btnAddReport.Name" xml:space="preserve">
     <value>btnAddReport</value>
+  </data>
+  <data name="&gt;&gt;btnAddReport.Type" xml:space="preserve">
+    <value>System.Windows.Forms.ToolStripButton, System.Windows.Forms, Version=4.0.0.0, Culture=neutral, PublicKeyToken=b77a5c561934e089</value>
   </data>
   <data name="&gt;&gt;btnDeleteReport.Name" xml:space="preserve">
     <value>btnDeleteReport</value>
   </data>
+  <data name="&gt;&gt;btnDeleteReport.Type" xml:space="preserve">
+    <value>System.Windows.Forms.ToolStripButton, System.Windows.Forms, Version=4.0.0.0, Culture=neutral, PublicKeyToken=b77a5c561934e089</value>
+  </data>
   <data name="&gt;&gt;btnEditReport.Name" xml:space="preserve">
     <value>btnEditReport</value>
+  </data>
+  <data name="&gt;&gt;btnEditReport.Type" xml:space="preserve">
+    <value>System.Windows.Forms.ToolStripButton, System.Windows.Forms, Version=4.0.0.0, Culture=neutral, PublicKeyToken=b77a5c561934e089</value>
   </data>
   <data name="&gt;&gt;columnName.Name" xml:space="preserve">
     <value>columnName</value>
   </data>
+  <data name="&gt;&gt;columnName.Type" xml:space="preserve">
+    <value>System.Windows.Forms.DataGridViewTextBoxColumn, System.Windows.Forms, Version=4.0.0.0, Culture=neutral, PublicKeyToken=b77a5c561934e089</value>
+  </data>
   <data name="&gt;&gt;columnScripts.Name" xml:space="preserve">
     <value>columnScripts</value>
+  </data>
+  <data name="&gt;&gt;columnScripts.Type" xml:space="preserve">
+    <value>System.Windows.Forms.DataGridViewTextBoxColumn, System.Windows.Forms, Version=4.0.0.0, Culture=neutral, PublicKeyToken=b77a5c561934e089</value>
   </data>
   <data name="&gt;&gt;columnFile.Name" xml:space="preserve">
     <value>columnFile</value>
   </data>
+  <data name="&gt;&gt;columnFile.Type" xml:space="preserve">
+    <value>System.Windows.Forms.DataGridViewTextBoxColumn, System.Windows.Forms, Version=4.0.0.0, Culture=neutral, PublicKeyToken=b77a5c561934e089</value>
+  </data>
   <data name="&gt;&gt;imageListToolbarIcons.Name" xml:space="preserve">
     <value>imageListToolbarIcons</value>
   </data>
+  <data name="&gt;&gt;imageListToolbarIcons.Type" xml:space="preserve">
+    <value>System.Windows.Forms.ImageList, System.Windows.Forms, Version=4.0.0.0, Culture=neutral, PublicKeyToken=b77a5c561934e089</value>
+  </data>
   <data name="&gt;&gt;$this.Name" xml:space="preserve">
     <value>SkylineBatchConfigForm</value>
+  </data>
+  <data name="&gt;&gt;$this.Type" xml:space="preserve">
+    <value>System.Windows.Forms.Form, System.Windows.Forms, Version=4.0.0.0, Culture=neutral, PublicKeyToken=b77a5c561934e089</value>
   </data>
 </root>

@@ -118,14 +118,10 @@
     <value>System.Resources.ResXResourceWriter, System.Windows.Forms, Version=4.0.0.0, Culture=neutral, PublicKeyToken=b77a5c561934e089</value>
   </resheader>
   <assembly alias="System.Windows.Forms" name="System.Windows.Forms, Version=4.0.0.0, Culture=neutral, PublicKeyToken=b77a5c561934e089" />
-  <assembly alias="System.Drawing" name="System.Drawing, Version=4.0.0.0, Culture=neutral, PublicKeyToken=b03f5f7f11d50a3a" />
-  <assembly alias="mscorlib" name="mscorlib, Version=4.0.0.0, Culture=neutral, PublicKeyToken=b77a5c561934e089" />
-  <metadata name="$this.Localizable" type="System.Boolean, mscorlib, Version=4.0.0.0, Culture=neutral, PublicKeyToken=b77a5c561934e089">
-    <value>True</value>
-  </metadata>
   <data name="splitContainer1.Dock" type="System.Windows.Forms.DockStyle, System.Windows.Forms">
     <value>Fill</value>
   </data>
+  <assembly alias="System.Drawing" name="System.Drawing, Version=4.0.0.0, Culture=neutral, PublicKeyToken=b03f5f7f11d50a3a" />
   <data name="splitContainer1.Location" type="System.Drawing.Point, System.Drawing">
     <value>0, 0</value>
   </data>
@@ -147,11 +143,15 @@
   <data name="textConfigName.Size" type="System.Drawing.Size, System.Drawing">
     <value>324, 20</value>
   </data>
+  <assembly alias="mscorlib" name="mscorlib, Version=4.0.0.0, Culture=neutral, PublicKeyToken=b77a5c561934e089" />
   <data name="textConfigName.TabIndex" type="System.Int32, mscorlib">
     <value>0</value>
   </data>
   <data name="&gt;&gt;textConfigName.Name" xml:space="preserve">
     <value>textConfigName</value>
+  </data>
+  <data name="&gt;&gt;textConfigName.Type" xml:space="preserve">
+    <value>System.Windows.Forms.TextBox, System.Windows.Forms, Version=4.0.0.0, Culture=neutral, PublicKeyToken=b77a5c561934e089</value>
   </data>
   <data name="&gt;&gt;textConfigName.Parent" xml:space="preserve">
     <value>groupBoxMain</value>
@@ -183,6 +183,9 @@
   <data name="&gt;&gt;labelConfigName.Name" xml:space="preserve">
     <value>labelConfigName</value>
   </data>
+  <data name="&gt;&gt;labelConfigName.Type" xml:space="preserve">
+    <value>System.Windows.Forms.Label, System.Windows.Forms, Version=4.0.0.0, Culture=neutral, PublicKeyToken=b77a5c561934e089</value>
+  </data>
   <data name="&gt;&gt;labelConfigName.Parent" xml:space="preserve">
     <value>groupBoxMain</value>
   </data>
@@ -207,12 +210,18 @@
   <data name="checkBoxRemoveResults.Text" xml:space="preserve">
     <value>&amp;Remove Results</value>
   </data>
+  <metadata name="toolTip1.TrayLocation" type="System.Drawing.Point, System.Drawing, Version=4.0.0.0, Culture=neutral, PublicKeyToken=b03f5f7f11d50a3a">
+    <value>17, 17</value>
+  </metadata>
   <data name="checkBoxRemoveResults.ToolTip" xml:space="preserve">
     <value>If checked, results imported into the Skyline document that are older than theResults time window will be removed. This is done to keep the document size small. 
 Results time window is a rolling window and only results acquired within the last ‘n’ days, where ‘n’ is the width of this window in days, will be retained in the document</value>
   </data>
   <data name="&gt;&gt;checkBoxRemoveResults.Name" xml:space="preserve">
     <value>checkBoxRemoveResults</value>
+  </data>
+  <data name="&gt;&gt;checkBoxRemoveResults.Type" xml:space="preserve">
+    <value>System.Windows.Forms.CheckBox, System.Windows.Forms, Version=4.0.0.0, Culture=neutral, PublicKeyToken=b77a5c561934e089</value>
   </data>
   <data name="&gt;&gt;checkBoxRemoveResults.Parent" xml:space="preserve">
     <value>groupBoxMain</value>
@@ -241,6 +250,9 @@ Results time window is a rolling window and only results acquired within the las
   <data name="&gt;&gt;labelQcFilePattern.Name" xml:space="preserve">
     <value>labelQcFilePattern</value>
   </data>
+  <data name="&gt;&gt;labelQcFilePattern.Type" xml:space="preserve">
+    <value>System.Windows.Forms.Label, System.Windows.Forms, Version=4.0.0.0, Culture=neutral, PublicKeyToken=b77a5c561934e089</value>
+  </data>
   <data name="&gt;&gt;labelQcFilePattern.Parent" xml:space="preserve">
     <value>groupBoxMain</value>
   </data>
@@ -261,6 +273,9 @@ Results time window is a rolling window and only results acquired within the las
   </data>
   <data name="&gt;&gt;comboBoxFileFilter.Name" xml:space="preserve">
     <value>comboBoxFileFilter</value>
+  </data>
+  <data name="&gt;&gt;comboBoxFileFilter.Type" xml:space="preserve">
+    <value>System.Windows.Forms.ComboBox, System.Windows.Forms, Version=4.0.0.0, Culture=neutral, PublicKeyToken=b77a5c561934e089</value>
   </data>
   <data name="&gt;&gt;comboBoxFileFilter.Parent" xml:space="preserve">
     <value>groupBoxMain</value>
@@ -289,6 +304,9 @@ Results time window is a rolling window and only results acquired within the las
   <data name="&gt;&gt;label5.Name" xml:space="preserve">
     <value>label5</value>
   </data>
+  <data name="&gt;&gt;label5.Type" xml:space="preserve">
+    <value>System.Windows.Forms.Label, System.Windows.Forms, Version=4.0.0.0, Culture=neutral, PublicKeyToken=b77a5c561934e089</value>
+  </data>
   <data name="&gt;&gt;label5.Parent" xml:space="preserve">
     <value>groupBoxMain</value>
   </data>
@@ -316,6 +334,9 @@ Results time window is a rolling window and only results acquired within the las
   <data name="&gt;&gt;includeSubfoldersCb.Name" xml:space="preserve">
     <value>includeSubfoldersCb</value>
   </data>
+  <data name="&gt;&gt;includeSubfoldersCb.Type" xml:space="preserve">
+    <value>System.Windows.Forms.CheckBox, System.Windows.Forms, Version=4.0.0.0, Culture=neutral, PublicKeyToken=b77a5c561934e089</value>
+  </data>
   <data name="&gt;&gt;includeSubfoldersCb.Parent" xml:space="preserve">
     <value>groupBoxMain</value>
   </data>
@@ -339,6 +360,9 @@ Results time window is a rolling window and only results acquired within the las
   </data>
   <data name="&gt;&gt;textQCFilePattern.Name" xml:space="preserve">
     <value>textQCFilePattern</value>
+  </data>
+  <data name="&gt;&gt;textQCFilePattern.Type" xml:space="preserve">
+    <value>System.Windows.Forms.TextBox, System.Windows.Forms, Version=4.0.0.0, Culture=neutral, PublicKeyToken=b77a5c561934e089</value>
   </data>
   <data name="&gt;&gt;textQCFilePattern.Parent" xml:space="preserve">
     <value>groupBoxMain</value>
@@ -366,6 +390,9 @@ Results time window is a rolling window and only results acquired within the las
   </data>
   <data name="&gt;&gt;labelMinutes.Name" xml:space="preserve">
     <value>labelMinutes</value>
+  </data>
+  <data name="&gt;&gt;labelMinutes.Type" xml:space="preserve">
+    <value>System.Windows.Forms.Label, System.Windows.Forms, Version=4.0.0.0, Culture=neutral, PublicKeyToken=b77a5c561934e089</value>
   </data>
   <data name="&gt;&gt;labelMinutes.Parent" xml:space="preserve">
     <value>groupBoxMain</value>
@@ -397,6 +424,9 @@ Results time window is a rolling window and only results acquired within the las
   <data name="&gt;&gt;labelAquisitionTime.Name" xml:space="preserve">
     <value>labelAquisitionTime</value>
   </data>
+  <data name="&gt;&gt;labelAquisitionTime.Type" xml:space="preserve">
+    <value>System.Windows.Forms.Label, System.Windows.Forms, Version=4.0.0.0, Culture=neutral, PublicKeyToken=b77a5c561934e089</value>
+  </data>
   <data name="&gt;&gt;labelAquisitionTime.Parent" xml:space="preserve">
     <value>groupBoxMain</value>
   </data>
@@ -420,6 +450,9 @@ Results time window is a rolling window and only results acquired within the las
   </data>
   <data name="&gt;&gt;textAquisitionTime.Name" xml:space="preserve">
     <value>textAquisitionTime</value>
+  </data>
+  <data name="&gt;&gt;textAquisitionTime.Type" xml:space="preserve">
+    <value>System.Windows.Forms.TextBox, System.Windows.Forms, Version=4.0.0.0, Culture=neutral, PublicKeyToken=b77a5c561934e089</value>
   </data>
   <data name="&gt;&gt;textAquisitionTime.Parent" xml:space="preserve">
     <value>groupBoxMain</value>
@@ -448,6 +481,9 @@ Results time window is a rolling window and only results acquired within the las
   <data name="&gt;&gt;labelDays.Name" xml:space="preserve">
     <value>labelDays</value>
   </data>
+  <data name="&gt;&gt;labelDays.Type" xml:space="preserve">
+    <value>System.Windows.Forms.Label, System.Windows.Forms, Version=4.0.0.0, Culture=neutral, PublicKeyToken=b77a5c561934e089</value>
+  </data>
   <data name="&gt;&gt;labelDays.Parent" xml:space="preserve">
     <value>groupBoxMain</value>
   </data>
@@ -471,6 +507,9 @@ Results time window is a rolling window and only results acquired within the las
   </data>
   <data name="&gt;&gt;textResultsTimeWindow.Name" xml:space="preserve">
     <value>textResultsTimeWindow</value>
+  </data>
+  <data name="&gt;&gt;textResultsTimeWindow.Type" xml:space="preserve">
+    <value>System.Windows.Forms.TextBox, System.Windows.Forms, Version=4.0.0.0, Culture=neutral, PublicKeyToken=b77a5c561934e089</value>
   </data>
   <data name="&gt;&gt;textResultsTimeWindow.Parent" xml:space="preserve">
     <value>groupBoxMain</value>
@@ -499,6 +538,9 @@ Results time window is a rolling window and only results acquired within the las
   <data name="&gt;&gt;labelAccumulationTimeWindow.Name" xml:space="preserve">
     <value>labelAccumulationTimeWindow</value>
   </data>
+  <data name="&gt;&gt;labelAccumulationTimeWindow.Type" xml:space="preserve">
+    <value>System.Windows.Forms.Label, System.Windows.Forms, Version=4.0.0.0, Culture=neutral, PublicKeyToken=b77a5c561934e089</value>
+  </data>
   <data name="&gt;&gt;labelAccumulationTimeWindow.Parent" xml:space="preserve">
     <value>groupBoxMain</value>
   </data>
@@ -525,6 +567,9 @@ Results time window is a rolling window and only results acquired within the las
   </data>
   <data name="&gt;&gt;labelInstrumentType.Name" xml:space="preserve">
     <value>labelInstrumentType</value>
+  </data>
+  <data name="&gt;&gt;labelInstrumentType.Type" xml:space="preserve">
+    <value>System.Windows.Forms.Label, System.Windows.Forms, Version=4.0.0.0, Culture=neutral, PublicKeyToken=b77a5c561934e089</value>
   </data>
   <data name="&gt;&gt;labelInstrumentType.Parent" xml:space="preserve">
     <value>groupBoxMain</value>
@@ -565,6 +610,9 @@ Results time window is a rolling window and only results acquired within the las
   <data name="&gt;&gt;comboBoxInstrumentType.Name" xml:space="preserve">
     <value>comboBoxInstrumentType</value>
   </data>
+  <data name="&gt;&gt;comboBoxInstrumentType.Type" xml:space="preserve">
+    <value>System.Windows.Forms.ComboBox, System.Windows.Forms, Version=4.0.0.0, Culture=neutral, PublicKeyToken=b77a5c561934e089</value>
+  </data>
   <data name="&gt;&gt;comboBoxInstrumentType.Parent" xml:space="preserve">
     <value>groupBoxMain</value>
   </data>
@@ -591,6 +639,9 @@ Results time window is a rolling window and only results acquired within the las
   </data>
   <data name="&gt;&gt;btnFolderToWatch.Name" xml:space="preserve">
     <value>btnFolderToWatch</value>
+  </data>
+  <data name="&gt;&gt;btnFolderToWatch.Type" xml:space="preserve">
+    <value>System.Windows.Forms.Button, System.Windows.Forms, Version=4.0.0.0, Culture=neutral, PublicKeyToken=b77a5c561934e089</value>
   </data>
   <data name="&gt;&gt;btnFolderToWatch.Parent" xml:space="preserve">
     <value>groupBoxMain</value>
@@ -622,6 +673,9 @@ Results time window is a rolling window and only results acquired within the las
   <data name="&gt;&gt;label2.Name" xml:space="preserve">
     <value>label2</value>
   </data>
+  <data name="&gt;&gt;label2.Type" xml:space="preserve">
+    <value>System.Windows.Forms.Label, System.Windows.Forms, Version=4.0.0.0, Culture=neutral, PublicKeyToken=b77a5c561934e089</value>
+  </data>
   <data name="&gt;&gt;label2.Parent" xml:space="preserve">
     <value>groupBoxMain</value>
   </data>
@@ -652,6 +706,9 @@ Results time window is a rolling window and only results acquired within the las
   <data name="&gt;&gt;label3.Name" xml:space="preserve">
     <value>label3</value>
   </data>
+  <data name="&gt;&gt;label3.Type" xml:space="preserve">
+    <value>System.Windows.Forms.Label, System.Windows.Forms, Version=4.0.0.0, Culture=neutral, PublicKeyToken=b77a5c561934e089</value>
+  </data>
   <data name="&gt;&gt;label3.Parent" xml:space="preserve">
     <value>groupBoxMain</value>
   </data>
@@ -678,6 +735,9 @@ Results time window is a rolling window and only results acquired within the las
   </data>
   <data name="&gt;&gt;textFolderToWatchPath.Name" xml:space="preserve">
     <value>textFolderToWatchPath</value>
+  </data>
+  <data name="&gt;&gt;textFolderToWatchPath.Type" xml:space="preserve">
+    <value>System.Windows.Forms.TextBox, System.Windows.Forms, Version=4.0.0.0, Culture=neutral, PublicKeyToken=b77a5c561934e089</value>
   </data>
   <data name="&gt;&gt;textFolderToWatchPath.Parent" xml:space="preserve">
     <value>groupBoxMain</value>
@@ -709,6 +769,9 @@ Results time window is a rolling window and only results acquired within the las
   <data name="&gt;&gt;btnSkylineFilePath.Name" xml:space="preserve">
     <value>btnSkylineFilePath</value>
   </data>
+  <data name="&gt;&gt;btnSkylineFilePath.Type" xml:space="preserve">
+    <value>System.Windows.Forms.Button, System.Windows.Forms, Version=4.0.0.0, Culture=neutral, PublicKeyToken=b77a5c561934e089</value>
+  </data>
   <data name="&gt;&gt;btnSkylineFilePath.Parent" xml:space="preserve">
     <value>groupBoxMain</value>
   </data>
@@ -736,6 +799,9 @@ Results time window is a rolling window and only results acquired within the las
   <data name="&gt;&gt;textSkylinePath.Name" xml:space="preserve">
     <value>textSkylinePath</value>
   </data>
+  <data name="&gt;&gt;textSkylinePath.Type" xml:space="preserve">
+    <value>System.Windows.Forms.TextBox, System.Windows.Forms, Version=4.0.0.0, Culture=neutral, PublicKeyToken=b77a5c561934e089</value>
+  </data>
   <data name="&gt;&gt;textSkylinePath.Parent" xml:space="preserve">
     <value>groupBoxMain</value>
   </data>
@@ -760,6 +826,9 @@ Results time window is a rolling window and only results acquired within the las
   <data name="&gt;&gt;groupBoxMain.Name" xml:space="preserve">
     <value>groupBoxMain</value>
   </data>
+  <data name="&gt;&gt;groupBoxMain.Type" xml:space="preserve">
+    <value>System.Windows.Forms.GroupBox, System.Windows.Forms, Version=4.0.0.0, Culture=neutral, PublicKeyToken=b77a5c561934e089</value>
+  </data>
   <data name="&gt;&gt;groupBoxMain.Parent" xml:space="preserve">
     <value>tabSettings</value>
   </data>
@@ -783,6 +852,9 @@ Results time window is a rolling window and only results acquired within the las
   </data>
   <data name="&gt;&gt;tabSettings.Name" xml:space="preserve">
     <value>tabSettings</value>
+  </data>
+  <data name="&gt;&gt;tabSettings.Type" xml:space="preserve">
+    <value>System.Windows.Forms.TabPage, System.Windows.Forms, Version=4.0.0.0, Culture=neutral, PublicKeyToken=b77a5c561934e089</value>
   </data>
   <data name="&gt;&gt;tabSettings.Parent" xml:space="preserve">
     <value>tabControl</value>
@@ -810,6 +882,9 @@ Results time window is a rolling window and only results acquired within the las
   </data>
   <data name="&gt;&gt;cbPublishToPanorama.Name" xml:space="preserve">
     <value>cbPublishToPanorama</value>
+  </data>
+  <data name="&gt;&gt;cbPublishToPanorama.Type" xml:space="preserve">
+    <value>System.Windows.Forms.CheckBox, System.Windows.Forms, Version=4.0.0.0, Culture=neutral, PublicKeyToken=b77a5c561934e089</value>
   </data>
   <data name="&gt;&gt;cbPublishToPanorama.Parent" xml:space="preserve">
     <value>tabPanoramaSettings</value>
@@ -844,6 +919,9 @@ Results time window is a rolling window and only results acquired within the las
   <data name="&gt;&gt;labelPanoramaFolder.Name" xml:space="preserve">
     <value>labelPanoramaFolder</value>
   </data>
+  <data name="&gt;&gt;labelPanoramaFolder.Type" xml:space="preserve">
+    <value>System.Windows.Forms.Label, System.Windows.Forms, Version=4.0.0.0, Culture=neutral, PublicKeyToken=b77a5c561934e089</value>
+  </data>
   <data name="&gt;&gt;labelPanoramaFolder.Parent" xml:space="preserve">
     <value>groupBoxPanorama</value>
   </data>
@@ -867,6 +945,9 @@ Results time window is a rolling window and only results acquired within the las
   </data>
   <data name="&gt;&gt;textPanoramaFolder.Name" xml:space="preserve">
     <value>textPanoramaFolder</value>
+  </data>
+  <data name="&gt;&gt;textPanoramaFolder.Type" xml:space="preserve">
+    <value>System.Windows.Forms.TextBox, System.Windows.Forms, Version=4.0.0.0, Culture=neutral, PublicKeyToken=b77a5c561934e089</value>
   </data>
   <data name="&gt;&gt;textPanoramaFolder.Parent" xml:space="preserve">
     <value>groupBoxPanorama</value>
@@ -898,6 +979,9 @@ Results time window is a rolling window and only results acquired within the las
   <data name="&gt;&gt;lblPanoramaUrl.Name" xml:space="preserve">
     <value>lblPanoramaUrl</value>
   </data>
+  <data name="&gt;&gt;lblPanoramaUrl.Type" xml:space="preserve">
+    <value>System.Windows.Forms.Label, System.Windows.Forms, Version=4.0.0.0, Culture=neutral, PublicKeyToken=b77a5c561934e089</value>
+  </data>
   <data name="&gt;&gt;lblPanoramaUrl.Parent" xml:space="preserve">
     <value>groupBoxPanorama</value>
   </data>
@@ -925,6 +1009,9 @@ Results time window is a rolling window and only results acquired within the las
   <data name="&gt;&gt;textPanoramaUrl.Name" xml:space="preserve">
     <value>textPanoramaUrl</value>
   </data>
+  <data name="&gt;&gt;textPanoramaUrl.Type" xml:space="preserve">
+    <value>System.Windows.Forms.TextBox, System.Windows.Forms, Version=4.0.0.0, Culture=neutral, PublicKeyToken=b77a5c561934e089</value>
+  </data>
   <data name="&gt;&gt;textPanoramaUrl.Parent" xml:space="preserve">
     <value>groupBoxPanorama</value>
   </data>
@@ -948,6 +1035,9 @@ Results time window is a rolling window and only results acquired within the las
   </data>
   <data name="&gt;&gt;textPanoramaPasswd.Name" xml:space="preserve">
     <value>textPanoramaPasswd</value>
+  </data>
+  <data name="&gt;&gt;textPanoramaPasswd.Type" xml:space="preserve">
+    <value>System.Windows.Forms.TextBox, System.Windows.Forms, Version=4.0.0.0, Culture=neutral, PublicKeyToken=b77a5c561934e089</value>
   </data>
   <data name="&gt;&gt;textPanoramaPasswd.Parent" xml:space="preserve">
     <value>groupBoxPanorama</value>
@@ -979,6 +1069,9 @@ Results time window is a rolling window and only results acquired within the las
   <data name="&gt;&gt;lblPanoramaPasswd.Name" xml:space="preserve">
     <value>lblPanoramaPasswd</value>
   </data>
+  <data name="&gt;&gt;lblPanoramaPasswd.Type" xml:space="preserve">
+    <value>System.Windows.Forms.Label, System.Windows.Forms, Version=4.0.0.0, Culture=neutral, PublicKeyToken=b77a5c561934e089</value>
+  </data>
   <data name="&gt;&gt;lblPanoramaPasswd.Parent" xml:space="preserve">
     <value>groupBoxPanorama</value>
   </data>
@@ -1009,6 +1102,9 @@ Results time window is a rolling window and only results acquired within the las
   <data name="&gt;&gt;lblPanoramaEmail.Name" xml:space="preserve">
     <value>lblPanoramaEmail</value>
   </data>
+  <data name="&gt;&gt;lblPanoramaEmail.Type" xml:space="preserve">
+    <value>System.Windows.Forms.Label, System.Windows.Forms, Version=4.0.0.0, Culture=neutral, PublicKeyToken=b77a5c561934e089</value>
+  </data>
   <data name="&gt;&gt;lblPanoramaEmail.Parent" xml:space="preserve">
     <value>groupBoxPanorama</value>
   </data>
@@ -1029,6 +1125,9 @@ Results time window is a rolling window and only results acquired within the las
   </data>
   <data name="&gt;&gt;textPanoramaEmail.Name" xml:space="preserve">
     <value>textPanoramaEmail</value>
+  </data>
+  <data name="&gt;&gt;textPanoramaEmail.Type" xml:space="preserve">
+    <value>System.Windows.Forms.TextBox, System.Windows.Forms, Version=4.0.0.0, Culture=neutral, PublicKeyToken=b77a5c561934e089</value>
   </data>
   <data name="&gt;&gt;textPanoramaEmail.Parent" xml:space="preserve">
     <value>groupBoxPanorama</value>
@@ -1053,6 +1152,9 @@ Results time window is a rolling window and only results acquired within the las
   </data>
   <data name="&gt;&gt;groupBoxPanorama.Name" xml:space="preserve">
     <value>groupBoxPanorama</value>
+  </data>
+  <data name="&gt;&gt;groupBoxPanorama.Type" xml:space="preserve">
+    <value>System.Windows.Forms.GroupBox, System.Windows.Forms, Version=4.0.0.0, Culture=neutral, PublicKeyToken=b77a5c561934e089</value>
   </data>
   <data name="&gt;&gt;groupBoxPanorama.Parent" xml:space="preserve">
     <value>tabPanoramaSettings</value>
@@ -1081,6 +1183,9 @@ Results time window is a rolling window and only results acquired within the las
   <data name="&gt;&gt;tabPanoramaSettings.Name" xml:space="preserve">
     <value>tabPanoramaSettings</value>
   </data>
+  <data name="&gt;&gt;tabPanoramaSettings.Type" xml:space="preserve">
+    <value>System.Windows.Forms.TabPage, System.Windows.Forms, Version=4.0.0.0, Culture=neutral, PublicKeyToken=b77a5c561934e089</value>
+  </data>
   <data name="&gt;&gt;tabPanoramaSettings.Parent" xml:space="preserve">
     <value>tabControl</value>
   </data>
@@ -1101,6 +1206,9 @@ Results time window is a rolling window and only results acquired within the las
   </data>
   <data name="&gt;&gt;panelSkylineSettings.Name" xml:space="preserve">
     <value>panelSkylineSettings</value>
+  </data>
+  <data name="&gt;&gt;panelSkylineSettings.Type" xml:space="preserve">
+    <value>System.Windows.Forms.Panel, System.Windows.Forms, Version=4.0.0.0, Culture=neutral, PublicKeyToken=b77a5c561934e089</value>
   </data>
   <data name="&gt;&gt;panelSkylineSettings.Parent" xml:space="preserve">
     <value>tabSkylineSettings</value>
@@ -1125,6 +1233,9 @@ Results time window is a rolling window and only results acquired within the las
   </data>
   <data name="&gt;&gt;tabSkylineSettings.Name" xml:space="preserve">
     <value>tabSkylineSettings</value>
+  </data>
+  <data name="&gt;&gt;tabSkylineSettings.Type" xml:space="preserve">
+    <value>System.Windows.Forms.TabPage, System.Windows.Forms, Version=4.0.0.0, Culture=neutral, PublicKeyToken=b77a5c561934e089</value>
   </data>
   <data name="&gt;&gt;tabSkylineSettings.Parent" xml:space="preserve">
     <value>tabControl</value>
@@ -1153,6 +1264,9 @@ Results time window is a rolling window and only results acquired within the las
   <data name="&gt;&gt;tabControl.Name" xml:space="preserve">
     <value>tabControl</value>
   </data>
+  <data name="&gt;&gt;tabControl.Type" xml:space="preserve">
+    <value>System.Windows.Forms.TabControl, System.Windows.Forms, Version=4.0.0.0, Culture=neutral, PublicKeyToken=b77a5c561934e089</value>
+  </data>
   <data name="&gt;&gt;tabControl.Parent" xml:space="preserve">
     <value>splitContainer1.Panel1</value>
   </data>
@@ -1161,6 +1275,9 @@ Results time window is a rolling window and only results acquired within the las
   </data>
   <data name="&gt;&gt;splitContainer1.Panel1.Name" xml:space="preserve">
     <value>splitContainer1.Panel1</value>
+  </data>
+  <data name="&gt;&gt;splitContainer1.Panel1.Type" xml:space="preserve">
+    <value>System.Windows.Forms.SplitterPanel, System.Windows.Forms, Version=4.0.0.0, Culture=neutral, PublicKeyToken=b77a5c561934e089</value>
   </data>
   <data name="&gt;&gt;splitContainer1.Panel1.Parent" xml:space="preserve">
     <value>splitContainer1</value>
@@ -1190,6 +1307,9 @@ Results time window is a rolling window and only results acquired within the las
   <data name="&gt;&gt;lblConfigRunning.Name" xml:space="preserve">
     <value>lblConfigRunning</value>
   </data>
+  <data name="&gt;&gt;lblConfigRunning.Type" xml:space="preserve">
+    <value>System.Windows.Forms.Label, System.Windows.Forms, Version=4.0.0.0, Culture=neutral, PublicKeyToken=b77a5c561934e089</value>
+  </data>
   <data name="&gt;&gt;lblConfigRunning.Parent" xml:space="preserve">
     <value>groupBox1</value>
   </data>
@@ -1216,6 +1336,9 @@ Results time window is a rolling window and only results acquired within the las
   </data>
   <data name="&gt;&gt;btnCancelConfig.Name" xml:space="preserve">
     <value>btnCancelConfig</value>
+  </data>
+  <data name="&gt;&gt;btnCancelConfig.Type" xml:space="preserve">
+    <value>System.Windows.Forms.Button, System.Windows.Forms, Version=4.0.0.0, Culture=neutral, PublicKeyToken=b77a5c561934e089</value>
   </data>
   <data name="&gt;&gt;btnCancelConfig.Parent" xml:space="preserve">
     <value>groupBox1</value>
@@ -1247,6 +1370,9 @@ Results time window is a rolling window and only results acquired within the las
   <data name="&gt;&gt;btnSaveConfig.Name" xml:space="preserve">
     <value>btnSaveConfig</value>
   </data>
+  <data name="&gt;&gt;btnSaveConfig.Type" xml:space="preserve">
+    <value>System.Windows.Forms.Button, System.Windows.Forms, Version=4.0.0.0, Culture=neutral, PublicKeyToken=b77a5c561934e089</value>
+  </data>
   <data name="&gt;&gt;btnSaveConfig.Parent" xml:space="preserve">
     <value>groupBox1</value>
   </data>
@@ -1273,6 +1399,9 @@ Results time window is a rolling window and only results acquired within the las
   </data>
   <data name="&gt;&gt;btnOkConfig.Name" xml:space="preserve">
     <value>btnOkConfig</value>
+  </data>
+  <data name="&gt;&gt;btnOkConfig.Type" xml:space="preserve">
+    <value>System.Windows.Forms.Button, System.Windows.Forms, Version=4.0.0.0, Culture=neutral, PublicKeyToken=b77a5c561934e089</value>
   </data>
   <data name="&gt;&gt;btnOkConfig.Parent" xml:space="preserve">
     <value>groupBox1</value>
@@ -1301,6 +1430,9 @@ Results time window is a rolling window and only results acquired within the las
   <data name="&gt;&gt;groupBox1.Name" xml:space="preserve">
     <value>groupBox1</value>
   </data>
+  <data name="&gt;&gt;groupBox1.Type" xml:space="preserve">
+    <value>System.Windows.Forms.GroupBox, System.Windows.Forms, Version=4.0.0.0, Culture=neutral, PublicKeyToken=b77a5c561934e089</value>
+  </data>
   <data name="&gt;&gt;groupBox1.Parent" xml:space="preserve">
     <value>splitContainer1.Panel2</value>
   </data>
@@ -1309,6 +1441,9 @@ Results time window is a rolling window and only results acquired within the las
   </data>
   <data name="&gt;&gt;splitContainer1.Panel2.Name" xml:space="preserve">
     <value>splitContainer1.Panel2</value>
+  </data>
+  <data name="&gt;&gt;splitContainer1.Panel2.Type" xml:space="preserve">
+    <value>System.Windows.Forms.SplitterPanel, System.Windows.Forms, Version=4.0.0.0, Culture=neutral, PublicKeyToken=b77a5c561934e089</value>
   </data>
   <data name="&gt;&gt;splitContainer1.Panel2.Parent" xml:space="preserve">
     <value>splitContainer1</value>
@@ -1331,12 +1466,21 @@ Results time window is a rolling window and only results acquired within the las
   <data name="&gt;&gt;splitContainer1.Name" xml:space="preserve">
     <value>splitContainer1</value>
   </data>
+  <data name="&gt;&gt;splitContainer1.Type" xml:space="preserve">
+    <value>System.Windows.Forms.SplitContainer, System.Windows.Forms, Version=4.0.0.0, Culture=neutral, PublicKeyToken=b77a5c561934e089</value>
+  </data>
   <data name="&gt;&gt;splitContainer1.Parent" xml:space="preserve">
     <value>$this</value>
   </data>
   <data name="&gt;&gt;splitContainer1.ZOrder" xml:space="preserve">
     <value>0</value>
   </data>
+  <metadata name="$this.Localizable" type="System.Boolean, mscorlib, Version=4.0.0.0, Culture=neutral, PublicKeyToken=b77a5c561934e089">
+    <value>True</value>
+  </metadata>
+  <metadata name="$this.TrayHeight" type="System.Int32, mscorlib, Version=4.0.0.0, Culture=neutral, PublicKeyToken=b77a5c561934e089">
+    <value>64</value>
+  </metadata>
   <data name="$this.AutoScaleDimensions" type="System.Drawing.SizeF, System.Drawing">
     <value>6, 13</value>
   </data>
@@ -1760,7 +1904,13 @@ Results time window is a rolling window and only results acquired within the las
   <data name="&gt;&gt;toolTip1.Name" xml:space="preserve">
     <value>toolTip1</value>
   </data>
+  <data name="&gt;&gt;toolTip1.Type" xml:space="preserve">
+    <value>System.Windows.Forms.ToolTip, System.Windows.Forms, Version=4.0.0.0, Culture=neutral, PublicKeyToken=b77a5c561934e089</value>
+  </data>
   <data name="&gt;&gt;$this.Name" xml:space="preserve">
     <value>AutoQcConfigForm</value>
+  </data>
+  <data name="&gt;&gt;$this.Type" xml:space="preserve">
+    <value>System.Windows.Forms.Form, System.Windows.Forms, Version=4.0.0.0, Culture=neutral, PublicKeyToken=b77a5c561934e089</value>
   </data>
 </root>

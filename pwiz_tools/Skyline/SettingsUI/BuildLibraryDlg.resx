@@ -117,26 +117,31 @@
   <resheader name="writer">
     <value>System.Resources.ResXResourceWriter, System.Windows.Forms, Version=4.0.0.0, Culture=neutral, PublicKeyToken=b77a5c561934e089</value>
   </resheader>
-  <assembly alias="System.Drawing" name="System.Drawing, Version=4.0.0.0, Culture=neutral, PublicKeyToken=b03f5f7f11d50a3a" />
-  <assembly alias="mscorlib" name="mscorlib, Version=4.0.0.0, Culture=neutral, PublicKeyToken=b77a5c561934e089" />
-  <assembly alias="System.Windows.Forms" name="System.Windows.Forms, Version=4.0.0.0, Culture=neutral, PublicKeyToken=b77a5c561934e089" />
-  <metadata name="$this.Localizable" type="System.Boolean, mscorlib, Version=4.0.0.0, Culture=neutral, PublicKeyToken=b77a5c561934e089">
-    <value>True</value>
+  <metadata name="modeUIHandler.TrayLocation" type="System.Drawing.Point, System.Drawing, Version=4.0.0.0, Culture=neutral, PublicKeyToken=b03f5f7f11d50a3a">
+    <value>17, 17</value>
   </metadata>
+  <assembly alias="System.Drawing" name="System.Drawing, Version=4.0.0.0, Culture=neutral, PublicKeyToken=b03f5f7f11d50a3a" />
   <data name="textName.Location" type="System.Drawing.Point, System.Drawing">
     <value>15, 23</value>
   </data>
   <data name="textName.Size" type="System.Drawing.Size, System.Drawing">
     <value>267, 20</value>
   </data>
+  <assembly alias="mscorlib" name="mscorlib, Version=4.0.0.0, Culture=neutral, PublicKeyToken=b77a5c561934e089" />
   <data name="textName.TabIndex" type="System.Int32, mscorlib">
     <value>1</value>
   </data>
+  <metadata name="helpTip.TrayLocation" type="System.Drawing.Point, System.Drawing, Version=4.0.0.0, Culture=neutral, PublicKeyToken=b03f5f7f11d50a3a">
+    <value>155, 17</value>
+  </metadata>
   <data name="textName.ToolTip" xml:space="preserve">
     <value>The name Skyline will use to refer to this library</value>
   </data>
   <data name="&gt;&gt;textName.Name" xml:space="preserve">
     <value>textName</value>
+  </data>
+  <data name="&gt;&gt;textName.Type" xml:space="preserve">
+    <value>System.Windows.Forms.TextBox, System.Windows.Forms, Version=4.0.0.0, Culture=neutral, PublicKeyToken=b77a5c561934e089</value>
   </data>
   <data name="&gt;&gt;textName.Parent" xml:space="preserve">
     <value>panelProperties</value>
@@ -162,12 +167,16 @@
   <data name="&gt;&gt;label4.Name" xml:space="preserve">
     <value>label4</value>
   </data>
+  <data name="&gt;&gt;label4.Type" xml:space="preserve">
+    <value>System.Windows.Forms.Label, System.Windows.Forms, Version=4.0.0.0, Culture=neutral, PublicKeyToken=b77a5c561934e089</value>
+  </data>
   <data name="&gt;&gt;label4.Parent" xml:space="preserve">
     <value>panelProperties</value>
   </data>
   <data name="&gt;&gt;label4.ZOrder" xml:space="preserve">
     <value>6</value>
   </data>
+  <assembly alias="System.Windows.Forms" name="System.Windows.Forms, Version=4.0.0.0, Culture=neutral, PublicKeyToken=b77a5c561934e089" />
   <data name="btnCancel.Anchor" type="System.Windows.Forms.AnchorStyles, System.Windows.Forms">
     <value>Bottom, Right</value>
   </data>
@@ -185,6 +194,9 @@
   </data>
   <data name="&gt;&gt;btnCancel.Name" xml:space="preserve">
     <value>btnCancel</value>
+  </data>
+  <data name="&gt;&gt;btnCancel.Type" xml:space="preserve">
+    <value>System.Windows.Forms.Button, System.Windows.Forms, Version=4.0.0.0, Culture=neutral, PublicKeyToken=b77a5c561934e089</value>
   </data>
   <data name="&gt;&gt;btnCancel.Parent" xml:space="preserve">
     <value>$this</value>
@@ -210,6 +222,9 @@
   <data name="&gt;&gt;btnNext.Name" xml:space="preserve">
     <value>btnNext</value>
   </data>
+  <data name="&gt;&gt;btnNext.Type" xml:space="preserve">
+    <value>System.Windows.Forms.Button, System.Windows.Forms, Version=4.0.0.0, Culture=neutral, PublicKeyToken=b77a5c561934e089</value>
+  </data>
   <data name="&gt;&gt;btnNext.Parent" xml:space="preserve">
     <value>$this</value>
   </data>
@@ -233,6 +248,9 @@
   </data>
   <data name="&gt;&gt;label2.Name" xml:space="preserve">
     <value>label2</value>
+  </data>
+  <data name="&gt;&gt;label2.Type" xml:space="preserve">
+    <value>System.Windows.Forms.Label, System.Windows.Forms, Version=4.0.0.0, Culture=neutral, PublicKeyToken=b77a5c561934e089</value>
   </data>
   <data name="&gt;&gt;label2.Parent" xml:space="preserve">
     <value>panelProperties</value>
@@ -259,6 +277,9 @@ library will be created.</value>
   <data name="&gt;&gt;textPath.Name" xml:space="preserve">
     <value>textPath</value>
   </data>
+  <data name="&gt;&gt;textPath.Type" xml:space="preserve">
+    <value>System.Windows.Forms.TextBox, System.Windows.Forms, Version=4.0.0.0, Culture=neutral, PublicKeyToken=b77a5c561934e089</value>
+  </data>
   <data name="&gt;&gt;textPath.Parent" xml:space="preserve">
     <value>panelProperties</value>
   </data>
@@ -282,6 +303,9 @@ library will be created.</value>
   </data>
   <data name="&gt;&gt;iRTPeptidesLabel.Name" xml:space="preserve">
     <value>iRTPeptidesLabel</value>
+  </data>
+  <data name="&gt;&gt;iRTPeptidesLabel.Type" xml:space="preserve">
+    <value>System.Windows.Forms.Label, System.Windows.Forms, Version=4.0.0.0, Culture=neutral, PublicKeyToken=b77a5c561934e089</value>
   </data>
   <data name="&gt;&gt;iRTPeptidesLabel.Parent" xml:space="preserve">
     <value>panelFilesPrositProperties</value>
@@ -316,6 +340,9 @@ library will be created.</value>
   <data name="&gt;&gt;ceLabel.Name" xml:space="preserve">
     <value>ceLabel</value>
   </data>
+  <data name="&gt;&gt;ceLabel.Type" xml:space="preserve">
+    <value>System.Windows.Forms.Label, System.Windows.Forms, Version=4.0.0.0, Culture=neutral, PublicKeyToken=b77a5c561934e089</value>
+  </data>
   <data name="&gt;&gt;ceLabel.Parent" xml:space="preserve">
     <value>panelFilesPrositProperties</value>
   </data>
@@ -336,6 +363,9 @@ library will be created.</value>
   </data>
   <data name="&gt;&gt;ceCombo.Name" xml:space="preserve">
     <value>ceCombo</value>
+  </data>
+  <data name="&gt;&gt;ceCombo.Type" xml:space="preserve">
+    <value>System.Windows.Forms.ComboBox, System.Windows.Forms, Version=4.0.0.0, Culture=neutral, PublicKeyToken=b77a5c561934e089</value>
   </data>
   <data name="&gt;&gt;ceCombo.Parent" xml:space="preserve">
     <value>panelFilesPrositProperties</value>
@@ -363,6 +393,9 @@ library will be created.</value>
   </data>
   <data name="&gt;&gt;actionLabel.Name" xml:space="preserve">
     <value>actionLabel</value>
+  </data>
+  <data name="&gt;&gt;actionLabel.Type" xml:space="preserve">
+    <value>System.Windows.Forms.Label, System.Windows.Forms, Version=4.0.0.0, Culture=neutral, PublicKeyToken=b77a5c561934e089</value>
   </data>
   <data name="&gt;&gt;actionLabel.Parent" xml:space="preserve">
     <value>panelFilesProps</value>
@@ -396,6 +429,9 @@ of the redundant library data.</value>
   <data name="&gt;&gt;comboAction.Name" xml:space="preserve">
     <value>comboAction</value>
   </data>
+  <data name="&gt;&gt;comboAction.Type" xml:space="preserve">
+    <value>System.Windows.Forms.ComboBox, System.Windows.Forms, Version=4.0.0.0, Culture=neutral, PublicKeyToken=b77a5c561934e089</value>
+  </data>
   <data name="&gt;&gt;comboAction.Parent" xml:space="preserve">
     <value>panelFilesProps</value>
   </data>
@@ -422,6 +458,9 @@ of the redundant library data.</value>
   </data>
   <data name="&gt;&gt;cbIncludeAmbiguousMatches.Name" xml:space="preserve">
     <value>cbIncludeAmbiguousMatches</value>
+  </data>
+  <data name="&gt;&gt;cbIncludeAmbiguousMatches.Type" xml:space="preserve">
+    <value>System.Windows.Forms.CheckBox, System.Windows.Forms, Version=4.0.0.0, Culture=neutral, PublicKeyToken=b77a5c561934e089</value>
   </data>
   <data name="&gt;&gt;cbIncludeAmbiguousMatches.Parent" xml:space="preserve">
     <value>panelFilesProps</value>
@@ -454,6 +493,9 @@ you can append more spectra in the future.</value>
   <data name="&gt;&gt;cbKeepRedundant.Name" xml:space="preserve">
     <value>cbKeepRedundant</value>
   </data>
+  <data name="&gt;&gt;cbKeepRedundant.Type" xml:space="preserve">
+    <value>System.Windows.Forms.CheckBox, System.Windows.Forms, Version=4.0.0.0, Culture=neutral, PublicKeyToken=b77a5c561934e089</value>
+  </data>
   <data name="&gt;&gt;cbKeepRedundant.Parent" xml:space="preserve">
     <value>panelFilesProps</value>
   </data>
@@ -481,6 +523,9 @@ you can append more spectra in the future.</value>
   <data name="&gt;&gt;cbFilter.Name" xml:space="preserve">
     <value>cbFilter</value>
   </data>
+  <data name="&gt;&gt;cbFilter.Type" xml:space="preserve">
+    <value>System.Windows.Forms.CheckBox, System.Windows.Forms, Version=4.0.0.0, Culture=neutral, PublicKeyToken=b77a5c561934e089</value>
+  </data>
   <data name="&gt;&gt;cbFilter.Parent" xml:space="preserve">
     <value>panelFilesProps</value>
   </data>
@@ -502,6 +547,9 @@ you can append more spectra in the future.</value>
   <data name="&gt;&gt;panelFilesProps.Name" xml:space="preserve">
     <value>panelFilesProps</value>
   </data>
+  <data name="&gt;&gt;panelFilesProps.Type" xml:space="preserve">
+    <value>System.Windows.Forms.Panel, System.Windows.Forms, Version=4.0.0.0, Culture=neutral, PublicKeyToken=b77a5c561934e089</value>
+  </data>
   <data name="&gt;&gt;panelFilesProps.Parent" xml:space="preserve">
     <value>panelFilesPrositProperties</value>
   </data>
@@ -520,6 +568,9 @@ you can append more spectra in the future.</value>
   <data name="&gt;&gt;comboStandards.Name" xml:space="preserve">
     <value>comboStandards</value>
   </data>
+  <data name="&gt;&gt;comboStandards.Type" xml:space="preserve">
+    <value>System.Windows.Forms.ComboBox, System.Windows.Forms, Version=4.0.0.0, Culture=neutral, PublicKeyToken=b77a5c561934e089</value>
+  </data>
   <data name="&gt;&gt;comboStandards.Parent" xml:space="preserve">
     <value>panelFilesPrositProperties</value>
   </data>
@@ -537,6 +588,9 @@ you can append more spectra in the future.</value>
   </data>
   <data name="&gt;&gt;panelFilesPrositProperties.Name" xml:space="preserve">
     <value>panelFilesPrositProperties</value>
+  </data>
+  <data name="&gt;&gt;panelFilesPrositProperties.Type" xml:space="preserve">
+    <value>System.Windows.Forms.Panel, System.Windows.Forms, Version=4.0.0.0, Culture=neutral, PublicKeyToken=b77a5c561934e089</value>
   </data>
   <data name="&gt;&gt;panelFilesPrositProperties.Parent" xml:space="preserve">
     <value>panelProperties</value>
@@ -561,6 +615,9 @@ you can append more spectra in the future.</value>
   </data>
   <data name="&gt;&gt;prositInfoSettingsBtn.Name" xml:space="preserve">
     <value>prositInfoSettingsBtn</value>
+  </data>
+  <data name="&gt;&gt;prositInfoSettingsBtn.Type" xml:space="preserve">
+    <value>System.Windows.Forms.LinkLabel, System.Windows.Forms, Version=4.0.0.0, Culture=neutral, PublicKeyToken=b77a5c561934e089</value>
   </data>
   <data name="&gt;&gt;prositInfoSettingsBtn.Parent" xml:space="preserve">
     <value>dataSourceGroupBox</value>
@@ -589,6 +646,9 @@ you can append more spectra in the future.</value>
   <data name="&gt;&gt;prositDataSourceRadioButton.Name" xml:space="preserve">
     <value>prositDataSourceRadioButton</value>
   </data>
+  <data name="&gt;&gt;prositDataSourceRadioButton.Type" xml:space="preserve">
+    <value>System.Windows.Forms.RadioButton, System.Windows.Forms, Version=4.0.0.0, Culture=neutral, PublicKeyToken=b77a5c561934e089</value>
+  </data>
   <data name="&gt;&gt;prositDataSourceRadioButton.Parent" xml:space="preserve">
     <value>dataSourceGroupBox</value>
   </data>
@@ -613,6 +673,9 @@ you can append more spectra in the future.</value>
   <data name="&gt;&gt;dataSourceFilesRadioButton.Name" xml:space="preserve">
     <value>dataSourceFilesRadioButton</value>
   </data>
+  <data name="&gt;&gt;dataSourceFilesRadioButton.Type" xml:space="preserve">
+    <value>System.Windows.Forms.RadioButton, System.Windows.Forms, Version=4.0.0.0, Culture=neutral, PublicKeyToken=b77a5c561934e089</value>
+  </data>
   <data name="&gt;&gt;dataSourceFilesRadioButton.Parent" xml:space="preserve">
     <value>dataSourceGroupBox</value>
   </data>
@@ -633,6 +696,9 @@ you can append more spectra in the future.</value>
   </data>
   <data name="&gt;&gt;dataSourceGroupBox.Name" xml:space="preserve">
     <value>dataSourceGroupBox</value>
+  </data>
+  <data name="&gt;&gt;dataSourceGroupBox.Type" xml:space="preserve">
+    <value>System.Windows.Forms.GroupBox, System.Windows.Forms, Version=4.0.0.0, Culture=neutral, PublicKeyToken=b77a5c561934e089</value>
   </data>
   <data name="&gt;&gt;dataSourceGroupBox.Parent" xml:space="preserve">
     <value>panelProperties</value>
@@ -658,6 +724,9 @@ you can append more spectra in the future.</value>
   <data name="&gt;&gt;btnBrowse.Name" xml:space="preserve">
     <value>btnBrowse</value>
   </data>
+  <data name="&gt;&gt;btnBrowse.Type" xml:space="preserve">
+    <value>System.Windows.Forms.Button, System.Windows.Forms, Version=4.0.0.0, Culture=neutral, PublicKeyToken=b77a5c561934e089</value>
+  </data>
   <data name="&gt;&gt;btnBrowse.Parent" xml:space="preserve">
     <value>panelProperties</value>
   </data>
@@ -675,6 +744,9 @@ you can append more spectra in the future.</value>
   </data>
   <data name="&gt;&gt;panelProperties.Name" xml:space="preserve">
     <value>panelProperties</value>
+  </data>
+  <data name="&gt;&gt;panelProperties.Type" xml:space="preserve">
+    <value>System.Windows.Forms.Panel, System.Windows.Forms, Version=4.0.0.0, Culture=neutral, PublicKeyToken=b77a5c561934e089</value>
   </data>
   <data name="&gt;&gt;panelProperties.Parent" xml:space="preserve">
     <value>$this</value>
@@ -700,6 +772,9 @@ you can append more spectra in the future.</value>
   <data name="&gt;&gt;gridInputFiles.Name" xml:space="preserve">
     <value>gridInputFiles</value>
   </data>
+  <data name="&gt;&gt;gridInputFiles.Type" xml:space="preserve">
+    <value>pwiz.Skyline.FileUI.PeptideSearch.BuildLibraryGridView, Skyline, Version=1.0.0.0, Culture=neutral, PublicKeyToken=null</value>
+  </data>
   <data name="&gt;&gt;gridInputFiles.Parent" xml:space="preserve">
     <value>panelFiles</value>
   </data>
@@ -724,6 +799,9 @@ you can append more spectra in the future.</value>
   <data name="&gt;&gt;btnAddPaths.Name" xml:space="preserve">
     <value>btnAddPaths</value>
   </data>
+  <data name="&gt;&gt;btnAddPaths.Type" xml:space="preserve">
+    <value>System.Windows.Forms.Button, System.Windows.Forms, Version=4.0.0.0, Culture=neutral, PublicKeyToken=b77a5c561934e089</value>
+  </data>
   <data name="&gt;&gt;btnAddPaths.Parent" xml:space="preserve">
     <value>panelFiles</value>
   </data>
@@ -747,6 +825,9 @@ you can append more spectra in the future.</value>
   </data>
   <data name="&gt;&gt;label7.Name" xml:space="preserve">
     <value>label7</value>
+  </data>
+  <data name="&gt;&gt;label7.Type" xml:space="preserve">
+    <value>System.Windows.Forms.Label, System.Windows.Forms, Version=4.0.0.0, Culture=neutral, PublicKeyToken=b77a5c561934e089</value>
   </data>
   <data name="&gt;&gt;label7.Parent" xml:space="preserve">
     <value>panelFiles</value>
@@ -776,6 +857,9 @@ You can uncheck ones you do not want added to the library.</value>
   <data name="&gt;&gt;btnAddDirectory.Name" xml:space="preserve">
     <value>btnAddDirectory</value>
   </data>
+  <data name="&gt;&gt;btnAddDirectory.Type" xml:space="preserve">
+    <value>System.Windows.Forms.Button, System.Windows.Forms, Version=4.0.0.0, Culture=neutral, PublicKeyToken=b77a5c561934e089</value>
+  </data>
   <data name="&gt;&gt;btnAddDirectory.Parent" xml:space="preserve">
     <value>panelFiles</value>
   </data>
@@ -803,6 +887,9 @@ You can uncheck ones you do not want added to the library.</value>
   <data name="&gt;&gt;btnAddFile.Name" xml:space="preserve">
     <value>btnAddFile</value>
   </data>
+  <data name="&gt;&gt;btnAddFile.Type" xml:space="preserve">
+    <value>System.Windows.Forms.Button, System.Windows.Forms, Version=4.0.0.0, Culture=neutral, PublicKeyToken=b77a5c561934e089</value>
+  </data>
   <data name="&gt;&gt;btnAddFile.Parent" xml:space="preserve">
     <value>panelFiles</value>
   </data>
@@ -823,6 +910,9 @@ You can uncheck ones you do not want added to the library.</value>
   </data>
   <data name="&gt;&gt;panelFiles.Name" xml:space="preserve">
     <value>panelFiles</value>
+  </data>
+  <data name="&gt;&gt;panelFiles.Type" xml:space="preserve">
+    <value>System.Windows.Forms.Panel, System.Windows.Forms, Version=4.0.0.0, Culture=neutral, PublicKeyToken=b77a5c561934e089</value>
   </data>
   <data name="&gt;&gt;panelFiles.Parent" xml:space="preserve">
     <value>$this</value>
@@ -851,12 +941,18 @@ You can uncheck ones you do not want added to the library.</value>
   <data name="&gt;&gt;btnPrevious.Name" xml:space="preserve">
     <value>btnPrevious</value>
   </data>
+  <data name="&gt;&gt;btnPrevious.Type" xml:space="preserve">
+    <value>System.Windows.Forms.Button, System.Windows.Forms, Version=4.0.0.0, Culture=neutral, PublicKeyToken=b77a5c561934e089</value>
+  </data>
   <data name="&gt;&gt;btnPrevious.Parent" xml:space="preserve">
     <value>$this</value>
   </data>
   <data name="&gt;&gt;btnPrevious.ZOrder" xml:space="preserve">
     <value>0</value>
   </data>
+  <metadata name="$this.Localizable" type="System.Boolean, mscorlib, Version=4.0.0.0, Culture=neutral, PublicKeyToken=b77a5c561934e089">
+    <value>True</value>
+  </metadata>
   <data name="$this.AutoScaleDimensions" type="System.Drawing.SizeF, System.Drawing">
     <value>6, 13</value>
   </data>
@@ -872,10 +968,19 @@ You can uncheck ones you do not want added to the library.</value>
   <data name="&gt;&gt;modeUIHandler.Name" xml:space="preserve">
     <value>modeUIHandler</value>
   </data>
+  <data name="&gt;&gt;modeUIHandler.Type" xml:space="preserve">
+    <value>pwiz.Skyline.Util.Helpers+ModeUIExtender, Skyline, Version=1.0.0.0, Culture=neutral, PublicKeyToken=null</value>
+  </data>
   <data name="&gt;&gt;helpTip.Name" xml:space="preserve">
     <value>helpTip</value>
   </data>
+  <data name="&gt;&gt;helpTip.Type" xml:space="preserve">
+    <value>System.Windows.Forms.ToolTip, System.Windows.Forms, Version=4.0.0.0, Culture=neutral, PublicKeyToken=b77a5c561934e089</value>
+  </data>
   <data name="&gt;&gt;$this.Name" xml:space="preserve">
     <value>BuildLibraryDlg</value>
+  </data>
+  <data name="&gt;&gt;$this.Type" xml:space="preserve">
+    <value>pwiz.Skyline.Util.FormEx, Skyline, Version=1.0.0.0, Culture=neutral, PublicKeyToken=null</value>
   </data>
 </root>

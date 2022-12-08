@@ -118,23 +118,20 @@
     <value>System.Resources.ResXResourceWriter, System.Windows.Forms, Version=4.0.0.0, Culture=neutral, PublicKeyToken=b77a5c561934e089</value>
   </resheader>
   <assembly alias="System.Windows.Forms" name="System.Windows.Forms, Version=4.0.0.0, Culture=neutral, PublicKeyToken=b77a5c561934e089" />
-  <assembly alias="System.Drawing" name="System.Drawing, Version=4.0.0.0, Culture=neutral, PublicKeyToken=b03f5f7f11d50a3a" />
-  <assembly alias="mscorlib" name="mscorlib, Version=4.0.0.0, Culture=neutral, PublicKeyToken=b77a5c561934e089" />
-  <metadata name="$this.Localizable" type="System.Boolean, mscorlib, Version=4.0.0.0, Culture=neutral, PublicKeyToken=b77a5c561934e089">
-    <value>True</value>
-  </metadata>
   <data name="radioDIA.Anchor" type="System.Windows.Forms.AnchorStyles, System.Windows.Forms">
     <value>Top, Left, Right</value>
   </data>
   <data name="radioDIA.ImeMode" type="System.Windows.Forms.ImeMode, System.Windows.Forms">
     <value>NoControl</value>
   </data>
+  <assembly alias="System.Drawing" name="System.Drawing, Version=4.0.0.0, Culture=neutral, PublicKeyToken=b03f5f7f11d50a3a" />
   <data name="radioDIA.Location" type="System.Drawing.Point, System.Drawing">
     <value>6, 42</value>
   </data>
   <data name="radioDIA.Size" type="System.Drawing.Size, System.Drawing">
     <value>369, 17</value>
   </data>
+  <assembly alias="mscorlib" name="mscorlib, Version=4.0.0.0, Culture=neutral, PublicKeyToken=b77a5c561934e089" />
   <data name="radioDIA.TabIndex" type="System.Int32, mscorlib">
     <value>1</value>
   </data>
@@ -143,6 +140,9 @@
   </data>
   <data name="&gt;&gt;radioDIA.Name" xml:space="preserve">
     <value>radioDIA</value>
+  </data>
+  <data name="&gt;&gt;radioDIA.Type" xml:space="preserve">
+    <value>System.Windows.Forms.RadioButton, System.Windows.Forms, Version=4.0.0.0, Culture=neutral, PublicKeyToken=b77a5c561934e089</value>
   </data>
   <data name="&gt;&gt;radioDIA.Parent" xml:space="preserve">
     <value>grpWorkflow</value>
@@ -171,6 +171,9 @@
   <data name="&gt;&gt;radioPRM.Name" xml:space="preserve">
     <value>radioPRM</value>
   </data>
+  <data name="&gt;&gt;radioPRM.Type" xml:space="preserve">
+    <value>System.Windows.Forms.RadioButton, System.Windows.Forms, Version=4.0.0.0, Culture=neutral, PublicKeyToken=b77a5c561934e089</value>
+  </data>
   <data name="&gt;&gt;radioPRM.Parent" xml:space="preserve">
     <value>grpWorkflow</value>
   </data>
@@ -198,6 +201,9 @@
   <data name="&gt;&gt;radioDDA.Name" xml:space="preserve">
     <value>radioDDA</value>
   </data>
+  <data name="&gt;&gt;radioDDA.Type" xml:space="preserve">
+    <value>System.Windows.Forms.RadioButton, System.Windows.Forms, Version=4.0.0.0, Culture=neutral, PublicKeyToken=b77a5c561934e089</value>
+  </data>
   <data name="&gt;&gt;radioDDA.Parent" xml:space="preserve">
     <value>grpWorkflow</value>
   </data>
@@ -221,6 +227,9 @@
   </data>
   <data name="&gt;&gt;grpWorkflow.Name" xml:space="preserve">
     <value>grpWorkflow</value>
+  </data>
+  <data name="&gt;&gt;grpWorkflow.Type" xml:space="preserve">
+    <value>System.Windows.Forms.GroupBox, System.Windows.Forms, Version=4.0.0.0, Culture=neutral, PublicKeyToken=b77a5c561934e089</value>
   </data>
   <data name="&gt;&gt;grpWorkflow.Parent" xml:space="preserve">
     <value>$this</value>
@@ -249,6 +258,9 @@
   <data name="&gt;&gt;radioButtonNewLibrary.Name" xml:space="preserve">
     <value>radioButtonNewLibrary</value>
   </data>
+  <data name="&gt;&gt;radioButtonNewLibrary.Type" xml:space="preserve">
+    <value>System.Windows.Forms.RadioButton, System.Windows.Forms, Version=4.0.0.0, Culture=neutral, PublicKeyToken=b77a5c561934e089</value>
+  </data>
   <data name="&gt;&gt;radioButtonNewLibrary.Parent" xml:space="preserve">
     <value>panel1</value>
   </data>
@@ -276,6 +288,9 @@
   <data name="&gt;&gt;radioExistingLibrary.Name" xml:space="preserve">
     <value>radioExistingLibrary</value>
   </data>
+  <data name="&gt;&gt;radioExistingLibrary.Type" xml:space="preserve">
+    <value>System.Windows.Forms.RadioButton, System.Windows.Forms, Version=4.0.0.0, Culture=neutral, PublicKeyToken=b77a5c561934e089</value>
+  </data>
   <data name="&gt;&gt;radioExistingLibrary.Parent" xml:space="preserve">
     <value>panel1</value>
   </data>
@@ -297,6 +312,9 @@
   <data name="&gt;&gt;panel1.Name" xml:space="preserve">
     <value>panel1</value>
   </data>
+  <data name="&gt;&gt;panel1.Type" xml:space="preserve">
+    <value>System.Windows.Forms.Panel, System.Windows.Forms, Version=4.0.0.0, Culture=neutral, PublicKeyToken=b77a5c561934e089</value>
+  </data>
   <data name="&gt;&gt;panel1.Parent" xml:space="preserve">
     <value>$this</value>
   </data>
@@ -317,6 +335,9 @@
   </data>
   <data name="&gt;&gt;tbxLibraryPath.Name" xml:space="preserve">
     <value>tbxLibraryPath</value>
+  </data>
+  <data name="&gt;&gt;tbxLibraryPath.Type" xml:space="preserve">
+    <value>System.Windows.Forms.TextBox, System.Windows.Forms, Version=4.0.0.0, Culture=neutral, PublicKeyToken=b77a5c561934e089</value>
   </data>
   <data name="&gt;&gt;tbxLibraryPath.Parent" xml:space="preserve">
     <value>panelChooseFile</value>
@@ -345,6 +366,9 @@
   <data name="&gt;&gt;btnBrowse.Name" xml:space="preserve">
     <value>btnBrowse</value>
   </data>
+  <data name="&gt;&gt;btnBrowse.Type" xml:space="preserve">
+    <value>System.Windows.Forms.Button, System.Windows.Forms, Version=4.0.0.0, Culture=neutral, PublicKeyToken=b77a5c561934e089</value>
+  </data>
   <data name="&gt;&gt;btnBrowse.Parent" xml:space="preserve">
     <value>panelChooseFile</value>
   </data>
@@ -372,6 +396,9 @@
   <data name="&gt;&gt;lblLibraryPath.Name" xml:space="preserve">
     <value>lblLibraryPath</value>
   </data>
+  <data name="&gt;&gt;lblLibraryPath.Type" xml:space="preserve">
+    <value>System.Windows.Forms.Label, System.Windows.Forms, Version=4.0.0.0, Culture=neutral, PublicKeyToken=b77a5c561934e089</value>
+  </data>
   <data name="&gt;&gt;lblLibraryPath.Parent" xml:space="preserve">
     <value>panelChooseFile</value>
   </data>
@@ -396,6 +423,9 @@
   <data name="&gt;&gt;panelChooseFile.Name" xml:space="preserve">
     <value>panelChooseFile</value>
   </data>
+  <data name="&gt;&gt;panelChooseFile.Type" xml:space="preserve">
+    <value>System.Windows.Forms.Panel, System.Windows.Forms, Version=4.0.0.0, Culture=neutral, PublicKeyToken=b77a5c561934e089</value>
+  </data>
   <data name="&gt;&gt;panelChooseFile.Parent" xml:space="preserve">
     <value>$this</value>
   </data>
@@ -416,6 +446,9 @@
   </data>
   <data name="&gt;&gt;gridSearchFiles.Name" xml:space="preserve">
     <value>gridSearchFiles</value>
+  </data>
+  <data name="&gt;&gt;gridSearchFiles.Type" xml:space="preserve">
+    <value>pwiz.Skyline.FileUI.PeptideSearch.BuildLibraryGridView, Skyline, Version=1.0.0.0, Culture=neutral, PublicKeyToken=null</value>
   </data>
   <data name="&gt;&gt;gridSearchFiles.Parent" xml:space="preserve">
     <value>panelPeptideSearch</value>
@@ -444,6 +477,9 @@
   <data name="&gt;&gt;label2.Name" xml:space="preserve">
     <value>label2</value>
   </data>
+  <data name="&gt;&gt;label2.Type" xml:space="preserve">
+    <value>System.Windows.Forms.Label, System.Windows.Forms, Version=4.0.0.0, Culture=neutral, PublicKeyToken=b77a5c561934e089</value>
+  </data>
   <data name="&gt;&gt;label2.Parent" xml:space="preserve">
     <value>panelPeptideSearch</value>
   </data>
@@ -461,6 +497,9 @@
   </data>
   <data name="&gt;&gt;comboInputFileType.Name" xml:space="preserve">
     <value>comboInputFileType</value>
+  </data>
+  <data name="&gt;&gt;comboInputFileType.Type" xml:space="preserve">
+    <value>System.Windows.Forms.ComboBox, System.Windows.Forms, Version=4.0.0.0, Culture=neutral, PublicKeyToken=b77a5c561934e089</value>
   </data>
   <data name="&gt;&gt;comboInputFileType.Parent" xml:space="preserve">
     <value>panelPeptideSearch</value>
@@ -492,6 +531,9 @@
   <data name="&gt;&gt;lblStandardPeptides.Name" xml:space="preserve">
     <value>lblStandardPeptides</value>
   </data>
+  <data name="&gt;&gt;lblStandardPeptides.Type" xml:space="preserve">
+    <value>System.Windows.Forms.Label, System.Windows.Forms, Version=4.0.0.0, Culture=neutral, PublicKeyToken=b77a5c561934e089</value>
+  </data>
   <data name="&gt;&gt;lblStandardPeptides.Parent" xml:space="preserve">
     <value>panelPeptideSearch</value>
   </data>
@@ -512,6 +554,9 @@
   </data>
   <data name="&gt;&gt;comboStandards.Name" xml:space="preserve">
     <value>comboStandards</value>
+  </data>
+  <data name="&gt;&gt;comboStandards.Type" xml:space="preserve">
+    <value>System.Windows.Forms.ComboBox, System.Windows.Forms, Version=4.0.0.0, Culture=neutral, PublicKeyToken=b77a5c561934e089</value>
   </data>
   <data name="&gt;&gt;comboStandards.Parent" xml:space="preserve">
     <value>panelPeptideSearch</value>
@@ -543,6 +588,9 @@
   <data name="&gt;&gt;cbIncludeAmbiguousMatches.Name" xml:space="preserve">
     <value>cbIncludeAmbiguousMatches</value>
   </data>
+  <data name="&gt;&gt;cbIncludeAmbiguousMatches.Type" xml:space="preserve">
+    <value>System.Windows.Forms.CheckBox, System.Windows.Forms, Version=4.0.0.0, Culture=neutral, PublicKeyToken=b77a5c561934e089</value>
+  </data>
   <data name="&gt;&gt;cbIncludeAmbiguousMatches.Parent" xml:space="preserve">
     <value>panelPeptideSearch</value>
   </data>
@@ -572,6 +620,9 @@
   </data>
   <data name="&gt;&gt;cbFilterForDocumentPeptides.Name" xml:space="preserve">
     <value>cbFilterForDocumentPeptides</value>
+  </data>
+  <data name="&gt;&gt;cbFilterForDocumentPeptides.Type" xml:space="preserve">
+    <value>System.Windows.Forms.CheckBox, System.Windows.Forms, Version=4.0.0.0, Culture=neutral, PublicKeyToken=b77a5c561934e089</value>
   </data>
   <data name="&gt;&gt;cbFilterForDocumentPeptides.Parent" xml:space="preserve">
     <value>panelPeptideSearch</value>
@@ -603,6 +654,9 @@
   <data name="&gt;&gt;btnRemFile.Name" xml:space="preserve">
     <value>btnRemFile</value>
   </data>
+  <data name="&gt;&gt;btnRemFile.Type" xml:space="preserve">
+    <value>System.Windows.Forms.Button, System.Windows.Forms, Version=4.0.0.0, Culture=neutral, PublicKeyToken=b77a5c561934e089</value>
+  </data>
   <data name="&gt;&gt;btnRemFile.Parent" xml:space="preserve">
     <value>panelPeptideSearch</value>
   </data>
@@ -630,6 +684,9 @@
   <data name="&gt;&gt;lblFileCaption.Name" xml:space="preserve">
     <value>lblFileCaption</value>
   </data>
+  <data name="&gt;&gt;lblFileCaption.Type" xml:space="preserve">
+    <value>System.Windows.Forms.Label, System.Windows.Forms, Version=4.0.0.0, Culture=neutral, PublicKeyToken=b77a5c561934e089</value>
+  </data>
   <data name="&gt;&gt;lblFileCaption.Parent" xml:space="preserve">
     <value>panelPeptideSearch</value>
   </data>
@@ -656,6 +713,9 @@
   </data>
   <data name="&gt;&gt;btnAddFile.Name" xml:space="preserve">
     <value>btnAddFile</value>
+  </data>
+  <data name="&gt;&gt;btnAddFile.Type" xml:space="preserve">
+    <value>System.Windows.Forms.Button, System.Windows.Forms, Version=4.0.0.0, Culture=neutral, PublicKeyToken=b77a5c561934e089</value>
   </data>
   <data name="&gt;&gt;btnAddFile.Parent" xml:space="preserve">
     <value>panelPeptideSearch</value>
@@ -696,6 +756,9 @@
   <data name="&gt;&gt;label1.Name" xml:space="preserve">
     <value>label1</value>
   </data>
+  <data name="&gt;&gt;label1.Type" xml:space="preserve">
+    <value>System.Windows.Forms.Label, System.Windows.Forms, Version=4.0.0.0, Culture=neutral, PublicKeyToken=b77a5c561934e089</value>
+  </data>
   <data name="&gt;&gt;label1.Parent" xml:space="preserve">
     <value>panelSearchThreshold</value>
   </data>
@@ -717,6 +780,9 @@
   <data name="&gt;&gt;textCutoff.Name" xml:space="preserve">
     <value>textCutoff</value>
   </data>
+  <data name="&gt;&gt;textCutoff.Type" xml:space="preserve">
+    <value>System.Windows.Forms.TextBox, System.Windows.Forms, Version=4.0.0.0, Culture=neutral, PublicKeyToken=b77a5c561934e089</value>
+  </data>
   <data name="&gt;&gt;textCutoff.Parent" xml:space="preserve">
     <value>panelSearchThreshold</value>
   </data>
@@ -734,6 +800,9 @@
   </data>
   <data name="&gt;&gt;panelSearchThreshold.Name" xml:space="preserve">
     <value>panelSearchThreshold</value>
+  </data>
+  <data name="&gt;&gt;panelSearchThreshold.Type" xml:space="preserve">
+    <value>System.Windows.Forms.FlowLayoutPanel, System.Windows.Forms, Version=4.0.0.0, Culture=neutral, PublicKeyToken=b77a5c561934e089</value>
   </data>
   <data name="&gt;&gt;panelSearchThreshold.Parent" xml:space="preserve">
     <value>panelPeptideSearch</value>
@@ -756,6 +825,9 @@
   <data name="&gt;&gt;panelPeptideSearch.Name" xml:space="preserve">
     <value>panelPeptideSearch</value>
   </data>
+  <data name="&gt;&gt;panelPeptideSearch.Type" xml:space="preserve">
+    <value>System.Windows.Forms.Panel, System.Windows.Forms, Version=4.0.0.0, Culture=neutral, PublicKeyToken=b77a5c561934e089</value>
+  </data>
   <data name="&gt;&gt;panelPeptideSearch.Parent" xml:space="preserve">
     <value>$this</value>
   </data>
@@ -774,6 +846,9 @@
   <data name="dataGridViewTextBoxColumn4.HeaderText" xml:space="preserve">
     <value>得分阈值</value>
   </data>
+  <metadata name="$this.Localizable" type="System.Boolean, mscorlib, Version=4.0.0.0, Culture=neutral, PublicKeyToken=b77a5c561934e089">
+    <value>True</value>
+  </metadata>
   <data name="$this.AutoScaleDimensions" type="System.Drawing.SizeF, System.Drawing">
     <value>6, 13</value>
   </data>
@@ -783,16 +858,31 @@
   <data name="&gt;&gt;dataGridViewTextBoxColumn1.Name" xml:space="preserve">
     <value>dataGridViewTextBoxColumn1</value>
   </data>
+  <data name="&gt;&gt;dataGridViewTextBoxColumn1.Type" xml:space="preserve">
+    <value>System.Windows.Forms.DataGridViewTextBoxColumn, System.Windows.Forms, Version=4.0.0.0, Culture=neutral, PublicKeyToken=b77a5c561934e089</value>
+  </data>
   <data name="&gt;&gt;dataGridViewTextBoxColumn2.Name" xml:space="preserve">
     <value>dataGridViewTextBoxColumn2</value>
+  </data>
+  <data name="&gt;&gt;dataGridViewTextBoxColumn2.Type" xml:space="preserve">
+    <value>System.Windows.Forms.DataGridViewTextBoxColumn, System.Windows.Forms, Version=4.0.0.0, Culture=neutral, PublicKeyToken=b77a5c561934e089</value>
   </data>
   <data name="&gt;&gt;dataGridViewTextBoxColumn3.Name" xml:space="preserve">
     <value>dataGridViewTextBoxColumn3</value>
   </data>
+  <data name="&gt;&gt;dataGridViewTextBoxColumn3.Type" xml:space="preserve">
+    <value>System.Windows.Forms.DataGridViewTextBoxColumn, System.Windows.Forms, Version=4.0.0.0, Culture=neutral, PublicKeyToken=b77a5c561934e089</value>
+  </data>
   <data name="&gt;&gt;dataGridViewTextBoxColumn4.Name" xml:space="preserve">
     <value>dataGridViewTextBoxColumn4</value>
   </data>
+  <data name="&gt;&gt;dataGridViewTextBoxColumn4.Type" xml:space="preserve">
+    <value>System.Windows.Forms.DataGridViewTextBoxColumn, System.Windows.Forms, Version=4.0.0.0, Culture=neutral, PublicKeyToken=b77a5c561934e089</value>
+  </data>
   <data name="&gt;&gt;$this.Name" xml:space="preserve">
     <value>BuildPeptideSearchLibraryControl</value>
+  </data>
+  <data name="&gt;&gt;$this.Type" xml:space="preserve">
+    <value>System.Windows.Forms.UserControl, System.Windows.Forms, Version=4.0.0.0, Culture=neutral, PublicKeyToken=b77a5c561934e089</value>
   </data>
 </root>
