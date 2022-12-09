@@ -584,8 +584,7 @@ namespace pwiz.SkylineTestFunctional
                       });
             WaitForClosedForm(irtDlg3);
             
-            RunUI(editCalculator.OkDialog);
-            WaitForClosedForm(editCalculator);
+            OkDialog(editCalculator, editCalculator.OkDialog);
 
             RunUI(() =>
                       {
@@ -1037,8 +1036,7 @@ namespace pwiz.SkylineTestFunctional
                 OkDialog(recalibrateDlg, recalibrateDlg.Btn1Click);
             }
 
-            RunUI(dlg.OkDialog);
-            WaitForClosedForm(dlg);
+            OkDialog(dlg, dlg.OkDialog);
         }
     }
 

@@ -817,8 +817,7 @@ namespace pwiz.SkylineTestUtil
                 addLibUI.LibraryPath = libFullPath;
                 addLibUI.OkDialog();
             });
-            RunUI(editListUI.OkDialog);
-            WaitForClosedForm(editListUI);
+            OkDialog(editListUI, editListUI.OkDialog);
 
             // Make sure the libraries actually show up in the peptide settings dialog before continuing.
             WaitForConditionUI(() => peptideSettingsUI.AvailableLibraries.Length > 0);
@@ -846,8 +845,7 @@ namespace pwiz.SkylineTestUtil
             var docAfter = WaitForDocumentChange(docBefore);
 
             OkDialog(viewLibraryDlg, viewLibraryDlg.Close);
-            RunUI(() => peptideSettingsUI.OkDialog());
-            WaitForClosedForm(peptideSettingsUI);
+            OkDialog(peptideSettingsUI, peptideSettingsUI.OkDialog);
             return docAfter;
         }
     }

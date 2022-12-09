@@ -243,7 +243,7 @@ namespace TestPerf
                         // If user doesn't check for errors first, then expect FilterMatchedPeptidesDlg on "OK"
                         var filterMatchedDlg = ShowDialog<FilterMatchedPeptidesDlg>(() => colDlg.OkDialog());
                         // Canceling the associate proteins dialog should return us to the import dialog and turn off associate proteins
-                        RunUI(() => filterMatchedDlg.CancelDialog());
+                        OkDialog(filterMatchedDlg, filterMatchedDlg.CancelDialog);
                         var isAssociateProteins = true;
                         RunUI(() => isAssociateProteins = colDlg.checkBoxAssociateProteins.Checked);
                         AssertEx.IsFalse(isAssociateProteins, "Expected associate proteins to be turned off after cancelation");
