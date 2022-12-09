@@ -28,8 +28,8 @@ using System.Linq;
 namespace pwiz.Skyline.Alerts
 {
     /// <summary>
-    /// Use for a <see cref="MessageBox"/> substitute that can be
-    /// detected and closed by automated functional tests.
+    /// Support for File > Share to create a .sky.zip file.
+    /// CONSIDER: Seems more appropriate to move this to the FileUI namespace
     /// </summary>
     public partial class ShareTypeDlg : FormEx
     {
@@ -82,9 +82,8 @@ namespace pwiz.Skyline.Alerts
 
         public void OkDialog()
         {
+            ShareType = new ShareType(radioComplete.Checked, _skylineVersionOptions[comboSkylineVersion.SelectedIndex], GetIncludedAuxiliaryFiles()); // Pass in all the checked auxiliary files
             DialogResult = DialogResult.OK;
-            ShareType = new ShareType(radioComplete.Checked, _skylineVersionOptions[comboSkylineVersion.SelectedIndex], GetCheckedAuxiliaryFiles()); // Pass in all the checked auxiliary files
-            Close();
         }
 
         private void btnShare_Click(object sender, EventArgs e)
@@ -150,55 +149,74 @@ namespace pwiz.Skyline.Alerts
         #endregion
 
         /// <summary>
+        /// Path on disk to the current document.
+        /// CONSIDER: Pass in the document file path rather than relying on Program.MainWindow
+        /// </summary>
+        private string _documentFilePath => Program.MainWindow.DocumentFilePath;
+
+        /// <summary>
         /// Creates and collects user information on present raw files
         /// </summary>
-        /// <param name="sender"></param>
-        /// <param name="e"></param>
         private void btnSelectReplicateFiles_Click(object sender, EventArgs e)
         {
-            using (var replicateSelectDlg = new ShareResultsFilesDlg(_document, _auxiliaryFiles))
+            using (var replicateSelectDlg = new ShareResultsFilesDlg(_document, _documentFilePath, _auxiliaryFiles))
             {
                 if (replicateSelectDlg.ShowDialog(this) == DialogResult.OK)
                 {
                     // Pass along any extra files the user may have selected
-                    _auxiliaryFiles = replicateSelectDlg._auxiliaryFiles; // Pass auxiliary file information back
-                    labelFileStatus.Text = replicateSelectDlg.UpdateLabel();
+                    _auxiliaryFiles = replicateSelectDlg.FilesInfo; // Pass auxiliary file information back
+                    if (_auxiliaryFiles.IncludeFiles.Any())
+                        labelFileStatus.Text = _auxiliaryFiles.ToString();
+                    else
+                        cbIncludeReplicateFiles.Checked = false;
                 }
             }
         }
 
         /// <summary>
-        /// Upon checking the box the current file information is saved and file status is displayed
-        /// The check box also allows the user access to more specific file selection and the ability
-        /// to locate missing files and add them to the zip. Should the check box be unchecked the
-        /// file selection info will be removed and the user will no longer be able to select files
-        /// unless they re-check the box.
+        /// Handle status updates based on <see cref="cbIncludeReplicateFiles"/> checked state.
+        /// Also, creates a default <see cref="ShareResultsFilesDlg.AuxiliaryFiles"/> instance,
+        /// based on what can be found from the <see cref="SrmDocument"/>
         /// </summary>
-        /// <param name="sender"></param>
-        /// <param name="e"></param>
         private void cbIncludeFiles_CheckedChanged(object sender, EventArgs e)
         {
-            using var replicateSelectDlg = new ShareResultsFilesDlg(_document, _auxiliaryFiles);
-            labelFileStatus.Text = replicateSelectDlg.UpdateLabel(); // Update label
-            replicateSelectDlg.OkDialog(); // Update file selection
-            _auxiliaryFiles = replicateSelectDlg._auxiliaryFiles; // Update files
-
-            btnSelectReplicateFiles.Enabled = cbIncludeReplicateFiles.Checked;
-            labelFileStatus.Visible = cbIncludeReplicateFiles.Checked;
+            bool includeFiles = cbIncludeReplicateFiles.Checked;
+            if (includeFiles)
+            {
+                var formatVersion = SelectedSkylineVersion?.SrmDocumentVersion ?? _savedFileFormat;
+                if (formatVersion == null || formatVersion < DocumentFormat.SHARE_REPLICATE_FILES)
+                {
+                    MessageDlg.Show(this, Resources.ShareTypeDlg_cbIncludeFiles_CheckedChanged_Including_results_files_is_not_supported_by_the_currently_selected_version_);
+                    cbIncludeReplicateFiles.CheckedChanged -= cbIncludeFiles_CheckedChanged;    // Avoid calling this function again
+                    cbIncludeReplicateFiles.Checked = false;
+                    cbIncludeReplicateFiles.CheckedChanged += cbIncludeFiles_CheckedChanged;
+                    return;
+                }
+            }
+            btnSelectReplicateFiles.Enabled = includeFiles;
+            if (includeFiles)
+            {
+                if (_auxiliaryFiles == null)
+                {
+                    // TODO: Need LongWaitDlg support for this with the ability to cancel
+                    _auxiliaryFiles = new ShareResultsFilesDlg.AuxiliaryFiles(_document, _documentFilePath);
+                }
+                labelFileStatus.Text = _auxiliaryFiles.ToString();
+            }
+            else
+            {
+                var totalFileCount = _document.Settings.MeasuredResults?.Chromatograms
+                    .SelectMany(c => c.MSDataFileInfos).Distinct().Count() ?? 0;
+                labelFileStatus.Text = ShareResultsFilesDlg.AuxiliaryFiles.GetStatusText(0, totalFileCount, 0);
+            }
         }
 
-        ///
         private void UpdateDataSourceSharing()
         {
-            var formatVersion = SelectedSkylineVersion?.SrmDocumentVersion ?? _savedFileFormat;
             if (!_allowDataSources) // e.g. Panorama uploads
             {
                 cbIncludeReplicateFiles.Visible = cbIncludeReplicateFiles.Enabled = cbIncludeReplicateFiles.Checked =
                     btnSelectReplicateFiles.Visible = labelFileStatus.Visible = false; // Don't offer to include results files for any formats
-            }
-            else if (formatVersion == null || formatVersion < DocumentFormat.SHARE_REPLICATE_FILES)
-            {
-                cbIncludeReplicateFiles.Enabled = cbIncludeReplicateFiles.Checked = false; // Don't offer to include results files for older save formats
             }
             else
             {
@@ -209,28 +227,11 @@ namespace pwiz.Skyline.Alerts
         /// <summary>
         /// Get all selected files
         /// </summary>
-        /// <returns></returns>
-        private List<string> GetCheckedAuxiliaryFiles()
+        private IEnumerable<string> GetIncludedAuxiliaryFiles()
         { 
-            var auxiliaryFiles = new List<string>(); 
-
-            // Collect files to be selected
-            if (cbIncludeReplicateFiles.Checked)
-            {
-                foreach (var checkedAuxFiles in _auxiliaryFiles._checkBoxFiles)
-                {
-                    if (checkedAuxFiles.CheckedState)
-                    {
-                        auxiliaryFiles.Add(checkedAuxFiles.Filename);
-                    }
-                }
-            }
-            return auxiliaryFiles;
-        }
-
-        private void comboSkylineVersion_SelectedIndexChanged(object sender, EventArgs e)
-        {
-            UpdateDataSourceSharing(); // Only allow data sources to be included with modern formats
+            if (cbIncludeReplicateFiles.Checked && _auxiliaryFiles != null)
+                return _auxiliaryFiles.IncludeFiles;
+            return Array.Empty<string>();
         }
     }
 }

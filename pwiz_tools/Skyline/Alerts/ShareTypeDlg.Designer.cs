@@ -76,7 +76,6 @@
             this.comboSkylineVersion.FormattingEnabled = true;
             this.comboSkylineVersion.Name = "comboSkylineVersion";
             this.toolTip1.SetToolTip(this.comboSkylineVersion, resources.GetString("comboSkylineVersion.ToolTip"));
-            this.comboSkylineVersion.SelectedIndexChanged += new System.EventHandler(this.comboSkylineVersion_SelectedIndexChanged);
             // 
             // label2
             // 

@@ -56,7 +56,7 @@
             resources.ApplyResources(this.btnOK, "btnOK");
             this.btnOK.Name = "btnOK";
             this.btnOK.UseVisualStyleBackColor = true;
-            this.btnOK.Click += new System.EventHandler(this.Btn_Accept_Click);
+            this.btnOK.Click += new System.EventHandler(this.btnOK_Click);
             // 
             // btnCancel
             // 
@@ -71,7 +71,7 @@
             this.checkedListBox.CheckOnClick = true;
             this.checkedListBox.FormattingEnabled = true;
             this.checkedListBox.Name = "checkedListBox";
-            this.checkedListBox.SelectedIndexChanged += new System.EventHandler(this.CheckedListBoxResults_SelectIndexChanged);
+            this.checkedListBox.ItemCheck += new System.Windows.Forms.ItemCheckEventHandler(this.checkedListBox_ItemCheck);
             // 
             // checkboxSelectAll
             // 
@@ -80,7 +80,7 @@
             this.checkboxSelectAll.CheckState = System.Windows.Forms.CheckState.Checked;
             this.checkboxSelectAll.Name = "checkboxSelectAll";
             this.checkboxSelectAll.UseVisualStyleBackColor = true;
-            this.checkboxSelectAll.CheckedChanged += new System.EventHandler(this.CheckboxSelectAll_CheckedChanged);
+            this.checkboxSelectAll.CheckedChanged += new System.EventHandler(this.checkboxSelectAll_CheckedChanged);
             // 
             // checkedStatus
             // 
@@ -92,7 +92,7 @@
             resources.ApplyResources(this.listboxMissingFiles, "listboxMissingFiles");
             this.listboxMissingFiles.FormattingEnabled = true;
             this.listboxMissingFiles.Name = "listboxMissingFiles";
-            this.listboxMissingFiles.MouseDoubleClick += new System.Windows.Forms.MouseEventHandler(this.MissingListBox_MouseDoubleClick);
+            this.listboxMissingFiles.MouseDoubleClick += new System.Windows.Forms.MouseEventHandler(this.listboxMissingFiles_MouseDoubleClick);
             // 
             // labelMissingFiles
             // 
@@ -104,12 +104,11 @@
             resources.ApplyResources(this.btnLocateFiles, "btnLocateFiles");
             this.btnLocateFiles.Name = "btnLocateFiles";
             this.btnLocateFiles.UseVisualStyleBackColor = true;
-            this.btnLocateFiles.Click += new System.EventHandler(this.Btn_addFiles_Click);
+            this.btnLocateFiles.Click += new System.EventHandler(this.btnLocateFiles_Click);
             // 
             // splitContainer1
             // 
             resources.ApplyResources(this.splitContainer1, "splitContainer1");
-            this.splitContainer1.BorderStyle = System.Windows.Forms.BorderStyle.FixedSingle;
             this.splitContainer1.Name = "splitContainer1";
             // 
             // splitContainer1.Panel1
@@ -130,7 +129,7 @@
             resources.ApplyResources(this.btnFindInFolder, "btnFindInFolder");
             this.btnFindInFolder.Name = "btnFindInFolder";
             this.btnFindInFolder.UseVisualStyleBackColor = true;
-            this.btnFindInFolder.Click += new System.EventHandler(this.FindResultsFolder_Click);
+            this.btnFindInFolder.Click += new System.EventHandler(this.btnFindInFolder_Click);
             // 
             // ShareResultsFilesDlg
             // 
