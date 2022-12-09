@@ -38,7 +38,7 @@ using pwiz.SkylineTestUtil;
 namespace pwiz.SkylineTestFunctional
 {
     /// <summary>
-    /// Functional test for CE Optimization.
+    /// Functional test for document sharing.
     /// </summary>
     [TestClass]
     public class ShareDocumentTest : AbstractFunctionalTest
@@ -49,7 +49,9 @@ namespace pwiz.SkylineTestFunctional
             TestDirectoryName = "ShareDocumentTest";
             TestFilesZipPaths = new[] { @"TestFunctional\PrecursorTest.zip",
                                         @"TestFunctional\LibraryShareTest.zip",
-                                        @"TestFunctional\LibraryShareTestPeakAnnotations.zip"};
+                                        @"TestFunctional\LibraryShareTestPeakAnnotations.zip",
+                                        @"TestData\Results\AgilentCEOpt.zip"
+            };
             RunFunctionalTest();
         }
 
@@ -60,6 +62,10 @@ namespace pwiz.SkylineTestFunctional
         /// </summary>
         protected override void DoTest()
         {
+            ShareWithRawDirectoriesTest();
+
+            ShareWithRawFilesTest();
+
             ShareLibraryWithPeakAnnotationsTest();
 
             ShareDocTest();
@@ -167,7 +173,7 @@ namespace pwiz.SkylineTestFunctional
 
             // Open the .sky file
             string documentPath = TestFilesDirs[1].GetTestPath(docName);
-            RunUI(() => SkylineWindow.OpenFile(documentPath));
+            RunUI(() => SkylineWindow.LoadFile(documentPath));
             WaitForDocumentLoaded();
 
             // Share the complete document.
@@ -244,7 +250,7 @@ namespace pwiz.SkylineTestFunctional
 
             // Open the original .sky file
             doc = SkylineWindow.Document;
-            RunUI(() => SkylineWindow.OpenFile(documentPath));
+            RunUI(() => SkylineWindow.LoadFile(documentPath));
             WaitForDocumentChangeLoaded(doc);
 
             // Disable MS1 filtering
@@ -262,6 +268,121 @@ namespace pwiz.SkylineTestFunctional
             Share(shareMinPath4, false, origFileSet, newFileSet, docName);
         }
 
+        // Verify handling of replicate "files" that are really directories
+        private void ShareWithRawDirectoriesTest()
+        {
+            const string docName = "AgilentCE.sky";
+            string zipPath = TestContext.GetProjectDirectory(TestFilesZipPaths[3]);
+            string documentPath = TestFilesDirs[3].GetTestPath(docName);
+            var bismetPgulOptD = "BisMet-1pgul-opt-01.d";
+            var dataPath = TestFilesDirs[3].GetTestPath(bismetPgulOptD);
+            RunUI(() => SkylineWindow.LoadFile(documentPath));
+            ImportResultsFile(dataPath);
+            RunUI(() => SkylineWindow.SaveDocument(TestFilesDirs[3].GetTestPath("ShareWithRawDirectoriesTest.sky")));
+
+            var shareCompletePath = DoShareWithRawFiles(TestFilesDirs[3]);
+
+            using var zipFile = ZipFile.Read(shareCompletePath);
+            {
+                // Confirm files have been correctly found
+                Assert.IsTrue(zipFile.EntryFileNames.Contains(bismetPgulOptD+"/AcqData/"), $@"expected to find raw data {bismetPgulOptD} in zip file");
+            }
+
+            // Now reload - formerly Skyline would balk because there was a subdirectory in the zip file
+            RunUI(() => SkylineWindow.NewDocument());
+            RunUI(() => SkylineWindow.LoadFile(shareCompletePath));
+            RunUI(() => SkylineWindow.NewDocument());
+        }
+
+        private string DoShareWithRawFiles(TestFilesDir testFilesDir, string directoryElsewhere = null, string filename = null, bool testFolder = false)
+        {
+            string shareCompletePath = testFilesDir.GetTestPath($"{Path.GetFileName(directoryElsewhere)}{testFolder}.sky.zip");
+            var shareDlg = ShowDialog<ShareTypeDlg>(() => SkylineWindow.ShareDocument(shareCompletePath));
+            RunUI(() => shareDlg.IncludeReplicateFiles = true); // Check box must be checked in order for files to be zipped
+            var replicatePickDlg = ShowDialog<ShareResultsFilesDlg>(() => shareDlg.ShowSelectReplicatesDialog());
+            RunUI(() => replicatePickDlg.SelectOrDeselectAll(true));
+            if (directoryElsewhere != null)
+            {
+
+                if (!testFolder)
+                {
+                    // Test file selector
+                    var fileFinderDlg = ShowDialog<OpenDataSourceDialog>(() => replicatePickDlg.LocateMissingFiles());
+                    RunUI(() =>
+                    {
+                        fileFinderDlg.SelectFile(directoryElsewhere); // Select sub folder
+                        fileFinderDlg.Open(); // Open folder
+                        fileFinderDlg.SelectFile(filename); // Select file
+                        fileFinderDlg.Open(); // Open file
+                    });
+                    OkDialog(fileFinderDlg, fileFinderDlg.Open); // Accept selected files and close dialog
+
+ 
+                }
+
+                // Test folder selector
+                RunUI(() =>
+                    replicatePickDlg.SearchDirectoryForMissingFiles(directoryElsewhere)); // Exercise folder select
+
+            }
+
+            // Close and confirm results
+            OkDialog(replicatePickDlg, replicatePickDlg.OkDialog);
+            OkDialog(shareDlg, shareDlg.OkDialog);
+
+            WaitForCondition(() => File.Exists(shareCompletePath));
+
+            return shareCompletePath;
+        }
+
+        private void ShareWithRawFilesTest()
+        {
+            // Remember original files
+            const string docName = "LibraryShareTest.sky";
+            string zipPath = TestContext.GetProjectDirectory(TestFilesZipPaths[1]);
+
+            // Open the .sky file
+            string documentPath = TestFilesDirs[1].GetTestPath(docName);
+            RunUI(() => SkylineWindow.LoadFile(documentPath));
+            WaitForDocumentLoaded();
+            // We don't have the actual raw data handy, but a couple of suitably named files will stand in just fine for our purposes
+            var S1_RAW = "S_1.RAW";
+            var S5_RAW = "S_5.RAW";
+
+            File.Copy(documentPath, TestFilesDirs[1].GetTestPath(S1_RAW)); // In documents directory
+            File.Copy(documentPath, TestFilesDirs[1].GetTestPath("..\\" + S5_RAW)); // In document's parent directory
+
+            void VerifyContents(string s)
+            {
+                using var zipFile = ZipFile.Read(s);
+                {
+                    // Confirm files have been correctly found
+                    Assert.IsTrue(zipFile.EntryFileNames.Contains(S1_RAW),
+                        $@"expected to find (fake!) raw data file {S1_RAW} in zip file");
+                    Assert.IsTrue(zipFile.EntryFileNames.Contains(S5_RAW),
+                        $@"expected to find (fake!) raw data file {S5_RAW} in zip file");
+                }
+            }
+
+            var shareCompletePath = DoShareWithRawFiles(TestFilesDirs[1], null, S1_RAW);
+            VerifyContents(shareCompletePath);
+
+            // Now exercise the missing file handling
+            var elsewhere = TestFilesDirs[1].GetTestPath("elsewhere");
+            Directory.CreateDirectory(elsewhere);
+            var elsewhereS1 = Path.Combine(elsewhere, S1_RAW);
+            File.Move(TestFilesDirs[1].GetTestPath(S1_RAW), elsewhereS1); // Exercise folder select
+
+            shareCompletePath = DoShareWithRawFiles(TestFilesDirs[1], elsewhere, elsewhereS1);
+            VerifyContents(shareCompletePath);
+
+            // Move the location of S5_RAW in order to test the folder selector
+            elsewhereS1 = Path.Combine(elsewhere,(S5_RAW));
+            File.Move(TestFilesDirs[1].GetTestPath("..\\" + S5_RAW), elsewhereS1);
+
+            shareCompletePath = DoShareWithRawFiles(TestFilesDirs[1], elsewhere, elsewhereS1, true);
+            VerifyContents(shareCompletePath);
+        }
 
         private void ShareDocTest()
         {
@@ -277,7 +398,7 @@ namespace pwiz.SkylineTestFunctional
 
             // Open the .sky file
             string documentPath = TestFilesDirs[0].GetTestPath(DOCUMENT_NAME);
-            RunUI(() => SkylineWindow.OpenFile(documentPath));
+            RunUI(() => SkylineWindow.LoadFile(documentPath));
 
             string shareCompletePath = TestFilesDirs[0].GetTestPath("ShareComplete.zip");
             Share(shareCompletePath, true, origFileSet, newFileSet, DOCUMENT_NAME, false);
