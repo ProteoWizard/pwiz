@@ -23,14 +23,18 @@ using System.Diagnostics;
 using System.Drawing;
 using System.IO;
 using System.Linq;
+using System.Reflection;
 using System.Text;
 using System.Threading;
 using pwiz.Common.DataBinding;
 using pwiz.Common.SystemUtil;
 using pwiz.Skyline.Controls;
+using pwiz.Skyline.Controls.Databinding;
+using pwiz.Skyline.Controls.Databinding.RowActions;
 using pwiz.Skyline.Model.AuditLog;
 using pwiz.Skyline.Model.Databinding;
 using pwiz.Skyline.Model.DocSettings.Extensions;
+using pwiz.Skyline.Model.ElementLocators;
 using pwiz.Skyline.Model.Find;
 using pwiz.Skyline.Model.Lib;
 using pwiz.Skyline.Model.Results;
@@ -100,7 +104,7 @@ namespace pwiz.Skyline.Model
             IProgressStatus status = new ProgressStatus(string.Format(Resources.ReportSpec_ReportToCsvString_Exporting__0__report,
                 viewSpec.Name));
             var writer = new StringWriter();
-            if (viewContext.Export(CancellationToken.None, progressMonitor, ref status, viewContext.GetViewInfo(null, viewSpec.ViewSpec), writer,
+            if (viewContext.Export(CancellationToken.None, progressMonitor, ref status, viewContext.GetViewInfo(null, viewSpec.ViewSpec), viewSpec.DefaultViewLayout, writer,
                     TextUtil.SEPARATOR_CSV))
             {
                 return writer.ToString();
@@ -108,6 +112,7 @@ namespace pwiz.Skyline.Model
             return null;
         }
 
+        [Obsolete]
         public DocumentLocation GetDocumentLocation()
         {
             DocumentLocation documentLocation = null;
@@ -133,6 +138,7 @@ namespace pwiz.Skyline.Model
         /// Select a document location in Skyline's tree view.
         /// </summary>
         /// <param name="documentLocation">Which location to select (null for insert node).</param>
+        [Obsolete]
         public void SetDocumentLocation(DocumentLocation documentLocation)
         {
             Program.MainWindow.Invoke(new Action(() =>
@@ -161,6 +167,7 @@ namespace pwiz.Skyline.Model
             return name;
         }
 
+        [Obsolete]
         public Chromatogram[] GetChromatograms(DocumentLocation documentLocation)
         {
             if (documentLocation == null)
@@ -453,6 +460,127 @@ namespace pwiz.Skyline.Model
             {
                 return Interlocked.Increment(ref _timeoutCount) < maxCount;
             }
+        }
+
+        public int GetProcessId()
+        {
+            return Process.GetCurrentProcess().Id;
+        }
+
+        public void DeleteElements(string[] elementLocatorStrings)
+        {
+            var elementLocators = elementLocatorStrings.Select(ElementLocator.Parse).ToList();
+            _skylineWindow.Invoke(new Action(() =>
+            {
+                DeleteElementsNow(elementLocators);
+            }));
+        }
+
+        private void DeleteElementsNow(IEnumerable<ElementLocator> elementLocators)
+        {
+            lock (_skylineWindow.GetDocumentChangeLock())
+            {
+                var originalDocument = _skylineWindow.Document;
+                var document = originalDocument;
+                var identityPathsToDelete = new HashSet<IdentityPath>();
+                foreach (var elementLocator in elementLocators)
+                {
+                    var elementRef = ElementRefs.FromObjectReference(elementLocator);
+                    if (elementRef is NodeRef nodeRef)
+                    {
+                        identityPathsToDelete.Add(nodeRef.ToIdentityPath(document));
+                    }
+                    else
+                    {
+                        throw new ArgumentException(string.Format(Resources.ToolService_DeleteElementsNow_Unsupported_element__0_, elementLocator));
+                    }
+                }
+
+                if (!identityPathsToDelete.Any())
+                {
+                    return;
+                }
+
+                DeleteNodesAction.DeleteIdentityPaths(_skylineWindow, identityPathsToDelete);
+            }
+        }
+
+        public void ImportProperties(string csvText)
+        {
+            _skylineWindow.Invoke(new Action(() =>
+            {
+                _skylineWindow.ImportAnnotations(new StringReader(csvText),
+                    new MessageInfo(MessageType.imported_annotations, _skylineWindow.Document.DocumentType,
+                        Resources.ToolService_ImportProperties_Import_Properties_from_external_tool));
+            }));
+        }
+
+        public string GetSelectedElementLocator(string elementType)
+        {
+            ElementRef result = null;
+            Exception exception = null;
+            _skylineWindow.Invoke(new Action(() => 
+            {
+                try
+                {
+                    result = GetSelectedElementRefNow(elementType);
+                }
+                catch (Exception e)
+                {
+                    exception = e;
+                }
+            }));
+            if (exception != null)
+            {
+                throw new TargetInvocationException(exception);
+            }
+            return result?.ToString();
+        }
+
+        private ElementRef GetSelectedElementRefNow(string elementType)
+        {
+            var document = _skylineWindow.DocumentUI;
+
+            SrmDocument.Level nodeLevel;
+            if (elementType == ReplicateRef.PROTOTYPE.ElementType)
+            {
+                if (!document.Settings.HasResults)
+                {
+                    return null;
+                }
+
+                return ReplicateRef.FromChromatogramSet(document.Settings.MeasuredResults
+                    .Chromatograms[_skylineWindow.ComboResults.SelectedIndex]);
+            }
+
+            if (elementType == TransitionRef.PROTOTYPE.ElementType)
+            {
+                nodeLevel = SrmDocument.Level.Transitions;
+            }
+            else if (elementType == PrecursorRef.PROTOTYPE.ElementType)
+            {
+                nodeLevel = SrmDocument.Level.TransitionGroups;
+            }
+            else if (elementType == MoleculeRef.PROTOTYPE.ElementType)
+            {
+                nodeLevel = SrmDocument.Level.Molecules;
+            }
+            else if (elementType == MoleculeGroupRef.PROTOTYPE.ElementType)
+            {
+                nodeLevel = SrmDocument.Level.MoleculeGroups;
+            }
+            else
+            {
+                throw new ArgumentException(string.Format(Resources.ToolService_GetSelectedElementRefNow_Unsupported_element_type___0__, elementType));
+            }
+
+            var selectedPath = _skylineWindow.SelectedPath;
+            if (selectedPath.Length <= (int)nodeLevel)
+            {
+                return null;
+            }
+            var elementRefs = new ElementRefs(document);
+            return elementRefs.GetNodeRef(selectedPath.GetPathTo((int)nodeLevel));
         }
     }
 }

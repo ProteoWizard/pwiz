@@ -143,6 +143,7 @@
     <Compile Include="PerfAssociateProteinsTest.cs" />
     <Compile Include="PerfCommandlineCreateImsDbTest.cs" />
     <Compile Include="PerfDetectLockmassFunctionTest.cs" />
+    <Compile Include="PerfHighEnergyIonMobilityOffsetForPRM.cs" />
     <Compile Include="PerfImportBrukerPasefBbCIDTest.cs" />
     <Compile Include="PerfImportHundredsOfReplicatesTest.cs" />
     <Compile Include="HiResMetabolomicsTutorial.cs" />
@@ -158,7 +159,6 @@
     <Compile Include="PerfImportResultsAgilentIMSFringeValues.cs" />
     <Compile Include="PerfImportResultsAgilentIMSTest.cs" />
     <Compile Include="PerfImportResultsAgilentSpectrumMillIMSTest.cs" />
-    <Compile Include="PerfImportResultsHugeTest.cs" />
     <Compile Include="PerfImportResultsWatersIMSTest.cs" />
     <Compile Include="PerfLockmassCmdlineTest.cs" />
     <Compile Include="PerfLockmassTest.cs" />

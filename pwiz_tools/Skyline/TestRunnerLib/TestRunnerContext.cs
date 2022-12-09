@@ -35,6 +35,10 @@ namespace TestRunnerLib
             _dictionary = new Dictionary<string, string>();
         }
 
+        public bool HasPassed { get; set; }
+
+        public override UnitTestOutcome CurrentTestOutcome => HasPassed ? UnitTestOutcome.Passed : base.CurrentTestOutcome;
+
         public override void WriteLine(string format, params object[] args)
         {
             throw new NotImplementedException();

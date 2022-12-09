@@ -464,6 +464,12 @@ namespace TestRunner
             bool allTestsPassed = true;
             int CLIENT_WAIT_TIMEOUT = 10; // time to wait for a message from server before exiting, in seconds
 
+            Action<string> TeeLog = msg =>
+            {
+                Console.WriteLine(msg);
+                log.WriteLine(msg);
+            };
+
             string host;
             if (commandLineArgs.HasArg("queuehost"))
                 host = commandLineArgs.ArgAsString("queuehost");
@@ -494,7 +500,7 @@ namespace TestRunner
                             {
                                 if (!heartbeatReceiver.TrySendFrameEmpty(TimeSpan.FromSeconds(15)))
                                 {
-                                    Console.Error.WriteLine("Server heartbeat could not be sent.");
+                                    TeeLog("Server heartbeat could not be sent.");
                                     if (attempts == 2)
                                     {
                                         cts.Cancel();
@@ -518,7 +524,7 @@ namespace TestRunner
                 string ip = Dns.GetHostEntry(Dns.GetHostName()).AddressList
                     .First(a => a.AddressFamily != System.Net.Sockets.AddressFamily.InterNetworkV6).ToString();
                 string workerId = $"{workerName}/{ip}/{tasksPort}/{resultsPort}/{heartbeatPort}";
-                Console.WriteLine($"Sending worker name and IP: {workerId}");
+                TeeLog($"Sending worker name and IP: {workerId}");
                 sender.SendFrame(workerId);
 
 
@@ -538,16 +544,17 @@ namespace TestRunner
                     var cargs = new CommandLineArgs(new[] { "test=" + testName }, commandLineOptions);
                     commandLineArgs.SetArg("language", testLanguage);
                     var testList = LoadTestList(cargs);
+                    TeeLog($"Starting test {testName}-{testLanguage}");
                     using (var testLogStream = new MemoryStream())
                     using (var testLog = new StreamWriter(testLogStream, new UTF8Encoding(false)))
                     {
                         bool passed = RunTestPasses(testList, testList, commandLineArgs, testLog, 1, 1);
                         allTestsPassed &= passed;
-                        log.Write(testLog);
+                        TeeLog(Encoding.UTF8.GetString(testLogStream.GetBuffer()));
                         var resultBuffer = testLogStream.GetBuffer().Prepend(Convert.ToByte(passed));
                         if (!sender2.TrySendFrame(TimeSpan.FromSeconds(CLIENT_WAIT_TIMEOUT), resultBuffer.ToArray(), (int) testLogStream.Length+1))
                         {
-                            Console.Error.WriteLine($"Exiting due to no response from server in {CLIENT_WAIT_TIMEOUT} seconds.");
+                            TeeLog($"Exiting due to no response from server in {CLIENT_WAIT_TIMEOUT} seconds.");
                             cts.Cancel();
                         }
                     }
@@ -559,7 +566,8 @@ namespace TestRunner
 
                 while (!cts.IsCancellationRequested)
                 {
-                    Console.WriteLine("Waiting for message");
+                    // This should be redundant with the new "Starting test" message, but may help debugging if there are connection issues
+                    // TeeLog("Waiting for message");
                     if (!sender2.TrySignalOK())
                     {
                         Thread.Sleep(2000);
@@ -568,7 +576,7 @@ namespace TestRunner
 
                     if (!receiver.Poll(TimeSpan.FromSeconds(CLIENT_WAIT_TIMEOUT)))
                     {
-                        Console.Error.WriteLine($"Exiting due to no response from server in {CLIENT_WAIT_TIMEOUT} seconds.");
+                        TeeLog($"Exiting due to no response from server in {CLIENT_WAIT_TIMEOUT} seconds.");
                         cts.Cancel();
                     }
                 }
@@ -606,7 +614,7 @@ namespace TestRunner
 
         private static void CheckDocker(CommandLineArgs commandLineArgs)
         {
-            var dockerVersionOutput = RunTests.RunCommand("docker", "version -f json", RunTests.IS_DOCKER_RUNNING_MESSAGE);
+            var dockerVersionOutput = RunTests.RunCommand("docker", "version -f \"{{json .}}\"", RunTests.IS_DOCKER_RUNNING_MESSAGE);
             var dockerVersionJson = JObject.Parse(dockerVersionOutput);
             if (dockerVersionJson["Server"]["Os"].Value<string>() != "windows")
             {
@@ -650,11 +658,13 @@ namespace TestRunner
             var pwizRoot = Path.GetDirectoryName(Path.GetDirectoryName(GetSkylineDirectory().FullName));
             string workerName = bigWorker ? $"docker_big_worker_{i}" : $"docker_worker_{i}";
             string dockerRunRedirect = string.Empty;
+            string testRunnerLog = @$"c:\AlwaysUpCLT\TestRunner-{workerName}.log";
             if (commandLineArgs.ArgAsBool("keepworkerlogs"))
-                dockerRunRedirect = $"> c:\\pwiz\\TestRunner-{workerName}-docker.log 2>1";
+                testRunnerLog = @$"c:\pwiz\TestRunner-{workerName}-docker.log";
+
 
             // paths in testRunnerCmd are in container-space (c:\pwiz is mounted from pwizRoot, c:\downloads is mounted from GetDownloadsPath(), c:\AlwaysUpCLT is not copied to the host)
-            var testRunnerCmd = $@"c:\pwiz\pwiz_tools\Skyline\bin\x64\Release\TestRunner.exe parallelmode=client showheader=0 results=c:\AlwaysUpCLT\TestResults log=c:\AlwaysUpCLT\TestRunner-{workerName}.log";
+            var testRunnerCmd = $@"c:\pwiz\pwiz_tools\Skyline\bin\x64\Release\TestRunner.exe parallelmode=client showheader=0 results=c:\AlwaysUpCLT\TestResults log={testRunnerLog}";
             testRunnerCmd = AddPassThroughArguments(commandLineArgs, testRunnerCmd);
             testRunnerCmd += $" workerport={workerPort}";
 
@@ -758,6 +768,12 @@ namespace TestRunner
                 }
             }
 
+            if (testQueue.Count < workerCount)
+            {
+                Console.WriteLine($"There are fewer test/language pairs ({testQueue.Count}) than the number of specified workers; reducing workercount to {testQueue.Count}.");
+                workerCount = testQueue.Count;
+            }
+
             // check docker daemon is working and build always_up_runner if necessary
             CheckDocker(commandLineArgs);
 
@@ -765,7 +781,14 @@ namespace TestRunner
             using (var receiver = new PullSocket())
             {
                 // get system-assigned port which will passed to workers with "workerport" parameter
-                int workerPort = receiver.BindRandomPort("tcp://*");
+                int workerPort;
+                if (commandLineArgs.HasArg("workerport"))
+                {
+                    workerPort = (int)commandLineArgs.ArgAsLong("workerport");
+                    receiver.Bind($"tcp://*:{workerPort}");
+                }
+                else
+                    workerPort = receiver.BindRandomPort("tcp://*");
 
                 string workerNames = null;
 
@@ -777,7 +800,7 @@ namespace TestRunner
                     return true;
                 }, true);
 
-                if (workerCount > 0)
+                if (workerCount > 1)
                 {
                     long availableBytesForNormalWorkers = MemoryInfo.AvailableBytes - MinBytesPerBigWorker;
 
@@ -874,12 +897,13 @@ namespace TestRunner
                     }
                 }, TaskCreationOptions.LongRunning));
 
-                Console.WriteLine("Running {0}{1} tests{2}{3} in parallel with {4} workers...\r\n",
+                Console.WriteLine("Running {0}{1} tests{2}{3} in parallel with {4} workers...",
                     testList.Count,
                     testList.Count < unfilteredTestList.Count ? "/" + unfilteredTestList.Count : "",
                     (loop <= 0) ? " forever" : (loop == 1) ? "" : " in " + loop + " loops",
                     "", /*(repeat <= 1) ? "" : ", repeated " + repeat + " times each per language",*/
                     workerCount);
+                Console.WriteLine("(If prompted to \"Allow TestRunner to communicate on these networks\", be sure to check BOTH public and private options.)\r\n");
 
                 // main thread listens for workers to connect
                 while (!cts.IsCancellationRequested)
@@ -1876,6 +1900,10 @@ Here is a list of recognized arguments:
                                     on test failures, with the idea that the failure might be due
                                     to stale data sets.
 
+    originalurls=[on|off]           Set originalurls=on to use direct links to download-on-the-fly
+                                    dependencies like Crux and MSFragger. Otherwise a cached
+                                    location on AWS S3 will be used.
+
     profile=[on|off]                Set profile=on to enable memory profiling mode.
                                     TestRunner will pause for 10 seconds after the first
                                     test is run to allow you to take a memory snapshot.
@@ -1901,6 +1929,9 @@ Here is a list of recognized arguments:
     workercount=[n]                 The number of parallel workers to run. One of the workers
                                     will be on the host, so only workercount - 1 Docker
                                     containers will be launched.
+
+    workerport=[n]                  The port the parallel server will listen for worker connections
+                                    on. If unset, a random port will be used.
 
     keepworkerlogs=[on|off]         Set keepworkerlogs=on to persist individual logs from each 
                                     Docker worker. Useful for debugging issues related to running

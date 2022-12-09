@@ -24,7 +24,6 @@ using System.Globalization;
 using System.Linq;
 using pwiz.Common.Collections;
 using pwiz.Common.DataBinding;
-using pwiz.Skyline.Controls;
 using pwiz.Skyline.Model.AuditLog;
 using pwiz.Skyline.Model.AuditLog.Databinding;
 using pwiz.Skyline.Model.Databinding.Collections;
@@ -96,7 +95,9 @@ namespace pwiz.Skyline.Model.Databinding
 
         protected override bool IsScalar(Type type)
         {
+#pragma warning disable CS0612 //"XXX is obsolete"
             return base.IsScalar(type) || type == typeof(IsotopeLabelType) || type == typeof(DocumentLocation) ||
+#pragma warning restore CS0612
                    type == typeof(SampleType) || type == typeof(GroupIdentifier) || type == typeof(StandardType) ||
                    type == typeof(NormalizationMethod) || type == typeof(RegressionFit) ||
                    type == typeof(AuditLogRow.AuditLogRowText) || type == typeof(AuditLogRow.AuditLogRowId);
@@ -255,7 +256,7 @@ namespace pwiz.Skyline.Model.Databinding
             }
         }
 
-        public SkylineWindow SkylineWindow { get { return _documentContainer as SkylineWindow; } }
+        public virtual SkylineWindow SkylineWindow { get { return null; } }
 
         private ReplicateSummaries _replicateSummaries;
         public ReplicateSummaries GetReplicateSummaries()
@@ -372,34 +373,19 @@ namespace pwiz.Skyline.Model.Databinding
             {
                 throw new InvalidOperationException();
             }
-            string message = Resources.DataGridViewPasteHandler_EndDeferSettingsChangesOnDocument_Updating_settings;
             if (SkylineWindow != null)
             {
                 SkylineWindow.ModifyDocument(description, _batchChangesState.UndoState, document =>
                 {
                     VerifyDocumentCurrent(_batchChangesState.OriginalDocument, document);
-                    using (var longWaitDlg = new LongWaitDlg
-                    {
-                        Message = message
-                    })
-                    {
-                        SrmDocument newDocument = document;
-                        longWaitDlg.PerformWork(SkylineWindow, 1000, progressMonitor =>
-                        {
-                            var srmSettingsChangeMonitor = new SrmSettingsChangeMonitor(progressMonitor,
-                                message);
-                            newDocument = _document.EndDeferSettingsChanges(_batchChangesState.OriginalDocument, srmSettingsChangeMonitor);
-                        });
-                        return newDocument;
-                    }
+                    return EndDeferSettingsChanges(_document, _batchChangesState.OriginalDocument);
                 }, null, null, GetAuditLogFunction(batchModifyInfo));
             }
             else
             {
                 VerifyDocumentCurrent(_batchChangesState.OriginalDocument, _documentContainer.Document);
-                if (!_documentContainer.SetDocument(
-                    _document.EndDeferSettingsChanges(_batchChangesState.OriginalDocument, null),
-                    _batchChangesState.OriginalDocument))
+                var newDocument = EndDeferSettingsChanges(_document, _batchChangesState.OriginalDocument);
+                if (!_documentContainer.SetDocument(newDocument, _batchChangesState.OriginalDocument))
                 {
                     throw new InvalidOperationException(Resources
                         .SkylineDataSchema_VerifyDocumentCurrent_The_document_was_modified_in_the_middle_of_the_operation_);
@@ -407,6 +393,11 @@ namespace pwiz.Skyline.Model.Databinding
             }
             _batchChangesState = null;
             DocumentChangedEventHandler(_documentContainer, new DocumentChangedEventArgs(_document));
+        }
+
+        protected virtual SrmDocument EndDeferSettingsChanges(SrmDocument document, SrmDocument originalDocument)
+        {
+            return document.EndDeferSettingsChanges(originalDocument, null);
         }
 
         private Func<SrmDocumentPair, AuditLogEntry> GetAuditLogFunction(

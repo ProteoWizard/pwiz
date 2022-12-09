@@ -174,14 +174,14 @@ namespace pwiz.Skyline.SettingsUI
 
         protected Target TryResolveTarget(object targetText, out string errorText)
         {
-            if (targetText == null)
+            var targetStr = targetText?.ToString();
+            if (string.IsNullOrWhiteSpace(targetStr))
             {
-                errorText = Resources
-                    .MeasuredPeptide_ValidateSequence_A_modified_peptide_sequence_is_required_for_each_entry;
+                errorText = Resources.MeasuredPeptide_ValidateSequence_A_modified_peptide_sequence_is_required_for_each_entry;
                 return null;
             }
 
-            return TargetResolver.TryResolveTarget(targetText.ToString(), out errorText);
+            return TargetResolver.TryResolveTarget(targetStr, out errorText);
         }
 
         protected virtual bool DoCellValidating(int rowIndex, int columnIndex, string value)

@@ -135,7 +135,7 @@ namespace pwiz.SkylineTestFunctional
         protected override void DoTest()
         {
             var docEmpty = NewDocument();
-
+            TestFormulaWithAtomCountZero();
             TestIrregularColumnCounts();
             TestMissingAccessionNumbers();
             TestMzOrderIndependence();
@@ -1516,6 +1516,31 @@ namespace pwiz.SkylineTestFunctional
             }
         }
 
+        private void TestFormulaWithAtomCountZero()
+        {
+            // Make sure that H'0 doesn't cause trouble - throws "System.Collections.Generic.KeyNotFoundException: The given key was not present in the dictionary."
+            // in StripLabelsFromFormula() in pwiz_tools\Skyline\Util\BioMassCalc.cs if not fixed.
+            var text =
+                "MoleculeGroup,PrecursorName,PrecursorFormula,PrecursorAdduct,PrecursorMz,PrecursorCharge,ProductName,ProductFormula,ProductAdduct,ProductMz,ProductCharge\n" +
+                "AMPP_FA,AMPP_16:0_1.04,C28H42N2O1XeH'0,[M]1+,,1,AMPP_16:0_precursor,C28H42N2O1H'0,[M]1+,,1\n" + // Data from the wild
+                "AMPP_FA,AMPP_18:0_1.04,C30H46N2O1XeH'0,[M]1+,,1,AMPP_18:0_precursor,C30H46N2O1H'0,[M]1+,,1\n" + // Data from the wild
+                "AMPP_FA,AMPP_17:0_1.04,C28H0N2O1XeH'41,[M]1+,,1,AMPP_17:0_precursor,C28H0N2O1XeH'41,[M]1+,,1\n" + // Made up values
+                "AMPP_FA,AMPP_14:0_1.04,C28H0N2O1XeH'0,[M]1+,,1,AMPP_14:0_precursor,C28H0N2O1XeH'0,[M]1+,,1\n" + // Made up values
+                "AMPP_FA,AMPP_19:0_1.04,C30N2O1XeH'45,[M]1+,,1,AMPP_19:0_precursor,C30N2O1XeH'45,[M]1+,,1\n"; // Made up values
+
+            SetClipboardText(text);
+            // Paste directly into targets area - no interaction expected
+            RunUI(() => SkylineWindow.Paste());
+            AssertEx.IsDocumentState(SkylineWindow.Document, null, 1, 5, 5, 5);
+            var docMolecules = SkylineWindow.Document.CustomMolecules.Select(mol => mol.CustomMolecule.Formula).ToArray();
+            AssertEx.AreEqual("C28H42N2O1Xe", docMolecules[0]);
+            AssertEx.AreEqual("C30H46N2O1Xe", docMolecules[1]);
+            AssertEx.AreEqual("C28H41N2OXe", docMolecules[2]);
+            AssertEx.AreEqual("C28N2O1Xe", docMolecules[3]);
+            AssertEx.AreEqual("C30N2OXeH45", docMolecules[4]); // We intentionally preserve nonstandard order
+            NewDocument();
+        }
+
         private void TestNegativeModeLabels()
         {
             // If bug is not fixed, the negative heavy does not appear in the document
@@ -1866,7 +1891,7 @@ namespace pwiz.SkylineTestFunctional
                     }
                 }
                 // Test serialization of explicit values
-                pastedDoc = AssertEx.Serializable(pastedDoc, TestDirectoryName, SkylineVersion.CURRENT); 
+                pastedDoc = AssertEx.Serializable(pastedDoc, TestContext.GetTestResultsPath(), SkylineVersion.CURRENT); 
             }
             NewDocument();
 
@@ -1875,7 +1900,7 @@ namespace pwiz.SkylineTestFunctional
         private void TestTransitionListOutput(SrmDocument importDoc, string outputName, string expectedName, ExportFileType fileType)
         {
             // Write out a transition list
-            string csvPath = TestContext.GetTestPath(outputName);
+            string csvPath = TestFilesDir.GetTestPath(outputName);
             string csvExpectedPath = TestFilesDir.GetTestPath(expectedName);
             // Open Export Method dialog, and set method to scheduled or standard.
             var exportMethodDlg =

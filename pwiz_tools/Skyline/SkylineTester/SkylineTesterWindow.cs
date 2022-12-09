@@ -559,7 +559,11 @@ namespace SkylineTester
             statusLabel.Text = status;
         }
 
+#if DEBUG
+        private bool _buildDebug = true;
+#else
         private bool _buildDebug;
+#endif
 
         public enum BuildDirs
         {
@@ -599,7 +603,7 @@ namespace SkylineTester
             CheckBuildDirExistence(buildDirs);
             if (buildDirs.All(dir => dir == null))
             {
-                _buildDebug = true;
+                _buildDebug = !_buildDebug;
                 buildDirs = GetPossibleBuildDirs();
                 CheckBuildDirExistence(buildDirs);
                 _buildDebug = buildDirs.Any(dir => dir != null);
@@ -871,13 +875,15 @@ namespace SkylineTester
 
             var testNumber = line.Substring(8, 7).Trim();
             var testName = line.Substring(16, 46).TrimEnd();
+            // Expecting:
+            // <time> <pass> <test-name> <language> [test-output]<failure-count> failures, <memory-counts> MB, <handle-counts> handles, <seconds> secs.
             var parts = Regex.Split(line, "\\s+");
-            var partsIndex = memoryGraphType ? 6 : 8;
+            var partsIndex = parts.Length - (memoryGraphType ? 6 : 4);
             var unitsIndex = partsIndex + 1;
             var units = memoryGraphType ? LABEL_UNITS_MEMORY : LABEL_UNITS_HANDLE;
             double minorMemory = 0, majorMemory = 0;
             double? middleMemory = null;
-            if (unitsIndex < parts.Length && parts[unitsIndex].Equals(units + ",", StringComparison.InvariantCultureIgnoreCase))
+            if (6 < parts.Length && parts[unitsIndex].Equals(units + ",", StringComparison.InvariantCultureIgnoreCase))
             {
                 try
                 {
@@ -1899,6 +1905,11 @@ namespace SkylineTester
         private void comboTestSet_SelectedValueChanged(object sender, EventArgs e)
         {
             StartBackgroundLoadTestSet();
+        }
+
+        private void buttonRunStatsExportCSV_Click(object sender, EventArgs e)
+        {
+            _tabRunStats.ExportCSV();
         }
 
         #endregion Control events

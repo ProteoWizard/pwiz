@@ -1311,6 +1311,12 @@ namespace pwiz.Skyline.Properties
                        };
         }
 
+        public void ResetDefaults()
+        {
+            Clear();
+            AddDefaults();
+        }
+
         public static readonly ToolDescription DEPRECATED_QUASAR = new ToolDescription(@"QuaSAR",
                                                                               @"http://genepattern.broadinstitute.org/gp/pages/index.jsf?lsid=QuaSAR",
                                                                               string.Empty);

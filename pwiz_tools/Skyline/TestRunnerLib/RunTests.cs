@@ -106,8 +106,9 @@ namespace TestRunnerLib
         private readonly StreamWriter _log;
         private readonly bool _showStatus;
         private readonly bool _buildMode;
+        private readonly bool _cleanupLevelAll;
 
-        public readonly TestContext TestContext;
+        public readonly TestRunnerContext TestContext;
         public CultureInfo Language = new CultureInfo("en-US");
         public long CheckCrtLeaks;
         public int FailureCount { get; private set; }
@@ -169,6 +170,13 @@ namespace TestRunnerLib
             _showStatus = showStatus;
             TestContext = new TestRunnerContext();
             SetTestDir(TestContext, results);
+            // Minimize disk use on TeamCity VMs by removing downloaded files
+            // during test clean-up
+            if (teamcityTestDecoration)
+            {
+                _cleanupLevelAll = true;
+                TestContext.Properties["DesiredCleanupLevel"] = "all";  // Must match DesiredCleanupLevel value
+            }
 
             // Set Skyline state for unit testing.
             Skyline = new InvokeSkyline();
@@ -268,7 +276,6 @@ namespace TestRunnerLib
             var saveCulture = Thread.CurrentThread.CurrentCulture;
             var saveUICulture = Thread.CurrentThread.CurrentUICulture;
             long crtLeakedBytes = 0;
-            var testResultsDir = Path.Combine(TestContext.TestDir, test.TestClassType.Name);
 
             var dumpFileName = string.Format("{0}.{1}_{2}_{3}_{4:yyyy_MM_dd__hh_mm_ss_tt}.dmp", pass, testNumber, test.TestMethod.Name, Language.TwoLetterISOLanguageName, DateTime.Now);
 
@@ -278,7 +285,7 @@ namespace TestRunnerLib
                 {
                     if (string.IsNullOrEmpty(dmpDir))
                     {
-                        dmpDir = Path.Combine(testResultsDir, "Minidumps");
+                        dmpDir = Path.Combine(TestContext.TestDir, test.TestMethod.Name, "Minidumps");
                         Log("[WARNING] No log path provided - using test results dir ({0})", dmpDir);
                     }
 
@@ -300,13 +307,13 @@ namespace TestRunnerLib
                 var testObject = Activator.CreateInstance(test.TestClassType);
 
                 // Set the TestContext.
+                TestContext.HasPassed = false;
                 TestContext.Properties["AccessInternet"] = AccessInternet.ToString();
                 TestContext.Properties["RunPerfTests"] = RunPerfTests.ToString();
                 TestContext.Properties["RetryDataDownloads"] = RetryDataDownloads.ToString();
                 TestContext.Properties["RunSmallMoleculeTestVersions"] = RunsSmallMoleculeVersions.ToString(); // Run the AsSmallMolecule version of tests when available?
                 TestContext.Properties["LiveReports"] = LiveReports.ToString();
                 TestContext.Properties["TestName"] = test.TestMethod.Name;
-                TestContext.Properties["TestRunResultsDirectory"] = testResultsDir;
                 TestContext.Properties["RecordAuditLogs"] = RecordAuditLogs.ToString();
 
                 if (test.SetTestContext != null)
@@ -320,6 +327,7 @@ namespace TestRunnerLib
                 LocalizationHelper.InitThread();
 
                 // Run the test and time it.
+                CleanUpTestDir();   // Attempt to cleanup first, in case something was left behind by a failing test
                 if (test.TestInitialize != null)
                     test.TestInitialize.Invoke(testObject, null);
 
@@ -336,8 +344,18 @@ namespace TestRunnerLib
                     //crtLeakedBytes = CrtDebugHeap.DumpLeaks(true);
                 }
 
+                // Need to set the test outcome to passed or it won't get set which impacts cleanup
+                TestContext.HasPassed = true;
                 if (test.TestCleanup != null)
                     test.TestCleanup.Invoke(testObject, null);
+
+                // If everything is supposed to be cleaned up, then check for any left over files
+                var allEntries = CleanUpTestDir();
+                if (allEntries.Count > 0)
+                {
+                    allEntries.Insert(0, string.Format("The test {0} left files in the test folder:", test.TestMethod.Name));
+                    throw new IOException(string.Join("\r\n", allEntries));
+                }
             }
             catch (Exception e)
             {
@@ -465,7 +483,9 @@ namespace TestRunnerLib
 
             TeamCityFinishTest(test, message + '\n' + stackTrace);
 
-            Log("{0,3} failures, {1:F2}/{2:F2}/{3:F1} MB, {4}/{5} handles, {6} sec.\r\n\r\n!!! {7} FAILED\r\n{8}\r\n{9}\r\n!!!\r\n\r\n",
+            Log(ReportSystemHeaps
+                    ? "{0,3} failures, {1:F2}/{2:F2}/{3:F1} MB, {4}/{5} handles, {6} sec.\r\n\r\n!!! {7} FAILED\r\n{8}\r\n{9}\r\n!!!\r\n\r\n"
+                    : "{0,3} failures, {1:F2}/{3:F1} MB, {4}/{5} handles, {6} sec.\r\n\r\n!!! {7} FAILED\r\n{8}\r\n{9}\r\n!!!\r\n\r\n",
                 FailureCount,
                 ManagedMemory,
                 CommittedMemory,
@@ -477,6 +497,36 @@ namespace TestRunnerLib
                 message,
                 exception);
             return false;
+        }
+
+        /// <summary>
+        /// Resets the test directory to empty when cleanupLevel is 'all'.
+        /// </summary>
+        /// <returns>A list of the entries, if any, that were removed</returns>
+        private List<string> CleanUpTestDir()
+        {
+            var allEntries = new List<string>();
+            // If everything is supposed to be cleaned up, then check for any left over files
+            if (_cleanupLevelAll && Directory.Exists(TestContext.TestDir))
+            {
+                allEntries.AddRange(Directory.EnumerateFileSystemEntries(TestContext.TestDir));
+                if (allEntries.Count > 0)
+                {
+                    // If the folder is not empty, attempt to get rid of everything
+                    // and recreate the folder.
+                    try
+                    {
+                        Directory.Delete(TestContext.TestDir, true);
+                        Directory.CreateDirectory(TestContext.TestDir);
+                    }
+                    catch (Exception)
+                    {
+                        // Do nothing
+                    }
+                }
+            }
+
+            return allEntries;
         }
 
         public class LeakingTest
@@ -968,7 +1018,7 @@ namespace TestRunnerLib
 
             p?.WaitForExit();
             if (p == null || p.ExitCode != 0)
-                throw new InvalidOperationException($"{message}\r\n\r\nDetails:\r\n'{command} {args}' returned an error ({output});");
+                throw new InvalidOperationException($"{message}\r\n\r\nDetails:\r\n'{command} {args}' returned an error ({output.ToString().Trim()});");
              
             return output.ToString();
         }
@@ -979,8 +1029,8 @@ namespace TestRunnerLib
                                                         GETTING_PARALLEL_TESTING_WORKING;
 
         public const string GETTING_PARALLEL_TESTING_WORKING =
-            "See the Skyline developer site to get parallel testing working with Skyline: " +
-            "https://skyline.ms/wiki/home/development/page.view?name=Running%20tests%20in%20parallel%20with%20Docker";
+            "See the parallelmode wiki page for setup information on parallel testing for Skyline: " +
+            "https://skyline.ms/parallelmode.url";
 
         public static string ALWAYS_UP_RUNNER_REPO => Path.Combine(PathEx.GetDownloadsPath(), @"AlwaysUpRunner-master");
         public static string ALWAYS_UP_SERVICE_EXE => Path.Combine(ALWAYS_UP_RUNNER_REPO, @"AlwaysUpService.exe");

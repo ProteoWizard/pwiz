@@ -2025,6 +2025,15 @@ namespace pwiz.Skyline.Properties {
         }
         
         /// <summary>
+        ///   Looks up a localized string similar to An error occurred during protein association..
+        /// </summary>
+        public static string AssociateProteinsDlg_UseFastaFile_An_error_occurred_during_protein_association_ {
+            get {
+                return ResourceManager.GetString("AssociateProteinsDlg_UseFastaFile_An_error_occurred_during_protein_association_", resourceCulture);
+            }
+        }
+        
+        /// <summary>
         ///   Looks up a localized string similar to There was an error reading from the file..
         /// </summary>
         public static string AssociateProteinsDlg_UseFastaFile_There_was_an_error_reading_from_the_file_ {
@@ -3215,26 +3224,6 @@ namespace pwiz.Skyline.Properties {
         public static string BuildLibraryGridView_OnRowPrepaint_Error_getting_score_type_for_this_file_ {
             get {
                 return ResourceManager.GetString("BuildLibraryGridView_OnRowPrepaint_Error_getting_score_type_for_this_file_", resourceCulture);
-            }
-        }
-        
-        /// <summary>
-        ///   Looks up a localized string similar to Score threshold maximum (score is probability that identification is incorrect)..
-        /// </summary>
-        public static string BuildLibraryGridView_OnRowPrepaint_Score_threshold_maximum__score_is_probability_that_identification_is_incorrect__ {
-            get {
-                return ResourceManager.GetString("BuildLibraryGridView_OnRowPrepaint_Score_threshold_maximum__score_is_probability_" +
-                        "that_identification_is_incorrect__", resourceCulture);
-            }
-        }
-        
-        /// <summary>
-        ///   Looks up a localized string similar to Score threshold minimum (score is probability that identification is correct)..
-        /// </summary>
-        public static string BuildLibraryGridView_OnRowPrepaint_Score_threshold_minimum__score_is_probability_that_identification_is_correct__ {
-            get {
-                return ResourceManager.GetString("BuildLibraryGridView_OnRowPrepaint_Score_threshold_minimum__score_is_probability_" +
-                        "that_identification_is_correct__", resourceCulture);
             }
         }
         
@@ -4778,6 +4767,24 @@ namespace pwiz.Skyline.Properties {
         }
         
         /// <summary>
+        ///   Looks up a localized string similar to :.
+        /// </summary>
+        public static string ColonEndOfLine {
+            get {
+                return ResourceManager.GetString("ColonEndOfLine", resourceCulture);
+            }
+        }
+        
+        /// <summary>
+        ///   Looks up a localized string similar to {0}: {1}.
+        /// </summary>
+        public static string ColonSeparator {
+            get {
+                return ResourceManager.GetString("ColonSeparator", resourceCulture);
+            }
+        }
+        
+        /// <summary>
         ///   Looks up a localized string similar to Skyline classic.
         /// </summary>
         public static string ColorSchemeList_DEFAULT_Skyline_classic {
@@ -6225,6 +6232,15 @@ namespace pwiz.Skyline.Properties {
         public static string CommandLine_ImportSkyr_Error___0__does_not_exist____report_add_command_failed_ {
             get {
                 return ResourceManager.GetString("CommandLine_ImportSkyr_Error___0__does_not_exist____report_add_command_failed_", resourceCulture);
+            }
+        }
+        
+        /// <summary>
+        ///   Looks up a localized string similar to Error: Reports could not be imported from {0}.
+        /// </summary>
+        public static string CommandLine_ImportSkyr_Error__Reports_could_not_be_imported_from__0_ {
+            get {
+                return ResourceManager.GetString("CommandLine_ImportSkyr_Error__Reports_could_not_be_imported_from__0_", resourceCulture);
             }
         }
         
@@ -12770,6 +12786,15 @@ namespace pwiz.Skyline.Properties {
         }
         
         /// <summary>
+        ///   Looks up a localized string similar to Accumulation time (sec):.
+        /// </summary>
+        public static string ExportMethodDlg_ACCUMULATION_TIME_TXT {
+            get {
+                return ResourceManager.GetString("ExportMethodDlg_ACCUMULATION_TIME_TXT", resourceCulture);
+            }
+        }
+        
+        /// <summary>
         ///   Looks up a localized string similar to {0} Method.
         /// </summary>
         public static string ExportMethodDlg_btnBrowseTemplate_Click__0__Method {
@@ -14853,6 +14878,15 @@ namespace pwiz.Skyline.Properties {
             get {
                 object obj = ResourceManager.GetObject("FragmentLibDecoy", resourceCulture);
                 return ((System.Drawing.Bitmap)(obj));
+            }
+        }
+        
+        /// <summary>
+        ///   Looks up a localized string similar to Include by default.
+        /// </summary>
+        public static string FragmentLoss_ItemDescription_Include_by_default {
+            get {
+                return ResourceManager.GetString("FragmentLoss_ItemDescription_Include_by_default", resourceCulture);
             }
         }
         
@@ -18469,6 +18503,15 @@ namespace pwiz.Skyline.Properties {
         public static string LibrarySpec_CreateFromPath_Unrecognized_library_type_at__0_ {
             get {
                 return ResourceManager.GetString("LibrarySpec_CreateFromPath_Unrecognized_library_type_at__0_", resourceCulture);
+            }
+        }
+        
+        /// <summary>
+        ///   Looks up a localized string similar to Ignore explicit peak boundaries.
+        /// </summary>
+        public static string LibrarySpec_ItemDescription_Ignore_explicit_peak_boundaries {
+            get {
+                return ResourceManager.GetString("LibrarySpec_ItemDescription_Ignore_explicit_peak_boundaries", resourceCulture);
             }
         }
         
@@ -23901,6 +23944,15 @@ namespace pwiz.Skyline.Properties {
         }
         
         /// <summary>
+        ///   Looks up a localized string similar to Failed loading MIDAS library {0}..
+        /// </summary>
+        public static string PeptideSettingsUI_ShowFilterMidasDlg_Failed_loading_MIDAS_library__0__ {
+            get {
+                return ResourceManager.GetString("PeptideSettingsUI_ShowFilterMidasDlg_Failed_loading_MIDAS_library__0__", resourceCulture);
+            }
+        }
+        
+        /// <summary>
         ///   Looks up a localized string similar to Loading {0}.
         /// </summary>
         public static string PeptideSettingsUI_ShowFilterMidasDlg_Loading__0_ {
@@ -27314,6 +27366,16 @@ namespace pwiz.Skyline.Properties {
         }
         
         /// <summary>
+        ///   Looks up a localized string similar to Invalid instrument type for SCIEX OS method export..
+        /// </summary>
+        public static string SciexOsMethodExporter_SciexOsMethodExporter_Invalid_instrument_type_for_SCIEX_OS_method_export_ {
+            get {
+                return ResourceManager.GetString("SciexOsMethodExporter_SciexOsMethodExporter_Invalid_instrument_type_for_SCIEX_OS_" +
+                        "method_export_", resourceCulture);
+            }
+        }
+        
+        /// <summary>
         ///   Looks up a localized string similar to Additional Settings.
         /// </summary>
         public static string SearchSettingsControl_Additional_Settings {
@@ -27945,87 +28007,6 @@ namespace pwiz.Skyline.Properties {
         }
         
         /// <summary>
-        ///   Looks up a localized string similar to Skyline 19.1.
-        /// </summary>
-        public static string SkylineVersion_V19_1_Skyline_19_1 {
-            get {
-                return ResourceManager.GetString("SkylineVersion_V19_1_Skyline_19_1", resourceCulture);
-            }
-        }
-        
-        /// <summary>
-        ///   Looks up a localized string similar to Skyline 20.1.
-        /// </summary>
-        public static string SkylineVersion_V20_1_Skyline_20_1 {
-            get {
-                return ResourceManager.GetString("SkylineVersion_V20_1_Skyline_20_1", resourceCulture);
-            }
-        }
-        
-        /// <summary>
-        ///   Looks up a localized string similar to Skyline 20.2.
-        /// </summary>
-        public static string SkylineVersion_V20_2_Skyline_20_2 {
-            get {
-                return ResourceManager.GetString("SkylineVersion_V20_2_Skyline_20_2", resourceCulture);
-            }
-        }
-        
-        /// <summary>
-        ///   Looks up a localized string similar to Skyline 21.1.
-        /// </summary>
-        public static string SkylineVersion_V21_1_Skyline_21_1 {
-            get {
-                return ResourceManager.GetString("SkylineVersion_V21_1_Skyline_21_1", resourceCulture);
-            }
-        }
-        
-        /// <summary>
-        ///   Looks up a localized string similar to Skyline 21.2.
-        /// </summary>
-        public static string SkylineVersion_V21_2_Skyline_21_2 {
-            get {
-                return ResourceManager.GetString("SkylineVersion_V21_2_Skyline_21_2", resourceCulture);
-            }
-        }
-        
-        /// <summary>
-        ///   Looks up a localized string similar to Skyline 3.6.
-        /// </summary>
-        public static string SkylineVersion_V3_6_Skyline_3_6 {
-            get {
-                return ResourceManager.GetString("SkylineVersion_V3_6_Skyline_3_6", resourceCulture);
-            }
-        }
-        
-        /// <summary>
-        ///   Looks up a localized string similar to Skyline 3.7.
-        /// </summary>
-        public static string SkylineVersion_V3_7_Skyline_3_7 {
-            get {
-                return ResourceManager.GetString("SkylineVersion_V3_7_Skyline_3_7", resourceCulture);
-            }
-        }
-        
-        /// <summary>
-        ///   Looks up a localized string similar to Skyline 4.1.
-        /// </summary>
-        public static string SkylineVersion_V4_1_Skyline_4_1 {
-            get {
-                return ResourceManager.GetString("SkylineVersion_V4_1_Skyline_4_1", resourceCulture);
-            }
-        }
-        
-        /// <summary>
-        ///   Looks up a localized string similar to Skyline 4.2.
-        /// </summary>
-        public static string SkylineVersion_V4_2_Skyline_4_2 {
-            get {
-                return ResourceManager.GetString("SkylineVersion_V4_2_Skyline_4_2", resourceCulture);
-            }
-        }
-        
-        /// <summary>
         ///   Looks up a localized string similar to Change Document Reports.
         /// </summary>
         public static string SkylineViewContext_ChangeDocumentViewSpec_Change_Document_Reports {
@@ -28303,15 +28284,6 @@ namespace pwiz.Skyline.Properties {
         public static string SkylineWindow_ApplyPeak_Failed_to_apply_peak_ {
             get {
                 return ResourceManager.GetString("SkylineWindow_ApplyPeak_Failed_to_apply_peak_", resourceCulture);
-            }
-        }
-        
-        /// <summary>
-        ///   Looks up a localized string similar to No results found for the precursor {0} in the file {1}..
-        /// </summary>
-        public static string SkylineWindow_ApplyPeak_No_results_found_for_the_precursor__0__in_the_file__1__ {
-            get {
-                return ResourceManager.GetString("SkylineWindow_ApplyPeak_No_results_found_for_the_precursor__0__in_the_file__1__", resourceCulture);
             }
         }
         
@@ -32155,6 +32127,96 @@ namespace pwiz.Skyline.Properties {
         }
         
         /// <summary>
+        ///   Looks up a localized string similar to ({0} Da).
+        /// </summary>
+        public static string StaticMod_FormatFormulaOrMass___0__Da_ {
+            get {
+                return ResourceManager.GetString("StaticMod_FormatFormulaOrMass___0__Da_", resourceCulture);
+            }
+        }
+        
+        /// <summary>
+        ///   Looks up a localized string similar to Mass.
+        /// </summary>
+        public static string StaticMod_FormatMass_Mass {
+            get {
+                return ResourceManager.GetString("StaticMod_FormatMass_Mass", resourceCulture);
+            }
+        }
+        
+        /// <summary>
+        ///   Looks up a localized string similar to Unknown mass.
+        /// </summary>
+        public static string StaticMod_FormatMass_Unknown_mass {
+            get {
+                return ResourceManager.GetString("StaticMod_FormatMass_Unknown_mass", resourceCulture);
+            }
+        }
+        
+        /// <summary>
+        ///   Looks up a localized string similar to {0} losses.
+        /// </summary>
+        public static string StaticMod_ItemDescription__0__losses {
+            get {
+                return ResourceManager.GetString("StaticMod_ItemDescription__0__losses", resourceCulture);
+            }
+        }
+        
+        /// <summary>
+        ///   Looks up a localized string similar to {0} neutral losses.
+        /// </summary>
+        public static string StaticMod_ItemDescription__0__neutral_losses {
+            get {
+                return ResourceManager.GetString("StaticMod_ItemDescription__0__neutral_losses", resourceCulture);
+            }
+        }
+        
+        /// <summary>
+        ///   Looks up a localized string similar to Empty.
+        /// </summary>
+        public static string StaticMod_ItemDescription_Empty {
+            get {
+                return ResourceManager.GetString("StaticMod_ItemDescription_Empty", resourceCulture);
+            }
+        }
+        
+        /// <summary>
+        ///   Looks up a localized string similar to Loss.
+        /// </summary>
+        public static string StaticMod_ItemDescription_Loss {
+            get {
+                return ResourceManager.GetString("StaticMod_ItemDescription_Loss", resourceCulture);
+            }
+        }
+        
+        /// <summary>
+        ///   Looks up a localized string similar to Losses.
+        /// </summary>
+        public static string StaticMod_ItemDescription_Losses {
+            get {
+                return ResourceManager.GetString("StaticMod_ItemDescription_Losses", resourceCulture);
+            }
+        }
+        
+        /// <summary>
+        ///   Looks up a localized string similar to Neutral loss.
+        /// </summary>
+        public static string StaticMod_ItemDescription_Neutral_loss {
+            get {
+                return ResourceManager.GetString("StaticMod_ItemDescription_Neutral_loss", resourceCulture);
+            }
+        }
+        
+        /// <summary>
+        ///   Looks up a localized string similar to Neutral losses.
+        /// </summary>
+        public static string StaticMod_ItemDescription_Neutral_losses {
+            get {
+                return ResourceManager.GetString("StaticMod_ItemDescription_Neutral_losses", resourceCulture);
+            }
+        }
+        
+        /// <summary>
         ///   Looks up a localized string similar to Invalid terminus &apos;{0}&apos;..
         /// </summary>
         public static string StaticMod_ToModTerminus_Invalid_terminus__0__ {
@@ -33011,11 +33073,38 @@ namespace pwiz.Skyline.Properties {
         }
         
         /// <summary>
+        ///   Looks up a localized string similar to Unsupported element {0}.
+        /// </summary>
+        public static string ToolService_DeleteElementsNow_Unsupported_element__0_ {
+            get {
+                return ResourceManager.GetString("ToolService_DeleteElementsNow_Unsupported_element__0_", resourceCulture);
+            }
+        }
+        
+        /// <summary>
+        ///   Looks up a localized string similar to Unsupported element type &apos;{0}&apos;.
+        /// </summary>
+        public static string ToolService_GetSelectedElementRefNow_Unsupported_element_type___0__ {
+            get {
+                return ResourceManager.GetString("ToolService_GetSelectedElementRefNow_Unsupported_element_type___0__", resourceCulture);
+            }
+        }
+        
+        /// <summary>
         ///   Looks up a localized string similar to Insert proteins.
         /// </summary>
         public static string ToolService_ImportFasta_Insert_proteins {
             get {
                 return ResourceManager.GetString("ToolService_ImportFasta_Insert_proteins", resourceCulture);
+            }
+        }
+        
+        /// <summary>
+        ///   Looks up a localized string similar to Import Properties from external tool.
+        /// </summary>
+        public static string ToolService_ImportProperties_Import_Properties_from_external_tool {
+            get {
+                return ResourceManager.GetString("ToolService_ImportProperties_Import_Properties_from_external_tool", resourceCulture);
             }
         }
         

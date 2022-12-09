@@ -590,6 +590,53 @@ namespace pwiz.Skyline.Util
         }
 
         /// <summary>
+        /// Remove, if necessary, any weirdness like "H0" (zero hydrogens) in a formula, preserving other less offensive idiosyncrasies like N1 instead of N
+        /// e.g. XeC12N001H0 => XeC12N1
+        /// Preserve things like COOOH instead of making it CO3H, e.g. COOOHN1S0 =>  COOOHN1 or COOOHNS0 =>  COOOHN
+        /// </summary>
+        /// <param name="desc">the formula</param>
+        /// <returns>the tidied up formula</returns>
+        public string RegularizeFormula(string desc)
+        {
+            if (string.IsNullOrEmpty(desc))
+            {
+                return desc;
+            }
+            desc = desc.Trim();
+            var atomCounts = new List<KeyValuePair<string, string>>();
+            while (desc.Length > 0)
+            {
+                var atom = NextSymbol(desc);
+                desc = desc.Substring(atom.Length);
+
+                var nDigits = 0; // Looking for an explicit atom count declaration
+                while (nDigits < desc.Length && char.IsDigit(desc[nDigits]))
+                {
+                    nDigits++;
+                }
+
+                var atomCount = 1;
+                var atomCountString = "";
+                if (nDigits > 0) // There was an explicit count declaration
+                {
+                    atomCount = int.Parse(desc.Substring(0, nDigits), CultureInfo.InvariantCulture);
+                    atomCountString = atomCount.ToString(CultureInfo.InvariantCulture); // Change "H01" to "H1"
+                }
+
+                if (atomCount != 0) // Drop "H0"
+                {
+                    atomCounts.Add(new KeyValuePair<string, string> (atom, atomCountString));
+                }
+
+                desc = desc.Substring(nDigits).TrimStart();
+            }
+
+            return string.Concat(atomCounts.Select(atomCount =>
+                $@"{atomCount.Key}{atomCount.Value}"));
+
+        }
+
+        /// <summary>
         /// Turn a formula like C5H9H'3NO2S into C5H12NO2S
         /// </summary>
         public string StripLabelsFromFormula(string desc)
@@ -640,13 +687,14 @@ namespace pwiz.Skyline.Util
             }
             return string.Concat(atomOrder.Select(atom =>
             {
-                var atomCount = dictAtomCounts[atom];
-                return atomCount > 1 ? $@"{atom}{atomCount.ToString(CultureInfo.InvariantCulture)}" : atom;
+                return dictAtomCounts.TryGetValue(atom, out var atomCount) && atomCount != 0 ? // We have seen things like C30H46N2O1XeH'0 in the wild - H' won't be in dictAtomCounts
+                    (atomCount > 1 ? $@"{atom}{atomCount.ToString(CultureInfo.InvariantCulture)}" : atom) :
+                    string.Empty;
             })); 
         }
 
         /// <summary>
-        /// Find the C'3H'3 in  C'3C2H9H'3NO2S
+        /// Find the C'3O"2 in  C'3C2H9H'0NO2O"2S (yes, H'0 - seen in the wild - but drop zero counts)
         /// </summary>
         public IDictionary<string, int> FindIsotopeLabelsInFormula(string desc)
         {

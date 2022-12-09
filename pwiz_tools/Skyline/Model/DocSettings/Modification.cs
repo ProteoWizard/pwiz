@@ -27,8 +27,10 @@ using pwiz.Common.Collections;
 using pwiz.Common.SystemUtil;
 using pwiz.Skyline.Model.AuditLog;
 using pwiz.Skyline.Model.Crosslinking;
+using pwiz.Skyline.Model.Hibernate;
 using pwiz.Skyline.Properties;
 using pwiz.Skyline.Util;
+using pwiz.Skyline.Util.Extensions;
 
 namespace pwiz.Skyline.Model.DocSettings
 {
@@ -87,13 +89,22 @@ namespace pwiz.Skyline.Model.DocSettings
 
 // ReSharper restore InconsistentNaming
 
+    public class DefaultValuesRelativeRtMatching : DefaultValues
+    {
+        protected override IEnumerable<object> _values
+        {
+            get { yield return RelativeRT.Matching; }
+        }
+    }
+
+
     /// <summary>
     /// Represents a document-wide  or explicit static modification that applies
     /// to all amino acids of a specific type or a single amino acid, or all peptides in the
     /// case of C-terminal or N-terminal modifications.
     /// </summary>
     [XmlRoot("static_modification")]
-    public sealed class StaticMod : XmlNamedElement, IAuditLogComparable
+    public sealed class StaticMod : XmlNamedElement, IAuditLogComparable, IHasItemDescription
     {
         private ImmutableList<FragmentLoss> _losses;
         public static StaticMod EMPTY = new StaticMod();
@@ -244,6 +255,7 @@ namespace pwiz.Skyline.Model.DocSettings
             }
         }
 
+        [Track(defaultValues: typeof(DefaultValuesRelativeRtMatching))]
         public RelativeRT RelativeRT { get; private set; }
 
         [TrackChildren]
@@ -377,6 +389,193 @@ namespace pwiz.Skyline.Model.DocSettings
             }
 
             return new MoleculeMassOffset(Molecule.ParseExpression(Formula), 0, 0);
+        }
+
+        public ItemDescription ItemDescription
+        {
+            get
+            {
+                var lines = new List<string>();
+                if (!string.IsNullOrEmpty(AAs))
+                {
+                    lines.Add(TextUtil.ColonSeparate(PropertyNames.StaticMod_AAs, AAs));
+                }
+
+                if (Terminus != null)
+                {
+                    lines.Add(TextUtil.ColonSeparate(PropertyNames.StaticMod_Terminus, Terminus.ToString()));
+                }
+
+                // TODO: "Variable" is only interesting to include in the description if the modification is
+                // also implicit, which this object does not know
+                // if (IsVariable)
+                // {
+                //     lines.Add(PropertyNames.StaticMod_IsVariable);
+                // }
+
+                if (IsCrosslinker)
+                {
+                    lines.Add(PropertyNames.StaticMod_IsCrosslinker);
+                }
+
+                var labelDescriptions = new List<string>();
+                if (Label2H)
+                {
+                    labelDescriptions.Add(PropertyNames.StaticMod_Label2H);
+                }
+
+                if (Label13C)
+                {
+                    labelDescriptions.Add(PropertyNames.StaticMod_Label13C);
+                }
+
+                if (Label15N)
+                {
+                    labelDescriptions.Add(PropertyNames.StaticMod_Label15N);
+                }
+
+                if (Label18O)
+                {
+                    labelDescriptions.Add(PropertyNames.StaticMod_Label18O);
+                }
+
+                if (Label32P)
+                {
+                    labelDescriptions.Add(PropertyNames.StaticMod_Label32P);
+                }
+
+                if (Label34S)
+                {
+                    labelDescriptions.Add(PropertyNames.StaticMod_Label32P);
+                }
+
+                if (Label37Cl)
+                {
+                    labelDescriptions.Add(PropertyNames.StaticMod_Label37Cl);
+                }
+
+                if (Label81Br)
+                {
+                    labelDescriptions.Add(PropertyNames.StaticMod_Label81Br);
+                }
+
+                string summary = null;
+                if (labelDescriptions.Any())
+                {
+                    lines.Add(summary = TextUtil.SpaceSeparate(labelDescriptions));
+                }
+                else
+                {
+                    if (HasMod || !HasLoss)
+                    {
+                        lines.Add(summary = FormatFormulaOrMass(Formula, MonoisotopicMass, AverageMass));
+                    }
+                }
+
+                if (RelativeRT != RelativeRT.Matching)
+                {
+                    lines.Add(TextUtil.ColonSeparate(PropertyNames.StaticMod_RelativeRT, RelativeRT.GetLocalizedString()));
+                }
+
+                if (Losses?.Count > 0)
+                {
+                    if (Losses.Count == 1)
+                    {
+                        string lossDescription;
+                        if (Losses[0].Charge == 0)
+                        {
+                            lossDescription = TextUtil.ColonSeparate(Resources.StaticMod_ItemDescription_Neutral_loss, Losses[0].ItemDescription.Summary);
+                        }
+                        else
+                        {
+                            lossDescription = TextUtil.ColonSeparate(Resources.StaticMod_ItemDescription_Loss, Losses[0].ItemDescription.Summary);
+                        }
+
+                        lines.Add(lossDescription);
+                        summary ??= lossDescription;
+                    }
+                    else
+                    {
+                        if (Losses.All(loss => loss.Charge == 0))
+                        {
+                            lines.Add(TextUtil.AppendColon(Resources.StaticMod_ItemDescription_Neutral_losses));
+                            summary ??= string.Format(Resources.StaticMod_ItemDescription__0__neutral_losses, Losses.Count);
+                        }
+                        else
+                        {
+                            lines.Add(TextUtil.AppendColon(Resources.StaticMod_ItemDescription_Losses));
+                            summary ??= string.Format(Resources.StaticMod_ItemDescription__0__losses, Losses.Count);
+                        }
+
+                        const string indent = @"    ";
+                        foreach (var fragmentLoss in Losses)
+                        {
+                            lines.Add(indent + fragmentLoss.ItemDescription.Summary);
+                        }
+                    }
+                }
+
+                summary ??= Resources.StaticMod_ItemDescription_Empty;
+                return new ItemDescription(summary).ChangeTitle(Name).ChangeDetailLines(lines);
+            }
+        }
+
+        /// <summary>
+        /// If the formula is not blank, return the formula followed by the mono mass in parentheses formatted to one decimal place.
+        /// For example: H2O (-18)
+        /// If the formula is blank then return <see cref="FormatMass"/>
+        /// </summary>
+        public static string FormatFormulaOrMass(string formula, double? monoMass, double? averageMass)
+        {
+            if (!string.IsNullOrEmpty(formula))
+            {
+                var parts = new List<string> { formula };
+                if (monoMass.HasValue)
+                {
+                    var massString = monoMass.Value.ToString(@"0.#");
+                    if (monoMass.Value > 0)
+                    {
+                        massString = @"+" + massString;
+                    }
+
+                    parts.Add(string.Format(Resources.StaticMod_FormatFormulaOrMass___0__Da_, massString));
+                }
+
+                return TextUtil.SpaceSeparate(parts);
+            }
+
+            return FormatMass(monoMass, averageMass);
+        }
+
+        /// <summary>
+        /// If the mono and average masses are the same then return "Mass: &lt;mass>".
+        /// Otherwise return something saying what the mono and average masses are.
+        /// </summary>
+        public static string FormatMass(double? monoMass, double? averageMass)
+        {
+            var massDescriptions = new List<string>();
+            if (monoMass.HasValue)
+            {
+                if (Equals(monoMass, averageMass))
+                {
+                    return TextUtil.ColonSeparate(Resources.StaticMod_FormatMass_Mass, monoMass.Value.ToString(Formats.RoundTrip));
+                }
+                massDescriptions.Add(TextUtil.ColonSeparate(PropertyNames.StaticMod_MonoisotopicMass,
+                    monoMass.Value.ToString(Formats.RoundTrip)));
+            }
+
+            if (averageMass.HasValue)
+            {
+                massDescriptions.Add(TextUtil.ColonSeparate(PropertyNames.StaticMod_AverageMass, averageMass.Value.ToString(Formats.RoundTrip)));
+            }
+
+            if (massDescriptions.Any())
+            {
+                return TextUtil.SpaceSeparate(massDescriptions);
+            }
+
+            // Should not happen
+            return Resources.StaticMod_FormatMass_Unknown_mass;
         }
 
         #region Property change methods
@@ -1096,6 +1295,17 @@ namespace pwiz.Skyline.Model.DocSettings
             return ChangeProp(ImClone(explicitMods), im => im.CrosslinkStructure = crosslinks);
         }
 
+        private ExplicitMods UpdateCrosslinkStructure(SrmSettings settingsNew)
+        {
+            var newCrosslinkStructure = CrosslinkStructure.ChangeGlobalMods(settingsNew);
+            if (ReferenceEquals(newCrosslinkStructure, CrosslinkStructure))
+            {
+                return this;
+            }
+
+            return ChangeCrosslinkStructure(newCrosslinkStructure);
+        }
+
         public bool HasCrosslinks
         {
             get { return !CrosslinkStructure.IsEmpty; }
@@ -1164,7 +1374,8 @@ namespace pwiz.Skyline.Model.DocSettings
             }
             heavyMods = heavyModsList ?? heavyMods ?? new StaticMod[0];
             return ChangeGlobalMods(modSettings.StaticModifications, heavyMods,
-                modSettings.GetHeavyModificationTypes().ToArray());
+                    modSettings.GetHeavyModificationTypes().ToArray())
+                ?.UpdateCrosslinkStructure(settingsNew);
         }
 
         public ExplicitMods ChangeGlobalMods(IList<StaticMod> staticMods, IList<StaticMod> heavyMods,
@@ -1199,7 +1410,7 @@ namespace pwiz.Skyline.Model.DocSettings
 
             if (ArrayUtil.ReferencesEqual(modifications, _modifications))
                 return this;
-            if (modifications.Count == 0)
+            if (modifications.Count == 0 && CrosslinkStructure.IsEmpty)
                 return null;
             return ChangeProp(ImClone(this), im =>
             {

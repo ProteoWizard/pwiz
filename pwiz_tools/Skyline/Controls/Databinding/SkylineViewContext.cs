@@ -16,6 +16,7 @@
  * See the License for the specific language governing permissions and
  * limitations under the License.
  */
+
 using System;
 using System.Collections.Generic;
 using System.ComponentModel;
@@ -33,16 +34,18 @@ using pwiz.Common.DataBinding.Controls.Editor;
 using pwiz.Common.DataBinding.Layout;
 using pwiz.Common.SystemUtil;
 using pwiz.Skyline.Alerts;
-using pwiz.Skyline.Controls;
+using pwiz.Skyline.Controls.Databinding.RowActions;
+using pwiz.Skyline.Model;
 using pwiz.Skyline.Model.AuditLog;
+using pwiz.Skyline.Model.Databinding;
 using pwiz.Skyline.Model.Databinding.Collections;
 using pwiz.Skyline.Model.Databinding.Entities;
-using pwiz.Skyline.Model.Databinding.RowActions;
 using pwiz.Skyline.Model.Hibernate;
 using pwiz.Skyline.Properties;
 using pwiz.Skyline.Util;
 using pwiz.Skyline.Util.Extensions;
-namespace pwiz.Skyline.Model.Databinding
+
+namespace pwiz.Skyline.Controls.Databinding
 {
     public class SkylineViewContext : AbstractViewContext
     {
@@ -358,6 +361,13 @@ namespace pwiz.Skyline.Model.Databinding
             using (var bindingListSource = new BindingListSource(cancellationToken))
             {
                 bindingListSource.SetViewContext(this, viewInfo);
+                if (viewLayout != null)
+                {
+                    foreach (var column in viewLayout.ColumnFormats)
+                    {
+                        bindingListSource.ColumnFormats.SetFormat(column.Item1, column.Item2);
+                    }
+                }
                 progressMonitor.UpdateProgress(status = status.ChangePercentComplete(5)
                     .ChangeMessage(Resources.ExportReportDlg_ExportReport_Writing_report));
 
@@ -472,9 +482,9 @@ namespace pwiz.Skyline.Model.Databinding
                     }
                     addRoot = true;
                 }
-                else if (columnDescriptor.PropertyType == typeof(Entities.Peptide))
+                else if (columnDescriptor.PropertyType == typeof(Model.Databinding.Entities.Peptide))
                 {
-                    columnsToRemove.Add(PropertyPath.Root.Property(nameof(Entities.Peptide.AutoSelectPrecursors)));
+                    columnsToRemove.Add(PropertyPath.Root.Property(nameof(Model.Databinding.Entities.Peptide.AutoSelectPrecursors)));
                     columnsToRemove.Add(PropertyPath.Root.Property("Sequence"));
                     columnsToRemove.Add(PropertyPath.Root.Property("SequenceLength"));
                     columnsToRemove.Add(PropertyPath.Root.Property("PreviousAa"));
@@ -486,16 +496,16 @@ namespace pwiz.Skyline.Model.Databinding
                     columnsToRemove.Add(PropertyPath.Root.Property("CalibrationCurve"));
                     columnsToRemove.Add(PropertyPath.Root.Property("FiguresOfMerit"));
                     columnsToRemove.Add(PropertyPath.Root.Property("NormalizationMethod"));
-                    columnsToRemove.Add(PropertyPath.Root.Property(nameof(Entities.Peptide.AutoSelectPrecursors)));
-                    columnsToRemove.Add(PropertyPath.Root.Property(nameof(Entities.Peptide.AttributeGroupId)));
+                    columnsToRemove.Add(PropertyPath.Root.Property(nameof(Model.Databinding.Entities.Peptide.AutoSelectPrecursors)));
+                    columnsToRemove.Add(PropertyPath.Root.Property(nameof(Model.Databinding.Entities.Peptide.AttributeGroupId)));
                     foreach (var prop in MoleculeAccessionNumbers.PREFERRED_ACCESSION_TYPE_ORDER)
                         columnsToRemove.Add(PropertyPath.Root.Property(prop)); // By default don't show CAS, InChI etc
                     if (docHasOnlyCustomIons)
                     {
                         // Peptide-oriented fields that make no sense in a small molecule context
                         columnsToRemove.Add(PropertyPath.Root.Property("ModifiedSequence"));
-                        columnsToRemove.Add(PropertyPath.Root.Property(nameof(Entities.Peptide.FirstPosition)));
-                        columnsToRemove.Add(PropertyPath.Root.Property(nameof(Entities.Peptide.LastPosition)));
+                        columnsToRemove.Add(PropertyPath.Root.Property(nameof(Model.Databinding.Entities.Peptide.FirstPosition)));
+                        columnsToRemove.Add(PropertyPath.Root.Property(nameof(Model.Databinding.Entities.Peptide.LastPosition)));
                         columnsToRemove.Add(PropertyPath.Root.Property("MissedCleavages"));
                     }
                     if (!docHasCustomIons)
@@ -542,7 +552,7 @@ namespace pwiz.Skyline.Model.Databinding
                     columnsToRemove.Add(PropertyPath.Root.Property(nameof(Precursor.LibraryIonMobility)));
                     addRoot = true;
                 }
-                else if (columnDescriptor.PropertyType == typeof(Entities.Transition))
+                else if (columnDescriptor.PropertyType == typeof(Model.Databinding.Entities.Transition))
                 {
                     columnsToRemove.Add(PropertyPath.Root.Property("ExplicitCollisionEnergy"));
                     columnsToRemove.Add(PropertyPath.Root.Property("ExplicitDriftTimeHighEnergyOffsetMsec"));
@@ -716,12 +726,12 @@ namespace pwiz.Skyline.Model.Databinding
             yield return MakeRowSource<Protein>(dataSchema, 
                 proteomic ? Resources.SkylineViewContext_GetDocumentGridRowSources_Proteins : Resources.SkylineViewContext_GetDocumentGridRowSources_Molecule_Lists,
                 () => new Proteins(dataSchema));
-            yield return MakeRowSource<Entities.Peptide>(dataSchema, 
+            yield return MakeRowSource<Model.Databinding.Entities.Peptide>(dataSchema, 
                 proteomic ? Resources.SkylineViewContext_GetDocumentGridRowSources_Peptides : Resources.SkylineViewContext_GetDocumentGridRowSources_Molecules,
                 () => new Peptides(dataSchema, new[] {IdentityPath.ROOT}));
             yield return MakeRowSource<Precursor>(dataSchema, Resources.SkylineViewContext_GetDocumentGridRowSources_Precursors, 
                 () => new Precursors(dataSchema, new[] { IdentityPath.ROOT }));
-            yield return MakeRowSource<Entities.Transition>(dataSchema, Resources.SkylineViewContext_GetDocumentGridRowSources_Transitions, 
+            yield return MakeRowSource<Model.Databinding.Entities.Transition>(dataSchema, Resources.SkylineViewContext_GetDocumentGridRowSources_Transitions, 
                 () => new Transitions(dataSchema, new[] { IdentityPath.ROOT }));
             yield return MakeRowSource<Replicate>(dataSchema, Resources.SkylineViewContext_GetDocumentGridRowSources_Replicates, 
                 () => new ReplicateList(dataSchema));
@@ -765,11 +775,11 @@ namespace pwiz.Skyline.Model.Databinding
         {
             // ReSharper disable RedundantNameQualifier
             // ReSharper disable AssignNullToNotNullAttribute
-            {typeof (Entities.Protein).FullName, Tuple.Create(1, 6)},
-            {typeof (Entities.Peptide).FullName, Tuple.Create(2, 7)},
-            {typeof (Entities.Precursor).FullName, Tuple.Create(3, 3)},
-            {typeof (Entities.Transition).FullName, Tuple.Create(4, 4)},
-            {typeof (Entities.Replicate).FullName, Tuple.Create(5, 5)}
+            {typeof (Model.Databinding.Entities.Protein).FullName, Tuple.Create(1, 6)},
+            {typeof (Model.Databinding.Entities.Peptide).FullName, Tuple.Create(2, 7)},
+            {typeof (Model.Databinding.Entities.Precursor).FullName, Tuple.Create(3, 3)},
+            {typeof (Model.Databinding.Entities.Transition).FullName, Tuple.Create(4, 4)},
+            {typeof (Model.Databinding.Entities.Replicate).FullName, Tuple.Create(5, 5)}
             // ReSharper restore AssignNullToNotNullAttribute
             // ReSharper restore RedundantNameQualifier
         };
