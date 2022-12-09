@@ -31,6 +31,7 @@ using pwiz.Skyline.Model.AuditLog;
 using pwiz.Skyline.Model.DocSettings;
 using pwiz.Skyline.Model.DocSettings.Extensions;
 using pwiz.Skyline.Model.Lib;
+using pwiz.Skyline.Model.Serialization;
 using pwiz.Skyline.Properties;
 using pwiz.Skyline.Util;
 using pwiz.SkylineTestUtil;
@@ -298,12 +299,25 @@ namespace pwiz.SkylineTestFunctional
         {
             string shareCompletePath = testFilesDir.GetTestPath($"{Path.GetFileName(directoryElsewhere)}{testFolder}.sky.zip");
             var shareDlg = ShowDialog<ShareTypeDlg>(() => SkylineWindow.ShareDocument(shareCompletePath));
-            RunUI(() => shareDlg.IncludeReplicateFiles = true); // Check box must be checked in order for files to be zipped
+            RunUI(() => Assert.IsNull(shareDlg.SelectedSkylineVersion));    // Expect using the currently saved format
+            if (SkylineWindow.SavedDocumentFormat.CompareTo(DocumentFormat.SHARE_REPLICATE_FILES) < 0)
+            {
+                RunDlg<MessageDlg>(() => shareDlg.IncludeReplicateFiles = true, dlg =>
+                {
+                    Assert.AreEqual(Resources.ShareTypeDlg_cbIncludeFiles_CheckedChanged_Including_results_files_is_not_supported_by_the_currently_selected_version_, dlg.Message);
+                    dlg.OkDialog();
+                });
+            }
+            // Check box must be checked in order for files to be zipped
+            RunUI(() =>
+            {
+                shareDlg.SelectedSkylineVersion = SkylineVersion.CURRENT;
+                shareDlg.IncludeReplicateFiles = true;
+            });
             var replicatePickDlg = ShowDialog<ShareResultsFilesDlg>(() => shareDlg.ShowSelectReplicatesDialog());
             RunUI(() => replicatePickDlg.SelectOrDeselectAll(true));
             if (directoryElsewhere != null)
             {
-
                 if (!testFolder)
                 {
                     // Test file selector
@@ -316,14 +330,11 @@ namespace pwiz.SkylineTestFunctional
                         fileFinderDlg.Open(); // Open file
                     });
                     OkDialog(fileFinderDlg, fileFinderDlg.Open); // Accept selected files and close dialog
-
- 
                 }
 
                 // Test folder selector
                 RunUI(() =>
                     replicatePickDlg.SearchDirectoryForMissingFiles(directoryElsewhere)); // Exercise folder select
-
             }
 
             // Close and confirm results
@@ -349,8 +360,8 @@ namespace pwiz.SkylineTestFunctional
             var S1_RAW = "S_1.RAW";
             var S5_RAW = "S_5.RAW";
 
-            File.Copy(documentPath, TestFilesDirs[1].GetTestPath(S1_RAW)); // In documents directory
-            File.Copy(documentPath, TestFilesDirs[1].GetTestPath("..\\" + S5_RAW)); // In document's parent directory
+            SafeFileCopy(documentPath, TestFilesDirs[1].GetTestPath(S1_RAW)); // In documents directory
+            SafeFileCopy(documentPath, TestFilesDirs[1].GetTestPath("..\\" + S5_RAW)); // In document's parent directory
 
             void VerifyContents(string s)
             {
@@ -382,6 +393,12 @@ namespace pwiz.SkylineTestFunctional
 
             shareCompletePath = DoShareWithRawFiles(TestFilesDirs[1], elsewhere, elsewhereS1, true);
             VerifyContents(shareCompletePath);
+        }
+
+        private void SafeFileCopy(string sourceFileName, string destFileName)
+        {
+            FileEx.SafeDelete(destFileName);
+            File.Copy(sourceFileName, destFileName);
         }
 
         private void ShareDocTest()

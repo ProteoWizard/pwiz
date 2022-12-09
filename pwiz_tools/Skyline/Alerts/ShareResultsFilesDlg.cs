@@ -1,6 +1,7 @@
 ﻿/*
- * Original author: Clark Brace <clarkbrace@gmail.com>,
- *                  MacCoss Lab, Department of Genome Sciences, UW
+ * Original authors: Clark Brace <clarkbrace@gmail.com>,
+ *                   Brendan MacLean <brendanx@proteinms.net
+ *                   MacCoss Lab, Department of Genome Sciences, UW
  *
  * Copyright 2022 University of Washington - Seattle, WA
  * 
@@ -23,42 +24,37 @@ using System.IO;
 using System.Linq;
 using System.Windows.Forms;
 using pwiz.Common.Collections;
+using pwiz.Skyline.Controls;
 using pwiz.Skyline.FileUI;
 using pwiz.Skyline.Model;
 using pwiz.Skyline.Model.Results;
 using pwiz.Skyline.Properties;
 using pwiz.Skyline.Util;
+using pwiz.Skyline.Util.Extensions;
 
 namespace pwiz.Skyline.Alerts
 {
     /// <summary>
-    /// Added by Clark Brace (cbrace3)
-    /// Share results dialog is intended to allow users to select raw files they wish to include when sharing
-    /// their current Skyline document. Information regarding which raw files are currently being used in Skyline
-    /// are collected and displayed allowing the user to zip send everything in one clean package. Files are
-    /// displayed in natural sort order and await upon the user's selection. Should files be missing/not accessible
-    /// by the document the user can either select individual files utilizing the OpenDataSourceDialog or select
-    /// the folder where missing files are known to be using the FolderBrowserDialog. Missing files that are found
-    /// are added to the selection of files the user can choose from in their selection. By default missing files
+    /// Intended to allow users to select replicate results files they wish to include when sharing
+    /// their current Skyline document. Information regarding which files are currently being used in Skyline
+    /// is collected and displayed allowing the user to ZIP everything in one clean package. Files are
+    /// displayed in natural sort order in a checked list for user selection. Any missing/not accessible
+    /// files can be selected individually using the <see cref="OpenDataSourceDialog"/> or by selecting
+    /// a folder known to contain the files. Once located, missing files are added to the set of
+    /// files the user can choose from in in the checked list. By default missing files
     /// are checked when discovered and added.
     /// </summary>
     public partial class ShareResultsFilesDlg : ModeUIInvariantFormEx
     {
-        private readonly SrmDocument _document; // Document of the current open project where files and potential locations are extracted
-        public AuxiliaryFiles _auxiliaryFiles; // Previous file selection 
-
-        // public List<string> ReplicateFilesToInclude { get; private set; } // Data files that user wants to include in the .sky.zip file
-        
-        public ShareResultsFilesDlg(SrmDocument document, AuxiliaryFiles auxiliaryFiles) // Srm document passed in to allow access to raw files currently loaded and being used
+        public ShareResultsFilesDlg(SrmDocument document, string documentPath, AuxiliaryFiles auxiliaryFiles) // Srm document passed in to allow access to raw files currently loaded and being used
         {
             InitializeComponent();
-            Icon = Resources.Skyline; // Have the skyline icon in the upper left corner
-            _document = document; // Document for extracting current raw files
-            _auxiliaryFiles = auxiliaryFiles; // Load in the skyline auxiliary files which may or may not already exist
-            PopulateListView(); // Populate the selection and missing files list boxes
-            checkedStatus.Text = UpdateLabel(); // Update the status label on the bottom about the file status
-            UpdateSelectAll(); // Checkbox selection to ensure it displays the correct graphic
-            UpdateAuxFiles(); // Selection state of files
+
+            Icon = Resources.Skyline;
+
+            PopulateListViews(auxiliaryFiles ?? new AuxiliaryFiles(document, documentPath)); // Populate the selection and missing files list boxes
+            UpdateStatusLabel();
+            UpdateSelectAll();
         }
 
         /// <summary>
@@ -68,119 +64,70 @@ namespace pwiz.Skyline.Alerts
         /// by default. Should previous selections already exist load them in as opposed to
         /// searching again.
         /// </summary>
-        private void PopulateListView()
+        private void PopulateListViews(AuxiliaryFiles auxiliaryFiles)
         {
-            // Should the users selection already exist load them into the appropriate list boxes
-            if (_auxiliaryFiles != null)
+            foreach (var fileChoice in auxiliaryFiles.FoundFiles)
             {
-                foreach (var checkBoxItems in _auxiliaryFiles._checkBoxFiles)
-                {
-                    checkedListBox.Items.Add(checkBoxItems.Filename, checkBoxItems.CheckedState);
-                }
-
-                foreach (var missingFile in _auxiliaryFiles._missingCheckBoxFiles)
-                {
-                    listboxMissingFiles.Items.Add(missingFile);
-                }
-
-                // Don't bother the user with missing files stuff when there are no missing files
-                btnLocateFiles.Enabled = btnFindInFolder.Enabled = 
-                    listboxMissingFiles.Enabled = labelMissingFiles.Enabled =
-                        listboxMissingFiles.Items.Count > 0;
-                splitContainer1.Panel2Collapsed = listboxMissingFiles.Items.Count == 0;
-                return;
+                checkedListBox.Items.Add(fileChoice.Filename, fileChoice.IsIncluded);
             }
-            
-            // Search for files based on their expected location 
-            var paths = new HashSet<string>(); // List of file paths
-            var missingPaths = new HashSet<string>(); // List of missing paths
-            if (_document.Settings.MeasuredResults != null)
+
+            foreach (var missingFile in auxiliaryFiles.MissingFiles)
             {
-                foreach (var chromatogramSet in _document.Settings.MeasuredResults.Chromatograms)
-                {
-                    foreach (var chromFileInfo in chromatogramSet.MSDataFileInfos)
-                    {
-                        // Check for path validity, using our standard rules for locating data files when they aren't in current working directory
-                        if (ScanProvider.FileExists(Program.MainWindow.DocumentFilePath, chromFileInfo.FilePath, out var path))
-                        {
-                            paths.Add(path);
-                        }
-                        else
-                        {
-                            missingPaths.Add(chromFileInfo.FilePath.GetFileName());
-                        }
-                    }
-                }
-                var repFiles = paths.ToList(); // Convert to list. Prevents duplicates from being present
-                repFiles.Sort(NaturalComparer.Compare); // Natural Sort
-                
-                // Add to list view for selection
-                checkedListBox.Items.AddRange(paths.ToArray());
-                SelectOrDeselectAll(true); // All check box elements start selected
-
-                var missingRepFiles = missingPaths.ToList(); // Convert to list. Prevents duplicates from being present
-                missingRepFiles.Sort(NaturalComparer.Compare);
-
-                listboxMissingFiles.Items.AddRange(missingRepFiles.ToArray()); //Add all elements present to 
+                listboxMissingFiles.Items.Add(missingFile);
             }
+
+            UpdateMissingFilePane();
         }
 
+        private void UpdateMissingFilePane()
+        {
+            // Don't bother the user with missing files stuff when there are no missing files
+            bool showMissingFiles = listboxMissingFiles.Items.Count > 0;
+            btnLocateFiles.Enabled = btnFindInFolder.Enabled =
+                listboxMissingFiles.Enabled = labelMissingFiles.Enabled =
+                    showMissingFiles;
+            splitContainer1.Panel2Collapsed = !showMissingFiles;
+        }
 
-        /// <summary>
-        /// Accept button pressed. Selection information saved
-        /// </summary>
-        /// <param name="sender"></param>
-        /// <param name="e"></param>
-        private void Btn_Accept_Click(object sender, EventArgs e)
+        private void btnOK_Click(object sender, EventArgs e)
         {
             OkDialog();
         }
 
-
-        /// <summary>
-        /// Save all list box and checked list box information about the users current
-        /// selection of what to included in the zip file as well as what is still currently
-        /// missing.
-        /// </summary>
-        public void UpdateAuxFiles()
-        {
-            var checkedItems = (from object checkedItem in checkedListBox.Items
-                select checkedListBox.CheckedItems.Contains(checkedItem)
-                    ? new CheckedListBoxItem(checkedItem.ToString(), true)
-                    : new CheckedListBoxItem(checkedItem.ToString(), false)).ToList();
-
-            // Add all missing auxiliary files to list
-            var missingItems = (from object missingItem in listboxMissingFiles.Items select missingItem.ToString()).ToList();
-
-            // Save auxiliary file selection 
-            _auxiliaryFiles = new AuxiliaryFiles(checkedItems, missingItems); // Save users file selection
-        }
-
-
-        /// <summary>
-        ///  Close form after updating files
-        /// </summary>
         public void OkDialog()
         {
-            // Add auxiliary file data
-            UpdateAuxFiles();
             DialogResult = DialogResult.OK;
         }
 
+        public AuxiliaryFiles FilesInfo
+        {
+            get
+            {
+                var checkedItems = (
+                    from object item in checkedListBox.Items
+                    select checkedListBox.CheckedItems.Contains(item)
+                        ? new FileChoice(item.ToString(), true)
+                        : new FileChoice(item.ToString(), false)).ToList();
+
+                var missingItems = (
+                    from object item in listboxMissingFiles.Items
+                    select item.ToString()).ToList();
+
+                return new AuxiliaryFiles(checkedItems, missingItems);
+            }
+        }
+
+        public int IncludedFilesCount => checkedListBox.CheckedIndices.Count;
 
         /// <summary>
         /// Switch select all checkbox state and update checked status
         /// </summary>
-        /// <param name="sender"></param>
-        /// <param name="e"></param>
-        private void CheckboxSelectAll_CheckedChanged(object sender, EventArgs e)
+        private void checkboxSelectAll_CheckedChanged(object sender, EventArgs e)
         {
             if (checkboxSelectAll.CheckState == CheckState.Indeterminate)
-            {
                 return;
-            }
-            SelectOrDeselectAll(checkboxSelectAll.CheckState == CheckState.Checked);
-            checkedStatus.Text = UpdateLabel(); // Update file status label
+
+            SelectOrDeselectAll(checkboxSelectAll.Checked);
         }
 
 
@@ -190,64 +137,74 @@ namespace pwiz.Skyline.Alerts
         /// <param name="select">true to select all, false to deselect all</param>
         public void SelectOrDeselectAll(bool select)
         {
-            for (var i = 0; i < checkedListBox.Items.Count; i++)
-            {
-                checkedListBox.SetItemChecked(i, select); // Change checked status for all checked list box items
-            }
+            // Change checkbox for all items without events
+            checkedListBox.ItemCheck -= checkedListBox_ItemCheck;
+            int count = checkedListBox.Items.Count;
+            for (var i = 0; i < count; i++)
+                checkedListBox.SetItemChecked(i, select);
+            checkedListBox.ItemCheck += checkedListBox_ItemCheck;
+
+            // Update the summary UI to match the resulting state
+            UpdateSelectAll(select ? count : 0);
+            UpdateStatusLabel();
         }
-        
 
         /// <summary>
-        /// Update check 3-state check box to the correct state/graphic
+        /// Update UI elements that depend on selection state just before that
+        /// selection is about to change.
         /// </summary>
-        private void UpdateSelectAll()
+        private void checkedListBox_ItemCheck(object sender, ItemCheckEventArgs e)
         {
-            var checkCount = checkedListBox.CheckedIndices.Count;
-            if (checkCount == checkedListBox.Items.Count)
-            {
-                checkboxSelectAll.CheckState = checkCount == 0 ? CheckState.Indeterminate : CheckState.Checked; 
-            }
+            var checkCount = IncludedFilesCount;
+            if (e.NewValue == CheckState.Checked)
+                checkCount++;
             else
-            {
-                checkboxSelectAll.CheckState = checkCount == 0 ? CheckState.Unchecked : CheckState.Indeterminate;
-            }
+                checkCount--;
+
+            UpdateSelectAll(checkCount);
+
+            // Because the checked state in the selection list does not accurately
+            // reflect what the status is about to become, it is necessary to craft
+            // the status text to match the near future.
+            checkedStatus.Text = AuxiliaryFiles.GetStatusText(checkCount,
+                checkedListBox.Items.Count + listboxMissingFiles.Items.Count,
+                listboxMissingFiles.Items.Count);
         }
 
-
         /// <summary>
-        /// Update 3-state check box and file selection information on checked list box update
+        /// Updates the status label describing what files will be included and what is missing
         /// </summary>
-        /// <param name="sender"></param>
-        /// <param name="e"></param>
-        private void CheckedListBoxResults_SelectIndexChanged(object sender, EventArgs e)
+        private void UpdateStatusLabel()
         {
-            UpdateSelectAll(); // Update 3-state box
-            checkedStatus.Text = UpdateLabel(); // Update file status label
+            checkedStatus.Text = FilesInfo.ToString();
         }
 
-
         /// <summary>
-        /// Displays information about selected files. This includes the number of files the user
-        /// has selected to included in the zip file in comparison to the total number of files
-        /// the document sees the loaded skyline document uses. The number of missing files is
-        /// also displayed alerting the user to the fact that some files my be located in a different
-        /// place than the document thinks they are.
+        /// Update check 3-state check box to the correct state/graphic without
+        /// triggering the event to change the selection list
         /// </summary>
-        ///
-        public string UpdateLabel()
+        private void UpdateSelectAll(int? checkCountNullable = null)
         {
-            var total = checkedListBox.Items.Count + listboxMissingFiles.Items.Count; // Number of total files
-            var checkCount = checkedListBox.CheckedIndices.Count; // Number of elements currently checked in the checked list box
-            var missingCount = listboxMissingFiles.Items.Count;
+            int checkCount = checkCountNullable ?? IncludedFilesCount;
+            checkboxSelectAll.CheckedChanged -= checkboxSelectAll_CheckedChanged;
+            if (checkCount == 0) // Nothing is checked
+                checkboxSelectAll.Checked = false;
+            else if (checkCount == checkedListBox.Items.Count)  // Everything is checked
+                checkboxSelectAll.Checked = true;
+            else // A mix of checked and unchecked
+                checkboxSelectAll.CheckState = CheckState.Indeterminate;
+            checkboxSelectAll.CheckedChanged += checkboxSelectAll_CheckedChanged;
+            checkboxSelectAll.Enabled = checkedListBox.Items.Count > 0;
+        }
 
-            var fileIncludingLabel = string.Format(Resources.ShareResultsFilesDlg_UpdateLabel__0__of__1__files_will_be_included_, checkCount, total); // Some number of elements are selected
+        private void listboxMissingFiles_MouseDoubleClick(object sender, MouseEventArgs e)
+        {
+            LocateMissingFiles();
+        }
 
-            if (missingCount != 0)
-            {
-                fileIncludingLabel += string.Format(Resources.ShareResultsFilesDlg_UpdateLabel___0__of__1__files_have_not_been_located_, missingCount, total);
-
-            }
-            return fileIncludingLabel;
+        private void btnLocateFiles_Click(object sender, EventArgs e)
+        {
+            LocateMissingFiles();
         }
 
         /// <summary>
@@ -259,90 +216,50 @@ namespace pwiz.Skyline.Alerts
         /// </summary>
         public void LocateMissingFiles()
         {
-            if (listboxMissingFiles.Items.Count > 0)
+            Assume.IsTrue(listboxMissingFiles.Items.Count > 0); // Should only be in here with files to find
+
+            // Get list of all files that are currently missing
+            var missingFiles = (from object missingItem in listboxMissingFiles.Items select missingItem.ToString()).ToList();
+
+            // Set initial directory to the one containing the document or default for results
+            var docPath = Program.MainWindow.DocumentFilePath;
+            var initialDir = Path.GetDirectoryName(docPath) ?? Settings.Default.SrmResultsDirectory;
+            if (string.IsNullOrEmpty(initialDir))
+                initialDir = null;
+
+            using var openDataSource = new OpenDataSourceDialog(Settings.Default.RemoteAccountList, missingFiles)
             {
-                // Get list of all files that are currently missing
-                var missingFiles = (from object missingItem in listboxMissingFiles.Items select missingItem.ToString()).ToList();
+                InitialDirectory = new MsDataFilePath(initialDir)
+            };
 
-                using var openDataSource = new OpenDataSourceDialog(Settings.Default.RemoteAccountList, missingFiles);
-                // Find location of the current directory
-                var docPath = Program.MainWindow.DocumentFilePath;
+            if (openDataSource.ShowDialog(this) == DialogResult.OK)
+            {
+                var directory = openDataSource.CurrentDirectory; // Current directory from dialog selection
 
-                // Set initial directory to default if not applicable
-                var initialDir = Path.GetDirectoryName(docPath) ?? Settings.Default.SrmResultsDirectory;
-                if (string.IsNullOrEmpty(initialDir))
-                    initialDir = null;
-
-                // Set the initial directory to the current working directory if present
-                openDataSource.InitialDirectory = new MsDataFilePath(initialDir);
-
-                // Discovered missing files
-                var paths = new HashSet<string>();
-                // Use dialog to search for files
-                if (openDataSource.ShowDialog(this) == DialogResult.OK) // TODO find out what to put here
-                {
-                    var currentDirectory = openDataSource.CurrentDirectory; // Current directory from dialog selection
-                    var selectedFiles = openDataSource.SelectedFiles; // Selected files from dialog (file name)
-
-                    // Search through all selected files
-                    foreach (var selectedFile in selectedFiles)
+                // Search through all selected files
+                foreach (var selectedFile in openDataSource.SelectedFiles)
+                { 
+                    // Check if the selected file is one of those missing
+                    if (listboxMissingFiles.Items.Contains(selectedFile))
                     { 
-                        // Check if the selected file is one of those missing
-                        if (listboxMissingFiles.Items.Contains(selectedFile))
-                        { 
-                            // True file path to be checked against
-                            var filePath = Path.Combine(currentDirectory.GetFilePath(), selectedFile);
+                        // True file path to be checked against
+                        var filePath = Path.Combine(directory.GetFilePath(), selectedFile);
 
-                            // Confirm the path is correct
-                            if (ScanProvider.FileExists(filePath, currentDirectory))
-                            {
-                                paths.Add(filePath); // Add confirmed path to map
-                                listboxMissingFiles.Items.Remove(selectedFile); // Removed found file from missing lis box
-                            }
+                        // Confirm the path is correct
+                        if (ScanProvider.FileExists(filePath, directory))
+                        {
+                            checkedListBox.Items.Add(filePath, true);
+                            listboxMissingFiles.Items.Remove(selectedFile); // Removed found file from missing lis box
                         }
-                    }
-                    // Add each of the discovered missing files to the checked list box checked by default
-                    foreach (var discoveredMissingFiles in paths)
-                    {
-                        checkedListBox.Items.Add(discoveredMissingFiles, true);
                     }
                 }
             }
-            else
-            {
-                // Message informing the user of the fact there are no longer any missing files and thus no need to search for more
-                MessageDlg.Show(this, Resources.ShareResultsFilesDlg_LocateMissingFiles_All_relevant_files_are_present);
-            }
-            checkedStatus.Text = UpdateLabel(); // Update the label after potential changes
+
+            UpdateStatusLabel();
+            UpdateSelectAll();
         }
 
-        /// <summary>
-        /// Double click functionality allowing users to browse for missing files
-        /// </summary>
-        /// <param name="sender"></param>
-        /// <param name="e"></param>
-        private void MissingListBox_MouseDoubleClick(object sender, MouseEventArgs e)
-        {
-            LocateMissingFiles();
-        }
-
-        /// <summary>
-        /// Button allowing users to browse for missing files
-        /// </summary>
-        /// <param name="sender"></param>
-        /// <param name="e"></param>
-        private void Btn_addFiles_Click(object sender, EventArgs e)
-        {
-            LocateMissingFiles();
-        }
-
-
-        /// <summary>
-        /// Select and add all missing files from folder
-        /// </summary>
-        /// <param name="sender"></param>
-        /// <param name="e"></param>
-        public void FindResultsFolder_Click(object sender, EventArgs e)
+        public void btnFindInFolder_Click(object sender, EventArgs e)
         {
             LocateMissingFilesFromFolder();
         }
@@ -352,28 +269,21 @@ namespace pwiz.Skyline.Alerts
         /// </summary>
         public void LocateMissingFilesFromFolder()
         {
-            if (listboxMissingFiles.Items.Count == 0)
-            {
-                // Message informing the user of the fact there are no longer any missing files and thus no need to search for more
-                MessageDlg.Show(this, Resources.ShareResultsFilesDlg_LocateMissingFiles_All_relevant_files_are_present);
-                return;
-            }
+            Assume.IsTrue(listboxMissingFiles.Items.Count > 0); // Should only be in here with files to find
 
-            // Ask the user for the directory to search
-            using var searchFolderDialog = new FolderBrowserDialog();
-            searchFolderDialog.ShowNewFolderButton = false;
-
+            // Set initial directory to the one containing the document or default for results
             var docPath = Program.MainWindow.DocumentFilePath;
-
-            // Set initial directory to default if not applicable
             var initialDir = Path.GetDirectoryName(docPath) ?? Settings.Default.SrmResultsDirectory;
             if (string.IsNullOrEmpty(initialDir))
                 initialDir = null;
 
-            // Set the initial directory to the current working directory if present
-            searchFolderDialog.SelectedPath = initialDir;
-
-            searchFolderDialog.Description = Resources.ShareResultsFilesDlg_LocateMissingFilesFromFolder_Please_select_the_folder_containing_the_missing_files_;
+            // Ask the user for the directory to search
+            using var searchFolderDialog = new FolderBrowserDialog
+            {
+                ShowNewFolderButton = false,
+                SelectedPath = initialDir,
+                Description = Resources.ShareResultsFilesDlg_LocateMissingFilesFromFolder_Please_select_the_folder_containing_the_missing_files_
+            };
 
             if (searchFolderDialog.ShowDialog() == DialogResult.OK)
             {
@@ -385,70 +295,172 @@ namespace pwiz.Skyline.Alerts
         /// Preforms search for missing items within directory given directory path. Split
         /// for testing purposes and incompatibility with form types.
         /// </summary>
-        /// <param name="folderPath"></param>
         public void SearchDirectoryForMissingFiles(string folderPath)
         {
-            // Get all file/directory information from given folder path
-            var files = Directory.GetFiles(folderPath);
-            var folders = Directory.GetDirectories(folderPath);
-            var set = new HashSet<string>();
-
-            // Add all file paths in folder to hash set
-            foreach (var file in files)
+            var matchedFiles = new List<string>();
+            using (var longWaitDlg = new LongWaitDlg
+                   {
+                       Text = Resources.ImportResultsControl_FindResultsFiles_Searching_for_Results_Files
+                   })
             {
-                set.Add(file);
-            }
-
-            // Add all folder paths in folder to hash set
-            foreach (var folder in folders)
-            {
-                set.Add(folder);
-            }
-
-            set.Remove(null);
-
-            // Check if the folder contained any missing items
-            foreach (var rawFiles in set)
-            {
-                if (listboxMissingFiles.Items.Contains(Path.GetDirectoryName(rawFiles) != null) || listboxMissingFiles.Items.Contains(Path.GetFileName(rawFiles)))
+                try
                 {
-                    checkedListBox.Items.Add(rawFiles, true);
-                    listboxMissingFiles.Items.Remove(Path.GetDirectoryName(rawFiles) != null);
-                    listboxMissingFiles.Items.Remove(Path.GetFileName(rawFiles));
+                    var missingNames = new HashSet<string>(listboxMissingFiles.Items.OfType<string>());
+                    longWaitDlg.PerformWork(this, 1000, longWaitBroker =>
+                        FindDataFiles(folderPath, missingNames, matchedFiles, longWaitBroker));
+                }
+                catch (Exception x)
+                {
+                    MessageDlg.ShowWithException(this, TextUtil.LineSeparate(
+                        Resources.ImportResultsControl_FindResultsFiles_An_error_occurred_attempting_to_find_results_files_,
+                        x.Message), x);
                 }
             }
-            checkedStatus.Text = UpdateLabel();
+
+            // Update the UI with any matched files
+            // CONSIDER: Seems not worth it to insert these into the checked list. Instead they are added to the end in sorted order.
+            matchedFiles.Sort(NaturalComparer.Compare);
+            foreach (var matchedFile in matchedFiles)
+            {
+                checkedListBox.Items.Add(matchedFile, true);
+                listboxMissingFiles.Items.Remove(Path.GetFileName(matchedFile));
+            }
+
+            UpdateStatusLabel();
+            UpdateSelectAll();
         }
 
+        private void FindDataFiles(string directory, HashSet<string> namesToMatch, IList<string> matchedFiles, ILongWaitBroker longWaitBroker)
+        {
+            // Don't search if every spectrum source file has an exact match and an alternate match
+            if (directory == null || !Directory.Exists(directory))
+                return;
+
+            if (longWaitBroker != null)
+            {
+                longWaitBroker.Message =
+                    string.Format(Resources.ImportResultsControl_FindResultsFiles_Searching_for_matching_results_files_in__0__, directory);
+            }
+
+            try
+            {
+                foreach (string entry in Directory.EnumerateFileSystemEntries(directory))
+                {
+                    if (longWaitBroker != null && longWaitBroker.IsCanceled)
+                        return;
+
+                    if (entry != null && DataSourceUtil.IsDataSource(entry))
+                    {
+                        if (namesToMatch.Contains(Path.GetFileName(entry)))
+                        {
+                            matchedFiles.Add(entry);
+                        }
+                    }
+                }
+            }
+            // ReSharper disable once EmptyGeneralCatchClause
+            catch (Exception)
+            {
+                // No permissions on folder
+            }
+        }
 
         /// <summary>
-        /// All list box information used to store the state of the from
+        /// User choices for data source file inclusion
+        /// CONSIDER: This should probably be moved to Model to support command-line use
         /// </summary>
         public class AuxiliaryFiles
         {
-            public List<CheckedListBoxItem> _checkBoxFiles;
-            public List<string> _missingCheckBoxFiles;
-
-            public AuxiliaryFiles(List<CheckedListBoxItem> checkedFiles, List<string> missingFiles)
+            public AuxiliaryFiles(IList<FileChoice> foundFiles, IList<string> missingFiles)
             {
-                _checkBoxFiles = checkedFiles;
-                _missingCheckBoxFiles = missingFiles;
+                FoundFiles = foundFiles;
+                MissingFiles = missingFiles;
+            }
+
+            public AuxiliaryFiles(SrmDocument document, string documentPath)
+            {
+                // Search for files based on their expected location 
+                var paths = new HashSet<string>(); // List of file paths
+                var missingPaths = new HashSet<string>(); // List of missing paths
+                if (document.Settings.MeasuredResults != null)
+                {
+                    foreach (var chromatogramSet in document.Settings.MeasuredResults.Chromatograms)
+                    {
+                        foreach (var chromFileInfo in chromatogramSet.MSDataFileInfos)
+                        {
+                            // Check for path validity, using our standard rules for locating data files when they aren't in current working directory
+                            if (ScanProvider.FileExists(documentPath, chromFileInfo.FilePath,
+                                    out var path))
+                            {
+                                paths.Add(path);
+                            }
+                            else
+                            {
+                                missingPaths.Add(chromFileInfo.FilePath.GetFileName());
+                            }
+                        }
+                    }
+
+                    var repFiles = paths.ToList(); // Convert to list. Prevents duplicates from being present
+                    repFiles.Sort(NaturalComparer.Compare);
+                    FoundFiles = repFiles.Select(f => new FileChoice(f, true)).ToArray();
+
+                    var missingRepFiles = missingPaths.ToList(); // Convert to list. Prevents duplicates from being present
+                    missingRepFiles.Sort(NaturalComparer.Compare);
+                    MissingFiles = missingRepFiles.ToArray();
+                }
+            }
+
+            public int IncludeFilesCount => FoundFiles.Count(f => f.IsIncluded);
+            public int TotalFilesCount => FoundFiles.Count + MissingFiles.Count;
+            public int MissingFilesCount => MissingFiles.Count;
+
+            public IList<FileChoice> FoundFiles { get; }
+            public IList<string> MissingFiles { get; }
+
+            private IEnumerable<FileChoice> IncludeFileChoices => FoundFiles.Where(f => f.IsIncluded);
+            public IEnumerable<string> IncludeFiles => IncludeFileChoices.Select(f => f.Filename);
+
+            public override string ToString()
+            {
+                return GetStatusText(IncludeFilesCount, TotalFilesCount, MissingFilesCount);
+            }
+
+            /// <summary>
+            /// Gets display text about selected files. This includes the number of files the user
+            /// has selected to include in the zip file in comparison to the total number of files
+            /// in the document. The number of missing files is also displayed alerting the user
+            /// to the fact that some files cannot be found based on the document path and the
+            /// path stored at the time they were imported.
+            /// CONSIDER: Sure would be nice to report the size on disk of the included files
+            /// </summary>
+            public static string GetStatusText(int includedFilesCount, int totalFilesCount, int missingFilesCount)
+            {
+                var labelText = string.Format(Resources.AuxiliaryFiles_GetStatusText__0__of__1__files_will_be_included_,
+                    includedFilesCount, totalFilesCount);
+
+                if (missingFilesCount != 0)
+                {
+                    labelText = TextUtil.SpaceSeparate(labelText, string.Format(Resources.AuxiliaryFiles_GetStatusText__0__files_have_not_been_located_,
+                        missingFilesCount));
+                }
+                return labelText;
             }
         }
 
         /// <summary>
-        /// Checked list box information
+        /// Included or not included status for a file that is known to exist
         /// </summary>
-        public class CheckedListBoxItem
+        public class FileChoice
         {
-            public string Filename { get; }
-            public bool CheckedState { get; }
-
-            public CheckedListBoxItem(string filename, bool checkedState)
+            public FileChoice(string filename, bool isIncluded)
             {
                 Filename = filename;
-                CheckedState = checkedState;
+                IsIncluded = isIncluded;
             }
+
+            public string Filename { get; }
+            public bool IsIncluded { get; }
         }
     }
 }
