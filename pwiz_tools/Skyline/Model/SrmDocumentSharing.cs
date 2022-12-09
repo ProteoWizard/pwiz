@@ -159,13 +159,34 @@ namespace pwiz.Skyline.Model
         {
             string skylineFile = null;
 
-            foreach (var file in zip.EntryFileNames)
+            // Shared files should not have subfolders unless they're data sources (e.g. Bruker .d, Waters .raw).
+            // Just look at top level files and directories  (e.g. "foo.sky", "agilentfile.d/", "watersdata.raw/", "watersdata.raw/_FUNC01.DAT, "agilentdata.d/AcqData/"")
+
+            var topLevelDirectories =
+                zip.Entries.Where(e => e is { IsDirectory: true } && e.FileName.Count(ch => ch == '/') == 1)
+                    .Select(e => e.FileName).ToArray();
+            var topLevelZipEntries = zip.Entries.Where(e => e != null && e.FileName.Count(ch => ch == '/') <= 2).ToArray();
+            foreach (var entry in topLevelZipEntries)
             {
+                var file = entry.FileName;
+
                 if (file == null) continue; // ReSharper
 
-                // Shared files should not have subfolders.
-                if (Path.GetFileName(file) != file)
-                    throw new IOException(Resources.SrmDocumentSharing_FindSharedSkylineFile_The_zip_file_is_not_a_shared_file);
+                // Shared files should not have subfolders unless they're data sources (e.g. Bruker .d, Waters .raw).
+                if (entry.IsDirectory && topLevelDirectories.Contains(entry.FileName))
+                {
+                    // Mimic System.IO.DirectoryInfo - only deals with top level of directory
+                    var directoryName = entry.FileName;
+                    var files =
+                        topLevelZipEntries.Where(e => e.FileName.StartsWith(directoryName) && !e.IsDirectory && e.FileName.Count(ch => ch == '/') == 1).
+                            Select(e => e.FileName.Split('/')[1]).ToArray();
+                    var subdirectories =
+                        topLevelZipEntries.Where(e => e.FileName.StartsWith(directoryName) && e.IsDirectory && !Equals(e.FileName, directoryName)).Select(e => e.FileName.Split('/')[1]).ToArray();
+                    if (DataSourceUtil.GetSourceType(directoryName.Trim('/'), files, subdirectories) == DataSourceUtil.FOLDER_TYPE)
+                    {
+                        throw new IOException(Resources.SrmDocumentSharing_FindSharedSkylineFile_The_zip_file_is_not_a_shared_file);
+                    }
+                }
 
                 // Shared files must have exactly one Skyline Document(.sky).
                 if (!file.EndsWith(SrmDocument.EXT)) continue;
@@ -371,6 +392,15 @@ namespace pwiz.Skyline.Model
             {
                 zip.AddFile(ViewFilePath);
             }
+
+            // If user selected any raw data files for inclusion, add those now
+            if (ShareType.AuxiliaryFiles != null)
+            {
+                foreach (var path in ShareType.AuxiliaryFiles)
+                {
+                    zip.AddFile(path);
+                }
+            }
         }
 
         private void SaveDocToTempFile(ZipFileShare zip)
@@ -558,7 +588,14 @@ namespace pwiz.Skyline.Model
                     return;
                 }
                 _dictNameToPath.Add(fileName, path);
-                _zip.AddFile(path, string.Empty);
+                if (Directory.Exists(path)) // Some mass spec data "files" are really directories
+                {
+                    _zip.AddDirectory(path, Path.GetFileName(path));
+                }
+                else
+                {
+                    _zip.AddFile(path, string.Empty);
+                }
             }
 
             public void Save(string path, EventHandler<SaveProgressEventArgs> progressEvent)
@@ -600,10 +637,11 @@ namespace pwiz.Skyline.Model
         public static readonly ShareType COMPLETE = new ShareType(true, null);
         public static readonly ShareType MINIMAL = new ShareType(false, null);
         public static readonly ShareType DEFAULT = COMPLETE;
-        public ShareType(bool complete, SkylineVersion skylineVersion)
+        public ShareType(bool complete, SkylineVersion skylineVersion, IEnumerable<string> auxiliaryFiles = null)
         {
             Complete = complete;
             SkylineVersion = skylineVersion;
+            AuxiliaryFiles = auxiliaryFiles;
         }
         public bool Complete { get; private set; }
 
@@ -612,6 +650,8 @@ namespace pwiz.Skyline.Model
             return ChangeProp(ImClone(this), im=>im.Complete = complete);
         }
         public SkylineVersion SkylineVersion { get; private set; }
+
+        public IEnumerable<string> AuxiliaryFiles { get; private set; } // Usually mass spec data files
 
         public ShareType ChangeSkylineVersion(SkylineVersion skylineVersion)
         {

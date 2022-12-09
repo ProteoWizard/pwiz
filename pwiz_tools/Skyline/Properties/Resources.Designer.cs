@@ -27642,6 +27642,43 @@ namespace pwiz.Skyline.Properties {
         }
         
         /// <summary>
+        ///   Looks up a localized string similar to All relevant files are present.
+        /// </summary>
+        public static string ShareResultsFilesDlg_LocateMissingFiles_All_relevant_files_are_present {
+            get {
+                return ResourceManager.GetString("ShareResultsFilesDlg_LocateMissingFiles_All_relevant_files_are_present", resourceCulture);
+            }
+        }
+        
+        /// <summary>
+        ///   Looks up a localized string similar to Please select the folder containing the missing files..
+        /// </summary>
+        public static string ShareResultsFilesDlg_LocateMissingFilesFromFolder_Please_select_the_folder_containing_the_missing_files_ {
+            get {
+                return ResourceManager.GetString("ShareResultsFilesDlg_LocateMissingFilesFromFolder_Please_select_the_folder_contai" +
+                        "ning_the_missing_files_", resourceCulture);
+            }
+        }
+        
+        /// <summary>
+        ///   Looks up a localized string similar to  {0} of {1} files have not been located..
+        /// </summary>
+        public static string ShareResultsFilesDlg_UpdateLabel___0__of__1__files_have_not_been_located_ {
+            get {
+                return ResourceManager.GetString("ShareResultsFilesDlg_UpdateLabel___0__of__1__files_have_not_been_located_", resourceCulture);
+            }
+        }
+        
+        /// <summary>
+        ///   Looks up a localized string similar to {0} of {1} files will be included..
+        /// </summary>
+        public static string ShareResultsFilesDlg_UpdateLabel__0__of__1__files_will_be_included_ {
+            get {
+                return ResourceManager.GetString("ShareResultsFilesDlg_UpdateLabel__0__of__1__files_will_be_included_", resourceCulture);
+            }
+        }
+        
+        /// <summary>
         ///   Looks up a localized string similar to Current saved file ({0}).
         /// </summary>
         public static string ShareTypeDlg_ShareTypeDlg_Current_saved_file___0__ {

@@ -19,6 +19,7 @@
 using System;
 using System.Collections.Generic;
 using System.IO;
+using System.Linq;
 using System.Xml;
 using pwiz.Common.SystemUtil;
 using pwiz.ProteowizardWrapper;
@@ -44,6 +45,11 @@ namespace pwiz.Skyline.Util
         public const string EXT_WATERS_RAW = ".raw";
         public const string EXT_AGILENT_BRUKER_RAW = ".d";
         public const string EXT_MOBILION_MBI = ".mbi";
+
+        // Folders with these .EXTs may be data sources
+        public static readonly string[] EXT_DATA_FOLDERS = 
+            { EXT_WATERS_RAW, EXT_AGILENT_BRUKER_RAW };
+
         public static readonly string[] EXT_FASTA = {".fasta", ".fa", ".faa"};
 
         public const string TYPE_WIFF = "Sciex WIFF/WIFF2";
@@ -75,29 +81,34 @@ namespace pwiz.Skyline.Util
 
         public static string GetSourceType(DirectoryInfo dirInfo)
         {
-            // ReSharper disable LocalizableElement
             try
             {
-                if (dirInfo.HasExtension(EXT_WATERS_RAW) &&
-                        dirInfo.GetFiles("_FUNC*.DAT").Length > 0)
-                    return TYPE_WATERS_RAW;
-                if (dirInfo.HasExtension(EXT_AGILENT_BRUKER_RAW))
-                {
-                    if (dirInfo.GetDirectories("AcqData").Length > 0)
-                        return TYPE_AGILENT;
-                    if (dirInfo.GetFiles("analysis.baf").Length > 0 || 
-                        dirInfo.GetFiles("analysis.tdf").Length > 0 || // TIMS ion mobility data
-                        dirInfo.GetFiles("analysis.tsf").Length > 0) 
-                        return TYPE_BRUKER;
-                }
-                return FOLDER_TYPE;
+                return GetSourceType(dirInfo.FullName,
+                    dirInfo.GetFiles().Select(f => f.Name).ToArray(),
+                    dirInfo.GetDirectories().Select(d => d.Name).ToArray());
             }
-            // ReSharper restore LocalizableElement
-            catch (Exception)
+            catch (Exception) // Probably dirInfo was constructed with a file path rather than an actual directory
             {
                 // TODO: Folder without access type
-                return FOLDER_TYPE;
+                return FOLDER_TYPE; // It might actually be a file, or nonexistent. But callers expect FOLDER_TYPE return value for "not a data source"
             }
+        }
+
+        public static string GetSourceType(string directoryName, string[] fileNames, string[] subdirectoryNames)
+        {
+            if (directoryName.ToLowerInvariant().EndsWith(EXT_WATERS_RAW) &&
+                (fileNames.Count(fn => fn.StartsWith(@"_FUNC") && fn.EndsWith(@".DAT") && fn.Count(ch => ch=='.')==1) > 0))
+                return TYPE_WATERS_RAW;
+            if (directoryName.ToLowerInvariant().EndsWith(EXT_AGILENT_BRUKER_RAW))
+            {
+                if (subdirectoryNames.Contains(@"AcqData"))
+                    return TYPE_AGILENT;
+                if (fileNames.Contains(@"analysis.baf") ||
+                    fileNames.Contains(@"analysis.tdf") || // TIMS ion mobility data
+                    fileNames.Contains(@"analysis.tsf"))
+                    return TYPE_BRUKER;
+            }
+            return FOLDER_TYPE;
         }
 
         private static bool HasExtension(this DirectoryInfo dirInfo, string ext)

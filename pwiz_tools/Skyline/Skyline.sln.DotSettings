@@ -149,6 +149,7 @@
 	<s:Boolean x:Key="/Default/Environment/UnitTesting/ShadowCopy/@EntryValue">False</s:Boolean>
 	<s:String x:Key="/Default/FilterSettingsManager/AttributeFilterXml/@EntryValue">&lt;data /&gt;</s:String>
 	<s:String x:Key="/Default/FilterSettingsManager/CoverageFilterXml/@EntryValue">&lt;data&gt;&lt;IncludeFilters /&gt;&lt;ExcludeFilters /&gt;&lt;/data&gt;</s:String>
+	<s:String x:Key="/Default/Housekeeping/UnitTestingMru/UnitTestRunner/RunConfigurationFilename/@EntryValue">TestSettings_x64.runsettings</s:String>
 	<s:Boolean x:Key="/Default/PatternsAndTemplates/StructuralSearch/Pattern/=B12E80652A0A4B468ADDFECD2ECF3D0A/@KeyIndexDefined">True</s:Boolean>
 	<s:String x:Key="/Default/PatternsAndTemplates/StructuralSearch/Pattern/=B12E80652A0A4B468ADDFECD2ECF3D0A/Comment/@EntryValue">Unexpected image scaling usually caused by HD monitors</s:String>
 	<s:Boolean x:Key="/Default/PatternsAndTemplates/StructuralSearch/Pattern/=B12E80652A0A4B468ADDFECD2ECF3D0A/CustomPatternPlaceholder/=args/@KeyIndexDefined">True</s:Boolean>
