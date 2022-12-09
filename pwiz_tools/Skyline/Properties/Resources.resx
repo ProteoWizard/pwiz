@@ -11867,7 +11867,10 @@ If you do not have the original file, you may build the library with embedded sp
   </data>
   <data name="SkypDownloadException_GetMessage_The_skyp_file_was_downloaded_by_the_user__0___Credentials_saved_in_Skyline_for_this_server_are_for_the_user__1__" xml:space="preserve">
 	  <value>The skyp file was downloaded by the user {0}. Credentials saved in Skyline for this server are for the user {1}.</value>
- </data>
+  </data>
+  <data name="AssociateProteinsDlg_UseFastaFile_An_error_occurred_during_protein_association_" xml:space="preserve">
+	  <value>An error occurred during protein association.</value>
+  </data>
   <data name="ColonSeparator" xml:space="preserve">
 	  <value>{0}: {1}</value>
   </data>

@@ -44,7 +44,7 @@ using PeakType = pwiz.Skyline.Model.Results.MsDataFileScanHelper.PeakType;
 
 namespace pwiz.Skyline.Controls.Graphs
 {
-    public partial class GraphFullScan : DockableFormEx, IGraphContainer, IMzScalePlot
+    public partial class GraphFullScan : DockableFormEx, IGraphContainer, IMzScalePlot, IMenuControlImplementer
     {
         private const int MIN_DOT_RADIUS = 4;
         private const int MAX_DOT_RADIUS = 13;
@@ -95,6 +95,12 @@ namespace pwiz.Skyline.Controls.Graphs
             filterBtn.Checked = Settings.Default.FilterIonMobilityFullScan;
             toolStripButtonShowAnnotations.Checked = Settings.Default.ShowFullScanAnnotations;
             _showIonSeriesAnnotations = Settings.Default.ShowFullScanAnnotations;
+
+            magnifyBtn.CheckedChanged += magnifyBtn_CheckedChanged;
+            spectrumBtn.CheckedChanged += spectrumBtn_CheckedChanged;
+            filterBtn.CheckedChanged += filterBtn_CheckedChanged;
+            toolStripButtonShowAnnotations.CheckedChanged += toolStripButtonShowAnnotations_CheckedChanged;
+
 
             spectrumBtn.Visible = false;
             filterBtn.Visible = false;
@@ -1036,6 +1042,7 @@ namespace pwiz.Skyline.Controls.Graphs
         }
 
         public bool IsAnnotated => _showIonSeriesAnnotations;
+        public LibraryRankedSpectrumInfo SpectrumInfo => _rmis;
 
         private void ZoomYAxis()
         {
@@ -1259,6 +1266,26 @@ namespace pwiz.Skyline.Controls.Graphs
                         return chargesItem.DropDownItems[0] as MenuControl<T>;
                 }
                 return null;
+        }
+
+        public void DisconnectHandlers()
+        {
+            if (_documentContainer is SkylineWindow skylineWindow)
+            {
+                var chargeSelector = GetHostedControl<ChargeSelectionPanel>();
+
+                if (chargeSelector != null)
+                {
+                    chargeSelector.HostedControl.OnChargeChanged -= skylineWindow.IonChargeSelector_ionChargeChanged;
+                }
+
+                var ionTypeSelector = GetHostedControl<IonTypeSelectionPanel>();
+                if (ionTypeSelector != null)
+                {
+                    ionTypeSelector.HostedControl.IonTypeChanged -= skylineWindow.IonTypeSelector_IonTypeChanges;
+                    ionTypeSelector.HostedControl.LossChanged -= skylineWindow.IonTypeSelector_LossChanged;
+                }
+            }
         }
 
         #region Mouse events
