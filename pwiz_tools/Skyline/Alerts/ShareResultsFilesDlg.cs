@@ -266,9 +266,10 @@ namespace pwiz.Skyline.Alerts
         }
 
         /// <summary>
-        /// Allow the user to select a folder to search for missing files from
+        /// Allow the user to select a folder to search for missing files from.
+        /// This code can't be tested because it uses a CommonDialog form.
         /// </summary>
-        public void LocateMissingFilesFromFolder()
+        private void LocateMissingFilesFromFolder()
         {
             Assume.IsTrue(listboxMissingFiles.Items.Count > 0); // Should only be in here with files to find
 

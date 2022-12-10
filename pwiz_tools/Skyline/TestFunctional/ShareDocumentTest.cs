@@ -332,17 +332,26 @@ namespace pwiz.SkylineTestFunctional
                 // Turn a checkbox off and on and verify UI updates appropriately
                 RunUI(() =>
                 {
-                    replicatePickDlg.IsSelectAll = true;
                     VerifyCheckedState(replicatePickDlg, totalFilesCount, 0, missingFilesCount);
                     replicatePickDlg.SetFileChecked(0, false);
                     VerifyCheckedState(replicatePickDlg, totalFilesCount, 1, missingFilesCount);
                     replicatePickDlg.SetFileChecked(0, true);
                     VerifyCheckedState(replicatePickDlg, totalFilesCount, 0, missingFilesCount);
+                    replicatePickDlg.IsSelectAll = false;
+                    VerifyCheckedState(replicatePickDlg, totalFilesCount, totalFilesCount-missingFilesCount, missingFilesCount);
+                    replicatePickDlg.IsSelectAll = true;
+                    VerifyCheckedState(replicatePickDlg, totalFilesCount, 0, missingFilesCount);
                 });
             }
             if (directoryElsewhere != null)
             {
-                if (!testFolder)
+                if (testFolder)
+                {
+                    // Test folder selector
+                    RunUI(() =>
+                        replicatePickDlg.SearchDirectoryForMissingFiles(directoryElsewhere)); // Exercise folder select
+                }
+                else
                 {
                     // Test file selector
                     var fileFinderDlg = ShowDialog<OpenDataSourceDialog>(() => replicatePickDlg.LocateMissingFiles());
@@ -350,15 +359,12 @@ namespace pwiz.SkylineTestFunctional
                     {
                         fileFinderDlg.SelectFile(directoryElsewhere); // Select sub folder
                         fileFinderDlg.Open(); // Open folder
-                        fileFinderDlg.SelectFile(filename); // Select file
-                        fileFinderDlg.Open(); // Open file
+                        string selectName = Path.GetFileName(filename);
+                        fileFinderDlg.SelectFile(selectName); // Select file
+                        Assert.AreEqual(selectName, fileFinderDlg.SelectedFiles.FirstOrDefault());
                     });
                     OkDialog(fileFinderDlg, fileFinderDlg.Open); // Accept selected files and close dialog
                 }
-
-                // Test folder selector
-                RunUI(() =>
-                    replicatePickDlg.SearchDirectoryForMissingFiles(directoryElsewhere)); // Exercise folder select
             }
 
             // Close and confirm results
