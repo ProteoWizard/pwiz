@@ -146,6 +146,8 @@ namespace pwiz.Skyline.Alerts
             btnSelectReplicateFiles_Click(null, null);
         }
 
+        public string FileStatusText => labelFileStatus.Text;
+
         #endregion
 
         /// <summary>

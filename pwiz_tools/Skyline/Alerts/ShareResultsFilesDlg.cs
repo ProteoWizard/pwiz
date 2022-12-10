@@ -118,6 +118,7 @@ namespace pwiz.Skyline.Alerts
         }
 
         public int IncludedFilesCount => checkedListBox.CheckedIndices.Count;
+        public int MissingFilesCount => listboxMissingFiles.Items.Count;
 
         /// <summary>
         /// Switch select all checkbox state and update checked status
@@ -135,7 +136,7 @@ namespace pwiz.Skyline.Alerts
         /// Change the state of all elements in the checkedItemBox
         /// </summary>
         /// <param name="select">true to select all, false to deselect all</param>
-        public void SelectOrDeselectAll(bool select)
+        private void SelectOrDeselectAll(bool select)
         {
             // Change checkbox for all items without events
             checkedListBox.ItemCheck -= checkedListBox_ItemCheck;
@@ -188,9 +189,9 @@ namespace pwiz.Skyline.Alerts
             int checkCount = checkCountNullable ?? IncludedFilesCount;
             checkboxSelectAll.CheckedChanged -= checkboxSelectAll_CheckedChanged;
             if (checkCount == 0) // Nothing is checked
-                checkboxSelectAll.Checked = false;
+                checkboxSelectAll.CheckState = CheckState.Unchecked;
             else if (checkCount == checkedListBox.Items.Count)  // Everything is checked
-                checkboxSelectAll.Checked = true;
+                checkboxSelectAll.CheckState = CheckState.Checked;
             else // A mix of checked and unchecked
                 checkboxSelectAll.CheckState = CheckState.Indeterminate;
             checkboxSelectAll.CheckedChanged += checkboxSelectAll_CheckedChanged;
@@ -364,6 +365,31 @@ namespace pwiz.Skyline.Alerts
                 // No permissions on folder
             }
         }
+
+        #region Functional test helpers
+
+        public bool? IsSelectAll
+        {
+            get
+            {
+                if (checkboxSelectAll.CheckState == CheckState.Indeterminate)
+                    return null;
+                return checkboxSelectAll.CheckState == CheckState.Checked;
+            }
+            set
+            {
+                checkboxSelectAll.Checked = value ?? false;
+            }
+        }
+
+        public void SetFileChecked(int fileIndex, bool fileChecked)
+        {
+            checkedListBox.SetItemChecked(fileIndex, fileChecked);
+        }
+
+        public string StatusText => checkedStatus.Text;
+
+        #endregion
 
         /// <summary>
         /// User choices for data source file inclusion

@@ -297,6 +297,9 @@ namespace pwiz.SkylineTestFunctional
 
         private string DoShareWithRawFiles(TestFilesDir testFilesDir, string directoryElsewhere = null, string filename = null, bool testFolder = false)
         {
+            var doc = SkylineWindow.Document;
+            var totalFilesCount = doc.MeasuredResults.Chromatograms.Count;
+
             string shareCompletePath = testFilesDir.GetTestPath($"{Path.GetFileName(directoryElsewhere)}{testFolder}.sky.zip");
             var shareDlg = ShowDialog<ShareTypeDlg>(() => SkylineWindow.ShareDocument(shareCompletePath));
             RunUI(() => Assert.IsNull(shareDlg.SelectedSkylineVersion));    // Expect using the currently saved format
@@ -309,13 +312,34 @@ namespace pwiz.SkylineTestFunctional
                 });
             }
             // Check box must be checked in order for files to be zipped
+            int missingFilesCount = directoryElsewhere != null ? 1 : 0;
+            if (testFolder)
+                missingFilesCount++;
             RunUI(() =>
             {
                 shareDlg.SelectedSkylineVersion = SkylineVersion.CURRENT;
                 shareDlg.IncludeReplicateFiles = true;
+                VerifyFileStatus(shareDlg, totalFilesCount, missingFilesCount);
             });
             var replicatePickDlg = ShowDialog<ShareResultsFilesDlg>(() => shareDlg.ShowSelectReplicatesDialog());
-            RunUI(() => replicatePickDlg.SelectOrDeselectAll(true));
+            if (missingFilesCount == totalFilesCount)
+            {
+                // No checkboxes to test
+                RunUI(() => VerifyCheckedState(replicatePickDlg, totalFilesCount, 0, missingFilesCount));
+            }
+            else
+            {
+                // Turn a checkbox off and on and verify UI updates appropriately
+                RunUI(() =>
+                {
+                    replicatePickDlg.IsSelectAll = true;
+                    VerifyCheckedState(replicatePickDlg, totalFilesCount, 0, missingFilesCount);
+                    replicatePickDlg.SetFileChecked(0, false);
+                    VerifyCheckedState(replicatePickDlg, totalFilesCount, 1, missingFilesCount);
+                    replicatePickDlg.SetFileChecked(0, true);
+                    VerifyCheckedState(replicatePickDlg, totalFilesCount, 0, missingFilesCount);
+                });
+            }
             if (directoryElsewhere != null)
             {
                 if (!testFolder)
@@ -338,13 +362,39 @@ namespace pwiz.SkylineTestFunctional
             }
 
             // Close and confirm results
+            RunUI(() => VerifyCheckedState(replicatePickDlg, totalFilesCount, 0, 0));
             OkDialog(replicatePickDlg, replicatePickDlg.OkDialog);
+            RunUI(() => VerifyFileStatus(shareDlg, totalFilesCount, 0));
             OkDialog(shareDlg, shareDlg.OkDialog);
 
             WaitForCondition(() => File.Exists(shareCompletePath));
 
             return shareCompletePath;
         }
+
+        private static void VerifyCheckedState(ShareResultsFilesDlg dlg, int totalCount, int uncheckedCount, int missingFilesCount)
+        {
+            int includedCount = dlg.IncludedFilesCount;
+            if (missingFilesCount > 0)
+                Assert.AreEqual(missingFilesCount, dlg.MissingFilesCount);
+            Assert.AreEqual(totalCount - uncheckedCount - missingFilesCount, includedCount);
+            if (uncheckedCount == 0 && totalCount > missingFilesCount)
+                Assert.IsTrue(dlg.IsSelectAll.Value);
+            else if (totalCount - missingFilesCount > uncheckedCount)
+                Assert.IsNull(dlg.IsSelectAll); // Indeterminate
+            else
+                Assert.IsFalse(dlg.IsSelectAll.Value);
+            Assert.AreEqual(
+                ShareResultsFilesDlg.AuxiliaryFiles.GetStatusText(includedCount, totalCount, missingFilesCount),
+                dlg.StatusText);
+        }
+        private static void VerifyFileStatus(ShareTypeDlg dlg, int totalFilesCount, int missingFile)
+        {
+            Assert.AreEqual(
+                ShareResultsFilesDlg.AuxiliaryFiles.GetStatusText(totalFilesCount - missingFile, totalFilesCount, missingFile),
+                dlg.FileStatusText);
+        }
+
 
         private void ShareWithRawFilesTest()
         {
