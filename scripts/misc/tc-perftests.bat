@@ -17,6 +17,7 @@ IF ERRORLEVEL 1 (pwiz_tools\Skyline\bin\x64\Release\TestRunner.exe test=%%I loop
 IF ERRORLEVEL 1 set /a FailedTests += 1
 IF EXIST pwiz_tools\Skyline\TestResults rmdir /s /q pwiz_tools\Skyline\TestResults
 IF EXIST %SKYLINE_DOWNLOAD_PATH% rmdir /s /q %SKYLINE_DOWNLOAD_PATH%
+IF EXIST z:\Temp del /f /s /q z:\Temp\*.* >nul
 )
 
 echo %FailedTests% tests failed.
