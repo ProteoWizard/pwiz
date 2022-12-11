@@ -133,6 +133,10 @@ SpectrumList_PeakPicker::SpectrumList_PeakPicker(
     else if (algorithm != NULL)
         method.userParams.emplace_back(algorithm->name());
 
+    string msLevelsToPeakPickStr = lexical_cast<string>(msLevelsToPeakPick);
+    if (msLevelsToPeakPickStr != "1-")
+        method.userParams.emplace_back("ms levels", msLevelsToPeakPickStr);
+
     if (algorithm_)
         noVendorCentroidingWarningMessage_ = string("[SpectrumList_PeakPicker]: vendor centroiding requested but not available for this data; falling back to ") + algorithm_->name();
 
@@ -158,6 +162,7 @@ PWIZ_API_DECL bool SpectrumList_PeakPicker::supportsVendorPeakPicking(const std:
                                                + ReaderPtr(new Reader_Bruker_BAF)
                                                + ReaderPtr(new Reader_Bruker_YEP)
                                                + ReaderPtr(new Reader_Bruker_TDF)
+                                               + ReaderPtr(new Reader_Bruker_TSF)
                                                + ReaderPtr(new Reader_Shimadzu)
                                                + ReaderPtr(new Reader_Thermo)
                                                + ReaderPtr(new Reader_Waters);

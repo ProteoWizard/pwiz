@@ -57,7 +57,7 @@ namespace {
 // OBO format has some escape characters that C++ doesn't,
 // so we unescape them when reading in a tag:value pair.
 // http://www.geneontology.org/GO.format.obo-1_2.shtml#S.1.5
-string& unescape(string& str)
+string& unescape(string& str, bool translateLetters = false)
 {
     bal::replace_all(str, "\\!", "!");
     bal::replace_all(str, "\\:", ":");
@@ -68,14 +68,19 @@ string& unescape(string& str)
     bal::replace_all(str, "\\]", "]");
     bal::replace_all(str, "\\{", "{");
     bal::replace_all(str, "\\}", "}");
+
+    // replace alphabetic characters with their number (A=1, Z=26)
+    if (translateLetters)
+        for (int i = 0; i < 26; ++i)
+            bal::ireplace_all(str, string(1, 'A' + i), lexical_cast<string>(i+1));
     return str;
 }
 
 
-string unescape_copy(const string& str)
+string unescape_copy(const string& str, bool translateLetters = false)
 {
     string copy(str);
-    unescape(copy);
+    unescape(copy, translateLetters);
     return copy;
 }
 
@@ -91,7 +96,7 @@ istream& getcleanline(istream& is, string& buffer)
 
 void parse_id(const string& line, Term& term)
 {
-    static const bxp::sregex e = bxp::sregex::compile("id:\\s*(\\w+):(\\d+)\\s*");
+    static const bxp::sregex e = bxp::sregex::compile("id:\\s*(\\w+):(\\S+)\\s*");
 
     bxp::smatch what; 
     if (!bxp::regex_match(line, what, e))
@@ -103,7 +108,7 @@ void parse_id(const string& line, Term& term)
     if(id.empty())
         term.id = 0; // id was all zeros
     else
-        term.id = lexical_cast<Term::id_type>(unescape(id));
+        term.id = lexical_cast<Term::id_type>(unescape(id, true));
 }
 
 
@@ -134,22 +139,32 @@ void parse_def(const string& line, Term& term)
 
 void parse_relationship(const string& line, Term& term)
 {
-    static const bxp::sregex e = bxp::sregex::compile("relationship:\\s*(\\w+) (\\w+):(\\d+).*");
+    static const bxp::sregex e = bxp::sregex::compile("relationship:\\s*(\\w+) (\\S+).*");
+    static const bxp::sregex idRegex = bxp::sregex::compile("(\\w+):(\\S+)");
 
     bxp::smatch what; 
     if (!bxp::regex_match(line, what, e))
         throw runtime_error("Error matching term relationship on line: \"" + line + "\"");
 
+    string relation = unescape_copy(what[2]);
+    if (bal::istarts_with(relation, "xsd:"))
+        return;
+
+    bxp::smatch what2;
+    if (!bxp::regex_match(relation, what2, idRegex))
+        throw runtime_error("Error parsing id from relationship on line: \"" + line + "\"");
+    string id = unescape_copy(what2[2], true);
+
     if (what[1] == "part_of")
     {
-        if (what[2].str() != term.prefix)
-            cerr << "[obo] Ignoring part_of relationship with different prefix:\n  " << line << endl;
+        if (what2[1].str() != term.prefix)
+            cerr << "[obo] Ignoring part_of relationship with different prefix:\n  " << term.id << " " << term.name << endl << line << endl;
         else
-            term.parentsPartOf.push_back(lexical_cast<Term::id_type>(what[3]));
+            term.parentsPartOf.push_back(lexical_cast<Term::id_type>(id));
         return;
     }
 
-    term.relations.insert(make_pair(unescape_copy(what[1]), make_pair(what[2], lexical_cast<Term::id_type>(what[3]))));
+    term.relations.insert(make_pair(unescape_copy(what[1]), make_pair(what2[1], lexical_cast<Term::id_type>(id))));
 }
 
 
@@ -167,11 +182,13 @@ void parse_is_obsolete(const string& line, Term& term)
 
 void parse_is_a(const string& line, Term& term)
 {
-    static const bxp::sregex e = bxp::sregex::compile("is_a:\\s*(\\w+):(\\d+).*");
+    static const bxp::sregex e = bxp::sregex::compile("is_a:\\s*(\\w+):(\\S+).*");
 
     bxp::smatch what; 
     if (!bxp::regex_match(line, what, e))
-        throw runtime_error("Error matching term is_a on line: \"" + line + "\"");    
+        throw runtime_error("Error matching term is_a on line: \"" + line + "\"");
+
+    string id = unescape_copy(what[2], true);
 
     if (what[1].str() != term.prefix)
     {
@@ -179,7 +196,7 @@ void parse_is_a(const string& line, Term& term)
         return;
     }
 
-    term.parentsIsA.push_back(lexical_cast<Term::id_type>(what[2]));
+    term.parentsIsA.push_back(lexical_cast<Term::id_type>(id));
 }
 
 
@@ -303,6 +320,10 @@ void parseStanza(istream& is, OBO& obo)
     {
         Term term = parseTerm(is);
 
+        // ignore UO terms in MS obo
+        if (bal::iends_with(obo.filename, "psi-ms.obo") && term.prefix == "UO")
+            return;
+
         // validate prefix
         if (obo.prefixes.empty())
         {
@@ -311,9 +332,13 @@ void parseStanza(istream& is, OBO& obo)
         else
         {
             if (obo.prefixes.count(term.prefix) == 0)
-                throw runtime_error("[obo] Prefix mismatch: " +
-                                    lexical_cast<string>(obo.prefixes) + ", " + 
-                                    term.prefix + ":" + lexical_cast<string>(term.id));
+            {
+                //throw runtime_error("[obo] Prefix mismatch: " +
+                //                    lexical_cast<string>(obo.prefixes) + ", " + 
+                //                    term.prefix + ":" + lexical_cast<string>(term.id));
+                cerr << "[obo] Prefix was not declared in header: " + term.prefix + ":" + lexical_cast<string>(term.id) << endl;
+                obo.prefixes.insert(term.prefix);
+            }
         }
 
         // add all terms, even obsolete ones

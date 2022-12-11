@@ -433,15 +433,6 @@ namespace pwiz.Skyline.Model.Results
         {
             return ChangeProp(ImClone(this), im => im.LibraryDotProduct = prop);
         }
-
-        public TransitionGroupChromInfo ChangeScore(float qvalue, float score)
-        {
-            return ChangeProp(ImClone(this), im =>
-            {
-                im.QValue = qvalue;
-                im.ZScore = score;
-            });
-        }
         #endregion
 
         #region object overrides
@@ -506,8 +497,8 @@ namespace pwiz.Skyline.Model.Results
                 result = (result*397) ^ Identified.GetHashCode();
                 result = (result*397) ^ (LibraryDotProduct.HasValue ? LibraryDotProduct.Value.GetHashCode() : 0);
                 result = (result*397) ^ (IsotopeDotProduct.HasValue ? IsotopeDotProduct.Value.GetHashCode() : 0);
-                result = (result*397) ^ (QValue.HasValue ? QValue.Value.GetHashCode() : 0);
-                result = (result*397) ^ (ZScore.HasValue ? ZScore.Value.GetHashCode() : 0);
+                result = (result*397) ^ QValue.GetHashCode();
+                result = (result*397) ^ ZScore.GetHashCode();
                 result = (result*397) ^ OptimizationStep;
                 result = (result*397) ^ Annotations.GetHashCode();
                 result = (result*397) ^ UserSet.GetHashCode();
@@ -571,7 +562,7 @@ namespace pwiz.Skyline.Model.Results
             RetentionTime = retentionTime;
             StartRetentionTime = startRetentionTime;
             EndRetentionTime = endRetentionTime;
-            IonMobility = ionMobility;
+            IonMobility = ionMobility ?? IonMobilityFilter.EMPTY;
             Area = area;
             BackgroundArea = backgroundArea;
             Height = height;
@@ -947,11 +938,11 @@ namespace pwiz.Skyline.Model.Results
             var msDataFileInfo = measuredResults.Chromatograms[transitionPeak.ReplicateIndex]
                 .MSDataFileInfos[transitionPeak.FileIndexInReplicate];
             var fileId = msDataFileInfo.FileId;
-            var ionMobilityValue = DataValues.FromOptional(transitionPeak.IonMobility);
+            var ionMobilityValue = transitionPeak.IonMobility;
             IonMobilityFilter ionMobility;
             if (ionMobilityValue.HasValue)
             {
-                var ionMobilityWidth = DataValues.FromOptional(transitionPeak.IonMobilityWindow);
+                var ionMobilityWidth = transitionPeak.IonMobilityWindow;
                 var ionMobilityUnits = msDataFileInfo.IonMobilityUnits;
                 ionMobility = IonMobilityFilter.GetIonMobilityFilter(ionMobilityValue.Value, ionMobilityUnits, ionMobilityWidth, null);
             }
@@ -973,7 +964,7 @@ namespace pwiz.Skyline.Model.Results
             return new TransitionChromInfo(
                 fileId, 
                 transitionPeak.OptimizationStep,
-                DataValues.FromOptional(transitionPeak.MassError),
+                transitionPeak.MassError,
                 transitionPeak.RetentionTime,
                 transitionPeak.StartRetentionTime,
                 transitionPeak.EndRetentionTime,
@@ -1444,7 +1435,7 @@ namespace pwiz.Skyline.Model.Results
         TRUE,   // SET by manual integration
         FALSE,  // Best peak picked during results import
         IMPORTED,   // Import peak boundaries
-        REINTEGRATED,   // Edit > Refine > Reintagrate
+        REINTEGRATED,   // Edit > Refine > Reintegrate
         MATCHED // Forced by peak matching when adding missing label type precursors
     }
 

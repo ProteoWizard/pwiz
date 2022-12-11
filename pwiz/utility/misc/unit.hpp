@@ -82,24 +82,24 @@ inline std::string quote_string(const string& str) {return "\"" + str + "\"";}
 
 
 #define unit_assert(x) \
-    (!(x) ? throw std::runtime_error(unit_assert_message(__FILE__, __LINE__, #x)) : 0)
+    (!(x) ? throw std::runtime_error(pwiz::util::unit_assert_message(__FILE__, __LINE__, #x)) : 0)
 
 #define unit_assert_to_stream(x, os) \
-    ((os) << (!(x) ? unit_assert_message(__FILE__, __LINE__, #x) + "\n" : ""))
+    ((os) << (!(x) ? pwiz::util::unit_assert_message(__FILE__, __LINE__, #x) + "\n" : ""))
 
 
 #define unit_assert_operator_equal(expected, actual) \
-    (!((expected) == (actual)) ? throw std::runtime_error(unit_assert_equal_message(__FILE__, __LINE__, lexical_cast<string>(expected), lexical_cast<string>(actual), #actual)) : 0)
+    (!((expected) == (actual)) ? throw std::runtime_error(pwiz::util::unit_assert_equal_message(__FILE__, __LINE__, lexical_cast<string>(expected), lexical_cast<string>(actual), #actual)) : 0)
 
 #define unit_assert_operator_equal_to_stream(expected, actual, os) \
-    ((os) << (!((expected) == (actual)) ? unit_assert_equal_message(__FILE__, __LINE__, lexical_cast<string>(expected), lexical_cast<string>(actual), #actual) + "\n" : ""))
+    ((os) << (!((expected) == (actual)) ? pwiz::util::unit_assert_equal_message(__FILE__, __LINE__, lexical_cast<string>(expected), lexical_cast<string>(actual), #actual) + "\n" : ""))
 
 
 #define unit_assert_equal(x, y, epsilon) \
-    (!(fabs((x)-(y)) <= (epsilon)) ? throw std::runtime_error(unit_assert_numeric_equal_message(__FILE__, __LINE__, (x), (y), (epsilon))) : 0)
+    (!(fabs((x)-(y)) <= (epsilon)) ? throw std::runtime_error(pwiz::util::unit_assert_numeric_equal_message(__FILE__, __LINE__, (x), (y), (epsilon))) : 0)
 
 #define unit_assert_equal_to_stream(x, y, epsilon, os) \
-    ((os) << (!(fabs((x)-(y)) <= (epsilon)) ? unit_assert_numeric_equal_message(__FILE__, __LINE__, (x), (y), (epsilon)) + "\n" : ""))
+    ((os) << (!(fabs((x)-(y)) <= (epsilon)) ? pwiz::util::unit_assert_numeric_equal_message(__FILE__, __LINE__, (x), (y), (epsilon)) + "\n" : ""))
 
 
 #define unit_assert_throws(x, exception) \
@@ -111,7 +111,7 @@ inline std::string quote_string(const string& str) {return "\"" + str + "\"";}
             threw = true; \
         } \
         if (!threw) \
-            throw std::runtime_error(unit_assert_exception_message(__FILE__, __LINE__, #x, #exception)); \
+            throw std::runtime_error(pwiz::util::unit_assert_exception_message(__FILE__, __LINE__, #x, #exception)); \
     }
 
 
@@ -124,10 +124,10 @@ inline std::string quote_string(const string& str) {return "\"" + str + "\"";}
             if (e.what() == std::string(whatStr)) \
                 threw = true; \
             else \
-                throw std::runtime_error(unit_assert_exception_message(__FILE__, __LINE__, #x, std::string(#exception)+" "+quote_string(whatStr)+"\nBut a different exception was thrown: ")+quote_string(e.what())); \
+                throw std::runtime_error(pwiz::util::unit_assert_exception_message(__FILE__, __LINE__, #x, std::string(#exception)+" "+pwiz::util::quote_string(whatStr)+"\nBut a different exception was thrown: ")+pwiz::util::quote_string(e.what())); \
         } \
         if (!threw) \
-            throw std::runtime_error(unit_assert_exception_message(__FILE__, __LINE__, #x, std::string(#exception)+" "+quote_string(whatStr))); \
+            throw std::runtime_error(pwiz::util::unit_assert_exception_message(__FILE__, __LINE__, #x, std::string(#exception)+" "+pwiz::util::quote_string(whatStr))); \
     }
 
 
@@ -236,14 +236,14 @@ namespace std
 
     inline ostream& operator<< (ostream& o, const doctest::Approx& rhs)
     {
-        o << rhs.toString();
+        o << toString(rhs);
         return o;
     }
 
     template <typename T>
     bool operator==(const vector<T>& lhs, const vector<doctest::Approx>& rhs)
     {
-        if (doctest::isRunningInTest())
+        if (doctest::is_running_in_test)
             REQUIRE(lhs.size() == rhs.size());
         else if (lhs.size() != rhs.size())
             return false;

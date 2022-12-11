@@ -64,7 +64,7 @@ namespace pwiz.SkylineTestUtil
         public static void DumpFields(Type type, TextWriter writer)
         {
             bool first = true;
-            foreach (var field in type.GetFields(BindingFlags.Instance | BindingFlags.Public | BindingFlags.NonPublic))
+            foreach (var field in type.GetFields(BindingFlags.Instance | BindingFlags.Public | BindingFlags.NonPublic | BindingFlags.DeclaredOnly))
             {
                 if (first)
                 {

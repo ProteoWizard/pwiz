@@ -21,6 +21,7 @@ using System.Collections.Generic;
 using System.Linq;
 using Microsoft.VisualStudio.TestTools.UnitTesting;
 using pwiz.Common.DataBinding;
+using pwiz.Skyline.Controls.Databinding;
 using pwiz.Skyline.Model;
 using pwiz.Skyline.Model.Databinding;
 using pwiz.Skyline.Model.Databinding.Entities;
@@ -59,6 +60,74 @@ namespace pwiz.SkylineTest.Reporting
                 var viewInfo = SkylineViewContext.GetDefaultViewInfo(ColumnDescriptor.RootColumn(dataSchema, type));
                 EnsureViewRoundTrips(viewInfo);
             }
+        }
+
+        [TestMethod]
+        public void TestProteinResultTicArea()
+        {
+            PropertyPath ppProteinResults = PropertyPath.Root.Property(nameof(Protein.Results)).DictionaryValues();
+            var dataSchema = GetDataSchema();
+            var viewSpec = new ViewSpec().SetColumns(new[]
+            {
+                new ColumnSpec(PropertyPath.Root),
+                new ColumnSpec(ppProteinResults.Property(nameof(ProteinResult.Abundance))),
+                new ColumnSpec(ppProteinResults.Property(nameof(ProteinResult.Replicate))
+                    .Property(nameof(Replicate.Files))
+                    .LookupAllItems().Property(nameof(ResultFile.TicArea)))
+            }).SetRowType(typeof(Protein));
+            var viewInfo = new ViewInfo(dataSchema, typeof(Protein), viewSpec);
+            EnsureViewRoundTrips(viewInfo);
+        }
+
+        /// <summary>
+        /// Verifies that when mapping columns from things rooted at <see cref="SkylineDocument"/> to
+        /// other Document Grid entity types, both the source and target property paths exist, and
+        /// the Type of the two columns are the same.
+        /// </summary>
+        [TestMethod]
+        public void TestDocumentViewTransformerMappings()
+        {
+            VerifyRowMapping(typeof(Protein));
+            VerifyRowMapping(typeof(Peptide));
+            VerifyRowMapping(typeof(Precursor));
+            VerifyRowMapping(typeof(Transition));
+            VerifyRowMapping(typeof(Replicate));
+        }
+
+        private void VerifyRowMapping(Type rowType)
+        {
+            var dataSchema = GetDataSchema();
+            var rootDocNodeColumn = ColumnDescriptor.RootColumn(dataSchema, rowType);
+            var rootSkylineDocumentColumn = ColumnDescriptor.RootColumn(dataSchema, typeof(SkylineDocument));
+            var mapping = DocumentViewTransformer.GetMappingForRowType(rowType);
+            Assert.IsNotNull(mapping);
+            foreach (var entry in mapping)
+            {
+                var docNodeColumn = ResolvePropertyPath(rootDocNodeColumn, entry.Key);
+                var skylineDocumentColumn = ResolvePropertyPath(rootSkylineDocumentColumn, entry.Value);
+                Assert.AreEqual(docNodeColumn.PropertyType, skylineDocumentColumn.PropertyType, "Mismatch on column types for mapping entry {0}", entry);
+            }
+        }
+
+        private static ColumnDescriptor ResolvePropertyPath(ColumnDescriptor column, PropertyPath propertyPath)
+        {
+            if (propertyPath.IsRoot)
+            {
+                return column;
+            }
+
+            var parentColumn = ResolvePropertyPath(column, propertyPath.Parent);
+            ColumnDescriptor childColumn = null;
+            if (propertyPath.IsUnboundLookup)
+            {
+                childColumn = parentColumn.GetCollectionColumn();
+            }
+            else
+            {
+                childColumn = parentColumn.ResolveChild(propertyPath.Name);
+            }
+            Assert.IsNotNull(childColumn, "Unable to resolve property {0} from root column {1}", propertyPath, column.PropertyType);
+            return childColumn;
         }
 
         private void ValidateReport(ReportSpec reportSpec, Type rowType)

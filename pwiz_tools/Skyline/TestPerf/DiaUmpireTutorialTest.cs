@@ -116,7 +116,7 @@ namespace TestPerf
         }
         private string RootName { get; set; }
 
-        [TestMethod]
+        [TestMethod, NoParallelTesting]
         public void TestDiaTtofDiaUmpireTutorial()
         {
             //IsPauseForScreenShots = true;
@@ -129,20 +129,20 @@ namespace TestPerf
                 IrtIntercept = -67.215,
 
                 TargetCounts = new[] { 14, 213, 277, 1661 },
-                FinalTargetCounts = new[] { 10, 213, 277, 1661 },
-                ScoringModelCoefficients = "0.3528|-0.4846|5.9333|-1.1380|-0.5351|1.0173|0.0899|-0.0254",
+                FinalTargetCounts = new[] { 11, 215, 279, 1673 },
+                ScoringModelCoefficients = "0.0967|-0.2729|5.0783|0.0589|-0.5294|0.8508|0.1078|-0.0567",
                 MassErrorStats = new[]
                 {
-                    new[] {3.3, 4.0},
-                    new[] {3.1, 3.6},
-                    new[] {3.4, 4.3},
+                    new[] {3.4, 3.7},
+                    new[] {3.2, 3.3},
+                    new[] {3.5, 4.1},
                 },
             };
 
             TestTtofData();
         }
 
-        [TestMethod]
+        [TestMethod, NoParallelTesting]
         public void TestDiaTtofDiaUmpireTutorialFullFileset()
         {
             // do not run full filesets for nightly tests
@@ -162,15 +162,15 @@ namespace TestPerf
                 IrtIntercept = -67.212,
 
                 TargetCounts = new[] { 6945, 41874, 46365, 278190 },
-                FinalTargetCounts = new[] { 2642, 27792, 31145, 186870 },
-                ScoringModelCoefficients = "0.1963|-0.6327|4.0327|0.1539|-0.1755|0.5762|0.1579|-0.0450",
+                FinalTargetCounts = new[] { 2642, 27840, 31188, 187128 },
+                ScoringModelCoefficients = "0.1950|-0.6249|4.0515|0.1456|-0.1799|0.5898|0.1468|-0.0444",
                 MassErrorStats = new[]
                 {
                     new[] {2.7, 5.1},
                     new[] {2.6, 4.7},
                     new[] {3.5, 5.0},
                     new[] {4.9, 4.7},
-                    new[] {4.0, 5.0},
+                    new[] {4.0, 5.1},
                     new[] {-0.1, 4.5},
                     new[] {1.1, 4.8},
                 },
@@ -206,7 +206,7 @@ namespace TestPerf
             RunTest();
         }
 
-        [TestMethod]
+        [TestMethod, NoParallelTesting]
         public void TestDiaQeDiaUmpireTutorial()
         {
             _analysisValues = new AnalysisValues
@@ -219,13 +219,13 @@ namespace TestPerf
                 IrtIntercept = -45.948,
 
                 TargetCounts = new[] { 14, 173, 203, 1217 },
-                FinalTargetCounts = new[] { 10, 173, 203, 1217 },
-                ScoringModelCoefficients = "0.4517|-1.2533|3.2801|-0.5960|-0.0941|0.8708|0.0924|-0.0688",
+                FinalTargetCounts = new[] { 11, 175, 205, 1229 },
+                ScoringModelCoefficients = "0.2009|-0.8476|1.6044|1.7595|-0.0760|0.7611|0.2394|-0.0863",
                 MassErrorStats = new[]
                 {
                     new[] {1.9, 3.8},
                     new[] {1.4, 3.7},
-                    new[] {2.4, 3.9},
+                    new[] {2.3, 3.9},
                 },
             };
 
@@ -233,7 +233,7 @@ namespace TestPerf
                 TestQeData();
         }
 
-        [TestMethod]
+        [TestMethod, NoParallelTesting]
         public void TestDiaQeDiaUmpireTutorialFullFileset()
         {
             // do not run full filesets for nightly tests
@@ -253,13 +253,13 @@ namespace TestPerf
                 IrtIntercept = -45.630,
 
                 TargetCounts = new[] { 4424, 25010, 27129, 162774 },
-                FinalTargetCounts = new[] { 1528, 15308, 16775, 100650 },
-                ScoringModelCoefficients = "0.2817|-0.8060|3.0565|1.2920|-0.0721|0.6843|0.0820|-0.0641",
+                FinalTargetCounts = new[] { 1529, 15328, 16793, 100758 },
+                ScoringModelCoefficients = "0.2747|-0.8326|2.9655|1.2696|-0.0727|0.7013|0.0816|-0.0658",
                 MassErrorStats = new[]
                 {
                     new[] {1.6, 4.6},
                     new[] {1.2, 4.4},
-                    new[] {1.7, 4.8},
+                    new[] {1.6, 4.8},
                     new[] {1.8, 4.3},
                     new[] {1.8, 4.8},
                     new[] {1.8, 4.4},
@@ -359,7 +359,7 @@ namespace TestPerf
             SrmDocument doc = SkylineWindow.Document;
 
             string documentBaseName = "DIA-" + InstrumentTypeName + "-tutorial";
-            string documentFile = TestContext.GetTestPath(documentBaseName + SrmDocument.EXT);
+            string documentFile = GetTestPath(documentBaseName + SrmDocument.EXT);
             RunUI(() => SkylineWindow.SaveDocument(documentFile));
 
             // Launch the wizard
@@ -628,13 +628,13 @@ namespace TestPerf
             }
             OkDialog(addIrtDlg, addIrtDlg.OkDialog);
 
-            var peptidesPerProteinDlg = WaitForOpenForm<PeptidesPerProteinDlg>(600000);
+            var peptidesPerProteinDlg = WaitForOpenForm<AssociateProteinsDlg>(600000);
             WaitForCondition(() => peptidesPerProteinDlg.DocumentFinalCalculated);
             RunUI(() =>
             {
-                int proteinCount, peptideCount, precursorCount, transitionCount;
-                peptidesPerProteinDlg.NewTargetsAll(out proteinCount, out peptideCount, out precursorCount, out transitionCount);
-                ValidateTargets(ref _analysisValues.TargetCounts, proteinCount, peptideCount, precursorCount, transitionCount, @"TargetCounts");
+                //int proteinCount, peptideCount, precursorCount, transitionCount;
+                //peptidesPerProteinDlg.NewTargetsAll(out proteinCount, out peptideCount, out precursorCount, out transitionCount);
+                //ValidateTargets(ref _analysisValues.TargetCounts, proteinCount, peptideCount, precursorCount, transitionCount, @"TargetCounts");
                 if (_analysisValues.RemoveDuplicates)
                     peptidesPerProteinDlg.RemoveDuplicatePeptides = true;
                 if (_analysisValues.MinPeptidesPerProtein.HasValue)

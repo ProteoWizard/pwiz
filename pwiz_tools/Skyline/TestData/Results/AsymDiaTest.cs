@@ -68,13 +68,13 @@ namespace pwiz.SkylineTestData.Results
 
             LocalizationHelper.InitThread();    // TODO: All unit tests should be correctly initialized
 
-            var testFilesDir = new TestFilesDir(TestContext, ZIP_FILE);
-            string docPath = testFilesDir.GetTestPath("Asym_DIA.sky");
+            TestFilesDir = new TestFilesDir(TestContext, ZIP_FILE);
+            string docPath = TestFilesDir.GetTestPath("Asym_DIA.sky");
             string cachePath = ChromatogramCache.FinalPathForName(docPath, null);
             FileEx.SafeDelete(cachePath);
             SrmDocument doc = ResultsUtil.DeserializeDocument(docPath);
             var refine = new RefinementSettings();
-            doc = refine.ConvertToSmallMolecules(doc, testFilesDir.FullPath, asSmallMolecules);
+            doc = refine.ConvertToSmallMolecules(doc, TestFilesDir.FullPath, asSmallMolecules);
             const int expectedMoleculeCount = 1;   // At first small molecules did not support multiple charge states, and this was 2 for that test mode
             AssertEx.IsDocumentState(doc, null, 1, expectedMoleculeCount, 2, 4);
             var fullScanInitial = doc.Settings.TransitionSettings.FullScan;
@@ -85,7 +85,7 @@ namespace pwiz.SkylineTestData.Results
             using (var docContainer = new ResultsTestDocumentContainer(doc, docPath))
             {
                 // Import the first RAW file (or mzML for international)
-                string rawPath = testFilesDir.GetTestPath("Asym_DIA_data.mzML");
+                string rawPath = TestFilesDir.GetTestPath("Asym_DIA_data.mzML");
                 var measuredResults = new MeasuredResults(new[] { new ChromatogramSet("Single", new[] { rawPath }) });
                 TransitionGroupDocNode nodeGroup;
                 double ratio;
@@ -102,7 +102,7 @@ namespace pwiz.SkylineTestData.Results
 
                     // Revert to original document, and get rid of results cache
                     Assert.IsTrue(docContainer.SetDocument(doc, docResults, false));
-                    FileEx.SafeDelete(testFilesDir.GetTestPath("Asym_DIA.skyd"));
+                    FileEx.SafeDelete(TestFilesDir.GetTestPath("Asym_DIA.skyd"));
                 }
 
                 {
@@ -120,7 +120,7 @@ namespace pwiz.SkylineTestData.Results
 
                     // Revert to original document, and get rid of results cache
                     Assert.IsTrue(docContainer.SetDocument(doc, docResults, false));
-                    FileEx.SafeDelete(testFilesDir.GetTestPath("Asym_DIA.skyd"));
+                    FileEx.SafeDelete(TestFilesDir.GetTestPath("Asym_DIA.skyd"));
                 }
 
                 {
@@ -140,14 +140,14 @@ namespace pwiz.SkylineTestData.Results
                     var normalizedValueCalculator = new NormalizedValueCalculator(docResults);
                     ratio = normalizedValueCalculator.GetTransitionGroupValue(
                         normalizedValueCalculator.GetFirstRatioNormalizationMethod(),
-                        docResults.Molecules.First(), nodeGroup, nodeGroup.Results[0][0]).Value;
+                        docResults.Molecules.First(), nodeGroup, 0, nodeGroup.Results[0][0]).Value;
                     // Asymmetric should be a lot closer to 1.0
                     if (asSmallMolecules != RefinementSettings.ConvertToSmallMoleculesMode.masses_only)  // Can't use labels without a formula
                         Assert.AreEqual(fixedRatio, ratio, 0.05);
 
                     // Revert to original document, and get rid of results cache
                     Assert.IsTrue(docContainer.SetDocument(doc, docResults, false));
-                    FileEx.SafeDelete(testFilesDir.GetTestPath("Asym_DIA.skyd"));
+                    FileEx.SafeDelete(TestFilesDir.GetTestPath("Asym_DIA.skyd"));
                 }
 
                 {
@@ -170,7 +170,7 @@ namespace pwiz.SkylineTestData.Results
 
                     // Revert to original document, and get rid of results cache
                     Assert.IsTrue(docContainer.SetDocument(doc, docResults, false));
-                    FileEx.SafeDelete(testFilesDir.GetTestPath("Asym_DIA.skyd"));
+                    FileEx.SafeDelete(TestFilesDir.GetTestPath("Asym_DIA.skyd"));
                 }
 
                 {
@@ -197,7 +197,7 @@ namespace pwiz.SkylineTestData.Results
 
                     // Revert to original document, and get rid of results cache
                     Assert.IsTrue(docContainer.SetDocument(doc, docContainer.Document, false));
-                    FileEx.SafeDelete(testFilesDir.GetTestPath("Asym_DIA.skyd"));
+                    FileEx.SafeDelete(TestFilesDir.GetTestPath("Asym_DIA.skyd"));
                 }
 
                 {
@@ -216,11 +216,9 @@ namespace pwiz.SkylineTestData.Results
 
                     // Revert to original document, and get rid of results cache
                     Assert.IsTrue(docContainer.SetDocument(doc, docResults, false));
-                    FileEx.SafeDelete(testFilesDir.GetTestPath("Asym_DIA.skyd"));
+                    FileEx.SafeDelete(TestFilesDir.GetTestPath("Asym_DIA.skyd"));
                 }
             }
-
-            testFilesDir.Dispose();
         }
 
         private double? GetFirstTransitionGroupRatio(SrmDocument document)
@@ -231,7 +229,7 @@ namespace pwiz.SkylineTestData.Results
             var peptideDocNode = document.Molecules.First();
             var transitionGroupDocNode = peptideDocNode.TransitionGroups.First();
             return normalizedValueCalculator.GetTransitionGroupValue(normalizationMethod, peptideDocNode,
-                transitionGroupDocNode, transitionGroupDocNode.Results[0][0]);
+                transitionGroupDocNode, 0, transitionGroupDocNode.Results[0][0]);
         }
     }
 }

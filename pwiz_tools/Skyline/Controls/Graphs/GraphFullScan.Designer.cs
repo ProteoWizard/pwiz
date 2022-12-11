@@ -51,6 +51,7 @@
             this.showScanNumberContextMenuItem = new System.Windows.Forms.ToolStripMenuItem();
             this.showPeakAnnotationsContextMenuItem = new System.Windows.Forms.ToolStripMenuItem();
             this.toolStripSeparator1 = new System.Windows.Forms.ToolStripSeparator();
+            this.showCollisionEnergyContextMenuItem = new System.Windows.Forms.ToolStripMenuItem();
             this.GraphPanel.SuspendLayout();
             this.toolBar.SuspendLayout();
             this.contextMenuStrip1.SuspendLayout();
@@ -160,7 +161,6 @@
             resources.ApplyResources(this.magnifyBtn, "magnifyBtn");
             this.magnifyBtn.Margin = new System.Windows.Forms.Padding(0, 1, 10, 2);
             this.magnifyBtn.Name = "magnifyBtn";
-            this.magnifyBtn.CheckedChanged += new System.EventHandler(this.magnifyBtn_CheckedChanged);
             // 
             // spectrumBtn
             // 
@@ -172,7 +172,6 @@
             this.spectrumBtn.Image = global::pwiz.Skyline.Properties.Resources.DataProcessing;
             resources.ApplyResources(this.spectrumBtn, "spectrumBtn");
             this.spectrumBtn.Name = "spectrumBtn";
-            this.spectrumBtn.CheckedChanged += new System.EventHandler(this.spectrumBtn_CheckedChanged);
             // 
             // filterBtn
             // 
@@ -183,7 +182,6 @@
             resources.ApplyResources(this.filterBtn, "filterBtn");
             this.filterBtn.Margin = new System.Windows.Forms.Padding(10, 1, 0, 2);
             this.filterBtn.Name = "filterBtn";
-            this.filterBtn.CheckedChanged += new System.EventHandler(this.filterBtn_CheckedChanged);
             // 
             // lblScanId
             // 
@@ -208,7 +206,6 @@
             this.toolStripButtonShowAnnotations.Image = global::pwiz.Skyline.Properties.Resources.AnnotatedSpectum;
             resources.ApplyResources(this.toolStripButtonShowAnnotations, "toolStripButtonShowAnnotations");
             this.toolStripButtonShowAnnotations.Name = "toolStripButtonShowAnnotations";
-            this.toolStripButtonShowAnnotations.CheckedChanged += new System.EventHandler(this.toolStripButtonShowAnnotations_CheckedChanged);
             // 
             // toolStripLabelPeakType
             // 
@@ -228,6 +225,7 @@
             // 
             this.contextMenuStrip1.Items.AddRange(new System.Windows.Forms.ToolStripItem[] {
             this.showScanNumberContextMenuItem,
+            this.showCollisionEnergyContextMenuItem,
             this.showPeakAnnotationsContextMenuItem,
             this.toolStripSeparator1});
             this.contextMenuStrip1.Name = "contextMenuStrip1";
@@ -250,6 +248,12 @@
             // 
             this.toolStripSeparator1.Name = "toolStripSeparator1";
             resources.ApplyResources(this.toolStripSeparator1, "toolStripSeparator1");
+            // 
+            // showCollisionEnergyContextMenuItem
+            // 
+            this.showCollisionEnergyContextMenuItem.Name = "showCollisionEnergyContextMenuItem";
+            resources.ApplyResources(this.showCollisionEnergyContextMenuItem, "showCollisionEnergyContextMenuItem");
+            this.showCollisionEnergyContextMenuItem.Click += new System.EventHandler(this.showCollisionEnergyToolStripMenuItem_Click);
             // 
             // GraphFullScan
             // 
@@ -292,5 +296,6 @@
         private System.Windows.Forms.ToolStripSeparator toolStripSeparator1;
         private System.Windows.Forms.ToolStripLabel toolStripLabelPeakType;
         private System.Windows.Forms.ToolStripComboBox comboBoxPeakType;
+        private System.Windows.Forms.ToolStripMenuItem showCollisionEnergyContextMenuItem;
     }
 }

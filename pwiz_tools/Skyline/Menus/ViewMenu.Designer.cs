@@ -58,21 +58,10 @@
             this.toolStripSeparator39 = new System.Windows.Forms.ToolStripSeparator();
             this.libraryMatchToolStripMenuItem = new System.Windows.Forms.ToolStripMenuItem();
             this.ionTypesMenuItem = new System.Windows.Forms.ToolStripMenuItem();
-            this.aMenuItem = new System.Windows.Forms.ToolStripMenuItem();
-            this.bMenuItem = new System.Windows.Forms.ToolStripMenuItem();
-            this.cMenuItem = new System.Windows.Forms.ToolStripMenuItem();
-            this.xMenuItem = new System.Windows.Forms.ToolStripMenuItem();
-            this.yMenuItem = new System.Windows.Forms.ToolStripMenuItem();
-            this.zMenuItem = new System.Windows.Forms.ToolStripMenuItem();
-            this.zhMenuItem = new System.Windows.Forms.ToolStripMenuItem();
-            this.zhhMenuItem = new System.Windows.Forms.ToolStripMenuItem();
             this.fragmentsMenuItem = new System.Windows.Forms.ToolStripMenuItem();
+            this.specialIonsMenuItem = new System.Windows.Forms.ToolStripMenuItem();
             this.precursorIonMenuItem = new System.Windows.Forms.ToolStripMenuItem();
             this.chargesMenuItem = new System.Windows.Forms.ToolStripMenuItem();
-            this.charge1MenuItem = new System.Windows.Forms.ToolStripMenuItem();
-            this.charge2MenuItem = new System.Windows.Forms.ToolStripMenuItem();
-            this.charge3MenuItem = new System.Windows.Forms.ToolStripMenuItem();
-            this.charge4MenuItem = new System.Windows.Forms.ToolStripMenuItem();
             this.ranksMenuItem = new System.Windows.Forms.ToolStripMenuItem();
             this.toolStripSeparator9 = new System.Windows.Forms.ToolStripSeparator();
             this.chromatogramsMenuItem = new System.Windows.Forms.ToolStripMenuItem();
@@ -101,7 +90,6 @@
             this.transformChromNoneMenuItem = new System.Windows.Forms.ToolStripMenuItem();
             this.transformChromInterpolatedMenuItem = new System.Windows.Forms.ToolStripMenuItem();
             this.secondDerivativeMenuItem = new System.Windows.Forms.ToolStripMenuItem();
-            this.firstDerivativeMenuItem = new System.Windows.Forms.ToolStripMenuItem();
             this.smoothSGChromMenuItem = new System.Windows.Forms.ToolStripMenuItem();
             this.autoZoomMenuItem = new System.Windows.Forms.ToolStripMenuItem();
             this.autoZoomNoneMenuItem = new System.Windows.Forms.ToolStripMenuItem();
@@ -140,6 +128,7 @@
             this.listsMenuItem = new System.Windows.Forms.ToolStripMenuItem();
             this.defineNewListMenuItem = new System.Windows.Forms.ToolStripMenuItem();
             this.auditLogMenuItem = new System.Windows.Forms.ToolStripMenuItem();
+            this.candidatePeaksToolStripMenuItem = new System.Windows.Forms.ToolStripMenuItem();
             this.toolStripSeparator36 = new System.Windows.Forms.ToolStripSeparator();
             this.toolBarToolStripMenuItem = new System.Windows.Forms.ToolStripMenuItem();
             this.statusToolStripMenuItem = new System.Windows.Forms.ToolStripMenuItem();
@@ -168,6 +157,9 @@
             this.toolStripSeparator39,
             this.libraryMatchToolStripMenuItem,
             this.ionTypesMenuItem,
+            this.fragmentsMenuItem,
+            this.specialIonsMenuItem,
+            this.precursorIonMenuItem,
             this.chargesMenuItem,
             this.ranksMenuItem,
             this.toolStripSeparator9,
@@ -376,78 +368,9 @@
             // 
             // ionTypesMenuItem
             // 
-            this.ionTypesMenuItem.DropDownItems.AddRange(new System.Windows.Forms.ToolStripItem[] {
-            this.aMenuItem,
-            this.bMenuItem,
-            this.cMenuItem,
-            this.xMenuItem,
-            this.yMenuItem,
-            this.zMenuItem,
-            this.zhMenuItem,
-            this.zhhMenuItem,
-            this.fragmentsMenuItem,
-            this.precursorIonMenuItem});
             resources.ApplyResources(this.ionTypesMenuItem, "ionTypesMenuItem");
             this.ionTypesMenuItem.Name = "ionTypesMenuItem";
             this.ionTypesMenuItem.DropDownOpening += new System.EventHandler(this.ionTypesMenuItem_DropDownOpening);
-            // 
-            // aMenuItem
-            // 
-            this.aMenuItem.CheckOnClick = true;
-            this.aMenuItem.Name = "aMenuItem";
-            resources.ApplyResources(this.aMenuItem, "aMenuItem");
-            this.aMenuItem.Click += new System.EventHandler(this.aMenuItem_Click);
-            // 
-            // bMenuItem
-            // 
-            this.bMenuItem.CheckOnClick = true;
-            this.bMenuItem.Name = "bMenuItem";
-            resources.ApplyResources(this.bMenuItem, "bMenuItem");
-            this.bMenuItem.Click += new System.EventHandler(this.bMenuItem_Click);
-            // 
-            // cMenuItem
-            // 
-            this.cMenuItem.CheckOnClick = true;
-            this.cMenuItem.Name = "cMenuItem";
-            resources.ApplyResources(this.cMenuItem, "cMenuItem");
-            this.cMenuItem.Click += new System.EventHandler(this.cMenuItem_Click);
-            // 
-            // xMenuItem
-            // 
-            this.xMenuItem.CheckOnClick = true;
-            this.xMenuItem.Name = "xMenuItem";
-            resources.ApplyResources(this.xMenuItem, "xMenuItem");
-            this.xMenuItem.Click += new System.EventHandler(this.xMenuItem_Click);
-            // 
-            // yMenuItem
-            // 
-            this.yMenuItem.Checked = true;
-            this.yMenuItem.CheckOnClick = true;
-            this.yMenuItem.CheckState = System.Windows.Forms.CheckState.Checked;
-            this.yMenuItem.Name = "yMenuItem";
-            resources.ApplyResources(this.yMenuItem, "yMenuItem");
-            this.yMenuItem.Click += new System.EventHandler(this.yMenuItem_Click);
-            // 
-            // zMenuItem
-            // 
-            this.zMenuItem.CheckOnClick = true;
-            this.zMenuItem.Name = "zMenuItem";
-            resources.ApplyResources(this.zMenuItem, "zMenuItem");
-            this.zMenuItem.Click += new System.EventHandler(this.zMenuItem_Click);
-            // 
-            // zhMenuItem
-            // 
-            this.zhMenuItem.CheckOnClick = true;
-            this.zhMenuItem.Name = "zhMenuItem";
-            resources.ApplyResources(this.zhMenuItem, "zhMenuItem");
-            this.zhMenuItem.Click += new System.EventHandler(this.zhMenuItem_Click);
-            // 
-            // zhhMenuItem
-            // 
-            this.zhhMenuItem.CheckOnClick = true;
-            this.zhhMenuItem.Name = "zhhMenuItem";
-            resources.ApplyResources(this.zhhMenuItem, "zhhMenuItem");
-            this.zhhMenuItem.Click += new System.EventHandler(this.zhhMenuItem_Click);
             // 
             // fragmentsMenuItem
             // 
@@ -455,6 +378,13 @@
             this.fragmentsMenuItem.Name = "fragmentsMenuItem";
             resources.ApplyResources(this.fragmentsMenuItem, "fragmentsMenuItem");
             this.fragmentsMenuItem.Click += new System.EventHandler(this.fragmentsMenuItem_Click);
+            // 
+            // specialIonsMenuItem
+            // 
+            this.specialIonsMenuItem.CheckOnClick = true;
+            this.specialIonsMenuItem.Name = "specialIonsMenuItem";
+            resources.ApplyResources(this.specialIonsMenuItem, "specialIonsMenuItem");
+            this.specialIonsMenuItem.Click += new System.EventHandler(this.specialIonsMenuItem_Click);
             // 
             // precursorIonMenuItem
             // 
@@ -464,42 +394,9 @@
             // 
             // chargesMenuItem
             // 
-            this.chargesMenuItem.DropDownItems.AddRange(new System.Windows.Forms.ToolStripItem[] {
-            this.charge1MenuItem,
-            this.charge2MenuItem,
-            this.charge3MenuItem,
-            this.charge4MenuItem});
             resources.ApplyResources(this.chargesMenuItem, "chargesMenuItem");
             this.chargesMenuItem.Name = "chargesMenuItem";
             this.chargesMenuItem.DropDownOpening += new System.EventHandler(this.chargesMenuItem_DropDownOpening);
-            // 
-            // charge1MenuItem
-            // 
-            this.charge1MenuItem.Checked = true;
-            this.charge1MenuItem.CheckOnClick = true;
-            this.charge1MenuItem.CheckState = System.Windows.Forms.CheckState.Checked;
-            this.charge1MenuItem.Name = "charge1MenuItem";
-            resources.ApplyResources(this.charge1MenuItem, "charge1MenuItem");
-            this.charge1MenuItem.Click += new System.EventHandler(this.charge1MenuItem_Click);
-            // 
-            // charge2MenuItem
-            // 
-            this.charge2MenuItem.CheckOnClick = true;
-            this.charge2MenuItem.Name = "charge2MenuItem";
-            resources.ApplyResources(this.charge2MenuItem, "charge2MenuItem");
-            this.charge2MenuItem.Click += new System.EventHandler(this.charge2MenuItem_Click);
-            // 
-            // charge3MenuItem
-            // 
-            this.charge3MenuItem.Name = "charge3MenuItem";
-            resources.ApplyResources(this.charge3MenuItem, "charge3MenuItem");
-            this.charge3MenuItem.Click += new System.EventHandler(this.charge3MenuItem_Click);
-            // 
-            // charge4MenuItem
-            // 
-            this.charge4MenuItem.Name = "charge4MenuItem";
-            resources.ApplyResources(this.charge4MenuItem, "charge4MenuItem");
-            this.charge4MenuItem.Click += new System.EventHandler(this.charge4MenuItem_Click);
             // 
             // ranksMenuItem
             // 
@@ -668,7 +565,6 @@
             this.transformChromNoneMenuItem,
             this.transformChromInterpolatedMenuItem,
             this.secondDerivativeMenuItem,
-            this.firstDerivativeMenuItem,
             this.smoothSGChromMenuItem});
             resources.ApplyResources(this.transformChromMenuItem, "transformChromMenuItem");
             this.transformChromMenuItem.Name = "transformChromMenuItem";
@@ -691,12 +587,6 @@
             this.secondDerivativeMenuItem.Name = "secondDerivativeMenuItem";
             resources.ApplyResources(this.secondDerivativeMenuItem, "secondDerivativeMenuItem");
             this.secondDerivativeMenuItem.Click += new System.EventHandler(this.secondDerivativeMenuItem_Click);
-            // 
-            // firstDerivativeMenuItem
-            // 
-            this.firstDerivativeMenuItem.Name = "firstDerivativeMenuItem";
-            resources.ApplyResources(this.firstDerivativeMenuItem, "firstDerivativeMenuItem");
-            this.firstDerivativeMenuItem.Click += new System.EventHandler(this.firstDerivativeMenuItem_Click);
             // 
             // smoothSGChromMenuItem
             // 
@@ -909,7 +799,8 @@
             this.resultsGridMenuItem,
             this.groupComparisonsMenuItem,
             this.listsMenuItem,
-            this.auditLogMenuItem});
+            this.auditLogMenuItem,
+            this.candidatePeaksToolStripMenuItem});
             this.otherGridsMenuItem.Name = "otherGridsMenuItem";
             resources.ApplyResources(this.otherGridsMenuItem, "otherGridsMenuItem");
             // 
@@ -959,6 +850,12 @@
             this.auditLogMenuItem.Name = "auditLogMenuItem";
             resources.ApplyResources(this.auditLogMenuItem, "auditLogMenuItem");
             this.auditLogMenuItem.Click += new System.EventHandler(this.auditLogMenuItem_Click);
+            // 
+            // candidatePeaksToolStripMenuItem
+            // 
+            this.candidatePeaksToolStripMenuItem.Name = "candidatePeaksToolStripMenuItem";
+            resources.ApplyResources(this.candidatePeaksToolStripMenuItem, "candidatePeaksToolStripMenuItem");
+            this.candidatePeaksToolStripMenuItem.Click += new System.EventHandler(this.candidatePeaksToolStripMenuItem_Click);
             // 
             // toolStripSeparator36
             // 
@@ -1026,21 +923,10 @@
         private System.Windows.Forms.ToolStripSeparator toolStripSeparator39;
         private System.Windows.Forms.ToolStripMenuItem libraryMatchToolStripMenuItem;
         private System.Windows.Forms.ToolStripMenuItem ionTypesMenuItem;
-        private System.Windows.Forms.ToolStripMenuItem aMenuItem;
-        private System.Windows.Forms.ToolStripMenuItem bMenuItem;
-        private System.Windows.Forms.ToolStripMenuItem cMenuItem;
-        private System.Windows.Forms.ToolStripMenuItem xMenuItem;
-        private System.Windows.Forms.ToolStripMenuItem yMenuItem;
-        private System.Windows.Forms.ToolStripMenuItem zMenuItem;
-        private System.Windows.Forms.ToolStripMenuItem zhMenuItem;
-        private System.Windows.Forms.ToolStripMenuItem zhhMenuItem;
         private System.Windows.Forms.ToolStripMenuItem fragmentsMenuItem;
+        private System.Windows.Forms.ToolStripMenuItem specialIonsMenuItem;
         private System.Windows.Forms.ToolStripMenuItem precursorIonMenuItem;
         private System.Windows.Forms.ToolStripMenuItem chargesMenuItem;
-        private System.Windows.Forms.ToolStripMenuItem charge1MenuItem;
-        private System.Windows.Forms.ToolStripMenuItem charge2MenuItem;
-        private System.Windows.Forms.ToolStripMenuItem charge3MenuItem;
-        private System.Windows.Forms.ToolStripMenuItem charge4MenuItem;
         private System.Windows.Forms.ToolStripMenuItem ranksMenuItem;
         private System.Windows.Forms.ToolStripSeparator toolStripSeparator9;
         private System.Windows.Forms.ToolStripMenuItem chromatogramsMenuItem;
@@ -1069,7 +955,6 @@
         private System.Windows.Forms.ToolStripMenuItem transformChromNoneMenuItem;
         private System.Windows.Forms.ToolStripMenuItem transformChromInterpolatedMenuItem;
         private System.Windows.Forms.ToolStripMenuItem secondDerivativeMenuItem;
-        private System.Windows.Forms.ToolStripMenuItem firstDerivativeMenuItem;
         private System.Windows.Forms.ToolStripMenuItem smoothSGChromMenuItem;
         private System.Windows.Forms.ToolStripMenuItem autoZoomMenuItem;
         private System.Windows.Forms.ToolStripMenuItem autoZoomNoneMenuItem;
@@ -1111,6 +996,7 @@
         private System.Windows.Forms.ToolStripSeparator toolStripSeparator36;
         private System.Windows.Forms.ToolStripMenuItem toolBarToolStripMenuItem;
         private System.Windows.Forms.ToolStripMenuItem statusToolStripMenuItem;
+        private System.Windows.Forms.ToolStripMenuItem candidatePeaksToolStripMenuItem;
         private System.Windows.Forms.ToolStripMenuItem viewTargetsMenuItem;
     }
 }

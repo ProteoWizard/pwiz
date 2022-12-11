@@ -1428,6 +1428,13 @@ public ref class SpectrumList
     /// return true if either the wrapper implementation would benefit from using multiple threads, or if the inner wrapped list would
     /// </summary>
     virtual bool benefitsFromWorkerThreads();
+
+
+    /// <summary>
+    // returns true if the source data contains calibration spectra that is being skipped over as with msconvert's --ignoreCalibrationScans flag
+    // currently this is only for Waters lockmass functions
+    /// </summary>
+    virtual bool calibrationSpectraAreOmitted();
 };
 
 

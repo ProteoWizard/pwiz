@@ -203,10 +203,8 @@ namespace pwiz.Skyline.Model
                     PrecursorAdduct);
             }
 
-            var modifiedSequence = settings
-                .GetPrecursorCalc(TransitionGroup.LabelType, nodePep.ExplicitMods)
-                .GetModifiedSequence(nodePep.Peptide.Target, SequenceModFormatType.full_precision, false).ToString();
-            return new LibKey(modifiedSequence, PrecursorAdduct.AdductCharge);
+            return new LibKey(settings.GetModifiedSequence(nodePep.Peptide.Target, LabelType, nodePep.ExplicitMods),
+                PrecursorAdduct.AdductCharge);
         }
 
         /// <summary>
@@ -1021,30 +1019,22 @@ namespace pwiz.Skyline.Model
                     // loss modifications which are no longer possible.
                     var modsNew = settingsNew.PeptideSettings.Modifications;
                     var modsLossNew = modsNew.NeutralLossModifications.ToArray();
-                    var modsOld = diff.SettingsOld.PeptideSettings.Modifications;
-                    var modsLossOld = modsOld.NeutralLossModifications.ToArray();
-                    if (modsNew.MaxNeutralLosses < modsOld.MaxNeutralLosses ||
-                        !ArrayUtil.EqualsDeep(modsLossNew, modsLossOld) ||
-                        !ArrayUtil.EqualsDeep(settingsNew.TransitionSettings.Filter.MeasuredIons, diff.SettingsOld.TransitionSettings.Filter.MeasuredIons) ||
-                        !Equals(settingsNew.TransitionSettings.Instrument, diff.SettingsOld.TransitionSettings.Instrument))
+                    if (nodePep.HasExplicitMods && nodePep.ExplicitMods.HasNeutralLosses)
                     {
-                        if (nodePep.HasExplicitMods && nodePep.ExplicitMods.HasNeutralLosses)
-                        {
-                            modsLossNew = modsLossNew
-                                .Union(nodePep.ExplicitMods.NeutralLossModifications.Select(m => m.Modification))
-                                .ToArray();
-                        }
-                        IList<DocNode> childrenNew = new List<DocNode>();
-                        foreach (TransitionDocNode nodeTransition in nodeResult.Children)
-                        {
-                            if (nodeTransition.IsLossPossible(modsNew.MaxNeutralLosses, modsLossNew) &&
-                                settingsNew.TransitionSettings.Filter.IsAvailableReporterIon(nodeTransition) &&
-                                settingsNew.TransitionSettings.Instrument.IsMeasurable(nodeTransition.Mz, precursorMz))
-                                childrenNew.Add(nodeTransition);
-                        }
-
-                        nodeResult = (TransitionGroupDocNode)nodeResult.ChangeChildrenChecked(childrenNew);
+                        modsLossNew = modsLossNew
+                            .Union(nodePep.ExplicitMods.NeutralLossModifications.Select(m => m.Modification))
+                            .ToArray();
                     }
+                    IList<DocNode> childrenNew = new List<DocNode>();
+                    foreach (TransitionDocNode nodeTransition in nodeResult.Children)
+                    {
+                        if (nodeTransition.IsLossPossible(modsNew.MaxNeutralLosses, modsLossNew) &&
+                            settingsNew.TransitionSettings.Filter.IsAvailableReporterIon(nodeTransition) &&
+                            settingsNew.TransitionSettings.Instrument.IsMeasurable(nodeTransition.Mz, precursorMz))
+                            childrenNew.Add(nodeTransition);
+                    }
+
+                    nodeResult = (TransitionGroupDocNode)nodeResult.ChangeChildrenChecked(childrenNew);
                 }
 
                 if (diff.DiffTransitionProps)
@@ -1435,8 +1425,7 @@ namespace pwiz.Skyline.Model
 
                 if (resultsHandler != null)
                 {
-                    reintegratePeaks[j] = resultsHandler.GetPeakFeatureStatistics(
-                        nodePep.Peptide.GlobalIndex, fileId.GlobalIndex);
+                    reintegratePeaks[j] = resultsHandler.GetPeakFeatureStatistics(nodePep.Peptide, fileId);
                 }
             }
             resultsCalc.AddReintegrateInfo(resultsHandler, fileIds, reintegratePeaks);
@@ -2361,7 +2350,6 @@ namespace pwiz.Skyline.Model
                                                                           step,
                                                                           TransitionCount,
                                                                           chromInfoGroup,
-                                                                          ReintegrateResults,
                                                                           GetReintegratePeak(fileId, step), 
                                                                           explicitPeakBounds);
                         calc.AddChromInfo(nodeTran, chromInfo);
@@ -2444,7 +2432,6 @@ namespace pwiz.Skyline.Model
                                                         int optimizationStep,
                                                         int transitionCount,
                                                         TransitionGroupChromInfo chromInfo,
-                                                        MProphetResultsHandler reintegrateResults,
                                                         PeakFeatureStatistics reintegratePeak,
                                                         ExplicitPeakBounds explicitPeakBounds)
             {

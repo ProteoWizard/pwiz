@@ -217,7 +217,7 @@
     <value>2</value>
   </data>
   <data name="btnNext.Text" xml:space="preserve">
-    <value>&amp;Next &gt;</value>
+    <value>Ne&amp;xt &gt;</value>
   </data>
   <data name="&gt;&gt;btnNext.Name" xml:space="preserve">
     <value>btnNext</value>
@@ -332,7 +332,7 @@ library will be created.</value>
     <value>16</value>
   </data>
   <data name="ceLabel.Text" xml:space="preserve">
-    <value>&amp;NCE:</value>
+    <value>N&amp;CE:</value>
   </data>
   <data name="ceLabel.Visible" type="System.Boolean, mscorlib">
     <value>False</value>
@@ -518,7 +518,7 @@ you can append more spectra in the future.</value>
     <value>18</value>
   </data>
   <data name="cbFilter.Text" xml:space="preserve">
-    <value>&amp;Filter for document peptides</value>
+    <value>Filter for &amp;document peptides</value>
   </data>
   <data name="&gt;&gt;cbFilter.Name" xml:space="preserve">
     <value>cbFilter</value>
@@ -641,7 +641,7 @@ you can append more spectra in the future.</value>
     <value>1</value>
   </data>
   <data name="prositDataSourceRadioButton.Text" xml:space="preserve">
-    <value>Prosit</value>
+    <value>Pro&amp;sit</value>
   </data>
   <data name="&gt;&gt;prositDataSourceRadioButton.Name" xml:space="preserve">
     <value>prositDataSourceRadioButton</value>
@@ -668,7 +668,7 @@ you can append more spectra in the future.</value>
     <value>0</value>
   </data>
   <data name="dataSourceFilesRadioButton.Text" xml:space="preserve">
-    <value>Files</value>
+    <value>&amp;Files</value>
   </data>
   <data name="&gt;&gt;dataSourceFilesRadioButton.Name" xml:space="preserve">
     <value>dataSourceFilesRadioButton</value>
@@ -773,7 +773,7 @@ you can append more spectra in the future.</value>
     <value>gridInputFiles</value>
   </data>
   <data name="&gt;&gt;gridInputFiles.Type" xml:space="preserve">
-    <value>pwiz.Skyline.FileUI.PeptideSearch.BuildLibraryGridView, Skyline-daily, Version=21.2.1.441, Culture=neutral, PublicKeyToken=null</value>
+    <value>pwiz.Skyline.FileUI.PeptideSearch.BuildLibraryGridView, Skyline, Version=1.0.0.0, Culture=neutral, PublicKeyToken=null</value>
   </data>
   <data name="&gt;&gt;gridInputFiles.Parent" xml:space="preserve">
     <value>panelFiles</value>
@@ -794,7 +794,7 @@ you can append more spectra in the future.</value>
     <value>4</value>
   </data>
   <data name="btnAddPaths.Text" xml:space="preserve">
-    <value>Add &amp;Paths...</value>
+    <value>Add Pat&amp;hs...</value>
   </data>
   <data name="&gt;&gt;btnAddPaths.Name" xml:space="preserve">
     <value>btnAddPaths</value>
@@ -969,7 +969,7 @@ You can uncheck ones you do not want added to the library.</value>
     <value>modeUIHandler</value>
   </data>
   <data name="&gt;&gt;modeUIHandler.Type" xml:space="preserve">
-    <value>pwiz.Skyline.Util.Helpers+ModeUIExtender, Skyline-daily, Version=21.2.1.441, Culture=neutral, PublicKeyToken=null</value>
+    <value>pwiz.Skyline.Util.Helpers+ModeUIExtender, Skyline, Version=1.0.0.0, Culture=neutral, PublicKeyToken=null</value>
   </data>
   <data name="&gt;&gt;helpTip.Name" xml:space="preserve">
     <value>helpTip</value>
@@ -981,6 +981,6 @@ You can uncheck ones you do not want added to the library.</value>
     <value>BuildLibraryDlg</value>
   </data>
   <data name="&gt;&gt;$this.Type" xml:space="preserve">
-    <value>pwiz.Skyline.Util.FormEx, Skyline-daily, Version=21.2.1.441, Culture=neutral, PublicKeyToken=null</value>
+    <value>pwiz.Skyline.Util.FormEx, Skyline, Version=1.0.0.0, Culture=neutral, PublicKeyToken=null</value>
   </data>
 </root>

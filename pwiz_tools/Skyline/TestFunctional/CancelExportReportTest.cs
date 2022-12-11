@@ -21,10 +21,8 @@ using System.IO;
 using System.Threading;
 using System.Windows.Forms;
 using Microsoft.VisualStudio.TestTools.UnitTesting;
-using pwiz.Common.DataBinding;
 using pwiz.Skyline.Controls;
 using pwiz.Skyline.Controls.Databinding;
-using pwiz.Skyline.Model.Databinding;
 using pwiz.SkylineTestUtil;
 
 namespace pwiz.SkylineTestFunctional
@@ -114,8 +112,8 @@ namespace pwiz.SkylineTestFunctional
             bool triedToCancel = RunAndMaybeTryCancel(() =>
             {
                 var skylineViewContext = (SkylineViewContext)databoundGridControl.NavBar.ViewContext;
-                skylineViewContext.ExportToFile(databoundGridControl, databoundGridControl.BindingListSource.ViewInfo, filename,
-                    new DsvWriter(SEPARATOR_TO_USE));
+                skylineViewContext.ExportToFile(databoundGridControl, databoundGridControl.BindingListSource.ViewInfo,
+                    filename, SEPARATOR_TO_USE);
             }, true);
             if (!triedToCancel)
             {

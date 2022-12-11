@@ -74,12 +74,91 @@ namespace pwiz.Skyline.Model.Crosslinking
             }
         }
 
-        public bool IsEmpty
+        /// <summary>
+        /// Returns true if all of the peptides in this fragment ion are connected to each other by
+        /// at least one crosslinker.
+        /// </summary>
+        public bool IsConnected(PeptideStructure peptideStructure)
         {
-            get
+            var peptideIndexes =
+                Enumerable.Range(0, IonChain.Count).Where(i => !IonChain[i].IsEmpty).ToHashSet();
+            if (peptideIndexes.Count == 0)
             {
-                return IonChain.IsEmpty;
+                // Empty
+                return false;
             }
+
+            var containedCrosslinks = new List<Crosslink>();
+            var cleavedCrosslinks = new List<Crosslink>();
+            foreach (var crosslink in peptideStructure.Crosslinks)
+            {
+                bool? isContained = ContainsCrosslink(peptideStructure, crosslink.Sites);
+                if (!isContained.HasValue)
+                {
+                    cleavedCrosslinks.Add(crosslink);
+                } 
+                else if (isContained.Value)
+                {
+                    containedCrosslinks.Add(crosslink);
+                }
+            }
+
+            // Verify that the number of cleaved crosslinkers with a particular name is the same as
+            // the number of neutral losses with that name
+            if (Losses == null)
+            {
+                if (cleavedCrosslinks.Count > 0)
+                {
+                    return false;
+                }
+            }
+            else
+            {
+                var lossCountsByName = Losses.Losses.GroupBy(loss => loss.PrecursorMod.Name)
+                    .ToDictionary(group => group.Key, group => group.Count());
+                var cleavedCrosslinksByName = cleavedCrosslinks.GroupBy(crosslink => crosslink.Crosslinker.Name)
+                    .ToDictionary(group => group.Key, group => group.Count());
+                foreach (var crosslinkerName in peptideStructure.Crosslinks
+                             .Select(crosslink => crosslink.Crosslinker.Name).Distinct())
+                {
+                    lossCountsByName.TryGetValue(crosslinkerName, out int lossCount);
+                    cleavedCrosslinksByName.TryGetValue(crosslinkerName, out int cleavedCrosslinkCount);
+                    if (lossCount != cleavedCrosslinkCount)
+                    {
+                        return false;
+                    }
+                }
+            }
+
+            var peptideIndexQueue = new Queue<int>();
+            var visitedPeptideIndexes = new HashSet<int>();
+            peptideIndexQueue.Enqueue(peptideIndexes.Min());
+            while (peptideIndexQueue.Count > 0)
+            {
+                var peptideIndex = peptideIndexQueue.Dequeue();
+                visitedPeptideIndexes.Add(peptideIndex);
+                foreach (var crosslink in containedCrosslinks)
+                {
+                    if (crosslink.Sites.PeptideIndexes.Contains(peptideIndex))
+                    {
+                        foreach (var site in crosslink.Sites)
+                        {
+                            if (visitedPeptideIndexes.Add(site.PeptideIndex))
+                            {
+                                peptideIndexQueue.Enqueue(site.PeptideIndex);
+                            }
+                        }
+                    }
+                }
+            }
+
+            return visitedPeptideIndexes.SetEquals(peptideIndexes);
+        }
+
+        public IEnumerable<Crosslink> GetCleavedCrosslinks(PeptideStructure peptideStructure)
+        {
+            return peptideStructure.Crosslinks.Where(crosslink =>
+                !ContainsCrosslink(peptideStructure, crosslink.Sites).HasValue);
         }
 
         public bool IsOrphan
@@ -174,11 +253,18 @@ namespace pwiz.Skyline.Model.Crosslinking
         /// This method only considers CrosslinkSites whose PeptideIndex is less than IonType.Count.
         /// This is to enable filtering out impossible partial ions while constructing larger ions using
         /// <see cref="SingleFragmentIon.Prepend"/>.
+        /// Note that this does not check whether all of the fragment ions are actually connected to each other.
+        /// For that, you would need to also check <see cref="IsConnected"/>.
         /// </summary>
         public bool IsAllowed(PeptideStructure peptideStructure)
         {
             foreach (var crosslink in peptideStructure.Crosslinks)
             {
+                if (crosslink.Crosslinker.HasLoss)
+                {
+                    // A crosslinker with losses is cleavable to assume it is valid for now
+                    continue;
+                }
                 if (!ContainsCrosslink(peptideStructure, crosslink.Sites).HasValue)
                 {
                     return false;
@@ -276,6 +362,25 @@ namespace pwiz.Skyline.Model.Crosslinking
         public ComplexFragmentIon MakeChargedIon(TransitionGroup group, Adduct adduct, ExplicitMods explicitMods)
         {
             return new ComplexFragmentIon(MakeTransition(group, adduct), this, explicitMods);
+        }
+
+        public NeutralFragmentIon AddLosses(TransitionLosses losses)
+        {
+            if (losses == null)
+            {
+                return this;
+            }
+            TransitionLosses newLosses;
+            if (Losses == null)
+            {
+                newLosses = losses;
+            }
+            else
+            {
+                newLosses = new TransitionLosses(Losses.Losses.Concat(losses.Losses).ToList(), losses.MassType);
+            }
+
+            return ChangeProp(ImClone(this), im => im.Losses = newLosses);
         }
     }
 }

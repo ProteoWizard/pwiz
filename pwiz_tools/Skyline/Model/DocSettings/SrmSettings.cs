@@ -439,9 +439,6 @@ namespace pwiz.Skyline.Model.DocSettings
 
         public Target GetModifiedSequence(PeptideDocNode nodePep)
         {
-            if (nodePep.Peptide.IsCustomMolecule)
-                return nodePep.ModifiedTarget;
-            Assume.IsNotNull(nodePep.ModifiedSequence);
             return nodePep.ModifiedTarget;
         }
 
@@ -2046,7 +2043,39 @@ namespace pwiz.Skyline.Model.DocSettings
                     result.TransitionSettings.ChangeIonMobilityFiltering(TransitionIonMobilityFiltering.EMPTY));
             }
 
+            if (documentFormat < DocumentFormat.VERSION_21_12)
+            {
+                result = result.ChangeTransitionSettings(transitionSettings =>
+                    transitionSettings.ChangeIntegration(
+                        transitionSettings.Integration.ChangeSynchronizedIntegration(null, false,
+                            Array.Empty<string>())));
+            }
+
+            if (documentFormat < DocumentFormat.PROTEIN_GROUPS)
+            {
+                result = result.ChangePeptideSettings(peptideSettings =>
+                    peptideSettings.ChangeParsimonySettings(ProteinAssociation.ParsimonySettings.DEFAULT));
+            }
+
             return result;
+        }
+
+        public ChromatogramGroupInfo LoadChromatogramGroup(ChromatogramSet chromatogramSet, MsDataFileUri dataFilePath, PeptideDocNode peptide,
+            TransitionGroupDocNode transitionGroup)
+        {
+            if (!HasResults)
+            {
+                return null;
+            }
+
+            if (!MeasuredResults.TryLoadChromatogram(chromatogramSet, peptide, transitionGroup,
+                (float) TransitionSettings.Instrument.MzMatchTolerance, out var infoSet))
+            {
+                return null;
+            }
+
+            return infoSet.FirstOrDefault(chromatogramGroupInfo =>
+                Equals(chromatogramGroupInfo.FilePath, dataFilePath));
         }
 
         #region Implementation of IXmlSerializable
@@ -2767,6 +2796,15 @@ namespace pwiz.Skyline.Model.DocSettings
             // Force update if the bulk import has just completed
             else if (settingsOld.HasResults && settingsOld.MeasuredResults.IsResultsUpdateRequired)
                 DiffResults = true;
+
+            if (!settingsNew.PeptideSettings.Libraries.IsLoaded)
+            {
+                // If the libraries have not been loaded then we will not be able to determine which children
+                // should be chosen
+                DiffPeptides = false;
+                DiffTransitionGroups = false;
+                DiffTransitions = false;
+            }
         }
 
         private static bool EqualExceptAnnotations(MeasuredResults measuredResultsNew, MeasuredResults measuredResultsOld)

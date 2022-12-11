@@ -45,6 +45,9 @@ namespace pwiz.Skyline.Model
         public const int DWELL_TIME_MAX = 1000;
         public const int DWELL_TIME_DEFAULT = 20;
 
+        public const double ACCUMULATION_TIME_MIN = 0;
+        public const double ACCUMULATION_TIME_MAX = 500;
+
         public const int RUN_LENGTH_MIN = 0; // Not inclusive
         public const int RUN_LENGTH_MAX = 500;
         public const int RUN_LENGTH_DEFAULT = 60;
@@ -391,9 +394,8 @@ namespace pwiz.Skyline.Model
                     var peptideSchedule = new PeptideSchedule(nodePep, maxInstrumentTrans);
                     foreach (TransitionGroupDocNode nodeTranGroup in nodePep.TransitionGroups.Where(PassesPolarityFilter))
                     {
-                        double timeWindow;
                         double retentionTime = predict.PredictRetentionTime(Document, nodePep, nodeTranGroup, SchedulingReplicateIndex,
-                            SchedulingAlgorithm, singleWindow, out timeWindow) ?? 0;
+                            SchedulingAlgorithm, singleWindow, out var timeWindow) ?? 0;
                         var nodeTranGroupPrimary = PrimaryTransitionCount > 0
                                                    ? nodePep.GetPrimaryResultsGroup(nodeTranGroup)
                                                    : null;

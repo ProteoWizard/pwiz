@@ -166,7 +166,7 @@
     <value>12, 34</value>
   </data>
   <data name="dataGridViewErrors.Size" type="System.Drawing.Size, System.Drawing">
-    <value>740, 290</value>
+    <value>833, 290</value>
   </data>
   <data name="dataGridViewErrors.TabIndex" type="System.Int32, mscorlib">
     <value>1</value>
@@ -190,7 +190,7 @@
     <value>NoControl</value>
   </data>
   <data name="buttonOk.Location" type="System.Drawing.Point, System.Drawing">
-    <value>770, 34</value>
+    <value>689, 331</value>
   </data>
   <data name="buttonOk.Size" type="System.Drawing.Size, System.Drawing">
     <value>75, 23</value>
@@ -217,7 +217,7 @@
     <value>Top, Right</value>
   </data>
   <data name="buttonCancel.Location" type="System.Drawing.Point, System.Drawing">
-    <value>770, 63</value>
+    <value>770, 331</value>
   </data>
   <data name="buttonCancel.Size" type="System.Drawing.Size, System.Drawing">
     <value>75, 23</value>

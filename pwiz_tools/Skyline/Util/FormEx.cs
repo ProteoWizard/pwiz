@@ -301,13 +301,16 @@ namespace pwiz.Skyline.Util
 
         public static Point GetOffscreenPoint()
         {
-            var offscreenPoint = new Point(0, 0);
+            // First use a position that is usually enough to put any window above and left of the screen
+            var offscreenPoint = new Point(-5000, -5000);
+            // Then review all screens and make sure this is less than one screen size outside its
+            // top-left corner
             foreach (var screen in Screen.AllScreens)
             {
-                offscreenPoint.X = Math.Min(offscreenPoint.X, screen.Bounds.Right);
-                offscreenPoint.Y = Math.Min(offscreenPoint.Y, screen.Bounds.Bottom);
+                offscreenPoint.X = Math.Min(offscreenPoint.X, screen.Bounds.Left - screen.Bounds.Width);
+                offscreenPoint.Y = Math.Min(offscreenPoint.Y, screen.Bounds.Top - screen.Bounds.Height);
             }
-            return offscreenPoint - Screen.PrimaryScreen.Bounds.Size;    // position one screen away to top left
+            return offscreenPoint;
         }
 
         public static Form GetParentForm(Control control)
@@ -351,5 +354,24 @@ namespace pwiz.Skyline.Util
 
         public virtual string DetailedMessage { get { return null; } }
 
+        public static Control GetFocused(Control.ControlCollection controls)
+        {
+            foreach (Control c in controls)
+            {
+                if (c.Focused)
+                {
+                    // Return the focused control
+                    return c;
+                }
+                if (c.ContainsFocus)
+                {
+                    // If the focus is contained inside a control's children
+                    // return the child
+                    return GetFocused(c.Controls);
+                }
+            }
+            // No control on the form has focus
+            return null;
+        }
     }
 }

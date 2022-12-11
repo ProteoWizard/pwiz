@@ -1285,6 +1285,42 @@ namespace pwiz.Skyline.Model.AuditLog {
         }
         
         /// <summary>
+        ///   Looks up a localized string similar to Matching.
+        /// </summary>
+        public static string RelativeRT_Matching {
+            get {
+                return ResourceManager.GetString("RelativeRT_Matching", resourceCulture);
+            }
+        }
+        
+        /// <summary>
+        ///   Looks up a localized string similar to Overlapping.
+        /// </summary>
+        public static string RelativeRT_Overlapping {
+            get {
+                return ResourceManager.GetString("RelativeRT_Overlapping", resourceCulture);
+            }
+        }
+        
+        /// <summary>
+        ///   Looks up a localized string similar to Preceding.
+        /// </summary>
+        public static string RelativeRT_Preceding {
+            get {
+                return ResourceManager.GetString("RelativeRT_Preceding", resourceCulture);
+            }
+        }
+        
+        /// <summary>
+        ///   Looks up a localized string similar to Unknown.
+        /// </summary>
+        public static string RelativeRT_Unknown {
+            get {
+                return ResourceManager.GetString("RelativeRT_Unknown", resourceCulture);
+            }
+        }
+        
+        /// <summary>
         ///   Looks up a localized string similar to Use only scans within time frame of MS/MS IDs.
         /// </summary>
         public static string RetentionTimeFilterType_ms2_ids {

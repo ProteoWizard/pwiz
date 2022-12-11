@@ -93,7 +93,7 @@ namespace pwiz.Skyline.Model.GroupComparison
             {
                 foreach (var precursor in peptide.TransitionGroups)
                 {
-                    if (NormalizationMethod.RatioToLabel.Matches(ComparisonDef.NormalizationMethod, precursor.TransitionGroup.LabelType))
+                    if (ComparisonDef.NormalizationMethod.HideLabelType(SrmDocument.Settings, precursor.LabelType))
                     {
                         continue;
                     }
@@ -451,8 +451,8 @@ namespace pwiz.Skyline.Model.GroupComparison
                             BioReplicate = replicateEntry.Value.BioReplicate,
                             Control = replicateEntry.Value.IsControl,
                             IdentityPath = quantityEntry.Key,
-                            Intensity = Math.Max(1.0, quantityEntry.Value.Intensity),
-                            Denominator = Math.Max(1.0, quantityEntry.Value.Denominator),
+                            Intensity = quantityEntry.Value.Intensity,
+                            Denominator = quantityEntry.Value.Denominator,
                             ReplicateIndex = replicateEntry.Key,
                         };
                         foldChangeDetails.Add(dataRowDetails);
@@ -489,7 +489,13 @@ namespace pwiz.Skyline.Model.GroupComparison
 
             public double GetLog2Abundance()
             {
-                return Math.Log(Intensity/Denominator)/Math.Log(2.0);
+                double log2Abundance = Math.Log(Intensity/Denominator)/Math.Log(2.0);
+                if (double.IsNaN(log2Abundance) || double.IsInfinity(log2Abundance))
+                {
+                    log2Abundance = 0;
+                }
+
+                return log2Abundance;
             }
         }
 

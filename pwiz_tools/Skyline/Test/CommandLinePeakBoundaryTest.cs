@@ -118,13 +118,13 @@ namespace pwiz.SkylineTest
         public void TestCommandLineImportPeakBoundary()
         {
             // Load the SRM document and relevant files            
-            var testFilesDir = new TestFilesDir(TestContext, TEST_ZIP_PATH);
+            TestFilesDir = new TestFilesDir(TestContext, TEST_ZIP_PATH);
             bool isIntl = (TextUtil.CsvSeparator != TextUtil.SEPARATOR_CSV);
             var precursorMzs = isIntl ? _precursorMzsIntl : _precursorMzsUs;
             var peakBoundaryFileTsv =
-                testFilesDir.GetTestPath(isIntl ? "PeakBoundaryTsvIntl.tsv" : "PeakBoundaryTsv.tsv");
-            var peakBoundaryFileCsv = testFilesDir.GetTestPath(isIntl ? "PeakBoundaryIntl.csv" : "PeakBoundaryUS.csv");
-            var originalDocumentPath = testFilesDir.GetTestPath("Chrom05.sky");
+                TestFilesDir.GetTestPath(isIntl ? "PeakBoundaryTsvIntl.tsv" : "PeakBoundaryTsv.tsv");
+            var peakBoundaryFileCsv = TestFilesDir.GetTestPath(isIntl ? "PeakBoundaryIntl.csv" : "PeakBoundaryUS.csv");
+            var originalDocumentPath = TestFilesDir.GetTestPath("Chrom05.sky");
             var cult = LocalizationHelper.CurrentCulture;
             var cultI = CultureInfo.InvariantCulture;
             string csvSep = TextUtil.CsvSeparator.ToString(cultI);
@@ -144,13 +144,13 @@ namespace pwiz.SkylineTest
                 _csvMinTime2, _csvMaxTime2, _csvIdentified2, _csvAreas2, _peptides, 1, precursorMzs);
 
             // Test that importing same file twice leads to no change to document the second time
-            var afterImportPath = testFilesDir.GetTestPath("AfterImport.sky");
+            var afterImportPath = TestFilesDir.GetTestPath("AfterImport.sky");
             var docNew = ImportFileToDocAndSaveAs(originalDocumentPath, peakBoundaryFileTsv, afterImportPath);
             var docNewSame = ImportFileToDoc(afterImportPath, peakBoundaryFileTsv);
             AssertEx.DocumentCloned(docNew, docNewSame);
 
             // Test that exporting peak boundaries and then importing them leads to no change
-            string peakBoundaryExport = testFilesDir.GetTestPath("TestRoundTrip.csv");
+            string peakBoundaryExport = TestFilesDir.GetTestPath("TestRoundTrip.csv");
             ReportSpec reportSpec = MakeReportSpec();
             ReportToCsv(reportSpec, docNew, peakBoundaryExport);
             var docRoundTrip = ImportFileToDoc(afterImportPath, peakBoundaryExport);
@@ -277,8 +277,8 @@ namespace pwiz.SkylineTest
             // Note: Importing with all 7 columns is tested as part of MProphetResultsHandlerTest
 
             // Now check a file that has peptide ID's, and see that they're properly ported
-            var peptideIdPath = testFilesDir.GetTestPath("Template_MS1Filtering_1118_2011_3-2min.sky");
-            var peakBoundaryFileId = testFilesDir.GetTestPath(isIntl
+            var peptideIdPath = TestFilesDir.GetTestPath("Template_MS1Filtering_1118_2011_3-2min.sky");
+            var peakBoundaryFileId = TestFilesDir.GetTestPath(isIntl
                 ? "Template_MS1Filtering_1118_2011_3-2min_new_intl.tsv"
                 : "Template_MS1Filtering_1118_2011_3-2min_new.tsv");
             DoFileImportTests(peptideIdPath, peakBoundaryFileId, _precursorChargeId,

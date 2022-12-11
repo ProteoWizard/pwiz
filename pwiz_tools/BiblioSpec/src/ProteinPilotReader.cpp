@@ -117,6 +117,10 @@ bool ProteinPilotReader::parseFile()
 }
 
 vector<PSM_SCORE_TYPE> ProteinPilotReader::getScoreTypes() {
+    return getScoreTypesHelper();
+}
+
+vector<PSM_SCORE_TYPE> ProteinPilotReader::getScoreTypesHelper() {
     return vector<PSM_SCORE_TYPE>(1, PROTEIN_PILOT_CONFIDENCE);
 }
 

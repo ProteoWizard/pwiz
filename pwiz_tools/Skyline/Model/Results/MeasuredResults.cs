@@ -51,6 +51,7 @@ namespace pwiz.Skyline.Model.Results
         private ImmutableList<ChromatogramCache> _listPartialCaches;
         private ImmutableList<string> _listSharedCachePaths;
         private HashSet<MsDataFileUri> _setCachedFiles = EMPTY_FILES;
+        private double? _medianTicArea;
 
         public MeasuredResults(IList<ChromatogramSet> chromatograms, bool disableJoining = false)
         {
@@ -107,6 +108,7 @@ namespace pwiz.Skyline.Model.Results
                 EmptyTransitionGroupResults = new Results<TransitionGroupChromInfo>(new ChromInfoList<TransitionGroupChromInfo>[count]);
                 EmptyTransitionResults = new Results<TransitionChromInfo>(new ChromInfoList<TransitionChromInfo>[count]);
                 CheckForNewChromatogramData();
+                _medianTicArea = CalculateMedianTicArea();
             }
         }
 
@@ -190,7 +192,10 @@ namespace pwiz.Skyline.Model.Results
 
         public IEnumerable<Type> CachedScoreTypes
         {
-            get { return Caches.SelectMany(cache => cache.ScoreTypes).Distinct(); }
+            get
+            {
+                return Caches.SelectMany(cache => cache.ScoreTypes.AsCalculatorTypes()).Distinct();
+            }
         }
 
         private IEnumerable<ChromatogramCache> Caches
@@ -1875,7 +1880,7 @@ namespace pwiz.Skyline.Model.Results
             return false;
         }
 
-        public double? GetMedianTicArea()
+        private double? CalculateMedianTicArea()
         {
             var ticAreas = new Statistics(Chromatograms.SelectMany(c => c.MSDataFileInfos)
                 .Where(fileInfo => fileInfo.TicArea.HasValue).Select(fileInfo => fileInfo.TicArea.Value));
@@ -1883,8 +1888,12 @@ namespace pwiz.Skyline.Model.Results
             {
                 return null;
             }
-
             return ticAreas.Median();
+        }
+
+        public double? GetMedianTicArea()
+        {
+            return _medianTicArea;
         }
     }
 

@@ -17,7 +17,6 @@
  * limitations under the License.
  */
 
-using System;
 using System.Diagnostics;
 using System.Globalization;
 using System.IO;
@@ -96,8 +95,8 @@ namespace pwiz.SkylineTestFunctional
         [TestMethod]
         public void TestSkylineCmdInEmptyDirectory()
         {
-            var tempPath = TestContext.GetTestPath("SkylineCmdTempDirectory" + Guid.NewGuid());
-            Directory.CreateDirectory(tempPath);
+            TestContext.EnsureTestResultsDir();
+            var tempPath = TestContext.GetTestResultsPath();
             var destFileName = Path.Combine(tempPath, "SkylineCmd.exe");
             File.Copy(FindSkylineCmdExe(), destFileName);
             var processStartInfo = GetProcessStartInfo(string.Empty);
@@ -117,7 +116,7 @@ namespace pwiz.SkylineTestFunctional
             // Make sure the error message says it tries loading "Skyline.exe" and "Skyline-daily.exe" from the
             // same directory as SkylineCmd.exe
             StringAssert.Contains(output, "Skyline.exe");
-            StringAssert.Contains(output, "Skyline-daily.exe");
+            StringAssert.Contains(output, "Skyline-daily.exe"); // Keep -daily
             StringAssert.Contains(output, tempPath);
         }
 

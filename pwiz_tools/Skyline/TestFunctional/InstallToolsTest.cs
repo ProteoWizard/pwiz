@@ -38,7 +38,7 @@ namespace pwiz.SkylineTestFunctional
     [TestClass]
     public class InstallToolsTest : AbstractFunctionalTest
     {
-        [TestMethod]
+        [TestMethod, NoParallelTesting]
         public void TestInstallTools()
         {
             TestFilesZip = @"TestFunctional\InstallToolsTest.zip"; //Not L10N

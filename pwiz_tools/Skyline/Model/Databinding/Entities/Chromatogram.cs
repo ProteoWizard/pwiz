@@ -115,7 +115,12 @@ namespace pwiz.Skyline.Model.Databinding.Entities
                         .Interpolate(rawTimeIntensities.GetInterpolatedTimes(), rawTimeIntensities.InferZeroes);
                     return new Data(interpolatedTimeIntensities, GetLazyMsDataFileScanIds());
                 }
-                return new Data(timeIntensitiesGroup.TransitionTimeIntensities[_chromatogramInfo.Value.TransitionIndex], GetLazyMsDataFileScanIds());
+                var chromInfo = _chromatogramInfo.Value;
+                if (null == chromInfo)
+                {
+                    return null;
+                }
+                return new Data(timeIntensitiesGroup.TransitionTimeIntensities[chromInfo.TransitionIndex], GetLazyMsDataFileScanIds());
             }
         }
 

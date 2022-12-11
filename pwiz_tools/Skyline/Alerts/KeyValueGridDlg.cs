@@ -100,8 +100,10 @@ namespace pwiz.Skyline.Alerts
                     {
                         Text = valueToString(kvp.Value),
                         Dock = DockStyle.Fill,
-                        Height = lbl.Height
+                        Height = lbl.Height,
+                        UseSystemPasswordChar = kvp.Key.ToLowerInvariant().Contains(@"password")
                     };
+
                     valueControl.LostFocus += (o, args) =>
                     {
                         if (validateValue != null && o is TextBox tb)

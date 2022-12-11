@@ -404,6 +404,7 @@ namespace pwiz.Skyline.SettingsUI
                                          SortableBindingList<DbOptimization> items, EditOptimizationLibraryDlg form, SrmDocument document, TargetResolver targetResolver)
                 : base(gridView, bindingSource, items)
             {
+                SetRequiredColumns(COLUMN_VALUE);
                 gridView.UserDeletingRow += gridView_UserDeletingRow;
                 gridView.UserDeletedRow += gridView_UserDeletedRow;
                 gridView.CellFormatting += gridView_CellFormatting;
@@ -568,10 +569,10 @@ namespace pwiz.Skyline.SettingsUI
                     }
                     else
                     {
-                    string seq = Transition.StripChargeIndicators(sequenceAndCharge, min, max);
-                    ModifiedSequence = SequenceMassCalc.NormalizeModifiedSequence(new Target(seq));
-                    Charge = Transition.GetChargeFromIndicator(sequenceAndCharge, min, max, Adduct.SINGLY_PROTONATED);
-                }
+                        string seq = Transition.StripChargeIndicators(sequenceAndCharge, min, max);
+                        ModifiedSequence = SequenceMassCalc.NormalizeModifiedSequence(new Target(seq));
+                        Charge = Transition.GetChargeFromIndicator(sequenceAndCharge, min, max, Adduct.SINGLY_PROTONATED);
+                    }
                 }
 
                 public Target ModifiedSequence { get; private set; }

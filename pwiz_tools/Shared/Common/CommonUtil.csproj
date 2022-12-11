@@ -126,7 +126,9 @@
     <Compile Include="Collections\AbstractReadOnlyList.cs" />
     <Compile Include="Collections\BindingLists.cs" />
     <Compile Include="Collections\IdentityEqualityComparer.cs" />
+    <Compile Include="Collections\IndexedList.cs" />
     <Compile Include="Collections\LinqExtensions.cs" />
+    <Compile Include="Collections\NaturalComparer.cs" />
     <Compile Include="Collections\PrimitiveArrays.cs" />
     <Compile Include="Collections\CollectionUtil.cs" />
     <Compile Include="Collections\ImmutableCollection.cs" />
@@ -137,6 +139,7 @@
     <Compile Include="Collections\RangeList.cs" />
     <Compile Include="Collections\ReadOnlyList.cs" />
     <Compile Include="Collections\StructSerializer.cs" />
+    <Compile Include="SystemUtil\ItemDescription.cs" />
     <Compile Include="SystemUtil\StringSearch.cs" />
     <Compile Include="SystemUtil\SubstringFinder.cs" />
     <Compile Include="Collections\UniqueList.cs" />

@@ -201,7 +201,7 @@ public: SpectrumList_FilterPredicate_ActivationType(System::Collections::Generic
 
 public ref class SpectrumList_FilterPredicate_AnalyzerType : SpectrumList_FilterPredicate
 {
-    public: SpectrumList_FilterPredicate_AnalyzerType(System::Collections::Generic::IEnumerable<CVID>^ filterItem);
+    public: SpectrumList_FilterPredicate_AnalyzerType(System::Collections::Generic::IEnumerable<CVID>^ filterItem, System::String^ msLevelSet);
 };
 
 

@@ -247,5 +247,11 @@ namespace pwiz.Skyline.Model.Lib
         {
             return ChangeProp(ImClone(this), im => im.PredictedMz = predictedMz);
         }
+        public bool HasVisibleLoss(ICollection<string> showLosses)
+        {
+            return showLosses == null || Losses == null ||
+                   Losses.Losses.Any(loss => showLosses.Contains(loss.Loss.Formula));
+        }
+
     }
 }

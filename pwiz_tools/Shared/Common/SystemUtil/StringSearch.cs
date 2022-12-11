@@ -272,7 +272,7 @@ namespace pwiz.Common.SystemUtil
         /// </summary>
         /// <param name="keywords">Keywords to search for</param>
         /// <param name="cancelToken">A token that can be used to abort building the Aho-Corasick tree</param>
-        public StringSearch(IEnumerable<string> keywords, CancellationToken cancelToken = default)
+        public StringSearch(IEnumerable<string> keywords, CancellationToken cancelToken = default(CancellationToken))
         {
             SetKeywords(keywords, cancelToken);
         }
@@ -364,7 +364,7 @@ namespace pwiz.Common.SystemUtil
         /// </summary>
         public IEnumerable<string> Keywords => _keywords;
 
-        public void SetKeywords(IEnumerable<string> keywords, CancellationToken cancelToken = default)
+        public void SetKeywords(IEnumerable<string> keywords, CancellationToken cancelToken = default(CancellationToken))
         {
             _keywords = keywords;
             BuildTree(cancelToken);

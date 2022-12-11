@@ -933,6 +933,7 @@ namespace pwiz.Skyline
             private readonly IdentityPath _treeSelection;
             private readonly IList<IdentityPath> _treeSelections;
             private readonly string _resultName;
+            private IDictionary<DataGridId, DataboundGridForm.UndoState> _gridStates;
 
             public UndoState(SkylineWindow window)
             {
@@ -941,16 +942,18 @@ namespace pwiz.Skyline
                 _treeSelections = window.SequenceTree.SelectedPaths;
                 _treeSelection = window.SequenceTree.SelectedPath;
                 _resultName = ResultNameCurrent;
+                _gridStates = DataboundGridForm.GetUndoStates();
             }
 
             private UndoState(SkylineWindow window, SrmDocument document, IList<IdentityPath> treeSelections,
-                IdentityPath treeSelection, string resultName)
+                IdentityPath treeSelection, string resultName, IDictionary<DataGridId, DataboundGridForm.UndoState> gridStates)
             {
                 _window = window;
                 _document = document;
                 _treeSelections = treeSelections;
                 _treeSelection = treeSelection;
                 _resultName = resultName;
+                _gridStates = gridStates;
             }
 
             private string ResultNameCurrent
@@ -973,6 +976,8 @@ namespace pwiz.Skyline
                 // Get results name
                 string resultName = ResultNameCurrent;
 
+                var gridStates = DataboundGridForm.GetUndoStates();
+
                 // Restore document state
                 SrmDocument docReplaced = _window.RestoreDocument(_document);
 
@@ -988,9 +993,12 @@ namespace pwiz.Skyline
                 if (_resultName != null)
                     _window.ComboResults.SelectedItem = _resultName;
 
+                if (_gridStates != null)
+                    DataboundGridForm.RestoreUndoStates(_gridStates);
+
                 // Return a record that can be used to restore back to the state
                 // before this action.
-                return new UndoState(_window, docReplaced, treeSelections, treeSelection, resultName);
+                return new UndoState(_window, docReplaced, treeSelections, treeSelection, resultName, gridStates);
             }
         }
 
@@ -1092,6 +1100,9 @@ namespace pwiz.Skyline
             
             DestroyAllChromatogramsGraph();
             base.OnClosing(e);
+
+            foreach (var control in new IMenuControlImplementer[] { _graphFullScan, _graphSpectrum, ViewMenu })
+                control?.DisconnectHandlers();
         }
 
         protected override void OnClosed(EventArgs e)
@@ -2259,11 +2270,12 @@ namespace pwiz.Skyline
                     }
                 }
             }
-            if (newDoc != null)
+
+            var standardPepGroup = firstAdded != null ? (PeptideGroupDocNode)newDoc?.FindNode(firstAdded) : null;
+            if (standardPepGroup != null)
             {
                 ModifyDocument(Resources.SkylineWindow_AddStandardsToDocument_Add_standard_peptides, _ =>
                 {
-                    var standardPepGroup = newDoc.PeptideGroups.First(nodePepGroup => new IdentityPath(nodePepGroup.Id).Equals(firstAdded));
                     var pepList = new List<DocNode>();
                     foreach (var nodePep in standardPepGroup.Peptides.Where(pep => missingPeptides.ContainsKey(pep.ModifiedTarget)))
                     {
@@ -4390,7 +4402,6 @@ namespace pwiz.Skyline
                     SelectedResultsIndex = resultsIndex;
                 }
             }
-            
         }
 
         public sealed override void SetUIMode(SrmDocument.DOCUMENT_TYPE mode)
@@ -4649,6 +4660,17 @@ namespace pwiz.Skyline
                     modeUIHandler.AddHandledComponent(entry.Key, entry.Value);
                 }
             }
+        }
+
+        private void helpToolStripMenuItem_DropDownOpening(object sender, EventArgs e)
+        {
+            // The "Submit Error Report" menu item should only be shown if the user was holding down the Shift key when they dropped the Help menu
+            submitErrorReportMenuItem.Visible = 0 != (ModifierKeys & Keys.Shift);
+        }
+
+        private void submitErrorReportMenuItem_Click(object sender, EventArgs e)
+        {
+            Program.ReportException(new ApplicationException(Resources.SkylineWindow_submitErrorReportMenuItem_Click_Submitting_an_unhandled_error_report));
         }
     }
 }

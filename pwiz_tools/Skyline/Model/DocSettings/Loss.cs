@@ -20,14 +20,17 @@ using System;
 using System.Collections.Generic;
 using System.IO;
 using System.Linq;
+using System.Text;
 using System.Xml;
 using System.Xml.Schema;
 using System.Xml.Serialization;
 using JetBrains.Annotations;
 using pwiz.Common.SystemUtil;
+using pwiz.Skyline.Model.AuditLog;
 using pwiz.Skyline.Model.Serialization;
 using pwiz.Skyline.Properties;
 using pwiz.Skyline.Util;
+using pwiz.Skyline.Util.Extensions;
 
 namespace pwiz.Skyline.Model.DocSettings
 {
@@ -68,7 +71,7 @@ namespace pwiz.Skyline.Model.DocSettings
     }
 
     [XmlRoot("potential_loss")]
-    public sealed class FragmentLoss : Immutable, IXmlSerializable
+    public sealed class FragmentLoss : Immutable, IXmlSerializable, IHasItemDescription
     {
         public const double MIN_LOSS_MASS = 0.0001;
         public const double MAX_LOSS_MASS = 5000;
@@ -105,6 +108,11 @@ namespace pwiz.Skyline.Model.DocSettings
             }
         }
 
+        public string FormulaNoNull
+        {
+            get { return _formula ?? Resources.Loss_FormulaUnknown; }
+        }
+
         [Track]
         public double MonoisotopicMass { get; private set; }
         [Track]
@@ -132,6 +140,39 @@ namespace pwiz.Skyline.Model.DocSettings
             Array.Sort(arrayLosses, (l1, l2) =>
                 Comparer<double>.Default.Compare(l1.MonoisotopicMass, l2.MonoisotopicMass));
             return arrayLosses;
+        }
+
+        public ItemDescription ItemDescription
+        {
+            get
+            {
+                StringBuilder stringBuilder = new StringBuilder();
+                stringBuilder.Append(StaticMod.FormatFormulaOrMass(Formula, -MonoisotopicMass, -AverageMass));
+                if (Charge != 0)
+                {
+                    stringBuilder.Append(Adduct.FromChargeProtonated(Charge));
+                }
+
+                var itemDescription = new ItemDescription(stringBuilder.ToString());
+                switch (Inclusion)
+                {
+                    case LossInclusion.Always:
+                        itemDescription = itemDescription.AppendDetailLines(TextUtil.ColonSeparate(
+                            Resources.FragmentLoss_ItemDescription_Include_by_default, EnumNames.LossInclusion_Always));
+                        break;
+                    case LossInclusion.Library:
+                        itemDescription = itemDescription.AppendDetailLines(TextUtil.ColonSeparate(
+                            Resources.FragmentLoss_ItemDescription_Include_by_default,
+                            EnumNames.LossInclusion_Library));
+                        break;
+                    case LossInclusion.Never:
+                        itemDescription = itemDescription.AppendDetailLines(TextUtil.ColonSeparate(
+                            Resources.FragmentLoss_ItemDescription_Include_by_default, EnumNames.LossInclusion_Never));
+                        break;
+                }
+
+                return itemDescription;
+            }
         }
 
         #region Property change methods
@@ -358,7 +399,8 @@ namespace pwiz.Skyline.Model.DocSettings
         {
             if (ReferenceEquals(null, other)) return false;
             if (ReferenceEquals(this, other)) return true;
-            return other.Mass == Mass;
+            return other.Mass == Mass &&
+                   other.TotalCharge == TotalCharge;
         }
 
         public override bool Equals(object obj)
@@ -371,7 +413,12 @@ namespace pwiz.Skyline.Model.DocSettings
 
         public override int GetHashCode()
         {
-            return Mass.GetHashCode();
+            unchecked
+            {
+                int result = Mass.GetHashCode();
+                result = (result * 397) ^ TotalCharge.GetHashCode();
+                return result;
+            }
         }
 
         #endregion

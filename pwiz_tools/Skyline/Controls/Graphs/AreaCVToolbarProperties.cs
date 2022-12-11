@@ -185,14 +185,14 @@ namespace pwiz.Skyline.Controls.Graphs
             set { checkShowMedian.Checked = value; }
         }
 
-        public double QValueCutoff
+        public double? QValueCutoff
         {
             get
             {
                 double result;
-                return double.TryParse(textQValueCutoff.Text, out result) ? result : double.NaN;
+                return double.TryParse(textQValueCutoff.Text, out result) ? result : (double?)null;
             }
-            set { textQValueCutoff.Text = value.ToString(CultureInfo.CurrentCulture); }
+            set { textQValueCutoff.Text = value?.ToString(CultureInfo.CurrentCulture) ?? string.Empty; }
         }
 
         #endregion
