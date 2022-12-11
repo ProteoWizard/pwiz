@@ -2,11 +2,13 @@
 
 namespace pwiz.Common.Progress
 {
-    public class SubtaskProgress : WrappedProgress
+    public class SubtaskProgress : IProgress
     {
+        private readonly IProgress _parent;
         public SubtaskProgress(IProgress parent, string messageTemplate, double minProgress,
-            double maxProgress) : base(parent)
+            double maxProgress)
         {
+            _parent = parent;
             if (double.IsNaN(minProgress) || double.IsInfinity(minProgress))
             {
                 throw new ArgumentOutOfRangeException(nameof(minProgress));
@@ -25,31 +27,36 @@ namespace pwiz.Common.Progress
         public double MinProgress { get; }
         public double MaxProgress { get; }
 
-        public override double Value
+        public double Value
         {
             set
             {
                 if (!double.IsNaN(value))
                 {
-                    Parent.Value = Math.Max(0, Math.Min(100, MinProgress + (MaxProgress - MinProgress) * value / 100));
+                    _parent.Value = Math.Max(0, Math.Min(100, MinProgress + (MaxProgress - MinProgress) * value / 100));
                 }
             }
             
         }
 
-        public override string Message
+        public string Message
         {
             set
             {
                 if (MessageTemplate == null)
                 {
-                    Parent.Message = value;
+                    _parent.Message = value;
                 }
                 else
                 {
-                    Parent.Message = string.Format(MessageTemplate, value);
+                    _parent.Message = string.Format(MessageTemplate, value);
                 }
             }
+        }
+
+        public bool IsCanceled
+        {
+            get { return _parent.IsCanceled; }
         }
     }
 }

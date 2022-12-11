@@ -2,7 +2,7 @@
 
 namespace pwiz.Common.Progress
 {
-    public abstract class AbstractProgress : IProgress
+    public abstract class AbstractProgress : IProgressEx
     {
         protected AbstractProgress(CancellationToken cancellationToken)
         {

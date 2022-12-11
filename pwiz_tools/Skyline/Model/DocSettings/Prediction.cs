@@ -590,7 +590,7 @@ namespace pwiz.Skyline.Model.DocSettings
             RetentionTimeScoreCache scoreCache,
             bool allPeptides,
             RegressionMethodRT regressionMethod,
-            IProgress progress)
+            IProgressEx progress)
         {
             var data = new List<CalculatedRegressionInfo>(calculators.Count);
             var queueWorker = new QueueWorker<RetentionScoreCalculatorSpec>(null, (calculator, i) =>

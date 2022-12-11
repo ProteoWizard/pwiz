@@ -333,7 +333,7 @@ namespace pwiz.Skyline.Controls.Databinding
             }
         }
 
-        public bool Export(IProgress progress, ViewInfo viewInfo, TextWriter writer, char separator)
+        public bool Export(IProgressEx progress, ViewInfo viewInfo, TextWriter writer, char separator)
         {
             ViewLayout viewLayout = null;
             if (viewInfo.ViewGroup != null)
@@ -348,7 +348,7 @@ namespace pwiz.Skyline.Controls.Databinding
             return Export(progress, viewInfo, viewLayout, writer, separator);
         }
 
-        public bool Export(IProgress progress, ViewInfo viewInfo, ViewLayout viewLayout, TextWriter writer, char separator)
+        public bool Export(IProgressEx progress, ViewInfo viewInfo, ViewLayout viewLayout, TextWriter writer, char separator)
         {
             progress ??= SilentProgress.INSTANCE;
             using (var bindingListSource = new BindingListSource(progress.CancellationToken))

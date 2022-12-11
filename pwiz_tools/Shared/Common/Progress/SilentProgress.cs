@@ -2,7 +2,7 @@
 
 namespace pwiz.Common.Progress
 {
-    public struct SilentProgress : IProgress
+    public struct SilentProgress : IProgressEx
     {
         public static readonly SilentProgress INSTANCE = default;
         public SilentProgress(CancellationToken cancellationToken)

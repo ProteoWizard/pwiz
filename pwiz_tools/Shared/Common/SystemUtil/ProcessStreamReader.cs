@@ -22,6 +22,7 @@ using System.Diagnostics;
 using System.IO;
 using System.Text;
 using System.Threading;
+using pwiz.Common.Progress;
 
 namespace pwiz.Common.SystemUtil
 {
@@ -60,14 +61,14 @@ namespace pwiz.Common.SystemUtil
         /// Public access to read the next line from the interleaved output
         /// of both standard out and standard error.
         /// </summary>
-        public string ReadLine(CancellationToken cancellationToken)
+        public string ReadLine(IProgress progress)
         {
-            int timeout = cancellationToken.CanBeCanceled ? 10000 : Timeout.Infinite;
+            int timeout = progress != null ? 10000 : Timeout.Infinite;
             lock (_readLines)
             {
                 for (;;)
                 {
-                    if (cancellationToken.IsCancellationRequested)
+                    if (true == progress?.IsCanceled)
                     {
                         return string.Empty;
                     }
@@ -88,7 +89,7 @@ namespace pwiz.Common.SystemUtil
 
         public string ReadLine()
         {
-            return ReadLine(CancellationToken.None);
+            return ReadLine(null);
         }
 
         public string GetErrorLines()

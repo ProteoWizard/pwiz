@@ -75,7 +75,7 @@ namespace pwiz.Skyline.Model.Find
             {
                 foreach (var peptide in group.Peptides)
                 {
-                    progress.CancellationToken.ThrowIfCancellationRequested();
+                    progress.ThrowIfCancellationRequested();
                     iPeptide++;
                     progress.Value = iPeptide * 100.0 / peptideCount;
                     if (_duplicatePeptideKeys.Contains(peptide.SequenceKey))

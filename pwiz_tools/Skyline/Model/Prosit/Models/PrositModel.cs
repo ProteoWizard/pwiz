@@ -240,17 +240,21 @@ namespace pwiz.Skyline.Model.Prosit.Models
         /// Constructs batches and makes predictions in parallel
         /// </summary>
         /// <param name="predictionClient">Client to use for prediction</param>
-        /// <param name="progress">Monitor to show progress in UI</param>
+        /// <param name="progressMonitor">Monitor to show progress in UI</param>
+        /// <param name="progressStatus"/>
         /// <param name="settings">Settings to use for constructing inputs and outputs</param>
         /// <param name="inputs">List of inputs to predict</param>
+        /// <param name="token">Token for cancelling prediction</param>
         /// <returns>Predictions from Prosit</returns>
         public TSkylineOutput PredictBatches(PredictionService.PredictionServiceClient predictionClient,
-            IProgress progress, SrmSettings settings, IList<TSkylineInputRow> inputs)
+            IProgressMonitor progressMonitor, ref IProgressStatus progressStatus, SrmSettings settings, IList<TSkylineInputRow> inputs, CancellationToken token)
         {
 
             const int CONSTRUCTING_INPUTS_FRACTION = 50;
-            progress.Message = PrositResources.PrositModel_BatchPredict_Constructing_Prosit_inputs;
-            progress.Value = 0;
+            progressMonitor.UpdateProgress(progressStatus = progressStatus
+                .ChangeMessage(PrositResources.PrositModel_BatchPredict_Constructing_Prosit_inputs)
+                .ChangePercentComplete(0));
+              
 
             inputs = inputs.Distinct().ToArray();
 
@@ -264,6 +268,7 @@ namespace pwiz.Skyline.Model.Prosit.Models
                 new List<List<TSkylineInputRow>>();
 
             // Construct batch inputs in parallel
+            var localProgressStatus = progressStatus;
             ParallelEx.ForEach(PrositHelpers.EnumerateBatches(inputs, PrositConstants.BATCH_SIZE),
                 batchEnumerable =>
                 {
@@ -289,7 +294,7 @@ namespace pwiz.Skyline.Model.Prosit.Models
 
                         // ReSharper disable AccessToModifiedClosure
                         processed += batch.Length;
-                        progress.SetProgressValue(CONSTRUCTING_INPUTS_FRACTION * processed / totalCount);
+                        progressMonitor.UpdateProgress(localProgressStatus.ChangePercentComplete(CONSTRUCTING_INPUTS_FRACTION * processed / totalCount));
                         // ReSharper enable AccessToModifiedClosure
                     }
                 });
@@ -298,22 +303,25 @@ namespace pwiz.Skyline.Model.Prosit.Models
             totalCount = inputsList.Sum(pi => pi.InputRows.Count);
 
             const int REQUESTING_INPUTS_FRACTION = 100 - CONSTRUCTING_INPUTS_FRACTION;
-            progress.Message = PrositResources.PrositModel_BatchPredict_Requesting_predictions_from_Prosit;
-            progress.Value = CONSTRUCTING_INPUTS_FRACTION;
+            progressStatus = progressStatus
+                .ChangeMessage(PrositResources.PrositModel_BatchPredict_Requesting_predictions_from_Prosit)
+                .ChangePercentComplete(CONSTRUCTING_INPUTS_FRACTION);
+            progressMonitor.UpdateProgress(progressStatus);
 
             // Make predictions batch by batch in sequence and merge the outputs
             var prositOutputAll = new TPrositOut();
             foreach (var prositIn in inputsList)
             {
-                var prositOutput = Predict(predictionClient, prositIn, progress.CancellationToken);
+                var prositOutput = Predict(predictionClient, prositIn, token);
                 prositOutputAll = prositOutputAll.MergeOutputs(prositOutput);
 
                 processed += prositIn.InputRows.Count;
-                progress.Message = TextUtil.SpaceSeparate(
+                progressStatus = progressStatus.ChangeMessage(TextUtil.SpaceSeparate(
                         PrositResources.PrositModel_BatchPredict_Requesting_predictions_from_Prosit,
-                        processed.ToString(), @"/", totalCount.ToString());
-                progress.Value = CONSTRUCTING_INPUTS_FRACTION +
-                                 REQUESTING_INPUTS_FRACTION * processed / totalCount;
+                        processed.ToString(), @"/", totalCount.ToString()))
+                    .ChangePercentComplete(CONSTRUCTING_INPUTS_FRACTION +
+                                           REQUESTING_INPUTS_FRACTION * processed / totalCount);
+                progressMonitor.UpdateProgress(progressStatus);
             }
 
             return CreateSkylineOutput(settings, validInputsList.SelectMany(i => i).ToArray(), prositOutputAll);

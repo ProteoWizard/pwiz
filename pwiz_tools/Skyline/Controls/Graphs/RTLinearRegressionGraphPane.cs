@@ -264,7 +264,7 @@ namespace pwiz.Skyline.Controls.Graphs
                 data.Graph(this, nodeSelected);
         }
 
-        private GraphData Update(SrmDocument document, int targetIndex, double threshold, bool refine, PointsTypeRT pointsType, RegressionMethodRT regressionMethod, int origIndex, IProgress progress)
+        private GraphData Update(SrmDocument document, int targetIndex, double threshold, bool refine, PointsTypeRT pointsType, RegressionMethodRT regressionMethod, int origIndex, IProgressEx progress)
         {
             bool bestResults = (ShowReplicate == ReplicateDisplay.best);
             return new GraphData(document, Data, targetIndex, threshold, null, refine, bestResults, 
@@ -573,7 +573,7 @@ namespace pwiz.Skyline.Controls.Graphs
         }
 
         private void UpdateAndRefine(RequestContext requestContext,
-            IProgress progress)
+            IProgressEx progress)
         {
             try
             {
@@ -704,7 +704,7 @@ namespace pwiz.Skyline.Controls.Graphs
                 RegressionMethodRT regressionMethod,
                 int originalIndex,
                 RTLinearRegressionGraphPane graphPane,
-                IProgress progress
+                IProgressEx progress
                 )
             {
                 _document = document;

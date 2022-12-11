@@ -41,7 +41,7 @@ namespace pwiz.Skyline.Util
         public int DelayMillis { get; set; }
         public bool ExecutesJobOnBackgroundThread { get; set; }
 
-        public void Run(Action<IProgress> action)
+        public void Run(Action<IProgressEx> action)
         {
             if (ExecutesJobOnBackgroundThread)
             {
@@ -50,7 +50,7 @@ namespace pwiz.Skyline.Util
             RunOnThisThread(action);
         }
 
-        public T CallFunction<T>(Func<IProgress, T> func)
+        public T CallFunction<T>(Func<IProgressEx, T> func)
         {
             T returnValue = default(T);
             Run(progressMonitor =>
@@ -60,7 +60,7 @@ namespace pwiz.Skyline.Util
             return returnValue;
         }
         
-        private void RunOnThisThread(Action<IProgress> performWork)
+        private void RunOnThisThread(Action<IProgressEx> performWork)
         {
             LongWaitDlg longWaitDlg = null;
             ProgressWaitBroker progressWaitBroker;
@@ -112,7 +112,7 @@ namespace pwiz.Skyline.Util
             }
         }
 
-        private void RunOnBackgroundThread(Action<IProgress> action)
+        private void RunOnBackgroundThread(Action<IProgressEx> action)
         {
             using (var longWaitDlg = new LongWaitDlg())
             {

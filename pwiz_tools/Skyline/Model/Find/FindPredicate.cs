@@ -134,7 +134,7 @@ namespace pwiz.Skyline.Model.Find
             var customMatches = new Dictionary<Bookmark, FindMatch>();
             foreach (var finder in FindOptions.CustomFinders)
             {
-                progress.CancellationToken.ThrowIfCancellationRequested();
+                progress.ThrowIfCancellationRequested();
                 var customEnumerator = new BookmarkEnumerator(bookmarkEnumerator);
                 progress = progressSegments.NextSegment(string.Format(Resources.FindPredicate_FindAll_Searching_for__0__,
                     finder.DisplayName));
@@ -151,7 +151,7 @@ namespace pwiz.Skyline.Model.Find
             progress = progressSegments.NextSegment("Collating results");
             do
             {
-                progress.CancellationToken.ThrowIfCancellationRequested();
+                progress.ThrowIfCancellationRequested();
                 bookmarkEnumerator.MoveNext();
                 FindMatch findMatch;
                 if (customMatches.TryGetValue(bookmarkEnumerator.Current, out findMatch))

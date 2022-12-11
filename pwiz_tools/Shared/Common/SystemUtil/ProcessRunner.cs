@@ -113,7 +113,7 @@ namespace pwiz.Common.SystemUtil
                 var reader = new ProcessStreamReader(proc, StatusPrefix == null && MessagePrefix == null);
                 StringBuilder sbError = new StringBuilder();
                 string line;
-                while ((line = reader.ReadLine(progress?.CancellationToken ?? CancellationToken.None)) != null)
+                while ((line = reader.ReadLine(progress)) != null)
                 {
                     if (writer != null && (HideLinePrefix == null || !line.StartsWith(HideLinePrefix)))
                         writer.WriteLine(line);

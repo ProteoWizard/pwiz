@@ -20,6 +20,7 @@ using System.Collections.Generic;
 using System.Runtime.CompilerServices;
 using pwiz.Common.Progress;
 using pwiz.Skyline.Model.Results;
+using pwiz.Skyline.Util.Extensions;
 
 namespace pwiz.Skyline.Model.Find
 {
@@ -80,7 +81,7 @@ namespace pwiz.Skyline.Model.Find
         }
         private IEnumerable<Bookmark> FindAll(IdentityPath identityPath, DocNode docNode, IProgress progress)
         {
-            progress.CancellationToken.ThrowIfCancellationRequested();
+            progress.ThrowIfCancellationRequested();
             var results = new List<Bookmark>();
             var transitionGroupDocNode = docNode as TransitionGroupDocNode;
             if (transitionGroupDocNode == null)
@@ -102,7 +103,7 @@ namespace pwiz.Skyline.Model.Find
             }
             for (int iReplicate = 0; iReplicate < transitionGroupDocNode.Results.Count; iReplicate++)
             {
-                progress.CancellationToken.ThrowIfCancellationRequested();
+                progress.ThrowIfCancellationRequested();
                 var replicate = transitionGroupDocNode.Results[iReplicate];
                 if (replicate.IsEmpty)
                 {

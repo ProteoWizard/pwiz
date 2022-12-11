@@ -97,7 +97,7 @@ namespace pwiz.Skyline.Model
             return GetReportRows(Program.MainWindow.Document, reportOrViewSpec.ViewSpecLayout, progress);
         }
 
-        private string GetReportRows(SrmDocument document, ViewSpecLayout viewSpec, IProgress progressMonitor)
+        private string GetReportRows(SrmDocument document, ViewSpecLayout viewSpec, IProgressEx progressMonitor)
         {
             var container = new MemoryDocumentContainer();
             container.SetDocument(document, container.Document);

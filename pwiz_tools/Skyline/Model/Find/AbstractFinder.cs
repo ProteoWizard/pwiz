@@ -42,7 +42,7 @@ namespace pwiz.Skyline.Model.Find
             long index = 0;
             do
             {
-                progress.CancellationToken.ThrowIfCancellationRequested();
+                progress.ThrowIfCancellationRequested();
                 bookmarkEnumerator.MoveNext();
                 if (0 == index++ % PROGRESS_UPDATE_FREQUENCY)
                 {
@@ -63,7 +63,7 @@ namespace pwiz.Skyline.Model.Find
             long index = 0;
             while (true)
             {
-                progress.CancellationToken.ThrowIfCancellationRequested();
+                progress.ThrowIfCancellationRequested();
                 bookmarkEnumerator.MoveNext();
                 if (0 == index++ % PROGRESS_UPDATE_FREQUENCY)
                 {

@@ -399,7 +399,7 @@ namespace pwiz.Skyline.Controls
         }
 
 
-        public IProgress AsProgress()
+        public IProgressEx AsProgress()
         {
             return new LongWaitDlgProgress(this);
         }
