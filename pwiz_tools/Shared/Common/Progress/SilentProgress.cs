@@ -25,5 +25,10 @@ namespace pwiz.Common.Progress
         {
             get { return CancellationToken.IsCancellationRequested; }
         }
+
+        public void ThrowIfCancellationRequested()
+        {
+            CancellationToken.ThrowIfCancellationRequested();
+        }
     }
 }

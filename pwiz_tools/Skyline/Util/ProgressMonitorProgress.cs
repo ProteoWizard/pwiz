@@ -6,38 +6,36 @@ using pwiz.Common.SystemUtil;
 
 namespace pwiz.Skyline.Util
 {
-    public class ProgressMonitorProgress : AbstractProgress
+    public class ProgressMonitorProgress : IProgress
     {
         protected IProgressStatus _progressStatus;
         
-        public ProgressMonitorProgress(IProgressMonitor progressMonitor, CancellationToken cancellationToken,
-            IProgressStatus progressStatus) : base(cancellationToken)
+        public ProgressMonitorProgress(IProgressMonitor progressMonitor, IProgressStatus progressStatus)
         {
             ProgressMonitor = progressMonitor;
             _progressStatus = progressStatus;
             progressMonitor.UpdateProgress(progressStatus);
         }
 
-        public static IProgress ForProgressMonitor(IProgressMonitor progressMonitor,
-            CancellationToken cancellationToken, IProgressStatus progressStatus)
+        public static IProgress ForProgressMonitor(IProgressMonitor progressMonitor, IProgressStatus progressStatus)
         {
             if (progressMonitor == null)
             {
                 return SilentProgress.INSTANCE;
             }
 
-            return new ProgressMonitorProgress(progressMonitor, cancellationToken, progressStatus);
+            return new ProgressMonitorProgress(progressMonitor, progressStatus);
         }
 
         [CanBeNull]
-        public static Disposable ForNewTask(IProgressMonitor progressMonitor, CancellationToken cancellationToken)
+        public static Disposable ForNewTask(IProgressMonitor progressMonitor)
         {
             if (progressMonitor == null)
             {
                 return null;
             }
 
-            return new Disposable(progressMonitor, cancellationToken);
+            return new Disposable(progressMonitor);
         }
 
         public IProgressMonitor ProgressMonitor { get; }
@@ -46,7 +44,7 @@ namespace pwiz.Skyline.Util
             get { return _progressStatus; }
         }
 
-        public override double Value 
+        public double Value 
         {
             set
             {
@@ -54,7 +52,7 @@ namespace pwiz.Skyline.Util
             }
         }
 
-        public override string Message
+        public string Message
         {
             set
             {
@@ -86,8 +84,8 @@ namespace pwiz.Skyline.Util
         public class Disposable : ProgressMonitorProgress, IDisposable
         {
             private bool _disposed;
-            public Disposable(IProgressMonitor progressMonitor, CancellationToken cancellationToken) : base(
-                progressMonitor, cancellationToken, new ProgressStatus())
+            public Disposable(IProgressMonitor progressMonitor) : base(
+                progressMonitor, new ProgressStatus())
             {
             }
 
@@ -104,6 +102,11 @@ namespace pwiz.Skyline.Util
                 _disposed = true;
                 ChangeProgressStatus(status=>status.IsFinal ? status : status.Complete());
             }
+        }
+
+        public bool IsCanceled
+        {
+            get { return ProgressMonitor.IsCanceled; }
         }
     }
 }

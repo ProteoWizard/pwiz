@@ -94,7 +94,7 @@ namespace pwiz.Skyline.Model
             }
 
             using var progress = Program.MainWindow.NewProgress();
-            return GetReportRows(Program.MainWindow.Document, reportOrViewSpec.ViewSpecLayout, progress);
+            return GetReportRows(Program.MainWindow.Document, reportOrViewSpec.ViewSpecLayout, progress.WithCancellationToken(Program.MainWindow.ApplicationCancellationToken));
         }
 
         private string GetReportRows(SrmDocument document, ViewSpecLayout viewSpec, IProgressEx progressMonitor)

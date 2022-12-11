@@ -163,8 +163,8 @@ namespace pwiz.Skyline.Model.Lib
             {
                 try
                 {
-                    if (!blibBuilder.BuildLibrary(Action, progress, ref status,
-                        out _buildCommandArgs, out _buildOutput, out _ambiguousMatches))
+                    if (!progress.CallWithProgress(ref status, p=>blibBuilder.BuildLibrary(Action, p,
+                        out _buildCommandArgs, out _buildOutput, out _ambiguousMatches)))
                     {
                         return false;
                     }
@@ -215,7 +215,7 @@ namespace pwiz.Skyline.Model.Lib
             {
                 using (var saver = new FileSaver(OutputPath))
                 {
-                    if (!blibFilter.Filter(redundantLibrary, saver.SafeName, progress, ref status))
+                    if (!progress.CallWithProgress(ref status, p=>blibFilter.Filter(redundantLibrary, saver.SafeName, p)))
                     {
                         return false;
                     }

@@ -1945,7 +1945,7 @@ namespace pwiz.Skyline
             _out.WriteLine(Resources.CommandLine_ImportSearch_Creating_spectral_library_from_files_);
             foreach (var file in commandArgs.SearchResultsFiles)
                 _out.WriteLine(Path.GetFileName(file));
-            if (!builder.BuildLibrary(progressMonitor, CancellationToken.None))
+            if (!builder.BuildLibrary(progressMonitor))
                 return false;
 
             if (!string.IsNullOrEmpty(builder.AmbiguousMatchesMessage))
@@ -2763,7 +2763,7 @@ namespace pwiz.Skyline
 
                     using (var writer = new StreamWriter(saver.SafeName))
                     {
-                        viewContext.Export(new ProgressMonitorProgress(broker, CancellationToken.None, status), viewInfo, writer,
+                        viewContext.Export(new ProgressMonitorProgress(broker, status).WithCancellationToken(CancellationToken.None), viewInfo, writer,
                             reportColSeparator);
                     }
                     

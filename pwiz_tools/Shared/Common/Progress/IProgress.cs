@@ -2,6 +2,7 @@
 
 namespace pwiz.Common.Progress
 {
+
     public interface IProgress
     {
         bool IsCanceled { get; }

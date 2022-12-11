@@ -31,6 +31,7 @@ using System.Xml;
 using System.Xml.Schema;
 using System.Xml.Serialization;
 using pwiz.Common.DataBinding;
+using pwiz.Common.Progress;
 using pwiz.Common.SystemUtil;
 using pwiz.Skyline.Controls;
 using pwiz.Skyline.Controls.Databinding;
@@ -878,10 +879,10 @@ namespace pwiz.Skyline.Model.Tools
                         toolTitle, reportTitle));
             }
 
-            var progressReporter = new ProgressMonitorProgress(progressMonitor, CancellationToken.None,
-                new ProgressStatus(string.Format(Resources.ReportSpec_ReportToCsvString_Exporting__0__report,
-                    reportTitle)));
-            if (!viewContext.Export(progressReporter, viewInfo, writer,
+            using var progressReporter = new ProgressMonitorProgress.Disposable(progressMonitor);
+            progressReporter.Message = string.Format(Resources.ReportSpec_ReportToCsvString_Exporting__0__report,
+                reportTitle);
+            if (!viewContext.Export(progressReporter.WithCancellationToken(CancellationToken.None), viewInfo, writer,
                     TextUtil.SEPARATOR_CSV))
             {
                 throw new OperationCanceledException();

@@ -1,5 +1,4 @@
 ﻿using System;
-using System.Threading;
 using pwiz.Common.Progress;
 using pwiz.Common.SystemUtil;
 
@@ -7,14 +6,14 @@ namespace pwiz.Skyline.Util.Extensions
 {
     public static class ProgressMonitorExtensions
     {
-        public static T CallWithProgress<T>(this IProgressMonitor progressMonitor, CancellationToken cancellationToken,
+        public static T CallWithProgress<T>(this IProgressMonitor progressMonitor,
             ref IProgressStatus status, Func<IProgress, T> function)
         {
             if (progressMonitor == null)
             {
                 return function(SilentProgress.INSTANCE);
             }
-            var progressMonitorProgress = new ProgressMonitorProgress(progressMonitor, cancellationToken, status);
+            var progressMonitorProgress = new ProgressMonitorProgress(progressMonitor, status);
             try
             {
                 var returnValue = function(progressMonitorProgress);
@@ -31,10 +30,9 @@ namespace pwiz.Skyline.Util.Extensions
             }
         }
 
-        public static T CallWithNewProgress<T>(this IProgressMonitor progressMonitor, CancellationToken cancellationToken,
-            Func<IProgress, T> function)
+        public static T CallWithNewProgress<T>(this IProgressMonitor progressMonitor, Func<IProgress, T> function)
         {
-            using (var progress = ProgressMonitorProgress.ForNewTask(progressMonitor, cancellationToken))
+            using (var progress = ProgressMonitorProgress.ForNewTask(progressMonitor))
             {
                 return function((IProgress)progress ?? SilentProgress.INSTANCE);
             }

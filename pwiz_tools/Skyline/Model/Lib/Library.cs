@@ -421,7 +421,7 @@ namespace pwiz.Skyline.Model.Lib
             bool success;
             lock (loadLock)
             {
-                success = builder.BuildLibrary(monitor, cancellationToken);
+                success = builder.BuildLibrary(monitor);
                 var iRTCapableBuilder = builder as IiRTCapableLibraryBuilder;
                 if (null != iRTCapableBuilder)
                 {
@@ -530,7 +530,7 @@ namespace pwiz.Skyline.Model.Lib
         /// </summary>
         /// <param name="progress">Sink for progress updates, and source of user cancel status</param>
         /// <param name="cancellationToken">Cancellation token associated with the progress monitor</param>
-        bool BuildLibrary(IProgressMonitor progress, CancellationToken cancellationToken);
+        bool BuildLibrary(IProgressMonitor progress);
 
         /// <summary>
         /// A <see cref="LibrarySpec"/> referencing the library to be built.

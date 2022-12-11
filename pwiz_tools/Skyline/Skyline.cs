@@ -3839,12 +3839,12 @@ namespace pwiz.Skyline
 
         public IProgress ProgressForStatus(IProgressStatus status)
         {
-            return new ProgressMonitorProgress(this, _cancellationTokenSource.Token, status);
+            return new ProgressMonitorProgress(this, status);
         }
 
         public ProgressMonitorProgress.Disposable NewProgress()
         {
-            return new ProgressMonitorProgress.Disposable(this, ApplicationCancellationToken);
+            return new ProgressMonitorProgress.Disposable(this);
         }
 
         UpdateProgressResponse IProgressMonitor.UpdateProgress(IProgressStatus status)

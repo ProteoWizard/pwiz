@@ -18,7 +18,7 @@ namespace pwiz.Skyline.Util.Extensions
             TextWriter writer,
             ProcessPriorityClass priorityClass = ProcessPriorityClass.Normal)
         {
-            progressMonitor.CallWithProgress(CancellationToken.None, ref status, progress => processRunner.Run(psi, stdin, progress, writer, priorityClass));
+            progressMonitor.CallWithProgress(ref status, progress => processRunner.Run(psi, stdin, progress, writer, priorityClass));
         }
     }
 }
