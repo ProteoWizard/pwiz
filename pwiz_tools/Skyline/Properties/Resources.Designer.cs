@@ -14677,6 +14677,15 @@ namespace pwiz.Skyline.Properties {
         }
         
         /// <summary>
+        ///   Looks up a localized string similar to Searching for next result.
+        /// </summary>
+        public static string FindPredicate_FindNext_Searching_for_next_result {
+            get {
+                return ResourceManager.GetString("FindPredicate_FindNext_Searching_for_next_result", resourceCulture);
+            }
+        }
+        
+        /// <summary>
         ///   Looks up a localized string similar to Bar Graph.
         /// </summary>
         public static string FoldChangeForm_BuildContextMenu_Bar_Graph {

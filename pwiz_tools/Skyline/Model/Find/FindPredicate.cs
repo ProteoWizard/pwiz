@@ -19,6 +19,8 @@
 
 using System;
 using System.Collections.Generic;
+using System.Linq;
+using System.Web.Configuration;
 using pwiz.Common.Progress;
 using pwiz.Skyline.Controls.SeqNode;
 using pwiz.Skyline.Model.Results;
@@ -145,10 +147,7 @@ namespace pwiz.Skyline.Model.Find
                 }
                 customMatches.Add(customEnumerator.Current, nextMatch);
             }
-
-            // TODO(nicksh): this next part looks really inefficient. It looks like it's just trying 
-            // to figure out which find result comes next but it's iterating over all of the bookmark positions
-            progress = progressSegments.NextSegment("Collating results");
+            progress = progressSegments.NextSegment(Resources.FindPredicate_FindNext_Searching_for_next_result);
             do
             {
                 progress.ThrowIfCancellationRequested();
