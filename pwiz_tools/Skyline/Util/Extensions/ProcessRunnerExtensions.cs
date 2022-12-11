@@ -9,7 +9,7 @@ namespace pwiz.Skyline.Util.Extensions
         public static void Run(this ProcessRunner processRunner, ProcessStartInfo psi, string stdin, IProgressMonitor progress, ref IProgressStatus status,
             ProcessPriorityClass priorityClass = ProcessPriorityClass.Normal)
         {
-            Run(processRunner, psi, stdin, progress, ref status, null, priorityClass);
+            Run(processRunner, psi, stdin, progress ?? new SilentProgressMonitor(), ref status, null, priorityClass);
         }
 
 
