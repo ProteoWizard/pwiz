@@ -20,6 +20,7 @@
 using System.Collections.Generic;
 using System.Linq;
 using pwiz.Common.Progress;
+using pwiz.Common.SystemUtil;
 using pwiz.Skyline.Model.DocSettings;
 using pwiz.Skyline.Model.Irt;
 using pwiz.Skyline.Model.Lib.BlibData;
@@ -37,9 +38,8 @@ namespace pwiz.Skyline.Model.Lib
         public string DocumentFilePath { get; private set; }
         public SrmDocument Document { get; private set; }
 
-        public void ExportSpectralLibrary(string path, IProgress progressMonitor)
+        public void ExportSpectralLibrary(string path, IProgressMonitor progressMonitor)
         {
-            progressMonitor ??= SilentProgress.INSTANCE;
             const string name = "exported";
             var spectra = new Dictionary<LibKey, SpectrumMzInfo>();
             foreach (var nodePepGroup in Document.MoleculeGroups)
@@ -59,21 +59,21 @@ namespace pwiz.Skyline.Model.Lib
             var rCalcIrt = Document.Settings.HasRTPrediction
                 ? Document.Settings.PeptideSettings.Prediction.RetentionTime.Calculator as RCalcIrt
                 : null;
-            var progressSegments = new ProgressSegments(progressMonitor, 1);
-            if (rCalcIrt != null)
+            IProgressStatus status = new ProgressStatus();
+            if (rCalcIrt != null && progressMonitor != null)
             {
-                progressSegments.SegmentCount++;
+                progressMonitor.UpdateProgress(status = status.ChangeSegments(0, 2));
             }
 
             using (var blibDb = BlibDb.CreateBlibDb(path))
             {
                 var libSpec = new BiblioSpecLiteSpec(name, path);
-                blibDb.CreateLibraryFromSpectra(libSpec, spectra.Values.ToList(), name, progressSegments.NextSegment());
+                blibDb.CreateLibraryFromSpectra(libSpec, spectra.Values.ToList(), name, progressMonitor, ref status);
             }
 
             if (rCalcIrt != null)
             {
-                IrtDb.CreateIrtDb(path).UpdatePeptides(rCalcIrt.GetDbIrtPeptides().ToList(), progressSegments.NextSegment());
+                IrtDb.CreateIrtDb(path).UpdatePeptides(rCalcIrt.GetDbIrtPeptides().ToList(), progressMonitor, ref status);
             }
         }
 

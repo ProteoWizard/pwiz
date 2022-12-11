@@ -87,8 +87,7 @@ namespace pwiz.Skyline.Model.Lib.Midas
 
             using (var blibDb = BlibDb.CreateBlibDb(_libSpec.FilePath))
             {
-                using var progress2 = ProgressMonitorProgress.ForNewTask(progress);
-                return blibDb.CreateLibraryFromSpectra(new BiblioSpecLiteSpec(BLIB_NAME_INTERNAL, _libSpec.FilePath), bestSpectra, BLIB_NAME_INTERNAL, progress2) != null;
+                return blibDb.CreateLibraryFromSpectra(new BiblioSpecLiteSpec(BLIB_NAME_INTERNAL, _libSpec.FilePath), bestSpectra, BLIB_NAME_INTERNAL, progress) != null;
             }
         }
 

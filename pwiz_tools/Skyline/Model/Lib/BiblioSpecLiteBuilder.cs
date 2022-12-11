@@ -163,7 +163,7 @@ namespace pwiz.Skyline.Model.Lib
             {
                 try
                 {
-                    if (!blibBuilder.BuildLibrary(Action, new ProgressMonitorProgress(progress, status),
+                    if (!blibBuilder.BuildLibrary(Action, ProgressMonitorProgress.ForProgressMonitor(progress, status),
                             out _buildCommandArgs, out _buildOutput, out _ambiguousMatches))
                     {
                         return false;
@@ -215,7 +215,7 @@ namespace pwiz.Skyline.Model.Lib
             {
                 using (var saver = new FileSaver(OutputPath))
                 {
-                    if (!blibFilter.Filter(redundantLibrary, saver.SafeName, new ProgressMonitorProgress(progress, status)))
+                    if (!blibFilter.Filter(redundantLibrary, saver.SafeName, ProgressMonitorProgress.ForProgressMonitor(progress, status)))
                     {
                         return false;
                     }

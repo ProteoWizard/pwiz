@@ -1361,8 +1361,8 @@ namespace pwiz.Skyline
                         Message = string.Format(Resources.SkylineWindow_ShowExportSpectralLibraryDialog_Exporting_spectral_library__0____, Path.GetFileName(dlg.FileName))
                     })
                     {
-                        longWaitDlg.PerformWork(this, 800, ()=>
-                            new SpectralLibraryExporter(Document, DocumentFilePath).ExportSpectralLibrary(dlg.FileName, longWaitDlg.AsProgress()));
+                        longWaitDlg.PerformWork(this, 800, monitor =>
+                            new SpectralLibraryExporter(Document, DocumentFilePath).ExportSpectralLibrary(dlg.FileName, monitor));
                     }
                 }
                 catch (Exception x)
@@ -2322,7 +2322,7 @@ namespace pwiz.Skyline
             using (var longWaitDlg = new LongWaitDlg(this) { Text = Resources.SkylineWindow_ImportMassList_Adding_iRT_values_ })
             {
                 var newDoc = doc;
-                longWaitDlg.PerformWork(this, 100, () => newDoc = newDoc.AddIrtPeptides(dbIrtPeptides, overwriteExisting, longWaitDlg.AsProgress()));
+                longWaitDlg.PerformWork(this, 100, progressMonitor => newDoc = newDoc.AddIrtPeptides(dbIrtPeptides, overwriteExisting, progressMonitor));
                 doc = newDoc;
             }
             if (doc == null)

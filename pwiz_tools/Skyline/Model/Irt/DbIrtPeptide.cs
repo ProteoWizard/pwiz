@@ -19,7 +19,7 @@
 using System;
 using System.Collections.Generic;
 using System.Linq;
-using pwiz.Common.Progress;
+using pwiz.Common.SystemUtil;
 using pwiz.Skyline.Model.DocSettings;
 using pwiz.Skyline.Model.Lib.BlibData;
 using pwiz.Skyline.Properties;
@@ -152,14 +152,12 @@ namespace pwiz.Skyline.Model.Irt
         public static List<DbIrtPeptide> FindNonConflicts(
             IList<DbIrtPeptide> oldPeptides, 
             IList<DbIrtPeptide> newPeptides, 
-            IProgress progressMonitor,
+            IProgressMonitor progressMonitor,
             out IList<Conflict> conflicts)
         {
             var progressPercent = 0;
-            if (progressMonitor != null)
-            {
-                progressMonitor.Message = Resources.DbIrtPeptide_FindNonConflicts_Adding_iRT_values_for_imported_peptides;
-            }
+            IProgressStatus status = new ProgressStatus(Resources.DbIrtPeptide_FindNonConflicts_Adding_iRT_values_for_imported_peptides);
+            progressMonitor?.UpdateProgress(status);
             var peptidesNoConflict = new List<DbIrtPeptide>();
             conflicts = new List<Conflict>();
             var dictOld = oldPeptides.ToDictionary(pep => pep.ModifiedTarget);
@@ -183,7 +181,7 @@ namespace pwiz.Skyline.Model.Irt
                     var progressNew = i * 100 / newPeptides.Count;
                     if (progressPercent != progressNew)
                     {
-                        progressMonitor.Value = progressNew;
+                        progressMonitor.UpdateProgress(status = status.ChangePercentComplete(progressNew));
                         progressPercent = progressNew;
                     }
                 }

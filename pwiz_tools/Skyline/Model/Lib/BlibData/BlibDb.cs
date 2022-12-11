@@ -27,7 +27,6 @@ using NHibernate;
 using pwiz.Common.Chemistry;
 using pwiz.Common.Database;
 using pwiz.Common.Database.NHibernate;
-using pwiz.Common.Progress;
 using pwiz.Common.SystemUtil;
 using pwiz.Skyline.Model.DocSettings;
 using pwiz.Skyline.Model.Lib.Midas;
@@ -234,17 +233,15 @@ namespace pwiz.Skyline.Model.Lib.BlibData
         /// <param name="librarySpec">Library spec for which the new library is created</param>
         /// <param name="listSpectra">List of existing spectra, by LibKey</param>
         /// <param name="libraryName">Name of the library to be created</param>
-        /// <param name="progress">Progress monitor to display progress in creating library</param>
+        /// <param name="progressMonitor">Progress monitor to display progress in creating library</param>
         /// <returns>A library of type <see cref="BiblioSpecLiteLibrary"/></returns>
         public BiblioSpecLiteLibrary CreateLibraryFromSpectra(BiblioSpecLiteSpec librarySpec,
                                                               IList<SpectrumMzInfo> listSpectra,
                                                               string libraryName,
-                                                              IProgress progress)
+                                                              IProgressMonitor progressMonitor)
         {
-            progress.Message = Resources
-                .BlibDb_CreateLibraryFromSpectra_Creating_spectral_library_for_imported_transition_list;
-            IProgressStatus progressStatus = new ProgressStatus();
-            return CreateLibraryFromSpectra(librarySpec, listSpectra, libraryName, new ProgressProgressMonitor(progress), ref progressStatus);
+            IProgressStatus status = new ProgressStatus(Resources.BlibDb_CreateLibraryFromSpectra_Creating_spectral_library_for_imported_transition_list);
+            return CreateLibraryFromSpectra(librarySpec, listSpectra, libraryName, progressMonitor, ref status);
         }
 
         public BiblioSpecLiteLibrary CreateLibraryFromSpectra(BiblioSpecLiteSpec librarySpec,

@@ -1955,7 +1955,7 @@ namespace pwiz.Skyline
 
             _out.WriteLine(Resources.CommandLine_ImportSearch_Loading_library);
             var libraryManager = new LibraryManager();
-            if (!import.LoadPeptideSearchLibrary(libraryManager, docLibSpec, progressMonitor.AsProgress()))
+            if (!import.LoadPeptideSearchLibrary(libraryManager, docLibSpec, progressMonitor))
                 return false;
 
             doc = import.AddDocumentSpectralLibrary(doc, docLibSpec);
@@ -1998,7 +1998,7 @@ namespace pwiz.Skyline
                 try
                 {
                     processed = ImportPeptideSearch.ProcessRetentionTimes(numCirt, irtProviders, import.IrtStandard.Peptides.ToArray(),
-                        cirtPeptides, IrtRegressionType.DEFAULT, progressMonitor.AsProgress(), out var newStandardPeptides);
+                        cirtPeptides, IrtRegressionType.DEFAULT, progressMonitor, out var newStandardPeptides);
                     if (newStandardPeptides != null)
                     {
                         import.IrtStandard = new IrtStandard(XmlNamedElement.NAME_INTERNAL, null, null, newStandardPeptides);
@@ -2016,7 +2016,7 @@ namespace pwiz.Skyline
                 if (processedDbIrtPeptides.Any())
                 {
                     ImportPeptideSearch.CreateIrtDb(docLibSpec.FilePath, processed, import.IrtStandard.Peptides.ToArray(),
-                        processed.CanRecalibrateStandards(import.IrtStandard.Peptides) && commandArgs.RecalibrateIrts, IrtRegressionType.DEFAULT, progressMonitor.AsProgress());
+                        processed.CanRecalibrateStandards(import.IrtStandard.Peptides) && commandArgs.RecalibrateIrts, IrtRegressionType.DEFAULT, progressMonitor);
                 }
                 doc = ImportPeptideSearch.AddRetentionTimePredictor(doc, docLibSpec);
             }
@@ -2564,7 +2564,7 @@ namespace pwiz.Skyline
                 }
 
                 _out.WriteLine(Resources.CommandLine_ImportTransitionList_Importing__0__iRT_values_into_the_iRT_calculator__1_, dbIrtPeptidesFilter.Count, calcIrt.Name);
-                docNew = docNew.AddIrtPeptides(dbIrtPeptidesFilter, false, progressMonitor.AsProgress());
+                docNew = docNew.AddIrtPeptides(dbIrtPeptidesFilter, false, progressMonitor);
                 if (docNew == null)
                     return false;
             }
@@ -2596,7 +2596,7 @@ namespace pwiz.Skyline
                 {
                     var docLibrarySpec = new BiblioSpecLiteSpec(libraryName, outputLibraryPath);
                     using (var docLibrary = new LibraryReference(blibDb.CreateLibraryFromSpectra(
-                        docLibrarySpec, librarySpectra, libraryName, progressMonitor.AsProgress())))
+                        docLibrarySpec, librarySpectra, libraryName, progressMonitor)))
                     {
                         var newSettings = docNew.Settings.ChangePeptideLibraries(
                             libs => libs.ChangeLibrary(docLibrary.Reference, docLibrarySpec, indexOldLibrary));

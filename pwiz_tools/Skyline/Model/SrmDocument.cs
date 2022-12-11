@@ -1562,7 +1562,7 @@ namespace pwiz.Skyline.Model
             return null;
         }
 
-        public SrmDocument AddIrtPeptides(List<DbIrtPeptide> irtPeptides, bool overwriteExisting, IProgress progressMonitor)
+        public SrmDocument AddIrtPeptides(List<DbIrtPeptide> irtPeptides, bool overwriteExisting, IProgressMonitor progressMonitor)
         {
             var regression = Settings.PeptideSettings.Prediction.RetentionTime;
             if (!(regression?.Calculator is RCalcIrt calculator))

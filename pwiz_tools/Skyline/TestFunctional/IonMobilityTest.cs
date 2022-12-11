@@ -24,7 +24,7 @@ using System.Linq;
 using System.Text;
 using Microsoft.VisualStudio.TestTools.UnitTesting;
 using pwiz.Common.Chemistry;
-using pwiz.Common.Progress;
+using pwiz.Common.SystemUtil;
 using pwiz.Skyline.Alerts;
 using pwiz.Skyline.FileUI;
 using pwiz.Skyline.Model;
@@ -846,9 +846,10 @@ namespace pwiz.SkylineTestFunctional
                 dlg.OkDialog();
             });
             doc = WaitForDocumentLoaded();
+            var progress = new SilentProgressMonitor();
             var exported = testFilesDir.GetTestPath("export.blib");
             new SpectralLibraryExporter(SkylineWindow.Document, SkylineWindow.DocumentFilePath)
-                .ExportSpectralLibrary(exported, SilentProgress.INSTANCE);
+                .ExportSpectralLibrary(exported, progress);
             var refSpectra = GetRefSpectra(exported);
             AssertEx.IsTrue(refSpectra.All(r => (r.IonMobility??0) > 0));
 

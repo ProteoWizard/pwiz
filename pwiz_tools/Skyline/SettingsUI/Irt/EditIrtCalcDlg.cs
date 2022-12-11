@@ -27,7 +27,6 @@ using System.Windows.Forms;
 using NHibernate;
 using pwiz.Common.Collections;
 using pwiz.Common.DataBinding;
-using pwiz.Common.Progress;
 using pwiz.Common.SystemUtil;
 using pwiz.Skyline.Alerts;
 using pwiz.Skyline.Controls;
@@ -1026,7 +1025,7 @@ namespace pwiz.Skyline.SettingsUI.Irt
                                 var irtProvider = library.RetentionTimeProvidersIrt.ToArray();
                                 if (irtProvider.Any())
                                 {
-                                    irtAverages = ProcessRetentionTimes(longWait.AsProgress(), irtProvider, RegressionType);
+                                    irtAverages = ProcessRetentionTimes(monitor, irtProvider, RegressionType);
                                 }
                                 else
                                 {
@@ -1040,7 +1039,7 @@ namespace pwiz.Skyline.SettingsUI.Irt
                                         return;
                                     }
 
-                                    irtAverages = ProcessRetentionTimes(longWait.AsProgress(), library.RetentionTimeProviders.ToArray(), RegressionType);
+                                    irtAverages = ProcessRetentionTimes(monitor, library.RetentionTimeProviders.ToArray(), RegressionType);
                                 }
                             });
                             if (status.IsError)
@@ -1099,7 +1098,7 @@ namespace pwiz.Skyline.SettingsUI.Irt
                         {
                             var irtDb = IrtDb.GetIrtDb(irtCalc.DatabasePath, monitor);
 
-                            irtAverages = ProcessRetentionTimes(longWait.AsProgress(),
+                            irtAverages = ProcessRetentionTimes(monitor,
                                 new[] { new IrtRetentionTimeProvider(!irtCalc.Name.Equals(AddIrtCalculatorDlg.DEFAULT_NAME) ? irtCalc.Name : Path.GetFileName(irtCalc.DatabasePath), irtDb) },
                                 RegressionType);
                         });
@@ -1149,9 +1148,9 @@ namespace pwiz.Skyline.SettingsUI.Irt
                 }
             }
 
-            private ProcessedIrtAverages ProcessRetentionTimes(IProgress progress, IRetentionTimeProvider[] providers, IrtRegressionType regressionType)
+            private ProcessedIrtAverages ProcessRetentionTimes(IProgressMonitor monitor, IRetentionTimeProvider[] providers, IrtRegressionType regressionType)
             {
-                return RCalcIrt.ProcessRetentionTimes(progress, providers, StandardPeptideList.ToArray(), Items.ToArray(), regressionType);
+                return RCalcIrt.ProcessRetentionTimes(monitor, providers, StandardPeptideList.ToArray(), Items.ToArray(), regressionType);
             }
 
             private void AddToLibrary(ProcessedIrtAverages irtAverages)
