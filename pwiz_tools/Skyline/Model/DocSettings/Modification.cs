@@ -1295,6 +1295,17 @@ namespace pwiz.Skyline.Model.DocSettings
             return ChangeProp(ImClone(explicitMods), im => im.CrosslinkStructure = crosslinks);
         }
 
+        private ExplicitMods UpdateCrosslinkStructure(SrmSettings settingsNew)
+        {
+            var newCrosslinkStructure = CrosslinkStructure.ChangeGlobalMods(settingsNew);
+            if (ReferenceEquals(newCrosslinkStructure, CrosslinkStructure))
+            {
+                return this;
+            }
+
+            return ChangeCrosslinkStructure(newCrosslinkStructure);
+        }
+
         public bool HasCrosslinks
         {
             get { return !CrosslinkStructure.IsEmpty; }
@@ -1363,7 +1374,8 @@ namespace pwiz.Skyline.Model.DocSettings
             }
             heavyMods = heavyModsList ?? heavyMods ?? new StaticMod[0];
             return ChangeGlobalMods(modSettings.StaticModifications, heavyMods,
-                modSettings.GetHeavyModificationTypes().ToArray());
+                    modSettings.GetHeavyModificationTypes().ToArray())
+                ?.UpdateCrosslinkStructure(settingsNew);
         }
 
         public ExplicitMods ChangeGlobalMods(IList<StaticMod> staticMods, IList<StaticMod> heavyMods,
@@ -1398,7 +1410,7 @@ namespace pwiz.Skyline.Model.DocSettings
 
             if (ArrayUtil.ReferencesEqual(modifications, _modifications))
                 return this;
-            if (modifications.Count == 0)
+            if (modifications.Count == 0 && CrosslinkStructure.IsEmpty)
                 return null;
             return ChangeProp(ImClone(this), im =>
             {

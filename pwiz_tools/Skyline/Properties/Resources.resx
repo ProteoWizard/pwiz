@@ -11868,6 +11868,9 @@ If you do not have the original file, you may build the library with embedded sp
   <data name="SkylineWindow_FindNext_Find_Next" xml:space="preserve">
 	  <value>Find Next</value>
   </data>
+  <data name="AssociateProteinsDlg_UseFastaFile_An_error_occurred_during_protein_association_" xml:space="preserve">
+	  <value>An error occurred during protein association.</value>
+  </data>
   <data name="ColonSeparator" xml:space="preserve">
 	  <value>{0}: {1}</value>
   </data>

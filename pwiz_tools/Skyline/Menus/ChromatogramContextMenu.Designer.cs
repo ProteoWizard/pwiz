@@ -75,7 +75,6 @@
             this.transformChromNoneContextMenuItem = new System.Windows.Forms.ToolStripMenuItem();
             this.transformChromInterpolatedContextMenuItem = new System.Windows.Forms.ToolStripMenuItem();
             this.secondDerivativeContextMenuItem = new System.Windows.Forms.ToolStripMenuItem();
-            this.firstDerivativeContextMenuItem = new System.Windows.Forms.ToolStripMenuItem();
             this.smoothSGChromContextMenuItem = new System.Windows.Forms.ToolStripMenuItem();
             this.toolStripSeparator17 = new System.Windows.Forms.ToolStripSeparator();
             this.autoZoomContextMenuItem = new System.Windows.Forms.ToolStripMenuItem();
@@ -399,7 +398,6 @@
             this.transformChromNoneContextMenuItem,
             this.transformChromInterpolatedContextMenuItem,
             this.secondDerivativeContextMenuItem,
-            this.firstDerivativeContextMenuItem,
             this.smoothSGChromContextMenuItem});
             this.transformChromContextMenuItem.Name = "transformChromContextMenuItem";
             resources.ApplyResources(this.transformChromContextMenuItem, "transformChromContextMenuItem");
@@ -422,12 +420,6 @@
             this.secondDerivativeContextMenuItem.Name = "secondDerivativeContextMenuItem";
             resources.ApplyResources(this.secondDerivativeContextMenuItem, "secondDerivativeContextMenuItem");
             this.secondDerivativeContextMenuItem.Click += new System.EventHandler(this.secondDerivativeMenuItem_Click);
-            // 
-            // firstDerivativeContextMenuItem
-            // 
-            this.firstDerivativeContextMenuItem.Name = "firstDerivativeContextMenuItem";
-            resources.ApplyResources(this.firstDerivativeContextMenuItem, "firstDerivativeContextMenuItem");
-            this.firstDerivativeContextMenuItem.Click += new System.EventHandler(this.firstDerivativeMenuItem_Click);
             // 
             // smoothSGChromContextMenuItem
             // 
@@ -570,7 +562,6 @@
         private System.Windows.Forms.ToolStripMenuItem transformChromNoneContextMenuItem;
         private System.Windows.Forms.ToolStripMenuItem transformChromInterpolatedContextMenuItem;
         private System.Windows.Forms.ToolStripMenuItem secondDerivativeContextMenuItem;
-        private System.Windows.Forms.ToolStripMenuItem firstDerivativeContextMenuItem;
         private System.Windows.Forms.ToolStripMenuItem smoothSGChromContextMenuItem;
         private System.Windows.Forms.ToolStripSeparator toolStripSeparator17;
         private System.Windows.Forms.ToolStripMenuItem autoZoomContextMenuItem;
