@@ -2592,6 +2592,14 @@ namespace pwiz.Skyline.Model.Results
 
 // ReSharper disable InconsistentNaming
     public enum TransformChrom { raw, interpolated, craw2d, craw1d, savitzky_golay }
+
+    public static class TransformChromExtension
+    {
+        public static bool IsDerivative(this TransformChrom transformChrom)
+        {
+            return transformChrom == TransformChrom.craw1d || transformChrom == TransformChrom.craw2d;
+        }
+    }
 // ReSharper restore InconsistentNaming
 
     public class ChromatogramInfo
@@ -2626,9 +2634,12 @@ namespace pwiz.Skyline.Model.Results
             _transitionIndex = transitionIndex;
         }
 
-        public ChromatogramInfo(float[] times, float[] intensities)
+        public ChromatogramInfo(float[] times, float[] intensities) : this(new TimeIntensities(times, intensities, null, null))
         {
-            _timeIntensities = new TimeIntensities(times, intensities, null, null);
+        }
+        public ChromatogramInfo(TimeIntensities timeIntensities)
+        {
+            _timeIntensities = timeIntensities;
         }
 
         public ChromatogramGroupInfo GroupInfo { get { return _groupInfo; } }
@@ -2908,6 +2919,14 @@ namespace pwiz.Skyline.Model.Results
             }
         }
 
+        public TransformChrom TransformChrom
+        {
+            get
+            {
+                return _transformChrom;
+            }
+        }
+
         public void Transform(TransformChrom transformChrom)
         {
             if (_transformChrom == transformChrom)
@@ -2972,6 +2991,18 @@ namespace pwiz.Skyline.Model.Results
         }
 
         public int TransitionIndex { get { return _transitionIndex; } }
+
+        public float? GetBackgroundLevel(float peakStart, float peakEnd)
+        {
+            TimeIntensities interpolatedTimeIntensities = GetTransformedTimeIntensities(TransformChrom.interpolated);
+            // Make sure that the TimeIntensities has an entry for both the start and end time
+            interpolatedTimeIntensities =
+                interpolatedTimeIntensities.InterpolateTime(peakStart).InterpolateTime(peakEnd);
+            float startIntensity = interpolatedTimeIntensities.Intensities[interpolatedTimeIntensities.IndexOfNearestTime(peakStart)];
+            float endIntensity =
+                interpolatedTimeIntensities.Intensities[interpolatedTimeIntensities.IndexOfNearestTime(peakEnd)];
+            return Math.Min(startIntensity, endIntensity);
+        }
     }
 
     public class BulkReadException : IOException

@@ -161,7 +161,6 @@
             resources.ApplyResources(this.magnifyBtn, "magnifyBtn");
             this.magnifyBtn.Margin = new System.Windows.Forms.Padding(0, 1, 10, 2);
             this.magnifyBtn.Name = "magnifyBtn";
-            this.magnifyBtn.CheckedChanged += new System.EventHandler(this.magnifyBtn_CheckedChanged);
             // 
             // spectrumBtn
             // 
@@ -173,7 +172,6 @@
             this.spectrumBtn.Image = global::pwiz.Skyline.Properties.Resources.DataProcessing;
             resources.ApplyResources(this.spectrumBtn, "spectrumBtn");
             this.spectrumBtn.Name = "spectrumBtn";
-            this.spectrumBtn.CheckedChanged += new System.EventHandler(this.spectrumBtn_CheckedChanged);
             // 
             // filterBtn
             // 
@@ -184,7 +182,6 @@
             resources.ApplyResources(this.filterBtn, "filterBtn");
             this.filterBtn.Margin = new System.Windows.Forms.Padding(10, 1, 0, 2);
             this.filterBtn.Name = "filterBtn";
-            this.filterBtn.CheckedChanged += new System.EventHandler(this.filterBtn_CheckedChanged);
             // 
             // lblScanId
             // 
@@ -209,7 +206,6 @@
             this.toolStripButtonShowAnnotations.Image = global::pwiz.Skyline.Properties.Resources.AnnotatedSpectum;
             resources.ApplyResources(this.toolStripButtonShowAnnotations, "toolStripButtonShowAnnotations");
             this.toolStripButtonShowAnnotations.Name = "toolStripButtonShowAnnotations";
-            this.toolStripButtonShowAnnotations.CheckedChanged += new System.EventHandler(this.toolStripButtonShowAnnotations_CheckedChanged);
             // 
             // toolStripLabelPeakType
             // 
