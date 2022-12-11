@@ -103,7 +103,8 @@ namespace pwiz.Skyline.Controls
                         //CONSIDER: multiple tools running. eg. two tools titled "Tool" and "ToolTest" if you enter ToolTest then both tools will run.
                         try
                         {
-                            tool.RunTool(_parent.Document, _parent, _textBoxStreamWriter.WriterHelper, _parent, _parent.ApplicationCancellationToken, _parent);
+                            tool.RunTool(_parent.Document, _textBoxStreamWriter.WriterHelper, new ToolExecutionContext(
+                                _parent, _parent, _parent.ApplicationCancellationToken), _parent);
                         }
                         catch (ToolDeprecatedException e)
                         {

@@ -2887,14 +2887,16 @@ namespace pwiz.Skyline
                 // Run the tool and catch all errors.
                 try
                 {
+                    var toolExecutionContext =
+                        new ToolExecutionContext(_parent, _parent, _parent.ApplicationCancellationToken);
                     if (_tool.OutputToImmediateWindow)
                     {
                         _parent.ShowImmediateWindow();
-                        _tool.RunTool(_parent.Document, _parent, _skylineTextBoxStreamWriterHelper, _parent, _parent.ApplicationCancellationToken, _parent);
+                        _tool.RunTool(_parent.Document, _skylineTextBoxStreamWriterHelper, toolExecutionContext, _parent);
                     }
                     else
                     {
-                        _tool.RunTool(_parent.Document, _parent, null, _parent, _parent.ApplicationCancellationToken, _parent);
+                        _tool.RunTool(_parent.Document,  null, toolExecutionContext, _parent);
                     }
                 }
                 catch (ToolDeprecatedException e)

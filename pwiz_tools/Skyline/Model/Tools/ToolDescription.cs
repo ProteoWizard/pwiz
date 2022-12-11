@@ -150,7 +150,7 @@ namespace pwiz.Skyline.Model.Tools
             }
         }
 
-        public string GetUrl(SrmDocument doc, IToolMacroProvider toolMacroProvider, IProgressMonitor progressMonitor, CancellationToken cancellationToken)
+        public string GetUrl(SrmDocument doc, ToolExecutionContext toolExecutionContext)
         {
             if (!IsWebPage)
                 return null;
@@ -159,7 +159,7 @@ namespace pwiz.Skyline.Model.Tools
             const string paramSep = "&";
             if (!string.IsNullOrEmpty(Arguments))
             {
-                string query = GetArguments(doc, toolMacroProvider, progressMonitor, cancellationToken);
+                string query = GetArguments(doc, toolExecutionContext);
                 if (query == null)
                     return null;
 
@@ -172,43 +172,39 @@ namespace pwiz.Skyline.Model.Tools
         ///  Return a string that is the Arguments string with the macros replaced.
         /// </summary>
         /// <param name="doc"> Document for report data. </param>
-        /// <param name="toolMacroProvider"> Interface to use to get the current macro values </param>
-        /// <param name="progressMonitor">Progress monitor. </param>
+        /// <param name="toolExecutionContext">Execution context</param>
         /// <returns> Arguments with macros replaced or null if one of the macros was missing 
         /// (eg. no selected peptide for $(SelPeptide) then the return value is null </returns>
-        public string GetArguments(SrmDocument doc, IToolMacroProvider toolMacroProvider, IProgressMonitor progressMonitor, CancellationToken cancellationToken)
+        public string GetArguments(SrmDocument doc, ToolExecutionContext toolExecutionContext)
         {
-            return ToolMacros.ReplaceMacrosArguments(doc, toolMacroProvider, this, progressMonitor, cancellationToken);
+            return ToolMacros.ReplaceMacrosArguments(doc, this, toolExecutionContext);
         }
 
         /// <summary>
         ///  Return a string that is the InitialDirectoy string with the macros replaced.
         /// </summary>
         /// <param name="doc"> Document for report data. </param>
-        /// <param name="toolMacroProvider"> Interface to use to get the current macro values </param>
-        /// <param name="progressMonitor">Progress monitor. </param>
+        /// <param name="toolExecutionContext">Execution context</param>
         /// <returns> InitialDirectory with macros replaced or null if one of the macros was missing 
         /// (eg. no document for $(DocumentDir) then the return value is null </returns>
-        public string GetInitialDirectory(SrmDocument doc, IToolMacroProvider toolMacroProvider, IProgressMonitor progressMonitor, CancellationToken cancellationToken)
+        public string GetInitialDirectory(SrmDocument doc, ToolExecutionContext toolExecutionContext)
         {
-            return ToolMacros.ReplaceMacrosInitialDirectory(doc, toolMacroProvider, this, progressMonitor, cancellationToken);
+            return ToolMacros.ReplaceMacrosInitialDirectory(doc, this, toolExecutionContext);
         }
 
-        private string GetCommand(SrmDocument doc, IToolMacroProvider toolMacroProvider, IProgressMonitor progressMonitor, CancellationToken cancellationToken)
+        private string GetCommand(SrmDocument doc, ToolExecutionContext toolExecutionContext)
         {
-            return ToolMacros.ReplaceMacrosCommand(doc, toolMacroProvider, this, progressMonitor, cancellationToken);            
+            return ToolMacros.ReplaceMacrosCommand(doc, this, toolExecutionContext);            
         }
 
         /// <summary>
         /// Run the tool. When you call run tool. call it on a different thread. 
         /// </summary>       
         /// <param name="document">The document to base reports off of. </param>
-        /// <param name="toolMacroProvider">Interface for replacing Tool Macros with the correct strings. </param>
         /// <param name="textWriter">A textWriter to write to when the tool redirects stdout. (eg. Outputs to an Immediate Window) </param>
-        /// <param name="progressMonitor">Progress monitor. </param>
-        /// <param name="cancellationToken">Cancellation token for the progress monitor</param>
+        /// <param name="toolExecutionContext">Execution context</param>
         /// <param name="parent">A parent control to invoke to display args collectors in, if necessary. Can be null. </param>
-        public void RunTool(SrmDocument document, IToolMacroProvider toolMacroProvider, TextWriter textWriter, IProgressMonitor progressMonitor, CancellationToken cancellationToken, Control parent) 
+        public void RunTool(SrmDocument document, TextWriter textWriter, ToolExecutionContext toolExecutionContext, Control parent) 
         {
             if (Annotations != null && Annotations.Count != 0)
             {
@@ -225,7 +221,7 @@ namespace pwiz.Skyline.Model.Tools
                 }
                 var webHelpers = WebHelpers ?? new WebHelpers();
 
-                string url = GetUrl(document, toolMacroProvider, progressMonitor, cancellationToken);
+                string url = GetUrl(document, toolExecutionContext);
                 if (string.IsNullOrEmpty(url))
                     return;
 
@@ -235,7 +231,7 @@ namespace pwiz.Skyline.Model.Tools
                 }
                 else // It has a selected report that must be posted. 
                 {
-                    PostToLink(url, document, progressMonitor, cancellationToken, webHelpers);
+                    PostToLink(url, document, toolExecutionContext.ProgressMonitor, toolExecutionContext.CancellationToken, webHelpers);
                 }
             }
             else // Not a website. Needs its own thread.
@@ -246,8 +242,10 @@ namespace pwiz.Skyline.Model.Tools
                 }
 
                 // To eliminate a cross thread error make a copy of the IToolMacroProvider.
-                IToolMacroProvider newToolMacroProvider = new CopyToolMacroProvider(toolMacroProvider);
-                RunExecutable(document, newToolMacroProvider, textWriter, progressMonitor, cancellationToken, parent);                
+                var newExecutionContext =
+                    toolExecutionContext.ChangeToolMacroProvider(
+                        new CopyToolMacroProvider(toolExecutionContext.ToolMacroProvider));
+                RunExecutable(document, textWriter, newExecutionContext, parent);                
             }           
         }
 
@@ -330,17 +328,17 @@ namespace pwiz.Skyline.Model.Tools
             webHelpers.PostToLink(url, report.ToString());
         }
 
-        private void RunExecutable(SrmDocument document, IToolMacroProvider toolMacroProvider, TextWriter textWriter, IProgressMonitor progressMonitor, CancellationToken cancellationToken, Control parent)
+        private void RunExecutable(SrmDocument document, TextWriter textWriter, ToolExecutionContext toolExecutionContext, Control parent)
         {
             ActionUtil.RunAsync(() =>
             {
                 try
                 {
-                    RunExecutableBackground(document, toolMacroProvider, textWriter, progressMonitor, cancellationToken, parent);
+                    RunExecutableBackground(document, textWriter, toolExecutionContext, parent);
                 }
                 catch (Exception e)
                 {
-                    progressMonitor.UpdateProgress(new ProgressStatus(string.Empty).ChangeErrorException(e));
+                    toolExecutionContext.ProgressMonitor.UpdateProgress(new ProgressStatus(string.Empty).ChangeErrorException(e));
                 }
             }, @"Run Executable");
         }
@@ -349,20 +347,18 @@ namespace pwiz.Skyline.Model.Tools
         ///  Method used to encapsulate the running of a executable for threading.
         /// </summary>
         /// <param name="document"> Contains the document to base reports off of, as well as to serve as the parent for args collector forms. </param>
-        /// <param name="toolMacroProvider"> Interface for determining what to replace macros with. </param>
         /// <param name="textWriter"> A textWriter to write to if outputting to the immediate window. </param>
-        /// <param name="progressMonitor"> Progress monitor. </param>
-        /// <param name="cancellationToken">Cancellation token for the progress monitor</param>
+        /// <param name="toolExecutionContext">Execution context</param>
         /// <param name="parent">If there is an Args Collector form, it will be showed on this control. Can be null. </param>
-        private void RunExecutableBackground(SrmDocument document, IToolMacroProvider toolMacroProvider, TextWriter textWriter, IProgressMonitor progressMonitor, CancellationToken cancellationToken, Control parent)
+        private void RunExecutableBackground(SrmDocument document, TextWriter textWriter, ToolExecutionContext toolExecutionContext, Control parent)
         {                                                
             // Need to know if $(InputReportTempPath) is an argument to determine if a report should be piped to stdin or not.
             bool containsInputReportTempPath = Arguments.Contains(ToolMacros.INPUT_REPORT_TEMP_PATH);
-            string command = GetCommand(document, toolMacroProvider, progressMonitor, cancellationToken);
+            string command = GetCommand(document, toolExecutionContext);
             if (command == null) // Has already thrown the error.
                 return;
-            string args = GetArguments(document, toolMacroProvider, progressMonitor, cancellationToken);
-            string initDir = GetInitialDirectory(document, toolMacroProvider, progressMonitor, cancellationToken); // If either of these fails an Exception is thrown.
+            string args = GetArguments(document, toolExecutionContext);
+            string initDir = GetInitialDirectory(document, toolExecutionContext); // If either of these fails an Exception is thrown.
                                     
             if (args != null && initDir != null)
             {
@@ -394,8 +390,8 @@ namespace pwiz.Skyline.Model.Tools
                     else
                     {
                         var stringWriter = new StringWriter();
-                        using var progress = new ProgressMonitorProgress.Disposable(progressMonitor);
-                        ToolDescriptionHelpers.GetReport(document, ReportTitle, Title, progress.WithCancellationToken(cancellationToken), stringWriter);
+                        using var progress = new ProgressMonitorProgress.Disposable(toolExecutionContext.ProgressMonitor);
+                        ToolDescriptionHelpers.GetReport(document, ReportTitle, Title, progress.WithCancellationToken(toolExecutionContext.CancellationToken), stringWriter);
                         startInfo.RedirectStandardInput = true;
                         reportReader = new StringReader(stringWriter.ToString());
                     }

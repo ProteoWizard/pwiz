@@ -684,12 +684,12 @@ namespace pwiz.SkylineTestFunctional
                     Assert.AreEqual(tool.ToolDirPath, toolDir);
                     string expectedcommand = configureToolsDlg.textCommand.Text.Replace("$(ToolDir)", toolDir);
 
-                    string command = ToolMacros.ReplaceMacrosCommand(SkylineWindow.Document, SkylineWindow, tool, SkylineWindow, SkylineWindow.ApplicationCancellationToken);
+                    string command = ToolMacros.ReplaceMacrosCommand(SkylineWindow.Document, tool, new ToolExecutionContext(SkylineWindow, SkylineWindow, SkylineWindow.ApplicationCancellationToken));
                     Assert.AreEqual(expectedcommand,command);
 
                     string expectedArgument = configureToolsDlg.textArguments.Text.Replace("$(ToolDir)", toolDir);
 
-                    string arguments = ToolMacros.ReplaceMacrosArguments(SkylineWindow.Document, SkylineWindow, tool, SkylineWindow, SkylineWindow.ApplicationCancellationToken);
+                    string arguments = ToolMacros.ReplaceMacrosArguments(SkylineWindow.Document, tool, new ToolExecutionContext(SkylineWindow, SkylineWindow, SkylineWindow.ApplicationCancellationToken));
                     Assert.AreEqual(expectedArgument, arguments);
 
                     configureToolsDlg.RemoveAllTools();
