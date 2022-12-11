@@ -34,7 +34,6 @@ using pwiz.Skyline.Model.Results;
 using pwiz.Skyline.Model.Results.Scoring;
 using pwiz.Skyline.Properties;
 using pwiz.Skyline.Util;
-using pwiz.Skyline.Util.Extensions;
 using Transition = pwiz.Skyline.Model.Transition;
 
 namespace pwiz.Skyline.Controls.Databinding.RowActions

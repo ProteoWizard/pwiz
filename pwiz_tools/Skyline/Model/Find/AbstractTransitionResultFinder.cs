@@ -20,7 +20,6 @@ using System.Collections.Generic;
 using System.Runtime.CompilerServices;
 using pwiz.Common.Progress;
 using pwiz.Skyline.Model.Results;
-using pwiz.Skyline.Util.Extensions;
 
 namespace pwiz.Skyline.Model.Find
 {

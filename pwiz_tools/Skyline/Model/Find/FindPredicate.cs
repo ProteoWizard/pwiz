@@ -19,8 +19,6 @@
 
 using System;
 using System.Collections.Generic;
-using System.Linq;
-using System.Web.Configuration;
 using pwiz.Common.Progress;
 using pwiz.Skyline.Controls.SeqNode;
 using pwiz.Skyline.Model.Results;

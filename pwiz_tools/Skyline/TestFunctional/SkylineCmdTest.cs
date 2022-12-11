@@ -22,6 +22,7 @@ using System.Globalization;
 using System.IO;
 using System.Text;
 using Microsoft.VisualStudio.TestTools.UnitTesting;
+using pwiz.Common.Progress;
 using pwiz.Common.SystemUtil;
 using pwiz.Skyline;
 using pwiz.Skyline.Properties;
@@ -102,11 +103,10 @@ namespace pwiz.SkylineTestFunctional
             var processStartInfo = GetProcessStartInfo(string.Empty);
             processStartInfo.FileName = destFileName;
             var processRunner = new ProcessRunner { OutputEncoding = Encoding.UTF8 };
-            IProgressStatus status = new ProgressStatus(string.Empty);
             string output = null;
             try
             {
-                processRunner.Run(processStartInfo, null, null, ref status, null);
+                processRunner.Run(processStartInfo, null, SilentProgress.INSTANCE, null);
                 Assert.Fail("IOException should have been thrown");
             }
             catch (IOException ioException)
@@ -125,8 +125,7 @@ namespace pwiz.SkylineTestFunctional
         {
             var writer = new StringWriter();
             var processRunner = new ProcessRunner { OutputEncoding = Encoding.UTF8 };
-            IProgressStatus status = new ProgressStatus(string.Empty);
-            processRunner.Run(GetProcessStartInfo(args), null, null, ref status, writer);
+            processRunner.Run(GetProcessStartInfo(args), null, SilentProgress.INSTANCE, writer);
             return writer.ToString();
         }
 

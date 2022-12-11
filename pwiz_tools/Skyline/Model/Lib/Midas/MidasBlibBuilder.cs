@@ -23,7 +23,6 @@ using System.Linq;
 using pwiz.Common.SystemUtil;
 using pwiz.Skyline.Model.DocSettings;
 using pwiz.Skyline.Model.Lib.BlibData;
-using pwiz.Skyline.Util;
 
 namespace pwiz.Skyline.Model.Lib.Midas
 {
