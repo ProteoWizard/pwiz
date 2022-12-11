@@ -2890,11 +2890,11 @@ namespace pwiz.Skyline
                     if (_tool.OutputToImmediateWindow)
                     {
                         _parent.ShowImmediateWindow();
-                        _tool.RunTool(_parent.Document, _parent, _skylineTextBoxStreamWriterHelper, _parent, _parent);
+                        _tool.RunTool(_parent.Document, _parent, _skylineTextBoxStreamWriterHelper, _parent, _parent.ApplicationCancellationToken, _parent);
                     }
                     else
                     {
-                        _tool.RunTool(_parent.Document, _parent, null, _parent, _parent);
+                        _tool.RunTool(_parent.Document, _parent, null, _parent, _parent.ApplicationCancellationToken, _parent);
                     }
                 }
                 catch (ToolDeprecatedException e)
@@ -3835,11 +3835,6 @@ namespace pwiz.Skyline
             {
                 return _cancellationTokenSource.Token;
             }
-        }
-
-        public IProgress ProgressForStatus(IProgressStatus status)
-        {
-            return new ProgressMonitorProgress(this, status);
         }
 
         public ProgressMonitorProgress.Disposable NewProgress()

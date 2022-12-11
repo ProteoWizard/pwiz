@@ -1016,8 +1016,8 @@ namespace pwiz.SkylineTestFunctional
                 ToolDescription toolMenuItem = Settings.Default.ToolList[0];
                 Assert.AreEqual("$(DocumentPath)", toolMenuItem.Arguments); // Not L10N
                 Assert.AreEqual("$(DocumentDir)", toolMenuItem.InitialDirectory); // Not L10N
-                string args = toolMenuItem.GetArguments(SkylineWindow.Document, SkylineWindow, SkylineWindow);
-                string initDir = toolMenuItem.GetInitialDirectory(SkylineWindow.Document, SkylineWindow, SkylineWindow);
+                string args = toolMenuItem.GetArguments(SkylineWindow.Document, SkylineWindow, SkylineWindow, SkylineWindow.ApplicationCancellationToken);
+                string initDir = toolMenuItem.GetInitialDirectory(SkylineWindow.Document, SkylineWindow, SkylineWindow, SkylineWindow.ApplicationCancellationToken);
                 Assert.AreEqual(Path.GetDirectoryName(args), initDir);
                 Assert.AreEqual(args, path);
             });

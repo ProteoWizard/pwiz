@@ -75,5 +75,4 @@ namespace pwiz.Common.SystemUtil
             get { return false; }
         }
     }
-
 }

@@ -71,7 +71,8 @@ namespace pwiz.Skyline.Model
         public string GetReport(string toolName, string reportName)
         {
             var report = new StringWriter();
-            ToolDescriptionHelpers.GetReport(Program.MainWindow.Document, reportName, toolName, Program.MainWindow, report);
+            using var progress = Program.MainWindow.NewProgress();
+            ToolDescriptionHelpers.GetReport(Program.MainWindow.Document, reportName, toolName, progress.WithCancellationToken(Program.MainWindow.ApplicationCancellationToken), report);
             return report.ToString();
         }
 

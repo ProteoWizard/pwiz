@@ -150,7 +150,7 @@ namespace pwiz.Skyline.Model.Tools
             }
         }
 
-        public string GetUrl(SrmDocument doc, IToolMacroProvider toolMacroProvider, IProgressMonitor progressMonitor)
+        public string GetUrl(SrmDocument doc, IToolMacroProvider toolMacroProvider, IProgressMonitor progressMonitor, CancellationToken cancellationToken)
         {
             if (!IsWebPage)
                 return null;
@@ -159,7 +159,7 @@ namespace pwiz.Skyline.Model.Tools
             const string paramSep = "&";
             if (!string.IsNullOrEmpty(Arguments))
             {
-                string query = GetArguments(doc, toolMacroProvider, progressMonitor);
+                string query = GetArguments(doc, toolMacroProvider, progressMonitor, cancellationToken);
                 if (query == null)
                     return null;
 
@@ -176,9 +176,9 @@ namespace pwiz.Skyline.Model.Tools
         /// <param name="progressMonitor">Progress monitor. </param>
         /// <returns> Arguments with macros replaced or null if one of the macros was missing 
         /// (eg. no selected peptide for $(SelPeptide) then the return value is null </returns>
-        public string GetArguments(SrmDocument doc, IToolMacroProvider toolMacroProvider, IProgressMonitor progressMonitor)
+        public string GetArguments(SrmDocument doc, IToolMacroProvider toolMacroProvider, IProgressMonitor progressMonitor, CancellationToken cancellationToken)
         {
-            return ToolMacros.ReplaceMacrosArguments(doc, toolMacroProvider, this, progressMonitor);
+            return ToolMacros.ReplaceMacrosArguments(doc, toolMacroProvider, this, progressMonitor, cancellationToken);
         }
 
         /// <summary>
@@ -189,25 +189,26 @@ namespace pwiz.Skyline.Model.Tools
         /// <param name="progressMonitor">Progress monitor. </param>
         /// <returns> InitialDirectory with macros replaced or null if one of the macros was missing 
         /// (eg. no document for $(DocumentDir) then the return value is null </returns>
-        public string GetInitialDirectory(SrmDocument doc, IToolMacroProvider toolMacroProvider, IProgressMonitor progressMonitor)
+        public string GetInitialDirectory(SrmDocument doc, IToolMacroProvider toolMacroProvider, IProgressMonitor progressMonitor, CancellationToken cancellationToken)
         {
-            return ToolMacros.ReplaceMacrosInitialDirectory(doc, toolMacroProvider, this, progressMonitor);
+            return ToolMacros.ReplaceMacrosInitialDirectory(doc, toolMacroProvider, this, progressMonitor, cancellationToken);
         }
 
-        private string GetCommand(SrmDocument doc, IToolMacroProvider toolMacroProvider, IProgressMonitor progressMonitor)
+        private string GetCommand(SrmDocument doc, IToolMacroProvider toolMacroProvider, IProgressMonitor progressMonitor, CancellationToken cancellationToken)
         {
-            return ToolMacros.ReplaceMacrosCommand(doc, toolMacroProvider, this, progressMonitor);            
+            return ToolMacros.ReplaceMacrosCommand(doc, toolMacroProvider, this, progressMonitor, cancellationToken);            
         }
-        
+
         /// <summary>
         /// Run the tool. When you call run tool. call it on a different thread. 
         /// </summary>       
-        /// <param name="document"> The document to base reports off of. </param>
-        /// <param name="toolMacroProvider"> Interface for replacing Tool Macros with the correct strings. </param>
-        /// <param name="textWriter"> A textWriter to write to when the tool redirects stdout. (eg. Outputs to an Immediate Window) </param>
-        /// <param name="progressMonitor"> Progress monitor. </param>
+        /// <param name="document">The document to base reports off of. </param>
+        /// <param name="toolMacroProvider">Interface for replacing Tool Macros with the correct strings. </param>
+        /// <param name="textWriter">A textWriter to write to when the tool redirects stdout. (eg. Outputs to an Immediate Window) </param>
+        /// <param name="progressMonitor">Progress monitor. </param>
+        /// <param name="cancellationToken">Cancellation token for the progress monitor</param>
         /// <param name="parent">A parent control to invoke to display args collectors in, if necessary. Can be null. </param>
-        public void RunTool(SrmDocument document, IToolMacroProvider toolMacroProvider, TextWriter textWriter, IProgressMonitor progressMonitor, Control parent) 
+        public void RunTool(SrmDocument document, IToolMacroProvider toolMacroProvider, TextWriter textWriter, IProgressMonitor progressMonitor, CancellationToken cancellationToken, Control parent) 
         {
             if (Annotations != null && Annotations.Count != 0)
             {
@@ -224,7 +225,7 @@ namespace pwiz.Skyline.Model.Tools
                 }
                 var webHelpers = WebHelpers ?? new WebHelpers();
 
-                string url = GetUrl(document, toolMacroProvider, progressMonitor);
+                string url = GetUrl(document, toolMacroProvider, progressMonitor, cancellationToken);
                 if (string.IsNullOrEmpty(url))
                     return;
 
@@ -234,7 +235,7 @@ namespace pwiz.Skyline.Model.Tools
                 }
                 else // It has a selected report that must be posted. 
                 {
-                    PostToLink(url, document, progressMonitor, webHelpers);
+                    PostToLink(url, document, progressMonitor, cancellationToken, webHelpers);
                 }
             }
             else // Not a website. Needs its own thread.
@@ -246,7 +247,7 @@ namespace pwiz.Skyline.Model.Tools
 
                 // To eliminate a cross thread error make a copy of the IToolMacroProvider.
                 IToolMacroProvider newToolMacroProvider = new CopyToolMacroProvider(toolMacroProvider);
-                RunExecutable(document, newToolMacroProvider, textWriter, progressMonitor, parent);                
+                RunExecutable(document, newToolMacroProvider, textWriter, progressMonitor, cancellationToken, parent);                
             }           
         }
 
@@ -305,35 +306,37 @@ namespace pwiz.Skyline.Model.Tools
             }
         }
 
-        private void PostToLink(string url, SrmDocument doc, IProgressMonitor progressMonitor, IWebHelpers webHelpers)
+        private void PostToLink(string url, SrmDocument doc, IProgressMonitor progressMonitor, CancellationToken cancellationToken, IWebHelpers webHelpers)
         {
             ActionUtil.RunAsync(() =>
             {
+                using var progress = new ProgressMonitorProgress.Disposable(progressMonitor);
+
                 try
                 {
-                    PostToLinkBackground(url, doc, progressMonitor, webHelpers);
+                    PostToLinkBackground(url, doc, progress.WithCancellationToken(cancellationToken), webHelpers);
                 }
                 catch (Exception exception)
                 {
-                    progressMonitor.UpdateProgress(new ProgressStatus(string.Empty).ChangeErrorException(exception));
+                    progressMonitor.UpdateProgress(progress.ProgressStatus.ChangeErrorException(exception));
                 }
             }, @"Post To Link");
         }
 
-        private void PostToLinkBackground(string url, SrmDocument doc, IProgressMonitor progressMonitor, IWebHelpers webHelpers)
+        private void PostToLinkBackground(string url, SrmDocument doc, IProgressEx progress, IWebHelpers webHelpers)
         {
             StringWriter report = new StringWriter();
-            ToolDescriptionHelpers.GetReport(doc, ReportTitle, Title, progressMonitor, report);
+            ToolDescriptionHelpers.GetReport(doc, ReportTitle, Title, progress, report);
             webHelpers.PostToLink(url, report.ToString());
         }
 
-        private void RunExecutable(SrmDocument document, IToolMacroProvider toolMacroProvider, TextWriter textWriter, IProgressMonitor progressMonitor, Control parent)
+        private void RunExecutable(SrmDocument document, IToolMacroProvider toolMacroProvider, TextWriter textWriter, IProgressMonitor progressMonitor, CancellationToken cancellationToken, Control parent)
         {
             ActionUtil.RunAsync(() =>
             {
                 try
                 {
-                    RunExecutableBackground(document, toolMacroProvider, textWriter, progressMonitor, parent);
+                    RunExecutableBackground(document, toolMacroProvider, textWriter, progressMonitor, cancellationToken, parent);
                 }
                 catch (Exception e)
                 {
@@ -349,16 +352,17 @@ namespace pwiz.Skyline.Model.Tools
         /// <param name="toolMacroProvider"> Interface for determining what to replace macros with. </param>
         /// <param name="textWriter"> A textWriter to write to if outputting to the immediate window. </param>
         /// <param name="progressMonitor"> Progress monitor. </param>
+        /// <param name="cancellationToken">Cancellation token for the progress monitor</param>
         /// <param name="parent">If there is an Args Collector form, it will be showed on this control. Can be null. </param>
-        private void RunExecutableBackground(SrmDocument document, IToolMacroProvider toolMacroProvider, TextWriter textWriter, IProgressMonitor progressMonitor, Control parent)
+        private void RunExecutableBackground(SrmDocument document, IToolMacroProvider toolMacroProvider, TextWriter textWriter, IProgressMonitor progressMonitor, CancellationToken cancellationToken, Control parent)
         {                                                
             // Need to know if $(InputReportTempPath) is an argument to determine if a report should be piped to stdin or not.
             bool containsInputReportTempPath = Arguments.Contains(ToolMacros.INPUT_REPORT_TEMP_PATH);
-            string command = GetCommand(document, toolMacroProvider, progressMonitor);
+            string command = GetCommand(document, toolMacroProvider, progressMonitor, cancellationToken);
             if (command == null) // Has already thrown the error.
                 return;
-            string args = GetArguments(document, toolMacroProvider, progressMonitor);
-            string initDir = GetInitialDirectory(document, toolMacroProvider, progressMonitor); // If either of these fails an Exception is thrown.
+            string args = GetArguments(document, toolMacroProvider, progressMonitor, cancellationToken);
+            string initDir = GetInitialDirectory(document, toolMacroProvider, progressMonitor, cancellationToken); // If either of these fails an Exception is thrown.
                                     
             if (args != null && initDir != null)
             {
@@ -390,7 +394,8 @@ namespace pwiz.Skyline.Model.Tools
                     else
                     {
                         var stringWriter = new StringWriter();
-                        ToolDescriptionHelpers.GetReport(document, ReportTitle, Title, progressMonitor, stringWriter);
+                        using var progress = new ProgressMonitorProgress.Disposable(progressMonitor);
+                        ToolDescriptionHelpers.GetReport(document, ReportTitle, Title, progress.WithCancellationToken(cancellationToken), stringWriter);
                         startInfo.RedirectStandardInput = true;
                         reportReader = new StringReader(stringWriter.ToString());
                     }
@@ -861,10 +866,10 @@ namespace pwiz.Skyline.Model.Tools
         /// <param name="doc">Document to create the report from.</param>
         /// <param name="reportTitle">Title of the reportSpec to make a report from.</param>
         /// <param name="toolTitle">Title of tool for exception error message.</param>
-        /// <param name="progressMonitor">Progress monitor.</param>
+        /// <param name="progress">Progress monitor.</param>
         /// <param name="writer">TextWriter that the report should be written to.</param>
         /// <returns> Returns a string representation of the ReportTitle report, or throws an error that the reportSpec no longer exist. </returns>
-        public static void GetReport(SrmDocument doc, string reportTitle, string toolTitle, IProgressMonitor progressMonitor, TextWriter writer)
+        public static void GetReport(SrmDocument doc, string reportTitle, string toolTitle, IProgressEx progress, TextWriter writer)
         {
             var container = new MemoryDocumentContainer();
             container.SetDocument(doc, container.Document);
@@ -879,17 +884,14 @@ namespace pwiz.Skyline.Model.Tools
                         toolTitle, reportTitle));
             }
 
-            using var progressReporter = new ProgressMonitorProgress.Disposable(progressMonitor);
-            progressReporter.Message = string.Format(Resources.ReportSpec_ReportToCsvString_Exporting__0__report,
+            progress.Message = string.Format(Resources.ReportSpec_ReportToCsvString_Exporting__0__report,
                 reportTitle);
-            if (!viewContext.Export(progressReporter.WithCancellationToken(CancellationToken.None), viewInfo, writer,
+            if (!viewContext.Export(progress, viewInfo, writer,
                     TextUtil.SEPARATOR_CSV))
             {
                 throw new OperationCanceledException();
             }
-            progressReporter.Complete();
         }
-
 
         // Long test names make for long Tools directory names, which can make for long command lines - maybe too long. So limit that directory name length by
         // shortening to acronym and original length (e.g. "Foo7WithBar" => "F7WB10", "Foo7WithoutBar" => "F7WB13"))

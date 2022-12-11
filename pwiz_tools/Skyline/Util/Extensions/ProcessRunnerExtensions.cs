@@ -1,6 +1,5 @@
 ﻿using System.Diagnostics;
 using System.IO;
-using System.Threading;
 using pwiz.Common.SystemUtil;
 
 namespace pwiz.Skyline.Util.Extensions
@@ -18,7 +17,15 @@ namespace pwiz.Skyline.Util.Extensions
             TextWriter writer,
             ProcessPriorityClass priorityClass = ProcessPriorityClass.Normal)
         {
-            progressMonitor.CallWithProgress(ref status, progress => processRunner.Run(psi, stdin, progress, writer, priorityClass));
+            var progressMonitorProgress = new ProgressMonitorProgress(progressMonitor, status);
+            try
+            {
+                processRunner.Run(psi, stdin, progressMonitorProgress, writer, priorityClass);
+            }
+            finally
+            {
+                status = progressMonitorProgress.ProgressStatus;
+            }
         }
     }
 }

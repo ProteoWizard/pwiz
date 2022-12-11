@@ -801,7 +801,6 @@
     </Compile>
     <Compile Include="Util\DocumentCancellationToken.cs" />
     <Compile Include="Util\Extensions\ProcessRunnerExtensions.cs" />
-    <Compile Include="Util\Extensions\ProgressMonitorExtensions.cs" />
     <Compile Include="Util\FormGroup.cs" />
     <Compile Include="Util\PersistentString.cs" />
     <Compile Include="Util\ProgressMonitorProgress.cs" />

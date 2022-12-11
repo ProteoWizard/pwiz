@@ -21,9 +21,11 @@ using System;
 using System.Globalization;
 using System.IO;
 using System.Text.RegularExpressions;
+using System.Threading;
 using System.Xml;
 using System.Xml.Schema;
 using System.Xml.Serialization;
+using pwiz.Common.Progress;
 using pwiz.Common.SystemUtil;
 using pwiz.Skyline.Properties;
 using pwiz.Skyline.Util;
@@ -124,7 +126,7 @@ namespace pwiz.Skyline.Model.Tools
             return path;
         }
 
-        public static string ReplaceMacrosCommand(SrmDocument doc, IToolMacroProvider toolMacroProvider, ToolDescription toolDescription, IProgressMonitor progressMonitor)
+        public static string ReplaceMacrosCommand(SrmDocument doc, IToolMacroProvider toolMacroProvider, ToolDescription toolDescription, IProgressMonitor progressMonitor, CancellationToken cancellationToken)
         {            
             string workingString = toolDescription.Command;
             foreach (Macro macro in LIST_COMMAND)
@@ -139,7 +141,7 @@ namespace pwiz.Skyline.Model.Tools
                     else
                     {
                         string path = macro.GetContents(new ToolMacroInfo(toolMacroProvider, toolDescription.Title,
-                                                                          toolDescription.ReportTitle, doc, progressMonitor, ppc, toolDescription.ToolDirPath));
+                                                                          toolDescription.ReportTitle, doc, progressMonitor, cancellationToken, ppc, toolDescription.ToolDirPath));
                         if (string.IsNullOrEmpty(path))
                         { 
                             throw new ToolExecutionException(macro.ErrorMessage);
@@ -171,10 +173,11 @@ namespace pwiz.Skyline.Model.Tools
         /// <param name="toolMacroProvider"> Method provider for getting macro actual values </param>
         /// <param name="tool"> The tool to run this on. </param>
         /// <param name="progressMonitor">Progress monitor. </param>
+        /// <param name="cancellationToken">Cancellation token for the progress monitor</param>
         /// <returns> Arguments string with macros replaced or a thrown exception with error message. </returns>
-        public static string ReplaceMacrosArguments(SrmDocument doc, IToolMacroProvider toolMacroProvider, ToolDescription tool, IProgressMonitor progressMonitor)
+        public static string ReplaceMacrosArguments(SrmDocument doc, IToolMacroProvider toolMacroProvider, ToolDescription tool, IProgressMonitor progressMonitor, CancellationToken cancellationToken)
         {
-            return ReplaceMacrosHelper(doc, toolMacroProvider, tool, progressMonitor, tool.Arguments, LIST_ARGUMENTS);
+            return ReplaceMacrosHelper(doc, toolMacroProvider, tool, progressMonitor, cancellationToken, tool.Arguments, LIST_ARGUMENTS);
         }
 
         /// <summary>
@@ -186,13 +189,14 @@ namespace pwiz.Skyline.Model.Tools
         /// <param name="toolMacroProvider"> Method provider for getting macro actual values </param>
         /// <param name="tool"> The tool to run this on. </param>
         /// <param name="progressMonitor"> Progress monitor. </param>
+        /// <param name="cancellationToken">Cancellation token for the progress monitor</param>
         /// <returns> InitialDirectory string with macros replaced or a thrown exception with error message. </returns>
-        public static string ReplaceMacrosInitialDirectory(SrmDocument doc, IToolMacroProvider toolMacroProvider, ToolDescription tool, IProgressMonitor progressMonitor)
+        public static string ReplaceMacrosInitialDirectory(SrmDocument doc, IToolMacroProvider toolMacroProvider, ToolDescription tool, IProgressMonitor progressMonitor, CancellationToken cancellationToken)
         {
-            return ReplaceMacrosHelper(doc, toolMacroProvider, tool, progressMonitor, tool.InitialDirectory, LIST_INITIAL_DIRECTORY);
+            return ReplaceMacrosHelper(doc, toolMacroProvider, tool, progressMonitor, cancellationToken, tool.InitialDirectory, LIST_INITIAL_DIRECTORY);
         }
 
-        public static string ReplaceMacrosHelper(SrmDocument doc, IToolMacroProvider toolMacroProvider, ToolDescription tool, IProgressMonitor progressMonitor, string replacein, Macro[] macros)
+        public static string ReplaceMacrosHelper(SrmDocument doc, IToolMacroProvider toolMacroProvider, ToolDescription tool, IProgressMonitor progressMonitor, CancellationToken cancellationToken, string replacein, Macro[] macros)
         {
             string workingString = replacein;
             foreach (Macro macro in macros)
@@ -202,7 +206,7 @@ namespace pwiz.Skyline.Model.Tools
                     string contents;
                     if (macro.PlainText == Resources.ToolMacros__listArguments_Input_Report_Temp_Path)
                     {
-                        contents = macro.GetContents(new ToolMacroInfo(toolMacroProvider, tool.Title, tool.ReportTitle, doc, progressMonitor));
+                        contents = macro.GetContents(new ToolMacroInfo(toolMacroProvider, tool.Title, tool.ReportTitle, doc, progressMonitor, cancellationToken));
                         tool.ReportTempPath_toDelete = contents;
                     }
                     else if (macro.ShortText == COLLECTED_ARGS)
@@ -215,7 +219,7 @@ namespace pwiz.Skyline.Model.Tools
                         /* null is fine for the ProgramPathContainer argument because ProgramPathContainer
                          * is only used when working with the command text and this function is only used for
                          * arguments and initial directory. */
-                        contents = macro.GetContents(new ToolMacroInfo(toolMacroProvider, tool.Title, tool.ReportTitle, doc, progressMonitor, null, tool.ToolDirPath));
+                        contents = macro.GetContents(new ToolMacroInfo(toolMacroProvider, tool.Title, tool.ReportTitle, doc, progressMonitor, cancellationToken, null, tool.ToolDirPath));
                     }
                     if (contents == null)
                     {
@@ -255,7 +259,8 @@ namespace pwiz.Skyline.Model.Tools
                     }
                     using (var writer = new StreamWriter(saver.SafeName))
                     {
-                        ToolDescriptionHelpers.GetReport(doc, reportName, toolTitle, toolMacroInfo.ProgressMonitor, writer);
+                        using var progress = new ProgressMonitorProgress.Disposable(toolMacroInfo.ProgressMonitor);
+                        ToolDescriptionHelpers.GetReport(doc, reportName, toolTitle, progress.WithCancellationToken(toolMacroInfo.CancellationToken), writer);
                     }
                     saver.Commit();
                     return tempFilePath;                        
@@ -451,16 +456,7 @@ namespace pwiz.Skyline.Model.Tools
         private readonly IToolMacroProvider _macroProvider;
 
         public ToolMacroInfo(SkylineWindow sw, ToolDescription td) :
-            this(sw, td.Title, td.ReportTitle, sw.Document, sw, null, td.ToolDirPath)
-        {
-        }
-
-        public ToolMacroInfo(IToolMacroProvider macroProvider,
-                             string toolTitle,
-                             string reportName,
-                             SrmDocument document,
-                             IProgressMonitor progressMonitor)
-            : this(macroProvider, toolTitle, reportName, document, progressMonitor, null, null)
+            this(sw, td.Title, td.ReportTitle, sw.Document, sw, sw.ApplicationCancellationToken, null, td.ToolDirPath)
         {
         }
 
@@ -469,6 +465,17 @@ namespace pwiz.Skyline.Model.Tools
                              string reportName,
                              SrmDocument document,
                              IProgressMonitor progressMonitor,
+                             CancellationToken cancellationToken)
+            : this(macroProvider, toolTitle, reportName, document, progressMonitor, cancellationToken, null, null)
+        {
+        }
+
+        public ToolMacroInfo(IToolMacroProvider macroProvider,
+                             string toolTitle,
+                             string reportName,
+                             SrmDocument document,
+                             IProgressMonitor progressMonitor,
+                             CancellationToken cancellationToken,
                              ProgramPathContainer pathContainer,
                              string toolDirPath)
         {
@@ -477,6 +484,7 @@ namespace pwiz.Skyline.Model.Tools
             ReportName = reportName;
             Doc = document;
             ProgressMonitor = progressMonitor;
+            CancellationToken = cancellationToken;
             programPathContainer = pathContainer;
             ToolDirPath = toolDirPath;
         }
@@ -485,6 +493,7 @@ namespace pwiz.Skyline.Model.Tools
         public string ReportName { get; private set; }
         public SrmDocument Doc { get; private set; }
         public IProgressMonitor ProgressMonitor { get; private set; }
+        public CancellationToken CancellationToken { get; }
         public ProgramPathContainer programPathContainer { get; private set; }
         public string ToolDirPath { get; private set; }
 

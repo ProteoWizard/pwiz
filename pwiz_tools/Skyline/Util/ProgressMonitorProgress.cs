@@ -1,5 +1,4 @@
 ﻿using System;
-using System.Threading;
 using JetBrains.Annotations;
 using pwiz.Common.Progress;
 using pwiz.Common.SystemUtil;

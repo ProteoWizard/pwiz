@@ -23,7 +23,7 @@ using System.Linq;
 using pwiz.Common.SystemUtil;
 using pwiz.Skyline.Model.DocSettings;
 using pwiz.Skyline.Model.Lib.BlibData;
-using pwiz.Skyline.Util.Extensions;
+using pwiz.Skyline.Util;
 
 namespace pwiz.Skyline.Model.Lib.Midas
 {
@@ -87,7 +87,8 @@ namespace pwiz.Skyline.Model.Lib.Midas
 
             using (var blibDb = BlibDb.CreateBlibDb(_libSpec.FilePath))
             {
-                return progress.CallWithNewProgress( progress2=>blibDb.CreateLibraryFromSpectra(new BiblioSpecLiteSpec(BLIB_NAME_INTERNAL, _libSpec.FilePath), bestSpectra, BLIB_NAME_INTERNAL, progress2)) != null;
+                using var progress2 = ProgressMonitorProgress.ForNewTask(progress);
+                return blibDb.CreateLibraryFromSpectra(new BiblioSpecLiteSpec(BLIB_NAME_INTERNAL, _libSpec.FilePath), bestSpectra, BLIB_NAME_INTERNAL, progress2) != null;
             }
         }
 
