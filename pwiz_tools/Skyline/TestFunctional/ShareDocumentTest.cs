@@ -70,6 +70,8 @@ namespace pwiz.SkylineTestFunctional
 
             ShareWithRawFilesTest();
 
+            ShareWithWiffFileTest();
+
             ShareLibraryWithPeakAnnotationsTest();
 
             ShareDocTest();
@@ -344,10 +346,13 @@ namespace pwiz.SkylineTestFunctional
 
             shareCompletePath = DoShareWithRawFiles(TestFilesDirs[1], elsewhere, elsewhereS1, true);
             VerifyContents(shareCompletePath);
+        }
 
+        private void ShareWithWiffFileTest()
+        {
             // WIFF file should also save the .wiff.scan file
-            const string docNameWiff = "skyline error2.sky";
-            var documentPathWiff = TestFilesDirs[4].GetTestPath(docNameWiff);
+            const string docName = "skyline error2.sky";
+            var documentPathWiff = TestFilesDirs[4].GetTestPath(docName);
             const string dataBasename = "CB1_Step 2_CE_Sample 02";
             var dataNameWiff = dataBasename + DataSourceUtil.EXT_WIFF;
             var dataNameWiffScan = dataBasename + DataSourceUtil.EXT_WIFF_SCAN;

@@ -20,7 +20,6 @@ using System;
 using System.Collections.Generic;
 using System.IO;
 using System.Linq;
-using System.Web.UI;
 using System.Xml;
 using pwiz.Common.SystemUtil;
 using pwiz.ProteowizardWrapper;
