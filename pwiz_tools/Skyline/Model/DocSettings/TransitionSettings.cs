@@ -3113,7 +3113,7 @@ namespace pwiz.Skyline.Model.DocSettings
         {
             return ChangeProp(ImClone(this), im =>
             {
-                im.SynchronizedIntegrationGroupBy = string.IsNullOrEmpty(groupBy) ? string.Empty : groupBy;
+                im.SynchronizedIntegrationGroupBy = string.IsNullOrEmpty(groupBy) ? null : groupBy;
                 im.SynchronizedIntegrationAll = all;
                 im.SynchronizedIntegrationTargets = !all && targets.Length > 0 ? targets : Array.Empty<string>();
             });
@@ -3161,7 +3161,11 @@ namespace pwiz.Skyline.Model.DocSettings
 
             if (reader.IsStartElement(EL.synchronize_integration))
             {
-                SynchronizedIntegrationGroupBy = reader.GetAttribute(ATTR.group_by) ?? string.Empty;
+                SynchronizedIntegrationGroupBy = reader.GetAttribute(ATTR.group_by);
+                if (string.IsNullOrEmpty(SynchronizedIntegrationGroupBy))
+                {
+                    SynchronizedIntegrationGroupBy = null;
+                }
                 SynchronizedIntegrationAll = reader.GetBoolAttribute(ATTR.all);
                 SynchronizedIntegrationTargets = Array.Empty<string>();
 
@@ -3193,7 +3197,7 @@ namespace pwiz.Skyline.Model.DocSettings
             writer.WriteAttribute(ATTR.integrate_all, IsIntegrateAll);
 
             // Write synchronize_integration
-            var hasGroupBy = SynchronizedIntegrationGroupBy != null;
+            var hasGroupBy = !string.IsNullOrEmpty(SynchronizedIntegrationGroupBy);
             var hasSyncTargets = SynchronizedIntegrationTargets != null && SynchronizedIntegrationTargets.Length > 0;
             if (hasGroupBy || SynchronizedIntegrationAll || hasSyncTargets)
             {
