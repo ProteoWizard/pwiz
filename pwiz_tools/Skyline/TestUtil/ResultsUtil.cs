@@ -209,7 +209,7 @@ namespace pwiz.SkylineTestUtil
                             TransitionGroupResults++;
                             if (chromInfo.Annotations.Note != null)
                                 NoteCount++;
-                            if (chromInfo.Annotations.ListAnnotations().Length > 0)
+                            if (chromInfo.Annotations.ListAnnotations().Any())
                                 AnnotationCount++;
                         }
                         //                            if (TransitionGroupResults - startSize < fileIndices.Length)
@@ -233,7 +233,7 @@ namespace pwiz.SkylineTestUtil
                             TransitionResults++;
                             if (chromInfo.Annotations.Note != null)
                                 NoteCount++;
-                            if (chromInfo.Annotations.ListAnnotations().Length > 0)
+                            if (chromInfo.Annotations.ListAnnotations().Any())
                                 AnnotationCount++;
                             if (chromInfo.IsUserSetManual)
                                 UserSetCount++;

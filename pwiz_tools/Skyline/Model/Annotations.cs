@@ -64,7 +64,7 @@ namespace pwiz.Skyline.Model
                 {
                     if (!string.IsNullOrEmpty(entry.Value))
                     {
-                        annotationsDict = annotationsDict ?? new Dictionary<string, string>();
+                        annotationsDict ??= new Dictionary<string, string>();
                         annotationsDict.Add(entry.Key, entry.Value);
                     }
                 }
@@ -174,13 +174,14 @@ namespace pwiz.Skyline.Model
             }
         }
 
-        public KeyValuePair<string,string>[] ListAnnotations()
+        public IEnumerable<KeyValuePair<string,string>> ListAnnotations()
         {
             if (_annotations == null)
             {
-                return new KeyValuePair<string, string>[0];
+                return Array.Empty<KeyValuePair<string, string>>();
             }
-            return _annotations.ToArray();
+
+            return _annotations.AsEnumerable();
         }
         public String GetAnnotation(String name)
         {           

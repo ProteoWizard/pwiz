@@ -19,6 +19,7 @@
 
 using System.Collections.Generic;
 using System.IO;
+using System.Linq;
 using Microsoft.VisualStudio.TestTools.UnitTesting;
 using pwiz.Skyline.Model;
 using pwiz.Skyline.Util;
@@ -75,9 +76,9 @@ namespace pwiz.SkylineTest
             // Merge with disjoint annotations
             var annotationsComplex2 = Annotations.FromValues(note1, new[] {new KeyValuePair<string, string>(annotationName2, annotationValue2)}, -1);
             var complexMerge = annotationsComplex1.Merge(annotationsComplex2);
-            Assert.AreEqual(2, complexMerge.ListAnnotations().Length);
-            Assert.AreEqual(0, complexMerge.ListAnnotations().IndexOf(a => Equals(a.Key, annotationName1)));
-            Assert.AreEqual(1, complexMerge.ListAnnotations().IndexOf(a => Equals(a.Key, annotationName2)));
+            Assert.AreEqual(2, complexMerge.ListAnnotations().Count());
+            Assert.AreEqual(0, complexMerge.ListAnnotations().ToList().IndexOf(a => Equals(a.Key, annotationName1)));
+            Assert.AreEqual(1, complexMerge.ListAnnotations().ToList().IndexOf(a => Equals(a.Key, annotationName2)));
 
             // Merge with conflicting annotations
             var annotationsComplex3 = Annotations.FromValues(null,
@@ -97,7 +98,7 @@ namespace pwiz.SkylineTest
                     new KeyValuePair<string, string>(annotationName2, annotationValue2)
                 },
                 -1);
-            Assert.AreEqual(3, complexMerge.Merge(annotationsComplex4).ListAnnotations().Length);
+            Assert.AreEqual(3, complexMerge.Merge(annotationsComplex4).ListAnnotations().Count());
         }
     }
 }

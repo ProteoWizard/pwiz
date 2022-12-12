@@ -448,11 +448,11 @@ namespace pwiz.SkylineTest
                 var annotations = groupChromInfo.Annotations;
                 if (precursorMzs != null)
                 {
-                    Assert.AreEqual(annotations.ListAnnotations().Length, 1);
+                    Assert.AreEqual(1, annotations.ListAnnotations().Count());
                     Assert.AreEqual(annotations.GetAnnotation(annote), precursorMzs[j]);
                 }
                 else
-                    Assert.AreEqual(annotations.ListAnnotations().Length, 0);
+                    Assert.AreEqual(0, annotations.ListAnnotations().Count());
                 ++j;
             }
         }

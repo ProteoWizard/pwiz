@@ -18,6 +18,7 @@
  */
 using System;
 using System.Collections.Generic;
+using System.Linq;
 using Microsoft.VisualStudio.TestTools.UnitTesting;
 using pwiz.Skyline.Controls.SeqNode;
 using pwiz.Skyline.EditUI;
@@ -118,8 +119,8 @@ namespace pwiz.SkylineTestFunctional
             {
                 var selNode = (SrmTreeNode) SkylineWindow.SequenceTree.SelectedNode;
                 var annotations = selNode.Model.Annotations;
-                Assert.AreEqual(PROTEINS_AND_PEPTIDES, annotations.ListAnnotations()[0].Key);
-                Assert.IsFalse(string.IsNullOrEmpty(annotations.ListAnnotations()[0].Value));
+                Assert.AreEqual(PROTEINS_AND_PEPTIDES, annotations.ListAnnotations().First().Key);
+                Assert.IsFalse(string.IsNullOrEmpty(annotations.ListAnnotations().First().Value));
                 Assert.AreEqual(3, annotations.ColorIndex);
                 Assert.AreEqual("New Text", annotations.Note);
             });
