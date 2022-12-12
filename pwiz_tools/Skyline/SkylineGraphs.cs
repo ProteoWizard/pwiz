@@ -1132,7 +1132,16 @@ namespace pwiz.Skyline
 
             // Insert skyline specific menus
             var set = Settings.Default;
-            var control = menuStrip.SourceControl.Parent.Parent as IMzScalePlot;
+
+            Func<Control, IMzScalePlot> traverseParents = null;
+            traverseParents = (c) =>
+            {
+                if (c == null || c is IMzScalePlot)
+                    return (IMzScalePlot)c;
+                return traverseParents(c.Parent);
+            };
+
+            var control = traverseParents( menuStrip.SourceControl );
             int iInsert = 0;
             if (control?.IsAnnotated ?? false)
             {

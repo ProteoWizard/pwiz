@@ -2515,7 +2515,7 @@ namespace pwiz.Skyline.Model.Lib
  
 
 
-        private SpectrumProperties CreateProperties(ViewLibraryPepInfo pepInfo, LibKeyModificationMatcher matcher)
+        public SpectrumProperties CreateProperties(ViewLibraryPepInfo pepInfo, LibKeyModificationMatcher matcher, SpectrumProperties currentProperties = null)
         {
             string baseCCS = null;
             string baseIM = null;
@@ -2548,43 +2548,35 @@ namespace pwiz.Skyline.Model.Lib
                 IonMobility = baseIM
 
             };
-
             res.SetFileName(FileName);
+
             if (_library is BiblioSpecLiteLibrary)
             {
-                res = GetBiblioSpecAdditionalInfo(pepInfo.Key, res);
+                BiblioSpecLiteLibrary.BiblioSpecSheetInfo biblioAdditionalInfo;
+                BiblioSpecLiteLibrary selectedBiblioSpecLib = _library as BiblioSpecLiteLibrary;
+                if (IsBest)
+                {
+                    biblioAdditionalInfo = selectedBiblioSpecLib?.GetBestSheetInfo(pepInfo.Key);
+                    res.SpectrumCount = biblioAdditionalInfo?.Count;
+                }
+                else
+                {
+                    biblioAdditionalInfo = selectedBiblioSpecLib?.GetRedundantSheetInfo(((SpectrumLiteKey)SpectrumKey).RedundantId);
+                    // Redundant spectra always return a count of 1, so hold on to the count from the best spectrum
+                    res.SpectrumCount = currentProperties?.SpectrumCount ?? biblioAdditionalInfo?.Count;
+                }
+
+                if (biblioAdditionalInfo != null)
+                {
+                    res.SpecIdInFile = biblioAdditionalInfo.SpecIdInFile;
+                    res.IdFileName = biblioAdditionalInfo.IDFileName;
+                    res.SetFileName(biblioAdditionalInfo.FileName);
+                    res.Score = biblioAdditionalInfo.Score;
+                    res.ScoreType = biblioAdditionalInfo.ScoreType;
+                }
             }
             return res;
         }
-
-        private SpectrumProperties GetBiblioSpecAdditionalInfo(LibKey pepKey, SpectrumProperties props)
-        {
-            BiblioSpecLiteLibrary.BiblioSpecSheetInfo biblioAdditionalInfo;
-            BiblioSpecLiteLibrary selectedBiblioSpecLib = _library as BiblioSpecLiteLibrary;
-            if (IsBest)
-            {
-                biblioAdditionalInfo = selectedBiblioSpecLib?.GetBestSheetInfo(pepKey);
-                props.SpectrumCount = biblioAdditionalInfo?.Count;
-            }
-            else
-            {
-                biblioAdditionalInfo = selectedBiblioSpecLib?.GetRedundantSheetInfo(((SpectrumLiteKey)SpectrumKey).RedundantId);
-                //TODO: Clarify, not clear what a redundant spectrum is and when the non-redundant spectrum is retrieved.
-                // Redundant spectra always return a count of 1, so hold on to the count from the best spectrum
-            }
-
-            if (biblioAdditionalInfo != null)
-            {
-                props.SpecIdInFile = biblioAdditionalInfo.SpecIdInFile;
-                props.IdFileName = biblioAdditionalInfo.IDFileName;
-                props.SetFileName(biblioAdditionalInfo.FileName);
-                props.Score = biblioAdditionalInfo.Score;
-                props.ScoreType = biblioAdditionalInfo.ScoreType;
-            }
-            return props;
-        }
-
-
     }
 
     public class SpectrumProperties : GlobalizedObject

@@ -149,6 +149,7 @@ namespace pwiz.Skyline.Controls.Graphs
         public GraphSpectrum(IDocumentUIContainer documentUIContainer)
         {
             InitializeComponent();
+            graphControl.ContextMenuBuilder += graphControl_ContextMenuBuilder;
 
             Icon = Resources.SkylineData;
             _graphHelper = GraphHelper.Attach(graphControl);
@@ -160,6 +161,10 @@ namespace pwiz.Skyline.Controls.Graphs
 
             // ReSharper disable once PossibleNullReferenceException
             comboPrecursor.ComboBox.DisplayMember = nameof(Precursor.DisplayString);
+
+            ShowProperties(Settings.Default.ViewLibraryPropertiesVisible);
+            if (Settings.Default.ViewLibraryPropertiesSorted)
+                msGraphExtension.PropertiesSheet.PropertySort = PropertySort.Alphabetical;
 
             if (DocumentUI != null)
                 ZoomSpectrumToSettings();
@@ -388,7 +393,7 @@ namespace pwiz.Skyline.Controls.Graphs
 
         private void propertiesMenuItem_Click(object sender, EventArgs e)
         {
-
+            ShowProperties(!propertiesButton.Checked);
         }
 
         private class ToolbarUpdate : IDisposable
@@ -519,7 +524,7 @@ namespace pwiz.Skyline.Controls.Graphs
             ceLabel.Visible = enableCE;
 
             // Show only if we made any of the things visible
-            toolBar.Visible = showPrecursorSelect || showSpectraSelect || enableCE;
+            //toolBar.Visible = showPrecursorSelect || showSpectraSelect || enableCE;
         }
 
         public void SelectSpectrum(SpectrumIdentifier spectrumIdentifier)
@@ -1348,6 +1353,15 @@ namespace pwiz.Skyline.Controls.Graphs
                         }
 
                         _graphHelper.ZoomSpectrumToSettings(DocumentUI, selection.NodeTranGroup);
+
+                        if (selection.NodePep != null && selection.NodeTranGroup != null && spectrum?.SpectrumInfo is SpectrumInfoLibrary libInfo)
+                        {
+                            var pepInfo = new ViewLibraryPepInfo(
+                                    selection.NodePep.ModifiedTarget.GetLibKey(selection.NodeTranGroup.PrecursorAdduct), 
+                                    libInfo.SpectrumHeaderInfo)
+                                .ChangePeptideNode(selection.NodePep);
+                            msGraphExtension.SetPropertiesObject(libInfo.CreateProperties(pepInfo, new LibKeyModificationMatcher()));
+                        }
                     }
                     else
                     {
@@ -1396,6 +1410,18 @@ namespace pwiz.Skyline.Controls.Graphs
                 _graphHelper.SetErrorGraphItem(new UnavailableMSGraphItem());
             }
         }
+
+        public void ShowProperties(bool show)
+        {
+            // TODO: [RC] Create separate properties visibility settings for this window.
+            if (!show && msGraphExtension.PropertiesVisible)
+                Settings.Default.ViewLibrarySplitPropsDist = msGraphExtension.Splitter.SplitterDistance;
+            propertiesButton.Checked = show;
+            msGraphExtension.SetPropertiesVisibility(propertiesButton.Checked);
+            if (show && Settings.Default.ViewLibrarySplitPropsDist > 0)
+                msGraphExtension.Splitter.SplitterDistance = Settings.Default.ViewLibrarySplitPropsDist;
+        }
+
 
         private static bool DisplayTypeMatches(LibraryChromGroup.ChromData chromData, DisplayTypeChrom displayType)
         {

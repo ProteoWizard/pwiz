@@ -3,6 +3,7 @@ using System;
 using System.ComponentModel;
 using System.Resources;
 using System.Windows.Forms;
+using pwiz.Skyline.Model.Lib;
 
 namespace pwiz.Skyline.SettingsUI
 {
@@ -42,6 +43,8 @@ namespace pwiz.Skyline.SettingsUI
         {
             SetPropertiesVisibility(false);
         }
+
+        public SpectrumProperties SpectrumProperties => spectrumInfoSheet.SelectedObject as SpectrumProperties;
     }
 
 

@@ -911,23 +911,7 @@ namespace pwiz.Skyline.SettingsUI
                             }
 
                             // Generates the object that will go into the property sheet
-                            var newProperties = new SpectrumProperties
-                            {
-                                LibraryName = spectrumInfo.Name,
-                                PrecursorMz = pepInfo.CalcMz(_matcher).ToString(Formats.Mz),
-                                Score = (spectrumInfo?.SpectrumHeaderInfo as BiblioSpecSpectrumHeaderInfo)?.Score,
-                                Charge = pepInfo.Charge,
-                                RetentionTime = baseRT,
-                                CCS = baseCCS,
-                                IonMobility = baseIM
-                            };
-                            newProperties.SetFileName(spectrumInfo.FileName);
-                            if (_selectedLibrary is BiblioSpecLiteLibrary)
-                            {
-                                newProperties = GetBiblioSpecAdditionalInfo(spectrumInfo, index, newProperties);
-                            }
-
-                            _currentProperties = newProperties;
+                            _currentProperties = spectrumInfo.CreateProperties(pepInfo, _matcher, _currentProperties); 
                         }
 
                         _hasScores = _currentProperties.Score != null;
