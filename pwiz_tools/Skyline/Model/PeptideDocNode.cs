@@ -635,6 +635,10 @@ namespace pwiz.Skyline.Model
 
         public PeptideDocNode ChangeExplicitMods(ExplicitMods prop)
         {
+            if (prop == null && !Peptide.Target.IsProteomic)
+            {
+                prop = ExplicitMods.EMPTY;
+            }
             return ChangeProp(ImClone(this), im => im.ExplicitMods = prop);
         }
 

@@ -202,7 +202,7 @@ namespace pwiz.Skyline.Model
                 note = null;
             }
 
-            if (note == null && _annotations.Count == 0)
+            if (note == null && _annotations == null)
             {
                 return EMPTY;
             }
