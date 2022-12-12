@@ -762,7 +762,9 @@ namespace pwiz.Skyline.Model
             if (!DeferSettingsChanges)
             {
                 // Make sure peptide standards lists are up to date
-                docClone.Settings = docClone.Settings.CachePeptideStandards(Children, docClone.Children);
+                docClone.Settings = docClone.Settings
+                    .UpdateScoreQValueMap(docClone.MoleculeGroups)
+                    .CachePeptideStandards(Children, docClone.Children);
             }
 
             // Note protein metadata readiness
@@ -2161,7 +2163,9 @@ namespace pwiz.Skyline.Model
                 var children = documentReader.Children;
 
                 // Make sure peptide standards lists are up to date
-                Settings = Settings.CachePeptideStandards(new PeptideGroupDocNode[0], children);
+                Settings = Settings
+                    .UpdateScoreQValueMap(children)
+                    .CachePeptideStandards(new PeptideGroupDocNode[0], children);
 
                 SetChildren(UpdateResultsSummaries(children, new Dictionary<int, PeptideDocNode>()));
 

@@ -3113,7 +3113,7 @@ namespace pwiz.Skyline.Model.DocSettings
         {
             return ChangeProp(ImClone(this), im =>
             {
-                im.SynchronizedIntegrationGroupBy = groupBy;
+                im.SynchronizedIntegrationGroupBy = string.IsNullOrEmpty(groupBy) ? string.Empty : groupBy;
                 im.SynchronizedIntegrationAll = all;
                 im.SynchronizedIntegrationTargets = !all && targets.Length > 0 ? targets : Array.Empty<string>();
             });
