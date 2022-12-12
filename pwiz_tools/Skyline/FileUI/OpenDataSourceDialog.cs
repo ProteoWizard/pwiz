@@ -45,14 +45,14 @@ namespace pwiz.Skyline.FileUI
         private RemoteSession _remoteSession;
         private readonly IList<RemoteAccount> _remoteAccounts;
         private bool _waitingForData;
-        private readonly List<string> _specificDataSourceFilter; // Specific data sources to look for
+        private readonly IList<string> _specificDataSourceFilter; // Specific data sources to look for
         
         /// <summary>
         /// File picker which is aware of mass spec "files" that are really directories
         /// </summary>
         /// <param name="remoteAccounts">For UNIFI</param>
         /// <param name="specificDataSourceFilter">Optional list of specific files the user needs to located, ignoring the rest</param>
-        public OpenDataSourceDialog(IList<RemoteAccount> remoteAccounts, List<string> specificDataSourceFilter = null)
+        public OpenDataSourceDialog(IList<RemoteAccount> remoteAccounts, IList<string> specificDataSourceFilter = null)
         {
             InitializeComponent();
             _remoteAccounts = remoteAccounts;

@@ -34,24 +34,25 @@ namespace pwiz.Skyline.Alerts
     public partial class ShareTypeDlg : FormEx
     {
         private List<SkylineVersion> _skylineVersionOptions;
-        private readonly SrmDocument _document; // Document from which replicate files and information can be extracted
+        private readonly SrmDocument _document;
+        private string _documentFilePath;
         private readonly DocumentFormat? _savedFileFormat;
-        private readonly bool _allowDataSources; // For now at least we never offer to include data sources in Panorama uploads
-        private ShareResultsFilesDlg.AuxiliaryFiles _auxiliaryFiles; // Auxiliary files to be included (e.g. replicate files)
+        private ShareResultsFilesDlg.AuxiliaryFiles _auxiliaryFiles; // Mass spec data files/folders to be included
 
-        public ShareTypeDlg(SrmDocument document, DocumentFormat? savedFileFormat): this(document, savedFileFormat, SkylineVersion.CURRENT)
+        public ShareTypeDlg(SrmDocument document, string documentFilePath, DocumentFormat? savedFileFormat)
+            : this(document, documentFilePath, savedFileFormat, SkylineVersion.CURRENT)
         {
         }
 
-        public ShareTypeDlg(SrmDocument document, DocumentFormat? savedFileFormat, SkylineVersion maxSupportedVersion, bool allowDataSources = true)
+        public ShareTypeDlg(SrmDocument document, string documentFilePath, DocumentFormat? savedFileFormat, SkylineVersion maxSupportedVersion, bool allowDataSources = true)
         {
             InitializeComponent();
             _skylineVersionOptions = new List<SkylineVersion>();
             _document = document;
+            _documentFilePath = documentFilePath;
             _savedFileFormat = savedFileFormat;
-            _allowDataSources = allowDataSources;
 
-            if (!_allowDataSources)
+            if (!allowDataSources)
             {
                 // Get rid of the area where we would have asked about data sources
                 Height -= (btnSelectReplicateFiles.Height + (radioMinimal.Top - radioComplete.Bottom));
@@ -74,8 +75,8 @@ namespace pwiz.Skyline.Alerts
             }
             comboSkylineVersion.SelectedIndex = 0;
             radioComplete.Checked = true;
-            UpdateDataSourceSharing(); // Don't offer to include results files when there are none, or when document format is too old
 
+            UpdateDataSourceSharing(allowDataSources);
         }
 
         public ShareType ShareType { get; private set; }
@@ -151,12 +152,6 @@ namespace pwiz.Skyline.Alerts
         #endregion
 
         /// <summary>
-        /// Path on disk to the current document.
-        /// CONSIDER: Pass in the document file path rather than relying on Program.MainWindow
-        /// </summary>
-        private string _documentFilePath => Program.MainWindow.DocumentFilePath;
-
-        /// <summary>
         /// Creates and collects user information on present raw files
         /// </summary>
         private void btnSelectReplicateFiles_Click(object sender, EventArgs e)
@@ -167,7 +162,7 @@ namespace pwiz.Skyline.Alerts
                 {
                     // Pass along any extra files the user may have selected
                     _auxiliaryFiles = replicateSelectDlg.FilesInfo; // Pass auxiliary file information back
-                    if (_auxiliaryFiles.IncludeFiles.Any())
+                    if (_auxiliaryFiles.IncludeFilesCount > 0)
                         labelFileStatus.Text = _auxiliaryFiles.ToString();
                     else
                         cbIncludeReplicateFiles.Checked = false;
@@ -213,16 +208,21 @@ namespace pwiz.Skyline.Alerts
             }
         }
 
-        private void UpdateDataSourceSharing()
+        /// <summary>
+        /// Don't offer to include results files when there are none, or when document format is too old.
+        /// </summary>
+        private void UpdateDataSourceSharing(bool allowDataSources)
         {
-            if (!_allowDataSources) // e.g. Panorama uploads
+            if (!allowDataSources) // e.g. Panorama uploads
             {
+                // Don't offer to include results files for any formats
                 cbIncludeReplicateFiles.Visible = cbIncludeReplicateFiles.Enabled = cbIncludeReplicateFiles.Checked =
-                    btnSelectReplicateFiles.Visible = labelFileStatus.Visible = false; // Don't offer to include results files for any formats
+                    btnSelectReplicateFiles.Visible = labelFileStatus.Visible = false;
             }
             else
             {
-                cbIncludeReplicateFiles.Enabled = _document.Settings.HasResults; // Don't offer to include results files when there are none
+                // Don't offer to include results files when there are none
+                cbIncludeReplicateFiles.Enabled = _document.Settings.HasResults;
             }
         }
 
@@ -232,7 +232,7 @@ namespace pwiz.Skyline.Alerts
         private IEnumerable<string> GetIncludedAuxiliaryFiles()
         { 
             if (cbIncludeReplicateFiles.Checked && _auxiliaryFiles != null)
-                return _auxiliaryFiles.IncludeFiles;
+                return _auxiliaryFiles.FilesToIncludeInZip;
             return Array.Empty<string>();
         }
     }

@@ -48,10 +48,13 @@ namespace pwiz.SkylineTestFunctional
         public void TestDocumentSharing()
         {
             TestDirectoryName = "ShareDocumentTest";
-            TestFilesZipPaths = new[] { @"TestFunctional\PrecursorTest.zip",
-                                        @"TestFunctional\LibraryShareTest.zip",
-                                        @"TestFunctional\LibraryShareTestPeakAnnotations.zip",
-                                        @"TestData\Results\AgilentCEOpt.zip"
+            TestFilesZipPaths = new[]
+            {
+                @"TestFunctional\PrecursorTest.zip",
+                @"TestFunctional\LibraryShareTest.zip",
+                @"TestFunctional\LibraryShareTestPeakAnnotations.zip",
+                @"TestData\Results\AgilentCEOpt.zip",   // .d folder
+                @"TestData\Results\AsymCEOpt.zip"       // .wiff and .wiff.scan
             };
             RunFunctionalTest();
         }
@@ -273,7 +276,6 @@ namespace pwiz.SkylineTestFunctional
         private void ShareWithRawDirectoriesTest()
         {
             const string docName = "AgilentCE.sky";
-            string zipPath = TestContext.GetProjectDirectory(TestFilesZipPaths[3]);
             string documentPath = TestFilesDirs[3].GetTestPath(docName);
             var bismetPgulOptD = "BisMet-1pgul-opt-01.d";
             var dataPath = TestFilesDirs[3].GetTestPath(bismetPgulOptD);
@@ -293,6 +295,82 @@ namespace pwiz.SkylineTestFunctional
             RunUI(() => SkylineWindow.NewDocument());
             RunUI(() => SkylineWindow.LoadFile(shareCompletePath));
             RunUI(() => SkylineWindow.NewDocument());
+        }
+
+        private void ShareWithRawFilesTest()
+        {
+            // Remember original files
+            const string docName = "LibraryShareTest.sky";
+            string zipPath = TestContext.GetProjectDirectory(TestFilesZipPaths[1]);
+
+            // Open the .sky file
+            string documentPath = TestFilesDirs[1].GetTestPath(docName);
+            RunUI(() => SkylineWindow.LoadFile(documentPath));
+            WaitForDocumentLoaded();
+            // We don't have the actual raw data handy, but a couple of suitably named files will stand in just fine for our purposes
+            var S1_RAW = "S_1.RAW";
+            var S5_RAW = "S_5.RAW";
+
+            SafeFileCopy(documentPath, TestFilesDirs[1].GetTestPath(S1_RAW)); // In documents directory
+            SafeFileCopy(documentPath, TestFilesDirs[1].GetTestPath("..\\" + S5_RAW)); // In document's parent directory
+
+            void VerifyContents(string s)
+            {
+                using var zipFile = ZipFile.Read(s);
+                {
+                    // Confirm files have been correctly found
+                    Assert.IsTrue(zipFile.EntryFileNames.Contains(S1_RAW),
+                        $@"expected to find (fake!) raw data file {S1_RAW} in zip file");
+                    Assert.IsTrue(zipFile.EntryFileNames.Contains(S5_RAW),
+                        $@"expected to find (fake!) raw data file {S5_RAW} in zip file");
+                }
+            }
+
+            var shareCompletePath = DoShareWithRawFiles(TestFilesDirs[1], null, S1_RAW);
+            VerifyContents(shareCompletePath);
+
+            // Now exercise the missing file handling
+            var elsewhere = TestFilesDirs[1].GetTestPath("elsewhere");
+            Directory.CreateDirectory(elsewhere);
+            var elsewhereS1 = Path.Combine(elsewhere, S1_RAW);
+            File.Move(TestFilesDirs[1].GetTestPath(S1_RAW), elsewhereS1); // Exercise folder select
+
+            shareCompletePath = DoShareWithRawFiles(TestFilesDirs[1], elsewhere, elsewhereS1);
+            VerifyContents(shareCompletePath);
+
+            // Move the location of S5_RAW in order to test the folder selector
+            elsewhereS1 = Path.Combine(elsewhere, (S5_RAW));
+            File.Move(TestFilesDirs[1].GetTestPath("..\\" + S5_RAW), elsewhereS1);
+
+            shareCompletePath = DoShareWithRawFiles(TestFilesDirs[1], elsewhere, elsewhereS1, true);
+            VerifyContents(shareCompletePath);
+
+            // WIFF file should also save the .wiff.scan file
+            const string docNameWiff = "skyline error2.sky";
+            var documentPathWiff = TestFilesDirs[4].GetTestPath(docNameWiff);
+            const string dataBasename = "CB1_Step 2_CE_Sample 02";
+            var dataNameWiff = dataBasename + DataSourceUtil.EXT_WIFF;
+            var dataNameWiffScan = dataBasename + DataSourceUtil.EXT_WIFF_SCAN;
+            var dataPathWiff = TestFilesDirs[4].GetTestPath(dataNameWiff);
+            RunUI(() => SkylineWindow.LoadFile(documentPathWiff));
+            ImportResultsFile(dataPathWiff);
+            RunUI(() => SkylineWindow.SaveDocument(TestFilesDirs[4].GetTestPath("ShareWithWiffTest.sky")));
+
+            var shareCompletePathWiff = DoShareWithRawFiles(TestFilesDirs[4]);
+            using var zipFile = ZipFile.Read(shareCompletePathWiff);
+            {
+                // Confirm files have been correctly found
+                Assert.IsTrue(zipFile.EntryFileNames.Contains(dataNameWiff),
+                    $@"expected to find data file {dataNameWiff} in zip file");
+                Assert.IsTrue(zipFile.EntryFileNames.Contains(dataNameWiffScan),
+                    $@"expected to find data file {dataNameWiffScan} in zip file");
+            }
+        }
+
+        private void SafeFileCopy(string sourceFileName, string destFileName)
+        {
+            FileEx.SafeDelete(destFileName);
+            File.Copy(sourceFileName, destFileName);
         }
 
         private string DoShareWithRawFiles(TestFilesDir testFilesDir, string directoryElsewhere = null, string filename = null, bool testFolder = false)
@@ -394,6 +472,7 @@ namespace pwiz.SkylineTestFunctional
                 ShareResultsFilesDlg.AuxiliaryFiles.GetStatusText(includedCount, totalCount, missingFilesCount),
                 dlg.StatusText);
         }
+
         private static void VerifyFileStatus(ShareTypeDlg dlg, int totalFilesCount, int missingFile)
         {
             Assert.AreEqual(
@@ -401,61 +480,6 @@ namespace pwiz.SkylineTestFunctional
                 dlg.FileStatusText);
         }
 
-
-        private void ShareWithRawFilesTest()
-        {
-            // Remember original files
-            const string docName = "LibraryShareTest.sky";
-            string zipPath = TestContext.GetProjectDirectory(TestFilesZipPaths[1]);
-
-            // Open the .sky file
-            string documentPath = TestFilesDirs[1].GetTestPath(docName);
-            RunUI(() => SkylineWindow.LoadFile(documentPath));
-            WaitForDocumentLoaded();
-            // We don't have the actual raw data handy, but a couple of suitably named files will stand in just fine for our purposes
-            var S1_RAW = "S_1.RAW";
-            var S5_RAW = "S_5.RAW";
-
-            SafeFileCopy(documentPath, TestFilesDirs[1].GetTestPath(S1_RAW)); // In documents directory
-            SafeFileCopy(documentPath, TestFilesDirs[1].GetTestPath("..\\" + S5_RAW)); // In document's parent directory
-
-            void VerifyContents(string s)
-            {
-                using var zipFile = ZipFile.Read(s);
-                {
-                    // Confirm files have been correctly found
-                    Assert.IsTrue(zipFile.EntryFileNames.Contains(S1_RAW),
-                        $@"expected to find (fake!) raw data file {S1_RAW} in zip file");
-                    Assert.IsTrue(zipFile.EntryFileNames.Contains(S5_RAW),
-                        $@"expected to find (fake!) raw data file {S5_RAW} in zip file");
-                }
-            }
-
-            var shareCompletePath = DoShareWithRawFiles(TestFilesDirs[1], null, S1_RAW);
-            VerifyContents(shareCompletePath);
-
-            // Now exercise the missing file handling
-            var elsewhere = TestFilesDirs[1].GetTestPath("elsewhere");
-            Directory.CreateDirectory(elsewhere);
-            var elsewhereS1 = Path.Combine(elsewhere, S1_RAW);
-            File.Move(TestFilesDirs[1].GetTestPath(S1_RAW), elsewhereS1); // Exercise folder select
-
-            shareCompletePath = DoShareWithRawFiles(TestFilesDirs[1], elsewhere, elsewhereS1);
-            VerifyContents(shareCompletePath);
-
-            // Move the location of S5_RAW in order to test the folder selector
-            elsewhereS1 = Path.Combine(elsewhere,(S5_RAW));
-            File.Move(TestFilesDirs[1].GetTestPath("..\\" + S5_RAW), elsewhereS1);
-
-            shareCompletePath = DoShareWithRawFiles(TestFilesDirs[1], elsewhere, elsewhereS1, true);
-            VerifyContents(shareCompletePath);
-        }
-
-        private void SafeFileCopy(string sourceFileName, string destFileName)
-        {
-            FileEx.SafeDelete(destFileName);
-            File.Copy(sourceFileName, destFileName);
-        }
 
         private void ShareDocTest()
         {

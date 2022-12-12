@@ -35256,46 +35256,6 @@ namespace pwiz.Skyline.Properties {
         }
         
         /// <summary>
-        ///   Looks up a localized string similar to Calculating hash of input file.
-        /// </summary>
-        public static string VendorIssueHelper_ConvertBrukerToMzml_Calculating_hash_of_input_file {
-            get {
-                return ResourceManager.GetString("VendorIssueHelper_ConvertBrukerToMzml_Calculating_hash_of_input_file", resourceCulture);
-            }
-        }
-        
-        /// <summary>
-        ///   Looks up a localized string similar to CompassXport software must be installed to import Bruker raw data files..
-        /// </summary>
-        public static string VendorIssueHelper_ConvertBrukerToMzml_CompassXport_software_must_be_installed_to_import_Bruker_raw_data_files_ {
-            get {
-                return ResourceManager.GetString("VendorIssueHelper_ConvertBrukerToMzml_CompassXport_software_must_be_installed_to_" +
-                        "import_Bruker_raw_data_files_", resourceCulture);
-            }
-        }
-        
-        /// <summary>
-        ///   Looks up a localized string similar to Failure attempting to convert {0} to mzML using CompassXport..
-        /// </summary>
-        public static string VendorIssueHelper_ConvertBrukerToMzml_Failure_attempting_to_convert__0__to_mzML_using_CompassXport_ {
-            get {
-                return ResourceManager.GetString("VendorIssueHelper_ConvertBrukerToMzml_Failure_attempting_to_convert__0__to_mzML_u" +
-                        "sing_CompassXport_", resourceCulture);
-            }
-        }
-        
-        /// <summary>
-        ///   Looks up a localized string similar to Failure attempting to convert sample {0} in {1} to mzXML to work around a performance issue in the AB Sciex WiffFileDataReader library..
-        /// </summary>
-        public static string VendorIssueHelper_ConvertLocalWiffToMzxml_Failure_attempting_to_convert_sample__0__in__1__to_mzXML_to_work_around_a_performance_issue_in_the_AB_Sciex_WiffFileDataReader_library {
-            get {
-                return ResourceManager.GetString("VendorIssueHelper_ConvertLocalWiffToMzxml_Failure_attempting_to_convert_sample__0" +
-                        "__in__1__to_mzXML_to_work_around_a_performance_issue_in_the_AB_Sciex_WiffFileDat" +
-                        "aReader_library", resourceCulture);
-            }
-        }
-        
-        /// <summary>
         ///   Looks up a localized string similar to Converting {0} to xml.
         /// </summary>
         public static string VendorIssueHelper_ConvertPilotFiles_Converting__0__to_xml {

@@ -367,7 +367,7 @@ namespace pwiz.Skyline.Alerts
             }
         }
 
-        #region Functional test helpers
+        #region Functional testing support
 
         public bool? IsSelectAll
         {
@@ -446,7 +446,14 @@ namespace pwiz.Skyline.Alerts
             public IList<string> MissingFiles { get; }
 
             private IEnumerable<FileChoice> IncludeFileChoices => FoundFiles.Where(f => f.IsIncluded);
-            public IEnumerable<string> IncludeFiles => IncludeFileChoices.Select(f => f.Filename);
+
+            /// <summary>
+            /// The set of files and/or directories to pass to ZipFileShare.AddFile().
+            /// For .wiff files this requires also including the .wiff.scan files.
+            /// For now this is handled here, because this class report the size-on-disk
+            /// for each FileChoice.
+            /// </summary>
+            public IEnumerable<string> FilesToIncludeInZip => IncludeFileChoices.SelectMany(f => f.RootFiles);
 
             public override string ToString()
             {
@@ -488,6 +495,15 @@ namespace pwiz.Skyline.Alerts
 
             public string Filename { get; }
             public bool IsIncluded { get; }
+
+            /// <summary>
+            /// The directory or set of files to be included in the ZIP file.
+            /// In the case of a .wiff file this may also include the .wiff.scan
+            /// file. It does not currently expand directories. This is done here
+            /// because this class should include the total cost in size on disk
+            /// for this choice.
+            /// </summary>
+            public IEnumerable<string> RootFiles => DataSourceUtil.GetCompanionFiles(Filename);
         }
     }
 }
