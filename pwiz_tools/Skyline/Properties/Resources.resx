@@ -11856,6 +11856,9 @@ If you do not have the original file, you may build the library with embedded sp
   <data name="CommandLine_ImportSkyr_Error__Reports_could_not_be_imported_from__0_" xml:space="preserve">
       <value>Error: Reports could not be imported from {0}</value>
   </data>
+  <data name="AssociateProteinsDlg_UseFastaFile_An_error_occurred_during_protein_association_" xml:space="preserve">
+	  <value>An error occurred during protein association.</value>
+  </data>
   <data name="ColonSeparator" xml:space="preserve">
 	  <value>{0}: {1}</value>
   </data>

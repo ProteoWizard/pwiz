@@ -2025,6 +2025,15 @@ namespace pwiz.Skyline.Properties {
         }
         
         /// <summary>
+        ///   Looks up a localized string similar to An error occurred during protein association..
+        /// </summary>
+        public static string AssociateProteinsDlg_UseFastaFile_An_error_occurred_during_protein_association_ {
+            get {
+                return ResourceManager.GetString("AssociateProteinsDlg_UseFastaFile_An_error_occurred_during_protein_association_", resourceCulture);
+            }
+        }
+        
+        /// <summary>
         ///   Looks up a localized string similar to There was an error reading from the file..
         /// </summary>
         public static string AssociateProteinsDlg_UseFastaFile_There_was_an_error_reading_from_the_file_ {
