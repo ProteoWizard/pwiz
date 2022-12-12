@@ -993,7 +993,6 @@ namespace pwiz.Skyline.Model.Serialization
                 : null;
             var annotations = Annotations.EMPTY;
             ExplicitMods mods = null, lookupMods = null;
-            CrosslinkStructure crosslinkStructure = null;
             Results<PeptideChromInfo> results = null;
             TransitionGroupDocNode[] children = null;
             Adduct adduct = Adduct.EMPTY;
@@ -1031,7 +1030,7 @@ namespace pwiz.Skyline.Model.Serialization
                     mods = ReadExplicitMods(reader, peptide)?.ConvertFromLegacyCrosslinkStructure();
                     SkipImplicitModsElement(reader);
                     lookupMods = ReadLookupMods(reader, lookupSequence);
-                    crosslinkStructure = ReadCrosslinkStructure(reader);
+                    var crosslinkStructure = ReadCrosslinkStructure(reader);
                     if (crosslinkStructure != null && !crosslinkStructure.IsEmpty)
                     {
                         mods = mods ?? new ExplicitMods(peptide, null, null);

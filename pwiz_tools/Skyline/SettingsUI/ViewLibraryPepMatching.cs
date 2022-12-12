@@ -658,20 +658,23 @@ namespace pwiz.Skyline.SettingsUI
                                                  Settings.PeptideSettings.Enzyme.CountCleavagePoints(peptideSequence));
                     // Make sure we keep the same children. 
                     PeptideMatch match = pepMatch;
-                    var newNodePep = ((PeptideDocNode) new PeptideDocNode(newPeptide, pepMatch.NodePep.ExplicitMods, pepMatch.NodePep.ExplicitRetentionTime)
-                            .ChangeChildren(pepMatch.NodePep.Children.ToList().ConvertAll(nodeGroup =>
-                                {
-                                    // Create copies of the children in order to prevent transition groups with the same 
-                                    // global indices.
-                                    var nodeTranGroup = (TransitionGroupDocNode) nodeGroup;
-                                    if(match.Proteins != null && match.Proteins.Count > 1)
-                                    {
-                                        nodeTranGroup = (TransitionGroupDocNode) nodeTranGroup.CopyId();
-                                        nodeTranGroup = (TransitionGroupDocNode) nodeTranGroup.ChangeChildren(
-                                            nodeTranGroup.Children.ToList().ConvertAll(nodeTran => nodeTran.CopyId()));
-                                    }
-                                    return (DocNode) nodeTranGroup;
-                                })).ChangeAutoManageChildren(false)).ChangeSettings(document.Settings, SrmSettingsDiff.ALL);
+                    var newNodePep = ((PeptideDocNode)new PeptideDocNode(newPeptide, pepMatch.NodePep.ExplicitMods,
+                            pepMatch.NodePep.ExplicitRetentionTime)
+                        .ChangeChildren(pepMatch.NodePep.TransitionGroups.Select(nodeGroup =>
+                        {
+                            // Create copies of the children in order to prevent transition groups with the same 
+                            // global indices.
+                            var nodeTranGroup = nodeGroup.ChangePeptide(newPeptide);
+                            if (match.Proteins != null && match.Proteins.Count > 1)
+                            {
+                                nodeTranGroup = (TransitionGroupDocNode)nodeTranGroup.CopyId();
+                                nodeTranGroup = (TransitionGroupDocNode)nodeTranGroup.ChangeChildren(
+                                    nodeTranGroup.Children.ToList().ConvertAll(nodeTran => nodeTran.CopyId()));
+                            }
+
+                            return (DocNode)nodeTranGroup;
+                        }).ToList())
+                        .ChangeAutoManageChildren(false)).ChangeSettings(document.Settings, SrmSettingsDiff.ALL);
                     // If this PeptideDocNode is already a child of the PeptideGroupDocNode,
                     // ignore it.
                     if (peptideGroupDocNode.Children.Contains(nodePep => Equals(((PeptideDocNode) nodePep).Key, newNodePep.Key)))
