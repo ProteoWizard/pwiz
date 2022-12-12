@@ -606,7 +606,7 @@ namespace pwiz.Skyline.Model
                                 // Remove annotations for defs that were imported into the document and were on this peptide prior to import
                                 var newAnnotationValues = groupChromInfo.Annotations.ListAnnotations().ToList();
                                 newAnnotationValues = newAnnotationValues.Where(a => !AnnotationsAdded.Contains(a.Key)).ToList();
-                                var newAnnotations = new Annotations(groupChromInfo.Annotations.Note, newAnnotationValues, groupChromInfo.Annotations.ColorIndex);
+                                var newAnnotations = Annotations.FromValues(groupChromInfo.Annotations.Note, newAnnotationValues, groupChromInfo.Annotations.ColorIndex);
                                 var newGroupNode = groupNode.ChangePrecursorAnnotations(fileId, newAnnotations);
                                 if (!ReferenceEquals(groupNode, newGroupNode))
                                     docNew = (SrmDocument) docNew.ReplaceChild(groupPath.Parent, newGroupNode);

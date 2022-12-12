@@ -175,7 +175,7 @@ namespace pwiz.Skyline.EditUI
                 colorIndex = Settings.Default.AnnotationColor;
             else if (!matchingColors)
                 colorIndex = -1;
-            return new Annotations(text, dictMatchingAnnotations, colorIndex);
+            return Annotations.FromValues(text, dictMatchingAnnotations, colorIndex);
         }
 
 

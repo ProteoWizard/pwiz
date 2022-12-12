@@ -520,6 +520,9 @@ namespace pwiz.Skyline.SettingsUI
             Helpers.AssignIfEquals(ref modifications, _peptideSettings.Modifications);
 
             PeptideIntegration integration = new PeptideIntegration(_driverPeakScoringModel.SelectedItem);
+            // Always preserve the ScoreQValueMap until the user tells Skyline to reintegrate
+            integration = integration.ChangeScoreQValueMap(_peptideSettings.Integration.ScoreQValueMap);
+            
             Helpers.AssignIfEquals(ref integration, Integration);
 
             QuantificationSettings quantification = QuantificationSettings.DEFAULT

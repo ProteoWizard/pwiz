@@ -3231,7 +3231,7 @@ namespace pwiz.Skyline.Model
                     int? massShift = productExp.MassShift;
                     if (massShift == null && precursorExp.MassShift.HasValue)
                         massShift = 0;
-                    var annotations = string.IsNullOrEmpty(productExp.ExInfo.Note) ? Annotations.EMPTY : new Annotations(productExp.ExInfo.Note, null, 0);
+                    var annotations = Annotations.FromValues(productExp.ExInfo.Note, null, 0);
                     var tran = new Transition(transitionGroup, ionType, offset, 0, productExp.Adduct, massShift);
                     // m/z and library info calculated later
                     return new TransitionDocNode(tran, annotations, productExp.Losses, TypedMass.ZERO_MONO_MASSH, TransitionDocNode.TransitionQuantInfo.DEFAULT, productExp.ExInfo.ExplicitTransitionValues, null);

@@ -52,12 +52,6 @@ namespace pwiz.SkylineTestFunctional
             RunFunctionalTest();
         }
 
-        //[TestMethod]
-        public void TestAnnotationsWithOldReports()
-        {
-            RunWithOldReports(TestAnnotations);
-        }
-
         private const string ANNOTATION_PROTEIN_TEXT = "proteinText";
         private const string ANNOTATION_PRECURSOR_RESULTS_ITEMS = "precursor-Result+Items";
         private const string ANNOTATION_REPLICATE = "replicateText";

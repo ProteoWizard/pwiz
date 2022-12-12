@@ -26,18 +26,64 @@ namespace pwiz.SkylineTestUtil
 {
     /// <summary>
     /// Task which runs in the background and keeps calling <see cref="AssertEx.Serializable(pwiz.Skyline.Model.SrmDocument)"/>
-    /// on <see cref="SkylineWindow.Document"/> to make sure the document in memory would always
+    /// on <see cref="pwiz.Skyline.SkylineWindow.Document"/> to make sure the document in memory would always
     /// be able to round-trip to XML
     /// </summary>
     public class DocumentSerializabilityVerifier : IDisposable
     {
-        private CancellationTokenSource _cancellationTokenSource = new CancellationTokenSource();
-
-        public void RunAsync()
+        private static bool RUN_SYNCHRONOUSLY = true;
+        private readonly CancellationTokenSource _cancellationTokenSource = new CancellationTokenSource();
+        private SkylineWindow _skylineWindow;
+        
+        public void Start()
         {
             var thread = ActionUtil.RunAsync(RunOnThisThread);
             thread.Name = "Document Serializability Verifier";
             thread.Priority = ThreadPriority.Lowest;
+        }
+
+        public SkylineWindow SkylineWindow
+        {
+            get
+            {
+                return _skylineWindow;
+            }
+            set
+            {
+                lock (this)
+                {
+                    if (ReferenceEquals(SkylineWindow, value))
+                    {
+                        return;
+                    }
+
+                    if (RUN_SYNCHRONOUSLY)
+                    {
+                        if (SkylineWindow != null)
+                        {
+                            SkylineWindow.DocumentChangedEvent -= SkylineWindow_DocumentChangedEvent;
+                        }
+                    }
+
+                    _skylineWindow = value;
+                    if (RUN_SYNCHRONOUSLY)
+                    {
+                        if (SkylineWindow != null)
+                        {
+                            SkylineWindow.DocumentChangedEvent += SkylineWindow_DocumentChangedEvent;
+                        }
+                    }
+                }
+            }
+        }
+
+        private void SkylineWindow_DocumentChangedEvent(object sender, DocumentChangedEventArgs e)
+        {
+            var document = SkylineWindow?.Document;
+            if (document != null)
+            {
+                AssertEx.Serializable(document);
+            }
         }
 
         private void RunOnThisThread()
@@ -46,11 +92,18 @@ namespace pwiz.SkylineTestUtil
             SrmDocument lastDocument = null;
             while (true)
             {
-                if (cancellationToken.IsCancellationRequested)
+                SrmDocument document;
+                lock (this) 
                 {
-                    return;
+                    if (cancellationToken.IsCancellationRequested)
+                    {
+                        return;
+                    }
+
+                    SkylineWindow = Program.MainWindow;
+                    document = SkylineWindow?.Document;
                 }
-                var document = Program.MainWindow?.Document;
+
                 if (document == null || ReferenceEquals(document, lastDocument))
                 {
                     // No work to do: Wait for 1 millisecond or until cancelled
@@ -58,14 +111,21 @@ namespace pwiz.SkylineTestUtil
                     continue;
                 }
 
-                AssertEx.Serializable(document);
+                if (!RUN_SYNCHRONOUSLY)
+                {
+                    AssertEx.Serializable(document);
+                }
                 lastDocument = document;
             }
         }
 
         public void Dispose()
         {
-            _cancellationTokenSource.Cancel();
+            lock (this)
+            {
+                _cancellationTokenSource.Cancel();
+                SkylineWindow = null;
+            }
         }
     }
 }

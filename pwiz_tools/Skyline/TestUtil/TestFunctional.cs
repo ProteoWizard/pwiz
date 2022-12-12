@@ -1407,7 +1407,7 @@ namespace pwiz.SkylineTestUtil
             threadTest.Start();
             using (var documentSerializabilityVerifier = new DocumentSerializabilityVerifier())
             {
-                documentSerializabilityVerifier.RunAsync();
+                documentSerializabilityVerifier.Start();
                 Program.Main();
             }
             threadTest.Join();

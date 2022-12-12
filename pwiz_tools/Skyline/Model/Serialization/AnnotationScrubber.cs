@@ -82,7 +82,7 @@ namespace pwiz.Skyline.Model.Serialization
             newAnnotations = newAnnotations.Select(kvp => new KeyValuePair<string, string>(
                 StringPool.GetString(kvp.Key), kvp.Value));
 
-            return new Annotations(StringPool.GetString(annotations.Note), newAnnotations, annotations.ColorIndex);
+            return Annotations.FromValues(StringPool.GetString(annotations.Note), newAnnotations, annotations.ColorIndex);
         }
 
         /// <summary>

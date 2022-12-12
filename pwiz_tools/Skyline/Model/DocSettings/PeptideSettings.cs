@@ -2720,7 +2720,21 @@ namespace pwiz.Skyline.Model.DocSettings
                     unloadedLibraries.Add(null);
                 }
             }
-            return ChangeLibraries(unloadedLibrarySpecs, unloadedLibraries);
+
+            return ChangeProp(ImClone(this), im =>
+            {
+                if (_disconnectedLibraries != null && unloadedLibraries.Count == 0)
+                {
+                    im._libraries = ImmutableList.ValueOf(_disconnectedLibraries.Select(library=>library?.Unload()));
+                    im._librarySpecs = ImmutableList.ValueOf(new LibrarySpec[im._libraries.Count]);
+                }
+                else
+                {
+                    im._libraries = ImmutableList.ValueOf(unloadedLibraries);
+                    im._librarySpecs = ImmutableList.ValueOf(unloadedLibrarySpecs);
+                }
+                im._disconnectedLibraries = null;
+            });
         }
 
         #region object overrides
