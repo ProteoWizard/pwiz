@@ -57,6 +57,7 @@ using Transition = pwiz.Skyline.Model.Transition;
 using static pwiz.Skyline.Model.Lib.BiblioSpecLiteLibrary;
 
 
+
 namespace pwiz.Skyline.SettingsUI
 {
     /// <summary>
@@ -659,7 +660,7 @@ namespace pwiz.Skyline.SettingsUI
                 // Because the document modifications do not explain this peptide, a set of
                 // explicit modifications must be constructed, even if they are empty.
                 IList<ExplicitMod> staticModList = new List<ExplicitMod>();
-                IEnumerable<ModificationInfo> modList = GetModifications(pepInfo);
+                IEnumerable<ViewLibraryPepInfo.ModificationInfo> modList = GetModifications(pepInfo);
                 foreach (var modInfo in modList)
                 {
                     var aa = modInfo.ModifiedAminoAcid;
@@ -805,7 +806,7 @@ namespace pwiz.Skyline.SettingsUI
 
                         ExplicitMods mods;
                         var pepInfo = (ViewLibraryPepInfo)listPeptide.SelectedItem;
-                        GetPeptideInfo(pepInfo, _matcher, out settings, out transitionGroupDocNode, out mods);
+                        pepInfo.GetPeptideInfo(_matcher, out settings, out transitionGroupDocNode, out mods);
                         var showAdducts = (isSmallMoleculeItem ?  transitionGroupDocNode.InUseAdducts : Transition.DEFAULT_PEPTIDE_LIBRARY_CHARGES).ToList();
                         var charges = ShowIonCharges(showAdducts);
 
@@ -913,7 +914,7 @@ namespace pwiz.Skyline.SettingsUI
                             var newProperties = new SpectrumProperties
                             {
                                 LibraryName = spectrumInfo.Name,
-                                PrecursorMz = CalcMz(pepInfo, _matcher).ToString(Formats.Mz),
+                                PrecursorMz = pepInfo.CalcMz(_matcher).ToString(Formats.Mz),
                                 Score = (spectrumInfo?.SpectrumHeaderInfo as BiblioSpecSpectrumHeaderInfo)?.Score,
                                 Charge = pepInfo.Charge,
                                 RetentionTime = baseRT,
@@ -2429,9 +2430,9 @@ namespace pwiz.Skyline.SettingsUI
 
         // Computes each ModificationInfo for the given peptide and returns a 
         // list of all modifications.
-        private static IEnumerable<ModificationInfo> GetModifications(ViewLibraryPepInfo pep)
+        private static IEnumerable<ViewLibraryPepInfo.ModificationInfo> GetModifications(ViewLibraryPepInfo pep)
         {
-            IList<ModificationInfo> modList = new List<ModificationInfo>();
+            IList<ViewLibraryPepInfo.ModificationInfo> modList = new List<ViewLibraryPepInfo.ModificationInfo>();
             string sequence;
             if (pep.Key.LibraryKey is PeptideLibraryKey peptideLibraryKey)
             {
@@ -2470,7 +2471,7 @@ namespace pwiz.Skyline.SettingsUI
                 double massDiff;
                 if (double.TryParse(sequence.Substring(i, iEnd - i), NumberStyles.Number, CultureInfo.InvariantCulture, out massDiff))
                 {
-                    modList.Add(new ModificationInfo(iMod, sequence[iAa], massDiff * signVal));
+                    modList.Add(new ViewLibraryPepInfo.ModificationInfo(iMod, sequence[iAa], massDiff * signVal));
                 }
                 i = iEnd;
             }
@@ -2587,24 +2588,6 @@ namespace pwiz.Skyline.SettingsUI
         }
 
         #endregion
-
-        /// <summary>
-        /// Data structure to store information on a modification for a given
-        /// peptide sequence.
-        /// </summary>
-        private class ModificationInfo
-        {
-            public int IndexMod { get; private set; }
-            public char ModifiedAminoAcid { get; private set; }
-            public double ModifiedMass { get; private set; }
-
-            public ModificationInfo(int indexMod, char modifiedAminoAcid, double modifiedMass)
-            {
-                IndexMod = indexMod;
-                ModifiedAminoAcid = modifiedAminoAcid;
-                ModifiedMass = modifiedMass;
-            }
-        }
 
         /// <summary>
         /// If the library has a HUGE number of peptides, it may not be
@@ -2762,7 +2745,7 @@ namespace pwiz.Skyline.SettingsUI
                 TransitionGroupDocNode transitionGroup;
                 _pepInfo = pepInfo;
                 _matcher = matcher;
-                GetPeptideInfo(_pepInfo, _matcher, out _settings, out transitionGroup, out mods);
+                _pepInfo.GetPeptideInfo(_matcher, out _settings, out transitionGroup, out mods);
                 // build seq parts to draw
                 _seqPartsToDraw = GetSequencePartsToDraw(mods);
                 // Get small molecule info if any
@@ -2777,7 +2760,7 @@ namespace pwiz.Skyline.SettingsUI
                 if (_pepInfo.Target != null)
                 {
                     // build mz range parts to draw
-                    _mz = CalcMz(_pepInfo, _settings, transitionGroup, mods);
+                    _mz = _pepInfo.CalcMz(_settings, transitionGroup, mods);
                     _mzRangePartsToDraw = GetMzRangeItemsToDraw(_mz);
                 }
                 else
@@ -3154,34 +3137,6 @@ namespace pwiz.Skyline.SettingsUI
 
                 comboRedundantSpectra.EndUpdate();
                 _comboBoxUpdated = true;
-            }
-        }
-
-        public class SpectrumProperties : GlobalizedObject
-        {
-            [Category("FileInfo")] public string IdFileName { get; set; }
-            [Category("FileInfo")] public string FileName { get; set; }
-            [Category("FileInfo")] public string FilePath { get; set; }
-            [Category("FileInfo")] public string LibraryName { get; set; }
-            [Category("PrecursorInfo")] public string PrecursorMz { get; set; }
-            [Category("PrecursorInfo")] public int? Charge { get; set; }
-            [Category("AcquisitionInfo")] public string RetentionTime { get; set; }
-            [Category("AcquisitionInfo")] public string CCS { get; set; }
-            [Category("AcquisitionInfo")] public string IonMobility { get; set; }
-            [Category("AcquisitionInfo")] public string SpecIdInFile { get; set; }
-            [Category("MatchInfo")] public double? Score { get; set; }
-            [Category("MatchInfo")] public string ScoreType { get; set; }
-            [Category("MatchInfo")] public int? SpectrumCount { get; set; }
-
-            public void SetFileName(string fileName)
-            {
-                if (string.IsNullOrEmpty(Path.GetDirectoryName(fileName)))
-                    FileName = fileName;
-                else
-                {
-                    FilePath = fileName;
-                    FileName = Path.GetFileName(fileName);
-                }
             }
         }
     }

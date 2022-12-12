@@ -19,6 +19,7 @@
 using System;
 using System.Collections.Generic;
 using System.Collections.ObjectModel;
+using System.ComponentModel;
 using System.Globalization;
 using System.IO;
 using System.Linq;
@@ -34,6 +35,7 @@ using pwiz.Skyline.Model.AuditLog;
 using pwiz.Skyline.Model.Crosslinking;
 using pwiz.Skyline.Model.DocSettings;
 using pwiz.Skyline.Model.DocSettings.Extensions;
+using pwiz.Skyline.Model.Hibernate;
 using pwiz.Skyline.Model.Irt;
 using pwiz.Skyline.Model.Lib.ChromLib;
 using pwiz.Skyline.Model.Lib.Midas;
@@ -41,6 +43,7 @@ using pwiz.Skyline.Model.Prosit;
 using pwiz.Skyline.Model.Results;
 using pwiz.Skyline.Model.RetentionTimes;
 using pwiz.Skyline.Properties;
+using pwiz.Skyline.SettingsUI;
 using pwiz.Skyline.Util;
 using pwiz.Skyline.Util.Extensions;
 
@@ -2508,6 +2511,108 @@ namespace pwiz.Skyline.Model.Lib
         public double? RetentionTime { get; set; }
         public IonMobilityAndCCS IonMobilityInfo { get; private set; }
         public string Protein { get; private set; } // Also used as Molecule List Name for small molecules
+
+ 
+
+
+        private SpectrumProperties CreateProperties(ViewLibraryPepInfo pepInfo, LibKeyModificationMatcher matcher)
+        {
+            string baseCCS = null;
+            string baseIM = null;
+            string baseRT = null;
+
+            var rt = ChromatogramData?.RetentionTime;
+
+            if (rt.HasValue)
+                baseRT = rt.Value.ToString(Formats.RETENTION_TIME);
+            if (IonMobilityInfo != null && !IonMobilityInfo.IsEmpty)
+            {
+                var ccsText = string.Empty;
+                var imText = string.Empty;
+                var ccs = ChromatogramData?.CCS ?? IonMobilityInfo.CollisionalCrossSectionSqA;
+                if (ccs.HasValue)
+                    baseCCS = string.Format(@"{0:F2}", ccs.Value);
+
+                if (IonMobilityInfo.HasIonMobilityValue)
+                    baseIM = string.Format(@"{0:F2} {1}", IonMobilityInfo.IonMobility.Mobility, IonMobilityInfo.IonMobility.UnitsString);
+            }
+
+            var res = new SpectrumProperties()
+            {
+                LibraryName = Name,
+                PrecursorMz = pepInfo.CalcMz(matcher).ToString(Formats.Mz),
+                Score = (SpectrumHeaderInfo as BiblioSpecSpectrumHeaderInfo)?.Score,
+                Charge = pepInfo.Charge,
+                RetentionTime = baseRT,
+                CCS = baseCCS,
+                IonMobility = baseIM
+
+            };
+
+            res.SetFileName(FileName);
+            if (_library is BiblioSpecLiteLibrary)
+            {
+                res = GetBiblioSpecAdditionalInfo(pepInfo.Key, res);
+            }
+            return res;
+        }
+
+        private SpectrumProperties GetBiblioSpecAdditionalInfo(LibKey pepKey, SpectrumProperties props)
+        {
+            BiblioSpecLiteLibrary.BiblioSpecSheetInfo biblioAdditionalInfo;
+            BiblioSpecLiteLibrary selectedBiblioSpecLib = _library as BiblioSpecLiteLibrary;
+            if (IsBest)
+            {
+                biblioAdditionalInfo = selectedBiblioSpecLib?.GetBestSheetInfo(pepKey);
+                props.SpectrumCount = biblioAdditionalInfo?.Count;
+            }
+            else
+            {
+                biblioAdditionalInfo = selectedBiblioSpecLib?.GetRedundantSheetInfo(((SpectrumLiteKey)SpectrumKey).RedundantId);
+                //TODO: Clarify, not clear what a redundant spectrum is and when the non-redundant spectrum is retrieved.
+                // Redundant spectra always return a count of 1, so hold on to the count from the best spectrum
+            }
+
+            if (biblioAdditionalInfo != null)
+            {
+                props.SpecIdInFile = biblioAdditionalInfo.SpecIdInFile;
+                props.IdFileName = biblioAdditionalInfo.IDFileName;
+                props.SetFileName(biblioAdditionalInfo.FileName);
+                props.Score = biblioAdditionalInfo.Score;
+                props.ScoreType = biblioAdditionalInfo.ScoreType;
+            }
+            return props;
+        }
+
+
+    }
+
+    public class SpectrumProperties : GlobalizedObject
+    {
+        [Category("FileInfo")] public string IdFileName { get; set; }
+        [Category("FileInfo")] public string FileName { get; set; }
+        [Category("FileInfo")] public string FilePath { get; set; }
+        [Category("FileInfo")] public string LibraryName { get; set; }
+        [Category("PrecursorInfo")] public string PrecursorMz { get; set; }
+        [Category("PrecursorInfo")] public int? Charge { get; set; }
+        [Category("AcquisitionInfo")] public string RetentionTime { get; set; }
+        [Category("AcquisitionInfo")] public string CCS { get; set; }
+        [Category("AcquisitionInfo")] public string IonMobility { get; set; }
+        [Category("AcquisitionInfo")] public string SpecIdInFile { get; set; }
+        [Category("MatchInfo")] public double? Score { get; set; }
+        [Category("MatchInfo")] public string ScoreType { get; set; }
+        [Category("MatchInfo")] public int? SpectrumCount { get; set; }
+
+        public void SetFileName(string fileName)
+        {
+            if (string.IsNullOrEmpty(Path.GetDirectoryName(fileName)))
+                FileName = fileName;
+            else
+            {
+                FilePath = fileName;
+                FileName = Path.GetFileName(fileName);
+            }
+        }
     }
 
     public class SpectrumInfoProsit : SpectrumInfo

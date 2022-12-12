@@ -144,6 +144,7 @@ namespace pwiz.Skyline.Controls.Graphs
         // TODO
         // private object _spectrumKeySave;
         private readonly GraphHelper _graphHelper;
+        private MSGraphControl graphControl => msGraphExtension.Graph;
 
         public GraphSpectrum(IDocumentUIContainer documentUIContainer)
         {
@@ -385,10 +386,9 @@ namespace pwiz.Skyline.Controls.Graphs
             UpdateUI();
         }
 
-        private bool NodeGroupChanged(TransitionGroupDocNode nodeGroup)
+        private void propertiesMenuItem_Click(object sender, EventArgs e)
         {
-            return (_nodeGroup == null) ||
-                   (!ReferenceEquals(_nodeGroup.Id, nodeGroup.Id));
+
         }
 
         private class ToolbarUpdate : IDisposable

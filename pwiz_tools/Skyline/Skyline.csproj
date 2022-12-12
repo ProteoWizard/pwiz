@@ -618,6 +618,7 @@
     <Compile Include="Model\Lib\LibKeyIndex.cs" />
     <Compile Include="Model\Lib\SpectralLibraryExporter.cs" />
     <Compile Include="Model\Lib\SpectrumRanker.cs" />
+    <Compile Include="Model\Lib\ViewLibraryPepInfo.cs" />
     <Compile Include="Model\MinimizeResults.cs" />
     <Compile Include="Model\MoleculeNameAndAccessions.cs" />
     <Compile Include="Model\Proteome\ProteinAssociation.cs" />
@@ -1964,7 +1965,6 @@
     <Compile Include="SettingsUI\StartPageSettingsUI.Designer.cs">
       <DependentUpon>StartPageSettingsUI.cs</DependentUpon>
     </Compile>
-    <Compile Include="SettingsUI\ViewLibraryPepInfo.cs" />
     <Compile Include="SettingsUI\ViewLibraryPepMatching.cs" />
     <Compile Include="SettingsUI\SettingsListBoxDriver.cs" />
     <Compile Include="SettingsUI\SettingsListComboDriver.cs">
