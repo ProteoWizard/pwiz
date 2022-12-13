@@ -22,6 +22,7 @@ using System.Collections.Generic;
 using System.IO;
 using System.Linq;
 using System.Text.RegularExpressions;
+using System.Windows.Forms;
 
 namespace SkylineTester
 {
@@ -46,54 +47,179 @@ namespace SkylineTester
 
         private class TestData
         {
-            public int Iterations;
-            public int Duration;
+            public int Iterations => _durations.Count;
+            public int TotalDuration => _durations.Sum();
+            public int MinDuration => _durations.Min();
+            public int MaxDuration => _durations.Max();
+            public int MeanDuration => Iterations == 0 ? 0 : TotalDuration / Iterations;
+            public int MedianDuration {
+                get
+                {
+                    var count = _durations.Count;
+                    switch (count)
+                    {
+                        case 0:
+                            return 0;
+                        case 1:
+                            return _durations[0];
+                        default:
+                            _durations.Sort();
+                            var mid = count / 2;
+                            if (count % 2 == 0)
+                            {
+                                return (_durations[mid]);
+                            }
+                            return (_durations[mid] + _durations[mid-1])/2;
+                    }
+                }
+            }
+            public List<int> _durations;
+
+            public TestData()
+            {
+                _durations = new List<int>();
+            }
+        }
+
+        private Dictionary<string, TestData> TestSummaries;
+        private Dictionary<string, TestData> TestSummariesCompare;
+        private List<string> TestNames;
+        private string TestLog;
+        private string TestLogCompare;
+
+        private void AddHeaderPair(bool paired, List<string> header, string columnName)
+        {
+            header.Add(columnName);
+            if (paired)
+            {
+                header.Add(columnName);
+                header.Add($@"delta {columnName}");
+            }
+        }
+
+        private void AddColumnPair(int? valA, int? valB, List<string> columns)
+        {
+            columns.Add(valA.HasValue ? valA.ToString() : string.Empty);
+            columns.Add(valB.HasValue ? valB.ToString() : string.Empty);
+            columns.Add(valA.HasValue && valB.HasValue ? (valA - valB).ToString() : string.Empty);
+        }
+
+        private void AddColumns(Dictionary<string, TestData> tests, Dictionary<string, TestData> testsCompare, string testName, List<string> columns)
+        {
+            if (!tests.TryGetValue(testName, out var testData))
+            {
+                testData = null;
+            }
+
+            if (testsCompare == null)
+            {
+                columns.Add(testData?.Iterations.ToString()); // "Iterations"
+                columns.Add(testData?.TotalDuration.ToString()); // "TotalTime"
+                columns.Add(testData?.MinDuration.ToString()); // "MinTime"
+                columns.Add(testData?.MaxDuration.ToString()); // "MaxTime"
+                columns.Add(testData?.MeanDuration.ToString()); // "MeanTime"
+                columns.Add(testData?.MedianDuration.ToString()); // "MedianTime"
+            }
+            else
+            {
+                TestData testDataCompare = null;
+                if (!testsCompare.TryGetValue(testName, out testDataCompare))
+                {
+                    testDataCompare = null;
+                }
+
+                AddColumnPair(testData?.Iterations, testDataCompare?.Iterations, columns); // "Iterations"
+                AddColumnPair(testData?.TotalDuration, testDataCompare?.TotalDuration, columns); // "TotalTime"
+                AddColumnPair(testData?.MinDuration, testDataCompare?.MinDuration, columns); // "MinTime"
+                AddColumnPair(testData?.MaxDuration, testDataCompare?.MaxDuration, columns); // "MaxTime"
+                AddColumnPair(testData?.MeanDuration, testDataCompare?.MeanDuration, columns); // "MeanTime"
+                AddColumnPair(testData?.MedianDuration, testDataCompare?.MedianDuration, columns); // "MedianTime"
+            }
+        }
+
+        /// <summary>
+        /// Create a CSV file with run stats for further analysis in Excel etc
+        /// Works for single or side by side comparisons
+        /// </summary>
+        public void ExportCSV()
+        {
+            using (var openFileDlg = new OpenFileDialog
+                   {
+                       Filter = @"CSV files (*.csv)|*.csv|All files (*.*)|*.*",
+                       Title = @"Export Run Stats"
+                   })
+            {
+                if (openFileDlg.ShowDialog() != DialogResult.OK)
+                    return;
+                using (var report = new StreamWriter(openFileDlg.FileName))
+                {
+                    var compared = (TestLogCompare == null) ? string.Empty : $@" vs {Path.GetFileNameWithoutExtension(TestLogCompare)}";
+                    var header = new List<string>() { $@"Test ({Path.GetFileNameWithoutExtension(TestLog)}{compared})" };
+                    var paired = !string.IsNullOrEmpty(compared);
+                    AddHeaderPair(paired, header, $@"Iterations");
+                    AddHeaderPair(paired, header, $@"TotalTime");
+                    AddHeaderPair(paired, header, $@"MinTime");
+                    AddHeaderPair(paired, header, $@"MaxTime");
+                    AddHeaderPair(paired, header, $@"MeanTime");
+                    AddHeaderPair(paired, header, $@"MedianTime");
+
+                    report.WriteLine(string.Join(@",",header));
+                    foreach (var test in TestNames)
+                    {
+                        var columns = new List<string>(){test};
+                        AddColumns(TestSummaries, TestSummariesCompare, test, columns);
+                        report.WriteLine(string.Join(@",", columns));
+                    }
+                }
+            }
         }
 
         public void Process(string logFile, string logFileCompare)
         {
-            var testDictionary = GetStatsFromLog(logFile);
-            if (testDictionary == null)
+            TestLog = logFile;
+            TestSummaries = GetStatsFromLog(logFile);
+            if (TestSummaries == null)
                 return;
-            var compareDictionary = GetStatsFromLog(logFileCompare);
-            var keys = testDictionary.Keys.ToList();
-            if (compareDictionary != null)
+            TestLogCompare = logFileCompare;
+            TestSummariesCompare = GetStatsFromLog(logFileCompare);
+            TestNames = TestSummaries.Keys.ToList();
+            if (TestSummariesCompare != null)
             {
-                foreach (var k in compareDictionary.Keys)
+                foreach (var k in TestSummariesCompare.Keys)
                 {
-                    if (!keys.Contains(k))
+                    if (!TestNames.Contains(k))
                     {
-                        keys.Add(k);
+                        TestNames.Add(k);
                     }
                 }
             }
             // Hide columns which are for comparison only
             for (int col = 1; col <= 2; col++)
-                MainWindow.DataGridRunStats.Columns[MainWindow.DataGridRunStats.Columns.Count - col].Visible = compareDictionary != null;
+                MainWindow.DataGridRunStats.Columns[MainWindow.DataGridRunStats.Columns.Count - col].Visible = TestSummariesCompare != null;
 
             MainWindow.DataGridRunStats.Rows.Clear();
-            foreach (var key in keys)
+            foreach (var key in TestNames)
             {
-                if (compareDictionary == null)
+                if (TestSummariesCompare == null)
                 {
-                    var value = testDictionary[key];
-                    MainWindow.DataGridRunStats.Rows.Add(key, value.Iterations, value.Duration, value.Duration / value.Iterations, "N/A");
+                    var value = TestSummaries[key];
+                    MainWindow.DataGridRunStats.Rows.Add(key, value.Iterations, value.TotalDuration, value.TotalDuration / value.Iterations, "N/A");
                 }
                 else
                 {
                     TestData valLeft = null;
-                    testDictionary.TryGetValue(key, out valLeft);
+                    TestSummaries.TryGetValue(key, out valLeft);
                     TestData valRight = null;
-                    compareDictionary.TryGetValue(key, out valRight);
-                    var durLeftI = valLeft == null ? 0 : valLeft.Duration / valLeft.Iterations;
-                    var durLeftTotal = valLeft == null ? 0 : valLeft.Duration;
-                    var durRightI = valRight == null ? 0 : valRight.Duration / valRight.Iterations;
-                    var durRightTotal = valRight == null ? 0 : valRight.Duration;
-                    var durLeftD = valLeft == null ? 0 : valLeft.Duration / (double)valLeft.Iterations;
-                    var durRightD = valRight == null ? 0 : valRight.Duration / (double)valRight.Iterations;
+                    TestSummariesCompare.TryGetValue(key, out valRight);
+                    var durLeftI = valLeft == null ? 0 : valLeft.TotalDuration / valLeft.Iterations;
+                    var durLeftTotal = valLeft == null ? 0 : valLeft.TotalDuration;
+                    var durRightI = valRight == null ? 0 : valRight.TotalDuration / valRight.Iterations;
+                    var durRightTotal = valRight == null ? 0 : valRight.TotalDuration;
+                    var durLeftD = valLeft == null ? 0 : valLeft.TotalDuration / (double)valLeft.Iterations;
+                    var durRightD = valRight == null ? 0 : valRight.TotalDuration / (double)valRight.Iterations;
                     MainWindow.DataGridRunStats.Rows.Add(key,
                         string.Format("{0}/{1}", valLeft == null ? 0 : valLeft.Iterations, valRight == null ? 0 : valRight.Iterations),
-                        string.Format("{0}/{1}", valLeft == null ? 0 : valLeft.Duration, valRight == null ? 0 : valRight.Duration),
+                        string.Format("{0}/{1}", valLeft == null ? 0 : valLeft.TotalDuration, valRight == null ? 0 : valRight.TotalDuration),
                         string.Format("{0}/{1}", durLeftI, durRightI),
                         (valRight == null || valLeft == null) ? "N/A" : string.Format("{0:0.00}", (durRightD == 0 ? 1 : durLeftD / durRightD)),
                         string.Format("{0}",  durLeftTotal - durRightTotal));
@@ -125,10 +251,8 @@ namespace SkylineTester
                     testData = new TestData();
                     testDictionary.Add(name, testData);
                 }
-                testData.Iterations++;
-                int durationSeconds;
-                if (int.TryParse(duration, out durationSeconds))
-                    testData.Duration += durationSeconds;
+                int.TryParse(duration, out var durationSeconds);
+                testData._durations.Add(durationSeconds);
             }
             return testDictionary;
         }

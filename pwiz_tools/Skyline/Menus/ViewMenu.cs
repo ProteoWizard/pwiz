@@ -38,8 +38,11 @@ using pwiz.Skyline.Util;
 
 namespace pwiz.Skyline.Menus
 {
-    public partial class ViewMenu : SkylineControl
+    public partial class ViewMenu : SkylineControl, IMenuControlImplementer
     {
+        private bool ProteomicsEnabled { get; set; }
+        private bool SmallMoleculesEnabled { get; set; }
+
         public ViewMenu(SkylineWindow skylineWindow) : base(skylineWindow)
         {
             InitializeComponent();
@@ -59,7 +62,8 @@ namespace pwiz.Skyline.Menus
             extraLargeToolStripMenuItem.Checked = Settings.Default.TextZoom == TreeViewMS.XLRG_TEXT_FACTOR;
             defaultTextToolStripMenuItem.Checked =
                 !(largeToolStripMenuItem.Checked || extraLargeToolStripMenuItem.Checked);
-
+            ProteomicsEnabled = false;
+            SmallMoleculesEnabled = false;
         }
 
         public IEnumerable<ToolStripItem> DropDownItems { get; }
@@ -221,103 +225,194 @@ namespace pwiz.Skyline.Menus
             var set = Settings.Default;
             switch (Math.Abs(adduct.AdductCharge))  // TODO(bspratt) - need a lot more flexibility here, neg charges, M+Na etc
             {
-                case 1: set.ShowCharge1 = charge1MenuItem.Checked = check; break;
-                case 2: set.ShowCharge2 = charge2MenuItem.Checked = check; break;
-                case 3: set.ShowCharge3 = charge3MenuItem.Checked = check; break;
-                case 4: set.ShowCharge4 = charge4MenuItem.Checked = check; break;
+                case 1: set.ShowCharge1 = check; break;
+                case 2: set.ShowCharge2 = check; break;
+                case 3: set.ShowCharge3 = check; break;
+                case 4: set.ShowCharge4 = check; break;
+            }
+            UpdateChargesMenu();
+        }
+
+        public void UpdateChargesMenu()
+        {
+            if (chargesMenuItem.DropDownItems.Count > 0 && chargesMenuItem.DropDownItems[0] is MenuControl<ChargeSelectionPanel> chargeSelector)
+            {
+                chargeSelector.Update(GraphSpectrumSettings, DocumentUI.Settings.PeptideSettings);
+            }
+            else
+            {
+                chargesMenuItem.DropDownItems.Clear();
+                var selectorControl = new MenuControl<ChargeSelectionPanel>(GraphSpectrumSettings, DocumentUI.Settings.PeptideSettings);
+                chargesMenuItem.DropDownItems.Add(selectorControl);
+                selectorControl.HostedControl.OnChargeChanged += IonChargeSelector_ionChargeChanged;
             }
         }
-        public void CheckIonType(IonType type, bool check, bool visible)
+
+        public void IonChargeSelector_ionChargeChanged(int charge, bool show)
         {
-            var set = Settings.Default;
+            switch (charge)
+            {
+                case 1:
+                    SkylineWindow.ShowCharge1(show);
+                    break;
+                case 2:
+                    SkylineWindow.ShowCharge2(show);
+                    break;
+                case 3:
+                    SkylineWindow.ShowCharge3(show);
+                    break;
+                case 4:
+                    SkylineWindow.ShowCharge4(show);
+                    break;
+            }
+        }
+
+        public void UpdateIonTypeMenu()
+        {
+            if (ProteomicsEnabled)
+            {
+                if (ionTypesMenuItem.DropDownItems.Count > 0 &&
+                    ionTypesMenuItem.DropDownItems[0] is MenuControl<IonTypeSelectionPanel> ionSelector)
+                {
+                    ionSelector.Update(GraphSpectrumSettings, DocumentUI.Settings.PeptideSettings);
+                }
+                else
+                {
+                    ionTypesMenuItem.DropDownItems.Clear();
+                    var ionTypeSelector = new MenuControl<IonTypeSelectionPanel>(GraphSpectrumSettings,
+                        DocumentUI.Settings.PeptideSettings);
+                    ionTypesMenuItem.DropDownItems.Add(ionTypeSelector);
+                    ionTypeSelector.HostedControl.IonTypeChanged += IonTypeSelector_IonTypeChanges;
+                    ionTypeSelector.HostedControl.LossChanged += IonTypeSelector_LossChanged;
+                }
+            }
+            else
+            {
+                if (ionTypesMenuItem.DropDownItems.Count > 0 &&
+                    ionTypesMenuItem.DropDownItems[0] is MenuControl<IonTypeSelectionPanel> ionSelector)
+                {
+                    ionTypesMenuItem.DropDownItems.Clear();
+                    ionSelector.HostedControl.IonTypeChanged -= IonTypeSelector_IonTypeChanges;
+                    ionSelector.HostedControl.LossChanged -= IonTypeSelector_LossChanged;
+                }
+            }
+            ionTypesMenuItem.Visible = ProteomicsEnabled;
+            fragmentsMenuItem.Visible = SmallMoleculesEnabled;
+            fragmentsMenuItem.Checked = GraphSpectrumSettings.ShowFragmentIons;
+            precursorIonMenuItem.Checked = GraphSpectrumSettings.ShowPrecursorIon;
+            specialIonsMenuItem.Checked = GraphSpectrumSettings.ShowSpecialIons;
+        }
+
+        private void IonTypeSelector_IonTypeChanges(IonType type, bool show)
+        {
             switch (type)
             {
-                case IonType.a: set.ShowAIons = aMenuItem.Checked = check; aMenuItem.Visible = visible; break;
-                case IonType.b: set.ShowBIons = bMenuItem.Checked = check; bMenuItem.Visible = visible; break;
-                case IonType.c: set.ShowCIons = cMenuItem.Checked = check; cMenuItem.Visible = visible; break;
-                case IonType.x: set.ShowXIons = xMenuItem.Checked = check; xMenuItem.Visible = visible; break;
-                case IonType.y: set.ShowYIons = yMenuItem.Checked = check; yMenuItem.Visible = visible; break;
-                case IonType.z: set.ShowZIons = zMenuItem.Checked = check; zMenuItem.Visible = visible; break;
-                case IonType.zh: set.ShowZHIons = zhMenuItem.Checked = check; zhMenuItem.Visible = visible; break;
-                case IonType.zhh: set.ShowZHHIons = zhhMenuItem.Checked = check; zhhMenuItem.Visible = visible; break;
-                case IonType.custom: set.ShowFragmentIons = fragmentsMenuItem.Checked = check; fragmentsMenuItem.Visible = visible; break;
+                case IonType.a:
+                    SkylineWindow.ShowAIons(show);
+                    break;
+                case IonType.b:
+                    SkylineWindow.ShowBIons(show);
+                    break;
+                case IonType.c:
+                    SkylineWindow.ShowCIons(show);
+                    break;
+                case IonType.x:
+                    SkylineWindow.ShowXIons(show);
+                    break;
+                case IonType.y:
+                    SkylineWindow.ShowYIons(show);
+                    break;
+                case IonType.z:
+                    SkylineWindow.ShowZIons(show);
+                    break;
+                case IonType.zh:
+                    SkylineWindow.ShowZHIons(show);
+                    break;
+                case IonType.zhh:
+                    SkylineWindow.ShowZHHIons(show);
+                    break;
             }
+        }
+
+        private void IonTypeSelector_LossChanged(string[] losses)
+        {
+            SkylineWindow.ShowLosses(losses);
+        }
+
+        public void CheckIonType(IonType type, bool check)
+        {
+            var set = Settings.Default;
+            
+            switch (type)
+            {
+                case IonType.a: set.ShowAIons= check; break;
+                case IonType.b: set.ShowBIons= check; break;
+                case IonType.c: set.ShowCIons= check; break;
+                case IonType.x: set.ShowXIons= check; break;
+                case IonType.y: set.ShowYIons= check; break;
+                case IonType.z: set.ShowZIons= check; break;
+                case IonType.zh: set.ShowZHIons = check; break;
+                case IonType.zhh: set.ShowZHHIons = check; break;
+                case IonType.custom: set.ShowFragmentIons = fragmentsMenuItem.Checked = check; break;
+            }
+        }
+
+        public void EnableProteomicIons(bool visible)
+        {
+            ProteomicsEnabled = visible;
+            UpdateIonTypeMenu();
+        }
+
+        public void EnableSmallMoleculeIons(bool visible)
+        {
+            SmallMoleculesEnabled = visible;
+            UpdateIonTypeMenu();
         }
 
         private void ionTypesMenuItem_DropDownOpening(object sender, EventArgs e)
         {
-            var set = Settings.Default;
-            aMenuItem.Checked = set.ShowAIons;
-            bMenuItem.Checked = set.ShowBIons;
-            cMenuItem.Checked = set.ShowCIons;
-            xMenuItem.Checked = set.ShowXIons;
-            yMenuItem.Checked = set.ShowYIons;
-            zMenuItem.Checked = set.ShowZIons;
-            zhMenuItem.Checked = set.ShowZHIons;
-            zhhMenuItem.Checked = set.ShowZHHIons;
-            fragmentsMenuItem.Checked = set.ShowFragmentIons;
-            precursorIonMenuItem.Checked = set.ShowPrecursorIon;
-            UpdateIonTypesMenuItemsVisibility();
+            UpdateIonTypeMenu();
         }
 
-        // Update the Ion Types menu for document contents
-        public void UpdateIonTypesMenuItemsVisibility()
+        public MenuControl<T> GetHostedControl<T>() where T : Panel, IControlSize, new()
         {
-            aMenuItem.Visible = bMenuItem.Visible = cMenuItem.Visible =
-                xMenuItem.Visible = yMenuItem.Visible = zMenuItem.Visible = zhMenuItem.Visible = zhhMenuItem.Visible =
-                    DocumentUI.DocumentType != SrmDocument.DOCUMENT_TYPE.small_molecules;
-
-            fragmentsMenuItem.Visible = DocumentUI.HasSmallMolecules;
+            var chargesItem = viewToolStripMenuItem.DropDownItems.OfType<ToolStripMenuItem>()
+                .FirstOrDefault(item => item.DropDownItems.OfType<MenuControl<T>>().Any());
+            if (chargesItem != null)
+                return chargesItem.DropDownItems[0] as MenuControl<T>;
+            return null;
         }
 
+        public void DisconnectHandlers()
+        {
+            var chargeSelector = GetHostedControl<ChargeSelectionPanel>();
+
+            if (chargeSelector != null)
+            {
+                chargeSelector.HostedControl.OnChargeChanged -= IonChargeSelector_ionChargeChanged;
+            }
+
+            var ionTypeSelector = GetHostedControl<IonTypeSelectionPanel>();
+            if (ionTypeSelector != null)
+            {
+                ionTypeSelector.HostedControl.IonTypeChanged -= IonTypeSelector_IonTypeChanges;
+                ionTypeSelector.HostedControl.LossChanged -= IonTypeSelector_LossChanged;
+            }
+        }
 
         public GraphSpectrumSettings GraphSpectrumSettings
         {
             get { return SkylineWindow.GraphSpectrumSettings; }
         }
-        private void aMenuItem_Click(object sender, EventArgs e)
-        {
-            SkylineWindow.ShowAIons(!GraphSpectrumSettings.ShowAIons);
-        }
-
-        private void bMenuItem_Click(object sender, EventArgs e)
-        {
-            SkylineWindow.ShowBIons(!GraphSpectrumSettings.ShowBIons);
-        }
-
-        private void cMenuItem_Click(object sender, EventArgs e)
-        {
-            SkylineWindow.ShowCIons(!GraphSpectrumSettings.ShowCIons);
-        }
-
-        private void xMenuItem_Click(object sender, EventArgs e)
-        {
-            SkylineWindow.ShowXIons(!GraphSpectrumSettings.ShowXIons);
-        }
-
-        private void yMenuItem_Click(object sender, EventArgs e)
-        {
-            SkylineWindow.ShowYIons(!GraphSpectrumSettings.ShowYIons);
-        }
-
-        private void zMenuItem_Click(object sender, EventArgs e)
-        {
-            SkylineWindow.ShowZIons(!GraphSpectrumSettings.ShowZIons);
-        }
-
-        private void zhMenuItem_Click(object sender, EventArgs e)
-        {
-            SkylineWindow.ShowZHIons(!GraphSpectrumSettings.ShowZHIons);
-        }
-
-        private void zhhMenuItem_Click(object sender, EventArgs e)
-        {
-            SkylineWindow.ShowZHHIons(!GraphSpectrumSettings.ShowZHHIons);
-        }
 
         private void fragmentsMenuItem_Click(object sender, EventArgs e)
         {
             SkylineWindow.ShowFragmentIons(!GraphSpectrumSettings.ShowFragmentIons);
+        }
+
+        private void specialIonsMenuItem_Click(object sender, EventArgs e)
+        {
+            SkylineWindow.ShowSpecialIons(!GraphSpectrumSettings.ShowSpecialIons);
         }
 
         private void precursorIonMenuItem_Click(object sender, EventArgs e)
@@ -327,32 +422,10 @@ namespace pwiz.Skyline.Menus
 
         private void chargesMenuItem_DropDownOpening(object sender, EventArgs e)
         {
-            var set = SkylineWindow.GraphSpectrumSettings;
-            charge1MenuItem.Checked = set.ShowCharge1;
-            charge2MenuItem.Checked = set.ShowCharge2;
-            charge3MenuItem.Checked = set.ShowCharge3;
-            charge4MenuItem.Checked = set.ShowCharge4;
+            UpdateChargesMenu();
         }
 
-        private void charge1MenuItem_Click(object sender, EventArgs e)
-        {
-            SkylineWindow.ShowCharge1(!GraphSpectrumSettings.ShowCharge1);
-        }
 
-        private void charge2MenuItem_Click(object sender, EventArgs e)
-        {
-            SkylineWindow.ShowCharge2(!GraphSpectrumSettings.ShowCharge2);
-        }
-
-        private void charge3MenuItem_Click(object sender, EventArgs e)
-        {
-            SkylineWindow.ShowCharge3(!GraphSpectrumSettings.ShowCharge3);
-        }
-
-        private void charge4MenuItem_Click(object sender, EventArgs e)
-        {
-            SkylineWindow.ShowCharge4(!GraphSpectrumSettings.ShowCharge4);
-        }
         private void ranksMenuItem_Click(object sender, EventArgs e)
         {
             Settings.Default.ShowRanks = !Settings.Default.ShowRanks;
@@ -563,7 +636,6 @@ namespace pwiz.Skyline.Menus
             transformChromNoneMenuItem.Checked = (transform == TransformChrom.raw);
             transformChromInterpolatedMenuItem.Checked = (transform == TransformChrom.interpolated);
             secondDerivativeMenuItem.Checked = (transform == TransformChrom.craw2d);
-            firstDerivativeMenuItem.Checked = (transform == TransformChrom.craw1d);
             smoothSGChromMenuItem.Checked = (transform == TransformChrom.savitzky_golay);
         }
 
@@ -582,11 +654,6 @@ namespace pwiz.Skyline.Menus
         private void secondDerivativeMenuItem_Click(object sender, EventArgs e)
         {
             SkylineWindow.SetTransformChrom(TransformChrom.craw2d);
-        }
-
-        private void firstDerivativeMenuItem_Click(object sender, EventArgs e)
-        {
-            SkylineWindow.SetTransformChrom(TransformChrom.craw1d);
         }
 
         private void smoothSGChromMenuItem_Click(object sender, EventArgs e)
@@ -856,6 +923,7 @@ namespace pwiz.Skyline.Menus
                 viewModificationsMenuItem.DropDownItems.Add(menuItem);
             }
             ranksMenuItem.Checked = Settings.Default.ShowRanks;
+            UpdateChargesMenu();
         }
 
         public void UpdateGraphUi(Action ensureLayoutLocked, SrmSettings settingsNew, bool deserialized)
@@ -942,7 +1010,8 @@ namespace pwiz.Skyline.Menus
             bool enable = hasLibraries || PrositHelpers.PrositSettingsValid;
             if (enable)
             {
-                UpdateIonTypesMenuItemsVisibility();
+                UpdateIonTypeMenu();
+                UpdateChargesMenu();
             }
 
             bool enableChanging = libraryMatchToolStripMenuItem.Enabled != enable;

@@ -262,6 +262,7 @@ namespace SkylineTester
             this.label19 = new System.Windows.Forms.Label();
             this.buttonStop = new System.Windows.Forms.Button();
             this.tabRunStats = new System.Windows.Forms.TabPage();
+            this.buttonRunStatsExportCSV = new System.Windows.Forms.Button();
             this.labelCompareTo = new System.Windows.Forms.Label();
             this.comboBoxRunStatsCompare = new System.Windows.Forms.ComboBox();
             this.comboBoxRunStats = new System.Windows.Forms.ComboBox();
@@ -2811,6 +2812,7 @@ namespace SkylineTester
             // tabRunStats
             // 
             this.tabRunStats.BackColor = System.Drawing.Color.BurlyWood;
+            this.tabRunStats.Controls.Add(this.buttonRunStatsExportCSV);
             this.tabRunStats.Controls.Add(this.labelCompareTo);
             this.tabRunStats.Controls.Add(this.comboBoxRunStatsCompare);
             this.tabRunStats.Controls.Add(this.comboBoxRunStats);
@@ -2821,6 +2823,18 @@ namespace SkylineTester
             this.tabRunStats.Size = new System.Drawing.Size(709, 689);
             this.tabRunStats.TabIndex = 8;
             this.tabRunStats.Text = "Run Stats";
+            // 
+            // buttonRunStatsExportCSV
+            // 
+            this.buttonRunStatsExportCSV.Anchor = ((System.Windows.Forms.AnchorStyles)((System.Windows.Forms.AnchorStyles.Top | System.Windows.Forms.AnchorStyles.Right)));
+            this.buttonRunStatsExportCSV.Location = new System.Drawing.Point(622, 48);
+            this.buttonRunStatsExportCSV.Name = "buttonRunStatsExportCSV";
+            this.buttonRunStatsExportCSV.Size = new System.Drawing.Size(75, 23);
+            this.buttonRunStatsExportCSV.TabIndex = 36;
+            this.buttonRunStatsExportCSV.Text = "Export CSV";
+            this.toolTip1.SetToolTip(this.buttonRunStatsExportCSV, "Export a CSV report with more details");
+            this.buttonRunStatsExportCSV.UseVisualStyleBackColor = true;
+            this.buttonRunStatsExportCSV.Click += new System.EventHandler(this.buttonRunStatsExportCSV_Click);
             // 
             // labelCompareTo
             // 
@@ -3607,5 +3621,6 @@ namespace SkylineTester
         private Label label22;
         private RadioButton runSerial;
         private ComboBox testSet;
+        private Button buttonRunStatsExportCSV;
     }
 }
