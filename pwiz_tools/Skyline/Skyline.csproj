@@ -3390,9 +3390,6 @@
     <Content Include="Method\Agilent\6400\MethodCreator.dll">
       <CopyToOutputDirectory>PreserveNewest</CopyToOutputDirectory>
     </Content>
-    <Content Include="Method\Agilent\MH12\Agilent.MassSpectrometry.LCMSAcquisition.MHPlugin.dll">
-      <CopyToOutputDirectory>PreserveNewest</CopyToOutputDirectory>
-    </Content>
     <Content Include="Method\Agilent\MH12\Agilent.MSDrivers.LCQuadrupole.CommonUtilities.dll">
       <CopyToOutputDirectory>PreserveNewest</CopyToOutputDirectory>
     </Content>
@@ -3406,6 +3403,9 @@
       <CopyToOutputDirectory>PreserveNewest</CopyToOutputDirectory>
     </Content>
     <Content Include="Method\Agilent\MH12\Agilent.MSDrivers.LCQuadrupole.KeyValueInterfaces.dll">
+      <CopyToOutputDirectory>PreserveNewest</CopyToOutputDirectory>
+    </Content>
+    <Content Include="Method\Agilent\MH12\Agilent.MSDrivers.LCQuadrupole.MethodCreator.dll">
       <CopyToOutputDirectory>PreserveNewest</CopyToOutputDirectory>
     </Content>
     <Content Include="Method\Agilent\MH12\Agilent.MSDrivers.LCQuadrupole.MethodLocaleServiceProvider.dll">
@@ -3424,6 +3424,12 @@
       <CopyToOutputDirectory>PreserveNewest</CopyToOutputDirectory>
     </Content>
     <Content Include="Method\Agilent\MH12\Agilent.MSDrivers.LCQuadrupole.MSActualProvider.dll">
+      <CopyToOutputDirectory>PreserveNewest</CopyToOutputDirectory>
+    </Content>
+    <Content Include="Method\Agilent\MH12\Agilent.MSDrivers.LCQuadrupole.MSDataStorage.dll">
+      <CopyToOutputDirectory>PreserveNewest</CopyToOutputDirectory>
+    </Content>
+    <Content Include="Method\Agilent\MH12\Agilent.MSDrivers.LCQuadrupole.MSDataStorageIF.dll">
       <CopyToOutputDirectory>PreserveNewest</CopyToOutputDirectory>
     </Content>
     <Content Include="Method\Agilent\MH12\Agilent.MSDrivers.LCQuadrupole.MSIF.dll">
@@ -3447,6 +3453,18 @@
     <Content Include="Method\Agilent\MH12\Agilent.MSDrivers.LCQuadrupole.ValidationBase.dll">
       <CopyToOutputDirectory>PreserveNewest</CopyToOutputDirectory>
     </Content>
+    <Content Include="Method\Agilent\MH12\BaseCommon.dll">
+      <CopyToOutputDirectory>PreserveNewest</CopyToOutputDirectory>
+    </Content>
+    <Content Include="Method\Agilent\MH12\BaseError.dll">
+      <CopyToOutputDirectory>PreserveNewest</CopyToOutputDirectory>
+    </Content>
+    <Content Include="Method\Agilent\MH12\BaseMSUtils.dll">
+      <CopyToOutputDirectory>PreserveNewest</CopyToOutputDirectory>
+    </Content>
+    <Content Include="Method\Agilent\MH12\BaseTof.dll">
+      <CopyToOutputDirectory>PreserveNewest</CopyToOutputDirectory>
+    </Content>
     <Content Include="Method\Agilent\MH12\BuildAgilentMH12Method.exe">
       <CopyToOutputDirectory>PreserveNewest</CopyToOutputDirectory>
     </Content>
@@ -3454,9 +3472,6 @@
       <CopyToOutputDirectory>PreserveNewest</CopyToOutputDirectory>
     </Content>
     <Content Include="Method\Agilent\MH12\ESWShared.dll">
-      <CopyToOutputDirectory>PreserveNewest</CopyToOutputDirectory>
-    </Content>
-    <Content Include="Method\Agilent\MH12\MethodCreator.dll">
       <CopyToOutputDirectory>PreserveNewest</CopyToOutputDirectory>
     </Content>
     <Content Include="Method\Agilent\MH12\RapidControlIF.dll">

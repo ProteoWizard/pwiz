@@ -21,7 +21,7 @@ using System.Collections.Generic;
 using System.IO;
 using System.Linq;
 using System.Text;
-using Agilent.MassSpectrometry.Optimator;
+using Agilent.MSDrivers.LCQuadrupole.MethodCreator;
 
 namespace BuildAgilentMH12Method
 {

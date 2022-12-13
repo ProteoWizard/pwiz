@@ -34,84 +34,121 @@
     <WarningLevel>4</WarningLevel>
   </PropertyGroup>
   <ItemGroup>
-    <Reference Include="Agilent.MassSpectrometry.LCMSAcquisition.MHPlugin">
-      <HintPath>..\..\..\Method\AgilentUltivo\Agilent.MassSpectrometry.LCMSAcquisition.MHPlugin.dll</HintPath>
-    </Reference>
-    <Reference Include="Agilent.MSDrivers.LCQuadrupole.CommonUtilities">
-      <HintPath>..\..\..\Method\AgilentUltivo\Agilent.MSDrivers.LCQuadrupole.CommonUtilities.dll</HintPath>
-    </Reference>
-    <Reference Include="Agilent.MSDrivers.LCQuadrupole.DataInterfaces">
-      <HintPath>..\..\..\Method\AgilentUltivo\Agilent.MSDrivers.LCQuadrupole.DataInterfaces.dll</HintPath>
-    </Reference>
-    <Reference Include="Agilent.MSDrivers.LCQuadrupole.ESW">
-      <HintPath>..\..\..\Method\AgilentUltivo\Agilent.MSDrivers.LCQuadrupole.ESW.dll</HintPath>
-    </Reference>
-    <Reference Include="Agilent.MSDrivers.LCQuadrupole.HWConfigResourceMgr">
-      <HintPath>..\..\..\Method\AgilentUltivo\Agilent.MSDrivers.LCQuadrupole.HWConfigResourceMgr.dll</HintPath>
-    </Reference>
-    <Reference Include="Agilent.MSDrivers.LCQuadrupole.KeyValueInterfaces">
-      <HintPath>..\..\..\Method\AgilentUltivo\Agilent.MSDrivers.LCQuadrupole.KeyValueInterfaces.dll</HintPath>
-    </Reference>
-    <Reference Include="Agilent.MSDrivers.LCQuadrupole.MethodLocaleServiceProvider">
-      <HintPath>..\..\..\Method\AgilentUltivo\Agilent.MSDrivers.LCQuadrupole.MethodLocaleServiceProvider.dll</HintPath>
-    </Reference>
-    <Reference Include="Agilent.MSDrivers.LCQuadrupole.MethodResourceMgr">
-      <HintPath>..\..\..\Method\AgilentUltivo\Agilent.MSDrivers.LCQuadrupole.MethodResourceMgr.dll</HintPath>
-    </Reference>
-    <Reference Include="Agilent.MSDrivers.LCQuadrupole.MethodValidationModule">
-      <HintPath>..\..\..\Method\AgilentUltivo\Agilent.MSDrivers.LCQuadrupole.MethodValidationModule.dll</HintPath>
-    </Reference>
-    <Reference Include="Agilent.MSDrivers.LCQuadrupole.ModelSpecificMethodResourceManager">
-      <HintPath>..\..\..\Method\AgilentUltivo\Agilent.MSDrivers.LCQuadrupole.ModelSpecificMethodResourceManager.dll</HintPath>
-    </Reference>
-    <Reference Include="Agilent.MSDrivers.LCQuadrupole.MRMObjectFactory">
-      <HintPath>..\..\..\Method\AgilentUltivo\Agilent.MSDrivers.LCQuadrupole.MRMObjectFactory.dll</HintPath>
-    </Reference>
-    <Reference Include="Agilent.MSDrivers.LCQuadrupole.MSActualProvider">
-      <HintPath>..\..\..\Method\AgilentUltivo\Agilent.MSDrivers.LCQuadrupole.MSActualProvider.dll</HintPath>
-    </Reference>
-    <Reference Include="Agilent.MSDrivers.LCQuadrupole.MSIF">
-      <HintPath>..\..\..\Method\AgilentUltivo\Agilent.MSDrivers.LCQuadrupole.MSIF.dll</HintPath>
-    </Reference>
-    <Reference Include="Agilent.MSDrivers.LCQuadrupole.MSMethodDO">
-      <HintPath>..\..\..\Method\AgilentUltivo\Agilent.MSDrivers.LCQuadrupole.MSMethodDO.dll</HintPath>
-    </Reference>
-    <Reference Include="Agilent.MSDrivers.LCQuadrupole.MSParamProvider">
-      <HintPath>..\..\..\Method\AgilentUltivo\Agilent.MSDrivers.LCQuadrupole.MSParamProvider.dll</HintPath>
-    </Reference>
-    <Reference Include="Agilent.MSDrivers.LCQuadrupole.MSTrace">
-      <HintPath>..\..\..\Method\AgilentUltivo\Agilent.MSDrivers.LCQuadrupole.MSTrace.dll</HintPath>
-    </Reference>
-    <Reference Include="Agilent.MSDrivers.LCQuadrupole.MSTraceDataSystemIF">
-      <HintPath>..\..\..\Method\AgilentUltivo\Agilent.MSDrivers.LCQuadrupole.MSTraceDataSystemIF.dll</HintPath>
-    </Reference>
-    <Reference Include="Agilent.MSDrivers.LCQuadrupole.MSTuneDO">
-      <HintPath>..\..\..\Method\AgilentUltivo\Agilent.MSDrivers.LCQuadrupole.MSTuneDO.dll</HintPath>
-    </Reference>
-    <Reference Include="Agilent.MSDrivers.LCQuadrupole.ValidationBase">
-      <HintPath>..\..\..\Method\AgilentUltivo\Agilent.MSDrivers.LCQuadrupole.ValidationBase.dll</HintPath>
-    </Reference>
-    <Reference Include="MethodCreator">
-      <HintPath>..\..\..\Method\AgilentUltivo\MethodCreator.dll</HintPath>
-    </Reference>
-    <Reference Include="RapidControlIF">
-      <HintPath>..\..\..\Method\AgilentUltivo\RapidControlIF.dll</HintPath>
-    </Reference>
-    <Reference Include="System" />
-    <Reference Include="System.Core" />
-    <Reference Include="System.Xml.Linq" />
-    <Reference Include="System.Data.DataSetExtensions" />
-    <Reference Include="Microsoft.CSharp" />
-    <Reference Include="System.Data" />
-    <Reference Include="System.Net.Http" />
-    <Reference Include="System.Xml" />
-  </ItemGroup>
-  <ItemGroup>
     <Compile Include="Program.cs" />
     <Compile Include="Properties\AssemblyInfo.cs" />
   </ItemGroup>
   <ItemGroup>
     <None Include="App.config" />
+  </ItemGroup>
+  <ItemGroup>
+    <Reference Include="Agilent.MSDrivers.LCQuadrupole.CommonUtilities, Version=3.1.18.0, Culture=neutral, processorArchitecture=MSIL">
+      <SpecificVersion>False</SpecificVersion>
+      <HintPath>..\..\..\Method\Agilent\MH12\Agilent.MSDrivers.LCQuadrupole.CommonUtilities.dll</HintPath>
+    </Reference>
+    <Reference Include="Agilent.MSDrivers.LCQuadrupole.DataInterfaces, Version=3.1.18.0, Culture=neutral, processorArchitecture=MSIL">
+      <SpecificVersion>False</SpecificVersion>
+      <HintPath>..\..\..\Method\Agilent\MH12\Agilent.MSDrivers.LCQuadrupole.DataInterfaces.dll</HintPath>
+    </Reference>
+    <Reference Include="Agilent.MSDrivers.LCQuadrupole.ESW, Version=3.1.18.0, Culture=neutral, processorArchitecture=MSIL">
+      <SpecificVersion>False</SpecificVersion>
+      <HintPath>..\..\..\Method\Agilent\MH12\Agilent.MSDrivers.LCQuadrupole.ESW.dll</HintPath>
+    </Reference>
+    <Reference Include="Agilent.MSDrivers.LCQuadrupole.HWConfigResourceMgr, Version=3.1.18.0, Culture=neutral, processorArchitecture=MSIL">
+      <SpecificVersion>False</SpecificVersion>
+      <HintPath>..\..\..\Method\Agilent\MH12\Agilent.MSDrivers.LCQuadrupole.HWConfigResourceMgr.dll</HintPath>
+    </Reference>
+    <Reference Include="Agilent.MSDrivers.LCQuadrupole.KeyValueInterfaces, Version=3.1.18.0, Culture=neutral, processorArchitecture=MSIL">
+      <SpecificVersion>False</SpecificVersion>
+      <HintPath>..\..\..\Method\Agilent\MH12\Agilent.MSDrivers.LCQuadrupole.KeyValueInterfaces.dll</HintPath>
+    </Reference>
+    <Reference Include="Agilent.MSDrivers.LCQuadrupole.MethodCreator, Version=1.0.0.0, Culture=neutral, processorArchitecture=MSIL">
+      <SpecificVersion>False</SpecificVersion>
+      <HintPath>..\..\..\Method\Agilent\MH12\Agilent.MSDrivers.LCQuadrupole.MethodCreator.dll</HintPath>
+    </Reference>
+    <Reference Include="Agilent.MSDrivers.LCQuadrupole.MethodLocaleServiceProvider, Version=3.1.18.0, Culture=neutral, processorArchitecture=MSIL">
+      <SpecificVersion>False</SpecificVersion>
+      <HintPath>..\..\..\Method\Agilent\MH12\Agilent.MSDrivers.LCQuadrupole.MethodLocaleServiceProvider.dll</HintPath>
+    </Reference>
+    <Reference Include="Agilent.MSDrivers.LCQuadrupole.MethodResourceMgr, Version=3.1.18.0, Culture=neutral, processorArchitecture=MSIL">
+      <SpecificVersion>False</SpecificVersion>
+      <HintPath>..\..\..\Method\Agilent\MH12\Agilent.MSDrivers.LCQuadrupole.MethodResourceMgr.dll</HintPath>
+    </Reference>
+    <Reference Include="Agilent.MSDrivers.LCQuadrupole.MethodValidationModule, Version=3.1.18.0, Culture=neutral, processorArchitecture=MSIL">
+      <SpecificVersion>False</SpecificVersion>
+      <HintPath>..\..\..\Method\Agilent\MH12\Agilent.MSDrivers.LCQuadrupole.MethodValidationModule.dll</HintPath>
+    </Reference>
+    <Reference Include="Agilent.MSDrivers.LCQuadrupole.ModelSpecificMethodResourceManager, Version=3.1.18.0, Culture=neutral, processorArchitecture=MSIL">
+      <SpecificVersion>False</SpecificVersion>
+      <HintPath>..\..\..\Method\Agilent\MH12\Agilent.MSDrivers.LCQuadrupole.ModelSpecificMethodResourceManager.dll</HintPath>
+    </Reference>
+    <Reference Include="Agilent.MSDrivers.LCQuadrupole.MRMObjectFactory, Version=3.1.18.0, Culture=neutral, processorArchitecture=MSIL">
+      <SpecificVersion>False</SpecificVersion>
+      <HintPath>..\..\..\Method\Agilent\MH12\Agilent.MSDrivers.LCQuadrupole.MRMObjectFactory.dll</HintPath>
+    </Reference>
+    <Reference Include="Agilent.MSDrivers.LCQuadrupole.MSActualProvider, Version=3.1.18.0, Culture=neutral, processorArchitecture=MSIL">
+      <SpecificVersion>False</SpecificVersion>
+      <HintPath>..\..\..\Method\Agilent\MH12\Agilent.MSDrivers.LCQuadrupole.MSActualProvider.dll</HintPath>
+    </Reference>
+    <Reference Include="Agilent.MSDrivers.LCQuadrupole.MSDataStorage, Version=3.1.18.0, Culture=neutral, processorArchitecture=MSIL">
+      <SpecificVersion>False</SpecificVersion>
+      <HintPath>..\..\..\Method\Agilent\MH12\Agilent.MSDrivers.LCQuadrupole.MSDataStorage.dll</HintPath>
+    </Reference>
+    <Reference Include="Agilent.MSDrivers.LCQuadrupole.MSDataStorageIF, Version=3.1.18.0, Culture=neutral, processorArchitecture=MSIL">
+      <SpecificVersion>False</SpecificVersion>
+      <HintPath>..\..\..\Method\Agilent\MH12\Agilent.MSDrivers.LCQuadrupole.MSDataStorageIF.dll</HintPath>
+    </Reference>
+    <Reference Include="Agilent.MSDrivers.LCQuadrupole.MSIF, Version=3.1.18.0, Culture=neutral, processorArchitecture=MSIL">
+      <SpecificVersion>False</SpecificVersion>
+      <HintPath>..\..\..\Method\Agilent\MH12\Agilent.MSDrivers.LCQuadrupole.MSIF.dll</HintPath>
+    </Reference>
+    <Reference Include="Agilent.MSDrivers.LCQuadrupole.MSMethodDO, Version=3.1.18.0, Culture=neutral, processorArchitecture=MSIL">
+      <SpecificVersion>False</SpecificVersion>
+      <HintPath>..\..\..\Method\Agilent\MH12\Agilent.MSDrivers.LCQuadrupole.MSMethodDO.dll</HintPath>
+    </Reference>
+    <Reference Include="Agilent.MSDrivers.LCQuadrupole.MSParamProvider, Version=3.1.18.0, Culture=neutral, processorArchitecture=MSIL">
+      <SpecificVersion>False</SpecificVersion>
+      <HintPath>..\..\..\Method\Agilent\MH12\Agilent.MSDrivers.LCQuadrupole.MSParamProvider.dll</HintPath>
+    </Reference>
+    <Reference Include="Agilent.MSDrivers.LCQuadrupole.MSTrace, Version=3.1.18.0, Culture=neutral, processorArchitecture=MSIL">
+      <SpecificVersion>False</SpecificVersion>
+      <HintPath>..\..\..\Method\Agilent\MH12\Agilent.MSDrivers.LCQuadrupole.MSTrace.dll</HintPath>
+    </Reference>
+    <Reference Include="Agilent.MSDrivers.LCQuadrupole.MSTraceDataSystemIF, Version=3.1.18.0, Culture=neutral, processorArchitecture=MSIL">
+      <SpecificVersion>False</SpecificVersion>
+      <HintPath>..\..\..\Method\Agilent\MH12\Agilent.MSDrivers.LCQuadrupole.MSTraceDataSystemIF.dll</HintPath>
+    </Reference>
+    <Reference Include="Agilent.MSDrivers.LCQuadrupole.MSTuneDO, Version=3.1.18.0, Culture=neutral, processorArchitecture=MSIL">
+      <SpecificVersion>False</SpecificVersion>
+      <HintPath>..\..\..\Method\Agilent\MH12\Agilent.MSDrivers.LCQuadrupole.MSTuneDO.dll</HintPath>
+    </Reference>
+    <Reference Include="Agilent.MSDrivers.LCQuadrupole.ValidationBase, Version=3.1.18.0, Culture=neutral, processorArchitecture=MSIL">
+      <SpecificVersion>False</SpecificVersion>
+      <HintPath>..\..\..\Method\Agilent\MH12\Agilent.MSDrivers.LCQuadrupole.ValidationBase.dll</HintPath>
+    </Reference>
+    <Reference Include="BaseCommon, Version=12.0.315.0, Culture=neutral, processorArchitecture=MSIL">
+      <SpecificVersion>False</SpecificVersion>
+      <HintPath>..\..\..\Method\Agilent\MH12\BaseCommon.dll</HintPath>
+    </Reference>
+    <Reference Include="BaseError, Version=12.0.315.0, Culture=neutral, processorArchitecture=MSIL">
+      <SpecificVersion>False</SpecificVersion>
+      <HintPath>..\..\..\Method\Agilent\MH12\BaseError.dll</HintPath>
+    </Reference>
+    <Reference Include="BaseMSUtils, Version=12.0.258.0, Culture=neutral, processorArchitecture=MSIL">
+      <SpecificVersion>False</SpecificVersion>
+      <HintPath>..\..\..\Method\Agilent\MH12\BaseMSUtils.dll</HintPath>
+    </Reference>
+    <Reference Include="BaseTof, Version=12.0.315.0, Culture=neutral, processorArchitecture=x86">
+      <SpecificVersion>False</SpecificVersion>
+      <HintPath>..\..\..\Method\Agilent\MH12\BaseTof.dll</HintPath>
+    </Reference>
+    <Reference Include="Newtonsoft.Json, Version=13.0.0.0, Culture=neutral, PublicKeyToken=30ad4fe6b2a6aeed, processorArchitecture=MSIL">
+      <SpecificVersion>False</SpecificVersion>
+      <HintPath>..\..\..\..\Shared\Lib\Newtonsoft.Json.dll</HintPath>
+    </Reference>
+    <Reference Include="RapidControlIF, Version=2.1.5.0, Culture=neutral, PublicKeyToken=43cb10ffc99be394, processorArchitecture=MSIL">
+      <SpecificVersion>False</SpecificVersion>
+      <HintPath>..\..\..\Method\Agilent\MH12\RapidControlIF.dll</HintPath>
+    </Reference>
   </ItemGroup>
   <Import Project="$(MSBuildToolsPath)\Microsoft.CSharp.targets" />
 </Project>
