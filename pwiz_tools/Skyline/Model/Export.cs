@@ -3173,7 +3173,7 @@ namespace pwiz.Skyline.Model
 
     public class AgilentMethodExporter : AgilentMassListExporter
     {
-        public const string EXE_BUILD_AGILENT_METHOD = @"Method\Agilent\BuildAgilentMethod";
+        public const string EXE_BUILD_AGILENT_METHOD = @"Method\Agilent\6400\BuildAgilentMethod";
 
         public AgilentMethodExporter(SrmDocument document)
             : base(document)
@@ -3197,7 +3197,7 @@ namespace pwiz.Skyline.Model
 
     public class AgilentUltivoMethodExporter : AgilentMassListExporter
     {
-        public const string EXE_BUILD_AGILENT_METHOD = @"Method\AgilentUltivo\BuildAgilentUltivoMethod";
+        public const string EXE_BUILD_AGILENT_METHOD = @"Method\Agilent\MH12\BuildAgilentMH12Method";
 
         public AgilentUltivoMethodExporter(SrmDocument document)
             : base(document)

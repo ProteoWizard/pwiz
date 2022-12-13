@@ -149,8 +149,8 @@ Method\AbSciex\TQ\Interop.ROTMan.dll
 Method\AbSciex\TQ\QueueDispatcherLib.dll
 Method\AbSciex\TQ\ROTMANLib.dll
 Method\AbSciex\TQ\StdType.dll
-Method\Agilent\BuildAgilentMethod.exe
-Method\Agilent\MethodCreator.dll
+Method\Agilent\6400\BuildAgilentMethod.exe
+Method\Agilent\6400\MethodCreator.dll
 Method\Bruker\BDal.Submethod.Wrapper.dll
 Method\Bruker\BdalRetentionTimeMassList.dll
 Method\Bruker\BuildBrukerMethod.exe

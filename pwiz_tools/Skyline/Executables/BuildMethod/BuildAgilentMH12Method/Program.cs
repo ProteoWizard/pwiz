@@ -23,7 +23,7 @@ using System.Linq;
 using System.Text;
 using Agilent.MassSpectrometry.Optimator;
 
-namespace BuildAgilentUltivoMethod
+namespace BuildAgilentMH12Method
 {
     internal class UsageException : Exception { }
 
@@ -66,13 +66,13 @@ namespace BuildAgilentUltivoMethod
         static void Usage()
         {
             const string usage =
-                    "Usage: BuildAgilentUltivoMethod [options] <template method> [list file]*\n" +
+                    "Usage: BuildAgilentMH12Method [options] <template method> [list file]*\n" +
                     "   Takes template Agilent method file and a Skyline generated Agilent\n" +
-                    "   transition list as inputs, to generate a Agilent Ultivo method\n" +
+                    "   transition list as inputs, to generate a Agilent MassHunter 12 method\n" +
                     "   file as output.\n" +
                     "   -o <output file> New method is written to the specified output file\n" +
                     "   -s               Transition list is read from stdin.\n" +
-                    "                    e.g. cat TranList.csv | BuildAgilentUltivoMethod -s -o new.ext temp.ext\n" +
+                    "                    e.g. cat TranList.csv | BuildAgilentMH12Method -s -o new.ext temp.ext\n" +
                     "\n" +
                     "   -m               Multiple lists concatenated in the format:\n" +
                     "                    file1.ext\n" +

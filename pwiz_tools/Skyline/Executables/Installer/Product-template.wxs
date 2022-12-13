@@ -101,7 +101,9 @@
           <Directory Id="Method_AbSciex_TOF_directory" Name="TOF"/>
           <Directory Id="Method_AbSciex_TQ_directory" Name="TQ"/>
         </Directory>
-        <Directory Id="Method_Agilent_directory" Name="Agilent"/>
+        <Directory Id="Method_Agilent_directory" Name="Agilent">
+          <Directory Id="Method_Agilent_6400_directory" Name="6400"/>
+        </Directory>
         <Directory Id="Method_Bruker_directory" Name="Bruker"/>
         <Directory Id="Method_Shimadzu_directory" Name="Shimadzu"/>
         <Directory Id="Method_Thermo_directory" Name="Thermo"/>
@@ -585,15 +587,15 @@
         <File Source="$(var.Skyline.TargetDir)/Method\AbSciex\TQ\StdType.dll" KeyPath="yes"/>
       </Component>
     </ComponentGroup>
-    <ComponentGroup Id="Method_Agilent_files" Directory="Method_Agilent_directory">
-      <Component Id="Method_Agilent_BuildAgilentMethod.exe">
-        <File Source="$(var.Skyline.TargetDir)/Method\Agilent\BuildAgilentMethod.exe" KeyPath="yes"/>
+    <ComponentGroup Id="Method_Agilent_6400_files" Directory="Method_Agilent_6400_directory">
+      <Component Id="Method_Agilent_6400_BuildAgilentMethod.exe">
+        <File Source="$(var.Skyline.TargetDir)/Method\Agilent\6400\BuildAgilentMethod.exe" KeyPath="yes"/>
       </Component>
-      <Component Id="Method_Agilent_BuildAgilentMethod.exe.config">
-        <File Source="$(var.Skyline.TargetDir)/Method\Agilent\BuildAgilentMethod.exe.config" KeyPath="yes"/>
+      <Component Id="Method_Agilent_6400_BuildAgilentMethod.exe.config">
+        <File Source="$(var.Skyline.TargetDir)/Method\Agilent\6400\BuildAgilentMethod.exe.config" KeyPath="yes"/>
       </Component>
-      <Component Id="Method_Agilent_MethodCreator.dll">
-        <File Source="$(var.Skyline.TargetDir)/Method\Agilent\MethodCreator.dll" KeyPath="yes"/>
+      <Component Id="Method_Agilent_6400_MethodCreator.dll">
+        <File Source="$(var.Skyline.TargetDir)/Method\Agilent\6400\MethodCreator.dll" KeyPath="yes"/>
       </Component>
     </ComponentGroup>
     <ComponentGroup Id="Method_Bruker_files" Directory="Method_Bruker_directory">
