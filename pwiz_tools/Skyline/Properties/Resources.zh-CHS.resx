@@ -4250,7 +4250,7 @@
     <value>单击“创建”按钮来创建一个新库或单击“打开”按钮来打开现有的库文件。</value>
   </data>
   <data name="TransitionTreeNode_GetLabel_irank__0__" xml:space="preserve">
-    <value>针对离子对节点的同位素排名 {0}</value>
+    <value>i排名 {0}</value>
     <comment>Isotope rank for transition node</comment>
   </data>
   <data name="AddIrtSpectralLibrary_OkDialog_The_file__0__is_not_a_BiblioSpec_or_Chromatogram_library" xml:space="preserve">
