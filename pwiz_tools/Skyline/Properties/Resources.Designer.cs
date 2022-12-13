@@ -5761,6 +5761,17 @@ namespace pwiz.Skyline.Properties {
         }
         
         /// <summary>
+        ///   Looks up a localized string similar to The folder {0} does not appear to contain an Agilent MassHunter 12 method template. The folder is expected to have a .m extension..
+        /// </summary>
+        public static string CommandLine_ExportInstrumentFile_The_folder__0__does_not_appear_to_contain_an_Agilent_MassHunter_12_method_template__The_folder_is_expected_to_have_a__m_extension_ {
+            get {
+                return ResourceManager.GetString("CommandLine_ExportInstrumentFile_The_folder__0__does_not_appear_to_contain_an_Agi" +
+                        "lent_MassHunter_12_method_template__The_folder_is_expected_to_have_a__m_extensio" +
+                        "n_", resourceCulture);
+            }
+        }
+        
+        /// <summary>
         ///   Looks up a localized string similar to Warning: Max transitions per injection must be set to some value between {0} and {1} for export strategies &quot;protein&quot; and &quot;buckets&quot; and for scheduled methods. You specified {3}. Defaulting to {2}..
         /// </summary>
         public static string CommandLine_ExportInstrumentFile_Warning__Max_transitions_per_injection_must_be_set_to_some_value_between__0__and__1__for_export_strategies__protein__and__buckets__and_for_scheduled_methods__You_specified__3___Defaulting_to__2__ {
@@ -12806,6 +12817,17 @@ namespace pwiz.Skyline.Properties {
         }
         
         /// <summary>
+        ///   Looks up a localized string similar to The chosen folder does not appear to contain an Agilent MassHunter 12 method template. The folder is expected to have a .m extension..
+        /// </summary>
+        public static string ExportMethodDlg_btnBrowseTemplate_Click_The_chosen_folder_does_not_appear_to_contain_an_Agilent_MassHunter_12_method_template__The_folder_is_expected_to_have_a__m_extension_ {
+            get {
+                return ResourceManager.GetString("ExportMethodDlg_btnBrowseTemplate_Click_The_chosen_folder_does_not_appear_to_cont" +
+                        "ain_an_Agilent_MassHunter_12_method_template__The_folder_is_expected_to_have_a__" +
+                        "m_extension_", resourceCulture);
+            }
+        }
+        
+        /// <summary>
         ///   Looks up a localized string similar to The chosen folder does not appear to contain an Agilent QQQ method template. The folder is expected to have a .m extension, and contain the file qqqacqmethod.xsd..
         /// </summary>
         public static string ExportMethodDlg_btnBrowseTemplate_Click_The_chosen_folder_does_not_appear_to_contain_an_Agilent_QQQ_method_template_The_folder_is_expected_to_have_a_m_extension_and_contain_the_file_qqqacqmethod_xsd {
@@ -12813,17 +12835,6 @@ namespace pwiz.Skyline.Properties {
                 return ResourceManager.GetString("ExportMethodDlg_btnBrowseTemplate_Click_The_chosen_folder_does_not_appear_to_cont" +
                         "ain_an_Agilent_QQQ_method_template_The_folder_is_expected_to_have_a_m_extension_" +
                         "and_contain_the_file_qqqacqmethod_xsd", resourceCulture);
-            }
-        }
-        
-        /// <summary>
-        ///   Looks up a localized string similar to The chosen folder does not appear to contain an Agilent Ultivo method template. The folder is expected to have a .m extension..
-        /// </summary>
-        public static string ExportMethodDlg_btnBrowseTemplate_Click_The_chosen_folder_does_not_appear_to_contain_an_Agilent_Ultivo_method_template__The_folder_is_expected_to_have_a__m_extension_ {
-            get {
-                return ResourceManager.GetString("ExportMethodDlg_btnBrowseTemplate_Click_The_chosen_folder_does_not_appear_to_cont" +
-                        "ain_an_Agilent_Ultivo_method_template__The_folder_is_expected_to_have_a__m_exten" +
-                        "sion_", resourceCulture);
             }
         }
         
@@ -13193,6 +13204,16 @@ namespace pwiz.Skyline.Properties {
         }
         
         /// <summary>
+        ///   Looks up a localized string similar to The folder {0} does not appear to contain an Agilent MassHunter 12 method template. The folder is expected to have a .m extension..
+        /// </summary>
+        public static string ExportMethodDlg_OkDialog_The_folder__0__does_not_appear_to_contain_an_Agilent_MassHunter_12_method_template__The_folder_is_expected_to_have_a__m_extension_ {
+            get {
+                return ResourceManager.GetString("ExportMethodDlg_OkDialog_The_folder__0__does_not_appear_to_contain_an_Agilent_Mas" +
+                        "sHunter_12_method_template__The_folder_is_expected_to_have_a__m_extension_", resourceCulture);
+            }
+        }
+        
+        /// <summary>
         ///   Looks up a localized string similar to The folder {0} does not appear to contain an Agilent QQQ method template. The folder is expected to have a .m extension, and contain the file qqqacqmethod.xsd..
         /// </summary>
         public static string ExportMethodDlg_OkDialog_The_folder__0__does_not_appear_to_contain_an_Agilent_QQQ_method_template_The_folder_is_expected_to_have_a_m_extension_and_contain_the_file_qqqacqmethod_xsd {
@@ -13200,16 +13221,6 @@ namespace pwiz.Skyline.Properties {
                 return ResourceManager.GetString("ExportMethodDlg_OkDialog_The_folder__0__does_not_appear_to_contain_an_Agilent_QQQ" +
                         "_method_template_The_folder_is_expected_to_have_a_m_extension_and_contain_the_fi" +
                         "le_qqqacqmethod_xsd", resourceCulture);
-            }
-        }
-        
-        /// <summary>
-        ///   Looks up a localized string similar to The folder {0} does not appear to contain an Agilent Ultivo method template. The folder is expected to have a .m extension..
-        /// </summary>
-        public static string ExportMethodDlg_OkDialog_The_folder__0__does_not_appear_to_contain_an_Agilent_Ultivo_method_template__The_folder_is_expected_to_have_a__m_extension_ {
-            get {
-                return ResourceManager.GetString("ExportMethodDlg_OkDialog_The_folder__0__does_not_appear_to_contain_an_Agilent_Ult" +
-                        "ivo_method_template__The_folder_is_expected_to_have_a__m_extension_", resourceCulture);
             }
         }
         

@@ -11923,4 +11923,13 @@ If you do not have the original file, you may build the library with embedded sp
 	  <value>({0} Da)</value>
 	  <comment>"Da" stands for "Daltons". Example: (+57.2 Da)</comment>
   </data>
+  <data name="ExportMethodDlg_btnBrowseTemplate_Click_The_chosen_folder_does_not_appear_to_contain_an_Agilent_MassHunter_12_method_template__The_folder_is_expected_to_have_a__m_extension_" xml:space="preserve">
+      <value>The chosen folder does not appear to contain an Agilent MassHunter 12 method template. The folder is expected to have a .m extension.</value>
+  </data>
+  <data name="CommandLine_ExportInstrumentFile_The_folder__0__does_not_appear_to_contain_an_Agilent_MassHunter_12_method_template__The_folder_is_expected_to_have_a__m_extension_" xml:space="preserve">
+      <value>The folder {0} does not appear to contain an Agilent MassHunter 12 method template. The folder is expected to have a .m extension.</value>
+  </data>
+  <data name="ExportMethodDlg_OkDialog_The_folder__0__does_not_appear_to_contain_an_Agilent_MassHunter_12_method_template__The_folder_is_expected_to_have_a__m_extension_" xml:space="preserve">
+      <value>The folder {0} does not appear to contain an Agilent MassHunter 12 method template. The folder is expected to have a .m extension.</value>
+  </data>
 </root>

@@ -175,7 +175,7 @@ namespace pwiz.Skyline.Model
         public const string AGILENT = "Agilent";
         public const string AGILENT_TOF = "Agilent QTOF";
         public const string AGILENT6400 = "Agilent 6400 Series";
-        public const string AGILENT_ULTIVO = "Agilent Ultivo";
+        public const string AGILENT_MASSHUNTER_12 = "Agilent MassHunter 12";
         public const string BRUKER = "Bruker";
         public const string BRUKER_TOF = "Bruker QTOF";
         public const string BRUKER_TIMSTOF = "Bruker timsTOF";
@@ -210,7 +210,7 @@ namespace pwiz.Skyline.Model
         public static readonly string[] METHOD_TYPES =
             {
                 AGILENT6400,
-                AGILENT_ULTIVO,
+                AGILENT_MASSHUNTER_12,
                 BRUKER_TOF,
                 BRUKER_TIMSTOF,
                 ABI_QTRAP,
@@ -265,7 +265,7 @@ namespace pwiz.Skyline.Model
                                        {ABI_7500, EXT_SCIEX_OS},
                                        {ABI_7600, EXT_SCIEX_OS},
                                        {AGILENT6400, EXT_AGILENT},
-                                       {AGILENT_ULTIVO, EXT_AGILENT},
+                                       {AGILENT_MASSHUNTER_12, EXT_AGILENT},
                                        {BRUKER_TOF, EXT_BRUKER},
                                        {BRUKER_TIMSTOF, EXT_BRUKER_TIMSTOF},
                                        {SHIMADZU, EXT_SHIMADZU},
@@ -464,7 +464,7 @@ namespace pwiz.Skyline.Model
                         return ExportAgilentCsv(doc, path);
                     else
                         return ExportAgilentMethod(doc, path, template);
-                case ExportInstrumentType.AGILENT_ULTIVO:
+                case ExportInstrumentType.AGILENT_MASSHUNTER_12:
                     return ExportAgilentUltivoMethod(doc, path, template);
                 case ExportInstrumentType.AGILENT_TOF:
                     if (type == ExportFileType.IsolationList)
