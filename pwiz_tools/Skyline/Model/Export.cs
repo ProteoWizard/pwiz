@@ -170,7 +170,8 @@ namespace pwiz.Skyline.Model
         public const string ABI = "SCIEX";
         public const string ABI_QTRAP = "SCIEX QTRAP";
         public const string ABI_TOF = "SCIEX QTOF";
-        public const string ABI_7500 = "SCIEX 7500";
+        public const string ABI_7500 = "SCIEX OS 7500";
+        public const string ABI_7600 = "SCIEX OS 7600";
         public const string AGILENT = "Agilent";
         public const string AGILENT_TOF = "Agilent QTOF";
         public const string AGILENT6400 = "Agilent 6400 Series";
@@ -215,6 +216,7 @@ namespace pwiz.Skyline.Model
                 ABI_QTRAP,
                 ABI_TOF,
                 ABI_7500,
+                ABI_7600,
                 SHIMADZU,
                 THERMO_TSQ,
                 THERMO_LTQ,
@@ -261,6 +263,7 @@ namespace pwiz.Skyline.Model
                                        {ABI_QTRAP, EXT_AB_SCIEX},
                                        {ABI_TOF, EXT_AB_SCIEX},
                                        {ABI_7500, EXT_SCIEX_OS},
+                                       {ABI_7600, EXT_SCIEX_OS},
                                        {AGILENT6400, EXT_AGILENT},
                                        {AGILENT_ULTIVO, EXT_AGILENT},
                                        {BRUKER_TOF, EXT_BRUKER},
@@ -322,7 +325,8 @@ namespace pwiz.Skyline.Model
                    Equals(type, WATERS_SYNAPT_TRANSFER) ||
                    Equals(type, WATERS_XEVO_QTOF) ||
                    Equals(type, BRUKER_TOF) ||
-                   Equals(type, ABI_TOF);
+                   Equals(type, ABI_TOF) ||
+                   Equals(type, ABI_7600);
         }
 
         public static bool CanScheduleInstrumentType(string type, SrmDocument doc)
@@ -384,6 +388,7 @@ namespace pwiz.Skyline.Model
 
         public virtual int PrimaryTransitionCount { get; set; }
         public virtual int DwellTime { get; set; }
+        public virtual double AccumulationTime { get; set; }
         public virtual bool UseSlens { get; set; }
         public virtual bool WriteCompensationVoltages { get; set; }
         public virtual bool AddEnergyRamp { get; set; }
@@ -451,7 +456,8 @@ namespace pwiz.Skyline.Model
                         return ExportAbiTofIsolationList(doc, path, template);
                     return ExportAbiTofMethod(doc, path, template);
                 case ExportInstrumentType.ABI_7500:
-                    return ExportSciexOsMethod(doc, path, template);
+                case ExportInstrumentType.ABI_7600:
+                    return ExportSciexOsMethod(doc, path, template, instrumentType);
                 case ExportInstrumentType.AGILENT:
                 case ExportInstrumentType.AGILENT6400:
                     if (type == ExportFileType.List)
@@ -589,11 +595,21 @@ namespace pwiz.Skyline.Model
             return exporter;
         }
 
-        public AbstractMassListExporter ExportSciexOsMethod(SrmDocument document, string fileName, string templateName)
+        public AbstractMassListExporter ExportSciexOsMethod(SrmDocument document, string fileName, string templateName, string instrumentType)
         {
-            var exporter = InitExporter(new SciexOsMethodExporter(document));
+            var exporter = InitExporter(new SciexOsMethodExporter(document, instrumentType));
             if (MethodType == ExportMethodType.Standard)
-                exporter.DwellTime = DwellTime;
+            {
+                switch (instrumentType)
+                {
+                    case ExportInstrumentType.ABI_7500:
+                        exporter.DwellTime = DwellTime;
+                        break;
+                    case ExportInstrumentType.ABI_7600:
+                        exporter.AccumulationTime = AccumulationTime;
+                        break;
+                }
+            }
             PerformLongExport(m => exporter.ExportMethod(fileName, templateName, m));
             return exporter;
         }
@@ -2134,7 +2150,8 @@ namespace pwiz.Skyline.Model
         {
         }
 
-        public double DwellTime { get; set; }
+        public double? DwellTime { get; set; }
+        public double? AccumulationTime { get; set; }
         protected PeptidePrediction.WindowRT RTWindow { get; private set; }
 
         private int OptimizeStepIndex { get; set; }
@@ -2214,9 +2231,9 @@ namespace pwiz.Skyline.Model
         }
 
         // Helper function for emitting CE, Dxp and CoV values consistent with ionization mode, for Sciex
-        private double AdjustParameterPolarity(TransitionDocNode nodeTran, double paramValue)
+        private double AdjustParameterPolarity(TransitionGroupDocNode nodeGroup, TransitionDocNode nodeTran, double paramValue)
         {
-            return nodeTran.Transition.Charge < 0 ? -paramValue : paramValue;
+            return (nodeTran?.Transition.Charge ?? nodeGroup.PrecursorCharge) < 0 ? -paramValue : paramValue;
         }
 
         protected override void WriteTransition(TextWriter writer,
@@ -2230,7 +2247,7 @@ namespace pwiz.Skyline.Model
         {
             OptimizeStepIndex = step;
             string q1 = SequenceMassCalc.PersistentMZ(nodeTranGroup.PrecursorMz).ToString(CultureInfo);
-            string q3 = GetProductMz(SequenceMassCalc.PersistentMZ(nodeTran.Mz), step).ToString(CultureInfo);
+            string q3 = nodeTran != null ? GetProductMz(SequenceMassCalc.PersistentMZ(nodeTran.Mz), step).ToString(CultureInfo) : string.Empty;
 
             GetTransitionTimeValues(nodePep, nodeTranGroup, out var predictedRT, out var dwellOrRt);
             GetPeptideAndGroupNames(nodePepGroup, nodePep, nodeTranGroup, nodeTran, step, out var extPeptideId, out var extGroupId);
@@ -2242,11 +2259,11 @@ namespace pwiz.Skyline.Model
                     return;
                 ceValue = 10;
             }
-            ceValue = AdjustParameterPolarity(nodeTran, ceValue); // Sciex wants negative CE values for negative ion mode
+            ceValue = AdjustParameterPolarity(nodeTranGroup, nodeTran, ceValue); // Sciex wants negative CE values for negative ion mode
             string ce = Math.Round(ceValue, 1).ToString(CultureInfo);
             double dpValue = GetDeclusteringPotential(nodePep, nodeTranGroup, nodeTran, step);
             // CONSIDER: Is there a minimum DP value?
-            dpValue = AdjustParameterPolarity(nodeTran, dpValue); // Sciex wants negative DxP values for negative ion mode
+            dpValue = AdjustParameterPolarity(nodeTranGroup, nodeTran, dpValue); // Sciex wants negative DxP values for negative ion mode
             string dp = Math.Round(dpValue, 1).ToString(CultureInfo);
 
             string precursorWindow = string.Empty;
@@ -2254,12 +2271,13 @@ namespace pwiz.Skyline.Model
             if (FullScans)
             {
                 precursorWindow = Document.Settings.TransitionSettings.FullScan.GetProductFilterWindow(nodeTranGroup.PrecursorMz).ToString(CultureInfo);
-                productWindow = Document.Settings.TransitionSettings.FullScan.GetProductFilterWindow(nodeTran.Mz).ToString(CultureInfo);
+                if (nodeTran != null)
+                    productWindow = Document.Settings.TransitionSettings.FullScan.GetProductFilterWindow(nodeTran.Mz).ToString(CultureInfo);
             }          
 
             double maxRtDiff = 0;
             float? averagePeakArea = null;
-            if (nodeTran.Results != null && predictedRT.HasValue)
+            if (nodeTran?.Results != null && predictedRT.HasValue)
             {
                 GetValuesFromResults(nodeTran, predictedRT, out averagePeakArea, out maxRtDiff);
             }
@@ -2283,7 +2301,7 @@ namespace pwiz.Skyline.Model
             if (Document.Settings.TransitionSettings.Prediction.CompensationVoltage != null)
             {
                 var coV = GetCompensationVoltage(nodePep, nodeTranGroup, nodeTran, step).GetValueOrDefault();
-                coV = AdjustParameterPolarity(nodeTran, coV); // Sciex wants negative CoV values for negative ion mode
+                coV = AdjustParameterPolarity(nodeTranGroup, nodeTran, coV); // Sciex wants negative CoV values for negative ion mode
                 compensationVoltage =  string.Format(@",{0}", coV.ToString(@"0.00", CultureInfo));
             }
 
@@ -2352,12 +2370,14 @@ namespace pwiz.Skyline.Model
 
             var charge = nodeTranGroup.TransitionGroup.PrecursorAdduct;
             var pepGroupName = nodePepGroup.Name.Replace('.', '_');
-            extPeptideId = string.Format(@"{0}.{1}.{2}.{3}{4}",
-                pepGroupName,
-                modifiedPepSequence,
-                GetTransitionName(charge, nodeTran),
-                GetOptValueText(nodePepGroup, nodePep, nodeTranGroup, nodeTran, step),
-                nodeTranGroup.TransitionGroup.LabelType);
+            var pieces = new List<string>(4);
+            pieces.Add(pepGroupName);
+            pieces.Add(modifiedPepSequence);
+            if (nodeTran != null)
+                pieces.Add(GetTransitionName(charge, nodeTran));
+            pieces.Add(GetOptValueText(nodePepGroup, nodePep, nodeTranGroup, nodeTran, step) + nodeTranGroup.TransitionGroup.LabelType);
+            extPeptideId = string.Join(@".", pieces);
+
             extGroupId = string.Format(@"{0}.{1}.{2}",
                 pepGroupName,
                 modifiedPepSequence,
@@ -2406,7 +2426,7 @@ namespace pwiz.Skyline.Model
 
                 if (optPrefix != null)
                 {
-                    optValue = AdjustParameterPolarity(nodeTran, optValue);  // Sciex wants negative values for negative ion mode
+                    optValue = AdjustParameterPolarity(nodeTranGroup, nodeTran, optValue);  // Sciex wants negative values for negative ion mode
                     return string.Format(@"{0}_{1}.", optPrefix, optValue.ToString(@"0.0", CultureInfo.InvariantCulture));
                 }
             }
@@ -2418,7 +2438,9 @@ namespace pwiz.Skyline.Model
             if (MethodType == ExportMethodType.Standard)
             {
                 predictedRT = new PeptidePrediction.WindowRT(0, false);
-                dwellOrRt = Math.Round(DwellTime, 2).ToString(CultureInfo);
+                dwellOrRt = AccumulationTime.HasValue
+                    ? Math.Round(AccumulationTime.Value, 4).ToString(CultureInfo)
+                    : Math.Round(DwellTime.GetValueOrDefault(), 2).ToString(CultureInfo);
                 return;
             }
 
@@ -2816,8 +2838,21 @@ namespace pwiz.Skyline.Model
         private const string SCIEX_OS_EXE = @"SciexOs.exe";
         private const string EXE_NAME = @"Method\AbSciex\SciexOS\BuildSciexMethod";
 
-        public SciexOsMethodExporter(SrmDocument document) : base(document)
+        private readonly string _instrument;
+
+        public SciexOsMethodExporter(SrmDocument document, string instrumentType) : base(document)
         {
+            _instrument = instrumentType;
+            switch (instrumentType)
+            {
+                case ExportInstrumentType.ABI_7500:
+                    break;
+                case ExportInstrumentType.ABI_7600:
+                    IsolationList = true;
+                    break;
+                default:
+                    throw new Exception(Resources.SciexOsMethodExporter_SciexOsMethodExporter_Invalid_instrument_type_for_SCIEX_OS_method_export_);
+            }
         }
 
         protected override double? GetVariableRtWindow(double maxRtDiff)
@@ -2836,6 +2871,9 @@ namespace pwiz.Skyline.Model
             var args = new List<string>();
             if (MethodType == ExportMethodType.Standard)
                 args.Add(@"-d");
+
+            if (Equals(_instrument, ExportInstrumentType.ABI_7600))
+                args.Add(@"-t");
 
             MethodExporter.ExportMethod(EXE_NAME, args, fileName, templateName, MemoryOutput, progressMonitor);
         }

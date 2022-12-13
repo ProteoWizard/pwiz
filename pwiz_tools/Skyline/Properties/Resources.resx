@@ -2967,6 +2967,9 @@ Are you sure you want to continue?</value>
   <data name="ExportMethodDlg_DWELL_TIME_TXT" xml:space="preserve">
     <value>&amp;Dwell time (ms):</value>
   </data>
+  <data name="ExportMethodDlg_ACCUMULATION_TIME_TXT" xml:space="preserve">
+      <value>Accumulation time (sec):</value>
+  </data>
   <data name="CommandLine_ExportInstrumentFile_Error__the_instrument_type__0__does_not_support_triggered_acquisition_" xml:space="preserve">
     <value>Error: the instrument type {0} does not support triggered acquisition.</value>
   </data>
@@ -6987,9 +6990,6 @@ Please contact the Panorama server administrator to upgrade the server.</value>
   </data>
   <data name="SettingsList_ELEMENT_NONE_None" xml:space="preserve">
     <value>None</value>
-  </data>
-  <data name="SkylineWindow_ApplyPeak_No_results_found_for_the_precursor__0__in_the_file__1__" xml:space="preserve">
-    <value>No results found for the precursor {0} in the file {1}.</value>
   </data>
   <data name="ComparePeakPickingDlg_ComparePeakPickingDlg_Fraction_of_Peak_Groups" xml:space="preserve">
     <value>Fraction of Peak Groups</value>
@@ -11723,12 +11723,6 @@ If you do not have the original file, you may build the library with embedded sp
   <data name="BuildLibraryGridView_OnRowPrepaint_Error_getting_score_type_for_this_file_" xml:space="preserve">
     <value>Error getting score type for this file.</value>
   </data>
-  <data name="BuildLibraryGridView_OnRowPrepaint_Score_threshold_minimum__score_is_probability_that_identification_is_correct__" xml:space="preserve">
-    <value>Score threshold minimum (score is probability that identification is correct).</value>
-  </data>
-  <data name="BuildLibraryGridView_OnRowPrepaint_Score_threshold_maximum__score_is_probability_that_identification_is_incorrect__" xml:space="preserve">
-    <value>Score threshold maximum (score is probability that identification is incorrect).</value>
-  </data>
   <data name="BuildLibraryGridView_OnCellPainting_Score_threshold___0___is_invalid__must_be_a_decimal_value_between__1__and__2___" xml:space="preserve">
     <value>Score threshold '{0}' is invalid (must be a decimal value between {1} and {2}).</value>
   </data>
@@ -11868,10 +11862,65 @@ If you do not have the original file, you may build the library with embedded sp
   <data name="CommandLine_ImportSkyr_Error__Reports_could_not_be_imported_from__0_" xml:space="preserve">
       <value>Error: Reports could not be imported from {0}</value>
   </data>
-  <data name="ExportMethodDlg_OkDialog_The_folder__0__does_not_appear_to_contain_an_Agilent_Ultivo_method_template__The_folder_is_expected_to_have_a__m_extension_" xml:space="preserve">
-    <value>The folder {0} does not appear to contain an Agilent Ultivo method template. The folder is expected to have a .m extension.</value>
+  <data name="AssociateProteinsDlg_UseFastaFile_An_error_occurred_during_protein_association_" xml:space="preserve">
+	  <value>An error occurred during protein association.</value>
   </data>
-  <data name="ExportMethodDlg_btnBrowseTemplate_Click_The_chosen_folder_does_not_appear_to_contain_an_Agilent_Ultivo_method_template__The_folder_is_expected_to_have_a__m_extension_" xml:space="preserve">
-    <value>The chosen folder does not appear to contain an Agilent Ultivo method template. The folder is expected to have a .m extension.</value>
+  <data name="ColonSeparator" xml:space="preserve">
+	  <value>{0}: {1}</value>
+  </data>
+  <data name="ColonEndOfLine" xml:space="preserve">
+	  <value>:</value>
+  </data>
+  <data name="FragmentLoss_ItemDescription_Include_by_default" xml:space="preserve">
+	  <value>Include by default</value>
+  </data>
+  <data name="StaticMod_ItemDescription_Neutral_loss" xml:space="preserve">
+	  <value>Neutral loss</value>
+  </data>
+  <data name="StaticMod_ItemDescription_Loss" xml:space="preserve">
+	  <value>Loss</value>
+  </data>
+  <data name="StaticMod_ItemDescription_Neutral_losses" xml:space="preserve">
+	  <value>Neutral losses</value>
+  </data>
+  <data name="StaticMod_ItemDescription__0__neutral_losses" xml:space="preserve">
+	  <value>{0} neutral losses</value>
+  </data>
+  <data name="StaticMod_ItemDescription_Losses" xml:space="preserve">
+	  <value>Losses</value>
+  </data>
+  <data name="StaticMod_ItemDescription__0__losses" xml:space="preserve">
+	  <value>{0} losses</value>
+  </data>
+  <data name="StaticMod_FormatMass_Mass" xml:space="preserve">
+	  <value>Mass</value>
+  </data>
+  <data name="StaticMod_ItemDescription_Empty" xml:space="preserve">
+	  <value>Empty</value>
+  </data>
+  <data name="StaticMod_FormatMass_Unknown_mass" xml:space="preserve">
+	  <value>Unknown mass</value>
+  </data>
+  <data name="LibrarySpec_ItemDescription_Ignore_explicit_peak_boundaries" xml:space="preserve">
+	  <value>Ignore explicit peak boundaries</value>
+  </data>
+  <data name="ToolService_ImportProperties_Import_Properties_from_external_tool" xml:space="preserve">
+	  <value>Import Properties from external tool</value>
+  </data>
+  <data name="ToolService_DeleteElementsNow_Unsupported_element__0_" xml:space="preserve">
+	  <value>Unsupported element {0}</value>
+  </data>
+  <data name="ToolService_GetSelectedElementRefNow_Unsupported_element_type___0__" xml:space="preserve">
+	  <value>Unsupported element type '{0}'</value>
+  </data>
+  <data name="SciexOsMethodExporter_SciexOsMethodExporter_Invalid_instrument_type_for_SCIEX_OS_method_export_" xml:space="preserve">
+      <value>Invalid instrument type for SCIEX OS method export.</value>
+  </data>
+  <data name="PeptideSettingsUI_ShowFilterMidasDlg_Failed_loading_MIDAS_library__0__" xml:space="preserve">
+      <value>Failed loading MIDAS library {0}.</value>
+  </data>
+  <data name="StaticMod_FormatFormulaOrMass___0__Da_" xml:space="preserve">
+	  <value>({0} Da)</value>
+	  <comment>"Da" stands for "Daltons". Example: (+57.2 Da)</comment>
   </data>
 </root>

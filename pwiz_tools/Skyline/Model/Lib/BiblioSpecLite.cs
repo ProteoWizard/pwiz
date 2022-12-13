@@ -96,6 +96,11 @@ namespace pwiz.Skyline.Model.Lib
             get { return RANK_IDS; }
         }
 
+        public override string GetLibraryTypeName()
+        {
+            return Resources.BiblioSpecLiteSpec_FILTER_BLIB_BiblioSpec_Library;
+        }
+
         #region Implementation of IXmlSerializable
         
         /// <summary>
@@ -305,44 +310,86 @@ namespace pwiz.Skyline.Model.Lib
                     {
                         // ReSharper disable LocalizableElement
 
-                        // Query for the source files.  
-                        // The number of matching entries in the RefSpectra is "BestSpectra".
-                        // The number of entries in the RetentionTimes table is "MatchedSpectra".
-                        // Each of these numbers is subdivided by score type.
-                        // Also, select "ssf.*" because not all tables have a column "cutoffScore".
+                        // Query for the source files detail information.
+                        // If any of the first 3 columns are missing an exception is thrown,
+                        // and only the filenames get listed.
+                        // 1. The number of matching entries in the RefSpectra is "BestSpectra".
+                        // 2. The number of entries in the RetentionTimes table is "MatchedSpectra".
+                        // 3. The score type for the entry is joined from "ScoreTypes".
+                        // Also, select "ssf.*" because not all tables have a column "cutoffScore" or "idFileName".
+                        var cols = new List<string>();
+                        cols.Add("ssf.fileName");
+                        if (SqliteOperations.ColumnExists(_sqliteConnection.Connection, "SpectrumSourceFiles", "idFileName"))
+                            cols.Add("ssf.idFileName");
+                        if (SqliteOperations.ColumnExists(_sqliteConnection.Connection, "SpectrumSourceFiles", "cutoffScore"))
+                            cols.Add("ssf.cutoffScore");
+                        cols.Add("st.scoreType");
+                        if (SqliteOperations.ColumnExists(_sqliteConnection.Connection, "ScoreTypes", "probabilityType"))
+                            cols.Add("st.probabilityType");
+                        cols.Add("rs.BestSpectra");
+                        cols.Add("rs.MatchedSpectra");
+
                         select.CommandText =
-                            @"SELECT ssf.fileName, st.scoreType, rs.BestSpectra, rs.MatchedSpectra, ssf.*
-                            FROM SpectrumSourceFiles ssf 
+                            "SELECT " + string.Join(", ", cols) + @"
+                            FROM SpectrumSourceFiles ssf
                             LEFT JOIN (SELECT rsInner.fileId, rsInner.scoreType AS scoreType, COUNT(DISTINCT rsInner.id) AS BestSpectra, (SELECT COUNT(*) AS MatchedSpectra FROM RetentionTimes RT WHERE RT.SpectrumSourceId = rsInner.fileId) AS MatchedSpectra 
                                 FROM RefSpectra rsInner GROUP BY rsInner.fileId, rsInner.scoreType) RS ON RS.fileId = ssf.id
                             LEFT JOIN ScoreTypes st ON rs.scoreType = st.id";
                         // ReSharper restore LocalizableElement
                         using (SQLiteDataReader reader = select.ExecuteReader())
                         {
-                            int icolCutoffScore = GetColumnIndex(reader, @"cutoffScore");
-                            int icolIdFileName = GetColumnIndex(reader, @"idFileName");
+                            int icolFileName = GetColumnIndex(reader, @"fileName");
+                            int icolIdFileName = GetColumnIndex(reader, @"idFileName");           // May be -1
+                            int icolCutoffScore = GetColumnIndex(reader, @"cutoffScore");         // May be -1
+                            int icolBestSpectra = GetColumnIndex(reader, @"BestSpectra");         // May be missing causing exception
+                            int icolMatchedSpectra = GetColumnIndex(reader, @"MatchedSpectra");   // May be missing
+                            int icolScoreType = GetColumnIndex(reader, @"scoreType");             // May be missing
+                            int icolProbabilityType = GetColumnIndex(reader, @"probabilityType"); // May be missing
+                            var seenScoreTypes = new HashSet<ScoreType>();
                             while (reader.Read())
                             {
-                                string filename = reader.GetString(0);
-                                string idFilename = icolIdFileName > 0 && !reader.IsDBNull(icolIdFileName) ? reader.GetString(icolIdFileName) : null;
+                                string filename = reader.GetString(icolFileName);
+                                string idFilename = null;
+                                if (icolIdFileName > 0 && !reader.IsDBNull(icolIdFileName))
+                                {
+                                    idFilename = reader.GetString(icolIdFileName);
+                                }
                                 SpectrumSourceFileDetails sourceFileDetails;
                                 if (!detailsByFileName.TryGetValue(filename, out sourceFileDetails))
                                 {
                                     sourceFileDetails = new SpectrumSourceFileDetails(filename, idFilename);
                                     detailsByFileName.Add(filename, sourceFileDetails);
                                 }
-                                sourceFileDetails.BestSpectrum += Convert.ToInt32(reader.GetValue(2));
-                                sourceFileDetails.MatchedSpectrum += Convert.ToInt32(reader.GetValue(3));
+                                if (!reader.IsDBNull(icolBestSpectra))
+                                    sourceFileDetails.BestSpectrum += Convert.ToInt32(reader.GetValue(icolBestSpectra));
+                                if (!reader.IsDBNull(icolMatchedSpectra))
+                                    sourceFileDetails.MatchedSpectrum += Convert.ToInt32(reader.GetValue(icolMatchedSpectra));
+                                var scoreName = !reader.IsDBNull(icolScoreType) ? reader.GetString(icolScoreType) : string.Empty;
+                                var probabilityType = !reader.IsDBNull(icolProbabilityType) ? reader.GetString(icolProbabilityType) : null;
+                                var cutoffScore = icolCutoffScore >= 0 && !reader.IsDBNull(icolCutoffScore)
+                                    ? Convert.ToDouble(reader.GetValue(icolCutoffScore))
+                                    : (double?)null;
 
-                                string scoreName = reader.IsDBNull(1) ? null : reader.GetString(1);
-                                if (null != scoreName)
+                                if (!string.IsNullOrEmpty(scoreName))
                                 {
-                                    double? cutoffScore = null;
-                                    if (icolCutoffScore >= 0 && !reader.IsDBNull(icolCutoffScore))
+                                    var scoreType = new ScoreType(scoreName, probabilityType);
+                                    sourceFileDetails.ScoreThresholds[scoreType] = cutoffScore;
+                                    seenScoreTypes.Add(scoreType);
+                                }
+                            }
+
+                            // Cleanup cut-off scores without a score type
+                            // CONSIDER: We should add a score type column to the SpectrumSourceFiles table
+                            if (seenScoreTypes.Count == 1)
+                            {
+                                foreach (var details in detailsByFileName.Values.Where(d => d.ScoreThresholds.Count == 1))
+                                {
+                                    var kvp = details.ScoreThresholds.First();
+                                    if (Equals(kvp.Key.NameInvariant, string.Empty))
                                     {
-                                        cutoffScore = Convert.ToDouble(reader.GetValue(icolCutoffScore));
+                                        details.ScoreThresholds[seenScoreTypes.First()] = kvp.Value;
+                                        details.ScoreThresholds.Remove(kvp.Key);
                                     }
-                                    sourceFileDetails.CutoffScores[scoreName] = cutoffScore;
                                 }
                             }
                         }

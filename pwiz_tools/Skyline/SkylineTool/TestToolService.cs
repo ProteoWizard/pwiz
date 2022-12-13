@@ -19,6 +19,7 @@
 
 using System.Diagnostics;
 
+#pragma warning disable CS0612 // "obsolete"
 namespace SkylineTool
 {
     public interface ITestTool

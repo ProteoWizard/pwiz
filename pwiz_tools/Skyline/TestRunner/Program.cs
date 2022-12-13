@@ -897,12 +897,13 @@ namespace TestRunner
                     }
                 }, TaskCreationOptions.LongRunning));
 
-                Console.WriteLine("Running {0}{1} tests{2}{3} in parallel with {4} workers...\r\n",
+                Console.WriteLine("Running {0}{1} tests{2}{3} in parallel with {4} workers...",
                     testList.Count,
                     testList.Count < unfilteredTestList.Count ? "/" + unfilteredTestList.Count : "",
                     (loop <= 0) ? " forever" : (loop == 1) ? "" : " in " + loop + " loops",
                     "", /*(repeat <= 1) ? "" : ", repeated " + repeat + " times each per language",*/
                     workerCount);
+                Console.WriteLine("(If prompted to \"Allow TestRunner to communicate on these networks\", be sure to check BOTH public and private options.)\r\n");
 
                 // main thread listens for workers to connect
                 while (!cts.IsCancellationRequested)

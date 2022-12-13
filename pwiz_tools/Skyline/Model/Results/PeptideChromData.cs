@@ -155,21 +155,15 @@ namespace pwiz.Skyline.Model.Results
 
         public void PickChromatogramPeaks()
         {
-            var explicitPeakBounds = _settings.GetExplicitPeakBounds(NodePep, FileInfo.FilePath);
-            var peakBounds = explicitPeakBounds == null
-                ? null
-                : new PeakBounds(explicitPeakBounds.StartTime, explicitPeakBounds.EndTime);
-            PickChromatogramPeaks(peakBounds);
-        }
-
-        public void PickChromatogramPeaks(PeakBounds peakBounds)
-        {
             ExplicitPeakBoundsFunc explicitPeakBoundsFunc = null;
-            if (peakBounds != null)
+            var explicitPeakBounds = _settings.GetExplicitPeakBounds(NodePep, FileInfo.FilePath);
+            if (explicitPeakBounds != null)
             {
-                explicitPeakBoundsFunc = (transitionGroup, transition) => peakBounds;
+                var peakBounds = explicitPeakBounds.IsEmpty
+                    ? null
+                    : new PeakBounds(explicitPeakBounds.StartTime, explicitPeakBounds.EndTime);
+                explicitPeakBoundsFunc = (transitionGroup, transition)=>peakBounds;
             }
-
             PickChromatogramPeaks(explicitPeakBoundsFunc);
         }
 

@@ -1,7 +1,7 @@
 format-version: 1.2
-data-version: 4.1.99
-date: 24:08:2022 10:06
-saved-by: Matt Chambers
+data-version: 4.1.108
+date: 26:10:2022 11:38
+saved-by: Joshua Klein
 auto-generated-by: OBO-Edit 2.3.1
 import: http://purl.obolibrary.org/obo/pato.obo
 import: http://purl.obolibrary.org/obo/stato.owl
@@ -6315,6 +6315,7 @@ id: MS:1000894
 name: retention time
 def: "A time interval from the start of chromatography when an analyte exits a chromatographic column." [PSI:MS]
 is_a: MS:1003050 ! peptidoform attribute
+is_a: MS:1003295 ! summary statistics of replicates
 relationship: has_units UO:0000010 ! second
 relationship: has_units UO:0000031 ! minute
 relationship: has_value_type xsd:float ! The allowed value-type for this CV term
@@ -6333,6 +6334,7 @@ id: MS:1000896
 name: normalized retention time
 def: "A time interval from the start of chromatography when an analyte exits a standardized reference chromatographic column and instrumental setup." [PSI:MS]
 is_a: MS:1000894 ! retention time
+is_a: MS:1003295 ! summary statistics of replicates
 relationship: has_units UO:0000010 ! second
 relationship: has_units UO:0000031 ! minute
 relationship: has_value_type xsd:float ! The allowed value-type for this CV term
@@ -15355,6 +15357,7 @@ id: MS:1002345
 name: PSM-level attribute
 def: "Attribute of a single peptide-spectrum match." [PSI:PI]
 is_a: MS:1002694 ! single identification result attribute
+relationship: part_of MS:1003301 ! peptide-spectrum match
 
 [Term]
 id: MS:1002346
@@ -15781,6 +15784,8 @@ id: MS:1002404
 name: count of identified proteins
 def: "The number of proteins that have been identified, which must match the number of groups that pass the threshold in the file." [PSI:PI]
 is_a: MS:1002704 ! protein-level result list attribute
+is_a: MS:4000003 ! single value
+relationship: has_metric_category MS:4000008 ! ID based metric
 relationship: has_value_type xsd:int ! The allowed value-type for this CV term
 
 [Term]
@@ -21091,6 +21096,7 @@ id: MS:1003208
 name: experimental precursor monoisotopic m/z
 def: "The measured or inferred m/z (as reported by the mass spectrometer acquisition software or post-processing software) of the monoisotopic peak of the precursor ion based on the MSn-1 spectrum." [PSI:MS]
 is_a: MS:1000455 ! ion selection attribute
+is_a: MS:1003295 ! summary statistics of replicates
 relationship: has_units MS:1000040 ! m/z
 relationship: has_value_type xsd:float ! The allowed value-type for this CV term
 
@@ -21099,6 +21105,7 @@ id: MS:1003209
 name: monoisotopic m/z deviation
 def: "The measured monoisotopic m/z (as reported by the mass spectrometer acquisition software or post-processing software) minus the theoretical monoisotopic m/z of the analyte assigned to the spectrum." [PSI:MS]
 is_a: MS:1003078 ! interpreted spectrum attribute
+is_a: MS:1003295 ! summary statistics of replicates
 relationship: has_units MS:1000040 ! m/z
 relationship: has_units UO:0000169 ! parts per million
 relationship: has_value_type xsd:float ! The allowed value-type for this CV term
@@ -21108,6 +21115,7 @@ id: MS:1003210
 name: average m/z deviation
 def: "The measured average m/z (as reported by the mass spectrometer acquisition software or post-processing software) minus the theoretical average m/z of the analyte assigned to the spectrum." [PSI:MS]
 is_a: MS:1003078 ! interpreted spectrum attribute
+is_a: MS:1003295 ! summary statistics of replicates
 relationship: has_units MS:1000040 ! m/z
 relationship: has_units UO:0000169 ! parts per million
 relationship: has_value_type xsd:float ! The allowed value-type for this CV term
@@ -21361,6 +21369,8 @@ id: MS:1003250
 name: count of identified peptidoforms
 def: "The number of peptidoforms that pass the threshold to be considered identified with sufficient confidence." [PSI:PI]
 is_a: MS:1002702 ! peptide sequence-level result list attribute
+is_a: MS:4000003 ! single value
+relationship: has_metric_category MS:4000008 ! ID based metric
 relationship: has_value_type xsd:int ! The allowed value-type for this CV term
 
 [Term]
@@ -21368,7 +21378,9 @@ id: MS:1003251
 name: count of identified spectra
 def: "The number of spectra that pass the threshold to be considered identified with sufficient confidence." [PSI:PI]
 is_a: MS:1002700 ! PSM-level result list attribute
+is_a: MS:4000003 ! single value
 relationship: has_value_type xsd:int ! The allowed value-type for this CV term
+relationship: has_metric_category MS:4000008 ! ID based metric
 
 [Term]
 id: MS:1003252
@@ -21524,12 +21536,19 @@ id: MS:1003275
 name: other attribute name
 def: "A user-provided name for a user-defined value describing a trait not covered by an existing controlled vocabulary term. This term should be used sparingly, preferring existing terms that describe the specific concept. Should be used with MS:1003276 to provide the attribute's value" [PSI:MS]
 is_a: MS:1003078 ! interpreted spectrum attribute
+relationship: has_value_type xsd:string ! The allowed value-type for this CV term
 
 [Term]
 id: MS:1003276
 name: other attribute value
 def: "A user-provided value for a user-defined name describing a trait not covered by an existing controlled vocabulary term. This term should be used sparingly, preferring existing terms that describe the specific concept. Should be used with MS:1003275 to provide the attribute's name" [PSI:MS]
 is_a: MS:1003078 ! interpreted spectrum attribute
+relationship: has_value_type xsd:string ! The allowed value-type for this CV term
+relationship: has_value_type xsd:integer ! The allowed value-type for this CV term
+relationship: has_value_type xsd:float ! The allowed value-type for this CV term
+relationship: has_value_type MS:1002711 ! The allowed value-type for this CV term
+relationship: has_value_type MS:1002712 ! The allowed value-type for this CV term
+relationship: has_value_type MS:1002713 ! The allowed value-type for this CV term
 
 [Term]
 id: MS:1003277
@@ -21542,7 +21561,6 @@ id: MS:1003278
 name: m/z variability of peak
 def: "A measure of the statistical variability of the m/z value of this peak, usually estimated from replicate spectra of the same analyte." [PSI:PI]
 is_a: MS:1003254 ! peak attribute
-relationship: has_value_type xsd:float ! The allowed value-type for this CV term
 
 [Term]
 id: MS:1003279
@@ -21556,7 +21574,6 @@ id: MS:1003280
 name: intensity variability of peak
 def: "A measure of the statistical variability of the intensity of this peak, usually estimated from replicate spectra of the same analyte." [PSI:PI]
 is_a: MS:1003254 ! peak attribute
-relationship: has_value_type xsd:float ! The allowed value-type for this CV term
 
 [Term]
 id: MS:1003281
@@ -21582,6 +21599,286 @@ name: Bruker TSF nativeID format, combined spectra
 def: "Bruker TSF comma separated list of spectra that have been combined prior to searching or interpretation." [PSI:PI]
 is_a: MS:1002646 ! native spectrum identifier format, combined spectra
 relationship: has_value_type xsd:string ! The allowed value-type for this CV term
+
+
+[Term]
+id: MS:1003285
+name: standard deviation of m/z values of peak among replicates
+def: "The standard deviation of the m/z values of this peak among the replicate spectra of the same analyte." [PSI:PI]
+is_a: MS:1003278 ! m/z variability of peak
+relationship: has_value_type xsd:float ! The allowed value-type for this CV term
+
+[Term]
+id: MS:1003286
+name: coefficient of variation of intensity of peak among replicates
+def: "The coefficient of variation (standard deviation divided by mean) of the intensities of this peak among the replicate spectra of the same analyte." [PSI:PI]
+is_a: MS:1003280 ! intensity variability of peak
+relationship: has_value_type xsd:float ! The allowed value-type for this CV term
+
+[Term]
+id: MS:1003287
+name: standard deviation of intensity of peak among replicates
+def: "The standard deviation of the intensities of this peak among the replicate spectra of the same analyte." [PSI:PI]
+is_a: MS:1003280 ! intensity variability of peak
+relationship: has_value_type xsd:float ! The allowed value-type for this CV term
+
+[Term]
+id: MS:1003288
+name: number of unassigned peaks
+def: "The number of unassigned peaks in the spectrum." [NIST]
+is_a: MS:1003078 ! interpreted spectrum attribute
+relationship: has_value_type xsd:integer ! The allowed value-type for this CV term
+
+[Term]
+id: MS:1003289
+name: intensity of highest unassigned peak
+def: "The intensity of the highest unassigned peak in the spectrum." [NIST]
+is_a: MS:1003078 ! interpreted spectrum attribute
+relationship: has_value_type xsd:integer ! The allowed value-type for this CV term
+
+[Term]
+id: MS:1003290
+name: number of unassigned peaks among top 20 peaks
+def: "The number of unassigned peaks among the most intense 20 peaks in the spectrum." [NIST]
+is_a: MS:1003078 ! interpreted spectrum attribute
+relationship: has_value_type xsd:integer ! The allowed value-type for this CV term
+
+[Term]
+id: MS:1003291
+name: Luciphor deltaScore
+def: "Luciphor phosphosite localization score" [PSI:MS]
+is_a: MS:1001968 ! PTM localization PSM-level statistic
+relationship: has_regexp MS:1002505 ! regular expression for modification localization scoring
+
+[Term]
+id: MS:1003292
+name: TSQ Altis Plus
+def: "Thermo Scientific TSQ Altis Plus Triple Quadrupole MS." [PSI:PI]
+is_a: MS:1000494 ! Thermo Scientific instrument model
+
+[Term]
+id: MS:1003293
+name: ZenoTOF 7600
+def: "SCIEX ZenoTOF 7600." [PSI:MS]
+is_a: MS:1000121 ! SCIEX instrument model
+
+[Term]
+id: MS:1003294
+name: electron activated dissociation
+def: "A process to fragment ions in a high intensity electron beam which results in a dissociation of various analytes ranging from singly charged small molecules to multiply protonated proteins." [PSI:MS]
+synonym: "EAD" EXACT []
+is_a: MS:1000250 ! electron capture dissociation
+
+[Term]
+id: MS:1003295
+name: summary statistics of replicates
+def: "Summary statistics of an attribute among all replicates that are aggregated to generate this spectrum." [PSI:PI]
+is_a: MS:1003064 ! spectrum aggregation attribute
+
+[Term]
+id: MS:1003296
+name: number of replicates spectra used from source
+def: "The number of replicate spectra used during the aggregation process that originate from a specified source (e.g. a file, a dataset, a sample type, etc.). This term must appear in a group alongside a source term, which is one of: 'ProteomeXchange accession number', 'constituent spectrum file', or 'sample name'" [PSI:PI]
+is_a: MS:1003064 ! spectrum aggregation attribute
+relationship: has_value_type xsd:integer ! The allowed value-type for this CV term
+
+[Term]
+id: MS:1003297
+name: contributing replicate spectrum
+def: "A cross reference to another spectrum that is a replicate spectrum of the same analyte and contributes to the generation of this aggregated spectrum." [PSI:PI]
+is_a: MS:1003257 ! library spectrum cross reference
+
+[Term]
+id: MS:1003298
+name: contributing replicate spectrum keys
+def: "A list of cross references to contributing replicate spectra in the same library, in the form of library spectrum keys." [PSI:PI]
+relationship: part_of MS:1003297 ! contributing replicate spectrum
+
+[Term]
+id: MS:1003299
+name: contributing replicate spectrum USI
+def: "A list of cross references to contributing replicate spectra, in the form of PSI Universal Spectrum Identifiers." [PSI:PI]
+relationship: part_of MS:1003297 ! contributing replicate spectrum
+
+[Term]
+id: MS:1003300
+name: spectrum match
+def: "Result of a comparison of a spectrum to another spectrum, usually to assess the plausibility that the two spectra originate from the same analyte." [PSI:PI]
+relationship: part_of MS:1001000 ! spectrum interpretation
+
+[Term]
+id: MS:1003301
+name: peptide-spectrum match
+def: "Result of a comparison of an observed fragment ion spectrum to the theoretically predicted fragmentation pattern of a peptide sequence, to assess the plausibility that the observed spectrum originates from the putative peptide sequence." [PSI:PI]
+is_a: MS:1003300 ! spectrum match
+synonym: "PSM" EXACT []
+
+[Term]
+id: MS:1003302
+name: spectrum-spectrum match
+def: "Result of a comparison of an observed fragment ion spectrum to another observed fragment ion spectrum, to assess the plausibility that two spectra originate from the same analyte, e.g., in spectral library searching and spectrum clustering." [PSI:PI]
+is_a: MS:1003300 ! spectrum match
+synonym: "SSM" EXACT []
+
+[Term]
+id: MS:1003303
+name: spectral similarity
+def: "A measure of how similar two spectra are, based on the features of the spectra (the locations and intensities of peaks) alone." [PSI:PI]
+is_a: MS:1002694 ! single identification attribute
+relationship: part_of MS:1003302 ! spectrum-spectrum match
+
+[Term]
+id: MS:1003304
+name: spectral dot product
+def: "The dot (inner) product of two vectorized spectra divided by the product of their vector norms. It ranges from 0 (orthogonal vectors) to 1 (collinear vectors). Also known as cosine similarity." [PSI:PI]
+is_a: MS:1003303 ! spectral similarity
+synonym: "cosine similarity" EXACT []
+relationship: has_value_type xsd:float ! The allowed value-type for this CV term
+
+[Term]
+id: MS:1003305
+name: spectral Euclidean distance
+def: "The Euclidean distance between a pair of points representing two vectorized spectra in high-dimensional space." [PSI:PI]
+is_a: MS:1003303 ! spectral similarity
+relationship: has_value_type xsd:float ! The allowed value-type for this CV term
+
+[Term]
+id: MS:1003306
+name: shared peak count
+def: "The number of peaks with closely matching m/z values that are common to two spectra." [PSI:PI]
+is_a: MS:1003303 ! spectral similarity
+relationship: has_value_type xsd:integer ! The allowed value-type for this CV term
+
+[Term]
+id: MS:1003307
+name: normalized spectral angle
+def: "The angle subtended by two vectorized spectra in high-dimensional space. It is equal to the 1 - (2 * inverse cosine of the spectral dot product) / pi." [https://doi.org/10.1074/mcp.O113.036475]
+is_a: MS:1003303 ! spectral similarity
+relationship: has_value_type xsd:float ! The allowed value-type for this CV term
+
+[Term]
+id: MS:1003308
+name: spectral Pearson correlation
+def: "The Pearson's rho statistic between a pair of points representing two vectorized spectra." [PSI:PI]
+is_a: MS:1003303 ! spectral similarity
+relationship: has_value_type xsd:float ! The allowed value-type for this CV term
+
+
+[Term]
+id: MS:1003309
+name: Goslin
+def: "The Goslin implementations parse common lipid name dialects and normalize them to the recent lipid shorthand nomenclature based on grammars on succinct lipid nomenclature." [PMID:32589019, https://github.com/lifs-tools/goslin]
+is_a: MS:1001457 ! data processing software
+is_a: MS:1002414 ! postprocessing software
+is_a: MS:1002964 ! lipidomics analysis software
+
+[Term]
+id: MS:1003310
+name: Lipid shorthand identification confidence level
+def: "Identification confidence levels based on the updated lipid shorthand nomenclature. The value slot can have the values 'Category', 'Class', 'Species', 'Phosphate-position', 'Molecular species', 'sn-position', 'DBE position', 'Structure defined', 'Full structure', 'Complete structure'." [PMID:33037133]
+is_a: MS:1002895 ! small molecule identification attribute
+
+[Term]
+id: MS:1003311
+name: Lipid empirical score
+def: "The lipid empirical score is a point-based lipid class-specific scoring system based on MS and other evidence sources as defined by the Lipidomics Standards Initiative (LSI). The score has a numeric value between 0 and 100. Score values are lipid class-specific and are therefore not immediately comparable between lipid classes." []
+is_a: MS:1002888 ! small molecule confidence measure
+relationship: has_value_type xsd:float ! The allowed value-type for this CV term
+
+[Term]
+id: MS:1003312
+name: Lipid shorthand identification confidence - Category
+def: "Lipid shorthand identification confidence level 'Category'." [PMID:33037133]
+is_a: MS:1003310 ! Lipid shorthand identification confidence level
+
+[Term]
+id: MS:1003313
+name: Lipid shorthand identification confidence - Class
+def: "Lipid shorthand identification confidence level 'Class'." [PMID:33037133]
+is_a: MS:1003310 ! Lipid shorthand identification confidence level
+
+[Term]
+id: MS:1003314
+name: Lipid shorthand identification confidence - Species
+def: "Lipid shorthand identification confidence level 'Species'." [PMID:33037133]
+is_a: MS:1003310 ! Lipid shorthand identification confidence level
+
+[Term]
+id: MS:1003315
+name: Lipid shorthand identification confidence - Phosphate-position
+def: "Lipid shorthand identification confidence level 'Phosphate-position'." [PMID:33037133]
+is_a: MS:1003310 ! Lipid shorthand identification confidence level
+
+[Term]
+id: MS:1003316
+name: Lipid shorthand identification confidence - Molecular species
+def: "Lipid shorthand identification confidence level 'Molecular species'." [PMID:33037133]
+is_a: MS:1003310 ! Lipid shorthand identification confidence level
+
+[Term]
+id: MS:1003317
+name: Lipid shorthand identification confidence - sn-position
+def: "Lipid shorthand identification confidence level 'sn-position'." [PMID:33037133]
+is_a: MS:1003310 ! Lipid shorthand identification confidence level
+
+[Term]
+id: MS:1003318
+name: Lipid shorthand identification confidence - DBE pos
+def: "Lipid shorthand identification confidence level 'DBE pos'." [PMID:33037133]
+is_a: MS:1003310 ! Lipid shorthand identification confidence level
+
+[Term]
+id: MS:1003319
+name: Lipid shorthand identification confidence - Structure defined
+def: "Lipid shorthand identification confidence level 'Structure defined'." [PMID:33037133]
+is_a: MS:1003310 ! Lipid shorthand identification confidence level
+
+[Term]
+id: MS:1003320
+name: spectrum cluster size
+def: "The number of spectra in a spectrum cluster." [PSI:PI]
+is_a: MS:1003266 ! spectrum cluster attribute
+relationship: has_value_type xsd:integer
+
+[Term]
+id: MS:1003321
+name: summary statistics of clustered spectra
+def: "Summary statistics of an attribute among all spectra of a spectrum cluster." [PSI:PI]
+is_a: MS:1003266 ! spectrum cluster attribute
+
+[Term]
+id: MS:1003322
+name: spectrum cluster best representative
+def: "Cross reference to the spectrum that is considered the most representative among spectra in a cluster, either as a library spectrum key if the best representative is in the same library, or a universal spectrum identifier if it is not." [PSI:PI]
+is_a: MS:1003266 ! spectrum cluster attribute
+relationship: has_value_type xsd:string
+
+[Term]
+id: MS:1003323
+name: spectrum cluster consensus spectrum
+def: "Cross reference to a consensus spectrum that is constructed from aggregating spectra in a cluster, either as a library spectrum key if the consensus spectrum is in the same library, or a universal spectrum identifier if it is not." [PSI:PI]
+is_a: MS:1003266 ! spectrum cluster attribute
+relationship: has_value_type xsd:string
+
+[Term]
+id: MS:1003324
+name: spectral dot product to aggregated spectrum
+def: "Spectral similarity measured by the spectral dot product between a replicate to its corresponding aggregated (e.g. consensus) spectrum." [PSI:PI]
+is_a: MS:1003295 ! summary statistics of replicates
+is_a: MS:1003304 ! spectral dot product
+relationship: has_value_type xsd:float
+
+[Term]
+id: MS:1003325
+name: Lipid shorthand identification confidence - Full structure
+def: "Lipid shorthand identification confidence level 'Full structure'." [PMID:33037133]
+is_a: MS:1003310 ! Lipid shorthand identification confidence level
+
+[Term]
+id: MS:1003326
+name: Lipid shorthand identification confidence - Complete structure
+def: "Lipid shorthand identification confidence level 'Complete structure'." [PMID:33037133]
+is_a: MS:1003310 ! Lipid shorthand identification confidence level
 
 [Term]
 id: MS:4000000
@@ -22260,6 +22557,102 @@ relationship: has_optional_column MS:4000085 ! fifth principal component
 relationship: has_optional_column MS:4000087 ! mzQC plot label
 relationship: has_optional_column MS:4000088 ! batch label
 relationship: has_optional_column MS:4000089 ! injection sequence label
+
+[Term]
+id: MS:4000095
+name: slowest frequency for MS level 1 collection
+def: "The slowest acquisition speed with which precursor MS scans were collected. Scan acquisition frequency can be used to gauge the suitability of used instrument settings for the sample content used." [PSI:MS]
+is_a: MS:4000003 ! single value
+relationship: has_metric_category MS:4000009 ! ID free metric
+relationship: has_metric_category MS:4000012 ! single run based metric
+relationship: has_units UO:0000106 ! hertz
+relationship: has_value_type xsd:float ! The allowed value-type for this CV term
+relationship: has_metric_category MS:4000021 ! MS1 metric
+
+[Term]
+id: MS:4000096
+name: slowest frequency for MS level 2 collection
+def: "The slowest acquisition speed with which product MS scans were collected. Scan acquisition frequency can be used to gauge the suitability of used instrument settings for the sample content used." [PSI:MS]
+is_a: MS:4000003 ! single value
+relationship: has_metric_category MS:4000009 ! ID free metric
+relationship: has_metric_category MS:4000012 ! single run based metric
+relationship: has_units UO:0000106 ! hertz
+relationship: has_value_type xsd:float ! The allowed value-type for this CV term
+relationship: has_metric_category MS:4000022 ! MS2 metric
+
+[Term]
+id: MS:4000097
+name: MS1 signal jump (10x) count
+def: "The number of times where MS1 TIC increased more than 10-fold between adjacent MS1 scans. An unusual high count of signal jumps or falls can indicate ESI stability issues." [PSI:MS]
+is_a: MS:4000003 ! single value
+relationship: has_metric_category MS:4000009 ! ID free metric
+relationship: has_metric_category MS:4000021 ! MS1 metric
+relationship: has_units UO:0000189 ! count unit
+relationship: has_value_type xsd:integer ! The allowed value-type for this CV term
+synonym: "IS-1A"  RELATED []
+
+[Term]
+id: MS:4000098
+name: MS1 signal fall (10x) count
+def: "The number of times where MS1 TIC decreased more than 10-fold between adjacent MS1 scans. An unusual high count of signal jumps or falls can indicate ESI stability issues." [PSI:MS]
+is_a: MS:4000003 ! single value
+relationship: has_metric_category MS:4000009 ! ID free metric
+relationship: has_metric_category MS:4000021 ! MS1 metric
+relationship: has_units UO:0000189 ! count unit
+relationship: has_value_type xsd:integer ! The allowed value-type for this CV term
+synonym: "IS-1B"  RELATED []
+
+[Term]
+id: MS:4000099
+name: number of empty MS1 scans
+def: "Number of MS1 scans where the scans' peaks intensity sums to 0 (i.e. no peaks or only 0-intensity peaks)." [PSI:MS]
+is_a: MS:4000003 ! single value
+relationship: has_metric_category MS:4000009 ! ID free metric
+relationship: has_metric_category MS:4000012 ! single run based metric
+relationship: has_metric_category MS:4000021 ! MS1 metric
+relationship: has_units UO:0000189 ! count unit
+relationship: has_value_type xsd:integer ! The allowed value-type for this CV term
+
+[Term]
+id: MS:4000100
+name: number of empty MS2 scans
+def: "Number of MS2 scans where the scans' peaks intensity sums to 0 (i.e. no peaks or only 0-intensity peaks)." [PSI:MS]
+is_a: MS:4000003 ! single value
+relationship: has_metric_category MS:4000009 ! ID free metric
+relationship: has_metric_category MS:4000012 ! single run based metric
+relationship: has_metric_category MS:4000022 ! MS2 metric
+relationship: has_units UO:0000189 ! count unit
+relationship: has_value_type xsd:integer ! The allowed value-type for this CV term
+
+[Term]
+id: MS:4000101
+name: number of empty MS3 scans
+def: "Number of MS3 scans where the scans' peaks intensity sums to 0 (i.e. no peaks or only 0-intensity peaks)." [PSI:MS]
+is_a: MS:4000003 ! single value
+relationship: has_metric_category MS:4000009 ! ID free metric
+relationship: has_metric_category MS:4000012 ! single run based metric
+relationship: has_units UO:0000189 ! count unit
+relationship: has_value_type xsd:integer ! The allowed value-type for this CV term
+
+[Term]
+id: MS:4000102
+name: number of detected quantification data points
+def: "The number of datapoints detected for quantification purposes within the run. These datapoints may be for example XIC profiles, isotopic pattern areas, or reporter ions (see MS:1001805). The used type should be noted in the meta data or analysis methods section of the recording file for the respective run." [PSI:MS]
+is_a: MS:4000003 ! single value
+relationship: has_metric_category MS:4000009 ! ID free metric
+relationship: has_metric_category MS:4000012 ! single run based metric
+relationship: has_value_type xsd:int ! The allowed value-type for this CV term
+relationship: has_units UO:0000189 ! count unit
+
+[Term]
+id: MS:4000103
+name: number of identified quantification data points
+def: "The number of identified datapoints for quantification purposes withing the run after user defined acceptance criteria are applied. These datapoints may be for example XIC profiles, isotopic pattern areas, or reporter ions (see MS:1001805). The used type should be noted in the meta data or analysis methods section of the recording file for the respective run. In case of multiple acceptance criteria (FDR) available in proteomics, PSM-level FDR should be used for better comparability." [PSI:MS]
+is_a: MS:4000003 ! single value
+relationship: has_metric_category MS:4000008 ! ID based metric
+relationship: has_metric_category MS:4000012 ! single run based metric
+relationship: has_value_type xsd:int ! The allowed value-type for this CV term
+relationship: has_units UO:0000189 ! count unit
 
 [Term]
 id: PEFF:0000001

@@ -227,6 +227,47 @@ namespace pwiz.Skyline.Model.Crosslinking
             return new CrosslinkStructure(newLinkedPeptides, newExplicitModsList, newCrosslinks);
         }
 
+        public CrosslinkStructure ChangeGlobalMods(SrmSettings settingsNew)
+        {
+            if (IsEmpty)
+            {
+                return this;
+            }
+            var crosslinkModifications = settingsNew.PeptideSettings.Modifications.StaticModifications
+                .Where(mod => mod.IsCrosslinker).ToDictionary(mod => mod.Name);
+            var newCrosslinks = new List<Crosslink>();
+            foreach (var crosslink in Crosslinks)
+            {
+                if (!crosslinkModifications.TryGetValue(crosslink.Crosslinker.Name, out var newCrosslinker))
+                {
+                    continue;
+                }
+
+                if (crosslink.Crosslinker.Equivalent(newCrosslinker))
+                {
+                    newCrosslinks.Add(crosslink);
+                }
+                else
+                {
+                    newCrosslinks.Add(new Crosslink(newCrosslinker, crosslink.Sites));
+                }
+            }
+
+            var newExplicitMods = new List<ExplicitMods>();
+            foreach (var explicitMods in LinkedExplicitMods)
+            {
+                newExplicitMods.Add(explicitMods.ChangeGlobalMods(settingsNew));
+            }
+
+            if (ArrayUtil.ReferencesEqual(newCrosslinks, Crosslinks) &&
+                ArrayUtil.ReferencesEqual(newExplicitMods, LinkedExplicitMods))
+            {
+                return this;
+            }
+
+            return new CrosslinkStructure(LinkedPeptides, newExplicitMods, newCrosslinks).RemoveDisconnectedPeptides();
+        }
+
         public static ExplicitMods MakeEmptyExplicitMods(Peptide peptide)
         {
             return new ExplicitMods(peptide, ImmutableList.Empty<ExplicitMod>(), null);
