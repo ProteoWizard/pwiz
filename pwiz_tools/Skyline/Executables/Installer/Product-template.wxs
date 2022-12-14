@@ -601,91 +601,82 @@
       </Component>
     </ComponentGroup>
     <ComponentGroup Id="Method_Agilent_MH12_files" Directory="Method_Agilent_MH12_directory">
-       <Component Id="Method_Agilent_MH12_Agilent.MSDrivers.LCQuadrupole.CommonUtilities.dll">
+      <Component Id="Method_Agilent_MH12_Agilent.MSDrivers.LCQuadrupole.CommonUtilities.dll">
          <File Source="$(var.Skyline.TargetDir)/Method\Agilent\MH12\Agilent.MSDrivers.LCQuadrupole.CommonUtilities.dll" KeyPath="yes"/>
       </Component>
-       <Component Id="Method_Agilent_MH12_Agilent.MSDrivers.LCQuadrupole.DataInterfaces.dll">
+      <Component Id="Method_Agilent_MH12_Agilent.MSDrivers.LCQuadrupole.DataInterfaces.dll">
          <File Source="$(var.Skyline.TargetDir)/Method\Agilent\MH12\Agilent.MSDrivers.LCQuadrupole.DataInterfaces.dll" KeyPath="yes"/>
       </Component>
-       <Component Id="Method_Agilent_MH12_Agilent.MSDrivers.LCQuadrupole.ESW.dll">
+      <Component Id="Method_Agilent_MH12_Agilent.MSDrivers.LCQuadrupole.ESW.dll">
          <File Source="$(var.Skyline.TargetDir)/Method\Agilent\MH12\Agilent.MSDrivers.LCQuadrupole.ESW.dll" KeyPath="yes"/>
       </Component>
-       <Component Id="Method_Agilent_MH12_Agilent.MSDrivers.LCQuadrupole.HWConfigResourceMgr.dll">
+      <Component Id="Method_Agilent_MH12_Agilent.MSDrivers.LCQuadrupole.HWConfigResourceMgr.dll">
          <File Source="$(var.Skyline.TargetDir)/Method\Agilent\MH12\Agilent.MSDrivers.LCQuadrupole.HWConfigResourceMgr.dll" KeyPath="yes"/>
       </Component>
-       <Component Id="Method_Agilent_MH12_Agilent.MSDrivers.LCQuadrupole.KeyValueInterfaces.dll">
+      <Component Id="Method_Agilent_MH12_Agilent.MSDrivers.LCQuadrupole.KeyValueInterfaces.dll">
          <File Source="$(var.Skyline.TargetDir)/Method\Agilent\MH12\Agilent.MSDrivers.LCQuadrupole.KeyValueInterfaces.dll" KeyPath="yes"/>
       </Component>
-       <Component Id="Method_Agilent_MH12_Agilent.MSDrivers.LCQuadrupole.MethodCreator.dll">
+      <Component Id="Method_Agilent_MH12_Agilent.MSDrivers.LCQuadrupole.MethodCreator.dll">
          <File Source="$(var.Skyline.TargetDir)/Method\Agilent\MH12\Agilent.MSDrivers.LCQuadrupole.MethodCreator.dll" KeyPath="yes"/>
       </Component>
-       <Component Id="Method_Agilent_MH12_Agilent.MSDrivers.LCQuadrupole.MethodLocaleServiceProvider.dll">
+      <Component Id="Method_Agilent_MH12_Agilent.MSDrivers.LCQuadrupole.MethodLocaleServiceProvider.dll">
          <File Source="$(var.Skyline.TargetDir)/Method\Agilent\MH12\Agilent.MSDrivers.LCQuadrupole.MethodLocaleServiceProvider.dll" KeyPath="yes"/>
       </Component>
-       <Component Id="Method_Agilent_MH12_Agilent.MSDrivers.LCQuadrupole.MethodResourceMgr.dll">
+      <Component Id="Method_Agilent_MH12_Agilent.MSDrivers.LCQuadrupole.MethodResourceMgr.dll">
          <File Source="$(var.Skyline.TargetDir)/Method\Agilent\MH12\Agilent.MSDrivers.LCQuadrupole.MethodResourceMgr.dll" KeyPath="yes"/>
       </Component>
-       <Component Id="Method_Agilent_MH12_Agilent.MSDrivers.LCQuadrupole.MethodValidationModule.dll">
+      <Component Id="Method_Agilent_MH12_Agilent.MSDrivers.LCQuadrupole.MethodValidationModule.dll">
          <File Source="$(var.Skyline.TargetDir)/Method\Agilent\MH12\Agilent.MSDrivers.LCQuadrupole.MethodValidationModule.dll" KeyPath="yes"/>
       </Component>
-       <Component Id="Method_Agilent_MH12_Agilent.MSDrivers.LCQuadrupole.ModelSpecificMethodResourceManager.dll">
+      <Component Id="Method_Agilent_MH12_Agilent.MSDrivers.LCQuadrupole.ModelSpecificMethodResourceManager.dll">
          <File Source="$(var.Skyline.TargetDir)/Method\Agilent\MH12\Agilent.MSDrivers.LCQuadrupole.ModelSpecificMethodResourceManager.dll" KeyPath="yes"/>
       </Component>
-       <Component Id="Method_Agilent_MH12_Agilent.MSDrivers.LCQuadrupole.MRMObjectFactory.dll">
+      <Component Id="Method_Agilent_MH12_Agilent.MSDrivers.LCQuadrupole.MRMObjectFactory.dll">
          <File Source="$(var.Skyline.TargetDir)/Method\Agilent\MH12\Agilent.MSDrivers.LCQuadrupole.MRMObjectFactory.dll" KeyPath="yes"/>
       </Component>
-       <Component Id="Method_Agilent_MH12_Agilent.MSDrivers.LCQuadrupole.MSActualProvider.dll">
+      <Component Id="Method_Agilent_MH12_Agilent.MSDrivers.LCQuadrupole.MSActualProvider.dll">
          <File Source="$(var.Skyline.TargetDir)/Method\Agilent\MH12\Agilent.MSDrivers.LCQuadrupole.MSActualProvider.dll" KeyPath="yes"/>
       </Component>
-       <Component Id="Method_Agilent_MH12_Agilent.MSDrivers.LCQuadrupole.MSDataStorage.dll">
+      <Component Id="Method_Agilent_MH12_Agilent.MSDrivers.LCQuadrupole.MSDataStorage.dll">
          <File Source="$(var.Skyline.TargetDir)/Method\Agilent\MH12\Agilent.MSDrivers.LCQuadrupole.MSDataStorage.dll" KeyPath="yes"/>
       </Component>
-       <Component Id="Method_Agilent_MH12_Agilent.MSDrivers.LCQuadrupole.MSDataStorageIF.dll">
+      <Component Id="Method_Agilent_MH12_Agilent.MSDrivers.LCQuadrupole.MSDataStorageIF.dll">
          <File Source="$(var.Skyline.TargetDir)/Method\Agilent\MH12\Agilent.MSDrivers.LCQuadrupole.MSDataStorageIF.dll" KeyPath="yes"/>
       </Component>
-       <Component Id="Method_Agilent_MH12_Agilent.MSDrivers.LCQuadrupole.MSIF.dll">
+      <Component Id="Method_Agilent_MH12_Agilent.MSDrivers.LCQuadrupole.MSIF.dll">
          <File Source="$(var.Skyline.TargetDir)/Method\Agilent\MH12\Agilent.MSDrivers.LCQuadrupole.MSIF.dll" KeyPath="yes"/>
       </Component>
-       <Component Id="Method_Agilent_MH12_Agilent.MSDrivers.LCQuadrupole.MSMethodDO.dll">
+      <Component Id="Method_Agilent_MH12_Agilent.MSDrivers.LCQuadrupole.MSMethodDO.dll">
          <File Source="$(var.Skyline.TargetDir)/Method\Agilent\MH12\Agilent.MSDrivers.LCQuadrupole.MSMethodDO.dll" KeyPath="yes"/>
       </Component>
-       <Component Id="Method_Agilent_MH12_Agilent.MSDrivers.LCQuadrupole.MSParamProvider.dll">
+      <Component Id="Method_Agilent_MH12_Agilent.MSDrivers.LCQuadrupole.MSParamProvider.dll">
          <File Source="$(var.Skyline.TargetDir)/Method\Agilent\MH12\Agilent.MSDrivers.LCQuadrupole.MSParamProvider.dll" KeyPath="yes"/>
       </Component>
-       <Component Id="Method_Agilent_MH12_Agilent.MSDrivers.LCQuadrupole.MSTrace.dll">
+      <Component Id="Method_Agilent_MH12_Agilent.MSDrivers.LCQuadrupole.MSTrace.dll">
          <File Source="$(var.Skyline.TargetDir)/Method\Agilent\MH12\Agilent.MSDrivers.LCQuadrupole.MSTrace.dll" KeyPath="yes"/>
       </Component>
-       <Component Id="Method_Agilent_MH12_Agilent.MSDrivers.LCQuadrupole.MSTraceDataSystemIF.dll">
+      <Component Id="Method_Agilent_MH12_Agilent.MSDrivers.LCQuadrupole.MSTraceDataSystemIF.dll">
          <File Source="$(var.Skyline.TargetDir)/Method\Agilent\MH12\Agilent.MSDrivers.LCQuadrupole.MSTraceDataSystemIF.dll" KeyPath="yes"/>
       </Component>
-       <Component Id="Method_Agilent_MH12_Agilent.MSDrivers.LCQuadrupole.MSTuneDO.dll">
+      <Component Id="Method_Agilent_MH12_Agilent.MSDrivers.LCQuadrupole.MSTuneDO.dll">
          <File Source="$(var.Skyline.TargetDir)/Method\Agilent\MH12\Agilent.MSDrivers.LCQuadrupole.MSTuneDO.dll" KeyPath="yes"/>
       </Component>
-       <Component Id="Method_Agilent_MH12_Agilent.MSDrivers.LCQuadrupole.ValidationBase.dll">
+      <Component Id="Method_Agilent_MH12_Agilent.MSDrivers.LCQuadrupole.ValidationBase.dll">
          <File Source="$(var.Skyline.TargetDir)/Method\Agilent\MH12\Agilent.MSDrivers.LCQuadrupole.ValidationBase.dll" KeyPath="yes"/>
       </Component>
-       <Component Id="Method_Agilent_MH12_BaseCommon.dll">
-         <File Source="$(var.Skyline.TargetDir)/Method\Agilent\MH12\BaseCommon.dll" KeyPath="yes"/>
-      </Component>
-       <Component Id="Method_Agilent_MH12_BaseError.dll">
-         <File Source="$(var.Skyline.TargetDir)/Method\Agilent\MH12\BaseError.dll" KeyPath="yes"/>
-      </Component>
-       <Component Id="Method_Agilent_MH12_BaseMSUtils.dll">
+      <Component Id="Method_Agilent_MH12_BaseMSUtils.dll">
          <File Source="$(var.Skyline.TargetDir)/Method\Agilent\MH12\BaseMSUtils.dll" KeyPath="yes"/>
       </Component>
-       <Component Id="Method_Agilent_MH12_BaseTof.dll">
-         <File Source="$(var.Skyline.TargetDir)/Method\Agilent\MH12\BaseTof.dll" KeyPath="yes"/>
-      </Component>
-       <Component Id="Method_Agilent_MH12_BuildAgilentMH12Method.exe">
+      <Component Id="Method_Agilent_MH12_BuildAgilentMH12Method.exe">
          <File Source="$(var.Skyline.TargetDir)/Method\Agilent\MH12\BuildAgilentMH12Method.exe" KeyPath="yes"/>
       </Component>
-       <Component Id="Method_Agilent_MH12_BuildAgilentMH12Method.pdb">
+      <Component Id="Method_Agilent_MH12_BuildAgilentMH12Method.pdb">
          <File Source="$(var.Skyline.TargetDir)/Method\Agilent\MH12\BuildAgilentMH12Method.pdb" KeyPath="yes"/>
       </Component>
-       <Component Id="Method_Agilent_MH12_ESWShared.dll">
+      <Component Id="Method_Agilent_MH12_ESWShared.dll">
          <File Source="$(var.Skyline.TargetDir)/Method\Agilent\MH12\ESWShared.dll" KeyPath="yes"/>
       </Component>
-       <Component Id="Method_Agilent_MH12_RapidControlIF.dll">
+      <Component Id="Method_Agilent_MH12_RapidControlIF.dll">
          <File Source="$(var.Skyline.TargetDir)/Method\Agilent\MH12\RapidControlIF.dll" KeyPath="yes"/>
       </Component>
     </ComponentGroup>

@@ -172,10 +172,7 @@ Method\Agilent\MH12\Agilent.MSDrivers.LCQuadrupole.MSTrace.dll
 Method\Agilent\MH12\Agilent.MSDrivers.LCQuadrupole.MSTraceDataSystemIF.dll
 Method\Agilent\MH12\Agilent.MSDrivers.LCQuadrupole.MSTuneDO.dll
 Method\Agilent\MH12\Agilent.MSDrivers.LCQuadrupole.ValidationBase.dll
-Method\Agilent\MH12\BaseCommon.dll
-Method\Agilent\MH12\BaseError.dll
 Method\Agilent\MH12\BaseMSUtils.dll
-Method\Agilent\MH12\BaseTof.dll
 Method\Agilent\MH12\BuildAgilentMH12Method.exe
 Method\Agilent\MH12\BuildAgilentMH12Method.pdb
 Method\Agilent\MH12\ESWShared.dll
