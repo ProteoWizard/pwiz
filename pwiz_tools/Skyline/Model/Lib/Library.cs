@@ -33,6 +33,7 @@ using pwiz.Common.Collections;
 using pwiz.Common.SystemUtil;
 using pwiz.Skyline.Model.AuditLog;
 using pwiz.Skyline.Model.Crosslinking;
+using pwiz.Skyline.Model.Databinding.Entities;
 using pwiz.Skyline.Model.DocSettings;
 using pwiz.Skyline.Model.DocSettings.Extensions;
 using pwiz.Skyline.Model.Hibernate;
@@ -43,7 +44,6 @@ using pwiz.Skyline.Model.Prosit;
 using pwiz.Skyline.Model.Results;
 using pwiz.Skyline.Model.RetentionTimes;
 using pwiz.Skyline.Properties;
-using pwiz.Skyline.SettingsUI;
 using pwiz.Skyline.Util;
 using pwiz.Skyline.Util.Extensions;
 
@@ -2511,9 +2511,6 @@ namespace pwiz.Skyline.Model.Lib
         public double? RetentionTime { get; set; }
         public IonMobilityAndCCS IonMobilityInfo { get; private set; }
         public string Protein { get; private set; } // Also used as Molecule List Name for small molecules
-
- 
-
 
         public SpectrumProperties CreateProperties(ViewLibraryPepInfo pepInfo, LibKeyModificationMatcher matcher, SpectrumProperties currentProperties = null)
         {

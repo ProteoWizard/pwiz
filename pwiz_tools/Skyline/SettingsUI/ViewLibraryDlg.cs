@@ -56,8 +56,6 @@ using Peptide = pwiz.Skyline.Model.Peptide;
 using Transition = pwiz.Skyline.Model.Transition;
 using static pwiz.Skyline.Model.Lib.BiblioSpecLiteLibrary;
 
-
-
 namespace pwiz.Skyline.SettingsUI
 {
     /// <summary>

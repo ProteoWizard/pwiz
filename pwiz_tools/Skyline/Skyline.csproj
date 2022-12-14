@@ -464,6 +464,14 @@
       <DesignTime>True</DesignTime>
       <DependentUpon>ColumnCaptions.resx</DependentUpon>
     </Compile>
+    <Compile Include="Model\Databinding\Entities\GlobalizedObject.cs">
+      <SubType>UserControl</SubType>
+    </Compile>
+    <Compile Include="Model\Databinding\Entities\GlobalizedObjectResx.Designer.cs">
+      <AutoGen>True</AutoGen>
+      <DesignTime>True</DesignTime>
+      <DependentUpon>GlobalizedObjectResx.resx</DependentUpon>
+    </Compile>
     <Compile Include="Model\DdaSearch\MsconvertDdaConverter.cs" />
     <Compile Include="Model\Databinding\Entities\ColumnToolTips.Designer.cs">
       <AutoGen>True</AutoGen>
@@ -651,9 +659,6 @@
     </Compile>
     <Compile Include="SettingsUI\MsGraphExtension.Designer.cs">
       <DependentUpon>MsGraphExtension.cs</DependentUpon>
-    </Compile>
-    <Compile Include="SettingsUI\MsGraphExtensionResx.Designer.cs">
-      <DependentUpon>MsGraphExtensionResx.resx</DependentUpon>
     </Compile>
     <Compile Include="SettingsUI\ViewLibraryPepInfoList.cs" />
     <Compile Include="Model\Lib\LibKeyMap.cs" />
@@ -3221,6 +3226,11 @@
       <DependentUpon>ColumnToolTips.resx</DependentUpon>
       <SubType>Designer</SubType>
     </EmbeddedResource>
+    <EmbeddedResource Include="Model\Databinding\Entities\GlobalizedObjectResx.resx">
+      <Generator>ResXFileCodeGenerator</Generator>
+      <LastGenOutput>GlobalizedObjectResx.Designer.cs</LastGenOutput>
+      <SubType>Designer</SubType>
+    </EmbeddedResource>
     <EmbeddedResource Include="Model\DocSettings\AbsoluteQuantification\QuantificationStrings.ja.resx" />
     <EmbeddedResource Include="Model\DocSettings\AbsoluteQuantification\QuantificationStrings.resx">
       <Generator>PublicResXFileCodeGenerator</Generator>
@@ -3960,9 +3970,6 @@
     </EmbeddedResource>
     <EmbeddedResource Include="SettingsUI\MsGraphExtension.resx">
       <DependentUpon>MsGraphExtension.cs</DependentUpon>
-    </EmbeddedResource>
-    <EmbeddedResource Include="SettingsUI\MsGraphExtensionResx.resx">
-      <SubType>Designer</SubType>
     </EmbeddedResource>
     <EmbeddedResource Include="SettingsUI\Optimization\AddOptimizationLibraryDlg.ja.resx">
       <DependentUpon>AddOptimizationLibraryDlg.cs</DependentUpon>
