@@ -49,7 +49,7 @@ namespace pwiz.SkylineTestFunctional
             Assert.AreEqual(2, SkylineWindow.Document.MoleculeTransitionGroupCount);
 
             // Do "Permute Isotope Modifications" and choose to do the complete 
-            RunDlg<PermuteIsotopeModificationsDlg>(SkylineWindow.ShowPermuteIsotopeModificationsDlg, true, dlg =>
+            RunDlg<PermuteIsotopeModificationsDlg>(SkylineWindow.ShowPermuteIsotopeModificationsDlg, dlg =>
             {
                 dlg.SimplePermutation = false;
                 dlg.OkDialog();
