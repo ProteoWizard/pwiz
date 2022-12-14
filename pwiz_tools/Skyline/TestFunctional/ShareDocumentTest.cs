@@ -108,7 +108,7 @@ namespace pwiz.SkylineTestFunctional
 
             // Share the minimal document.
             var shareMinPath = TestFilesDirs[2].GetTestPath(zipFileMin);
-            RunDlg<ShareTypeDlg>(SkylineWindow.ShareDocument);
+            ShowAndCancelDlg<ShareTypeDlg>(SkylineWindow.ShareDocument);
             Share(shareMinPath, false, origFileSet, newFileSet, docName);
             WaitForLibraries();
 
@@ -178,7 +178,7 @@ namespace pwiz.SkylineTestFunctional
 
             // Share the minimal document.
             string shareMinPath = TestFilesDirs[1].GetTestPath(zipFileMin);
-            RunDlg<ShareTypeDlg>(SkylineWindow.ShareDocument);
+            ShowAndCancelDlg<ShareTypeDlg>(SkylineWindow.ShareDocument);
             Share(shareMinPath, false, origFileSet, newFileSet, docName);
             // The blib schema changes over time, stuff gets added, this isn't a reliable check
             // Assert.AreEqual(origFileSet[blibName].UncompressedSize,

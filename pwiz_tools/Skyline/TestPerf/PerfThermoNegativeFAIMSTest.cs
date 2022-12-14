@@ -117,7 +117,7 @@ namespace TestPerf // Tests in this namespace are skipped unless the RunPerfTest
                 exportDialog.WriteCompensationVoltages = true;
             });
             MultiButtonMsgDlg errDlg1 = null;
-            RunDlg<MultiButtonMsgDlg>(() => exportDialog.OkDialog(filePathActual),
+            ShowAndDismissDlg<MultiButtonMsgDlg>(() => exportDialog.OkDialog(filePathActual),
                 // Expect The_settings_for_this_document_do_not_match_the_instrument_type...
                 errDlg =>
                 {
