@@ -34,6 +34,7 @@ using pwiz.Skyline.Model.Lib;
 using pwiz.Skyline.Model.Serialization;
 using pwiz.Skyline.Properties;
 using pwiz.Skyline.Util;
+using pwiz.Skyline.Util.Extensions;
 using pwiz.SkylineTestUtil;
 
 namespace pwiz.SkylineTestFunctional
@@ -287,15 +288,47 @@ namespace pwiz.SkylineTestFunctional
 
             var shareCompletePath = DoShareWithRawFiles(TestFilesDirs[3]);
 
-            using var zipFile = ZipFile.Read(shareCompletePath);
+            using (var zipFile = ZipFile.Read(shareCompletePath))
             {
                 // Confirm files have been correctly found
                 Assert.IsTrue(zipFile.EntryFileNames.Contains(bismetPgulOptD+"/AcqData/"), $@"expected to find raw data {bismetPgulOptD} in zip file");
             }
 
-            // Now reload - formerly Skyline would balk because there was a subdirectory in the zip file
+            // Now reload - formerly Skyline would balk because there was a sub-directory in the zip file
             RunUI(() => SkylineWindow.NewDocument());
             RunUI(() => SkylineWindow.LoadFile(shareCompletePath));
+            RunUI(() => SkylineWindow.NewDocument());
+            // Also make sure it doesn't balk when the file name ends in only .zip and not .sky.zip
+            int unzippedFolderLen = shareCompletePath.Length - SrmDocumentSharing.EXT_SKY_ZIP.Length;
+            string unzippedFolder = shareCompletePath.Substring(0, unzippedFolderLen) + "-pass";
+            string zipOnlyPath = unzippedFolder + SrmDocumentSharing.EXT;
+            File.Move(shareCompletePath, zipOnlyPath);
+            RunUI(() => SkylineWindow.LoadFile(zipOnlyPath));
+            // But it should fail for a normal .zip with a non-data subfolder
+            string subFolder = Path.Combine(unzippedFolder, "non-data");
+            Directory.CreateDirectory(subFolder);
+            File.WriteAllText(Path.Combine(subFolder, "error.txt"), @"Cause a failure");
+            string zipOnlyFailPath =
+                shareCompletePath.Substring(0, shareCompletePath.Length - SrmDocumentSharing.EXT_SKY_ZIP.Length) + "-fail" +
+                SrmDocumentSharing.EXT;
+            using (var zipFile = new ZipFile(zipOnlyFailPath))
+            {
+                zipFile.AddDirectory(unzippedFolder, string.Empty);
+                zipFile.Save();
+            }
+            RunUI(() => SkylineWindow.NewDocument());
+            RunDlg<MessageDlg>(() => SkylineWindow.LoadFile(zipOnlyFailPath), dlg =>
+            {
+                string expectedMessage = TextUtil.LineSeparate(
+                    string.Format(Resources.SkylineWindow_OpenSharedFile_Failure_extracting_Skyline_document_from_zip_file__0__, zipOnlyFailPath),
+                    Resources.SrmDocumentSharing_FindSharedSkylineFile_The_zip_file_is_not_a_shared_file);
+                Assert.AreEqual(expectedMessage, dlg.Message);
+                dlg.OkDialog();
+            });
+            // Finally, it should be possible to open when the extension is changed back to .sky.zip
+            string zipOnlyIgnoreFolder = Path.ChangeExtension(zipOnlyFailPath, SrmDocumentSharing.EXT_SKY_ZIP);
+            File.Move(zipOnlyFailPath, zipOnlyIgnoreFolder);
+            RunUI(() => SkylineWindow.LoadFile(zipOnlyIgnoreFolder));
             RunUI(() => SkylineWindow.NewDocument());
         }
 
@@ -386,21 +419,12 @@ namespace pwiz.SkylineTestFunctional
             string shareCompletePath = testFilesDir.GetTestPath($"{Path.GetFileName(directoryElsewhere)}{testFolder}.sky.zip");
             var shareDlg = ShowDialog<ShareTypeDlg>(() => SkylineWindow.ShareDocument(shareCompletePath));
             RunUI(() => Assert.IsNull(shareDlg.SelectedSkylineVersion));    // Expect using the currently saved format
-            if (SkylineWindow.SavedDocumentFormat.CompareTo(DocumentFormat.SHARE_REPLICATE_FILES) < 0)
-            {
-                RunDlg<MessageDlg>(() => shareDlg.IncludeReplicateFiles = true, dlg =>
-                {
-                    Assert.AreEqual(Resources.ShareTypeDlg_cbIncludeFiles_CheckedChanged_Including_results_files_is_not_supported_by_the_currently_selected_version_, dlg.Message);
-                    dlg.OkDialog();
-                });
-            }
             // Check box must be checked in order for files to be zipped
             int missingFilesCount = directoryElsewhere != null ? 1 : 0;
             if (testFolder)
                 missingFilesCount++;
             RunUI(() =>
             {
-                shareDlg.SelectedSkylineVersion = SkylineVersion.CURRENT;
                 shareDlg.IncludeReplicateFiles = true;
                 VerifyFileStatus(shareDlg, totalFilesCount, missingFilesCount);
             });
@@ -454,6 +478,17 @@ namespace pwiz.SkylineTestFunctional
             RunUI(() => VerifyCheckedState(replicatePickDlg, totalFilesCount, 0, 0));
             OkDialog(replicatePickDlg, replicatePickDlg.OkDialog);
             RunUI(() => VerifyFileStatus(shareDlg, totalFilesCount, 0));
+            // If the format is older and any directory is being added, Skyline should show an error.
+            if (SkylineWindow.SavedDocumentFormat.CompareTo(DocumentFormat.SHARE_DATA_FOLDERS) < 0 &&
+                shareDlg.GetIncludedAuxiliaryFiles().Any(Directory.Exists))
+            {
+                RunDlg<MessageDlg>(shareDlg.OkDialog, dlg =>
+                {
+                    Assert.AreEqual(Resources.ShareTypeDlg_OkDialog_Including_data_folders_is_not_supported_by_the_currently_selected_version_, dlg.Message);
+                    dlg.OkDialog();
+                });
+                RunUI(() => shareDlg.SelectedSkylineVersion = SkylineVersion.CURRENT);
+            }
             OkDialog(shareDlg, shareDlg.OkDialog);
 
             WaitForCondition(() => File.Exists(shareCompletePath));

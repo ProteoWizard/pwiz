@@ -157,14 +157,10 @@ namespace pwiz.Skyline.Model
 
         private static string FindSharedSkylineFile(ZipFile zip)
         {
+            // Review the top level entries primarily to find a single Skyline file to open
             string skylineFile = null;
 
-            // Shared files should not have subfolders unless they're data sources (e.g. Bruker .d, Waters .raw).
-            // Just look at top level files and directories  (e.g. "foo.sky", "agilentfile.d/", "watersdata.raw/", "watersdata.raw/_FUNC01.DAT, "agilentdata.d/AcqData/"")
-
-            var topLevelDirectories =
-                zip.Entries.Where(e => e is { IsDirectory: true } && e.FileName.Count(ch => ch == '/') == 1)
-                    .Select(e => e.FileName).ToArray();
+            var topLevelDirectories = GetTopLevelDirectories(zip);
             var topLevelZipEntries = zip.Entries.Where(e => e != null && e.FileName.Count(ch => ch == '/') <= 2).ToArray();
             foreach (var entry in topLevelZipEntries)
             {
@@ -172,21 +168,7 @@ namespace pwiz.Skyline.Model
 
                 if (file == null) continue; // ReSharper
 
-                // Shared files should not have subfolders unless they're data sources (e.g. Bruker .d, Waters .raw).
-                if (entry.IsDirectory && topLevelDirectories.Contains(entry.FileName))
-                {
-                    // Mimic System.IO.DirectoryInfo - only deals with top level of directory
-                    var directoryName = entry.FileName;
-                    var files =
-                        topLevelZipEntries.Where(e => e.FileName.StartsWith(directoryName) && !e.IsDirectory && e.FileName.Count(ch => ch == '/') == 1).
-                            Select(e => e.FileName.Split('/')[1]).ToArray();
-                    var subdirectories =
-                        topLevelZipEntries.Where(e => e.FileName.StartsWith(directoryName) && e.IsDirectory && !Equals(e.FileName, directoryName)).Select(e => e.FileName.Split('/')[1]).ToArray();
-                    if (DataSourceUtil.GetSourceType(directoryName.Trim('/'), files, subdirectories) == DataSourceUtil.FOLDER_TYPE)
-                    {
-                        throw new IOException(Resources.SrmDocumentSharing_FindSharedSkylineFile_The_zip_file_is_not_a_shared_file);
-                    }
-                }
+                ValidateEntry(entry, topLevelDirectories, topLevelZipEntries);
 
                 // Shared files must have exactly one Skyline Document(.sky).
                 if (!file.EndsWith(SrmDocument.EXT)) continue;
@@ -202,6 +184,47 @@ namespace pwiz.Skyline.Model
                 throw new IOException(Resources.SrmDocumentSharing_FindSharedSkylineFile_The_zip_file_is_not_a_shared_file_The_file_does_not_contain_any_Skyline_documents);
             }
             return skylineFile;
+        }
+
+        /// <summary>
+        /// Gets the top level folders in a .zip file when it is not a .sky.zip file.
+        /// </summary>
+        private static string[] GetTopLevelDirectories(ZipFile zip)
+        {
+            // If the archive is not a .sky.zip file (e.g. just .zip) then extra checking is
+            // done to make sure the ZIP file looks like a valid shared file, which means it
+            // should not contain folders that are not instrument vendor data folders.
+            // (e.g. "agilentfile.d/", "watersdata.raw/", "watersdata.raw/_FUNC01.DAT, "agilentdata.d/AcqData/"")
+            return !PathEx.HasExtension(zip.Name, EXT_SKY_ZIP)
+                ? zip.Entries.Where(e => e is { IsDirectory: true } && e.FileName.Count(ch => ch == '/') == 1)
+                    .Select(e => e.FileName).ToArray()
+                : Array.Empty<string>();
+        }
+
+        private static void ValidateEntry(ZipEntry entry, string[] topLevelDirectories, ZipEntry[] topLevelZipEntries)
+        {
+            // Shared files should not have subfolders unless they're data sources (e.g. Bruker .d, Waters .raw).
+            // But this check is not enforced for .sky.zip files, since already this level of enforcement
+            // proved problematic when we added data folders to the possible contents of a .sky.zip
+            // Not checking seems more future proof and it is not really a huge deal if this happens.
+            // It was originally meant to keep people from trying to open just any .zip file.
+            if (entry.IsDirectory && topLevelDirectories.Contains(entry.FileName))
+            {
+                // Mimic System.IO.DirectoryInfo - only deals with top level of directory
+                var directoryName = entry.FileName;
+                var files =
+                    topLevelZipEntries
+                        .Where(e => e.FileName.StartsWith(directoryName) && !e.IsDirectory &&
+                                    e.FileName.Count(ch => ch == '/') == 1).Select(e => e.FileName.Split('/')[1]).ToArray();
+                var subdirectories =
+                    topLevelZipEntries
+                        .Where(e => e.FileName.StartsWith(directoryName) && e.IsDirectory && !Equals(e.FileName, directoryName))
+                        .Select(e => e.FileName.Split('/')[1]).ToArray();
+                if (DataSourceUtil.GetSourceType(directoryName.Trim('/'), files, subdirectories) == DataSourceUtil.FOLDER_TYPE)
+                {
+                    throw new IOException(Resources.SrmDocumentSharing_FindSharedSkylineFile_The_zip_file_is_not_a_shared_file);
+                }
+            }
         }
 
         public void Share(IProgressMonitor progressMonitor)
@@ -525,6 +548,13 @@ namespace pwiz.Skyline.Model
                     return;
                 }
 
+                if (e.CurrentEntry != null && !Equals(CurrentEntry, e.CurrentEntry.FileName))
+                {
+                    if (CurrentEntry != null)
+                        EntriesSaved++;
+                    CurrentEntry = e.CurrentEntry.FileName;
+                }
+
                 // Consider: More accurate total byte progress
                 double percentCompressed = (e.TotalBytesToTransfer > 0 ?
                     1.0 * e.BytesTransferred / e.TotalBytesToTransfer : 0);
@@ -538,16 +568,8 @@ namespace pwiz.Skyline.Model
                     {
                         ProgressMonitor.UpdateProgress(_progressStatus = _progressStatus.ChangeMessage(DefaultMessage));
                     }
-                        
                     else
                     {
-                        if (!Equals(CurrentEntry, e.CurrentEntry.FileName))
-                        {
-                            if (CurrentEntry != null)
-                                EntriesSaved++;
-                            CurrentEntry = e.CurrentEntry.FileName;
-                        }
-
                         var message = string.Format(
                             Resources.SrmDocumentSharing_SrmDocumentSharing_SaveProgress_Compressing__0__,
                             e.CurrentEntry.FileName);

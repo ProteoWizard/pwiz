@@ -18,6 +18,7 @@
  */
 using System;
 using System.Collections.Generic;
+using System.IO;
 using System.Windows.Forms;
 using pwiz.Skyline.Model;
 using pwiz.Skyline.Model.Serialization;
@@ -83,7 +84,18 @@ namespace pwiz.Skyline.Alerts
 
         public void OkDialog()
         {
-            ShareType = new ShareType(radioComplete.Checked, _skylineVersionOptions[comboSkylineVersion.SelectedIndex], GetIncludedAuxiliaryFiles()); // Pass in all the checked auxiliary files
+            var auxiliaryFiles = GetIncludedAuxiliaryFiles().ToArray();
+            var formatVersion = SelectedSkylineVersion?.SrmDocumentVersion ?? _savedFileFormat;
+            if (formatVersion == null || formatVersion < DocumentFormat.SHARE_DATA_FOLDERS)
+            {
+                if (auxiliaryFiles.Any(Directory.Exists))
+                {
+                    MessageDlg.Show(this, Resources.ShareTypeDlg_OkDialog_Including_data_folders_is_not_supported_by_the_currently_selected_version_);
+                    comboSkylineVersion.Focus();
+                    return;
+                }
+            }
+            ShareType = new ShareType(radioComplete.Checked, _skylineVersionOptions[comboSkylineVersion.SelectedIndex], auxiliaryFiles); // Pass in all the checked auxiliary files
             DialogResult = DialogResult.OK;
         }
 
@@ -178,24 +190,13 @@ namespace pwiz.Skyline.Alerts
         private void cbIncludeFiles_CheckedChanged(object sender, EventArgs e)
         {
             bool includeFiles = cbIncludeReplicateFiles.Checked;
-            if (includeFiles)
-            {
-                var formatVersion = SelectedSkylineVersion?.SrmDocumentVersion ?? _savedFileFormat;
-                if (formatVersion == null || formatVersion < DocumentFormat.SHARE_REPLICATE_FILES)
-                {
-                    MessageDlg.Show(this, Resources.ShareTypeDlg_cbIncludeFiles_CheckedChanged_Including_results_files_is_not_supported_by_the_currently_selected_version_);
-                    cbIncludeReplicateFiles.CheckedChanged -= cbIncludeFiles_CheckedChanged;    // Avoid calling this function again
-                    cbIncludeReplicateFiles.Checked = false;
-                    cbIncludeReplicateFiles.CheckedChanged += cbIncludeFiles_CheckedChanged;
-                    return;
-                }
-            }
             btnSelectReplicateFiles.Enabled = includeFiles;
             if (includeFiles)
             {
                 if (_auxiliaryFiles == null)
                 {
-                    // TODO: Need LongWaitDlg support for this with the ability to cancel
+                    // CONSIDER: Need LongWaitDlg support for this with the ability to cancel
+                    // Leaving for now because testing with 200 files was fast enough
                     _auxiliaryFiles = new ShareResultsFilesDlg.AuxiliaryFiles(_document, _documentFilePath);
                 }
                 labelFileStatus.Text = _auxiliaryFiles.ToString();
@@ -229,7 +230,7 @@ namespace pwiz.Skyline.Alerts
         /// <summary>
         /// Get all selected files
         /// </summary>
-        private IEnumerable<string> GetIncludedAuxiliaryFiles()
+        public IEnumerable<string> GetIncludedAuxiliaryFiles()
         { 
             if (cbIncludeReplicateFiles.Checked && _auxiliaryFiles != null)
                 return _auxiliaryFiles.FilesToIncludeInZip;

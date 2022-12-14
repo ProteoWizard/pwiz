@@ -929,6 +929,13 @@ namespace pwiz.Skyline.FileUI
                     populateListViewFromDirectory( _currentDirectory ); // refresh
                     _abortPopulateList = true;
                     break;
+                case Keys.A:
+                    if (e.Control)
+                    {
+                        foreach (ListViewItem item in listView.Items)
+                            item.Selected = true;
+                    }
+                    break;
             }
         }
 

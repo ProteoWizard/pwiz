@@ -27670,12 +27670,12 @@ namespace pwiz.Skyline.Properties {
         }
         
         /// <summary>
-        ///   Looks up a localized string similar to Including results files is not supported by the currently selected version..
+        ///   Looks up a localized string similar to Including data folders is not supported by the currently selected version..
         /// </summary>
-        public static string ShareTypeDlg_cbIncludeFiles_CheckedChanged_Including_results_files_is_not_supported_by_the_currently_selected_version_ {
+        public static string ShareTypeDlg_OkDialog_Including_data_folders_is_not_supported_by_the_currently_selected_version_ {
             get {
-                return ResourceManager.GetString("ShareTypeDlg_cbIncludeFiles_CheckedChanged_Including_results_files_is_not_support" +
-                        "ed_by_the_currently_selected_version_", resourceCulture);
+                return ResourceManager.GetString("ShareTypeDlg_OkDialog_Including_data_folders_is_not_supported_by_the_currently_se" +
+                        "lected_version_", resourceCulture);
             }
         }
         

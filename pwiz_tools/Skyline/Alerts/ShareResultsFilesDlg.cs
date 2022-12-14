@@ -46,8 +46,12 @@ namespace pwiz.Skyline.Alerts
     /// </summary>
     public partial class ShareResultsFilesDlg : ModeUIInvariantFormEx
     {
+        private string _documentPath;
+
         public ShareResultsFilesDlg(SrmDocument document, string documentPath, AuxiliaryFiles auxiliaryFiles) // Srm document passed in to allow access to raw files currently loaded and being used
         {
+            _documentPath = documentPath;
+
             InitializeComponent();
 
             Icon = Resources.Skyline;
@@ -223,8 +227,7 @@ namespace pwiz.Skyline.Alerts
             var missingFiles = (from object missingItem in listboxMissingFiles.Items select missingItem.ToString()).ToList();
 
             // Set initial directory to the one containing the document or default for results
-            var docPath = Program.MainWindow.DocumentFilePath;
-            var initialDir = Path.GetDirectoryName(docPath) ?? Settings.Default.SrmResultsDirectory;
+            var initialDir = Path.GetDirectoryName(_documentPath) ?? Settings.Default.SrmResultsDirectory;
             if (string.IsNullOrEmpty(initialDir))
                 initialDir = null;
 
@@ -256,6 +259,7 @@ namespace pwiz.Skyline.Alerts
                 }
             }
 
+            UpdateMissingFilePane();
             UpdateStatusLabel();
             UpdateSelectAll();
         }
@@ -274,8 +278,7 @@ namespace pwiz.Skyline.Alerts
             Assume.IsTrue(listboxMissingFiles.Items.Count > 0); // Should only be in here with files to find
 
             // Set initial directory to the one containing the document or default for results
-            var docPath = Program.MainWindow.DocumentFilePath;
-            var initialDir = Path.GetDirectoryName(docPath) ?? Settings.Default.SrmResultsDirectory;
+            var initialDir = Path.GetDirectoryName(_documentPath) ?? Settings.Default.SrmResultsDirectory;
             if (string.IsNullOrEmpty(initialDir))
                 initialDir = null;
 
@@ -328,6 +331,7 @@ namespace pwiz.Skyline.Alerts
                 listboxMissingFiles.Items.Remove(Path.GetFileName(matchedFile));
             }
 
+            UpdateMissingFilePane();
             UpdateStatusLabel();
             UpdateSelectAll();
         }
