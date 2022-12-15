@@ -11914,6 +11914,9 @@ If you do not have the original file, you may build the library with embedded sp
 	  <value>({0} Da)</value>
 	  <comment>"Da" stands for "Daltons". Example: (+57.2 Da)</comment>
   </data>
+  <data name="SkylineWindow_crashSkylineMenuItem_Click_Are_you_sure_you_want_to_abruptly_terminate_Skyline__You_will_lose_all_unsaved_work_" xml:space="preserve">
+	  <value>Are you sure you want to abruptly terminate Skyline? You will lose all unsaved work.</value>
+  </data>
   <data name="AuxiliaryFiles_GetStatusText__0__files_have_not_been_located_" xml:space="preserve">
 	  <value>{0} files have not been located.</value>
   </data>
