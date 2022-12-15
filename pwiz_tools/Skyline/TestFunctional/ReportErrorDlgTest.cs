@@ -122,6 +122,7 @@ namespace pwiz.SkylineTestFunctional
                     .FirstOrDefault(item => item.Name == "crashSkylineMenuItem");
                 Assert.IsNotNull(crashSkylineMenuItem);
                 Assert.IsFalse(crashSkylineMenuItem.Visible);
+                helpMenuItem.HideDropDown();
 
                 SetShiftKeyState(true, true);
                 Assert.AreEqual(Keys.Shift | Keys.Control, Control.ModifierKeys & (Keys.Shift | Keys.Control));
@@ -134,6 +135,7 @@ namespace pwiz.SkylineTestFunctional
                     .FirstOrDefault(item => item.Name == "crashSkylineMenuItem");
                 Assert.IsNotNull(crashSkylineMenuItem);
                 Assert.IsTrue(crashSkylineMenuItem.Visible);
+                helpMenuItem.HideDropDown();
 
                 SetShiftKeyState(false, false);
                 Assert.AreEqual(Keys.None, Control.ModifierKeys & Keys.Shift);
