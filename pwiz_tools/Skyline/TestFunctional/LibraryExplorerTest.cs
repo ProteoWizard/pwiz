@@ -206,14 +206,10 @@ namespace pwiz.SkylineTestFunctional
                 // Find the filter category combo box
                 filterCategoryComboBox = (ComboBox) _viewLibUI.Controls.Find("comboFilterCategory", true)[0];
 
-            });
+                // Filter category combo box should be set to "Name" by default
+                Assert.AreEqual(filterCategoryComboBox.SelectedItem.ToString(), Resources.SmallMoleculeLibraryAttributes_KeyValuePairs_Name);
 
-            // Filter category combo box should be set to "Name" by default
-            Assert.AreEqual(filterCategoryComboBox.SelectedItem.ToString(), Resources.SmallMoleculeLibraryAttributes_KeyValuePairs_Name);
-
-            // Test filtering by formula
-            RunUI(() =>
-            {
+                // Test filtering by formula
                 filterCategoryComboBox.SelectedIndex =
                     filterCategoryComboBox.FindStringExact(Resources
                         .SmallMoleculeLibraryAttributes_KeyValuePairs_Formula);
@@ -925,7 +921,7 @@ namespace pwiz.SkylineTestFunctional
                 _viewLibUI.GraphSettings.ShowCharge2 = false;
             });
             // Add all to document, expect to be asked if we want to add library to doc as well
-            RunDlg<MultiButtonMsgDlg>(() => _viewLibUI.AddAllPeptides(true), msgDlg => msgDlg.Btn1Click());
+            ShowAndDismissDlg<MultiButtonMsgDlg>(() => _viewLibUI.AddAllPeptides(true), msgDlg => msgDlg.Btn1Click());
             if (isLipidCreator || isSketchyFragmentAnnotations || libIndex == 10)
             {
                 // Expect to be asked if we want to add peptides that don't match filter
