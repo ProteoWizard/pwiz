@@ -111,7 +111,9 @@ namespace pwiz.Skyline.Model
             else if (_libKeys.Current.LibraryKey is CrosslinkLibraryKey crosslinkLibraryKey)
             {
                 return crosslinkLibraryKey.PeptideLibraryKeys.SelectMany(
-                    libKey => EnumerateSequenceInfos(libKey, false));
+                        libKey => EnumerateSequenceInfos(libKey, false))
+                    .Concat(crosslinkLibraryKey.Crosslinks.Select(crosslink =>
+                        MakeCrosslinkAaModInfo(crosslinkLibraryKey, crosslink)));
             }
 
             return new AAModInfo[0];

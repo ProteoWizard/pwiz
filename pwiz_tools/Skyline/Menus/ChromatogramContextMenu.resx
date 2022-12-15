@@ -418,12 +418,6 @@
   <data name="secondDerivativeContextMenuItem.Text" xml:space="preserve">
     <value>Second Derivative</value>
   </data>
-  <data name="firstDerivativeContextMenuItem.Size" type="System.Drawing.Size, System.Drawing">
-    <value>213, 22</value>
-  </data>
-  <data name="firstDerivativeContextMenuItem.Text" xml:space="preserve">
-    <value>First Derivative</value>
-  </data>
   <data name="smoothSGChromContextMenuItem.Size" type="System.Drawing.Size, System.Drawing">
     <value>213, 22</value>
   </data>
@@ -464,7 +458,7 @@
     <value>modeUIHandler</value>
   </data>
   <data name="&gt;&gt;modeUIHandler.Type" xml:space="preserve">
-    <value>pwiz.Skyline.Util.Helpers+ModeUIExtender, Skyline, Version=1.0.0.0, Culture=neutral, PublicKeyToken=null</value>
+    <value>pwiz.Skyline.Util.Helpers+ModeUIExtender, Skyline-daily, Version=22.2.1.310, Culture=neutral, PublicKeyToken=null</value>
   </data>
   <data name="&gt;&gt;applyPeakAllGraphMenuItem.Name" xml:space="preserve">
     <value>applyPeakAllGraphMenuItem</value>
@@ -730,12 +724,6 @@
   <data name="&gt;&gt;secondDerivativeContextMenuItem.Type" xml:space="preserve">
     <value>System.Windows.Forms.ToolStripMenuItem, System.Windows.Forms, Version=4.0.0.0, Culture=neutral, PublicKeyToken=b77a5c561934e089</value>
   </data>
-  <data name="&gt;&gt;firstDerivativeContextMenuItem.Name" xml:space="preserve">
-    <value>firstDerivativeContextMenuItem</value>
-  </data>
-  <data name="&gt;&gt;firstDerivativeContextMenuItem.Type" xml:space="preserve">
-    <value>System.Windows.Forms.ToolStripMenuItem, System.Windows.Forms, Version=4.0.0.0, Culture=neutral, PublicKeyToken=b77a5c561934e089</value>
-  </data>
   <data name="&gt;&gt;smoothSGChromContextMenuItem.Name" xml:space="preserve">
     <value>smoothSGChromContextMenuItem</value>
   </data>
@@ -824,6 +812,6 @@
     <value>ChromatogramContextMenu</value>
   </data>
   <data name="&gt;&gt;$this.Type" xml:space="preserve">
-    <value>pwiz.Skyline.Menus.SkylineControl, Skyline, Version=1.0.0.0, Culture=neutral, PublicKeyToken=null</value>
+    <value>pwiz.Skyline.Menus.SkylineControl, Skyline-daily, Version=22.2.1.310, Culture=neutral, PublicKeyToken=null</value>
   </data>
 </root>

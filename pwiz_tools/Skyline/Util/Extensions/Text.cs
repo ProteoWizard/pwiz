@@ -457,6 +457,22 @@ namespace pwiz.Skyline.Util.Extensions
         }
 
         /// <summary>
+        /// Append the localized colon character to a string.
+        /// </summary>
+        public static string AppendColon(string left)
+        {
+            return left + Resources.ColonEndOfLine;
+        }
+
+        /// <summary>
+        /// Separate two strings with the localized colon character and a space.
+        /// </summary>
+        public static string ColonSeparate(string left, string right)
+        {
+            return string.Format(Resources.ColonSeparator, left, right);
+        }
+
+        /// <summary>
         /// Convert a collection of strings to a TSV line for serialization purposes,
         /// watching out for tabs, CRLF, and existing escapes
         /// </summary>

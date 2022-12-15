@@ -175,10 +175,21 @@ namespace pwiz.Skyline.EditUI
 
             using (var longWaitDlg = new LongWaitDlg())
             {
-                longWaitDlg.PerformWork(this, 1000, broker =>
+                try
                 {
-                    _proteinAssociation = new ProteinAssociation(_document, broker);
-                });
+                    longWaitDlg.PerformWork(this, 1000, broker =>
+                    {
+                        _proteinAssociation = new ProteinAssociation(_document, broker);
+                    });
+                }
+                catch (Exception ex)
+                {
+                    MessageDlg.ShowWithException(this,
+                        TextUtil.LineSeparate(
+                            Resources.AssociateProteinsDlg_UseFastaFile_An_error_occurred_during_protein_association_,
+                            ex.Message), ex, true);
+                    return;
+                }
 
                 if (longWaitDlg.IsCanceled)
                     _proteinAssociation = null;
@@ -328,11 +339,22 @@ namespace pwiz.Skyline.EditUI
             if (_document.PeptideCount == 0)
                 return;
 
-            using (var longWaitDlg = new LongWaitDlg())
+            try
             {
-                longWaitDlg.PerformWork(this, 1000, broker => _proteinAssociation.UseBackgroundProteome(backgroundProteome, DigestProteinToPeptides, broker));
-                if (longWaitDlg.IsCanceled)
-                    return;
+                using (var longWaitDlg = new LongWaitDlg())
+                {
+                    longWaitDlg.PerformWork(this, 1000, broker => _proteinAssociation.UseBackgroundProteome(backgroundProteome, DigestProteinToPeptides, broker));
+                    if (longWaitDlg.IsCanceled)
+                        return;
+                }
+            }
+            catch (Exception ex)
+            {
+                MessageDlg.ShowWithException(this,
+                    TextUtil.LineSeparate(
+                        Resources.AssociateProteinsDlg_UseFastaFile_An_error_occurred_during_protein_association_,
+                        ex.Message), ex, true);
+                return;
             }
 
             if (Results.PeptidesMapped == 0)
@@ -398,11 +420,22 @@ namespace pwiz.Skyline.EditUI
             if (_document.PeptideCount == 0)
                 return;
 
-            using (var longWaitDlg = new LongWaitDlg())
+            try
             {
-                longWaitDlg.PerformWork(this, 1000, broker => _proteinAssociation.UseFastaFile(file, DigestProteinToPeptides, broker));
-                if (longWaitDlg.IsCanceled)
-                    return;
+                using (var longWaitDlg = new LongWaitDlg())
+                {
+                    longWaitDlg.PerformWork(this, 1000, broker => _proteinAssociation.UseFastaFile(file, DigestProteinToPeptides, broker));
+                    if (longWaitDlg.IsCanceled)
+                        return;
+                }
+            }
+            catch (Exception ex)
+            {
+                MessageDlg.ShowWithException(this,
+                    TextUtil.LineSeparate(
+                        Resources.AssociateProteinsDlg_UseFastaFile_An_error_occurred_during_protein_association_,
+                        ex.Message), ex, true);
+                return;
             }
 
             if (Results.PeptidesMapped == 0)

@@ -197,6 +197,22 @@ namespace pwiz.BiblioSpec
             }
         }
 
+        public string ThresholdDescription
+        {
+            get
+            {
+                switch (ProbabilityType)
+                {
+                    case EnumProbabilityType.probability_correct:
+                        return Resources.ScoreType_ScoreThresholdDescription_Score_threshold_minimum__score_is_probability_that_identification_is_correct_;
+                    case EnumProbabilityType.probability_incorrect:
+                        return Resources.ScoreType_ScoreThresholdDescription_Score_threshold_maximum__score_is_probability_that_identification_is_incorrect_;
+                    default:
+                        return null;
+                }
+            }
+        }
+
         public override string ToString()
         {
             switch (NameInvariant)

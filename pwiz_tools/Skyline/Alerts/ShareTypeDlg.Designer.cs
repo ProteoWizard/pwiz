@@ -39,7 +39,12 @@
             this.radioMinimal = new System.Windows.Forms.RadioButton();
             this.label3 = new System.Windows.Forms.Label();
             this.toolTip1 = new System.Windows.Forms.ToolTip(this.components);
+            this.btnSelectReplicateFiles = new System.Windows.Forms.Button();
+            this.cbIncludeReplicateFiles = new System.Windows.Forms.CheckBox();
+            this.tableLayoutPanel1 = new System.Windows.Forms.TableLayoutPanel();
+            this.labelFileStatus = new System.Windows.Forms.Label();
             this.panelButtonBar.SuspendLayout();
+            this.tableLayoutPanel1.SuspendLayout();
             this.SuspendLayout();
             // 
             // btnCancel
@@ -98,6 +103,32 @@
             resources.ApplyResources(this.label3, "label3");
             this.label3.Name = "label3";
             // 
+            // btnSelectReplicateFiles
+            // 
+            resources.ApplyResources(this.btnSelectReplicateFiles, "btnSelectReplicateFiles");
+            this.btnSelectReplicateFiles.Name = "btnSelectReplicateFiles";
+            this.btnSelectReplicateFiles.UseVisualStyleBackColor = true;
+            this.btnSelectReplicateFiles.Click += new System.EventHandler(this.btnSelectReplicateFiles_Click);
+            // 
+            // cbIncludeReplicateFiles
+            // 
+            resources.ApplyResources(this.cbIncludeReplicateFiles, "cbIncludeReplicateFiles");
+            this.cbIncludeReplicateFiles.Name = "cbIncludeReplicateFiles";
+            this.cbIncludeReplicateFiles.UseVisualStyleBackColor = true;
+            this.cbIncludeReplicateFiles.CheckedChanged += new System.EventHandler(this.cbIncludeFiles_CheckedChanged);
+            // 
+            // tableLayoutPanel1
+            // 
+            resources.ApplyResources(this.tableLayoutPanel1, "tableLayoutPanel1");
+            this.tableLayoutPanel1.Controls.Add(this.btnSelectReplicateFiles, 1, 0);
+            this.tableLayoutPanel1.Controls.Add(this.cbIncludeReplicateFiles, 0, 0);
+            this.tableLayoutPanel1.Name = "tableLayoutPanel1";
+            // 
+            // labelFileStatus
+            // 
+            resources.ApplyResources(this.labelFileStatus, "labelFileStatus");
+            this.labelFileStatus.Name = "labelFileStatus";
+            // 
             // ShareTypeDlg
             // 
             this.AcceptButton = this.btnShare;
@@ -105,6 +136,8 @@
             this.AutoScaleMode = System.Windows.Forms.AutoScaleMode.Font;
             this.BackColor = System.Drawing.SystemColors.Control;
             this.CancelButton = this.btnCancel;
+            this.Controls.Add(this.labelFileStatus);
+            this.Controls.Add(this.tableLayoutPanel1);
             this.Controls.Add(this.radioMinimal);
             this.Controls.Add(this.label2);
             this.Controls.Add(this.radioComplete);
@@ -117,6 +150,8 @@
             this.Name = "ShareTypeDlg";
             this.ShowInTaskbar = false;
             this.panelButtonBar.ResumeLayout(false);
+            this.tableLayoutPanel1.ResumeLayout(false);
+            this.tableLayoutPanel1.PerformLayout();
             this.ResumeLayout(false);
             this.PerformLayout();
 
@@ -133,5 +168,9 @@
         private System.Windows.Forms.Label label3;
         private System.Windows.Forms.ComboBox comboSkylineVersion;
         private System.Windows.Forms.ToolTip toolTip1;
+        private System.Windows.Forms.Button btnSelectReplicateFiles;
+        private System.Windows.Forms.CheckBox cbIncludeReplicateFiles;
+        private System.Windows.Forms.TableLayoutPanel tableLayoutPanel1;
+        private System.Windows.Forms.Label labelFileStatus;
     }
 }

@@ -53,24 +53,22 @@ namespace pwiz.SkylineTestFunctional
             });
 
             // Add some modifications to the peptide settings
-            var peptideSettingsUi = ShowDialog<PeptideSettingsUI>(SkylineWindow.ShowPeptideSettingsUI);
-            RunUI(() =>
+            RunLongDlg<PeptideSettingsUI>(SkylineWindow.ShowPeptideSettingsUI, peptideSettingsUi =>
             {
-                peptideSettingsUi.SelectedTab = PeptideSettingsUI.TABS.Modifications;
-            });
-            RunDlg<EditListDlg<SettingsListBase<StaticMod>, StaticMod>>(peptideSettingsUi.EditStaticMods,
-                editMods =>
-                {
-                    editMods.AddItem(waterLossModification);
-                    editMods.OkDialog();
-                });
-            RunDlg<EditListDlg<SettingsListBase<StaticMod>, StaticMod>>(peptideSettingsUi.EditStaticMods,
-                editMods =>
-                {
-                    editMods.AddItem(phosphoModification);
-                    editMods.OkDialog();
-                });
-            OkDialog(peptideSettingsUi, peptideSettingsUi.OkDialog);
+                RunUI(() => { peptideSettingsUi.SelectedTab = PeptideSettingsUI.TABS.Modifications; });
+                RunDlg<EditListDlg<SettingsListBase<StaticMod>, StaticMod>>(peptideSettingsUi.EditStaticMods,
+                    editMods =>
+                    {
+                        editMods.AddItem(waterLossModification);
+                        editMods.OkDialog();
+                    });
+                RunDlg<EditListDlg<SettingsListBase<StaticMod>, StaticMod>>(peptideSettingsUi.EditStaticMods,
+                    editMods =>
+                    {
+                        editMods.AddItem(phosphoModification);
+                        editMods.OkDialog();
+                    });
+            }, peptideSettingsUi => peptideSettingsUi.OkDialog());
             // Apply the Phospho modification to the "S" amino acid on the peptide and the Water Loss to the "E"
             RunDlg<EditPepModsDlg>(SkylineWindow.ModifyPeptide, editPepModsDlg =>
             {
@@ -105,26 +103,18 @@ namespace pwiz.SkylineTestFunctional
             Assert.AreNotEqual(0, GetLossesForMod(phosphoModification).Count());
             Assert.AreNotEqual(0, GetLossesForMod(waterLossModification).Count());
             // Remove the phospho modification from settings
-            bool peptideSettingsClosed = false;
-            peptideSettingsUi = ShowDialog<PeptideSettingsUI>(() =>
-            {
-                SkylineWindow.ShowPeptideSettingsUI();
-                peptideSettingsClosed = true;
-            });
-            RunUI(() =>
-            {
-                peptideSettingsUi.SelectedTab = PeptideSettingsUI.TABS.Modifications;
-            });
-            RunDlg<EditListDlg<SettingsListBase<StaticMod>, StaticMod>>(peptideSettingsUi.EditStaticMods,
-                editMods =>
+            RunLongDlg<PeptideSettingsUI>(SkylineWindow.ShowPeptideSettingsUI,
+                peptideSettingsUi =>
                 {
-                    editMods.SelectItem(phosphoModification.Name);
-                    editMods.RemoveItem();
-                    editMods.OkDialog();
-                });
-            OkDialog(peptideSettingsUi, peptideSettingsUi.OkDialog);
-            // Wait for the peptide settings dialog to finish updating SkylineWindow.Document
-            WaitForCondition(() => peptideSettingsClosed);
+                    RunUI(() => { peptideSettingsUi.SelectedTab = PeptideSettingsUI.TABS.Modifications; });
+                    RunDlg<EditListDlg<SettingsListBase<StaticMod>, StaticMod>>(peptideSettingsUi.EditStaticMods,
+                        editMods =>
+                        {
+                            editMods.SelectItem(phosphoModification.Name);
+                            editMods.RemoveItem();
+                            editMods.OkDialog();
+                        });
+                }, peptideSettingsUi => peptideSettingsUi.OkDialog());
             AssertEx.Serializable(SkylineWindow.Document);
             Assert.AreEqual(0, GetLossesForMod(phosphoModification).Count());
             Assert.AreNotEqual(0, GetLossesForMod(waterLossModification).Count());

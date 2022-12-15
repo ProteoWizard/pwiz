@@ -133,10 +133,37 @@ class BinaryData<T>::Impl
         {
             if (managedStorage_->Length == that.size())
             {
-                // swap the managed array to the vector and vice versa
-                pin_ptr<T> pinnedArrayPtr = &managedStorage_[0];
-                T* nativeArrayPtr = &that[0];
-                std::swap_ranges(nativeArrayPtr, nativeArrayPtr + that.size(), (T*)&pinnedArrayPtr[0]);
+                if (that.size() == 0)
+                {
+                    managedStorage_ = System::Array::Empty<T>();
+                }
+                else
+                {
+                    // swap the managed array to the vector and vice versa
+                    pin_ptr<T> pinnedArrayPtr = &managedStorage_[0];
+                    T* nativeArrayPtr = &that[0];
+                    std::swap_ranges(nativeArrayPtr, nativeArrayPtr + that.size(), (T*)&pinnedArrayPtr[0]);
+                }
+            }
+            else if (that.size() == 0)
+            {
+                // copy the managed array's contents to the native array
+                {
+                    pin_ptr<T> pinnedArrayPtr = &managedStorage_[0];
+                    that.resize(managedStorage_->Length);
+                    memcpy(&that[0], &pinnedArrayPtr[0], that.size() * sizeof(T));
+                }
+
+                managedStorage_ = System::Array::Empty<T>();
+            }
+            else if (managedStorage_->Length == 0)
+            {
+                // copy native array to managed
+                managedStorage_ = gcnew cli::array<T>((int)that.size());
+                pin_ptr<T> pinnedTmpPtr = &managedStorage_[0];
+                for (int i = 0; i < that.size(); ++i)
+                    pinnedTmpPtr[i] = that[i];
+                that.clear();
             }
             else
             {
