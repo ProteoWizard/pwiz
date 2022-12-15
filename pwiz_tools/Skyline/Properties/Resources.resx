@@ -196,9 +196,6 @@
   <data name="PeptideGroupTreeNode_RenderTip_Original_Description" xml:space="preserve">
     <value>Original Description</value>
   </data>
-  <data name="VendorIssueHelper_ConvertBrukerToMzml_CompassXport_software_must_be_installed_to_import_Bruker_raw_data_files_" xml:space="preserve">
-    <value>CompassXport software must be installed to import Bruker raw data files.</value>
-  </data>
   <data name="CommandLine_ImportResultsFile_File_write_date__0__is_before___import_on_or_after_date__1___Ignoring___" xml:space="preserve">
     <value>File write date {0} is before --import-on-or-after date {1}. Ignoring...</value>
   </data>
@@ -2613,9 +2610,6 @@ Are you sure you want to continue?</value>
   <data name="ImportFastaControl_ImportFasta_The_document_does_not_contain_any_precursor_transitions_" xml:space="preserve">
     <value>The document does not contain any precursor transitions.</value>
   </data>
-  <data name="VendorIssueHelper_ConvertLocalWiffToMzxml_Failure_attempting_to_convert_sample__0__in__1__to_mzXML_to_work_around_a_performance_issue_in_the_AB_Sciex_WiffFileDataReader_library" xml:space="preserve">
-    <value>Failure attempting to convert sample {0} in {1} to mzXML to work around a performance issue in the AB Sciex WiffFileDataReader library.</value>
-  </data>
   <data name="NistLibraryBase_Load_Invalid_precursor_charge_found_File_may_be_corrupted" xml:space="preserve">
     <value>Invalid precursor charge found. File may be corrupted.</value>
   </data>
@@ -3618,9 +3612,6 @@ Are you sure you want to continue?</value>
   </data>
   <data name="CommandLine_ReintegratePeaks_Error__You_must_first_import_results_into_the_document_before_reintegrating_" xml:space="preserve">
     <value>Error: You must first import results into the document before reintegrating.</value>
-  </data>
-  <data name="VendorIssueHelper_ConvertBrukerToMzml_Calculating_hash_of_input_file" xml:space="preserve">
-    <value>Calculating hash of input file</value>
   </data>
   <data name="OptimizationDb_FILTER_OPTDB_Optimization_Libraries" xml:space="preserve">
     <value>Optimization Libraries</value>
@@ -7035,9 +7026,6 @@ Please contact the Panorama server administrator to upgrade the server.</value>
   </data>
   <data name="BioMassCalc_SynchMasses_Fixing_isotope_abundance_masses_requires_a_monoisotopic_mass_calculator" xml:space="preserve">
     <value>Fixing isotope abundance masses requires a monoisotopic mass calculator</value>
-  </data>
-  <data name="VendorIssueHelper_ConvertBrukerToMzml_Failure_attempting_to_convert__0__to_mzML_using_CompassXport_" xml:space="preserve">
-    <value>Failure attempting to convert {0} to mzML using CompassXport.</value>
   </data>
   <data name="TransitionPrediction_DoValidate_Transition_prediction_requires_a_collision_energy_regression_function" xml:space="preserve">
     <value>Transition prediction requires a collision energy regression function.</value>
@@ -11835,6 +11823,9 @@ If you do not have the original file, you may build the library with embedded sp
   <data name="BuildLibraryGridView_GridUpdateScoreInfo_Score_type_not_found_" xml:space="preserve">
       <value>Score type not found.</value>
   </data>
+  <data name="ShareResultsFilesDlg_LocateMissingFilesFromFolder_Please_select_the_folder_containing_the_missing_files_" xml:space="preserve">
+    <value>Please select the folder containing the missing files.</value>
+  </data>
   <data name="BrukerTimsTofIsolationListExporter_CheckIonMobilities__0____1_____2__" xml:space="preserve">
       <value>{0} ({1} - {2})</value>
   </data>
@@ -11922,5 +11913,14 @@ If you do not have the original file, you may build the library with embedded sp
   <data name="StaticMod_FormatFormulaOrMass___0__Da_" xml:space="preserve">
 	  <value>({0} Da)</value>
 	  <comment>"Da" stands for "Daltons". Example: (+57.2 Da)</comment>
+  </data>
+  <data name="AuxiliaryFiles_GetStatusText__0__files_have_not_been_located_" xml:space="preserve">
+	  <value>{0} files have not been located.</value>
+  </data>
+  <data name="AuxiliaryFiles_GetStatusText__0__of__1__files_will_be_included_" xml:space="preserve">
+	  <value>{0} of {1} files will be included.</value>
+  </data>
+  <data name="ShareTypeDlg_OkDialog_Including_data_folders_is_not_supported_by_the_currently_selected_version_" xml:space="preserve">
+      <value>Including data folders is not supported by the currently selected version.</value>
   </data>
 </root>

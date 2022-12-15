@@ -45,8 +45,14 @@ namespace pwiz.Skyline.FileUI
         private RemoteSession _remoteSession;
         private readonly IList<RemoteAccount> _remoteAccounts;
         private bool _waitingForData;
-
-        public OpenDataSourceDialog(IList<RemoteAccount> remoteAccounts)
+        private readonly IList<string> _specificDataSourceFilter; // Specific data sources to look for
+        
+        /// <summary>
+        /// File picker which is aware of mass spec "files" that are really directories
+        /// </summary>
+        /// <param name="remoteAccounts">For UNIFI</param>
+        /// <param name="specificDataSourceFilter">Optional list of specific files the user needs to located, ignoring the rest</param>
+        public OpenDataSourceDialog(IList<RemoteAccount> remoteAccounts, IList<string> specificDataSourceFilter = null)
         {
             InitializeComponent();
             _remoteAccounts = remoteAccounts;
@@ -108,6 +114,8 @@ namespace pwiz.Skyline.FileUI
             lookInComboBox.SelectedIndex = 1;
             lookInComboBox.IntegralHeight = false;
             lookInComboBox.DropDownHeight = lookInComboBox.Items.Count * lookInComboBox.ItemHeight + 2;
+
+            _specificDataSourceFilter = specificDataSourceFilter;
         }
 
         public new DialogResult ShowDialog(IWin32Window owner)
@@ -483,6 +491,17 @@ namespace pwiz.Skyline.FileUI
                             // Always show folders
                             sourceInfo.isFolder)
                 {
+                    // Filter for specifically named data sources (as when called from Skyline File>Share)
+                    if (_specificDataSourceFilter != null && !sourceInfo.isFolder)
+                    {
+                        var name = sourceInfo.MsDataFileUri.GetFileName();
+                        if (!_specificDataSourceFilter.Any(specificDataSource => specificDataSource.Equals(name,
+                                StringComparison.CurrentCultureIgnoreCase)))
+                        {
+                            continue;
+                        }
+                    }
+
                     ListViewItem item = new ListViewItem(sourceInfo.ToArray(), (int) sourceInfo.imageIndex)
                     {
                         Tag = sourceInfo,
@@ -909,6 +928,13 @@ namespace pwiz.Skyline.FileUI
                 case Keys.F5:
                     populateListViewFromDirectory( _currentDirectory ); // refresh
                     _abortPopulateList = true;
+                    break;
+                case Keys.A:
+                    if (e.Control)
+                    {
+                        foreach (ListViewItem item in listView.Items)
+                            item.Selected = true;
+                    }
                     break;
             }
         }

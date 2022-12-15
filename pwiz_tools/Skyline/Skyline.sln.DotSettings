@@ -149,6 +149,7 @@
 	<s:Boolean x:Key="/Default/Environment/UnitTesting/ShadowCopy/@EntryValue">False</s:Boolean>
 	<s:String x:Key="/Default/FilterSettingsManager/AttributeFilterXml/@EntryValue">&lt;data /&gt;</s:String>
 	<s:String x:Key="/Default/FilterSettingsManager/CoverageFilterXml/@EntryValue">&lt;data&gt;&lt;IncludeFilters /&gt;&lt;ExcludeFilters /&gt;&lt;/data&gt;</s:String>
+	<s:String x:Key="/Default/Housekeeping/UnitTestingMru/UnitTestRunner/RunConfigurationFilename/@EntryValue">TestSettings_x64.runsettings</s:String>
 	<s:Boolean x:Key="/Default/PatternsAndTemplates/LiveTemplates/Template/=B1E1D4C4C8DF11449D8D75F8DBBBFCAD/@KeyIndexDefined">True</s:Boolean>
 	<s:Boolean x:Key="/Default/PatternsAndTemplates/LiveTemplates/Template/=B1E1D4C4C8DF11449D8D75F8DBBBFCAD/Applicability/=Live/@EntryIndexedValue">True</s:Boolean>
 	<s:Boolean x:Key="/Default/PatternsAndTemplates/LiveTemplates/Template/=B1E1D4C4C8DF11449D8D75F8DBBBFCAD/Applicability/=Surround/@EntryIndexedValue">False</s:Boolean>
