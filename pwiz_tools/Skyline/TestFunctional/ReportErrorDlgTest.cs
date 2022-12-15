@@ -91,27 +91,51 @@ namespace pwiz.SkylineTestFunctional
 
             // Verify that the "Report Error" menu item on the Help menu is hidden unless the user holds down the shift key
             ToolStripMenuItem submitErrorReportMenuItem = null;
+            ToolStripMenuItem crashSkylineMenuItem = null;
             RunUI(() =>
             {
                 var helpMenuItem = skylineWindow.MainMenuStrip.Items.OfType<ToolStripMenuItem>()
                     .FirstOrDefault(item => item.Name == "helpToolStripMenuItem");
                 Assert.IsNotNull(helpMenuItem);
-                SetShiftKeyState(false);
-                Assert.AreEqual(Keys.None, Control.ModifierKeys & Keys.Shift);
+
+                SetShiftKeyState(false, false);
+                Assert.AreEqual(Keys.None, Control.ModifierKeys & (Keys.Shift | Keys.Control));
                 helpMenuItem.ShowDropDown();
                 submitErrorReportMenuItem = helpMenuItem.DropDownItems.OfType<ToolStripMenuItem>()
                     .FirstOrDefault(item => item.Name == "submitErrorReportMenuItem");
                 Assert.IsNotNull(submitErrorReportMenuItem);
                 Assert.IsFalse(submitErrorReportMenuItem.Visible);
+                crashSkylineMenuItem = helpMenuItem.DropDownItems.OfType<ToolStripMenuItem>()
+                    .FirstOrDefault(item => item.Name == "crashSkylineMenuItem");
+                Assert.IsNotNull(crashSkylineMenuItem);
+                Assert.IsFalse(crashSkylineMenuItem.Visible);
                 helpMenuItem.HideDropDown();
-                SetShiftKeyState(true);
-                Assert.AreEqual(Keys.Shift, Control.ModifierKeys & Keys.Shift);
+                
+                SetShiftKeyState(true, false);
+                Assert.AreEqual(Keys.Shift, Control.ModifierKeys & (Keys.Shift | Keys.Control));
                 helpMenuItem.ShowDropDown();
                 submitErrorReportMenuItem = helpMenuItem.DropDownItems.OfType<ToolStripMenuItem>()
                     .FirstOrDefault(item => item.Name == "submitErrorReportMenuItem");
                 Assert.IsNotNull(submitErrorReportMenuItem);
                 Assert.IsTrue(submitErrorReportMenuItem.Visible);
-                SetShiftKeyState(false);
+                crashSkylineMenuItem = helpMenuItem.DropDownItems.OfType<ToolStripMenuItem>()
+                    .FirstOrDefault(item => item.Name == "crashSkylineMenuItem");
+                Assert.IsNotNull(crashSkylineMenuItem);
+                Assert.IsFalse(crashSkylineMenuItem.Visible);
+
+                SetShiftKeyState(true, true);
+                Assert.AreEqual(Keys.Shift | Keys.Control, Control.ModifierKeys & (Keys.Shift | Keys.Control));
+                helpMenuItem.ShowDropDown();
+                submitErrorReportMenuItem = helpMenuItem.DropDownItems.OfType<ToolStripMenuItem>()
+                    .FirstOrDefault(item => item.Name == "submitErrorReportMenuItem");
+                Assert.IsNotNull(submitErrorReportMenuItem);
+                Assert.IsTrue(submitErrorReportMenuItem.Visible);
+                crashSkylineMenuItem = helpMenuItem.DropDownItems.OfType<ToolStripMenuItem>()
+                    .FirstOrDefault(item => item.Name == "crashSkylineMenuItem");
+                Assert.IsNotNull(crashSkylineMenuItem);
+                Assert.IsTrue(crashSkylineMenuItem.Visible);
+
+                SetShiftKeyState(false, false);
                 Assert.AreEqual(Keys.None, Control.ModifierKeys & Keys.Shift);
             });
             Assert.IsNotNull(submitErrorReportMenuItem);
@@ -147,12 +171,12 @@ namespace pwiz.SkylineTestFunctional
         [DllImport("user32.dll", SetLastError = true)]
         [return: MarshalAs(UnmanagedType.Bool)]
         static extern bool GetKeyboardState(byte[] lpKeyState);
-        private void SetShiftKeyState(bool pressed)
+        private void SetShiftKeyState(bool shiftPressed, bool ctrlPressed)
         {
             var keyStates = new byte[256];
             Assert.IsTrue(GetKeyboardState(keyStates));
             var shiftKeyState = keyStates[(int)Keys.ShiftKey];
-            if (pressed)
+            if (shiftPressed)
             {
                 shiftKeyState |= 0x80;
             }
@@ -161,8 +185,20 @@ namespace pwiz.SkylineTestFunctional
                 shiftKeyState = (byte)(shiftKeyState & ~0x80);
             }
             keyStates[(int)Keys.ShiftKey] = shiftKeyState;
+            var ctrlKeyState = keyStates[(int)Keys.ControlKey];
+            if (ctrlPressed)
+            {
+                ctrlKeyState |= 0x80;
+            }
+            else
+            {
+                ctrlKeyState = (byte)(ctrlKeyState & ~0x80);
+            }
+
+            keyStates[(int)Keys.ControlKey] = ctrlKeyState;
             Assert.IsTrue(SetKeyboardState(keyStates));
-            Assert.AreEqual(pressed, 0 != (Control.ModifierKeys & Keys.Shift));
+            Assert.AreEqual(shiftPressed, 0 != (Control.ModifierKeys & Keys.Shift));
+            Assert.AreEqual(ctrlPressed, 0 != (Control.ModifierKeys & Keys.Control));
         }
 
         private void ReportException(Exception x)
