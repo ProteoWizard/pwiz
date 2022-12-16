@@ -1216,35 +1216,42 @@ namespace pwiz.Skyline
             string fileName = DocumentFilePath;
             ShareType shareType;
             DocumentFormat? fileFormatOnDisk = GetFileFormatOnDisk();
-            using (var dlgType = new ShareTypeDlg(document, fileFormatOnDisk))
+            using (var dlgType = new ShareTypeDlg(document, fileName, fileFormatOnDisk))
             {
                 if (dlgType.ShowDialog(this) == DialogResult.Cancel)
                     return;
                 shareType = dlgType.ShareType;
             }
 
-            if (skyZipFileName == null)
+            skyZipFileName ??= GetShareFileName();
+            if (skyZipFileName != null)
+                ShareDocument(skyZipFileName, shareType);
+        }
+
+        /// <summary>
+        /// Gets a share file path from the users.
+        /// This cannot be tested because it uses a CommonDialog form.
+        /// </summary>
+        private string GetShareFileName()
+        {
+            using var dlg = new SaveFileDialog
             {
-                using (var dlg = new SaveFileDialog
-                {
-                    Title = Resources.SkylineWindow_shareDocumentMenuItem_Click_Share_Document,
-                    OverwritePrompt = true,
-                    DefaultExt = SrmDocumentSharing.EXT_SKY_ZIP,
-                    SupportMultiDottedExtensions = true,
-                    Filter = TextUtil.FileDialogFilterAll(Resources.SkylineWindow_shareDocumentMenuItem_Click_Skyline_Shared_Documents, SrmDocumentSharing.EXT),
-                })
-                {
-                    if (fileName != null)
-                    {
-                        dlg.InitialDirectory = Path.GetDirectoryName(fileName);
-                        dlg.FileName = Path.GetFileNameWithoutExtension(fileName) + SrmDocumentSharing.EXT_SKY_ZIP;
-                    }
-                    if (dlg.ShowDialog(this) == DialogResult.Cancel)
-                        return;
-                    skyZipFileName = dlg.FileName;
-                }
+                Title = Resources.SkylineWindow_shareDocumentMenuItem_Click_Share_Document,
+                OverwritePrompt = true,
+                DefaultExt = SrmDocumentSharing.EXT_SKY_ZIP,
+                SupportMultiDottedExtensions = true,
+                Filter = TextUtil.FileDialogFilterAll(
+                    Resources.SkylineWindow_shareDocumentMenuItem_Click_Skyline_Shared_Documents,
+                    SrmDocumentSharing.EXT),
+            };
+            string fileName = DocumentFilePath;
+            if (fileName != null)
+            {
+                dlg.InitialDirectory = Path.GetDirectoryName(fileName);
+                dlg.FileName = Path.GetFileNameWithoutExtension(fileName) + SrmDocumentSharing.EXT_SKY_ZIP;
             }
-            ShareDocument(skyZipFileName, shareType);
+
+            return dlg.ShowDialog(this) == DialogResult.OK ? dlg.FileName : null;
         }
 
         private DocumentFormat? GetFileFormatOnDisk()
@@ -3350,7 +3357,7 @@ namespace pwiz.Skyline
             try
             {
                 var cancelled = false;
-                shareType = publishClient.GetShareType(fileInfo, DocumentUI, GetFileFormatOnDisk(), this, ref cancelled);
+                shareType = publishClient.GetShareType(fileInfo, DocumentUI, DocumentFilePath, GetFileFormatOnDisk(), this, ref cancelled);
                 if (cancelled)
                 {
                     return true;
