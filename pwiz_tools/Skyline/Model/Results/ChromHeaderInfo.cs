@@ -999,10 +999,10 @@ namespace pwiz.Skyline.Model.Results
         private FlagValues _flagValues;
         private short _massError;
         private readonly short _pointsAcross;
-        private readonly HalfPrecisionFloat _stdDev;
-        private readonly HalfPrecisionFloat _skewness;
-        private readonly HalfPrecisionFloat _kurtosis;
-        private readonly HalfPrecisionFloat _shapeCorrelation;
+        private readonly float _stdDev;
+        private readonly float _skewness;
+        private readonly float _kurtosis;
+        private readonly float _shapeCorrelation;
 
         [Flags]
         public enum FlagValues : ushort
@@ -1065,10 +1065,10 @@ namespace pwiz.Skyline.Model.Results
             if (peakShapeValues.HasValue)
             {
                 flagValues |= FlagValues.has_peak_shape;
-                _skewness = (HalfPrecisionFloat) peakShapeValues.Value.Skewness;
-                _kurtosis = (HalfPrecisionFloat)peakShapeValues.Value.Kurtosis;
-                _stdDev = (HalfPrecisionFloat)peakShapeValues.Value.StdDev;
-                _shapeCorrelation = (HalfPrecisionFloat) peakShapeValues.Value.ShapeCorrelation;
+                _skewness = peakShapeValues.Value.Skewness;
+                _kurtosis = peakShapeValues.Value.Kurtosis;
+                _stdDev = peakShapeValues.Value.StdDev;
+                _shapeCorrelation = peakShapeValues.Value.ShapeCorrelation;
             }
             else
             {
@@ -1195,10 +1195,10 @@ namespace pwiz.Skyline.Model.Results
             if (peakShapeStatistics != null)
             {
                 _flagValues |= FlagValues.has_peak_shape;
-                _stdDev = (HalfPrecisionFloat) peakShapeStatistics.StdDevTime;
-                _skewness = (HalfPrecisionFloat) peakShapeStatistics.Skewness;
-                _kurtosis = (HalfPrecisionFloat) peakShapeStatistics.Kurtosis;
-                _shapeCorrelation = (HalfPrecisionFloat) (medianPeakShape?.GetCorrelation(timeIntensities) ?? 1f);
+                _stdDev = (float) peakShapeStatistics.StdDevTime;
+                _skewness = (float) peakShapeStatistics.Skewness;
+                _kurtosis = (float) peakShapeStatistics.Kurtosis;
+                _shapeCorrelation = (float?) medianPeakShape?.GetCorrelation(timeIntensities) ?? 1f;
             }
             else
             {
@@ -1323,7 +1323,7 @@ namespace pwiz.Skyline.Model.Results
             {
                 return 36;
             }
-            return 44;
+            return 52;
         }
 
         public static StructSerializer<ChromPeak> StructSerializer(int chromPeakSize)
