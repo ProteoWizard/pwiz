@@ -107,7 +107,17 @@ namespace pwiz.Skyline.FileUI.PeptideSearch
             if (!filesNotAlreadyDownloaded.Any())
                 return true;
 
-            SimpleFileDownloaderDlg.Show(TopLevelControl, string.Format(Resources.SearchSettingsControl_EnsureRequiredFilesDownloaded_Download__0_, searchEngineComboBox.SelectedItem),  filesNotAlreadyDownloaded);
+            try
+            {
+                SimpleFileDownloaderDlg.Show(TopLevelControl,
+                    string.Format(Resources.SearchSettingsControl_EnsureRequiredFilesDownloaded_Download__0_,
+                        searchEngineComboBox.SelectedItem), filesNotAlreadyDownloaded);
+            }
+            catch (Exception exception)
+            {
+                MessageDlg.ShowWithException(this, exception.Message, exception);
+                return false;
+            }
 
             return !SimpleFileDownloader.FilesNotAlreadyDownloaded(filesNotAlreadyDownloaded).Any();
         }
