@@ -128,7 +128,7 @@ namespace pwiz.Skyline.SettingsUI
             }
         }
 
-        public int PeptidesCount { get { return _peptides.Count; } }
+        public int PeptidesCount { get { return _peptides != null ? _peptides.Count : 0; } }
 
         public bool HasSmallMolecules { get; private set; }
         public bool HasPeptides { get; private set;  }
@@ -169,7 +169,7 @@ namespace pwiz.Skyline.SettingsUI
             _driverLibraries = new SettingsListComboDriver<LibrarySpec>(comboLibrary, Settings.Default.SpectralLibraryList);
             Settings.Default.SpectralLibraryList.ListChanged += SpectralLibraryList_ListChanged;
 
-            GraphSettings = new GraphSpectrumSettings(UpdateUI);
+            GraphSettings = new GraphSpectrumSettings(UpdateGraphs);
 
             Icon = Resources.Skyline;
             ModFonts = new ModFontHolder(listPeptide);
@@ -199,6 +199,12 @@ namespace pwiz.Skyline.SettingsUI
             _matcher = new LibKeyModificationMatcher();
             _showChromatograms = Settings.Default.ShowLibraryChromatograms;
             _hasChromatograms = false; // We'll set this true if the user opens a chromatogram library
+        }
+
+        private void UpdateGraphs(bool selectionChanged)
+        {
+            UpdateUI(selectionChanged);
+            (Owner as SkylineWindow)?.UpdateSpectrumGraph(selectionChanged);
         }
 
         private void SpectralLibraryList_ListChanged(object sender, EventArgs e)
@@ -354,6 +360,13 @@ namespace pwiz.Skyline.SettingsUI
                 Settings.Default.ViewLibrarySplitPropsDist = msGraphExtension1.Splitter.SplitterDistance;
             Settings.Default.ViewLibraryPropertiesSorted =
                 msGraphExtension1.PropertiesSheet.PropertySort == PropertySort.Alphabetical;
+
+            var ionTypeSelector = GetHostedControl<IonTypeSelectionPanel>();
+            if (ionTypeSelector != null)
+            {
+                ionTypeSelector.HostedControl.IonTypeChanged -= IonTypeSelector_IonTypeChanges;
+                ionTypeSelector.HostedControl.LossChanged -= IonTypeSelector_LossChanged;
+            }
 
             base.OnClosing(e);
         }
@@ -757,13 +770,8 @@ namespace pwiz.Skyline.SettingsUI
                     btnXIons.Enabled = btnXIons.Visible =
                     btnYIons.Enabled = btnYIons.Visible =
                     btnZIons.Enabled = btnZIons.Visible =
-                    aionsContextMenuItem.Enabled = aionsContextMenuItem.Visible =
-                    bionsContextMenuItem.Enabled = bionsContextMenuItem.Visible =
-                    cionsContextMenuItem.Enabled = cionsContextMenuItem.Visible =
-                    xionsContextMenuItem.Enabled = xionsContextMenuItem.Visible =
-                    yionsContextMenuItem.Enabled = yionsContextMenuItem.Visible =
-                    zionsContextMenuItem.Enabled = zionsContextMenuItem.Visible
-                    = isSequenceLibrary && !isSmallMoleculeItem;
+                    ionTypesContextMenuItem.Enabled = ionTypesContextMenuItem.Visible = isSequenceLibrary && !isSmallMoleculeItem;
+
                 btnFragmentIons.Enabled = btnFragmentIons.Visible =
                     fragmentionsContextMenuItem.Enabled = fragmentionsContextMenuItem.Visible =
                     isSequenceLibrary && isSmallMoleculeItem;
@@ -944,6 +952,7 @@ namespace pwiz.Skyline.SettingsUI
                             ShowScores = Settings.Default.ShowLibraryScores,
                             ShowMz = Settings.Default.ShowIonMz,
                             ShowObservedMz = Settings.Default.ShowObservedMz,
+                            ShowMassError = Settings.Default.ShowFullScanMassError,
                             ShowDuplicates = Settings.Default.ShowDuplicateIons,
                             FontSize = Settings.Default.SpectrumFontSize,
                             LineWidth = Settings.Default.SpectrumLineWidth
@@ -1182,34 +1191,15 @@ namespace pwiz.Skyline.SettingsUI
             // Insert skyline specific menus
             var set = Settings.Default;
             int iInsert = 0;
-            aionsContextMenuItem.Checked = set.ShowAIons;
-            menuStrip.Items.Insert(iInsert++, aionsContextMenuItem);
-            bionsContextMenuItem.Checked = set.ShowBIons;
-            menuStrip.Items.Insert(iInsert++, bionsContextMenuItem);
-            cionsContextMenuItem.Checked = set.ShowCIons;
-            menuStrip.Items.Insert(iInsert++, cionsContextMenuItem);
-            xionsContextMenuItem.Checked = set.ShowXIons;
-            menuStrip.Items.Insert(iInsert++, xionsContextMenuItem);
-            yionsContextMenuItem.Checked = set.ShowYIons;
-            menuStrip.Items.Insert(iInsert++, yionsContextMenuItem);
-            zionsContextMenuItem.Checked = set.ShowZIons;
-            menuStrip.Items.Insert(iInsert++, zionsContextMenuItem);
             fragmentionsContextMenuItem.Checked = set.ShowFragmentIons;
+            menuStrip.Items.Insert(iInsert++,  ionTypesContextMenuItem);
+
             menuStrip.Items.Insert(iInsert++, fragmentionsContextMenuItem);
             precursorIonContextMenuItem.Checked = set.ShowPrecursorIon;
+            menuStrip.Items.Insert(iInsert++, specialionsContextMenuItem);
+            specialionsContextMenuItem.Checked = set.ShowSpecialIons;
             menuStrip.Items.Insert(iInsert++, precursorIonContextMenuItem);
-            menuStrip.Items.Insert(iInsert++, toolStripSeparator11);
             menuStrip.Items.Insert(iInsert++, chargesContextMenuItem);
-            if (chargesContextMenuItem.DropDownItems.Count == 0)
-            {
-                chargesContextMenuItem.DropDownItems.AddRange(new ToolStripItem[]
-                    {
-                        charge1ContextMenuItem,
-                        charge2ContextMenuItem,
-                        charge3ContextMenuItem,
-                        charge4ContextMenuItem,
-                    });
-            }
             menuStrip.Items.Insert(iInsert++, toolStripSeparator12);
             ranksContextMenuItem.Checked = set.ShowRanks;
             menuStrip.Items.Insert(iInsert++, ranksContextMenuItem);
@@ -1222,6 +1212,8 @@ namespace pwiz.Skyline.SettingsUI
             menuStrip.Items.Insert(iInsert++, ionMzValuesContextMenuItem);
             observedMzValuesContextMenuItem.Checked = set.ShowObservedMz;
             menuStrip.Items.Insert(iInsert++, observedMzValuesContextMenuItem);
+            massErrorToolStripMenuItem.Checked = set.ShowFullScanMassError;
+            menuStrip.Items.Insert(iInsert++, massErrorToolStripMenuItem);
             duplicatesContextMenuItem.Checked = set.ShowDuplicateIons;
             menuStrip.Items.Insert(iInsert++, duplicatesContextMenuItem);
             menuStrip.Items.Insert(iInsert++, toolStripSeparator13);
@@ -1244,6 +1236,8 @@ namespace pwiz.Skyline.SettingsUI
                     menuStrip.Items.Remove(item);
             }
             ZedGraphClipboard.AddToContextMenu(GraphControl, menuStrip);
+            UpdateIonTypeMenu();
+            UpdateChargesMenu();
         }
 
         public void LockYAxis(bool lockY)
@@ -1530,10 +1524,81 @@ namespace pwiz.Skyline.SettingsUI
                 UpdateListPeptide(listPeptide.SelectedIndex);
             }    
         }
-        
+
         #endregion
-        
+
         #region Mouse Click Events
+
+        public void UpdateIonTypeMenu()
+        {
+            if (ionTypesContextMenuItem.DropDownItems.Count > 0 &&
+                ionTypesContextMenuItem.DropDownItems[0] is MenuControl<IonTypeSelectionPanel> ionSelector)
+            {
+                ionSelector.Update(GraphSettings, _documentUiContainer.DocumentUI.Settings.PeptideSettings);
+            }
+            else
+            {
+                ionTypesContextMenuItem.DropDownItems.Clear();
+                var ionTypeSelector = new MenuControl<IonTypeSelectionPanel>(GraphSettings, _documentUiContainer.DocumentUI.Settings.PeptideSettings);
+                ionTypesContextMenuItem.DropDownItems.Add(ionTypeSelector);
+                ionTypeSelector.HostedControl.IonTypeChanged += IonTypeSelector_IonTypeChanges;
+                ionTypeSelector.HostedControl.LossChanged += IonTypeSelector_LossChanged;
+            }
+        }
+
+        public void ionTypeMenuItem_DropDownOpening(object sender, EventArgs e)
+        {
+            UpdateIonTypeMenu();
+        }
+
+        public MenuControl<T> GetHostedControl<T>() where T : Panel, IControlSize, new()
+        {
+            if (GraphControl.ContextMenuStrip != null)
+            {
+                var chargesItem = GraphControl.ContextMenuStrip.Items.OfType<ToolStripMenuItem>()
+                    .FirstOrDefault(item => item.DropDownItems.OfType<MenuControl<T>>().Any());
+                if (chargesItem != null)
+                    return chargesItem.DropDownItems[0] as MenuControl<T>;
+            }
+            return null;
+        }
+
+
+        private void IonTypeSelector_IonTypeChanges(IonType type, bool show)
+        {
+            switch (type)
+            {
+                case IonType.a:
+                    GraphSettings.ShowAIons = show;
+                    break;
+                case IonType.b:
+                    GraphSettings.ShowBIons = show;
+                    break;
+                case IonType.c:
+                    GraphSettings.ShowCIons = show;
+                    break;
+                case IonType.x:
+                    GraphSettings.ShowXIons = show;
+                    break;
+                case IonType.y:
+                    GraphSettings.ShowYIons = show;
+                    break;
+                case IonType.z:
+                    GraphSettings.ShowZIons = show;
+                    break;
+                case IonType.zh:
+                    GraphSettings.ShowZHIons = show;
+                    break;
+                case IonType.zhh:
+                    GraphSettings.ShowZHHIons = show;
+                    break;
+            }
+        }
+
+        private void IonTypeSelector_LossChanged(string[] losses)
+        {
+            GraphSettings.ShowLosses = new List<string>(losses);
+        }
 
         private void aionsContextMenuItem_Click(object sender, EventArgs e)
         {
@@ -1575,6 +1640,25 @@ namespace pwiz.Skyline.SettingsUI
             GraphSettings.ShowPrecursorIon = !GraphSettings.ShowPrecursorIon;
         }
 
+        public void IonChargeSelector_ionChargeChanged(int charge, bool show)
+        {
+            switch (charge)
+            {
+                case 1:
+                    GraphSettings.ShowCharge1 = show;
+                    break;
+                case 2:
+                    GraphSettings.ShowCharge2 = show;
+                    break;
+                case 3:
+                    GraphSettings.ShowCharge3 = show;
+                    break;
+                case 4:
+                    GraphSettings.ShowCharge4 = show;
+                    break;
+            }
+        }
+
         private void charge1ContextMenuItem_Click(object sender, EventArgs e)
         {
             GraphSettings.ShowCharge1 = !GraphSettings.ShowCharge1;
@@ -1585,14 +1669,9 @@ namespace pwiz.Skyline.SettingsUI
             GraphSettings.ShowCharge2 = !GraphSettings.ShowCharge2;
         }
 
-        private void charge3ContextMenuItem_Click(object sender, EventArgs e)
+        private void specialionsContextMenuItem_Click(object sender, EventArgs e)
         {
-            GraphSettings.ShowCharge3 = !GraphSettings.ShowCharge3;
-        }
-
-        private void charge4ContextMenuItem_Click(object sender, EventArgs e)
-        {
-            GraphSettings.ShowCharge4 = !GraphSettings.ShowCharge4;
+            GraphSettings.ShowSpecialIons = !GraphSettings.ShowSpecialIons;
         }
 
         private void propertiesMenuItem_Click(object sender, EventArgs e)
@@ -1610,31 +1689,43 @@ namespace pwiz.Skyline.SettingsUI
                 msGraphExtension1.Splitter.SplitterDistance = Settings.Default.ViewLibrarySplitPropsDist;
         }
 
-        private void chargesMenuItem_DropDownOpening(object sender, EventArgs e)
+        public void UpdateChargesMenu()
         {
             var set = GraphSettings;
-            charge1ContextMenuItem.Checked = set.ShowCharge1;
-            charge2ContextMenuItem.Checked = set.ShowCharge2;
-            charge3ContextMenuItem.Checked = set.ShowCharge3;
-            charge4ContextMenuItem.Checked = set.ShowCharge4;
+            if (chargesContextMenuItem.DropDownItems.Count > 0 && chargesContextMenuItem.DropDownItems[0] is MenuControl<ChargeSelectionPanel> chargeSelector)
+            {
+                chargeSelector.Update(GraphSettings, _documentUiContainer.DocumentUI.Settings.PeptideSettings);
+            }
+            else
+            {
+                chargesContextMenuItem.DropDownItems.Clear();
+                var selectorControl = new MenuControl<ChargeSelectionPanel>(GraphSettings, _documentUiContainer.DocumentUI.Settings.PeptideSettings);
+                chargesContextMenuItem.DropDownItems.Add(selectorControl);
+                selectorControl.HostedControl.OnChargeChanged += IonChargeSelector_ionChargeChanged;
+            }
+        }
+
+        private void chargesMenuItem_DropDownOpening(object sender, EventArgs e)
+        {
+            UpdateChargesMenu();
         }
 
         private void ranksContextMenuItem_Click(object sender, EventArgs e)
         {
             Settings.Default.ShowRanks = !Settings.Default.ShowRanks;
-            UpdateUI();
+            UpdateGraphs(true);
         }
 
         private void scoreContextMenuItem_Click(object sender, EventArgs e)
         {
             Settings.Default.ShowLibraryScores = !Settings.Default.ShowLibraryScores;
-            UpdateUI();
+            UpdateGraphs(true);
         }
 
         private void ionMzValuesContextMenuItem_Click(object sender, EventArgs e)
         {
-            Settings.Default.ShowIonMz = !Settings.Default.ShowIonMz;
-            UpdateUI();
+            GraphSettings.ShowSpecialIons = !Settings.Default.ShowIonMz;
+            UpdateGraphs(true);
         }
 
         private void observedMzValuesContextMenuItem_Click(object sender, EventArgs e)
@@ -1642,10 +1733,16 @@ namespace pwiz.Skyline.SettingsUI
             SetObservedMzValues(!Settings.Default.ShowObservedMz);
         }
 
+        private void massErrorToolStripMenuItem_Click(object sender, EventArgs e)
+        {
+            Settings.Default.ShowFullScanMassError = !Settings.Default.ShowFullScanMassError;
+            UpdateGraphs(true);
+        }
+
         public void SetObservedMzValues(bool on)
         {
             Settings.Default.ShowObservedMz = on;
-            UpdateUI();
+            UpdateGraphs(true);
         }
 
         private void duplicatesContextMenuItem_Click(object sender, EventArgs e)
@@ -2389,11 +2486,6 @@ namespace pwiz.Skyline.SettingsUI
             set { textPeptide.Text = value; }            
         }
 
-        public int GetSelectedIndex()
-        {
-            return SelectedIndex;
-        }
-
         public int SelectedIndex
         {
             get { return listPeptide.SelectedIndex; }
@@ -2796,29 +2888,37 @@ namespace pwiz.Skyline.SettingsUI
             private List<TextColor> GetSequencePartsToDraw(ExplicitMods mods)
             {
                 var toDrawParts = new List<TextColor>();
-                if (!_pepInfo.Key.HasModifications)
+
+                if (_pepInfo.Key.IsPrecursorKey)
                 {
-                    toDrawParts.Add(new TextColor(_pepInfo.Key.Sequence));
+                    toDrawParts.Add(new TextColor(_pepInfo.Key.ToString()));
                 }
                 else
                 {
-                    var splitMods = SplitModifications(_pepInfo.Key.Sequence);
-                    for (var i = 0; i < splitMods.Count; i++)
+                    if (!_pepInfo.Key.HasModifications)
                     {
-                        var piece = splitMods[i];
-                        string drawStr = piece.Item1.ToString();
-                        var drawColor = Brushes.Black;
-                        if (piece.Item2 != null) // if is modified AA
+                        toDrawParts.Add(new TextColor(_pepInfo.Key.Sequence));
+                    }
+                    else
+                    {
+                        var splitMods = SplitModifications(_pepInfo.Key.Sequence);
+                        for (var i = 0; i < splitMods.Count; i++)
                         {
-                            drawStr += piece.Item2;
-                            var currentMod = GetCurrentMod(mods, i, piece);
-                            if (!IsMatched(currentMod, piece)) // not match if color is red
+                            var piece = splitMods[i];
+                            string drawStr = piece.Item1.ToString();
+                            var drawColor = Brushes.Black;
+                            if (piece.Item2 != null) // if is modified AA
                             {
-                                drawStr = drawStr.Replace(@"]", @"?]");
-                                drawColor = Brushes.Red;
+                                drawStr += piece.Item2;
+                                var currentMod = GetCurrentMod(mods, i, piece);
+                                if (!IsMatched(currentMod, piece)) // not match if color is red
+                                {
+                                    drawStr = drawStr.Replace(@"]", @"?]");
+                                    drawColor = Brushes.Red;
+                                }
                             }
+                            toDrawParts.Add(new TextColor(drawStr, drawColor));
                         }
-                        toDrawParts.Add(new TextColor(drawStr, drawColor));
                     }
                 }
                 return toDrawParts;
@@ -2960,6 +3060,9 @@ namespace pwiz.Skyline.SettingsUI
         /// </summary>
         public static double CalcMz(ViewLibraryPepInfo info, LibKeyModificationMatcher matcher)
         {
+            if (info.Key.IsPrecursorKey)
+                return info.Key.PrecursorMz.GetValueOrDefault();
+
             GetPeptideInfo(info, matcher, out var _settings, out var transitionGroup, out var mods);
             return CalcMz(info, _settings, transitionGroup, mods);
         }
@@ -2970,6 +3073,9 @@ namespace pwiz.Skyline.SettingsUI
         private static double CalcMz(ViewLibraryPepInfo info, SrmSettings settings,
             TransitionGroupDocNode transitionGroup, ExplicitMods mods)
         {
+            if (info.Key.IsPrecursorKey)
+                return info.Key.PrecursorMz.GetValueOrDefault();
+
             var massH = settings.GetPrecursorCalc(transitionGroup.TransitionGroup.LabelType, mods)
                 .GetPrecursorMass(info.Target);
             return SequenceMassCalc.PersistentMZ(SequenceMassCalc.GetMZ(massH, transitionGroup.PrecursorAdduct));

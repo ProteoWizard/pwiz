@@ -327,7 +327,14 @@ File::File(const string& filename)
     {
         records.push_back(readRecord(is));
         if (version >= XcaliburVersion_2_0)
-            is.seekg(60, ios::cur);
+        {
+            // now advance past 15 fields we don't care about
+            // (only the 14th field appears to contain data now, but maybe in the future others will?)
+            for (int field=0; field<15; field++)
+            {
+                readString(is);
+            }
+        }
     }
 }
 

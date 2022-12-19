@@ -404,6 +404,7 @@ namespace pwiz.Skyline.SettingsUI
                                          SortableBindingList<DbOptimization> items, EditOptimizationLibraryDlg form, SrmDocument document, TargetResolver targetResolver)
                 : base(gridView, bindingSource, items)
             {
+                SetRequiredColumns(COLUMN_VALUE);
                 gridView.UserDeletingRow += gridView_UserDeletingRow;
                 gridView.UserDeletedRow += gridView_UserDeletedRow;
                 gridView.CellFormatting += gridView_CellFormatting;

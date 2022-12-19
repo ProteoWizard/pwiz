@@ -159,7 +159,6 @@
     <Compile Include="PerfImportResultsAgilentIMSFringeValues.cs" />
     <Compile Include="PerfImportResultsAgilentIMSTest.cs" />
     <Compile Include="PerfImportResultsAgilentSpectrumMillIMSTest.cs" />
-    <Compile Include="PerfImportResultsHugeTest.cs" />
     <Compile Include="PerfImportResultsWatersIMSTest.cs" />
     <Compile Include="PerfLockmassCmdlineTest.cs" />
     <Compile Include="PerfLockmassTest.cs" />

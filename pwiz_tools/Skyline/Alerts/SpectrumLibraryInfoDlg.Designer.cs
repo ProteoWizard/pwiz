@@ -30,15 +30,15 @@
         {
             System.ComponentModel.ComponentResourceManager resources = new System.ComponentModel.ComponentResourceManager(typeof(SpectrumLibraryInfoDlg));
             this.btnOk = new System.Windows.Forms.Button();
-            this.libraryGridView = new pwiz.Common.Controls.CommonDataGridView();
-            this.labelLibInfo = new System.Windows.Forms.Label();
-            this.tableLayoutPanel1 = new System.Windows.Forms.TableLayoutPanel();
-            this.linkSpecLibLinks = new System.Windows.Forms.LinkLabel();
+            this.libraryGridView = new pwiz.Skyline.Controls.DataGridViewEx();
             this.fileNameCol = new System.Windows.Forms.DataGridViewTextBoxColumn();
             this.scoreTypeCol = new System.Windows.Forms.DataGridViewTextBoxColumn();
             this.cutoffScoreCol = new System.Windows.Forms.DataGridViewTextBoxColumn();
             this.matchingTimesCol = new System.Windows.Forms.DataGridViewTextBoxColumn();
             this.bestTimesCol = new System.Windows.Forms.DataGridViewTextBoxColumn();
+            this.labelLibInfo = new System.Windows.Forms.Label();
+            this.tableLayoutPanel1 = new System.Windows.Forms.TableLayoutPanel();
+            this.linkSpecLibLinks = new System.Windows.Forms.LinkLabel();
             ((System.ComponentModel.ISupportInitialize)(this.libraryGridView)).BeginInit();
             this.tableLayoutPanel1.SuspendLayout();
             this.SuspendLayout();
@@ -70,6 +70,37 @@
             resources.ApplyResources(this.libraryGridView, "libraryGridView");
             this.libraryGridView.Name = "libraryGridView";
             this.libraryGridView.RowHeadersVisible = false;
+            this.libraryGridView.CellPainting += new System.Windows.Forms.DataGridViewCellPaintingEventHandler(this.libraryGridView_CellPainting);
+            // 
+            // fileNameCol
+            // 
+            this.fileNameCol.DataPropertyName = "FileName";
+            resources.ApplyResources(this.fileNameCol, "fileNameCol");
+            this.fileNameCol.Name = "fileNameCol";
+            // 
+            // scoreTypeCol
+            // 
+            this.scoreTypeCol.DataPropertyName = "ScoreType";
+            resources.ApplyResources(this.scoreTypeCol, "scoreTypeCol");
+            this.scoreTypeCol.Name = "scoreTypeCol";
+            // 
+            // cutoffScoreCol
+            // 
+            this.cutoffScoreCol.DataPropertyName = "ScoreThreshold";
+            resources.ApplyResources(this.cutoffScoreCol, "cutoffScoreCol");
+            this.cutoffScoreCol.Name = "cutoffScoreCol";
+            // 
+            // matchingTimesCol
+            // 
+            this.matchingTimesCol.DataPropertyName = "MatchedCount";
+            resources.ApplyResources(this.matchingTimesCol, "matchingTimesCol");
+            this.matchingTimesCol.Name = "matchingTimesCol";
+            // 
+            // bestTimesCol
+            // 
+            this.bestTimesCol.DataPropertyName = "SpectrumCount";
+            resources.ApplyResources(this.bestTimesCol, "bestTimesCol");
+            this.bestTimesCol.Name = "bestTimesCol";
             // 
             // labelLibInfo
             // 
@@ -91,31 +122,6 @@
             this.linkSpecLibLinks.Name = "linkSpecLibLinks";
             this.linkSpecLibLinks.TabStop = true;
             this.linkSpecLibLinks.LinkClicked += new System.Windows.Forms.LinkLabelLinkClickedEventHandler(this.linkLabel1_LinkClicked);
-            // 
-            // fileNameCol
-            // 
-            resources.ApplyResources(this.fileNameCol, "fileNameCol");
-            this.fileNameCol.Name = "fileNameCol";
-            // 
-            // scoreTypeCol
-            // 
-            resources.ApplyResources(this.scoreTypeCol, "scoreTypeCol");
-            this.scoreTypeCol.Name = "scoreTypeCol";
-            // 
-            // cutoffScoreCol
-            // 
-            resources.ApplyResources(this.cutoffScoreCol, "cutoffScoreCol");
-            this.cutoffScoreCol.Name = "cutoffScoreCol";
-            // 
-            // matchingTimesCol
-            // 
-            resources.ApplyResources(this.matchingTimesCol, "matchingTimesCol");
-            this.matchingTimesCol.Name = "matchingTimesCol";
-            // 
-            // bestTimesCol
-            // 
-            resources.ApplyResources(this.bestTimesCol, "bestTimesCol");
-            this.bestTimesCol.Name = "bestTimesCol";
             // 
             // SpectrumLibraryInfoDlg
             // 
@@ -140,15 +146,14 @@
         #endregion
 
         private System.Windows.Forms.Button btnOk;
-        private System.Windows.Forms.DataGridView libraryGridView;
         private System.Windows.Forms.Label labelLibInfo;
         private System.Windows.Forms.TableLayoutPanel tableLayoutPanel1;
         private System.Windows.Forms.LinkLabel linkSpecLibLinks;
+        private pwiz.Skyline.Controls.DataGridViewEx libraryGridView;
         private System.Windows.Forms.DataGridViewTextBoxColumn fileNameCol;
         private System.Windows.Forms.DataGridViewTextBoxColumn scoreTypeCol;
         private System.Windows.Forms.DataGridViewTextBoxColumn cutoffScoreCol;
         private System.Windows.Forms.DataGridViewTextBoxColumn matchingTimesCol;
         private System.Windows.Forms.DataGridViewTextBoxColumn bestTimesCol;
-
     }
 }

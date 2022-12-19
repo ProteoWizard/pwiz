@@ -98,7 +98,8 @@ namespace pwiz.SkylineTestFunctional
             WaitForCondition(() => grid.DataboundGridControl.IsComplete);
             RunUI(()=>grid.DataboundGridControl.ChooseView("Clustered"));
             WaitForCondition(() => grid.DataboundGridControl.IsComplete && 0 != grid.DataboundGridControl.RowCount);
-            var heatMap = ShowDialog<HeatMapGraph>(() => grid.DataboundGridControl.ShowHeatMap());
+            RunUI(()=> grid.DataboundGridControl.ShowHeatMap());
+            var heatMap = FindOpenForm<HeatMapGraph>();
             WaitForConditionUI(() => heatMap.IsComplete);
             string expectedHeatMapTitle = DataboundGraph.MakeTitle(Resources.HeatMapGraph_RefreshData_Heat_Map,
                 new DataGridId(DataGridType.GROUP_COMPARISON, PER_PROTEIN_NAME),
