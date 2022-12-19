@@ -591,6 +591,8 @@
     <ClCompile Include="pwiz\utility\bindings\CLI\analysis\SpectrumList_IonMobility_Test.cpp" />
     <ClCompile Include="pwiz\utility\misc\String.cpp" />
     <ClCompile Include="pwiz_tools\commandline\idcat.cpp" />
+    <ClCompile Include="pwiz_aux\msrc\utility\vendor_api\Bruker\TsfData.cpp" />
+    <ClCompile Include="libraries\SQLite\sqlite3pp.cpp" />
   </ItemGroup>
   <ItemGroup>
     <ClInclude Include="libraries\boost_aux\boost\nowide\args.hpp" />
@@ -1062,6 +1064,8 @@
     <ClInclude Include="pwiz\data\msdata\mz5\Datastructures_mz5.hpp" />
     <ClInclude Include="pwiz\data\msdata\mz5\Connection_mz5.hpp" />
     <ClInclude Include="pwiz\data\msdata\mz5\Configuration_mz5.hpp" />
+    <ClInclude Include="pwiz_aux\msrc\utility\vendor_api\Bruker\TsfData.hpp" />
+    <ClInclude Include="libraries\SQLite\sqlite3pp.h" />
   </ItemGroup>
   <ItemGroup>
     <None Include="Jamroot.jam" />
