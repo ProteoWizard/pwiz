@@ -50,8 +50,8 @@
     <PublisherName>MacCoss Lab, UW</PublisherName>
     <CreateWebPageOnPublish>true</CreateWebPageOnPublish>
     <WebPage>index.html</WebPage>
-    <ApplicationRevision>306</ApplicationRevision>
-    <ApplicationVersion>22.2.1.306</ApplicationVersion>
+    <ApplicationRevision>351</ApplicationRevision>
+    <ApplicationVersion>22.2.1.351</ApplicationVersion>
     <UseApplicationTrust>false</UseApplicationTrust>
     <PublishWizardCompleted>true</PublishWizardCompleted>
     <BootstrapperEnabled>true</BootstrapperEnabled>
@@ -230,6 +230,12 @@
     </Compile>
     <Compile Include="Alerts\PathChooserDlg.Designer.cs">
       <DependentUpon>PathChooserDlg.cs</DependentUpon>
+    </Compile>
+    <Compile Include="Alerts\ShareResultsFilesDlg.cs">
+      <SubType>Form</SubType>
+    </Compile>
+    <Compile Include="Alerts\ShareResultsFilesDlg.Designer.cs">
+      <DependentUpon>ShareResultsFilesDlg.cs</DependentUpon>
     </Compile>
     <Compile Include="Alerts\ReportShutdownDlg.cs">
       <SubType>Form</SubType>
@@ -2148,6 +2154,10 @@
     </EmbeddedResource>
     <EmbeddedResource Include="Alerts\PathChooserDlg.zh-CHS.resx">
       <DependentUpon>PathChooserDlg.cs</DependentUpon>
+    </EmbeddedResource>
+    <EmbeddedResource Include="Alerts\ShareResultsFilesDlg.resx">
+      <DependentUpon>ShareResultsFilesDlg.cs</DependentUpon>
+      <SubType>Designer</SubType>
     </EmbeddedResource>
     <EmbeddedResource Include="Alerts\ReportErrorDlg.ja.resx">
       <DependentUpon>ReportErrorDlg.cs</DependentUpon>

@@ -267,7 +267,7 @@ bool processPath(const bfs::path& path, const Config& config, const ReaderList& 
         return false;
 
     boost::uintmax_t pathSize = calculatePathSize(path);
-    string pathLastModified = getStringFromTimeT(bfs::last_write_time(path));
+    string pathCreationTime = getStringFromTimeT(bfs::creation_time(path));
 
     Reader::Config readerConfig;
     readerConfig.acceptZeroLengthSpectra = true;
@@ -279,7 +279,7 @@ bool processPath(const bfs::path& path, const Config& config, const ReaderList& 
             cout << (format("\n%|1$-14| %|15t| %|2$+8| %|24t| %3% %|42t| %4%")
                     % pathType
                     % abbreviate_byte_size(pathSize)
-                    % pathLastModified
+                    % pathCreationTime
                     % path.leaf()
                     ).str() << flush;
             break;
@@ -293,24 +293,26 @@ bool processPath(const bfs::path& path, const Config& config, const ReaderList& 
                 {
                     const auto& source = *msd;
                     size_t spectraCount = source.run.spectrumListPtr->size();
-                    cout << (format("\n%|1$-14| %|15t| %|2$+8| %|24t| %3% %|42t| %|4$+6| %|50t| %|" + lexical_cast<string>(longestPath+3) + "t| %6%")
+                    cout << (format("\n%|1$-14| %|15t| %|2$+8| %|24t| %3% %7% %|42t| %|4$+6| %|50t| %|" + lexical_cast<string>(longestPath+3) + "t| %6%")
                         % pathType
                         % abbreviate_byte_size(pathSize)
-                        % pathLastModified
+                        % pathCreationTime
                         % spectraCount
                         % path.leaf()
                         % source.run.id
+                        % source.run.startTimeStamp
                         ).str() << flush;
                 }
             }
             catch(exception& e)
             {
-                cout << (format("\n%|1$-14| %|15t| %|2$+8| %|24t| %3% %|42t| %|4$+6| %|50t| %|" + lexical_cast<string>(longestPath + 3) + "t| %6%")
+                cout << (format("\n%|1$-14| %|15t| %|2$+8| %|24t| %3% %7% %|42t| %|4$+6| %|50t| %|" + lexical_cast<string>(longestPath + 3) + "t| %6%")
                         % pathType
                         % abbreviate_byte_size(pathSize)
-                        % pathLastModified
+                        % pathCreationTime
                         % "error"
                         % path.leaf()
+                        % "error"
                         % "error"
                         ).str() << endl << e.what() << endl; 
             }
@@ -344,11 +346,11 @@ void go(const Config& config)
     {
         case VerbosityLevel_Brief:
             cout << (format("%|1$=14| %|15t| %|2$=8| %|24t| %|3$=16| %|42t| %4%")
-                    % "Type" % "Size" % "Last Modified" % "Name").str();
+                    % "Type" % "Size" % "Creation Time" % "Name").str();
             break;
         case VerbosityLevel_Detailed:
-            cout << (format("%|1$=14| %|15t| %|2$=8| %|24t| %|3$=16| %|42t| %|4$=6| %|50t| %5%")
-                    % "Type" % "Size" % "Last Modified" % "Spectra" % "Name").str();
+            cout << (format("%|1$=14| %|15t| %|2$=8| %|24t| %|3$=16| %|42t| %|4$=6| %|50t| %|6$=6| %|50t| %5%")
+                    % "Type" % "Size" % "Creation Time" % "Spectra" % "Name" % "Run Start Time").str();
             break;
         case VerbosityLevel_Full:
             // no global header

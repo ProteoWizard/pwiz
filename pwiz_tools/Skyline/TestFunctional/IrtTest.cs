@@ -781,31 +781,31 @@ namespace pwiz.SkylineTestFunctional
                 Assert.IsTrue(regressionOptions.Select(opt => opt.Name).Contains(IrtStandard.PIERCE.Name));
                 Assert.IsTrue(ReferenceEquals(calibrateIrtDlg.SelectedRegressionOption, regressionOptions[0]));
             });
-            RunDlg<MessageDlg>(() => calibrateIrtDlg.GraphRegression(), false);
-            RunDlg<MessageDlg>(() => calibrateIrtDlg.GraphIrts(), false);
+            ShowAndCancelDlg<MessageDlg>(() => calibrateIrtDlg.GraphRegression());
+            ShowAndCancelDlg<MessageDlg>(() => calibrateIrtDlg.GraphIrts());
             var addIrtDlg = ShowDialog<AddIrtStandardsDlg>(calibrateIrtDlg.UseResults);
-            RunDlg<MessageDlg>(() => addIrtDlg.OkDialog(), false); // try empty textbox
+            ShowAndCancelDlg<MessageDlg>(() => addIrtDlg.OkDialog()); // try empty textbox
             RunUI(() => addIrtDlg.StandardCount = CalibrateIrtDlg.MIN_STANDARD_PEPTIDES - 1);
-            RunDlg<MessageDlg>(() => addIrtDlg.OkDialog(), false); // try below minimum
+            ShowAndCancelDlg<MessageDlg>(() => addIrtDlg.OkDialog()); // try below minimum
             RunUI(() => addIrtDlg.StandardCount = SkylineWindow.Document.PeptideCount + 1);
-            RunDlg<MessageDlg>(() => addIrtDlg.OkDialog(), false); // try above maximum
+            ShowAndCancelDlg<MessageDlg>(() => addIrtDlg.OkDialog()); // try above maximum
             RunUI(() => addIrtDlg.StandardCount = 10);
             OkDialog(addIrtDlg, addIrtDlg.OkDialog);
             RunUI(() => Assert.AreEqual(10, calibrateIrtDlg.StandardPeptideCount));
-            RunDlg<GraphRegression>(() => calibrateIrtDlg.GraphRegression(), false, dlg =>
+            RunDlg<GraphRegression>(() => calibrateIrtDlg.GraphRegression(), dlg =>
             {
                 Assert.AreEqual(1, dlg.RegressionGraphDatas.Count);
                 Assert.AreEqual(2, dlg.RegressionGraphDatas.First().RegularPoints.Count);
                 dlg.CloseDialog();
             });
-            RunDlg<GraphRegression>(() => calibrateIrtDlg.GraphIrts(), false, dlg =>
+            RunDlg<GraphRegression>(() => calibrateIrtDlg.GraphIrts(), dlg =>
             {
                 Assert.AreEqual(1, dlg.RegressionGraphDatas.Count);
                 Assert.AreEqual(10, dlg.RegressionGraphDatas.First().RegularPoints.Count);
                 dlg.CloseDialog();
             });
             RunUI(() => calibrateIrtDlg.SelectedRegressionOption = calibrateIrtDlg.RegressionOptions.First(opt => opt.Name.Equals(IrtStandard.PIERCE.Name)));
-            RunDlg<AddIrtStandardsDlg>(() => calibrateIrtDlg.UseResults(), false, dlg =>
+            RunDlg<AddIrtStandardsDlg>(() => calibrateIrtDlg.UseResults(), dlg =>
             {
                 dlg.StandardCount = 10;
                 dlg.OkDialog();
@@ -832,7 +832,7 @@ namespace pwiz.SkylineTestFunctional
             var irtDb = IrtDb.GetIrtDb(calcPath, null);
             Assert.IsFalse(string.IsNullOrEmpty(irtDb.DocumentXml));
             // Set RT regression to None
-            RunDlg<PeptideSettingsUI>(() => SkylineWindow.ShowPeptideSettingsUI(), true, dlg =>
+            RunDlg<PeptideSettingsUI>(() => SkylineWindow.ShowPeptideSettingsUI(), dlg =>
             {
                 dlg.ChooseRegression(Resources.SettingsList_ELEMENT_NONE_None);
                 dlg.OkDialog();
@@ -883,7 +883,7 @@ namespace pwiz.SkylineTestFunctional
                     Assert.AreEqual(predefinedIrts[pep.Target], pep.Irt);
                 }
             });
-            RunDlg<GraphRegression>(() => calibrateIrtDlg2.GraphRegression(), false, dlg =>
+            RunDlg<GraphRegression>(() => calibrateIrtDlg2.GraphRegression(), dlg =>
             {
                 Assert.AreEqual(1, dlg.RegressionGraphDatas.Count);
                 var data = dlg.RegressionGraphDatas.First();
@@ -893,7 +893,7 @@ namespace pwiz.SkylineTestFunctional
                 Assert.IsTrue(data.R >= RCalcIrt.MIN_IRT_TO_TIME_CORRELATION);
                 dlg.CloseDialog();
             });
-            RunDlg<GraphRegression>(() => calibrateIrtDlg2.GraphIrts(), false, dlg =>
+            RunDlg<GraphRegression>(() => calibrateIrtDlg2.GraphIrts(), dlg =>
             {
                 Assert.AreEqual(1, dlg.RegressionGraphDatas.Count);
                 Assert.AreEqual(10, dlg.RegressionGraphDatas.First().RegularPoints.Count);
@@ -936,7 +936,7 @@ namespace pwiz.SkylineTestFunctional
                     Assert.AreEqual(expectedIrt, pep.Irt);
                 }
             });
-            RunDlg<GraphRegression>(() => calibrateIrtDlg3.GraphRegression(), false, dlg =>
+            RunDlg<GraphRegression>(() => calibrateIrtDlg3.GraphRegression(), dlg =>
             {
                 Assert.AreEqual(1, dlg.RegressionGraphDatas.Count);
                 var data = dlg.RegressionGraphDatas.First();
@@ -946,7 +946,7 @@ namespace pwiz.SkylineTestFunctional
                 Assert.IsTrue(data.R >= RCalcIrt.MIN_IRT_TO_TIME_CORRELATION);
                 dlg.CloseDialog();
             });
-            RunDlg<GraphRegression>(() => calibrateIrtDlg3.GraphIrts(), false, dlg =>
+            RunDlg<GraphRegression>(() => calibrateIrtDlg3.GraphIrts(), dlg =>
             {
                 Assert.AreEqual(1, dlg.RegressionGraphDatas.Count);
                 Assert.AreEqual(10, dlg.RegressionGraphDatas.First().RegularPoints.Count);
