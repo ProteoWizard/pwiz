@@ -58,7 +58,7 @@ namespace pwiz.SkylineTest
         public void NistLoadLibrary()
         {
             var streamManager = new MemoryStreamManager();
-            streamManager.TextFiles.Add(PATH_NIST_LIB, TEXT_LIB_YEAST_NIST + TEXT_LIB_BICINE_NIST + TEXT_LIB_NO_ADDUCT + TEXT_LIB_FORMULA_PLUS + TEXT_LIB_MINE + LIB_TEXT_MONA + LIB_TEXT_MZVAULT + LIB_TEXT_RTINSECONDS);
+            streamManager.TextFiles.Add(PATH_NIST_LIB, TEXT_LIB_YEAST_NIST + TEXT_LIB_BICINE_NIST + TEXT_LIB_NO_ADDUCT + TEXT_LIB_FORMULA_PLUS + TEXT_LIB_MINE + LIB_TEXT_MONA + LIB_TEXT_MZVAULT + LIB_TEXT_RTINSECONDS + TEXT_NIST_PARENTHESIS);
             var loader = new TestLibraryLoader {StreamManager = streamManager};
             var expectedFragmentAnnotations = new Dictionary<int, List<SpectrumPeakAnnotation>>
             {
@@ -99,8 +99,15 @@ namespace pwiz.SkylineTest
             Assert.AreEqual(1, lib2Keys.Count(k => Equals("[M-H2O+H]", k.Adduct.AdductFormula)));
 
             // Check ability to parse strangely decorated formula
-            Assert.AreEqual(2, lib2Keys.Count(k => Equals("[M+]", k.Adduct.AdductFormula)));
+            Assert.AreEqual(5, lib2Keys.Count(k => Equals("[M+]", k.Adduct.AdductFormula)));
             Assert.AreEqual(1, lib2Keys.Count(k => Equals("C11H22NO4", k.SmallMoleculeLibraryAttributes.ChemicalFormula)));
+            Assert.AreEqual(1, lib2Keys.Count(k => Equals("C6 H14 F O2 P", k.SmallMoleculeLibraryAttributes.ChemicalFormula)));
+
+            // Check use of "MW:"
+            Assert.AreEqual(1, lib2Keys.Count(k => Equals(324.6, k.Target?.Molecule?.MonoisotopicMass.Value ?? 0)));
+
+            // Check use of GC not declaring mass at all
+            Assert.AreEqual(1, lib2Keys.Count(k => Equals(NistLibraryBase.DUMMY_GC_ESI_MASS, k.Target?.Molecule?.MonoisotopicMass.Value ?? 0)));
 
             // Check case insensitive regex use in  https://minedatabase.mcs.anl.gov/#/download
             Assert.AreEqual(1, lib2Keys.Count(k => Equals("C28H38O6", k.SmallMoleculeLibraryAttributes.ChemicalFormula)));
@@ -1295,5 +1302,69 @@ namespace pwiz.SkylineTest
             "1801.867676	0	\"b16\"\n" +
             "1858.889160	13	\"b17\"\n" +
             "1891.910645	15	\"y17\"\n";
+
+        private const string TEXT_NIST_PARENTHESIS =
+            "\n" +
+            "NAME: 1,2-Dimethylpropyl methylphosphonofluoridate\n" +
+            "FORM: C6 H14 F O2 P\n" +
+            "CASNBR: 6154-51-4\n" +
+            "NUM PEAKS: 44\n" +
+            "( 26 19) (  27 164) (29   131 ) ( 31 14  ) ( 38 21)\n" + // BSP note: I stuck some extra spaces in here just in case
+            " ( 39 197) ( 40 28) ( 41 262) ( 42 139) ( 43 262 )\n" +
+            "( 44 15) ( 45 68) ( 47 66) ( 50 16) ( 51 22) \n" +
+            "( 52 9) ( 53 66) ( 54 21) ( 55 614)   ( 56 35 ) \n" +
+            "( 65 8) ( 66 21) ( 67 66) ( 68 9) ( 69 43)\n" +
+            "( 70 563) ( 71 121) ( 78 13) ( 79 28) ( 80 32)\n" +
+            "( 81 166) ( 82 457) ( 83 87) ( 98 107) ( 99 1000)\n" +
+            "( 100 16) ( 101 6) ( 110 6) ( 111 10) ( 124 75)\n" +
+            "( 125 791) ( 126 459) ( 127 46) ( 153 42)\n" +
+            "\n" +
+            "NAME:ketone resin dimer 14 (DOME 2009) RI=1565.4\n" + // Note no mass hint here - not necessarily an error with GCMS
+            "COMMENT: RI=1565.4,  14.2924 min 1EE8529691734FF6B9B0360C49DA5AA5|RI:1565.40\n" +
+            "RI:1565.40\n" +
+            "CASNO:1EE852~1-N1018\n" + // Note - not actually a CAS number, but seen in the wild
+            "RT:14.292\n" +
+            "SOURCE:C:\\Users\\bob\\OneDrive - lab\\GC stuff\\TotoroQuadrupole.msp\n" +
+            "NUM PEAKS:  52 \n" +
+            "( 39  241) ( 41  445) ( 42   50) ( 43  108) ( 51   50) \n" + // BSP note - I did NOT add these extra spaces, seen in the wild
+            "( 53  192) ( 54   86) ( 55  425) ( 57   37) ( 65  154) \n" +
+            "( 66   68) ( 67  734) ( 68  125) ( 69  117) ( 70   64) \n" +
+            "( 77  247) ( 78   49) ( 79  514) ( 80  122) ( 81  271) \n" +
+            "( 82  119) ( 83  194) ( 91  186) ( 92   44) ( 93  180) \n" +
+            "( 94  303) ( 95 1000) ( 96  309) ( 97  352) ( 98  754) \n" +
+            "( 99   72) (107   81) (109  128) (110  618) (111  214) \n" +
+            "(112   58) (117   28) (123   38) (124   21) (125   33) \n" +
+            "(131   59) (132   33) (133   44) (135   32) (136   19) \n" +
+            "(149   44) (163   32) (164   74) (174   32) (192  362) \n" +
+            "(193   50) (194   34) \n" +
+            "\n" +
+            "NAME:Tricosane\n" +
+            "COMMENT: Japan AIST/NIMC Database- Spectrum MS-NW-5921|RI:2300.00\n" +
+            "RI:2300.00\n" +
+            "MW:324.6\n" +
+            "CASNO:638-67-5\n" +
+            "RSN:503\n" +
+            "SOURCE:C:\\NIST11\\AMDIS32\\LIB\\HiMWHCs.MSP\n" +
+            "NUM PEAKS:  100 \n" +
+            "( 26    1) ( 27   38) ( 28    9) ( 29  142) ( 30    3) \n" +
+            "( 39   20) ( 40    5) ( 41  257) ( 42   67) ( 43  697) \n" +
+            "( 44   22) ( 53    9) ( 54   20) ( 55  216) ( 56  121) \n" +
+            "( 57 1000) ( 58   43) ( 65    1) ( 66    1) ( 67   20) \n" +
+            "( 68   21) ( 69  121) ( 70   99) ( 71  672) ( 72   38) \n" +
+            "( 73    1) ( 77    1) ( 79    2) ( 81    9) ( 82   25) \n" +
+            "( 83   94) ( 84   68) ( 85  461) ( 86   30) ( 87    1) \n" +
+            "( 95    3) ( 96   14) ( 97   72) ( 98   54) ( 99  172) \n" +
+            "(100   12) (109    1) (110    8) (111   36) (112   47) \n" +
+            "(113  118) (114   10) (124    4) (125   19) (126   42) \n" +
+            "(127   94) (128    9) (138    3) (139    9) (140   36) \n" +
+            "(141   77) (142    9) (152    2) (153    5) (154   31) \n" +
+            "(155   67) (156    8) (166    1) (167    3) (168   27) \n" +
+            "(169   57) (170    7) (181    2) (182   23) (183   53) \n" +
+            "(184    8) (195    1) (196   20) (197   47) (198    7) \n" +
+            "(210   17) (211   41) (212    7) (224   14) (225   38) \n" +
+            "(226    6) (238   12) (239   34) (240    6) (252    9) \n" +
+            "(253   30) (254    6) (266    8) (267   26) (268    6) \n" +
+            "(280    4) (281   15) (282    3) (294    3) (295    9) \n" +
+            "(296    2) (323    2) (324  134) (325   34) (326    4) \n";
     }
 }

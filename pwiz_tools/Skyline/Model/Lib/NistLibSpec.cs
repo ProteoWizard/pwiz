@@ -375,6 +375,8 @@ namespace pwiz.Skyline.Model.Lib
 
     public abstract class NistLibraryBase : CachedLibrary<NistSpectrumInfo>
     {
+        public const double DUMMY_GC_ESI_MASS = 99; // Some GC libraries only offer fragment info (as there's no intact mass to measure after 100% fragmentation) so use a dummy mass
+
         // Version 6 adds peak annotations
         private const int FORMAT_VERSION_CACHE = 6; 
 
@@ -769,34 +771,35 @@ namespace pwiz.Skyline.Model.Lib
 // ReSharper disable LocalizableElement
         private static readonly string NAME = "Name:";
         private static readonly RegexOptions NOCASE = RegexOptions.IgnoreCase | RegexOptions.CultureInvariant | RegexOptions.Compiled;
-        private static readonly Regex REGEX_NAME = new Regex(@"^(?i:Name): ([A-Z()\[\]0-9]+)/(\d)", RegexOptions.CultureInvariant | RegexOptions.Compiled); // NIST libraries can contain M(O) and SpectraST M[16] TODO: Spectrast also has c- and n-term mods but we reject such entries for now - see example in TestLibraryExplorer
-        private static readonly Regex REGEX_NUM_PEAKS = new Regex(@"^(?:Num ?Peaks|number of peaks): (\d+)", NOCASE);  // NIST uses "Num peaks" and SpectraST "NumPeaks" and mzVault does its own thing
-        private static readonly string COMMENT = "Comment: ";
+        private static readonly Regex REGEX_NAME = new Regex(@"^(?i:Name):\s*([A-Z()\[\]0-9]+)/(\d)", RegexOptions.CultureInvariant | RegexOptions.Compiled); // NIST libraries can contain M(O) and SpectraST M[16] TODO: Spectrast also has c- and n-term mods but we reject such entries for now - see example in TestLibraryExplorer
+        private static readonly Regex REGEX_NUM_PEAKS = new Regex(@"^(?:Num ?Peaks|number of peaks):\s*(\d+)", NOCASE);  // NIST uses "Num peaks" and SpectraST "NumPeaks" and mzVault does its own thing
+        private static readonly string COMMENT = "Comment:";
         private static readonly Regex REGEX_MODS = new Regex(@" Mods=([^ ]+) ", NOCASE);
         private static readonly Regex REGEX_TF_RATIO = new Regex(@" Tfratio=([^ ]+) ", NOCASE);
         private static readonly Regex REGEX_RT = new Regex(@" RetentionTime=([^ ,]+)", NOCASE); // In a comment
         private static readonly Regex REGEX_RTINSECONDS = new Regex(@" RTINSECONDS=([^ ,]+)", NOCASE); // In a comment
-        private static readonly Regex REGEX_RT_LINE = new Regex(@"^RetentionTime(Mins)*: ([^ ]+)", NOCASE); // On its own line
+        private static readonly Regex REGEX_RT_LINE = new Regex(@"^RetentionTime(Mins)*:\s*([^ ]+)", NOCASE); // On its own line
         private static readonly Regex REGEX_IRT = new Regex(@" iRT=([^ ,]+)", NOCASE);
-        private static readonly Regex REGEX_RI = new Regex(@"^Retention_index: ([^ ]+)", NOCASE); // Retention Index for GC
-        private static readonly Regex REGEX_RI_LINE = new Regex(@"^(?:Synon:.* )?RI: ([^ ]+)", NOCASE); // Retention Index for GC
+        private static readonly Regex REGEX_RI = new Regex(@"^Retention_index:\s*([^ ]+)", NOCASE); // Retention Index for GC
+        private static readonly Regex REGEX_RI_LINE = new Regex(@"^(?:Synon:.* )?RI:\s*([^ ]+)", NOCASE); // Retention Index for GC
         private static readonly Regex REGEX_SAMPLE = new Regex(@" Nreps=\d+/(\d+)", NOCASE);  // Observer spectrum count
         private static readonly char[] MAJOR_SEP = {'/'};
         private static readonly char[] MINOR_SEP = {','};
         // Small molecule items
-        private static readonly Regex REGEX_NAME_SMALLMOL = new Regex(@"^Name: (.*)", NOCASE); // small molecule names can be anything
-        private static readonly string SYNON = "Synon: ";
-        private static readonly Regex REGEX_INCHIKEY = new Regex(@"^(?:Synon:.* )?InChIKey: (.*)", NOCASE);
-        private static readonly Regex REGEX_INCHI = new Regex(@"^(?:Synon:.* )?InChI: (?:InChI\=)?(.*)", NOCASE);
-        private static readonly Regex REGEX_FORMULA = new Regex(@"^Formula: (.*)", NOCASE);
-        private static readonly Regex REGEX_CAS = new Regex(@"^(?:Synon:.* )?CAS(?:#?|No): (\d+-\d+-\d)", NOCASE); // CONSIDER(bspratt): capture NIST# as well?
-        private static readonly Regex REGEX_KEGG = new Regex(@"^(?:Synon:.* )?KEGG: (.*)", NOCASE);
-        private static readonly Regex REGEX_SMILES = new Regex(@"^(?:Synon:.* )?SMILES: (.*)", NOCASE);
-        private static readonly Regex REGEX_ADDUCT = new Regex(@"^Precursor_type: (.*)", NOCASE);
+        private static readonly Regex REGEX_NAME_SMALLMOL = new Regex(@"^Name:\s*(.*)", NOCASE); // small molecule names can be anything
+        private static readonly string SYNON = "Synon:";
+        private static readonly Regex REGEX_INCHIKEY = new Regex(@"^(?:Synon:.* )?InChIKey:\s*(.*)", NOCASE);
+        private static readonly Regex REGEX_INCHI = new Regex(@"^(?:Synon:.* )?InChI:\s*(?:InChI\=)?(.*)", NOCASE);
+        private static readonly Regex REGEX_FORMULA = new Regex(@"^(Formula|Form):\s*(.*)", NOCASE);
+        private static readonly Regex REGEX_CAS = new Regex(@"^(?:Synon:.* )?CAS(?:#?|No|Nbr):\s*(\d+-\d+-\d)", NOCASE); // CONSIDER(bspratt): capture NIST# as well?
+        private static readonly Regex REGEX_KEGG = new Regex(@"^(?:Synon:.* )?KEGG:\s*(.*)", NOCASE);
+        private static readonly Regex REGEX_SMILES = new Regex(@"^(?:Synon:.* )?SMILES:\s*(.*)", NOCASE);
+        private static readonly Regex REGEX_ADDUCT = new Regex(@"^Precursor_type:\s*(.*)", NOCASE);
         // N.B this was formerly "^PrecursorMz: ([^ ]+)" - no comma - I don't understand how double.Parse worked with existing
         // test inputs like "PrecursorMZ: 124.0757, 109.1" but somehow adding NOCASE suddenly made it necessary
-        private static readonly Regex REGEX_PRECURSORMZ = new Regex(@"^(?:PrecursorMz|Selected Ion m/z): ([^ ,]+)", NOCASE); 
-        private static readonly Regex REGEX_IONMODE = new Regex(@"^IonMode: (.*)", NOCASE);
+        private static readonly Regex REGEX_PRECURSORMZ = new Regex(@"^(?:PrecursorMz|Selected Ion m/z):\s*([^ ,]+)", NOCASE);
+        private static readonly Regex REGEX_MOLWEIGHT = new Regex(@"^MW:\s*([^ ,]+)", NOCASE);
+        private static readonly Regex REGEX_IONMODE = new Regex(@" ^ IonMode:\s*(.*)", NOCASE);
         private const double DEFAULT_MZ_MATCH_TOLERANCE = 0.01; // Most .MSP formats we see present precursor m/z values that match at about this tolerance
         private const string MZVAULT_POSITIVE_SCAN_INIDCATOR = @"Positive scan";
         private const string MZVAULT_NEGATIVE_SCAN_INIDCATOR = @"Negative scan";
@@ -875,6 +878,7 @@ namespace pwiz.Skyline.Model.Lib
                     double? rt = null, irt = null;
                     int? copies = null;
                     double? precursorMz = null;
+                    double? molWeight = null;
                     bool? isPositive = null;
 
                     // Process until the start of the peaks
@@ -919,7 +923,7 @@ namespace pwiz.Skyline.Model.Lib
                                 match = REGEX_FORMULA.Match(line);
                                 if (match.Success)
                                 {
-                                    formula = match.Groups[1].Value;
+                                    formula = match.Groups[2].Value;
                                     if (string.Equals(MZVAULT_FORMULA_UNKNOWN, formula, StringComparison.OrdinalIgnoreCase)) // As in mzVault output
                                     {
                                         formula = null;
@@ -995,6 +999,22 @@ namespace pwiz.Skyline.Model.Lib
                                     catch
                                     {
                                         ThrowIOException(lineCount, string.Format(Resources.NistLibraryBase_CreateCache_Could_not_read_the_precursor_m_z_value___0__ , line) );
+                                    }
+                                    continue;
+                                }
+                            }
+                            if (!molWeight.HasValue)
+                            {
+                                match = REGEX_MOLWEIGHT.Match(line);
+                                if (match.Success)
+                                {
+                                    try
+                                    {
+                                        molWeight = double.Parse(match.Groups[1].Value, CultureInfo.InvariantCulture);
+                                    }
+                                    catch
+                                    {
+                                        ThrowIOException(lineCount, string.Format(Resources.NistLibraryBase_CreateCache_Could_not_read_the_precursor_m_z_value___0__, line));
                                     }
                                     continue;
                                 }
@@ -1102,24 +1122,45 @@ namespace pwiz.Skyline.Model.Lib
                         }
                     }
 
+                    // Use molecular weight (if any) as mass cue if no precursor mz given
+                    precursorMz ??= molWeight;
+
                     // Try to infer adduct if none given
-                    if (charge == 0 && adduct.IsEmpty && precursorMz.HasValue && ! string.IsNullOrEmpty(formula))
+                    if (charge == 0 && adduct.IsEmpty && !string.IsNullOrEmpty(formula))
                     {
-                        var formulaIn = formula;
-                        charge = SmallMoleculeTransitionListReader.ValidateFormulaWithMzAndAdduct(mzMatchTolerance, true,
-                            ref formulaIn, ref adduct, new TypedMass(precursorMz.Value, MassType.Monoisotopic), null, isPositive, true, out _, out _, out _) ?? 0;
-                        if (!Equals(formula, formulaIn))
+                        if (precursorMz.HasValue)
                         {
-                            // We would not expect to adjust the formula in a library import
-                            charge = 0;
-                            adduct = Adduct.EMPTY;
+                            var formulaIn = formula;
+                            charge = SmallMoleculeTransitionListReader.ValidateFormulaWithMzAndAdduct(mzMatchTolerance, true,
+                                ref formulaIn, ref adduct, new TypedMass(precursorMz.Value, MassType.Monoisotopic), null, isPositive, true, out _, out _, out _) ?? 0;
+                            if (!Equals(formula, formulaIn))
+                            {
+                                // We would not expect to adjust the formula in a library import
+                                charge = 0;
+                                adduct = Adduct.EMPTY;
+                            }
+                        }
+                        else
+                        {
+                            // No charge information, but we do have a formula - most likely GCMS data
+                            isGC = true;
                         }
                     }
 
-                    if (isGC && adduct.IsEmpty)
+                    if (isGC)
                     {
-                        // GCMS is generally EI 
-                        adduct = Adduct.M_PLUS;
+                        if (adduct.IsEmpty)
+                        {
+                            // GCMS is generally EI fragmented
+                            adduct = Adduct.M_PLUS;
+                        }
+                        if (string.IsNullOrEmpty(formula))
+                        {
+                            // Encode mass as string for library use
+                            formula = SmallMoleculeLibraryAttributes.FormatChemicalFormulaOrMassesString(null,
+                                new TypedMass(precursorMz ?? DUMMY_GC_ESI_MASS, MassType.Monoisotopic),
+                                new TypedMass(precursorMz ?? DUMMY_GC_ESI_MASS, MassType.Average));
+                        }
                     }
 
                     if (charge == 0 && adduct.IsEmpty)
@@ -1151,15 +1192,39 @@ namespace pwiz.Skyline.Model.Lib
                         int iSeperator1 = linePeaks.IndexOf(sep); 
                         if (iSeperator1 == -1) // Using space instead of tab, maybe?
                         {
-                            sep = ' '; 
-                            iSeperator1 = linePeaks.IndexOf(sep); 
-                            var iColon = linePeaks.IndexOf(':');
+                            sep = ' ';
+                            var trimmed = linePeaks.Trim(sep);
+                            iSeperator1 = trimmed.IndexOf(sep); 
+                            var iColon = trimmed.IndexOf(':');
                             if (iColon > -1 && iColon < iSeperator1)
                             {
                                 // Looks like a Golm GMD file e.g. "70:10 76:35 77:1000 78:110 79:42 \n80:4 81:7 86:6 87:5 88:21 " etc
                                 sep = ':';
-                                lines = linePeaks.Split(' ');
-                                iSeperator1 = linePeaks.IndexOf(sep);
+                                lines = trimmed.Split(' ');
+                                iSeperator1 = trimmed.IndexOf(sep);
+                            }
+                            else
+                            {
+                                var iParen = trimmed.IndexOf('('); 
+                                if (iParen > -1 && iParen < iSeperator1)
+                                {
+                                    // Looks like form "( 26 19) (  27 164) ( 29 131 ) ( 31 14  ) ( 38 21)" etc
+                                    for (linePeaks = trimmed; ;)
+                                    {
+                                        // Reduce to "(26 19)(27 164)(29 131)(31 14)(38 21)"
+                                        trimmed = trimmed.Replace(@"( ", @"(").Replace(@" )", @")").Replace(@") ", @")").Replace(@"  ", @" ");
+                                        if (linePeaks.Equals(trimmed))
+                                        {
+                                            break;
+                                        }
+                                        linePeaks = trimmed;
+                                    }
+
+                                    // Reduce to "26 19)27 164)29 131)31 14)38 21"
+                                    linePeaks = linePeaks.Replace(@"(", string.Empty).Trim(')');
+                                    lines = linePeaks.Split(')');
+                                    iSeperator1 = linePeaks.IndexOf(sep);
+                                }
                             }
                         }
 
