@@ -2099,6 +2099,24 @@ namespace pwiz.Skyline.Properties {
         }
         
         /// <summary>
+        ///   Looks up a localized string similar to {0} files have not been located..
+        /// </summary>
+        public static string AuxiliaryFiles_GetStatusText__0__files_have_not_been_located_ {
+            get {
+                return ResourceManager.GetString("AuxiliaryFiles_GetStatusText__0__files_have_not_been_located_", resourceCulture);
+            }
+        }
+        
+        /// <summary>
+        ///   Looks up a localized string similar to {0} of {1} files will be included..
+        /// </summary>
+        public static string AuxiliaryFiles_GetStatusText__0__of__1__files_will_be_included_ {
+            get {
+                return ResourceManager.GetString("AuxiliaryFiles_GetStatusText__0__of__1__files_will_be_included_", resourceCulture);
+            }
+        }
+        
+        /// <summary>
         ///   Looks up a localized string similar to Examining background proteome for uniqueness constraints.
         /// </summary>
         public static string BackgroundProteome_GetUniquenessDict_Examining_background_proteome_for_uniqueness_constraints {
@@ -27662,6 +27680,26 @@ namespace pwiz.Skyline.Properties {
         }
         
         /// <summary>
+        ///   Looks up a localized string similar to Please select the folder containing the missing files..
+        /// </summary>
+        public static string ShareResultsFilesDlg_LocateMissingFilesFromFolder_Please_select_the_folder_containing_the_missing_files_ {
+            get {
+                return ResourceManager.GetString("ShareResultsFilesDlg_LocateMissingFilesFromFolder_Please_select_the_folder_contai" +
+                        "ning_the_missing_files_", resourceCulture);
+            }
+        }
+        
+        /// <summary>
+        ///   Looks up a localized string similar to Including data folders is not supported by the currently selected version..
+        /// </summary>
+        public static string ShareTypeDlg_OkDialog_Including_data_folders_is_not_supported_by_the_currently_selected_version_ {
+            get {
+                return ResourceManager.GetString("ShareTypeDlg_OkDialog_Including_data_folders_is_not_supported_by_the_currently_se" +
+                        "lected_version_", resourceCulture);
+            }
+        }
+        
+        /// <summary>
         ///   Looks up a localized string similar to Current saved file ({0}).
         /// </summary>
         public static string ShareTypeDlg_ShareTypeDlg_Current_saved_file___0__ {
@@ -28426,6 +28464,16 @@ namespace pwiz.Skyline.Properties {
         public static string SkylineWindow_ConnectLibrarySpecs_Spectral_Library {
             get {
                 return ResourceManager.GetString("SkylineWindow_ConnectLibrarySpecs_Spectral_Library", resourceCulture);
+            }
+        }
+        
+        /// <summary>
+        ///   Looks up a localized string similar to Are you sure you want to abruptly terminate Skyline? You will lose all unsaved work..
+        /// </summary>
+        public static string SkylineWindow_crashSkylineMenuItem_Click_Are_you_sure_you_want_to_abruptly_terminate_Skyline__You_will_lose_all_unsaved_work_ {
+            get {
+                return ResourceManager.GetString("SkylineWindow_crashSkylineMenuItem_Click_Are_you_sure_you_want_to_abruptly_termin" +
+                        "ate_Skyline__You_will_lose_all_unsaved_work_", resourceCulture);
             }
         }
         
@@ -35234,46 +35282,6 @@ namespace pwiz.Skyline.Properties {
             get {
                 return ResourceManager.GetString("ValueUnexpectedException_ValueUnexpectedException_The_argument__0__should_not_hav" +
                         "e_a_value_specified", resourceCulture);
-            }
-        }
-        
-        /// <summary>
-        ///   Looks up a localized string similar to Calculating hash of input file.
-        /// </summary>
-        public static string VendorIssueHelper_ConvertBrukerToMzml_Calculating_hash_of_input_file {
-            get {
-                return ResourceManager.GetString("VendorIssueHelper_ConvertBrukerToMzml_Calculating_hash_of_input_file", resourceCulture);
-            }
-        }
-        
-        /// <summary>
-        ///   Looks up a localized string similar to CompassXport software must be installed to import Bruker raw data files..
-        /// </summary>
-        public static string VendorIssueHelper_ConvertBrukerToMzml_CompassXport_software_must_be_installed_to_import_Bruker_raw_data_files_ {
-            get {
-                return ResourceManager.GetString("VendorIssueHelper_ConvertBrukerToMzml_CompassXport_software_must_be_installed_to_" +
-                        "import_Bruker_raw_data_files_", resourceCulture);
-            }
-        }
-        
-        /// <summary>
-        ///   Looks up a localized string similar to Failure attempting to convert {0} to mzML using CompassXport..
-        /// </summary>
-        public static string VendorIssueHelper_ConvertBrukerToMzml_Failure_attempting_to_convert__0__to_mzML_using_CompassXport_ {
-            get {
-                return ResourceManager.GetString("VendorIssueHelper_ConvertBrukerToMzml_Failure_attempting_to_convert__0__to_mzML_u" +
-                        "sing_CompassXport_", resourceCulture);
-            }
-        }
-        
-        /// <summary>
-        ///   Looks up a localized string similar to Failure attempting to convert sample {0} in {1} to mzXML to work around a performance issue in the AB Sciex WiffFileDataReader library..
-        /// </summary>
-        public static string VendorIssueHelper_ConvertLocalWiffToMzxml_Failure_attempting_to_convert_sample__0__in__1__to_mzXML_to_work_around_a_performance_issue_in_the_AB_Sciex_WiffFileDataReader_library {
-            get {
-                return ResourceManager.GetString("VendorIssueHelper_ConvertLocalWiffToMzxml_Failure_attempting_to_convert_sample__0" +
-                        "__in__1__to_mzXML_to_work_around_a_performance_issue_in_the_AB_Sciex_WiffFileDat" +
-                        "aReader_library", resourceCulture);
             }
         }
         
