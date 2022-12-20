@@ -208,7 +208,6 @@ namespace pwiz.Skyline.Model.Serialization
             public const string std_dev = "std_dev";
             public const string skewness = "skewness";
             public const string kurtosis = "kurtosis";
-
             public const string shape_correlation = "shape_correlation";
             // ReSharper restore LocalizableElement
         }

@@ -568,7 +568,7 @@ indicating which isotope modifications are applied</value>
     <value>Key</value>
   </data>
   <data name="Kurtosis">
-	<value>A measure of the "tailedness" of the chromatogram peak.</value>
+    <value>A measure of the "tailedness" of the chromatogram peak.</value>
   </data>
   <data name="LastPosition">
     <value>The position of the last (C-terminal) amino acid of the peptide within its
