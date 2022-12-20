@@ -983,7 +983,7 @@ namespace pwiz.Skyline.SettingsUI
                                 var color =
                                     GraphChromatogram.COLORS_LIBRARY[iChromData%GraphChromatogram.COLORS_LIBRARY.Count];
                                 var graphItem = new ChromGraphItem(nodeGroup, null, chromatogramInfo, iChromData == iChromDataPrimary ? transitionChromInfo : null, null,
-                                   new[] { iChromData == iChromDataPrimary }, null, 0, false, false, null, 0,
+                                   new[] { iChromData == iChromDataPrimary }, null, 0, false, false, null, null,
                                    color, Settings.Default.ChromatogramFontSize, 1);
                                 LineItem curve = (LineItem) _graphHelper.AddChromatogram(PaneKey.DEFAULT, graphItem);
                                 var pointAnnotation = GraphItem.AnnotatePoint(new PointPair(chromData.Mz, 1.0));

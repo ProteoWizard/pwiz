@@ -13250,6 +13250,16 @@ namespace pwiz.Skyline.Properties {
         }
         
         /// <summary>
+        ///   Looks up a localized string similar to The transition prediction settings for this document are set to use optimized values by transition..
+        /// </summary>
+        public static string ExportMethodDlg_OkDialog_The_transition_prediction_settings_for_this_document_are_set_to_use_optimized_values_by_transition_ {
+            get {
+                return ResourceManager.GetString("ExportMethodDlg_OkDialog_The_transition_prediction_settings_for_this_document_are" +
+                        "_set_to_use_optimized_values_by_transition_", resourceCulture);
+            }
+        }
+        
+        /// <summary>
         ///   Looks up a localized string similar to TOF.
         /// </summary>
         public static string ExportMethodDlg_OkDialog_TOF {
@@ -13264,6 +13274,16 @@ namespace pwiz.Skyline.Properties {
         public static string ExportMethodDlg_OkDialog_Transition_List {
             get {
                 return ResourceManager.GetString("ExportMethodDlg_OkDialog_Transition_List", resourceCulture);
+            }
+        }
+        
+        /// <summary>
+        ///   Looks up a localized string similar to Using optimized values by transition is invalid for this instrument type. Would you like to use optimized values by precursor instead?.
+        /// </summary>
+        public static string ExportMethodDlg_OkDialog_Using_optimized_values_by_transition_is_invalid_for_this_instrument_type__Would_you_like_to_use_optimized_values_by_precursor_instead_ {
+            get {
+                return ResourceManager.GetString("ExportMethodDlg_OkDialog_Using_optimized_values_by_transition_is_invalid_for_this" +
+                        "_instrument_type__Would_you_like_to_use_optimized_values_by_precursor_instead_", resourceCulture);
             }
         }
         
