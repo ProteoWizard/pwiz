@@ -1045,11 +1045,10 @@ namespace pwiz.Skyline.Controls.Graphs
                 ChromatogramInfo chromatogramInfo;
                 MakeChromatogramInfo(selection.NodeTranGroup.PrecursorMz, chromatogramData, chromData,
                     out chromatogramInfo, out tranPeakInfo);
-                var graphItem = new ChromGraphItem(selection.NodeTranGroup, matchingTransition,
-                    chromatogramInfo,
+                var graphItem = new ChromGraphItem(selection.NodeTranGroup, matchingTransition, chromatogramInfo,
                     iChromData == iChromDataPrimary ? tranPeakInfo : null, null,
-                    new[] { iChromData == iChromDataPrimary }, null, 0, false, false, null, 0,
-                    color, Settings.Default.ChromatogramFontSize, 1);
+                    new[] { iChromData == iChromDataPrimary }, null, 0, false, false, null, null, color,
+                    Settings.Default.ChromatogramFontSize, 1);
                 LineItem curve =
                     (LineItem)_graphHelper.AddChromatogram(PaneKey.DEFAULT, graphItem);
                 if (matchingTransition == null)
