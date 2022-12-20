@@ -567,6 +567,9 @@ indicating which isotope modifications are applied</value>
   <data name="Key">
     <value>Key</value>
   </data>
+  <data name="Kurtosis">
+    <value>A measure of the "tailedness" of the chromatogram peak.</value>
+  </data>
   <data name="LastPosition">
     <value>The position of the last (C-terminal) amino acid of the peptide within its
 containing protein sequence, or #N/A if no protein sequence is available</value>
@@ -903,6 +906,9 @@ same precursor.</value>
   </data>
   <data name="PeakScores">
     <value>The features and their scores for the peak group.</value>
+  </data>
+  <data name="PeakStandardDeviation">
+    <value>The standard deviation of the chromatographic peak.</value>
   </data>
   <data name="Peptide">
     <value>Peptide</value>
@@ -1298,6 +1304,12 @@ file, or the file name again for other file types.</value>
   </data>
   <data name="Score">
     <value>The numerical value for the particular feature.</value>
+  </data>
+  <data name="ShapeCorrelation">
+    <value>The Pearson correlation of this transition's chromatographic peak compared to the median peak shape of all of the transitions under the same precursor.</value>
+  </data>
+  <data name="Skewness">
+    <value>A measure of the asymmetry of the chromatogram peak.</value>
   </data>
   <data name="SkylineVersion">
     <value>Version of Skyline in which the change was made</value>
