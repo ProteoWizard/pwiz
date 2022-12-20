@@ -178,12 +178,13 @@ namespace pwiz.Skyline.ToolsUI
                 var recentUri = new Uri(baseUri + exe);
                 var olderUri = new Uri(baseUri + @"old/" + _version + @"/" + exe);
 
-                if (!webClient.DownloadFileAsync(recentUri, DownloadPath) && !webClient.DownloadFileAsync(olderUri, DownloadPath))
+                Exception downloadException;
+                if (!webClient.DownloadFileAsync(recentUri, DownloadPath, out downloadException) && !webClient.DownloadFileAsync(olderUri, DownloadPath, out downloadException))
                     throw new ToolExecutionException(
                         TextUtil.LineSeparate(
                             Resources.RInstaller_DownloadR_Download_failed_,
                             Resources
-                                .RInstaller_DownloadPackages_Check_your_network_connection_or_contact_the_tool_provider_for_installation_support_));
+                                .RInstaller_DownloadPackages_Check_your_network_connection_or_contact_the_tool_provider_for_installation_support_), downloadException);
             }
         }
 
