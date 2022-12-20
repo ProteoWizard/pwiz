@@ -1613,7 +1613,7 @@ namespace pwiz.Skyline.Controls.Graphs
                 crawPeakFinder.GetPeak(
                     FindNearestIndex(chromGroup.Times, (float) chromGroup.StartTime),
                     FindNearestIndex(chromGroup.Times, (float) chromGroup.EndTime));
-            var chromPeak = new ChromPeak(crawPeakFinder, crawdadPeak, 0, timeIntensities, null);
+            var chromPeak = new ChromPeak(crawPeakFinder, crawdadPeak, 0, timeIntensities, null, null);
             var ionMobilityFilter = IonMobilityFilter.GetIonMobilityFilter(chromData.IonMobility,null, chromGroup.CCS);
             transitionChromInfo = new TransitionChromInfo(null, 0, chromPeak,
                 ionMobilityFilter,
