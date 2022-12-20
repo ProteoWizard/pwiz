@@ -1716,8 +1716,20 @@ namespace pwiz.Skyline.FileUI
                 cbIgnoreProteins.Checked = true;
             }
 
-            comboOptimizing.Enabled = !(triggered && !(InstrumentType == ExportInstrumentType.ABI ||
-                                                       InstrumentType == ExportInstrumentType.ABI_QTRAP));
+            if (triggered && !(InstrumentType == ExportInstrumentType.ABI || InstrumentType == ExportInstrumentType.ABI_QTRAP))
+            {
+                comboOptimizing.Enabled = false;
+            }
+            else if (!IsFullScanInstrument)
+            {
+                comboOptimizing.Enabled = true;
+            }
+            else
+            {
+                comboOptimizing.Enabled = Equals(InstrumentType, ExportInstrumentType.ABI_TOF) ||
+                                          Equals(InstrumentType, ExportInstrumentType.ABI_7600);
+            }
+
             if (!comboOptimizing.Enabled)
             {
                 OptimizeType = ExportOptimize.NONE;
