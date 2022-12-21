@@ -627,7 +627,6 @@
     <None Include="SynchSiblingsSmallMoleculesTest.zip" />
     <None Include="SynchSiblingsTest.zip" />
     <None Include="TargetResolverTest.zip" />
-    <None Include="TestBlibMoleculeLists.zip" />
     <None Include="TicNormalizationTest.zip" />
     <None Include="ToolServiceTest.zip" />
     <None Include="ToolStoreDlgTest.zip" />
