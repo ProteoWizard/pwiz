@@ -54,8 +54,8 @@ namespace SortRESX
                     from schema in resx.Root.Elements() where schema.Name.LocalName == "schema" select schema,
                     from resheader in resx.Root.Elements("resheader") select resheader,
                     SelectElements(resx.Root, "assembly"),
-                    SelectElements(resx.Root, "metadata").Where(metadata=>!FilterOutMetadataElement(metadata)),
-                    SelectElements(resx.Root, "data").Where(data => !FilterOutDataElement(data))
+                    SelectElements(resx.Root, "metadata").Where(KeepMetadataElement),
+                    SelectElements(resx.Root, "data").Where(KeepDataElement)
                         .Select(data=>FixWhitespace(data, 1))));
         }
 
@@ -102,26 +102,26 @@ namespace SortRESX
 
         public bool PreserveElementOrder { get; set; }
 
-        private bool FilterOutMetadataElement(XElement metadataElement)
+        private bool KeepMetadataElement(XElement metadataElement)
         {
             string name = (string) metadataElement.Attribute("name");
             if (name.EndsWith(".TrayLocation") || name.EndsWith(".TrayHeight"))
             {
-                return true;
+                return false;
             }
 
-            return false;
+            return true;
         }
 
-        private bool FilterOutDataElement(XElement dataElement)
+        private bool KeepDataElement(XElement dataElement)
         {
             string name = (string)dataElement.Attribute("name");
             if (name.StartsWith(">>") && name.EndsWith(".Type"))
             {
-                return true;
+                return false;
             }
 
-            return false;
+            return true;
         }
 
         private IEnumerable<XElement> SelectElements(XElement parent, string elementName)
@@ -129,7 +129,7 @@ namespace SortRESX
             var elements = parent.Elements(elementName);
             if (!PreserveElementOrder)
             {
-                elements = elements.OrderBy(element => element.Attribute("name"));
+                elements = elements.OrderBy(element => element.Attribute("name")?.ToString());
             }
 
             return elements;
