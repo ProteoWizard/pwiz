@@ -1131,7 +1131,7 @@ namespace pwiz.Skyline.Model.Lib
                         if (precursorMz.HasValue)
                         {
                             var formulaIn = formula;
-                            if (BioMassCalc.TryParseFormula(formula, out var _, out var _))
+                            if (BioMassCalc.TryParseFormula(formula, out var _, out var errMessage))
                             {
                                 charge = SmallMoleculeTransitionListReader.ValidateFormulaWithMzAndAdduct(mzMatchTolerance, true,
                                     ref formulaIn, ref adduct, new TypedMass(precursorMz.Value, MassType.Monoisotopic), null, isPositive, true, out _, out _, out _) ?? 0;
