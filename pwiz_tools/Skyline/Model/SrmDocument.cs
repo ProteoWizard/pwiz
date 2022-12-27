@@ -1783,7 +1783,7 @@ namespace pwiz.Skyline.Model
         public SrmDocument ChangePeak(IdentityPath groupPath, string nameSet, MsDataFileUri filePath,
             Identity tranId, double retentionTime, UserSet userSet)
         {
-            return ChangePeak(groupPath, nameSet, filePath, false,
+            return ChangePeak(groupPath, nameSet, filePath,
                 (node, info, tol, iSet, fileId, reg) =>
                     node.ChangePeak(Settings, info, tol, iSet, fileId, reg, tranId, retentionTime, userSet));
         }
@@ -1822,9 +1822,9 @@ namespace pwiz.Skyline.Model
                         : PeakIdentification.FALSE;
                 }
             }
-            return ChangePeak(groupPath, nameSet, filePath, true,
+            return ChangePeak(groupPath, nameSet, filePath,
                 (node, info, tol, iSet, fileId, reg) =>
-                    node.ChangePeak(Settings, info, tol, iSet, fileId, reg, transition, startTime, 
+                    node.ChangePeak(Settings, info, iSet, fileId, reg, transition, startTime, 
                                     endTime, identified.Value, userSet, preserveMissingPeaks));
         }
 
@@ -1837,8 +1837,7 @@ namespace pwiz.Skyline.Model
             ChromatogramGroupInfo chromInfoGroup, double mzMatchTolerance, int indexSet,
             ChromFileInfoId indexFile, OptimizableRegression regression);
 
-        private SrmDocument ChangePeak(IdentityPath groupPath, string nameSet, MsDataFileUri filePath, bool loadPoints,
-            ChangeNodePeak change)
+        private SrmDocument ChangePeak(IdentityPath groupPath, string nameSet, MsDataFileUri filePath, ChangeNodePeak change)
         {
             var find = new FindChromInfos(this, groupPath, nameSet, filePath);
 
@@ -2358,7 +2357,7 @@ namespace pwiz.Skyline.Model
             var prediction = Settings.TransitionSettings.Prediction;
             var methodType = prediction.OptimizedMethodType;
             var lib = prediction.OptimizedLibrary;
-            if (lib != null && !lib.IsNone)
+            if (lib != null && !lib.IsNone && nodeTransition != null)
             {
                 var optimization = lib.GetOptimization(OptimizationType.collision_energy,
                     Settings.GetSourceTarget(nodePep), nodeGroup.PrecursorAdduct,

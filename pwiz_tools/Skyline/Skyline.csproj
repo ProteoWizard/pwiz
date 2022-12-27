@@ -631,8 +631,12 @@
     <Compile Include="Model\ProteomicSequence.cs" />
     <Compile Include="Model\Results\CandidatePeakGroupData.cs" />
     <Compile Include="Model\Results\OnDemandFeatureCalculator.cs" />
+    <Compile Include="Model\Results\PeakGroupIntegrator.cs" />
+    <Compile Include="Model\Results\PeakShapeStatistics.cs" />
+    <Compile Include="Model\Results\PeakShapeValues.cs" />
     <Compile Include="Model\Results\Scoring\Calculators.cs" />
     <Compile Include="Model\Results\IntensityAccumulator.cs" />
+    <Compile Include="Model\Results\MedianPeakShape.cs" />
     <Compile Include="Model\Results\OptStepChromatograms.cs" />
     <Compile Include="Model\Results\Scoring\FeatureNames.cs" />
     <Compile Include="Model\Results\Scoring\FeatureTooltips.Designer.cs">
