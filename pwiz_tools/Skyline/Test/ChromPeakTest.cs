@@ -33,7 +33,7 @@ namespace pwiz.SkylineTest
         {
             var times = Enumerable.Range(0, 12).Select(i => (float) i).ToArray();
             var timeIntensities = new TimeIntensities(times, times.Select(t => 36 - (t - 6) * (t - 6)), null, null);
-            var chromPeak = ChromPeak.IntegrateWithoutBackground(timeIntensities, 1, 11, 0);
+            var chromPeak = ChromPeak.IntegrateWithoutBackground(timeIntensities, 1, 11, 0, null);
             Assert.AreEqual(36f, chromPeak.Height);
             Assert.AreEqual(11, timeIntensities.Intensities[1]);
             Assert.AreEqual(20, timeIntensities.Intensities[2]);
@@ -43,7 +43,7 @@ namespace pwiz.SkylineTest
             var fwhmEnd = (7 * 10 + 2 * 11) / 9.0;
             Assert.AreEqual(fwhmEnd-fwhmStart, chromPeak.Fwhm, .00001);
             Assert.AreEqual(false, chromPeak.IsFwhmDegenerate);
-            var chromPeak2 = ChromPeak.IntegrateWithoutBackground(timeIntensities, 2, 10, 0);
+            var chromPeak2 = ChromPeak.IntegrateWithoutBackground(timeIntensities, 2, 10, 0, null);
             Assert.AreEqual(8, chromPeak2.Fwhm);
             Assert.AreEqual(true, chromPeak2.IsFwhmDegenerate);
         }
@@ -61,8 +61,9 @@ namespace pwiz.SkylineTest
             Assert.AreNotEqual(0, peakWithBackground.BackgroundArea);
 
             // Set the TimeIntervals so the peakIntegrator will use "IntegratePeakWithoutBackground" 
-            var peakIntegratorWithTimeIntervals = new PeakIntegrator(FullScanAcquisitionMethod.None,
-                TimeIntervals.EMPTY, ChromSource.unknown, null, timeIntensities, null);
+            var peakIntegratorWithTimeIntervals = new PeakIntegrator(
+                new PeakGroupIntegrator(FullScanAcquisitionMethod.None, TimeIntervals.EMPTY),
+                ChromSource.unknown, null, timeIntensities, null);
             var peakWithoutBackground = peakIntegratorWithTimeIntervals.IntegratePeak(peakStartTime, peakEndTime, flagValues);
             Assert.AreEqual(0, peakWithoutBackground.BackgroundArea);
             var expectedArea = peakWithBackground.Area + peakWithBackground.BackgroundArea;
@@ -76,7 +77,9 @@ namespace pwiz.SkylineTest
             var times = new [] {0, 1.5f, 2, 3};
             var intensities = Enumerable.Repeat(constantIntensity, times.Length);
             var timeIntensities = new TimeIntensities(times, intensities, null, null);
-            var peakIntegrator = new PeakIntegrator(FullScanAcquisitionMethod.None, TimeIntervals.EMPTY, ChromSource.unknown, null, timeIntensities, null);
+            var peakIntegrator = new PeakIntegrator(
+                new PeakGroupIntegrator(FullScanAcquisitionMethod.None, TimeIntervals.EMPTY),
+                ChromSource.unknown, null, timeIntensities, null);
             var flagValues = ChromPeak.FlagValues.time_normalized;
             for (float peakStartTime = 0; peakStartTime < 3; peakStartTime += .1f)
             {
@@ -97,7 +100,8 @@ namespace pwiz.SkylineTest
             var times = new[] { 0, 1.5f, 2, 3 };
             var intensities = times.Select(time => (float) (time * slope)).ToList();
             var timeIntensities = new TimeIntensities(times, intensities, null, null);
-            var peakIntegrator = new PeakIntegrator(FullScanAcquisitionMethod.None, TimeIntervals.EMPTY, ChromSource.unknown, null, timeIntensities, null);
+            var peakIntegrator = new PeakIntegrator(new PeakGroupIntegrator(FullScanAcquisitionMethod.None, TimeIntervals.EMPTY), 
+                ChromSource.unknown, null, timeIntensities, null);
             var flagValues = ChromPeak.FlagValues.time_normalized;
             for (float peakStartTime = 0; peakStartTime < 3; peakStartTime += .1f)
             {

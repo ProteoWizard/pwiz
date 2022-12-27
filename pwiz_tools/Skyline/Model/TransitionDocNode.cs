@@ -833,6 +833,17 @@ namespace pwiz.Skyline.Model
                     transitionPeak.Rank = transitionChromInfo.Rank;
                     transitionPeak.RankByLevel = transitionChromInfo.RankByLevel;
                     transitionPeak.PointsAcrossPeak = DataValues.ToOptional(transitionChromInfo.PointsAcrossPeak);
+                    var peakShapeValues = transitionChromInfo.PeakShapeValues;
+                    if (peakShapeValues.HasValue)
+                    {
+                        transitionPeak.PeakShapeValues =
+                            new SkylineDocumentProto.Types.TransitionPeak.Types.PeakShapeValues
+                            {
+                                StdDev = peakShapeValues.Value.StdDev,
+                                Skewness = peakShapeValues.Value.Skewness,
+                                Kurtosis = peakShapeValues.Value.Kurtosis
+                            };
+                    }
                     yield return transitionPeak;
                 }
             }
