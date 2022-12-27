@@ -356,7 +356,7 @@ namespace pwiz.SkylineTestFunctional
             {
                 exportMethodDlg1.InstrumentType = ExportInstrumentType.ABI_TOF;
                 Assert.AreEqual(ExportMethodDlg.PREC_PER_SAMPLE_INJ_TXT, exportMethodDlg1.GetMaxLabelText);
-                Assert.IsFalse(exportMethodDlg1.IsOptimizeTypeEnabled);
+                Assert.IsTrue(exportMethodDlg1.IsOptimizeTypeEnabled);
                 Assert.IsTrue(exportMethodDlg1.IsTargetTypeEnabled);
 
                 // The dwell time field should not be visible.
@@ -382,7 +382,7 @@ namespace pwiz.SkylineTestFunctional
                 {
                     exportMethodDlg.InstrumentType = ExportInstrumentType.ABI_TOF;
 
-                    Assert.IsFalse(exportMethodDlg.IsOptimizeTypeEnabled);
+                    Assert.IsTrue(exportMethodDlg.IsOptimizeTypeEnabled);
                     Assert.IsTrue(exportMethodDlg.IsTargetTypeEnabled);
 
                     // change Method type to "Scheduled"
