@@ -16,10 +16,7 @@
  * limitations under the License.
  */
 
-using System.IO;
-using System.Linq;
 using Microsoft.VisualStudio.TestTools.UnitTesting;
-using pwiz.Skyline.Model.Lib;
 using pwiz.SkylineTestUtil;
 
 namespace pwiz.SkylineTestFunctional
@@ -40,7 +37,7 @@ namespace pwiz.SkylineTestFunctional
         protected override void DoTest()
         {
             RunUI(() => SkylineWindow.OpenFile(TestFilesDir.GetTestPath("SaveAfterProteinAssociationTest.sky")));
-            var docOrig = WaitForDocumentLoaded();
+            WaitForDocumentLoaded();
             WaitForProteinMetadataBackgroundLoaderCompleted();
             RunUI(() => SkylineWindow.SaveDocument());
         }
