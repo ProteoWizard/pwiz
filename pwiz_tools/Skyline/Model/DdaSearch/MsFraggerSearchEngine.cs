@@ -49,6 +49,8 @@ namespace pwiz.Skyline.Model.DdaSearch
         private const string PERCOLATOR_TRAIN_QVALUE_CUTOFF = "train-fdr";
         private readonly string[] PERCOLATOR_SETTINGS = { PERCOLATOR_TEST_QVALUE_CUTOFF, PERCOLATOR_TRAIN_QVALUE_CUTOFF };
 
+        private const string KEEP_INTERMEDIATE_FILES = "keep-intermediate-files";
+
         public MsFraggerSearchEngine(double percolatorQvalueCutoff)
         {
             AdditionalSettings = new Dictionary<string, Setting>
@@ -57,6 +59,7 @@ namespace pwiz.Skyline.Model.DdaSearch
                 {CALIBRATE_MASS, new Setting(CALIBRATE_MASS, 0, 0, 2)},
                 {PERCOLATOR_TEST_QVALUE_CUTOFF, new Setting(PERCOLATOR_TEST_QVALUE_CUTOFF, percolatorQvalueCutoff, 0, 1)},
                 {PERCOLATOR_TRAIN_QVALUE_CUTOFF, new Setting(PERCOLATOR_TRAIN_QVALUE_CUTOFF, 0.01, 0, 1)},
+                {KEEP_INTERMEDIATE_FILES, new Setting(KEEP_INTERMEDIATE_FILES, false)},
             };
         }
 
@@ -187,11 +190,14 @@ namespace pwiz.Skyline.Model.DdaSearch
                     string finalOutputFilepath = GetSearchResultFilepath(spectrumFilename);
                     FixPercolatorPepXml(cruxOutputFilepath, finalOutputFilepath, spectrumFilename, nativeIdByScanNumber);
 
-                    FileEx.SafeDelete(cruxInputFilepath);
-                    FileEx.SafeDelete(cruxFixedInputFilepath);
-                    FileEx.SafeDelete(cruxOutputFilepath);
-                    FileEx.SafeDelete(paramsFile);
-                    FileEx.SafeDelete(cruxParamsFile);
+                    if (!(bool) AdditionalSettings[KEEP_INTERMEDIATE_FILES].Value)
+                    {
+                        FileEx.SafeDelete(cruxInputFilepath);
+                        FileEx.SafeDelete(cruxFixedInputFilepath);
+                        FileEx.SafeDelete(cruxOutputFilepath);
+                        FileEx.SafeDelete(paramsFile);
+                        FileEx.SafeDelete(cruxParamsFile);
+                    }
                 }
 
                 _progressStatus = _progressStatus.NextSegment();
