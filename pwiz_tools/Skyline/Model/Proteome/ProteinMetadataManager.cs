@@ -20,6 +20,7 @@
 using System;
 using System.Collections.Generic;
 using System.Linq;
+using pwiz.Common.Collections;
 using pwiz.Common.SystemUtil;
 using pwiz.ProteomeDatabase.API;
 using pwiz.ProteomeDatabase.DataModel;
@@ -200,8 +201,9 @@ namespace pwiz.Skyline.Model.Proteome
                         {
                             if (node.ProteinMetadata.NeedsSearch() && !_processedNodes.ContainsKey(node.Id.GlobalIndex)) // Did we already process this?
                             {
-                                void ProcessNode(FastaSequence seq, ProteinMetadata proteinMetadata, int nResolved2, ref IProgressStatus progressStatus2)
+                                void ProcessNode(FastaSequence seq, ProteinMetadata proteinMetadataOrGroup, int i, int nResolved2, ref IProgressStatus progressStatus2)
                                 {
+                                    var proteinMetadata = proteinMetadataOrGroup.ProteinMetadataList[i];
                                     if (proteinMetadata.WebSearchInfo.IsEmpty()) // Never even been hit with regex
                                     {
                                         // Use Regexes to get some metadata, and a search term
@@ -212,7 +214,7 @@ namespace pwiz.Skyline.Model.Proteome
                                             if (_processedNodes.TryGetValue(node.Id.GlobalIndex, out var processedProteinGroupMetadata))
                                                 _processedNodes[node.Id.GlobalIndex] = processedProteinGroupMetadata.ChangeSingleProteinMetadata(proteinMetadata.SetWebSearchCompleted());
                                             else
-                                                _processedNodes.Add(node.Id.GlobalIndex, proteinMetadata.ChangeSingleProteinMetadata(proteinMetadata.SetWebSearchCompleted()));
+                                                _processedNodes.Add(node.Id.GlobalIndex, proteinMetadataOrGroup.ChangeSingleProteinMetadata(proteinMetadata.SetWebSearchCompleted()));
                                             if (!UpdatePrecentComplete(progressMonitor, 100 * nResolved2 / nUnresolved, ref progressStatus2))
                                                 return;
                                             proteinMetadata = null; // No search to be done
@@ -233,9 +235,8 @@ namespace pwiz.Skyline.Model.Proteome
 
                                 for (var i = 0; i < node.ProteinMetadata.ProteinMetadataList.Count; i++)
                                 {
-                                    var proteinMetadata = node.ProteinMetadata.ProteinMetadataList[i];
                                     var fastaSequenceOrGroup = node.PeptideGroup as FastaSequence;
-                                    ProcessNode(fastaSequenceOrGroup?.FastaSequenceList[i], proteinMetadata, nResolved, ref progressStatus);
+                                    ProcessNode(fastaSequenceOrGroup?.FastaSequenceList[i], node.ProteinMetadata, i, nResolved, ref progressStatus);
                                 }
                             }
                         }
