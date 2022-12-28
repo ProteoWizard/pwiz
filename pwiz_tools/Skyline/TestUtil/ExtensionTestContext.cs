@@ -23,6 +23,7 @@ using System.Linq;
 using System.Reflection;
 using Ionic.Zip;
 using Microsoft.VisualStudio.TestTools.UnitTesting;
+using pwiz.Common.SystemUtil;
 using pwiz.Skyline;
 using pwiz.Skyline.Util;
 
@@ -59,7 +60,10 @@ namespace pwiz.SkylineTestUtil
         {
             // when run with VSTest/MSTest (when .runsettings file is used), use the CustomTestResultsDirectory property if available
             // because there's no other way to override the TestDir
-            return testContext.Properties["CustomTestResultsDirectory"]?.ToString() ?? testContext.TestDir;
+            var path = testContext.Properties["CustomTestResultsDirectory"]?.ToString() ?? testContext.TestDir;
+            // Avoid conflicts in multi-language parallel testing
+            var language = LocalizationHelper.CurrentCulture.TwoLetterISOLanguageName;
+            return language == @"en" ? path : Path.Combine(path, language);
         }
 
         public static string GetTestPath(this TestContext testContext, string relativePath)

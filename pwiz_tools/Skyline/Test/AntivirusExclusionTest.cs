@@ -37,7 +37,7 @@ namespace pwiz.SkylineTest
 
     public class AntivirusExclusionTest : AbstractUnitTest
     {
-        [TestMethod]
+        [TestMethod, NoParallelTesting] // No parallel testing as there's only one copy of the test file, so parallel agents may collide on access
         public void AaantivirusTestExclusion() // Intentional misspelling to encourage this as first test in nightlies
         {
             CheckDirectory(".");
