@@ -132,7 +132,7 @@ namespace pwiz.Skyline.Model.DocSettings.AbsoluteQuantification
                 return double.MaxValue;
             }
             BilinearCurveFit fit = FitBilinearCurve(points);
-            if (fit == null)
+            if (fit == null || double.IsNaN(fit.StdDevBaseline))
             {
                 return double.MaxValue;
             }
