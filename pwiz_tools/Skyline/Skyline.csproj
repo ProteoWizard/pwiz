@@ -231,6 +231,12 @@
     <Compile Include="Alerts\PathChooserDlg.Designer.cs">
       <DependentUpon>PathChooserDlg.cs</DependentUpon>
     </Compile>
+    <Compile Include="Alerts\ShareResultsFilesDlg.cs">
+      <SubType>Form</SubType>
+    </Compile>
+    <Compile Include="Alerts\ShareResultsFilesDlg.Designer.cs">
+      <DependentUpon>ShareResultsFilesDlg.cs</DependentUpon>
+    </Compile>
     <Compile Include="Alerts\ReportShutdownDlg.cs">
       <SubType>Form</SubType>
     </Compile>
@@ -454,6 +460,11 @@
     <Compile Include="FileUI\PeptideSearch\BuildLibraryGridView.cs">
       <SubType>Component</SubType>
     </Compile>
+    <Compile Include="Model\AuditLog\EnumNames.Designer.cs">
+      <AutoGen>True</AutoGen>
+      <DesignTime>True</DesignTime>
+      <DependentUpon>EnumNames.resx</DependentUpon>
+    </Compile>
     <Compile Include="Model\AuditLog\PropertyNames.Designer.cs">
       <DesignTime>True</DesignTime>
       <AutoGen>True</AutoGen>
@@ -528,11 +539,6 @@
     <Compile Include="Model\AuditLog\CustomPropertyLocalizer.cs" />
     <Compile Include="Model\AuditLog\Databinding\AuditLogRowTime.cs" />
     <Compile Include="Model\AuditLog\Databinding\TextImageColumn.cs" />
-    <Compile Include="Model\AuditLog\EnumNames.Designer.cs">
-      <AutoGen>True</AutoGen>
-      <DesignTime>True</DesignTime>
-      <DependentUpon>EnumNames.resx</DependentUpon>
-    </Compile>
     <Compile Include="Model\AuditLog\LogMessage.cs" />
     <Compile Include="Model\AuditLog\Property.cs" />
     <Compile Include="Model\AuditLog\PropertyElementNames.Designer.cs">
@@ -654,6 +660,7 @@
       <DesignTime>True</DesignTime>
       <DependentUpon>Resources.resx</DependentUpon>
     </Compile>
+    <Compile Include="GenericFormClassNames.cs" />
     <Compile Include="SettingsUI\MsGraphExtension.cs">
       <SubType>UserControl</SubType>
     </Compile>
@@ -1550,7 +1557,9 @@
     <Compile Include="EditUI\SpectrumChartPropertyDlg.Designer.cs">
       <DependentUpon>SpectrumChartPropertyDlg.cs</DependentUpon>
     </Compile>
-    <Compile Include="FileUI\ShareListDlg.cs" />
+    <Compile Include="FileUI\ShareListDlg.cs">
+      <SubType>Form</SubType>
+    </Compile>
     <Compile Include="EditUI\UniquePeptidesDlg.cs">
       <SubType>Form</SubType>
     </Compile>
@@ -2011,7 +2020,9 @@
     <Compile Include="SettingsUI\EditEnzymeDlg.Designer.cs">
       <DependentUpon>EditEnzymeDlg.cs</DependentUpon>
     </Compile>
-    <Compile Include="SettingsUI\EditListDlg.cs" />
+    <Compile Include="SettingsUI\EditListDlg.cs">
+      <SubType>Form</SubType>
+    </Compile>
     <Compile Include="SettingsUI\EditListDlg.Designer.cs">
       <DependentUpon>EditListDlg.cs</DependentUpon>
     </Compile>
@@ -2153,6 +2164,10 @@
     </EmbeddedResource>
     <EmbeddedResource Include="Alerts\PathChooserDlg.zh-CHS.resx">
       <DependentUpon>PathChooserDlg.cs</DependentUpon>
+    </EmbeddedResource>
+    <EmbeddedResource Include="Alerts\ShareResultsFilesDlg.resx">
+      <DependentUpon>ShareResultsFilesDlg.cs</DependentUpon>
+      <SubType>Designer</SubType>
     </EmbeddedResource>
     <EmbeddedResource Include="Alerts\ReportErrorDlg.ja.resx">
       <DependentUpon>ReportErrorDlg.cs</DependentUpon>
@@ -2787,8 +2802,8 @@
     </EmbeddedResource>
     <EmbeddedResource Include="Model\AuditLog\EnumNames.resx">
       <Generator>PublicResXFileCodeGenerator</Generator>
-      <LastGenOutput>EnumNames.Designer.cs</LastGenOutput>
       <SubType>Designer</SubType>
+      <LastGenOutput>EnumNames.Designer.cs</LastGenOutput>
     </EmbeddedResource>
     <EmbeddedResource Include="Model\AuditLog\EnumNames.zh-CHS.resx">
       <DependentUpon>EnumNames.resx</DependentUpon>
