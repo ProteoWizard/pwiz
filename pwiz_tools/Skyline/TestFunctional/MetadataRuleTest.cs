@@ -92,7 +92,7 @@ namespace pwiz.SkylineTestFunctional
                         });
                 }, metadataRuleEditor => metadataRuleEditor.OkDialog());
             }, documentSettingsDlg => documentSettingsDlg.OkDialog());
-
+            PauseTest();
             // Verify that newly imported files get the correct SubjectId
             ImportResultsFiles(new[]
             {
@@ -216,7 +216,6 @@ namespace pwiz.SkylineTestFunctional
             }, documentSettingsDlg=> documentSettingsDlg.OkDialog());
             CollectionAssert.AreEqual(new[] { "Diseased", "Healthy" }, SkylineWindow.Document.Settings.MeasuredResults.Chromatograms
                 .Select(chrom => chrom.Annotations.GetAnnotation("Condition")).ToList());
-
             // Import some more result files
             ImportResultsFiles(new[]
             {
