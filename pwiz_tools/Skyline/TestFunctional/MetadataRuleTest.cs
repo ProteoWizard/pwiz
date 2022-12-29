@@ -92,7 +92,7 @@ namespace pwiz.SkylineTestFunctional
                         });
                 }, metadataRuleEditor => metadataRuleEditor.OkDialog());
             }, documentSettingsDlg => documentSettingsDlg.OkDialog());
-            PauseTest();
+
             // Verify that newly imported files get the correct SubjectId
             ImportResultsFiles(new[]
             {
