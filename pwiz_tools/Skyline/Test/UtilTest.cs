@@ -164,7 +164,7 @@ namespace pwiz.SkylineTest
 
         }
 
-        [TestMethod, NoParallelTesting]
+        [TestMethod]
         public void SafeDeleteTest()
         {
             // Test ArgumentException.
@@ -187,7 +187,8 @@ namespace pwiz.SkylineTest
             AssertEx.NoExceptionThrown<IOException>(() => FileEx.SafeDelete(pathTooLong, true));
 
             // Test IOException.
-            const string busyFile = "TestBusyDelete.txt"; // Not L10N
+            TestContext.EnsureTestResultsDir();
+            string busyFile = TestContext.GetTestResultsPath("TestBusyDelete.txt"); // Not L10N
             using (File.CreateText(busyFile))
             {
                 AssertEx.ThrowsException<IOException>(() => FileEx.SafeDelete(busyFile));
@@ -196,7 +197,7 @@ namespace pwiz.SkylineTest
             AssertEx.NoExceptionThrown<IOException>(() => FileEx.SafeDelete(busyFile));
 
             // Test UnauthorizedAccessException.
-            const string readOnlyFile = "TestReadOnlyFile.txt"; // Not L10N
+            string readOnlyFile = TestContext.GetTestResultsPath("TestReadOnlyFile.txt"); // Not L10N
 // ReSharper disable LocalizableElement
             File.WriteAllText(readOnlyFile, "Testing read only file delete.\n"); // Not L10N
 // ReSharper restore LocalizableElement

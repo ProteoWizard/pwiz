@@ -158,6 +158,11 @@ namespace pwiz.Skyline.Model
                 newMetadata = newMetadata.ChangeName(null); // no actual override
             if (Equals(PeptideGroup.Description, newMetadata.Description))
                 newMetadata = newMetadata.ChangeDescription(null); // no actual override
+            var group = PeptideGroup as FastaSequenceGroup;
+            if (group != null)
+            {
+                Assume.AreEqual(group.FastaSequenceList.Count, proteinMetadata.ProteinMetadataList.Count);
+            }
             return ChangeProp(ImClone(this), im => im._proteinMetadata = newMetadata);
         }
 
