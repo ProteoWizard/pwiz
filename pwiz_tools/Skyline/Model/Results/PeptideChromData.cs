@@ -495,8 +495,8 @@ namespace pwiz.Skyline.Model.Results
         {
             get
             {
-                // We do not save raw times if there is an optimization function because it is too hard.
-                return OptimizableRegression == null;
+                // We do not save raw times if there is an optimization function and it is SRM because it is too hard.
+                return OptimizableRegression == null || !FileInfo.IsSrm;
             }
         }
 

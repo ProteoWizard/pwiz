@@ -340,6 +340,7 @@ namespace pwiz.Skyline
             this.detectionsToolStripSeparator2 = new System.Windows.Forms.ToolStripSeparator();
             this.detectionsPropertiesToolStripMenuItem = new System.Windows.Forms.ToolStripMenuItem();
             this.detectionsToolStripSeparator3 = new System.Windows.Forms.ToolStripSeparator();
+            this.crashSkylineMenuItem = new System.Windows.Forms.ToolStripMenuItem();
             this.contextMenuTreeNode.SuspendLayout();
             this.contextMenuSpectrum.SuspendLayout();
             this.contextMenuRetentionTimes.SuspendLayout();
@@ -2082,6 +2083,7 @@ namespace pwiz.Skyline
             this.supportMenuItem,
             this.issuesMenuItem,
             this.submitErrorReportMenuItem,
+            this.crashSkylineMenuItem,
             this.checkForUpdatesSeparator,
             this.checkForUpdatesMenuItem,
             this.toolStripSeparator29,
@@ -2506,6 +2508,12 @@ namespace pwiz.Skyline
             this.detectionsToolStripSeparator3.Name = "detectionsToolStripSeparator3";
             resources.ApplyResources(this.detectionsToolStripSeparator3, "detectionsToolStripSeparator3");
             // 
+            // crashSkylineMenuItem
+            // 
+            this.crashSkylineMenuItem.Name = "crashSkylineMenuItem";
+            resources.ApplyResources(this.crashSkylineMenuItem, "crashSkylineMenuItem");
+            this.crashSkylineMenuItem.Click += new System.EventHandler(this.crashSkylineMenuItem_Click);
+            // 
             // SkylineWindow
             // 
             resources.ApplyResources(this, "$this");
@@ -2845,6 +2853,7 @@ namespace pwiz.Skyline
         private System.Windows.Forms.ToolStripMenuItem massErrorToolStripMenuItem;
         private System.Windows.Forms.ToolStripMenuItem synchMzScaleToolStripMenuItem;
         private System.Windows.Forms.ToolStripMenuItem submitErrorReportMenuItem;
+        private System.Windows.Forms.ToolStripMenuItem crashSkylineMenuItem;
     }
 }
 

@@ -59,6 +59,8 @@ namespace pwiz.Skyline.Model.Results
                 _maxTime = maxTime.Value;
             }
 
+            OptStep = precursorTextId.OptStep;
+            CollisionEnergy = precursorTextId.CollisionEnergy;
             IonMobilityInfo = precursorTextId.IonMobility;
             MinIonMobilityValue = IonMobilityInfo.IsEmpty ? null : IonMobilityInfo.IonMobility.Mobility - (IonMobilityInfo.IonMobilityExtractionWindowWidth??0)/2;
             MaxIonMobilityValue = IonMobilityInfo.IsEmpty ? null : MinIonMobilityValue + (IonMobilityInfo.IonMobilityExtractionWindowWidth ?? 0);
@@ -94,6 +96,8 @@ namespace pwiz.Skyline.Model.Results
         public int? BestWindowGroup { get; private set; }
         public double? BestWindowGroupDistance { get; private set; }
         public IList<int> OtherWindowGroups { get; private set; }
+        public int? OptStep { get; }
+        private double? CollisionEnergy { get; }
         private IonMobilityFilter IonMobilityInfo { get; set; }
         private bool HasCombinedIonMobility { get; set; } // When true, data was read in 3-array format, which affects spectrum ID format
         private SpectrumProductFilter[] Ms1ProductFilters { get; set; }
@@ -170,6 +174,13 @@ namespace pwiz.Skyline.Model.Results
             if (HasIonMobilityFAIMS() && spectra.All(s => !Equals(IonMobilityInfo.IonMobility, s.IonMobility)))
             {
                 return null; // No compensation voltage match
+            }
+
+            if (CollisionEnergy.HasValue &&
+                spectra.SelectMany(s => s.Precursors).Select(p => p.PrecursorCollisionEnergy)
+                    .Any(ce => !ce.HasValue || Math.Abs(ce.Value - CollisionEnergy.Value) > 0.05))
+            {
+                return null;
             }
 
             int targetCount = 1;
@@ -384,6 +395,10 @@ namespace pwiz.Skyline.Model.Results
                     if (_hasMinTime && _hasMaxTime)
                     {
                         key = key.ChangeOptionalTimes(_minTime, _maxTime);
+                    }
+                    if (OptStep.HasValue)
+                    {
+                        key = key.ChangeOptimizationStep(OptStep.Value);
                     }
                     listChromKeys.Add(key);
                 }

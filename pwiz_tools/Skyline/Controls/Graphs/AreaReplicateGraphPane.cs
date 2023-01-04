@@ -918,7 +918,7 @@ namespace pwiz.Skyline.Controls.Graphs
 
         private GraphObjList _dotpLabels;
 
-        private IEnumerable<string> DotProductStrings
+        public IEnumerable<string> DotProductStrings
         {
             get
             {
