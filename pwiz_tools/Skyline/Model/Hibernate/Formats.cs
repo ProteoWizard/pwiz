@@ -45,6 +45,7 @@ namespace pwiz.Skyline.Model.Hibernate
 
         public const string IonMobility = "0.###";
         public const string CCS = "0.##";
+        public const string Skewness = "0.###";
         // ReSharper restore LocalizableElement
     }
 }

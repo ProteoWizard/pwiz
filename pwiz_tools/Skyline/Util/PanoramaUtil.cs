@@ -854,8 +854,8 @@ namespace pwiz.Skyline.Util
         JObject SupportedVersionsJson(Server server);
         void UploadSharedZipFile(Control parent, Server server, string zipFilePath, string folderPath);
         ShareType DecideShareTypeVersion(FolderInformation folderInfo, SrmDocument document, ShareType shareType);
-        ShareType GetShareType(FolderInformation folderInfo, SrmDocument document, DocumentFormat? fileFormatOnDisk,
-            Control parent, ref bool cancelled);
+        ShareType GetShareType(FolderInformation folderInfo, SrmDocument document, string documentFilePath,
+            DocumentFormat? fileFormatOnDisk, Control parent, ref bool cancelled);
 
         Uri UploadedDocumentUri { get; }
     }
@@ -956,12 +956,14 @@ namespace pwiz.Skyline.Util
             return settings.HasResults ? settings.MeasuredResults.CacheVersion : null;
         }
 
-        public ShareType GetShareType(FolderInformation folderInfo, SrmDocument document, DocumentFormat? fileFormatOnDisk, Control parent, ref bool cancelled)
+        public ShareType GetShareType(FolderInformation folderInfo, SrmDocument document,
+            string documentFilePath, DocumentFormat? fileFormatOnDisk, Control parent, ref bool cancelled)
         {
             var cacheVersion = GetDocumentCacheVersion(document);
             var supportedSkylineVersion = GetSupportedVersionForCacheFormat(folderInfo, cacheVersion);
             
-            using (var dlgType = new ShareTypeDlg(document, fileFormatOnDisk, supportedSkylineVersion))
+            using (var dlgType = new ShareTypeDlg(document, documentFilePath, fileFormatOnDisk, supportedSkylineVersion, 
+                       false)) // Don't offer to include mass spec data in .sky.zip - Panorama isn't expecting that
             {
                 if (dlgType.ShowDialog(parent) == DialogResult.Cancel)
                 {

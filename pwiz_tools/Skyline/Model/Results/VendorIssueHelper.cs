@@ -21,9 +21,7 @@ using System.Collections.Generic;
 using System.Diagnostics;
 using System.IO;
 using System.Linq;
-using System.Reflection;
 using System.Text;
-using System.Text.RegularExpressions;
 using Microsoft.Win32;
 using pwiz.Common.SystemUtil;
 using pwiz.Skyline.Model.Lib;
@@ -35,10 +33,6 @@ namespace pwiz.Skyline.Model.Results
     public static class VendorIssueHelper
     {
         // ReSharper disable LocalizableElement
-        private const string EXE_MZ_WIFF = "mzWiff";
-        private const string EXT_WIFF_SCAN = ".scan";
-        private const string KEY_COMPASSXPORT = @"SOFTWARE\Microsoft\Windows\CurrentVersion\App Paths\CompassXport.exe";
-
         private const string EXE_GROUP2_XML = "group2xml.exe";
         private const string EXE_GROUP_FILE_EXTRACTOR = "GroupFileExtractor.exe";
         private const string KEY_PROTEIN_PILOT = @"SOFTWARE\Classes\groFile\shell\open\command";
@@ -172,189 +166,6 @@ namespace pwiz.Skyline.Model.Results
             }
             progress.UpdateProgress(status.ChangePercentComplete(100));
             return inputFilesPilotConverted;
-        }
-
-        private static string GetWiffScanPath(string filePathWiff)
-        {
-            return filePathWiff + EXT_WIFF_SCAN;
-        }
-
-        private static void ConvertLocalWiffToMzxml(string filePathWiff, int sampleIndex,
-            string outputPath, IProgressMonitor monitor)
-        {
-            var argv = new[]
-                           {
-                               // ReSharper disable LocalizableElement
-                               "--mzXML",
-                               "-s" + (sampleIndex + 1),
-                               "\"" + filePathWiff + "\"",
-                               "\"" + outputPath + "\"",
-                               // ReSharper restore LocalizableElement
-                           };
-
-            var psi = new ProcessStartInfo(EXE_MZ_WIFF)
-            {
-                CreateNoWindow = true,
-                UseShellExecute = false,
-                // Common directory includes the directory separator
-                WorkingDirectory = Path.GetDirectoryName(filePathWiff) ?? string.Empty,
-                Arguments = string.Join(@" ", argv.ToArray()),
-                RedirectStandardError = true,
-                RedirectStandardOutput = true,
-            };
-
-            var sbOut = new StringBuilder();
-            var proc = new Process { StartInfo = psi };
-            proc.Start();
-
-            var reader = new ProcessStreamReader(proc);
-            string line;
-            while ((line = reader.ReadLine()) != null)
-            {
-                if (monitor.IsCanceled)
-                {
-                    proc.Kill();
-                    throw new LoadCanceledException(new ProgressStatus(string.Empty).Cancel());
-                }
-
-                sbOut.AppendLine(line);
-            }
-
-            while (!proc.WaitForExit(200))
-            {
-                if (monitor.IsCanceled)
-                {
-                    proc.Kill();
-                    throw new LoadCanceledException(new ProgressStatus(string.Empty).Cancel());
-                }
-            }
-
-            // Exit code -4 is a compatibility warning but not necessarily an error
-            if (proc.ExitCode != 0 && !IsCompatibilityWarning(proc.ExitCode))
-            {
-                var message = TextUtil.LineSeparate(string.Format(Resources.VendorIssueHelper_ConvertLocalWiffToMzxml_Failure_attempting_to_convert_sample__0__in__1__to_mzXML_to_work_around_a_performance_issue_in_the_AB_Sciex_WiffFileDataReader_library,
-                                                                  sampleIndex, filePathWiff),
-                                                    string.Empty,
-                                                    sbOut.ToString());
-                throw new IOException(message);
-            }
-        }
-
-        /// <summary>
-        /// True if the mzWiff exit code is non-zero, but only for a warning
-        /// that does not necessarily mean anything is wrong with the output.
-        /// </summary>
-        private static bool IsCompatibilityWarning(int exitCode)
-        {
-            return exitCode == -2 ||
-                   exitCode == -3 ||
-                   exitCode == -4;
-        }
-
-        private static void ConvertBrukerToMzml(string filePathBruker,
-            string outputPath, IProgressMonitor monitor, IProgressStatus status)
-        {
-            // We use CompassXport, if it is installed, to convert a Bruker raw file to mzML.  This solves two
-            // issues: the Bruker reader can't be called on any thread other than the main thread, and there
-            // is no 64-bit version of the reader.  So we start CompassXport in its own 32-bit process, 
-            // and use it to convert the raw data to mzML in a temporary file, which we read back afterwards.
-            var key = Registry.LocalMachine.OpenSubKey(KEY_COMPASSXPORT, false);
-            string compassXportExe = (key != null) ? (string)key.GetValue(string.Empty) : null;
-            if (compassXportExe == null)
-                throw new IOException(Resources.VendorIssueHelper_ConvertBrukerToMzml_CompassXport_software_must_be_installed_to_import_Bruker_raw_data_files_);
-
-            // CompassXport arguments
-            // ReSharper disable LocalizableElement
-            var argv = new[]
-                           {
-                               "-a \"" + filePathBruker + "\"",     // input file (directory)
-                               "-o \"" + outputPath + "\"",         // output file (directory)
-                               "-mode 2",                           // mode 2 (mzML)
-                               "-raw 0"                             // export line spectra (profile data is HUGE and SLOW!)
-                           };
-            // ReSharper restore LocalizableElement
-
-            // Start CompassXport in its own process.
-            var psi = new ProcessStartInfo(compassXportExe)
-            {
-                CreateNoWindow = true,
-                UseShellExecute = false,
-                // Common directory includes the directory separator
-                WorkingDirectory = Path.GetDirectoryName(Assembly.GetExecutingAssembly().Location) ?? string.Empty,
-                Arguments = string.Join(@" ", argv),
-                RedirectStandardError = true,
-                RedirectStandardOutput = true,
-            };
-            var proc = new Process { StartInfo = psi };
-            proc.Start();
-
-            // CompassXport starts by calculating a hash of the input file.  This takes a long time, and there is
-            // no intermediate output during this time.  So we set the progress bar some fraction of the way and
-            // let it sit there and animate while we wait for the start of spectra processing.
-            const int hashPercent = 25; // percentage of import time allocated to calculating the input file hash
-            
-            int spectrumCount = 0;
-
-            var sbOut = new StringBuilder();
-            var reader = new ProcessStreamReader(proc);
-            string line;
-            while ((line = reader.ReadLine()) != null)
-            {
-                if (monitor.IsCanceled)
-                {
-                    proc.Kill();
-                    throw new LoadCanceledException(status.Cancel());
-                }
-
-                sbOut.AppendLine(line);
-                line = line.Trim();
-
-                // The main part of conversion starts with the hash calculation.
-                if (line.StartsWith(@"Calculating hash"))
-                {
-                    status = status.ChangeMessage(Resources.VendorIssueHelper_ConvertBrukerToMzml_Calculating_hash_of_input_file)
-                        .ChangePercentComplete(hashPercent);
-                    monitor.UpdateProgress(status);
-                    continue;
-                }
-
-                // Determine how many spectra will be converted so we can track progress.
-                // ReSharper disable LocalizableElement
-                var match = Regex.Match(line, @"Converting (\d+) spectra");
-                // ReSharper restore LocalizableElement
-                if (match.Success)
-                {
-                    spectrumCount = int.Parse(match.Groups[1].Value);
-                    continue;
-                }
-
-                // Update progress as each spectra batch is converted.
-                // ReSharper disable LocalizableElement
-                match = Regex.Match(line, @"Spectrum \d+ - (\d+)");
-                // ReSharper restore LocalizableElement
-                if (match.Success)
-                {
-                    var spectrumEnd = int.Parse(match.Groups[1].Value);
-                    var percentComplete = hashPercent + (100-hashPercent)*spectrumEnd/spectrumCount;
-                    status = status.ChangeMessage(line).ChangePercentComplete(percentComplete);
-                    monitor.UpdateProgress(status);
-                }
-            }
-
-            while (!proc.WaitForExit(200))
-            {
-                if (monitor.IsCanceled)
-                {
-                    proc.Kill();
-                    throw new LoadCanceledException(status.Cancel());
-                }
-            }
-
-            if (proc.ExitCode != 0)
-            {
-                throw new IOException(TextUtil.LineSeparate(string.Format(Resources.VendorIssueHelper_ConvertBrukerToMzml_Failure_attempting_to_convert__0__to_mzML_using_CompassXport_,
-                    filePathBruker), string.Empty, sbOut.ToString()));
-            }
         }
     }
 }

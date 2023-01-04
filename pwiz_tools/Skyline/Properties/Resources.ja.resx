@@ -196,9 +196,6 @@
   <data name="PeptideGroupTreeNode_RenderTip_Original_Description" xml:space="preserve">
     <value>元の説明</value>
   </data>
-  <data name="VendorIssueHelper_ConvertBrukerToMzml_CompassXport_software_must_be_installed_to_import_Bruker_raw_data_files_" xml:space="preserve">
-    <value>Brukerの生データファイルをインポートするには、CompassXportソフトウェアをインストールする必要があります。</value>
-  </data>
   <data name="CommandLine_ImportResultsFile_File_write_date__0__is_before___import_on_or_after_date__1___Ignoring___" xml:space="preserve">
     <value>ファイル書き込み日{0}が、--import-on-or-after日{1}より前です。無視...</value>
   </data>
@@ -2610,9 +2607,6 @@
   <data name="ImportFastaControl_ImportFasta_The_document_does_not_contain_any_precursor_transitions_" xml:space="preserve">
     <value>ドキュメントにプリカーサートランジションが含まれていません。</value>
   </data>
-  <data name="VendorIssueHelper_ConvertLocalWiffToMzxml_Failure_attempting_to_convert_sample__0__in__1__to_mzXML_to_work_around_a_performance_issue_in_the_AB_Sciex_WiffFileDataReader_library" xml:space="preserve">
-    <value>AB Sciex WiffFileDataReaderライブラリでの性能問題の回避方法として、{1}内の試料{0}をmzXMLに変換しようとしましたが失敗しました。</value>
-  </data>
   <data name="NistLibraryBase_Load_Invalid_precursor_charge_found_File_may_be_corrupted" xml:space="preserve">
     <value>無効なプリカーサー電荷が見つかりました。ファイルが破損している可能性があります。</value>
   </data>
@@ -3609,9 +3603,6 @@
   </data>
   <data name="CommandLine_ReintegratePeaks_Error__You_must_first_import_results_into_the_document_before_reintegrating_" xml:space="preserve">
     <value>エラー： 再積分の前にまず結果をドキュメントにインポートしなければなりません。</value>
-  </data>
-  <data name="VendorIssueHelper_ConvertBrukerToMzml_Calculating_hash_of_input_file" xml:space="preserve">
-    <value>入力ファイルのハッシュを計算中</value>
   </data>
   <data name="OptimizationDb_FILTER_OPTDB_Optimization_Libraries" xml:space="preserve">
     <value>最適化ライブラリ</value>
@@ -7023,9 +7014,6 @@
   </data>
   <data name="BioMassCalc_SynchMasses_Fixing_isotope_abundance_masses_requires_a_monoisotopic_mass_calculator" xml:space="preserve">
     <value>同位体存在質量の確定には、モノアイソトピック質量カルキュレータが必要です</value>
-  </data>
-  <data name="VendorIssueHelper_ConvertBrukerToMzml_Failure_attempting_to_convert__0__to_mzML_using_CompassXport_" xml:space="preserve">
-    <value>CompassXportを使用した{0}のmzMLへの変換に失敗しました。</value>
   </data>
   <data name="TransitionPrediction_DoValidate_Transition_prediction_requires_a_collision_energy_regression_function" xml:space="preserve">
     <value>トランジション予測には、衝突エネルギー回帰関数が必要です。</value>
