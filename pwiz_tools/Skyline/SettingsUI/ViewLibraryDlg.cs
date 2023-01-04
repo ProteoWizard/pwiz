@@ -356,7 +356,7 @@ namespace pwiz.Skyline.SettingsUI
             Settings.Default.ViewLibrarySplitMainDist = splitMain.SplitterDistance;
             Settings.Default.ViewLibraryPropertiesVisible = propertiesButton.Checked;
             if (msGraphExtension1.PropertiesVisible)
-                Settings.Default.ViewLibrarySplitPropsDist = msGraphExtension1.Splitter.SplitterDistance;
+                msGraphExtension1.SaveSplitterWidthSetting();
             Settings.Default.ViewLibraryPropertiesSorted =
                 msGraphExtension1.PropertiesSheet.PropertySort == PropertySort.Alphabetical;
 
@@ -932,7 +932,6 @@ namespace pwiz.Skyline.SettingsUI
                             ShowTypes = types,
                             ShowCharges = charges,
                             ShowRanks = Settings.Default.ShowRanks,
-                            ShowScores = Settings.Default.ShowLibraryScores,
                             ShowMz = Settings.Default.ShowIonMz,
                             ShowObservedMz = Settings.Default.ShowObservedMz,
                             ShowMassError = Settings.Default.ShowFullScanMassError,
@@ -1665,11 +1664,11 @@ namespace pwiz.Skyline.SettingsUI
         public void ShowProperties(bool show)
         {
             if (!show && msGraphExtension1.PropertiesVisible)
-                Settings.Default.ViewLibrarySplitPropsDist = msGraphExtension1.Splitter.SplitterDistance;
+                msGraphExtension1.SaveSplitterWidthSetting();
             propertiesButton.Checked = show;
             msGraphExtension1.SetPropertiesVisibility(propertiesButton.Checked);
-            if (show && Settings.Default.ViewLibrarySplitPropsDist > 0)
-                msGraphExtension1.Splitter.SplitterDistance = Settings.Default.ViewLibrarySplitPropsDist;
+            if (show)
+                msGraphExtension1.RestoreSplitterWidthSetting();
         }
 
         public void UpdateChargesMenu()

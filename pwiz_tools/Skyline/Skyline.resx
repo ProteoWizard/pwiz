@@ -404,11 +404,17 @@
   <data name="toolStripSeparator61.Size" type="System.Drawing.Size, System.Drawing">
     <value>190, 6</value>
   </data>
-  <data name="spectrumPropsContextMenuItem.Size" type="System.Drawing.Size, System.Drawing">
+  <data name="spectrumGraphPropsContextMenuItem.Size" type="System.Drawing.Size, System.Drawing">
     <value>193, 22</value>
   </data>
-  <data name="spectrumPropsContextMenuItem.Text" xml:space="preserve">
-    <value>Properties...</value>
+  <data name="spectrumGraphPropsContextMenuItem.Text" xml:space="preserve">
+    <value>Graph Properties...</value>
+  </data>
+  <data name="showSpectrumPropertiesContextMenuItem.Size" type="System.Drawing.Size, System.Drawing">
+    <value>193, 22</value>
+  </data>
+  <data name="showSpectrumPropertiesContextMenuItem.Text" xml:space="preserve">
+    <value>Spectrum Properties</value>
   </data>
   <data name="toolStripSeparator15.Size" type="System.Drawing.Size, System.Drawing">
     <value>190, 6</value>
@@ -2334,10 +2340,16 @@
   <data name="&gt;&gt;toolStripSeparator61.Type" xml:space="preserve">
     <value>System.Windows.Forms.ToolStripSeparator, System.Windows.Forms, Version=4.0.0.0, Culture=neutral, PublicKeyToken=b77a5c561934e089</value>
   </data>
-  <data name="&gt;&gt;spectrumPropsContextMenuItem.Name" xml:space="preserve">
-    <value>spectrumPropsContextMenuItem</value>
+  <data name="&gt;&gt;spectrumGraphPropsContextMenuItem.Name" xml:space="preserve">
+    <value>spectrumGraphPropsContextMenuItem</value>
   </data>
-  <data name="&gt;&gt;spectrumPropsContextMenuItem.Type" xml:space="preserve">
+  <data name="&gt;&gt;spectrumGraphPropsContextMenuItem.Type" xml:space="preserve">
+    <value>System.Windows.Forms.ToolStripMenuItem, System.Windows.Forms, Version=4.0.0.0, Culture=neutral, PublicKeyToken=b77a5c561934e089</value>
+  </data>
+  <data name="&gt;&gt;showSpectrumPropertiesContextMenuItem.Name" xml:space="preserve">
+    <value>showSpectrumPropertiesContextMenuItem</value>
+  </data>
+  <data name="&gt;&gt;showSpectrumPropertiesContextMenuItem.Type" xml:space="preserve">
     <value>System.Windows.Forms.ToolStripMenuItem, System.Windows.Forms, Version=4.0.0.0, Culture=neutral, PublicKeyToken=b77a5c561934e089</value>
   </data>
   <data name="&gt;&gt;toolStripSeparator15.Name" xml:space="preserve">

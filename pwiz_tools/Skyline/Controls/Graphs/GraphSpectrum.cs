@@ -69,6 +69,7 @@ namespace pwiz.Skyline.Controls.Graphs
         SpectrumControlType ControlType { get; }
         bool IsAnnotated { get; }
         LibraryRankedSpectrumInfo SpectrumInfo { get; }
+        bool ShowPropertiesSheet { get; set; }
     }
 
     public interface ISpectrumScaleProvider
@@ -162,7 +163,7 @@ namespace pwiz.Skyline.Controls.Graphs
             // ReSharper disable once PossibleNullReferenceException
             comboPrecursor.ComboBox.DisplayMember = nameof(Precursor.DisplayString);
 
-            ShowProperties(Settings.Default.ViewLibraryPropertiesVisible);
+            ShowPropertiesSheet = Settings.Default.ViewLibraryMatchPropsVisible;
             if (Settings.Default.ViewLibraryPropertiesSorted)
                 msGraphExtension.PropertiesSheet.PropertySort = PropertySort.Alphabetical;
 
@@ -393,7 +394,7 @@ namespace pwiz.Skyline.Controls.Graphs
 
         private void propertiesMenuItem_Click(object sender, EventArgs e)
         {
-            ShowProperties(!propertiesButton.Checked);
+            ShowPropertiesSheet = !ShowPropertiesSheet;
         }
 
         private class ToolbarUpdate : IDisposable
@@ -524,7 +525,7 @@ namespace pwiz.Skyline.Controls.Graphs
             ceLabel.Visible = enableCE;
 
             // Show only if we made any of the things visible
-            //toolBar.Visible = showPrecursorSelect || showSpectraSelect || enableCE;
+            toolBar.Visible = showPrecursorSelect || showSpectraSelect || enableCE;
         }
 
         public void SelectSpectrum(SpectrumIdentifier spectrumIdentifier)
@@ -947,7 +948,6 @@ namespace pwiz.Skyline.Controls.Graphs
                 ShowCharges = charges,
                 ShowLosses = losses,
                 ShowRanks = Settings.Default.ShowRanks,
-                ShowScores = Settings.Default.ShowLibraryScores,
                 ShowMz = Settings.Default.ShowIonMz,
                 ShowObservedMz = Settings.Default.ShowObservedMz,
                 ShowMassError = Settings.Default.ShowFullScanMassError,
@@ -1411,15 +1411,21 @@ namespace pwiz.Skyline.Controls.Graphs
             }
         }
 
-        public void ShowProperties(bool show)
-        {
-            // TODO: [RC] Create separate properties visibility settings for this window.
-            if (!show && msGraphExtension.PropertiesVisible)
-                Settings.Default.ViewLibrarySplitPropsDist = msGraphExtension.Splitter.SplitterDistance;
-            propertiesButton.Checked = show;
-            msGraphExtension.SetPropertiesVisibility(propertiesButton.Checked);
-            if (show && Settings.Default.ViewLibrarySplitPropsDist > 0)
-                msGraphExtension.Splitter.SplitterDistance = Settings.Default.ViewLibrarySplitPropsDist;
+        public bool ShowPropertiesSheet {
+            set
+            {
+                if (!value && msGraphExtension.PropertiesVisible)
+                    msGraphExtension.SaveSplitterWidthSetting();
+                propertiesButton.Checked = value;
+                msGraphExtension.SetPropertiesVisibility(propertiesButton.Checked);
+                Settings.Default.ViewLibraryMatchPropsVisible = value;
+                if (value)
+                    msGraphExtension.RestoreSplitterWidthSetting();
+            }
+            get
+            {
+                return propertiesButton.Checked;
+            }
         }
 
 
@@ -1580,6 +1586,9 @@ namespace pwiz.Skyline.Controls.Graphs
                     ionTypeSelector.HostedControl.LossChanged -= skylineWindow.IonTypeSelector_LossChanged;
                 }
             }
+
+            if (msGraphExtension.PropertiesSheet.PropertySort == PropertySort.Alphabetical)
+                Settings.Default.ViewLibraryPropertiesSorted = true;
         }
 
         protected override void OnClosed(EventArgs e)

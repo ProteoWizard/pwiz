@@ -1133,7 +1133,7 @@ namespace pwiz.SkylineTestTutorial
             Assert.IsNotNull(propertyGrid);
 
             // Checks the number of properties displayed is the expected number
-            int expectedPropCount = isSmallMolecules ? 7 : 11;
+            int expectedPropCount = isSmallMolecules ? 6 : 10;
             RunUI(() =>
             {
                 // If the ViewLibraryDlg property grid is updated with new properties, these values likely need to change

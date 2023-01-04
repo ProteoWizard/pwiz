@@ -123,7 +123,6 @@ namespace pwiz.Skyline.Controls.Graphs
         public ICollection<IonType> ShowTypes { get; set; }
         public ICollection<int> ShowCharges { get; set; } // List of absolute charge values to display CONSIDER(bspratt): may want finer per-adduct control for small mol use
         public bool ShowRanks { get; set; }
-        public bool ShowScores { get; set; }
         public bool ShowMz { get; set; }
         public bool ShowObservedMz { get; set; }
         public bool ShowMassError { get; set; }
@@ -253,19 +252,6 @@ namespace pwiz.Skyline.Controls.Graphs
                 annotations.Add(stick);
             }
             //ReSharper restore UseObjectOrCollectionInitializer
-
-            if (ShowScores && SpectrumInfo.Score.HasValue)
-            {
-                var text = new TextObj(
-                    string.Format(LocalizationHelper.CurrentCulture, Resources.AbstractSpectrumGraphItem_AddAnnotations_, SpectrumInfo.Score),
-                    0.01, 0, CoordType.ChartFraction, AlignH.Left, AlignV.Top)
-                {
-                    IsClippedToChartRect = true,
-                    ZOrder = ZOrder.E_BehindCurves,
-                    FontSpec = GraphSummary.CreateFontSpec(Color.Black),
-                };
-                annotations.Add(text);
-            }
         }
 
         public override PointAnnotation AnnotatePoint(PointPair point)

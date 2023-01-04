@@ -1108,6 +1108,12 @@ namespace pwiz.Skyline
             ToggleObservedMzValues();
         }
 
+        private void showSpectrumPropertiesContextMenuItem_Click(object sender, EventArgs e)
+        {
+            if(_graphSpectrum != null && _graphSpectrum.Visible)
+                _graphSpectrum.ShowPropertiesSheet = !showSpectrumPropertiesContextMenuItem.Checked;
+        }
+
         public void ToggleObservedMzValues()
         {
             Settings.Default.ShowObservedMz = !Settings.Default.ShowObservedMz;
@@ -1133,15 +1139,12 @@ namespace pwiz.Skyline
             // Insert skyline specific menus
             var set = Settings.Default;
 
-            Func<Control, IMzScalePlot> traverseParents = null;
-            traverseParents = (c) =>
-            {
-                if (c == null || c is IMzScalePlot)
-                    return (IMzScalePlot)c;
-                return traverseParents(c.Parent);
-            };
 
-            var control = traverseParents( menuStrip.SourceControl );
+            var cSearch = menuStrip.SourceControl;
+            while (cSearch != null && !(cSearch is IMzScalePlot))
+                cSearch = cSearch.Parent;
+            var control = (IMzScalePlot)cSearch;
+
             int iInsert = 0;
             if (control?.IsAnnotated ?? false)
             {
@@ -1165,13 +1168,6 @@ namespace pwiz.Skyline
                 
                 ranksContextMenuItem.Checked = set.ShowRanks;
                 menuStrip.Items.Insert(iInsert++, ranksContextMenuItem);
-                if (control.ControlType == SpectrumControlType.LibraryMatch && 
-                    control.SpectrumInfo != null && control.SpectrumInfo.Score.HasValue)
-                {
-                    
-                    scoreContextMenuItem.Checked = set.ShowLibraryScores;
-                    menuStrip.Items.Insert(iInsert++, scoreContextMenuItem);
-                }
 
                 ionMzValuesContextMenuItem.Checked = set.ShowIonMz;
                 menuStrip.Items.Insert(iInsert++, ionMzValuesContextMenuItem);
@@ -1202,7 +1198,14 @@ namespace pwiz.Skyline
                 menuStrip.Items.Insert(iInsert++, toolStripSeparator61);
             }
 
-            menuStrip.Items.Insert(iInsert++, spectrumPropsContextMenuItem);
+            if (control != null)
+            {
+                menuStrip.Items.Insert(iInsert++, spectrumGraphPropsContextMenuItem);
+                showSpectrumPropertiesContextMenuItem.Checked = control.ShowPropertiesSheet;
+            }
+
+            menuStrip.Items.Insert(iInsert++, showSpectrumPropertiesContextMenuItem);
+
             if (_listGraphChrom.Any(c => c.Visible)) // Don't offer to show chromatograms when there are none
             {
                 showLibraryChromatogramsSpectrumContextMenuItem.Checked = set.ShowLibraryChromatograms;
@@ -1250,7 +1253,7 @@ namespace pwiz.Skyline
             UpdateGraphPanes();
         }
 
-        private void spectrumPropsContextMenuItem_Click(object sender, EventArgs e)
+        private void spectrumGraphPropsContextMenuItem_Click(object sender, EventArgs e)
         {
             ShowSpectrumProperties();
         }
