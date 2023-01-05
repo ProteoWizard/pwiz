@@ -10484,23 +10484,11 @@ Click 'Retry' to try building again after placing the original spectrum files in
   <data name="SkypSupport_Open_Failure_opening_skyp_file_" xml:space="preserve">
     <value>Failure opening skyp file.</value>
   </data>
-  <data name="SkypSupport_Download_There_was_an_error_downloading_the_Skyline_document_specified_in_the_skyp_file___0__" xml:space="preserve">
-    <value>There was an error downloading the Skyline document specified in the skyp file: {0}.</value>
-  </data>
-  <data name="SkypSupport_Download_You_may_have_to_add__0__as_a_Panorama_server_from_the_Tools___Options_menu_in_Skyline_" xml:space="preserve">
-    <value>You may have to add {0} as a Panorama server from the Tools &gt; Options menu in Skyline.</value>
-  </data>
   <data name="SkypSupport_Download_You_do_not_have_permissions_to_download_this_file_from__0__" xml:space="preserve">
     <value>You do not have permissions to download this file from {0}.</value>
   </data>
-  <data name="SkypFile_GetSkyFileUrl_Expected_the_URL_of_a_shared_Skyline_document_archive___0___in_the_skyp_file__Found__1__instead_" xml:space="preserve">
-    <value>Expected the URL of a shared Skyline document archive ({0}) in the skyp file. Found {1} instead.</value>
-  </data>
   <data name="SkypFile_GetNonExistentPath_Name_of_shared_Skyline_archive_cannot_be_null_or_empty_" xml:space="preserve">
     <value>Name of shared Skyline archive cannot be null or empty.</value>
-  </data>
-  <data name="SkypSupport_Download_Downloading__0_" xml:space="preserve">
-    <value>Downloading {0}</value>
   </data>
   <data name="SkypFile_GetSkyFileUrl_File_does_not_contain_the_URL_of_a_shared_Skyline_archive_file___0___on_a_Panorama_server_" xml:space="preserve">
     <value>File does not contain the URL of a shared Skyline archive file ({0}) on a Panorama server.</value>
@@ -11853,6 +11841,24 @@ If you do not have the original file, you may build the library with embedded sp
   <data name="CommandLine_ImportSkyr_Error__Reports_could_not_be_imported_from__0_" xml:space="preserve">
       <value>Error: Reports could not be imported from {0}</value>
   </data>
+  <data name="SkypSupport_Open_Path_to_skyp_file_cannot_be_empty_" xml:space="preserve">
+	  <value>Path to skyp file cannot be empty.</value>
+  </data>
+  <data name="SkypDownloadException_GetMessage_Would_you_like_to_add__0__as_a_Panorama_server_in_Skyline_" xml:space="preserve">
+	  <value>Would you like to add {0} as a Panorama server in Skyline?</value>
+  </data>
+  <data name="SkypDownloadException_GetMessage_Credentials_saved_in_Skyline_for_the_Panorama_server__0__are_invalid_" xml:space="preserve">
+	  <value>Credentials saved in Skyline for the Panorama server {0} are invalid.</value>
+  </data>
+  <data name="SkypDownloadException_GetMessage_Would_you_like_to_update_the_credentials_" xml:space="preserve">
+	  <value>Would you like to update the credentials?</value>
+  </data>
+  <data name="SkypDownloadException_GetMessage_Credentials_saved_in_Skyline_for_the_Panorama_server__0__are_for_the_user__1___This_user_does_not_have_permissions_to_download_the_file__The_skyp_file_was_downloaded_by__2__" xml:space="preserve">
+	  <value>Credentials saved in Skyline for the Panorama server {0} are for the user {1}. This user does not have permissions to download the file. The skyp file was downloaded by {2}.</value>
+  </data>
+  <data name="SkypDownloadException_GetMessage_The_skyp_file_was_downloaded_by_the_user__0___Credentials_saved_in_Skyline_for_this_server_are_for_the_user__1__" xml:space="preserve">
+	  <value>The skyp file was downloaded by the user {0}. Credentials saved in Skyline for this server are for the user {1}.</value>
+  </data>
   <data name="AssociateProteinsDlg_UseFastaFile_An_error_occurred_during_protein_association_" xml:space="preserve">
 	  <value>An error occurred during protein association.</value>
   </data>
@@ -11934,6 +11940,15 @@ If you do not have the original file, you may build the library with embedded sp
   <data name="StaticMod_FormatFormulaOrMass___0__Da_" xml:space="preserve">
 	  <value>({0} Da)</value>
 	  <comment>"Da" stands for "Daltons". Example: (+57.2 Da)</comment>
+  </data>
+  <data name="SkypSupport_ShowDownloadError_There_was_an_error_downloading_the_Skyline_document__0__from__1__" xml:space="preserve">
+	  <value>There was an error downloading the Skyline document {0} from {1}.</value>
+  </data>
+  <data name="SkypSupport_Download_Downloading__0__from__1_" xml:space="preserve">
+	  <value>Downloading {0} from {1}</value>
+  </data>
+  <data name="SkypFile_GetSkyFileUrl_Expected_the_URL_of_a_shared_Skyline_document_archive_file___0____Found_filename__1__instead_in_the_URL__2__" xml:space="preserve">
+	  <value>Expected the URL of a shared Skyline document archive file ({0}). Found filename {1} instead in the URL {2}.</value>
   </data>
   <data name="SkylineWindow_crashSkylineMenuItem_Click_Are_you_sure_you_want_to_abruptly_terminate_Skyline__You_will_lose_all_unsaved_work_" xml:space="preserve">
 	  <value>Are you sure you want to abruptly terminate Skyline? You will lose all unsaved work.</value>

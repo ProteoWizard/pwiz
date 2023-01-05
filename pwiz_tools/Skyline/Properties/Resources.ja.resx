@@ -10443,23 +10443,11 @@ Skylineにインポートする前に必要に応じてライブラリをフィ�
   <data name="SkypSupport_Open_Failure_opening_skyp_file_" xml:space="preserve">
     <value>skypファイルを開けません。</value>
   </data>
-  <data name="SkypSupport_Download_There_was_an_error_downloading_the_Skyline_document_specified_in_the_skyp_file___0__" xml:space="preserve">
-    <value>以下のskypファイルで指定されたSkylineドキュメントをダウンロードする際にエラーが発生しました：{0}。</value>
-  </data>
-  <data name="SkypSupport_Download_You_may_have_to_add__0__as_a_Panorama_server_from_the_Tools___Options_menu_in_Skyline_" xml:space="preserve">
-    <value>Skylineで[ツール] &gt; [オプション]メニューを選択し、Panoramaサーバーとして{0}を追加する必要があります。</value>
-  </data>
   <data name="SkypSupport_Download_You_do_not_have_permissions_to_download_this_file_from__0__" xml:space="preserve">
     <value>{0}からこのファイルをダウンロードする権限がありません。</value>
   </data>
-  <data name="SkypFile_GetSkyFileUrl_Expected_the_URL_of_a_shared_Skyline_document_archive___0___in_the_skyp_file__Found__1__instead_" xml:space="preserve">
-    <value>skypファイル内にSkyline共有ドキュメントアーカイブ({0})のURLがあると考えられます。代わりに{1}が見つかりました。</value>
-  </data>
   <data name="SkypFile_GetNonExistentPath_Name_of_shared_Skyline_archive_cannot_be_null_or_empty_" xml:space="preserve">
     <value>Skyline共有アーカイブの名前はNullや空白にできません。</value>
-  </data>
-  <data name="SkypSupport_Download_Downloading__0_" xml:space="preserve">
-    <value>{0}のダウンロード中</value>
   </data>
   <data name="SkypFile_GetSkyFileUrl_File_does_not_contain_the_URL_of_a_shared_Skyline_archive_file___0___on_a_Panorama_server_" xml:space="preserve">
     <value>PanoramaサーバーにあるSkyline共有アーカイブファイル({0})のURLがファイルに含まれていません。</value>
