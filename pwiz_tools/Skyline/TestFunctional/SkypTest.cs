@@ -541,17 +541,12 @@ namespace pwiz.SkylineTestFunctional
 
         public ServerState GetServerState()
         {
-           return ServerState.available;
-        }
-
-        public PanoramaState IsPanorama()
-        {
-            return PanoramaState.panorama;
+           return ServerState.VALID;
         }
 
         public UserState IsValidUser(string username, string password)
         {
-            return UserState.valid;
+            return UserState.VALID;
         }
 
         public FolderState IsValidFolder(string folderPath, string username, string password)
