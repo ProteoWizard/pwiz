@@ -151,7 +151,6 @@ namespace pwiz.Skyline.Alerts
                 {
                     DialogResult = DialogResult.Cancel;
                 }
-
             }
         }
 
