@@ -3018,12 +3018,12 @@ namespace pwiz.SkylineTestData
 
             // Error: Unknown server
             var serverUri = PanoramaUtil.ServerNameToUri("unknown.server-state.com");
-            var client = new TestPanoramaClient() { MyServerState = ServerState.unknown, ServerUri = serverUri };
+            var client = new TestPanoramaClient() { MyServerState = new ServerState(ServerStateEnum.unknown, null, null), ServerUri = serverUri };
             helper.ValidateServer(client, null, null);
             Assert.IsTrue(
                 buffer.ToString()
                     .Contains(
-                        string.Format(Resources.EditServerDlg_OkDialog_Unknown_error_connecting_to_the_server__0__,
+                        string.Format(Resources.ServerState_GetErrorMessage_Unable_to_connect_to_the_server__0__,
                             serverUri.AbsoluteUri)));
             TestOutputHasErrorLine(buffer.ToString());
             buffer.Clear();
@@ -3031,12 +3031,12 @@ namespace pwiz.SkylineTestData
 
             // Error: Not a Panorama Server
             serverUri = PanoramaUtil.ServerNameToUri("www.google.com");
-            client = new TestPanoramaClient() {MyPanoramaState = PanoramaState.other, ServerUri = serverUri};
+            client = new TestPanoramaClient() {MyUserState = new UserState(UserStateEnum.unknown, null, null), ServerUri = serverUri};
             helper.ValidateServer(client, null, null);
             Assert.IsTrue(
                 buffer.ToString()
                     .Contains(
-                        string.Format(Resources.EditServerDlg_OkDialog_The_server__0__is_not_a_Panorama_server,
+                        string.Format(Resources.UserState_getErrorMessage_There_was_an_error_authenticating_user_credentials_on_the_server__0__,
                             serverUri.AbsoluteUri)));
             TestOutputHasErrorLine(buffer.ToString());
             buffer.Clear();
@@ -3044,7 +3044,7 @@ namespace pwiz.SkylineTestData
 
             // Error: Invalid user
             serverUri = PanoramaUtil.ServerNameToUri(PanoramaUtil.PANORAMA_WEB);
-            client = new TestPanoramaClient() { MyUserState = UserState.nonvalid, ServerUri = serverUri };
+            client = new TestPanoramaClient() { MyUserState = new UserState(UserStateEnum.nonvalid, null, null), ServerUri = serverUri };
             helper.ValidateServer(client, "invalid", "user");
             Assert.IsTrue(
                 buffer.ToString()
@@ -3213,26 +3213,19 @@ namespace pwiz.SkylineTestData
             public Uri ServerUri { get; set; }
 
             public ServerState MyServerState { get; set; }
-            public PanoramaState MyPanoramaState { get; set; }
             public UserState MyUserState { get; set; }
             public FolderState MyFolderState { get; set; }
 
             public TestPanoramaClient()
             {
-                MyServerState = ServerState.available;
-                MyPanoramaState = PanoramaState.panorama;
-                MyUserState = UserState.valid;
+                MyServerState = ServerState.VALID;
+                MyUserState = UserState.VALID;
                 MyFolderState = FolderState.valid;
             }
 
             public virtual ServerState GetServerState()
             {
                 return MyServerState;
-            }
-
-            public PanoramaState IsPanorama()
-            {
-                return MyPanoramaState;
             }
 
             public UserState IsValidUser(string username, string password)

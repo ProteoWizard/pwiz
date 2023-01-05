@@ -196,9 +196,6 @@
   <data name="PeptideGroupTreeNode_RenderTip_Original_Description" xml:space="preserve">
     <value>初始描述</value>
   </data>
-  <data name="VendorIssueHelper_ConvertBrukerToMzml_CompassXport_software_must_be_installed_to_import_Bruker_raw_data_files_" xml:space="preserve">
-    <value>必须安装 CompassXport 软件，以导入 Bruker 原始数据文件。</value>
-  </data>
   <data name="CommandLine_ImportResultsFile_File_write_date__0__is_before___import_on_or_after_date__1___Ignoring___" xml:space="preserve">
     <value>文件写入日期 {0} 早于 --导入-在-或-之前日期 {1}。忽视...</value>
   </data>
@@ -688,7 +685,7 @@
   <data name="ReportSpec_ReportToCsvString_Exporting__0__report" xml:space="preserve">
     <value>导出{0}报告</value>
   </data>
-  <data name="CommandLine_GeneralException_Error___0_" xml:space="preserve">
+  <data name="Error___0_" xml:space="preserve">
     <value>错误：{0}</value>
   </data>
   <data name="CommandLine_ExportLiveReport_Error__The_report__0__could_not_be_saved_to__1__" xml:space="preserve">
@@ -2610,9 +2607,6 @@
   <data name="ImportFastaControl_ImportFasta_The_document_does_not_contain_any_precursor_transitions_" xml:space="preserve">
     <value>文档不包含任何母离子离子对。</value>
   </data>
-  <data name="VendorIssueHelper_ConvertLocalWiffToMzxml_Failure_attempting_to_convert_sample__0__in__1__to_mzXML_to_work_around_a_performance_issue_in_the_AB_Sciex_WiffFileDataReader_library" xml:space="preserve">
-    <value>尝试将{1}中的样品{0}转换成 mzXML 以解决 AB Sciex WiffFileDataReader 库中的问题失败。</value>
-  </data>
   <data name="NistLibraryBase_Load_Invalid_precursor_charge_found_File_may_be_corrupted" xml:space="preserve">
     <value>发现无效的母离子电荷。文件可能已损坏。</value>
   </data>
@@ -3212,9 +3206,6 @@
   <data name="RTDetails_gridStatistics_KeyDown_Failed_setting_data_to_clipboard" xml:space="preserve">
     <value>向剪切板设定数据失败。</value>
   </data>
-  <data name="EditServerDlg_OkDialog_The_server__0__is_not_a_Panorama_server" xml:space="preserve">
-    <value>服务器{0}不是 Panorama 服务器。</value>
-  </data>
   <data name="CommandLine_ExportInstrumentFile_Method__0__exported_successfully_" xml:space="preserve">
     <value>方法{0}已成功导出。</value>
   </data>
@@ -3612,9 +3603,6 @@
   </data>
   <data name="CommandLine_ReintegratePeaks_Error__You_must_first_import_results_into_the_document_before_reintegrating_" xml:space="preserve">
     <value>错误：您必须先导入结果至文档后才能重新整合。</value>
-  </data>
-  <data name="VendorIssueHelper_ConvertBrukerToMzml_Calculating_hash_of_input_file" xml:space="preserve">
-    <value>输入文件的计算杂乱</value>
   </data>
   <data name="OptimizationDb_FILTER_OPTDB_Optimization_Libraries" xml:space="preserve">
     <value>最优化库</value>
@@ -4101,9 +4089,6 @@
   <data name="SpectrumMzInfo_GetInfoFromLibrary_Library_spectrum_for_sequence__0__is_missing_" xml:space="preserve">
     <value>针对序列 {0} 的库谱图丢失。</value>
   </data>
-  <data name="EditServerDlg_OkDialog_Unknown_error_connecting_to_the_server__0__" xml:space="preserve">
-    <value>连接至服务器{0}出现未知错误。</value>
-  </data>
   <data name="RenameProteinsDlg_OkDialog_Cannot_rename__0__more_than_once__Please_remove_either__1__or__2__" xml:space="preserve">
     <value>无法多次重新命名{0}。请删除{1}或{2}</value>
   </data>
@@ -4250,7 +4235,7 @@
     <value>单击“创建”按钮来创建一个新库或单击“打开”按钮来打开现有的库文件。</value>
   </data>
   <data name="TransitionTreeNode_GetLabel_irank__0__" xml:space="preserve">
-    <value>针对离子对节点的同位素排名 {0}</value>
+    <value>i排名 {0}</value>
     <comment>Isotope rank for transition node</comment>
   </data>
   <data name="AddIrtSpectralLibrary_OkDialog_The_file__0__is_not_a_BiblioSpec_or_Chromatogram_library" xml:space="preserve">
@@ -7029,9 +7014,6 @@
   </data>
   <data name="BioMassCalc_SynchMasses_Fixing_isotope_abundance_masses_requires_a_monoisotopic_mass_calculator" xml:space="preserve">
     <value>固定同位素丰度质量需要一个单一同位素质量计算器</value>
-  </data>
-  <data name="VendorIssueHelper_ConvertBrukerToMzml_Failure_attempting_to_convert__0__to_mzML_using_CompassXport_" xml:space="preserve">
-    <value>尝试使用 CompassXport 将{0}转化为 mzML 失败。</value>
   </data>
   <data name="TransitionPrediction_DoValidate_Transition_prediction_requires_a_collision_energy_regression_function" xml:space="preserve">
     <value>离子对预测需要碰撞能量回归函数。</value>
