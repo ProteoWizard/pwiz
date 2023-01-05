@@ -550,7 +550,7 @@
     <value>Key</value>
   </data>
   <data name="Kurtosis">
-	<value>Kurtosis</value>
+    <value>Kurtosis</value>
   </data>
   <data name="LastPosition">
     <value>Last Position</value>
@@ -1202,6 +1202,9 @@
   </data>
   <data name="Score">
     <value>Score</value>
+  </data>
+  <data name="ShapeCorrelation">
+    <value>Shape Correlation</value>
   </data>
   <data name="Skewness">
     <value>Skewness</value>

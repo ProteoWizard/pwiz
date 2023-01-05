@@ -999,10 +999,10 @@ namespace pwiz.Skyline.Model.Results
         private FlagValues _flagValues;
         private short _massError;
         private readonly short _pointsAcross;
-        private readonly HalfPrecisionFloat _stdDev;
-        private readonly HalfPrecisionFloat _skewness;
-        private readonly HalfPrecisionFloat _kurtosis;
-        private readonly HalfPrecisionFloat _shapeCorrelation;
+        private readonly float _stdDev;
+        private readonly float _skewness;
+        private readonly float _kurtosis;
+        private readonly float _shapeCorrelation;
 
         [Flags]
         public enum FlagValues : ushort
@@ -1065,10 +1065,10 @@ namespace pwiz.Skyline.Model.Results
             if (peakShapeValues.HasValue)
             {
                 flagValues |= FlagValues.has_peak_shape;
-                _skewness = (HalfPrecisionFloat) peakShapeValues.Value.Skewness;
-                _kurtosis = (HalfPrecisionFloat)peakShapeValues.Value.Kurtosis;
-                _stdDev = (HalfPrecisionFloat)peakShapeValues.Value.StdDev;
-                _shapeCorrelation = (HalfPrecisionFloat) peakShapeValues.Value.ShapeCorrelation;
+                _skewness = peakShapeValues.Value.Skewness;
+                _kurtosis = peakShapeValues.Value.Kurtosis;
+                _stdDev = peakShapeValues.Value.StdDev;
+                _shapeCorrelation = peakShapeValues.Value.ShapeCorrelation;
             }
             else
             {
@@ -1195,10 +1195,10 @@ namespace pwiz.Skyline.Model.Results
             if (peakShapeStatistics != null)
             {
                 _flagValues |= FlagValues.has_peak_shape;
-                _stdDev = (HalfPrecisionFloat) peakShapeStatistics.StdDevTime;
-                _skewness = (HalfPrecisionFloat) peakShapeStatistics.Skewness;
-                _kurtosis = (HalfPrecisionFloat) peakShapeStatistics.Kurtosis;
-                _shapeCorrelation = (HalfPrecisionFloat) (medianPeakShape?.GetCorrelation(timeIntensities) ?? 1f);
+                _stdDev = (float) peakShapeStatistics.StdDevTime;
+                _skewness = (float) peakShapeStatistics.Skewness;
+                _kurtosis = (float) peakShapeStatistics.Kurtosis;
+                _shapeCorrelation = (float?) medianPeakShape?.GetCorrelation(timeIntensities) ?? 1f;
             }
             else
             {
@@ -1323,7 +1323,7 @@ namespace pwiz.Skyline.Model.Results
             {
                 return 36;
             }
-            return 44;
+            return 52;
         }
 
         public static StructSerializer<ChromPeak> StructSerializer(int chromPeakSize)
@@ -2672,6 +2672,14 @@ namespace pwiz.Skyline.Model.Results
 
 // ReSharper disable InconsistentNaming
     public enum TransformChrom { raw, interpolated, craw2d, craw1d, savitzky_golay }
+
+    public static class TransformChromExtension
+    {
+        public static bool IsDerivative(this TransformChrom transformChrom)
+        {
+            return transformChrom == TransformChrom.craw1d || transformChrom == TransformChrom.craw2d;
+        }
+    }
 // ReSharper restore InconsistentNaming
 
     public class ChromatogramInfo
@@ -2706,9 +2714,12 @@ namespace pwiz.Skyline.Model.Results
             _transitionIndex = transitionIndex;
         }
 
-        public ChromatogramInfo(float[] times, float[] intensities)
+        public ChromatogramInfo(float[] times, float[] intensities) : this(new TimeIntensities(times, intensities, null, null))
         {
-            _timeIntensities = new TimeIntensities(times, intensities, null, null);
+        }
+        public ChromatogramInfo(TimeIntensities timeIntensities)
+        {
+            _timeIntensities = timeIntensities;
         }
 
         public ChromatogramGroupInfo GroupInfo { get { return _groupInfo; } }
@@ -2995,6 +3006,14 @@ namespace pwiz.Skyline.Model.Results
             }
         }
 
+        public TransformChrom TransformChrom
+        {
+            get
+            {
+                return _transformChrom;
+            }
+        }
+
         public void Transform(TransformChrom transformChrom)
         {
             if (_transformChrom == transformChrom)
@@ -3059,6 +3078,18 @@ namespace pwiz.Skyline.Model.Results
         }
 
         public int TransitionIndex { get { return _transitionIndex; } }
+
+        public float? GetBackgroundLevel(float peakStart, float peakEnd)
+        {
+            TimeIntensities interpolatedTimeIntensities = GetTransformedTimeIntensities(TransformChrom.interpolated);
+            // Make sure that the TimeIntensities has an entry for both the start and end time
+            interpolatedTimeIntensities =
+                interpolatedTimeIntensities.InterpolateTime(peakStart).InterpolateTime(peakEnd);
+            float startIntensity = interpolatedTimeIntensities.Intensities[interpolatedTimeIntensities.IndexOfNearestTime(peakStart)];
+            float endIntensity =
+                interpolatedTimeIntensities.Intensities[interpolatedTimeIntensities.IndexOfNearestTime(peakEnd)];
+            return Math.Min(startIntensity, endIntensity);
+        }
     }
 
     public class BulkReadException : IOException

@@ -55,7 +55,7 @@ namespace pwiz.Skyline.Model.Results.Spectra
                     var msDataFileScanIds = new ResultFileMetaData(_spectra).ToMsDataFileScanIds();
                     IScanProvider scanProvider = new ScanProvider(DataSchema.SkylineWindow.DocumentFilePath, _dataFileUri,
                         chromSource, timeIntensities.Times, new TransitionFullScanInfo[] {transitionFullScanInfo}, null, msDataFileScanIds); 
-                    DataSchema.SkylineWindow.ShowGraphFullScan(scanProvider, 0, 0);
+                    DataSchema.SkylineWindow.ShowGraphFullScan(scanProvider, 0, 0, 0);
                 };
             }
         }

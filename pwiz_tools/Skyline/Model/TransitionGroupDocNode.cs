@@ -1489,7 +1489,7 @@ namespace pwiz.Skyline.Model
                 {
                     // Get all transition chromatogram info for this file.
                     ChromatogramGroupInfo chromGroupInfo = chromGroupInfos[j];
-                    var peakGroupIntegrator = MakePeakGroupIntegrator(settingsNew, chromatograms, chromGroupInfo);
+                    PeakGroupIntegrator peakGroupIntegrator = null;
                     ChromFileInfoId fileId = fileIds[j];
                     PeakFeatureStatistics reintegratePeak = reintegratePeaks != null ? reintegratePeaks[j] : null;
 
@@ -1544,6 +1544,7 @@ namespace pwiz.Skyline.Model
 
                                     if (chromInfoBest != null)
                                     {
+                                        peakGroupIntegrator ??= MakePeakGroupIntegrator(settingsNew, chromatograms, chromGroupInfo);
                                         peak = CalcPeak(settingsNew, peakGroupIntegrator, info, chromInfoBest);
                                         userSet = chromInfoBest.UserSet;
                                     }
@@ -1552,6 +1553,7 @@ namespace pwiz.Skyline.Model
                                 else if (nodePep.HasResults && !HasResults &&
                                     TryGetMatchingGroupInfo(nodePep, chromIndex, fileId, step, out chromGroupInfoMatch))
                                 {
+                                    peakGroupIntegrator ??= MakePeakGroupIntegrator(settingsNew, chromatograms, chromGroupInfo);
                                     peak = CalcMatchingPeak(settingsNew, peakGroupIntegrator, info, chromGroupInfoMatch, reintegratePeak, qcutoff, ref userSet);
                                 }
                                 // Otherwise use the best peak chosen at import time

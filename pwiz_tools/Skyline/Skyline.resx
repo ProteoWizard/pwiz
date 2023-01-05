@@ -303,6 +303,27 @@
     <value>Replicates</value>
   </data>
   <data name="contextMenuTreeNode.Size" type="System.Drawing.Size, System.Drawing">
+    <value>229, 374</value>
+  </data>
+  <data name="&gt;&gt;contextMenuTreeNode.Name" xml:space="preserve">
+    <value>contextMenuTreeNode</value>
+  </data>
+  <data name="&gt;&gt;contextMenuTreeNode.Type" xml:space="preserve">
+    <value>System.Windows.Forms.ContextMenuStrip, System.Windows.Forms, Version=4.0.0.0, Culture=neutral, PublicKeyToken=b77a5c561934e089</value>
+  </data>
+  <metadata name="contextMenuSpectrum.TrayLocation" type="System.Drawing.Point, System.Drawing, Version=4.0.0.0, Culture=neutral, PublicKeyToken=b03f5f7f11d50a3a">
+    <value>197, 56</value>
+  </metadata>
+  <data name="replicatesTreeContextMenuItem.Size" type="System.Drawing.Size, System.Drawing">
+    <value>228, 22</value>
+  </data>
+  <data name="ionTypesContextMenuItem.Text" xml:space="preserve">
+    <value>Ion Types</value>
+  </data>
+  <data name="replicatesTreeContextMenuItem.Text" xml:space="preserve">
+    <value>Replicates</value>
+  </data>
+  <data name="contextMenuTreeNode.Size" type="System.Drawing.Size, System.Drawing">
     <value>229, 396</value>
   </data>
   <data name="&gt;&gt;contextMenuTreeNode.Name" xml:space="preserve">
@@ -316,6 +337,12 @@
   </data>
   <data name="fragmentionsContextMenuItem.Text" xml:space="preserve">
     <value>Fragment ions</value>
+  </data>
+  <data name="specialionsContextMenuItem.Size" type="System.Drawing.Size, System.Drawing">
+    <value>193, 22</value>
+  </data>
+  <data name="specialionsContextMenuItem.Text" xml:space="preserve">
+    <value>Special Ions</value>
   </data>
   <data name="precursorIonContextMenuItem.Size" type="System.Drawing.Size, System.Drawing">
     <value>193, 22</value>
@@ -332,12 +359,6 @@
   <data name="chargesContextMenuItem.Text" xml:space="preserve">
     <value>Charges</value>
   </data>
-  <data name="specialionsContextMenuItem.Size" type="System.Drawing.Size, System.Drawing">
-    <value>80, 22</value>
-  </data>
-  <data name="specialionsContextMenuItem.Text" xml:space="preserve">
-    <value>Special Ions</value>
-  </data>
   <data name="toolStripSeparator12.Size" type="System.Drawing.Size, System.Drawing">
     <value>190, 6</value>
   </data>
@@ -352,6 +373,12 @@
   </data>
   <data name="scoreContextMenuItem.Text" xml:space="preserve">
     <value>Score</value>
+  </data>
+  <data name="massErrorToolStripMenuItem.Size" type="System.Drawing.Size, System.Drawing">
+    <value>193, 22</value>
+  </data>
+  <data name="massErrorToolStripMenuItem.Text" xml:space="preserve">
+    <value>Mass Error</value>
   </data>
   <data name="massErrorToolStripMenuItem.Size" type="System.Drawing.Size, System.Drawing">
     <value>193, 22</value>
@@ -433,9 +460,6 @@
   </data>
   <data name="synchMzScaleToolStripMenuItem.Text" xml:space="preserve">
     <value>Synchronize m/z Scale</value>
-  </data>
-  <data name="contextMenuSpectrum.Size" type="System.Drawing.Size, System.Drawing">
-    <value>194, 574</value>
   </data>
   <data name="&gt;&gt;contextMenuSpectrum.Name" xml:space="preserve">
     <value>contextMenuSpectrum</value>
@@ -1666,25 +1690,25 @@
     <value>&amp;Tools</value>
   </data>
   <data name="homeMenuItem.Size" type="System.Drawing.Size, System.Drawing">
-    <value>171, 22</value>
+    <value>187, 22</value>
   </data>
   <data name="homeMenuItem.Text" xml:space="preserve">
     <value>&amp;Home</value>
   </data>
   <data name="videosMenuItem.Size" type="System.Drawing.Size, System.Drawing">
-    <value>171, 22</value>
+    <value>187, 22</value>
   </data>
   <data name="videosMenuItem.Text" xml:space="preserve">
     <value>&amp;Videos</value>
   </data>
   <data name="webinarsMenuItem.Size" type="System.Drawing.Size, System.Drawing">
-    <value>171, 22</value>
+    <value>187, 22</value>
   </data>
   <data name="webinarsMenuItem.Text" xml:space="preserve">
     <value>&amp;Webinars</value>
   </data>
   <data name="tutorialsMenuItem.Size" type="System.Drawing.Size, System.Drawing">
-    <value>171, 22</value>
+    <value>187, 22</value>
   </data>
   <data name="tutorialsMenuItem.Text" xml:space="preserve">
     <value>&amp;Tutorials</value>
@@ -1708,19 +1732,19 @@
     <value>&amp;Other</value>
   </data>
   <data name="documentationToolStripMenuItem.Size" type="System.Drawing.Size, System.Drawing">
-    <value>171, 22</value>
+    <value>187, 22</value>
   </data>
   <data name="documentationToolStripMenuItem.Text" xml:space="preserve">
     <value>&amp;Documentation</value>
   </data>
   <data name="supportMenuItem.Size" type="System.Drawing.Size, System.Drawing">
-    <value>171, 22</value>
+    <value>187, 22</value>
   </data>
   <data name="supportMenuItem.Text" xml:space="preserve">
     <value>&amp;Support</value>
   </data>
   <data name="issuesMenuItem.Size" type="System.Drawing.Size, System.Drawing">
-    <value>171, 22</value>
+    <value>187, 22</value>
   </data>
   <data name="issuesMenuItem.Text" xml:space="preserve">
     <value>&amp;Issues</value>
@@ -1734,20 +1758,26 @@
   <data name="submitErrorReportMenuItem.Visible" type="System.Boolean, mscorlib">
     <value>False</value>
   </data>
+  <data name="crashSkylineMenuItem.Size" type="System.Drawing.Size, System.Drawing">
+    <value>187, 22</value>
+  </data>
+  <data name="crashSkylineMenuItem.Text" xml:space="preserve">
+    <value>Crash Skyline...</value>
+  </data>
   <data name="checkForUpdatesSeparator.Size" type="System.Drawing.Size, System.Drawing">
-    <value>168, 6</value>
+    <value>184, 6</value>
   </data>
   <data name="checkForUpdatesMenuItem.Size" type="System.Drawing.Size, System.Drawing">
-    <value>171, 22</value>
+    <value>187, 22</value>
   </data>
   <data name="checkForUpdatesMenuItem.Text" xml:space="preserve">
     <value>&amp;Check for Updates</value>
   </data>
   <data name="toolStripSeparator29.Size" type="System.Drawing.Size, System.Drawing">
-    <value>168, 6</value>
+    <value>184, 6</value>
   </data>
   <data name="aboutMenuItem.Size" type="System.Drawing.Size, System.Drawing">
-    <value>171, 22</value>
+    <value>187, 22</value>
   </data>
   <data name="aboutMenuItem.Text" xml:space="preserve">
     <value>&amp;About</value>
@@ -2077,7 +2107,7 @@
     <value>modeUIHandler</value>
   </data>
   <data name="&gt;&gt;modeUIHandler.Type" xml:space="preserve">
-    <value>pwiz.Skyline.Util.Helpers+ModeUIExtender, Skyline-daily, Version=21.2.1.506, Culture=neutral, PublicKeyToken=null</value>
+    <value>pwiz.Skyline.Util.Helpers+ModeUIExtender, Skyline-daily, Version=22.2.1.341, Culture=neutral, PublicKeyToken=null</value>
   </data>
   <data name="&gt;&gt;cutContextMenuItem.Name" xml:space="preserve">
     <value>cutContextMenuItem</value>
@@ -2241,22 +2271,22 @@
   <data name="&gt;&gt;bestReplicateTreeContextMenuItem.Type" xml:space="preserve">
     <value>System.Windows.Forms.ToolStripMenuItem, System.Windows.Forms, Version=4.0.0.0, Culture=neutral, PublicKeyToken=b77a5c561934e089</value>
   </data>
-  <data name="&gt;&gt;zhionsContextMenuItem.Name" xml:space="preserve">
-    <value>zhionsContextMenuItem</value>
+  <data name="&gt;&gt;ionTypesContextMenuItem.Name" xml:space="preserve">
+    <value>ionTypesContextMenuItem</value>
   </data>
-  <data name="&gt;&gt;zhionsContextMenuItem.Type" xml:space="preserve">
-    <value>System.Windows.Forms.ToolStripMenuItem, System.Windows.Forms, Version=4.0.0.0, Culture=neutral, PublicKeyToken=b77a5c561934e089</value>
-  </data>
-  <data name="&gt;&gt;zhhionsContextMenuItem.Name" xml:space="preserve">
-    <value>zhhionsContextMenuItem</value>
-  </data>
-  <data name="&gt;&gt;zhhionsContextMenuItem.Type" xml:space="preserve">
+  <data name="&gt;&gt;ionTypesContextMenuItem.Type" xml:space="preserve">
     <value>System.Windows.Forms.ToolStripMenuItem, System.Windows.Forms, Version=4.0.0.0, Culture=neutral, PublicKeyToken=b77a5c561934e089</value>
   </data>
   <data name="&gt;&gt;fragmentionsContextMenuItem.Name" xml:space="preserve">
     <value>fragmentionsContextMenuItem</value>
   </data>
   <data name="&gt;&gt;fragmentionsContextMenuItem.Type" xml:space="preserve">
+    <value>System.Windows.Forms.ToolStripMenuItem, System.Windows.Forms, Version=4.0.0.0, Culture=neutral, PublicKeyToken=b77a5c561934e089</value>
+  </data>
+  <data name="&gt;&gt;specialionsContextMenuItem.Name" xml:space="preserve">
+    <value>specialionsContextMenuItem</value>
+  </data>
+  <data name="&gt;&gt;specialionsContextMenuItem.Type" xml:space="preserve">
     <value>System.Windows.Forms.ToolStripMenuItem, System.Windows.Forms, Version=4.0.0.0, Culture=neutral, PublicKeyToken=b77a5c561934e089</value>
   </data>
   <data name="&gt;&gt;precursorIonContextMenuItem.Name" xml:space="preserve">
@@ -3543,6 +3573,12 @@
   <data name="&gt;&gt;issuesMenuItem.Type" xml:space="preserve">
     <value>System.Windows.Forms.ToolStripMenuItem, System.Windows.Forms, Version=4.0.0.0, Culture=neutral, PublicKeyToken=b77a5c561934e089</value>
   </data>
+  <data name="&gt;&gt;submitErrorReportMenuItem.Name" xml:space="preserve">
+    <value>submitErrorReportMenuItem</value>
+  </data>
+  <data name="&gt;&gt;submitErrorReportMenuItem.Type" xml:space="preserve">
+    <value>System.Windows.Forms.ToolStripMenuItem, System.Windows.Forms, Version=4.0.0.0, Culture=neutral, PublicKeyToken=b77a5c561934e089</value>
+  </data>
   <data name="&gt;&gt;checkForUpdatesSeparator.Name" xml:space="preserve">
     <value>checkForUpdatesSeparator</value>
   </data>
@@ -3831,28 +3867,17 @@
   <data name="&gt;&gt;detectionsToolStripSeparator3.Type" xml:space="preserve">
     <value>System.Windows.Forms.ToolStripSeparator, System.Windows.Forms, Version=4.0.0.0, Culture=neutral, PublicKeyToken=b77a5c561934e089</value>
   </data>
-  <data name="&gt;&gt;editSpectrumFilterContextMenuItem.Name" xml:space="preserve">
-    <value>editSpectrumFilterContextMenuItem</value>
+  <data name="&gt;&gt;crashSkylineMenuItem.Name" xml:space="preserve">
+    <value>crashSkylineMenuItem</value>
   </data>
-  <data name="&gt;&gt;editSpectrumFilterContextMenuItem.Type" xml:space="preserve">
+  <data name="&gt;&gt;crashSkylineMenuItem.Type" xml:space="preserve">
     <value>System.Windows.Forms.ToolStripMenuItem, System.Windows.Forms, Version=4.0.0.0, Culture=neutral, PublicKeyToken=b77a5c561934e089</value>
   </data>
   <data name="&gt;&gt;$this.Name" xml:space="preserve">
     <value>SkylineWindow</value>
   </data>
   <data name="&gt;&gt;$this.Type" xml:space="preserve">
-    <value>pwiz.Skyline.Util.FormEx, Skyline-daily, Version=21.2.1.506, Culture=neutral, PublicKeyToken=null</value>
-  </data>
-  <data name="ionTypesContextMenuItem.Size" type="System.Drawing.Size, System.Drawing">
-    <value>226, 24</value>
-  </data>
-  <data name="ionTypesContextMenuItem.Text" xml:space="preserve">
-    <value>Ion Types</value>
-  </data>
-  <data name="&gt;&gt;ionTypesContextMenuItem.Name" xml:space="preserve">
-    <value>ionTypesContextMenuItem</value>
-  </data>
-  <data name="&gt;&gt;ionTypesContextMenuItem.Type" xml:space="preserve">
-    <value>System.Windows.Forms.ToolStripMenuItem, System.Windows.Forms, Version=4.0.0.0, Culture=neutral, PublicKeyToken=b77a5c561934e089</value>
+    <value>pwiz.Skyline.Util.FormEx, Skyline-daily, Version=22.2.1.341, Culture=neutral, PublicKeyToken=null</value>
   </data>
 </root>
+

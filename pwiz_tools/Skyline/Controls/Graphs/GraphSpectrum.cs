@@ -68,6 +68,7 @@ namespace pwiz.Skyline.Controls.Graphs
         event EventHandler<ZoomEventArgs> ZoomEvent;
         SpectrumControlType ControlType { get; }
         bool IsAnnotated { get; }
+        LibraryRankedSpectrumInfo SpectrumInfo { get; }
     }
 
     public interface ISpectrumScaleProvider
@@ -75,7 +76,7 @@ namespace pwiz.Skyline.Controls.Graphs
         MzRange GetMzRange(SpectrumControlType controlType);
     }
     
-    public partial class GraphSpectrum : DockableFormEx, IGraphContainer, IMzScalePlot
+    public partial class GraphSpectrum : DockableFormEx, IGraphContainer, IMzScalePlot, IMenuControlImplementer
     {
 
         private static readonly double YMAX_SCALE = 1.25;
@@ -919,6 +920,10 @@ namespace pwiz.Skyline.Controls.Graphs
             showAdducts.AddRange(adducts.Where(a =>
                 charges.Contains(Math.Abs(a.AdductCharge)) && !showAdducts.Contains(a)));
 
+            double? score = null;
+            if(spectrum.SpectrumInfo is SpectrumInfoLibrary libInfo)
+                if (libInfo.SpectrumHeaderInfo is BiblioSpecSpectrumHeaderInfo biblioSpecInfo)
+                    score = biblioSpecInfo.Score;
             var spectrumInfoR = LibraryRankedSpectrumInfo.NewLibraryRankedSpectrumInfo(spectrumPeaksOverride ?? spectrum.SpectrumPeaksInfo,
                 spectrum.LabelType,
                 precursor,
@@ -929,7 +934,7 @@ namespace pwiz.Skyline.Controls.Graphs
                 types,
                 rankAdducts,
                 rankTypes,
-                null);
+                score);
 
             return new SpectrumGraphItem(peptide, precursor, selection.NodeTran, spectrumInfoR, spectrum.Name)
             {
@@ -1040,11 +1045,10 @@ namespace pwiz.Skyline.Controls.Graphs
                 ChromatogramInfo chromatogramInfo;
                 MakeChromatogramInfo(selection.NodeTranGroup.PrecursorMz, chromatogramData, chromData,
                     out chromatogramInfo, out tranPeakInfo);
-                var graphItem = new ChromGraphItem(selection.NodeTranGroup, matchingTransition,
-                    chromatogramInfo,
+                var graphItem = new ChromGraphItem(selection.NodeTranGroup, matchingTransition, chromatogramInfo,
                     iChromData == iChromDataPrimary ? tranPeakInfo : null, null,
-                    new[] { iChromData == iChromDataPrimary }, null, 0, false, false, null, 0,
-                    color, Settings.Default.ChromatogramFontSize, 1);
+                    new[] { iChromData == iChromDataPrimary }, null, 0, false, false, null, null, color,
+                    Settings.Default.ChromatogramFontSize, 1);
                 LineItem curve =
                     (LineItem)_graphHelper.AddChromatogram(PaneKey.DEFAULT, graphItem);
                 if (matchingTransition == null)
@@ -1458,6 +1462,8 @@ namespace pwiz.Skyline.Controls.Graphs
             get {return new MzRange(GraphPane.XAxis.Scale.Min, GraphPane.XAxis.Scale.Max);}
         }
 
+        public LibraryRankedSpectrumInfo SpectrumInfo => GraphItem.SpectrumInfo;
+
         public Scale IntensityScale
         {
             get { return GraphPane.YAxis.Scale; }
@@ -1515,6 +1521,38 @@ namespace pwiz.Skyline.Controls.Graphs
             ContextMenuStrip menuStrip, Point mousePt, ZedGraphControl.ContextMenuObjectState objState)
         {
             _stateProvider.BuildSpectrumMenu(IsNotSmallMolecule, sender, menuStrip);
+        }
+
+        public MenuControl<T> GetHostedControl<T>() where T : Panel, IControlSize, new()
+        {
+            if (graphControl.ContextMenuStrip != null)
+            {
+                var chargesItem = graphControl.ContextMenuStrip.Items.OfType<ToolStripMenuItem>()
+                    .FirstOrDefault(item => item.DropDownItems.OfType<MenuControl<T>>().Any());
+                if (chargesItem != null)
+                    return chargesItem.DropDownItems[0] as MenuControl<T>;
+            }
+            return null;
+        }
+
+        public void DisconnectHandlers()
+        {
+            if (_documentContainer is SkylineWindow skylineWindow)
+            {
+                var chargeSelector = GetHostedControl<ChargeSelectionPanel>();
+
+                if (chargeSelector != null)
+                {
+                    chargeSelector.HostedControl.OnChargeChanged -= skylineWindow.IonChargeSelector_ionChargeChanged;
+                }
+
+                var ionTypeSelector = GetHostedControl<IonTypeSelectionPanel>();
+                if (ionTypeSelector != null)
+                {
+                    ionTypeSelector.HostedControl.IonTypeChanged -= skylineWindow.IonTypeSelector_IonTypeChanges;
+                    ionTypeSelector.HostedControl.LossChanged -= skylineWindow.IonTypeSelector_LossChanged;
+                }
+            }
         }
 
         protected override void OnClosed(EventArgs e)

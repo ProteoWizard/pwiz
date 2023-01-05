@@ -1,4 +1,22 @@
-﻿using System;
+﻿/*
+ * Original author: Nicholas Shulman <nicksh .at. u.washington.edu>,
+ *                  MacCoss Lab, Department of Genome Sciences, UW
+ *
+ * Copyright 2022 University of Washington - Seattle, WA
+ *
+ * Licensed under the Apache License, Version 2.0 (the "License");
+ * you may not use this file except in compliance with the License.
+ * You may obtain a copy of the License at
+ *
+ *     http://www.apache.org/licenses/LICENSE-2.0
+ *
+ * Unless required by applicable law or agreed to in writing, software
+ * distributed under the License is distributed on an "AS IS" BASIS,
+ * WITHOUT WARRANTIES OR CONDITIONS OF ANY KIND, either express or implied.
+ * See the License for the specific language governing permissions and
+ * limitations under the License.
+ */
+using System;
 using System.Collections.Generic;
 using System.Linq;
 using MathNet.Numerics.Statistics;
@@ -15,7 +33,7 @@ namespace pwiz.SkylineTest
         [TestMethod]
         public void TestPeakShapeQuadrilateral()
         {
-            var times = new double[] {0, 1, 7.0/3};
+            var times = new[] {0, 1, 7.0/3};
             var intensities = new double[] {1, 3, 0};
             var stats = PeakShapeStatistics.Calculate(times, intensities);
             Assert.AreEqual(4, stats.Area, epsilon);
@@ -78,7 +96,7 @@ namespace pwiz.SkylineTest
         public void TestPeakShapeSmallGaussian()
         {
             var times = new double[] {0, 1, 2, 3, 4, 5, 6, 7, 8, 9, 10};
-            var intensities = new double[]
+            var intensities = new[]
             {
                 0.00876415, 0.026995483, 0.064758798, 0.120985362, 0.176032663, 0.19947114, 0.176032663, 0.120985362,
                 0.064758798, 0.026995483, 0.00876415

@@ -39,7 +39,7 @@ namespace pwiz.Skyline.Model.Results
         Thirteen = 13,  // Adds TIC to CachedFileHeaderStruct
         Fourteen = 14,  // Adds SampleId and SerialNumber to CachedFileHeaderStruct and moves centroiding from ChromCachedFile.FilePath to Flags
         Fifteen = 15, // Add import time to CachedFileHeaderStruct
-        Sixteen = 16, // Skewness, Kurtosis and ResultFileMetaData
+        Sixteen = 16, // Skewness and Kurtosis
         CURRENT = Sixteen,
     }
     

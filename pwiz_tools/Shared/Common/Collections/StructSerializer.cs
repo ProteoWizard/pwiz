@@ -69,10 +69,20 @@ namespace pwiz.Common.Collections
                 return result;
             }
             result = new TItem[count];
-            var buffer = new byte[ItemSizeOnDisk];
+            var buffer = new byte[Math.Max(ItemSizeInMemory, ItemSizeOnDisk)];
+            int countToRead = ItemSizeOnDisk;
+            int offset;
+            if (PadFromStart)
+            {
+                offset = buffer.Length - countToRead;
+            }
+            else
+            {
+                offset = 0;
+            }
             for (int i = 0; i < count; i++)
             {
-                if (stream.Read(buffer, 0, buffer.Length) != buffer.Length)
+                if (stream.Read(buffer, offset, countToRead) != countToRead)
                     throw new InvalidDataException();
                 result[i] = FromByteArray(buffer);
             }
