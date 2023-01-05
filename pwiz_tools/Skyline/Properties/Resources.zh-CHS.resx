@@ -10451,23 +10451,11 @@
   <data name="SkypSupport_Open_Failure_opening_skyp_file_" xml:space="preserve">
     <value>打开 skyp 文件失败。</value>
   </data>
-  <data name="SkypSupport_Download_There_was_an_error_downloading_the_Skyline_document_specified_in_the_skyp_file___0__" xml:space="preserve">
-    <value>下载 skyp 文件中指定的 Skyline 文档时出现错误：{0}。</value>
-  </data>
-  <data name="SkypSupport_Download_You_may_have_to_add__0__as_a_Panorama_server_from_the_Tools___Options_menu_in_Skyline_" xml:space="preserve">
-    <value>您可能必须使用 Skyline 中 Tools （工具）&gt; Options （选项）菜单，添加 {0} 作为Panorama 服务器。</value>
-  </data>
   <data name="SkypSupport_Download_You_do_not_have_permissions_to_download_this_file_from__0__" xml:space="preserve">
     <value>您无从 {0} 下载此文件的权限。</value>
   </data>
-  <data name="SkypFile_GetSkyFileUrl_Expected_the_URL_of_a_shared_Skyline_document_archive___0___in_the_skyp_file__Found__1__instead_" xml:space="preserve">
-    <value>skyp 文件内预计的共享 Skyline 文档存档 ({0}) 链接。反之发现 {1}。</value>
-  </data>
   <data name="SkypFile_GetNonExistentPath_Name_of_shared_Skyline_archive_cannot_be_null_or_empty_" xml:space="preserve">
     <value>共享 Skyline 存档的名称不得无效或空。</value>
-  </data>
-  <data name="SkypSupport_Download_Downloading__0_" xml:space="preserve">
-    <value>下载{0}</value>
   </data>
   <data name="SkypFile_GetSkyFileUrl_File_does_not_contain_the_URL_of_a_shared_Skyline_archive_file___0___on_a_Panorama_server_" xml:space="preserve">
     <value>文件不包括 Panorama 服务器上共享 Skyline 存档文档 ({0}) 的 URL。</value>
