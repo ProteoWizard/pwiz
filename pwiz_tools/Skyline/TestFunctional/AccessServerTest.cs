@@ -279,7 +279,8 @@ namespace pwiz.SkylineTestFunctional
             }
             else if (EMPTY_SERVER_URL.Equals(testClient.Server))
             {
-                Assert.IsTrue(errorMsg.Equals(string.Format(Resources.MessageBoxHelper_ValidateNameTextBox__0__cannot_be_empty, "URL (e.g. https://panoramaweb.org/)")));
+                var expectedMsg = string.Format(Resources.MessageBoxHelper_ValidateNameTextBox__0__cannot_be_empty, editServerDlg.GetTextServerUrlControlLabel());
+                Assert.IsTrue(errorMsg.Equals(expectedMsg), string.Format("Expected: '{0}'; Found: '{1}'", expectedMsg, errorMsg));
             }
             RunUI(() =>
                       {
