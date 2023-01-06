@@ -17,6 +17,7 @@
  * limitations under the License.
  */
 
+using System;
 using System.IO;
 using Microsoft.VisualStudio.TestTools.UnitTesting;
 using pwiz.Skyline.Util;
@@ -24,17 +25,17 @@ using pwiz.SkylineTestUtil;
 
 namespace pwiz.SkylineTest
 {
+    /// <summary>
+    /// Test to check whether antivirus software is not monitoring the test directory by 
+    /// creating a fake threat file containing a standard test string that's used to 
+    /// test antivirus systems (See http://www.eicar.org/86-0-Intended-use.html for details).
+    /// If the file is not there after we create it, we know we're being watched.
+    ///
+    /// It is not considered an error if there is antivirus software watching the folder,
+    /// but a warning will be written to the test log file.
+    /// This is necessary because antivirus systems may slow down or even interfere with testing.
+    /// </summary>
     [TestClass]
-
-    // Test to make sure antivirus software is not monitoring the test directory by 
-    // creating a fake threat file containing a standard test string that's used to 
-    // test antivirus systems (See http://www.eicar.org/86-0-Intended-use.html for details).
-    // If the file is not there after we create it, we know we're being watched.
-    //
-    // This is necessary because antivirus systems slow down and even interfere with testing.
-    //
-    // On a system that's not configured properly this may set off alarms, but that's just as well
-
     public class AntivirusExclusionTest : AbstractUnitTest
     {
         [TestMethod]
@@ -66,7 +67,8 @@ namespace pwiz.SkylineTest
             }
             if (!eicarTestString.Equals(test))
             {
-                Assert.Fail("Could not read contents of the (completely harmless!) antivirus test file \"" + eicarTestFile + "\", probably because it was quarantined by antivirus software.  If your antivirus flagged on \"eicar_fake_threat.com\", don't panic - that's part of the test (see http://www.eicar.org/86-0-Intended-use.html).  Now go exclude that directory from further antivirus scrutiny, as it causes file locking problems in the tests.");
+                // If anti virus software is enabled, do not treat it as an error but write the fact out to the test log
+                Console.Out.WriteLine("Virus scanning appears to be enabled in the folder '{0}'. Tests may be flaky or slow as a result.", Path.GetFullPath(directory));
             }
             if (File.Exists(eicarTestFile))  // Don't leave this lying around - it can cause problems with automated backups etc
             {
