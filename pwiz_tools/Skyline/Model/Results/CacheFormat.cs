@@ -249,15 +249,25 @@ namespace pwiz.Skyline.Model.Results
             };
         }
 
-        public IItemSerializer<ChromGroupHeaderInfo> ChromGroupHeaderInfoSerializer()
+        public IItemSerializer<ChromGroupHeaderInfo16> OldChromGroupHeaderInfoSerializer()
         {
             if (FormatVersion >= CacheFormatVersion.Five)
             {
-                return ChromGroupHeaderInfo.ItemSerializer(ChromGroupHeaderSize);
+                return ChromGroupHeaderInfo16.ItemSerializer(ChromGroupHeaderSize);
             }
 
             var v4Reader = ChromGroupHeaderInfo4.StructSerializer();
-            return ConvertedItemSerializer.Create(v4Reader, v4Header => new ChromGroupHeaderInfo(v4Header), header=>new ChromGroupHeaderInfo4(header));
+            return ConvertedItemSerializer.Create(v4Reader, v4Header => new ChromGroupHeaderInfo16(v4Header), header => new ChromGroupHeaderInfo4(header));
+
+        }
+
+        public IItemSerializer<ChromGroupHeaderInfo> ChromGroupHeaderInfoSerializer()
+        {
+            if (FormatVersion < CacheFormatVersion.Seventeen)
+            {
+                throw new InvalidOperationException();
+            }
+            return ChromGroupHeaderInfo.ItemSerializer(ChromGroupHeaderSize);
         }
 
         public IItemSerializer<ChromTransition> ChromTransitionSerializer()

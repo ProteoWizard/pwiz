@@ -1,9 +1,12 @@
-﻿using System.Collections.Generic;
+﻿using System;
+using System.CodeDom;
+using System.Collections;
+using System.Collections.Generic;
 using System.Text;
-using pwiz.Common.Collections;
 using pwiz.Common.SystemUtil;
 using pwiz.Skyline.Model.Results.ProtoBuf;
 using pwiz.Skyline.Model.Results.Spectra;
+using pwiz.Skyline.Util;
 
 namespace pwiz.Skyline.Model.Results
 {
@@ -76,9 +79,33 @@ namespace pwiz.Skyline.Model.Results
 
             return idsProto;
         }
+
+        public static IEnumerable<ChromatogramGroupId> FromProto(ChromatogramGroupIdsProto proto)
+        {
+            var targets = new List<Target>() {null};
+            foreach (var targetProto in proto.Targets)
+            {
+                if (!string.IsNullOrEmpty(targetProto.ModifiedPeptideSequence))
+                {
+                    targets.Add(new Target(targetProto.ModifiedPeptideSequence));
+                }
+                else
+                {
+                    MoleculeAccessionNumbers moleculeAccessionNumbers = MoleculeAccessionNumbers.EMPTY; // TODO
+                    targets.Add(new Target(new CustomMolecule(targetProto.Formula, new TypedMass(targetProto.MonoMass, MassType.Monoisotopic),
+                        new TypedMass(targetProto.AverageMass, MassType.Average),
+                        targetProto.Name, moleculeAccessionNumbers)));
+                }
+            }
+
+            foreach (var id in proto.ChromatogramGroupIds)
+            {
+                yield return new ChromatogramGroupId(targets[id.TargetIndex], null);
+            }
+        }
     }
 
-    public class ChromatogramGroupIds
+    public class ChromatogramGroupIds : IEnumerable<ChromatogramGroupId>
     {
         private List<ChromatogramGroupId> _ids = new List<ChromatogramGroupId>();
         private Dictionary<ChromatogramGroupId, int> _idIndexes = new Dictionary<ChromatogramGroupId, int>();
@@ -93,8 +120,17 @@ namespace pwiz.Skyline.Model.Results
             return _ids[index];
         }
 
+        public ChromatogramGroupId GetId(ChromGroupHeaderInfo chromGroupHeaderInfo)
+        {
+            return GetId(chromGroupHeaderInfo.TextIdIndex);
+        }
+
         public int AddId(ChromatogramGroupId groupId)
         {
+            if (groupId == null)
+            {
+                return -1;
+            }
             if (!_idIndexes.TryGetValue(groupId, out int index))
             {
                 index = _ids.Count;
@@ -107,58 +143,122 @@ namespace pwiz.Skyline.Model.Results
         }
 
         public IEnumerable<ChromGroupHeaderInfo> ConvertFromTextIdBytes(byte[] textIdBytes,
-            IEnumerable<ChromGroupHeaderInfo> chromGroupHeaderInfos)
+            IEnumerable<ChromGroupHeaderInfo16> chromGroupHeaderInfos)
         {
-            Dictionary<KeyValuePair<int, ushort>, int> groupIdIndexes =
-                new Dictionary<KeyValuePair<int, ushort>, int>();
             foreach (var chromGroupHeaderInfo in chromGroupHeaderInfos)
             {
-                if (chromGroupHeaderInfo.TextIdIndex == -1)
+                if (chromGroupHeaderInfo._textIdIndex == -1)
                 {
-                    yield return chromGroupHeaderInfo;
+                    yield return new ChromGroupHeaderInfo(chromGroupHeaderInfo, -1);
                     continue;
                 }
 
                 var target = Target.FromSerializableString(Encoding.UTF8.GetString(textIdBytes,
-                    chromGroupHeaderInfo.TextIdIndex, chromGroupHeaderInfo.TextIdLen));
+                    chromGroupHeaderInfo._textIdIndex, chromGroupHeaderInfo._textIdLen));
                 int index = AddId(new ChromatogramGroupId(target, null));
-                yield return chromGroupHeaderInfo.ChangeTextIdIndex(index, 0);
+                yield return new ChromGroupHeaderInfo(chromGroupHeaderInfo, index);
             }
         }
 
-        public IEnumerable<ChromGroupHeaderInfo> ToTextIdBytes(IEnumerable<ChromGroupHeaderInfo> chromGroupHeaderInfos,
-            List<byte> textIdBytes)
+        public ChromGroupHeaderInfo SetId(ChromGroupHeaderInfo chromGroupHeaderInfo, ChromatogramGroupId id)
         {
-            var textIdLocations = new Dictionary<int, KeyValuePair<int, ushort>>();
-            var targetTextLocations = new Dictionary<string, KeyValuePair<int, ushort>>();
-            foreach (var chromGroupHeaderInfo in chromGroupHeaderInfos)
+            return chromGroupHeaderInfo.ChangeTextIdIndex(AddId(id));
+        }
+
+        public ChromGroupHeaderInfo16 ConvertToTextId(List<byte> textIdBytes, Dictionary<Target, TextIdLocation> map,
+            ChromGroupHeaderInfo chromGroupHeaderInfo)
+        {
+            throw new NotImplementedException();
+            // var target = GetId(chromGroupHeaderInfo)?.Target;
+            // if (target == null)
+            // {
+            //     return chromGroupHeaderInfo.ChangeTextIdLocation(null);
+            // }
+            // if (!map.TryGetValue(target, out var textIdLocation))
+            // {
+            //     int textIdIndex = textIdBytes.Count;
+            //     textIdBytes.AddRange(Encoding.UTF8.GetBytes(target.ToSerializableString()));
+            //     textIdLocation = new TextIdLocation(textIdIndex, textIdBytes.Count - textIdIndex);
+            //     map.Add(target, textIdLocation);
+            // }
+            //
+            // return chromGroupHeaderInfo.ChangeTextIdLocation(textIdLocation);
+        }
+
+        public int Count
+        {
+            get
             {
-                if (chromGroupHeaderInfo.TextIdIndex < 0)
-                {
-                    yield return chromGroupHeaderInfo;
-                    continue;
-                }
-
-                KeyValuePair<int, ushort> textIdLocation;
-                if (!textIdLocations.TryGetValue(chromGroupHeaderInfo.TextIdIndex, out textIdLocation))
-                {
-                    var targetText = GetId(chromGroupHeaderInfo.TextIdIndex).Target.ToSerializableString();
-                    if (targetTextLocations.TryGetValue(targetText, out textIdLocation))
-                    {
-                        textIdLocations.Add(chromGroupHeaderInfo.TextIdIndex, textIdLocation);
-                    }
-                    else
-                    {
-                        var bytes = Encoding.UTF8.GetBytes(targetText);
-                        textIdLocation = new KeyValuePair<int, ushort>(textIdBytes.Count, (ushort) bytes.Length);
-                        targetTextLocations.Add(targetText, textIdLocation);
-                    }
-
-                    textIdLocations.Add(chromGroupHeaderInfo.TextIdIndex, textIdLocation);
-                }
-
-                yield return chromGroupHeaderInfo.ChangeTextIdIndex(textIdLocation.Key, textIdLocation.Value);
+                return _ids.Count;
             }
         }
+
+        IEnumerator IEnumerable.GetEnumerator()
+        {
+            return GetEnumerator();
+        }
+
+        public IEnumerator<ChromatogramGroupId> GetEnumerator()
+        {
+            return _ids.GetEnumerator();
+        }
+
+        public ChromatogramGroupIdsProto ToProtoMessage()
+        {
+            var targets = new ValueIndex<Target>();
+            var filters = new ValueIndex<SpectrumClassFilter>();
+            var idsProto = new ChromatogramGroupIdsProto();
+            foreach (var id in this)
+            {
+                idsProto.ChromatogramGroupIds.Add(new ChromatogramGroupIdsProto.Types.ChromatogramGroupId()
+                {
+                    TargetIndex = targets.IndexForValue(id.Target),
+                    FilterIndex = filters.IndexForValue(id.SpectrumClassFilter)
+                });
+            }
+
+            foreach (var target in targets.Values)
+            {
+                var targetProto = new ChromatogramGroupIdsProto.Types.Target();
+                if (target.IsProteomic)
+                {
+                    targetProto.ModifiedPeptideSequence = target.Sequence;
+                }
+                else
+                {
+                    var molecule = target.Molecule;
+                    targetProto.Name = molecule.Name;
+                    targetProto.Formula = molecule.Formula;
+                    targetProto.MonoMass = molecule.MonoisotopicMass;
+                    targetProto.AverageMass = molecule.AverageMass;
+                    // TODO: Accession numbers
+                }
+
+                idsProto.Targets.Add(targetProto);
+            }
+
+            return idsProto;
+        }
+    }
+
+    public class TextIdLocation
+    {
+        public TextIdLocation(int index, int length)
+        {
+            if (index < 0)
+            {
+                throw new ArgumentOutOfRangeException(nameof(index));
+            }
+
+            if (length < 0 || length > ushort.MaxValue)
+            {
+                throw new ArgumentOutOfRangeException(nameof(length));
+            }
+            Index = index;
+            Length = length;
+        }
+
+        public int Index { get; }
+        public int Length { get; }
     }
 }

@@ -1067,6 +1067,19 @@ namespace pwiz.Skyline.Util
                     bytesTransferred));
             }
         }
+
+        public static byte[] ReadBytes(this Stream inStream, int byteCount)
+        {
+            var buffer = new byte[byteCount];
+            int bytesRead = inStream.Read(buffer, 0, buffer.Length);
+            if (bytesRead != buffer.Length)
+            {
+                throw new InvalidDataException(string.Format(
+                    @"Tried to read {0} bytes, but actual byte count read was {1}", buffer.Length, bytesRead));
+            }
+
+            return buffer;
+        }
     }
 
     /// <summary>

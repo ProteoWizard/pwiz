@@ -1371,7 +1371,11 @@ namespace pwiz.Skyline.Model.Results
             // Add to header list
             var header = chromDataSet.MakeChromGroupHeaderInfo(groupOfTimeIntensities, lenCompressed, lenUncompressed);
             header.Offset(0, _listTransitions.Count, _peakCount, scoresIndex, location);
-            header.CalcTextIdIndex(chromDataSet.ModifiedSequence, _dictSequenceToByteIndex, _listTextIdBytes);
+            if (chromDataSet.ModifiedSequence != null)
+            {
+                header = header.ChangeTextIdIndex(
+                    _chromatogramGroupIds.AddId(new ChromatogramGroupId(chromDataSet.ModifiedSequence, null)));
+            }
 
             int? transitionPeakCount = null;
             foreach (var chromData in chromDataSet.Chromatograms)

@@ -261,7 +261,7 @@ namespace pwiz.Skyline.Model.Results.Spectra
             }
 
             var header = chromatogramGroupInfo.Header;
-            header = new ChromGroupHeaderInfo(header.Precursor, 0, 0, 0, header.NumTransitions, 0, header.NumPeaks, 0,
+            header = new ChromGroupHeaderInfo(header.Precursor, 0, header.NumTransitions, 0, header.NumPeaks, 0,
                 0, header.MaxPeakIndex, header.NumPeaks, 0, 0, 0, header.Flags, header.StatusId, header.StatusRank,
                 header.StartTime, header.EndTime, header.CollisionalCrossSection, header.IonMobilityUnits);
             var chromTransitions = Enumerable.Range(0, header.NumTransitions)

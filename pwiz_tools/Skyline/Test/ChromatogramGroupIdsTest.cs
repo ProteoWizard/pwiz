@@ -30,9 +30,19 @@ namespace pwiz.SkylineTest
 
             var legacyChromGroupHeaderInfos = new[]
             {
-                new ChromGroupHeaderInfo().ChangeTextIdIndex(textIdLocations[1].Key, textIdLocations[1].Value),
-                new ChromGroupHeaderInfo().ChangeTextIdIndex(-1, 0),
-                new ChromGroupHeaderInfo().ChangeTextIdIndex(textIdLocations[0].Key, textIdLocations[0].Value)
+                new ChromGroupHeaderInfo16()
+                {
+                    _textIdIndex = textIdLocations[1].Key,
+                    _textIdLen = textIdLocations[1].Value,
+                },
+                new ChromGroupHeaderInfo16() {
+                    _textIdIndex = -1
+                },
+                new ChromGroupHeaderInfo16()
+                {
+                    _textIdIndex = textIdLocations[0].Key, 
+                    _textIdLen = textIdLocations[0].Value
+                }
             };
             var chromatogramGroupIds = new ChromatogramGroupIds();
             var newChromGroupHeaderInfos = chromatogramGroupIds.ConvertFromTextIdBytes(textIdBytes.ToArray(), legacyChromGroupHeaderInfos)

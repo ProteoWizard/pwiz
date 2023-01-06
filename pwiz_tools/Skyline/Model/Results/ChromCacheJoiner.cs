@@ -34,7 +34,6 @@ namespace pwiz.Skyline.Model.Results
         private readonly bool _assumeNegativeChargeInPreV11Caches;
 
         private readonly byte[] _buffer = new byte[0x40000];  // 256K
-        private readonly Dictionary<Target, int> _dictTextIdToByteIndex = new Dictionary<Target, int>();
 
         public ChromCacheJoiner(string cachePath, IPooledStream streamDest,
                                 IList<string> cacheFilePaths, ILoadMonitor loader, ProgressStatus status,
@@ -151,8 +150,7 @@ namespace pwiz.Skyline.Model.Results
                                             offsetPeaks,
                                             offsetScores,
                                             offsetPoints,
-                                            _dictTextIdToByteIndex,
-                                            _listTextIdBytes)));
+                                            _chromatogramGroupIds)));
                     }
 
                     inStream.Seek(0, SeekOrigin.Begin);

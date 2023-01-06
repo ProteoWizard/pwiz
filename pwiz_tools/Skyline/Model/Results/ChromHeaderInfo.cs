@@ -34,7 +34,6 @@ using pwiz.ProteowizardWrapper;
 using pwiz.Skyline.Model.DocSettings;
 using pwiz.Skyline.Model.Results.Crawdad;
 using pwiz.Skyline.Model.Results.Scoring;
-using pwiz.Skyline.Model.Results.Spectra;
 using pwiz.Skyline.Properties;
 using pwiz.Skyline.Util;
 
@@ -44,18 +43,18 @@ namespace pwiz.Skyline.Model.Results
     [StructLayout(LayoutKind.Sequential, Pack=4)]
     public struct ChromGroupHeaderInfo4
     {
-        public ChromGroupHeaderInfo4(ChromGroupHeaderInfo header) : this()
+        public ChromGroupHeaderInfo4(ChromGroupHeaderInfo16 header) : this()
         {
-            Precursor = (float) header.Precursor;
-            FileIndex = header.FileIndex;
-            NumTransitions = header.NumTransitions;
-            StartTransitionIndex = header.StartTransitionIndex;
-            NumPeaks = header.NumPeaks;
-            StartPeakIndex = header.StartPeakIndex;
-            MaxPeakIndex = header.MaxPeakIndex;
-            NumPoints = header.NumPoints;
-            CompressedSize = header.CompressedSize;
-            LocationPoints = header.LocationPoints;
+            Precursor = (float) header._precursor;
+            FileIndex = header._fileIndex;
+            NumTransitions = header._numTransitions;
+            StartTransitionIndex = header._startTransitionIndex;
+            NumPeaks = header._numPeaks;
+            StartPeakIndex = header._startPeakIndex;
+            MaxPeakIndex = header._maxPeakIndex;
+            NumPoints = header._numPoints;
+            CompressedSize = header._compressedSize;
+            LocationPoints = header._locationPoints;
         }
 
         public float Precursor { get; set; }
@@ -128,6 +127,155 @@ namespace pwiz.Skyline.Model.Results
     }
 
     [StructLayout(LayoutKind.Sequential, Pack = 1)]
+    public struct ChromGroupHeaderInfo16
+    {
+        public int _textIdIndex;
+        public int _startTransitionIndex;
+        public int _startPeakIndex;
+        public int _startScoreIndex;
+        public int _numPoints;
+        public int _compressedSize;
+        public ushort _flagBits;
+        public ushort _fileIndex;
+        public ushort _textIdLen;
+        public ushort _numTransitions;
+        public byte _numPeaks;
+        public byte _maxPeakIndex;
+        public byte _isProcessedScans;
+        private readonly byte _align1;
+        public ushort _statusId;
+        public ushort _statusRank;
+        public double _precursor;
+        public long _locationPoints;
+        // V11 fields
+        public int _uncompressedSize;
+        public float _startTime;
+        public float _endTime;
+        public float _collisionalCrossSection;
+        [Flags]
+        public enum FlagValues
+        {
+            has_mass_errors = 0x01,
+            has_calculated_mzs = 0x02,
+            extracted_base_peak = 0x04,
+            has_ms1_scan_ids = 0x08,
+            has_sim_scan_ids = 0x10,
+            has_frag_scan_ids = 0x20,
+            polarity_negative = 0x40, // When set, only use negative scans.
+            raw_chromatograms = 0x80,
+            ion_mobility_type_bitmask = 0x700, // 3 bits for ion mobility type none, drift, inverse_mobility, spares
+            dda_acquisition_method = 0x800,
+            extracted_qc_trace = 0x1000
+        }
+
+        public ChromGroupHeaderInfo16(ChromGroupHeaderInfo4 headerInfo) : this()
+        {
+            _precursor = headerInfo.Precursor;
+            _fileIndex = CheckUShort(headerInfo.FileIndex);
+            _numTransitions = CheckUShort(headerInfo.NumTransitions);
+            _startTransitionIndex = headerInfo.StartTransitionIndex;
+            _numPeaks = CheckByte(headerInfo.NumPeaks);
+            _startPeakIndex = headerInfo.StartPeakIndex;
+            _startScoreIndex = -1;
+            _maxPeakIndex = CheckByte(headerInfo.MaxPeakIndex);
+            _numPoints = headerInfo.NumPoints;
+            _uncompressedSize = -1;
+            _locationPoints = headerInfo.LocationPoints;
+            _flagBits = 0;
+            unchecked
+            {
+                _statusId = (ushort) - 1;
+                _statusRank = (ushort) -1;
+            }
+
+            _startTime = -1;
+            _endTime = -1;
+        }
+
+        public static IItemSerializer<ChromGroupHeaderInfo16> ItemSerializer(int itemSizeOnDisk)
+        {
+            StructSerializer<ChromGroupHeaderInfo16> structSerializer = new StructSerializer<ChromGroupHeaderInfo16>
+            {
+                ItemSizeOnDisk = itemSizeOnDisk,
+                DirectSerializer = DirectSerializer.Create(ReadArray, WriteArray)
+            };
+            if (itemSizeOnDisk < GetStructSize(CacheFormatVersion.Eleven))
+            {
+                return ConvertedItemSerializer.Create(structSerializer, chromGroupHeaderInfo =>
+                {
+                    chromGroupHeaderInfo._uncompressedSize = -1;
+                    return chromGroupHeaderInfo;
+                }, chromGroupHeaderInfo => chromGroupHeaderInfo);
+            }
+            return structSerializer;
+        }
+
+        private static unsafe ChromGroupHeaderInfo16[] ReadArray(SafeHandle file, int count)
+        {
+            ChromGroupHeaderInfo16[] results = new ChromGroupHeaderInfo16[count];
+            fixed (ChromGroupHeaderInfo16* p = results)
+            {
+                FastRead.ReadBytes(file, (byte*)p, sizeof(ChromGroupHeaderInfo16) * count);
+            }
+
+            return results;
+        }
+        private static unsafe void WriteArray(SafeHandle file, ChromGroupHeaderInfo16[] groupHeaders)
+        {
+            fixed (ChromGroupHeaderInfo16* p = groupHeaders)
+            {
+                FastWrite.WriteBytes(file, (byte*)p, sizeof(ChromGroupHeaderInfo16) * groupHeaders.Length);
+            }
+        }
+        public static int GetStructSize(CacheFormatVersion cacheFormatVersion)
+        {
+            if (cacheFormatVersion <= CacheFormatVersion.Four)
+            {
+                return 48;
+            }
+            if (cacheFormatVersion < CacheFormatVersion.Eleven)
+            {
+                return 56;
+            }
+            return 72;
+        }
+
+        public static unsafe int SizeOf
+        {
+            get { return sizeof(ChromGroupHeaderInfo16); }
+        }
+
+        public ChromGroupHeaderInfo16 ChangeChargeToNegative()
+        {
+            // For dealing with pre-V11 caches where we didn't record chromatogram polarity
+            var chromGroupHeaderInfo = this;
+            chromGroupHeaderInfo._flagBits |= (ushort)FlagValues.polarity_negative;
+            return chromGroupHeaderInfo;
+        }
+
+        private static ushort CheckUShort(int value, bool allowNegativeOne = false)
+        {
+            return (ushort)CheckValue(value, ushort.MinValue, ushort.MaxValue, allowNegativeOne);
+        }
+
+        private static byte CheckByte(int value, int maxValue = byte.MaxValue)
+        {
+            return (byte)CheckValue(value, byte.MinValue, maxValue);
+        }
+
+        private static int CheckValue(int value, int min, int max, bool allowNegativeOne = false)
+        {
+            if (min > value || value > max)
+            {
+                if (!allowNegativeOne || value != -1)
+                    throw new ArgumentOutOfRangeException(string.Format(@"The value {0} must be between {1} and {2}.", value, min, max)); // CONSIDER: localize?  Does user see this?
+            }
+            return value;
+        }
+
+    }
+
+    [StructLayout(LayoutKind.Sequential, Pack = 4)]
     public struct ChromGroupHeaderInfo : IComparable<ChromGroupHeaderInfo>
     {
         /////////////////////////////////////////////////////////////////////
@@ -145,12 +293,12 @@ namespace pwiz.Skyline.Model.Results
         private int _compressedSize;
         private ushort _flagBits;
         private ushort _fileIndex;
-        private ushort _textIdLen;
+        private ushort unused1;
         private ushort _numTransitions;
         private byte _numPeaks;
         private byte _maxPeakIndex;
-        private byte _isProcessedScans;
-        private byte _align1;
+        private readonly byte _unused2;
+        private readonly byte _unused3;
         private ushort _statusId;
         private ushort _statusRank;
         private double _precursor;
@@ -195,8 +343,7 @@ namespace pwiz.Skyline.Model.Results
         }
 
         /// <summary>
-        /// Constructs header struct with TextIdIndex and TextIdCount left to be initialized
-        /// in a subsequent call to <see cref="CalcTextIdIndex"/>.
+        /// Constructs header struct with all values populated. Later on, <see cref="ChangeTextIdLocation"/> should be called.
         /// </summary>
         public ChromGroupHeaderInfo(SignedMz precursor, int fileIndex,
                                      int numTransitions, int startTransitionIndex,
@@ -205,25 +352,7 @@ namespace pwiz.Skyline.Model.Results
                                      int statusId, int statusRank,
                                      float? startTime, float? endTime,
                                      double? collisionalCrossSection, 
-                                     eIonMobilityUnits ionMobilityUnits)
-            : this(precursor, -1, 0, fileIndex, numTransitions, startTransitionIndex,
-                   numPeaks, startPeakIndex, startScoreIndex, maxPeakIndex, numPoints,
-                   compressedSize, uncompressedSize, location, flags, statusId, statusRank,
-                   startTime, endTime, collisionalCrossSection, ionMobilityUnits)
-        {
-        }
-
-        /// <summary>
-        /// Cunstructs header struct with all values populated.
-        /// </summary>
-        public ChromGroupHeaderInfo(SignedMz precursor, int textIdIndex, int textIdLen, int fileIndex,
-                                     int numTransitions, int startTransitionIndex,
-                                     int numPeaks, int startPeakIndex, int startScoreIndex, int maxPeakIndex,
-                                     int numPoints, int compressedSize, int uncompressedSize, long location, FlagValues flags,
-                                     int statusId, int statusRank,
-                                     float? startTime, float? endTime,
-                                     double? collisionalCrossSection, eIonMobilityUnits ionMobilityUnits)
-            : this()
+                                     eIonMobilityUnits ionMobilityUnits) : this()
         {
             _precursor = precursor.Value;
             if (precursor.IsNegative)
@@ -235,8 +364,6 @@ namespace pwiz.Skyline.Model.Results
                 flags &= ~FlagValues.polarity_negative;
             }
             flags = (flags & ~FlagValues.ion_mobility_type_bitmask) | (FlagValues.ion_mobility_type_bitmask & (FlagValues) ((int) ionMobilityUnits << 8));
-            _textIdIndex = textIdIndex;
-            _textIdLen = CheckUShort(textIdLen);
             _fileIndex = CheckUShort(fileIndex);
             _numTransitions = CheckUShort(numTransitions);
             _startTransitionIndex = startTransitionIndex;
@@ -266,32 +393,30 @@ namespace pwiz.Skyline.Model.Results
             {
                 _startTime = _endTime = -1; // Unknown
             }
-        }
 
-        public ChromGroupHeaderInfo(ChromGroupHeaderInfo4 headerInfo)
-            : this(new SignedMz(headerInfo.Precursor),
-            headerInfo.FileIndex,
-            headerInfo.NumTransitions,
-            headerInfo.StartTransitionIndex,
-            headerInfo.NumPeaks,
-            headerInfo.StartPeakIndex,
-            -1,
-            headerInfo.MaxPeakIndex,
-            headerInfo.NumPoints,
-            headerInfo.CompressedSize,
-            -1,
-            headerInfo.LocationPoints,
-            0, -1, -1,
-            null, null, null, eIonMobilityUnits.none)
-        {
+            _textIdIndex = -1;
         }
-
-        public ChromGroupHeaderInfo ChangeChargeToNegative()
+        
+        public ChromGroupHeaderInfo(ChromGroupHeaderInfo16 headerInfo16, int textIdIndex) : this()
         {
-            // For dealing with pre-V11 caches where we didn't record chromatogram polarity
-            var chromGroupHeaderInfo = this;
-            chromGroupHeaderInfo._flagBits |= (ushort)FlagValues.polarity_negative;
-            return chromGroupHeaderInfo;
+            _textIdIndex = textIdIndex;
+            _startTransitionIndex = headerInfo16._startTransitionIndex;
+            _startPeakIndex = headerInfo16._startPeakIndex;
+            _startScoreIndex = headerInfo16._startScoreIndex;
+            _numPoints = headerInfo16._numPoints;
+            _compressedSize = headerInfo16._compressedSize;
+            _flagBits = headerInfo16._flagBits;
+            _fileIndex = headerInfo16._fileIndex;
+            _numTransitions = headerInfo16._numTransitions;
+            _numPeaks = headerInfo16._numPeaks;
+            _maxPeakIndex = headerInfo16._maxPeakIndex;
+            _statusId = headerInfo16._statusId;
+            _statusRank = headerInfo16._statusRank;
+            _locationPoints = headerInfo16._locationPoints;
+            _uncompressedSize = headerInfo16._uncompressedSize;
+            _startTime = headerInfo16._startTime;
+            _endTime = headerInfo16._endTime;
+            _collisionalCrossSection = headerInfo16._collisionalCrossSection;
         }
 
         private static ushort CheckUShort(int value, bool allowNegativeOne = false)
@@ -322,14 +447,12 @@ namespace pwiz.Skyline.Model.Results
         public int CompressedSize { get { return _compressedSize; } }
         public ushort FlagBits { get { return _flagBits; } }
         public ushort FileIndex { get {return _fileIndex;} }
-        public ushort TextIdLen { get { return _textIdLen; } }
         public ushort NumTransitions { get { return _numTransitions; } }
         public byte NumPeaks { get { return _numPeaks; } }        // The number of peaks stored per chrom should be well under 128
         public ushort StatusId { get { return _statusId; } }
         public ushort StatusRank { get { return _statusRank; } }
         public long LocationPoints { get{return _locationPoints;} }
         public int UncompressedSize { get{return _uncompressedSize;} }
-        public bool IsProcessedScans { get { return _isProcessedScans != 0; } }
 
         public override string ToString()
         {
@@ -434,35 +557,10 @@ namespace pwiz.Skyline.Model.Results
             _startScoreIndex = -1;
         }
 
-        public void CalcTextIdIndex(Target target,
-            Dictionary<Target, int> dictTextIdToByteIndex,
-            List<byte> listTextIdBytes)
-        {
-            if (target == null)
-            {
-                _textIdIndex = -1;
-                _textIdLen = 0;
-            }
-            else
-            {
-                int textIdIndex;
-                var textIdBytes = Encoding.UTF8.GetBytes(target.ToSerializableString());
-                if (!dictTextIdToByteIndex.TryGetValue(target, out textIdIndex))
-                {
-                    textIdIndex = listTextIdBytes.Count;
-                    listTextIdBytes.AddRange(textIdBytes);
-                    dictTextIdToByteIndex.Add(target, textIdIndex);
-                }
-                _textIdIndex = textIdIndex;
-                _textIdLen = (ushort)textIdBytes.Length;
-            }
-        }
-
-        public ChromGroupHeaderInfo ChangeTextIdIndex(int newIndex, ushort newLength)
+        public ChromGroupHeaderInfo ChangeTextIdIndex(int index)
         {
             var headerInfo = this;
-            headerInfo._textIdIndex = newIndex;
-            headerInfo._textIdLen = newLength;
+            headerInfo._textIdIndex = index;
             return headerInfo;
         }
 
@@ -2278,7 +2376,6 @@ namespace pwiz.Skyline.Model.Results
     {
         protected readonly ChromGroupHeaderInfo _groupHeaderInfo;
         protected readonly FeatureNames _scoreTypeIndices;
-        protected readonly byte[] _textIdBytes;
         protected readonly IList<ChromCachedFile> _allFiles;
         protected readonly IReadOnlyList<ChromTransition> _allTransitions;
         [CanBeNull]
@@ -2289,14 +2386,14 @@ namespace pwiz.Skyline.Model.Results
 
         public ChromatogramGroupInfo(ChromGroupHeaderInfo groupHeaderInfo,
                                      FeatureNames scoreTypeIndices,
-                                     byte[] textIdBytes,
+                                     ChromatogramGroupId chromatogramGroupId,
                                      IList<ChromCachedFile> allFiles,
                                      IReadOnlyList<ChromTransition> allTransitions,
                                      ChromatogramCache chromatogramCache)
         {
             _groupHeaderInfo = groupHeaderInfo;
             _scoreTypeIndices = scoreTypeIndices;
-            _textIdBytes = textIdBytes;
+            ChromatogramGroupId = chromatogramGroupId;
             _allFiles = allFiles;
             _allTransitions = allTransitions;
             _chromatogramCache = chromatogramCache;
@@ -2316,7 +2413,6 @@ namespace pwiz.Skyline.Model.Results
             TimeIntensitiesGroup timeIntensitiesGroup, FeatureNames scoreTypeIndices, float[] scores)
         {
             _groupHeaderInfo = groupHeaderInfo;
-            _textIdBytes = Array.Empty<byte>();
             _allFiles = new[]{chromCachedFile};
             _allTransitions = allTransitions;
             _chromPeaks = peaks;
@@ -2328,13 +2424,16 @@ namespace pwiz.Skyline.Model.Results
 
         internal ChromGroupHeaderInfo Header { get { return _groupHeaderInfo; } }
         public SignedMz PrecursorMz { get { return new SignedMz(_groupHeaderInfo.Precursor, _groupHeaderInfo.NegativeCharge); } }
+        public ChromatogramGroupId ChromatogramGroupId
+        {
+            get; private set;
+        }
+
         public string TextId
         {
             get
             {
-                return _groupHeaderInfo.TextIdIndex != -1
-                    ? Encoding.UTF8.GetString(_textIdBytes, _groupHeaderInfo.TextIdIndex, _groupHeaderInfo.TextIdLen)
-                    : null;
+                return ChromatogramGroupId?.Target.Sequence;
             }
         }
         public double? PrecursorCollisionalCrossSection { get { return _groupHeaderInfo.CollisionalCrossSection; } }
