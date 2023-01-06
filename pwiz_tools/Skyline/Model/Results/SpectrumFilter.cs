@@ -28,6 +28,7 @@ using pwiz.ProteowizardWrapper;
 using pwiz.Skyline.Model.DocSettings;
 using pwiz.Skyline.Model.Lib;
 using pwiz.Skyline.Model.Optimization;
+using pwiz.Skyline.Model.Results.Spectra;
 using pwiz.Skyline.Properties;
 using pwiz.Skyline.Util;
 
@@ -84,8 +85,8 @@ namespace pwiz.Skyline.Model.Results
         private int _mseLastSpectrumLevel; // for averaging Agilent stepped CE spectra
         private bool _sourceHasDeclaredMSnSpectra; // Used in all-ions mode to discern low and high energy scans for Bruker
 
-        private static readonly PrecursorTextId TIC_KEY = new PrecursorTextId(SignedMz.ZERO, null, null, null, null, ChromExtractor.summed);
-        private static readonly PrecursorTextId BPC_KEY = new PrecursorTextId(SignedMz.ZERO, null, null, null, null, ChromExtractor.base_peak);
+        private static readonly PrecursorTextId TIC_KEY = new PrecursorTextId(SignedMz.ZERO, null, null, null, null, SpectrumClassFilter.EMPTY, ChromExtractor.summed);
+        private static readonly PrecursorTextId BPC_KEY = new PrecursorTextId(SignedMz.ZERO, null, null, null, null, SpectrumClassFilter.EMPTY, ChromExtractor.base_peak);
 
         public IEnumerable<SpectrumFilterPair> FilterPairs { get { return _filterMzValues; } }
         public bool HasRangeRT { get; private set; }
@@ -281,7 +282,7 @@ namespace pwiz.Skyline.Model.Results
                             var ce = step.HasValue
                                 ? document.GetCollisionEnergy(nodePep, nodeGroup, null, step.Value)
                                 : (double?)null;
-                            var key = new PrecursorTextId(mz, step, ce, ionMobilityFilter, nodePep.ModifiedTarget, ChromExtractor.summed);
+                            var key = new PrecursorTextId(mz, step, ce, ionMobilityFilter, nodePep.ModifiedTarget, nodeGroup.SpectrumClassFilter, ChromExtractor.summed);
 
                             if (!dictPrecursorMzToFilter.TryGetValue(key, out var filter))
                             {
@@ -835,8 +836,18 @@ namespace pwiz.Skyline.Model.Results
             {
                 if (!filterPair.ContainsRetentionTime(retentionTime.Value))
                     continue;
+                var matchingSpectra = spectra;
+                if (!filterPair.SpectrumClassFilter.IsEmpty)
+                {
+                    matchingSpectra = spectra.Where(spectrum => filterPair.MatchesSpectrum(spectrum.Metadata))
+                        .ToArray();
+                    if (matchingSpectra.Length == 0)
+                    {
+                        continue;
+                    }
+                }
 
-                var filteredSrmSpectrum = filterPair.FilterQ1SpectrumList(spectra, isSimSpectra);
+                var filteredSrmSpectrum = filterPair.FilterQ1SpectrumList(matchingSpectra, isSimSpectra);
                 if (filteredSrmSpectrum != null)
                     yield return filteredSrmSpectrum;
             }
@@ -876,8 +887,17 @@ namespace pwiz.Skyline.Model.Results
                         }
                     }
 
+                    var matchingSpectra = spectra;
+                    if (!filterPair.SpectrumClassFilter.IsEmpty)
+                    {
+                        matchingSpectra = spectra.Where(spectrum => filterPair.MatchesSpectrum(spectrum.Metadata))
+                            .ToArray();
+                        if (matchingSpectra.Length == 0)
+                            continue;
+                    }
+
                     // This line does the bulk of the work of pulling chromatogram points from spectra
-                    var filteredSrmSpectrum = filterPair.FilterQ3SpectrumList(spectra, UseDriftTimeHighEnergyOffset());
+                    var filteredSrmSpectrum = filterPair.FilterQ3SpectrumList(matchingSpectra, UseDriftTimeHighEnergyOffset());
 
                     filteredSrmSpectrum = pasefAwareFilter.Filter(filteredSrmSpectrum, filterPair, isoWin);
                     if (filteredSrmSpectrum != null)

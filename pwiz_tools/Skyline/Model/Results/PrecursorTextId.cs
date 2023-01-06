@@ -21,19 +21,21 @@ using System;
 using System.Collections.Generic;
 using pwiz.Common.Chemistry;
 using pwiz.Skyline.Model.DocSettings;
+using pwiz.Skyline.Model.Results.Spectra;
 
 namespace pwiz.Skyline.Model.Results
 {
     public struct PrecursorTextId
     {
         public PrecursorTextId(SignedMz precursorMz, int? optStep, double? collisionEnergy,
-            IonMobilityFilter ionMobilityFilter, Target target, ChromExtractor extractor) : this()
+            IonMobilityFilter ionMobilityFilter, Target target, SpectrumClassFilter spectrumClassFilter, ChromExtractor extractor) : this()
         {
             PrecursorMz = precursorMz;
             OptStep = optStep;
             CollisionEnergy = collisionEnergy;
             IonMobility = ionMobilityFilter ?? IonMobilityFilter.EMPTY;
             Target = target;
+            SpectrumClassFilter = spectrumClassFilter;
             Extractor = extractor;
         }
 
@@ -41,7 +43,8 @@ namespace pwiz.Skyline.Model.Results
         public int? OptStep { get; }
         public double? CollisionEnergy { get; }
         public IonMobilityFilter IonMobility { get; private set; }
-        public Target Target { get; private set; }  // Peptide Modifed Sequence or custom ion ID
+        public Target Target { get; private set; }  // Peptide Modified Sequence or custom ion ID
+        public SpectrumClassFilter SpectrumClassFilter { get; private set; }
         public ChromExtractor Extractor { get; private set; }
 
         #region object overrides

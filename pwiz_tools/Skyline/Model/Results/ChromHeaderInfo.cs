@@ -34,6 +34,7 @@ using pwiz.ProteowizardWrapper;
 using pwiz.Skyline.Model.DocSettings;
 using pwiz.Skyline.Model.Results.Crawdad;
 using pwiz.Skyline.Model.Results.Scoring;
+using pwiz.Skyline.Model.Results.Spectra;
 using pwiz.Skyline.Properties;
 using pwiz.Skyline.Util;
 
@@ -455,6 +456,14 @@ namespace pwiz.Skyline.Model.Results
                 _textIdIndex = textIdIndex;
                 _textIdLen = (ushort)textIdBytes.Length;
             }
+        }
+
+        public ChromGroupHeaderInfo ChangeTextIdIndex(int newIndex, ushort newLength)
+        {
+            var headerInfo = this;
+            headerInfo._textIdIndex = newIndex;
+            headerInfo._textIdLen = newLength;
+            return headerInfo;
         }
 
         public int CompareTo(ChromGroupHeaderInfo info)

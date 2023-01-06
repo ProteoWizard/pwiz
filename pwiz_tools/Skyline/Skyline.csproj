@@ -643,6 +643,7 @@
     <Compile Include="Model\Proteome\ProteinGroupMetadata.cs" />
     <Compile Include="Model\ProteomicSequence.cs" />
     <Compile Include="Model\Results\CandidatePeakGroupData.cs" />
+    <Compile Include="Model\Results\ChromatogramGroupId.cs" />
     <Compile Include="Model\Results\OnDemandFeatureCalculator.cs" />
     <Compile Include="Model\Results\PeakGroupIntegrator.cs" />
     <Compile Include="Model\Results\PeakShapeStatistics.cs" />

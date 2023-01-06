@@ -1,5 +1,6 @@
 ﻿syntax = "proto3";
 option csharp_namespace = "pwiz.Skyline.Model.Results.ProtoBuf";
+import "google/protobuf/struct.proto";
 message ChromatogramGroupData {
 	message TimeList {
 		repeated float times = 1;
@@ -51,4 +52,53 @@ message ResultFileMetaDataProto {
 	repeated SpectrumMetadata spectra = 1;
 	repeated Precursor precursors = 2;
 	repeated string scanDescriptions = 3;
+}
+message ChromatogramGroupIdsProto {
+	enum FilterOperation {
+		FILTER_OP_HAS_ANY_VALUE = 0;
+		FILTER_OP_EQUALS = 1;
+		FILTER_OP_NOT_EQUALS = 2;
+		FILTER_OP_IS_BLANK = 3;
+		FILTER_OP_IS_NOT_BLANK = 4;
+		FILTER_OP_IS_GREATER_THAN = 5;
+		FILTER_OP_IS_LESS_THAN = 6;
+		FILTER_OP_IS_GREATER_THAN_OR_EQUAL_TO = 7;
+		FILTER_OP_IS_LESS_THAN_OR_EQUAL_TO = 8;
+		FILTER_OP_CONTAINS = 9;
+		FILTER_OP_NOT_CONTAINS = 10;
+		FITLER_OP_STARTS_WITH = 11;
+		FILTER_OP_NOT_STARTS_WITH = 12;
+	}
+	message AccessionNumber {
+		int32 typeName = 1;
+		string value = 2;;
+	}
+
+	message Target {
+		string modifiedPeptideSequence = 1;
+		string formula = 2;
+		string name = 3;
+		double monoMass = 4;
+		double averageMass = 5;
+		repeated AccessionNumber accessionNumbers = 6;
+	}
+	repeated Target targets = 1;
+	repeated string accessionTypeNames = 2;
+	repeated string scoreTypeNames = 3;
+	repeated SpectrumFilter filters = 4;
+	repeated ChromatogramGroupId chromatogramGroupIds = 5;
+
+	message ChromatogramGroupId {
+		int32 targetIndex = 1; // one-based index into "targets"
+		int32 filterIndex = 2; // one-based index into "filter"
+	}
+
+	message SpectrumFilter {
+		message Predicate {
+			string propertyPath = 1;
+			FilterOperation operation = 2;
+			google.protobuf.Value operand = 3;
+		}
+		repeated Predicate predicates = 1;
+	}
 }

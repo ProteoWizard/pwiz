@@ -177,6 +177,7 @@
     <Compile Include="SystemUtil\StringPool.cs" />
     <Compile Include="SystemUtil\TaskbarProgress.cs" />
     <Compile Include="SystemUtil\TypeSafeEnum.cs" />
+    <Compile Include="SystemUtil\ValueIndex.cs" />
   </ItemGroup>
   <ItemGroup>
     <BootstrapperPackage Include="Microsoft.Net.Client.3.5">

@@ -40,7 +40,8 @@ namespace pwiz.Skyline.Model.Results
         Fourteen = 14,  // Adds SampleId and SerialNumber to CachedFileHeaderStruct and moves centroiding from ChromCachedFile.FilePath to Flags
         Fifteen = 15, // Add import time to CachedFileHeaderStruct
         Sixteen = 16, // Skewness and Kurtosis
-        CURRENT = Sixteen,
+        Seventeen = 17, // Add Spectrum Class Filter to ChromGroupHeaderInfo
+        CURRENT = Seventeen,
     }
     
     [StructLayout(LayoutKind.Sequential, Pack = 4)]

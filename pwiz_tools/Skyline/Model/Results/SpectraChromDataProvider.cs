@@ -543,7 +543,7 @@ namespace pwiz.Skyline.Model.Results
             for (int i = 0; i < intensities.Length; i++)
                 intensityFloats[i] = (float) intensities[i];
             var productFilters = mzs.Select(mz => new SpectrumProductFilter(new SignedMz(mz, precursorMz.IsNegative), 0, 0)).ToArray();
-            var spectrum = new ExtractedSpectrum(modifiedSequence, peptideColor, precursorMz,
+            var spectrum = new ExtractedSpectrum(modifiedSequence, SpectrumClassFilter.EMPTY, peptideColor, precursorMz,
             IonMobilityFilter.EMPTY, // ion mobility unknown
                 ChromExtractor.summed, filterIndex, productFilters, intensityFloats, null);
             chromMap.ProcessExtractedSpectrum(time, _collectors, -1, spectrum, null);
@@ -1651,7 +1651,7 @@ namespace pwiz.Skyline.Model.Results
             ChromExtractor extractor = spectrum.Extractor;
             int ionScanCount = spectrum.ProductFilters.Length;
             ChromDataCollector collector;
-            var key = new PrecursorTextId(precursorMz, null, null, ionMobility, target, extractor);
+            var key = new PrecursorTextId(precursorMz, null, null, ionMobility, target, spectrum.SpectrumClassFilter, extractor);
             int index = spectrum.FilterIndex;
             while (PrecursorCollectorMap.Count <= index)
                 PrecursorCollectorMap.Add(null);
