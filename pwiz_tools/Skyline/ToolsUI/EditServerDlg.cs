@@ -132,5 +132,10 @@ namespace pwiz.Skyline.ToolsUI
         {
             OkDialog();
         }
+
+        public string GetTextServerUrlControlLabel()
+        {
+            return new MessageBoxHelper(this).GetControlMessage(textServerURL);
+        }
     }
 }
