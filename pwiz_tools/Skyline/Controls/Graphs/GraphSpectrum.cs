@@ -1494,7 +1494,7 @@ namespace pwiz.Skyline.Controls.Graphs
             get {return new MzRange(GraphPane.XAxis.Scale.Min, GraphPane.XAxis.Scale.Max);}
         }
 
-        public LibraryRankedSpectrumInfo SpectrumInfo => GraphItem.SpectrumInfo;
+        public LibraryRankedSpectrumInfo SpectrumInfo => GraphItem?.SpectrumInfo;
 
         public Scale IntensityScale
         {

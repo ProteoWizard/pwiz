@@ -234,8 +234,12 @@ namespace pwiz.Skyline.Model.Lib
         public double CalcMz(SrmSettings settings,
             TransitionGroupDocNode transitionGroup, ExplicitMods mods)
         {
-            var massH = settings.GetPrecursorCalc(transitionGroup.TransitionGroup.LabelType, mods)
-                .GetPrecursorMass(Target);
+            TypedMass massH;
+            if (Target != null)
+                massH = settings.GetPrecursorCalc(transitionGroup.TransitionGroup.LabelType, mods)
+                    .GetPrecursorMass(Target);
+            else
+                massH = new TypedMass(Key.PrecursorMz ?? 0, MassType.Monoisotopic);
             return SequenceMassCalc.PersistentMZ(SequenceMassCalc.GetMZ(massH, transitionGroup.PrecursorAdduct));
         }
 
