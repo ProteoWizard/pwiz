@@ -275,12 +275,12 @@ namespace pwiz.SkylineTestFunctional
             }
             else if (BAD_SERVER_URL.Equals(testClient.Server))
             {
-                Assert.IsTrue(errorMsg.Equals(string.Format(Resources.EditServerDlg_OkDialog_The_text__0__is_not_a_valid_server_name_, BAD_SERVER_URL)));
+                Assert.AreEqual(string.Format(Resources.EditServerDlg_OkDialog_The_text__0__is_not_a_valid_server_name_, BAD_SERVER_URL), errorMsg);
             }
             else if (EMPTY_SERVER_URL.Equals(testClient.Server))
             {
                 var expectedMsg = string.Format(Resources.MessageBoxHelper_ValidateNameTextBox__0__cannot_be_empty, editServerDlg.GetTextServerUrlControlLabel());
-                Assert.IsTrue(errorMsg.Equals(expectedMsg), string.Format("Expected: '{0}'; Found: '{1}'", expectedMsg, errorMsg));
+                Assert.AreEqual(expectedMsg, errorMsg);
             }
             RunUI(() =>
                       {
