@@ -685,7 +685,7 @@
   <data name="ReportSpec_ReportToCsvString_Exporting__0__report" xml:space="preserve">
     <value>导出{0}报告</value>
   </data>
-  <data name="CommandLine_GeneralException_Error___0_" xml:space="preserve">
+  <data name="Error___0_" xml:space="preserve">
     <value>错误：{0}</value>
   </data>
   <data name="CommandLine_ExportLiveReport_Error__The_report__0__could_not_be_saved_to__1__" xml:space="preserve">
@@ -3206,9 +3206,6 @@
   <data name="RTDetails_gridStatistics_KeyDown_Failed_setting_data_to_clipboard" xml:space="preserve">
     <value>向剪切板设定数据失败。</value>
   </data>
-  <data name="EditServerDlg_OkDialog_The_server__0__is_not_a_Panorama_server" xml:space="preserve">
-    <value>服务器{0}不是 Panorama 服务器。</value>
-  </data>
   <data name="CommandLine_ExportInstrumentFile_Method__0__exported_successfully_" xml:space="preserve">
     <value>方法{0}已成功导出。</value>
   </data>
@@ -4092,9 +4089,6 @@
   <data name="SpectrumMzInfo_GetInfoFromLibrary_Library_spectrum_for_sequence__0__is_missing_" xml:space="preserve">
     <value>针对序列 {0} 的库谱图丢失。</value>
   </data>
-  <data name="EditServerDlg_OkDialog_Unknown_error_connecting_to_the_server__0__" xml:space="preserve">
-    <value>连接至服务器{0}出现未知错误。</value>
-  </data>
   <data name="RenameProteinsDlg_OkDialog_Cannot_rename__0__more_than_once__Please_remove_either__1__or__2__" xml:space="preserve">
     <value>无法多次重新命名{0}。请删除{1}或{2}</value>
   </data>
@@ -4241,7 +4235,7 @@
     <value>单击“创建”按钮来创建一个新库或单击“打开”按钮来打开现有的库文件。</value>
   </data>
   <data name="TransitionTreeNode_GetLabel_irank__0__" xml:space="preserve">
-    <value>针对离子对节点的同位素排名 {0}</value>
+    <value>i排名 {0}</value>
     <comment>Isotope rank for transition node</comment>
   </data>
   <data name="AddIrtSpectralLibrary_OkDialog_The_file__0__is_not_a_BiblioSpec_or_Chromatogram_library" xml:space="preserve">
@@ -10457,23 +10451,11 @@
   <data name="SkypSupport_Open_Failure_opening_skyp_file_" xml:space="preserve">
     <value>打开 skyp 文件失败。</value>
   </data>
-  <data name="SkypSupport_Download_There_was_an_error_downloading_the_Skyline_document_specified_in_the_skyp_file___0__" xml:space="preserve">
-    <value>下载 skyp 文件中指定的 Skyline 文档时出现错误：{0}。</value>
-  </data>
-  <data name="SkypSupport_Download_You_may_have_to_add__0__as_a_Panorama_server_from_the_Tools___Options_menu_in_Skyline_" xml:space="preserve">
-    <value>您可能必须使用 Skyline 中 Tools （工具）&gt; Options （选项）菜单，添加 {0} 作为Panorama 服务器。</value>
-  </data>
   <data name="SkypSupport_Download_You_do_not_have_permissions_to_download_this_file_from__0__" xml:space="preserve">
     <value>您无从 {0} 下载此文件的权限。</value>
   </data>
-  <data name="SkypFile_GetSkyFileUrl_Expected_the_URL_of_a_shared_Skyline_document_archive___0___in_the_skyp_file__Found__1__instead_" xml:space="preserve">
-    <value>skyp 文件内预计的共享 Skyline 文档存档 ({0}) 链接。反之发现 {1}。</value>
-  </data>
   <data name="SkypFile_GetNonExistentPath_Name_of_shared_Skyline_archive_cannot_be_null_or_empty_" xml:space="preserve">
     <value>共享 Skyline 存档的名称不得无效或空。</value>
-  </data>
-  <data name="SkypSupport_Download_Downloading__0_" xml:space="preserve">
-    <value>下载{0}</value>
   </data>
   <data name="SkypFile_GetSkyFileUrl_File_does_not_contain_the_URL_of_a_shared_Skyline_archive_file___0___on_a_Panorama_server_" xml:space="preserve">
     <value>文件不包括 Panorama 服务器上共享 Skyline 存档文档 ({0}) 的 URL。</value>
