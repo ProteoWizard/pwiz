@@ -192,6 +192,28 @@ namespace pwiz.Skyline.Model.Results
             _endTime = -1;
         }
 
+        public ChromGroupHeaderInfo16(ChromGroupHeaderInfo chromGroupHeaderInfo, int textIdIndex, ushort textIdLen) : this()
+        {
+            _textIdIndex = textIdIndex;
+            _startTransitionIndex = chromGroupHeaderInfo.StartTransitionIndex;
+            _startPeakIndex = chromGroupHeaderInfo.StartPeakIndex;
+            _startScoreIndex = chromGroupHeaderInfo.StartScoreIndex;
+            _numPoints = chromGroupHeaderInfo.NumPoints;
+            _compressedSize = chromGroupHeaderInfo.CompressedSize;
+            _flagBits = chromGroupHeaderInfo.FlagBits;
+            _fileIndex = chromGroupHeaderInfo.FileIndex;
+            _textIdLen = textIdLen;
+            _numTransitions = chromGroupHeaderInfo.NumTransitions;
+            _numPeaks = chromGroupHeaderInfo.NumPeaks;
+            _maxPeakIndex = CheckByte(chromGroupHeaderInfo.MaxPeakIndex);
+            _precursor = chromGroupHeaderInfo.Precursor;
+            _locationPoints = chromGroupHeaderInfo.LocationPoints;
+            _uncompressedSize = chromGroupHeaderInfo.UncompressedSize;
+            _startTime = chromGroupHeaderInfo.StartTime ?? -1;
+            _endTime = chromGroupHeaderInfo.EndTime ?? -1;
+            _collisionalCrossSection = chromGroupHeaderInfo.CollisionalCrossSection ?? -1;
+        }
+
         public static IItemSerializer<ChromGroupHeaderInfo16> ItemSerializer(int itemSizeOnDisk)
         {
             StructSerializer<ChromGroupHeaderInfo16> structSerializer = new StructSerializer<ChromGroupHeaderInfo16>

@@ -1,5 +1,4 @@
 ﻿using System;
-using System.CodeDom;
 using System.Collections;
 using System.Collections.Generic;
 using System.Text;
@@ -168,21 +167,21 @@ namespace pwiz.Skyline.Model.Results
         public ChromGroupHeaderInfo16 ConvertToTextId(List<byte> textIdBytes, Dictionary<Target, TextIdLocation> map,
             ChromGroupHeaderInfo chromGroupHeaderInfo)
         {
-            throw new NotImplementedException();
-            // var target = GetId(chromGroupHeaderInfo)?.Target;
-            // if (target == null)
-            // {
-            //     return chromGroupHeaderInfo.ChangeTextIdLocation(null);
-            // }
-            // if (!map.TryGetValue(target, out var textIdLocation))
-            // {
-            //     int textIdIndex = textIdBytes.Count;
-            //     textIdBytes.AddRange(Encoding.UTF8.GetBytes(target.ToSerializableString()));
-            //     textIdLocation = new TextIdLocation(textIdIndex, textIdBytes.Count - textIdIndex);
-            //     map.Add(target, textIdLocation);
-            // }
-            //
-            // return chromGroupHeaderInfo.ChangeTextIdLocation(textIdLocation);
+            var target = GetId(chromGroupHeaderInfo)?.Target;
+            if (target == null)
+            {
+                return new ChromGroupHeaderInfo16(chromGroupHeaderInfo, -1, 0);
+            }
+            if (!map.TryGetValue(target, out var textIdLocation))
+            {
+                int textIdIndex = textIdBytes.Count;
+                textIdBytes.AddRange(Encoding.UTF8.GetBytes(target.ToSerializableString()));
+                textIdLocation = new TextIdLocation(textIdIndex, textIdBytes.Count - textIdIndex);
+                map.Add(target, textIdLocation);
+            }
+
+            return new ChromGroupHeaderInfo16(chromGroupHeaderInfo, textIdLocation.Index,
+                (ushort) textIdLocation.Length);
         }
 
         public int Count

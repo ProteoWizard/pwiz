@@ -1104,7 +1104,8 @@ namespace pwiz.Skyline.Model.Results
             {
                 numTextIdBytes = 0;
                 locationHeaders = outStream.Position;
-                cacheFormat.ChromGroupHeaderInfoSerializer().WriteItems(outStream, chromatogramEntries);
+                cacheFormat.OldChromGroupHeaderInfoSerializer().WriteItems(outStream, 
+                    chromatogramEntries.Select(chromGroupHeaderInfo=>new ChromGroupHeaderInfo16(chromGroupHeaderInfo, -1, 0)));
             }
             // Write the list of cached files and their modification time stamps
             long locationFiles = outStream.Position;
