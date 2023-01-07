@@ -99,7 +99,7 @@ namespace pwiz.Skyline.Model.Results.Legacy
             _textIdLen = textIdLen;
             _numTransitions = chromGroupHeaderInfo.NumTransitions;
             _numPeaks = chromGroupHeaderInfo.NumPeaks;
-            _maxPeakIndex = CheckByte(chromGroupHeaderInfo.MaxPeakIndex);
+            _maxPeakIndex = chromGroupHeaderInfo.MaxPeakIndex >= 0 ? CheckByte(chromGroupHeaderInfo.MaxPeakIndex) : NO_MAX_PEAK;
             _statusId = CheckUShort(-1, true);
             _statusRank = CheckUShort(-1, true);
             _precursor = chromGroupHeaderInfo.Precursor;

@@ -7,7 +7,7 @@ namespace pwiz.Skyline.Model
     public class PrecursorKey : Immutable
     {
         public static readonly PrecursorKey EMPTY = new PrecursorKey(Adduct.EMPTY);
-        public PrecursorKey(Adduct adduct) : this(adduct, null)
+        public PrecursorKey(Adduct adduct) : this(adduct, SpectrumClassFilter.EMPTY)
         {
         }
         public PrecursorKey(Adduct adduct, SpectrumClassFilter spectrumClassFilter)
