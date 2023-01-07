@@ -132,7 +132,7 @@ namespace pwiz.Skyline.Model.Results
 
         public override IResultFileMetadata ResultFileData
         {
-            get { return _cache.GetOrLoadResultFileMetadata(_fileIndex); }
+            get { return _cache?.GetOrLoadResultFileMetadata(_fileIndex); }
         }
 
         public override double? MaxRetentionTime { get { return _maxRetentionTime; } }

@@ -496,7 +496,6 @@ namespace pwiz.Skyline.Model.Results
                         pairProduct.Key.FilterWidth,
                         chromMap.ChromSource,
                         modSeq.Extractor,
-                        true,
                         true);
 
                     _collectors.AddSrmCollector(key, chromCollector);

@@ -99,7 +99,7 @@ namespace pwiz.Skyline.Model.Results
 
         public static MsDataFileScanIds FromBytes(byte[] byteArray)
         {
-            if (byteArray.Length == 0)
+            if (byteArray == null || byteArray.Length == 0)
                 return null;
 
             int i = 0;

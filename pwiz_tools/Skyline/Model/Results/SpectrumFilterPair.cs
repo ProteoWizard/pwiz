@@ -395,7 +395,6 @@ namespace pwiz.Skyline.Model.Results
                         spectrumProductFilter.FilterWidth,
                         source,
                         Extractor,
-                        true,
                         true);
                     if (_hasMinTime && _hasMaxTime)
                     {

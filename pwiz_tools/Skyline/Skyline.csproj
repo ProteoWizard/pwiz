@@ -644,6 +644,7 @@
     <Compile Include="Model\ProteomicSequence.cs" />
     <Compile Include="Model\Results\CandidatePeakGroupData.cs" />
     <Compile Include="Model\Results\ChromatogramGroupId.cs" />
+    <Compile Include="Model\Results\Legacy\ChromGroupHeaderInfo16.cs" />
     <Compile Include="Model\Results\OnDemandFeatureCalculator.cs" />
     <Compile Include="Model\Results\PeakGroupIntegrator.cs" />
     <Compile Include="Model\Results\PeakShapeStatistics.cs" />
@@ -4507,6 +4508,7 @@
     <Compile Include="Util\UtilUI.cs">
       <SubType>Component</SubType>
     </Compile>
+    <Compile Include="Util\ValueChecking.cs" />
     <Compile Include="Util\Xml.cs" />
     <Compile Include="Model\DocSettings\XmlNamedElement.cs" />
     <Compile Include="Util\ClipboardEx.cs" />

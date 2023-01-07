@@ -1480,8 +1480,6 @@ namespace pwiz.Skyline.Model.Results
                 uncompressedSize,
                 groupOfTimeIntensities.NumInterpolatedPoints,
                 GetFlagValues(groupOfTimeIntensities),
-                StatusId,
-                StatusRank,
                 MinRawTime,
                 MaxRawTime,
                 CollisionalCrossSectionSqA,

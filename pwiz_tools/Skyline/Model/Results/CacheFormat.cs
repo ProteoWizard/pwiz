@@ -20,6 +20,7 @@ using System;
 using System.IO;
 using System.Runtime.InteropServices;
 using pwiz.Common.Collections;
+using pwiz.Skyline.Model.Results.Legacy;
 
 namespace pwiz.Skyline.Model.Results
 {
@@ -257,7 +258,7 @@ namespace pwiz.Skyline.Model.Results
             }
 
             var v4Reader = ChromGroupHeaderInfo4.StructSerializer();
-            return ConvertedItemSerializer.Create(v4Reader, v4Header => new ChromGroupHeaderInfo16(v4Header), header => new ChromGroupHeaderInfo4(header));
+            return ConvertedItemSerializer.Create(v4Reader, v4Header => new ChromGroupHeaderInfo16(v4Header), header => { return new ChromGroupHeaderInfo4(header); });
 
         }
 

@@ -4,6 +4,7 @@ using System.Text;
 using Microsoft.VisualStudio.TestTools.UnitTesting;
 using pwiz.Skyline.Model;
 using pwiz.Skyline.Model.Results;
+using pwiz.Skyline.Model.Results.Legacy;
 using pwiz.SkylineTestUtil;
 
 namespace pwiz.SkylineTest

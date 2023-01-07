@@ -91,6 +91,7 @@ message ChromatogramGroupIdsProto {
 	message ChromatogramGroupId {
 		int32 targetIndex = 1; // one-based index into "targets"
 		int32 filterIndex = 2; // one-based index into "filter"
+		string qcTraceName = 3;
 	}
 
 	message SpectrumFilter {

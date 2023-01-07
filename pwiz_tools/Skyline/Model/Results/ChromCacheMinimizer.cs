@@ -706,8 +706,6 @@ namespace pwiz.Skyline.Model.Results
                     lenUncompressed,
                     location,
                     flags,
-                    originalHeader.StatusId,
-                    originalHeader.StatusRank,
                     originalHeader.StartTime, originalHeader.EndTime,
                     originalHeader.CollisionalCrossSection,
                     originalHeader.IonMobilityUnits);

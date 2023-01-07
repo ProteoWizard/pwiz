@@ -28,6 +28,7 @@ using pwiz.Common.Collections;
 using pwiz.Common.SystemUtil;
 using pwiz.Skyline.Model.DocSettings;
 using pwiz.Skyline.Model.Lib;
+using pwiz.Skyline.Model.Results.Legacy;
 using pwiz.Skyline.Model.Results.ProtoBuf;
 using pwiz.Skyline.Model.Results.Scoring;
 using pwiz.Skyline.Model.Results.Spectra;
@@ -1327,10 +1328,10 @@ namespace pwiz.Skyline.Model.Results
                         ionMobilityValue.ChangeIonMobility(tranInfo.IonMobilityValue); // This likely doesn't change from transition to transition, so reuse it
                     ChromKey key = new ChromKey(GetChromatogramGroupId(groupInfo)?.Target,
                         groupInfo.Precursor, IonMobilityFilter.GetIonMobilityFilter(ionMobilityValue, tranInfo.IonMobilityExtractionWidth, groupInfo.CollisionalCrossSection), product, 
-                        0, extractionWidth, source, groupInfo.Extractor, true, true);
+                        0, extractionWidth, source, groupInfo.Extractor, true);
 
-                    int id = groupInfo.HasStatusId ? groupInfo.StatusId : i;
-                    int rank = groupInfo.HasStatusRank ? groupInfo.StatusRank : -1;
+                    int id = i;
+                    int rank = -1;
                     yield return new ChromKeyIndices(key, groupInfo.LocationPoints, i, id, rank, j);
                 }
             }
@@ -1436,8 +1437,6 @@ namespace pwiz.Skyline.Model.Results
                             lastEntry.UncompressedSize,
                             lastEntry.LocationPoints + offsetPoints,
                             lastEntry.Flags,
-                            lastEntry.StatusId,
-                            lastEntry.StatusRank,
                             lastEntry.StartTime,
                             lastEntry.EndTime,
                             lastEntry.CollisionalCrossSection, 

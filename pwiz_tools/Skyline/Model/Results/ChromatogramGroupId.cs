@@ -3,14 +3,41 @@ using System.Collections;
 using System.Collections.Generic;
 using System.Text;
 using pwiz.Common.SystemUtil;
+using pwiz.Skyline.Model.Results.Legacy;
 using pwiz.Skyline.Model.Results.ProtoBuf;
 using pwiz.Skyline.Model.Results.Spectra;
 using pwiz.Skyline.Util;
 
 namespace pwiz.Skyline.Model.Results
 {
-    public class ChromatogramGroupId
+    public class ChromatogramGroupId : Immutable
     {
+        private ChromatogramGroupId(Target target, string qcTraceName, SpectrumClassFilter spectrumClassFilter)
+        {
+            Target = target;
+            QcTraceName = qcTraceName;
+            SpectrumClassFilter = spectrumClassFilter;
+        }
+
+        public static ChromatogramGroupId ForTarget(Target target)
+        {
+            if (target == null)
+            {
+                return null;
+            }
+
+            return new ChromatogramGroupId(target, null, null);
+        }
+
+        public static ChromatogramGroupId ForQcTraceName(string name)
+        {
+            if (string.IsNullOrEmpty(name))
+            {
+                return null;
+            }
+            return new ChromatogramGroupId(null, name, null);
+        }
+
         public ChromatogramGroupId(Target target, SpectrumClassFilter spectrumClassFilter)
         {
             Target = target;
@@ -18,11 +45,27 @@ namespace pwiz.Skyline.Model.Results
         }
 
         public Target Target { get; }
-        public SpectrumClassFilter SpectrumClassFilter { get; }
+        public string QcTraceName { get; }
+        public SpectrumClassFilter SpectrumClassFilter { get; private set; }
+
+        public ChromatogramGroupId ChangeSpectrumClassFilter(SpectrumClassFilter spectrumClassFilter)
+        {
+            if (ReferenceEquals(spectrumClassFilter, SpectrumClassFilter))
+            {
+                return this;
+            }
+
+            if (Target == null && spectrumClassFilter != null)
+            {
+                throw new InvalidOperationException();
+            }
+
+            return ChangeProp(ImClone(this), im => im.SpectrumClassFilter = spectrumClassFilter);
+        }
 
         protected bool Equals(ChromatogramGroupId other)
         {
-            return Equals(Target, other.Target) && Equals(SpectrumClassFilter, other.SpectrumClassFilter);
+            return Equals(Target, other.Target) && QcTraceName == other.QcTraceName && Equals(SpectrumClassFilter, other.SpectrumClassFilter);
         }
 
         public override bool Equals(object obj)
@@ -37,8 +80,10 @@ namespace pwiz.Skyline.Model.Results
         {
             unchecked
             {
-                return ((Target != null ? Target.GetHashCode() : 0) * 397) ^
-                       (SpectrumClassFilter != null ? SpectrumClassFilter.GetHashCode() : 0);
+                var hashCode = (Target != null ? Target.GetHashCode() : 0);
+                hashCode = (hashCode * 397) ^ (QcTraceName != null ? QcTraceName.GetHashCode() : 0);
+                hashCode = (hashCode * 397) ^ (SpectrumClassFilter != null ? SpectrumClassFilter.GetHashCode() : 0);
+                return hashCode;
             }
         }
 
@@ -99,7 +144,7 @@ namespace pwiz.Skyline.Model.Results
 
             foreach (var id in proto.ChromatogramGroupIds)
             {
-                yield return new ChromatogramGroupId(targets[id.TargetIndex], null);
+                yield return new ChromatogramGroupId(targets[id.TargetIndex], id.QcTraceName, null);
             }
         }
     }
@@ -152,9 +197,18 @@ namespace pwiz.Skyline.Model.Results
                     continue;
                 }
 
-                var target = Target.FromSerializableString(Encoding.UTF8.GetString(textIdBytes,
-                    chromGroupHeaderInfo._textIdIndex, chromGroupHeaderInfo._textIdLen));
-                int index = AddId(new ChromatogramGroupId(target, null));
+                var textId = Encoding.UTF8.GetString(textIdBytes,
+                    chromGroupHeaderInfo._textIdIndex, chromGroupHeaderInfo._textIdLen);
+                ChromatogramGroupId chromatogramGroupId;
+                if (0 != (chromGroupHeaderInfo._flagBits & ChromGroupHeaderInfo16.FlagValues.extracted_qc_trace))
+                {
+                    chromatogramGroupId = ChromatogramGroupId.ForQcTraceName(textId);
+                }
+                else
+                {
+                    chromatogramGroupId = ChromatogramGroupId.ForTarget(Target.FromSerializableString(textId));
+                }
+                int index = AddId(chromatogramGroupId);
                 yield return new ChromGroupHeaderInfo(chromGroupHeaderInfo, index);
             }
         }
