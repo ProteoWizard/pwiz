@@ -188,6 +188,7 @@ namespace pwiz.Skyline.Model.Results
                 _statusRank = (ushort) -1;
             }
 
+            _textIdIndex = -1;
             _startTime = -1;
             _endTime = -1;
         }

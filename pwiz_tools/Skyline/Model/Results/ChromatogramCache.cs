@@ -895,6 +895,7 @@ namespace pwiz.Skyline.Model.Results
                     textIdBytes = stream.ReadBytes(cacheHeader.numTextIdBytes);
                 }
 
+                stream.Seek(cacheHeader.locationHeaders, SeekOrigin.Begin);
                 var oldChromatogramEntries = new BlockedArray<ChromGroupHeaderInfo16>(
                     count => cacheFormat.OldChromGroupHeaderInfoSerializer().ReadArray(stream, count),
                     cacheHeader.numChromatograms,
