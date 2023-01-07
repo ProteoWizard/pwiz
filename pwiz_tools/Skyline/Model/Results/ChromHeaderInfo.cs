@@ -412,6 +412,7 @@ namespace pwiz.Skyline.Model.Results
             _maxPeakIndex = headerInfo16._maxPeakIndex;
             _statusId = headerInfo16._statusId;
             _statusRank = headerInfo16._statusRank;
+            _precursor = headerInfo16._precursor;
             _locationPoints = headerInfo16._locationPoints;
             _uncompressedSize = headerInfo16._uncompressedSize;
             _startTime = headerInfo16._startTime;
