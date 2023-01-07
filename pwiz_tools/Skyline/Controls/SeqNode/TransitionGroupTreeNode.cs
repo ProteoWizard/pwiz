@@ -175,7 +175,7 @@ namespace pwiz.Skyline.Controls.SeqNode
         {
             string displayText = GetLabel(nodeGroup.TransitionGroup, nodeGroup.PrecursorMz,
                 GetResultsText(settings, nodeGroup));
-            if (null != nodeGroup.SpectrumClassFilter)
+            if (false == nodeGroup.SpectrumClassFilter?.IsEmpty)
             {
                 displayText = TextUtil.SpaceSeparate(displayText, nodeGroup.SpectrumClassFilter.GetAbbreviatedText());
             }
