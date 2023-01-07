@@ -255,6 +255,8 @@ namespace pwiz.Skyline.Model.Results.Legacy
         public bool HasFragScanIds => 0 != (_flagBits & FlagValues.has_frag_scan_ids);
         public bool RawChromatograms => 0 != (_flagBits & FlagValues.raw_chromatograms);
         public bool IsDda => 0 != (_flagBits & FlagValues.dda_acquisition_method);
+        public bool ExtractedBasePeak => 0 != (_flagBits & FlagValues.extracted_base_peak);
+        public bool ExtractedQcTrace => 0 != (_flagBits & FlagValues.extracted_qc_trace);
 
         public SignedMz Precursor
         {

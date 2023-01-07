@@ -198,7 +198,7 @@ namespace pwiz.Skyline.Model.Results
                                      double? collisionalCrossSection, 
                                      eIonMobilityUnits ionMobilityUnits) : this()
         {
-            if (0 != (flags & FlagValues.raw_chromatograms))
+            if (0 != (flags & FlagValues.raw_chromatograms) && compressedSize != -1)
             {
                 Assume.AreNotEqual(-1, uncompressedSize);
             }
@@ -248,36 +248,38 @@ namespace pwiz.Skyline.Model.Results
             {
                 _flagBits |= FlagValues.has_mass_errors;
             }
-
             if (headerInfo16.HasCalculatedMzs)
             {
                 _flagBits |= FlagValues.has_calculated_mzs;
             }
-
             if (headerInfo16.HasMs1ScanIds)
             {
                 _flagBits |= FlagValues.has_ms1_scan_ids;
             }
-
             if (headerInfo16.HasSimScanIds)
             {
                 _flagBits |= FlagValues.has_sim_scan_ids;
             }
-
             if (headerInfo16.HasFragScanIds)
             {
                 _flagBits |= FlagValues.has_frag_scan_ids;
             }
-
             if (headerInfo16.RawChromatograms)
             {
                 _flagBits |= FlagValues.raw_chromatograms;
                 Assume.AreNotEqual(-1, headerInfo16._uncompressedSize);
             }
-
             if (headerInfo16.IsDda)
             {
                 _flagBits |= FlagValues.dda_acquisition_method;
+            }
+            if (headerInfo16.ExtractedBasePeak)
+            {
+                _flagBits |= FlagValues.extracted_base_peak;
+            }
+            if (headerInfo16.ExtractedQcTrace)
+            {
+                _flagBits |= FlagValues.extracted_qc_trace;
             }
             _fileIndex = headerInfo16._fileIndex;
             _numTransitions = headerInfo16._numTransitions;
