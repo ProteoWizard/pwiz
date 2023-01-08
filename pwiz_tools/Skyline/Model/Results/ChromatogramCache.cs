@@ -1331,9 +1331,9 @@ namespace pwiz.Skyline.Model.Results
                     ionMobilityValue = ionMobilityValue == null ? 
                         IonMobilityValue.GetIonMobilityValue(tranInfo.IonMobilityValue, units) :
                         ionMobilityValue.ChangeIonMobility(tranInfo.IonMobilityValue); // This likely doesn't change from transition to transition, so reuse it
-                    ChromKey key = new ChromKey(GetChromatogramGroupId(groupInfo)?.Target,
+                    ChromKey key = new ChromKey(GetChromatogramGroupId(groupInfo),
                         groupInfo.Precursor, IonMobilityFilter.GetIonMobilityFilter(ionMobilityValue, tranInfo.IonMobilityExtractionWidth, groupInfo.CollisionalCrossSection), product, 
-                        0, extractionWidth, source, groupInfo.Extractor, true);
+                        0, extractionWidth, source, groupInfo.Extractor);
 
                     int id = i;
                     int rank = -1;

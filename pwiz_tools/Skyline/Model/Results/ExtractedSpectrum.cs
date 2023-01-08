@@ -20,14 +20,12 @@
 using System.Drawing;
 using pwiz.Common.Chemistry;
 using pwiz.Skyline.Model.DocSettings;
-using pwiz.Skyline.Model.Results.Spectra;
 
 namespace pwiz.Skyline.Model.Results
 {
     public sealed class ExtractedSpectrum
     {
-        public ExtractedSpectrum(Target target,
-                                 SpectrumClassFilter spectrumClassFilter,
+        public ExtractedSpectrum(ChromatogramGroupId chromatogramGroupId,
                                  Color peptideColor,
                                  SignedMz precursorMz,
                                  IonMobilityFilter ionMobility,
@@ -37,8 +35,7 @@ namespace pwiz.Skyline.Model.Results
                                  float[] intensities,
                                  float[] massErrors)
         {
-            Target = target;
-            SpectrumClassFilter = spectrumClassFilter;
+            ChromatogramGroupId = chromatogramGroupId;
             PeptideColor = peptideColor;
             PrecursorMz = precursorMz;
             IonMobility = ionMobility;
@@ -49,8 +46,7 @@ namespace pwiz.Skyline.Model.Results
             MassErrors = massErrors;
         }
 
-        public Target Target { get; private set; } // Peptide modified sequence or custom ion id
-        public SpectrumClassFilter SpectrumClassFilter { get; private set; }
+        public ChromatogramGroupId ChromatogramGroupId { get; private set; }
         public Color PeptideColor { get; private set; }
         public SignedMz PrecursorMz { get; private set; }
         public IonMobilityFilter IonMobility { get; private set; }

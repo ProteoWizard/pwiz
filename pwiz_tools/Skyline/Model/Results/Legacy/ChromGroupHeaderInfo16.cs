@@ -118,10 +118,6 @@ namespace pwiz.Skyline.Model.Results.Legacy
                 flagValues |= FlagValues.has_mass_errors;
             }
 
-            if (chromGroupHeaderInfo.HasCalculatedMzs)
-            {
-                flagValues |= FlagValues.has_calculated_mzs;
-            }
             switch (chromGroupHeaderInfo.Extractor)
             {
                 case ChromExtractor.base_peak:

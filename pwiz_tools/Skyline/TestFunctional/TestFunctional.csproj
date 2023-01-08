@@ -198,6 +198,7 @@
     <Compile Include="RemoveNeutralLossModificationTest.cs" />
     <Compile Include="SaveAfterProteinAssociationTest.cs" />
     <Compile Include="SequenceTreeRatioTest.cs" />
+    <Compile Include="SpectrumClassFilterTest.cs" />
     <Compile Include="UnreadableBlibTest.cs" />
     <Compile Include="RemoveSmallMoleculeLabelTypeTest.cs" />
     <Compile Include="StartPageInsertTransitionListTest.cs" />
@@ -615,6 +616,7 @@
     <None Include="SkypTest.zip" />
     <None Include="SmallMoleculeIrtTest.zip" />
     <None Include="SmallMoleculesDocumentGrid.zip" />
+    <None Include="SpectrumClassFilterTest.zip" />
     <None Include="SplitGraphTest.zip" />
     <None Include="SrmCourseScenarioTest.zip" />
     <None Include="SrmSmMolChromTest.zip" />

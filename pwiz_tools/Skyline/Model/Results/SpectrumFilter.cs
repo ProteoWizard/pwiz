@@ -85,8 +85,8 @@ namespace pwiz.Skyline.Model.Results
         private int _mseLastSpectrumLevel; // for averaging Agilent stepped CE spectra
         private bool _sourceHasDeclaredMSnSpectra; // Used in all-ions mode to discern low and high energy scans for Bruker
 
-        private static readonly PrecursorTextId TIC_KEY = new PrecursorTextId(SignedMz.ZERO, null, null, null, null, SpectrumClassFilter.EMPTY, ChromExtractor.summed);
-        private static readonly PrecursorTextId BPC_KEY = new PrecursorTextId(SignedMz.ZERO, null, null, null, null, SpectrumClassFilter.EMPTY, ChromExtractor.base_peak);
+        private static readonly PrecursorTextId TIC_KEY = new PrecursorTextId(SignedMz.ZERO, null, null, null, null, ChromExtractor.summed);
+        private static readonly PrecursorTextId BPC_KEY = new PrecursorTextId(SignedMz.ZERO, null, null, null, null, ChromExtractor.base_peak);
 
         public IEnumerable<SpectrumFilterPair> FilterPairs { get { return _filterMzValues; } }
         public bool HasRangeRT { get; private set; }
@@ -282,7 +282,8 @@ namespace pwiz.Skyline.Model.Results
                             var ce = step.HasValue
                                 ? document.GetCollisionEnergy(nodePep, nodeGroup, null, step.Value)
                                 : (double?)null;
-                            var key = new PrecursorTextId(mz, step, ce, ionMobilityFilter, nodePep.ModifiedTarget, nodeGroup.SpectrumClassFilter, ChromExtractor.summed);
+                            var key = new PrecursorTextId(mz, step, ce, ionMobilityFilter,
+                                ChromatogramGroupId.ForPeptide(nodePep, nodeGroup), ChromExtractor.summed);
 
                             if (!dictPrecursorMzToFilter.TryGetValue(key, out var filter))
                             {
@@ -837,7 +838,7 @@ namespace pwiz.Skyline.Model.Results
                 if (!filterPair.ContainsRetentionTime(retentionTime.Value))
                     continue;
                 var matchingSpectra = spectra;
-                if (!filterPair.SpectrumClassFilter.IsEmpty)
+                if (false == filterPair.SpectrumClassFilter?.IsEmpty)
                 {
                     matchingSpectra = spectra.Where(spectrum => filterPair.MatchesSpectrum(spectrum.Metadata))
                         .ToArray();

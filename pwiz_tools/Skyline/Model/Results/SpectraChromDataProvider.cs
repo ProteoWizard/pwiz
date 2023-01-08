@@ -308,7 +308,7 @@ namespace pwiz.Skyline.Model.Results
                     var peptideNode = peptideFinder != null ? peptideFinder.FindPeptide(precursorMz) : null;
                     ProcessSrmSpectrum(
                         (float) dataSpectrum.RetentionTime.Value,
-                        peptideNode != null ? peptideNode.ModifiedTarget : null,
+                        ChromatogramGroupId.ForPeptide(peptideNode, null),
                         peptideNode != null ? peptideNode.Color : PeptideDocNode.UNKNOWN_COLOR,
                         precursorMz,
                         filterIndex,
@@ -488,15 +488,14 @@ namespace pwiz.Skyline.Model.Results
                         chromCollector.SetTimes(timesCollector);
                     }
                     var key = new ChromKey(
-                        collector.ModifiedSequence,
+                        collector.ChromatogramGroupId,
                         collector.PrecursorMz,
                         collector.IonMobility,
                         pairProduct.Key.TargetMz,
                         0,
                         pairProduct.Key.FilterWidth,
                         chromMap.ChromSource,
-                        modSeq.Extractor,
-                        true);
+                        modSeq.Extractor);
 
                     _collectors.AddSrmCollector(key, chromCollector);
                 }
@@ -530,7 +529,7 @@ namespace pwiz.Skyline.Model.Results
         }
 
         private void ProcessSrmSpectrum(float time,
-                                               Target modifiedSequence,
+                                               ChromatogramGroupId chromatogramGroupId,
                                                Color peptideColor,
                                                SignedMz precursorMz,
                                                int filterIndex,
@@ -542,7 +541,7 @@ namespace pwiz.Skyline.Model.Results
             for (int i = 0; i < intensities.Length; i++)
                 intensityFloats[i] = (float) intensities[i];
             var productFilters = mzs.Select(mz => new SpectrumProductFilter(new SignedMz(mz, precursorMz.IsNegative), 0, 0)).ToArray();
-            var spectrum = new ExtractedSpectrum(modifiedSequence, SpectrumClassFilter.EMPTY, peptideColor, precursorMz,
+            var spectrum = new ExtractedSpectrum(chromatogramGroupId, peptideColor, precursorMz,
             IonMobilityFilter.EMPTY, // ion mobility unknown
                 ChromExtractor.summed, filterIndex, productFilters, intensityFloats, null);
             chromMap.ProcessExtractedSpectrum(time, _collectors, -1, spectrum, null);
@@ -601,7 +600,7 @@ namespace pwiz.Skyline.Model.Results
             }
         }
 
-        public override bool GetChromatogram(int id, Target modifiedSequence, Color peptideColor, out ChromExtra extra, out TimeIntensities timeIntensities)
+        public override bool GetChromatogram(int id, ChromatogramGroupId chromatogramGroupId, Color peptideColor, out ChromExtra extra, out TimeIntensities timeIntensities)
         {
             var chromKey = _collectors.ChromKeys.Count > id ? _collectors.ChromKeys[id] : null;
             timeIntensities = null;
@@ -1646,11 +1645,11 @@ namespace pwiz.Skyline.Model.Results
         {
             var precursorMz = spectrum.PrecursorMz;
             var ionMobility = spectrum.IonMobility;
-            var target = spectrum.Target;
+            var chromatogramGroupId = spectrum.ChromatogramGroupId;
             ChromExtractor extractor = spectrum.Extractor;
             int ionScanCount = spectrum.ProductFilters.Length;
             ChromDataCollector collector;
-            var key = new PrecursorTextId(precursorMz, null, null, ionMobility, target, spectrum.SpectrumClassFilter, extractor);
+            var key = new PrecursorTextId(precursorMz, null, null, ionMobility, chromatogramGroupId, extractor);
             int index = spectrum.FilterIndex;
             while (PrecursorCollectorMap.Count <= index)
                 PrecursorCollectorMap.Add(null);
@@ -1658,7 +1657,7 @@ namespace pwiz.Skyline.Model.Results
                 collector = PrecursorCollectorMap[index].Item2;
             else
             {
-                collector = new ChromDataCollector(target, precursorMz, ionMobility, index, IsGroupedTime);
+                collector = new ChromDataCollector(chromatogramGroupId, precursorMz, ionMobility, index, IsGroupedTime);
                 PrecursorCollectorMap[index] = new Tuple<PrecursorTextId, ChromDataCollector>(key, collector);
             }
 
@@ -1712,7 +1711,7 @@ namespace pwiz.Skyline.Model.Results
 
             // Add data for chromatogram graph.
             if (_allChromData != null && spectrum.PrecursorMz != 0) // Exclude TIC and BPC
-                _allChromData.Add(spectrum.Target, spectrum.PeptideColor, spectrum.FilterIndex, time, spectrum.Intensities);
+                _allChromData.Add(spectrum.ChromatogramGroupId, spectrum.PeptideColor, spectrum.FilterIndex, time, spectrum.Intensities);
 
             // If this was a multiple ion scan and not all ions had measurements,
             // make sure missing ions have zero intensities in the chromatogram.
@@ -1736,9 +1735,9 @@ namespace pwiz.Skyline.Model.Results
 
     internal sealed class ChromDataCollector
     {
-        public ChromDataCollector(Target modifiedSequence, SignedMz precursorMz, IonMobilityFilter ionMobility, int statusId, bool isGroupedTime)
+        public ChromDataCollector(ChromatogramGroupId chromatogramGroupId, SignedMz precursorMz, IonMobilityFilter ionMobility, int statusId, bool isGroupedTime)
         {
-            ModifiedSequence = modifiedSequence;
+            ChromatogramGroupId = chromatogramGroupId;
             PrecursorMz = precursorMz;
             IonMobility = ionMobility;
             StatusId = statusId;
@@ -1750,7 +1749,7 @@ namespace pwiz.Skyline.Model.Results
             }
         }
 
-        public Target ModifiedSequence { get; private set; }
+        public ChromatogramGroupId ChromatogramGroupId { get; private set; }
         public SignedMz PrecursorMz { get; private set; }
         public IonMobilityFilter IonMobility { get; private set; }
         public int StatusId { get; private set; }

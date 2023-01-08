@@ -44,8 +44,7 @@ namespace pwiz.Skyline.Model.Results
             bool highAccQ1, bool highAccQ3)
         {
             Id = id;
-            ModifiedSequence = precursorTextId.Target;
-            SpectrumClassFilter = precursorTextId.SpectrumClassFilter;
+            ChromatogramGroupId = precursorTextId.ChromatogramGroupId;
             PeptideColor = peptideColor;
             Q1 = precursorTextId.PrecursorMz;
             Extractor = precursorTextId.Extractor;
@@ -83,8 +82,8 @@ namespace pwiz.Skyline.Model.Results
         public ChromExtractor Extractor { get; private set; }
         public bool HighAccQ1 { get; private set; }
         public bool HighAccQ3 { get; private set; }
-        public Target ModifiedSequence { get; private set; }
-        public SpectrumClassFilter SpectrumClassFilter { get; }
+        public ChromatogramGroupId ChromatogramGroupId { get; }
+        public SpectrumClassFilter SpectrumClassFilter => ChromatogramGroupId?.SpectrumClassFilter;
         public Color PeptideColor { get; private set; }
         public SignedMz Q1 { get; private set; }
         public double? MinTime
@@ -334,8 +333,7 @@ namespace pwiz.Skyline.Model.Results
                     extractedIntensities[i] *= scale;
             }
             var dtFilter = GetIonMobilityWindow();
-            return new ExtractedSpectrum(ModifiedSequence,
-                SpectrumClassFilter,
+            return new ExtractedSpectrum(ChromatogramGroupId,
                 PeptideColor,
                 Q1,
                 dtFilter, 
@@ -387,15 +385,15 @@ namespace pwiz.Skyline.Model.Results
                 foreach (var spectrumProductFilter in productFilters)
                 {
                     spectrumProductFilter.FilterId = listChromKeys.Count;
-                    var key = new ChromKey(ModifiedSequence,
+                    var key = new ChromKey(ChromatogramGroupId,
                         Q1,
-                        ionMobilityFilter.ApplyOffset(highEnergy ? spectrumProductFilter.HighEnergyIonMobilityValueOffset : 0),
+                        ionMobilityFilter.ApplyOffset(highEnergy 
+                            ? spectrumProductFilter.HighEnergyIonMobilityValueOffset : 0),
                         spectrumProductFilter.TargetMz,
                         0,  // CE value (Shimadzu SRM only)
                         spectrumProductFilter.FilterWidth,
                         source,
-                        Extractor,
-                        true);
+                        Extractor);
                     if (_hasMinTime && _hasMaxTime)
                     {
                         key = key.ChangeOptionalTimes(_minTime, _maxTime);

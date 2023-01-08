@@ -87,7 +87,7 @@ namespace pwiz.Skyline.Model.Results
             // expected proportions of the mass distribution that will end up filtered into
             // peaks
             // CONSIDER: Mass accuracy information is not calculated here
-            var key = new PrecursorTextId(signedQ1FilterValues[monoMassIndex], null, null, null, null, null, ChromExtractor.summed);
+            var key = new PrecursorTextId(signedQ1FilterValues[monoMassIndex], null, null, null, null, ChromExtractor.summed);
             var filter = new SpectrumFilterPair(key, PeptideDocNode.UNKNOWN_COLOR, 0, null, null, false, false);
             filter.AddQ1FilterValues(signedQ1FilterValues, calcFilterWindow);
 

@@ -358,9 +358,11 @@ namespace pwiz.Skyline.Model.Results
                         continue;
                     }
                     var rawTimeIntensities = chromatogramInfo.TimeIntensities;
-                    var chromKey = new ChromKey(PeptideDocNode.ModifiedTarget, transitionGroup.PrecursorMz, null,
+                    var chromKey = new ChromKey(
+                        new ChromatogramGroupId(PeptideDocNode.ModifiedTarget, transitionGroup.SpectrumClassFilter),
+                        transitionGroup.PrecursorMz, null,
                         transition.Mz, 0, 0, transition.IsMs1 ? ChromSource.ms1 : ChromSource.fragment,
-                        ChromExtractor.summed, true);
+                        ChromExtractor.summed);
                     chromDatas.Add(new ChromData(chromKey, transition, rawTimeIntensities, rawTimeIntensities));
                 }
 

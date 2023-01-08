@@ -161,14 +161,13 @@ namespace pwiz.Skyline.Model.Results
         public enum FlagValues : ushort
         {
             has_mass_errors = 0x01,
-            has_calculated_mzs = 0x02,
-            extracted_base_peak = 0x04,
-            has_ms1_scan_ids = 0x08,
-            has_sim_scan_ids = 0x10,
-            has_frag_scan_ids = 0x20,
-            raw_chromatograms = 0x80,
-            dda_acquisition_method = 0x100,
-            extracted_qc_trace = 0x200
+            extracted_base_peak = 0x02,
+            has_ms1_scan_ids = 0x04,
+            has_sim_scan_ids = 0x08,
+            has_frag_scan_ids = 0x10,
+            raw_chromatograms = 0x20,
+            dda_acquisition_method = 0x40,
+            extracted_qc_trace = 0x80
         }
 
         /// <summary>
@@ -248,10 +247,6 @@ namespace pwiz.Skyline.Model.Results
             {
                 _flagBits |= FlagValues.has_mass_errors;
             }
-            if (headerInfo16.HasCalculatedMzs)
-            {
-                _flagBits |= FlagValues.has_calculated_mzs;
-            }
             if (headerInfo16.HasMs1ScanIds)
             {
                 _flagBits |= FlagValues.has_ms1_scan_ids;
@@ -322,7 +317,6 @@ namespace pwiz.Skyline.Model.Results
 
         public FlagValues Flags { get { return _flagBits; } }
 
-        public bool HasCalculatedMzs { get { return (Flags & FlagValues.has_calculated_mzs) != 0; } }
         public bool HasMassErrors { get { return (Flags & FlagValues.has_mass_errors) != 0; } }
         public bool HasMs1ScanIds { get { return (Flags & FlagValues.has_ms1_scan_ids) != 0; } }
         public bool HasFragmentScanIds { get { return (Flags & FlagValues.has_frag_scan_ids) != 0; } }
@@ -1818,45 +1812,45 @@ namespace pwiz.Skyline.Model.Results
     public class ChromKey : Immutable, IComparable<ChromKey>
     {
         public static readonly ChromKey EMPTY = new ChromKey(null, SignedMz.ZERO, null,
-            SignedMz.ZERO, 0, 0, ChromSource.unknown, ChromExtractor.summed, false);
+            SignedMz.ZERO, 0, 0, ChromSource.unknown, ChromExtractor.summed);
 
         private double _optionalMinTime;
         private double _optionalMaxTime;
         private bool _hasOptionalTimes;
 
         public ChromKey(byte[] textIdBytes,
-                        int textIdIndex,
-                        int textIdLen,
-                        SignedMz precursor,
-                        SignedMz product,
-                        double extractionWidth,
-                        IonMobilityFilter ionMobility,
-                        ChromSource source,
-                        ChromExtractor extractor,
-                        bool calculatedMzs)
-            : this(textIdIndex != -1 ? Target.FromSerializableString(Encoding.UTF8.GetString(textIdBytes, textIdIndex, textIdLen)) : null,
-                   precursor,
-                   ionMobility,
-                   product,
-                   0,
-                   extractionWidth,
-                   source,
-                   extractor,
-                   calculatedMzs)
+            int textIdIndex,
+            int textIdLen,
+            SignedMz precursor,
+            SignedMz product,
+            double extractionWidth,
+            IonMobilityFilter ionMobility,
+            ChromSource source,
+            ChromExtractor extractor) : this(
+            textIdIndex != -1
+                ? new ChromatogramGroupId(
+                    Target.FromSerializableString(Encoding.UTF8.GetString(textIdBytes, textIdIndex, textIdLen)), null)
+                : null,
+            precursor,
+            ionMobility,
+            product,
+            0,
+            extractionWidth,
+            source,
+            extractor)
         {
         }
 
-        public ChromKey(ChromatogramGroupId target,
+        public ChromKey(ChromatogramGroupId chromatogramGroupId,
                         SignedMz precursor,
                         IonMobilityFilter ionMobilityFilter,
                         SignedMz product,
                         double ceValue,
                         double extractionWidth,
                         ChromSource source,
-                        ChromExtractor extractor,
-                        bool calculatedMzs)
+                        ChromExtractor extractor)
         {
-            Target = target;
+            ChromatogramGroupId = chromatogramGroupId;
             Precursor = precursor;
             IonMobilityFilter = ionMobilityFilter ?? IonMobilityFilter.EMPTY;
             Product = product;
@@ -1864,13 +1858,16 @@ namespace pwiz.Skyline.Model.Results
             ExtractionWidth = (float) extractionWidth;
             Source = source;
             Extractor = extractor;
-            HasCalculatedMzs = calculatedMzs;
             // Calculating these values on the fly shows up in a profiler in the CompareTo function
             // So, probably not worth the space saved in this class
             IsEmpty = Precursor == 0 && Product == 0 && source == ChromSource.unknown;
         }
 
-        public Target Target { get; private set; }  // Modified sequence or custom ion id
+        public ChromatogramGroupId ChromatogramGroupId { get; }
+        public Target Target
+        {
+            get { return ChromatogramGroupId?.Target; }
+        }  // Modified sequence or custom ion id
         public SignedMz Precursor { get; private set; }
         public double? CollisionalCrossSectionSqA { get { return IonMobilityFilter.CollisionalCrossSectionSqA; }  }
         public eIonMobilityUnits IonMobilityUnits { get { return IonMobilityFilter.IonMobilityUnits; } }
@@ -1881,7 +1878,6 @@ namespace pwiz.Skyline.Model.Results
         public ChromSource Source { get; private set; }
         public ChromExtractor Extractor { get; private set; }
         public bool HasCalculatedMzs { get; private set; }
-        public bool HasScanIds { get; private set; }
         public bool IsEmpty { get; private set; }
 
         public double? OptionalMinTime
@@ -1924,8 +1920,8 @@ namespace pwiz.Skyline.Model.Results
         /// </summary>
         public override string ToString()
         {
-            if (Target != null)
-                return string.Format(@"{0:F04}, {1:F04} {4} - {2} - {3}", Precursor.RawValue, Product.RawValue, Source, Target, IonMobilityFilter);
+            if (ChromatogramGroupId != null)
+                return string.Format(@"{0:F04}, {1:F04} {4} - {2} - {3}", Precursor.RawValue, Product.RawValue, Source, ChromatogramGroupId, IonMobilityFilter);
             return string.Format(@"{0:F04}, {1:F04} {3} - {2}", Precursor.RawValue, Product.RawValue, Source, IonMobilityFilter);
         }
 
@@ -1964,25 +1960,10 @@ namespace pwiz.Skyline.Model.Results
             int c = Precursor.CompareTo(key.Precursor);
             if (c != 0)
                 return c;
-            c = CompareTarget(key);
+            c = ValueTuple.Create(ChromatogramGroupId).CompareTo(ValueTuple.Create(key.ChromatogramGroupId));
             if (c != 0)
                 return c;
             return Extractor.CompareTo(key.Extractor);
-        }
-
-        private int CompareTarget(ChromKey key)
-        {
-            if (Target != null && key.Target != null)
-            {
-                int c = Target.CompareTo(key.Target);
-                if (c != 0)
-                    return c;
-            }
-            else if (Target != null)
-                return 1;
-            else if (key.Target != null)
-                return -1;
-            return 0;   // both null
         }
 
         public int CompareSource(ChromKey key)
@@ -2086,7 +2067,7 @@ namespace pwiz.Skyline.Model.Results
                         ceValue = Math.Abs(ceParsed);
                     }
                 }
-                return new ChromKey(null, new SignedMz(precursor, isNegativeCharge), null, new SignedMz(product, isNegativeCharge), ceValue, 0, source, extractor, false);
+                return new ChromKey(null, new SignedMz(precursor, isNegativeCharge), null, new SignedMz(product, isNegativeCharge), ceValue, 0, source, extractor);
             }
             catch (FormatException)
             {
@@ -2097,14 +2078,14 @@ namespace pwiz.Skyline.Model.Results
         public static ChromKey FromQcTrace(MsDataFileImpl.QcTrace qcTrace)
         {
             var qcTextBytes = Encoding.UTF8.GetBytes(qcTrace.Name);
-            return new ChromKey(qcTextBytes, 0, qcTextBytes.Length, SignedMz.ZERO, SignedMz.ZERO, 0, null, ChromSource.unknown, ChromExtractor.qc, false);
+            return new ChromKey(qcTextBytes, 0, qcTextBytes.Length, SignedMz.ZERO, SignedMz.ZERO, 0, null, ChromSource.unknown, ChromExtractor.qc);
         }
 
         #region object overrides
 
         public bool Equals(ChromKey other)
         {
-            return Equals(Target, other.Target) &&
+            return Equals(ChromatogramGroupId, other.ChromatogramGroupId) &&
                 Precursor.Equals(other.Precursor) &&
                 IonMobilityFilter.Equals(other.IonMobilityFilter) &&
                 Product.Equals(other.Product) &&
@@ -2113,7 +2094,6 @@ namespace pwiz.Skyline.Model.Results
                 Source == other.Source &&
                 Extractor == other.Extractor &&
                 HasCalculatedMzs.Equals(other.HasCalculatedMzs) &&
-                HasScanIds.Equals(other.HasScanIds) &&
                 OptionalMinTime.Equals(other.OptionalMinTime) &&
                 OptionalMaxTime.Equals(other.OptionalMaxTime);
         }
@@ -2128,7 +2108,7 @@ namespace pwiz.Skyline.Model.Results
         {
             unchecked
             {
-                var hashCode = (Target != null ? Target.GetHashCode() : 0);
+                var hashCode = (ChromatogramGroupId != null ? ChromatogramGroupId.GetHashCode() : 0);
                 hashCode = (hashCode*397) ^ Precursor.GetHashCode();
                 hashCode = (hashCode*397) ^ IonMobilityFilter.GetHashCode();
                 hashCode = (hashCode*397) ^ Product.GetHashCode();
@@ -2137,7 +2117,6 @@ namespace pwiz.Skyline.Model.Results
                 hashCode = (hashCode*397) ^ (int) Source;
                 hashCode = (hashCode*397) ^ (int) Extractor;
                 hashCode = (hashCode*397) ^ HasCalculatedMzs.GetHashCode();
-                hashCode = (hashCode*397) ^ HasScanIds.GetHashCode();
                 hashCode = (hashCode*397) ^ OptionalMinTime.GetHashCode();
                 hashCode = (hashCode*397) ^ OptionalMaxTime.GetHashCode();
                 return hashCode;

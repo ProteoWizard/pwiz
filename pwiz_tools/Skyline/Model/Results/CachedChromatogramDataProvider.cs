@@ -96,7 +96,7 @@ namespace pwiz.Skyline.Model.Results
 
         public override eIonMobilityUnits IonMobilityUnits { get { return _cache != null ? _cache.CachedFiles[_fileIndex].IonMobilityUnits : eIonMobilityUnits.none; } }
 
-        public override bool GetChromatogram(int id, Target modifiedSequence, Color peptideColor, out ChromExtra extra, out TimeIntensities timeIntensities)
+        public override bool GetChromatogram(int id, ChromatogramGroupId chromatogramGroupId, Color peptideColor, out ChromExtra extra, out TimeIntensities timeIntensities)
         {
             var chromKeyIndices = _chromKeyIndices[id];
             if (_lastChromGroupInfo == null || _lastIndices.GroupIndex != chromKeyIndices.GroupIndex)
@@ -120,7 +120,7 @@ namespace pwiz.Skyline.Model.Results
             if (chromKeyIndices.Key.Precursor != 0 && Status is ChromatogramLoadingStatus)
             {
                 ((ChromatogramLoadingStatus)Status).Transitions.AddTransition(
-                    modifiedSequence,
+                    chromatogramGroupId,
                     peptideColor,
                     chromKeyIndices.StatusId,
                     chromKeyIndices.StatusRank,

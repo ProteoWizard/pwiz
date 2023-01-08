@@ -186,19 +186,15 @@ namespace pwiz.Skyline.Model.Results
         /// </summary>
         public bool OverrideTextId { get; }
 
-        public Target ModifiedSequence
+        public ChromatogramGroupId ChromatogramGroupId
         {
             get
             {
                 if (OverrideTextId)
                 {
-                    var peptideDocNode = NodeGroups.FirstOrDefault()?.Item1;
-                    if (peptideDocNode != null)
-                    {
-                        return peptideDocNode.ModifiedTarget;
-                    }
+                    return ChromatogramGroupId.ForPeptide(NodeGroups.FirstOrDefault()?.Item1, NodeGroups.FirstOrDefault()?.Item2);
                 }
-                return _listChromData.Count > 0 ? BestChromatogram.Key.Target : null;
+                return _listChromData.Count > 0 ? BestChromatogram.Key.ChromatogramGroupId : null;
             }
         }
 
@@ -230,11 +226,6 @@ namespace pwiz.Skyline.Model.Results
         public float ExtractionWidth
         {
             get { return _listChromData.Count > 0 ? BestChromatogram.Key.ExtractionWidth : 0; }
-        }
-
-        public bool HasCalculatedMzs
-        {
-            get { return _listChromData.Count > 0 && BestChromatogram.Key.HasCalculatedMzs; }
         }
 
         public int StatusId
@@ -290,11 +281,11 @@ namespace pwiz.Skyline.Model.Results
             }
         }
 
-        public bool Load(ChromDataProvider provider, Target modifiedSequence, Color peptideColor)
+        public bool Load(ChromDataProvider provider, ChromatogramGroupId chromatogramGroupId, Color peptideColor)
         {
             foreach (var chromData in _listChromData.ToArray())
             {
-                if (!chromData.Load(provider, modifiedSequence, peptideColor))
+                if (!chromData.Load(provider, chromatogramGroupId, peptideColor))
                 {
                     Remove(chromData);
                 }
@@ -1448,8 +1439,6 @@ namespace pwiz.Skyline.Model.Results
             ChromGroupHeaderInfo.FlagValues flags = 0;
             if (groupOfTimeIntensities.HasMassErrors)
                 flags |= ChromGroupHeaderInfo.FlagValues.has_mass_errors;
-            if (HasCalculatedMzs)
-                flags |= ChromGroupHeaderInfo.FlagValues.has_calculated_mzs;
             if (Extractor == ChromExtractor.base_peak)
                 flags |= ChromGroupHeaderInfo.FlagValues.extracted_base_peak;
             else if (Extractor == ChromExtractor.qc)

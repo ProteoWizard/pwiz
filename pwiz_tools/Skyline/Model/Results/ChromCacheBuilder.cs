@@ -599,6 +599,15 @@ namespace pwiz.Skyline.Model.Results
 
             public PeptideDocNode NodePeptide { get; private set; }
             public TransitionGroupDocNode NodeGroup { get; private set; }
+
+            public ChromatogramGroupId ChromatogramGroupId
+            {
+                get
+                {
+                    return ChromatogramGroupId.ForPeptide(NodePeptide, NodeGroup);
+                }
+            }
+
             public SignedMz PrecursorMz { get; private set; }
         }
 
@@ -914,12 +923,12 @@ namespace pwiz.Skyline.Model.Results
 
             // Enumerate all possible matching precursor values, collecting the ones
             // with potentially matching product ions
-            var modSeq = chromDataSet.ModifiedSequence;
+            var chromatogramGroupId = chromDataSet.ChromatogramGroupId;
             var listMatchingGroups = new List<Tuple<PeptidePrecursorMz, ChromDataSet, IList<ChromData>>>();
             for (; i < listMzPrecursors.Count && listMzPrecursors[i].PrecursorMz <= maxMzMatch && listMzPrecursors[i].PrecursorMz.IsNegative == maxMzMatch.IsNegative; i++)
             {
                 var peptidePrecursorMz = listMzPrecursors[i];
-                if (modSeq != null && !Equals(modSeq, peptidePrecursorMz.NodePeptide.ModifiedTarget)) // ModifiedSequence for peptides, other id for customIons
+                if (chromatogramGroupId != null && !Equals(chromatogramGroupId, peptidePrecursorMz.ChromatogramGroupId))
                     continue;
 
                 var nodeGroup = peptidePrecursorMz.NodeGroup;
@@ -1371,10 +1380,10 @@ namespace pwiz.Skyline.Model.Results
             // Add to header list
             var header = chromDataSet.MakeChromGroupHeaderInfo(groupOfTimeIntensities, lenCompressed, lenUncompressed);
             header.Offset(0, _listTransitions.Count, _peakCount, scoresIndex, location);
-            if (chromDataSet.ModifiedSequence != null)
+            if (chromDataSet.ChromatogramGroupId != null)
             {
                 header = header.ChangeTextIdIndex(
-                    _chromatogramGroupIds.AddId(new ChromatogramGroupId(chromDataSet.ModifiedSequence, null)));
+                    _chromatogramGroupIds.AddId(chromDataSet.ChromatogramGroupId));
             }
 
             int? transitionPeakCount = null;

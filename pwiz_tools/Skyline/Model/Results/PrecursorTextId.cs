@@ -21,21 +21,19 @@ using System;
 using System.Collections.Generic;
 using pwiz.Common.Chemistry;
 using pwiz.Skyline.Model.DocSettings;
-using pwiz.Skyline.Model.Results.Spectra;
 
 namespace pwiz.Skyline.Model.Results
 {
     public struct PrecursorTextId
     {
         public PrecursorTextId(SignedMz precursorMz, int? optStep, double? collisionEnergy,
-            IonMobilityFilter ionMobilityFilter, Target target, SpectrumClassFilter spectrumClassFilter, ChromExtractor extractor) : this()
+            IonMobilityFilter ionMobilityFilter, ChromatogramGroupId chromatogramGroupId, ChromExtractor extractor) : this()
         {
             PrecursorMz = precursorMz;
             OptStep = optStep;
             CollisionEnergy = collisionEnergy;
             IonMobility = ionMobilityFilter ?? IonMobilityFilter.EMPTY;
-            Target = target;
-            SpectrumClassFilter = spectrumClassFilter;
+            ChromatogramGroupId = chromatogramGroupId;
             Extractor = extractor;
         }
 
@@ -43,8 +41,7 @@ namespace pwiz.Skyline.Model.Results
         public int? OptStep { get; }
         public double? CollisionEnergy { get; }
         public IonMobilityFilter IonMobility { get; private set; }
-        public Target Target { get; private set; }  // Peptide Modified Sequence or custom ion ID
-        public SpectrumClassFilter SpectrumClassFilter { get; private set; }
+        public ChromatogramGroupId ChromatogramGroupId { get; }
         public ChromExtractor Extractor { get; private set; }
 
         #region object overrides
@@ -55,8 +52,7 @@ namespace pwiz.Skyline.Model.Results
                    Equals(OptStep, other.OptStep) &&
                    Equals(CollisionEnergy, other.CollisionEnergy) &&
                    Equals(IonMobility, other.IonMobility) &&
-                   Equals(Target, other.Target) &&
-                   Equals(SpectrumClassFilter, other.SpectrumClassFilter) &&
+                   Equals(ChromatogramGroupId, other.ChromatogramGroupId) &&
                    Extractor == other.Extractor;
         }
 
@@ -74,8 +70,7 @@ namespace pwiz.Skyline.Model.Results
                 hashCode = (hashCode * 397) ^ OptStep.GetHashCode();
                 hashCode = (hashCode * 397) ^ CollisionEnergy.GetHashCode();
                 hashCode = (hashCode * 397) ^ IonMobility.GetHashCode();
-                hashCode = (hashCode * 397) ^ (Target != null ? Target.GetHashCode() : 0);
-                hashCode = (hashCode * 397) ^ (SpectrumClassFilter != null ? SpectrumClassFilter.GetHashCode() : 0);
+                hashCode = (hashCode * 397) ^ (ChromatogramGroupId != null ? ChromatogramGroupId.GetHashCode() : 0);
                 hashCode = (hashCode * 397) ^ (int)Extractor;
                 return hashCode;
             }
@@ -83,7 +78,7 @@ namespace pwiz.Skyline.Model.Results
 
         public override string ToString()
         {
-            return string.Format(@"{0} - {1}{2} ({3})", Target, PrecursorMz, IonMobility, Extractor);    // For debugging
+            return string.Format(@"{0} - {1}{2} ({3})", ChromatogramGroupId, PrecursorMz, IonMobility, Extractor);    // For debugging
         }
 
         private sealed class PrecursorMzTextIdComparer : IComparer<PrecursorTextId>
@@ -102,11 +97,7 @@ namespace pwiz.Skyline.Model.Results
                 c = x.IonMobility.CompareTo(y.IonMobility);
                 if (c != 0)
                     return c;
-                c = Target.CompareOrdinal(x.Target, y.Target);
-                if (c != 0)
-                    return c;
-                c = (x.SpectrumClassFilter ?? SpectrumClassFilter.EMPTY).CompareTo(y.SpectrumClassFilter ??
-                    SpectrumClassFilter.EMPTY);
+                c = ValueTuple.Create(x.ChromatogramGroupId).CompareTo(ValueTuple.Create(y.ChromatogramGroupId));
                 if (c != 0)
                     return c;
                 return x.Extractor - y.Extractor;

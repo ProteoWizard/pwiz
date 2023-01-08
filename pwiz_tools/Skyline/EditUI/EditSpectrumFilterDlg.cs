@@ -45,6 +45,16 @@ namespace pwiz.Skyline.EditUI
             public SpectrumClassColumn Property { get; set; }
             public string Operation { get; set; }
             public string Value { get; set; }
+
+            public void SetOperation(IFilterOperation filterOperation)
+            {
+                Operation = (filterOperation ?? FilterOperations.OP_HAS_ANY_VALUE).DisplayName;
+            }
+
+            public void SetValue(object value)
+            {
+                Value = value?.ToString() ?? string.Empty;
+            }
         }
 
         private void btnOk_Click(object sender, EventArgs e)
@@ -139,6 +149,11 @@ namespace pwiz.Skyline.EditUI
             _rowList.Clear();
             _rowList.AddRange(GetRows(_originalSpectrumClassFilter));
             _rowBindingList.ResetBindings();
+        }
+
+        public BindingList<Row> RowBindingList
+        {
+            get { return _rowBindingList; }
         }
     }
 }

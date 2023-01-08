@@ -9,26 +9,17 @@ using pwiz.Skyline.Model.Results.Legacy;
 using pwiz.Skyline.Model.Results.ProtoBuf;
 using pwiz.Skyline.Model.Results.Spectra;
 using pwiz.Skyline.Util;
+using pwiz.Skyline.Util.Extensions;
 
 namespace pwiz.Skyline.Model.Results
 {
-    public class ChromatogramGroupId : Immutable
+    public class ChromatogramGroupId : Immutable, IComparable<ChromatogramGroupId>
     {
         private ChromatogramGroupId(Target target, string qcTraceName, SpectrumClassFilter spectrumClassFilter)
         {
             Target = target;
             QcTraceName = qcTraceName;
-            SpectrumClassFilter = spectrumClassFilter;
-        }
-
-        public static ChromatogramGroupId ForTarget(Target target)
-        {
-            if (target == null)
-            {
-                return null;
-            }
-
-            return new ChromatogramGroupId(target, null, null);
+            SpectrumClassFilter = SpectrumClassFilter.EmptyToNull(spectrumClassFilter);
         }
 
         public static ChromatogramGroupId ForQcTraceName(string name)
@@ -128,6 +119,41 @@ namespace pwiz.Skyline.Model.Results
             }
         }
 
+        /// <summary>
+        /// Used by <see cref="SpectrumFilterPair.CompareTo"/>
+        /// </summary>
+        public int CompareTo(ChromatogramGroupId other)
+        {
+            return ValueTuple.Create(Target, SpectrumClassFilter)
+                .CompareTo(ValueTuple.Create(other.Target, other.SpectrumClassFilter));
+        }
+
+        public override string ToString()
+        {
+            var parts = new List<string>();
+            if (Target != null)
+            {
+                parts.Add(Target.ToString());
+            }
+
+            if (SpectrumClassFilter != null)
+            {
+                parts.Add(SpectrumClassFilter.ToString());
+            }
+
+            return TextUtil.SpaceSeparate(parts);
+        }
+
+        public static ChromatogramGroupId ForPeptide(PeptideDocNode peptideDocNode,
+            TransitionGroupDocNode transitionGroupDocNode)
+        {
+            if (peptideDocNode == null)
+            {
+                return null;
+            }
+
+            return new ChromatogramGroupId(peptideDocNode.ModifiedTarget, transitionGroupDocNode?.SpectrumClassFilter);
+        }
     }
 
     public class ChromatogramGroupIds : IEnumerable<ChromatogramGroupId>
@@ -187,7 +213,7 @@ namespace pwiz.Skyline.Model.Results
                 }
                 else
                 {
-                    chromatogramGroupId = ChromatogramGroupId.ForTarget(Target.FromSerializableString(textId));
+                    chromatogramGroupId = new ChromatogramGroupId(Target.FromSerializableString(textId), null);
                 }
                 int index = AddId(chromatogramGroupId);
                 yield return new ChromGroupHeaderInfo(chromGroupHeaderInfo, index);
