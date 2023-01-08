@@ -6,6 +6,7 @@ using pwiz.Common.Collections;
 using pwiz.Common.DataBinding;
 using pwiz.Common.Spectra;
 using pwiz.Skyline.Model.Databinding.Entities;
+using pwiz.Skyline.Properties;
 
 namespace pwiz.Skyline.Model.Results.Spectra
 {
@@ -13,11 +14,11 @@ namespace pwiz.Skyline.Model.Results.Spectra
     {
         private static DataSchema _dataSchema = new DataSchema();
         public static readonly SpectrumClassColumn Ms1Precursors =
-            new PrecursorsColumn(nameof(SpectrumClass.Ms1Precursors), spectrum => SpectrumPrecursors.FromPrecursors(spectrum.GetPrecursors(1)), () => "MS1");
+            new PrecursorsColumn(nameof(SpectrumClass.Ms1Precursors), spectrum => SpectrumPrecursors.FromPrecursors(spectrum.GetPrecursors(1)), () => Resources.SpectrumClassColumn_Ms1Precursors_MS1);
 
         public static readonly SpectrumClassColumn Ms2Precursors =
             new PrecursorsColumn(nameof(SpectrumClass.Ms2Precursors), 
-                spectrum => SpectrumPrecursors.FromPrecursors(spectrum.GetPrecursors(2)), ()=>"MS2");
+                spectrum => SpectrumPrecursors.FromPrecursors(spectrum.GetPrecursors(2)), ()=>Resources.SpectrumClassColumn_Ms2Precursors_MS2);
 
         public static readonly SpectrumClassColumn ScanDescription =
             MakeColumn(nameof(SpectrumClass.ScanDescription), spectrum => spectrum.ScanDescription);

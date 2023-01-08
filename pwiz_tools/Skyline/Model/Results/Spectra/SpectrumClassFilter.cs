@@ -9,6 +9,7 @@ using pwiz.Common.DataBinding;
 using pwiz.Common.Spectra;
 using pwiz.Common.SystemUtil;
 using pwiz.Skyline.Model.Databinding;
+using pwiz.Skyline.Properties;
 using pwiz.Skyline.Util;
 using pwiz.Skyline.Util.Extensions;
 
@@ -45,7 +46,7 @@ namespace pwiz.Skyline.Model.Results.Spectra
                 var spectrumClassColumn = SpectrumClassColumn.FindColumn(filterSpec.ColumnId);
                 if (spectrumClassColumn == null)
                 {
-                    throw new InvalidOperationException(string.Format("No such spectrum column {0}",
+                    throw new InvalidOperationException(string.Format(Resources.SpectrumClassFilter_MakePredicate_No_spectrum_column__0_,
                         filterSpec.ColumnId));
                 }
 
@@ -252,7 +253,7 @@ namespace pwiz.Skyline.Model.Results.Spectra
                 }
             }
 
-            return string.Join(" AND ", clauses);
+            return string.Join(Resources.SpectrumClassFilter_GetAbbreviatedText__AND_, clauses);
         }
     }
 }

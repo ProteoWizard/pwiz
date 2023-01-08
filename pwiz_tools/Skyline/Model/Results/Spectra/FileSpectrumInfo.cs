@@ -3,13 +3,12 @@ using System.Collections.Generic;
 using System.ComponentModel;
 using System.Drawing;
 using System.Linq;
-using pwiz.Common.Chemistry;
 using pwiz.Common.Collections;
 using pwiz.Common.DataBinding;
 using pwiz.Common.Spectra;
-using pwiz.Skyline.Alerts;
 using pwiz.Skyline.Model.Databinding;
 using pwiz.Skyline.Model.Databinding.Entities;
+using pwiz.Skyline.Properties;
 
 namespace pwiz.Skyline.Model.Results.Spectra
 {
@@ -53,8 +52,9 @@ namespace pwiz.Skyline.Model.Results.Spectra
                         ExtractionWidth = 0,
                     };
                     var msDataFileScanIds = new ResultFileMetaData(_spectra).ToMsDataFileScanIds();
-                    IScanProvider scanProvider = new ScanProvider(DataSchema.SkylineWindow.DocumentFilePath, _dataFileUri,
-                        chromSource, timeIntensities.Times, new TransitionFullScanInfo[] {transitionFullScanInfo}, null, msDataFileScanIds); 
+                    IScanProvider scanProvider = new ScanProvider(DataSchema.SkylineWindow.DocumentFilePath,
+                        _dataFileUri, chromSource, timeIntensities.Times,
+                        new[] {transitionFullScanInfo}, null, msDataFileScanIds);
                     DataSchema.SkylineWindow.ShowGraphFullScan(scanProvider, 0, 0, 0);
                 };
             }
@@ -67,7 +67,7 @@ namespace pwiz.Skyline.Model.Results.Spectra
 
         public override string ToString()
         {
-            return string.Format("{0} Spectra", SpectrumCount);
+            return string.Format(Resources.FileSpectrumInfo_ToString__0__Spectra, SpectrumCount);
         }
 
         public ImmutableList<SpectrumMetadata> GetSpectra()

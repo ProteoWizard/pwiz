@@ -198,7 +198,8 @@
     <Compile Include="RemoveNeutralLossModificationTest.cs" />
     <Compile Include="SaveAfterProteinAssociationTest.cs" />
     <Compile Include="SequenceTreeRatioTest.cs" />
-    <Compile Include="SpectrumClassFilterTest.cs" />
+    <Compile Include="EditSpectrumFilterTest.cs" />
+    <Compile Include="SpectraGridFormTest.cs" />
     <Compile Include="UnreadableBlibTest.cs" />
     <Compile Include="RemoveSmallMoleculeLabelTypeTest.cs" />
     <Compile Include="StartPageInsertTransitionListTest.cs" />

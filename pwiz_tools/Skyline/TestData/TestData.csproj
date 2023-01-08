@@ -183,7 +183,6 @@
     <Compile Include="Results\DocumentRetentionTimesTest.cs" />
     <Compile Include="Results\ShimadzuSrmTest.cs" />
     <Compile Include="Results\SmallWiffTest.cs" />
-    <Compile Include="Results\SpectrumListTest.cs" />
     <Compile Include="Results\StructSerializerTest.cs" />
     <Compile Include="Results\StructSizeTest.cs" />
     <Compile Include="Results\ThermoQuantTest.cs" />

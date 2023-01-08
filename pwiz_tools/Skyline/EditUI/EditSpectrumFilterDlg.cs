@@ -119,7 +119,7 @@ namespace pwiz.Skyline.EditUI
             DialogResult = DialogResult.OK;
         }
 
-        private void dataGridViewEx1_DataError(object sender, System.Windows.Forms.DataGridViewDataErrorEventArgs e)
+        private void dataGridViewEx1_DataError(object sender, DataGridViewDataErrorEventArgs e)
         {
             MessageDlg.ShowWithException(this, e.Exception.Message, e.Exception);
         }

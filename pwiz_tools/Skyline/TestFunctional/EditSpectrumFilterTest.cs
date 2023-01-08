@@ -11,10 +11,10 @@ using pwiz.SkylineTestUtil;
 namespace pwiz.SkylineTestFunctional
 {
     [TestClass]
-    public class SpectrumClassFilterTest : AbstractFunctionalTest
+    public class EditSpectrumFilterTest : AbstractFunctionalTest
     {
         [TestMethod]
-        public void TestSpectrumClassFilter()
+        public void TestEditSpectrumFilter()
         {
             TestFilesZip = @"TestFunctional\SpectrumClassFilterTest.zip";
             RunFunctionalTest();
@@ -30,6 +30,7 @@ namespace pwiz.SkylineTestFunctional
                 SkylineWindow.SelectedPath =
                     SkylineWindow.Document.GetPathTo((int) SrmDocument.Level.TransitionGroups, 0);
             });
+            PauseTest();
             RunDlg<EditSpectrumFilterDlg>(SkylineWindow.EditMenu.EditSpectrumFilter, dlg =>
             {
                 dlg.CreateCopy = true;
@@ -66,6 +67,8 @@ namespace pwiz.SkylineTestFunctional
             });
             Assert.AreEqual(1, SkylineWindow.Document.MoleculeCount);
             Assert.AreEqual(3, SkylineWindow.Document.MoleculeTransitionGroupCount);
+            AssertEx.Serializable(SkylineWindow.Document);
+
             ImportResultsFile(TestFilesDir.GetTestPath("SpectrumClassFilterTest.mzML"));
             var document = SkylineWindow.Document;
             var peptideDocNode = document.Molecules.First();
@@ -94,7 +97,14 @@ namespace pwiz.SkylineTestFunctional
             Assert.IsNotNull(scanConfiguration3Chromatogram);
             Assert.AreNotEqual(0, scanConfiguration3Chromatogram.RawTimes.Count);
             Assert.AreEqual(unfilteredMs2Chromatogram.RawTimes.Count, scanConfiguration2Chromatogram.RawTimes.Count + scanConfiguration3Chromatogram.RawTimes.Count);
-
+            RunUI(()=>
+            {
+                SkylineWindow.SelectedPath = SkylineWindow.Document.GetPathTo((int) SrmDocument.Level.Molecules, 0);
+                SkylineWindow.ShowSplitChromatogramGraph(true);
+                SkylineWindow.ShowProductTransitions();
+                SkylineWindow.SetTransformChrom(TransformChrom.raw);
+            });
+            PauseTest();
         }
 
         private ChromatogramGroupInfo LoadChromatogram(SrmDocument document, PeptideDocNode peptideDocNode,

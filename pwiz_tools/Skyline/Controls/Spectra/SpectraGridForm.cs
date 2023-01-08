@@ -1,5 +1,4 @@
 ﻿using System;
-using System.Collections;
 using System.Collections.Generic;
 using System.ComponentModel;
 using System.IO;
@@ -57,7 +56,7 @@ namespace pwiz.Skyline.Controls.Spectra
             _bindingList = new BindingList<SpectrumClassRow>(_spectrumClasses);
             var viewContext = new SkylineViewContext(_dataSchema, MakeRowSourceInfos());
             BindingListSource.SetViewContext(viewContext);
-            Text = TabText = "Spectrum Grid";
+            Text = TabText = Resources.SpectraGridForm_SpectraGridForm_Spectrum_Grid;
             DataboundGridControl.Parent.Controls.Remove(DataboundGridControl);
             splitContainer1.Panel2.Controls.Add(DataboundGridControl);
             DataboundGridControl.Dock = DockStyle.Fill;
@@ -138,7 +137,7 @@ namespace pwiz.Skyline.Controls.Spectra
                 columns.Add(new ColumnSpec(ppSpectrumClass.Concat(classColumn.PropertyPath)));
             }
             columns.Add(new ColumnSpec(PropertyPath.Root.Property(nameof(SpectrumClassRow.Files)).DictionaryValues()));
-            return new ViewSpec().SetName("Default").SetColumns(columns);
+            return new ViewSpec().SetName(Resources.SpectraGridForm_GetDefaultViewSpec_Default).SetColumns(columns);
         }
 
         private bool HasMultipleValues(SpectrumMetadataList spectra, SpectrumClassColumn column, double tolerance)
@@ -395,16 +394,21 @@ namespace pwiz.Skyline.Controls.Spectra
 
                 foreach (var msDataFileUri in dataSrcDlg.DataSources)
                 {
-                    if (_dataFileSet.Add(msDataFileUri))
-                    {
-                        var dataFileItem = new DataFileItem(null, msDataFileUri);
-                        _dataFileList.Add(dataFileItem);
-                        if (!_spectrumLists.ContainsKey(dataFileItem))
-                        {
-                            _spectrumReader.AddFile(msDataFileUri);
-                            listBoxFiles.Items.Add(dataFileItem);
-                        }
-                    }
+                    AddFile(msDataFileUri);
+                }
+            }
+        }
+
+        public void AddFile(MsDataFileUri msDataFileUri)
+        {
+            if (_dataFileSet.Add(msDataFileUri))
+            {
+                var dataFileItem = new DataFileItem(null, msDataFileUri);
+                _dataFileList.Add(dataFileItem);
+                if (!_spectrumLists.ContainsKey(dataFileItem))
+                {
+                    _spectrumReader.AddFile(msDataFileUri);
+                    listBoxFiles.Items.Add(dataFileItem);
                 }
             }
         }
@@ -461,6 +465,11 @@ namespace pwiz.Skyline.Controls.Spectra
             statusPanel.Visible = true;
             lblStatus.Text = text;
             progressBar1.Value = value;
+        }
+
+        public new bool IsComplete()
+        {
+            return _spectrumReader.IsComplete() && DataboundGridControl.BindingListSource.IsComplete;
         }
 
         class SpectrumReader
@@ -546,7 +555,7 @@ namespace pwiz.Skyline.Controls.Spectra
 
             private bool ReadSpectraFromFile(MsDataFileUri file)
             {
-                string message = string.Format("Reading spectra from {0}", file.GetFileName());
+                string message = string.Format(Resources.SpectrumReader_ReadSpectraFromFile_Reading_spectra_from__0_, file.GetFileName());
                 CommonActionUtil.SafeBeginInvoke(_form, () => _form.UpdateProgress(message, 0));
                 using (var msDataFile = file.OpenMsDataFile(true, false, false, false, true))
                 {
@@ -579,6 +588,14 @@ namespace pwiz.Skyline.Controls.Spectra
 
                     CommonActionUtil.SafeBeginInvoke(_form, () => _form.SetSpectra(file, spectra));
                     return true;
+                }
+            }
+
+            public bool IsComplete()
+            {
+                lock (this)
+                {
+                    return !_isRunning;
                 }
             }
         }
@@ -660,7 +677,7 @@ namespace pwiz.Skyline.Controls.Spectra
             var activeClassColumns = GetActiveClassColumns().ToList();
             using (var longWaitDlg = new LongWaitDlg()
                    {
-                       Message = "Examining filters"
+                       Message = Resources.SpectraGridForm_AddSpectrumFilters_Examining_filters
                    })
             {
                 var document = SkylineWindow.DocumentUI;
@@ -703,11 +720,11 @@ namespace pwiz.Skyline.Controls.Spectra
             {
                 if (spectrumClassRows.Count == 0)
                 {
-                    MessageDlg.Show(this, "The selected row does not have any filters");
+                    MessageDlg.Show(this, Resources.SpectraGridForm_AddSpectrumFilters_The_selected_row_does_not_have_any_filters);
                 }
                 else
                 {
-                    MessageDlg.Show(this, "The selected rows do not have any filters");
+                    MessageDlg.Show(this, Resources.SpectraGridForm_AddSpectrumFilters_The_selected_rows_do_not_have_any_filters);
                 }
 
                 return;
@@ -715,13 +732,13 @@ namespace pwiz.Skyline.Controls.Spectra
 
             if (transitionIdentityPathLists.All(list => list.Count == 0))
             {
-                MessageDlg.Show(this, "There were no matching precursors to add any filters to.");
+                MessageDlg.Show(this, Resources.SpectraGridForm_AddSpectrumFilters_There_were_no_matching_precursors_to_add_any_filters_to_);
                 return;
             }
 
             lock (SkylineWindow.GetDocumentChangeLock())
             {
-                SkylineWindow.ModifyDocument("Change spectrum filter", doc =>
+                SkylineWindow.ModifyDocument(Resources.SpectraGridForm_AddSpectrumFilters_Change_spectrum_filter, doc =>
                         AddFilters(doc, filters, transitionIdentityPathLists),
                     docPair => AuditLogEntry.CreateSimpleEntry(MessageType.added_spectrum_filter,
                         docPair.NewDocumentType));

@@ -1,5 +1,4 @@
 ﻿using System.Collections.Generic;
-using pwiz.Common.Spectra;
 
 namespace pwiz.Skyline.Model.Results.Spectra
 {

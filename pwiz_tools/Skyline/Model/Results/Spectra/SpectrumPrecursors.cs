@@ -78,7 +78,7 @@ namespace pwiz.Skyline.Model.Results.Spectra
             }
             catch (FormatException formatException)
             {
-                throw new FormatException("Unable to convert '{0}' to a list of precursors", formatException);
+                throw new FormatException(string.Format(@"Unable to convert '{0}' to a list of precursors", s), formatException);
             }
         }
 

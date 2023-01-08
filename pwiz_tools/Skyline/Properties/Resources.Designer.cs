@@ -11382,6 +11382,15 @@ namespace pwiz.Skyline.Properties {
         }
         
         /// <summary>
+        ///   Looks up a localized string similar to Change spectrum filter.
+        /// </summary>
+        public static string EditMenu_ChangeSpectrumFilter_Change_spectrum_filter {
+            get {
+                return ResourceManager.GetString("EditMenu_ChangeSpectrumFilter_Change_spectrum_filter", resourceCulture);
+            }
+        }
+        
+        /// <summary>
         ///   Looks up a localized string similar to Change synchronized integration to {0}.
         /// </summary>
         public static string EditMenu_SetSynchronizedIntegration_Change_synchronized_integration_to__0_ {
@@ -14369,6 +14378,15 @@ namespace pwiz.Skyline.Properties {
         public static string FileSaver_CanSave_Cannot_save_to__0__The_file_is_read_only {
             get {
                 return ResourceManager.GetString("FileSaver_CanSave_Cannot_save_to__0__The_file_is_read_only", resourceCulture);
+            }
+        }
+        
+        /// <summary>
+        ///   Looks up a localized string similar to {0} Spectra.
+        /// </summary>
+        public static string FileSpectrumInfo_ToString__0__Spectra {
+            get {
+                return ResourceManager.GetString("FileSpectrumInfo_ToString__0__Spectra", resourceCulture);
             }
         }
         
@@ -31507,6 +31525,70 @@ namespace pwiz.Skyline.Properties {
         }
         
         /// <summary>
+        ///   Looks up a localized string similar to Change spectrum filter.
+        /// </summary>
+        public static string SpectraGridForm_AddSpectrumFilters_Change_spectrum_filter {
+            get {
+                return ResourceManager.GetString("SpectraGridForm_AddSpectrumFilters_Change_spectrum_filter", resourceCulture);
+            }
+        }
+        
+        /// <summary>
+        ///   Looks up a localized string similar to Examining filters.
+        /// </summary>
+        public static string SpectraGridForm_AddSpectrumFilters_Examining_filters {
+            get {
+                return ResourceManager.GetString("SpectraGridForm_AddSpectrumFilters_Examining_filters", resourceCulture);
+            }
+        }
+        
+        /// <summary>
+        ///   Looks up a localized string similar to The selected row does not have any filters.
+        /// </summary>
+        public static string SpectraGridForm_AddSpectrumFilters_The_selected_row_does_not_have_any_filters {
+            get {
+                return ResourceManager.GetString("SpectraGridForm_AddSpectrumFilters_The_selected_row_does_not_have_any_filters", resourceCulture);
+            }
+        }
+        
+        /// <summary>
+        ///   Looks up a localized string similar to The selected rows do not have any filters.
+        /// </summary>
+        public static string SpectraGridForm_AddSpectrumFilters_The_selected_rows_do_not_have_any_filters {
+            get {
+                return ResourceManager.GetString("SpectraGridForm_AddSpectrumFilters_The_selected_rows_do_not_have_any_filters", resourceCulture);
+            }
+        }
+        
+        /// <summary>
+        ///   Looks up a localized string similar to There were no matching precursors to add any filters to..
+        /// </summary>
+        public static string SpectraGridForm_AddSpectrumFilters_There_were_no_matching_precursors_to_add_any_filters_to_ {
+            get {
+                return ResourceManager.GetString("SpectraGridForm_AddSpectrumFilters_There_were_no_matching_precursors_to_add_any_f" +
+                        "ilters_to_", resourceCulture);
+            }
+        }
+        
+        /// <summary>
+        ///   Looks up a localized string similar to Default.
+        /// </summary>
+        public static string SpectraGridForm_GetDefaultViewSpec_Default {
+            get {
+                return ResourceManager.GetString("SpectraGridForm_GetDefaultViewSpec_Default", resourceCulture);
+            }
+        }
+        
+        /// <summary>
+        ///   Looks up a localized string similar to Spectrum Grid.
+        /// </summary>
+        public static string SpectraGridForm_SpectraGridForm_Spectrum_Grid {
+            get {
+                return ResourceManager.GetString("SpectraGridForm_SpectraGridForm_Spectrum_Grid", resourceCulture);
+            }
+        }
+        
+        /// <summary>
         ///   Looks up a localized string similar to &amp;Libraries:.
         /// </summary>
         public static string SpectralLibraryList_Label_Libraries {
@@ -31530,6 +31612,42 @@ namespace pwiz.Skyline.Properties {
         public static string SpectrastLibrary_SpecFilter_SpectraST_Library {
             get {
                 return ResourceManager.GetString("SpectrastLibrary_SpecFilter_SpectraST_Library", resourceCulture);
+            }
+        }
+        
+        /// <summary>
+        ///   Looks up a localized string similar to MS1.
+        /// </summary>
+        public static string SpectrumClassColumn_Ms1Precursors_MS1 {
+            get {
+                return ResourceManager.GetString("SpectrumClassColumn_Ms1Precursors_MS1", resourceCulture);
+            }
+        }
+        
+        /// <summary>
+        ///   Looks up a localized string similar to MS2.
+        /// </summary>
+        public static string SpectrumClassColumn_Ms2Precursors_MS2 {
+            get {
+                return ResourceManager.GetString("SpectrumClassColumn_Ms2Precursors_MS2", resourceCulture);
+            }
+        }
+        
+        /// <summary>
+        ///   Looks up a localized string similar to  AND .
+        /// </summary>
+        public static string SpectrumClassFilter_GetAbbreviatedText__AND_ {
+            get {
+                return ResourceManager.GetString("SpectrumClassFilter_GetAbbreviatedText__AND_", resourceCulture);
+            }
+        }
+        
+        /// <summary>
+        ///   Looks up a localized string similar to No spectrum column {0}.
+        /// </summary>
+        public static string SpectrumClassFilter_MakePredicate_No_spectrum_column__0_ {
+            get {
+                return ResourceManager.GetString("SpectrumClassFilter_MakePredicate_No_spectrum_column__0_", resourceCulture);
             }
         }
         
@@ -31731,6 +31849,15 @@ namespace pwiz.Skyline.Properties {
         public static string SpectrumMzInfo_GetInfoFromLibrary_Library_spectrum_for_sequence__0__is_missing_ {
             get {
                 return ResourceManager.GetString("SpectrumMzInfo_GetInfoFromLibrary_Library_spectrum_for_sequence__0__is_missing_", resourceCulture);
+            }
+        }
+        
+        /// <summary>
+        ///   Looks up a localized string similar to Reading spectra from {0}.
+        /// </summary>
+        public static string SpectrumReader_ReadSpectraFromFile_Reading_spectra_from__0_ {
+            get {
+                return ResourceManager.GetString("SpectrumReader_ReadSpectraFromFile_Reading_spectra_from__0_", resourceCulture);
             }
         }
         

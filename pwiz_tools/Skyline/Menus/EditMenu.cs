@@ -1717,7 +1717,7 @@ namespace pwiz.Skyline.Menus
         public void ChangeSpectrumFilter(ICollection<IdentityPath> precursorIdentityPaths,
             SpectrumClassFilter spectrumClassFilter, bool copy)
         {
-            SkylineWindow.ModifyDocument("Change spectrum filter", doc => ChangeSpectrumFilter(doc, precursorIdentityPaths, spectrumClassFilter, copy),
+            SkylineWindow.ModifyDocument(Resources.EditMenu_ChangeSpectrumFilter_Change_spectrum_filter, doc => ChangeSpectrumFilter(doc, precursorIdentityPaths, spectrumClassFilter, copy),
                 docPair => AuditLogEntry.CreateSimpleEntry(MessageType.added_spectrum_filter, docPair.NewDocumentType));
 
         }
