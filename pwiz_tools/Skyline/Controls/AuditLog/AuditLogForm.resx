@@ -121,15 +121,6 @@
   <metadata name="$this.Localizable" type="System.Boolean, mscorlib, Version=4.0.0.0, Culture=neutral, PublicKeyToken=b77a5c561934e089">
     <value>True</value>
   </metadata>
-  <data name="&gt;&gt;databoundGridControl.Name" xml:space="preserve">
-    <value>databoundGridControl</value>
-  </data>
-  <data name="&gt;&gt;databoundGridControl.Parent" xml:space="preserve">
-    <value>$this</value>
-  </data>
-  <data name="&gt;&gt;databoundGridControl.ZOrder" xml:space="preserve">
-    <value>0</value>
-  </data>
   <data name="$this.AutoScaleDimensions" type="System.Drawing.SizeF, System.Drawing">
     <value>6, 13</value>
   </data>
@@ -139,10 +130,19 @@
   <data name="$this.Text" xml:space="preserve">
     <value>AuditLogForm</value>
   </data>
-  <data name="&gt;&gt;ModeUIExtender.Name" xml:space="preserve">
-    <value>ModeUIExtender</value>
-  </data>
   <data name="&gt;&gt;$this.Name" xml:space="preserve">
     <value>AuditLogForm</value>
+  </data>
+  <data name="&gt;&gt;databoundGridControl.Name" xml:space="preserve">
+    <value>databoundGridControl</value>
+  </data>
+  <data name="&gt;&gt;databoundGridControl.Parent" xml:space="preserve">
+    <value>$this</value>
+  </data>
+  <data name="&gt;&gt;databoundGridControl.ZOrder" xml:space="preserve">
+    <value>0</value>
+  </data>
+  <data name="&gt;&gt;ModeUIExtender.Name" xml:space="preserve">
+    <value>ModeUIExtender</value>
   </data>
 </root>

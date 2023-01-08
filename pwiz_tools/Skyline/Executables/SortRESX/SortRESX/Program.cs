@@ -39,13 +39,13 @@ namespace SortRESX
     {
         static void Main(string[] args)
         {
-            bool preserveElementOrder = false;
+            bool preserveOrderInResourcesResx = false;
             List<string> startingFolders = new List<string>();
             foreach (var arg in args)
             {
-                if (arg == "--preserveElementOrder")
+                if (arg == "--preserveOrderInResourcesResx")
                 {
-                    preserveElementOrder = true;
+                    preserveOrderInResourcesResx = true;
                 }
                 else
                 {
@@ -60,7 +60,7 @@ namespace SortRESX
             Console.Error.WriteLine("Sorting resx files in {0}", string.Join(",", startingFolders));
             var resxSorter = new ResxSorter
             {
-                PreserveElementOrder = preserveElementOrder
+                PreserveOrderInResourcesResx = preserveOrderInResourcesResx
             };
             RecurseDirectories(resxSorter.ProcessFile, startingFolders.ToArray());
         }

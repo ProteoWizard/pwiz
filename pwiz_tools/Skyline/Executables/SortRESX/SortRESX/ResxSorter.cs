@@ -41,7 +41,7 @@ namespace SortRESX
             // Unicode encoding with Byte Order Mark, and throw on invalid characters
             Encoding = new UTF8Encoding(true, true)
         };
-        public XDocument SortResxDocument(XDocument resx)
+        public XDocument SortResxDocument(XDocument resx, bool preserveElementOrder)
         {
             if (resx.Root == null)
             {
@@ -53,13 +53,13 @@ namespace SortRESX
                     from comment in resx.Root.Nodes() where comment.NodeType == XmlNodeType.Comment select comment,
                     from schema in resx.Root.Elements() where schema.Name.LocalName == "schema" select schema,
                     from resheader in resx.Root.Elements("resheader") select resheader,
-                    SelectElements(resx.Root, "assembly"),
-                    SelectElements(resx.Root, "metadata").Where(KeepMetadataElement),
-                    SelectElements(resx.Root, "data").Where(KeepDataElement)
+                    SelectElements(resx.Root, "assembly", preserveElementOrder),
+                    SelectElements(resx.Root, "metadata", preserveElementOrder).Where(KeepMetadataElement),
+                    SelectElements(resx.Root, "data", preserveElementOrder).Where(KeepDataElement)
                         .Select(data=>FixWhitespace(data, 1))));
         }
 
-        public bool SortResxFile(string filePath)
+        public bool SortResxFile(string filePath, bool preserveElementOrder)
         {
             XDocument originalDocument;
             var inputBytes = File.ReadAllBytes(filePath);
@@ -69,7 +69,7 @@ namespace SortRESX
             }
 
             // Create a sorted version of the XML
-            var sortedDoc = SortResxDocument(originalDocument);
+            var sortedDoc = SortResxDocument(originalDocument, preserveElementOrder);
             MemoryStream outputMemoryStream = new MemoryStream();
             var xmlWriterSettings = HasUtf8Preamble(inputBytes) 
                 ? _xmlWriterSettingsPreamble : _xmlWriterSettingsNoPreamble;
@@ -97,10 +97,15 @@ namespace SortRESX
                 return false;
             }
 
-            return SortResxFile(path);
+            bool preserveElementOrder = PreserveOrderInResourcesResx 
+                                        && Path.GetFileNameWithoutExtension(path) == "Resources";
+            return SortResxFile(path, preserveElementOrder);
         }
 
-        public bool PreserveElementOrder { get; set; }
+        /// <summary>
+        /// Whether, if the filename is "Resources" to skip sorting elements by the name attribute
+        /// </summary>
+        public bool PreserveOrderInResourcesResx { get; set; }
 
         private bool KeepMetadataElement(XElement metadataElement)
         {
@@ -124,10 +129,10 @@ namespace SortRESX
             return true;
         }
 
-        private IEnumerable<XElement> SelectElements(XElement parent, string elementName)
+        private IEnumerable<XElement> SelectElements(XElement parent, string elementName, bool preserveOrder)
         {
             var elements = parent.Elements(elementName);
-            if (!PreserveElementOrder)
+            if (!preserveOrder)
             {
                 elements = elements.OrderBy(element => element.Attribute("name")?.ToString());
             }
