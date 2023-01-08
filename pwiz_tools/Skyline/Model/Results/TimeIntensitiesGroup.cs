@@ -317,20 +317,20 @@ namespace pwiz.Skyline.Model.Results
 
         public ChromatogramGroupData ToChromatogramGroupData()
         {
-            var timeLists = new ValueIndex<ImmutableList<float>>();
-            var scanIdLists = new ValueIndex<ImmutableList<int>>();
+            var timeLists = new DistinctList<ImmutableList<float>>{null};
+            var scanIdLists = new DistinctList<ImmutableList<int>>{null};
             var chromatogramGroupData = new ChromatogramGroupData();
             for (int i = 0; i < TransitionTimeIntensities.Count; i++)
             {
                 var timeIntensities = TransitionTimeIntensities[i];
                 var chromatogram = new ChromatogramGroupData.Types.Chromatogram();
-                chromatogram.TimeListIndex = timeLists.IndexForValue(timeIntensities.Times);
+                chromatogram.TimeListIndex = timeLists.Add(timeIntensities.Times);
                 chromatogram.Intensities.AddRange(timeIntensities.Intensities);
                 if (null != timeIntensities.MassErrors)
                 {
                     chromatogram.MassErrors100X.AddRange(timeIntensities.MassErrors.Select(error=>(int) Math.Round(error * 100)));
                 }
-                chromatogram.ScanIdListIndex = scanIdLists.IndexForValue(timeIntensities.ScanIds);
+                chromatogram.ScanIdListIndex = scanIdLists.Add(timeIntensities.ScanIds);
                 chromatogramGroupData.Chromatograms.Add(chromatogram);
             }
             if (InterpolationParams != null)
@@ -349,14 +349,14 @@ namespace pwiz.Skyline.Model.Results
                 chromatogramGroupData.TimeIntervals.EndTimes.AddRange(TimeIntervals.Ends);
             }
 
-            foreach (var times in timeLists.Values)
+            foreach (var times in timeLists.Skip(1))
             {
                 var timeList = new ChromatogramGroupData.Types.TimeList();
                 timeList.Times.AddRange(times);
                 chromatogramGroupData.TimeLists.Add(timeList);
             }
 
-            foreach (var scanIds in scanIdLists.Values)
+            foreach (var scanIds in scanIdLists.Skip(1))
             {
                 var scanIdList = new ChromatogramGroupData.Types.ScanIdList();
                 scanIdList.ScanIds.AddRange(scanIds);

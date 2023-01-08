@@ -4,6 +4,7 @@ using System.Collections.Generic;
 using System.Linq;
 using System.Text;
 using Google.Protobuf.WellKnownTypes;
+using MathNet.Numerics.LinearAlgebra.Complex.Solvers;
 using pwiz.Common.DataBinding;
 using pwiz.Common.SystemUtil;
 using pwiz.Skyline.Model.Results.Legacy;
@@ -96,19 +97,19 @@ namespace pwiz.Skyline.Model.Results
 
         public static ChromatogramGroupIdsProto ToProto(IEnumerable<ChromatogramGroupId> ids)
         {
-            var targets = new ValueIndex<Target>();
-            var filters = new ValueIndex<SpectrumClassFilter>();
+            var targets = new DistinctList<Target> {null};
+            var filters = new DistinctList<SpectrumClassFilter> {null};
             var idsProto = new ChromatogramGroupIdsProto();
             foreach (var id in ids)
             {
                 idsProto.ChromatogramGroupIds.Add(new ChromatogramGroupIdsProto.Types.ChromatogramGroupId()
                 {
-                    TargetIndex = targets.IndexForValue(id.Target),
-                    FilterIndex = filters.IndexForValue(id.SpectrumClassFilter)
+                    TargetIndex = targets.Add(id.Target),
+                    FilterIndex = filters.Add(id.SpectrumClassFilter)
                 });
             }
 
-            foreach (var target in targets.Values)
+            foreach (var target in targets.Skip(1))
             {
                 var targetProto = new ChromatogramGroupIdsProto.Types.Target();
                 if (target.IsProteomic)
@@ -128,7 +129,7 @@ namespace pwiz.Skyline.Model.Results
                 idsProto.Targets.Add(targetProto);
             }
 
-            foreach (var filter in filters.Values)
+            foreach (var filter in filters.Skip(1))
             {
                 var filterProto = new ChromatogramGroupIdsProto.Types.SpectrumFilter();
                 foreach (var filterSpec in filter.FilterSpecs)
@@ -301,19 +302,19 @@ namespace pwiz.Skyline.Model.Results
 
         public ChromatogramGroupIdsProto ToProtoMessage()
         {
-            var targets = new ValueIndex<Target>();
-            var filters = new ValueIndex<SpectrumClassFilter>();
+            var targets = new DistinctList<Target> {null};
+            var filters = new DistinctList<SpectrumClassFilter> {null};
             var idsProto = new ChromatogramGroupIdsProto();
             foreach (var id in this)
             {
                 idsProto.ChromatogramGroupIds.Add(new ChromatogramGroupIdsProto.Types.ChromatogramGroupId()
                 {
-                    TargetIndex = targets.IndexForValue(id.Target),
-                    FilterIndex = filters.IndexForValue(id.SpectrumClassFilter)
+                    TargetIndex = targets.Add(id.Target),
+                    FilterIndex = filters.Add(id.SpectrumClassFilter)
                 });
             }
 
-            foreach (var target in targets.Values)
+            foreach (var target in targets.Skip(1))
             {
                 var targetProto = new ChromatogramGroupIdsProto.Types.Target();
                 if (target.IsProteomic)
