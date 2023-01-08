@@ -1,6 +1,5 @@
 ﻿syntax = "proto3";
 option csharp_namespace = "pwiz.Skyline.Model.Results.ProtoBuf";
-import "google/protobuf/struct.proto";
 message ChromatogramGroupData {
 	message TimeList {
 		repeated float times = 1;
