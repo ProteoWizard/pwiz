@@ -259,7 +259,7 @@ namespace pwiz.Skyline.Model.Results
                 explicitRT = nodePep.ExplicitRetentionTime.RetentionTime;
             }
 
-            return GetHeaderInfos(nodePep, precursorMz, explicitRT, tolerance, chromatograms);
+            return GetHeaderInfos(nodePep, nodeGroup?.SpectrumClassFilter, precursorMz, explicitRT, tolerance, chromatograms);
         }
 
         public bool HasAllIonsChromatograms
@@ -311,10 +311,10 @@ namespace pwiz.Skyline.Model.Results
             ReadStream.CloseStream();
         }
 
-        private IEnumerable<ChromatogramGroupInfo> GetHeaderInfos(PeptideDocNode nodePep, SignedMz precursorMz, double? explicitRT, float tolerance,
+        private IEnumerable<ChromatogramGroupInfo> GetHeaderInfos(PeptideDocNode nodePep, SpectrumClassFilter spectrumClassFilter, SignedMz precursorMz, double? explicitRT, float tolerance,
             ChromatogramSet chromatograms)
         {
-            foreach (int i in ChromatogramIndexesMatching(nodePep, precursorMz, tolerance, chromatograms))
+            foreach (int i in ChromatogramIndexesMatching(nodePep, spectrumClassFilter, precursorMz, tolerance, chromatograms))
             {
                 var entry = ChromGroupHeaderInfos[i];
                 // If explicit retention time info is available, use that to discard obvious mismatches
@@ -328,9 +328,10 @@ namespace pwiz.Skyline.Model.Results
             }
         }
 
-        public IEnumerable<int> ChromatogramIndexesMatching(PeptideDocNode nodePep, SignedMz precursorMz,
+        public IEnumerable<int> ChromatogramIndexesMatching(PeptideDocNode nodePep, SpectrumClassFilter spectrumClassFilter, SignedMz precursorMz,
             float tolerance, ChromatogramSet chromatograms)
         {
+            spectrumClassFilter = SpectrumClassFilter.EmptyToNull(spectrumClassFilter);
             var fileIndexesFound = new HashSet<int>();
             if (nodePep != null && nodePep.IsProteomic && _chromEntryIndex != null)
             {
@@ -338,6 +339,10 @@ namespace pwiz.Skyline.Model.Results
                 foreach (var chromatogramIndex in _chromEntryIndex.ItemsMatching(key, false).SelectMany(list=>list))
                 {
                     var entry = ChromGroupHeaderInfos[chromatogramIndex];
+                    if (!Equals(spectrumClassFilter, GetChromatogramGroupId(entry)?.SpectrumClassFilter))
+                    {
+                        continue;
+                    }
                     if (!MatchMz(precursorMz, entry.Precursor, tolerance))
                     {
                         continue;

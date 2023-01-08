@@ -3500,6 +3500,7 @@
     </Content>
     <None Include="Model\Prosit\Config\PrositConfig_development.xml" />
     <None Include="Model\Prosit\Config\UpdatePrositConfiguration.bat" />
+    <None Include="ProtocolBuffers\google\protobuf\struct.proto" />
     <None Include="ProtocolBuffers\google\protobuf\wrappers.proto" />
     <None Include="PreBuildEvents.bat" />
     <None Include="Resources\Locked.bmp" />
