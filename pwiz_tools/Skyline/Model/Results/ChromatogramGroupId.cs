@@ -3,8 +3,6 @@ using System.Collections;
 using System.Collections.Generic;
 using System.Linq;
 using System.Text;
-using Google.Protobuf.WellKnownTypes;
-using MathNet.Numerics.LinearAlgebra.Complex.Solvers;
 using pwiz.Common.DataBinding;
 using pwiz.Common.SystemUtil;
 using pwiz.Skyline.Model.Results.Legacy;
@@ -54,10 +52,7 @@ namespace pwiz.Skyline.Model.Results
 
         public ChromatogramGroupId ChangeSpectrumClassFilter(SpectrumClassFilter spectrumClassFilter)
         {
-            if (false == spectrumClassFilter?.IsEmpty)
-            {
-                spectrumClassFilter = null;
-            }
+            spectrumClassFilter = SpectrumClassFilter.EmptyToNull(spectrumClassFilter);
             if (ReferenceEquals(spectrumClassFilter, SpectrumClassFilter))
             {
                 return this;
@@ -95,61 +90,10 @@ namespace pwiz.Skyline.Model.Results
             }
         }
 
-        public static ChromatogramGroupIdsProto ToProto(IEnumerable<ChromatogramGroupId> ids)
-        {
-            var targets = new DistinctList<Target> {null};
-            var filters = new DistinctList<SpectrumClassFilter> {null};
-            var idsProto = new ChromatogramGroupIdsProto();
-            foreach (var id in ids)
-            {
-                idsProto.ChromatogramGroupIds.Add(new ChromatogramGroupIdsProto.Types.ChromatogramGroupId()
-                {
-                    TargetIndex = targets.Add(id.Target),
-                    FilterIndex = filters.Add(id.SpectrumClassFilter)
-                });
-            }
-
-            foreach (var target in targets.Skip(1))
-            {
-                var targetProto = new ChromatogramGroupIdsProto.Types.Target();
-                if (target.IsProteomic)
-                {
-                    targetProto.ModifiedPeptideSequence = target.Sequence;
-                }
-                else
-                {
-                    var molecule = target.Molecule;
-                    targetProto.Name = molecule.Name;
-                    targetProto.Formula = molecule.Formula;
-                    targetProto.MonoMass = molecule.MonoisotopicMass;
-                    targetProto.AverageMass = molecule.AverageMass;
-                    // TODO: Accession numbers
-                }
-
-                idsProto.Targets.Add(targetProto);
-            }
-
-            foreach (var filter in filters.Skip(1))
-            {
-                var filterProto = new ChromatogramGroupIdsProto.Types.SpectrumFilter();
-                foreach (var filterSpec in filter.FilterSpecs)
-                {
-                    filterProto.Predicates.Add(new ChromatogramGroupIdsProto.Types.SpectrumFilter.Types.Predicate()
-                    {
-                        PropertyPath = filterSpec.Column,
-                        Operation = _filterOperationReverseMap[filterSpec.Operation],
-                        Operand = new Value{StringValue = filterSpec.Predicate.InvariantOperandText}
-                    });
-                }
-                idsProto.Filters.Add(filterProto);
-            }
-
-            return idsProto;
-        }
-
         public static IEnumerable<ChromatogramGroupId> FromProto(ChromatogramGroupIdsProto proto)
         {
-            var targets = new List<Target>() {null};
+            var targets = new List<Target> {null};
+            var filters = new List<SpectrumClassFilter> {null};
             foreach (var targetProto in proto.Targets)
             {
                 if (!string.IsNullOrEmpty(targetProto.ModifiedPeptideSequence))
@@ -165,32 +109,25 @@ namespace pwiz.Skyline.Model.Results
                 }
             }
 
+            foreach (var filterProto in proto.Filters)
+            {
+                var filterSpecs = new List<FilterSpec>();
+                foreach (var filterPredicate in filterProto.Predicates)
+                {
+                    filterSpecs.Add(new FilterSpec(PropertyPath.Parse(filterPredicate.PropertyPath),
+                        FilterPredicate.FromInvariantOperandText(
+                            ChromatogramGroupIds.GetFilterOperation(filterPredicate.Operation),
+                            filterPredicate.Operand)));
+                }
+                filters.Add(new SpectrumClassFilter(filterSpecs));
+            }
+
             foreach (var id in proto.ChromatogramGroupIds)
             {
-                yield return new ChromatogramGroupId(targets[id.TargetIndex], id.QcTraceName, null);
+                yield return new ChromatogramGroupId(targets[id.TargetIndex], id.QcTraceName, filters[id.FilterIndex]);
             }
         }
 
-        private static Dictionary<ChromatogramGroupIdsProto.Types.FilterOperation, IFilterOperation>
-            _filterOperationMap = new Dictionary<ChromatogramGroupIdsProto.Types.FilterOperation, IFilterOperation>
-            {
-                {ChromatogramGroupIdsProto.Types.FilterOperation.FilterOpHasAnyValue, FilterOperations.OP_HAS_ANY_VALUE},
-                {ChromatogramGroupIdsProto.Types.FilterOperation.FilterOpEquals, FilterOperations.OP_EQUALS},
-                {ChromatogramGroupIdsProto.Types.FilterOperation.FilterOpNotEquals, FilterOperations.OP_NOT_EQUALS},
-                {ChromatogramGroupIdsProto.Types.FilterOperation.FilterOpIsBlank, FilterOperations.OP_IS_BLANK},
-                {ChromatogramGroupIdsProto.Types.FilterOperation.FilterOpIsNotBlank, FilterOperations.OP_IS_NOT_BLANK},
-                {ChromatogramGroupIdsProto.Types.FilterOperation.FilterOpIsGreaterThan, FilterOperations.OP_IS_GREATER_THAN},
-                {ChromatogramGroupIdsProto.Types.FilterOperation.FilterOpIsLessThan, FilterOperations.OP_IS_LESS_THAN},
-                {ChromatogramGroupIdsProto.Types.FilterOperation.FilterOpIsGreaterThanOrEqualTo, FilterOperations.OP_IS_GREATER_THAN_OR_EQUAL},
-                {ChromatogramGroupIdsProto.Types.FilterOperation.FilterOpIsLessThanOrEqualTo, FilterOperations.OP_IS_GREATER_THAN_OR_EQUAL},
-                {ChromatogramGroupIdsProto.Types.FilterOperation.FilterOpContains, FilterOperations.OP_CONTAINS},
-                {ChromatogramGroupIdsProto.Types.FilterOperation.FilterOpNotContains, FilterOperations.OP_NOT_CONTAINS},
-                {ChromatogramGroupIdsProto.Types.FilterOperation.FitlerOpStartsWith, FilterOperations.OP_STARTS_WITH},
-                {ChromatogramGroupIdsProto.Types.FilterOperation.FilterOpNotStartsWith, FilterOperations.OP_NOT_STARTS_WITH}
-            };
-
-        private static readonly Dictionary<IFilterOperation, ChromatogramGroupIdsProto.Types.FilterOperation>
-            _filterOperationReverseMap = _filterOperationMap.ToDictionary(kvp => kvp.Value, kvp => kvp.Key);
     }
 
     public class ChromatogramGroupIds : IEnumerable<ChromatogramGroupId>
@@ -333,9 +270,68 @@ namespace pwiz.Skyline.Model.Results
 
                 idsProto.Targets.Add(targetProto);
             }
+            foreach (var filter in filters.Skip(1))
+            {
+                var filterProto = new ChromatogramGroupIdsProto.Types.SpectrumFilter();
+                foreach (var filterSpec in filter.FilterSpecs)
+                {
+                    filterProto.Predicates.Add(new ChromatogramGroupIdsProto.Types.SpectrumFilter.Types.Predicate()
+                    {
+                        PropertyPath = filterSpec.Column,
+                        Operation = _filterOperationReverseMap[filterSpec.Operation],
+                        Operand = filterSpec.Predicate.InvariantOperandText
+                    });
+                }
+                idsProto.Filters.Add(filterProto);
+            }
+
 
             return idsProto;
         }
+
+        private static Dictionary<ChromatogramGroupIdsProto.Types.FilterOperation, IFilterOperation>
+            _filterOperationMap = new Dictionary<ChromatogramGroupIdsProto.Types.FilterOperation, IFilterOperation>
+            {
+                {
+                    ChromatogramGroupIdsProto.Types.FilterOperation.FilterOpHasAnyValue,
+                    FilterOperations.OP_HAS_ANY_VALUE
+                },
+                {ChromatogramGroupIdsProto.Types.FilterOperation.FilterOpEquals, FilterOperations.OP_EQUALS},
+                {ChromatogramGroupIdsProto.Types.FilterOperation.FilterOpNotEquals, FilterOperations.OP_NOT_EQUALS},
+                {ChromatogramGroupIdsProto.Types.FilterOperation.FilterOpIsBlank, FilterOperations.OP_IS_BLANK},
+                {ChromatogramGroupIdsProto.Types.FilterOperation.FilterOpIsNotBlank, FilterOperations.OP_IS_NOT_BLANK},
+                {
+                    ChromatogramGroupIdsProto.Types.FilterOperation.FilterOpIsGreaterThan,
+                    FilterOperations.OP_IS_GREATER_THAN
+                },
+                {ChromatogramGroupIdsProto.Types.FilterOperation.FilterOpIsLessThan, FilterOperations.OP_IS_LESS_THAN},
+                {
+                    ChromatogramGroupIdsProto.Types.FilterOperation.FilterOpIsGreaterThanOrEqualTo,
+                    FilterOperations.OP_IS_GREATER_THAN_OR_EQUAL
+                },
+                {
+                    ChromatogramGroupIdsProto.Types.FilterOperation.FilterOpIsLessThanOrEqualTo,
+                    FilterOperations.OP_IS_LESS_THAN_OR_EQUAL
+                },
+                {ChromatogramGroupIdsProto.Types.FilterOperation.FilterOpContains, FilterOperations.OP_CONTAINS},
+                {ChromatogramGroupIdsProto.Types.FilterOperation.FilterOpNotContains, FilterOperations.OP_NOT_CONTAINS},
+                {ChromatogramGroupIdsProto.Types.FilterOperation.FitlerOpStartsWith, FilterOperations.OP_STARTS_WITH},
+                {
+                    ChromatogramGroupIdsProto.Types.FilterOperation.FilterOpNotStartsWith,
+                    FilterOperations.OP_NOT_STARTS_WITH
+                }
+            };
+
+        private static readonly Dictionary<IFilterOperation, ChromatogramGroupIdsProto.Types.FilterOperation>
+            _filterOperationReverseMap = _filterOperationMap.ToDictionary(kvp => kvp.Value, kvp => kvp.Key);
+
+        public static IFilterOperation GetFilterOperation(
+            ChromatogramGroupIdsProto.Types.FilterOperation protoFilterOperation)
+        {
+            _filterOperationMap.TryGetValue(protoFilterOperation, out var filterOperation);
+            return filterOperation;
+        }
+
     }
 
     public class TextIdLocation

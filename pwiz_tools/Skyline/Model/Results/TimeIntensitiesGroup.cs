@@ -367,7 +367,7 @@ namespace pwiz.Skyline.Model.Results
 
         public static RawTimeIntensities FromChromatogramGroupData(ChromatogramGroupData chromatogramGroupData)
         {
-            var timeIntensitiesList = new List<TimeIntensities>();
+            var timeIntensitiesList = new List<TimeIntensities>{};
             var timeLists = chromatogramGroupData.TimeLists.Select(timeList => ImmutableList.ValueOf(timeList.Times)).ToArray();
             var scanIdLists = chromatogramGroupData.ScanIdLists
                 .Select(scanIdList => ImmutableList.ValueOf(scanIdList.ScanIds)).ToArray();

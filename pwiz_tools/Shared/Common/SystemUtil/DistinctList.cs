@@ -25,8 +25,8 @@ namespace pwiz.Common.SystemUtil
             {
                 return index;
             }
-            _values.Add(value);
             index = _values.Count;
+            _values.Add(value);
             _dictionary.Add(wrappedValue, index);
             return index;
         }

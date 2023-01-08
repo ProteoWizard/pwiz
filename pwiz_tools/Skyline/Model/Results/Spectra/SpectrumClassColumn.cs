@@ -2,7 +2,6 @@
 using System.Globalization;
 using System.Linq;
 using System.Reflection;
-using System.Web;
 using pwiz.Common.Collections;
 using pwiz.Common.DataBinding;
 using pwiz.Common.Spectra;
@@ -12,6 +11,7 @@ namespace pwiz.Skyline.Model.Results.Spectra
 {
     public abstract class SpectrumClassColumn
     {
+        private static DataSchema _dataSchema = new DataSchema();
         public static readonly SpectrumClassColumn Ms1Precursors =
             new PrecursorsColumn(nameof(SpectrumClass.Ms1Precursors), spectrum => SpectrumPrecursors.FromPrecursors(spectrum.GetPrecursors(1)), () => "MS1");
 

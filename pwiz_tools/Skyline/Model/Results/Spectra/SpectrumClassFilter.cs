@@ -23,7 +23,7 @@ namespace pwiz.Skyline.Model.Results.Spectra
 
         public static SpectrumClassFilter EmptyToNull(SpectrumClassFilter spectrumClassFilter)
         {
-            return false == spectrumClassFilter?.IsEmpty ? null : spectrumClassFilter;
+            return true == spectrumClassFilter?.IsEmpty ? null : spectrumClassFilter;
         }
         public const string XML_ROOT = "spectrum_filter";
         public SpectrumClassFilter(IEnumerable<FilterSpec> filterSpecs)

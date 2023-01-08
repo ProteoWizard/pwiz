@@ -2643,12 +2643,6 @@ namespace pwiz.Skyline.Controls.Graphs
                         continue;
                     }
 
-                    if (transitionGroupDocNode.SpectrumClassFilter != null)
-                    {
-                        arrayChromInfo = arrayChromInfo.Select(chrom =>
-                            transitionGroupDocNode.SpectrumClassFilter.FilterChromatogramGroupInfo(DocumentUI.Settings,
-                                chrom)).ToArray();
-                    }
                     listArrayChromInfo.Add(arrayChromInfo);
                     foreach (var chromInfo in arrayChromInfo)
                     {

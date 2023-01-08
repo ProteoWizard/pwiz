@@ -71,6 +71,12 @@ namespace pwiz.Common.DataBinding
         [Track]
         public string InvariantOperandText { get; private set; }
 
+        public static FilterPredicate FromInvariantOperandText(IFilterOperation filterOperation,
+            string invariantOperandText)
+        {
+            return new FilterPredicate(filterOperation, invariantOperandText);
+        }
+
         public object GetOperandValue(ColumnDescriptor columnDescriptor)
         {
             return GetOperandValue(columnDescriptor.DataSchema, columnDescriptor.PropertyType);

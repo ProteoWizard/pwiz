@@ -1846,7 +1846,7 @@ namespace pwiz.Skyline.Model.Results
         {
         }
 
-        public ChromKey(Target target,
+        public ChromKey(ChromatogramGroupId target,
                         SignedMz precursor,
                         IonMobilityFilter ionMobilityFilter,
                         SignedMz product,

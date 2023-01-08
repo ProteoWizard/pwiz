@@ -56,6 +56,7 @@ namespace pwiz.Skyline.Model.Results
                    Equals(CollisionEnergy, other.CollisionEnergy) &&
                    Equals(IonMobility, other.IonMobility) &&
                    Equals(Target, other.Target) &&
+                   Equals(SpectrumClassFilter, other.SpectrumClassFilter) &&
                    Extractor == other.Extractor;
         }
 
@@ -74,6 +75,7 @@ namespace pwiz.Skyline.Model.Results
                 hashCode = (hashCode * 397) ^ CollisionEnergy.GetHashCode();
                 hashCode = (hashCode * 397) ^ IonMobility.GetHashCode();
                 hashCode = (hashCode * 397) ^ (Target != null ? Target.GetHashCode() : 0);
+                hashCode = (hashCode * 397) ^ (SpectrumClassFilter != null ? SpectrumClassFilter.GetHashCode() : 0);
                 hashCode = (hashCode * 397) ^ (int)Extractor;
                 return hashCode;
             }
@@ -101,6 +103,10 @@ namespace pwiz.Skyline.Model.Results
                 if (c != 0)
                     return c;
                 c = Target.CompareOrdinal(x.Target, y.Target);
+                if (c != 0)
+                    return c;
+                c = (x.SpectrumClassFilter ?? SpectrumClassFilter.EMPTY).CompareTo(y.SpectrumClassFilter ??
+                    SpectrumClassFilter.EMPTY);
                 if (c != 0)
                     return c;
                 return x.Extractor - y.Extractor;

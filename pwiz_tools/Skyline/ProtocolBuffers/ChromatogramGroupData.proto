@@ -98,7 +98,7 @@ message ChromatogramGroupIdsProto {
 		message Predicate {
 			string propertyPath = 1;
 			FilterOperation operation = 2;
-			google.protobuf.Value operand = 3;
+			string operand = 3;
 		}
 		repeated Predicate predicates = 1;
 	}
