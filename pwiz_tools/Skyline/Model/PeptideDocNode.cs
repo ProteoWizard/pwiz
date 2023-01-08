@@ -30,7 +30,6 @@ using pwiz.Skyline.Model.Irt;
 using pwiz.Skyline.Model.Lib;
 using pwiz.Skyline.Model.Results;
 using pwiz.Skyline.Model.Results.Scoring;
-using pwiz.Skyline.Model.Results.Spectra;
 using pwiz.Skyline.Properties;
 using pwiz.Skyline.Util;
 
@@ -1860,19 +1859,6 @@ namespace pwiz.Skyline.Model
             }
         }
 
-        public class TransitionGroupKey
-        {
-            public TransitionGroupKey(Adduct adduct, SpectrumClassFilter spectrumClassFilter)
-            {
-                Adduct = adduct.Unlabeled;
-                SpectrumClassFilter = spectrumClassFilter;
-            }
-
-            public Adduct Adduct { get; }
-
-            public SpectrumClassFilter SpectrumClassFilter { get; }
-        }
-
         public struct TransitionKey
         {
             private readonly IonType _ionType;
@@ -1893,8 +1879,8 @@ namespace pwiz.Skyline.Model
                 _ionOrdinal = transition.Ordinal;
                 _massIndex = transition.MassIndex;
                 _decoyMassShift = transition.DecoyMassShift;
-                _adduct = transition.Adduct;
-                _precursorKey = nodeGroup.PrecursorKey; // Only interested in charge and formula, ignore any labels
+                _adduct = transition.Adduct.Unlabeled;
+                _precursorKey = nodeGroup.PrecursorKey.Unlabeled; // Only interested in charge and formula, ignore any labels
                 _losses = tranLossKey.Losses;
                 _labelType = labelType;
             }
@@ -1907,7 +1893,6 @@ namespace pwiz.Skyline.Model
                 _massIndex = key._massIndex;
                 _decoyMassShift = key._decoyMassShift;
                 _adduct = key._adduct;
-                _precursorKey = key._precursorKey;
                 _precursorKey = key._precursorKey;
                 _losses = key._losses;
                 _labelType = labelType;
@@ -1932,7 +1917,7 @@ namespace pwiz.Skyline.Model
                     return true;
                 }
 
-                return Equals(other.Adduct, PrecursorKey.Adduct);
+                return Equals(PrecursorKey.Adduct, other.Adduct.Unlabeled);
             }
 
             #region object overrides
@@ -1966,7 +1951,7 @@ namespace pwiz.Skyline.Model
                     result = (result*397) ^ _ionOrdinal;
                     result = (result*397) ^ _massIndex;
                     result = (result*397) ^ (_decoyMassShift.HasValue ? _decoyMassShift.Value : 0);
-                    result = (result * 397) ^ _adduct.GetHashCode();
+                    result = (result*397) ^ _adduct.GetHashCode();
                     result = (result*397) ^ _precursorKey.GetHashCode();
                     result = (result*397) ^ (_losses != null ? _losses.GetHashCode() : 0);
                     result = (result*397) ^ _labelType.GetHashCode();

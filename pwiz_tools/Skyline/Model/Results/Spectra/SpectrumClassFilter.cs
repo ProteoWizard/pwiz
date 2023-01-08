@@ -18,8 +18,6 @@ namespace pwiz.Skyline.Model.Results.Spectra
     [XmlRoot(XML_ROOT)]
     public class SpectrumClassFilter : Immutable, IXmlSerializable, IComparable, IComparable<SpectrumClassFilter>
     {
-        public static readonly SpectrumClassFilter EMPTY = new SpectrumClassFilter(ImmutableList.Empty<FilterSpec>());
-
         public static SpectrumClassFilter EmptyToNull(SpectrumClassFilter spectrumClassFilter)
         {
             return true == spectrumClassFilter?.IsEmpty ? null : spectrumClassFilter;

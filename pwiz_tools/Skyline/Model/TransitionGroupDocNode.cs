@@ -92,7 +92,6 @@ namespace pwiz.Skyline.Model
             LibInfo = libInfo;
             ExplicitValues = explicitValues ?? ExplicitTransitionGroupValues.EMPTY;
             Results = results;
-            SpectrumClassFilter = SpectrumClassFilter.EMPTY;
         }
 
         private TransitionGroupDocNode(TransitionGroupDocNode group,
@@ -110,7 +109,6 @@ namespace pwiz.Skyline.Model
             Results = group.Results;
             ExplicitValues = group.ExplicitValues ?? ExplicitTransitionGroupValues.EMPTY;
             PrecursorConcentration = group.PrecursorConcentration;
-            SpectrumClassFilter = SpectrumClassFilter.EMPTY;
         }
 
         public TransitionGroup TransitionGroup { get { return (TransitionGroup) Id; }}
@@ -252,6 +250,7 @@ namespace pwiz.Skyline.Model
 
         public TransitionGroupDocNode ChangeSpectrumClassFilter(SpectrumClassFilter spectrumClassFilter)
         {
+            spectrumClassFilter = SpectrumClassFilter.EmptyToNull(spectrumClassFilter);
             if (Equals(SpectrumClassFilter, spectrumClassFilter))
             {
                 return this;

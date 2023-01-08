@@ -7,7 +7,7 @@ namespace pwiz.Skyline.Model
     public class PrecursorKey : Immutable
     {
         public static readonly PrecursorKey EMPTY = new PrecursorKey(Adduct.EMPTY);
-        public PrecursorKey(Adduct adduct) : this(adduct, SpectrumClassFilter.EMPTY)
+        public PrecursorKey(Adduct adduct) : this(adduct, null)
         {
         }
         public PrecursorKey(Adduct adduct, SpectrumClassFilter spectrumClassFilter)
@@ -44,6 +44,14 @@ namespace pwiz.Skyline.Model
             {
                 return (Adduct.GetHashCode() * 397) ^
                        (SpectrumClassFilter != null ? SpectrumClassFilter.GetHashCode() : 0);
+            }
+        }
+
+        public PrecursorKey Unlabeled
+        {
+            get
+            {
+                return ChangeProp(ImClone(this), im => im.Adduct = im.Adduct.Unlabeled);
             }
         }
     }
