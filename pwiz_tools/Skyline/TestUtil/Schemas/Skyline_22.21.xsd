@@ -1602,7 +1602,6 @@
       <xs:enumeration value="ppm"/>
     </xs:restriction>
   </xs:simpleType>
-  
   <xs:simpleType name="terminus_type">
     <xs:restriction base="xs:string">
       <xs:enumeration value="N"/>

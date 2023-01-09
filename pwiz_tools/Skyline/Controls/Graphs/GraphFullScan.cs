@@ -212,9 +212,9 @@ namespace pwiz.Skyline.Controls.Graphs
             else
                 return t.Color;
         }
-        public void ShowSpectrum(IScanProvider scanProvider, int transitionIndex, int scanIndex)
+        public void ShowSpectrum(IScanProvider scanProvider, int transitionIndex, int scanIndex, int? optStep)
         {
-            _msDataFileScanHelper.UpdateScanProvider(scanProvider, transitionIndex, scanIndex);
+            _msDataFileScanHelper.UpdateScanProvider(scanProvider, transitionIndex, scanIndex, optStep);
             if (scanProvider != null)
             {
 
@@ -420,9 +420,6 @@ namespace pwiz.Skyline.Controls.Graphs
             }
 
             double retentionTime = _msDataFileScanHelper.MsDataSpectra[0].RetentionTime ?? _msDataFileScanHelper.ScanProvider.Times[_msDataFileScanHelper.ScanIndex];
-            var result = _documentContainer.DocumentUI.Settings.MeasuredResults.Chromatograms.FirstOrDefault(
-                chr => chr.IndexOfPath(_msDataFileScanHelper.ScanProvider.DataFilePath) >= 0);
-
             GraphPane.Title.Text = string.Format(Resources.GraphFullScan_CreateGraph__0_____1_F2__min_, _msDataFileScanHelper.FileName, retentionTime);
 
             if (Settings.Default.ShowFullScanNumber && _msDataFileScanHelper.MsDataSpectra.Any())
@@ -936,13 +933,12 @@ namespace pwiz.Skyline.Controls.Graphs
         public void FireSelectedScanChanged(double retentionTime)
         {
             IsLoaded = true;
-            if (SelectedScanChanged != null)
-            {
-                if (_msDataFileScanHelper.MsDataSpectra != null)
-                    SelectedScanChanged(this, new SelectedScanEventArgs(_msDataFileScanHelper.ScanProvider.DataFilePath, retentionTime, _msDataFileScanHelper.ScanProvider.Transitions[_msDataFileScanHelper.TransitionIndex].Id));
-                else
-                    SelectedScanChanged(this, new SelectedScanEventArgs(null, 0, null));
-            }
+            SelectedScanChanged?.Invoke(this,
+                _msDataFileScanHelper.MsDataSpectra != null
+                    ? new SelectedScanEventArgs(_msDataFileScanHelper.ScanProvider.DataFilePath, retentionTime,
+                        _msDataFileScanHelper.ScanProvider.Transitions[_msDataFileScanHelper.TransitionIndex].Id,
+                        _msDataFileScanHelper.OptStep)
+                    : new SelectedScanEventArgs(null, 0, null, null));
         }
 
         public bool IsLoaded { get; private set; }
@@ -1168,7 +1164,7 @@ namespace pwiz.Skyline.Controls.Graphs
             if (_msDataFileScanHelper.ScanIndex + delta < 0 || _msDataFileScanHelper.ScanIndex + delta >= _msDataFileScanHelper.ScanProvider.Times.Count)
                 return;
 
-            var sourceScanIds = _msDataFileScanHelper.GetScanIndexes(_msDataFileScanHelper.Source);
+            var sourceScanIds = _msDataFileScanHelper.TimeIntensities.ScanIds;
             int scanId = sourceScanIds[_msDataFileScanHelper.ScanIndex];
             while ((delta < 0 && _msDataFileScanHelper.ScanIndex > 0) || (delta > 0 && _msDataFileScanHelper.ScanIndex < sourceScanIds.Count-1))
             {
@@ -1553,15 +1549,17 @@ namespace pwiz.Skyline.Controls.Graphs
 
     public sealed class SelectedScanEventArgs : EventArgs
     {
-        public SelectedScanEventArgs(MsDataFileUri dataFile, double retentionTime, Identity transitionId)
+        public SelectedScanEventArgs(MsDataFileUri dataFile, double retentionTime, Identity transitionId, int? optStep)
         {
             DataFile = dataFile;
             RetentionTime = retentionTime;
             TransitionId = transitionId;
+            OptStep = optStep;
         }
 
         public MsDataFileUri DataFile { get; private set; }
         public double RetentionTime { get; private set; }
         public Identity TransitionId { get; private set; }
+        public int? OptStep { get; }
     }
 }

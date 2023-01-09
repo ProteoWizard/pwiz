@@ -585,12 +585,6 @@
   <data name="secondDerivativeMenuItem.Text" xml:space="preserve">
     <value>&amp;Second Derivative</value>
   </data>
-  <data name="firstDerivativeMenuItem.Size" type="System.Drawing.Size, System.Drawing">
-    <value>297, 22</value>
-  </data>
-  <data name="firstDerivativeMenuItem.Text" xml:space="preserve">
-    <value>&amp;First Derivative</value>
-  </data>
   <data name="smoothSGChromMenuItem.ShortcutKeys" type="System.Windows.Forms.Keys, System.Windows.Forms">
     <value>Ctrl+Shift+F12</value>
   </data>
@@ -1285,12 +1279,6 @@
     <value>secondDerivativeMenuItem</value>
   </data>
   <data name="&gt;&gt;secondDerivativeMenuItem.Type" xml:space="preserve">
-    <value>System.Windows.Forms.ToolStripMenuItem, System.Windows.Forms, Version=4.0.0.0, Culture=neutral, PublicKeyToken=b77a5c561934e089</value>
-  </data>
-  <data name="&gt;&gt;firstDerivativeMenuItem.Name" xml:space="preserve">
-    <value>firstDerivativeMenuItem</value>
-  </data>
-  <data name="&gt;&gt;firstDerivativeMenuItem.Type" xml:space="preserve">
     <value>System.Windows.Forms.ToolStripMenuItem, System.Windows.Forms, Version=4.0.0.0, Culture=neutral, PublicKeyToken=b77a5c561934e089</value>
   </data>
   <data name="&gt;&gt;smoothSGChromMenuItem.Name" xml:space="preserve">

@@ -90,7 +90,6 @@
             this.transformChromNoneMenuItem = new System.Windows.Forms.ToolStripMenuItem();
             this.transformChromInterpolatedMenuItem = new System.Windows.Forms.ToolStripMenuItem();
             this.secondDerivativeMenuItem = new System.Windows.Forms.ToolStripMenuItem();
-            this.firstDerivativeMenuItem = new System.Windows.Forms.ToolStripMenuItem();
             this.smoothSGChromMenuItem = new System.Windows.Forms.ToolStripMenuItem();
             this.autoZoomMenuItem = new System.Windows.Forms.ToolStripMenuItem();
             this.autoZoomNoneMenuItem = new System.Windows.Forms.ToolStripMenuItem();
@@ -129,10 +128,10 @@
             this.listsMenuItem = new System.Windows.Forms.ToolStripMenuItem();
             this.defineNewListMenuItem = new System.Windows.Forms.ToolStripMenuItem();
             this.auditLogMenuItem = new System.Windows.Forms.ToolStripMenuItem();
+            this.candidatePeaksToolStripMenuItem = new System.Windows.Forms.ToolStripMenuItem();
             this.toolStripSeparator36 = new System.Windows.Forms.ToolStripSeparator();
             this.toolBarToolStripMenuItem = new System.Windows.Forms.ToolStripMenuItem();
             this.statusToolStripMenuItem = new System.Windows.Forms.ToolStripMenuItem();
-            this.candidatePeaksToolStripMenuItem = new System.Windows.Forms.ToolStripMenuItem();
             this.menuStrip1.SuspendLayout();
             this.SuspendLayout();
             // 
@@ -566,7 +565,6 @@
             this.transformChromNoneMenuItem,
             this.transformChromInterpolatedMenuItem,
             this.secondDerivativeMenuItem,
-            this.firstDerivativeMenuItem,
             this.smoothSGChromMenuItem});
             resources.ApplyResources(this.transformChromMenuItem, "transformChromMenuItem");
             this.transformChromMenuItem.Name = "transformChromMenuItem";
@@ -589,12 +587,6 @@
             this.secondDerivativeMenuItem.Name = "secondDerivativeMenuItem";
             resources.ApplyResources(this.secondDerivativeMenuItem, "secondDerivativeMenuItem");
             this.secondDerivativeMenuItem.Click += new System.EventHandler(this.secondDerivativeMenuItem_Click);
-            // 
-            // firstDerivativeMenuItem
-            // 
-            this.firstDerivativeMenuItem.Name = "firstDerivativeMenuItem";
-            resources.ApplyResources(this.firstDerivativeMenuItem, "firstDerivativeMenuItem");
-            this.firstDerivativeMenuItem.Click += new System.EventHandler(this.firstDerivativeMenuItem_Click);
             // 
             // smoothSGChromMenuItem
             // 
@@ -859,6 +851,12 @@
             resources.ApplyResources(this.auditLogMenuItem, "auditLogMenuItem");
             this.auditLogMenuItem.Click += new System.EventHandler(this.auditLogMenuItem_Click);
             // 
+            // candidatePeaksToolStripMenuItem
+            // 
+            this.candidatePeaksToolStripMenuItem.Name = "candidatePeaksToolStripMenuItem";
+            resources.ApplyResources(this.candidatePeaksToolStripMenuItem, "candidatePeaksToolStripMenuItem");
+            this.candidatePeaksToolStripMenuItem.Click += new System.EventHandler(this.candidatePeaksToolStripMenuItem_Click);
+            // 
             // toolStripSeparator36
             // 
             this.toolStripSeparator36.Name = "toolStripSeparator36";
@@ -881,12 +879,6 @@
             this.statusToolStripMenuItem.Name = "statusToolStripMenuItem";
             resources.ApplyResources(this.statusToolStripMenuItem, "statusToolStripMenuItem");
             this.statusToolStripMenuItem.Click += new System.EventHandler(this.statusToolStripMenuItem_Click);
-            // 
-            // candidatePeaksToolStripMenuItem
-            // 
-            this.candidatePeaksToolStripMenuItem.Name = "candidatePeaksToolStripMenuItem";
-            resources.ApplyResources(this.candidatePeaksToolStripMenuItem, "candidatePeaksToolStripMenuItem");
-            this.candidatePeaksToolStripMenuItem.Click += new System.EventHandler(this.candidatePeaksToolStripMenuItem_Click);
             // 
             // ViewMenu
             // 
@@ -963,7 +955,6 @@
         private System.Windows.Forms.ToolStripMenuItem transformChromNoneMenuItem;
         private System.Windows.Forms.ToolStripMenuItem transformChromInterpolatedMenuItem;
         private System.Windows.Forms.ToolStripMenuItem secondDerivativeMenuItem;
-        private System.Windows.Forms.ToolStripMenuItem firstDerivativeMenuItem;
         private System.Windows.Forms.ToolStripMenuItem smoothSGChromMenuItem;
         private System.Windows.Forms.ToolStripMenuItem autoZoomMenuItem;
         private System.Windows.Forms.ToolStripMenuItem autoZoomNoneMenuItem;

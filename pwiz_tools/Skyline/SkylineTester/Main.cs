@@ -66,7 +66,7 @@ namespace SkylineTester
                 return;
 
             foreach (var runButton in _runButtons)
-                runButton.Text = "Stop";
+                runButton.Text = "&Stop";
             buttonStop.Enabled = true;
             EnableButtonSelectFailedTests(false); // Until we have failures to select
             AcceptButton = null;
@@ -170,7 +170,7 @@ namespace SkylineTester
             _runningTab = null;
 
             foreach (var runButton in _runButtons)
-                runButton.Text = "Run";
+                runButton.Text = "&Run";
             buttonStop.Enabled = false;
             AcceptButton = DefaultButton;
 
