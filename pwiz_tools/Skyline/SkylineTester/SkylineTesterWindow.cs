@@ -29,6 +29,7 @@ using System.Reflection;
 using System.Runtime.InteropServices;
 using System.Text;
 using System.Text.RegularExpressions;
+using System.Threading;
 using System.Windows.Forms;
 using System.Xml;
 using System.Xml.Linq;
@@ -491,6 +492,8 @@ namespace SkylineTester
             return isNightly;
         }
 
+        private Thread _waitForClose;
+
         protected override void OnClosing(CancelEventArgs e)
         {
             // If child process is attached to debugger, don't shut down without asking
@@ -507,6 +510,30 @@ namespace SkylineTester
             // If there are tests running, check with user before actually shutting down.
             if (_runningTab != null && !ShiftKeyPressed)
             {
+                // Wait a little longer for the active tab to finish if it was killed,
+                // since it is relatively easy to click the Stop button and then close
+                // the window and end up here.
+                if (_waitForClose == null && commandShell.IsKilled)
+                {
+                    _waitForClose = new Thread(() =>
+                    {
+                        // Wait 1 second more at most
+                        for (int i = 0; i < 10; i++)
+                        {
+                            if (_runningTab == null)
+                                break;
+                            Thread.Sleep(100);
+                        }
+
+                        RunUI(Close);
+                    });
+                    _waitForClose.Start();
+                    e.Cancel = true;
+                    return;
+                }
+
+                _waitForClose = null;
+
                 // Skip that check if we closed programatically.
                 var isNightly = IsNightlyRun();
 
@@ -875,13 +902,15 @@ namespace SkylineTester
 
             var testNumber = line.Substring(8, 7).Trim();
             var testName = line.Substring(16, 46).TrimEnd();
+            // Expecting:
+            // <time> <pass> <test-name> <language> [test-output]<failure-count> failures, <memory-counts> MB, <handle-counts> handles, <seconds> secs.
             var parts = Regex.Split(line, "\\s+");
-            var partsIndex = memoryGraphType ? 6 : 8;
+            var partsIndex = parts.Length - (memoryGraphType ? 6 : 4);
             var unitsIndex = partsIndex + 1;
             var units = memoryGraphType ? LABEL_UNITS_MEMORY : LABEL_UNITS_HANDLE;
             double minorMemory = 0, majorMemory = 0;
             double? middleMemory = null;
-            if (unitsIndex < parts.Length && parts[unitsIndex].Equals(units + ",", StringComparison.InvariantCultureIgnoreCase))
+            if (6 < parts.Length && parts[unitsIndex].Equals(units + ",", StringComparison.InvariantCultureIgnoreCase))
             {
                 try
                 {
@@ -1903,6 +1932,11 @@ namespace SkylineTester
         private void comboTestSet_SelectedValueChanged(object sender, EventArgs e)
         {
             StartBackgroundLoadTestSet();
+        }
+
+        private void buttonRunStatsExportCSV_Click(object sender, EventArgs e)
+        {
+            _tabRunStats.ExportCSV();
         }
 
         #endregion Control events

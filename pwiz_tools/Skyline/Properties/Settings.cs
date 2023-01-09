@@ -1466,6 +1466,17 @@ namespace pwiz.Skyline.Properties
             }
         }
 
+        public Server EditCredentials(Control owner, Server item, IEnumerable<Server> existing, string username, string password)
+        {
+            using (var editServerDlg = new EditServerDlg(existing ?? this) { Server = item })
+            {
+                editServerDlg.Username = username;
+                editServerDlg.Password = password;
+                editServerDlg.textServerURL.Enabled = false;
+                return editServerDlg.ShowDialog(owner) == DialogResult.OK ? editServerDlg.Server : null;
+            }
+        }
+
         public override Server CopyItem(Server item)
         {
             return new Server(item.URI, item.Username, item.Password);

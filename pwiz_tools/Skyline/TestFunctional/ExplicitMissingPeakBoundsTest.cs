@@ -55,23 +55,14 @@ namespace pwiz.SkylineTestFunctional
                 {
                     var chromatogramSet = document.Settings.MeasuredResults.Chromatograms[iReplicate];
                     bool expectedMissingPeak = iPeptide == 1 && iReplicate == 0;
+                    int expectedRowCount = expectedMissingPeak ? 0 : 1;
 
                     string message = string.Format("Peptide: {0} Replicate: {1}", peptideDocNode.Peptide,
                         chromatogramSet.Name);
                     RunUI(()=>SkylineWindow.ComboResults.SelectedIndex = iReplicate);
                     WaitForGraphs();
-                    WaitForCondition(() => candidatePeaksForm.IsComplete);
-                    RunUI(() =>
-                    {
-                        if (expectedMissingPeak)
-                        {
-                            Assert.AreEqual(0, candidatePeaksForm.RowCount, message);
-                        }
-                        else
-                        {
-                            Assert.AreEqual(1, candidatePeaksForm.RowCount, message);
-                        }
-                    });
+                    TryWaitForCondition(() => candidatePeaksForm.IsComplete && candidatePeaksForm.RowCount == expectedRowCount);
+                    RunUI(() => Assert.AreEqual(expectedRowCount, candidatePeaksForm.RowCount, message));
                     document.Settings.MeasuredResults.TryLoadChromatogram(chromatogramSet, peptideDocNode,
                         peptideDocNode.TransitionGroups.First(),
                         document.Settings.TransitionSettings.Instrument.IonMatchMzTolerance,

@@ -477,6 +477,8 @@ namespace SkylineTester
             get { return _process != null && !_process.HasExited; }
         }
 
+        public bool IsKilled => _processKilled || _process == null;
+
         public bool IsWaiting { get; set; }
 
         public bool IsDebuggerAttached 

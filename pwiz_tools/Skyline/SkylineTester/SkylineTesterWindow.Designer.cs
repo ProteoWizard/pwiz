@@ -262,6 +262,7 @@ namespace SkylineTester
             this.label19 = new System.Windows.Forms.Label();
             this.buttonStop = new System.Windows.Forms.Button();
             this.tabRunStats = new System.Windows.Forms.TabPage();
+            this.buttonRunStatsExportCSV = new System.Windows.Forms.Button();
             this.labelCompareTo = new System.Windows.Forms.Label();
             this.comboBoxRunStatsCompare = new System.Windows.Forms.ComboBox();
             this.comboBoxRunStats = new System.Windows.Forms.ComboBox();
@@ -580,7 +581,7 @@ namespace SkylineTester
             this.runForms.Name = "runForms";
             this.runForms.Size = new System.Drawing.Size(100, 28);
             this.runForms.TabIndex = 4;
-            this.runForms.Text = "Run";
+            this.runForms.Text = "&Run";
             this.runForms.UseVisualStyleBackColor = true;
             this.runForms.Click += new System.EventHandler(this.RunOrStop_Clicked);
             // 
@@ -927,7 +928,7 @@ namespace SkylineTester
             this.runTutorials.Name = "runTutorials";
             this.runTutorials.Size = new System.Drawing.Size(100, 28);
             this.runTutorials.TabIndex = 1;
-            this.runTutorials.Text = "Run";
+            this.runTutorials.Text = "&Run";
             this.runTutorials.UseVisualStyleBackColor = true;
             this.runTutorials.Click += new System.EventHandler(this.RunOrStop_Clicked);
             // 
@@ -958,7 +959,7 @@ namespace SkylineTester
             this.runTests.Name = "runTests";
             this.runTests.Size = new System.Drawing.Size(100, 28);
             this.runTests.TabIndex = 5;
-            this.runTests.Text = "Run";
+            this.runTests.Text = "&Run";
             this.toolTip1.SetToolTip(this.runTests, "run the selected tests, immediately");
             this.runTests.UseVisualStyleBackColor = true;
             this.runTests.Click += new System.EventHandler(this.RunOrStop_Clicked);
@@ -1518,7 +1519,7 @@ namespace SkylineTester
             this.runBuild.Name = "runBuild";
             this.runBuild.Size = new System.Drawing.Size(100, 28);
             this.runBuild.TabIndex = 22;
-            this.runBuild.Text = "Run";
+            this.runBuild.Text = "&Run";
             this.runBuild.UseVisualStyleBackColor = true;
             this.runBuild.Click += new System.EventHandler(this.RunOrStop_Clicked);
             // 
@@ -2016,7 +2017,7 @@ namespace SkylineTester
             this.runQuality.Name = "runQuality";
             this.runQuality.Size = new System.Drawing.Size(100, 28);
             this.runQuality.TabIndex = 26;
-            this.runQuality.Text = "Run";
+            this.runQuality.Text = "&Run";
             this.runQuality.UseVisualStyleBackColor = true;
             this.runQuality.Click += new System.EventHandler(this.RunOrStop_Clicked);
             // 
@@ -2648,7 +2649,7 @@ namespace SkylineTester
             this.runNightly.Name = "runNightly";
             this.runNightly.Size = new System.Drawing.Size(100, 28);
             this.runNightly.TabIndex = 33;
-            this.runNightly.Text = "Run";
+            this.runNightly.Text = "&Run";
             this.runNightly.UseVisualStyleBackColor = true;
             this.runNightly.Click += new System.EventHandler(this.RunOrStop_Clicked);
             // 
@@ -2804,13 +2805,14 @@ namespace SkylineTester
             this.buttonStop.Name = "buttonStop";
             this.buttonStop.Size = new System.Drawing.Size(100, 28);
             this.buttonStop.TabIndex = 27;
-            this.buttonStop.Text = "Stop";
+            this.buttonStop.Text = "&Stop";
             this.buttonStop.UseVisualStyleBackColor = true;
             this.buttonStop.Click += new System.EventHandler(this.Stop_Clicked);
             // 
             // tabRunStats
             // 
             this.tabRunStats.BackColor = System.Drawing.Color.BurlyWood;
+            this.tabRunStats.Controls.Add(this.buttonRunStatsExportCSV);
             this.tabRunStats.Controls.Add(this.labelCompareTo);
             this.tabRunStats.Controls.Add(this.comboBoxRunStatsCompare);
             this.tabRunStats.Controls.Add(this.comboBoxRunStats);
@@ -2821,6 +2823,18 @@ namespace SkylineTester
             this.tabRunStats.Size = new System.Drawing.Size(709, 689);
             this.tabRunStats.TabIndex = 8;
             this.tabRunStats.Text = "Run Stats";
+            // 
+            // buttonRunStatsExportCSV
+            // 
+            this.buttonRunStatsExportCSV.Anchor = ((System.Windows.Forms.AnchorStyles)((System.Windows.Forms.AnchorStyles.Top | System.Windows.Forms.AnchorStyles.Right)));
+            this.buttonRunStatsExportCSV.Location = new System.Drawing.Point(622, 48);
+            this.buttonRunStatsExportCSV.Name = "buttonRunStatsExportCSV";
+            this.buttonRunStatsExportCSV.Size = new System.Drawing.Size(75, 23);
+            this.buttonRunStatsExportCSV.TabIndex = 36;
+            this.buttonRunStatsExportCSV.Text = "Export CSV";
+            this.toolTip1.SetToolTip(this.buttonRunStatsExportCSV, "Export a CSV report with more details");
+            this.buttonRunStatsExportCSV.UseVisualStyleBackColor = true;
+            this.buttonRunStatsExportCSV.Click += new System.EventHandler(this.buttonRunStatsExportCSV_Click);
             // 
             // labelCompareTo
             // 
@@ -2953,21 +2967,21 @@ namespace SkylineTester
             this.exitToolStripMenuItem2});
             this.fileToolStripMenuItem.Name = "fileToolStripMenuItem";
             this.fileToolStripMenuItem.Size = new System.Drawing.Size(37, 20);
-            this.fileToolStripMenuItem.Text = "File";
+            this.fileToolStripMenuItem.Text = "&File";
             // 
             // openToolStripMenuItem
             // 
             this.openToolStripMenuItem.Name = "openToolStripMenuItem";
             this.openToolStripMenuItem.ShortcutKeys = ((System.Windows.Forms.Keys)((System.Windows.Forms.Keys.Control | System.Windows.Forms.Keys.O)));
             this.openToolStripMenuItem.Size = new System.Drawing.Size(188, 22);
-            this.openToolStripMenuItem.Text = "Open...";
+            this.openToolStripMenuItem.Text = "&Open...";
             this.openToolStripMenuItem.Click += new System.EventHandler(this.open_Click);
             // 
             // saveToolStripMenuItem
             // 
             this.saveToolStripMenuItem.Name = "saveToolStripMenuItem";
             this.saveToolStripMenuItem.Size = new System.Drawing.Size(188, 22);
-            this.saveToolStripMenuItem.Text = "Save as...";
+            this.saveToolStripMenuItem.Text = "Save &as...";
             this.saveToolStripMenuItem.Click += new System.EventHandler(this.save_Click);
             // 
             // exitToolStripMenuItem1
@@ -2979,7 +2993,7 @@ namespace SkylineTester
             // 
             this.createInstallerZipFileToolStripMenuItem.Name = "createInstallerZipFileToolStripMenuItem";
             this.createInstallerZipFileToolStripMenuItem.Size = new System.Drawing.Size(188, 22);
-            this.createInstallerZipFileToolStripMenuItem.Text = "Save zip file installer...";
+            this.createInstallerZipFileToolStripMenuItem.Text = "Save &zip file installer...";
             this.createInstallerZipFileToolStripMenuItem.Click += new System.EventHandler(this.SaveZipFileInstaller);
             // 
             // toolStripSeparator1
@@ -2991,7 +3005,7 @@ namespace SkylineTester
             // 
             this.exitToolStripMenuItem2.Name = "exitToolStripMenuItem2";
             this.exitToolStripMenuItem2.Size = new System.Drawing.Size(188, 22);
-            this.exitToolStripMenuItem2.Text = "Exit";
+            this.exitToolStripMenuItem2.Text = "E&xit";
             this.exitToolStripMenuItem2.Click += new System.EventHandler(this.exit_Click);
             // 
             // findToolStripMenuItem
@@ -3002,14 +3016,14 @@ namespace SkylineTester
             this.findToolStripMenuItem.Name = "findToolStripMenuItem";
             this.findToolStripMenuItem.ShortcutKeys = System.Windows.Forms.Keys.F3;
             this.findToolStripMenuItem.Size = new System.Drawing.Size(42, 20);
-            this.findToolStripMenuItem.Text = "Find";
+            this.findToolStripMenuItem.Text = "Fi&nd";
             // 
             // findTestToolStripMenuItem
             // 
             this.findTestToolStripMenuItem.Name = "findTestToolStripMenuItem";
             this.findTestToolStripMenuItem.ShortcutKeys = ((System.Windows.Forms.Keys)((System.Windows.Forms.Keys.Control | System.Windows.Forms.Keys.F)));
             this.findTestToolStripMenuItem.Size = new System.Drawing.Size(146, 22);
-            this.findTestToolStripMenuItem.Text = "Find...";
+            this.findTestToolStripMenuItem.Text = "&Find...";
             this.findTestToolStripMenuItem.Click += new System.EventHandler(this.findTestToolStripMenuItem_Click);
             // 
             // findNextToolStripMenuItem
@@ -3017,7 +3031,7 @@ namespace SkylineTester
             this.findNextToolStripMenuItem.Name = "findNextToolStripMenuItem";
             this.findNextToolStripMenuItem.ShortcutKeys = System.Windows.Forms.Keys.F3;
             this.findNextToolStripMenuItem.Size = new System.Drawing.Size(146, 22);
-            this.findNextToolStripMenuItem.Text = "Find next";
+            this.findNextToolStripMenuItem.Text = "Find &Next";
             this.findNextToolStripMenuItem.Click += new System.EventHandler(this.findNextToolStripMenuItem_Click);
             // 
             // selectBuildMenuItem
@@ -3033,7 +3047,7 @@ namespace SkylineTester
             this.zip64Bit});
             this.selectBuildMenuItem.Name = "selectBuildMenuItem";
             this.selectBuildMenuItem.Size = new System.Drawing.Size(80, 20);
-            this.selectBuildMenuItem.Text = "Select build";
+            this.selectBuildMenuItem.Text = "Select &Build";
             this.selectBuildMenuItem.DropDownOpening += new System.EventHandler(this.selectBuildMenuOpening);
             // 
             // bin32Bit
@@ -3106,14 +3120,14 @@ namespace SkylineTester
             this.accessInternet});
             this.optionsToolStripMenuItem.Name = "optionsToolStripMenuItem";
             this.optionsToolStripMenuItem.Size = new System.Drawing.Size(61, 20);
-            this.optionsToolStripMenuItem.Text = "Options";
+            this.optionsToolStripMenuItem.Text = "&Options";
             // 
             // accessInternet
             // 
             this.accessInternet.CheckOnClick = true;
             this.accessInternet.Name = "accessInternet";
             this.accessInternet.Size = new System.Drawing.Size(154, 22);
-            this.accessInternet.Text = "Access internet";
+            this.accessInternet.Text = "&Access Internet";
             // 
             // helpToolStripMenuItem
             // 
@@ -3122,20 +3136,20 @@ namespace SkylineTester
             this.aboutToolStripMenuItem});
             this.helpToolStripMenuItem.Name = "helpToolStripMenuItem";
             this.helpToolStripMenuItem.Size = new System.Drawing.Size(44, 20);
-            this.helpToolStripMenuItem.Text = "Help";
+            this.helpToolStripMenuItem.Text = "&Help";
             // 
             // documentationToolStripMenuItem
             // 
             this.documentationToolStripMenuItem.Name = "documentationToolStripMenuItem";
             this.documentationToolStripMenuItem.Size = new System.Drawing.Size(166, 22);
-            this.documentationToolStripMenuItem.Text = "Documentation...";
+            this.documentationToolStripMenuItem.Text = "&Documentation...";
             this.documentationToolStripMenuItem.Click += new System.EventHandler(this.documentationToolStripMenuItem_Click);
             // 
             // aboutToolStripMenuItem
             // 
             this.aboutToolStripMenuItem.Name = "aboutToolStripMenuItem";
             this.aboutToolStripMenuItem.Size = new System.Drawing.Size(166, 22);
-            this.aboutToolStripMenuItem.Text = "About...";
+            this.aboutToolStripMenuItem.Text = "&About...";
             this.aboutToolStripMenuItem.Click += new System.EventHandler(this.about_Click);
             // 
             // radioButton3
@@ -3607,5 +3621,6 @@ namespace SkylineTester
         private Label label22;
         private RadioButton runSerial;
         private ComboBox testSet;
+        private Button buttonRunStatsExportCSV;
     }
 }

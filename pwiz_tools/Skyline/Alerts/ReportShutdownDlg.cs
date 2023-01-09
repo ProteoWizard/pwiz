@@ -20,11 +20,13 @@
 using System;
 using System.Diagnostics;
 using System.IO;
+using System.Linq;
 using System.Reflection;
 using System.Text;
 using System.Windows.Forms;
 using pwiz.Skyline.Properties;
 using pwiz.Skyline.Util;
+using pwiz.Skyline.Util.Extensions;
 
 namespace pwiz.Skyline.Alerts
 {
@@ -49,22 +51,9 @@ namespace pwiz.Skyline.Alerts
                 Helpers.TryTwice(() => File.Delete(exceptionFile));
             }
 
-            var exceptionType = lines[0];
-            var exceptionMessage = new StringBuilder();
-            exceptionMessage.AppendLine(lines[1]);
-            var stackTraceText = new StringBuilder();
-            for (int i = 2; i < lines.Length; i++)
-            {
-                if (lines[i] == @"Stack trace:")
-                {
-                    while (++i < lines.Length)
-                        stackTraceText.AppendLine(lines[i]);
-                    break;
-                }
-                exceptionMessage.AppendLine(lines[i]);
-            }
-
-            Init(exceptionType, exceptionMessage.ToString(), stackTraceText.ToString());
+            string exceptionType = lines.ElementAtOrDefault(0) ?? string.Empty;
+            string exceptionMessage = lines.ElementAtOrDefault(1) ?? string.Empty;
+            Init(exceptionType, exceptionMessage, TextUtil.LineSeparate(lines));
 
             // Change the title and intro text of the dialog.
             SetTitleAndIntroText(
@@ -72,6 +61,8 @@ namespace pwiz.Skyline.Alerts
                 Resources.ReportShutdownDlg_ReportShutdownDlg_Skyline_had_an_unexpected_error_the_last_time_you_ran_it_,
                 Resources.ReportShutdownDlg_ReportShutdownDlg_Report_the_error_to_help_improve_Skyline_);
             StartPosition = FormStartPosition.CenterScreen;
+            // This dialog should be shown in the taskbar because it does not have a parent
+            ShowInTaskbar = true;
         }
 
         /// <summary>

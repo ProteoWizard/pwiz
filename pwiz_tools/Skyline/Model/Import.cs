@@ -3479,6 +3479,12 @@ namespace pwiz.Skyline.Model
             sequence.Append(seq);
         }
 
+        public static bool IsValidFastaChar(char c)
+        {
+            return c >= 0x20 && c <= 0x7E ||
+                   c == '\t' || c == 0x01;
+        }
+
         public static IEnumerable<FastaData> ParseFastaFile(TextReader reader, bool readNamesOnly = false)
         {
             string line;
@@ -3488,9 +3494,12 @@ namespace pwiz.Skyline.Model
 
             while ((line = reader.ReadLine()) != null)
             {
+                ++lineNum;
                 for (int i=0; i < line.Length; ++i)
-                    if (line[i] < 32 || line[i] > 126)
-                        throw new InvalidDataException(string.Format(Resources.FastaData_ParseFastaFile_Error_on_line__0___invalid_non_ASCII_character___1___at_position__2___are_you_sure_this_is_a_FASTA_file_, lineNum, line[i], i));
+                    if (!IsValidFastaChar(line[i]))
+                        throw new InvalidDataException(string.Format(
+                            Resources.FastaData_ParseFastaFile_Error_on_line__0___invalid_non_ASCII_character___1___at_position__2___are_you_sure_this_is_a_FASTA_file_,
+                            lineNum, line[i], i));
                     
                 if (line.StartsWith(@">"))
                 {

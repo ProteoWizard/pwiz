@@ -48,6 +48,7 @@ namespace pwiz.Skyline.FileUI
         public static string CONCUR_PREC_TXT { get { return Resources.ExportMethodDlg_CONCUR_PREC_TXT; } }
         public static string RUN_DURATION_TXT { get { return Resources.ExportMethodDlg_RUN_DURATION_TXT; } }
         public static string DWELL_TIME_TXT { get { return Resources.ExportMethodDlg_DWELL_TIME_TXT; } }
+        public static string ACCUMULATION_TIME_TXT { get { return Resources.ExportMethodDlg_ACCUMULATION_TIME_TXT; } }
 
         public static string SCHED_NOT_SUPPORTED_ERR_TXT { get { return Resources.ExportMethodDlg_comboTargetType_SelectedIndexChanged_Sched_Not_Supported_Err_Text; } }
 
@@ -172,6 +173,7 @@ namespace pwiz.Skyline.FileUI
             MethodType = mType;
 
             DwellTime = Settings.Default.ExportMethodDwellTime;
+            AccumulationTime = Settings.Default.ExportMethodAccumulationTime;
             RunLength = Settings.Default.ExportMethodRunLength;
 
             Helpers.PeptideToMoleculeTextMapper.TranslateForm(this, document.DocumentType); // Use terminology like "Molecule List" instead of "Protein" if appropriate to document
@@ -220,6 +222,7 @@ namespace pwiz.Skyline.FileUI
             textMs1RepetitionTime.Text = Settings.Default.ExportMs1RepetitionTime.ToString(LocalizationHelper.CurrentCulture);
             // Reposition from design layout
             cbSlens.Top = textMaxTransitions.Bottom;
+            textAccumulationTime.Top = textDwellTime.Top;
             panelSureQuant.Top = labelMaxTransitions.Top;
             panelThermoColumns.Top = labelDwellTime.Top;
             var panelOffset = panelThermoColumns.Controls.Cast<Control>().Min(c => c.Left);
@@ -749,6 +752,16 @@ namespace pwiz.Skyline.FileUI
             }
         }
 
+        public double AccumulationTime
+        {
+            get { return _exportProperties.AccumulationTime; }
+            set
+            {
+                _exportProperties.AccumulationTime = value;
+                textAccumulationTime.Text = _exportProperties.AccumulationTime.ToString(LocalizationHelper.CurrentCulture);
+            }
+        }
+
         /// <summary>
         /// Length of run in minutes for non-scheduled runs
         /// </summary>
@@ -838,7 +851,8 @@ namespace pwiz.Skyline.FileUI
             }
 
             if (Equals(InstrumentType, ExportInstrumentType.AGILENT_TOF) ||
-                Equals(InstrumentType, ExportInstrumentType.ABI_TOF))
+                Equals(InstrumentType, ExportInstrumentType.ABI_TOF) ||
+                Equals(InstrumentType, ExportInstrumentType.ABI_7600))
             {
                 // Check that mass analyzer settings are set to TOF.
                 if (!CheckAnalyzer(documentExport.Settings.TransitionSettings.FullScan.IsEnabledMs, 
@@ -907,6 +921,26 @@ namespace pwiz.Skyline.FileUI
                 {
                     MessageDlg.Show(this, ionMobilityError);
                     return;
+                }
+            }
+
+            // Check to make sure prediction is not set to optimize by transition if exporting an isolation list.
+            if (Equals(documentExport.Settings.TransitionSettings.Prediction.OptimizedMethodType,
+                    OptimizedMethodType.Transition) && IsFullScanInstrument)
+            {
+                switch (MultiButtonMsgDlg.Show(this,
+                            TextUtil.LineSeparate(
+                                Resources.ExportMethodDlg_OkDialog_The_transition_prediction_settings_for_this_document_are_set_to_use_optimized_values_by_transition_,
+                                Resources.ExportMethodDlg_OkDialog_Using_optimized_values_by_transition_is_invalid_for_this_instrument_type__Would_you_like_to_use_optimized_values_by_precursor_instead_),
+                            MessageBoxButtons.OKCancel))
+                {
+                    case DialogResult.OK:
+                        documentExport = documentExport.ChangeSettings(
+                            documentExport.Settings.ChangeTransitionPrediction(
+                                predict => predict.ChangeOptimizedMethodType(OptimizedMethodType.Precursor)));
+                        break;
+                    default:
+                        return;
                 }
             }
 
@@ -1125,6 +1159,8 @@ namespace pwiz.Skyline.FileUI
                 Settings.Default.PrimaryTransitionCount = PrimaryCount;
             if (textDwellTime.Visible)
                 Settings.Default.ExportMethodDwellTime = DwellTime;
+            if (textAccumulationTime.Visible)
+                Settings.Default.ExportMethodAccumulationTime = AccumulationTime;
             if (textRunLength.Visible)
                 Settings.Default.ExportMethodRunLength = RunLength;
             if (panelThermoColumns.Visible)
@@ -1331,6 +1367,15 @@ namespace pwiz.Skyline.FileUI
                     return false;
 
                 _exportProperties.DwellTime = dwellTime;
+            }
+
+            if (textAccumulationTime.Visible)
+            {
+                if (!helper.ValidateDecimalTextBox(textAccumulationTime, AbstractMassListExporter.ACCUMULATION_TIME_MIN,
+                        AbstractMassListExporter.ACCUMULATION_TIME_MAX, out var accumulationTime, false))
+                    return false;
+
+                _exportProperties.AccumulationTime = accumulationTime;
             }
 
             _exportProperties.IntensityThresholdPercent = null;
@@ -1670,14 +1715,21 @@ namespace pwiz.Skyline.FileUI
             {
                 cbIgnoreProteins.Checked = true;
             }
+
             if (triggered && !(InstrumentType == ExportInstrumentType.ABI || InstrumentType == ExportInstrumentType.ABI_QTRAP))
             {
                 comboOptimizing.Enabled = false;
             }
+            else if (!IsFullScanInstrument)
+            {
+                comboOptimizing.Enabled = true;
+            }
             else
             {
-                comboOptimizing.Enabled = !IsFullScanInstrument;
+                comboOptimizing.Enabled = Equals(InstrumentType, ExportInstrumentType.ABI_TOF) ||
+                                          Equals(InstrumentType, ExportInstrumentType.ABI_7600);
             }
+
             if (!comboOptimizing.Enabled)
             {
                 OptimizeType = ExportOptimize.NONE;
@@ -1889,13 +1941,22 @@ namespace pwiz.Skyline.FileUI
         private void UpdateDwellControls(bool standard)
         {
             bool showDwell = false;
+            bool showAccumulation = false;
             bool showRunLength = false;
             if (standard)
             {
                 if (!IsSingleDwellInstrument && !IsDia)
                 {
-                    labelDwellTime.Text = DWELL_TIME_TXT;
-                    showDwell = true;
+                    if (!Equals(InstrumentType, ExportInstrumentType.ABI_7600))
+                    {
+                        labelDwellTime.Text = DWELL_TIME_TXT;
+                        showDwell = true;
+                    }
+                    else
+                    {
+                        labelDwellTime.Text = ACCUMULATION_TIME_TXT;
+                        showAccumulation = true;
+                    }
                 }
                 else if (IsAlwaysScheduledInstrument)
                 {
@@ -1903,10 +1964,11 @@ namespace pwiz.Skyline.FileUI
                     showRunLength = true;                    
                 }
             }
-            labelDwellTime.Visible = showDwell || showRunLength;
+            labelDwellTime.Visible = showDwell || showAccumulation || showRunLength;
             labelDwellTime.TabIndex = textRunLength.TabIndex-1;
             textDwellTime.Visible = showDwell;
             textDwellTime.TabIndex = textRunLength.TabIndex;
+            textAccumulationTime.Visible = showAccumulation;
             textRunLength.Visible = showRunLength;
         }
 
@@ -1974,6 +2036,11 @@ namespace pwiz.Skyline.FileUI
                 if (Equals(InstrumentType, ExportInstrumentType.ABI_QTRAP))
                 {
                     listFileTypes.Add(MethodFilter(ExportInstrumentType.EXT_AB_SCIEX));
+                }
+                else if (Equals(InstrumentType, ExportInstrumentType.ABI_7500) ||
+                         Equals(InstrumentType, ExportInstrumentType.ABI_7600))
+                {
+                    listFileTypes.Add(MethodFilter(ExportInstrumentType.EXT_SCIEX_OS));
                 }
                 else if (Equals(InstrumentType, ExportInstrumentType.BRUKER_TIMSTOF))
                 {

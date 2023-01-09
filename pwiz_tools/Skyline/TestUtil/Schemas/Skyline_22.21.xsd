@@ -1467,14 +1467,12 @@
       <xs:pattern value="H'|H&quot;|D|T|C'|C&quot;|N'|O&quot;|O'|Cl'|Br'|P'|S'|S&quot;|Cu'"/>
     </xs:restriction>
   </xs:simpleType>
-  
   <xs:simpleType name="mz_match_tolerance_unit_type">
     <xs:restriction base="xs:string">
       <xs:enumeration value="mz"/>
       <xs:enumeration value="ppm"/>
     </xs:restriction>
   </xs:simpleType>
-
   <xs:simpleType name="full_scan_mass_analyzer_type">
     <xs:restriction base="xs:string">
       <xs:enumeration value="none"/>

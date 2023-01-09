@@ -727,6 +727,34 @@ namespace pwiz.Skyline.Model
             return new CrosslinkStructure(linkedPeptides, linkedExplicitMods, crosslinks);
         }
 
+        protected AAModInfo MakeCrosslinkAaModInfo(CrosslinkLibraryKey crosslinkLibraryKey, CrosslinkLibraryKey.Crosslink crosslink)
+        {
+            var firstCrosslinkSite = crosslink.CrosslinkSites.First();
+            AAModKey modKey = new AAModKey()
+            {
+                IsCrosslinker = true,
+                AA = crosslinkLibraryKey.PeptideLibraryKeys[firstCrosslinkSite.PeptideIndex]
+                    .UnmodifiedSequence[firstCrosslinkSite.AaIndex]
+            };
+            var massModification = MassModification.Parse(crosslink.Name);
+            if (massModification == null)
+            {
+                modKey.Name = crosslink.Name;
+            }
+            else
+            {
+                modKey.Mass = massModification.Mass;
+                modKey.RoundedTo = massModification.Precision;
+            }
+
+            AAModInfo modInfo = new AAModInfo
+            {
+                IndexAA = firstCrosslinkSite.AaIndex,
+                ModKey = modKey
+            };
+            return modInfo;
+        }
+
         private StaticMod FindCrosslinkMod(string crosslinkName, string sequence1, int indexAa1, String sequence2,
             int indexAa2)
         {
@@ -1150,9 +1178,10 @@ namespace pwiz.Skyline.Model
             public bool IsModMatch(StaticMod mod)
             {
                 return mod != null
-                    && (string.IsNullOrEmpty(mod.AAs) ||
-                        mod.AminoAcids.ContainsAA(AA.ToString(CultureInfo.InvariantCulture)))
-                    && ((mod.Terminus == null) || Equals(mod.Terminus, Terminus));
+                       && (string.IsNullOrEmpty(mod.AAs) ||
+                           mod.AminoAcids.ContainsAA(AA.ToString(CultureInfo.InvariantCulture)))
+                       && ((mod.Terminus == null) || Equals(mod.Terminus, Terminus))
+                       && mod.IsCrosslinker == ModKey.IsCrosslinker;
             }
         }
 
@@ -1170,6 +1199,7 @@ namespace pwiz.Skyline.Model
             public int RoundedTo { get; set; }
             public bool AppearsToBeSpecificMod { get; set; }
             public bool UserIndicatedHeavy { get; set; }
+            public bool IsCrosslinker { get; set; }
             public void RemoveTerminus()
             {
                 _terminus = null;

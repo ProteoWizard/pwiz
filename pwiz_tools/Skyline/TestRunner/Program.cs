@@ -664,7 +664,12 @@ namespace TestRunner
 
 
             // paths in testRunnerCmd are in container-space (c:\pwiz is mounted from pwizRoot, c:\downloads is mounted from GetDownloadsPath(), c:\AlwaysUpCLT is not copied to the host)
-            var testRunnerCmd = $@"c:\pwiz\pwiz_tools\Skyline\bin\x64\Release\TestRunner.exe parallelmode=client showheader=0 results=c:\AlwaysUpCLT\TestResults log={testRunnerLog}";
+            var testRunnerExe = Assembly.GetExecutingAssembly().Location;
+            int iRelative = testRunnerExe.IndexOf(@"pwiz_tools\Skyline\bin", StringComparison.CurrentCultureIgnoreCase);
+            testRunnerExe = iRelative != -1
+                ? Path.Combine(@"c:\pwiz", testRunnerExe.Substring(iRelative))
+                : @"c:\pwiz\pwiz_tools\Skyline\bin\x64\Release\TestRunner.exe";
+            var testRunnerCmd = $@"{testRunnerExe} parallelmode=client showheader=0 results=c:\AlwaysUpCLT\TestResults log={testRunnerLog}";
             testRunnerCmd = AddPassThroughArguments(commandLineArgs, testRunnerCmd);
             testRunnerCmd += $" workerport={workerPort}";
 
@@ -897,12 +902,13 @@ namespace TestRunner
                     }
                 }, TaskCreationOptions.LongRunning));
 
-                Console.WriteLine("Running {0}{1} tests{2}{3} in parallel with {4} workers...\r\n",
+                Console.WriteLine("Running {0}{1} tests{2}{3} in parallel with {4} workers...",
                     testList.Count,
                     testList.Count < unfilteredTestList.Count ? "/" + unfilteredTestList.Count : "",
                     (loop <= 0) ? " forever" : (loop == 1) ? "" : " in " + loop + " loops",
                     "", /*(repeat <= 1) ? "" : ", repeated " + repeat + " times each per language",*/
                     workerCount);
+                Console.WriteLine("(If prompted to \"Allow TestRunner to communicate on these networks\", be sure to check BOTH public and private options.)\r\n");
 
                 // main thread listens for workers to connect
                 while (!cts.IsCancellationRequested)
