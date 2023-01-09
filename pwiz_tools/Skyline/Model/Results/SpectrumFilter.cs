@@ -888,7 +888,7 @@ namespace pwiz.Skyline.Model.Results
                     }
 
                     var matchingSpectra = spectra;
-                    if (!filterPair.SpectrumClassFilter.IsEmpty)
+                    if (filterPair.SpectrumClassFilter != null)
                     {
                         matchingSpectra = spectra.Where(spectrum => filterPair.MatchesSpectrum(spectrum.Metadata))
                             .ToArray();
