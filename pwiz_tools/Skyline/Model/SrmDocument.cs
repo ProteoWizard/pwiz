@@ -769,14 +769,7 @@ namespace pwiz.Skyline.Model
 
             SrmDocument docClone = (SrmDocument)clone;
             docClone.RevisionIndex = RevisionIndex + 1;
-            if (docClone.Settings.DataSettings.SynchronizeMolecules)
-            {
-                docClone._moleculeSynchronizer = MoleculeSynchronizer.MakeMoleculeSynchronizer(docClone);
-            }
-            else
-            {
-                docClone._moleculeSynchronizer = null;
-            }
+            docClone._moleculeSynchronizer = MoleculeSynchronizer.MakeMoleculeSynchronizer(docClone);
 
             if (!DeferSettingsChanges)
             {
@@ -971,10 +964,6 @@ namespace pwiz.Skyline.Model
             {
                 doc.RevisionIndex++;
                 doc.IsProteinMetadataPending = doc.CalcIsProteinMetadataPending();
-                if (doc.Settings.DataSettings.SynchronizeMolecules)
-                {
-                    doc._moleculeSynchronizer = _moleculeSynchronizer ?? MoleculeSynchronizer.MakeMoleculeSynchronizer(doc);
-                }
             });
         }
 
@@ -2186,10 +2175,7 @@ namespace pwiz.Skyline.Model
                 Settings = Settings.CachePeptideStandards(new PeptideGroupDocNode[0], children);
 
                 SetChildren(UpdateResultsSummaries(children, new Dictionary<int, PeptideDocNode>()));
-                if (Settings.DataSettings.SynchronizeMolecules)
-                {
-                    _moleculeSynchronizer = MoleculeSynchronizer.MakeMoleculeSynchronizer(this);
-                }
+                _moleculeSynchronizer = MoleculeSynchronizer.MakeMoleculeSynchronizer(this);
 
                 IsProteinMetadataPending = CalcIsProteinMetadataPending(); // Background loaders are about to kick in, they need this info.
             }

@@ -73,7 +73,6 @@ namespace pwiz.Skyline.SettingsUI
                 viewSpec => PersistedViews.MainGroup.Id.ViewName(viewSpec.Name));
             _metadataRuleSetsListBoxDriver = new SettingsListBoxDriver<MetadataRuleSet>(checkedListBoxRuleSets, Settings.Default.MetadataRuleSets);
             _metadataRuleSetsListBoxDriver.LoadList(dataSettings.MetadataRuleSets);
-            cbxSynchronizeMolecules.Checked = dataSettings.SynchronizeMolecules;
             _originalSettings = dataSettings;
         }
 
@@ -90,8 +89,7 @@ namespace pwiz.Skyline.SettingsUI
                 .ChangeGroupComparisonDefs(_groupComparisonsListBoxDriver.Chosen)
                 .ChangeViewSpecList(viewSpecs)
                 .ChangeListDefs(_listsListBoxDriver.Chosen)
-                .ChangeExtractedMetadata(_metadataRuleSetsListBoxDriver.Chosen)
-                .ChangeSynchronizeMolecules(cbxSynchronizeMolecules.Checked);
+                .ChangeExtractedMetadata(_metadataRuleSetsListBoxDriver.Chosen);
         }
 
         private void btnAddAnnotation_Click(object sender, System.EventArgs e)

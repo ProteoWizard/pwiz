@@ -57,15 +57,12 @@ namespace pwiz.Skyline.SettingsUI
             this.chooseViewsControl = new pwiz.Common.DataBinding.Controls.Editor.ChooseViewsControl();
             this.btnCancel = new System.Windows.Forms.Button();
             this.btnOK = new System.Windows.Forms.Button();
-            this.tabPageMisc = new System.Windows.Forms.TabPage();
-            this.cbxSynchronizeMolecules = new System.Windows.Forms.CheckBox();
             this.tabControl.SuspendLayout();
             this.tabPageAnnotations.SuspendLayout();
             this.tabPageResultFileRules.SuspendLayout();
             this.tabPageLists.SuspendLayout();
             this.tabPageGroupComparisons.SuspendLayout();
             this.tabPageReports.SuspendLayout();
-            this.tabPageMisc.SuspendLayout();
             this.SuspendLayout();
             // 
             // tabControl
@@ -76,7 +73,6 @@ namespace pwiz.Skyline.SettingsUI
             this.tabControl.Controls.Add(this.tabPageLists);
             this.tabControl.Controls.Add(this.tabPageGroupComparisons);
             this.tabControl.Controls.Add(this.tabPageReports);
-            this.tabControl.Controls.Add(this.tabPageMisc);
             this.tabControl.Name = "tabControl";
             this.tabControl.SelectedIndex = 0;
             // 
@@ -278,20 +274,6 @@ namespace pwiz.Skyline.SettingsUI
             this.btnOK.UseVisualStyleBackColor = true;
             this.btnOK.Click += new System.EventHandler(this.btnOK_Click);
             // 
-            // tabPageMisc
-            // 
-            this.tabPageMisc.Controls.Add(this.cbxSynchronizeMolecules);
-            resources.ApplyResources(this.tabPageMisc, "tabPageMisc");
-            this.tabPageMisc.Name = "tabPageMisc";
-            this.tabPageMisc.UseVisualStyleBackColor = true;
-            // 
-            // cbxSynchronizeMolecules
-            // 
-            resources.ApplyResources(this.cbxSynchronizeMolecules, "cbxSynchronizeMolecules");
-            this.cbxSynchronizeMolecules.Name = "cbxSynchronizeMolecules";
-            this.modeUIHandler.SetUIMode(this.cbxSynchronizeMolecules, pwiz.Skyline.Util.Helpers.ModeUIExtender.MODE_UI_HANDLING_TYPE.invariant);
-            this.cbxSynchronizeMolecules.UseVisualStyleBackColor = true;
-            // 
             // DocumentSettingsDlg
             // 
             this.AcceptButton = this.btnOK;
@@ -312,8 +294,6 @@ namespace pwiz.Skyline.SettingsUI
             this.tabPageLists.ResumeLayout(false);
             this.tabPageGroupComparisons.ResumeLayout(false);
             this.tabPageReports.ResumeLayout(false);
-            this.tabPageMisc.ResumeLayout(false);
-            this.tabPageMisc.PerformLayout();
             this.ResumeLayout(false);
 
         }
@@ -348,7 +328,5 @@ namespace pwiz.Skyline.SettingsUI
         private System.Windows.Forms.Label lblMetadataRulesDescription;
         private System.Windows.Forms.Button btnAddMetadataRuleSet;
         private System.Windows.Forms.Button btnEditMetadataRuleSetList;
-        private System.Windows.Forms.TabPage tabPageMisc;
-        private System.Windows.Forms.CheckBox cbxSynchronizeMolecules;
     }
 }
