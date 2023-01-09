@@ -295,7 +295,7 @@ namespace pwiz.SkylineTestTutorial
 
             var libraryExpl = ShowDialog<ViewLibraryDlg>(SkylineWindow.ViewSpectralLibraries);
             var messageWarning = WaitForOpenForm<AddModificationsDlg>();
-            RunUI(() => messageWarning.OkDialogAll());
+            OkDialog(messageWarning, messageWarning.OkDialogAll);
             PauseForScreenShot("Spectral Library Explorer Window", 3);
             OkDialog(libraryExpl, libraryExpl.Close);
 

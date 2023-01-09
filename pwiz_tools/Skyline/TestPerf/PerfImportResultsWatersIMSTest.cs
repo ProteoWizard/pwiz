@@ -135,8 +135,7 @@ namespace TestPerf // Note: tests in the "TestPerf" namespace only run when the 
                     lockmassDlg.LockmassTolerance = 10.0;
                 });
                 */
-                RunUI(lockmassDlg.OkDialog);
-                WaitForClosedForm<ImportResultsLockMassDlg>();
+                OkDialog(lockmassDlg, lockmassDlg.OkDialog);
 
                 // Add FASTA also skipped because filter for document peptides was chosen.
 
