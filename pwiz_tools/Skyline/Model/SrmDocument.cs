@@ -288,6 +288,7 @@ namespace pwiz.Skyline.Model
             DocumentHash = doc.DocumentHash;
             DeferSettingsChanges = doc.DeferSettingsChanges;
             DocumentType = doc.DocumentType;
+            _moleculeSynchronizer = doc._moleculeSynchronizer;
 
             if (changeProps != null)
                 changeProps(this);
@@ -2694,7 +2695,7 @@ namespace pwiz.Skyline.Model
 
         public IEnumerable<IdentityPath> FindMolecules(PeptideSequenceModKey key)
         {
-            return _moleculeSynchronizer.FindMolecules(key);
+            return _moleculeSynchronizer?.FindMolecules(key) ?? Array.Empty<IdentityPath>();
         }
 
         #region object overrides

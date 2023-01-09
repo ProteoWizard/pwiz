@@ -289,6 +289,7 @@ namespace pwiz.Skyline
             this.supportMenuItem = new System.Windows.Forms.ToolStripMenuItem();
             this.issuesMenuItem = new System.Windows.Forms.ToolStripMenuItem();
             this.submitErrorReportMenuItem = new System.Windows.Forms.ToolStripMenuItem();
+            this.crashSkylineMenuItem = new System.Windows.Forms.ToolStripMenuItem();
             this.checkForUpdatesSeparator = new System.Windows.Forms.ToolStripSeparator();
             this.checkForUpdatesMenuItem = new System.Windows.Forms.ToolStripMenuItem();
             this.toolStripSeparator29 = new System.Windows.Forms.ToolStripSeparator();
@@ -339,7 +340,8 @@ namespace pwiz.Skyline
             this.detectionsToolStripSeparator2 = new System.Windows.Forms.ToolStripSeparator();
             this.detectionsPropertiesToolStripMenuItem = new System.Windows.Forms.ToolStripMenuItem();
             this.detectionsToolStripSeparator3 = new System.Windows.Forms.ToolStripSeparator();
-            this.crashSkylineMenuItem = new System.Windows.Forms.ToolStripMenuItem();
+            this.duplicatePeptidesTreeContextMenuItem = new System.Windows.Forms.ToolStripMenuItem();
+            this.toolStripSeparator4 = new System.Windows.Forms.ToolStripSeparator();
             this.contextMenuTreeNode.SuspendLayout();
             this.contextMenuSpectrum.SuspendLayout();
             this.contextMenuRetentionTimes.SuspendLayout();
@@ -373,7 +375,8 @@ namespace pwiz.Skyline
             this.editNoteContextMenuItem,
             this.toolStripSeparatorRatios,
             this.ratiosContextMenuItem,
-            this.replicatesTreeContextMenuItem});
+            this.replicatesTreeContextMenuItem,
+            this.duplicatePeptidesTreeContextMenuItem});
             this.contextMenuTreeNode.Name = "contextMenuTreeNode";
             resources.ApplyResources(this.contextMenuTreeNode, "contextMenuTreeNode");
             this.contextMenuTreeNode.Opening += new System.ComponentModel.CancelEventHandler(this.contextMenuTreeNode_Opening);
@@ -2153,6 +2156,12 @@ namespace pwiz.Skyline
             resources.ApplyResources(this.submitErrorReportMenuItem, "submitErrorReportMenuItem");
             this.submitErrorReportMenuItem.Click += new System.EventHandler(this.submitErrorReportMenuItem_Click);
             // 
+            // crashSkylineMenuItem
+            // 
+            this.crashSkylineMenuItem.Name = "crashSkylineMenuItem";
+            resources.ApplyResources(this.crashSkylineMenuItem, "crashSkylineMenuItem");
+            this.crashSkylineMenuItem.Click += new System.EventHandler(this.crashSkylineMenuItem_Click);
+            // 
             // checkForUpdatesSeparator
             // 
             this.checkForUpdatesSeparator.Name = "checkForUpdatesSeparator";
@@ -2500,11 +2509,17 @@ namespace pwiz.Skyline
             this.detectionsToolStripSeparator3.Name = "detectionsToolStripSeparator3";
             resources.ApplyResources(this.detectionsToolStripSeparator3, "detectionsToolStripSeparator3");
             // 
-            // crashSkylineMenuItem
+            // duplicatePeptidesTreeContextMenuItem
             // 
-            this.crashSkylineMenuItem.Name = "crashSkylineMenuItem";
-            resources.ApplyResources(this.crashSkylineMenuItem, "crashSkylineMenuItem");
-            this.crashSkylineMenuItem.Click += new System.EventHandler(this.crashSkylineMenuItem_Click);
+            this.duplicatePeptidesTreeContextMenuItem.DropDownItems.AddRange(new System.Windows.Forms.ToolStripItem[] {
+            this.toolStripSeparator4});
+            this.duplicatePeptidesTreeContextMenuItem.Name = "duplicatePeptidesTreeContextMenuItem";
+            resources.ApplyResources(this.duplicatePeptidesTreeContextMenuItem, "duplicatePeptidesTreeContextMenuItem");
+            // 
+            // toolStripSeparator4
+            // 
+            this.toolStripSeparator4.Name = "toolStripSeparator4";
+            resources.ApplyResources(this.toolStripSeparator4, "toolStripSeparator4");
             // 
             // SkylineWindow
             // 
@@ -2845,6 +2860,8 @@ namespace pwiz.Skyline
         private System.Windows.Forms.ToolStripMenuItem synchMzScaleToolStripMenuItem;
         private System.Windows.Forms.ToolStripMenuItem submitErrorReportMenuItem;
         private System.Windows.Forms.ToolStripMenuItem crashSkylineMenuItem;
+        private System.Windows.Forms.ToolStripMenuItem duplicatePeptidesTreeContextMenuItem;
+        private System.Windows.Forms.ToolStripSeparator toolStripSeparator4;
     }
 }
 

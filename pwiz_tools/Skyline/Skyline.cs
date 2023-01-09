@@ -3395,7 +3395,48 @@ namespace pwiz.Skyline
                     (settings.HasGlobalStandardArea ||
                     (settings.PeptideSettings.Modifications.RatioInternalStandardTypes.Count > 1 &&
                      settings.PeptideSettings.Modifications.HasHeavyModifications));
+            var duplicatePeptideMenuItems = new List<ToolStripMenuItem>();
+            if (SelectedPath.Length >= 2)
+            {
+                var selectedPeptidePath = SelectedPath.GetPathTo((int)SrmDocument.Level.Molecules);
+                var selectedPeptide =
+                    (PeptideDocNode)DocumentUI.FindNode(selectedPeptidePath);
+                var duplicates = DocumentUI.FindMolecules(selectedPeptide.SequenceKey).ToList();
+                if (duplicates.Count > 1)
+                {
+                    foreach (var duplicatePath in duplicates)
+                    {
+                        var menuItem = MakeDuplicatePeptideMenuItem(duplicatePath);
+                        if (Equals(duplicatePath, selectedPeptidePath))
+                        {
+                            menuItem.Checked = true;
+                        }
+                        duplicatePeptideMenuItems.Add(menuItem);
+                    }
+                }
+            }
+
+            duplicatePeptidesTreeContextMenuItem.DropDownItems.Clear();
+            if (duplicatePeptideMenuItems.Count > 0)
+            {
+                duplicatePeptidesTreeContextMenuItem.DropDownItems.AddRange(duplicatePeptideMenuItems.ToArray());
+                duplicatePeptidesTreeContextMenuItem.Visible = true;
+            }
+            else
+            {
+                duplicatePeptidesTreeContextMenuItem.Visible = false;
+            }
             contextMenuTreeNode.Show(SequenceTree, pt);
+        }
+
+        private ToolStripMenuItem MakeDuplicatePeptideMenuItem(IdentityPath identityPath)
+        {
+            var peptideGroupDocNode = DocumentUI.FindPeptideGroup((PeptideGroup)identityPath.GetIdentity(0));
+            return new ToolStripMenuItem(ProteinMetadataManager.ProteinModalDisplayText(peptideGroupDocNode), null,
+                (sender, args) =>
+                {
+                    SelectedPath = identityPath;
+                });
         }
 
         private void ratiosContextMenuItem_DropDownOpening(object sender, EventArgs e)

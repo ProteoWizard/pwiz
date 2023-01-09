@@ -279,13 +279,13 @@
     <value>Ratios To</value>
   </data>
   <data name="singleReplicateTreeContextMenuItem.Size" type="System.Drawing.Size, System.Drawing">
-    <value>106, 22</value>
+    <value>180, 22</value>
   </data>
   <data name="singleReplicateTreeContextMenuItem.Text" xml:space="preserve">
     <value>Single</value>
   </data>
   <data name="bestReplicateTreeContextMenuItem.Size" type="System.Drawing.Size, System.Drawing">
-    <value>106, 22</value>
+    <value>180, 22</value>
   </data>
   <data name="bestReplicateTreeContextMenuItem.Text" xml:space="preserve">
     <value>Best</value>
@@ -296,8 +296,20 @@
   <data name="replicatesTreeContextMenuItem.Text" xml:space="preserve">
     <value>Replicates</value>
   </data>
+  <data name="toolStripSeparator4.Size" type="System.Drawing.Size, System.Drawing">
+    <value>177, 6</value>
+  </data>
+  <data name="duplicatePeptidesTreeContextMenuItem.Size" type="System.Drawing.Size, System.Drawing">
+    <value>228, 22</value>
+  </data>
+  <data name="duplicatePeptidesTreeContextMenuItem.Text" xml:space="preserve">
+    <value>Duplicate Peptides</value>
+  </data>
+  <data name="duplicatePeptidesTreeContextMenuItem.Visible" type="System.Boolean, mscorlib">
+    <value>False</value>
+  </data>
   <data name="contextMenuTreeNode.Size" type="System.Drawing.Size, System.Drawing">
-    <value>229, 374</value>
+    <value>229, 418</value>
   </data>
   <data name="&gt;&gt;contextMenuTreeNode.Name" xml:space="preserve">
     <value>contextMenuTreeNode</value>
@@ -306,7 +318,7 @@
     <value>System.Windows.Forms.ContextMenuStrip, System.Windows.Forms, Version=4.0.0.0, Culture=neutral, PublicKeyToken=b77a5c561934e089</value>
   </data>
   <metadata name="contextMenuSpectrum.TrayLocation" type="System.Drawing.Point, System.Drawing, Version=4.0.0.0, Culture=neutral, PublicKeyToken=b03f5f7f11d50a3a">
-    <value>197, 56</value>
+    <value>380, 56</value>
   </metadata>
   <data name="ionTypesContextMenuItem.Size" type="System.Drawing.Size, System.Drawing">
     <value>193, 22</value>
@@ -741,7 +753,7 @@
     <value>System.Windows.Forms.ContextMenuStrip, System.Windows.Forms, Version=4.0.0.0, Culture=neutral, PublicKeyToken=b77a5c561934e089</value>
   </data>
   <metadata name="contextMenuPeakAreas.TrayLocation" type="System.Drawing.Point, System.Drawing, Version=4.0.0.0, Culture=neutral, PublicKeyToken=b03f5f7f11d50a3a">
-    <value>17, 56</value>
+    <value>200, 56</value>
   </metadata>
   <data name="areaReplicateComparisonContextMenuItem.Size" type="System.Drawing.Size, System.Drawing">
     <value>190, 22</value>
@@ -1153,7 +1165,7 @@
     <value>7</value>
   </data>
   <metadata name="mainToolStrip.TrayLocation" type="System.Drawing.Point, System.Drawing, Version=4.0.0.0, Culture=neutral, PublicKeyToken=b03f5f7f11d50a3a">
-    <value>373, 56</value>
+    <value>556, 56</value>
   </metadata>
   <data name="newToolBarButton.ImageTransparentColor" type="System.Drawing.Color, System.Drawing">
     <value>Magenta</value>
@@ -1792,7 +1804,7 @@
     <value>9</value>
   </data>
   <metadata name="contextMenuMassErrors.TrayLocation" type="System.Drawing.Point, System.Drawing, Version=4.0.0.0, Culture=neutral, PublicKeyToken=b03f5f7f11d50a3a">
-    <value>941, 17</value>
+    <value>17, 56</value>
   </metadata>
   <data name="massErrorReplicateComparisonContextMenuItem.Size" type="System.Drawing.Size, System.Drawing">
     <value>190, 22</value>
@@ -2086,7 +2098,7 @@
     <value>modeUIHandler</value>
   </data>
   <data name="&gt;&gt;modeUIHandler.Type" xml:space="preserve">
-    <value>pwiz.Skyline.Util.Helpers+ModeUIExtender, Skyline-daily, Version=22.2.1.341, Culture=neutral, PublicKeyToken=null</value>
+    <value>pwiz.Skyline.Util.Helpers+ModeUIExtender, Skyline-daily, Version=22.2.1.374, Culture=neutral, PublicKeyToken=null</value>
   </data>
   <data name="&gt;&gt;cutContextMenuItem.Name" xml:space="preserve">
     <value>cutContextMenuItem</value>
@@ -3558,6 +3570,12 @@
   <data name="&gt;&gt;submitErrorReportMenuItem.Type" xml:space="preserve">
     <value>System.Windows.Forms.ToolStripMenuItem, System.Windows.Forms, Version=4.0.0.0, Culture=neutral, PublicKeyToken=b77a5c561934e089</value>
   </data>
+  <data name="&gt;&gt;crashSkylineMenuItem.Name" xml:space="preserve">
+    <value>crashSkylineMenuItem</value>
+  </data>
+  <data name="&gt;&gt;crashSkylineMenuItem.Type" xml:space="preserve">
+    <value>System.Windows.Forms.ToolStripMenuItem, System.Windows.Forms, Version=4.0.0.0, Culture=neutral, PublicKeyToken=b77a5c561934e089</value>
+  </data>
   <data name="&gt;&gt;checkForUpdatesSeparator.Name" xml:space="preserve">
     <value>checkForUpdatesSeparator</value>
   </data>
@@ -3846,16 +3864,22 @@
   <data name="&gt;&gt;detectionsToolStripSeparator3.Type" xml:space="preserve">
     <value>System.Windows.Forms.ToolStripSeparator, System.Windows.Forms, Version=4.0.0.0, Culture=neutral, PublicKeyToken=b77a5c561934e089</value>
   </data>
-  <data name="&gt;&gt;crashSkylineMenuItem.Name" xml:space="preserve">
-    <value>crashSkylineMenuItem</value>
+  <data name="&gt;&gt;duplicatePeptidesTreeContextMenuItem.Name" xml:space="preserve">
+    <value>duplicatePeptidesTreeContextMenuItem</value>
   </data>
-  <data name="&gt;&gt;crashSkylineMenuItem.Type" xml:space="preserve">
+  <data name="&gt;&gt;duplicatePeptidesTreeContextMenuItem.Type" xml:space="preserve">
     <value>System.Windows.Forms.ToolStripMenuItem, System.Windows.Forms, Version=4.0.0.0, Culture=neutral, PublicKeyToken=b77a5c561934e089</value>
+  </data>
+  <data name="&gt;&gt;toolStripSeparator4.Name" xml:space="preserve">
+    <value>toolStripSeparator4</value>
+  </data>
+  <data name="&gt;&gt;toolStripSeparator4.Type" xml:space="preserve">
+    <value>System.Windows.Forms.ToolStripSeparator, System.Windows.Forms, Version=4.0.0.0, Culture=neutral, PublicKeyToken=b77a5c561934e089</value>
   </data>
   <data name="&gt;&gt;$this.Name" xml:space="preserve">
     <value>SkylineWindow</value>
   </data>
   <data name="&gt;&gt;$this.Type" xml:space="preserve">
-    <value>pwiz.Skyline.Util.FormEx, Skyline-daily, Version=22.2.1.341, Culture=neutral, PublicKeyToken=null</value>
+    <value>pwiz.Skyline.Util.FormEx, Skyline-daily, Version=22.2.1.374, Culture=neutral, PublicKeyToken=null</value>
   </data>
 </root>

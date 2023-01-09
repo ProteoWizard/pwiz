@@ -86,6 +86,10 @@ namespace pwiz.Skyline.Controls.SeqNode
 // ReSharper restore RedundantCheckBeforeAssignment
             var nodePep = (PeptideDocNode) Model;
             string label = DisplayText(nodePep, SequenceTree.GetDisplaySettings(nodePep));
+            if (HasDuplicates())
+            {
+                label = @"*" + label;
+            }
             if (!string.Equals(label, Text))
                 Text = label;
             // Hard to tell what might cause label formatting to change
@@ -93,6 +97,11 @@ namespace pwiz.Skyline.Controls.SeqNode
 
             // Make sure children are up to date
             OnUpdateChildren(SequenceTree.ExpandPeptides);
+        }
+
+        public bool HasDuplicates()
+        {
+            return SequenceTree.Document.FindMolecules(DocNode.SequenceKey).Skip(1).Any();
         }
 
         public override bool CanShow
