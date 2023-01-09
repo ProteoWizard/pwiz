@@ -16,7 +16,7 @@ namespace pwiz.SkylineTestFunctional
         [TestMethod]
         public void TestEditSpectrumFilter()
         {
-            TestFilesZip = @"TestFunctional\SpectrumClassFilterTest.zip";
+            TestFilesZip = @"TestFunctional\EditSpectrumFilterTest.zip";
             RunFunctionalTest();
         }
 
