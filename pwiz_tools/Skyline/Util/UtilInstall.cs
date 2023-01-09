@@ -35,7 +35,7 @@ namespace pwiz.Skyline.Util
         /// Attempts to download the file located at the specified address to the specified
         /// file path. This function returns true if the download succeeded.
         /// </summary>
-        bool DownloadFileAsync(Uri address, string path);
+        bool DownloadFileAsync(Uri address, string path, out Exception error);
     }
     
     public class MultiFileAsynchronousDownloadClient : IAsynchronousDownloadClient
@@ -47,6 +47,7 @@ namespace pwiz.Skyline.Util
         // indicate aspects of the most recent download
         private bool DownloadComplete { get; set; }
         private bool DownloadSucceeded { get; set; }
+        private Exception DownloadError { get; set; }
 
         /// <summary>
         /// The asynchronous download client links a webClient to a LongWaitBroker. It supports
@@ -70,6 +71,7 @@ namespace pwiz.Skyline.Util
             _webClient.DownloadFileCompleted += (sender, args) =>
                 {
                     FilesDownloaded++;
+                    DownloadError = args.Error;
                     DownloadSucceeded = (args.Error == null);
                     DownloadComplete = true;
                 };
@@ -81,10 +83,11 @@ namespace pwiz.Skyline.Util
         /// <param name="address">The Uri of the file to download</param>
         /// <param name="path">The path to download the file to, including the name of 
         /// the file, e.g "C:\Users\Trevor\Downloads\example.txt"</param>
+        /// <param name="error">Contains the error if any</param>
         /// <exception cref="ToolExecutionException">Thrown if the user cancels the download 
         /// using the instances' LongWaitBroker</exception>
-        /// <returns>True if the downlaod was successful, otherwise false</returns>
-        public bool DownloadFileAsync(Uri address, string path)
+        /// <returns>True if the download was successful, otherwise false</returns>
+        public bool DownloadFileAsync(Uri address, string path, out Exception error)
         {
             // reset download status
             DownloadComplete = false;
@@ -104,6 +107,8 @@ namespace pwiz.Skyline.Util
                         Resources.MultiFileAsynchronousDownloadClient_DownloadFileAsyncWithBroker_Download_canceled_);
                 }
             }
+
+            error = DownloadError;
             return DownloadSucceeded;
         }
  
@@ -231,8 +236,8 @@ namespace pwiz.Skyline.Util
 
                         using (var fileSaver = new FileSaver(downloadFilename))
                         {
-                            if (!client.DownloadFileAsync(downloadUrl, fileSaver.SafeName))
-                                throw new Exception(Resources.PythonInstaller_DownloadPip_Download_failed__Check_your_network_connection_or_contact_Skyline_developers_);
+                            if (!client.DownloadFileAsync(downloadUrl, fileSaver.SafeName, out var downloadError))
+                                throw new Exception(Resources.PythonInstaller_DownloadPip_Download_failed__Check_your_network_connection_or_contact_Skyline_developers_, downloadError);
                             fileSaver.Commit();
                         }
 
@@ -296,8 +301,9 @@ namespace pwiz.Skyline.Util
         public bool DownloadSuccess { get; set; }
         public bool CancelDownload { get; set; }
 
-        public bool DownloadFileAsync(Uri address, string fileName)
+        public bool DownloadFileAsync(Uri address, string fileName, out Exception error)
         {
+            error = null;
             if (CancelDownload)
                 throw new ToolExecutionException(Resources.MultiFileAsynchronousDownloadClient_DownloadFileAsyncWithBroker_Download_canceled_);
             return DownloadSuccess;
