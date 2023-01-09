@@ -30,7 +30,6 @@ namespace pwiz.SkylineTestFunctional
                 SkylineWindow.SelectedPath =
                     SkylineWindow.Document.GetPathTo((int) SrmDocument.Level.TransitionGroups, 0);
             });
-            PauseTest();
             RunDlg<EditSpectrumFilterDlg>(SkylineWindow.EditMenu.EditSpectrumFilter, dlg =>
             {
                 dlg.CreateCopy = true;
@@ -104,7 +103,6 @@ namespace pwiz.SkylineTestFunctional
                 SkylineWindow.ShowProductTransitions();
                 SkylineWindow.SetTransformChrom(TransformChrom.raw);
             });
-            PauseTest();
         }
 
         private ChromatogramGroupInfo LoadChromatogram(SrmDocument document, PeptideDocNode peptideDocNode,
