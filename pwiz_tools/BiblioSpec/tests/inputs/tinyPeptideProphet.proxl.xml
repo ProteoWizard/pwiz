@@ -1,0 +1,139 @@
+<?xml version="1.0" encoding="UTF-8" standalone="yes"?>
+<proxl_input fasta_filename="2PSM_newecoli_nonspecific_DECOY.fasta.txt">
+    <search_program_info>
+        <search_programs>
+            <search_program name="PeptideProphet" display_name="PeptideProphet" version="PeptideProphet  (TPP v6.1.0 Parhelion, Build 202109241246-exported (Windows_NT-x86_64))">
+                <psm_annotation_types>
+                    <filterable_psm_annotation_types>
+                        <filterable_psm_annotation_type name="PProphet Score" description="PeptideProphet Probability Score" filter_direction="above" default_filter="false"/>
+                        <filterable_psm_annotation_type name="PProphet FDR" description="Error rate calculated from PeptideProphet probability scores." filter_direction="below" default_filter="true" default_filter_value="0.01"/>
+                    </filterable_psm_annotation_types>
+                </psm_annotation_types>
+            </search_program>
+            <search_program name="Kojak" display_name="Kojak" version="2.0.0 alpha 8">
+                <psm_annotation_types>
+                    <filterable_psm_annotation_types>
+                        <filterable_psm_annotation_type name="Score" description="Kojak Score" filter_direction="above" default_filter="false" default_filter_value="1"/>
+                    </filterable_psm_annotation_types>
+                    <descriptive_psm_annotation_types>
+                        <descriptive_psm_annotation_type name="delta Score" description="delta Score"/>
+                        <descriptive_psm_annotation_type name="PPM error" description="PPM error"/>
+                    </descriptive_psm_annotation_types>
+                </psm_annotation_types>
+            </search_program>
+        </search_programs>
+        <default_visible_annotations>
+            <visible_psm_annotations>
+                <search_annotation search_program="PeptideProphet" annotation_name="PProphet FDR"/>
+                <search_annotation search_program="PeptideProphet" annotation_name="PProphet Score"/>
+            </visible_psm_annotations>
+        </default_visible_annotations>
+        <annotation_sort_order>
+            <psm_annotation_sort_order>
+                <search_annotation search_program="PeptideProphet" annotation_name="PProphet FDR"/>
+                <search_annotation search_program="PeptideProphet" annotation_name="PProphet Score"/>
+            </psm_annotation_sort_order>
+        </annotation_sort_order>
+    </search_program_info>
+    <linkers>
+        <linker name="BPA">
+            <crosslink_masses>
+                <crosslink_mass mass="0"/>
+            </crosslink_masses>
+            <linked_ends>
+                <linked_end>
+                    <residues>
+                        <residue>B</residue>
+                    </residues>
+                </linked_end>
+                <linked_end>
+                    <residues>
+                        <residue>A</residue>
+                        <residue>C</residue>
+                        <residue>D</residue>
+                        <residue>E</residue>
+                        <residue>F</residue>
+                        <residue>G</residue>
+                        <residue>H</residue>
+                        <residue>I</residue>
+                        <residue>K</residue>
+                        <residue>L</residue>
+                        <residue>M</residue>
+                        <residue>N</residue>
+                        <residue>O</residue>
+                        <residue>P</residue>
+                        <residue>R</residue>
+                        <residue>S</residue>
+                        <residue>T</residue>
+                        <residue>U</residue>
+                        <residue>V</residue>
+                        <residue>W</residue>
+                        <residue>Y</residue>
+                    </residues>
+                </linked_end>
+            </linked_ends>
+        </linker>
+    </linkers>
+    <reported_peptides>
+        <reported_peptide reported_peptide_string="ADLAKYICENQDSISSK(13)-MDIAIHHPBIR(9)" type="crosslink">
+            <peptides>
+                <peptide sequence="ADLAKYICENQDSISSK">
+                    <linked_positions>
+                        <linked_position position="13"/>
+                    </linked_positions>
+                </peptide>
+                <peptide sequence="MDIAIHHPBIR">
+                    <linked_positions>
+                        <linked_position position="9"/>
+                    </linked_positions>
+                </peptide>
+            </peptides>
+            <psms>
+                <psm scan_file_name="tinyPeptideProphetProxl.mzML" scan_number="32810" precursor_charge="5" linker_mass="0.000000">
+                    <filterable_psm_annotations>
+                        <filterable_psm_annotation search_program="PeptideProphet" annotation_name="PProphet FDR" value="0.0167"/>
+                        <filterable_psm_annotation search_program="PeptideProphet" annotation_name="PProphet Score" value="0.7349"/>
+                        <filterable_psm_annotation search_program="Kojak" annotation_name="Score" value="1.3450"/>
+                    </filterable_psm_annotations>
+                    <descriptive_psm_annotations>
+                        <descriptive_psm_annotation search_program="Kojak" annotation_name="PPM error" value="1.5414"/>
+                        <descriptive_psm_annotation search_program="Kojak" annotation_name="delta Score" value="0.0050"/>
+                    </descriptive_psm_annotations>
+                </psm>
+            </psms>
+        </reported_peptide>
+        <reported_peptide reported_peptide_string="MDIAIHHPBIR(9)-RTTSSSTR(5)" type="crosslink">
+            <peptides>
+                <peptide sequence="MDIAIHHPBIR">
+                    <linked_positions>
+                        <linked_position position="9"/>
+                    </linked_positions>
+                </peptide>
+                <peptide sequence="RTTSSSTR">
+                    <linked_positions>
+                        <linked_position position="5"/>
+                    </linked_positions>
+                </peptide>
+            </peptides>
+            <psms>
+                <psm scan_file_name="tinyPeptideProphetProxl.mzML" scan_number="24611" precursor_charge="3" linker_mass="0.000000">
+                    <filterable_psm_annotations>
+                        <filterable_psm_annotation search_program="PeptideProphet" annotation_name="PProphet FDR" value="0.6078"/>
+                        <filterable_psm_annotation search_program="PeptideProphet" annotation_name="PProphet Score" value="0.0000"/>
+                        <filterable_psm_annotation search_program="Kojak" annotation_name="Score" value="0.5800"/>
+                    </filterable_psm_annotations>
+                    <descriptive_psm_annotations>
+                        <descriptive_psm_annotation search_program="Kojak" annotation_name="PPM error" value="-9.7867"/>
+                        <descriptive_psm_annotation search_program="Kojak" annotation_name="delta Score" value="0.2450"/>
+                    </descriptive_psm_annotations>
+                </psm>
+            </psms>
+        </reported_peptide>
+    </reported_peptides>
+    <static_modifications>
+        <static_modification amino_acid="C" mass_change="0"/>
+    </static_modifications>
+    <decoy_labels>
+        <decoy_label prefix="DECOY"/>
+    </decoy_labels>
+</proxl_input>
