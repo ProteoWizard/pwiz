@@ -150,7 +150,7 @@ namespace pwiz.Skyline.ToolsUI
         private System.Windows.Forms.Button btnCancel;
         private System.Windows.Forms.Button btnOK;
         private System.Windows.Forms.Label lblProjectInfo;
-        private System.Windows.Forms.TextBox textServerURL;
+        internal System.Windows.Forms.TextBox textServerURL;
         internal System.Windows.Forms.TextBox textPassword;
         internal System.Windows.Forms.TextBox textUsername;
         private System.Windows.Forms.Label lblPassword;
