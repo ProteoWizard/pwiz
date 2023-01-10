@@ -117,8 +117,7 @@ namespace pwiz.SkylineTestTutorial
             });
             PauseForScreenShot<GenerateDecoysDlg>("Add Decoy Peptides form", 2);
             
-            RunUI(generateDecoysDlg.OkDialog);
-            WaitForClosedForm(generateDecoysDlg);
+            OkDialog(generateDecoysDlg, generateDecoysDlg.OkDialog);
 
             RestoreViewOnScreen(3);
             RunUI(() => SkylineWindow.SequenceTree.TopNode = SkylineWindow.SequenceTree.Nodes[11]);

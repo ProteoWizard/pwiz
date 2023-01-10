@@ -2275,8 +2275,7 @@ namespace pwiz.SkylineTestUtil
             });
             WaitForClosedForm(addStaticModDlg);
 
-            RunUI(editModsDlg.OkDialog);
-            WaitForClosedForm(editModsDlg);
+            OkDialog(editModsDlg, editModsDlg.OkDialog);
         }
 
         public static void SetStaticModifications(Func<IList<string>, IList<string>> changeMods)
