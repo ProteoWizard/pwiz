@@ -1939,6 +1939,11 @@ namespace SkylineTester
             _tabRunStats.ExportCSV();
         }
 
+        private void runSerial_CheckedChanged(object sender, EventArgs e)
+        {
+            Offscreen.Enabled = runSerial.Checked; // Everything happens offscreen in parallel tests, so don't offer the option
+        }
+
         #endregion Control events
     }
 }

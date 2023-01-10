@@ -241,7 +241,10 @@ namespace pwiz.SkylineTestUtil
             CheckForFileLocks(RootPath, desiredCleanupLevel == DesiredCleanupLevel.all);
             // Also check for file locks on the persistent files directory
             // since it is essentially an extension of the test directory.
-            CheckForFileLocks(PersistentFilesDir, desiredCleanupLevel != DesiredCleanupLevel.none);
+            if (!TestContext.Properties.Contains("ParallelTest")) // It is a shared directory in parallel tests, though, so leave it alone in parallel mode
+            {
+                CheckForFileLocks(PersistentFilesDir, desiredCleanupLevel != DesiredCleanupLevel.none);
+            }
         }
 
         public static void CheckForFileLocks(string path, bool useDeletion = false)
@@ -254,7 +257,7 @@ namespace pwiz.SkylineTestUtil
             if (useDeletion)
             {
                 RemoveReadonlyFlags(path);
-                Helpers.TryTwice(() => Directory.Delete(path, true));
+                Helpers.TryTwice(() => Directory.Delete(path, true),$@"Directory.Delete(""{path}"", true)");
                 return;
             }
 
@@ -266,23 +269,25 @@ namespace pwiz.SkylineTestUtil
 
             try
             {
-                Helpers.TryTwice(() => Directory.Move(path, guidName));
+                Helpers.TryTwice(() => Directory.Move(path, guidName), $@"Directory.Move(""{path}"", ""{guidName}"")");
             }
             catch (IOException)
             {
+                Console.Write($@"# CheckForFileLocks failed to Directory.Move(""{path}"",""{guidName}"")");
                 // Useful for debugging. Exception names file that is locked.
-                Helpers.TryTwice(() => Directory.Delete(path, true));
+                Helpers.TryTwice(() => Directory.Delete(path, true), $@"Directory.Delete(""{path}"")");
             }
 
             // Move the file back to where it was, and fail if this throws
             try
             {
-                Helpers.TryTwice(() => Directory.Move(guidName, path));
+                Helpers.TryTwice(() => Directory.Move(guidName, path), $@"Directory.Move(""{guidName}"",""{path}"")");
             }
             catch (IOException)
             {
+                Console.Write($@"# CheckForFileLocks failed to Directory.Move(""{guidName}"",(""{path}"")");
                 // Useful for debugging. Exception names file that is locked.
-                Helpers.TryTwice(() => Directory.Delete(guidName, true));
+                Helpers.TryTwice(() => Directory.Delete(guidName, true),$@"Directory.Delete(""{guidName}"", true)");
             }
         }
 

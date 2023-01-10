@@ -669,7 +669,7 @@ namespace TestRunner
             testRunnerExe = iRelative != -1
                 ? Path.Combine(@"c:\pwiz", testRunnerExe.Substring(iRelative))
                 : @"c:\pwiz\pwiz_tools\Skyline\bin\x64\Release\TestRunner.exe";
-            var testRunnerCmd = $@"{testRunnerExe} parallelmode=client showheader=0 results=c:\AlwaysUpCLT\TestResults log={testRunnerLog}";
+            var testRunnerCmd = $@"{testRunnerExe} parallelmode=client showheader=0 results=c:\AlwaysUpCLT\TestResults_{i} log={testRunnerLog}";
             testRunnerCmd = AddPassThroughArguments(commandLineArgs, testRunnerCmd);
             testRunnerCmd += $" workerport={workerPort}";
 
@@ -908,7 +908,8 @@ namespace TestRunner
                     (loop <= 0) ? " forever" : (loop == 1) ? "" : " in " + loop + " loops",
                     "", /*(repeat <= 1) ? "" : ", repeated " + repeat + " times each per language",*/
                     workerCount);
-                Console.WriteLine("(If prompted to \"Allow TestRunner to communicate on these networks\", be sure to check BOTH public and private options.)\r\n");
+                Console.WriteLine("Be sure to check BOTH public and private options if prompted to \"Allow TestRunner to communicate on these networks\".");
+                Console.WriteLine("See https://skyline.ms/wiki/home/development/page.view?name=Troubleshooting_parallel_mode for troubleshooting tips.\r\n");
 
                 // main thread listens for workers to connect
                 while (!cts.IsCancellationRequested)
@@ -1112,6 +1113,26 @@ namespace TestRunner
             bool serverMode = parallelMode == "server";
             bool clientMode = parallelMode == "client" || parallelMode == "server_worker";
             bool asNightly = offscreen && qualityMode;  // While it is possible to run quality off screen from the Quality tab, this is what we use to distinguish for treatment of perf tests
+
+            // If running Nightly tests, remove any flagged for exclusion by the NoNightlyTesting custom attribute
+            if (asNightly)
+            {
+                for (var t = testList.Count; t-- > 0;)
+                {
+                    if (testList[t].DoNotRunInNightly)
+                    {
+                        testList.RemoveAt(t);
+                    }
+                }
+                for (var ut = unfilteredTestList.Count; ut-- > 0;)
+                {
+                    if (unfilteredTestList[ut].DoNotRunInNightly)
+                    {
+                        unfilteredTestList.RemoveAt(ut);
+                    }
+                }
+            }
+
 
             // If we haven't been told to run perf tests, remove any from the list
             // which may have shown up by default

@@ -44,7 +44,6 @@ namespace pwiz.SkylineTestFunctional
     {
         private readonly string extension = ExtensionTestContext.ExtMz5;
         
-        [TestMethod, NoParallelTesting]
         public void TestRetentionTimeFilter()
         {
             TestFilesZip = @"TestFunctional\RetentionTimeFilterTest.zip";
