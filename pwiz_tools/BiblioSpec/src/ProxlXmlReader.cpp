@@ -78,7 +78,7 @@ PSM_SCORE_TYPE ProxlXmlReader::analysisToScoreType(ANALYSIS analysisType) {
         case PERCOLATOR_ANALYSIS:
             return PERCOLATOR_QVALUE;
         case PLINK_ANALYIS:
-		case PEPTIDE_PROPHET_ANALYSIS:	
+        case PEPTIDE_PROPHET_ANALYSIS:	
             return GENERIC_QVALUE;
         default:
             return UNKNOWN_SCORE_TYPE;
