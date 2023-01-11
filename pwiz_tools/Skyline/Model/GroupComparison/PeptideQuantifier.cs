@@ -34,7 +34,6 @@ namespace pwiz.Skyline.Model.GroupComparison
             {
                 MeasuredLabelTypes = labelTypes,
                 IncludeTruncatedPeaks = srmSettings.TransitionSettings.Instrument.TriggeredAcquisition,
-                AlwaysMultiplyByMedianNormalizationFactor = true
             };
         }
 
