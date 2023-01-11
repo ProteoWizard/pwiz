@@ -1559,7 +1559,7 @@ namespace pwiz.Skyline.Model
 
         public PeakGroupIntegrator MakePeakGroupIntegrator(SrmSettings settings, ChromatogramSet chromatogramSet, ChromatogramGroupInfo chromatogramGroupInfo)
         {
-            var tolerance = (float) settings.TransitionSettings.Instrument.MzMatchTolerance;
+            var tolerance = settings.TransitionSettings.Instrument.IonMatchMzTolerance;
             var timeIntervals = (chromatogramGroupInfo.TimeIntensitiesGroup as RawTimeIntensities)?.TimeIntervals;
             var peakGroupIntegrator =
                 new PeakGroupIntegrator(settings.TransitionSettings.FullScan.AcquisitionMethod, timeIntervals);
@@ -2863,7 +2863,6 @@ namespace pwiz.Skyline.Model
                 flags |= ChromPeak.FlagValues.contains_id;
             if (identified == PeakIdentification.ALIGNED)
                 flags |= ChromPeak.FlagValues.used_id_alignment;
-            float mzMatchTolerance = (float) settings.TransitionSettings.Instrument.MzMatchTolerance;
             var peakGroupIntegrator = MakePeakGroupIntegrator(settings,
                 settings.MeasuredResults.Chromatograms[indexSet], chromGroupInfo);
             foreach (TransitionDocNode nodeTran in Children)

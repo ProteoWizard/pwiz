@@ -1824,7 +1824,7 @@ namespace pwiz.Skyline.Model
             }
             return ChangePeak(groupPath, nameSet, filePath,
                 (node, info, tol, iSet, fileId, reg) =>
-                    node.ChangePeak(Settings, info, iSet, fileId, reg, transition, startTime, 
+                    node.ChangePeak(Settings, info, tol, iSet, fileId, reg, transition, startTime, 
                                     endTime, identified.Value, userSet, preserveMissingPeaks));
         }
 

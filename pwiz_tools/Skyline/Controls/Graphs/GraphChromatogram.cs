@@ -396,7 +396,7 @@ namespace pwiz.Skyline.Controls.Graphs
                     continue;
 
                 var optStepChroms = ChromGroupInfo.GetAllTransitionInfo(nodeTran,
-                    (float)settings.TransitionSettings.Instrument.MzMatchTolerance, chromSet.OptimizationFunction, TransformChrom.raw);
+                    settings.TransitionSettings.Instrument.IonMatchMzTolerance, chromSet.OptimizationFunction, TransformChrom.raw);
 
                 var chromInfo = optStepChroms.GetChromatogramForStep(clickedItem.OptimizationStep.Value);
                 if (chromInfo != null)
