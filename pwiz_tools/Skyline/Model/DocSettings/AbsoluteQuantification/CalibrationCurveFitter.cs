@@ -36,17 +36,16 @@ namespace pwiz.Skyline.Model.DocSettings.AbsoluteQuantification
             = new Dictionary<CalibrationPoint, ImmutableList<PeptideQuantifier.Quantity>>();
         private HashSet<IdentityPath> _transitionsToQuantifyOn;
 
-        public CalibrationCurveFitter(PeptideQuantifier peptideQuantifier, SrmSettings srmSettings)
+        public CalibrationCurveFitter(PeptideQuantifier peptideQuantifier)
         {
             PeptideQuantifier = peptideQuantifier;
-            SrmSettings = srmSettings;
             IsotopologResponseCurve = peptideQuantifier.PeptideDocNode.HasPrecursorConcentrations;
         }
 
         public static CalibrationCurveFitter GetCalibrationCurveFitter(SrmSettings srmSettings,
             PeptideGroupDocNode peptideGroup, PeptideDocNode peptide)
         {
-            return new CalibrationCurveFitter(PeptideQuantifier.GetPeptideQuantifier(null, srmSettings, peptideGroup, peptide), srmSettings);
+            return new CalibrationCurveFitter(PeptideQuantifier.GetPeptideQuantifier(null, srmSettings, peptideGroup, peptide));
         }
 
         public PeptideQuantifier PeptideQuantifier { get; private set; }
@@ -55,7 +54,10 @@ namespace pwiz.Skyline.Model.DocSettings.AbsoluteQuantification
         {
             get { return PeptideQuantifier.QuantificationSettings; }
         }
-        public SrmSettings SrmSettings { get; private set; }
+        public SrmSettings SrmSettings
+        {
+            get { return PeptideQuantifier.SrmSettings; }
+        }
 
         public bool IsotopologResponseCurve { get; set; }
 
@@ -69,7 +71,7 @@ namespace pwiz.Skyline.Model.DocSettings.AbsoluteQuantification
                 IDictionary<IdentityPath, PeptideQuantifier.Quantity> quantityDictionary;
                 if (calibrationPoint.LabelType == null)
                 {
-                    quantityDictionary = PeptideQuantifier.GetTransitionIntensities(SrmSettings, calibrationPoint.ReplicateIndex, false);
+                    quantityDictionary = PeptideQuantifier.GetTransitionIntensities(calibrationPoint.ReplicateIndex, false);
                 }
                 else
                 {
@@ -391,7 +393,7 @@ namespace pwiz.Skyline.Model.DocSettings.AbsoluteQuantification
                     continue;
                 }
 
-                var qualitativeIonRatio = PeptideQuantifier.GetQualitativeIonRatio(SrmSettings, transitionGroupDocNode, replicateIndex);
+                var qualitativeIonRatio = PeptideQuantifier.GetQualitativeIonRatio(transitionGroupDocNode, replicateIndex);
                 if (qualitativeIonRatio.HasValue)
                 {
                     totalQualitativeIonRatio += qualitativeIonRatio.Value;
@@ -672,7 +674,7 @@ namespace pwiz.Skyline.Model.DocSettings.AbsoluteQuantification
             }
 
             var targetIonRatio = GetTargetIonRatio(transitionGroupDocNode);
-            var ionRatio = PeptideQuantifier.GetQualitativeIonRatio(SrmSettings, transitionGroupDocNode, replicateIndex);
+            var ionRatio = PeptideQuantifier.GetQualitativeIonRatio(transitionGroupDocNode, replicateIndex);
             if (targetIonRatio.HasValue || ionRatio.HasValue)
             {
                 result = result ?? new PrecursorQuantificationResult();

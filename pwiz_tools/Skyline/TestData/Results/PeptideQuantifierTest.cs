@@ -38,13 +38,16 @@ namespace pwiz.SkylineTestData.Results
             {
                 foreach (var peptide in peptideGroup.Peptides)
                 {
-                    var peptideQuantifier = new PeptideQuantifier(null, peptideGroup, peptide, 
-                        QuantificationSettings.DEFAULT.ChangeNormalizationMethod(NormalizationMethod.GetNormalizationMethod(IsotopeLabelType.heavy)));
+                    var peptideQuantifier = new PeptideQuantifier(null, peptideGroup, peptide,
+                        doc.Settings.ChangePeptideSettings(doc.Settings.PeptideSettings.ChangeAbsoluteQuantification(
+                            QuantificationSettings.DEFAULT.ChangeNormalizationMethod(
+                                NormalizationMethod.GetNormalizationMethod(IsotopeLabelType.heavy)))
+                        ));
                     for (int replicateIndex = 0; replicateIndex < doc.Settings.MeasuredResults.Chromatograms.Count; replicateIndex++)
                     {
                         var expected = peptide.Results[replicateIndex].First().LabelRatios.First().Ratio.Ratio;
                         var actual = PeptideQuantifier.SumQuantities(
-                            peptideQuantifier.GetTransitionIntensities(doc.Settings, replicateIndex, false).Values, 
+                            peptideQuantifier.GetTransitionIntensities(replicateIndex, false).Values, 
                             peptideQuantifier.NormalizationMethod, peptideQuantifier.QuantificationSettings.SimpleRatios).Value;
                         Assert.AreEqual(expected, actual, .0001, "Error on replicate {0}", replicateIndex);
                     }

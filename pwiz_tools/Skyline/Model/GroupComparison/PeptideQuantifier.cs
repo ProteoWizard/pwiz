@@ -1,6 +1,7 @@
 ﻿using System;
 using System.Collections.Generic;
 using System.Linq;
+using MathNet.Numerics.Statistics;
 using pwiz.Common.Collections;
 using pwiz.Skyline.Model.DocSettings;
 using pwiz.Skyline.Model.DocSettings.AbsoluteQuantification;
@@ -12,12 +13,14 @@ namespace pwiz.Skyline.Model.GroupComparison
     {
         private NormalizationData _normalizationData;
         private Func<NormalizationData> _getNormalizationDataFunc;
+        private Dictionary<ChromFileInfoId, double> _globalStandardAreas;
+        private double _medianGlobalStandardArea;
         public PeptideQuantifier(Func<NormalizationData> getNormalizationDataFunc, PeptideGroupDocNode peptideGroup, PeptideDocNode peptideDocNode,
-            QuantificationSettings quantificationSettings)
+            SrmSettings srmSettings)
         {
             PeptideGroupDocNode = peptideGroup;
             PeptideDocNode = peptideDocNode;
-            QuantificationSettings = quantificationSettings;
+            SrmSettings = srmSettings;
             _getNormalizationDataFunc = getNormalizationDataFunc;
         }
 
@@ -27,10 +30,11 @@ namespace pwiz.Skyline.Model.GroupComparison
             // Quantify on all label types which are not internal standards.
             ICollection<IsotopeLabelType> labelTypes = ImmutableList.ValueOf(mods.GetModificationTypes()
                 .Except(mods.InternalStandardTypes));
-            return new PeptideQuantifier(getNormalizationDataFunc, peptideGroup, peptide, srmSettings.PeptideSettings.Quantification)
+            return new PeptideQuantifier(getNormalizationDataFunc, peptideGroup, peptide, srmSettings)
             {
                 MeasuredLabelTypes = labelTypes,
-                IncludeTruncatedPeaks = srmSettings.TransitionSettings.Instrument.TriggeredAcquisition
+                IncludeTruncatedPeaks = srmSettings.TransitionSettings.Instrument.TriggeredAcquisition,
+                AlwaysMultiplyByMedianNormalizationFactor = true
             };
         }
 
@@ -43,7 +47,11 @@ namespace pwiz.Skyline.Model.GroupComparison
 
         public PeptideGroupDocNode PeptideGroupDocNode { get; private set; }
         public PeptideDocNode PeptideDocNode {get; private set; }
-        public QuantificationSettings QuantificationSettings { get; private set; }
+        public QuantificationSettings QuantificationSettings
+        {
+            get { return SrmSettings.PeptideSettings.Quantification; }
+        }
+        public SrmSettings SrmSettings { get; }
 
         public NormalizationMethod NormalizationMethod
         {
@@ -53,6 +61,45 @@ namespace pwiz.Skyline.Model.GroupComparison
             }
         }
         public ICollection<IsotopeLabelType> MeasuredLabelTypes { get; set; }
+        /// <summary>
+        /// When normalizing to global standards, whether to multiply the end result by the median global standard area,
+        /// so the normalized value is close in magnitude to the original value.
+        /// For backward compatibility reasons, we do not normally do this for global standard normalization.
+        /// However, when doing group comparisons we need to do this, since group comparisons treat values which are less than 1
+        /// as being equal to 1, because otherwise logarithms of negative or very small numbers mess up some calculations.
+        /// </summary>
+        public bool AlwaysMultiplyByMedianNormalizationFactor { get; set; }
+
+        public double GetGlobalStandardNormalizationFactor(ChromFileInfoId chromFileInfoId)
+        {
+            if (_globalStandardAreas == null)
+            {
+                var dictionary =
+                    new Dictionary<ChromFileInfoId, double>(new IdentityEqualityComparer<ChromFileInfoId>());
+                for (int iResult = 0; iResult < SrmSettings.MeasuredResults?.Chromatograms.Count; iResult++)
+                {
+                    var chromatogramSet = SrmSettings.MeasuredResults.Chromatograms[iResult];
+                    foreach (var chromFileInfo in chromatogramSet.MSDataFileInfos)
+                    {
+                        dictionary[chromFileInfo.FileId] = SrmSettings.CalcGlobalStandardArea(iResult, chromFileInfo);
+                    }
+                }
+
+                if (dictionary.Count > 0)
+                {
+                    _medianGlobalStandardArea = dictionary.Values.Median();
+                }
+                _globalStandardAreas = dictionary;
+            }
+
+            _globalStandardAreas.TryGetValue(chromFileInfoId, out var globalStandardArea);
+            if (AlwaysMultiplyByMedianNormalizationFactor && _medianGlobalStandardArea != 0)
+            {
+                globalStandardArea /= _medianGlobalStandardArea;
+            }
+
+            return globalStandardArea;
+        }
 
         public NormalizationData GetNormalizationData()
         {
@@ -105,9 +152,9 @@ namespace pwiz.Skyline.Model.GroupComparison
             return false;
         }
 
-        public bool SkipTransition(SrmSettings settings, TransitionDocNode transitionDocNode)
+        public bool SkipTransition(TransitionDocNode transitionDocNode)
         {
-            if (!transitionDocNode.IsQuantitative(settings))
+            if (!transitionDocNode.IsQuantitative(SrmSettings))
             {
                 return true;
             }
@@ -122,10 +169,10 @@ namespace pwiz.Skyline.Model.GroupComparison
             return false;
         }
 
-        public IDictionary<IdentityPath, Quantity> GetTransitionIntensities(SrmSettings srmSettings, int replicateIndex, bool treatMissingAsZero)
+        public IDictionary<IdentityPath, Quantity> GetTransitionIntensities(int replicateIndex, bool treatMissingAsZero)
         {
             var quantities = new Dictionary<IdentityPath, Quantity>();
-            var transitionsToNormalizeAgainst = GetTransitionsToNormalizeAgainst(srmSettings, PeptideDocNode, replicateIndex);
+            var transitionsToNormalizeAgainst = GetTransitionsToNormalizeAgainst(PeptideDocNode, replicateIndex);
             foreach (var precursor in PeptideDocNode.TransitionGroups)
             {
                 if (SkipTransitionGroup(precursor))
@@ -134,11 +181,11 @@ namespace pwiz.Skyline.Model.GroupComparison
                 }
                 foreach (var transition in precursor.Transitions)
                 {
-                    if (SkipTransition(srmSettings, transition))
+                    if (SkipTransition(transition))
                     {
                         continue;
                     }
-                    var quantity = GetTransitionQuantity(srmSettings, transitionsToNormalizeAgainst, NormalizationMethod, replicateIndex, precursor,
+                    var quantity = GetTransitionQuantity(transitionsToNormalizeAgainst, NormalizationMethod, replicateIndex, precursor,
                         transition, treatMissingAsZero);
                     if (null != quantity)
                     {
@@ -167,11 +214,11 @@ namespace pwiz.Skyline.Model.GroupComparison
                 }
                 foreach (var transition in precursor.Transitions)
                 {
-                    if (SkipTransition(settings, transition))
+                    if (SkipTransition(transition))
                     {
                         continue;
                     }
-                    var quantity = GetTransitionQuantity(settings, null, normalizationMethod, replicateIndex, precursor,
+                    var quantity = GetTransitionQuantity(null, normalizationMethod, replicateIndex, precursor,
                         transition, false);
                     if (quantity != null)
                     {
@@ -182,7 +229,7 @@ namespace pwiz.Skyline.Model.GroupComparison
             return totalArea;
         }
 
-        public double? GetQualitativeIonRatio(SrmSettings settings, TransitionGroupDocNode precursor, int replicateIndex)
+        public double? GetQualitativeIonRatio(TransitionGroupDocNode precursor, int replicateIndex)
         {
             double numerator = 0;
             int numeratorCount = 0;
@@ -190,7 +237,7 @@ namespace pwiz.Skyline.Model.GroupComparison
             int denominatorCount = 0;
             foreach (var transition in precursor.Transitions)
             {
-                var quantity = GetTransitionQuantity(settings, null, NormalizationMethod.NONE, replicateIndex,
+                var quantity = GetTransitionQuantity(null, NormalizationMethod.NONE, replicateIndex,
                     precursor, transition, false);
                 if (quantity != null)
                 {
@@ -217,7 +264,6 @@ namespace pwiz.Skyline.Model.GroupComparison
         }
 
         private Quantity GetTransitionQuantity(
-            SrmSettings srmSettings,
             IDictionary<PeptideDocNode.TransitionKey, TransitionChromInfo> peptideStandards,
             NormalizationMethod normalizationMethod,
             int replicateIndex,
@@ -282,18 +328,13 @@ namespace pwiz.Skyline.Model.GroupComparison
                 }
                 if (Equals(normalizationMethod, NormalizationMethod.GLOBAL_STANDARDS))
                 {
-                    var fileInfo = srmSettings.MeasuredResults.Chromatograms[replicateIndex]
-                        .GetFileInfo(chromInfo.FileId);
-                    if (fileInfo == null)
-                    {
-                        return null;
-                    }
-                    denominator = srmSettings.CalcGlobalStandardArea(replicateIndex, fileInfo);
+
+                    denominator = GetGlobalStandardNormalizationFactor(chromInfo.FileId);
                 }
                 else if (normalizationMethod is NormalizationMethod.RatioToSurrogate)
                 {
                     denominator =  ((NormalizationMethod.RatioToSurrogate) NormalizationMethod)
-                        .GetStandardArea(srmSettings, replicateIndex, chromInfo.FileId);
+                        .GetStandardArea(SrmSettings, replicateIndex, chromInfo.FileId);
                 }
                 else if (Equals(normalizationMethod, NormalizationMethod.EQUALIZE_MEDIANS))
                 {
@@ -312,7 +353,7 @@ namespace pwiz.Skyline.Model.GroupComparison
                 }
                 else if (Equals(normalizationMethod, NormalizationMethod.TIC))
                 {
-                    var factor = srmSettings.GetTicNormalizationDenominator(replicateIndex, chromInfo.FileId);
+                    var factor = SrmSettings.GetTicNormalizationDenominator(replicateIndex, chromInfo.FileId);
                     if (!factor.HasValue)
                     {
                         return null;
@@ -347,7 +388,7 @@ namespace pwiz.Skyline.Model.GroupComparison
         }
 
         private Dictionary<PeptideDocNode.TransitionKey, TransitionChromInfo> GetTransitionsToNormalizeAgainst(
-            SrmSettings settings, PeptideDocNode peptideDocNode, int replicateIndex)
+            PeptideDocNode peptideDocNode, int replicateIndex)
         {
             NormalizationMethod.RatioToLabel ratioToLabel = NormalizationMethod as NormalizationMethod.RatioToLabel;
             if (ratioToLabel == null)
@@ -363,7 +404,7 @@ namespace pwiz.Skyline.Model.GroupComparison
                 }
                 foreach (var transition in transitionGroup.Transitions)
                 {
-                    if (!transition.IsQuantitative(settings))
+                    if (!transition.IsQuantitative(SrmSettings))
                     {
                         continue;
                     }

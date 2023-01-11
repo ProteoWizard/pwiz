@@ -436,17 +436,21 @@ namespace pwiz.Skyline.Model.GroupComparison
                     QuantificationSettings quantificationSettings = QuantificationSettings.DEFAULT
                         .ChangeNormalizationMethod(ComparisonDef.NormalizationMethod)
                         .ChangeMsLevel(selector.MsLevel);
+                    var srmSettings = SrmDocument.Settings;
+                    srmSettings =
+                        srmSettings.ChangePeptideSettings(
+                            srmSettings.PeptideSettings.ChangeAbsoluteQuantification(quantificationSettings));
                     var peptideQuantifier = new PeptideQuantifier(GetNormalizationData, selector.Protein, peptide,
-                        quantificationSettings)
+                        srmSettings)
                     {
-                        QValueCutoff = ComparisonDef.QValueCutoff
+                        QValueCutoff = ComparisonDef.QValueCutoff,
+                        AlwaysMultiplyByMedianNormalizationFactor = true
                     };
                     if (null != selector.LabelType)
                     {
                         peptideQuantifier.MeasuredLabelTypes = ImmutableList.Singleton(selector.LabelType);
                     }
-                    foreach (var quantityEntry in peptideQuantifier.GetTransitionIntensities(SrmDocument.Settings, 
-                                replicateEntry.Key, ComparisonDef.UseZeroForMissingPeaks))
+                    foreach (var quantityEntry in peptideQuantifier.GetTransitionIntensities(replicateEntry.Key, ComparisonDef.UseZeroForMissingPeaks))
                     {
                         var dataRowDetails = new DataRowDetails
                         {

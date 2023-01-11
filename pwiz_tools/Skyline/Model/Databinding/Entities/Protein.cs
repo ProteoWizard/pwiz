@@ -241,15 +241,14 @@ namespace pwiz.Skyline.Model.Databinding.Entities
             for (int iReplicate = 0; iReplicate < replicateCount; iReplicate++)
             {
                 double totalNumerator = 0;
-                double totalDenomicator = 0;
+                double totalDenominator = 0;
                 int transitionCount = 0;
                 foreach (var peptideQuantifier in quantifiers)
                 {
-                    foreach (var entry in peptideQuantifier.GetTransitionIntensities(SrmDocument.Settings, iReplicate,
-                        false))
+                    foreach (var entry in peptideQuantifier.GetTransitionIntensities(iReplicate, false))
                     {
                         totalNumerator += entry.Value.Intensity;
-                        totalDenomicator += entry.Value.Denominator;
+                        totalDenominator += entry.Value.Denominator;
                         allTransitionIdentityPaths.Add(entry.Key);
                         transitionCount++;
                     }
@@ -257,7 +256,7 @@ namespace pwiz.Skyline.Model.Databinding.Entities
 
                 if (transitionCount != 0)
                 {
-                    var abundance = totalNumerator / totalDenomicator;
+                    var abundance = totalNumerator / totalDenominator;
                     abundances.Add(iReplicate, Tuple.Create(abundance, transitionCount));
                 }
             }
