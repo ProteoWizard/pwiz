@@ -664,8 +664,17 @@
       <Component Id="Method_Agilent_MH12_Agilent.MSDrivers.LCQuadrupole.ValidationBase.dll">
          <File Source="$(var.Skyline.TargetDir)/Method\Agilent\MH12\Agilent.MSDrivers.LCQuadrupole.ValidationBase.dll" KeyPath="yes"/>
       </Component>
+      <Component Id="Method_Agilent_MH12_BaseCommon.dll">
+         <File Source="$(var.Skyline.TargetDir)/Method\Agilent\MH12\BaseCommon.dll" KeyPath="yes"/>
+      </Component>
+      <Component Id="Method_Agilent_MH12_BaseError.dll">
+         <File Source="$(var.Skyline.TargetDir)/Method\Agilent\MH12\BaseError.dll" KeyPath="yes"/>
+      </Component>
       <Component Id="Method_Agilent_MH12_BaseMSUtils.dll">
          <File Source="$(var.Skyline.TargetDir)/Method\Agilent\MH12\BaseMSUtils.dll" KeyPath="yes"/>
+      </Component>
+      <Component Id="Method_Agilent_MH12_BaseTof.dll">
+         <File Source="$(var.Skyline.TargetDir)/Method\Agilent\MH12\BaseTof.dll" KeyPath="yes"/>
       </Component>
       <Component Id="Method_Agilent_MH12_BuildAgilentMH12Method.exe">
          <File Source="$(var.Skyline.TargetDir)/Method\Agilent\MH12\BuildAgilentMH12Method.exe" KeyPath="yes"/>
@@ -675,6 +684,15 @@
       </Component>
       <Component Id="Method_Agilent_MH12_ESWShared.dll">
          <File Source="$(var.Skyline.TargetDir)/Method\Agilent\MH12\ESWShared.dll" KeyPath="yes"/>
+      </Component>
+      <Component Id="Method_Agilent_MH12_Newtonsoft.Json.dll">
+         <File Source="$(var.Skyline.TargetDir)/Method\Agilent\MH12\Newtonsoft.Json.dll" KeyPath="yes"/>
+      </Component>
+      <Component Id="Method_Agilent_MH12_Newtonsoft.Json.pdb">
+         <File Source="$(var.Skyline.TargetDir)/Method\Agilent\MH12\Newtonsoft.Json.pdb" KeyPath="yes"/>
+      </Component>
+      <Component Id="Method_Agilent_MH12_Newtonsoft.Json.xml">
+         <File Source="$(var.Skyline.TargetDir)/Method\Agilent\MH12\Newtonsoft.Json.xml" KeyPath="yes"/>
       </Component>
       <Component Id="Method_Agilent_MH12_RapidControlIF.dll">
          <File Source="$(var.Skyline.TargetDir)/Method\Agilent\MH12\RapidControlIF.dll" KeyPath="yes"/>
