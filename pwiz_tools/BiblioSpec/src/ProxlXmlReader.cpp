@@ -110,8 +110,8 @@ void ProxlXmlReader::startElement(const XML_Char* name, const XML_Char** attr) {
                 analysisType_ = PLINK_ANALYIS;
             else if (program == "merox")
                 analysisType_ = MEROX_ANALYSIS;
-			else if (program == "peptideprophet")
-				analysisType_ = PEPTIDE_PROPHET_ANALYSIS;
+            else if (program == "peptideprophet")
+                analysisType_ = PEPTIDE_PROPHET_ANALYSIS;
         }
         break;
     case REPORTED_PEPTIDES_STATE:
@@ -318,7 +318,7 @@ double ProxlXmlReader::getScoreThreshold()
         case PERCOLATOR_ANALYSIS: 
         case PLINK_ANALYIS:
         case MEROX_ANALYSIS:
-		case PEPTIDE_PROPHET_ANALYSIS:	
+        case PEPTIDE_PROPHET_ANALYSIS:	
             return blibMaker_.getScoreThreshold(GENERIC_QVALUE_INPUT);
 
         default:
