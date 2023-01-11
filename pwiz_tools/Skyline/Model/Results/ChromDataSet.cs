@@ -927,39 +927,29 @@ namespace pwiz.Skyline.Model.Results
 
         private void MarkOptimizationData()
         {
-            int iFirst = 0;
-            for (int i = 0; i < _listChromData.Count; i++)
+            var curGroup = new List<int>();
+
+            void ProcessGroup()
             {
-                if (i < _listChromData.Count - 1 &&
-                    ChromatogramInfo.IsOptimizationSpacing(_listChromData[i].Key.Product, _listChromData[i + 1].Key.Product))
-                {
-                    // CONSIDER: This is no longer possible, since IsOptimizationSpacing checked for order
-                    //           optimization spacing could happen at a boundary changing between ion types
-                    if (_listChromData[i + 1].Key.Product < _listChromData[i].Key.Product)
-                    {
-                        throw new InvalidDataException(string.Format(Resources.ChromDataSet_MarkOptimizationData_Incorrectly_sorted_chromatograms__0__1__,
-                                                                     _listChromData[i + 1].Key.Product, _listChromData[i].Key.Product));
-                    }
-                }
-                else
-                {
-                    if (iFirst != i)
-                    {
-                        // The middle element in the run is the regression value.
-                        // Mark it as not optimization data.
-                        int middleIndex = (i - iFirst)/2 + iFirst;
-                        var primaryData = _listChromData[middleIndex];
-                        // Set the primary key for all members of this group.
-                        for (int j = iFirst; j <= i; j++)
-                        {
-                            _listChromData[j].OptimizationStep = middleIndex - j;
-                            _listChromData[j].PrimaryKey = primaryData.Key;
-                        }
-                    }
-                    // Start a new run with the next value
-                    iFirst = i + 1;
-                }
+                if (curGroup.Count == 0)
+                    return;
+
+                var primary = _listChromData[curGroup.Count / 2].Key;
+                foreach (var i in curGroup)
+                    _listChromData[i].PrimaryKey = primary;
+
+                curGroup.Clear();
             }
+
+            for (var i = 0; i < _listChromData.Count; i++)
+            {
+                if (i > 0 && _listChromData[i].OptimizationStep != _listChromData[i - 1].OptimizationStep + 1)
+                    ProcessGroup();
+
+                curGroup.Add(i);
+            }
+
+            ProcessGroup();
         }
 
         // Moved to ProteoWizard

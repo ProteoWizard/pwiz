@@ -299,7 +299,7 @@ namespace pwiz.Skyline.Model.Results
 
         public IList<ChromPeak> Peaks { get; private set; }
         public int MaxPeakIndex { get; set; }
-        public int OptimizationStep { get; set; }
+        public int OptimizationStep => Key.OptimizationStep;
         public ChromKey PrimaryKey { get; set; }
 
         public void FixChromatogram(float[] timesNew, float[] intensitiesNew, int[] scanIndexesNew)
@@ -393,7 +393,8 @@ namespace pwiz.Skyline.Model.Results
                 Key.ExtractionWidth,
                 (float) (Key.IonMobilityFilter.IonMobility.Mobility ?? 0),
                 (float) (Key.IonMobilityFilter.IonMobilityExtractionWindowWidth ?? 0),
-                Key.Source);
+                Key.Source,
+                (short) OptimizationStep);
         }
     }
 
