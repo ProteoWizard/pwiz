@@ -2004,7 +2004,7 @@ namespace pwiz.Skyline.Model
             writer.Write(FieldSeparator);
             writer.Write(nodeTran != null ? GetProductMz(SequenceMassCalc.PersistentMZ(nodeTran.Mz), step).ToString(CultureInfo) : string.Empty);
             writer.Write(FieldSeparator);
-            writer.Write(ThermoFusionMassListExporter.GetCE(Document).ToString(CultureInfo));
+            writer.Write(ThermoFusionMassListExporter.GetCE(Document, nodePep, nodeTranGroup, nodeTran).ToString(CultureInfo));
 
             if (UseSlens)
             {
@@ -3966,7 +3966,11 @@ namespace pwiz.Skyline.Model
                         iw => iw.IsolationEnd - iw.IsolationStart) >= 5;
                 }
             }
-            string collisionEnergy = (wideWindowDia ? WIDE_NCE : NARROW_NCE).ToString(CultureInfo); // Normalized CE, not a real voltage
+
+            var ce = Document.GetOptimizedCollisionEnergy(nodePep, nodeTranGroup, nodeTran)
+                     ?? (wideWindowDia ? WIDE_NCE : NARROW_NCE); // Normalized CE, not a real voltage
+            var ceString = ce.ToString(CultureInfo);
+
             string comment = string.Format(@"{0} ({1})",
                 GetCompound(nodePep, nodeTranGroup),
                 nodeTranGroup.TransitionGroup.LabelType).ToDsvField(FieldSeparator);
@@ -3975,11 +3979,11 @@ namespace pwiz.Skyline.Model
             if (UseSlens)
             {
                 var slens = (ExplicitTransitionValues.Get(nodeTran).SLens ?? DEFAULT_SLENS).ToString(CultureInfo);  
-                Write(writer, precursorMz, string.Empty, string.Empty, z, polarity, start, end, collisionEnergy, slens, comment);
+                Write(writer, precursorMz, string.Empty, string.Empty, z, polarity, start, end, ceString, slens, comment);
             }
             else
             {
-                Write(writer, precursorMz, string.Empty, string.Empty, z, polarity, start, end, collisionEnergy, comment);
+                Write(writer, precursorMz, string.Empty, string.Empty, z, polarity, start, end, ceString, comment);
             }
         }
     }
@@ -4073,7 +4077,7 @@ namespace pwiz.Skyline.Model
             writer.Write(FieldSeparator);
             writer.Write(end);
             writer.Write(FieldSeparator);
-            writer.Write(GetCE(Document).ToString(CultureInfo));
+            writer.Write(GetCE(Document, nodePep, nodeTranGroup, nodeTran).ToString(CultureInfo));
 
             if (UseSlens)
             {
@@ -4089,8 +4093,12 @@ namespace pwiz.Skyline.Model
             writer.WriteLine();
         }
 
-        public static double GetCE(SrmDocument doc)
+        public static double GetCE(SrmDocument doc, PeptideDocNode nodePep, TransitionGroupDocNode nodeGroup, TransitionDocNode nodeTransition)
         {
+            var optCe = doc.GetOptimizedCollisionEnergy(nodePep, nodeGroup, nodeTransition);
+            if (optCe.HasValue)
+                return optCe.Value;
+
             // Note that this is normalized CE (not absolute)
             var fullScan = doc.Settings.TransitionSettings.FullScan;
             var wideWindowDia = false;

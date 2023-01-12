@@ -930,6 +930,26 @@ namespace pwiz.Skyline.FileUI
                 }
             }
 
+            // Check to make sure prediction is not set to optimize by transition if exporting an isolation list.
+            if (Equals(documentExport.Settings.TransitionSettings.Prediction.OptimizedMethodType,
+                    OptimizedMethodType.Transition) && IsFullScanInstrument)
+            {
+                switch (MultiButtonMsgDlg.Show(this,
+                            TextUtil.LineSeparate(
+                                Resources.ExportMethodDlg_OkDialog_The_transition_prediction_settings_for_this_document_are_set_to_use_optimized_values_by_transition_,
+                                Resources.ExportMethodDlg_OkDialog_Using_optimized_values_by_transition_is_invalid_for_this_instrument_type__Would_you_like_to_use_optimized_values_by_precursor_instead_),
+                            MessageBoxButtons.OKCancel))
+                {
+                    case DialogResult.OK:
+                        documentExport = documentExport.ChangeSettings(
+                            documentExport.Settings.ChangeTransitionPrediction(
+                                predict => predict.ChangeOptimizedMethodType(OptimizedMethodType.Precursor)));
+                        break;
+                    default:
+                        return;
+                }
+            }
+
             // Full-scan method building ignores CE and DP regression values
             if (!IsFullScanInstrument)
             {
@@ -1701,14 +1721,21 @@ namespace pwiz.Skyline.FileUI
             {
                 cbIgnoreProteins.Checked = true;
             }
+
             if (triggered && !(InstrumentType == ExportInstrumentType.ABI || InstrumentType == ExportInstrumentType.ABI_QTRAP))
             {
                 comboOptimizing.Enabled = false;
             }
+            else if (!IsFullScanInstrument)
+            {
+                comboOptimizing.Enabled = true;
+            }
             else
             {
-                comboOptimizing.Enabled = !IsFullScanInstrument;
+                comboOptimizing.Enabled = Equals(InstrumentType, ExportInstrumentType.ABI_TOF) ||
+                                          Equals(InstrumentType, ExportInstrumentType.ABI_7600);
             }
+
             if (!comboOptimizing.Enabled)
             {
                 OptimizeType = ExportOptimize.NONE;
