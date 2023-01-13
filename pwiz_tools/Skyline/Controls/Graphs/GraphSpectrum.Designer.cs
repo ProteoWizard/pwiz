@@ -129,6 +129,7 @@ namespace pwiz.Skyline.Controls.Graphs
             // 
             resources.ApplyResources(this.msGraphExtension, "msGraphExtension");
             this.msGraphExtension.Name = "msGraphExtension";
+            this.msGraphExtension.PropertySheetVisibilityPropName = "ViewLibraryMatchPropsVisible";
             //
             // propertiesButton
             //
@@ -155,7 +156,6 @@ namespace pwiz.Skyline.Controls.Graphs
             this.GraphPanel.ResumeLayout(false);
             this.ResumeLayout(false);
             this.PerformLayout();
-
         }
 
         #endregion

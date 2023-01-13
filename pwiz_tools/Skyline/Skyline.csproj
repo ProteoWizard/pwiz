@@ -3605,6 +3605,7 @@
     </Content>
     <None Include="Resources\AnnotatedSpectum.png" />
     <None Include="Resources\Cluster.ico" />
+    <None Include="Resources\Close.bmp" />
     <Content Include="SkylineDocPointer.ico" />
     <EmbeddedResource Include="Resources\prosit_logo_dark_blue.png" />
     <Content Include="SkylineProcessRunner.exe">
@@ -3984,6 +3985,7 @@
     </EmbeddedResource>
     <EmbeddedResource Include="SettingsUI\MsGraphExtension.resx">
       <DependentUpon>MsGraphExtension.cs</DependentUpon>
+      <SubType>Designer</SubType>
     </EmbeddedResource>
     <EmbeddedResource Include="SettingsUI\Optimization\AddOptimizationLibraryDlg.ja.resx">
       <DependentUpon>AddOptimizationLibraryDlg.cs</DependentUpon>

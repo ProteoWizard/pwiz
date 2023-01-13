@@ -108,7 +108,6 @@ namespace pwiz.Skyline.SettingsUI
         private ITipProvider _lastTipProvider;
         private bool _showChromatograms;
         private bool _hasChromatograms;
-        private bool _hasScores;
         private readonly GraphHelper _graphHelper;
         private string _originalFileLabelText;
         private string _sourceFile;
@@ -194,6 +193,9 @@ namespace pwiz.Skyline.SettingsUI
             }
             if (Settings.Default.ViewLibrarySplitMainDist > 0)
                 splitMain.SplitterDistance = Settings.Default.ViewLibrarySplitMainDist;
+
+            msGraphExtension1.RestorePropertiesSheet();
+            msGraphExtension1.PropertiesSheetVisibilityChanged += msGraphExtension_PropertiesSheetVisibilityChanged;
 
             _matcher = new LibKeyModificationMatcher();
             _showChromatograms = Settings.Default.ShowLibraryChromatograms;
@@ -355,10 +357,6 @@ namespace pwiz.Skyline.SettingsUI
             Settings.Default.ViewLibrarySize = Size;
             Settings.Default.ViewLibrarySplitMainDist = splitMain.SplitterDistance;
             Settings.Default.ViewLibraryPropertiesVisible = propertiesButton.Checked;
-            if (msGraphExtension1.PropertiesVisible)
-                msGraphExtension1.SaveSplitterWidthSetting();
-            Settings.Default.ViewLibraryPropertiesSorted =
-                msGraphExtension1.PropertiesSheet.PropertySort == PropertySort.Alphabetical;
 
             var ionTypeSelector = GetHostedControl<IonTypeSelectionPanel>();
             if (ionTypeSelector != null)
@@ -386,14 +384,6 @@ namespace pwiz.Skyline.SettingsUI
             UpdateListPeptide(0);
             textPeptide.Select();
             UpdateUI();
-            RestoreProperties();
-        }
-
-        private void RestoreProperties()
-        {
-            ShowProperties(Settings.Default.ViewLibraryPropertiesVisible);
-            if (Settings.Default.ViewLibraryPropertiesSorted)
-                GraphExtensionControl.PropertiesSheet.PropertySort = PropertySort.Alphabetical;
         }
 
         /// <summary>
@@ -912,8 +902,6 @@ namespace pwiz.Skyline.SettingsUI
                             _currentProperties = spectrumInfo.CreateProperties(pepInfo, _matcher, _currentProperties); 
                         }
 
-                        _hasScores = _currentProperties.Score != null;
-
                         var spectrumInfoR = LibraryRankedSpectrumInfo.NewLibraryRankedSpectrumInfo(
                             spectrumInfo.SpectrumPeaksInfo,
                             transitionGroupDocNode.TransitionGroup.LabelType,
@@ -1185,11 +1173,6 @@ namespace pwiz.Skyline.SettingsUI
             menuStrip.Items.Insert(iInsert++, toolStripSeparator12);
             ranksContextMenuItem.Checked = set.ShowRanks;
             menuStrip.Items.Insert(iInsert++, ranksContextMenuItem);
-            if (_hasScores)
-            {
-                scoreContextMenuItem.Checked = set.ShowLibraryScores;
-                menuStrip.Items.Insert(iInsert++, scoreContextMenuItem);
-            }
             ionMzValuesContextMenuItem.Checked = set.ShowIonMz;
             menuStrip.Items.Insert(iInsert++, ionMzValuesContextMenuItem);
             observedMzValuesContextMenuItem.Checked = set.ShowObservedMz;
@@ -1202,6 +1185,8 @@ namespace pwiz.Skyline.SettingsUI
             lockYaxisContextMenuItem.Checked = set.LockYAxis;
             menuStrip.Items.Insert(iInsert++, lockYaxisContextMenuItem);
             menuStrip.Items.Insert(iInsert++, toolStripSeparator14);
+            menuStrip.Items.Insert(iInsert++, graphPropsContextMenuItem);
+            spectrumPropsContextMenuItem.Checked = msGraphExtension1.PropertiesVisible;
             menuStrip.Items.Insert(iInsert++, spectrumPropsContextMenuItem);
             if (_hasChromatograms)
             {
@@ -1658,17 +1643,14 @@ namespace pwiz.Skyline.SettingsUI
 
         private void propertiesMenuItem_Click(object sender, EventArgs e)
         {
-            ShowProperties(!propertiesButton.Checked);
+            msGraphExtension1.TogglePropertiesSheet();
+            propertiesButton.Checked = msGraphExtension1.PropertiesVisible;
+
         }
 
-        public void ShowProperties(bool show)
+        private void msGraphExtension_PropertiesSheetVisibilityChanged(object sender, EventArgs e)
         {
-            if (!show && msGraphExtension1.PropertiesVisible)
-                msGraphExtension1.SaveSplitterWidthSetting();
-            propertiesButton.Checked = show;
-            msGraphExtension1.SetPropertiesVisibility(propertiesButton.Checked);
-            if (show)
-                msGraphExtension1.RestoreSplitterWidthSetting();
+            propertiesButton.Checked = msGraphExtension1.PropertiesVisible;
         }
 
         public void UpdateChargesMenu()
@@ -1739,13 +1721,18 @@ namespace pwiz.Skyline.SettingsUI
             LockYAxis(Settings.Default.LockYAxis = lockYaxisContextMenuItem.Checked);
         }
 
-        private void spectrumPropsContextMenuItem_Click(object sender, EventArgs e)
+        private void graphPropsContextMenuItem_Click(object sender, EventArgs e)
         {
             using (var dlg = new SpectrumChartPropertyDlg())
             {
                 if (dlg.ShowDialog(this) == DialogResult.OK)
                     UpdateUI();
             }
+        }
+        private void spectrumPropsContextMenuItem_Click(object sender, EventArgs e)
+        {
+            msGraphExtension1.TogglePropertiesSheet();
+            propertiesButton.Checked = msGraphExtension1.PropertiesVisible;
         }
 
         private void zoomSpectrumContextMenuItem_Click(object sender, EventArgs e)

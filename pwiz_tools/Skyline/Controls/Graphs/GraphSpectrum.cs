@@ -151,6 +151,7 @@ namespace pwiz.Skyline.Controls.Graphs
         {
             InitializeComponent();
             graphControl.ContextMenuBuilder += graphControl_ContextMenuBuilder;
+            msGraphExtension.PropertiesSheetVisibilityChanged += msGraphExtension_PropertiesSheetVisibilityChanged;
 
             Icon = Resources.SkylineData;
             _graphHelper = GraphHelper.Attach(graphControl);
@@ -162,10 +163,7 @@ namespace pwiz.Skyline.Controls.Graphs
 
             // ReSharper disable once PossibleNullReferenceException
             comboPrecursor.ComboBox.DisplayMember = nameof(Precursor.DisplayString);
-
-            ShowPropertiesSheet = Settings.Default.ViewLibraryMatchPropsVisible;
-            if (Settings.Default.ViewLibraryPropertiesSorted)
-                msGraphExtension.PropertiesSheet.PropertySort = PropertySort.Alphabetical;
+            msGraphExtension.RestorePropertiesSheet();
 
             if (DocumentUI != null)
                 ZoomSpectrumToSettings();
@@ -396,6 +394,10 @@ namespace pwiz.Skyline.Controls.Graphs
         {
             ShowPropertiesSheet = !ShowPropertiesSheet;
         }
+        private void msGraphExtension_PropertiesSheetVisibilityChanged(object sender, EventArgs e)
+        {
+            propertiesButton.Checked = ShowPropertiesSheet;
+        }
 
         private class ToolbarUpdate : IDisposable
         {
@@ -526,6 +528,7 @@ namespace pwiz.Skyline.Controls.Graphs
 
             // Show only if we made any of the things visible
             toolBar.Visible = showPrecursorSelect || showSpectraSelect || enableCE;
+            propertiesButton.Checked = ShowPropertiesSheet;
         }
 
         public void SelectSpectrum(SpectrumIdentifier spectrumIdentifier)
@@ -1413,17 +1416,12 @@ namespace pwiz.Skyline.Controls.Graphs
         public bool ShowPropertiesSheet {
             set
             {
-                if (!value && msGraphExtension.PropertiesVisible)
-                    msGraphExtension.SaveSplitterWidthSetting();
+                msGraphExtension.ShowPropertiesSheet(value);
                 propertiesButton.Checked = value;
-                msGraphExtension.SetPropertiesVisibility(propertiesButton.Checked);
-                Settings.Default.ViewLibraryMatchPropsVisible = value;
-                if (value)
-                    msGraphExtension.RestoreSplitterWidthSetting();
             }
             get
             {
-                return propertiesButton.Checked;
+                return msGraphExtension.PropertiesVisible;
             }
         }
 
