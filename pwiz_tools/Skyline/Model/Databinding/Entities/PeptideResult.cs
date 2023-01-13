@@ -302,7 +302,7 @@ namespace pwiz.Skyline.Model.Databinding.Entities
                     return owner.Peptide.GetCalibrationCurveFitter();
                 }
                 var calibrationCurveFitter =
-                    new CalibrationCurveFitter(owner.Peptide.GetPeptideQuantifier());
+                    new CalibrationCurveFitter(owner.Peptide.GetPeptideQuantifier(), owner.SrmDocument.Settings);
                 calibrationCurveFitter.SingleBatchReplicateIndex = owner.ResultFile.Replicate.ReplicateIndex;
                 return calibrationCurveFitter;
             }

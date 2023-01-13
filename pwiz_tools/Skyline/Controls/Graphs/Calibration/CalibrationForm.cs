@@ -153,7 +153,7 @@ namespace pwiz.Skyline.Controls.Graphs.Calibration
             }
             PeptideQuantifier peptideQuantifier = PeptideQuantifier.GetPeptideQuantifier(document, peptideGroup,
                 peptide);
-            CalibrationCurveFitter curveFitter = new CalibrationCurveFitter(peptideQuantifier);
+            CalibrationCurveFitter curveFitter = new CalibrationCurveFitter(peptideQuantifier, document.Settings);
             if (curveFitter.IsEnableSingleBatch && Settings.Default.CalibrationCurveOptions.SingleBatch)
             {
                 curveFitter.SingleBatchReplicateIndex = _skylineWindow.SelectedResultsIndex;

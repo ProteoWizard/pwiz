@@ -89,7 +89,7 @@ namespace pwiz.Skyline.Model
                         var peptideQuantifier = PeptideQuantifier.GetPeptideQuantifier(
                             () => normalizedValueCalculator.GetNormalizationData(), document.Settings, peptideGroup,
                             peptide);
-                        calibrationCurveFitter = new CalibrationCurveFitter(peptideQuantifier);
+                        calibrationCurveFitter = new CalibrationCurveFitter(peptideQuantifier, document.Settings);
                         transitionGroups = new[] {peptide.TransitionGroups.First()};
                         if (_settings.NormalizeOption == NormalizeOption.CALIBRATED)
                         {

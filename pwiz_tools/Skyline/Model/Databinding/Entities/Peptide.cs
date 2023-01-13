@@ -563,7 +563,7 @@ namespace pwiz.Skyline.Model.Databinding.Entities
 
             protected override CalibrationCurveFitter CalculateValue(Peptide owner)
             {
-                return new CalibrationCurveFitter(owner.GetPeptideQuantifier());
+                return new CalibrationCurveFitter(owner.GetPeptideQuantifier(), owner.SrmDocument.Settings);
             }
 
             protected override ImmutableList<Precursor> CalculateValue1(Peptide owner)

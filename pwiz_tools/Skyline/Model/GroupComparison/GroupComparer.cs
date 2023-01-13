@@ -436,21 +436,17 @@ namespace pwiz.Skyline.Model.GroupComparison
                     QuantificationSettings quantificationSettings = QuantificationSettings.DEFAULT
                         .ChangeNormalizationMethod(ComparisonDef.NormalizationMethod)
                         .ChangeMsLevel(selector.MsLevel);
-                    var srmSettings = SrmDocument.Settings;
-                    srmSettings =
-                        srmSettings.ChangePeptideSettings(
-                            srmSettings.PeptideSettings.ChangeAbsoluteQuantification(quantificationSettings));
                     var peptideQuantifier = new PeptideQuantifier(GetNormalizationData, selector.Protein, peptide,
-                        srmSettings)
+                        quantificationSettings)
                     {
-                        QValueCutoff = ComparisonDef.QValueCutoff,
-                        AlwaysMultiplyByMedianNormalizationFactor = true
+                        QValueCutoff = ComparisonDef.QValueCutoff
                     };
                     if (null != selector.LabelType)
                     {
                         peptideQuantifier.MeasuredLabelTypes = ImmutableList.Singleton(selector.LabelType);
                     }
-                    foreach (var quantityEntry in peptideQuantifier.GetTransitionIntensities(replicateEntry.Key, ComparisonDef.UseZeroForMissingPeaks))
+                    foreach (var quantityEntry in peptideQuantifier.GetTransitionIntensities(SrmDocument.Settings, 
+                                replicateEntry.Key, ComparisonDef.UseZeroForMissingPeaks))
                     {
                         var dataRowDetails = new DataRowDetails
                         {
@@ -553,18 +549,12 @@ namespace pwiz.Skyline.Model.GroupComparison
 
         public static double CalcLog2Abundance(double numerator, double denominator)
         {
-            if (numerator <= 0)
-            {
-                return 0;
-            }
-
             if (denominator <= 0)
             {
                 return double.NaN;
             }
 
-            double log2Abundance = Math.Log(numerator / denominator, 2);
-            return Math.Max(0, log2Abundance);
+            return Math.Log(Math.Max(numerator, 1) / denominator, 2);
         }
     }
 }
