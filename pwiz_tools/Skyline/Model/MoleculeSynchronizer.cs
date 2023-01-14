@@ -73,17 +73,23 @@ namespace pwiz.Skyline.Model
                     continue;
                 }
 
-                newChildren ??= moleculeGroups.ToArray();
-                var targetMoleculeGroup = (PeptideGroupDocNode) newChildren[targetMoleculeGroupIndex];
+                var targetMoleculeGroup = (PeptideGroupDocNode)
+                    ((IList<DocNode>)newChildren ?? moleculeGroups)[targetMoleculeGroupIndex];
                 var targetMoleculeNode = (PeptideDocNode) targetMoleculeGroup.FindNode(identityPath.GetIdentity(1));
                 if (targetMoleculeNode == null)
                 {
                     continue;
                 }
 
+                var synchronizedTargetMoleculeNode = CopyPeptideIdFrom(sourceMoleculeNode, targetMoleculeNode);
+                if (Equals(synchronizedTargetMoleculeNode, targetMoleculeNode))
+                {
+                    continue;
+                }
+
+                newChildren ??= moleculeGroups.ToArray();
                 targetMoleculeGroup =
-                    (PeptideGroupDocNode) targetMoleculeGroup.ReplaceChild(
-                        CopyPeptideIdFrom(sourceMoleculeNode, targetMoleculeNode));
+                    (PeptideGroupDocNode) targetMoleculeGroup.ReplaceChild(synchronizedTargetMoleculeNode);
                 newChildren[targetMoleculeGroupIndex] = targetMoleculeGroup;
             }
 
