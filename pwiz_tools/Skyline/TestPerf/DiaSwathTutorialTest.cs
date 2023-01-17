@@ -141,7 +141,7 @@ namespace TestPerf
             TestTtofData();
         }
 
-        [TestMethod]
+        [TestMethod, NoParallelTesting(TestExclusionReason.RESOURCE_INTENSIVE)] // Times out on slower worker VMs
         public void TestDiaTtofFullSearchTutorial()
         {
             _analysisValues = new AnalysisValues
