@@ -63,284 +63,287 @@ namespace pwiz.SkylineTestFunctional
         protected override void DoTest()
         {
             var testFilesDir = TestFilesDirs[0]; // IonMobilityTest.zip
-            using (var d = new CurrentDirectorySetter(testFilesDir.FullPath)) // Make sure we don't write anything to default directory, interferes with parallel test
+
+            // Make sure any generated .imsdb files are not in exe's directory - that interferes with parallel tests
+            TestContext.EnsureTestResultsDir();
+            using var d = new CurrentDirectorySetter(testFilesDir.FullPath);
+
+            // Make sure we haven't forgotten to update anything if a new IMS type has been added
+            foreach (eIonMobilityUnits units in Enum.GetValues(typeof(eIonMobilityUnits)))
             {
-                // Make sure we haven't forgotten to update anything if a new IMS type has been added
-                foreach (eIonMobilityUnits units in Enum.GetValues(typeof(eIonMobilityUnits)))
+                if (units != eIonMobilityUnits.unknown)
                 {
-                    if (units != eIonMobilityUnits.unknown)
-                    {
-                        AssertEx.IsNotNull(IonMobilityFilter.IonMobilityUnitsL10NString(units));
-                    }
+                    AssertEx.IsNotNull(IonMobilityFilter.IonMobilityUnitsL10NString(units));
                 }
+            }
 
-                // Verify fix for issue where we would not preserve a simple change to IM window width
-                TestMobilityWindowWidth();
+            // Verify fix for issue where we would not preserve a simple change to IM window width
+            TestMobilityWindowWidth();
 
-                const double HIGH_ENERGY_DRIFT_TIME_OFFSET_MSEC = -.1;
+            const double HIGH_ENERGY_DRIFT_TIME_OFFSET_MSEC = -.1;
 
-                // do a few unit tests on the UI error handlers
-                TestGetIonMobilityDBErrorHandling(testFilesDir);
-                TestImportIonMobilityFromSpectralLibraryErrorHandling();
-                TestEditIonMobilityLibraryDlgErrorHandling();
+            // do a few unit tests on the UI error handlers
+            TestGetIonMobilityDBErrorHandling(testFilesDir);
+            TestImportIonMobilityFromSpectralLibraryErrorHandling();
+            TestEditIonMobilityLibraryDlgErrorHandling();
 
-                // Now exercise the UI
+            // Now exercise the UI
 
-                var goodPeptide = BuildValidatingIonMobilityPeptide("SISIVGSYVGNR", Adduct.SINGLY_PROTONATED, 133.3210342, 23.4, HIGH_ENERGY_DRIFT_TIME_OFFSET_MSEC);
-                AssertEx.IsNull(goodPeptide.Validate());
-                var badPeptides = new[]
-                {
-                    BuildValidatingIonMobilityPeptide("@#$!", Adduct.SINGLY_PROTONATED, 133.3210342, 23.4, HIGH_ENERGY_DRIFT_TIME_OFFSET_MSEC),
-                    BuildValidatingIonMobilityPeptide("SISIVGSYVGNR", Adduct.SINGLY_PROTONATED, 0, 0, 0),
-                    BuildValidatingIonMobilityPeptide("SISIVGSYVGNR", Adduct.SINGLY_PROTONATED, -133.3210342, -23.4, -HIGH_ENERGY_DRIFT_TIME_OFFSET_MSEC),
-                };
-                foreach (var badPeptide in badPeptides)
-                {
-                    AssertEx.IsNotNull(badPeptide.Validate());
-                }
+            var goodPeptide = BuildValidatingIonMobilityPeptide("SISIVGSYVGNR", Adduct.SINGLY_PROTONATED, 133.3210342, 23.4, HIGH_ENERGY_DRIFT_TIME_OFFSET_MSEC);
+            AssertEx.IsNull(goodPeptide.Validate());
+            var badPeptides = new[]
+            {
+                BuildValidatingIonMobilityPeptide("@#$!", Adduct.SINGLY_PROTONATED, 133.3210342, 23.4, HIGH_ENERGY_DRIFT_TIME_OFFSET_MSEC),
+                BuildValidatingIonMobilityPeptide("SISIVGSYVGNR", Adduct.SINGLY_PROTONATED, 0, 0, 0),
+                BuildValidatingIonMobilityPeptide("SISIVGSYVGNR", Adduct.SINGLY_PROTONATED, -133.3210342, -23.4, -HIGH_ENERGY_DRIFT_TIME_OFFSET_MSEC),
+            };
+            foreach (var badPeptide in badPeptides)
+            {
+                AssertEx.IsNotNull(badPeptide.Validate());
+            }
 
-                var CCS_ANELLINVK_MH = 119.2825783;
-                var DRIFTTIME_ANELLINVK = 21.4;
-                var ionMobilityPeptides = new[]  // N.B. These are made-up values
-                {
-                    BuildValidatingIonMobilityPeptide("SISIVGSYVGNR", Adduct.SINGLY_PROTONATED, 133.3210342, 23.4, HIGH_ENERGY_DRIFT_TIME_OFFSET_MSEC),
-                    BuildValidatingIonMobilityPeptide("SISIVGSYVGNR", Adduct.SINGLY_PROTONATED, 133.3210342, 23.4, HIGH_ENERGY_DRIFT_TIME_OFFSET_MSEC), // Redundant - should be tossed
-                    BuildValidatingIonMobilityPeptide("SISIVGSYVGNR", Adduct.SINGLY_PROTONATED, 134.3210342, 24.4, HIGH_ENERGY_DRIFT_TIME_OFFSET_MSEC), // Multiple conformers - should be retained
-                    BuildValidatingIonMobilityPeptide("SISIVGSYVGNR", Adduct.SINGLY_PROTONATED, 134.3210342, 123.4, 0, eIonMobilityUnits.inverse_K0_Vsec_per_cm2), // Different measurement units - should be retained
-                    BuildValidatingIonMobilityPeptide("CCSDVFNQVVK", Adduct.SINGLY_PROTONATED, 131.2405487, 22.4, HIGH_ENERGY_DRIFT_TIME_OFFSET_MSEC),
-                    BuildValidatingIonMobilityPeptide("CCSDVFNQVVK", Adduct.SINGLY_PROTONATED, 131.2405487, 22.4, HIGH_ENERGY_DRIFT_TIME_OFFSET_MSEC), // Redundant - should be tossed
-                    BuildValidatingIonMobilityPeptide("ANELLINVK", Adduct.SINGLY_PROTONATED, CCS_ANELLINVK_MH, DRIFTTIME_ANELLINVK, HIGH_ENERGY_DRIFT_TIME_OFFSET_MSEC),
-                    BuildValidatingIonMobilityPeptide("ANELLINVK", Adduct.SINGLY_PROTONATED, CCS_ANELLINVK_MH, DRIFTTIME_ANELLINVK, HIGH_ENERGY_DRIFT_TIME_OFFSET_MSEC), // Redundant - should be tossed
-                    BuildValidatingIonMobilityPeptide("EALDFFAR", Adduct.SINGLY_PROTONATED, 110.6867676, 20.4, HIGH_ENERGY_DRIFT_TIME_OFFSET_MSEC),
-                    BuildValidatingIonMobilityPeptide("EALDFFAR", Adduct.SINGLY_PROTONATED, 110.6867676, 20.4, HIGH_ENERGY_DRIFT_TIME_OFFSET_MSEC), // Redundant - should be tossed
-                    BuildValidatingIonMobilityPeptide("GVIFYESHGK", Adduct.SINGLY_PROTONATED, 123.7844632, 20.6, HIGH_ENERGY_DRIFT_TIME_OFFSET_MSEC),
-                    BuildValidatingIonMobilityPeptide("GVIFYESHGK", Adduct.SINGLY_PROTONATED, 123.7844632, 20.6, HIGH_ENERGY_DRIFT_TIME_OFFSET_MSEC), // Redundant - should be tossed
-                    BuildValidatingIonMobilityPeptide("EKDIVGAVLK", Adduct.SINGLY_PROTONATED, 124.3414249, 20.7, HIGH_ENERGY_DRIFT_TIME_OFFSET_MSEC),
-                    BuildValidatingIonMobilityPeptide("EKDIVGAVLK", Adduct.SINGLY_PROTONATED, 124.3414249, 20.7, HIGH_ENERGY_DRIFT_TIME_OFFSET_MSEC), // Redundant - should be tossed
-                    BuildValidatingIonMobilityPeptide("VVGLSTLPEIYEK", Adduct.SINGLY_PROTONATED, 149.857687, 25.7, HIGH_ENERGY_DRIFT_TIME_OFFSET_MSEC),
-                    BuildValidatingIonMobilityPeptide("VVGLSTLPEIYEK", Adduct.SINGLY_PROTONATED, 149.857687, 25.7, HIGH_ENERGY_DRIFT_TIME_OFFSET_MSEC), // Redundant - should be tossed
-                    BuildValidatingIonMobilityPeptide("VVGLSTLPEIYEK", Adduct.SINGLY_PROTONATED, 149.857687, 25.7, HIGH_ENERGY_DRIFT_TIME_OFFSET_MSEC), // Redundant - should be tossed
-                    BuildValidatingIonMobilityPeptide("ANGTTVLVGMPAGAK", Adduct.SINGLY_PROTONATED, 144.7461979, 24.7, HIGH_ENERGY_DRIFT_TIME_OFFSET_MSEC),
-                    BuildValidatingIonMobilityPeptide("ANGTTVLVGMPAGAK", Adduct.SINGLY_PROTONATED, 144.7461979, 24.7, HIGH_ENERGY_DRIFT_TIME_OFFSET_MSEC), // Redundant - should be tossed
-                    BuildValidatingIonMobilityPeptide("IGDYAGIK", Adduct.SINGLY_PROTONATED,  102.2694763, 14.7, HIGH_ENERGY_DRIFT_TIME_OFFSET_MSEC),
-                    BuildValidatingIonMobilityPeptide("IGDYAGIK", Adduct.SINGLY_PROTONATED,  102.2694763, 14.7, HIGH_ENERGY_DRIFT_TIME_OFFSET_MSEC), // Redundant - should be tossed
-                    BuildValidatingIonMobilityPeptide("GDYAGIK", Adduct.SINGLY_PROTONATED,  91.09155861, 13.7, HIGH_ENERGY_DRIFT_TIME_OFFSET_MSEC),
-                    BuildValidatingIonMobilityPeptide("GDYAGIK", Adduct.SINGLY_PROTONATED,  91.09155861, 13.7, HIGH_ENERGY_DRIFT_TIME_OFFSET_MSEC), // Redundant - should be tossed
-                    BuildValidatingIonMobilityPeptide("IFYESHGK", Adduct.SINGLY_PROTONATED, 111.2756406, 14.2, HIGH_ENERGY_DRIFT_TIME_OFFSET_MSEC),
-                    BuildValidatingIonMobilityPeptide("EALDFFAR", Adduct.SINGLY_PROTONATED, 110.6867676, 14.3, HIGH_ENERGY_DRIFT_TIME_OFFSET_MSEC), // CCS conflict, should be tossed
-                    BuildValidatingIonMobilityPeptide("EALDFFAR", Adduct.DOUBLY_PROTONATED, 90.6867676, 7.3, HIGH_ENERGY_DRIFT_TIME_OFFSET_MSEC), // Different charge, should be retained
-                };
-                var message = EditIonMobilityLibraryDlg.ValidateUniquePrecursors(ionMobilityPeptides, out var minimalSet); // Check for conflicts, strip out dupes
+            var CCS_ANELLINVK_MH = 119.2825783;
+            var DRIFTTIME_ANELLINVK = 21.4;
+            var ionMobilityPeptides = new[]  // N.B. These are made-up values
+            {
+                BuildValidatingIonMobilityPeptide("SISIVGSYVGNR", Adduct.SINGLY_PROTONATED, 133.3210342, 23.4, HIGH_ENERGY_DRIFT_TIME_OFFSET_MSEC),
+                BuildValidatingIonMobilityPeptide("SISIVGSYVGNR", Adduct.SINGLY_PROTONATED, 133.3210342, 23.4, HIGH_ENERGY_DRIFT_TIME_OFFSET_MSEC), // Redundant - should be tossed
+                BuildValidatingIonMobilityPeptide("SISIVGSYVGNR", Adduct.SINGLY_PROTONATED, 134.3210342, 24.4, HIGH_ENERGY_DRIFT_TIME_OFFSET_MSEC), // Multiple conformers - should be retained
+                BuildValidatingIonMobilityPeptide("SISIVGSYVGNR", Adduct.SINGLY_PROTONATED, 134.3210342, 123.4, 0, eIonMobilityUnits.inverse_K0_Vsec_per_cm2), // Different measurement units - should be retained
+                BuildValidatingIonMobilityPeptide("CCSDVFNQVVK", Adduct.SINGLY_PROTONATED, 131.2405487, 22.4, HIGH_ENERGY_DRIFT_TIME_OFFSET_MSEC),
+                BuildValidatingIonMobilityPeptide("CCSDVFNQVVK", Adduct.SINGLY_PROTONATED, 131.2405487, 22.4, HIGH_ENERGY_DRIFT_TIME_OFFSET_MSEC), // Redundant - should be tossed
+                BuildValidatingIonMobilityPeptide("ANELLINVK", Adduct.SINGLY_PROTONATED, CCS_ANELLINVK_MH, DRIFTTIME_ANELLINVK, HIGH_ENERGY_DRIFT_TIME_OFFSET_MSEC),
+                BuildValidatingIonMobilityPeptide("ANELLINVK", Adduct.SINGLY_PROTONATED, CCS_ANELLINVK_MH, DRIFTTIME_ANELLINVK, HIGH_ENERGY_DRIFT_TIME_OFFSET_MSEC), // Redundant - should be tossed
+                BuildValidatingIonMobilityPeptide("EALDFFAR", Adduct.SINGLY_PROTONATED, 110.6867676, 20.4, HIGH_ENERGY_DRIFT_TIME_OFFSET_MSEC),
+                BuildValidatingIonMobilityPeptide("EALDFFAR", Adduct.SINGLY_PROTONATED, 110.6867676, 20.4, HIGH_ENERGY_DRIFT_TIME_OFFSET_MSEC), // Redundant - should be tossed
+                BuildValidatingIonMobilityPeptide("GVIFYESHGK", Adduct.SINGLY_PROTONATED, 123.7844632, 20.6, HIGH_ENERGY_DRIFT_TIME_OFFSET_MSEC),
+                BuildValidatingIonMobilityPeptide("GVIFYESHGK", Adduct.SINGLY_PROTONATED, 123.7844632, 20.6, HIGH_ENERGY_DRIFT_TIME_OFFSET_MSEC), // Redundant - should be tossed
+                BuildValidatingIonMobilityPeptide("EKDIVGAVLK", Adduct.SINGLY_PROTONATED, 124.3414249, 20.7, HIGH_ENERGY_DRIFT_TIME_OFFSET_MSEC),
+                BuildValidatingIonMobilityPeptide("EKDIVGAVLK", Adduct.SINGLY_PROTONATED, 124.3414249, 20.7, HIGH_ENERGY_DRIFT_TIME_OFFSET_MSEC), // Redundant - should be tossed
+                BuildValidatingIonMobilityPeptide("VVGLSTLPEIYEK", Adduct.SINGLY_PROTONATED, 149.857687, 25.7, HIGH_ENERGY_DRIFT_TIME_OFFSET_MSEC),
+                BuildValidatingIonMobilityPeptide("VVGLSTLPEIYEK", Adduct.SINGLY_PROTONATED, 149.857687, 25.7, HIGH_ENERGY_DRIFT_TIME_OFFSET_MSEC), // Redundant - should be tossed
+                BuildValidatingIonMobilityPeptide("VVGLSTLPEIYEK", Adduct.SINGLY_PROTONATED, 149.857687, 25.7, HIGH_ENERGY_DRIFT_TIME_OFFSET_MSEC), // Redundant - should be tossed
+                BuildValidatingIonMobilityPeptide("ANGTTVLVGMPAGAK", Adduct.SINGLY_PROTONATED, 144.7461979, 24.7, HIGH_ENERGY_DRIFT_TIME_OFFSET_MSEC),
+                BuildValidatingIonMobilityPeptide("ANGTTVLVGMPAGAK", Adduct.SINGLY_PROTONATED, 144.7461979, 24.7, HIGH_ENERGY_DRIFT_TIME_OFFSET_MSEC), // Redundant - should be tossed
+                BuildValidatingIonMobilityPeptide("IGDYAGIK", Adduct.SINGLY_PROTONATED,  102.2694763, 14.7, HIGH_ENERGY_DRIFT_TIME_OFFSET_MSEC),
+                BuildValidatingIonMobilityPeptide("IGDYAGIK", Adduct.SINGLY_PROTONATED,  102.2694763, 14.7, HIGH_ENERGY_DRIFT_TIME_OFFSET_MSEC), // Redundant - should be tossed
+                BuildValidatingIonMobilityPeptide("GDYAGIK", Adduct.SINGLY_PROTONATED,  91.09155861, 13.7, HIGH_ENERGY_DRIFT_TIME_OFFSET_MSEC),
+                BuildValidatingIonMobilityPeptide("GDYAGIK", Adduct.SINGLY_PROTONATED,  91.09155861, 13.7, HIGH_ENERGY_DRIFT_TIME_OFFSET_MSEC), // Redundant - should be tossed
+                BuildValidatingIonMobilityPeptide("IFYESHGK", Adduct.SINGLY_PROTONATED, 111.2756406, 14.2, HIGH_ENERGY_DRIFT_TIME_OFFSET_MSEC),
+                BuildValidatingIonMobilityPeptide("EALDFFAR", Adduct.SINGLY_PROTONATED, 110.6867676, 14.3, HIGH_ENERGY_DRIFT_TIME_OFFSET_MSEC), // CCS conflict, should be tossed
+                BuildValidatingIonMobilityPeptide("EALDFFAR", Adduct.DOUBLY_PROTONATED, 90.6867676, 7.3, HIGH_ENERGY_DRIFT_TIME_OFFSET_MSEC), // Different charge, should be retained
+            };
+            var message = EditIonMobilityLibraryDlg.ValidateUniquePrecursors(ionMobilityPeptides, out var minimalSet); // Check for conflicts, strip out dupes
 
-                AssertEx.AreComparableStrings(Resources.EditIonMobilityLibraryDlg_ValidateUniquePrecursors_The_ion__0__has_multiple_ion_mobility_values__Skyline_supports_multiple_conformers__so_this_may_be_intentional_,
-                    message);
-                const int EXPECTED_DB_ENTRIES = 14;
-                AssertEx.AreEqual(EXPECTED_DB_ENTRIES, minimalSet.Count, "known good data imported but with wrong result count");
+            AssertEx.AreComparableStrings(Resources.EditIonMobilityLibraryDlg_ValidateUniquePrecursors_The_ion__0__has_multiple_ion_mobility_values__Skyline_supports_multiple_conformers__so_this_may_be_intentional_,
+                message);
+            const int EXPECTED_DB_ENTRIES = 14;
+            AssertEx.AreEqual(EXPECTED_DB_ENTRIES, minimalSet.Count, "known good data imported but with wrong result count");
 
-                // Present the Ion Mobility tab of the transition settings dialog
-                var transitionSettingsDlg1 = ShowDialog<TransitionSettingsUI>(
-                    () => SkylineWindow.ShowTransitionSettingsUI(TransitionSettingsUI.TABS.IonMobility));
-                // Simulate picking "Add..." from the Ion Mobility Libraries button context menu
-                var ionMobilityLibDlg1 = ShowDialog<EditIonMobilityLibraryDlg>(transitionSettingsDlg1.IonMobilityControl.AddIonMobilityLibrary);
-                // Simulate user pasting in collisional cross section data to create a new ion mobility library
-                string testlibName = "testlib";
-                string databasePath = testFilesDir.GetTestPath(testlibName + IonMobilityDb.EXT);
-                RunUI(() =>
-                {
-                    // N.B no library name provided, so we'll automatically use filename as basis
-                    ionMobilityLibDlg1.CreateDatabaseFile(databasePath); // Simulate user click on Create button
-                    ionMobilityLibDlg1.SetOffsetHighEnergySpectraCheckbox(true);
-                    string libraryText = BuildPasteLibraryText(ionMobilityPeptides,
-                        seq => seq.Substring(0, seq.Length - 1),
-                        ionMobilityLibDlg1.GetOffsetHighEnergySpectraCheckbox());
-                    SetClipboardText(libraryText);
-                });
-                AssertEx.AreEqual(testlibName, ionMobilityLibDlg1.LibraryName);
-                // Expect to be warned about multiple conformer
-                var warnDlg = ShowDialog<MessageDlg>(() => ionMobilityLibDlg1.DoPasteLibrary());
-                RunUI(() =>
-                {
-                    warnDlg.OkDialog();
-                    ionMobilityLibDlg1.OkDialog();
-                });
-                RunUI(() => transitionSettingsDlg1.IonMobilityControl.WindowWidthType = IonMobilityWindowWidthCalculator.IonMobilityWindowWidthType.resolving_power);
-                RunUI(() => transitionSettingsDlg1.IonMobilityControl.SetResolvingPower(50));
-                WaitForClosedForm(ionMobilityLibDlg1);
-                OkDialog(transitionSettingsDlg1, transitionSettingsDlg1.OkDialog);
-                // Rename that library
-                const string testlibName2 = "testlib2";
-                var transitionSettingsDlg2 = ShowDialog<TransitionSettingsUI>(
-                    () => SkylineWindow.ShowTransitionSettingsUI(TransitionSettingsUI.TABS.IonMobility));
+            // Present the Ion Mobility tab of the transition settings dialog
+            var transitionSettingsDlg1 = ShowDialog<TransitionSettingsUI>(
+                () => SkylineWindow.ShowTransitionSettingsUI(TransitionSettingsUI.TABS.IonMobility));
+            // Simulate picking "Add..." from the Ion Mobility Libraries button context menu
+            var ionMobilityLibDlg1 = ShowDialog<EditIonMobilityLibraryDlg>(transitionSettingsDlg1.IonMobilityControl.AddIonMobilityLibrary);
+            // Simulate user pasting in collisional cross section data to create a new ion mobility library
+            string testlibName = "testlib";
+            string databasePath = testFilesDir.GetTestPath(testlibName + IonMobilityDb.EXT);
+            RunUI(() =>
+            {
+                // N.B no library name provided, so we'll automatically use filename as basis
+                ionMobilityLibDlg1.CreateDatabaseFile(databasePath); // Simulate user click on Create button
+                ionMobilityLibDlg1.SetOffsetHighEnergySpectraCheckbox(true);
+                string libraryText = BuildPasteLibraryText(ionMobilityPeptides,
+                    seq => seq.Substring(0, seq.Length - 1),
+                    ionMobilityLibDlg1.GetOffsetHighEnergySpectraCheckbox());
+                SetClipboardText(libraryText);
+            });
+            AssertEx.AreEqual(testlibName, ionMobilityLibDlg1.LibraryName);
+            // Expect to be warned about multiple conformer
+            var warnDlg = ShowDialog<MessageDlg>(() => ionMobilityLibDlg1.DoPasteLibrary());
+            RunUI(() =>
+            {
+                warnDlg.OkDialog();
+                ionMobilityLibDlg1.OkDialog();
+            });
+            RunUI(() => transitionSettingsDlg1.IonMobilityControl.WindowWidthType = IonMobilityWindowWidthCalculator.IonMobilityWindowWidthType.resolving_power);
+            RunUI(() => transitionSettingsDlg1.IonMobilityControl.SetResolvingPower(50));
+            WaitForClosedForm(ionMobilityLibDlg1);
+            OkDialog(transitionSettingsDlg1, transitionSettingsDlg1.OkDialog);
+            // Rename that library
+            const string testlibName2 = "testlib2";
+            var transitionSettingsDlg2 = ShowDialog<TransitionSettingsUI>(
+                () => SkylineWindow.ShowTransitionSettingsUI(TransitionSettingsUI.TABS.IonMobility));
 
-                // Simulate user picking Edit... from the Ion Mobility Library combo control
-                var editIonMobilityLibraryDlg = ShowDialog<EditIonMobilityLibraryDlg>(transitionSettingsDlg2.IonMobilityControl.EditIonMobilityLibrary);
+            // Simulate user picking Edit... from the Ion Mobility Library combo control
+            var editIonMobilityLibraryDlg = ShowDialog<EditIonMobilityLibraryDlg>(transitionSettingsDlg2.IonMobilityControl.EditIonMobilityLibrary);
 
-                RunUI(() =>
-                {
-                    editIonMobilityLibraryDlg.LibraryName = testlibName2;
-                    editIonMobilityLibraryDlg.OkDialog();
-                });
-                WaitForClosedForm(editIonMobilityLibraryDlg);
+            RunUI(() =>
+            {
+                editIonMobilityLibraryDlg.LibraryName = testlibName2;
+                editIonMobilityLibraryDlg.OkDialog();
+            });
+            WaitForClosedForm(editIonMobilityLibraryDlg);
 
-                var olddoc = SkylineWindow.Document;
-                // Set other parameters - name, resolving power
-                const double resolvingPower = 123.4;
-                RunUI(() =>
-                {
-                    transitionSettingsDlg2.IonMobilityControl.WindowWidthType = IonMobilityWindowWidthCalculator.IonMobilityWindowWidthType.resolving_power;
-                    transitionSettingsDlg2.IonMobilityControl.IonMobilityFilterResolvingPower = resolvingPower;
-                    // Go back to the first library we created
-                    transitionSettingsDlg2.IonMobilityControl.SelectedIonMobilityLibrary= testlibName;
-                });
-                OkDialog(transitionSettingsDlg2, transitionSettingsDlg2.OkDialog);
+            var olddoc = SkylineWindow.Document;
+            // Set other parameters - name, resolving power
+            const double resolvingPower = 123.4;
+            RunUI(() =>
+            {
+                transitionSettingsDlg2.IonMobilityControl.WindowWidthType = IonMobilityWindowWidthCalculator.IonMobilityWindowWidthType.resolving_power;
+                transitionSettingsDlg2.IonMobilityControl.IonMobilityFilterResolvingPower = resolvingPower;
+                // Go back to the first library we created
+                transitionSettingsDlg2.IonMobilityControl.SelectedIonMobilityLibrary= testlibName;
+            });
+            OkDialog(transitionSettingsDlg2, transitionSettingsDlg2.OkDialog);
 
-                /*
+            /*
                 * Check that the database was created successfully
                 * Check that it has the correct number of entries
                 */
-                IonMobilityDb db = IonMobilityDb.GetIonMobilityDb(databasePath, null);
-                var dbPrecursorAndIonMobilities = db.GetIonMobilities();
-                AssertEx.AreEqual(EXPECTED_DB_ENTRIES, dbPrecursorAndIonMobilities.Count());
-                WaitForDocumentChange(olddoc);
+            IonMobilityDb db = IonMobilityDb.GetIonMobilityDb(databasePath, null);
+            var dbPrecursorAndIonMobilities = db.GetIonMobilities();
+            AssertEx.AreEqual(EXPECTED_DB_ENTRIES, dbPrecursorAndIonMobilities.Count());
+            WaitForDocumentChange(olddoc);
 
-                // Check serialization and background loader
-                WaitForDocumentLoaded();
-                RunUI(() =>
-                {
-                    SkylineWindow.SaveDocument(testFilesDir.GetTestPath("test.sky"));
-                    SkylineWindow.NewDocument();
-                    SkylineWindow.OpenFile(testFilesDir.GetTestPath("test.sky"));
-                });
-                var doc = WaitForDocumentLoaded();
+            // Check serialization and background loader
+            WaitForDocumentLoaded();
+            RunUI(() =>
+            {
+                SkylineWindow.SaveDocument(testFilesDir.GetTestPath("test.sky"));
+                SkylineWindow.NewDocument();
+                SkylineWindow.OpenFile(testFilesDir.GetTestPath("test.sky"));
+            });
+            var doc = WaitForDocumentLoaded();
 
-                // Verify that the schema has been updated to include these new settings
-                AssertEx.ValidatesAgainstSchema(doc);
-                // Do some DT calculations
-                double driftTimeMax = 1000.0;
-                var node = FindNodes("ANELLINV", Adduct.SINGLY_PROTONATED);
-                var centerIonMobility = doc.Settings.GetIonMobilityHelper(
-                    node.NodePep, node.NodeGroup, null, null, driftTimeMax);
-                AssertEx.AreEqual(DRIFTTIME_ANELLINVK, centerIonMobility.IonMobilityAndCCS.IonMobility.Mobility);
-                AssertEx.AreEqual(2 * DRIFTTIME_ANELLINVK / resolvingPower, centerIonMobility.IonMobilityExtractionWindowWidth);
-                AssertEx.AreEqual(DRIFTTIME_ANELLINVK + HIGH_ENERGY_DRIFT_TIME_OFFSET_MSEC, centerIonMobility.IonMobilityAndCCS.GetHighEnergyIonMobility());
+            // Verify that the schema has been updated to include these new settings
+            AssertEx.ValidatesAgainstSchema(doc);
+            // Do some DT calculations
+            double driftTimeMax = 1000.0;
+            var node = FindNodes("ANELLINV", Adduct.SINGLY_PROTONATED);
+            var centerIonMobility = doc.Settings.GetIonMobilityHelper(
+                node.NodePep, node.NodeGroup, null, null, driftTimeMax);
+            AssertEx.AreEqual(DRIFTTIME_ANELLINVK, centerIonMobility.IonMobilityAndCCS.IonMobility.Mobility);
+            AssertEx.AreEqual(2 * DRIFTTIME_ANELLINVK / resolvingPower, centerIonMobility.IonMobilityExtractionWindowWidth);
+            AssertEx.AreEqual(DRIFTTIME_ANELLINVK + HIGH_ENERGY_DRIFT_TIME_OFFSET_MSEC, centerIonMobility.IonMobilityAndCCS.GetHighEnergyIonMobility());
 
-                var centerIonMobilityNoHighEnergy = doc.Settings.GetIonMobilityHelper(
-                    node.NodePep, node.NodeGroup, null, null, driftTimeMax);
-                AssertEx.AreEqual(DRIFTTIME_ANELLINVK, centerIonMobilityNoHighEnergy.IonMobilityAndCCS.IonMobility.Mobility);
-                AssertEx.AreEqual(2 * DRIFTTIME_ANELLINVK / resolvingPower, centerIonMobilityNoHighEnergy.IonMobilityExtractionWindowWidth);
-                AssertEx.AreEqual(DRIFTTIME_ANELLINVK+HIGH_ENERGY_DRIFT_TIME_OFFSET_MSEC, centerIonMobilityNoHighEnergy.IonMobilityAndCCS.GetHighEnergyIonMobility());
+            var centerIonMobilityNoHighEnergy = doc.Settings.GetIonMobilityHelper(
+                node.NodePep, node.NodeGroup, null, null, driftTimeMax);
+            AssertEx.AreEqual(DRIFTTIME_ANELLINVK, centerIonMobilityNoHighEnergy.IonMobilityAndCCS.IonMobility.Mobility);
+            AssertEx.AreEqual(2 * DRIFTTIME_ANELLINVK / resolvingPower, centerIonMobilityNoHighEnergy.IonMobilityExtractionWindowWidth);
+            AssertEx.AreEqual(DRIFTTIME_ANELLINVK+HIGH_ENERGY_DRIFT_TIME_OFFSET_MSEC, centerIonMobilityNoHighEnergy.IonMobilityAndCCS.GetHighEnergyIonMobility());
 
-                //
-                // Test importing collisional cross sections from a spectral lib that has drift times but no high energy offset info
-                //
-                var peptideSettingsUI = ShowDialog<PeptideSettingsUI>(SkylineWindow.ShowPeptideSettingsUI);
-                const string libname = "libIMS";
-                var blibPath = testFilesDir.GetTestPath("mse-mobility.filtered-scaled.blib");
-                var editListUI =
-                    ShowDialog<EditListDlg<SettingsListBase<LibrarySpec>, LibrarySpec>>(peptideSettingsUI.EditLibraryList);
-                RunDlg<EditLibraryDlg>(editListUI.AddItem, editLibraryDlg =>
-                {
-                    editLibraryDlg.LibrarySpec = new BiblioSpecLibSpec(libname, blibPath); 
-                    editLibraryDlg.OkDialog();
-                });
-                OkDialog(editListUI, editListUI.OkDialog);
-                RunUI(() => peptideSettingsUI.PickedLibraries = new[] { libname });
-                OkDialog(peptideSettingsUI, peptideSettingsUI.OkDialog);
-                var transitionSettingsUI = ShowDialog<TransitionSettingsUI>(SkylineWindow.ShowTransitionSettingsUI);
-                var ionMobilityControl = transitionSettingsUI.IonMobilityControl;
+            //
+            // Test importing collisional cross sections from a spectral lib that has drift times but no high energy offset info
+            //
+            var peptideSettingsUI = ShowDialog<PeptideSettingsUI>(SkylineWindow.ShowPeptideSettingsUI);
+            const string libname = "libIMS";
+            var blibPath = testFilesDir.GetTestPath("mse-mobility.filtered-scaled.blib");
+            var editListUI =
+                ShowDialog<EditListDlg<SettingsListBase<LibrarySpec>, LibrarySpec>>(peptideSettingsUI.EditLibraryList);
+            RunDlg<EditLibraryDlg>(editListUI.AddItem, editLibraryDlg =>
+            {
+                editLibraryDlg.LibrarySpec = new BiblioSpecLibSpec(libname, blibPath); 
+                editLibraryDlg.OkDialog();
+            });
+            OkDialog(editListUI, editListUI.OkDialog);
+            RunUI(() => peptideSettingsUI.PickedLibraries = new[] { libname });
+            OkDialog(peptideSettingsUI, peptideSettingsUI.OkDialog);
+            var transitionSettingsUI = ShowDialog<TransitionSettingsUI>(SkylineWindow.ShowTransitionSettingsUI);
+            var ionMobilityControl = transitionSettingsUI.IonMobilityControl;
 
-                // Check error cases for resolving power (caused unexpected exception)
-                RunUI(() =>
-                {
-                    ionMobilityControl.IsUseSpectralLibraryIonMobilities = true;
-                    ionMobilityControl.IonMobilityFilterResolvingPower = null;
+            // Check error cases for resolving power (caused unexpected exception)
+            RunUI(() =>
+            {
+                ionMobilityControl.IsUseSpectralLibraryIonMobilities = true;
+                ionMobilityControl.IonMobilityFilterResolvingPower = null;
 
-                });
-                RunDlg<MessageDlg>(transitionSettingsUI.OkDialog, dlg =>
-                {
-                    AssertEx.AreComparableStrings(Resources.MessageBoxHelper_ValidateDecimalTextBox__0__must_contain_a_decimal_value, dlg.Message);
-                    dlg.OkDialog();
-                });
-                RunUI(() => ionMobilityControl.IonMobilityFilterResolvingPower = -1);
-                RunDlg<MessageDlg>(transitionSettingsUI.OkDialog, dlg =>
-                {
-                    AssertEx.AreEqual(Resources.EditIonMobilityLibraryDlg_ValidateResolvingPower_Resolving_power_must_be_greater_than_0_, dlg.Message);
-                    dlg.OkDialog();
-                });
-                RunUI(() => ionMobilityControl.IonMobilityFilterResolvingPower = 50);
+            });
+            RunDlg<MessageDlg>(transitionSettingsUI.OkDialog, dlg =>
+            {
+                AssertEx.AreComparableStrings(Resources.MessageBoxHelper_ValidateDecimalTextBox__0__must_contain_a_decimal_value, dlg.Message);
+                dlg.OkDialog();
+            });
+            RunUI(() => ionMobilityControl.IonMobilityFilterResolvingPower = -1);
+            RunDlg<MessageDlg>(transitionSettingsUI.OkDialog, dlg =>
+            {
+                AssertEx.AreEqual(Resources.EditIonMobilityLibraryDlg_ValidateResolvingPower_Resolving_power_must_be_greater_than_0_, dlg.Message);
+                dlg.OkDialog();
+            });
+            RunUI(() => ionMobilityControl.IonMobilityFilterResolvingPower = 50);
 
-                RunUI(() => ionMobilityControl.IsUseSpectralLibraryIonMobilities = false);
+            RunUI(() => ionMobilityControl.IsUseSpectralLibraryIonMobilities = false);
 
-                OkDialog(transitionSettingsUI, transitionSettingsUI.OkDialog);
-                WaitForDocumentLoaded(); // Let that library load
+            OkDialog(transitionSettingsUI, transitionSettingsUI.OkDialog);
+            WaitForDocumentLoaded(); // Let that library load
 
-                // In this lib: ANGTTVLVGMPAGAK at z=2, with drift time 4.99820623749102
-                // and, a single CCS value, for ANELLINVK, which is 3.8612432898618
-                // Present the Prediction tab of the peptide settings dialog
-                var transitionSettingsDlg3 = ShowDialog<TransitionSettingsUI>(
-                    () => SkylineWindow.ShowTransitionSettingsUI(TransitionSettingsUI.TABS.IonMobility));
-                RunUI(() => transitionSettingsDlg3.IonMobilityControl.SetResolvingPower(resolvingPower));
-                // Simulate picking "Add..." from the Ion Mobility Library combo control
-                var ionMobilityLibraryDlg = ShowDialog<EditIonMobilityLibraryDlg>(transitionSettingsDlg3.IonMobilityControl.AddIonMobilityLibrary);
-                const double deadeelsDT = 3.456;
-                const double deadeelsCCS = 345.67;
-                const double deadeelsDTHighEnergyOffset = -0.1;
-                var fourCols = "DEADEELS\t5\t" +
-                               deadeelsCCS.ToString(CultureInfo.CurrentCulture) + "\t" +
-                               deadeelsDT.ToString(CultureInfo.CurrentCulture) + "\t" +
-                               Resources.IonMobilityFilter_IonMobilityUnitsString_Drift_Time__ms_;
-                var fiveCols = fourCols + "\t" + deadeelsDTHighEnergyOffset.ToString(CultureInfo.CurrentCulture);
-                testlibName = "test3";
-                RunUI(() =>
-                {
-                    ionMobilityLibraryDlg.LibraryName = testlibName;
-                    // Simulate user pasting in some measured drift time info without high energy offset, even though its enabled - should not throw
-                    ionMobilityLibraryDlg.SetOffsetHighEnergySpectraCheckbox(true);
-                    SetClipboardText(fourCols);
-                    ionMobilityLibraryDlg.DoPasteLibrary();
-                    // Simulate user pasting in some measured drift time info with high energy offset
-                    SetClipboardText(fiveCols);
-                    ionMobilityLibraryDlg.DoPasteLibrary();
-                    // Now turn off the high energy column and paste in five columns - should fail
-                    ionMobilityLibraryDlg.SetOffsetHighEnergySpectraCheckbox(false);
-                    SetClipboardText(fiveCols);
-                });
-                // An error will appear because the column count is wrong
-                ShowDialog<MessageDlg>(ionMobilityLibraryDlg.DoPasteLibrary);
-                var errorDlg = WaitForOpenForm<MessageDlg>();
-                AssertEx.AreEqual(string.Format(Resources.SettingsUIUtil_DoPasteText_Incorrect_number_of_columns__0__found_on_line__1__, 6, 1), errorDlg.Message);
-                errorDlg.OkDialog();
-                RunUI(() =>
-                {
-                    // And now paste in four columns, should be OK
-                    SetClipboardText(fourCols);
-                    ionMobilityLibraryDlg.DoPasteLibrary();
+            // In this lib: ANGTTVLVGMPAGAK at z=2, with drift time 4.99820623749102
+            // and, a single CCS value, for ANELLINVK, which is 3.8612432898618
+            // Present the Prediction tab of the peptide settings dialog
+            var transitionSettingsDlg3 = ShowDialog<TransitionSettingsUI>(
+                () => SkylineWindow.ShowTransitionSettingsUI(TransitionSettingsUI.TABS.IonMobility));
+            RunUI(() => transitionSettingsDlg3.IonMobilityControl.SetResolvingPower(resolvingPower));
+            // Simulate picking "Add..." from the Ion Mobility Library combo control
+            var ionMobilityLibraryDlg = ShowDialog<EditIonMobilityLibraryDlg>(transitionSettingsDlg3.IonMobilityControl.AddIonMobilityLibrary);
+            const double deadeelsDT = 3.456;
+            const double deadeelsCCS = 345.67;
+            const double deadeelsDTHighEnergyOffset = -0.1;
+            var fourCols = "DEADEELS\t5\t" +
+                           deadeelsCCS.ToString(CultureInfo.CurrentCulture) + "\t" +
+                           deadeelsDT.ToString(CultureInfo.CurrentCulture) + "\t" +
+                           Resources.IonMobilityFilter_IonMobilityUnitsString_Drift_Time__ms_;
+            var fiveCols = fourCols + "\t" + deadeelsDTHighEnergyOffset.ToString(CultureInfo.CurrentCulture);
+            testlibName = "test3";
+            RunUI(() =>
+            {
+                ionMobilityLibraryDlg.LibraryName = testlibName;
+                // Simulate user pasting in some measured drift time info without high energy offset, even though its enabled - should not throw
+                ionMobilityLibraryDlg.SetOffsetHighEnergySpectraCheckbox(true);
+                SetClipboardText(fourCols);
+                ionMobilityLibraryDlg.DoPasteLibrary();
+                // Simulate user pasting in some measured drift time info with high energy offset
+                SetClipboardText(fiveCols);
+                ionMobilityLibraryDlg.DoPasteLibrary();
+                // Now turn off the high energy column and paste in five columns - should fail
+                ionMobilityLibraryDlg.SetOffsetHighEnergySpectraCheckbox(false);
+                SetClipboardText(fiveCols);
+            });
+            // An error will appear because the column count is wrong
+            ShowDialog<MessageDlg>(ionMobilityLibraryDlg.DoPasteLibrary);
+            var errorDlg = WaitForOpenForm<MessageDlg>();
+            AssertEx.AreEqual(string.Format(Resources.SettingsUIUtil_DoPasteText_Incorrect_number_of_columns__0__found_on_line__1__, 6, 1), errorDlg.Message);
+            errorDlg.OkDialog();
+            RunUI(() =>
+            {
+                // And now paste in four columns, should be OK
+                SetClipboardText(fourCols);
+                ionMobilityLibraryDlg.DoPasteLibrary();
 
-                    // Finally turn the high energy column back on, and put in a value
-                    ionMobilityLibraryDlg.SetOffsetHighEnergySpectraCheckbox(true);
-                    SetClipboardText(fiveCols);
-                    ionMobilityLibraryDlg.DoPasteLibrary();
-                });
-                // Expect an error message requesting a filename for the new library
-                ShowDialog<MessageDlg>(ionMobilityLibraryDlg.OkDialog);
-                errorDlg = WaitForOpenForm<MessageDlg>();
-                AssertEx.IsTrue(errorDlg.Message.Contains(Resources.EditIonMobilityLibraryDlg_OkDialog_Please_choose_a_file_for_the_ion_mobility_library));
-                errorDlg.OkDialog();
-                RunUI(() =>
-                {
-                    ionMobilityLibraryDlg.CreateDatabaseFile(testlibName + IonMobilityDb.EXT);
-                });
-                // Expect an error message requesting a full path for the new library
-                ShowDialog<MessageDlg>(ionMobilityLibraryDlg.OkDialog);
-                errorDlg = WaitForOpenForm<MessageDlg>();
-                AssertEx.IsTrue(errorDlg.Message.Contains(Resources.EditIonMobilityLibraryDlg_OkDialog_Please_use_a_full_path_to_a_file_for_the_ion_mobility_library_));
-                errorDlg.OkDialog();
-                RunUI(() =>
-                {
-                    ionMobilityLibraryDlg.CreateDatabaseFile(testFilesDir.GetTestPath(testlibName + IonMobilityDb.EXT));
-                });
+                // Finally turn the high energy column back on, and put in a value
+                ionMobilityLibraryDlg.SetOffsetHighEnergySpectraCheckbox(true);
+                SetClipboardText(fiveCols);
+                ionMobilityLibraryDlg.DoPasteLibrary();
+            });
+            // Expect an error message requesting a filename for the new library
+            ShowDialog<MessageDlg>(ionMobilityLibraryDlg.OkDialog);
+            errorDlg = WaitForOpenForm<MessageDlg>();
+            AssertEx.IsTrue(errorDlg.Message.Contains(Resources.EditIonMobilityLibraryDlg_OkDialog_Please_choose_a_file_for_the_ion_mobility_library));
+            errorDlg.OkDialog();
+            RunUI(() =>
+            {
+                ionMobilityLibraryDlg.CreateDatabaseFile(testlibName + IonMobilityDb.EXT);
+            });
+            // Expect an error message requesting a full path for the new library
+            ShowDialog<MessageDlg>(ionMobilityLibraryDlg.OkDialog);
+            errorDlg = WaitForOpenForm<MessageDlg>();
+            AssertEx.IsTrue(errorDlg.Message.Contains(Resources.EditIonMobilityLibraryDlg_OkDialog_Please_use_a_full_path_to_a_file_for_the_ion_mobility_library_));
+            errorDlg.OkDialog();
+            RunUI(() =>
+            {
+                ionMobilityLibraryDlg.CreateDatabaseFile(testFilesDir.GetTestPath(testlibName + IonMobilityDb.EXT));
+            });
 
-                /* We don't handle any external ion mobility library formats yet
+            /* We don't handle any external ion mobility library formats yet
                 // Test import ion mobility data from an external file format (other than spectral libs).
                 var ionMobilityLibDlg3 = ShowDialog<EditIonMobilityLibraryDlg>(ionMobilityLibraryDlg.AddIonMobilityLibrary);
                 const string testlibName3 = "testlib3";
@@ -351,123 +354,121 @@ namespace pwiz.SkylineTestFunctional
                     ionMobilityLibDlg3.CreateDatabase(databasePath3, testlibName3);
                 });
                 */
-                // Simulate pressing "Import" button from the Edit Ion Mobility Library dialog
-                var importSpectralLibDlg =
-                    ShowDialog<ImportIonMobilityFromSpectralLibraryDlg>(ionMobilityLibraryDlg.ImportFromSpectralLibrary);
-                RunUI(() =>
-                {
-                    // Set up to fail - don't provide z=2 info
-                    importSpectralLibDlg.Source = SpectralLibrarySource.settings; // Simulate user selecting 1st radio button
-                });
-                OkDialog(importSpectralLibDlg, importSpectralLibDlg.OkDialog); // User clicks OK 
-                RunUI(() =>
-                {
-                    importSpectralLibDlg.Source = SpectralLibrarySource.file; // Simulate user selecting 2nd radio button
-                    importSpectralLibDlg.FilePath = blibPath; // Simulate user entering filename
-                    importSpectralLibDlg.OkDialog();
-                });
-                WaitForClosedForm(importSpectralLibDlg);
-                WaitForCondition(() => ionMobilityLibraryDlg.LibraryMobilitiesFlatCount > 8); // Let that library load
-                OkDialog(ionMobilityLibraryDlg, ionMobilityLibraryDlg.OkDialog);
-                OkDialog(transitionSettingsDlg3, transitionSettingsDlg3.OkDialog);
-                doc = WaitForDocumentChangeLoaded(doc); // Let that library load
+            // Simulate pressing "Import" button from the Edit Ion Mobility Library dialog
+            var importSpectralLibDlg =
+                ShowDialog<ImportIonMobilityFromSpectralLibraryDlg>(ionMobilityLibraryDlg.ImportFromSpectralLibrary);
+            RunUI(() =>
+            {
+                // Set up to fail - don't provide z=2 info
+                importSpectralLibDlg.Source = SpectralLibrarySource.settings; // Simulate user selecting 1st radio button
+            });
+            OkDialog(importSpectralLibDlg, importSpectralLibDlg.OkDialog); // User clicks OK 
+            RunUI(() =>
+            {
+                importSpectralLibDlg.Source = SpectralLibrarySource.file; // Simulate user selecting 2nd radio button
+                importSpectralLibDlg.FilePath = blibPath; // Simulate user entering filename
+                importSpectralLibDlg.OkDialog();
+            });
+            WaitForClosedForm(importSpectralLibDlg);
+            WaitForCondition(() => ionMobilityLibraryDlg.LibraryMobilitiesFlatCount > 8); // Let that library load
+            OkDialog(ionMobilityLibraryDlg, ionMobilityLibraryDlg.OkDialog);
+            OkDialog(transitionSettingsDlg3, transitionSettingsDlg3.OkDialog);
+            doc = WaitForDocumentChangeLoaded(doc); // Let that library load
 
-                // Do some DT calculations with this new library
-                node = FindNodes("ANELLINVK", Adduct.DOUBLY_PROTONATED);
-                centerIonMobility = doc.Settings.GetIonMobilityHelper(
-                    node.NodePep, node.NodeGroup, null, null, driftTimeMax);
-                AssertEx.IsTrue(centerIonMobility.IsEmpty); // This library entry was CCS only, so GetIonMobilityHelp with no ionMobilityFunctionsProvider returns EMPTY
-                node = FindNodes("ANGTTVLVGMPAGAK", Adduct.DOUBLY_PROTONATED);
-                centerIonMobility = doc.Settings.GetIonMobilityHelper(
-                    node.NodePep, node.NodeGroup, null, null, driftTimeMax);
-                var dt = 4.99820623749102;
-                AssertEx.IsFalse(centerIonMobility.IonMobilityAndCCS.CollisionalCrossSectionSqA.HasValue);
-                AssertEx.AreEqual(dt, centerIonMobility.IonMobilityAndCCS.IonMobility.Mobility.Value, .000001);
-                AssertEx.AreEqual(2 * dt / resolvingPower, centerIonMobility.IonMobilityExtractionWindowWidth ?? 0, .000001);
+            // Do some DT calculations with this new library
+            node = FindNodes("ANELLINVK", Adduct.DOUBLY_PROTONATED);
+            centerIonMobility = doc.Settings.GetIonMobilityHelper(
+                node.NodePep, node.NodeGroup, null, null, driftTimeMax);
+            AssertEx.IsTrue(centerIonMobility.IsEmpty); // This library entry was CCS only, so GetIonMobilityHelp with no ionMobilityFunctionsProvider returns EMPTY
+            node = FindNodes("ANGTTVLVGMPAGAK", Adduct.DOUBLY_PROTONATED);
+            centerIonMobility = doc.Settings.GetIonMobilityHelper(
+                node.NodePep, node.NodeGroup, null, null, driftTimeMax);
+            var dt = 4.99820623749102;
+            AssertEx.IsFalse(centerIonMobility.IonMobilityAndCCS.CollisionalCrossSectionSqA.HasValue);
+            AssertEx.AreEqual(dt, centerIonMobility.IonMobilityAndCCS.IonMobility.Mobility.Value, .000001);
+            AssertEx.AreEqual(2 * dt / resolvingPower, centerIonMobility.IonMobilityExtractionWindowWidth ?? 0, .000001);
 
-                node = FindNodes("DEADEELS", Adduct.TRIPLY_PROTONATED);
-                centerIonMobility = doc.Settings.GetIonMobilityHelper(
-                    node.NodePep, node.NodeGroup, null, null, driftTimeMax); // Should fail to find anything
-                AssertEx.IsTrue(centerIonMobility.IsEmpty);
+            node = FindNodes("DEADEELS", Adduct.TRIPLY_PROTONATED);
+            centerIonMobility = doc.Settings.GetIonMobilityHelper(
+                node.NodePep, node.NodeGroup, null, null, driftTimeMax); // Should fail to find anything
+            AssertEx.IsTrue(centerIonMobility.IsEmpty);
 
-                node = FindNodes("DEADEELS", Adduct.QUINTUPLY_PROTONATED);
-                centerIonMobility = doc.Settings.GetIonMobilityHelper(
-                    node.NodePep, node.NodeGroup, null, null, driftTimeMax);
-                AssertEx.AreEqual(deadeelsDT, centerIonMobility.IonMobilityAndCCS.IonMobility.Mobility.Value, .000001);
-                AssertEx.AreEqual(deadeelsDT+deadeelsDTHighEnergyOffset, centerIonMobility.IonMobilityAndCCS.GetHighEnergyIonMobility() ?? -1, .000001);
-                AssertEx.AreEqual(2 * (deadeelsDT / resolvingPower), centerIonMobility.IonMobilityExtractionWindowWidth??0, .0001); // Directly measured, should match
+            node = FindNodes("DEADEELS", Adduct.QUINTUPLY_PROTONATED);
+            centerIonMobility = doc.Settings.GetIonMobilityHelper(
+                node.NodePep, node.NodeGroup, null, null, driftTimeMax);
+            AssertEx.AreEqual(deadeelsDT, centerIonMobility.IonMobilityAndCCS.IonMobility.Mobility.Value, .000001);
+            AssertEx.AreEqual(deadeelsDT+deadeelsDTHighEnergyOffset, centerIonMobility.IonMobilityAndCCS.GetHighEnergyIonMobility() ?? -1, .000001);
+            AssertEx.AreEqual(2 * (deadeelsDT / resolvingPower), centerIonMobility.IonMobilityExtractionWindowWidth??0, .0001); // Directly measured, should match
 
-                // Now check handling of scenario where user pastes in high energy offsets then unchecks the "Use High Energy Offsets" box
-                var transitionSettingsDlg4 = ShowDialog<TransitionSettingsUI>(
-                    () => SkylineWindow.ShowTransitionSettingsUI(TransitionSettingsUI.TABS.IonMobility));
-                // Simulate picking "Edit Current..." from the Ion Mobility Library combo control
-                var mobilityLibraryDlg = ShowDialog<EditIonMobilityLibraryDlg>(transitionSettingsDlg4.IonMobilityControl.EditIonMobilityLibrary);
-                RunUI(() =>
-                {
-                    AssertEx.IsTrue(mobilityLibraryDlg.GetOffsetHighEnergySpectraCheckbox()); // Should start out enabled if we have offsets
-                    mobilityLibraryDlg.SetOffsetHighEnergySpectraCheckbox(false); // Turn off the high energy offset column
-                    mobilityLibraryDlg.LibraryName="test4";
-                });
-                OkDialog(mobilityLibraryDlg, mobilityLibraryDlg.OkDialog);
-                OkDialog(transitionSettingsDlg4, transitionSettingsDlg4.OkDialog);
-                doc = WaitForDocumentChangeLoaded(doc);
-                node = FindNodes("DEADEELS", Adduct.QUINTUPLY_PROTONATED);
-                centerIonMobility = doc.Settings.GetIonMobilityHelper(
-                    node.NodePep, node.NodeGroup, null, null, driftTimeMax);
-                AssertEx.AreEqual(deadeelsDT, centerIonMobility.IonMobilityAndCCS.IonMobility.Mobility.Value, .000001);
-                AssertEx.AreEqual(deadeelsDT-0.1, centerIonMobility.IonMobilityAndCCS.GetHighEnergyIonMobility() ?? -1, .000001); // High energy value should now be same as low energy value
-                AssertEx.AreEqual(2 * (deadeelsDT / resolvingPower), centerIonMobility.IonMobilityExtractionWindowWidth??0, .0001); // Directly measured, should match
+            // Now check handling of scenario where user pastes in high energy offsets then unchecks the "Use High Energy Offsets" box
+            var transitionSettingsDlg4 = ShowDialog<TransitionSettingsUI>(
+                () => SkylineWindow.ShowTransitionSettingsUI(TransitionSettingsUI.TABS.IonMobility));
+            // Simulate picking "Edit Current..." from the Ion Mobility Library combo control
+            var mobilityLibraryDlg = ShowDialog<EditIonMobilityLibraryDlg>(transitionSettingsDlg4.IonMobilityControl.EditIonMobilityLibrary);
+            RunUI(() =>
+            {
+                AssertEx.IsTrue(mobilityLibraryDlg.GetOffsetHighEnergySpectraCheckbox()); // Should start out enabled if we have offsets
+                mobilityLibraryDlg.SetOffsetHighEnergySpectraCheckbox(false); // Turn off the high energy offset column
+                mobilityLibraryDlg.LibraryName="test4";
+            });
+            OkDialog(mobilityLibraryDlg, mobilityLibraryDlg.OkDialog);
+            OkDialog(transitionSettingsDlg4, transitionSettingsDlg4.OkDialog);
+            doc = WaitForDocumentChangeLoaded(doc);
+            node = FindNodes("DEADEELS", Adduct.QUINTUPLY_PROTONATED);
+            centerIonMobility = doc.Settings.GetIonMobilityHelper(
+                node.NodePep, node.NodeGroup, null, null, driftTimeMax);
+            AssertEx.AreEqual(deadeelsDT, centerIonMobility.IonMobilityAndCCS.IonMobility.Mobility.Value, .000001);
+            AssertEx.AreEqual(deadeelsDT-0.1, centerIonMobility.IonMobilityAndCCS.GetHighEnergyIonMobility() ?? -1, .000001); // High energy value should now be same as low energy value
+            AssertEx.AreEqual(2 * (deadeelsDT / resolvingPower), centerIonMobility.IonMobilityExtractionWindowWidth??0, .0001); // Directly measured, should match
 
-                // Now make sure that high energy checkbox initial state is as we expect (expect it checked since lib has HE offsets)
-                var transitionSettingsDlg5 = ShowDialog<TransitionSettingsUI>(
-                    () => SkylineWindow.ShowTransitionSettingsUI(TransitionSettingsUI.TABS.IonMobility));
-                // Simulate picking "Edit Current..." from the Ion Mobility Library combo control
-                var driftTimePredictorDlg5 = ShowDialog<EditIonMobilityLibraryDlg>(transitionSettingsDlg5.IonMobilityControl.EditIonMobilityLibrary);
-                RunUI(() => AssertEx.IsTrue(driftTimePredictorDlg5.GetOffsetHighEnergySpectraCheckbox()));
-                OkDialog(driftTimePredictorDlg5, driftTimePredictorDlg5.CancelDialog);
-                OkDialog(transitionSettingsDlg5, transitionSettingsDlg5.OkDialog);
+            // Now make sure that high energy checkbox initial state is as we expect (expect it checked since lib has HE offsets)
+            var transitionSettingsDlg5 = ShowDialog<TransitionSettingsUI>(
+                () => SkylineWindow.ShowTransitionSettingsUI(TransitionSettingsUI.TABS.IonMobility));
+            // Simulate picking "Edit Current..." from the Ion Mobility Library combo control
+            var driftTimePredictorDlg5 = ShowDialog<EditIonMobilityLibraryDlg>(transitionSettingsDlg5.IonMobilityControl.EditIonMobilityLibrary);
+            RunUI(() => AssertEx.IsTrue(driftTimePredictorDlg5.GetOffsetHighEnergySpectraCheckbox()));
+            OkDialog(driftTimePredictorDlg5, driftTimePredictorDlg5.CancelDialog);
+            OkDialog(transitionSettingsDlg5, transitionSettingsDlg5.OkDialog);
 
-                // Try it with linear range instead of resolving power
-                var transitionSettingsDlg6 = ShowDialog<TransitionSettingsUI>(
-                    () => SkylineWindow.ShowTransitionSettingsUI(TransitionSettingsUI.TABS.IonMobility));
-                RunUI(() => transitionSettingsDlg6.IonMobilityControl.WindowWidthType = IonMobilityWindowWidthCalculator.IonMobilityWindowWidthType.linear_range);
-                // Simulate picking "Edit Current..." from the Ion Mobility Library combo control
-                var driftTimePredictorDlg6 = ShowDialog<EditIonMobilityLibraryDlg>(transitionSettingsDlg6.IonMobilityControl.EditIonMobilityLibrary);
-                var widthAtDtZero = 10;
-                var widthAtDtMax = 1000;
-                RunUI(() => transitionSettingsDlg6.IonMobilityControl.SetWidthAtIonMobilityMax(widthAtDtMax));
-                RunUI(() => transitionSettingsDlg6.IonMobilityControl.SetWidthAtIonMobilityZero(widthAtDtZero));
-                OkDialog(driftTimePredictorDlg6, driftTimePredictorDlg6.OkDialog);
-                OkDialog(transitionSettingsDlg6, transitionSettingsDlg6.OkDialog);
-                doc = WaitForDocumentChangeLoaded(doc);
-                node = FindNodes("DEADEELS", Adduct.QUINTUPLY_PROTONATED);
-                centerIonMobility = doc.Settings.GetIonMobilityHelper(
-                    node.NodePep, node.NodeGroup, null, null, driftTimeMax);
-                AssertEx.AreEqual(deadeelsDT, centerIonMobility.IonMobilityAndCCS.IonMobility.Mobility.Value, .000001);
-                AssertEx.AreEqual(deadeelsDT-0.1, centerIonMobility.IonMobilityAndCCS.GetHighEnergyIonMobility() ?? -1, .000001); // High energy value should now be same as low energy value
-                AssertEx.AreEqual(widthAtDtZero + deadeelsDT * (widthAtDtMax - widthAtDtZero) / driftTimeMax, centerIonMobility.IonMobilityExtractionWindowWidth??0, .0001);
+            // Try it with linear range instead of resolving power
+            var transitionSettingsDlg6 = ShowDialog<TransitionSettingsUI>(
+                () => SkylineWindow.ShowTransitionSettingsUI(TransitionSettingsUI.TABS.IonMobility));
+            RunUI(() => transitionSettingsDlg6.IonMobilityControl.WindowWidthType = IonMobilityWindowWidthCalculator.IonMobilityWindowWidthType.linear_range);
+            // Simulate picking "Edit Current..." from the Ion Mobility Library combo control
+            var driftTimePredictorDlg6 = ShowDialog<EditIonMobilityLibraryDlg>(transitionSettingsDlg6.IonMobilityControl.EditIonMobilityLibrary);
+            var widthAtDtZero = 10;
+            var widthAtDtMax = 1000;
+            RunUI(() => transitionSettingsDlg6.IonMobilityControl.SetWidthAtIonMobilityMax(widthAtDtMax));
+            RunUI(() => transitionSettingsDlg6.IonMobilityControl.SetWidthAtIonMobilityZero(widthAtDtZero));
+            OkDialog(driftTimePredictorDlg6, driftTimePredictorDlg6.OkDialog);
+            OkDialog(transitionSettingsDlg6, transitionSettingsDlg6.OkDialog);
+            doc = WaitForDocumentChangeLoaded(doc);
+            node = FindNodes("DEADEELS", Adduct.QUINTUPLY_PROTONATED);
+            centerIonMobility = doc.Settings.GetIonMobilityHelper(
+                node.NodePep, node.NodeGroup, null, null, driftTimeMax);
+            AssertEx.AreEqual(deadeelsDT, centerIonMobility.IonMobilityAndCCS.IonMobility.Mobility.Value, .000001);
+            AssertEx.AreEqual(deadeelsDT-0.1, centerIonMobility.IonMobilityAndCCS.GetHighEnergyIonMobility() ?? -1, .000001); // High energy value should now be same as low energy value
+            AssertEx.AreEqual(widthAtDtZero + deadeelsDT * (widthAtDtMax - widthAtDtZero) / driftTimeMax, centerIonMobility.IonMobilityExtractionWindowWidth??0, .0001);
 
-                // Try it with fixed width
-                var transitionSettingsDlg7= ShowDialog<TransitionSettingsUI>(
-                    () => SkylineWindow.ShowTransitionSettingsUI(TransitionSettingsUI.TABS.IonMobility));
-                RunUI(() => transitionSettingsDlg7.IonMobilityControl.WindowWidthType = IonMobilityWindowWidthCalculator.IonMobilityWindowWidthType.fixed_width);
-                // Simulate picking "Edit Current..." from the Ion Mobility Library combo control
-                var driftTimePredictorDlg7 = ShowDialog<EditIonMobilityLibraryDlg>(transitionSettingsDlg7.IonMobilityControl.EditIonMobilityLibrary);
-                var fixedWidth = 100;
-                RunUI(() => transitionSettingsDlg7.IonMobilityControl.SetFixedWidth(fixedWidth));
-                OkDialog(driftTimePredictorDlg7, driftTimePredictorDlg7.OkDialog);
-                OkDialog(transitionSettingsDlg7, transitionSettingsDlg7.OkDialog);
-                doc = WaitForDocumentChangeLoaded(doc);
-                node = FindNodes("DEADEELS", Adduct.QUINTUPLY_PROTONATED);
-                centerIonMobility = doc.Settings.GetIonMobilityHelper(
-                    node.NodePep, node.NodeGroup, null, null, driftTimeMax);
-                AssertEx.AreEqual(deadeelsDT, centerIonMobility.IonMobilityAndCCS.IonMobility.Mobility.Value, .000001);
-                AssertEx.AreEqual(deadeelsDT-0.1, centerIonMobility.IonMobilityAndCCS.GetHighEnergyIonMobility() ?? -1, .000001); // High energy value should now be same as low energy value
-                AssertEx.AreEqual(fixedWidth, centerIonMobility.IonMobilityExtractionWindowWidth??0, .0001);
+            // Try it with fixed width
+            var transitionSettingsDlg7= ShowDialog<TransitionSettingsUI>(
+                () => SkylineWindow.ShowTransitionSettingsUI(TransitionSettingsUI.TABS.IonMobility));
+            RunUI(() => transitionSettingsDlg7.IonMobilityControl.WindowWidthType = IonMobilityWindowWidthCalculator.IonMobilityWindowWidthType.fixed_width);
+            // Simulate picking "Edit Current..." from the Ion Mobility Library combo control
+            var driftTimePredictorDlg7 = ShowDialog<EditIonMobilityLibraryDlg>(transitionSettingsDlg7.IonMobilityControl.EditIonMobilityLibrary);
+            var fixedWidth = 100;
+            RunUI(() => transitionSettingsDlg7.IonMobilityControl.SetFixedWidth(fixedWidth));
+            OkDialog(driftTimePredictorDlg7, driftTimePredictorDlg7.OkDialog);
+            OkDialog(transitionSettingsDlg7, transitionSettingsDlg7.OkDialog);
+            doc = WaitForDocumentChangeLoaded(doc);
+            node = FindNodes("DEADEELS", Adduct.QUINTUPLY_PROTONATED);
+            centerIonMobility = doc.Settings.GetIonMobilityHelper(
+                node.NodePep, node.NodeGroup, null, null, driftTimeMax);
+            AssertEx.AreEqual(deadeelsDT, centerIonMobility.IonMobilityAndCCS.IonMobility.Mobility.Value, .000001);
+            AssertEx.AreEqual(deadeelsDT-0.1, centerIonMobility.IonMobilityAndCCS.GetHighEnergyIonMobility() ?? -1, .000001); // High energy value should now be same as low energy value
+            AssertEx.AreEqual(fixedWidth, centerIonMobility.IonMobilityExtractionWindowWidth??0, .0001);
 
-                TestMeasuredDriftTimes();
-            }
-
+            TestMeasuredDriftTimes();
         }
 
         private void SetUiDocument(SrmDocument newDocument)
