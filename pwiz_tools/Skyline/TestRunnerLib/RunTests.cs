@@ -327,6 +327,10 @@ namespace TestRunnerLib
                 TestContext.Properties["LiveReports"] = LiveReports.ToString();
                 TestContext.Properties["TestName"] = test.TestMethod.Name;
                 TestContext.Properties["RecordAuditLogs"] = RecordAuditLogs.ToString();
+                if (IsParallelClient)
+                {
+                    Environment.SetEnvironmentVariable(@"SKYLINE_TESTER_PARALLEL_CLIENT_ID", ParallelClientId); // Accessed in pwiz_tools\Skyline\Util\Util.cs
+                }
 
                 if (test.SetTestContext != null)
                 {
