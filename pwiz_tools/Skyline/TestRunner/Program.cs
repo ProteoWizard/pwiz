@@ -1117,42 +1117,18 @@ namespace TestRunner
             // If running Nightly tests, remove any flagged for exclusion by the NoNightlyTesting custom attribute
             if (asNightly)
             {
-                for (var t = testList.Count; t-- > 0;)
-                {
-                    if (testList[t].DoNotRunInNightly)
-                    {
-                        testList.RemoveAt(t);
-                    }
-                }
-                for (var ut = unfilteredTestList.Count; ut-- > 0;)
-                {
-                    if (unfilteredTestList[ut].DoNotRunInNightly)
-                    {
-                        unfilteredTestList.RemoveAt(ut);
-                    }
-                }
+                testList.RemoveAll(test => test.DoNotRunInNightly);
+                unfilteredTestList.RemoveAll(test => test.DoNotRunInNightly);
             }
-
 
             // If we haven't been told to run perf tests, remove any from the list
             // which may have shown up by default
             if (!perftests)
             {
-                for (var t = testList.Count; t-- > 0; )
-                {
-                    if (testList[t].IsPerfTest)
-                    {
-                        testList.RemoveAt(t);
-                    }
-                }
-                for (var ut = unfilteredTestList.Count; ut-- > 0; )
-                {
-                    if (unfilteredTestList[ut].IsPerfTest)
-                    {
-                        unfilteredTestList.RemoveAt(ut);
-                    }
-                }
+                testList.RemoveAll(test => test.IsPerfTest);
+                unfilteredTestList.RemoveAll(test => test.IsPerfTest);
             }
+
             // Even if we have been told to run perftests, if none are in the list
             // then make sure we don't chat about perf tests in the log
             perftests &= testList.Any(t => t.IsPerfTest);
