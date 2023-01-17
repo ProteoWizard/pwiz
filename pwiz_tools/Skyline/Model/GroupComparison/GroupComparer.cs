@@ -35,6 +35,7 @@ namespace pwiz.Skyline.Model.GroupComparison
         private readonly IList<KeyValuePair<int, ReplicateDetails>> _replicateIndexes;
         private QrFactorizationCache _qrFactorizationCache;
         private NormalizationData _normalizationData;
+        private ImmutableList<int> _msLevels;
         public GroupComparer(GroupComparisonDef comparisonDef, SrmDocument document, QrFactorizationCache qrFactorizationCache)
         {
             SrmDocument = document;
@@ -79,6 +80,30 @@ namespace pwiz.Skyline.Model.GroupComparison
             _replicateIndexes = ImmutableList.ValueOf(replicateIndexes);
             IsValid = _replicateIndexes.Any(keyValuePair => keyValuePair.Value.IsControl) &&
                       _replicateIndexes.Any(keyValuePair => !keyValuePair.Value.IsControl);
+            if (comparisonDef.MsLevel == MsLevelOption.ONE)
+            {
+                _msLevels = ImmutableList.Singleton(1);
+            }
+            else if (comparisonDef.MsLevel == MsLevelOption.TWO)
+            {
+                _msLevels = ImmutableList.Singleton(2);
+            }
+            else if (comparisonDef.MsLevel == MsLevelOption.DEFAULT)
+            {
+                var quantificationSettings = document.Settings.PeptideSettings.Quantification;
+                if (quantificationSettings.MsLevel.HasValue)
+                {
+                    _msLevels = ImmutableList.Singleton(quantificationSettings.MsLevel.Value);
+                }
+                else
+                {
+                    _msLevels = ImmutableList.ValueOf(new[] { 1, 2 });
+                }
+            }
+            else
+            {
+                _msLevels = ImmutableList.ValueOf(new[] { 1, 2 });
+            }
         }
         public GroupComparisonDef ComparisonDef { get; private set; }
         public SrmDocument SrmDocument { get; private set; }
@@ -119,7 +144,7 @@ namespace pwiz.Skyline.Model.GroupComparison
             var groupsToCompareTo = ListGroupsToCompareTo();
             foreach (var labelType in ListLabelTypes(protein, peptide))
             {
-                for (int msLevel = 1; msLevel <= 2; msLevel++)
+                foreach (int msLevel in _msLevels)
                 {
                     foreach (var group in groupsToCompareTo)
                     {

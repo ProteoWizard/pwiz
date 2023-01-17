@@ -25,6 +25,7 @@ using System.Windows.Forms;
 using pwiz.Skyline.Model;
 using pwiz.Skyline.Model.AuditLog;
 using pwiz.Skyline.Model.DocSettings;
+using pwiz.Skyline.Model.DocSettings.AbsoluteQuantification;
 using pwiz.Skyline.Model.GroupComparison;
 using pwiz.Skyline.Properties;
 using pwiz.Skyline.Util;
@@ -50,6 +51,8 @@ namespace pwiz.Skyline.Controls.GroupComparison
             }
             _pushChangesToDocument = false;
             tbxName.Text = groupComparisonDef.Name ?? string.Empty;
+            comboMsLevel.Items.Clear();
+            comboMsLevel.Items.AddRange(MsLevelOption.AllOptions.ToArray());
         }
 
         public EditGroupComparisonDlg(FoldChangeBindingSource foldChangeBindingSource)
@@ -111,6 +114,7 @@ namespace pwiz.Skyline.Controls.GroupComparison
             ReplaceComboItems(comboNormalizationMethod, NormalizationMethod.ListNormalizationMethods(GroupComparisonModel.Document), groupComparisonDef.NormalizationMethod);
             ReplaceComboItems(comboSummaryMethod, SummarizationMethod.ListSummarizationMethods(), groupComparisonDef.SummarizationMethod);
             tbxConfidenceLevel.Text = groupComparisonDef.ConfidenceLevelTimes100.ToString(CultureInfo.CurrentCulture);
+            ReplaceComboItems(comboMsLevel, MsLevelOption.AllOptions, groupComparisonDef.MsLevel);
             radioScopeProtein.Checked = groupComparisonDef.PerProtein;
             radioScopePeptide.Checked = !groupComparisonDef.PerProtein;
             cbxUseZeroForMissingPeaks.Checked = groupComparisonDef.UseZeroForMissingPeaks;
@@ -475,6 +479,17 @@ namespace pwiz.Skyline.Controls.GroupComparison
         private void btnAdvanced_Click(object sender, EventArgs e)
         {
             ShowAdvanced(true);
+        }
+
+        private void comboMsLevel_SelectedIndexChanged(object sender, EventArgs e)
+        {
+            if (_inChangeSettings)
+            {
+                return;
+            }
+
+            GroupComparisonDef =
+                GroupComparisonDef.ChangeMsLevel(comboMsLevel.SelectedItem as MsLevelOption ?? MsLevelOption.ALL);
         }
     }
 }
