@@ -1941,7 +1941,11 @@ namespace SkylineTester
 
         private void runSerial_CheckedChanged(object sender, EventArgs e)
         {
-            Offscreen.Enabled = runSerial.Checked; // Everything happens offscreen in parallel tests, so don't offer the option
+            Offscreen.Enabled = runSerial.Checked; // Everything happens offscreen in parallel tests, so don't offer the option if we're not serial mode
+            if (!Offscreen.Enabled)
+            {
+                Offscreen.Checked = true; // If we're not offering the choice of offscreen, it's because we're forcing it
+            }
         }
 
         #endregion Control events
