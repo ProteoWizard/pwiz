@@ -82,7 +82,8 @@ protected:
         PERCOLATOR_ANALYSIS,
         BYONIC_ANALYSIS,
         PLINK_ANALYIS,
-        MEROX_ANALYSIS
+        MEROX_ANALYSIS,
+        PEPTIDE_PROPHET_ANALYSIS,
     };
 
     static double aaMasses_[128];
