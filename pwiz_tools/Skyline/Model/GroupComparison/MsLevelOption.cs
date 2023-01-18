@@ -2,8 +2,9 @@
 using System.Linq;
 using pwiz.Common.Collections;
 using pwiz.Common.SystemUtil;
+using pwiz.Skyline.Model.DocSettings.AbsoluteQuantification;
 
-namespace pwiz.Skyline.Model.DocSettings.AbsoluteQuantification
+namespace pwiz.Skyline.Model.GroupComparison
 {
     public class MsLevelOption : LabeledValues<string>
     {

@@ -27,6 +27,7 @@ using pwiz.Common.DataAnalysis.Matrices;
 using pwiz.Skyline.Model.DocSettings;
 using pwiz.Skyline.Model.DocSettings.AbsoluteQuantification;
 using pwiz.Skyline.Model.Hibernate;
+using pwiz.Skyline.Model.Results;
 
 namespace pwiz.Skyline.Model.GroupComparison
 {
@@ -106,6 +107,25 @@ namespace pwiz.Skyline.Model.GroupComparison
             }
         }
         public GroupComparisonDef ComparisonDef { get; private set; }
+
+        public NormalizationMethod NormalizationMethod
+        {
+            get
+            {
+                if (ComparisonDef.NormalizationMethod is NormalizeOption.Simple simple)
+                {
+                    return simple.NormalizationMethod;
+                }
+
+                if (ComparisonDef.NormalizationMethod == NormalizeOption.DEFAULT)
+                {
+                    return SrmDocument.Settings.PeptideSettings.Quantification.NormalizationMethod;
+                }
+
+                return null;
+            }
+        }
+
         public SrmDocument SrmDocument { get; private set; }
 
         public bool IsValid { get; private set; }
@@ -437,7 +457,7 @@ namespace pwiz.Skyline.Model.GroupComparison
         private IEnumerable<IGrouping<int, DataRowDetails>> RemoveIncompleteReplicates(IList<DataRowDetails> dataRows)
         {
             var rowsByReplicateIndex = dataRows.ToLookup(row => row.ReplicateIndex);
-            if (ComparisonDef.NormalizationMethod is NormalizationMethod.RatioToLabel)
+            if (NormalizationMethod is NormalizationMethod.RatioToLabel)
             {
                 return rowsByReplicateIndex;
             }
@@ -447,8 +467,17 @@ namespace pwiz.Skyline.Model.GroupComparison
                 grouping => allIdentityPaths.SetEquals(grouping.Select(row => row.IdentityPath)));
         }
 
+        private const double CALIBRATED_DENOMINATOR = 1e6;
+
         private void GetDataRows(GroupComparisonSelector selector, IList<DataRowDetails> foldChangeDetails)
         {
+            NormalizationMethod normalizationMethod = NormalizationMethod;
+            bool useCalibrationCurve = false;
+            if (normalizationMethod == null)
+            {
+                normalizationMethod = SrmDocument.Settings.PeptideSettings.Quantification.NormalizationMethod;
+                useCalibrationCurve = true;
+            }
             foreach (var replicateEntry in _replicateIndexes)
             {
                 if (!replicateEntry.Value.IsControl &&
@@ -456,22 +485,46 @@ namespace pwiz.Skyline.Model.GroupComparison
                 {
                     continue;
                 }
+
                 foreach (var peptide in selector.ListPeptides())
                 {
                     QuantificationSettings quantificationSettings = QuantificationSettings.DEFAULT
-                        .ChangeNormalizationMethod(ComparisonDef.NormalizationMethod)
+                        .ChangeNormalizationMethod(normalizationMethod)
                         .ChangeMsLevel(selector.MsLevel);
                     var peptideQuantifier = new PeptideQuantifier(GetNormalizationData, selector.Protein, peptide,
                         quantificationSettings)
                     {
                         QValueCutoff = ComparisonDef.QValueCutoff
                     };
+                    if (useCalibrationCurve)
+                    {
+                        var calibrationCurveFitter =
+                            new CalibrationCurveFitter(peptideQuantifier, SrmDocument.Settings);
+                        calibrationCurveFitter.SingleBatchReplicateIndex = replicateEntry.Key;
+                        var calculatedConcentration =
+                            calibrationCurveFitter.GetCalculatedConcentration(
+                                calibrationCurveFitter.GetCalibrationCurve(), replicateEntry.Key);
+                        if (calculatedConcentration.HasValue)
+                        {
+                            var dataRowDetails = new DataRowDetails
+                            {
+                                BioReplicate = replicateEntry.Value.BioReplicate,
+                                Control = replicateEntry.Value.IsControl,
+                                IdentityPath = new IdentityPath(selector.Protein.PeptideGroup, peptide.Peptide),
+                                Intensity = calculatedConcentration.Value * CALIBRATED_DENOMINATOR,
+                                Denominator = CALIBRATED_DENOMINATOR,
+                                ReplicateIndex = replicateEntry.Key
+                            };
+                            foldChangeDetails.Add(dataRowDetails);
+                            continue;
+                        }
+                    }
                     if (null != selector.LabelType)
                     {
                         peptideQuantifier.MeasuredLabelTypes = ImmutableList.Singleton(selector.LabelType);
                     }
-                    foreach (var quantityEntry in peptideQuantifier.GetTransitionIntensities(SrmDocument.Settings, 
-                                replicateEntry.Key, ComparisonDef.UseZeroForMissingPeaks))
+                    foreach (var quantityEntry in peptideQuantifier.GetTransitionIntensities(SrmDocument.Settings,
+                                 replicateEntry.Key, ComparisonDef.UseZeroForMissingPeaks))
                     {
                         var dataRowDetails = new DataRowDetails
                         {

@@ -1347,7 +1347,7 @@ namespace pwiz.SkylineTestTutorial
                 Assert.IsTrue(editGroupComparisonDlg.ComboCaseValue.Items.Contains(caseValue));
                 editGroupComparisonDlg.ComboIdentityAnnotation.SelectedItem = identityAnnotation;
                 Assert.IsTrue(editGroupComparisonDlg.ComboIdentityAnnotation.Items.Contains(identityAnnotation));
-                editGroupComparisonDlg.ComboNormalizationMethod.SelectedItem = NormalizationMethod.GLOBAL_STANDARDS;
+                editGroupComparisonDlg.NormalizeOption = NormalizeOption.GLOBAL_STANDARDS;
                 editGroupComparisonDlg.TextBoxConfidenceLevel.Text = 99.ToString(CultureInfo.CurrentCulture);
                 editGroupComparisonDlg.RadioScopePerProtein.Checked = true;
             });

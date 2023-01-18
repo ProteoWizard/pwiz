@@ -197,6 +197,15 @@ namespace pwiz.Skyline.Model.GroupComparison {
         }
         
         /// <summary>
+        ///   Looks up a localized string similar to Batch Calibration Curve.
+        /// </summary>
+        internal static string EditGroupComparisonDlg_GetNormalizeOptionText_Batch_Calibration_Curve {
+            get {
+                return ResourceManager.GetString("EditGroupComparisonDlg_GetNormalizeOptionText_Batch_Calibration_Curve", resourceCulture);
+            }
+        }
+        
+        /// <summary>
         ///   Looks up a localized string similar to -Log10(P Value).
         /// </summary>
         internal static string FoldChange__Log10_P_Value_ {

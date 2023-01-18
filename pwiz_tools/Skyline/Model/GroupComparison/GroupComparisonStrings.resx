@@ -362,4 +362,7 @@
 	  <value>Median Normalized {0}</value>
       <comment>Example: Median Normalized Peak Area</comment>
   </data>
+  <data name="EditGroupComparisonDlg_GetNormalizeOptionText_Batch_Calibration_Curve" xml:space="preserve">
+    <value>Batch Calibration Curve</value>
+  </data>
 </root>

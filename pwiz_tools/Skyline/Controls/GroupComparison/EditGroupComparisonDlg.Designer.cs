@@ -114,8 +114,13 @@
             resources.ApplyResources(this.comboMsLevel, "comboMsLevel");
             this.comboMsLevel.DropDownStyle = System.Windows.Forms.ComboBoxStyle.DropDownList;
             this.comboMsLevel.FormattingEnabled = true;
+            this.comboMsLevel.Items.AddRange(new object[] {
+            resources.GetString("comboMsLevel.Items"),
+            resources.GetString("comboMsLevel.Items1"),
+            resources.GetString("comboMsLevel.Items2"),
+            resources.GetString("comboMsLevel.Items3"),
+            resources.GetString("comboMsLevel.Items4")});
             this.comboMsLevel.Name = "comboMsLevel";
-            this.comboMsLevel.SelectedIndexChanged += new System.EventHandler(this.comboMsLevel_SelectedIndexChanged);
             // 
             // lblMsLevel
             // 

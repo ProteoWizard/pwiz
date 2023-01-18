@@ -24,7 +24,6 @@ using System.Xml.Serialization;
 using pwiz.Common.Collections;
 using pwiz.Common.SystemUtil;
 using pwiz.Skyline.Model.DocSettings;
-using pwiz.Skyline.Model.DocSettings.AbsoluteQuantification;
 using pwiz.Skyline.Model.Results;
 using pwiz.Skyline.Util;
 
@@ -35,7 +34,7 @@ namespace pwiz.Skyline.Model.GroupComparison
     {
         public static readonly GroupComparisonDef EMPTY = new GroupComparisonDef
         {
-            NormalizationMethod = NormalizationMethod.NONE,
+            NormalizationMethod = NormalizeOption.NONE,
             SummarizationMethod = SummarizationMethod.AVERAGING,
             ConfidenceLevelTimes100 = 95,
             ColorRows = ImmutableList<MatchRgbHexColor>.EMPTY
@@ -43,7 +42,7 @@ namespace pwiz.Skyline.Model.GroupComparison
 
         public GroupComparisonDef(string name) : base(name)
         {
-            NormalizationMethod = NormalizationMethod.NONE;
+            NormalizationMethod = NormalizeOption.NONE;
             SummarizationMethod = SummarizationMethod.AVERAGING;
             ConfidenceLevelTimes100 = 95;
             ColorRows = ImmutableList<MatchRgbHexColor>.EMPTY;
@@ -89,9 +88,9 @@ namespace pwiz.Skyline.Model.GroupComparison
         }
 
         [Track]
-        public NormalizationMethod NormalizationMethod { get; private set; }
+        public NormalizeOption NormalizationMethod { get; private set; }
 
-        public GroupComparisonDef ChangeNormalizationMethod(NormalizationMethod value)
+        public GroupComparisonDef ChangeNormalizationMethod(NormalizeOption value)
         {
             return ChangeProp(ImClone(this), im => im.NormalizationMethod = value);
         }
@@ -228,7 +227,7 @@ namespace pwiz.Skyline.Model.GroupComparison
             CaseValue = reader.GetAttribute(ATTR.case_value);
             IdentityAnnotation = reader.GetAttribute(ATTR.identity_annotation);
             AverageTechnicalReplicates = reader.GetBoolAttribute(ATTR.avg_tech_replicates, true);
-            NormalizationMethod = NormalizationMethod.FromName(reader.GetAttribute(ATTR.normalization_method));
+            NormalizationMethod = GetNormalizeOption(reader.GetAttribute(ATTR.normalization_method));
             IncludeInteractionTransitions = reader.GetBoolAttribute(ATTR.include_interaction_transitions, false);
             SummarizationMethod = SummarizationMethod.FromName(reader.GetAttribute(ATTR.summarization_method));
             ConfidenceLevelTimes100 = reader.GetDoubleAttribute(ATTR.confidence_level, 95);
@@ -263,9 +262,9 @@ namespace pwiz.Skyline.Model.GroupComparison
             writer.WriteAttributeIfString(ATTR.case_value, CaseValue);
             writer.WriteAttributeIfString(ATTR.identity_annotation, IdentityAnnotation);
             writer.WriteAttribute(ATTR.avg_tech_replicates, AverageTechnicalReplicates, true);
-            if (NormalizationMethod != null)
+            if (NormalizationMethod != NormalizeOption.NONE)
             {
-                writer.WriteAttributeIfString(ATTR.normalization_method, NormalizationMethod.Name);
+                writer.WriteAttributeIfString(ATTR.normalization_method, NormalizationMethod.PersistedName);
             }
             writer.WriteAttribute(ATTR.include_interaction_transitions, IncludeInteractionTransitions, false);
             writer.WriteAttribute(ATTR.summarization_method, SummarizationMethod.Name);
@@ -331,5 +330,18 @@ namespace pwiz.Skyline.Model.GroupComparison
         }
 
         #endregion
+
+        public static NormalizeOption GetNormalizeOption(string name)
+        {
+            var normalizeOption = NormalizeOption.FromPersistedName(name);
+            if (normalizeOption is NormalizeOption.Special)
+            {
+                if (normalizeOption != NormalizeOption.DEFAULT && normalizeOption != NormalizeOption.CALIBRATED)
+                {
+                    return NormalizeOption.NONE;
+                }
+            }
+            return normalizeOption;
+        }
     }
 }
