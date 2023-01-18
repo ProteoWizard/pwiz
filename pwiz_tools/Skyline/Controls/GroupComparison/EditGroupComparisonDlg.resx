@@ -205,7 +205,7 @@
     <value>Relative to internal standard</value>
   </data>
   <data name="comboMsLevel.Location" type="System.Drawing.Point, System.Drawing">
-    <value>217, 223</value>
+    <value>221, 223</value>
   </data>
   <data name="comboMsLevel.Size" type="System.Drawing.Size, System.Drawing">
     <value>94, 21</value>
@@ -235,13 +235,13 @@
     <value>221, 207</value>
   </data>
   <data name="lblMsLevel.Size" type="System.Drawing.Size, System.Drawing">
-    <value>55, 13</value>
+    <value>51, 13</value>
   </data>
   <data name="lblMsLevel.TabIndex" type="System.Int32, mscorlib">
     <value>13</value>
   </data>
   <data name="lblMsLevel.Text" xml:space="preserve">
-    <value>MS Level:</value>
+    <value>MS level:</value>
   </data>
   <data name="&gt;&gt;lblMsLevel.Name" xml:space="preserve">
     <value>lblMsLevel</value>
@@ -786,54 +786,6 @@
   <data name="groupBoxQValueCutoff.Anchor" type="System.Windows.Forms.AnchorStyles, System.Windows.Forms">
     <value>Top, Left, Right</value>
   </data>
-  <data name="&gt;&gt;tbxQValueCutoff.Name" xml:space="preserve">
-    <value>tbxQValueCutoff</value>
-  </data>
-  <data name="&gt;&gt;tbxQValueCutoff.Type" xml:space="preserve">
-    <value>System.Windows.Forms.TextBox, System.Windows.Forms, Version=4.0.0.0, Culture=neutral, PublicKeyToken=b77a5c561934e089</value>
-  </data>
-  <data name="&gt;&gt;tbxQValueCutoff.Parent" xml:space="preserve">
-    <value>groupBoxQValueCutoff</value>
-  </data>
-  <data name="&gt;&gt;tbxQValueCutoff.ZOrder" xml:space="preserve">
-    <value>0</value>
-  </data>
-  <data name="&gt;&gt;lblQValueCutoff.Name" xml:space="preserve">
-    <value>lblQValueCutoff</value>
-  </data>
-  <data name="&gt;&gt;lblQValueCutoff.Type" xml:space="preserve">
-    <value>System.Windows.Forms.Label, System.Windows.Forms, Version=4.0.0.0, Culture=neutral, PublicKeyToken=b77a5c561934e089</value>
-  </data>
-  <data name="&gt;&gt;lblQValueCutoff.Parent" xml:space="preserve">
-    <value>groupBoxQValueCutoff</value>
-  </data>
-  <data name="&gt;&gt;lblQValueCutoff.ZOrder" xml:space="preserve">
-    <value>1</value>
-  </data>
-  <data name="groupBoxQValueCutoff.Location" type="System.Drawing.Point, System.Drawing">
-    <value>16, 70</value>
-  </data>
-  <data name="groupBoxQValueCutoff.Size" type="System.Drawing.Size, System.Drawing">
-    <value>483, 65</value>
-  </data>
-  <data name="groupBoxQValueCutoff.TabIndex" type="System.Int32, mscorlib">
-    <value>3</value>
-  </data>
-  <data name="groupBoxQValueCutoff.Text" xml:space="preserve">
-    <value>Q-value cutoff</value>
-  </data>
-  <data name="&gt;&gt;groupBoxQValueCutoff.Name" xml:space="preserve">
-    <value>groupBoxQValueCutoff</value>
-  </data>
-  <data name="&gt;&gt;groupBoxQValueCutoff.Type" xml:space="preserve">
-    <value>System.Windows.Forms.GroupBox, System.Windows.Forms, Version=4.0.0.0, Culture=neutral, PublicKeyToken=b77a5c561934e089</value>
-  </data>
-  <data name="&gt;&gt;groupBoxQValueCutoff.Parent" xml:space="preserve">
-    <value>panelAdvanced</value>
-  </data>
-  <data name="&gt;&gt;groupBoxQValueCutoff.ZOrder" xml:space="preserve">
-    <value>0</value>
-  </data>
   <data name="tbxQValueCutoff.Location" type="System.Drawing.Point, System.Drawing">
     <value>9, 38</value>
   </data>
@@ -881,6 +833,30 @@
   </data>
   <data name="&gt;&gt;lblQValueCutoff.ZOrder" xml:space="preserve">
     <value>1</value>
+  </data>
+  <data name="groupBoxQValueCutoff.Location" type="System.Drawing.Point, System.Drawing">
+    <value>16, 70</value>
+  </data>
+  <data name="groupBoxQValueCutoff.Size" type="System.Drawing.Size, System.Drawing">
+    <value>483, 65</value>
+  </data>
+  <data name="groupBoxQValueCutoff.TabIndex" type="System.Int32, mscorlib">
+    <value>3</value>
+  </data>
+  <data name="groupBoxQValueCutoff.Text" xml:space="preserve">
+    <value>Q-value cutoff</value>
+  </data>
+  <data name="&gt;&gt;groupBoxQValueCutoff.Name" xml:space="preserve">
+    <value>groupBoxQValueCutoff</value>
+  </data>
+  <data name="&gt;&gt;groupBoxQValueCutoff.Type" xml:space="preserve">
+    <value>System.Windows.Forms.GroupBox, System.Windows.Forms, Version=4.0.0.0, Culture=neutral, PublicKeyToken=b77a5c561934e089</value>
+  </data>
+  <data name="&gt;&gt;groupBoxQValueCutoff.Parent" xml:space="preserve">
+    <value>panelAdvanced</value>
+  </data>
+  <data name="&gt;&gt;groupBoxQValueCutoff.ZOrder" xml:space="preserve">
+    <value>0</value>
   </data>
   <data name="lblSummaryMethod.AutoSize" type="System.Boolean, mscorlib">
     <value>True</value>
