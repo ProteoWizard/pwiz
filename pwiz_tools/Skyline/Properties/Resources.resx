@@ -4772,9 +4772,6 @@ If you prefer you can choose to report anonymously.</value>
   <data name="FastaImporter_ToFasta_Too_few_columns_found" xml:space="preserve">
     <value>Too few columns found</value>
   </data>
-  <data name="ChromDataSet_MarkOptimizationData_Incorrectly_sorted_chromatograms__0__1__" xml:space="preserve">
-    <value>Incorrectly sorted chromatograms {0} &gt; {1}</value>
-  </data>
   <data name="IrtDb_GetIrtDb_The_file__0__could_not_be_opened" xml:space="preserve">
     <value>The file {0} could not be opened.</value>
   </data>

@@ -20,7 +20,6 @@ using System;
 using System.Collections.Generic;
 using System.Diagnostics;
 using System.Drawing;
-using System.IO;
 using System.Linq;
 using pwiz.Common.Chemistry;
 using pwiz.Common.Collections;
@@ -927,29 +926,34 @@ namespace pwiz.Skyline.Model.Results
 
         private void MarkOptimizationData()
         {
-            var curGroup = new List<int>();
+            if (_listChromData.Count <= 1)
+                return;
 
-            void ProcessGroup()
+            var curGroup = new List<int> { 0 };
+            for (var i = 1; i < _listChromData.Count; i++)
             {
-                if (curGroup.Count == 0)
-                    return;
-
-                var primary = _listChromData[curGroup.Count / 2].Key;
-                foreach (var i in curGroup)
-                    _listChromData[i].PrimaryKey = primary;
-
-                curGroup.Clear();
-            }
-
-            for (var i = 0; i < _listChromData.Count; i++)
-            {
-                if (i > 0 && _listChromData[i].OptimizationStep != _listChromData[i - 1].OptimizationStep + 1)
-                    ProcessGroup();
+                if (_listChromData[i].OptimizationStep != _listChromData[i - 1].Key.OptimizationStep + 1)
+                    ProcessOptimizationGroup(curGroup);
 
                 curGroup.Add(i);
             }
 
-            ProcessGroup();
+            ProcessOptimizationGroup(curGroup);
+        }
+
+        private void ProcessOptimizationGroup(IList<int> indices)
+        {
+            if (indices.Count <= 1)
+                return;
+
+            var primaryIndex = indices[indices.Count / 2];
+            var primaryKey = _listChromData[primaryIndex].Key;
+            foreach (var i in indices.Where(i => i != primaryIndex))
+            {
+                _listChromData[i].PrimaryKey = primaryKey;
+            }
+
+            indices.Clear();
         }
 
         // Moved to ProteoWizard

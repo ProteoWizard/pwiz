@@ -19,6 +19,7 @@
 using System;
 using System.Collections.Generic;
 using System.Drawing;
+using System.Linq;
 using pwiz.Common.Chemistry;
 using pwiz.Common.SystemUtil;
 using pwiz.ProteowizardWrapper;
@@ -229,6 +230,7 @@ namespace pwiz.Skyline.Model.Results
 
         public ChromatogramDataProvider(MsDataFileImpl dataFile,
                                         ChromFileInfo fileInfo,
+                                        SrmDocument document,
                                         IProgressStatus status,
                                         int startPercent,
                                         int endPercent,
@@ -271,11 +273,7 @@ namespace pwiz.Skyline.Model.Results
                 _chromIds.Add(ki);
             }
 
-            // Shimadzu can't do the necessary product m/z stepping for itself.
-            // So, they provide the CE values in their IDs and we need to adjust
-            // product m/z values for them to support CE optimization.
-            if (fixCEOptForShimadzu)
-                FixCEOptForShimadzu();
+            FixCEOpt(document, fixCEOptForShimadzu);
 
             if (_chromIds.Count == 0)
                 throw new NoSrmDataException(FileInfo.FilePath);
@@ -304,34 +302,87 @@ namespace pwiz.Skyline.Model.Results
             SetPercentComplete(50);
         }
 
-        private void FixCEOptForShimadzu()
+        private void FixCEOpt(SrmDocument doc, bool shimadzu)
         {
-            // Need to sort by keys to ensure everything is in the right order.
-            _chromIds.Sort();
-
-            int indexLast = 0;
-            var lastPrecursor = SignedMz.ZERO;
-            var lastProduct = SignedMz.ZERO;
-            for (int i = 0; i < _chromIds.Count; i++)
+            if (!shimadzu)
             {
-                var chromKey = _chromIds[i].Key;
-                if (chromKey.Precursor != lastPrecursor || chromKey.Product != lastProduct)
+                var idToIndex = new Dictionary<int, int>();
+                for (var i = 0; i < _chromIds.Count; i++)
+                    idToIndex[_chromIds[i].ProviderId] = i;
+
+                foreach (var matchingGroup in ChromCacheBuilder.GetMatchingGroups(doc, this))
                 {
-                    int count = i - indexLast;
-                    if (HasConstantCEInterval(indexLast, count))
+                    var lastProduct = SignedMz.ZERO;
+                    var curGroup = new List<ChromData>();
+                    foreach (var chromData in matchingGroup.Value.Chromatograms.OrderBy(chromData => chromData.Key.Product))
                     {
-                        AddCEMzSteps(indexLast, count);
+                        if (!ChromatogramInfo.IsOptimizationSpacing(lastProduct, chromData.Key.Product))
+                            ProcessOptimizationGroup(idToIndex, curGroup);
+
+                        curGroup.Add(chromData);
+                        lastProduct = chromData.Key.Product;
                     }
-                    lastPrecursor = chromKey.Precursor;
-                    lastProduct = chromKey.Product;
-                    indexLast = i;
+
+                    ProcessOptimizationGroup(idToIndex, curGroup);
                 }
             }
-            int finalCount = _chromIds.Count - indexLast;
-            if (HasConstantCEInterval(indexLast, finalCount))
+            else
             {
-                AddCEMzSteps(indexLast, finalCount);
+                // Shimadzu can't do the necessary product m/z stepping for itself.
+                // So, they provide the CE values in their IDs and we need to adjust
+                // product m/z values for them to support CE optimization.
+
+                // Need to sort by keys to ensure everything is in the right order.
+                _chromIds.Sort();
+
+                int indexLast = 0;
+                var lastPrecursor = SignedMz.ZERO;
+                var lastProduct = SignedMz.ZERO;
+                for (int i = 0; i < _chromIds.Count; i++)
+                {
+                    var chromKey = _chromIds[i].Key;
+                    if (chromKey.Precursor != lastPrecursor || chromKey.Product != lastProduct)
+                    {
+                        int count = i - indexLast;
+                        if (HasConstantCEInterval(indexLast, count))
+                        {
+                            AddCESteps(indexLast, count);
+                        }
+                        lastPrecursor = chromKey.Precursor;
+                        lastProduct = chromKey.Product;
+                        indexLast = i;
+                    }
+                }
+                int finalCount = _chromIds.Count - indexLast;
+                if (HasConstantCEInterval(indexLast, finalCount))
+                {
+                    AddCESteps(indexLast, finalCount);
+                }
             }
+        }
+
+        private void ProcessOptimizationGroup(IReadOnlyDictionary<int, int> idToIndex, IList<ChromData> chromDatas)
+        {
+            if (chromDatas.Count <= 1)
+            {
+                chromDatas.Clear();
+                return;
+            }
+
+            var matchedIndices = chromDatas.Select((chromData, i) => new { ChromData = chromData, Index = i })
+                .Where(pair => pair.ChromData.DocNode != null).Select(obj => obj.Index).ToArray();
+            if (matchedIndices.Length == 0)
+            {
+                matchedIndices = new[] { chromDatas.Count / 2 };
+            }
+
+            var centerIdx = matchedIndices[matchedIndices.Length / 2];
+            for (var i = 0; i < chromDatas.Count; i++)
+            {
+                SetOptimizationStep(idToIndex[chromDatas[i].ProviderId], i - centerIdx);
+            }
+
+            chromDatas.Clear();
         }
 
         private float GetCE(int i)
@@ -360,16 +411,20 @@ namespace pwiz.Skyline.Model.Results
             return true;
         }
 
-        private void AddCEMzSteps(int start, int count)
+        private void AddCESteps(int start, int count)
         {
             int step = count / 2;
             for (int i = count - 1; i >= 0; i--)
             {
-                var chromId = _chromIds[start + i];
-                var chromKeyNew = chromId.Key.ChangeOptimizationStep(step);
-                _chromIds[start + i] = new ChromKeyProviderIdPair(chromKeyNew, chromId.ProviderId);
-                step--;
+                SetOptimizationStep(start + i, step--);
             }
+        }
+
+        private void SetOptimizationStep(int i, int step)
+        {
+            var chromId = _chromIds[i];
+            var chromKeyNew = chromId.Key.ChangeOptimizationStep(step);
+            _chromIds[i] = new ChromKeyProviderIdPair(chromKeyNew, chromId.ProviderId);
         }
 
         public override IEnumerable<ChromKeyProviderIdPair> ChromIds
