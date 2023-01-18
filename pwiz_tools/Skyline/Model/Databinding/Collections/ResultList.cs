@@ -17,21 +17,15 @@
  * limitations under the License.
  */
 
-using System.Collections.Generic;
-using System.Linq;
+using System.Collections;
 using pwiz.Skyline.Model.Databinding.Entities;
 
 namespace pwiz.Skyline.Model.Databinding.Collections
 {
-    public abstract class ResultList<TResult> : SkylineObjectList<ResultFileKey, TResult> where TResult : Result
+    public abstract class ResultList<TResult> : SkylineObjectList<TResult> where TResult : Result
     {
         protected ResultList(SkylineDataSchema dataSchema) : base(dataSchema)
         {
-        }
-
-        public ResultFileKey GetKey(TResult value)
-        {
-            return GetResultFileKey(value);
         }
 
         public ResultFileKey GetResultFileKey(Result result)
@@ -53,14 +47,9 @@ namespace pwiz.Skyline.Model.Databinding.Collections
         }
 
         public Entities.Peptide Peptide { get; private set; }
-        protected override IEnumerable<ResultFileKey> ListKeys()
+        public override IEnumerable GetItems()
         {
-            return Peptide.Results.Values.Select(GetKey);
-        }
-
-        protected override PeptideResult ConstructItem(ResultFileKey key)
-        {
-            return new PeptideResult(Peptide, GetResultFile(key));
+            return Peptide.Results.Values;
         }
     }
 
@@ -72,14 +61,9 @@ namespace pwiz.Skyline.Model.Databinding.Collections
         }
 
         public Precursor Precursor { get; private set; }
-        protected override IEnumerable<ResultFileKey> ListKeys()
+        public override IEnumerable GetItems()
         {
-            return Precursor.Results.Values.Select(GetKey);
-        }
-
-        protected override PrecursorResult ConstructItem(ResultFileKey key)
-        {
-            return new PrecursorResult(Precursor, GetResultFile(key));
+            return Precursor.Results.Values;
         }
     }
 
@@ -90,14 +74,9 @@ namespace pwiz.Skyline.Model.Databinding.Collections
             Transition = transition;
         }
         public Entities.Transition Transition { get; private set; }
-        protected override IEnumerable<ResultFileKey> ListKeys()
+        public override IEnumerable GetItems()
         {
-            return Transition.Results.Values.Select(GetKey);
-        }
-
-        protected override TransitionResult ConstructItem(ResultFileKey key)
-        {
-            return new TransitionResult(Transition, GetResultFile(key));
+            return Transition.Results;
         }
     }
 }
