@@ -341,8 +341,8 @@ namespace pwiz.Skyline.Model.DdaSearch
 
         private void EnsureFastaHasDecoys()
         {
-            Assume.IsNotNull(_fastaFilepath);
             _fastaFilepath ??= string.Empty;    // For ReSharper
+            Assume.IsFalse(string.IsNullOrEmpty(_fastaFilepath));
 
             _progressStatus = _progressStatus.ChangeMessage(string.Format(Resources.EnsureFastaHasDecoys_Detecting_decoy_prefix_in__0__, Path.GetFileName(_fastaFilepath)));
             UpdateProgress(_progressStatus);
