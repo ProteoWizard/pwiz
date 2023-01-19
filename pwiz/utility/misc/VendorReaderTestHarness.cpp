@@ -754,6 +754,7 @@ string ReaderTestConfig::resultFilename(const string& baseFilename) const
     if (peakPickingCWT) bal::replace_all(result, ".mzML", "-centroid-cwt.mzML");
     if (!isolationMzAndMobilityFilter.empty()) bal::replace_all(result, ".mzML", "-mzMobilityFilter.mzML");
     if (globalChromatogramsAreMs1Only) bal::replace_all(result, ".mzML", "-globalChromatogramsAreMs1Only.mzML");
+    if (ddaProcessing) bal::replace_all(result, ".mzML", "-ddaProcessing.mzML");
     //if (thresholdCount > 0) bal::replace_all(result, ".mzML", "-top" + lexical_cast<string>(thresholdCount) + ".mzML");
     return result;
 }
@@ -833,7 +834,22 @@ TestResult testReader(const Reader& reader, const vector<string>& args, bool tes
             if (generateMzML && config.autoTest)
                 continue;
             else if (generateMzML && !testAcceptOnly)
-                generate(reader, rawpath, parentPath, config);
+            {
+                try
+                {
+                    generate(reader, rawpath, parentPath, config);
+                }
+                catch (exception& e)
+                {
+                    if (!catchReaderExceptions)
+                        throw;
+                    cerr << "Error generating result for " << rawpath << " (" << config.resultFilename("config.mzML") <<
+                        (config.peakPickingCWT ? "-cwt" : "") <<
+                        (config.thresholdCount > 0 ? "-threshold-top3" : "") <<
+                        "): " << e.what() << endl;
+                    ++result.failedTests;
+                }
+            }
             else
             {
                 try
