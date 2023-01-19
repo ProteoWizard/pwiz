@@ -19,6 +19,7 @@
 using System;
 using System.IO;
 using System.Text;
+using pwiz.Common.SystemUtil;
 
 namespace pwiz.Common.Collections
 {
@@ -51,7 +52,7 @@ namespace pwiz.Common.Collections
         {
             var result = new T[count];
             byte[] byteArray = new byte[Buffer.ByteLength(result)];
-            stream.Read(byteArray, 0, byteArray.Length);
+            stream.ReadOrThrow(byteArray, 0, byteArray.Length);
             Buffer.BlockCopy(byteArray, 0, result, 0, byteArray.Length);
             return result;
         }
@@ -62,7 +63,7 @@ namespace pwiz.Common.Collections
             if (stringLength > 0)
             {
                 byte[] bytes = new byte[stringLength];
-                stream.Read(bytes, 0, bytes.Length);
+                stream.ReadOrThrow(bytes, 0, bytes.Length);
                 return Encoding.UTF8.GetString(bytes);
             }
             return null;
