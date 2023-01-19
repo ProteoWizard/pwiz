@@ -197,7 +197,7 @@ namespace pwiz.Skyline.Model.DdaSearch
             return files;
         }
 
-        private void InitializeEngine(CancellationTokenSource token, string spectrumFileName)
+        private MSAmandaSearch InitializeEngine(CancellationTokenSource token, string spectrumFileName)
         {
             _outputParameters = new OutputParameters();
             _outputParameters.FastaFiles = FastaFileNames.ToList();
@@ -222,6 +222,7 @@ namespace pwiz.Skyline.Model.DdaSearch
             SearchEngine.InitializeOutputMZ(mzID);
             Settings.LoadedProteinsAtOnce = (int) AdditionalSettings[MAX_LOADED_PROTEINS_AT_ONCE].Value;
             Settings.LoadedSpectraAtOnce = (int) AdditionalSettings[MAX_LOADED_SPECTRA_AT_ONCE].Value;
+            return SearchEngine;
         }
     
         public override bool Run(CancellationTokenSource tokenSource, IProgressStatus status)
@@ -257,7 +258,7 @@ namespace pwiz.Skyline.Model.DdaSearch
                                 FileEx.SafeDelete(outputFilepath);
                             }
 
-                            InitializeEngine(tokenSource, rawFileName.GetSampleLocator());
+                            SearchEngine = InitializeEngine(tokenSource, rawFileName.GetSampleLocator());   // Assignment for ReSharper
                             amandaInputParser = new MSAmandaSpectrumParser(rawFileName.GetSampleLocator(), Settings.ConsideredCharges, true);
                             SearchEngine.SetInputParser(amandaInputParser);
                             SearchEngine.PerformSearch(_outputParameters.DBFile);
@@ -266,7 +267,7 @@ namespace pwiz.Skyline.Model.DdaSearch
                         }
                         finally
                         {
-                            SearchEngine.Dispose();
+                            SearchEngine?.Dispose();
                             amandaInputParser?.Dispose();
                             amandaInputParser = null;
                         }
