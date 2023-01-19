@@ -257,7 +257,14 @@ namespace pwiz.SkylineTestUtil
             if (useDeletion)
             {
                 RemoveReadonlyFlags(path);
-                Helpers.TryTwice(() => Directory.Delete(path, true),$@"Directory.Delete(""{path}"", true)");
+                try
+                {
+                    Helpers.TryTwice(() => Directory.Delete(path, true));
+                }
+                catch (Exception e)
+                {
+                    Assert.Fail($@"Directory.Delete(""{path}"",true) failed with ""{e.Message}""");
+                }
                 return;
             }
 
@@ -269,25 +276,37 @@ namespace pwiz.SkylineTestUtil
 
             try
             {
-                Helpers.TryTwice(() => Directory.Move(path, guidName), $@"Directory.Move(""{path}"", ""{guidName}"")");
+                Helpers.TryTwice(() => Directory.Move(path, guidName));
             }
             catch (IOException)
             {
-                Console.Write($@"# CheckForFileLocks failed to Directory.Move(""{path}"",""{guidName}"")");
                 // Useful for debugging. Exception names file that is locked.
-                Helpers.TryTwice(() => Directory.Delete(path, true), $@"Directory.Delete(""{path}"")");
+                try
+                {
+                    Helpers.TryTwice(() => Directory.Delete(path, true));
+                }
+                catch (Exception e)
+                {
+                    Assert.Fail($@"Directory.Move(""{path}"",""{guidName}"") failed, attempt to delete instead resulted in ""{e.Message}""");
+                }
             }
 
             // Move the file back to where it was, and fail if this throws
             try
             {
-                Helpers.TryTwice(() => Directory.Move(guidName, path), $@"Directory.Move(""{guidName}"",""{path}"")");
+                Helpers.TryTwice(() => Directory.Move(guidName, path));
             }
             catch (IOException)
             {
-                Console.Write($@"# CheckForFileLocks failed to Directory.Move(""{guidName}"",(""{path}"")");
-                // Useful for debugging. Exception names file that is locked.
-                Helpers.TryTwice(() => Directory.Delete(guidName, true),$@"Directory.Delete(""{guidName}"", true)");
+                try
+                {
+                    // Useful for debugging. Exception names file that is locked.
+                    Helpers.TryTwice(() => Directory.Delete(guidName, true));
+                }
+                catch (Exception e)
+                {
+                    Assert.Fail($@"Directory.Move(""{guidName}"",(""{path}"") failed, attempt to delete instead resulted in ""{e.Message}""");
+                }
             }
         }
 
