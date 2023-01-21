@@ -142,9 +142,9 @@
     <Reference Include="System.Data.DataSetExtensions">
       <RequiredTargetFramework>3.5</RequiredTargetFramework>
     </Reference>
-    <Reference Include="System.Data.SQLite, Version=1.0.105.2, Culture=neutral, PublicKeyToken=db937bc2d44ff139, processorArchitecture=$(PLATFORM)">
+    <Reference Include="System.Data.SQLite, Version=1.0.105.2, Culture=neutral, PublicKeyToken=db937bc2d44ff139, processorArchitecture=$(Platform)">
       <SpecificVersion>False</SpecificVersion>
-      <HintPath>..\..\..\libraries\SQLite\$(PLATFORM)\System.Data.SQLite.dll</HintPath>
+      <HintPath>..\..\..\libraries\SQLite\$(Platform)\System.Data.SQLite.dll</HintPath>
       <Private>True</Private>
     </Reference>
     <Reference Include="System.Deployment" />
