@@ -43,7 +43,16 @@ using namespace Waters;
 SpectrumList_Waters::SpectrumList_Waters(MSData& msd, RawDataPtr rawdata, const Reader::Config& config)
     : msd_(msd), rawdata_(rawdata), config_(config), lockmassFunction_(LOCKMASS_FUNCTION_UNINIT)
 {
-    createIndex();
+    if (config_.ddaProcessing)
+    {
+        useDDAProcessor_ = true;
+        rawdata_->EnableDDAProcessing();
+        createDDAIndex();
+    }
+    else
+    {
+        createIndex();
+    }
 }
 
 
@@ -210,7 +219,7 @@ PWIZ_API_DECL SpectrumPtr SpectrumList_Waters::spectrum(size_t index, DetailLeve
         double lockmassMz = (polarityType == PolarityType_Negative) ? lockmassMzNegScans : lockmassMzPosScans;
         if (lockmassMz != 0.0)
         {
-            if (detailLevel == DetailLevel_FullData && !rawdata_->ApplyLockMass(lockmassMz, lockmassTolerance)) // TODO: if false (cannot apply lockmass), log a warning
+            if (detailLevel == DetailLevel_FullData && !rawdata_->ApplyLockMass(lockmassMz, lockmassTolerance))
                 warn_once("[SpectrumList_Waters] failed to apply lockmass correction");
         }
         else
@@ -287,7 +296,11 @@ PWIZ_API_DECL SpectrumPtr SpectrumList_Waters::spectrum(size_t index, DetailLeve
     if (msLevel > 1 && isMS)
     {
         double setMass = 0;
-        if (!hasSonarFunctions())
+        if (useDDAProcessor_)
+        {
+            setMass = ie.setMass;
+        }
+        else if (!hasSonarFunctions())
         {
             string setMassStr = rawdata_->GetScanStat(ie.function, scanStatIndex, MassLynxScanItem::SET_MASS);
             if (!setMassStr.empty())
@@ -308,7 +321,10 @@ PWIZ_API_DECL SpectrumPtr SpectrumList_Waters::spectrum(size_t index, DetailLeve
         if (collisionEnergy > 0)
             precursor.activation.set(MS_collision_energy, collisionEnergy, UO_electronvolt);
 
-        SelectedIon selectedIon(setMass);
+
+        double precursorMass = useDDAProcessor_ ? ie.precursorMass : setMass;
+        SelectedIon selectedIon(precursorMass);
+
         precursor.selectedIons.push_back(selectedIon);
         result->precursors.push_back(precursor);
     }
@@ -352,7 +368,11 @@ PWIZ_API_DECL SpectrumPtr SpectrumList_Waters::spectrum(size_t index, DetailLeve
         {
             vector<float> masses, intensities;
 
-            if (ie.block >= 0 && !doCentroid && !isLockMassFunction(ie.function)) // Lockmass won't have IMS
+            if (useDDAProcessor_)
+            {
+                getDDAScan(index, masses, intensities);
+            }
+            else if (ie.block >= 0 && !doCentroid && !isLockMassFunction(ie.function)) // Lockmass won't have IMS
             {
                 MassLynxRawScanReader& scanReader = binaryDataSource.lock()->GetCompressedDataClusterForBlock(ie.function, ie.block);
                 scanReader.ReadScan(ie.function, ie.block, ie.scan, masses, intensities);
@@ -450,8 +470,6 @@ PWIZ_API_DECL void SpectrumList_Waters::initializeCoefficients() const
             throw runtime_error("[SpectrumList_Waters::spectrum()] error parsing calibration coefficients: " + coefficients);
         }
     }
-
-
 }
 
 PWIZ_API_DECL double SpectrumList_Waters::calibrate(const double& mz) const
@@ -720,6 +738,58 @@ PWIZ_API_DECL void SpectrumList_Waters::createIndex()
     }
 
     size_ = index_.size();
+}
+
+PWIZ_API_DECL void SpectrumList_Waters::getDDAScan(unsigned int index, vector<float>& masses, vector<float>& intensities) const
+{
+    using namespace boost::spirit::karma;
+    
+    float setMass, precursorMass, retentionTime;
+    int function, startScan, endScan;
+    bool isMS1;
+    rawdata_->GetDDAScan(index, retentionTime, function, startScan, endScan, isMS1, setMass, precursorMass, masses, intensities);
+}
+
+PWIZ_API_DECL void SpectrumList_Waters::createDDAIndex()
+{
+    using namespace boost::spirit::karma;
+
+    size_ = rawdata_->GetDDAScanCount();
+    index_.resize(size_);
+
+    for (auto i = 0; i < size_; ++i)
+    {
+        IndexEntry& ie = index_[i];
+
+        float setMass, precursorMass, retentionTime;
+        int function, startScan, endScan;
+        vector<float> masses, intensities;
+        bool isMS1;
+        rawdata_->GetDDAScan(i, retentionTime, function, startScan, endScan, isMS1, setMass, precursorMass, masses, intensities);
+
+        ie.function = function;
+        ie.process = 0;
+        ie.block = -1; // The SDK DDA processor doesn't yet support ion mobility data
+        ie.scan = startScan; // While it might combine multiple scans, use the first for getting the metadata
+        ie.index = i;
+        ie.setMass = setMass;
+        ie.precursorMass = precursorMass;
+
+        std::back_insert_iterator<std::string> sink(ie.id);
+        if (startScan == endScan)
+        {
+            generate(sink,
+                    "function=" << int_ << " process=" << int_ << " scan=" << int_,
+                    ie.function + 1, ie.process, ie.scan + 1);
+        } 
+        else
+        {
+            generate(sink,
+                    "merged=" << int_ << " function=" << int_ << " process=" << int_ << " scans=" << int_ << "-" << int_,
+                    ie.index, ie.function + 1, ie.process, startScan + 1, endScan + 1);
+        }
+        idToIndexMap_[ie.id] = ie.index;
+    }
 }
 
 
