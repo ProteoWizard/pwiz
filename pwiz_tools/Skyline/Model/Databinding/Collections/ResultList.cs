@@ -76,7 +76,7 @@ namespace pwiz.Skyline.Model.Databinding.Collections
         public Entities.Transition Transition { get; private set; }
         public override IEnumerable GetItems()
         {
-            return Transition.Results;
+            return Transition.Results.Values;
         }
     }
 }
