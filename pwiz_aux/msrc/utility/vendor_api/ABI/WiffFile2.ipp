@@ -56,7 +56,9 @@ class WiffFile2Impl : public WiffFile
 
     ISampleDataApi^ DataReader() const
     {
-        static gcroot<ISampleDataApi^> dataReader = (gcnew DataApiFactory())->CreateSampleDataApi();
+        IDataApiFactory^ apiFactory = gcnew DataApiFactory();
+        apiFactory->LicenseKey = "<?xml version=\"1.0\" encoding=\"utf-8\"?><license_key><company_name>Proteowizard</company_name><product_name>Sciex Data API</product_name><features /><key_data>t6QaoUk9a7EedqZ/V/WAE98aSv1Z0tgvmnYXSveHSvLNChvDdMXh3A==</key_data></license_key>";
+        static gcroot<ISampleDataApi^> dataReader = apiFactory->CreateSampleDataApi();
         try
         {
             if (!dataReader)
