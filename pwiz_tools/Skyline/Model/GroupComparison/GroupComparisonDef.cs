@@ -90,9 +90,14 @@ namespace pwiz.Skyline.Model.GroupComparison
         [Track]
         public NormalizeOption NormalizationMethod { get; private set; }
 
-        public GroupComparisonDef ChangeNormalizationMethod(NormalizeOption value)
+        public GroupComparisonDef ChangeNormalizeOption(NormalizeOption value)
         {
             return ChangeProp(ImClone(this), im => im.NormalizationMethod = value);
+        }
+
+        public GroupComparisonDef ChangeNormalizationMethod(NormalizationMethod value)
+        {
+            return ChangeNormalizeOption(NormalizeOption.FromNormalizationMethod(value));
         }
 
         public bool IncludeInteractionTransitions { get; private set; }

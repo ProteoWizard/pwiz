@@ -333,7 +333,7 @@ namespace pwiz.Skyline.Controls.GroupComparison
             {
                 return;
             }
-            GroupComparisonDef = GroupComparisonDef.ChangeNormalizationMethod(NormalizeOption);
+            GroupComparisonDef = GroupComparisonDef.ChangeNormalizeOption(NormalizeOption);
         }
 
         protected void comboCaseValue_SelectedIndexChanged(object sender, EventArgs e)
