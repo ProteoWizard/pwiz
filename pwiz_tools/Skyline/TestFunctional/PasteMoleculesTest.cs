@@ -1601,8 +1601,8 @@ namespace pwiz.SkylineTestFunctional
                     Resources.SmallMoleculeTransitionListReader_Precursor_mz_does_not_agree_with_calculated_value_,
                     596.9, 597.9001, 1.000131, (float)SkylineWindow.Document.Settings.TransitionSettings.Instrument.MzMatchTolerance),
                 4, 5, "Acetic Acid C2H4O2 1 [7M-H6+Fe3+O] 596.9"), errDlg.ErrorList[2]);
-            RunUI(() => errDlg.OkDialog());
-            RunUI(() => transitionDlg.CancelDialog());
+            OkDialog(errDlg, errDlg.OkDialog);
+            OkDialog(transitionDlg, transitionDlg.CancelDialog);
         }
 
         private void TestProductNeutralLoss()

@@ -39,20 +39,29 @@ namespace SortRESX
     {
         static void Main(string[] args)
         {
+            bool preserveOrderInResourcesResx = false;
             List<string> startingFolders = new List<string>();
-            if (args.Length == 0)
+            foreach (var arg in args)
             {
-                startingFolders.Add(Directory.GetCurrentDirectory());
-            }
-            else
-            {
-                foreach (var arg in args)
+                if (arg == "--preserveOrderInResourcesResx")
+                {
+                    preserveOrderInResourcesResx = true;
+                }
+                else
                 {
                     startingFolders.Add(Path.GetFullPath(arg));
                 }
             }
+
+            if (startingFolders.Count == 0)
+            {
+                startingFolders.Add(Directory.GetCurrentDirectory());
+            }
             Console.Error.WriteLine("Sorting resx files in {0}", string.Join(",", startingFolders));
-            var resxSorter = new ResxSorter();
+            var resxSorter = new ResxSorter
+            {
+                PreserveOrderInResourcesResx = preserveOrderInResourcesResx
+            };
             RecurseDirectories(resxSorter.ProcessFile, startingFolders.ToArray());
         }
 
