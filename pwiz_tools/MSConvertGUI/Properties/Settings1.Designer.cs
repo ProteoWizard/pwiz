@@ -8,7 +8,7 @@
 // </auto-generated>
 //------------------------------------------------------------------------------
 
-namespace TestHarness.Properties {
+namespace MSConvertGUI.Properties {
     
     
     [global::System.Runtime.CompilerServices.CompilerGeneratedAttribute()]
@@ -20,6 +20,30 @@ namespace TestHarness.Properties {
         public static Settings Default {
             get {
                 return defaultInstance;
+            }
+        }
+        
+        [global::System.Configuration.UserScopedSettingAttribute()]
+        [global::System.Diagnostics.DebuggerNonUserCodeAttribute()]
+        [global::System.Configuration.DefaultSettingValueAttribute("")]
+        public string LastUsedUnifiUrl {
+            get {
+                return ((string)(this["LastUsedUnifiUrl"]));
+            }
+            set {
+                this["LastUsedUnifiUrl"] = value;
+            }
+        }
+        
+        [global::System.Configuration.UserScopedSettingAttribute()]
+        [global::System.Diagnostics.DebuggerNonUserCodeAttribute()]
+        [global::System.Configuration.DefaultSettingValueAttribute("1")]
+        public decimal NumFilesToConvertInParallel {
+            get {
+                return ((decimal)(this["NumFilesToConvertInParallel"]));
+            }
+            set {
+                this["NumFilesToConvertInParallel"] = value;
             }
         }
     }
