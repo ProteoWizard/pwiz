@@ -669,4 +669,16 @@
   <data name="RelativeRT_Unknown" xml:space="preserve">
     <value>Unknown</value>
   </data>
+  <data name="MsLevelOption_" xml:space="preserve">
+    <value>All</value>
+  </data>
+  <data name="MsLevelOption_1" xml:space="preserve">
+    <value>1</value>
+  </data>
+  <data name="MsLevelOption_2" xml:space="preserve">
+    <value>2</value>
+  </data>
+  <data name="MsLevelOption_default" xml:space="preserve">
+    <value>Default</value>
+  </data>
 </root>

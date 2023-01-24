@@ -871,6 +871,42 @@ namespace pwiz.Skyline.Model.AuditLog {
         }
         
         /// <summary>
+        ///   Looks up a localized string similar to All.
+        /// </summary>
+        public static string MsLevelOption_ {
+            get {
+                return ResourceManager.GetString("MsLevelOption_", resourceCulture);
+            }
+        }
+        
+        /// <summary>
+        ///   Looks up a localized string similar to 1.
+        /// </summary>
+        public static string MsLevelOption_1 {
+            get {
+                return ResourceManager.GetString("MsLevelOption_1", resourceCulture);
+            }
+        }
+        
+        /// <summary>
+        ///   Looks up a localized string similar to 2.
+        /// </summary>
+        public static string MsLevelOption_2 {
+            get {
+                return ResourceManager.GetString("MsLevelOption_2", resourceCulture);
+            }
+        }
+        
+        /// <summary>
+        ///   Looks up a localized string similar to Default.
+        /// </summary>
+        public static string MsLevelOption_default {
+            get {
+                return ResourceManager.GetString("MsLevelOption_default", resourceCulture);
+            }
+        }
+        
+        /// <summary>
         ///   Looks up a localized string similar to (m/z &gt; precursor) - 1.
         /// </summary>
         public static string MzFragmentFinder__m_z__gt__precursor___minus__1 {

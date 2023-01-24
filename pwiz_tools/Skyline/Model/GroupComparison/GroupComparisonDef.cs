@@ -17,6 +17,7 @@
  * limitations under the License.
  */
 
+using System;
 using System.Collections.Generic;
 using System.Linq;
 using System.Xml;
@@ -37,7 +38,8 @@ namespace pwiz.Skyline.Model.GroupComparison
             NormalizationMethod = NormalizeOption.NONE,
             SummarizationMethod = SummarizationMethod.AVERAGING,
             ConfidenceLevelTimes100 = 95,
-            ColorRows = ImmutableList<MatchRgbHexColor>.EMPTY
+            ColorRows = ImmutableList<MatchRgbHexColor>.EMPTY,
+            MsLevel = MsLevelOption.ALL
         };
 
         public GroupComparisonDef(string name) : base(name)
@@ -46,6 +48,7 @@ namespace pwiz.Skyline.Model.GroupComparison
             SummarizationMethod = SummarizationMethod.AVERAGING;
             ConfidenceLevelTimes100 = 95;
             ColorRows = ImmutableList<MatchRgbHexColor>.EMPTY;
+            MsLevel = MsLevelOption.ALL;
         }
 
         [Track]
@@ -226,6 +229,10 @@ namespace pwiz.Skyline.Model.GroupComparison
 
         public override void ReadXml(XmlReader reader)
         {
+            if (MsLevel != null)
+            {
+                throw new InvalidOperationException();
+            }
             base.ReadXml(reader);
             ControlAnnotation = reader.GetAttribute(ATTR.control_annotation);
             ControlValue = reader.GetAttribute(ATTR.control_value);
