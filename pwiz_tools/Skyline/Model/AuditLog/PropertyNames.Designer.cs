@@ -1366,6 +1366,15 @@ namespace pwiz.Skyline.Model.AuditLog {
         }
         
         /// <summary>
+        ///   Looks up a localized string similar to MS level.
+        /// </summary>
+        public static string GroupComparisonDef_MsLevel {
+            get {
+                return ResourceManager.GetString("GroupComparisonDef_MsLevel", resourceCulture);
+            }
+        }
+        
+        /// <summary>
         ///   Looks up a localized string similar to Normalization method.
         /// </summary>
         public static string GroupComparisonDef_NormalizationMethod {

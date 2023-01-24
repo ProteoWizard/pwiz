@@ -1712,4 +1712,7 @@
   <data name="PeptideSettings_ProteinAssociationSettings" xml:space="preserve">
     <value>Protein association settings</value>
   </data>
+  <data name="GroupComparisonDef_MsLevel" xml:space="preserve">
+    <value>MS level</value>
+  </data>
 </root>
