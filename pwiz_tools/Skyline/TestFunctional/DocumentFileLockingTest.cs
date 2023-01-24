@@ -54,7 +54,7 @@ namespace pwiz.SkylineTestFunctional
                 var alertDlg = ShowDialog<AlertDlg>(() => Program.StartWindow.OpenFile(versionTooHigh1));
                 // Verify that the file can be deleted while the message is showing
                 File.Delete(versionTooHigh1);
-                // Careful about using RunUI() and OkDialog() here because they can
+                // Careful about using RunUI and OkDialog here because they can
                 // end up accessing a disposed StartPage
                 startWindow.Invoke((Action)alertDlg.OkDialog);
             }
