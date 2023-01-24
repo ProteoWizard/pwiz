@@ -16,6 +16,7 @@
  * See the License for the specific language governing permissions and
  * limitations under the License.
  */
+using System;
 using System.IO;
 using Microsoft.VisualStudio.TestTools.UnitTesting;
 using pwiz.Skyline;
@@ -45,14 +46,17 @@ namespace pwiz.SkylineTestFunctional
         protected override void DoTest()
         {
             // Test opening a file from the Start Page which will give an error
-            Assert.IsNotNull(Program.StartWindow);
+            var startWindow = Program.StartWindow;
+            Assert.IsNotNull(startWindow);
             Assert.IsNotNull(FindOpenForm<StartPage>());
             {
                 var versionTooHigh1 = TestFilesDir.GetTestPath("VersionTooHigh.sky");
                 var alertDlg = ShowDialog<AlertDlg>(() => Program.StartWindow.OpenFile(versionTooHigh1));
                 // Verify that the file can be deleted while the message is showing
                 File.Delete(versionTooHigh1);
-                OkDialog(alertDlg, alertDlg.OkDialog);
+                // Careful about using RunUI() and OkDialog() here because they can
+                // end up accessing a disposed StartPage
+                startWindow.Invoke((Action)alertDlg.OkDialog);
             }
             WaitForOpenForm<SkylineWindow>();
 
