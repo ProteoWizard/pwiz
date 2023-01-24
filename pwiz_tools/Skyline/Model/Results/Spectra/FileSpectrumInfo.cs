@@ -46,7 +46,7 @@ namespace pwiz.Skyline.Model.Results.Spectra
                     {
                         Color = Color.Blue,
                         Id = new ChromatogramSetId(),
-                        Name = "Test",
+                        Name = _dataFileUri.GetFileName(),
                         TimeIntensities = timeIntensities,
                         Source = chromSource,
                         ExtractionWidth = 0,
