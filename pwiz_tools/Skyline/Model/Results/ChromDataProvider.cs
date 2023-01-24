@@ -369,14 +369,9 @@ namespace pwiz.Skyline.Model.Results
                 return;
             }
 
-            var matchedIndices = chromDatas.Select((chromData, i) => new { ChromData = chromData, Index = i })
-                .Where(pair => pair.ChromData.DocNode != null).Select(obj => obj.Index).ToArray();
-            if (matchedIndices.Length == 0)
-            {
-                matchedIndices = new[] { chromDatas.Count / 2 };
-            }
-
-            var centerIdx = matchedIndices[matchedIndices.Length / 2];
+            var centerIdx = chromDatas.Count % 2 == 1
+                ? chromDatas.Count / 2
+                : chromDatas.Count / 2 - 1;
             for (var i = 0; i < chromDatas.Count; i++)
             {
                 SetOptimizationStep(idToIndex[chromDatas[i].ProviderId], i - centerIdx);

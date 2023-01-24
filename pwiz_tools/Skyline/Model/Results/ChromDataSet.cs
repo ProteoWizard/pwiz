@@ -941,14 +941,17 @@ namespace pwiz.Skyline.Model.Results
             ProcessOptimizationGroup(curGroup);
         }
 
-        private void ProcessOptimizationGroup(IList<int> indices)
+        private void ProcessOptimizationGroup(ICollection<int> indices)
         {
             if (indices.Count <= 1)
+            {
+                indices.Clear();
                 return;
+            }
 
-            var primaryIndex = indices[indices.Count / 2];
+            var primaryIndex = indices.First(i => _listChromData[i].OptimizationStep == 0);
             var primaryKey = _listChromData[primaryIndex].Key;
-            foreach (var i in indices.Where(i => i != primaryIndex))
+            foreach (var i in indices)
             {
                 _listChromData[i].PrimaryKey = primaryKey;
             }
