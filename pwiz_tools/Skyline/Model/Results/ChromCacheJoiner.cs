@@ -30,21 +30,19 @@ namespace pwiz.Skyline.Model.Results
     {
         private int _currentPartIndex = -1;
         private int _scoreTypesCount = -1;
-        private readonly bool _assumeNegativeChargeInPreV11Caches;
+        private readonly SrmDocument _doc;
 
         private readonly byte[] _buffer = new byte[0x40000];  // 256K
         private readonly Dictionary<Target, int> _dictTextIdToByteIndex = new Dictionary<Target, int>();
 
-        public ChromCacheJoiner(string cachePath, IPooledStream streamDest,
-                                IList<string> cacheFilePaths, ILoadMonitor loader, ProgressStatus status,
-                                Action<ChromatogramCache, IProgressStatus> completed,
-                                bool assumeNegativeChargeInPreV11Caches)
-            : base(cachePath, loader, status, completed)
+        public ChromCacheJoiner(string cachePath, IPooledStream streamDest, IList<string> cacheFilePaths,
+            ILoadMonitor loader, IProgressStatus status, Action<ChromatogramCache, IProgressStatus> completed,
+            SrmDocument doc) : base(cachePath, loader, status, completed)
         {
             _destinationStream = streamDest;
 
             CacheFilePaths = cacheFilePaths;
-            _assumeNegativeChargeInPreV11Caches = assumeNegativeChargeInPreV11Caches; // Deal with older cache formats where we did not record polarity
+            _doc = doc;
         }
 
         private IList<string> CacheFilePaths { get; set; }
@@ -94,7 +92,7 @@ namespace pwiz.Skyline.Model.Results
                         _fs.Stream = _loader.StreamManager.CreateStream(_fs.SafeName, FileMode.Create, true);
 
                     ChromatogramCache.RawData rawData;
-                    long bytesData = ChromatogramCache.LoadStructs(inStream, out rawData, _assumeNegativeChargeInPreV11Caches);
+                    long bytesData = ChromatogramCache.LoadStructs(inStream, null, null, out rawData, _doc);
 
                     // If joining, then format version should have already been checked.
                     Assume.IsTrue(ChromatogramCache.IsVersionCurrent(rawData.FormatVersion) ||

@@ -635,10 +635,7 @@ namespace pwiz.Skyline.Model.Results
                 readStream = loader.StreamManager.CreatePooledStream(cachePath, false);
                 // DebugLog.Info("{0}. {1} - loaded", readStream.GlobalIndex, cachePath);
 
-                // Watch out for older caches that didn't record chromatogram polarity.  We can only reliably handle this for completely negative docs.
-                var assumeNegativeChargesInPreV11Caches =
-                    doc != null && doc.MoleculeTransitionGroups.All(p => p.PrecursorMz.IsNegative);
-                LoadStructs(readStream.Stream, status, loader, out var raw, assumeNegativeChargesInPreV11Caches);
+                LoadStructs(readStream.Stream, status, loader, out var raw, doc);
 
                 var result = new ChromatogramCache(cachePath, raw, readStream);
                 result = result.UpdateOptimizationSteps(doc);
@@ -658,15 +655,13 @@ namespace pwiz.Skyline.Model.Results
             }
         }
 
-        public static void Join(string cachePath, IPooledStream streamDest,
-            IList<string> listCachePaths, ILoadMonitor loader,
-            Action<ChromatogramCache, IProgressStatus> complete,
-            bool assumeNegativeChargeInPreV11Caches)
+        public static void Join(string cachePath, IPooledStream streamDest, IList<string> listCachePaths,
+            ILoadMonitor loader, Action<ChromatogramCache, IProgressStatus> complete, SrmDocument doc)
         {
             var status = new ProgressStatus(string.Empty);
             try
             {
-                var joiner = new ChromCacheJoiner(cachePath, streamDest, listCachePaths, loader, status, complete, assumeNegativeChargeInPreV11Caches);
+                var joiner = new ChromCacheJoiner(cachePath, streamDest, listCachePaths, loader, status, complete, doc);
                 joiner.JoinParts();
             }
             catch (Exception x)
@@ -763,12 +758,7 @@ namespace pwiz.Skyline.Model.Results
                 throw new IOException(errorMessage.ToString());
         }
 
-        public static long LoadStructs(Stream stream, out RawData raw, bool assumeNegativeChargesInPreV11Caches)
-        {
-            return LoadStructs(stream, null, null, out raw, assumeNegativeChargesInPreV11Caches);
-        }
-
-        public static long LoadStructs(Stream stream, IProgressStatus status, IProgressMonitor progressMonitor, out RawData raw, bool assumeNegativeChargeInPreV11Caches)
+        public static long LoadStructs(Stream stream, IProgressStatus status, IProgressMonitor progressMonitor, out RawData raw, SrmDocument doc)
         {
             CacheHeaderStruct cacheHeader = CacheHeaderStruct.Read(stream);
             if (cacheHeader.formatVersion < CacheFormatVersion.Two || cacheHeader.numFiles == 0)
@@ -866,7 +856,10 @@ namespace pwiz.Skyline.Model.Results
                 ChromGroupHeaderInfo.DEFAULT_BLOCK_SIZE,
                 progressMonitor,
                 status));
-            if (formatVersion < CacheFormatVersion.Eleven && assumeNegativeChargeInPreV11Caches)
+
+            // Watch out for older caches that didn't record chromatogram polarity.  We can only reliably handle this for completely negative docs.
+            if (formatVersion < CacheFormatVersion.Eleven &&
+                doc != null && doc.MoleculeTransitionGroups.All(p => p.PrecursorMz.IsNegative))
             {
                 raw = raw.ChangeChromatogramEntries(raw.ChromatogramEntries.ChangeAll(
                     chromGroupHeader => chromGroupHeader.ChangeChargeToNegative()));

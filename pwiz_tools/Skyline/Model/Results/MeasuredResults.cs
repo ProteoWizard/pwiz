@@ -1438,9 +1438,7 @@ namespace pwiz.Skyline.Model.Results
                         Assume.IsNull(streamDestination);
                         streamDestination = streamRecalc;
                     }
-                    var assumeNegativeChargeInPreV11Caches = _document.MoleculeTransitionGroups.All(tg => tg.PrecursorMz.IsNegative);
-                    ChromatogramCache.Join(cachePath, streamDestination,
-                        listPaths, _loadMonitor, FinishCacheJoin, assumeNegativeChargeInPreV11Caches);
+                    ChromatogramCache.Join(cachePath, streamDestination, listPaths, _loadMonitor, FinishCacheJoin, _document);
                 }
             }
 
