@@ -2,6 +2,8 @@
 using System.Collections.Generic;
 using System.IO;
 using System.Linq;
+using System.Web;
+using JetBrains.Annotations;
 using pwiz.Common.SystemUtil;
 using pwiz.Skyline.Properties;
 using pwiz.Skyline.Util;
@@ -18,73 +20,134 @@ namespace pwiz.Skyline.Model
 
         public string SkypPath { get; private set; }
         public Uri SkylineDocUri { get; private set; }
-        public Server Server { get; private set; }
+        public Server ServerMatch { get; private set; }
+        public string DownloadingUser { get; private set; }
+        public long? Size { get; private set; }
         public string DownloadPath { get; private set; }
-        
-        public static SkypFile Create(string skypPath, IEnumerable<Server> servers)
+
+        private SkypFile()
         {
-            if (string.IsNullOrEmpty(skypPath))
-            {
-                return null;
-            }
+        }
+
+        [NotNull]
+        public static SkypFile Create([NotNull] string skypPath, IEnumerable<Server> servers)
+        {
             var skyp = new SkypFile
             {
-                SkypPath = skypPath,
-                SkylineDocUri = GetSkyFileUrl(skypPath),
+                SkypPath = skypPath
             };
-            skyp.Server = servers?.FirstOrDefault(server => server.URI.Host.Equals(skyp.SkylineDocUri.Host));
+            using (var reader = new StreamReader(skyp.SkypPath))
+            {
+                ReadSkyp(skyp, reader);
+            }
+
+            skyp.ServerMatch = servers?.FirstOrDefault(server => server.URI.Host.Equals(skyp.SkylineDocUri.Host));
 
             var downloadDir = Path.GetDirectoryName(skyp.SkypPath);
             skyp.DownloadPath = GetNonExistentPath(downloadDir ?? string.Empty, skyp.GetSkylineDocName());
 
             return skyp;
         }
-    
-        private static Uri GetSkyFileUrl(string skypPath)
+
+        public static SkypFile CreateForTest(string skypText)
         {
-            using (var reader = new StreamReader(skypPath))
-            {
-                return GetSkyFileUrl(reader);
-            }
+            var skyp = new SkypFile();
+            ReadSkyp(skyp, new StringReader(skypText));
+            return skyp;
         }
 
-        public static Uri GetSkyFileUrl(TextReader reader)
+        private static void ReadSkyp(SkypFile skyp, TextReader reader)
         {
             string line;
+            var first = true;
             while ((line = reader.ReadLine()) != null)
             {
                 if (!string.IsNullOrEmpty(line))
                 {
-                    var urlString = line;
-                    if (!urlString.EndsWith(SrmDocumentSharing.EXT))
+                    if (first)
                     {
-                        // This is not a shared Skyline zip.
-                        throw new InvalidDataException(string.Format(
-                            Resources
-                                .SkypFile_GetSkyFileUrl_Expected_the_URL_of_a_shared_Skyline_document_archive___0___in_the_skyp_file__Found__1__instead_,
-                            SrmDocumentSharing.EXT_SKY_ZIP, urlString));
+                        // First line in the skyp file is the URL of the skyp.zip file on a Panorama server
+                        skyp.SkylineDocUri = GetSkyFileUrl(line);
+                        first = false;
                     }
-
-                    var validUrl = Uri.TryCreate(urlString, UriKind.Absolute, out var skyFileUri)
-                                   && (skyFileUri.Scheme == Uri.UriSchemeHttp || skyFileUri.Scheme == Uri.UriSchemeHttps);
-                    if (!validUrl)
+                    else
                     {
-                        throw new InvalidDataException(string.Format(
-                            Resources.SkypFile_GetSkyFileUrl__0__is_not_a_valid_URL_on_a_Panorama_server_, urlString));
+                        // The remaining lines should contain colon separated key value pairs, e.g. FileSize:475831
+                        // The only thing required is the WebDAV URL of the sky.zip file. FileSize and DownloadingUser
+                        // are for better user experience so we will not throw an exception if we are unable to parse
+                        // these values. 
+                        var parts = line.Split(':');
+                        if (parts.Length == 2)
+                        {
+                            var key = parts[0].Trim();
+                            var value = parts[1].Trim();
+                            if (@"FileSize".Equals(key) && value.Length > 0)
+                            {
+                                if (long.TryParse(value, out var size) && size > 0)
+                                {
+                                    skyp.Size = size;
+                                }
+                            }
+                            else if (@"DownloadingUser".Equals(key) && value.Length > 0)
+                            {
+                                skyp.DownloadingUser = value;
+                            }
+                        }
                     }
-
-                    return skyFileUri;
                 }
             }
-
-            throw new InvalidDataException(string.Format(
-                Resources.SkypFile_GetSkyFileUrl_File_does_not_contain_the_URL_of_a_shared_Skyline_archive_file___0___on_a_Panorama_server_,
-                SrmDocumentSharing.EXT_SKY_ZIP));
+            if (skyp.SkylineDocUri == null)
+            {
+                throw new InvalidDataException(string.Format(
+                    Resources
+                        .SkypFile_GetSkyFileUrl_File_does_not_contain_the_URL_of_a_shared_Skyline_archive_file___0___on_a_Panorama_server_,
+                    SrmDocumentSharing.EXT_SKY_ZIP));
+            }
         }
 
+        private static Uri GetSkyFileUrl(string line)
+        {
+            var urlString = line;
+
+            var validUrl = Uri.TryCreate(urlString, UriKind.Absolute, out var skyFileUri)
+                           && (skyFileUri.Scheme == Uri.UriSchemeHttp || skyFileUri.Scheme == Uri.UriSchemeHttps);
+            if (!validUrl)
+            {
+                throw new InvalidDataException(string.Format(
+                    Resources.SkypFile_GetSkyFileUrl__0__is_not_a_valid_URL_on_a_Panorama_server_, urlString));
+            }
+
+            if (!urlString.EndsWith(SrmDocumentSharing.EXT))
+            {
+
+                // This is not a shared Skyline zip.
+                throw new InvalidDataException(string.Format(
+                    Resources.SkypFile_GetSkyFileUrl_Expected_the_URL_of_a_shared_Skyline_document_archive_file___0____Found_filename__1__instead_in_the_URL__2__,
+                    SrmDocumentSharing.EXT_SKY_ZIP, GetDecodedUriFileName(skyFileUri), urlString));
+            }
+
+            return skyFileUri;
+        }
+
+        // Return the URL-decoded name of the sky.zip file
         public string GetSkylineDocName()
         {
-            return SkylineDocUri != null ? Path.GetFileName(SkylineDocUri.AbsolutePath) : null;
+            // URI in the skyp file is URL-encoded. Return the decoded file name. 
+            return GetDecodedUriFileName(SkylineDocUri);
+        }
+
+        // Return the URL-decoded name of the file from the given URI.
+        private static string GetDecodedUriFileName(Uri uri)
+        {
+            return HttpUtility.UrlDecode(Path.GetFileName(uri.AbsolutePath));
+        }
+
+        // Return decoded URI of the sky.zip file, excluding '@files' and everything after.
+        public string GetDocUrlNoName()
+        {
+            var decodedUri = HttpUtility.UrlDecode(SkylineDocUri.AbsoluteUri);
+            var idx = decodedUri.IndexOf(@"@files", StringComparison.Ordinal);
+            return idx != -1 ? decodedUri.Substring(0, idx) : decodedUri;
         }
 
         public static string GetNonExistentPath(string dir, string sharedSkyFile)
@@ -112,6 +175,33 @@ namespace pwiz.Skyline.Model
                 count++;
             }
             return Path.Combine(dir, sharedSkyFile);
+        }
+
+        public bool HasCredentials()
+        {
+            return ServerMatch != null && !string.IsNullOrEmpty(ServerMatch.Username) && !string.IsNullOrEmpty(ServerMatch.Password);
+        }
+        public bool UsernameMismatch()
+        {
+            return ServerMatch != null && DownloadingUser != null && !Equals(DownloadingUser, ServerMatch.Username);
+        }
+
+        // Return a Server object with the server URI set to the hostname + port number from the sky.zip WebDAV URL,
+        // and the username set to the downloading user's email address from the skyp file.
+        public Server GetSkylineDocServer()
+        {
+            return new Server(SkylineDocUri.GetLeftPart(UriPartial.Authority), // get the host name and port number
+                DownloadingUser ?? string.Empty, string.Empty);
+        }
+
+        public string GetServerName()
+        {
+            return ServerMatch != null ? ServerMatch.URI.ToString() : GetSkylineDocServer().URI.ToString();
+        }
+
+        public bool HasSize()
+        {
+            return Size.HasValue && Size > 0;
         }
     }
 }

@@ -1394,6 +1394,15 @@ namespace pwiz.Skyline.Model.Databinding.Entities {
         }
         
         /// <summary>
+        ///   Looks up a localized string similar to A measure of the &quot;tailedness&quot; of the chromatogram peak..
+        /// </summary>
+        public static string Kurtosis {
+            get {
+                return ResourceManager.GetString("Kurtosis", resourceCulture);
+            }
+        }
+        
+        /// <summary>
         ///   Looks up a localized string similar to The position of the last (C-terminal) amino acid of the peptide within its
         ///containing protein sequence, or #N/A if no protein sequence is available.
         /// </summary>
@@ -2324,6 +2333,15 @@ namespace pwiz.Skyline.Model.Databinding.Entities {
         public static string PeakScores {
             get {
                 return ResourceManager.GetString("PeakScores", resourceCulture);
+            }
+        }
+        
+        /// <summary>
+        ///   Looks up a localized string similar to The standard deviation of the chromatographic peak..
+        /// </summary>
+        public static string PeakStandardDeviation {
+            get {
+                return ResourceManager.GetString("PeakStandardDeviation", resourceCulture);
             }
         }
         
@@ -3408,6 +3426,24 @@ namespace pwiz.Skyline.Model.Databinding.Entities {
         public static string Score {
             get {
                 return ResourceManager.GetString("Score", resourceCulture);
+            }
+        }
+        
+        /// <summary>
+        ///   Looks up a localized string similar to The Pearson correlation of this transition&apos;s chromatographic peak compared to the median peak shape of all of the transitions under the same precursor..
+        /// </summary>
+        public static string ShapeCorrelation {
+            get {
+                return ResourceManager.GetString("ShapeCorrelation", resourceCulture);
+            }
+        }
+        
+        /// <summary>
+        ///   Looks up a localized string similar to A measure of the asymmetry of the chromatogram peak..
+        /// </summary>
+        public static string Skewness {
+            get {
+                return ResourceManager.GetString("Skewness", resourceCulture);
             }
         }
         
