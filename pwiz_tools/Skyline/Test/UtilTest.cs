@@ -19,7 +19,9 @@
 
 using System;
 using System.Collections.Generic;
+using System.Diagnostics;
 using System.IO;
+using System.Linq;
 using System.Text;
 using pwiz.Skyline.Util;
 using pwiz.Skyline.Util.Extensions;
@@ -307,9 +309,14 @@ namespace pwiz.SkylineTest
                 // NOTE: This takes seconds because the cleanup code uses TryTwice()
                 const string fileName = "DocWithLibrary.sky";
                 string filePath = testFilesDir.GetTestPath(fileName);
-                if (!Install.IsRunningOnWine)
+                using (new StreamReader(filePath))
                 {
-                    using (new StreamReader(filePath))
+                    // Test the code that names the process locking a file
+                    var names = string.Join(@", ", FileLockingProcessFinder.GetProcessesUsingFile(filePath).Select(p => p.ProcessName));
+                    AssertEx.Contains(names, Process.GetCurrentProcess().ProcessName);
+
+                    // Test our post-test cleanup code's handling of a locked file
+                    if (!Install.IsRunningOnWine)
                     {
                         DesiredCleanupLevel = DesiredCleanupLevel.none; // Folders renamed
                         AssertEx.ThrowsException<IOException>(testFilesDir.Cleanup, x => AssertEx.Contains(x.Message, fileName));
