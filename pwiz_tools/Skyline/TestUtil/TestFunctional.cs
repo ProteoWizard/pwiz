@@ -1864,11 +1864,13 @@ namespace pwiz.SkylineTestUtil
             var skylineWindow = Program.MainWindow;
             if (skylineWindow == null || skylineWindow.IsDisposed || !IsFormOpen(skylineWindow))
             {
-                if (Program.StartWindow != null)
+                var startWindow = Program.StartWindow;
+                if (startWindow != null)
                 {
                     CloseOpenForms(typeof(StartPage));
                     _testCompleted = true;
-                    RunUI(Program.StartWindow.Close);
+                    if (!startWindow.IsDisposed && IsFormOpen(startWindow))
+                        startWindow.Invoke((Action)Program.StartWindow.Close);
                 }
 
                 return;
