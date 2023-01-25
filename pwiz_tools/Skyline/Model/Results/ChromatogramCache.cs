@@ -636,7 +636,8 @@ namespace pwiz.Skyline.Model.Results
                 // DebugLog.Info("{0}. {1} - loaded", readStream.GlobalIndex, cachePath);
 
                 // Watch out for older caches that didn't record chromatogram polarity.  We can only reliably handle this for completely negative docs.
-                var assumeNegativeChargesInPreV11Caches = doc.MoleculeTransitionGroups.All(p => p.PrecursorMz.IsNegative);
+                var assumeNegativeChargesInPreV11Caches =
+                    doc != null && doc.MoleculeTransitionGroups.All(p => p.PrecursorMz.IsNegative);
                 LoadStructs(readStream.Stream, status, loader, out var raw, assumeNegativeChargesInPreV11Caches);
 
                 var result = new ChromatogramCache(cachePath, raw, readStream);
