@@ -854,7 +854,12 @@ namespace pwiz.Skyline.Model.Results
         public float ExtractionWidth { get { return _extractionWidth; }}  // In m/z
         public float IonMobilityValue { get { return _ionMobilityValue; } } // Units depend on ion mobility type
         public float IonMobilityExtractionWidth { get { return _ionMobilityExtractionWidth; } } // Units depend on ion mobility type
-        public short OptimizationStep { get { return _optimizationStep; } }
+
+        public short OptimizationStep
+        {
+            get { return _optimizationStep; }
+            set { _optimizationStep = value; }
+        }
 
         public FlagValues Flags
         {
@@ -2646,7 +2651,7 @@ namespace pwiz.Skyline.Model.Results
     public class ChromatogramInfo
     {
         public const double OPTIMIZE_SHIFT_SIZE = 0.01;
-        private const double OPTIMIZE_SHIFT_THRESHOLD = 0.001;
+        private const double OPTIMIZE_SHIFT_THRESHOLD = 0.0015;
 
         public static bool IsOptimizationSpacing(double mz1, double mz2)
         {

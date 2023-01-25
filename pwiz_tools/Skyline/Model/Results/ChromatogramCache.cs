@@ -282,7 +282,12 @@ namespace pwiz.Skyline.Model.Results
                 im.ReadStream.CloseStream();
                 im.ReadStream = manager.CreatePooledStream(prop,false);
             });
-        }        
+        }
+
+        private ChromatogramCache ChangeRawData(RawData rawData)
+        {
+            return ChangeProp(ImClone(this), im => im._rawData = rawData);
+        }
 
         public void Dispose()
         {
@@ -619,7 +624,7 @@ namespace pwiz.Skyline.Model.Results
             }
         }
 
-        public static ChromatogramCache Load(string cachePath, IProgressStatus status, ILoadMonitor loader, bool assumeNegativeChargeInPreV11Caches)
+        public static ChromatogramCache Load(string cachePath, IProgressStatus status, ILoadMonitor loader, SrmDocument doc)
         {
             status = status.ChangeMessage(string.Format(Resources.ChromatogramCache_Load_Loading__0__cache, Path.GetFileName(cachePath)));
             loader.UpdateProgress(status);
@@ -630,10 +635,12 @@ namespace pwiz.Skyline.Model.Results
                 readStream = loader.StreamManager.CreatePooledStream(cachePath, false);
                 // DebugLog.Info("{0}. {1} - loaded", readStream.GlobalIndex, cachePath);
 
-                RawData raw;
-                LoadStructs(readStream.Stream, status, loader, out raw, assumeNegativeChargeInPreV11Caches);
+                // Watch out for older caches that didn't record chromatogram polarity.  We can only reliably handle this for completely negative docs.
+                var assumeNegativeChargesInPreV11Caches = doc.MoleculeTransitionGroups.All(p => p.PrecursorMz.IsNegative);
+                LoadStructs(readStream.Stream, status, loader, out var raw, assumeNegativeChargesInPreV11Caches);
 
                 var result = new ChromatogramCache(cachePath, raw, readStream);
+                result = result.UpdateOptimizationSteps(doc);
                 loader.UpdateProgress(status.Complete());
                 return result;
             }
@@ -678,7 +685,7 @@ namespace pwiz.Skyline.Model.Results
                     // Import using a child process.
                     Run(msDataFileUri, documentFilePath, cachePath, status, loader);
 
-                    var cacheNew = Load(cachePath, status, loader, false);
+                    var cacheNew = Load(cachePath, status, loader, document);
                     complete(cacheNew, status);
                 }
                 else
@@ -1228,6 +1235,91 @@ namespace pwiz.Skyline.Model.Results
                     yield return new ChromKeyIndices(key, groupInfo.LocationPoints, i, id, rank, j);
                 }
             }
+        }
+
+        private ChromatogramCache UpdateOptimizationSteps(SrmDocument doc)
+        {
+            if (doc == null || Version >= CacheFormatVersion.Seventeen)
+                return this;
+
+            var tolerance = (float)doc.Settings.TransitionSettings.Instrument.MzMatchTolerance;
+            var chromTransitions = new List<ChromTransition>(_rawData.ChromTransitions);
+            var setOptSteps = false;
+
+            foreach (var nodePep in doc.Molecules)
+            {
+                foreach (var nodeTranGroup in nodePep.TransitionGroups)
+                {
+                    var transitions = nodeTranGroup.Transitions.OrderBy(nodeTran => nodeTran.Mz).ToArray();
+                    foreach (var info in ChromatogramIndexesMatching(nodePep, nodeTranGroup.PrecursorMz, tolerance, null)
+                                 .Select(m => ChromGroupHeaderInfos[m]).Where(info => info.NumTransitions > 1))
+                    {
+                        var curTranIdx = 0;
+                        var curTran = transitions[curTranIdx];
+                        var nextTran = transitions.Length > 1 ? transitions[curTranIdx + 1] : null;
+
+                        var bestIdx = info.StartTransitionIndex;
+                        var bestDiff = double.MaxValue;
+                        var groupStartIdx = info.StartTransitionIndex;
+
+                        for (var i = info.StartTransitionIndex; i < info.StartTransitionIndex + info.NumTransitions; i++)
+                        {
+                            var chromTran = _rawData.ChromTransitions[i];
+                            while (nextTran != null && Math.Abs(curTran.Mz - chromTran.Product) > Math.Abs(nextTran.Mz - chromTran.Product))
+                            {
+                                // Matching a new transition.
+                                setOptSteps |= ProcessOptimizationGroup(chromTransitions, groupStartIdx, i, bestIdx);
+                                curTranIdx++;
+                                curTran = nextTran;
+                                nextTran = curTranIdx < transitions.Length - 1 ? transitions[curTranIdx + 1] : null;
+                                bestIdx = i;
+                                bestDiff = double.MaxValue;
+                                groupStartIdx = i;
+                            }
+
+                            var diff = Math.Abs(curTran.Mz - chromTran.Product);
+                            if (diff < bestDiff)
+                            {
+                                bestIdx = i;
+                                bestDiff = diff;
+                            }
+                        }
+
+                        setOptSteps |= ProcessOptimizationGroup(chromTransitions, groupStartIdx, info.StartTransitionIndex + info.NumTransitions, bestIdx);
+                    }
+                }
+            }
+
+            return setOptSteps
+                ? ChangeRawData(_rawData.ChangeChromTransitions(new BlockedArray<ChromTransition>(
+                    chromTransitions, ChromTransition.SizeOf, ChromTransition.DEFAULT_BLOCK_SIZE)))
+                : this;
+        }
+
+        private static bool ProcessOptimizationGroup(IList<ChromTransition> transitions, int startIdx, int endIdx, int centerIdx)
+        {
+            if (endIdx - startIdx <= 1)
+                return false;
+
+            // Make sure all of the transitions have optimization spacing.
+            var prev = transitions[startIdx];
+            for (var i = startIdx + 1; i < endIdx; i++)
+            {
+                var cur = transitions[i];
+                if (!ChromatogramInfo.IsOptimizationSpacing(prev.Product, cur.Product))
+                    return false;
+                prev = cur;
+            }
+            
+            // Update optimization steps.
+            for (var i = startIdx; i < endIdx; i++)
+            {
+                var newChromTransition = transitions[i];
+                newChromTransition.OptimizationStep = (short)(i - centerIdx);
+                transitions[i] = newChromTransition;
+            }
+
+            return true;
         }
 
         public ChromatogramCache Optimize(string documentPath, IEnumerable<MsDataFileUri> msDataFilePaths, IStreamManager streamManager,
