@@ -25,6 +25,7 @@
 #define _DIFF_STD_HPP_
 
 #include "pwiz/utility/misc/Export.hpp"
+#include "pwiz/utility/math/round.hpp"
 #include <string>
 #include <vector>
 #include <cmath>
@@ -282,7 +283,11 @@ void diff_floating(const floating_type& a,
     a_b = 0;
     b_a = 0;
 
-    if (fabs(a - b) > config.precision + std::numeric_limits<floating_type>::epsilon())
+    int sigFigs = std::max(1, (int) abs(log10(config.precision)) - 1); // treat 1e-5 precison as asking for 5 significant figures
+    floating_type aSig = pwiz::math::sigfig(a, sigFigs);
+    floating_type bSig = pwiz::math::sigfig(b, sigFigs);
+
+    if (fabs(aSig - bSig) > std::numeric_limits<floating_type>::epsilon())
     {
         a_b = fabs(a - b);
         b_a = fabs(a - b);
