@@ -37,6 +37,8 @@
             this.btnApply = new System.Windows.Forms.Button();
             this.btnPreview = new System.Windows.Forms.Button();
             this.lblMinTransitions = new System.Windows.Forms.Label();
+            this.lblRandomSeed = new System.Windows.Forms.Label();
+            this.tbxRandomSeed = new System.Windows.Forms.TextBox();
             this.panel1.SuspendLayout();
             this.groupBoxOptimize.SuspendLayout();
             ((System.ComponentModel.ISupportInitialize)(this.tbxMinTransitions)).BeginInit();
@@ -49,6 +51,8 @@
             // 
             // panel1
             // 
+            this.panel1.Controls.Add(this.tbxRandomSeed);
+            this.panel1.Controls.Add(this.lblRandomSeed);
             this.panel1.Controls.Add(this.groupBoxOptimize);
             this.panel1.Controls.Add(this.cbxPreserveNonQuantitative);
             this.panel1.Controls.Add(this.tbxMinTransitions);
@@ -152,6 +156,22 @@
             this.lblMinTransitions.TabIndex = 0;
             this.lblMinTransitions.Text = "Minimum number of transitions";
             // 
+            // lblRandomSeed
+            // 
+            this.lblRandomSeed.AutoSize = true;
+            this.lblRandomSeed.Location = new System.Drawing.Point(458, 14);
+            this.lblRandomSeed.Name = "lblRandomSeed";
+            this.lblRandomSeed.Size = new System.Drawing.Size(76, 13);
+            this.lblRandomSeed.TabIndex = 7;
+            this.lblRandomSeed.Text = "Random seed:";
+            // 
+            // tbxRandomSeed
+            // 
+            this.tbxRandomSeed.Location = new System.Drawing.Point(459, 34);
+            this.tbxRandomSeed.Name = "tbxRandomSeed";
+            this.tbxRandomSeed.Size = new System.Drawing.Size(100, 20);
+            this.tbxRandomSeed.TabIndex = 8;
+            // 
             // OptimizeTransitionsDlg
             // 
             this.AutoScaleDimensions = new System.Drawing.SizeF(6F, 13F);
@@ -182,5 +202,7 @@
         private System.Windows.Forms.GroupBox groupBoxOptimize;
         private System.Windows.Forms.RadioButton radioLOQ;
         private System.Windows.Forms.RadioButton radioLOD;
+        private System.Windows.Forms.TextBox tbxRandomSeed;
+        private System.Windows.Forms.Label lblRandomSeed;
     }
 }

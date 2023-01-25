@@ -17,15 +17,15 @@ namespace pwiz.Skyline.Model.DocSettings.AbsoluteQuantification
             MinSameLoqCountForAccept = 25;
             GridSize = 100;
             CvThreshold = .2;
-            Random = new Random();
             MinNumTransitions = 5;
+            RandomSeed = (int) DateTime.UtcNow.Ticks;
         }
         public int MaxBootstrapIterations { get; set; }
         public int MinBootstrapIterations { get; set; }
         public int MinSameLoqCountForAccept { get; set; }
         public int GridSize { get; set; }
         public double CvThreshold { get; set; }
-        public Random Random { get; set; }
+        public int RandomSeed { get; set; }
         public int MinNumTransitions { get; set; }
         public CancellationToken CancellationToken { get; set; }
 
@@ -42,15 +42,16 @@ namespace pwiz.Skyline.Model.DocSettings.AbsoluteQuantification
                 BilinearRegressionFit.FitPointsWithOffset(offset, pointsList), pointsList);
         }
 
-        public BilinearCurveFit ComputeBootstrapParams(IList<WeightedPoint> points)
+        public BilinearCurveFit ComputeBootstrapParams(Random random, IList<WeightedPoint> points)
         {
             var randomPoints = Enumerable.Range(0, points.Count)
-                .Select(i => points[Random.Next(points.Count)]).ToList();
+                .Select(i => points[random.Next(points.Count)]).ToList();
             return FitBilinearCurve(randomPoints);
         }
 
         public double ComputeBootstrappedLoq(IList<WeightedPoint> points)
         {
+            var random = new Random(RandomSeed);
             var lod = ComputeLod(points);
             var maxConcentration = points.Max(pt => pt.X);
             var concentrationValues = Enumerable.Range(0, GridSize)
@@ -61,7 +62,7 @@ namespace pwiz.Skyline.Model.DocSettings.AbsoluteQuantification
             for (int i = 0; i < MaxBootstrapIterations; i++)
             {
                 CancellationToken.ThrowIfCancellationRequested();
-                var p = ComputeBootstrapParams(points);
+                var p = ComputeBootstrapParams(random, points);
                 for (int iConcentration = 0; iConcentration < concentrationValues.Count; iConcentration++)
                 {
                     var area = p.CalibrationCurve.GetY(concentrationValues[iConcentration]);

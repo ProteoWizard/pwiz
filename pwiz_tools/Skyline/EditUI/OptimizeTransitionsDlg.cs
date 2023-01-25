@@ -18,6 +18,7 @@ using pwiz.Skyline.Model.DocSettings.AbsoluteQuantification;
 using pwiz.Skyline.Model.GroupComparison;
 using pwiz.Skyline.Properties;
 using pwiz.Skyline.Util;
+using ZedGraph;
 
 namespace pwiz.Skyline.EditUI
 {
@@ -78,11 +79,13 @@ namespace pwiz.Skyline.EditUI
             private SrmDocument _optimizedDocument;
             private Lazy<FiguresOfMerit> _originalFiguresOfMerit;
             private Lazy<FiguresOfMerit> _optimizedFiguresOfMerit;
-            public Row(Model.Databinding.Entities.Peptide molecule, SrmDocument originalDocument, SrmDocument optimizedDocument) 
+            private BilinearCurveFitter _bilinearCurveFitter;
+            public Row(Model.Databinding.Entities.Peptide molecule, SrmDocument originalDocument, SrmDocument optimizedDocument, BilinearCurveFitter bilinearCurveFitter) 
             {
                 Molecule = molecule;
                 _originalDocument = originalDocument;
                 _optimizedDocument = optimizedDocument;
+                _bilinearCurveFitter = bilinearCurveFitter;
                 _originalFiguresOfMerit = new Lazy<FiguresOfMerit>(() => GetFiguresOfMerit(_originalDocument));
                 _optimizedFiguresOfMerit = new Lazy<FiguresOfMerit>(() => GetFiguresOfMerit(_optimizedDocument));
                 if (optimizedDocument != null)
@@ -147,8 +150,7 @@ namespace pwiz.Skyline.EditUI
                     return null;
                 }
                 var calibrationCurveFitter = new CalibrationCurveFitter(peptideQuantifier, document.Settings);
-                var bilinearCurveFitter = new BilinearCurveFitter();
-                return MakeFiguresOfMerit(bilinearCurveFitter.ComputeQuantLimits(calibrationCurveFitter),
+                return MakeFiguresOfMerit(_bilinearCurveFitter.ComputeQuantLimits(calibrationCurveFitter),
                     document.Settings);
             }
         }
@@ -227,21 +229,41 @@ namespace pwiz.Skyline.EditUI
             }
         }
 
+        private BilinearCurveFitter GetBilinearCurveFitter(CancellationToken cancellationToken)
+        {
+            if (string.IsNullOrEmpty(tbxRandomSeed.Text.Trim()))
+            {
+                tbxRandomSeed.Text = ((int) DateTime.UtcNow.Ticks).ToString();
+            }
+
+            var helper = new MessageBoxHelper(this);
+            if (!helper.ValidateNumberTextBox(tbxRandomSeed, null, null, out int randomSeed))
+            {
+                return null;
+            }
+
+            return new BilinearCurveFitter
+            {
+                CancellationToken = cancellationToken,
+                RandomSeed = randomSeed,
+                MinNumTransitions = (int) tbxMinTransitions.Value
+            };
+        }
+
         public SrmDocument GetOptimizedDocument(SrmDocument document)
         {
             SrmDocument newDocument = null;
-            int minNumTransitions = (int)tbxMinTransitions.Value;
             bool preserveNonQuantitative = cbxPreserveNonQuantitative.Checked;
             var optimizeType = OptimizeType;
             using (var longWaitDlg = new LongWaitDlg())
             {
+                var bilinearCurveFitter = GetBilinearCurveFitter(longWaitDlg.CancellationToken);
+                if (bilinearCurveFitter == null)
+                {
+                    return null;
+                }
                 longWaitDlg.PerformWork(this, 1000, broker =>
                 {
-                    var bilinearCurveFitter = new BilinearCurveFitter()
-                    {
-                        MinNumTransitions = minNumTransitions,
-                        CancellationToken = broker.CancellationToken,
-                    };
                     newDocument = OptimizeTransitions(broker, document, bilinearCurveFitter, optimizeType, preserveNonQuantitative);
                 });
             }
@@ -252,6 +274,7 @@ namespace pwiz.Skyline.EditUI
         public IEnumerable<Row> MakeRows()
         {
             var currentDocument = SkylineWindow.Document;
+            var bilinearCurveFitter = GetBilinearCurveFitter(CancellationToken.None);
             foreach (var moleculeList in currentDocument.MoleculeGroups)
             {
                 foreach (var molecule in moleculeList.Molecules)
@@ -262,7 +285,7 @@ namespace pwiz.Skyline.EditUI
                     }
 
                     var peptideIdentityPath = new IdentityPath(moleculeList.PeptideGroup, molecule.Peptide);
-                    var row = new Row(new Model.Databinding.Entities.Peptide(_dataSchema, peptideIdentityPath), _originalDocument, _optimizedDocument);
+                    var row = new Row(new Model.Databinding.Entities.Peptide(_dataSchema, peptideIdentityPath), _originalDocument, _optimizedDocument, bilinearCurveFitter);
                     yield return row;
                 }
             }
