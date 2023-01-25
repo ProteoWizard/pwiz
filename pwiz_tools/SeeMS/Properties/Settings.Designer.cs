@@ -346,5 +346,17 @@ namespace seems.Properties {
                 this["SrmAsSpectra"] = value;
             }
         }
+        
+        [global::System.Configuration.UserScopedSettingAttribute()]
+        [global::System.Diagnostics.DebuggerNonUserCodeAttribute()]
+        [global::System.Configuration.DefaultSettingValueAttribute("C:\\")]
+        public string LastBrowseToFileLocation {
+            get {
+                return ((string)(this["LastBrowseToFileLocation"]));
+            }
+            set {
+                this["LastBrowseToFileLocation"] = value;
+            }
+        }
     }
 }
