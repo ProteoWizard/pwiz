@@ -837,8 +837,7 @@ namespace pwiz.SkylineTestFunctional
                     exportMethodDlg.OptimizeType = ExportOptimize.CE;
                     exportMethodDlg.MethodType = ExportMethodType.Standard;
                 });
-                RunUI(() => exportMethodDlg.OkDialog(pathList));
-                WaitForClosedForm(exportMethodDlg);
+                OkDialog(exportMethodDlg,() => exportMethodDlg.OkDialog(pathList));
                 var actual = File.ReadAllLines(pathList);
                 if (loop == 1)
                 {
@@ -913,8 +912,7 @@ namespace pwiz.SkylineTestFunctional
             });
             WaitForClosedForm(editRTDlg);
 
-            RunUI(peptideSettingsDlg.OkDialog);
-            WaitForClosedForm(peptideSettingsDlg);
+            OkDialog(peptideSettingsDlg, peptideSettingsDlg.OkDialog);
         }
 
         private static void SetDocument(Func<SrmDocument, SrmDocument> changeDoc)

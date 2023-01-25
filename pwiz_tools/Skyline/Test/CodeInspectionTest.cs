@@ -59,6 +59,18 @@ namespace pwiz.SkylineTest
         {
 
             // Looking for uses of MessageBox where we should really be using MessageDlg
+            const string runDlgOkDlgExemptionComment = @"// Purposely using RunUI instead of OkDialog here";
+            AddTextInspection(@"*.cs", // Examine files with this mask
+                Inspection.Forbidden, // This is a test for things that should NOT be in such files
+                Level.Error, // Any failure is treated as an error, and overall test fails
+                null,  // There are no parts of the codebase that should skip this check
+                "AbstractFunctionalTest", // Only files containing this string get inspected for this
+                @"RunUI\(.*(Ok|Cancel)Dialog[^_].*", // Forbidden pattern - match RunUI(()=>foo.OkDialog()), RunUI(foo.CancelDialog) etc
+                true, // Pattern is a regular expression
+                @"use OkDialog() instead of RunUI() to close dialogs in a test - this waits for the dialog to actually close, which avoids race conditions e.g. ""OkDialog(colDlg, colDlg.CancelDialog)"" instead of ""RunUI(() => colDlg.CancelDialog())"". If this really is a legitimate use (to test error handling etc) add this comment to the offending line: '" + runDlgOkDlgExemptionComment + @"'", // Explanation for prohibition, appears in report
+                runDlgOkDlgExemptionComment); // There are one or two legitimate uses of this, look for this comment and ignore the violation when found
+
+            // Looking for uses of MessageBox where we should really be using MessageDlg
             const string messageBoxExemptionComment = @"// Purposely using MessageBox here";
             AddTextInspection(@"*.cs", // Examine files with this mask
                 Inspection.Forbidden, // This is a test for things that should NOT be in such files
@@ -67,7 +79,7 @@ namespace pwiz.SkylineTest
                 string.Empty, // No file content required for inspection
                 @"MessageBox.Show", // Forbidden pattern
                 false, // Pattern is not a regular expression
-                @"use MessageDlg.Show instead - this ensures proper interaction with automated tests, small molecule interface operation, and other enhancements. If this really is a legitimate use add this comment to the offending line: '"+ messageBoxExemptionComment+@"'", // Explanation for prohibition, appears in report
+                @"use MessageDlg.Show instead - this ensures proper interaction with automated tests, small molecule interface operation, and other enhancements. If this really is a legitimate use add this comment to the offending line: '" + messageBoxExemptionComment + @"'", // Explanation for prohibition, appears in report
                 messageBoxExemptionComment); // There are one or two legitimate uses of this, look for this comment and ignore the violation when found
 
             // Looking for forgotten PauseTest() calls that will mess up automated tests
