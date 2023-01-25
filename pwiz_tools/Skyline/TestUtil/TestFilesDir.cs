@@ -20,6 +20,7 @@ using System;
 using System.IO;
 using System.Linq;
 using Microsoft.VisualStudio.TestTools.UnitTesting;
+using pwiz.Common.Collections;
 using pwiz.Skyline.Util;
 using pwiz.Skyline.Util.Extensions;
 
@@ -249,6 +250,27 @@ namespace pwiz.SkylineTestUtil
 
         public static void CheckForFileLocks(string path, bool useDeletion = false)
         {
+            string GetProcessNamesLockingFile(string lockedDirectory, Exception exceptionShowingLockedFileName)
+            {
+                var output = string.Empty;
+                try
+                {
+                    var fname = exceptionShowingLockedFileName.Message.Split('\'')[1];
+                    var fullPathToFile = Path.Combine(lockedDirectory, fname);
+                    var names = string.Join(@", ",
+                        FileLockingProcessFinder.GetProcessesUsingFile(fullPathToFile).Select(p => p.ProcessName));
+                    if (!names.IsNullOrEmpty())
+                    {
+                        output = $@" ({fullPathToFile} is locked by {names})";
+                    }
+                }
+                catch
+                {
+                    // ignored - not a disaster if this doesn't always work
+                }
+                return output;
+            }
+
             if (!Directory.Exists(path)) // Did test already clean up after itself?
                 return;
 
@@ -263,7 +285,7 @@ namespace pwiz.SkylineTestUtil
                 }
                 catch (Exception e)
                 {
-                    Assert.Fail($@"Directory.Delete(""{path}"",true) failed with ""{e.Message}""");
+                    throw new IOException($@"Directory.Delete(""{path}"",true) failed with ""{e.Message}""{GetProcessNamesLockingFile(path, e)}");
                 }
                 return;
             }
@@ -287,7 +309,7 @@ namespace pwiz.SkylineTestUtil
                 }
                 catch (Exception e)
                 {
-                    Assert.Fail($@"Directory.Move(""{path}"",""{guidName}"") failed, attempt to delete instead resulted in ""{e.Message}""");
+                    throw new IOException($@"Directory.Move(""{path}"",""{guidName}"") failed, attempt to delete instead resulted in ""{e.Message}""{GetProcessNamesLockingFile(path, e)}");
                 }
             }
 
@@ -305,7 +327,7 @@ namespace pwiz.SkylineTestUtil
                 }
                 catch (Exception e)
                 {
-                    Assert.Fail($@"Directory.Move(""{guidName}"",(""{path}"") failed, attempt to delete instead resulted in ""{e.Message}""");
+                    throw new IOException($@"Directory.Move(""{guidName}"",(""{path}"") failed, attempt to delete instead resulted in ""{e.Message}""{GetProcessNamesLockingFile(path, e)}");
                 }
             }
         }

@@ -148,6 +148,7 @@
     <Compile Include="CheckReportCompatibility.cs" />
     <Compile Include="ExampleText.cs" />
     <Compile Include="ExtensionTestContext.cs" />
+    <Compile Include="FileLockingProcessFinder.cs" />
     <Compile Include="FormSeen.cs" />
     <Compile Include="GridTester.cs" />
     <Compile Include="MemoryStreamManager.cs" />
