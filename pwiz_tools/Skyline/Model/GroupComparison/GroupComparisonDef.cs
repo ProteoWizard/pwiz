@@ -18,6 +18,7 @@
  */
 
 using System;
+using System.CodeDom;
 using System.Collections.Generic;
 using System.Linq;
 using System.Xml;
@@ -133,7 +134,7 @@ namespace pwiz.Skyline.Model.GroupComparison
             return ChangeProp(ImClone(this), im => im.ConfidenceLevelTimes100 = value);
         }
 
-        [Track]
+        [Track(defaultValues: typeof(MsLevelOption.DefaultAll))]
         public MsLevelOption MsLevel { get; private set; }
 
         public GroupComparisonDef ChangeMsLevel(MsLevelOption msLevelOption)

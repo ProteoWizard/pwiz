@@ -1,4 +1,5 @@
 ﻿using System;
+using System.Collections.Generic;
 using System.Linq;
 using pwiz.Common.Collections;
 using pwiz.Common.SystemUtil;
@@ -35,6 +36,19 @@ namespace pwiz.Skyline.Model.GroupComparison
         public override string ToString()
         {
             return Label;
+        }
+
+        public class DefaultAll : DefaultValues
+        {
+            public override bool IsDefault(object obj, object parentObject)
+            {
+                return Equals(obj, ALL);
+            }
+
+            public override bool IgnoreIfDefault
+            {
+                get { return true; }
+            }
         }
     }
 }

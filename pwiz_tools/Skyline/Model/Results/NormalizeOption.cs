@@ -19,6 +19,7 @@
 using System;
 using System.Collections.Generic;
 using System.Linq;
+using pwiz.Common.SystemUtil;
 using pwiz.Skyline.Model.DocSettings;
 using pwiz.Skyline.Model.DocSettings.AbsoluteQuantification;
 using pwiz.Skyline.Model.GroupComparison;
@@ -31,7 +32,7 @@ namespace pwiz.Skyline.Model.Results
     /// DEFAULT: whatever the normalization method for the currently selected peptide is
     /// CALIBRATED: use the calibration curve
     /// </summary>
-    public abstract class NormalizeOption
+    public abstract class NormalizeOption : LabeledValues<string>
     {
         public static readonly NormalizeOption NONE = new Simple(NormalizationMethod.NONE);
         private static Dictionary<string, Special> _specialOptions 
@@ -44,6 +45,9 @@ namespace pwiz.Skyline.Model.Results
         public static readonly NormalizeOption GLOBAL_STANDARDS =
             FromNormalizationMethod(NormalizationMethod.GLOBAL_STANDARDS);
 
+        protected NormalizeOption(string name, Func<string> getLabel, Func<string> getInvariantName = null) : base(name, getLabel, getInvariantName)
+        {
+        }
 
         public abstract string PersistedName { get; }
 
@@ -198,7 +202,7 @@ namespace pwiz.Skyline.Model.Results
         /// </summary>
         public class Simple : NormalizeOption
         {
-            public Simple(NormalizationMethod normalizationMethod)
+            public Simple(NormalizationMethod normalizationMethod) : base(normalizationMethod.Name, ()=>normalizationMethod.NormalizationMethodCaption)
             {
                 NormalizationMethod = normalizationMethod;
             }
@@ -217,7 +221,8 @@ namespace pwiz.Skyline.Model.Results
         {
             private readonly string _persistedName;
             private readonly Func<string> _getCaptionFunc;
-            public Special(string persistedName, Func<string> getCaptionFunc)
+            public Special(string persistedName, Func<string> getCaptionFunc) 
+                : base(persistedName, getCaptionFunc)
             {
                 _specialOptions.Add(persistedName, this);
                 _persistedName = persistedName;
