@@ -104,62 +104,21 @@ namespace pwiz.SkylineTestUtil
         public static long CacheSize(SrmDocument docInitial, long format3Size, int groupCount, int tranCount, int peakCount)
         {
             long cacheSize = format3Size;
+            cacheSize += CacheHeaderStruct.GetStructSize(CacheFormatVersion.CURRENT) -
+                         CacheHeaderStruct.GetStructSize(CacheFormatVersion.Three);
             int fileCachedCount = docInitial.Settings.MeasuredResults.MSDataFileInfos.Count();
-            if (ChromatogramCache.FORMAT_VERSION_CACHE > ChromatogramCache.FORMAT_VERSION_CACHE_3)
-            {
-                // Cache version 4 stores instrument information, and is bigger in size.
-                cacheSize += sizeof(int) * fileCachedCount;
-            }
-            if (ChromatogramCache.FORMAT_VERSION_CACHE > ChromatogramCache.FORMAT_VERSION_CACHE_4)
-            {
-                // Cache version 5 adds an int for flags for each file
-                // Allow for a difference in sizes due to the extra information.
-                int fileFlagsSize = sizeof(int) * fileCachedCount;
-                // And SeqIndex, SeqCount, StartScoreIndex and padding
-                var deltaSize5 = ChromGroupHeaderInfo.GetStructSize(CacheFormatVersion.Five) -
-                                 ChromGroupHeaderInfo.GetStructSize(CacheFormatVersion.Four);
-                int groupHeadersSize = deltaSize5 * groupCount;
-                // And flags for each transition
-                int transitionFlagsSize = ChromTransition5.DeltaSize5 * tranCount;
-                // And num seq byte count, seq location, score types, num scores and score location
-                const int headerScoreSize = sizeof(int) + sizeof(long) + sizeof(int) + sizeof(int) + sizeof(long);
-                cacheSize += groupHeadersSize + fileFlagsSize + transitionFlagsSize + headerScoreSize;
-            }
-            if (ChromatogramCache.FORMAT_VERSION_CACHE > ChromatogramCache.FORMAT_VERSION_CACHE_5)
-            {
-                // Cache version 6 adds status graph dimensions for every file
-                cacheSize += sizeof(float) * 2 * fileCachedCount;
-            }
-            if (ChromatogramCache.FORMAT_VERSION_CACHE > ChromatogramCache.FORMAT_VERSION_CACHE_6)
-            {
-                // Cache version 7 adds ion mobility information
-                cacheSize += sizeof(float) * 2 * tranCount;
-            }
-            if (ChromatogramCache.FORMAT_VERSION_CACHE > ChromatogramCache.FORMAT_VERSION_CACHE_8)
-            {
-                // Cache version 9 adds scan id values for every file
-                cacheSize += (sizeof(int) + sizeof(long)) * fileCachedCount;
-                // And scan ids location to global header
-                cacheSize += sizeof(long);
-            }
-            if (ChromatogramCache.FORMAT_VERSION_CACHE >= ChromatogramCache.FORMAT_VERSION_CACHE_11)
-            {
-                // Version 11 adds uncompressed buffer size for convenience, and some time span metadata
-                cacheSize += ChromGroupHeaderInfo.DeltaSize11 * groupCount;
-            }
-            if (ChromatogramCache.FORMAT_VERSION_CACHE >= CacheFormatVersion.Twelve)
-            {
-                cacheSize += peakCount * (ChromPeak.GetStructSize(CacheFormatVersion.Twelve) -
-                                        ChromPeak.GetStructSize(CacheFormatVersion.Eleven));
-                cacheSize += tranCount *
-                             (ChromTransition.GetStructSize(CacheFormatVersion.Twelve) -
-                              ChromTransition.GetStructSize(CacheFormatVersion.Eleven));
-            }
             cacheSize += fileCachedCount *
-                         (CachedFileHeaderStruct.GetStructSize(ChromatogramCache.FORMAT_VERSION_CACHE) -
-                          CachedFileHeaderStruct.GetStructSize(CacheFormatVersion.Nine));
-            cacheSize += CacheHeaderStruct.GetStructSize(ChromatogramCache.FORMAT_VERSION_CACHE) -
-                         CacheHeaderStruct.GetStructSize(ChromatogramCache.FORMAT_VERSION_CACHE_11);
+                         (CachedFileHeaderStruct.GetStructSize(CacheFormatVersion.CURRENT) -
+                          CachedFileHeaderStruct.GetStructSize(CacheFormatVersion.Three));
+
+            cacheSize += groupCount * (ChromGroupHeaderInfo.GetStructSize(CacheFormatVersion.CURRENT) -
+                                       ChromGroupHeaderInfo.GetStructSize(CacheFormatVersion.Three));
+
+            cacheSize += tranCount * (ChromTransition.GetStructSize(CacheFormatVersion.CURRENT) -
+                                      ChromTransition.GetStructSize(CacheFormatVersion.Three));
+
+            cacheSize += peakCount * (ChromPeak.GetStructSize(CacheFormatVersion.CURRENT) -
+                                      ChromPeak.GetStructSize(CacheFormatVersion.Three));
             return cacheSize;
         }
 

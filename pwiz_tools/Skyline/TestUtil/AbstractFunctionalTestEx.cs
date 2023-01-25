@@ -817,8 +817,7 @@ namespace pwiz.SkylineTestUtil
                 addLibUI.LibraryPath = libFullPath;
                 addLibUI.OkDialog();
             });
-            RunUI(editListUI.OkDialog);
-            WaitForClosedForm(editListUI);
+            OkDialog(editListUI, editListUI.OkDialog);
 
             // Make sure the libraries actually show up in the peptide settings dialog before continuing.
             WaitForConditionUI(() => peptideSettingsUI.AvailableLibraries.Length > 0);
@@ -829,7 +828,7 @@ namespace pwiz.SkylineTestUtil
             var viewLibraryDlg = FindOpenForm<ViewLibraryDlg>();
             var docBefore = WaitForProteinMetadataBackgroundLoaderCompletedUI();
 
-            RunDlg<MultiButtonMsgDlg>(viewLibraryDlg.AddAllPeptides, messageDlg =>
+            ShowAndDismissDlg<MultiButtonMsgDlg>(viewLibraryDlg.AddAllPeptides, messageDlg =>
             {
                 var addLibraryMessage =
                     string.Format(
@@ -839,15 +838,14 @@ namespace pwiz.SkylineTestUtil
                 messageDlg.DialogResult = DialogResult.Yes;
             });
             var filterPeptidesDlg = WaitForOpenForm<FilterMatchedPeptidesDlg>();
-            RunDlg<MultiButtonMsgDlg>(filterPeptidesDlg.OkDialog, addLibraryPepsDlg => { addLibraryPepsDlg.Btn1Click(); });
+            ShowAndDismissDlg<MultiButtonMsgDlg>(filterPeptidesDlg.OkDialog, addLibraryPepsDlg => { addLibraryPepsDlg.Btn1Click(); });
 
             OkDialog(filterPeptidesDlg, filterPeptidesDlg.OkDialog);
 
             var docAfter = WaitForDocumentChange(docBefore);
 
             OkDialog(viewLibraryDlg, viewLibraryDlg.Close);
-            RunUI(() => peptideSettingsUI.OkDialog());
-            WaitForClosedForm(peptideSettingsUI);
+            OkDialog(peptideSettingsUI, peptideSettingsUI.OkDialog);
             return docAfter;
         }
     }
