@@ -15048,6 +15048,25 @@ namespace pwiz.Skyline.Properties {
         }
         
         /// <summary>
+        ///   Looks up a localized string similar to minutes of detected features.
+        /// </summary>
+        public static string FullScanSettingsControl_Initialize_minutes_of_detected_features {
+            get {
+                return ResourceManager.GetString("FullScanSettingsControl_Initialize_minutes_of_detected_features", resourceCulture);
+            }
+        }
+        
+        /// <summary>
+        ///   Looks up a localized string similar to Sets the MS type for Hardklor&apos;s FWHM calculation.
+        /// </summary>
+        public static string FullScanSettingsControl_InitializeMs1FilterUI_Sets_the_MS_type_for_Hardklor_s_FWHM_calculation {
+            get {
+                return ResourceManager.GetString("FullScanSettingsControl_InitializeMs1FilterUI_Sets_the_MS_type_for_Hardklor_s_FWH" +
+                        "M_calculation", resourceCulture);
+            }
+        }
+        
+        /// <summary>
         ///   Looks up a localized string similar to Mass &amp;Accuracy:.
         /// </summary>
         public static string FullScanSettingsControl_SetAnalyzerType_Mass__Accuracy_ {
@@ -15698,6 +15717,16 @@ namespace pwiz.Skyline.Properties {
         }
         
         /// <summary>
+        ///   Looks up a localized resource of type System.Drawing.Bitmap.
+        /// </summary>
+        public static System.Drawing.Bitmap HardklorLogo {
+            get {
+                object obj = ResourceManager.GetObject("HardklorLogo", resourceCulture);
+                return ((System.Drawing.Bitmap)(obj));
+            }
+        }
+        
+        /// <summary>
         ///   Looks up a localized string similar to Heat Map.
         /// </summary>
         public static string HeatMapGraph_RefreshData_Heat_Map {
@@ -16237,6 +16266,15 @@ namespace pwiz.Skyline.Properties {
         }
         
         /// <summary>
+        ///   Looks up a localized string similar to Feature Detection.
+        /// </summary>
+        public static string ImportPeptideSearchDlg_ImportPeptideSearchDlg_Feature_Detection {
+            get {
+                return ResourceManager.GetString("ImportPeptideSearchDlg_ImportPeptideSearchDlg_Feature_Detection", resourceCulture);
+            }
+        }
+        
+        /// <summary>
         ///   Looks up a localized string similar to MS/MS full-scan settings were configured, please verify or change your current full-scan settings..
         /// </summary>
         public static string ImportPeptideSearchDlg_ImportPeptideSearchDlg_MS_MS_full_scan_settings_were_configured__please_verify_or_change_your_current_full_scan_settings_ {
@@ -16252,6 +16290,24 @@ namespace pwiz.Skyline.Properties {
         public static string ImportPeptideSearchDlg_ImportPeptideSearchDlg_Next {
             get {
                 return ResourceManager.GetString("ImportPeptideSearchDlg_ImportPeptideSearchDlg_Next", resourceCulture);
+            }
+        }
+        
+        /// <summary>
+        ///   Looks up a localized string similar to Select Files to Search.
+        /// </summary>
+        public static string ImportPeptideSearchDlg_ImportPeptideSearchDlg_Select_Files_to_Search {
+            get {
+                return ResourceManager.GetString("ImportPeptideSearchDlg_ImportPeptideSearchDlg_Select_Files_to_Search", resourceCulture);
+            }
+        }
+        
+        /// <summary>
+        ///   Looks up a localized string similar to Adding detected features to document.
+        /// </summary>
+        public static string ImportPeptideSearchDlg_NextPage_Adding_detected_features_to_document {
+            get {
+                return ResourceManager.GetString("ImportPeptideSearchDlg_NextPage_Adding_detected_features_to_document", resourceCulture);
             }
         }
         

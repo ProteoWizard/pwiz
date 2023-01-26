@@ -92,7 +92,7 @@ void BuildParser::setSpecFileName(
     curSpecFileName_.clear();
 
     string fileroot = specfileroot;
-    Verbosity::debug("checking for basename: %s", fileroot);
+    Verbosity::debug("checking for basename: %s", fileroot.c_str());
     do {
         // try the location of the result file, then all dirs in the list
         for(int i=-1; i<(int)directories.size(); i++) {
@@ -354,6 +354,7 @@ void BuildParser::buildTables(PSM_SCORE_TYPE scoreType, string specFilename, boo
     // prune out any duplicates from the list of psms
     if (!blibMaker_.keepAmbiguous()) {
         removeDuplicates();
+        removeNulls();
         hasMatches = psms_.size() > 0;
         if (!hasMatches)
             Verbosity::status("No matches left after removing ambiguous spectra in %s.", curSpecFileName_.c_str());
@@ -393,12 +394,16 @@ void BuildParser::buildTables(PSM_SCORE_TYPE scoreType, string specFilename, boo
 
         // get spectrum information
         bool success = specReader_->getSpectrum(psm, lookUpBy_,
-                                                curSpectrum, true); //getpeaks
+                                                curSpectrum, !psm->isPrecursorOnly()); //getpeaks
         if( ! success ){
             string idStr = psm->idAsString();
             Verbosity::warn("Did not find spectrum '%s' in '%s'.",
                                idStr.c_str(), curSpecFileName_.c_str());
             continue;
+        }
+        if (psm->isPrecursorOnly())
+        {
+            curSpectrum.numPeaks = 0;
         }
 
         curSpectrum.totalIonCurrent = 0;
@@ -462,7 +467,7 @@ void BuildParser::insertSpectrum(PSM* psm,
     string specIdStr = psm->idAsString();
 
     // check if charge state exists
-    if (psm->charge < 1) {
+    if (psm->charge == 0) {
         // try to calculate charge
         Verbosity::debug("Attempting to calculate charge state for spectrum %s (%s)",
                          specIdStr.c_str(), psm->modifiedSeq.c_str());
@@ -477,10 +482,15 @@ void BuildParser::insertSpectrum(PSM* psm,
         }
     }
 
+    if (!blibMaker_.keepCharge(psm->charge)) // Ignore items with unwanted charges
+    {
+        return;
+    }
+
     // this order must agree with insertSpectrumStmt_ as set in the ctor
     int field = 1;
     sqlite3_bind_text(insertSpectrumStmt_, field++, psm->unmodSeq.c_str(), -1, SQLITE_STATIC);
-    sqlite3_bind_double(insertSpectrumStmt_, field++, curSpectrum.mz);
+    sqlite3_bind_double(insertSpectrumStmt_, field++, psm->smallMolMetadata.precursorMzDeclared == 0 ? curSpectrum.mz : psm->smallMolMetadata.precursorMzDeclared);
     sqlite3_bind_int(insertSpectrumStmt_, field++, psm->charge);
     sqlite3_bind_text(insertSpectrumStmt_, field++, psm->modifiedSeq.c_str(), -1, SQLITE_STATIC);
     sqlite3_bind_text(insertSpectrumStmt_, field++, "-", -1, SQLITE_TRANSIENT);
@@ -491,7 +501,11 @@ void BuildParser::insertSpectrum(PSM* psm,
     sqlite3_bind_double(insertSpectrumStmt_, field++, curSpectrum.ccs);
     sqlite3_bind_double(insertSpectrumStmt_, field++, curSpectrum.getIonMobilityHighEnergyOffset());
     sqlite3_bind_int(insertSpectrumStmt_, field++, (int) (psm->ionMobilityType == IONMOBILITY_NONE ? curSpectrum.ionMobilityType : psm->ionMobilityType));
-    sqlite3_bind_double(insertSpectrumStmt_, field++, curSpectrum.retentionTime);
+    if (curSpectrum.retentionTime != 0) {
+        sqlite3_bind_double(insertSpectrumStmt_, field++, curSpectrum.retentionTime);
+    } else {
+        sqlite3_bind_null(insertSpectrumStmt_, field++);
+    }
     if (curSpectrum.startTime != 0 && curSpectrum.endTime != 0) {
         sqlite3_bind_double(insertSpectrumStmt_, field++, curSpectrum.startTime);
         sqlite3_bind_double(insertSpectrumStmt_, field++, curSpectrum.endTime);
@@ -499,9 +513,18 @@ void BuildParser::insertSpectrum(PSM* psm,
         sqlite3_bind_null(insertSpectrumStmt_, field++);
         sqlite3_bind_null(insertSpectrumStmt_, field++);
     }
-    sqlite3_bind_double(insertSpectrumStmt_, field++, curSpectrum.totalIonCurrent);
+    if (psm->isPrecursorOnly())
+    {
+        sqlite3_bind_null(insertSpectrumStmt_, field++); // No TIC if no spectrum
+    }
+    else
+    {
+        sqlite3_bind_double(insertSpectrumStmt_, field++, curSpectrum.totalIonCurrent);
+    }
     sqlite3_bind_int(insertSpectrumStmt_, field++, fileId);
-    sqlite3_bind_text(insertSpectrumStmt_, field++, specIdStr.c_str(), -1, SQLITE_STATIC);
+    sqlite3_bind_text(insertSpectrumStmt_, field++, 
+        psm->isPrecursorOnly() ? "" : specIdStr.c_str(), // No spectrum ID for precursor-only records
+        -1, SQLITE_STATIC);
     sqlite3_bind_double(insertSpectrumStmt_, field++, psm->score);
     sqlite3_bind_int(insertSpectrumStmt_, field++, scoreType);
     // Small molecule: moleculeName VARCHAR(128), chemicalFormula VARCHAR(128), precursorAdduct VARCHAR(128), inchiKey VARCHAR(128), otherKeys VARCHAR(128)
@@ -635,37 +658,37 @@ void BuildParser::filterBySequence(const set<string>* targetSequences,
  */
 void BuildParser::removeDuplicates() {
 
-    map<string,int> keyIndexPairs; // spectrum id, position in the vector
+    map<string, int> keyIndexPairs; // spectrum id, position in the vector
 
-    int startingNumPsms = psms_.size(); // for debugging
-
-    for(unsigned int i=0; i<psms_.size(); i++) {
+    for (unsigned int i = 0; i < psms_.size(); i++) {
         PSM* psm = psms_.at(i);
-        if( psm == NULL ){
+        if (psm == NULL) {
             continue;
         }
         // choose the correct id type
         string id = boost::lexical_cast<string>(psm->specKey);
-        if( lookUpBy_ == INDEX_ID ){
+        if (lookUpBy_ == INDEX_ID) {
             id = boost::lexical_cast<string>(psm->specIndex);
-        } else if( lookUpBy_ == NAME_ID ){
+        }
+        else if (lookUpBy_ == NAME_ID) {
             id = psm->specName;
         }
 
         // have we seen this spec key yet?
-        map<string,int>::iterator found = keyIndexPairs.find(id);
-        if( found == keyIndexPairs.end() ) {
+        map<string, int>::iterator found = keyIndexPairs.find(id);
+        if (found == keyIndexPairs.end()) {
             // not seen yet
             keyIndexPairs[id] = i;
-        } else {
+        }
+        else {
             // it's a duplicate, four possibilties
             int dupIndex = found->second;
             PSM* dupPSM = psms_.at(dupIndex);
             // 1. was the duplicate already removed because of a third id
-            if( dupPSM == NULL ){
+            if (dupPSM == NULL) {
                 Verbosity::comment(V_DEBUG,
-                       "Removing duplicate spectrum id '%s' with sequence %s.",
-                                   id.c_str(), psm->modifiedSeq.c_str());
+                    "Removing duplicate spectrum id '%s' with sequence %s.",
+                    id.c_str(), psm->modifiedSeq.c_str());
                 if (blibMaker_.ambiguityMessages()) {
                     cout << "AMBIGUOUS:" << psm->modifiedSeq << endl;
                 }
@@ -674,24 +697,24 @@ void BuildParser::removeDuplicates() {
                 psms_.at(i) = NULL;
             }
             // 2. check for identical sequences
-            else if( psm->modifiedSeq == dupPSM->modifiedSeq ){
+            else if (psm->modifiedSeq == dupPSM->modifiedSeq) {
                 // remove only one
                 delete psms_.at(i);
                 psms_.at(i) = NULL;
             }
             // 2. check for I/L differences
-            else if ( seqsILEquivalent(psm->modifiedSeq, dupPSM->modifiedSeq)){
+            else if (seqsILEquivalent(psm->modifiedSeq, dupPSM->modifiedSeq)) {
                 keyIndexPairs[id] = i;
             }
             // 3. else delete
             else {
                 Verbosity::comment(V_DEBUG, "Removing duplicate spectra id "
-                                   "'%s', sequences %s and %s.",
-                                   id.c_str(), psm->modifiedSeq.c_str(),
-                                   dupPSM->modifiedSeq.c_str());
+                    "'%s', sequences %s and %s.",
+                    id.c_str(), psm->modifiedSeq.c_str(),
+                    dupPSM->modifiedSeq.c_str());
                 if (blibMaker_.ambiguityMessages()) {
                     cout << "AMBIGUOUS:" << psm->modifiedSeq << endl
-                         << "AMBIGUOUS:" << dupPSM->modifiedSeq << endl;
+                        << "AMBIGUOUS:" << dupPSM->modifiedSeq << endl;
                 }
                 // delete current
                 delete psms_.at(i);
@@ -703,7 +726,10 @@ void BuildParser::removeDuplicates() {
             }
         }
     }// next psm
+}
 
+void BuildParser::removeNulls() {
+    int startingNumPsms = psms_.size(); // for debugging
     // fill in any gaps
     unsigned int insert_index = 0;
     for(unsigned int move_index = 0; move_index < psms_.size(); move_index++ ) {

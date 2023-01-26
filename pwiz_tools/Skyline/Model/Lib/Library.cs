@@ -1834,6 +1834,7 @@ namespace pwiz.Skyline.Model.Lib
 
     public sealed class SpectrumPeaksInfo
     {
+        public static SpectrumPeaksInfo EMPTY = new SpectrumPeaksInfo(Array.Empty<MI>());
         public SpectrumPeaksInfo(MI[] spectrum)
         {
             Peaks = spectrum;

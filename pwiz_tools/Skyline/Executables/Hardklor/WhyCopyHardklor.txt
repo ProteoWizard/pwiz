@@ -1,0 +1,10 @@
+This is a fork of the Hardklor project at https://github.com/mhoopmann/hardklor.
+
+Well, it's a copy rather than a true fork as I want to track any changes made here as part of the ProteoWizard project. As you can see there's also a copy of the MSToolkit code, for similar reasons.
+
+Both contain just enough changes to support use in Skyline, and omit a bunch of library code (zlib, expat etc) that is already in the ProteoWizard project. 
+
+In Hardklor, there are a couple of uninitialized variables and infinite loops that get caught in the MSVC debugger, I've fixed those and will submit a PR to the original project. 
+
+Note the Visual Studio project I created for this, it's not actually used in production - bjam is the build system for that.
+

@@ -122,7 +122,7 @@ namespace pwiz.Skyline.Model
 
         protected override IList<DocNode> OrderedChildren(IList<DocNode> children)
         {
-            if (IsCustomIon && children.Any() && !SrmDocument.IsConvertedFromProteomicTestDocNode(this))
+            if (IsCustomIon && children.Count > 1 && !SrmDocument.IsConvertedFromProteomicTestDocNode(this))
             {
                 // Enforce order that facilitates Isotope ratio calculation, especially in cases where all we have is mz
                 return children.OrderBy(t => (TransitionDocNode)t, new TransitionDocNode.CustomIonEquivalenceComparer()).ToArray();

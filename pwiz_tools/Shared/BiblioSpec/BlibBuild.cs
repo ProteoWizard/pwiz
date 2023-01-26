@@ -78,6 +78,8 @@ namespace pwiz.BiblioSpec
 
     public class ScoreType
     {
+        // N.B. these should agree with the values in PSM_SCORE_TYPE in pwiz_tools\BiblioSpec\src\BlibUtils.h
+        // And if you add something here, don't forget to update ToString() below
         private const string PERCOLATOR_QVALUE = "PERCOLATOR QVALUE";
         private const string PEPTIDE_PROPHET_SOMETHING = "PEPTIDE PROPHET SOMETHING";
         private const string SPECTRUM_MILL = "SPECTRUM MILL";
@@ -97,6 +99,7 @@ namespace pwiz.BiblioSpec
         private const string BYONIC_SCORE = "BYONIC SCORE";
         private const string PEPTIDE_SHAKER_CONFIDENCE = "PEPTIDE SHAKER CONFIDENCE";
         private const string GENERIC_QVALUE = "GENERIC Q-VALUE";
+        private const string HARDKLOR_CORRELATION_SCORE = "HARDKLOR CORRELATION SCORE"; // Hardklor "The dot-product score of this feature to the theoretical model." PROBABILITY_CORRECT
 
         private const string PROBABILITY_CORRECT = "PROBABILITY_THAT_IDENTIFICATION_IS_CORRECT";
         private const string PROBABILITY_INCORRECT = "PROBABILITY_THAT_IDENTIFICATION_IS_INCORRECT";
@@ -107,6 +110,7 @@ namespace pwiz.BiblioSpec
         public EnumProbabilityType ProbabilityType { get; }
 
         public static ScoreType GenericQValue => new ScoreType(GENERIC_QVALUE, PROBABILITY_INCORRECT);
+        public static ScoreType HardklorCorrelationScore => new ScoreType(HARDKLOR_CORRELATION_SCORE, PROBABILITY_CORRECT);
 
         public ScoreType(string name, string probabilityType)
         {
@@ -254,6 +258,8 @@ namespace pwiz.BiblioSpec
                 case SEQUEST_XCORR:
                 case GENERIC_QVALUE:
                     return Resources.BiblioSpecScoreType_DisplayName_q_value;
+                case HARDKLOR_CORRELATION_SCORE:
+                    return Resources.BiblioSpecScoreType_DisplayName_Hardklor_Correlation_Score;
                 default:
                     return NameInvariant;
             }
@@ -331,6 +337,7 @@ namespace pwiz.BiblioSpec
         public Dictionary<string, double> ScoreThresholdsByFile { get; set; }
 
         public IList<string> TargetSequences { get; private set; }
+        public IList<int> Charges { get; set; } // Optional list of charges, if non-empty passed to BlibBuild's -z option
 
         public bool BuildLibrary(LibraryBuildAction libraryBuildAction, IProgressMonitor progressMonitor, ref IProgressStatus status, out string[] ambiguous)
         {
@@ -376,6 +383,11 @@ namespace pwiz.BiblioSpec
             if (PreferEmbeddedSpectra == true)
             {
                 argv.Add("-E");
+            }
+            if (Charges != null && Charges.Any())
+            {
+                argv.Add("-z");
+                argv.Add(string.Join(@",", Charges)); // Process PSMs with these charges, ignoring others
             }
             string dirCommon = PathEx.GetCommonRoot(InputFiles);
 

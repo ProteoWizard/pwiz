@@ -398,6 +398,7 @@ if [ modules.peek : NT ] && --i-agree-to-the-vendor-licenses in [ modules.peek :
             <dependency>../../pwiz/utility/bindings/CLI/timstof_prm_scheduler//PrmPasefScheduler/<location>$(PWIZ_WRAPPER_PATH)/obj/$(PLATFORM)
             <dependency>../../pwiz/utility/bindings/CLI/timstof_prm_scheduler//PrmPasefScheduler.xml/<location>$(PWIZ_WRAPPER_PATH)/obj/$(PLATFORM)
             <dependency>TestDiagnostics//TestDiagnostics/<location>$(PWIZ_WRAPPER_PATH)/obj/$(PLATFORM)
+            <dependency>Executables/Hardklor//Hardklor/<location>$(SKYLINE_PATH)/Executables/Hardklor/obj/$(PLATFORM)
             <dependency>../../pwiz_tools/BiblioSpec/src//BlibBuild/<location>$(BIBLIO_SPEC_PATH)/obj/$(PLATFORM)
             <dependency>../../pwiz_tools/BiblioSpec/src//BlibFilter/<location>$(BIBLIO_SPEC_PATH)/obj/$(PLATFORM)
             <dependency>../../pwiz_tools/BiblioSpec/src//BlibToMs2/<location>$(BIBLIO_SPEC_PATH)/obj/$(PLATFORM)

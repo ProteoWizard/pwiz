@@ -230,6 +230,7 @@ namespace pwiz.Skyline
             this.peakBoundariesToolStripMenuItem = new System.Windows.Forms.ToolStripMenuItem();
             this.toolStripSeparator51 = new System.Windows.Forms.ToolStripSeparator();
             this.importPeptideSearchMenuItem = new System.Windows.Forms.ToolStripMenuItem();
+            this.importFeatureDetectionMenuItem = new System.Windows.Forms.ToolStripMenuItem();
             this.toolStripSeparator52 = new System.Windows.Forms.ToolStripSeparator();
             this.importFASTAMenuItem = new System.Windows.Forms.ToolStripMenuItem();
             this.importAssayLibraryMenuItem = new System.Windows.Forms.ToolStripMenuItem();
@@ -1726,6 +1727,7 @@ namespace pwiz.Skyline
             this.peakBoundariesToolStripMenuItem,
             this.toolStripSeparator51,
             this.importPeptideSearchMenuItem,
+            this.importFeatureDetectionMenuItem,
             this.toolStripSeparator52,
             this.importFASTAMenuItem,
             this.importAssayLibraryMenuItem,
@@ -1759,6 +1761,12 @@ namespace pwiz.Skyline
             resources.ApplyResources(this.importPeptideSearchMenuItem, "importPeptideSearchMenuItem");
             this.modeUIHandler.SetUIMode(this.importPeptideSearchMenuItem, pwiz.Skyline.Util.Helpers.ModeUIExtender.MODE_UI_HANDLING_TYPE.proteomic);
             this.importPeptideSearchMenuItem.Click += new System.EventHandler(this.importPeptideSearchMenuItem_Click);
+            // 
+            // importFeatureDetectionMenuItem
+            // 
+            this.importFeatureDetectionMenuItem.Name = "importFeatureDetectionMenuItem";
+            resources.ApplyResources(this.importFeatureDetectionMenuItem, "importFeatureDetectionMenuItem");
+            this.importFeatureDetectionMenuItem.Click += new System.EventHandler(this.importFeatureDetectionMenuItem_Click);
             // 
             // toolStripSeparator52
             // 
@@ -2845,6 +2853,7 @@ namespace pwiz.Skyline
         private System.Windows.Forms.ToolStripMenuItem synchMzScaleToolStripMenuItem;
         private System.Windows.Forms.ToolStripMenuItem submitErrorReportMenuItem;
         private System.Windows.Forms.ToolStripMenuItem crashSkylineMenuItem;
+        private System.Windows.Forms.ToolStripMenuItem importFeatureDetectionMenuItem;
     }
 }
 

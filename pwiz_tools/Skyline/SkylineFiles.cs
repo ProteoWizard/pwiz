@@ -3151,6 +3151,11 @@ namespace pwiz.Skyline
             ShowImportPeptideSearchDlg();
         }
 
+        private void importFeatureDetectionMenuItem_Click(object sender, EventArgs e)
+        {
+            ShowImportPeptideSearchDlg(ImportPeptideSearchDlg.Workflow.feature_detection);
+        }
+
         public void ShowImportPeptideSearchDlg(ImportPeptideSearchDlg.Workflow? workflowType)
         {
             if (!CheckDocumentExists(Resources.SkylineWindow_ShowImportPeptideSearchDlg_You_must_save_this_document_before_importing_a_peptide_search_))
@@ -3177,6 +3182,11 @@ namespace pwiz.Skyline
         public void ShowImportPeptideSearchDlg()
         {
             ShowImportPeptideSearchDlg(null);
+        }
+
+        public void ShowFeatureDetectionDlg()
+        {
+            ShowImportPeptideSearchDlg(ImportPeptideSearchDlg.Workflow.feature_detection);
         }
 
         private bool CheckDocumentExists(String errorMsg)

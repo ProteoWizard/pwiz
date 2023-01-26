@@ -156,6 +156,7 @@ lib blibbuild
     SQTreader.cpp
     SQTversion.cpp
     SslReader.cpp
+    HardklorReader.cpp
     TandemNativeParser.cpp
     TSVReader.cpp
     UnimodParser.cpp

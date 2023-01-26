@@ -201,7 +201,7 @@
     <value>$this</value>
   </data>
   <data name="&gt;&gt;groupBoxRetentionTimeToKeep.ZOrder" xml:space="preserve">
-    <value>4</value>
+    <value>5</value>
   </data>
   <assembly alias="System.Windows.Forms" name="System.Windows.Forms, Version=4.0.0.0, Culture=neutral, PublicKeyToken=b77a5c561934e089" />
   <data name="flowLayoutPanelUseSchedulingWindow.Anchor" type="System.Windows.Forms.AnchorStyles, System.Windows.Forms">
@@ -247,7 +247,7 @@
     <value>0, 0, 0, 0</value>
   </data>
   <data name="tbxTimeAroundPrediction.Size" type="System.Drawing.Size, System.Drawing">
-    <value>49, 20</value>
+    <value>32, 20</value>
   </data>
   <data name="tbxTimeAroundPrediction.TabIndex" type="System.Int32, mscorlib">
     <value>3</value>
@@ -271,7 +271,7 @@
     <value>NoControl</value>
   </data>
   <data name="label2.Location" type="System.Drawing.Point, System.Drawing">
-    <value>158, 3</value>
+    <value>141, 3</value>
   </data>
   <data name="label2.Margin" type="System.Windows.Forms.Padding, System.Windows.Forms">
     <value>0, 3, 3, 3</value>
@@ -454,7 +454,7 @@
     <value>0, 0, 0, 0</value>
   </data>
   <data name="tbxTimeAroundMs2Ids.Size" type="System.Drawing.Size, System.Drawing">
-    <value>49, 20</value>
+    <value>32, 20</value>
   </data>
   <data name="tbxTimeAroundMs2Ids.TabIndex" type="System.Int32, mscorlib">
     <value>3</value>
@@ -478,7 +478,7 @@
     <value>NoControl</value>
   </data>
   <data name="labelTimeAroundMs2Ids2.Location" type="System.Drawing.Point, System.Drawing">
-    <value>158, 3</value>
+    <value>141, 3</value>
   </data>
   <data name="labelTimeAroundMs2Ids2.Margin" type="System.Windows.Forms.Padding, System.Windows.Forms">
     <value>0, 3, 3, 3</value>
@@ -775,7 +775,7 @@
     <value>$this</value>
   </data>
   <data name="&gt;&gt;groupBoxMS1.ZOrder" xml:space="preserve">
-    <value>5</value>
+    <value>6</value>
   </data>
   <metadata name="toolTip.TrayLocation" type="System.Drawing.Point, System.Drawing, Version=4.0.0.0, Culture=neutral, PublicKeyToken=b03f5f7f11d50a3a">
     <value>17, 17</value>
@@ -1393,7 +1393,7 @@
     <value>$this</value>
   </data>
   <data name="&gt;&gt;groupBoxMS2.ZOrder" xml:space="preserve">
-    <value>6</value>
+    <value>7</value>
   </data>
   <data name="labelProductPPM.AutoSize" type="System.Boolean, mscorlib">
     <value>True</value>
@@ -1756,7 +1756,7 @@
     <value>$this</value>
   </data>
   <data name="&gt;&gt;lblPrecursorCharges.ZOrder" xml:space="preserve">
-    <value>3</value>
+    <value>4</value>
   </data>
   <data name="textPrecursorCharges.Location" type="System.Drawing.Point, System.Drawing">
     <value>17, 496</value>
@@ -1780,7 +1780,7 @@
     <value>$this</value>
   </data>
   <data name="&gt;&gt;textPrecursorCharges.ZOrder" xml:space="preserve">
-    <value>2</value>
+    <value>3</value>
   </data>
   <metadata name="toolTip.TrayLocation" type="System.Drawing.Point, System.Drawing, Version=4.0.0.0, Culture=neutral, PublicKeyToken=b03f5f7f11d50a3a">
     <value>17, 17</value>
@@ -1817,13 +1817,86 @@ Checked uses single resolution for extraction width for hgher selectivity in com
     <value>$this</value>
   </data>
   <data name="&gt;&gt;cbHighSelectivity.ZOrder" xml:space="preserve">
-    <value>1</value>
+    <value>2</value>
+  </data>
+  <data name="cbHardklorCentroided.AutoSize" type="System.Boolean, mscorlib">
+    <value>True</value>
+  </data>
+  <data name="cbHardklorCentroided.Enabled" type="System.Boolean, mscorlib">
+    <value>False</value>
+  </data>
+  <data name="cbHardklorCentroided.ImeMode" type="System.Windows.Forms.ImeMode, System.Windows.Forms">
+    <value>NoControl</value>
+  </data>
+  <data name="cbHardklorCentroided.Location" type="System.Drawing.Point, System.Drawing">
+    <value>18, 73</value>
+  </data>
+  <data name="cbHardklorCentroided.Size" type="System.Drawing.Size, System.Drawing">
+    <value>101, 17</value>
+  </data>
+  <data name="cbHardklorCentroided.TabIndex" type="System.Int32, mscorlib">
+    <value>19</value>
+  </data>
+  <data name="cbHardklorCentroided.Text" xml:space="preserve">
+    <value>Centroided &amp;data</value>
+  </data>
+  <data name="cbHardklorCentroided.ToolTip" xml:space="preserve">
+    <value>Hardklor needs to know whether data is centroided, or profile. If you are unsure, leave this unchecked and Skyline will attempt to determine this value by inspecting the converted mzML files.</value>
+  </data>
+  <data name="&gt;&gt;cbHardklorCentroided.Name" xml:space="preserve">
+    <value>cbHardklorCentroided</value>
+  </data>
+  <data name="&gt;&gt;cbHardklorCentroided.Type" xml:space="preserve">
+    <value>System.Windows.Forms.CheckBox, System.Windows.Forms, Version=4.0.0.0, Culture=neutral, PublicKeyToken=b77a5c561934e089</value>
+  </data>
+  <data name="&gt;&gt;cbHardklorCentroided.Parent" xml:space="preserve">
+    <value>groupBoxHardklor</value>
+  </data>
+  <data name="&gt;&gt;cbHardklorCentroided.ZOrder" xml:space="preserve">
+    <value>0</value>
+  </data>
+  <data name="lblHardklorSignalToNoise.AutoSize" type="System.Boolean, mscorlib">
+    <value>True</value>
+  </data>
+  <data name="lblHardklorSignalToNoise.ImeMode" type="System.Windows.Forms.ImeMode, System.Windows.Forms">
+    <value>NoControl</value>
+  </data>
+  <data name="lblHardklorSignalToNoise.Location" type="System.Drawing.Point, System.Drawing">
+    <value>15, 26</value>
+  </data>
+  <data name="lblHardklorSignalToNoise.Size" type="System.Drawing.Size, System.Drawing">
+    <value>79, 13</value>
+  </data>
+  <data name="lblHardklorSignalToNoise.TabIndex" type="System.Int32, mscorlib">
+    <value>17</value>
+  </data>
+  <data name="lblHardklorSignalToNoise.Text" xml:space="preserve">
+    <value>Si&amp;gnal to noise:</value>
+  </data>
+  <data name="lblHardklorSignalToNoise.ToolTip" xml:space="preserve">
+    <value>Hardklor filters spectra to remove peaks below this signal-to-noise ratio prior to finding features. The noise threshold is determined as described in the Hardklor manuscript.
+Setting this parameter to 1 turns on searches for non-covalently linked dimers (not cross-links). This will no worse than double search time and is only recommended for highly concentrated and purified samples.</value>
+  </data>
+  <data name="lblHardklorSignalToNoise.Visible" type="System.Boolean, mscorlib">
+    <value>False</value>
+  </data>
+  <data name="&gt;&gt;lblHardklorSignalToNoise.Name" xml:space="preserve">
+    <value>lblHardklorSignalToNoise</value>
+  </data>
+  <data name="&gt;&gt;lblHardklorSignalToNoise.Type" xml:space="preserve">
+    <value>System.Windows.Forms.Label, System.Windows.Forms, Version=4.0.0.0, Culture=neutral, PublicKeyToken=b77a5c561934e089</value>
+  </data>
+  <data name="&gt;&gt;lblHardklorSignalToNoise.Parent" xml:space="preserve">
+    <value>groupBoxHardklor</value>
+  </data>
+  <data name="&gt;&gt;lblHardklorSignalToNoise.ZOrder" xml:space="preserve">
+    <value>2</value>
   </data>
   <data name="usercontrolIonMobilityFiltering.Location" type="System.Drawing.Point, System.Drawing">
     <value>17, 532</value>
   </data>
   <data name="usercontrolIonMobilityFiltering.Size" type="System.Drawing.Size, System.Drawing">
-    <value>365, 140</value>
+    <value>365, 158</value>
   </data>
   <data name="usercontrolIonMobilityFiltering.TabIndex" type="System.Int32, mscorlib">
     <value>3</value>
@@ -1832,12 +1905,60 @@ Checked uses single resolution for extraction width for hgher selectivity in com
     <value>usercontrolIonMobilityFiltering</value>
   </data>
   <data name="&gt;&gt;usercontrolIonMobilityFiltering.Type" xml:space="preserve">
-    <value>pwiz.Skyline.SettingsUI.IonMobility.IonMobilityFilteringUserControl, Skyline, Version=1.0.0.0, Culture=neutral, PublicKeyToken=null</value>
+    <value>pwiz.Skyline.SettingsUI.IonMobility.IonMobilityFilteringUserControl, Skyline-daily, Version=22.2.1.299, Culture=neutral, PublicKeyToken=null</value>
   </data>
   <data name="&gt;&gt;usercontrolIonMobilityFiltering.Parent" xml:space="preserve">
     <value>$this</value>
   </data>
   <data name="&gt;&gt;usercontrolIonMobilityFiltering.ZOrder" xml:space="preserve">
+    <value>1</value>
+  </data>
+  <data name="textHardklorSignalToNoise.Location" type="System.Drawing.Point, System.Drawing">
+    <value>18, 42</value>
+  </data>
+  <data name="textHardklorSignalToNoise.Size" type="System.Drawing.Size, System.Drawing">
+    <value>76, 20</value>
+  </data>
+  <data name="textHardklorSignalToNoise.TabIndex" type="System.Int32, mscorlib">
+    <value>18</value>
+  </data>
+  <data name="textHardklorSignalToNoise.Visible" type="System.Boolean, mscorlib">
+    <value>False</value>
+  </data>
+  <data name="&gt;&gt;textHardklorSignalToNoise.Name" xml:space="preserve">
+    <value>textHardklorSignalToNoise</value>
+  </data>
+  <data name="&gt;&gt;textHardklorSignalToNoise.Type" xml:space="preserve">
+    <value>System.Windows.Forms.TextBox, System.Windows.Forms, Version=4.0.0.0, Culture=neutral, PublicKeyToken=b77a5c561934e089</value>
+  </data>
+  <data name="&gt;&gt;textHardklorSignalToNoise.Parent" xml:space="preserve">
+    <value>groupBoxHardklor</value>
+  </data>
+  <data name="&gt;&gt;textHardklorSignalToNoise.ZOrder" xml:space="preserve">
+    <value>1</value>
+  </data>
+  <data name="groupBoxHardklor.Location" type="System.Drawing.Point, System.Drawing">
+    <value>17, 710</value>
+  </data>
+  <data name="groupBoxHardklor.Size" type="System.Drawing.Size, System.Drawing">
+    <value>200, 100</value>
+  </data>
+  <data name="groupBoxHardklor.TabIndex" type="System.Int32, mscorlib">
+    <value>17</value>
+  </data>
+  <data name="groupBoxHardklor.Text" xml:space="preserve">
+    <value>Hardklor search configuration</value>
+  </data>
+  <data name="&gt;&gt;groupBoxHardklor.Name" xml:space="preserve">
+    <value>groupBoxHardklor</value>
+  </data>
+  <data name="&gt;&gt;groupBoxHardklor.Type" xml:space="preserve">
+    <value>System.Windows.Forms.GroupBox, System.Windows.Forms, Version=4.0.0.0, Culture=neutral, PublicKeyToken=b77a5c561934e089</value>
+  </data>
+  <data name="&gt;&gt;groupBoxHardklor.Parent" xml:space="preserve">
+    <value>$this</value>
+  </data>
+  <data name="&gt;&gt;groupBoxHardklor.ZOrder" xml:space="preserve">
     <value>0</value>
   </data>
   <metadata name="$this.Localizable" type="System.Boolean, mscorlib, Version=4.0.0.0, Culture=neutral, PublicKeyToken=b77a5c561934e089">
@@ -1850,7 +1971,7 @@ Checked uses single resolution for extraction width for hgher selectivity in com
     <value>True</value>
   </data>
   <data name="$this.Size" type="System.Drawing.Size, System.Drawing">
-    <value>385, 675</value>
+    <value>385, 813</value>
   </data>
   <data name="&gt;&gt;toolTip.Name" xml:space="preserve">
     <value>toolTip</value>

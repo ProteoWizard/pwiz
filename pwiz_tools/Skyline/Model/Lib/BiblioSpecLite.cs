@@ -1305,6 +1305,10 @@ namespace pwiz.Skyline.Model.Lib
 
         protected override SpectrumPeaksInfo.MI[] ReadSpectrum(BiblioLiteSpectrumInfo info)
         {
+            if (info.NumPeaks == 0)
+            {
+                return Array.Empty<SpectrumPeaksInfo.MI>();
+            }
             return _sqliteConnection.ExecuteWithConnection(connection =>
             {
                 using (SQLiteCommand select = new SQLiteCommand(_sqliteConnection.Connection))
@@ -1425,6 +1429,10 @@ namespace pwiz.Skyline.Model.Lib
 
         private SpectrumPeaksInfo.MI[] ReadPeaks(SQLiteDataReader reader, int numPeaks, int refSpectraId, PooledSqliteConnection connection)
         {
+            if (numPeaks == 0)
+            {
+                return Array.Empty<SpectrumPeaksInfo.MI>();
+            }
             const int sizeMz = sizeof(double);
             const int sizeInten = sizeof(float);
 

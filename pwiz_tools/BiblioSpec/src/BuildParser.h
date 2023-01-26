@@ -87,7 +87,8 @@ class BuildParser : protected SAXHandler{
   double calculatePeptideMass(PSM* psm);
   int calculateCharge(double neutralMass, double precursorMz);
   void filterBySequence(const set<string>* targetSequences, const set<string>* targetSequencesModified);
-  void removeDuplicates();
+  virtual void removeDuplicates();
+  void removeNulls();
   double aaMasses_[128];
 
  protected:

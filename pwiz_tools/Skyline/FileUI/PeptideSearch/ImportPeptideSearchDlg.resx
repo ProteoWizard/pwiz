@@ -548,13 +548,13 @@ injected into the mass spectrometer.</value>
     <value>True</value>
   </data>
   <data name="label14.Font" type="System.Drawing.Font, System.Drawing">
-    <value>Arial Rounded MT Bold, 12pt</value>
+    <value>Microsoft Sans Serif, 12pt</value>
   </data>
   <data name="label14.Location" type="System.Drawing.Point, System.Drawing">
     <value>8, 9</value>
   </data>
   <data name="label14.Size" type="System.Drawing.Size, System.Drawing">
-    <value>137, 18</value>
+    <value>119, 20</value>
   </data>
   <data name="label14.TabIndex" type="System.Int32, mscorlib">
     <value>0</value>
@@ -629,13 +629,13 @@ injected into the mass spectrometer.</value>
     <value>True</value>
   </data>
   <data name="label20.Font" type="System.Drawing.Font, System.Drawing">
-    <value>Arial Rounded MT Bold, 12pt</value>
+    <value>Microsoft Sans Serif, 12pt</value>
   </data>
   <data name="label20.Location" type="System.Drawing.Point, System.Drawing">
     <value>12, 9</value>
   </data>
   <data name="label20.Size" type="System.Drawing.Size, System.Drawing">
-    <value>199, 18</value>
+    <value>177, 20</value>
   </data>
   <data name="label20.TabIndex" type="System.Int32, mscorlib">
     <value>0</value>
@@ -710,13 +710,13 @@ injected into the mass spectrometer.</value>
     <value>True</value>
   </data>
   <data name="label16.Font" type="System.Drawing.Font, System.Drawing">
-    <value>Arial Rounded MT Bold, 12pt</value>
+    <value>Microsoft Sans Serif, 12pt</value>
   </data>
   <data name="label16.Location" type="System.Drawing.Point, System.Drawing">
     <value>12, 9</value>
   </data>
   <data name="label16.Size" type="System.Drawing.Size, System.Drawing">
-    <value>149, 18</value>
+    <value>135, 20</value>
   </data>
   <data name="label16.TabIndex" type="System.Int32, mscorlib">
     <value>0</value>
@@ -791,7 +791,7 @@ injected into the mass spectrometer.</value>
     <value>True</value>
   </data>
   <data name="label1.Font" type="System.Drawing.Font, System.Drawing">
-    <value>Arial Rounded MT Bold, 12pt</value>
+    <value>Microsoft Sans Serif, 12pt</value>
   </data>
   <data name="label1.ImeMode" type="System.Windows.Forms.ImeMode, System.Windows.Forms">
     <value>NoControl</value>
@@ -800,7 +800,7 @@ injected into the mass spectrometer.</value>
     <value>12, 9</value>
   </data>
   <data name="label1.Size" type="System.Drawing.Size, System.Drawing">
-    <value>240, 18</value>
+    <value>214, 20</value>
   </data>
   <data name="label1.TabIndex" type="System.Int32, mscorlib">
     <value>0</value>
@@ -872,13 +872,13 @@ injected into the mass spectrometer.</value>
     <value>True</value>
   </data>
   <data name="label19.Font" type="System.Drawing.Font, System.Drawing">
-    <value>Arial Rounded MT Bold, 12pt</value>
+    <value>Microsoft Sans Serif, 12pt</value>
   </data>
   <data name="label19.Location" type="System.Drawing.Point, System.Drawing">
     <value>12, 9</value>
   </data>
   <data name="label19.Size" type="System.Drawing.Size, System.Drawing">
-    <value>234, 18</value>
+    <value>212, 20</value>
   </data>
   <data name="label19.TabIndex" type="System.Int32, mscorlib">
     <value>0</value>
@@ -950,7 +950,7 @@ injected into the mass spectrometer.</value>
     <value>4</value>
   </data>
   <data name="lblFasta.Font" type="System.Drawing.Font, System.Drawing">
-    <value>Arial Rounded MT Bold, 12pt</value>
+    <value>Microsoft Sans Serif, 12pt</value>
   </data>
   <data name="lblFasta.Location" type="System.Drawing.Point, System.Drawing">
     <value>12, 9</value>
@@ -1028,7 +1028,7 @@ injected into the mass spectrometer.</value>
     <value>5</value>
   </data>
   <data name="label2.Font" type="System.Drawing.Font, System.Drawing">
-    <value>Arial Rounded MT Bold, 12pt</value>
+    <value>Microsoft Sans Serif, 12pt</value>
   </data>
   <data name="label2.ImeMode" type="System.Windows.Forms.ImeMode, System.Windows.Forms">
     <value>NoControl</value>
@@ -1109,7 +1109,7 @@ injected into the mass spectrometer.</value>
     <value>6</value>
   </data>
   <data name="lblSearchSettings.Font" type="System.Drawing.Font, System.Drawing">
-    <value>Arial Rounded MT Bold, 12pt</value>
+    <value>Microsoft Sans Serif, 12pt</value>
   </data>
   <data name="lblSearchSettings.ImeMode" type="System.Windows.Forms.ImeMode, System.Windows.Forms">
     <value>NoControl</value>
@@ -1187,7 +1187,7 @@ injected into the mass spectrometer.</value>
     <value>7</value>
   </data>
   <data name="lblDDASearch.Font" type="System.Drawing.Font, System.Drawing">
-    <value>Arial Rounded MT Bold, 12pt</value>
+    <value>Microsoft Sans Serif, 12pt</value>
   </data>
   <data name="lblDDASearch.ImeMode" type="System.Windows.Forms.ImeMode, System.Windows.Forms">
     <value>NoControl</value>
@@ -1277,7 +1277,7 @@ injected into the mass spectrometer.</value>
     <value>wizardPagesImportPeptideSearch</value>
   </data>
   <data name="&gt;&gt;wizardPagesImportPeptideSearch.Type" xml:space="preserve">
-    <value>pwiz.Skyline.Controls.WizardPages, Skyline, Version=1.0.0.0, Culture=neutral, PublicKeyToken=null</value>
+    <value>pwiz.Skyline.Controls.WizardPages, Skyline-daily, Version=22.2.1.299, Culture=neutral, PublicKeyToken=null</value>
   </data>
   <data name="&gt;&gt;wizardPagesImportPeptideSearch.Parent" xml:space="preserve">
     <value>$this</value>
@@ -1343,7 +1343,7 @@ injected into the mass spectrometer.</value>
     <value>modeUIHandler</value>
   </data>
   <data name="&gt;&gt;modeUIHandler.Type" xml:space="preserve">
-    <value>pwiz.Skyline.Util.Helpers+ModeUIExtender, Skyline, Version=1.0.0.0, Culture=neutral, PublicKeyToken=null</value>
+    <value>pwiz.Skyline.Util.Helpers+ModeUIExtender, Skyline-daily, Version=22.2.1.299, Culture=neutral, PublicKeyToken=null</value>
   </data>
   <data name="&gt;&gt;helpTip.Name" xml:space="preserve">
     <value>helpTip</value>
@@ -1355,6 +1355,6 @@ injected into the mass spectrometer.</value>
     <value>ImportPeptideSearchDlg</value>
   </data>
   <data name="&gt;&gt;$this.Type" xml:space="preserve">
-    <value>pwiz.Skyline.Util.FormEx, Skyline, Version=1.0.0.0, Culture=neutral, PublicKeyToken=null</value>
+    <value>pwiz.Skyline.Util.FormEx, Skyline-daily, Version=22.2.1.299, Culture=neutral, PublicKeyToken=null</value>
   </data>
 </root>

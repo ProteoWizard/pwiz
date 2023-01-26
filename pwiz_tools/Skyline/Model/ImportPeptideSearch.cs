@@ -48,6 +48,11 @@ namespace pwiz.Skyline.Model
 
         public string[] SearchFilenames { get; set; }
         public double CutoffScore { get; set; }
+        public string Instrument { get; set; } // Used by Hardklor
+        public double ResolutionAt400mz { get; set; } // Used by Hardklor
+        public double SignalToNoise { get; set; } // Used by Hardklor
+        public bool DataIsCentroided { get; set; } // Used by Hardklor
+        public List<int> Charges { get; set; } // Used by Hardklor, a list of desired charges for BlibBuild
         public Library DocLib { get; private set; }
         public Dictionary<string, FoundResultsFilePossibilities> SpectrumSourceFiles { get; set; }
         public AbstractDdaSearchEngine SearchEngine { get; set; }
@@ -56,6 +61,7 @@ namespace pwiz.Skyline.Model
         public bool HasDocLib { get { return DocLib != null; } }
         public IrtStandard IrtStandard { get; set; }
         public bool IsDDASearch { get; set; }
+        public bool IsFeatureDetection { get; set; }
         private readonly LibKeyModificationMatcher _matcher;
         private IsotopeLabelType DefaultHeavyLabelType { get; set; }
         public HashSet<StaticMod> UserDefinedTypedMods { get; private set; }
@@ -92,6 +98,7 @@ namespace pwiz.Skyline.Model
                 KeepRedundant = true,
                 CutOffScore = CutoffScore,
                 Id = Helpers.MakeId(name),
+                Charges = Charges, // Optional list of charges, if non-empty BlibBuild will ignore any not listed here
                 IncludeAmbiguousMatches = includeAmbiguousMatches
             };
         }

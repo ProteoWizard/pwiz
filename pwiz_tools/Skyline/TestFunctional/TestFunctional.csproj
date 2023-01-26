@@ -182,6 +182,7 @@
     <Compile Include="EncyclopeDiaPeptidesWithNoSignalTest.cs" />
     <Compile Include="ExplicitMissingPeakBoundsTest.cs" />
     <Compile Include="ExportPropertiesTest.cs" />
+    <Compile Include="FeatureDetectionTest.cs" />
     <Compile Include="IgnoreSimScansTest.cs" />
     <Compile Include="InteractiveCommandLineToolTest.cs" />
     <Compile Include="LegacyScoringModelTest.cs" />

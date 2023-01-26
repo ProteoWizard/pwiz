@@ -1,0 +1,8 @@
+create libmstoolkitlite.a
+addlib obj/libexpat.a
+addlib obj/libz.a
+addlib obj/libmstlite.a
+addlib obj/libmzparser.a
+addlib obj/libmzimltools.a
+save
+end

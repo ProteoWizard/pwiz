@@ -55,7 +55,7 @@ struct SpecData{
         delete [] productIonMobilities;
     };
 
-    SpecData& operator=(SpecData& rhs){
+    SpecData& operator=(const SpecData& rhs){
         id = rhs.id;
         ionMobility = rhs.ionMobility;
         ionMobilityType = rhs.ionMobilityType;
@@ -71,11 +71,8 @@ struct SpecData{
         delete [] mzs;
         delete [] intensities;
         delete [] productIonMobilities;
-        mzs = NULL;
-        intensities = NULL;
-        productIonMobilities = NULL;
 
-        if( numPeaks){
+        if( numPeaks > 0){
             mzs = new double[numPeaks];
             intensities = new float[numPeaks];
             productIonMobilities = ( (rhs.productIonMobilities == NULL) ? NULL : new float[numPeaks] );
@@ -85,6 +82,12 @@ struct SpecData{
                 if (rhs.productIonMobilities != NULL)
                     productIonMobilities[i] = rhs.productIonMobilities[i];
             }   
+        }
+        else
+        {
+            mzs = NULL;
+            intensities = NULL;
+            productIonMobilities = NULL;
         }
         return *this;
     }

@@ -1,0 +1,74 @@
+MSTOOLKIT_DEFS=/D"_NOSQLITE"
+
+CFLAGS=/permissive- /GS /GL /W3 /Gy /Zc:wchar_t /Zi /Gm- /O2 /sdl /Zc:inline /fp:precise /errorReport:prompt /WX- /Zc:forScope /Gd /Oi /MD /FC /EHsc /nologo /diagnostics:column 
+CDEFS=/D "WIN32" /D "_CRT_SECURE_NO_WARNINGS" /D "_CRT_NONSTDC_NO_DEPRECATE" /D "XML_STATIC" /D "_MBCS"
+LIBFLAGS=/LTCG /MACHINE:X64 /NOLOGO
+
+BUILD_INC=.\include
+BUILD_SRC=.\src
+BUILD_DIR=.\x64\Release
+
+# -- Global build rules -------------------------------
+# Rules for all packages of the MSToolkit.
+#------------------------------------------------------
+.PHONY: all
+all       : output zlib expat mzparser mzid core mstoolkit
+
+
+# -- Output -------------------------------------------
+# Create output directories
+#------------------------------------------------------
+output:
+	@if not exist $(BUILD_DIR) mkdir $(BUILD_DIR)
+
+# -- MSToolkit  ---------------------------------------
+# The core MSToolkit files
+#------------------------------------------------------
+MSTOOLKIT_SRCDIR=$(BUILD_SRC)\MSToolkit
+
+mstoolkit: $(BUILD_DIR)\*.obj
+	lib /OUT:"$(BUILD_DIR)\MSToolkitLite.lib" $(LIBFLAGS) $?
+
+core : $(MSTOOLKIT_SRCDIR)\\*.cpp
+	cl $(CFLAGS) $(CDEFS) $(MSTOOLKIT_DEFS) /I"$(BUILD_INC)" /c /Fo$(BUILD_DIR)\ $?
+	
+clean:
+	del $(BUILD_DIR)\*.obj
+
+
+# -- Expat --------------------------------------------
+# XML support
+#------------------------------------------------------
+EXPAT_SRCDIR=$(BUILD_SRC)\expat-2.2.9\lib
+
+expat : $(EXPAT_SRCDIR)\\*.c
+	cl $(CFLAGS) $(CDEFS) /I"$(BUILD_INC)" /c /Fo$(BUILD_DIR)\ $?
+
+
+# -- mzIMLTools ---------------------------------------
+# mzIdentML support
+#------------------------------------------------------
+MZID_SRCDIR=$(BUILD_SRC)\mzIMLTools
+
+mzid : $(MZID_SRCDIR)\\*.cpp
+	cl $(CFLAGS) $(CDEFS) /I"$(BUILD_INC)" /c /Fo$(BUILD_DIR)\ $?
+
+
+# -- mzParser -----------------------------------------
+# mz(X)ML and mz5 file support
+#------------------------------------------------------
+MZP_SRCDIR=$(BUILD_SRC)\mzParser
+
+mzparser : $(MZP_SRCDIR)\\*.cpp
+	cl $(CFLAGS) $(CDEFS) /I"$(BUILD_INC)" /c /Fo$(BUILD_DIR)\ $?
+
+
+# -- zlib ---------------------------------------------
+# zlib file compression
+#------------------------------------------------------
+ZLIB_SRCDIR=$(BUILD_SRC)\zlib-1.2.11
+
+zlib : $(ZLIB_SRCDIR)\\*.c
+	cl $(CFLAGS) $(CDEFS) /I"$(BUILD_INC)" /c /Fo$(BUILD_DIR)\ $?
+
+	

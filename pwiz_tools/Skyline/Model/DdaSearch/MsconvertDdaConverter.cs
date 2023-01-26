@@ -38,6 +38,7 @@ namespace pwiz.Skyline.Model.DdaSearch
         private int _currentSourceIndex;
         private int _stepCount;
         private int _lastPercentComplete;
+        protected bool _wantPeakPicking;
 
         public string MsConvertOutputExtension { get; private set; }
         public string MsConvertOutputFormatParam { get; private set; }
@@ -46,6 +47,7 @@ namespace pwiz.Skyline.Model.DdaSearch
         {
             MsConvertOutputExtension = @".mzML";
             MsConvertOutputFormatParam = @"--mzML";
+            _wantPeakPicking = true;
         }
 
         public override void SetSpectrumFiles(MsDataFileUri[] spectrumFiles)
@@ -109,8 +111,8 @@ namespace pwiz.Skyline.Model.DdaSearch
                             $"-o {Path.GetDirectoryName(tmpFilepath).Quote()} " +
                             $"--outfile {Path.GetFileName(tmpFilepath)} " +
                             " --acceptZeroLengthSpectra --simAsSpectra --combineIonMobilitySpectra" +
-                            " --filter \"peakPicking true 1-\" " +
-                            " --filter \"msLevel 2-\" " +
+                            (_wantPeakPicking ? @" --filter ""peakPicking true 1-"" " : string.Empty) +
+                            FilterMslevel() +
                             spectrumSource.ToString().Quote()
                     };
 
@@ -144,6 +146,11 @@ namespace pwiz.Skyline.Model.DdaSearch
                 UpdateProgress(status => status.ChangeErrorException(e));
                 return false;
             }
+        }
+
+        public virtual string FilterMslevel()
+        {
+            return @" --filter ""msLevel 2-"" ";
         }
 
         private void UpdateProgress(Func<IProgressStatus, IProgressStatus> updater)
@@ -195,5 +202,23 @@ namespace pwiz.Skyline.Model.DdaSearch
 
             return _parentProgressMonitor.UpdateProgress(status);
         }
+    }
+
+    /// <summary>
+    /// Just an Msconvert caller with slightly different settings, for Hardklor purposes
+    /// </summary>
+    public class HardklorDdaConverter : MsconvertDdaConverter
+    {
+
+        public HardklorDdaConverter(ImportPeptideSearch importPeptideSearch) : base(importPeptideSearch)
+        {
+            _wantPeakPicking = false; // Hardklor prefers to do its own
+        }
+
+        public override string FilterMslevel()
+        {
+            return @" --filter ""msLevel 1"" ";
+        }
+
     }
 }

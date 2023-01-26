@@ -891,6 +891,11 @@ namespace pwiz.Skyline.Model
         {
             // We're just using this masscalc to get the ion formula, so mono vs average doesn't matter
             isotopeLabelType = isotopeLabelType ?? IsotopeLabelType.light;
+            if (nodePep == null) // Can happen when called from document grid handler when doc changes
+            {
+                adduct = Adduct.EMPTY;
+                return CustomMolecule.EMPTY;
+            }
             var peptideTarget = nodePep.Peptide.Target;
             var masscalc = document.Settings.TryGetPrecursorCalc(isotopeLabelType, nodePep.ExplicitMods);
             if (masscalc == null)

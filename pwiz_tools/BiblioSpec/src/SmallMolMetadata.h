@@ -35,8 +35,9 @@ struct SmallMolMetadata {
     std::string chemicalFormula; ///< formula without adduct
     std::string moleculeName; ///< friendly name
     std::string otherKeys; //< of form <idType:value>\t<idType:value> etc as in "CAS:58-08-2\tinchi:1S/C8H10N4O2/c1-10-4-9-6-5(10)7(13)12(3)8(14)11(6)2/h4H,1-3H3"
+    double precursorMzDeclared; //< ignored except when no chemical formula is provided
 
-    SmallMolMetadata(){};
+    SmallMolMetadata() : precursorMzDeclared(0) {};
 
     SmallMolMetadata(const SmallMolMetadata &rhs)
     {
@@ -100,13 +101,24 @@ struct SmallMolMetadata {
     chemicalFormula = rhs.chemicalFormula;
     moleculeName = rhs.moleculeName;
     otherKeys = rhs.otherKeys;
+    precursorMzDeclared = rhs.precursorMzDeclared;
     return *this;
+  }
+
+  bool operator== (const SmallMolMetadata& rhs) const
+  {
+    return (inchiKey == rhs.inchiKey &&
+      precursorAdduct == rhs.precursorAdduct &&
+      chemicalFormula == rhs.chemicalFormula &&
+      moleculeName == rhs.moleculeName &&
+      otherKeys == rhs.otherKeys &&
+      precursorMzDeclared == rhs.precursorMzDeclared);
   }
 
   bool IsCompleteEnough() const
   {
-	  // Need at least name, adduct and formula to be a useful description
-	  return (!moleculeName.empty() && !precursorAdduct.empty() && !chemicalFormula.empty());
+    // Need at least name, adduct and formula or mz declaration to be a useful description
+    return (!moleculeName.empty() && !precursorAdduct.empty() && (precursorMzDeclared != 0 || !chemicalFormula.empty()));
   }
 
   void clear(){
@@ -115,6 +127,7 @@ struct SmallMolMetadata {
     chemicalFormula.clear();
     moleculeName.clear();
     otherKeys.clear();
+    precursorMzDeclared = 0;
   };
 
 };

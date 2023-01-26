@@ -47,6 +47,7 @@ namespace pwiz.Skyline.FileUI.PeptideSearch
         public BuildLibraryGridView Grid { get; }
         private readonly SettingsListComboDriver<IrtStandard> _driverStandards;
         private MsDataFileUri[] _ddaSearchDataSources = Array.Empty<MsDataFileUri>();
+        private bool _isFeatureDetectionWorkflow;
 
         public BuildPeptideSearchLibraryControl(IModifyDocumentContainer documentContainer, ImportPeptideSearch importPeptideSearch, LibraryManager libraryManager)
         {
@@ -181,6 +182,8 @@ namespace pwiz.Skyline.FileUI.PeptideSearch
         {
             get
             {
+                if (_isFeatureDetectionWorkflow)
+                    return ImportPeptideSearchDlg.Workflow.feature_detection;
                 if (radioPRM.Checked)
                     return ImportPeptideSearchDlg.Workflow.prm;
                 if (radioDIA.Checked)
@@ -196,6 +199,10 @@ namespace pwiz.Skyline.FileUI.PeptideSearch
                         break;
                     case ImportPeptideSearchDlg.Workflow.dia:
                         radioDIA.Checked = true;
+                        break;
+                    case ImportPeptideSearchDlg.Workflow.feature_detection:
+                        _isFeatureDetectionWorkflow = true;
+                        radioDDA.Checked = true;
                         break;
                     default:
                         radioDDA.Checked = true;
@@ -531,6 +538,21 @@ namespace pwiz.Skyline.FileUI.PeptideSearch
         {
             WorkflowType = workflowType;
             grpWorkflow.Hide();
+            if (WorkflowType == ImportPeptideSearchDlg.Workflow.feature_detection)
+            {
+                // Initialize then hide various controls that Hardklor doesn't need
+                panel1.Hide();
+                radioButtonNewLibrary.Checked = true;
+                radioButtonNewLibrary.Hide();
+                radioExistingLibrary.Hide();
+                label2.Hide();
+                comboInputFileType.SelectedIndex = (int)ImportPeptideSearchDlg.InputFile.dda_raw;
+                comboInputFileType.Hide();
+                lblStandardPeptides.Hide();
+                comboStandards.Hide();
+                cbIncludeAmbiguousMatches.Hide();
+                cbFilterForDocumentPeptides.Hide();
+            }
         }
 
         private void radioButtonLibrary_CheckedChanged(object sender, EventArgs e)

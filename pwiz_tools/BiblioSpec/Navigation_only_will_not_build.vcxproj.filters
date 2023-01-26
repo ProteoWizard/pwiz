@@ -204,6 +204,9 @@
     <ClCompile Include="src\DiaNNSpecLibReader.cpp">
       <Filter>Source Files</Filter>
     </ClCompile>
+    <ClCompile Include="src\HardklorReader.cpp">
+      <Filter>Source Files</Filter>
+    </ClCompile>
   </ItemGroup>
   <ItemGroup>
     <ClInclude Include="src\AllBuildParsers.h">

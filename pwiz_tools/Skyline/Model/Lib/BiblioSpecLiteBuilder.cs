@@ -26,6 +26,7 @@ using System.Linq;
 using System.Text.RegularExpressions;
 using pwiz.BiblioSpec;
 using pwiz.Common.SystemUtil;
+using pwiz.Skyline.Controls;
 using pwiz.Skyline.Model.Irt;
 using pwiz.Skyline.Model.Results;
 using pwiz.Skyline.Properties;
@@ -95,6 +96,7 @@ namespace pwiz.Skyline.Model.Lib
         public bool IncludeAmbiguousMatches { get; set; }
         public IrtStandard IrtStandard { get; set; }
         public bool? PreferEmbeddedSpectra { get; set; }
+        public IList<int> Charges { get; set; } // Optional list of desired charges, if populated BlibBuild ignores any not listed
         public bool DebugMode { get; set; }
 
         public IList<string> InputFiles
@@ -156,6 +158,7 @@ namespace pwiz.Skyline.Model.Lib
                 Id = Id,
                 PreferEmbeddedSpectra = PreferEmbeddedSpectra,
                 DebugMode = DebugMode,
+                Charges = Charges,
             };
 
             bool retry = true;

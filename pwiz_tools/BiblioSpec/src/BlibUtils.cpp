@@ -54,7 +54,8 @@ const scoreTypeInfo scoreTypes[NUM_PSM_SCORE_TYPES] = {
     {"PEAKS CONFIDENCE SCORE", PROBABILITY_INCORRECT}, // pepxml files with peaks confidence scores
     {"BYONIC SCORE", PROBABILITY_INCORRECT}, // byonic .mzid files
     {"PEPTIDE SHAKER CONFIDENCE", PROBABILITY_CORRECT}, // peptideshaker .mzid files
-    {"GENERIC Q-VALUE", PROBABILITY_INCORRECT}
+    {"GENERIC Q-VALUE", PROBABILITY_INCORRECT},
+    {"HARDKLOR CORRELATION SCORE", PROBABILITY_CORRECT} // Hardklor "The dot-product score of this feature to the theoretical model."
 };
 
 /**

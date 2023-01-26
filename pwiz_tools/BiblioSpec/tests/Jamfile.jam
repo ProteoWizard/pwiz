@@ -207,6 +207,9 @@ blib-test-build ssl-name-rt : -o : output/ssl-name-rt.blib : ssl-name-rt.check :
 blib-test-build ssl-small-mol : -o : output/ssl-small-mol.blib : ssl-small-mol.check : $(TEST_INPUTS_PATH)/ssl-small-mol.ssl ;
 blib-test-build ssl-invalid-sequence : -o -e@Only_uppercase_letters : output/ssl-invalid-sequence.blib : ssl-invalid-sequence.check : $(TEST_INPUTS_PATH)/ssl-invalid-sequence.ssl ;
 
+# Test with the tab-delimited Hardklor format
+blib-test-build hardklor : --unicode -o : output/hardklor.blib : hardklor.check : $(TEST_INPUTS_PATH)/hardklor.hk ;
+
 # Test building with percolator XML files
 
 blib-test-build perc-xml : --unicode -o : output/perc-xml.blib : perc-xml.check : $(TEST_INPUTS_PATH)/smaller.perc.xml ;

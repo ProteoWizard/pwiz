@@ -1670,6 +1670,9 @@
   <data name="MSAmandaLogo" type="System.Resources.ResXFileRef, System.Windows.Forms">
     <value>..\Resources\LogoAmanda_32.bmp;System.Drawing.Bitmap, System.Drawing, Version=2.0.0.0, Culture=neutral, PublicKeyToken=b03f5f7f11d50a3a</value>
   </data>
+  <data name="HardklorLogo" type="System.Resources.ResXFileRef, System.Windows.Forms">
+    <value>..\Resources\hardklor64.ico;System.Drawing.Bitmap, System.Drawing, Version=2.0.0.0, Culture=neutral, PublicKeyToken=b03f5f7f11d50a3a</value>
+  </data>
   <data name="ToolService_ImportFasta_Insert_proteins" xml:space="preserve">
     <value>Insert proteins</value>
   </data>
@@ -11961,5 +11964,20 @@ If you do not have the original file, you may build the library with embedded sp
   </data>
   <data name="ShareTypeDlg_OkDialog_Including_data_folders_is_not_supported_by_the_currently_selected_version_" xml:space="preserve">
     <value>Including data folders is not supported by the currently selected version.</value>
+  </data>
+  <data name="ImportPeptideSearchDlg_ImportPeptideSearchDlg_Feature_Detection" xml:space="preserve">
+    <value>Feature Detection</value>
+  </data>
+  <data name="FullScanSettingsControl_InitializeMs1FilterUI_Sets_the_MS_type_for_Hardklor_s_FWHM_calculation" xml:space="preserve">
+    <value>Sets the MS type for Hardklor's FWHM calculation</value>
+  </data>
+  <data name="FullScanSettingsControl_Initialize_minutes_of_detected_features" xml:space="preserve">
+    <value>minutes of detected features</value>
+  </data>
+  <data name="ImportPeptideSearchDlg_ImportPeptideSearchDlg_Select_Files_to_Search" xml:space="preserve">
+    <value>Select Files to Search</value>
+  </data>
+  <data name="ImportPeptideSearchDlg_NextPage_Adding_detected_features_to_document" xml:space="preserve">
+    <value>Adding detected features to document</value>
   </data>
 </root>

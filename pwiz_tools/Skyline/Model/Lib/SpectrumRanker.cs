@@ -106,7 +106,7 @@ namespace pwiz.Skyline.Model.Lib
             }
 
             var spectrumRanker = new SpectrumRanker(targetInfo, settings, fragmentFilter);
-            return spectrumRanker.RankSpectrum(info, minPeaks, score);
+            return spectrumRanker.RankSpectrum(info ?? SpectrumPeaksInfo.EMPTY, minPeaks, score);
         }
 
 

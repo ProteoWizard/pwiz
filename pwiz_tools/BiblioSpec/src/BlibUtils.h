@@ -94,6 +94,7 @@ enum PSM_SCORE_TYPE {
     BYONIC_PEP,               // byonic .mzid files
     PEPTIDE_SHAKER_CONFIDENCE,// peptideshaker .mzid files
     GENERIC_QVALUE,
+    HARDKLOR_CORRELATION_SCORE, // Hardklor "The dot-product score of this feature to the theoretical model."
 
     NUM_PSM_SCORE_TYPES
 };

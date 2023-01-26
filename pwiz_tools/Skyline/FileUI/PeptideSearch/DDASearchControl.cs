@@ -97,12 +97,17 @@ namespace pwiz.Skyline.FileUI.PeptideSearch
                 MessageDlg.ShowWithException(Program.MainWindow, Resources.CommandLineTest_ConsoleAddFastaTest_Error, status.ErrorException);
                 return;
             }
+            if (IsDisposed)
+            {
+                return;
+            }
 
             if (_progressTextItems.Count > 0 && status.Message == _progressTextItems[_progressTextItems.Count - 1].Message)
                 return;
 
             var newEntry = new ProgressEntry(DateTime.Now, message);
             _progressTextItems.Add(newEntry);
+
             txtSearchProgress.AppendText($@"{newEntry.ToString(showTimestampsCheckbox.Checked)}{Environment.NewLine}");
 
             int percentComplete = status.PercentComplete;

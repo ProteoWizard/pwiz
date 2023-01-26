@@ -43,11 +43,18 @@ namespace pwiz.Skyline.FileUI.PeptideSearch
             ImportPeptideSearch = importPeptideSearch;
             _documentContainer = documentContainer;
 
-            searchEngineComboBox.SelectedIndexChanged += SearchEngineComboBox_SelectedIndexChanged;
-            txtMS1Tolerance.LostFocus += txtMS1Tolerance_LostFocus;
-            txtMS2Tolerance.LostFocus += txtMS2Tolerance_LostFocus;
+            if (importPeptideSearch.IsFeatureDetection)
+            {
+                SearchEngineComboBox_SelectedIndexChanged(null, null); // Initialize
+            }
+            else
+            {
+                searchEngineComboBox.SelectedIndexChanged += SearchEngineComboBox_SelectedIndexChanged;
+                txtMS1Tolerance.LostFocus += txtMS1Tolerance_LostFocus;
+                txtMS2Tolerance.LostFocus += txtMS2Tolerance_LostFocus;
 
-            searchEngineComboBox.SelectedIndex = 0;
+                searchEngineComboBox.SelectedIndex = 0;
+            }
 
             LoadMassUnitEntries();
         }
@@ -63,14 +70,15 @@ namespace pwiz.Skyline.FileUI.PeptideSearch
         {
             MSAmanda,
             MSGFPlus,
-            MSFragger
+            MSFragger,
+            Hardklor
         }
 
         public SearchEngine SelectedSearchEngine
         {
             get
             {
-                return (SearchEngine) searchEngineComboBox.SelectedIndex;
+                return ImportPeptideSearch.IsFeatureDetection ? SearchEngine.Hardklor : (SearchEngine) searchEngineComboBox.SelectedIndex;
             }
 
             set
@@ -127,6 +135,7 @@ namespace pwiz.Skyline.FileUI.PeptideSearch
             FileDownloadInfo[] fileDownloadInfo;
             switch (searchEngine)
             {
+                case SearchEngine.Hardklor:
                 case SearchEngine.MSAmanda:
                     return true;
                 case SearchEngine.MSGFPlus:
@@ -157,6 +166,8 @@ namespace pwiz.Skyline.FileUI.PeptideSearch
                     if (!EnsureRequiredFilesDownloaded(MsFraggerSearchEngine.FilesToDownload, ShowDownloadMsFraggerDialog))
                         SelectedSearchEngine = SearchEngine.MSAmanda;
                     return new MsFraggerSearchEngine(1 - ImportPeptideSearch.CutoffScore);
+                case SearchEngine.Hardklor:
+                    return new HardklorSearchEngine(ImportPeptideSearch);
                 default:
                     throw new NotImplementedException();
             }
@@ -247,13 +258,16 @@ namespace pwiz.Skyline.FileUI.PeptideSearch
 
         private void LoadComboboxEntries()
         {
-            LoadFragmentIonEntries();
-            LoadMs2AnalyzerEntries();
+            if (!ImportPeptideSearch.IsFeatureDetection)
+            {
+                LoadFragmentIonEntries();
+                LoadMs2AnalyzerEntries();
 
-            var modSettings = _documentContainer.Document.Settings.PeptideSettings.Modifications;
-            cbMaxVariableMods.SelectedItem = modSettings.MaxVariableMods.ToString(LocalizationHelper.CurrentCulture);
-            if (cbMaxVariableMods.SelectedIndex < 0)
-                cbMaxVariableMods.SelectedIndex = 2; // default max = 2
+                var modSettings = _documentContainer.Document.Settings.PeptideSettings.Modifications;
+                cbMaxVariableMods.SelectedItem = modSettings.MaxVariableMods.ToString(LocalizationHelper.CurrentCulture);
+                if (cbMaxVariableMods.SelectedIndex < 0)
+                    cbMaxVariableMods.SelectedIndex = 2; // default max = 2
+            }
         }
 
         private void LoadMassUnitEntries()

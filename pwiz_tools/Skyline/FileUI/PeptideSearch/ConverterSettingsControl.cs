@@ -319,5 +319,10 @@ namespace pwiz.Skyline.FileUI.PeptideSearch
         {
             return new MsconvertDdaConverter(ImportPeptideSearch);
         }
+
+        public HardklorDdaConverter GetHardklorConverter()
+        {
+            return new HardklorDdaConverter(ImportPeptideSearch);
+        }
     }
 }
