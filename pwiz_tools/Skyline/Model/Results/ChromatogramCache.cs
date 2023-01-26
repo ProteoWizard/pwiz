@@ -729,7 +729,7 @@ namespace pwiz.Skyline.Model.Results
                 throw new IOException(string.Format(@"Failure starting {0} command.", psi.FileName));
 
             var reader = new ProcessStreamReader(proc);
-            string errorPrefix = Resources.CommandLine_GeneralException_Error___0_.Split('{')[0];
+            string errorPrefix = Resources.Error___0_.Split('{')[0];
             var errorMessage = new StringBuilder();
             string line;
             while ((line = reader.ReadLine()) != null)

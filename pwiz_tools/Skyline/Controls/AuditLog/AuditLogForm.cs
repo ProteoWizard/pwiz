@@ -19,7 +19,6 @@
 
 using System;
 using System.Collections;
-using System.Collections.Generic;
 using System.Drawing;
 using System.Linq;
 using System.Windows.Forms;
@@ -185,20 +184,10 @@ namespace pwiz.Skyline.Controls.AuditLog
             return new AuditLogForm(viewContext, viewInfos[2].Name);
         }
 
-        private class AuditLogRowSource : SkylineObjectList<object, AuditLogRow>
+        private class AuditLogRowSource : SkylineObjectList<AuditLogRow>
         {
             public AuditLogRowSource(SkylineDataSchema dataSchema) : base(dataSchema)
             {
-            }
-
-            protected override IEnumerable<object> ListKeys()
-            {
-                throw new InvalidOperationException();
-            }
-
-            protected override AuditLogRow ConstructItem(object key)
-            {
-                throw new InvalidOperationException();
             }
 
             private static AuditLogRow GetRow(AuditLogEntry entry, SkylineDataSchema skylineDataSchema, int id)

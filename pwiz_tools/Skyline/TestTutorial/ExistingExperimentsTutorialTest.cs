@@ -695,7 +695,7 @@ namespace pwiz.SkylineTestTutorial
                 PauseForScreenShot<EditPepModsDlg>("Edit Modifications form", 23);
             }
             var doc = SkylineWindow.Document;
-            RunUI(editPepModsDlg.OkDialog);
+            OkDialog(editPepModsDlg, editPepModsDlg.OkDialog);
             WaitForDocumentChange(doc);
             RunUI(() =>
             {

@@ -35,7 +35,8 @@ import path ;
 rule vendor-api-requirements ( properties * )
 {
     local result = [ masslynxraw-dll-location $(API_PATH) : $(properties) ] ;
-    if $(result)
+    if $(result) &&
+       ! <address-model>32 in $(properties)
     {
         result = <search>$(result) ;
     }

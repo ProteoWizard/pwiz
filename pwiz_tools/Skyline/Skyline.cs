@@ -4704,11 +4704,28 @@ namespace pwiz.Skyline
         {
             // The "Submit Error Report" menu item should only be shown if the user was holding down the Shift key when they dropped the Help menu
             submitErrorReportMenuItem.Visible = 0 != (ModifierKeys & Keys.Shift);
+            // The "Crash Skyline" menu item only appears if they hold down both Ctrl and Shift
+            crashSkylineMenuItem.Visible = (Keys.Shift | Keys.Control) == (ModifierKeys & (Keys.Shift | Keys.Control));
         }
 
         private void submitErrorReportMenuItem_Click(object sender, EventArgs e)
         {
             Program.ReportException(new ApplicationException(Resources.SkylineWindow_submitErrorReportMenuItem_Click_Submitting_an_unhandled_error_report));
+        }
+
+        private void crashSkylineMenuItem_Click(object sender, EventArgs e)
+        {
+            if (DialogResult.OK !=
+                new AlertDlg(Resources.SkylineWindow_crashSkylineMenuItem_Click_Are_you_sure_you_want_to_abruptly_terminate_Skyline__You_will_lose_all_unsaved_work_,
+                    MessageBoxButtons.OKCancel, DialogResult.Cancel).ShowAndDispose(this))
+            {
+                return;
+            }
+
+            new Thread(() =>
+            {
+                throw new ApplicationException(@"Crash Skyline Menu Item Clicked");
+            }).Start();
         }
     }
 }

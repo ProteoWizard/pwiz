@@ -216,10 +216,8 @@ using (new Assume.DebugOnFail())  // TODO(bspratt) remove then when this intermi
                 {
                     WaitForCondition(() => SkylineWindow.BackgroundProteomeManager.ForegroundLoadRequested); // Verify that background loader is made to wait for us
                 }
-                RunUI(() => longWaitDlg.CancelButton.PerformClick());
-                WaitForClosedForm(longWaitDlg);
-                RunUI(() => peptideSettingsUI.CancelDialog());
-                WaitForClosedForm(peptideSettingsUI);
+                OkDialog(longWaitDlg, longWaitDlg.CancelButton.PerformClick);
+                OkDialog(peptideSettingsUI, peptideSettingsUI.CancelDialog);
             }
             else
             {

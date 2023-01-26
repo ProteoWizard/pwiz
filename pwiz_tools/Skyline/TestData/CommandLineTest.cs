@@ -1321,18 +1321,22 @@ namespace pwiz.SkylineTestData
             Assert.IsFalse(doc.Settings.MeasuredResults.ContainsChromatogram("FullScan_folder"));
         }
 
-        [TestMethod]
-        public void ConsoleMultiReplicateImportTest()
+        private static string GetTestZipPath(out string extRaw)
         {
             bool useRaw = ExtensionTestContext.CanImportThermoRaw && ExtensionTestContext.CanImportWatersRaw;
             string testZipPath = useRaw
-                                     ? @"TestData\ImportAllCmdLineTest.zip"
-                                     : @"TestData\ImportAllCmdLineTestMzml.zip";
-            string extRaw = useRaw
-                                ? ".raw"
-                                : ".mzML";
+                ? @"TestData\ImportAllCmdLineTest.zip"
+                : @"TestData\ImportAllCmdLineTestMzml.zip";
+            extRaw = useRaw
+                ? ".raw"
+                : ".mzML";
+            return testZipPath;
+        }
 
-            TestFilesDir = new TestFilesDir(TestContext, testZipPath);
+        [TestMethod]
+        public void ConsoleMultiReplicateImportTest()
+        {
+            TestFilesDir = new TestFilesDir(TestContext, GetTestZipPath(out var extRaw), "ConsoleMultiReplicateImportTest");
 
 
             // Contents:
@@ -1361,8 +1365,6 @@ namespace pwiz.SkylineTestData
             FileEx.SafeDelete(outPath0);
             var outPath1 = TestFilesDir.GetTestPath("Imported_multiple1.sky");
             FileEx.SafeDelete(outPath1);
-            var outPath2 = TestFilesDir.GetTestPath("Imported_multiple2.sky");
-            FileEx.SafeDelete(outPath2);
             var outPath4 = TestFilesDir.GetTestPath("Imported_multiple4.sky");
             FileEx.SafeDelete(outPath4);
 
@@ -1457,17 +1459,52 @@ namespace pwiz.SkylineTestData
 
 
 
+            // Test: Import non-recursive
+            // Make sure only files directly in the folder get imported
+            string badFilePath = TestFilesDir.GetTestPath("bad_file" + extRaw);
+            string badFileMoved = badFilePath + ".save";
+            if (File.Exists(badFilePath))
+                File.Move(badFilePath, badFileMoved);
+            string fullScanPath = TestFilesDir.GetTestPath("FullScan" + extRaw);
+            string fullScanMoved = fullScanPath + ".save";
+            File.Move(fullScanPath, fullScanMoved);
+
+            msg = RunCommand("--in=" + docPath,
+                "--import-all-files=" + TestFilesDir.FullPath,
+                "--out=" + outPath4);
+
+            AssertEx.FileExists(outPath4, msg);
+            doc = ResultsUtil.DeserializeDocument(outPath4);
+            Assert.IsTrue(doc.Settings.HasResults);
+            Assert.AreEqual(4, doc.Settings.MeasuredResults.Chromatograms.Count,
+                string.Format("Expected 4 replicates from files, found: {0}",
+                    string.Join(", ", doc.Settings.MeasuredResults.Chromatograms.Select(chromSet => chromSet.Name).ToArray())));
+            if (File.Exists(badFileMoved))
+                File.Move(badFileMoved, badFilePath);
+            File.Move(fullScanMoved, fullScanPath);
+        }
+
+        [TestMethod, NoParallelTesting] // Just a really tricky race condition using --warn-on-failure under parallel testing pressure
+        public void ConsoleMultiWarnOnFailureImportTest()
+        {
+            TestFilesDir = new TestFilesDir(TestContext, GetTestZipPath(out var extRaw), "ConsoleMultiWarnOnFailureImportTest");
+
+            var docPath = TestFilesDir.GetTestPath("test.sky");
+            var outPath2 = TestFilesDir.GetTestPath("Imported_multiple2.sky");
+            FileEx.SafeDelete(outPath2);
+            var rawPath = new MsDataFilePath(TestFilesDir.GetTestPath(@"REP01\CE_Vantage_15mTorr_0001_REP1_01" + extRaw));
+
             AssertEx.FileNotExists(outPath2);
 
             // Test: Import a single file
             // Import REP01\CE_Vantage_15mTorr_0001_REP1_01.raw;
             // Use replicate name "REP01"
-            msg = RunCommand("--in=" + docPath,
-                       "--import-file=" + rawPath.FilePath,
-                       "--import-replicate-name=REP01",
-                       "--out=" + outPath2);
+            var msg = RunCommand("--in=" + docPath,
+                "--import-file=" + rawPath.FilePath,
+                "--import-replicate-name=REP01",
+                "--out=" + outPath2);
             AssertEx.FileExists(outPath2, msg);
-            doc = ResultsUtil.DeserializeDocument(outPath2);
+            var doc = ResultsUtil.DeserializeDocument(outPath2);
             Assert.AreEqual(1, doc.Settings.MeasuredResults.Chromatograms.Count);
             int initialFileCount = 0;
             foreach (var chromatogram in doc.Settings.MeasuredResults.Chromatograms)
@@ -1478,9 +1515,9 @@ namespace pwiz.SkylineTestData
             // Import another single file. 
             var rawPath2 = MsDataFileUri.Parse(TestFilesDir.GetTestPath("160109_Mix1_calcurve_070.mzML"));
             msg = RunCommand("--in=" + outPath2,
-                       "--import-file=" + rawPath2.GetFilePath(),
-                       "--import-replicate-name=160109_Mix1_calcurve_070",
-                       "--save");
+                "--import-file=" + rawPath2.GetFilePath(),
+                "--import-replicate-name=160109_Mix1_calcurve_070",
+                "--save");
             doc = ResultsUtil.DeserializeDocument(outPath2);
             Assert.AreEqual(2, doc.Settings.MeasuredResults.Chromatograms.Count, msg);
             ChromatogramSet chromatSet;
@@ -1488,7 +1525,6 @@ namespace pwiz.SkylineTestData
             doc.Settings.MeasuredResults.TryGetChromatogramSet("160109_Mix1_calcurve_070", out chromatSet, out idx);
             Assert.IsNotNull(chromatSet, msg);
             Assert.IsTrue(chromatSet.MSDataFilePaths.Contains(rawPath2));
-
 
             // Test: Import all files and sub-folders in test directory
             // The document should already contain a replicate named "REP01".
@@ -1499,6 +1535,9 @@ namespace pwiz.SkylineTestData
                              "--import-all=" + TestFilesDir.FullPath,
                              "--import-warn-on-failure",
                              "--save");
+
+            Assert.IsFalse(msg.Contains(string.Format(Resources.Error___0_, string.Empty)), msg);
+
             // ExtensionTestContext.ExtThermo raw uses different case from file on disk
             // which happens to make a good test case.
             MsDataFilePath rawPathDisk = GetThermoDiskPath(rawPath);
@@ -1506,7 +1545,7 @@ namespace pwiz.SkylineTestData
             // These messages are due to files that were already in the document.
             Assert.IsTrue(msg.Contains(string.Format(Resources.CommandLine_RemoveImportedFiles__0______1___Note__The_file_has_already_been_imported__Ignoring___, "REP01", rawPathDisk)), msg);
             Assert.IsTrue(msg.Contains(string.Format(Resources.CommandLine_RemoveImportedFiles__0______1___Note__The_file_has_already_been_imported__Ignoring___, "160109_Mix1_calcurve_070", rawPath2)), msg);
-//            Assert.IsTrue(msg.Contains(string.Format("160109_Mix1_calcurve_070 -> {0}",rawPath2)), msg); 
+            //            Assert.IsTrue(msg.Contains(string.Format("160109_Mix1_calcurve_070 -> {0}",rawPath2)), msg); 
 
             doc = ResultsUtil.DeserializeDocument(outPath2);
             Assert.IsTrue(doc.Settings.HasResults);
@@ -1534,33 +1573,8 @@ namespace pwiz.SkylineTestData
             doc.Settings.MeasuredResults.TryGetChromatogramSet("REP012", out chromatogramSet, out index);
             Assert.IsNotNull(chromatogramSet);
             Assert.IsTrue(chromatogramSet.MSDataFilePaths.Count() == 1);
-            Assert.IsTrue(!useRaw || chromatogramSet.MSDataFilePaths.Contains(
+            Assert.IsTrue(chromatogramSet.MSDataFilePaths.Contains(
                 GetThermoDiskPath(new MsDataFilePath(TestFilesDir.GetTestPath(@"REP01\CE_Vantage_15mTorr_0001_REP1_02" + extRaw)))));
- 
-
-            // Test: Import non-recursive
-            // Make sure only files directly in the folder get imported
-            string badFilePath = TestFilesDir.GetTestPath("bad_file" + extRaw);
-            string badFileMoved = badFilePath + ".save";
-            if (File.Exists(badFilePath))
-                File.Move(badFilePath, badFileMoved);
-            string fullScanPath = TestFilesDir.GetTestPath("FullScan" + extRaw);
-            string fullScanMoved = fullScanPath + ".save";
-            File.Move(fullScanPath, fullScanMoved);
-
-            msg = RunCommand("--in=" + docPath,
-                "--import-all-files=" + TestFilesDir.FullPath,
-                "--out=" + outPath4);
-
-            AssertEx.FileExists(outPath4, msg);
-            doc = ResultsUtil.DeserializeDocument(outPath4);
-            Assert.IsTrue(doc.Settings.HasResults);
-            Assert.AreEqual(4, doc.Settings.MeasuredResults.Chromatograms.Count,
-                string.Format("Expected 4 replicates from files, found: {0}",
-                    string.Join(", ", doc.Settings.MeasuredResults.Chromatograms.Select(chromSet => chromSet.Name).ToArray())));
-            if (File.Exists(badFileMoved))
-                File.Move(badFileMoved, badFilePath);
-            File.Move(fullScanMoved, fullScanPath);
         }
 
         [TestMethod]
@@ -3018,12 +3032,12 @@ namespace pwiz.SkylineTestData
 
             // Error: Unknown server
             var serverUri = PanoramaUtil.ServerNameToUri("unknown.server-state.com");
-            var client = new TestPanoramaClient() { MyServerState = ServerState.unknown, ServerUri = serverUri };
+            var client = new TestPanoramaClient() { MyServerState = new ServerState(ServerStateEnum.unknown, null, null), ServerUri = serverUri };
             helper.ValidateServer(client, null, null);
             Assert.IsTrue(
                 buffer.ToString()
                     .Contains(
-                        string.Format(Resources.EditServerDlg_OkDialog_Unknown_error_connecting_to_the_server__0__,
+                        string.Format(Resources.ServerState_GetErrorMessage_Unable_to_connect_to_the_server__0__,
                             serverUri.AbsoluteUri)));
             TestOutputHasErrorLine(buffer.ToString());
             buffer.Clear();
@@ -3031,12 +3045,12 @@ namespace pwiz.SkylineTestData
 
             // Error: Not a Panorama Server
             serverUri = PanoramaUtil.ServerNameToUri("www.google.com");
-            client = new TestPanoramaClient() {MyPanoramaState = PanoramaState.other, ServerUri = serverUri};
+            client = new TestPanoramaClient() {MyUserState = new UserState(UserStateEnum.unknown, null, null), ServerUri = serverUri};
             helper.ValidateServer(client, null, null);
             Assert.IsTrue(
                 buffer.ToString()
                     .Contains(
-                        string.Format(Resources.EditServerDlg_OkDialog_The_server__0__is_not_a_Panorama_server,
+                        string.Format(Resources.UserState_getErrorMessage_There_was_an_error_authenticating_user_credentials_on_the_server__0__,
                             serverUri.AbsoluteUri)));
             TestOutputHasErrorLine(buffer.ToString());
             buffer.Clear();
@@ -3044,7 +3058,7 @@ namespace pwiz.SkylineTestData
 
             // Error: Invalid user
             serverUri = PanoramaUtil.ServerNameToUri(PanoramaUtil.PANORAMA_WEB);
-            client = new TestPanoramaClient() { MyUserState = UserState.nonvalid, ServerUri = serverUri };
+            client = new TestPanoramaClient() { MyUserState = new UserState(UserStateEnum.nonvalid, null, null), ServerUri = serverUri };
             helper.ValidateServer(client, "invalid", "user");
             Assert.IsTrue(
                 buffer.ToString()
@@ -3213,26 +3227,19 @@ namespace pwiz.SkylineTestData
             public Uri ServerUri { get; set; }
 
             public ServerState MyServerState { get; set; }
-            public PanoramaState MyPanoramaState { get; set; }
             public UserState MyUserState { get; set; }
             public FolderState MyFolderState { get; set; }
 
             public TestPanoramaClient()
             {
-                MyServerState = ServerState.available;
-                MyPanoramaState = PanoramaState.panorama;
-                MyUserState = UserState.valid;
+                MyServerState = ServerState.VALID;
+                MyUserState = UserState.VALID;
                 MyFolderState = FolderState.valid;
             }
 
             public virtual ServerState GetServerState()
             {
                 return MyServerState;
-            }
-
-            public PanoramaState IsPanorama()
-            {
-                return MyPanoramaState;
             }
 
             public UserState IsValidUser(string username, string password)

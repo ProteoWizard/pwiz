@@ -857,6 +857,7 @@ namespace pwiz.Skyline.Controls.Databinding
         {
             get
             {
+                // ReSharper disable once SuspiciousTypeConversion.Global
                 return (ParentForm as IDataboundGridForm);
             }
         }

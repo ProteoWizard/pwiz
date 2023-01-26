@@ -995,6 +995,7 @@ namespace pwiz.Skyline
 
             if (source == null)
             {
+                // ReSharper disable once SuspiciousTypeConversion.Global
                 source = (synchMzScaleToolStripMenuItem.Owner as ContextMenuStrip)?.SourceControl?.FindForm() as IMzScalePlot;
                 if (source == null)
                     return;
@@ -1132,6 +1133,7 @@ namespace pwiz.Skyline
 
             // Insert skyline specific menus
             var set = Settings.Default;
+            // ReSharper disable once SuspiciousTypeConversion.Global
             var control = menuStrip.SourceControl.Parent.Parent as IMzScalePlot;
             int iInsert = 0;
             if (control?.IsAnnotated ?? false)
@@ -1433,7 +1435,7 @@ namespace pwiz.Skyline
                 _graphFullScan.Hide();
         }
 
-        private void ShowGraphFullScan(IScanProvider scanProvider, int transitionIndex, int scanIndex)
+        private void ShowGraphFullScan(IScanProvider scanProvider, int transitionIndex, int scanIndex, int? optStep)
         {
             if (_graphFullScan != null)
             {
@@ -1449,7 +1451,7 @@ namespace pwiz.Skyline
                 _graphFullScan.Show(dockPanel, rectFloat);
             }
 
-            _graphFullScan.ShowSpectrum(scanProvider, transitionIndex, scanIndex);
+            _graphFullScan.ShowSpectrum(scanProvider, transitionIndex, scanIndex, optStep);
         }
 
         // Testing
@@ -1502,6 +1504,7 @@ namespace pwiz.Skyline
             SelectedScanFile = e.DataFile;
             SelectedScanRetentionTime = e.RetentionTime;
             SelectedScanTransition = e.TransitionId;
+            SelectedScanOptStep = e.OptStep;
             UpdateChromGraphs();
         }
 
@@ -2035,7 +2038,7 @@ namespace pwiz.Skyline
                 }
             }
 
-            ShowGraphFullScan(e.ScanProvider, e.TransitionIndex, e.ScanIndex);
+            ShowGraphFullScan(e.ScanProvider, e.TransitionIndex, e.ScanIndex, e.OptStep);
         }
 
         /// <summary>
@@ -2715,6 +2718,7 @@ namespace pwiz.Skyline
         public MsDataFileUri SelectedScanFile { get; set; }
         public double SelectedScanRetentionTime { get; set; }
         public Identity SelectedScanTransition { get; set; }
+        public int? SelectedScanOptStep { get; set; }
 
         public void ActivateReplicate(string name)
         {

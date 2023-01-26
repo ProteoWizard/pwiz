@@ -141,6 +141,7 @@
     <Compile Include="Collections\StructSerializer.cs" />
     <Compile Include="Progress\ProgressExtensions.cs" />
     <Compile Include="SystemUtil\ItemDescription.cs" />
+    <Compile Include="SystemUtil\StreamEx.cs" />
     <Compile Include="Progress\AbstractProgress.cs" />
     <Compile Include="Progress\IProgress.cs" />
     <Compile Include="Progress\ProgressSegments.cs" />
