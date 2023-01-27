@@ -221,9 +221,9 @@ namespace pwiz.Skyline.Model
                 THERMO_QUANTIVA,
                 THERMO_ALTIS,
                 THERMO_EXPLORIS,
-                // THERMO_ECLIPSE,
+                THERMO_ECLIPSE,
                 THERMO_FUSION,
-                // THERMO_FUSION_LUMOS,
+                THERMO_FUSION_LUMOS,
                 WATERS_XEVO_TQ,
                 WATERS_QUATTRO_PREMIER,
             };
