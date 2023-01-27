@@ -235,6 +235,14 @@
   <ItemGroup>
     <EmbeddedResource Include="Schemas\*.xsd" />
   </ItemGroup>
+  <ItemGroup>
+    <EmbeddedResource Include="Schemas\AuditLog\Skyl_0.xsd">
+      <SubType>Designer</SubType>
+    </EmbeddedResource>
+    <EmbeddedResource Include="Schemas\AuditLog\Skyl_4.21.xsd">
+      <SubType>Designer</SubType>
+    </EmbeddedResource>
+  </ItemGroup>
   <Import Project="$(MSBuildToolsPath)\Microsoft.CSharp.targets" />
   <!-- To modify your build process, add your task inside one of the targets below and uncomment it. 
        Other similar extension points exist, see Microsoft.Common.targets.
