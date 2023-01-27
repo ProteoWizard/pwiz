@@ -1236,12 +1236,10 @@ namespace pwiz.Skyline.Model.Results
             if (doc?.MeasuredResults?.Chromatograms == null || Version >= CacheFormatVersion.Seventeen)
                 return this;
 
-            // Get the set of MsDataFileUris belonging to ChromatogramSets with optimization functions.
-            var optFiles = new HashSet<MsDataFileUri>();
-            foreach (var chromSet in doc.MeasuredResults.Chromatograms.Where(chromSet => chromSet.OptimizationFunction != null))
-            foreach (var file in chromSet.MSDataFilePaths)
-                optFiles.Add(file);
-            if (!optFiles.Any())
+            // Determine which files belong to ChromatogramSets with optimization functions.
+            var fileIsOpt = CachedFiles.Select(file => doc.MeasuredResults.Chromatograms.Any(chromSet =>
+                chromSet.OptimizationFunction != null && chromSet.MSDataFilePaths.Contains(file.FilePath))).ToArray();
+            if (!fileIsOpt.Any(isOpt => isOpt))
                 return this;
 
             var tolerance = (float)doc.Settings.TransitionSettings.Instrument.MzMatchTolerance;
@@ -1256,7 +1254,7 @@ namespace pwiz.Skyline.Model.Results
                     foreach (var chromIdx in ChromatogramIndexesMatching(nodePep, nodeTranGroup.PrecursorMz, tolerance, null))
                     {
                         var info = ChromGroupHeaderInfos[chromIdx];
-                        if (info.NumTransitions <= 1 || !optFiles.Contains(CachedFiles[info.FileIndex].FilePath))
+                        if (info.NumTransitions <= 1 || !fileIsOpt[info.FileIndex])
                             continue;
 
                         var curTranIdx = 0;
@@ -1320,11 +1318,7 @@ namespace pwiz.Skyline.Model.Results
             
             // Update optimization steps.
             for (var i = startIdx; i < endIdx; i++)
-            {
-                var newChromTransition = transitions[i];
-                newChromTransition.OptimizationStep = (short)(i - centerIdx);
-                transitions[i] = newChromTransition;
-            }
+                transitions[i] = transitions[i].ChangeOptimizationStep((short)(i - centerIdx));
 
             return true;
         }
@@ -1446,8 +1440,8 @@ namespace pwiz.Skyline.Model.Results
                             if (formatVersion < CacheFormatVersion.Seventeen && chromTransition.OptimizationStep != 0)
                             {
                                 // Convert to old format with shifted m/z.
-                                chromTransition.Product += chromTransition.OptimizationStep * ChromatogramInfo.OPTIMIZE_SHIFT_SIZE;
-                                chromTransition.OptimizationStep = 0;
+                                var newProduct = chromTransition.Product + chromTransition.OptimizationStep * ChromatogramInfo.OPTIMIZE_SHIFT_SIZE;
+                                chromTransition = chromTransition.ChangeProduct(newProduct).ChangeOptimizationStep(0);
                             }
                             listKeepTransitions.Add(chromTransition);
                         }

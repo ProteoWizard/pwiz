@@ -850,21 +850,11 @@ namespace pwiz.Skyline.Model.Results
         {
         }
 
-        public double Product
-        {
-            get { return _product; }
-            set { _product = value; }
-        }
-
+        public double Product { get { return _product; } }
         public float ExtractionWidth { get { return _extractionWidth; }}  // In m/z
         public float IonMobilityValue { get { return _ionMobilityValue; } } // Units depend on ion mobility type
         public float IonMobilityExtractionWidth { get { return _ionMobilityExtractionWidth; } } // Units depend on ion mobility type
-
-        public short OptimizationStep
-        {
-            get { return _optimizationStep; }
-            set { _optimizationStep = value; }
-        }
+        public short OptimizationStep { get { return _optimizationStep; } }
 
         public FlagValues Flags
         {
@@ -984,6 +974,20 @@ namespace pwiz.Skyline.Model.Results
         #endregion
 
         #region object overrides
+
+        public ChromTransition ChangeProduct(double product)
+        {
+            var chromTransition = this;
+            chromTransition._product = product;
+            return chromTransition;
+        }
+
+        public ChromTransition ChangeOptimizationStep(short step)
+        {
+            var chromTransition = this;
+            chromTransition._optimizationStep = step;
+            return chromTransition;
+        }
 
         /// <summary>
         /// For debugging only
