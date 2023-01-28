@@ -58,7 +58,7 @@ namespace pwiz.SkylineTest
         {
             string explicitCurrentResourceName = GetVersionSpecificXsdResourceName(DocumentFormat.CURRENT); // e.g. if DocumentFormat.CURRENT is 21.3, returns "Skyline_21_3.xsd"
             var explicitCurrentXsdContents = GetResourceText(explicitCurrentResourceName); // May be null if DocumentFormat.CURRENT is pre-release and explicit file hasn't been created yet
-            if (IsOfficialBuild())
+            if (IsOfficialBuild() && explicitCurrentXsdContents == null)
             {
                 if (!CreateCurrentXsdFile())
                 {
