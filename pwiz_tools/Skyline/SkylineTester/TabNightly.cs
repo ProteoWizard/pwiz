@@ -694,9 +694,12 @@ namespace SkylineTester
 
                     MainWindow.Summary = null;
                     MainWindow.InitLogSelector(MainWindow.NightlyRunDate, MainWindow.NightlyViewLog);
-                    MainWindow.NightlyLogFile = (MainWindow.Summary.Runs.Count > 0)
-                        ? MainWindow.Summary.GetLogFile(MainWindow.Summary.Runs[MainWindow.Summary.Runs.Count - 1])
-                        : null;
+                    if (MainWindow.Summary != null) // For ReSharper - should never be null
+                    {
+                        MainWindow.NightlyLogFile = (MainWindow.Summary.Runs.Count > 0)
+                            ? MainWindow.Summary.GetLogFile(MainWindow.Summary.Runs[MainWindow.Summary.Runs.Count - 1])
+                            : null;
+                    }
 
                     MainWindow.InitNightly();
                     Enter();

@@ -181,7 +181,7 @@ namespace TestPerf // Note: tests in the "TestPerf" namespace only run when the 
             // Verify error handling in ion mobility control
             RunUI(() => importPeptideSearchDlg.FullScanSettingsControl.IonMobilityFiltering.SetResolvingPowerText("fish"));
             var errDlg = ShowDialog<MessageDlg>(importPeptideSearchDlg.ClickNextButtonNoCheck);
-            RunUI(() => errDlg.OkDialog());
+            OkDialog(errDlg, errDlg.OkDialog);
 
             RunUI(() => importPeptideSearchDlg.FullScanSettingsControl.IonMobilityFiltering.SetResolvingPower(40));
 

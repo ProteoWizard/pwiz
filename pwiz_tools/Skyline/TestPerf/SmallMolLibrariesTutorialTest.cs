@@ -187,7 +187,7 @@ namespace TestPerf // This would be in tutorial tests if it didn't require a mas
             var confirmAddDlg = ShowDialog<AlertDlg>(viewLibUI.AddAllPeptides);
             using (new CheckDocumentState(1, 34, 38, 246))
             {
-                RunUI(confirmAddDlg.OkDialog);
+                OkDialog(confirmAddDlg, confirmAddDlg.OkDialog);
                 doc = WaitForDocumentChangeLoaded(doc);
             }
 
@@ -459,7 +459,7 @@ namespace TestPerf // This would be in tutorial tests if it didn't require a mas
                     pick.Left = SkylineWindow.Right + 20;
                 });
                 PauseForScreenShot("LipidCreator in tool store", 22);
-                RunUI(() => pick.CancelDialog());
+                OkDialog(pick, pick.CancelDialog);
                 OkDialog(configureToolsDlg, configureToolsDlg.Cancel);
                 //   • Click the Install button.
             }

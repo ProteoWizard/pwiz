@@ -31,6 +31,7 @@
     <EnableSecurityDebugging>false</EnableSecurityDebugging>
     <AutoGenerateBindingRedirects>false</AutoGenerateBindingRedirects>
     <!-- Make the assembly name configurable -->
+    <MSBuildAssemblyName />
     <AssemblyName Condition=" '$(MSBuildAssemblyName)' == '' ">Skyline-daily</AssemblyName>
     <AssemblyName Condition=" '$(MSBuildAssemblyName)' != '' ">$(MSBuildAssemblyName)</AssemblyName>
     <PublishUrl>T:\www\site\skyline.ms\html\software\Skyline-daily13-64\</PublishUrl>
@@ -50,8 +51,8 @@
     <PublisherName>MacCoss Lab, UW</PublisherName>
     <CreateWebPageOnPublish>true</CreateWebPageOnPublish>
     <WebPage>index.html</WebPage>
-    <ApplicationRevision>306</ApplicationRevision>
-    <ApplicationVersion>22.2.1.306</ApplicationVersion>
+    <ApplicationRevision>391</ApplicationRevision>
+    <ApplicationVersion>22.2.1.391</ApplicationVersion>
     <UseApplicationTrust>false</UseApplicationTrust>
     <PublishWizardCompleted>true</PublishWizardCompleted>
     <BootstrapperEnabled>true</BootstrapperEnabled>
@@ -230,6 +231,12 @@
     </Compile>
     <Compile Include="Alerts\PathChooserDlg.Designer.cs">
       <DependentUpon>PathChooserDlg.cs</DependentUpon>
+    </Compile>
+    <Compile Include="Alerts\ShareResultsFilesDlg.cs">
+      <SubType>Form</SubType>
+    </Compile>
+    <Compile Include="Alerts\ShareResultsFilesDlg.Designer.cs">
+      <DependentUpon>ShareResultsFilesDlg.cs</DependentUpon>
     </Compile>
     <Compile Include="Alerts\ReportShutdownDlg.cs">
       <SubType>Form</SubType>
@@ -458,6 +465,7 @@
       <AutoGen>True</AutoGen>
       <DependentUpon>PropertyNames.resx</DependentUpon>
     </Compile>
+    <Compile Include="Model\Databinding\Collections\FixedSkylineObjectList.cs" />
     <Compile Include="Model\Databinding\Entities\CalibrationCurveMetrics.cs" />
     <Compile Include="Model\Databinding\Entities\ColumnCaptions.Designer.cs">
       <AutoGen>True</AutoGen>
@@ -625,8 +633,12 @@
     <Compile Include="Model\ProteomicSequence.cs" />
     <Compile Include="Model\Results\CandidatePeakGroupData.cs" />
     <Compile Include="Model\Results\OnDemandFeatureCalculator.cs" />
+    <Compile Include="Model\Results\PeakGroupIntegrator.cs" />
+    <Compile Include="Model\Results\PeakShapeStatistics.cs" />
+    <Compile Include="Model\Results\PeakShapeValues.cs" />
     <Compile Include="Model\Results\Scoring\Calculators.cs" />
     <Compile Include="Model\Results\IntensityAccumulator.cs" />
+    <Compile Include="Model\Results\MedianPeakShape.cs" />
     <Compile Include="Model\Results\OptStepChromatograms.cs" />
     <Compile Include="Model\Results\Scoring\FeatureNames.cs" />
     <Compile Include="Model\Results\Scoring\FeatureTooltips.Designer.cs">
@@ -2148,6 +2160,10 @@
     </EmbeddedResource>
     <EmbeddedResource Include="Alerts\PathChooserDlg.zh-CHS.resx">
       <DependentUpon>PathChooserDlg.cs</DependentUpon>
+    </EmbeddedResource>
+    <EmbeddedResource Include="Alerts\ShareResultsFilesDlg.resx">
+      <DependentUpon>ShareResultsFilesDlg.cs</DependentUpon>
+      <SubType>Designer</SubType>
     </EmbeddedResource>
     <EmbeddedResource Include="Alerts\ReportErrorDlg.ja.resx">
       <DependentUpon>ReportErrorDlg.cs</DependentUpon>

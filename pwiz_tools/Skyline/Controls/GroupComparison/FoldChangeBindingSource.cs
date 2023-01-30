@@ -28,6 +28,7 @@ using pwiz.Common.DataBinding.Controls;
 using pwiz.Skyline.Controls.Databinding;
 using pwiz.Skyline.Model;
 using pwiz.Skyline.Model.Databinding;
+using pwiz.Skyline.Model.Databinding.Collections;
 using pwiz.Skyline.Model.Databinding.Entities;
 using pwiz.Skyline.Model.GroupComparison;
 using pwiz.Skyline.Model.Hibernate;
@@ -161,9 +162,9 @@ namespace pwiz.Skyline.Controls.GroupComparison
 
             var rowSourceInfos = new List<RowSourceInfo>()
             {
-                new RowSourceInfo(new StaticRowSource(foldChangeRows),
+                new RowSourceInfo(new FixedSkylineObjectList<FoldChangeRow>(_skylineDataSchema, foldChangeRows),
                     new ViewInfo(_skylineDataSchema, typeof(FoldChangeRow), defaultViewSpec).ChangeViewGroup(ViewGroup.BUILT_IN)),
-                new RowSourceInfo(new StaticRowSource(detailRows),
+                new RowSourceInfo(new FixedSkylineObjectList<FoldChangeDetailRow>(_skylineDataSchema, detailRows),
                     new ViewInfo(_skylineDataSchema, typeof(FoldChangeDetailRow), clusteredViewSpec).ChangeViewGroup(ViewGroup.BUILT_IN))
             };
             return rowSourceInfos;

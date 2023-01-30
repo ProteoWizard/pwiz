@@ -5,8 +5,8 @@ targets['Skyline'] = \
 {
     'master':
     {
-        "bt210": "Skyline master and PRs (Windows x86_64 debug, with code coverage)"
-        ,"ProteoWizard_SkylinePrPerfAndTutorialTestsWindowsX8664": "Skyline PR Perf and Tutorial tests (Windows x86_64)"
+        #"bt210": "Skyline master and PRs (Windows x86_64 debug, with code coverage)",
+        "ProteoWizard_SkylinePrPerfAndTutorialTestsWindowsX8664": "Skyline PR Perf and Tutorial tests (Windows x86_64)"
     },
     'release':
     {

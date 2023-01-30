@@ -51,7 +51,7 @@ namespace pwiz.Skyline.Model.Lib
         {
             int length = PrimitiveArrays.ReadOneValue<int>(stream);
             byte[] buffer = new byte[length];
-            stream.Read(buffer, 0, length);
+            stream.ReadOrThrow(buffer, 0, length);
             var proto = new LibraryKeyProto();
             proto.MergeFrom(new CodedInputStream(buffer));
             switch (proto.KeyType)

@@ -288,6 +288,7 @@ namespace pwiz.Skyline.Model.Results
                         // Skip settings change for deserialized document when it first becomes connected with its cache
                         results = results.UpdateCaches(documentPath, resultsLoad);
                         docNew = docCurrent.ChangeSettingsNoDiff(docCurrent.Settings.ChangeMeasuredResults(results));
+                        docNew = _manager.ApplyMetadataRules(docNew);
                     }
                     else
                     {

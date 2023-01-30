@@ -141,6 +141,14 @@ namespace SkylineTester
             return true;
         }
 
+        public override void Cancel()
+        {
+            base.Cancel();
+
+            if (MainWindow.RunParallel.Checked)
+                RunTests.SendDockerKill();
+        }
+
         public override int Find(string text, int position)
         {
             return MainWindow.TestsTree.Find(text.Trim(), position);

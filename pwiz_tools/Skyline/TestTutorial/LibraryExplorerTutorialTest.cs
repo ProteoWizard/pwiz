@@ -102,7 +102,7 @@ namespace pwiz.SkylineTestTutorial
             // Go to view menu and click Spectral Libraries
             ViewLibraryDlg viewLibraryDlg = ShowDialog<ViewLibraryDlg>(SkylineWindow.ViewSpectralLibraries);
             var matchedPepsDlg = WaitForOpenForm<AddModificationsDlg>();
-            RunUI(matchedPepsDlg.CancelDialog);
+            OkDialog(matchedPepsDlg, matchedPepsDlg.CancelDialog);
             PauseForScreenShot<ViewLibraryDlg>("Library Explorer", 5);
 
             // Types text in Peptide textbox in the Spectral Library Explorer Window
@@ -310,7 +310,7 @@ namespace pwiz.SkylineTestTutorial
 
             // Ignore modification matching form
             var matchedPepModsDlg = WaitForOpenForm<AddModificationsDlg>();
-            RunUI(matchedPepModsDlg.CancelDialog);
+            OkDialog(matchedPepModsDlg,matchedPepModsDlg.CancelDialog);
 
             var viewLibraryDlg1 = WaitForOpenForm<ViewLibraryDlg>();
             const int countLabels1 = 15;
