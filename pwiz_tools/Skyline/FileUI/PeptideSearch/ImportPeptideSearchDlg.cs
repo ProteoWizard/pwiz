@@ -985,7 +985,7 @@ namespace pwiz.Skyline.FileUI.PeptideSearch
                 filter = filter.ChangeAutoSelect(true);
             Helpers.AssignIfEquals(ref filter, TransitionSettings.Filter);
 
-            if (FullScanSettingsControl.IsDIA() && filter.ExclusionUseDIAWindow)
+            if (FullScanSettingsControl.IsDIA() && filter.ExclusionUseDIAWindow && FullScanSettingsControl.IsolationScheme != null)
             {
                 if (FullScanSettingsControl.IsolationScheme.IsAllIons)
                 {
