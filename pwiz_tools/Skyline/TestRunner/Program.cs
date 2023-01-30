@@ -669,6 +669,8 @@ namespace TestRunner
             testRunnerExe = iRelative != -1
                 ? Path.Combine(@"c:\pwiz", testRunnerExe.Substring(iRelative))
                 : @"c:\pwiz\pwiz_tools\Skyline\bin\x64\Release\TestRunner.exe";
+            // N.B. TestResults_<n> could technically just be TestResults since each VM has its own drive, but it makes for a more readable log and
+            // is also used in pwiz_tools\Skyline\TestRunnerLib\RunTests.cs to determine the test client ID
             var testRunnerCmd = $@"{testRunnerExe} parallelmode=client showheader=0 results=c:\AlwaysUpCLT\TestResults_{i} log={testRunnerLog}";
             testRunnerCmd = AddPassThroughArguments(commandLineArgs, testRunnerCmd);
             testRunnerCmd += $" workerport={workerPort}";
