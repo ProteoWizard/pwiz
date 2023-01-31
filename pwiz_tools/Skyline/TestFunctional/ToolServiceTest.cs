@@ -17,8 +17,11 @@
  * limitations under the License.
  */
 
+using System;
+using System.Collections.Generic;
 using System.Linq;
 using Microsoft.VisualStudio.TestTools.UnitTesting;
+using pwiz.Skyline;
 using pwiz.Skyline.Model;
 using pwiz.Skyline.Model.Tools;
 using pwiz.Skyline.Util;
@@ -41,7 +44,36 @@ namespace pwiz.SkylineTestFunctional
             Run(@"TestFunctional\ToolServiceTest.zip"); 
         }
 
+        /// <summary>
+        /// Sometimes the test external tool stops listening to Skyline.
+        /// If the test fails, and only consider it to be a failure if it fails twice in a row
+        /// </summary>
+        private const int MAX_TEST_ATTEMPTS = 2;
         protected override void DoTest()
+        {
+            List<Exception> accumulatedExceptions = new List<Exception>();
+            for (int attemptNumber = 0; attemptNumber < MAX_TEST_ATTEMPTS; attemptNumber++)
+            {
+                try
+                {
+                    TryToDoTest();
+                    if (!Program.TestExceptions.Any())
+                    {
+                        return;
+                    }
+                }
+                catch (Exception ex)
+                {
+                    accumulatedExceptions.Add(ex);
+                }
+                accumulatedExceptions.AddRange(Program.TestExceptions);
+                Program.TestExceptions.Clear();
+            }
+
+            throw new AggregateException(accumulatedExceptions);
+        }
+
+        protected void TryToDoTest()
         {
             OpenDocument(FILE_NAME);
 
