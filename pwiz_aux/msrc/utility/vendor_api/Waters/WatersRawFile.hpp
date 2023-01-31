@@ -457,14 +457,14 @@ struct PWIZ_API_DECL RawData
         return success;
     }
 
-    bool GetIsolationWindow(float& lowerOffset, float& upperOffset) {
+    bool GetIsolationWindow(float& lowerOffset, float& upperOffset)
+    {
         MassLynxParameters parameters = DDAProcessor.GetParameters();
-        float lowerOffsetParam = stof(parameters.Get(DDAParameter::LOWEROFFSET));
-        float upperOffsetParam = stof(parameters.Get(DDAParameter::UPPEROFFSET));
-        
-        if (lowerOffsetParam == 0 && upperOffsetParam == 0) {
+        float lowerOffsetParam = lexical_cast<float>(parameters.Get(DDAParameter::LOWEROFFSET));
+        float upperOffsetParam = lexical_cast<float>(parameters.Get(DDAParameter::UPPEROFFSET));
+
+        if (lowerOffsetParam == 0 && upperOffsetParam == 0)
             return false;
-        }
 
         lowerOffset = lowerOffsetParam;
         upperOffset = upperOffsetParam;
