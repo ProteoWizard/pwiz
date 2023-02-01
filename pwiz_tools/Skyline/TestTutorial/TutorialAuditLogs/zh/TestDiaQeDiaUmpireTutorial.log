@@ -47,7 +47,7 @@ All Info  :
 导入肽段搜索 > 提取色谱图 > 已删除后缀 是 ".mzML"
 导入肽段搜索 > 添加修饰 > 已添加修饰 : 包含 "Carbamidomethyl (C) = C[57] （固定）"
 导入肽段搜索 > 添加修饰 > 已添加修饰 : 包含 "Oxidation (M) = M[16] （可变）"
-导入肽段搜索 > 配置离子对设置 > Ion match tolerance 是 0.05mz
+导入肽段搜索 > 配置离子对设置 > 离子匹配耐受性 是 0.05mz
 导入肽段搜索 > 导入 FASTA > FASTA 文件 是 "nodecoys_3mixed_human_yeast_ecoli_20140403_iRT.fasta"
 导入肽段搜索 > 导入 FASTA > 用于导入目标的 FASTA 文件 是 "target_protein_sequences.fasta"
 导入肽段搜索 > 导入 FASTA > 诱饵生成方法 是 "随机序列"
@@ -91,7 +91,7 @@ Extra Info: 提取色谱图 =
 },
 配置离子对设置 = 
 {
-    Ion match tolerance = 0.05mz
+    离子匹配耐受性 = 0.05mz
 },
 导入 FASTA = 
 {
