@@ -41,7 +41,7 @@ namespace TestPerf
     [TestClass]
     public class DdaTutorialTest : AbstractFunctionalTest
     {
-        [TestMethod, NoParallelTesting]
+        [TestMethod, NoParallelTesting(TestExclusionReason.RESOURCE_INTENSIVE)]
         public void TestDdaTutorial()
         {
             // Set true to look at tutorial screenshots.

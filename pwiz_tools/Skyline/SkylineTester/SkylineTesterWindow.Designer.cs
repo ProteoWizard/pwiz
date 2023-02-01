@@ -3261,6 +3261,7 @@ namespace SkylineTester
             this.runSerial.TabIndex = 14;
             this.runSerial.Text = "Run tests serially";
             this.runSerial.UseVisualStyleBackColor = true;
+            this.runSerial.CheckedChanged += new System.EventHandler(this.runSerial_CheckedChanged);
             // 
             // parallelGroup
             // 
