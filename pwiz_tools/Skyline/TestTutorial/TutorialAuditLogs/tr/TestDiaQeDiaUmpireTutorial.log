@@ -47,6 +47,7 @@ Import Peptide Search > Extract Chromatograms > Removed prefix is "collinsb_X180
 Import Peptide Search > Extract Chromatograms > Removed suffix is ".mzML"
 Import Peptide Search > Add Modifications > Added modifications : contains "Carbamidomethyl (C) = C[57] (fixed)"
 Import Peptide Search > Add Modifications > Added modifications : contains "Oxidation (M) = M[16] (variable)"
+Import Peptide Search > Configure Transition Settings > Ion match tolerance is 0,05mz
 Import Peptide Search > Import FASTA > FASTA file is "nodecoys_3mixed_human_yeast_ecoli_20140403_iRT.fasta"
 Import Peptide Search > Import FASTA > FASTA file for importing targets is "target_protein_sequences.fasta"
 Import Peptide Search > Import FASTA > Decoy generation method is "Shuffle Sequence"
@@ -87,6 +88,10 @@ Add Modifications =
         "Carbamidomethyl (C) = C[57] (fixed)",
         "Oxidation (M) = M[16] (variable)"
     ]
+},
+Configure Transition Settings = 
+{
+    Ion match tolerance = 0,05mz
 },
 Import FASTA = 
 {
