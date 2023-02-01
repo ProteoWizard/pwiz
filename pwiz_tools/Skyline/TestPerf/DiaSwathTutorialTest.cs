@@ -142,7 +142,7 @@ namespace TestPerf
             TestTtofData();
         }
 
-        [TestMethod]
+        [TestMethod, NoParallelTesting(TestExclusionReason.RESOURCE_INTENSIVE)] // Times out on slower worker VMs
         public void TestDiaTtofFullSearchTutorial()
         {
             _analysisValues = new AnalysisValues
@@ -240,7 +240,7 @@ namespace TestPerf
                 TestQeData();
         }
 
-        [TestMethod]
+        [TestMethod, NoParallelTesting(TestExclusionReason.RESOURCE_INTENSIVE)] // Times out on slower VMs
         public void TestDiaQeFullSearchTutorial()
         {
             _analysisValues = new AnalysisValues
@@ -307,7 +307,7 @@ namespace TestPerf
             RunTest();
         }
 
-        [TestMethod]
+        [TestMethod, NoParallelTesting(TestExclusionReason.VENDOR_FILE_LOCKING)] // Bruker wants exclusive read access to raw data
         [Timeout(int.MaxValue)] // These can take a long time
         public void TestDiaPasefTutorial()
         {
@@ -371,12 +371,12 @@ namespace TestPerf
             RunTest();
         }
 
-        [TestMethod]
+        [TestMethod,
+         NoParallelTesting(TestExclusionReason.VENDOR_FILE_LOCKING), // Bruker wants exclusive read access to raw data
+         NoNightlyTesting(TestExclusionReason.EXCESSIVE_TIME)] // Skip during Nightly
         [Timeout(int.MaxValue)] // These can take a long time
         public void TestDiaPasefFullDataset()
         {
-            if (Program.SkylineOffscreen)
-                return; // skip during Nightly
 
             _analysisValues = new AnalysisValues
             {

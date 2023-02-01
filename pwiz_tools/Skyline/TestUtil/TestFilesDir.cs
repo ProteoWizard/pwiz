@@ -20,6 +20,7 @@ using System;
 using System.IO;
 using System.Linq;
 using Microsoft.VisualStudio.TestTools.UnitTesting;
+using pwiz.Common.Collections;
 using pwiz.Skyline.Util;
 using pwiz.Skyline.Util.Extensions;
 
@@ -241,11 +242,35 @@ namespace pwiz.SkylineTestUtil
             CheckForFileLocks(RootPath, desiredCleanupLevel == DesiredCleanupLevel.all);
             // Also check for file locks on the persistent files directory
             // since it is essentially an extension of the test directory.
-            CheckForFileLocks(PersistentFilesDir, desiredCleanupLevel != DesiredCleanupLevel.none);
+            if (!TestContext.Properties.Contains("ParallelTest")) // It is a shared directory in parallel tests, though, so leave it alone in parallel mode
+            {
+                CheckForFileLocks(PersistentFilesDir, desiredCleanupLevel != DesiredCleanupLevel.none);
+            }
         }
 
         public static void CheckForFileLocks(string path, bool useDeletion = false)
         {
+            string GetProcessNamesLockingFile(string lockedDirectory, Exception exceptionShowingLockedFileName)
+            {
+                var output = string.Empty;
+                try
+                {
+                    var fname = exceptionShowingLockedFileName.Message.Split('\'')[1];
+                    var fullPathToFile = Path.Combine(lockedDirectory, fname);
+                    var names = string.Join(@", ",
+                        FileLockingProcessFinder.GetProcessesUsingFile(fullPathToFile).Select(p => p.ProcessName));
+                    if (!names.IsNullOrEmpty())
+                    {
+                        output = $@" ({fullPathToFile} is locked by {names})";
+                    }
+                }
+                catch
+                {
+                    // ignored - not a disaster if this doesn't always work
+                }
+                return output;
+            }
+
             if (!Directory.Exists(path)) // Did test already clean up after itself?
                 return;
 
@@ -254,7 +279,14 @@ namespace pwiz.SkylineTestUtil
             if (useDeletion)
             {
                 RemoveReadonlyFlags(path);
-                Helpers.TryTwice(() => Directory.Delete(path, true));
+                try
+                {
+                    Helpers.TryTwice(() => Directory.Delete(path, true));
+                }
+                catch (Exception e)
+                {
+                    throw new IOException($@"Directory.Delete(""{path}"",true) failed with ""{e.Message}""{GetProcessNamesLockingFile(path, e)}");
+                }
                 return;
             }
 
@@ -271,7 +303,14 @@ namespace pwiz.SkylineTestUtil
             catch (IOException)
             {
                 // Useful for debugging. Exception names file that is locked.
-                Helpers.TryTwice(() => Directory.Delete(path, true));
+                try
+                {
+                    Helpers.TryTwice(() => Directory.Delete(path, true));
+                }
+                catch (Exception e)
+                {
+                    throw new IOException($@"Directory.Move(""{path}"",""{guidName}"") failed, attempt to delete instead resulted in ""{e.Message}""{GetProcessNamesLockingFile(path, e)}");
+                }
             }
 
             // Move the file back to where it was, and fail if this throws
@@ -281,8 +320,15 @@ namespace pwiz.SkylineTestUtil
             }
             catch (IOException)
             {
-                // Useful for debugging. Exception names file that is locked.
-                Helpers.TryTwice(() => Directory.Delete(guidName, true));
+                try
+                {
+                    // Useful for debugging. Exception names file that is locked.
+                    Helpers.TryTwice(() => Directory.Delete(guidName, true));
+                }
+                catch (Exception e)
+                {
+                    throw new IOException($@"Directory.Move(""{guidName}"",(""{path}"") failed, attempt to delete instead resulted in ""{e.Message}""{GetProcessNamesLockingFile(path, e)}");
+                }
             }
         }
 
