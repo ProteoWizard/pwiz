@@ -34,6 +34,7 @@ using pwiz.Skyline.Controls.Graphs;
 using pwiz.Skyline.Model;
 using pwiz.Skyline.Model.DocSettings;
 using pwiz.Skyline.Model.GroupComparison;
+using pwiz.Skyline.Model.IonMobility;
 using pwiz.Skyline.Model.Irt;
 using pwiz.Skyline.Model.Results;
 using pwiz.Skyline.Model.Results.Scoring;
@@ -215,6 +216,23 @@ namespace pwiz.Skyline
         public string SharedFile { get; private set; }
         public ShareType SharedFileType { get; private set; }
 
+        // For creating a .imsdb ion mobility library
+        public static readonly Argument ARG_IMSDB_CREATE = new DocArgument(@"ionmobility-library-create", () => GetPathToFile(IonMobilityDb.EXT),
+            (c, p) => c.ImsDbFile = p.ValueFullPath);
+
+        // For creating a .imsdb ion mobility library
+        public static readonly Argument ARG_IMSDB_NAME = new DocArgument(@"ionmobility-library-name", NAME_VALUE,
+            (c, p) => c.ImsDbName = p.Value);
+
+        private static readonly ArgumentGroup GROUP_CREATE_IMSDB = new ArgumentGroup(() => CommandArgUsage.CommandArgs_GROUP_CREATE_IMSDB_Ion_Mobility_Library, false,
+            ARG_IMSDB_CREATE, ARG_IMSDB_NAME)
+        {
+            Dependencies =
+            {
+                {  ARG_IMSDB_NAME, ARG_IMSDB_CREATE },
+            },
+        };
+
         public static readonly Argument ARG_IMPORT_FILE = new DocArgument(@"import-file", PATH_TO_FILE,
             (c, p) => c.ParseImportFile(p));
         public static readonly Argument ARG_IMPORT_REPLICATE_NAME = new DocArgument(@"import-replicate-name", NAME_VALUE,
@@ -259,12 +277,15 @@ namespace pwiz.Skyline
             (c, p) => c.LockmassNegative = p.ValueDouble);
         public static readonly Argument ARG_IMPORT_LOCKMASS_TOLERANCE = new DocArgument(@"import-lockmass-tolerance", NUM_VALUE,
             (c, p) => c.LockmassTolerance = p.ValueDouble);
+        public static readonly Argument ARG_IMPORT_PEAK_BOUNDARIES = new DocArgument(@"import-peak-boundaries", PATH_TO_FILE,
+            (c, p) => c.ImportPeakBoundariesPath = p.ValueFullPath);
 
         private static readonly ArgumentGroup GROUP_IMPORT = new ArgumentGroup(() => CommandArgUsage.CommandArgs_GROUP_IMPORT_Importing_results_replicates, false,
             ARG_IMPORT_FILE, ARG_IMPORT_REPLICATE_NAME, ARG_IMPORT_OPTIMIZING, ARG_IMPORT_APPEND, ARG_IMPORT_ALL,
             ARG_IMPORT_ALL_FILES, ARG_IMPORT_NAMING_PATTERN, ARG_IMPORT_FILENAME_PATTERN, ARG_IMPORT_SAMPLENAME_PATTERN,
             ARG_IMPORT_BEFORE, ARG_IMPORT_ON_OR_AFTER, ARG_IMPORT_NO_JOIN, ARG_IMPORT_PROCESS_COUNT, ARG_IMPORT_THREADS,
-            ARG_IMPORT_WARN_ON_FAILURE, ARG_IMPORT_LOCKMASS_POSITIVE, ARG_IMPORT_LOCKMASS_NEGATIVE, ARG_IMPORT_LOCKMASS_TOLERANCE);
+            ARG_IMPORT_WARN_ON_FAILURE, ARG_IMPORT_LOCKMASS_POSITIVE, ARG_IMPORT_LOCKMASS_NEGATIVE, ARG_IMPORT_LOCKMASS_TOLERANCE, 
+            ARG_IMPORT_PEAK_BOUNDARIES);
 
         public static readonly Argument ARG_REMOVE_BEFORE = new DocArgument(@"remove-before", DATE_VALUE,
             (c, p) => c.SetRemoveBefore(p.ValueDate));
@@ -334,6 +355,8 @@ namespace pwiz.Skyline
             return true;
         }
 
+        public string ImsDbFile { get; private set; }
+        public string ImsDbName { get; private set; }
 
         public List<MsDataFileUri> ReplicateFile { get; private set; }
         public string ReplicateName { get; private set; }
@@ -346,6 +369,7 @@ namespace pwiz.Skyline
         public Regex ImportFileNamePattern { get; private set; }
         public Regex ImportSampleNamePattern { get; private set; }
         public bool ImportWarnOnFailure { get; private set; }
+        public string ImportPeakBoundariesPath { get; private set; }
         public bool RemovingResults { get; private set; }
         public DateTime? RemoveBeforeDate { get; private set; }
         public bool ChromatogramsDiscard{ get; private set; }
@@ -551,6 +575,10 @@ namespace pwiz.Skyline
         public bool AddDecoys
         {
             get { return !string.IsNullOrEmpty(AddDecoysType); }
+        }
+        public bool CreatingIMSDB
+        {
+            get { return !string.IsNullOrEmpty(ImsDbFile); }
         }
         public bool ImportingResults
         {
@@ -999,7 +1027,7 @@ namespace pwiz.Skyline
                 var serverUri = PanoramaUtil.ServerNameToUri(PanoramaServerUri);
                 if (serverUri == null)
                 {
-                    WriteLine(Resources.CommandLine_GeneralException_Error___0_, 
+                    WriteLine(Resources.Error___0_, 
                         string.Format(Resources.EditServerDlg_OkDialog_The_text__0__is_not_a_valid_server_name_, PanoramaServerUri));
                     return false;
                 }
@@ -1780,6 +1808,7 @@ namespace pwiz.Skyline
                     GROUP_IMPORT_SEARCH,
                     GROUP_IMPORT_LIST,
                     GROUP_ADD_LIBRARY,
+                    GROUP_CREATE_IMSDB,
                     GROUP_DECOYS,
                     GROUP_REFINEMENT,
                     GROUP_REFINEMENT_W_RESULTS,
@@ -1885,14 +1914,14 @@ namespace pwiz.Skyline
             }
             catch (UsageException x)
             {
-                WriteLine(Resources.CommandLine_GeneralException_Error___0_, x.Message);
+                WriteLine(Resources.Error___0_, x.Message);
                 return false;
             }
             catch (Exception x)
             {
                 // Unexpected behavior, but better to output the error than appear to crash, and
                 // have Windows write it to the application event log.
-                WriteLine(Resources.CommandLine_GeneralException_Error___0_, x.Message);
+                WriteLine(Resources.Error___0_, x.Message);
                 WriteLine(x.StackTrace);
                 return false;
             }

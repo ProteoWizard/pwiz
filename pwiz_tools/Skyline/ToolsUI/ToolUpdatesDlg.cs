@@ -21,6 +21,8 @@ using System.Collections.Generic;
 using System.Collections.ObjectModel;
 using System.IO;
 using System.Linq;
+using System.Net;
+using System.Reflection;
 using System.Windows.Forms;
 using pwiz.Skyline.Alerts;
 using pwiz.Skyline.Controls;
@@ -155,6 +157,13 @@ namespace pwiz.Skyline.ToolsUI
                 catch (ToolExecutionException)
                 {
                     failedDownloads.Add(tool._packageName);
+                }
+                catch (TargetInvocationException ex)
+                {
+                    if (ex.InnerException is WebException)
+                        failedDownloads.Add(tool._packageName);
+                    else
+                        throw;
                 }
             }
         }

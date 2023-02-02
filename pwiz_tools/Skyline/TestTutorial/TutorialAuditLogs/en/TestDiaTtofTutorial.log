@@ -9,7 +9,7 @@ Summary   : Added spectral library "DIA-TTOF-tutorial"
 All Info  :
 Added spectral library "DIA-TTOF-tutorial"
 Build Spectral Library > Cut-off score is "0.95"
-Build Spectral Library > Search files : contains "interact.pep.xml"
+Build Spectral Library > Search files : contains { File = "interact.pep.xml", Score type = "PeptideProphet confidence", Score threshold = "0.95" }
 Build Spectral Library > iRT standard peptides is "Biognosys-11 (iRT-C18)"
 Build Spectral Library > Include ambiguous matches is False
 Build Spectral Library > Filter for document peptides is False
@@ -18,7 +18,11 @@ Build Spectral Library > Input File Type is "Search results (build library direc
 Extra Info: Cut-off score = "0.95",
 Search files = 
 [
-    "interact.pep.xml"
+    {
+        File = "interact.pep.xml",
+        Score type = "PeptideProphet confidence",
+        Score threshold = "0.95"
+    }
 ],
 iRT standard peptides = "Biognosys-11 (iRT-C18)",
 Include ambiguous matches = False,
@@ -121,6 +125,16 @@ Import Peptide Search > Import FASTA > FASTA file is "target_protein_sequences.f
 Import Peptide Search > Import FASTA > Decoy generation method is "Shuffle Sequence"
 Import Peptide Search > Import FASTA > Decoys per target is "1"
 Import Peptide Search > Import FASTA > Automatically train mProphet model is True
+Import Peptide Search > Associate Proteins > Group proteins is False
+Import Peptide Search > Associate Proteins > Find minimal protein list is False
+Import Peptide Search > Associate Proteins > Remove subset proteins is False
+Import Peptide Search > Associate Proteins > Shared peptides option is "Duplicated between proteins"
+Import Peptide Search > Associate Proteins > Min peptides per protein is "1"
+Import Peptide Search > Associate Proteins > Proteins mapped is "11"
+Import Peptide Search > Associate Proteins > Peptides mapped is "134"
+Import Peptide Search > Associate Proteins > Proteins unmapped is "1"
+Import Peptide Search > Associate Proteins > Protein targets is "11"
+Import Peptide Search > Associate Proteins > Peptide targets is "134"
 Extra Info: Extract Chromatograms = 
 {
     Found results files = 
@@ -487,6 +501,19 @@ Import FASTA =
     Decoy generation method = "Shuffle Sequence",
     Decoys per target = "1",
     Automatically train mProphet model = True
+},
+Associate Proteins = 
+{
+    Group proteins = False,
+    Find minimal protein list = False,
+    Remove subset proteins = False,
+    Shared peptides option = "Duplicated between proteins",
+    Min peptides per protein = "1",
+    Proteins mapped = "11",
+    Peptides mapped = "134",
+    Proteins unmapped = "1",
+    Protein targets = "11",
+    Peptide targets = "134"
 }
 
 Undo Redo : Annotations changed

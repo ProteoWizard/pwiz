@@ -38,7 +38,7 @@ namespace pwiz.SkylineTestFunctional
     [TestClass]
     public class InstallToolsTest : AbstractFunctionalTest
     {
-        [TestMethod]
+        [TestMethod, NoParallelTesting(TestExclusionReason.SHARED_DIRECTORY_WRITE)]
         public void TestInstallTools()
         {
             TestFilesZip = @"TestFunctional\InstallToolsTest.zip"; //Not L10N
@@ -322,7 +322,7 @@ namespace pwiz.SkylineTestFunctional
             Assert.AreEqual(0, Settings.Default.ToolList.Count);
             string toolsDir = ToolDescriptionHelpers.GetToolsDirectory();
 
-            WaitForCondition(5*1000, () => !Directory.Exists(toolsDir));
+            WaitForCondition(5*1000, () => !Directory.Exists(toolsDir), $@"Directory ""{toolsDir}"" should not exist");
         }
 
         private void ClearAllTools()
@@ -612,7 +612,7 @@ namespace pwiz.SkylineTestFunctional
                                       messageDlg => messageDlg.Btn1Click()); // keep existing annotations
             WaitForConditionUI(3 * 1000, () => configureToolsDlg.ToolList.Count == 5);
             Assert.IsTrue(Settings.Default.AnnotationDefList.Contains(sampleId));
-            RunDlg<MultiButtonMsgDlg>(() => configureToolsDlg.InstallZipTool(conflictAnnotationsPath),
+            ShowAndDismissDlg<MultiButtonMsgDlg>(() => configureToolsDlg.InstallZipTool(conflictAnnotationsPath),
                                       dlg => dlg.Btn0Click());
             {
                 var messageDlg = WaitForOpenForm<MultiButtonMsgDlg>();

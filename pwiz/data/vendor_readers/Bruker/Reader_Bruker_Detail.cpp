@@ -60,6 +60,9 @@ Reader_Bruker_Format format(const string& path)
         else if(leaf == "analysis.tdf" ||
                 leaf == "analysis.tdf_bin")
             return Reader_Bruker_Format_TDF;
+        else if(leaf == "analysis.tsf" ||
+                leaf == "analysis.tsf_bin")
+            return Reader_Bruker_Format_TSF;
         else
             return Reader_Bruker_Format_Unknown;
     }
@@ -68,6 +71,8 @@ Reader_Bruker_Format format(const string& path)
     // The directory should have a file named "Analysis.tdf"
     if (bfs::exists(sourcePath / "Analysis.tdf") || bfs::exists(sourcePath / "analysis.tdf"))
         return Reader_Bruker_Format_TDF;
+    if (bfs::exists(sourcePath / "Analysis.tsf") || bfs::exists(sourcePath / "analysis.tsf"))
+        return Reader_Bruker_Format_TSF;
 
     // TODO: 1SRef is not the only possible substring below, get more examples!
 
@@ -158,7 +163,7 @@ std::vector<InstrumentConfiguration> createInstrumentConfigurations(CompassDataP
         case InstrumentSource_ESI:
         case InstrumentSource_MULTI_MODE:
         case InstrumentSource_Ultraspray:
-        case InstrumentSource_VIP_HESI:  // TODO: MattC says "From what I can tell VIP-HESI is heated ESI + APCI ("The Vacuum Insulated Probe Heated ESI source is a dual source with an integrated APCI probe."). So I'm not sure it's accurate to just group it with ESI. Not that it matters much to our workflows. To handle this properly though probably requires a new CV term, or confirmation with the mzML group that multi-type sources should just have a CV param for each type (the same as we do for activation types e.g. CID+ETD)."
+        case InstrumentSource_VIP_HESI:
             configurations.push_back(InstrumentConfiguration());
             configurations.back().componentList.push_back(Component(MS_ESI, 1));
             configurations.back().componentList.back().set(MS_electrospray_inlet);
@@ -175,6 +180,7 @@ std::vector<InstrumentConfiguration> createInstrumentConfigurations(CompassDataP
 
         case InstrumentSource_APCI:
         case InstrumentSource_GC_APCI:
+        case InstrumentSource_VIP_APCI:
             configurations.push_back(InstrumentConfiguration());
             configurations.back().componentList.push_back(Component(MS_atmospheric_pressure_chemical_ionization, 1));
             break;
@@ -289,7 +295,7 @@ PWIZ_API_DECL cv::CVID translateAsInstrumentSeries(CompassDataPtr rawfile)
         case InstrumentFamily_MaldiTOF: return MS_Bruker_Daltonics_flex_series;
         case InstrumentFamily_FTMS: return MS_Bruker_Daltonics_apex_series;
         case InstrumentFamily_solariX: return MS_Bruker_Daltonics_solarix_series;
-        //case InstrumentFamily_timsTOF: return MS_Bruker_Daltonics_timsTOF;
+        case InstrumentFamily_timsTOF: return MS_Bruker_Daltonics_timsTOF_series;
 
         case InstrumentFamily_maXis:
         case InstrumentFamily_compact:

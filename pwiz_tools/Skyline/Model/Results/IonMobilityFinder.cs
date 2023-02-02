@@ -103,6 +103,17 @@ namespace pwiz.Skyline.Model.Results
             if (_totalSteps == 0)
                 return measured;
 
+            // Before we do anything else, make sure the raw files are present
+            foreach (var f in fileInfos)
+            {
+                if (!ScanProvider.FileExists(_documentFilePath, f.FilePath))
+                {
+                    throw new FileNotFoundException(TextUtil.LineSeparate(Resources.IonMobilityFinder_ProcessMSLevel_Failed_using_results_to_populate_ion_mobility_library_,
+                        string.Format(Resources.ScanProvider_GetScans_The_data_file__0__could_not_be_found__either_at_its_original_location_or_in_the_document_or_document_parent_folder_,
+                            f.FilePath)));
+                }
+            }
+
             using (_msDataFileScanHelper = new MsDataFileScanHelper(SetScans, HandleLoadScanException, true))
             {
                 //
@@ -212,7 +223,7 @@ namespace pwiz.Skyline.Model.Results
                         return false;
 
                     ChromatogramGroupInfo[] chromGroupInfos;
-                    results.TryLoadChromatogram(i, nodePep, nodeGroup, tolerance, true, out chromGroupInfos);
+                    results.TryLoadChromatogram(i, nodePep, nodeGroup, tolerance, out chromGroupInfos);
                     foreach (var chromInfo in chromGroupInfos.Where(c => Equals(filePath, c.FilePath)))
                     {
                         if (!ProcessChromInfo(fileInfo, chromInfo, pair, nodeGroup, tolerance, libKey)) 
@@ -314,7 +325,7 @@ namespace pwiz.Skyline.Model.Results
             // Across all spectra at the peak retention time, find the one with max total 
             // intensity for the mz's of interest (ie the isotopic distribution) and note its ion mobility.
             var scanIndex = MsDataFileScanHelper.FindScanIndex(times, apexRT.Value);
-            _msDataFileScanHelper.UpdateScanProvider(scanProvider, 0, scanIndex);
+            _msDataFileScanHelper.UpdateScanProvider(scanProvider, 0, scanIndex, null);
             _msDataFileScanHelper.MsDataSpectra = null; // Reset
             scanIndex = _msDataFileScanHelper.GetScanIndex();
             _msDataFileScanHelper.ScanProvider.SetScanForBackgroundLoad(scanIndex);
@@ -465,6 +476,7 @@ namespace pwiz.Skyline.Model.Results
         private bool IsExtremeMs2Value(double im)
         {
             return _ms1IonMobilityBest.HasValue &&
+                   _ms1IonMobilityBest.Units != eIonMobilityUnits.compensation_V && // Makes no sense in FAIMS
                    (im < _ms1IonMobilityBest.Mobility - _maxHighEnergyDriftOffsetMsec ||
                     im > _ms1IonMobilityBest.Mobility + _maxHighEnergyDriftOffsetMsec);
         }

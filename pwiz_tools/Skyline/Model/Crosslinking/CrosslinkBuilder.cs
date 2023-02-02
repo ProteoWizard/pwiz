@@ -20,6 +20,7 @@ using System;
 using System.Collections.Generic;
 using System.Linq;
 using pwiz.Common.Chemistry;
+using pwiz.Common.Collections;
 using pwiz.Skyline.Model.DocSettings;
 using pwiz.Skyline.Model.Lib;
 using pwiz.Skyline.Model.Results;
@@ -213,7 +214,9 @@ namespace pwiz.Skyline.Model.Crosslinking
                 simpleTransitions.Add(_peptideBuilders[i].GetSingleFragmentIons(peptideTransitionGroup, useFilter).ToList());
             }
 
-            return PermuteTransitions(simpleTransitions, Settings.PeptideSettings.Modifications.MaxNeutralLosses);
+            int maxNeutralLosses = Settings.PeptideSettings.Modifications.MaxNeutralLosses;
+            return PermuteTransitions(simpleTransitions, maxNeutralLosses).SelectMany(neutralFragmentIon =>
+                PermuteCleavedCrosslinks(neutralFragmentIon, maxNeutralLosses));
         }
 
         public IEnumerable<TransitionDocNode> GetTransitionDocNodes(TransitionGroup transitionGroup,
@@ -240,7 +243,7 @@ namespace pwiz.Skyline.Model.Crosslinking
                 if (Settings.TransitionSettings.FullScan.IsHighResPrecursor)
                 {
                     ms1transitions = ms1transitions.SelectMany(tran =>
-                        ExpandPrecursorIsotopes(tran, isotopeDist, useFilter)).ToList();
+                        RemoveUnmeasurable(precursorMz, ExpandPrecursorIsotopes(tran, isotopeDist, useFilter))).ToList();
                 }
             }
             else
@@ -292,6 +295,69 @@ namespace pwiz.Skyline.Model.Crosslinking
             return result;
         }
 
+        public IEnumerable<NeutralFragmentIon> PermuteCleavedCrosslinks(NeutralFragmentIon neutralFragmentIon, int maxFragmentationEventCount)
+        {
+            var cleavedCrosslinks = neutralFragmentIon.GetCleavedCrosslinks(PeptideStructure).ToList();
+            if (cleavedCrosslinks.Count == 0)
+            {
+                yield return neutralFragmentIon;
+                yield break;
+            }
+
+            if (cleavedCrosslinks.Count + neutralFragmentIon.CountFragmentationEvents() > maxFragmentationEventCount)
+            {
+                yield break;
+            }
+
+            var massType = Settings.TransitionSettings.Prediction.FragmentMassType;
+            foreach (var lossList in PermuteTransitionLosses(
+                         cleavedCrosslinks.Select(crosslink => crosslink.Crosslinker),
+                         massType))
+            {
+                var transitionLosses = new TransitionLosses(lossList.ToList(), massType);
+                yield return neutralFragmentIon.AddLosses(transitionLosses);
+            }
+        }
+
+        public static IList<ImmutableList<TransitionLoss>> PermuteTransitionLosses(IEnumerable<StaticMod> staticMods, MassType massType)
+        {
+            var allLosses = new List<ImmutableList<TransitionLoss>> { ImmutableList<TransitionLoss>.EMPTY };
+            foreach (var group in staticMods.GroupBy(mod => mod))
+            {
+                var staticMod = group.Key;
+                if (staticMod.Losses == null)
+                {
+                    return Array.Empty<ImmutableList<TransitionLoss>>();
+                }
+
+                var transitionLosses = staticMod.Losses.Select(loss => new TransitionLoss(staticMod, loss, massType)).ToList();
+                var integerCombinations = IntegerCombinations(transitionLosses.Count, group.Count());
+                allLosses = allLosses.SelectMany(entry =>
+                {
+                    return integerCombinations.Select(indexes =>
+                        ImmutableList.ValueOf(entry.Concat(indexes.Select(i => transitionLosses[i]))));
+                }).ToList();
+            }
+
+            return allLosses;
+        }
+
+        private static List<ImmutableList<int>> IntegerCombinations(int range, int count)
+        {
+            var list = new List<ImmutableList<int>> { ImmutableList<int>.EMPTY };
+            for (int position = 0; position < count; position++)
+            {
+                list = list.SelectMany(entry => Enumerable.Range(0, range).Select(i =>
+                {
+                    var newEntry = entry.Append(i).ToList();
+                    newEntry.Sort();
+                    return ImmutableList.ValueOf(newEntry);
+                })).Distinct().ToList();
+            }
+
+            return list;
+        }
+
         public IEnumerable<TransitionDocNode> MakeTransitionDocNodes(
             TransitionGroup transitionGroup,
             IsotopeDistInfo isotopeDist,
@@ -311,7 +377,7 @@ namespace pwiz.Skyline.Model.Crosslinking
 
             foreach (var complexFragmentIon in complexFragmentIons)
             {
-                if (complexFragmentIon.IsEmpty)
+                if (!complexFragmentIon.IsConnected(PeptideStructure))
                 {
                     continue;
                 }

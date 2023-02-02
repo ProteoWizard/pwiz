@@ -42,6 +42,7 @@ Reader::Config::Config()
     , acceptZeroLengthSpectra(false)
     , ignoreZeroIntensityPoints(false)
     , combineIonMobilitySpectra(false)
+    , ignoreCalibrationScans(false)
     , reportSonarBins(false)
     , unknownInstrumentIsError(false)
     , adjustUnknownTimeZonesToHostTimeZone(true)
@@ -50,6 +51,7 @@ Reader::Config::Config()
     , allowMsMsWithoutPrecursor(true)
     , sortAndJitter(false)
     , globalChromatogramsAreMs1Only(false)
+    , ddaProcessing(false)
 {
 }
 
@@ -60,7 +62,9 @@ Reader::Config::Config(const Config& rhs)
     srmAsSpectra = rhs.srmAsSpectra;
 	acceptZeroLengthSpectra = rhs.acceptZeroLengthSpectra;
     ignoreZeroIntensityPoints = rhs.ignoreZeroIntensityPoints;
+    ignoreCalibrationScans = rhs.ignoreCalibrationScans;
     combineIonMobilitySpectra = rhs.combineIonMobilitySpectra;
+    ddaProcessing = rhs.ddaProcessing;
     reportSonarBins = rhs.reportSonarBins;
     unknownInstrumentIsError = rhs.unknownInstrumentIsError;
     adjustUnknownTimeZonesToHostTimeZone = rhs.adjustUnknownTimeZonesToHostTimeZone;
@@ -75,6 +79,8 @@ Reader::Config::Config(const Config& rhs)
 // default implementation; most Readers don't need to worry about multi-run input files
 PWIZ_API_DECL void Reader::readIds(const string& filename, const string& head, vector<string>& results, const Config& config) const
 {
+    check_path_length(filename);
+
     MSData data;
     read(filename, head, data);
     results.push_back(data.id);
@@ -89,6 +95,8 @@ PWIZ_API_DECL std::string ReaderList::identify(const string& filename) const
 
 PWIZ_API_DECL std::string ReaderList::identify(const string& filename, const string& head) const
 {
+    check_path_length(filename);
+
 	std::string result;
     for (const_iterator it=begin(); it!=end(); ++it)
 	{
@@ -110,6 +118,8 @@ PWIZ_API_DECL void ReaderList::read(const string& filename, MSData& result, int 
 
 PWIZ_API_DECL void ReaderList::read(const string& filename, const string& head, MSData& result, int sampleIndex /* = 0 */, const Config& config) const
 {
+    check_path_length(filename);
+
     for (const_iterator it=begin(); it!=end(); ++it)
         if ((*it)->accept(filename, head))
         {
@@ -129,6 +139,8 @@ PWIZ_API_DECL void ReaderList::read(const string& filename, vector<MSDataPtr>& r
 
 PWIZ_API_DECL void ReaderList::read(const string& filename, const string& head, vector<MSDataPtr>& results, const Config& config) const
 {
+    check_path_length(filename);
+
     for (const_iterator it=begin(); it!=end(); ++it)
         if ((*it)->accept(filename, head))
         {
@@ -148,6 +160,8 @@ PWIZ_API_DECL void ReaderList::readIds(const string& filename, vector<string>& r
 
 PWIZ_API_DECL void ReaderList::readIds(const string& filename, const string& head, vector<string>& results, const Config& config) const
 {
+    check_path_length(filename);
+
     for (const_iterator it=begin(); it!=end(); ++it)
         if ((*it)->accept(filename, head))
         {
@@ -244,6 +258,8 @@ PWIZ_API_DECL ReaderList operator +(const ReaderPtr& lhs, const ReaderPtr& rhs)
 
 PWIZ_API_DECL ReaderPtr ReaderList::identifyAsReader(const std::string& filepath) const
 {
+    check_path_length(filepath);
+
     try
     {
         string head = read_file_header(filepath, 512);

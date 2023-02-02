@@ -103,6 +103,20 @@ int main(int argc, char* argv[])
             result += pwiz::util::testReader(reader, testArgs, testAcceptOnly, requireUnicodeSupport, pwiz::util::IsNamedRawFile({ "HDDDA_Short_noLM.raw" }), newConfig);
         }
 
+        // test ddaProcessing
+        {
+            auto newConfig = config;
+
+            // CWT should work with ion mobility
+            newConfig.ddaProcessing = true;
+            result += pwiz::util::testReader(reader, testArgs, testAcceptOnly, requireUnicodeSupport, pwiz::util::IsNamedRawFile({ "ATEHLSTLSEK_LM_684.3469.raw" }), newConfig);
+            result += pwiz::util::testReader(reader, testArgs, testAcceptOnly, requireUnicodeSupport, pwiz::util::IsNamedRawFile({ "Minimal_DDA.raw" }), newConfig);
+
+            // with or without combineIonMobility on
+            //newConfig.combineIonMobilitySpectra = true;
+            //result += pwiz::util::testReader(reader, testArgs, testAcceptOnly, requireUnicodeSupport, pwiz::util::IsNamedRawFile({ "HDDDA_Short_noLM.raw" }), newConfig);
+        }
+
         config.combineIonMobilitySpectra = true;
         result += pwiz::util::testReader(reader, testArgs, testAcceptOnly, requireUnicodeSupport, IsIMSData(), config);
 

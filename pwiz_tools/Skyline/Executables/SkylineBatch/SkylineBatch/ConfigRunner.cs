@@ -49,6 +49,8 @@ namespace SkylineBatch
             _runnerStatus = RunnerStatus.Stopped;
             Config = config;
             _uiControl = uiControl;
+            if (uiControl == null)
+                _uiControl = null;
             _logger = logger;
 
             _processRunner = new ProcessRunner()
@@ -210,6 +212,13 @@ namespace SkylineBatch
             // STEP 1: create results document and import data
             if (runOption <= RunBatchOptions.FROM_TEMPLATE_COPY)
             {
+                // Delete existing .sky and .skyd results files
+                var filesToDelete = FileUtil.GetFilesInFolder(Config.MainSettings.AnalysisFolderPath, TextUtil.EXT_SKY);
+                filesToDelete.AddRange(FileUtil.GetFilesInFolder(Config.MainSettings.AnalysisFolderPath,
+                    TextUtil.EXT_SKYD));
+                foreach (var file in filesToDelete)
+                    File.Delete(file);
+
                 // Unzip zipped template
                 if (Config.MainSettings.Template.Zipped)
                 {
@@ -226,13 +235,6 @@ namespace SkylineBatch
                     _logger.StopLogPercent(true);
                     _logger.Log(string.Format("{0} extracted.", Config.MainSettings.Template.FileName()));
                 }
-                
-                // Delete existing .sky and .skyd results files
-                var filesToDelete = FileUtil.GetFilesInFolder(Config.MainSettings.AnalysisFolderPath, TextUtil.EXT_SKY);
-                filesToDelete.AddRange(FileUtil.GetFilesInFolder(Config.MainSettings.AnalysisFolderPath,
-                    TextUtil.EXT_SKYD));
-                foreach (var file in filesToDelete) 
-                    File.Delete(file);
 
                 Config.WriteOpenSkylineTemplateCommand(commandWriter);
                 Config.WriteMsOneCommand(commandWriter);
@@ -300,7 +302,7 @@ namespace SkylineBatch
                 if (tries > 0) _logger.Log(Resources.ConfigRunner_DownloadPanoramaFile_Trying_again___);
                 try
                 {
-                    wc.DownloadAsync(serverFile.ServerInfo.URI, filePath, serverFile.ServerInfo.Username, serverFile.ServerInfo.Password, serverFile.Size);
+                    wc.DownloadAsync(serverFile.ServerInfo.URI, filePath, serverFile.ServerInfo.FileSource.Username, serverFile.ServerInfo.FileSource.Password, serverFile.Size);
                     _logger.StopLogPercent(true);
                     break;
                 }
@@ -388,7 +390,7 @@ namespace SkylineBatch
                         }, token);
                         try
                         {
-                            wc.DownloadAsync(file.ServerInfo.URI, filePath, file.ServerInfo.Username, file.ServerInfo.Password, file.Size);
+                            wc.DownloadAsync(file.ServerInfo.URI, filePath, file.ServerInfo.FileSource.Username, file.ServerInfo.FileSource.Password, file.Size);
                             _logger.StopLogPercent(true);
                             break;
                         }
@@ -524,6 +526,19 @@ namespace SkylineBatch
         public bool IsWaiting()
         {
             return _runnerStatus == RunnerStatus.Waiting;
+        }
+
+        // config runners are only equal if they are the same reference
+        public override bool Equals(object obj)
+        {
+            if (ReferenceEquals(null, obj)) return false;
+            if (ReferenceEquals(this, obj)) return true;
+            return false;
+        }
+
+        public override int GetHashCode()
+        {
+            return Config.GetHashCode() + _runnerStatus.GetHashCode();
         }
     }
 }

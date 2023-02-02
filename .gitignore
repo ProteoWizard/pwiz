@@ -387,6 +387,9 @@ Reader*Test.data
 /pwiz_aux/msrc/utility/vendor_api/ABI/LicenseKey.h
 /pwiz_aux/msrc/utility/vendor_api/Agilent/x64/
 /pwiz_aux/msrc/utility/vendor_api/Agilent/x86/
+/pwiz_aux/msrc/utility/vendor_api/Bruker/BAF2SQL-README.txt
+/pwiz_aux/msrc/utility/vendor_api/Bruker/BAF2SQL-THIRD-PARTY-LICENSE-README.txt
+/pwiz_aux/msrc/utility/vendor_api/Bruker/THIRD-PARTY-LICENSE-README.txt
 /pwiz_aux/msrc/utility/vendor_api/Bruker/x64/
 /pwiz_aux/msrc/utility/vendor_api/Bruker/x86/
 /pwiz_aux/msrc/utility/vendor_api/Bruker/**/*.h
@@ -410,6 +413,7 @@ SkylineTester Results
 /bs32.bat
 /bso64.bat
 /bso32.bat
+/SignAfterPublishPW.bat
 /OnyxTOFMS.试验.wiff.scan
 /160109_Mix1_calcurve_074_raw.skyl
 /160109_Mix1_calcurve_074_raw.skyd
@@ -443,6 +447,10 @@ SkylineTester Results
 /pwiz_tools/Skyline/TestRunner/Properties/AssemblyInfo.cs
 /pwiz_tools/Skyline/Executables/Installer/FileList64.txt
 /pwiz_tools/Skyline/TestSettings_x??.testsettings
+/pwiz_tools/Skyline/SignAfterPublishPW.bat
 /BrowseOnly
 /x64/BrowseOnly
 /qb64.bat
+/pwiz_tools/Skyline/Test/ProtocolBuffers/GeneratedCode/*.cs
+/pwiz_tools/Skyline/Test/ProtocolBuffers/tmp/*.cs
+/pwiz_tools/Skyline/Test/ProtocolBuffers/tmp

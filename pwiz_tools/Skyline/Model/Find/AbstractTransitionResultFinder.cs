@@ -137,7 +137,7 @@ namespace pwiz.Skyline.Model.Find
                     {
                         FinderChromFileData chromFileData;
                         bool match = MatchTransition(chromInfo) != null;
-                        var transitionBookmark = new Bookmark(transitionId, chromInfo.FileId,
+                        var transitionBookmark = new Bookmark(transitionId, iReplicate, chromInfo.FileId,
                                                               chromInfo.OptimizationStep);
                         var chromFileKey = new FinderChromFileKey(chromInfo);
                         if (!fileDatas.TryGetValue(chromFileKey, out chromFileData))
@@ -167,7 +167,7 @@ namespace pwiz.Skyline.Model.Find
                         var transitionGroupMatch = MatchTransitionGroup(fileDataEntry.Value.TransitionGroupChromInfo);
                         if (transitionGroupMatch != null)
                         {
-                            results.Add(new Bookmark(identityPath, fileDataEntry.Value.TransitionGroupChromInfo.FileId, fileDataEntry.Value.TransitionGroupChromInfo.OptimizationStep));
+                            results.Add(new Bookmark(identityPath, iReplicate, fileDataEntry.Value.TransitionGroupChromInfo.FileId, fileDataEntry.Value.TransitionGroupChromInfo.OptimizationStep));
                             continue;
                         }
                     }

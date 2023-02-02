@@ -91,13 +91,11 @@ namespace TestPerf // Note: tests in the "TestPerf" namespace only run when the 
                 var doc = SkylineWindow.Document;
                 RunUI(() =>
                 {
-                    Assert.IsTrue(importPeptideSearchDlg.CurrentPage ==
-                                  ImportPeptideSearchDlg.Pages.spectra_page);
+                    Assert.IsTrue(importPeptideSearchDlg.CurrentPage == ImportPeptideSearchDlg.Pages.spectra_page);
                     importPeptideSearchDlg.BuildPepSearchLibControl.AddSearchFiles(searchFiles);
-                    importPeptideSearchDlg.BuildPepSearchLibControl.CutOffScore = 0.95;
                     importPeptideSearchDlg.BuildPepSearchLibControl.FilterForDocumentPeptides = true;
                 });
-
+                WaitForConditionUI(() => importPeptideSearchDlg.IsNextButtonEnabled);
                 RunUI(() => Assert.IsTrue(importPeptideSearchDlg.ClickNextButton()));
                 doc = WaitForDocumentChange(doc);
 
@@ -137,8 +135,7 @@ namespace TestPerf // Note: tests in the "TestPerf" namespace only run when the 
                     lockmassDlg.LockmassTolerance = 10.0;
                 });
                 */
-                RunUI(lockmassDlg.OkDialog);
-                WaitForClosedForm<ImportResultsLockMassDlg>();
+                OkDialog(lockmassDlg, lockmassDlg.OkDialog);
 
                 // Add FASTA also skipped because filter for document peptides was chosen.
 
@@ -161,8 +158,8 @@ namespace TestPerf // Note: tests in the "TestPerf" namespace only run when the 
                 foreach (var pair in doc1.PeptidePrecursorPairs)
                 {
                     ChromatogramGroupInfo[] chromGroupInfo;
-                    Assert.IsTrue(results.TryLoadChromatogram(0, pair.NodePep, pair.NodeGroup,
-                        tolerance, true, out chromGroupInfo));
+                    Assert.IsTrue(results.TryLoadChromatogram(0, pair.NodePep, pair.NodeGroup, tolerance,
+                        out chromGroupInfo));
 
                     foreach (var chromGroup in chromGroupInfo)
                     {

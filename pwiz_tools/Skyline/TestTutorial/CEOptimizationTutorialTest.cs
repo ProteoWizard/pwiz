@@ -56,9 +56,8 @@ namespace pwiz.SkylineTestTutorial
         [TestMethod]
         public void TestCEOptimizationTutorialAsSmallMolecules()
         {
-            if (!RunSmallMoleculeTestVersions)
+            if (SkipSmallMoleculeTestVersions())
             {
-                Console.Write(MSG_SKIPPING_SMALLMOLECULE_TEST_VERSION);
                 return;
             }
             AsSmallMolecules = true;
@@ -138,8 +137,7 @@ namespace pwiz.SkylineTestTutorial
 
                 PauseForScreenShot<ExportMethodDlg.TransitionListView>("Export Transition List form", 4);
 
-                RunUI(() => exportMethodDlg.OkDialog(GetTestPath("CE_Vantage_15mTorr_unscheduled.csv"))); // Not L10N
-                WaitForClosedForm(exportMethodDlg);
+                OkDialog(exportMethodDlg,() => exportMethodDlg.OkDialog(GetTestPath("CE_Vantage_15mTorr_unscheduled.csv"))); // Not L10N
             }
 
             string filePathTemplate = GetTestPath("CE_Vantage_15mTorr_unscheduled.csv"); // Not L10N
@@ -192,8 +190,7 @@ namespace pwiz.SkylineTestTutorial
 
                 PauseForScreenShot<ExportMethodDlg.TransitionListView>("Export Transition List form", 6);
 
-                RunUI(() => exportMethodDlg.OkDialog(GetTestPath("CE_Vantage_15mTorr.csv"))); // Not L10N
-                WaitForClosedForm(exportMethodDlg);
+                OkDialog(exportMethodDlg ,() => exportMethodDlg.OkDialog(GetTestPath("CE_Vantage_15mTorr.csv"))); // Not L10N
             }
 
             string filePathTemplate1 = GetTestPath("CE_Vantage_15mTorr_000{0}.csv"); // Not L10N
@@ -292,14 +289,10 @@ namespace pwiz.SkylineTestTutorial
                                                                   Math.Round(graphDatas[1].RegressionLine.Intercept, 4)), 
                                                           });
 
-            RunUI(graphRegression.CloseDialog);
-            WaitForClosedForm(graphRegression);
-            RunUI(addItem.OkDialog);
-            WaitForClosedForm(addItem);
-            RunUI(editCEDlg1.OkDialog);
-            WaitForClosedForm(editCEDlg1);
-            RunUI(transitionSettingsUI1.OkDialog);
-            WaitForClosedForm(transitionSettingsUI1);
+            OkDialog(graphRegression, graphRegression.CloseDialog);
+            OkDialog(addItem, addItem.OkDialog);
+            OkDialog(editCEDlg1, editCEDlg1.OkDialog);
+            OkDialog(transitionSettingsUI1, transitionSettingsUI1.OkDialog);
 
             // Optimizing Each Transition, p. 10
             RunDlg<TransitionSettingsUI>(SkylineWindow.ShowTransitionSettingsUI, transitionSettingsUI2 =>

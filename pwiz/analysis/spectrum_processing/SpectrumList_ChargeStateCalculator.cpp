@@ -46,6 +46,7 @@ using namespace pwiz::msdata;
 using namespace pwiz::cv;
 using namespace pwiz::util;
 using namespace pwiz::chemistry;
+using namespace pwiz::svm;
 
 
 namespace {

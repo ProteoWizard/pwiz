@@ -52,6 +52,7 @@
       <ComponentGroupRef Id="tr_files"/>
       <ComponentGroupRef Id="zh_CHS_files"/>
       <ComponentGroupRef Id="zh_tw_files"/>
+      <ComponentGroupRef Id="Method_AbSciex_SciexOS_files"/>
       <ComponentGroupRef Id="Method_AbSciex_TOF_files"/>
       <ComponentGroupRef Id="Method_AbSciex_TQ_files"/>
       <ComponentGroupRef Id="Method_Agilent_files"/>
@@ -59,6 +60,8 @@
       <ComponentGroupRef Id="Method_Shimadzu_files"/>
       <ComponentGroupRef Id="Method_Thermo_files"/>
       <ComponentGroupRef Id="Method_Waters_files"/>
+      <ComponentGroupRef Id="Microsoft.VC90.MFC_files"/>
+      <ComponentGroupRef Id="Microsoft.VC90.CRT_files"/>
       <ComponentGroupRef Id="percolator_files"/>
       <ComponentGroupRef Id="ApplicationShortcuts"/>
     </Feature>
@@ -90,10 +93,11 @@
       <Directory Id="sv_directory" Name="sv"/>
       <Directory Id="tr_directory" Name="tr"/>
       <Directory Id="zh_CHS_directory" Name="zh-CHS"/>
-      <Directory Id="zh_tw_directory" Name="zh-tw"/>
+      <Directory Id="zh_tw_directory" Name="zh-TW"/>
       
       <Directory Id="Method_directory" Name="Method">
         <Directory Id="Method_AbSciex_directory" Name="AbSciex">
+          <Directory Id="Method_AbSciex_SciexOS_directory" Name="SciexOS"/>
           <Directory Id="Method_AbSciex_TOF_directory" Name="TOF"/>
           <Directory Id="Method_AbSciex_TQ_directory" Name="TQ"/>
         </Directory>
@@ -104,6 +108,7 @@
         <Directory Id="Method_Waters_directory" Name="Waters"/>
       </Directory>
       <Directory Id="Microsoft.VC90.MFC_directory" Name="Microsoft.VC90.MFC"/>
+      <Directory Id="Microsoft.VC90.CRT_directory" Name="Microsoft.VC90.CRT"/>
       <Directory Id="percolator_directory" Name="percolator"/>
     </DirectoryRef>
   </Fragment>
@@ -204,6 +209,9 @@
       </Component>
       <Component Id="modifications.xml">
         <File Source="$(var.Skyline.TargetDir)/modifications.xml" KeyPath="yes"/>
+      </Component>
+      <Component Id="msconvert.exe">
+        <File Source="$(var.Skyline.TargetDir)/msconvert.exe" KeyPath="yes"/>
       </Component>
       <Component Id="MSGraph.dll">
         <File Source="$(var.Skyline.TargetDir)/MSGraph.dll" KeyPath="yes"/>
@@ -469,6 +477,17 @@
         <File Source="$(var.Skyline.TargetDir)/zh-tw\ZedGraph.resources.dll" Id="zh_tw_ZedGraph.resources.dll_file" KeyPath="yes"/>
       </Component>
     </ComponentGroup>
+    <ComponentGroup Id="Method_AbSciex_SciexOS_files" Directory="Method_AbSciex_SciexOS_directory">
+      <Component Id="Method_AbSciex_SciexOS_BuildSciexMethod.exe">
+        <File Source="$(var.Skyline.TargetDir)/Method\AbSciex\SciexOS\BuildSciexMethod.exe" KeyPath="yes"/>
+      </Component>
+      <Component Id="Method_AbSciex_SciexOS_Microsoft.IO.RecyclableMemoryStream.dll">
+        <File Source="$(var.Skyline.TargetDir)/Method\AbSciex\SciexOS\Microsoft.IO.RecyclableMemoryStream.dll" KeyPath="yes"/>
+      </Component>
+      <Component Id="Method_AbSciex_SciexOS_SCIEX.Apis.Control.v1.dll">
+        <File Source="$(var.Skyline.TargetDir)/Method\AbSciex\SciexOS\SCIEX.Apis.Control.v1.dll" KeyPath="yes"/>
+      </Component>
+    </ComponentGroup>
     <ComponentGroup Id="Method_AbSciex_TOF_files" Directory="Method_AbSciex_TOF_directory">
       <Component Id="Method_AbSciex_TOF_BuildAnalystFullScanMethod.exe">
         <File Source="$(var.Skyline.TargetDir)/Method\AbSciex\TOF\BuildAnalystFullScanMethod.exe" KeyPath="yes"/>
@@ -632,6 +651,29 @@
       <Component Id="Method_Waters_VerifyESkylineLibrary.dll">
         <File Source="$(var.Skyline.TargetDir)/Method\Waters\VerifyESkylineLibrary.dll" KeyPath="yes"/>
       </Component>
+    </ComponentGroup>
+    <ComponentGroup Id="Microsoft.VC90.MFC_files" Directory="Microsoft.VC90.MFC_directory">
+      <?if $(sys.BUILDARCH) != x64 ?>
+      <Component>
+        <File Id="Microsoft.VC90.MFC_mfc90u.dll" Source="$(var.Skyline.TargetDir)/Microsoft.VC90.MFC\mfc90u.dll" KeyPath="yes"/>
+      </Component>
+      <Component>
+        <File Id="Microsoft.VC90.MFC_Microsoft.VC90.MFC.manifest" Source="$(var.Skyline.TargetDir)/Microsoft.VC90.MFC\Microsoft.VC90.MFC.manifest" KeyPath="yes"/>
+      </Component>
+      <?endif?>
+    </ComponentGroup>
+    <ComponentGroup Id="Microsoft.VC90.CRT_files" Directory="Microsoft.VC90.CRT_directory">
+      <?if $(sys.BUILDARCH) != x64 ?>
+      <Component>
+        <File Id="Microsoft.VC90.CRT_msvcp90.dll" Source="$(var.Skyline.TargetDir)/Microsoft.VC90.CRT\msvcp90.dll" KeyPath="yes"/>
+      </Component>
+      <Component>
+        <File Id="Microsoft.VC90.CRT_msvcr90.dll" Source="$(var.Skyline.TargetDir)/Microsoft.VC90.CRT\msvcr90.dll" KeyPath="yes"/>
+      </Component>
+      <Component>
+        <File Id="Microsoft.VC90.CRT_Microsoft.VC90.CRT.manifest" Source="$(var.Skyline.TargetDir)/Microsoft.VC90.CRT\Microsoft.VC90.CRT.manifest" KeyPath="yes"/>
+      </Component>
+      <?endif?>
     </ComponentGroup>
     <ComponentGroup Id="percolator_files" Directory="percolator_directory">
       <Component Id="percolator_percolator.exe">

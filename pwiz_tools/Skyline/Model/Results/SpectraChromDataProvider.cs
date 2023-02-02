@@ -42,6 +42,7 @@ namespace pwiz.Skyline.Model.Results
         private IDemultiplexer _demultiplexer;
         private readonly IRetentionTimePredictor _retentionTimePredictor;
         private List<string> _scanIdList = new List<string>();
+        private Dictionary<string, int> _scanIdDictionary = new Dictionary<string, int>();
         private readonly bool _isProcessedScans;
         private double? _maxIonMobilityValue;
         private bool _isSingleMzMatch;
@@ -61,6 +62,9 @@ namespace pwiz.Skyline.Model.Results
         private ChromGroups _chromGroups;
         private BlockWriter _blockWriter;
         private bool _isSrm;
+
+        private readonly OptimizableRegression _optimization;
+
         private readonly object _disposeLock = new object();
         private bool _isDisposing;
 
@@ -111,6 +115,9 @@ namespace pwiz.Skyline.Model.Results
             // during interpolation.
             _isProcessedScans = dataFile.IsMzWiffXml;
 
+            _optimization = _document.Settings.MeasuredResults.Chromatograms
+                .FirstOrDefault(chromSet => chromSet.ContainsFile(fileInfo.FilePath))?.OptimizationFunction;
+
             UpdatePercentComplete();
 
             if (NeedMaxIonMobilityValue(dataFile))
@@ -119,7 +126,7 @@ namespace pwiz.Skyline.Model.Results
             // Create the filter responsible for chromatogram extraction
             bool firstPass = (_retentionTimePredictor != null);
             _filter = new SpectrumFilter(_document, FileInfo.FilePath, new DataFileInstrumentInfo(dataFile),
-                _maxIonMobilityValue, _retentionTimePredictor, firstPass, _globalChromatogramExtractor);
+                _optimization, _maxIonMobilityValue, _retentionTimePredictor, firstPass, _globalChromatogramExtractor);
 
             if (!_isSrm && (_filter.EnabledMs || _filter.EnabledMsMs))
             {
@@ -214,7 +221,8 @@ namespace pwiz.Skyline.Model.Results
             var dataFile = _spectra.Detach();
 
             // Start the second pass
-            _filter = new SpectrumFilter(_document, FileInfo.FilePath, _filter, _maxIonMobilityValue, _retentionTimePredictor, false, _globalChromatogramExtractor);
+            _filter = new SpectrumFilter(_document, FileInfo.FilePath, _filter, _optimization, _maxIonMobilityValue,
+                _retentionTimePredictor, false, _globalChromatogramExtractor);
             _spectra = null;
             _isSrm = false;
 
@@ -443,16 +451,14 @@ namespace pwiz.Skyline.Model.Results
 
         private int GetScanIdIndex(string id)
         {
-            if (_scanIdList.Count > 0)
+            if (_scanIdDictionary.TryGetValue(id, out int scanIndex))
             {
-                if (id == _scanIdList[_scanIdList.Count - 1])
-                {
-                    return _scanIdList.Count - 1;
-                }
+                return scanIndex;
             }
-            int nextIndex = _scanIdList.Count;
+            scanIndex = _scanIdList.Count;
             _scanIdList.Add(id);
-            return nextIndex;
+            _scanIdDictionary.Add(id, scanIndex);
+            return scanIndex;
         }
 
         private void AddChromatograms(ChromDataCollectorSet chromMap)
@@ -749,17 +755,24 @@ namespace pwiz.Skyline.Model.Results
                 
                 _lookaheadContext = new LookaheadContext(_filter, _dataFile);
                 _countSpectra = dataFile.SpectrumCount;
-                // Use the TIC chromatogram if possible, because spectrum count can be massive for data files with IMS
-                double[] tic = null;
+
+                // Initially use the number of spectra as the estimate of the number of points that chromatograms will have.
+                _countCycles = _countSpectra;
                 try
                 {
-                    tic = dataFile.GetTotalIonCurrent();
+                    double[] tic = dataFile.GetTotalIonCurrent();
+                    if (tic != null && tic.Length > 0)
+                    {
+                        // The TIC's length is equal to the number of MS1 spectra in the data file.
+                        // It is a better estimate of extracted chromatogram length
+                        // because spectrum count can be massive for data files with IMS
+                        _countCycles = tic.Length;
+                    }
                 }
                 catch (Exception)
                 {
                     // Ignore and use _countSpectra
                 }
-                _countCycles = tic != null ? tic.Length : _countSpectra;
 
                 HasSrmSpectra = dataFile.HasSrmSpectra;
                 
@@ -858,7 +871,7 @@ namespace pwiz.Skyline.Model.Results
                 get
                 {
                     // If the data file has been disposed, then count this as 100% complete
-                    if (_currentInfo.IsLast)
+                    if (_currentInfo == null || _currentInfo.IsLast)
                         return 100;
                     return Math.Max(0, CurrentIndex)*100/_countSpectra;
                 }
@@ -1636,7 +1649,7 @@ namespace pwiz.Skyline.Model.Results
             ChromExtractor extractor = spectrum.Extractor;
             int ionScanCount = spectrum.ProductFilters.Length;
             ChromDataCollector collector;
-            var key = new PrecursorTextId(precursorMz, ionMobility, target, extractor);
+            var key = new PrecursorTextId(precursorMz, null, null, ionMobility, target, extractor);
             int index = spectrum.FilterIndex;
             while (PrecursorCollectorMap.Count <= index)
                 PrecursorCollectorMap.Add(null);

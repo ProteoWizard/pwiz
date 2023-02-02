@@ -156,6 +156,18 @@ string translate_SourceFileTypeToRunID(const SourceFile& sf, CVID sourceFileType
             if (nameExtension == ".baf" && locationExtension == ".d")
                 return bfs::basename(bfs::path(sf.location).leaf());
             return "";
+            
+        // location="file://path/to/source.d" name="Analysis.tdf"
+        case MS_Bruker_TDF_format:
+            if (nameExtension == ".tdf" && locationExtension == ".d")
+                return bfs::basename(bfs::path(sf.location).leaf());
+            return "";
+            
+        // location="file://path/to/source.d" name="Analysis.tsf"
+        case MS_Bruker_TSF_format:
+            if (nameExtension == ".tsf" && locationExtension == ".d")
+                return bfs::basename(bfs::path(sf.location).leaf());
+            return "";
 
         // location="file://path/to/source.d/AcqData" name="msprofile.bin"
         case MS_Agilent_MassHunter_format:
@@ -841,8 +853,11 @@ CVID translate_parentFilenameToSourceFileType(const string& name)
     }
     else if (fileExtension == ".dat")                           return MS_Waters_raw_format;
     else if (fileExtension == ".wiff")                          return MS_ABI_WIFF_format;
+    else if (fileExtension == ".wiff2")                         return MS_ABI_WIFF_format;
     else if (fileExtension == ".yep")                           return MS_Bruker_Agilent_YEP_format;
     else if (fileExtension == ".baf")                           return MS_Bruker_BAF_format;
+    else if (fileExtension == ".tdf")                           return MS_Bruker_TDF_format;
+    else if (fileExtension == ".tsf")                           return MS_Bruker_TSF_format;
     else if (name == "fid")                                     return MS_Bruker_FID_format;
     else if (bal::iequals(name, "msprofile.bin"))               return MS_Agilent_MassHunter_format;
     else if (bal::iequals(name, "mspeak.bin"))                  return MS_Agilent_MassHunter_format;
@@ -877,6 +892,8 @@ CVID translateSourceFileTypeToNativeIdFormat(CVID sourceFileType)
         case MS_Thermo_RAW_format:            return MS_Thermo_nativeID_format;
         case MS_Bruker_Agilent_YEP_format:    return MS_Bruker_Agilent_YEP_nativeID_format;
         case MS_Bruker_BAF_format:            return MS_Bruker_BAF_nativeID_format;
+        case MS_Bruker_TDF_format:            return MS_Bruker_TDF_nativeID_format;
+        case MS_Bruker_TSF_format:            return MS_Bruker_TSF_nativeID_format;
         case MS_ISB_mzXML_format:             return MS_scan_number_only_nativeID_format;
         case MS_PSI_mzData_format:            return MS_spectrum_identifier_nativeID_format;
         case MS_Mascot_MGF_format:            return MS_multiple_peak_list_nativeID_format;
@@ -889,6 +906,7 @@ CVID translateSourceFileTypeToNativeIdFormat(CVID sourceFileType)
         case MS_SCIEX_TOF_TOF_T2D_format:
         case MS_Waters_raw_format:
         case MS_Micromass_PKL_format:
+        case MS_mzML_format:
             return MS_scan_number_only_nativeID_format;
 
         // in other cases, assume the source file doesn't contain instrument data
@@ -1155,11 +1173,11 @@ struct Handler_msInstrument : public SAXParser::Handler
         }
         else if (name == "software")
         {
-            string type, name, version;
+            string type, softwareName, version;
             getAttribute(attributes, "type", type);
-            getAttribute(attributes, "name", name);
+            getAttribute(attributes, "name", softwareName);
             getAttribute(attributes, "version", version);
-            instrumentConfiguration->softwarePtr = registerSoftware(msd_, type, name, version, cvTranslator_);
+            instrumentConfiguration->softwarePtr = registerSoftware(msd_, type, softwareName, version, cvTranslator_);
             return Status::Ok;
         }
         else if (name == "operator")
@@ -1258,11 +1276,11 @@ struct Handler_dataProcessing : public SAXParser::Handler
         }
         else if (name == "software")
         {
-            string type, name, version;
+            string type, softwareName, version;
             getAttribute(attributes, "type", type);
-            getAttribute(attributes, "name", name);
+            getAttribute(attributes, "name", softwareName);
             getAttribute(attributes, "version", version);
-            registerSoftware(msd_, type, name, version, cvTranslator_);
+            registerSoftware(msd_, type, softwareName, version, cvTranslator_);
             return Status::Ok;
         }
         else if (name == "processingOperation")

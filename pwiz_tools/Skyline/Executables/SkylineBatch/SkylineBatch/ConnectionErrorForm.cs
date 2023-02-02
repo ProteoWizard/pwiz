@@ -10,18 +10,23 @@ namespace SkylineBatch
         private Dictionary<string, Exception> _disconnectedConfigs;
         private Dictionary<string, SkylineBatchConfig> _configDict;
         private ServerFilesManager _serverFiles;
+        private IMainUiControl _mainControl;
 
         private object _lastSelectedItem;
 
 
-        public ConnectionErrorForm(List<SkylineBatchConfig> downloadingConfigs, ServerFilesManager serverFiles)
+        public ConnectionErrorForm(SkylineBatchConfigManagerState state, List<SkylineBatchConfig> downloadingConfigs,
+            ServerFilesManager serverFiles, IMainUiControl mainControl)
         {
             InitializeComponent();
             Icon = Program.Icon();
+            State = state;
             _serverFiles = serverFiles;
             _disconnectedConfigs = new Dictionary<string, Exception>();
             _configDict = new Dictionary<string, SkylineBatchConfig>();
-            foreach (var config in downloadingConfigs) _configDict.Add(config.Name, config);
+            _mainControl = mainControl;
+            foreach (var config in downloadingConfigs)
+                _configDict.Add(config.Name, config);
             ReplacingConfigs = new List<SkylineBatchConfig>();
 
             Shown += ((sender, args) =>
@@ -31,6 +36,8 @@ namespace SkylineBatch
         }
 
         public List<SkylineBatchConfig> ReplacingConfigs;
+
+        public SkylineBatchConfigManagerState State;
 
         private void listConfigs_SelectedIndexChanged(object sender, EventArgs e)
         {
@@ -45,16 +52,20 @@ namespace SkylineBatch
         private void btnEdit_Click(object sender, EventArgs e)
         {
             var config = _configDict[(string) listConfigs.SelectedItem];
-            var addServerForm = new AddServerForm(config.MainSettings.Server, config.MainSettings.Server.Folder, true);
+            var addServerForm = new DataServerForm(config.MainSettings.Server, config.MainSettings.Server.Folder, State, _mainControl, true);
             if (DialogResult.OK == addServerForm.ShowDialog(this))
             {
+                State = addServerForm.State;
                 var mainSettings = config.MainSettings;
-                var newMainSettings = new MainSettings(mainSettings.Template, mainSettings.AnalysisFolderPath,mainSettings.DataFolderPath, 
+                var newMainSettings = new MainSettings(mainSettings.Template, mainSettings.AnalysisFolderPath, mainSettings.UseAnalysisFolderName, mainSettings.DataFolderPath, 
                     addServerForm.Server, mainSettings.AnnotationsFilePath, mainSettings.AnnotationsDownload, mainSettings.ReplicateNamingPattern);
                 var newConfig = new SkylineBatchConfig(config.Name, config.Enabled, config.LogTestFormat, config.Modified, newMainSettings, config.FileSettings, 
                     config.RefineSettings, config.ReportSettings, config.SkylineSettings);
 
                 ReplacingConfigs.Add(newConfig);
+                var index = State.BaseState.GetConfigIndex(config.Name);
+                State.ProgramaticallyRemoveAt(index)
+                    .ProgramaticallyInsertConfig(index, newConfig, _mainControl);
                 _configDict.Remove(config.Name);
                 _disconnectedConfigs.Remove(config.Name);
                 listConfigs.Items.Remove(config.Name);
@@ -103,7 +114,8 @@ namespace SkylineBatch
         {
             if (IsDisposed || !completed) return;
             UpdateConfigList();
-            if (_disconnectedConfigs.Count == 0) return;
+            if (_disconnectedConfigs.Count == 0)
+                DialogResult = DialogResult.OK;
             foreach (var server in servers)
             {
                 foreach (var config in _configDict.Values)

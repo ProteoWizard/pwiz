@@ -23,6 +23,7 @@ using System.Linq;
 using System.Text.RegularExpressions;
 using System.Windows.Forms;
 using System.IO;
+using pwiz.Common.Collections;
 using pwiz.Common.SystemUtil;
 using pwiz.Skyline.Alerts;
 using pwiz.Skyline.Model.Results;
@@ -30,6 +31,7 @@ using pwiz.Skyline.Model.Results.RemoteApi;
 using pwiz.Skyline.Properties;
 using pwiz.Skyline.Util;
 using pwiz.Skyline.Util.Extensions;
+
 
 namespace pwiz.Skyline.FileUI
 {
@@ -43,8 +45,14 @@ namespace pwiz.Skyline.FileUI
         private RemoteSession _remoteSession;
         private readonly IList<RemoteAccount> _remoteAccounts;
         private bool _waitingForData;
-
-        public OpenDataSourceDialog(IList<RemoteAccount> remoteAccounts)
+        private readonly IList<string> _specificDataSourceFilter; // Specific data sources to look for
+        
+        /// <summary>
+        /// File picker which is aware of mass spec "files" that are really directories
+        /// </summary>
+        /// <param name="remoteAccounts">For UNIFI</param>
+        /// <param name="specificDataSourceFilter">Optional list of specific files the user needs to located, ignoring the rest</param>
+        public OpenDataSourceDialog(IList<RemoteAccount> remoteAccounts, IList<string> specificDataSourceFilter = null)
         {
             InitializeComponent();
             _remoteAccounts = remoteAccounts;
@@ -106,6 +114,8 @@ namespace pwiz.Skyline.FileUI
             lookInComboBox.SelectedIndex = 1;
             lookInComboBox.IntegralHeight = false;
             lookInComboBox.DropDownHeight = lookInComboBox.Items.Count * lookInComboBox.ItemHeight + 2;
+
+            _specificDataSourceFilter = specificDataSourceFilter;
         }
 
         public new DialogResult ShowDialog(IWin32Window owner)
@@ -457,16 +467,41 @@ namespace pwiz.Skyline.FileUI
                 }
             }
 
+            listSourceInfo = listSourceInfo.Where(l => l != null).ToList(); // Ignore null entries in order to not confuse sort
+
+            // Sorts files and folders in natural order rather than lexicographically with folders being prioritized (sorted above files)
+            // e.g. (a1.txt, b10.folder, b2.folder, c6.txt --> b2.folder, b10.folder, a1.txt, c6.txt)
+            listSourceInfo.Sort((x, y) =>
+            {
+                // Check to see if one element is a folder. If so regardless of name it will always prioritized over a file.
+                if (x.isFolder != y.isFolder)
+                {
+                    return x.isFolder ? -1 : 1; 
+                }
+                return NaturalComparer.Compare(x.name, y.name); // Use normal compare if both elements are of the same type (folder vs folder, file vs file)
+            }); // Sorts by natural sort order for easier more natural readability e.g. (A1.raw, A22.raw, A5.raw --> A1.raw, A5.raw, A22.raw)
+
+
             // Populate the list
             var items = new List<ListViewItem>();
             foreach (var sourceInfo in listSourceInfo)
             {
-                if (sourceInfo != null &&
-                        (sourceTypeComboBox.SelectedIndex == 0 ||
+                if (sourceTypeComboBox.SelectedIndex == 0 ||
                             sourceTypeComboBox.SelectedItem.ToString() == sourceInfo.type ||
                             // Always show folders
-                            sourceInfo.isFolder))
+                            sourceInfo.isFolder)
                 {
+                    // Filter for specifically named data sources (as when called from Skyline File>Share)
+                    if (_specificDataSourceFilter != null && !sourceInfo.isFolder)
+                    {
+                        var name = sourceInfo.MsDataFileUri.GetFileName();
+                        if (!_specificDataSourceFilter.Any(specificDataSource => specificDataSource.Equals(name,
+                                StringComparison.CurrentCultureIgnoreCase)))
+                        {
+                            continue;
+                        }
+                    }
+
                     ListViewItem item = new ListViewItem(sourceInfo.ToArray(), (int) sourceInfo.imageIndex)
                     {
                         Tag = sourceInfo,
@@ -893,6 +928,13 @@ namespace pwiz.Skyline.FileUI
                 case Keys.F5:
                     populateListViewFromDirectory( _currentDirectory ); // refresh
                     _abortPopulateList = true;
+                    break;
+                case Keys.A:
+                    if (e.Control)
+                    {
+                        foreach (ListViewItem item in listView.Items)
+                            item.Selected = true;
+                    }
                     break;
             }
         }

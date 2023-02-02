@@ -97,7 +97,7 @@ namespace pwiz.SkylineTestFunctional
             const int notFoundCount = 20;
             for (int i = 0; i < notFoundCount; i++)
             {
-                listPeptides.Add(string.Join(string.Empty, ProteinRand.ToArray().RandomOrder().ToArray()));
+                listPeptides.Add(string.Concat(ProteinRand.ToArray().RandomOrder().ToArray()));
             }
             listPeptides.Add(FirstProteinName);
             listPeptides.Add(SecondProteinName);
@@ -120,7 +120,7 @@ namespace pwiz.SkylineTestFunctional
 
         private static void TestName()
         {
-            RunDlg<RefineProteinListDlg>(SkylineWindow.AcceptProteins, true,
+            RunDlg<RefineProteinListDlg>(SkylineWindow.AcceptProteins, 
                 dlgRefineList =>
                 {
                     dlgRefineList.ProteinsText = TextUtil.LineSeparate(FirstProteinName, SecondProteinName);
@@ -135,7 +135,7 @@ namespace pwiz.SkylineTestFunctional
 
         private static void TestAccession()
         {
-            RunDlg<RefineProteinListDlg>(SkylineWindow.AcceptProteins, true,
+            RunDlg<RefineProteinListDlg>(SkylineWindow.AcceptProteins, 
                dlgRefineList =>
                {
                    dlgRefineList.Accession = true;
@@ -152,7 +152,7 @@ namespace pwiz.SkylineTestFunctional
 
         private static void TestPreferred()
         {
-            RunDlg<RefineProteinListDlg>(SkylineWindow.AcceptProteins, true,
+            RunDlg<RefineProteinListDlg>(SkylineWindow.AcceptProteins, 
                dlgRefineList =>
                {
                    dlgRefineList.Preferred = true;

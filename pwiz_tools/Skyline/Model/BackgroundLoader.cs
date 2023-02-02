@@ -60,7 +60,7 @@ namespace pwiz.Skyline.Model
             IDocumentContainer container = (IDocumentContainer)sender;
             SrmDocument document = container.Document;
             SrmDocument previous = e.DocumentPrevious;
-            if (StateChanged(document, previous))
+            if (IsStateChanged(document, previous))
             {
                 CloseRemovedStreams(document, previous);
 
@@ -145,6 +145,16 @@ namespace pwiz.Skyline.Model
             {
                 Interlocked.Decrement(ref _activeThreadCount);
             }
+        }
+
+        public bool IsStateChanged(SrmDocument document, SrmDocument previous)
+        {
+            if (previous == null || !ReferenceEquals(document.Id, previous.Id))
+            {
+                return true;
+            }
+
+            return StateChanged(document, previous);
         }
 
         /// <summary>
@@ -317,7 +327,7 @@ namespace pwiz.Skyline.Model
                     var monitor = _container as IProgressMonitor;
                     if (monitor != null && monitor.IsCanceled)
                         return true;
-                    // Check for cancelation of just this item
+                    // Check for cancellation of just this item
                     return IsCanceledItem(_tag);
                 }
             }

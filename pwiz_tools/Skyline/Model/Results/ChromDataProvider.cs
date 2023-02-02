@@ -98,6 +98,8 @@ namespace pwiz.Skyline.Model.Results
 
         public virtual bool HasSonarSpectra { get { return false; } }
 
+        public virtual bool IsSrm { get { return FileInfo.IsSrm; } }
+
         // Used for offering hints to user when document transition polarities don't agree with the raw data
         public abstract bool SourceHasPositivePolarityData { get; }
         public abstract bool SourceHasNegativePolarityData { get; }
@@ -197,7 +199,7 @@ namespace pwiz.Skyline.Model.Results
                 return false;
             }
 
-            if (times.Length == 0)
+            if (times.Length <= 1)
             {
                 return false;
             }
@@ -427,6 +429,11 @@ namespace pwiz.Skyline.Model.Results
         public override bool IsSingleMzMatch
         {
             get { return false; }
+        }
+
+        public override bool IsSrm
+        {
+            get { return true; }
         }
 
         public override bool HasMidasSpectra

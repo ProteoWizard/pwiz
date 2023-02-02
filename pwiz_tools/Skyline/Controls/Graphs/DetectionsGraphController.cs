@@ -295,9 +295,6 @@ namespace pwiz.Skyline.Controls.Graphs
                         };
                     break;
             }
-
-            if (!ReferenceEquals(_controllerInterface.GraphSummary.GraphPanes.FirstOrDefault(), pane))
-                (pane as IDisposable)?.Dispose();
         }
     }
 }

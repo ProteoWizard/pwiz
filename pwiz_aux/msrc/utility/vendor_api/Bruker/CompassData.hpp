@@ -93,6 +93,15 @@ PWIZ_API_DECL enum IsolationMode
     IsolationMode_Unknown = 255
 };
 
+PWIZ_API_DECL enum class MsMsType // not from CXT
+{
+    MS1 = 0,
+    MRM = 2,
+    DDA_PASEF = 8,
+    DIA_PASEF = 9,
+    PRM_PASEF = 10
+};
+
 PWIZ_API_DECL enum InstrumentSource // not from CXT
 {
     InstrumentSource_AlsoUnknown = 0,
@@ -110,6 +119,7 @@ PWIZ_API_DECL enum InstrumentSource // not from CXT
     InstrumentSource_EI = 16,
     InstrumentSource_GC_APCI = 17,
     InstrumentSource_VIP_HESI = 18,
+    InstrumentSource_VIP_APCI = 19,
     InstrumentSource_Unknown = 255
 };
 
@@ -216,6 +226,9 @@ struct PWIZ_API_DECL MSSpectrum
     virtual double oneOverK0() const { return 0.0; }
     virtual std::pair<double, double> getIonMobilityRange() const { return std::pair<double, double>(0, 0); }
 	virtual int getWindowGroup() const { return 0; } // for diaPASEF data
+
+    virtual boost::optional<int> getMaldiChip() const { return boost::optional<int>(); }
+    virtual boost::optional<std::string> getMaldiSpotName() const { return boost::optional<std::string>(); }
 
     virtual void getCombinedSpectrumData(pwiz::util::BinaryData<double>& mz, pwiz::util::BinaryData<double>& intensities, pwiz::util::BinaryData<double>& mobilities, bool sortAndJitter) const { }
     virtual size_t getCombinedSpectrumDataSize() const { return 0; }

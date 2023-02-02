@@ -47,7 +47,7 @@ namespace pwiz.Skyline.Model.Results.Scoring
         /// <summary>
         /// List of feature calculators used by this model in scoring.
         /// </summary>
-        IList<IPeakFeatureCalculator> PeakFeatureCalculators { get; }
+        FeatureCalculators PeakFeatureCalculators { get; }
 
         /// <summary>
         /// Method called to train the model.  Features scores for positive and negative distributions
@@ -65,7 +65,7 @@ namespace pwiz.Skyline.Model.Results.Scoring
         /// <param name="preTrain">Use a pre-trained model to bootstrap the learning?</param>
         /// <param name="progressMonitor">Progress monitor for displaying progress to the user</param>
         /// <param name="documentPath">Path on disk of the document for writing diagnostic files</param>
-        IPeakScoringModel Train(IList<IList<float[]>> targets, IList<IList<float[]>> decoys, TargetDecoyGenerator targetDecoyGenerator, LinearModelParams initParameters,
+        IPeakScoringModel Train(IList<IList<FeatureScores>> targets, IList<IList<FeatureScores>> decoys, TargetDecoyGenerator targetDecoyGenerator, LinearModelParams initParameters,
             IList<double> cutoffs, int? iterations = null, bool includeSecondBest = false, bool preTrain = true, IProgressMonitor progressMonitor = null, string documentPath = null);
 
         /// <summary>
@@ -92,6 +92,11 @@ namespace pwiz.Skyline.Model.Results.Scoring
         /// Parameter structure for the model, including weights and bias
         /// </summary>
         LinearModelParams Parameters { get;  }
+
+        /// <summary>
+        /// True if this type of model ignores unknown (NaN or infinity) scores and replaces them with zero.
+        /// </summary>
+        bool ReplaceUnknownFeatureScores { get; }
     }
 
 
@@ -146,15 +151,25 @@ namespace pwiz.Skyline.Model.Results.Scoring
         }
 
         public bool IsTrained { get { return Parameters != null && Parameters.Weights != null; } }
-        public abstract IList<IPeakFeatureCalculator> PeakFeatureCalculators { get; }
-        public abstract IPeakScoringModel Train(IList<IList<float[]>> targets, IList<IList<float[]>> decoys, TargetDecoyGenerator targetDecoyGenerator, LinearModelParams initParameters,
+
+        public abstract bool ReplaceUnknownFeatureScores { get; }
+        public abstract FeatureCalculators PeakFeatureCalculators { get; }
+        public abstract IPeakScoringModel Train(IList<IList<FeatureScores>> targets, IList<IList<FeatureScores>> decoys, TargetDecoyGenerator targetDecoyGenerator, LinearModelParams initParameters,
             IList<double> cutoffs, int? iterations = null, bool includeSecondBest = false, bool preTrain = true, IProgressMonitor progressMonitor = null, string documentPath = null);
-        public virtual double Score(IList<float> features)
+        public double Score(IList<float> features)
         {
+            if (ReplaceUnknownFeatureScores)
+            {
+                features = LinearModelParams.ReplaceUnknownFeatureScores(features);
+            }
             return Parameters.Score(features);
         }
-        public virtual string ScoreText(IList<float> features)
+        public string ScoreText(IList<float> features)
         {
+            if (ReplaceUnknownFeatureScores)
+            {
+                features = LinearModelParams.ReplaceUnknownFeatureScores(features);
+            }
             return Parameters.ScoreText(features);
         }
         [Track]
@@ -182,7 +197,7 @@ namespace pwiz.Skyline.Model.Results.Scoring
             return base.Equals(other) && 
                 UsesDecoys.Equals(other.UsesDecoys) && 
                 UsesSecondBest.Equals(other.UsesSecondBest) && 
-                AreSameCalculators(PeakFeatureCalculators, other.PeakFeatureCalculators) &&
+                PeakFeatureCalculators.Equals(other.PeakFeatureCalculators) &&
                 Equals(Parameters, other.Parameters);
         }
 
@@ -266,15 +281,22 @@ namespace pwiz.Skyline.Model.Results.Scoring
             }
             return score;
         }
-
-        public static double Score(IList<float> features, LinearModelParams parameters)
-        {
-            return parameters.Score(features);
-        }
-
         public double Score(IList<float> features)
         {
             return Score(features, Weights, Bias);
+        }
+        public static IList<float> ReplaceUnknownFeatureScores(IList<float> features)
+        {
+            if (features.Any(IsUnknownFeatureScore))
+            {
+                return features.Select(feature => IsUnknownFeatureScore(feature) ? 0 : feature).ToList();
+            }
+            return features;
+        }
+
+        private static bool IsUnknownFeatureScore(float feature)
+        {
+            return float.IsNaN(feature) || float.IsInfinity(feature);
         }
 
         public static string ScoreText(IList<float> features, IList<double> weights, double bias)
@@ -381,6 +403,12 @@ namespace pwiz.Skyline.Model.Results.Scoring
         /// A calculator name that does not get localized
         /// </summary>
         string HeaderName { get; }
+        /// <summary>
+        /// The full name of the calculator class
+        /// </summary>
+        string FullyQualifiedName { get; }
+
+        string Tooltip { get; }
         
         /// <summary>
         /// True if low scores are better for this calculator, false if high scores are better
@@ -411,6 +439,15 @@ namespace pwiz.Skyline.Model.Results.Scoring
         public abstract string Name { get; }
 
         public string HeaderName { get; private set; }
+        public string FullyQualifiedName
+        {
+            get { return GetType().FullName; }
+        }
+
+        public string Tooltip
+        {
+            get { return FeatureTooltips.ResourceManager.GetString(FullyQualifiedName); }
+        }
 
         public abstract bool IsReversedScore { get; }
 
@@ -442,6 +479,16 @@ namespace pwiz.Skyline.Model.Results.Scoring
         public abstract string Name { get; }
 
         public string HeaderName { get; private set; }
+
+        public string FullyQualifiedName
+        {
+            get { return GetType().FullName; }
+        }
+
+        public string Tooltip
+        {
+            get { return FeatureTooltips.ResourceManager.GetString(FullyQualifiedName); }
+        }
 
         public abstract bool IsReversedScore { get; }
 
@@ -503,12 +550,10 @@ namespace pwiz.Skyline.Model.Results.Scoring
         public TransitionGroupPeakDataConverter(ITransitionGroupPeakData<TData> groupPeakData)
         {
             _groupPeakData = groupPeakData;
-            var transPeakData = _groupPeakData.TransitionPeakData;
-            TransitionPeakData = transPeakData == null ? new List<ITransitionPeakData<ISummaryPeakData>>()
-                                              : _groupPeakData.TransitionPeakData.Select(tp => 
-                                                  new TransitionPeakDataConverter<TData>(tp) as ITransitionPeakData<ISummaryPeakData>).ToList();
-            Ms1TranstionPeakData = TransitionPeakData.Where(t => t.NodeTran != null && t.NodeTran.IsMs1).ToArray();
-            Ms2TranstionPeakData = TransitionPeakData.Where(t => t.NodeTran != null && !t.NodeTran.IsMs1).ToArray();
+            TransitionPeakData = ConvertTransitionPeakDatas(_groupPeakData.TransitionPeakData);
+            Ms1TranstionPeakData = ConvertTransitionPeakDatas(_groupPeakData.Ms1TranstionPeakData);
+            Ms2TranstionPeakData = ConvertTransitionPeakDatas(_groupPeakData.Ms2TranstionPeakData);
+            Ms2TranstionDotpData = ConvertTransitionPeakDatas(_groupPeakData.Ms2TranstionDotpData);
         }
 
         private readonly ITransitionGroupPeakData<TData> _groupPeakData;
@@ -523,9 +568,23 @@ namespace pwiz.Skyline.Model.Results.Scoring
 
         public IList<ITransitionPeakData<ISummaryPeakData>> Ms2TranstionPeakData { get; private set; }
 
+        public IList<ITransitionPeakData<ISummaryPeakData>> Ms2TranstionDotpData { get; private set; }
+
         public IList<ITransitionPeakData<ISummaryPeakData>> DefaultTranstionPeakData
         {
             get { return Ms2TranstionPeakData.Count > 0 ? Ms2TranstionPeakData : Ms1TranstionPeakData; }
+        }
+
+        private IList<ITransitionPeakData<ISummaryPeakData>> ConvertTransitionPeakDatas(
+            IEnumerable<ITransitionPeakData<TData>> peakDatas)
+        {
+            if (peakDatas == null)
+            {
+                return Array.Empty<ITransitionPeakData<ISummaryPeakData>>();
+            }
+
+            return peakDatas.Select(peakData => new TransitionPeakDataConverter<TData>(peakData))
+                .Cast<ITransitionPeakData<ISummaryPeakData>>().ToList();
         }
     }
 
@@ -576,6 +635,8 @@ namespace pwiz.Skyline.Model.Results.Scoring
 
         IList<ITransitionPeakData<TData>> Ms2TranstionPeakData { get; }
 
+        IList<ITransitionPeakData<TData>> Ms2TranstionDotpData { get; }
+
         IList<ITransitionPeakData<TData>> DefaultTranstionPeakData { get; }
     }
 
@@ -608,7 +669,7 @@ namespace pwiz.Skyline.Model.Results.Scoring
     }
 
     // ReSharper disable InconsistentNaming
-    public enum PeakIdentification { FALSE, TRUE, ALIGNED }
+    public enum PeakIdentification : byte { FALSE, TRUE, ALIGNED }
     // ReSharper restore InconsistentNaming
 
     public static class PeakIdentificationFastLookup
@@ -702,15 +763,15 @@ namespace pwiz.Skyline.Model.Results.Scoring
     {
         private readonly Dictionary<Type, object> _dictInfo = new Dictionary<Type, object>();
 
-        public PeakScoringContext(SrmDocument document)
+        public PeakScoringContext(SrmSettings settings)
         {
-            Document = document;
+            Settings = settings;
         }
 
         /// <summary>
         /// The document in which the peaks are being scored
         /// </summary>
-        public SrmDocument Document { get; private set; }
+        public SrmSettings Settings { get; private set; }
 
         /// <summary>
         /// Stores information that can be used by other <see cref="IPeakFeatureCalculator"/> objects.

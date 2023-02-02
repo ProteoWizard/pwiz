@@ -56,6 +56,11 @@ namespace pwiz.Skyline.Model.Lib.ChromLib
             get { return new[] {PEPTIDE_RANK_PEAK_AREA}; }
         }
 
+        public override string GetLibraryTypeName()
+        {
+            return Resources.ChromatogramLibrary_FILTER_CLIB_Chromatogram_Libraries;
+        }
+
         #region Implementation of IXmlSerializable
         /// <summary>
         /// For serialization

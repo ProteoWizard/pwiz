@@ -43,10 +43,12 @@ namespace pwiz.SkylineTestData.Results
         private const string ZIP_FILE = @"TestData\Results\SmallWiff.zip";
 
         // TODO: Next time SmallWiff.zip is updated, remove the suffix shenanigans below and rename the mzML files in the zip
-        [TestMethod]
+        [TestMethod, NoParallelTesting(TestExclusionReason.VENDOR_FILE_LOCKING)]
         public void FileTypeTest()
         {
-            var testFilesDir = new TestFilesDir(TestContext, ZIP_FILE);
+            if (SkipWiff2TestInTestExplorer(nameof(FileTypeTest)))
+                return;
+            TestFilesDir = new TestFilesDir(TestContext, ZIP_FILE);
 
             // wiff1
             {
@@ -54,12 +56,12 @@ namespace pwiz.SkylineTestData.Results
                 string suffix = ExtensionTestContext.CanImportAbWiff ? "" : "-test";
 
                 // Do file type checks
-                using (var msData = new MsDataFileImpl(testFilesDir.GetTestPath("051309_digestion" + suffix + extWiff)))
+                using (var msData = new MsDataFileImpl(TestFilesDir.GetTestPath("051309_digestion" + suffix + extWiff)))
                 {
                     Assert.IsTrue(msData.IsABFile);
                 }
 
-                using (var msData = new MsDataFileImpl(testFilesDir.GetTestPath("051309_digestion-s3.mzXML")))
+                using (var msData = new MsDataFileImpl(TestFilesDir.GetTestPath("051309_digestion-s3.mzXML")))
                 {
                     Assert.IsTrue(msData.IsABFile);
                     Assert.IsTrue(msData.IsMzWiffXml);
@@ -79,12 +81,14 @@ namespace pwiz.SkylineTestData.Results
             }
         }
 
-        [TestMethod]
+        [TestMethod, NoParallelTesting(TestExclusionReason.VENDOR_FILE_LOCKING)]
         public void Wiff2ResultsTest()
         {
-            TestFilesDir testFilesDir = new TestFilesDir(TestContext, ZIP_FILE);
+            if (SkipWiff2TestInTestExplorer(nameof(Wiff2ResultsTest)))
+                return;
+            TestFilesDir = new TestFilesDir(TestContext, ZIP_FILE);
 
-            string docPath = testFilesDir.GetTestPath("OnyxTOFMS.sky");
+            string docPath = TestFilesDir.GetTestPath("OnyxTOFMS.sky");
             SrmDocument doc = ResultsUtil.DeserializeDocument(docPath);
             //AssertEx.IsDocumentState(doc, 0, 1, 1, 4);
 
@@ -105,8 +109,6 @@ namespace pwiz.SkylineTestData.Results
                 //AssertResult.IsDocumentResultsState(docResults, replicateName,
                 //    doc.MoleculeCount, doc.MoleculeTransitionGroupCount, 0, doc.MoleculeTransitionCount, 0);
             }
-
-            testFilesDir.Dispose();
         }
 
         [TestMethod]
@@ -149,11 +151,11 @@ namespace pwiz.SkylineTestData.Results
         [TestMethod]
         public void WiffResultsTest()
         {
-            TestFilesDir testFilesDir = new TestFilesDir(TestContext, ZIP_FILE);
+            TestFilesDir = new TestFilesDir(TestContext, ZIP_FILE);
 
-            SrmDocument doc = InitWiffDocument(testFilesDir);
+            SrmDocument doc = InitWiffDocument(TestFilesDir);
             using (var docContainer = new ResultsTestDocumentContainer(doc,
-                testFilesDir.GetTestPath("SimpleWiffTest.sky")))
+                TestFilesDir.GetTestPath("SimpleWiffTest.sky")))
             {
                 FileEx.SafeDelete(ChromatogramCache.FinalPathForName(docContainer.DocumentFilePath, null));
 
@@ -161,7 +163,7 @@ namespace pwiz.SkylineTestData.Results
 
                 if (ExtensionTestContext.CanImportAbWiff)
                 {
-                    string pathWiff = testFilesDir.GetTestPath("051309_digestion.wiff");
+                    string pathWiff = TestFilesDir.GetTestPath("051309_digestion.wiff");
                     string[] dataIds = MsDataFileImpl.ReadIds(pathWiff);
 
                     for (int i = 0; i < dataIds.Length; i++)
@@ -176,9 +178,9 @@ namespace pwiz.SkylineTestData.Results
                 else
                 {
                     listChromatograms.Add(new ChromatogramSet("test",
-                        new[] { MsDataFileUri.Parse(testFilesDir.GetTestPath("051309_digestion-test.mzML")) }));
+                        new[] { MsDataFileUri.Parse(TestFilesDir.GetTestPath("051309_digestion-test.mzML")) }));
                     listChromatograms.Add(new ChromatogramSet("rfp9,before,h,1",
-                        new[] { MsDataFileUri.Parse(testFilesDir.GetTestPath("051309_digestion-rfp9,before,h,1.mzML")) }));
+                        new[] { MsDataFileUri.Parse(TestFilesDir.GetTestPath("051309_digestion-rfp9,before,h,1.mzML")) }));
                 }
 
                 // Should have added test and one after
@@ -207,7 +209,7 @@ namespace pwiz.SkylineTestData.Results
                 AssertResult.IsDocumentResultsState(docResultsSingle, "test", 9, 2, 9, 10, 27);
 
                 // Add mzXML version of test sample
-                listChromatograms.Add(new ChromatogramSet("test-mzXML", new[] { MsDataFileUri.Parse(testFilesDir.GetTestPath("051309_digestion-s3.mzXML")) }));
+                listChromatograms.Add(new ChromatogramSet("test-mzXML", new[] { MsDataFileUri.Parse(TestFilesDir.GetTestPath("051309_digestion-s3.mzXML")) }));
 
                 var docMzxml = docResults.ChangeMeasuredResults(new MeasuredResults(listChromatograms));
                 Assert.IsTrue(docContainer.SetDocument(docMzxml, docResults, true));
@@ -219,9 +221,6 @@ namespace pwiz.SkylineTestData.Results
                 // its mzWiff mzXML file will never be the same.
                 AssertResult.MatchChromatograms(docMzxml, 0, 1, -1, 0);
             }
-
-            // TODO: Switch to a using clause when PWiz is fixed, and this assertion fails
-//            AssertEx.ThrowsException<IOException>(() => testFilesDir.Dispose());
         }
 
         private static SrmDocument InitWiffDocument(TestFilesDir testFilesDir)

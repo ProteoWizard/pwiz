@@ -31,6 +31,7 @@ using pwiz.Skyline.Controls;
 using pwiz.Skyline.Controls.Graphs;
 using pwiz.Skyline.Controls.SeqNode;
 using pwiz.Skyline.EditUI;
+using pwiz.Skyline.FileUI;
 using pwiz.Skyline.Model;
 using pwiz.Skyline.Model.AuditLog;
 using pwiz.Skyline.Model.DocSettings;
@@ -321,11 +322,13 @@ namespace pwiz.Skyline.Menus
             else
             {
                 string text;
-                string textCsv;
                 try
                 {
-                    text = ClipboardEx.GetText().Trim();
-                    textCsv = ClipboardEx.GetText(TextDataFormat.CommaSeparatedValue);
+                    text = ClipboardEx.GetText(TextDataFormat.CommaSeparatedValue);
+                    if (string.IsNullOrEmpty(text))
+                    {
+                        text = ClipboardEx.GetText().Trim();
+                    }
                 }
                 catch (Exception)
                 {
@@ -334,7 +337,7 @@ namespace pwiz.Skyline.Menus
                 }
                 try
                 {
-                    Paste(string.IsNullOrEmpty(textCsv) ? text : textCsv);
+                    Paste(text);
                 }
                 catch (Exception x)
                 {
@@ -535,6 +538,7 @@ namespace pwiz.Skyline.Menus
             // Check to see if any of the peptides would be filtered
             // by the current settings.
             string[] pepSequences = text.Split('\n');
+            // ReSharper disable once CollectionNeverQueried.Local
             var setAdded = new HashSet<string>();
             var listAllPeptides = new List<string>();
             var listAcceptPeptides = new List<string>();
@@ -1055,16 +1059,18 @@ namespace pwiz.Skyline.Menus
 
         public void ShowSynchronizedIntegrationDialog()
         {
-            using (var dlg = new SynchronizedIntegrationDlg(DocumentUI))
+            using (var dlg = new SynchronizedIntegrationDlg(SkylineWindow))
             {
                 if (dlg.ShowDialog(SkylineWindow) == DialogResult.OK)
                 {
                     var groupBy = dlg.GroupByPersistedString;
                     var all = dlg.IsAll;
-                    var targets = dlg.Targets.ToArray();
+                    var targets = dlg.TargetsInvariant.ToArray();
 
-                    var existing = DocumentUI.Settings.TransitionSettings.Integration;
-                    if (groupBy != existing.SynchronizedIntegrationGroupBy || !ArrayUtil.EqualsDeep(existing.SynchronizedIntegrationTargets, targets))
+                    var existing = Document.Settings.TransitionSettings.Integration;
+                    if (groupBy != existing.SynchronizedIntegrationGroupBy ||
+                        all != existing.SynchronizedIntegrationAll ||
+                        !ArrayUtil.EqualsDeep(existing.SynchronizedIntegrationTargets, targets))
                     {
                         ModifyDocument(
                             string.Format(Resources.EditMenu_SetSynchronizedIntegration_Change_synchronized_integration_to__0_,
@@ -1136,19 +1142,42 @@ namespace pwiz.Skyline.Menus
 
         private void insertTransitionListMenuItem_Click(object sender, EventArgs e)
         {
-            ShowPasteTransitionListDlg();
+            ShowInsertTransitionListDlg();
         }
 
-        public void ShowPasteTransitionListDlg()
+        public void ShowInsertTransitionListDlg()
         {
-            using (var pasteDlg = new PasteDlg(SkylineWindow)
+            using (var transitionDlg = new InsertTransitionListDlg())
             {
-                SelectedPath = SelectedPath,
-                PasteFormat = PasteFormat.transition_list
-            })
-            {
-                if (pasteDlg.ShowDialog(SkylineWindow) == DialogResult.OK)
-                    SelectedPath = pasteDlg.SelectedPath;
+                if (transitionDlg.ShowDialog(SkylineWindow) != DialogResult.OK)
+                    return;
+
+                IFormatProvider formatProvider;
+                char separator;
+                Type[] columnTypes;
+                var text = transitionDlg.TransitionListText;
+                // As long as it has columns we want to parse the input as a transition list
+                if (MassListImporter.IsColumnar(text, out formatProvider, out separator, out columnTypes))
+                {
+                    try
+                    {
+                        SkylineWindow.ImportMassList(new MassListInputs(text, formatProvider, separator),
+                            Resources.SkylineWindow_Paste_Paste_transition_list, false, SrmDocument.DOCUMENT_TYPE.none, true);
+                    }
+                    catch (Exception exception)
+                    {
+                        if (ExceptionUtil.IsProgrammingDefect(exception))
+                        {
+                            throw;
+                        }
+                        MessageDlg.ShowWithException(this, exception.Message, exception, true);
+                    }
+                }
+                else
+                {
+                    // Alert the user that their list is not columnar
+                    MessageDlg.Show(this, Resources.SkylineWindow_importMassListMenuItem_Click_Data_columns_not_found_in_first_line);
+                }
             }
         }
         #endregion
@@ -1430,7 +1459,8 @@ namespace pwiz.Skyline.Menus
                         var dlg = new EditCustomMoleculeDlg(SkylineWindow, Resources.SkylineWindow_ModifyPeptide_Modify_Small_Molecule,
                             Document.Settings,
                             nodePep.Peptide.CustomMolecule,
-                            nodePep.ExplicitRetentionTime ?? ExplicitRetentionTimeInfo.EMPTY))
+                            nodePep.ExplicitRetentionTime ?? ExplicitRetentionTimeInfo.EMPTY,
+                            nodePep.Children.Select(node => ((TransitionGroupDocNode)node).PrecursorAdduct).ToList()))
                     {
                         dlg.SetResult(nodePep.Peptide.CustomMolecule, Adduct.EMPTY);
                         if (dlg.ShowDialog(SkylineWindow) == DialogResult.OK)

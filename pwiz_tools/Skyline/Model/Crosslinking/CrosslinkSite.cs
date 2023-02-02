@@ -38,11 +38,6 @@ namespace pwiz.Skyline.Model.Crosslinking
             {
                 throw new ArgumentOutOfRangeException(nameof(peptideIndex));
             }
-
-            if (aaIndex < 0)
-            {
-                throw new ArgumentOutOfRangeException(nameof(aaIndex));
-            }
             PeptideIndex = peptideIndex;
             AaIndex = aaIndex;
         }

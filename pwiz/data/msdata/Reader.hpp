@@ -59,6 +59,9 @@ class PWIZ_API_DECL Reader
         /// when true, all drift bins/scans in a frame/block are written in combined form instead of as individual spectra
         bool combineIonMobilitySpectra;
 
+        /// when true, scans with only calibration data will be ignored (currently Waters lockmass only)
+        bool ignoreCalibrationScans;
+
         /// when true, Waters SONAR data will use bin numbers instead of ion mobility values in combineIonMobilitySpectra mode
         bool reportSonarBins;
 
@@ -88,6 +91,10 @@ class PWIZ_API_DECL Reader
 
         /// when true, global TIC and BPC chromatograms consist of only MS1 spectra (thus the number of time points cannot be assumed to be equal to the number of spectra)
         bool globalChromatogramsAreMs1Only;
+
+        // When true, vendor-specific DDA processing is enabled. For Waters data, this involves combining MS2 scans which refer
+        // to the same precursor from the same survey scan, and lockmass-correcting the precursor mass (if the lockmass refiner is active).
+        bool ddaProcessing;
 
         Config();
         Config(const Config& rhs);

@@ -113,14 +113,14 @@ namespace TestPerf // Tests in this namespace are skipped unless the RunPerfTest
             WaitForConditionUI(() => pepList.SelectedIndex != -1);
             var modDlg = WaitForOpenForm<AddModificationsDlg>();
             viewLibUI.IsUpdateComplete = false;
-            RunUI(modDlg.OkDialogAll);
+            OkDialog(modDlg, modDlg.OkDialogAll);
             // Wait for the list update caused by adding all modifications to complete
             WaitForConditionUI(() => viewLibUI.IsUpdateComplete);
 
             // Add all peptides
             var filterMatchedPeptidesDlg = ShowDialog<FilterMatchedPeptidesDlg>(viewLibUI.AddAllPeptides);
             var docBefore = WaitForProteinMetadataBackgroundLoaderCompletedUI();
-            using (new CheckDocumentState(1, 8756, 10988, 43894))
+            using (new CheckDocumentState(1, 8433, 10882, 43484))
             {
                 RunDlg<MultiButtonMsgDlg>(filterMatchedPeptidesDlg.OkDialog, addLibraryPepsDlg =>
                 {
@@ -145,11 +145,11 @@ namespace TestPerf // Tests in this namespace are skipped unless the RunPerfTest
             // build the document library.
             RunUI(() =>
             {
-                Assert.IsTrue(importPeptideSearchDlg.CurrentPage ==
-                            ImportPeptideSearchDlg.Pages.spectra_page);
+                Assert.IsTrue(importPeptideSearchDlg.CurrentPage == ImportPeptideSearchDlg.Pages.spectra_page);
                 importPeptideSearchDlg.BuildPepSearchLibControl.AddSearchFiles(SearchFiles);
-                Assert.IsTrue(importPeptideSearchDlg.ClickEarlyFinishButton());
             });
+            WaitForConditionUI(() => importPeptideSearchDlg.IsEarlyFinishButtonEnabled);
+            RunUI(() => Assert.IsTrue(importPeptideSearchDlg.ClickEarlyFinishButton()));
             WaitForClosedForm(importPeptideSearchDlg);
 
             VerifyDocumentLibraryBuilt(documentFile);

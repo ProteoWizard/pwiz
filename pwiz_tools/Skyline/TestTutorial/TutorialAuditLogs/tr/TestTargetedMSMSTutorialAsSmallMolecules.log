@@ -5,7 +5,7 @@ Transition Settings changed
 Settings > Transition Settings -- Filter > Ion types changed from "y, b" to "y, b, p"
 Settings > Transition Settings -- Filter > Molecule Ion types changed from "f" to "f, p"
 Settings > Transition Settings -- Library > Ion match tolerance changed from "0,5" to "0,7"
-Settings > Transition Settings -- Full-Scan > Acquisition method changed from "None" to "Targeted"
+Settings > Transition Settings -- Full-Scan > Acquisition method changed from "None" to "PRM"
 Settings > Transition Settings -- Full-Scan > Product mass analyzer changed from "None" to "QIT"
 Settings > Transition Settings -- Full-Scan > Resolution changed from Missing to "0,7"
 Settings > Transition Settings -- Full-Scan > Isotope peaks included changed from "None" to "Count"
@@ -159,7 +159,7 @@ Transition Settings changed
 Settings > Transition Settings -- Filter > Ion types changed from "y, b" to "y, b, p"
 Settings > Transition Settings -- Filter > Molecule Ion types changed from "f" to "f, p"
 Settings > Transition Settings -- Library > Ion match tolerance changed from "0,5" to "0,7"
-Settings > Transition Settings -- Full-Scan > Acquisition method changed from "None" to "Targeted"
+Settings > Transition Settings -- Full-Scan > Acquisition method changed from "None" to "PRM"
 Settings > Transition Settings -- Full-Scan > Product mass analyzer changed from "None" to "QIT"
 Settings > Transition Settings -- Full-Scan > Resolution changed from Missing to "0,7"
 Settings > Transition Settings -- Full-Scan > Isotope peaks included changed from "None" to "Count"
@@ -310,19 +310,27 @@ Undo Redo : Added spectral library "BSA_Protea_label_free_meth3"
 Summary   : Added spectral library "BSA_Protea_label_free_meth3"
 All Info  :
 Added spectral library "BSA_Protea_label_free_meth3"
-Build Spectral Library > Cut-off score is "0,99"
-Build Spectral Library > Search files : contains "klc_20100329v_Protea_Peptide_Curve_20fmol_uL_tech1.perc.xml"
-Build Spectral Library > Search files : contains "klc_20100329v_Protea_Peptide_Curve_80fmol_uL_tech1.perc.xml"
+Build Spectral Library > Cut-off score is "0,95"
+Build Spectral Library > Search files : contains { File = "klc_20100329v_Protea_Peptide_Curve_20fmol_uL_tech1.perc.xml", Score type = "Percolator q-value", Score threshold = "0,01" }
+Build Spectral Library > Search files : contains { File = "klc_20100329v_Protea_Peptide_Curve_80fmol_uL_tech1.perc.xml", Score type = "Percolator q-value", Score threshold = "0,01" }
 Build Spectral Library > iRT standard peptides is None
 Build Spectral Library > Include ambiguous matches is False
 Build Spectral Library > Filter for document peptides is True
 Build Spectral Library > Workflow is "PRM"
 Build Spectral Library > Input File Type is "Search results (build library directly)"
-Extra Info: Cut-off score = "0,99",
+Extra Info: Cut-off score = "0,95",
 Search files = 
 [
-    "klc_20100329v_Protea_Peptide_Curve_20fmol_uL_tech1.perc.xml",
-    "klc_20100329v_Protea_Peptide_Curve_80fmol_uL_tech1.perc.xml"
+    {
+        File = "klc_20100329v_Protea_Peptide_Curve_20fmol_uL_tech1.perc.xml",
+        Score type = "Percolator q-value",
+        Score threshold = "0,01"
+    },
+    {
+        File = "klc_20100329v_Protea_Peptide_Curve_80fmol_uL_tech1.perc.xml",
+        Score type = "Percolator q-value",
+        Score threshold = "0,01"
+    }
 ],
 iRT standard molecules = None,
 Include ambiguous matches = False,
@@ -380,7 +388,7 @@ All Info  :
 Transition Settings changed
 Settings > Transition Settings -- Filter > Ion types changed from "y, b" to "y, b, p"
 Settings > Transition Settings -- Filter > Molecule Ion types changed from "f" to "f, p"
-Settings > Transition Settings -- Full-Scan > Acquisition method changed from "None" to "Targeted"
+Settings > Transition Settings -- Full-Scan > Acquisition method changed from "None" to "PRM"
 Settings > Transition Settings -- Full-Scan > Product mass analyzer changed from "None" to "Centroided"
 Settings > Transition Settings -- Full-Scan > Mass accuracy changed from Missing to "20"
 Settings > Transition Settings -- Full-Scan > Isotope peaks included changed from "None" to "Count"

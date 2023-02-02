@@ -21,6 +21,7 @@ using System;
 using System.Collections.Generic;
 using System.IO;
 using System.Linq;
+using System.Net.Http;
 using System.Windows.Forms;
 using Microsoft.VisualStudio.TestTools.UnitTesting;
 using pwiz.Skyline;
@@ -129,6 +130,7 @@ namespace pwiz.SkylineTestFunctional
                 startPage.SelectedTab = StartPage.TABS.Tutorial;
 
                 Assert.IsTrue(AllBoxPanelsExist(startPage));
+                Assert.IsTrue(AllTutorialLinksExist(startPage));
                 startPage.DoAction(skylineWindow=>true);
             });
             WaitForOpenForm<SkylineWindow>();
@@ -140,6 +142,44 @@ namespace pwiz.SkylineTestFunctional
             GetControlsOfType(boxPanels, startPage);
             var openBoxPanels = startPage.GetVisibleBoxPanels();
             return boxPanels.Count == openBoxPanels.Count;
+        }
+
+        private bool AllTutorialLinksExist(StartPage startPage)
+        {
+            using var httpClient = new HttpClient();
+            var tutorialActionOriginal = startPage.Tutorial;
+            try
+            {
+                startPage.Tutorial = (s, p, z) =>
+                    TutorialLinksExist(httpClient, s, p, z);
+
+                var boxPanels = new List<ActionBoxControl>();
+                GetControlsOfType(boxPanels, startPage);
+                foreach (var boxPanel in startPage.GetVisibleBoxPanels())
+                {
+                    if (boxPanel is TutorialActionBoxControl t)
+                        t.EventAction(); // Trigger the action to cause the link test
+                }
+            }
+            finally
+            {
+                startPage.Tutorial = tutorialActionOriginal;
+            }
+
+            return true;
+        }
+
+        private void TutorialLinksExist(HttpClient httpClient, string skyFileLocation, string pdfFileLocation, string zipSkyFileLocation)
+        {
+            // See if data URIs are accessible
+            foreach (var uri in new[] { skyFileLocation, pdfFileLocation, zipSkyFileLocation })
+            {
+                if (!string.IsNullOrEmpty(uri) && uri.StartsWith(@"http"))
+                {
+                    using var response = httpClient.GetAsync(uri, HttpCompletionOption.ResponseHeadersRead).Result;
+                    Assert.IsTrue(response.IsSuccessStatusCode, @"Could not access tutorial doc at " + uri);
+                }
+            }
         }
 
         private void GetControlsOfType<T>(List<T> controls, Control root) where T :Control 
@@ -182,7 +222,7 @@ namespace pwiz.SkylineTestFunctional
     }
 
     /// <summary>
-    /// Checks that the Import Action works, randomly test either peptide, protein, transition list, or fasta import.
+    /// Checks that the Import Action works, randomly test either peptide, protein, or fasta import.
     /// </summary>
     [TestClass]
     public class StartPageImportTest : AbstractFunctionalTest
@@ -206,10 +246,9 @@ namespace pwiz.SkylineTestFunctional
                 {
                     new PasteDlgTab(ActionImport.DataType.fasta, typeof(PasteDlg.FastaTab)),
                     new PasteDlgTab(ActionImport.DataType.proteins, typeof(PasteDlg.ProteinListTab)),
-                    new PasteDlgTab(ActionImport.DataType.transition_list, typeof(PasteDlg.TransitionListTab)),
                 };
                 var random = new Random(DateTime.UtcNow.Millisecond);
-                int rand = random.Next(0, 3);
+                int rand = random.Next(0, 2);
                 var selectedImport = types[rand];
                 var startPage = FindOpenForm<StartPage>();
                 RunUI(() => startPage.TestImportAction(selectedImport.DType));

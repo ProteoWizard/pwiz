@@ -119,6 +119,25 @@ namespace pwiz.Skyline.Model.Results
             }
         }
 
+        public static bool FileExists(string docFilePath, MsDataFileUri dataFilePath)
+        {
+            return FileExists(docFilePath, dataFilePath, out _);
+        }
+
+        /// <summary>
+        /// Checks for file existence using ScanProvider search rules (as stated, in doc dir, in doc dir parent)
+        /// </summary>
+        /// <param name="docFilePath">Full path of the Skyline document that uses the data file</param>
+        /// <param name="dataFilePath">Full path of file to be verified as existing using search rules</param>
+        /// <param name="dataFileActualPath">Full path of the matching file that was found</param>
+        /// <returns>true if file exists as described or in any of the standard search locations</returns>
+        public static bool FileExists(string docFilePath, MsDataFileUri dataFilePath, out string dataFileActualPath)
+        {
+            var tester = new ScanProvider(docFilePath, dataFilePath, ChromSource.unknown, null, null, null);
+            dataFileActualPath = tester.FindDataFilePath();
+            return dataFileActualPath != null;
+        }
+
         public bool Adopt(IScanProvider other)
         {
             if (!Equals(DocFilePath, other.DocFilePath) || !Equals(DataFilePath, other.DataFilePath))

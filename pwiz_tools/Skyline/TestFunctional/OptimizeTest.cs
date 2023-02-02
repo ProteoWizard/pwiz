@@ -68,9 +68,8 @@ namespace pwiz.SkylineTestFunctional
 
         protected override void DoTest()
         {
-            if (AsSmallMolecules && !RunSmallMoleculeTestVersions)
+            if (AsSmallMolecules && SkipSmallMoleculeTestVersions())
             {
-                Console.Write(MSG_SKIPPING_SMALLMOLECULE_TEST_VERSION);
                 return;
             }
 
@@ -78,6 +77,7 @@ namespace pwiz.SkylineTestFunctional
             OptLibNeutralLossTest();
 
             CovOptimizationTest();
+            PrmCeOptimizationTest();
             Assert.IsFalse(IsCovRecordMode);    // Make sure no commits with this set to true
         }
 
@@ -246,7 +246,7 @@ namespace pwiz.SkylineTestFunctional
             var addOptDlgAskConverted = ShowDialog<AddOptimizationsDlg>(addOptDbConvertible.OkDialog);
             Assert.AreEqual(AsSmallMolecules ? 111 : 109, addOptDlgAskConverted.OptimizationsCount);
             Assert.AreEqual(AsSmallMolecules ? 0 : 2, addOptDlgAskConverted.ExistingOptimizationsCount);
-            RunUI(addOptDlgAskConverted.CancelDialog);
+            OkDialog(addOptDlgAskConverted, addOptDlgAskConverted.CancelDialog);
 
             // Done editing optimization library
             OkDialog(editOptLib, editOptLib.OkDialog);
@@ -264,10 +264,12 @@ namespace pwiz.SkylineTestFunctional
             var importResults = ShowDialog<ImportResultsDlg>(SkylineWindow.ImportResults);
 
             RunUI(() =>
-                      {
-                          importResults.NamedPathSets = DataSourceUtil.GetDataSourcesInSubdirs(TestFilesDir.FullPath).ToArray();
-                          importResults.OptimizationName = ExportOptimize.CE;
-                      });
+            {
+                importResults.NamedPathSets =
+                    DataSourceUtil.GetDataSources(TestFilesDir.GetTestPath("REP01"))
+                        .Concat(DataSourceUtil.GetDataSources(TestFilesDir.GetTestPath("REP02"))).ToArray();
+                importResults.OptimizationName = ExportOptimize.CE;
+            });
 
             var removePrefix = ShowDialog<ImportResultsNameDlg>(importResults.OkDialog);
             RunUI(removePrefix.NoDialog);
@@ -283,10 +285,9 @@ namespace pwiz.SkylineTestFunctional
             // Set up display while loading
             RunUI(SkylineWindow.ArrangeGraphsTiled);
 
-            SelectNode(SrmDocument.Level.Transitions, 0);
+            SelectNode(SrmDocument.Level.TransitionGroups, 0);
 
             RunUI(SkylineWindow.AutoZoomBestPeak);
-
             // Add some heavy precursors while loading
             const LabelAtoms labelAtoms = LabelAtoms.C13 | LabelAtoms.N15;
             const string heavyK = "Heavy K";
@@ -309,6 +310,22 @@ namespace pwiz.SkylineTestFunctional
 
             // First make sure the first settings change occurs
             WaitForDocumentChangeLoaded(docCurrent, 300*1000);
+
+            // Verify that "GraphChromatogram.DisplayOptimizationTotals" works for different values
+            // of TransformChrom
+            RunUI(()=>
+            {
+                SkylineWindow.ShowSingleTransition();
+                SkylineWindow.SetTransformChrom(TransformChrom.raw);
+            });
+            WaitForGraphs();
+            RunUI(() =>
+            {
+                SkylineWindow.SetTransformChrom(TransformChrom.interpolated);
+            });
+            WaitForGraphs();
+
+            SelectNode(SrmDocument.Level.Transitions, 0);
 
             RunUI(() => SkylineWindow.SaveDocument());
 
@@ -762,7 +779,8 @@ namespace pwiz.SkylineTestFunctional
 
                 // Try exporting with an explicitly set compensation voltage value and declustering potential
                 var documentGrid = ShowDialog<DocumentGridForm>(() => SkylineWindow.ShowDocumentGrid(true));
-                EnableDocumentGridColumns(documentGrid, Resources.SkylineViewContext_GetTransitionListReportSpec_Mixed_Transition_List, 5,
+                EnsureMixedTransitionListReport();
+                EnableDocumentGridColumns(documentGrid, MIXED_TRANSITION_LIST_REPORT_NAME, 5,
                     new[]
                     {
                         "Proteins!*.Peptides!*.Precursors!*.ExplicitCompensationVoltage",
@@ -784,6 +802,95 @@ namespace pwiz.SkylineTestFunctional
                 outTransitionsFinalWithOptLib2 = outTransitionsFinalWithOptLib2.Replace(".csv", "_explicit.csv");
                 expectedTransitionsFinalWithOptLib2 = expectedTransitionsFinalWithOptLib2.Replace(".csv", "_explicit.csv");
             }
+        }
+
+        private void PrmCeOptimizationTest()
+        {
+            if (AsSmallMolecules)
+                return;
+
+            var dir = TestFilesDir.GetTestPath("prm-thermo");
+
+            // Open the document.
+            RunUI(() => SkylineWindow.OpenFile(Path.Combine(dir, "doc.sky")));
+
+            var doc = SkylineWindow.Document;
+
+            // Import results.
+            var importResultsDlg = ShowDialog<ImportResultsDlg>(SkylineWindow.ImportResults);
+            RunUI(() =>
+            {
+                importResultsDlg.NamedPathSets = DataSourceUtil.GetDataSources(dir).ToArray();
+                importResultsDlg.OptimizationName = ExportOptimize.CE;
+            });
+            RunDlg<ImportResultsNameDlg>(importResultsDlg.OkDialog, dlg => dlg.OkDialog());
+            doc = WaitForDocumentChangeLoaded(doc);
+
+            var expected = new[]
+            {
+                new { Seq = "IGDYAGIK", Mz = 418.7293, Charge = 2, BestStep = -3 },
+                new { Seq = "SISIVGSYVGNR", Mz = 626.3382, Charge = 2, BestStep = -1 },
+                new { Seq = "VVGLSTLPEIYEK", Mz = 724.4058, Charge = 2, BestStep = -2 },
+                new { Seq = "YVVDTSK", Mz = 406.2134, Charge = 2, BestStep = -3 }
+            };
+
+            void Find(SrmDocument document, string seq, double mz, int charge, out PeptideDocNode nodePep,
+                out TransitionGroupDocNode nodeGroup)
+            {
+                Assert.AreEqual(1, document.PeptideGroupCount);
+                nodePep = document.Peptides.FirstOrDefault(pep => pep.ModifiedSequence.Equals(seq));
+                Assert.IsNotNull(nodePep, $"Peptide {seq} not found.");
+                nodeGroup = nodePep.TransitionGroups.FirstOrDefault(nodeTranGroup =>
+                    nodeTranGroup.PrecursorCharge == charge && Math.Abs(nodeTranGroup.PrecursorMz - mz) < 0.001);
+                Assert.IsNotNull(nodeGroup, $"Precursor with charge {charge} and m/z {mz} not found for peptide {seq}.");
+            }
+
+            // Verify results.
+            const int chromCount = 2;
+            var chroms = doc.MeasuredResults.Chromatograms;
+            Assert.AreEqual(chromCount, chroms.Count);
+            var optFunc = chroms[0].OptimizationFunction;
+            Assert.AreEqual(OptimizationType.collision_energy, optFunc.OptType);
+            Assert.AreEqual(optFunc, chroms[1].OptimizationFunction);
+            var ceRegression = optFunc as CollisionEnergyRegression;
+            Assert.IsNotNull(ceRegression);
+            foreach (var expect in expected)
+            {
+                Find(doc, expect.Seq, expect.Mz, expect.Charge, out _, out var nodeGroup);
+
+                var results = nodeGroup.Results;
+                Assert.IsNotNull(results);
+                Assert.AreEqual(chromCount, results.Count);
+                foreach (var result in results)
+                {
+                    // Verify results go from step -3 to 3.
+                    Assert.IsTrue(Enumerable.Range(-3, 7).SequenceEqual(result.Select(r => (int)r.OptimizationStep)));
+                    // Verify best step.
+                    Assert.AreEqual(expect.BestStep, result.OrderByDescending(r => r.Area).First().OptimizationStep);
+                }
+            }
+
+            // Enable optimize by precursor.
+            RunDlg<TransitionSettingsUI>(SkylineWindow.ShowTransitionSettingsUI, dlg =>
+            {
+                dlg.UseOptimized = true;
+                dlg.OptimizeType = OptimizedMethodType.Precursor.GetLocalizedString();
+                dlg.OkDialog();
+            });
+            doc = WaitForDocumentChange(doc);
+
+            // Verify that SrmDocument.GetOptimizedCollisionEnergy returns the expected CE values.
+            foreach (var expect in expected)
+            {
+                Find(doc, expect.Seq, expect.Mz, expect.Charge, out var nodePep, out var nodeGroup);
+                var optCe = doc.GetOptimizedCollisionEnergy(nodePep, nodeGroup, null);
+                var expectCe = ceRegression.GetCollisionEnergy(
+                    Adduct.FromCharge(nodeGroup.PrecursorCharge, Adduct.ADDUCT_TYPE.proteomic), nodeGroup.PrecursorMz,
+                    expect.BestStep);
+                Assert.AreEqual(expectCe, optCe);
+            }
+
+            RunUI(() => SkylineWindow.SaveDocument());
         }
 
         private DbOptimization GetDbOptimization(OptimizationType type, string sequence, Adduct adduct, double optValue)
@@ -879,7 +986,7 @@ namespace pwiz.SkylineTestFunctional
             SrmDocument docCurrent = SkylineWindow.Document;
             int transitions = docCurrent.MoleculeTransitionCount / docCurrent.MoleculeTransitionGroupCount;
             foreach (var chromSet in docCurrent.Settings.MeasuredResults.Chromatograms)
-                Assert.AreEqual(transitions, SkylineWindow.GetGraphChrom(chromSet.Name).CurveCount);
+                AssertEx.AreEqual(transitions, SkylineWindow.GetGraphChrom(chromSet.Name).CurveCount);
             Assert.AreEqual(transitions, SkylineWindow.GraphPeakArea.CurveCount);
             Assert.AreEqual(transitions, SkylineWindow.GraphRetentionTime.CurveCount);
 

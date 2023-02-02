@@ -6,7 +6,7 @@
 # Then this script runs git for master or an active pull request[1] to check the files changed by the latest commit (for master)
 # or by any commit (for PRs).
 #
-# When a build is NOT triggered, the script reports this fact to GitHub so that the config can still be a "required check" for merging the PR.
+# When a build is NOT triggered due to changed files, the script reports this fact to GitHub so that the config can still be a "required check" for merging the PR.
 #
 # The 'targets' dictionary maps build config ids (e.g. 'bt83') to the status name shown in GitHub (e.g. "teamcity - Core Windows x86");
 # THESE NAMES MUST MATCH THE STATUS NAME REPORTED BY THE CORRESPONDING TEAMCITY CONFIGS (usually the name of the config as seen on the TeamCity project page).
@@ -27,13 +27,20 @@ import base64
 import json
 
 args = sys.argv[1:len(sys.argv)]
-current_branch = args[0]
-bearer_token = args[1]
-teamcity_username = args[2]
-teamcity_password = args[3]
+
+if len(args) < 5:
+    print("Usage:")
+    print(" %s <targets_and_paths_file> <current branch> <GitHub authorization token> <teamcity_username> <teamcity_password>" % os.path.basename(sys.argv[0]))
+    exit(0)
+
+targets_and_paths_file = args[0]
+current_branch = args[1]
+bearer_token = args[2]
+teamcity_username = args[3]
+teamcity_password = args[4]
 
 def post(url, params, headers):
-    if os.environ['USERNAME'] != 'teamcity':
+    if not 'TEAMCITY_VERSION' in os.environ:
         return
 
     if isinstance(params, dict):
@@ -45,7 +52,7 @@ def post(url, params, headers):
         return conn.read().decode('utf-8')
 
 def get(url, always = False):
-    if not always and os.environ['USERNAME'] != 'teamcity':
+    if not always and not 'TEAMCITY_VERSION' in os.environ:
         return
     
     req = urllib.request.Request(url)
@@ -70,99 +77,17 @@ def merge(dict1, *dicts):
                 r[k] = d[k]
     return r
 
-
-if len(args) < 4:
-    print("Usage:")
-    print(" %s <current branch> <current commit SHA1> <GitHub authorization token>" % os.path.basename(sys.argv[0]))
-    exit(0)
-
-targets = {}
-targets['CoreWindowsRelease'] = \
-{
-    "bt83": "Core Windows x86_64"
-    ,"bt36": "Core Windows x86"
-    ,"bt143": "Core Windows x86_64 (no vendor DLLs)"
-}
-#targets['CoreWindowsDebug'] = \
-#{
-#    "bt84": "Core Windows x86_64 debug"
-#    ,"bt75": "Core Windows debug"
-#}
-#targets['CoreWindows'] = merge(targets['CoreWindowsRelease'], targets['CoreWindowsDebug'])
-targets['CoreWindows'] = targets['CoreWindowsRelease']
-targets['CoreLinux'] = {"bt17": "Core Linux x86_64"}
-
-targets['SkylineRelease'] = \
-{
-    'master':
-    {
-        "ProteoWizard_WindowsX8664msvcProfessionalSkylineResharperChecks": "Skyline code inspection" # depends on "bt209",
-        ,"bt209": "Skyline master and PRs (Windows x86_64)"
-        ,"bt19": "Skyline master and PRs (Windows x86)"
-    },
-    'release':
-    {
-        "ProteoWizard_SkylineReleaseBranchCodeInspection": "Skyline release code inspection" # depends on "ProteoWizard_WindowsX8664SkylineReleaseBranchMsvcProfessional",
-        ,"ProteoWizard_WindowsX8664SkylineReleaseBranchMsvcProfessional": "Skyline Release Branch x86_64"
-        ,"ProteoWizard_WindowsX86SkylineReleaseBranchMsvcProfessional": "Skyline Release Branch x86"
-    }
-}
-
-#targets['SkylineDebug'] = \
-#{
-#    "bt210": "Skyline master and PRs (Windows x86_64 debug)"
-#    ,"bt87": "Skyline master and PRs (Windows x86 debug)"
-#}
-#targets['Skyline'] = merge(targets['SkylineRelease'], targets['SkylineDebug'])
-targets['Skyline'] = targets['SkylineRelease']
-
-targets['Container'] = \
-{
-    'master':
-    {
-        "ProteoWizardAndSkylineDockerContainerWineX8664": "ProteoWizard and Skyline Docker container (Wine x86_64)"
-    },
-    'release':
-    {
-        "ProteoWizard_ProteoWizardAndSkylineReleaseBranchDockerContainerWineX8664": "ProteoWizard and Skyline (release branch) Docker container (Wine x86_64)"
-    }
-}
-
-targets['BumbershootRelease'] = \
-{
-    "Bumbershoot_Windows_X86_64": "Bumbershoot Windows x86_64"
-    ,"ProteoWizard_Bumbershoot_Windows_X86": "Bumbershoot Windows x86"
-}
-targets['BumbershootLinux'] = {"ProteoWizard_Bumbershoot_Linux_x86_64": "Bumbershoot Linux x86_64"}
-targets['Bumbershoot'] = merge(targets['BumbershootRelease'], targets['BumbershootLinux'])
-
-targets['Core'] = merge(targets['CoreWindows'], targets['CoreLinux'])
-targets['All'] = merge(targets['Core'], targets['Skyline'], targets['Bumbershoot'], targets['Container'])
-
-# Patterns are processed in order. If a path matches multiple patterns, only the first pattern will trigger. For example,
-# "pwiz_tools/Bumbershoot/Jamfile.jam" matches both "pwiz_tools/Bumbershoot/.*" and "pwiz_tools/.*", but will only trigger "Bumbershoot" targets
-matchPaths = [
-    (".*/smartBuildTrigger.py", {}),
-    ("libraries/.*", targets['All']),
-    ("pwiz/.*", targets['All']),
-    ("pwiz_aux/.*", targets['All']),
-    ("scripts/wix/.*", targets['CoreWindows']),
-    ("scripts/.*", targets['All']),
-    ("pwiz_tools/BiblioSpec/.*", merge(targets['Core'], targets['Skyline'], targets['Container'])),
-    ("pwiz_tools/Bumbershoot/.*", targets['Bumbershoot']),
-    ("pwiz_tools/Skyline/.*", merge(targets['Skyline'], targets['Container'])),
-    ("pwiz_tools/Topograph/.*", targets['Skyline']),
-    ("pwiz_tools/Shared/.*", merge(targets['Skyline'], targets['BumbershootRelease'], targets['Container'])),
-    ("pwiz_tools/.*", targets['All']),
-    ("Jamroot.jam", targets['All'])
-]
+# exec the targets_and_paths_file to define the targets and matchPaths variables
+with open(targets_and_paths_file, "rb") as source_file:
+    code = compile(source_file.read(), targets_and_paths_file, "exec")
+exec(code)
 
 print("Current branch: %s" % current_branch) # must be either 'master' or 'pull/#'
 
-if current_branch == "master":
+if current_branch == "master" or current_branch.startswith("skyline_"):
     changed_files = subprocess.check_output("git show --pretty="" --name-only", shell=True).decode(sys.stdout.encoding)
     current_commit = subprocess.check_output('git log -n1 --format="%H"', shell=True).decode(sys.stdout.encoding).strip()
-    base_branch = "master"
+    base_branch = current_branch
 elif current_branch.startswith("pull/"):
     pullMetadata = json.loads(get("https://api.github.com/repos/ProteoWizard/pwiz/" + current_branch.replace("pull", "pulls"), True))
     base_branch = pullMetadata["base"]["ref"]
@@ -176,11 +101,13 @@ else:
 
 print("Current commit: '%s'" % current_commit)
 
-print("Changed files:\n", changed_files)
+changed_files_str = changed_files
 changed_files = changed_files.splitlines()
+print(f"Changed files ({len(changed_files)}):\n", changed_files_str)
 
 # substitute "release" for specific skyline_##.# versions
-base_branch = re.sub("Skyline/skyline_.*", "release", base_branch)
+base_branch = re.sub("(Skyline/)?skyline_.*", "release", base_branch)
+print("Base branch: '%s'" % base_branch)
 
 # promote branch-specific targets into main match dictionaries
 for tuple in matchPaths:
@@ -189,11 +116,13 @@ for tuple in matchPaths:
 
 # match changed file paths to triggers
 triggers = {}
-if current_branch == "master" and len(changed_files) == 0:
-    print("Empty change list on master branch; this is some merge I don't know how to get a reliable change list for yet. Building everything!")
+if (current_branch == "master" or current_branch.startswith("skyline_")) and len(changed_files) == 0:
+    print(f"Empty change list on {current_branch} branch; this is some merge I don't know how to get a reliable change list for yet. Building everything!")
     for target in targets['All']:
         if target not in triggers:
-            triggers[target] = "merge to master"
+            isBaseBranchDict = isinstance(tuple[1][target], dict) # these targets were promoted into top-level above
+            if not isBaseBranchDict and target not in triggers:
+                triggers[target] = "merge to %s" % base_branch
 else:
     for path in changed_files:
         if os.path.basename(path) == "smartBuildTrigger.py":
@@ -209,17 +138,18 @@ else:
             if triggered:
                 break
     
-notBuilding = {}
+notBuildingDueToBranch = {}
+notBuildingDueToChangedFiles = {}
 building = {}
 for targetKey in targets:
     for target in targets[targetKey]:
         isBaseBranchDict = isinstance(targets[targetKey][target], dict) # these targets were promoted into top-level above
         if not isBaseBranchDict and target not in triggers:
-            notBuilding[target] = targets[targetKey][target]
+            notBuildingDueToChangedFiles[target] = targets[targetKey][target]
         elif isBaseBranchDict:
             for target2 in targets[targetKey][target]:
-                if target2 not in triggers:
-                    notBuilding[target2] = targets[targetKey][target][target2]
+                if target2 not in triggers and not base_branch == target:
+                    notBuildingDueToBranch[target2] = targets[targetKey][target][target2]
         else:
             building[target] = targets[targetKey][target]
 
@@ -229,7 +159,7 @@ buildNodeToPOST = '<build branchName="%s"><buildType id="%s"/></build>'
 base64string = base64.b64encode(('%s:%s' % (teamcity_username, teamcity_password)).encode('ascii')).decode('ascii')
 headers = {"Authorization": "Basic %s" % base64string, "Content-Type": "application/xml"}
 for trigger in triggers:
-    if trigger == "bt209":
+    if trigger == "bt209" or trigger == "ProteoWizard_WindowsX8664SkylineReleaseBranchMsvcProfessional":
         continue # special case to skip triggering this build since Skyline Code Inspection starts it as part of build chain (TODO: refactor to make this capability more generic)
     print("Triggering build %s (%s): %s" % (building[trigger], trigger, triggers[trigger]))
     data = buildNodeToPOST % (current_branch, trigger)
@@ -239,10 +169,13 @@ for trigger in triggers:
 # For builds not being triggered, report success to GitHub
 githubUrl = "https://api.github.com/repos/ProteoWizard/pwiz/statuses/%s" % current_commit
 headers = {"Authorization": "Bearer %s" % bearer_token, "Content-type": "application/json"}
-for target in notBuilding:
-    print("Not building %s (%s), but reporting success to GitHub." % (notBuilding[target], target))
-    data = '{"state": "success", "context": "teamcity - %s", "description": "Build not necessary with these changed files"}' %  notBuilding[target]
+for target in notBuildingDueToChangedFiles:
+    print("Not building %s (%s) due to unchanged files, but reporting success to GitHub." % (notBuildingDueToChangedFiles[target], target))
+    data = '{"state": "success", "context": "teamcity - %s", "description": "Build not necessary with these changed files"}' %  notBuildingDueToChangedFiles[target]
     rsp = post(githubUrl, data, headers)
+
+for target in notBuildingDueToBranch:
+    print("Not building %s (%s) or reporting to GitHub due to PR's target branch." % (notBuildingDueToBranch[target], target))
 
 # when no builds are triggered (e.g. if the only update is to this script), report a GitHub status that the script ran successfully
 if len(building) == 0:

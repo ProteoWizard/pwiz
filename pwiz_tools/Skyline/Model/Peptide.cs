@@ -142,8 +142,12 @@ namespace pwiz.Skyline.Model
                 // CONSIDER(bspratt) could we reasonably reuse fragments with proposed precursors of suitable charge and polarity (say, add an M+Na node that mimics an existing M+H node and children)
                 foreach (var group in nodePep.TransitionGroups.Where(tranGroup => tranGroup.TransitionGroup.IsCustomIon))
                 {
+                    if (!settings.SupportsPrecursor(group, mods))
+                    {
+                        continue;
+                    }
                     if (!useFilter || settings.TransitionSettings.IsMeasurablePrecursor(group.PrecursorMz))
-                      yield return group.TransitionGroup;
+                        yield return group.TransitionGroup;
                 }
             }
             else

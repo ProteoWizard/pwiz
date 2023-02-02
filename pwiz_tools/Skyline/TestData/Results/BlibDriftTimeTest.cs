@@ -42,9 +42,9 @@ namespace pwiz.SkylineTestData.Results
         [TestMethod]
         public void TestBlibDriftTimes()
         {
-            var testFilesDir = new TestFilesDir(TestContext, @"TestData\Results\BlibDriftTimeTest.zip");
+            TestFilesDir = new TestFilesDir(TestContext, @"TestData\Results\BlibDriftTimeTest.zip");
             // Open document with some peptides but no results
-            var docPath = testFilesDir.GetTestPath("BlibDriftTimeTest.sky");
+            var docPath = TestFilesDir.GetTestPath("BlibDriftTimeTest.sky");
             SrmDocument docOriginal = ResultsUtil.DeserializeDocument(docPath);
             using (var docContainer = new ResultsTestDocumentContainer(docOriginal, docPath))
             {
@@ -52,7 +52,7 @@ namespace pwiz.SkylineTestData.Results
 
                 // Use the bare drift times in the spectral library
                 var librarySpec = new BiblioSpecLiteSpec("drift test",
-                                                    testFilesDir.GetTestPath("BlibDriftTimeTest.blib"));
+                                                    TestFilesDir.GetTestPath("BlibDriftTimeTest.blib"));
                 var ionMobility = doc.Settings.TransitionSettings.IonMobilityFiltering
                     .ChangeFilterWindowWidthCalculator(
                         new IonMobilityWindowWidthCalculator(
@@ -69,7 +69,7 @@ namespace pwiz.SkylineTestData.Results
                 var chromSets = new[]
                                 {
                                     new ChromatogramSet(replicateName, new[]
-                                        { new MsDataFilePath(testFilesDir.GetTestPath("ID12692_01_UCA168_3727_040714" + ExtensionTestContext.ExtMz5)),  }),
+                                        { new MsDataFilePath(TestFilesDir.GetTestPath("ID12692_01_UCA168_3727_040714" + ExtensionTestContext.ExtMz5)),  }),
                                 };
                 var docResults = doc.ChangeMeasuredResults(new MeasuredResults(chromSets));
                 Assert.IsTrue(docContainer.SetDocument(docResults, docOriginal, true));
@@ -83,7 +83,7 @@ namespace pwiz.SkylineTestData.Results
                 var pair = document.PeptidePrecursorPairs.ToArray()[1];
                 ChromatogramGroupInfo[] chromGroupInfo;
                 Assert.IsTrue(results.TryLoadChromatogram(0, pair.NodePep, pair.NodeGroup,
-                    tolerance, true, out chromGroupInfo));
+                    tolerance, out chromGroupInfo));
                 Assert.AreEqual(1, chromGroupInfo.Length);
                 var chromGroup = chromGroupInfo[0];
                 Assert.AreEqual(2, chromGroup.NumPeaks); // This will be higher if we don't filter on DT

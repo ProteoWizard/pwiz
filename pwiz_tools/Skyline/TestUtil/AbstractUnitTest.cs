@@ -17,6 +17,11 @@
  * limitations under the License.
  */
 
+using Microsoft.VisualStudio.TestTools.UnitTesting;
+using pwiz.Common.SystemUtil;
+using pwiz.Skyline;
+using pwiz.Skyline.Properties;
+using pwiz.Skyline.Util;
 using System;
 using System.Collections.Generic;
 using System.Diagnostics;
@@ -24,23 +29,18 @@ using System.Globalization;
 using System.IO;
 using System.Linq;
 using System.Net;
-using Microsoft.VisualStudio.TestTools.UnitTesting;
-using pwiz.Common.SystemUtil;
-using pwiz.Skyline;
-using pwiz.Skyline.Properties;
-using pwiz.Skyline.Util;
+using TestRunnerLib;
 
 // Once-per-application setup information to perform logging with log4net.
 [assembly: log4net.Config.XmlConfigurator(ConfigFile = "SkylineLog4Net.config", Watch = true)]
 
 namespace pwiz.SkylineTestUtil
 {
-   
+
     /// <summary>
     /// This is the base class for every unit test in Skyline.  It enables logging
     /// and also provides quick information about the running time of the test.
     /// </summary>
-    [TestClass]
     [DeploymentItem("SkylineLog4Net.config")]
     public class AbstractUnitTest
     {
@@ -49,28 +49,53 @@ namespace pwiz.SkylineTestUtil
         // NB this text needs to agree with that in UpdateRun() in pwiz_tools\Skyline\SkylineTester\TabQuality.cs
         public const string MSG_SKIPPING_SMALLMOLECULE_TEST_VERSION = " (RunSmallMoleculeTestVersions=False, skipping.) ";
 
+        public const string MSG_SKIPPING_SLOW_RESHARPER_ANALYSIS_TEST = " (test is too slow running under ReSharper analysis, skippiing.) ";
+
 // ReSharper disable UnusedAutoPropertyAccessor.Global
 // ReSharper disable MemberCanBeProtected.Global
         public TestContext TestContext { get; set; }
 // ReSharper restore MemberCanBeProtected.Global
 // ReSharper restore UnusedAutoPropertyAccessor.Global
 
+        /// <summary>
+        /// When true, the test attempts to remove all the files it creates in downloads folder.
+        /// This helps reduce disk space required to run the tests just once, but adds a lot of
+        /// download overhead when running the tests multiple times. At present, this only gets
+        /// set to true for TeamCity, where the VMs start clean every time, tests only get run
+        /// once, and limiting VM disk space is cost effective.
+        /// </summary>
+        protected DesiredCleanupLevel DesiredCleanupLevel
+        {
+            get { return TestContext.GetEnumValue("DesiredCleanupLevel", DesiredCleanupLevel.none); }  // Return none if unspecified
+            set { TestContext.Properties["DesiredCleanupLevel"] = value.ToString(); }
+        }
+
+        /// <summary>
+        /// When false, tests should not access resources on the internet other than
+        /// downloading the test ZIP files. e.g. UniProt, Prosit, Chorus, etc.
+        /// </summary>
         protected bool AllowInternetAccess
         {
-            get { return GetBoolValue("AccessInternet", false); }  // Return false if unspecified
-            set { TestContext.Properties["AccessInternet"] = value ? "true" : "false"; } // Only appropriate to use in perf tests, really
+            get { return TestContext.GetBoolValue("AccessInternet", false); }  // Return false if unspecified
+            set { TestContext.Properties["AccessInternet"] = value.ToString(CultureInfo.InvariantCulture); }
         }
 
+        /// <summary>
+        /// When false, perf tests get short-circuited doing no actual testing
+        /// </summary>
         protected bool RunPerfTests
         {
-            get { return GetBoolValue("RunPerfTests", false); }  // Return false if unspecified
-            set { TestContext.Properties["RunPerfTests"] = value ? "true" : "false"; }
+            get { return TestContext.GetBoolValue("RunPerfTests", false); }  // Return false if unspecified
+            set { TestContext.Properties["RunPerfTests"] = value.ToString(CultureInfo.InvariantCulture); }
         }
 
+        /// <summary>
+        /// When true, re-download data sets on test failure in case it's due to stale data.
+        /// </summary>
         protected bool RetryDataDownloads
         {
-            get { return GetBoolValue("RetryDataDownloads", false); }  // When true, re-download data sets on test failure in case it's due to stale data
-            set { TestContext.Properties["RetryDataDownloads"] = value ? "true" : "false"; }
+            get { return TestContext.GetBoolValue("RetryDataDownloads", false); }  // Return false if unspecified
+            set { TestContext.Properties["RetryDataDownloads"] = value.ToString(CultureInfo.InvariantCulture); }
         }
 
         /// <summary>
@@ -78,8 +103,8 @@ namespace pwiz.SkylineTestUtil
         /// </summary>
         protected bool RecordAuditLogs
         {
-            get { return GetBoolValue("RecordAuditLogs", false); }  // Return false if unspecified
-            set { TestContext.Properties["RecordAuditLogs"] = value ? "true" : "false"; }
+            get { return TestContext.GetBoolValue("RecordAuditLogs", false); }  // Return false if unspecified
+            set { TestContext.Properties["RecordAuditLogs"] = value.ToString(CultureInfo.InvariantCulture); }
         }
 
         /// <summary>
@@ -89,11 +114,11 @@ namespace pwiz.SkylineTestUtil
         /// Developers that want to see such tests execute within the IDE can add their machine name to the SmallMoleculeDevelopers
         /// list below (partial matches suffice, so name carefully!)
         /// </summary>
-        private static string[] SmallMoleculeDevelopers = {"BSPRATT", "TOBIASR"}; 
+        private static string[] SmallMoleculeDevelopers = {"BSPRATT"}; 
         protected bool RunSmallMoleculeTestVersions
         {
-            get { return GetBoolValue("RunSmallMoleculeTestVersions", false) || SmallMoleculeDevelopers.Any(smd => Environment.MachineName.Contains(smd)); }
-            set { TestContext.Properties["RunSmallMoleculeTestVersions"] = value ? "true" : "false"; }
+            get { return TestContext.GetBoolValue("RunSmallMoleculeTestVersions", false) || SmallMoleculeDevelopers.Any(smd => Environment.MachineName.Contains(smd)); }
+            set { TestContext.Properties["RunSmallMoleculeTestVersions"] = value.ToString(CultureInfo.InvariantCulture); }
         }
 
         /// <summary>
@@ -101,9 +126,10 @@ namespace pwiz.SkylineTestUtil
         /// in the TestPerf namespace so that they can be skipped when the RunPerfTests 
         /// flag is unset.
         /// </summary>
+        public const string PERFTEST_NAMESPACE = @"TestPerf";
         public bool IsPerfTest
         {
-            get { return ("TestPerf".Equals(GetType().Namespace)); }
+            get { return (PERFTEST_NAMESPACE.Equals(GetType().Namespace)); }
         }
 
         /// <summary>
@@ -115,20 +141,36 @@ namespace pwiz.SkylineTestUtil
             get { return TestContext.Properties.Contains("DeploymentDirectory"); }
         }
 
+        /// <summary>
+        /// True if TestRunner is running the test and not MSTest (or presumably ReSharper)
+        /// </summary>
+        public bool IsRunningInTestRunner
+        {
+            get { return TestContext is TestRunnerContext; }
+        }
+
+        /// <summary>
+        /// Returns true if the test is not running in TestRunner. Also outputs a message to the console
+        /// indicating that the test is being skipped. It is the caller's responsibility to actually
+        /// skip the test if this method returns true.
+        /// </summary>
+        protected bool SkipWiff2TestInTestExplorer(string testName)
+        {
+            if (IsRunningInTestRunner)
+            {
+                return false;
+            }
+            Console.Out.WriteLine("Skipping {0} because Wiff2 DLLs do not load in the correct order when test is executed by Test Explorer.", testName);
+            Console.Out.WriteLine("This test only runs to completion when executed by TestRunner or SkylineTester.");
+            return true;
+        }
+
         public static string PanoramaDomainAndPath => @"panoramaweb.org/_webdav/MacCoss/software/%40files";
 
         public static string GetPerfTestDataURL(string filename)
         {
             return @"https://" + PanoramaDomainAndPath + @"/perftests/" + filename;
         }
-
-        protected bool GetBoolValue(string property, bool defaultValue)
-        {
-            var value = TestContext.Properties[property];
-            return (value == null) ? defaultValue :
-                string.Compare(value.ToString(), "true", true, CultureInfo.InvariantCulture) == 0;
-        }
-
 
         private string[] _testFilesZips;
         public string TestFilesZip
@@ -203,12 +245,12 @@ namespace pwiz.SkylineTestUtil
                 Directory.CreateDirectory(targetFolder);
 
             bool downloadFromS3 = Environment.GetEnvironmentVariable("SKYLINE_DOWNLOAD_FROM_S3") == "1";
-            string s3hostname = @"skyline-perftest.s3-us-west-2.amazonaws.com";
+            string s3hostname = @"ci.skyline.ms";
             string message = string.Empty;
-            for (var retry = downloadFromS3; ; retry = false)
+            for (var retry = true; ; retry = false)
             {
                 var zipURL = downloadFromS3
-                    ? zipPath.Replace(@"skyline.gs.washington.edu", s3hostname).Replace(@"skyline.ms", s3hostname)
+                    ? zipPath.Replace(@"skyline.gs.washington.edu", s3hostname).Replace(@"https://skyline.ms", @"https://" + s3hostname)
                         .Replace(PanoramaDomainAndPath, s3hostname)
                     : zipPath;
 
@@ -222,7 +264,7 @@ namespace pwiz.SkylineTestUtil
                         timer.Start();
                         webClient.DownloadFile(zipURL.Split('\\')[0],
                             fs.SafeName); // We encode a Chorus anonymous download string as two parts: url\localName
-                        Console.Write(@" done. Download time (hh:mm:ss) {0} ", timer.Elapsed);
+                        Console.Write(@" done. Download time {0} sec ", timer.ElapsedMilliseconds / 1000);
                         fs.Commit();
                     }
                     return zipURL;
@@ -235,7 +277,7 @@ namespace pwiz.SkylineTestUtil
                         AssertEx.Fail(message);
                     }
                     Console.Write(message);
-                    downloadFromS3 = false; // Maybe it just never got copied to S3
+                    downloadFromS3 = !downloadFromS3; // Maybe it just never got copied to S3 or vice versa
                 }
             }
         }
@@ -327,8 +369,8 @@ namespace pwiz.SkylineTestUtil
         [TestInitialize]
         public void MyTestInitialize()
         {
-
             Program.UnitTest = true;
+            Program.TestName = TestContext.TestName;
 
             // Stop profiler if we are profiling.  The unit test will start profiling explicitly when it wants to.
             DotTraceProfile.Stop(true);
@@ -340,6 +382,14 @@ namespace pwiz.SkylineTestUtil
 
             Settings.Init();
 
+            // DesiredCleanupLevel is set in TestRunner, but we need it to work for VS Test also for code
+            // coverage builds
+            if (IsMsTestRun)
+            {
+                var isTeamCity = !string.IsNullOrEmpty(Environment.GetEnvironmentVariable(@"TEAMCITY_VERSION"));
+                if (isTeamCity)
+                    DesiredCleanupLevel = DesiredCleanupLevel.all;
+            }
             STOPWATCH.Restart();
             Initialize();
         }
@@ -351,18 +401,7 @@ namespace pwiz.SkylineTestUtil
         public void MyTestCleanup()
         {
             Cleanup();
-
-            // Delete unzipped test files if test otherwise passed to make sure file handles
-            // are not still open. Files may still be open otherwise, and trying this could
-            // mask the original error.
-            if (TestFilesDirs != null && TestContext.CurrentTestOutcome == UnitTestOutcome.Passed)
-            {
-                foreach (TestFilesDir dir in TestFilesDirs)
-                {
-                    if (dir != null)
-                        dir.Dispose();
-                }
-            }
+            CleanupFiles();
 
             STOPWATCH.Stop();
 
@@ -376,6 +415,50 @@ namespace pwiz.SkylineTestUtil
 //            log.Info(
 //                string.Format(TestContext.TestName + " finished in {0:0.000} sec.\r\n-----------------------",
 //                STOPWATCH.ElapsedMilliseconds / 1000.0));
+
+            // Prevent any weird interactions between tests on reused processes
+            Program.UnitTest = Program.FunctionalTest = false;
+            Program.TestName = null;
+
+        }
+
+        public bool IsParallelClient => TestContext.Properties.Contains("ParallelClientId");
+
+        private void CleanupFiles()
+        {
+            // If test passed, dispose the working directories to make sure file handles are not still open.
+            // Note: Normally this has no impact on the directory contents, because the directory is
+            // simply renamed and then renamed back. If the rename fails, the directory gets
+            // deleted to raise a useful error about what is locked.
+            // In a failure case, files may still be open otherwise, and trying this could
+            // mask the original error.
+            if (TestFilesDirs != null && TestContext.CurrentTestOutcome == UnitTestOutcome.Passed)
+            {
+                foreach (var dir in TestFilesDirs.Where(d => d != null))
+                {
+                    dir.Cleanup();
+                }
+            }
+
+            // We normally persist downloaded data files, along with selected large expensive-to-extract files
+            // contained therein because this is highly beneficial for cases that run tests multiple times,
+            // like nightly test runs or on a developer machine where the same downloaded files can be
+            // used for months on end, and even in cases where the computer is disconnected from a network.
+            // In a single run case on a pristine VM (like TeamCity), however, removing them greatly reduces
+            // the disk space required to run the tests.
+            if (_testFilesZips != null && DesiredCleanupLevel > DesiredCleanupLevel.persistent_files)
+            {
+                // Only remove files from the Downloads folder
+                string downloadFolder = PathEx.GetDownloadsPath();
+                foreach (var zipFilePath in _testFilesZips.Where(p => p.StartsWith(downloadFolder)))
+                {
+                    FileEx.SafeDelete(zipFilePath, true);
+                }
+            }
+
+            // Audit logging can create this folder with no other association
+            TestFilesDir.CheckForFileLocks(TestContext.GetTestResultsPath(),
+                DesiredCleanupLevel == DesiredCleanupLevel.all);
         }
 
         protected virtual void Initialize() {}
@@ -384,6 +467,34 @@ namespace pwiz.SkylineTestUtil
         protected bool IsProfiling
         {
             get { return DotTraceProfile.IsProfiling; }
+        }
+
+        /// <summary>
+        /// Used by tests that just take much too long under code coverage analysis
+        /// </summary>
+        /// <returns>true iff ReSharper code analysis is detected</returns>
+        public static bool SkipForResharperAnalysis()
+        {
+            if (Helpers.RunningResharperAnalysis)
+            {
+                Console.Write(MSG_SKIPPING_SLOW_RESHARPER_ANALYSIS_TEST); // Log this via console for TestRunner
+                return true;
+            }
+            return false;
+        }
+
+        /// <summary>
+        /// Used by tests that convert proteomic data sets to small molecule for extra coverage - which we don't always want
+        /// </summary>
+        /// <returns>true iff we don't want the small molecule versions of tests</returns>
+        public bool SkipSmallMoleculeTestVersions()
+        {
+            if (!RunSmallMoleculeTestVersions)
+            {
+                Console.Write(MSG_SKIPPING_SMALLMOLECULE_TEST_VERSION); // Log this via console for TestRunner
+                return true;
+            }
+            return false;
         }
     }
 }

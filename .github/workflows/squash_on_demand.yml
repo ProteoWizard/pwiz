@@ -1,0 +1,14 @@
+name: Squash on demand
+on: 
+  issue_comment:
+    types: [created]
+jobs:
+  softfix:
+    name: Softfix action
+    if: github.event.issue.pull_request != '' && contains(github.event.comment.body, '/squash')
+    runs-on: ubuntu-latest
+    steps:
+    - uses: actions/checkout@v2
+    - uses: chambm/softfix@v2
+      env:
+        GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }}

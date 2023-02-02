@@ -142,13 +142,14 @@
     <Reference Include="System.Data.DataSetExtensions">
       <RequiredTargetFramework>3.5</RequiredTargetFramework>
     </Reference>
-    <Reference Include="System.Data.SQLite, Version=1.0.105.2, Culture=neutral, PublicKeyToken=db937bc2d44ff139, processorArchitecture=$(PLATFORM)">
+    <Reference Include="System.Data.SQLite, Version=1.0.105.2, Culture=neutral, PublicKeyToken=db937bc2d44ff139, processorArchitecture=$(Platform)">
       <SpecificVersion>False</SpecificVersion>
-      <HintPath>..\..\..\libraries\SQLite\$(PLATFORM)\System.Data.SQLite.dll</HintPath>
+      <HintPath>..\..\..\libraries\SQLite\$(Platform)\System.Data.SQLite.dll</HintPath>
       <Private>True</Private>
     </Reference>
     <Reference Include="System.Deployment" />
     <Reference Include="System.Drawing" />
+    <Reference Include="System.Net.Http" />
     <Reference Include="System.ServiceModel" />
     <Reference Include="System.Windows.Forms" />
     <Reference Include="System.Xml" />
@@ -163,9 +164,48 @@
     <Compile Include="AccessServerTest.cs" />
     <Compile Include="AddAllPeptidesWithModificationsTest.cs" />
     <Compile Include="AddMixedLibraryTest.cs" />
+    <Compile Include="AlphabeticalReportEditorTest.cs" />
     <Compile Include="AreaNormalizeOptionTest.cs" />
     <Compile Include="AssociateProteinVariantTest.cs" />
+    <Compile Include="AutoTrainModelTest.cs" />
     <Compile Include="BlibMoleculeListsTest.cs" />
+    <Compile Include="CandidatePeakTest.cs" />
+    <Compile Include="CantReadSkydTest.cs" />
+    <Compile Include="CleavableCrosslinkTest.cs" />
+    <Compile Include="ConstrainNormalizationMethodTest.cs" />
+    <Compile Include="CrosslinkImsTest.cs" />
+    <Compile Include="DdaPeakIntegrationTest.cs" />
+    <Compile Include="DdaScoringTest.cs" />
+    <Compile Include="DocumentGridExportTest.cs" />
+    <Compile Include="DocumentGridUndoTest.cs" />
+    <Compile Include="EncyclopeDiaLibraryMatchTest.cs" />
+    <Compile Include="EncyclopeDiaPeptidesWithNoSignalTest.cs" />
+    <Compile Include="ExplicitMissingPeakBoundsTest.cs" />
+    <Compile Include="ExportPropertiesTest.cs" />
+    <Compile Include="IgnoreSimScansTest.cs" />
+    <Compile Include="InteractiveCommandLineToolTest.cs" />
+    <Compile Include="LegacyScoringModelTest.cs" />
+    <Compile Include="LibraryMatchViewTest.cs" />
+    <Compile Include="LiteDropdownListTest.cs" />
+    <Compile Include="MedianNormalizationTest.cs" />
+    <Compile Include="MessageBoxHelperTest.cs" />
+    <Compile Include="MinimizeIrtTest.cs" />
+    <Compile Include="EADZIonsTest.cs" />
+    <Compile Include="MixedSrmPrmTest.cs" />
+    <Compile Include="MultiInjectionReplicatesTest.cs" />
+    <Compile Include="OpenDocWithBackgroundProteomeTest.cs" />
+    <Compile Include="RemoveHeavyModificationTest.cs" />
+    <Compile Include="RemoveNeutralLossModificationTest.cs" />
+    <Compile Include="SaveAfterProteinAssociationTest.cs" />
+    <Compile Include="SequenceTreeRatioTest.cs" />
+    <Compile Include="UnreadableBlibTest.cs" />
+    <Compile Include="RemoveSmallMoleculeLabelTypeTest.cs" />
+    <Compile Include="StartPageInsertTransitionListTest.cs" />
+    <Compile Include="LibraryCacheTest.cs" />
+    <Compile Include="PermuteIsotopeModificationsTest.cs" />
+    <Compile Include="NewDocumentLoadLibrariesTest.cs" />
+    <Compile Include="TargetRatiosTest.cs" />
+    <Compile Include="TestPeakAreaDotpGraph.cs" />
     <Compile Include="ZedGraphClipboardTest.cs" />
     <Compile Include="ClusteredHeatMapTest.cs" />
     <Compile Include="ComplexCrosslinkTest.cs" />
@@ -443,19 +483,23 @@
     <None Include="AssociateProteinVariantTest.zip" />
     <None Include="AuditLogSavingTest.zip" />
     <None Include="AuditLogValidationTest.zip" />
+    <None Include="AutoTrainModelTest.zip" />
     <None Include="BackgroundProteomeTest.zip" />
     <None Include="BatchCalibrationTest.zip" />
     <None Include="BlibMoleculeListsTest.zip" />
     <None Include="CalibrationScenariosTest.zip" />
     <None Include="CalibrationTest.zip" />
     <None Include="CancelExportReportTest.zip" />
+    <None Include="CandidatePeakTest.zip" />
     <None Include="ChromDataSetMatchingTest.zip" />
     <None Include="ChromGraphTransformTest.zip" />
     <None Include="ChromUITest.zip" />
     <None Include="ConfigureToolsDlgTest.zip" />
     <None Include="CopyPasteTest.zip" />
+    <None Include="CrosslinkImsTest.zip" />
     <None Include="CrosslinkingTest.zip" />
     <None Include="CrosslinkNeutralLossTest.zip" />
+    <None Include="DdaPeakIntegrationTest.zip" />
     <None Include="DdaSearchTest.zip" />
     <None Include="DecoyTargetMatchTest.zip" />
     <None Include="DetectionsPlotTest.zip" />
@@ -465,10 +509,14 @@
     <None Include="DocumentSizeErrorTest.zip" />
     <None Include="DuplicateSmallMoleculePrecursorTest.zip" />
     <None Include="DuplicateTransitionGroupTest.zip" />
+    <None Include="EADZIonsTest.zip" />
     <None Include="EditNoteTest.zip" />
+    <None Include="EncyclopeDiaLibraryMatchTest.zip" />
+    <None Include="EncyclopeDiaPeptidesWithNoSignalTest.zip" />
     <None Include="EncyclopeDiaScoreTest.zip" />
     <None Include="EncyclopeDiaTest.zip" />
     <None Include="ExplicitAnalyteConcentrationTest.zip" />
+    <None Include="ExplicitMissingPeakBoundsTest.zip" />
     <None Include="ExplicitPeakBoundsTest.zip" />
     <None Include="ExplicitPeakScoreTest.zip" />
     <None Include="ExplicitRTTest.zip" />
@@ -485,6 +533,7 @@
     <None Include="ClusteredHeatMapTest.zip" />
     <None Include="HighPrecModsTest.zip" />
     <None Include="HighReplicateCountTest.zip" />
+    <None Include="IgnoreSimScansTest.zip" />
     <None Include="ImportAnnotationsTest.zip" />
     <None Include="ImportDocTest.zip" />
     <None Include="ImportEncyclopeDiaLibraryTest.zip" />
@@ -501,8 +550,10 @@
     <None Include="IrtTest.zip" />
     <None Include="LabelPeakPickingTest.zip" />
     <None Include="LegacyCrosslinkTest.zip" />
+    <None Include="LegacyScoringModelTest.zip" />
     <None Include="LibraryBuildShareTest.zip" />
     <None Include="LibraryBuildTest.zip" />
+    <None Include="LibraryCacheTest.zip" />
     <None Include="LibraryExplorerSpeedTest.zip" />
     <None Include="LibraryExplorerTest.zip" />
     <None Include="LibraryShareTest.zip" />
@@ -515,18 +566,24 @@
     <None Include="MassErrorGraphsTest.zip" />
     <None Include="MidasModificationTest.zip" />
     <None Include="MidasTest.zip" />
+    <None Include="MinimizeIrtTest.zip" />
     <None Include="ModifiedAreaProportionTest.zip" />
     <None Include="ModifyMoleculeTest.zip" />
+    <None Include="MultiInjectionReplicatesTest.zip" />
     <None Include="MultiSelectRetentionTimeTest.zip" />
     <None Include="NegativeIonChromatogramsTest.zip" />
     <None Include="NeutralLossLibraryTest.zip" />
+    <None Include="NewDocumentLoadLibrariesTest.zip" />
     <None Include="NoQuantitativeTransitionsTest.zip" />
+    <None Include="OpenDocWithBackgroundProteomeTest.zip" />
     <None Include="OptimizeTest.zip" />
     <None Include="OrderByReplicateAnnotationTest.zip" />
     <None Include="PasteMoleculeTest.zip" />
     <None Include="PasteTransitionListTest.zip" />
+    <None Include="PeakAreaDotpGraphTest.zip" />
     <None Include="PeakBoundaryCompareTest.zip" />
     <None Include="PeakScoringModelTest.zip" />
+    <None Include="PermuteIsotopeModificationsTest.zip" />
     <None Include="PivotEditorTest.zip" />
     <None Include="PrecursorTest.zip" />
     <None Include="PrositSkylineIntegrationTest.zip" />
@@ -550,6 +607,7 @@
     <None Include="RowActionsTest.zip" />
     <None Include="RunToRunRegressionTest.zip" />
     <None Include="SaveAsPreviousVersionTest.zip" />
+    <None Include="SequenceTreeRatioTest.zip" />
     <None Include="SettingsChangeReimportTest.zip" />
     <None Include="ShareSettingsTest.zip" />
     <None Include="SingleReplicateResponseCurveTest.zip" />
@@ -570,7 +628,6 @@
     <None Include="SynchSiblingsSmallMoleculesTest.zip" />
     <None Include="SynchSiblingsTest.zip" />
     <None Include="TargetResolverTest.zip" />
-    <None Include="TestBlibMoleculeLists.zip" />
     <None Include="TicNormalizationTest.zip" />
     <None Include="ToolServiceTest.zip" />
     <None Include="ToolStoreDlgTest.zip" />

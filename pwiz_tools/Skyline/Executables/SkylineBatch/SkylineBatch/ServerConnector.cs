@@ -100,17 +100,17 @@ namespace SkylineBatch
                     if (panoramaFolder.StartsWith("/_webdav/"))
                     {
                         webdavUri = new Uri("https://panoramaweb.org" + panoramaFolder + "?method=json");
-                        files = TryUri(webdavUri, server.Username, server.Password, cancelToken, out error);
+                        files = TryUri(webdavUri, server.FileSource.Username, server.FileSource.Password, cancelToken, out error);
                     }
                     else
                     {
                         panoramaFolder = "/_webdav" + panoramaFolder;
                         webdavUri = new Uri("https://panoramaweb.org" + panoramaFolder + "/%40files/RawFiles?method=json");
-                        files = TryUri(webdavUri, server.Username, server.Password, cancelToken, out error);
+                        files = TryUri(webdavUri, server.FileSource.Username, server.FileSource.Password, cancelToken, out error);
                         if (files == null)
                         {
                             webdavUri = new Uri("https://panoramaweb.org" + panoramaFolder + "/%40files?method=json");
-                            files = TryUri(webdavUri, server.Username, server.Password, cancelToken, out error);
+                            files = TryUri(webdavUri, server.FileSource.Username, server.FileSource.Password, cancelToken, out error);
                         }
                     }
 
@@ -120,17 +120,21 @@ namespace SkylineBatch
                         if (error != null) throw error;
                         var count = (double) (files.AsEnumerable().Count());
                         int i = 0;
-                        foreach (var file in files)
+                        foreach (dynamic file in files)
                         {
                             doOnProgress((int) (i / count * percentScale) + percentDone,
                                 (int) ((i + 1) / count * percentScale) + percentDone);
-                            var pathOnServer = (string) file["id"];
-                            var downloadUri = new Uri("https://panoramaweb.org" + pathOnServer);
-                            var size = WebDownloadClient.GetSize(downloadUri, server.Username, server.Password,
-                                cancelToken);
-                            fileInfos.Add(new ConnectedFileInfo(Path.GetFileName(pathOnServer),
-                                new Server(downloadUri, server.Username, server.Password, server.Encrypt), size,
-                                folder));
+                            if (file.collection == false && file.leaf == true)
+                            {
+                                var pathOnServer = (string)file["id"];
+                                var downloadUri = new Uri("https://panoramaweb.org" + pathOnServer);
+                                var panoramaServerUri = new Uri("https://panoramaweb.org/");
+                                var size = PanoramaServerConnector.GetSize(downloadUri, panoramaServerUri, new WebPanoramaClient(panoramaServerUri), server.FileSource.Username, server.FileSource.Password,
+                                     cancelToken);
+                                fileInfos.Add(new ConnectedFileInfo(Path.GetFileName(pathOnServer),
+                                    new Server(new RemoteFileSource(server.FileSource.Name + " TEST2", downloadUri, server.FileSource.Username, server.FileSource.Password, server.FileSource.Encrypt), string.Empty), size,
+                                    folder));
+                            }
                             i++;
                         }
                     }
@@ -180,7 +184,7 @@ namespace SkylineBatch
                         _serverExceptions[server] = new ArgumentException(string.Format(
                             Resources
                                 .DataServerInfo_Validate_There_were_no_files_found_at__0___Make_sure_the_URL__username__and_password_are_correct_and_try_again_,
-                            server));
+                            server.URI));
                     }
                     else
                     {
@@ -227,13 +231,8 @@ namespace SkylineBatch
         {
             var client = new FtpClient(serverInfo.URI.Host);
 
-            if (!string.IsNullOrEmpty(serverInfo.Password))
-            {
-                if (!string.IsNullOrEmpty(serverInfo.Username))
-                    client.Credentials = new NetworkCredential(serverInfo.Username, serverInfo.Password);
-                else
-                    client.Credentials = new NetworkCredential("anonymous", serverInfo.Password);
-            }
+            if (!string.IsNullOrEmpty(serverInfo.FileSource.Password))
+                client.Credentials = new NetworkCredential(serverInfo.FileSource.Username, serverInfo.FileSource.Password);
 
             return client;
         }

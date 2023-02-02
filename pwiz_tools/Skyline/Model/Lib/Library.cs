@@ -26,6 +26,7 @@ using System.Text;
 using System.Xml;
 using System.Xml.Schema;
 using System.Xml.Serialization;
+using pwiz.BiblioSpec;
 using pwiz.Common.Chemistry;
 using pwiz.Common.Collections;
 using pwiz.Common.SystemUtil;
@@ -68,9 +69,8 @@ namespace pwiz.Skyline.Model.Lib
 
         protected override bool StateChanged(SrmDocument document, SrmDocument previous)
         {
-            return previous == null ||
-                !ReferenceEquals(document.Settings.PeptideSettings.Libraries, previous.Settings.PeptideSettings.Libraries) ||
-                !ReferenceEquals(document.Settings.MeasuredResults, previous.Settings.MeasuredResults);
+            return !ReferenceEquals(document.Settings.PeptideSettings.Libraries, previous.Settings.PeptideSettings.Libraries) ||
+                   !ReferenceEquals(document.Settings.MeasuredResults, previous.Settings.MeasuredResults);
         }
 
         protected override string IsNotLoadedExplained(SrmDocument document)
@@ -233,14 +233,18 @@ namespace pwiz.Skyline.Model.Lib
                             docNew = docNew.ChangeSettings(docNew.Settings.ChangePeptideSettings(
                                 docNew.Settings.PeptideSettings.ChangeLibraries(libraries)), settingsChangeMonitor);
                         }
-                        catch (InvalidDataException x)
-                        {
-                            settingsChangeMonitor.ChangeProgress(s => s.ChangeErrorException(x));
-                            break;
-                        }
                         catch (OperationCanceledException)
                         {
                             docNew = docCurrent;    // Just continue
+                        }
+                        catch (Exception x)
+                        {
+                            if (ExceptionUtil.IsProgrammingDefect(x))
+                            {
+                                throw;
+                            }
+                            settingsChangeMonitor.ChangeProgress(s => s.ChangeErrorException(x));
+                            break;
                         }
                     }
                 }
@@ -426,7 +430,7 @@ namespace pwiz.Skyline.Model.Lib
                         buildState.ExtraMessage = iRTCapableBuilder.AmbiguousMatchesMessage;
                     }
                     if (iRTCapableBuilder.IrtStandard != null &&
-                        !iRTCapableBuilder.IrtStandard.Name.Equals(IrtStandard.EMPTY.Name))
+                        !iRTCapableBuilder.IrtStandard.IsEmpty)
                     {
                         buildState.IrtStandard = iRTCapableBuilder.IrtStandard;
                     }
@@ -641,7 +645,7 @@ namespace pwiz.Skyline.Model.Lib
         /// <summary>
         /// Some details for the library. 
         /// This can be the library revision, program version, 
-		/// build date or a hyperlink to the library source 
+        /// build date or a hyperlink to the library source 
         /// (e.g. http://peptide.nist.gov/ for NIST libraries)
         /// </summary>
         public abstract LibraryDetails LibraryDetails { get; }
@@ -1459,7 +1463,7 @@ namespace pwiz.Skyline.Model.Lib
         }
     }
 
-    public abstract class LibrarySpec : XmlNamedElement
+    public abstract class LibrarySpec : XmlNamedElement, IHasItemDescription
     {
         public static readonly PeptideRankId PEP_RANK_COPIES =
             new PeptideRankId(@"Spectrum count", () => Resources.LibrarySpec_PEP_RANK_COPIES_Spectrum_count);
@@ -1527,6 +1531,24 @@ namespace pwiz.Skyline.Model.Lib
 
         [Track(defaultValues:typeof(DefaultValuesTrue))]
         public bool UseExplicitPeakBounds { get; private set; }
+
+        public virtual ItemDescription ItemDescription
+        {
+            get
+            {
+                var lines = new List<string>();
+                lines.Add(GetLibraryTypeName());
+                lines.Add(TextUtil.ColonSeparate(PropertyNames.LibrarySpec_FilePathAuditLog, FilePath));
+                if (!UseExplicitPeakBounds)
+                {
+                    lines.Add(Resources.LibrarySpec_ItemDescription_Ignore_explicit_peak_boundaries);
+                }
+
+                return new ItemDescription(FilePath).ChangeTitle(Name).ChangeDetailLines(lines);
+            }
+        }
+
+        public abstract string GetLibraryTypeName();
 
         #region Property change methods
 
@@ -2203,6 +2225,51 @@ namespace pwiz.Skyline.Model.Lib
             }
         }
 
+        /// <summary>
+        /// Return a SmallMoleculeLibraryAttributes object that represents the union of this and other, or null if
+        /// conflicts prevent that
+        /// </summary>
+        public SmallMoleculeLibraryAttributes Merge(SmallMoleculeLibraryAttributes other)
+        {
+            if (other == null || Equals(other))
+                return this;
+
+            // If only one is named, could still be a match
+            var consensusName = MoleculeName;
+            if (!Equals(MoleculeName, other.MoleculeName))
+            {
+                if (string.IsNullOrEmpty(MoleculeName))
+                {
+                    consensusName = other.MoleculeName;
+                }
+                else if (!string.IsNullOrEmpty(other.MoleculeName))
+                {
+                    return null; // Conflict
+                }
+            }
+
+            if (!Equals(ChemicalFormulaOrMassesString, other.ChemicalFormulaOrMassesString))
+            {
+                return null; // Conflict
+            }
+
+            var consensusInChiKey = InChiKey;
+            var consensusOtherKeys = OtherKeys;
+            if (!Equals(InChiKey, other.InChiKey) || !Equals(OtherKeys, other.OtherKeys))
+            {
+                var consensusAccession = this.CreateMoleculeID().Union(other.CreateMoleculeID());
+                if (consensusAccession == null)
+                {
+                    return null; // Conflict
+                }
+                consensusInChiKey = consensusAccession.GetInChiKey();
+                consensusOtherKeys = consensusAccession.GetNonInChiKeys();
+            }
+            
+            return Create(consensusName, ChemicalFormulaOrMassesString, consensusInChiKey,
+                consensusOtherKeys);
+        }
+
         public override string ToString()
         {
             return GetPreferredKey();
@@ -2746,8 +2813,7 @@ namespace pwiz.Skyline.Model.Lib
         {
             get
             {
-                var peptideKey = LibraryKey as PeptideLibraryKey;
-                return peptideKey == null ? null : peptideKey.ModifiedSequence;
+                return LibraryKey.Target.ToString();
             }
         }
         public Target Target
@@ -2768,12 +2834,9 @@ namespace pwiz.Skyline.Model.Lib
                     : moleculeLibraryKey.SmallMoleculeLibraryAttributes;
             }
         }
-        public int Charge { get
-        {
-            return IsProteomicKey
-                ? ((PeptideLibraryKey) LibraryKey).Charge
-                : (IsPrecursorKey ? 0 : ((MoleculeLibraryKey) LibraryKey).Adduct.AdductCharge);
-        } }
+
+        public int Charge => LibraryKey.Adduct.AdductCharge;
+
         public Adduct Adduct 
         {
             get
@@ -2872,14 +2935,14 @@ namespace pwiz.Skyline.Model.Lib
         {
             FilePath = filePath;
             IdFilePath = idFilePath;
-            CutoffScores = new Dictionary<string, double?>();
+            ScoreThresholds = new Dictionary<ScoreType, double?>();
             BestSpectrum = 0;
             MatchedSpectrum = 0;
         }
 
         public string FilePath { get; private set; }
         public string IdFilePath { get; set; }
-        public Dictionary<string, double?> CutoffScores { get; private set; }
+        public Dictionary<ScoreType, double?> ScoreThresholds { get; private set; }
         public int BestSpectrum { get; set; }
         public int MatchedSpectrum { get; set; }
 

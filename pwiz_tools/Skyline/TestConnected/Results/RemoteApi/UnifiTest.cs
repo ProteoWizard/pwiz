@@ -24,8 +24,8 @@ using System.Net.Http;
 using System.Xml.Serialization;
 using Microsoft.VisualStudio.TestTools.UnitTesting;
 using Newtonsoft.Json.Linq;
-using pwiz.Skyline.Model.Results.RemoteApi;
 using pwiz.Skyline.Model.Results.RemoteApi.Unifi;
+using pwiz.Skyline.Properties;
 using pwiz.SkylineTestUtil;
 
 namespace pwiz.SkylineTestConnected.Results.RemoteApi
@@ -82,7 +82,7 @@ namespace pwiz.SkylineTestConnected.Results.RemoteApi
             var account = GetAccount();
             var folders = account.GetFolders().ToArray();
             Assert.AreNotEqual(0, folders.Length);
-            var files = account.GetFiles(folders[0]).ToArray();
+            var files = account.GetFiles(folders.Last()).ToArray();
             Assert.AreNotEqual(0, files.Length);
         }
 

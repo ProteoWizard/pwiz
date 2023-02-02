@@ -183,7 +183,7 @@ void test()
         unit_assert_operator_equal(0.42, rtConfig.TestDouble);
 
         testIntegerSet << rtConfig.TestIntegerSet;
-        unit_assert_operator_equal("[-4,2] ", testIntegerSet.str());
+        unit_assert_operator_equal("[-4,2]", testIntegerSet.str());
 
         unit_assert_operator_equal(42, rtConfig.TestMZTolerance.value);
         unit_assert_operator_equal(MZTolerance::PPM, rtConfig.TestMZTolerance.units);
@@ -254,11 +254,11 @@ void test()
             
         rtConfig.initializeFromBuffer("TestIntegerSet = [-3,1]");
         testIntegerSet.str(""); testIntegerSet << rtConfig.TestIntegerSet;
-        unit_assert_operator_equal("[-3,1] ", testIntegerSet.str());
+        unit_assert_operator_equal("[-3,1]", testIntegerSet.str());
             
         rtConfig.initializeFromBuffer("TestIntegerSet = -3-1");
         testIntegerSet.str(""); testIntegerSet << rtConfig.TestIntegerSet;
-        unit_assert_operator_equal("[-3,1] ", testIntegerSet.str());
+        unit_assert_operator_equal("[-3,1]", testIntegerSet.str());
             
         rtConfig.initializeFromBuffer("TestMZTolerance = 123ppm");
         unit_assert_operator_equal(123, rtConfig.TestMZTolerance.value);

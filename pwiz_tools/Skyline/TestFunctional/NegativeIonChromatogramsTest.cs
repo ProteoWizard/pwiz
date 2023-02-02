@@ -22,8 +22,9 @@ using System.IO;
 using System.Linq;
 using Microsoft.VisualStudio.TestTools.UnitTesting;
 using pwiz.Common.SystemUtil;
-using pwiz.Skyline.EditUI;
+using pwiz.Skyline.FileUI;
 using pwiz.Skyline.Model;
+using pwiz.Skyline.Properties;
 using pwiz.Skyline.Util.Extensions;
 using pwiz.SkylineTestUtil;
 
@@ -37,27 +38,25 @@ namespace pwiz.SkylineTestFunctional
         [TestMethod]
         public void NegativeIonChromatogramsTest()
         {
+            // CONSIDER: in this zip file is a tiny data set "134.sky" and "134.mzml" that demonstrate how we still don't
+            //           do a perfect job of handling chromatograms with same Q1Q3 and overlapping RT ranges.  There
+            //           are two chromatograms in the mzml with Q1=134Q3=134 and similar time ranges.  We don't pick the best
+            //           of the two so a would-be peak match gets missed.
+            TestFilesZip = ZIP_FILE;
             RunFunctionalTest();
         }
 
         // Verify proper peak selection when polarity information is present
         protected override void DoTest()
         {
-            // CONSIDER: in this zip file is a tiny data set "134.sky" and "134.mzml" that demonstrate how we still don't
-            //           do a perfect job of handling chromatograms with same Q1Q3 and overlapping RT ranges.  There
-            //           are two chromatograms in the mzml with Q1=134Q3=134 and similar time ranges.  We don't pick the best
-            //           of the two so a would-be peak match gets missed.
-
-            var testFilesDir = new TestFilesDir(TestContext, ZIP_FILE);
-
-            var replicatePath = testFilesDir.GetTestPath("090215_033.mzML"); // properly converted, with polarity sense
-            var allNegativePath = testFilesDir.GetTestPath("all_negative.mzML"); // Hacked to declare all chromatograms as negative
-            var noPolarityPath = testFilesDir.GetTestPath("no_polarity.mzML"); // Converted by older msconvert without any ion polarity sense, so all positive
+            var replicatePath = TestFilesDir.GetTestPath("090215_033.mzML"); // properly converted, with polarity sense
+            var allNegativePath = TestFilesDir.GetTestPath("all_negative.mzML"); // Hacked to declare all chromatograms as negative
+            var noPolarityPath = TestFilesDir.GetTestPath("no_polarity.mzML"); // Converted by older msconvert without any ion polarity sense, so all positive
             var replicateName = Path.GetFileNameWithoutExtension(replicatePath);
 
-            var docProperPolarity = LoadDocWithReplicate(testFilesDir, replicateName, replicatePath);
-            var docNoPolarity = LoadDocWithReplicate(testFilesDir, replicateName, noPolarityPath);
-            var docNegPolarity = LoadDocWithReplicate(testFilesDir, replicateName, allNegativePath);
+            var docProperPolarity = LoadDocWithReplicate(TestFilesDir, replicateName, replicatePath);
+            var docNoPolarity = LoadDocWithReplicate(TestFilesDir, replicateName, noPolarityPath);
+            var docNegPolarity = LoadDocWithReplicate(TestFilesDir, replicateName, allNegativePath);
 
             var transProperPolarity = docProperPolarity.MoleculeTransitions.ToArray();
             var transNoPolarity = docNoPolarity.MoleculeTransitions.ToArray();
@@ -97,8 +96,8 @@ namespace pwiz.SkylineTestFunctional
             Assert.AreEqual(26, countPeaksNegPolarity, "countPeaksNegPolarity"); // Should probably be 93, see CONSIDER note above
             // 26 are negative, so will not match chromatograms artificially marked positive in the mzML
             Assert.AreEqual(74, countPeaksNoPolarity, "countPeaksNoPolarity");
+            RunUI(()=>SkylineWindow.SwitchDocument(new SrmDocument(SrmSettingsList.GetDefault()), null));
             // Note that 26+74 != 98 : as it happens there is a negative transition 136,136 that matches when it's faked up as positive
-            testFilesDir.Dispose();
         }
 
         // Load a skyline doc, half of which is positve charges and half negative, so we can verify interaction with 
@@ -115,31 +114,27 @@ namespace pwiz.SkylineTestFunctional
             var docEmpty = WaitForDocumentLoaded();
             AssertEx.IsDocumentState(docEmpty, null, 0, 0, 0, 0);
             // Class,Name,Pre charge,Pre,Prod,Prod charge,RT,window,CE
-            var columnOrder =  new[]
-                {
-                    SmallMoleculeTransitionListColumnHeaders.moleculeGroup,
-                    SmallMoleculeTransitionListColumnHeaders.namePrecursor,
-                    SmallMoleculeTransitionListColumnHeaders.chargePrecursor,
-                    SmallMoleculeTransitionListColumnHeaders.mzPrecursor,
-                    SmallMoleculeTransitionListColumnHeaders.mzProduct,
-                    SmallMoleculeTransitionListColumnHeaders.chargeProduct,
-                    SmallMoleculeTransitionListColumnHeaders.rtPrecursor,
-                    SmallMoleculeTransitionListColumnHeaders.rtWindowPrecursor,
-                    SmallMoleculeTransitionListColumnHeaders.cePrecursor,
-                };
-            var pasteDlg = ShowDialog<PasteDlg>(SkylineWindow.ShowPasteTransitionListDlg);
-            RunUI(() =>
-            {
-                pasteDlg.IsMolecule = true;
-                pasteDlg.SetSmallMoleculeColumns(columnOrder.ToList());
-                WaitForConditionUI(() => columnOrder.ToList().SequenceEqual(pasteDlg.GetColumnNames()));
-            });
-            var clipText = File.ReadAllText(testFilesDir.GetTestPath("SRMs.csv")).Replace(',', TextUtil.CsvSeparator) 
+            var importDialog3 = ShowDialog<InsertTransitionListDlg>(SkylineWindow.ShowPasteTransitionListDlg);
+            var clipText = File.ReadAllText(testFilesDir.GetTestPath("SRMs.csv")).Replace(',', TextUtil.CsvSeparator)
                 .Replace(".", LocalizationHelper.CurrentCulture.NumberFormat.NumberDecimalSeparator);
-            SetClipboardTextUI(clipText);
-            RunUI(pasteDlg.PasteTransitions);
-            RunUI(pasteDlg.ValidateCells);
-            OkDialog(pasteDlg, pasteDlg.OkDialog);
+            var col4Dlg = ShowDialog<ImportTransitionListColumnSelectDlg>(() => importDialog3.TransitionListText = clipText);
+
+            RunUI(() => {
+                col4Dlg.radioMolecule.PerformClick();
+                col4Dlg.SetSelectedColumnTypes(
+                    Resources.ImportTransitionListColumnSelectDlg_ComboChanged_Molecule_List_Name,
+                    Resources.ImportTransitionListColumnSelectDlg_ComboChanged_Molecule_Name,
+                    Resources.ImportTransitionListColumnSelectDlg_PopulateComboBoxes_Precursor_Charge,
+                    Resources.ImportTransitionListColumnSelectDlg_PopulateComboBoxes_Precursor_m_z,
+                    Resources.ImportTransitionListColumnSelectDlg_PopulateComboBoxes_Product_m_z,
+                    Resources.PasteDlg_UpdateMoleculeType_Product_Charge,
+                    Resources.PasteDlg_UpdateMoleculeType_Explicit_Retention_Time,
+                    Resources.PasteDlg_UpdateMoleculeType_Explicit_Retention_Time_Window,
+                    Resources.PasteDlg_UpdateMoleculeType_Explicit_Collision_Energy);
+            });
+
+            OkDialog(col4Dlg, col4Dlg.OkDialog);
+
             var document = WaitForDocumentChangeLoaded(docEmpty);
 
             AssertEx.IsDocumentState(document, null, 1, 236, 236, 236);

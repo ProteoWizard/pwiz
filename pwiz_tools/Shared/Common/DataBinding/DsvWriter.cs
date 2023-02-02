@@ -23,6 +23,7 @@ using System.Globalization;
 using System.IO;
 using System.Threading;
 using pwiz.Common.DataBinding.Attributes;
+using pwiz.Common.DataBinding.Layout;
 
 namespace pwiz.Common.DataBinding
 {
@@ -47,6 +48,7 @@ namespace pwiz.Common.DataBinding
         public CultureInfo Language { get; private set; }
         public char Separator { get; private set; }
         public string NumberFormatOverride { get; set; }
+        public ColumnFormats ColumnFormats { get; set; }
 
         /// <summary>
         /// Writes out a row containing the column headers.
@@ -102,26 +104,18 @@ namespace pwiz.Common.DataBinding
                     }
                     return formatAttribute.NullValue;
                 }
-                if (value is double || value is float)
+
+                try
                 {
-                    var formatAttribute = (FormatAttribute) propertyDescriptor.Attributes[typeof (FormatAttribute)];
-                    try
+                    if (value is IFormattable formattable)
                     {
-                        var doubleValue = Convert.ToDouble(value);
-                        if (null != NumberFormatOverride)
-                        {
-                            return doubleValue.ToString(NumberFormatOverride, FormatProvider);
-                        }
-                        if (null == formatAttribute || null == formatAttribute.Format)
-                        {
-                            return doubleValue.ToString(FormatProvider);
-                        }
-                        return doubleValue.ToString(formatAttribute.Format, FormatProvider);
+                        var formatString = GetFormatString(formattable, propertyDescriptor);
+                        return formattable.ToString(formatString, FormatProvider);
                     }
-                    catch (Exception)
-                    {
-                        return value.ToString();
-                    }
+                }
+                catch (Exception)
+                {
+                    return value.ToString();
                 }
                 return value.ToString();
             }
@@ -130,6 +124,30 @@ namespace pwiz.Common.DataBinding
                 Thread.CurrentThread.CurrentUICulture = oldUiCulture;
                 Thread.CurrentThread.CurrentCulture = oldCulture;
             }
+        }
+
+        protected virtual string GetFormatString(IFormattable value, PropertyDescriptor propertyDescriptor)
+        {
+            if (null != NumberFormatOverride)
+            {
+                if (value is double || value is float)
+                {
+                    return NumberFormatOverride;
+                }
+            }
+
+            if (null != ColumnFormats && propertyDescriptor is DataPropertyDescriptor dataPropertyDescriptor)
+            {
+                var columnId = ColumnId.GetColumnId(dataPropertyDescriptor);
+                var columnFormat = ColumnFormats.GetFormat(columnId);
+                if (!string.IsNullOrEmpty(columnFormat?.Format))
+                {
+                    return columnFormat.Format;
+                }
+            }
+
+            var formatAttribute = (FormatAttribute)propertyDescriptor.Attributes[typeof(FormatAttribute)];
+            return formatAttribute?.Format;
         }
 
         protected virtual object GetValue(RowItem rowItem, PropertyDescriptor propertyDescriptor)

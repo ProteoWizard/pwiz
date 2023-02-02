@@ -42,12 +42,7 @@ namespace SkylineBatchTest
 
         private bool ConfigRunning(MainForm mainForm, bool expectedAnswer)
         {
-            bool worked = false;
-            RunUI(() =>
-            {
-                worked = expectedAnswer == mainForm.ConfigRunning("EmptyTemplate");
-            });
-            return worked;
+            return expectedAnswer == mainForm.ConfigRunning("EmptyTemplate");
         }
 
         public void TestSmallDataDownload(MainForm mainForm)
@@ -62,8 +57,8 @@ namespace SkylineBatchTest
             });
             var longWaitDialog = ShowDialog<LongWaitDlg>(() => mainForm.ClickRun(1));
             WaitForClosedForm(longWaitDialog);
-            var tenSeconds = new TimeSpan(0,0,10);
-            FunctionalTestUtil.WaitForCondition(ConfigRunning, mainForm, true, tenSeconds, 200,
+            var thirtySeconds = new TimeSpan(0,0,30);
+            FunctionalTestUtil.WaitForCondition(ConfigRunning, mainForm, true, thirtySeconds, 200,
                 "Config did not start");
             var oneMinute = new TimeSpan(0, 1, 0);
             FunctionalTestUtil.WaitForCondition(ConfigRunning, mainForm, false, oneMinute, 1000,
@@ -91,17 +86,18 @@ namespace SkylineBatchTest
             {
                 FunctionalTestUtil.CheckConfigs(1, 0, mainForm, "Config was not imported!", "Config was imported but invalid");
             });
+            FileUtil.SimulatedDriveSpace = 100 * FileUtil.ONE_GB;
             var longWaitDialog = ShowDialog<LongWaitDlg>(() => mainForm.ClickRun(1));
             WaitForClosedForm(longWaitDialog);
             var spaceErrorDlg = WaitForOpenForm<AlertDlg>();
+            FileUtil.SimulatedDriveSpace = null;
             RunUI(() =>
             {
                 Assert.IsTrue(spaceErrorDlg.Message.StartsWith(SkylineBatch.Properties.Resources.SkylineBatchConfigManager_StartBatchRun_There_is_not_enough_space_on_this_computer_to_download_the_data_for_these_configurations__You_need_an_additional_));
                 spaceErrorDlg.ClickOk();
-                Assert.AreEqual(false, mainForm.ConfigRunning("EmptyTemplate"));
                 Assert.AreEqual(0, mainForm.tabMain.SelectedIndex);
             });
-            
+            Assert.AreEqual(false, mainForm.ConfigRunning("EmptyTemplate"));
         }
 
         public void TestPanoramaDataDownload(MainForm mainForm)

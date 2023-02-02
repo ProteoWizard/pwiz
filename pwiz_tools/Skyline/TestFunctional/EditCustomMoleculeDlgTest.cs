@@ -121,6 +121,7 @@ namespace pwiz.SkylineTestFunctional
             docNext = WaitForDocumentChange(docNext);
             TestAddingSmallMoleculePrecursor();
             WaitForDocumentChange(docNext);
+            TestMoleculeEditError(); // Test handling of edits to molecule that don't make sense for child ions
         }
 
         private static void TestEditingSmallMolecule()
@@ -862,6 +863,40 @@ namespace pwiz.SkylineTestFunctional
 
         }
 
+        // Test handling of changes to molecule that make no sense with its child ions
+        // e.g. removing atoms that the child ions also want to remove
+        private void TestMoleculeEditError()
+        {
+            // Position ourselves on the first precursor
+            var newDoc = SkylineWindow.Document;
+            SelectNode(SrmDocument.Level.TransitionGroups, 0);
+            var moleculeDlg = ShowDialog<EditCustomMoleculeDlg>(SkylineWindow.ModifySmallMoleculeTransitionGroup);
+            var adduct = moleculeDlg.FormulaBox.Adduct.ChangeIonFormula("-C+2H");
+            RunUI(() =>
+            {
+                moleculeDlg.Adduct = adduct; 
+                moleculeDlg.OkDialog();
+            });
+            // The first precursor now has no Carbon - if we try to remove Carbon from parent molecule too that should error out
+            SelectNode(SrmDocument.Level.Molecules, 0);
+            moleculeDlg = ShowDialog<EditCustomMoleculeDlg>(SkylineWindow.ModifyPeptide);
+            RunUI(() =>
+            {
+                moleculeDlg.FormulaBox.Formula = "HO15"; 
+            });
+            // First precursor's adduct now describes removing a Carbon that doesn't exist
+            RunDlg<MessageDlg>(moleculeDlg.OkDialog, dlg =>
+            {
+                // Trying to exit the dialog should cause a warning about adduct and formula conflict
+                var expected =
+                    string.Format(Resources.Adduct_ApplyToMolecule_Adduct___0___calls_for_removing_more__1__atoms_than_are_found_in_the_molecule__2_,
+                        "[M-C+2H]", "C", "HO15");
+                Assert.AreEqual(expected, dlg.Message);
+                dlg.OkDialog(); // Dismiss the warning
+            });
+            OkDialog(moleculeDlg, moleculeDlg.CancelDialog); // Abandon silly change to molecule
+        }
+
         private static void CheckTransitionGroupSortOrder(SrmDocument newDoc)
         {
             foreach (var mol in newDoc.Molecules)
@@ -965,7 +1000,7 @@ namespace pwiz.SkylineTestFunctional
                 fullScanDlg.SelectedTab = TransitionSettingsUI.TABS.FullScan;
                 fullScanDlg.PrecursorIsotopesCurrent = FullScanPrecursorIsotopes.Count;
                 fullScanDlg.Peaks = 3;
-                fullScanDlg.AcquisitionMethod = FullScanAcquisitionMethod.Targeted;
+                fullScanDlg.AcquisitionMethod = FullScanAcquisitionMethod.PRM;
             });
             OkDialog(fullScanDlg, fullScanDlg.OkDialog);
             Assert.IsTrue(SkylineWindow.Document.Settings.TransitionSettings.Filter.SmallMoleculeIonTypes.Contains(IonType.custom));

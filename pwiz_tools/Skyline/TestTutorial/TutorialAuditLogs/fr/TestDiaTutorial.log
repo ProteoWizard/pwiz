@@ -40,7 +40,7 @@ Summary   : Added spectral library "DIA-tutorial"
 All Info  :
 Added spectral library "DIA-tutorial"
 Build Spectral Library > Cut-off score is "0,95"
-Build Spectral Library > Search files : contains "interact-20130311_DDA_Pit01.pep.xml"
+Build Spectral Library > Search files : contains { File = "interact-20130311_DDA_Pit01.pep.xml", Score type = "PeptideProphet confidence", Score threshold = "0,95" }
 Build Spectral Library > iRT standard peptides is None
 Build Spectral Library > Include ambiguous matches is False
 Build Spectral Library > Filter for document peptides is False
@@ -49,7 +49,11 @@ Build Spectral Library > Input File Type is "Search results (build library direc
 Extra Info: Cut-off score = "0,95",
 Search files = 
 [
-    "interact-20130311_DDA_Pit01.pep.xml"
+    {
+        File = "interact-20130311_DDA_Pit01.pep.xml",
+        Score type = "PeptideProphet confidence",
+        Score threshold = "0,95"
+    }
 ],
 iRT standard peptides = None,
 Include ambiguous matches = False,
@@ -73,7 +77,15 @@ Import Peptide Search > Configure Transition Settings > Product ion selection st
 Import Peptide Search > Configure Transition Settings > Product ion selection end is "last ion"
 Import Peptide Search > Configure Transition Settings > Max ion m/z is "2000"
 Import Peptide Search > Import FASTA > FASTA file is "pituitary_database.fasta"
-Import Peptide Search > Import FASTA > Decoys per target is "1"
+Import Peptide Search > Associate Proteins > Group proteins is False
+Import Peptide Search > Associate Proteins > Find minimal protein list is False
+Import Peptide Search > Associate Proteins > Remove subset proteins is False
+Import Peptide Search > Associate Proteins > Shared peptides option is "Duplicated between proteins"
+Import Peptide Search > Associate Proteins > Min peptides per protein is "1"
+Import Peptide Search > Associate Proteins > Proteins mapped is "6"
+Import Peptide Search > Associate Proteins > Peptides mapped is "21"
+Import Peptide Search > Associate Proteins > Protein targets is "6"
+Import Peptide Search > Associate Proteins > Peptide targets is "21"
 Extra Info: Extract Chromatograms = 
 {
     Found results files = Empty,
@@ -93,8 +105,19 @@ Configure Transition Settings =
 },
 Import FASTA = 
 {
-    FASTA file = "pituitary_database.fasta",
-    Decoys per target = "1"
+    FASTA file = "pituitary_database.fasta"
+},
+Associate Proteins = 
+{
+    Group proteins = False,
+    Find minimal protein list = False,
+    Remove subset proteins = False,
+    Shared peptides option = "Duplicated between proteins",
+    Min peptides per protein = "1",
+    Proteins mapped = "6",
+    Peptides mapped = "21",
+    Protein targets = "6",
+    Peptide targets = "21"
 }
 
 Undo Redo : Changed peak bounds of sp|P01222|TSHB_HUMAN > K.YALSQDVCTYR.D [65, 75] > 688,3192++

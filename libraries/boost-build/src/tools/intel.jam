@@ -1,7 +1,7 @@
 # Copyright Vladimir Prus 2004.
 # Distributed under the Boost Software License, Version 1.0.
-# (See accompanying file LICENSE_1_0.txt
-# or copy at http://www.boost.org/LICENSE_1_0.txt)
+# (See accompanying file LICENSE.txt
+# or copy at https://www.bfgroup.xyz/b2/LICENSE.txt)
 
 #| tag::doc[]
 
@@ -46,7 +46,7 @@ This option is necessary only if it is not possible to detect this information
 from the compiler command -- for example if the specified compiler command is
 a user script. For the Windows version, specifies the directory of the
 `iclvars.bat` file, for versions prior to 21 ( or 2021 ), or of the `setvars.bat`,
-for versions from 21 ( or 2021 ) on up, for configuring the compiler. 
+for versions from 21 ( or 2021 ) on up, for configuring the compiler.
 Specifying the `root` option without specifying the compiler command allows the
 end-user not to have to worry about whether they are compiling 32-bit or 64-bit code,
 as the toolset will automatically configure the compiler for the appropriate address

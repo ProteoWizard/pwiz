@@ -17,7 +17,6 @@
  * limitations under the License.
  */
 
-using System;
 using System.Linq;
 using Microsoft.VisualStudio.TestTools.UnitTesting;
 using pwiz.Common.SystemUtil;
@@ -58,28 +57,27 @@ namespace pwiz.SkylineTestData.Results
 
         public void DoAsymmetricIsolationTest(RefinementSettings.ConvertToSmallMoleculesMode asSmallMolecules)
         {
-            if (asSmallMolecules != RefinementSettings.ConvertToSmallMoleculesMode.none && !RunSmallMoleculeTestVersions)
+            if (asSmallMolecules != RefinementSettings.ConvertToSmallMoleculesMode.none && SkipSmallMoleculeTestVersions())
             {
-                Console.Write(MSG_SKIPPING_SMALLMOLECULE_TEST_VERSION);
                 return;
             }
 
             LocalizationHelper.InitThread();    // TODO: All unit tests should be correctly initialized
 
-            var testFilesDir = new TestFilesDir(TestContext, ZIP_FILE);
-            string docPath = testFilesDir.GetTestPath("TROUBLED_File.sky");
+            TestFilesDir = new TestFilesDir(TestContext, ZIP_FILE);
+            string docPath = TestFilesDir.GetTestPath("TROUBLED_File.sky");
             string cachePath = ChromatogramCache.FinalPathForName(docPath, null);
             FileEx.SafeDelete(cachePath);
             SrmDocument doc = ResultsUtil.DeserializeDocument(docPath);
             var refine = new RefinementSettings();
-            doc = refine.ConvertToSmallMolecules(doc, testFilesDir.FullPath, asSmallMolecules);
+            doc = refine.ConvertToSmallMolecules(doc, TestFilesDir.FullPath, asSmallMolecules);
             const int expectedMoleculeCount = 1;   // At first small molecules did not support multiple label types
             AssertEx.IsDocumentState(doc, null, 1, expectedMoleculeCount, 2, 6);
 
             using (var docContainer = new ResultsTestDocumentContainer(doc, docPath))
             {
                 // Import the first RAW file (or mzML for international)
-                string rawPath = testFilesDir.GetTestPath("Rush_p3_96_21May16_Smeagol.mzML");
+                string rawPath = TestFilesDir.GetTestPath("Rush_p3_96_21May16_Smeagol.mzML");
                 var measuredResults = new MeasuredResults(new[] {new ChromatogramSet("Single", new[] {rawPath})});
 
                 {
@@ -87,14 +85,14 @@ namespace pwiz.SkylineTestData.Results
                     var docResults =
                         docContainer.ChangeMeasuredResults(measuredResults, expectedMoleculeCount, 1, 1, 3, 3);
                     var nodeGroup = docResults.MoleculeTransitionGroups.First();
-                    double ratio = nodeGroup.Results[0][0].Ratio ?? 0;
+                    var normalizedValueCalculator = new NormalizedValueCalculator(docResults);
+                    double ratio = normalizedValueCalculator.GetTransitionGroupValue(normalizedValueCalculator.GetFirstRatioNormalizationMethod(), 
+                        docResults.Molecules.First(), nodeGroup, 0, nodeGroup.Results[0][0]).GetValueOrDefault();
                     // The expected ratio is 1.0, but the symmetric isolation window should produce poor results
                     if (asSmallMolecules != RefinementSettings.ConvertToSmallMoleculesMode.masses_only) // Can't use labels without a formula
                         Assert.AreEqual(0.008, ratio, 0.001);
                 }
             }
-
-            testFilesDir.Dispose();
         }
     }
 }

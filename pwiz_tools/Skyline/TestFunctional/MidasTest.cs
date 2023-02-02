@@ -23,6 +23,7 @@ using System.IO;
 using System.Linq;
 using System.Text;
 using Microsoft.VisualStudio.TestTools.UnitTesting;
+using pwiz.Skyline.Alerts;
 using pwiz.Skyline.FileUI;
 using pwiz.Skyline.Model;
 using pwiz.Skyline.Model.Lib.Midas;
@@ -54,7 +55,8 @@ namespace pwiz.SkylineTestFunctional
             WaitForDocumentChangeLoaded(doc);
 
             var wiffPath = TestFilesDir.GetTestPath("102816 Plas ApoB MIDAS testing 2.wiff");
-            var importResults = ShowDialog<ImportResultsDlg>(SkylineWindow.ImportResults);
+            var askDecoysDlg = ShowDialog<MultiButtonMsgDlg>(SkylineWindow.ImportResults);
+            var importResults = ShowDialog<ImportResultsDlg>(askDecoysDlg.ClickNo);
             RunUI(() =>
             {
                 importResults.NamedPathSets =
@@ -143,6 +145,14 @@ namespace pwiz.SkylineTestFunctional
             });
             OkDialog(filterDlg, filterDlg.OkDialog);
             OkDialog(peptideSettings, peptideSettings.OkDialog);
+
+            var libExplorerDlg = ShowDialog<ViewLibraryDlg>(SkylineWindow.ViewSpectralLibraries);
+            const int expectedPeptides = 218;
+            if (!TryWaitForCondition(() => expectedPeptides == libExplorerDlg.PeptidesCount))
+            {
+                Assert.AreEqual(expectedPeptides, libExplorerDlg.PeptidesCount);    // Expecting a failure message
+            }
+            OkDialog(libExplorerDlg, libExplorerDlg.Close);
 
             // Get transition rankings
             var ranks = new Dictionary<Identity, Dictionary<double, int>>();

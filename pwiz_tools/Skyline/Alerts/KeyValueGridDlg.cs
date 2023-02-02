@@ -53,7 +53,7 @@ namespace pwiz.Skyline.Alerts
                 Anchor = AnchorStyles.Bottom | AnchorStyles.Left | AnchorStyles.Right | AnchorStyles.Top,
                 AutoScroll = true
             };
-            layout.RowCount = gridValues.Count; // empty last row
+            layout.RowCount = gridValues.Count + 2; // empty first and last row
             layout.ColumnCount = 2; // key and value
             foreach (ColumnStyle style in layout.ColumnStyles)
             {
@@ -61,9 +61,17 @@ namespace pwiz.Skyline.Alerts
                 style.SizeType = SizeType.Percent;
             }
 
+            layout.Controls.Add(new Label
+            {
+                //Text = kvp.Key,
+                Dock = DockStyle.Fill,
+                AutoSize = true,
+                TextAlign = ContentAlignment.MiddleCenter
+            }, 0, 0);
+
             var keyToControl = new Dictionary<string, Control>();
             var controlToSetting = new Dictionary<object, TValue>();
-            int row = 0;
+            int row = 1;
             foreach (var kvp in gridValues.OrderBy(kvp => kvp.Key))
             {
                 var lbl = new Label
@@ -92,8 +100,10 @@ namespace pwiz.Skyline.Alerts
                     {
                         Text = valueToString(kvp.Value),
                         Dock = DockStyle.Fill,
-                        Height = lbl.Height
+                        Height = lbl.Height,
+                        UseSystemPasswordChar = kvp.Key.ToLowerInvariant().Contains(@"password")
                     };
+
                     valueControl.LostFocus += (o, args) =>
                     {
                         if (validateValue != null && o is TextBox tb)
@@ -122,7 +132,9 @@ namespace pwiz.Skyline.Alerts
             using (var dlg = new MultiButtonMsgDlg(layout, Resources.OK)
             {
                 Text = title,
-                ClientSize = new Size(300, defaultHeight)
+                ClientSize = new Size(300, defaultHeight),
+                StartPosition = FormStartPosition.CenterParent,
+                ShowInTaskbar = false
             })
             {
                 dlg.MinimumSize = dlg.Size;

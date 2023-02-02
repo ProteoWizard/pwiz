@@ -18,6 +18,7 @@
  */
 
 using System;
+using System.Collections.Generic;
 using System.Linq;
 using System.Windows.Forms;
 using pwiz.Common.Chemistry;
@@ -25,6 +26,7 @@ using pwiz.Common.SystemUtil;
 using pwiz.Skyline.Alerts;
 using pwiz.Skyline.Controls;
 using pwiz.Skyline.Model;
+using pwiz.Skyline.Model.DdaSearch;
 using pwiz.Skyline.Properties;
 using pwiz.Skyline.Util;
 
@@ -41,10 +43,124 @@ namespace pwiz.Skyline.FileUI.PeptideSearch
             ImportPeptideSearch = importPeptideSearch;
             _documentContainer = documentContainer;
 
+            searchEngineComboBox.SelectedIndexChanged += SearchEngineComboBox_SelectedIndexChanged;
             txtMS1Tolerance.LostFocus += txtMS1Tolerance_LostFocus;
             txtMS2Tolerance.LostFocus += txtMS2Tolerance_LostFocus;
+
+            searchEngineComboBox.SelectedIndex = 0;
+
+            LoadMassUnitEntries();
         }
 
+        private void SearchEngineComboBox_SelectedIndexChanged(object sender, EventArgs e)
+        {
+            ImportPeptideSearch.SearchEngine?.Dispose();
+            ImportPeptideSearch.SearchEngine = InitSelectedSearchEngine();
+            InitializeEngine();
+        }
+
+        public enum SearchEngine
+        {
+            MSAmanda,
+            MSGFPlus,
+            MSFragger
+        }
+
+        public SearchEngine SelectedSearchEngine
+        {
+            get
+            {
+                return (SearchEngine) searchEngineComboBox.SelectedIndex;
+            }
+
+            set
+            {
+                searchEngineComboBox.SelectedIndex = (int) value;
+            }
+        }
+
+        private bool ShowDownloadMsFraggerDialog()
+        {
+            if (SimpleFileDownloader.FileAlreadyDownloaded(MsFraggerSearchEngine.MsFraggerDownloadInfo))
+                return true;
+
+            using (var downloadDlg = new MsFraggerDownloadDlg())
+            {
+                if (downloadDlg.ShowDialog(TopLevelControl) == DialogResult.Cancel)
+                    return false;
+            }
+
+            return true;
+        }
+
+        private bool EnsureRequiredFilesDownloaded(IEnumerable<FileDownloadInfo> requiredFiles, Func<bool> extraDownloadAction = null)
+        {
+            var requiredFilesList = requiredFiles.ToList();
+            var filesNotAlreadyDownloaded = SimpleFileDownloader.FilesNotAlreadyDownloaded(requiredFilesList).ToList();
+            if (!filesNotAlreadyDownloaded.Any())
+                return true;
+
+            if (extraDownloadAction != null && !extraDownloadAction())
+                return false;
+
+            filesNotAlreadyDownloaded = SimpleFileDownloader.FilesNotAlreadyDownloaded(requiredFilesList).ToList();
+            if (!filesNotAlreadyDownloaded.Any())
+                return true;
+
+            try
+            {
+                SimpleFileDownloaderDlg.Show(TopLevelControl,
+                    string.Format(Resources.SearchSettingsControl_EnsureRequiredFilesDownloaded_Download__0_,
+                        searchEngineComboBox.SelectedItem), filesNotAlreadyDownloaded);
+            }
+            catch (Exception exception)
+            {
+                MessageDlg.ShowWithException(this, exception.Message, exception);
+                return false;
+            }
+
+            return !SimpleFileDownloader.FilesNotAlreadyDownloaded(filesNotAlreadyDownloaded).Any();
+        }
+
+        public static bool HasRequiredFilesDownloaded(SearchEngine searchEngine)
+        {
+            FileDownloadInfo[] fileDownloadInfo;
+            switch (searchEngine)
+            {
+                case SearchEngine.MSAmanda:
+                    return true;
+                case SearchEngine.MSGFPlus:
+                    fileDownloadInfo = MsgfPlusSearchEngine.FilesToDownload;
+                    break;
+                case SearchEngine.MSFragger:
+                    fileDownloadInfo = MsFraggerSearchEngine.FilesToDownload;
+                    break;
+                default:
+                    throw new ArgumentOutOfRangeException();
+            }
+
+            return !SimpleFileDownloader.FilesNotAlreadyDownloaded(fileDownloadInfo).Any();
+        }
+
+        private AbstractDdaSearchEngine InitSelectedSearchEngine()
+        {
+            pBLogo.Image = null;
+            switch (SelectedSearchEngine)
+            {
+                case SearchEngine.MSAmanda:
+                    return new MSAmandaSearchWrapper();
+                case SearchEngine.MSGFPlus:
+                    if (!EnsureRequiredFilesDownloaded(MsgfPlusSearchEngine.FilesToDownload))
+                        SelectedSearchEngine = SearchEngine.MSAmanda;
+                    return new MsgfPlusSearchEngine();
+                case SearchEngine.MSFragger:
+                    if (!EnsureRequiredFilesDownloaded(MsFraggerSearchEngine.FilesToDownload, ShowDownloadMsFraggerDialog))
+                        SelectedSearchEngine = SearchEngine.MSAmanda;
+                    return new MsFraggerSearchEngine(1 - ImportPeptideSearch.CutoffScore);
+                default:
+                    throw new NotImplementedException();
+            }
+        }
 
         public DdaSearchSettings SearchSettings
         {
@@ -53,9 +169,13 @@ namespace pwiz.Skyline.FileUI.PeptideSearch
 
         public class DdaSearchSettings
         {
-            public DdaSearchSettings(SearchSettingsControl control) : this(control.PrecursorTolerance,
-                control.FragmentTolerance, control.MaxVariableMods, control.FragmentIons)
+            public DdaSearchSettings(SearchSettingsControl control) : this(control.SelectedSearchEngine, control.PrecursorTolerance,
+                control.FragmentTolerance, control.MaxVariableMods, control.FragmentIons, control.Ms2Analyzer)
             {
+                if (control.cbFragmentIons.Items.Count == 1)
+                    FragmentIons = null;
+                if (control.cbMs2Analyzer.Items.Count == 1)
+                    Ms2Analyzer = null;
             }
 
             public static DdaSearchSettings GetDefault()
@@ -67,22 +187,36 @@ namespace pwiz.Skyline.FileUI.PeptideSearch
             {
             }
 
-            public DdaSearchSettings(MzTolerance precursorTolerance, MzTolerance fragmentTolerance, int maxVariableMods, string fragmentIons)
+            public DdaSearchSettings(SearchEngine searchEngine, MzTolerance precursorTolerance, MzTolerance fragmentTolerance, int maxVariableMods, string fragmentIons, string ms2Analyzer)
             {
+                SearchEngine = searchEngine;
                 PrecursorTolerance = precursorTolerance;
                 FragmentTolerance = fragmentTolerance;
                 MaxVariableMods = maxVariableMods;
                 FragmentIons = fragmentIons;
+                Ms2Analyzer = ms2Analyzer;
             }
 
+            private class SearchEngineDefault : DefaultValues
+            {
+                public override bool IsDefault(object obj, object parentObject)
+                {
+                    return ((DdaSearchSettings)parentObject).SearchEngine == SearchEngine.MSAmanda;
+                }
+            }
+
+            [Track(defaultValues:typeof(SearchEngineDefault))]
+            public SearchEngine SearchEngine { get; private set; }
             [Track]
             public MzTolerance PrecursorTolerance { get; private set; }
             [Track]
             public MzTolerance FragmentTolerance { get; private set; }
             [Track]
             public int MaxVariableMods { get; private set; }
-            [Track]
+            [Track(defaultValues:typeof(DefaultValuesNull))]
             public string FragmentIons { get; private set; }
+            [Track(defaultValues:typeof(DefaultValuesNull))]
+            public string Ms2Analyzer { get; private set; }
         }
 
         private void txtMS1Tolerance_LostFocus(object sender, EventArgs e)
@@ -105,7 +239,7 @@ namespace pwiz.Skyline.FileUI.PeptideSearch
 
         public void InitializeEngine()
         {
-            lblSearchEngineName.Text = ImportPeptideSearch.SearchEngine.EngineName;
+            //lblSearchEngineName.Text = ImportPeptideSearch.SearchEngine.EngineName;
             LoadComboboxEntries();
             pBLogo.Image = ImportPeptideSearch.SearchEngine.SearchEngineLogo;
             btnAdditionalSettings.Enabled = ImportPeptideSearch.SearchEngine.AdditionalSettings != null;
@@ -113,8 +247,8 @@ namespace pwiz.Skyline.FileUI.PeptideSearch
 
         private void LoadComboboxEntries()
         {
-            LoadMassUnitEntries();
             LoadFragmentIonEntries();
+            LoadMs2AnalyzerEntries();
 
             var modSettings = _documentContainer.Document.Settings.PeptideSettings.Modifications;
             cbMaxVariableMods.SelectedItem = modSettings.MaxVariableMods.ToString(LocalizationHelper.CurrentCulture);
@@ -124,6 +258,9 @@ namespace pwiz.Skyline.FileUI.PeptideSearch
 
         private void LoadMassUnitEntries()
         {
+            cbMS1TolUnit.Items.Clear();
+            cbMS2TolUnit.Items.Clear();
+
             string[] entries = {@"Da", @"ppm"};
             cbMS1TolUnit.Items.AddRange(entries);
             cbMS2TolUnit.Items.AddRange(entries);
@@ -131,11 +268,20 @@ namespace pwiz.Skyline.FileUI.PeptideSearch
 
         private void LoadFragmentIonEntries()
         {
+            cbFragmentIons.Items.Clear();
             cbFragmentIons.Items.AddRange(ImportPeptideSearch.SearchEngine.FragmentIons);
             ComboHelper.AutoSizeDropDown(cbFragmentIons);
             cbFragmentIons.SelectedIndex = 0;
         }
-    
+
+        private void LoadMs2AnalyzerEntries()
+        {
+            cbMs2Analyzer.Items.Clear();
+            cbMs2Analyzer.Items.AddRange(ImportPeptideSearch.SearchEngine.Ms2Analyzers);
+            ComboHelper.AutoSizeDropDown(cbMs2Analyzer);
+            cbMs2Analyzer.SelectedIndex = 0;
+        }
+
         private Form WizardForm
         {
             get { return FormEx.GetParentForm(this); }
@@ -191,6 +337,16 @@ namespace pwiz.Skyline.FileUI.PeptideSearch
                 return false;
             }
             ImportPeptideSearch.SearchEngine.SetFragmentIons(fragmentIons);
+
+            string ms2Analyzer;
+            if (!ValidateCombobox(cbMs2Analyzer, out ms2Analyzer))
+            {
+                helper.ShowTextBoxError(cbMs2Analyzer,
+                    Resources.DdaSearch_SearchSettingsControl_MS2_analyzer_must_be_selected);
+                return false;
+            }
+            ImportPeptideSearch.SearchEngine.SetMs2Analyzer(ms2Analyzer);
+
             return true;
         }
 
@@ -229,10 +385,37 @@ namespace pwiz.Skyline.FileUI.PeptideSearch
             set
             {
                 int i = cbFragmentIons.Items.IndexOf(value);
-            Assume.IsTrue(i >= 0, $@"fragmentIons value ""{value}"" not found in ComboBox items");
+                Assume.IsTrue(i >= 0, $@"fragmentIons value ""{value}"" not found in ComboBox items");
                 cbFragmentIons.SelectedIndex = i;
                 ImportPeptideSearch.SearchEngine.SetFragmentIons(value);
             }
+        }
+
+        public string Ms2Analyzer
+        {
+            get { return cbMs2Analyzer.SelectedItem.ToString(); }
+
+            set
+            {
+                int i = cbMs2Analyzer.Items.IndexOf(value);
+                Assume.IsTrue(i >= 0, $@"MS2 analyzer value ""{value}"" not found in ComboBox items");
+                cbMs2Analyzer.SelectedIndex = i;
+                ImportPeptideSearch.SearchEngine.SetMs2Analyzer(value);
+            }
+        }
+
+        public IDictionary<string, AbstractDdaSearchEngine.Setting> AdditionalSettings
+        {
+            get => ImportPeptideSearch.SearchEngine.AdditionalSettings;
+            set => ImportPeptideSearch.SearchEngine.AdditionalSettings = value;
+        }
+
+        public void SetAdditionalSetting(string name, string value)
+        {
+            Assume.IsNotNull(ImportPeptideSearch.SearchEngine.AdditionalSettings);
+            Assume.IsTrue(ImportPeptideSearch.SearchEngine.AdditionalSettings.ContainsKey(name));
+
+            ImportPeptideSearch.SearchEngine.AdditionalSettings[name].Value = value;
         }
 
         private void btnAdditionalSettings_Click(object sender, EventArgs e)
@@ -246,5 +429,5 @@ namespace pwiz.Skyline.FileUI.PeptideSearch
                 (value, setting) => setting.Validate(value));
         }
     }
-    
+
 }

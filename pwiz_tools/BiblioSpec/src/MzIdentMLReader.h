@@ -39,7 +39,8 @@ namespace BiblioSpec{
         ~MzIdentMLReader();
         
         bool parseFile();
-        
+        vector<PSM_SCORE_TYPE> getScoreTypes();
+
     private:
         enum ANALYSIS { UNKNOWN_ANALYSIS,
                         SCAFFOLD_ANALYSIS,
@@ -55,6 +56,7 @@ namespace BiblioSpec{
         pwiz::identdata::IdentDataFile* pwizReader_;
         map< string, vector<PSM*> > fileMap_; // vector of PSMs for each file
         double scoreThreshold_;
+        bool isScoreLookup_;
 
         // name some file accessors to make the code more readable
         vector<pwiz::identdata::SpectrumIdentificationListPtr>::const_iterator list_iter_;
@@ -67,6 +69,8 @@ namespace BiblioSpec{
         void extractModifications(pwiz::identdata::PeptidePtr peptide, PSM* psm);
         void extractIonMobility(const pwiz::identdata::SpectrumIdentificationResult& result, const pwiz::identdata::SpectrumIdentificationItem& item, PSM* psm);
         double getScore(const pwiz::identdata::SpectrumIdentificationItem& item);
+        void setAnalysisType(ANALYSIS analysisType);
+        static PSM_SCORE_TYPE analysisToScoreType(ANALYSIS analysisType);
         bool passThreshold(double score);
         static bool stringToScan(const std::string& name, PSM* psm);
     };

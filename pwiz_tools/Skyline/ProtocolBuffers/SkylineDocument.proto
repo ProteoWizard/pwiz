@@ -1,4 +1,5 @@
 ﻿syntax = "proto3";
+import "google/protobuf/wrappers.proto";
 option csharp_namespace = "pwiz.Skyline.Model.Serialization";
 option java_package = "org.labkey.targetedms.parser.proto";
 message SkylineDocumentProto {
@@ -29,6 +30,8 @@ message SkylineDocumentProto {
 		ION_TYPE_z = 6;
 		ION_TYPE_precursor = 7;
 		ION_TYPE_custom = 8;
+		ION_TYPE_zH = 9;
+		ION_TYPE_zHH = 10;
 	}
 
 	message Annotations {
@@ -45,12 +48,12 @@ message SkylineDocumentProto {
 	message TransitionPeak {
 		int32 replicateIndex = 1;
 		int32 fileIndexInReplicate = 2;
-		OptionalFloat massError = 3;
+		google.protobuf.FloatValue massError = 3;
 		float retentionTime = 4;
 		float startRetentionTime = 5;
 		float endRetentionTime = 6;
-		OptionalDouble ionMobility = 7;
-		OptionalDouble ionMobilityWindow = 8;
+		google.protobuf.DoubleValue ionMobility = 7;
+		google.protobuf.DoubleValue ionMobilityWindow = 8;
 		float area = 9;
 		float backgroundArea = 10;
 		float height = 11;
@@ -65,20 +68,27 @@ message SkylineDocumentProto {
 		sint32 optimizationStep = 23;
 		Annotations annotations = 24;
 		bool forcedIntegration = 25;
+		PeakShapeValues peakShapeValues = 26;
+		message PeakShapeValues {
+			float stdDev = 1;
+			float skewness = 2;
+			float kurtosis = 3;
+			float shapeCorrelation = 4;
+		}
 	}
 	message TransitionResults {
 		repeated TransitionPeak peaks = 1;
 	}
 	message Transition {
-		OptionalString formula = 1;
-		OptionalDouble averageMassH = 2; // See also: averageMass = 27;
-		OptionalDouble monoMassH = 3; // See also:  monoMass = 28;
-		OptionalString custom_ion_name = 6; // See also: custom_ion_id = 30;
-		OptionalString measured_ion_name = 7;
+		google.protobuf.StringValue formula = 1;
+		google.protobuf.DoubleValue averageMassH = 2; // See also: averageMass = 27;
+		google.protobuf.DoubleValue monoMassH = 3; // See also:  monoMass = 28;
+		google.protobuf.StringValue custom_ion_name = 6; // See also: custom_ion_id = 30;
+		google.protobuf.StringValue measured_ion_name = 7;
 		OptionalInt decoyMassShift = 8;
 		sint32 massIndex = 9;
 		OptionalInt isotopeDistRank = 11;
-		OptionalFloat isotopeDistProportion = 12; 
+		google.protobuf.FloatValue isotopeDistProportion = 12; 
 		sint32 fragmentOrdinal = 13;
 		double calc_neutral_mass = 14;
 		sint32 charge = 15; // See also: adduct = 29;
@@ -87,40 +97,30 @@ message SkylineDocumentProto {
 		Annotations annotations = 18;
 		double precursorMz = 19;
 		double productMz = 20;
-		OptionalDouble collisionEnergy = 21;
-		OptionalDouble declusteringPotential = 22;
+		google.protobuf.DoubleValue collisionEnergy = 21;
+		google.protobuf.DoubleValue declusteringPotential = 22;
 		repeated TransitionLoss losses = 23;
 		IonType fragmentType = 24;
 		TransitionLibInfo libInfo = 25;
 		TransitionResults results = 26;
-		OptionalDouble averageMass = 27;
-		OptionalDouble monoMass = 28;
-		OptionalString adduct = 29;
-		OptionalString molecule_id = 30;
+		google.protobuf.DoubleValue averageMass = 27;
+		google.protobuf.DoubleValue monoMass = 28;
+		google.protobuf.StringValue adduct = 29;
+		google.protobuf.StringValue molecule_id = 30;
 		bool not_quantitative = 31;
-		OptionalDouble explicitCollisionEnergy = 32;
-		OptionalDouble explicitIonMobilityHighEnergyOffset = 33;
-		OptionalDouble explicitSLens = 34;
-		OptionalDouble explicitConeVoltage = 35;
-		OptionalDouble explicitDeclusteringPotential = 36;
+		google.protobuf.DoubleValue explicitCollisionEnergy = 32;
+		google.protobuf.DoubleValue explicitIonMobilityHighEnergyOffset = 33;
+		google.protobuf.DoubleValue explicitSLens = 34;
+		google.protobuf.DoubleValue explicitConeVoltage = 35;
+		google.protobuf.DoubleValue explicitDeclusteringPotential = 36;
 		bool orphanedCrosslinkIon = 37;
 		repeated LinkedIon linkedIons = 38;
 	}
 
-	message OptionalFloat {
-		float value = 1;
-	}
-
-	message OptionalDouble {
-		double value = 1;
-	}
-
+	// Note that this is different from google.protobuf.IntValue because this
+	// uses sint32 instead of int32 and is therefore more efficient at encoding negative numbers
 	message OptionalInt {
 		sint32 value = 1;
-	}
-
-	message OptionalString {
-		string value = 1;
 	}
 
 	enum LossInclusion {

@@ -239,12 +239,21 @@ namespace seems
                     var userparam = scan.userParam("drift time");
                     if (!userparam.empty())
                         row.IonMobility = userparam.timeInSeconds() * 1000.0;
+
                 }
             }
 
-            if (row.IonMobility > 0)
+            if (row.IonMobility == 0)
+            {
+                row.IonMobility = (double) s.cvParam(CVID.MS_FAIMS_compensation_voltage).value;
+                row.IonMobilityType = SpectrumDataSet.IonMobilityType_CompensationVoltage;
+            }
+
+            if (row.IonMobilityType == SpectrumDataSet.IonMobilityType_None && row.IonMobility != 0)
                 row.IonMobilityType = SpectrumDataSet.IonMobilityType_SingleValue;
-            else if (s.id.Contains("frame=") || s.id.Contains("block="))
+            else if ((s.id.Contains("frame=") && s.id.Contains("scan=")) ||
+                     s.id.Contains("block=") ||
+                     s.GetIonMobilityArray() != null)
                 row.IonMobilityType = SpectrumDataSet.IonMobilityType_Array;
 
             row.SpotId = s.spotID;
@@ -252,6 +261,25 @@ namespace seems
             row.DataPoints = s.defaultArrayLength;
             row.IcId = ( ic == null || ic.id.Length == 0 ? "unknown" : ic.id );
             row.DpId = ( dp == null || dp.id.Length == 0 ? "unknown" : dp.id );
+        }
+
+        public IEnumerable<SpectrumDataSet.SpectrumTableRow> GetIonMobilityRows()
+        {
+            var dgv = GridView;
+
+            foreach (DataGridViewRow row in dgv.Rows)
+            {
+                var spectrumRow = (SpectrumDataSet.SpectrumTableRow)((DataRowView)row.DataBoundItem).Row;
+                if (spectrumRow.IonMobilityType == SpectrumDataSet.IonMobilityType_None ||
+                    spectrumRow.IonMobilityType == SpectrumDataSet.IonMobilityType_CompensationVoltage)
+                    continue;
+
+                if (spectrumRow.DataPoints == 0 ||
+                    (spectrumRow.IonMobilityType == Misc.SpectrumDataSet.IonMobilityType_SingleValue && spectrumRow.IonMobility == 0))
+                    continue;
+
+                yield return spectrumRow;
+            }
         }
 
         public void BeginBulkLoad()
@@ -343,7 +371,7 @@ namespace seems
             spectrum.Tag = this;
 
 
-            if (row.IonMobility > 0)
+            if (row.IonMobility != 0)
                 gridView.Columns["IonMobility"].Visible = true;
 
             if( spectrum.Element.spotID.Length > 0 )

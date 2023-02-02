@@ -154,12 +154,6 @@ class stream_vector_const_iterator
             return (that.end_ - that.begin_) / that.value_size_;
 	}
 
-	reference operator[](difference_type _Off) const
-	{
-        next_ = _Off * value_size_;
-		return (**this);
-	}
-
 	bool operator==(const _Myt& that) const
 	{
         bool gotThis = this->streamPtr_.get() != NULL;
@@ -288,6 +282,8 @@ class BinaryIndexStream::Impl
         else
             size_ = maxIdLength_ = streamLength_ = 0;
     }
+
+    ~Impl() {}
 
     virtual void create(std::vector<Entry>& entries)
     {

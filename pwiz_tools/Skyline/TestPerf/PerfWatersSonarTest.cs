@@ -33,7 +33,7 @@ namespace TestPerf // Note: tests in the "TestPerf" namespace only run when the 
     {
         static string replicateName = @"LFQ_Waters_SynaptXS_SONAR_Standard_AutoQC_01";
 
-        [TestMethod]
+        [TestMethod, NoParallelTesting(TestExclusionReason.VENDOR_FILE_LOCKING)]
         public void WatersSonarPerfTest()
         {
             TestFilesZip = GetPerfTestDataURL(@"PerfWatersSonarTest.zip");
@@ -92,7 +92,7 @@ namespace TestPerf // Note: tests in the "TestPerf" namespace only run when the 
             {
                 ChromatogramGroupInfo[] chromGroupInfo;
                 AssertEx.AreEqual(expectLoaded, results.TryLoadChromatogram(0, pair.NodePep, pair.NodeGroup,
-                    tolerance, true, out chromGroupInfo));
+                    tolerance, out chromGroupInfo));
                 if (expectLoaded)
                 {
                     foreach (var chromGroup in chromGroupInfo)

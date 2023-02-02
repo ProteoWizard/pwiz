@@ -36,7 +36,8 @@ PrideXmlReader::PrideXmlReader(BlibBuilder& maker,
     scoreType_(UNKNOWN_SCORE_TYPE),
     threshold_(-1),
     thresholdIsMax_(false),
-    curState_(ROOT_STATE)
+    curState_(ROOT_STATE),
+    isScoreLookup_(false)
 {
    this->setFileName(xmlfilename); // this is for the saxhandler
    setSpecFileName(xmlfilename,    // this is for the BuildParser
@@ -294,7 +295,12 @@ void PrideXmlReader::parseCvParam(const XML_Char** attr)
             if (curType != UNKNOWN_SCORE_TYPE)
             {
                 // we've found score type for this file
-                if (scoreType_ == UNKNOWN_SCORE_TYPE) scoreType_ = curType;
+                if (scoreType_ == UNKNOWN_SCORE_TYPE) {
+                    scoreType_ = curType;
+                    if (isScoreLookup_) {
+                        throw EndEarlyException();
+                    }
+                }
 
                 if (scoreType_ == curType)
                 {
@@ -504,6 +510,12 @@ bool PrideXmlReader::parseFile()
     }
 
     return success;
+}
+
+vector<PSM_SCORE_TYPE> PrideXmlReader::getScoreTypes() {
+    isScoreLookup_ = true;
+    parse();
+    return vector<PSM_SCORE_TYPE>(1, scoreType_);
 }
 
 /**

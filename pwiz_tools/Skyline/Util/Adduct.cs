@@ -113,7 +113,7 @@ namespace pwiz.Skyline.Util
             SetHashCode(); // For fast GetHashCode()
         }
 
-        private Adduct(string description, ADDUCT_TYPE integerMode, int? explicitCharge = null) // Description should have form similar to M+H, 2M+2NA-H etc, or it may be a text representation of a protonated charge a la "2", "-3" etc
+        private Adduct(string description, ADDUCT_TYPE integerMode, int? explicitCharge = null, bool strict = false) // Description should have form similar to M+H, 2M+2NA-H etc, or it may be a text representation of a protonated charge a la "2", "-3" etc
         {
             var input = (description ?? string.Empty).Trim();
             int chargeFromText;
@@ -162,6 +162,13 @@ namespace pwiz.Skyline.Util
                 var posNext = input.IndexOf('M') + 1;
                 if (posNext > 0 && posNext < input.Length)
                 {
+                    var posClose = input.IndexOf(']');
+                    if (posClose >= 0 && posClose < posNext)
+                    {
+                        // This isn't an adduct description, probably actually examining a modified peptide e.g. K[1Ac]IDGFGPMK
+                        throw new InvalidOperationException(
+                            string.Format(Resources.BioMassCalc_ApplyAdductToFormula_Failed_parsing_adduct_description___0__, input));
+                    }
                     if (input[posNext] != '+' && input[posNext] != '-') 
                     {
                         // No leading + or - : is it because description starts with a label, or because + mode is implied?
@@ -180,6 +187,14 @@ namespace pwiz.Skyline.Util
                             input = input.Replace(@"M", @"M+");
                         }
                     }
+                }
+
+                if (strict && !Equals(input, description))
+                {
+                    // Caller wanted no tidying, initialize as an empty adduct
+                    InitializeAsCharge(0, ADDUCT_TYPE.charge_only);
+                    SetHashCode(); 
+                    return;
                 }
                 ParseDescription(Description = input);
                 InitializeMasses();
@@ -213,7 +228,7 @@ namespace pwiz.Skyline.Util
                 {
                     // No leading + or - : is it because description starts with a label, or because + mode is implied?
                     var limit = input.IndexOfAny(new[] { '+', '-', ']' });
-                    if (limit < 0)
+                    if (limit < posNext)
                     {
                         return null;
                     }
@@ -247,7 +262,7 @@ namespace pwiz.Skyline.Util
 
         private static readonly Regex ADDUCT_OUTER_REGEX =
             new Regex(
-                @"\[?(?<multM>\d*)M(?<label>(\(.*\)|[^\+\-]*))?(?<adduct>[\+\-][^\]]*)(\](?<declaredChargeCount>\d*)(?<declaredChargeSign>[+-]*)?)?$",
+                @"\[?(?<multM>.*?)M(?<label>(\(.*\)|[^\+\-]*))?(?<adduct>[\+\-][^\]]*)(\](?<declaredChargeCount>\d*)(?<declaredChargeSign>[+-]*)?)?$",
                 RegexOptions.ExplicitCapture | RegexOptions.Singleline | RegexOptions.CultureInvariant);
         private static readonly Regex ADDUCT_INNER_REGEX = new Regex(@"(?<oper>\+|\-)(?<multM>\d+)?\(?(?<ion>[^-+\)]*)\)?",
             RegexOptions.ExplicitCapture | RegexOptions.Singleline | RegexOptions.CultureInvariant);
@@ -302,9 +317,14 @@ namespace pwiz.Skyline.Util
                 // Read the mass multiplier if any - the "2" in "[2M+..." if any such thing is there
                 var massMultiplier = 1;
                 var massMultiplierStr = match.Groups[@"multM"].Value;
-                if (!string.IsNullOrEmpty(massMultiplierStr))
+                if (!string.IsNullOrEmpty(massMultiplierStr) && !massMultiplierStr.StartsWith(@"("))
                 {
                     success = int.TryParse(massMultiplierStr, out massMultiplier);
+                    if (!success || massMultiplier <= 0)
+                    {
+                        throw new InvalidOperationException(
+                            string.Format(Resources.BioMassCalc_ApplyAdductToFormula_Failed_parsing_adduct_description___0__, input));
+                    }
                 }
                 MassMultiplier = massMultiplier;
 
@@ -460,7 +480,7 @@ namespace pwiz.Skyline.Util
             }
             AdductCharge = calculatedCharge ?? declaredCharge ?? 0;
             Composition = new ImmutableDictionary<string, int>(composition);
-            var resultMol = Molecule.FromDict(new ImmutableSortedList<string, int>(composition));
+            var resultMol = Molecule.FromDict(composition);
             if (!resultMol.Keys.All(k => BioMassCalc.MONOISOTOPIC.IsKnownSymbol(k)))
             {
                 throw new InvalidOperationException(
@@ -582,10 +602,11 @@ namespace pwiz.Skyline.Util
 
         /// <summary>
         /// Construct an adduct based on a string (probably serialized XML) of form "2" or "-3" or "[M+Na]" etc.
-        /// Minimizes memory thrash by reusing the more common adducts. 
+        /// Minimizes memory thrash by reusing the more common adducts.
+        /// In strict mode, won't attempt any syntax correction
         ///
         /// </summary>
-        public static Adduct FromString(string value, ADDUCT_TYPE parserMode, int? explicitCharge)
+        public static Adduct FromString(string value, ADDUCT_TYPE parserMode, int? explicitCharge, bool strict=false)
         {
             if (value == null)
                 return EMPTY;
@@ -606,7 +627,7 @@ namespace pwiz.Skyline.Util
 
             // Reuse the more common non-proteomic adducts
             var testValue = value.StartsWith(@"M") ? @"[" + value + @"]" : value;
-            var testAdduct = new Adduct(testValue, parserMode, explicitCharge);
+            var testAdduct = new Adduct(testValue, parserMode, explicitCharge, strict);
             if (!testValue.EndsWith(@"]"))
             {
                 // Can we trim any trailing charge info to arrive at a standard form (ie use [M+H] instead of [M+H]+)?
@@ -632,6 +653,10 @@ namespace pwiz.Skyline.Util
                 }
             }
             dict[value] = testAdduct;  // Cache this on the likely chance that we'll see this representation again
+            if (strict && !Equals(testAdduct.Description, value))
+            {
+                return EMPTY; // Caller wants no attempts at tidying up
+            }
             return testAdduct;
         }
 
@@ -716,8 +741,7 @@ namespace pwiz.Skyline.Util
             var l = Molecule.Parse(left.Trim());
             var r = Molecule.Parse(right.Trim());
             var d = l.Difference(r);
-
-            if (d.Values.All(count => count == 0))
+            if (d.Values.Any(count => count < 0) || d.Values.All(count => count == 0))
             {
                 return NonProteomicProtonatedFromCharge(charge); // No difference in formulas, try straight protonation
             }
@@ -809,10 +833,12 @@ namespace pwiz.Skyline.Util
             } 
             return ChangeIsotopeLabels(
                 isotopes == null || isotopes.Count == 0 ? string.Empty : isotopes.Aggregate(string.Empty,
-                        (current, pair) => current + string.Format(CultureInfo.InvariantCulture, @"{0}{1}",
-                            (pair.Value > 1) ? pair.Value.ToString() : string.Empty,
-                            // If label was described (for example) as Cl' in dict, look up Cl37 and use that
-                            DICT_ADDUCT_ISOTOPE_NICKNAMES.FirstOrDefault(x => x.Value == pair.Key).Key ?? pair.Key))); 
+                    (current, pair) => current +
+                                       ((pair.Value == 0) ? string.Empty : // We see things like H'0 (that's a zero) in the wild
+                                           (string.Format(CultureInfo.InvariantCulture, @"{0}{1}",
+                                               (pair.Value > 1) ? pair.Value.ToString() : string.Empty,
+                                               // If label was described (for example) as Cl' in dict, look up Cl37 and use that
+                                               DICT_ADDUCT_ISOTOPE_NICKNAMES.FirstOrDefault(x => x.Value == pair.Key).Key ?? pair.Key))))); 
         }
 
         // Sometimes all we know is that two analytes have same name but different masses - describe isotope label as a mass
@@ -837,6 +863,9 @@ namespace pwiz.Skyline.Util
         {
             if (Equals(newCharge, AdductCharge))
                 return this;
+            // If it is proteomic, simply create a new proteomic adduct with the new charge.
+            if (IsProteomic)
+                return FromChargeProtonated(newCharge);
 
             if (AdductCharge == 0)
             {
@@ -1010,12 +1039,12 @@ namespace pwiz.Skyline.Util
             return list.Select(FromChargeProtonated).ToArray();
         }
 
-        public static bool TryParse(string s, out Adduct result, ADDUCT_TYPE assumeAdductType = ADDUCT_TYPE.non_proteomic)
+        public static bool TryParse(string s, out Adduct result, ADDUCT_TYPE assumeAdductType = ADDUCT_TYPE.non_proteomic, bool strict = false)
         {
             result = EMPTY;
             try
             {
-                result = FromString(s, assumeAdductType, null);
+                result = FromString(s, assumeAdductType, null, strict);
                 return result.AdductCharge != 0;
             }
             catch
@@ -1065,7 +1094,8 @@ namespace pwiz.Skyline.Util
                 {"C14", BioMassCalc.C14},
                 {"N15", BioMassCalc.N15},
                 {"O17", BioMassCalc.O17},
-                {"O18", BioMassCalc.O18}
+                {"O18", BioMassCalc.O18},
+                {"Cu65", BioMassCalc.Cu65},
                 // ReSharper restore LocalizableElement
             };
 

@@ -51,6 +51,7 @@ namespace pwiz.Skyline.Model.Results
         private ImmutableList<ChromatogramCache> _listPartialCaches;
         private ImmutableList<string> _listSharedCachePaths;
         private HashSet<MsDataFileUri> _setCachedFiles = EMPTY_FILES;
+        private double? _medianTicArea;
 
         public MeasuredResults(IList<ChromatogramSet> chromatograms, bool disableJoining = false)
         {
@@ -107,6 +108,7 @@ namespace pwiz.Skyline.Model.Results
                 EmptyTransitionGroupResults = new Results<TransitionGroupChromInfo>(new ChromInfoList<TransitionGroupChromInfo>[count]);
                 EmptyTransitionResults = new Results<TransitionChromInfo>(new ChromInfoList<TransitionChromInfo>[count]);
                 CheckForNewChromatogramData();
+                _medianTicArea = CalculateMedianTicArea();
             }
         }
 
@@ -190,7 +192,10 @@ namespace pwiz.Skyline.Model.Results
 
         public IEnumerable<Type> CachedScoreTypes
         {
-            get { return Caches.SelectMany(cache => cache.ScoreTypes).Distinct(); }
+            get
+            {
+                return Caches.SelectMany(cache => cache.ScoreTypes.AsCalculatorTypes()).Distinct();
+            }
         }
 
         private IEnumerable<ChromatogramCache> Caches
@@ -758,8 +763,6 @@ namespace pwiz.Skyline.Model.Results
             {
                 foreach (var chromInfo in cache.LoadAllIonsChromatogramInfo(extractor, chromatogram))
                 {
-                    if (loadPoints)
-                        chromInfo.ReadChromatogram(cache);
                     listChrom.Add(chromInfo);
                 }
             }
@@ -771,31 +774,57 @@ namespace pwiz.Skyline.Model.Results
                                         PeptideDocNode nodePep,
                                         TransitionGroupDocNode nodeGroup,
                                         float tolerance,
-                                        bool loadPoints,
                                         out ChromatogramGroupInfo[] infoSet)
         {
-            return TryLoadChromatogram(_chromatograms[index], nodePep, nodeGroup, tolerance, loadPoints, out infoSet);
+            return TryLoadChromatogram(_chromatograms[index], nodePep, nodeGroup, tolerance, out infoSet);
         }
 
-        private static readonly ChromatogramGroupInfo[] EMPTY_GROUP_INFOS = new ChromatogramGroupInfo[0];
+        private static readonly ChromatogramGroupInfo[] EMPTY_GROUP_INFOS = Array.Empty<ChromatogramGroupInfo>();
 
         public bool TryLoadChromatogram(ChromatogramSet chromatogram,
                                         PeptideDocNode nodePep,
                                         TransitionGroupDocNode nodeGroup,
                                         float tolerance,
-                                        bool loadPoints,
                                         out ChromatogramGroupInfo[] infoSet)
         {
-            return TryLoadChromatogram(chromatogram, nodePep, nodeGroup, tolerance, loadPoints, null, out infoSet);
+            IEnumerable<ChromatogramGroupInfo> infoEnum = Enumerable.Empty<ChromatogramGroupInfo>();
+            foreach (var cache in CachesEx)
+            {
+                if (_cacheFinal == null && cache.CachedFiles.Count == 1)
+                {
+                    // If the cache has only one file in it, it's likely to be a temporary one.
+                    // Skip the cache if it does not contain any files of interest.
+                    if (!chromatogram.ContainsFile(cache.CachedFiles[0].FilePath))
+                    {
+                        continue;
+                    }
+                }
+
+                infoEnum = infoEnum.Concat(cache.LoadChromatogramInfos(nodePep, nodeGroup, tolerance, chromatogram));
+            }
+
+            infoSet = infoEnum.ToArray();
+            // Short-circuit further processing for common case in label free data
+            if (infoSet.Length == 1)
+            {
+                return true;
+            }
+
+            var listChrom = GetMatchingChromatograms(chromatogram, nodePep, nodeGroup, tolerance, infoSet);
+            if (listChrom.Count == 0)
+            {
+                infoSet = EMPTY_GROUP_INFOS;
+                return false;
+            }
+            infoSet = listChrom.ToArray();
+            return true;
         }
 
-        public bool TryLoadChromatogram(ChromatogramSet chromatogram,
-                                        PeptideDocNode nodePep,
-                                        TransitionGroupDocNode nodeGroup,
-                                        float tolerance,
-                                        bool loadPoints,
-                                        List<ChromatogramGroupInfo> listChromBuffer,   // List can be used to avoid extra allocation
-                                        out ChromatogramGroupInfo[] infoSet)
+        private IList<ChromatogramGroupInfo> GetMatchingChromatograms(ChromatogramSet chromatogram,
+            PeptideDocNode nodePep,
+            TransitionGroupDocNode nodeGroup,
+            float tolerance, 
+            IEnumerable<ChromatogramGroupInfo> infoSet)
         {
             // Add precursor matches to a list, if they match at least 1 transition
             // in this group, and are potentially the maximal transition match.
@@ -808,67 +837,27 @@ namespace pwiz.Skyline.Model.Results
             // In small molecule SRM, it's not at all unusual to have the same Q1>Q3
             // pair repeatedly, at different retention times, so we use explicit RT to disambiguate if available
             int maxTranMatch = 1;
-
-            IList<ChromatogramGroupInfo> listChrom = EMPTY_GROUP_INFOS;
-            foreach (var cache in CachesEx)
+            // If the chromatogram set has an optimization function, then the number
+            // of matching chromatograms per transition is a reflection of better
+            // matching.  Otherwise, we only expect one match per transition.
+            bool multiMatch = chromatogram.OptimizationFunction != null;
+            List<ChromatogramGroupInfo> listChrom = new List<ChromatogramGroupInfo>();
+            foreach (var chromInfo in infoSet)
             {
-                if (_cacheFinal == null && cache.CachedFiles.Count == 1)
+                int tranMatch = chromInfo.MatchTransitions(nodePep, nodeGroup, tolerance, multiMatch);
+                // CONSIDER: This is pretty tricky code, and we are currently favoring
+                //           peak proximity to explicit retention time over number of matching
+                //           transitions.
+                if (tranMatch >= maxTranMatch)
                 {
-                    // If the cache has only one file in it, it's likely to be a temporary one.
-                    // Skip the cache if it does not contain any files of interest.
-                    if (!chromatogram.ContainsFile(cache.CachedFiles[0].FilePath))
-                    {
-                        continue;
-                    }
-                }
-                var infoEnum = cache.LoadChromatogramInfos(nodePep, nodeGroup, tolerance, chromatogram);
-                IList<ChromatogramGroupInfo> info = listChromBuffer;
-                infoSet = null;
-                if (info == null)
-                    info = infoSet = infoEnum.ToArray();
-                else
-                {
-                    listChromBuffer.Clear();
-                    listChromBuffer.AddRange(infoEnum);
-                }
-                foreach (var chromInfo in info)
-                {
-                    // Short-circuit further processing for common case in label free data
-                    if (_cacheFinal != null && info.Count == 1)
-                    {
-                        if (loadPoints)
-                            info[0].ReadChromatogram(cache);
-                        return true;
-                    }
+                    // If new maximum, clear anything collected at the previous maximum
+                    if (tranMatch > maxTranMatch)
+                        listChrom.Clear();
 
-                    // If the chromatogram set has an optimization function, then the number
-                    // of matching chromatograms per transition is a reflection of better
-                    // matching.  Otherwise, we only expect one match per transition.
-                    //
-                    // For small molecules we will likely have to select from several chromInfos all with same Q1>Q3,
-                    // so we examine peaks for match with explicitRT if provided
-                    bool multiMatch = chromatogram.OptimizationFunction != null;
-                    int tranMatch = chromInfo.MatchTransitions(nodePep, nodeGroup, tolerance, multiMatch);
-                    // CONSIDER: This is pretty tricky code, and we are currently favoring
-                    //           peak proximity to explicit retention time over number of matching
-                    //           transitions.
-                    if (tranMatch >= maxTranMatch)
-                    {
-                        if (ReferenceEquals(listChrom, EMPTY_GROUP_INFOS))
-                            listChrom = new List<ChromatogramGroupInfo>();
-                        // If new maximum, clear anything collected at the previous maximum
-                        if (tranMatch > maxTranMatch)
-                            listChrom.Clear();
-
-                        maxTranMatch = tranMatch;
-                        // Read the points now, if requested.
-                        if (loadPoints)
-                            chromInfo.ReadChromatogram(cache);
-                        listChrom.Add(chromInfo);
-                    }
+                    maxTranMatch = tranMatch;
+                    listChrom.Add(chromInfo);
                 }
             }
-
             // If more than one value was found, make a final pass to ensure that there
             // is only one precursor match per file.
             if (listChrom.Count > 1)
@@ -892,18 +881,25 @@ namespace pwiz.Skyline.Model.Results
                 }
                 listChrom = listChromFinal;
             }
-            if (listChromBuffer != null)
+
+            return listChrom;
+        }
+
+        public List<IList<ChromatogramGroupInfo>> LoadChromatogramsForAllReplicates(PeptideDocNode nodePep,
+            TransitionGroupDocNode nodeGroup,
+            float tolerance)
+        {
+            var chromatogramGroupInfosByFile = CachesEx.SelectMany(cache => cache.LoadChromatogramInfos(nodePep, nodeGroup, tolerance, null))
+                .ToLookup(chromGroupInfo=>chromGroupInfo.FilePath.GetLocation());
+            var result = new List<IList<ChromatogramGroupInfo>>();
+            foreach (var chromatogramSet in Chromatograms)
             {
-                listChromBuffer.Clear();
-                listChromBuffer.AddRange(listChrom);
-                infoSet = null;
+                var listChrom = chromatogramSet.MSDataFileInfos
+                    .SelectMany(fileInfo => chromatogramGroupInfosByFile[fileInfo.FilePath.GetLocation()]).ToList();
+                result.Add(GetMatchingChromatograms(chromatogramSet, nodePep, nodeGroup, tolerance, listChrom));
             }
-            else
-            {
-                infoSet = ReferenceEquals(listChrom, EMPTY_GROUP_INFOS)
-                    ? EMPTY_GROUP_INFOS : listChrom.ToArray();
-            }
-            return listChrom.Count > 0;
+            Assume.AreEqual(Chromatograms.Count, result.Count);
+            return result;
         }
 
         public bool ContainsChromatogram(string name)
@@ -1884,7 +1880,7 @@ namespace pwiz.Skyline.Model.Results
             return false;
         }
 
-        public double? GetMedianTicArea()
+        private double? CalculateMedianTicArea()
         {
             var ticAreas = new Statistics(Chromatograms.SelectMany(c => c.MSDataFileInfos)
                 .Where(fileInfo => fileInfo.TicArea.HasValue).Select(fileInfo => fileInfo.TicArea.Value));
@@ -1892,8 +1888,12 @@ namespace pwiz.Skyline.Model.Results
             {
                 return null;
             }
-
             return ticAreas.Median();
+        }
+
+        public double? GetMedianTicArea()
+        {
+            return _medianTicArea;
         }
     }
 

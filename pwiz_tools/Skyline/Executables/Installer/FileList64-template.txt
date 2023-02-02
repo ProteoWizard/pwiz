@@ -117,6 +117,9 @@ MassCalcWrapObject.dll (included automatically from ProteoWizard; DO NOT ADD TO 
 MassLynxRaw.dll (included automatically from ProteoWizard; DO NOT ADD TO THE WXS TEMPLATE!)
 MassSpecDataReader.dll (included automatically from ProteoWizard; DO NOT ADD TO THE WXS TEMPLATE!)
 MathNet.Numerics.dll
+Method\AbSciex\SciexOS\BuildSciexMethod.exe
+Method\AbSciex\SciexOS\Microsoft.IO.RecyclableMemoryStream.dll
+Method\AbSciex\SciexOS\SCIEX.Apis.Control.v1.dll
 Method\AbSciex\TOF\BuildAnalystFullScanMethod.exe
 Method\AbSciex\TOF\BuildAnalystMethod.dll
 Method\AbSciex\TOF\Interop.AcqMethodDir.dll
@@ -170,6 +173,7 @@ Microsoft.Practices.Unity.Configuration.dll (included automatically from ProteoW
 Microsoft.Practices.Unity.dll (included automatically from ProteoWizard; DO NOT ADD TO THE WXS TEMPLATE!)
 MIDAC.dll (included automatically from ProteoWizard; DO NOT ADD TO THE WXS TEMPLATE!)
 modifications.xml
+msconvert.exe
 MSGraph.dll
 MSGraph.pdb
 MSMSDBCntl.dll (included automatically from ProteoWizard; DO NOT ADD TO THE WXS TEMPLATE!)

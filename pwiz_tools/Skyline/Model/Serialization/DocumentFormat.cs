@@ -25,13 +25,17 @@ using pwiz.Skyline.Util;
 namespace pwiz.Skyline.Model.Serialization
 {
     /// <summary>
-    /// Constants listing version numbers which identify times when changes were made to the way
-    /// that Skyline saves documents in the .sky file.
-    /// The current schema is described in a file called "Skyline_Current.xsd".
+    /// <para>Constants listing version numbers which identify times when changes were made to the way
+    /// that Skyline saves documents in the .sky file.</para>
+    /// <para>Whenever we release we make a changeless format version update to match
+    /// Install.MajorVersion.Install.MinorVersion.
+    /// Between releases we increment by 0.01 from the last release format version.
+    /// e.g. 21.1 (release), 21.11 (daily), 21.12 (daily), ... 21.2 (release)</para>
+    /// <para>The current schema is described in a file called "Skyline_Current.xsd".
     /// The current version number should be changed if you make a change to "Skyline_Current.xsd", and there
-    /// is already a released build of Skyline-Daily that is using the current version.
+    /// is already a released build of Skyline-daily that is using the current version.
     /// When changing the current version number, you should copy "Skyline_Current.xsd" to "Skyline_###.xsd" representing
-    /// the old version number.
+    /// the old version number.</para>
     /// </summary>
     public struct DocumentFormat : IComparable<DocumentFormat>
     {
@@ -88,9 +92,25 @@ namespace pwiz.Skyline.Model.Serialization
         public static readonly DocumentFormat FLAT_CROSSLINKS = VERSION_20_22;
         public static readonly DocumentFormat VERSION_21_1 = new DocumentFormat(21.1); // Release format
         public static readonly DocumentFormat VERSION_21_11 = new DocumentFormat(21.11); // Import Time
-        public static readonly DocumentFormat VERSION_21_12 = new DocumentFormat(21.12); // Add synchronized integration
-        public static readonly DocumentFormat CURRENT = VERSION_21_12;
-
+        public static readonly DocumentFormat VERSION_21_12 = new DocumentFormat(21.12); // Add synchronized integration, auto-train peak scoring model
+        public static readonly DocumentFormat VERSION_21_2 = new DocumentFormat(21.2); // Release format
+        public static readonly DocumentFormat VERSION_22_1 = new DocumentFormat(22.1); // Add Cu' to list of supported heavy isotopes
+        public static readonly DocumentFormat VERSION_22_11 = new DocumentFormat(22.11); // zh and zhh ion types added to the schema.
+        public static readonly DocumentFormat VERSION_22_12 = new DocumentFormat(22.12); // ignore_sim_scans added
+        public static readonly DocumentFormat VERSION_22_13 = new DocumentFormat(22.13); // protein_group and protein_association added
+        public static readonly DocumentFormat PROTEIN_GROUPS = VERSION_22_13;
+        public static readonly DocumentFormat VERSION_22_2 = new DocumentFormat(22.2); // Release format
+        /// <summary>
+        /// Shared (.sky.zip) files may contain mass spec data files.
+        /// This is not really a document format change, but a way to keep users from using
+        /// File > Share to save to an older format with mass spec data folders included, since
+        /// older versions of Skyline show an error with a .sky.zip or .zip file containing
+        /// subfolders which Agilent, Bruker, and Waters all use for their mass spec data.
+        /// </summary>
+        public static readonly DocumentFormat VERSION_22_21 = new DocumentFormat(22.21);
+        public static readonly DocumentFormat SHARE_DATA_FOLDERS = VERSION_22_21;
+        public static readonly DocumentFormat VERSION_22_22 = new DocumentFormat(22.22); // skewness and kurtosis
+        public static readonly DocumentFormat CURRENT = VERSION_22_22;
 
         private readonly double _versionNumber;
         public DocumentFormat(double versionNumber)

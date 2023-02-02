@@ -3,6 +3,7 @@ using System.Collections.Generic;
 using System.Linq;
 using pwiz.Common.Collections;
 using pwiz.Common.DataBinding;
+using pwiz.Skyline.Controls.Databinding;
 using pwiz.Skyline.Model.Databinding.Collections;
 using pwiz.Skyline.Model.Databinding.Entities;
 
@@ -60,28 +61,8 @@ namespace pwiz.Skyline.Model.Databinding
 
         public ViewInfo MakeIntoDocumentView(ViewInfo viewInfo, ref IEnumerable<PropertyPath> propertyPaths)
         {
-            IList<KeyValuePair<PropertyPath, PropertyPath>> mapping;
-            if (viewInfo.ParentColumn.PropertyType == typeof(Entities.Peptide))
-            {
-                mapping = MappingFromPeptides();
-            }
-            else if (viewInfo.ParentColumn.PropertyType == typeof (Precursor))
-            {
-                mapping = MappingFromPrecursors();
-            }
-            else if (viewInfo.ParentColumn.PropertyType == typeof (Entities.Transition))
-            {
-                mapping = MappingFromTransitions();
-            }
-            else if (viewInfo.ParentColumn.PropertyType == typeof (Protein))
-            {
-                mapping = MappingFromProteins();
-            }
-            else if (viewInfo.ParentColumn.PropertyType == typeof (Replicate))
-            {
-                mapping = MappingFromReplicates();
-            }
-            else
+            var mapping = GetMappingForRowType(viewInfo.ParentColumn.PropertyType);
+            if (mapping == null)
             {
                 return viewInfo;
             }
@@ -96,6 +77,36 @@ namespace pwiz.Skyline.Model.Databinding
                 viewSpec = viewSpec.SetSublistId(SkylineViewContext.GetReplicateSublist(typeof(SkylineDocument)));
             }
             return new ViewInfo(viewInfo.DataSchema, typeof(SkylineDocument), viewSpec);
+        }
+
+        /// <summary>
+        /// Returns the mapping for columns in the specify row type (Protein, Peptide, etc) to equivalent columns
+        /// on the <see cref="SkylineDocument"/> row type.
+        /// </summary>
+        public static IList<KeyValuePair<PropertyPath, PropertyPath>> GetMappingForRowType(Type rowType)
+        {
+            if (rowType == typeof(Entities.Peptide))
+            {
+                return MappingFromPeptides();
+            }
+            if (rowType == typeof(Precursor))
+            {
+                return MappingFromPrecursors();
+            }
+            if (rowType == typeof(Entities.Transition))
+            {
+                return MappingFromTransitions();
+            }
+            if (rowType == typeof(Protein))
+            {
+                return MappingFromProteins();
+            }
+            if (rowType == typeof(Replicate))
+            {
+                return MappingFromReplicates();
+            }
+
+            return null;
         }
 
         public ViewInfo ConvertFromDocumentView(ViewInfo viewInfo, ref IEnumerable<PropertyPath> propertyPaths)
@@ -194,11 +205,11 @@ namespace pwiz.Skyline.Model.Databinding
         {
             PropertyPath proteinResults = PropertyPath.Root.Property(nameof(Protein.Results)).LookupAllItems().Property("Value");
             PropertyPath replicates = proteinResults.Property(nameof(ProteinResult.Replicate));
-            PropertyPath resultFiles = replicates.Property(nameof(Replicate.Files));
+            PropertyPath resultFiles = replicates.Property(nameof(Replicate.Files)).LookupAllItems();
             return new List<KeyValuePair<PropertyPath, PropertyPath>>
             {
-                Kvp(replicates, Replicates),
                 Kvp(resultFiles, ResultFiles),
+                Kvp(replicates, Replicates),
                 Kvp(proteinResults, ProteinResults),
                 Kvp(PropertyPath.Root, Proteins),
             };

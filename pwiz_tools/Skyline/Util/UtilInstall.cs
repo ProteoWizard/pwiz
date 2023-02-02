@@ -17,10 +17,13 @@
  * limitations under the License.
  */
 using System;
+using System.Collections.Generic;
 using System.Diagnostics;
 using System.IO;
+using System.Linq;
 using System.Net;
 using System.Text.RegularExpressions;
+using Ionic.Zip;
 using pwiz.Skyline.Model.Tools;
 using pwiz.Skyline.Properties;
 
@@ -32,7 +35,7 @@ namespace pwiz.Skyline.Util
         /// Attempts to download the file located at the specified address to the specified
         /// file path. This function returns true if the download succeeded.
         /// </summary>
-        bool DownloadFileAsync(Uri address, string path);
+        bool DownloadFileAsync(Uri address, string path, out Exception error);
     }
     
     public class MultiFileAsynchronousDownloadClient : IAsynchronousDownloadClient
@@ -44,6 +47,7 @@ namespace pwiz.Skyline.Util
         // indicate aspects of the most recent download
         private bool DownloadComplete { get; set; }
         private bool DownloadSucceeded { get; set; }
+        private Exception DownloadError { get; set; }
 
         /// <summary>
         /// The asynchronous download client links a webClient to a LongWaitBroker. It supports
@@ -67,6 +71,7 @@ namespace pwiz.Skyline.Util
             _webClient.DownloadFileCompleted += (sender, args) =>
                 {
                     FilesDownloaded++;
+                    DownloadError = args.Error;
                     DownloadSucceeded = (args.Error == null);
                     DownloadComplete = true;
                 };
@@ -78,10 +83,11 @@ namespace pwiz.Skyline.Util
         /// <param name="address">The Uri of the file to download</param>
         /// <param name="path">The path to download the file to, including the name of 
         /// the file, e.g "C:\Users\Trevor\Downloads\example.txt"</param>
+        /// <param name="error">Contains the error if any</param>
         /// <exception cref="ToolExecutionException">Thrown if the user cancels the download 
         /// using the instances' LongWaitBroker</exception>
-        /// <returns>True if the downlaod was successful, otherwise false</returns>
-        public bool DownloadFileAsync(Uri address, string path)
+        /// <returns>True if the download was successful, otherwise false</returns>
+        public bool DownloadFileAsync(Uri address, string path, out Exception error)
         {
             // reset download status
             DownloadComplete = false;
@@ -101,6 +107,8 @@ namespace pwiz.Skyline.Util
                         Resources.MultiFileAsynchronousDownloadClient_DownloadFileAsyncWithBroker_Download_canceled_);
                 }
             }
+
+            error = DownloadError;
             return DownloadSucceeded;
         }
  
@@ -114,14 +122,188 @@ namespace pwiz.Skyline.Util
         #endregion
     }
 
+    public struct FileDownloadInfo
+    {
+        /// <summary>
+        /// The name of the file after downloading. For ZIP files (Unzip is true), the file will be deleted after unzipping.
+        /// </summary>
+        public string Filename;
+
+        /// <summary>
+        /// The path to download the file to, and to unzip if Unzip is true.
+        /// </summary>
+        public string InstallPath;
+
+        /// <summary>
+        /// The online location of the file to download.
+        /// </summary>
+        public Uri DownloadUrl;
+
+        /// <summary>
+        /// If true, existing files will be overwritten (including during the unzip step).
+        /// </summary>
+        public bool OverwriteExisting;
+
+        /// <summary>
+        /// If true, the file must be a ZIP file and it will unzipped into InstallPath after downloading.
+        /// </summary>
+        public bool Unzip;
+    }
+
+    public static class JavaDownloadInfo
+    {
+        static string JRE_FILENAME = @"jre-17.0.1";
+
+        /// <summary>
+        /// This custom OpenJDK JRE was created with https://justinmahar.github.io/easyjre/
+        /// </summary>
+        static Uri JRE_URL = new Uri($@"https://ci.skyline.ms/skyline_tool_testing_mirror/{JRE_FILENAME}.zip");
+        public static string JavaDirectory => Path.Combine(ToolDescriptionHelpers.GetToolsDirectory(), JRE_FILENAME);
+        public static string JavaBinary => Path.Combine(JavaDirectory, JRE_FILENAME, @"bin", @"java.exe");
+
+        // TODO: Try to find a pre-existing installation of Java instead of downloading: https://stackoverflow.com/questions/3038140/how-to-determine-windows-java-installation-location
+        public static FileDownloadInfo[] FilesToDownload => new[]
+        {
+            new FileDownloadInfo {Filename = JRE_FILENAME, InstallPath = JavaDirectory, DownloadUrl = JRE_URL, OverwriteExisting = true, Unzip = true} 
+        }; // N.B. lazy evaluation so that JavaDirectory reflects current Tools directory, which may change from test to test
+    }
+
+    public static class SimpleFileDownloader
+    {
+        private static readonly string SKYLINE_TOOL_TESTING_MIRROR_URL = @"https://ci.skyline.ms/skyline_tool_testing_mirror";
+
+        public static bool FileAlreadyDownloaded(FileDownloadInfo requiredFile)
+        {
+            return Directory.Exists(requiredFile.InstallPath);
+        }
+
+        public static IEnumerable<FileDownloadInfo> FilesNotAlreadyDownloaded(IEnumerable<FileDownloadInfo> requiredFiles)
+        {
+            return requiredFiles.Where(f => !FileAlreadyDownloaded(f));
+        }
+
+        private static void LogToConsole(string message)
+        {
+            if (Helpers.RunningResharperAnalysis)
+            {
+                Trace.WriteLine(@"# (ReSharper Analysis Trace) " + message);
+            }
+            Console.WriteLine(@"# " + message);
+        }
+
+        public static bool DownloadRequiredFiles(IEnumerable<FileDownloadInfo> filesToDownload, ILongWaitBroker waitBroker)
+        {
+            var filesNotAlreadyDownloaded = FilesNotAlreadyDownloaded(filesToDownload).ToList();
+            using (var client = new MultiFileAsynchronousDownloadClient(waitBroker, filesNotAlreadyDownloaded.Count))
+            {
+                Stopwatch downloadTimer = null;
+                Stopwatch unzipTimer = null;
+                if (Program.UnitTest)
+                {
+                    downloadTimer = new Stopwatch();
+                    unzipTimer = new Stopwatch();
+                }
+
+                foreach (var requiredFile in filesNotAlreadyDownloaded)
+                {
+                    // For testing, replace the hostname with the Skyline tool testing mirror path on AWS
+                    var downloadUrl = requiredFile.DownloadUrl;
+                    if (Program.UnitTest && !Program.UseOriginalURLs)
+                        downloadUrl = new Uri(Regex.Replace(downloadUrl.OriginalString, ".*/(.*)", $"{SKYLINE_TOOL_TESTING_MIRROR_URL}/$1"));
+
+                    var useCachedDownloads = Program.UnitTest; // Cache downloads in case of tests running in parallel
+                    var destinationFilename = Path.Combine(requiredFile.InstallPath, requiredFile.Filename);
+                    string downloadFilename = useCachedDownloads
+                        ? Path.Combine(GetCachedDownloadsDirectory(), requiredFile.DownloadUrl.Segments.Last()) :
+                        requiredFile.Unzip ? Path.GetTempFileName() : destinationFilename;
+
+                    if (useCachedDownloads && File.Exists(downloadFilename))
+                    {
+                        LogToConsole($@"Using cached test data from {downloadUrl} in {downloadFilename} as {destinationFilename}...");
+                        if (!requiredFile.Unzip)
+                        {
+                            Helpers.TryTwice(() => File.Copy(downloadFilename, destinationFilename));
+                        }
+                        downloadTimer = null;
+                    }
+                    else
+                    {
+                        if (downloadTimer != null)
+                        {
+                            LogToConsole($@"Downloading test data file {downloadUrl} to {downloadFilename}...");
+                            downloadTimer.Start();
+                        }
+
+                        using (var fileSaver = new FileSaver(downloadFilename))
+                        {
+                            if (!client.DownloadFileAsync(downloadUrl, fileSaver.SafeName, out var downloadError))
+                                throw new Exception(Resources.PythonInstaller_DownloadPip_Download_failed__Check_your_network_connection_or_contact_Skyline_developers_, downloadError);
+                            fileSaver.Commit();
+                        }
+
+                        if (downloadTimer != null)
+                        {
+                            downloadTimer.Stop();
+                            LogToConsole($@"Done downloading test data file {downloadUrl} to {downloadFilename}");
+                        }
+                    }
+
+                    if (!requiredFile.Unzip)
+                        continue;
+
+                    if (unzipTimer != null)
+                    {
+                        LogToConsole($@"Unzipping test data file {Path.GetFileName(downloadFilename)} to {requiredFile.InstallPath}...");
+                        unzipTimer.Start();
+                    }
+
+                    Directory.CreateDirectory(requiredFile.InstallPath);
+                    using (var zipFile = new ZipFile(downloadFilename))
+                    {
+                        zipFile.ExtractAll(requiredFile.InstallPath, requiredFile.OverwriteExisting ? ExtractExistingFileAction.OverwriteSilently : ExtractExistingFileAction.DoNotOverwrite);
+                    }
+
+                    if (unzipTimer != null)
+                    {
+                        unzipTimer.Stop();
+
+                        LogToConsole($@"Done unzipping test data file {Path.GetFileName(downloadFilename)} to {requiredFile.InstallPath}...");
+                    }
+
+                    if (!useCachedDownloads)
+                    {
+                        FileEx.SafeDelete(downloadFilename);
+                    }
+                }
+
+                if (downloadTimer != null)
+                {
+                    LogToConsole($@"Total download time {downloadTimer.ElapsedMilliseconds / 1000.0:F2} sec ");
+                }
+
+                if (unzipTimer != null)
+                {
+                    LogToConsole($@"Total unzip time {unzipTimer.ElapsedMilliseconds / 1000.0:F2} sec ");
+                }
+            }
+            return true;
+        }
+
+        private static string GetCachedDownloadsDirectory()
+        {
+            return Path.Combine(ToolDescriptionHelpers.GetSkylineInstallationPath(), @"CachedDownloadsForTests");
+        }
+    }
+
     // The test Asynchronous Download Client allows us to simulate downloading files from the internet
     public class TestAsynchronousDownloadClient : IAsynchronousDownloadClient
     {
         public bool DownloadSuccess { get; set; }
         public bool CancelDownload { get; set; }
 
-        public bool DownloadFileAsync(Uri address, string fileName)
+        public bool DownloadFileAsync(Uri address, string fileName, out Exception error)
         {
+            error = null;
             if (CancelDownload)
                 throw new ToolExecutionException(Resources.MultiFileAsynchronousDownloadClient_DownloadFileAsyncWithBroker_Download_canceled_);
             return DownloadSuccess;

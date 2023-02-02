@@ -27,6 +27,7 @@ using Newtonsoft.Json.Linq;
 using pwiz.Skyline.Alerts;
 using pwiz.Skyline.Controls;
 using pwiz.Skyline.Model;
+using pwiz.Skyline.Model.Serialization;
 using pwiz.Skyline.Properties;
 using pwiz.Skyline.Util;
 using pwiz.Skyline.Util.Extensions;
@@ -37,6 +38,7 @@ namespace pwiz.Skyline.FileUI
     {
         private readonly IDocumentUIContainer _docContainer;
         private readonly SettingsList<Server> _panoramaServers;
+        private readonly DocumentFormat? _fileFormatOnDisk;
         public IPanoramaPublishClient PanoramaPublishClient { get; set; }
         public bool IsLoaded { get; set; }
 
@@ -51,13 +53,14 @@ namespace pwiz.Skyline.FileUI
             folder
          }
 
-        public PublishDocumentDlg(IDocumentUIContainer docContainer, SettingsList<Server> servers, string fileName)
+        public PublishDocumentDlg(IDocumentUIContainer docContainer, SettingsList<Server> servers, string fileName, DocumentFormat? fileFormatOnDisk)
         {
             IsLoaded = false;
             InitializeComponent();
             Icon = Resources.Skyline;
 
             _docContainer = docContainer;
+            _fileFormatOnDisk = fileFormatOnDisk;
 
             _panoramaServers = servers;
             tbFilePath.Text = FileEx.GetTimeStampedFileName(fileName);
@@ -125,16 +128,15 @@ namespace pwiz.Skyline.FileUI
                     if (ex is WebException || ex is PanoramaServerException)
                     {
                         var error = ex.Message;
-                        if (Resources
-                            .EditServerDlg_OkDialog_The_username_and_password_could_not_be_authenticated_with_the_panorama_server
-                            .Equals(error))
+                        if (error != null && error.Contains(Resources
+                                .EditServerDlg_OkDialog_The_username_and_password_could_not_be_authenticated_with_the_panorama_server))
                         {
                             error = TextUtil.LineSeparate(error, Resources
                                 .PublishDocumentDlg_PublishDocumentDlgLoad_Go_to_Tools___Options___Panorama_tab_to_update_the_username_and_password_);
 
                         }
 
-                        listErrorServers.Add(new Tuple<Server, string>(server, error));
+                        listErrorServers.Add(new Tuple<Server, string>(server, error ?? string.Empty));
                     }
                     else
                     {
@@ -254,7 +256,13 @@ namespace pwiz.Skyline.FileUI
 
             try
             {
-                ShareType = PanoramaPublishClient.DecideShareType(folderInfo, _docContainer.DocumentUI);
+                var cancelled = false;
+                ShareType = PanoramaPublishClient.GetShareType(folderInfo, _docContainer.DocumentUI,
+                    _docContainer.DocumentFilePath, _fileFormatOnDisk, this, ref cancelled);
+                if (cancelled)
+                {
+                    return;
+                }
             }
             catch (PanoramaServerException panoramaServerException)
             {
@@ -265,7 +273,7 @@ namespace pwiz.Skyline.FileUI
             Assume.IsNotNull(ShareType);
             DialogResult = DialogResult.OK;
         }
-           
+
         public void Upload(Control parent)
         {
             string folderPath = GetFolderPath(treeViewFolders.SelectedNode);

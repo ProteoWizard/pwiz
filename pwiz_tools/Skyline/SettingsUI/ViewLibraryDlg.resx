@@ -130,7 +130,7 @@
   </data>
   <assembly alias="System.Drawing" name="System.Drawing, Version=4.0.0.0, Culture=neutral, PublicKeyToken=b03f5f7f11d50a3a" />
   <data name="splitPeptideList.Location" type="System.Drawing.Point, System.Drawing">
-    <value>0, 63</value>
+    <value>0, 77</value>
   </data>
   <data name="splitPeptideList.Orientation" type="System.Windows.Forms.Orientation, System.Windows.Forms">
     <value>Horizontal</value>
@@ -145,7 +145,7 @@
     <value>0, 0</value>
   </data>
   <data name="listPeptide.Size" type="System.Drawing.Size, System.Drawing">
-    <value>257, 230</value>
+    <value>270, 294</value>
   </data>
   <data name="listPeptide.TabIndex" type="System.Int32, mscorlib">
     <value>0</value>
@@ -169,10 +169,10 @@
     <value>Bottom</value>
   </data>
   <data name="cbShowModMasses.Location" type="System.Drawing.Point, System.Drawing">
-    <value>0, 230</value>
+    <value>0, 294</value>
   </data>
   <data name="cbShowModMasses.Size" type="System.Drawing.Size, System.Drawing">
-    <value>257, 17</value>
+    <value>270, 21</value>
   </data>
   <data name="cbShowModMasses.TabIndex" type="System.Int32, mscorlib">
     <value>1</value>
@@ -202,10 +202,10 @@
     <value>0, 3</value>
   </data>
   <data name="PeptideListPanel.Size" type="System.Drawing.Size, System.Drawing">
-    <value>257, 247</value>
+    <value>270, 315</value>
   </data>
   <data name="PeptideListPanel.TabIndex" type="System.Int32, mscorlib">
-    <value>3</value>
+    <value>0</value>
   </data>
   <data name="&gt;&gt;PeptideListPanel.Name" xml:space="preserve">
     <value>PeptideListPanel</value>
@@ -247,7 +247,7 @@
     <value>31, 13</value>
   </data>
   <data name="PageCount.TabIndex" type="System.Int32, mscorlib">
-    <value>2</value>
+    <value>1</value>
   </data>
   <data name="PageCount.Text" xml:space="preserve">
     <value>page</value>
@@ -277,7 +277,7 @@
     <value>47, 13</value>
   </data>
   <data name="PeptideCount.TabIndex" type="System.Int32, mscorlib">
-    <value>0</value>
+    <value>2</value>
   </data>
   <data name="PeptideCount.Text" xml:space="preserve">
     <value>peptides</value>
@@ -301,13 +301,13 @@
     <value>Right</value>
   </data>
   <data name="NextLink.Location" type="System.Drawing.Point, System.Drawing">
-    <value>213, 0</value>
+    <value>226, 0</value>
   </data>
   <data name="NextLink.Size" type="System.Drawing.Size, System.Drawing">
     <value>44, 13</value>
   </data>
   <data name="NextLink.TabIndex" type="System.Int32, mscorlib">
-    <value>1</value>
+    <value>3</value>
   </data>
   <data name="NextLink.Text" xml:space="preserve">
     <value>Next &gt;&gt;</value>
@@ -370,13 +370,13 @@
     <value>50</value>
   </data>
   <data name="splitPeptideList.Size" type="System.Drawing.Size, System.Drawing">
-    <value>257, 326</value>
+    <value>270, 390</value>
   </data>
   <data name="splitPeptideList.SplitterDistance" type="System.Int32, mscorlib">
-    <value>250</value>
+    <value>318</value>
   </data>
   <data name="splitPeptideList.TabIndex" type="System.Int32, mscorlib">
-    <value>2</value>
+    <value>6</value>
   </data>
   <data name="&gt;&gt;splitPeptideList.Name" xml:space="preserve">
     <value>splitPeptideList</value>
@@ -403,13 +403,13 @@
     <value>True</value>
   </data>
   <data name="byLabel.Location" type="System.Drawing.Point, System.Drawing">
-    <value>156, 24</value>
+    <value>155, 24</value>
   </data>
   <data name="byLabel.Size" type="System.Drawing.Size, System.Drawing">
     <value>22, 13</value>
   </data>
   <data name="byLabel.TabIndex" type="System.Int32, mscorlib">
-    <value>6</value>
+    <value>3</value>
   </data>
   <data name="byLabel.Text" xml:space="preserve">
     <value>&amp;By:</value>
@@ -430,13 +430,13 @@
     <value>Top, Right</value>
   </data>
   <data name="comboFilterCategory.Location" type="System.Drawing.Point, System.Drawing">
-    <value>156, 39</value>
+    <value>158, 39</value>
   </data>
   <data name="comboFilterCategory.Size" type="System.Drawing.Size, System.Drawing">
-    <value>98, 21</value>
+    <value>112, 21</value>
   </data>
   <data name="comboFilterCategory.TabIndex" type="System.Int32, mscorlib">
-    <value>5</value>
+    <value>4</value>
   </data>
   <data name="&gt;&gt;comboFilterCategory.Name" xml:space="preserve">
     <value>comboFilterCategory</value>
@@ -460,7 +460,7 @@
     <value>32, 13</value>
   </data>
   <data name="filterLabel.TabIndex" type="System.Int32, mscorlib">
-    <value>4</value>
+    <value>1</value>
   </data>
   <data name="filterLabel.Text" xml:space="preserve">
     <value>&amp;Filter:</value>
@@ -490,7 +490,7 @@
     <value>53, 13</value>
   </data>
   <data name="MoleculeLabel.TabIndex" type="System.Int32, mscorlib">
-    <value>1</value>
+    <value>5</value>
   </data>
   <data name="MoleculeLabel.Text" xml:space="preserve">
     <value>&amp;Molecule:</value>
@@ -508,7 +508,7 @@
     <value>PeptideEditPanel</value>
   </data>
   <data name="&gt;&gt;MoleculeLabel.ZOrder" xml:space="preserve">
-    <value>0</value>
+    <value>3</value>
   </data>
   <data name="tableLayoutPanel1.ColumnCount" type="System.Int32, mscorlib">
     <value>2</value>
@@ -523,7 +523,7 @@
     <value>0, 0, 0, 0</value>
   </data>
   <data name="comboLibrary.Size" type="System.Drawing.Size, System.Drawing">
-    <value>232, 21</value>
+    <value>243, 21</value>
   </data>
   <data name="comboLibrary.TabIndex" type="System.Int32, mscorlib">
     <value>0</value>
@@ -541,16 +541,16 @@
     <value>0</value>
   </data>
   <data name="btnLibDetails.Location" type="System.Drawing.Point, System.Drawing">
-    <value>232, 0</value>
+    <value>243, 0</value>
   </data>
   <data name="btnLibDetails.Margin" type="System.Windows.Forms.Padding, System.Windows.Forms">
     <value>0, 0, 0, 0</value>
   </data>
   <data name="btnLibDetails.Size" type="System.Drawing.Size, System.Drawing">
-    <value>24, 21</value>
+    <value>25, 21</value>
   </data>
   <data name="btnLibDetails.TabIndex" type="System.Int32, mscorlib">
-    <value>5</value>
+    <value>1</value>
   </data>
   <data name="btnLibDetails.Text" xml:space="preserve">
     <value>...</value>
@@ -580,10 +580,10 @@
     <value>1</value>
   </data>
   <data name="tableLayoutPanel1.Size" type="System.Drawing.Size, System.Drawing">
-    <value>257, 24</value>
+    <value>270, 24</value>
   </data>
   <data name="tableLayoutPanel1.TabIndex" type="System.Int32, mscorlib">
-    <value>3</value>
+    <value>0</value>
   </data>
   <data name="&gt;&gt;tableLayoutPanel1.Name" xml:space="preserve">
     <value>tableLayoutPanel1</value>
@@ -595,7 +595,7 @@
     <value>PeptideEditPanel</value>
   </data>
   <data name="&gt;&gt;tableLayoutPanel1.ZOrder" xml:space="preserve">
-    <value>1</value>
+    <value>4</value>
   </data>
   <data name="tableLayoutPanel1.LayoutSettings" type="System.Windows.Forms.TableLayoutSettings, System.Windows.Forms">
     <value>&lt;?xml version="1.0" encoding="utf-16"?&gt;&lt;TableLayoutSettings&gt;&lt;Controls&gt;&lt;Control Name="comboLibrary" Row="0" RowSpan="1" Column="0" ColumnSpan="1" /&gt;&lt;Control Name="btnLibDetails" Row="0" RowSpan="1" Column="1" ColumnSpan="1" /&gt;&lt;/Controls&gt;&lt;Columns Styles="Percent,90.31007,Percent,9.689922" /&gt;&lt;Rows Styles="Percent,50" /&gt;&lt;/TableLayoutSettings&gt;</value>
@@ -610,7 +610,7 @@
     <value>46, 13</value>
   </data>
   <data name="PeptideLabel.TabIndex" type="System.Int32, mscorlib">
-    <value>1</value>
+    <value>5</value>
   </data>
   <data name="PeptideLabel.Text" xml:space="preserve">
     <value>&amp;Peptide:</value>
@@ -625,16 +625,16 @@
     <value>PeptideEditPanel</value>
   </data>
   <data name="&gt;&gt;PeptideLabel.ZOrder" xml:space="preserve">
-    <value>2</value>
+    <value>5</value>
   </data>
   <data name="textPeptide.Anchor" type="System.Windows.Forms.AnchorStyles, System.Windows.Forms">
     <value>Top, Left, Right</value>
   </data>
   <data name="textPeptide.Location" type="System.Drawing.Point, System.Drawing">
-    <value>0, 40</value>
+    <value>1, 39</value>
   </data>
   <data name="textPeptide.Size" type="System.Drawing.Size, System.Drawing">
-    <value>150, 20</value>
+    <value>154, 20</value>
   </data>
   <data name="textPeptide.TabIndex" type="System.Int32, mscorlib">
     <value>2</value>
@@ -649,7 +649,7 @@
     <value>PeptideEditPanel</value>
   </data>
   <data name="&gt;&gt;textPeptide.ZOrder" xml:space="preserve">
-    <value>3</value>
+    <value>6</value>
   </data>
   <data name="PeptideEditPanel.Dock" type="System.Windows.Forms.DockStyle, System.Windows.Forms">
     <value>Top</value>
@@ -658,7 +658,7 @@
     <value>0, 0</value>
   </data>
   <data name="PeptideEditPanel.Size" type="System.Drawing.Size, System.Drawing">
-    <value>257, 77</value>
+    <value>270, 77</value>
   </data>
   <data name="PeptideEditPanel.TabIndex" type="System.Int32, mscorlib">
     <value>0</value>
@@ -687,35 +687,32 @@
   <data name="&gt;&gt;splitMain.Panel1.ZOrder" xml:space="preserve">
     <value>0</value>
   </data>
-  <data name="graphControl.Dock" type="System.Windows.Forms.DockStyle, System.Windows.Forms">
+  <data name="msGraphExtension1.Dock" type="System.Windows.Forms.DockStyle, System.Windows.Forms">
     <value>Fill</value>
   </data>
-  <data name="graphControl.Location" type="System.Drawing.Point, System.Drawing">
+  <data name="msGraphExtension1.Location" type="System.Drawing.Point, System.Drawing">
     <value>0, 0</value>
   </data>
-  <data name="graphControl.Margin" type="System.Windows.Forms.Padding, System.Windows.Forms">
-    <value>5, 5, 5, 5</value>
+  <data name="msGraphExtension1.Size" type="System.Drawing.Size, System.Drawing">
+    <value>485, 407</value>
   </data>
-  <data name="graphControl.Size" type="System.Drawing.Size, System.Drawing">
-    <value>450, 329</value>
+  <data name="msGraphExtension1.TabIndex" type="System.Int32, mscorlib">
+    <value>5</value>
   </data>
-  <data name="graphControl.TabIndex" type="System.Int32, mscorlib">
-    <value>3</value>
+  <data name="&gt;&gt;msGraphExtension1.Name" xml:space="preserve">
+    <value>msGraphExtension1</value>
   </data>
-  <data name="&gt;&gt;graphControl.Name" xml:space="preserve">
-    <value>graphControl</value>
+  <data name="&gt;&gt;msGraphExtension1.Type" xml:space="preserve">
+    <value>pwiz.Skyline.SettingsUI.MsGraphExtension, Skyline-daily, Version=21.2.1.579, Culture=neutral, PublicKeyToken=null</value>
   </data>
-  <data name="&gt;&gt;graphControl.Type" xml:space="preserve">
-    <value>pwiz.MSGraph.MSGraphControl, MSGraph, Version=1.0.0.0, Culture=neutral, PublicKeyToken=e57071561ce779d9</value>
-  </data>
-  <data name="&gt;&gt;graphControl.Parent" xml:space="preserve">
+  <data name="&gt;&gt;msGraphExtension1.Parent" xml:space="preserve">
     <value>GraphPanel</value>
   </data>
-  <data name="&gt;&gt;graphControl.ZOrder" xml:space="preserve">
+  <data name="&gt;&gt;msGraphExtension1.ZOrder" xml:space="preserve">
     <value>0</value>
   </data>
   <metadata name="toolStrip1.TrayLocation" type="System.Drawing.Point, System.Drawing, Version=4.0.0.0, Culture=neutral, PublicKeyToken=b03f5f7f11d50a3a">
-    <value>331, 17</value>
+    <value>448, 17</value>
   </metadata>
   <data name="toolStrip1.Dock" type="System.Windows.Forms.DockStyle, System.Windows.Forms">
     <value>Right</value>
@@ -724,7 +721,7 @@
     <value>Magenta</value>
   </data>
   <data name="btnAIons.Size" type="System.Drawing.Size, System.Drawing">
-    <value>21, 20</value>
+    <value>31, 28</value>
   </data>
   <data name="btnAIons.ToolTipText" xml:space="preserve">
     <value>A-ions</value>
@@ -733,7 +730,7 @@
     <value>Magenta</value>
   </data>
   <data name="btnBIons.Size" type="System.Drawing.Size, System.Drawing">
-    <value>21, 20</value>
+    <value>31, 28</value>
   </data>
   <data name="btnBIons.ToolTipText" xml:space="preserve">
     <value>B-ions</value>
@@ -742,7 +739,7 @@
     <value>Magenta</value>
   </data>
   <data name="btnCIons.Size" type="System.Drawing.Size, System.Drawing">
-    <value>21, 20</value>
+    <value>31, 28</value>
   </data>
   <data name="btnCIons.ToolTipText" xml:space="preserve">
     <value>C-ions</value>
@@ -751,7 +748,7 @@
     <value>Magenta</value>
   </data>
   <data name="btnXIons.Size" type="System.Drawing.Size, System.Drawing">
-    <value>21, 20</value>
+    <value>31, 28</value>
   </data>
   <data name="btnXIons.ToolTipText" xml:space="preserve">
     <value>X-ions</value>
@@ -760,7 +757,7 @@
     <value>Magenta</value>
   </data>
   <data name="btnYIons.Size" type="System.Drawing.Size, System.Drawing">
-    <value>21, 20</value>
+    <value>31, 28</value>
   </data>
   <data name="btnYIons.ToolTipText" xml:space="preserve">
     <value>Y-ions</value>
@@ -769,7 +766,7 @@
     <value>Magenta</value>
   </data>
   <data name="btnZIons.Size" type="System.Drawing.Size, System.Drawing">
-    <value>21, 20</value>
+    <value>31, 28</value>
   </data>
   <data name="btnZIons.ToolTipText" xml:space="preserve">
     <value>Z-ions</value>
@@ -778,19 +775,19 @@
     <value>Magenta</value>
   </data>
   <data name="btnFragmentIons.Size" type="System.Drawing.Size, System.Drawing">
-    <value>21, 20</value>
+    <value>31, 28</value>
   </data>
   <data name="btnFragmentIons.ToolTipText" xml:space="preserve">
     <value>fragment ions</value>
   </data>
   <data name="toolStripSeparator1.Size" type="System.Drawing.Size, System.Drawing">
-    <value>21, 6</value>
+    <value>31, 6</value>
   </data>
   <data name="charge1Button.ImageTransparentColor" type="System.Drawing.Color, System.Drawing">
     <value>Magenta</value>
   </data>
   <data name="charge1Button.Size" type="System.Drawing.Size, System.Drawing">
-    <value>21, 20</value>
+    <value>31, 28</value>
   </data>
   <data name="charge1Button.ToolTipText" xml:space="preserve">
     <value>Charge 1 ions</value>
@@ -799,19 +796,31 @@
     <value>Magenta</value>
   </data>
   <data name="charge2Button.Size" type="System.Drawing.Size, System.Drawing">
-    <value>21, 20</value>
+    <value>31, 28</value>
   </data>
   <data name="charge2Button.ToolTipText" xml:space="preserve">
     <value>Charge 2 ions</value>
   </data>
   <data name="toolStripSeparator2.Size" type="System.Drawing.Size, System.Drawing">
-    <value>21, 6</value>
+    <value>31, 6</value>
+  </data>
+  <data name="propertiesButton.ImageTransparentColor" type="System.Drawing.Color, System.Drawing">
+    <value>Magenta</value>
+  </data>
+  <data name="propertiesButton.Size" type="System.Drawing.Size, System.Drawing">
+    <value>31, 28</value>
+  </data>
+  <data name="propertiesButton.ToolTipText" xml:space="preserve">
+    <value>Spectrum Properties</value>
+  </data>
+  <data name="toolStripSeparator3.Size" type="System.Drawing.Size, System.Drawing">
+    <value>31, 6</value>
   </data>
   <data name="copyMetafileButton.ImageTransparentColor" type="System.Drawing.Color, System.Drawing">
     <value>Magenta</value>
   </data>
   <data name="copyMetafileButton.Size" type="System.Drawing.Size, System.Drawing">
-    <value>21, 20</value>
+    <value>31, 28</value>
   </data>
   <data name="copyMetafileButton.ToolTipText" xml:space="preserve">
     <value>Copy Metafile</value>
@@ -820,7 +829,7 @@
     <value>Magenta</value>
   </data>
   <data name="btnCopy.Size" type="System.Drawing.Size, System.Drawing">
-    <value>21, 20</value>
+    <value>34, 28</value>
   </data>
   <data name="btnCopy.ToolTipText" xml:space="preserve">
     <value>Copy Bitmap</value>
@@ -829,7 +838,7 @@
     <value>Magenta</value>
   </data>
   <data name="btnSave.Size" type="System.Drawing.Size, System.Drawing">
-    <value>21, 20</value>
+    <value>34, 28</value>
   </data>
   <data name="btnSave.ToolTipText" xml:space="preserve">
     <value>Save</value>
@@ -838,19 +847,19 @@
     <value>Magenta</value>
   </data>
   <data name="btnPrint.Size" type="System.Drawing.Size, System.Drawing">
-    <value>21, 20</value>
+    <value>34, 28</value>
   </data>
   <data name="btnPrint.ToolTipText" xml:space="preserve">
     <value>Print</value>
   </data>
   <data name="toolStrip1.Location" type="System.Drawing.Point, System.Drawing">
-    <value>450, 0</value>
+    <value>485, 0</value>
   </data>
   <data name="toolStrip1.Size" type="System.Drawing.Size, System.Drawing">
-    <value>24, 329</value>
+    <value>36, 407</value>
   </data>
   <data name="toolStrip1.TabIndex" type="System.Int32, mscorlib">
-    <value>4</value>
+    <value>2</value>
   </data>
   <data name="&gt;&gt;toolStrip1.Name" xml:space="preserve">
     <value>toolStrip1</value>
@@ -871,7 +880,7 @@
     <value>0, 0</value>
   </data>
   <data name="GraphPanel.Size" type="System.Drawing.Size, System.Drawing">
-    <value>478, 333</value>
+    <value>525, 411</value>
   </data>
   <data name="GraphPanel.TabIndex" type="System.Int32, mscorlib">
     <value>0</value>
@@ -888,6 +897,135 @@
   <data name="&gt;&gt;GraphPanel.ZOrder" xml:space="preserve">
     <value>0</value>
   </data>
+  <data name="tableLayoutPanel2.Anchor" type="System.Windows.Forms.AnchorStyles, System.Windows.Forms">
+    <value>Top, Left, Right</value>
+  </data>
+  <data name="tableLayoutPanel2.ColumnCount" type="System.Int32, mscorlib">
+    <value>3</value>
+  </data>
+  <data name="labelFilename.Anchor" type="System.Windows.Forms.AnchorStyles, System.Windows.Forms">
+    <value>Left</value>
+  </data>
+  <data name="labelFilename.AutoSize" type="System.Boolean, mscorlib">
+    <value>True</value>
+  </data>
+  <data name="labelFilename.ImeMode" type="System.Windows.Forms.ImeMode, System.Windows.Forms">
+    <value>NoControl</value>
+  </data>
+  <data name="labelFilename.Location" type="System.Drawing.Point, System.Drawing">
+    <value>3, 6</value>
+  </data>
+  <data name="labelFilename.Margin" type="System.Windows.Forms.Padding, System.Windows.Forms">
+    <value>3, 0, 0, 0</value>
+  </data>
+  <data name="labelFilename.Size" type="System.Drawing.Size, System.Drawing">
+    <value>26, 13</value>
+  </data>
+  <data name="labelFilename.TabIndex" type="System.Int32, mscorlib">
+    <value>0</value>
+  </data>
+  <data name="labelFilename.Text" xml:space="preserve">
+    <value>Fil&amp;e:</value>
+  </data>
+  <data name="&gt;&gt;labelFilename.Name" xml:space="preserve">
+    <value>labelFilename</value>
+  </data>
+  <data name="&gt;&gt;labelFilename.Type" xml:space="preserve">
+    <value>System.Windows.Forms.Label, System.Windows.Forms, Version=4.0.0.0, Culture=neutral, PublicKeyToken=b77a5c561934e089</value>
+  </data>
+  <data name="&gt;&gt;labelFilename.Parent" xml:space="preserve">
+    <value>tableLayoutPanel2</value>
+  </data>
+  <data name="&gt;&gt;labelFilename.ZOrder" xml:space="preserve">
+    <value>0</value>
+  </data>
+  <data name="comboRedundantSpectra.Dock" type="System.Windows.Forms.DockStyle, System.Windows.Forms">
+    <value>Fill</value>
+  </data>
+  <data name="comboRedundantSpectra.Location" type="System.Drawing.Point, System.Drawing">
+    <value>29, 2</value>
+  </data>
+  <data name="comboRedundantSpectra.Margin" type="System.Windows.Forms.Padding, System.Windows.Forms">
+    <value>0, 2, 3, 1</value>
+  </data>
+  <data name="comboRedundantSpectra.Size" type="System.Drawing.Size, System.Drawing">
+    <value>460, 21</value>
+  </data>
+  <data name="comboRedundantSpectra.TabIndex" type="System.Int32, mscorlib">
+    <value>1</value>
+  </data>
+  <data name="&gt;&gt;comboRedundantSpectra.Name" xml:space="preserve">
+    <value>comboRedundantSpectra</value>
+  </data>
+  <data name="&gt;&gt;comboRedundantSpectra.Type" xml:space="preserve">
+    <value>System.Windows.Forms.ComboBox, System.Windows.Forms, Version=4.0.0.0, Culture=neutral, PublicKeyToken=b77a5c561934e089</value>
+  </data>
+  <data name="&gt;&gt;comboRedundantSpectra.Parent" xml:space="preserve">
+    <value>tableLayoutPanel2</value>
+  </data>
+  <data name="&gt;&gt;comboRedundantSpectra.ZOrder" xml:space="preserve">
+    <value>1</value>
+  </data>
+  <data name="labelRT.Anchor" type="System.Windows.Forms.AnchorStyles, System.Windows.Forms">
+    <value>Right</value>
+  </data>
+  <data name="labelRT.AutoSize" type="System.Boolean, mscorlib">
+    <value>True</value>
+  </data>
+  <data name="labelRT.Location" type="System.Drawing.Point, System.Drawing">
+    <value>495, 6</value>
+  </data>
+  <data name="labelRT.Size" type="System.Drawing.Size, System.Drawing">
+    <value>22, 13</value>
+  </data>
+  <data name="labelRT.TabIndex" type="System.Int32, mscorlib">
+    <value>1</value>
+  </data>
+  <data name="labelRT.Text" xml:space="preserve">
+    <value>RT</value>
+  </data>
+  <data name="labelRT.TextAlign" type="System.Drawing.ContentAlignment, System.Drawing">
+    <value>TopRight</value>
+  </data>
+  <data name="&gt;&gt;labelRT.Name" xml:space="preserve">
+    <value>labelRT</value>
+  </data>
+  <data name="&gt;&gt;labelRT.Type" xml:space="preserve">
+    <value>System.Windows.Forms.Label, System.Windows.Forms, Version=4.0.0.0, Culture=neutral, PublicKeyToken=b77a5c561934e089</value>
+  </data>
+  <data name="&gt;&gt;labelRT.Parent" xml:space="preserve">
+    <value>tableLayoutPanel2</value>
+  </data>
+  <data name="&gt;&gt;labelRT.ZOrder" xml:space="preserve">
+    <value>2</value>
+  </data>
+  <data name="tableLayoutPanel2.Location" type="System.Drawing.Point, System.Drawing">
+    <value>2, 1</value>
+  </data>
+  <data name="tableLayoutPanel2.RowCount" type="System.Int32, mscorlib">
+    <value>1</value>
+  </data>
+  <data name="tableLayoutPanel2.Size" type="System.Drawing.Size, System.Drawing">
+    <value>520, 26</value>
+  </data>
+  <data name="tableLayoutPanel2.TabIndex" type="System.Int32, mscorlib">
+    <value>0</value>
+  </data>
+  <data name="&gt;&gt;tableLayoutPanel2.Name" xml:space="preserve">
+    <value>tableLayoutPanel2</value>
+  </data>
+  <data name="&gt;&gt;tableLayoutPanel2.Type" xml:space="preserve">
+    <value>System.Windows.Forms.TableLayoutPanel, System.Windows.Forms, Version=4.0.0.0, Culture=neutral, PublicKeyToken=b77a5c561934e089</value>
+  </data>
+  <data name="&gt;&gt;tableLayoutPanel2.Parent" xml:space="preserve">
+    <value>panel2</value>
+  </data>
+  <data name="&gt;&gt;tableLayoutPanel2.ZOrder" xml:space="preserve">
+    <value>0</value>
+  </data>
+  <data name="tableLayoutPanel2.LayoutSettings" type="System.Windows.Forms.TableLayoutSettings, System.Windows.Forms">
+    <value>&lt;?xml version="1.0" encoding="utf-16"?&gt;&lt;TableLayoutSettings&gt;&lt;Controls&gt;&lt;Control Name="labelFilename" Row="0" RowSpan="1" Column="0" ColumnSpan="1" /&gt;&lt;Control Name="comboRedundantSpectra" Row="0" RowSpan="1" Column="1" ColumnSpan="1" /&gt;&lt;Control Name="labelRT" Row="0" RowSpan="1" Column="2" ColumnSpan="1" /&gt;&lt;/Controls&gt;&lt;Columns Styles="AutoSize,0,Percent,100,AutoSize,0" /&gt;&lt;Rows Styles="AutoSize,0" /&gt;&lt;/TableLayoutSettings&gt;</value>
+  </data>
   <data name="cbAssociateProteins.AutoSize" type="System.Boolean, mscorlib">
     <value>True</value>
   </data>
@@ -895,10 +1033,10 @@
     <value>163, 36</value>
   </data>
   <data name="cbAssociateProteins.Size" type="System.Drawing.Size, System.Drawing">
-    <value>112, 17</value>
+    <value>119, 21</value>
   </data>
   <data name="cbAssociateProteins.TabIndex" type="System.Int32, mscorlib">
-    <value>3</value>
+    <value>5</value>
   </data>
   <data name="cbAssociateProteins.Text" xml:space="preserve">
     <value>Asso&amp;ciate proteins</value>
@@ -913,33 +1051,6 @@
     <value>panel2</value>
   </data>
   <data name="&gt;&gt;cbAssociateProteins.ZOrder" xml:space="preserve">
-    <value>0</value>
-  </data>
-  <data name="labelFilename.AutoSize" type="System.Boolean, mscorlib">
-    <value>True</value>
-  </data>
-  <data name="labelFilename.Location" type="System.Drawing.Point, System.Drawing">
-    <value>3, 6</value>
-  </data>
-  <data name="labelFilename.Size" type="System.Drawing.Size, System.Drawing">
-    <value>23, 13</value>
-  </data>
-  <data name="labelFilename.TabIndex" type="System.Int32, mscorlib">
-    <value>3</value>
-  </data>
-  <data name="labelFilename.Text" xml:space="preserve">
-    <value>File</value>
-  </data>
-  <data name="&gt;&gt;labelFilename.Name" xml:space="preserve">
-    <value>labelFilename</value>
-  </data>
-  <data name="&gt;&gt;labelFilename.Type" xml:space="preserve">
-    <value>System.Windows.Forms.Label, System.Windows.Forms, Version=4.0.0.0, Culture=neutral, PublicKeyToken=b77a5c561934e089</value>
-  </data>
-  <data name="&gt;&gt;labelFilename.Parent" xml:space="preserve">
-    <value>panel2</value>
-  </data>
-  <data name="&gt;&gt;labelFilename.ZOrder" xml:space="preserve">
     <value>1</value>
   </data>
   <data name="btnAdd.Anchor" type="System.Windows.Forms.AnchorStyles, System.Windows.Forms">
@@ -952,7 +1063,7 @@
     <value>75, 23</value>
   </data>
   <data name="btnAdd.TabIndex" type="System.Int32, mscorlib">
-    <value>2</value>
+    <value>3</value>
   </data>
   <data name="btnAdd.Text" xml:space="preserve">
     <value>&amp;Add</value>
@@ -979,7 +1090,7 @@
     <value>75, 23</value>
   </data>
   <data name="btnAddAll.TabIndex" type="System.Int32, mscorlib">
-    <value>1</value>
+    <value>4</value>
   </data>
   <data name="btnAddAll.Text" xml:space="preserve">
     <value>A&amp;dd All...</value>
@@ -1000,13 +1111,13 @@
     <value>Bottom, Right</value>
   </data>
   <data name="btnCancel.Location" type="System.Drawing.Point, System.Drawing">
-    <value>403, 33</value>
+    <value>450, 30</value>
   </data>
   <data name="btnCancel.Size" type="System.Drawing.Size, System.Drawing">
     <value>75, 23</value>
   </data>
   <data name="btnCancel.TabIndex" type="System.Int32, mscorlib">
-    <value>0</value>
+    <value>6</value>
   </data>
   <data name="btnCancel.Text" xml:space="preserve">
     <value>Close</value>
@@ -1023,47 +1134,17 @@
   <data name="&gt;&gt;btnCancel.ZOrder" xml:space="preserve">
     <value>4</value>
   </data>
-  <data name="labelRT.Anchor" type="System.Windows.Forms.AnchorStyles, System.Windows.Forms">
-    <value>Top, Right</value>
-  </data>
-  <data name="labelRT.Location" type="System.Drawing.Point, System.Drawing">
-    <value>73, 6</value>
-  </data>
-  <data name="labelRT.Size" type="System.Drawing.Size, System.Drawing">
-    <value>403, 16</value>
-  </data>
-  <data name="labelRT.TabIndex" type="System.Int32, mscorlib">
-    <value>4</value>
-  </data>
-  <data name="labelRT.Text" xml:space="preserve">
-    <value>RT</value>
-  </data>
-  <data name="labelRT.TextAlign" type="System.Drawing.ContentAlignment, System.Drawing">
-    <value>TopRight</value>
-  </data>
-  <data name="&gt;&gt;labelRT.Name" xml:space="preserve">
-    <value>labelRT</value>
-  </data>
-  <data name="&gt;&gt;labelRT.Type" xml:space="preserve">
-    <value>System.Windows.Forms.Label, System.Windows.Forms, Version=4.0.0.0, Culture=neutral, PublicKeyToken=b77a5c561934e089</value>
-  </data>
-  <data name="&gt;&gt;labelRT.Parent" xml:space="preserve">
-    <value>panel2</value>
-  </data>
-  <data name="&gt;&gt;labelRT.ZOrder" xml:space="preserve">
-    <value>5</value>
-  </data>
   <data name="panel2.Dock" type="System.Windows.Forms.DockStyle, System.Windows.Forms">
     <value>Bottom</value>
   </data>
   <data name="panel2.Location" type="System.Drawing.Point, System.Drawing">
-    <value>0, 333</value>
+    <value>0, 411</value>
   </data>
   <data name="panel2.Size" type="System.Drawing.Size, System.Drawing">
-    <value>478, 56</value>
+    <value>525, 56</value>
   </data>
   <data name="panel2.TabIndex" type="System.Int32, mscorlib">
-    <value>1</value>
+    <value>0</value>
   </data>
   <data name="&gt;&gt;panel2.Name" xml:space="preserve">
     <value>panel2</value>
@@ -1090,10 +1171,10 @@
     <value>1</value>
   </data>
   <data name="splitMain.Size" type="System.Drawing.Size, System.Drawing">
-    <value>739, 389</value>
+    <value>799, 467</value>
   </data>
   <data name="splitMain.SplitterDistance" type="System.Int32, mscorlib">
-    <value>257</value>
+    <value>270</value>
   </data>
   <data name="splitMain.TabIndex" type="System.Int32, mscorlib">
     <value>0</value>
@@ -1117,7 +1198,7 @@
     <value>10, 25</value>
   </data>
   <data name="ViewLibraryPanel.Size" type="System.Drawing.Size, System.Drawing">
-    <value>739, 389</value>
+    <value>799, 467</value>
   </data>
   <data name="ViewLibraryPanel.TabIndex" type="System.Int32, mscorlib">
     <value>2</value>
@@ -1162,160 +1243,115 @@
     <value>1</value>
   </data>
   <metadata name="contextMenuSpectrum.TrayLocation" type="System.Drawing.Point, System.Drawing, Version=4.0.0.0, Culture=neutral, PublicKeyToken=b03f5f7f11d50a3a">
-    <value>155, 17</value>
+    <value>200, 17</value>
   </metadata>
-  <data name="aionsContextMenuItem.Size" type="System.Drawing.Size, System.Drawing">
-    <value>193, 22</value>
+  <data name="ionTypesContextMenuItem.Size" type="System.Drawing.Size, System.Drawing">
+    <value>263, 32</value>
   </data>
-  <data name="aionsContextMenuItem.Text" xml:space="preserve">
-    <value>A-ions</value>
-  </data>
-  <data name="bionsContextMenuItem.Size" type="System.Drawing.Size, System.Drawing">
-    <value>193, 22</value>
-  </data>
-  <data name="bionsContextMenuItem.Text" xml:space="preserve">
-    <value>B-ions</value>
-  </data>
-  <data name="cionsContextMenuItem.Size" type="System.Drawing.Size, System.Drawing">
-    <value>193, 22</value>
-  </data>
-  <data name="cionsContextMenuItem.Text" xml:space="preserve">
-    <value>C-ions</value>
-  </data>
-  <data name="xionsContextMenuItem.Size" type="System.Drawing.Size, System.Drawing">
-    <value>193, 22</value>
-  </data>
-  <data name="xionsContextMenuItem.Text" xml:space="preserve">
-    <value>X-ions</value>
-  </data>
-  <data name="yionsContextMenuItem.Size" type="System.Drawing.Size, System.Drawing">
-    <value>193, 22</value>
-  </data>
-  <data name="yionsContextMenuItem.Text" xml:space="preserve">
-    <value>Y-ions</value>
-  </data>
-  <data name="zionsContextMenuItem.Size" type="System.Drawing.Size, System.Drawing">
-    <value>193, 22</value>
-  </data>
-  <data name="zionsContextMenuItem.Text" xml:space="preserve">
-    <value>Z-ions</value>
-  </data>
-  <data name="fragmentionsContextMenuItem.Size" type="System.Drawing.Size, System.Drawing">
-    <value>193, 22</value>
+  <data name="ionTypesContextMenuItem.Text" xml:space="preserve">
+    <value>Ion Types</value>
   </data>
   <data name="fragmentionsContextMenuItem.Text" xml:space="preserve">
     <value>Fragment Ions</value>
   </data>
   <data name="precursorIonContextMenuItem.Size" type="System.Drawing.Size, System.Drawing">
-    <value>193, 22</value>
+    <value>263, 32</value>
   </data>
   <data name="precursorIonContextMenuItem.Text" xml:space="preserve">
     <value>Precursor</value>
   </data>
+  <data name="specialionsContextMenuItem.Size" type="System.Drawing.Size, System.Drawing">
+    <value>263, 32</value>
+  </data>
+  <data name="specialionsContextMenuItem.Text" xml:space="preserve">
+    <value>Special Ions</value>
+  </data>
   <data name="toolStripSeparator11.Size" type="System.Drawing.Size, System.Drawing">
-    <value>190, 6</value>
-  </data>
-  <data name="charge1ContextMenuItem.Size" type="System.Drawing.Size, System.Drawing">
-    <value>80, 22</value>
-  </data>
-  <data name="charge1ContextMenuItem.Text" xml:space="preserve">
-    <value>1</value>
-  </data>
-  <data name="charge2ContextMenuItem.Size" type="System.Drawing.Size, System.Drawing">
-    <value>80, 22</value>
-  </data>
-  <data name="charge2ContextMenuItem.Text" xml:space="preserve">
-    <value>2</value>
-  </data>
-  <data name="charge3ContextMenuItem.Size" type="System.Drawing.Size, System.Drawing">
-    <value>80, 22</value>
-  </data>
-  <data name="charge3ContextMenuItem.Text" xml:space="preserve">
-    <value>3</value>
-  </data>
-  <data name="charge4ContextMenuItem.Size" type="System.Drawing.Size, System.Drawing">
-    <value>80, 22</value>
-  </data>
-  <data name="charge4ContextMenuItem.Text" xml:space="preserve">
-    <value>4</value>
+    <value>260, 6</value>
   </data>
   <data name="chargesContextMenuItem.Size" type="System.Drawing.Size, System.Drawing">
-    <value>193, 22</value>
+    <value>263, 32</value>
   </data>
   <data name="chargesContextMenuItem.Text" xml:space="preserve">
     <value>Charges</value>
   </data>
   <data name="toolStripSeparator12.Size" type="System.Drawing.Size, System.Drawing">
-    <value>190, 6</value>
+    <value>260, 6</value>
   </data>
   <data name="ranksContextMenuItem.Size" type="System.Drawing.Size, System.Drawing">
-    <value>193, 22</value>
+    <value>263, 32</value>
   </data>
   <data name="ranksContextMenuItem.Text" xml:space="preserve">
     <value>Ranks</value>
   </data>
   <data name="scoreContextMenuItem.Size" type="System.Drawing.Size, System.Drawing">
-    <value>193, 22</value>
+    <value>263, 32</value>
   </data>
   <data name="scoreContextMenuItem.Text" xml:space="preserve">
     <value>Score</value>
   </data>
   <data name="ionMzValuesContextMenuItem.Size" type="System.Drawing.Size, System.Drawing">
-    <value>193, 22</value>
+    <value>263, 32</value>
   </data>
   <data name="ionMzValuesContextMenuItem.Text" xml:space="preserve">
     <value>Ion m/z Values</value>
   </data>
   <data name="observedMzValuesContextMenuItem.Size" type="System.Drawing.Size, System.Drawing">
-    <value>193, 22</value>
+    <value>263, 32</value>
   </data>
   <data name="observedMzValuesContextMenuItem.Text" xml:space="preserve">
     <value>Observed m/z Values</value>
   </data>
+  <data name="massErrorToolStripMenuItem.Size" type="System.Drawing.Size, System.Drawing">
+    <value>263, 32</value>
+  </data>
+  <data name="massErrorToolStripMenuItem.Text" xml:space="preserve">
+    <value>Mass Error</value>
+  </data>
   <data name="duplicatesContextMenuItem.Size" type="System.Drawing.Size, System.Drawing">
-    <value>193, 22</value>
+    <value>263, 32</value>
   </data>
   <data name="duplicatesContextMenuItem.Text" xml:space="preserve">
     <value>Duplicate Ions</value>
   </data>
   <data name="toolStripSeparator13.Size" type="System.Drawing.Size, System.Drawing">
-    <value>190, 6</value>
+    <value>260, 6</value>
   </data>
   <data name="lockYaxisContextMenuItem.Size" type="System.Drawing.Size, System.Drawing">
-    <value>193, 22</value>
+    <value>263, 32</value>
   </data>
   <data name="lockYaxisContextMenuItem.Text" xml:space="preserve">
     <value>Auto-scale Y-axis</value>
   </data>
   <data name="toolStripSeparator14.Size" type="System.Drawing.Size, System.Drawing">
-    <value>190, 6</value>
+    <value>260, 6</value>
   </data>
   <data name="spectrumPropsContextMenuItem.Size" type="System.Drawing.Size, System.Drawing">
-    <value>193, 22</value>
+    <value>263, 32</value>
   </data>
   <data name="spectrumPropsContextMenuItem.Text" xml:space="preserve">
     <value>Properties...</value>
   </data>
   <data name="showChromatogramsContextMenuItem.Size" type="System.Drawing.Size, System.Drawing">
-    <value>193, 22</value>
+    <value>263, 32</value>
   </data>
   <data name="showChromatogramsContextMenuItem.Text" xml:space="preserve">
     <value>Show Chromatograms</value>
   </data>
   <data name="toolStripSeparator15.Size" type="System.Drawing.Size, System.Drawing">
-    <value>190, 6</value>
+    <value>260, 6</value>
   </data>
   <data name="zoomSpectrumContextMenuItem.Size" type="System.Drawing.Size, System.Drawing">
-    <value>193, 22</value>
+    <value>263, 32</value>
   </data>
   <data name="zoomSpectrumContextMenuItem.Text" xml:space="preserve">
     <value>Zoom Out</value>
   </data>
   <data name="toolStripSeparator27.Size" type="System.Drawing.Size, System.Drawing">
-    <value>190, 6</value>
+    <value>260, 6</value>
   </data>
   <data name="contextMenuSpectrum.Size" type="System.Drawing.Size, System.Drawing">
-    <value>194, 436</value>
+    <value>264, 616</value>
   </data>
   <data name="&gt;&gt;contextMenuSpectrum.Name" xml:space="preserve">
     <value>contextMenuSpectrum</value>
@@ -1326,11 +1362,14 @@
   <metadata name="$this.Localizable" type="System.Boolean, mscorlib, Version=4.0.0.0, Culture=neutral, PublicKeyToken=b77a5c561934e089">
     <value>True</value>
   </metadata>
+  <metadata name="$this.TrayHeight" type="System.Int32, mscorlib, Version=4.0.0.0, Culture=neutral, PublicKeyToken=b77a5c561934e089">
+    <value>25</value>
+  </metadata>
   <data name="$this.AutoScaleDimensions" type="System.Drawing.SizeF, System.Drawing">
     <value>6, 13</value>
   </data>
   <data name="$this.ClientSize" type="System.Drawing.Size, System.Drawing">
-    <value>759, 424</value>
+    <value>819, 502</value>
   </data>
   <data name="$this.Padding" type="System.Windows.Forms.Padding, System.Windows.Forms">
     <value>10, 25, 10, 10</value>
@@ -1342,7 +1381,7 @@
     <value>modeUIHandler</value>
   </data>
   <data name="&gt;&gt;modeUIHandler.Type" xml:space="preserve">
-    <value>pwiz.Skyline.Util.Helpers+ModeUIExtender, Skyline-daily, Version=21.1.1.204, Culture=neutral, PublicKeyToken=null</value>
+    <value>pwiz.Skyline.Util.Helpers+ModeUIExtender, Skyline-daily, Version=21.2.1.579, Culture=neutral, PublicKeyToken=null</value>
   </data>
   <data name="&gt;&gt;btnAIons.Name" xml:space="preserve">
     <value>btnAIons</value>
@@ -1408,6 +1447,18 @@
     <value>toolStripSeparator2</value>
   </data>
   <data name="&gt;&gt;toolStripSeparator2.Type" xml:space="preserve">
+    <value>System.Windows.Forms.ToolStripSeparator, System.Windows.Forms, Version=4.0.0.0, Culture=neutral, PublicKeyToken=b77a5c561934e089</value>
+  </data>
+  <data name="&gt;&gt;propertiesButton.Name" xml:space="preserve">
+    <value>propertiesButton</value>
+  </data>
+  <data name="&gt;&gt;propertiesButton.Type" xml:space="preserve">
+    <value>System.Windows.Forms.ToolStripButton, System.Windows.Forms, Version=4.0.0.0, Culture=neutral, PublicKeyToken=b77a5c561934e089</value>
+  </data>
+  <data name="&gt;&gt;toolStripSeparator3.Name" xml:space="preserve">
+    <value>toolStripSeparator3</value>
+  </data>
+  <data name="&gt;&gt;toolStripSeparator3.Type" xml:space="preserve">
     <value>System.Windows.Forms.ToolStripSeparator, System.Windows.Forms, Version=4.0.0.0, Culture=neutral, PublicKeyToken=b77a5c561934e089</value>
   </data>
   <data name="&gt;&gt;copyMetafileButton.Name" xml:space="preserve">
@@ -1606,6 +1657,6 @@
     <value>ViewLibraryDlg</value>
   </data>
   <data name="&gt;&gt;$this.Type" xml:space="preserve">
-    <value>pwiz.Skyline.Util.FormEx, Skyline-daily, Version=21.1.1.204, Culture=neutral, PublicKeyToken=null</value>
+    <value>pwiz.Skyline.Util.FormEx, Skyline-daily, Version=21.2.1.579, Culture=neutral, PublicKeyToken=null</value>
   </data>
 </root>

@@ -112,6 +112,7 @@ enum PWIZ_API_DECL InstrumentModelType
     InstrumentModelType_Q_Exactive_Plus,
     InstrumentModelType_Q_Exactive_HF,
     InstrumentModelType_Q_Exactive_HF_X,
+    InstrumentModelType_Q_Exactive_UHMR,
     InstrumentModelType_Surveyor_PDA,
     InstrumentModelType_Accela_PDA,
     InstrumentModelType_Orbitrap_Fusion,
@@ -121,6 +122,7 @@ enum PWIZ_API_DECL InstrumentModelType
     InstrumentModelType_TSQ_Quantiva,
     InstrumentModelType_TSQ_Endura,
     InstrumentModelType_TSQ_Altis,
+    InstrumentModelType_TSQ_Altis_Plus,
     InstrumentModelType_TSQ_Quantis,
     InstrumentModelType_TSQ_8000_Evo,
     InstrumentModelType_TSQ_9000,
@@ -221,6 +223,7 @@ const InstrumentNameToModelMapping nameToModelMapping[] =
     {"TSQ QUANTIVA", InstrumentModelType_TSQ_Quantiva, Exact},
     {"TSQ ENDURA", InstrumentModelType_TSQ_Endura, Exact},
     {"TSQ ALTIS", InstrumentModelType_TSQ_Altis, Exact},
+    {"TSQ ALTIS PLUS", InstrumentModelType_TSQ_Altis_Plus, Exact},
     {"TSQ QUANTIS", InstrumentModelType_TSQ_Quantis, Exact},
     {"ELEMENT XR", InstrumentModelType_Element_XR, Exact},
     {"ELEMENT GD", InstrumentModelType_Element_GD, Exact},
@@ -229,6 +232,7 @@ const InstrumentNameToModelMapping nameToModelMapping[] =
     {"Q EXACTIVE PLUS", InstrumentModelType_Q_Exactive_Plus, Contains},
     {"Q EXACTIVE HF-X", InstrumentModelType_Q_Exactive_HF_X, Contains},
     {"Q EXACTIVE HF", InstrumentModelType_Q_Exactive_HF, Contains},
+    {"Q EXACTIVE UHMR", InstrumentModelType_Q_Exactive_UHMR, Contains},
     {"Q EXACTIVE", InstrumentModelType_Q_Exactive, Contains},
     {"EXACTIVE PLUS", InstrumentModelType_Exactive_Plus, Contains},
     {"EXACTIVE", InstrumentModelType_Exactive, Contains},
@@ -317,6 +321,7 @@ inline std::vector<IonizationType> getIonSourcesForInstrumentModel(InstrumentMod
         case InstrumentModelType_Q_Exactive_Plus:
         case InstrumentModelType_Q_Exactive_HF:
         case InstrumentModelType_Q_Exactive_HF_X:
+        case InstrumentModelType_Q_Exactive_UHMR:
         case InstrumentModelType_Orbitrap_Exploris_120:
         case InstrumentModelType_Orbitrap_Exploris_240:
         case InstrumentModelType_Orbitrap_Exploris_480:
@@ -336,6 +341,7 @@ inline std::vector<IonizationType> getIonSourcesForInstrumentModel(InstrumentMod
         case InstrumentModelType_TSQ_Quantiva:
         case InstrumentModelType_TSQ_Endura:
         case InstrumentModelType_TSQ_Altis:
+        case InstrumentModelType_TSQ_Altis_Plus:
         case InstrumentModelType_TSQ_Quantis:
             ionSources.push_back(IonizationType_ESI);
             break;
@@ -429,6 +435,7 @@ inline MassAnalyzerType convertScanFilterMassAnalyzer(ScanFilterMassAnalyzerType
         case InstrumentModelType_Q_Exactive_Plus:
         case InstrumentModelType_Q_Exactive_HF_X:
         case InstrumentModelType_Q_Exactive_HF:
+        case InstrumentModelType_Q_Exactive_UHMR:
         case InstrumentModelType_Orbitrap_Exploris_120:
         case InstrumentModelType_Orbitrap_Exploris_240:
         case InstrumentModelType_Orbitrap_Exploris_480:
@@ -490,6 +497,7 @@ inline MassAnalyzerType convertScanFilterMassAnalyzer(ScanFilterMassAnalyzerType
         case InstrumentModelType_TSQ_Quantiva:
         case InstrumentModelType_TSQ_Endura:
         case InstrumentModelType_TSQ_Altis:
+        case InstrumentModelType_TSQ_Altis_Plus:
         case InstrumentModelType_TSQ_Quantis:
             return MassAnalyzerType_Triple_Quadrupole;
 
@@ -564,6 +572,7 @@ inline std::vector<MassAnalyzerType> getMassAnalyzersForInstrumentModel(Instrume
         case InstrumentModelType_Q_Exactive_Plus:
         case InstrumentModelType_Q_Exactive_HF_X:
         case InstrumentModelType_Q_Exactive_HF:
+        case InstrumentModelType_Q_Exactive_UHMR:
         case InstrumentModelType_Orbitrap_Exploris_120:
         case InstrumentModelType_Orbitrap_Exploris_240:
         case InstrumentModelType_Orbitrap_Exploris_480:
@@ -618,6 +627,7 @@ inline std::vector<MassAnalyzerType> getMassAnalyzersForInstrumentModel(Instrume
         case InstrumentModelType_TSQ_Quantiva:
         case InstrumentModelType_TSQ_Endura:
         case InstrumentModelType_TSQ_Altis:
+        case InstrumentModelType_TSQ_Altis_Plus:
         case InstrumentModelType_TSQ_Quantis:
             massAnalyzers.push_back(MassAnalyzerType_Triple_Quadrupole);
             break;
@@ -701,6 +711,7 @@ inline std::vector<DetectorType> getDetectorsForInstrumentModel(InstrumentModelT
         case InstrumentModelType_Q_Exactive_Plus:
         case InstrumentModelType_Q_Exactive_HF_X:
         case InstrumentModelType_Q_Exactive_HF:
+        case InstrumentModelType_Q_Exactive_UHMR:
         case InstrumentModelType_Orbitrap_Exploris_120:
         case InstrumentModelType_Orbitrap_Exploris_240:
         case InstrumentModelType_Orbitrap_Exploris_480:
@@ -767,6 +778,7 @@ inline std::vector<DetectorType> getDetectorsForInstrumentModel(InstrumentModelT
         case InstrumentModelType_TSQ_Quantiva:
         case InstrumentModelType_TSQ_Endura:
         case InstrumentModelType_TSQ_Altis:
+        case InstrumentModelType_TSQ_Altis_Plus:
         case InstrumentModelType_TSQ_Quantis:
             detectors.push_back(DetectorType_Electron_Multiplier);
             break;

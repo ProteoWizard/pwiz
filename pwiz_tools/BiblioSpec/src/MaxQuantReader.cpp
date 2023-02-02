@@ -505,6 +505,10 @@ bool MaxQuantReader::parseFile()
     return true;
 }
 
+vector<PSM_SCORE_TYPE> MaxQuantReader::getScoreTypes() {
+    return vector<PSM_SCORE_TYPE>(1, MAXQUANT_SCORE);
+}
+
 bool MaxQuantReader::openFile()
 {
     Verbosity::debug("Opening TSV file.");

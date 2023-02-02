@@ -19,7 +19,7 @@ namespace pwiz.Skyline.Model.AuditLog {
     // class via a tool like ResGen or Visual Studio.
     // To add or remove a member, edit your .ResX file then rerun ResGen
     // with the /str option, or rebuild your VS project.
-    [global::System.CodeDom.Compiler.GeneratedCodeAttribute("System.Resources.Tools.StronglyTypedResourceBuilder", "15.0.0.0")]
+    [global::System.CodeDom.Compiler.GeneratedCodeAttribute("System.Resources.Tools.StronglyTypedResourceBuilder", "17.0.0.0")]
     [global::System.Diagnostics.DebuggerNonUserCodeAttribute()]
     [global::System.Runtime.CompilerServices.CompilerGeneratedAttribute()]
     public class EnumNames {
@@ -394,7 +394,7 @@ namespace pwiz.Skyline.Model.AuditLog {
         }
         
         /// <summary>
-        ///   Looks up a localized string similar to Targeted.
+        ///   Looks up a localized string similar to Targeted (obsolete).
         /// </summary>
         public static string FullScanAcquisitionMethod_Targeted {
             get {
@@ -1285,6 +1285,42 @@ namespace pwiz.Skyline.Model.AuditLog {
         }
         
         /// <summary>
+        ///   Looks up a localized string similar to Matching.
+        /// </summary>
+        public static string RelativeRT_Matching {
+            get {
+                return ResourceManager.GetString("RelativeRT_Matching", resourceCulture);
+            }
+        }
+        
+        /// <summary>
+        ///   Looks up a localized string similar to Overlapping.
+        /// </summary>
+        public static string RelativeRT_Overlapping {
+            get {
+                return ResourceManager.GetString("RelativeRT_Overlapping", resourceCulture);
+            }
+        }
+        
+        /// <summary>
+        ///   Looks up a localized string similar to Preceding.
+        /// </summary>
+        public static string RelativeRT_Preceding {
+            get {
+                return ResourceManager.GetString("RelativeRT_Preceding", resourceCulture);
+            }
+        }
+        
+        /// <summary>
+        ///   Looks up a localized string similar to Unknown.
+        /// </summary>
+        public static string RelativeRT_Unknown {
+            get {
+                return ResourceManager.GetString("RelativeRT_Unknown", resourceCulture);
+            }
+        }
+        
+        /// <summary>
         ///   Looks up a localized string similar to Use only scans within time frame of MS/MS IDs.
         /// </summary>
         public static string RetentionTimeFilterType_ms2_ids {
@@ -1366,6 +1402,33 @@ namespace pwiz.Skyline.Model.AuditLog {
         }
         
         /// <summary>
+        ///   Looks up a localized string similar to MS Amanda.
+        /// </summary>
+        public static string SearchEngine_MSAmanda {
+            get {
+                return ResourceManager.GetString("SearchEngine_MSAmanda", resourceCulture);
+            }
+        }
+        
+        /// <summary>
+        ///   Looks up a localized string similar to MSFragger.
+        /// </summary>
+        public static string SearchEngine_MSFragger {
+            get {
+                return ResourceManager.GetString("SearchEngine_MSFragger", resourceCulture);
+            }
+        }
+        
+        /// <summary>
+        ///   Looks up a localized string similar to MS-GF+.
+        /// </summary>
+        public static string SearchEngine_MSGFPlus {
+            get {
+                return ResourceManager.GetString("SearchEngine_MSGFPlus", resourceCulture);
+            }
+        }
+        
+        /// <summary>
         ///   Looks up a localized string similar to Max.
         /// </summary>
         public static string SelectOne_Max {
@@ -1398,6 +1461,78 @@ namespace pwiz.Skyline.Model.AuditLog {
         public static string SequenceTerminus_N {
             get {
                 return ResourceManager.GetString("SequenceTerminus_N", resourceCulture);
+            }
+        }
+        
+        /// <summary>
+        ///   Looks up a localized string similar to Assigned to the protein with the most peptides.
+        /// </summary>
+        public static string SharedPeptides_AssignedToBestProtein {
+            get {
+                return ResourceManager.GetString("SharedPeptides_AssignedToBestProtein", resourceCulture);
+            }
+        }
+        
+        /// <summary>
+        ///   Looks up a localized string similar to Assigned to first protein.
+        /// </summary>
+        public static string SharedPeptides_AssignedToFirstProtein {
+            get {
+                return ResourceManager.GetString("SharedPeptides_AssignedToFirstProtein", resourceCulture);
+            }
+        }
+        
+        /// <summary>
+        ///   Looks up a localized string similar to Duplicated between proteins.
+        /// </summary>
+        public static string SharedPeptides_DuplicatedBetweenProteins {
+            get {
+                return ResourceManager.GetString("SharedPeptides_DuplicatedBetweenProteins", resourceCulture);
+            }
+        }
+        
+        /// <summary>
+        ///   Looks up a localized string similar to Removed (peptides must be unique to a single protein).
+        /// </summary>
+        public static string SharedPeptides_Removed {
+            get {
+                return ResourceManager.GetString("SharedPeptides_Removed", resourceCulture);
+            }
+        }
+        
+        /// <summary>
+        ///   Looks up a localized string similar to Assigned to the protein group with the most peptides.
+        /// </summary>
+        public static string SharedPeptidesGroup_AssignedToBestProtein {
+            get {
+                return ResourceManager.GetString("SharedPeptidesGroup_AssignedToBestProtein", resourceCulture);
+            }
+        }
+        
+        /// <summary>
+        ///   Looks up a localized string similar to Assigned to first protein group.
+        /// </summary>
+        public static string SharedPeptidesGroup_AssignedToFirstProtein {
+            get {
+                return ResourceManager.GetString("SharedPeptidesGroup_AssignedToFirstProtein", resourceCulture);
+            }
+        }
+        
+        /// <summary>
+        ///   Looks up a localized string similar to Duplicated between protein groups.
+        /// </summary>
+        public static string SharedPeptidesGroup_DuplicatedBetweenProteins {
+            get {
+                return ResourceManager.GetString("SharedPeptidesGroup_DuplicatedBetweenProteins", resourceCulture);
+            }
+        }
+        
+        /// <summary>
+        ///   Looks up a localized string similar to Removed (peptides must be unique to a single protein group).
+        /// </summary>
+        public static string SharedPeptidesGroup_Removed {
+            get {
+                return ResourceManager.GetString("SharedPeptidesGroup_Removed", resourceCulture);
             }
         }
         

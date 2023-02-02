@@ -21,6 +21,7 @@ using System;
 using System.Collections.Generic;
 using System.IO;
 using System.Linq;
+using pwiz.Common.Collections;
 using pwiz.Common.DataBinding.Attributes;
 using pwiz.Common.DataBinding;
 using pwiz.Skyline.Controls.GroupComparison;
@@ -43,16 +44,10 @@ namespace pwiz.Skyline.Model.Databinding.Entities
     [InvariantDisplayName("Molecule")]
     public class Peptide : SkylineDocNode<PeptideDocNode>
     {
-        private readonly CachedValue<CalibrationCurveFitter> _calibrationCurveFitter;
-        private readonly CachedValue<Precursor[]> _precursors;
-        private readonly CachedValue<IDictionary<ResultKey, PeptideResult>> _results;
+        private readonly CachedValues _cachedValues = new CachedValues();
         public Peptide(SkylineDataSchema dataSchema, IdentityPath identityPath)
             : base(dataSchema, identityPath)
         {
-            _calibrationCurveFitter = CachedValue.Create(dataSchema,
-                () => new CalibrationCurveFitter(GetPeptideQuantifier(), SrmDocument.Settings));
-            _precursors = CachedValue.Create(dataSchema, ()=>DocNode.Children.Select(child=>new Precursor(DataSchema, new IdentityPath(IdentityPath, child.Id))).ToArray());
-            _results = CachedValue.Create(dataSchema, MakeResults);
         }
 
         [OneToMany(ForeignKey = "Peptide")]
@@ -61,7 +56,7 @@ namespace pwiz.Skyline.Model.Databinding.Entities
         {
             get
             {
-                return _precursors.Value;
+                return _cachedValues.GetValue1(this);
             }
         }
 
@@ -71,7 +66,7 @@ namespace pwiz.Skyline.Model.Databinding.Entities
         [HideWhen(AncestorOfType = typeof(FoldChangeBindingSource.FoldChangeRow))]
         public IDictionary<ResultKey, PeptideResult> Results
         {
-            get { return _results.Value; }
+            get { return _cachedValues.GetValue2(this); }
         }
 
         private IDictionary<ResultKey, PeptideResult> MakeResults()
@@ -183,6 +178,7 @@ namespace pwiz.Skyline.Model.Databinding.Entities
         }
 
         [DataGridViewColumnType(typeof(StandardTypeDataGridViewColumn))]
+        [Importable(Formatter = typeof(StandardType.PropertyFormatter))]
         public StandardType StandardType
         {
             get
@@ -414,13 +410,13 @@ namespace pwiz.Skyline.Model.Databinding.Entities
             }
         }
 
-        public LinkValue<CalibrationCurve> CalibrationCurve
+        public LinkValue<CalibrationCurveMetrics> CalibrationCurve
         {
             get
             {
                 CalibrationCurveFitter curveFitter = GetCalibrationCurveFitter();
-                CalibrationCurve calibrationCurve = curveFitter.GetCalibrationCurve();
-                return new LinkValue<CalibrationCurve>(calibrationCurve, (sender, args) =>
+                var calibrationCurve = curveFitter.GetCalibrationCurveMetrics();
+                return new LinkValue<CalibrationCurveMetrics>(calibrationCurve, (sender, args) =>
                 {
                     if (null == DataSchema.SkylineWindow)
                     {
@@ -460,7 +456,7 @@ namespace pwiz.Skyline.Model.Databinding.Entities
 
         public CalibrationCurveFitter GetCalibrationCurveFitter()
         {
-            return _calibrationCurveFitter.Value;
+            return _cachedValues.GetValue(this);
         }
 
         public override string GetDeleteConfirmation(int nodeCount)
@@ -555,6 +551,31 @@ namespace pwiz.Skyline.Model.Databinding.Entities
         protected override Type SkylineDocNodeType
         {
             get { return typeof(Peptide); }
+        }
+
+        private class CachedValues : CachedValues<Peptide, CalibrationCurveFitter, ImmutableList<Precursor>,
+            IDictionary<ResultKey, PeptideResult>>
+        {
+            protected override SrmDocument GetDocument(Peptide owner)
+            {
+                return owner.SrmDocument;
+            }
+
+            protected override CalibrationCurveFitter CalculateValue(Peptide owner)
+            {
+                return new CalibrationCurveFitter(owner.GetPeptideQuantifier(), owner.SrmDocument.Settings);
+            }
+
+            protected override ImmutableList<Precursor> CalculateValue1(Peptide owner)
+            {
+                return ImmutableList.ValueOf(owner.DocNode.Children.Select(child =>
+                    new Precursor(owner.DataSchema, new IdentityPath(owner.IdentityPath, child.Id))));
+            }
+
+            protected override IDictionary<ResultKey, PeptideResult> CalculateValue2(Peptide owner)
+            {
+                return owner.MakeResults();
+            }
         }
     }
 }

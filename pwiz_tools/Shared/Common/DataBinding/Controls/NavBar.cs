@@ -194,11 +194,12 @@ namespace pwiz.Common.DataBinding.Controls
                     }
                     foreach (var viewSpec in viewSpecList.ViewSpecs)
                     {
-                        var item = NewChooseViewItem(group, viewSpec);
-                        if (null != item)
+                        if (!ViewContext.CanDisplayView(viewSpec))
                         {
-                            items.Add(item);
+                            continue;
                         }
+
+                        items.Add(NewChooseViewItem(group, viewSpec));
                     }
                     if (!items.Any())
                     {
@@ -251,11 +252,6 @@ namespace pwiz.Common.DataBinding.Controls
 
         ToolStripItem NewChooseViewItem(ViewGroup viewGroup, ViewSpec viewSpec)
         {
-            var viewInfo = ViewContext.GetViewInfo(new ViewName(viewGroup.Id, viewSpec.Name));
-            if (null == viewInfo)
-            {
-                return null;
-            }
             Image image = null;
             int imageIndex = ViewContext.GetImageIndex(viewSpec);
             if (imageIndex >= 0)

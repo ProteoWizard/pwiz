@@ -70,8 +70,11 @@ IdpXMLreader::~IdpXMLreader()
 // as spectrum source files are encountered,
 // the spectra are added to tables
 bool IdpXMLreader::parseFile() {
-
     return parse();
+}
+
+vector<PSM_SCORE_TYPE> IdpXMLreader::getScoreTypes() {
+    return vector<PSM_SCORE_TYPE>(1, IDPICKER_FDR);
 }
 
 void IdpXMLreader::startElement(const XML_Char* name, 

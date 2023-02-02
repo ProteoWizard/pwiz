@@ -4,9 +4,9 @@
 
 #define LIBSVM_VERSION 300
 
-#ifdef __cplusplus
-extern "C" {
-#endif
+// don't conflict with other projects using libsvm
+namespace pwiz {
+namespace svm {
 
 extern int libsvm_version;
 
@@ -99,8 +99,7 @@ void svm_set_print_string_function(void (*print_func)(const char *));
 // this function will be removed in future release
 void svm_destroy_model(struct svm_model *model_ptr); 
 
-#ifdef __cplusplus
-}
-#endif
+} // namespace svm
+} // namespace pwiz
 
 #endif /* _LIBSVM_H */

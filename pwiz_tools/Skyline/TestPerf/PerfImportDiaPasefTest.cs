@@ -43,7 +43,7 @@ namespace TestPerf // Note: tests in the "TestPerf" namespace only run when the 
     {
         private bool IsRecordMode { get { return false; } }
 
-        [TestMethod]
+        [TestMethod, NoParallelTesting(TestExclusionReason.VENDOR_FILE_LOCKING)] // No parallel testing as Bruker reader locks the files it reads
         public void BrukerDiaPasefImportTest()
         {
             // RunPerfTests = true; // Uncomment this to force test to run in IDE
@@ -96,7 +96,7 @@ namespace TestPerf // Note: tests in the "TestPerf" namespace only run when the 
             foreach (var pair in doc1.PeptidePrecursorPairs)
             {
                 AssertEx.IsTrue(results.TryLoadChromatogram(0, pair.NodePep, pair.NodeGroup,
-                    tolerance, true, out var chromGroupInfo));
+                    tolerance, out var chromGroupInfo));
 
                 foreach (var chromGroup in chromGroupInfo)
                 {

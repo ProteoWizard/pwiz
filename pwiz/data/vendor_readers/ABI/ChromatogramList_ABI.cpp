@@ -323,6 +323,21 @@ PWIZ_API_DECL ChromatogramPtr ChromatogramList_ABI::chromatogram(size_t index, D
             }
         }
         break;
+
+        case MS_emission_chromatogram:
+        {
+            WiffFile::ADCTrace twc;
+            wifffile_->getTWC(sample, twc);
+
+            if (getBinaryData)
+                result->setTimeIntensityArrays(twc.x, twc.y, UO_minute, UO_absorbance_unit);
+            else
+            {
+                result->setTimeIntensityArrays(std::vector<double>(), std::vector<double>(), UO_minute, UO_absorbance_unit);
+                result->defaultArrayLength = twc.x.size();
+            }
+        }
+        break;
     }
 
     return result;
@@ -341,8 +356,10 @@ PWIZ_API_DECL void ChromatogramList_ABI::createIndex() const
         idToIndexMap_[ie.id] = ie.index;
     }
 
-    index_.push_back(IndexEntry());
+    // wiff2 doesn't support BPC for now
+    if (!bal::iends_with(wifffile_->getWiffPath(), ".wiff2"))
     {
+        index_.push_back(IndexEntry());
         IndexEntry& ie = index_.back();
         ie.index = index_.size() - 1;
         ie.id = "BPC";
@@ -380,12 +397,18 @@ PWIZ_API_DECL void ChromatogramList_ABI::createIndex() const
 
                 std::ostringstream oss;
                 oss << polarityStringForFilter(ABI::translate(ie.experiment->getPolarity())) <<
-                        "SRM SIC Q1=" << ie.q1 <<
+                       "SRM SIC Q1=" << ie.q1 <<
                        " Q3=" << ie.q3 <<
                        " sample=" << ie.sample <<
                        " period=" << ie.period <<
                        " experiment=" << ie.experiment->getExperimentNumber() <<
                        " transition=" << ie.transition;
+                if (target.endTime > 0)
+                    oss << " start=" << target.startTime << " end=" << target.endTime;
+                if (target.collisionEnergy > 0)
+                    oss << " ce=" << target.collisionEnergy;
+                if (!target.compoundID.empty())
+                    oss << " name=" << target.compoundID;
                 ie.id = oss.str();
                 idToIndexMap_[ie.id] = ie.index;
             }
@@ -412,6 +435,12 @@ PWIZ_API_DECL void ChromatogramList_ABI::createIndex() const
                     " period=" << ie.period <<
                     " experiment=" << ie.experiment->getExperimentNumber() <<
                     " transition=" << ie.transition;
+                if (target.endTime > 0)
+                    oss << " start=" << target.startTime << " end=" << target.endTime;
+                if (target.collisionEnergy > 0)
+                    oss << " ce=" << target.collisionEnergy;
+                if (!target.compoundID.empty())
+                    oss << " name=" << target.compoundID;
                 ie.id = oss.str();
                 idToIndexMap_[ie.id] = ie.index;
             }
@@ -435,6 +464,21 @@ PWIZ_API_DECL void ChromatogramList_ABI::createIndex() const
         ie.sample = sample;
         ie.transition = i;
         ie.chromatogramType = bal::icontains(name, "Pressure") ? MS_pressure_chromatogram : MS_flow_rate_chromatogram;
+        idToIndexMap_[ie.id] = ie.index;
+    }
+
+    WiffFile::ADCTrace twc;
+    wifffile_->getTWC(sample, twc);
+    if (!twc.x.empty())
+    {
+
+        index_.push_back(IndexEntry());
+        IndexEntry& ie = index_.back();
+        ie.index = index_.size() - 1;
+        ie.id = "TWC";
+        ie.sample = sample;
+        ie.transition = 0;
+        ie.chromatogramType = MS_emission_chromatogram;
         idToIndexMap_[ie.id] = ie.index;
     }
 

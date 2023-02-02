@@ -214,7 +214,7 @@
     <value>4</value>
   </data>
   <data name="labelSoftwareVersion.Text" xml:space="preserve">
-    <value>Skyline (64ビット: 開発者ビルド) 19.0.0.000 (abc123456)</value>
+    <value>Skyline (64ビット: 開発者ビルド) 22.0.0.000 (abc123456)</value>
   </data>
   <data name="&gt;&gt;labelSoftwareVersion.Name" xml:space="preserve">
     <value>labelSoftwareVersion</value>
@@ -464,12 +464,12 @@ https://www.zlib.net</value>
     <value>10</value>
   </data>
   <data name="linkLabel1.Text" xml:space="preserve">
-    <value>Copyright © 2008-2021 University of Washington, 無断複写・転載を禁じます。
+    <value>Copyright © 2008-2023 University of Washington, 無断複写・転載を禁じます。
 
 MacCoss Lab, Department of Genome Sciences, UW
 
- このソフトウェアは、連邦政府および民間からの助成金を受け、
-MacCoss labにより作成されました。詳細については、
+このソフトウェアは、連邦政府および民間からの助成金を受け、
+MacCoss Labにより作成されました。詳細については、
 Skylineウェブサイトをご覧ください。</value>
   </data>
   <data name="&gt;&gt;linkLabel1.Name" xml:space="preserve">

@@ -61,8 +61,6 @@ namespace pwiz.Skyline.Model.Results
 
         protected override bool StateChanged(SrmDocument document, SrmDocument previous)
         {
-            if (previous == null)
-                return true;
             // If using full-scan filtering, then completion of library load
             // is a state change event, since peak picking cannot occur until
             // libraries are loaded.
@@ -185,7 +183,7 @@ namespace pwiz.Skyline.Model.Results
                 // behind this one, or the document has become loaded, then this thread
                 // has nothing to do.
                 var docInLock = container.Document;
-                if (StateChanged(docCurrent, docInLock) || IsLoaded(docInLock))
+                if (IsStateChanged(docCurrent, docInLock) || IsLoaded(docInLock))
                     return false;
                 docCurrent = docInLock;
 
@@ -289,6 +287,7 @@ namespace pwiz.Skyline.Model.Results
                         // Skip settings change for deserialized document when it first becomes connected with its cache
                         results = results.UpdateCaches(documentPath, resultsLoad);
                         docNew = docCurrent.ChangeSettingsNoDiff(docCurrent.Settings.ChangeMeasuredResults(results));
+                        docNew = _manager.ApplyMetadataRules(docNew);
                     }
                     else
                     {
@@ -1013,6 +1012,7 @@ namespace pwiz.Skyline.Model.Results
         public eIonMobilityUnits IonMobilityUnits { get; private set; }
         public string SampleId { get; private set; }
         public string InstrumentSerialNumber { get; private set; }
+        public bool IsSrm { get; private set; }
 
         public IList<MsInstrumentConfigInfo> InstrumentInfoList
         {
@@ -1061,6 +1061,7 @@ namespace pwiz.Skyline.Model.Results
                                                      im.IonMobilityUnits = fileInfo.IonMobilityUnits;
                                                      im.SampleId = fileInfo.SampleId;
                                                      im.InstrumentSerialNumber = fileInfo.InstrumentSerialNumber;
+                                                     im.IsSrm = fileInfo.IsSrm;
                                                  });
         }
 
@@ -1140,7 +1141,8 @@ namespace pwiz.Skyline.Model.Results
                 return false;
             if (!ArrayUtil.EqualsDeep(other.RetentionTimeAlignments, RetentionTimeAlignments))
                 return false;
-
+            if (!IsSrm.Equals(other.IsSrm))
+                return false;
             return true;
         }
 
@@ -1175,6 +1177,7 @@ namespace pwiz.Skyline.Model.Results
                 result = (result*397) ^ IonMobilityUnits.GetHashCode();
                 result = (result*397) ^ SampleId?.GetHashCode() ?? 0;
                 result = (result*397) ^ InstrumentSerialNumber?.GetHashCode() ?? 0;
+                result = (result*397) ^ IsSrm.GetHashCode();
                 return result;
             }
         }

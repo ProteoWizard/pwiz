@@ -42,8 +42,18 @@ namespace pwiz.SkylineTest
         private void TestPentaneAdduct(string adductText, string expectedFormula, int expectedCharge, HashSet<string> coverage)
         {
             var adduct = Adduct.FromStringAssumeProtonated(adductText);
-            var actual = IonInfo.ApplyAdductToFormula(PENTANE, adduct).ToString();
-            Assert.AreEqual(expectedFormula, actual, "unexpected formula for adduct "+adduct);
+            var actualFormula = IonInfo.ApplyAdductToFormula(PENTANE, adduct).ToString();
+            if (!Equals(expectedFormula, actualFormula))
+            {
+                // ApplyAdductToFormula doesn't necessarily preserve element order, so check again as dictionary
+                var dictExpected = IonInfo.ApplyAdductToMoleculeAsDictionary(expectedFormula, Adduct.EMPTY);
+                var dictActual = IonInfo.ApplyAdductToMoleculeAsDictionary(PENTANE, adduct);
+                if (dictExpected.Count != dictActual.Count || 
+                    !dictExpected.All(kvp => dictActual.TryGetValue(kvp.Key, out var v) && v == kvp.Value))
+                {
+                    Assert.AreEqual(expectedFormula, actualFormula, "unexpected formula for adduct " + adduct);
+                }
+            }
             Assert.AreEqual(expectedCharge, adduct.AdductCharge, "unexpected charge for adduct " + adduct);
             coverage.Add(adduct.AsFormula());
         }
@@ -75,6 +85,12 @@ namespace pwiz.SkylineTest
         private void TestAdductOperators()
         {
             // Test some underlying formula handling for fanciful user-supplied values
+            AssertEx.AreEqual("COOOHN", BioMassCalc.MONOISOTOPIC.RegularizeFormula("COOOHNS0"));
+            AssertEx.AreEqual("XeC12N1", BioMassCalc.MONOISOTOPIC.RegularizeFormula("XeC12N1H0"));
+            AssertEx.AreEqual("XeC12N1", BioMassCalc.MONOISOTOPIC.RegularizeFormula("XeC12N01H0"));
+            AssertEx.AreEqual("C'3C2H9NO2O\"2S1", BioMassCalc.MONOISOTOPIC.RegularizeFormula("C'3C2H9H'0NO2O\"2S001"));
+            var labels = new Dictionary<string, int>(){{"C'",3},{"O\"",2}}; // Find the C'3O"2 in  C'3C2H9H'0NO2O"2S (yes, H'0 - seen in the wild - but we drop zero counts)
+            AssertEx.AreEqual(labels, BioMassCalc.MONOISOTOPIC.FindIsotopeLabelsInFormula("C'3C2H9H'0NO2O\"2S"));
             AssertEx.AreEqual(Adduct.SINGLY_PROTONATED, Adduct.FromStringAssumeProtonated("(M+H)+") );
             AssertEx.IsTrue(Adduct.FromStringAssumeProtonatedNonProteomic("[M-H2O+H]+").SameEffect(Adduct.FromStringAssumeProtonatedNonProteomic("(M+H)+[-H2O]")));
             Assert.IsTrue(Molecule.AreEquivalentFormulas("C10H30Si5O5H-CH4", "C9H27O5Si5"));
@@ -265,6 +281,7 @@ namespace pwiz.SkylineTest
             TestPentaneAdduct("[M+2NH4]", "C5H20N2", 2, coverage); // multiple of a group
             TestPentaneAdduct("[M+2(NH4)]", "C5H20N2", 2, coverage); // multiple of a group in parenthesis
             TestPentaneAdduct("[M+2H]", "C5H14", 2, coverage);
+            TestPentaneAdduct("[M+2Cu65+2H]", "C5Cu'2H14", 2, coverage); // With heavy copper as in MaConDa Contaminants DB https://www.maconda.bham.ac.uk/downloads/MaConDa__v1_0__csv.zip 
             TestPentaneAdduct("[M2C13+2H]", "C3C'2H14", 2, coverage); // Labeled
             TestPentaneAdduct("[2M2C13+2H]", "C6C'4H26", 2, coverage); // Labeled dimer
             TestPentaneAdduct("[2M2C14+2H]", "C6C\"4H26", 2, coverage); // Labeled dimer
@@ -425,6 +442,9 @@ namespace pwiz.SkylineTest
             mz = BioMassCalc.CalculateIonMass(new TypedMass(massHectochlorin, MassType.Monoisotopic), heavy);
             Assert.AreEqual(2 * (massHectochlorin + 1.23456), mz, .001);
 
+            TestException(PENTANE, "zM+2H"); // That "z" doesn't make any sense as a mass multiplier (must be a positive integer)
+            TestException(PENTANE, "-2M+2H"); // That "-2" doesn't make any sense as a mass multiplier (must be a positive integer)
+            TestException("", "+M"); // Meaningless, used to cause an exception in our parser
             TestException(Hectochlorin, "M3Cl37+H"); // Trying to label more chlorines than exist in the molecule
             TestException(Hectochlorin, "M-3Cl+H"); // Trying to remove more chlorines than exist in the molecule
             TestException(PENTANE, "M+foo+H"); // Unknown adduct

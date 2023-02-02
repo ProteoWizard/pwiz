@@ -29,6 +29,8 @@
 #include "WatersMseReader.h"
 #include "boost/algorithm/string.hpp"
 #include "boost/filesystem.hpp"
+#include <boost/range/adaptor/map.hpp>
+#include <boost/range/algorithm/copy.hpp>
 #include "pwiz/utility/chemistry/Ion.hpp"
 
 #ifdef USE_WATERS_READER
@@ -253,6 +255,10 @@ bool WatersMseReader::parseFile(){
     buildTables(WATERS_MSE_PEPTIDE_SCORE);
     
     return true;
+}
+
+std::vector<PSM_SCORE_TYPE> WatersMseReader::getScoreTypes() {
+    return std::vector<PSM_SCORE_TYPE>(1, WATERS_MSE_PEPTIDE_SCORE);
 }
 
 /**
@@ -619,8 +625,11 @@ void WatersMseReader::parseModString(LineEntry& entry,
                 break;
         }
         if (j == mods_.rend()) {
-            throw BlibException(false, "The modification '%s' on line %d is not recognized.",
-                                i->c_str(), lineNum_);
+            // We support a very limited hardcoded list of understood modifications, go ahead and list them in the error message.
+            // If we ever expand this we may want to stop listing them all, but for now this is reasonably helpful.
+            string modList = boost::algorithm::join(mods_ | boost::adaptors::map_keys, "\", \"");
+            throw BlibException(false, "The modification '%s' on line %d is not recognized. Supported modifications include: \"%s\".",
+                                i->c_str(), lineNum_, modList.c_str());
         }
         // find the position in the sequence
         size_t openBrace = i->rfind('(');

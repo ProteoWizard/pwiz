@@ -244,6 +244,8 @@ class PWIZ_API_DECL ScanInfo
     virtual void reinitialize(const std::string& filterString) = 0;
 
     virtual long scanNumber() const = 0;
+    virtual int scanSegmentNumber() const = 0;
+    virtual int scanEventNumber() const = 0;
 
     // info contained in filter string
     virtual std::string filter() const = 0;

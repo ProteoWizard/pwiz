@@ -33,6 +33,7 @@ namespace SkylineTester
     {
         public const int MAX_PROCESS_SILENCE_MINUTES = 60; // If a process is silent longer than this, assume it's hung
         public const int MAX_PROCESS_OUTPUT_DELAY = 700; // milliseconds 
+        public const int RETRY_WAIT_SECONDS = 60; // Wait this long between retries
         private enum EXIT_TYPE {error_stop, error_restart, success};
         public string DefaultDirectory { get; set; }
         public Button StopButton { get; set; }
@@ -71,6 +72,19 @@ namespace SkylineTester
 
         #region Add/run commands
 
+        // Insert a pause before next executed command
+        public void InsertPause()
+        {
+            lock (_commands)
+            {
+                var pauseCommand = "waitfor nothing /T " + RETRY_WAIT_SECONDS;
+                if (_commands.Count == 0 || _commands[0] != pauseCommand)
+                {
+                    _commands.Insert(0, pauseCommand);
+                }
+            }
+        }
+
         /// <summary>
         /// Add a command and arguments to be executed by the command shell by the Run
         /// command.  You can also add a comment line starting with '#'.  Multiple Add
@@ -78,15 +92,21 @@ namespace SkylineTester
         /// </summary>
         public int Add(string command, params object[] args)
         {
-            _commands.Add(command.With(args));
-            return _commands.Count - 1;
+            lock (_commands)
+            {
+                _commands.Add(command.With(args));
+                return _commands.Count - 1;
+            }
         }
 
         public int AddWithRetry(string command, params object[] args)
         {
-            var result = Add(command, args);
-            _commandsWithRetry.Add(_commands[result]);
-            return result;
+            lock (_commands)
+            {
+                var result = Add(command, args);
+                _commandsWithRetry.Add(_commands[result]);
+                return result;
+            }
         }
 
         public void AddImmediate(string command, params object[] args)
@@ -144,6 +164,16 @@ namespace SkylineTester
             RunUI(RunNext);
         }
 
+        private string GetNextCommand()
+        {
+            lock (_commands)
+            {
+                if (NextCommand < _commands.Count)
+                    return _commands[NextCommand++];
+                return null;
+            }
+        }
+
         // Called on UI thread.
         private void RunNext()
         {
@@ -152,10 +182,9 @@ namespace SkylineTester
             if (NextCommand > 0 && FinishedOneCommand != null)
                 FinishedOneCommand();
 
-            while (NextCommand < _commands.Count)
+            string line;
+            while ((line = GetNextCommand()) != null)
             {
-                var line = _commands[NextCommand++];
-
                 // Handle comment line.
                 if (line.StartsWith("#"))
                 {
@@ -220,7 +249,7 @@ namespace SkylineTester
                             catch (Exception e)
                             {
                                 Log(Environment.NewLine + "!!!! COMMAND FAILED !!!! unable to remove folder " + deleteDir + " : " + e);
-                                CommandsDone(EXIT_TYPE.error_stop);
+                                CommandsDone(IsUnattended ? EXIT_TYPE.error_restart : EXIT_TYPE.error_stop);
                                 return;
                             }
                         }
@@ -279,15 +308,16 @@ namespace SkylineTester
             if (exitType == EXIT_TYPE.error_restart)
             {
                 // restart a maximum of 10 times and within 30 minutes of starting
-                if (RestartCount < 10 && DateTime.Now.Subtract(RunStartTime) < new TimeSpan(0, 0, 30, 0, 0)) 
+                var MaxRestartCount = 10;
+                if (RestartCount < MaxRestartCount && DateTime.UtcNow.Subtract(RunStartTime) < new TimeSpan(0, 0, 30, 0, 0)) 
                 {
                     restart = true;
                     RestartCount++;
-                    Log("# Restarting (take "+RestartCount+") " + DateTime.Now.ToString("f") + Environment.NewLine + Environment.NewLine);
+                    Log("# Will retry in " + RETRY_WAIT_SECONDS + " seconds (this will be retry #" + RestartCount + " of " + MaxRestartCount + ") " + DateTime.Now.ToString("f") + Environment.NewLine + Environment.NewLine);
                 }
                 else
                 {
-                    Log("# Restart count exceeded" + Environment.NewLine + Environment.NewLine);
+                    Log("# Retry count exceeded" + Environment.NewLine + Environment.NewLine);
                     exitType = EXIT_TYPE.error_stop;
                 }
             }
@@ -301,7 +331,10 @@ namespace SkylineTester
             }
             else
             {
-                _commands.Clear();
+                lock (_commands)
+                {
+                    _commands.Clear();
+                }
                 _doneAction(exitType == EXIT_TYPE.success);
             }
         } 
@@ -361,9 +394,18 @@ namespace SkylineTester
             _process.StartInfo.EnvironmentVariables.Add(@"GIT_HTTP_LOW_SPEED_LIMIT", @"1000"); // Fail if transfer rate falls below 1Kbps,
             _process.StartInfo.EnvironmentVariables.Add(@"GIT_HTTP_LOW_SPEED_TIME", @"300");   // and stays that way for 5 minutes
 
-            _process.OutputDataReceived += HandleOutput;
-            _process.ErrorDataReceived += HandleOutput;
-            _process.Exited += ProcessExit;
+            if (exe.StartsWith("waitfor", StringComparison.InvariantCultureIgnoreCase))
+            {
+                _process.OutputDataReceived += IgnoreOutput;
+                _process.ErrorDataReceived += IgnoreOutput;
+                _process.Exited += ProcessExitIgnoreError;
+            }
+            else
+            {
+                _process.OutputDataReceived += HandleOutput;
+                _process.ErrorDataReceived += HandleOutput;
+                _process.Exited += ProcessExit;
+            }
             _process.Start();
             _processName = _process.ProcessName;
             _process.BeginOutputReadLine();
@@ -389,6 +431,11 @@ namespace SkylineTester
         {
             ResetLastOutputTime();
             Log(e.Data);
+        }
+
+        private void IgnoreOutput(object sender, DataReceivedEventArgs e)
+        {
+            // Do nothing
         }
 
         /// <summary>
@@ -430,6 +477,8 @@ namespace SkylineTester
             get { return _process != null && !_process.HasExited; }
         }
 
+        public bool IsKilled => _processKilled || _process == null;
+
         public bool IsWaiting { get; set; }
 
         public bool IsDebuggerAttached 
@@ -451,6 +500,16 @@ namespace SkylineTester
         /// </summary>
         void ProcessExit(object sender, EventArgs e)
         {
+            ProcessExit(false);
+        }
+
+        void ProcessExitIgnoreError(object sender, EventArgs e)
+        {
+            ProcessExit(true);
+        }
+
+        void ProcessExit(bool ignoreError)
+        {
             if (_process == null)
                 return;
 
@@ -460,7 +519,7 @@ namespace SkylineTester
             bool processKilled = _processKilled;
             _processKilled = false;
 
-            if (exitCode == 0)
+            if (ignoreError || exitCode == 0)
             {
                 // Tricky: we have to wait for the final output of the last process to
                 // be logged, otherwise the output from the next process may be interleaved.

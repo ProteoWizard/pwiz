@@ -82,6 +82,9 @@ public ref class ReaderConfig
     /// when true, all drift bins/scans in a frame/block are written in combined form instead of as individual spectra
     bool combineIonMobilitySpectra;
 
+    // when true, scans with only calibration data will be ignored (currently Waters lockmass only)
+    bool ignoreCalibrationScans;
+
     /// when true, Waters SONAR data populates "drift" information with bin number instead of pseudo ion mobility values
     bool reportSonarBins;
 
@@ -108,12 +111,17 @@ public ref class ReaderConfig
     /// when true, global TIC and BPC chromatograms consist of only MS1 spectra (thus the number of time points cannot be assumed to be equal to the number of spectra)
     bool globalChromatogramsAreMs1Only;
 
+    // When true, vendor-specific DDA processing is enabled. For Waters data, this involves combining MS2 scans which refer
+    // to the same precursor from the same survey scan, and lockmass-correcting the precursor mass (if the lockmass refiner is active).
+    bool ddaProcessing;
+
     ReaderConfig()
     : simAsSpectra(false)
     , srmAsSpectra(false)
     , acceptZeroLengthSpectra(false)
     , ignoreZeroIntensityPoints(false)
     , combineIonMobilitySpectra(false)
+    , ignoreCalibrationScans(false)
     , reportSonarBins(false)
     , unknownInstrumentIsError(false)
     , adjustUnknownTimeZonesToHostTimeZone(true)
@@ -121,6 +129,7 @@ public ref class ReaderConfig
     , allowMsMsWithoutPrecursor(true)
     , sortAndJitter(false)
     , globalChromatogramsAreMs1Only(false)
+    , ddaProcessing(false)
     {
     }
 };

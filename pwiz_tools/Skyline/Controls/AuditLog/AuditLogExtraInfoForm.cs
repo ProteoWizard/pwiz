@@ -55,7 +55,7 @@ namespace pwiz.Skyline.Controls.AuditLog
 
         private void copyButton_Click(object sender, EventArgs e)
         {
-            ClipboardEx.SetText(extraInfoTextBox.Text);
+            ClipboardHelper.SetClipboardText(this, extraInfoTextBox.Text);
         }
 
         // Test Support

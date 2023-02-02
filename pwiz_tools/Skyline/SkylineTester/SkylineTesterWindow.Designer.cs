@@ -139,9 +139,9 @@ namespace SkylineTester
             this.runLoops = new System.Windows.Forms.RadioButton();
             this.runIndefinitely = new System.Windows.Forms.RadioButton();
             this.testsGroup = new System.Windows.Forms.GroupBox();
+            this.testSet = new System.Windows.Forms.ComboBox();
             this.runMode = new System.Windows.Forms.ComboBox();
             this.label21 = new System.Windows.Forms.Label();
-            this.showTutorialsOnly = new System.Windows.Forms.CheckBox();
             this.testsTree = new SkylineTester.MyTreeView();
             this.skipCheckedTests = new System.Windows.Forms.RadioButton();
             this.runCheckedTests = new System.Windows.Forms.RadioButton();
@@ -262,6 +262,7 @@ namespace SkylineTester
             this.label19 = new System.Windows.Forms.Label();
             this.buttonStop = new System.Windows.Forms.Button();
             this.tabRunStats = new System.Windows.Forms.TabPage();
+            this.buttonRunStatsExportCSV = new System.Windows.Forms.Button();
             this.labelCompareTo = new System.Windows.Forms.Label();
             this.comboBoxRunStatsCompare = new System.Windows.Forms.ComboBox();
             this.comboBoxRunStats = new System.Windows.Forms.ComboBox();
@@ -305,6 +306,11 @@ namespace SkylineTester
             this.radioButton5 = new System.Windows.Forms.RadioButton();
             this.toolTip1 = new System.Windows.Forms.ToolTip(this.components);
             this.myTreeView1 = new SkylineTester.MyTreeView();
+            this.parallelWorkerCount = new System.Windows.Forms.NumericUpDown();
+            this.label22 = new System.Windows.Forms.Label();
+            this.runParallel = new System.Windows.Forms.RadioButton();
+            this.runSerial = new System.Windows.Forms.RadioButton();
+            this.parallelGroup = new System.Windows.Forms.GroupBox();
             this.mainPanel.SuspendLayout();
             this.statusStrip1.SuspendLayout();
             this.tabs.SuspendLayout();
@@ -359,6 +365,8 @@ namespace SkylineTester
             this.tabRunStats.SuspendLayout();
             ((System.ComponentModel.ISupportInitialize)(this.dataGridRunStats)).BeginInit();
             this.menuStrip1.SuspendLayout();
+            ((System.ComponentModel.ISupportInitialize)(this.parallelWorkerCount)).BeginInit();
+            this.parallelGroup.SuspendLayout();
             this.SuspendLayout();
             // 
             // mainPanel
@@ -573,7 +581,7 @@ namespace SkylineTester
             this.runForms.Name = "runForms";
             this.runForms.Size = new System.Drawing.Size(100, 28);
             this.runForms.TabIndex = 4;
-            this.runForms.Text = "Run";
+            this.runForms.Text = "&Run";
             this.runForms.UseVisualStyleBackColor = true;
             this.runForms.Click += new System.EventHandler(this.RunOrStop_Clicked);
             // 
@@ -869,9 +877,11 @@ namespace SkylineTester
             this.tutorialsDemoMode.Location = new System.Drawing.Point(7, 106);
             this.tutorialsDemoMode.Margin = new System.Windows.Forms.Padding(4);
             this.tutorialsDemoMode.Name = "tutorialsDemoMode";
-            this.tutorialsDemoMode.Size = new System.Drawing.Size(82, 17);
+            this.tutorialsDemoMode.Size = new System.Drawing.Size(145, 17);
             this.tutorialsDemoMode.TabIndex = 6;
-            this.tutorialsDemoMode.Text = "Demo mode";
+            this.tutorialsDemoMode.Text = "Demo mode (deprecated)";
+            this.toolTip1.SetToolTip(this.tutorialsDemoMode, "Use the Tests tab\'s \'Tutorials only\', \'Mode\', and \'Run indefinitely\' settings for" +
+        " more fine-grained control of demos");
             this.tutorialsDemoMode.UseVisualStyleBackColor = true;
             // 
             // label5
@@ -918,13 +928,14 @@ namespace SkylineTester
             this.runTutorials.Name = "runTutorials";
             this.runTutorials.Size = new System.Drawing.Size(100, 28);
             this.runTutorials.TabIndex = 1;
-            this.runTutorials.Text = "Run";
+            this.runTutorials.Text = "&Run";
             this.runTutorials.UseVisualStyleBackColor = true;
             this.runTutorials.Click += new System.EventHandler(this.RunOrStop_Clicked);
             // 
             // tabTests
             // 
             this.tabTests.BackColor = System.Drawing.Color.FromArgb(((int)(((byte)(195)))), ((int)(((byte)(220)))), ((int)(((byte)(210)))));
+            this.tabTests.Controls.Add(this.parallelGroup);
             this.tabTests.Controls.Add(this.runTests);
             this.tabTests.Controls.Add(this.buttonSelectFailedTestsTab);
             this.tabTests.Controls.Add(this.label17);
@@ -948,7 +959,7 @@ namespace SkylineTester
             this.runTests.Name = "runTests";
             this.runTests.Size = new System.Drawing.Size(100, 28);
             this.runTests.TabIndex = 5;
-            this.runTests.Text = "Run";
+            this.runTests.Text = "&Run";
             this.toolTip1.SetToolTip(this.runTests, "run the selected tests, immediately");
             this.runTests.UseVisualStyleBackColor = true;
             this.runTests.Click += new System.EventHandler(this.RunOrStop_Clicked);
@@ -986,7 +997,7 @@ namespace SkylineTester
             this.groupBox15.Controls.Add(this.testsJapanese);
             this.groupBox15.Controls.Add(this.testsChinese);
             this.groupBox15.Controls.Add(this.testsEnglish);
-            this.groupBox15.Location = new System.Drawing.Point(11, 308);
+            this.groupBox15.Location = new System.Drawing.Point(11, 306);
             this.groupBox15.Margin = new System.Windows.Forms.Padding(4);
             this.groupBox15.Name = "groupBox15";
             this.groupBox15.Padding = new System.Windows.Forms.Padding(4);
@@ -1055,7 +1066,7 @@ namespace SkylineTester
             // windowsGroup
             // 
             this.windowsGroup.Controls.Add(this.offscreen);
-            this.windowsGroup.Location = new System.Drawing.Point(11, 242);
+            this.windowsGroup.Location = new System.Drawing.Point(11, 240);
             this.windowsGroup.Margin = new System.Windows.Forms.Padding(4);
             this.windowsGroup.Name = "windowsGroup";
             this.windowsGroup.Padding = new System.Windows.Forms.Padding(4);
@@ -1091,7 +1102,7 @@ namespace SkylineTester
             this.iterationsGroup.Margin = new System.Windows.Forms.Padding(4);
             this.iterationsGroup.Name = "iterationsGroup";
             this.iterationsGroup.Padding = new System.Windows.Forms.Padding(4);
-            this.iterationsGroup.Size = new System.Drawing.Size(280, 184);
+            this.iterationsGroup.Size = new System.Drawing.Size(280, 183);
             this.iterationsGroup.TabIndex = 1;
             this.iterationsGroup.TabStop = false;
             this.iterationsGroup.Text = "Run options";
@@ -1099,7 +1110,7 @@ namespace SkylineTester
             // recordAuditLogs
             // 
             this.recordAuditLogs.AutoSize = true;
-            this.recordAuditLogs.Location = new System.Drawing.Point(5, 127);
+            this.recordAuditLogs.Location = new System.Drawing.Point(8, 133);
             this.recordAuditLogs.Name = "recordAuditLogs";
             this.recordAuditLogs.Size = new System.Drawing.Size(166, 17);
             this.recordAuditLogs.TabIndex = 10;
@@ -1112,7 +1123,7 @@ namespace SkylineTester
             this.testsRunSmallMoleculeVersions.AutoSize = true;
             this.testsRunSmallMoleculeVersions.Checked = true;
             this.testsRunSmallMoleculeVersions.CheckState = System.Windows.Forms.CheckState.Checked;
-            this.testsRunSmallMoleculeVersions.Location = new System.Drawing.Point(5, 150);
+            this.testsRunSmallMoleculeVersions.Location = new System.Drawing.Point(8, 156);
             this.testsRunSmallMoleculeVersions.Name = "testsRunSmallMoleculeVersions";
             this.testsRunSmallMoleculeVersions.Size = new System.Drawing.Size(179, 17);
             this.testsRunSmallMoleculeVersions.TabIndex = 9;
@@ -1123,7 +1134,7 @@ namespace SkylineTester
             // randomize
             // 
             this.randomize.AutoSize = true;
-            this.randomize.Location = new System.Drawing.Point(5, 106);
+            this.randomize.Location = new System.Drawing.Point(8, 112);
             this.randomize.Name = "randomize";
             this.randomize.Size = new System.Drawing.Size(126, 17);
             this.randomize.TabIndex = 7;
@@ -1222,9 +1233,9 @@ namespace SkylineTester
             this.testsGroup.Anchor = ((System.Windows.Forms.AnchorStyles)((((System.Windows.Forms.AnchorStyles.Top | System.Windows.Forms.AnchorStyles.Bottom) 
             | System.Windows.Forms.AnchorStyles.Left) 
             | System.Windows.Forms.AnchorStyles.Right)));
+            this.testsGroup.Controls.Add(this.testSet);
             this.testsGroup.Controls.Add(this.runMode);
             this.testsGroup.Controls.Add(this.label21);
-            this.testsGroup.Controls.Add(this.showTutorialsOnly);
             this.testsGroup.Controls.Add(this.testsTree);
             this.testsGroup.Controls.Add(this.skipCheckedTests);
             this.testsGroup.Controls.Add(this.runCheckedTests);
@@ -1237,6 +1248,21 @@ namespace SkylineTester
             this.testsGroup.TabStop = false;
             this.testsGroup.Text = "Tests";
             // 
+            // testSet
+            // 
+            this.testSet.Anchor = ((System.Windows.Forms.AnchorStyles)((System.Windows.Forms.AnchorStyles.Top | System.Windows.Forms.AnchorStyles.Right)));
+            this.testSet.DropDownStyle = System.Windows.Forms.ComboBoxStyle.DropDownList;
+            this.testSet.FormattingEnabled = true;
+            this.testSet.Items.AddRange(new object[] {
+            "All tests",
+            "Tutorial tests",
+            "Audit log tests"});
+            this.testSet.Location = new System.Drawing.Point(274, 1);
+            this.testSet.Name = "testSet";
+            this.testSet.Size = new System.Drawing.Size(121, 21);
+            this.testSet.TabIndex = 34;
+            this.testSet.SelectedValueChanged += new System.EventHandler(this.comboTestSet_SelectedValueChanged);
+            // 
             // runMode
             // 
             this.runMode.Anchor = ((System.Windows.Forms.AnchorStyles)((System.Windows.Forms.AnchorStyles.Bottom | System.Windows.Forms.AnchorStyles.Right)));
@@ -1245,6 +1271,7 @@ namespace SkylineTester
             "Test",
             "Quality",
             "Demo",
+            "Screenshots",
             "Covershot"});
             this.runMode.Location = new System.Drawing.Point(276, 553);
             this.runMode.Name = "runMode";
@@ -1260,19 +1287,6 @@ namespace SkylineTester
             this.label21.Size = new System.Drawing.Size(37, 13);
             this.label21.TabIndex = 35;
             this.label21.Text = "Mode:";
-            // 
-            // showTutorialsOnly
-            // 
-            this.showTutorialsOnly.Anchor = ((System.Windows.Forms.AnchorStyles)((System.Windows.Forms.AnchorStyles.Top | System.Windows.Forms.AnchorStyles.Right)));
-            this.showTutorialsOnly.AutoSize = true;
-            this.showTutorialsOnly.Location = new System.Drawing.Point(307, 1);
-            this.showTutorialsOnly.Name = "showTutorialsOnly";
-            this.showTutorialsOnly.Size = new System.Drawing.Size(88, 17);
-            this.showTutorialsOnly.TabIndex = 34;
-            this.showTutorialsOnly.Text = "Tutorials only";
-            this.showTutorialsOnly.TextAlign = System.Drawing.ContentAlignment.MiddleRight;
-            this.showTutorialsOnly.UseVisualStyleBackColor = true;
-            this.showTutorialsOnly.CheckedChanged += new System.EventHandler(this.showTutorialsOnly_CheckedChanged);
             // 
             // testsTree
             // 
@@ -1505,7 +1519,7 @@ namespace SkylineTester
             this.runBuild.Name = "runBuild";
             this.runBuild.Size = new System.Drawing.Size(100, 28);
             this.runBuild.TabIndex = 22;
-            this.runBuild.Text = "Run";
+            this.runBuild.Text = "&Run";
             this.runBuild.UseVisualStyleBackColor = true;
             this.runBuild.Click += new System.EventHandler(this.RunOrStop_Clicked);
             // 
@@ -2003,7 +2017,7 @@ namespace SkylineTester
             this.runQuality.Name = "runQuality";
             this.runQuality.Size = new System.Drawing.Size(100, 28);
             this.runQuality.TabIndex = 26;
-            this.runQuality.Text = "Run";
+            this.runQuality.Text = "&Run";
             this.runQuality.UseVisualStyleBackColor = true;
             this.runQuality.Click += new System.EventHandler(this.RunOrStop_Clicked);
             // 
@@ -2635,7 +2649,7 @@ namespace SkylineTester
             this.runNightly.Name = "runNightly";
             this.runNightly.Size = new System.Drawing.Size(100, 28);
             this.runNightly.TabIndex = 33;
-            this.runNightly.Text = "Run";
+            this.runNightly.Text = "&Run";
             this.runNightly.UseVisualStyleBackColor = true;
             this.runNightly.Click += new System.EventHandler(this.RunOrStop_Clicked);
             // 
@@ -2701,7 +2715,7 @@ namespace SkylineTester
             // 
             this.outputSplitContainer.Panel2.Controls.Add(this.errorConsole);
             this.outputSplitContainer.Size = new System.Drawing.Size(671, 562);
-            this.outputSplitContainer.SplitterDistance = 362;
+            this.outputSplitContainer.SplitterDistance = 356;
             this.outputSplitContainer.SplitterWidth = 10;
             this.outputSplitContainer.TabIndex = 35;
             // 
@@ -2723,7 +2737,7 @@ namespace SkylineTester
             this.commandShell.NextCommand = 0;
             this.commandShell.RestartCount = 0;
             this.commandShell.RunStartTime = new System.DateTime(((long)(0)));
-            this.commandShell.Size = new System.Drawing.Size(671, 350);
+            this.commandShell.Size = new System.Drawing.Size(671, 356);
             this.commandShell.StopButton = null;
             this.commandShell.TabIndex = 2;
             this.commandShell.Text = "";
@@ -2741,7 +2755,7 @@ namespace SkylineTester
             this.errorConsole.Margin = new System.Windows.Forms.Padding(0);
             this.errorConsole.Name = "errorConsole";
             this.errorConsole.ReadOnly = true;
-            this.errorConsole.Size = new System.Drawing.Size(671, 202);
+            this.errorConsole.Size = new System.Drawing.Size(671, 196);
             this.errorConsole.TabIndex = 3;
             this.errorConsole.Text = "";
             this.errorConsole.SelectionChanged += new System.EventHandler(this.errorConsole_SelectionChanged);
@@ -2791,13 +2805,14 @@ namespace SkylineTester
             this.buttonStop.Name = "buttonStop";
             this.buttonStop.Size = new System.Drawing.Size(100, 28);
             this.buttonStop.TabIndex = 27;
-            this.buttonStop.Text = "Stop";
+            this.buttonStop.Text = "&Stop";
             this.buttonStop.UseVisualStyleBackColor = true;
             this.buttonStop.Click += new System.EventHandler(this.Stop_Clicked);
             // 
             // tabRunStats
             // 
             this.tabRunStats.BackColor = System.Drawing.Color.BurlyWood;
+            this.tabRunStats.Controls.Add(this.buttonRunStatsExportCSV);
             this.tabRunStats.Controls.Add(this.labelCompareTo);
             this.tabRunStats.Controls.Add(this.comboBoxRunStatsCompare);
             this.tabRunStats.Controls.Add(this.comboBoxRunStats);
@@ -2808,6 +2823,18 @@ namespace SkylineTester
             this.tabRunStats.Size = new System.Drawing.Size(709, 689);
             this.tabRunStats.TabIndex = 8;
             this.tabRunStats.Text = "Run Stats";
+            // 
+            // buttonRunStatsExportCSV
+            // 
+            this.buttonRunStatsExportCSV.Anchor = ((System.Windows.Forms.AnchorStyles)((System.Windows.Forms.AnchorStyles.Top | System.Windows.Forms.AnchorStyles.Right)));
+            this.buttonRunStatsExportCSV.Location = new System.Drawing.Point(622, 48);
+            this.buttonRunStatsExportCSV.Name = "buttonRunStatsExportCSV";
+            this.buttonRunStatsExportCSV.Size = new System.Drawing.Size(75, 23);
+            this.buttonRunStatsExportCSV.TabIndex = 36;
+            this.buttonRunStatsExportCSV.Text = "Export CSV";
+            this.toolTip1.SetToolTip(this.buttonRunStatsExportCSV, "Export a CSV report with more details");
+            this.buttonRunStatsExportCSV.UseVisualStyleBackColor = true;
+            this.buttonRunStatsExportCSV.Click += new System.EventHandler(this.buttonRunStatsExportCSV_Click);
             // 
             // labelCompareTo
             // 
@@ -2940,21 +2967,21 @@ namespace SkylineTester
             this.exitToolStripMenuItem2});
             this.fileToolStripMenuItem.Name = "fileToolStripMenuItem";
             this.fileToolStripMenuItem.Size = new System.Drawing.Size(37, 20);
-            this.fileToolStripMenuItem.Text = "File";
+            this.fileToolStripMenuItem.Text = "&File";
             // 
             // openToolStripMenuItem
             // 
             this.openToolStripMenuItem.Name = "openToolStripMenuItem";
             this.openToolStripMenuItem.ShortcutKeys = ((System.Windows.Forms.Keys)((System.Windows.Forms.Keys.Control | System.Windows.Forms.Keys.O)));
             this.openToolStripMenuItem.Size = new System.Drawing.Size(188, 22);
-            this.openToolStripMenuItem.Text = "Open...";
+            this.openToolStripMenuItem.Text = "&Open...";
             this.openToolStripMenuItem.Click += new System.EventHandler(this.open_Click);
             // 
             // saveToolStripMenuItem
             // 
             this.saveToolStripMenuItem.Name = "saveToolStripMenuItem";
             this.saveToolStripMenuItem.Size = new System.Drawing.Size(188, 22);
-            this.saveToolStripMenuItem.Text = "Save as...";
+            this.saveToolStripMenuItem.Text = "Save &as...";
             this.saveToolStripMenuItem.Click += new System.EventHandler(this.save_Click);
             // 
             // exitToolStripMenuItem1
@@ -2966,7 +2993,7 @@ namespace SkylineTester
             // 
             this.createInstallerZipFileToolStripMenuItem.Name = "createInstallerZipFileToolStripMenuItem";
             this.createInstallerZipFileToolStripMenuItem.Size = new System.Drawing.Size(188, 22);
-            this.createInstallerZipFileToolStripMenuItem.Text = "Save zip file installer...";
+            this.createInstallerZipFileToolStripMenuItem.Text = "Save &zip file installer...";
             this.createInstallerZipFileToolStripMenuItem.Click += new System.EventHandler(this.SaveZipFileInstaller);
             // 
             // toolStripSeparator1
@@ -2978,7 +3005,7 @@ namespace SkylineTester
             // 
             this.exitToolStripMenuItem2.Name = "exitToolStripMenuItem2";
             this.exitToolStripMenuItem2.Size = new System.Drawing.Size(188, 22);
-            this.exitToolStripMenuItem2.Text = "Exit";
+            this.exitToolStripMenuItem2.Text = "E&xit";
             this.exitToolStripMenuItem2.Click += new System.EventHandler(this.exit_Click);
             // 
             // findToolStripMenuItem
@@ -2989,14 +3016,14 @@ namespace SkylineTester
             this.findToolStripMenuItem.Name = "findToolStripMenuItem";
             this.findToolStripMenuItem.ShortcutKeys = System.Windows.Forms.Keys.F3;
             this.findToolStripMenuItem.Size = new System.Drawing.Size(42, 20);
-            this.findToolStripMenuItem.Text = "Find";
+            this.findToolStripMenuItem.Text = "Fi&nd";
             // 
             // findTestToolStripMenuItem
             // 
             this.findTestToolStripMenuItem.Name = "findTestToolStripMenuItem";
             this.findTestToolStripMenuItem.ShortcutKeys = ((System.Windows.Forms.Keys)((System.Windows.Forms.Keys.Control | System.Windows.Forms.Keys.F)));
             this.findTestToolStripMenuItem.Size = new System.Drawing.Size(146, 22);
-            this.findTestToolStripMenuItem.Text = "Find...";
+            this.findTestToolStripMenuItem.Text = "&Find...";
             this.findTestToolStripMenuItem.Click += new System.EventHandler(this.findTestToolStripMenuItem_Click);
             // 
             // findNextToolStripMenuItem
@@ -3004,7 +3031,7 @@ namespace SkylineTester
             this.findNextToolStripMenuItem.Name = "findNextToolStripMenuItem";
             this.findNextToolStripMenuItem.ShortcutKeys = System.Windows.Forms.Keys.F3;
             this.findNextToolStripMenuItem.Size = new System.Drawing.Size(146, 22);
-            this.findNextToolStripMenuItem.Text = "Find next";
+            this.findNextToolStripMenuItem.Text = "Find &Next";
             this.findNextToolStripMenuItem.Click += new System.EventHandler(this.findNextToolStripMenuItem_Click);
             // 
             // selectBuildMenuItem
@@ -3020,7 +3047,7 @@ namespace SkylineTester
             this.zip64Bit});
             this.selectBuildMenuItem.Name = "selectBuildMenuItem";
             this.selectBuildMenuItem.Size = new System.Drawing.Size(80, 20);
-            this.selectBuildMenuItem.Text = "Select build";
+            this.selectBuildMenuItem.Text = "Select &Build";
             this.selectBuildMenuItem.DropDownOpening += new System.EventHandler(this.selectBuildMenuOpening);
             // 
             // bin32Bit
@@ -3093,14 +3120,14 @@ namespace SkylineTester
             this.accessInternet});
             this.optionsToolStripMenuItem.Name = "optionsToolStripMenuItem";
             this.optionsToolStripMenuItem.Size = new System.Drawing.Size(61, 20);
-            this.optionsToolStripMenuItem.Text = "Options";
+            this.optionsToolStripMenuItem.Text = "&Options";
             // 
             // accessInternet
             // 
             this.accessInternet.CheckOnClick = true;
             this.accessInternet.Name = "accessInternet";
             this.accessInternet.Size = new System.Drawing.Size(154, 22);
-            this.accessInternet.Text = "Access internet";
+            this.accessInternet.Text = "&Access Internet";
             // 
             // helpToolStripMenuItem
             // 
@@ -3109,20 +3136,20 @@ namespace SkylineTester
             this.aboutToolStripMenuItem});
             this.helpToolStripMenuItem.Name = "helpToolStripMenuItem";
             this.helpToolStripMenuItem.Size = new System.Drawing.Size(44, 20);
-            this.helpToolStripMenuItem.Text = "Help";
+            this.helpToolStripMenuItem.Text = "&Help";
             // 
             // documentationToolStripMenuItem
             // 
             this.documentationToolStripMenuItem.Name = "documentationToolStripMenuItem";
             this.documentationToolStripMenuItem.Size = new System.Drawing.Size(166, 22);
-            this.documentationToolStripMenuItem.Text = "Documentation...";
+            this.documentationToolStripMenuItem.Text = "&Documentation...";
             this.documentationToolStripMenuItem.Click += new System.EventHandler(this.documentationToolStripMenuItem_Click);
             // 
             // aboutToolStripMenuItem
             // 
             this.aboutToolStripMenuItem.Name = "aboutToolStripMenuItem";
             this.aboutToolStripMenuItem.Size = new System.Drawing.Size(166, 22);
-            this.aboutToolStripMenuItem.Text = "About...";
+            this.aboutToolStripMenuItem.Text = "&About...";
             this.aboutToolStripMenuItem.Click += new System.EventHandler(this.about_Click);
             // 
             // radioButton3
@@ -3183,6 +3210,71 @@ namespace SkylineTester
             this.myTreeView1.Name = "myTreeView1";
             this.myTreeView1.Size = new System.Drawing.Size(309, 350);
             this.myTreeView1.TabIndex = 15;
+            // 
+            // parallelWorkerCount
+            // 
+            this.parallelWorkerCount.Location = new System.Drawing.Point(150, 20);
+            this.parallelWorkerCount.Minimum = new decimal(new int[] {
+            1,
+            0,
+            0,
+            0});
+            this.parallelWorkerCount.Name = "parallelWorkerCount";
+            this.parallelWorkerCount.Size = new System.Drawing.Size(41, 20);
+            this.parallelWorkerCount.TabIndex = 12;
+            this.parallelWorkerCount.Value = new decimal(new int[] {
+            2,
+            0,
+            0,
+            0});
+            // 
+            // label22
+            // 
+            this.label22.AutoSize = true;
+            this.label22.Location = new System.Drawing.Point(198, 24);
+            this.label22.Margin = new System.Windows.Forms.Padding(4, 0, 4, 0);
+            this.label22.Name = "label22";
+            this.label22.Size = new System.Drawing.Size(44, 13);
+            this.label22.TabIndex = 13;
+            this.label22.Text = "workers";
+            // 
+            // runParallel
+            // 
+            this.runParallel.AutoSize = true;
+            this.runParallel.Checked = true;
+            this.runParallel.Location = new System.Drawing.Point(26, 20);
+            this.runParallel.Margin = new System.Windows.Forms.Padding(4);
+            this.runParallel.Name = "runParallel";
+            this.runParallel.Size = new System.Drawing.Size(117, 17);
+            this.runParallel.TabIndex = 11;
+            this.runParallel.TabStop = true;
+            this.runParallel.Text = "Run tests in parallel";
+            this.runParallel.UseVisualStyleBackColor = true;
+            // 
+            // runSerial
+            // 
+            this.runSerial.AutoSize = true;
+            this.runSerial.Location = new System.Drawing.Point(26, 45);
+            this.runSerial.Margin = new System.Windows.Forms.Padding(4);
+            this.runSerial.Name = "runSerial";
+            this.runSerial.Size = new System.Drawing.Size(104, 17);
+            this.runSerial.TabIndex = 14;
+            this.runSerial.Text = "Run tests serially";
+            this.runSerial.UseVisualStyleBackColor = true;
+            this.runSerial.CheckedChanged += new System.EventHandler(this.runSerial_CheckedChanged);
+            // 
+            // parallelGroup
+            // 
+            this.parallelGroup.Controls.Add(this.parallelWorkerCount);
+            this.parallelGroup.Controls.Add(this.runParallel);
+            this.parallelGroup.Controls.Add(this.label22);
+            this.parallelGroup.Controls.Add(this.runSerial);
+            this.parallelGroup.Location = new System.Drawing.Point(11, 476);
+            this.parallelGroup.Name = "parallelGroup";
+            this.parallelGroup.Size = new System.Drawing.Size(280, 70);
+            this.parallelGroup.TabIndex = 37;
+            this.parallelGroup.TabStop = false;
+            this.parallelGroup.Text = "Parallelism";
             // 
             // SkylineTesterWindow
             // 
@@ -3281,6 +3373,9 @@ namespace SkylineTester
             ((System.ComponentModel.ISupportInitialize)(this.dataGridRunStats)).EndInit();
             this.menuStrip1.ResumeLayout(false);
             this.menuStrip1.PerformLayout();
+            ((System.ComponentModel.ISupportInitialize)(this.parallelWorkerCount)).EndInit();
+            this.parallelGroup.ResumeLayout(false);
+            this.parallelGroup.PerformLayout();
             this.ResumeLayout(false);
 
         }
@@ -3521,6 +3616,12 @@ namespace SkylineTester
         private CheckBox showChangedFiles;
         private ComboBox runMode;
         private Label label21;
-        private CheckBox showTutorialsOnly;
+        private GroupBox parallelGroup;
+        private NumericUpDown parallelWorkerCount;
+        private RadioButton runParallel;
+        private Label label22;
+        private RadioButton runSerial;
+        private ComboBox testSet;
+        private Button buttonRunStatsExportCSV;
     }
 }

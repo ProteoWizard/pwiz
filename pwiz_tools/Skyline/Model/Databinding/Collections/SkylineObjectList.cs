@@ -17,21 +17,16 @@
  * limitations under the License.
  */
 
-using System.Collections;
-using System.Collections.Generic;
 using System.ComponentModel;
 using System.Diagnostics;
-using System.Linq;
 using System.Threading;
 using pwiz.Common.DataBinding;
 
 namespace pwiz.Skyline.Model.Databinding.Collections
 {
-    public abstract class SkylineObjectList<TKey, TItem> : AbstractRowSource
+    public abstract class SkylineObjectList<TItem> : AbstractRowSource
     {
         private IDocumentChangeListener _documentChangeListener;
-        protected IDictionary<TKey, int> _keyIndexes 
-            = new Dictionary<TKey, int>();
 
         protected SkylineObjectList(SkylineDataSchema dataSchema)
         {
@@ -66,19 +61,10 @@ namespace pwiz.Skyline.Model.Databinding.Collections
             FireListChanged();
         }
 
-        public override IEnumerable GetItems()
-        {
-            return ListKeys().Select(ConstructItem);
-        }
-
-        protected abstract IEnumerable<TKey> ListKeys();
-
-
-
         private class DocumentChangeListener : IDocumentChangeListener
         {
-            private readonly SkylineObjectList<TKey, TItem> _skylineObjectList;
-            public DocumentChangeListener(SkylineObjectList<TKey, TItem> skylineObjectList)
+            private readonly SkylineObjectList<TItem> _skylineObjectList;
+            public DocumentChangeListener(SkylineObjectList<TItem> skylineObjectList)
             {
                 _skylineObjectList = skylineObjectList;
             }
@@ -88,7 +74,5 @@ namespace pwiz.Skyline.Model.Databinding.Collections
                 _skylineObjectList.DocumentOnChanged(sender, args);
             }
         }
-
-        protected abstract TItem ConstructItem(TKey key);
     }
 }

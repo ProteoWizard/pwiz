@@ -1,14 +1,12 @@
 Microsoft Visual Studio Solution File, Format Version 12.00
-# Visual Studio 15
-VisualStudioVersion = 15.0.27130.2020
+# Visual Studio Version 17
+VisualStudioVersion = 17.1.32210.238
 MinimumVisualStudioVersion = 10.0.40219.1
 Project("{2150E333-8FDC-42A3-9474-1A3956D46DE8}") = "Solution Items", "Solution Items", "{C80CDBB4-AC19-4D59-B8AE-6424EA5C6D34}"
 	ProjectSection(SolutionItems) = preProject
 		Skyline.vsmdi = Skyline.vsmdi
 		TestSettings_x64.runsettings = TestSettings_x64.runsettings
-		TestSettings_x64.testsettings = TestSettings_x64.testsettings
 		TestSettings_x86.runsettings = TestSettings_x86.runsettings
-		TestSettings_x86.testsettings = TestSettings_x86.testsettings
 	EndProjectSection
 EndProject
 Project("{FAE04EC0-301F-11D3-BF4B-00C04F79EFBC}") = "Skyline", "Skyline.csproj", "{DDA2EA4C-B632-4FDF-94BA-F71E4C152056}"
@@ -56,6 +54,7 @@ EndProject
 Project("{FAE04EC0-301F-11D3-BF4B-00C04F79EFBC}") = "SkylineTester", "SkylineTester\SkylineTester.csproj", "{65E16E9D-71FC-40D1-B3FF-AD16BEFF9AF4}"
 	ProjectSection(ProjectDependencies) = postProject
 		{DDA2EA4C-B632-4FDF-94BA-F71E4C152056} = {DDA2EA4C-B632-4FDF-94BA-F71E4C152056}
+		{B92CA24E-0867-4B99-88F8-EF542A4AFE87} = {B92CA24E-0867-4B99-88F8-EF542A4AFE87}
 	EndProjectSection
 EndProject
 Project("{FAE04EC0-301F-11D3-BF4B-00C04F79EFBC}") = "CommonTest", "CommonTest\CommonTest.csproj", "{3F077244-13E5-4815-BA55-31F030042E06}"
@@ -222,14 +221,14 @@ Global
 		{3F077244-13E5-4815-BA55-31F030042E06}.Release|x64.Build.0 = Release|x64
 		{3F077244-13E5-4815-BA55-31F030042E06}.Release|x86.ActiveCfg = Release|x86
 		{3F077244-13E5-4815-BA55-31F030042E06}.Release|x86.Build.0 = Release|x86
-		{3FD4E167-8F9C-4116-8122-67C7AD143490}.Debug|x64.ActiveCfg = Debug|x64
-		{3FD4E167-8F9C-4116-8122-67C7AD143490}.Debug|x64.Build.0 = Debug|x64
-		{3FD4E167-8F9C-4116-8122-67C7AD143490}.Debug|x86.ActiveCfg = Debug|x86
-		{3FD4E167-8F9C-4116-8122-67C7AD143490}.Debug|x86.Build.0 = Debug|x86
-		{3FD4E167-8F9C-4116-8122-67C7AD143490}.Release|x64.ActiveCfg = Release|x64
-		{3FD4E167-8F9C-4116-8122-67C7AD143490}.Release|x64.Build.0 = Release|x64
-		{3FD4E167-8F9C-4116-8122-67C7AD143490}.Release|x86.ActiveCfg = Release|x86
-		{3FD4E167-8F9C-4116-8122-67C7AD143490}.Release|x86.Build.0 = Release|x86
+		{3FD4E167-8F9C-4116-8122-67C7AD143490}.Debug|x64.ActiveCfg = Debug|Any CPU
+		{3FD4E167-8F9C-4116-8122-67C7AD143490}.Debug|x64.Build.0 = Debug|Any CPU
+		{3FD4E167-8F9C-4116-8122-67C7AD143490}.Debug|x86.ActiveCfg = Debug|Any CPU
+		{3FD4E167-8F9C-4116-8122-67C7AD143490}.Debug|x86.Build.0 = Debug|Any CPU
+		{3FD4E167-8F9C-4116-8122-67C7AD143490}.Release|x64.ActiveCfg = Release|Any CPU
+		{3FD4E167-8F9C-4116-8122-67C7AD143490}.Release|x64.Build.0 = Release|Any CPU
+		{3FD4E167-8F9C-4116-8122-67C7AD143490}.Release|x86.ActiveCfg = Release|Any CPU
+		{3FD4E167-8F9C-4116-8122-67C7AD143490}.Release|x86.Build.0 = Release|Any CPU
 		{32A40878-3053-4FFA-96C1-23FC27D46B65}.Debug|x64.ActiveCfg = Debug|x64
 		{32A40878-3053-4FFA-96C1-23FC27D46B65}.Debug|x64.Build.0 = Debug|x64
 		{32A40878-3053-4FFA-96C1-23FC27D46B65}.Debug|x86.ActiveCfg = Debug|x86

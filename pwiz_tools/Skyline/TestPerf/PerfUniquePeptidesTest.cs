@@ -1,4 +1,4 @@
-/*
+﻿/*
  * Original author: Brian Pratt <bspratt .at. u.washington.edu>,
  *                  MacCoss Lab, Department of Genome Sciences, UW
  *
@@ -31,8 +31,8 @@ namespace TestPerf // Note: tests in the "TestPerf" namespace only run when the 
 {
     /// <summary>
     /// Verify operation of UI when working with large protdb files that may need 
-	/// processing before the settings can be changed.  In particular verify the 
-	/// interaction of the UI with the background loader, and behaviour on cancellation.
+    /// processing before the settings can be changed.  In particular verify the 
+    /// interaction of the UI with the background loader, and behaviour on cancellation.
     /// </summary>
     [TestClass]
     public class PerfUniquePeptidesTest : AbstractFunctionalTest
@@ -216,10 +216,8 @@ using (new Assume.DebugOnFail())  // TODO(bspratt) remove then when this intermi
                 {
                     WaitForCondition(() => SkylineWindow.BackgroundProteomeManager.ForegroundLoadRequested); // Verify that background loader is made to wait for us
                 }
-                RunUI(() => longWaitDlg.CancelButton.PerformClick());
-                WaitForClosedForm(longWaitDlg);
-                RunUI(() => peptideSettingsUI.CancelDialog());
-                WaitForClosedForm(peptideSettingsUI);
+                OkDialog(longWaitDlg, longWaitDlg.CancelButton.PerformClick);
+                OkDialog(peptideSettingsUI, peptideSettingsUI.CancelDialog);
             }
             else
             {

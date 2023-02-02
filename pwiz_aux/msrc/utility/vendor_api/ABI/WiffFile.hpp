@@ -86,7 +86,9 @@ PWIZ_API_DECL enum InstrumentModel
     API4600TripleTOF,
     API5600TripleTOF,
     API6600TripleTOF,
+    TripleQuad7500,
     X500QTOF,
+    ZenoTOF7600,
     GenericQTrap,
     InstrumentModel_Count
 };
@@ -172,6 +174,7 @@ struct PWIZ_API_DECL Target
     double dwellTime;
     double collisionEnergy;
     double declusteringPotential;
+    double startTime, endTime;
     std::string compoundID;
 };
 
@@ -239,6 +242,9 @@ class PWIZ_API_DECL WiffFile
     virtual int getADCTraceCount(int sample) const = 0;
     virtual std::string getADCTraceName(int sample, int traceIndex) const = 0;
     virtual void getADCTrace(int sample, int traceIndex, ADCTrace& trace) const = 0;
+
+    /// get total wavelength chromatogram; returned ADCTrace is empty if there is no UV data in the file
+    virtual void getTWC(int sample, ADCTrace& totalWavelengthChromatogram) const = 0;
 
     virtual ExperimentPtr getExperiment(int sample, int period, int experiment) const = 0;
     virtual SpectrumPtr getSpectrum(int sample, int period, int experiment, int cycle) const = 0;

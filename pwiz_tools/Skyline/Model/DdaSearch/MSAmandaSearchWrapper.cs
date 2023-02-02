@@ -156,15 +156,10 @@ namespace pwiz.Skyline.Model.DdaSearch
             }
         }
 
-        public override string[] FragmentIons
-        {
-            get { return Settings.ChemicalData.Instruments.Keys.ToArray(); }
-        }
-        public override string EngineName { get { return @"MS Amanda"; } }
-        public override Bitmap SearchEngineLogo
-        {
-            get { return Resources.MSAmandaLogo; }
-        }
+        public override string[] FragmentIons => Settings.ChemicalData.Instruments.Keys.ToArray();
+        public override string[] Ms2Analyzers => new[] { @"Default" };
+        public override string EngineName => @"MS Amanda";
+        public override Bitmap SearchEngineLogo => Resources.MSAmandaLogo;
 
         public override void SetPrecursorMassTolerance(MzTolerance tol)
         {
@@ -184,6 +179,11 @@ namespace pwiz.Skyline.Model.DdaSearch
             }
         }
 
+        public override void SetMs2Analyzer(string analyzer)
+        {
+            // MS2 analyzer is not relevant in MS Amanda
+        }
+
         private List<FastaDBFile> GetFastaFileList()
         {
             List<FastaDBFile> files = new List<FastaDBFile>();
@@ -197,7 +197,7 @@ namespace pwiz.Skyline.Model.DdaSearch
             return files;
         }
 
-        private void InitializeEngine(CancellationTokenSource token, string spectrumFileName)
+        private MSAmandaSearch InitializeEngine(CancellationTokenSource token, string spectrumFileName)
         {
             _outputParameters = new OutputParameters();
             _outputParameters.FastaFiles = FastaFileNames.ToList();
@@ -222,6 +222,7 @@ namespace pwiz.Skyline.Model.DdaSearch
             SearchEngine.InitializeOutputMZ(mzID);
             Settings.LoadedProteinsAtOnce = (int) AdditionalSettings[MAX_LOADED_PROTEINS_AT_ONCE].Value;
             Settings.LoadedSpectraAtOnce = (int) AdditionalSettings[MAX_LOADED_SPECTRA_AT_ONCE].Value;
+            return SearchEngine;
         }
     
         public override bool Run(CancellationTokenSource tokenSource, IProgressStatus status)
@@ -257,7 +258,7 @@ namespace pwiz.Skyline.Model.DdaSearch
                                 FileEx.SafeDelete(outputFilepath);
                             }
 
-                            InitializeEngine(tokenSource, rawFileName.GetSampleLocator());
+                            SearchEngine = InitializeEngine(tokenSource, rawFileName.GetSampleLocator());   // Assignment for ReSharper
                             amandaInputParser = new MSAmandaSpectrumParser(rawFileName.GetSampleLocator(), Settings.ConsideredCharges, true);
                             SearchEngine.SetInputParser(amandaInputParser);
                             SearchEngine.PerformSearch(_outputParameters.DBFile);
@@ -304,7 +305,7 @@ namespace pwiz.Skyline.Model.DdaSearch
             return _success;
         }
 
-        public override void SetModifications(IEnumerable<StaticMod> modifications, int maxVariableMods)
+        public override void SetModifications(IEnumerable<StaticMod> modifications, int maxVariableMods_)
         {
             Settings.SelectedModifications.Clear();
             foreach (var item in modifications)
@@ -320,6 +321,10 @@ namespace pwiz.Skyline.Model.DdaSearch
                         {
                             Modification modClone = new Modification(elem);
                             modClone.Fixed = !item.IsVariable && item.LabelAtoms == LabelAtoms.None;
+                            if (item.Terminus == ModTerminus.C)
+                                modClone.CTerminal = true;
+                            else if (item.Terminus == ModTerminus.N)
+                                modClone.NTerminal = true;
                             Settings.SelectedModifications.Add(modClone);
                         }
                         else
@@ -339,6 +344,12 @@ namespace pwiz.Skyline.Model.DdaSearch
         public override string GetSearchResultFilepath(MsDataFileUri searchFilepath)
         {
             return Path.ChangeExtension(searchFilepath.GetFilePath(), @".mzid.gz");
+        }
+
+        public override bool GetSearchFileNeedsConversion(MsDataFileUri searchFilepath, out AbstractDdaConverter.MsdataFileFormat requiredFormat)
+        {
+            requiredFormat = AbstractDdaConverter.MsdataFileFormat.mzML;
+            return false;
         }
 
         private List<Modification> GenerateNewModificationsForEveryAA(StaticMod mod)

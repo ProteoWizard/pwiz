@@ -19,6 +19,7 @@
 using System;
 using System.IO;
 using Microsoft.VisualStudio.TestTools.UnitTesting;
+using pwiz.Skyline.Model.Databinding.Entities;
 using pwiz.Skyline.Model.Results;
 using pwiz.SkylineTestUtil;
 
@@ -46,6 +47,23 @@ namespace pwiz.SkylineTest
             var chromDataType = typeof(ChromKey).Assembly.GetType("pwiz.Skyline.Model.Results.ChromData");
 
             DumpTypeAndFields(chromDataType);
+        }
+
+        [TestMethod]
+        public void TestTransitionChromInfoSize()
+        {
+            DumpTypeAndFields(typeof(TransitionChromInfo));
+        }
+        [TestMethod]
+        public void TestTransitionGroupChromInfoSize()
+        {
+            DumpTypeAndFields(typeof(TransitionGroupChromInfo));
+        }
+
+        [TestMethod]
+        public void TestTransitionResultSize()
+        {
+            DumpTypeAndFields(typeof(TransitionResult));
         }
 
         private void DumpTypeAndFields(Type type)

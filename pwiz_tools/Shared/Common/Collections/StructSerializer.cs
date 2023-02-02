@@ -37,8 +37,8 @@ namespace pwiz.Common.Collections
     /// <typeparam name="TItem"></typeparam>
     public interface IDirectSerializer<TItem>
     {
-        TItem[] ReadArray(SafeHandle safeHandle, int count);
-        bool WriteArray(SafeHandle safeHandle, TItem[] items);
+        TItem[] ReadArray(FileStream fileStream, int count);
+        bool WriteArray(FileStream fileStream, TItem[] items);
     }
 
     
@@ -69,10 +69,20 @@ namespace pwiz.Common.Collections
                 return result;
             }
             result = new TItem[count];
-            var buffer = new byte[ItemSizeOnDisk];
+            var buffer = new byte[Math.Max(ItemSizeInMemory, ItemSizeOnDisk)];
+            int countToRead = ItemSizeOnDisk;
+            int offset;
+            if (PadFromStart)
+            {
+                offset = buffer.Length - countToRead;
+            }
+            else
+            {
+                offset = 0;
+            }
             for (int i = 0; i < count; i++)
             {
-                if (stream.Read(buffer, 0, buffer.Length) != buffer.Length)
+                if (stream.Read(buffer, offset, countToRead) != countToRead)
                     throw new InvalidDataException();
                 result[i] = FromByteArray(buffer);
             }
@@ -162,7 +172,7 @@ namespace pwiz.Common.Collections
             {
                 return null;
             }
-            return DirectSerializer.ReadArray(fileStream.SafeFileHandle, count);
+            return DirectSerializer.ReadArray(fileStream, count);
         }
 
         protected bool TryFastWrite(Stream stream, TItem[] items)
@@ -180,7 +190,7 @@ namespace pwiz.Common.Collections
             {
                 return false;
             }
-            return DirectSerializer.WriteArray(fileStream.SafeFileHandle, items);
+            return DirectSerializer.WriteArray(fileStream, items);
         }
     }
 

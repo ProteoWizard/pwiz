@@ -29,6 +29,7 @@ using pwiz.Skyline.Model.DocSettings;
 using pwiz.Skyline.Model.Results;
 using pwiz.Skyline.Model.Serialization;
 using pwiz.Skyline.Properties;
+using pwiz.Skyline.Util;
 using pwiz.SkylineTestUtil;
 
 namespace pwiz.SkylineTest
@@ -37,10 +38,22 @@ namespace pwiz.SkylineTest
     public class DocumentSerializerTest : AbstractUnitTest
     {
         [TestMethod]
+        public void TestDocumentFormatCurrent()
+        {
+            double expectedDocumentFormat = Install.MajorVersion + Install.MinorVersion * 0.1;
+            if (expectedDocumentFormat == 21.2)
+                expectedDocumentFormat = 22.1;  // Allow for the mistake made after 21.2 release
+            double deltaAllowed = 0.099;
+            Assert.AreEqual(expectedDocumentFormat, DocumentFormat.CURRENT.AsDouble(), deltaAllowed,
+                string.Format("DocumentFormat.CURRENT {0} is expected to be less than 0.1 from the current Skyline version {1}",
+                    DocumentFormat.CURRENT, expectedDocumentFormat));
+        }
+
+        [TestMethod]
         public void TestSerializePeptides()
         {
             var srmDocument = new SrmDocument(SrmSettingsList.GetDefault());
-            string strProteinSequence = string.Join(string.Empty, 
+            string strProteinSequence = string.Concat(
                 "MSLSSKLSVQDLDLKDKRVFIRVDFNVPLDGKKITSNQRIVAALPTIKYVLEHHPRYVVL",
                 "ASHLGRPNGERNEKYSLAPVAKELQSLLGKDVTFLNDCVGPEVEAAVKASAPGSVILLEN",
                 "LRYHIEEEGSRKVDGQKVKASKEDVQKFRHELSSLADVYINDAFGTAHRAHSSMVGFDLP",
@@ -64,9 +77,10 @@ namespace pwiz.SkylineTest
         private SrmDocument AddSmallMolecules(SrmDocument document)
         {
             var newChildren = new List<PeptideGroupDocNode>(document.MoleculeGroups);
-            newChildren.AddRange(new RefinementSettings().ConvertToSmallMolecules(document, TestContext.TestRunDirectory, RefinementSettings.ConvertToSmallMoleculesMode.masses_and_names).MoleculeGroups);
-            newChildren.AddRange(new RefinementSettings().ConvertToSmallMolecules(document, TestContext.TestRunDirectory, RefinementSettings.ConvertToSmallMoleculesMode.masses_only).MoleculeGroups);
-            newChildren.AddRange(new RefinementSettings().ConvertToSmallMolecules(document, TestContext.TestRunDirectory).MoleculeGroups); // Do this last for fullest library translation
+            var path = TestContext.GetTestResultsPath();
+            newChildren.AddRange(new RefinementSettings().ConvertToSmallMolecules(document, path, RefinementSettings.ConvertToSmallMoleculesMode.masses_and_names).MoleculeGroups);
+            newChildren.AddRange(new RefinementSettings().ConvertToSmallMolecules(document, path, RefinementSettings.ConvertToSmallMoleculesMode.masses_only).MoleculeGroups);
+            newChildren.AddRange(new RefinementSettings().ConvertToSmallMolecules(document, path).MoleculeGroups); // Do this last for fullest library translation
             document = (SrmDocument)document.ChangeChildren(newChildren.ToArray());
             return document;
         }

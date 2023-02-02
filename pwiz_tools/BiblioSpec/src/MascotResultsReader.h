@@ -51,6 +51,7 @@ class MascotResultsReader : public BuildParser{
   ~MascotResultsReader();
 
   bool parseFile();
+  vector<PSM_SCORE_TYPE> getScoreTypes();
 
  private:
   enum { N_TERM_POS = 'n', C_TERM_POS = 'c' };
@@ -68,6 +69,7 @@ class MascotResultsReader : public BuildParser{
   vector<string> rawFiles_; // a list of distiller rawfiles
   boost::shared_ptr<TempFileDeleter> tmpDatFile_;
 
+  void initParse();
   void getIsotopeMasses();
   void applyIsotopeDiffs(PSM* psm, string quantName);
   void parseMods(PSM* psm, string modstr, string readableModStr);
@@ -83,7 +85,7 @@ class MascotResultsReader : public BuildParser{
   string getFilename(ms_inputquery& spec);
   string getErrorMessage();
   string getErrorMessage(int errorCode);
-  unsigned int getCacheFlag(const char* filename, int size);
+  unsigned int getCacheFlag(const string& filename, int size);
 };
 
 } // namespace

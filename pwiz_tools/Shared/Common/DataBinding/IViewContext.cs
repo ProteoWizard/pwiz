@@ -42,7 +42,15 @@ namespace pwiz.Common.DataBinding
         IRowSource GetRowSource(ViewInfo viewInfo);
         ViewInfo GetViewInfo(ViewGroup viewGroup, ViewSpec viewSpec);
         ViewInfo GetViewInfo(ViewName? viewName);
+        RowSourceInfo GetRowSourceInfo(ViewSpec viewSpec);
+        /// <summary>
+        /// Returns true if this view is able to be displayed in this ViewContext.
+        /// </summary>
+        bool CanDisplayView(ViewSpec viewSpec);
+        /// <summary>Displays a File Save dialog and then exports all of the rows of data to a file.</summary>
         void Export(Control owner, BindingListSource bindingListSource);
+        /// <summary>Exports all of the rows of data to a file.</summary>
+        void ExportToFile(Control owner, BindingListSource bindingListSource, String filename, char separator);
         void CopyAll(Control owner, BindingListSource bindingListSource);
         ViewSpec NewView(Control owner, ViewGroup viewGroup);
         ViewSpec CustomizeView(Control owner, ViewSpec viewSpec, ViewGroup viewGroup);

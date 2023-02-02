@@ -23,6 +23,7 @@ using MathNet.Numerics.LinearRegression;
 using pwiz.Common.Collections;
 using pwiz.Common.DataAnalysis;
 using pwiz.Common.SystemUtil;
+using pwiz.Skyline.Model.Databinding.Entities;
 using pwiz.Skyline.Properties;
 
 namespace pwiz.Skyline.Model.DocSettings.AbsoluteQuantification
@@ -30,7 +31,7 @@ namespace pwiz.Skyline.Model.DocSettings.AbsoluteQuantification
     public abstract class RegressionFit : LabeledValues<string>
     {
         public static readonly RegressionFit NONE = new SimpleRegressionFit(@"none",
-            ()=>QuantificationStrings.RegressionFit_NONE_None, NoExternalStandards);
+            ()=>QuantificationStrings.RegressionFit_NONE_None, points=>CalibrationCurve.NO_EXTERNAL_STANDARDS);
 
         public static readonly RegressionFit LINEAR = new SimpleRegressionFit(@"linear",
             () => QuantificationStrings.RegressionFit_LINEAR_Linear, LinearFit);
@@ -52,42 +53,27 @@ namespace pwiz.Skyline.Model.DocSettings.AbsoluteQuantification
         {
         }
 
-        public virtual CalibrationCurve Fit(IList<WeightedPoint> points)
+        public CalibrationCurve Fit(IList<WeightedPoint> points)
         {
             try
             {
                 CalibrationCurve curve = FitPoints(points);
-                if (curve != null)
-                {
-                    curve = curve.ChangeRegressionFit(this);
-                    curve = AddRSquared(curve, points);
-                }
                 return curve;
             }
             catch (Exception e)
             {
-                return new CalibrationCurve(this).ChangeErrorMessage(e.Message);
+                return new CalibrationCurve.Error(e.Message);
             }
+        }
+
+        public CalibrationCurveMetrics GetCalibrationCurveMetrics(IList<WeightedPoint> points)
+        {
+            return Fit(points).GetMetrics(points);
         }
 
         public override string ToString()
         {
             return Label;
-        }
-
-        public virtual double? GetY(CalibrationCurve calibrationCurve, double? x)
-        {
-            return x * calibrationCurve.Slope + calibrationCurve.Intercept.GetValueOrDefault();
-        }
-
-        public virtual double? GetFittedX(CalibrationCurve calibrationCurve, double? y)
-        {
-            return (y - calibrationCurve.Intercept.GetValueOrDefault()) / calibrationCurve.Slope;
-        }
-
-        public virtual double? GetX(CalibrationCurve calibrationCurve, double? y)
-        {
-            return GetFittedX(calibrationCurve, y);
         }
 
         protected abstract CalibrationCurve FitPoints(IList<WeightedPoint> points);
@@ -106,74 +92,22 @@ namespace pwiz.Skyline.Model.DocSettings.AbsoluteQuantification
             }
         }
 
-        protected virtual CalibrationCurve AddRSquared(CalibrationCurve curve, IList<WeightedPoint> points)
-        {
-            List<double> yValues = new List<double>();
-            List<double> residuals = new List<double>();
-            foreach (var point in points)
-            {
-                double? yFitted = curve.GetY(point.X);
-                if (!yFitted.HasValue)
-                {
-                    continue;
-                }
-                yValues.Add(point.Y);
-                residuals.Add(point.Y - yFitted.Value);
-            }
-            if (!residuals.Any())
-            {
-                return curve;
-            }
-            double yMean = yValues.Average();
-            double totalSumOfSquares = yValues.Sum(y => (y - yMean)*(y - yMean));
-            double sumOfSquaresOfResiduals = residuals.Sum(r => r*r);
-            double rSquared = 1 - sumOfSquaresOfResiduals/totalSumOfSquares;
-            return curve.ChangeRSquared(rSquared);
-        }
-
-        protected static CalibrationCurve NoExternalStandards(IList<WeightedPoint> points)
-        {
-            return CalibrationCurve.NO_EXTERNAL_STANDARDS;
-        }
-
         protected static CalibrationCurve LinearFit(IList<WeightedPoint> points)
         {
-            CalibrationCurve calibrationCurve = new CalibrationCurve().ChangePointCount(points.Count);
-            try
-            {
-                double[] values = WeightedRegression.Weighted(points.Select(p => new Tuple<double[], double>(new[] {p.X}, p.Y)),
-                    points.Select(p => p.Weight).ToArray(), true);
-                calibrationCurve = calibrationCurve.ChangeSlope(values[1]).ChangeIntercept(values[0]);
-            }
-            catch (Exception ex)
-            {
-                calibrationCurve = calibrationCurve.ChangeErrorMessage(ex.Message);
-            }
-            return calibrationCurve;
+            double[] values = WeightedRegression.Weighted(points.Select(p => new Tuple<double[], double>(new[] {p.X}, p.Y)),
+                points.Select(p => p.Weight).ToArray(), true);
+            return new CalibrationCurve.Linear(values[1], values[0]);
         }
 
-        public static CalibrationCurve LinearFitThroughZero(IList<WeightedPoint> points)
+        protected static CalibrationCurve LinearFitThroughZero(IList<WeightedPoint> points)
         {
             // ReSharper disable RedundantArgumentDefaultValue
             var values = WeightedRegression.Weighted(points.Select(p => new Tuple<double[], double>(new[] { p.X }, p.Y)),
                 points.Select(p => p.Weight).ToArray(), false);
             // ReSharper restore RedundantArgumentDefaultValue
-            return new CalibrationCurve().ChangePointCount(points.Count).ChangeSlope(values[0]);
+            return new CalibrationCurve.Linear(values[0], null);
         }
 
-        public static CalibrationCurve QuadraticFit2(IList<WeightedPoint> points)
-        {
-            double[] result = MathNet.Numerics.Fit.PolynomialWeighted(
-                points.Select(p => p.X).ToArray(),
-                points.Select(p => p.Y).ToArray(),
-                points.Select(p => p.Weight).ToArray(),
-                2
-                );
-            return new CalibrationCurve().ChangePointCount(points.Count)
-                .ChangeQuadraticCoefficient(result[2])
-                .ChangeSlope(result[1])
-                .ChangeIntercept(result[0]);
-        }
 
         public static RegressionFit Parse(string name)
         {
@@ -199,35 +133,7 @@ namespace pwiz.Skyline.Model.DocSettings.AbsoluteQuantification
                     points.Select(p => p.Weight).ToArray(),
                     2
                 );
-                return new CalibrationCurve().ChangePointCount(points.Count)
-                    .ChangeQuadraticCoefficient(result[2])
-                    .ChangeSlope(result[1])
-                    .ChangeIntercept(result[0]);
-            }
-
-            public override double? GetFittedX(CalibrationCurve calibrationCurve, double? y)
-            {
-                // Quadratic formula: x = (-b +/- sqrt(b^2-4ac))/2a
-                double? a = calibrationCurve.QuadraticCoefficient;
-                double? b = calibrationCurve.Slope;
-                double? c = calibrationCurve.Intercept - y;
-
-                double? discriminant = b * b - 4 * a * c;
-                if (!discriminant.HasValue)
-                {
-                    return null;
-                }
-                if (discriminant < 0)
-                {
-                    return double.NaN;
-                }
-                double sqrtDiscriminant = Math.Sqrt(discriminant.Value);
-                return (-b + sqrtDiscriminant) / 2 / a;
-            }
-
-            public override double? GetY(CalibrationCurve calibrationCurve, double? x)
-            {
-                return x * x * calibrationCurve.QuadraticCoefficient + x * calibrationCurve.Slope + calibrationCurve.Intercept;
+                return new CalibrationCurve.Quadratic(result[0], result[1], result[2]);
             }
         }
 
@@ -235,7 +141,6 @@ namespace pwiz.Skyline.Model.DocSettings.AbsoluteQuantification
         {
             public BilinearFit() : base(@"bilinear", () => QuantificationStrings.RegressionFit_BILINEAR_Bilinear)
             {
-                
             }
 
             protected override CalibrationCurve FitPoints(IList<WeightedPoint> weightedPoints)
@@ -261,19 +166,19 @@ namespace pwiz.Skyline.Model.DocSettings.AbsoluteQuantification
                 }
                 return GetCalibrationCurveWithLod(bestLod.Value, weightedPoints);
             }
-            private static CalibrationCurve GetCalibrationCurveWithLod(double lod, IList<WeightedPoint> weightedPoints)
+            private static CalibrationCurve.Bilinear GetCalibrationCurveWithLod(double lod, IList<WeightedPoint> weightedPoints)
             {
                 var linearPoints = weightedPoints.Select(pt => pt.X > lod ? pt : new WeightedPoint(lod, pt.Y, pt.Weight)).ToArray();
                 if (linearPoints.Select(p => p.X).Distinct().Count() <= 1)
                 {
                     return null;
                 }
-                var linearCalibrationCurve = LinearFit(linearPoints);
-                if (!string.IsNullOrEmpty(linearCalibrationCurve.ErrorMessage))
+                var linearCalibrationCurve = LinearFit(linearPoints) as CalibrationCurve.Linear;
+                if (linearCalibrationCurve == null)
                 {
                     return null;
                 }
-                return linearCalibrationCurve.ChangeTurningPoint(lod).ChangeRegressionFit(BILINEAR);
+                return new CalibrationCurve.Bilinear(linearCalibrationCurve, lod);
             }
 
             /// <summary>
@@ -281,8 +186,8 @@ namespace pwiz.Skyline.Model.DocSettings.AbsoluteQuantification
             /// </summary>
             private static double LodObjectiveFunction(double lod, IList<WeightedPoint> weightedPoints)
             {
-                CalibrationCurve calibrationCurve = GetCalibrationCurveWithLod(lod, weightedPoints);
-                if (calibrationCurve == null || !calibrationCurve.TurningPoint.HasValue)
+                CalibrationCurve.Bilinear calibrationCurve = GetCalibrationCurveWithLod(lod, weightedPoints);
+                if (calibrationCurve == null)
                 {
                     return double.MaxValue;
                 }
@@ -295,25 +200,6 @@ namespace pwiz.Skyline.Model.DocSettings.AbsoluteQuantification
                     totalDelta += pt.Weight * delta * delta;
                 }
                 return totalDelta / totalWeight;
-            }
-
-            public override double? GetX(CalibrationCurve calibrationCurve, double? y)
-            {
-                double? x = GetFittedX(calibrationCurve, y);
-                if (x.HasValue && calibrationCurve.TurningPoint.HasValue && x < calibrationCurve.TurningPoint)
-                {
-                    return null;
-                }
-                return x;
-            }
-
-            public override double? GetY(CalibrationCurve calibrationCurve, double? x)
-            {
-                if (calibrationCurve.TurningPoint.HasValue && x < calibrationCurve.TurningPoint)
-                {
-                    x = calibrationCurve.TurningPoint;
-                }
-                return base.GetY(calibrationCurve, x);
             }
         }
 
@@ -328,58 +214,17 @@ namespace pwiz.Skyline.Model.DocSettings.AbsoluteQuantification
             {
                 if (points.Any(pt => pt.Y <= 0 || pt.X <= 0))
                 {
-                    return new CalibrationCurve(this).ChangeErrorMessage(Resources.LinearInLogSpace_FitPoints_Unable_to_do_a_regression_in_log_space_because_one_or_more_points_are_non_positive_);
+                    return new CalibrationCurve.Error(Resources.LinearInLogSpace_FitPoints_Unable_to_do_a_regression_in_log_space_because_one_or_more_points_are_non_positive_);
                 }
-                var logPoints = points.Select(LogPoint).ToList();
-                var calibrationCurve = LinearFit(logPoints);
-                calibrationCurve.ChangeRegressionFit(this);
-                return calibrationCurve;
+                var logPoints = points.Select(LogOfPoint).ToList();
+                var calibrationCurve = (CalibrationCurve.Linear) LinearFit(logPoints);
+                return new CalibrationCurve.LinearInLogSpace(calibrationCurve);
             }
 
-            protected WeightedPoint LogPoint(WeightedPoint pt)
+            protected WeightedPoint LogOfPoint(WeightedPoint pt)
             {
-                return new WeightedPoint(Math.Log(pt.X), Math.Log(pt.Y), pt.Weight);
-            }
-
-            public override double? GetFittedX(CalibrationCurve calibrationCurve, double? y)
-            {
-                if (y.HasValue)
-                {
-                    var x = base.GetFittedX(calibrationCurve, Math.Log(y.Value));
-                    if (x.HasValue)
-                    {
-                        return Math.Exp(x.Value);
-                    }
-                }
-                return null;
-            }
-
-            public override double? GetX(CalibrationCurve calibrationCurve, double? y)
-            {
-                return GetFittedX(calibrationCurve, y);
-            }
-
-            public override double? GetY(CalibrationCurve calibrationCurve, double? x)
-            {
-                if (x.HasValue)
-                {
-                    var y = base.GetY(calibrationCurve, Math.Log(x.Value));
-                    if (y.HasValue)
-                    {
-                        return Math.Exp(y.Value);
-                    }
-                }
-                return null;
-            }
-
-            protected override CalibrationCurve AddRSquared(CalibrationCurve curve, IList<WeightedPoint> points)
-            {
-                var linearCurve = curve.ChangeRegressionFit(LINEAR);
-                linearCurve = linearCurve.RegressionFit
-                    .AddRSquared(linearCurve, points.Select(LogPoint).ToList());
-                return curve.ChangeRSquared(linearCurve.RSquared);
+                return CalibrationCurve.LinearInLogSpace.LogOfPoint(pt);
             }
         }
-
     }
 }

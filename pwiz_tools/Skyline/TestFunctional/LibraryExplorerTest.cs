@@ -94,9 +94,8 @@ namespace pwiz.SkylineTestFunctional
         [TestMethod]
         public void TestLibraryExplorerAsSmallMolecules()
         {
-            if (!RunSmallMoleculeTestVersions)
+            if (SkipSmallMoleculeTestVersions())
             {
-                Console.Write(MSG_SKIPPING_SMALLMOLECULE_TEST_VERSION);
                 return;
             }
             TestFilesZip = @"TestFunctional\LibraryExplorerTest.zip";
@@ -146,16 +145,14 @@ namespace pwiz.SkylineTestFunctional
             {
                 AddLibrary(editListUI, _testLibs[i]);
             }
-            RunUI(editListUI.OkDialog);
-            WaitForClosedForm(editListUI);
+            OkDialog(editListUI, editListUI.OkDialog);
 
             // Make sure the libraries actually show up in the peptide settings dialog before continuing.
             WaitForConditionUI(() => _testLibs.Length == PeptideSettingsUI.AvailableLibraries.Length);
 
             RunUI(() => Assert.IsFalse(PeptideSettingsUI.IsSettingsChanged));
 
-            RunUI(() => PeptideSettingsUI.OkDialog());
-            WaitForClosedForm(PeptideSettingsUI);
+            OkDialog(PeptideSettingsUI, PeptideSettingsUI.OkDialog);
         }
 
         /// <summary>
@@ -207,14 +204,10 @@ namespace pwiz.SkylineTestFunctional
                 // Find the filter category combo box
                 filterCategoryComboBox = (ComboBox) _viewLibUI.Controls.Find("comboFilterCategory", true)[0];
 
-            });
+                // Filter category combo box should be set to "Name" by default
+                Assert.AreEqual(filterCategoryComboBox.SelectedItem.ToString(), Resources.SmallMoleculeLibraryAttributes_KeyValuePairs_Name);
 
-            // Filter category combo box should be set to "Name" by default
-            Assert.AreEqual(filterCategoryComboBox.SelectedItem.ToString(), Resources.SmallMoleculeLibraryAttributes_KeyValuePairs_Name);
-
-            // Test filtering by formula
-            RunUI(() =>
-            {
+                // Test filtering by formula
                 filterCategoryComboBox.SelectedIndex =
                     filterCategoryComboBox.FindStringExact(Resources
                         .SmallMoleculeLibraryAttributes_KeyValuePairs_Formula);
@@ -334,8 +327,7 @@ namespace pwiz.SkylineTestFunctional
             VerifyFilterCategories(filterCategoryComboBox, expectedCategories);
 
             // Close the spectral library explorer
-            RunUI(() => _viewLibUI.CancelDialog());
-            WaitForClosedForm(_viewLibUI);
+            OkDialog(_viewLibUI , _viewLibUI.CancelDialog);
         }
 
         private void TestBasicFunctionality()
@@ -655,7 +647,7 @@ namespace pwiz.SkylineTestFunctional
             RunUI(() =>
                 SkylineWindow.ModifyDocument("Change static mods", doc => doc.ChangeSettings(phosphoLossSettings)));
 
-            RunDlg<MultiButtonMsgDlg>(() => _viewLibUI.AddAllPeptides(true), msgDlg => msgDlg.Btn0Click());
+            ShowAndDismissDlg<MultiButtonMsgDlg>(() => _viewLibUI.AddAllPeptides(true), msgDlg => msgDlg.Btn0Click());
 
             // Again, we should be able to match all peptides since the document settings match use the peptides found 
             // in the library.
@@ -680,7 +672,7 @@ namespace pwiz.SkylineTestFunctional
                 buildBackgroundProteomeDlg.BackgroundProteomeName = "Yeast";
                 buildBackgroundProteomeDlg.OkDialog();
             });
-            RunUI(peptideSettingsUI.OkDialog);
+            OkDialog(peptideSettingsUI, peptideSettingsUI.OkDialog);
             WaitForDocumentLoaded(); // Give background loader a chance to get the protein metadata too
 
             RunDlg<TransitionSettingsUI>(SkylineWindow.ShowTransitionSettingsUI, transitionSettingsUI =>
@@ -863,9 +855,8 @@ namespace pwiz.SkylineTestFunctional
                     libComboBox.SelectedIndex = libIndex;
                 });
                 AssertEx.AreComparableStrings(expectError, errWin.Message);
-                errWin.OkDialog();
-                RunUI(() => _viewLibUI.CancelDialog());
-                WaitForClosedForm(_viewLibUI);
+                OkDialog(errWin, errWin.OkDialog);
+                OkDialog(_viewLibUI, _viewLibUI.CancelDialog);
                 return;
             }
 
@@ -926,7 +917,7 @@ namespace pwiz.SkylineTestFunctional
                 _viewLibUI.GraphSettings.ShowCharge2 = false;
             });
             // Add all to document, expect to be asked if we want to add library to doc as well
-            RunDlg<MultiButtonMsgDlg>(() => _viewLibUI.AddAllPeptides(true), msgDlg => msgDlg.Btn1Click());
+            ShowAndDismissDlg<MultiButtonMsgDlg>(() => _viewLibUI.AddAllPeptides(true), msgDlg => msgDlg.Btn1Click());
             if (isLipidCreator || isSketchyFragmentAnnotations || libIndex == 10)
             {
                 // Expect to be asked if we want to add peptides that don't match filter
@@ -937,8 +928,7 @@ namespace pwiz.SkylineTestFunctional
             OkDialog(confirmAdd, confirmAdd.BtnYesClick);
             WaitForDocumentLoaded();
 
-            RunUI(() => _viewLibUI.CancelDialog());
-            WaitForClosedForm(_viewLibUI);
+            OkDialog(_viewLibUI , _viewLibUI.CancelDialog);
             if (isNIST)
             {
                 AssertEx.IsDocumentState(SkylineWindow.Document, null, 1, 74, 222, 14358); // Was 666, from when we only took top N ranked by intensity then mz, but now we take that or all annotated
@@ -1021,7 +1011,7 @@ namespace pwiz.SkylineTestFunctional
             SelectLibWithAllMods(_libComboBox, 4);
             WaitForConditionUI(() => _pepList.SelectedIndex != -1);
             WaitForConditionUI(() => _viewLibUI.HasMatches);
-            RunDlg<MultiButtonMsgDlg>(() => _viewLibUI.AddAllPeptides(true), msgDlg => { msgDlg.Btn0Click(); });
+            ShowAndDismissDlg<MultiButtonMsgDlg>(() => _viewLibUI.AddAllPeptides(true), msgDlg => { msgDlg.Btn0Click(); });
 
             var fmpDlg0 = WaitForOpenForm<FilterMatchedPeptidesDlg>();
             RunUI(() => fmpDlg0.AddFiltered = true);
@@ -1116,11 +1106,10 @@ namespace pwiz.SkylineTestFunctional
             WaitForConditionUI(() => !_viewLibUI.HasUnmatchedPeptides);
 
             // Relaunch explorer without modification matching
-            RunUI(() => _viewLibUI.CancelDialog());
-            WaitForClosedForm(_viewLibUI);
+            OkDialog(_viewLibUI, _viewLibUI.CancelDialog);
             _viewLibUI = ShowDialog<ViewLibraryDlg>(() => SkylineWindow.OpenLibraryExplorer(YEAST));
             var matchedPepModsDlg = WaitForOpenForm<AddModificationsDlg>();
-            RunUI(matchedPepModsDlg.CancelDialog);
+            OkDialog(matchedPepModsDlg, matchedPepModsDlg.CancelDialog);
             WaitForConditionUI(() => _pepList.Items.Count == 96);
             WaitForConditionUI(() => _pepList.SelectedIndex != -1);
             WaitForConditionUI(() => _viewLibUI.HasUnmatchedPeptides);
@@ -1138,8 +1127,7 @@ namespace pwiz.SkylineTestFunctional
             WaitForConditionUI(() => _pepList.SelectedIndex != -1);
             WaitForConditionUI(() => !_viewLibUI.HasUnmatchedPeptides);
 
-            RunUI(() => _viewLibUI.CancelDialog());
-            WaitForClosedForm(_viewLibUI);
+            OkDialog(_viewLibUI, _viewLibUI.CancelDialog);
         }
 
         private void TestTooltip()
@@ -1156,8 +1144,7 @@ namespace pwiz.SkylineTestFunctional
                 Assert.AreEqual(pep1.GetMzParts().Count, 0); // In mz range so should not have red mz out of range tooltip
                 Assert.AreEqual(pep3.GetMzParts().Count, 0); // In mz range so should not have red mz out of range tooltip
             });
-            RunUI(() => _viewLibUI.CancelDialog());
-            WaitForClosedForm(_viewLibUI);
+            OkDialog(_viewLibUI, _viewLibUI.CancelDialog);
             RelaunchLibExplorer(true, false, PHOSPHO_LIB); // No ExplicitMods selected
             RunUI(() =>
             {
@@ -1189,16 +1176,14 @@ namespace pwiz.SkylineTestFunctional
                 var pep4 = _viewLibUI.GetTipProvider(3);
                 Assert.AreEqual(pep4.GetMzParts().Count, 0);  // not out of bounds
             });
-            RunUI(() => _viewLibUI.CancelDialog());
-            WaitForClosedForm(_viewLibUI);
+            OkDialog(_viewLibUI, _viewLibUI.CancelDialog);
         }
 
         private void RelaunchLibExplorer(bool showModsDlg, bool okAll, string libName)
         {
             if (_viewLibUI != null)
             {
-                RunUI(() => _viewLibUI.CancelDialog());
-                WaitForClosedForm(_viewLibUI);
+                OkDialog(_viewLibUI, _viewLibUI.CancelDialog);
             }
             _viewLibUI = ShowDialog<ViewLibraryDlg>(() => SkylineWindow.OpenLibraryExplorer(libName));
             if (showModsDlg)

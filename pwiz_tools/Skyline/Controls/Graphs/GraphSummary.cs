@@ -269,7 +269,12 @@ namespace pwiz.Skyline.Controls.Graphs
         internal IEnumerable<SummaryGraphPane> GraphPanes
         {
             get { return graphControl.MasterPane.PaneList.OfType<SummaryGraphPane>(); }
-            set { graphControl.MasterPane.PaneList.Clear(); graphControl.MasterPane.PaneList.AddRange(value); }
+            set
+            {
+                graphControl.MasterPane.PaneList.OfType<SummaryGraphPane>().ForEach(panel => panel.OnClose(EventArgs.Empty));
+                graphControl.MasterPane.PaneList.Clear();
+                graphControl.MasterPane.PaneList.AddRange(value);
+            }
         }
 
         public bool TryGetGraphPane<TPane>(out TPane pane) where TPane : class
@@ -381,6 +386,12 @@ namespace pwiz.Skyline.Controls.Graphs
             if (sender != null && e.Button == sender.PanButtons && ModifierKeys == sender.PanModifierKeys)
                 graphPane.EnsureYMin();
             return graphPane.HandleMouseMoveEvent(sender, e);
+        }
+
+        private void graphControl_MouseOutEvent(object sender, EventArgs e)
+        {
+            foreach(var pane in graphControl.MasterPane.PaneList)
+                (pane as SummaryGraphPane)?.HandleMouseOutEvent(sender, e);
         }
 
         private bool graphControl_MouseDownEvent(ZedGraphControl sender, MouseEventArgs e)
@@ -505,7 +516,7 @@ namespace pwiz.Skyline.Controls.Graphs
                                 var transitionGroup = transitionGroups[0];
                                 bool hasPrecursors = transitionGroup.Transitions.Any(transition => transition.IsMs1);
                                 bool hasProducts = transitionGroup.Transitions.Any(transition => !transition.IsMs1);
-                                if (hasPrecursors && hasProducts)
+                                if (hasPrecursors && hasProducts && !IsOptimization(transitionGroup))
                                 {
                                     paneKeys = new[] { PaneKey.PRECURSORS, PaneKey.PRODUCTS };
                                 }
@@ -527,6 +538,24 @@ namespace pwiz.Skyline.Controls.Graphs
             paneKeys = paneKeys ?? new[] { PaneKey.DEFAULT };
             Array.Sort(paneKeys);
             return paneKeys;
+        }
+
+        private static bool IsOptimization(TransitionGroupDocNode nodeTranGroup)
+        {
+            if (nodeTranGroup.Transitions.Any(nodeTran => nodeTran.IsMs1 && nodeTran.ChromInfos.Any()))
+                return false;
+
+            var steps = nodeTranGroup.ChromInfos.Select(info => info.OptimizationStep).OrderBy(step => step).ToArray();
+            if (steps.Length <= 1)
+                return false;
+
+            for (var i = 0; i < steps.Length - 1; i++)
+            {
+                if (steps[i] != steps[i + 1] - 1)
+                    return false;
+            }
+
+            return true;
         }
     }
 

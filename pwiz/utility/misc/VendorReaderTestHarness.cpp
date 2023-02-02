@@ -332,25 +332,26 @@ void testRead(const Reader& reader, const string& rawpath, const bfs::path& pare
                 for (size_t j=0; j < mzArray.size(); ++j)
                     duplicateIndicesByMz[mzArray[j]].push_back(j);
 
-                bool hasDuplicates = false;
+                int duplicates = false;
                 for (auto& mzIndicesPair : duplicateIndicesByMz)
                     if (mzIndicesPair.second.size() > 1)
                     {
-                        hasDuplicates = true;
-                        break;
+                        duplicates += mzIndicesPair.second.size() - 1;
                     }
 
-                if (hasDuplicates)
+                if (duplicates > 0)
                 {
-                    ss << "Spectrum " << s->id << " - " << duplicateIndicesByMz.size() << " duplicates (";
+                    ss << "Spectrum " << s->id << " - " << duplicates << " duplicates (";
                     for (auto& mzIndicesPair : duplicateIndicesByMz)
                     {
+                        if (mzIndicesPair.second.size() == 1)
+                            continue;
                         ss << mzIndicesPair.first << " [" << mzIndicesPair.second[0];
-                        for (size_t k = 0; k < mzIndicesPair.second.size(); ++k)
+                        for (size_t k = 1; k < mzIndicesPair.second.size(); ++k)
                             ss << " " << mzIndicesPair.second[k];
                         ss << "]";
                     }
-                    ss << ")";
+                    ss << ")\n";
                 }
             }
 
@@ -438,7 +439,7 @@ void testRead(const Reader& reader, const string& rawpath, const bfs::path& pare
         stringstreamPtr->clear();
         stringstreamPtr->seekp(0);
 
-        if (msd.run.spectrumListPtr)
+        if (msd.run.spectrumListPtr && config.preferOnlyMsLevel != 2)
         {
             // mzML <-> MGF
             vendorMsd.run.spectrumListPtr = SpectrumListPtr(new SpectrumList_MGF_Filter(vendorMsd.run.spectrumListPtr));
@@ -753,6 +754,7 @@ string ReaderTestConfig::resultFilename(const string& baseFilename) const
     if (peakPickingCWT) bal::replace_all(result, ".mzML", "-centroid-cwt.mzML");
     if (!isolationMzAndMobilityFilter.empty()) bal::replace_all(result, ".mzML", "-mzMobilityFilter.mzML");
     if (globalChromatogramsAreMs1Only) bal::replace_all(result, ".mzML", "-globalChromatogramsAreMs1Only.mzML");
+    if (ddaProcessing) bal::replace_all(result, ".mzML", "-ddaProcessing.mzML");
     //if (thresholdCount > 0) bal::replace_all(result, ".mzML", "-top" + lexical_cast<string>(thresholdCount) + ".mzML");
     return result;
 }
@@ -778,7 +780,8 @@ void ReaderTestConfig::wrap(MSData& msd) const
 
 
 PWIZ_API_DECL
-TestResult testReader(const Reader& reader, const vector<string>& args, bool testAcceptOnly, bool requireUnicodeSupport, const TestPathPredicate& isPathTestable, const ReaderTestConfig& config)
+TestResult testReader(const Reader& reader, const vector<string>& args, bool testAcceptOnly, bool requireUnicodeSupport,
+                      const TestPathPredicate& isPathTestable, const ReaderTestConfig& config, bool catchReaderExceptions)
 {
     bool generateMzML;
     vector<string> rawpaths;
@@ -831,7 +834,22 @@ TestResult testReader(const Reader& reader, const vector<string>& args, bool tes
             if (generateMzML && config.autoTest)
                 continue;
             else if (generateMzML && !testAcceptOnly)
-                generate(reader, rawpath, parentPath, config);
+            {
+                try
+                {
+                    generate(reader, rawpath, parentPath, config);
+                }
+                catch (exception& e)
+                {
+                    if (!catchReaderExceptions)
+                        throw;
+                    cerr << "Error generating result for " << rawpath << " (" << config.resultFilename("config.mzML") <<
+                        (config.peakPickingCWT ? "-cwt" : "") <<
+                        (config.thresholdCount > 0 ? "-threshold-top3" : "") <<
+                        "): " << e.what() << endl;
+                    ++result.failedTests;
+                }
+            }
             else
             {
                 try
@@ -840,6 +858,8 @@ TestResult testReader(const Reader& reader, const vector<string>& args, bool tes
                 }
                 catch (exception& e)
                 {
+                    if (!catchReaderExceptions)
+                        throw;
                     cerr << "Error testing on " << rawpath << " (" << config.resultFilename("config.mzML") <<
                         (config.peakPickingCWT ? "-cwt" : "") <<
                         (config.thresholdCount > 0 ? "-threshold-top3" : "") <<

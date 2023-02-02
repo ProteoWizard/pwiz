@@ -35,7 +35,6 @@ using pwiz.Skyline.Model.Irt;
 using pwiz.Skyline.Model.Lib;
 using pwiz.Skyline.Model.Optimization;
 using pwiz.Skyline.Model.Proteome;
-using pwiz.Skyline.Model.Results.RemoteApi;
 using pwiz.Skyline.Model.Results.Scoring;
 using pwiz.Skyline.Model.RetentionTimes;
 using pwiz.Skyline.Model.Tools;
@@ -49,7 +48,6 @@ using pwiz.Common.Collections;
 using pwiz.ProteowizardWrapper;
 using pwiz.Skyline.Controls.Graphs;
 using pwiz.Skyline.Model.DocSettings.AbsoluteQuantification;
-using pwiz.Skyline.Model.DocSettings.MetadataExtraction;
 using pwiz.Skyline.Model.GroupComparison;
 using pwiz.Skyline.Model.Lists;
 using pwiz.Skyline.Model.Results;
@@ -123,6 +121,18 @@ namespace pwiz.Skyline.Properties
             catch (Exception)
             {
                 // Ignore exceptions
+            }
+        }
+
+        /// <summary>
+        /// Clears internal cache of original serialized settings values and resets all settings to their default value.
+        /// </summary>
+        public new void Reset()
+        {
+            lock (this)
+            {
+                _originalSerializedValues.Clear();
+                base.Reset();
             }
         }
 
@@ -540,7 +550,7 @@ namespace pwiz.Skyline.Properties
 
         [UserScopedSettingAttribute]
         // Saves column type positions between transition lists. This way when a user tell us the correct column positions they are carried
-        // on to the next transition list
+        // on to the next transition list. Normally these are saved in invariant language (en) but we can read localized for backward compatibility
         public List<string> CustomImportTransitionListColumnTypesList
         {
             get
@@ -1301,6 +1311,12 @@ namespace pwiz.Skyline.Properties
                        };
         }
 
+        public void ResetDefaults()
+        {
+            Clear();
+            AddDefaults();
+        }
+
         public static readonly ToolDescription DEPRECATED_QUASAR = new ToolDescription(@"QuaSAR",
                                                                               @"http://genepattern.broadinstitute.org/gp/pages/index.jsf?lsid=QuaSAR",
                                                                               string.Empty);
@@ -1446,6 +1462,17 @@ namespace pwiz.Skyline.Properties
                     return editServer.Server;
 
                 return null;
+            }
+        }
+
+        public Server EditCredentials(Control owner, Server item, IEnumerable<Server> existing, string username, string password)
+        {
+            using (var editServerDlg = new EditServerDlg(existing ?? this) { Server = item })
+            {
+                editServerDlg.Username = username;
+                editServerDlg.Password = password;
+                editServerDlg.textServerURL.Enabled = false;
+                return editServerDlg.ShowDialog(owner) == DialogResult.OK ? editServerDlg.Server : null;
             }
         }
 
@@ -2495,7 +2522,7 @@ namespace pwiz.Skyline.Properties
 
         private static MeasuredIon CreateMeasuredIon(string name, string formula)
         {
-            return new MeasuredIon(name, formula, null, null, Adduct.SINGLY_PROTONATED);
+            return new MeasuredIon(name, formula, null, null, Adduct.M_PLUS);
         }
 
         public override int RevisionIndexCurrent { get { return 1; } }
@@ -2949,7 +2976,8 @@ namespace pwiz.Skyline.Properties
                         new[] {IsotopeLabelType.heavy}
                     ),
                     new PeptideIntegration(null), 
-                    BackgroundProteome.NONE
+                    BackgroundProteome.NONE,
+                    ProteinAssociation.ParsimonySettings.DEFAULT
                 ),
                 new TransitionSettings
                 (
@@ -3057,6 +3085,10 @@ namespace pwiz.Skyline.Properties
 
     public class ReportSpecList : SerializableSettingsList<ReportSpec>, IItemEditor<ReportSpec>
     {
+        /// <summary>
+        /// OBSOLETE: replaced by  <see cref="Settings.PersistedViews"></see> for reports management/>
+        /// </summary>
+
         public const string EXT_REPORTS = ".skyr";
         // CONSIDER: Consider localizing tool report names which is not possible at the moment.
         public static string SRM_COLLIDER_REPORT_NAME

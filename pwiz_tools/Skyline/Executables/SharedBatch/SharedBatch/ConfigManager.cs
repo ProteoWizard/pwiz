@@ -38,107 +38,386 @@ namespace SharedBatch
     {
         // Handles all modification to configs, the config list, configRunners, and log files
         // The UI should reflect the configs, runners, and log files from this class
-
-        protected Importer importer; // a ReadXml method to import the configurations
-
-        protected ImmutableList<IConfig> _configList { get; private set; } // the list of configurations. Every config must have a validation status in _configValidation
-
-        protected ImmutableDictionary<string, bool> _configValidation { get; private set; } // dictionary mapping from config name to if that config is valid
-
-        protected readonly List<Logger> _logList; // list of all loggers displayed in the dropDown list on the log tab
-
-        protected bool _runningUi; // if the UI is displayed (false when testing)
+        
         protected IMainUiControl _uiControl; // null if no UI displayed
+        protected ImmutableList<Logger> _logList;
 
-        protected readonly object _lock = new object(); // lock required for any mutator or getter method on _configList, _configValidators, or SelectedConfig
+        private ConfigManagerState _baseState; // the current state
+
+        protected readonly object _lock = new object(); // lock required for getting or setting the state
         protected readonly object _loggerLock = new object(); // lock required for any mutator or getter method on _logList or SelectedLog
-
-        public Dictionary<string, string> RootReplacement; // dictionary mapping from roots of invalid file paths to roots of valid file paths
 
         public ConfigManager()
         {
-            SelectedConfig = -1;
-            SelectedLog = 0;
-            _logList = new List<Logger>();
-            _configList = ImmutableList<IConfig>.Empty;
-            _configValidation = ImmutableDictionary<string, bool>.Empty;
-            RootReplacement = new Dictionary<string, string>();
+            _baseState = ConfigManagerState.Empty();
+            _logList = ImmutableList<Logger>.Empty;
         }
 
-        public void Init()
-        {
-            AssertAllInitialized();
-        }
-
-        protected void AssertAllInitialized()
-        {
-            if (importer == null || _configList == null || _configValidation == null || 
-                _logList == null || _lock == null || _loggerLock == null || RootReplacement == null)
-                throw new NullReferenceException("Not all Config Manager variables have been initialized.");
-        }
-
-        public int SelectedConfig { get; private set; } // index of the selected configuration
-        public int SelectedLog { get; protected set; } // index of the selected log. index 0 corresponds to _logger, any index > 0 corresponds to oldLogs[index - 1]
+        public ConfigManagerState State => GetState();
         
-        protected List<IConfig> LoadConfigList(decimal currentXmlVersion)
+        public int SelectedLog { get; protected set; } // index of the selected log. index 0 corresponds to _logger, any index > 0 corresponds to oldLogs[index - 1]
+
+       
+
+        public static void SaveConfigList(ConfigManagerState state)
         {
-            ConfigList.Importer = importer;
-            ConfigList.XmlVersion = currentXmlVersion;
-            // Do not load saved configurations in test mode
-            return _runningUi ? Settings.Default.ConfigList.ToList() : new List<IConfig>();
+            Settings.Default.SetConfigList(state.ConfigList.ToList());
+            Settings.Default.Save();
         }
 
 
-        protected ConfigManagerState ProgramaticallyInsertConfig(IConfig config, int index, ConfigManagerState state)
+
+        // Static Methods
+
+        #region Alert Dialogs
+
+        public static void DisplayError(IMainUiControl uiControl, string message)
         {
-            if (state == null) state = new ConfigManagerState(this);
-            var configList = state.configList.Insert(index, config);
-            ImmutableDictionary<string, bool> configValidation;
-            try
+            uiControl?.DisplayError(message);
+        }
+
+        public static void DisplayErrorWithException(IMainUiControl uiControl, string message, Exception ex)
+        {
+            uiControl?.DisplayErrorWithException(message, ex);
+        }
+
+        public static void DisplayWarning(IMainUiControl uiControl, string message)
+        {
+            uiControl?.DisplayWarning(message);
+        }
+
+        public static DialogResult DisplayQuestion(IMainUiControl uiControl, string message)
+        {
+            if (uiControl == null)
+                return DialogResult.Yes;
+            return uiControl.DisplayQuestion(message);
+        }
+
+        public static DialogResult DisplayLargeOkCancel(IMainUiControl uiControl, string message)
+        {
+            if (uiControl == null)
+                return DialogResult.Yes;
+            return uiControl.DisplayLargeOkCancel(message);
+        }
+
+        #endregion
+        
+
+        // Instance methods
+
+        #region Manipulate State
+
+        // Updates the config manager to a new valid state when the configuration list has changed
+        // newState should contain a configuration list that is different from the current state in at least one way
+        public void SetState(ConfigManagerState oldState, ConfigManagerState newState)
+        {
+            lock (_lock)
             {
-                config.Validate();
-                configValidation = state.configValidation.Add(config.GetName(), true);
+                if (!Equals(oldState, GetState()))
+                {
+                    throw new ArgumentException(Resources
+                        .ConfigManager_SetState_The_state_of_the_configuration_list_has_changed_since_this_operation_started__Please_try_again_);
+                }
+                newState.ValidateState();
+                if (newState.ModelChanged)
+                    SaveConfigList(newState);
+                _baseState = newState.Copy();
             }
-            catch (ArgumentException)
+        }
+
+        protected ConfigManagerState GetState()
+        {
+            lock (_lock)
             {
-                // Invalid configurations are loaded
-                configValidation = state.configValidation.Add(config.GetName(), false);
+                return _baseState.Copy();
             }
-            var newState = new ConfigManagerState(state)
-            {
-                configList = configList,
-                configValidation = configValidation
-            };
-            return newState;
         }
 
         public void Close()
         {
-            SaveConfigList();
+            SaveConfigList(GetState());
         }
 
-        public void SaveConfigList()
+        #endregion
+
+        #region Logging
+
+        public Logger GetSelectedLogger()
         {
-            lock (_lock)
+            lock (_loggerLock)
             {
-                Settings.Default.SetConfigList(_configList.ToList());
-                Settings.Default.Save();
+                if (SelectedLog == -1)
+                    return null;
+                return _logList[SelectedLog];
             }
         }
 
+        public void SelectLog(int selected)
+        {
+            lock (_loggerLock)
+            {
+                if (selected < 0 || selected >= _logList.Count)
+                    throw new IndexOutOfRangeException(Resources.ConfigManagerState_SelectLog_No_log_at_index__ + selected);
+                SelectedLog = selected;
+            }
+        }
 
-        #region Configs
+        public void ClearLogs()
+        {
+            lock (_loggerLock)
+            {
+                _logList = ImmutableList<Logger>.Empty;
+            }
+        }
 
-        protected List<ListViewItem> ConfigsListViewItems(ImmutableDictionary<string, IConfigRunner> configRunners,
-            Graphics graphics, ConfigManagerState state)
+        public void RemoveLogsByName(object[] removingLogs)
+        {
+            lock (_loggerLock)
+            {
+                SelectedLog = -1;
+                int i = 0;
+                while (i < _logList.Count)
+                {
+                    if (removingLogs.Contains(_logList[i].LogFileName))
+                    {
+                        _logList[i].Delete(); // closes and deletes log file
+                        _logList = _logList.RemoveAt(i); // removes from list
+                        continue;
+                    }
+                    i++;
+                }
+            }
+        }
+
+        public object[] GetAllLogFiles()
+        {
+            lock (_loggerLock)
+            {
+                var logFiles = new object[_logList.Count];
+                for (int i = 0; i < _logList.Count; i++)
+                    logFiles[i] = _logList[i].LogFileName;
+                return logFiles;
+            }
+        }
+
+        public void InsertLog(int index, Logger logger)
+        {
+            lock (_loggerLock)
+            {
+                _logList = _logList.Insert(index, logger);
+            }
+        }
+
+        public bool LoggerIsDisplayed(string name)
+        {
+            lock (_loggerLock)
+            {
+                if (SelectedLog < 0)
+                    return false;
+                return GetSelectedLogger().Name.Equals(name);
+            }
+        }
+
+        public object[] GetLogNameList()
+        {
+            lock (_loggerLock)
+            {
+                var logNames = new object[_logList.Count];
+                for (int i = 0; i < _logList.Count; i++)
+                    logNames[i] = _logList[i].Name;
+                return logNames;
+            }
+        }
+
+        public void ArchiveFirstLog()
+        {
+            lock (_loggerLock)
+            {
+                var oldLogger = (_logList[0]).Archive();
+                if (oldLogger != null)
+                    _logList = _logList.Insert(1, oldLogger);
+            }
+        }
+
+        #endregion
+
+        #region UI Control
+
+        protected void UpdateUiLogs()
+        {
+            if (_uiControl == null)
+                return;
+            _uiControl.UpdateUiLogFiles();
+        }
+
+        protected void UpdateIsRunning(bool canStart, bool canStop)
+        {
+            if (_uiControl == null)
+                return;
+            _uiControl.UpdateRunningButtons(canStart, canStop);
+        }
+
+        #endregion
+        
+        #region Tests
+
+        public bool ConfigListEquals(List<IConfig> otherConfigs)
+        {
+            lock (_lock)
+            {
+                if (otherConfigs.Count != State.ConfigList.Count) return false;
+
+                for (int i = 0; i < State.ConfigList.Count; i++)
+                {
+                    if (!Equals(otherConfigs[i], State.ConfigList[i])) return false;
+                }
+                return true;
+            }
+        }
+
+        public string ListConfigNames()
+        {
+            lock (_lock)
+            {
+                var names = string.Empty;
+                foreach (var config in State.ConfigList)
+                {
+                    names += config.GetName() + "  ";
+                }
+                return names;
+            }
+        }
+
+        public int InvalidConfigCount()
+        {
+            var invalidCount = 0;
+            foreach (var validation in State.ConfigValidation.Values)
+                invalidCount += validation ? 0 : 1;
+            return invalidCount;
+        }
+
+        #endregion
+
+    }
+
+    // Represents a state of the config manager
+    public class ConfigManagerState
+    {
+        public ImmutableList<IConfig> ConfigList { get; private set; }
+        public ImmutableDictionary<string, bool> ConfigValidation { get; private set; }
+        public ImmutableDictionary<string, string> RootReplacement { get; private set; }
+        public int Selected { get; private set; }
+        public bool ModelChanged { get; private set; }
+
+        public static ConfigManagerState Empty()
+        {
+            return new ConfigManagerState(ImmutableList<IConfig>.Empty, ImmutableDictionary<string, bool>.Empty, ImmutableDictionary<string, string>.Empty);
+        }
+
+        public ConfigManagerState(ImmutableList<IConfig> configList, ImmutableDictionary<string, bool> configValidation, ImmutableDictionary<string, string> rootReplacement, int selected = -1,  bool modelChanged = true)
+        {
+            ConfigList = configList;
+            ConfigValidation = configValidation;
+            RootReplacement = rootReplacement;
+            Selected = selected;
+            ModelChanged = modelChanged;
+        }
+
+        public void ValidateState()
+        {
+            foreach (var config in ConfigList)
+            {
+                if (ConfigList.Count != ConfigValidation.Count || !ConfigValidation.ContainsKey(config.GetName()))
+                    throw new ArgumentException("Could not validate the new state of the configuration list. The operation did not succeed.");
+            }
+            if (Selected < -1 || Selected >= ConfigList.Count)
+                throw new IndexOutOfRangeException(string.Format(
+                    Resources.ConfigManager_SelectConfig_There_is_no_configuration_at_index___0_, Selected));
+        }
+
+        public ConfigManagerState Copy()
+        {
+            return new ConfigManagerState(ConfigList, ConfigValidation, RootReplacement, Selected, false);
+        }
+
+        public ConfigManagerState ModelHasChanged()
+        {
+            ModelChanged = true;
+            return this;
+        }
+
+        public ConfigManagerState ModelUnchanged()
+        {
+            ModelChanged = false;
+            return this;
+        }
+
+        // State methods
+
+        #region Config List
+
+        public ConfigManagerState LoadConfigList()
+        {
+            ConfigList = ImmutableList<IConfig>.Empty;
+            ConfigValidation = ImmutableDictionary<string, bool>.Empty;
+            Selected = -1;
+            foreach (var config in Settings.Default.ConfigList.ToList())
+                ProgramaticallyInsertConfig(ConfigList.Count, config);
+            return this;
+        }
+
+        public bool HasConfigs()
+        {
+            return ConfigList.Count > 0;
+        }
+
+        public IConfig GetConfig(int index)
+        {
+            return ConfigList[index];
+        }
+
+        public int GetConfigIndex(string name)
+        {
+            for (int i = 0; i < this.ConfigList.Count; i++)
+            {
+                if (ConfigList[i].GetName().Equals(name))
+                    return i;
+            }
+            return -1;
+        }
+
+        public ConfigManagerState MoveSelectedConfig(bool moveUp)
+        {
+            var movingConfig = ConfigList[Selected];
+            var delta = moveUp ? -1 : 1;
+            Selected += delta;
+            ConfigList = ConfigList.Remove(movingConfig).Insert(Selected, movingConfig);
+            ModelChanged = true;
+            return this;
+        }
+
+        public ConfigManagerState ReorderConfigs(List<int> newIndexOrder)
+        {
+            var selectedName = Selected >= 0 ? ConfigList[Selected].GetName() : null;
+            var oldConfigList = ConfigList;
+            ConfigList = ImmutableList<IConfig>.Empty;
+            foreach (var index in newIndexOrder)
+                ConfigList = ConfigList.Add(oldConfigList[index]);
+            if (selectedName != null)
+                Selected = GetConfigIndex(selectedName);
+            return this;
+        }
+
+        public List<ListViewItem> ConfigsAsListViewItems(ImmutableDictionary<string, IConfigRunner> configRunners,
+            Graphics graphics)
         {
             var listViewConfigs = new List<ListViewItem>();
-            foreach (var config in state.configList)
+            foreach (var config in ConfigList)
             {
                 var lvi = config.AsListViewItem(configRunners[config.GetName()], graphics);
-                if (!_configValidation[config.GetName()])
+                if (!ConfigValidation[config.GetName()])
                     lvi.ForeColor = Color.Red;
-                if (HasSelectedConfig() && _configList[SelectedConfig].GetName().Equals(config.GetName()))
+                if (HasSelectedConfig() && ConfigList[Selected].GetName().Equals(config.GetName()))
                 {
                     lvi.BackColor = Color.LightSteelBlue;
                     foreach (ListViewItem.ListViewSubItem subItem in lvi.SubItems)
@@ -150,166 +429,32 @@ namespace SharedBatch
             return listViewConfigs;
         }
 
-        public bool HasConfigs()
+        public object[] ConfigNamesAsObjectArray()
         {
-            return HasConfigs(new ConfigManagerState(this));
-        }
-
-        protected bool HasConfigs(ConfigManagerState state)
-        {
-            return state.configList.Count > 0;
-        }
-
-        public bool HasSelectedConfig()
-        {
-            return SelectedConfig >= 0;
-        }
-
-        protected bool HasSelectedConfig(ConfigManagerState state)
-        {
-            return state.selected >= 0;
-        }
-
-        public void SelectConfig(int newIndex)
-        {
-            lock (_lock)
-            {
-                new ConfigManagerState(this).ValidateState(newIndex);
-                if (SelectedConfig != newIndex)
-                {
-                    SelectedConfig = newIndex;
-                    _uiControl?.UpdateUiConfigurations();
-                }
-            }
-        }
-
-        public void DeselectConfig()
-        {
-            lock (_lock)
-            {
-                if (SelectedConfig >= 0)
-                {
-                    SelectedConfig = -1;
-                    _uiControl?.UpdateUiConfigurations();
-                }
-            }
-        }
-
-        protected void AssertConfigSelected(ConfigManagerState state)
-        {
-            if (SelectedConfig < 0)
-            {
-                throw new IndexOutOfRangeException(Resources
-                    .ConfigManager_CheckConfigSelected_There_is_no_configuration_selected_);
-            }
-        }
-
-        public int GetConfigIndex(string name)
-        {
-            return GetConfigIndex(name, new ConfigManagerState(this));
-        }
-
-        protected int GetConfigIndex(string name, ConfigManagerState state)
-        {
-            for (int i = 0; i < state.configList.Count; i++)
-            {
-                if (state.configList[i].GetName().Equals(name))
-                    return i;
-            }
-            return -1;
-        }
-
-        public IConfig GetSelectedConfig()
-        {
-            var state = new ConfigManagerState(this);
-            AssertConfigSelected(state);
-            return state.configList[SelectedConfig];
-        }
-
-        public IConfig GetConfig(int index)
-        {
-            return _configList[index];
-        }
-
-        public bool IsSelectedConfigValid()
-        {
-            var state = new ConfigManagerState(this);
-            AssertConfigSelected(state);
-            return state.configValidation[state.configList[state.selected].GetName()];
-        }
-
-        public bool IsConfigValid(int index)
-        {
-            return _configValidation[_configList[index].GetName()];
-        }
-
-        public void UpdateConfigValidation()
-        {
-            var state = new ConfigManagerState(this);
-            var configValidationMutable = new Dictionary<string, bool>();
-            foreach (var config in state.configList)
-            {
-                try
-                {
-                    config.Validate();
-                    configValidationMutable.Add(config.GetName(), true);
-                }
-                catch (ArgumentException)
-                {
-                    configValidationMutable.Add(config.GetName(), false);
-                }
-            }
-
-            state.configValidation = ImmutableDictionary<string, bool>.Empty.AddRange(configValidationMutable);
-            SetState(state);
-            _uiControl.UpdateUiConfigurations();
-        }
-
-        public void SetConfigInvalid(IConfig invalidConfig)
-        {
-            lock (_lock)
-            {
-                var state = new ConfigManagerState(this);
-                var configValidationMutable = new Dictionary<string, bool>();
-                foreach (var config in state.configList)
-                {
-                    if (invalidConfig.GetName().Equals(config.GetName()))
-                        configValidationMutable.Add(config.GetName(), false);
-                    else
-                        configValidationMutable.Add(config.GetName(), state.configValidation[config.GetName()]);
-                }
-
-                state.configValidation = ImmutableDictionary<string, bool>.Empty.AddRange(configValidationMutable);
-                SetState(state);
-            }
-            _uiControl.UpdateUiConfigurations();
+            var names = new object[ConfigList.Count];
+            for (int i = 0; i < ConfigList.Count; i++)
+                names[i] = ConfigList[i].GetName();
+            return names;
         }
 
         public IConfig GetLastModified() // creates config using most recently modified config
         {
-            var state = new ConfigManagerState(this);
-            if (!HasConfigs(state))
+            if (!HasConfigs())
                 return null;
-            var lastModified = state.configList[0];
-            foreach (var config in state.configList)
+            var lastModified = ConfigList[0];
+            foreach (var config in ConfigList)
             {
                 if (config.GetModified() > lastModified.GetModified())
                     lastModified = config;
             }
-
             return lastModified;
         }
 
         public void AssertUniqueName(string newName, bool replacingSelected)
         {
-            AssertUniqueName(newName, replacingSelected, new ConfigManagerState(this));
-        }
-
-        private void AssertUniqueName(string newName, bool replacingSelected, ConfigManagerState state)
-        {
-            if (state.configValidation.Keys.Contains(newName))
+            if (ConfigValidation.Keys.Contains(newName))
             {
-                if (!replacingSelected || !_configList[SelectedConfig].GetName().Equals(newName))
+                if (!replacingSelected || !ConfigList[Selected].GetName().Equals(newName))
                     throw new ArgumentException(
                         string.Format(Resources.ConfigManager_InsertConfiguration_Configuration___0___already_exists_,
                             newName) + Environment.NewLine +
@@ -317,147 +462,154 @@ namespace SharedBatch
             }
         }
 
-        protected ConfigManagerState UserInsertConfig(IConfig config, int index, ConfigManagerState state)
+        public ConfigManagerState UserInsertConfig(int index, IConfig config)
         {
-            lock (_lock)
+            AssertUniqueName(config.GetName(), false);
+            ProgramLog.Info(string.Format(Resources.ConfigManager_InsertConfiguration_Adding_configuration___0___,
+                config.GetName()));
+            ConfigList = ConfigList.Insert(index, config);
+            ConfigValidation = ConfigValidation.Add(config.GetName(), true);
+            Selected = index;
+            ModelChanged = true;
+            return this;
+        }
+
+        public ConfigManagerState UserRemoveAt(int index)
+        {
+            RemoveAt(index);
+            if (Selected == ConfigList.Count)
+                Selected -= 1;
+            ModelChanged = true;
+            return this;
+        }
+
+        public ConfigManagerState ProgramaticallyInsertConfig(int index, IConfig config)
+        {
+            ConfigList = ConfigList.Insert(index, config);
+            try
             {
-                AssertUniqueName(config.GetName(), false, state);
-                ProgramLog.Info(string.Format(Resources.ConfigManager_InsertConfiguration_Adding_configuration___0___,
-                    config.GetName()));
-                var configList = state.configList.Insert(index, config);
-                var configValidation = state.configValidation.Add(config.GetName(), true);
-                return new ConfigManagerState(state)
-                {
-                    configList = configList,
-                    configValidation = configValidation,
-                    selected = index,
-                    editedConfigFromRedo = index
-                };
+                config.Validate();
+                ConfigValidation = ConfigValidation.Add(config.GetName(), true);
             }
-        }
-
-        protected ConfigManagerState MoveSelectedConfig(ConfigManagerState state, bool moveUp)
-        {
-            var movingConfig = _configList[SelectedConfig];
-            var delta = moveUp ? -1 : 1;
-            state.configList = state.configList.Remove(movingConfig);
-            state.configList = state.configList.Insert(SelectedConfig + delta, movingConfig);
-            state.editedConfigFromUndo = state.selected;
-            state.selected += delta;
-            state.editedConfigFromRedo = state.selected;
-            return state;
-        }
-
-        protected ConfigManagerState UserRemoveAt(int index, ConfigManagerState state)
-        {
-            lock (_lock)
+            catch (ArgumentException)
             {
-                state = RemoveAt(index, state);
-                if (state.selected == state.configList.Count)
-                    state.selected--;
-                return state;
+                // Invalid configurations are loaded
+                ConfigValidation = ConfigValidation.Add(config.GetName(), false);
             }
+            return this;
         }
 
-        protected ConfigManagerState ProgramaticallyRemoveAt(int index, ConfigManagerState state)
+        public ConfigManagerState ProgramaticallyRemoveAt(int index)
         {
-            return RemoveAt(index, state);
+            return RemoveAt(index);
         }
 
-        private ConfigManagerState RemoveAt(int index, ConfigManagerState state)
+        private ConfigManagerState RemoveAt(int index)
         {
-            var config = state.configList[index];
+            var config = ConfigList[index];
             ProgramLog.Info(string.Format(Resources.ConfigManager_RemoveSelected_Removing_configuration____0__,
                 config.GetName()));
-            if (!state.configValidation.Keys.Contains(config.GetName()))
+            if (!ConfigValidation.Keys.Contains(config.GetName()))
             {
                 throw new ArgumentException(string.Format(
                     Resources.ConfigManager_RemoveConfig_Cannot_delete___0____configuration_does_not_exist_,
                     config.GetName()));
             }
 
-            var configList = state.configList.Remove(config);
-            var configValidation = state.configValidation.Remove(config.GetName());
-            return new ConfigManagerState(state)
+            ConfigList = ConfigList.Remove(config);
+            ConfigValidation = ConfigValidation.Remove(config.GetName());
+            return this;
+        }
+
+        #endregion
+
+        #region Config Selection
+
+        public bool HasSelectedConfig()
+        {
+            return Selected >= 0;
+        }
+
+        public ConfigManagerState SelectIndex(int newIndex)
+        {
+            Selected = newIndex;
+            return this;
+        }
+
+        public void AssertConfigSelected()
+        {
+            if (Selected < 0)
             {
-                configList = configList,
-                configValidation = configValidation,
-                editedConfigFromUndo = index
-            };
+                throw new IndexOutOfRangeException(Resources
+                    .ConfigManager_CheckConfigSelected_There_is_no_configuration_selected_);
+            }
+        }
+
+        public IConfig GetSelectedConfig()
+        {
+            AssertConfigSelected();
+            return ConfigList[Selected];
         }
 
         #endregion
 
-        #region UI Control
+        #region Config Validation
 
-        protected void DisplayError(string message)
+        public bool IsSelectedConfigValid()
         {
-            if (!_runningUi)
-                return;
-            _uiControl.DisplayError(message);
+            AssertConfigSelected();
+            return ConfigValidation[ConfigList[Selected].GetName()];
         }
 
-        protected void DisplayErrorWithException(string message, Exception ex)
+        public bool IsConfigValid(int index)
         {
-            if (!_runningUi)
-                return;
-            _uiControl.DisplayErrorWithException(message, ex);
+            return ConfigValidation[ConfigList[index].GetName()];
         }
 
-        protected void DisplayWarning(string message)
+        public ConfigManagerState UpdateConfigValidation()
         {
-            if (!_runningUi)
-                return;
-            _uiControl.DisplayWarning(message);
+            ConfigValidation = ImmutableDictionary<string, bool>.Empty;
+            foreach (var config in ConfigList)
+            {
+                try
+                {
+                    config.Validate();
+                    ConfigValidation = ConfigValidation.Add(config.GetName(), true);
+                }
+                catch (ArgumentException)
+                {
+                    ConfigValidation = ConfigValidation.Add(config.GetName(), false);
+                }
+            }
+            return this;
         }
 
-        protected DialogResult DisplayQuestion(string message)
+        public ConfigManagerState SetConfigInvalid(IConfig invalidConfig)
         {
-            if (!_runningUi)
-                return DialogResult.Yes;
-            return _uiControl.DisplayQuestion(message);
+            ConfigValidation = ConfigValidation.Remove(invalidConfig.GetName())
+                .Add(invalidConfig.GetName(), false);
+            return this;
         }
 
-        protected DialogResult DisplayLargeOkCancel(string message)
-        {
-            if (!_runningUi)
-                return DialogResult.Yes;
-            return _uiControl.DisplayLargeOkCancel(message);
-        }
-
-        protected void UpdateUiLogs()
-        {
-            if (!_runningUi)
-                return;
-            _uiControl.UpdateUiLogFiles();
-        }
-
-        protected void UpdateIsRunning(bool canStart, bool canStop)
-        {
-            if (!_runningUi)
-                return;
-            _uiControl.UpdateRunningButtons(canStart, canStop);
-        }
-        
         #endregion
 
-        #region Import/Export
-
+        #region Read / Write Configs
 
         public delegate DialogResult ShowDownloadedFileForm(string filePath, out string copiedDestination);
 
-        // gets the list of importing configs
-        protected List<IConfig> ImportFrom(string filePath, decimal currentXmlVersion, ShowDownloadedFileForm showDownloadedFileForm)
+        public ConfigManagerState ImportFrom(Importer importer, string filePath, decimal currentXmlVersion,
+             IMainUiControl uiControl, ShowDownloadedFileForm showDownloadedFileForm, out List<int> addedIndicies)
         {
             var copiedDestination = string.Empty;
             var copiedConfigFile = string.Empty;
             var forceReplaceRoot = string.Empty;
-            
+            addedIndicies = new List<int>();
+
             if (filePath.Contains(FileUtil.DOWNLOADS_FOLDER) && showDownloadedFileForm != null)
             {
                 var dialogResult = showDownloadedFileForm(filePath, out copiedDestination);
                 if (dialogResult != DialogResult.Yes)
-                    return new List<IConfig>();
+                    return this;
                 copiedConfigFile = Path.Combine(copiedDestination, Path.GetFileName(filePath));
                 var file = new FileInfo(filePath);
                 file.CopyTo(copiedConfigFile, true);
@@ -478,7 +630,7 @@ namespace SharedBatch
                         {
                             if (reader.Name.Equals("config_list") || reader.Name.Equals("ConfigList"))
                             {
-                                var importingXmlVersion = ConfigList.ReadXmlVersion(reader);
+                                var importingXmlVersion = Properties.ConfigList.ReadXmlVersion(reader);
                                 if (importingXmlVersion > currentXmlVersion)
                                 {
                                     throw new ArgumentException(string.Format(
@@ -489,7 +641,7 @@ namespace SharedBatch
 
                                 var oldFolder = reader.GetAttribute(Attr.saved_path_root);
                                 var oldConfigFile = reader.GetAttribute(Attr.SavedConfigsFilePath);
-                                oldFolder = oldFolder?? reader.GetAttribute(Attr.SavedPathRoot);
+                                oldFolder = oldFolder ?? reader.GetAttribute(Attr.SavedPathRoot);
                                 if (!string.IsNullOrEmpty(oldConfigFile) && string.IsNullOrEmpty(oldFolder))
                                     oldFolder = Path.GetDirectoryName(oldConfigFile);
 
@@ -498,13 +650,13 @@ namespace SharedBatch
                                     var newFolder = string.IsNullOrEmpty(copiedDestination)
                                         ? Path.GetDirectoryName(filePath)
                                         : Path.GetDirectoryName(copiedConfigFile);
-                                    AddRootReplacement(oldFolder, newFolder, false, out string oldRoot, out _);
+                                    AddRootReplacement(oldFolder, newFolder, false, uiControl, out string oldRoot, out _, out _);
                                     if (!string.IsNullOrEmpty(copiedDestination))
                                         forceReplaceRoot = oldRoot;
                                 }
                                 else if (!string.IsNullOrEmpty(copiedConfigFile))
                                 {
-                                    DisplayWarning(string.Format(Resources.ConfigManager_ImportFrom_The_imported_configurations_are_from_an_old_file_format_and_could_not_be_copied_to__0_, copiedDestination));
+                                    ConfigManager.DisplayWarning(uiControl, string.Format(Resources.ConfigManager_ImportFrom_The_imported_configurations_are_from_an_old_file_format_and_could_not_be_copied_to__0_, copiedDestination));
                                 }
 
                                 while (!reader.Name.EndsWith("_config"))
@@ -544,35 +696,35 @@ namespace SharedBatch
             catch (Exception e)
             {
                 // possible xml format error
-                DisplayError(
+                ConfigManager.DisplayError(uiControl,
                     string.Format(
                         Resources.ConfigManager_Import_An_error_occurred_while_importing_configurations_from__0__,
                         filePath) + Environment.NewLine +
                     e.Message);
-                return new List<IConfig>();
+                return this;
             }
+            return HandleImportedConfigErrors(readConfigs, readXmlErrors, filePath, forceReplaceRoot, uiControl, out addedIndicies);
+        }
 
-            // delete temporary file used to rewrite XML
-            if (filePath.EndsWith(TextUtil.EXT_TMP))
-                File.Delete(filePath);
-
+        // handles imported config errors like duplicate configs
+        protected ConfigManagerState HandleImportedConfigErrors(List<IConfig> readConfigs, List<string> readXmlErrors, string filePath, string forceReplaceRoot,
+            IMainUiControl uiControl, out List<int> addedIndicies)
+        {
+            addedIndicies = new List<int>();
             if (readConfigs.Count == 0 && readXmlErrors.Count == 0)
             {
                 // warn if no configs found
-                DisplayWarning(string.Format(Resources.ConfigManager_Import_No_configurations_were_found_in__0__,
+                ConfigManager.DisplayWarning(uiControl, string.Format(Resources.ConfigManager_Import_No_configurations_were_found_in__0__,
                     filePath));
-                return new List<IConfig>();
+                return this;
             }
 
             var duplicateConfigNames = new List<string>();
-            lock (_lock)
+            foreach (IConfig config in readConfigs)
             {
-                foreach (IConfig config in readConfigs)
-                {
-                    // Make sure that the configuration name is unique
-                    if (_configValidation.Keys.Contains(config.GetName()))
-                        duplicateConfigNames.Add(config.GetName());
-                }
+                // Make sure that the configuration name is unique
+                if (ConfigValidation.Keys.Contains(config.GetName()))
+                    duplicateConfigNames.Add(config.GetName());
             }
 
             var message = new StringBuilder();
@@ -587,15 +739,14 @@ namespace SharedBatch
                 message.Append(duplicateMessage).Append(Environment.NewLine);
                 duplicateMessage.Append(Resources
                     .ConfigManager_ImportFrom_Do_you_want_to_overwrite_these_configurations_);
-                if (DialogResult.Yes == DisplayQuestion(duplicateMessage.ToString()))
+                if (DialogResult.Yes == ConfigManager.DisplayQuestion(uiControl, duplicateMessage.ToString()))
                 {
                     message.Append(Resources.ConfigManager_ImportFrom_Overwriting_).Append(Environment.NewLine);
                     duplicateConfigNames.Clear();
                 }
             }
             
-            var addedConfigs = new List<IConfig>();
-
+            var numAddedConfigs = 0;
             foreach (IConfig config in readConfigs)
             {
                 if (duplicateConfigNames.Contains(config.GetName())) continue;
@@ -605,43 +756,37 @@ namespace SharedBatch
                 if (string.IsNullOrEmpty(forceReplaceRoot))
                     addingConfig = RunRootReplacement(config);
                 else
-                    addingConfig = ForceRootReplacement(config, forceReplaceRoot, out _);
-                addedConfigs.Add(addingConfig);
+                    addingConfig = ForceRootReplacement(config, forceReplaceRoot, RootReplacement[forceReplaceRoot], out _);
+                numAddedConfigs++;
+                var existingConfigIndex = GetConfigIndex(addingConfig.GetName());
+                ModelChanged = true;
+                if (existingConfigIndex >= 0)
+                    ProgramaticallyRemoveAt(existingConfigIndex);
+                addedIndicies.Add(existingConfigIndex >= 0 ? existingConfigIndex : ConfigList.Count);
+                ProgramaticallyInsertConfig(existingConfigIndex >= 0 ? existingConfigIndex : ConfigList.Count, addingConfig);
             }
 
             message.Append(Resources.ConfigManager_Import_Number_of_configurations_imported_);
-            message.Append(addedConfigs.Count).Append(Environment.NewLine);
+            message.Append(numAddedConfigs).Append(Environment.NewLine);
 
             if (readXmlErrors.Count > 0)
             {
                 var errorMessage = new StringBuilder(Resources
                         .ConfigManager_Import_Number_of_configurations_with_errors_that_could_not_be_imported_)
                     .Append(Environment.NewLine);
-                foreach (var error in readXmlErrors)
+                foreach (var errorLine in readXmlErrors)
                 {
-                    errorMessage.Append(error).Append(Environment.NewLine);
+                    errorMessage.Append(errorLine).Append(Environment.NewLine);
                 }
-
                 message.Append(errorMessage);
-                DisplayError(errorMessage.ToString());
+                ConfigManager.DisplayError(uiControl, errorMessage.ToString());
             }
-
             ProgramLog.Info(message.ToString());
-            return addedConfigs;
-        }
-        
-        public object[] ConfigNamesAsObjectArray()
-        {
-            var state = new ConfigManagerState(this);
-            var names = new object[_configList.Count];
-            for (int i = 0; i < state.configList.Count; i++)
-                names[i] = state.configList[i].GetName();
-            return names;
+            return this;
         }
 
         public void ExportConfigs(string filePath, decimal xmlVersion, int[] indiciesToSave)
         {
-            var state = new ConfigManagerState(this);
             var directory = string.Empty;
             // Exception if no configurations are selected to export
             if (indiciesToSave.Length == 0)
@@ -680,14 +825,13 @@ namespace SharedBatch
                         writer.WriteAttributeString(Attr.saved_path_root, directory);
                         writer.WriteAttribute(Attr.xml_version, xmlVersion);
                         foreach (int index in indiciesToSave)
-                            state.configList[index].WriteXml(writer);
+                            ConfigList[index].WriteXml(writer);
                         writer.WriteEndElement();
                     }
                 }
             }
         }
 
-        // TODO (Ali): fix autoQC SavedFilePath
         public enum Attr
         {
             saved_path_root,
@@ -699,99 +843,86 @@ namespace SharedBatch
             SavedPathRoot
         }
 
-        #endregion
-        
-        #region Tests
 
-        public bool ConfigListEquals(List<IConfig> otherConfigs)
-        {
-            lock (_lock)
-            {
-                if (otherConfigs.Count != _configList.Count) return false;
-
-                for (int i = 0; i < _configList.Count; i++)
-                {
-                    if (!Equals(otherConfigs[i], _configList[i])) return false;
-                }
-                return true;
-            }
-        }
-
-        public string ListConfigNames()
-        {
-            lock (_lock)
-            {
-                var names = string.Empty;
-                foreach (var config in _configList)
-                {
-                    names += config.GetName() + "  ";
-                }
-                return names;
-            }
-        }
-
-        public int InvalidConfigCount()
-        {
-            var invalidCount = 0;
-            foreach (var validation in _configValidation.Values)
-                invalidCount += validation ? 0 : 1;
-            return invalidCount;
-        }
 
         #endregion
 
+        #region Modify Configs
 
-        #region Logging
-
-        public Logger GetSelectedLogger()
-        {
-            return _logList[SelectedLog];
-        }
-
-        public bool LoggerIsDisplayed(string name)
-        {
-            if (SelectedLog < 0)
-                return false;
-            return GetSelectedLogger().Name.Equals(name);
-        }
-
-        public object[] GetLogList()
-        {
-            var logNames = new object[_logList.Count];
-            for (int i = 0; i < _logList.Count; i++)
-                logNames[i] = _logList[i].Name;
-            return logNames;
-        }
-
-        protected List<Tuple<int, IConfig>> GetReplacedSkylineSettings(SkylineSettings newSettings,
+        private List<Tuple<int, IConfig>> GetReplacedSkylineSettings(SkylineSettings newSettings,
             List<string> runningConfigs)
         {
-            lock (_lock)
+            var replacedConfigs = new List<Tuple<int, IConfig>>();
+            for (int i = 0; i < ConfigList.Count; i++)
             {
-                var replacedConfigs = new List<Tuple<int, IConfig>>();
-                for (int i = 0; i < _configList.Count; i++)
-                {
-                    var config = _configList[i];
-                    if (runningConfigs.Contains(config.GetName()))
-                        continue;
-                    var newConfig = config.ReplaceSkylineVersion(newSettings);
-                    replacedConfigs.Add(new Tuple<int, IConfig>(i, newConfig));
-                }
-                return replacedConfigs;
+                var config = ConfigList[i];
+                if (runningConfigs.Contains(config.GetName()))
+                    continue;
+                var newConfig = config.ReplaceSkylineVersion(newSettings);
+                replacedConfigs.Add(new Tuple<int, IConfig>(i, newConfig));
             }
+            return replacedConfigs;
         }
+
+        public ConfigManagerState AskToReplaceAllSkylineVersions(SkylineSettings skylineSettings, List<string> runningConfigs, IMainUiControl uiControl, out bool? replaced)
+        {
+            replaced = null;
+            if (ConfigList.Count < 2)
+                return this;
+            try
+            {
+                skylineSettings.Validate();
+            }
+            catch (ArgumentException)
+            {
+                // Only ask to replace Skyline settings if new settings are valid
+                return this;
+            }
+            if (DialogResult.Yes ==
+                ConfigManager.DisplayQuestion(uiControl, Resources.ConfigManager_ReplaceAllSkylineVersions_Do_you_want_to_use_this_Skyline_version_for_all_configurations_))
+            {
+                return ReplaceAllSkylineVersions(skylineSettings, runningConfigs, uiControl, out replaced);
+            }
+            replaced = false;
+            return this;
+        }
+
+        public ConfigManagerState ReplaceAllSkylineVersions(SkylineSettings skylineSettings, List<string> runningConfigs, IMainUiControl uiControl, out bool? replaced)
+        {
+            var replacedConfigs = GetReplacedSkylineSettings(skylineSettings, runningConfigs);
+            foreach (var indexAndConfig in replacedConfigs)
+            {
+                if (!runningConfigs.Contains(indexAndConfig.Item2.GetName()))
+                {
+                    ProgramaticallyRemoveAt(indexAndConfig.Item1);
+                    ProgramaticallyInsertConfig(indexAndConfig.Item1, indexAndConfig.Item2);
+                }
+            }
+            if (runningConfigs.Count > 0)
+            {
+                ConfigManager.DisplayError(uiControl,
+                    Resources.ConfigManagerState_ReplaceAllSkylineVersions_The_following_configurations_are_running_and_could_not_be_updated_
+                    + Environment.NewLine +
+                    TextUtil.LineSeparate(runningConfigs));
+                replaced = false;
+            }
+            replaced = true;
+            return this;
+        }
+
 
         #endregion
 
         #region Root Replacement
 
-        public bool AddRootReplacement(string oldPath, string newPath, bool askAboutRootReplacement, 
-            out string oldRoot, out bool askedAboutRootReplacement)
+        public ConfigManagerState AddRootReplacement(string oldPath, string newPath, bool askAboutRootReplacement,
+            IMainUiControl uiControl, out string oldRoot, out bool askedAboutRootReplacement, out bool addedRootReplacement)
         {
             var oldPathFolders = oldPath.Split('\\');
             var newPathFolders = newPath.Split('\\');
             oldRoot = string.Empty;
             askedAboutRootReplacement = false;
+            addedRootReplacement = false;
 
             var matchingEndFolders = 1;
             while (matchingEndFolders <= Math.Min(oldPathFolders.Length, newPathFolders.Length))
@@ -807,49 +938,46 @@ namespace SharedBatch
             oldRoot = string.Join("\\", oldPathFolders.Take(oldPathFolders.Length - matchingEndFolders).ToArray());
             var newRoot = string.Join("\\", newPathFolders.Take(newPathFolders.Length - matchingEndFolders).ToArray());
 
-            var replaceRoot = false;
             if (oldRoot.Length > 0)
             {
-                replaceRoot = true;
+                var replaceRoot = true;
                 if (askAboutRootReplacement)
                 {
                     replaceRoot =
-                        DisplayQuestion(string.Format(
+                        ConfigManager.DisplayQuestion(uiControl, string.Format(
                             Resources.InvalidConfigSetupForm_GetValidPath_Would_you_like_to_replace__0__with__1___,
                             oldRoot, newRoot)) == DialogResult.Yes;
                     askedAboutRootReplacement = true;
                 }
+
                 if (replaceRoot)
                 {
+                    addedRootReplacement = true;
                     if (RootReplacement.ContainsKey(oldRoot))
-                        RootReplacement[oldRoot] = newRoot;
-                    else
-                        RootReplacement.Add(oldRoot, newRoot);
+                        RootReplacement = RootReplacement.Remove(oldRoot);
+                    RootReplacement = RootReplacement.Add(oldRoot, newRoot);
                 }
             }
-            return replaceRoot;
+            return this;
         }
 
-        protected List<IConfig> GetRootReplacedConfigs(string oldRoot, ConfigManagerState state)
+        public ConfigManagerState GetRootReplacedConfigs(string oldRoot, string newRoot)
         {
-            var replacingConfigs = new List<IConfig>();
-            var newRoot = RootReplacement[oldRoot];
-            lock (_lock)
+            for (int i = 0; i < ConfigList.Count; i++)
             {
-                for (int i = 0; i < state.configList.Count; i++)
+                var config = ConfigList[i];
+                if (!ConfigValidation[config.GetName()])
                 {
-                    var config = state.configList[i];
-                    if (!state.configValidation[config.GetName()])
+                    var pathsReplaced = config.TryPathReplace(oldRoot, newRoot, out IConfig replacedPathConfig);
+                    if (pathsReplaced)
                     {
-                        var pathsReplaced = config.TryPathReplace(oldRoot, newRoot, out IConfig replacedPathConfig);
-                        if (pathsReplaced)
-                        {
-                            replacingConfigs.Add(replacedPathConfig);
-                        }
+                        var index = GetConfigIndex(config.GetName());
+                        ProgramaticallyRemoveAt(index);
+                        ProgramaticallyInsertConfig(index, replacedPathConfig);
                     }
                 }
             }
-            return replacingConfigs;
+            return this;
         }
 
         private IConfig RunRootReplacement(IConfig config)
@@ -864,12 +992,12 @@ namespace SharedBatch
         }
 
         // replaces all roots and creates the folders of the new paths. Throws exception if path replacement fails
-        private IConfig ForceRootReplacement(IConfig config, string oldRoot, out string errorMessage)
+        private IConfig ForceRootReplacement(IConfig config, string oldRoot, string newRoot, out string errorMessage)
         {
             errorMessage = null;
             try
             {
-                return config.ForcePathReplace(oldRoot, RootReplacement[oldRoot]);
+                return config.ForcePathReplace(oldRoot, newRoot);
             }
             catch (ArgumentException e)
             {
@@ -879,67 +1007,59 @@ namespace SharedBatch
         }
 
         #endregion
+        
+        #region Override Equals
 
-        // Updates the config manager to a new valid state when the configuration list has changed
-        // newState should contain a configuration list that is different from the current state in at least one way
-        protected void SetState(ConfigManagerState newState)
+        protected bool Equals(ConfigManagerState other)
         {
-            lock (_lock)
+            if (ConfigList.Count != other.ConfigList.Count)
+                return false;
+            for (int i = 0; i < ConfigList.Count; i++)
             {
-                newState.ValidateState(newState.selected);
-                _configList = newState.configList;
-                _configValidation = newState.configValidation;
-                SelectedConfig = newState.selected;
-                SaveConfigList();
+                if (!Equals(ConfigList[i], other.ConfigList[i]))
+                    return false;
             }
+            if (ConfigValidation.Count != other.ConfigValidation.Count)
+                return false;
+            foreach (var config in ConfigValidation.Keys)
+            {
+                if (!other.ConfigValidation.ContainsKey(config) || !Equals(ConfigValidation[config], other.ConfigValidation[config]))
+                    return false;
+            }
+            /*if (LogList.Count != other.LogList.Count)
+                return false;
+            for (int i = 0; i < LogList.Count; i++)
+            {
+                if (!Equals(LogList[i], other.LogList[i]))
+                    return false;
+            }*/
+            if (RootReplacement.Count != other.RootReplacement.Count)
+                return false;
+            foreach (var root in RootReplacement.Keys)
+            {
+                if (!other.RootReplacement.ContainsKey(root) || !Equals(RootReplacement[root], other.RootReplacement[root]))
+                    return false;
+            }
+
+            return Selected == other.Selected;
         }
 
-        // Represents a state of the config manager
-        protected class ConfigManagerState
+        public override bool Equals(object obj)
         {
-            public ImmutableList<IConfig> configList;
-            public ImmutableDictionary<string, bool> configValidation;
-            public int selected;
-            public int editedConfigFromUndo; // -1 or the index of a configuration to be selected if an operation is undone
-            public int editedConfigFromRedo; // -1 or the index of a configuration to be selected if an operation is redone
-
-            public ConfigManagerState()
-            {
-                editedConfigFromUndo = -1;
-                editedConfigFromRedo = -1;
-            }
-
-            public ConfigManagerState(ConfigManager configManager)
-            {
-                configList = configManager._configList;
-                configValidation = configManager._configValidation;
-                selected = configManager.SelectedConfig;
-                editedConfigFromUndo = -1;
-                editedConfigFromRedo = -1;
-            }
-
-            public ConfigManagerState(ConfigManagerState state)
-            {
-                configList = state.configList;
-                configValidation = state.configValidation;
-                selected = state.selected;
-                editedConfigFromUndo = state.editedConfigFromUndo;
-                editedConfigFromRedo = state.editedConfigFromRedo;
-            }
-
-            public void ValidateState(int selectedConfig)
-            {
-                foreach (var config in configList)
-                {
-                    if (configList.Count != configValidation.Count || !configValidation.ContainsKey(config.GetName()))
-                        throw new ArgumentException("Could not validate the new state of the configuration list. The operation did not succeed.");
-                }
-                if (selectedConfig < -1 || selectedConfig >= configList.Count)
-                    throw new IndexOutOfRangeException(string.Format(
-                        Resources.ConfigManager_SelectConfig_There_is_no_configuration_at_index___0_, selectedConfig));
-            }
-
+            if (ReferenceEquals(null, obj)) return false;
+            if (ReferenceEquals(this, obj)) return true;
+            if (obj.GetType() != this.GetType()) return false;
+            return Equals((ConfigManagerState)obj);
         }
+
+        public override int GetHashCode()
+        {
+            return ConfigList.GetHashCode() +
+                   ConfigValidation.GetHashCode();
+        }
+
+        #endregion
+
     }
 }
 

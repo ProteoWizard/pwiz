@@ -161,6 +161,10 @@ namespace pwiz.Skyline.Model.Results
             var normalizationMethod = (this as Simple)?.NormalizationMethod;
             if (normalizationMethod is NormalizationMethod.RatioToLabel ratioToLabel)
             {
+                if (!settings.PeptideSettings.Modifications.HasHeavyModifications)
+                {
+                    return DEFAULT;
+                }
                 if (settings.PeptideSettings.Modifications.RatioInternalStandardTypes
                     .All(item => item.Name != ratioToLabel.IsotopeLabelTypeName))
                 {
@@ -170,8 +174,11 @@ namespace pwiz.Skyline.Model.Results
 
             if (Equals(normalizationMethod, NormalizationMethod.GLOBAL_STANDARDS) && !settings.HasGlobalStandardArea)
             {
-                return RatioToFirstStandard(settings);
+                return DEFAULT;
             }
+
+            if (Equals(normalizationMethod, NormalizationMethod.TIC) && !settings.HasTicArea)
+                return FromNormalizationMethod(NormalizationMethod.NONE);
 
             return this;
         }
@@ -179,6 +186,11 @@ namespace pwiz.Skyline.Model.Results
         public static NormalizeOption Constrain(SrmSettings settings, NormalizeOption currentNormalizeOption)
         {
             return (currentNormalizeOption ?? RatioToFirstStandard(settings)).Constrain(settings);
+        }
+
+        public bool HideLabelType(SrmSettings settings, IsotopeLabelType labelType)
+        {
+            return NormalizationMethod?.HideLabelType(settings, labelType) ?? false;
         }
 
         /// <summary>

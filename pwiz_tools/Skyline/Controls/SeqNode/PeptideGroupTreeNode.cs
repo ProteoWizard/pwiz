@@ -22,6 +22,8 @@ using System.Drawing;
 using System.Linq;
 using System.Text;
 using System.Windows.Forms;
+using pwiz.Common.Collections;
+using pwiz.ProteomeDatabase.API;
 using pwiz.Skyline.Model;
 using pwiz.Skyline.Model.DocSettings;
 using pwiz.Skyline.Model.Lib;
@@ -252,28 +254,20 @@ namespace pwiz.Skyline.Controls.SeqNode
             var tableDetails = new TableDesc();
             using (RenderTools rt = new RenderTools())
             {
-                SizeF sizeX80 = g.MeasureString(X80, rt.FontNormal);
-                float widthLine = sizeX80.Width;
-                float heightLine = sizeX80.Height;
-                float heightMax = sizeMax.Height;
-                tableDetails.AddDetailRow(Resources.PeptideGroupTreeNode_RenderTip_Name, DocNode.Name, rt);
+                GetX80Dimensions(g, rt, sizeMax, out var widthLine, out var heightLine, out var heightMax);
+                tableDetails.AddDetailRowLineWrap(g, Resources.PeptideGroupTreeNode_RenderTip_Name, DocNode.Name, rt);
                 // If current name isn't the original, show that.
                 if (DocNode.PeptideGroup.Name != null && !Equals(DocNode.Name, DocNode.PeptideGroup.Name))
-                    tableDetails.AddDetailRow(Resources.PeptideGroupTreeNode_RenderTip_Original_Name, DocNode.OriginalName, rt);
-                if (!String.IsNullOrEmpty(DocNode.ProteinMetadata.Accession))
-                    tableDetails.AddDetailRow(Resources.PeptideGroupTreeNode_RenderTip_Accession, DocNode.ProteinMetadata.Accession, rt);
-                if (!String.IsNullOrEmpty(DocNode.ProteinMetadata.PreferredName))
-                    tableDetails.AddDetailRow(Resources.PeptideGroupTreeNode_RenderTip_Preferred_Name, DocNode.ProteinMetadata.PreferredName, rt);
-                if (!String.IsNullOrEmpty(DocNode.ProteinMetadata.Gene))
-                    tableDetails.AddDetailRow(Resources.PeptideGroupTreeNode_RenderTip_Gene, DocNode.ProteinMetadata.Gene, rt);
-                if (!String.IsNullOrEmpty(DocNode.ProteinMetadata.Species))
-                    tableDetails.AddDetailRow(Resources.PeptideGroupTreeNode_RenderTip_Species, DocNode.ProteinMetadata.Species, rt);
-                if (!String.IsNullOrEmpty(DocNode.ProteinMetadata.DisplaySearchHistory()))
-                    tableDetails.AddDetailRow(Resources.PeptideGroupTreeNode_RenderTip_Searched, DocNode.ProteinMetadata.DisplaySearchHistory(), rt);
-                if (!String.IsNullOrEmpty(DocNode.ProteinMetadata.Description))
-                    tableDetails.AddDetailRowLineWrap(g,Resources.PeptideGroupTreeNode_RenderTip_Description, DocNode.ProteinMetadata.Description, rt);
-                if (DocNode.PeptideGroup.Description != null && !Equals(DocNode.Description, DocNode.PeptideGroup.Description))
-                    tableDetails.AddDetailRow(Resources.PeptideGroupTreeNode_RenderTip_Original_Description, DocNode.OriginalDescription, rt);
+                    tableDetails.AddDetailRowLineWrap(g, Resources.PeptideGroupTreeNode_RenderTip_Original_Name, DocNode.OriginalName, rt);
+                // Add information about accession, preferred name, gene, etc.
+                AddProteinMetadata(tableDetails, DocNode.ProteinMetadata, rt, g);
+                if (!DocNode.PeptideGroup.Description.IsNullOrEmpty() &&
+                    !Equals(DocNode.Description, DocNode.PeptideGroup.Description))
+                {
+                    tableDetails.AddDetailRow(Resources.PeptideGroupTreeNode_RenderTip_Original_Description,
+                        DocNode.OriginalDescription, rt);
+                }
+
                 SizeF sizeDetails = tableDetails.CalcDimensions(g);
                 sizeDetails.Height += TableDesc.TABLE_SPACING;    // Spacing between details and fragments
                 float heightTotal = sizeDetails.Height;
@@ -300,48 +294,103 @@ namespace pwiz.Skyline.Controls.SeqNode
                     // Get the selected peptide, if there is one
                     PeptideTreeNode nodePepTree = SequenceTree.GetNodeOfType<PeptideTreeNode>();
                     Peptide peptideSelected = (nodePepTree != null ? nodePepTree.DocNode.Peptide : null);
-
-                    int i = 0;
-                    string aa = fastaSeq.Sequence;
-                    const bool peptideList = false;
-                    while (i < aa.Length)
-                    {
-                        // If this is not the last possible line, just render it.
-                        if (heightTotal + heightLine * 2 <= heightMax)
-                        {
-                            i = RenderAALine(aa, peptideList, i, false, draw,
-                                peptidesChoices, peptidesChosen, peptideSelected,
-                                g, rt, heightTotal, widthLine);
-                            heightTotal += heightLine;
-                        }
-                            // If not drawing, then this is the last possible line, and
-                            // it will have content.
-                        else if (!draw)
-                        {
-                            heightTotal += heightLine;
-                            break;
-                        }
-                            // Otherwise, measure first, and then re-render, with an elipsis
-                            // if the full sequence cannot be shown.
-                        else
-                        {
-                            RenderAALine(aa, peptideList, i, false, false,
-                                peptidesChoices, peptidesChosen, peptideSelected,
-                                g, rt, heightTotal, widthLine);
-                            RenderAALine(aa, peptideList, i, i < aa.Length, true,
-                                peptidesChoices, peptidesChosen, peptideSelected,
-                                g, rt, heightTotal, widthLine);
-                            heightTotal += heightLine;
-                            break;
-                        }
-                    }
+                    var aa = fastaSeq.Sequence;
+                    heightTotal = RenderFastaSeq(g, draw, aa, heightTotal, heightLine, heightMax, peptidesChoices, peptidesChosen, peptideSelected, rt, widthLine);
                 }
                 return TipSize(Math.Max(widthLine, sizeInitial.Width), heightTotal + sizeInitial.Height);
             }
         }
 
-        private IEnumerable<string> Descriptions  
+        /// <summary>
+        /// Measure the dimensions of a string of 80 X characters
+        /// </summary>
+        internal static void GetX80Dimensions(Graphics g, RenderTools rt, SizeF sizeMax, out float widthLine, out float heightLine, out float heightMax)
         {
+            SizeF sizeX80 = g.MeasureString(X80, rt.FontNormal);
+            widthLine = sizeX80.Width;
+            heightLine = sizeX80.Height;
+            heightMax = sizeMax.Height;
+        }
+
+        /// <summary>
+        /// Draw the FASTA sequence of a protein
+        /// </summary>
+        internal static float RenderFastaSeq(Graphics g, bool draw, string aa, float heightTotal, float heightLine,
+            float heightMax, IList<DocNode> peptidesChoices, HashSet<DocNode> peptidesChosen, Peptide peptideSelected, RenderTools rt,
+            float widthLine)
+        {
+            int i = 0;
+            const bool peptideList = false;
+            while (i < aa.Length)
+            {
+                // If this is not the last possible line, just render it.
+                if (heightTotal + heightLine * 2 <= heightMax)
+                {
+                    i = RenderAALine(aa, peptideList, i, false, draw,
+                        peptidesChoices, peptidesChosen, peptideSelected,
+                        g, rt, heightTotal, widthLine);
+                    heightTotal += heightLine;
+                }
+                // If not drawing, then this is the last possible line, and
+                // it will have content.
+                else if (!draw)
+                {
+                    heightTotal += heightLine;
+                    break;
+                }
+                // Otherwise, measure first, and then re-render, with an elipsis
+                // if the full sequence cannot be shown.
+                else
+                {
+                    RenderAALine(aa, peptideList, i, false, false,
+                        peptidesChoices, peptidesChosen, peptideSelected,
+                        g, rt, heightTotal, widthLine);
+                    RenderAALine(aa, peptideList, i, i < aa.Length, true,
+                        peptidesChoices, peptidesChosen, peptideSelected,
+                        g, rt, heightTotal, widthLine);
+                    heightTotal += heightLine;
+                    break;
+                }
+            }
+
+            return heightTotal;
+        }
+
+        /// <summary>
+        /// Add information we store about a protein to a TableDesc
+        /// </summary>
+        internal static void AddProteinMetadata(TableDesc tableDetails, ProteinMetadata metadata, RenderTools rt, Graphics g)
+        {
+            if (!String.IsNullOrEmpty(metadata.Accession))
+            {
+                tableDetails.AddDetailRowLineWrap(g, Resources.PeptideGroupTreeNode_RenderTip_Accession, metadata.Accession, rt);
+            }
+
+            if (!String.IsNullOrEmpty(metadata.PreferredName))
+            {
+                tableDetails.AddDetailRowLineWrap(g, Resources.PeptideGroupTreeNode_RenderTip_Preferred_Name,
+                    metadata.PreferredName, rt);
+            }
+            if (!String.IsNullOrEmpty(metadata.Gene))
+            {
+                tableDetails.AddDetailRowLineWrap(g, Resources.PeptideGroupTreeNode_RenderTip_Gene, metadata.Gene, rt);
+            }
+            if (!String.IsNullOrEmpty(metadata.Species))
+            {
+                tableDetails.AddDetailRowLineWrap(g, Resources.PeptideGroupTreeNode_RenderTip_Species, metadata.Species, rt);
+            }
+            if (!String.IsNullOrEmpty(metadata.DisplaySearchHistory()))
+            {
+                tableDetails.AddDetailRow(Resources.PeptideGroupTreeNode_RenderTip_Searched,
+                    metadata.DisplaySearchHistory(), rt);
+            }
+            if (!String.IsNullOrEmpty(metadata.Description))
+            {
+                tableDetails.AddDetailRowLineWrap(g, Resources.PeptideGroupTreeNode_RenderTip_Description,
+                    metadata.Description, rt);
+            }
+        }
+        private IEnumerable<string> Descriptions {
             get
             {
                 if (!string.IsNullOrEmpty(DocNode.Description))
