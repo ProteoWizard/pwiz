@@ -7,8 +7,10 @@
     <GenerateAssemblyInfo>false</GenerateAssemblyInfo>
     <UseWindowsForms>true</UseWindowsForms>
     <ImportWindowsDesktopTargets>true</ImportWindowsDesktopTargets>
-    <PwizBuildPath>$(BaseIntermediateOutputPath)\..</PwizBuildPath>
+    <PwizBuildPath>$(SolutionDir)..\..\build-nt-x86</PwizBuildPath>
     <ApplicationDefaultFont>Segoe UI, 8.25pt</ApplicationDefaultFont>
+    <EnableDefaultCompileItems>false</EnableDefaultCompileItems>
+    <EnableDefaultEmbeddedResourceItems>false</EnableDefaultEmbeddedResourceItems>
     <Platforms>x86;x64</Platforms>
   </PropertyGroup>
   <PropertyGroup Condition=" '$(Configuration)|$(Platform)' == 'Debug|x86' ">
@@ -38,12 +40,102 @@
   <PropertyGroup>
     <ApplicationIcon>Resources\SpectrumConverter.ico</ApplicationIcon>
     <StartupObject>MSConvertGUI.Program</StartupObject>
-    <BaseOutputPath></BaseOutputPath>
-    <AllowUnsafeBlocks>False</AllowUnsafeBlocks>
     <AppendTargetFrameworkToOutputPath>false</AppendTargetFrameworkToOutputPath>
     <ProduceReferenceAssembly>false</ProduceReferenceAssembly>
-    <GenerateAssemblyInfo>false</GenerateAssemblyInfo>
   </PropertyGroup>
+    <ItemGroup>
+    <Compile Include="DataGridViewProgressBar.cs" />
+    <Compile Include="FileSizeFormatProvider.cs" />
+    <Compile Include="GlobalSuppressions.cs" />
+    <Compile Include="ListViewColumnSorter.cs" />
+    <Compile Include="LoginForm.cs">
+      <SubType>Form</SubType>
+    </Compile>
+    <Compile Include="LoginForm.Designer.cs">
+      <DependentUpon>LoginForm.cs</DependentUpon>
+    </Compile>
+    <Compile Include="MainForm.cs">
+      <SubType>Form</SubType>
+    </Compile>
+    <Compile Include="MainForm.Designer.cs">
+      <DependentUpon>MainForm.cs</DependentUpon>
+    </Compile>
+    <Compile Include="MainLogic.cs" />
+    <Compile Include="NetworkSource.cs" />
+    <Compile Include="Program.cs" />
+    <Compile Include="ProgressForm.cs">
+      <SubType>Form</SubType>
+    </Compile>
+    <Compile Include="ProgressForm.Designer.cs">
+      <DependentUpon>ProgressForm.cs</DependentUpon>
+    </Compile>
+    <Compile Include="Properties\AssemblyInfo.cs" />
+    <Compile Include="SingleInstanceHandler.cs" />
+    <Compile Include="TextInputPrompt.cs">
+      <SubType>Form</SubType>
+    </Compile>
+    <Compile Include="TextInputPrompt.designer.cs">
+      <DependentUpon>TextInputPrompt.cs</DependentUpon>
+    </Compile>
+    <Compile Include="UnifiBrowserForm.cs">
+      <SubType>Form</SubType>
+    </Compile>
+    <Compile Include="UnifiBrowserForm.Designer.cs">
+      <DependentUpon>UnifiBrowserForm.cs</DependentUpon>
+    </Compile>
+    <None Include="Resources\SpectrumConverter.ico" />
+    <EmbeddedResource Include="LoginForm.resx">
+      <DependentUpon>LoginForm.cs</DependentUpon>
+    </EmbeddedResource>
+    <EmbeddedResource Include="MainForm.resx">
+      <DependentUpon>MainForm.cs</DependentUpon>
+    </EmbeddedResource>
+    <EmbeddedResource Include="ProgressForm.resx">
+      <DependentUpon>ProgressForm.cs</DependentUpon>
+    </EmbeddedResource>
+    <EmbeddedResource Include="Properties\Resources.resx">
+      <Generator>ResXFileCodeGenerator</Generator>
+      <LastGenOutput>Resources.Designer.cs</LastGenOutput>
+      <SubType>Designer</SubType>
+    </EmbeddedResource>
+    <Compile Include="Properties\Resources.Designer.cs">
+      <AutoGen>True</AutoGen>
+      <DependentUpon>Resources.resx</DependentUpon>
+      <DesignTime>True</DesignTime>
+    </Compile>
+    <EmbeddedResource Include="TextInputPrompt.resx">
+      <DependentUpon>TextInputPrompt.cs</DependentUpon>
+    </EmbeddedResource>
+    <EmbeddedResource Include="UnifiBrowserForm.resx">
+      <DependentUpon>UnifiBrowserForm.cs</DependentUpon>
+    </EmbeddedResource>
+    <None Include="app.config" />
+    <None Include="Properties\Settings.settings">
+      <Generator>SettingsSingleFileGenerator</Generator>
+    </None>
+    <Compile Include="Properties\Settings.Designer.cs">
+      <AutoGen>True</AutoGen>
+      <DependentUpon>Settings.settings</DependentUpon>
+      <DesignTimeSharedInput>True</DesignTimeSharedInput>
+    </Compile>
+  </ItemGroup>
+  <ItemGroup>
+    <None Include="Resources\DataProcessing.png" />
+    <None Include="Resources\file.png" />
+    <None Include="Resources\folder.png" />
+    <None Include="Resources\Arrow Active.png" />
+    <None Include="Resources\Arrow Faded.png" />
+    <None Include="Resources\Arrow Lit.png" />
+    <None Include="Resources\Back Active.png" />
+    <None Include="Resources\Back Faded.png" />
+    <None Include="Resources\Back Lit.png" />
+    <None Include="Resources\Forward Active.png" />
+    <None Include="Resources\Forward Faded.png" />
+    <None Include="Resources\Forward Lit.png" />
+    <None Include="Resources\Right Arrow.png" />
+    <None Include="Resources\Right Arrow.gif" />
+    <None Include="Resources\Left Arrow.gif" />
+  </ItemGroup>
   <ItemGroup>
     <Reference Include="IdentityModel, Version=2.6.0.0, Culture=neutral, processorArchitecture=MSIL">
       <SpecificVersion>False</SpecificVersion>
@@ -77,11 +169,15 @@
     <Reference Include="ThermoFisher.CommonCore.RawFileReader" Condition=" '$(Platform)' == 'x64' ">
       <HintPath>..\..\..\pwiz_aux\msrc\utility\vendor_api\thermo\ThermoFisher.CommonCore.RawFileReader.dll</HintPath>
     </Reference>
+  </ItemGroup>
+  <!--<ItemGroup>
     <NativeReference Include="Interop.EDAL.SxS, Version=1.0.0.0, Type=win32">
       <Name>Interop.EDAL.SxS.manifest</Name>
       <HintPath>..\..\..\pwiz_aux\msrc\utility\vendor_api\Bruker\$(PlatformTarget)\Interop.EDAL.SxS.manifest</HintPath>
     </NativeReference>
-    <NativeReference Include="MSFileReader.XRawfile2.SxS, Version=3.0.13.0, Type=AnyCPU" Condition=" '$(Platform)' == 'x86' ">
+  </ItemGroup>-->
+  <ItemGroup Condition=" '$(Platform)' == 'x86' ">
+    <NativeReference Include="MSFileReader.XRawfile2.SxS, Version=3.0.13.0, Type=AnyCPU">
       <Name>MSFileReader.XRawfile2.SxS.manifest</Name>
       <HintPath>..\..\..\pwiz_aux\msrc\utility\vendor_api\thermo\$(Platform)\MSFileReader.XRawfile2.SxS.manifest</HintPath>
     </NativeReference>
@@ -89,9 +185,6 @@
   <ItemGroup>
     <ProjectReference Include="..\..\Shared\Common\CommonUtil.csproj" />
     <ProjectReference Include="..\CustomDataSourceDialog\CustomDataSourceDialog.csproj" />
-  </ItemGroup>
-  <ItemGroup>
-    <None Include="Resources\Right Arrow.png" />
   </ItemGroup>
   <ItemGroup>
     <PackageReference Include="Microsoft.CSharp" Version="4.7.0" />

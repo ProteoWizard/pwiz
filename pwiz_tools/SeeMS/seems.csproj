@@ -13,6 +13,8 @@
     <AppendTargetFrameworkToOutputPath>false</AppendTargetFrameworkToOutputPath>
     <ProduceReferenceAssembly>False</ProduceReferenceAssembly>
     <GenerateAssemblyInfo>false</GenerateAssemblyInfo>
+    <EnableDefaultCompileItems>false</EnableDefaultCompileItems>
+    <EnableDefaultEmbeddedResourceItems>false</EnableDefaultEmbeddedResourceItems>
     <Platforms>x86;x64</Platforms>
   </PropertyGroup>
   <PropertyGroup Condition=" '$(Configuration)|$(Platform)' == 'Debug|x86' ">
@@ -38,12 +40,6 @@
     <PlatformTarget>x64</PlatformTarget>
   </PropertyGroup>
   <ItemGroup>
-    <Compile Remove="obj\**" />
-    <EmbeddedResource Remove="obj\**" />
-    <None Remove="obj\**" />
-    <Compile Remove="$(OutputPath)**" />
-  </ItemGroup>
-  <ItemGroup>
     <Reference Include="DigitalRune.Windows.Docking, Version=1.3.1.0, Culture=neutral, PublicKeyToken=83b2c390cd515404, processorArchitecture=MSIL">
       <SpecificVersion>False</SpecificVersion>
       <HintPath>..\Shared\Lib\DigitalRune.Windows.Docking.dll</HintPath>
@@ -64,45 +60,258 @@
     </Reference>
   </ItemGroup>
   <ItemGroup>
-    <Compile Update="Dialogs\AnnotationPanels.cs">
+    <Compile Include="Annotation.cs" />
+    <Compile Include="DataGridViewAutoFilter\DataGridViewAutoFilterColumnHeaderCell.cs" />
+    <Compile Include="DataGridViewAutoFilter\DataGridViewAutoFilterTextBoxColumn.cs" />
+    <Compile Include="Dialogs\TimeMzHeatmapForm.cs">
+      <SubType>Form</SubType>
+    </Compile>
+    <Compile Include="Dialogs\TimeMzHeatmapForm.Designer.cs">
+      <DependentUpon>TimeMzHeatmapForm.cs</DependentUpon>
+    </Compile>
+    <Compile Include="Dialogs\HeatmapForm.cs">
+      <SubType>Form</SubType>
+    </Compile>
+    <Compile Include="Dialogs\HeatmapForm.Designer.cs">
+      <DependentUpon>HeatmapForm.cs</DependentUpon>
+    </Compile>
+    <Compile Include="GlobalSuppressions.cs" />
+    <Compile Include="Misc\ChromatogramDataSet.Designer.cs">
+      <AutoGen>True</AutoGen>
+      <DesignTime>True</DesignTime>
+      <DependentUpon>ChromatogramDataSet.xsd</DependentUpon>
+    </Compile>
+    <Compile Include="Dialogs\AnnotationPanels.cs">
       <SubType>UserControl</SubType>
     </Compile>
-    <Compile Update="Dialogs\ProcessingPanels.cs">
+    <Compile Include="Dialogs\AnnotationPanels.Designer.cs">
+      <DependentUpon>AnnotationPanels.cs</DependentUpon>
+    </Compile>
+    <Compile Include="Dialogs\ChromatogramListForm.cs">
+      <SubType>Form</SubType>
+    </Compile>
+    <Compile Include="Dialogs\ChromatogramListForm.Designer.cs">
+      <DependentUpon>ChromatogramListForm.cs</DependentUpon>
+    </Compile>
+    <Compile Include="DataSource.cs" />
+    <Compile Include="Dialogs\AboutForm.cs">
+      <SubType>Form</SubType>
+    </Compile>
+    <Compile Include="Dialogs\AboutForm.designer.cs">
+      <DependentUpon>AboutForm.cs</DependentUpon>
+    </Compile>
+    <Compile Include="Dialogs\DataPointTableForm.cs">
+      <SubType>Form</SubType>
+    </Compile>
+    <Compile Include="Dialogs\DataPointTableForm.Designer.cs">
+      <DependentUpon>DataPointTableForm.cs</DependentUpon>
+    </Compile>
+    <Compile Include="Dialogs\ProcessingPanels.cs">
       <SubType>UserControl</SubType>
     </Compile>
-    <Compile Update="Misc\SpectrumDataSet.cs">
+    <Compile Include="Dialogs\ProcessingPanels.Designer.cs">
+      <DependentUpon>ProcessingPanels.cs</DependentUpon>
+    </Compile>
+    <Compile Include="Dialogs\OpenDataSourceDialog.cs">
+      <SubType>Form</SubType>
+    </Compile>
+    <Compile Include="Dialogs\OpenDataSourceDialog.Designer.cs">
+      <DependentUpon>OpenDataSourceDialog.cs</DependentUpon>
+    </Compile>
+    <Compile Include="Dialogs\SelectColumnsDialog.cs">
+      <SubType>Form</SubType>
+    </Compile>
+    <Compile Include="Dialogs\SpectrumAnnotationForm.cs">
+      <SubType>Form</SubType>
+    </Compile>
+    <Compile Include="Dialogs\SpectrumAnnotationForm.Designer.cs">
+      <DependentUpon>SpectrumAnnotationForm.cs</DependentUpon>
+    </Compile>
+    <Compile Include="Manager.cs" />
+    <Compile Include="Misc\Arguments.cs" />
+    <Compile Include="Misc\Extensions.cs">
+    </Compile>
+    <Compile Include="Misc\FileSizeFormatProvider.cs" />
+    <Compile Include="Misc\ListViewColumnSorter.cs" />
+    <Compile Include="Misc\SpectrumDataSet.cs">
       <DependentUpon>SpectrumDataSet.xsd</DependentUpon>
     </Compile>
-    <Compile Update="Dialogs\ProcessingListView.cs">
+    <Compile Include="Misc\SpectrumDataSet.Designer.cs">
+      <AutoGen>True</AutoGen>
+      <DesignTime>True</DesignTime>
+      <DependentUpon>SpectrumDataSet.xsd</DependentUpon>
+    </Compile>
+    <Compile Include="Dialogs\ProcessingListView.cs">
       <SubType>UserControl</SubType>
+    </Compile>
+    <Compile Include="Dialogs\SpectrumListForm.cs">
+      <SubType>Form</SubType>
+    </Compile>
+    <Compile Include="Dialogs\SpectrumListForm.Designer.cs">
+      <DependentUpon>SpectrumListForm.cs</DependentUpon>
+    </Compile>
+    <Compile Include="Dialogs\GraphForm.cs">
+      <SubType>Form</SubType>
+    </Compile>
+    <Compile Include="Dialogs\GraphForm.Designer.cs">
+      <DependentUpon>GraphForm.cs</DependentUpon>
+    </Compile>
+    <Compile Include="Misc\MruStripMenu.cs" />
+    <Compile Include="Processing.cs" />
+    <Compile Include="seems.cs">
+      <SubType>Form</SubType>
+    </Compile>
+    <Compile Include="seems.Designer.cs">
+      <DependentUpon>seems.cs</DependentUpon>
+    </Compile>
+    <Compile Include="Program.cs" />
+    <Compile Include="Properties\AssemblyInfo.cs" />
+    <EmbeddedResource Include="Dialogs\TimeMzHeatmapForm.resx">
+      <DependentUpon>TimeMzHeatmapForm.cs</DependentUpon>
+      <SubType>Designer</SubType>
+    </EmbeddedResource>
+    <EmbeddedResource Include="Dialogs\HeatmapForm.resx">
+      <DependentUpon>HeatmapForm.cs</DependentUpon>
+      <SubType>Designer</SubType>
+    </EmbeddedResource>
+    <EmbeddedResource Include="Properties\Resources.resx">
+      <Generator>ResXFileCodeGenerator</Generator>
+      <LastGenOutput>Resources.Designer.cs</LastGenOutput>
+      <SubType>Designer</SubType>
+    </EmbeddedResource>
+    <EmbeddedResource Include="seems.resx">
+      <SubType>Designer</SubType>
+      <DependentUpon>seems.cs</DependentUpon>
+    </EmbeddedResource>
+    <Compile Include="Properties\Resources.Designer.cs">
+      <AutoGen>True</AutoGen>
+      <DependentUpon>Resources.resx</DependentUpon>
+      <DesignTime>True</DesignTime>
+    </Compile>
+    <None Include="app.config">
+      <SubType>Designer</SubType>
+    </None>
+    <None Include="Properties\Settings.settings">
+      <Generator>SettingsSingleFileGenerator</Generator>
+      <LastGenOutput>Settings.Designer.cs</LastGenOutput>
+    </None>
+    <None Include="signature.snk" />
+    <Compile Include="Properties\Settings.Designer.cs">
+      <AutoGen>True</AutoGen>
+      <DependentUpon>Settings.settings</DependentUpon>
+      <DesignTimeSharedInput>True</DesignTimeSharedInput>
+    </Compile>
+    <Compile Include="Dialogs\SpectrumProcessingForm.cs">
+      <SubType>Form</SubType>
+    </Compile>
+    <Compile Include="Dialogs\SpectrumProcessingForm.Designer.cs">
+      <DependentUpon>SpectrumProcessingForm.cs</DependentUpon>
+    </Compile>
+    <Compile Include="Dialogs\TreeViewForm.cs">
+      <SubType>Form</SubType>
+    </Compile>
+    <Compile Include="Dialogs\TreeViewForm.Designer.cs">
+      <DependentUpon>TreeViewForm.cs</DependentUpon>
+    </Compile>
+    <Compile Include="SingleInstanceHandler.cs" />
+    <Compile Include="Types.cs">
     </Compile>
   </ItemGroup>
   <ItemGroup>
+    <EmbeddedResource Include="Dialogs\AnnotationPanels.resx">
+      <DependentUpon>AnnotationPanels.cs</DependentUpon>
+    </EmbeddedResource>
+    <EmbeddedResource Include="Dialogs\ChromatogramListForm.resx">
+      <DependentUpon>ChromatogramListForm.cs</DependentUpon>
+      <SubType>Designer</SubType>
+    </EmbeddedResource>
+    <EmbeddedResource Include="Dialogs\AboutForm.resx">
+      <DependentUpon>AboutForm.cs</DependentUpon>
+      <SubType>Designer</SubType>
+    </EmbeddedResource>
+    <EmbeddedResource Include="Dialogs\DataPointTableForm.resx">
+      <DependentUpon>DataPointTableForm.cs</DependentUpon>
+    </EmbeddedResource>
+    <EmbeddedResource Include="Dialogs\ProcessingPanels.resx">
+      <DependentUpon>ProcessingPanels.cs</DependentUpon>
+    </EmbeddedResource>
+    <EmbeddedResource Include="Dialogs\OpenDataSourceDialog.resx">
+      <SubType>Designer</SubType>
+      <DependentUpon>OpenDataSourceDialog.cs</DependentUpon>
+    </EmbeddedResource>
+    <EmbeddedResource Include="Dialogs\SpectrumAnnotationForm.resx">
+      <DependentUpon>SpectrumAnnotationForm.cs</DependentUpon>
+    </EmbeddedResource>
+    <EmbeddedResource Include="Dialogs\GraphForm.resx">
+      <SubType>Designer</SubType>
+      <DependentUpon>GraphForm.cs</DependentUpon>
+    </EmbeddedResource>
     <EmbeddedResource Include="Misc\SpectrumIcon.ico" />
+    <EmbeddedResource Include="Dialogs\ProcessingListView.resx">
+      <DependentUpon>ProcessingListView.cs</DependentUpon>
+    </EmbeddedResource>
+    <EmbeddedResource Include="Dialogs\SpectrumListForm.resx">
+      <SubType>Designer</SubType>
+      <DependentUpon>SpectrumListForm.cs</DependentUpon>
+    </EmbeddedResource>
+    <EmbeddedResource Include="Dialogs\SpectrumProcessingForm.resx">
+      <SubType>Designer</SubType>
+      <DependentUpon>SpectrumProcessingForm.cs</DependentUpon>
+    </EmbeddedResource>
+    <EmbeddedResource Include="Dialogs\TreeViewForm.resx">
+      <SubType>Designer</SubType>
+      <DependentUpon>TreeViewForm.cs</DependentUpon>
+    </EmbeddedResource>
   </ItemGroup>
   <ItemGroup>
-    <None Update="Misc\ChromatogramDataSet.xsc">
+    <Content Include="Misc\Centroider.ico" />
+    <None Include="Misc\ChromatogramDataSet.xsc">
       <DependentUpon>ChromatogramDataSet.xsd</DependentUpon>
     </None>
-    <None Update="Misc\ChromatogramDataSet.xsd">
+    <None Include="Misc\ChromatogramDataSet.xsd">
       <SubType>Designer</SubType>
       <Generator>MSDataSetGenerator</Generator>
       <LastGenOutput>ChromatogramDataSet.Designer.cs</LastGenOutput>
     </None>
-    <None Update="Misc\ChromatogramDataSet.xss">
+    <None Include="Misc\ChromatogramDataSet.xss">
       <DependentUpon>ChromatogramDataSet.xsd</DependentUpon>
     </None>
-    <None Update="Misc\SpectrumDataSet.xsc">
+    <Content Include="Misc\DataProcessing.ico" />
+    <None Include="Misc\SpectrumDataSet.xsc">
       <DependentUpon>SpectrumDataSet.xsd</DependentUpon>
     </None>
-    <None Update="Misc\SpectrumDataSet.xsd">
+    <None Include="Misc\SpectrumDataSet.xsd">
       <SubType>Designer</SubType>
       <Generator>MSDataSetGenerator</Generator>
       <LastGenOutput>SpectrumDataSet.Designer.cs</LastGenOutput>
     </None>
-    <None Update="Misc\SpectrumDataSet.xss">
+    <None Include="Misc\SpectrumDataSet.xss">
       <DependentUpon>SpectrumDataSet.xsd</DependentUpon>
     </None>
+    <Content Include="Misc\Smoother.ico" />
+    <Content Include="Misc\SpectrumSVG-template.svg">
+    </Content>
+    <None Include="Resources\Annotation.png" />
+    <None Include="Resources\views.png" />
+    <None Include="Resources\up.png" />
+    <None Include="Resources\Thresholder.png" />
+    <None Include="Resources\Smoother.png" />
+    <None Include="Resources\RecentDocuments.png" />
+    <None Include="Resources\PeakIntegralActive.png" />
+    <None Include="Resources\PeakIntegral.png" />
+    <None Include="Resources\OpticalDrive.png" />
+    <None Include="Resources\NetworkDrive.png" />
+    <None Include="Resources\MyNetworkPlaces.png" />
+    <None Include="Resources\MyDocuments.png" />
+    <None Include="Resources\MyComputer.png" />
+    <None Include="Resources\LocalDrive.png" />
+    <None Include="Resources\folder.png" />
+    <None Include="Resources\file.png" />
+    <None Include="Resources\Desktop.png" />
+    <None Include="Resources\Centroider.png" />
+    <None Include="Resources\back.png" />
+    <None Include="Resources\DataProcessing.png" />
+    <None Include="Resources\folder.png" />
   </ItemGroup>
   <ItemGroup>
     <NativeReference Include="Interop.EDAL.SxS, Version=1.0.0.0, Type=win32">
