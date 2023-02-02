@@ -63,6 +63,11 @@ namespace pwiz.SkylineTestFunctional
         protected override void DoTest()
         {
             var testFilesDir = TestFilesDirs[0]; // IonMobilityTest.zip
+
+            // Make sure any generated .imsdb files are not in exe's directory - that interferes with parallel tests
+            TestContext.EnsureTestResultsDir();
+            using var d = new CurrentDirectorySetter(testFilesDir.FullPath);
+
             // Make sure we haven't forgotten to update anything if a new IMS type has been added
             foreach (eIonMobilityUnits units in Enum.GetValues(typeof(eIonMobilityUnits)))
             {
@@ -164,8 +169,7 @@ namespace pwiz.SkylineTestFunctional
             RunUI(() => transitionSettingsDlg1.IonMobilityControl.WindowWidthType = IonMobilityWindowWidthCalculator.IonMobilityWindowWidthType.resolving_power);
             RunUI(() => transitionSettingsDlg1.IonMobilityControl.SetResolvingPower(50));
             WaitForClosedForm(ionMobilityLibDlg1);
-            RunUI(transitionSettingsDlg1.OkDialog);
-            WaitForClosedForm(transitionSettingsDlg1);
+            OkDialog(transitionSettingsDlg1, transitionSettingsDlg1.OkDialog);
             // Rename that library
             const string testlibName2 = "testlib2";
             var transitionSettingsDlg2 = ShowDialog<TransitionSettingsUI>(
@@ -191,12 +195,12 @@ namespace pwiz.SkylineTestFunctional
                 // Go back to the first library we created
                 transitionSettingsDlg2.IonMobilityControl.SelectedIonMobilityLibrary= testlibName;
             });
-            RunUI(transitionSettingsDlg2.OkDialog);
+            OkDialog(transitionSettingsDlg2, transitionSettingsDlg2.OkDialog);
 
             /*
-            * Check that the database was created successfully
-            * Check that it has the correct number of entries
-            */
+                * Check that the database was created successfully
+                * Check that it has the correct number of entries
+                */
             IonMobilityDb db = IonMobilityDb.GetIonMobilityDb(databasePath, null);
             var dbPrecursorAndIonMobilities = db.GetIonMobilities();
             AssertEx.AreEqual(EXPECTED_DB_ENTRIES, dbPrecursorAndIonMobilities.Count());
@@ -340,16 +344,16 @@ namespace pwiz.SkylineTestFunctional
             });
 
             /* We don't handle any external ion mobility library formats yet
-            // Test import ion mobility data from an external file format (other than spectral libs).
-            var ionMobilityLibDlg3 = ShowDialog<EditIonMobilityLibraryDlg>(ionMobilityLibraryDlg.AddIonMobilityLibrary);
-            const string testlibName3 = "testlib3";
-            string databasePath3 = testFilesDir.GetTestPath(testlibName3 + IonMobilityDb.EXT);
-            RunUI(() =>
-            {
-                ionMobilityLibDlg3.LibraryName = testlibName3;
-                ionMobilityLibDlg3.CreateDatabase(databasePath3, testlibName3);
-            });
-            */
+                // Test import ion mobility data from an external file format (other than spectral libs).
+                var ionMobilityLibDlg3 = ShowDialog<EditIonMobilityLibraryDlg>(ionMobilityLibraryDlg.AddIonMobilityLibrary);
+                const string testlibName3 = "testlib3";
+                string databasePath3 = testFilesDir.GetTestPath(testlibName3 + IonMobilityDb.EXT);
+                RunUI(() =>
+                {
+                    ionMobilityLibDlg3.LibraryName = testlibName3;
+                    ionMobilityLibDlg3.CreateDatabase(databasePath3, testlibName3);
+                });
+                */
             // Simulate pressing "Import" button from the Edit Ion Mobility Library dialog
             var importSpectralLibDlg =
                 ShowDialog<ImportIonMobilityFromSpectralLibraryDlg>(ionMobilityLibraryDlg.ImportFromSpectralLibrary);
@@ -358,7 +362,7 @@ namespace pwiz.SkylineTestFunctional
                 // Set up to fail - don't provide z=2 info
                 importSpectralLibDlg.Source = SpectralLibrarySource.settings; // Simulate user selecting 1st radio button
             });
-            RunUI(() => importSpectralLibDlg.OkDialog()); // User clicks OK 
+            OkDialog(importSpectralLibDlg, importSpectralLibDlg.OkDialog); // User clicks OK 
             RunUI(() =>
             {
                 importSpectralLibDlg.Source = SpectralLibrarySource.file; // Simulate user selecting 2nd radio button
@@ -367,10 +371,8 @@ namespace pwiz.SkylineTestFunctional
             });
             WaitForClosedForm(importSpectralLibDlg);
             WaitForCondition(() => ionMobilityLibraryDlg.LibraryMobilitiesFlatCount > 8); // Let that library load
-            RunUI(ionMobilityLibraryDlg.OkDialog);
-            WaitForClosedForm(ionMobilityLibraryDlg);
-            RunUI(() => transitionSettingsDlg3.OkDialog());
-            WaitForClosedForm(transitionSettingsDlg3);
+            OkDialog(ionMobilityLibraryDlg, ionMobilityLibraryDlg.OkDialog);
+            OkDialog(transitionSettingsDlg3, transitionSettingsDlg3.OkDialog);
             doc = WaitForDocumentChangeLoaded(doc); // Let that library load
 
             // Do some DT calculations with this new library
@@ -409,10 +411,8 @@ namespace pwiz.SkylineTestFunctional
                 mobilityLibraryDlg.SetOffsetHighEnergySpectraCheckbox(false); // Turn off the high energy offset column
                 mobilityLibraryDlg.LibraryName="test4";
             });
-            RunUI(()=>mobilityLibraryDlg.OkDialog());
-            WaitForClosedForm(mobilityLibraryDlg);
-            RunUI(transitionSettingsDlg4.OkDialog);
-            WaitForClosedForm(transitionSettingsDlg4);
+            OkDialog(mobilityLibraryDlg, mobilityLibraryDlg.OkDialog);
+            OkDialog(transitionSettingsDlg4, transitionSettingsDlg4.OkDialog);
             doc = WaitForDocumentChangeLoaded(doc);
             node = FindNodes("DEADEELS", Adduct.QUINTUPLY_PROTONATED);
             centerIonMobility = doc.Settings.GetIonMobilityHelper(
@@ -427,9 +427,8 @@ namespace pwiz.SkylineTestFunctional
             // Simulate picking "Edit Current..." from the Ion Mobility Library combo control
             var driftTimePredictorDlg5 = ShowDialog<EditIonMobilityLibraryDlg>(transitionSettingsDlg5.IonMobilityControl.EditIonMobilityLibrary);
             RunUI(() => AssertEx.IsTrue(driftTimePredictorDlg5.GetOffsetHighEnergySpectraCheckbox()));
-            RunUI(driftTimePredictorDlg5.CancelDialog);
-            WaitForClosedForm(driftTimePredictorDlg5);
-            OkDialog(transitionSettingsDlg5, () => transitionSettingsDlg5.OkDialog());
+            OkDialog(driftTimePredictorDlg5, driftTimePredictorDlg5.CancelDialog);
+            OkDialog(transitionSettingsDlg5, transitionSettingsDlg5.OkDialog);
 
             // Try it with linear range instead of resolving power
             var transitionSettingsDlg6 = ShowDialog<TransitionSettingsUI>(
@@ -441,8 +440,8 @@ namespace pwiz.SkylineTestFunctional
             var widthAtDtMax = 1000;
             RunUI(() => transitionSettingsDlg6.IonMobilityControl.SetWidthAtIonMobilityMax(widthAtDtMax));
             RunUI(() => transitionSettingsDlg6.IonMobilityControl.SetWidthAtIonMobilityZero(widthAtDtZero));
-            OkDialog(driftTimePredictorDlg6, () => driftTimePredictorDlg6.OkDialog());
-            OkDialog(transitionSettingsDlg6, () => transitionSettingsDlg6.OkDialog());
+            OkDialog(driftTimePredictorDlg6, driftTimePredictorDlg6.OkDialog);
+            OkDialog(transitionSettingsDlg6, transitionSettingsDlg6.OkDialog);
             doc = WaitForDocumentChangeLoaded(doc);
             node = FindNodes("DEADEELS", Adduct.QUINTUPLY_PROTONATED);
             centerIonMobility = doc.Settings.GetIonMobilityHelper(
@@ -459,8 +458,8 @@ namespace pwiz.SkylineTestFunctional
             var driftTimePredictorDlg7 = ShowDialog<EditIonMobilityLibraryDlg>(transitionSettingsDlg7.IonMobilityControl.EditIonMobilityLibrary);
             var fixedWidth = 100;
             RunUI(() => transitionSettingsDlg7.IonMobilityControl.SetFixedWidth(fixedWidth));
-            OkDialog(driftTimePredictorDlg7, () => driftTimePredictorDlg7.OkDialog());
-            OkDialog(transitionSettingsDlg7, () => transitionSettingsDlg7.OkDialog());
+            OkDialog(driftTimePredictorDlg7, driftTimePredictorDlg7.OkDialog);
+            OkDialog(transitionSettingsDlg7, transitionSettingsDlg7.OkDialog);
             doc = WaitForDocumentChangeLoaded(doc);
             node = FindNodes("DEADEELS", Adduct.QUINTUPLY_PROTONATED);
             centerIonMobility = doc.Settings.GetIonMobilityHelper(
@@ -486,7 +485,7 @@ namespace pwiz.SkylineTestFunctional
             {
                 var transitionSettingsDlg0 = ShowDialog<TransitionSettingsUI>(() => SkylineWindow.ShowTransitionSettingsUI(TransitionSettingsUI.TABS.IonMobility));
                 RunUI(() => transitionSettingsDlg0.IonMobilityControl.WindowWidthType = IonMobilityWindowWidthCalculator.IonMobilityWindowWidthType.none);
-                RunUI(() =>  transitionSettingsDlg0.OkDialog());
+                OkDialog(transitionSettingsDlg0, transitionSettingsDlg0.OkDialog);
                 doc = WaitForDocumentChange(doc);
                 AssertEx.AreEqual(IonMobilityWindowWidthCalculator.IonMobilityWindowWidthType.none,
                     doc.Settings.TransitionSettings.IonMobilityFiltering.FilterWindowWidthCalculator.WindowWidthMode);
@@ -495,7 +494,7 @@ namespace pwiz.SkylineTestFunctional
             var transitionSettingsDlg = ShowDialog<TransitionSettingsUI>(() => SkylineWindow.ShowTransitionSettingsUI(TransitionSettingsUI.TABS.IonMobility));
             RunUI(() => transitionSettingsDlg.IonMobilityControl.WindowWidthType = IonMobilityWindowWidthCalculator.IonMobilityWindowWidthType.fixed_width);
             RunUI(() => transitionSettingsDlg.IonMobilityControl.SetFixedWidth(5));
-            RunUI(() => transitionSettingsDlg.OkDialog());
+            OkDialog(transitionSettingsDlg, transitionSettingsDlg.OkDialog);
             doc = WaitForDocumentChange(doc);
             AssertEx.AreEqual(IonMobilityWindowWidthCalculator.IonMobilityWindowWidthType.fixed_width,
                 doc.Settings.TransitionSettings.IonMobilityFiltering.FilterWindowWidthCalculator.WindowWidthMode);
@@ -505,7 +504,7 @@ namespace pwiz.SkylineTestFunctional
             // If the bug has not been fixed, we won't preserve changing just the window width
             transitionSettingsDlg = ShowDialog<TransitionSettingsUI>(() => SkylineWindow.ShowTransitionSettingsUI(TransitionSettingsUI.TABS.IonMobility));
             RunUI(() => transitionSettingsDlg.IonMobilityControl.SetFixedWidth(55));
-            RunUI(() => transitionSettingsDlg.OkDialog());
+            OkDialog(transitionSettingsDlg, transitionSettingsDlg.OkDialog);
             doc = WaitForDocumentChange(doc);
             AssertEx.AreEqual(55,
                 doc.Settings.TransitionSettings.IonMobilityFiltering.FilterWindowWidthCalculator.FixedWindowWidth);
@@ -901,8 +900,7 @@ namespace pwiz.SkylineTestFunctional
                     messageDlg.OkDialog();
                 });
 
-            RunUI(() => driftTimePredictorDoomedDlg.CancelDialog());
-            WaitForClosedForm(driftTimePredictorDoomedDlg);
+            OkDialog(driftTimePredictorDoomedDlg, driftTimePredictorDoomedDlg.CancelDialog);
             RunUI(() =>
             {
                 transitionSettingsDlg.OkDialog();

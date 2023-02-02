@@ -135,8 +135,7 @@ namespace pwiz.SkylineTestFunctional
             });
             WaitForClosedForm(renameDlg);
 
-            RunUI(manageResultsDlg.OkDialog);
-            WaitForClosedForm(manageResultsDlg);
+            OkDialog(manageResultsDlg, manageResultsDlg.OkDialog);
 
             CheckResultsEquivalent(docMove2, true);
 

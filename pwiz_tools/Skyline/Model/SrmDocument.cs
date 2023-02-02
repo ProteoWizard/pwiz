@@ -1282,7 +1282,7 @@ namespace pwiz.Skyline.Model
                     {
                         var CHUNKSIZE = 500; // Should be more than adequate to check for "?xml version="1.0" encoding="utf-8"?>< srm_settings format_version = "4.12" software_version = "Skyline (64-bit) " >"
                         var probeBuf = new byte[CHUNKSIZE];
-                        probeFile.Read(probeBuf, 0, CHUNKSIZE);
+                        probeFile.ReadOrThrow(probeBuf, 0, CHUNKSIZE);
                         probeBuf[CHUNKSIZE - 1] = 0;
                         var probeString = Encoding.UTF8.GetString(probeBuf);
                         if (!probeString.Contains(@"<srm_settings"))
