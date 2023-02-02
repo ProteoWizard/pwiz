@@ -82,7 +82,7 @@ namespace pwiz.SkylineTestFunctional
 
         DdaTestSettings TestSettings;
 
-        [TestMethod, NoParallelTesting]
+        [TestMethod, NoParallelTesting(TestExclusionReason.RESOURCE_INTENSIVE)]
         public void TestDdaSearch()
         {
             TestFilesZip = @"TestFunctional\DdaSearchTest.zip";
@@ -107,7 +107,7 @@ namespace pwiz.SkylineTestFunctional
             RunFunctionalTest();
         }
 
-        [TestMethod, NoParallelTesting]
+        [TestMethod, NoParallelTesting(TestExclusionReason.RESOURCE_INTENSIVE)]
         public void TestDdaSearchMsgfPlus()
         {
             TestFilesZip = @"TestFunctional\DdaSearchTest.zip";
@@ -134,7 +134,7 @@ namespace pwiz.SkylineTestFunctional
             RunFunctionalTest();
         }
 
-        [TestMethod, NoParallelTesting]
+        [TestMethod, NoParallelTesting(TestExclusionReason.RESOURCE_INTENSIVE)]
         public void TestDdaSearchMsFragger()
         {
             TestFilesZip = @"TestFunctional\DdaSearchTest.zip";

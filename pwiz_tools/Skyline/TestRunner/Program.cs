@@ -669,7 +669,9 @@ namespace TestRunner
             testRunnerExe = iRelative != -1
                 ? Path.Combine(@"c:\pwiz", testRunnerExe.Substring(iRelative))
                 : @"c:\pwiz\pwiz_tools\Skyline\bin\x64\Release\TestRunner.exe";
-            var testRunnerCmd = $@"{testRunnerExe} parallelmode=client showheader=0 results=c:\AlwaysUpCLT\TestResults log={testRunnerLog}";
+            // N.B. TestResults_<n> could technically just be TestResults since each VM has its own drive, but it makes for a more readable log and
+            // is also used in pwiz_tools\Skyline\TestRunnerLib\RunTests.cs to determine the test client ID
+            var testRunnerCmd = $@"{testRunnerExe} parallelmode=client showheader=0 results=c:\AlwaysUpCLT\TestResults_{i} log={testRunnerLog}";
             testRunnerCmd = AddPassThroughArguments(commandLineArgs, testRunnerCmd);
             testRunnerCmd += $" workerport={workerPort}";
 
@@ -908,7 +910,8 @@ namespace TestRunner
                     (loop <= 0) ? " forever" : (loop == 1) ? "" : " in " + loop + " loops",
                     "", /*(repeat <= 1) ? "" : ", repeated " + repeat + " times each per language",*/
                     workerCount);
-                Console.WriteLine("(If prompted to \"Allow TestRunner to communicate on these networks\", be sure to check BOTH public and private options.)\r\n");
+                Console.WriteLine("Be sure to check BOTH public and private options if prompted to \"Allow TestRunner to communicate on these networks\".");
+                Console.WriteLine("See https://skyline.ms/wiki/home/development/page.view?name=Troubleshooting_parallel_mode for troubleshooting tips.\r\n");
 
                 // main thread listens for workers to connect
                 while (!cts.IsCancellationRequested)
@@ -1113,25 +1116,21 @@ namespace TestRunner
             bool clientMode = parallelMode == "client" || parallelMode == "server_worker";
             bool asNightly = offscreen && qualityMode;  // While it is possible to run quality off screen from the Quality tab, this is what we use to distinguish for treatment of perf tests
 
+            // If running Nightly tests, remove any flagged for exclusion by the NoNightlyTesting custom attribute
+            if (asNightly)
+            {
+                testList.RemoveAll(test => test.DoNotRunInNightly);
+                unfilteredTestList.RemoveAll(test => test.DoNotRunInNightly);
+            }
+
             // If we haven't been told to run perf tests, remove any from the list
             // which may have shown up by default
             if (!perftests)
             {
-                for (var t = testList.Count; t-- > 0; )
-                {
-                    if (testList[t].IsPerfTest)
-                    {
-                        testList.RemoveAt(t);
-                    }
-                }
-                for (var ut = unfilteredTestList.Count; ut-- > 0; )
-                {
-                    if (unfilteredTestList[ut].IsPerfTest)
-                    {
-                        unfilteredTestList.RemoveAt(ut);
-                    }
-                }
+                testList.RemoveAll(test => test.IsPerfTest);
+                unfilteredTestList.RemoveAll(test => test.IsPerfTest);
             }
+
             // Even if we have been told to run perftests, if none are in the list
             // then make sure we don't chat about perf tests in the log
             perftests &= testList.Any(t => t.IsPerfTest);
