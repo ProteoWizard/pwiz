@@ -4,7 +4,7 @@ All Info  :
 Transition Settings changed
 Settings > Transition Settings -- Filter > Ion types changed from "y, b" to "y, b, p"
 Settings > Transition Settings -- Filter > Molecule Ion types changed from "f" to "f, p"
-Settings > Transition Settings -- Library > Ion match tolerance changed from 0.5mz to 0.7mz
+Settings > Transition Settings -- Library > Ion match tolerance changed from "0.5" m/z to "0.7" m/z
 Settings > Transition Settings -- Full-Scan > Acquisition method changed from "None" to "PRM"
 Settings > Transition Settings -- Full-Scan > Product mass analyzer changed from "None" to "QIT"
 Settings > Transition Settings -- Full-Scan > Resolution changed from Missing to "0.7"
@@ -193,7 +193,7 @@ Import Peptide Search > Extract Chromatograms > Found results files : contains "
 Import Peptide Search > Extract Chromatograms > Files to import simultaneously is "Many"
 Import Peptide Search > Extract Chromatograms > Removed prefix is "klc_20100329v_Protea_Peptide_Curve_"
 Import Peptide Search > Extract Chromatograms > Removed suffix is "_uL_tech1"
-Import Peptide Search > Configure Transition Settings > Ion match tolerance is 0.7mz
+Import Peptide Search > Configure Transition Settings > Ion match tolerance is "0.7" m/z
 Import Peptide Search > Configure Transition Settings > Pick min product ions is "6"
 Import Peptide Search > Configure Transition Settings > Product ion selection start is "ion 1"
 Import Peptide Search > Configure Transition Settings > Product ion selection end is "last ion"
@@ -210,7 +210,7 @@ Extra Info: Extract Chromatograms =
 },
 Configure Transition Settings = 
 {
-    Ion match tolerance = 0.7mz,
+    Ion match tolerance = "0.7" m/z,
     Pick min product ions = "6",
     Product ion selection start = "ion 1",
     Product ion selection end = "last ion"

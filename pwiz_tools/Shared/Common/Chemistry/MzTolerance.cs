@@ -17,13 +17,14 @@
  */
 
 using System;
+using pwiz.Common.Properties;
 using pwiz.Common.SystemUtil;
 
 namespace pwiz.Common.Chemistry
 {
     public class MzTolerance : IAuditLogObject
     {
-        public enum Units { mz, ppm };
+        public enum Units { mz, ppm }
 
         public double Value { get; private set; }
         public Units Unit { get; private set; }
@@ -90,12 +91,15 @@ namespace pwiz.Common.Chemistry
             return (a < b - this);
         }
 
+        public string TypeText =>
+            Resources.ResourceManager.GetString(nameof(Units) + "_" + Enum.GetName(typeof(Units), Unit));
+
         public override string ToString()
         {
-            return $@"{Value}{Enum.GetName(typeof(Units), Unit)}";
+            return $"{Value} {TypeText}";
         }
 
-        public string AuditLogText => ToString();
+        public string AuditLogText => $"\"{Value}\" {TypeText}";
         public bool IsName => false;
     };
 }

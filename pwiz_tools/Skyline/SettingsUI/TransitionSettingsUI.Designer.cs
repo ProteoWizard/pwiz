@@ -541,6 +541,7 @@
             resources.GetString("comboToleranceUnits.Items1")});
             resources.ApplyResources(this.comboToleranceUnits, "comboToleranceUnits");
             this.comboToleranceUnits.Name = "comboToleranceUnits";
+            this.comboToleranceUnits.SelectedIndexChanged += new System.EventHandler(this.comboToleranceUnits_SelectedIndexChanged);
             // 
             // label9
             // 

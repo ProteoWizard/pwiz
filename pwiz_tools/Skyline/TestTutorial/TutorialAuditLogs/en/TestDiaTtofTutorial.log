@@ -46,7 +46,7 @@ Import Peptide Search > Configure Transition Settings > Precursor charges is "2,
 Import Peptide Search > Configure Transition Settings > Ion charges is "1, 2"
 Import Peptide Search > Configure Transition Settings > Ion types is "y, b"
 Import Peptide Search > Configure Transition Settings > Use DIA precursor window for exclusion is True
-Import Peptide Search > Configure Transition Settings > Ion match tolerance is 0.05mz
+Import Peptide Search > Configure Transition Settings > Ion match tolerance is "0.05" m/z
 Import Peptide Search > Configure Transition Settings > Pick min product ions is "6"
 Import Peptide Search > Configure Transition Settings > Pick product ions is "6"
 Import Peptide Search > Configure Transition Settings > Product ion selection start is "ion 3"
@@ -155,7 +155,7 @@ Configure Transition Settings =
     Ion charges = "1, 2",
     Ion types = "y, b",
     Use DIA precursor window for exclusion = True,
-    Ion match tolerance = 0.05mz,
+    Ion match tolerance = "0.05" m/z,
     Pick min product ions = "6",
     Pick product ions = "6",
     Product ion selection start = "ion 3",

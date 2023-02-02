@@ -143,8 +143,8 @@ namespace pwiz.Skyline.SettingsUI
             // Initialize library settings
             cbLibraryPick.Checked = (Libraries.Pick != TransitionLibraryPick.none);
             panelPick.Visible = cbLibraryPick.Checked;
-            textTolerance.Text = Libraries.IonMatchMzTolerance.Value.ToString(LocalizationHelper.CurrentCulture);
             comboToleranceUnits.SelectedItem = comboToleranceUnits.Items[(int)Libraries.IonMatchMzTolerance.Unit];
+            textTolerance.Text = Libraries.IonMatchMzTolerance.Value.ToString(LocalizationHelper.CurrentCulture);
             textMinIonCount.Text = Libraries.MinIonCount != 0 ? Libraries.MinIonCount.ToString(LocalizationHelper.CurrentCulture) : string.Empty;
             textIonCount.Text = Libraries.IonCount.ToString(LocalizationHelper.CurrentCulture);
             if (Libraries.Pick == TransitionLibraryPick.filter)
@@ -1034,6 +1034,12 @@ namespace pwiz.Skyline.SettingsUI
             set { textTolerance.Text = value.ToString(CultureInfo.CurrentCulture); }
         }
 
+        public MzTolerance.Units IonMatchToleranceUnits
+        {
+            get { return (MzTolerance.Units)comboToleranceUnits.SelectedIndex; }
+            set { comboToleranceUnits.SelectedIndex = (int) value; }
+        }
+
         public int Peaks
         {
             get { return FullScanSettingsControl.Peaks; }
@@ -1315,6 +1321,17 @@ namespace pwiz.Skyline.SettingsUI
                         AcquisitionMethod = FullScanAcquisitionMethod.PRM;
                         break;
                 }
+            }
+        }
+
+        private void comboToleranceUnits_SelectedIndexChanged(object sender, EventArgs e)
+        {
+            if (double.TryParse(textTolerance.Text, out var matchTolerance))
+            {
+                if (IonMatchToleranceUnits == MzTolerance.Units.mz)
+                    IonMatchTolerance = matchTolerance / 1000;
+                else
+                    IonMatchTolerance = matchTolerance * 1000;
             }
         }
     }
