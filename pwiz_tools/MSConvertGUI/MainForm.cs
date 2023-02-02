@@ -37,7 +37,7 @@ using pwiz.Common.Collections;
 
 namespace MSConvertGUI
 {
-    public partial class MainForm : Form
+    public partial class MainForm : BaseForm
     {
         IList<string> cmdline_args;
         string SetDefaultsDataType = ""; // watch last-added filetype, offer to set defaults for that type
