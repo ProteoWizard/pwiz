@@ -11259,9 +11259,7 @@ Example: Crosslink to PEPTIDE: T [4]</comment>
   <data name="DDASearchControl_RunSearch_Conversion_failed_" xml:space="preserve">
     <value>转换失败。</value>
   </data>
-  <data name="DDASearchControl_RunSearch_Conversion_finished_" xml:space="preserve">
-    <value>转换完成。</value>
-  </data>
+  <data name="UpgradeManager_updateCheck_Complete_Failed_attempting_to_upgrade_" xml:space="preserve">
   <data name="DiaUmpireDdaConverter_Run_Re_using_existing_DiaUmpire_file__with_equivalent_settings__for__0_" xml:space="preserve">
     <value>为 {0} 重新使用现有 DIA-Umpire 文件（具有等效设置）</value>
   </data>

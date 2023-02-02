@@ -11257,9 +11257,6 @@ Example: Crosslink to PEPTIDE: T [4]</comment>
   <data name="DDASearchControl_RunSearch_Conversion_failed_" xml:space="preserve">
     <value>Conversion failed.</value>
   </data>
-  <data name="DDASearchControl_RunSearch_Conversion_finished_" xml:space="preserve">
-    <value>Conversion finished.</value>
-  </data>
   <data name="DiaUmpireDdaConverter_Run_Re_using_existing_DiaUmpire_file__with_equivalent_settings__for__0_" xml:space="preserve">
     <value>Re-using existing DIA-Umpire file (with equivalent settings) for {0}</value>
   </data>
