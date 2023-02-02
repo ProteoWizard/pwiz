@@ -36,17 +36,19 @@ namespace pwiz.Skyline.SettingsUI
             PropertiesSheet.PropertySortChanged += PropertiesSheet_PropertySortChanged;
             var toolStrip = spectrumInfoSheet.Controls.OfType<ToolStrip>().First();
 
-            var closeButton = new ToolStripButton()
+            CloseButton = new ToolStripButton()
             {
                 Alignment = ToolStripItemAlignment.Right,
                 Image = Resources.Close,
                 ImageTransparentColor = Color.Magenta,
-                DisplayStyle = ToolStripItemDisplayStyle.Image
+                DisplayStyle = ToolStripItemDisplayStyle.Image,
+                Tag = @"Close button"
             };
             var resources = new ComponentResourceManager(typeof(MsGraphExtension));
-            resources.ApplyResources(closeButton, "closeButton");
-            closeButton.Click += closeButton_Click;
-            toolStrip.Items.Add(closeButton);
+            resources.ApplyResources(CloseButton, "closeButton");
+            CloseButton.Click += closeButton_Click;
+            toolStrip.Items.Add(CloseButton);
+            
         }
 
         public void RestorePropertiesSheet()
@@ -136,5 +138,10 @@ namespace pwiz.Skyline.SettingsUI
             _focusedControl?.Focus();
             _focusedControl = null;
         }
+
+        #region Test Support
+        public ToolStripButton CloseButton { get; private set; }
+        #endregion
+
     }
 }

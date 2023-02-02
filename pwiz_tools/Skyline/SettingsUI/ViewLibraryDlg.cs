@@ -52,7 +52,6 @@ using ZedGraph;
 using pwiz.Skyline.Util.Extensions;
 using Array = System.Array;
 using Label = System.Windows.Forms.Label;
-using Peptide = pwiz.Skyline.Model.Peptide;
 using Transition = pwiz.Skyline.Model.Transition;
 using static pwiz.Skyline.Model.Lib.BiblioSpecLiteLibrary;
 
@@ -617,66 +616,6 @@ namespace pwiz.Skyline.SettingsUI
             IsUpdateComplete = true;
         }
 
-        public static void GetPeptideInfo(ViewLibraryPepInfo pepInfo, 
-                                        LibKeyModificationMatcher matcher,
-                                        out SrmSettings settings, out TransitionGroupDocNode transitionGroup, out ExplicitMods mods)
-        {
-            settings = Program.ActiveDocument.Settings;
-
-            if (matcher.HasMatches)
-                settings = settings.ChangePeptideModifications(modifications => matcher.MatcherPepMods);
-
-//            var pepInfo = (ViewLibraryPepInfo)lPeptide.SelectedItem;
-            var nodePep = pepInfo.PeptideNode;
-            if (nodePep != null)
-            {
-                mods = nodePep.ExplicitMods;
-                // Should always be just one child.  The child that matched this spectrum.
-                transitionGroup = nodePep.TransitionGroups.First();
-            }
-            else if (null != pepInfo.Key.LibraryKey.Target)
-            {
-                var peptide = pepInfo.Key.LibraryKey.CreatePeptideIdentityObj();
-                transitionGroup = new TransitionGroupDocNode(new TransitionGroup(peptide, pepInfo.Adduct,
-                                                      IsotopeLabelType.light, true, null), null);
-                if (pepInfo.Key.IsSmallMoleculeKey)
-                {
-                    mods = null;
-                    return;
-                }
-
-                // Because the document modifications do not explain this peptide, a set of
-                // explicit modifications must be constructed, even if they are empty.
-                IList<ExplicitMod> staticModList = new List<ExplicitMod>();
-                IEnumerable<ViewLibraryPepInfo.ModificationInfo> modList = GetModifications(pepInfo);
-                foreach (var modInfo in modList)
-                {
-                    var aa = modInfo.ModifiedAminoAcid;
-                    var smod = new StaticMod(@"temp",
-                                             aa != 'X' ? aa.ToString(CultureInfo.InvariantCulture) : string.Join(@",", AminoAcid.All),
-                                             null,
-                                             null,
-                                             LabelAtoms.None,
-                                             modInfo.ModifiedMass,
-                                             modInfo.ModifiedMass);
-                    var exmod = new ExplicitMod(modInfo.IndexMod, smod);
-                    staticModList.Add(exmod);
-                }
-
-                mods = new ExplicitMods(peptide, staticModList, new TypedExplicitModifications[0]);
-            }
-            else
-            {
-                // Create custom ion node for midas library
-                var precursor = pepInfo.Key.PrecursorMz.GetValueOrDefault();
-                var precursorMono = new TypedMass(precursor, MassType.Monoisotopic);
-                var precursorAverage = new TypedMass(precursor, MassType.Average);
-                var peptide = new Peptide(new CustomMolecule(precursorMono, precursorAverage, precursor.ToString(CultureInfo.CurrentCulture)));
-                transitionGroup = new TransitionGroupDocNode(new TransitionGroup(peptide, Adduct.EMPTY, IsotopeLabelType.light, true, null), null);
-                mods = new ExplicitMods(peptide, new ExplicitMod[0], new TypedExplicitModifications[0]);
-            }
-        }
-
 
         public class ComboOption : IComparable<ComboOption>
         {
@@ -899,7 +838,7 @@ namespace pwiz.Skyline.SettingsUI
                             }
 
                             // Generates the object that will go into the property sheet
-                            _currentProperties = spectrumInfo.CreateProperties(pepInfo, _matcher, _currentProperties); 
+                            _currentProperties = spectrumInfo.CreateProperties(pepInfo, transitionGroupDocNode, _matcher, _currentProperties); 
                         }
 
                         var spectrumInfoR = LibraryRankedSpectrumInfo.NewLibraryRankedSpectrumInfo(
@@ -3004,32 +2943,6 @@ namespace pwiz.Skyline.SettingsUI
                 public string Text { get; private set; }
                 public Brush Color { get; private set; }
             }
-        }
-
-        /// <summary>
-        /// Get the information necessary to calculate precursor m/z and then calculate it
-        /// </summary>
-        public static double CalcMz(ViewLibraryPepInfo info, LibKeyModificationMatcher matcher)
-        {
-            if (info.Key.IsPrecursorKey)
-                return info.Key.PrecursorMz.GetValueOrDefault();
-
-            GetPeptideInfo(info, matcher, out var _settings, out var transitionGroup, out var mods);
-            return CalcMz(info, _settings, transitionGroup, mods);
-        }
-
-        /// <summary>
-        /// Calculate precursor m/z
-        /// </summary>
-        private static double CalcMz(ViewLibraryPepInfo info, SrmSettings settings,
-            TransitionGroupDocNode transitionGroup, ExplicitMods mods)
-        {
-            if (info.Key.IsPrecursorKey)
-                return info.Key.PrecursorMz.GetValueOrDefault();
-
-            var massH = settings.GetPrecursorCalc(transitionGroup.TransitionGroup.LabelType, mods)
-                .GetPrecursorMass(info.Target);
-            return SequenceMassCalc.PersistentMZ(SequenceMassCalc.GetMZ(massH, transitionGroup.PrecursorAdduct));
         }
 
         /// <summary>

@@ -163,6 +163,9 @@
   <data name="IonMobility" xml:space="preserve">
     <value>Ion Mobility</value>
   </data>
+  <data name="Label" xml:space="preserve">
+    <value>Label</value>
+  </data>
   <data name="LibraryName" xml:space="preserve">
     <value>Library Name</value>
   </data>

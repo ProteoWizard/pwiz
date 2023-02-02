@@ -2512,7 +2512,7 @@ namespace pwiz.Skyline.Model.Lib
         public IonMobilityAndCCS IonMobilityInfo { get; private set; }
         public string Protein { get; private set; } // Also used as Molecule List Name for small molecules
 
-        public SpectrumProperties CreateProperties(ViewLibraryPepInfo pepInfo, LibKeyModificationMatcher matcher, SpectrumProperties currentProperties = null)
+        public SpectrumProperties CreateProperties(ViewLibraryPepInfo pepInfo, TransitionGroupDocNode precursorInfo, LibKeyModificationMatcher matcher, SpectrumProperties currentProperties = null)
         {
             string baseCCS = null;
             string baseIM = null;
@@ -2537,13 +2537,13 @@ namespace pwiz.Skyline.Model.Lib
             var res = new SpectrumProperties()
             {
                 LibraryName = Name,
-                PrecursorMz = pepInfo.CalcMz(matcher).ToString(Formats.Mz),
+                PrecursorMz = precursorInfo.PrecursorMz.Value.ToString(Formats.Mz),
                 Score = (SpectrumHeaderInfo as BiblioSpecSpectrumHeaderInfo)?.Score,
                 Charge = pepInfo.Charge,
                 RetentionTime = baseRT,
                 CCS = baseCCS,
-                IonMobility = baseIM
-
+                IonMobility = baseIM,
+                Label = precursorInfo.LabelType.ToString()
             };
             res.SetFileName(FileName);
 
@@ -2580,10 +2580,12 @@ namespace pwiz.Skyline.Model.Lib
     {
         [Category("FileInfo")] public string IdFileName { get; set; }
         [Category("FileInfo")] public string FileName { get; set; }
-        [Category("FileInfo")] public string FilePath { get; set; }
+        // need to exclude the file path from test assertions because it is machine-dependent
+        [UseToCompare(false)] [Category("FileInfo")] public string FilePath { get; set; }
         [Category("FileInfo")] public string LibraryName { get; set; }
         [Category("PrecursorInfo")] public string PrecursorMz { get; set; }
         [Category("PrecursorInfo")] public int? Charge { get; set; }
+        [Category("PrecursorInfo")] public string Label { get; set; }
         [Category("AcquisitionInfo")] public string RetentionTime { get; set; }
         [Category("AcquisitionInfo")] public string CCS { get; set; }
         [Category("AcquisitionInfo")] public string IonMobility { get; set; }

@@ -251,19 +251,19 @@ namespace pwiz.Skyline.Model.Lib
             if (matcher.HasMatches)
                 settings = settings.ChangePeptideModifications(modifications => matcher.MatcherPepMods);
 
-            //            var pepInfo = (ViewLibraryPepInfo)lPeptide.SelectedItem;
             var nodePep = PeptideNode;
             if (nodePep != null)
             {
                 mods = nodePep.ExplicitMods;
-                // Should always be just one child.  The child that matched this spectrum.
-                transitionGroup = nodePep.TransitionGroups.First();
+                transitionGroup =
+                    nodePep.TransitionGroups.FirstOrDefault(precursor => precursor.PrecursorCharge == Charge);
+                transitionGroup ??= nodePep.TransitionGroups.First();
             }
             else if (null != Key.LibraryKey.Target)
             {
                 var peptide = Key.LibraryKey.CreatePeptideIdentityObj();
                 transitionGroup = new TransitionGroupDocNode(new TransitionGroup(peptide, Adduct,
-                                                      IsotopeLabelType.light, true, null), null);
+                    IsotopeLabelType.light, true, null), null);
                 if (Key.IsSmallMoleculeKey)
                 {
                     mods = null;

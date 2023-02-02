@@ -38,6 +38,7 @@ using pwiz.Skyline.Model.Results;
 using pwiz.Skyline.Model.Results.Crawdad;
 using pwiz.Skyline.Model.Themes;
 using pwiz.Skyline.Properties;
+using pwiz.Skyline.SettingsUI;
 using pwiz.Skyline.Util;
 using pwiz.Skyline.Util.Extensions;
 using ZedGraph;
@@ -1356,13 +1357,14 @@ namespace pwiz.Skyline.Controls.Graphs
 
                         _graphHelper.ZoomSpectrumToSettings(DocumentUI, selection.NodeTranGroup);
 
-                        if (selection.NodePep != null && selection.NodeTranGroup != null && spectrum?.SpectrumInfo is SpectrumInfoLibrary libInfo)
+                        if (GraphItem.PeptideDocNode != null && GraphItem.TransitionGroupNode != null && spectrum?.SpectrumInfo is SpectrumInfoLibrary libInfo)
                         {
                             var pepInfo = new ViewLibraryPepInfo(
-                                    selection.NodePep.ModifiedTarget.GetLibKey(selection.NodeTranGroup.PrecursorAdduct), 
+                                GraphItem.PeptideDocNode.ModifiedTarget.GetLibKey(GraphItem.TransitionGroupNode.PrecursorAdduct), 
                                     libInfo.SpectrumHeaderInfo)
                                 .ChangePeptideNode(selection.NodePep);
-                            msGraphExtension.SetPropertiesObject(libInfo.CreateProperties(pepInfo, new LibKeyModificationMatcher()));
+                            var props = libInfo.CreateProperties(pepInfo, spectrum.Precursor, new LibKeyModificationMatcher());
+                            msGraphExtension.SetPropertiesObject(props);
                         }
                     }
                     else
@@ -1392,6 +1394,7 @@ namespace pwiz.Skyline.Controls.Graphs
             {
                 ClearGraphPane();
                 _graphHelper.SetErrorGraphItem(new ExceptionMSGraphItem(ex));
+                msGraphExtension.SetPropertiesObject(null);
                 return;
             }
             catch (Exception)
@@ -1400,6 +1403,7 @@ namespace pwiz.Skyline.Controls.Graphs
                 //_graphHelper.SetErrorGraphItem(new NoDataMSGraphItem(ex.Message));
                 _graphHelper.SetErrorGraphItem(new NoDataMSGraphItem(
                     Resources.GraphSpectrum_UpdateUI_Failure_loading_spectrum__Library_may_be_corrupted));
+                msGraphExtension.SetPropertiesObject(null);
                 return;
             }
 
@@ -1410,6 +1414,7 @@ namespace pwiz.Skyline.Controls.Graphs
                 UpdateToolbar();
                 _nodeGroup = null;
                 _graphHelper.SetErrorGraphItem(new UnavailableMSGraphItem());
+                msGraphExtension.SetPropertiesObject(null);
             }
         }
 
@@ -1675,6 +1680,15 @@ namespace pwiz.Skyline.Controls.Graphs
                 }, peaks, TimeIntensitiesGroup.Singleton(timeIntensities));
             chromatogramInfo = new ChromatogramInfo(groupInfo, 0);
         }
+
+        #region Test support
+
+        public ToolStripButton PropertyButton => propertiesButton;
+        public MsGraphExtension MsGraphExtension => msGraphExtension;
+        public ToolStripComboBox SpectrumCombo => comboSpectrum;
+
+        #endregion
+
     }
 
     public class GraphSpectrumSettings

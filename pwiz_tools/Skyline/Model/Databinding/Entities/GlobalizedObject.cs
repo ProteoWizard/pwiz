@@ -1,9 +1,27 @@
 ﻿using System;
+using System.Collections.Generic;
 using System.ComponentModel;
+using System.Linq;
+using System.Reflection;
 using System.Resources;
+using pwiz.Skyline.Util;
+using Newtonsoft.Json;
 
 namespace pwiz.Skyline.Model.Databinding.Entities
 {
+    public class UseToCompare : Attribute
+    {
+        public bool IsUsed { get; set; }
+        public static readonly UseToCompare Yes = new UseToCompare(true);
+        public static readonly UseToCompare No = new UseToCompare(false);
+
+        public UseToCompare(bool isUsed)
+        {
+            IsUsed = isUsed;
+            BrowsableAttribute myAttribute = BrowsableAttribute.Yes;
+        }
+    }
+
     /// <summary>
     /// GlobalizedObject implements ICustomTypeDescriptor to enable 
     /// required functionality to describe a type (class).<br></br>
@@ -14,6 +32,26 @@ namespace pwiz.Skyline.Model.Databinding.Entities
     {
         private PropertyDescriptorCollection globalizedProps;
 
+        private static Dictionary<string, MethodInfo> TypeConverterDictionary;
+
+        private static string GetConverterKey(Type fromType, Type toType)
+        {
+            return fromType.FullName + @" " + toType.FullName;
+        }
+        static GlobalizedObject()
+        {
+            //Initialize the dictionary of type conversion methods.
+            var methodList = typeof(Convert).GetMethods()
+                .Where(method => method.GetParameters().Length == 1 && method.Name.StartsWith(@"To")).ToList();
+            TypeConverterDictionary = new Dictionary<string, MethodInfo>();
+            foreach (var method in methodList)
+            {
+                var methodKey = GetConverterKey(method.GetParameters().First().ParameterType, method.ReturnType);
+                if(!TypeConverterDictionary.ContainsKey(methodKey))
+                    TypeConverterDictionary.Add(methodKey, method);
+            }
+        }
+        
         public String GetClassName() => TypeDescriptor.GetClassName(this, true);
 
         public AttributeCollection GetAttributes() => TypeDescriptor.GetAttributes(this, true);
@@ -82,6 +120,76 @@ namespace pwiz.Skyline.Model.Databinding.Entities
             }
             return globalizedProps;
         }
+
+        #region Test suppport
+
+        public override bool Equals(object obj)
+        {
+            if(obj == null)
+                return false;
+            if(this.GetType() != obj.GetType())
+                return false;
+            var other = (GlobalizedObject)obj;
+            if(GetProperties().Count != other.GetProperties().Count)
+                return false;
+            var thisProps = GetProperties().Cast<PropertyDescriptor>()
+                .Where(prop => !prop.Attributes.Contains(UseToCompare.No))
+                .ToDictionary(prop => prop.Name, prop => prop.GetValue(this));
+            var otherProps = other.GetProperties().Cast<PropertyDescriptor>()
+                .Where(prop => !prop.Attributes.Contains(UseToCompare.No))
+                .ToDictionary(prop => prop.Name, prop => prop.GetValue(other));
+
+            return ArrayUtil.EqualsDeep(thisProps, otherProps);
+        }
+
+        public override int GetHashCode()
+        {
+            var valueList = GetType().GetProperties().ToList().Select(prop => prop.Name + @"=" + prop.GetValue(this)).ToList();
+            valueList.Sort();
+            
+            return valueList.ToString(@",").GetHashCode();
+        }
+
+        public string Serialize()
+        {
+            var thisProps = GetType().GetProperties().ToDictionary(prop => prop.Name, prop => prop.GetValue(this));
+
+            return JsonConvert.SerializeObject(thisProps, Formatting.Indented);
+        }
+
+        public void Deserialize(string str)
+        {
+            if(str == null)
+                return;
+
+            var valueDict = JsonConvert.DeserializeObject<Dictionary<string, object>>(str);
+            var propDict = GetType().GetProperties().ToDictionary(prop => prop.Name, prop => prop);
+            foreach (var val in valueDict)
+            {
+                if (propDict.ContainsKey(val.Key) && val.Value != null)
+                {
+                    var actualPropType = propDict[val.Key].PropertyType;
+                    var converterKey = GetConverterKey(val.Value.GetType(), actualPropType);
+                    if (!TypeConverterDictionary.ContainsKey(converterKey) && propDict[val.Key].PropertyType.Name.StartsWith(@"Nullable"))
+                    {
+                        actualPropType = propDict[val.Key].PropertyType.GetGenericArguments()[0];
+                        converterKey = GetConverterKey(val.Value.GetType(), actualPropType);
+                    }
+                    if (TypeConverterDictionary.ContainsKey(converterKey))
+                    {
+                        var parseMethod = TypeConverterDictionary[converterKey];
+                        var value = parseMethod.Invoke(this, new[] { val.Value });
+                        propDict[val.Key].SetValue(this, value);
+                    }
+                    else
+                        propDict[val.Key].SetValue(this, null);
+                }
+                else
+                    propDict[val.Key].SetValue(this, null);
+
+            }
+        }
+#endregion
     }
 
     /// <summary>
