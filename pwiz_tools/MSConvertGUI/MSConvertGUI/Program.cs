@@ -44,6 +44,7 @@ namespace MSConvertGUI
             singleInstanceHandler.Launching += (sender, e) =>
             {
                 Application.EnableVisualStyles();
+                Application.SetHighDpiMode(HighDpiMode.SystemAware);
                 Application.SetCompatibleTextRenderingDefault(false);
                 var singleInstanceArgs = e.Args.ToList();
                 MainWindow = new MainForm(singleInstanceArgs);

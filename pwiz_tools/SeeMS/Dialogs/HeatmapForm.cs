@@ -39,7 +39,6 @@ using JWC;
 using pwiz.CLI.cv;
 using pwiz.CLI.msdata;
 using pwiz.Common.Collections;
-using SpyTools;
 
 namespace seems
 {

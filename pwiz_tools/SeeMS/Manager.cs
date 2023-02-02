@@ -36,7 +36,6 @@ using pwiz.MSGraph;
 using ZedGraph;
 
 using System.Diagnostics;
-using SpyTools;
 
 namespace seems
 {

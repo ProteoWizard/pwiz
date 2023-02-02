@@ -78,7 +78,7 @@ namespace CustomDataSourceDialog
         private void SetUpDialog()
         {
             _historyQueue = new List<string>();
-            ArrowPicture.Tag = new ContextMenu();
+            ArrowPicture.Tag = new ContextMenuStrip();
             _unfilteredItems = new List<ListViewItem>();
             _spectraFolders = new Dictionary<string, List<string[]>>();
             _spectraFiles = new Dictionary<string, List<string[]>>();
@@ -583,7 +583,7 @@ namespace CustomDataSourceDialog
 
         private void UpdateHistoryButtons()
         {
-            if (((ContextMenu)ArrowPicture.Tag).MenuItems.Count == 0
+            if (((ContextMenuStrip)ArrowPicture.Tag).Items.Count == 0
                 && _historyQueue.Any())
             {
                 ArrowPicture.Image = Properties.Resources.Arrow_Active;
@@ -636,28 +636,28 @@ namespace CustomDataSourceDialog
 
         private void ArrowPicture_Click(object sender, EventArgs e)
         {
-            var menu = (ContextMenu)ArrowPicture.Tag;
+            var menu = (ContextMenuStrip)ArrowPicture.Tag;
 
-            menu.MenuItems.Clear();
+            menu.Items.Clear();
             for (var x = 0; x < _historyQueue.Count; x++)
             {
                 var name = Path.GetFileName(_historyQueue[x]);
                 if (name == string.Empty)
                     name = _historyQueue[x];
-                var mi = new MenuItem(name) {Tag = _historyQueue[x]};
+                var mi = new ToolStripMenuItem(name) {Tag = _historyQueue[x]};
                 if (x == _placeInQueue)
                     mi.Checked = true;
                 else
                     mi.Click += rootMenu_Click;
-                menu.MenuItems.Add(mi);
+                menu.Items.Add(mi);
             }
             menu.Show((Control)sender,new Point(0,30));
         }
 
         private void rootMenu_Click(object sender, EventArgs e)
         {
-            var mi = (MenuItem) sender;
-            _placeInQueue = mi.Parent.MenuItems.IndexOf(mi);
+            var mi = (ToolStripMenuItem) sender;
+            _placeInQueue = mi.Owner.Items.IndexOf(mi);
             _navigatingHistory = true;
             NavigateToFolder(mi.Tag as string, null);
             _navigatingHistory = false;

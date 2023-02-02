@@ -34,7 +34,6 @@ using ZedGraph;
 
 using System.Diagnostics;
 using System.Linq;
-using SpyTools;
 
 namespace seems
 {

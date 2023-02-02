@@ -1,4 +1,4 @@
-//
+﻿//
 // $Id$
 //
 //
@@ -49,7 +49,6 @@ namespace seems
 		/// The main entry point for the application.
 		/// </summary>
 		[STAThread]
-		[SecurityPermission(SecurityAction.Demand, Flags = SecurityPermissionFlag.ControlAppDomain)]
 		public static int Main( string[] args )
 		{
 		    // redirect console output to parent process;
@@ -80,6 +79,7 @@ namespace seems
 			// our handler.
 			Application.SetUnhandledExceptionMode( UnhandledExceptionMode.CatchException );
 			Application.EnableVisualStyles();
+			Application.SetHighDpiMode(HighDpiMode.SystemAware);
 			Application.SetCompatibleTextRenderingDefault( false );
 
 			// Add the event handler for handling non-UI thread exceptions to the event. 
@@ -90,6 +90,7 @@ namespace seems
             singleInstanceHandler.Launching += (sender, e) =>
             {
                 Application.EnableVisualStyles();
+                Application.SetHighDpiMode(HighDpiMode.SystemAware);
                 Application.SetCompatibleTextRenderingDefault(false);
 
                 var singleInstanceArgs = e.Args.ToArray();

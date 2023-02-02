@@ -379,7 +379,6 @@ namespace ZedGraph
 		/// serialized data</param>
 		/// <param name="context">A <see cref="StreamingContext"/> instance that contains the
 		/// serialized data</param>
-		[SecurityPermissionAttribute( SecurityAction.Demand, SerializationFormatter = true )]
 		public virtual void GetObjectData( SerializationInfo info, StreamingContext context )
 		{
 			info.AddValue( "schema0", schema0 );

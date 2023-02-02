@@ -29,6 +29,7 @@ using System.Windows.Forms;
 using System.Diagnostics;
 using System.Reflection;
 using System.IO;
+using System.Reflection.Metadata;
 using System.Text.RegularExpressions;
 
 namespace seems
@@ -79,7 +80,7 @@ namespace seems
 
         public static DateTime GetAssemblyLastModified( AssemblyName assembly )
         {
-            return File.GetLastWriteTime( Assembly.ReflectionOnlyLoad( assembly.FullName ).Location );
+            return File.GetLastWriteTime( Assembly.Load(assembly).Location );
         }
     }
 }

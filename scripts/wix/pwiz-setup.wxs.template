@@ -32,6 +32,7 @@
       <Package Description="ProteoWizard {version} $(var.AddressModel)-bit Installer" Manufacturer="ProteoWizard" InstallerVersion="500" Compressed="yes" />
       <Media Id="1" Cabinet="ProteoWizard.cab" EmbedCab="yes" />
       <Icon Id="seems_Icon.exe" SourceFile="msvc-release\seems.exe" />
+      <Icon Id="MSConvertGUI_Icon.exe" SourceFile="msvc-release\MSConvertGUI.exe" />
       <Property Id="ARPPRODUCTICON" Value="seems_Icon.exe" />
       <Property Id="ApplicationFolderName" Value="ProteoWizard {version}" />
       <Property Id="WixAppFolder" Value="WixPerUserFolder" />
@@ -84,7 +85,7 @@
           <Directory Name="MSConvertGUI" Id="MSConvertGUI" ComponentGuidGenerationSeed="E31534E2-901E-4850-811D-E4E56FCB1D42">
             <Component Feature="MainFeature" Id="Presets" Guid="D6D81C1D-B8B3-42D1-8152-2D01EC31ECA1">
               <RegistryValue Root="HKCU" Key="Software/MSConvertGUI/PresetsInstalled" Type="string" Value="" KeyPath="yes" />
-              <File Source="msvc-release\..\..\pwiz_tools\MSConvertGUI\PASEF MGF.cmdline" />
+              <File Source="msvc-release\..\..\pwiz_tools\MSConvertGUI\MSConvertGUI\PASEF MGF.cmdline" />
               <RemoveFolder Id="RemovePresets" On="uninstall" />
             </Component>
           </Directory>
@@ -100,7 +101,7 @@
                   </Component>
                     <Component Feature="MainFeature">
                         <File Source="msvc-release\MSConvertGUI.exe" KeyPath="yes"/>
-                        <Shortcut Id="MSConvertShortcut" Directory="ProteoWizardStartMenuFolder" Name="MSConvert" WorkingDirectory="APPLICATIONFOLDER" Icon="seems_Icon.exe" IconIndex="0" Advertise="yes" />
+                        <Shortcut Id="MSConvertShortcut" Directory="ProteoWizardStartMenuFolder" Name="MSConvert" WorkingDirectory="APPLICATIONFOLDER" Icon="MSConvertGUI_Icon.exe" IconIndex="0" Advertise="yes" />
                     </Component>
                     __CONTEXTMENU_REGISTRY__
 
@@ -108,12 +109,16 @@
                     <Component Feature="MainFeature"><File Source="msvc-release\CustomDataSourceDialog.dll.config" KeyPath="yes"/></Component>
                     <Component Feature="MainFeature"><File Source="msvc-release\DigitalRune.Windows.Docking.dll" KeyPath="yes"/></Component>
                     <Component Feature="MainFeature"><File Source="msvc-release\MSGraph.dll" KeyPath="yes"/></Component>
-                    <Component Feature="MainFeature"><File Source="msvc-release\MSConvertGUI.exe.config" KeyPath="yes"/></Component>
-                    <Component Feature="MainFeature"><File Source="msvc-release\MSConvertGUI.exe.manifest" KeyPath="yes"/></Component>
+                    <Component Feature="MainFeature"><File Source="msvc-release\MSConvertGUI.dll" KeyPath="yes"/></Component>
+                    <Component Feature="MainFeature"><File Source="msvc-release\MSConvertGUI.dll.config" KeyPath="yes"/></Component>
+                    <Component Feature="MainFeature"><File Source="msvc-release\MSConvertGUI.dll.manifest" KeyPath="yes"/></Component>
+                    <Component Feature="MainFeature"><File Source="msvc-release\MSConvertGUI.runtimeconfig.json" KeyPath="yes"/></Component>
                     <Component Feature="MainFeature"><File Source="msvc-release\pwiz.CommonUtil.dll" KeyPath="yes"/></Component>
                     <Component Feature="MainFeature"><File Source="msvc-release\pwiz_bindings_cli.dll" KeyPath="yes"/></Component>
-                    <Component Feature="MainFeature"><File Source="msvc-release\seems.exe.config" KeyPath="yes"/></Component>
-                    <Component Feature="MainFeature"><File Source="msvc-release\seems.exe.manifest" KeyPath="yes"/></Component>
+                    <Component Feature="MainFeature"><File Source="msvc-release\seems.dll" KeyPath="yes"/></Component>
+                    <Component Feature="MainFeature"><File Source="msvc-release\seems.dll.config" KeyPath="yes"/></Component>
+                    <Component Feature="MainFeature"><File Source="msvc-release\seems.dll.manifest" KeyPath="yes"/></Component>
+                    <Component Feature="MainFeature"><File Source="msvc-release\seems.runtimeconfig.json" KeyPath="yes"/></Component>
                     <Component Feature="MainFeature"><File Source="msvc-release\STL_Containers.dll" KeyPath="yes"/></Component>
                     <Component Feature="MainFeature"><File Source="msvc-release\ZedGraph.dll" KeyPath="yes"/></Component>
                   

@@ -38,7 +38,6 @@ using pwiz.CLI.msdata;
 using JWC;
 using Microsoft.Win32;
 using DigitalRune.Windows.Docking;
-using SpyTools;
 using CommandLine.Utility;
 
 namespace seems

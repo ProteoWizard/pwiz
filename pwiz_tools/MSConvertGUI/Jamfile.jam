@@ -27,7 +27,7 @@ if [ modules.peek : NT ]
     path-constant MSCONVERT_PATH : $(PWIZ_ROOT_PATH)/pwiz_tools/MSConvertGUI ;
 
     # generate MSConvertGUI version header
-    generate-version.AssemblyInfo.cs $(MSCONVERT_PATH)/Properties/AssemblyInfo.cs : $(PWIZ_MAJOR) : $(PWIZ_MINOR) : $(PWIZ_BUILD_TIMESTAMP) : $(PWIZ_GIT_REV)
+    generate-version.AssemblyInfo.cs $(MSCONVERT_PATH)/MSConvertGUI/Properties/AssemblyInfo.cs : $(PWIZ_MAJOR) : $(PWIZ_MINOR) : $(PWIZ_BUILD_TIMESTAMP) : $(PWIZ_GIT_REV)
         : "MSConvertGUI" "A tool for converting mass spectrometry data formats." "Vanderbilt University" "MSConvertGUI" ;
 
 

@@ -1,0 +1,116 @@
+﻿<Project Sdk="Microsoft.NET.Sdk">
+  <PropertyGroup>
+    <TargetFramework>net7.0-windows</TargetFramework>
+    <Platform Condition=" '$(Platform)' == '' ">x64</Platform>
+    <OutputType>WinExe</OutputType>
+    <AutoGenerateBindingRedirects>false</AutoGenerateBindingRedirects>
+    <GenerateAssemblyInfo>false</GenerateAssemblyInfo>
+    <UseWindowsForms>true</UseWindowsForms>
+    <ImportWindowsDesktopTargets>true</ImportWindowsDesktopTargets>
+    <PwizBuildPath>$(BaseIntermediateOutputPath)\..</PwizBuildPath>
+    <ApplicationDefaultFont>Segoe UI, 8.25pt</ApplicationDefaultFont>
+    <Platforms>x86;x64</Platforms>
+  </PropertyGroup>
+  <PropertyGroup Condition=" '$(Configuration)|$(Platform)' == 'Debug|x86' ">
+    <OutputPath>$(PwizBuildPath)\msvc-debug\</OutputPath>
+    <AllowUnsafeBlocks>true</AllowUnsafeBlocks>
+    <UseVSHostingProcess>false</UseVSHostingProcess>
+    <PlatformTarget>x86</PlatformTarget>
+  </PropertyGroup>
+  <PropertyGroup Condition=" '$(Configuration)|$(Platform)' == 'Release|x86' ">
+    <OutputPath>$(PwizBuildPath)\msvc-release\</OutputPath>
+    <AllowUnsafeBlocks>true</AllowUnsafeBlocks>
+    <UseVSHostingProcess>false</UseVSHostingProcess>
+    <PlatformTarget>x86</PlatformTarget>
+  </PropertyGroup>
+  <PropertyGroup Condition=" '$(Configuration)|$(Platform)' == 'Debug|x64' ">
+    <OutputPath>$(PwizBuildPath)\msvc-debug-x86_64\</OutputPath>
+    <AllowUnsafeBlocks>true</AllowUnsafeBlocks>
+    <UseVSHostingProcess>false</UseVSHostingProcess>
+    <PlatformTarget>x64</PlatformTarget>
+  </PropertyGroup>
+  <PropertyGroup Condition=" '$(Configuration)|$(Platform)' == 'Release|x64' ">
+    <OutputPath>$(PwizBuildPath)\msvc-release-x86_64\</OutputPath>
+    <AllowUnsafeBlocks>true</AllowUnsafeBlocks>
+    <UseVSHostingProcess>false</UseVSHostingProcess>
+    <PlatformTarget>x64</PlatformTarget>
+  </PropertyGroup>
+  <PropertyGroup>
+    <ApplicationIcon>Resources\SpectrumConverter.ico</ApplicationIcon>
+    <StartupObject>MSConvertGUI.Program</StartupObject>
+    <BaseOutputPath></BaseOutputPath>
+    <AllowUnsafeBlocks>False</AllowUnsafeBlocks>
+    <AppendTargetFrameworkToOutputPath>false</AppendTargetFrameworkToOutputPath>
+    <ProduceReferenceAssembly>false</ProduceReferenceAssembly>
+    <GenerateAssemblyInfo>false</GenerateAssemblyInfo>
+  </PropertyGroup>
+  <ItemGroup>
+    <Reference Include="IdentityModel, Version=2.6.0.0, Culture=neutral, processorArchitecture=MSIL">
+      <SpecificVersion>False</SpecificVersion>
+      <HintPath>..\..\Shared\Lib\IdentityModel.dll</HintPath>
+    </Reference>
+    <Reference Include="Newtonsoft.Json, Version=10.0.0.0, Culture=neutral, PublicKeyToken=30ad4fe6b2a6aeed, processorArchitecture=MSIL">
+      <SpecificVersion>False</SpecificVersion>
+      <HintPath>..\..\Shared\Lib\Newtonsoft.Json.dll</HintPath>
+    </Reference>
+    <Reference Include="protobuf-net, Version=2.0.0.668, Culture=neutral, PublicKeyToken=257b51d87d2e4d67, processorArchitecture=MSIL">
+      <SpecificVersion>False</SpecificVersion>
+      <HintPath>..\..\..\pwiz_aux\msrc\utility\vendor_api\ABI\protobuf-net.dll</HintPath>
+    </Reference>
+    <Reference Include="pwiz_bindings_cli">
+      <SpecificVersion>False</SpecificVersion>
+      <HintPath>..\..\..\build-nt-x86\obj\$(PlatformTarget)\$(Configuration)\pwiz_bindings_cli.dll</HintPath>
+    </Reference>
+    <Reference Include="STL_Containers, Version=1.0.0.0, Culture=neutral, PublicKeyToken=e1b14cb78f1752cf, processorArchitecture=MSIL">
+      <SpecificVersion>False</SpecificVersion>
+      <HintPath>..\..\SeeMS\STL_Containers.dll</HintPath>
+    </Reference>
+    <Reference Update="System.Core">
+      <RequiredTargetFramework>3.5</RequiredTargetFramework>
+    </Reference>
+    <Reference Update="System.Xml.Linq">
+      <RequiredTargetFramework>3.5</RequiredTargetFramework>
+    </Reference>
+    <Reference Include="ThermoFisher.CommonCore.Data" Condition=" '$(Platform)' == 'x64' ">
+      <HintPath>..\..\..\pwiz_aux\msrc\utility\vendor_api\thermo\ThermoFisher.CommonCore.Data.dll</HintPath>
+    </Reference>
+    <Reference Include="ThermoFisher.CommonCore.RawFileReader" Condition=" '$(Platform)' == 'x64' ">
+      <HintPath>..\..\..\pwiz_aux\msrc\utility\vendor_api\thermo\ThermoFisher.CommonCore.RawFileReader.dll</HintPath>
+    </Reference>
+    <NativeReference Include="Interop.EDAL.SxS, Version=1.0.0.0, Type=win32">
+      <Name>Interop.EDAL.SxS.manifest</Name>
+      <HintPath>..\..\..\pwiz_aux\msrc\utility\vendor_api\Bruker\$(PlatformTarget)\Interop.EDAL.SxS.manifest</HintPath>
+    </NativeReference>
+    <NativeReference Include="MSFileReader.XRawfile2.SxS, Version=3.0.13.0, Type=AnyCPU" Condition=" '$(Platform)' == 'x86' ">
+      <Name>MSFileReader.XRawfile2.SxS.manifest</Name>
+      <HintPath>..\..\..\pwiz_aux\msrc\utility\vendor_api\thermo\$(Platform)\MSFileReader.XRawfile2.SxS.manifest</HintPath>
+    </NativeReference>
+  </ItemGroup>
+  <ItemGroup>
+    <ProjectReference Include="..\..\Shared\Common\CommonUtil.csproj" />
+    <ProjectReference Include="..\CustomDataSourceDialog\CustomDataSourceDialog.csproj" />
+  </ItemGroup>
+  <ItemGroup>
+    <None Include="Resources\Right Arrow.png" />
+  </ItemGroup>
+  <ItemGroup>
+    <PackageReference Include="Microsoft.CSharp" Version="4.7.0" />
+    <PackageReference Include="System.Data.DataSetExtensions" Version="4.5.0" />
+    <PackageReference Include="Microsoft.DotNet.UpgradeAssistant.Extensions.Default.Analyzers" Version="0.4.355802">
+      <PrivateAssets>all</PrivateAssets>
+    </PackageReference>
+  </ItemGroup>
+  <ItemGroup>
+    <Compile Update="Properties\Settings.Designer.cs">
+      <DesignTimeSharedInput>True</DesignTimeSharedInput>
+      <AutoGen>True</AutoGen>
+      <DependentUpon>Settings.settings</DependentUpon>
+    </Compile>
+  </ItemGroup>
+  <ItemGroup>
+    <None Update="Properties\Settings.settings">
+      <Generator>SettingsSingleFileGenerator</Generator>
+      <LastGenOutput>Settings.Designer.cs</LastGenOutput>
+    </None>
+  </ItemGroup>
+</Project>
