@@ -350,6 +350,7 @@ namespace pwiz.Skyline.Model
         {
             return Equals(type, AGILENT) ||
                    Equals(type, AGILENT6400) ||
+                   Equals(type, AGILENT_MASSHUNTER_12) ||
                    Equals(type, THERMO) ||
                    Equals(type, ABI_QTRAP) ||
                    Equals(type, ABI)
