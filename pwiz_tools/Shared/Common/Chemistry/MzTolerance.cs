@@ -91,15 +91,15 @@ namespace pwiz.Common.Chemistry
             return (a < b - this);
         }
 
-        public string TypeText =>
-            Resources.ResourceManager.GetString(nameof(Units) + "_" + Enum.GetName(typeof(Units), Unit));
+        public string UnitName => Enum.GetName(typeof(Units), Unit);
+        public string UnitText => Resources.ResourceManager.GetString(nameof(Units) + "_" + UnitName);
 
         public override string ToString()
         {
-            return $"{Value} {TypeText}";
+            return $"{Value} {UnitText}";
         }
 
-        public string AuditLogText => $"\"{Value}\" {TypeText}";
+        public string AuditLogText => $"\"{Value}\" {UnitText}";
         public bool IsName => false;
     };
 }
