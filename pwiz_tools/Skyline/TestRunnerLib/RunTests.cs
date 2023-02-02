@@ -49,6 +49,7 @@ namespace TestRunnerLib
         public readonly bool IsPerfTest;
         public readonly int? MinidumpLeakThreshold;
         public readonly bool DoNotRunInParallel;
+        public readonly bool DoNotRunInNightly;
 
         public TestInfo(Type testClass, MethodInfo testMethod, MethodInfo testInitializeMethod, MethodInfo testCleanupMethod)
         {
@@ -61,6 +62,9 @@ namespace TestRunnerLib
 
             var noParallelTestAttr = RunTests.GetAttribute(testMethod, "NoParallelTestingAttribute");
             DoNotRunInParallel = noParallelTestAttr != null;
+
+            var noNightlyTestAttr = RunTests.GetAttribute(testMethod, "NoNightlyTestingAttribute");
+            DoNotRunInNightly = noNightlyTestAttr != null;
 
             var minidumpAttr = RunTests.GetAttribute(testMethod, "MinidumpLeakThresholdAttribute");
             MinidumpLeakThreshold = minidumpAttr != null
@@ -131,6 +135,7 @@ namespace TestRunnerLib
         public bool TeamCityTestDecoration { get; set; }
         public bool Verbose { get; set; }
         public bool IsParallelClient { get; private set; }
+        public string ParallelClientId { get; private set; }
 
         public bool ReportSystemHeaps
         {
@@ -169,6 +174,7 @@ namespace TestRunnerLib
             _process = Process.GetCurrentProcess();
             _showStatus = showStatus;
             TestContext = new TestRunnerContext();
+            IsParallelClient = isParallelClient;
             SetTestDir(TestContext, results);
             // Minimize disk use on TeamCity VMs by removing downloaded files
             // during test clean-up
@@ -176,6 +182,11 @@ namespace TestRunnerLib
             {
                 _cleanupLevelAll = true;
                 TestContext.Properties["DesiredCleanupLevel"] = "all";  // Must match DesiredCleanupLevel value
+            }
+
+            if (isParallelClient)
+            {
+                TestContext.Properties["ParallelTest"] = string.Empty; // Just the presence of the key is the flag
             }
 
             // Set Skyline state for unit testing.
@@ -202,7 +213,6 @@ namespace TestRunnerLib
             LiveReports = true;
             TeamCityTestDecoration = teamcityTestDecoration;
             Verbose = verbose;
-            IsParallelClient = isParallelClient;
 
             // Disable logging.
             LogManager.GetRepository().Threshold = LogManager.GetRepository().LevelMap["OFF"];
@@ -212,6 +222,8 @@ namespace TestRunnerLib
         {
             if (string.IsNullOrEmpty(resultsDir))
                 resultsDir = Path.Combine(GetProjectPath("TestResults"), "TestRunner results");
+            else if (IsParallelClient && resultsDir.Contains("TestResults_"))
+                ParallelClientId = resultsDir.Split('_')[1];
             testContext.Properties["TestDir"] = resultsDir;
             if (Directory.Exists(resultsDir))
                 Try<Exception>(() => Directory.Delete(resultsDir, true), 4, false);
@@ -315,6 +327,10 @@ namespace TestRunnerLib
                 TestContext.Properties["LiveReports"] = LiveReports.ToString();
                 TestContext.Properties["TestName"] = test.TestMethod.Name;
                 TestContext.Properties["RecordAuditLogs"] = RecordAuditLogs.ToString();
+                if (IsParallelClient)
+                {
+                    Environment.SetEnvironmentVariable(@"SKYLINE_TESTER_PARALLEL_CLIENT_ID", ParallelClientId); // Accessed in pwiz_tools\Skyline\Util\Util.cs
+                }
 
                 if (test.SetTestContext != null)
                 {
@@ -472,6 +488,8 @@ namespace TestRunnerLib
             else
                 FailureCounts[test.TestMethod.Name] = 1;
             var message = exception.InnerException == null ? exception.Message : exception.InnerException.Message;
+            if (!string.IsNullOrEmpty(ParallelClientId))
+                message += $"\nOn parallel client {ParallelClientId}";
             var stackTrace = exception.InnerException == null ? exception.StackTrace : exception.InnerException.StackTrace;
             var failureInfo = "# " + test.TestMethod.Name + "FAILED:\n" +
                 message + "\n" +

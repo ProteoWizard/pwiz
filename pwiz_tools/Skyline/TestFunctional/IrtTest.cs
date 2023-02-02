@@ -878,7 +878,7 @@ namespace pwiz.SkylineTestFunctional
                 Assert.AreEqual(10, calibrateIrtDlg2.StandardPeptideCount);
                 foreach (var pep in calibrateIrtDlg2.StandardPeptideList)
                 {
-                    Assert.IsTrue(predefinedIrts.ContainsKey(pep.Target));
+                    Assert.IsTrue(predefinedIrts.ContainsKey(pep.Target), $@"calibrateIrtDlg2.StandardPeptideList entry ""{pep.Target}"" not found in predefinedIrts");
                     Assert.AreEqual(predefinedIrts[pep.Target], pep.Irt);
                 }
             });

@@ -2905,9 +2905,6 @@
   <data name="DDASearchControl_RunSearch_Conversion_failed_" xml:space="preserve">
     <value>转换失败。</value>
   </data>
-  <data name="DDASearchControl_RunSearch_Conversion_finished_" xml:space="preserve">
-    <value>转换完成。</value>
-  </data>
   <data name="DDASearchControl_SearchProgress_Search_canceled" xml:space="preserve">
     <value>搜索取消。</value>
   </data>

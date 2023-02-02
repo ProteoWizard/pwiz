@@ -81,7 +81,7 @@ namespace TestPerf // Note: tests in the "TestPerf" namespace only run when the 
         }
 
 
-        [TestMethod] 
+        [TestMethod, NoParallelTesting(TestExclusionReason.VENDOR_FILE_LOCKING)] // No parallel testing as Agilent reader locks the files it reads 
         public void AllVsMz5OptimzeCeImportPerformanceTests()
         {
             if (!RunPerfTests)
