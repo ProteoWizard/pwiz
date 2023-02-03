@@ -267,6 +267,15 @@ namespace pwiz.Skyline.Model.Databinding.Entities
             }
         }
 
+        public int PeptideSpectrumMatchCount
+        {
+            get
+            {
+                return SrmDocument.Settings.GetRetentionTimes(GetResultFile().ChromFileInfo.FilePath,
+                    Peptide.DocNode.Target, Peptide.DocNode.ExplicitMods).Length;
+            }
+        }
+
         [ProteomicDisplayName("PeptideResultLocator")]
         [InvariantDisplayName("MoleculeResultLocator")]
         public string Locator

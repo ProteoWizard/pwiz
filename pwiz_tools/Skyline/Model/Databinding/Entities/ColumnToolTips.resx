@@ -971,6 +971,9 @@ Edit menu</value>
   <data name="PeptideSequenceLength">
     <value>Amino acid count in the sequence of the peptide.</value>
   </data>
+  <data name="PeptideSpectrumMatchCount">
+    <value>Number of spectra in the spectral library which match the peptide and Result File.</value>
+  </data>
   <data name="PointCount">
     <value>Number of data points that were used in the curve fit.</value>
   </data>

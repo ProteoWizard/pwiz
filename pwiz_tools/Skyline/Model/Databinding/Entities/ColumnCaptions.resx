@@ -912,6 +912,9 @@
   <data name="PeptideSequenceLength">
     <value>Peptide Sequence Length</value>
   </data>
+  <data name="PeptideSpectrumMatchCount">
+    <value>Peptide Spectrum Match Count</value>
+  </data>
   <data name="PointCount">
     <value>Point Count</value>
   </data>

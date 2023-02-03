@@ -2446,6 +2446,15 @@ namespace pwiz.Skyline.Model.Databinding.Entities {
         }
         
         /// <summary>
+        ///   Looks up a localized string similar to Peptide Spectrum Match Count.
+        /// </summary>
+        public static string PeptideSpectrumMatchCount {
+            get {
+                return ResourceManager.GetString("PeptideSpectrumMatchCount", resourceCulture);
+            }
+        }
+        
+        /// <summary>
         ///   Looks up a localized string similar to Point Count.
         /// </summary>
         public static string PointCount {
