@@ -20,7 +20,7 @@
       </sourceFile>
       <sourceFile id="_dda.inf" name="_dda.inf" location="file://C:\dev\pwiz\pwiz\data\vendor_readers\Waters\Reader_Waters_Test.data\DDA_IsolationWindow.raw">
         <cvParam cvRef="MS" accession="MS:1000824" name="no nativeID format" value=""/>
-        <cvParam cvRef="MS" accession="MS:1000569" name="SHA-1" value="2c8e813af70469ebcd5ae23cf2245f033b1727f2"/>
+        <cvParam cvRef="MS" accession="MS:1000569" name="SHA-1" value="9542b2005a04ce776922a1bbdcda662c5e975231"/>
       </sourceFile>
       <sourceFile id="_extern.inf" name="_extern.inf" location="file://C:\dev\pwiz\pwiz\data\vendor_readers\Waters\Reader_Waters_Test.data\DDA_IsolationWindow.raw">
         <cvParam cvRef="MS" accession="MS:1000824" name="no nativeID format" value=""/>
