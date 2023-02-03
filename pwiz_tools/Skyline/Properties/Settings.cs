@@ -1289,7 +1289,6 @@ namespace pwiz.Skyline.Properties
                 NormalizeOptionValue = value.PersistedName;
             }
         }
-
     }
 
     /// <summary>

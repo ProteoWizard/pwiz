@@ -44,7 +44,7 @@ namespace pwiz.Skyline.Controls.Graphs
             this.ceLabel = new System.Windows.Forms.ToolStripLabel();
             this.comboCE = new System.Windows.Forms.ToolStripComboBox();
             this.GraphPanel = new System.Windows.Forms.Panel();
-            this.msGraphExtension = new pwiz.Skyline.SettingsUI.MsGraphExtension();
+            this.msGraphExtension = new MsGraphExtension();
             this.propertiesButton = new System.Windows.Forms.ToolStripButton();
             this.toolBar.SuspendLayout();
             this.GraphPanel.SuspendLayout();
@@ -161,7 +161,7 @@ namespace pwiz.Skyline.Controls.Graphs
         #endregion
         private System.Windows.Forms.ToolStrip toolBar;
         private System.Windows.Forms.Panel GraphPanel;
-        private pwiz.Skyline.SettingsUI.MsGraphExtension msGraphExtension;
+        private MsGraphExtension msGraphExtension;
         private System.Windows.Forms.ToolStripButton propertiesButton;
         private System.Windows.Forms.ToolStripLabel labelSpectrum;
         private System.Windows.Forms.ToolStripComboBox comboSpectrum;

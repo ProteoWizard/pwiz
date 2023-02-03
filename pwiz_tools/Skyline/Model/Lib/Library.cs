@@ -19,7 +19,6 @@
 using System;
 using System.Collections.Generic;
 using System.Collections.ObjectModel;
-using System.ComponentModel;
 using System.Globalization;
 using System.IO;
 using System.Linq;
@@ -33,7 +32,6 @@ using pwiz.Common.Collections;
 using pwiz.Common.SystemUtil;
 using pwiz.Skyline.Model.AuditLog;
 using pwiz.Skyline.Model.Crosslinking;
-using pwiz.Skyline.Model.Databinding.Entities;
 using pwiz.Skyline.Model.DocSettings;
 using pwiz.Skyline.Model.DocSettings.Extensions;
 using pwiz.Skyline.Model.Hibernate;
@@ -2573,36 +2571,6 @@ namespace pwiz.Skyline.Model.Lib
                 }
             }
             return res;
-        }
-    }
-
-    public class SpectrumProperties : GlobalizedObject
-    {
-        [Category("FileInfo")] public string IdFileName { get; set; }
-        [Category("FileInfo")] public string FileName { get; set; }
-        // need to exclude the file path from test assertions because it is machine-dependent
-        [UseToCompare(false)] [Category("FileInfo")] public string FilePath { get; set; }
-        [Category("FileInfo")] public string LibraryName { get; set; }
-        [Category("PrecursorInfo")] public string PrecursorMz { get; set; }
-        [Category("PrecursorInfo")] public int? Charge { get; set; }
-        [Category("PrecursorInfo")] public string Label { get; set; }
-        [Category("AcquisitionInfo")] public string RetentionTime { get; set; }
-        [Category("AcquisitionInfo")] public string CCS { get; set; }
-        [Category("AcquisitionInfo")] public string IonMobility { get; set; }
-        [Category("AcquisitionInfo")] public string SpecIdInFile { get; set; }
-        [Category("MatchInfo")] public double? Score { get; set; }
-        [Category("MatchInfo")] public string ScoreType { get; set; }
-        [Category("MatchInfo")] public int? SpectrumCount { get; set; }
-
-        public void SetFileName(string fileName)
-        {
-            if (string.IsNullOrEmpty(Path.GetDirectoryName(fileName)))
-                FileName = fileName;
-            else
-            {
-                FilePath = fileName;
-                FileName = Path.GetFileName(fileName);
-            }
         }
     }
 

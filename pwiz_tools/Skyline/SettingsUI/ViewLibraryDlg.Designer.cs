@@ -1,4 +1,5 @@
 using System;
+using pwiz.Skyline.Controls.Graphs;
 
 namespace pwiz.Skyline.SettingsUI
 {
@@ -52,7 +53,7 @@ namespace pwiz.Skyline.SettingsUI
             this.PeptideLabel = new System.Windows.Forms.Label();
             this.textPeptide = new System.Windows.Forms.TextBox();
             this.GraphPanel = new System.Windows.Forms.Panel();
-            this.msGraphExtension1 = new pwiz.Skyline.SettingsUI.MsGraphExtension();
+            this.msGraphExtension1 = new MsGraphExtension();
             this.toolStrip1 = new System.Windows.Forms.ToolStrip();
             this.specialionsContextMenuItem = new System.Windows.Forms.ToolStripMenuItem();
             this.ionTypesContextMenuItem = new System.Windows.Forms.ToolStripMenuItem();

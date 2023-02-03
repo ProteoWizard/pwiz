@@ -2,13 +2,13 @@
 using System.ComponentModel;
 using System.Drawing;
 using System.Linq;
-using pwiz.MSGraph;
 using System.Windows.Forms;
-using pwiz.Skyline.Model.Databinding.Entities;
+using pwiz.MSGraph;
+using pwiz.Skyline.Model;
 using pwiz.Skyline.Properties;
 using pwiz.Skyline.Util;
 
-namespace pwiz.Skyline.SettingsUI
+namespace pwiz.Skyline.Controls.Graphs
 {
     public partial class MsGraphExtension : UserControl
     {

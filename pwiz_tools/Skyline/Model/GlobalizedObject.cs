@@ -4,10 +4,10 @@ using System.ComponentModel;
 using System.Linq;
 using System.Reflection;
 using System.Resources;
-using pwiz.Skyline.Util;
 using Newtonsoft.Json;
+using pwiz.Skyline.Util;
 
-namespace pwiz.Skyline.Model.Databinding.Entities
+namespace pwiz.Skyline.Model
 {
     public class UseToCompare : Attribute
     {
@@ -28,7 +28,7 @@ namespace pwiz.Skyline.Model.Databinding.Entities
     /// The main task of this class is to instantiate our own property descriptor 
     /// of type GlobalizedPropertyDescriptor.  
     /// </summary>
-    public class GlobalizedObject : ICustomTypeDescriptor
+    public abstract class GlobalizedObject : ICustomTypeDescriptor
     {
         private PropertyDescriptorCollection globalizedProps;
 
@@ -51,6 +51,8 @@ namespace pwiz.Skyline.Model.Databinding.Entities
                     TypeConverterDictionary.Add(methodKey, method);
             }
         }
+
+        protected abstract ResourceManager GetResourceManager();
         
         public String GetClassName() => TypeDescriptor.GetClassName(this, true);
 
@@ -92,7 +94,7 @@ namespace pwiz.Skyline.Model.Databinding.Entities
                     // Only display properties whose values have been set
                     if (oProp.GetValue(this) != null)
                     {
-                        globalizedProps.Add(new GlobalizedPropertyDescriptor(oProp));
+                        globalizedProps.Add(new GlobalizedPropertyDescriptor(oProp, GetResourceManager()));
                     }
                 }
             }
@@ -114,7 +116,7 @@ namespace pwiz.Skyline.Model.Databinding.Entities
                     // Only display properties whose values have been set
                     if (oProp.GetValue(this) != null)
                     {
-                        globalizedProps.Add(new GlobalizedPropertyDescriptor(oProp));
+                        globalizedProps.Add(new GlobalizedPropertyDescriptor(oProp, GetResourceManager()));
                     }
                 }
             }
@@ -206,11 +208,12 @@ namespace pwiz.Skyline.Model.Databinding.Entities
         public bool ReadOnly = true;
         private static string _descriptionPrefix = @"Description_";
         private static string _categoryPrefix = @"Category_";
-        private ResourceManager _resourceManager = GlobalizedObjectResx.ResourceManager;
+        private readonly ResourceManager _resourceManager;
 
-        public GlobalizedPropertyDescriptor(PropertyDescriptor basePropertyDescriptor) : base(basePropertyDescriptor)
+        public GlobalizedPropertyDescriptor(PropertyDescriptor basePropertyDescriptor, ResourceManager resourceManager) : base(basePropertyDescriptor)
         {
             this.basePropertyDescriptor = basePropertyDescriptor;
+            _resourceManager = resourceManager;
         }
 
         public override bool CanResetValue(object component)

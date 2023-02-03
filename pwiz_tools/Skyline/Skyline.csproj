@@ -470,13 +470,13 @@
       <DesignTime>True</DesignTime>
       <DependentUpon>ColumnCaptions.resx</DependentUpon>
     </Compile>
-    <Compile Include="Model\Databinding\Entities\GlobalizedObject.cs">
+    <Compile Include="Model\GlobalizedObject.cs">
       <SubType>UserControl</SubType>
     </Compile>
-    <Compile Include="Model\Databinding\Entities\GlobalizedObjectResx.Designer.cs">
+    <Compile Include="Model\SpectrumPropertiesResx.Designer.cs">
       <AutoGen>True</AutoGen>
       <DesignTime>True</DesignTime>
-      <DependentUpon>GlobalizedObjectResx.resx</DependentUpon>
+      <DependentUpon>SpectrumPropertiesResx.resx</DependentUpon>
     </Compile>
     <Compile Include="Model\DdaSearch\MsconvertDdaConverter.cs" />
     <Compile Include="Model\Databinding\Entities\ColumnToolTips.Designer.cs">
@@ -631,6 +631,7 @@
     <Compile Include="Model\Lib\ExplicitPeakBounds.cs" />
     <Compile Include="Model\Lib\LibKeyIndex.cs" />
     <Compile Include="Model\Lib\SpectralLibraryExporter.cs" />
+    <Compile Include="Model\SpectrumProperties.cs" />
     <Compile Include="Model\Lib\SpectrumRanker.cs" />
     <Compile Include="Model\Lib\ViewLibraryPepInfo.cs" />
     <Compile Include="Model\MinimizeResults.cs" />
@@ -664,10 +665,10 @@
       <DependentUpon>Resources.resx</DependentUpon>
     </Compile>
     <Compile Include="GenericFormClassNames.cs" />
-    <Compile Include="SettingsUI\MsGraphExtension.cs">
+    <Compile Include="Controls\Graphs\MsGraphExtension.cs">
       <SubType>UserControl</SubType>
     </Compile>
-    <Compile Include="SettingsUI\MsGraphExtension.Designer.cs">
+    <Compile Include="Controls\Graphs\MsGraphExtension.Designer.cs">
       <DependentUpon>MsGraphExtension.cs</DependentUpon>
     </Compile>
     <Compile Include="SettingsUI\ViewLibraryPepInfoList.cs" />
@@ -3240,9 +3241,9 @@
       <DependentUpon>ColumnToolTips.resx</DependentUpon>
       <SubType>Designer</SubType>
     </EmbeddedResource>
-    <EmbeddedResource Include="Model\Databinding\Entities\GlobalizedObjectResx.resx">
+    <EmbeddedResource Include="Model\SpectrumPropertiesResx.resx">
       <Generator>ResXFileCodeGenerator</Generator>
-      <LastGenOutput>GlobalizedObjectResx.Designer.cs</LastGenOutput>
+      <LastGenOutput>SpectrumPropertiesResx.Designer.cs</LastGenOutput>
       <SubType>Designer</SubType>
     </EmbeddedResource>
     <EmbeddedResource Include="Model\DocSettings\AbsoluteQuantification\QuantificationStrings.ja.resx" />
@@ -3983,7 +3984,7 @@
       <DependentUpon>MetadataRuleSetEditor.cs</DependentUpon>
       <SubType>Designer</SubType>
     </EmbeddedResource>
-    <EmbeddedResource Include="SettingsUI\MsGraphExtension.resx">
+    <EmbeddedResource Include="Controls\Graphs\MsGraphExtension.resx">
       <DependentUpon>MsGraphExtension.cs</DependentUpon>
       <SubType>Designer</SubType>
     </EmbeddedResource>

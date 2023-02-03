@@ -1110,7 +1110,7 @@ namespace pwiz.Skyline
 
         private void showSpectrumPropertiesContextMenuItem_Click(object sender, EventArgs e)
         {
-            if(_graphSpectrum != null && _graphSpectrum.Visible)
+            if (_graphSpectrum != null && _graphSpectrum.Visible)
                 _graphSpectrum.ShowPropertiesSheet = !showSpectrumPropertiesContextMenuItem.Checked;
         }
 
