@@ -46,6 +46,11 @@ namespace pwiz.Skyline.Controls
 
         public bool ValidateNameTextBox(Control control, out string val)
         {
+            return ValidateNotEmptyTextBox(control, out val);
+        }
+
+        public bool ValidateNotEmptyTextBox(Control control, out string val)
+        {
             bool valid = false;
             val = control.Text.Trim();
             if (val.Length == 0)

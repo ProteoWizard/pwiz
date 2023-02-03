@@ -23,6 +23,7 @@ using System.Linq;
 using System.Xml.Serialization;
 using Microsoft.VisualStudio.TestTools.UnitTesting;
 using pwiz.Common.Chemistry;
+using pwiz.Common.SystemUtil;
 using pwiz.ProteomeDatabase.API;
 using pwiz.Skyline.Model;
 using pwiz.Skyline.Model.AuditLog;
@@ -1185,9 +1186,12 @@ namespace pwiz.SkylineTest
         /// <summary>
         /// Test serialization of ion mobility data
         /// </summary>
-        [TestMethod, NoParallelTesting]
+        [TestMethod]
         public void SerializeIonMobilityTest()
         {
+            // Make sure any generated .imsdb files are not in exe's directory - that interferes with parallel tests
+            TestContext.EnsureTestResultsDir();
+            using var d = new CurrentDirectorySetter(TestContext.GetTestResultsPath());
 
             // Check using drift time predictor without measured drift times (this never was exposed in production, so just testing ability to ignore it in test docs)
             const string predictorV19 = "<predict_drift_time name=\"test\" resolving_power=\"100\"> <ion_mobility_library name=\"scaled\" database_path=\"db.imdb\"/>" +
@@ -1265,8 +1269,8 @@ namespace pwiz.SkylineTest
             var settings = AssertEx.Deserialize<SrmSettings>(xml);
             var save = AuditLogList.IgnoreTestChecks;
             AuditLogList.IgnoreTestChecks = true;
-            var tmpFile19 = "V19_1.sky";
-            var tmpFileCurrent = "V20_13.sky";
+            var tmpFile19 = TestContext.GetTestResultsPath("V19_1.sky");
+            var tmpFileCurrent = TestContext.GetTestResultsPath("V20_13.sky");
             var oldDoc = new SrmDocument(settings.ChangeDataSettings(settings.DataSettings.ChangeAuditLogging(false)));
             var testPath = TestContext.GetTestResultsPath();
             if (!File.Exists(testPath))
@@ -1287,7 +1291,6 @@ namespace pwiz.SkylineTest
             Assert.AreEqual(newDoc.Settings.TransitionSettings.IonMobilityFiltering.IonMobilityLibrary.Name, "test");
             Assert.AreEqual(currentDoc.Settings.TransitionSettings.IonMobilityFiltering.IonMobilityLibrary.Name, "test");
             AuditLogList.IgnoreTestChecks = save;
-
         }
 
         private const string VALID_ISOTOPE_ENRICHMENT_XML =

@@ -201,7 +201,7 @@ namespace pwiz.Skyline
                     }
                     else if (dlg.FileName.EndsWith(SkypFile.EXT))
                     {
-                        OpenSkypFile(dlg.FileName);
+                        OpenSkypFile(dlg.FileName, this);
                     }
                     else
                     {

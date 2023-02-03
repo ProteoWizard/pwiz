@@ -584,8 +584,7 @@ namespace pwiz.SkylineTestFunctional
                       });
             WaitForClosedForm(irtDlg3);
             
-            RunUI(editCalculator.OkDialog);
-            WaitForClosedForm(editCalculator);
+            OkDialog(editCalculator, editCalculator.OkDialog);
 
             RunUI(() =>
                       {
@@ -879,7 +878,7 @@ namespace pwiz.SkylineTestFunctional
                 Assert.AreEqual(10, calibrateIrtDlg2.StandardPeptideCount);
                 foreach (var pep in calibrateIrtDlg2.StandardPeptideList)
                 {
-                    Assert.IsTrue(predefinedIrts.ContainsKey(pep.Target));
+                    Assert.IsTrue(predefinedIrts.ContainsKey(pep.Target), $@"calibrateIrtDlg2.StandardPeptideList entry ""{pep.Target}"" not found in predefinedIrts");
                     Assert.AreEqual(predefinedIrts[pep.Target], pep.Irt);
                 }
             });
@@ -1037,8 +1036,7 @@ namespace pwiz.SkylineTestFunctional
                 OkDialog(recalibrateDlg, recalibrateDlg.Btn1Click);
             }
 
-            RunUI(dlg.OkDialog);
-            WaitForClosedForm(dlg);
+            OkDialog(dlg, dlg.OkDialog);
         }
     }
 

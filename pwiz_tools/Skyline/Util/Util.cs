@@ -1902,9 +1902,11 @@ namespace pwiz.Skyline.Util
             DetailedTrace.WriteLine(string.Format(@"Encountered the following exception on attempt {0} of {1}{2}:", loopCount, maxLoopCount,
                 string.IsNullOrEmpty(hint) ? string.Empty : (@" of action " + hint)));
             DetailedTrace.WriteLine(x.Message);
-            if (RunningResharperAnalysis)
+            if (RunningResharperAnalysis || IsParallelClient)
             {
-                DetailedTrace.WriteLine($@"We're running under ReSharper analysis, which may throw off timing - adding some extra sleep time");
+                DetailedTrace.WriteLine(IsParallelClient ?
+                    $@"We're running under a virtual machine, which may throw off timing - adding some extra sleep time":
+                    $@"We're running under ReSharper analysis, which may throw off timing - adding some extra sleep time");
                 // Allow up to 5 sec extra time when running code coverage or other analysis
                 milliseconds += (5000 * (loopCount+1)) / maxLoopCount; // Each loop a little more desperate
             }
@@ -1918,6 +1920,8 @@ namespace pwiz.Skyline.Util
         // "Set JETBRAINS_DPA_AGENT_ENABLE=0 environment variable for user apps started from dotTrace, and JETBRAINS_DPA_AGENT_ENABLE=1
         // in case of dotCover and dotMemory."
         public static bool RunningResharperAnalysis => !string.IsNullOrEmpty(Environment.GetEnvironmentVariable(@"JETBRAINS_DPA_AGENT_ENABLE"));
+
+        public static bool IsParallelClient => !string.IsNullOrEmpty(Environment.GetEnvironmentVariable(@"SKYLINE_TESTER_PARALLEL_CLIENT_ID"));
 
         [DllImport("kernel32.dll", CharSet = CharSet.Unicode, SetLastError = true)]
         static extern IntPtr GetModuleHandle([MarshalAs(UnmanagedType.LPWStr)] string lpModuleName);

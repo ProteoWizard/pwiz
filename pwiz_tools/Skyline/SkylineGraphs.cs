@@ -995,6 +995,7 @@ namespace pwiz.Skyline
 
             if (source == null)
             {
+                // ReSharper disable once SuspiciousTypeConversion.Global
                 source = (synchMzScaleToolStripMenuItem.Owner as ContextMenuStrip)?.SourceControl?.FindForm() as IMzScalePlot;
                 if (source == null)
                     return;
@@ -1138,13 +1139,10 @@ namespace pwiz.Skyline
 
             // Insert skyline specific menus
             var set = Settings.Default;
-
-
             var cSearch = menuStrip.SourceControl;
             while (cSearch != null && !(cSearch is IMzScalePlot))
                 cSearch = cSearch.Parent;
             var control = (IMzScalePlot)cSearch;
-
             int iInsert = 0;
             if (control?.IsAnnotated ?? false)
             {

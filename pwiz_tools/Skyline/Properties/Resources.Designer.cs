@@ -5993,15 +5993,6 @@ namespace pwiz.Skyline.Properties {
         }
         
         /// <summary>
-        ///   Looks up a localized string similar to Error: {0}.
-        /// </summary>
-        public static string CommandLine_GeneralException_Error___0_ {
-            get {
-                return ResourceManager.GetString("CommandLine_GeneralException_Error___0_", resourceCulture);
-            }
-        }
-        
-        /// <summary>
         ///   Looks up a localized string similar to Error: Failure reading file information from directory {0}..
         /// </summary>
         public static string CommandLine_GetDataSources_Error__Failure_reading_file_information_from_directory__0__ {
@@ -8839,15 +8830,6 @@ namespace pwiz.Skyline.Properties {
         public static string DDASearchControl_RunSearch_Conversion_failed_ {
             get {
                 return ResourceManager.GetString("DDASearchControl_RunSearch_Conversion_failed_", resourceCulture);
-            }
-        }
-        
-        /// <summary>
-        ///   Looks up a localized string similar to Conversion finished..
-        /// </summary>
-        public static string DDASearchControl_RunSearch_Conversion_finished_ {
-            get {
-                return ResourceManager.GetString("DDASearchControl_RunSearch_Conversion_finished_", resourceCulture);
             }
         }
         
@@ -12179,20 +12161,20 @@ namespace pwiz.Skyline.Properties {
         }
         
         /// <summary>
+        ///   Looks up a localized string similar to {0} is not a valid email address..
+        /// </summary>
+        public static string EditServerDlg_OkDialog__0__is_not_a_valid_email_address_ {
+            get {
+                return ResourceManager.GetString("EditServerDlg_OkDialog__0__is_not_a_valid_email_address_", resourceCulture);
+            }
+        }
+        
+        /// <summary>
         ///   Looks up a localized string similar to The server &apos;{0}&apos; already exists..
         /// </summary>
         public static string EditServerDlg_OkDialog_The_server__0__already_exists_ {
             get {
                 return ResourceManager.GetString("EditServerDlg_OkDialog_The_server__0__already_exists_", resourceCulture);
-            }
-        }
-        
-        /// <summary>
-        ///   Looks up a localized string similar to The server {0} is not a Panorama server..
-        /// </summary>
-        public static string EditServerDlg_OkDialog_The_server__0__is_not_a_Panorama_server {
-            get {
-                return ResourceManager.GetString("EditServerDlg_OkDialog_The_server__0__is_not_a_Panorama_server", resourceCulture);
             }
         }
         
@@ -12212,15 +12194,6 @@ namespace pwiz.Skyline.Properties {
             get {
                 return ResourceManager.GetString("EditServerDlg_OkDialog_The_username_and_password_could_not_be_authenticated_with_" +
                         "the_panorama_server", resourceCulture);
-            }
-        }
-        
-        /// <summary>
-        ///   Looks up a localized string similar to Unknown error connecting to the server {0}..
-        /// </summary>
-        public static string EditServerDlg_OkDialog_Unknown_error_connecting_to_the_server__0__ {
-            get {
-                return ResourceManager.GetString("EditServerDlg_OkDialog_Unknown_error_connecting_to_the_server__0__", resourceCulture);
             }
         }
         
@@ -12620,6 +12593,15 @@ namespace pwiz.Skyline.Properties {
         public static string EnzymeList_Title_Edit_Enzymes {
             get {
                 return ResourceManager.GetString("EnzymeList_Title_Edit_Enzymes", resourceCulture);
+            }
+        }
+        
+        /// <summary>
+        ///   Looks up a localized string similar to Error: {0}.
+        /// </summary>
+        public static string Error___0_ {
+            get {
+                return ResourceManager.GetString("Error___0_", resourceCulture);
             }
         }
         
@@ -15161,6 +15143,15 @@ namespace pwiz.Skyline.Properties {
         public static string GenerateDecoysError_No_peptide_precursor_models_for_decoys_were_found_ {
             get {
                 return ResourceManager.GetString("GenerateDecoysError_No_peptide_precursor_models_for_decoys_were_found_", resourceCulture);
+            }
+        }
+        
+        /// <summary>
+        ///   Looks up a localized string similar to URL: {0}.
+        /// </summary>
+        public static string GenericState_AppendErrorAndUri_URL___0_ {
+            get {
+                return ResourceManager.GetString("GenericState_AppendErrorAndUri_URL___0_", resourceCulture);
             }
         }
         
@@ -21763,6 +21754,35 @@ namespace pwiz.Skyline.Properties {
         }
         
         /// <summary>
+        ///   Looks up a localized string similar to Could not authenticate user. Response received from server: {0} {1}.
+        /// </summary>
+        public static string PanoramaUtil_EnsureLogin_Could_not_authenticate_user__Response_received_from_server___0___1_ {
+            get {
+                return ResourceManager.GetString("PanoramaUtil_EnsureLogin_Could_not_authenticate_user__Response_received_from_serv" +
+                        "er___0___1_", resourceCulture);
+            }
+        }
+        
+        /// <summary>
+        ///   Looks up a localized string similar to Server did not return a valid JSON response. {0} is not a Panorama server..
+        /// </summary>
+        public static string PanoramaUtil_EnsureLogin_Server_did_not_return_a_valid_JSON_response___0__is_not_a_Panorama_server_ {
+            get {
+                return ResourceManager.GetString("PanoramaUtil_EnsureLogin_Server_did_not_return_a_valid_JSON_response___0__is_not_" +
+                        "a_Panorama_server_", resourceCulture);
+            }
+        }
+        
+        /// <summary>
+        ///   Looks up a localized string similar to Unexpected JSON response from the server: {0}.
+        /// </summary>
+        public static string PanoramaUtil_EnsureLogin_Unexpected_JSON_response_from_the_server___0_ {
+            get {
+                return ResourceManager.GetString("PanoramaUtil_EnsureLogin_Unexpected_JSON_response_from_the_server___0_", resourceCulture);
+            }
+        }
+        
+        /// <summary>
         ///   Looks up a localized string similar to {0} is not a Panorama folder.
         /// </summary>
         public static string PanoramaUtil_VerifyFolder__0__is_not_a_Panorama_folder {
@@ -27563,6 +27583,15 @@ namespace pwiz.Skyline.Properties {
         }
         
         /// <summary>
+        ///   Looks up a localized string similar to Unable to connect to the server {0}..
+        /// </summary>
+        public static string ServerState_GetErrorMessage_Unable_to_connect_to_the_server__0__ {
+            get {
+                return ResourceManager.GetString("ServerState_GetErrorMessage_Unable_to_connect_to_the_server__0__", resourceCulture);
+            }
+        }
+        
+        /// <summary>
         ///   Looks up a localized string similar to The value &apos;{0}&apos; is not valid for the argument {1} which must be either &apos;True&apos; or &apos;False&apos;..
         /// </summary>
         public static string Setting_Validate_The_value___0___is_not_valid_for_the_argument__1__which_must_be_either__True__or__False__ {
@@ -30931,6 +30960,56 @@ namespace pwiz.Skyline.Properties {
         }
         
         /// <summary>
+        ///   Looks up a localized string similar to Credentials saved in Skyline for the Panorama server {0} are for the user {1}. This user does not have permissions to download the file. The skyp file was downloaded by {2}..
+        /// </summary>
+        public static string SkypDownloadException_GetMessage_Credentials_saved_in_Skyline_for_the_Panorama_server__0__are_for_the_user__1___This_user_does_not_have_permissions_to_download_the_file__The_skyp_file_was_downloaded_by__2__ {
+            get {
+                return ResourceManager.GetString("SkypDownloadException_GetMessage_Credentials_saved_in_Skyline_for_the_Panorama_se" +
+                        "rver__0__are_for_the_user__1___This_user_does_not_have_permissions_to_download_t" +
+                        "he_file__The_skyp_file_was_downloaded_by__2__", resourceCulture);
+            }
+        }
+        
+        /// <summary>
+        ///   Looks up a localized string similar to Credentials saved in Skyline for the Panorama server {0} are invalid..
+        /// </summary>
+        public static string SkypDownloadException_GetMessage_Credentials_saved_in_Skyline_for_the_Panorama_server__0__are_invalid_ {
+            get {
+                return ResourceManager.GetString("SkypDownloadException_GetMessage_Credentials_saved_in_Skyline_for_the_Panorama_se" +
+                        "rver__0__are_invalid_", resourceCulture);
+            }
+        }
+        
+        /// <summary>
+        ///   Looks up a localized string similar to The skyp file was downloaded by the user {0}. Credentials saved in Skyline for this server are for the user {1}..
+        /// </summary>
+        public static string SkypDownloadException_GetMessage_The_skyp_file_was_downloaded_by_the_user__0___Credentials_saved_in_Skyline_for_this_server_are_for_the_user__1__ {
+            get {
+                return ResourceManager.GetString("SkypDownloadException_GetMessage_The_skyp_file_was_downloaded_by_the_user__0___Cr" +
+                        "edentials_saved_in_Skyline_for_this_server_are_for_the_user__1__", resourceCulture);
+            }
+        }
+        
+        /// <summary>
+        ///   Looks up a localized string similar to Would you like to add {0} as a Panorama server in Skyline?.
+        /// </summary>
+        public static string SkypDownloadException_GetMessage_Would_you_like_to_add__0__as_a_Panorama_server_in_Skyline_ {
+            get {
+                return ResourceManager.GetString("SkypDownloadException_GetMessage_Would_you_like_to_add__0__as_a_Panorama_server_i" +
+                        "n_Skyline_", resourceCulture);
+            }
+        }
+        
+        /// <summary>
+        ///   Looks up a localized string similar to Would you like to update the credentials?.
+        /// </summary>
+        public static string SkypDownloadException_GetMessage_Would_you_like_to_update_the_credentials_ {
+            get {
+                return ResourceManager.GetString("SkypDownloadException_GetMessage_Would_you_like_to_update_the_credentials_", resourceCulture);
+            }
+        }
+        
+        /// <summary>
         ///   Looks up a localized string similar to Skyline Document Pointer.
         /// </summary>
         public static string SkypFile_FILTER_SKYP_Skyline_Document_Pointer {
@@ -30959,12 +31038,12 @@ namespace pwiz.Skyline.Properties {
         }
         
         /// <summary>
-        ///   Looks up a localized string similar to Expected the URL of a shared Skyline document archive ({0}) in the skyp file. Found {1} instead..
+        ///   Looks up a localized string similar to Expected the URL of a shared Skyline document archive file ({0}). Found filename {1} instead in the URL {2}..
         /// </summary>
-        public static string SkypFile_GetSkyFileUrl_Expected_the_URL_of_a_shared_Skyline_document_archive___0___in_the_skyp_file__Found__1__instead_ {
+        public static string SkypFile_GetSkyFileUrl_Expected_the_URL_of_a_shared_Skyline_document_archive_file___0____Found_filename__1__instead_in_the_URL__2__ {
             get {
-                return ResourceManager.GetString("SkypFile_GetSkyFileUrl_Expected_the_URL_of_a_shared_Skyline_document_archive___0_" +
-                        "__in_the_skyp_file__Found__1__instead_", resourceCulture);
+                return ResourceManager.GetString("SkypFile_GetSkyFileUrl_Expected_the_URL_of_a_shared_Skyline_document_archive_file" +
+                        "___0____Found_filename__1__instead_in_the_URL__2__", resourceCulture);
             }
         }
         
@@ -30979,21 +31058,11 @@ namespace pwiz.Skyline.Properties {
         }
         
         /// <summary>
-        ///   Looks up a localized string similar to Downloading {0}.
+        ///   Looks up a localized string similar to Downloading {0} from {1}.
         /// </summary>
-        public static string SkypSupport_Download_Downloading__0_ {
+        public static string SkypSupport_Download_Downloading__0__from__1_ {
             get {
-                return ResourceManager.GetString("SkypSupport_Download_Downloading__0_", resourceCulture);
-            }
-        }
-        
-        /// <summary>
-        ///   Looks up a localized string similar to There was an error downloading the Skyline document specified in the skyp file: {0}..
-        /// </summary>
-        public static string SkypSupport_Download_There_was_an_error_downloading_the_Skyline_document_specified_in_the_skyp_file___0__ {
-            get {
-                return ResourceManager.GetString("SkypSupport_Download_There_was_an_error_downloading_the_Skyline_document_specifie" +
-                        "d_in_the_skyp_file___0__", resourceCulture);
+                return ResourceManager.GetString("SkypSupport_Download_Downloading__0__from__1_", resourceCulture);
             }
         }
         
@@ -31003,16 +31072,6 @@ namespace pwiz.Skyline.Properties {
         public static string SkypSupport_Download_You_do_not_have_permissions_to_download_this_file_from__0__ {
             get {
                 return ResourceManager.GetString("SkypSupport_Download_You_do_not_have_permissions_to_download_this_file_from__0__", resourceCulture);
-            }
-        }
-        
-        /// <summary>
-        ///   Looks up a localized string similar to You may have to add {0} as a Panorama server from the Tools &gt; Options menu in Skyline..
-        /// </summary>
-        public static string SkypSupport_Download_You_may_have_to_add__0__as_a_Panorama_server_from_the_Tools___Options_menu_in_Skyline_ {
-            get {
-                return ResourceManager.GetString("SkypSupport_Download_You_may_have_to_add__0__as_a_Panorama_server_from_the_Tools_" +
-                        "__Options_menu_in_Skyline_", resourceCulture);
             }
         }
         
@@ -31031,6 +31090,25 @@ namespace pwiz.Skyline.Properties {
         public static string SkypSupport_Open_Failure_opening_skyp_file_ {
             get {
                 return ResourceManager.GetString("SkypSupport_Open_Failure_opening_skyp_file_", resourceCulture);
+            }
+        }
+        
+        /// <summary>
+        ///   Looks up a localized string similar to Path to skyp file cannot be empty..
+        /// </summary>
+        public static string SkypSupport_Open_Path_to_skyp_file_cannot_be_empty_ {
+            get {
+                return ResourceManager.GetString("SkypSupport_Open_Path_to_skyp_file_cannot_be_empty_", resourceCulture);
+            }
+        }
+        
+        /// <summary>
+        ///   Looks up a localized string similar to There was an error downloading the Skyline document {0} from {1}..
+        /// </summary>
+        public static string SkypSupport_ShowDownloadError_There_was_an_error_downloading_the_Skyline_document__0__from__1__ {
+            get {
+                return ResourceManager.GetString("SkypSupport_ShowDownloadError_There_was_an_error_downloading_the_Skyline_document" +
+                        "__0__from__1__", resourceCulture);
             }
         }
         
@@ -35103,6 +35181,16 @@ namespace pwiz.Skyline.Properties {
         public static string UpgradeManager_updateCheck_Complete_Upgrading__0_ {
             get {
                 return ResourceManager.GetString("UpgradeManager_updateCheck_Complete_Upgrading__0_", resourceCulture);
+            }
+        }
+        
+        /// <summary>
+        ///   Looks up a localized string similar to There was an error authenticating user credentials on the server {0}..
+        /// </summary>
+        public static string UserState_getErrorMessage_There_was_an_error_authenticating_user_credentials_on_the_server__0__ {
+            get {
+                return ResourceManager.GetString("UserState_getErrorMessage_There_was_an_error_authenticating_user_credentials_on_t" +
+                        "he_server__0__", resourceCulture);
             }
         }
         
