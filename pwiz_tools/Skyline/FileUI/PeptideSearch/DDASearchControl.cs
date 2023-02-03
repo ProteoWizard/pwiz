@@ -19,13 +19,13 @@
 using System;
 using System.Collections.Generic;
 using System.Threading;
-using System.Threading.Tasks;
 using System.Windows.Forms;
 using MSAmanda.Utils;
 using pwiz.Common.SystemUtil;
 using pwiz.Skyline.Alerts;
 using pwiz.Skyline.Model;
 using pwiz.Skyline.Properties;
+using pwiz.Skyline.Util.Extensions;
 
 namespace pwiz.Skyline.FileUI.PeptideSearch
 {
@@ -73,7 +73,7 @@ namespace pwiz.Skyline.FileUI.PeptideSearch
         /// <param name="disposing">true if managed resources should be disposed; otherwise, false.</param>
         protected override void Dispose(bool disposing)
         {
-            cancelToken?.Cancel();
+            _cancelToken?.Cancel();
 
             if (disposing && (components != null))
             {
@@ -129,78 +129,83 @@ namespace pwiz.Skyline.FileUI.PeptideSearch
             return new InstrumentSetting();
         }
 
-        private CancellationTokenSource cancelToken;
-        private Task<bool> t;
+        private CancellationTokenSource _cancelToken;
 
-        public async void RunSearch()
+        public void RunSearch()
         {
             ImportPeptideSearch.SearchEngine.SearchProgressChanged += SearchEngine_MessageNotificationEvent;
             txtSearchProgress.Text = string.Empty;
             _progressTextItems.Clear();
-            btnCancel.Enabled = true;
-            cancelToken = new CancellationTokenSource();
-            IProgressStatus status = new ProgressStatus();
-            progressBar.Visible = true;
-            bool success = true;
+            btnCancel.Enabled = progressBar.Visible = true;
+
+            _cancelToken = new CancellationTokenSource();
+
+            ActionUtil.RunAsync(RunSearchAsync, @"DDA Search thread");
+        }
+
+        private void RunSearchAsync()
+        {
+            var filesCount = ImportPeptideSearch.SearchEngine.SpectrumFileNames.Length;
+
+            IProgressStatus status = new ProgressStatus().ChangeSegments(0, filesCount);
+            bool convertSuccess = true;
 
             if (ImportPeptideSearch.DdaConverter != null)
             {
-                status = status.ChangeSegments(0, ImportPeptideSearch.SearchEngine.SpectrumFileNames.Length * 2);
+                status = status.ChangeSegments(0, filesCount * 2);
+                convertSuccess = ImportPeptideSearch.DdaConverter.Run(this, status) && !_cancelToken.IsCancellationRequested;
 
-                t = Task<bool>.Factory.StartNew((statusObj) => ImportPeptideSearch.DdaConverter.Run(this, statusObj as IProgressStatus), status, cancelToken.Token);
-                await t;
-                success = t.Result;
+                Invoke(new MethodInvoker(() => status = UpdateSearchEngineProgressMilestone(status, convertSuccess, filesCount,
+                    Resources.DDASearchControl_RunSearch_Conversion_cancelled_,
+                    Resources.DDASearchControl_RunSearch_Conversion_failed_,
+                    Resources.DDASearchControl_SearchProgress_Starting_search)));
+            }
 
-                if (cancelToken.IsCancellationRequested)
-                {
-                    UpdateSearchEngineProgress(status.ChangeMessage(Resources.DDASearchControl_RunSearch_Conversion_cancelled_));
-                    progressBar.Visible = false;
-                    success = false;
-                }
-                else if (!t.Result)
-                {
-                    UpdateSearchEngineProgress(status.ChangeMessage(Resources.DDASearchControl_RunSearch_Conversion_failed_));
-                    Cancel();
-                }
-                else
-                {
-                    UpdateSearchEngineProgress(status.ChangeMessage(Resources.DDASearchControl_RunSearch_Conversion_finished_).Complete());
-                    status = status.ChangeSegments(ImportPeptideSearch.SearchEngine.SpectrumFileNames.Length,
-                        ImportPeptideSearch.SearchEngine.SpectrumFileNames.Length * 2);
-                }
+            bool searchSuccess = convertSuccess;
+            if (convertSuccess)
+            {
+                searchSuccess = ImportPeptideSearch.SearchEngine.Run(_cancelToken, status) && !_cancelToken.IsCancellationRequested;
+
+                Invoke(new MethodInvoker(() => UpdateSearchEngineProgressMilestone(status, searchSuccess, status.SegmentCount,
+                    Resources.DDASearchControl_SearchProgress_Search_canceled,
+                    Resources.DDASearchControl_SearchProgress_Search_failed,
+                    Resources.DDASearchControl_SearchProgress_Search_done)));
+            }
+
+            Invoke(new MethodInvoker(() =>
+            {
+                UpdateTaskbarProgress(TaskbarProgress.TaskbarStates.NoProgress, 0);
+                btnCancel.Enabled = false;
+                OnSearchFinished?.Invoke(searchSuccess);
+                ImportPeptideSearch.SearchEngine.SearchProgressChanged -= SearchEngine_MessageNotificationEvent;
+            }));
+        }
+
+        private IProgressStatus UpdateSearchEngineProgressMilestone(IProgressStatus status, bool success, int segmentsComplete,
+            string cancelledMessage, string failedMessage, string succeededMessage)
+        {
+            if (_cancelToken.IsCancellationRequested)
+            {
+                UpdateSearchEngineProgress(status = status.ChangeMessage(cancelledMessage));
+                progressBar.Visible = false;
+            }
+            else if (!success)
+            {
+                UpdateSearchEngineProgress(status = status.ChangeMessage(failedMessage));
+                Cancel();
             }
             else
-                status = status.ChangeSegments(0, ImportPeptideSearch.SearchEngine.SpectrumFileNames.Length);
-
-            if (success && !cancelToken.IsCancellationRequested)
             {
-                status.ChangeMessage(Resources.DDASearchControl_SearchProgress_Starting_search);
+                if (segmentsComplete == status.SegmentCount)
+                    status = status.ChangeSegments(0, 0);
+
+                status = status.ChangeMessage(succeededMessage).Complete();
                 UpdateSearchEngineProgress(status);
 
-                t = Task<bool>.Factory.StartNew(() => ImportPeptideSearch.SearchEngine.Run(cancelToken, status), cancelToken.Token);
-                await t;
-                success = t.Result;
-
-                if (cancelToken.IsCancellationRequested)
-                {
-                    UpdateSearchEngineProgress(status.ChangeMessage(Resources.DDASearchControl_SearchProgress_Search_canceled));
-                    progressBar.Visible = false;
-                    success = false;
-                }
-                else if (!t.Result)
-                {
-                    UpdateSearchEngineProgress(status.ChangeWarningMessage(Resources.DDASearchControl_SearchProgress_Search_failed));
-                    Cancel();
-                }
-                else
-                {
-                    UpdateSearchEngineProgress(status.ChangeMessage(Resources.DDASearchControl_SearchProgress_Search_done).ChangeSegments(0, 0).Complete());
-                }
+                if (status.SegmentCount > segmentsComplete)
+                    status = status.ChangeSegments(segmentsComplete, status.SegmentCount);
             }
-            UpdateTaskbarProgress(TaskbarProgress.TaskbarStates.NoProgress, 0);
-            btnCancel.Enabled = false;
-            OnSearchFinished?.Invoke(success);
-            ImportPeptideSearch.SearchEngine.SearchProgressChanged -= SearchEngine_MessageNotificationEvent;
+            return status;
         }
 
         private void SearchEngine_MessageNotificationEvent(object sender, IProgressStatus status)
@@ -213,7 +218,7 @@ namespace pwiz.Skyline.FileUI.PeptideSearch
 
         public void Cancel()
         {
-            cancelToken?.Cancel();
+            _cancelToken?.Cancel();
             btnCancel.Enabled = false;
         }
 
@@ -237,7 +242,7 @@ namespace pwiz.Skyline.FileUI.PeptideSearch
         public string LogText => txtSearchProgress.Text;
 
         public bool HasUI => true;
-        public bool IsCanceled => cancelToken.IsCancellationRequested;
+        public bool IsCanceled => _cancelToken.IsCancellationRequested;
 
         /// progress updates from AbstractDdaConverter (should be prefixed by the file currently being processed)
         public UpdateProgressResponse UpdateProgress(IProgressStatus status)
