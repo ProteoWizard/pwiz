@@ -122,7 +122,7 @@ namespace pwiz.SkylineTest
         [TestMethod]
         public void TestComputeLoq()
         {
-            var areas = new double[]
+            var areas = new []
             {
                 0.00000000000000000000, 0.00000000000000000000, 0.00000000000000000000, 0.00000000000000000000,
                 0.00000000000000000000, 0.00000000000000000000, 0.00000000000000000000, 0.00000000000000000000,
@@ -133,7 +133,7 @@ namespace pwiz.SkylineTest
                 0.00512273079101743887, 0.00491574289577129727, 0.00501447277612654049, 0.00750785941174682541,
                 0.00808758893988542615, 0.00522947445339865240
             };
-            var concentrations = new double[]
+            var concentrations = new []
             {0.005, 0.005, 0.005, 0.01, 0.01, 0.01, 0.03, 0.03, 0.03, 0.05, 0.05, 0.05, 0.07, 0.07, 0.07, 0.1, 0.1,
                 0.1, 0.3, 0.3, 0.3, 0.5, 0.5, 0.5, 0.7, 0.7, 0.7, 1.0, 1.0, 1.0
             };
@@ -142,7 +142,6 @@ namespace pwiz.SkylineTest
             {
                 MaxBootstrapIterations = 10000,
                 MinBootstrapIterations = 1000,
-                Random = new Random(0)
             }.ComputeBootstrappedLoq(weightedPoints);
             Assert.AreEqual(0.07947949229870066, loq, delta);
         }
@@ -180,7 +179,7 @@ namespace pwiz.SkylineTest
                 var weightedPoints = MakeWeightedPoints(concentrations, transitionAreas);
                 var lod = new BilinearCurveFitter().ComputeLod(weightedPoints);
                 Assert.AreEqual(expectedLods[iTransition], lod, delta, "Lod Mismatch Transition #{0}", iTransition);
-                var loq = new BilinearCurveFitter() {MaxBootstrapIterations = 10000, Random = new Random(0)}.ComputeBootstrappedLoq(weightedPoints);
+                var loq = new BilinearCurveFitter {MaxBootstrapIterations = 10000}.ComputeBootstrappedLoq(weightedPoints);
                 Assert.AreEqual(expectedLoqs[iTransition], loq, delta, "Loq Mismatch Transition #{0}", loq);
             }
         }
@@ -190,7 +189,7 @@ namespace pwiz.SkylineTest
         {
             var concentrations = datasetConcentrations;
             var areas = datasetTransitionAreas;
-            var curveFitter = new BilinearCurveFitter() {Random = new Random(0), MinNumTransitions = 4};
+            var curveFitter = new BilinearCurveFitter();
             var weightedPoints = new List<IList<WeightedPoint>>();
             for (int iTransition = 0; iTransition < areas.GetLength(1); iTransition++)
             {
@@ -200,7 +199,10 @@ namespace pwiz.SkylineTest
                 weightedPoints.Add(MakeWeightedPoints(concentrations, transitionAreas));
             }
 
-            var acceptedIndices = curveFitter.OptimizeTransitions(OptimizeType.LOQ, weightedPoints, out var finalQuantLimit).ToList();
+            var acceptedIndices = curveFitter.OptimizeTransitions(
+                OptimizeTransitionSettings.DEFAULT.ChangeMinimumNumberOfTransitions(4)
+                    .ChangeOptimizeType(OptimizeType.LOQ),
+                weightedPoints, out var finalQuantLimit).ToList();
             CollectionAssert.AreEqual(new[]{1,3,0,5}, acceptedIndices);
             Assert.AreEqual(finalQuantLimit.Lod, 0.3719707784516309, delta);
             Assert.AreEqual(finalQuantLimit.Loq, 0.3719707784516309, delta);

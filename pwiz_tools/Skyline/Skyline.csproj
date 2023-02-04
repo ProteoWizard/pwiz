@@ -418,6 +418,12 @@
     <Compile Include="EditUI\EditLinkedPeptidesDlg.Designer.cs">
       <DependentUpon>EditLinkedPeptidesDlg.cs</DependentUpon>
     </Compile>
+    <Compile Include="EditUI\OptimizeTransitionDetailsForm.cs">
+      <SubType>Form</SubType>
+    </Compile>
+    <Compile Include="EditUI\OptimizeTransitionDetailsForm.Designer.cs">
+      <DependentUpon>OptimizeTransitionDetailsForm.cs</DependentUpon>
+    </Compile>
     <Compile Include="EditUI\OptimizeTransitionsDlg.cs">
       <SubType>Form</SubType>
     </Compile>
@@ -585,7 +591,9 @@
     <Compile Include="Model\DocSettings\AbsoluteQuantification\BilinearCurveFit.cs" />
     <Compile Include="Model\DocSettings\AbsoluteQuantification\BilinearCurveFitter.cs" />
     <Compile Include="Model\DocSettings\AbsoluteQuantification\BilinearRegressionFit.cs" />
+    <Compile Include="Model\DocSettings\AbsoluteQuantification\OptimizeTransitionDetails.cs" />
     <Compile Include="Model\DocSettings\AbsoluteQuantification\OptimizeType.cs" />
+    <Compile Include="Model\DocSettings\AbsoluteQuantification\TransitionsQuantLimit.cs" />
     <Compile Include="Model\DocSettings\AbsoluteQuantification\ValueStatus.cs" />
     <Compile Include="Model\DocSettings\AnnotationCalculator.cs" />
     <Compile Include="Model\DocSettings\AnnotationExpression.cs" />
@@ -2608,6 +2616,9 @@
     </EmbeddedResource>
     <EmbeddedResource Include="EditUI\MassErrorChartPropertyDlg.zh-CHS.resx">
       <DependentUpon>MassErrorChartPropertyDlg.cs</DependentUpon>
+    </EmbeddedResource>
+    <EmbeddedResource Include="EditUI\OptimizeTransitionDetailsForm.resx">
+      <DependentUpon>OptimizeTransitionDetailsForm.cs</DependentUpon>
     </EmbeddedResource>
     <EmbeddedResource Include="EditUI\OptimizeTransitionsDlg.resx">
       <DependentUpon>OptimizeTransitionsDlg.cs</DependentUpon>

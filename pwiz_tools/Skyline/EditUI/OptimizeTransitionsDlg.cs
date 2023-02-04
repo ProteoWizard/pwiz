@@ -18,7 +18,6 @@ using pwiz.Skyline.Model.DocSettings.AbsoluteQuantification;
 using pwiz.Skyline.Model.GroupComparison;
 using pwiz.Skyline.Properties;
 using pwiz.Skyline.Util;
-using ZedGraph;
 
 namespace pwiz.Skyline.EditUI
 {
@@ -34,7 +33,7 @@ namespace pwiz.Skyline.EditUI
         {
             InitializeComponent();
             SkylineWindow = skylineWindow;
-            _dataSchema = new SkylineDataSchema(skylineWindow, SkylineDataSchema.GetLocalizedSchemaLocalizer());
+            _dataSchema = new SkylineWindowDataSchema(skylineWindow, SkylineDataSchema.GetLocalizedSchemaLocalizer());
             BindingListSource.QueryLock = _dataSchema.QueryLock;
             _bindingList = new BindingList<Row>(_rowList);
             UpdateViewContext();
@@ -155,7 +154,7 @@ namespace pwiz.Skyline.EditUI
             }
         }
 
-        public SrmDocument OptimizeTransitions(ILongWaitBroker longWaitBroker, SrmDocument document, BilinearCurveFitter bilinearCurveFitter, OptimizeType optimizeType, bool preserveNonQuantitative)
+        public SrmDocument OptimizeTransitions(ILongWaitBroker longWaitBroker, SrmDocument document, BilinearCurveFitter bilinearCurveFitter, OptimizeTransitionSettings optimizeTransitionSettings, bool preserveNonQuantitative)
         {
             longWaitBroker.ProgressValue = 0;
             var newMoleculeArrays = new List<PeptideDocNode[]>();
@@ -199,7 +198,7 @@ namespace pwiz.Skyline.EditUI
                 }
                 var calibrationCurveFitter = new CalibrationCurveFitter(peptideQuantifier, document.Settings);
                 var optimizedMolecule =
-                    bilinearCurveFitter.OptimizeTransitions(optimizeType, calibrationCurveFitter);
+                    bilinearCurveFitter.OptimizeTransitions(optimizeTransitionSettings, calibrationCurveFitter, null);
                 newMoleculeArrays[moleculeListMoleculeIndex.Item1][moleculeListMoleculeIndex.Item2] = optimizedMolecule;
                 Interlocked.Increment(ref processedMoleculeCount);
                 longWaitBroker.ProgressValue = processedMoleculeCount * 100 / moleculeListMoleculesIndexes.Count;
@@ -246,8 +245,13 @@ namespace pwiz.Skyline.EditUI
             {
                 CancellationToken = cancellationToken,
                 RandomSeed = randomSeed,
-                MinNumTransitions = (int) tbxMinTransitions.Value
             };
+        }
+
+        private OptimizeTransitionSettings GetOptimizeTransitionSettings()
+        {
+            return OptimizeTransitionSettings.DEFAULT.ChangeMinimumNumberOfTransitions((int) tbxMinTransitions.Value)
+                .ChangeOptimizeType(OptimizeType);
         }
 
         public SrmDocument GetOptimizedDocument(SrmDocument document)
@@ -262,9 +266,11 @@ namespace pwiz.Skyline.EditUI
                 {
                     return null;
                 }
+
+                var optimizeSettings = GetOptimizeTransitionSettings();
                 longWaitDlg.PerformWork(this, 1000, broker =>
                 {
-                    newDocument = OptimizeTransitions(broker, document, bilinearCurveFitter, optimizeType, preserveNonQuantitative);
+                    newDocument = OptimizeTransitions(broker, document, bilinearCurveFitter, optimizeSettings, preserveNonQuantitative);
                 });
             }
 
@@ -291,7 +297,7 @@ namespace pwiz.Skyline.EditUI
             }
         }
 
-        private static FiguresOfMerit MakeFiguresOfMerit(BilinearCurveFitter.QuantLimit quantLimit, SrmSettings settings)
+        private static FiguresOfMerit MakeFiguresOfMerit(QuantLimit quantLimit, SrmSettings settings)
         {
             if (quantLimit == null)
             {
