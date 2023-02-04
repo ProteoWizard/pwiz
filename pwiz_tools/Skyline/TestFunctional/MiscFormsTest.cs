@@ -32,7 +32,7 @@ namespace pwiz.SkylineTestFunctional
     [TestClass]
     public class MiscFormsTest : AbstractFunctionalTest
     {
-        [TestMethod]
+        [TestMethod, NoParallelTesting(TestExclusionReason.SHARED_DIRECTORY_WRITE)] // No parallel testing because SkylineException.txt is written to Skyline.exe directory by design - and that directory is shared by all workers
         public void TestMiscForms()
         {
             RunFunctionalTest();

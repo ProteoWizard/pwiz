@@ -2839,7 +2839,7 @@ namespace pwiz.Skyline.Controls.Graphs
 
         private ScaledRetentionTime GetRetentionTimeOfZeroOptStep(ChromGraphItem graphItem, ScaledRetentionTime peakTime)
         {
-            if (graphItem.OptimizationStep == 0)
+            if ((graphItem.OptimizationStep ?? 0) == 0)
             {
                 return peakTime;
             }

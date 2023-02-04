@@ -50,7 +50,7 @@ namespace TestPerf // Note: tests in the "TestPerf" namespace only run when the 
         private const string bsaFmolTimsInfusionesiPrecMz5Mz5 = "_BSA_50fmol_TIMS_InfusionESI_10prec_mz5.mz5";
         private const string  BSA_50fmol_TIMS_InfusionESI_10precd =  "BSA_50fmol_TIMS_InfusionESI_10prec.d";
 
-        [TestMethod]
+        [TestMethod, NoParallelTesting(TestExclusionReason.VENDOR_FILE_LOCKING)]
         public void MeasuredInverseK0ValuesPerfTest()
         {
             TestFilesZip = GetPerfTestDataURL(@"PerfMeasuredInverseK0_v3.zip");
