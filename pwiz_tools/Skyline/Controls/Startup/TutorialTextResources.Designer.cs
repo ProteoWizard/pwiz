@@ -19,7 +19,7 @@ namespace pwiz.Skyline.Controls.Startup {
     // class via a tool like ResGen or Visual Studio.
     // To add or remove a member, edit your .ResX file then rerun ResGen
     // with the /str option, or rebuild your VS project.
-    [global::System.CodeDom.Compiler.GeneratedCodeAttribute("System.Resources.Tools.StronglyTypedResourceBuilder", "15.0.0.0")]
+    [global::System.CodeDom.Compiler.GeneratedCodeAttribute("System.Resources.Tools.StronglyTypedResourceBuilder", "17.0.0.0")]
     [global::System.Diagnostics.DebuggerNonUserCodeAttribute()]
     [global::System.Runtime.CompilerServices.CompilerGeneratedAttribute()]
     internal class TutorialTextResources {
@@ -178,7 +178,7 @@ namespace pwiz.Skyline.Controls.Startup {
         }
         
         /// <summary>
-        ///   Looks up a localized string similar to Get hands-on experience working with a data independent acquisition (DIA) data, from either a Q Exactive or a TripleTOF instrument, using a 3-organism mix data set created for instruction, based on the Navarro, Nature Biotech 2016 benchmarking paper. Use the Import Peptide Search wizard for DIA to build a spectral library from DDA data with automatic iRT calibration for retention time calibration and an mProphet learned model for peptide peak detection. Assess the data quality using a rich collectoin of Sky [rest of string was truncated]&quot;;.
+        ///   Looks up a localized string similar to Get hands-on experience working with a data independent acquisition (DIA) data, from either a Q Exactive or a TripleTOF instrument, using a 3-organism mix data set created for instruction, based on the Navarro, Nature Biotech 2016 benchmarking paper. Use the Import Peptide Search wizard for DIA to build a spectral library from DDA data with automatic iRT calibration for retention time calibration and an mProphet learned model for peptide peak detection. Assess the data quality using a rich collection of Sky [rest of string was truncated]&quot;;.
         /// </summary>
         internal static string DIA_SWATH_Description {
             get {

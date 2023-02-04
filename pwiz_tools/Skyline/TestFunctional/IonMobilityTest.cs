@@ -63,6 +63,11 @@ namespace pwiz.SkylineTestFunctional
         protected override void DoTest()
         {
             var testFilesDir = TestFilesDirs[0]; // IonMobilityTest.zip
+
+            // Make sure any generated .imsdb files are not in exe's directory - that interferes with parallel tests
+            TestContext.EnsureTestResultsDir();
+            using var d = new CurrentDirectorySetter(testFilesDir.FullPath);
+
             // Make sure we haven't forgotten to update anything if a new IMS type has been added
             foreach (eIonMobilityUnits units in Enum.GetValues(typeof(eIonMobilityUnits)))
             {
@@ -193,9 +198,9 @@ namespace pwiz.SkylineTestFunctional
             OkDialog(transitionSettingsDlg2, transitionSettingsDlg2.OkDialog);
 
             /*
-            * Check that the database was created successfully
-            * Check that it has the correct number of entries
-            */
+                * Check that the database was created successfully
+                * Check that it has the correct number of entries
+                */
             IonMobilityDb db = IonMobilityDb.GetIonMobilityDb(databasePath, null);
             var dbPrecursorAndIonMobilities = db.GetIonMobilities();
             AssertEx.AreEqual(EXPECTED_DB_ENTRIES, dbPrecursorAndIonMobilities.Count());
@@ -339,16 +344,16 @@ namespace pwiz.SkylineTestFunctional
             });
 
             /* We don't handle any external ion mobility library formats yet
-            // Test import ion mobility data from an external file format (other than spectral libs).
-            var ionMobilityLibDlg3 = ShowDialog<EditIonMobilityLibraryDlg>(ionMobilityLibraryDlg.AddIonMobilityLibrary);
-            const string testlibName3 = "testlib3";
-            string databasePath3 = testFilesDir.GetTestPath(testlibName3 + IonMobilityDb.EXT);
-            RunUI(() =>
-            {
-                ionMobilityLibDlg3.LibraryName = testlibName3;
-                ionMobilityLibDlg3.CreateDatabase(databasePath3, testlibName3);
-            });
-            */
+                // Test import ion mobility data from an external file format (other than spectral libs).
+                var ionMobilityLibDlg3 = ShowDialog<EditIonMobilityLibraryDlg>(ionMobilityLibraryDlg.AddIonMobilityLibrary);
+                const string testlibName3 = "testlib3";
+                string databasePath3 = testFilesDir.GetTestPath(testlibName3 + IonMobilityDb.EXT);
+                RunUI(() =>
+                {
+                    ionMobilityLibDlg3.LibraryName = testlibName3;
+                    ionMobilityLibDlg3.CreateDatabase(databasePath3, testlibName3);
+                });
+                */
             // Simulate pressing "Import" button from the Edit Ion Mobility Library dialog
             var importSpectralLibDlg =
                 ShowDialog<ImportIonMobilityFromSpectralLibraryDlg>(ionMobilityLibraryDlg.ImportFromSpectralLibrary);

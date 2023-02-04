@@ -50,13 +50,13 @@ namespace TestPerf // Note: tests in the "TestPerf" namespace only run when the 
     {
         private int _testCase;
 
-        [TestMethod]
+        [TestMethod, NoParallelTesting(TestExclusionReason.VENDOR_FILE_LOCKING)] // No parallel testing as Agilent reader locks the files it reads
         public void AgilentSpectrumMillSpectralLibTest()
         {
             AgilentSpectrumMillTest(2);
         }
 
-        [TestMethod]
+        [TestMethod, NoParallelTesting(TestExclusionReason.VENDOR_FILE_LOCKING)] // No parallel testing as Agilent reader locks the files it reads
         public void AgilentSpectrumMillRampedIMSImportTest()
         {
             AgilentSpectrumMillTest(1);

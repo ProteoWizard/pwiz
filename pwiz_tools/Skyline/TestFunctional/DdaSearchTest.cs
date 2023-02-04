@@ -34,6 +34,7 @@ using pwiz.Skyline.Model.Results;
 using pwiz.Skyline.Properties;
 using pwiz.Skyline.SettingsUI;
 using pwiz.Skyline.Util;
+using pwiz.Skyline.Util.Extensions;
 using pwiz.SkylineTestUtil;
 
 namespace pwiz.SkylineTestFunctional
@@ -82,7 +83,7 @@ namespace pwiz.SkylineTestFunctional
 
         DdaTestSettings TestSettings;
 
-        [TestMethod, NoParallelTesting]
+        [TestMethod, NoParallelTesting(TestExclusionReason.RESOURCE_INTENSIVE)]
         public void TestDdaSearch()
         {
             TestFilesZip = @"TestFunctional\DdaSearchTest.zip";
@@ -107,7 +108,7 @@ namespace pwiz.SkylineTestFunctional
             RunFunctionalTest();
         }
 
-        [TestMethod, NoParallelTesting]
+        [TestMethod, NoParallelTesting(TestExclusionReason.RESOURCE_INTENSIVE)]
         public void TestDdaSearchMsgfPlus()
         {
             TestFilesZip = @"TestFunctional\DdaSearchTest.zip";
@@ -134,7 +135,7 @@ namespace pwiz.SkylineTestFunctional
             RunFunctionalTest();
         }
 
-        [TestMethod, NoParallelTesting]
+        [TestMethod, NoParallelTesting(TestExclusionReason.RESOURCE_INTENSIVE)]
         public void TestDdaSearchMsFragger()
         {
             TestFilesZip = @"TestFunctional\DdaSearchTest.zip";
@@ -365,24 +366,34 @@ namespace pwiz.SkylineTestFunctional
                 importPeptideSearchDlg.BuildPepSearchLibControl.DdaSearchDataSources = SearchFilesSameName.Select(o => (MsDataFileUri) new MsDataFilePath(o)).ToArray();
             });
 
-            var removeSuffix = ShowDialog<ImportResultsNameDlg>(() => importPeptideSearchDlg.ClickNextButton());
-            OkDialog(removeSuffix, removeSuffix.CancelDialog);
+            // Cancel without changing the replicate names
+            {
+                var removeSuffix = ShowDialog<ImportResultsNameDlg>(() => importPeptideSearchDlg.ClickNextButton());
+                OkDialog(removeSuffix, removeSuffix.CancelDialog);
+            }
 
             // Test with 2 files (different name)
             RunUI(() =>
             {
+                // CONSIDER: Why does this end up on the next page after a cancel?
                 Assert.IsTrue(importPeptideSearchDlg.ClickBackButton());
+                Assert.IsTrue(importPeptideSearchDlg.CurrentPage == ImportPeptideSearchDlg.Pages.spectra_page);
                 importPeptideSearchDlg.BuildPepSearchLibControl.DdaSearchDataSources = SearchFiles.Select(o => (MsDataFileUri)new MsDataFilePath(o)).ToArray();
             });
 
             // With 2 sources, we get the remove prefix/suffix dialog; accept default behavior
-            var removeSuffix2 = ShowDialog<ImportResultsNameDlg>(() => importPeptideSearchDlg.ClickNextButton());
-            OkDialog(removeSuffix, () => removeSuffix2.YesDialog());
-            WaitForDocumentLoaded();
+            {
+                var removeSuffix2 = ShowDialog<ImportResultsNameDlg>(() => importPeptideSearchDlg.ClickNextButton());
+                OkDialog(removeSuffix2, () => removeSuffix2.YesDialog());
+            }
 
             RunUI(() =>
             {
+                // The document should not have changed, but code used to wait for it to be loaded
+                Assert.IsTrue(SkylineWindow.DocumentUI.IsLoaded, TextUtil.LineSeparate("Document not loaded:",
+                    TextUtil.LineSeparate(SkylineWindow.DocumentUI.NonLoadedStateDescriptions)));
                 // We're on the "Match Modifications" page again.
+                Assert.IsTrue(importPeptideSearchDlg.CurrentPage == ImportPeptideSearchDlg.Pages.match_modifications_page);
                 importPeptideSearchDlg.MatchModificationsControl.ChangeItem(0, false); // uncheck C+57
                 importPeptideSearchDlg.MatchModificationsControl.ChangeItem(1, true); // check M+16
                 importPeptideSearchDlg.MatchModificationsControl.ChangeItem(2, true); // check U+C3P0

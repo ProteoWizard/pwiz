@@ -40,7 +40,7 @@ namespace TestPerf // Note: tests in the "TestPerf" namespace only run when the 
     public class MeasuredDriftTimesPerfTest : AbstractFunctionalTest
     {
 
-        [TestMethod] 
+        [TestMethod, NoParallelTesting(TestExclusionReason.VENDOR_FILE_LOCKING)] 
         public void MeasuredDriftValuesPerfTest()
         {
             TestFilesZip = GetPerfTestDataURL(@"PerfMeauredDriftTimes.zip");
