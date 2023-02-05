@@ -1,9 +1,11 @@
-﻿using System.Collections.Generic;
+﻿using System;
+using System.Collections.Generic;
 using pwiz.Common.Collections;
+using pwiz.Skyline.Model.Hibernate;
 
 namespace pwiz.Skyline.Model.DocSettings.AbsoluteQuantification
 {
-    public class QuantLimit
+    public class QuantLimit : IFormattable
     {
         public QuantLimit(double lod, double loq)
         {
@@ -23,11 +25,22 @@ namespace pwiz.Skyline.Model.DocSettings.AbsoluteQuantification
 
             return Loq;
         }
+
+        public override string ToString()
+        {
+            return ToString(Formats.CalibrationCurve, null);
+        }
+
+        public string ToString(string format, IFormatProvider formatProvider)
+        {
+            return string.Format(formatProvider, "LLOD: {0} LLOQ: {1}", Lod.ToString(format, formatProvider),
+                Loq.ToString(format, formatProvider));
+        }
     }
 
     public class TransitionsQuantLimit
     {
-        public TransitionsQuantLimit(QuantLimit quantLimit, IdentityPath  transitionIdentityPath)
+        public TransitionsQuantLimit(QuantLimit quantLimit, IdentityPath transitionIdentityPath)
             : this(quantLimit, ImmutableList.Singleton(transitionIdentityPath))
         {
         }
