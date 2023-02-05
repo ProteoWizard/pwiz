@@ -392,7 +392,7 @@ namespace pwiz.Skyline.Menus
 
         private void optimizeTransitionsMenuItem_Click(object sender, EventArgs e)
         {
-            var optimizeTransitionsDlg = new OptimizeTransitionsDlg(SkylineWindow);
+            var optimizeTransitionsDlg = new OptimizeDocumentTransitionsForm(SkylineWindow);
             optimizeTransitionsDlg.Show(SkylineWindow);
         }
     }

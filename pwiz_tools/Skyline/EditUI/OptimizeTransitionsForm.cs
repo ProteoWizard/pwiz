@@ -1,18 +1,19 @@
 ﻿using System.Linq;
 using pwiz.Common.DataBinding.Attributes;
-using pwiz.Common.SystemUtil;
 using pwiz.Skyline.Controls.Databinding;
-using pwiz.Skyline.Model;
 using pwiz.Skyline.Model.DocSettings.AbsoluteQuantification;
 
 namespace pwiz.Skyline.EditUI
 {
-    public partial class OptimizeTransitionDetailsForm : DataboundGridForm
+    public partial class OptimizeTransitionsForm : DataboundGridForm
     {
-        public OptimizeTransitionDetailsForm()
+        public OptimizeTransitionsForm(SkylineWindow skylineWindow)
         {
             InitializeComponent();
+            SkylineWindow = skylineWindow;
         }
+
+        public SkylineWindow SkylineWindow { get; }
 
         public class Row
         {
@@ -36,6 +37,18 @@ namespace pwiz.Skyline.EditUI
                         .FirstOrDefault(tql => Equals(transition.IdentityPath, tql.TransitionIdentityPaths.Last()))
                         ?.QuantLimit
                 };
+            }
+        }
+
+        public OptimizeTransitionSettings Settings
+        {
+            get
+            {
+                return optimizeTransitionsSettingsControl1.CurrentSettings;
+            }
+            set
+            {
+                optimizeTransitionsSettingsControl1.CurrentSettings = value;
             }
         }
     }

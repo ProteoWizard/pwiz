@@ -21,7 +21,7 @@ using pwiz.Skyline.Util;
 
 namespace pwiz.Skyline.EditUI
 {
-    public partial class OptimizeTransitionsDlg : DataboundGridForm
+    public partial class OptimizeDocumentTransitionsForm : DataboundGridForm
     {
         private SkylineDataSchema _dataSchema;
         private List<Row> _rowList = new List<Row>();
@@ -29,7 +29,7 @@ namespace pwiz.Skyline.EditUI
         private SrmDocument _originalDocument;
         private SrmDocument _optimizedDocument;
 
-        public OptimizeTransitionsDlg(SkylineWindow skylineWindow)
+        public OptimizeDocumentTransitionsForm(SkylineWindow skylineWindow)
         {
             InitializeComponent();
             SkylineWindow = skylineWindow;
@@ -37,7 +37,7 @@ namespace pwiz.Skyline.EditUI
             BindingListSource.QueryLock = _dataSchema.QueryLock;
             _bindingList = new BindingList<Row>(_rowList);
             UpdateViewContext();
-            Text = TabText = "Optimize Transitions";
+            Text = TabText = "Optimize Document Transitions";
             Icon = Resources.Skyline;
         }
 
@@ -154,7 +154,7 @@ namespace pwiz.Skyline.EditUI
             }
         }
 
-        public SrmDocument OptimizeTransitions(ILongWaitBroker longWaitBroker, SrmDocument document, BilinearCurveFitter bilinearCurveFitter, OptimizeTransitionSettings optimizeTransitionSettings, bool preserveNonQuantitative)
+        public SrmDocument OptimizeTransitions(ILongWaitBroker longWaitBroker, SrmDocument document, BilinearCurveFitter bilinearCurveFitter)
         {
             longWaitBroker.ProgressValue = 0;
             var newMoleculeArrays = new List<PeptideDocNode[]>();
@@ -192,13 +192,13 @@ namespace pwiz.Skyline.EditUI
                 longWaitBroker.CancellationToken.ThrowIfCancellationRequested();
                 var peptideQuantifier = new PeptideQuantifier(() => normalizationData, moleculeList, molecule,
                     document.Settings.PeptideSettings.Quantification);
-                if (!preserveNonQuantitative)
+                if (!bilinearCurveFitter.OptimizeTransitionSettings.PreserveNonQuantitative)
                 {
                     peptideQuantifier = peptideQuantifier.MakeAllTransitionsQuantitative();
                 }
                 var calibrationCurveFitter = new CalibrationCurveFitter(peptideQuantifier, document.Settings);
                 var optimizedMolecule =
-                    bilinearCurveFitter.OptimizeTransitions(optimizeTransitionSettings, calibrationCurveFitter, null);
+                    bilinearCurveFitter.OptimizeTransitions(calibrationCurveFitter, null);
                 newMoleculeArrays[moleculeListMoleculeIndex.Item1][moleculeListMoleculeIndex.Item2] = optimizedMolecule;
                 Interlocked.Increment(ref processedMoleculeCount);
                 longWaitBroker.ProgressValue = processedMoleculeCount * 100 / moleculeListMoleculesIndexes.Count;
@@ -213,7 +213,7 @@ namespace pwiz.Skyline.EditUI
             return (SrmDocument) document.ChangeChildren(newMoleculeLists.ToArray());
         }
 
-        private void btnPreview_Click(object sender, System.EventArgs e)
+        private void btnPreview_Click(object sender, EventArgs e)
         {
             var originalDocument = SkylineWindow.Document;
             var optimizedDocument = GetOptimizedDocument(originalDocument);
@@ -230,35 +230,21 @@ namespace pwiz.Skyline.EditUI
 
         private BilinearCurveFitter GetBilinearCurveFitter(CancellationToken cancellationToken)
         {
-            if (string.IsNullOrEmpty(tbxRandomSeed.Text.Trim()))
-            {
-                tbxRandomSeed.Text = ((int) DateTime.UtcNow.Ticks).ToString();
-            }
-
-            var helper = new MessageBoxHelper(this);
-            if (!helper.ValidateNumberTextBox(tbxRandomSeed, null, null, out int randomSeed))
+            var settings = optimizeTransitionsSettingsControl1.CurrentSettings;
+            if (settings == null)
             {
                 return null;
             }
-
             return new BilinearCurveFitter
             {
                 CancellationToken = cancellationToken,
-                RandomSeed = randomSeed,
+                
             };
-        }
-
-        private OptimizeTransitionSettings GetOptimizeTransitionSettings()
-        {
-            return OptimizeTransitionSettings.DEFAULT.ChangeMinimumNumberOfTransitions((int) tbxMinTransitions.Value)
-                .ChangeOptimizeType(OptimizeType);
         }
 
         public SrmDocument GetOptimizedDocument(SrmDocument document)
         {
             SrmDocument newDocument = null;
-            bool preserveNonQuantitative = cbxPreserveNonQuantitative.Checked;
-            var optimizeType = OptimizeType;
             using (var longWaitDlg = new LongWaitDlg())
             {
                 var bilinearCurveFitter = GetBilinearCurveFitter(longWaitDlg.CancellationToken);
@@ -267,10 +253,9 @@ namespace pwiz.Skyline.EditUI
                     return null;
                 }
 
-                var optimizeSettings = GetOptimizeTransitionSettings();
                 longWaitDlg.PerformWork(this, 1000, broker =>
                 {
-                    newDocument = OptimizeTransitions(broker, document, bilinearCurveFitter, optimizeSettings, preserveNonQuantitative);
+                    newDocument = OptimizeTransitions(broker, document, bilinearCurveFitter);
                 });
             }
 
@@ -279,6 +264,7 @@ namespace pwiz.Skyline.EditUI
 
         public IEnumerable<Row> MakeRows()
         {
+            UpdateViewContext();
             var currentDocument = SkylineWindow.Document;
             var bilinearCurveFitter = GetBilinearCurveFitter(CancellationToken.None);
             foreach (var moleculeList in currentDocument.MoleculeGroups)
@@ -350,16 +336,11 @@ namespace pwiz.Skyline.EditUI
         {
             get
             {
-                return radioLOQ.Checked ? OptimizeType.LOQ : OptimizeType.LOD;
+                return optimizeTransitionsSettingsControl1.OptimizeType;
             }
             set
             {
-                if (OptimizeType == value)
-                {
-                    return;
-                }
-                radioLOQ.Checked = value == OptimizeType.LOQ;
-                radioLOD.Checked = value == OptimizeType.LOD;
+                optimizeTransitionsSettingsControl1.OptimizeType = value;
             }
         }
 
@@ -379,9 +360,10 @@ namespace pwiz.Skyline.EditUI
             }
         }
 
-        private void radio_CheckedChanged(object sender, EventArgs e)
+        private void btnDetails_Click(object sender, EventArgs e)
         {
-            UpdateViewContext();
+            var details = new OptimizeTransitionsForm();
+
         }
     }
 }

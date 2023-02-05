@@ -50,7 +50,7 @@ namespace pwiz.SkylineTest.Reporting
         private static readonly IList<Type> STARTING_TYPES = ImmutableList.ValueOf(new[]
         {
             typeof(SkylineDocument), typeof(FoldChangeBindingSource.FoldChangeRow), typeof(AuditLogRow),
-            typeof(CandidatePeakGroup), typeof(OptimizeTransitionsDlg.Row)
+            typeof(CandidatePeakGroup), typeof(OptimizeDocumentTransitionsForm.Row)
         });
         /// <summary>
         /// This test method just outputs the entire text that should go in "ColumnCaptions.resx".

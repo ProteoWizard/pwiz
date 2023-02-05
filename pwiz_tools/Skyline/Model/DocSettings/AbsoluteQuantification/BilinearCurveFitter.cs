@@ -18,15 +18,23 @@ namespace pwiz.Skyline.Model.DocSettings.AbsoluteQuantification
             MinSameLoqCountForAccept = 25;
             GridSize = 100;
             CvThreshold = .2;
-            RandomSeed = (int) DateTime.UtcNow.Ticks;
         }
+
+        public OptimizeTransitionSettings OptimizeTransitionSettings { get; set; }
         public int MaxBootstrapIterations { get; set; }
         public int MinBootstrapIterations { get; set; }
         public int MinSameLoqCountForAccept { get; set; }
         public int GridSize { get; set; }
         public double CvThreshold { get; set; }
-        public int RandomSeed { get; set; }
         public CancellationToken CancellationToken { get; set; }
+
+        public int RandomSeed
+        {
+            get
+            {
+                return OptimizeTransitionSettings.RandomSeed;
+            }
+        }
 
         public BilinearCurveFit FitBilinearCurve(IEnumerable<WeightedPoint> points)
         {
@@ -296,7 +304,7 @@ namespace pwiz.Skyline.Model.DocSettings.AbsoluteQuantification
         }
         
         [SuppressMessage("ReSharper", "PossibleMultipleEnumeration")]
-        public PeptideDocNode OptimizeTransitions(OptimizeTransitionSettings settings, CalibrationCurveFitter calibrationCurveFitter, OptimizeTransitionDetails details)
+        public PeptideDocNode OptimizeTransitions(CalibrationCurveFitter calibrationCurveFitter, OptimizeTransitionDetails details)
         {
             var standardConcentrations = calibrationCurveFitter.GetStandardConcentrations();
             if (standardConcentrations.Count == 0)
@@ -304,7 +312,7 @@ namespace pwiz.Skyline.Model.DocSettings.AbsoluteQuantification
                 return null;
             }
 
-            var optimizeType = settings.OptimizeType;
+            var optimizeType = OptimizeTransitionSettings.OptimizeType;
             OptimizeType otherOptimizeType;
             if (optimizeType == OptimizeType.LOD)
             {
@@ -348,7 +356,7 @@ namespace pwiz.Skyline.Model.DocSettings.AbsoluteQuantification
             }
             details?.SingleQuantLimits.AddRange(singleQuantLimits);
             IList<IdentityPath> acceptedTransitionIdentityPaths = new List<IdentityPath>();
-            foreach (var quantLimit in singleQuantLimits.Take(settings.MinimumNumberOfTransitions))
+            foreach (var quantLimit in singleQuantLimits.Take(OptimizeTransitionSettings.MinimumNumberOfTransitions))
             {
                 if (acceptedTransitionIdentityPaths.Count > 0 && quantLimit.QuantLimit.GetQuantLimit(optimizeType) >= maxConcentration)
                 {
@@ -359,7 +367,7 @@ namespace pwiz.Skyline.Model.DocSettings.AbsoluteQuantification
 
             var optimizedQuantLimit = ComputeTransitionsQuantLimit(calibrationCurveFitter, acceptedTransitionIdentityPaths);
             details?.AcceptedQuantLimits.Add(optimizedQuantLimit);
-            int startIndex = Math.Min(acceptedTransitionIdentityPaths.Count, settings.MinimumNumberOfTransitions);
+            int startIndex = Math.Min(acceptedTransitionIdentityPaths.Count, OptimizeTransitionSettings.MinimumNumberOfTransitions);
             var rejectedItems = new List<TransitionsQuantLimit>();
             foreach (var quantLimitAndIndex in singleQuantLimits.Skip(startIndex))
             {
@@ -384,7 +392,7 @@ namespace pwiz.Skyline.Model.DocSettings.AbsoluteQuantification
                 }
             }
             // if we still don't have enough transitions, for the case where there were transitions at the maximum limit
-            if (acceptedTransitionIdentityPaths.Count < settings.MinimumNumberOfTransitions && rejectedItems.Any())
+            if (acceptedTransitionIdentityPaths.Count < OptimizeTransitionSettings.MinimumNumberOfTransitions && rejectedItems.Any())
             {
                 if (lowestLimits[optimizeType] == maxConcentration &&
                     lowestLimits[otherOptimizeType] < maxConcentration)
@@ -396,7 +404,7 @@ namespace pwiz.Skyline.Model.DocSettings.AbsoluteQuantification
                     rejectedItems = rejectedItems.OrderBy(item => item.GetQuantLimit(optimizeType)).ToList();
                 }
 
-                int numTransitionsNeeded = settings.MinimumNumberOfTransitions - acceptedTransitionIdentityPaths.Count;
+                int numTransitionsNeeded = OptimizeTransitionSettings.MinimumNumberOfTransitions - acceptedTransitionIdentityPaths.Count;
                 foreach (var item in rejectedItems.Take(numTransitionsNeeded))
                 {
                     acceptedTransitionIdentityPaths.Add(item.TransitionIdentityPaths.Last());

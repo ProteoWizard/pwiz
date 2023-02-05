@@ -11,6 +11,7 @@ namespace pwiz.Skyline.Model.DocSettings.AbsoluteQuantification
             AcceptedQuantLimits = new List<TransitionsQuantLimit>();
             RejectedQuantLimits = new List<TransitionsQuantLimit>();
         }
+
         public List<TransitionsQuantLimit> SingleQuantLimits { get; }
         public List<TransitionsQuantLimit> AcceptedQuantLimits { get; }
         public List<TransitionsQuantLimit> RejectedQuantLimits { get; }

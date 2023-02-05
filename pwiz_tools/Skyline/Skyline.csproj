@@ -419,17 +419,23 @@
     <Compile Include="EditUI\EditLinkedPeptidesDlg.Designer.cs">
       <DependentUpon>EditLinkedPeptidesDlg.cs</DependentUpon>
     </Compile>
-    <Compile Include="EditUI\OptimizeTransitionDetailsForm.cs">
+    <Compile Include="EditUI\OptimizeTransitionsForm.cs">
       <SubType>Form</SubType>
     </Compile>
-    <Compile Include="EditUI\OptimizeTransitionDetailsForm.Designer.cs">
-      <DependentUpon>OptimizeTransitionDetailsForm.cs</DependentUpon>
+    <Compile Include="EditUI\OptimizeTransitionsForm.Designer.cs">
+      <DependentUpon>OptimizeTransitionsForm.cs</DependentUpon>
     </Compile>
-    <Compile Include="EditUI\OptimizeTransitionsDlg.cs">
+    <Compile Include="EditUI\OptimizeDocumentTransitionsForm.cs">
       <SubType>Form</SubType>
     </Compile>
-    <Compile Include="EditUI\OptimizeTransitionsDlg.Designer.cs">
-      <DependentUpon>OptimizeTransitionsDlg.cs</DependentUpon>
+    <Compile Include="EditUI\OptimizeDocumentTransitionsForm.Designer.cs">
+      <DependentUpon>OptimizeDocumentTransitionsForm.cs</DependentUpon>
+    </Compile>
+    <Compile Include="EditUI\OptimizeTransitions\OptimizeTransitionsSettingsControl.cs">
+      <SubType>UserControl</SubType>
+    </Compile>
+    <Compile Include="EditUI\OptimizeTransitions\OptimizeTransitionsSettingsControl.Designer.cs">
+      <DependentUpon>OptimizeTransitionsSettingsControl.cs</DependentUpon>
     </Compile>
     <Compile Include="EditUI\PermuteIsotopeModificationsDlg.designer.cs">
       <DependentUpon>PermuteIsotopeModificationsDlg.cs</DependentUpon>
@@ -2618,11 +2624,14 @@
     <EmbeddedResource Include="EditUI\MassErrorChartPropertyDlg.zh-CHS.resx">
       <DependentUpon>MassErrorChartPropertyDlg.cs</DependentUpon>
     </EmbeddedResource>
-    <EmbeddedResource Include="EditUI\OptimizeTransitionDetailsForm.resx">
-      <DependentUpon>OptimizeTransitionDetailsForm.cs</DependentUpon>
+    <EmbeddedResource Include="EditUI\OptimizeTransitionsForm.resx">
+      <DependentUpon>OptimizeTransitionsForm.cs</DependentUpon>
     </EmbeddedResource>
-    <EmbeddedResource Include="EditUI\OptimizeTransitionsDlg.resx">
-      <DependentUpon>OptimizeTransitionsDlg.cs</DependentUpon>
+    <EmbeddedResource Include="EditUI\OptimizeDocumentTransitionsForm.resx">
+      <DependentUpon>OptimizeDocumentTransitionsForm.cs</DependentUpon>
+    </EmbeddedResource>
+    <EmbeddedResource Include="EditUI\OptimizeTransitions\OptimizeTransitionsSettingsControl.resx">
+      <DependentUpon>OptimizeTransitionsSettingsControl.cs</DependentUpon>
     </EmbeddedResource>
     <EmbeddedResource Include="EditUI\PermuteIsotopeModificationsDlg.ja.resx">
       <DependentUpon>PermuteIsotopeModificationsDlg.cs</DependentUpon>
