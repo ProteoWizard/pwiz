@@ -235,5 +235,17 @@ namespace pwiz.Skyline.Model.Results
 
             public override NormalizationMethod NormalizationMethod => null;
         }
+
+        public class DefaultNone : DefaultValues
+        {
+            public override bool IgnoreIfDefault
+            {
+                get { return true; }
+            }
+            public override bool IsDefault(object obj, object parentObject)
+            {
+                return Equals(obj, NONE);
+            }
+        }
     }
 }

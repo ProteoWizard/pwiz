@@ -90,7 +90,7 @@ namespace pwiz.Skyline.Model.GroupComparison
             return ChangeProp(ImClone(this), im => im.AverageTechnicalReplicates = value);
         }
 
-        [Track]
+        [Track(defaultValues: typeof(NormalizeOption.DefaultNone))]
         public NormalizeOption NormalizationMethod { get; private set; }
 
         public GroupComparisonDef ChangeNormalizeOption(NormalizeOption value)
