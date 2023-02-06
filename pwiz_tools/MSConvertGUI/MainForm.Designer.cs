@@ -283,14 +283,14 @@ namespace MSConvertGUI
             this.OptionTab,
             this.ValueTab});
             this.FilterDGV.EditMode = System.Windows.Forms.DataGridViewEditMode.EditProgrammatically;
-            this.FilterDGV.Location = new System.Drawing.Point(3, 206);
+            this.FilterDGV.Location = new System.Drawing.Point(3, 263);
             this.FilterDGV.Margin = new System.Windows.Forms.Padding(0, 3, 0, 0);
             this.FilterDGV.MultiSelect = false;
             this.FilterDGV.Name = "FilterDGV";
             this.FilterDGV.RowHeadersVisible = false;
             this.FilterDGV.RowTemplate.Height = 24;
             this.FilterDGV.SelectionMode = System.Windows.Forms.DataGridViewSelectionMode.FullRowSelect;
-            this.FilterDGV.Size = new System.Drawing.Size(543, 247);
+            this.FilterDGV.Size = new System.Drawing.Size(543, 190);
             this.FilterDGV.TabIndex = 12;
             // 
             // OptionTab
@@ -360,7 +360,7 @@ namespace MSConvertGUI
             this.FilterGB.Location = new System.Drawing.Point(3, 0);
             this.FilterGB.Margin = new System.Windows.Forms.Padding(0, 3, 0, 3);
             this.FilterGB.Name = "FilterGB";
-            this.FilterGB.Size = new System.Drawing.Size(543, 197);
+            this.FilterGB.Size = new System.Drawing.Size(543, 228);
             this.FilterGB.TabIndex = 9;
             this.FilterGB.TabStop = false;
             this.FilterGB.Text = "Filters";
@@ -858,14 +858,15 @@ namespace MSConvertGUI
             this.FilterBox.Items.AddRange(new object[] {
             "Charge State Predictor",
             "Demultiplex",
+            "DIA-Umpire",
             "ETD Peak Filter",
             "Lockmass Refiner",
             "Peak Picking",
-            "Threshold Peak Filter",
             "Scan Summing",
             "Subset",
-            "Zero Samples",
-            "DIA-Umpire"});
+            "Threshold Peak Filter",
+            "Waters DDA Processing",
+            "Zero Samples"});
             this.FilterBox.Location = new System.Drawing.Point(173, 19);
             this.FilterBox.Name = "FilterBox";
             this.FilterBox.Size = new System.Drawing.Size(177, 21);
@@ -1499,7 +1500,7 @@ namespace MSConvertGUI
             // RemoveFilterButton
             // 
             this.RemoveFilterButton.Anchor = System.Windows.Forms.AnchorStyles.Top;
-            this.RemoveFilterButton.Location = new System.Drawing.Point(595, 286);
+            this.RemoveFilterButton.Location = new System.Drawing.Point(273, 234);
             this.RemoveFilterButton.Name = "RemoveFilterButton";
             this.RemoveFilterButton.Size = new System.Drawing.Size(58, 23);
             this.RemoveFilterButton.TabIndex = 11;
@@ -1510,9 +1511,9 @@ namespace MSConvertGUI
             // AddFilterButton
             // 
             this.AddFilterButton.Anchor = System.Windows.Forms.AnchorStyles.Top;
-            this.AddFilterButton.Location = new System.Drawing.Point(547, 286);
+            this.AddFilterButton.Location = new System.Drawing.Point(214, 234);
             this.AddFilterButton.Name = "AddFilterButton";
-            this.AddFilterButton.Size = new System.Drawing.Size(42, 23);
+            this.AddFilterButton.Size = new System.Drawing.Size(53, 23);
             this.AddFilterButton.TabIndex = 10;
             this.AddFilterButton.Text = "Add";
             this.AddFilterButton.UseVisualStyleBackColor = true;
@@ -1976,6 +1977,8 @@ namespace MSConvertGUI
             // 
             this.splitContainer1.Panel2.Controls.Add(this.FilterDGV);
             this.splitContainer1.Panel2.Controls.Add(this.FilterGB);
+            this.splitContainer1.Panel2.Controls.Add(this.AddFilterButton);
+            this.splitContainer1.Panel2.Controls.Add(this.RemoveFilterButton);
             this.splitContainer1.Size = new System.Drawing.Size(860, 453);
             this.splitContainer1.SplitterDistance = 310;
             this.splitContainer1.TabIndex = 38;
@@ -2041,7 +2044,6 @@ namespace MSConvertGUI
             this.AutoScaleDimensions = new System.Drawing.SizeF(6F, 13F);
             this.AutoScaleMode = System.Windows.Forms.AutoScaleMode.Font;
             this.ClientSize = new System.Drawing.Size(884, 584);
-            this.Controls.Add(this.splitContainer1);
             this.Controls.Add(this.showCommandLine);
             this.Controls.Add(this.filesToConvertInParallelLabel);
             this.Controls.Add(this.FilesToConvertInParallelUpDown);
@@ -2052,14 +2054,14 @@ namespace MSConvertGUI
             this.Controls.Add(this.BrowseFileButton);
             this.Controls.Add(this.FileListRadio);
             this.Controls.Add(this.TextFileRadio);
-            this.Controls.Add(this.RemoveFilterButton);
-            this.Controls.Add(this.AddFilterButton);
             this.Controls.Add(this.StartButton);
             this.Controls.Add(this.PresetSaveButton);
             this.Controls.Add(this.RemoveFileButton);
             this.Controls.Add(this.AddFileButton);
             this.Controls.Add(this.FileLabel);
             this.Controls.Add(this.FileBox);
+            this.Controls.Add(this.splitContainer1);
+            this.Font = new System.Drawing.Font("Microsoft Sans Serif", 8.25F);
             this.Icon = ((System.Drawing.Icon)(resources.GetObject("$this.Icon")));
             this.MinimumSize = new System.Drawing.Size(900, 623);
             this.Name = "MainForm";
