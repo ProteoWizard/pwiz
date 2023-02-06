@@ -150,17 +150,12 @@ namespace pwiz.Skyline.EditUI
             if (details != null)
             {
                 var peptideDocNode = selection.PeptideDocNode;
-                foreach (var transitionGroup in peptideDocNode.TransitionGroups)
+                foreach (var singleQuantLimit in details.SingleQuantLimits)
                 {
-                    foreach (var transitionDocNode in transitionGroup.Transitions)
-                    {
-                        var transitionIdentityPath = new IdentityPath(selection.MoleculeIdentityPath.GetIdentity(0),
-                            selection.MoleculeIdentityPath.GetIdentity(1), transitionGroup.TransitionGroup,
-                            transitionDocNode.Transition);
-                        var transition = new Model.Databinding.Entities.Transition(_dataSchema, transitionIdentityPath);
-                        var row = Row.CreateRow(transition, details);
-                        _rowList.Add(row);
-                    }
+                    var transition = new Model.Databinding.Entities.Transition(_dataSchema,
+                        singleQuantLimit.TransitionIdentityPaths.Single());
+                    var row = Row.CreateRow(transition, details);
+                    _rowList.Add(row);
                 }
             }
             _bindingList.ResetBindings();
@@ -282,6 +277,11 @@ namespace pwiz.Skyline.EditUI
                     return hashCode;
                 }
             }
+        }
+
+        private void optimizeTransitionsSettingsControl1_SettingsChanged(object sender, EventArgs e)
+        {
+            UpdateSelection();
         }
     }
 }

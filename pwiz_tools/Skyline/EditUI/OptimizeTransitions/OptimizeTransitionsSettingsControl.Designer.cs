@@ -46,6 +46,7 @@
             this.tbxRandomSeed.Name = "tbxRandomSeed";
             this.tbxRandomSeed.Size = new System.Drawing.Size(100, 20);
             this.tbxRandomSeed.TabIndex = 14;
+            this.tbxRandomSeed.Leave += new System.EventHandler(this.SettingsValueChange);
             // 
             // lblRandomSeed
             // 
@@ -78,6 +79,7 @@
             this.radioLOQ.TabStop = true;
             this.radioLOQ.Text = "Limit of quantification";
             this.radioLOQ.UseVisualStyleBackColor = true;
+            this.radioLOQ.CheckedChanged += new System.EventHandler(this.SettingsValueChange);
             // 
             // radioLOD
             // 
@@ -88,6 +90,7 @@
             this.radioLOD.TabIndex = 0;
             this.radioLOD.Text = "Limit of detection";
             this.radioLOD.UseVisualStyleBackColor = true;
+            this.radioLOD.CheckedChanged += new System.EventHandler(this.SettingsValueChange);
             // 
             // cbxPreserveNonQuantitative
             // 
@@ -98,6 +101,7 @@
             this.cbxPreserveNonQuantitative.TabIndex = 11;
             this.cbxPreserveNonQuantitative.Text = "Preserve non-quantitative transitions";
             this.cbxPreserveNonQuantitative.UseVisualStyleBackColor = true;
+            this.cbxPreserveNonQuantitative.CheckedChanged += new System.EventHandler(this.SettingsValueChange);
             // 
             // tbxMinTransitions
             // 
@@ -115,6 +119,7 @@
             0,
             0,
             0});
+            this.tbxMinTransitions.ValueChanged += new System.EventHandler(this.SettingsValueChange);
             // 
             // lblMinTransitions
             // 

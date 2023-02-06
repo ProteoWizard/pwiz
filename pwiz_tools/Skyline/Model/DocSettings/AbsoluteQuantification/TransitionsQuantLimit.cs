@@ -5,7 +5,7 @@ using pwiz.Skyline.Model.Hibernate;
 
 namespace pwiz.Skyline.Model.DocSettings.AbsoluteQuantification
 {
-    public class QuantLimit : IFormattable
+    public class QuantLimit : IFormattable, IComparable
     {
         public QuantLimit(double lod, double loq)
         {
@@ -35,6 +35,23 @@ namespace pwiz.Skyline.Model.DocSettings.AbsoluteQuantification
         {
             return string.Format(formatProvider, "LLOD: {0} LLOQ: {1}", Lod.ToString(format, formatProvider),
                 Loq.ToString(format, formatProvider));
+        }
+
+        public int CompareTo(object obj)
+        {
+            if (obj == null)
+            {
+                return 1;
+            }
+
+            var that = (QuantLimit)obj;
+            int result = Lod.CompareTo(that.Lod);
+            if (result == 0)
+            {
+                result = Loq.CompareTo(that.Loq);
+            }
+
+            return result;
         }
     }
 

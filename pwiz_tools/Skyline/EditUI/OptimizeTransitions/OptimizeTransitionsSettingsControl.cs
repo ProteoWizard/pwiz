@@ -7,6 +7,7 @@ namespace pwiz.Skyline.EditUI.OptimizeTransitions
 {
     public partial class OptimizeTransitionsSettingsControl : UserControl
     {
+        private bool _inSettingsChange;
         public OptimizeTransitionsSettingsControl()
         {
             InitializeComponent();
@@ -29,18 +30,32 @@ namespace pwiz.Skyline.EditUI.OptimizeTransitions
             }
             set
             {
-                tbxMinTransitions.Value = value.MinimumNumberOfTransitions;
-                if (value.OptimizeType == OptimizeType.LOD)
+                if (Equals(value, CurrentSettings))
                 {
-                    radioLOD.Checked = true;
-                }
-                else
-                {
-                    radioLOQ.Checked = true;
+                    return;
                 }
 
-                cbxPreserveNonQuantitative.Checked = value.PreserveNonQuantitative;
-                tbxRandomSeed.Text = value.RandomSeed.ToString();
+                bool inSettingsChangeOld = _inSettingsChange;
+                try
+                {
+                    _inSettingsChange = true;
+                    tbxMinTransitions.Value = value.MinimumNumberOfTransitions;
+                    if (value.OptimizeType == OptimizeType.LOD)
+                    {
+                        radioLOD.Checked = true;
+                    }
+                    else
+                    {
+                        radioLOQ.Checked = true;
+                    }
+
+                    cbxPreserveNonQuantitative.Checked = value.PreserveNonQuantitative;
+                    tbxRandomSeed.Text = value.RandomSeed.ToString();
+                }
+                finally
+                {
+                    _inSettingsChange = inSettingsChangeOld;
+                }
             }
         }
 
@@ -126,6 +141,21 @@ namespace pwiz.Skyline.EditUI.OptimizeTransitions
             set
             {
                 cbxPreserveNonQuantitative.Checked = value;
+            }
+        }
+
+        public event EventHandler SettingsChanged;
+
+        private void SettingsValueChange(object sender, EventArgs e)
+        {
+            FireSettingsChange();
+        }
+
+        private void FireSettingsChange()
+        {
+            if (!_inSettingsChange)
+            {
+                SettingsChanged?.Invoke(this, EventArgs.Empty);
             }
         }
     }

@@ -59,6 +59,7 @@
             this.optimizeTransitionsSettingsControl1.RandomSeed = null;
             this.optimizeTransitionsSettingsControl1.Size = new System.Drawing.Size(800, 100);
             this.optimizeTransitionsSettingsControl1.TabIndex = 0;
+            this.optimizeTransitionsSettingsControl1.SettingsChanged += new System.EventHandler(this.optimizeTransitionsSettingsControl1_SettingsChanged);
             // 
             // OptimizeTransitionsForm
             // 

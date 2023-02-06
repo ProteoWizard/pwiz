@@ -60,5 +60,12 @@ namespace pwiz.Skyline.Model.DocSettings.AbsoluteQuantification
                 DisplaySampleTypes = DisplaySampleTypes.Except(new[] {sampleType.Name}).ToArray();
             }
         }
+
+        public CalibrationCurveOptions Clone()
+        {
+            var clone = (CalibrationCurveOptions)MemberwiseClone();
+            clone.DisplaySampleTypes = (string[]) DisplaySampleTypes.Clone();
+            return clone;
+        }
     }
 }
