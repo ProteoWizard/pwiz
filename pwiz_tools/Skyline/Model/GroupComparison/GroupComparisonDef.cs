@@ -90,7 +90,7 @@ namespace pwiz.Skyline.Model.GroupComparison
             return ChangeProp(ImClone(this), im => im.AverageTechnicalReplicates = value);
         }
 
-        [Track(defaultValues: typeof(NormalizeOption.DefaultNone))]
+        [Track]
         public NormalizeOption NormalizationMethod { get; private set; }
 
         public GroupComparisonDef ChangeNormalizeOption(NormalizeOption value)
@@ -274,7 +274,7 @@ namespace pwiz.Skyline.Model.GroupComparison
             writer.WriteAttributeIfString(ATTR.case_value, CaseValue);
             writer.WriteAttributeIfString(ATTR.identity_annotation, IdentityAnnotation);
             writer.WriteAttribute(ATTR.avg_tech_replicates, AverageTechnicalReplicates, true);
-            if (NormalizationMethod != NormalizeOption.NONE)
+            if (NormalizationMethod != null)
             {
                 writer.WriteAttributeIfString(ATTR.normalization_method, NormalizationMethod.PersistedName);
             }

@@ -238,13 +238,14 @@ namespace pwiz.Skyline.Model.Results
 
         public class DefaultNone : DefaultValues
         {
+            protected override IEnumerable<object> _values
+            {
+                get { yield return NONE; }
+            }
+
             public override bool IgnoreIfDefault
             {
                 get { return true; }
-            }
-            public override bool IsDefault(object obj, object parentObject)
-            {
-                return Equals(obj, NONE);
             }
         }
     }
