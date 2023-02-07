@@ -544,6 +544,11 @@ namespace pwiz.Skyline.Model.Results
             get { return _isWatersMse; }
         }
 
+        public bool IsElectronIonizationMse
+        {
+            get { return _isElectronIonizationMse; }
+        }
+
         public bool IsAgilentFile
         {
             get { return _isAgilentMse; }
@@ -745,7 +750,12 @@ namespace pwiz.Skyline.Model.Results
                 // Agilent MSe is a series of MS1 scans with ramped CE (SpectrumList_Agilent returns these as MS1,MS2,MS2,...) 
                 //    but with ion mobility, as of June 2014, it's just a series of MS2 scans with a single nonzero CE, or MS1 scans with 0 CE
                 // Electron Ionization "MSe" is all MS1 data, but contains only fragments
-                if (_isAgilentMse)
+                if (_isElectronIonizationMse)
+                {
+                    _mseLevel = 2; // EI data is all fragments
+                    returnval = 2; // Report as MS2 even though its recorded as MS1
+                }
+                else if (_isAgilentMse)
                 {
                     if (1 == dataSpectrum.Level)
                     {
@@ -762,11 +772,6 @@ namespace pwiz.Skyline.Model.Results
                     {
                         returnval = 0; // Not useful - probably the file started off mid-cycle, with MS2 CE>0
                     }
-                }
-                else if (_isElectronIonizationMse)
-                {
-                    _mseLevel = 2; // EI data is all fragments
-                    returnval = 2; // Report as MS2 even though its recorded as MS1
                 }
                 else if (!_isWatersMse)
                 {
