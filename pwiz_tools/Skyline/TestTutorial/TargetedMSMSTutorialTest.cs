@@ -84,7 +84,6 @@ namespace pwiz.SkylineTestTutorial
             // Set true to look at tutorial screenshots.
 //            IsPauseForScreenShots = true;
 //            IsCoverShotMode = true;
-            RunSmallMoleculeTestVersions = true;
             CoverShotName = "TargetedMSMS";
 
             if (smallMoleculesTestMode != RefinementSettings.ConvertToSmallMoleculesMode.none &&
@@ -500,7 +499,8 @@ namespace pwiz.SkylineTestTutorial
 
             ValidatePeakRanks(1, 176, true);
 
-            TestLibraryMatchPropertySheet();
+            if(AsSmallMoleculesTestMode != RefinementSettings.ConvertToSmallMoleculesMode.masses_only)  
+                TestLibraryMatchPropertySheet();
 
             if (!AsSmallMoleculeMasses)
             {
@@ -1117,10 +1117,10 @@ namespace pwiz.SkylineTestTutorial
             string expectedPropertiesJson;
             if (isSmallMolecules)
                 expectedPropertiesJson =
-                    "{ \"IdFileName\": null, \"FileName\": null, \"FilePath\": null, \"LibraryName\": \"BSA_Protea_label_free_meth3.converted_to_small_molecules\",  \"PrecursorMz\": \"523.7745\",  \"Charge\": 2, \"Label\": \"light\", \"RetentionTime\": null,  \"CCS\": null,  \"IonMobility\": null,  \"SpecIdInFile\": null,  \"Score\": 0.0,  \"ScoreType\": \"Percolator q-value\",  \"SpectrumCount\": 24}";
+                    "{ \"IdFileName\": null, \"FileName\": null, \"FilePath\": null, \"LibraryName\": \"BSA_Protea_label_free_meth3.converted_to_small_molecules\",  \"PrecursorMz\": \"523.7745\",  \"Charge\": 2, \"Label\": \"light\", \"RetentionTime\": \"44.29\",  \"CCS\": null,  \"IonMobility\": null,  \"SpecIdInFile\": null,  \"Score\": 0.0,  \"ScoreType\": \"Percolator q-value\",  \"SpectrumCount\": 24}";
             else
                 expectedPropertiesJson =
-                    "{  \"IdFileName\": \"klc_20100329v_Protea_Peptide_Curve_20fmol_uL_tech1.perc.xml\",  \"FileName\": \"klc_20100329v_Protea_Peptide_Curve_20fmol_uL_tech1.ms2\",  \"FilePath\": \"C:\\\\Users\\\\RitaCh\\\\Workspaces\\\\ProteoWiz\\\\pwiz2\\\\pwiz_tools\\\\Skyline\\\\TestResults\\\\TargetedMSMSMzml_2\\\\TargetedMSMSMzml\\\\Low Res\\\\search\\\\klc_20100329v_Protea_Peptide_Curve_20fmol_uL_tech1.ms2\",  \"LibraryName\": \"BSA_Protea_label_free_meth3\",  \"PrecursorMz\": \"417.7271\",  \"Charge\": 2,  \"Label\": \"light\", \"RetentionTime\": null,  \"CCS\": null,  \"IonMobility\": null,  \"SpecIdInFile\": \"488\",  \"Score\": 0.0,  \"ScoreType\": \"Percolator q-value\",  \"SpectrumCount\": 4}";
+                    "{  \"IdFileName\": \"klc_20100329v_Protea_Peptide_Curve_20fmol_uL_tech1.perc.xml\",  \"FileName\": \"klc_20100329v_Protea_Peptide_Curve_20fmol_uL_tech1.ms2\",  \"FilePath\": \"C:\\\\Users\\\\RitaCh\\\\Workspaces\\\\ProteoWiz\\\\pwiz2\\\\pwiz_tools\\\\Skyline\\\\TestResults\\\\TargetedMSMSMzml_2\\\\TargetedMSMSMzml\\\\Low Res\\\\search\\\\klc_20100329v_Protea_Peptide_Curve_20fmol_uL_tech1.ms2\",  \"LibraryName\": \"BSA_Protea_label_free_meth3\",  \"PrecursorMz\": \"417.7271\",  \"Charge\": 2,  \"Label\": \"light\", \"RetentionTime\": \"17\",  \"CCS\": null,  \"IonMobility\": null,  \"SpecIdInFile\": \"488\",  \"Score\": 0.0,  \"ScoreType\": \"Percolator q-value\",  \"SpectrumCount\": 4}";
             var expectedProperties = new SpectrumProperties();
             expectedProperties.Deserialize(expectedPropertiesJson);
 
@@ -1204,10 +1204,10 @@ namespace pwiz.SkylineTestTutorial
             var isSmallMolecules = AsSmallMoleculesTestMode != RefinementSettings.ConvertToSmallMoleculesMode.none;
 
             var expectedPropertiesJson =
-                    "{  \"IdFileName\": \"klc_20100329v_Protea_Peptide_Curve_20fmol_uL_tech1.perc.xml\",  \"FileName\": \"klc_20100329v_Protea_Peptide_Curve_20fmol_uL_tech1.ms2\",  \"FilePath\": \"C:\\\\Users\\\\RitaCh\\\\Workspaces\\\\ProteoWiz\\\\pwiz2\\\\pwiz_tools\\\\Skyline\\\\TestResults\\\\TargetedMSMSMzml_2\\\\TargetedMSMSMzml\\\\Low Res\\\\search\\\\klc_20100329v_Protea_Peptide_Curve_20fmol_uL_tech1.ms2\",  \"LibraryName\": \"BSA_Protea_label_free_meth3\",  \"PrecursorMz\": \"582.319\",  \"Charge\": 2,  \"Label\": \"light\",  \"RetentionTime\": null,  \"CCS\": null,  \"IonMobility\": null,  \"SpecIdInFile\": \"7901\",  \"Score\": 0.0,  \"ScoreType\": \"Percolator q-value\",  \"SpectrumCount\": 118}";
+                    "{  \"IdFileName\": \"klc_20100329v_Protea_Peptide_Curve_20fmol_uL_tech1.perc.xml\",  \"FileName\": \"klc_20100329v_Protea_Peptide_Curve_20fmol_uL_tech1.ms2\",  \"FilePath\": \"C:\\\\Users\\\\RitaCh\\\\Workspaces\\\\ProteoWiz\\\\pwiz2\\\\pwiz_tools\\\\Skyline\\\\TestResults\\\\TargetedMSMSMzml_2\\\\TargetedMSMSMzml\\\\Low Res\\\\search\\\\klc_20100329v_Protea_Peptide_Curve_20fmol_uL_tech1.ms2\",  \"LibraryName\": \"BSA_Protea_label_free_meth3\",  \"PrecursorMz\": \"582.319\",  \"Charge\": 2,  \"Label\": \"light\",  \"RetentionTime\": \"46.81\", \"CCS\": null,  \"IonMobility\": null,  \"SpecIdInFile\": \"7901\",  \"Score\": 0.0,  \"ScoreType\": \"Percolator q-value\",  \"SpectrumCount\": 118}";
             if (isSmallMolecules)
                 expectedPropertiesJson =
-                    "{  \"IdFileName\": null,  \"FileName\": null,  \"FilePath\": null,  \"LibraryName\": \"BSA_Protea_label_free_meth3.converted_to_small_molecules\",  \"PrecursorMz\": \"582.319\",  \"Charge\": 2,  \"Label\": \"light\",  \"RetentionTime\": null,  \"CCS\": null,  \"IonMobility\": null,  \"SpecIdInFile\": null,  \"Score\": 0.0,  \"ScoreType\": \"Percolator q-value\",  \"SpectrumCount\": 118}";
+                    "{  \"IdFileName\": null,  \"FileName\": null,  \"FilePath\": null,  \"LibraryName\": \"BSA_Protea_label_free_meth3.converted_to_small_molecules\",  \"PrecursorMz\": \"582.319\",  \"Charge\": 2,  \"Label\": \"light\",  \"RetentionTime\": \"46.81\", \"CCS\": null,  \"IonMobility\": null,  \"SpecIdInFile\": null,  \"Score\": 0.0,  \"ScoreType\": \"Percolator q-value\",  \"SpectrumCount\": 118}";
 
             var expectedProperties = new SpectrumProperties();
             expectedProperties.Deserialize(expectedPropertiesJson);

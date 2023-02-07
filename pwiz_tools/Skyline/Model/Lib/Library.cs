@@ -2516,7 +2516,7 @@ namespace pwiz.Skyline.Model.Lib
             string baseIM = null;
             string baseRT = null;
 
-            var rt = ChromatogramData?.RetentionTime;
+            var rt = ChromatogramData?.RetentionTime ?? RetentionTime;
 
             if (rt.HasValue)
                 baseRT = rt.Value.ToString(Formats.RETENTION_TIME);
