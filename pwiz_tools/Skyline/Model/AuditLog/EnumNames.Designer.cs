@@ -1609,6 +1609,24 @@ namespace pwiz.Skyline.Model.AuditLog {
         }
         
         /// <summary>
+        ///   Looks up a localized string similar to Ratio to Heavy.
+        /// </summary>
+        public static string Simple_ratio_to_heavy {
+            get {
+                return ResourceManager.GetString("Simple_ratio_to_heavy", resourceCulture);
+            }
+        }
+        
+        /// <summary>
+        ///   Looks up a localized string similar to Ratio to Light.
+        /// </summary>
+        public static string Simple_ratio_to_light {
+            get {
+                return ResourceManager.GetString("Simple_ratio_to_light", resourceCulture);
+            }
+        }
+        
+        /// <summary>
         ///   Looks up a localized string similar to Total Ion Current.
         /// </summary>
         public static string Simple_tic {

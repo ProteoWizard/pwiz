@@ -696,9 +696,6 @@
   <data name="Special_calibrated" xml:space="preserve">
     <value>Calibration Curve</value>
   </data>
-  <data name="Simple_global_standards" xml:space="preserve">
-    <value>Ratio to Global Standards</value>
-  </data>
   <data name="Simple_equalize_medians" xml:space="preserve">
     <value>Equalize Medians</value>
   </data>
@@ -713,5 +710,11 @@
   </data>
   <data name="Simple_tic" xml:space="preserve">
     <value>Total Ion Current</value>
+  </data>
+  <data name="Simple_ratio_to_heavy" xml:space="preserve">
+    <value>Ratio to Heavy</value>
+  </data>
+  <data name="Simple_ratio_to_light" xml:space="preserve">
+    <value>Ratio to Light</value>
   </data>
 </root>
