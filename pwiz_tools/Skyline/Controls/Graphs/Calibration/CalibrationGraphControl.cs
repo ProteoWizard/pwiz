@@ -3,11 +3,12 @@ using System.Collections.Generic;
 using System.Drawing;
 using System.Linq;
 using System.Windows.Forms;
-using pwiz.Skyline.Controls.SeqNode;
+using pwiz.Common.SystemUtil;
 using pwiz.Skyline.Model;
 using pwiz.Skyline.Model.Databinding.Entities;
 using pwiz.Skyline.Model.DocSettings.AbsoluteQuantification;
 using pwiz.Skyline.Model.GroupComparison;
+using pwiz.Skyline.Util;
 using pwiz.Skyline.Util.Extensions;
 using ZedGraph;
 using SampleType = pwiz.Skyline.Model.DocSettings.AbsoluteQuantification.SampleType;
@@ -20,23 +21,55 @@ namespace pwiz.Skyline.Controls.Graphs.Calibration
         public CalibrationGraphControl()
         {
             InitializeComponent();
+            zedGraphControl.MasterPane.Border.IsVisible = false;
+            zedGraphControl.GraphPane.Border.IsVisible = false;
+            zedGraphControl.GraphPane.Chart.Border.IsVisible = false;
+            zedGraphControl.GraphPane.XAxis.Title.Text = QuantificationStrings.Analyte_Concentration;
+            zedGraphControl.GraphPane.YAxis.Title.Text = QuantificationStrings.CalibrationCurveFitter_GetYAxisTitle_Peak_Area;
+            zedGraphControl.GraphPane.Legend.IsVisible = false;
+            zedGraphControl.GraphPane.Title.Text = null;
+            zedGraphControl.GraphPane.Title.FontSpec.Size = 12f;
+            zedGraphControl.GraphPane.IsFontsScaled = false;
+            zedGraphControl.GraphPane.XAxis.MajorTic.IsOpposite = false;
+            zedGraphControl.GraphPane.XAxis.MinorTic.IsOpposite = false;
+            zedGraphControl.GraphPane.YAxis.MajorTic.IsOpposite = false;
+            zedGraphControl.GraphPane.YAxis.MinorTic.IsOpposite = false;
+            zedGraphControl.IsZoomOnMouseCenter = true;
         }
 
-        public Helpers.ModeUIAwareFormHelper 
+        public Helpers.ModeUIAwareFormHelper ModeUIAwareFormHelper
+        {
+            get;
+            set;
+        }
 
         public Settings DisplaySettings { get; private set; }
 
         public void Update(Settings displaySettings)
         {
+            DoUpdate(displaySettings);
+            zedGraphControl.AxisChange();
+            zedGraphControl.Invalidate();
+        }
+
+        public void Clear()
+        {
+            zedGraphControl.GraphPane.GraphObjList.Clear();
+            zedGraphControl.GraphPane.CurveList.Clear();
+            _scatterPlots = null;
+            CalibrationCurve = null;
+            FiguresOfMerit = FiguresOfMerit.EMPTY;
+        }
+
+        private void DoUpdate(Settings displaySettings)
+        {
+            Clear();
             DisplaySettings = displaySettings;
             var options = displaySettings.Options;
             zedGraphControl.GraphPane.YAxis.Type = options.LogYAxis ? AxisType.Log : AxisType.Linear;
             zedGraphControl.GraphPane.XAxis.Type = options.LogXAxis ? AxisType.Log : AxisType.Linear;
             bool logPlot = options.LogXAxis || options.LogYAxis;
             zedGraphControl.GraphPane.Legend.IsVisible = options.ShowLegend;
-            _scatterPlots = null;
-            CalibrationCurve = null;
-            FiguresOfMerit = FiguresOfMerit.EMPTY;
             SrmDocument document = displaySettings.Document;
             if (!document.Settings.HasResults)
             {
@@ -46,6 +79,7 @@ namespace pwiz.Skyline.Controls.Graphs.Calibration
             }
             CalibrationCurveFitter curveFitter = displaySettings.CalibrationCurveFitter;
             var peptideQuantifier = curveFitter.PeptideQuantifier;
+            var peptide = peptideQuantifier.PeptideDocNode;
             if (peptideQuantifier.QuantificationSettings.RegressionFit == RegressionFit.NONE)
             {
                 if (!(peptideQuantifier.NormalizationMethod is NormalizationMethod.RatioToLabel))
@@ -90,7 +124,7 @@ namespace pwiz.Skyline.Controls.Graphs.Calibration
             _scatterPlots = new CurveList();
 
             IEnumerable<SampleType> sampleTypes = SampleType.ListSampleTypes()
-                .Where(Options.DisplaySampleType);
+                .Where(options.DisplaySampleType);
             foreach (var sampleType in sampleTypes)
             {
                 PointPairList pointPairList = new PointPairList();
@@ -214,23 +248,22 @@ namespace pwiz.Skyline.Controls.Graphs.Calibration
             }
 
             CalibrationPoint? selectionIdentifier = null;
-            if (options.ShowSelection)
+            if (options.ShowSelection && displaySettings.SelectedResultsIndex.HasValue)
             {
                 if (curveFitter.IsotopologResponseCurve)
                 {
-                    var labelType = (_skylineWindow.SequenceTree.SelectedNode as SrmTreeNode)
-                        ?.GetNodeOfType<TransitionGroupTreeNode>()?.DocNode.LabelType;
+                    var labelType = displaySettings.SelectedLabelType;
                     if (labelType != null)
                     {
                         selectionIdentifier =
-                            new CalibrationPoint(_skylineWindow.SelectedResultsIndex,
+                            new CalibrationPoint(displaySettings.SelectedResultsIndex.Value,
                                 labelType);
                     }
                 }
                 else
                 {
                     selectionIdentifier =
-                        new CalibrationPoint(_skylineWindow.SelectedResultsIndex, null);
+                        new CalibrationPoint(displaySettings.SelectedResultsIndex.Value, null);
                 }
             }
             if (selectionIdentifier.HasValue)
@@ -291,7 +324,7 @@ namespace pwiz.Skyline.Controls.Graphs.Calibration
                                 Location = { CoordinateFrame = CoordType.AxisXYScale },
                                 IsClippedToChartRect = true,
                             };
-                            ZedGraphControl.GraphPane.GraphObjList.Add(horizontalLine);
+                            zedGraphControl.GraphPane.GraphObjList.Add(horizontalLine);
                         }
                     }
                 }
@@ -320,7 +353,7 @@ namespace pwiz.Skyline.Controls.Graphs.Calibration
                     labelLines.Add(QuantificationStrings.CalibrationForm_DisplayCalibrationCurve_The_selected_replicate_has_missing_or_truncated_transitions);
                 }
             }
-            if (Options.ShowFiguresOfMerit)
+            if (options.ShowFiguresOfMerit)
             {
                 if (IsNumber(FiguresOfMerit.LimitOfDetection))
                 {
@@ -356,9 +389,10 @@ namespace pwiz.Skyline.Controls.Graphs.Calibration
         }
 
         public CalibrationCurve CalibrationCurve { get; private set; }
+        public CalibrationCurveMetrics CalibrationCurveMetrics { get; private set; }
         public FiguresOfMerit FiguresOfMerit { get; private set; }
 
-        public class Settings
+        public class Settings : Immutable
         {
             private CalibrationCurveOptions _options;
             public Settings(SrmDocument document, CalibrationCurveFitter calibrationCurveFitter,
@@ -379,6 +413,138 @@ namespace pwiz.Skyline.Controls.Graphs.Calibration
                     return _options.Clone();
                 }
             }
+
+            public int? SelectedResultsIndex { get; private set; }
+
+            public Settings ChangeSelectedResultsIndex(int? value)
+            {
+                return ChangeProp(ImClone(this), im => im.SelectedResultsIndex = value);
+            }
+
+            public IsotopeLabelType SelectedLabelType { get; private set; }
+
+            public Settings ChangeSelectedLabelType(IsotopeLabelType value)
+            {
+                return ChangeProp(ImClone(this), im => im.SelectedLabelType = value);
+            }
         }
+        private LineItem CreateInterpolatedLine(CalibrationCurve calibrationCurve, double[] xValues, int pointCount, bool logPlot)
+        {
+            PointPairList pointPairList = new PointPairList();
+            for (int iRange = 0; iRange < xValues.Length - 1; iRange++)
+            {
+                double minX = xValues[iRange];
+                double maxX = xValues[iRange + 1];
+                for (int i = 0; i < pointCount; i++)
+                {
+                    double x;
+                    if (logPlot)
+                    {
+                        x = Math.Exp((Math.Log(minX) * (pointCount - 1 - i) + Math.Log(maxX) * i) / (pointCount - 1));
+                    }
+                    else
+                    {
+                        x = (minX * (pointCount - 1 - i) + maxX * i) / (pointCount - 1);
+                    }
+                    double y = calibrationCurve.GetY(x);
+                        pointPairList.Add(x, y);
+                }
+            }
+            if (!pointPairList.Any())
+            {
+                return null;
+            }
+            return new LineItem(QuantificationStrings.Calibration_Curve, pointPairList, Color.Gray, SymbolType.None);
+        }
+
+
+        public string ModeUIAwareStringFormat(string format, params object[] args)
+        {
+            return ModeUIAwareFormHelper?.Format(format, args) ?? string.Format(format, args);
+        }
+
+        public static bool IsNumber(double? value)
+        {
+            return CalibrationForm.IsNumber(value);
+        }
+
+        public string GraphTitle
+        {
+            get
+            {
+                return zedGraphControl.GraphPane.Title.Text;
+            }
+            set
+            {
+                zedGraphControl.GraphPane.Title.Text = value;
+            }
+        }
+
+        public void DisplayError(string message)
+        {
+            Clear();
+            GraphTitle = message;
+            zedGraphControl.AxisChange();
+            zedGraphControl.Invalidate();
+        }
+        public CalibrationPoint? ReplicateIndexFromPoint(Point pt)
+        {
+            if (null == _scatterPlots)
+            {
+                return null;
+            }
+            PointF ptF = new PointF(pt.X, pt.Y);
+            CurveItem nearestCurve;
+            int iNeareast;
+            if (!zedGraphControl.GraphPane.FindNearestPoint(ptF, _scatterPlots, out nearestCurve, out iNeareast))
+            {
+                return null;
+            }
+            PointPair nearPoint = nearestCurve.Points[iNeareast];
+            PointF nearPointScreen = zedGraphControl.GraphPane.GeneralTransform(nearPoint.X, nearPoint.Y, CoordType.AxisXYScale);
+            if (Math.Abs(nearPointScreen.X - pt.X) > 5 || Math.Abs(nearPointScreen.Y - pt.Y) > 5)
+            {
+                return null;
+            }
+            return nearestCurve.Points[iNeareast].Tag as CalibrationPoint?;
+        }
+
+        public ZedGraphControl ZedGraphControl
+        {
+            get
+            {
+                return zedGraphControl;
+            }
+        }
+
+        private bool zedGraphControl_MouseMoveEvent(ZedGraphControl sender, MouseEventArgs e)
+        {
+            var replicateIndex = ReplicateIndexFromPoint(e.Location);
+            if (replicateIndex.HasValue)
+            {
+                zedGraphControl.Cursor = Cursors.Hand;
+                return true;
+            }
+            return false;
+        }
+
+        private bool zedGraphControl_MouseDownEvent(ZedGraphControl sender, MouseEventArgs e)
+        {
+            if (e.Button != MouseButtons.Left)
+            {
+                return false;
+            }
+            CalibrationPoint? replicateIndex = ReplicateIndexFromPoint(e.Location);
+            if (replicateIndex.HasValue)
+            {
+                PointClicked?.Invoke(replicateIndex.Value);
+                return true;
+            }
+            return false;
+        }
+
+
+
+        public event Action<CalibrationPoint> PointClicked;
     }
 }

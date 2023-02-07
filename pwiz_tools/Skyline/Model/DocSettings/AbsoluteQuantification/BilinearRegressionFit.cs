@@ -42,7 +42,7 @@ namespace pwiz.Skyline.Model.DocSettings.AbsoluteQuantification
             if (linearPoints.Select(pt => pt.X).Distinct().Count() >= 2)
             {
                 var linearCurve = RegressionFit.LINEAR.Fit(linearPoints) as CalibrationCurve.Linear;
-                if (linearCurve == null)
+                if (linearCurve == null || linearCurve.Slope <= 0)
                 {
                     return null;
                 }

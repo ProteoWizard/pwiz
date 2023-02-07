@@ -10,9 +10,11 @@ using pwiz.Common.DataBinding.Attributes;
 using pwiz.Common.SystemUtil;
 using pwiz.Skyline.Controls;
 using pwiz.Skyline.Controls.Databinding;
+using pwiz.Skyline.Controls.Graphs.Calibration;
 using pwiz.Skyline.Model;
 using pwiz.Skyline.Model.Databinding;
 using pwiz.Skyline.Model.DocSettings.AbsoluteQuantification;
+using pwiz.Skyline.Model.GroupComparison;
 using pwiz.Skyline.Util.Extensions;
 
 namespace pwiz.Skyline.EditUI
@@ -25,6 +27,7 @@ namespace pwiz.Skyline.EditUI
         private BindingList<Row> _bindingList;
         private SkylineDataSchema _dataSchema;
         private SequenceTree _sequenceTree;
+        private OptimizeTransitionDetails _details;
         public OptimizeTransitionsForm(SkylineWindow skylineWindow)
         {
             InitializeComponent();
@@ -37,6 +40,77 @@ namespace pwiz.Skyline.EditUI
             var rowSourceInfo = new RowSourceInfo(BindingListRowSource.Create(_bindingList),
                 SkylineViewContext.GetDefaultViewInfo(rootColumn));
             BindingListSource.SetViewContext(new SkylineViewContext(_dataSchema, ImmutableList.Singleton(rowSourceInfo)));
+            DataGridView.CurrentCellChanged += DataGridView_OnCurrentCellChanged;
+        }
+
+        private void DataGridView_OnCurrentCellChanged(object sender, EventArgs e)
+        {
+            var currentCell = DataGridView.CurrentCell;
+            if (currentCell == null)
+            {
+                return;
+            }
+            var rowIndex = currentCell.RowIndex;
+            if (rowIndex < 0 || rowIndex >= BindingListSource.Count)
+            {
+                return;
+            }
+
+            var row = (BindingListSource[rowIndex] as RowItem)?.Value as Row;
+            if (row == null)
+            {
+                return;
+            }
+
+            var transitionIdentityPath = row.Transition.IdentityPath;
+
+            var columnIndex = currentCell.ColumnIndex;
+            if (columnIndex < 0 || columnIndex >= DataGridView.ColumnCount)
+            {
+                return;
+            }
+
+            var dataPropertyName = DataGridView.Columns[columnIndex]?.DataPropertyName;
+            if (dataPropertyName == null)
+            {
+                return;
+            }
+
+            var propertyPath =
+                (BindingListSource.ItemProperties.FindByName(dataPropertyName) as ColumnPropertyDescriptor)
+                ?.PropertyPath;
+            if (propertyPath == null)
+            {
+                return;
+            }
+
+            IList<TransitionsQuantLimit> quantLimitList = null;
+            if (propertyPath.StartsWith(PropertyPath.Root.Property(nameof(Row.SingleQuantLimit))))
+            {
+                quantLimitList = _details.SingleQuantLimits;
+            }
+            else if (propertyPath.StartsWith(PropertyPath.Root.Property(nameof(Row.AcceptedQuantLimit))))
+            {
+                quantLimitList = _details.AcceptedQuantLimits;
+            }
+            else if (propertyPath.StartsWith(PropertyPath.Root.Property(nameof(Row.RejectedQuantLimit))))
+            {
+                quantLimitList = _details.RejectedQuantLimits;
+            }
+
+            if (quantLimitList == null)
+            {
+                return;
+            }
+
+            var transitionQuantLimit = quantLimitList.FirstOrDefault(tql =>
+                Equals(transitionIdentityPath, tql.TransitionIdentityPaths.Last()));
+            if (transitionQuantLimit == null)
+            {
+                return;
+            }
+
+            DisplayTransitionQuantLimit(transitionQuantLimit);
         }
 
         public SkylineWindow SkylineWindow { get; }
@@ -147,9 +221,9 @@ namespace pwiz.Skyline.EditUI
                 return;
             }
             _rowList.Clear();
+            _details = details;
             if (details != null)
             {
-                var peptideDocNode = selection.PeptideDocNode;
                 foreach (var singleQuantLimit in details.SingleQuantLimits)
                 {
                     var transition = new Model.Databinding.Entities.Transition(_dataSchema,
@@ -282,6 +356,23 @@ namespace pwiz.Skyline.EditUI
         private void optimizeTransitionsSettingsControl1_SettingsChanged(object sender, EventArgs e)
         {
             UpdateSelection();
+        }
+
+        public void DisplayTransitionQuantLimit(TransitionsQuantLimit transitionQuantLimit)
+        {
+            var document = _selection.Document;
+            var quantificationSettings = document.Settings.PeptideSettings.Quantification;
+            quantificationSettings = quantificationSettings
+                .ChangeRegressionFit(RegressionFit.BILINEAR)
+                .ChangeRegressionWeighting(RegressionWeighting.ONE_OVER_X_SQUARED);
+
+            var peptideQuantifier = PeptideQuantifier.GetPeptideQuantifier(_selection.Document,
+                    _selection.PeptideGroupDocNode, _selection.PeptideDocNode)
+                .WithQuantifiableTransitions(transitionQuantLimit.TransitionIdentityPaths);
+            var calibrationCurveFitter = new CalibrationCurveFitter(peptideQuantifier, _selection.Document.Settings);
+            var settings = new CalibrationGraphControl.Settings(document, calibrationCurveFitter,
+                Properties.Settings.Default.CalibrationCurveOptions);
+            calibrationGraphControl1.Update(settings);
         }
     }
 }

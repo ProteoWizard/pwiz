@@ -50,6 +50,8 @@
             this.zedGraphControl.ScrollMinY2 = 0D;
             this.zedGraphControl.Size = new System.Drawing.Size(150, 150);
             this.zedGraphControl.TabIndex = 1;
+            this.zedGraphControl.MouseDownEvent += new ZedGraph.ZedGraphControl.ZedMouseEventHandler(this.zedGraphControl_MouseDownEvent);
+            this.zedGraphControl.MouseMoveEvent += new ZedGraph.ZedGraphControl.ZedMouseEventHandler(this.zedGraphControl_MouseMoveEvent);
             // 
             // CalibrationGraphControl
             // 

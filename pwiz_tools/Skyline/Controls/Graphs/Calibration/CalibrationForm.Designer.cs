@@ -30,7 +30,6 @@
         {
             this.components = new System.ComponentModel.Container();
             System.ComponentModel.ComponentResourceManager resources = new System.ComponentModel.ComponentResourceManager(typeof(CalibrationForm));
-            this.zedGraphControl = new ZedGraph.ZedGraphControl();
             this.contextMenuStrip1 = new System.Windows.Forms.ContextMenuStrip(this.components);
             this.logXContextMenuItem = new System.Windows.Forms.ToolStripMenuItem();
             this.logYAxisContextMenuItem = new System.Windows.Forms.ToolStripMenuItem();
@@ -40,27 +39,9 @@
             this.showLegendContextMenuItem = new System.Windows.Forms.ToolStripMenuItem();
             this.showSelectionContextMenuItem = new System.Windows.Forms.ToolStripMenuItem();
             this.showFiguresOfMeritContextMenuItem = new System.Windows.Forms.ToolStripMenuItem();
+            this.calibrationGraphControl1 = new pwiz.Skyline.Controls.Graphs.Calibration.CalibrationGraphControl();
             this.contextMenuStrip1.SuspendLayout();
             this.SuspendLayout();
-            // 
-            // zedGraphControl
-            // 
-            resources.ApplyResources(this.zedGraphControl, "zedGraphControl");
-            this.zedGraphControl.EditButtons = System.Windows.Forms.MouseButtons.Left;
-            this.zedGraphControl.EditModifierKeys = System.Windows.Forms.Keys.None;
-            this.zedGraphControl.IsShowCopyMessage = false;
-            this.zedGraphControl.IsZoomOnMouseCenter = true;
-            this.zedGraphControl.Name = "zedGraphControl";
-            this.zedGraphControl.ScrollGrace = 0D;
-            this.zedGraphControl.ScrollMaxX = 0D;
-            this.zedGraphControl.ScrollMaxY = 0D;
-            this.zedGraphControl.ScrollMaxY2 = 0D;
-            this.zedGraphControl.ScrollMinX = 0D;
-            this.zedGraphControl.ScrollMinY = 0D;
-            this.zedGraphControl.ScrollMinY2 = 0D;
-            this.zedGraphControl.ContextMenuBuilder += new ZedGraph.ZedGraphControl.ContextMenuBuilderEventHandler(this.zedGraphControl_ContextMenuBuilder);
-            this.zedGraphControl.MouseDownEvent += new ZedGraph.ZedGraphControl.ZedMouseEventHandler(this.zedGraphControl_MouseDownEvent);
-            this.zedGraphControl.MouseMoveEvent += new ZedGraph.ZedGraphControl.ZedMouseEventHandler(this.zedGraphControl_MouseMoveEvent);
             // 
             // contextMenuStrip1
             // 
@@ -122,11 +103,19 @@
             resources.ApplyResources(this.showFiguresOfMeritContextMenuItem, "showFiguresOfMeritContextMenuItem");
             this.showFiguresOfMeritContextMenuItem.Click += new System.EventHandler(this.showFiguresOfMeritContextMenuItem_Click);
             // 
+            // calibrationGraphControl1
+            // 
+            resources.ApplyResources(this.calibrationGraphControl1, "calibrationGraphControl1");
+            this.calibrationGraphControl1.GraphTitle = "Title";
+            this.calibrationGraphControl1.ModeUIAwareFormHelper = null;
+            this.calibrationGraphControl1.Name = "calibrationGraphControl1";
+            this.calibrationGraphControl1.PointClicked += new System.Action<pwiz.Skyline.Model.DocSettings.AbsoluteQuantification.CalibrationPoint>(this.calibrationGraphControl1_PointClicked);
+            // 
             // CalibrationForm
             // 
             resources.ApplyResources(this, "$this");
             this.AutoScaleMode = System.Windows.Forms.AutoScaleMode.Font;
-            this.Controls.Add(this.zedGraphControl);
+            this.Controls.Add(this.calibrationGraphControl1);
             this.KeyPreview = true;
             this.Name = "CalibrationForm";
             this.ShowInTaskbar = false;
@@ -137,8 +126,6 @@
         }
 
         #endregion
-
-        private ZedGraph.ZedGraphControl zedGraphControl;
         private System.Windows.Forms.ContextMenuStrip contextMenuStrip1;
         private System.Windows.Forms.ToolStripMenuItem logXContextMenuItem;
         private System.Windows.Forms.ToolStripMenuItem showToolStripMenuItem;
@@ -148,5 +135,6 @@
         private System.Windows.Forms.ToolStripMenuItem showFiguresOfMeritContextMenuItem;
         private System.Windows.Forms.ToolStripMenuItem logYAxisContextMenuItem;
         private System.Windows.Forms.ToolStripMenuItem singleBatchContextMenuItem;
+        private CalibrationGraphControl calibrationGraphControl1;
     }
 }

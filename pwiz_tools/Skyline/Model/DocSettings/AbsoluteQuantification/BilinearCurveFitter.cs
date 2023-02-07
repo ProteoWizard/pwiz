@@ -186,7 +186,13 @@ namespace pwiz.Skyline.Model.DocSettings.AbsoluteQuantification
 
         public QuantLimit ComputeQuantLimits(IList<WeightedPoint> areas)
         {
-            return new QuantLimit(ComputeLod(areas), ComputeBootstrappedLoq(areas));
+            var lod = ComputeLod(areas);
+            var loq = ComputeBootstrappedLoq(areas);
+            if (loq < lod)
+            {
+                loq = lod;
+            }
+            return new QuantLimit(loq, lod);
         }
 
         public QuantLimit ComputeQuantLimits(CalibrationCurveFitter calibrationCurveFitter)
