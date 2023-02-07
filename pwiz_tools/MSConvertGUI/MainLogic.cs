@@ -557,7 +557,7 @@ namespace MSConvertGUI
                     }
                     finally
                     {
-                    msd.Dispose();
+                        msd.Dispose();
                     }
                 }
             }
