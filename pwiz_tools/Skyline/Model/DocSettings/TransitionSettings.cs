@@ -1635,8 +1635,8 @@ namespace pwiz.Skyline.Model.DocSettings
         public const int MIN_ION_COUNT = 1;
         public const int MAX_ION_COUNT = 50;
         public const double MIN_MATCH_TOLERANCE = 0.001;    // Reduced from 0.1 to 0.001 (1 ppm at 1000 m/z) for high accuracy MS/MS
-        private const double MAX_MATCH_TOLERANCE = 1.0;
-        private const double MAX_MATCH_TOLERANCE_PPM = 100.1;    // Increased from 1 to 100 for ppm tolerance units
+        public const double MAX_MATCH_TOLERANCE = 1.0;
+        public const double MAX_MATCH_TOLERANCE_PPM = 100.1;    // Increased from 1 to 100 for ppm tolerance units
 
         public TransitionLibraries(MzTolerance ionMatchMzTolerance, int minIonCount, int ionCount, TransitionLibraryPick pick)
         {
@@ -1819,7 +1819,7 @@ namespace pwiz.Skyline.Model.DocSettings
             unchecked
             {
                 int result = IonMatchMzTolerance.Value.GetHashCode();
-                result = (result * 397) ^ IonMatchMzTolerance.Unit.GetHashCode();
+                result = (result*397) ^ IonMatchMzTolerance.Unit.GetHashCode();
                 result = (result*397) ^ MinIonCount;
                 result = (result*397) ^ IonCount;
                 result = (result*397) ^ Pick.GetHashCode();

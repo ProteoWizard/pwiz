@@ -954,7 +954,7 @@ namespace pwiz.Skyline.Controls.Graphs
             // If document changed, reload scan.
             // Also reload if ion mobility is in use (as implied by visibility of related controls), as changes to
             // the IM library don't cause a document ID change (similar to spectral libraries, its contents exist outside of Skyline)
-            if (e.DocumentPrevious == null || !ReferenceEquals(DocumentUI.Id, e.DocumentPrevious.Id) || spectrumBtn.Visible )
+            if (e.DocumentPrevious == null || !ReferenceEquals(DocumentUI.Id, e.DocumentPrevious.Id) || spectrumBtn.Visible)
             {
                 _msDataFileScanHelper.ScanProvider.SetScanProvider(null);
 

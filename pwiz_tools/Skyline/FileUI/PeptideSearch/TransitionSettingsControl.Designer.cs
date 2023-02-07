@@ -223,7 +223,7 @@
             // 
             resources.ApplyResources(this, "$this");
             this.AutoScaleMode = System.Windows.Forms.AutoScaleMode.Font;
-            this.BackColor = System.Drawing.Color.DarkGray;
+            this.BackColor = System.Drawing.Color.Transparent;
             this.Controls.Add(this.label7);
             this.Controls.Add(this.comboMatchToleranceUnit);
             this.Controls.Add(this.panelIonFilter);
