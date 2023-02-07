@@ -10,7 +10,7 @@
     <AppDesignerFolder>Properties</AppDesignerFolder>
     <RootNamespace>pwiz.SkylineTestFunctional</RootNamespace>
     <AssemblyName>TestFunctional</AssemblyName>
-    <TargetFrameworkVersion>v4.7.2</TargetFrameworkVersion>
+    <TargetFrameworkVersion>v4.8</TargetFrameworkVersion>
     <FileAlignment>512</FileAlignment>
     <ProjectTypeGuids>{3AC096D0-A1C2-E12C-1390-A8335801FDAB};{FAE04EC0-301F-11D3-BF4B-00C04F79EFBC}</ProjectTypeGuids>
     <FileUpgradeFlags>
@@ -164,6 +164,7 @@
     <Compile Include="AccessServerTest.cs" />
     <Compile Include="AddAllPeptidesWithModificationsTest.cs" />
     <Compile Include="AddMixedLibraryTest.cs" />
+    <Compile Include="AgilentGCEITest.cs" />
     <Compile Include="AlphabeticalReportEditorTest.cs" />
     <Compile Include="AreaNormalizeOptionTest.cs" />
     <Compile Include="AssociateProteinVariantTest.cs" />
@@ -476,6 +477,7 @@
     <None Include="AddAllPeptidesWithModificationsTest.zip" />
     <None Include="AddLibraryTest.zip" />
     <None Include="AddMixedLibraryTest.zip" />
+    <None Include="AgilentGCEITest.zip" />
     <None Include="AnnotationTest.zip" />
     <None Include="AreaCVHistogramTest.zip" />
     <None Include="AreaNormalizeOptionTest.zip" />

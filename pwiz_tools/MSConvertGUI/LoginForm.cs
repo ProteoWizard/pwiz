@@ -31,7 +31,7 @@ using System.Windows.Forms;
 
 namespace MSConvertGUI
 {
-    public partial class LoginForm : Form
+    public partial class LoginForm : BaseForm
     {
         public enum ApiVersion
         {
