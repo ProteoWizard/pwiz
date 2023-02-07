@@ -59,6 +59,18 @@ namespace pwiz.SkylineTest
         {
 
             // Looking for uses of MessageBox where we should really be using MessageDlg
+            const string runDlgOkDlgExemptionComment = @"// Purposely using RunUI instead of OkDialog here";
+            AddTextInspection(@"*.cs", // Examine files with this mask
+                Inspection.Forbidden, // This is a test for things that should NOT be in such files
+                Level.Error, // Any failure is treated as an error, and overall test fails
+                null,  // There are no parts of the codebase that should skip this check
+                "AbstractFunctionalTest", // Only files containing this string get inspected for this
+                @"RunUI\(.*(Ok|Cancel)Dialog[^_].*", // Forbidden pattern - match RunUI(()=>foo.OkDialog()), RunUI(foo.CancelDialog) etc
+                true, // Pattern is a regular expression
+                @"use OkDialog() instead of RunUI() to close dialogs in a test - this waits for the dialog to actually close, which avoids race conditions e.g. ""OkDialog(colDlg, colDlg.CancelDialog)"" instead of ""RunUI(() => colDlg.CancelDialog())"". If this really is a legitimate use (to test error handling etc) add this comment to the offending line: '" + runDlgOkDlgExemptionComment + @"'", // Explanation for prohibition, appears in report
+                runDlgOkDlgExemptionComment); // There are one or two legitimate uses of this, look for this comment and ignore the violation when found
+
+            // Looking for uses of MessageBox where we should really be using MessageDlg
             const string messageBoxExemptionComment = @"// Purposely using MessageBox here";
             AddTextInspection(@"*.cs", // Examine files with this mask
                 Inspection.Forbidden, // This is a test for things that should NOT be in such files
@@ -67,7 +79,7 @@ namespace pwiz.SkylineTest
                 string.Empty, // No file content required for inspection
                 @"MessageBox.Show", // Forbidden pattern
                 false, // Pattern is not a regular expression
-                @"use MessageDlg.Show instead - this ensures proper interaction with automated tests, small molecule interface operation, and other enhancements. If this really is a legitimate use add this comment to the offending line: '"+ messageBoxExemptionComment+@"'", // Explanation for prohibition, appears in report
+                @"use MessageDlg.Show instead - this ensures proper interaction with automated tests, small molecule interface operation, and other enhancements. If this really is a legitimate use add this comment to the offending line: '" + messageBoxExemptionComment + @"'", // Explanation for prohibition, appears in report
                 messageBoxExemptionComment); // There are one or two legitimate uses of this, look for this comment and ignore the violation when found
 
             // Looking for forgotten PauseTest() calls that will mess up automated tests
@@ -130,7 +142,7 @@ namespace pwiz.SkylineTest
                 true, // Pattern is a regular expression
                 @"Skyline model code must not depend on UI code", // Explanation for prohibition, appears in report
                 null, // No explicit exceptions to this rule
-                9); // Number of existing known failures that we'll tolerate as warnings instead of errors, so no more get added while we wait to fix the rest
+                3); // Number of existing known failures that we'll tolerate as warnings instead of errors, so no more get added while we wait to fix the rest
             // Check for using DataGridView.
             AddTextInspection("*.designer.cs", Inspection.Forbidden, Level.Error, NonSkylineDirectories(), null,
                 "new System.Windows.Forms.DataGridView()", false,
@@ -338,6 +350,52 @@ namespace pwiz.SkylineTest
             }
         }
 
+        // Looking for uses of Form where we should really be using FormEx
+        private static void FindIllegalForms(List<string> results) // Looks for uses of Form rather than FormEx
+        {
+            var bareForms = new HashSet<Type>();
+
+            // List of classes which actually do inherit directly from Form
+            var acceptableDirectUsesOfFormClass = new[]
+            {
+                typeof(FormEx),
+                typeof(CommonFormEx),
+                typeof(DockableFormEx),
+                typeof(PauseAndContinueForm),
+            };
+
+            try
+            {
+
+                var assembly = Assembly.GetAssembly(typeof(FormEx));
+                var types = assembly.GetTypes().Where(t => t.IsClass && !t.IsAbstract && t.IsSubclassOf(typeof(Form)) && 
+                                                           !acceptableDirectUsesOfFormClass.Any(t.IsSubclassOf) &&
+                                                           !acceptableDirectUsesOfFormClass.Any(t.Equals) &&
+                                                           t.FullName != null && !t.FullName.StartsWith("System"));
+                foreach (var type in types)
+                {
+                    bareForms.Add(type);
+                }
+            }
+            catch (ReflectionTypeLoadException ex)
+            {
+                var errMessage = new StringBuilder();
+                errMessage.AppendLine("Error in FindIllegalForms");
+                errMessage.AppendLine(ex.StackTrace);
+                errMessage.AppendLine();
+                errMessage.AppendLine(string.Format(ex.Message));
+                foreach (var loaderException in ex.LoaderExceptions)
+                {
+                    errMessage.AppendLine();
+                    errMessage.AppendLine(loaderException.Message);
+                }
+                Console.WriteLine(errMessage);
+                throw new Exception(errMessage.ToString(), ex);
+            }
+
+            results.AddRange(bareForms.Select(bareForm => $@"Error: class {bareForm.FullName} illegally inherits directly from Form instead of FormEx. Using FormEx ensures proper interaction with automated tests, small molecule interface operation, and other enhancements. If this really is intentional, add ""typeof({bareForm.Name})"" to the variable ""acceptableDirectUsesOfFormClass"" in method ""FindIllegalForms"" in CodeInspectionTest.cs"));
+        }
+
         private static HashSet<string> FindForms(Type[] inUseFormTypes,
             Type[] directParentTypes) // Types directly referenced in addition to their derived types
         {
@@ -448,6 +506,9 @@ namespace pwiz.SkylineTest
             }
 
             var results = CheckFormsWithoutTestRunnerLookups();
+
+            // Looking for uses of Form where we should really be using FormEx
+            FindIllegalForms(results);
 
             // Make sure that anything that should start with the L10N equivalent of CommandStatusWriter.ERROR_MESSAGE_HINT (i.e. "Error:") does so
             InspectConsistentErrorMessages(results);

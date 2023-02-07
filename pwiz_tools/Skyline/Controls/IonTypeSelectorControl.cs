@@ -38,6 +38,12 @@ namespace pwiz.Skyline.Controls
         void Update(GraphSpectrumSettings set, PeptideSettings peptideSet);
     }
 
+    public interface IMenuControlImplementer
+    {
+        public MenuControl<T> GetHostedControl<T>() where T : Panel, IControlSize, new();
+        public void DisconnectHandlers();
+    }
+
     public class MenuControl<T> : ToolStripControlHost where T : Panel, IControlSize, new()
     {
         public MenuControl(GraphSpectrumSettings set, PeptideSettings peptideSet) : base(new T())
@@ -67,11 +73,8 @@ namespace pwiz.Skyline.Controls
 
     public class ChargeSelectionPanel : FlowLayoutPanel, IControlSize
     {
-        public event Action<bool> OnCharge1Changed;
-        public event Action<bool> OnCharge2Changed;
-        public event Action<bool> OnCharge3Changed;
-        public event Action<bool> OnCharge4Changed;
-
+        public event Action<int, bool> OnChargeChanged;
+        
         public ChargeSelectionPanel()
         {
             for (int i = 1; i <= 4; i++)
@@ -140,17 +143,8 @@ namespace pwiz.Skyline.Controls
 
         public void button_Click(object sender, EventArgs e)
         {
-            if (sender is CheckBox button)
-            {
-                if (1.Equals(button.Tag))
-                    OnCharge1Changed?.Invoke(button.Checked);
-                if (2.Equals(button.Tag))
-                    OnCharge2Changed?.Invoke(button.Checked);
-                if (3.Equals(button.Tag))
-                    OnCharge3Changed?.Invoke(button.Checked);
-                if (4.Equals(button.Tag))
-                    OnCharge4Changed?.Invoke(button.Checked);
-            }
+            if (sender is CheckBox { Tag: int charge } button) 
+                OnChargeChanged?.Invoke(charge,  button.Checked);
         }
     }
 

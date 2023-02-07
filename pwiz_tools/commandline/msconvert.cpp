@@ -73,10 +73,12 @@ struct Config : public Reader::Config
         simAsSpectra = false;
         srmAsSpectra = false;
         combineIonMobilitySpectra = false;
+        ignoreCalibrationScans = false;
         reportSonarBins = false;
         unknownInstrumentIsError = true;
         stripLocationFromSourceFiles = false;
         stripVersionFromSoftware = false;
+        ddaProcessing = false;
     }
 
     string outputFilename(const string& inputFilename, const MSData& inputMSData) const;
@@ -336,6 +338,12 @@ Config parseCommandLine(int argc, char** argv)
         ("combineIonMobilitySpectra",
             po::value<bool>(&config.combineIonMobilitySpectra)->zero_tokens(),
             ": write all ion mobility or Waters SONAR bins/scans in a frame/block as one spectrum instead of individual spectra")
+        ("ddaProcessing",
+            po::value<bool>(&config.ddaProcessing)->zero_tokens(),
+            ": if supported by vendor; combine MS2 spectra referring to the same precursor and survey scan, and calculate accurate precursor masses.")
+        ("ignoreCalibrationScans",
+            po::value<bool>(&config.ignoreCalibrationScans)->zero_tokens(),
+            ": do not process calibration scans (currently only applies to Waters lockmass function)")
         ("acceptZeroLengthSpectra",
             po::value<bool>(&config.acceptZeroLengthSpectra)->zero_tokens(),
             ": some vendor readers have an efficient way of filtering out empty spectra, but it takes more time to open the file")

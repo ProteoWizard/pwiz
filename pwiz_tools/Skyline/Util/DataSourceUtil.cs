@@ -19,6 +19,7 @@
 using System;
 using System.Collections.Generic;
 using System.IO;
+using System.Linq;
 using System.Xml;
 using pwiz.Common.SystemUtil;
 using pwiz.ProteowizardWrapper;
@@ -34,6 +35,7 @@ namespace pwiz.Skyline.Util
         public const string EXT_THERMO_RAW = ".raw";
         public const string EXT_WIFF = ".wiff";
         public const string EXT_WIFF2 = ".wiff2";
+        public const string EXT_WIFF_SCAN = ".wiff.scan";
         public const string EXT_SHIMADZU_RAW = ".lcd";
         public const string EXT_MZXML =  ".mzxml";
         public const string EXT_MZDATA = ".mzdata";
@@ -41,14 +43,15 @@ namespace pwiz.Skyline.Util
         public const string EXT_MZ5 = ".mz5";
         public const string EXT_XML = ".xml";
         public const string EXT_UIMF = ".uimf";
-        public const string EXT_WATERS_RAW = ".raw";
-        public const string EXT_AGILENT_BRUKER_RAW = ".d";
+        public const string EXT_WATERS_RAW = ".raw";    // Folder
+        public const string EXT_AGILENT_BRUKER_RAW = ".d";  // Folder
         public const string EXT_MOBILION_MBI = ".mbi";
+
         public static readonly string[] EXT_FASTA = {".fasta", ".fa", ".faa"};
 
         public const string TYPE_WIFF = "Sciex WIFF/WIFF2";
         public const string TYPE_AGILENT = "Agilent MassHunter Data";
-        public const string TYPE_BRUKER = "Bruker BAF/TDF";
+        public const string TYPE_BRUKER = "Bruker BAF/TDF/TSF";
         public const string TYPE_SHIMADZU = "Shimadzu LCD";
         public const string TYPE_THERMO_RAW = "Thermo RAW";
         public const string TYPE_WATERS_RAW = "Waters RAW";
@@ -75,34 +78,34 @@ namespace pwiz.Skyline.Util
 
         public static string GetSourceType(DirectoryInfo dirInfo)
         {
-            // ReSharper disable LocalizableElement
             try
             {
-                if (dirInfo.HasExtension(EXT_WATERS_RAW) &&
-                        dirInfo.GetFiles("_FUNC*.DAT").Length > 0)
-                    return TYPE_WATERS_RAW;
-                if (dirInfo.HasExtension(EXT_AGILENT_BRUKER_RAW))
-                {
-                    if (dirInfo.GetDirectories("AcqData").Length > 0)
-                        return TYPE_AGILENT;
-                    if (dirInfo.GetFiles("analysis.baf").Length > 0 || 
-                        dirInfo.GetFiles("analysis.tdf").Length > 0) // TIMS ion mobility data
-                        return TYPE_BRUKER;
-                }
-                return FOLDER_TYPE;
+                return GetSourceType(dirInfo.FullName,
+                    dirInfo.GetFiles().Select(f => f.Name).ToArray(),
+                    dirInfo.GetDirectories().Select(d => d.Name).ToArray());
             }
-            // ReSharper restore LocalizableElement
-            catch (Exception)
+            catch (Exception) // Probably dirInfo was constructed with a file path rather than an actual directory
             {
                 // TODO: Folder without access type
-                return FOLDER_TYPE;
+                return FOLDER_TYPE; // It might actually be a file, or nonexistent. But callers expect FOLDER_TYPE return value for "not a data source"
             }
         }
 
-        private static bool HasExtension(this DirectoryInfo dirInfo, string ext)
+        public static string GetSourceType(string directoryName, string[] fileNames, string[] subdirectoryNames)
         {
-            var startIndex = dirInfo.Name.Length - ext.Length;
-            return startIndex >= 0 && dirInfo.Name.Substring(startIndex).ToLowerInvariant().Equals(ext);
+            if (PathEx.HasExtension(directoryName, EXT_WATERS_RAW) &&
+                (fileNames.Count(fn => fn.StartsWith(@"_FUNC") && fn.EndsWith(@".DAT") && fn.Count(ch => ch=='.')==1) > 0))
+                return TYPE_WATERS_RAW;
+            if (PathEx.HasExtension(directoryName, EXT_AGILENT_BRUKER_RAW))
+            {
+                if (subdirectoryNames.Contains(@"AcqData"))
+                    return TYPE_AGILENT;
+                if (fileNames.Contains(@"analysis.baf") ||
+                    fileNames.Contains(@"analysis.tdf") || // TIMS ion mobility data
+                    fileNames.Contains(@"analysis.tsf"))
+                    return TYPE_BRUKER;
+            }
+            return FOLDER_TYPE;
         }
 
         public static bool IsDataSource(FileInfo fileInfo)
@@ -143,6 +146,26 @@ namespace pwiz.Skyline.Util
         public static bool IsWiffFile(string filePath)
         {
             return PathEx.HasExtension(filePath, EXT_WIFF);
+        }
+
+        public static bool IsWiffOrWiff2File(string filePath)
+        {
+            return PathEx.HasExtension(filePath, EXT_WIFF) || PathEx.HasExtension(filePath, EXT_WIFF2);
+        }
+
+        /// <summary>
+        /// Returns all files necessary to complete the mass spec data path.
+        /// Currently only .wiff and .wiff2 files also require .wiff.scan when on exists.
+        /// </summary>
+        public static IEnumerable<string> GetCompanionFiles(string filePath)
+        {
+            yield return filePath;
+            if (IsWiffOrWiff2File(filePath))
+            {
+                string wiffScanPath = Path.ChangeExtension(filePath, EXT_WIFF_SCAN);
+                if (File.Exists(wiffScanPath))
+                    yield return wiffScanPath;
+            }
         }
 
         public static bool IsFolderType(string type)

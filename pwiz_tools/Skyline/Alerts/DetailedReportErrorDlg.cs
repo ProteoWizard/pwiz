@@ -159,10 +159,7 @@ namespace pwiz.Skyline.Alerts
             // Writes .sky file to byte array to be later posted to the skyline exceptions website.
             if (checkBoxSkyFile.Checked)
             {
-                var xmlSerializer = new XmlSerializer(typeof(SrmDocument));
-                MemoryStream memoryStream = new MemoryStream();
-                xmlSerializer.Serialize(new StreamWriter(memoryStream, Encoding.UTF8), Program.ActiveDocument);
-                SkylineFileBytes = memoryStream.ToArray();
+                SkylineFileBytes = GetDocumentBytesForErrorReport(Program.ActiveDocument, ReportErrorDlg.MAX_ATTACHMENT_SIZE);
             }           
           
             Message = textBoxMsg.Text;
@@ -255,12 +252,126 @@ namespace pwiz.Skyline.Alerts
         }
 
         // Test Method
-        public void SetFormProperties(bool sendScreenSchots, bool sendSkyFile, string email, string text)
+        public void SetFormProperties(bool sendScreenShots, bool sendSkyFile, string email, string text)
         {
-            checkBoxScreenShot.Checked = sendScreenSchots;
+            checkBoxScreenShot.Checked = sendScreenShots;
             checkBoxSkyFile.Checked = sendSkyFile;
             textBoxEmail.Text = email;
             textBoxMsg.Text = text;
+        }
+
+        /// <summary>
+        /// Returns the bytes which would go into the .sky file if the document were saved.
+        /// </summary>
+        public static byte[] GetDocumentBytesForErrorReport(SrmDocument document, int maxBytes)
+        {
+            var xmlSerializer = new XmlSerializer(typeof(SrmDocument));
+            MemoryStream memoryStream = new MemoryStream();
+            try
+            {
+                xmlSerializer.Serialize(
+                    new StreamWriter(new MaxLengthStream(memoryStream, maxBytes), Encoding.UTF8),
+                    document);
+            }
+            catch (Exception)
+            {
+                // ignore
+            }
+
+            if (memoryStream.Length > maxBytes)
+            {
+                memoryStream.SetLength(maxBytes);
+            }
+
+            return memoryStream.ToArray();
+        }
+
+        /// <summary>
+        /// Write-only wrapper around a Stream which throws an exception after MaxLength bytes have been written.
+        /// </summary>
+        private class MaxLengthStream : Stream
+        {
+            public MaxLengthStream(MemoryStream stream, int maxLength)
+            {
+                MemoryStream = stream;
+                MaxLength = maxLength;
+            }
+
+            public MemoryStream MemoryStream { get; }
+            public int MaxLength { get; }
+
+            public override void Flush()
+            {
+                MemoryStream.Flush();
+            }
+
+            public override long Seek(long offset, SeekOrigin origin)
+            {
+                throw new NotSupportedException();
+            }
+
+            public override void SetLength(long value)
+            {
+                throw new NotSupportedException();
+            }
+
+            public override void Write(byte[] buffer, int offset, int count)
+            {
+                MemoryStream.Write(buffer, offset, count);
+                if (MemoryStream.Length >= MaxLength)
+                {
+                    throw new ApplicationException(@"Maximum number of bytes written");
+                }
+            }
+
+            public override bool CanRead
+            {
+                get
+                {
+                    return false;
+                }
+            }
+
+            public override bool CanSeek
+            {
+                get
+                {
+                    return false;
+                }
+            }
+
+            public override bool CanWrite
+            {
+                get
+                {
+                    return true;
+                }
+            }
+
+            public override long Length
+            {
+                get
+                {
+                    return MemoryStream.Length;
+                }
+            }
+
+            public override long Position
+            {
+                get
+                {
+                    return MemoryStream.Position;
+                }
+                set
+                {
+                    MemoryStream.Position = value;
+                }
+            }
+
+            public override int Read(byte[] buffer, int offset, int count)
+            {
+                throw new NotSupportedException();
+            }
         }
     }
 }

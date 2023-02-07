@@ -269,7 +269,9 @@ namespace pwiz.Skyline.Model.GroupComparison
             var result = new List<RunAbundance>();
             foreach (var grouping in RemoveIncompleteReplicates(dataRows))
             {
-                var log2Abundance = Math.Log(grouping.Sum(row => row.Intensity) / grouping.Sum(row=>row.Denominator), 2.0);
+                var numerator = grouping.Sum(row => row.Intensity);
+                var denominator = grouping.Sum(row => row.Denominator);
+                var log2Abundance = CalcLog2Abundance(numerator, denominator);
                 result.Add(new RunAbundance
                 {
                     Control = grouping.First().Control,
@@ -489,7 +491,7 @@ namespace pwiz.Skyline.Model.GroupComparison
 
             public double GetLog2Abundance()
             {
-                return Math.Log(Intensity/Denominator)/Math.Log(2.0);
+                return CalcLog2Abundance(Intensity, Denominator);
             }
         }
 
@@ -545,5 +547,14 @@ namespace pwiz.Skyline.Model.GroupComparison
             }));
         }
 
+        public static double CalcLog2Abundance(double numerator, double denominator)
+        {
+            if (denominator <= 0)
+            {
+                return double.NaN;
+            }
+
+            return Math.Log(Math.Max(numerator, 1) / denominator, 2);
+        }
     }
 }

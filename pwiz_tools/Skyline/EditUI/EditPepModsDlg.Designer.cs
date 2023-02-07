@@ -34,8 +34,8 @@
             this.btnOk = new System.Windows.Forms.Button();
             this.label1 = new System.Windows.Forms.Label();
             this.labelHeavy1 = new System.Windows.Forms.Label();
-            this.comboStatic1 = new System.Windows.Forms.ComboBox();
-            this.comboHeavy1_1 = new System.Windows.Forms.ComboBox();
+            this.comboStatic1 = new pwiz.Common.Controls.LiteDropDownList();
+            this.comboHeavy1_1 = new pwiz.Common.Controls.LiteDropDownList();
             this.labelAA1 = new System.Windows.Forms.Label();
             this.panelMain = new System.Windows.Forms.Panel();
             this.btnEditLink1 = new System.Windows.Forms.Button();
@@ -72,15 +72,11 @@
             // 
             // comboStatic1
             // 
-            this.comboStatic1.DropDownStyle = System.Windows.Forms.ComboBoxStyle.DropDownList;
-            this.comboStatic1.FormattingEnabled = true;
             resources.ApplyResources(this.comboStatic1, "comboStatic1");
             this.comboStatic1.Name = "comboStatic1";
             // 
             // comboHeavy1_1
             // 
-            this.comboHeavy1_1.DropDownStyle = System.Windows.Forms.ComboBoxStyle.DropDownList;
-            this.comboHeavy1_1.FormattingEnabled = true;
             resources.ApplyResources(this.comboHeavy1_1, "comboHeavy1_1");
             this.comboHeavy1_1.Name = "comboHeavy1_1";
             // 
@@ -154,8 +150,8 @@
         private System.Windows.Forms.Button btnOk;
         private System.Windows.Forms.Label label1;
         private System.Windows.Forms.Label labelHeavy1;
-        private System.Windows.Forms.ComboBox comboStatic1;
-        private System.Windows.Forms.ComboBox comboHeavy1_1;
+        private pwiz.Common.Controls.LiteDropDownList comboStatic1;
+        private pwiz.Common.Controls.LiteDropDownList comboHeavy1_1;
         private System.Windows.Forms.Label labelAA1;
         private System.Windows.Forms.Panel panelMain;
         private System.Windows.Forms.Button btnReset;

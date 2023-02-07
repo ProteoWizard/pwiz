@@ -1311,6 +1311,12 @@ namespace pwiz.Skyline.Properties
                        };
         }
 
+        public void ResetDefaults()
+        {
+            Clear();
+            AddDefaults();
+        }
+
         public static readonly ToolDescription DEPRECATED_QUASAR = new ToolDescription(@"QuaSAR",
                                                                               @"http://genepattern.broadinstitute.org/gp/pages/index.jsf?lsid=QuaSAR",
                                                                               string.Empty);
@@ -1456,6 +1462,17 @@ namespace pwiz.Skyline.Properties
                     return editServer.Server;
 
                 return null;
+            }
+        }
+
+        public Server EditCredentials(Control owner, Server item, IEnumerable<Server> existing, string username, string password)
+        {
+            using (var editServerDlg = new EditServerDlg(existing ?? this) { Server = item })
+            {
+                editServerDlg.Username = username;
+                editServerDlg.Password = password;
+                editServerDlg.textServerURL.Enabled = false;
+                return editServerDlg.ShowDialog(owner) == DialogResult.OK ? editServerDlg.Server : null;
             }
         }
 

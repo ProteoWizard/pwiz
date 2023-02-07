@@ -50,6 +50,9 @@
     <Setting Name="ExportMethodDwellTime" Type="System.Int32" Scope="User">
       <Value Profile="(Default)">20</Value>
     </Setting>
+    <Setting Name="ExportMethodAccumulationTime" Type="System.Double" Scope="User">
+      <Value Profile="(Default)">0.1</Value>
+    </Setting>
     <Setting Name="MruLength" Type="System.Int32" Scope="User">
       <Value Profile="(Default)">4</Value>
     </Setting>
@@ -301,9 +304,6 @@
     </Setting>
     <Setting Name="ShowRegressionReplicateEnum" Type="System.String" Scope="User">
       <Value Profile="(Default)">all</Value>
-    </Setting>
-    <Setting Name="ShowTreeReplicateEnum" Type="System.String" Scope="User">
-      <Value Profile="(Default)">single</Value>
     </Setting>
     <Setting Name="ShowIonMz" Type="System.Boolean" Scope="User">
       <Value Profile="(Default)">False</Value>
@@ -818,6 +818,9 @@
     <Setting Name="ShowLosses" Type="System.String" Scope="User">
       <Value Profile="(Default)" />
     </Setting>
+    <Setting Name="ShowSpecialIons" Type="System.Boolean" Scope="User">
+      <Value Profile="(Default)">False</Value>
+    </Setting>
     <Setting Name="LastProteinAssociationFastaFilepath" Type="System.String" Scope="User">
       <Value Profile="(Default)" />
     </Setting>
@@ -826,6 +829,21 @@
     </Setting>
     <Setting Name="ExportCEPredictorName" Type="System.String" Scope="User">
       <Value Profile="(Default)" />
+    </Setting>
+    <Setting Name="AlphabeticalReportEditor" Type="System.Boolean" Scope="User">
+      <Value Profile="(Default)">False</Value>
+    </Setting>
+    <Setting Name="ViewLibraryPropertiesVisible" Type="System.Boolean" Scope="User">
+      <Value Profile="(Default)">False</Value>
+    </Setting>
+    <Setting Name="ViewLibraryPropertiesSorted" Type="System.Boolean" Scope="User">
+      <Value Profile="(Default)">False</Value>
+    </Setting>
+    <Setting Name="ViewLibrarySplitMainDist" Type="System.Int32" Scope="User">
+      <Value Profile="(Default)">0</Value>
+    </Setting>
+    <Setting Name="ViewLibrarySplitPropsDist" Type="System.Int32" Scope="User">
+      <Value Profile="(Default)">0</Value>
     </Setting>
   </Settings>
 </SettingsFile>

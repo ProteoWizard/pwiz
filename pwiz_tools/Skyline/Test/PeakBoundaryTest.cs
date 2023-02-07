@@ -26,6 +26,7 @@ using System.Threading;
 using Microsoft.VisualStudio.TestTools.UnitTesting;
 using pwiz.Common.DataBinding;
 using pwiz.Common.SystemUtil;
+using pwiz.Skyline.Controls.Databinding;
 using pwiz.Skyline.Model;
 using pwiz.Skyline.Model.Databinding;
 using pwiz.Skyline.Model.Databinding.Entities;
@@ -129,16 +130,16 @@ namespace pwiz.SkylineTest
         private void DoTest()
         {
             // Load the SRM document and relevant files            
-            var testFilesDir = new TestFilesDir(TestContext, TEST_ZIP_PATH);
+            TestFilesDir = new TestFilesDir(TestContext, TEST_ZIP_PATH);
             bool isIntl = (TextUtil.CsvSeparator != TextUtil.SEPARATOR_CSV);
             var precursorMzs = isIntl ? _precursorMzsIntl : _precursorMzsUs;
-            var peakBoundaryFileTsv = testFilesDir.GetTestPath(isIntl
+            var peakBoundaryFileTsv = TestFilesDir.GetTestPath(isIntl
                                                                    ? "PeakBoundaryTsvIntl.tsv"
                                                                    : "PeakBoundaryTsv.tsv");
-            var peakBoundaryFileCsv = testFilesDir.GetTestPath(isIntl
+            var peakBoundaryFileCsv = TestFilesDir.GetTestPath(isIntl
                                                                    ? "PeakBoundaryIntl.csv"
                                                                    : "PeakBoundaryUS.csv");
-            var peakBoundaryDoc = testFilesDir.GetTestPath("Chrom05.sky");
+            var peakBoundaryDoc = TestFilesDir.GetTestPath("Chrom05.sky");
             SrmDocument doc = ResultsUtil.DeserializeDocument(peakBoundaryDoc);
             if (AsSmallMolecules)
             {
@@ -179,7 +180,7 @@ namespace pwiz.SkylineTest
                 Assert.AreNotSame(docNew, docResults);
 
                 // Test that exporting peak boundaries and then importing them leads to no change
-                string peakBoundaryExport = testFilesDir.GetTestPath("TestRoundTrip.csv");
+                string peakBoundaryExport = TestFilesDir.GetTestPath("TestRoundTrip.csv");
                 var reportSpec = MakeReportSpec();
                 ReportToCsv(reportSpec, docNew, peakBoundaryExport, LocalizationHelper.CurrentCulture);
                 var docRoundTrip = ImportFileToDoc(docNew, ref peakBoundaryExport);
@@ -310,14 +311,14 @@ namespace pwiz.SkylineTest
             }
 
             // Now check a file that has peptide ID's, and see that they're properly ported
-            var peptideIdPath = testFilesDir.GetTestPath("Template_MS1Filtering_1118_2011_3-2min.sky");
+            var peptideIdPath = TestFilesDir.GetTestPath("Template_MS1Filtering_1118_2011_3-2min.sky");
             SrmDocument docId = ResultsUtil.DeserializeDocument(peptideIdPath);
             docId = docId.ChangeSettings(docId.Settings.ChangePeptideLibraries(libraries =>
                 {
                     var lib = libraries.Libraries[0];
                     return libraries.ChangeLibrarySpecs(new LibrarySpec[]
                         {
-                            new BiblioSpecLiteSpec(lib.Name, testFilesDir.GetTestPath(lib.FileNameHint))
+                            new BiblioSpecLiteSpec(lib.Name, TestFilesDir.GetTestPath(lib.FileNameHint))
                         });
                 }));
 
@@ -326,7 +327,7 @@ namespace pwiz.SkylineTest
                 docContainerId.SetDocument(docId, null, true);
                 docContainerId.AssertComplete();
                 SrmDocument docResultsId = docContainerId.Document;
-                var peakBoundaryFileId = testFilesDir.GetTestPath(isIntl
+                var peakBoundaryFileId = TestFilesDir.GetTestPath(isIntl
                                                                       ? "Template_MS1Filtering_1118_2011_3-2min_new_intl.tsv"
                                                                       : "Template_MS1Filtering_1118_2011_3-2min_new.tsv");
                 DoFileImportTests(docResultsId, peakBoundaryFileId, _precursorChargeId,
@@ -456,7 +457,7 @@ namespace pwiz.SkylineTest
             {
                 IProgressStatus status = new ProgressStatus();
                 viewContext.Export(CancellationToken.None, new SilentProgressMonitor(), ref status,
-                    viewContext.GetViewInfo(ViewGroup.BUILT_IN, viewSpec), writer, viewContext.GetCsvWriter());
+                    viewContext.GetViewInfo(ViewGroup.BUILT_IN, viewSpec), writer, TextUtil.GetCsvSeparator(cultureInfo));
             }
         }
 

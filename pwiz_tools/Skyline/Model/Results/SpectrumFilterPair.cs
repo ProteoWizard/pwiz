@@ -59,6 +59,8 @@ namespace pwiz.Skyline.Model.Results
                 _maxTime = maxTime.Value;
             }
 
+            OptStep = precursorTextId.OptStep;
+            CollisionEnergy = precursorTextId.CollisionEnergy;
             IonMobilityInfo = precursorTextId.IonMobility;
             MinIonMobilityValue = IonMobilityInfo.IsEmpty ? null : IonMobilityInfo.IonMobility.Mobility - (IonMobilityInfo.IonMobilityExtractionWindowWidth??0)/2;
             MaxIonMobilityValue = IonMobilityInfo.IsEmpty ? null : MinIonMobilityValue + (IonMobilityInfo.IonMobilityExtractionWindowWidth ?? 0);
@@ -94,6 +96,8 @@ namespace pwiz.Skyline.Model.Results
         public int? BestWindowGroup { get; private set; }
         public double? BestWindowGroupDistance { get; private set; }
         public IList<int> OtherWindowGroups { get; private set; }
+        public int? OptStep { get; }
+        private double? CollisionEnergy { get; }
         private IonMobilityFilter IonMobilityInfo { get; set; }
         private bool HasCombinedIonMobility { get; set; } // When true, data was read in 3-array format, which affects spectrum ID format
         private SpectrumProductFilter[] Ms1ProductFilters { get; set; }
@@ -166,6 +170,19 @@ namespace pwiz.Skyline.Model.Results
         private ExtractedSpectrum FilterSpectrumList(MsDataSpectrum[] spectra,
             SpectrumProductFilter[] productFilters, bool highAcc, bool useIonMobilityHighEnergyOffset)
         {
+
+            if (HasIonMobilityFAIMS() && spectra.All(s => !Equals(IonMobilityInfo.IonMobility, s.IonMobility)))
+            {
+                return null; // No compensation voltage match
+            }
+
+            if (CollisionEnergy.HasValue &&
+                spectra.SelectMany(s => s.Precursors).Select(p => p.PrecursorCollisionEnergy)
+                    .Any(ce => !ce.HasValue || Math.Abs(ce.Value - CollisionEnergy.Value) > 0.05))
+            {
+                return null;
+            }
+
             int targetCount = 1;
             if (Q1 == 0)
                 highAcc = false;    // No mass error for all-ions extraction
@@ -379,6 +396,10 @@ namespace pwiz.Skyline.Model.Results
                     {
                         key = key.ChangeOptionalTimes(_minTime, _maxTime);
                     }
+                    if (OptStep.HasValue)
+                    {
+                        key = key.ChangeOptimizationStep(OptStep.Value);
+                    }
                     listChromKeys.Add(key);
                 }
             }
@@ -386,8 +407,8 @@ namespace pwiz.Skyline.Model.Results
 
         public bool HasIonMobilityFAIMS()
         {
-            return IonMobilityInfo.HasIonMobilityValue && 
-                   IonMobilityInfo.IonMobility.Units == eIonMobilityUnits.compensation_V;
+            return IonMobilityInfo.IonMobility.Units == eIonMobilityUnits.compensation_V &&
+                   IonMobilityInfo.HasIonMobilityValue;
         }
 
         public bool ContainsIonMobilityValue(IonMobilityValue ionMobility, double highEnergyOffset)
@@ -624,6 +645,11 @@ namespace pwiz.Skyline.Model.Results
                 hashCode = (hashCode * 397) ^ HighEnergyIonMobilityValueOffset.GetHashCode();
                 return hashCode;
             }
+        }
+
+        public override string ToString() // For debug convenience
+        {
+            return $@"mz={TargetMz} w={FilterWidth} id={FilterId} heo={HighEnergyIonMobilityValueOffset}";
         }
 
         #endregion

@@ -28,6 +28,7 @@ using pwiz.Skyline.Model.DocSettings;
 using pwiz.Skyline.Model.Results;
 using pwiz.Skyline.Model.Themes;
 using pwiz.Skyline.Properties;
+using pwiz.Skyline.Util;
 using ZedGraph;
 
 namespace pwiz.Skyline.Controls.Graphs
@@ -72,7 +73,6 @@ namespace pwiz.Skyline.Controls.Graphs
         private readonly bool _isFullScanMs;
         private readonly bool _isSummary;
         private readonly RawTimesInfoItem? _displayRawTimes;
-        private readonly int _step;
 
         private int _bestPeakTimeIndex = -1;
         private PeakBoundsDragInfo _dragInfo;
@@ -88,7 +88,7 @@ namespace pwiz.Skyline.Controls.Graphs
                               bool isFullScanMs,
                               bool isSummary,
                               RawTimesInfoItem? displayRawTimes,
-                              int step,
+                              int? step,
                               Color color,
                               float fontSize,
                               int width,
@@ -102,7 +102,7 @@ namespace pwiz.Skyline.Controls.Graphs
             Color = color;
             FullScanInfo = fullScanInfo;
 
-            _step = step;
+            OptimizationStep = step;
             _fontSpec = CreateFontSpec(color, fontSize);
             _width = width;
 
@@ -163,11 +163,13 @@ namespace pwiz.Skyline.Controls.Graphs
         public ChromatogramInfo Chromatogram { get; private set; }
         public TransitionChromInfo TransitionChromInfo { get; private set; }
         public RegressionLine TimeRegressionFunction { get; private set; }
+        public TransformChrom? TransformChrom { get; set; }
         public ScaledRetentionTime ScaleRetentionTime(double measuredTime)
         {
             return new ScaledRetentionTime(measuredTime, MeasuredTimeToDisplayTime(measuredTime));
         }
-        public int OptimizationStep { get { return _step; } }
+
+        public int? OptimizationStep { get; }
 
         public double? RetentionPrediction { get; set; }
         public ExplicitRetentionTimeInfo RetentionExplicit { get; set; }
@@ -296,8 +298,8 @@ namespace pwiz.Skyline.Controls.Graphs
                         return string.Format(Resources.ChromGraphItem_Title__0____TIC, title);
                     return Chromatogram.GroupInfo.TextId ?? @"no summary text";
                 }
-                if (_step != 0)
-                    return string.Format(Resources.ChromGraphItem_Title_Step__0_, _step);
+                if (OptimizationStep.HasValue && !OptimizationStep.Value.Equals(0))
+                    return string.Format(Resources.ChromGraphItem_Title_Step__0_, OptimizationStep);
 
                 return GetTitle(TransitionGroupNode, TransitionNode);
             }
@@ -424,7 +426,7 @@ namespace pwiz.Skyline.Controls.Graphs
                         if (bestPeak.StartTime != TransitionChromInfo.StartRetentionTime ||
                             bestPeak.EndTime != TransitionChromInfo.EndRetentionTime)
                         {
-                            AddOriginalPeakAnnotation(bestPeak, annotations, graphPane);
+                            AddOriginalPeakAnnotation(bestPeak, annotations);
                         }
                     }
                 }
@@ -438,13 +440,12 @@ namespace pwiz.Skyline.Controls.Graphs
             }
         }
 
-        private void AddOriginalPeakAnnotation(ChromPeak bestPeak, GraphObjList annotations, GraphPane graphPane)
+        private void AddOriginalPeakAnnotation(ChromPeak bestPeak, GraphObjList annotations)
         {
             var start = ScaleRetentionTime(bestPeak.StartTime);
             var end = ScaleRetentionTime(bestPeak.EndTime);
             var width = end.DisplayTime - start.DisplayTime;
-            var height = graphPane.YAxis.Scale.Max;
-            var originalPeakShadingBox = new BoxObj(start.DisplayTime, graphPane.YAxis.Scale.Max, width, height)
+            var originalPeakShadingBox = new BoxObj(start.DisplayTime, 0, width, 1)
             {
                 Fill = new Fill(COLOR_ORIGINAL_PEAK_SHADE),
                 ZOrder = ZOrder.F_BehindGrid,
@@ -452,6 +453,7 @@ namespace pwiz.Skyline.Controls.Graphs
                 IsClippedToChartRect = true,
                 Tag = new GraphObjTag(this, GraphObjType.original_peak_shading, start, end)
             };
+            originalPeakShadingBox.Location.CoordinateFrame = CoordType.XScaleYChartFraction;
             annotations.Add(originalPeakShadingBox);
         }
 
@@ -675,7 +677,7 @@ namespace pwiz.Skyline.Controls.Graphs
         {
             var hasTimes = info.RawTimes != null && info.RawTimes.Any(); // has measured points
 
-            var scaledHeight = graphPane.YAxis.Scale.Max / 20; // 5% of graph pane height
+            const double yChartFractionPosition = 0.95; // 5% of graph pane height
             var rawtimes = new List<double>();
 
             if (hasTimes)
@@ -685,10 +687,10 @@ namespace pwiz.Skyline.Controls.Graphs
                     return;
                 foreach (var time in rawtimes)
                 {
-                    LineObj stick = new LineObj(time, scaledHeight, time, 0)
+                    LineObj stick = new LineObj(time, yChartFractionPosition, time, 1)
                     {
                         IsClippedToChartRect = true,
-                        Location = { CoordinateFrame = CoordType.AxisXYScale },
+                        Location = { CoordinateFrame = CoordType.XScaleYChartFraction},
                         ZOrder = ZOrder.A_InFront,
                         Line = { Width = 1, Style = DashStyle.Dash, Color = ColorScheme.ChromGraphItemSelected },
                         Tag = new GraphObjTag(this, GraphObjType.raw_time, new ScaledRetentionTime(time)),
@@ -699,7 +701,7 @@ namespace pwiz.Skyline.Controls.Graphs
             
             var countTxt = hasTimes ? @" " + rawtimes.Count : @" ?";
             var isBold = !hasTimes; // Question mark if no times exist is visually clearer if bold
-            TextObj pointCount = new TextObj(countTxt, endTime.DisplayTime, scaledHeight)
+            TextObj pointCount = new TextObj(countTxt, endTime.DisplayTime, yChartFractionPosition, CoordType.XScaleYChartFraction)
             {
                 FontSpec = new FontSpec(FontSpec.Family, FontSpec.Size, ColorScheme.ChromGraphItemSelected, isBold, false, false)
                 {
@@ -778,6 +780,17 @@ namespace pwiz.Skyline.Controls.Graphs
                 return;
             }
 
+            CoordType coordType;
+            if (true == TransformChrom?.IsDerivative())
+            {
+                maxIntensity = 1;
+                coordType = CoordType.XScaleYChartFraction;
+            }
+            else
+            {
+                coordType = CoordType.AxisXYScale;
+            }
+
             Color colorBoundaries = (best ? COLOR_BOUNDARIES_BEST : COLOR_BOUNDARIES);
             GraphObjType graphObjType = best ? GraphObjType.best_peak : GraphObjType.peak;
 
@@ -786,7 +799,7 @@ namespace pwiz.Skyline.Controls.Graphs
             LineObj stickStart = new LineObj(colorBoundaries, startTime.DisplayTime, maxIntensity, startTime.DisplayTime, 0)
                                      {
                                          IsClippedToChartRect = true,
-                                         Location = { CoordinateFrame = CoordType.AxisXYScale },
+                                         Location = { CoordinateFrame = coordType },
                                          ZOrder = ZOrder.B_BehindLegend,
                                          Line = { Width = 1, Style = DashStyle.Dash },
                                          Tag = new GraphObjTag(this, graphObjType, startTime),
@@ -795,7 +808,7 @@ namespace pwiz.Skyline.Controls.Graphs
             LineObj stickEnd = new LineObj(colorBoundaries, endTime.DisplayTime, maxIntensity, endTime.DisplayTime, 0)
                                    {
                                        IsClippedToChartRect = true,
-                                       Location = { CoordinateFrame = CoordType.AxisXYScale },
+                                       Location = { CoordinateFrame = coordType },
                                        ZOrder = ZOrder.B_BehindLegend,
                                        Line = { Width = 1, Style = DashStyle.Dash },
                                        Tag = new GraphObjTag(this, graphObjType, endTime),
@@ -1160,5 +1173,19 @@ namespace pwiz.Skyline.Controls.Graphs
     {
         public ChromatogramInfo ChromInfo;
         public string ScanName;
+
+        public FullScanInfo(ChromatogramInfo chromInfo, string scanName)
+        {
+            ChromInfo = chromInfo;
+            ScanName = scanName;
+        }
+
+        public FullScanInfo(ChromatogramInfo chromInfo, TransitionDocNode nodeTran) : this(chromInfo, nodeTran.FragmentIonName)
+        {
+            if (nodeTran.Transition.Adduct != Adduct.SINGLY_PROTONATED) // Positive singly charged is uninteresting
+                ScanName += Transition.GetChargeIndicator(nodeTran.Transition.Adduct);
+            if (nodeTran.Transition.MassIndex != 0)
+                ScanName += Environment.NewLine + Transition.GetMassIndexText(nodeTran.Transition.MassIndex);
+        }
     }
 }

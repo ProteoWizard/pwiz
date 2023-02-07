@@ -84,6 +84,8 @@ namespace SkylineTester
             MainWindow.NightlyThumbnail.ProcessId = 0;
         }
 
+        private bool _runningForNightly;    // To ensure only one run per instance for SkylineNightly
+
         public override bool Run()
         {
             if (!MainWindow.HasBuildPrerequisites)
@@ -92,6 +94,11 @@ namespace SkylineTester
             // When run from SkylineNightly, don't overwrite the nightly scheduled task.  Just start the nightly run immediately.
             if (MainWindow.NightlyExit.Checked)
             {
+                // Prevent anything from kicking off two nightly runs accidentally
+                // during SkylineNightly automated runs
+                if (_runningForNightly)
+                    return true;
+                _runningForNightly = true;
                 RunUI(StartNightly, 500);
                 return true;
             }
@@ -311,6 +318,8 @@ namespace SkylineTester
 
             StartLog("Nightly", MainWindow.Summary.GetLogFile(MainWindow.NewNightlyRun));
 
+            InitNightlyListener();
+
             var revisionWorker = new BackgroundWorker();
             revisionWorker.DoWork += (s, a) =>
             {
@@ -380,14 +389,65 @@ namespace SkylineTester
             }
             MainWindow.CommandShell.IsUnattended = MainWindow.NightlyExit.Checked;
 
+            // NOTE: Be very careful what gets added after MainWindow.RunCommands gets called.
+            //       It may be running asynchronously with the commands being executed.
             MainWindow.RunCommands();
 
             if (_updateTimer != null)
                 _updateTimer.Start();
             if (_stopTimer != null)
                 _stopTimer.Start();
+        }
 
-            _nightlyListener = new NightlyListener(_stopTimer);
+        /// <summary>
+        /// Helper function for adding diagnostics to understand issues with SkylineNightly runs.
+        /// Stack traces of callers get logged to "Traces.log" in the Log folder.
+        /// </summary>
+        /// <param name="message">A message that gets time-stamped and displayed as a header
+        /// for a logged stack trace</param>
+        public void LogTrace(string message)
+        {
+            var traceLogPath = Path.Combine(Path.GetDirectoryName(MainWindow.Summary.SummaryFile) ?? string.Empty, "Trace.log");
+            var stackTrace = new StackTrace(1, true);
+            var lines = new List<string>();
+            lines.Add(string.Format("[{0}] {1}",
+                DateTime.Now.ToString("MM/dd/yyyy HH:mm:ss.ffffff", CultureInfo.InvariantCulture),
+                message));
+            var frames = stackTrace.GetFrames();
+            if (frames == null || frames.Length == 0)
+                lines.Add("    !!no stack!!");
+            else
+                lines.AddRange(frames.Select(f => "    " + f.ToString().Trim()));
+            lines.Add(string.Empty);    // blank line
+            File.AppendAllLines(traceLogPath, lines);
+        }
+
+        private void InitNightlyListener()
+        {
+            // If this is a nightly run and there is no nightly listener already
+            // create one
+            if (!MainWindow.NightlyExit.Checked)
+                MainWindow.CommandShell.AddImmediate("# Skipping nightly listener");
+            else if (_nightlyListener != null)
+                MainWindow.CommandShell.AddImmediate("# Nightly listener already exists");
+            else
+            {
+                // With extra logging and exception handling because the unhandled exception
+                // "a registration already exists for net.pipe://localhost/Nightly/SetEndTime"
+                // was causing SkylineTester to crash on some computers
+                try
+                {
+                    MainWindow.CommandShell.AddImmediate("# Adding nightly listener...");
+                    _nightlyListener = new NightlyListener(_stopTimer);
+                    MainWindow.CommandShell.AddImmediate("# Added listener");
+                }
+                catch (Exception e)
+                {
+                    MainWindow.CommandShell.AddImmediate("# Failed adding listener(" + e + ")\n" +
+                                                         "# Running disconnected from SkylineNightly");
+                }
+            }
+            MainWindow.RefreshLogs();
         }
 
         private int _architecture;
@@ -634,9 +694,12 @@ namespace SkylineTester
 
                     MainWindow.Summary = null;
                     MainWindow.InitLogSelector(MainWindow.NightlyRunDate, MainWindow.NightlyViewLog);
-                    MainWindow.NightlyLogFile = (MainWindow.Summary.Runs.Count > 0)
-                        ? MainWindow.Summary.GetLogFile(MainWindow.Summary.Runs[MainWindow.Summary.Runs.Count - 1])
-                        : null;
+                    if (MainWindow.Summary != null) // For ReSharper - should never be null
+                    {
+                        MainWindow.NightlyLogFile = (MainWindow.Summary.Runs.Count > 0)
+                            ? MainWindow.Summary.GetLogFile(MainWindow.Summary.Runs[MainWindow.Summary.Runs.Count - 1])
+                            : null;
+                    }
 
                     MainWindow.InitNightly();
                     Enter();

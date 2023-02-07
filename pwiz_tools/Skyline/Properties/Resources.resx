@@ -117,6 +117,7 @@
   <resheader name="writer">
     <value>System.Resources.ResXResourceWriter, System.Windows.Forms, Version=4.0.0.0, Culture=neutral, PublicKeyToken=b77a5c561934e089</value>
   </resheader>
+  <assembly alias="System.Windows.Forms" name="System.Windows.Forms, Version=4.0.0.0, Culture=neutral, PublicKeyToken=b77a5c561934e089" />
   <data name="ChromatogramLibrarySpec_PEPTIDE_RANK_PEAK_AREA_Peak_Area" xml:space="preserve">
     <value>Peak Area</value>
   </data>
@@ -147,7 +148,6 @@
   <data name="EditRemoteAccountDlg_ValidateValues_There_is_already_an_account_defined_for_the_user__0__on_the_server__1_" xml:space="preserve">
     <value>There is already an account defined for the user {0} on the server {1}</value>
   </data>
-  <assembly alias="System.Windows.Forms" name="System.Windows.Forms, Version=4.0.0.0, Culture=neutral, PublicKeyToken=b77a5c561934e089" />
   <data name="FragmentLib" type="System.Resources.ResXFileRef, System.Windows.Forms">
     <value>..\resources\fragmentlib.bmp;System.Drawing.Bitmap, System.Drawing, Version=2.0.0.0, Culture=neutral, PublicKeyToken=b03f5f7f11d50a3a</value>
   </data>
@@ -195,9 +195,6 @@
   </data>
   <data name="PeptideGroupTreeNode_RenderTip_Original_Description" xml:space="preserve">
     <value>Original Description</value>
-  </data>
-  <data name="VendorIssueHelper_ConvertBrukerToMzml_CompassXport_software_must_be_installed_to_import_Bruker_raw_data_files_" xml:space="preserve">
-    <value>CompassXport software must be installed to import Bruker raw data files.</value>
   </data>
   <data name="CommandLine_ImportResultsFile_File_write_date__0__is_before___import_on_or_after_date__1___Ignoring___" xml:space="preserve">
     <value>File write date {0} is before --import-on-or-after date {1}. Ignoring...</value>
@@ -688,7 +685,7 @@
   <data name="ReportSpec_ReportToCsvString_Exporting__0__report" xml:space="preserve">
     <value>Exporting {0} report</value>
   </data>
-  <data name="CommandLine_GeneralException_Error___0_" xml:space="preserve">
+  <data name="Error___0_" xml:space="preserve">
     <value>Error: {0}</value>
   </data>
   <data name="CommandLine_ExportLiveReport_Error__The_report__0__could_not_be_saved_to__1__" xml:space="preserve">
@@ -1198,6 +1195,9 @@
   </data>
   <data name="PasteDlg_UpdateMoleculeType_Explicit_Collision_Energy" xml:space="preserve">
     <value>Explicit Collision Energy</value>
+  </data>
+  <data name="PasteDlg_UpdateMoleculeType_Collision_Energy" xml:space="preserve">
+    <value>Collision Energy</value>
   </data>
   <data name="Program_Main_Copying_external_tools_from_a_previous_installation" xml:space="preserve">
     <value>Copying external tools from a previous installation</value>
@@ -2610,9 +2610,6 @@ Are you sure you want to continue?</value>
   <data name="ImportFastaControl_ImportFasta_The_document_does_not_contain_any_precursor_transitions_" xml:space="preserve">
     <value>The document does not contain any precursor transitions.</value>
   </data>
-  <data name="VendorIssueHelper_ConvertLocalWiffToMzxml_Failure_attempting_to_convert_sample__0__in__1__to_mzXML_to_work_around_a_performance_issue_in_the_AB_Sciex_WiffFileDataReader_library" xml:space="preserve">
-    <value>Failure attempting to convert sample {0} in {1} to mzXML to work around a performance issue in the AB Sciex WiffFileDataReader library.</value>
-  </data>
   <data name="NistLibraryBase_Load_Invalid_precursor_charge_found_File_may_be_corrupted" xml:space="preserve">
     <value>Invalid precursor charge found. File may be corrupted.</value>
   </data>
@@ -2964,6 +2961,9 @@ Are you sure you want to continue?</value>
   <data name="ExportMethodDlg_DWELL_TIME_TXT" xml:space="preserve">
     <value>&amp;Dwell time (ms):</value>
   </data>
+  <data name="ExportMethodDlg_ACCUMULATION_TIME_TXT" xml:space="preserve">
+    <value>Accumulation time (sec):</value>
+  </data>
   <data name="CommandLine_ExportInstrumentFile_Error__the_instrument_type__0__does_not_support_triggered_acquisition_" xml:space="preserve">
     <value>Error: the instrument type {0} does not support triggered acquisition.</value>
   </data>
@@ -3211,9 +3211,6 @@ Are you sure you want to continue?</value>
   </data>
   <data name="RTDetails_gridStatistics_KeyDown_Failed_setting_data_to_clipboard" xml:space="preserve">
     <value>Failed setting data to clipboard.</value>
-  </data>
-  <data name="EditServerDlg_OkDialog_The_server__0__is_not_a_Panorama_server" xml:space="preserve">
-    <value>The server {0} is not a Panorama server.</value>
   </data>
   <data name="CommandLine_ExportInstrumentFile_Method__0__exported_successfully_" xml:space="preserve">
     <value>Method {0} exported successfully.</value>
@@ -3612,9 +3609,6 @@ Are you sure you want to continue?</value>
   </data>
   <data name="CommandLine_ReintegratePeaks_Error__You_must_first_import_results_into_the_document_before_reintegrating_" xml:space="preserve">
     <value>Error: You must first import results into the document before reintegrating.</value>
-  </data>
-  <data name="VendorIssueHelper_ConvertBrukerToMzml_Calculating_hash_of_input_file" xml:space="preserve">
-    <value>Calculating hash of input file</value>
   </data>
   <data name="OptimizationDb_FILTER_OPTDB_Optimization_Libraries" xml:space="preserve">
     <value>Optimization Libraries</value>
@@ -4100,9 +4094,6 @@ If you prefer you can choose to report anonymously.</value>
   </data>
   <data name="SpectrumMzInfo_GetInfoFromLibrary_Library_spectrum_for_sequence__0__is_missing_" xml:space="preserve">
     <value>Library spectrum for sequence {0} is missing.</value>
-  </data>
-  <data name="EditServerDlg_OkDialog_Unknown_error_connecting_to_the_server__0__" xml:space="preserve">
-    <value>Unknown error connecting to the server {0}.</value>
   </data>
   <data name="RenameProteinsDlg_OkDialog_Cannot_rename__0__more_than_once__Please_remove_either__1__or__2__" xml:space="preserve">
     <value>Cannot rename {0} more than once. Please remove either {1} or {2}</value>
@@ -5589,6 +5580,9 @@ If you prefer you can choose to report anonymously.</value>
   <data name="PasteDlg_UpdateMoleculeType_Explicit_Retention_Time_Window" xml:space="preserve">
     <value>Explicit Retention Time Window</value>
   </data>
+  <data name="PasteDlg_UpdateMoleculeType_Retention_Time_Window" xml:space="preserve">
+    <value>Retention Time Window</value>
+  </data>
   <data name="OverlapDeconvSolverHandler_BuildDeconvBlock_Overlap_deconvolution_window_scheme_is_rank_deficient_at_scan__2___Rank_is__0__while_matrix_has_dimension__1____A_non_degenerate_overlapping_window_scheme_is_required_" xml:space="preserve">
     <value>Overlap deconvolution window scheme is rank deficient at scan {2}. Rank is {0} while matrix has dimension {1}. A non-degenerate overlapping window scheme is required.</value>
   </data>
@@ -6982,9 +6976,6 @@ Please contact the Panorama server administrator to upgrade the server.</value>
   <data name="SettingsList_ELEMENT_NONE_None" xml:space="preserve">
     <value>None</value>
   </data>
-  <data name="SkylineWindow_ApplyPeak_No_results_found_for_the_precursor__0__in_the_file__1__" xml:space="preserve">
-    <value>No results found for the precursor {0} in the file {1}.</value>
-  </data>
   <data name="ComparePeakPickingDlg_ComparePeakPickingDlg_Fraction_of_Peak_Groups" xml:space="preserve">
     <value>Fraction of Peak Groups</value>
   </data>
@@ -7029,9 +7020,6 @@ Please contact the Panorama server administrator to upgrade the server.</value>
   </data>
   <data name="BioMassCalc_SynchMasses_Fixing_isotope_abundance_masses_requires_a_monoisotopic_mass_calculator" xml:space="preserve">
     <value>Fixing isotope abundance masses requires a monoisotopic mass calculator</value>
-  </data>
-  <data name="VendorIssueHelper_ConvertBrukerToMzml_Failure_attempting_to_convert__0__to_mzML_using_CompassXport_" xml:space="preserve">
-    <value>Failure attempting to convert {0} to mzML using CompassXport.</value>
   </data>
   <data name="TransitionPrediction_DoValidate_Transition_prediction_requires_a_collision_energy_regression_function" xml:space="preserve">
     <value>Transition prediction requires a collision energy regression function.</value>
@@ -7492,6 +7480,9 @@ Please contact the Panorama server administrator to upgrade the server.</value>
   </data>
   <data name="PasteDlg_UpdateMoleculeType_Explicit_Retention_Time" xml:space="preserve">
     <value>Explicit Retention Time</value>
+  </data>
+  <data name="PasteDlg_UpdateMoleculeType_Retention_Time" xml:space="preserve">
+    <value>Retention Time</value>
   </data>
   <data name="MassListRowReader_CalcPrecursorExplanations_The_precursor_m_z__0__of_the_peptide__1__is_out_of_range_for_the_instrument_settings_" xml:space="preserve">
     <value>The precursor m/z {0} of the peptide {1} is out of range for the instrument settings.</value>
@@ -8435,6 +8426,9 @@ Go to the Peptide Settings Prediction tab to fix.</value>
   <data name="PasteDlg_UpdateMoleculeType_Explicit_Compensation_Voltage" xml:space="preserve">
     <value>Explicit Compensation Voltage</value>
   </data>
+  <data name="PasteDlg_UpdateMoleculeType_Compensation_Voltage" xml:space="preserve">
+    <value>Compensation Voltage</value>
+  </data>
   <data name="SequenceMassCalc_NormalizeModifiedSequence_The_modification__0__is_not_valid___Expected_a_numeric_delta_mass_" xml:space="preserve">
     <value>The modification {0} is not valid. Expected a numeric delta mass.</value>
   </data>
@@ -8891,9 +8885,6 @@ If your transition list format combines formulas and adducts in a single column 
   <data name="SkylineVersion_GetCurrentVersionName_Developer_Build" xml:space="preserve">
     <value>Developer Build</value>
   </data>
-  <data name="SkylineVersion_V3_6_Skyline_3_6" xml:space="preserve">
-    <value>Skyline 3.6</value>
-  </data>
   <data name="GraphData_CorrelationLabel_Measured_Time___0__" xml:space="preserve">
     <value>Measured Time ({0})</value>
   </data>
@@ -9213,9 +9204,6 @@ If your transition list format combines formulas and adducts in a single column 
   <data name="Transition_GetDeleteConfirmation_Are_you_sure_you_want_to_delete_these__0__transitions_" xml:space="preserve">
     <value>Are you sure you want to delete these {0} transitions?</value>
     <comment>Example: Are you sure you want to delete these 18 transitions?</comment>
-  </data>
-  <data name="SkylineVersion_V3_7_Skyline_3_7" xml:space="preserve">
-    <value>Skyline 3.7</value>
   </data>
   <data name="SkylineWindow_importAssayLibraryMenuItem_Click_Import_Assay_Library" xml:space="preserve">
     <value>Import Assay Library</value>
@@ -9553,11 +9541,32 @@ Would you like to remove some or all of the prefix or suffix to shorten the name
   <data name="PasteDlg_UpdateMoleculeType_Explicit_Ion_Mobility" xml:space="preserve">
     <value>Explicit Ion Mobility</value>
   </data>
+  <data name="PasteDlg_UpdateMoleculeType_Explicit_Ion_Mobility__1_K0_" xml:space="preserve">
+    <value>Explicit Ion Mobility (1/K0)</value>
+  </data>
+  <data name="PasteDlg_UpdateMoleculeType_Explicit_Ion_Mobility__msec_" xml:space="preserve">
+    <value>Explicit Ion Mobility (msec)</value>
+  </data>
+  <data name="PasteDlg_UpdateMoleculeType_Ion_Mobility" xml:space="preserve">
+    <value>Ion Mobility</value>
+  </data>
+  <data name="PasteDlg_UpdateMoleculeType_Ion_Mobility__1_K0_" xml:space="preserve">
+    <value>Ion Mobility (1/K0)</value>
+  </data>
+  <data name="PasteDlg_UpdateMoleculeType_Ion_Mobility__msec_" xml:space="preserve">
+    <value>Ion Mobility (msec)</value>
+  </data>
   <data name="PasteDlg_UpdateMoleculeType_Explicit_Ion_Mobility_Units" xml:space="preserve">
     <value>Explicit Ion Mobility Units</value>
   </data>
+  <data name="PasteDlg_UpdateMoleculeType_Ion_Mobility_Units" xml:space="preserve">
+    <value>Ion Mobility Units</value>
+  </data>
   <data name="PasteDlg_UpdateMoleculeType_Explicit_Ion_Mobility_High_Energy_Offset" xml:space="preserve">
     <value>Explicit Ion Mobility High Energy Offset</value>
+  </data>
+  <data name="PasteDlg_UpdateMoleculeType_Ion_Mobility_High_Energy_Offset" xml:space="preserve">
+    <value>Ion Mobility High Energy Offset</value>
   </data>
   <data name="SmallMoleculeTransitionListReader_ReadPrecursorOrProductColumns_Invalid_ion_mobility_units_value__0___accepted_values_are__1__" xml:space="preserve">
     <value>Invalid ion mobility units value {0} (accepted values are {1})</value>
@@ -9648,9 +9657,6 @@ Recognized isotopes include: {2}</value>
   </data>
   <data name="ToolOptionsUI_btnResetSettings_Click_Are_you_sure_you_want_to_clear_all_saved_settings__This_will_immediately_return__0__to_its_original_configuration_and_cannot_be_undone_" xml:space="preserve">
     <value>Are you sure you want to clear all saved settings? This will immediately return {0} to its original configuration and cannot be undone.</value>
-  </data>
-  <data name="SkylineVersion_V4_1_Skyline_4_1" xml:space="preserve">
-    <value>Skyline 4.1</value>
   </data>
   <data name="PeptideGroupTreeNode_ChildHeading__0__Molecules" xml:space="preserve">
     <value>{0} Molecules</value>
@@ -10004,9 +10010,6 @@ Recognized isotopes include: {2}</value>
   <data name="FullScanAcquisitionMethod_FromName__0__is_not_a_valid_Full_Scan_Acquisition_Method" xml:space="preserve">
     <value>{0} is not a valid Full Scan Acquisition Method</value>
   </data>
-  <data name="SkylineVersion_V4_2_Skyline_4_2" xml:space="preserve">
-    <value>Skyline 4.2</value>
-  </data>
   <data name="BiblioSpecLiteBuilder_Embedded" xml:space="preserve">
     <value>Embedded</value>
   </data>
@@ -10243,9 +10246,6 @@ Click 'Retry' to try building again after placing the original spectrum files in
   </data>
   <data name="GraphChromatogram_UpdateUI_No_QC_chromatogram_found" xml:space="preserve">
     <value>No corresponding QC chromatogram found</value>
-  </data>
-  <data name="SkylineVersion_V19_1_Skyline_19_1" xml:space="preserve">
-    <value>Skyline 19.1</value>
   </data>
   <data name="CommandLine_SaveSettings_Error__Failed_saving_to_the_user_configuration_file_" xml:space="preserve">
     <value>Error: Failed saving to the user configuration file.</value>
@@ -10484,23 +10484,11 @@ Click 'Retry' to try building again after placing the original spectrum files in
   <data name="SkypSupport_Open_Failure_opening_skyp_file_" xml:space="preserve">
     <value>Failure opening skyp file.</value>
   </data>
-  <data name="SkypSupport_Download_There_was_an_error_downloading_the_Skyline_document_specified_in_the_skyp_file___0__" xml:space="preserve">
-    <value>There was an error downloading the Skyline document specified in the skyp file: {0}.</value>
-  </data>
-  <data name="SkypSupport_Download_You_may_have_to_add__0__as_a_Panorama_server_from_the_Tools___Options_menu_in_Skyline_" xml:space="preserve">
-    <value>You may have to add {0} as a Panorama server from the Tools &gt; Options menu in Skyline.</value>
-  </data>
   <data name="SkypSupport_Download_You_do_not_have_permissions_to_download_this_file_from__0__" xml:space="preserve">
     <value>You do not have permissions to download this file from {0}.</value>
   </data>
-  <data name="SkypFile_GetSkyFileUrl_Expected_the_URL_of_a_shared_Skyline_document_archive___0___in_the_skyp_file__Found__1__instead_" xml:space="preserve">
-    <value>Expected the URL of a shared Skyline document archive ({0}) in the skyp file. Found {1} instead.</value>
-  </data>
   <data name="SkypFile_GetNonExistentPath_Name_of_shared_Skyline_archive_cannot_be_null_or_empty_" xml:space="preserve">
     <value>Name of shared Skyline archive cannot be null or empty.</value>
-  </data>
-  <data name="SkypSupport_Download_Downloading__0_" xml:space="preserve">
-    <value>Downloading {0}</value>
   </data>
   <data name="SkypFile_GetSkyFileUrl_File_does_not_contain_the_URL_of_a_shared_Skyline_archive_file___0___on_a_Panorama_server_" xml:space="preserve">
     <value>File does not contain the URL of a shared Skyline archive file ({0}) on a Panorama server.</value>
@@ -10582,9 +10570,6 @@ Click 'Retry' to try building again after placing the original spectrum files in
   </data>
   <data name="SmallMoleculeTransitionListReader_ProcessNeutralLoss_Cannot_use_product_neutral_loss_chemical_formula_without_a_precursor_chemical_formula" xml:space="preserve">
     <value>Cannot use product neutral loss chemical formula without a precursor chemical formula</value>
-  </data>
-  <data name="SkylineVersion_V20_1_Skyline_20_1" xml:space="preserve">
-    <value>Skyline 20.1</value>
   </data>
   <data name="RefineDlg_MSLevel_1" xml:space="preserve">
     <value>1</value>
@@ -10986,9 +10971,6 @@ Invalid peptide sequence at position 18
   <data name="BrukerTimsTofMethodExporter_ExportMethod_Scheduling_failure__no_targets__" xml:space="preserve">
     <value>Scheduling failure (no targets?)</value>
   </data>
-  <data name="SkylineVersion_V20_2_Skyline_20_2" xml:space="preserve">
-    <value>Skyline 20.2</value>
-  </data>
   <data name="ExportMethodScheduleGraph_ExportMethodScheduleGraph_Concurrent_frames" xml:space="preserve">
     <value>Concurrent frames</value>
   </data>
@@ -11260,9 +11242,6 @@ Example: Crosslink to PEPTIDE: T [4]</comment>
   <data name="DDASearchControl_RunSearch_Conversion_failed_" xml:space="preserve">
     <value>Conversion failed.</value>
   </data>
-  <data name="DDASearchControl_RunSearch_Conversion_finished_" xml:space="preserve">
-    <value>Conversion finished.</value>
-  </data>
   <data name="DiaUmpireDdaConverter_Run_Re_using_existing_DiaUmpire_file__with_equivalent_settings__for__0_" xml:space="preserve">
     <value>Re-using existing DIA-Umpire file (with equivalent settings) for {0}</value>
   </data>
@@ -11409,6 +11388,9 @@ If you do not have the original file, you may build the library with embedded sp
   <data name="PasteDlg_UpdateMoleculeType_Explicit_Collision_Cross_Section__sq_A_" xml:space="preserve">
     <value>Explicit Collision Cross Section (sq A)</value>
   </data>
+  <data name="PasteDlg_UpdateMoleculeType_Collision_Cross_Section__sq_A_" xml:space="preserve">
+    <value>Collision Cross Section (sq A)</value>
+  </data>
   <data name="ExportMethodDlg_UpdateThermoSureQuantControls_Percentage_of_peak_max_height_to_use_as_intensity_threshold_" xml:space="preserve">
     <value>Percentage of peak max height to use as intensity threshold.</value>
   </data>
@@ -11439,6 +11421,9 @@ If you do not have the original file, you may build the library with embedded sp
   <data name="ImportTransitionListColumnSelectDlg_ComboChanged_Explicit_Declustering_Potential" xml:space="preserve">
     <value>Explicit Declustering Potential</value>
   </data>
+  <data name="ImportTransitionListColumnSelectDlg_ComboChanged_Declustering_Potential" xml:space="preserve">
+    <value>Declustering Potential</value>
+  </data>
   <data name="ImportTransitionListColumnSelectDlg_ComboChanged_Molecule_List_Name" xml:space="preserve">
     <value>Molecule List Name</value>
   </data>
@@ -11465,9 +11450,6 @@ If you do not have the original file, you may build the library with embedded sp
   </data>
   <data name="ImportTransitionListColumnSelectDlg_AssociateProteins_These_filters_cannot_be_applied_as_they_would_result_in_an_empty_transition_list." xml:space="preserve">
     <value>These filters cannot be applied as they would result in an empty transition list.</value>
-  </data>
-  <data name="SkylineVersion_V21_1_Skyline_21_1" xml:space="preserve">
-    <value>Skyline 21.1</value>
   </data>
   <data name="TransitionSettingsUI_cbxTriggeredAcquisition_CheckedChanged_The_SureQuant_acquisition_method_requires__Triggered_Chromatogram_Extraction___Unchecking_this_option_will_switch_to_the_PRM_acquisition_method__Do_you_want_to_continue_" xml:space="preserve">
     <value>The SureQuant acquisition method requires "Triggered Chromatogram Extraction". Unchecking this option will switch to the PRM acquisition method. Do you want to continue?</value>
@@ -11667,13 +11649,13 @@ If you do not have the original file, you may build the library with embedded sp
     <value>Associate Proteins</value>
   </data>
   <data name="SciexOsMethodExporter_EnsureSciexOs_Waiting_for_SCIEX_OS_to_start" xml:space="preserve">
-	  <value>Waiting for SCIEX OS to start</value>
+    <value>Waiting for SCIEX OS to start</value>
   </data>
   <data name="SciexOsMethodExporter_EnsureSciexOs_Working___" xml:space="preserve">
-	  <value>Working...</value>
+    <value>Working...</value>
   </data>
   <data name="SciexOsMethodExporter_EnsureSciexOs_Failed_to_find_a_valid_SCIEX_OS_installation_" xml:space="preserve">
-	  <value>Failed to find a valid SCIEX OS installation.</value>
+    <value>Failed to find a valid SCIEX OS installation.</value>
   </data>
   <data name="BuildLibraryGridView__colFile_File" xml:space="preserve">
     <value>File</value>
@@ -11705,23 +11687,14 @@ If you do not have the original file, you may build the library with embedded sp
   <data name="BuildLibraryGridView_GetThresholds_incorrect" xml:space="preserve">
     <value>incorrect</value>
   </data>
-  <data name="BuildLibraryGridView_GridUpdateScoreInfo_Error_getting_score_type_for_this_file_" xml:space="preserve">
+  <data name="BuildLibraryGridView_OnRowPrepaint_Error_getting_score_type_for_this_file_" xml:space="preserve">
     <value>Error getting score type for this file.</value>
   </data>
-  <data name="BuildLibraryGridView_GridUpdateScoreInfo_Score_threshold_minimum__score_is_probability_that_identification_is_correct__" xml:space="preserve">
-    <value>Score threshold minimum (score is probability that identification is correct).</value>
-  </data>
-  <data name="BuildLibraryGridView_GridUpdateScoreInfo_Score_threshold_maximum__score_is_probability_that_identification_is_incorrect__" xml:space="preserve">
-    <value>Score threshold maximum (score is probability that identification is incorrect).</value>
-  </data>
-  <data name="BuildLibraryGridView_OnCellValueChanged_Score_threshold___0___is_invalid__must_be_a_decimal_value_between__1__and__2___" xml:space="preserve">
+  <data name="BuildLibraryGridView_OnCellPainting_Score_threshold___0___is_invalid__must_be_a_decimal_value_between__1__and__2___" xml:space="preserve">
     <value>Score threshold '{0}' is invalid (must be a decimal value between {1} and {2}).</value>
   </data>
   <data name="BuildLibraryGridView_Validate_Are_you_sure_you_want_to_continue_" xml:space="preserve">
     <value>Are you sure you want to continue?</value>
-  </data>
-  <data name="SkylineVersion_V21_2_Skyline_21_2" xml:space="preserve">
-    <value>Skyline 21.2</value>
   </data>
   <data name="EditIrtCalcDlg_OpenDatabase_Opening_database" xml:space="preserve">
     <value>Opening database</value>
@@ -11814,6 +11787,9 @@ If you do not have the original file, you may build the library with embedded sp
   <data name="AssociateProteinsDlg_CellValueNeeded_Shared_Peptides" xml:space="preserve">
     <value>Shared Peptides</value>
   </data>
+  <data name="Properties_Button" type="System.Resources.ResXFileRef, System.Windows.Forms">
+    <value>..\Resources\Properties.bmp;System.Drawing.Bitmap, System.Drawing, Version=4.0.0.0, Culture=neutral, PublicKeyToken=b03f5f7f11d50a3a</value>
+  </data>
   <data name="DuplicatedPeptideFinder_DisplayName_Duplicated_peptides" xml:space="preserve">
     <value>Duplicated peptides</value>
   </data>
@@ -11822,5 +11798,165 @@ If you do not have the original file, you may build the library with embedded sp
   </data>
   <data name="ParsimonySettings_Validate_The_value__0__for__1__is_not_valid__it_must_be_greater_than_or_equal_to__2__" xml:space="preserve">
     <value>The value {0} for {1} is not valid: it must be greater than or equal to {2}.</value>
+  </data>
+  <data name="BuildLibraryGridView_GridUpdateScoreInfo_Score_type_not_found_" xml:space="preserve">
+    <value>Score type not found.</value>
+  </data>
+  <data name="ShareResultsFilesDlg_LocateMissingFilesFromFolder_Please_select_the_folder_containing_the_missing_files_" xml:space="preserve">
+    <value>Please select the folder containing the missing files.</value>
+  </data>
+  <data name="BrukerTimsTofIsolationListExporter_CheckIonMobilities__0____1_____2__" xml:space="preserve">
+    <value>{0} ({1} - {2})</value>
+  </data>
+  <data name="BrukerTimsTofIsolationListExporter_CheckIonMobilities_All_targets_must_have_an_ion_mobility_between__0__and__1__as_specified_in_the_template_method__Either_use_a_different_template_method__or_change_the_ion_mobility_values_for_the_following_targets_" xml:space="preserve">
+    <value>All targets must have an ion mobility between {0} and {1} as specified in the template method. Either use a different template method, or change the ion mobility values for the following targets:</value>
+  </data>
+  <data name="SkylineWindow_submitErrorReportMenuItem_Click_Submitting_an_unhandled_error_report" xml:space="preserve">
+    <value>Submitting an unhandled error report</value>
+  </data>
+  <data name="GraphChromatogram_UpdateUI_No_MS1_spectra_found_in_base_peak_chromatogram" xml:space="preserve">
+    <value>No MS1 spectra found in base peak chromatogram</value>
+  </data>
+  <data name="GraphChromatogram_UpdateUI_No_MS1_spectra_found_in_TIC_chromatogram" xml:space="preserve">
+    <value>No MS1 spectra found in TIC chromatogram</value>
+  </data>
+  <data name="CommandLine_CreateImsDb_Creating_ion_mobility_library___0___in___1_____" xml:space="preserve">
+    <value>Creating ion mobility library "{0}" in "{1}"...</value>
+  </data>
+  <data name="TextUtil_DeterminDsvSeparator_Unable_to_determine_format_of_delimiter_separated_value_file" xml:space="preserve">
+    <value>Unable to determine format of delimiter separated value file</value>
+  </data>
+  <data name="ExportMethodDlg_OkDialog_The_transition_prediction_settings_for_this_document_are_set_to_use_optimized_values_by_transition_" xml:space="preserve">
+    <value>The transition prediction settings for this document are set to use optimized values by transition.</value>
+  </data>
+  <data name="ExportMethodDlg_OkDialog_Using_optimized_values_by_transition_is_invalid_for_this_instrument_type__Would_you_like_to_use_optimized_values_by_precursor_instead_" xml:space="preserve">
+    <value>Using optimized values by transition is invalid for this instrument type. Would you like to use optimized values by precursor instead?</value>
+  </data>
+  <data name="PrositIntensityModel_CreatePrositInputRow_UnsupportedCharge" xml:space="preserve">
+    <value>The charge {0} is not supported by Prosit. The maximum supported charge is {1}.</value>
+  </data>
+  <data name="CommandLine_ImportSkyr_Error__Reports_could_not_be_imported_from__0_" xml:space="preserve">
+    <value>Error: Reports could not be imported from {0}</value>
+  </data>
+  <data name="SkypSupport_Open_Path_to_skyp_file_cannot_be_empty_" xml:space="preserve">
+    <value>Path to skyp file cannot be empty.</value>
+  </data>
+  <data name="SkypDownloadException_GetMessage_Would_you_like_to_add__0__as_a_Panorama_server_in_Skyline_" xml:space="preserve">
+    <value>Would you like to add {0} as a Panorama server in Skyline?</value>
+  </data>
+  <data name="SkypDownloadException_GetMessage_Credentials_saved_in_Skyline_for_the_Panorama_server__0__are_invalid_" xml:space="preserve">
+    <value>Credentials saved in Skyline for the Panorama server {0} are invalid.</value>
+  </data>
+  <data name="SkypDownloadException_GetMessage_Would_you_like_to_update_the_credentials_" xml:space="preserve">
+    <value>Would you like to update the credentials?</value>
+  </data>
+  <data name="SkypDownloadException_GetMessage_Credentials_saved_in_Skyline_for_the_Panorama_server__0__are_for_the_user__1___This_user_does_not_have_permissions_to_download_the_file__The_skyp_file_was_downloaded_by__2__" xml:space="preserve">
+    <value>Credentials saved in Skyline for the Panorama server {0} are for the user {1}. This user does not have permissions to download the file. The skyp file was downloaded by {2}.</value>
+  </data>
+  <data name="SkypDownloadException_GetMessage_The_skyp_file_was_downloaded_by_the_user__0___Credentials_saved_in_Skyline_for_this_server_are_for_the_user__1__" xml:space="preserve">
+    <value>The skyp file was downloaded by the user {0}. Credentials saved in Skyline for this server are for the user {1}.</value>
+  </data>
+  <data name="AssociateProteinsDlg_UseFastaFile_An_error_occurred_during_protein_association_" xml:space="preserve">
+    <value>An error occurred during protein association.</value>
+  </data>
+  <data name="ColonSeparator" xml:space="preserve">
+    <value>{0}: {1}</value>
+  </data>
+  <data name="ColonEndOfLine" xml:space="preserve">
+    <value>:</value>
+  </data>
+  <data name="FragmentLoss_ItemDescription_Include_by_default" xml:space="preserve">
+    <value>Include by default</value>
+  </data>
+  <data name="StaticMod_ItemDescription_Neutral_loss" xml:space="preserve">
+    <value>Neutral loss</value>
+  </data>
+  <data name="StaticMod_ItemDescription_Loss" xml:space="preserve">
+    <value>Loss</value>
+  </data>
+  <data name="StaticMod_ItemDescription_Neutral_losses" xml:space="preserve">
+    <value>Neutral losses</value>
+  </data>
+  <data name="StaticMod_ItemDescription__0__neutral_losses" xml:space="preserve">
+    <value>{0} neutral losses</value>
+  </data>
+  <data name="StaticMod_ItemDescription_Losses" xml:space="preserve">
+    <value>Losses</value>
+  </data>
+  <data name="StaticMod_ItemDescription__0__losses" xml:space="preserve">
+    <value>{0} losses</value>
+  </data>
+  <data name="StaticMod_FormatMass_Mass" xml:space="preserve">
+    <value>Mass</value>
+  </data>
+  <data name="StaticMod_ItemDescription_Empty" xml:space="preserve">
+    <value>Empty</value>
+  </data>
+  <data name="StaticMod_FormatMass_Unknown_mass" xml:space="preserve">
+    <value>Unknown mass</value>
+  </data>
+  <data name="LibrarySpec_ItemDescription_Ignore_explicit_peak_boundaries" xml:space="preserve">
+    <value>Ignore explicit peak boundaries</value>
+  </data>
+  <data name="ToolService_ImportProperties_Import_Properties_from_external_tool" xml:space="preserve">
+    <value>Import Properties from external tool</value>
+  </data>
+  <data name="ToolService_DeleteElementsNow_Unsupported_element__0_" xml:space="preserve">
+    <value>Unsupported element {0}</value>
+  </data>
+  <data name="ToolService_GetSelectedElementRefNow_Unsupported_element_type___0__" xml:space="preserve">
+    <value>Unsupported element type '{0}'</value>
+  </data>
+  <data name="SciexOsMethodExporter_SciexOsMethodExporter_Invalid_instrument_type_for_SCIEX_OS_method_export_" xml:space="preserve">
+    <value>Invalid instrument type for SCIEX OS method export.</value>
+  </data>
+  <data name="PeptideSettingsUI_ShowFilterMidasDlg_Failed_loading_MIDAS_library__0__" xml:space="preserve">
+    <value>Failed loading MIDAS library {0}.</value>
+  </data>
+  <data name="GenericState_AppendErrorAndUri_URL___0_" xml:space="preserve">
+    <value>URL: {0}</value>
+  </data>
+  <data name="PanoramaUtil_EnsureLogin_Could_not_authenticate_user__Response_received_from_server___0___1_" xml:space="preserve">
+    <value>Could not authenticate user. Response received from server: {0} {1}</value>
+  </data>
+  <data name="PanoramaUtil_EnsureLogin_Unexpected_JSON_response_from_the_server___0_" xml:space="preserve">
+    <value>Unexpected JSON response from the server: {0}</value>
+  </data>
+  <data name="UserState_getErrorMessage_There_was_an_error_authenticating_user_credentials_on_the_server__0__" xml:space="preserve">
+    <value>There was an error authenticating user credentials on the server {0}.</value>
+  </data>
+  <data name="PanoramaUtil_EnsureLogin_Server_did_not_return_a_valid_JSON_response___0__is_not_a_Panorama_server_" xml:space="preserve">
+    <value>Server did not return a valid JSON response. {0} is not a Panorama server.</value>
+  </data>
+  <data name="EditServerDlg_OkDialog__0__is_not_a_valid_email_address_" xml:space="preserve">
+    <value>{0} is not a valid email address.</value>
+  </data>
+  <data name="ServerState_GetErrorMessage_Unable_to_connect_to_the_server__0__" xml:space="preserve">
+    <value>Unable to connect to the server {0}.</value>
+  </data>
+  <data name="StaticMod_FormatFormulaOrMass___0__Da_" xml:space="preserve">
+    <value>({0} Da)</value>
+    <comment>"Da" stands for "Daltons". Example: (+57.2 Da)</comment>
+  </data>
+  <data name="SkypSupport_ShowDownloadError_There_was_an_error_downloading_the_Skyline_document__0__from__1__" xml:space="preserve">
+    <value>There was an error downloading the Skyline document {0} from {1}.</value>
+  </data>
+  <data name="SkypSupport_Download_Downloading__0__from__1_" xml:space="preserve">
+    <value>Downloading {0} from {1}</value>
+  </data>
+  <data name="SkypFile_GetSkyFileUrl_Expected_the_URL_of_a_shared_Skyline_document_archive_file___0____Found_filename__1__instead_in_the_URL__2__" xml:space="preserve">
+    <value>Expected the URL of a shared Skyline document archive file ({0}). Found filename {1} instead in the URL {2}.</value>
+  </data>
+  <data name="SkylineWindow_crashSkylineMenuItem_Click_Are_you_sure_you_want_to_abruptly_terminate_Skyline__You_will_lose_all_unsaved_work_" xml:space="preserve">
+    <value>Are you sure you want to abruptly terminate Skyline? You will lose all unsaved work.</value>
+  </data>
+  <data name="AuxiliaryFiles_GetStatusText__0__files_have_not_been_located_" xml:space="preserve">
+    <value>{0} files have not been located.</value>
+  </data>
+  <data name="AuxiliaryFiles_GetStatusText__0__of__1__files_will_be_included_" xml:space="preserve">
+    <value>{0} of {1} files will be included.</value>
+  </data>
+  <data name="ShareTypeDlg_OkDialog_Including_data_folders_is_not_supported_by_the_currently_selected_version_" xml:space="preserve">
+    <value>Including data folders is not supported by the currently selected version.</value>
   </data>
 </root>

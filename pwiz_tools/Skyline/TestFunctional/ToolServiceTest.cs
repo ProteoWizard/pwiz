@@ -17,8 +17,11 @@
  * limitations under the License.
  */
 
+using System;
+using System.Collections.Generic;
 using System.Linq;
 using Microsoft.VisualStudio.TestTools.UnitTesting;
+using pwiz.Skyline;
 using pwiz.Skyline.Model;
 using pwiz.Skyline.Model.Tools;
 using pwiz.Skyline.Util;
@@ -26,6 +29,7 @@ using pwiz.SkylineTestUtil;
 using SkylineTool;
 using Version = SkylineTool.Version;
 
+#pragma warning disable CS0612 // "obsolete"
 namespace pwiz.SkylineTestFunctional
 {
     [TestClass]
@@ -35,13 +39,42 @@ namespace pwiz.SkylineTestFunctional
         private const string FILE_NAME = "TestToolAPI.sky";
         private TestToolClient _testToolClient;
 
-        [TestMethod, NoParallelTesting]
+        [TestMethod, NoParallelTesting(TestExclusionReason.SHARED_DIRECTORY_WRITE)]
         public void TestToolService()
         {
             Run(@"TestFunctional\ToolServiceTest.zip"); 
         }
 
+        /// <summary>
+        /// Sometimes the test external tool stops listening to Skyline.
+        /// If the test fails, and only consider it to be a failure if it fails twice in a row
+        /// </summary>
+        private const int MAX_TEST_ATTEMPTS = 2;
         protected override void DoTest()
+        {
+            List<Exception> accumulatedExceptions = new List<Exception>();
+            for (int attemptNumber = 0; attemptNumber < MAX_TEST_ATTEMPTS; attemptNumber++)
+            {
+                try
+                {
+                    TryToDoTest();
+                    if (!Program.TestExceptions.Any())
+                    {
+                        return;
+                    }
+                }
+                catch (Exception ex)
+                {
+                    accumulatedExceptions.Add(ex);
+                }
+                accumulatedExceptions.AddRange(Program.TestExceptions);
+                Program.TestExceptions.Clear();
+            }
+
+            throw new AggregateException(accumulatedExceptions);
+        }
+
+        protected void TryToDoTest()
         {
             OpenDocument(FILE_NAME);
 
@@ -77,8 +110,29 @@ namespace pwiz.SkylineTestFunctional
                 SelectPeptideReplicate(83, "TDFGIFR", "5600TT13-1076");
                 SelectPeptideReplicate(313, "SAPLPNDSQAR", "5600TT13-1073");
 
-                // Check document changes.
-                CheckDocumentChanges();
+                try
+                {
+                    // Check document changes.
+                    CheckDocumentChanges();
+                }
+                catch (Exception ex)
+                {
+                    // If this part of the test fails, then capture the contents of the Immediate Window
+                    // and see whether it says that it failed to send a change to a tool.
+                    int immediateWindowLineCount = -1;
+                    string immediateWindowContents = null;
+                    RunUI(() =>
+                    {
+                        if (SkylineWindow.ImmediateWindow != null)
+                        {
+                            immediateWindowLineCount = SkylineWindow.ImmediateWindow.LineCount;
+                            immediateWindowContents = SkylineWindow.ImmediateWindow.TextContent;
+                        }
+                    });
+                    string message = string.Format("Immediate Window line count: {0} contents {1}",
+                        immediateWindowLineCount, immediateWindowContents);
+                    throw new AssertFailedException(message, ex);
+                }
 
                 // Select insert node.
                 SelectInsertNode();

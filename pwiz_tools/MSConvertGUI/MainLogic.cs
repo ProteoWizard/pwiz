@@ -237,6 +237,9 @@ namespace MSConvertGUI
                     case "--srmAsSpectra":
                         config.ReaderConfig.srmAsSpectra = true;
                         break;
+                    case "--ddaProcessing":
+                        config.ReaderConfig.ddaProcessing = true;
+                        break;
                     default:
                         config.Filenames.Add(commandList[x]);
                         break;
@@ -554,7 +557,7 @@ namespace MSConvertGUI
                     }
                     finally
                     {
-                    msd.Dispose();
+                        msd.Dispose();
                     }
                 }
             }

@@ -70,6 +70,11 @@ namespace pwiz.Skyline.Model.Lib
             get { return FILTER_ELIB; }
         }
 
+        public override string GetLibraryTypeName()
+        {
+            return Resources.EncyclopediaSpec_FILTER_ELIB_EncyclopeDIA_Library;
+        }
+
         #region Implementation of IXmlSerializable
 
         /// <summary>
@@ -94,6 +99,8 @@ namespace pwiz.Skyline.Model.Lib
         private const double MIN_QUANTITATIVE_INTENSITY = 1.0;
         private ImmutableList<string> _sourceFiles;
         private readonly PooledSqliteConnection _pooledSqliteConnection;
+        // List of entries which includes items which do not have a spectrum but which do have peak boundaries
+        private LibKeyMap<ElibSpectrumInfo> _allLibraryEntries;
 
         private EncyclopeDiaLibrary()
         {
@@ -108,7 +115,10 @@ namespace pwiz.Skyline.Model.Lib
 
         public static string FILTER_ELIB
         {
-            get { return TextUtil.FileDialogFilter(Resources.EncyclopediaLibrary_FILTER_ELIB_EncyclopeDIA_Libraries, EncyclopeDiaSpec.EXT); }
+            get
+            {
+                return TextUtil.FileDialogFilter(Resources.EncyclopediaLibrary_FILTER_ELIB_EncyclopeDIA_Libraries, EncyclopeDiaSpec.EXT);
+            }
         }
 
         public EncyclopeDiaLibrary(EncyclopeDiaSpec spec) : base(spec)
@@ -254,8 +264,18 @@ namespace pwiz.Skyline.Model.Lib
                             double score = reader.GetDouble(3);
                             var qValue = scores.GetQValue(libKey, fileName) ??
                                          ExplicitPeakBounds.UNKNOWN_SCORE;
+                            double? rtInMinutes = null;
+                            if (!reader.IsDBNull(4))
+                            {
+                                double rtInSeconds = reader.GetDouble(4);
+                                // EncyclopeDIA version 2.0 uses "-1" to indicate that the chromatogram had no apex.
+                                if (rtInSeconds != -1.0)
+                                {
+                                    rtInMinutes = rtInSeconds / 60;
+                                }
+                            }
                             dataByFilename.Add(fileName, new ScoredFileData(score,
-                                new FileData(reader.GetDouble(4) / 60,
+                                new FileData(rtInMinutes,
                                     new ExplicitPeakBounds(reader.GetDouble(5) / 60, reader.GetDouble(6) / 60,
                                         qValue))));
                         }
@@ -319,6 +339,21 @@ namespace pwiz.Skyline.Model.Lib
         }
         // ReSharper restore LocalizableElement
 
+        protected override void SetLibraryEntries(IEnumerable<ElibSpectrumInfo> entries)
+        {
+            var allEntries = ImmutableList.ValueOf(entries);
+            var entriesWithSpectra = ImmutableList.ValueOf(allEntries.Where(entry=>entry.BestFileId >= 0));
+            base.SetLibraryEntries(entriesWithSpectra);
+            if (entriesWithSpectra.Count == allEntries.Count)
+            {
+                _allLibraryEntries = _libraryEntries;
+            }
+            else
+            {
+                _allLibraryEntries = new LibKeyMap<ElibSpectrumInfo>(allEntries, allEntries.Select(entry => entry.Key.LibraryKey));
+            }
+        }
+
         private void WriteCache(ILoadMonitor loader)
         {
             using (FileSaver fs = new FileSaver(CachePath, loader.StreamManager))
@@ -333,8 +368,8 @@ namespace pwiz.Skyline.Model.Lib
                         PrimitiveArrays.WriteOneValue(stream, fileNameBytes.Length);
                         PrimitiveArrays.Write(stream, fileNameBytes);
                     }
-                    PrimitiveArrays.WriteOneValue(stream, _libraryEntries.Length);
-                    foreach (var elibSpectrumInfo in _libraryEntries)
+                    PrimitiveArrays.WriteOneValue(stream, _allLibraryEntries.Length);
+                    foreach (var elibSpectrumInfo in _allLibraryEntries)
                     {
                         elibSpectrumInfo.Write(stream);
                     }
@@ -372,7 +407,7 @@ namespace pwiz.Skyline.Model.Lib
                     {
                         int byteCount = PrimitiveArrays.ReadOneValue<int>(stream);
                         byte[] bytes = new byte[byteCount];
-                        stream.Read(bytes, 0, bytes.Length);
+                        stream.ReadOrThrow(bytes, 0, bytes.Length);
                         sourceFiles.Add(Encoding.UTF8.GetString(bytes));
                     }
                     int spectrumInfoCount = PrimitiveArrays.ReadOneValue<int>(stream);
@@ -556,20 +591,23 @@ namespace pwiz.Skyline.Model.Lib
             }
 
             bool anyMatch = false;
-            foreach (var entry in LibraryEntriesWithSequences(peptideSequences))
+            foreach (var peptideSequence in peptideSequences)
             {
-                FileData fileData;
-                if (entry.FileDatas.TryGetValue(fileId, out fileData))
+                foreach (var entry in
+                         _allLibraryEntries.ItemsMatching(new LibKey(peptideSequence, Adduct.EMPTY), false))
                 {
-                    return fileData.PeakBounds;
-                }
+                    FileData fileData;
+                    if (entry.FileDatas.TryGetValue(fileId, out fileData))
+                    {
+                        return fileData.PeakBounds;
+                    }
 
-                if (entry.FileDatas.Any())
-                {
-                    anyMatch = true;
+                    if (entry.FileDatas.Any())
+                    {
+                        anyMatch = true;
+                    }
                 }
             }
-
             if (anyMatch)
             {
                 return ExplicitPeakBounds.EMPTY;
@@ -582,27 +620,27 @@ namespace pwiz.Skyline.Model.Lib
             int iEntry = FindEntry(key);
             if (iEntry < 0)
             {
-                return new SpectrumInfoLibrary[0];
+                yield break;
             }
             var entry = _libraryEntries[iEntry];
-            return entry.FileDatas.Where(kvp =>
+            foreach (var keyValuePair in entry.FileDatas)
+            {
+                var fileIndex = keyValuePair.Key;
+                var fileData = keyValuePair.Value;
+                if (!fileData.ApexTime.HasValue)
                 {
-                    if (!kvp.Value.ApexTime.HasValue)
-                    {
-                        return false;
-                    }
-                    if (redundancy == LibraryRedundancy.best && kvp.Key != entry.BestFileId)
-                    {
-                        return false;
-                    }
-                    return true;
-                })
-                .Select(kvp =>
-                    new SpectrumInfoLibrary(this, labelType, _sourceFiles[kvp.Key], kvp.Value.ApexTime, null, null,
-                        kvp.Key == entry.BestFileId, new ElibSpectrumKey(iEntry, kvp.Key))
-                    {
-                        SpectrumHeaderInfo = CreateSpectrumHeaderInfo(entry)
-                    });
+                    continue;
+                }
+                if (redundancy == LibraryRedundancy.best && keyValuePair.Key != entry.BestFileId)
+                {
+                    continue;
+                }
+                yield return new SpectrumInfoLibrary(this, labelType, _sourceFiles[fileIndex], fileData.ApexTime, null, null,
+                    fileIndex == entry.BestFileId, new ElibSpectrumKey(iEntry, fileIndex))
+                {
+                    SpectrumHeaderInfo = CreateSpectrumHeaderInfo(entry)
+                };
+            }
         }
 
         public override SpectrumPeaksInfo LoadSpectrum(object spectrumKey)
@@ -738,7 +776,7 @@ namespace pwiz.Skyline.Model.Lib
 
             foreach (var entry in fileDatas)
             {
-                if (!entry.Value.Score.HasValue)
+                if (!entry.Value.Score.HasValue || !entry.Value.FileData.ApexTime.HasValue)
                 {
                     continue;
                 }
@@ -799,7 +837,7 @@ namespace pwiz.Skyline.Model.Lib
             public static ElibSpectrumInfo Read(ValueCache valueCache, Stream stream)
             {
                 byte[] peptideModSeqBytes = new byte[PrimitiveArrays.ReadOneValue<int>(stream)];
-                stream.Read(peptideModSeqBytes, 0, peptideModSeqBytes.Length);
+                stream.ReadOrThrow(peptideModSeqBytes, 0, peptideModSeqBytes.Length);
                 var peptideModSeq = valueCache.CacheValue(Encoding.UTF8.GetString(peptideModSeqBytes));
                 int charge = PrimitiveArrays.ReadOneValue<int>(stream);
                 int bestFileId = PrimitiveArrays.ReadOneValue<int>(stream);

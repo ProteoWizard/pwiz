@@ -457,6 +457,22 @@ namespace pwiz.Skyline.Util.Extensions
         }
 
         /// <summary>
+        /// Append the localized colon character to a string.
+        /// </summary>
+        public static string AppendColon(string left)
+        {
+            return left + Resources.ColonEndOfLine;
+        }
+
+        /// <summary>
+        /// Separate two strings with the localized colon character and a space.
+        /// </summary>
+        public static string ColonSeparate(string left, string right)
+        {
+            return string.Format(Resources.ColonSeparator, left, right);
+        }
+
+        /// <summary>
         /// Convert a collection of strings to a TSV line for serialization purposes,
         /// watching out for tabs, CRLF, and existing escapes
         /// </summary>
@@ -749,6 +765,7 @@ namespace pwiz.Skyline.Util.Extensions
         private string userHeaders;
         private bool _rereadTitleLine; // set true for first readline if the file didn't actually have a header line
         private TextReader _reader;
+        private int _linesRead;
         
         public int NumberOfFields { get; private set; }
         public Dictionary<string, int> FieldDict { get; private set; }
@@ -829,10 +846,12 @@ namespace pwiz.Skyline.Util.Extensions
             _rereadTitleLine = false; // we no longer need to re-use that first line
             if (line == null)
                 return null;
+            _linesRead++;
             _currentFields = line.ParseDsvFields(_separator);
             if (_currentFields.Length > NumberOfFields)
             {
-                throw new IOException(string.Format(Resources.DsvFileReader_ReadLine_Line__0__has__1__fields_when__2__expected_, line, _currentFields.Length, NumberOfFields));
+                throw new LineColNumberedIoException(string.Format(Resources.DsvFileReader_ReadLine_Line__0__has__1__fields_when__2__expected_,
+                    line, _currentFields.Length, NumberOfFields), _linesRead, 0);
             }
             else if (_currentFields.Length < NumberOfFields)
             {
@@ -895,5 +914,44 @@ namespace pwiz.Skyline.Util.Extensions
             _reader.Dispose();
         }
 
+    }
+
+    public class LineColNumberedIoException : IOException
+    {
+        public LineColNumberedIoException(string message, long lineNum, int colIndex)
+            : base(FormatMessage(message, lineNum, colIndex))
+        {
+            PlainMessage = message;
+            LineNumber = lineNum;
+            ColumnIndex = colIndex;
+        }
+
+        public LineColNumberedIoException(string message, string suggestion, long lineNum, int colIndex)
+            : base(TextUtil.LineSeparate(FormatMessage(message, lineNum, colIndex), suggestion))
+        {
+            PlainMessage = TextUtil.LineSeparate(message, suggestion);
+            LineNumber = lineNum;
+            ColumnIndex = colIndex;
+        }
+
+        public LineColNumberedIoException(string message, long lineNum, int colIndex, Exception inner)
+            : base(FormatMessage(message, lineNum, colIndex), inner)
+        {
+            PlainMessage = message;
+            LineNumber = lineNum;
+            ColumnIndex = colIndex;
+        }
+
+        private static string FormatMessage(string message, long lineNum, int colIndex)
+        {
+            if (colIndex == -1)
+                return string.Format(Resources.LineColNumberedIoException_FormatMessage__0___line__1__, message, lineNum);
+            else
+                return string.Format(Resources.LineColNumberedIoException_FormatMessage__0___line__1___col__2__, message, lineNum, colIndex + 1);
+        }
+
+        public string PlainMessage { get; private set; }
+        public long LineNumber { get; private set; }
+        public int ColumnIndex { get; private set; }
     }
 }

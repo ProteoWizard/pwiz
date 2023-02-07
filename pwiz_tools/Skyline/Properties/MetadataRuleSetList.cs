@@ -48,8 +48,8 @@ namespace pwiz.Skyline.Properties
 
         public override MetadataRuleSet EditItem(Control owner, MetadataRuleSet item, IEnumerable<MetadataRuleSet> existing, object tag)
         {
-            var documentContainer = (IDocumentContainer) tag;
-            using (var dlg = new MetadataRuleSetEditor(documentContainer, item, existing))
+            var document = (SrmDocument) tag;
+            using (var dlg = new MetadataRuleSetEditor(document, item, existing))
             {
                 if (dlg.ShowDialog(owner) == DialogResult.OK)
                 {

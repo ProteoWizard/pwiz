@@ -170,7 +170,7 @@ namespace pwiz.SkylineTestFunctional
             // Make sure explorer handles this adduct type
             var viewLibUI = ShowDialog<ViewLibraryDlg>(SkylineWindow.ViewSpectralLibraries);
             RunUI(() => AssertEx.IsTrue(viewLibUI.GraphItem.IonLabels.Any()));
-            RunUI(viewLibUI.CancelDialog);
+            OkDialog(viewLibUI, viewLibUI.CancelDialog);
 
             // Barbara added code to ProteoWizard to rebuild a missing or invalid mzXML index
             // BuildLibraryError("bad_mzxml.pep.XML", "<index> not found");
@@ -725,9 +725,9 @@ namespace pwiz.SkylineTestFunctional
                 {
                     switch (scoreType.ProbabilityType)
                     {
-                        case BiblioSpecScoreType.EnumProbabilityType.probability_correct:
+                        case ScoreType.EnumProbabilityType.probability_correct:
                             return scoreType.ValidRange.Min;
-                        case BiblioSpecScoreType.EnumProbabilityType.probability_incorrect:
+                        case ScoreType.EnumProbabilityType.probability_incorrect:
                             return scoreType.ValidRange.Max;
                         default:
                             return null;

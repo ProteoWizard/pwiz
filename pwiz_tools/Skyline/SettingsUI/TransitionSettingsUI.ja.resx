@@ -1257,7 +1257,9 @@ DPの最適化値が、メソッドおよびトランジションのリストで
     <value>5</value>
   </data>
   <data name="textPeptideIonTypes.ToolTip" xml:space="preserve">
-    <value>プロダクトイオン候補の計算に用いるプロダクトイオンタイプ（a、b、c、x、y、z、p （プリカーサー））  のリスト（カンマ区切り）です</value>
+    <value>プロダクトイオン候補の計算に用いるプロダクトイオンタイプ（a, b, c, x, y, z, z., z', p（プリカーサー））  のリスト（カンマ区切り）です。 z. および z’ はz+1ラジカルイオンおよびz+2イオンを意味します。
+これらは通常、ExD実験に含まれます。
+代わりに z* や z" を使用することもできます。 </value>
   </data>
   <data name="&gt;&gt;textPeptideIonTypes.Name" xml:space="preserve">
     <value>textPeptideIonTypes</value>

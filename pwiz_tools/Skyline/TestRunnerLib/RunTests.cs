@@ -39,6 +39,8 @@ namespace TestRunnerLib
 {
     public class TestInfo
     {
+        private bool? _isAuditLogTest;
+
         public readonly Type TestClassType;
         public readonly MethodInfo TestMethod;
         public readonly MethodInfo SetTestContext;
@@ -47,6 +49,7 @@ namespace TestRunnerLib
         public readonly bool IsPerfTest;
         public readonly int? MinidumpLeakThreshold;
         public readonly bool DoNotRunInParallel;
+        public readonly bool DoNotRunInNightly;
 
         public TestInfo(Type testClass, MethodInfo testMethod, MethodInfo testInitializeMethod, MethodInfo testCleanupMethod)
         {
@@ -60,10 +63,44 @@ namespace TestRunnerLib
             var noParallelTestAttr = RunTests.GetAttribute(testMethod, "NoParallelTestingAttribute");
             DoNotRunInParallel = noParallelTestAttr != null;
 
+            var noNightlyTestAttr = RunTests.GetAttribute(testMethod, "NoNightlyTestingAttribute");
+            DoNotRunInNightly = noNightlyTestAttr != null;
+
             var minidumpAttr = RunTests.GetAttribute(testMethod, "MinidumpLeakThresholdAttribute");
             MinidumpLeakThreshold = minidumpAttr != null
                 ? (int?) minidumpAttr.GetType().GetProperty("ThresholdMB")?.GetValue(minidumpAttr)
                 : null;
+        }
+
+        /// <summary>
+        /// True if this test records audit logging. This property is delay loaded because it
+        /// can end up locking test DLLs which can be a problem for the nightly tests.
+        /// </summary>
+        public bool IsAuditLogTest
+        {
+            get
+            {
+                if (!_isAuditLogTest.HasValue)
+                {
+                    _isAuditLogTest = false;
+
+                    var auditLogProp = TestClassType.GetProperty("AuditLogCompareLogs");
+                    if (auditLogProp != null)
+                    {
+                        var testObj = Activator.CreateInstance(TestClassType);
+                        SetTestContext?.Invoke(testObj, new object[]
+                        {
+                            new TestRunnerContext
+                            {
+                                Properties = { ["TestName"] = TestMethod.Name }
+                            }
+                        });
+                        _isAuditLogTest = (bool)auditLogProp.GetValue(testObj);
+                    }
+                }
+
+                return _isAuditLogTest.Value;
+            }
         }
     }
 
@@ -73,8 +110,9 @@ namespace TestRunnerLib
         private readonly StreamWriter _log;
         private readonly bool _showStatus;
         private readonly bool _buildMode;
+        private readonly bool _cleanupLevelAll;
 
-        public readonly TestContext TestContext;
+        public readonly TestRunnerContext TestContext;
         public CultureInfo Language = new CultureInfo("en-US");
         public long CheckCrtLeaks;
         public int FailureCount { get; private set; }
@@ -97,6 +135,7 @@ namespace TestRunnerLib
         public bool TeamCityTestDecoration { get; set; }
         public bool Verbose { get; set; }
         public bool IsParallelClient { get; private set; }
+        public string ParallelClientId { get; private set; }
 
         public bool ReportSystemHeaps
         {
@@ -135,7 +174,20 @@ namespace TestRunnerLib
             _process = Process.GetCurrentProcess();
             _showStatus = showStatus;
             TestContext = new TestRunnerContext();
+            IsParallelClient = isParallelClient;
             SetTestDir(TestContext, results);
+            // Minimize disk use on TeamCity VMs by removing downloaded files
+            // during test clean-up
+            if (teamcityTestDecoration)
+            {
+                _cleanupLevelAll = true;
+                TestContext.Properties["DesiredCleanupLevel"] = "all";  // Must match DesiredCleanupLevel value
+            }
+
+            if (isParallelClient)
+            {
+                TestContext.Properties["ParallelTest"] = string.Empty; // Just the presence of the key is the flag
+            }
 
             // Set Skyline state for unit testing.
             Skyline = new InvokeSkyline();
@@ -161,7 +213,6 @@ namespace TestRunnerLib
             LiveReports = true;
             TeamCityTestDecoration = teamcityTestDecoration;
             Verbose = verbose;
-            IsParallelClient = isParallelClient;
 
             // Disable logging.
             LogManager.GetRepository().Threshold = LogManager.GetRepository().LevelMap["OFF"];
@@ -171,6 +222,8 @@ namespace TestRunnerLib
         {
             if (string.IsNullOrEmpty(resultsDir))
                 resultsDir = Path.Combine(GetProjectPath("TestResults"), "TestRunner results");
+            else if (IsParallelClient && resultsDir.Contains("TestResults_"))
+                ParallelClientId = resultsDir.Split('_')[1];
             testContext.Properties["TestDir"] = resultsDir;
             if (Directory.Exists(resultsDir))
                 Try<Exception>(() => Directory.Delete(resultsDir, true), 4, false);
@@ -235,7 +288,6 @@ namespace TestRunnerLib
             var saveCulture = Thread.CurrentThread.CurrentCulture;
             var saveUICulture = Thread.CurrentThread.CurrentUICulture;
             long crtLeakedBytes = 0;
-            var testResultsDir = Path.Combine(TestContext.TestDir, test.TestClassType.Name);
 
             var dumpFileName = string.Format("{0}.{1}_{2}_{3}_{4:yyyy_MM_dd__hh_mm_ss_tt}.dmp", pass, testNumber, test.TestMethod.Name, Language.TwoLetterISOLanguageName, DateTime.Now);
 
@@ -245,7 +297,7 @@ namespace TestRunnerLib
                 {
                     if (string.IsNullOrEmpty(dmpDir))
                     {
-                        dmpDir = Path.Combine(testResultsDir, "Minidumps");
+                        dmpDir = Path.Combine(TestContext.TestDir, test.TestMethod.Name, "Minidumps");
                         Log("[WARNING] No log path provided - using test results dir ({0})", dmpDir);
                     }
 
@@ -267,14 +319,18 @@ namespace TestRunnerLib
                 var testObject = Activator.CreateInstance(test.TestClassType);
 
                 // Set the TestContext.
+                TestContext.HasPassed = false;
                 TestContext.Properties["AccessInternet"] = AccessInternet.ToString();
                 TestContext.Properties["RunPerfTests"] = RunPerfTests.ToString();
                 TestContext.Properties["RetryDataDownloads"] = RetryDataDownloads.ToString();
                 TestContext.Properties["RunSmallMoleculeTestVersions"] = RunsSmallMoleculeVersions.ToString(); // Run the AsSmallMolecule version of tests when available?
                 TestContext.Properties["LiveReports"] = LiveReports.ToString();
                 TestContext.Properties["TestName"] = test.TestMethod.Name;
-                TestContext.Properties["TestRunResultsDirectory"] = testResultsDir;
                 TestContext.Properties["RecordAuditLogs"] = RecordAuditLogs.ToString();
+                if (IsParallelClient)
+                {
+                    Environment.SetEnvironmentVariable(@"SKYLINE_TESTER_PARALLEL_CLIENT_ID", ParallelClientId); // Accessed in pwiz_tools\Skyline\Util\Util.cs
+                }
 
                 if (test.SetTestContext != null)
                 {
@@ -287,6 +343,7 @@ namespace TestRunnerLib
                 LocalizationHelper.InitThread();
 
                 // Run the test and time it.
+                CleanUpTestDir();   // Attempt to cleanup first, in case something was left behind by a failing test
                 if (test.TestInitialize != null)
                     test.TestInitialize.Invoke(testObject, null);
 
@@ -303,8 +360,18 @@ namespace TestRunnerLib
                     //crtLeakedBytes = CrtDebugHeap.DumpLeaks(true);
                 }
 
+                // Need to set the test outcome to passed or it won't get set which impacts cleanup
+                TestContext.HasPassed = true;
                 if (test.TestCleanup != null)
                     test.TestCleanup.Invoke(testObject, null);
+
+                // If everything is supposed to be cleaned up, then check for any left over files
+                var allEntries = CleanUpTestDir();
+                if (allEntries.Count > 0)
+                {
+                    allEntries.Insert(0, string.Format("The test {0} left files in the test folder:", test.TestMethod.Name));
+                    throw new IOException(string.Join("\r\n", allEntries));
+                }
             }
             catch (Exception e)
             {
@@ -421,6 +488,8 @@ namespace TestRunnerLib
             else
                 FailureCounts[test.TestMethod.Name] = 1;
             var message = exception.InnerException == null ? exception.Message : exception.InnerException.Message;
+            if (!string.IsNullOrEmpty(ParallelClientId))
+                message += $"\nOn parallel client {ParallelClientId}";
             var stackTrace = exception.InnerException == null ? exception.StackTrace : exception.InnerException.StackTrace;
             var failureInfo = "# " + test.TestMethod.Name + "FAILED:\n" +
                 message + "\n" +
@@ -432,7 +501,9 @@ namespace TestRunnerLib
 
             TeamCityFinishTest(test, message + '\n' + stackTrace);
 
-            Log("{0,3} failures, {1:F2}/{2:F2}/{3:F1} MB, {4}/{5} handles, {6} sec.\r\n\r\n!!! {7} FAILED\r\n{8}\r\n{9}\r\n!!!\r\n\r\n",
+            Log(ReportSystemHeaps
+                    ? "{0,3} failures, {1:F2}/{2:F2}/{3:F1} MB, {4}/{5} handles, {6} sec.\r\n\r\n!!! {7} FAILED\r\n{8}\r\n{9}\r\n!!!\r\n\r\n"
+                    : "{0,3} failures, {1:F2}/{3:F1} MB, {4}/{5} handles, {6} sec.\r\n\r\n!!! {7} FAILED\r\n{8}\r\n{9}\r\n!!!\r\n\r\n",
                 FailureCount,
                 ManagedMemory,
                 CommittedMemory,
@@ -444,6 +515,36 @@ namespace TestRunnerLib
                 message,
                 exception);
             return false;
+        }
+
+        /// <summary>
+        /// Resets the test directory to empty when cleanupLevel is 'all'.
+        /// </summary>
+        /// <returns>A list of the entries, if any, that were removed</returns>
+        private List<string> CleanUpTestDir()
+        {
+            var allEntries = new List<string>();
+            // If everything is supposed to be cleaned up, then check for any left over files
+            if (_cleanupLevelAll && Directory.Exists(TestContext.TestDir))
+            {
+                allEntries.AddRange(Directory.EnumerateFileSystemEntries(TestContext.TestDir));
+                if (allEntries.Count > 0)
+                {
+                    // If the folder is not empty, attempt to get rid of everything
+                    // and recreate the folder.
+                    try
+                    {
+                        Directory.Delete(TestContext.TestDir, true);
+                        Directory.CreateDirectory(TestContext.TestDir);
+                    }
+                    catch (Exception)
+                    {
+                        // Do nothing
+                    }
+                }
+            }
+
+            return allEntries;
         }
 
         public class LeakingTest
@@ -863,9 +964,9 @@ namespace TestRunnerLib
                 if (type.IsClass && HasAttribute(type, "TestClassAttribute"))
                 {
                     if (!DerivesFromAbstractUnitTest(type))
-// ReSharper disable LocalizableElement
-                        Console.WriteLine("WARNING: " + type.Name + " does not derive from AbstractUnitTest!");
-// ReSharper restore LocalizableElement
+                    {
+                        Console.WriteLine($@"ERROR: {type.Name} does not derive from AbstractUnitTest!"); 
+                    }
                     MethodInfo testInitializeMethod = null;
                     MethodInfo testCleanupMethod = null;
                     var methods = type.GetMethods();
@@ -909,5 +1010,65 @@ namespace TestRunnerLib
             return GetAttribute(info, attributeName) != null;
         }
 
+        public static string RunCommand(string command, string args, string message, bool useShellExecute = false, bool elevated = false)
+        {
+            var psi = new ProcessStartInfo(command, args)
+            {
+                RedirectStandardOutput = !useShellExecute,
+                RedirectStandardError = !useShellExecute,
+                UseShellExecute = useShellExecute,
+                CreateNoWindow = !useShellExecute
+            };
+            if (elevated)
+                psi.Verb = "runas";
+
+            var p = Process.Start(psi);
+
+            var output = new StringBuilder();
+
+            if (!useShellExecute)
+            {
+                var reader = new ProcessStreamReader(p);
+                string line;
+                while (!(line = reader.ReadLine()).IsNullOrEmpty())
+                    output.AppendLine(line);
+            }
+
+            p?.WaitForExit();
+            if (p == null || p.ExitCode != 0)
+                throw new InvalidOperationException($"{message}\r\n\r\nDetails:\r\n'{command} {args}' returned an error ({output.ToString().Trim()});");
+             
+            return output.ToString();
+        }
+
+        public const string DOCKER_IMAGE_NAME = "chambm/always_up_runner";
+
+        public const string IS_DOCKER_RUNNING_MESSAGE = "Is Docker Desktop installed and is the daemon running? " +
+                                                        GETTING_PARALLEL_TESTING_WORKING;
+
+        public const string GETTING_PARALLEL_TESTING_WORKING =
+            "See the parallelmode wiki page for setup information on parallel testing for Skyline: " +
+            "https://skyline.ms/parallelmode.url";
+
+        public static string ALWAYS_UP_RUNNER_REPO => Path.Combine(PathEx.GetDownloadsPath(), @"AlwaysUpRunner-master");
+        public static string ALWAYS_UP_SERVICE_EXE => Path.Combine(ALWAYS_UP_RUNNER_REPO, @"AlwaysUpService.exe");
+
+        public static IEnumerable<string> GetDockerWorkerNames()
+        {
+            string dockerPsOutput = RunCommand("docker", "ps --format \"{{.Names}}\" -f \"ancestor=chambm/always_up_runner\"", IS_DOCKER_RUNNING_MESSAGE);
+            foreach(var dockerWorkerName in dockerPsOutput.Split(new [] { Environment.NewLine }, StringSplitOptions.None))
+                yield return dockerWorkerName;
+        }
+
+        public static void SendDockerKill(string workerNames = null)
+        {
+            workerNames ??= string.Join(" ", GetDockerWorkerNames());
+
+            Console.WriteLine(@"Sending docker kill command to all workers.");
+            var psi = new ProcessStartInfo("docker", $@"kill {workerNames}");
+            psi.CreateNoWindow = true;
+            psi.UseShellExecute = false;
+            Process.Start(psi);
+        }
     }
 }

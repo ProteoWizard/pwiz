@@ -325,7 +325,7 @@ namespace pwiz.Skyline.Model.Results
             // Across all spectra at the peak retention time, find the one with max total 
             // intensity for the mz's of interest (ie the isotopic distribution) and note its ion mobility.
             var scanIndex = MsDataFileScanHelper.FindScanIndex(times, apexRT.Value);
-            _msDataFileScanHelper.UpdateScanProvider(scanProvider, 0, scanIndex);
+            _msDataFileScanHelper.UpdateScanProvider(scanProvider, 0, scanIndex, null);
             _msDataFileScanHelper.MsDataSpectra = null; // Reset
             scanIndex = _msDataFileScanHelper.GetScanIndex();
             _msDataFileScanHelper.ScanProvider.SetScanForBackgroundLoad(scanIndex);
@@ -476,6 +476,7 @@ namespace pwiz.Skyline.Model.Results
         private bool IsExtremeMs2Value(double im)
         {
             return _ms1IonMobilityBest.HasValue &&
+                   _ms1IonMobilityBest.Units != eIonMobilityUnits.compensation_V && // Makes no sense in FAIMS
                    (im < _ms1IonMobilityBest.Mobility - _maxHighEnergyDriftOffsetMsec ||
                     im > _ms1IonMobilityBest.Mobility + _maxHighEnergyDriftOffsetMsec);
         }

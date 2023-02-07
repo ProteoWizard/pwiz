@@ -330,59 +330,17 @@
   <data name="ionTypesMenuItem.Text" xml:space="preserve">
     <value>&amp;Ion Types</value>
   </data>
-  <data name="aMenuItem.Size" type="System.Drawing.Size, System.Drawing">
-    <value>130, 22</value>
-  </data>
-  <data name="aMenuItem.Text" xml:space="preserve">
-    <value>&amp;A</value>
-  </data>
-  <data name="bMenuItem.Size" type="System.Drawing.Size, System.Drawing">
-    <value>130, 22</value>
-  </data>
-  <data name="bMenuItem.Text" xml:space="preserve">
-    <value>&amp;B</value>
-  </data>
-  <data name="cMenuItem.Size" type="System.Drawing.Size, System.Drawing">
-    <value>130, 22</value>
-  </data>
-  <data name="cMenuItem.Text" xml:space="preserve">
-    <value>&amp;C</value>
-  </data>
-  <data name="xMenuItem.Size" type="System.Drawing.Size, System.Drawing">
-    <value>130, 22</value>
-  </data>
-  <data name="xMenuItem.Text" xml:space="preserve">
-    <value>&amp;X</value>
-  </data>
-  <data name="yMenuItem.Size" type="System.Drawing.Size, System.Drawing">
-    <value>130, 22</value>
-  </data>
-  <data name="yMenuItem.Text" xml:space="preserve">
-    <value>&amp;Y</value>
-  </data>
-  <data name="zMenuItem.Size" type="System.Drawing.Size, System.Drawing">
-    <value>130, 22</value>
-  </data>
-  <data name="zMenuItem.Text" xml:space="preserve">
-    <value>&amp;Z</value>
-  </data>
-  <data name="zhMenuItem.Size" type="System.Drawing.Size, System.Drawing">
-    <value>130, 22</value>
-  </data>
-  <data name="zhMenuItem.Text" xml:space="preserve">
-    <value>Z&#x2022;</value>
-  </data>
-  <data name="zhhMenuItem.Size" type="System.Drawing.Size, System.Drawing">
-    <value>130, 22</value>
-  </data>
-  <data name="zhhMenuItem.Text" xml:space="preserve">
-    <value>Z&#x2032;</value>
-  </data>
   <data name="fragmentsMenuItem.Size" type="System.Drawing.Size, System.Drawing">
     <value>130, 22</value>
   </data>
   <data name="fragmentsMenuItem.Text" xml:space="preserve">
     <value>&amp;Fragments</value>
+  </data>
+  <data name="specialIonsMenuItem.Size" type="System.Drawing.Size, System.Drawing">
+    <value>130, 22</value>
+  </data>
+  <data name="specialIonsMenuItem.Text" xml:space="preserve">
+    <value>&amp;Special Ions</value>
   </data>
   <data name="precursorIonMenuItem.Size" type="System.Drawing.Size, System.Drawing">
     <value>130, 22</value>
@@ -626,12 +584,6 @@
   </data>
   <data name="secondDerivativeMenuItem.Text" xml:space="preserve">
     <value>&amp;Second Derivative</value>
-  </data>
-  <data name="firstDerivativeMenuItem.Size" type="System.Drawing.Size, System.Drawing">
-    <value>297, 22</value>
-  </data>
-  <data name="firstDerivativeMenuItem.Text" xml:space="preserve">
-    <value>&amp;First Derivative</value>
   </data>
   <data name="smoothSGChromMenuItem.ShortcutKeys" type="System.Windows.Forms.Keys, System.Windows.Forms">
     <value>Ctrl+Shift+F12</value>
@@ -937,7 +889,7 @@
     <value>180, 22</value>
   </data>
   <data name="candidatePeaksToolStripMenuItem.Text" xml:space="preserve">
-    <value>Candidate Peaks</value>
+    <value>&amp;Candidate Peaks</value>
   </data>
   <metadata name="$this.Localizable" type="System.Boolean, mscorlib, Version=4.0.0.0, Culture=neutral, PublicKeyToken=b77a5c561934e089">
     <value>True</value>
@@ -1113,58 +1065,16 @@
   <data name="&gt;&gt;ionTypesMenuItem.Type" xml:space="preserve">
     <value>System.Windows.Forms.ToolStripMenuItem, System.Windows.Forms, Version=4.0.0.0, Culture=neutral, PublicKeyToken=b77a5c561934e089</value>
   </data>
-  <data name="&gt;&gt;aMenuItem.Name" xml:space="preserve">
-    <value>aMenuItem</value>
-  </data>
-  <data name="&gt;&gt;aMenuItem.Type" xml:space="preserve">
-    <value>System.Windows.Forms.ToolStripMenuItem, System.Windows.Forms, Version=4.0.0.0, Culture=neutral, PublicKeyToken=b77a5c561934e089</value>
-  </data>
-  <data name="&gt;&gt;bMenuItem.Name" xml:space="preserve">
-    <value>bMenuItem</value>
-  </data>
-  <data name="&gt;&gt;bMenuItem.Type" xml:space="preserve">
-    <value>System.Windows.Forms.ToolStripMenuItem, System.Windows.Forms, Version=4.0.0.0, Culture=neutral, PublicKeyToken=b77a5c561934e089</value>
-  </data>
-  <data name="&gt;&gt;cMenuItem.Name" xml:space="preserve">
-    <value>cMenuItem</value>
-  </data>
-  <data name="&gt;&gt;cMenuItem.Type" xml:space="preserve">
-    <value>System.Windows.Forms.ToolStripMenuItem, System.Windows.Forms, Version=4.0.0.0, Culture=neutral, PublicKeyToken=b77a5c561934e089</value>
-  </data>
-  <data name="&gt;&gt;xMenuItem.Name" xml:space="preserve">
-    <value>xMenuItem</value>
-  </data>
-  <data name="&gt;&gt;xMenuItem.Type" xml:space="preserve">
-    <value>System.Windows.Forms.ToolStripMenuItem, System.Windows.Forms, Version=4.0.0.0, Culture=neutral, PublicKeyToken=b77a5c561934e089</value>
-  </data>
-  <data name="&gt;&gt;yMenuItem.Name" xml:space="preserve">
-    <value>yMenuItem</value>
-  </data>
-  <data name="&gt;&gt;yMenuItem.Type" xml:space="preserve">
-    <value>System.Windows.Forms.ToolStripMenuItem, System.Windows.Forms, Version=4.0.0.0, Culture=neutral, PublicKeyToken=b77a5c561934e089</value>
-  </data>
-  <data name="&gt;&gt;zMenuItem.Name" xml:space="preserve">
-    <value>zMenuItem</value>
-  </data>
-  <data name="&gt;&gt;zMenuItem.Type" xml:space="preserve">
-    <value>System.Windows.Forms.ToolStripMenuItem, System.Windows.Forms, Version=4.0.0.0, Culture=neutral, PublicKeyToken=b77a5c561934e089</value>
-  </data>
-  <data name="&gt;&gt;zhMenuItem.Name" xml:space="preserve">
-    <value>zhMenuItem</value>
-  </data>
-  <data name="&gt;&gt;zhMenuItem.Type" xml:space="preserve">
-    <value>System.Windows.Forms.ToolStripMenuItem, System.Windows.Forms, Version=4.0.0.0, Culture=neutral, PublicKeyToken=b77a5c561934e089</value>
-  </data>
-  <data name="&gt;&gt;zhhMenuItem.Name" xml:space="preserve">
-    <value>zhhMenuItem</value>
-  </data>
-  <data name="&gt;&gt;zhhMenuItem.Type" xml:space="preserve">
-    <value>System.Windows.Forms.ToolStripMenuItem, System.Windows.Forms, Version=4.0.0.0, Culture=neutral, PublicKeyToken=b77a5c561934e089</value>
-  </data>
   <data name="&gt;&gt;fragmentsMenuItem.Name" xml:space="preserve">
     <value>fragmentsMenuItem</value>
   </data>
   <data name="&gt;&gt;fragmentsMenuItem.Type" xml:space="preserve">
+    <value>System.Windows.Forms.ToolStripMenuItem, System.Windows.Forms, Version=4.0.0.0, Culture=neutral, PublicKeyToken=b77a5c561934e089</value>
+  </data>
+  <data name="&gt;&gt;specialIonsMenuItem.Name" xml:space="preserve">
+    <value>specialIonsMenuItem</value>
+  </data>
+  <data name="&gt;&gt;specialIonsMenuItem.Type" xml:space="preserve">
     <value>System.Windows.Forms.ToolStripMenuItem, System.Windows.Forms, Version=4.0.0.0, Culture=neutral, PublicKeyToken=b77a5c561934e089</value>
   </data>
   <data name="&gt;&gt;precursorIonMenuItem.Name" xml:space="preserve">
@@ -1369,12 +1279,6 @@
     <value>secondDerivativeMenuItem</value>
   </data>
   <data name="&gt;&gt;secondDerivativeMenuItem.Type" xml:space="preserve">
-    <value>System.Windows.Forms.ToolStripMenuItem, System.Windows.Forms, Version=4.0.0.0, Culture=neutral, PublicKeyToken=b77a5c561934e089</value>
-  </data>
-  <data name="&gt;&gt;firstDerivativeMenuItem.Name" xml:space="preserve">
-    <value>firstDerivativeMenuItem</value>
-  </data>
-  <data name="&gt;&gt;firstDerivativeMenuItem.Type" xml:space="preserve">
     <value>System.Windows.Forms.ToolStripMenuItem, System.Windows.Forms, Version=4.0.0.0, Culture=neutral, PublicKeyToken=b77a5c561934e089</value>
   </data>
   <data name="&gt;&gt;smoothSGChromMenuItem.Name" xml:space="preserve">

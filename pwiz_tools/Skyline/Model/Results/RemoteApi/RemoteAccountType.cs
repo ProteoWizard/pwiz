@@ -55,7 +55,7 @@ namespace pwiz.Skyline.Model.Results.RemoteApi
 
             public override RemoteAccount GetEmptyAccount()
             {
-                return new UnifiAccount(@"https://demo.unifiapi.com:50034", null, null);
+                return new UnifiAccount(@"https://democonnect.waters.com:48505", null, null);
             }
         }
     }

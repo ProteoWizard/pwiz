@@ -199,7 +199,7 @@ namespace pwiz.Skyline.Model.Results
                 return false;
             }
 
-            if (times.Length == 0)
+            if (times.Length <= 1)
             {
                 return false;
             }

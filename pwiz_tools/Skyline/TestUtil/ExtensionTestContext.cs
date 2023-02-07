@@ -17,6 +17,7 @@
  * limitations under the License.
  */
 using System;
+using System.Globalization;
 using System.IO;
 using System.Linq;
 using System.Reflection;
@@ -39,6 +40,21 @@ namespace pwiz.SkylineTestUtil
             }
         }
 
+        public static bool GetBoolValue(this TestContext testContext, string property, bool defaultValue)
+        {
+            var value = testContext.Properties[property];
+            return (value == null) ? defaultValue :
+                string.Compare(value.ToString(), "true", true, CultureInfo.InvariantCulture) == 0;
+        }
+
+        public static TValue GetEnumValue<TValue>(this TestContext testContext, string property, TValue defaultValue)
+        {
+            var value = testContext.Properties[property];
+            return (value == null) ? defaultValue :
+                (TValue)Enum.Parse(typeof(TValue), value.ToString());
+        }
+
+
         public static string GetTestDir(this TestContext testContext)
         {
             // when run with VSTest/MSTest (when .runsettings file is used), use the CustomTestResultsDirectory property if available
@@ -48,7 +64,27 @@ namespace pwiz.SkylineTestUtil
 
         public static string GetTestPath(this TestContext testContext, string relativePath)
         {
-            return Path.GetFullPath(Path.Combine(GetProjectDirectory(), testContext.GetTestDir(), relativePath));
+            return Path.GetFullPath(Path.Combine(GetProjectDirectory(), testContext.GetTestDir(), relativePath ?? string.Empty));
+        }
+
+        public static string GetTestResultsPath(this TestContext testContext, string relativePath = null)
+        {
+            return Path.GetFullPath(Path.Combine(GetProjectDirectory(), testContext.GetTestDir(), testContext.TestName, relativePath ?? string.Empty));
+        }
+
+        /// <summary>
+        /// Ensures the <see cref="GetTestResultsPath"/> root folder is created and empty.
+        /// </summary>
+        public static void EnsureTestResultsDir(this TestContext testContext)
+        {
+            var testResultsDir = testContext.GetTestResultsPath();
+            if (testResultsDir != null)
+            {
+                if (Directory.Exists(testResultsDir))
+                    DirectoryEx.SafeDelete(testResultsDir);
+
+                Directory.CreateDirectory(testResultsDir);
+            }
         }
 
         public static String GetProjectDirectory()
@@ -64,9 +100,16 @@ namespace pwiz.SkylineTestUtil
                     return directory;
             }
 
-            // as last resort, check if current directory is the pwiz repository root (e.g. when running TestRunner in Docker container)
-            if (File.Exists(Path.Combine("pwiz_tools", "Skyline", "Skyline.sln")))
-                return Path.Combine("pwiz_tools", "Skyline");
+            // As last resort, hunt around the current working directory to find the pwiz repository root (e.g. when running TestRunner in Docker container)
+            var up = string.Empty;
+            var relPath = @".";
+            for (var depth = 0; depth < 10; depth++)
+            {
+                if (File.Exists(Path.Combine(relPath, "pwiz_tools", "Skyline", "Skyline.sln")))
+                    return Path.GetFullPath(Path.Combine(relPath, "pwiz_tools", "Skyline"));
+                up = Path.Combine(up, @"..");
+                relPath = Path.Combine(Directory.GetCurrentDirectory(), up);
+            }
 
             return null;
         }

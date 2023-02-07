@@ -38,14 +38,14 @@ namespace pwiz.Skyline.Controls.Databinding
         private const int indexImageFolder = 0;
         private const int indexImageBlank = 1;
         private const int indexFirstImage = 2;
-        private readonly IDocumentUIContainer _documentUiContainer;
+        private readonly SkylineWindow _skylineWindow;
         private DocumentGridViewContext _viewContext;
 
-        public ExportLiveReportDlg(IDocumentUIContainer documentUIContainer)
+        public ExportLiveReportDlg(SkylineWindow skylineWindow)
         {
             InitializeComponent();
             Icon = Resources.Skyline;
-            _documentUiContainer = documentUIContainer;
+            _skylineWindow = skylineWindow;
             Debug.Assert(indexLocalizedLanguage == comboLanguage.Items.Count);
             comboLanguage.Items.Add(CultureInfo.CurrentUICulture.DisplayName);
             Debug.Assert(indexInvariantLanguage == comboLanguage.Items.Count);
@@ -76,9 +76,9 @@ namespace pwiz.Skyline.Controls.Databinding
         protected override void OnHandleCreated(EventArgs e)
         {
             base.OnHandleCreated(e);
-            if (null != _documentUiContainer)
+            if (null != _skylineWindow)
             {
-                _viewContext = new DocumentGridViewContext(new SkylineDataSchema(_documentUiContainer,
+                _viewContext = new DocumentGridViewContext(new SkylineWindowDataSchema(_skylineWindow,
                         DataSchemaLocalizer.INVARIANT));
                 _viewContext.ViewsChanged += OnViewsChanged;
                 imageList1.Images.Clear();
@@ -123,7 +123,7 @@ namespace pwiz.Skyline.Controls.Databinding
             {
                 return viewContext.Export(this, viewInfo);
             }
-            return viewContext.ExportToFile(this, viewInfo, filename, viewContext.GetDsvWriter(separator));
+            return viewContext.ExportToFile(this, viewInfo, filename, separator);
         }
 
         private void Repopulate()
@@ -176,12 +176,12 @@ namespace pwiz.Skyline.Controls.Databinding
             if (clone)
             {
                 var documentContainer = new MemoryDocumentContainer();
-                documentContainer.SetDocument(_documentUiContainer.DocumentUI, documentContainer.Document);
+                documentContainer.SetDocument(_skylineWindow.DocumentUI, documentContainer.Document);
                 dataSchema = new SkylineDataSchema(documentContainer, GetDataSchemaLocalizer());
             }
             else
             {
-                dataSchema = new SkylineDataSchema(_documentUiContainer, GetDataSchemaLocalizer());
+                dataSchema = new SkylineWindowDataSchema(_skylineWindow, GetDataSchemaLocalizer());
             }
             return new DocumentGridViewContext(dataSchema) {EnablePreview = true};
         }

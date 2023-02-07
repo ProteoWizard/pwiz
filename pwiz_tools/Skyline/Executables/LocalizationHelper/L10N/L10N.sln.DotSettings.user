@@ -1,7 +1,0 @@
-﻿<wpf:ResourceDictionary xml:space="preserve" xmlns:x="http://schemas.microsoft.com/winfx/2006/xaml" xmlns:s="clr-namespace:System;assembly=mscorlib" xmlns:ss="urn:shemas-jetbrains-com:settings-storage-xaml" xmlns:wpf="http://schemas.microsoft.com/winfx/2006/xaml/presentation">
-	<s:String x:Key="/Default/Environment/AssemblyExplorer/XmlDocument/@EntryValue">&lt;AssemblyExplorer&gt;&#xD;
-  &lt;Assembly Path="C:\Users\Yuval\Desktop\L10N\packages\Sprache.JetBrains.2.0.0.44\lib\portable-net4+netcore45+win8+wp8+sl5+MonoAndroid1+MonoTouch1\Sprache.dll" /&gt;&#xD;
-  &lt;Assembly Path="C:\Users\Yuval\Desktop\L10N\packages\NuGet.Core.2.10.1\lib\net40-Client\NuGet.Core.dll" /&gt;&#xD;
-  &lt;Assembly Path="C:\Users\Yuval\Desktop\L10N\packages\JetBrains.Platform.Core.Shell.105.0.20160414.95726\DotFiles\JetBrains.Platform.Util.dll" /&gt;&#xD;
-  &lt;Assembly Path="C:\Users\Yuval\Desktop\L10N\packages\JetBrains.Annotations.10.1.4\lib\net20\JetBrains.Annotations.dll" /&gt;&#xD;
-&lt;/AssemblyExplorer&gt;</s:String></wpf:ResourceDictionary>

@@ -66,6 +66,7 @@ namespace pwiz.Skyline
             this.contextMenuSpectrum = new System.Windows.Forms.ContextMenuStrip(this.components);
             this.ionTypesContextMenuItem = new System.Windows.Forms.ToolStripMenuItem();
             this.fragmentionsContextMenuItem = new System.Windows.Forms.ToolStripMenuItem();
+            this.specialionsContextMenuItem = new System.Windows.Forms.ToolStripMenuItem();
             this.precursorIonContextMenuItem = new System.Windows.Forms.ToolStripMenuItem();
             this.toolStripSeparator11 = new System.Windows.Forms.ToolStripSeparator();
             this.chargesContextMenuItem = new System.Windows.Forms.ToolStripMenuItem();
@@ -287,6 +288,7 @@ namespace pwiz.Skyline
             this.otherDocsHelpMenuItem = new System.Windows.Forms.ToolStripMenuItem();
             this.supportMenuItem = new System.Windows.Forms.ToolStripMenuItem();
             this.issuesMenuItem = new System.Windows.Forms.ToolStripMenuItem();
+            this.submitErrorReportMenuItem = new System.Windows.Forms.ToolStripMenuItem();
             this.checkForUpdatesSeparator = new System.Windows.Forms.ToolStripSeparator();
             this.checkForUpdatesMenuItem = new System.Windows.Forms.ToolStripMenuItem();
             this.toolStripSeparator29 = new System.Windows.Forms.ToolStripSeparator();
@@ -337,6 +339,7 @@ namespace pwiz.Skyline
             this.detectionsToolStripSeparator2 = new System.Windows.Forms.ToolStripSeparator();
             this.detectionsPropertiesToolStripMenuItem = new System.Windows.Forms.ToolStripMenuItem();
             this.detectionsToolStripSeparator3 = new System.Windows.Forms.ToolStripSeparator();
+            this.crashSkylineMenuItem = new System.Windows.Forms.ToolStripMenuItem();
             this.contextMenuTreeNode.SuspendLayout();
             this.contextMenuSpectrum.SuspendLayout();
             this.contextMenuRetentionTimes.SuspendLayout();
@@ -554,6 +557,7 @@ namespace pwiz.Skyline
             this.contextMenuSpectrum.Items.AddRange(new System.Windows.Forms.ToolStripItem[] {
             this.ionTypesContextMenuItem,
             this.fragmentionsContextMenuItem,
+            this.specialionsContextMenuItem,
             this.precursorIonContextMenuItem,
             this.toolStripSeparator11,
             this.chargesContextMenuItem,
@@ -591,6 +595,13 @@ namespace pwiz.Skyline
             this.fragmentionsContextMenuItem.Name = "fragmentionsContextMenuItem";
             resources.ApplyResources(this.fragmentionsContextMenuItem, "fragmentionsContextMenuItem");
             this.fragmentionsContextMenuItem.Click += new System.EventHandler(this.fragmentsMenuItem_Click);
+            // 
+            // specialionsContextMenuItem
+            // 
+            this.specialionsContextMenuItem.CheckOnClick = true;
+            this.specialionsContextMenuItem.Name = "specialionsContextMenuItem";
+            resources.ApplyResources(this.specialionsContextMenuItem, "specialionsContextMenuItem");
+            this.specialionsContextMenuItem.Click += new System.EventHandler(this.specialionsContextMenuItem_Click);
             // 
             // precursorIonContextMenuItem
             // 
@@ -2063,12 +2074,15 @@ namespace pwiz.Skyline
             this.documentationToolStripMenuItem,
             this.supportMenuItem,
             this.issuesMenuItem,
+            this.submitErrorReportMenuItem,
+            this.crashSkylineMenuItem,
             this.checkForUpdatesSeparator,
             this.checkForUpdatesMenuItem,
             this.toolStripSeparator29,
             this.aboutMenuItem});
             this.helpToolStripMenuItem.Name = "helpToolStripMenuItem";
             resources.ApplyResources(this.helpToolStripMenuItem, "helpToolStripMenuItem");
+            this.helpToolStripMenuItem.DropDownOpening += new System.EventHandler(this.helpToolStripMenuItem_DropDownOpening);
             // 
             // homeMenuItem
             // 
@@ -2132,6 +2146,12 @@ namespace pwiz.Skyline
             this.issuesMenuItem.Name = "issuesMenuItem";
             resources.ApplyResources(this.issuesMenuItem, "issuesMenuItem");
             this.issuesMenuItem.Click += new System.EventHandler(this.issuesMenuItem_Click);
+            // 
+            // submitErrorReportMenuItem
+            // 
+            this.submitErrorReportMenuItem.Name = "submitErrorReportMenuItem";
+            resources.ApplyResources(this.submitErrorReportMenuItem, "submitErrorReportMenuItem");
+            this.submitErrorReportMenuItem.Click += new System.EventHandler(this.submitErrorReportMenuItem_Click);
             // 
             // checkForUpdatesSeparator
             // 
@@ -2480,6 +2500,12 @@ namespace pwiz.Skyline
             this.detectionsToolStripSeparator3.Name = "detectionsToolStripSeparator3";
             resources.ApplyResources(this.detectionsToolStripSeparator3, "detectionsToolStripSeparator3");
             // 
+            // crashSkylineMenuItem
+            // 
+            this.crashSkylineMenuItem.Name = "crashSkylineMenuItem";
+            resources.ApplyResources(this.crashSkylineMenuItem, "crashSkylineMenuItem");
+            this.crashSkylineMenuItem.Click += new System.EventHandler(this.crashSkylineMenuItem_Click);
+            // 
             // SkylineWindow
             // 
             resources.ApplyResources(this, "$this");
@@ -2556,6 +2582,7 @@ namespace pwiz.Skyline
         private System.Windows.Forms.ContextMenuStrip contextMenuSpectrum;
         private System.Windows.Forms.ToolStripMenuItem ionTypesContextMenuItem;
         private System.Windows.Forms.ToolStripMenuItem fragmentionsContextMenuItem;
+        private System.Windows.Forms.ToolStripMenuItem specialionsContextMenuItem;
         private System.Windows.Forms.ToolStripSeparator toolStripSeparator11;
         private System.Windows.Forms.ToolStripSeparator toolStripSeparator12;
         private System.Windows.Forms.ToolStripMenuItem ranksContextMenuItem;
@@ -2816,6 +2843,8 @@ namespace pwiz.Skyline
         private System.Windows.Forms.ToolStripMenuItem detectionsYScalePercentToolStripMenuItem;
         private System.Windows.Forms.ToolStripMenuItem massErrorToolStripMenuItem;
         private System.Windows.Forms.ToolStripMenuItem synchMzScaleToolStripMenuItem;
+        private System.Windows.Forms.ToolStripMenuItem submitErrorReportMenuItem;
+        private System.Windows.Forms.ToolStripMenuItem crashSkylineMenuItem;
     }
 }
 

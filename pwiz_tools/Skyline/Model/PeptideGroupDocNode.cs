@@ -158,6 +158,11 @@ namespace pwiz.Skyline.Model
                 newMetadata = newMetadata.ChangeName(null); // no actual override
             if (Equals(PeptideGroup.Description, newMetadata.Description))
                 newMetadata = newMetadata.ChangeDescription(null); // no actual override
+            var group = PeptideGroup as FastaSequenceGroup;
+            if (group != null)
+            {
+                Assume.AreEqual(group.FastaSequenceList.Count, proteinMetadata.ProteinMetadataList.Count);
+            }
             return ChangeProp(ImClone(this), im => im._proteinMetadata = newMetadata);
         }
 
@@ -325,26 +330,24 @@ namespace pwiz.Skyline.Model
             return childrenNew;
         }
 
-        public PeptideGroupDocNode Merge(PeptideGroupDocNode nodePepGroup)
+        public PeptideGroupDocNode Merge(PeptideGroupDocNode nodePepGroup = null)
         {
-            var childrenNew = new List<PeptideDocNode>(Children.Cast<PeptideDocNode>());
+            var childrenNew = new List<PeptideDocNode>();
             // Remember where all the existing children are
             var dictPepIndex = new Dictionary<PeptideModKey, int>();
-            for (int i = 0; i < childrenNew.Count; i++)
-            {
-                var key = childrenNew[i].Key;
-                if (!dictPepIndex.ContainsKey(key))
-                    dictPepIndex[key] = i;
-            }
             // Add the new children to the end, or merge when the peptide is already present
-            foreach (PeptideDocNode nodePep in nodePepGroup.Children)
+            var allChildren = nodePepGroup != null
+                ? new[] { Children, nodePepGroup.Children }.SelectMany(p => p)
+                : Children;
+            foreach (PeptideDocNode nodePep in allChildren)
             {
-                int i;
-                if (dictPepIndex.TryGetValue(nodePep.Key, out i))
+                if (dictPepIndex.TryGetValue(nodePep.Key, out int i))
                     childrenNew[i] = childrenNew[i].Merge(nodePep);
                 else
+                {
+                    dictPepIndex.Add(nodePep.Key, childrenNew.Count);
                     childrenNew.Add(nodePep);
-
+                }
             }
             // If it is a FASTA sequence, make sure new peptides are sorted into place
             if (PeptideGroup is FastaSequence && childrenNew.Count > Children.Count)

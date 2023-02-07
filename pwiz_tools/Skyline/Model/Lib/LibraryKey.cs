@@ -51,7 +51,7 @@ namespace pwiz.Skyline.Model.Lib
         {
             int length = PrimitiveArrays.ReadOneValue<int>(stream);
             byte[] buffer = new byte[length];
-            stream.Read(buffer, 0, length);
+            stream.ReadOrThrow(buffer, 0, length);
             var proto = new LibraryKeyProto();
             proto.MergeFrom(new CodedInputStream(buffer));
             switch (proto.KeyType)
@@ -791,6 +791,30 @@ namespace pwiz.Skyline.Model.Lib
             }
 
             return true;
+        }
+
+        protected bool Equals(CrosslinkLibraryKey other)
+        {
+            return Charge == other.Charge && Equals(PeptideLibraryKeys, other.PeptideLibraryKeys) && Equals(Crosslinks, other.Crosslinks);
+        }
+
+        public override bool Equals(object obj)
+        {
+            if (ReferenceEquals(null, obj)) return false;
+            if (ReferenceEquals(this, obj)) return true;
+            if (obj.GetType() != this.GetType()) return false;
+            return Equals((CrosslinkLibraryKey)obj);
+        }
+
+        public override int GetHashCode()
+        {
+            unchecked
+            {
+                var hashCode = Charge;
+                hashCode = (hashCode * 397) ^ (PeptideLibraryKeys != null ? PeptideLibraryKeys.GetHashCode() : 0);
+                hashCode = (hashCode * 397) ^ (Crosslinks != null ? Crosslinks.GetHashCode() : 0);
+                return hashCode;
+            }
         }
     }
 }

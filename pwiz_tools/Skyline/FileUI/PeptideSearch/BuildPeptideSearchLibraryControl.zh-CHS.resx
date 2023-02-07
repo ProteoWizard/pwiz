@@ -472,7 +472,7 @@
     <value>0</value>
   </data>
   <data name="label2.Text" xml:space="preserve">
-    <value>起始于(&amp;M)：</value>
+    <value>开始(&amp;M)：</value>
   </data>
   <data name="&gt;&gt;label2.Name" xml:space="preserve">
     <value>label2</value>
@@ -583,7 +583,7 @@
     <value>9</value>
   </data>
   <data name="cbIncludeAmbiguousMatches.Text" xml:space="preserve">
-    <value>包含不确定匹配项(&amp;I)</value>
+    <value>包含模糊的匹配项(&amp;I)</value>
   </data>
   <data name="&gt;&gt;cbIncludeAmbiguousMatches.Name" xml:space="preserve">
     <value>cbIncludeAmbiguousMatches</value>
@@ -616,7 +616,7 @@
     <value>10</value>
   </data>
   <data name="cbFilterForDocumentPeptides.Text" xml:space="preserve">
-    <value>文档肽段筛选器(&amp;E)</value>
+    <value>文档中肽段的筛选器(&amp;E)</value>
   </data>
   <data name="&gt;&gt;cbFilterForDocumentPeptides.Name" xml:space="preserve">
     <value>cbFilterForDocumentPeptides</value>
@@ -835,16 +835,16 @@
     <value>0</value>
   </data>
   <data name="dataGridViewTextBoxColumn1.HeaderText" xml:space="preserve">
-    <value>File</value>
+    <value>文件</value>
   </data>
   <data name="dataGridViewTextBoxColumn2.HeaderText" xml:space="preserve">
-    <value>Score Type</value>
+    <value>得分类型</value>
   </data>
   <data name="dataGridViewTextBoxColumn3.HeaderText" xml:space="preserve">
-    <value>Score Threshold</value>
+    <value>得分阈值</value>
   </data>
   <data name="dataGridViewTextBoxColumn4.HeaderText" xml:space="preserve">
-    <value>Score Threshold</value>
+    <value>得分阈值</value>
   </data>
   <metadata name="$this.Localizable" type="System.Boolean, mscorlib, Version=4.0.0.0, Culture=neutral, PublicKeyToken=b77a5c561934e089">
     <value>True</value>

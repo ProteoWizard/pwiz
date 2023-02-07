@@ -19,7 +19,9 @@
 
 using System;
 using System.Collections.Generic;
+using System.Diagnostics;
 using System.IO;
+using System.Linq;
 using System.Text;
 using pwiz.Skyline.Util;
 using pwiz.Skyline.Util.Extensions;
@@ -90,8 +92,16 @@ namespace pwiz.SkylineTest
                     writer.Write(separator);
                 writer.WriteDsvField(field, separator);
             }
-            var fieldsOut = sb.ToString().ParseDsvFields(separator);
-            Assert.IsTrue(ArrayUtil.EqualsDeep(fields, fieldsOut), "while parsing:\n"+sb+"\nexpected:\n" + string.Join("\n", fields) + "\n\ngot:\n" + string.Join("\n", fieldsOut));
+
+            var line = sb.ToString();
+            var fieldsOut = line.ParseDsvFields(separator);
+            Assert.IsTrue(ArrayUtil.EqualsDeep(fields, fieldsOut),
+                TextUtil.LineSeparate("while parsing:", line, string.Empty, 
+                    "expected:", TextUtil.LineSeparate(fields), string.Empty, 
+                    "got:",TextUtil.LineSeparate(fieldsOut)));
+            var detectedSeparator = AssertEx.DetermineDsvDelimiter(new[] { line }, out var detectedColumnCount);
+            Assert.AreEqual(separator, detectedSeparator);
+            Assert.AreEqual(fields.Length, detectedColumnCount);
         }
 
         [TestMethod]
@@ -156,7 +166,7 @@ namespace pwiz.SkylineTest
 
         }
 
-        [TestMethod, NoParallelTesting]
+        [TestMethod]
         public void SafeDeleteTest()
         {
             // Test ArgumentException.
@@ -179,7 +189,8 @@ namespace pwiz.SkylineTest
             AssertEx.NoExceptionThrown<IOException>(() => FileEx.SafeDelete(pathTooLong, true));
 
             // Test IOException.
-            const string busyFile = "TestBusyDelete.txt"; // Not L10N
+            TestContext.EnsureTestResultsDir();
+            string busyFile = TestContext.GetTestResultsPath("TestBusyDelete.txt"); // Not L10N
             using (File.CreateText(busyFile))
             {
                 AssertEx.ThrowsException<IOException>(() => FileEx.SafeDelete(busyFile));
@@ -188,7 +199,7 @@ namespace pwiz.SkylineTest
             AssertEx.NoExceptionThrown<IOException>(() => FileEx.SafeDelete(busyFile));
 
             // Test UnauthorizedAccessException.
-            const string readOnlyFile = "TestReadOnlyFile.txt"; // Not L10N
+            string readOnlyFile = TestContext.GetTestResultsPath("TestReadOnlyFile.txt"); // Not L10N
 // ReSharper disable LocalizableElement
             File.WriteAllText(readOnlyFile, "Testing read only file delete.\n"); // Not L10N
 // ReSharper restore LocalizableElement
@@ -285,6 +296,56 @@ namespace pwiz.SkylineTest
             Assert.IsFalse(DirectoryEx.IsTempZipFolder(@"C:\Users\skylinedev\Temp1_TargetedMSMS_2.zip\TargetedMSMS\Low Res\BSA_Protea_label_free_meth3.sky", out zipFileName));
             Assert.IsTrue(DirectoryEx.IsTempZipFolder(@"C:\Users\skylinedev\AppData\Local\Temp\ZipFile.zip\BSA_Protea_label_free_meth3.sky", out zipFileName));
             Assert.AreEqual("ZipFile.zip", zipFileName);
+        }
+
+        [TestMethod]
+        public void FilesDirTest()
+        {
+            var cleanupLevel = DesiredCleanupLevel;
+            try
+            {
+                var testFilesDir = new TestFilesDir(TestContext, @"Test\DocLoadLibraryTest.zip");
+                // Lock a file and make sure that CleanUp fails
+                // NOTE: This takes seconds because the cleanup code uses TryTwice()
+                const string fileName = "DocWithLibrary.sky";
+                string filePath = testFilesDir.GetTestPath(fileName);
+                using (new StreamReader(filePath))
+                {
+                    // Test the code that names the process locking a file
+                    try
+                    {
+                        var names = string.Join(@", ", FileLockingProcessFinder.GetProcessesUsingFile(filePath).Select(p => p.ProcessName));
+                        AssertEx.Contains(names, Process.GetCurrentProcess().ProcessName);
+                    }
+                    catch
+                    {
+                        // ignored - the mechanism behind FileLockingProcessFinder may not be supported, probably due to insufficient permissions
+                    }
+
+                    // Test our post-test cleanup code's handling of a locked file
+                    if (!Install.IsRunningOnWine)
+                    {
+                        DesiredCleanupLevel = DesiredCleanupLevel.none; // Folders renamed
+                        AssertEx.ThrowsException<IOException>(testFilesDir.Cleanup, x => AssertEx.Contains(x.Message, fileName));
+                        DesiredCleanupLevel = DesiredCleanupLevel.all;  // Folders deleted
+                        AssertEx.ThrowsException<IOException>(testFilesDir.Cleanup, x => AssertEx.Contains(x.Message, fileName));
+                    }
+                }
+                // Now test successful cleanup
+                DesiredCleanupLevel = DesiredCleanupLevel.downloads; // Folders renamed
+                testFilesDir.Cleanup();
+                AssertEx.FileExists(filePath);
+                DesiredCleanupLevel = DesiredCleanupLevel.all;  // Folders deleted
+                testFilesDir.Cleanup();
+                AssertEx.FileNotExists(filePath);
+                AssertEx.IsFalse(Directory.Exists(testFilesDir.FullPath));
+                // CONSIDER: This could be extended to test persistent files and
+                //           ZIP files in the Downloads folder.
+            }
+            finally
+            {
+                DesiredCleanupLevel = cleanupLevel;
+            }
         }
     }
 }
