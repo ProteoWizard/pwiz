@@ -36,6 +36,7 @@
 #include <boost/icl/interval_set.hpp>
 #include <boost/icl/continuous_interval.hpp>
 #include <boost/smart_ptr/make_shared.hpp>
+#include <boost/xpressive/xpressive_dynamic.hpp>
 
 #pragma managed
 #include "pwiz/utility/misc/cpp_cli_utilities.hpp"
@@ -48,10 +49,8 @@ using namespace Clearcore2::Data::AnalystDataProvider;
 using namespace Clearcore2::Data::Client;
 using namespace Clearcore2::Data::DataAccess;
 using namespace Clearcore2::Data::DataAccess::SampleData;
-
-#if __CLR_VER > 40000000 // .NET 4
 using namespace Clearcore2::RawXYProcessing;
-#endif
+namespace bxp = boost::xpressive;
 
 // peak areas from Sciex are very small values relative to peak heights;
 // multiplying them by this scaling factor makes them more comparable
@@ -147,6 +146,7 @@ struct ExperimentImpl : public Experiment
     const WiffFileImpl* wifffile_;
     gcroot<MSExperiment^> msExperiment;
     int sample, period, experiment;
+    bool hasHalfSizeRTWindow;
 
     ExperimentType experimentType;
     size_t simCount;
@@ -203,10 +203,7 @@ struct SpectrumImpl : public Spectrum
     ExperimentImplPtr experiment;
     gcroot<MassSpectrumInfo^> spectrumInfo;
     mutable gcroot<MassSpectrum^> spectrum;
-
-#if __CLR_VER > 40000000 // .NET 4
     mutable gcroot<cli::array<PeakClass^>^> peakList;
-#endif
 
     int cycle;
 
@@ -241,11 +238,7 @@ WiffFileImpl::WiffFileImpl(const string& wiffpath)
 {
     try
     {
-/*#if __CLR_VER > 40000000 // .NET 4
-        Clearcore2::Licensing::LicenseKeys::Keys = gcnew array<String^> {ABI_BETA_LICENSE_KEY};
-#else
-        Licenser::LicenseKey = ABI_BETA_LICENSE_KEY;
-#endif*/
+        //Clearcore2::Licensing::LicenseKeys::Keys = gcnew array<String^> {ABI_BETA_LICENSE_KEY};
 
         provider = DataProviderFactory::CreateDataProvider("", true);
         //provider = gcnew AnalystWiffDataProvider();
@@ -439,6 +432,25 @@ ExperimentImpl::ExperimentImpl(const WiffFileImpl* wifffile, int sample, int per
             transitionCount = msExperiment->Details->MassRangeInfo->Length;
         else if (experimentType == SIM)
             simCount = msExperiment->Details->MassRangeInfo->Length;
+
+        hasHalfSizeRTWindow = false;
+        try
+        {
+            auto softwareVersion = ToStdString(wifffile_->batch->GetSample(sample)->Details->SoftwareVersion);
+            bxp::sregex sciexOsVersionRegex = bxp::sregex::compile(R"(SCIEX OS (\d+)\.(\d+))");
+
+            bxp::smatch match;
+            if (bxp::regex_match(softwareVersion, match, sciexOsVersionRegex))
+            {
+                int major = lexical_cast<int>(match[1].str());
+                int minor = lexical_cast<int>(match[2].str());
+                hasHalfSizeRTWindow = !(major >= 3 && minor >= 1); // currently assumed present in SCIEX OS lower than v3.1
+            }
+        }
+        catch (Exception^)
+        {
+            // ignore read past end of stream: no version details? probably acquired with Analyst?
+        }
     }
     CATCH_AND_FORWARD
 }
@@ -523,11 +535,12 @@ void ExperimentImpl::getSIM(size_t index, Target& target) const
 
         SIMMassRange^ transition = (SIMMassRange^) msExperiment->Details->MassRangeInfo[index];
 
+        double rtWindowMultiplier = hasHalfSizeRTWindow ? 1 : 0.5;
         target.type = TargetType_SIM;
         target.Q1 = transition->Mass;
         target.dwellTime = transition->DwellTime;
-        target.startTime = transition->ExpectedRT - transition->RTWindow / 2;
-        target.endTime = transition->ExpectedRT + transition->RTWindow / 2;
+        target.startTime = transition->ExpectedRT - transition->RTWindow * rtWindowMultiplier;
+        target.endTime = transition->ExpectedRT + transition->RTWindow * rtWindowMultiplier;
         target.compoundID = ToStdString(transition->Name);
         
         auto parameters = transition->CompoundDepParameters;
@@ -561,12 +574,13 @@ void ExperimentImpl::getSRM(size_t index, Target& target) const
 
         MRMMassRange^ transition = (MRMMassRange^) msExperiment->Details->MassRangeInfo[index];
 
+        double rtWindowMultiplier = hasHalfSizeRTWindow ? 1 : 0.5;
         target.type = TargetType_SRM;
         target.Q1 = transition->Q1Mass;
         target.Q3 = transition->Q3Mass;
         target.dwellTime = transition->DwellTime;
-        target.startTime = transition->ExpectedRT - transition->RTWindow;
-        target.endTime = transition->ExpectedRT + transition->RTWindow;
+        target.startTime = transition->ExpectedRT - transition->RTWindow * rtWindowMultiplier;
+        target.endTime = transition->ExpectedRT + transition->RTWindow * rtWindowMultiplier;
         target.compoundID = ToStdString(transition->Name);
 
         auto parameters = transition->CompoundDepParameters;
@@ -768,23 +782,19 @@ size_t SpectrumImpl::getDataSize(bool doCentroid, bool ignoreZeroIntensityPoints
         if (experimentType == MRM || experimentType == SIM)
             return experiment->msExperiment->Details->MassRangeInfo->Length;
 
-#if __CLR_VER > 40000000 // .NET 4
         if (doCentroid)
         {
             if ((cli::array<PeakClass^>^) peakList == nullptr) peakList = experiment->msExperiment->GetPeakArray(cycle-1);
             return (size_t) peakList->Length;
         }
         else
-#endif
         {
             if ((MassSpectrum^) spectrum == nullptr)
             {
                 spectrum = experiment->msExperiment->GetMassSpectrum(cycle-1);
-#if __CLR_VER > 40000000 // the .NET 4 version has an efficient way to add zeros
 
                 if (!ignoreZeroIntensityPoints && pointsAreContinuous)
                     experiment->msExperiment->AddZeros((MassSpectrum^) spectrum, 1);
-#endif
             }
             return (size_t) spectrum->NumDataPoints;
         }
@@ -797,7 +807,6 @@ void SpectrumImpl::getData(bool doCentroid, pwiz::util::BinaryData<double>& mz, 
 {
     try
     {
-#if __CLR_VER > 40000000 // .NET 4
         if (doCentroid && pointsAreContinuous)
         {
             if ((cli::array<PeakClass^>^) peakList == nullptr) peakList = experiment->msExperiment->GetPeakArray(cycle-1);
@@ -812,15 +821,12 @@ void SpectrumImpl::getData(bool doCentroid, pwiz::util::BinaryData<double>& mz, 
             }
         }
         else
-#endif
         {
             if ((MassSpectrum^) spectrum == nullptr)
             {
                 spectrum = experiment->msExperiment->GetMassSpectrum(cycle-1);
-#if __CLR_VER > 40000000 // the .NET 4 version has an efficient way to add zeros
                 if (!ignoreZeroIntensityPoints && pointsAreContinuous)
                     experiment->msExperiment->AddZeros((MassSpectrum^) spectrum, 1);
-#endif
             }
 
             // XValues are not m/z values for MRM and SIM experiments
