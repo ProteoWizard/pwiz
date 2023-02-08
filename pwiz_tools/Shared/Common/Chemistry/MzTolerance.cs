@@ -101,5 +101,26 @@ namespace pwiz.Common.Chemistry
 
         public string AuditLogText => $"\"{Value}\" {UnitText}";
         public bool IsName => false;
-    };
+
+        protected bool Equals(MzTolerance other)
+        {
+            return Value.Equals(other.Value) && Unit == other.Unit;
+        }
+
+        public override bool Equals(object obj)
+        {
+            if (ReferenceEquals(null, obj)) return false;
+            if (ReferenceEquals(this, obj)) return true;
+            if (obj.GetType() != this.GetType()) return false;
+            return Equals((MzTolerance)obj);
+        }
+
+        public override int GetHashCode()
+        {
+            unchecked
+            {
+                return (Value.GetHashCode() * 397) ^ (int)Unit;
+            }
+        }
+    }
 }

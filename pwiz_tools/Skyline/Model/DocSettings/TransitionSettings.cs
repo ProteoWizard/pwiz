@@ -1802,8 +1802,7 @@ namespace pwiz.Skyline.Model.DocSettings
         {
             if (ReferenceEquals(null, obj)) return false;
             if (ReferenceEquals(this, obj)) return true;
-            return obj.IonMatchMzTolerance.Value == IonMatchMzTolerance.Value && obj.IonMatchMzTolerance.Unit == IonMatchMzTolerance.Unit &&
-                   obj.MinIonCount == MinIonCount && obj.IonCount == IonCount && Equals(obj.Pick, Pick);
+            return Equals(obj.IonMatchMzTolerance, IonMatchMzTolerance) && obj.MinIonCount == MinIonCount && obj.IonCount == IonCount && Equals(obj.Pick, Pick);
         }
 
         public override bool Equals(object obj)
@@ -1818,8 +1817,7 @@ namespace pwiz.Skyline.Model.DocSettings
         {
             unchecked
             {
-                int result = IonMatchMzTolerance.Value.GetHashCode();
-                result = (result*397) ^ IonMatchMzTolerance.Unit.GetHashCode();
+                int result = IonMatchMzTolerance.GetHashCode();
                 result = (result*397) ^ MinIonCount;
                 result = (result*397) ^ IonCount;
                 result = (result*397) ^ Pick.GetHashCode();
