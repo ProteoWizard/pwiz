@@ -657,4 +657,13 @@
   <data name="SharedPeptidesGroup_Removed" xml:space="preserve">
     <value>削除済み (ペプチドは特定のタンパク質グループに固有の必要がある)</value>
   </data>
+  <data name="Simple_equalize_medians" xml:space="preserve">
+    <value>中央値を均一化</value>
+  </data>
+  <data name="Simple_global_standards" xml:space="preserve">
+    <value>グローバル標準に対する比率</value>
+  </data>
+  <data name="Simple_none" xml:space="preserve">
+    <value>なし</value>
+  </data>
 </root>
