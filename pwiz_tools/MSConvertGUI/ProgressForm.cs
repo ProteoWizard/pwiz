@@ -32,7 +32,7 @@ using CustomProgressCell;
 
 namespace MSConvertGUI
 {
-    public partial class ProgressForm : Form
+    public partial class ProgressForm : BaseForm
     {
         public class JobInfo
         {
