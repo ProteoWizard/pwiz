@@ -666,4 +666,10 @@
   <data name="Simple_none" xml:space="preserve">
     <value>なし</value>
   </data>
+  <data name="Simple_ratio_to_heavy" xml:space="preserve">
+    <value>Heavyに対する比率</value>
+  </data>
+  <data name="Simple_ratio_to_light" xml:space="preserve">
+    <value>Lightに対する比率</value>
+  </data>
 </root>
