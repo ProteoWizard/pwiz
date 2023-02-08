@@ -49,8 +49,10 @@ using namespace Clearcore2::Data::AnalystDataProvider;
 using namespace Clearcore2::Data::Client;
 using namespace Clearcore2::Data::DataAccess;
 using namespace Clearcore2::Data::DataAccess::SampleData;
+
+#if __CLR_VER > 40000000 // .NET 4
 using namespace Clearcore2::RawXYProcessing;
-namespace bxp = boost::xpressive;
+#endif
 
 // peak areas from Sciex are very small values relative to peak heights;
 // multiplying them by this scaling factor makes them more comparable
@@ -203,7 +205,10 @@ struct SpectrumImpl : public Spectrum
     ExperimentImplPtr experiment;
     gcroot<MassSpectrumInfo^> spectrumInfo;
     mutable gcroot<MassSpectrum^> spectrum;
+
+#if __CLR_VER > 40000000 // .NET 4
     mutable gcroot<cli::array<PeakClass^>^> peakList;
+#endif
 
     int cycle;
 
@@ -238,7 +243,11 @@ WiffFileImpl::WiffFileImpl(const string& wiffpath)
 {
     try
     {
-        //Clearcore2::Licensing::LicenseKeys::Keys = gcnew array<String^> {ABI_BETA_LICENSE_KEY};
+/*#if __CLR_VER > 40000000 // .NET 4
+        Clearcore2::Licensing::LicenseKeys::Keys = gcnew array<String^> {ABI_BETA_LICENSE_KEY};
+#else
+        Licenser::LicenseKey = ABI_BETA_LICENSE_KEY;
+#endif*/
 
         provider = DataProviderFactory::CreateDataProvider("", true);
         //provider = gcnew AnalystWiffDataProvider();
@@ -782,19 +791,23 @@ size_t SpectrumImpl::getDataSize(bool doCentroid, bool ignoreZeroIntensityPoints
         if (experimentType == MRM || experimentType == SIM)
             return experiment->msExperiment->Details->MassRangeInfo->Length;
 
+#if __CLR_VER > 40000000 // .NET 4
         if (doCentroid)
         {
             if ((cli::array<PeakClass^>^) peakList == nullptr) peakList = experiment->msExperiment->GetPeakArray(cycle-1);
             return (size_t) peakList->Length;
         }
         else
+#endif
         {
             if ((MassSpectrum^) spectrum == nullptr)
             {
                 spectrum = experiment->msExperiment->GetMassSpectrum(cycle-1);
+#if __CLR_VER > 40000000 // the .NET 4 version has an efficient way to add zeros
 
                 if (!ignoreZeroIntensityPoints && pointsAreContinuous)
                     experiment->msExperiment->AddZeros((MassSpectrum^) spectrum, 1);
+#endif
             }
             return (size_t) spectrum->NumDataPoints;
         }
@@ -807,6 +820,7 @@ void SpectrumImpl::getData(bool doCentroid, pwiz::util::BinaryData<double>& mz, 
 {
     try
     {
+#if __CLR_VER > 40000000 // .NET 4
         if (doCentroid && pointsAreContinuous)
         {
             if ((cli::array<PeakClass^>^) peakList == nullptr) peakList = experiment->msExperiment->GetPeakArray(cycle-1);
@@ -821,12 +835,15 @@ void SpectrumImpl::getData(bool doCentroid, pwiz::util::BinaryData<double>& mz, 
             }
         }
         else
+#endif
         {
             if ((MassSpectrum^) spectrum == nullptr)
             {
                 spectrum = experiment->msExperiment->GetMassSpectrum(cycle-1);
+#if __CLR_VER > 40000000 // the .NET 4 version has an efficient way to add zeros
                 if (!ignoreZeroIntensityPoints && pointsAreContinuous)
                     experiment->msExperiment->AddZeros((MassSpectrum^) spectrum, 1);
+#endif
             }
 
             // XValues are not m/z values for MRM and SIM experiments
