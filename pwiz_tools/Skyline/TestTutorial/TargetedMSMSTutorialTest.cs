@@ -1222,6 +1222,7 @@ namespace pwiz.SkylineTestTutorial
 
             }); 
             WaitForConditionUI(() => msGraph.PropertiesVisible);
+            WaitForGraphs();
             SpectrumProperties currentProperties = null;
             RunUI(() =>
             {
@@ -1244,6 +1245,8 @@ namespace pwiz.SkylineTestTutorial
                 Assert.AreEqual(isSmallMolecules ? 118 : 4000, currentProperties.SpectrumCount);
             });
             var lastNodeIndex = SkylineWindow.SequenceTree.Nodes.Count;
+            IdentityPath oldPath = null;
+            RunUI(() => { oldPath = SkylineWindow.SequenceTree.SelectedPath; });
             FindNode("547.3174");
             RunUI(() =>
             {
@@ -1263,6 +1266,8 @@ namespace pwiz.SkylineTestTutorial
                 msGraph.CloseButton.PerformClick();
             });
             WaitForConditionUI(() => !msGraph.PropertiesVisible);
+            RunUI(() => { SkylineWindow.SequenceTree.SelectPath(oldPath); });
+            WaitForGraphs();
         }
         private static PropertyDescriptorCollection GetProperties(PropertyGrid propertyGrid)
         {

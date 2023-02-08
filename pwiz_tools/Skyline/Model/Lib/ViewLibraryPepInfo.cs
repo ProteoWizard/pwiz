@@ -302,8 +302,10 @@ namespace pwiz.Skyline.Model.Lib
             }
         }
 
-        // Computes each ModificationInfo for the given peptide and returns a 
-        // list of all modifications.
+        /// <summary>
+        /// Computes each ModificationInfo for the given peptide and returns a
+        /// list of all modifications.
+        /// </summary>
         private IEnumerable<ModificationInfo> GetModifications()
         {
             IList<ModificationInfo> modList = new List<ModificationInfo>();
