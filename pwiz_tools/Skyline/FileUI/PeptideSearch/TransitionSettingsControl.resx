@@ -144,7 +144,7 @@
     <value>$this</value>
   </data>
   <data name="&gt;&gt;lblPrecursorCharges.ZOrder" xml:space="preserve">
-    <value>17</value>
+    <value>16</value>
   </data>
   <data name="txtPeptidePrecursorCharges.Location" type="System.Drawing.Point, System.Drawing">
     <value>17, 19</value>
@@ -165,7 +165,7 @@
     <value>$this</value>
   </data>
   <data name="&gt;&gt;txtPeptidePrecursorCharges.ZOrder" xml:space="preserve">
-    <value>16</value>
+    <value>15</value>
   </data>
   <data name="lblIonCharges.AutoSize" type="System.Boolean, mscorlib">
     <value>True</value>
@@ -192,7 +192,7 @@
     <value>$this</value>
   </data>
   <data name="&gt;&gt;lblIonCharges.ZOrder" xml:space="preserve">
-    <value>15</value>
+    <value>14</value>
   </data>
   <data name="txtPrecursorIonCharges.Location" type="System.Drawing.Point, System.Drawing">
     <value>144, 19</value>
@@ -213,7 +213,7 @@
     <value>$this</value>
   </data>
   <data name="&gt;&gt;txtPrecursorIonCharges.ZOrder" xml:space="preserve">
-    <value>14</value>
+    <value>13</value>
   </data>
   <data name="lblIonTypes.AutoSize" type="System.Boolean, mscorlib">
     <value>True</value>
@@ -240,7 +240,7 @@
     <value>$this</value>
   </data>
   <data name="&gt;&gt;lblIonTypes.ZOrder" xml:space="preserve">
-    <value>13</value>
+    <value>12</value>
   </data>
   <data name="txtIonTypes.Location" type="System.Drawing.Point, System.Drawing">
     <value>262, 19</value>
@@ -261,7 +261,7 @@
     <value>$this</value>
   </data>
   <data name="&gt;&gt;txtIonTypes.ZOrder" xml:space="preserve">
-    <value>12</value>
+    <value>11</value>
   </data>
   <data name="lblTolerance.AutoSize" type="System.Boolean, mscorlib">
     <value>True</value>
@@ -315,39 +315,6 @@
   <data name="&gt;&gt;txtTolerance.ZOrder" xml:space="preserve">
     <value>7</value>
   </data>
-  <data name="lblToleranceUnits.AutoSize" type="System.Boolean, mscorlib">
-    <value>True</value>
-  </data>
-  <data name="lblToleranceUnits.Font" type="System.Drawing.Font, System.Drawing">
-    <value>Microsoft Sans Serif, 8.25pt, style=Italic</value>
-  </data>
-  <data name="lblToleranceUnits.ImeMode" type="System.Windows.Forms.ImeMode, System.Windows.Forms">
-    <value>NoControl</value>
-  </data>
-  <data name="lblToleranceUnits.Location" type="System.Drawing.Point, System.Drawing">
-    <value>99, 243</value>
-  </data>
-  <data name="lblToleranceUnits.Size" type="System.Drawing.Size, System.Drawing">
-    <value>25, 13</value>
-  </data>
-  <data name="lblToleranceUnits.TabIndex" type="System.Int32, mscorlib">
-    <value>12</value>
-  </data>
-  <data name="lblToleranceUnits.Text" xml:space="preserve">
-    <value>m/z</value>
-  </data>
-  <data name="&gt;&gt;lblToleranceUnits.Name" xml:space="preserve">
-    <value>lblToleranceUnits</value>
-  </data>
-  <data name="&gt;&gt;lblToleranceUnits.Type" xml:space="preserve">
-    <value>System.Windows.Forms.Label, System.Windows.Forms, Version=4.0.0.0, Culture=neutral, PublicKeyToken=b77a5c561934e089</value>
-  </data>
-  <data name="&gt;&gt;lblToleranceUnits.Parent" xml:space="preserve">
-    <value>$this</value>
-  </data>
-  <data name="&gt;&gt;lblToleranceUnits.ZOrder" xml:space="preserve">
-    <value>8</value>
-  </data>
   <data name="lblIonCount.AutoSize" type="System.Boolean, mscorlib">
     <value>True</value>
   </data>
@@ -376,7 +343,7 @@
     <value>$this</value>
   </data>
   <data name="&gt;&gt;lblIonCount.ZOrder" xml:space="preserve">
-    <value>9</value>
+    <value>8</value>
   </data>
   <data name="lblIonCountUnits.AutoSize" type="System.Boolean, mscorlib">
     <value>True</value>
@@ -406,7 +373,7 @@
     <value>$this</value>
   </data>
   <data name="&gt;&gt;lblIonCountUnits.ZOrder" xml:space="preserve">
-    <value>10</value>
+    <value>9</value>
   </data>
   <data name="txtIonCount.Location" type="System.Drawing.Point, System.Drawing">
     <value>164, 240</value>
@@ -427,7 +394,7 @@
     <value>$this</value>
   </data>
   <data name="&gt;&gt;txtIonCount.ZOrder" xml:space="preserve">
-    <value>11</value>
+    <value>10</value>
   </data>
   <data name="cbExclusionUseDIAWindow.AutoSize" type="System.Boolean, mscorlib">
     <value>True</value>
@@ -835,7 +802,7 @@
     <value>19</value>
   </data>
   <data name="label7.Text" xml:space="preserve">
-    <value>Ion match tolerance &amp;unit:</value>
+    <value>Ion match toleran&amp;ce unit:</value>
   </data>
   <data name="&gt;&gt;label7.Name" xml:space="preserve">
     <value>label7</value>

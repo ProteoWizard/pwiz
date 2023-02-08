@@ -37,7 +37,6 @@
             this.txtIonTypes = new System.Windows.Forms.TextBox();
             this.lblTolerance = new System.Windows.Forms.Label();
             this.txtTolerance = new System.Windows.Forms.TextBox();
-            this.lblToleranceUnits = new System.Windows.Forms.Label();
             this.lblIonCount = new System.Windows.Forms.Label();
             this.lblIonCountUnits = new System.Windows.Forms.Label();
             this.txtIonCount = new System.Windows.Forms.TextBox();
@@ -99,11 +98,6 @@
             // 
             resources.ApplyResources(this.txtTolerance, "txtTolerance");
             this.txtTolerance.Name = "txtTolerance";
-            // 
-            // lblToleranceUnits
-            // 
-            resources.ApplyResources(this.lblToleranceUnits, "lblToleranceUnits");
-            this.lblToleranceUnits.Name = "lblToleranceUnits";
             // 
             // lblIonCount
             // 
@@ -207,12 +201,14 @@
             // 
             // comboMatchToleranceUnit
             // 
+            this.comboMatchToleranceUnit.DropDownStyle = System.Windows.Forms.ComboBoxStyle.DropDownList;
             this.comboMatchToleranceUnit.FormattingEnabled = true;
             this.comboMatchToleranceUnit.Items.AddRange(new object[] {
             resources.GetString("comboMatchToleranceUnit.Items"),
             resources.GetString("comboMatchToleranceUnit.Items1")});
             resources.ApplyResources(this.comboMatchToleranceUnit, "comboMatchToleranceUnit");
             this.comboMatchToleranceUnit.Name = "comboMatchToleranceUnit";
+            this.comboMatchToleranceUnit.SelectedIndexChanged += new System.EventHandler(this.comboMatchToleranceUnit_SelectedIndexChanged);
             // 
             // label7
             // 
@@ -232,7 +228,6 @@
             this.Controls.Add(this.cbExclusionUseDIAWindow);
             this.Controls.Add(this.lblTolerance);
             this.Controls.Add(this.txtTolerance);
-            this.Controls.Add(this.lblToleranceUnits);
             this.Controls.Add(this.lblIonCount);
             this.Controls.Add(this.lblIonCountUnits);
             this.Controls.Add(this.txtIonCount);
@@ -260,7 +255,6 @@
         private System.Windows.Forms.TextBox txtIonTypes;
         private System.Windows.Forms.Label lblTolerance;
         private System.Windows.Forms.TextBox txtTolerance;
-        private System.Windows.Forms.Label lblToleranceUnits;
         private System.Windows.Forms.Label lblIonCount;
         private System.Windows.Forms.Label lblIonCountUnits;
         private System.Windows.Forms.TextBox txtIonCount;

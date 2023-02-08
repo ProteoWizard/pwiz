@@ -1,6 +1,7 @@
 ﻿using System;
 using System.Collections.Generic;
 using System.Drawing;
+using System.Globalization;
 using System.Linq;
 using System.Windows.Forms;
 using pwiz.Common.Chemistry;
@@ -171,14 +172,25 @@ namespace pwiz.Skyline.FileUI.PeptideSearch
         {
             get 
             { 
-                return new MzTolerance(double.Parse(txtTolerance.Text, LocalizationHelper.CurrentCulture),
-                    (MzTolerance.Units)comboMatchToleranceUnit.SelectedIndex);
+                return new MzTolerance(IonMatchTolerance, IonMatchToleranceUnits);
             }
             set
             {
-                txtTolerance.Text = value.Value.ToString(LocalizationHelper.CurrentCulture);
-                comboMatchToleranceUnit.SelectedItem = comboMatchToleranceUnit.Items[(int)value.Unit];
+                IonMatchTolerance = value.Value;
+                IonMatchToleranceUnits = value.Unit;
             }
+        }
+
+        public double IonMatchTolerance
+        {
+            get { return double.Parse(txtTolerance.Text); }
+            set { txtTolerance.Text = value.ToString(CultureInfo.CurrentCulture); }
+        }
+
+        public MzTolerance.Units IonMatchToleranceUnits
+        {
+            get { return (MzTolerance.Units)comboMatchToleranceUnit.SelectedIndex; }
+            set { comboMatchToleranceUnit.SelectedIndex = (int)value; }
         }
 
         public int MinIonCount
@@ -280,7 +292,7 @@ namespace pwiz.Skyline.FileUI.PeptideSearch
 
                     var libraries = settings.Libraries.ChangePick(TransitionLibraryPick.filter);    // Always apply the filter when the wizard is used
                     var defLibraries = defSettings.Libraries;
-                    if (libraries.IonMatchMzTolerance == defLibraries.IonMatchMzTolerance)
+                    if (Equals(libraries.IonMatchMzTolerance, defLibraries.IonMatchMzTolerance))
                         libraries = libraries.ChangeIonMatchMzTolerance(new MzTolerance(0.05));
                     if (libraries.IonCount == defLibraries.IonCount)
                         libraries = libraries.ChangeIonCount(6);
@@ -430,6 +442,17 @@ namespace pwiz.Skyline.FileUI.PeptideSearch
             Helpers.AssignIfEquals(ref libraries, settings.Libraries);
 
             return new TransitionSettings(settings.Prediction, filter, libraries, settings.Integration, instrument, settings.FullScan, settings.IonMobilityFiltering);
+        }
+
+        private void comboMatchToleranceUnit_SelectedIndexChanged(object sender, EventArgs e)
+        {
+            if (double.TryParse(txtTolerance.Text, out var matchTolerance))
+            {
+                if (IonMatchToleranceUnits == MzTolerance.Units.mz)
+                    IonMatchTolerance = matchTolerance / 1000;
+                else
+                    IonMatchTolerance = matchTolerance * 1000;
+            }
         }
     }
 }
