@@ -347,7 +347,6 @@ Import Molecule Search > Extract Chromatograms > Found results files : contains 
 Import Molecule Search > Extract Chromatograms > Files to import simultaneously is "Many"
 Import Molecule Search > Extract Chromatograms > Removed prefix is "klc_20100329v_Protea_Peptide_Curve_"
 Import Molecule Search > Extract Chromatograms > Removed suffix is "_uL_tech1"
-Import Molecule Search > Configure Transition Settings > Ion match tolerance is "0,7" m/z
 Import Molecule Search > Configure Transition Settings > Pick min product ions is "6"
 Import Molecule Search > Configure Transition Settings > Product ion selection start is "ion 1"
 Import Molecule Search > Configure Transition Settings > Product ion selection end is "last ion"
@@ -364,7 +363,6 @@ Extra Info: Extract Chromatograms =
 },
 Configure Transition Settings = 
 {
-    Ion match tolerance = "0,7" m/z,
     Pick min product ions = "6",
     Product ion selection start = "ion 1",
     Product ion selection end = "last ion"
