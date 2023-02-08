@@ -38,7 +38,6 @@ using pwiz.Skyline.Model.Results;
 using pwiz.Skyline.Model.Results.Crawdad;
 using pwiz.Skyline.Model.Themes;
 using pwiz.Skyline.Properties;
-using pwiz.Skyline.SettingsUI;
 using pwiz.Skyline.Util;
 using pwiz.Skyline.Util.Extensions;
 using ZedGraph;
