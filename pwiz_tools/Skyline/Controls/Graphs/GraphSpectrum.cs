@@ -1417,7 +1417,8 @@ namespace pwiz.Skyline.Controls.Graphs
             }
         }
 
-        public bool ShowPropertiesSheet {
+        public bool ShowPropertiesSheet 
+        {
             set
             {
                 msGraphExtension.ShowPropertiesSheet(value);

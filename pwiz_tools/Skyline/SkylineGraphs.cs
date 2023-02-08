@@ -1139,10 +1139,7 @@ namespace pwiz.Skyline
 
             // Insert skyline specific menus
             var set = Settings.Default;
-            var cSearch = menuStrip.SourceControl;
-            while (cSearch != null && !(cSearch is IMzScalePlot))
-                cSearch = cSearch.Parent;
-            var control = (IMzScalePlot)cSearch;
+            var control = FormUtil.FindParentOfType<IMzScalePlot>(menuStrip.SourceControl);
             int iInsert = 0;
             if (control?.IsAnnotated ?? false)
             {
