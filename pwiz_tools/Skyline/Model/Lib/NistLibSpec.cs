@@ -375,7 +375,7 @@ namespace pwiz.Skyline.Model.Lib
 
     public abstract class NistLibraryBase : CachedLibrary<NistSpectrumInfo>
     {
-        public const double DUMMY_GC_ESI_MASS = 99; // Some GC libraries only offer fragment info (as there's no intact mass to measure after 100% fragmentation) so use a dummy mass
+        public const double DUMMY_GC_ESI_MASS = 1000; // Some GC libraries only offer fragment info (as there's no intact mass to measure after 100% fragmentation) so use a dummy mass
 
         // Version 6 adds peak annotations
         private const int FORMAT_VERSION_CACHE = 6; 
@@ -824,6 +824,7 @@ namespace pwiz.Skyline.Model.Lib
 
                 long lineCount = 0;
                 string line;
+                long nMasslessEntries = 0;
                 while ((line = reader.ReadLine()) != null)
                 {
                     lineCount++;
@@ -1163,10 +1164,11 @@ namespace pwiz.Skyline.Model.Lib
                         }
                         if (string.IsNullOrEmpty(formula))
                         {
-                            // Encode mass as string for library use
+                            // Encode mass as string for library use. If none found, use a dummy value
+                            var mass = precursorMz ?? (DUMMY_GC_ESI_MASS + (nMasslessEntries++ % DUMMY_GC_ESI_MASS)); // Limit to twice the initial dummy mass
                             formula = SmallMoleculeLibraryAttributes.FormatChemicalFormulaOrMassesString(null,
-                                new TypedMass(precursorMz ?? DUMMY_GC_ESI_MASS, MassType.Monoisotopic),
-                                new TypedMass(precursorMz ?? DUMMY_GC_ESI_MASS, MassType.Average));
+                                new TypedMass(mass, MassType.Monoisotopic),
+                                new TypedMass(mass, MassType.Average));
                         }
                     }
 
