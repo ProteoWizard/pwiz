@@ -313,7 +313,7 @@ namespace SkylineBatch
             }
         }
 
-        private void btnOpenRemoteFolder_Click(object sender, EventArgs e)
+        private void btnOpenRemoteFolder_Click(object sender, EventArgs eventArgs)
         {
             var state = _configManager.State;
 
@@ -325,15 +325,13 @@ namespace SkylineBatch
             {
                 remoteFolderList.Items.Clear();
 
-                foreach (var name in state.FileSources.Keys)
+                foreach (var fileSource in state.FileSources)
                 {
-                    remoteFolderList.Items.Add(name);
+                    remoteFolderList.Items.Add(new ToolStripMenuItem(fileSource.Key, null, (s, e) =>
+                    {
+                        Process.Start(fileSource.Value.URI.AbsoluteUri);
+                    }));
                 }
-
-                remoteFolderList.ItemClicked += (sender, e) =>
-                {
-                    Process.Start(state.FileSources[e.ClickedItem.Text].URI.AbsoluteUri);
-                };
 
                 remoteFolderList.Show(btnOpenRemoteFolder.GetCurrentParent(), 
                     new Point(btnOpenRemoteFolder.Bounds.X, 
