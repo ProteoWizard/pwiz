@@ -802,9 +802,15 @@ namespace pwiz.SkylineTestUtil
 
         public static SrmDocument NewDocumentFromSpectralLibrary(string libName, string libFullPath)
         {
-            // Now import the .blib and populate document from that
+            // Remove current document
             RunUI(() => SkylineWindow.NewDocument(true));
+            // Now import the named library and populate document from that
+            return AddToDocumentFromSpectralLibrary(libName, libFullPath);
+        }
 
+        // Import a spectral library and add its contents to current document
+        public static SrmDocument AddToDocumentFromSpectralLibrary(string libName, string libFullPath)
+        {
             var peptideSettingsUI = ShowDialog<PeptideSettingsUI>(SkylineWindow.ShowPeptideSettingsUI);
 
             Assert.IsNotNull(peptideSettingsUI);
@@ -846,6 +852,8 @@ namespace pwiz.SkylineTestUtil
 
             OkDialog(viewLibraryDlg, viewLibraryDlg.Close);
             OkDialog(peptideSettingsUI, peptideSettingsUI.OkDialog);
+
+            docAfter = WaitForDocumentChange(docAfter);
             return docAfter;
         }
     }

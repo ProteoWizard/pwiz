@@ -226,12 +226,17 @@ namespace pwiz.SkylineTestFunctional
                 Console.WriteLine(@"{0} = new TestDetails.DocumentCounts {1},", propName, actualCounts);
             else
             {
+                string msg = null;
                 if (targetCounts.ToString() != actualCounts.ToString())
-                    Console.Error.WriteLine($@"Expected target counts <{targetCounts}> do not match actual <{actualCounts}>.");
-                Assert.IsTrue(Math.Abs(targetCounts.ProteinCount - actualCounts.ProteinCount) <= 10);
-                Assert.IsTrue(Math.Abs(targetCounts.PeptideCount - actualCounts.PeptideCount) <= 10);
-                Assert.IsTrue(Math.Abs(targetCounts.PrecursorCount - actualCounts.PrecursorCount) <= 10);
-                Assert.IsTrue(Math.Abs(targetCounts.TransitionCount - actualCounts.TransitionCount) <= 100);
+                    msg = $@"Expected target counts <{targetCounts}> do not match actual <{actualCounts}>.";
+                Assert.IsTrue(Math.Abs(targetCounts.ProteinCount - actualCounts.ProteinCount) <= 10,
+                    msg ?? string.Format($"ProteinCount expected<{targetCounts.ProteinCount}>, actual<{actualCounts.ProteinCount}>"));
+                Assert.IsTrue(Math.Abs(targetCounts.PeptideCount - actualCounts.PeptideCount) <= 10,
+                    msg ?? string.Format($"PeptideCount expected<{targetCounts.PeptideCount}>, actual<{actualCounts.PeptideCount}>"));
+                Assert.IsTrue(Math.Abs(targetCounts.PrecursorCount - actualCounts.PrecursorCount) <= 10,
+                    msg ?? string.Format($"PrecursorCount expected<{targetCounts.PrecursorCount}>, actual<{actualCounts.PrecursorCount}>"));
+                Assert.IsTrue(Math.Abs(targetCounts.TransitionCount - actualCounts.TransitionCount) <= 100,
+                    msg ?? string.Format($"TransitionCount expected<{targetCounts.TransitionCount}>, actual<{actualCounts.TransitionCount}>"));
                 //Assert.Fail($@"Expected target counts <{targetCounts}> do not match actual <{actualCounts}>.");}
             }
         }
