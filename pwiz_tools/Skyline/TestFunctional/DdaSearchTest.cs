@@ -257,13 +257,21 @@ namespace pwiz.SkylineTestFunctional
                 editModDlg.OkDialog();
             });
 
-            // Test a terminal mod with no AA
+            // Test a N terminal mod with no AA
             RunDlg<EditStaticModDlg>(editListUI.AddItem, editModDlg =>
             {
                 editModDlg.Modification = new StaticMod("NotUniModMod (N-term)", null, ModTerminus.N, "C42", LabelAtoms.None, null, null);
                 editModDlg.Modification = editModDlg.Modification.ChangeVariable(true);
                 editModDlg.OkDialog();
             });
+
+            // Test a C terminal mod with no AA - commented out because it changes results a bit to include it
+            /*RunDlg<EditStaticModDlg>(editListUI.AddItem, editModDlg =>
+            {
+                editModDlg.Modification = new StaticMod("NotUniModMod (C-term)", null, ModTerminus.C, null, LabelAtoms.None, 0.01, 0.01);
+                editModDlg.Modification = editModDlg.Modification.ChangeVariable(true);
+                editModDlg.OkDialog();
+            });*/
             OkDialog(editListUI, editListUI.OkDialog);
 
             // Test back/next buttons
