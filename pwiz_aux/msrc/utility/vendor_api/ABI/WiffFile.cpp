@@ -36,14 +36,15 @@
 #include <boost/icl/interval_set.hpp>
 #include <boost/icl/continuous_interval.hpp>
 #include <boost/smart_ptr/make_shared.hpp>
-#include <boost/xpressive/xpressive_dynamic.hpp>
 
 #pragma managed
 #include "pwiz/utility/misc/cpp_cli_utilities.hpp"
 #include <msclr/auto_gcroot.h>
+#using <System.dll>
 #using <System.Xml.dll>
 using namespace pwiz::util;
 using namespace System;
+using namespace System::Text::RegularExpressions;
 using namespace Clearcore2::Data;
 using namespace Clearcore2::Data::AnalystDataProvider;
 using namespace Clearcore2::Data::Client;
@@ -445,15 +446,17 @@ ExperimentImpl::ExperimentImpl(const WiffFileImpl* wifffile, int sample, int per
         hasHalfSizeRTWindow = false;
         try
         {
-            auto softwareVersion = ToStdString(wifffile_->batch->GetSample(sample)->Details->SoftwareVersion);
-            bxp::sregex sciexOsVersionRegex = bxp::sregex::compile(R"(SCIEX OS (\d+)\.(\d+))");
+            auto softwareVersion = wifffile_->batch->GetSample(sample)->Details->SoftwareVersion;
+            auto sciexOsVersionRegex = gcnew Regex(R"(SCIEX OS (\d+)\.(\d+))");
 
-            bxp::smatch match;
-            if (bxp::regex_match(softwareVersion, match, sciexOsVersionRegex))
+            auto match = sciexOsVersionRegex->Match(softwareVersion);
+            if (match->Success)
             {
-                int major = lexical_cast<int>(match[1].str());
-                int minor = lexical_cast<int>(match[2].str());
+                int major = Convert::ToInt32(match->Groups[1]->Value);
+                int minor = Convert::ToInt32(match->Groups[2]->Value);
                 hasHalfSizeRTWindow = !(major >= 3 && minor >= 1); // currently assumed present in SCIEX OS lower than v3.1
+                //if (hasHalfSizeRTWindow)
+                //    Console::Error->WriteLine("NOTE: data from " + softwareVersion + " has bugged half-width RTWindows");
             }
         }
         catch (Exception^)
