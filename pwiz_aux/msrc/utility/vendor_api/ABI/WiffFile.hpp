@@ -190,7 +190,7 @@ struct PWIZ_API_DECL Experiment
 
     virtual size_t getSRMSize() const = 0;
     virtual void getSRM(size_t index, Target& target) const = 0;
-    virtual void getSIC(size_t index, pwiz::util::BinaryData<double>& times, pwiz::util::BinaryData<double>& intensities) const = 0;
+    virtual double getSIC(size_t index, pwiz::util::BinaryData<double>& times, pwiz::util::BinaryData<double>& intensities) const = 0;
     virtual void getSIC(size_t index, pwiz::util::BinaryData<double>& times, pwiz::util::BinaryData<double>& intensities,
                         double& basePeakX, double& basePeakY) const = 0;
 
