@@ -283,7 +283,7 @@ namespace pwiz.Skyline.Util
         public const string Si = "Si";  //Silicon
         // ReSharper restore LocalizableElement
 // ReSharper restore InconsistentNaming
-
+  
         /// <summary>
         /// A dictionary mapping heavy isotope symbols to their corresponding
         /// indices within the mass distributions of <see cref="IsotopeAbundances.Default"/>,
@@ -336,7 +336,7 @@ namespace pwiz.Skyline.Util
                     .ToDictionary(kvp => kvp.Key,
                         kvp => kvp.Value.Replace(@"'", string.Empty).Replace(@"""", string.Empty));
 
-        private static readonly char[] HEAVYSYMBOL_HINTS = new char[] {'\'', '"', 'D', 'T'}; // If a formula does not contain any of these, it's not heavy labeled
+        private static readonly char[] HEAVYSYMBOL_HINTS = new char[] {'\'', '"', 'D', 'T', Molecule.MASS_MOD_START_CH}; // If a formula does not contain any of these, it's not heavy labeled
 
         /// <summary>
         /// A list of Skyline-style isotope symbols (e.g. H')
@@ -399,6 +399,16 @@ namespace pwiz.Skyline.Util
         /// <returns>The first atomic symbol</returns>
         private static string NextSymbol(string expression)
         {
+            // Watch for mass modifications
+            if (expression.StartsWith(Molecule.MASS_MOD_START_PLUS) || expression.StartsWith(Molecule.MASS_MOD_START_MINUS))
+            {
+                var close = expression.IndexOf(Molecule.MASS_MOD_END_CH);
+                if (close > 0)
+                {
+                    return expression.Substring(0, close+1);
+                }
+            }
+
             // Skip the first character, since it is always the start of
             // the symbol, and then look for the end of the symbol.
             var i = 1;
@@ -527,7 +537,9 @@ namespace pwiz.Skyline.Util
 
         public static bool ContainsIsotopicElement(string desc)
         {
-            return DICT_HEAVYSYMBOL_TO_MONOSYMBOL.Keys.Any(desc.Contains); // Look for Cl', O", D, T etc
+            // Look for Cl', O", D, T etc, or mass modifier e.g. [+1.23/1.24]
+            return DICT_HEAVYSYMBOL_TO_MONOSYMBOL.Keys.Any(desc.Contains) || 
+                   desc.Contains(Molecule.MASS_MOD_START_PLUS) || desc.Contains(Molecule.MASS_MOD_START_MINUS); 
         }
 
         public static bool TryParseFormula(string formula, out Molecule resultMolecule, out string errMessage)
@@ -637,7 +649,7 @@ namespace pwiz.Skyline.Util
         }
 
         /// <summary>
-        /// Turn a formula like C5H9H'3NO2S into C5H12NO2S
+        /// Turn a formula like C5H9H'3NO2S[-1.23/1.24] into C5H12NO2S
         /// </summary>
         public string StripLabelsFromFormula(string desc)
         {
@@ -678,6 +690,11 @@ namespace pwiz.Skyline.Util
                             atomOrder[index] = unlabeled; // Formula was all heavy - e.g. C' but no C
                         }
                     }
+                }
+                else if (kvp.Key.StartsWith(Molecule.MASS_MOD_START)) // Mass modification
+                {
+                    var index = atomOrder.IndexOf(kvp.Key);
+                    atomOrder.RemoveAt(index);
                 }
             }
 
@@ -831,6 +848,8 @@ namespace pwiz.Skyline.Util
         /// Parses a chemical formula expressed as "[{atom}[count][spaces]]*",
         /// e.g. "C6H11ON", where supported atoms are H, O, N, C, S or P, etc.
         /// returning the total mass for the formula.
+        ///
+        /// Formula may contain information about unexplained masses e.g. [+1.23] or [-2.34]
         /// 
         /// The parser removes atoms and counts until it encounters a character
         /// it does not understand as being part of the chemical formula.
@@ -1024,15 +1043,13 @@ namespace pwiz.Skyline.Util
 
         /// <summary>
         /// Get the mass of a single atom.
+        /// Also handles mass modifications in the form [+d.ddd] or [-d.ddd]
         /// </summary>
-        /// <param name="sym">Character specifying the atom</param>
-        /// <returns>The mass of the single atom</returns>
+        /// <param name="sym">String specifying the atom or mass modification</param>
+        /// <returns>The mass of the single atom or the parsed mass modification</returns>
         public double GetMass(string sym)
         {
-            double mass;
-            if (_atomicMasses.TryGetValue(sym, out mass))
-                return mass;
-            return 0;
+            return _atomicMasses.TryGetValue(sym, out var mass) ? mass : Molecule.ParseMassModification(sym, this.MassType.IsAverage());
         }
 
         /// <summary>
@@ -1065,13 +1082,14 @@ namespace pwiz.Skyline.Util
         }
 
         /// <summary>
-        /// Return true if symbol is found in mass table
+        /// Return true if symbol is found in mass table, or it's understood as a mass modification e.g. [+1.2/1.21]
         /// </summary>
         /// <param name="sym"></param>
         /// <returns></returns>
         public bool IsKnownSymbol(string sym)
         {
-            return _atomicMasses.ContainsKey(sym);
+            return _atomicMasses.ContainsKey(sym) || // Known symbol, e.g. Cl, O etc
+                   sym.StartsWith(Molecule.MASS_MOD_START_PLUS) || sym.StartsWith(Molecule.MASS_MOD_START_MINUS); // Looks like a mass modification
         }
     }
 }

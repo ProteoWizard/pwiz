@@ -217,10 +217,13 @@ namespace pwiz.Skyline.Util
                 return false;
             }
             // Does formula contain an adduct description?  If so, pull charge from that.
-            var parts = formula.Split('[');
-            if (parts.Length == 2 && parts[1].Count(c => c==']') == 1)
+            // Watch out for mass modifications, e.g. C12H5[+1.23][M+3H] 
+            var possibleAdductStart = formula.LastIndexOf('[');
+            if (possibleAdductStart >= 0 && // Has '['
+                formula.Substring(possibleAdductStart).Count(c => c == ']') == 1 && // Has closing ']'
+                formula[possibleAdductStart+1] != '+' && formula[possibleAdductStart+1] != '-') // Isn't a mass modification
             {
-                neutralFormula = parts[0];
+                neutralFormula = formula.Substring(0, possibleAdductStart);
                 var adductString = formula.Substring(neutralFormula.Length);
                 if (Adduct.TryParse(adductString, out adduct, Adduct.ADDUCT_TYPE.non_proteomic, strict))
                 {

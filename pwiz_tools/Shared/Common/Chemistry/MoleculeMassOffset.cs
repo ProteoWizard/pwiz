@@ -18,7 +18,6 @@
  */
 using System;
 using System.Collections.Generic;
-using System.Globalization;
 using System.Linq;
 using System.Text;
 using pwiz.Common.SystemUtil;
@@ -38,6 +37,13 @@ namespace pwiz.Common.Chemistry
             Molecule = molecule;
             MonoMassOffset = monoMassOffset;
             AverageMassOffset = averageMassOffset;
+            if (Molecule.HasMassModifications)
+            {
+                // Anyone using this class is expecting all mass offset information to reside in these variables, not the Molecule
+                MonoMassOffset += Molecule.GetMonoMassOffset();
+                AverageMassOffset += Molecule.GetAverageMassOffset();
+                Molecule = Molecule.WithoutMassModifications;
+            }
         }
 
         public MoleculeMassOffset(Molecule molecule) : this(molecule, 0, 0)
@@ -64,33 +70,20 @@ namespace pwiz.Common.Chemistry
 
         public override string ToString()
         {
-            return ToString(null, CultureInfo.CurrentCulture);
-        }
-
-        public string ToString(string format, IFormatProvider formatProvider)
-        {
             StringBuilder stringBuilder = new StringBuilder();
             stringBuilder.Append(Molecule);
             
             if (MonoMassOffset != 0 || AverageMassOffset != 0)
             {
-                if (Equals(MonoMassOffset, AverageMassOffset))
-                {
-                    stringBuilder.Append(ToSignedString(format, formatProvider, MonoMassOffset));
-                }
-                else
-                {
-                    stringBuilder.Append(@"(" + ToSignedString(format, formatProvider, MonoMassOffset) + "," +
-                                         ToSignedString(format, formatProvider, AverageMassOffset) + ")");
-                }
+                stringBuilder.Append(Molecule.FormatMassModification(MonoMassOffset, AverageMassOffset)); // Use our standard notation e.g. [+1.23/1.24], [-1.2] etc
             }
 
             return stringBuilder.ToString();
         }
 
-        private static string ToSignedString(string format, IFormatProvider formatProvider, double value)
+        public string ToString(string format, IFormatProvider formatProvider)
         {
-            return (value >= 0 ? @"+" : string.Empty) + value.ToString(format, formatProvider);
+            return ToString();
         }
 
         protected bool Equals(MoleculeMassOffset other)

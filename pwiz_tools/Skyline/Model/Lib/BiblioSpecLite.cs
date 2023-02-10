@@ -1943,7 +1943,7 @@ namespace pwiz.Skyline.Model.Lib
                     {
                         string filePath = reader.GetString(iFilePath);
                         int redundantId = iRedundantId < 0 ? -1 : reader.GetInt32(iRedundantId);
-                        double retentionTime = reader.GetDouble(iRetentionTime);
+                        var retentionTime = UtilDB.GetNullableDouble(reader, iRetentionTime);
                         bool isBest = !hasRetentionTimesTable || reader.GetInt16(iBestSpectrum) != 0;
 
                         IonMobilityAndCCS ionMobilityInfo = IonMobilityAndCCS.EMPTY;

@@ -1334,6 +1334,14 @@ namespace pwiz.Skyline.Util
                 }
             }
 
+            // Deal with mass-only labeling (the "(-1.23)" in [2M(-1.23)+Na]")
+            // N.B. in "[2M2.45+2H]" we'd add 4.90 rather than 2.45, that is, "[+2.45]" with a count of 2
+            // Same idea as handling "4Cl37" in the example below
+            if (IsotopeLabelMass.HasValue)
+            {
+                Molecule.AddMassModification(resultDict, IsotopeLabelMass.Value * MassMultiplier);
+            }
+
             // Deal with labeling (the "4Cl37" in "[M4Cl37+2H]")
             // N.B. in "[2M4Cl37+2H]" we'd replace 8 Cl rather than 4
             if (IsotopeLabels != null && IsotopeLabels.Count > 0)
@@ -1434,6 +1442,11 @@ namespace pwiz.Skyline.Util
                         resultDict.Add(pair.Key, pair.Value);
                     }
                 }
+            }
+
+            if ((IsotopeLabelMass ?? 0) != 0)
+            {
+                Molecule.AddMassModification(resultDict, IsotopeLabelMass.Value);
             }
             var resultMol = Molecule.FromDict(resultDict);
             return resultMol.ToString();
@@ -1612,6 +1625,7 @@ namespace pwiz.Skyline.Util
         {
             _hashCode = (Description != null ? Description.GetHashCode() : 0);
             _hashCode = (_hashCode * 397) ^ AdductCharge.GetHashCode();
+            _hashCode = (_hashCode * 397) ^ (IsotopeLabelMass??0).GetHashCode();
             foreach (var pair in Composition)
             {
                 _hashCode = (_hashCode * 397) ^ pair.Key.GetHashCode();

@@ -26,7 +26,6 @@ using System.Linq;
 using System.Text.RegularExpressions;
 using pwiz.BiblioSpec;
 using pwiz.Common.SystemUtil;
-using pwiz.Skyline.Controls;
 using pwiz.Skyline.Model.Irt;
 using pwiz.Skyline.Model.Results;
 using pwiz.Skyline.Properties;

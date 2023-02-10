@@ -232,6 +232,12 @@
     <Compile Include="Alerts\PathChooserDlg.Designer.cs">
       <DependentUpon>PathChooserDlg.cs</DependentUpon>
     </Compile>
+    <Compile Include="Alerts\ShareResultsFilesDlg.cs">
+      <SubType>Form</SubType>
+    </Compile>
+    <Compile Include="Alerts\ShareResultsFilesDlg.Designer.cs">
+      <DependentUpon>ShareResultsFilesDlg.cs</DependentUpon>
+    </Compile>
     <Compile Include="Alerts\ReportShutdownDlg.cs">
       <SubType>Form</SubType>
     </Compile>
@@ -361,6 +367,8 @@
       <DependentUpon>CandidatePeakForm.cs</DependentUpon>
     </Compile>
     <Compile Include="Controls\Databinding\IDataboundGridForm.cs" />
+    <Compile Include="Controls\Databinding\SkylineViewContext.cs" />
+    <Compile Include="Controls\Databinding\SkylineWindowDataSchema.cs" />
     <Compile Include="Controls\Graphs\ExportMethodScheduleGraph.cs">
       <SubType>Form</SubType>
     </Compile>
@@ -391,6 +399,7 @@
     <Compile Include="Controls\ImageListBox.cs">
       <SubType>Component</SubType>
     </Compile>
+    <Compile Include="Controls\Lists\ListViewContext.cs" />
     <Compile Include="Controls\SeqNode\PeptideFormatter.cs" />
     <Compile Include="Controls\PrositUIHelpers.cs" />
     <Compile Include="Controls\Startup\TutorialImageResources.Designer.cs">
@@ -446,11 +455,18 @@
     <Compile Include="FileUI\PeptideSearch\BuildLibraryGridView.cs">
       <SubType>Component</SubType>
     </Compile>
+    <Compile Include="Model\AuditLog\EnumNames.Designer.cs">
+      <AutoGen>True</AutoGen>
+      <DesignTime>True</DesignTime>
+      <DependentUpon>EnumNames.resx</DependentUpon>
+    </Compile>
     <Compile Include="Model\AuditLog\PropertyNames.Designer.cs">
       <DesignTime>True</DesignTime>
       <AutoGen>True</AutoGen>
       <DependentUpon>PropertyNames.resx</DependentUpon>
     </Compile>
+    <Compile Include="Model\Databinding\Collections\FixedSkylineObjectList.cs" />
+    <Compile Include="Model\Databinding\Entities\CalibrationCurveMetrics.cs" />
     <Compile Include="Model\Databinding\Entities\ColumnCaptions.Designer.cs">
       <AutoGen>True</AutoGen>
       <DesignTime>True</DesignTime>
@@ -520,11 +536,6 @@
     <Compile Include="Model\AuditLog\CustomPropertyLocalizer.cs" />
     <Compile Include="Model\AuditLog\Databinding\AuditLogRowTime.cs" />
     <Compile Include="Model\AuditLog\Databinding\TextImageColumn.cs" />
-    <Compile Include="Model\AuditLog\EnumNames.Designer.cs">
-      <AutoGen>True</AutoGen>
-      <DesignTime>True</DesignTime>
-      <DependentUpon>EnumNames.resx</DependentUpon>
-    </Compile>
     <Compile Include="Model\AuditLog\LogMessage.cs" />
     <Compile Include="Model\AuditLog\Property.cs" />
     <Compile Include="Model\AuditLog\PropertyElementNames.Designer.cs">
@@ -562,9 +573,9 @@
     <Compile Include="Model\Databinding\ListLookupPropertyDescriptor.cs" />
     <Compile Include="Model\Databinding\BoundComboBoxColumn.cs" />
     <Compile Include="Model\Databinding\ProteomicDisplayNameAttribute.cs" />
-    <Compile Include="Model\Databinding\RowActions\DeleteNodesAction.cs" />
-    <Compile Include="Model\Databinding\RowActions\RemovePeaksAction.cs" />
-    <Compile Include="Model\Databinding\RowActions\RowAction.cs" />
+    <Compile Include="Controls\Databinding\RowActions\DeleteNodesAction.cs" />
+    <Compile Include="Controls\Databinding\RowActions\RemovePeaksAction.cs" />
+    <Compile Include="Controls\Databinding\RowActions\RowAction.cs" />
     <Compile Include="Model\DdaSearch\MsFraggerSearchEngine.cs" />
     <Compile Include="Model\DiaUmpireDdaConverter.cs" />
     <Compile Include="Model\DocSettings\AbsoluteQuantification\ValueStatus.cs" />
@@ -623,8 +634,12 @@
     <Compile Include="Model\ProteomicSequence.cs" />
     <Compile Include="Model\Results\CandidatePeakGroupData.cs" />
     <Compile Include="Model\Results\OnDemandFeatureCalculator.cs" />
+    <Compile Include="Model\Results\PeakGroupIntegrator.cs" />
+    <Compile Include="Model\Results\PeakShapeStatistics.cs" />
+    <Compile Include="Model\Results\PeakShapeValues.cs" />
     <Compile Include="Model\Results\Scoring\Calculators.cs" />
     <Compile Include="Model\Results\IntensityAccumulator.cs" />
+    <Compile Include="Model\Results\MedianPeakShape.cs" />
     <Compile Include="Model\Results\OptStepChromatograms.cs" />
     <Compile Include="Model\Results\Scoring\FeatureNames.cs" />
     <Compile Include="Model\Results\Scoring\FeatureTooltips.Designer.cs">
@@ -642,6 +657,7 @@
       <DesignTime>True</DesignTime>
       <DependentUpon>Resources.resx</DependentUpon>
     </Compile>
+    <Compile Include="GenericFormClassNames.cs" />
     <Compile Include="SettingsUI\MsGraphExtension.cs">
       <SubType>UserControl</SubType>
     </Compile>
@@ -720,7 +736,6 @@
     <Compile Include="Model\Lists\ListItem.cs" />
     <Compile Include="Model\Lists\ListItemTypes.cs" />
     <Compile Include="Model\Lists\ListRowSource.cs" />
-    <Compile Include="Model\Lists\ListViewContext.cs" />
     <Compile Include="Model\RgbHexColor.cs" />
     <Compile Include="Model\GroupComparison\MatchExpression.cs" />
     <Compile Include="Model\GroupComparison\MatchRgbHexColor.cs" />
@@ -1337,7 +1352,7 @@
     <Compile Include="Model\Databinding\Collections\ResultList.cs" />
     <Compile Include="Model\Databinding\Collections\SkylineObjectList.cs" />
     <Compile Include="Model\Databinding\Collections\Transitions.cs" />
-    <Compile Include="Model\Databinding\DocumentGridViewContext.cs" />
+    <Compile Include="Controls\Databinding\DocumentGridViewContext.cs" />
     <Compile Include="Model\Databinding\Entities\Chromatogram.cs" />
     <Compile Include="Model\Databinding\Entities\ChromatogramGroup.cs" />
     <Compile Include="Model\Databinding\EditDescription.cs" />
@@ -1368,7 +1383,6 @@
     <Compile Include="Model\Databinding\SampleTypeDataGridViewColumn.cs" />
     <Compile Include="Model\Databinding\SkylineDataSchema.cs" />
     <Compile Include="Model\Databinding\SkylineRowSource.cs" />
-    <Compile Include="Model\Databinding\SkylineViewContext.cs" />
     <Compile Include="Model\Databinding\DocumentViewTransformer.cs" />
     <Compile Include="Model\Databinding\StandardTypeDataGridViewColumn.cs" />
     <Compile Include="Model\DocNodeChildren.cs" />
@@ -2148,6 +2162,10 @@
     <EmbeddedResource Include="Alerts\PathChooserDlg.zh-CHS.resx">
       <DependentUpon>PathChooserDlg.cs</DependentUpon>
     </EmbeddedResource>
+    <EmbeddedResource Include="Alerts\ShareResultsFilesDlg.resx">
+      <DependentUpon>ShareResultsFilesDlg.cs</DependentUpon>
+      <SubType>Designer</SubType>
+    </EmbeddedResource>
     <EmbeddedResource Include="Alerts\ReportErrorDlg.ja.resx">
       <DependentUpon>ReportErrorDlg.cs</DependentUpon>
     </EmbeddedResource>
@@ -2778,8 +2796,8 @@
     </EmbeddedResource>
     <EmbeddedResource Include="Model\AuditLog\EnumNames.resx">
       <Generator>PublicResXFileCodeGenerator</Generator>
-      <LastGenOutput>EnumNames.Designer.cs</LastGenOutput>
       <SubType>Designer</SubType>
+      <LastGenOutput>EnumNames.Designer.cs</LastGenOutput>
     </EmbeddedResource>
     <EmbeddedResource Include="Model\AuditLog\EnumNames.zh-CHS.resx">
       <DependentUpon>EnumNames.resx</DependentUpon>

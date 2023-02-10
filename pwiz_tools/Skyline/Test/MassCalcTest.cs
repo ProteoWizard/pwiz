@@ -204,7 +204,60 @@ namespace pwiz.SkylineTest
         public void TestParseMass()
         {
             var bioMassCalc = new BioMassCalc(MassType.Monoisotopic);
-            string description = "C'2";
+
+            // Check handling of mass modifications
+            var description = "C'2[+1.2]";
+            Assert.AreEqual(27.2, bioMassCalc.ParseMassExpression(ref description), .01);
+            description = "C'2[-1.2]H";
+            Assert.AreEqual(25.815, bioMassCalc.ParseMassExpression(ref description), .01);
+            description = "C'2[+1.2]-C'";
+            Assert.AreEqual(14.2, bioMassCalc.ParseMassExpression(ref description), .01);
+            description = "C'2[-1.2]H-C'[+1.2]";
+            Assert.AreEqual(11.61, bioMassCalc.ParseMassExpression(ref description), .01);
+            var dict = Molecule.ParseExpressionToDictionary("C12H5[-0.33]H3-C2[-0.11]");
+            Assert.AreEqual(1, dict["[-0.22]"]); // -0.33 + 0.11
+            Assert.AreEqual(10, dict["C"]);
+            Assert.AreEqual(8, dict["H"]);
+            var molA = Molecule.Parse("C12H5[-0.33]H3");
+            var molB = Molecule.Parse("C2[-0.11]");
+            var molC  = molA.Difference(molB);
+            Assert.AreEqual(1, molC["[-0.22]"]); // -0.33 + 0.11
+            Assert.AreEqual(10, molC["C"]);
+            Assert.AreEqual(8, molC["H"]);
+
+            Assert.IsTrue(IonInfo.IsFormulaWithAdduct("C12H5[+3.2/3.3][2M1.234+3H]", out var mol, out var adduct, out var neutralFormula));
+            Assert.AreEqual(Adduct.FromStringAssumeChargeOnly("2M1.234+3H"), adduct);
+            Assert.AreEqual("C12H5[+3.2/3.3]", neutralFormula);
+            Assert.AreEqual(1, mol["[+8.868/9.068]"]); // 3.2 + 2*1.234 mono 3.3 + 2*1.234 average
+            Assert.AreEqual(24, mol["C"]);
+            Assert.AreEqual(13, mol["H"]); // 2*5 + 3
+            Assert.IsTrue(mol.HasMassModifications);
+            Assert.AreEqual(8.868, mol.GetMonoMassOffset());
+            Assert.AreEqual(9.068, mol.GetAverageMassOffset());
+
+            var massAdduct = Adduct.FromStringAssumeChargeOnly("M(-1.1)+2H");
+            var molD = Molecule.Parse(massAdduct.ApplyToFormula("C12H5[+3.2]"));
+            Assert.AreEqual(1, molD["[+2.1]"]); // 3.2-1.1
+            Assert.AreEqual(12, molD["C"]);
+            Assert.AreEqual(7, molD["H"]);
+
+            // Make sure we play nice with MoleculeMassOffset's notion of mass modified formulas
+            var molOff = new MoleculeMassOffset(molD, 1.1, 2.2);
+            Assert.AreEqual(3.2, molOff.MonoMassOffset);
+            Assert.AreEqual(4.3, molOff.AverageMassOffset, .000001);
+            Assert.AreEqual(0, molOff.Molecule.GetMonoMassOffset());
+            Assert.AreEqual(0, molOff.Molecule.GetAverageMassOffset());
+            Assert.AreEqual(12, molOff.Molecule["C"]);
+            Assert.AreEqual(7, molOff.Molecule["H"]);
+
+            Assert.AreEqual(1, molD["[+2.1]"]); // Make sure MoleculeMassOffset ctor left input molecule alone
+            Assert.AreEqual(153.1547, BioMassCalc.MONOISOTOPIC.CalculateMassFromFormula(molD).Value, .001);
+            Assert.AreEqual(153.2857, BioMassCalc.AVERAGE.CalculateMassFromFormula(molD).Value, .0001);
+            Assert.AreEqual(151.0547, BioMassCalc.MONOISOTOPIC.CalculateMassFromFormula(molD.WithoutMassModifications).Value, .001);
+            Assert.AreEqual(151.1857, BioMassCalc.AVERAGE.CalculateMassFromFormula(molD.WithoutMassModifications).Value, .0001);
+
+            // Check formula math
+            description = "C'2";
             Assert.AreEqual(26, bioMassCalc.ParseMass(ref description), .01);
             Assert.AreEqual(string.Empty, description);
             description = "-C'2";

@@ -172,6 +172,7 @@ namespace pwiz.Skyline.Model.Databinding.Entities
             get
             {
                 // Given formula C12H8O3 and adduct M3H2+H, apply label 3H2 but not ionization +H to return C12H'3H5
+                // Given formula C12H8O3 and adduct M(-0.234)+H, apply mass-only label (-0.234) but not ionization +H to return C12H8O3[-0.234]
                 Adduct adduct;
                 string formula;
                 GetPrecursorFormulaAndAdduct(out adduct, out formula);

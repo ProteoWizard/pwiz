@@ -860,7 +860,15 @@ namespace pwiz.Skyline.Model
             var mol = protonated ? molecule.Elements : adduct.ApplyToMolecule(molecule.Elements);
             foreach (var element in mol)
             {
-                result = result.Add(md.Add(abundances[element.Key]).Multiply(element.Value));
+                if (abundances.TryGetValue(element.Key, out var massDistribution))
+                {
+                    result = result.Add(md.Add(massDistribution).Multiply(element.Value));
+                }
+                else
+                {
+                    // Presumably a mass modification e.g. the [+2.45,2.46] in H12C5[+2.45,2.46]N
+                    unexplainedMass += _massCalc.GetMass(element.Key) * element.Value; 
+                }
             }
             return result.OffsetAndDivide(unexplainedMass + charge * (protonated ? BioMassCalc.MassProton : -BioMassCalc.MassElectron), charge);
         }

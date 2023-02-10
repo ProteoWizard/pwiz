@@ -40,7 +40,8 @@ namespace pwiz.Skyline.Model.DdaSearch
     {
         private ImportPeptideSearch _searchSettings;
 
-        // Temp files we'll need to clean up at the end the end
+        private bool _keepIntermediateFiles;
+        // Temp files we'll need to clean up at the end the end if !_keepIntermediateFiles
         private Dictionary<MsDataFileUri, string> _inputsAndOutputs;
         private string _isotopesFilename;
         private string _tempDirectory;
@@ -71,16 +72,22 @@ namespace pwiz.Skyline.Model.DdaSearch
             _isotopesFilename = null;
             _paramsFilename = null;
 
+            var skylineWorkingDirectory = Settings.Default.ActiveDirectory;
+            _keepIntermediateFiles = !string.IsNullOrEmpty(skylineWorkingDirectory);
+
             try
             {
                 // Hardklor is not L10N ready, so take care to run its process under InvariantCulture
                 Func<string> RunHardklor = () =>
                 {
-                    var paramsFileText = GenerateHardklorConfigFile();
-                    _paramsFilename = Path.GetTempFileName();
+                    var paramsFileText = GenerateHardklorConfigFile(skylineWorkingDirectory);
+
+                    _paramsFilename = string.IsNullOrEmpty(skylineWorkingDirectory)
+                        ? Path.GetTempFileName()
+                        : Path.Combine(skylineWorkingDirectory, @"Hardklor.conf");
                     File.WriteAllText(_paramsFilename, paramsFileText.ToString());
                     var pr = new ProcessRunner();
-                    var psi = new ProcessStartInfo(@"Hardklor", _paramsFilename)
+                    var psi = new ProcessStartInfo(@"Hardklor", $@"""{_paramsFilename}""")
                     {
                         CreateNoWindow = true,
                         UseShellExecute = false,
@@ -117,7 +124,10 @@ namespace pwiz.Skyline.Model.DdaSearch
                 _progressStatus = _progressStatus.Complete().ChangeMessage(Resources.DDASearchControl_SearchProgress_Search_done);
             UpdateProgress(_progressStatus);
 
-            FileEx.SafeDelete(_paramsFilename, true);
+            if (!_keepIntermediateFiles)
+            {
+                FileEx.SafeDelete(_paramsFilename, true);
+            }
 
             return _success;
         }
@@ -178,13 +188,16 @@ namespace pwiz.Skyline.Model.DdaSearch
 
         public override void Dispose()
         {
-            FileEx.SafeDelete(_paramsFilename, true);
-            FileEx.SafeDelete(_isotopesFilename, true);
-            if (_inputsAndOutputs != null)
+            if (!_keepIntermediateFiles)
             {
-                foreach (var output in _inputsAndOutputs.Values)
+                FileEx.SafeDelete(_paramsFilename, true);
+                FileEx.SafeDelete(_isotopesFilename, true);
+                if (_inputsAndOutputs != null)
                 {
-                    FileEx.SafeDelete(output, true);
+                    foreach (var output in _inputsAndOutputs.Values)
+                    {
+                        FileEx.SafeDelete(output, true);
+                    }
                 }
             }
             DirectoryEx.SafeDelete(_tempDirectory);
@@ -223,16 +236,17 @@ namespace pwiz.Skyline.Model.DdaSearch
             File.AppendAllLines(_isotopesFilename, isotopeValues);
         }
 
-        private string GenerateHardklorConfigFile()
+        private string GenerateHardklorConfigFile(string skylineWorkingDirectory)
         {
             _inputsAndOutputs = new Dictionary<MsDataFileUri, string>();
             // Create a temporary directory for output
             _tempDirectory = Path.Combine(Path.GetTempPath(), Path.GetRandomFileName());
             Directory.CreateDirectory(_tempDirectory);
+            var workingDirectory = string.IsNullOrEmpty(skylineWorkingDirectory) ? _tempDirectory : skylineWorkingDirectory;
 
             foreach (var input in SpectrumFileNames)
             {
-                _inputsAndOutputs.Add(input, $@"{Path.Combine(_tempDirectory, input.GetFileName())}.hk");
+                _inputsAndOutputs.Add(input, $@"{Path.Combine(workingDirectory, input.GetFileName())}.hk");
                 if (!_searchSettings.DataIsCentroided)
                 {
                     // User didn't declare data as centroided, but that might only be because they don't know.
