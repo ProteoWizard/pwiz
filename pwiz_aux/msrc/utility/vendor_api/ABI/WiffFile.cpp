@@ -130,7 +130,7 @@ struct ExperimentImpl : public Experiment
     virtual size_t getSRMSize() const;
     virtual void getSRM(size_t index, Target& target) const;
 
-    virtual void getSIC(size_t index, pwiz::util::BinaryData<double>& times, pwiz::util::BinaryData<double>& intensities) const;
+    virtual double getSIC(size_t index, pwiz::util::BinaryData<double>& times, pwiz::util::BinaryData<double>& intensities) const;
     virtual void getSIC(size_t index, pwiz::util::BinaryData<double>& times, pwiz::util::BinaryData<double>& intensities,
                         double& basePeakX, double& basePeakY) const;
 
@@ -609,14 +609,24 @@ void ExperimentImpl::getSRM(size_t index, Target& target) const
     CATCH_AND_FORWARD
 }
 
-void ExperimentImpl::getSIC(size_t index, pwiz::util::BinaryData<double>& times, pwiz::util::BinaryData<double>& intensities) const
+double ExperimentImpl::getSIC(size_t index, pwiz::util::BinaryData<double>& times, pwiz::util::BinaryData<double>& intensities) const
 {
     try
     {
         if (index >= transitionCount+simCount)
-            throw std::out_of_range("[Experiment::getSIC()] index out of range");
+            throw std::out_of_range("[Experiment::getSIC()] index " + lexical_cast<string>(index) + " out of range");
+
+        Target target;
+        getSRM(index, target);
 
         ExtractedIonChromatogramSettings^ option = gcnew ExtractedIonChromatogramSettings(index);
+        if (target.startTime != target.endTime)
+        {
+            option->StartCycle = convertRetentionTimeToCycle(target.startTime);
+            option->EndCycle = convertRetentionTimeToCycle(target.endTime);
+            option->UseStartEndCycle = true;
+        }
+
         ExtractedIonChromatogram^ xic = msExperiment->GetExtractedIonChromatogram(option);
 
         ToBinaryData(xic->GetActualXValues(), times);
@@ -628,18 +638,10 @@ void ExperimentImpl::getSIC(size_t index, pwiz::util::BinaryData<double>& times,
 void ExperimentImpl::getSIC(size_t index, pwiz::util::BinaryData<double>& times, pwiz::util::BinaryData<double>& intensities,
                             double& basePeakX, double& basePeakY) const
 {
+    basePeakY = getSIC(index, times, intensities);
+
     try
     {
-        if (index >= transitionCount)
-            throw std::out_of_range("[Experiment::getSIC()] index " + lexical_cast<string>(index) + " out of range");
-
-        ExtractedIonChromatogramSettings^ option = gcnew ExtractedIonChromatogramSettings(index);
-        ExtractedIonChromatogram^ xic = msExperiment->GetExtractedIonChromatogram(option);
-
-        ToBinaryData(xic->GetActualXValues(), times);
-        ToBinaryData(xic->GetActualYValues(), intensities);
-
-        basePeakY = xic->MaximumYValue;
         basePeakX = 0;
         for (size_t i=0; i < intensities.size(); ++i)
             if (intensities[i] == basePeakY)
