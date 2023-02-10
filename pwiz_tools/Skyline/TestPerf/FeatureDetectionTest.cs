@@ -23,6 +23,7 @@ using Microsoft.VisualStudio.TestTools.UnitTesting;
 using pwiz.Common.Chemistry;
 using pwiz.Skyline.FileUI;
 using pwiz.Skyline.FileUI.PeptideSearch;
+using pwiz.Skyline.Model.DocSettings;
 using pwiz.Skyline.Model.Results;
 using pwiz.Skyline.Properties;
 using pwiz.SkylineTestUtil;
@@ -30,7 +31,7 @@ using pwiz.SkylineTestUtil;
 //
 // Test for Hardklor integration
 // 
-namespace pwiz.SkylineTestFunctional
+namespace TestPerf
 {
     [TestClass]
     public class FeatureDetectionTest : AbstractFunctionalTest
@@ -77,7 +78,13 @@ namespace pwiz.SkylineTestFunctional
         [TestMethod]
         public void TestDdaFeatureDetection()
         {
-            TestFilesZip = @"TestFunctional\DdaSearchTest.zip";
+            TestFilesZip = GetPerfTestDataURL("PerfImportResultsThermoDDAVsMz5.zip");
+
+            TestFilesPersistent = new[]
+            {
+                "Thermo\\QE_DDA\\20130311_DDA_Pit01.raw"
+            };
+            TestDirectoryName = "DdaFeatureDetectionTest";
 
             RunFunctionalTest();
         }
@@ -86,17 +93,25 @@ namespace pwiz.SkylineTestFunctional
 
         private string GetTestPath(string path)
         {
-            return TestFilesDir.GetTestPath(path);
+            var fullpath = TestFilesDir.GetTestPath(path);
+            if (!File.Exists(fullpath))
+            {
+                // Maybe it's one of the unzipped persistent files
+                var unzip = TestFilesDir.GetTestPath(Path.Combine("DdaSearchMs1Filtering",path));
+                if (File.Exists(unzip))
+                    return unzip;
+            }
+            return fullpath;
         }
 
-        private IEnumerable<string> SearchFiles
+        private string[] SearchFiles
         {
             get
             {
                 return new[]
                 {
-                    GetTestPath("Rpal_Std_2d_FullMS_Orbi30k_MSMS_Orbi7k_Centroid_Run1_102006_02.mzML"),
-                    GetTestPath("Rpal_Std_2d_FullMS_Orbi30k_MSMS_Orbi7k_Centroid_Run1_102006_03.mzML")
+                    GetTestPath(TestFilesPersistent[0]),
+                    GetTestPath("Thermo\\QE_DDA\\not_actually_there.raw") // Just for UI handling test
                 };
             }
         }
@@ -107,8 +122,8 @@ namespace pwiz.SkylineTestFunctional
             {
                 return new[]
                 {
-                    GetTestPath("Rpal_Std_2d_FullMS_Orbi30k_MSMS_Orbi7k_Centroid_Run1_102006_02.mzML"),
-                    GetTestPath(Path.Combine("subdir", "Rpal_Std_2d_FullMS_Orbi30k_MSMS_Orbi7k_Centroid_Run1_102006_02.mzML"))
+                    GetTestPath(TestFilesPersistent[0]),
+                    GetTestPath(Path.Combine("subdir", TestFilesPersistent[0]))
                 };
             }
         }
@@ -120,8 +135,6 @@ namespace pwiz.SkylineTestFunctional
             // Launch the wizard
             var importPeptideSearchDlg = ShowDialog<ImportPeptideSearchDlg>(SkylineWindow.ShowFeatureDetectionDlg);
             // We're on the "Select Files to Search" page of the wizard.
-            // Add the test xml file to the search files list and try to 
-            // build the document library.
 
             RunUI(() =>
             {
@@ -129,7 +142,7 @@ namespace pwiz.SkylineTestFunctional
                 Assert.IsTrue(importPeptideSearchDlg.BuildPepSearchLibControl.PerformDDASearch);
                 importPeptideSearchDlg.BuildPepSearchLibControl.DdaSearchDataSources = SearchFiles.Select(o => (MsDataFileUri)new MsDataFilePath(o)).Take(1).ToArray();
                 AssertEx.AreEqual(ImportPeptideSearchDlg.Workflow.feature_detection, importPeptideSearchDlg.BuildPepSearchLibControl.WorkflowType); 
-                importPeptideSearchDlg.BuildPepSearchLibControl.CutOffScore = 0.9;
+                importPeptideSearchDlg.BuildPepSearchLibControl.CutOffScore = 0.95;
             });
             PauseForScreenShot();
             RunUI(() =>
@@ -148,7 +161,8 @@ namespace pwiz.SkylineTestFunctional
                 // We're on the MS1 full scan settings page.
                 Assert.IsTrue(importPeptideSearchDlg.CurrentPage == ImportPeptideSearchDlg.Pages.full_scan_settings_page);
                 importPeptideSearchDlg.FullScanSettingsControl.PrecursorCharges = new[] { 2, 3 };
-                importPeptideSearchDlg.FullScanSettingsControl.PrecursorRes = 120000;
+                importPeptideSearchDlg.FullScanSettingsControl.PrecursorMassAnalyzer = FullScanMassAnalyzerType.orbitrap;
+                importPeptideSearchDlg.FullScanSettingsControl.PrecursorRes = 70000; // That's the value at 200m/z per this data set, probably close enough for the 400m/z usd by Hardklor
             });
             PauseForScreenShot();
             RunUI(() =>
@@ -158,6 +172,12 @@ namespace pwiz.SkylineTestFunctional
             });
             bool? searchSucceeded = null;
             TryWaitForOpenForm(typeof(ImportPeptideSearchDlg.DDASearchPage));   // Stop to show this form during form testing
+
+            // Wait for the mzML conversion to complete before canceling
+            var converted = Path.Combine(Path.GetDirectoryName(SearchFiles[0]) ?? string.Empty,
+                @"converted",
+                Path.ChangeExtension(Path.GetFileName(SearchFiles[0]), @"mzML"));
+            WaitForCondition(() => File.Exists(converted));
 
             RunUI(() =>
             {
@@ -170,7 +190,7 @@ namespace pwiz.SkylineTestFunctional
             WaitForConditionUI(60000, () => searchSucceeded.HasValue);
             Assert.IsFalse(searchSucceeded.Value);
             searchSucceeded = null;
-            // Go back and test 2 input files with the same name
+            // Go back and test 2 input files with the same name in different directories
             RunUI(() =>
             {
                 Assert.IsTrue(importPeptideSearchDlg.ClickBackButton());
@@ -182,7 +202,7 @@ namespace pwiz.SkylineTestFunctional
             var removeSuffix = ShowDialog<ImportResultsNameDlg>(() => importPeptideSearchDlg.ClickNextButton());
             OkDialog(removeSuffix, removeSuffix.CancelDialog);
 
-            // Test with 2 files (different name)
+            // Test with 2 files (different name - one of these is bogus, just checking the name handling)
             RunUI(() =>
             {
                 Assert.IsTrue(importPeptideSearchDlg.ClickBackButton());
@@ -192,10 +212,21 @@ namespace pwiz.SkylineTestFunctional
             // With 2 sources, we get the remove prefix/suffix dialog; accept default behavior
             var removeSuffix2 = ShowDialog<ImportResultsNameDlg>(() => importPeptideSearchDlg.ClickNextButton());
             OkDialog(removeSuffix, () => removeSuffix2.YesDialog());
-            WaitForDocumentLoaded();
+
+            // Go back and remove the bogus filename - we'll just process the one actual data set
+            RunUI(() =>
+            {
+                Assert.IsTrue(importPeptideSearchDlg.ClickBackButton());
+                importPeptideSearchDlg.BuildPepSearchLibControl.DdaSearchDataSources =
+                    importPeptideSearchDlg.BuildPepSearchLibControl.DdaSearchDataSources = new []{(MsDataFileUri)new MsDataFilePath(SearchFiles[0])};
+                Assert.IsTrue(importPeptideSearchDlg.ClickNextButton());
+            });
+
             RunUI(() =>
             {
                 // We're on the "Full Scan Settings" page again.
+                importPeptideSearchDlg.FullScanSettingsControl.PrecursorMassAnalyzer = FullScanMassAnalyzerType.orbitrap;
+                importPeptideSearchDlg.FullScanSettingsControl.PrecursorRes = 70000; // That's the value at 200m/z per this data set, probably close enough for the 400m/z usd by Hardklor
                 Assert.IsTrue(importPeptideSearchDlg.ClickNextButton());
             });
             try
@@ -215,6 +246,7 @@ namespace pwiz.SkylineTestFunctional
 
             WaitForDocumentLoaded();
             RunUI(() => SkylineWindow.SaveDocument());
+//PauseTest();
         }
 
         private void PrepareDocument(string documentFile)
