@@ -44,7 +44,7 @@ int main(int argc, char* argv[]) {
 		cout << "See documentation for instructions to modify and use config files." << endl;
 		exit(1);
 	}
-	cout << "\nAdaptations for Skyline integration Copyright 2022 University of Washington\n" << endl;
+	cout << "\nAdaptations for Skyline integration Copyright 2023 University of Washington\n" << endl;
 	cout << "Note: generated averagine formulas are for isotope envelope approximation only and do not represent actual molecule identifications.\n" << endl;
 
   CHardklorParser hp;

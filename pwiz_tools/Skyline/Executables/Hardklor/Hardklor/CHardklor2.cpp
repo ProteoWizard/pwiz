@@ -627,23 +627,11 @@ bool CHardklor2::MatchSubSpectrum(Spectrum& s, int peakIndex, pepHit& pep){
 		pep.monoMass=bestMass;
 		pep.intensity=s[peakIndex].intensity;
 		pep.variantIndex=bestVariant;
+		pep.zeroMass = bestZeroMass;
 		memmove(pep.avergine, bestAveragine, AV_FORMULA_BUFFER_LENGTH);
 
 		// Note which peaks contributed to this analysis for Skyline
-		std::vector<int> matches(bestMatchIndex);
-		for (size_t slot = 0; slot < MZ_EVIDENCE_LENGTH; slot++)
-		{
-			float maxScore = -1;
-			size_t bestIndex=0;
-			for (size_t m = 0; m < matches.size(); m++)
-			{
-				if (bestMatchPeak[m] > maxScore)
-					bestIndex = m;
-			}
-			pep.mzEvidence[slot] = (slot < bestMatchIndex.size()) ? static_cast<float>(s[bestMatchIndex[bestIndex]].mz) : 0;
-			if (!matches.empty())
-			    matches.erase(matches.begin() + static_cast<int>(bestIndex));
-		}
+		SaveIsotopeEvidence(s, bestMatchIndex, pep);
 
 		//mark which peaks contributed to this analysis
 		for(k=0;k<(int)bestMatchIndex.size();k++){
@@ -910,6 +898,16 @@ void CHardklor2::QuickCharge(Spectrum& s, int index, vector<int>& v){
 		if(charge[i]>0) v.push_back(i);
 	}
 
+}
+
+// BSP edit - note which isotope peaks were used as evidence (so we can toss "confident" ids with few isotopes)
+void CHardklor2::SaveIsotopeEvidence(Spectrum& s, const vector<int> &bestMatchIndex, pepHit &ph)
+{
+    // Note which peaks contributed to this analysis for Skyline
+    for (size_t isotopeNumber = 0; isotopeNumber < MIN_ISOTOPE_EVIDENCE; isotopeNumber++)
+    {
+        ph.isotopeEvidenceMzs[isotopeNumber] = (isotopeNumber < bestMatchIndex.size()) ? static_cast<float>(s[bestMatchIndex[isotopeNumber]].mz) : 0;
+    }
 }
 
 void CHardklor2::QuickHardklor(Spectrum& s, vector<pepHit>& vPeps) {
@@ -1249,18 +1247,24 @@ void CHardklor2::QuickHardklor(Spectrum& s, vector<pepHit>& vPeps) {
 			ph.lowMZ=bestLow;
 			ph.massShift=0.0;
 			ph.monoMass=bestMass;
+			ph.zeroMass = bestZeroMass;
 			ph.lowIndex=bestLowIndex;
 			ph.highIndex=bestHighIndex;
 			ph.variantIndex=bestVariant;
+			memmove(ph.avergine, bestAveragine, AV_FORMULA_BUFFER_LENGTH);
+
+			SaveIsotopeEvidence(s, bestMatchIndex, ph);
+
 			if(bestKeepPH){
 				vPeps[bestOverlap].area=bestPH.area;
 				vPeps[bestOverlap].intensity=bestPH.intensity;
 				vPeps[bestOverlap].corr=bestPH.corr;
 				vPeps[bestOverlap].charge=bestPH.charge;
-				vPeps[bestOverlap].monoMass=bestPH.monoMass;
+				vPeps[bestOverlap].monoMass = bestPH.monoMass;
+				vPeps[bestOverlap].zeroMass = bestPH.zeroMass;
 				vPeps[bestOverlap].variantIndex=bestPH.variantIndex;
 				memmove(vPeps[bestOverlap].avergine, bestPH.avergine, AV_FORMULA_BUFFER_LENGTH);
-				memmove(vPeps[bestOverlap].mzEvidence, bestPH.mzEvidence, sizeof(float) * MZ_EVIDENCE_LENGTH); // BSP edit, Skyline wants the evidence peaks
+				memmove(vPeps[bestOverlap].isotopeEvidenceMzs, bestPH.isotopeEvidenceMzs, sizeof(float) * MIN_ISOTOPE_EVIDENCE); // BSP edit, Skyline wants the evidence peaks
 			}
 			vPeps.push_back(ph);
 			mask[maxIndex].intensity=100.0f;
@@ -1434,18 +1438,18 @@ int CHardklor2::Size(){
 void CHardklor2::WritePepLine(pepHit& ph, Spectrum& s, FILE* fptr, int format){
   int i,j;
 
-  // BSP edit - reduce noise by rejecting anything with less than three evidence peaks
-  int evidenceCount;
-	for (evidenceCount = 0; evidenceCount < MZ_EVIDENCE_LENGTH; evidenceCount++)
+    // BSP edit - reduce noise by rejecting anything with less than three isotope peaks
+    int isotopeCount;
+	for (isotopeCount = 0; isotopeCount < MIN_ISOTOPE_EVIDENCE; isotopeCount++)
 	{
-		if (ph.mzEvidence[evidenceCount] == 0.0)
+		if (ph.isotopeEvidenceMzs[isotopeCount] == 0.0)
 			break;
 	}
-	if (evidenceCount < 3)
+	if (isotopeCount < 3)
 	{
 		return;
 	}
-	std::sort(ph.mzEvidence, ph.mzEvidence + evidenceCount);
+	std::sort(ph.isotopeEvidenceMzs, ph.isotopeEvidenceMzs + isotopeCount);
 
   if(format==0){
 		fprintf(fptr,"P\t%.4lf",ph.monoMass);
@@ -1475,9 +1479,19 @@ void CHardklor2::WritePepLine(pepHit& ph, Spectrum& s, FILE* fptr, int format){
 			}
 		}
 
-		fprintf(fptr, "\t%.4lf", ph.corr);
-		for (int evidence = 0; evidence < evidenceCount; evidence++)
-			fprintf(fptr, "\t%.4lf", ph.mzEvidence[evidence]); // BSP edit: include mz value of peaks for use in Skyline
+	  // BSP Edit: Skyline wants to know the chemical formula and mass offset so it can use the same isotope envelope as Hardklor
+	  // Encode this as a formula with a mass modification e.g. "H21C14N4O4[+3.038518]", "H21C14N4O4[-0.085518]" etc
+        double massShift = ph.monoMass - ph.zeroMass;
+		char massShiftStr[30];
+	    if (fabs(massShift) < .001)
+			massShiftStr[0] = 0;
+		else if (massShift < 0)
+			snprintf(massShiftStr, 30, "[%.4f]", massShift);
+		else if (massShift > 0)
+			snprintf(massShiftStr, 30, "[+%.4f]", massShift);
+		fprintf(fptr, "\t%.4lf\t%s%s", ph.corr, ph.avergine, massShiftStr);
+		for (int evidence = 0; evidence < isotopeCount; evidence++)
+			fprintf(fptr, "\t%.4f", ph.isotopeEvidenceMzs[evidence]); // BSP edit: output includes mz value of peaks for use in Skyline
 		fprintf(fptr, "\n");
 
   } else if(format==1) {

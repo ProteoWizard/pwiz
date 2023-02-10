@@ -23,7 +23,7 @@ limitations under the License.
 #include <vector>
 
 #define AV_FORMULA_BUFFER_LENGTH 64
-#define MZ_EVIDENCE_LENGTH 10
+#define MIN_ISOTOPE_EVIDENCE 3 // BSP edit - reduce noise by demanding at least three isotope peaks for a match
 
 enum specType {
 	OrbiTrap,
@@ -132,8 +132,9 @@ typedef struct pepHit{
 	double highMZ;
 	double monoMass;
 	double corr;
+	double zeroMass; // BSP edit - Skyline wants to know mass shift
 	char avergine[AV_FORMULA_BUFFER_LENGTH]; // BSP edit - Skyline wants to know isotope envelope
-	float mzEvidence[MZ_EVIDENCE_LENGTH];  // BSP edit - Skyline wants to know what peaks were used
+	float isotopeEvidenceMzs[MIN_ISOTOPE_EVIDENCE];  // BSP edit - Skyline wants to know what peaks were used
 } pepHit;
 
 typedef struct mercuryModel{
