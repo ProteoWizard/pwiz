@@ -407,12 +407,6 @@ namespace pwiz.Skyline.Model
             {
                 var ordered = OrderedChildren(value);
                 _children = ordered as DocNodeChildren ?? new DocNodeChildren(ordered, _children);
-var foo = _children.Count;
-if (this as TransitionGroupDocNode != null)
-    if (foo == 1)
-        foo = 0;
-    else if (foo == 0)
-        foo = 1;
             }
         }
 
