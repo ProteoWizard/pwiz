@@ -132,6 +132,7 @@
             resources.ApplyResources(this, "$this");
             this.AutoScaleMode = System.Windows.Forms.AutoScaleMode.Font;
             this.CancelButton = this.btnCancel;
+            this.ControlBox = false;
             this.Controls.Add(this.btnSave);
             this.Controls.Add(this.btnCancel);
             this.Controls.Add(this.label4);
@@ -139,6 +140,7 @@
             this.Controls.Add(this.label1);
             this.Controls.Add(this.textName);
             this.Controls.Add(this.splitContainer1);
+            this.MaximizeBox = false;
             this.Name = "RemoteSourceForm";
             this.ShowInTaskbar = false;
             this.FormClosing += new System.Windows.Forms.FormClosingEventHandler(this.RemoteSourceForm_FormClosing);
