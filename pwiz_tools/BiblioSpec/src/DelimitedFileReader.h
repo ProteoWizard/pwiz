@@ -270,8 +270,12 @@ template <typename STORAGE_TYPE> class DelimitedFileReader {
             getlinePortable(delimFile_, line);
             curLineNumber_++;
 
-            if (line.empty() && delimFile_.eof())
-                break;
+            if (line.empty())
+            {
+                if (delimFile_.eof())
+                    break;
+                continue;
+            }
 
             size_t colListIdx = 0;  // go through all target columns
             int lineColNumber = 0;  // compare to all file columns

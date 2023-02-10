@@ -50,7 +50,7 @@ struct SmallMolMetadata {
     // This order matters - it's used for sorting 
     #define DEFINE_SQL_COLS_AND_COMMENTS const char *sql_cols[][2] = { \
         { "moleculeName", "precursor molecule's name (not needed for peptides)" }, \
-        { "chemicalFormula", "precursor molecule's neutral formula (not needed for peptides)" }, \
+        { "chemicalFormula", "precursor molecule's neutral formula, may include value for unexplained mass e.g. H84C44N12O13[+3.3122] (not needed for peptides)" }, \
         { "precursorAdduct", "ionizing adduct e.g. [M+Na], [2M-H2O+2H] etc (not needed for peptides)" }, \
         { "inchiKey", "molecular identifier for structure retrieval (not needed for peptides)" }, \
         { "otherKeys", "alternative molecular identifiers for structure retrieval, tab separated name:value pairs e.g. cas:58-08-2\\thmdb:01847 (not needed for peptides)" }, \

@@ -352,7 +352,7 @@ void BuildParser::buildTables(PSM_SCORE_TYPE scoreType, string specFilename, boo
         Verbosity::status("No matches left after filtering for target sequences in %s.", curSpecFileName_.c_str());
 
     // prune out any duplicates from the list of psms
-    if (!blibMaker_.keepAmbiguous()) {
+    if (!keepAmbiguous()) {
         removeDuplicates();
         removeNulls();
         hasMatches = psms_.size() > 0;
@@ -450,6 +450,11 @@ void BuildParser::buildTables(PSM_SCORE_TYPE scoreType, string specFilename, boo
             fileProgress_->add(fileProgressIncrement_);
         }
     }
+}
+
+bool BuildParser::keepAmbiguous()
+{
+    return blibMaker_.keepAmbiguous();
 }
 
 /**

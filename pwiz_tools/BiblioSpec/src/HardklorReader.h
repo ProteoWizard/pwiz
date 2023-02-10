@@ -65,6 +65,7 @@ class HardklorReader : public SslReader {
     virtual void addDataLine(sslPSM& newPSM);
     virtual void removeDuplicates(); // Special case for Hardklor - no peptide sequences, but lots of redundant IDs in sequential scans
     virtual bool getSpectrum(PSM* psm, SPEC_ID_TYPE findBy, SpecData& returnData, bool getPeaks);
+    virtual bool keepAmbiguous();
 
 private:
 
@@ -96,6 +97,7 @@ private:
         else
         {
             sslPSM::setCharge(psm, value);
+            sslPSM::setPrecursorAdduct(psm, std::string("[M+") + value + "H]");
         }
     }
 
@@ -112,15 +114,13 @@ private:
         }
     }
 
-    static void setChemicalFormulaAndAdduct(sslPSM& psm, const std::string& value) {
+    static void setChemicalFormulaAndMassShift(sslPSM& psm, const std::string& value) {
         // Skyline's modified version of Hardklor supplies formula for isotope envelope, and
         // the offset that shifts it match the mass of the reported feature
-        // e.g. "H21C14N4O4[M3.038518+1H]" reported mass is 312.1948, formula mass is
+        // e.g. "H21C14N4O4[+3.038518]" reported mass is 312.1948, formula mass is
         // 309.1563, and 309.1563+3.038518=312.1948
         // This allows Skyline to show the same isotope envelope that Hardklor was thinking of.
-        size_t adductStart = value.find_first_of('[');
-        sslPSM::setPrecursorAdduct(psm, value.substr(adductStart));
-        psm.smallMolMetadata.chemicalFormula = value.substr(0, adductStart);
+        psm.smallMolMetadata.chemicalFormula = value;
     }
 
     // Things we read from "S" lines that need to be combined with "P" line info

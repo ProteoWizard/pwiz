@@ -88,6 +88,7 @@ class BuildParser : protected SAXHandler{
   int calculateCharge(double neutralMass, double precursorMz);
   void filterBySequence(const set<string>* targetSequences, const set<string>* targetSequencesModified);
   virtual void removeDuplicates();
+  virtual bool keepAmbiguous();
   void removeNulls();
   double aaMasses_[128];
 
