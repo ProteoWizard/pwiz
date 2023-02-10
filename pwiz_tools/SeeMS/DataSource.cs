@@ -90,13 +90,14 @@ namespace seems
 
 	public class SpectrumSource
 	{
-		private string sourceFilepath;
+		private OpenDataSourceDialog.MSDataRunPath sourceFilepath;
 		private List<Chromatogram> chromatograms = new List<Chromatogram>();
 		private List<MassSpectrum> spectra = new List<MassSpectrum>();
 
-		public string Name { get { return MSDataFile.run.id; } }
+		public string Name { get; set; }
 		public MSData MSDataFile { get; private set; }
-		public string CurrentFilepath { get { return sourceFilepath; } }
+		public string CurrentFilepath { get { return sourceFilepath.Filepath; } }
+		public OpenDataSourceDialog.MSDataRunPath CurrentMsDataRunPath { get { return sourceFilepath; } }
 
         public List<Chromatogram> Chromatograms { get { return chromatograms; } }
 		public List<MassSpectrum> Spectra { get { return spectra; } }
@@ -151,13 +152,15 @@ namespace seems
 
 		    MSDataFile = new MSData();
             ReaderList.FullReaderList.read(filepath.Filepath, MSDataFile, filepath.RunIndex, GetReaderConfig());
-			sourceFilepath = filepath.ToString();
+			sourceFilepath = filepath;
 
             // create dummy spectrum/chromatogram list to simplify logic
 		    MSDataFile.run.spectrumList = MSDataFile.run.spectrumList ?? new SpectrumListSimple();
 		    MSDataFile.run.chromatogramList = MSDataFile.run.chromatogramList ?? new ChromatogramListSimple();
 
-			setInputFileWaitHandle = new EventWaitHandle( false, EventResetMode.ManualReset );
+			Name = MSDataFile.run.id;
+
+            setInputFileWaitHandle = new EventWaitHandle( false, EventResetMode.ManualReset );
 			/*setInputFileDelegate = new ParameterizedThreadStart( startSetInputFile );
 			Thread setInputFileThread = new Thread( setInputFileDelegate );
 
