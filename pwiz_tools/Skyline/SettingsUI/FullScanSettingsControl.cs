@@ -316,7 +316,7 @@ namespace pwiz.Skyline.SettingsUI
         public void UpdatePrecursorAnalyzerType(bool forFeatureDetection)
         {
             var precursorMassAnalyzer = PrecursorMassAnalyzer;
-            if (forFeatureDetection && PrecursorMassAnalyzer == FullScanMassAnalyzerType.centroided || PrecursorMassAnalyzer == FullScanMassAnalyzerType.none)
+            if (forFeatureDetection && (PrecursorMassAnalyzer == FullScanMassAnalyzerType.centroided || PrecursorMassAnalyzer == FullScanMassAnalyzerType.none))
             {
                 PrecursorMassAnalyzer = FullScanMassAnalyzerType.orbitrap; // Anything but centroided - that's assumed for Hardklor, we need to know what kind of FWHM calculation is used
             }
