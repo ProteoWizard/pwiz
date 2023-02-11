@@ -84,7 +84,6 @@
             resources.ApplyResources(this, "$this");
             this.AutoScaleMode = System.Windows.Forms.AutoScaleMode.Font;
             this.CancelButton = this.btnCancel;
-            this.ControlBox = false;
             this.Controls.Add(this.btnCancel);
             this.Controls.Add(this.btnOk);
             this.Controls.Add(this.label1);
@@ -92,6 +91,7 @@
             this.Controls.Add(this.btnAdd);
             this.Controls.Add(this.listSources);
             this.MaximizeBox = false;
+            this.MinimizeBox = false;
             this.Name = "EditRemoteFileSourcesForm";
             this.ShowInTaskbar = false;
             this.ResumeLayout(false);
