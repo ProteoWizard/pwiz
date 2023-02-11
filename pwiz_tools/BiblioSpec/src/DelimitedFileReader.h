@@ -280,7 +280,6 @@ template <typename STORAGE_TYPE> class DelimitedFileReader {
             size_t colListIdx = 0;  // go through all target columns
             int lineColNumber = 0;  // compare to all file columns
 
-
             STORAGE_TYPE lineEntry;//create an empty container for each line
             try{
                 if (simple && (line.size() < MAX_SIMPLE)) // Use less elaborate tokenizer
