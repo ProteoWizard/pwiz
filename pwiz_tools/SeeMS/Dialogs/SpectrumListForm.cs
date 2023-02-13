@@ -25,16 +25,12 @@ using System.ComponentModel;
 using System.Data;
 using System.Drawing;
 using System.Text;
-using System.Text.RegularExpressions;
 using System.Windows.Forms;
 using DigitalRune.Windows.Docking;
 using pwiz.CLI.cv;
 using pwiz.CLI.data;
 using pwiz.CLI.msdata;
-using pwiz.CLI.analysis;
-using pwiz.Common.SystemUtil;
 using seems.Misc;
-using pwiz.vendor_api.UNIFI;
 using Spectrum = pwiz.CLI.msdata.Spectrum;
 
 namespace seems
