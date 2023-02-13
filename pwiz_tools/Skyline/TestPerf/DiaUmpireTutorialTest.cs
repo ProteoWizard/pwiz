@@ -575,8 +575,8 @@ namespace TestPerf
             });
 
             PauseForScreenShot("Import Peptide Search - DDA search progress page", 14);
-            WaitForConditionUI(120 * 600000, () => searchSucceeded.HasValue);
-            Assert.IsTrue(searchSucceeded.Value);
+            WaitForConditionUI(120 * 600000, () => searchSucceeded.HasValue, () => importPeptideSearchDlg.SearchControl.LogText);
+            RunUI(() => Assert.IsTrue(searchSucceeded.Value, importPeptideSearchDlg.SearchControl.LogText));
 
             var addIrtDlg = ShowDialog<AddIrtPeptidesDlg>(() => importPeptideSearchDlg.ClickNextButton(), 30 * 60000);//peptidesPerProteinDlg.OkDialog());
             RunUI(() =>
