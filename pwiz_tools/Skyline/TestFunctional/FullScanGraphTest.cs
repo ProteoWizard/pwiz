@@ -325,7 +325,11 @@ namespace pwiz.SkylineTestFunctional
             });
             OkDialog(transitionSettingsUI, transitionSettingsUI.OkDialog);
             WaitForDocumentLoaded();
-
+            RunUI(() =>
+            {
+                Assert.AreEqual(new MzTolerance(10, MzTolerance.Units.ppm),
+                    SkylineWindow.DocumentUI.Settings.TransitionSettings.Libraries.IonMatchMzTolerance);
+            });
             ClickChromatogram(33.11, 15.055, PaneKey.PRODUCTS);
             RunUI(() =>
             {
@@ -334,7 +338,7 @@ namespace pwiz.SkylineTestFunctional
             });
             WaitForGraphs();
             var graphLabels = SkylineWindow.GraphFullScan.IonLabels;
-            Assert.AreEqual(Skyline.Program.SkylineOffscreen ? 49 : 1, graphLabels.Count());
+            Assert.AreEqual(Skyline.Program.SkylineOffscreen ? 48 : 1, graphLabels.Count());
         }
     }
 }
