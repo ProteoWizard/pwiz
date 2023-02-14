@@ -191,7 +191,7 @@ namespace pwiz.SkylineTestUtil
             {
                 vendorReaderPath = Path.Combine(projectDir, @".."); // one up from TestZipFiles, and no vendorStr intermediate directory
                 if (vendorDir == VendorDir.DiaUmpire)
-                    return Path.Combine(vendorReaderPath, "DiaUmpireTest.data");
+                    return Path.Combine(vendorReaderPath, "SpectrumList_DiaUmpireTest.data");
                 else
                     return Path.Combine(vendorReaderPath, $"Reader_{vendorStr}_Test.data");
             }
