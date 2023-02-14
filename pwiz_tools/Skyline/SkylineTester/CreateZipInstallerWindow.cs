@@ -186,8 +186,12 @@ namespace SkylineTester
                             AddFile(file, zipFile);
                     }
 
+                    // MCC 2/14/2023: commented out adding test zips after discussion with Brendan that if we need
+                    // to test Skyline outside a source tree, we can find a way to get the zip files on the fly or
+                    // have a separate artifact for that. This will cut SkylineTester.zip from ~600MB to ~100MB.
+
                     // Add test zip files.
-                    var zipFilesList = new List<string>();
+                    /*var zipFilesList = new List<string>();
                     FindZipFiles(solutionDirectory, zipFilesList);
                     var zipFilesDirectory = Path.Combine(SkylineTesterWindow.SkylineTesterFiles, "TestZipFiles");
                     foreach (var testZipFile in zipFilesList)
@@ -217,7 +221,7 @@ namespace SkylineTester
                             parentDirectory.IndexOf(@"Test.data", StringComparison.InvariantCulture));
                         parentDirectory = parentDirectory.Substring(relativePathStart + 1);
                         AddFile(file, zipFile, Path.Combine(SkylineTesterWindow.SkylineTesterFiles, parentDirectory));
-                    }
+                    }*/
 
                     // Add the file that we use to determine which branch this is from
                     AddFile(Path.Combine(solutionDirectory,"..\\..\\pwiz\\Version.cpp"), zipFile);
