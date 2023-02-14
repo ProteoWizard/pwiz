@@ -31,6 +31,7 @@ using pwiz.Skyline.Util;
 using pwiz.Skyline.Util.Extensions;
 using pwiz.SkylineTestUtil;
 using System.Collections.Generic;
+using pwiz.Skyline.SettingsUI;
 
 namespace pwiz.SkylineTestFunctional
 {
@@ -311,17 +312,20 @@ namespace pwiz.SkylineTestFunctional
             SetZoom(false);
             ClickChromatogram(33.11, 15.055, PaneKey.PRODUCTS);
             WaitForGraphs();
+            //Labels are not created in offscreen mode, so we just validate total number of ions matching the show settings
             Assert.AreEqual(Skyline.Program.SkylineOffscreen? 70 : 20, SkylineWindow.GraphFullScan.IonLabels.Count());
+
+            var transitionSettingsUI = ShowDialog<TransitionSettingsUI>(SkylineWindow.ShowTransitionSettingsUI);
+            RunUI(() => transitionSettingsUI.SelectedTab = TransitionSettingsUI.TABS.Library);
 
             RunUI(() =>
             {
-                var settings = SkylineWindow.DocumentUI.Settings;
-                var newLibs = settings.TransitionSettings.Libraries.ChangeIonMatchMzTolerance(new MzTolerance(10.0, MzTolerance.Units.ppm));
-                var newSettings = settings.ChangeTransitionSettings(settings.TransitionSettings.ChangeLibraries(newLibs));
-                SkylineWindow.ModifyDocument("Set test settings",
-                    doc => doc.ChangeSettings(newSettings));
+                transitionSettingsUI.IonMatchToleranceUnits = MzTolerance.Units.ppm;
+                transitionSettingsUI.IonMatchTolerance = 10.0;
             });
+            OkDialog(transitionSettingsUI, transitionSettingsUI.OkDialog);
             WaitForDocumentLoaded();
+
             ClickChromatogram(33.11, 15.055, PaneKey.PRODUCTS);
             RunUI(() =>
             {
