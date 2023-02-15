@@ -116,7 +116,7 @@ namespace TestPerf
         }
         private string RootName { get; set; }
 
-        [TestMethod, NoParallelTesting]
+        [TestMethod, NoParallelTesting(TestExclusionReason.RESOURCE_INTENSIVE)]
         public void TestDiaTtofDiaUmpireTutorial()
         {
             //IsPauseForScreenShots = true;
@@ -142,13 +142,11 @@ namespace TestPerf
             TestTtofData();
         }
 
-        [TestMethod, NoParallelTesting]
+        [TestMethod, 
+         NoParallelTesting(TestExclusionReason.RESOURCE_INTENSIVE), 
+         NoNightlyTesting(TestExclusionReason.EXCESSIVE_TIME)]
         public void TestDiaTtofDiaUmpireTutorialFullFileset()
         {
-            // do not run full filesets for nightly tests
-            if (Program.SkylineOffscreen)
-                return;
-
             _analysisValues = new AnalysisValues
             {
                 KeepPrecursors = false,
@@ -206,7 +204,7 @@ namespace TestPerf
             RunTest();
         }
 
-        [TestMethod, NoParallelTesting]
+        [TestMethod, NoParallelTesting(TestExclusionReason.RESOURCE_INTENSIVE)]
         public void TestDiaQeDiaUmpireTutorial()
         {
             _analysisValues = new AnalysisValues
@@ -233,12 +231,11 @@ namespace TestPerf
                 TestQeData();
         }
 
-        [TestMethod, NoParallelTesting]
+        [TestMethod, 
+         NoParallelTesting(TestExclusionReason.RESOURCE_INTENSIVE), 
+         NoNightlyTesting(TestExclusionReason.EXCESSIVE_TIME)] // do not run full filesets for nightly tests
         public void TestDiaQeDiaUmpireTutorialFullFileset()
         {
-            // do not run full filesets for nightly tests
-            if (Program.SkylineOffscreen)
-                return;
 
             _analysisValues = new AnalysisValues
             {
@@ -578,8 +575,8 @@ namespace TestPerf
             });
 
             PauseForScreenShot("Import Peptide Search - DDA search progress page", 14);
-            WaitForConditionUI(120 * 600000, () => searchSucceeded.HasValue);
-            Assert.IsTrue(searchSucceeded.Value);
+            WaitForConditionUI(120 * 600000, () => searchSucceeded.HasValue, () => importPeptideSearchDlg.SearchControl.LogText);
+            RunUI(() => Assert.IsTrue(searchSucceeded.Value, importPeptideSearchDlg.SearchControl.LogText));
 
             var addIrtDlg = ShowDialog<AddIrtPeptidesDlg>(() => importPeptideSearchDlg.ClickNextButton(), 30 * 60000);//peptidesPerProteinDlg.OkDialog());
             RunUI(() =>
