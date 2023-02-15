@@ -24,6 +24,7 @@ using System.Globalization;
 using System.IO;
 using System.Linq;
 using Microsoft.VisualStudio.TestTools.UnitTesting;
+using pwiz.Common.Chemistry;
 using pwiz.Common.DataBinding;
 using pwiz.Common.DataBinding.Controls;
 using pwiz.Common.DataBinding.Controls.Editor;
@@ -675,7 +676,8 @@ namespace TestPerf
                 Assert.AreEqual(TransitionFilter.EndFragmentFinder.LAST_ION.Label, importPeptideSearchDlg.TransitionSettingsControl.IonRangeTo);
                 Assert.AreEqual(6, importPeptideSearchDlg.TransitionSettingsControl.IonCount);
                 Assert.AreEqual(6, importPeptideSearchDlg.TransitionSettingsControl.MinIonCount);
-                Assert.AreEqual(0.05, importPeptideSearchDlg.TransitionSettingsControl.IonMatchTolerance);
+                Assert.AreEqual(0.05, importPeptideSearchDlg.TransitionSettingsControl.IonMatchMzTolerance.Value);
+                Assert.AreEqual(MzTolerance.Units.mz, importPeptideSearchDlg.TransitionSettingsControl.IonMatchMzTolerance.Unit);
                 // CONSIDER: Not that easy to validate 1, 2 in ion charges.
             });
             PauseForScreenShot<ImportPeptideSearchDlg.TransitionSettingsPage>("Transition settings", screenshotPage++);

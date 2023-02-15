@@ -4,7 +4,7 @@ All Info  :
 Transition Settings changed
 Settings > Transition Settings -- Filter > Ion types changed from "y, b" to "y, b, p"
 Settings > Transition Settings -- Filter > Molecule Ion types changed from "f" to "f, p"
-Settings > Transition Settings -- Library > Ion match tolerance changed from "0,5" to "0,7"
+Settings > Transition Settings -- Library > Ion match tolerance changed from "0,5" m/z to "0,7" m/z
 Settings > Transition Settings -- Full-Scan > Acquisition method changed from "None" to "PRM"
 Settings > Transition Settings -- Full-Scan > Product mass analyzer changed from "None" to "QIT"
 Settings > Transition Settings -- Full-Scan > Resolution changed from Missing to "0,7"
@@ -158,7 +158,7 @@ All Info  :
 Transition Settings changed
 Settings > Transition Settings -- Filter > Ion types changed from "y, b" to "y, b, p"
 Settings > Transition Settings -- Filter > Molecule Ion types changed from "f" to "f, p"
-Settings > Transition Settings -- Library > Ion match tolerance changed from "0,5" to "0,7"
+Settings > Transition Settings -- Library > Ion match tolerance changed from "0,5" m/z to "0,7" m/z
 Settings > Transition Settings -- Full-Scan > Acquisition method changed from "None" to "PRM"
 Settings > Transition Settings -- Full-Scan > Product mass analyzer changed from "None" to "QIT"
 Settings > Transition Settings -- Full-Scan > Resolution changed from Missing to "0,7"

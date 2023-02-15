@@ -62,8 +62,8 @@ Import Peptide Search > Associate Proteins > Peptides mapped is "81"
 Import Peptide Search > Associate Proteins > Proteins unmapped is "24709"
 Import Peptide Search > Associate Proteins > Protein targets is "9"
 Import Peptide Search > Associate Proteins > Peptide targets is "82"
-Import Peptide Search > DDA search settings > Precursor tolerance is 10ppm
-Import Peptide Search > DDA search settings > Fragment tolerance is 20ppm
+Import Peptide Search > DDA search settings > Precursor tolerance is "10" ppm
+Import Peptide Search > DDA search settings > Fragment tolerance is "20" ppm
 Import Peptide Search > DDA search settings > Max variable mods per peptide is "3"
 Import Peptide Search > DDA search settings > Fragment ion types is "b, y"
 Import Peptide Search > DDA converter settings > DDA conversion protocol is "DIA-Umpire"
@@ -111,8 +111,8 @@ Associate Proteins =
 },
 DDA search settings = 
 {
-    Precursor tolerance = 10ppm,
-    Fragment tolerance = 20ppm,
+    Precursor tolerance = "10" ppm,
+    Fragment tolerance = "20" ppm,
     Max variable mods per peptide = "3",
     Fragment ion types = "b, y"
 },
