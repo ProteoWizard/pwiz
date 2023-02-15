@@ -3448,7 +3448,7 @@ namespace pwiz.Skyline.Model
             sequence.Append(seq);
         }
 
-        private static bool IsValidFastaChar(char c)
+        public static bool IsValidFastaChar(char c)
         {
             return c >= 0x20 && c <= 0x7E ||
                    c == '\t' || c == 0x01;
