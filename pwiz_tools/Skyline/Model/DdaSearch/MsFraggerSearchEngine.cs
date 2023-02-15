@@ -92,7 +92,7 @@ namespace pwiz.Skyline.Model.DdaSearch
         private Enzyme _enzyme;
         private int _ntt, _maxMissedCleavages;
         private int _maxVariableMods = 2;
-        private List<Tuple<StaticMod, double, string>> _variableMods;
+        private List<CruxModification> _variableMods;
         private string _modParams;
         private int _maxCharge = 7;
         private string _fastaFilepath;
@@ -222,6 +222,42 @@ namespace pwiz.Skyline.Model.DdaSearch
             return _success;
         }
 
+        private class CruxModification
+        {
+            public CruxModification(StaticMod mod, double mz, string residues)
+            {
+                Mod = mod;
+                Mz = mz;
+                Residues = residues;
+            }
+
+            public StaticMod Mod { get; }
+            public double Mz { get; }
+            public string Residues { get; }
+
+            public int GetCruxTerminusOrdinal()
+            {
+                switch (Mod.Terminus)
+                {
+                    case ModTerminus.C: return 3;
+                    case ModTerminus.N: return 2;
+                    case null: return 0;
+                    default: throw new ArgumentOutOfRangeException();
+                }
+            }
+
+            public string GetCruxResidues()
+            {
+                switch (Mod.Terminus)
+                {
+                    case ModTerminus.C: return @"null";
+                    case ModTerminus.N: return @"null";
+                    case null: return Residues;
+                    default: throw new ArgumentOutOfRangeException();
+                }
+            }
+        }
+
         private string GetCruxParamsText()
         {
             var cruxParamsFileText = new StringBuilder();
@@ -250,34 +286,12 @@ namespace pwiz.Skyline.Model.DdaSearch
             //# whether peptides must contain this modification: 0 = not forced to be present;
             //# 1 = modification is required.
 
-            int getCruxTerminusOrdinal(StaticMod mod)
-            {
-                switch (mod.Terminus)
-                {
-                    case ModTerminus.C: return 3;
-                    case ModTerminus.N: return 2;
-                    case null: return 0;
-                    default: throw new ArgumentOutOfRangeException();
-                }
-            }
-
-            string getCruxResidues(StaticMod mod, string residues)
-            {
-                switch (mod.Terminus)
-                {
-                    case ModTerminus.C: return @"null";
-                    case ModTerminus.N: return @"null";
-                    case null: return residues;
-                    default: throw new ArgumentOutOfRangeException();
-                }
-            }
-
             int iMod = 0;
             foreach (var m in _variableMods)
             {
                 ++iMod;
                 cruxParamsFileText.AppendLine(string.Format(@"variable_mod{0:D2} = {1} {2} {3} {4} -1 {5} 0", iMod,
-                    m.Item2, getCruxResidues(m.Item1, m.Item3), iMod, _maxVariableMods, getCruxTerminusOrdinal(m.Item1)));
+                    m.Mz, m.GetCruxResidues(), iMod, _maxVariableMods, m.GetCruxTerminusOrdinal()));
             }
 
             return cruxParamsFileText.ToString();
@@ -584,7 +598,7 @@ add_Nterm_protein = 0.000000
         public override void SetModifications(IEnumerable<StaticMod> fixedAndVariableModifs, int maxVariableMods_)
         {
             _maxVariableMods = maxVariableMods_;
-            _variableMods = new List<Tuple<StaticMod, double, string>>();
+            _variableMods = new List<CruxModification>();
 
             // maximum of 16 variable mods - amino acid codes, * for any amino acid, [ and ] specifies protein termini, n and c specifies peptide termini
             // TODO: alert when there are more than 16 variable mods
@@ -626,7 +640,7 @@ add_Nterm_protein = 0.000000
                     {
                         ++modCounter;
                         modParamLines.Add($@"variable_mod_{modCounter:D2} = {mass.ToString(CultureInfo.InvariantCulture)} {residues} {maxVariableMods_}");
-                        _variableMods.Add(new Tuple<StaticMod, double, string>(mod, mass, residues));
+                        _variableMods.Add(new CruxModification(mod, mass, residues));
                     }
                     else
                     {
