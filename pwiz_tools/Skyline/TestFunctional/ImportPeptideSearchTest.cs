@@ -622,7 +622,10 @@ namespace pwiz.SkylineTestFunctional
                 Assert.IsTrue(importPeptideSearchDlg.CurrentPage == ImportPeptideSearchDlg.Pages.match_modifications_page);
                 Assert.IsTrue(importPeptideSearchDlg.ClickNextButton());
                 Assert.IsTrue(importPeptideSearchDlg.CurrentPage == ImportPeptideSearchDlg.Pages.transition_settings_page);
+                var oldTolerance = importPeptideSearchDlg.TransitionSettingsControl.IonMatchTolerance;
                 importPeptideSearchDlg.TransitionSettingsControl.IonMatchToleranceUnits = MzTolerance.Units.ppm;
+                Assert.IsTrue(
+                    Math.Abs(importPeptideSearchDlg.TransitionSettingsControl.IonMatchTolerance / oldTolerance - 1000.0d) < 0.001d);
                 importPeptideSearchDlg.TransitionSettingsControl.IonMatchTolerance = 10;
                 Assert.IsTrue(importPeptideSearchDlg.ClickNextButton());
                 Assert.IsTrue(importPeptideSearchDlg.CurrentPage == ImportPeptideSearchDlg.Pages.full_scan_settings_page);

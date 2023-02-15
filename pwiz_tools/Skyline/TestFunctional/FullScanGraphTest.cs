@@ -17,6 +17,7 @@
  * limitations under the License.
  */
 
+using System;
 using System.Linq;
 using System.Text;
 using Microsoft.VisualStudio.TestTools.UnitTesting;
@@ -320,7 +321,9 @@ namespace pwiz.SkylineTestFunctional
 
             RunUI(() =>
             {
+                var oldTolerance = transitionSettingsUI.IonMatchTolerance;
                 transitionSettingsUI.IonMatchToleranceUnits = MzTolerance.Units.ppm;
+                Assert.IsTrue(Math.Abs(transitionSettingsUI.IonMatchTolerance/oldTolerance - 1000.0d) < 0.001d);
                 transitionSettingsUI.IonMatchTolerance = 10.0;
             });
             OkDialog(transitionSettingsUI, transitionSettingsUI.OkDialog);
