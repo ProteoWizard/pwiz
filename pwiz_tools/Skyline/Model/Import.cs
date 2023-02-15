@@ -3528,7 +3528,7 @@ namespace pwiz.Skyline.Model
             {
                 sequence = EMPTY_PROTEIN_SEQUENCE;
             }
-            return new FastaSequence(name, description, alternatives, sequence);
+            return new FastaSequence(name, string.IsNullOrEmpty(description) ? null : description, alternatives, sequence);
         }
 
         private static int IndexEndId(string line)
