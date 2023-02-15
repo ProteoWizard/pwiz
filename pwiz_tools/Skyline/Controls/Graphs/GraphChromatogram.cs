@@ -1643,13 +1643,13 @@ namespace pwiz.Skyline.Controls.Graphs
             RegressionLine timeRegressionFunction, double[] dotProducts, double bestProduct, bool isFullScanMs,
             int? step, float fontSize, int width, DashStyle dashStyle, FullScanInfo fullScanInfo, PaneKey graphPaneKey)
         {
+            if (tranPeakInfo == null || chromatogramInfo == null)
+                return; // Nothing to shade
             if (chromatogramInfo.TransformChrom.IsDerivative())
             {
                 // Shading underneath the derivative transforms does not make sense
                 return;
             }
-            if (tranPeakInfo == null)
-                return; // Nothing to shade
             float end = tranPeakInfo.EndRetentionTime;
             float start = tranPeakInfo.StartRetentionTime;
             double[] allTimes;

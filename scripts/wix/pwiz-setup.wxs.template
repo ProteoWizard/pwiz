@@ -48,8 +48,8 @@
       <?endif?>
 
       <PropertyRef Id='NETFRAMEWORK45'/>
-      <Condition Message="Requires Microsoft .NET 4.8 Framework">
-          <![CDATA[Installed OR (NETFRAMEWORK45 >= "#528040")]]>
+      <Condition Message="Requires Microsoft .NET 4.7.2 Framework">
+          <![CDATA[Installed OR (NETFRAMEWORK45 >= "#461808")]]>
       </Condition>
      __CONTEXTMENU_PROPERTIES__
 
