@@ -3475,6 +3475,7 @@ namespace pwiz.Skyline.Model
                     if (!string.IsNullOrEmpty(fastaDescriptionLine))
                     {
                         yield return MakeFastaSequence(fastaDescriptionLine, sequence.ToString());
+                        sequence.Clear();
                     }
                     fastaDescriptionLine = line;
                 }
