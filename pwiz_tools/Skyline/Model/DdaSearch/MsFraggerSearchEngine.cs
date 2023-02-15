@@ -358,7 +358,7 @@ namespace pwiz.Skyline.Model.DdaSearch
 
             using (var fastaReader = new StreamReader(_fastaFilepath))
             {
-                var fastaEntries = FastaParser.ParseFastaFile(fastaReader, true);
+                var fastaEntries = FastaData.ParseFastaFile(fastaReader, true);
                 foreach (var entry in fastaEntries)
                 {
                     ++entryCount;
@@ -442,7 +442,7 @@ namespace pwiz.Skyline.Model.DdaSearch
                 using (var fastaReader = new StreamReader(_fastaFilepath, Encoding.ASCII))
                 using (var fastaWriter = new StreamWriter(decoyFastaFilepath, true, Encoding.ASCII))
                 {
-                    var fastaEntries = FastaParser.ParseFastaFile(fastaReader);
+                    var fastaEntries = FastaData.ParseFastaFile(fastaReader);
                     foreach (var entry in fastaEntries)
                     {
                         fastaWriter.WriteLine($@">{_decoyPrefix}{entry.Name}");

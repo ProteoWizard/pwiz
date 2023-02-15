@@ -461,7 +461,6 @@ namespace pwiz.Skyline.Model
             var alternativesNew = new List<ProteinMetadata>(Alternatives) {proteinMetadata};
             return new FastaSequence(_name, _description, alternativesNew, _sequence, _isDecoy);
         }
-
     }
 
     public class FastaSequenceGroup : FastaSequence

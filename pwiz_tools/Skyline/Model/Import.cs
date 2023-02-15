@@ -2837,7 +2837,7 @@ namespace pwiz.Skyline.Model
             }
             else
             {
-                var fastaSequence = FastaParser.MakeFastaSequence(line, @"A");
+                var fastaSequence = FastaData.MakeFastaSequence(line, @"A");
                 BaseName = Name = fastaSequence.Name;
                 Description = fastaSequence.Description;
                 Alternatives = fastaSequence.Alternatives;
@@ -3434,7 +3434,7 @@ namespace pwiz.Skyline.Model
         }
     }
 
-    public static class FastaParser
+    public static class FastaData
     {
         private static string EMPTY_PROTEIN_SEQUENCE = @"EMPTY";
         private static void AppendSequence(StringBuilder sequence, string line)

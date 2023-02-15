@@ -881,7 +881,7 @@ namespace pwiz.Skyline.Model.Proteome
         {
             int index = 0;
             long streamLength = stream.Length;
-            foreach (var fastaData in FastaParser.ParseFastaFile(new StreamReader(stream)))
+            foreach (var fastaData in FastaData.ParseFastaFile(new StreamReader(stream)))
             {
                 yield return new FastaRecord(index, (int) (stream.Position * 100 / streamLength), fastaData);
                 index++;

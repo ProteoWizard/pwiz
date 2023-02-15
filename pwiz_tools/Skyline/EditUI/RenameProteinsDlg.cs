@@ -198,7 +198,7 @@ namespace pwiz.Skyline.EditUI
                             names.Add(nodePepGroup.Name);
                     }
 
-                    foreach (var seq in FastaParser.ParseFastaFile(reader))
+                    foreach (var seq in FastaData.ParseFastaFile(reader))
                     {
                         List<string> names;
                         if (dictSeqToNames.TryGetValue(seq.Sequence, out names))
