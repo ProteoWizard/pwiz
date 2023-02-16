@@ -393,6 +393,7 @@ InstrumentModel WiffFile2Impl::getInstrumentModel() const
         if (modelName->Contains("5500"))            return API5500; // predicted
         if (modelName->Contains("QTRAP6500"))       return API6500QTrap; // predicted
         if (modelName->Contains("6500"))            return API6500; // predicted
+        if (modelName->Contains("TRIPLEQUAD7500"))  return TripleQuad7500;
         if (modelName->Contains("QSTARPULSAR"))     return QStarPulsarI; // also covers variants like "API QStar Pulsar i, 0, Qstar"
         if (modelName->Contains("QSTARXL"))         return QStarXL;
         if (modelName->Contains("QSTARELITE"))      return QStarElite;
@@ -410,6 +411,7 @@ InstrumentModel WiffFile2Impl::getInstrumentModel() const
         if (modelName->Contains("350"))             return API350; // predicted
         if (modelName->Contains("365"))             return API365; // predicted
         if (modelName->Contains("X500QTOF"))        return X500QTOF;
+        if (modelName->Contains("ZENOTOF7600"))     return ZenoTOF7600;
         throw gcnew Exception("unknown instrument type: " + instrumentDetails->DeviceModelName);
     }
     CATCH_AND_FORWARD
@@ -616,6 +618,10 @@ ExperimentType Experiment2Impl::getExperimentType() const
             return ExperimentType::MS;
         if (msExperiment->ScanType == "TOFMSMS")
             return ExperimentType::Product;
+        if (msExperiment->ScanType == "MRM")
+            return ExperimentType::MRM;
+        if (msExperiment->ScanType == "SIM")
+            return ExperimentType::SIM;
 
         return ExperimentType::MS;
 
