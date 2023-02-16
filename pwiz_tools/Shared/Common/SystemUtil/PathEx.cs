@@ -208,6 +208,23 @@ namespace pwiz.Common.SystemUtil
             }
             return path;
         }
+
+        /// <summary>
+        /// Puts escaped quotation marks before and after the text passed in if it contains any spaces
+        /// Useful for constructing command lines with arguments needing nested quotes
+        /// e.g. msconvert --filter "mzRefiner \"my input1.pepXML\" \"your input2.mzid\""
+        ///
+        /// Also handles escaping '^' and '&' in file names - see EscapeIfNecessary() in pwiz_tools\Skyline\Executables\SkylineRunner\Program.cs
+        /// 
+        /// </summary>
+        public static string EscapedPath(this string text)
+        {
+            var escaped = text.
+                Replace(@"^", @"^^"). // '^' is the windows command line escape character, but is also a valid filename character 
+                Replace(@"&", @"^&"); // '&' has special meaning in commandline processing, but is also a valid filename character 
+            return escaped.Contains(@" ") ? @"\""" + escaped + @"\""" : escaped;
+        }
+
     }
 
     /// <summary>

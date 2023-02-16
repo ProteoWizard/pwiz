@@ -140,8 +140,8 @@ namespace pwiz.Skyline.Model
                     if (File.Exists(outputFilepath))
                         FileEx.SafeDelete(outputFilepath);
 
-                    string tmpFilepath = Path.Combine(Path.GetTempPath(), Path.GetRandomFileName() + MsConvertOutputExtension);
-                    string tmpParams = Path.Combine(Path.GetTempPath(), Path.GetRandomFileName() + @".params");
+                    string tmpFilepath = Path.Combine(Path.GetTempPath(), FileEx.GetRandomFileName() + MsConvertOutputExtension); // N.B. FileEx.GetRandomFileName adds unusual characters in test mode
+                    string tmpParams = Path.Combine(Path.GetTempPath(), FileEx.GetRandomFileName() + @".params");
                     //_diaUmpireConfig.Parameters["Thread"] = 1; // needed to compare DIAUMPIRE_DEBUG output
                     _diaUmpireConfig.WriteConfigToFile(tmpParams);
 
@@ -153,10 +153,10 @@ namespace pwiz.Skyline.Model
                         Arguments =
                             $"-v --32 -z {MsConvertOutputFormatParam} " +
                             $"-o {Path.GetDirectoryName(tmpFilepath).Quote()} " +
-                            $"--outfile {Path.GetFileName(tmpFilepath)} " +
+                            $"--outfile {Path.GetFileName(tmpFilepath).Quote()} " +
                             " --acceptZeroLengthSpectra --simAsSpectra --combineIonMobilitySpectra" +
                             " --filter \"peakPicking true 1-\"" + 
-                            " --filter " + $@"diaUmpire params={tmpParams}".Quote() + " " +
+                            " --filter " + $@"diaUmpire params={tmpParams.EscapedPath()}".Quote() + " " +
                             spectrumSource.ToString().Quote()
                     };
 

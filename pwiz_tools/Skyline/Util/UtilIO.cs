@@ -946,6 +946,21 @@ namespace pwiz.Skyline.Util
                 return elapsedSpan.TotalMilliseconds + @" milliseconds";
             return deltaTicks + @" ticks";
         }
+
+        /// <summary>
+        /// Like Path.GetRandFileName(), but in test context adds some legal but unusual characters for robustness testing
+        /// </summary>
+        /// <returns>a random filename</returns>
+        public static string GetRandomFileName()
+        {
+            var result = Path.GetRandomFileName();
+            if (Program.UnitTest)
+            {
+                // Introduce some potentially troublesome characters like space, caret, ampersand to test our handling
+                result = @"test c^ha&rs_" + result;
+            }
+            return result;
+        }
     }
 
     public static class DirectoryEx
@@ -1323,7 +1338,7 @@ namespace pwiz.Skyline.Util
         public TemporaryDirectory(string dirPath = null, string tempPrefix = TEMP_PREFIX)
         {
             if (string.IsNullOrEmpty(dirPath))
-                DirPath = Path.Combine(Path.GetTempPath(), tempPrefix + Path.GetRandomFileName());
+                DirPath = Path.Combine(Path.GetTempPath(), tempPrefix + FileEx.GetRandomFileName()); // N.B. FileEx.GetRandomFileName adds unusual characters in test mode
             else
                 DirPath = dirPath;
             Helpers.TryTwice(() => Directory.CreateDirectory(DirPath));

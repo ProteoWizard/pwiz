@@ -97,7 +97,7 @@ namespace pwiz.Skyline.Model.DdaSearch
                     if (File.Exists(outputFilepath))
                         FileEx.SafeDelete(outputFilepath);
 
-                    string tmpFilepath = Path.Combine(Path.GetTempPath(), Path.GetRandomFileName() + MsConvertOutputExtension);
+                    string tmpFilepath = Path.Combine(Path.GetTempPath(), FileEx.GetRandomFileName() + MsConvertOutputExtension); // N.B. FileEx.GetRandomFileName adds unusual characters in test mode
 
                     var pr = new ProcessRunner();
                     var psi = new ProcessStartInfo(MSCONVERT_EXE)
@@ -107,7 +107,7 @@ namespace pwiz.Skyline.Model.DdaSearch
                         Arguments =
                             $"-v -z {MsConvertOutputFormatParam} " +
                             $"-o {Path.GetDirectoryName(tmpFilepath).Quote()} " +
-                            $"--outfile {Path.GetFileName(tmpFilepath)} " +
+                            $"--outfile {Path.GetFileName(tmpFilepath).Quote()} " +
                             " --acceptZeroLengthSpectra --simAsSpectra --combineIonMobilitySpectra" +
                             " --filter \"peakPicking true 1-\" " +
                             " --filter \"msLevel 2-\" " +

@@ -4695,7 +4695,7 @@ namespace pwiz.Skyline.Model
                 }
 
                 string dirWork = Path.GetDirectoryName(fileName) ?? Environment.CurrentDirectory;
-                using (var tmpDir = new TemporaryDirectory(Path.Combine(dirWork, Path.GetRandomFileName())))
+                using (var tmpDir = new TemporaryDirectory(Path.Combine(dirWork, FileEx.GetRandomFileName()))) // N.B. FileEx.GetRandomFileName adds unusual characters in test mode
                 {
                     var transitionsFile = Path.Combine(tmpDir.DirPath, @"transitions.txt");
                     File.WriteAllText(transitionsFile, stdinBuilder.ToString());
