@@ -222,7 +222,7 @@ namespace TestPerf
                 // Verify other values shown in the tutorial
                 Assert.AreEqual(6, importPeptideSearchDlg.TransitionSettingsControl.IonCount);
                 Assert.AreEqual(6, importPeptideSearchDlg.TransitionSettingsControl.MinIonCount);
-                Assert.AreEqual(0.05, importPeptideSearchDlg.TransitionSettingsControl.IonMatchTolerance);
+                Assert.AreEqual(0.05, importPeptideSearchDlg.TransitionSettingsControl.IonMatchMzTolerance);
                 // CONSIDER: Not that easy to validate 1, 2 in ion charges.
             });
             RunUI(() => Assert.IsTrue(importPeptideSearchDlg.ClickNextButton()));
