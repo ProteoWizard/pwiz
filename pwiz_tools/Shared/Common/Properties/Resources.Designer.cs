@@ -1328,6 +1328,24 @@ namespace pwiz.Common.Properties {
         }
         
         /// <summary>
+        ///   Looks up a localized string similar to m/z.
+        /// </summary>
+        internal static string Units_mz {
+            get {
+                return ResourceManager.GetString("Units_mz", resourceCulture);
+            }
+        }
+        
+        /// <summary>
+        ///   Looks up a localized string similar to ppm.
+        /// </summary>
+        internal static string Units_ppm {
+            get {
+                return ResourceManager.GetString("Units_ppm", resourceCulture);
+            }
+        }
+        
+        /// <summary>
         ///   Looks up a localized resource of type System.Drawing.Bitmap.
         /// </summary>
         internal static System.Drawing.Bitmap UnknownUiMode {

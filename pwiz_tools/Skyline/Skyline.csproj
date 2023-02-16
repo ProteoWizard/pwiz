@@ -31,6 +31,7 @@
     <EnableSecurityDebugging>false</EnableSecurityDebugging>
     <AutoGenerateBindingRedirects>false</AutoGenerateBindingRedirects>
     <!-- Make the assembly name configurable -->
+    <MSBuildAssemblyName />
     <AssemblyName Condition=" '$(MSBuildAssemblyName)' == '' ">Skyline-daily</AssemblyName>
     <AssemblyName Condition=" '$(MSBuildAssemblyName)' != '' ">$(MSBuildAssemblyName)</AssemblyName>
     <PublishUrl>T:\www\site\skyline.ms\html\software\Skyline-daily13-64\</PublishUrl>
@@ -50,8 +51,8 @@
     <PublisherName>MacCoss Lab, UW</PublisherName>
     <CreateWebPageOnPublish>true</CreateWebPageOnPublish>
     <WebPage>index.html</WebPage>
-    <ApplicationRevision>351</ApplicationRevision>
-    <ApplicationVersion>22.2.1.351</ApplicationVersion>
+    <ApplicationRevision>391</ApplicationRevision>
+    <ApplicationVersion>22.2.1.391</ApplicationVersion>
     <UseApplicationTrust>false</UseApplicationTrust>
     <PublishWizardCompleted>true</PublishWizardCompleted>
     <BootstrapperEnabled>true</BootstrapperEnabled>
@@ -2731,6 +2732,7 @@
     </EmbeddedResource>
     <EmbeddedResource Include="FileUI\PeptideSearch\TransitionSettingsControl.resx">
       <DependentUpon>TransitionSettingsControl.cs</DependentUpon>
+      <SubType>Designer</SubType>
     </EmbeddedResource>
     <EmbeddedResource Include="FileUI\PeptideSearch\TransitionSettingsControl.zh-CHS.resx">
       <DependentUpon>TransitionSettingsControl.cs</DependentUpon>

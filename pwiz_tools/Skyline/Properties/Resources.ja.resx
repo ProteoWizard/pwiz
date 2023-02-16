@@ -2902,9 +2902,6 @@ Skylineがもう一度生データファイルからクロマトグラムを抽�
   <data name="DDASearchControl_RunSearch_Conversion_failed_" xml:space="preserve">
     <value>変換に失敗しました。</value>
   </data>
-  <data name="DDASearchControl_RunSearch_Conversion_finished_" xml:space="preserve">
-    <value>変換が終了しました。</value>
-  </data>
   <data name="DDASearchControl_SearchProgress_Search_canceled" xml:space="preserve">
     <value>検索がキャンセルされました。</value>
   </data>

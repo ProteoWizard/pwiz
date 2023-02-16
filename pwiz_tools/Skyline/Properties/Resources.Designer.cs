@@ -8815,15 +8815,6 @@ namespace pwiz.Skyline.Properties {
         }
         
         /// <summary>
-        ///   Looks up a localized string similar to Conversion finished..
-        /// </summary>
-        public static string DDASearchControl_RunSearch_Conversion_finished_ {
-            get {
-                return ResourceManager.GetString("DDASearchControl_RunSearch_Conversion_finished_", resourceCulture);
-            }
-        }
-        
-        /// <summary>
         ///   Looks up a localized string similar to Search canceled..
         /// </summary>
         public static string DDASearchControl_SearchProgress_Search_canceled {

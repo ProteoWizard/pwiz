@@ -856,7 +856,7 @@ namespace pwiz.SkylineTestUtil
                     // If only difference appears to be generated GUIDs or timestamps, let it pass
                     if (!LinesEquivalentIgnoringTimeStampsAndGUIDs(lineTarget, lineActual, columnTolerances))
                     {
-                        Fail(string.Format(@"Diff found at line {0}:\r\n{1}\r\n>\r\n{2}", count, lineTarget, lineActual));
+                        Fail(helpMsg + string.Format(@"Diff found at line {0}:\r\n{1}\r\n>\r\n{2}", count, lineTarget, lineActual));
                     }
                     lineEqualLast = lineTarget;
                     count++;

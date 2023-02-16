@@ -1484,7 +1484,7 @@ namespace pwiz.SkylineTestData
             File.Move(fullScanMoved, fullScanPath);
         }
 
-        [TestMethod, NoParallelTesting] // Just a really tricky race condition using --warn-on-failure under parallel testing pressure
+        [TestMethod, NoParallelTesting(TestExclusionReason.RESOURCE_INTENSIVE)] // Just a really tricky race condition using --warn-on-failure under parallel testing pressure
         public void ConsoleMultiWarnOnFailureImportTest()
         {
             TestFilesDir = new TestFilesDir(TestContext, GetTestZipPath(out var extRaw), "ConsoleMultiWarnOnFailureImportTest");

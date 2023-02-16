@@ -1643,12 +1643,13 @@ namespace pwiz.Skyline.Controls.Graphs
             RegressionLine timeRegressionFunction, double[] dotProducts, double bestProduct, bool isFullScanMs,
             int? step, float fontSize, int width, DashStyle dashStyle, FullScanInfo fullScanInfo, PaneKey graphPaneKey)
         {
-            if (tranPeakInfo == null ||                         // Nothing to shade
-                chromatogramInfo.TransformChrom.IsDerivative()) // Shading underneath the derivative transforms does not make sense
+            if (tranPeakInfo == null || chromatogramInfo == null)
+                return; // Nothing to shade
+            if (chromatogramInfo.TransformChrom.IsDerivative())
             {
+                // Shading underneath the derivative transforms does not make sense
                 return;
             }
-
             float end = tranPeakInfo.EndRetentionTime;
             float start = tranPeakInfo.StartRetentionTime;
             double[] allTimes;
@@ -2838,7 +2839,7 @@ namespace pwiz.Skyline.Controls.Graphs
 
         private ScaledRetentionTime GetRetentionTimeOfZeroOptStep(ChromGraphItem graphItem, ScaledRetentionTime peakTime)
         {
-            if (graphItem.OptimizationStep == 0)
+            if ((graphItem.OptimizationStep ?? 0) == 0)
             {
                 return peakTime;
             }

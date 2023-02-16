@@ -149,7 +149,7 @@ namespace pwiz.Skyline.Model.DdaSearch
                     var psi = new ProcessStartInfo(JavaDownloadInfo.JavaBinary,
                         $@"-Xmx{javaMaxHeapMB}M -jar """ + MsgfPlusBinary + @""" -tasks -2 " +
                         $@"-s ""{spectrumFilename}"" -d ""{FastaFileNames[0]}"" -tda 1 " +
-                        $@"-t {precursorMzTolerance} -ti {isotopeErrorRange.Item1},{isotopeErrorRange.Item2} " +
+                        $@"-t {precursorMzTolerance.Value}{precursorMzTolerance.UnitName} -ti {isotopeErrorRange.Item1},{isotopeErrorRange.Item2} " +
                         $@"-m {fragmentationMethod} -inst {instrumentType} -e {enzyme} -ntt {ntt} -maxMissedCleavages {maxMissedCleavages} " +
                         $@"-mod ""{modsFile}""")
                     {

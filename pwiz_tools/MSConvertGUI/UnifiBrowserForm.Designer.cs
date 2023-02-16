@@ -118,6 +118,7 @@ namespace MSConvertGUI
             this.DateModified});
             this.FolderViewList.Dock = System.Windows.Forms.DockStyle.Fill;
             this.FolderViewList.FullRowSelect = true;
+            this.FolderViewList.HideSelection = false;
             this.FolderViewList.Location = new System.Drawing.Point(0, 0);
             this.FolderViewList.Name = "FolderViewList";
             this.FolderViewList.Size = new System.Drawing.Size(1125, 549);
@@ -264,6 +265,7 @@ namespace MSConvertGUI
             this.Controls.Add(this.serverLocationTextBox);
             this.Controls.Add(this.VertSplit);
             this.Name = "UnifiBrowserForm";
+            this.ShowIcon = false;
             this.Text = "UNIFI Browser";
             this.VertSplit.Panel1.ResumeLayout(false);
             this.VertSplit.Panel2.ResumeLayout(false);
