@@ -688,6 +688,11 @@ UsageInfo usage_precursorRecalculation = {"","This filter recalculates the precu
     "although it does not use any 3rd party (vendor DLL) code.  Since the time the code was written, Thermo has since fixed "
     "up its own estimation in response, so it's less critical than it used to be (though can still be useful)."};
 
+/**
+ * \brief
+ * For use with nested quotes on commandlines e.g. // e.g. commandline --filter "params=\"my ^^parameters file\""
+ * \param path 
+ */
 inline void unescapeQuotedPath(string &path)
 {
     if ((bal::starts_with(path, "\'") && bal::ends_with(path, "\'")) || (bal::starts_with(path, "\"") && bal::ends_with(path, "\"")))
@@ -892,7 +897,9 @@ SpectrumListPtr filterCreator_diaUmpire(const MSData& msd, const string& carg, p
     unescapeQuotedPath(paramsFilepath); // e.g. commandline --filter "params=\"my parameters file\""
 
     if (!bfs::exists(paramsFilepath))
-        throw user_error("[diaUmpire] params filepath is required (params=path/to/diaumpire.params)");
+        throw user_error(paramsFilepath.empty() ?
+            "[diaUmpire] params filepath is required (params=path/to/diaumpire.params)":
+            "[diaUmpire] params file \"" + paramsFilepath + "\" not found");
 
     bal::trim(arg);
     if (!arg.empty())
