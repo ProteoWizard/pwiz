@@ -58,12 +58,12 @@ namespace pwiz.SkylineTestFunctional
             RunUI(() =>
             {
                 propertyDialog.SetDotpCutoffValue(AreaExpectedValue.ratio_to_label, "asdf");
-                propertyDialog.OkDialog();
+                propertyDialog.OkDialog();  // Does not dismiss the form
                 Assert.IsNotNull(propertyDialog.GetRdotpErrorText());
                 propertyDialog.SetShowCutoffProperty(true);
                 propertyDialog.SetDotpCutoffValue(AreaExpectedValue.ratio_to_label, (0.9).ToString(CultureInfo.CurrentCulture));
-                propertyDialog.OkDialog();
             });
+            OkDialog(propertyDialog, propertyDialog.OkDialog);
 
             FindNode((529.2855).ToString(LocalizationHelper.CurrentCulture) + "++");
             WaitForGraphs();
@@ -95,8 +95,8 @@ namespace pwiz.SkylineTestFunctional
                 propertyDialog.SetShowCutoffProperty(true);
                 propertyDialog.SetDotpCutoffValue(AreaExpectedValue.isotope_dist, (0.94).ToString(CultureInfo.CurrentCulture));
                 propertyDialog.SetDotpCutoffValue(AreaExpectedValue.library, (0.85).ToString(CultureInfo.CurrentCulture));
-                propertyDialog.OkDialog();
             });
+            OkDialog(propertyDialog, propertyDialog.OkDialog);
             FindNode((873.9438).ToString(LocalizationHelper.CurrentCulture) + "++");
             WaitForGraphs();
             RunUI(() =>
