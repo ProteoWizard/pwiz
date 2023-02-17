@@ -156,7 +156,7 @@ namespace pwiz.Skyline.Model
                             $"--outfile {Path.GetFileName(tmpFilepath).Quote()} " +
                             " --acceptZeroLengthSpectra --simAsSpectra --combineIonMobilitySpectra" +
                             " --filter \"peakPicking true 1-\"" + 
-                            " --filter " + $@"diaUmpire params={tmpParams.EscapedPath()}".Quote() + " " +
+                            " --filter " + $@"diaUmpire params={tmpParams.EscapedPathForCommandLine()}".Quote() + " " +
                             spectrumSource.ToString().Quote()
                     };
 

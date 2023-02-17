@@ -217,7 +217,7 @@ namespace pwiz.Common.SystemUtil
         /// Also handles escaping '^' and '&' in file names - see EscapeIfNecessary() in pwiz_tools\Skyline\Executables\SkylineRunner\Program.cs
         /// 
         /// </summary>
-        public static string EscapedPath(this string text)
+        public static string EscapedPathForCommandLine(this string text)
         {
             var escaped = text.
                 Replace(@"^", @"^^"). // '^' is the windows command line escape character, but is also a valid filename character 
