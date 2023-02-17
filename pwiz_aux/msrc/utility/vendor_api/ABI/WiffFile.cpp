@@ -130,9 +130,9 @@ struct ExperimentImpl : public Experiment
     virtual size_t getSRMSize() const;
     virtual void getSRM(size_t index, Target& target) const;
 
-    virtual double getSIC(size_t index, pwiz::util::BinaryData<double>& times, pwiz::util::BinaryData<double>& intensities) const;
+    virtual double getSIC(size_t index, pwiz::util::BinaryData<double>& times, pwiz::util::BinaryData<double>& intensities, bool ignoreScheduledLimits) const;
     virtual void getSIC(size_t index, pwiz::util::BinaryData<double>& times, pwiz::util::BinaryData<double>& intensities,
-                        double& basePeakX, double& basePeakY) const;
+                        double& basePeakX, double& basePeakY, bool ignoreScheduledLimits) const;
 
     virtual void getAcquisitionMassRange(double& startMz, double& stopMz) const;
     virtual ScanType getScanType() const;
@@ -609,7 +609,7 @@ void ExperimentImpl::getSRM(size_t index, Target& target) const
     CATCH_AND_FORWARD
 }
 
-double ExperimentImpl::getSIC(size_t index, pwiz::util::BinaryData<double>& times, pwiz::util::BinaryData<double>& intensities) const
+double ExperimentImpl::getSIC(size_t index, pwiz::util::BinaryData<double>& times, pwiz::util::BinaryData<double>& intensities, bool ignoreScheduledLimits) const
 {
     try
     {
@@ -620,7 +620,13 @@ double ExperimentImpl::getSIC(size_t index, pwiz::util::BinaryData<double>& time
         getSRM(index, target);
 
         ExtractedIonChromatogramSettings^ option = gcnew ExtractedIonChromatogramSettings(index);
-        if (target.startTime != target.endTime)
+        if (ignoreScheduledLimits)
+        {
+            option->StartCycle = 0;
+            option->EndCycle = convertRetentionTimeToCycle(cycleTimes().back());
+            option->UseStartEndCycle = true;
+        }
+        else if (target.startTime != target.endTime)
         {
             option->StartCycle = convertRetentionTimeToCycle(target.startTime);
             option->EndCycle = convertRetentionTimeToCycle(target.endTime);
@@ -636,9 +642,9 @@ double ExperimentImpl::getSIC(size_t index, pwiz::util::BinaryData<double>& time
 }
 
 void ExperimentImpl::getSIC(size_t index, pwiz::util::BinaryData<double>& times, pwiz::util::BinaryData<double>& intensities,
-                            double& basePeakX, double& basePeakY) const
+                            double& basePeakX, double& basePeakY, bool ignoreScheduledLimits) const
 {
-    basePeakY = getSIC(index, times, intensities);
+    basePeakY = getSIC(index, times, intensities, ignoreScheduledLimits);
 
     try
     {
