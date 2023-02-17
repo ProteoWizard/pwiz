@@ -175,7 +175,20 @@ namespace TestRunnerLib
             _showStatus = showStatus;
             TestContext = new TestRunnerContext();
             IsParallelClient = isParallelClient;
-            SetTestDir(TestContext, results);
+            results = SetTestDir(TestContext, results);
+
+            // Set the temp file path to something peculiar - helps guarantee support for
+            // unusual user names since temp file path is usually in the user directory
+            // N.B. I (bspratt) tried adding Unicode here (e.g. 试验, means "test") but it
+            // just breaks too many 3rd party tools (e.g. msFragger), causes trouble with
+            // mz5 reader, etc
+            var tmpDir = Path.Combine(results, @"temp dir&ecto^ry"); 
+            if (!Directory.Exists(tmpDir))
+            {
+                Directory.CreateDirectory(tmpDir);
+            }
+            Environment.SetEnvironmentVariable(@"TMP", tmpDir);
+
             // Minimize disk use on TeamCity VMs by removing downloaded files
             // during test clean-up
             if (teamcityTestDecoration)
@@ -218,7 +231,7 @@ namespace TestRunnerLib
             LogManager.GetRepository().Threshold = LogManager.GetRepository().LevelMap["OFF"];
         }
 
-        private void SetTestDir(TestContext testContext, string resultsDir)
+        private string SetTestDir(TestContext testContext, string resultsDir)
         {
             if (string.IsNullOrEmpty(resultsDir))
                 resultsDir = Path.Combine(GetProjectPath("TestResults"), "TestRunner results");
@@ -229,6 +242,7 @@ namespace TestRunnerLib
                 Try<Exception>(() => Directory.Delete(resultsDir, true), 4, false);
             if (Directory.Exists(resultsDir))
                 Log("!!! Couldn't delete results directory: {0}\n", resultsDir);
+            return resultsDir;
         }
 
         private static string GetProjectPath(string relativePath)

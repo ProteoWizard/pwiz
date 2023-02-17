@@ -957,7 +957,9 @@ namespace pwiz.Skyline.Util
             if (Program.UnitTest)
             {
                 // Introduce some potentially troublesome characters like space, caret, ampersand to test our handling
-                result = @"test c^ha&rs_" + result;
+                // N.B. I (bspratt) tried adding Unicode here (e.g. 试验, means "test") but it just breaks too many 3rd
+                // party tools (e.g. msFragger), causes trouble with mz5 reader, etc
+                result = @"test  c^ha&rs_ " + result;
             }
             return result;
         }
