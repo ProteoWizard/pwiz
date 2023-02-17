@@ -52,6 +52,7 @@ Reader::Config::Config()
     , sortAndJitter(false)
     , globalChromatogramsAreMs1Only(false)
     , ddaProcessing(false)
+    , ignoreScheduledLimitsForChromatograms(false)
 {
 }
 
@@ -74,6 +75,7 @@ Reader::Config::Config(const Config& rhs)
     isolationMzAndMobilityFilter = rhs.isolationMzAndMobilityFilter;
     sortAndJitter = rhs.sortAndJitter;
     globalChromatogramsAreMs1Only = rhs.globalChromatogramsAreMs1Only;
+    ignoreScheduledLimitsForChromatograms = rhs.ignoreScheduledLimitsForChromatograms;
 }
 
 // default implementation; most Readers don't need to worry about multi-run input files

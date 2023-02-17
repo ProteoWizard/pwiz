@@ -96,6 +96,10 @@ class PWIZ_API_DECL Reader
         // to the same precursor from the same survey scan, and lockmass-correcting the precursor mass (if the lockmass refiner is active).
         bool ddaProcessing;
 
+        /// when true, scheduled SIM/SRM chromatograms will try to get an XIC covering the entire range instead of just the scheduled range
+        /// (useful if the instrument recorded extra data outside the scheduled limits, currently only applicable to Sciex WIFF)
+        bool ignoreScheduledLimitsForChromatograms;
+
         Config();
         Config(const Config& rhs);
     };
