@@ -22,6 +22,7 @@ using System.Drawing;
 using System.Globalization;
 using System.Linq;
 using System.Windows.Forms;
+using pwiz.Common.Chemistry;
 using pwiz.Common.Controls;
 using pwiz.Common.SystemUtil;
 using pwiz.Skyline.Alerts;
@@ -142,7 +143,8 @@ namespace pwiz.Skyline.SettingsUI
             // Initialize library settings
             cbLibraryPick.Checked = (Libraries.Pick != TransitionLibraryPick.none);
             panelPick.Visible = cbLibraryPick.Checked;
-            textTolerance.Text = Libraries.IonMatchTolerance.ToString(LocalizationHelper.CurrentCulture);
+            comboToleranceUnits.SelectedItem = comboToleranceUnits.Items[(int)Libraries.IonMatchMzTolerance.Unit];
+            textTolerance.Text = Libraries.IonMatchMzTolerance.Value.ToString(LocalizationHelper.CurrentCulture);
             textMinIonCount.Text = Libraries.MinIonCount != 0 ? Libraries.MinIonCount.ToString(LocalizationHelper.CurrentCulture) : string.Empty;
             textIonCount.Text = Libraries.IonCount.ToString(LocalizationHelper.CurrentCulture);
             if (Libraries.Pick == TransitionLibraryPick.filter)
@@ -469,10 +471,12 @@ namespace pwiz.Skyline.SettingsUI
                     pick = TransitionLibraryPick.filter;
             }
 
+            MzTolerance.Units ionMatchToleranceUnit = (MzTolerance.Units)comboToleranceUnits.SelectedIndex;
+
             double ionMatchTolerance;
 
             double minTol = TransitionLibraries.MIN_MATCH_TOLERANCE;
-            double maxTol = TransitionLibraries.MAX_MATCH_TOLERANCE;
+            double maxTol = TransitionLibraries.GetMaxMatchTolerance(ionMatchToleranceUnit);
             if (!helper.ValidateDecimalTextBox(textTolerance,
                     minTol, maxTol, out ionMatchTolerance))
                 return;
@@ -499,7 +503,7 @@ namespace pwiz.Skyline.SettingsUI
                 }
             }
 
-            TransitionLibraries libraries = new TransitionLibraries(ionMatchTolerance, minIonCount, ionCount, pick);
+            TransitionLibraries libraries = new TransitionLibraries(new MzTolerance(ionMatchTolerance, ionMatchToleranceUnit), minIonCount, ionCount, pick);
             Helpers.AssignIfEquals(ref libraries, Libraries);
 
             // This dialog does not yet change integration settings
@@ -1030,6 +1034,12 @@ namespace pwiz.Skyline.SettingsUI
             set { textTolerance.Text = value.ToString(CultureInfo.CurrentCulture); }
         }
 
+        public MzTolerance.Units IonMatchToleranceUnits
+        {
+            get { return (MzTolerance.Units)comboToleranceUnits.SelectedIndex; }
+            set { comboToleranceUnits.SelectedIndex = (int) value; }
+        }
+
         public int Peaks
         {
             get { return FullScanSettingsControl.Peaks; }
@@ -1311,6 +1321,17 @@ namespace pwiz.Skyline.SettingsUI
                         AcquisitionMethod = FullScanAcquisitionMethod.PRM;
                         break;
                 }
+            }
+        }
+
+        private void comboToleranceUnits_SelectedIndexChanged(object sender, EventArgs e)
+        {
+            if (double.TryParse(textTolerance.Text, out var matchTolerance))
+            {
+                if (IonMatchToleranceUnits == MzTolerance.Units.mz)
+                    IonMatchTolerance = matchTolerance / 1000;
+                else
+                    IonMatchTolerance = matchTolerance * 1000;
             }
         }
     }

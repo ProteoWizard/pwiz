@@ -2308,12 +2308,8 @@ namespace pwiz.SkylineTestUtil
         private static void AddMod(string uniModName, bool isVariable, EditListDlg<SettingsListBase<StaticMod>, StaticMod> editModsDlg)
         {
             var addStaticModDlg = ShowAddModDlg(editModsDlg);
-            RunUI(() =>
-            {
-                addStaticModDlg.SetModification(uniModName, isVariable);
-                addStaticModDlg.OkDialog();
-            });
-            WaitForClosedForm(addStaticModDlg);
+            RunUI(() => addStaticModDlg.SetModification(uniModName, isVariable));
+            OkDialog(addStaticModDlg, addStaticModDlg.OkDialog);
 
             OkDialog(editModsDlg, editModsDlg.OkDialog);
         }

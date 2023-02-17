@@ -4140,9 +4140,9 @@ namespace pwiz.Skyline.Model.AuditLog {
         /// <summary>
         ///   Looks up a localized string similar to Ion match tolerance.
         /// </summary>
-        public static string TransitionFilterAndLibrariesSettings_IonMatchTolerance {
+        public static string TransitionFilterAndLibrariesSettings_IonMatchMzTolerance {
             get {
-                return ResourceManager.GetString("TransitionFilterAndLibrariesSettings_IonMatchTolerance", resourceCulture);
+                return ResourceManager.GetString("TransitionFilterAndLibrariesSettings_IonMatchMzTolerance", resourceCulture);
             }
         }
         
@@ -4545,9 +4545,9 @@ namespace pwiz.Skyline.Model.AuditLog {
         /// <summary>
         ///   Looks up a localized string similar to Ion match tolerance.
         /// </summary>
-        public static string TransitionLibraries_IonMatchTolerance {
+        public static string TransitionLibraries_IonMatchMzTolerance {
             get {
-                return ResourceManager.GetString("TransitionLibraries_IonMatchTolerance", resourceCulture);
+                return ResourceManager.GetString("TransitionLibraries_IonMatchMzTolerance", resourceCulture);
             }
         }
         

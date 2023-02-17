@@ -107,16 +107,8 @@ namespace TestPerf // Note: tests in the "TestPerf" namespace only run when the 
                 editIonMobilityLibraryDlg.GetIonMobilitiesFromResults();
             });
             // PauseTest(); // Uncomment this to inspect ion mobility finder results
-            RunUI(() =>
-            {
-                editIonMobilityLibraryDlg.OkDialog();
-            });
-            WaitForClosedForm(editIonMobilityLibraryDlg);
-            RunUI(() =>
-            {
-                transitionSettingsDlg.OkDialog();
-            });
-            WaitForClosedForm(transitionSettingsDlg);
+            OkDialog(editIonMobilityLibraryDlg, editIonMobilityLibraryDlg.OkDialog);
+            OkDialog(transitionSettingsDlg, transitionSettingsDlg.OkDialog);
 
             var docChangedDriftTimePredictor = WaitForDocumentChange(document);
 

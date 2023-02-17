@@ -450,7 +450,8 @@ namespace TestPerf
                 // Verify other values shown in the tutorial
                 Assert.AreEqual(6, importPeptideSearchDlg.TransitionSettingsControl.IonCount);
                 Assert.AreEqual(6, importPeptideSearchDlg.TransitionSettingsControl.MinIonCount);
-                Assert.AreEqual(0.05, importPeptideSearchDlg.TransitionSettingsControl.IonMatchTolerance);
+                Assert.AreEqual(0.05, importPeptideSearchDlg.TransitionSettingsControl.IonMatchMzTolerance.Value);
+                Assert.AreEqual(MzTolerance.Units.mz, importPeptideSearchDlg.TransitionSettingsControl.IonMatchMzTolerance.Unit);
                 // CONSIDER: Not that easy to validate 1, 2 in ion charges.
             });
             PauseForScreenShot<ImportPeptideSearchDlg.TransitionSettingsPage>("Transition settings", 7);
@@ -575,8 +576,8 @@ namespace TestPerf
             });
 
             PauseForScreenShot("Import Peptide Search - DDA search progress page", 14);
-            WaitForConditionUI(120 * 600000, () => searchSucceeded.HasValue);
-            Assert.IsTrue(searchSucceeded.Value);
+            WaitForConditionUI(120 * 600000, () => searchSucceeded.HasValue, () => importPeptideSearchDlg.SearchControl.LogText);
+            RunUI(() => Assert.IsTrue(searchSucceeded.Value, importPeptideSearchDlg.SearchControl.LogText));
 
             var addIrtDlg = ShowDialog<AddIrtPeptidesDlg>(() => importPeptideSearchDlg.ClickNextButton(), 30 * 60000);//peptidesPerProteinDlg.OkDialog());
             RunUI(() =>
