@@ -50,6 +50,7 @@ namespace TestRunnerLib
         public readonly int? MinidumpLeakThreshold;
         public readonly bool DoNotRunInParallel;
         public readonly bool DoNotRunInNightly;
+        public readonly bool DoNotUseUnicode; // If true, test is known to have trouble with unicode (3rd party tool, mz5, etc)
 
         public TestInfo(Type testClass, MethodInfo testMethod, MethodInfo testInitializeMethod, MethodInfo testCleanupMethod)
         {
@@ -59,6 +60,9 @@ namespace TestRunnerLib
             TestInitialize = testInitializeMethod;
             TestCleanup = testCleanupMethod;
             IsPerfTest = (testClass.Namespace ?? String.Empty).Equals("TestPerf");
+
+            var noUnicodeTestAttr = RunTests.GetAttribute(testMethod, "NoUnicodeTestingAttribute");
+            DoNotUseUnicode = noUnicodeTestAttr != null; // If true, don't add unicode to TMP environment variable
 
             var noParallelTestAttr = RunTests.GetAttribute(testMethod, "NoParallelTestingAttribute");
             DoNotRunInParallel = noParallelTestAttr != null;
@@ -175,19 +179,7 @@ namespace TestRunnerLib
             _showStatus = showStatus;
             TestContext = new TestRunnerContext();
             IsParallelClient = isParallelClient;
-            results = SetTestDir(TestContext, results);
-
-            // Set the temp file path to something peculiar - helps guarantee support for
-            // unusual user names since temp file path is usually in the user directory
-            // N.B. I (bspratt) tried adding Unicode here (e.g. 试验, means "test") but it
-            // just breaks too many 3rd party tools (e.g. msFragger), causes trouble with
-            // mz5 reader, etc
-            var tmpDir = Path.Combine(results, @"temp dir&ecto^ry"); 
-            if (!Directory.Exists(tmpDir))
-            {
-                Directory.CreateDirectory(tmpDir);
-            }
-            Environment.SetEnvironmentVariable(@"TMP", tmpDir);
+            SetTestDir(TestContext, results);
 
             // Minimize disk use on TeamCity VMs by removing downloaded files
             // during test clean-up
@@ -231,7 +223,7 @@ namespace TestRunnerLib
             LogManager.GetRepository().Threshold = LogManager.GetRepository().LevelMap["OFF"];
         }
 
-        private string SetTestDir(TestContext testContext, string resultsDir)
+        private void SetTestDir(TestContext testContext, string resultsDir)
         {
             if (string.IsNullOrEmpty(resultsDir))
                 resultsDir = Path.Combine(GetProjectPath("TestResults"), "TestRunner results");
@@ -242,7 +234,6 @@ namespace TestRunnerLib
                 Try<Exception>(() => Directory.Delete(resultsDir, true), 4, false);
             if (Directory.Exists(resultsDir))
                 Log("!!! Couldn't delete results directory: {0}\n", resultsDir);
-            return resultsDir;
         }
 
         private static string GetProjectPath(string relativePath)
@@ -344,6 +335,11 @@ namespace TestRunnerLib
                 if (IsParallelClient)
                 {
                     Environment.SetEnvironmentVariable(@"SKYLINE_TESTER_PARALLEL_CLIENT_ID", ParallelClientId); // Accessed in pwiz_tools\Skyline\Util\Util.cs
+                }
+
+                if (test.DoNotUseUnicode) // Some tests that employ 3rd party tools, mz5, etc, just can't tolerate unicode paths
+                {
+                    TestContext.Properties["NoUnicodeTesting"] = true.ToString();
                 }
 
                 if (test.SetTestContext != null)

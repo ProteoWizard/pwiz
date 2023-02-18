@@ -116,7 +116,7 @@ namespace TestPerf
         }
         private string RootName { get; set; }
 
-        [TestMethod, NoParallelTesting(TestExclusionReason.RESOURCE_INTENSIVE)]
+        [TestMethod, NoParallelTesting(TestExclusionReason.RESOURCE_INTENSIVE), NoUnicodeTesting("mz5 does not support unicode paths")]
         public void TestDiaTtofDiaUmpireTutorial()
         {
             //IsPauseForScreenShots = true;
@@ -144,6 +144,7 @@ namespace TestPerf
 
         [TestMethod, 
          NoParallelTesting(TestExclusionReason.RESOURCE_INTENSIVE), 
+         NoUnicodeTesting("mz5 does not support unicode paths"),
          NoNightlyTesting(TestExclusionReason.EXCESSIVE_TIME)]
         public void TestDiaTtofDiaUmpireTutorialFullFileset()
         {
@@ -204,7 +205,7 @@ namespace TestPerf
             RunTest();
         }
 
-        [TestMethod, NoParallelTesting(TestExclusionReason.RESOURCE_INTENSIVE)]
+        [TestMethod, NoParallelTesting(TestExclusionReason.RESOURCE_INTENSIVE), NoUnicodeTesting(@"MSFragger does not handle unicode paths")]
         public void TestDiaQeDiaUmpireTutorial()
         {
             _analysisValues = new AnalysisValues
@@ -233,6 +234,7 @@ namespace TestPerf
 
         [TestMethod, 
          NoParallelTesting(TestExclusionReason.RESOURCE_INTENSIVE), 
+         NoUnicodeTesting("mz5 does not support unicode paths"),
          NoNightlyTesting(TestExclusionReason.EXCESSIVE_TIME)] // do not run full filesets for nightly tests
         public void TestDiaQeDiaUmpireTutorialFullFileset()
         {

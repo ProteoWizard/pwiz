@@ -41,7 +41,7 @@ namespace TestPerf
     [TestClass]
     public class DdaTutorialTest : AbstractFunctionalTest
     {
-        [TestMethod, NoParallelTesting(TestExclusionReason.RESOURCE_INTENSIVE)]
+        [TestMethod, NoParallelTesting(TestExclusionReason.RESOURCE_INTENSIVE), NoUnicodeTesting("MsFragger does not handle unicode paths")]
         public void TestDdaTutorial()
         {
             // Set true to look at tutorial screenshots.

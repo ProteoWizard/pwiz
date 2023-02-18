@@ -86,6 +86,22 @@ namespace pwiz.SkylineTestUtil
     }
 
     /// <summary>
+    /// Test method attribute which specifies a test is not suitable for use with Unicode paths
+    /// Note that the constructor expects a string explaining why a test is unsuitable for use with Unicde 
+    /// </summary>
+    [AttributeUsage(AttributeTargets.Method, AllowMultiple = false)]
+    public sealed class NoUnicodeTestingAttribute : Attribute
+    {
+        public string Reason { get; private set; } // Reason for declaring test as unsuitable for unicode
+
+        public NoUnicodeTestingAttribute(string reason)
+        {
+            Reason = reason; // e.g. "calls MSFragger", "uses mz5" etc
+        }
+
+    }
+
+    /// <summary>
     /// Test method attribute which specifies a test is not suitable for parallel testing
     /// (e.g. memory hungry or writes to the filesystem outside of the test's working directory)
     /// Note that the constructor expects a string explaining why a test is unsuitable for parallel use 

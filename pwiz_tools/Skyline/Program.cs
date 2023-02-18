@@ -72,6 +72,7 @@ namespace pwiz.Skyline
         public static bool StressTest { get; set; }                 // Set true when doing stress testing (i.e. TestRunner).
         public static bool UnitTest { get; set; }                   // Set to true by AbstractUnitTest and AbstractFunctionalTest
         public static bool FunctionalTest { get; set; }             // Set to true by AbstractFunctionalTest
+        public static bool TestWithUnicode { get; set; }            // If true, add Unicode characters to tempfile paths in tests
         public static string TestName { get; set; }                 // Set during unit and functional tests
         public static string DefaultUiMode { get; set; }            // Set to avoid seeing NoModeUiDlg at the start of a test
         public static bool SkylineOffscreen { get; set; }           // Set true to move Skyline windows offscreen.
