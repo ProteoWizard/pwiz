@@ -395,6 +395,19 @@ namespace pwiz.Skyline.Model.DdaSearch
                         // remove C-terminal mod indicator to avoid "'c' is not an amino acid"
                         line = line.Replace(@"c[", @"[");
 
+                        // handle case of mod on terminal and on terminal AA
+                        if (line.Contains(@"]["))
+                        {
+                            var m = Regex.Match(line, "\\[([^]]+)\\]\\[([^]]+)\\]");
+                            if (!m.Success)
+                                throw new InvalidDataException(@"found back to back brackets but could not parse them with regex: " + line);
+                            if (!double.TryParse(m.Groups[1].Value, out double modMass1))
+                                throw new InvalidDataException(@"could not parse mod mass from " + m.Groups[1].Value);
+                            if (!double.TryParse(m.Groups[2].Value, out double modMass2))
+                                throw new InvalidDataException(@"could not parse mod mass from " + m.Groups[2].Value);
+                            line = Regex.Replace(line, "\\[([^]]+\\]\\[[^]]+)\\]", $"[{modMass1 + modMass2:F4}]");
+                        }
+
                         if (addChargeFeatures)
                         {
                             if (!int.TryParse(Regex.Replace(line, @"^.*\.\d+\.\d+\.(\d+)_.*", "$1"), out int chargeState))
@@ -635,8 +648,8 @@ add_Nterm_protein = 0.000000
                     # variable_mod_06 = 229.162930 n^ 1
                     # variable_mod_07 = 229.162930 S 1
                     */
-                    // MSFragger static mods must have an AA and cannot be terminal-specific, so in those cases, treat it as a variable mod
-                    if (mod.IsVariable || mod.AAs == null || !position.IsNullOrEmpty())
+                    // MSFragger static mods must have an AA and cannot be negative or terminal-specific, so in those cases, treat it as a variable mod
+                    if (mod.IsVariable || mod.AAs == null || !position.IsNullOrEmpty() || mass < 0)
                     {
                         ++modCounter;
                         modParamLines.Add($@"variable_mod_{modCounter:D2} = {mass.ToString(CultureInfo.InvariantCulture)} {residues} {maxVariableMods_}");
