@@ -294,6 +294,7 @@ namespace TestRunnerLib
             var saveUICulture = Thread.CurrentThread.CurrentUICulture;
             long crtLeakedBytes = 0;
             var saveTmp = Environment.GetEnvironmentVariable(@"TMP");
+            string tmpTestDir;
 
             var dumpFileName = string.Format("{0}.{1}_{2}_{3}_{4:yyyy_MM_dd__hh_mm_ss_tt}.dmp", pass, testNumber, test.TestMethod.Name, Language.TwoLetterISOLanguageName, DateTime.Now);
 
@@ -345,12 +346,12 @@ namespace TestRunnerLib
                 // (e.g. msFragger), causes trouble with mz5 reader, etc, so watch for custom test
                 // attribute that turns that off per test
                 var testDir = TestContext.Properties["TestDir"].ToString();
-                var tmpDir = Path.GetFullPath(Path.Combine(testDir, @"..", (@"SkylineTester temp&di^r" + (test.DoNotUseUnicode ? String.Empty : @" 试验"))));
-                if (!Directory.Exists(tmpDir))
+                tmpTestDir = Path.GetFullPath(Path.Combine(testDir, @"..", (@"SkylineTester temp&di^r" + (test.DoNotUseUnicode ? String.Empty : @" 试验"))));
+                if (!Directory.Exists(tmpTestDir))
                 {
-                    Directory.CreateDirectory(tmpDir);
+                    Directory.CreateDirectory(tmpTestDir);
                 }
-                Environment.SetEnvironmentVariable(@"TMP", tmpDir);
+                Environment.SetEnvironmentVariable(@"TMP", tmpTestDir);
                 if (test.DoNotUseUnicode)
                 {
                     // Tell Skyline not to decorate temp file names with unicode
@@ -368,7 +369,7 @@ namespace TestRunnerLib
                 LocalizationHelper.InitThread();
 
                 // Run the test and time it.
-                CleanUpTestDir();   // Attempt to cleanup first, in case something was left behind by a failing test
+                CleanUpTestDir(tmpTestDir);   // Attempt to cleanup first, in case something was left behind by a failing test
                 if (test.TestInitialize != null)
                     test.TestInitialize.Invoke(testObject, null);
 
@@ -391,7 +392,7 @@ namespace TestRunnerLib
                     test.TestCleanup.Invoke(testObject, null);
 
                 // If everything is supposed to be cleaned up, then check for any left over files
-                var allEntries = CleanUpTestDir();
+                var allEntries = CleanUpTestDir(tmpTestDir);
                 if (allEntries.Count > 0)
                 {
                     allEntries.Insert(0, string.Format("The test {0} left files in the test folder:", test.TestMethod.Name));
@@ -549,25 +550,31 @@ namespace TestRunnerLib
         /// Resets the test directory to empty when cleanupLevel is 'all'.
         /// </summary>
         /// <returns>A list of the entries, if any, that were removed</returns>
-        private List<string> CleanUpTestDir()
+        private List<string> CleanUpTestDir(string tmpTestDir)
         {
             var allEntries = new List<string>();
             // If everything is supposed to be cleaned up, then check for any left over files
-            if (_cleanupLevelAll && Directory.Exists(TestContext.TestDir))
+            if (_cleanupLevelAll)
             {
-                allEntries.AddRange(Directory.EnumerateFileSystemEntries(TestContext.TestDir));
-                if (allEntries.Count > 0)
+                foreach (var dir in new []{TestContext.TestDir, tmpTestDir})
                 {
-                    // If the folder is not empty, attempt to get rid of everything
-                    // and recreate the folder.
-                    try
+                    if (Directory.Exists(dir))
                     {
-                        Directory.Delete(TestContext.TestDir, true);
-                        Directory.CreateDirectory(TestContext.TestDir);
-                    }
-                    catch (Exception)
-                    {
-                        // Do nothing
+                        allEntries.AddRange(Directory.EnumerateFileSystemEntries(dir).Select(f => Path.Combine(dir, f)));
+                        if (allEntries.Count > 0)
+                        {
+                            // If the folder is not empty, attempt to get rid of everything
+                            // and recreate the folder.
+                            try
+                            {
+                                Directory.Delete(dir, true);
+                                Directory.CreateDirectory(dir);
+                            }
+                            catch (Exception)
+                            {
+                                // Do nothing
+                            }
+                        }
                     }
                 }
             }
