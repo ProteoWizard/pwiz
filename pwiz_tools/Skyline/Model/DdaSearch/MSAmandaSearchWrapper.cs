@@ -67,9 +67,8 @@ namespace pwiz.Skyline.Model.DdaSearch
         private const string MAX_LOADED_SPECTRA_AT_ONCE = "MaxLoadedSpectraAtOnce";
         private const string CONSIDERED_CHARGES = "ConsideredCharges";
 
-        private readonly TemporaryDirectory _baseDir = MSAmandaTempDir;
-
-        public static TemporaryDirectory MSAmandaTempDir = new TemporaryDirectory(tempPrefix: @"~SK_MSAmanda_");
+        public const string MS_AMANDA_TMP = @"~SK_MSAmanda";
+        private readonly TemporaryDirectory _baseDir = new TemporaryDirectory(tempPrefix: MS_AMANDA_TMP + @"/"); // Creates %TMP%/~SK_MSAmanda/<random dirname>
 
         public MSAmandaSearchWrapper()
         {

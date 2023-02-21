@@ -469,13 +469,10 @@ namespace pwiz.SkylineTestFunctional
             WaitForDocumentLoaded();
             RunUI(() => SkylineWindow.SaveDocument());
 
-            if (TestSettings.SearchEngine == SearchSettingsControl.SearchEngine.MSAmanda)
-            {
-                // MSAmanda intentionally leaves tempfiles behind (as caches in case of repeat runs)
-                // But our test system wants a clean finish
-                var msAmandaTmpDir = MSAmandaSearchWrapper.MSAmandaTempDir;
-                DirectoryEx.SafeDelete(msAmandaTmpDir.DirPath);
-            }
+            // MSAmanda intentionally leaves tempfiles behind (as caches in case of repeat runs)
+            // But our test system wants a clean finish
+            var msAmandaTmpDir = Path.Combine(Path.GetTempPath(), MSAmandaSearchWrapper.MS_AMANDA_TMP);
+            DirectoryEx.SafeDelete(msAmandaTmpDir);
         }
 
         private void PrepareDocument(string documentFile)
