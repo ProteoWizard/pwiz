@@ -293,6 +293,7 @@ namespace TestRunnerLib
             var saveCulture = Thread.CurrentThread.CurrentCulture;
             var saveUICulture = Thread.CurrentThread.CurrentUICulture;
             long crtLeakedBytes = 0;
+            var saveTmp = Environment.GetEnvironmentVariable(@"TMP");
 
             var dumpFileName = string.Format("{0}.{1}_{2}_{3}_{4:yyyy_MM_dd__hh_mm_ss_tt}.dmp", pass, testNumber, test.TestMethod.Name, Language.TwoLetterISOLanguageName, DateTime.Now);
 
@@ -337,9 +338,23 @@ namespace TestRunnerLib
                     Environment.SetEnvironmentVariable(@"SKYLINE_TESTER_PARALLEL_CLIENT_ID", ParallelClientId); // Accessed in pwiz_tools\Skyline\Util\Util.cs
                 }
 
-                if (test.DoNotUseUnicode) // Some tests that employ 3rd party tools, mz5, etc, just can't tolerate unicode paths
+                // Set the temp file path to something peculiar - helps guarantee support for
+                // unusual user names since temp file path is usually in the user directory
+                //
+                // But adding Unicode characters (e.g. 试验, means "test") breaks many 3rd party tools
+                // (e.g. msFragger), causes trouble with mz5 reader, etc, so watch for custom test
+                // attribute that turns that off per test
+                var testDir = TestContext.Properties["TestDir"].ToString();
+                var tmpDir = Path.GetFullPath(Path.Combine(testDir, @"..", (@"SkylineTester temp&di^r" + (test.DoNotUseUnicode ? String.Empty : @" 试验"))));
+                if (!Directory.Exists(tmpDir))
                 {
-                    TestContext.Properties["NoUnicodeTesting"] = true.ToString();
+                    Directory.CreateDirectory(tmpDir);
+                }
+                Environment.SetEnvironmentVariable(@"TMP", tmpDir);
+                if (test.DoNotUseUnicode)
+                {
+                    // Tell Skyline not to decorate temp file names with unicode
+                    TestContext.Properties["NoUnicodeTesting"] = true.ToString(); 
                 }
 
                 if (test.SetTestContext != null)
@@ -390,6 +405,9 @@ namespace TestRunnerLib
             stopwatch.Stop();
             LastTestDuration = (int) stopwatch.ElapsedMilliseconds;
             // Allow as much to be garbage collected as possible
+
+            // Restore TMP
+            Environment.SetEnvironmentVariable(@"TMP", saveTmp);
 
             // Restore culture.
             Thread.CurrentThread.CurrentCulture = saveCulture;
