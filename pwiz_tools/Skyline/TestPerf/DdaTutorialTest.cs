@@ -397,6 +397,14 @@ namespace TestPerf
             }
 
             RunUI(() => SkylineWindow.SaveDocument());
+
+            if (!isNotAmanda)
+            {
+                // MSAmanda intentionally leaves tempfiles behind (as caches in case of repeat runs)
+                // But our test system wants a clean finish
+                var msAmandaTmpDir = MSAmandaSearchWrapper.MSAmandaTempDir;
+                DirectoryEx.SafeDelete(msAmandaTmpDir.DirPath);
+            }
         }
 
         private void RefreshGraphs()

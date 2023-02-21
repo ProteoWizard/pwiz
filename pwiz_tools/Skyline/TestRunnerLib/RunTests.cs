@@ -62,7 +62,7 @@ namespace TestRunnerLib
             IsPerfTest = (testClass.Namespace ?? String.Empty).Equals("TestPerf");
 
             var noUnicodeTestAttr = RunTests.GetAttribute(testMethod, "NoUnicodeTestingAttribute");
-            DoNotUseUnicode = noUnicodeTestAttr != null; // If true, don't add unicode to TMP environment variable
+            DoNotUseUnicode = ProcessRunner.IsRunningOnWine || noUnicodeTestAttr != null; // If true, don't add unicode to TMP environment variable
 
             var noParallelTestAttr = RunTests.GetAttribute(testMethod, "NoParallelTestingAttribute");
             DoNotRunInParallel = noParallelTestAttr != null;
