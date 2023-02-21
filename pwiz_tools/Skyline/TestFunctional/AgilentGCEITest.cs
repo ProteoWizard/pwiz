@@ -46,6 +46,7 @@ namespace pwiz.SkylineTestFunctional
 
             // Read in a small .MSP file describing GC EI data as MS1
             AddToDocumentFromSpectralLibrary("GC EI test", TestFilesDir.GetTestPath(@"test.MSP"));
+            WaitForDocumentLoaded();
 
             // Extract chromatograms from an Agilent file describing GC EI data as MS1
             ImportResults(new[] { TestFilesDir.GetTestPath(@"cmsptc_00000_20230106_SCFA_1.mzML") });

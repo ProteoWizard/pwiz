@@ -19,6 +19,9 @@
 // limitations under the License.
 //
 
+using System.Drawing;
+using System.Windows.Forms;
+
 namespace seems
 {
     partial class TreeViewForm
@@ -49,44 +52,45 @@ namespace seems
         /// </summary>
         private void InitializeComponent()
         {
-            this.treeView = new System.Windows.Forms.TreeView();
+            this.treeView = new NoHScrollTree();
             this.SuspendLayout();
             // 
             // treeView
             // 
-            this.treeView.Anchor = ( (System.Windows.Forms.AnchorStyles) ( ( ( ( System.Windows.Forms.AnchorStyles.Top | System.Windows.Forms.AnchorStyles.Bottom )
-                        | System.Windows.Forms.AnchorStyles.Left )
-                        | System.Windows.Forms.AnchorStyles.Right ) ) );
             this.treeView.BackColor = System.Drawing.SystemColors.Info;
-            this.treeView.BorderStyle = System.Windows.Forms.BorderStyle.None;
-            this.treeView.Location = new System.Drawing.Point( 3, 3 );
+            this.treeView.ForeColor = System.Drawing.SystemColors.InfoText;
+            this.treeView.BorderStyle = System.Windows.Forms.BorderStyle.FixedSingle;
+            this.treeView.Location = new System.Drawing.Point(0, 0);
             this.treeView.Name = "treeView";
             this.treeView.ShowNodeToolTips = true;
-            this.treeView.Size = new System.Drawing.Size( 91, 43 );
+            this.treeView.Dock = DockStyle.Fill;
+            this.treeView.Margin = new Padding(3);
             this.treeView.TabIndex = 0;
             // 
             // TreeViewForm
             // 
-            this.AutoScaleDimensions = new System.Drawing.SizeF( 6F, 13F );
+            this.AutoScaleDimensions = new System.Drawing.SizeF(6F, 13F);
             this.AutoScaleMode = System.Windows.Forms.AutoScaleMode.Font;
             this.BackColor = System.Drawing.SystemColors.Info;
-            this.ClientSize = new System.Drawing.Size( 95, 47 );
+            this.ClientSize = new System.Drawing.Size(95, 47);
             this.ControlBox = false;
-            this.Controls.Add( this.treeView );
-            this.FormBorderStyle = System.Windows.Forms.FormBorderStyle.FixedToolWindow;
+            this.Controls.Add(this.treeView);
+            this.DoubleBuffered = true;
+            this.FormBorderStyle = System.Windows.Forms.FormBorderStyle.None;
             this.MaximizeBox = false;
             this.MinimizeBox = false;
             this.Name = "TreeViewForm";
             this.ShowIcon = false;
             this.ShowInTaskbar = false;
             this.StartPosition = System.Windows.Forms.FormStartPosition.Manual;
+            this.Padding = Padding.Empty;
             this.TopMost = true;
-            this.ResumeLayout( false );
+            this.ResumeLayout(false);
 
         }
 
         #endregion
 
-        private System.Windows.Forms.TreeView treeView;
+        private NoHScrollTree treeView;
     }
 }

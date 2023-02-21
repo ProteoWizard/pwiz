@@ -227,12 +227,8 @@ namespace pwiz.SkylineTestFunctional
         private static void TestPackagesUnselected()
         {
             var pythonInstaller = FormatPackageInstallerBothTypes(false, true, true, true);
-            RunUI(() =>
-                {
-                    pythonInstaller.UncheckAllPackages();
-                    pythonInstaller.OkDialog();
-                });
-            WaitForClosedForm(pythonInstaller);
+            RunUI(() => pythonInstaller.UncheckAllPackages());
+            OkDialog(pythonInstaller, pythonInstaller.OkDialog);
         }
 
         private static void TestPackagesSourceOnly()

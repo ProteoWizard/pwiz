@@ -8,7 +8,7 @@
     <OutputType>Exe</OutputType>
     <RootNamespace>BuildShimadzuMethod</RootNamespace>
     <AssemblyName>BuildShimadzuMethod</AssemblyName>
-    <TargetFrameworkVersion>v4.8</TargetFrameworkVersion>
+    <TargetFrameworkVersion>v4.6.1</TargetFrameworkVersion>
     <FileAlignment>512</FileAlignment>
     <AutoGenerateBindingRedirects>false</AutoGenerateBindingRedirects>
     <Deterministic>true</Deterministic>

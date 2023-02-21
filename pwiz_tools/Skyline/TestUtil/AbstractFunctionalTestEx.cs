@@ -813,6 +813,8 @@ namespace pwiz.SkylineTestUtil
         {
             var peptideSettingsUI = ShowDialog<PeptideSettingsUI>(SkylineWindow.ShowPeptideSettingsUI);
 
+            RunUI(() => peptideSettingsUI.TabControlSel = PeptideSettingsUI.TABS.Library);
+
             Assert.IsNotNull(peptideSettingsUI);
             var editListUI =
                 ShowDialog<EditListDlg<SettingsListBase<LibrarySpec>, LibrarySpec>>(peptideSettingsUI.EditLibraryList);
@@ -827,7 +829,10 @@ namespace pwiz.SkylineTestUtil
 
             // Make sure the libraries actually show up in the peptide settings dialog before continuing.
             WaitForConditionUI(() => peptideSettingsUI.AvailableLibraries.Length > 0);
+            // Library gets added to the document below by the ViewLibraryDlg form
             RunUI(() => Assert.IsFalse(peptideSettingsUI.IsSettingsChanged));
+
+            OkDialog(peptideSettingsUI, peptideSettingsUI.OkDialog);
 
             // Add all the molecules in the library
             RunUI(() => SkylineWindow.ViewSpectralLibraries());
@@ -845,16 +850,13 @@ namespace pwiz.SkylineTestUtil
             });
             var filterPeptidesDlg = WaitForOpenForm<FilterMatchedPeptidesDlg>();
             ShowAndDismissDlg<MultiButtonMsgDlg>(filterPeptidesDlg.OkDialog, addLibraryPepsDlg => { addLibraryPepsDlg.Btn1Click(); });
-
             OkDialog(filterPeptidesDlg, filterPeptidesDlg.OkDialog);
 
-            var docAfter = WaitForDocumentChange(docBefore);
+            var docAfterAdd = WaitForDocumentChange(docBefore);
 
             OkDialog(viewLibraryDlg, viewLibraryDlg.Close);
-            OkDialog(peptideSettingsUI, peptideSettingsUI.OkDialog);
 
-            docAfter = WaitForDocumentChange(docAfter);
-            return docAfter;
+            return docAfterAdd;
         }
     }
 }
