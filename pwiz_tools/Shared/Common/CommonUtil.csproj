@@ -140,6 +140,7 @@
     <Compile Include="Collections\ReadOnlyList.cs" />
     <Compile Include="Collections\StructSerializer.cs" />
     <Compile Include="SystemUtil\ItemDescription.cs" />
+    <Compile Include="SystemUtil\ProcessEx.cs" />
     <Compile Include="SystemUtil\StreamEx.cs" />
     <Compile Include="SystemUtil\StringSearch.cs" />
     <Compile Include="SystemUtil\SubstringFinder.cs" />

@@ -21,6 +21,7 @@ using System.Collections.Generic;
 using System.Globalization;
 using System.Runtime.InteropServices;
 using System.IO;
+using System.Text.RegularExpressions;
 
 namespace pwiz.Common.SystemUtil
 {
@@ -219,7 +220,7 @@ namespace pwiz.Common.SystemUtil
         /// </summary>
         public static string EscapedPathForNestedCommandLineQuotes(this string text)
         {
-            if (text.IndexOfAny(new char[] { ' ', '&', '^' }) != -1)
+            if (text.IndexOfAny(new[] { ' ', '&', '^' }) != -1)
             {
                 var escaped = text.
                     Replace(@"^", @"^^"). // '^' is the windows command line escape character, but is also a valid filename character 
@@ -229,6 +230,17 @@ namespace pwiz.Common.SystemUtil
             return text;
         }
 
+        // Inspect a file path for characters that must be escaped for use in XML (currently just "&")
+        // Return a suitably escaped version of the string
+        public static string EscapePathForXML(string path)
+        {
+            if (path.Contains(@"&")) // Valid windows filename character, may need escaping
+            {
+                // But it may also be in use as an escape character - don't mess with &quot; etc
+                path = Regex.Replace(path, @"&(?!(?:apos|quot|[gl]t|amp);|#)", @"&amp;");
+            }
+            return path;
+        }
     }
 
     /// <summary>

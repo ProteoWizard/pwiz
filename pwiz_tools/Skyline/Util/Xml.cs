@@ -961,18 +961,6 @@ namespace pwiz.Skyline.Util
             return sb.ToString();
         }
 
-        // Inspect a file path for characters that must be escaped for use in XML (currently just "&")
-        // Return a suitably escaped version of the string
-        public static string EscapePath(string path)
-        {
-            if (path.Contains(@"&")) // Valid windows filename character, may need escaping
-            {
-                // But it may also be in use as an escape character - don't mess with &quot; etc
-                path = Regex.Replace(path, @"&(?!(?:apos|quot|[gl]t|amp);|#)", @"&amp;");
-            }
-            return path;
-        }
-
         public static string GetInvalidDataMessage(string path, Exception x)
         {
             StringBuilder sb = new StringBuilder();

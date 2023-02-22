@@ -64,7 +64,7 @@ namespace pwiz.Skyline.Util
                 Version = string.Empty;
             }
 
-            IsRunningOnWine = ProcessRunner.IsRunningOnWine;
+            IsRunningOnWine = ProcessEx.IsRunningOnWine;
         }
         public enum InstallType { release, daily, developer }
 
