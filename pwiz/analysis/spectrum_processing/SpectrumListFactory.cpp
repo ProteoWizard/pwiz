@@ -700,17 +700,6 @@ inline void unescapeQuotedPath(string &path)
         // Remove the first and last characters
         path = path.substr(1, path.length() - 2);
     }
-    // Look for the ^ escape character
-    for (size_t escapePos = 0;;)
-    {
-        escapePos = path.find('^', escapePos);
-        if (escapePos == string::npos)
-        {
-            break;
-        }
-        path = path.substr(0, escapePos) + path.substr(escapePos + 1);
-        escapePos++;
-    }
 }
 
 SpectrumListPtr filterCreator_mzRefine(const MSData& msd, const string& arg, pwiz::util::IterationListenerRegistry* ilr)
