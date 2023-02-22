@@ -97,7 +97,7 @@ namespace pwiz.Skyline.Model.DdaSearch
                     if (File.Exists(outputFilepath))
                         FileEx.SafeDelete(outputFilepath);
 
-                    string tmpFilepath = Path.Combine(Path.GetTempPath(), FileEx.GetRandomFileName() + MsConvertOutputExtension); // N.B. FileEx.GetRandomFileName adds unusual characters in test mode
+                    string tmpFilepath = Path.Combine(Path.GetTempPath(), PathEx.GetRandomFileName() + MsConvertOutputExtension); // N.B. FileEx.GetRandomFileName adds unusual characters in test mode
 
                     var pr = new ProcessRunner();
                     var psi = new ProcessStartInfo(MSCONVERT_EXE)

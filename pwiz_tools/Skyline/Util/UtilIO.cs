@@ -946,23 +946,6 @@ namespace pwiz.Skyline.Util
                 return elapsedSpan.TotalMilliseconds + @" milliseconds";
             return deltaTicks + @" ticks";
         }
-
-        /// <summary>
-        /// Like Path.GetRandFileName(), but in test context adds some legal but unusual characters for robustness testing
-        /// </summary>
-        /// <returns>a random filename</returns>
-        public static string GetRandomFileName()
-        {
-            var result = Path.GetRandomFileName();
-            if (Program.UnitTest)
-            {
-                // Introduce some potentially troublesome characters like space, caret, ampersand to test our handling
-                // Adding Unicode here (e.g. 试验, means "test") breaks many 3rd party tools (e.g. msFragger), causes trouble
-                // with mz5 reader, etc so we don't do it for certain tests
-                result = @"test  c^ha&rs_ " + (Program.TestWithUnicode ? @"试验" : string.Empty) + result;
-            }
-            return result;
-        }
     }
 
     public static class DirectoryEx
@@ -1340,7 +1323,7 @@ namespace pwiz.Skyline.Util
         public TemporaryDirectory(string dirPath = null, string tempPrefix = TEMP_PREFIX)
         {
             if (string.IsNullOrEmpty(dirPath))
-                DirPath = Path.Combine(Path.GetTempPath(), tempPrefix + FileEx.GetRandomFileName()); // N.B. FileEx.GetRandomFileName adds unusual characters in test mode
+                DirPath = Path.Combine(Path.GetTempPath(), tempPrefix + PathEx.GetRandomFileName()); // N.B. FileEx.GetRandomFileName adds unusual characters in test mode
             else
                 DirPath = dirPath;
             Helpers.TryTwice(() => Directory.CreateDirectory(DirPath));

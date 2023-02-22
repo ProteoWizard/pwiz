@@ -372,12 +372,6 @@ namespace pwiz.SkylineTestUtil
             Program.UnitTest = true;
             Program.TestName = TestContext.TestName;
 
-            // We set temp file names to include peculiar characters like & and ^
-            // This helps guarantee support for // unusual user names since temp file path is usually in the user directory
-            // But adding Unicode chracters (e.g. 试验, means "test") breaks many 3rd party tools (e.g. msFragger) and
-            // causes trouble with mz5 reader, etc
-            Program.TestWithUnicode = !TestContext.Properties.Contains("NoUnicodeTesting");
-
             // Stop profiler if we are profiling.  The unit test will start profiling explicitly when it wants to.
             DotTraceProfile.Stop(true);
 

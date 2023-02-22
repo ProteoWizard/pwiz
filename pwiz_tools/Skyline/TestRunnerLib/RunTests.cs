@@ -346,17 +346,15 @@ namespace TestRunnerLib
                 // (e.g. msFragger), causes trouble with mz5 reader, etc, so watch for custom test
                 // attribute that turns that off per test
                 var testDir = TestContext.Properties["TestDir"].ToString();
-                tmpTestDir = Path.GetFullPath(Path.Combine(testDir, @"..", (@"SkylineTester temp&di^r" + (test.DoNotUseUnicode ? String.Empty : @" 试验"))));
+                tmpTestDir = Path.GetFullPath(Path.Combine(testDir, @"..", (@"SkylineTester temp&di^r" + (test.DoNotUseUnicode ? string.Empty : @" 试验"))));
                 if (!Directory.Exists(tmpTestDir))
                 {
                     Directory.CreateDirectory(tmpTestDir);
                 }
                 Environment.SetEnvironmentVariable(@"TMP", tmpTestDir);
-                if (test.DoNotUseUnicode)
-                {
-                    // Tell Skyline not to decorate temp file names with unicode
-                    TestContext.Properties["NoUnicodeTesting"] = true.ToString(); 
-                }
+
+                // Decorate tempfile names with peculiar characters
+                PathEx.RandomFileNameDecoration = @"test  c^ha&rs " + (test.DoNotUseUnicode ? "_" : @"试验_");
 
                 if (test.SetTestContext != null)
                 {
