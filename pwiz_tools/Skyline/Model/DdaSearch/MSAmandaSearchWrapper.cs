@@ -68,10 +68,11 @@ namespace pwiz.Skyline.Model.DdaSearch
         private const string CONSIDERED_CHARGES = "ConsideredCharges";
 
         public const string MS_AMANDA_TMP = @"~SK_MSAmanda";
-        private readonly TemporaryDirectory _baseDir = new TemporaryDirectory(tempPrefix: MS_AMANDA_TMP + @"/"); // Creates %TMP%/~SK_MSAmanda/<random dirname>
+        private readonly TemporaryDirectory _baseDir; // Created as %TMP%/~SK_MSAmanda/<random dirname>
 
         public MSAmandaSearchWrapper()
         {
+            _baseDir = new TemporaryDirectory(tempPrefix: MS_AMANDA_TMP + @"/"); // Creates %TMP%/~SK_MSAmanda/<random dirname>
             Settings = new MSAmandaSettings();
             helper = new MSHelper();
             helper.InitLogWriter(_baseDir.DirPath);
