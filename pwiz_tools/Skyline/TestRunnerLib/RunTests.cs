@@ -543,12 +543,28 @@ namespace TestRunnerLib
             return false;
         }
 
+        public static void CleanupMSAmandaTmpFiles()
+        {
+            // MSAmanda intentionally leaves tempfiles behind (as caches in case of repeat runs)
+            // But our test system wants a clean finish
+            var msAmandaTmpDir = Path.Combine(Path.GetTempPath(), @"~SK_MSAmanda" /* must match MSAmandaSearchWrapper.MS_AMANDA_TMP */);
+            try
+            {
+                Directory.Delete(msAmandaTmpDir, true);
+            }
+            catch
+            {
+                // ignored
+            }
+        }
+
         /// <summary>
         /// Resets the test directory to empty when cleanupLevel is 'all'.
         /// </summary>
         /// <returns>A list of the entries, if any, that were removed</returns>
         private List<string> CleanUpTestDir(string tmpTestDir, bool final)
         {
+            CleanupMSAmandaTmpFiles();
             var allEntries = new List<string>();
             // If everything is supposed to be cleaned up, then check for any left over files
             if (_cleanupLevelAll)

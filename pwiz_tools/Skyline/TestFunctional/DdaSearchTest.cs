@@ -468,10 +468,6 @@ namespace pwiz.SkylineTestFunctional
 
             WaitForDocumentLoaded();
             RunUI(() => SkylineWindow.SaveDocument());
-
-            // MSAmanda intentionally leaves tempfiles behind (as caches in case of repeat runs)
-            // But our test system wants a clean finish
-            CleanupMSAmandaTmpFiles();
         }
 
         private void PrepareDocument(string documentFile)
