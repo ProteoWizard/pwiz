@@ -294,7 +294,6 @@ namespace TestRunnerLib
             var saveUICulture = Thread.CurrentThread.CurrentUICulture;
             long crtLeakedBytes = 0;
             var saveTmp = Environment.GetEnvironmentVariable(@"TMP");
-            string tmpTestDir;
 
             var dumpFileName = string.Format("{0}.{1}_{2}_{3}_{4:yyyy_MM_dd__hh_mm_ss_tt}.dmp", pass, testNumber, test.TestMethod.Name, Language.TwoLetterISOLanguageName, DateTime.Now);
 
@@ -346,7 +345,7 @@ namespace TestRunnerLib
                 // (e.g. msFragger), causes trouble with mz5 reader, etc, so watch for custom test
                 // attribute that turns that off per test
                 var testDir = TestContext.Properties["TestDir"].ToString();
-                tmpTestDir = Path.GetFullPath(Path.Combine(testDir, @"..", (@"SkylineTester temp&di^r" + (test.DoNotUseUnicode ? string.Empty : @" 试验"))));
+                var tmpTestDir = Path.GetFullPath(Path.Combine(testDir, @"..", @"SkylineTester temp&di^rs", test.TestMethod.Name + (test.DoNotUseUnicode ? string.Empty : @" 试验")));
                 if (!Directory.Exists(tmpTestDir))
                 {
                     Directory.CreateDirectory(tmpTestDir);
@@ -367,7 +366,7 @@ namespace TestRunnerLib
                 LocalizationHelper.InitThread();
 
                 // Run the test and time it.
-                CleanUpTestDir(tmpTestDir);   // Attempt to cleanup first, in case something was left behind by a failing test
+                CleanUpTestDir(tmpTestDir, false);   // Attempt to cleanup first, in case something was left behind by a failing test
                 if (test.TestInitialize != null)
                     test.TestInitialize.Invoke(testObject, null);
 
@@ -390,10 +389,10 @@ namespace TestRunnerLib
                     test.TestCleanup.Invoke(testObject, null);
 
                 // If everything is supposed to be cleaned up, then check for any left over files
-                var allEntries = CleanUpTestDir(tmpTestDir);
+                var allEntries = CleanUpTestDir(tmpTestDir, true);
                 if (allEntries.Count > 0)
                 {
-                    allEntries.Insert(0, string.Format("The test {0} left files in the test folder:", test.TestMethod.Name));
+                    allEntries.Insert(0, string.Format("The test {0} left these files behind:", test.TestMethod.Name));
                     throw new IOException(string.Join("\r\n", allEntries));
                 }
             }
@@ -548,7 +547,7 @@ namespace TestRunnerLib
         /// Resets the test directory to empty when cleanupLevel is 'all'.
         /// </summary>
         /// <returns>A list of the entries, if any, that were removed</returns>
-        private List<string> CleanUpTestDir(string tmpTestDir)
+        private List<string> CleanUpTestDir(string tmpTestDir, bool final)
         {
             var allEntries = new List<string>();
             // If everything is supposed to be cleaned up, then check for any left over files
@@ -566,7 +565,10 @@ namespace TestRunnerLib
                             try
                             {
                                 Directory.Delete(dir, true);
-                                Directory.CreateDirectory(dir);
+                                if (!(final && dir.Equals(tmpTestDir)))
+                                {
+                                    Directory.CreateDirectory(dir);
+                                }
                             }
                             catch (Exception)
                             {

@@ -471,8 +471,7 @@ namespace pwiz.SkylineTestFunctional
 
             // MSAmanda intentionally leaves tempfiles behind (as caches in case of repeat runs)
             // But our test system wants a clean finish
-            var msAmandaTmpDir = Path.Combine(Path.GetTempPath(), MSAmandaSearchWrapper.MS_AMANDA_TMP);
-            DirectoryEx.SafeDelete(msAmandaTmpDir);
+            CleanupMSAmandaTmpFiles();
         }
 
         private void PrepareDocument(string documentFile)

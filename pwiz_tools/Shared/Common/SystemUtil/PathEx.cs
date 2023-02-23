@@ -215,17 +215,12 @@ namespace pwiz.Common.SystemUtil
         /// Useful for constructing command lines with arguments needing nested quotes
         /// e.g. msconvert --filter "mzRefiner \"my input1.pepXML\" \"your input2.mzid\""
         ///
-        /// Also handles escaping '^' and '&' in file names - see EscapeIfNecessary() in pwiz_tools\Skyline\Executables\SkylineRunner\Program.cs
-        /// 
         /// </summary>
         public static string EscapedPathForNestedCommandLineQuotes(this string text)
         {
-            if (text.IndexOfAny(new[] { ' ', '&', '^' }) != -1)
+            if (text.Contains(@" "))
             {
-                var escaped = text.
-                    Replace(@"^", @"^^"). // '^' is the windows command line escape character, but is also a valid filename character 
-                    Replace(@"&", @"^&"); // '&' has special meaning in commandline processing, but is also a valid filename character 
-                return @"\""" + escaped + @"\""";
+                return @"\""" + text + @"\""";
             }
             return text;
         }

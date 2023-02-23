@@ -24,7 +24,9 @@ using System.Text;
 using Microsoft.VisualStudio.TestTools.UnitTesting;
 using pwiz.Skyline;
 using pwiz.Skyline.Model;
+using pwiz.Skyline.Model.DdaSearch;
 using pwiz.Skyline.Model.Results;
+using pwiz.Skyline.Util;
 using pwiz.Skyline.Util.Extensions;
 
 
@@ -152,6 +154,14 @@ namespace pwiz.SkylineTestUtil
             }
             AssertEx.ConvertedSmallMoleculeDocumentIsSimilar(docOriginal, doc, Path.GetDirectoryName(docPath), mode);
             return doc;
+        }
+
+        public static void CleanupMSAmandaTmpFiles()
+        {
+            // MSAmanda intentionally leaves tempfiles behind (as caches in case of repeat runs)
+            // But our test system wants a clean finish
+            var msAmandaTmpDir = Path.Combine(Path.GetTempPath(), MSAmandaSearchWrapper.MS_AMANDA_TMP);
+            DirectoryEx.SafeDelete(msAmandaTmpDir);
         }
     }
 }

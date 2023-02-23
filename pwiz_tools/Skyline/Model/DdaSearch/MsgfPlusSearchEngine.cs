@@ -160,7 +160,7 @@ namespace pwiz.Skyline.Model.DdaSearch
                         RedirectStandardInput = false
                     };
 
-                    pr.Run(psi, string.Empty, this, ref _progressStatus, ProcessPriorityClass.BelowNormal);
+                    pr.Run(psi, string.Empty, this, ref _progressStatus, ProcessPriorityClass.BelowNormal, true);
                     _progressStatus = _progressStatus.NextSegment();
                 }
                 catch (Exception ex)

@@ -218,6 +218,10 @@ namespace pwiz.SkylineTestFunctional
 
             if (_testDetails.SearchEngine == SearchSettingsControl.SearchEngine.MSFragger)
                 TestDiaUmpireSearch(_testDetails);
+
+            // MSAmanda intentionally leaves tempfiles behind (as caches in case of repeat runs)
+            // But our test system wants a clean finish
+            CleanupMSAmandaTmpFiles();
         }
 
         private void ValidateTargets(TestDetails.DocumentCounts targetCounts, TestDetails.DocumentCounts actualCounts, string propName)

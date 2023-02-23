@@ -159,7 +159,7 @@ namespace pwiz.Skyline.Model.DdaSearch
                 };
                 foreach (var filename in SpectrumFileNames)
                     psi.Arguments += $@" ""{filename}""";
-                pr.Run(psi, string.Empty, this, ref _progressStatus, ProcessPriorityClass.BelowNormal);
+                pr.Run(psi, string.Empty, this, ref _progressStatus, ProcessPriorityClass.BelowNormal, true);
 
                 foreach (var spectrumFilename in SpectrumFileNames)
                 {
@@ -179,7 +179,7 @@ namespace pwiz.Skyline.Model.DdaSearch
                     psi.Arguments += $@" ""{cruxFixedInputFilepath}""";
                     foreach (var settingName in PERCOLATOR_SETTINGS)
                         psi.Arguments += $@" --{AdditionalSettings[settingName].ToString(false, CultureInfo.InvariantCulture)}";
-                    pr.Run(psi, string.Empty, this, ref _progressStatus, ProcessPriorityClass.BelowNormal);
+                    pr.Run(psi, string.Empty, this, ref _progressStatus, ProcessPriorityClass.BelowNormal, true);
 
                     string cruxOutputFilepath = Path.Combine(cruxOutputDir, @"percolator.target.pep.xml");
                     string finalOutputFilepath = GetSearchResultFilepath(spectrumFilename);
