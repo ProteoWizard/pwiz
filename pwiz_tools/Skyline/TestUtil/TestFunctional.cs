@@ -546,6 +546,7 @@ namespace pwiz.SkylineTestUtil
             {
                 using (var stream = File.OpenRead(filePath))
                 {
+                    using var newTmpDir = new TempDir(); // Causes ExcelReaderFactory to drop its tempfiles in a place that we can clean up on Dispose
                     IExcelDataReader excelDataReader;
                     if (legacyFile)
                     {

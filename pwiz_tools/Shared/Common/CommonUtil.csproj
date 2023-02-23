@@ -151,6 +151,7 @@
     <Compile Include="SystemUtil\MemoryBlockingCollection.cs" />
     <Compile Include="SystemUtil\ParallelEx.cs" />
     <Compile Include="SystemUtil\PollingCancellationToken.cs" />
+    <Compile Include="SystemUtil\TempDir.cs" />
     <Compile Include="SystemUtil\TrackAttribute.cs" />
     <Compile Include="SystemUtil\CommonActionUtil.cs" />
     <Compile Include="SystemUtil\ValueCache.cs" />
