@@ -547,6 +547,7 @@ namespace TestRunnerLib
         {
             // MSAmanda intentionally leaves tempfiles behind (as caches in case of repeat runs)
             // But our test system wants a clean finish
+            // TODO(MattC): tidy up MSAmanda implementation so that we can distinguish intentional uses of tmp dir (caching potentially re-used files) from accidental directory creation and/or not-reused files within
             var msAmandaTmpDir = Path.Combine(Path.GetTempPath(), @"~SK_MSAmanda" /* must match MSAmandaSearchWrapper.MS_AMANDA_TMP */);
             try
             {

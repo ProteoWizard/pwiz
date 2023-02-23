@@ -69,6 +69,7 @@ namespace pwiz.Skyline.Model.DdaSearch
 
         public const string MS_AMANDA_TMP = @"~SK_MSAmanda";
         private readonly TemporaryDirectory _baseDir; // Created as %TMP%/~SK_MSAmanda/<random dirname>
+        // TODO(MattC): tidy up MSAmanda implementation so that we can distinguish intentional uses of tmp dir (caching potentially re-used files) from accidental directory creation and/or not-reused files within
 
         public MSAmandaSearchWrapper()
         {
