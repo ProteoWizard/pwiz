@@ -97,6 +97,7 @@ namespace pwiz.Skyline.Model.DdaSearch
         private int _maxCharge = 7;
         private string _fastaFilepath;
         private string _decoyPrefix;
+        private List<string> _intermediateFiles;
 
         private CancellationTokenSource _cancelToken;
         private IProgressStatus _progressStatus;
@@ -110,12 +111,25 @@ namespace pwiz.Skyline.Model.DdaSearch
 
         public override bool Run(CancellationTokenSource cancelToken, IProgressStatus status)
         {
+            void DeleteIntermediateFiles()
+            {
+                if (_intermediateFiles != null)
+                {
+                    foreach (var path in _intermediateFiles)
+                    {
+                        FileEx.SafeDelete(path, true); // Don't throw if file can't be deleted
+                        DirectoryEx.SafeDelete(path); // In case it's actually a directory
+                    }
+                }
+            }
+
             _cancelToken = cancelToken;
             _progressStatus = status;
             _success = true;
 
             try
             {
+                _intermediateFiles = new List<string>();
                 _fastaFilepath = FastaFileNames[0];
                 EnsureFastaHasDecoys();
 
@@ -142,6 +156,7 @@ namespace pwiz.Skyline.Model.DdaSearch
                 paramsFileText.Append(defaultClosedConfig);
 
                 string paramsFile = Path.GetTempFileName();
+                _intermediateFiles.Add(paramsFile);
                 File.WriteAllText(paramsFile, paramsFileText.ToString());
 
                 long javaMaxHeapMB = Math.Min(16 * 1024L * 1024 * 1024, MemoryInfo.TotalBytes / 2) / 1024 / 1024;
@@ -166,9 +181,11 @@ namespace pwiz.Skyline.Model.DdaSearch
                     string msfraggerPepXmlFilepath = Path.ChangeExtension(spectrumFilename.GetFilePath(), ".pepXML");
                     string cruxInputFilepath = Path.ChangeExtension(spectrumFilename.GetFilePath(), ".pin");
                     string cruxFixedInputFilepath = Path.ChangeExtension(spectrumFilename.GetFilePath(), "fixed.pin");
+                    _intermediateFiles.Add(cruxInputFilepath);
                     FixMSFraggerPin(cruxInputFilepath, cruxFixedInputFilepath, msfraggerPepXmlFilepath, out var nativeIdByScanNumber);
 
                     string cruxParamsFile = Path.GetTempFileName();
+                    _intermediateFiles.Add(cruxParamsFile);
                     var cruxParamsFileText = GetCruxParamsText();
                     File.WriteAllText(cruxParamsFile, cruxParamsFileText);
 
@@ -183,15 +200,12 @@ namespace pwiz.Skyline.Model.DdaSearch
 
                     string cruxOutputFilepath = Path.Combine(cruxOutputDir, @"percolator.target.pep.xml");
                     string finalOutputFilepath = GetSearchResultFilepath(spectrumFilename);
+                    _intermediateFiles.Add(cruxOutputFilepath);
                     FixPercolatorPepXml(cruxOutputFilepath, finalOutputFilepath, spectrumFilename, nativeIdByScanNumber);
 
                     if (!(bool) AdditionalSettings[KEEP_INTERMEDIATE_FILES].Value)
                     {
-                        FileEx.SafeDelete(cruxInputFilepath);
-                        FileEx.SafeDelete(cruxFixedInputFilepath);
-                        FileEx.SafeDelete(cruxOutputFilepath);
-                        FileEx.SafeDelete(paramsFile);
-                        FileEx.SafeDelete(cruxParamsFile);
+                        DeleteIntermediateFiles();
                     }
                 }
 
@@ -211,6 +225,7 @@ namespace pwiz.Skyline.Model.DdaSearch
 
             if (!_success)
             {
+                DeleteIntermediateFiles();
                 _cancelToken.Cancel();
                 //break;
             }

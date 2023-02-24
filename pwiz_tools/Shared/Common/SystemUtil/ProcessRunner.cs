@@ -217,6 +217,9 @@ namespace pwiz.Common.SystemUtil
                         progress.UpdateProgress(status);
                 }
 
+            }
+            finally
+            {
                 if (!string.IsNullOrEmpty(tmpDirForCleanup))
                 {
                     // Clean out any tempfiles left behind
@@ -229,9 +232,6 @@ namespace pwiz.Common.SystemUtil
                         _messageLog.Add($@"warning: cleanup of temporary directory {tmpDirForCleanup} failed: {e.Message}");
                     }
                 }
-            }
-            finally
-            {
                 if (!proc.HasExited)
                     try { proc.Kill(); } catch (InvalidOperationException) { }
             }
