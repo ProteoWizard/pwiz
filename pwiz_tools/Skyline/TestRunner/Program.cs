@@ -243,6 +243,7 @@ namespace TestRunner
             "test;skip;filter;form;" +
             "loop=0;repeat=1;pause=0;startingpage=1;random=off;offscreen=on;multi=1;wait=off;internet=off;originalurls=off;" +
             "parallelmode=off;workercount=0;waitforworkers=off;keepworkerlogs=off;workername;queuehost;workerport;alwaysupcltpassword;" +
+            "invocation=0;" + // Helps with parallel runs that are cancelled then restarted before workers can be killed off
             "maxsecondspertest=-1;" +
             "demo=off;showformnames=off;showpages=off;status=off;buildcheck=0;screenshotlist;" +
             "quality=off;pass0=off;pass1=off;pass2=on;" +
@@ -656,7 +657,8 @@ namespace TestRunner
         private static string LaunchDockerWorker(int i, CommandLineArgs commandLineArgs, ref string workerNames, bool bigWorker, long workerBytes, int workerPort, StreamWriter log)
         {
             var pwizRoot = Path.GetDirectoryName(Path.GetDirectoryName(GetSkylineDirectory().FullName));
-            string workerName = bigWorker ? $"docker_big_worker_{i}" : $"docker_worker_{i}";
+            var invocationDetail = GetInvocationDetail(commandLineArgs); // Avoids conflicts between this and any previous invocation
+            string workerName = bigWorker ? $"docker_big_worker{invocationDetail}_{i}" : $"docker_worker{invocationDetail}_{i}";
             string dockerRunRedirect = string.Empty;
             string testRunnerLog = @$"c:\AlwaysUpCLT\TestRunner-{workerName}.log";
             if (commandLineArgs.ArgAsBool("keepworkerlogs"))
@@ -675,7 +677,7 @@ namespace TestRunner
             testRunnerCmd = AddPassThroughArguments(commandLineArgs, testRunnerCmd);
             testRunnerCmd += $" workerport={workerPort}";
 
-            string dockerArgs = $"run --name {workerName} -it --rm -m {workerBytes}b -v {PathEx.GetDownloadsPath()}:c:\\downloads -v {pwizRoot}:c:\\pwiz {RunTests.DOCKER_IMAGE_NAME} \"{testRunnerCmd} workername={workerName}\" {dockerRunRedirect}";
+            string dockerArgs = $"run --name {workerName} -it --rm -m {workerBytes}b -v \"{PathEx.GetDownloadsPath()}\":c:\\downloads -v \"{pwizRoot}\":c:\\pwiz {RunTests.DOCKER_IMAGE_NAME} \"{testRunnerCmd} workername={workerName}\" {dockerRunRedirect}";
             Console.WriteLine($"Launching {workerName}: docker {dockerArgs}");
             log?.WriteLine($"Launching {workerName}: docker {dockerArgs}");
             workerNames = (workerNames ?? "") + $"{workerName} ";
@@ -690,6 +692,19 @@ namespace TestRunner
                 log?.WriteLine($"Error launching docker worker: {proc?.ExitCode ?? -1}");
             }
             return workerName;
+        }
+
+        // Avoids conflicts between this and any previous invocation that may not have torn down its workers yet
+        // Helps when a run is cancelled then quickly restarted, as often happens when you realize you've forgotten
+        // to select certain tests etc
+        private static string GetInvocationDetail(CommandLineArgs commandLineArgs)
+        {
+            var invocation = commandLineArgs.ArgAsLong("invocation");
+            var invocationStr =
+                invocation > 0
+                    ? invocation.ToString()
+                    : string.Empty;
+            return invocationStr;
         }
 
         private static string AddPassThroughArguments(CommandLineArgs commandLineArgs, string testRunnerCmd)
@@ -868,10 +883,11 @@ namespace TestRunner
                         }
 
                         string testName = testInfo.TestInfo.TestMethod.Name;
+                        var serverWorkerLogName = $"serverWorker{GetInvocationDetail(commandLineArgs)}.log";
                         try
                         {
                             // running RunTestPasses() for GUI tests directly is problematic because we're no longer on the main thread
-                            var testRunnerCmd = $@"test={testName} offscreen=1 showheader=0 log=serverWorker.log parallelmode=server_worker loop=1 language={testInfo.Language}";
+                            var testRunnerCmd = $@"test={testName} offscreen=1 showheader=0 log={serverWorkerLogName} parallelmode=server_worker loop=1 language={testInfo.Language}";
                             testRunnerCmd = AddPassThroughArguments(commandLineArgs, testRunnerCmd);
 
                             var psi = new ProcessStartInfo(Assembly.GetExecutingAssembly().Location, testRunnerCmd);
@@ -888,7 +904,7 @@ namespace TestRunner
                             bool testPassed = p.ExitCode == 0;
                             if (!testPassed)
                                 Interlocked.Increment(ref testsFailed);
-                            var testOutput = File.ReadAllText("serverWorker.log");
+                            var testOutput = File.ReadAllText(serverWorkerLogName);
                             LogTestOutput(testOutput, log, testInfo.LoopCount);
                             Interlocked.Increment(ref testsResultsReturned);
                             Thread.Sleep(500); // wait a bit in case SkylineTester killed the server_worker TestRunner
