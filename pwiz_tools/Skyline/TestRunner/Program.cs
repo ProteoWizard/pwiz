@@ -243,7 +243,6 @@ namespace TestRunner
             "test;skip;filter;form;" +
             "loop=0;repeat=1;pause=0;startingpage=1;random=off;offscreen=on;multi=1;wait=off;internet=off;originalurls=off;" +
             "parallelmode=off;workercount=0;waitforworkers=off;keepworkerlogs=off;workername;queuehost;workerport;alwaysupcltpassword;" +
-            "invocation=0;" + // Helps with parallel runs that are cancelled then restarted before workers can be killed off
             "maxsecondspertest=-1;" +
             "demo=off;showformnames=off;showpages=off;status=off;buildcheck=0;screenshotlist;" +
             "quality=off;pass0=off;pass1=off;pass2=on;" +
@@ -259,6 +258,8 @@ namespace TestRunner
         {
             Application.SetUnhandledExceptionMode(UnhandledExceptionMode.CatchException);
             Application.ThreadException += ThreadExceptionEventHandler;
+
+            _testRunStartTime = DateTime.UtcNow;
 
             // Parse command line args and initialize default values.
             var commandLineArgs = new CommandLineArgs(args, commandLineOptions);
@@ -657,7 +658,7 @@ namespace TestRunner
         private static string LaunchDockerWorker(int i, CommandLineArgs commandLineArgs, ref string workerNames, bool bigWorker, long workerBytes, int workerPort, StreamWriter log)
         {
             var pwizRoot = Path.GetDirectoryName(Path.GetDirectoryName(GetSkylineDirectory().FullName));
-            var invocationDetail = GetInvocationDetail(commandLineArgs); // Avoids conflicts between this and any previous invocation
+            var invocationDetail = GetInvocationDetail(); // Avoids conflicts between this and any previous invocation
             string workerName = bigWorker ? $"docker_big_worker{invocationDetail}_{i}" : $"docker_worker{invocationDetail}_{i}";
             string dockerRunRedirect = string.Empty;
             string testRunnerLog = @$"c:\AlwaysUpCLT\TestRunner-{workerName}.log";
@@ -694,17 +695,13 @@ namespace TestRunner
             return workerName;
         }
 
+        private static DateTime _testRunStartTime;
         // Avoids conflicts between this and any previous invocation that may not have torn down its workers yet
         // Helps when a run is cancelled then quickly restarted, as often happens when you realize you've forgotten
         // to select certain tests etc
-        private static string GetInvocationDetail(CommandLineArgs commandLineArgs)
+        private static string GetInvocationDetail()
         {
-            var invocation = commandLineArgs.ArgAsLong("invocation");
-            var invocationStr =
-                invocation > 0
-                    ? invocation.ToString()
-                    : string.Empty;
-            return invocationStr;
+            return $"_{_testRunStartTime.ToString("yyyyMMddHHmmss")}";
         }
 
         private static string AddPassThroughArguments(CommandLineArgs commandLineArgs, string testRunnerCmd)
@@ -883,7 +880,7 @@ namespace TestRunner
                         }
 
                         string testName = testInfo.TestInfo.TestMethod.Name;
-                        var serverWorkerLogName = $"serverWorker{GetInvocationDetail(commandLineArgs)}.log";
+                        var serverWorkerLogName = $"serverWorker{GetInvocationDetail()}.log";
                         try
                         {
                             // running RunTestPasses() for GUI tests directly is problematic because we're no longer on the main thread

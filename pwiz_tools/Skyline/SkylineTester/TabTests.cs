@@ -29,7 +29,6 @@ namespace SkylineTester
 {
     public class TabTests : TabBase
     {
-        private static int parallelInvocationsCount; // Number of times we've launched parallel tests from here
         public override void Enter()
         {
             MainWindow.DefaultButton = MainWindow.RunTests;
@@ -110,12 +109,6 @@ namespace SkylineTester
                 // CONSIDER: Should we add a checkbox for this?
                 // args.Append(" keepworkerlogs=1"); // For debugging startup issues. Look for TestRunner-docker-worker_#-docker.log files in pwiz root
                 args.AppendFormat(" parallelmode=server workercount={0}", MainWindow.RunParallelWorkerCount.Value);
-                if (parallelInvocationsCount++ > 0)
-                {
-                    // Allows unique naming of workers between runs, helpful if a run is canceled then quickly restarted and
-                    // workers haven't shut down, as often happens when you realize you've forgotten to select certain tests etc
-                    args.AppendFormat(" invocation={0}", parallelInvocationsCount-1); 
-                }
                 try
                 {
                     var dockerImagesOutput = RunTests.RunCommand("docker", $"images {RunTests.DOCKER_IMAGE_NAME}", RunTests.IS_DOCKER_RUNNING_MESSAGE);
