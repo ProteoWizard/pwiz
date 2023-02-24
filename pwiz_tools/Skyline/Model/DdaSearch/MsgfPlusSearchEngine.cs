@@ -317,6 +317,7 @@ namespace pwiz.Skyline.Model.DdaSearch
 
         public override void Dispose()
         {
+            FileEx.SafeDelete(modsFile, true); // In case cancel came at an awkward time
         }
     }
 }

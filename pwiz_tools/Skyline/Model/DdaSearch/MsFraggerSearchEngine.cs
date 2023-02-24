@@ -103,6 +103,18 @@ namespace pwiz.Skyline.Model.DdaSearch
         private IProgressStatus _progressStatus;
         private bool _success;
 
+        private void DeleteIntermediateFiles()
+        {
+            if (_intermediateFiles != null)
+            {
+                foreach (var path in _intermediateFiles)
+                {
+                    FileEx.SafeDelete(path, true); // Don't throw if file can't be deleted
+                    DirectoryEx.SafeDelete(path); // In case it's actually a directory
+                }
+            }
+        }
+
         public override string[] FragmentIons => FRAGMENTATION_METHODS;
         public override string[] Ms2Analyzers => new [] { @"Default" };
         public override string EngineName => @"MSFragger";
@@ -111,17 +123,6 @@ namespace pwiz.Skyline.Model.DdaSearch
 
         public override bool Run(CancellationTokenSource cancelToken, IProgressStatus status)
         {
-            void DeleteIntermediateFiles()
-            {
-                if (_intermediateFiles != null)
-                {
-                    foreach (var path in _intermediateFiles)
-                    {
-                        FileEx.SafeDelete(path, true); // Don't throw if file can't be deleted
-                        DirectoryEx.SafeDelete(path); // In case it's actually a directory
-                    }
-                }
-            }
 
             _cancelToken = cancelToken;
             _progressStatus = status;
@@ -787,6 +788,10 @@ add_Nterm_protein = 0.000000
 
         public override void Dispose()
         {
+            if (IsCanceled)
+            {
+                DeleteIntermediateFiles(); // In case cancel came at an awkward time
+            }
         }
     }
 }
