@@ -306,6 +306,7 @@ namespace SkylineTester
             this.radioButton5 = new System.Windows.Forms.RadioButton();
             this.toolTip1 = new System.Windows.Forms.ToolTip(this.components);
             this.myTreeView1 = new SkylineTester.MyTreeView();
+            this.labelParallelOffscreenHint = new System.Windows.Forms.Label();
             this.parallelWorkerCount = new System.Windows.Forms.NumericUpDown();
             this.label22 = new System.Windows.Forms.Label();
             this.runParallel = new System.Windows.Forms.RadioButton();
@@ -1065,6 +1066,7 @@ namespace SkylineTester
             // 
             // windowsGroup
             // 
+            this.windowsGroup.Controls.Add(this.labelParallelOffscreenHint);
             this.windowsGroup.Controls.Add(this.offscreen);
             this.windowsGroup.Location = new System.Drawing.Point(11, 240);
             this.windowsGroup.Margin = new System.Windows.Forms.Padding(4);
@@ -3623,5 +3625,6 @@ namespace SkylineTester
         private RadioButton runSerial;
         private ComboBox testSet;
         private Button buttonRunStatsExportCSV;
+        private Label labelParallelOffscreenHint;
     }
 }

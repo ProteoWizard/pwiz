@@ -54,7 +54,7 @@ namespace SkylineTester
             var args = new StringBuilder();
 
             args.Append("offscreen=");
-            args.Append(MainWindow.Offscreen.Checked);
+            args.Append(MainWindow.Offscreen.Checked || MainWindow.RunParallel.Checked);
 
             if (!MainWindow.RunIndefinitely.Checked)
             {
