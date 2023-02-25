@@ -82,6 +82,7 @@ class Spectrum {
   bool            getRawFilter(char*,int,bool bLock=false);
   float		    		getRTime();
   float           getRTimeApex();
+  std::string     getScanDescription();
   int	      			getScanNumber(bool second=false);
   double          getScanWindowLower();
   double          getScanWindowUpper();
@@ -111,6 +112,7 @@ class Spectrum {
   void            setRawFilter(char*);
   void				    setRTime(float);
   void            setRTimeApex(float);
+  void            setScanDescription(std::string);
   void    				setScanNumber(int, bool second=false);
   void            setScanWindow(double lower, double upper); //the mass range of the spectrum
   void            setSelWindow(double lower, double upper); //the mass range of the selected/acquired ions
@@ -177,6 +179,7 @@ class Spectrum {
   int              centroidStatus;  //0=profile, 1=centroid, 2=unknown
   double           scanWinLower;    //the instrument spectrum m/z range
   double           scanWinUpper;    //the instrument spectrum m/z range
+  std::string      scanDescription;
 
   //private:
   //Functions

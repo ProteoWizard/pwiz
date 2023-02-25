@@ -68,7 +68,7 @@ class CPeptideVariant {
   std::vector<MSToolkit::Peak_T> *extra;    //Temporary storage of mismatch data until mismatch array size is determined
 
   int charge;               //Charge state of variant
-  char formula[64];         //Molecular formula (averagine-based)
+  char formula[AV_FORMULA_BUFFER_LENGTH];         //Molecular formula (averagine-based)
   double monoMass;          //monoisotopic mass
   double distArea;          //distribution area (sum of centroided peaks)
   CHardklorVariant variant; //Variant settings
@@ -98,7 +98,7 @@ class CPeptideVariant {
   double& GetMonoMass();
   void SetArea(double& d);
   void SetCharge(int ch);
-  void SetFormula(char form[64]);
+  void SetFormula(char form[AV_FORMULA_BUFFER_LENGTH]);
   void SetMatchSize(int& num);
   void SetMismatchSize(int& num);
   void SetMonoMass(double mass);

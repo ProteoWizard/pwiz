@@ -203,6 +203,8 @@ typedef struct sPrecursorIon{
   double monoMZ;
   std::vector<int>* possibleCharges;
   int charge;
+  int msLevel;
+  int scanNumber;
   sPrecursorIon(){
     intensity=0;
     isoLowerMZ=0;
@@ -212,6 +214,8 @@ typedef struct sPrecursorIon{
     monoMZ=0;
     possibleCharges = new std::vector<int>;
     charge=0;
+    msLevel=0;
+    scanNumber=-1;
   }
   sPrecursorIon(const sPrecursorIon& p){
     intensity=p.intensity;
@@ -223,6 +227,8 @@ typedef struct sPrecursorIon{
     possibleCharges=new std::vector<int>;
     for(size_t i=0;i<p.possibleCharges->size();i++) possibleCharges->push_back(p.possibleCharges->at(i));
     charge=p.charge;
+    msLevel=p.msLevel;
+    scanNumber=p.scanNumber;
   }
   ~sPrecursorIon(){
     delete possibleCharges;
@@ -239,6 +245,8 @@ typedef struct sPrecursorIon{
       possibleCharges=new std::vector<int>;
       for(size_t i=0;i<p.possibleCharges->size();i++) possibleCharges->push_back(p.possibleCharges->at(i));
       charge=p.charge;
+      msLevel = p.msLevel;
+      scanNumber = p.scanNumber;
     }
     return *this;
   }
@@ -251,6 +259,8 @@ typedef struct sPrecursorIon{
     monoMZ=0;
     possibleCharges->clear();
     charge=0;
+    msLevel=0;
+    scanNumber=0;
   }
 } sPrecursorIon;
 
@@ -269,6 +279,7 @@ public:
   //Modifiers
   void addDP(specDP dp);
   void clear();
+  void clearPrecursor();
   void setActivation(int a);
   void setBasePeakIntensity(double d);
   void setBasePeakMZ(double d);

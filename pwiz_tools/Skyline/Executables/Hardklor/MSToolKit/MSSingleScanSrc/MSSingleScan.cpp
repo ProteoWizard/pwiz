@@ -37,12 +37,17 @@ int main(int argc, char *argv[]){
 
   r.addFilter(MS1);
   r.addFilter(MS2);
+  r.addFilter(MS3);
 	r.addFilter(MSX);
   r.addFilter(SRM);
 
   char nativeID[256];
 	r.readFile(argv[2],s,atoi(argv[1]));
   if(s.getScanNumber()==0) exit(-1);
+
+  cout << s.getMsLevel() << endl;
+  cout << s.sizeMZ() << "\t" << s.getMZ(0) << endl;
+  exit(1);
 
 
   char szNativeID[128];

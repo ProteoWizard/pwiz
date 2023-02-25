@@ -71,6 +71,8 @@ CHardklorSetting::CHardklorSetting(){
 
   maxMolMZ=5000;
 
+  minIsotopePeaks = 1; // Don't report features unless they have at least this many isotope peaks identified
+
   strcpy(rawFilter,"");
 }
 

@@ -114,6 +114,7 @@ Spectrum::Spectrum(const Spectrum& s){
   }
   strcpy(rawFilter,s.rawFilter);
   strcpy(nativeID,s.nativeID);
+  scanDescription=s.scanDescription;
 }
 
 Spectrum& Spectrum::operator=(const Spectrum& s){
@@ -169,6 +170,7 @@ Spectrum& Spectrum::operator=(const Spectrum& s){
     selectionWinUpper = s.selectionWinUpper;
     strcpy(rawFilter,s.rawFilter);
     strcpy(nativeID,s.nativeID);
+    scanDescription = s.scanDescription;
   }
   return *this;
 }
@@ -437,6 +439,10 @@ float Spectrum::getRTime(){
   return rTime;
 }
 
+string Spectrum::getScanDescription(){
+  return scanDescription;
+}
+
 int Spectrum::getScanNumber(bool second){
   if(second) return scanNumber2;
   else return scanNumber;
@@ -542,6 +548,10 @@ void Spectrum::setRawFilter(char* c){
 
 void Spectrum::setRTime(float d){
   rTime=d;
+}
+
+void Spectrum::setScanDescription(string s) {
+  scanDescription=s;
 }
 
 void Spectrum::setScanNumber(int i, bool second){

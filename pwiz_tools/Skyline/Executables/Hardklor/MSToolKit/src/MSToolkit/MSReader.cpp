@@ -312,7 +312,7 @@ int MSReader::getPercent(){
   case mzXMLgz:
   case mzMLgz:
     if (rampFileIn != NULL){
-      return static_cast<int>((100.0 * static_cast<double>(lastReadScanNum)) / static_cast<double>(rampLastScan));
+      return (int)((double)lastReadScanNum / rampLastScan * 100);
     }
     break;
   case raw:

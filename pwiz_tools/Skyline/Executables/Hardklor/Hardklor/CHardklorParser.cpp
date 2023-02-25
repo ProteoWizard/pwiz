@@ -65,10 +65,10 @@ void CHardklorParser::parse(char* cmd) {
 	strcpy(tmpstr,cmd);
 	tok=strtok(tmpstr," \t\n\r");
 	if(tok==NULL)
-    {
+	{
 		free(tmpstr);
-        return;
-    }
+		return;
+	}
 
 	//Check if we have a parameter (has '=' in it) or a file request.
 	tok=strstr(cmd,"=");
@@ -153,7 +153,7 @@ void CHardklorParser::parse(char* cmd) {
 	//Read parameter
 	tok=strtok(cmd," \t=\n\r");
 	if(tok==NULL) return;
-    paramStr=tok;
+	paramStr=tok;
 	const char* param = paramStr.c_str();
 	tok=strtok(NULL," \t=\n\r");
 	if(tok==NULL) {
@@ -249,12 +249,15 @@ void CHardklorParser::parse(char* cmd) {
 		}
 
 	} else if(strcmp(param,"isotope_data")==0){
-    global.MercuryFile = tok;
-	if (global.MercuryFile[0]=='\"')
-	{
-		// Remove quotes
-		global.MercuryFile =  global.MercuryFile.substr(1, global.MercuryFile.length()-2);
+		global.MercuryFile = tok;
+		if (global.MercuryFile[0]=='\"')
+		{
+			// Remove quotes
+			global.MercuryFile =  global.MercuryFile.substr(1, global.MercuryFile.length()-2);
+		}
 	}
+	else if (strcmp(param, "isotope_peaks_min") == 0) {
+		global.minIsotopePeaks = atoi(tok); // Must identify at least this many isotope peaks in a feature for it to be included in report
 	} else if(strcmp(param,"max_features")==0){
 
   } else if(strcmp(param,"molecule_max_mz")==0){
@@ -283,6 +286,11 @@ void CHardklorParser::parse(char* cmd) {
 
 	} else if(strcmp(param,"resolution")==0){
 		global.res400=atof(tok);
+
+	} else if (strcmp(param, "report_averagine")==0){
+		global.reportAveragineAndMassOffset = atoi(tok);
+		if (global.reportAveragineAndMassOffset)
+			cout << std::endl << "Note: generated averagine formulas are for isotope envelope approximation only and do not represent actual molecule identifications.\n" << endl;
 
 	} else if(strcmp(param,"scan_range_max")==0){
 		global.scan.iUpper=atoi(tok);

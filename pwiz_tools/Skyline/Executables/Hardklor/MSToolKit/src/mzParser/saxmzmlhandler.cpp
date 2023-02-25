@@ -144,6 +144,8 @@ void mzpSAXMzmlHandler::startElement(const XML_Char *el, const XML_Char **attr){
       curIndex.scanNum = ++m_scanIDXCount;
     } else if(strstr(&curIndex.idRef[0],"S")!=NULL) {
       curIndex.scanNum=atoi(strstr(&curIndex.idRef[0],"S")+1);
+    } else if (strstr(&curIndex.idRef[0], "index=") != NULL) {
+      curIndex.scanNum = atoi(strstr(&curIndex.idRef[0], "index=") + 6);
     } else {
       curIndex.scanNum=++m_scanIDXCount;
       //Suppressing warning.
@@ -152,25 +154,33 @@ void mzpSAXMzmlHandler::startElement(const XML_Char *el, const XML_Char **attr){
 
   } else if(isElement("precursor",el)) {
     string s=getAttrValue("spectrumRef", attr);
+    int preScanNum=0;
 
     //if spectrumRef is not provided
     if(s.length()<1){
-      spec->setPrecursorScanNum(0);
+      preScanNum=0;
     } else {
       if(strstr(&s[0],"scan=")!=NULL)  {
-        spec->setPrecursorScanNum(atoi(strstr(&s[0],"scan=")+5));
+        preScanNum=atoi(strstr(&s[0],"scan=")+5);
       } else if(strstr(&s[0],"scanId=")!=NULL) {
-        spec->setPrecursorScanNum(atoi(strstr(&s[0],"scanId=")+7));
+        preScanNum = atoi(strstr(&s[0],"scanId=")+7);
       } else if (strstr(&s[0], "frame") != NULL) {
-        spec->setPrecursorScanNum(++m_scanPRECCount);
+        preScanNum = ++m_scanPRECCount;
       } else if(strstr(&s[0],"S")!=NULL) {
-        spec->setPrecursorScanNum(atoi(strstr(&s[0],"S")+1));
+        preScanNum = atoi(strstr(&s[0],"S")+1);
+      } else if (strstr(&s[0], "index=") != NULL) {
+        preScanNum = atoi(strstr(&s[0], "index=") + 6);
       } else {
-        spec->setPrecursorScanNum(++m_scanPRECCount);
+        preScanNum = ++m_scanPRECCount;
         //Suppressing warning.
         //cout << "WARNING: Cannot extract precursor scan number spectrum line: " << &s[0] << "\tDefaulting to " << m_scanPRECCount << endl;
       }
     }
+    if(preScanNum>spec->getPrecursorScanNum()) { //we have new most recent precursor scan number
+      spec->clearPrecursor(); //clear out any old precursors
+      spec->setPrecursorScanNum(preScanNum);
+    }
+    m_precursorIon.scanNumber=preScanNum;
 
   } else if (isElement("product", el)) {
     m_bInProduct=true;
@@ -199,6 +209,8 @@ void mzpSAXMzmlHandler::startElement(const XML_Char *el, const XML_Char **attr){
       spec->setScanNum(++m_scanSPECCount);
     } else if(strstr(&s[0],"S")!=NULL) {
       spec->setScanNum(atoi(strstr(&s[0],"S")+1));
+    } else if (strstr(&s[0], "index=") != NULL) {
+      spec->setScanNum(atoi(strstr(&s[0], "index=") + 6));
     } else if(m_scanNumOverride>-1){ //if a scan index was set (usually obtained from the calling class), use that instead.
       spec->setScanNum(m_scanNumOverride);
     } else {
@@ -244,6 +256,10 @@ void mzpSAXMzmlHandler::startElement(const XML_Char *el, const XML_Char **attr){
     const char* value = getAttrValue("value", attr);
     if(strcmp(name,"[Thermo Trailer Extra]Monoisotopic M/Z:")==0){
       m_precursorIon.monoMZ=atof(value);
+    } else if (strcmp(name, "scan description") == 0) {
+      m_precursorIon.monoMZ = atof(value);
+    } else if (strcmp(name, "ms level") == 0) {
+      m_precursorIon.msLevel = atoi(value);
     }
   }
 
@@ -317,7 +333,19 @@ void mzpSAXMzmlHandler::endElement(const XML_Char *el) {
     m_bInRefGroup = false;
 
   } else if(isElement("selectedIon",el)) {
+    if(m_precursorIon.scanNumber>0){ //only add precursors that match the precursor scan number
+      if(m_precursorIon.scanNumber==spec->getPrecursorScanNum()){
     spec->setPrecursorIon(m_precursorIon);
+      }
+    } else {
+      if(m_precursorIon.msLevel>0){  //if msLevel is known, only add precursors that are one msLevel away.
+        if(spec->getMSLevel()-m_precursorIon.msLevel==1) {
+          spec->setPrecursorIon(m_precursorIon);
+        }
+      } else {
+        spec->setPrecursorIon(m_precursorIon); //if there is no msLevel or parent scan info, just add the precursor.
+      }
+    }
     m_precursorIon.clear();
 
   }  else if(isElement("spectrum", el)) {

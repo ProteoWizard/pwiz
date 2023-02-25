@@ -75,7 +75,8 @@ class CHardklor{
   hkMem& operator[](const int& index);
 
   //Methods:
-	void Echo(bool b);
+  void Echo(bool b);
+  void ShowPerformanceHints(bool b);
   int GoHardklor(CHardklorSetting sett, MSToolkit::Spectrum* s=NULL);
 	void SetAveragine(CAveragine *a);
 	void SetMercury(CMercury8 *m);
@@ -118,6 +119,7 @@ class CHardklor{
 	CPeriodicTable *PT;
   hkMem hkm;
 	bool bEcho;
+	bool bShowPerformanceHints;
   bool bMem;
   int currentScanNumber;
   std::fstream fptr; //TODO: Get rid of this and use FILE* instead.

@@ -53,7 +53,6 @@ class CHardklor2{
   void  Echo(bool b);
   int   GoHardklor(CHardklorSetting sett, MSToolkit::Spectrum* s=NULL);
   void  QuickCharge(MSToolkit::Spectrum& s, int index, std::vector<int>& v);
-  void  SaveIsotopeEvidence(MSToolkit::Spectrum& s, const  std::vector<int> &bestMatchIndex, pepHit &ph); // BSP edit
   void  SetResultsToMemory(bool b);
   int   Size();
 
@@ -89,6 +88,7 @@ class CHardklor2{
   MSToolkit::Spectrum mask;
   hkMem               hkm;
   bool                bEcho;
+  bool                bShowPerformanceHints;
   bool                bMem;
   int                 currentScanNumber;
 

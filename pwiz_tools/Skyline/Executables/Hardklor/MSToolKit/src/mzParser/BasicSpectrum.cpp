@@ -150,6 +150,7 @@ void BasicSpectrum::clear(){
   vData->clear();
   vPrecursor->clear();
 }
+void BasicSpectrum::clearPrecursor(){ vPrecursor->clear();}
 void BasicSpectrum::setActivation(int a){ activation=a;}
 void BasicSpectrum::setBasePeakIntensity(double d){ basePeakIntensity=d;}
 void BasicSpectrum::setBasePeakMZ(double d){ basePeakMZ=d;}
