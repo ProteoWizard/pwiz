@@ -1350,10 +1350,9 @@ namespace pwiz.Skyline.Model.Serialization
                 {
                     ionFormula = ionFormula.Trim(); // We've seen trailing spaces in the wild
                 }
-                Molecule mol;
                 string neutralFormula;
                 Adduct adduct;
-                var isFormulaWithAdduct = IonInfo.IsFormulaWithAdduct(ionFormula, out mol, out adduct, out neutralFormula);
+                var isFormulaWithAdduct = IonInfo.IsFormulaWithAdduct(ionFormula, out var _, out adduct, out neutralFormula);
                 if (isFormulaWithAdduct)
                 {
                     precursorAdduct = adduct;

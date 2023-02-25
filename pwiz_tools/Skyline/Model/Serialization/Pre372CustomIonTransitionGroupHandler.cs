@@ -93,8 +93,7 @@ namespace pwiz.Skyline.Model.Serialization
                     details._formulaUnlabeled = formula.Trim(); // We've seen tailing spaces in the wild
                     string precursorFormula;
                     Adduct precursorAdduct;
-                    Molecule precursorMol;
-                    if (IonInfo.IsFormulaWithAdduct(formula, out precursorMol, out precursorAdduct, out precursorFormula))
+                    if (IonInfo.IsFormulaWithAdduct(formula, out var _, out precursorAdduct, out precursorFormula))
                     {
                         details._formulaUnlabeled = precursorFormula;
                         details._nominalAdduct = precursorAdduct;

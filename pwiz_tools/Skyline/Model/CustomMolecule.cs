@@ -772,9 +772,8 @@ namespace pwiz.Skyline.Model
                 formula = text;
             }
             string neutralFormula;
-            Molecule mol;
             // We commonly see the adduct inline with the neutral formula ("C12H5[M+Na]"), so be ready to preserve that
-            if (IonInfo.IsFormulaWithAdduct(formula, out mol, out embeddedAdduct, out neutralFormula))
+            if (IonInfo.IsFormulaWithAdduct(formula, out var _, out embeddedAdduct, out neutralFormula))
             {
                 formula = neutralFormula;
             }

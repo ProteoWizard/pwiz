@@ -18,6 +18,7 @@
  */
 using System;
 using System.Collections.Generic;
+using System.Globalization;
 using System.Linq;
 using System.Text;
 using pwiz.Common.SystemUtil;
@@ -37,13 +38,6 @@ namespace pwiz.Common.Chemistry
             Molecule = molecule;
             MonoMassOffset = monoMassOffset;
             AverageMassOffset = averageMassOffset;
-            if (Molecule.HasMassModifications)
-            {
-                // Anyone using this class is expecting all mass offset information to reside in these variables, not the Molecule
-                MonoMassOffset += Molecule.GetMonoMassOffset();
-                AverageMassOffset += Molecule.GetAverageMassOffset();
-                Molecule = Molecule.WithoutMassModifications;
-            }
         }
 
         public MoleculeMassOffset(Molecule molecule) : this(molecule, 0, 0)
@@ -68,6 +62,23 @@ namespace pwiz.Common.Chemistry
             return new MoleculeMassOffset(newMolecule, MonoMassOffset - moleculeMassOffset.MonoMassOffset, AverageMassOffset - moleculeMassOffset.AverageMassOffset);
         }
 
+
+        public static string FormatMassModification(double massMod, int desiredDecimals = 6)
+        {
+            var sign = massMod > 0 ? @"+" : string.Empty;
+            return string.Format($@"[{sign}{massMod.ToString($"F{desiredDecimals}", CultureInfo.InvariantCulture).TrimEnd('0')}]");
+        }
+
+        public static string FormatMassModification(double massModMono, double massModAverage, int desiredDecimals = 6)
+        {
+            if (Equals(massModMono, massModAverage))
+            {
+                return FormatMassModification(massModMono, desiredDecimals);
+            }
+            var sign = massModMono > 0 ? @"+" : string.Empty;
+            return string.Format($@"[{sign}{massModMono.ToString($"F{desiredDecimals}", CultureInfo.InvariantCulture).TrimEnd('0')}/{Math.Abs(massModAverage).ToString($"F{desiredDecimals}", CultureInfo.InvariantCulture).TrimEnd('0')}]");
+        }
+
         public override string ToString()
         {
             StringBuilder stringBuilder = new StringBuilder();
@@ -75,7 +86,7 @@ namespace pwiz.Common.Chemistry
             
             if (MonoMassOffset != 0 || AverageMassOffset != 0)
             {
-                stringBuilder.Append(Molecule.FormatMassModification(MonoMassOffset, AverageMassOffset)); // Use our standard notation e.g. [+1.23/1.24], [-1.2] etc
+                stringBuilder.Append(FormatMassModification(MonoMassOffset, AverageMassOffset)); // Use our standard notation e.g. [+1.23/1.24], [-1.2] etc
             }
 
             return stringBuilder.ToString();
@@ -83,7 +94,7 @@ namespace pwiz.Common.Chemistry
 
         public string ToString(string format, IFormatProvider formatProvider)
         {
-            return ToString();
+            return ToString(); // We always use the invariant form
         }
 
         protected bool Equals(MoleculeMassOffset other)

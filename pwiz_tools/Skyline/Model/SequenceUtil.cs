@@ -372,10 +372,9 @@ namespace pwiz.Skyline.Model
 
             public static MoleculeUnsorted Parse(string formula)
             {
-                Molecule ion;
                 Adduct adduct;
                 string neutralFormula;
-                Assume.IsFalse(IonInfo.IsFormulaWithAdduct(formula, out ion, out adduct, out neutralFormula));
+                Assume.IsFalse(IonInfo.IsFormulaWithAdduct(formula, out var ion, out adduct, out neutralFormula));
                 return new MoleculeUnsorted(Molecule.ParseExpressionToDictionary(formula));
             }
 

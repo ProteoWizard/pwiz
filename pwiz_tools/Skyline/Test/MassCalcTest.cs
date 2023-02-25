@@ -236,25 +236,16 @@ namespace pwiz.SkylineTest
             Assert.AreEqual(9.068, mol.GetAverageMassOffset());
 
             var massAdduct = Adduct.FromStringAssumeChargeOnly("M(-1.1)+2H");
-            var molD = Molecule.Parse(massAdduct.ApplyToFormula("C12H5[+3.2]"));
-            Assert.AreEqual(1, molD["[+2.1]"]); // 3.2-1.1
-            Assert.AreEqual(12, molD["C"]);
-            Assert.AreEqual(7, molD["H"]);
+            var formulaDict = FormulaWithMassModification.Parse(massAdduct.ApplyToFormula("C12H5[+3.2]"));
+            Assert.AreEqual(1, formulaDict["[+2.1]"]); // 3.2-1.1
+            Assert.AreEqual(12, formulaDict["C"]);
+            Assert.AreEqual(7, formulaDict["H"]);
 
-            // Make sure we play nice with MoleculeMassOffset's notion of mass modified formulas
-            var molOff = new MoleculeMassOffset(molD, 1.1, 2.2);
-            Assert.AreEqual(3.2, molOff.MonoMassOffset);
-            Assert.AreEqual(4.3, molOff.AverageMassOffset, .000001);
-            Assert.AreEqual(0, molOff.Molecule.GetMonoMassOffset());
-            Assert.AreEqual(0, molOff.Molecule.GetAverageMassOffset());
-            Assert.AreEqual(12, molOff.Molecule["C"]);
-            Assert.AreEqual(7, molOff.Molecule["H"]);
-
-            Assert.AreEqual(1, molD["[+2.1]"]); // Make sure MoleculeMassOffset ctor left input molecule alone
-            Assert.AreEqual(153.1547, BioMassCalc.MONOISOTOPIC.CalculateMassFromFormula(molD).Value, .001);
-            Assert.AreEqual(153.2857, BioMassCalc.AVERAGE.CalculateMassFromFormula(molD).Value, .0001);
-            Assert.AreEqual(151.0547, BioMassCalc.MONOISOTOPIC.CalculateMassFromFormula(molD.WithoutMassModifications).Value, .001);
-            Assert.AreEqual(151.1857, BioMassCalc.AVERAGE.CalculateMassFromFormula(molD.WithoutMassModifications).Value, .0001);
+            Assert.AreEqual(1, formulaDict["[+2.1]"]); // Make sure MoleculeMassOffset ctor left input molecule alone
+            Assert.AreEqual(153.1547, BioMassCalc.MONOISOTOPIC.CalculateMassFromFormula(formulaDict).Value, .001);
+            Assert.AreEqual(153.2857, BioMassCalc.AVERAGE.CalculateMassFromFormula(formulaDict).Value, .0001);
+            Assert.AreEqual(151.0547, BioMassCalc.MONOISOTOPIC.CalculateMassFromFormula(formulaDict.WithoutMassModifications).Value, .001);
+            Assert.AreEqual(151.1857, BioMassCalc.AVERAGE.CalculateMassFromFormula(formulaDict.WithoutMassModifications).Value, .0001);
 
             // Check formula math
             description = "C'2";

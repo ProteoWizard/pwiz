@@ -1339,7 +1339,7 @@ namespace pwiz.Skyline.Util
             // Same idea as handling "4Cl37" in the example below
             if (IsotopeLabelMass.HasValue)
             {
-                Molecule.AddMassModification(resultDict, IsotopeLabelMass.Value * MassMultiplier);
+                FormulaWithMassModification.AddMassModification(resultDict, IsotopeLabelMass.Value * MassMultiplier);
             }
 
             // Deal with labeling (the "4Cl37" in "[M4Cl37+2H]")
@@ -1446,7 +1446,7 @@ namespace pwiz.Skyline.Util
 
             if ((IsotopeLabelMass ?? 0) != 0)
             {
-                Molecule.AddMassModification(resultDict, IsotopeLabelMass.Value);
+                FormulaWithMassModification.AddMassModification(resultDict, IsotopeLabelMass.Value);
             }
             var resultMol = Molecule.FromDict(resultDict);
             return resultMol.ToString();

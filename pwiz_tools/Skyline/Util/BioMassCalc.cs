@@ -336,7 +336,7 @@ namespace pwiz.Skyline.Util
                     .ToDictionary(kvp => kvp.Key,
                         kvp => kvp.Value.Replace(@"'", string.Empty).Replace(@"""", string.Empty));
 
-        private static readonly char[] HEAVYSYMBOL_HINTS = new char[] {'\'', '"', 'D', 'T', Molecule.MASS_MOD_START_CH}; // If a formula does not contain any of these, it's not heavy labeled
+        private static readonly char[] HEAVYSYMBOL_HINTS = new char[] {'\'', '"', 'D', 'T'}; // If a formula does not contain any of these, it's not heavy labeled
 
         /// <summary>
         /// A list of Skyline-style isotope symbols (e.g. H')
@@ -400,9 +400,9 @@ namespace pwiz.Skyline.Util
         private static string NextSymbol(string expression)
         {
             // Watch for mass modifications
-            if (expression.StartsWith(Molecule.MASS_MOD_START_PLUS) || expression.StartsWith(Molecule.MASS_MOD_START_MINUS))
+            if (expression.StartsWith(FormulaWithMassModification.MASS_MOD_START_PLUS) || expression.StartsWith(FormulaWithMassModification.MASS_MOD_START_MINUS))
             {
-                var close = expression.IndexOf(Molecule.MASS_MOD_END_CH);
+                var close = expression.IndexOf(FormulaWithMassModification.MASS_MOD_END_CH);
                 if (close > 0)
                 {
                     return expression.Substring(0, close+1);
@@ -538,8 +538,8 @@ namespace pwiz.Skyline.Util
         public static bool ContainsIsotopicElement(string desc)
         {
             // Look for Cl', O", D, T etc, or mass modifier e.g. [+1.23/1.24]
-            return DICT_HEAVYSYMBOL_TO_MONOSYMBOL.Keys.Any(desc.Contains) || 
-                   desc.Contains(Molecule.MASS_MOD_START_PLUS) || desc.Contains(Molecule.MASS_MOD_START_MINUS); 
+            return DICT_HEAVYSYMBOL_TO_MONOSYMBOL.Keys.Any(desc.Contains) ||
+                   desc.Contains(FormulaWithMassModification.MASS_MOD_START_PLUS) || desc.Contains(FormulaWithMassModification.MASS_MOD_START_MINUS); 
         }
 
         public static bool TryParseFormula(string formula, out Molecule resultMolecule, out string errMessage)
@@ -691,7 +691,7 @@ namespace pwiz.Skyline.Util
                         }
                     }
                 }
-                else if (kvp.Key.StartsWith(Molecule.MASS_MOD_START)) // Mass modification
+                else if (kvp.Key.StartsWith(FormulaWithMassModification.MASS_MOD_START)) // Mass modification
                 {
                     var index = atomOrder.IndexOf(kvp.Key);
                     atomOrder.RemoveAt(index);
@@ -865,11 +865,10 @@ namespace pwiz.Skyline.Util
         {
             double totalMass = 0.0;
             desc = desc.Trim();
-            Molecule mol;
             Adduct adduct;
             string neutralFormula;
             Dictionary<string, int> dict = null;
-            if (IonInfo.IsFormulaWithAdduct(desc, out mol, out adduct, out neutralFormula))
+            if (IonInfo.IsFormulaWithAdduct(desc, out var mol, out adduct, out neutralFormula))
             {
                 totalMass += mol.Sum(p => p.Value*GetMass(p.Key));
                 desc = string.Empty; // Signal that we parsed the whole thing
@@ -1049,7 +1048,7 @@ namespace pwiz.Skyline.Util
         /// <returns>The mass of the single atom or the parsed mass modification</returns>
         public double GetMass(string sym)
         {
-            return _atomicMasses.TryGetValue(sym, out var mass) ? mass : Molecule.ParseMassModification(sym, this.MassType.IsAverage());
+            return _atomicMasses.TryGetValue(sym, out var mass) ? mass : FormulaWithMassModification.ParseMassModification(sym, this.MassType.IsAverage());
         }
 
         /// <summary>
@@ -1082,14 +1081,13 @@ namespace pwiz.Skyline.Util
         }
 
         /// <summary>
-        /// Return true if symbol is found in mass table, or it's understood as a mass modification e.g. [+1.2/1.21]
+        /// Return true if symbol is found in mass table
         /// </summary>
         /// <param name="sym"></param>
         /// <returns></returns>
         public bool IsKnownSymbol(string sym)
         {
-            return _atomicMasses.ContainsKey(sym) || // Known symbol, e.g. Cl, O etc
-                   sym.StartsWith(Molecule.MASS_MOD_START_PLUS) || sym.StartsWith(Molecule.MASS_MOD_START_MINUS); // Looks like a mass modification
+            return _atomicMasses.ContainsKey(sym);
         }
     }
 }

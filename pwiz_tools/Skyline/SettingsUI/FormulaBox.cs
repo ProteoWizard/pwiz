@@ -23,7 +23,6 @@ using System.Drawing;
 using System.Globalization;
 using System.Linq;
 using System.Windows.Forms;
-using pwiz.Common.Chemistry;
 using pwiz.Skyline.Alerts;
 using pwiz.Skyline.Controls;
 using pwiz.Skyline.Model;
@@ -131,7 +130,6 @@ namespace pwiz.Skyline.SettingsUI
                 {
                     return; // Do nothing - just initializing
                 }
-                Molecule ion;
                 Adduct newAdduct;
                 string newNeutralFormula;
                 string newTextFormulaText = null;
@@ -146,7 +144,7 @@ namespace pwiz.Skyline.SettingsUI
                     Adduct = newAdduct;
                     newTextFormulaText = value;
                 }
-                else if (IonInfo.IsFormulaWithAdduct(value, out ion, out newAdduct, out newNeutralFormula))
+                else if (IonInfo.IsFormulaWithAdduct(value, out var ion, out newAdduct, out newNeutralFormula))
                 {
                     // If we're allowing edit of adduct only, set aside the formula portion
                     var displayText = editAdductOnly ? newAdduct.AdductFormula : value;
@@ -646,9 +644,8 @@ namespace pwiz.Skyline.SettingsUI
                     formula = userinput;
                 }
                 string neutralFormula;
-                Molecule ion;
                 Adduct adduct;
-                if (!IonInfo.IsFormulaWithAdduct(formula, out ion, out adduct, out neutralFormula, true))
+                if (!IonInfo.IsFormulaWithAdduct(formula, out var ion, out adduct, out neutralFormula, true))
                 {
                     neutralFormula = formula;
                     if (!Adduct.TryParse(userinput, out adduct, Adduct.ADDUCT_TYPE.non_proteomic, true))
