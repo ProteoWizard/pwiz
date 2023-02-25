@@ -1,9 +1,0 @@
-create libmstoolkit.a
-addlib obj/libexpat.a
-addlib obj/libz.a
-addlib obj/libmst.a
-addlib obj/libmzparser.a
-addlib obj/libmzimltools.a
-addlib obj/libsqlite.a
-save
-end
