@@ -1,0 +1,6 @@
+[submodule "pwiz_tools/Skyline/Executables/Hardklor/Hardklor"]
+	path = pwiz_tools/Skyline/Executables/Hardklor/Hardklor
+	url = https://github.com/proteowizard/Hardklor
+[submodule "pwiz_tools/Skyline/Executables/Hardklor/MSToolkit"]
+	path = pwiz_tools/Skyline/Executables/Hardklor/MSToolkit
+	url = https://github.com/proteowizard/MSToolkit
