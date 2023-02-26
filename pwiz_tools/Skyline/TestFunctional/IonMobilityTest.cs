@@ -160,12 +160,8 @@ namespace pwiz.SkylineTestFunctional
             });
             AssertEx.AreEqual(testlibName, ionMobilityLibDlg1.LibraryName);
             // Expect to be warned about multiple conformer
-            var warnDlg = ShowDialog<MessageDlg>(() => ionMobilityLibDlg1.DoPasteLibrary());
-            RunUI(() =>
-            {
-                warnDlg.OkDialog();
-                ionMobilityLibDlg1.OkDialog();
-            });
+            RunDlg<MessageDlg>(() => ionMobilityLibDlg1.DoPasteLibrary(), warnDlg => warnDlg.OkDialog());
+            OkDialog(ionMobilityLibDlg1, ionMobilityLibDlg1.OkDialog);
             RunUI(() => transitionSettingsDlg1.IonMobilityControl.WindowWidthType = IonMobilityWindowWidthCalculator.IonMobilityWindowWidthType.resolving_power);
             RunUI(() => transitionSettingsDlg1.IonMobilityControl.SetResolvingPower(50));
             WaitForClosedForm(ionMobilityLibDlg1);
@@ -177,13 +173,8 @@ namespace pwiz.SkylineTestFunctional
 
             // Simulate user picking Edit... from the Ion Mobility Library combo control
             var editIonMobilityLibraryDlg = ShowDialog<EditIonMobilityLibraryDlg>(transitionSettingsDlg2.IonMobilityControl.EditIonMobilityLibrary);
-
-            RunUI(() =>
-            {
-                editIonMobilityLibraryDlg.LibraryName = testlibName2;
-                editIonMobilityLibraryDlg.OkDialog();
-            });
-            WaitForClosedForm(editIonMobilityLibraryDlg);
+            RunUI(() => editIonMobilityLibraryDlg.LibraryName = testlibName2);
+            OkDialog(editIonMobilityLibraryDlg, editIonMobilityLibraryDlg.OkDialog);
 
             var olddoc = SkylineWindow.Document;
             // Set other parameters - name, resolving power
@@ -367,9 +358,8 @@ namespace pwiz.SkylineTestFunctional
             {
                 importSpectralLibDlg.Source = SpectralLibrarySource.file; // Simulate user selecting 2nd radio button
                 importSpectralLibDlg.FilePath = blibPath; // Simulate user entering filename
-                importSpectralLibDlg.OkDialog();
             });
-            WaitForClosedForm(importSpectralLibDlg);
+            OkDialog(importSpectralLibDlg, importSpectralLibDlg.OkDialog);
             WaitForCondition(() => ionMobilityLibraryDlg.LibraryMobilitiesFlatCount > 8); // Let that library load
             OkDialog(ionMobilityLibraryDlg, ionMobilityLibraryDlg.OkDialog);
             OkDialog(transitionSettingsDlg3, transitionSettingsDlg3.OkDialog);
@@ -802,14 +792,9 @@ namespace pwiz.SkylineTestFunctional
                 ionMobilityLibraryDlg.CreateDatabaseFile(databasePath); // Simulate user click on Create button
                 ionMobilityLibraryDlg.SetOffsetHighEnergySpectraCheckbox(true);
                 ionMobilityLibraryDlg.GetIonMobilitiesFromResults();
-                ionMobilityLibraryDlg.OkDialog();
             });
-            WaitForClosedForm(ionMobilityLibraryDlg);
-            RunUI(() =>
-            {
-                transitionSettingsDlg.OkDialog();
-            });
-            WaitForClosedForm(transitionSettingsDlg);
+            OkDialog(ionMobilityLibraryDlg, ionMobilityLibraryDlg.OkDialog);
+            OkDialog(transitionSettingsDlg, transitionSettingsDlg.OkDialog);
             WaitForDocumentChange(doc);
 
             // Now close the document, then reopen to verify imsdb background loader operation
@@ -861,16 +846,8 @@ namespace pwiz.SkylineTestFunctional
                 values[0].IonMobility = expectedDT2+1;
                 ionMobilityLibraryDlg.LibraryMobilitiesFlat = values;
             });
-            RunUI(() =>
-            {
-                ionMobilityLibraryDlg.OkDialog();
-            });
-            WaitForClosedForm(ionMobilityLibraryDlg);
-            RunUI(() =>
-            {
-                transitionSettingsDlg.OkDialog();
-            });
-            WaitForClosedForm(transitionSettingsDlg);
+            OkDialog(ionMobilityLibraryDlg, ionMobilityLibraryDlg.OkDialog);
+            OkDialog(transitionSettingsDlg, transitionSettingsDlg.OkDialog);
             doc = WaitForDocumentChange(doc);
             result = doc.Settings.TransitionSettings.IonMobilityFiltering.IonMobilityLibrary;
             AssertEx.AreEqual(expectedDT2+1, result.GetIonMobilityInfo(key2).First().IonMobility.Mobility.Value, .001);
@@ -901,11 +878,7 @@ namespace pwiz.SkylineTestFunctional
                 });
 
             OkDialog(driftTimePredictorDoomedDlg, driftTimePredictorDoomedDlg.CancelDialog);
-            RunUI(() =>
-            {
-                transitionSettingsDlg.OkDialog();
-            });
-            WaitForClosedForm(transitionSettingsDlg);
+            OkDialog(transitionSettingsDlg, transitionSettingsDlg.OkDialog);
         }
     }
 }

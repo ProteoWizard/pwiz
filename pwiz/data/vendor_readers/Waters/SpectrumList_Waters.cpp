@@ -308,11 +308,20 @@ PWIZ_API_DECL SpectrumPtr SpectrumList_Waters::spectrum(size_t index, DetailLeve
         }
 
         Precursor precursor;
+
+        float lowerIsolationWindowOffset, maxIsolationWindowOffset;
+        bool offsetsPresent = useDDAProcessor_ ? rawdata_->GetIsolationWindow(lowerIsolationWindowOffset, maxIsolationWindowOffset) : false;
+        
         if (setMass == 0)
         {
             setMass = (maxMZ + minMZ) / 2;
             precursor.isolationWindow.set(MS_isolation_window_upper_offset, maxMZ - setMass, xUnit);
             precursor.isolationWindow.set(MS_isolation_window_lower_offset, maxMZ - setMass, xUnit);
+        }
+        else if (offsetsPresent)
+        {
+            precursor.isolationWindow.set(MS_isolation_window_lower_offset, lowerIsolationWindowOffset, xUnit);
+            precursor.isolationWindow.set(MS_isolation_window_upper_offset, maxIsolationWindowOffset, xUnit);
         }
         precursor.isolationWindow.set(MS_isolation_window_target_m_z, setMass, xUnit);
 

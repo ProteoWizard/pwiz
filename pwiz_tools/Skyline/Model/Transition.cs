@@ -22,6 +22,7 @@ using System.Drawing;
 using System.Globalization;
 using System.IO;
 using System.Linq;
+using pwiz.Common.Chemistry;
 using pwiz.Common.SystemUtil;
 using pwiz.Skyline.Model.Crosslinking;
 using pwiz.Skyline.Model.DocSettings;
@@ -598,7 +599,7 @@ namespace pwiz.Skyline.Model
             get { return GetFragmentIonName(LocalizationHelper.CurrentCulture); }
         }
 
-        public string GetFragmentIonName(CultureInfo cultureInfo, double? tolerance=null)
+        public string GetFragmentIonName(CultureInfo cultureInfo, MzTolerance tolerance=null)
         {
             if (IsCustom() && !IsPrecursor())
                 return CustomIon.ToString(tolerance);
