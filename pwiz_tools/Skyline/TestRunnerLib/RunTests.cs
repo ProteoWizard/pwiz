@@ -345,7 +345,18 @@ namespace TestRunnerLib
                 // (e.g. msFragger), causes trouble with mz5 reader, etc, so watch for custom test
                 // attribute that turns that off per test
                 var testDir = TestContext.Properties["TestDir"].ToString();
-                var tmpTestDir = Path.GetFullPath(Path.Combine(testDir, @"..", @"SkylineTester temp&di^rs", test.TestMethod.Name + (test.DoNotUseUnicode ? string.Empty : @" 试验")));
+                var unicode = test.DoNotUseUnicode ? string.Empty : @"试验";
+                var tmpTestDir = Path.GetFullPath(Path.Combine(testDir, @"..", @"SkylineTester temp&di^rs", test.TestMethod.Name + unicode)); 
+                if (tmpTestDir.Length > 100)
+                {
+                    // Avoid pushing the 260 character limit for windows paths - remember that there will be subdirs below this
+                    // e.g. in case of a long root path, use
+                    //      c:\crazy long username\massive subdir name\wacky installation dirnamne\pwiz_tools\Skyline\~t&mp ^\TMMENF910 试验"
+                    // instead of
+                    //      c:\crazy long username\massive subdir name\wacky installation dirnamne\pwiz_tools\Skyline\SkylineTester temp&di^rs\TestMyMostExcellentNebulousFunction 试验"
+                    tmpTestDir = Path.GetFullPath(Path.Combine(testDir, @"..", @"~t&mp ^",
+                        $"{string.Concat(test.TestMethod.Name.Where(char.IsUpper))}{test.TestMethod.Name.Sum(c=>c)}{unicode}"));
+                }
                 if (!Directory.Exists(tmpTestDir))
                 {
                     Directory.CreateDirectory(tmpTestDir);
@@ -353,7 +364,7 @@ namespace TestRunnerLib
                 Environment.SetEnvironmentVariable(@"TMP", tmpTestDir);
 
                 // Decorate tempfile names with peculiar characters
-                PathEx.RandomFileNameDecoration = @"test  c^ha&rs " + (test.DoNotUseUnicode ? "_" : @"试验_");
+                PathEx.RandomFileNameDecoration = @$"t^m&p{unicode} ";
 
                 if (test.SetTestContext != null)
                 {

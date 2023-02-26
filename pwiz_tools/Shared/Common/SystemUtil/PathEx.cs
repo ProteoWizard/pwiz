@@ -254,7 +254,7 @@ namespace pwiz.Common.SystemUtil
             return result;
         }
 
-        // Test framework can set this to something like  @"test  c^ha&rs 试验_" to help check our handling of unusual filename characters
+        // Test framework can set this to something like  @""t^m&p 试验" to help check our handling of unusual filename characters
         public static string RandomFileNameDecoration { get; set; }
     }
 
