@@ -39,15 +39,13 @@ Undo Redo : Added spectral library "DIA-tutorial"
 Summary   : Added spectral library "DIA-tutorial"
 All Info  :
 Added spectral library "DIA-tutorial"
-Build Spectral Library > Cut-off score is "0,95"
 Build Spectral Library > Search files : contains { File = "interact-20130311_DDA_Pit01.pep.xml", Score type = "PeptideProphet confidence", Score threshold = "0,95" }
 Build Spectral Library > iRT standard peptides is None
 Build Spectral Library > Include ambiguous matches is False
 Build Spectral Library > Filter for document peptides is False
 Build Spectral Library > Workflow is "DIA"
 Build Spectral Library > Input File Type is "Search results (build library directly)"
-Extra Info: Cut-off score = "0,95",
-Search files = 
+Extra Info: Search files = 
 [
     {
         File = "interact-20130311_DDA_Pit01.pep.xml",

@@ -722,7 +722,7 @@ namespace pwiz.Skyline.FileUI.PeptideSearch
                 case Pages.import_fasta_page: // This is the last page (if there is no dda search)
                     if (ImportPeptideSearch.IsDDASearch)
                     {
-                        ImportPeptideSearch.CutoffScore = BuildPepSearchLibControl.CutOffScore;
+                        ImportPeptideSearch.CutoffScore = BuildPepSearchLibControl.CutOffScore ?? 0;
 
                         if (!File.Exists(ImportFastaControl.FastaFile))
                         {
@@ -767,7 +767,7 @@ namespace pwiz.Skyline.FileUI.PeptideSearch
                     BuildPepSearchLibControl.Grid.IsFileOnly = false;
                     var scoreThreshold = (double?)(IsFeatureDetectionWorkflow
                         ? BuildPepSearchLibControl.CutOffScore
-                        : (1 - BuildPepSearchLibControl.CutOffScore));
+                        : (1 - (BuildPepSearchLibControl.CutOffScore ?? 0)));
                     var scoreType = IsFeatureDetectionWorkflow
                         ? ScoreType.HardklorCorrelationScore
                         : ScoreType.GenericQValue;
