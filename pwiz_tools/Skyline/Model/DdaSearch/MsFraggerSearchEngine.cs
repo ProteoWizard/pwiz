@@ -92,6 +92,7 @@ namespace pwiz.Skyline.Model.DdaSearch
         private Enzyme _enzyme;
         private int _ntt, _maxMissedCleavages;
         private int _maxVariableMods = 2;
+        private List<CruxModification> _variableMods;
         private string _modParams;
         private int _maxCharge = 7;
         private string _fastaFilepath;
@@ -168,14 +169,8 @@ namespace pwiz.Skyline.Model.DdaSearch
                     FixMSFraggerPin(cruxInputFilepath, cruxFixedInputFilepath, msfraggerPepXmlFilepath, out var nativeIdByScanNumber);
 
                     string cruxParamsFile = Path.GetTempFileName();
-                    var cruxParamsFileText = new StringBuilder();
-                    foreach (var line in _modParams.Split('\n'))
-                    {
-                        string cruxLine = line.Replace(@"variable_mod_", @"variable_mod");
-                        cruxLine = Regex.Replace(cruxLine, "add_([A-Z])_(\\S+)\\s*=\\s*(.*)", $"add_$1_$2 = $3{Environment.NewLine}$1 = $3");
-                        cruxParamsFileText.AppendLine(cruxLine);
-                    }
-                    File.WriteAllText(cruxParamsFile, cruxParamsFileText.ToString());
+                    var cruxParamsFileText = GetCruxParamsText();
+                    File.WriteAllText(cruxParamsFile, cruxParamsFileText);
 
                     // Run Crux Percolator
                     string cruxOutputDir = Path.Combine(Path.GetDirectoryName(SpectrumFileNames[0].GetFilePath()) ?? Environment.CurrentDirectory, "crux-output");
@@ -225,6 +220,81 @@ namespace pwiz.Skyline.Model.DdaSearch
             UpdateProgress(_progressStatus);
 
             return _success;
+        }
+
+        private class CruxModification
+        {
+            public CruxModification(StaticMod mod, double mz, string residues)
+            {
+                Mod = mod;
+                Mz = mz;
+                Residues = residues;
+            }
+
+            public StaticMod Mod { get; }
+            public double Mz { get; }
+            public string Residues { get; }
+
+            public int GetCruxTerminusOrdinal()
+            {
+                switch (Mod.Terminus)
+                {
+                    case ModTerminus.C: return 3;
+                    case ModTerminus.N: return 2;
+                    case null: return 0;
+                    default: throw new ArgumentOutOfRangeException();
+                }
+            }
+
+            public string GetCruxResidues()
+            {
+                switch (Mod.Terminus)
+                {
+                    case ModTerminus.C: return @"null";
+                    case ModTerminus.N: return @"null";
+                    case null: return Residues;
+                    default: throw new ArgumentOutOfRangeException();
+                }
+            }
+        }
+
+        private string GetCruxParamsText()
+        {
+            var cruxParamsFileText = new StringBuilder();
+            foreach (var line in _modParams.Split(new[] { Environment.NewLine }, StringSplitOptions.None))
+            {
+                if (line.Contains(@"variable_mod"))
+                    continue;
+                string cruxLine = Regex.Replace(line, "add_([A-Z])_(\\S+)\\s*=\\s*(.*)", $"add_$1_$2 = $3{Environment.NewLine}$1 = $3");
+                cruxParamsFileText.AppendLine(cruxLine);
+            }
+
+            //# Up to 9 variable modifications are supported. Each modification is specified
+            //# using seven entries: <mass> <residues> <type> <max> <distance> <terminus>
+            //# <force>." Type is 0 for static mods and non-zero for variable mods. Note that
+            //# that if you set the same type value on multiple modification entries, Comet
+            //# will treat those variable modifications as a binary set. This means that all
+            //# modifiable residues in the binary set must be unmodified or modified. Multiple
+            //# binary sets can be specified by setting a different binary modification value.
+            //# Max is an integer specifying the maximum number of modified residues possible
+            //# in a peptide for this modification entry. Distance specifies the distance the
+            //# modification is applied to from the respective terminus: -1 = no distance
+            //# constraint; 0 = only applies to terminal residue; N = only applies to terminal
+            //# residue through next N residues. Terminus specifies which terminus the
+            //# distance constraint is applied to: 0 = protein N-terminus; 1 = protein
+            //# C-terminus; 2 = peptide N-terminus; 3 = peptide C-terminus.Force specifies
+            //# whether peptides must contain this modification: 0 = not forced to be present;
+            //# 1 = modification is required.
+
+            int iMod = 0;
+            foreach (var m in _variableMods)
+            {
+                ++iMod;
+                cruxParamsFileText.AppendLine(string.Format(@"variable_mod{0:D2} = {1} {2} {3} {4} -1 {5} 0", iMod,
+                    m.Mz, m.GetCruxResidues(), iMod, _maxVariableMods, m.GetCruxTerminusOrdinal()));
+            }
+
+            return cruxParamsFileText.ToString();
         }
 
         // Fix bugs in Crux pepXML output:
@@ -321,6 +391,22 @@ namespace pwiz.Skyline.Model.DdaSearch
 
                         // move N-terminal mod to after first AA
                         line = Regex.Replace(line, "n(\\[[^]]+\\])([A-Z])", "$2$1");
+
+                        // remove C-terminal mod indicator to avoid "'c' is not an amino acid"
+                        line = line.Replace(@"c[", @"[");
+
+                        // handle case of mod on terminal and on terminal AA
+                        if (line.Contains(@"]["))
+                        {
+                            var m = Regex.Match(line, "\\[([^]]+)\\]\\[([^]]+)\\]");
+                            if (!m.Success)
+                                throw new InvalidDataException(@"found back to back brackets but could not parse them with regex: " + line);
+                            if (!double.TryParse(m.Groups[1].Value, out double modMass1))
+                                throw new InvalidDataException(@"could not parse mod mass from " + m.Groups[1].Value);
+                            if (!double.TryParse(m.Groups[2].Value, out double modMass2))
+                                throw new InvalidDataException(@"could not parse mod mass from " + m.Groups[2].Value);
+                            line = Regex.Replace(line, "\\[([^]]+\\]\\[[^]]+)\\]", $"[{modMass1 + modMass2:F4}]");
+                        }
 
                         if (addChargeFeatures)
                         {
@@ -525,6 +611,7 @@ add_Nterm_protein = 0.000000
         public override void SetModifications(IEnumerable<StaticMod> fixedAndVariableModifs, int maxVariableMods_)
         {
             _maxVariableMods = maxVariableMods_;
+            _variableMods = new List<CruxModification>();
 
             // maximum of 16 variable mods - amino acid codes, * for any amino acid, [ and ] specifies protein termini, n and c specifies peptide termini
             // TODO: alert when there are more than 16 variable mods
@@ -561,11 +648,12 @@ add_Nterm_protein = 0.000000
                     # variable_mod_06 = 229.162930 n^ 1
                     # variable_mod_07 = 229.162930 S 1
                     */
-                    // MSFragger static mods must have an AA and cannot be terminal-specific, so in those cases, treat it as a variable mod
-                    if (mod.IsVariable || mod.AAs == null || !position.IsNullOrEmpty())
+                    // MSFragger static mods must have an AA and cannot be negative or terminal-specific, so in those cases, treat it as a variable mod
+                    if (mod.IsVariable || mod.AAs == null || !position.IsNullOrEmpty() || mass < 0)
                     {
                         ++modCounter;
                         modParamLines.Add($@"variable_mod_{modCounter:D2} = {mass.ToString(CultureInfo.InvariantCulture)} {residues} {maxVariableMods_}");
+                        _variableMods.Add(new CruxModification(mod, mass, residues));
                     }
                     else
                     {
@@ -658,6 +746,7 @@ add_Nterm_protein = 0.000000
         }
 
         private string[] SupportedExtensions = { @".mzml", @".mzxml", @".raw", @".d" };
+
         public override bool GetSearchFileNeedsConversion(MsDataFileUri searchFilepath, out AbstractDdaConverter.MsdataFileFormat requiredFormat)
         {
             requiredFormat = AbstractDdaConverter.MsdataFileFormat.mzML;

@@ -24,6 +24,7 @@
 
 #include "SpectrumListBase.hpp"
 #include "pwiz/utility/misc/String.hpp"
+#include "pwiz/utility/misc/Stream.hpp"
 #include <boost/thread/lock_guard.hpp>
 #include <boost/thread/mutex.hpp>
 
@@ -36,7 +37,7 @@ PWIZ_API_DECL void pwiz::msdata::SpectrumListBase::warn_once(const char * msg) c
 {
     boost::lock_guard<boost::mutex> g(m);
     if (warn_msg_hashes_.insert(hash(msg)).second) // .second is true iff value is new
-        std::cerr << msg << std::endl;
+        cerr << msg << std::endl;
 }
 
 
