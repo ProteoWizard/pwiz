@@ -65,7 +65,7 @@ namespace pwiz.SkylineTestFunctional
             });
             var importResultsNameDlg = ShowDialog<ImportResultsNameDlg>(importResults.OkDialog);
             OkDialog(importResultsNameDlg, importResultsNameDlg.NoDialog);
-
+            
             WaitForConditionUI(() => {
                 var document = SkylineWindow.DocumentUI;
                 return document.Settings.HasResults && document.Settings.MeasuredResults.IsLoaded && 
