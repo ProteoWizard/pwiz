@@ -8,15 +8,13 @@ Undo Redo : 已添加谱图库“DIA-PASEF-tutorial”
 Summary   : 已添加谱图库“DIA-PASEF-tutorial”
 All Info  :
 已添加谱图库“DIA-PASEF-tutorial”
-建立谱图库 > 截止值 是 "0.95"
 建立谱图库 > 搜索文件 : 包含 { 文件 = "interact.pep.xml", 得分类型 = "PeptideProphet 置信度", 得分阈值 = "0.95" }
 建立谱图库 > iRT 标准肽段 是 "自动"
 建立谱图库 > 包含不明确匹配项 是 假
 建立谱图库 > 文档肽段筛选器 是 假
 建立谱图库 > 工作流程 是 "DIA（数据非依赖性采集）"
 建立谱图库 > 输入文件类型 是 "搜索结果（直接构建库）"
-Extra Info: 截止值 = "0.95",
-搜索文件 = 
+Extra Info: 搜索文件 = 
 [
     {
         文件 = "interact.pep.xml",

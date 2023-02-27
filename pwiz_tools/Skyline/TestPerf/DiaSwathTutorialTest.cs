@@ -527,8 +527,15 @@ namespace TestPerf
                 importPeptideSearchDlg.BuildPepSearchLibControl.AddSearchFiles(searchFiles);
                 importPeptideSearchDlg.BuildPepSearchLibControl.IrtStandards = _instrumentValues.IrtStandard;
                 importPeptideSearchDlg.BuildPepSearchLibControl.WorkflowType = ImportPeptideSearchDlg.Workflow.dia;
+            });
+            WaitForConditionUI(() =>
+                Equals(pwiz.BiblioSpec.Properties.Resources.BiblioSpecScoreType_DisplayName_PeptideProphet_confidence,
+                    importPeptideSearchDlg.BuildPepSearchLibControl.Grid.Files.FirstOrDefault()?.ScoreType?.ToString()));
+            RunUI(() =>
+            {
                 // Check default settings shown in the tutorial
-                Assert.AreEqual(0.95, importPeptideSearchDlg.BuildPepSearchLibControl.CutOffScore);
+                Assert.AreEqual(0.95, importPeptideSearchDlg.BuildPepSearchLibControl.Grid.Files.First().ScoreThreshold);
+                Assert.IsNull(importPeptideSearchDlg.BuildPepSearchLibControl.CutOffScore);
                 Assert.IsFalse(importPeptideSearchDlg.BuildPepSearchLibControl.IncludeAmbiguousMatches);
             });
             WaitForConditionUI(() => importPeptideSearchDlg.IsNextButtonEnabled);
