@@ -67,6 +67,7 @@ namespace sqlite3pp
     {
         friend class statement;
         friend class database_error;
+        friend class transaction;
         friend class ext::function;
         friend class ext::aggregate;
 
@@ -124,6 +125,7 @@ namespace sqlite3pp
     private:
         sqlite3* db_;
         bool closeOnDisconnect_;
+        bool throwingException_;
 
         busy_handler bh_;
         commit_handler ch_;
@@ -208,7 +210,7 @@ namespace sqlite3pp
 
     protected:
         explicit statement(database& db, const std::string& stmt = std::string());
-        ~statement();
+        ~statement() noexcept(false);
 
         int prepare_impl(char const* stmt);
         int finish_impl(sqlite3_stmt* stmt);
@@ -217,6 +219,7 @@ namespace sqlite3pp
         database& db_;
         sqlite3_stmt* stmt_;
         char const* tail_;
+        bool& throwingException() const {return db_.throwingException_;}
     };
 
     class command : public statement
@@ -345,13 +348,15 @@ namespace sqlite3pp
 
         iterator begin();
         iterator end();
+
+        friend class query_iterator;
     };
 
     class transaction : boost::noncopyable
     {
     public:
         explicit transaction(database& db, bool fcommit = false, bool freserve = false);
-        ~transaction();
+        ~transaction() noexcept(false);
 
         int commit();
         int rollback();
