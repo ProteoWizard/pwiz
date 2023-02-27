@@ -765,9 +765,9 @@ namespace pwiz.Skyline.FileUI.PeptideSearch
                     var eCancel2 = new CancelEventArgs();
                     //change search files to result files
                     BuildPepSearchLibControl.Grid.IsFileOnly = false;
-                    var scoreThreshold = (double?)(IsFeatureDetectionWorkflow
-                        ? BuildPepSearchLibControl.CutOffScore
-                        : (1 - (BuildPepSearchLibControl.CutOffScore ?? 0)));
+                    var scoreThreshold = IsFeatureDetectionWorkflow
+                        ? BuildPepSearchLibControl.CutOffScore ?? 0
+                        : (1 - (BuildPepSearchLibControl.CutOffScore ?? 0));
                     var scoreType = IsFeatureDetectionWorkflow
                         ? ScoreType.HardklorCorrelationScore
                         : ScoreType.GenericQValue;
@@ -914,7 +914,7 @@ namespace pwiz.Skyline.FileUI.PeptideSearch
             {
                 ImportPeptideSearch.Instrument =
                     TransitionFullScan.MassAnalyzerToString(FullScan.PrecursorMassAnalyzer);
-                ImportPeptideSearch.CutoffScore = BuildPepSearchLibControl.CutOffScore;
+                ImportPeptideSearch.CutoffScore = BuildPepSearchLibControl.CutOffScore ?? 0;
                 ImportPeptideSearch.ResolutionAt400mz = FullScan.PrecursorRes ?? 0;
                 if (Equals(FullScan.PrecursorMassAnalyzer, FullScanMassAnalyzerType.orbitrap))
                 {
