@@ -3213,6 +3213,14 @@ namespace SkylineTester
             this.myTreeView1.Size = new System.Drawing.Size(309, 350);
             this.myTreeView1.TabIndex = 15;
             // 
+            // labelParallelOffscreenHint
+            // 
+            this.labelParallelOffscreenHint.AutoSize = true;
+            this.labelParallelOffscreenHint.Location = new System.Drawing.Point(9, 44);
+            this.labelParallelOffscreenHint.Name = "labelParallelOffscreenHint";
+            this.labelParallelOffscreenHint.Size = new System.Drawing.Size(174, 13);
+            this.labelParallelOffscreenHint.TabIndex = 1;
+            this.labelParallelOffscreenHint.Text = "Tests run offscreen in parallel mode";
             // parallelWorkerCount
             // 
             this.parallelWorkerCount.Location = new System.Drawing.Point(150, 20);
