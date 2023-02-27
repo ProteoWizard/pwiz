@@ -658,8 +658,8 @@ namespace TestRunner
         private static string LaunchDockerWorker(int i, CommandLineArgs commandLineArgs, ref string workerNames, bool bigWorker, long workerBytes, int workerPort, StreamWriter log)
         {
             var pwizRoot = Path.GetDirectoryName(Path.GetDirectoryName(GetSkylineDirectory().FullName));
-            var invocationDetail = GetInvocationDetail(); // Avoids conflicts between this and any previous invocation
-            string workerName = bigWorker ? $"docker_big_worker{invocationDetail}_{i}" : $"docker_worker{invocationDetail}_{i}";
+            // Adding timestamp to worker name voids conflicts between this and any previous invocation
+            string workerName = bigWorker ? $"docker_big_worker{GetTestRunTimeStamp()}_{i}" : $"docker_worker{GetTestRunTimeStamp()}_{i}";
             string dockerRunRedirect = string.Empty;
             string testRunnerLog = @$"c:\AlwaysUpCLT\TestRunner-{workerName}.log";
             if (commandLineArgs.ArgAsBool("keepworkerlogs"))
@@ -699,7 +699,7 @@ namespace TestRunner
         // Avoids conflicts between this and any previous invocation that may not have torn down its workers yet
         // Helps when a run is cancelled then quickly restarted, as often happens when you realize you've forgotten
         // to select certain tests etc
-        private static string GetInvocationDetail()
+        private static string GetTestRunTimeStamp()
         {
             return $"_{_testRunStartTime.ToString("yyyyMMddHHmmss")}";
         }
@@ -880,7 +880,8 @@ namespace TestRunner
                         }
 
                         string testName = testInfo.TestInfo.TestMethod.Name;
-                        var serverWorkerLogName = $"serverWorker{GetInvocationDetail()}.log";
+                        // Adding timestamp to worker name voids conflicts between this and any previous invocation
+                        var serverWorkerLogName = $"serverWorker{GetTestRunTimeStamp()}.log";
                         try
                         {
                             // running RunTestPasses() for GUI tests directly is problematic because we're no longer on the main thread
