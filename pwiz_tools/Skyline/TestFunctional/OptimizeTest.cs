@@ -246,7 +246,7 @@ namespace pwiz.SkylineTestFunctional
             var addOptDlgAskConverted = ShowDialog<AddOptimizationsDlg>(addOptDbConvertible.OkDialog);
             Assert.AreEqual(AsSmallMolecules ? 111 : 109, addOptDlgAskConverted.OptimizationsCount);
             Assert.AreEqual(AsSmallMolecules ? 0 : 2, addOptDlgAskConverted.ExistingOptimizationsCount);
-            RunUI(addOptDlgAskConverted.CancelDialog);
+            OkDialog(addOptDlgAskConverted, addOptDlgAskConverted.CancelDialog);
 
             // Done editing optimization library
             OkDialog(editOptLib, editOptLib.OkDialog);

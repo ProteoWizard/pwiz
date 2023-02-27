@@ -24,6 +24,7 @@ using System.Globalization;
 using System.IO;
 using System.Linq;
 using Microsoft.VisualStudio.TestTools.UnitTesting;
+using pwiz.Common.Chemistry;
 using pwiz.Common.DataBinding;
 using pwiz.Common.DataBinding.Controls;
 using pwiz.Common.DataBinding.Controls.Editor;
@@ -141,7 +142,7 @@ namespace TestPerf
             TestTtofData();
         }
 
-        [TestMethod]
+        [TestMethod, NoParallelTesting(TestExclusionReason.RESOURCE_INTENSIVE)] // Times out on slower worker VMs
         public void TestDiaTtofFullSearchTutorial()
         {
             _analysisValues = new AnalysisValues
@@ -239,7 +240,7 @@ namespace TestPerf
                 TestQeData();
         }
 
-        [TestMethod]
+        [TestMethod, NoParallelTesting(TestExclusionReason.RESOURCE_INTENSIVE)] // Times out on slower VMs
         public void TestDiaQeFullSearchTutorial()
         {
             _analysisValues = new AnalysisValues
@@ -306,7 +307,7 @@ namespace TestPerf
             RunTest();
         }
 
-        [TestMethod]
+        [TestMethod, NoParallelTesting(TestExclusionReason.VENDOR_FILE_LOCKING)] // Bruker wants exclusive read access to raw data
         [Timeout(int.MaxValue)] // These can take a long time
         public void TestDiaPasefTutorial()
         {
@@ -370,12 +371,12 @@ namespace TestPerf
             RunTest();
         }
 
-        [TestMethod]
+        [TestMethod,
+         NoParallelTesting(TestExclusionReason.VENDOR_FILE_LOCKING), // Bruker wants exclusive read access to raw data
+         NoNightlyTesting(TestExclusionReason.EXCESSIVE_TIME)] // Skip during Nightly
         [Timeout(int.MaxValue)] // These can take a long time
         public void TestDiaPasefFullDataset()
         {
-            if (Program.SkylineOffscreen)
-                return; // skip during Nightly
 
             _analysisValues = new AnalysisValues
             {
@@ -526,8 +527,15 @@ namespace TestPerf
                 importPeptideSearchDlg.BuildPepSearchLibControl.AddSearchFiles(searchFiles);
                 importPeptideSearchDlg.BuildPepSearchLibControl.IrtStandards = _instrumentValues.IrtStandard;
                 importPeptideSearchDlg.BuildPepSearchLibControl.WorkflowType = ImportPeptideSearchDlg.Workflow.dia;
+            });
+            WaitForConditionUI(() =>
+                Equals(pwiz.BiblioSpec.Properties.Resources.BiblioSpecScoreType_DisplayName_PeptideProphet_confidence,
+                    importPeptideSearchDlg.BuildPepSearchLibControl.Grid.Files.FirstOrDefault()?.ScoreType?.ToString()));
+            RunUI(() =>
+            {
                 // Check default settings shown in the tutorial
-                Assert.AreEqual(0.95, importPeptideSearchDlg.BuildPepSearchLibControl.CutOffScore);
+                Assert.AreEqual(0.95, importPeptideSearchDlg.BuildPepSearchLibControl.Grid.Files.First().ScoreThreshold);
+                Assert.IsNull(importPeptideSearchDlg.BuildPepSearchLibControl.CutOffScore);
                 Assert.IsFalse(importPeptideSearchDlg.BuildPepSearchLibControl.IncludeAmbiguousMatches);
             });
             WaitForConditionUI(() => importPeptideSearchDlg.IsNextButtonEnabled);
@@ -675,7 +683,8 @@ namespace TestPerf
                 Assert.AreEqual(TransitionFilter.EndFragmentFinder.LAST_ION.Label, importPeptideSearchDlg.TransitionSettingsControl.IonRangeTo);
                 Assert.AreEqual(6, importPeptideSearchDlg.TransitionSettingsControl.IonCount);
                 Assert.AreEqual(6, importPeptideSearchDlg.TransitionSettingsControl.MinIonCount);
-                Assert.AreEqual(0.05, importPeptideSearchDlg.TransitionSettingsControl.IonMatchTolerance);
+                Assert.AreEqual(0.05, importPeptideSearchDlg.TransitionSettingsControl.IonMatchMzTolerance.Value);
+                Assert.AreEqual(MzTolerance.Units.mz, importPeptideSearchDlg.TransitionSettingsControl.IonMatchMzTolerance.Unit);
                 // CONSIDER: Not that easy to validate 1, 2 in ion charges.
             });
             PauseForScreenShot<ImportPeptideSearchDlg.TransitionSettingsPage>("Transition settings", screenshotPage++);

@@ -268,9 +268,7 @@ namespace pwiz.SkylineTestFunctional
                 editMoleculeDlgA.IonMobilityUnits = eIonMobilityUnits.none; // Simulate user forgets to declare units
                 editMoleculeDlgA.CollisionalCrossSectionSqA = TESTVALUES_GROUP.CollisionalCrossSectionSqA.Value;
             });
-            ShowDialog<MessageDlg>(editMoleculeDlgA.OkDialog);
-            var errorDlg = WaitForOpenForm<MessageDlg>();
-            RunUI(() =>
+            RunDlg<MessageDlg>(editMoleculeDlgA.OkDialog, errorDlg =>
             {
                 Assert.IsTrue(errorDlg.Message.Contains(Resources.EditCustomMoleculeDlg_OkDialog_Please_specify_the_ion_mobility_units_));
                 errorDlg.OkDialog();
@@ -285,16 +283,14 @@ namespace pwiz.SkylineTestFunctional
             {
                 editMoleculeDlgA.IonMobility = -TESTVALUES_GROUP.IonMobility.Value;
             });
-            ShowDialog<MessageDlg>(editMoleculeDlgA.OkDialog);
-            errorDlg = WaitForOpenForm<MessageDlg>();
-            RunUI(() =>
+            RunDlg<MessageDlg>(editMoleculeDlgA.OkDialog, errorDlg =>
             {
                 Assert.IsTrue(errorDlg.Message.Contains(
-                    string.Format(Resources.SmallMoleculeTransitionListReader_ReadPrecursorOrProductColumns_Invalid_ion_mobility_value__0_, 
+                    string.Format(Resources.SmallMoleculeTransitionListReader_ReadPrecursorOrProductColumns_Invalid_ion_mobility_value__0_,
                         -TESTVALUES_GROUP.IonMobility.Value)));
                 errorDlg.OkDialog();
-                editMoleculeDlgA.IonMobilityUnits = eIonMobilityUnits.compensation_V; // But negative CoV is allowed
             });
+            RunUI(() => editMoleculeDlgA.IonMobilityUnits = eIonMobilityUnits.compensation_V); // But negative CoV is allowed
             OkDialog(editMoleculeDlgA, editMoleculeDlgA.OkDialog);
             var docB = WaitForDocumentChange(doc);
             // Undo that last change
@@ -872,11 +868,9 @@ namespace pwiz.SkylineTestFunctional
             SelectNode(SrmDocument.Level.TransitionGroups, 0);
             var moleculeDlg = ShowDialog<EditCustomMoleculeDlg>(SkylineWindow.ModifySmallMoleculeTransitionGroup);
             var adduct = moleculeDlg.FormulaBox.Adduct.ChangeIonFormula("-C+2H");
-            RunUI(() =>
-            {
-                moleculeDlg.Adduct = adduct; 
-                moleculeDlg.OkDialog();
-            });
+            RunUI(() => moleculeDlg.Adduct = adduct);
+            OkDialog(moleculeDlg, moleculeDlg.OkDialog);
+
             // The first precursor now has no Carbon - if we try to remove Carbon from parent molecule too that should error out
             SelectNode(SrmDocument.Level.Molecules, 0);
             moleculeDlg = ShowDialog<EditCustomMoleculeDlg>(SkylineWindow.ModifyPeptide);

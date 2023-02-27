@@ -86,16 +86,17 @@ namespace pwiz.Skyline.Model.DdaSearch
             new FileDownloadInfo { Filename = CRUX_FILENAME, DownloadUrl = CRUX_URL, InstallPath = CruxDirectory, OverwriteExisting = true, Unzip = true }
         }).ToArray();
 
-        private MzTolerance precursorMzTolerance;
-        private MzTolerance fragmentMzTolerance;
-        private string fragmentIons;
-        private Enzyme enzyme;
-        private int ntt, maxMissedCleavages;
-        private int maxVariableMods = 2;
-        private string modParams;
-        private int maxCharge = 7;
-        private string fastaFilepath;
-        private string decoyPrefix;
+        private MzTolerance _precursorMzTolerance;
+        private MzTolerance _fragmentMzTolerance;
+        private string _fragmentIons;
+        private Enzyme _enzyme;
+        private int _ntt, _maxMissedCleavages;
+        private int _maxVariableMods = 2;
+        private List<CruxModification> _variableMods;
+        private string _modParams;
+        private int _maxCharge = 7;
+        private string _fastaFilepath;
+        private string _decoyPrefix;
 
         private CancellationTokenSource _cancelToken;
         private IProgressStatus _progressStatus;
@@ -115,29 +116,29 @@ namespace pwiz.Skyline.Model.DdaSearch
 
             try
             {
-                fastaFilepath = FastaFileNames[0];
+                _fastaFilepath = FastaFileNames[0];
                 EnsureFastaHasDecoys();
 
                 var paramsFileText = new StringBuilder();
                 paramsFileText.AppendLine(@"num_threads = 0");
-                paramsFileText.AppendLine($@"database_name = {fastaFilepath}");
-                paramsFileText.AppendLine($@"decoy_prefix = {decoyPrefix}");
-                paramsFileText.AppendLine($@"precursor_mass_lower = -{precursorMzTolerance.Value.ToString(CultureInfo.InvariantCulture)}");
-                paramsFileText.AppendLine($@"precursor_mass_upper = {precursorMzTolerance.Value.ToString(CultureInfo.InvariantCulture)}");
-                paramsFileText.AppendLine($@"precursor_mass_units = {(int)precursorMzTolerance.Unit}");
-                paramsFileText.AppendLine($@"fragment_mass_tolerance = {fragmentMzTolerance.Value.ToString(CultureInfo.InvariantCulture)}");
-                paramsFileText.AppendLine($@"fragment_mass_units = {(int)fragmentMzTolerance.Unit}");
-                paramsFileText.AppendLine($@"fragment_ion_series = {fragmentIons} # Ion series used in search, specify any of a,b,c,x,y,z,b~,y~,Y,b-18,y-18 (comma separated).");
-                paramsFileText.AppendLine($@"num_enzyme_termini = {ntt}");
-                paramsFileText.AppendLine($@"allowed_missed_cleavage_1 = {maxMissedCleavages}");
-                paramsFileText.AppendLine($@"search_enzyme_name_1 = {enzyme.Name ?? @"unnamed"} # Name of enzyme to be written to the pepXML file.");
-                paramsFileText.AppendLine($@"search_enzyme_cut_1 = {enzyme.CleavageC ?? enzyme.CleavageN}");
-                paramsFileText.AppendLine($@"search_enzyme_nocut_1 = {enzyme.RestrictC ?? enzyme.RestrictN}");
-                paramsFileText.AppendLine($@"search_enzyme_sense_1 = {(enzyme.IsCTerm ? 'C' : 'N')}");
-                paramsFileText.AppendLine($@"max_variable_mods_per_peptide = {maxVariableMods} # Maximum total number of variable modifications per peptide.");
+                paramsFileText.AppendLine($@"database_name = {_fastaFilepath}");
+                paramsFileText.AppendLine($@"decoy_prefix = {_decoyPrefix}");
+                paramsFileText.AppendLine($@"precursor_mass_lower = -{_precursorMzTolerance.Value.ToString(CultureInfo.InvariantCulture)}");
+                paramsFileText.AppendLine($@"precursor_mass_upper = {_precursorMzTolerance.Value.ToString(CultureInfo.InvariantCulture)}");
+                paramsFileText.AppendLine($@"precursor_mass_units = {(int)_precursorMzTolerance.Unit}");
+                paramsFileText.AppendLine($@"fragment_mass_tolerance = {_fragmentMzTolerance.Value.ToString(CultureInfo.InvariantCulture)}");
+                paramsFileText.AppendLine($@"fragment_mass_units = {(int)_fragmentMzTolerance.Unit}");
+                paramsFileText.AppendLine($@"fragment_ion_series = {_fragmentIons} # Ion series used in search, specify any of a,b,c,x,y,z,b~,y~,Y,b-18,y-18 (comma separated).");
+                paramsFileText.AppendLine($@"num_enzyme_termini = {_ntt}");
+                paramsFileText.AppendLine($@"allowed_missed_cleavage_1 = {_maxMissedCleavages}");
+                paramsFileText.AppendLine($@"search_enzyme_name_1 = {_enzyme.Name ?? @"unnamed"} # Name of enzyme to be written to the pepXML file.");
+                paramsFileText.AppendLine($@"search_enzyme_cut_1 = {_enzyme.CleavageC ?? _enzyme.CleavageN}");
+                paramsFileText.AppendLine($@"search_enzyme_nocut_1 = {_enzyme.RestrictC ?? _enzyme.RestrictN}");
+                paramsFileText.AppendLine($@"search_enzyme_sense_1 = {(_enzyme.IsCTerm ? 'C' : 'N')}");
+                paramsFileText.AppendLine($@"max_variable_mods_per_peptide = {_maxVariableMods} # Maximum total number of variable modifications per peptide.");
                 foreach (var settingName in MSFRAGGER_SETTINGS)
                     paramsFileText.AppendLine($@"{AdditionalSettings[settingName].ToString(CultureInfo.InvariantCulture)}");
-                paramsFileText.Append(modParams);
+                paramsFileText.Append(_modParams);
                 paramsFileText.Append(defaultClosedConfig);
 
                 string paramsFile = Path.GetTempFileName();
@@ -168,19 +169,13 @@ namespace pwiz.Skyline.Model.DdaSearch
                     FixMSFraggerPin(cruxInputFilepath, cruxFixedInputFilepath, msfraggerPepXmlFilepath, out var nativeIdByScanNumber);
 
                     string cruxParamsFile = Path.GetTempFileName();
-                    var cruxParamsFileText = new StringBuilder();
-                    foreach (var line in modParams.Split('\n'))
-                    {
-                        string cruxLine = line.Replace(@"variable_mod_", @"variable_mod");
-                        cruxLine = Regex.Replace(cruxLine, "add_([A-Z])_(\\S+)\\s*=\\s*(.*)", $"add_$1_$2 = $3{Environment.NewLine}$1 = $3");
-                        cruxParamsFileText.AppendLine(cruxLine);
-                    }
-                    File.WriteAllText(cruxParamsFile, cruxParamsFileText.ToString());
+                    var cruxParamsFileText = GetCruxParamsText();
+                    File.WriteAllText(cruxParamsFile, cruxParamsFileText);
 
                     // Run Crux Percolator
                     string cruxOutputDir = Path.Combine(Path.GetDirectoryName(SpectrumFileNames[0].GetFilePath()) ?? Environment.CurrentDirectory, "crux-output");
                     psi.FileName = CruxBinary;
-                    psi.Arguments = $@"percolator --pepxml-output T --output-dir ""{cruxOutputDir}"" --overwrite T --decoy-prefix ""{decoyPrefix}"" --parameter-file ""{cruxParamsFile}""";
+                    psi.Arguments = $@"percolator --pepxml-output T --output-dir ""{cruxOutputDir}"" --overwrite T --decoy-prefix ""{_decoyPrefix}"" --parameter-file ""{cruxParamsFile}""";
                     psi.Arguments += $@" ""{cruxFixedInputFilepath}""";
                     foreach (var settingName in PERCOLATOR_SETTINGS)
                         psi.Arguments += $@" --{AdditionalSettings[settingName].ToString(false, CultureInfo.InvariantCulture)}";
@@ -227,6 +222,81 @@ namespace pwiz.Skyline.Model.DdaSearch
             return _success;
         }
 
+        private class CruxModification
+        {
+            public CruxModification(StaticMod mod, double mz, string residues)
+            {
+                Mod = mod;
+                Mz = mz;
+                Residues = residues;
+            }
+
+            public StaticMod Mod { get; }
+            public double Mz { get; }
+            public string Residues { get; }
+
+            public int GetCruxTerminusOrdinal()
+            {
+                switch (Mod.Terminus)
+                {
+                    case ModTerminus.C: return 3;
+                    case ModTerminus.N: return 2;
+                    case null: return 0;
+                    default: throw new ArgumentOutOfRangeException();
+                }
+            }
+
+            public string GetCruxResidues()
+            {
+                switch (Mod.Terminus)
+                {
+                    case ModTerminus.C: return @"null";
+                    case ModTerminus.N: return @"null";
+                    case null: return Residues;
+                    default: throw new ArgumentOutOfRangeException();
+                }
+            }
+        }
+
+        private string GetCruxParamsText()
+        {
+            var cruxParamsFileText = new StringBuilder();
+            foreach (var line in _modParams.Split(new[] { Environment.NewLine }, StringSplitOptions.None))
+            {
+                if (line.Contains(@"variable_mod"))
+                    continue;
+                string cruxLine = Regex.Replace(line, "add_([A-Z])_(\\S+)\\s*=\\s*(.*)", $"add_$1_$2 = $3{Environment.NewLine}$1 = $3");
+                cruxParamsFileText.AppendLine(cruxLine);
+            }
+
+            //# Up to 9 variable modifications are supported. Each modification is specified
+            //# using seven entries: <mass> <residues> <type> <max> <distance> <terminus>
+            //# <force>." Type is 0 for static mods and non-zero for variable mods. Note that
+            //# that if you set the same type value on multiple modification entries, Comet
+            //# will treat those variable modifications as a binary set. This means that all
+            //# modifiable residues in the binary set must be unmodified or modified. Multiple
+            //# binary sets can be specified by setting a different binary modification value.
+            //# Max is an integer specifying the maximum number of modified residues possible
+            //# in a peptide for this modification entry. Distance specifies the distance the
+            //# modification is applied to from the respective terminus: -1 = no distance
+            //# constraint; 0 = only applies to terminal residue; N = only applies to terminal
+            //# residue through next N residues. Terminus specifies which terminus the
+            //# distance constraint is applied to: 0 = protein N-terminus; 1 = protein
+            //# C-terminus; 2 = peptide N-terminus; 3 = peptide C-terminus.Force specifies
+            //# whether peptides must contain this modification: 0 = not forced to be present;
+            //# 1 = modification is required.
+
+            int iMod = 0;
+            foreach (var m in _variableMods)
+            {
+                ++iMod;
+                cruxParamsFileText.AppendLine(string.Format(@"variable_mod{0:D2} = {1} {2} {3} {4} -1 {5} 0", iMod,
+                    m.Mz, m.GetCruxResidues(), iMod, _maxVariableMods, m.GetCruxTerminusOrdinal()));
+            }
+
+            return cruxParamsFileText.ToString();
+        }
+
         // Fix bugs in Crux pepXML output:
         // - base_name attributes not populated (BiblioSpec needs that to associate with spectrum source file)
         // - search database not set
@@ -241,7 +311,7 @@ namespace pwiz.Skyline.Model.DdaSearch
                     if (line.Contains(@"base_name"))
                         line = Regex.Replace(line, "base_name=\"NA\"", $"base_name=\"{spectrumFilename.GetFileNameWithoutExtension()}\"");
                     if (line.Contains(@"search_database"))
-                        line = Regex.Replace(line, "search_database local_path=\"\\(null\\)\"", $"search_database local_path=\"{fastaFilepath}\"");
+                        line = Regex.Replace(line, "search_database local_path=\"\\(null\\)\"", $"search_database local_path=\"{_fastaFilepath}\"");
 
                     if (line.Contains(@"<spectrum_query") &&
                         int.TryParse(Regex.Replace(line, ".* start_scan=\"(\\d+)\" .*", "$1"), out int scanNumber) &&
@@ -300,8 +370,8 @@ namespace pwiz.Skyline.Model.DdaSearch
                         else
                         {
                             addChargeFeatures = true;
-                            var chargeColumnNames = new string[maxCharge];
-                            for (int i = 1; i <= maxCharge; ++i)
+                            var chargeColumnNames = new string[_maxCharge];
+                            for (int i = 1; i <= _maxCharge; ++i)
                                 chargeColumnNames[i - 1] = $@"Charge{i}";
                             // ReSharper disable LocalizableElement
                             string chargeColumns = string.Join("\t", chargeColumnNames);
@@ -322,12 +392,28 @@ namespace pwiz.Skyline.Model.DdaSearch
                         // move N-terminal mod to after first AA
                         line = Regex.Replace(line, "n(\\[[^]]+\\])([A-Z])", "$2$1");
 
+                        // remove C-terminal mod indicator to avoid "'c' is not an amino acid"
+                        line = line.Replace(@"c[", @"[");
+
+                        // handle case of mod on terminal and on terminal AA
+                        if (line.Contains(@"]["))
+                        {
+                            var m = Regex.Match(line, "\\[([^]]+)\\]\\[([^]]+)\\]");
+                            if (!m.Success)
+                                throw new InvalidDataException(@"found back to back brackets but could not parse them with regex: " + line);
+                            if (!double.TryParse(m.Groups[1].Value, out double modMass1))
+                                throw new InvalidDataException(@"could not parse mod mass from " + m.Groups[1].Value);
+                            if (!double.TryParse(m.Groups[2].Value, out double modMass2))
+                                throw new InvalidDataException(@"could not parse mod mass from " + m.Groups[2].Value);
+                            line = Regex.Replace(line, "\\[([^]]+\\]\\[[^]]+)\\]", $"[{modMass1 + modMass2:F4}]");
+                        }
+
                         if (addChargeFeatures)
                         {
                             if (!int.TryParse(Regex.Replace(line, @"^.*\.\d+\.\d+\.(\d+)_.*", "$1"), out int chargeState))
                                 throw new InvalidDataException(@"cannot determine charge state from line in PIN file: " + line);
-                            var chargeColumnChars = new char[maxCharge];
-                            for (int i = 1; i <= maxCharge; ++i)
+                            var chargeColumnChars = new char[_maxCharge];
+                            for (int i = 1; i <= _maxCharge; ++i)
                                 chargeColumnChars[i - 1] = (i == chargeState ? '1' : '0');
                             string chargeColumns = string.Join('\t'.ToString(), chargeColumnChars);
                             line = Regex.Replace(line, "(\\d\t)([A-Z-]\\.)", $"$1\t{chargeColumns}\t$2");
@@ -341,7 +427,10 @@ namespace pwiz.Skyline.Model.DdaSearch
 
         private void EnsureFastaHasDecoys()
         {
-            _progressStatus = _progressStatus.ChangeMessage(string.Format(Resources.EnsureFastaHasDecoys_Detecting_decoy_prefix_in__0__, Path.GetFileName(fastaFilepath)));
+            _fastaFilepath ??= string.Empty;    // For ReSharper
+            Assume.IsFalse(string.IsNullOrEmpty(_fastaFilepath));
+
+            _progressStatus = _progressStatus.ChangeMessage(string.Format(Resources.EnsureFastaHasDecoys_Detecting_decoy_prefix_in__0__, Path.GetFileName(_fastaFilepath)));
             UpdateProgress(_progressStatus);
 
             // ReSharper disable LocalizableElement 
@@ -353,7 +442,7 @@ namespace pwiz.Skyline.Model.DdaSearch
             var suffixCounts = commonAffixes.ToDictionary(o => o, k => 0);
             int entryCount = 0;
 
-            using (var fastaReader = new StreamReader(fastaFilepath))
+            using (var fastaReader = new StreamReader(_fastaFilepath))
             {
                 var fastaEntries = FastaData.ParseFastaFile(fastaReader, true);
                 foreach (var entry in fastaEntries)
@@ -369,7 +458,7 @@ namespace pwiz.Skyline.Model.DdaSearch
                 }
             }
 
-            decoyPrefix = string.Empty;
+            _decoyPrefix = string.Empty;
 
             var decoyPrefixDetectionMessages = new StringBuilder();
             if (prefixCounts.Any(kvp => kvp.Value > 0))
@@ -385,8 +474,8 @@ namespace pwiz.Skyline.Model.DdaSearch
 
                 if (prefixPercentages.First().Value > 0.4)
                 {
-                    decoyPrefix = prefixPercentages.Select(kvp => kvp.Key).First();
-                    decoyPrefixDetectionMessages.AppendLine(string.Format(Resources.EnsureFastaHasDecoys_Using__0__as_the_most_likely_decoy_prefix_, decoyPrefix));
+                    _decoyPrefix = prefixPercentages.Select(kvp => kvp.Key).First();
+                    decoyPrefixDetectionMessages.AppendLine(string.Format(Resources.EnsureFastaHasDecoys_Using__0__as_the_most_likely_decoy_prefix_, _decoyPrefix));
                 }
                 else
                     decoyPrefixDetectionMessages.AppendLine(Resources.EnsureFastaHasDecoys_No_prefixes_were_frequent_enough_to_be_a_decoy_prefix__present_in_at_least_40__of_entries__);
@@ -418,31 +507,31 @@ namespace pwiz.Skyline.Model.DdaSearch
             _progressStatus = _progressStatus.ChangeMessage(decoyPrefixDetectionMessages.ToString());
             UpdateProgress(_progressStatus);
 
-            if (decoyPrefix.IsNullOrEmpty())
+            if (_decoyPrefix.IsNullOrEmpty())
             {
-                string decoyFastaFilepath = Path.Combine(Path.GetDirectoryName(fastaFilepath) ?? "", @"decoy_" + Path.GetFileName(fastaFilepath));
+                string decoyFastaFilepath = Path.Combine(Path.GetDirectoryName(_fastaFilepath) ?? "", @"decoy_" + Path.GetFileName(_fastaFilepath));
                 if (File.Exists(decoyFastaFilepath))
                 {
                     _progressStatus = _progressStatus.ChangeMessage(string.Format(Resources.EnsureFastaHasDecoys_No_decoy_prefix_detected__but_an_existing_decoy_database_seems_to_exist_at__0__, Path.GetFileName(decoyFastaFilepath)));
                     UpdateProgress(_progressStatus);
-                    fastaFilepath = decoyFastaFilepath;
+                    _fastaFilepath = decoyFastaFilepath;
                     EnsureFastaHasDecoys();
                     return;
                 }
 
-                decoyPrefix = @"DECOY_";
-                _progressStatus = _progressStatus.ChangeMessage(string.Format(Resources.EnsureFastaHasDecoys_No_decoy_prefix_detected__A_new_FASTA_will_be_generated_using_reverse_sequences_as_decoys__with_prefix___0____, decoyPrefix));
+                _decoyPrefix = @"DECOY_";
+                _progressStatus = _progressStatus.ChangeMessage(string.Format(Resources.EnsureFastaHasDecoys_No_decoy_prefix_detected__A_new_FASTA_will_be_generated_using_reverse_sequences_as_decoys__with_prefix___0____, _decoyPrefix));
                 UpdateProgress(_progressStatus);
 
-                File.Copy(fastaFilepath, decoyFastaFilepath);
+                File.Copy(_fastaFilepath, decoyFastaFilepath);
 
-                using (var fastaReader = new StreamReader(fastaFilepath, Encoding.ASCII))
+                using (var fastaReader = new StreamReader(_fastaFilepath, Encoding.ASCII))
                 using (var fastaWriter = new StreamWriter(decoyFastaFilepath, true, Encoding.ASCII))
                 {
                     var fastaEntries = FastaData.ParseFastaFile(fastaReader);
                     foreach (var entry in fastaEntries)
                     {
-                        fastaWriter.WriteLine($@">{decoyPrefix}{entry.Name}");
+                        fastaWriter.WriteLine($@">{_decoyPrefix}{entry.Name}");
                         foreach(var aa in entry.Sequence.Reverse())
                             fastaWriter.Write(aa);
                         fastaWriter.WriteLine();
@@ -450,7 +539,7 @@ namespace pwiz.Skyline.Model.DdaSearch
                 }
                 _progressStatus = _progressStatus.ChangeMessage(string.Format(Resources.EnsureFastaHasDecoys_Using_decoy_database_at__0___1_, Path.GetFileName(decoyFastaFilepath), Environment.NewLine));
                 UpdateProgress(_progressStatus);
-                fastaFilepath = decoyFastaFilepath;
+                _fastaFilepath = decoyFastaFilepath;
             }
         }
 
@@ -521,7 +610,8 @@ add_Nterm_protein = 0.000000
 
         public override void SetModifications(IEnumerable<StaticMod> fixedAndVariableModifs, int maxVariableMods_)
         {
-            maxVariableMods = maxVariableMods_;
+            _maxVariableMods = maxVariableMods_;
+            _variableMods = new List<CruxModification>();
 
             // maximum of 16 variable mods - amino acid codes, * for any amino acid, [ and ] specifies protein termini, n and c specifies peptide termini
             // TODO: alert when there are more than 16 variable mods
@@ -558,11 +648,12 @@ add_Nterm_protein = 0.000000
                     # variable_mod_06 = 229.162930 n^ 1
                     # variable_mod_07 = 229.162930 S 1
                     */
-                    // MSFragger static mods must have an AA and cannot be terminal-specific, so in those cases, treat it as a variable mod
-                    if (mod.IsVariable || mod.AAs == null || !position.IsNullOrEmpty())
+                    // MSFragger static mods must have an AA and cannot be negative or terminal-specific, so in those cases, treat it as a variable mod
+                    if (mod.IsVariable || mod.AAs == null || !position.IsNullOrEmpty() || mass < 0)
                     {
                         ++modCounter;
                         modParamLines.Add($@"variable_mod_{modCounter:D2} = {mass.ToString(CultureInfo.InvariantCulture)} {residues} {maxVariableMods_}");
+                        _variableMods.Add(new CruxModification(mod, mass, residues));
                     }
                     else
                     {
@@ -619,24 +710,24 @@ add_Nterm_protein = 0.000000
                     modParamLines.Add($@"add_{kvp.Key}_{AminoAcidFormulas.FullNames[kvp.Key].ToLowerInvariant().Replace(' ', '_')} = {kvp.Value.ToString(CultureInfo.InvariantCulture)}");
 
             modParamLines.Sort();
-            modParams = string.Join(Environment.NewLine, modParamLines);
+            _modParams = string.Join(Environment.NewLine, modParamLines);
         }
 
         public override void SetEnzyme(Enzyme enz, int mmc)
         {
-            enzyme = enz;
-            ntt = enz.IsSemiCleaving ? 1 : 2;
-            maxMissedCleavages = mmc;
+            _enzyme = enz;
+            _ntt = enz.IsSemiCleaving ? 1 : 2;
+            _maxMissedCleavages = mmc;
         }
 
         public override void SetFragmentIonMassTolerance(MzTolerance mzTolerance)
         {
-            fragmentMzTolerance = mzTolerance;
+            _fragmentMzTolerance = mzTolerance;
         }
 
         public override void SetFragmentIons(string ions)
         {
-            fragmentIons = ions;
+            _fragmentIons = ions;
         }
 
         public override void SetMs2Analyzer(string ms2Analyzer)
@@ -646,7 +737,7 @@ add_Nterm_protein = 0.000000
 
         public override void SetPrecursorMassTolerance(MzTolerance mzTolerance)
         {
-            precursorMzTolerance = mzTolerance;
+            _precursorMzTolerance = mzTolerance;
         }
 
         public override string GetSearchResultFilepath(MsDataFileUri searchFilepath)
@@ -655,6 +746,7 @@ add_Nterm_protein = 0.000000
         }
 
         private string[] SupportedExtensions = { @".mzml", @".mzxml", @".raw", @".d" };
+
         public override bool GetSearchFileNeedsConversion(MsDataFileUri searchFilepath, out AbstractDdaConverter.MsdataFileFormat requiredFormat)
         {
             requiredFormat = AbstractDdaConverter.MsdataFileFormat.mzML;

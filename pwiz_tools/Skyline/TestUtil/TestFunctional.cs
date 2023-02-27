@@ -67,7 +67,7 @@ using TestRunnerLib;
 namespace pwiz.SkylineTestUtil
 {
     /// <summary>
-    /// Test method attribute which hides the test from SkylineTester.
+    /// Test method attribute which excludes the test from SkylineTester's list of tutorial L10N checks.
     /// </summary>
     [AttributeUsage(AttributeTargets.Method, AllowMultiple = false)]
     public sealed class NoLocalizationAttribute : Attribute
@@ -88,10 +88,48 @@ namespace pwiz.SkylineTestUtil
     /// <summary>
     /// Test method attribute which specifies a test is not suitable for parallel testing
     /// (e.g. memory hungry or writes to the filesystem outside of the test's working directory)
+    /// Note that the constructor expects a string explaining why a test is unsuitable for parallel use 
     /// </summary>
     [AttributeUsage(AttributeTargets.Method, AllowMultiple = false)]
     public sealed class NoParallelTestingAttribute : Attribute
     {
+        public string Reason { get; private set; } // Reason for declaring test as unsuitable for parallel use
+
+        public NoParallelTestingAttribute(string reason)
+        {
+            Reason = reason; // Usually one of the strings in TestExclusionReason
+        }
+
+    }
+
+    // Some common reasons for excluding test from nightly and/or parallel testing
+    //
+    // CONSIDER: in future we might want more find-grained test exclusion handling
+    // For example RESOURCE_INTENSIVE tests might actually work in parallel with beefier workers,
+    // VENDOR_FILE_LOCKING and SHARED_DIRECTORY_WRITE might be able to run on workers so long as
+    // all instances are queued on same worker
+    public class TestExclusionReason
+    {
+        public const string RESOURCE_INTENSIVE = "Resource heavy test, best to run on server instead of worker";
+        public const string EXCESSIVE_TIME = "Requires more time than can be justified in nightly tests";
+        public const string VENDOR_FILE_LOCKING = "Vendor readers require exclusive read access";
+        public const string SHARED_DIRECTORY_WRITE = "Requires write access to directory shared by all workers";
+    }
+
+    /// <summary>
+    /// Test method attribute which specifies a test is not suitable for automated nightly testing
+    /// (e.g. memory hungry or excessively time consuming)
+    /// </summary>
+    [AttributeUsage(AttributeTargets.Method, AllowMultiple = false)]
+    public sealed class NoNightlyTestingAttribute : Attribute
+    {
+        public string Reason { get; private set; } // Reason for declaring test as unsuitable for Nightly
+
+        public NoNightlyTestingAttribute(string reason)
+        {
+            Reason = reason; // Usually one of the strings in TestExclusionReason
+        }
+
     }
 
     /// <summary>
@@ -1826,11 +1864,13 @@ namespace pwiz.SkylineTestUtil
             var skylineWindow = Program.MainWindow;
             if (skylineWindow == null || skylineWindow.IsDisposed || !IsFormOpen(skylineWindow))
             {
-                if (Program.StartWindow != null)
+                var startWindow = Program.StartWindow;
+                if (startWindow != null)
                 {
                     CloseOpenForms(typeof(StartPage));
                     _testCompleted = true;
-                    RunUI(Program.StartWindow.Close);
+                    if (!startWindow.IsDisposed && IsFormOpen(startWindow))
+                        startWindow.Invoke((Action)Program.StartWindow.Close);
                 }
 
                 return;
@@ -2268,15 +2308,10 @@ namespace pwiz.SkylineTestUtil
         private static void AddMod(string uniModName, bool isVariable, EditListDlg<SettingsListBase<StaticMod>, StaticMod> editModsDlg)
         {
             var addStaticModDlg = ShowAddModDlg(editModsDlg);
-            RunUI(() =>
-            {
-                addStaticModDlg.SetModification(uniModName, isVariable);
-                addStaticModDlg.OkDialog();
-            });
-            WaitForClosedForm(addStaticModDlg);
+            RunUI(() => addStaticModDlg.SetModification(uniModName, isVariable));
+            OkDialog(addStaticModDlg, addStaticModDlg.OkDialog);
 
-            RunUI(editModsDlg.OkDialog);
-            WaitForClosedForm(editModsDlg);
+            OkDialog(editModsDlg, editModsDlg.OkDialog);
         }
 
         public static void SetStaticModifications(Func<IList<string>, IList<string>> changeMods)

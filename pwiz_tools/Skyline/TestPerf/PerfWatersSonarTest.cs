@@ -33,7 +33,7 @@ namespace TestPerf // Note: tests in the "TestPerf" namespace only run when the 
     {
         static string replicateName = @"LFQ_Waters_SynaptXS_SONAR_Standard_AutoQC_01";
 
-        [TestMethod]
+        [TestMethod, NoParallelTesting(TestExclusionReason.VENDOR_FILE_LOCKING)]
         public void WatersSonarPerfTest()
         {
             TestFilesZip = GetPerfTestDataURL(@"PerfWatersSonarTest.zip");

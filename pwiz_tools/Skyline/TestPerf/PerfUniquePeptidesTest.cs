@@ -216,14 +216,25 @@ using (new Assume.DebugOnFail())  // TODO(bspratt) remove then when this intermi
                 {
                     WaitForCondition(() => SkylineWindow.BackgroundProteomeManager.ForegroundLoadRequested); // Verify that background loader is made to wait for us
                 }
-                RunUI(() => longWaitDlg.CancelButton.PerformClick());
-                WaitForClosedForm(longWaitDlg);
-                RunUI(() => peptideSettingsUI.CancelDialog());
-                WaitForClosedForm(peptideSettingsUI);
+                OkDialog(longWaitDlg, longWaitDlg.CancelButton.PerformClick);
+                OkDialog(peptideSettingsUI, peptideSettingsUI.CancelDialog);
             }
             else
             {
-                OkDialog(peptideSettingsUI, peptideSettingsUI.OkDialog);
+                bool settingsChanged = false;
+                RunUI(() => settingsChanged = peptideSettingsUI.IsSettingsChanged);
+                if (!settingsChanged)
+                {
+                    // Click the OK button but it is not expected to change anything
+                    OkDialog(peptideSettingsUI, peptideSettingsUI.OkDialog);
+                }
+                else
+                {
+                    using (new WaitDocumentChange(null, true))
+                    {
+                        OkDialog(peptideSettingsUI, peptideSettingsUI.OkDialog);
+                    }
+                }
             }
         }
 

@@ -1314,7 +1314,7 @@ namespace pwiz.Skyline.Controls.Graphs
 
                             if (spectrum != null)
                                 dotp = PrositHelpers.CalculateSpectrumDotpMzMatch(GraphItem.SpectrumInfo, mirrorGraphItem.SpectrumInfo,
-                                    settings.TransitionSettings.Libraries.IonMatchTolerance);
+                                    settings.TransitionSettings.Libraries.IonMatchMzTolerance);
                         }
 
                         if (mirrorSpectrum != null && mirrorGraphItem != null) // one implies the other, but resharper..
@@ -1462,7 +1462,7 @@ namespace pwiz.Skyline.Controls.Graphs
             get {return new MzRange(GraphPane.XAxis.Scale.Min, GraphPane.XAxis.Scale.Max);}
         }
 
-        public LibraryRankedSpectrumInfo SpectrumInfo => GraphItem.SpectrumInfo;
+        public LibraryRankedSpectrumInfo SpectrumInfo => GraphItem?.SpectrumInfo;
 
         public Scale IntensityScale
         {
