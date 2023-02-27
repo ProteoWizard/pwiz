@@ -228,7 +228,7 @@ namespace TestRunnerLib
             if (string.IsNullOrEmpty(resultsDir))
                 resultsDir = Path.Combine(GetProjectPath("TestResults"), "TestRunner results");
             else if (IsParallelClient && resultsDir.Contains("TestResults_"))
-                ParallelClientId = resultsDir.Split('_')[1];
+                ParallelClientId = resultsDir.Split('_').Last();
             testContext.Properties["TestDir"] = resultsDir;
             if (Directory.Exists(resultsDir))
                 Try<Exception>(() => Directory.Delete(resultsDir, true), 4, false);

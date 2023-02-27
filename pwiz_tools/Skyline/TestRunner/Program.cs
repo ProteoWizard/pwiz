@@ -259,6 +259,8 @@ namespace TestRunner
             Application.SetUnhandledExceptionMode(UnhandledExceptionMode.CatchException);
             Application.ThreadException += ThreadExceptionEventHandler;
 
+            _testRunStartTime = DateTime.UtcNow;
+
             // Parse command line args and initialize default values.
             var commandLineArgs = new CommandLineArgs(args, commandLineOptions);
 
@@ -656,7 +658,8 @@ namespace TestRunner
         private static string LaunchDockerWorker(int i, CommandLineArgs commandLineArgs, ref string workerNames, bool bigWorker, long workerBytes, int workerPort, StreamWriter log)
         {
             var pwizRoot = Path.GetDirectoryName(Path.GetDirectoryName(GetSkylineDirectory().FullName));
-            string workerName = bigWorker ? $"docker_big_worker_{i}" : $"docker_worker_{i}";
+            // Adding timestamp to worker name voids conflicts between this and any previous invocation
+            string workerName = bigWorker ? $"docker_big_worker{GetTestRunTimeStamp()}_{i}" : $"docker_worker{GetTestRunTimeStamp()}_{i}";
             string dockerRunRedirect = string.Empty;
             string testRunnerLog = @$"c:\AlwaysUpCLT\TestRunner-{workerName}.log";
             if (commandLineArgs.ArgAsBool("keepworkerlogs"))
@@ -690,6 +693,15 @@ namespace TestRunner
                 log?.WriteLine($"Error launching docker worker: {proc?.ExitCode ?? -1}");
             }
             return workerName;
+        }
+
+        private static DateTime _testRunStartTime;
+        // Avoids conflicts between this and any previous invocation that may not have torn down its workers yet
+        // Helps when a run is cancelled then quickly restarted, as often happens when you realize you've forgotten
+        // to select certain tests etc
+        private static string GetTestRunTimeStamp()
+        {
+            return $"_{_testRunStartTime.ToString("yyyyMMddHHmmss")}";
         }
 
         private static string AddPassThroughArguments(CommandLineArgs commandLineArgs, string testRunnerCmd)
@@ -868,10 +880,12 @@ namespace TestRunner
                         }
 
                         string testName = testInfo.TestInfo.TestMethod.Name;
+                        // Adding timestamp to worker name voids conflicts between this and any previous invocation
+                        var serverWorkerLogName = $"serverWorker{GetTestRunTimeStamp()}.log";
                         try
                         {
                             // running RunTestPasses() for GUI tests directly is problematic because we're no longer on the main thread
-                            var testRunnerCmd = $@"test={testName} offscreen=1 showheader=0 log=serverWorker.log parallelmode=server_worker loop=1 language={testInfo.Language}";
+                            var testRunnerCmd = $@"test={testName} offscreen=1 showheader=0 log={serverWorkerLogName} parallelmode=server_worker loop=1 language={testInfo.Language}";
                             testRunnerCmd = AddPassThroughArguments(commandLineArgs, testRunnerCmd);
 
                             var psi = new ProcessStartInfo(Assembly.GetExecutingAssembly().Location, testRunnerCmd);
@@ -888,7 +902,7 @@ namespace TestRunner
                             bool testPassed = p.ExitCode == 0;
                             if (!testPassed)
                                 Interlocked.Increment(ref testsFailed);
-                            var testOutput = File.ReadAllText("serverWorker.log");
+                            var testOutput = File.ReadAllText(serverWorkerLogName);
                             LogTestOutput(testOutput, log, testInfo.LoopCount);
                             Interlocked.Increment(ref testsResultsReturned);
                             Thread.Sleep(500); // wait a bit in case SkylineTester killed the server_worker TestRunner
