@@ -982,10 +982,11 @@ namespace pwiz.Skyline.Model.Results
             return chromTransition;
         }
 
-        public ChromTransition ChangeOptimizationStep(short step)
+        public ChromTransition ChangeOptimizationStep(short step, double productMz)
         {
             var chromTransition = this;
             chromTransition._optimizationStep = step;
+            chromTransition._product = productMz;
             return chromTransition;
         }
 
@@ -2660,7 +2661,7 @@ namespace pwiz.Skyline.Model.Results
     public class ChromatogramInfo
     {
         public const double OPTIMIZE_SHIFT_SIZE = 0.01;
-        private const double OPTIMIZE_SHIFT_THRESHOLD = 0.0015;
+        private const double OPTIMIZE_SHIFT_THRESHOLD = 0.001;
 
         public static bool IsOptimizationSpacing(double mz1, double mz2)
         {

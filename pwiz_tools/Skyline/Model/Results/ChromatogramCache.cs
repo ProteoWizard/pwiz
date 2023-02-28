@@ -1271,7 +1271,7 @@ namespace pwiz.Skyline.Model.Results
                             while (nextTran != null && Math.Abs(curTran.Mz - chromTran.Product) > Math.Abs(nextTran.Mz - chromTran.Product))
                             {
                                 // Matching a new transition.
-                                setOptSteps |= ProcessOptimizationGroup(chromTransitions, groupStartIdx, i, bestIdx);
+                                setOptSteps |= ProcessOptimizationGroup(curTran, tolerance, chromTransitions, groupStartIdx, i, bestIdx);
 
                                 curTranIdx++;
                                 curTran = nextTran;
@@ -1290,7 +1290,7 @@ namespace pwiz.Skyline.Model.Results
                             }
                         }
 
-                        setOptSteps |= ProcessOptimizationGroup(chromTransitions, groupStartIdx, info.StartTransitionIndex + info.NumTransitions, bestIdx);
+                        setOptSteps |= ProcessOptimizationGroup(curTran, tolerance, chromTransitions, groupStartIdx, info.StartTransitionIndex + info.NumTransitions, bestIdx);
                     }
                 }
             }
@@ -1301,7 +1301,7 @@ namespace pwiz.Skyline.Model.Results
                 : this;
         }
 
-        private static bool ProcessOptimizationGroup(IList<ChromTransition> transitions, int startIdx, int endIdx, int centerIdx)
+        private static bool ProcessOptimizationGroup(TransitionDocNode transitionDocNode, float tolerance, IList<ChromTransition> transitions, int startIdx, int endIdx, int centerIdx)
         {
             if (endIdx - startIdx <= 1)
                 return false;
@@ -1311,14 +1311,27 @@ namespace pwiz.Skyline.Model.Results
             for (var i = startIdx + 1; i < endIdx; i++)
             {
                 var cur = transitions[i];
-                if (!ChromatogramInfo.IsOptimizationSpacing(prev.Product, cur.Product))
+                bool isOptSpacing = ChromatogramInfo.IsOptimizationSpacing(prev.Product, cur.Product);
+                if (!isOptSpacing)
+                {
+                    if (Math.Abs(cur.Product - transitionDocNode.Mz) <= tolerance)
+                    {
+                        // One quirk of the old implementation and the way "ChromatogramGroupInfo.GetAllTransitionInfo" worked
+                        // was that transitions which matched the target transition doc node were always
+                        // considered to be spaced according to optimization spacing
+                        isOptSpacing = true;
+                    }
+                }
+                if (!isOptSpacing)
+                {
                     return false;
+                }
                 prev = cur;
             }
             
             // Update optimization steps.
             for (var i = startIdx; i < endIdx; i++)
-                transitions[i] = transitions[i].ChangeOptimizationStep((short)(i - centerIdx));
+                transitions[i] = transitions[i].ChangeOptimizationStep((short)(i - centerIdx), transitions[centerIdx].Product);
 
             return true;
         }
@@ -1441,7 +1454,7 @@ namespace pwiz.Skyline.Model.Results
                             {
                                 // Convert to old format with shifted m/z.
                                 var newProduct = chromTransition.Product + chromTransition.OptimizationStep * ChromatogramInfo.OPTIMIZE_SHIFT_SIZE;
-                                chromTransition = chromTransition.ChangeProduct(newProduct).ChangeOptimizationStep(0);
+                                chromTransition = chromTransition.ChangeOptimizationStep(0, newProduct);
                             }
                             listKeepTransitions.Add(chromTransition);
                         }
