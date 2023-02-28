@@ -138,25 +138,17 @@ namespace sqlite3pp
         return sqlite3_enable_shared_cache(fenable);
     }
 
-#define SQLITE3PP_THROW(throwingRef, ex) \
-    if ((throwingRef)) \
-        cerr << "While unwinding one exception, another exception occured: " << (ex).what() << endl; \
-    else { \
-        (throwingRef) = true; \
-        throw ex; \
-    }
-
-    database::database(const std::string& dbname, share_flags share, open_flags open) : db_(0), closeOnDisconnect_(true), throwingException_(false)
+    database::database(const std::string& dbname, share_flags share, open_flags open) : db_(0), closeOnDisconnect_(true)
     {
         if (!dbname.empty()) {
             int rc = connect(dbname, share, open);
             if (rc != SQLITE_OK)
-                SQLITE3PP_THROW(throwingException_, database_error("can't connect database"));
+                throw database_error("can't connect database");
         }
     }
 
     database::database(sqlite3* db, bool closeOnDisconnect) 
-       : db_(db), closeOnDisconnect_(closeOnDisconnect), throwingException_(false)
+       : db_(db), closeOnDisconnect_(closeOnDisconnect)
     {}
 
     database::~database()
@@ -206,7 +198,7 @@ namespace sqlite3pp
                 error = errorBuf;
                 sqlite3_free(errorBuf);
             }
-            SQLITE3PP_THROW(throwingException_, database_error("loading extension \"" + name + "\": " + error));
+            throw database_error("loading extension \"" + name + "\": " + error);
         }
         sqlite3_enable_load_extension(db_, 0);
     }
@@ -290,7 +282,7 @@ namespace sqlite3pp
                 error = errorBuf;
                 sqlite3_free(errorBuf);
             }
-            SQLITE3PP_THROW(throwingException_, database_error("executing \"" + sql + "\": " + error));
+            throw database_error("executing \"" + sql + "\": " + error);
         }
         return rc;
     }
@@ -317,15 +309,15 @@ namespace sqlite3pp
         if (!stmt.empty()) {
             int rc = prepare(stmt);
             if (rc != SQLITE_OK)
-                SQLITE3PP_THROW(db_.throwingException_, database_error(db_));
+                throw database_error(db_);
         }
     }
 
-    statement::~statement() noexcept(false)
+    statement::~statement()
     {
         int rc = finish();
         if (rc != SQLITE_OK)
-            SQLITE3PP_THROW(db_.throwingException_, database_error(db_));
+            cerr << "[sqlite3pp::~statement()] " << database_error(db_).what() << endl;
     }
 
     int statement::prepare(const std::string& stmt)
@@ -591,14 +583,14 @@ namespace sqlite3pp
     query::query_iterator::query_iterator(query* cmd) : cmd_(cmd) {
         rc_ = cmd_->step();
         if (rc_ != SQLITE_ROW && rc_ != SQLITE_DONE)
-            SQLITE3PP_THROW(cmd_->throwingException(), database_error(cmd_->db_));
+            throw database_error(cmd_->db_);
     }
 
     void query::query_iterator::increment()
     {
         rc_ = cmd_->step();
         if (rc_ != SQLITE_ROW && rc_ != SQLITE_DONE)
-            SQLITE3PP_THROW(cmd_->throwingException(), database_error(cmd_->db_));
+            throw database_error(cmd_->db_);
     }
 
     bool query::query_iterator::equal(query_iterator const& other) const
@@ -647,12 +639,12 @@ namespace sqlite3pp
         db_->execute(freserve ? "BEGIN IMMEDIATE" : "BEGIN");
     }
 
-    transaction::~transaction() noexcept(false)
+    transaction::~transaction()
     {
         if (db_) {
             int rc = db_->execute(fcommit_ ? "COMMIT" : "ROLLBACK");
             if (rc != SQLITE_OK)
-                SQLITE3PP_THROW(db_->throwingException_, database_error(*db_));
+                cerr << "[sqlite3pp::~transaction()] " << database_error(*db_).what() << endl;
         }
     }
 
