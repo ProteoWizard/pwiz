@@ -130,6 +130,9 @@ namespace pwiz.SkylineTestUtil
         public const string EXCESSIVE_TIME = "Requires more time than can be justified in nightly tests";
         public const string VENDOR_FILE_LOCKING = "Vendor readers require exclusive read access";
         public const string SHARED_DIRECTORY_WRITE = "Requires write access to directory shared by all workers";
+        public const string MZ5_UNICODE_ISSUES = "mz5 doesn't handle unicode paths";
+        public const string MSGFPLUS_UNICODE_ISSUES = "MsgfPlus doesn't handle unicode paths";
+        public const string MSFRAGGER_UNICODE_ISSUES = "MsFragger doesn't handle unicode paths";
     }
 
     /// <summary>

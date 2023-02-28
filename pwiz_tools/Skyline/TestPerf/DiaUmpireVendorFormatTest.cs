@@ -75,7 +75,7 @@ namespace TestPerf
 
         [TestMethod, 
          NoParallelTesting(TestExclusionReason.VENDOR_FILE_LOCKING), // Reader wants exclusive read access to raw data?
-         NoUnicodeTesting("mz5 doesn't handle unicode paths"),
+         NoUnicodeTesting(TestExclusionReason.MZ5_UNICODE_ISSUES),
          NoNightlyTesting(TestExclusionReason.EXCESSIVE_TIME)] // Do not run full filesets for nightly tests
         public void TestDiaUmpireWiffFile()
         {

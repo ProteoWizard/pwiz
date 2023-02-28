@@ -108,7 +108,8 @@ namespace pwiz.SkylineTestFunctional
             RunFunctionalTest();
         }
 
-        [TestMethod, NoParallelTesting(TestExclusionReason.RESOURCE_INTENSIVE), NoUnicodeTesting(@"MsgfPlus doesn't handle unicode")]
+        [TestMethod, NoParallelTesting(TestExclusionReason.RESOURCE_INTENSIVE), 
+         NoUnicodeTesting(TestExclusionReason.MSGFPLUS_UNICODE_ISSUES)]
         public void TestDdaSearchMsgfPlus()
         {
             TestFilesZip = @"TestFunctional\DdaSearchTest.zip";
@@ -135,7 +136,7 @@ namespace pwiz.SkylineTestFunctional
             RunFunctionalTest();
         }
 
-        [TestMethod, NoParallelTesting(TestExclusionReason.RESOURCE_INTENSIVE), NoUnicodeTesting(@"MSFragger doesn't handle unicode")]
+        [TestMethod, NoParallelTesting(TestExclusionReason.RESOURCE_INTENSIVE), NoUnicodeTesting(TestExclusionReason.MSFRAGGER_UNICODE_ISSUES)]
         public void TestDdaSearchMsFragger()
         {
             TestFilesZip = @"TestFunctional\DdaSearchTest.zip";
