@@ -338,33 +338,9 @@ namespace TestRunnerLib
                     Environment.SetEnvironmentVariable(@"SKYLINE_TESTER_PARALLEL_CLIENT_ID", ParallelClientId); // Accessed in pwiz_tools\Skyline\Util\Util.cs
                 }
 
-                // Set the temp file path to something peculiar - helps guarantee support for
+                // Set the TMP file path to something peculiar - helps guarantee support for
                 // unusual user names since temp file path is usually in the user directory
-                //
-                // But adding Unicode characters (e.g. 试验, means "test") breaks many 3rd party tools
-                // (e.g. msFragger), causes trouble with mz5 reader, etc, so watch for custom test
-                // attribute that turns that off per test
-                var testDir = TestContext.Properties["TestDir"].ToString();
-                var unicode = test.DoNotUseUnicode ? string.Empty : @"试验";
-                var tmpTestDir = Path.GetFullPath(Path.Combine(testDir, @"..", @"SkylineTester temp&di^rs", test.TestMethod.Name + unicode)); 
-                if (tmpTestDir.Length > 100)
-                {
-                    // Avoid pushing the 260 character limit for windows paths - remember that there will be subdirs below this
-                    // e.g. in case of a long root path, use
-                    //      c:\crazy long username\massive subdir name\wacky installation dirnamne\pwiz_tools\Skyline\~t&mp ^\TMMENF910 试验"
-                    // instead of
-                    //      c:\crazy long username\massive subdir name\wacky installation dirnamne\pwiz_tools\Skyline\SkylineTester temp&di^rs\TestMyMostExcellentNebulousFunction 试验"
-                    tmpTestDir = Path.GetFullPath(Path.Combine(testDir, @"..", @"~t&mp ^",
-                        $"{string.Concat(test.TestMethod.Name.Where(char.IsUpper))}{test.TestMethod.Name.Sum(c=>c)}{unicode}"));
-                }
-                if (!Directory.Exists(tmpTestDir))
-                {
-                    Directory.CreateDirectory(tmpTestDir);
-                }
-                Environment.SetEnvironmentVariable(@"TMP", tmpTestDir);
-
-                // Decorate tempfile names with peculiar characters
-                PathEx.RandomFileNameDecoration = @$"t^m&p{unicode} ";
+                var tmpTestDir = SetTMP(test);
 
                 if (test.SetTestContext != null)
                 {
@@ -554,6 +530,41 @@ namespace TestRunnerLib
             return false;
         }
 
+        private string SetTMP(TestInfo test)
+        {
+            // Set the temp file path to something peculiar - helps guarantee support for
+            // unusual user names since temp file path is usually in the user directory
+            //
+            // But adding Unicode characters (e.g. 试验, means "test") breaks many 3rd party tools
+            // (e.g. msFragger), causes trouble with mz5 reader, etc, so watch for custom test
+            // attribute that turns that off per test
+            var testDir = TestContext.Properties["TestDir"].ToString();
+            var unicode = test.DoNotUseUnicode ? string.Empty : @"试验";
+            var tmpTestDir =
+                Path.GetFullPath(Path.Combine(testDir, @"..", @"SkylineTester temp&di^rs", test.TestMethod.Name + unicode));
+            if (tmpTestDir.Length > 100)
+            {
+                // Avoid pushing the 260 character limit for windows paths - remember that there will be subdirs below this
+                // e.g. in case of a long root path, use
+                //      c:\crazy long username\massive subdir name\wacky installation dirnamne\pwiz_tools\Skyline\~t&mp ^\TMMENF910 试验"
+                // instead of
+                //      c:\crazy long username\massive subdir name\wacky installation dirnamne\pwiz_tools\Skyline\SkylineTester temp&di^rs\TestMyMostExcellentNebulousFunction 试验"
+                tmpTestDir = Path.GetFullPath(Path.Combine(testDir, @"..", @"~t&mp ^",
+                    $"{string.Concat(test.TestMethod.Name.Where(char.IsUpper))}{test.TestMethod.Name.Sum(c => c)}{unicode}"));
+            }
+
+            if (!Directory.Exists(tmpTestDir))
+            {
+                Directory.CreateDirectory(tmpTestDir);
+            }
+
+            Environment.SetEnvironmentVariable(@"TMP", tmpTestDir);
+
+            // Decorate tempfile names with peculiar characters
+            PathEx.RandomFileNameDecoration = @$"t^m&p{unicode} ";
+            return tmpTestDir;
+        }
+
         public static void CleanupMSAmandaTmpFiles()
         {
             // MSAmanda intentionally leaves tempfiles behind (as caches in case of repeat runs)
@@ -576,38 +587,41 @@ namespace TestRunnerLib
         /// <returns>A list of the entries, if any, that were removed</returns>
         private List<string> CleanUpTestDir(string tmpTestDir, bool final)
         {
-            CleanupMSAmandaTmpFiles();
-            var allEntries = new List<string>();
+            CleanupMSAmandaTmpFiles();  // TODO(MattC): tidy up MSAmanda implementation so that we can distinguish intentional uses of tmp dir (caching potentially re-used files) from accidental directory creation and/or not-reused files within
+            var abandonedFilesList = new List<string>();
             // If everything is supposed to be cleaned up, then check for any left over files
             if (_cleanupLevelAll)
             {
-                foreach (var dir in new []{TestContext.TestDir, tmpTestDir})
+                CleanupAbandonedFiles(TestContext.TestDir, true, abandonedFilesList);
+                CleanupAbandonedFiles(tmpTestDir, !final, abandonedFilesList);
+            }
+
+            return abandonedFilesList;
+        }
+
+        private void CleanupAbandonedFiles(string dir, bool recreateDirAfterClean, List<string> abandonedFilesList)
+        {
+            if (Directory.Exists(dir))
+            {
+                var oldCount = abandonedFilesList.Count; // List may have entries from a previous call
+                abandonedFilesList.AddRange(Directory.EnumerateFileSystemEntries(dir).Select(f => Path.Combine(dir, f)));
+                if (abandonedFilesList.Count > oldCount)
                 {
-                    if (Directory.Exists(dir))
+                    // Directory is not empty, attempt to get rid of everything and recreate the directory as directed.
+                    try
                     {
-                        allEntries.AddRange(Directory.EnumerateFileSystemEntries(dir).Select(f => Path.Combine(dir, f)));
-                        if (allEntries.Count > 0)
+                        Directory.Delete(dir, true);
+                        if (recreateDirAfterClean)
                         {
-                            // If the folder is not empty, attempt to get rid of everything
-                            // and recreate the folder.
-                            try
-                            {
-                                Directory.Delete(dir, true);
-                                if (!(final && dir.Equals(tmpTestDir)))
-                                {
-                                    Directory.CreateDirectory(dir);
-                                }
-                            }
-                            catch (Exception)
-                            {
-                                // Do nothing
-                            }
+                            Directory.CreateDirectory(dir);
                         }
+                    }
+                    catch (Exception)
+                    {
+                        // Do nothing
                     }
                 }
             }
-
-            return allEntries;
         }
 
         public class LeakingTest
