@@ -1311,18 +1311,7 @@ namespace pwiz.Skyline.Model.Results
             for (var i = startIdx + 1; i < endIdx; i++)
             {
                 var cur = transitions[i];
-                bool isOptSpacing = ChromatogramInfo.IsOptimizationSpacing(prev.Product, cur.Product);
-                if (!isOptSpacing)
-                {
-                    if (Math.Abs(cur.Product - transitionDocNode.Mz) <= tolerance)
-                    {
-                        // One quirk of the old implementation and the way "ChromatogramGroupInfo.GetAllTransitionInfo" worked
-                        // was that transitions which matched the target transition doc node were always
-                        // considered to be spaced according to optimization spacing
-                        isOptSpacing = true;
-                    }
-                }
-                if (!isOptSpacing)
+                if (!ChromatogramInfo.IsOptimizationSpacing(prev.Product, cur.Product))
                 {
                     return false;
                 }

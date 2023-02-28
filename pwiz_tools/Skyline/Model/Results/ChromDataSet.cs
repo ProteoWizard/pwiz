@@ -513,9 +513,6 @@ namespace pwiz.Skyline.Model.Results
             // Make sure chromatograms are in sorted order
             _listChromData.Sort();
 
-            // Mark all optimization chromatograms
-            MarkOptimizationData();
-
 //            if (Math.Round(_listChromData[0].Key.Precursor) == 585)
 //                Console.WriteLine("Issue");
 
@@ -922,41 +919,6 @@ namespace pwiz.Skyline.Model.Results
                     return true;
             }
             return false;
-        }
-
-        private void MarkOptimizationData()
-        {
-            if (_listChromData.Count <= 1)
-                return;
-
-            var curGroup = new List<int> { 0 };
-            for (var i = 1; i < _listChromData.Count; i++)
-            {
-                if (_listChromData[i].OptimizationStep != _listChromData[i - 1].Key.OptimizationStep + 1)
-                    ProcessOptimizationGroup(curGroup);
-
-                curGroup.Add(i);
-            }
-
-            ProcessOptimizationGroup(curGroup);
-        }
-
-        private void ProcessOptimizationGroup(ICollection<int> indices)
-        {
-            if (indices.Count <= 1)
-            {
-                indices.Clear();
-                return;
-            }
-
-            var primaryIndex = indices.First(i => _listChromData[i].OptimizationStep == 0);
-            var primaryKey = _listChromData[primaryIndex].Key;
-            foreach (var i in indices)
-            {
-                _listChromData[i].PrimaryKey = primaryKey;
-            }
-
-            indices.Clear();
         }
 
         // Moved to ProteoWizard

@@ -1983,9 +1983,13 @@ namespace pwiz.Skyline.Model.Results
             get { return _hasOptionalTimes ? (double?) _optionalMaxTime : null; }
         }
 
-        public ChromKey ChangeOptimizationStep(int step)
+        public ChromKey ChangeOptimizationStep(int step, SignedMz? newProductMz)
         {
-            return ChangeProp(ImClone(this), im => { im.OptimizationStep = step; });
+            return ChangeProp(ImClone(this), im =>
+            {
+                im.OptimizationStep = step;
+                im.Product = newProductMz ?? im.Product;
+            });
         }
 
         public ChromKey ChangeOptionalTimes(double start, double end)
@@ -2026,6 +2030,9 @@ namespace pwiz.Skyline.Model.Results
             if (c != 0)
                 return c;
             c = Product.CompareTo(key.Product);
+            if (c != 0)
+                return c;
+            c = OptimizationStep.CompareTo(key.OptimizationStep);
             if (c != 0)
                 return c;
             c = CollisionEnergy.CompareTo(key.CollisionEnergy);
