@@ -1231,20 +1231,26 @@ namespace pwiz.Skyline.Model.Results
             }
         }
 
+        /// <summary>
+        /// When reading older format .skyd files, find the groups of ChromTransition's whose product
+        /// m/z's differ by <see cref="ChromatogramInfo.OPTIMIZE_SHIFT_SIZE"/>, and set the
+        /// <see cref="ChromTransition.OptimizationStep"/> appropriately.
+        /// </summary>
         private ChromatogramCache UpdateOptimizationSteps(SrmDocument doc)
         {
-            if (doc?.MeasuredResults?.Chromatograms == null || Version >= CacheFormatVersion.Seventeen)
+            if (!doc.Settings.HasResults || Version >= CacheFormatVersion.Seventeen)
                 return this;
 
             // Determine which files belong to ChromatogramSets with optimization functions.
-            var fileIsOpt = CachedFiles.Select(file => doc.MeasuredResults.Chromatograms.Any(chromSet =>
-                chromSet.OptimizationFunction != null && chromSet.MSDataFilePaths.Contains(file.FilePath))).ToArray();
+            var fileIsOpt = CachedFiles.Select(file => doc.MeasuredResults.Chromatograms
+                    .Any(chromSet => chromSet.OptimizationFunction != null && chromSet.ContainsFile(file.FilePath)))
+                .ToArray();
             if (!fileIsOpt.Any(isOpt => isOpt))
                 return this;
 
             var tolerance = (float)doc.Settings.TransitionSettings.Instrument.MzMatchTolerance;
             var chromTransitions = new List<ChromTransition>(_rawData.ChromTransitions);
-            var setOptSteps = false;
+            var anyChanges = false;
 
             foreach (var nodePep in doc.Molecules)
             {
@@ -1271,7 +1277,7 @@ namespace pwiz.Skyline.Model.Results
                             while (nextTran != null && Math.Abs(curTran.Mz - chromTran.Product) > Math.Abs(nextTran.Mz - chromTran.Product))
                             {
                                 // Matching a new transition.
-                                setOptSteps |= ProcessOptimizationGroup(curTran, tolerance, chromTransitions, groupStartIdx, i, bestIdx);
+                                anyChanges |= ProcessOptimizationGroup(curTran, tolerance, chromTransitions, groupStartIdx, i, bestIdx);
 
                                 curTranIdx++;
                                 curTran = nextTran;
@@ -1290,15 +1296,18 @@ namespace pwiz.Skyline.Model.Results
                             }
                         }
 
-                        setOptSteps |= ProcessOptimizationGroup(curTran, tolerance, chromTransitions, groupStartIdx, info.StartTransitionIndex + info.NumTransitions, bestIdx);
+                        anyChanges |= ProcessOptimizationGroup(curTran, tolerance, chromTransitions, groupStartIdx, info.StartTransitionIndex + info.NumTransitions, bestIdx);
                     }
                 }
             }
 
-            return setOptSteps
-                ? ChangeRawData(_rawData.ChangeChromTransitions(new BlockedArray<ChromTransition>(
-                    chromTransitions, ChromTransition.SizeOf, ChromTransition.DEFAULT_BLOCK_SIZE)))
-                : this;
+            if (!anyChanges)
+            {
+                return this;
+            }
+
+            return ChangeRawData(_rawData.ChangeChromTransitions(new BlockedArray<ChromTransition>(
+                chromTransitions, ChromTransition.SizeOf, ChromTransition.DEFAULT_BLOCK_SIZE)));
         }
 
         private static bool ProcessOptimizationGroup(TransitionDocNode transitionDocNode, float tolerance, IList<ChromTransition> transitions, int startIdx, int endIdx, int centerIdx)
