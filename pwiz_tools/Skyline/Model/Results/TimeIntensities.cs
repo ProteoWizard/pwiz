@@ -22,6 +22,7 @@ using System.Collections.Generic;
 using System.Linq;
 using pwiz.Common.Collections;
 using pwiz.Common.SystemUtil;
+using pwiz.Skyline.Util;
 
 namespace pwiz.Skyline.Model.Results
 {
@@ -410,45 +411,84 @@ namespace pwiz.Skyline.Model.Results
 
         public float GetInterpolatedIntensity(float time)
         {
-            int index = CollectionUtil.BinarySearch(Times, time);
-            if (index >= 0)
+            return GetInterpolatedIntensities(new[] { time }).Single();
+        }
+
+        public IEnumerable<float> GetInterpolatedIntensities(IEnumerable<float> times)
+        {
+            int index = -1;
+            foreach (var time in times)
             {
-                return Intensities[index];
+                yield return GetInterpolatedIntensity(time, ref index);
+            }
+        }
+
+        /// <summary>
+        /// Returns the interpolated intensity making use of the passed in hint as to
+        /// where to start looking.
+        /// </summary>
+        private float GetInterpolatedIntensity(float time, ref int index)
+        {
+            if (index > 0) 
+            {
+                // The element before the passed in value of "index" is not allowed to be greater than "time".
+                // If that happens, then it means that the times for which this function was called were not in order.
+                Assume.IsTrue(Times[index - 1] < time);
+            }
+            if (Times.Count == 0)
+            {
+                return 0;
             }
 
-            index = ~index;
-            if (index <= 0)
+            if (time <= Times[0])
             {
+                index = 0;
                 return Intensities[0];
             }
 
-            if (index >= Times.Count)
+            if (time >= Times[Times.Count - 1])
             {
-                return Intensities[Intensities.Count - 1];
+                index = Times.Count;
+                return Intensities[Times.Count - 1];
+            }
+
+            if (index < 0)
+            {
+                index = Times.BinarySearch(time);
+                if (index < 0)
+                {
+                    index = ~index;
+                }
+            }
+
+            while (Times[index] < time)
+            {
+                index++;
+            }
+
+            if (Times[index] == time)
+            {
+                return Intensities[index];
             }
             double intensity1 = Intensities[index - 1];
             double intensity2 = Intensities[index];
             double time1 = Times[index - 1];
             double time2 = Times[index];
             double width = time2 - time1;
-            return (float) ((intensity2 * (time - time1) + intensity1 * (time2 - time)) / width);
+            return (float)((intensity2 * (time - time1) + intensity1 * (time2 - time)) / width);
         }
 
         public float MaxIntensityInRange(float startTime, float endTime)
         {
-            int index = CollectionUtil.BinarySearch(Times, startTime);
-            float max = 0;
-            if (index < 0)
-            {
-                max = GetInterpolatedIntensity(startTime);
-                index = ~index;
-            }
+            int index = -1;
+            float max = GetInterpolatedIntensity(startTime, ref index);
+            index = Math.Max(index, 0);
 
             for (; index < NumPoints; index++)
             {
                 if (Times[index] > endTime)
                 {
-                    max = Math.Max(max, GetInterpolatedIntensity(endTime));
+                    max = Math.Max(max, GetInterpolatedIntensity(endTime, ref index));
                     break;
                 }
 
