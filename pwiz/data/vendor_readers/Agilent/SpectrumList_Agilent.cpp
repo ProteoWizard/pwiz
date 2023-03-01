@@ -74,7 +74,7 @@ SpectrumPtr& getNonMsSpectrum(const MassHunterDataPtr& rawfile, SpectrumPtr& res
         {
             if (intensityArray[i] != 0)
             {
-                result->set(MS_lowest_observed_m_z, wavelengthArray[i], UO_nanometer);
+                result->set(MS_lowest_observed_wavelength, wavelengthArray[i], UO_nanometer);
                 break;
             }
         }
@@ -83,7 +83,7 @@ SpectrumPtr& getNonMsSpectrum(const MassHunterDataPtr& rawfile, SpectrumPtr& res
         {
             if (intensityArray[i] != 0)
             {
-                result->set(MS_highest_observed_m_z, wavelengthArray[i], UO_nanometer);
+                result->set(MS_highest_observed_wavelength, wavelengthArray[i], UO_nanometer);
                 break;
             }
         }
