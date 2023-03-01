@@ -330,7 +330,7 @@ namespace pwiz.Skyline.Model.Results
                     if (lastProduct.HasValue)
                     {
                         if (!ChromatogramInfo.IsOptimizationSpacing(lastProduct.Value, chromData.Key.Product))
-                            SetOptStepsForGroup(idToIndex, matchingGroup.Key.NodeGroup, curGroup);
+                            SetOptStepsForGroup(idToIndex, matchingGroup.Key?.NodeGroup, curGroup);
                     }
 
                     curGroup.Add(chromData);
@@ -339,7 +339,7 @@ namespace pwiz.Skyline.Model.Results
 
                 if (lastProduct.HasValue)
                 {
-                    SetOptStepsForGroup(idToIndex, matchingGroup.Key.NodeGroup, curGroup);
+                    SetOptStepsForGroup(idToIndex, matchingGroup.Key?.NodeGroup, curGroup);
                 }
             }
         }

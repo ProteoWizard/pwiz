@@ -1242,10 +1242,11 @@ namespace pwiz.Skyline.Model.Results
                 return this;
 
             // Determine which files belong to ChromatogramSets with optimization functions.
-            var fileIsOpt = CachedFiles.Select(file => doc.MeasuredResults.Chromatograms
-                    .Any(chromSet => chromSet.OptimizationFunction != null && chromSet.ContainsFile(file.FilePath)))
-                .ToArray();
-            if (!fileIsOpt.Any(isOpt => isOpt))
+            var optimizationFunctions = CachedFiles.Select(file =>
+                doc.MeasuredResults.Chromatograms
+                    .FirstOrDefault(c => c.OptimizationFunction != null && c.ContainsFile(file.FilePath))
+                    ?.OptimizationFunction).ToList();
+            if (optimizationFunctions.All(optFunc => null == optFunc))
                 return this;
 
             var tolerance = (float)doc.Settings.TransitionSettings.Instrument.MzMatchTolerance;
@@ -1260,15 +1261,14 @@ namespace pwiz.Skyline.Model.Results
                     foreach (var chromIdx in ChromatogramIndexesMatching(nodePep, nodeTranGroup.PrecursorMz, tolerance, null))
                     {
                         var info = ChromGroupHeaderInfos[chromIdx];
-                        if (info.NumTransitions <= 1 || !fileIsOpt[info.FileIndex])
+                        var optimizableRegression = optimizationFunctions[info.FileIndex];
+                        if (info.NumTransitions <= 1 || null == optimizableRegression)
                             continue;
 
                         var curTranIdx = 0;
                         var curTran = transitions[curTranIdx];
                         var nextTran = transitions.Length > 1 ? transitions[curTranIdx + 1] : null;
 
-                        var bestIdx = info.StartTransitionIndex;
-                        var bestDiff = double.MaxValue;
                         var groupStartIdx = info.StartTransitionIndex;
 
                         for (var i = info.StartTransitionIndex; i < info.StartTransitionIndex + info.NumTransitions; i++)
@@ -1277,26 +1277,17 @@ namespace pwiz.Skyline.Model.Results
                             while (nextTran != null && Math.Abs(curTran.Mz - chromTran.Product) > Math.Abs(nextTran.Mz - chromTran.Product))
                             {
                                 // Matching a new transition.
-                                anyChanges |= ProcessOptimizationGroup(curTran, tolerance, chromTransitions, groupStartIdx, i, bestIdx);
+                                anyChanges |= ProcessOptimizationGroup(curTran, chromTransitions, groupStartIdx, i, optimizableRegression);
 
                                 curTranIdx++;
                                 curTran = nextTran;
                                 nextTran = curTranIdx < transitions.Length - 1 ? transitions[curTranIdx + 1] : null;
 
-                                bestIdx = i;
-                                bestDiff = double.MaxValue;
                                 groupStartIdx = i;
-                            }
-
-                            var diff = Math.Abs(curTran.Mz - chromTran.Product);
-                            if (diff < bestDiff)
-                            {
-                                bestIdx = i;
-                                bestDiff = diff;
                             }
                         }
 
-                        anyChanges |= ProcessOptimizationGroup(curTran, tolerance, chromTransitions, groupStartIdx, info.StartTransitionIndex + info.NumTransitions, bestIdx);
+                        anyChanges |= ProcessOptimizationGroup(curTran, chromTransitions, groupStartIdx, info.StartTransitionIndex + info.NumTransitions, optimizableRegression);
                     }
                 }
             }
@@ -1310,7 +1301,7 @@ namespace pwiz.Skyline.Model.Results
                 chromTransitions, ChromTransition.SizeOf, ChromTransition.DEFAULT_BLOCK_SIZE)));
         }
 
-        private static bool ProcessOptimizationGroup(TransitionDocNode transitionDocNode, float tolerance, IList<ChromTransition> transitions, int startIdx, int endIdx, int centerIdx)
+        private static bool ProcessOptimizationGroup(TransitionDocNode transitionDocNode, IList<ChromTransition> transitions, int startIdx, int endIdx, OptimizableRegression optimizableRegression)
         {
             if (endIdx - startIdx <= 1)
                 return false;
@@ -1326,7 +1317,11 @@ namespace pwiz.Skyline.Model.Results
                 }
                 prev = cur;
             }
-            
+
+            var productMzs = Enumerable.Range(startIdx, endIdx - startIdx).Select(i =>
+                new SignedMz(transitions[i].Product, transitionDocNode.Mz.IsNegative));
+            int centerIdx = startIdx + OptStepChromatograms.IndexOfCenter(
+                transitionDocNode.Mz, productMzs, optimizableRegression.StepCount);
             // Update optimization steps.
             for (var i = startIdx; i < endIdx; i++)
                 transitions[i] = transitions[i].ChangeOptimizationStep((short)(i - centerIdx), transitions[centerIdx].Product);
