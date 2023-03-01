@@ -188,6 +188,9 @@ class MassHunterDataImpl : public MassHunterData
     virtual const vector<Signal>& getSignals() const;
     virtual SignalChromatogramPtr getSignal(const Signal& signal) const;
 
+    virtual int getNonMsScanCount() const;
+    virtual SpectrumPtr getNonMsSpectrum(int index) const;
+
     virtual const BinaryData<double>& getTicTimes(bool ms1Only) const;
     virtual const BinaryData<double>& getBpcTimes(bool ms1Only) const;
     virtual const BinaryData<float>& getTicIntensities(bool ms1Only) const;
@@ -217,6 +220,8 @@ class MassHunterDataImpl : public MassHunterData
 
     mutable vector<Signal> signals_;
     mutable gcroot<System::Collections::Generic::Dictionary<String^, MHDAC::ISignalInfo^>^> signalInfoMap_;
+
+    mutable gcroot<MHDAC::IBDAChromData^> chromDad_;
 
     bool hasProfileData_;
 };
@@ -265,6 +270,7 @@ struct SpectrumImpl : public Spectrum
     virtual double getCollisionEnergy() const {return specData_->CollisionEnergy;}
     virtual int getTotalDataPoints() const {return specData_->TotalDataPoints;}
     virtual int getParentScanId() const {return (int) specData_->ParentScanId;}
+    virtual double getRetentionTime() const {return specData_->AcquiredTimeRange[0]->Start;}
 
     virtual MassRange getMeasuredMassRange() const;
     virtual void getPrecursorIons(vector<double>& precursorIons) const;
@@ -705,6 +711,35 @@ SignalChromatogramPtr MassHunterDataImpl::getSignal(const Signal& signal) const
 
         auto nonMsDataReader = (MHDAC::INonmsDataReader^) (MHDAC::IMsdrDataReader^) reader_;
         return SignalChromatogramPtr(new SignalChromatogramImpl(nonMsDataReader->GetSignal(signalInfoMap_->default[signalKey])));
+    }
+    CATCH_AND_FORWARD
+}
+
+int MassHunterDataImpl::getNonMsScanCount() const
+{
+    try
+    {
+        if (!chromDad_)
+        {
+            MHDAC::IBDAChromFilter^ filter = gcnew MHDAC::BDAChromFilter();
+            filter->ChromatogramType = MHDAC::ChromType::ExtractedWavelength;
+            filter->DeviceName = "DAD";
+            chromDad_ = reader_->GetChromatogram(filter)[0];
+        }
+        return chromDad_->TotalDataPoints;
+    }
+    CATCH_AND_FORWARD
+}
+
+SpectrumPtr MassHunterDataImpl::getNonMsSpectrum(int index) const
+{
+    try
+    {
+        MHDAC::IBDASpecFilter^ specFilter = gcnew MHDAC::BDASpecFilter();
+        specFilter->SpectrumType = MHDAC::SpecType::UVSpectrum;
+        specFilter->ScanRange = gcnew cli::array<MHDAC::MinMaxRange^>(1);
+        specFilter->ScanRange[0] = gcnew MHDAC::MinMaxRange(chromDad_->XArray[index], chromDad_->XArray[index]);
+        return SpectrumPtr(new SpectrumImpl(reader_->GetSpectrum(specFilter)[0]));
     }
     CATCH_AND_FORWARD
 }
