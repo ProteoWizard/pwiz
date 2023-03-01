@@ -480,6 +480,10 @@ namespace pwiz.Skyline.Model.Results
 
         public float MaxIntensityInRange(float startTime, float endTime)
         {
+            if (startTime > endTime)
+            {
+                return 0;
+            }
             int index = -1;
             float max = GetInterpolatedIntensity(startTime, ref index);
             index = Math.Max(index, 0);
