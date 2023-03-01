@@ -67,7 +67,6 @@ namespace sqlite3pp
     {
         friend class statement;
         friend class database_error;
-        friend class transaction;
         friend class ext::function;
         friend class ext::aggregate;
 
@@ -346,8 +345,6 @@ namespace sqlite3pp
 
         iterator begin();
         iterator end();
-
-        friend class query_iterator;
     };
 
     class transaction : boost::noncopyable
