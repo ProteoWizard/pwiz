@@ -2725,6 +2725,14 @@ namespace pwiz.Skyline.Model.Results
             get { return _groupInfo.GetProductLocal(_transitionIndex); }
         }
 
+        public int OptimizationStep
+        {
+            get
+            {
+                return ChromTransition.OptimizationStep;
+            }
+        }
+
         public ChromSource Source
         {
             get { return ChromTransition.Source; }

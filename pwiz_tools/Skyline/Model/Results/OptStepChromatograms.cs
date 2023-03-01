@@ -46,7 +46,20 @@ namespace pwiz.Skyline.Model.Results
         {
             _chromatogramInfos = ImmutableList.ValueOf(chromatograms);
             StepCount = stepCount;
-            _centerIndex = IndexOfCenter(productMz, _chromatogramInfos.Select(c => c.ProductMz), stepCount);
+            _centerIndex = -1;
+            for (int i = 0; i < _chromatogramInfos.Count; i++)
+            {
+                if (_chromatogramInfos[i].OptimizationStep == 0)
+                {
+                    _centerIndex = i;
+                    break;
+                }
+            }
+
+            if (_centerIndex < 0)
+            {
+                _centerIndex = (_chromatogramInfos.Count + 1) / 2;
+            }
         }
 
         public static OptStepChromatograms FromChromatogram(ChromatogramInfo chromatogramInfo)

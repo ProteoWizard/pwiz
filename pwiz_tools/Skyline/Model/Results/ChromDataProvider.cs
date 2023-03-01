@@ -23,6 +23,7 @@ using System.Linq;
 using pwiz.Common.Chemistry;
 using pwiz.Common.SystemUtil;
 using pwiz.ProteowizardWrapper;
+using pwiz.Skyline.Model.DocSettings;
 
 namespace pwiz.Skyline.Model.Results
 {
@@ -222,6 +223,7 @@ namespace pwiz.Skyline.Model.Results
         private readonly bool _sourceHasNegativePolarityData;
         private readonly bool _sourceHasPositivePolarityData;
         private readonly eIonMobilityUnits _ionMobilityUnits;
+        private readonly OptimizableRegression _optimizableRegression;
 
         /// <summary>
         /// The number of chromatograms read so far.
@@ -239,7 +241,10 @@ namespace pwiz.Skyline.Model.Results
         {
             _dataFile = dataFile;
             _globalChromatogramExtractor = new GlobalChromatogramExtractor(dataFile);
-
+            _optimizableRegression = document.Settings.MeasuredResults?.Chromatograms
+                .FirstOrDefault(c => null != c.OptimizationFunction && c.ContainsFile(fileInfo.FilePath))
+                ?.OptimizationFunction;
+            
             int len = dataFile.ChromatogramCount;
             _chromIndices = new int[len];
 
@@ -277,7 +282,7 @@ namespace pwiz.Skyline.Model.Results
             {
                 SetOptStepsFromCeValues(document);
             }
-            else
+            else if (_optimizableRegression != null)
             {
                 SetOptStepsFromProductMz(document);
             }
@@ -325,7 +330,7 @@ namespace pwiz.Skyline.Model.Results
                     if (lastProduct.HasValue)
                     {
                         if (!ChromatogramInfo.IsOptimizationSpacing(lastProduct.Value, chromData.Key.Product))
-                            SetOptStepsForGroup(idToIndex, curGroup);
+                            SetOptStepsForGroup(idToIndex, matchingGroup.Key.NodeGroup, curGroup);
                     }
 
                     curGroup.Add(chromData);
@@ -334,7 +339,7 @@ namespace pwiz.Skyline.Model.Results
 
                 if (lastProduct.HasValue)
                 {
-                    SetOptStepsForGroup(idToIndex, curGroup);
+                    SetOptStepsForGroup(idToIndex, matchingGroup.Key.NodeGroup, curGroup);
                 }
             }
         }
@@ -372,7 +377,7 @@ namespace pwiz.Skyline.Model.Results
             }
         }
 
-        private void SetOptStepsForGroup(IReadOnlyDictionary<int, int> idToIndex, IList<ChromData> chromDatas)
+        private void SetOptStepsForGroup(IReadOnlyDictionary<int, int> idToIndex, TransitionGroupDocNode transitionGroupDocNode, IList<ChromData> chromDatas)
         {
             if (chromDatas.Count <= 1)
             {
@@ -380,9 +385,18 @@ namespace pwiz.Skyline.Model.Results
                 return;
             }
 
-            var centerIdx = chromDatas.Count % 2 == 1
-                ? chromDatas.Count / 2
-                : chromDatas.Count / 2 - 1;
+            int centerIdx = (chromDatas.Count + 1) / 2;
+            if (transitionGroupDocNode != null)
+            {
+                var centerMz = chromDatas[centerIdx].Key.Product;
+                var closestTransition = transitionGroupDocNode.Transitions.OrderBy(t => Math.Abs(t.Mz - centerMz))
+                    .FirstOrDefault();
+                if (closestTransition != null)
+                {
+                    centerIdx = OptStepChromatograms.IndexOfCenter(closestTransition.Mz, chromDatas.Select(c => c.Key.Product),
+                        _optimizableRegression.StepCount);
+                }
+            }
             for (var i = 0; i < chromDatas.Count; i++)
             {
                 SetOptimizationStep(idToIndex[chromDatas[i].ProviderId], i - centerIdx, chromDatas[centerIdx].Key.Product);
