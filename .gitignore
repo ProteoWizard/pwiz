@@ -454,3 +454,4 @@ SkylineTester Results
 /pwiz_tools/Skyline/Test/ProtocolBuffers/GeneratedCode/*.cs
 /pwiz_tools/Skyline/Test/ProtocolBuffers/tmp/*.cs
 /pwiz_tools/Skyline/Test/ProtocolBuffers/tmp
+/pwiz_aux/msrc/utility/vendor_api/ABI/SCIEX.Apis.Data.v1.xml
