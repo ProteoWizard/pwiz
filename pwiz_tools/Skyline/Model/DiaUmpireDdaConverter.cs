@@ -153,10 +153,10 @@ namespace pwiz.Skyline.Model
                         Arguments =
                             $"-v --32 -z {MsConvertOutputFormatParam} " +
                             $"-o {Path.GetDirectoryName(tmpFilepath).Quote()} " +
-                            $"--outfile {Path.GetFileName(tmpFilepath)} " +
+                            $"--outfile {Path.GetFileName(tmpFilepath).Quote()} " +
                             " --acceptZeroLengthSpectra --simAsSpectra --combineIonMobilitySpectra" +
                             " --filter \"peakPicking true 1-\"" + 
-                            " --filter " + $@"diaUmpire params={tmpParams}".Quote() + " " +
+                            " --filter " + $@"diaUmpire params={tmpParams.EscapedPathForNestedCommandLineQuotes()}".Quote() + " " +
                             spectrumSource.ToString().Quote()
                     };
 

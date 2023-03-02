@@ -23,6 +23,7 @@ using System.IO;
 using System.Linq;
 using System.Text;
 using Microsoft.VisualStudio.TestTools.UnitTesting;
+using pwiz.Common.SystemUtil;
 using pwiz.ProteowizardWrapper;
 using pwiz.Skyline;
 using pwiz.Skyline.Controls;
@@ -218,7 +219,8 @@ namespace TestPerf // Note: tests in the "TestPerf" namespace only run when the 
         private void VerifyFileInfoSerialization(string[] lines, string filePath, bool combinedIms)
         {
             var encodePath = SampleHelp.EncodePath(filePath, null, -1, null);
-            var lineFilePath = lines.FirstOrDefault(l => l.Contains(encodePath + '"'));
+            var escapedPath = PathEx.EscapePathForXML(encodePath);
+            var lineFilePath = lines.FirstOrDefault(l => l.Contains(escapedPath + '"'));
             Assert.IsNotNull(lineFilePath);
             // Nothing gets serialized to the XML about whether the MsData had combined spectra - can only be found in the SKYD file
         }

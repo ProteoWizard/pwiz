@@ -309,15 +309,21 @@ namespace pwiz.Skyline.Model.DdaSearch
                 while ((line = pepXmlFile.ReadLine()) != null)
                 {
                     if (line.Contains(@"base_name"))
-                        line = Regex.Replace(line, "base_name=\"NA\"", $"base_name=\"{spectrumFilename.GetFileNameWithoutExtension()}\"");
+                        line = Regex.Replace(line, "base_name=\"NA\"", $"base_name=\"{PathEx.EscapePathForXML(spectrumFilename.GetFileNameWithoutExtension())}\"");
                     if (line.Contains(@"search_database"))
-                        line = Regex.Replace(line, "search_database local_path=\"\\(null\\)\"", $"search_database local_path=\"{_fastaFilepath}\"");
+                        line = Regex.Replace(line, "search_database local_path=\"\\(null\\)\"", $"search_database local_path=\"{PathEx.EscapePathForXML(_fastaFilepath)}\"");
 
                     if (line.Contains(@"<spectrum_query") &&
                         int.TryParse(Regex.Replace(line, ".* start_scan=\"(\\d+)\" .*", "$1"), out int scanNumber) &&
                         nativeIdByScanNumber.TryGetValue(scanNumber, out string nativeId))
                     {
                         line = line.Replace(@"start_scan=", $@"spectrumNativeID=""{nativeId}"" start_scan=");
+                    }
+
+                    else if (line.Contains(@"output-dir") || line.Contains(@"temp-dir") || line.Contains(@"parameter-file") || line.Contains(@"output-file"))
+                    {
+                        // Handle unescaped ampersands in paths
+                        line = PathEx.EscapePathForXML(line);
                     }
                     fixedPepXmlFile.WriteLine(line);
                 }
