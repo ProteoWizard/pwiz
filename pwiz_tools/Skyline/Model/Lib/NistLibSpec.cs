@@ -849,22 +849,14 @@ namespace pwiz.Skyline.Model.Lib
                     line = HandleMzVaultLineVariant(line, out _);
 
                     // Read until name line
-                    if (!line.StartsWith(NAME, StringComparison.InvariantCultureIgnoreCase)) // Accept Name:, NAME:, nAmE: etc
-                        continue;
-                    Match match = REGEX_NAME.Match(line);
-                    var isPeptide = true;
-                    var mzMatchTolerance = DEFAULT_MZ_MATCH_TOLERANCE;  
-                    var isGC = false;
-                    if (!match.Success)
+                    if (!ParseName(line, out var isPeptide, out var sequence, out var charge))
                     {
-                        isPeptide = false;
-                        match = REGEX_NAME_SMALLMOL.Match(line);
-                    }
-                    if (!match.Success)
                         continue;
+                    }
 
-                    string sequence = match.Groups[1].Value; // Peptide sequence or molecule name
-                    var charge = isPeptide ? int.Parse(match.Groups[2].Value, CultureInfo.InvariantCulture) : 0;
+                    var mzMatchTolerance = DEFAULT_MZ_MATCH_TOLERANCE;
+                    var isGC = false;
+
                     var adduct = Adduct.EMPTY;
                     string formula = null;
                     var otherKeys = new Dictionary<string, string>();
@@ -888,198 +880,32 @@ namespace pwiz.Skyline.Model.Lib
                         lineCount++;
 
                         readChars += line.Length;
+
+                        // Handle quirky line construction by mzVault msp export
                         line = HandleMzVaultLineVariant(line, out var isMzVault);
 
-                        if (isPeptide && line.StartsWith(SYNON, StringComparison.InvariantCultureIgnoreCase)) // Case insensitive
+                        // "SYNON" is a clue that this isn't actually peptide data
+                        isPeptide &= !line.StartsWith(SYNON, StringComparison.InvariantCultureIgnoreCase);
+
+                        if (ParseRT(line, isMzVault, ref rt, ref isGC))
                         {
-                            isPeptide = false;
+                            continue; // Line is fully consumed
                         }
 
-                        if (!rt.HasValue)
+                        if (!isPeptide && ParseMolecule(line, otherKeys, lineCount, ref formula, ref inChiKey, ref inChi, ref CAS, 
+                                ref KEGG, ref SMILES, ref adduct, ref precursorMz, ref molWeight, ref isPositive))
                         {
-                            match = REGEX_RT_LINE.Match(line); // RT may also be found in comments (originally only in comments)
-                            if (match.Success)
-                            {
-                                rt = GetRetentionTime(match.Groups[2].Value, isMzVault || !string.IsNullOrEmpty(match.Groups[1].Value)); // RetentionTime: vs RetentionTimeMins:
-                                continue;
-                            }
-
-                            match = REGEX_RI_LINE.Match(line);
-                            if (!match.Success)
-                                match = REGEX_RI.Match(line);
-                            if (match.Success)
-                            {
-                                // Note using RT as stand-in for RI (retention Time vs retention Index, LC vs GC)
-                                // CONSIDER: track RT and RI simultaneously so lib is useful for GC and LC?
-                                rt = GetRetentionTime(match.Groups[1].Value, true); 
-                                isGC = true;
-                                continue;
-                            }
-                        }
-
-                        if (!isPeptide)
-                        {
-                            if (formula == null)
-                            {
-                                match = REGEX_FORMULA.Match(line);
-                                if (match.Success)
-                                {
-                                    formula = match.Groups[2].Value;
-                                    if (string.Equals(MZVAULT_FORMULA_UNKNOWN, formula, StringComparison.OrdinalIgnoreCase)) // As in mzVault output
-                                    {
-                                        formula = null;
-                                    }
-                                    continue;
-                                }
-                            }
-                            if (inChiKey == null)
-                            {
-                                match = REGEX_INCHIKEY.Match(line);
-                                if (match.Success)
-                                {
-                                    inChiKey = match.Groups[1].Value;
-                                    continue;
-                                }
-                            }
-                            if (inChi == null)
-                            {
-                                match = REGEX_INCHI.Match(line);
-                                if (match.Success)
-                                {
-                                    otherKeys.Add(MoleculeAccessionNumbers.TagInChI, inChi = match.Groups[1].Value);
-                                    continue;
-                                }
-                            }
-                            if (CAS == null)
-                            {
-                                match = REGEX_CAS.Match(line);
-                                if (match.Success)
-                                {
-                                    otherKeys.Add(MoleculeAccessionNumbers.TagCAS, CAS = match.Groups[1].Value);
-                                    continue;
-                                }
-                            }
-                            if (KEGG == null)
-                            {
-                                match = REGEX_KEGG.Match(line);
-                                if (match.Success)
-                                {
-                                    otherKeys.Add(MoleculeAccessionNumbers.TagKEGG, KEGG = match.Groups[1].Value);
-                                    continue;
-                                }
-                            }
-                            if (SMILES == null)
-                            {
-                                match = REGEX_SMILES.Match(line);
-                                if (match.Success)
-                                {
-                                    otherKeys.Add(MoleculeAccessionNumbers.TagSMILES, SMILES = match.Groups[1].Value);
-                                    continue;
-                                }
-                            }
-                            if (adduct.IsEmpty)
-                            {
-                                match = REGEX_ADDUCT.Match(line);
-                                if (match.Success)
-                                {
-                                    // We've seen strange adducts for MS3 data like "[109.1]+" - just pass over these
-                                    if (!Adduct.TryParse(match.Groups[1].Value, out adduct))
-                                        adduct = Adduct.EMPTY;
-                                    continue;
-                                }
-                            }
-                            if (!precursorMz.HasValue)
-                            {
-                                match = REGEX_PRECURSORMZ.Match(line);
-                                if (match.Success)
-                                {
-                                    try
-                                    {
-                                        precursorMz = double.Parse(match.Groups[1].Value, CultureInfo.InvariantCulture);
-                                    }
-                                    catch
-                                    {
-                                        ThrowIOException(lineCount, string.Format(Resources.NistLibraryBase_CreateCache_Could_not_read_the_precursor_m_z_value___0__ , line) );
-                                    }
-                                    continue;
-                                }
-                            }
-                            if (!molWeight.HasValue)
-                            {
-                                match = REGEX_MOLWEIGHT.Match(line);
-                                if (match.Success)
-                                {
-                                    try
-                                    {
-                                        molWeight = double.Parse(match.Groups[1].Value, CultureInfo.InvariantCulture);
-                                    }
-                                    catch
-                                    {
-                                        ThrowIOException(lineCount, string.Format(Resources.NistLibraryBase_CreateCache_Could_not_read_the_precursor_m_z_value___0__, line));
-                                    }
-                                    continue;
-                                }
-                            }
-                            if (!isPositive.HasValue)
-                            {
-                                match = REGEX_IONMODE.Match(line);
-                                if (match.Success)
-                                {
-                                    if (string.Equals(@"positive", match.Groups[1].Value))
-                                        isPositive = true;
-                                    else if (string.Equals(@"negative", match.Groups[1].Value))
-                                        isPositive = false;
-                                    continue;
-                                }
-                            }
+                            continue;  // Line is fully consumed
                         }
 
                         // For peptides (and some molecules), a lot of useful info is jammed into the COMMENT line and must be further picked apart
-                        if (line.StartsWith(COMMENT, StringComparison.InvariantCultureIgnoreCase)) // Case insensitive
+                        if (ParseComment(line, isPeptide, ref sequence, ref copies, ref tfRatio, ref rt, ref irt))
                         {
-                            if (isPeptide)
-                            {
-                                match = REGEX_MODS.Match(line);
-                                if (match.Success)
-                                    sequence = Modify(sequence, match.Groups[1].Value);
-
-                                if (!copies.HasValue)
-                                {
-                                    match = REGEX_SAMPLE.Match(line);
-                                    if (match.Success)
-                                        copies = int.Parse(match.Groups[1].Value, CultureInfo.InvariantCulture);
-                                }
-                            }
-
-                            if (!tfRatio.HasValue)
-                            {
-                                match = REGEX_TF_RATIO.Match(line);
-                                if (match.Success)
-                                    tfRatio = float.Parse(match.Groups[1].Value, CultureInfo.InvariantCulture);
-                            }
-
-                            if (!rt.HasValue)
-                            {
-                                match = REGEX_RT.Match(line);
-                                if (match.Success)
-                                    rt = GetRetentionTime(match.Groups[1].Value, false);
-                                else
-                                {
-                                    match = REGEX_RTINSECONDS.Match(line);
-                                    if (match.Success)
-                                        rt = GetRetentionTime(match.Groups[1].Value, false);
-                                }
-                            }
-
-                            if (!irt.HasValue)
-                            {
-                                match = REGEX_IRT.Match(line);
-                                if (match.Success)
-                                    irt = GetRetentionTime(match.Groups[1].Value, false);
-                            }
+                            continue;  // Line is fully consumed
                         }
 
-                        match = REGEX_NUM_PEAKS.Match(line);
+                        // The peaks count line marks the end of the data header
+                        var match = REGEX_NUM_PEAKS.Match(line);
                         if (match.Success)
                         {
                             numPeaksDeclared = int.Parse(match.Groups[1].Value, CultureInfo.InvariantCulture);
@@ -1091,21 +917,8 @@ namespace pwiz.Skyline.Model.Lib
                         else if (line.StartsWith(NAME, StringComparison.InvariantCultureIgnoreCase)) // Case insensitive
                             break;
 
-                        if (line.StartsWith(MZVAULT_POSITIVE_SCAN_INIDCATOR))
-                        {
-                            isPositive = true;
-                            isMzVault = true;
-                        }
-                        else if (line.StartsWith(MZVAULT_NEGATIVE_SCAN_INIDCATOR))
-                        {
-                            isPositive = false;
-                            isMzVault = true;
-                        }
-                        if (isMzVault)
-                        {
-                            // mzVault uses a wider tolerance than most in m/z matching for precursor identification
-                            mzMatchTolerance = 10.0 * DEFAULT_MZ_MATCH_TOLERANCE;
-                        }
+                        // MzVault has its own peculiarities, including scan polarity declarations, but rare so try this last
+                        ParseMzVaultPolarity(line, ref isPositive, ref mzMatchTolerance);
                     } // End parser loop
 
                     if (formula != null)
@@ -1394,6 +1207,291 @@ namespace pwiz.Skyline.Model.Lib
             }
 
             return true;
+        }
+
+        private static bool ParseName(string line, out bool isPeptide, out string sequence, out int charge)
+        {
+            isPeptide = true;
+            charge = 0;
+            sequence = null;
+            if (!line.StartsWith(NAME, StringComparison.InvariantCultureIgnoreCase)) // Accept Name:, NAME:, nAmE: etc
+            {
+                return false;
+            }
+            Match match = REGEX_NAME.Match(line);
+            if (!match.Success)
+            {
+                isPeptide = false;
+                match = REGEX_NAME_SMALLMOL.Match(line);
+            }
+
+            if (!match.Success)
+            {
+                return false;
+            }
+
+            sequence = match.Groups[1].Value;
+            if (isPeptide)
+            {
+                charge = int.Parse(match.Groups[2].Value, CultureInfo.InvariantCulture);
+            }
+            return true;
+        }
+
+        // MzVault has its own peculiarities, including scan polarity declarations
+        private static void ParseMzVaultPolarity(string line, ref bool? isPositive, ref double mzMatchTolerance)
+        {
+            var isMzVault = false;
+            if (line.StartsWith(MZVAULT_POSITIVE_SCAN_INIDCATOR))
+            {
+                isPositive = true;
+                isMzVault = true;
+            }
+            else if (line.StartsWith(MZVAULT_NEGATIVE_SCAN_INIDCATOR))
+            {
+                isPositive = false;
+                isMzVault = true;
+            }
+
+            if (isMzVault)
+            {
+                // mzVault uses a wider tolerance than most in m/z matching for precursor identification
+                mzMatchTolerance = 10.0 * DEFAULT_MZ_MATCH_TOLERANCE;
+            }
+
+            // return isMzVault; // Line was consumed
+        }
+
+        /// <summary>
+        /// For peptides (and some molecules), a lot of useful info is jammed into the COMMENT line and must be further picked apart
+        /// </summary>
+        /// <returns>true if line was shown to be comment info, and parser can advance to next line</returns>
+        private static bool ParseComment(string line, bool isPeptide, ref string sequence, ref int? copies, ref float? tfRatio,
+            ref double? rt, ref double? irt)
+        {
+            if (line.StartsWith(COMMENT, StringComparison.InvariantCultureIgnoreCase)) // Case insensitive
+            {
+                Match match;
+                if (isPeptide)
+                {
+                    match = REGEX_MODS.Match(line);
+                    if (match.Success)
+                        sequence = Modify(sequence, match.Groups[1].Value);
+
+                    if (!copies.HasValue)
+                    {
+                        match = REGEX_SAMPLE.Match(line);
+                        if (match.Success)
+                            copies = int.Parse(match.Groups[1].Value, CultureInfo.InvariantCulture);
+                    }
+                }
+
+                if (!tfRatio.HasValue)
+                {
+                    match = REGEX_TF_RATIO.Match(line);
+                    if (match.Success)
+                        tfRatio = float.Parse(match.Groups[1].Value, CultureInfo.InvariantCulture);
+                }
+
+                if (!rt.HasValue)
+                {
+                    match = REGEX_RT.Match(line);
+                    if (match.Success)
+                        rt = GetRetentionTime(match.Groups[1].Value, false);
+                    else
+                    {
+                        match = REGEX_RTINSECONDS.Match(line);
+                        if (match.Success)
+                            rt = GetRetentionTime(match.Groups[1].Value, false);
+                    }
+                }
+
+                if (!irt.HasValue)
+                {
+                    match = REGEX_IRT.Match(line);
+                    if (match.Success)
+                        irt = GetRetentionTime(match.Groups[1].Value, false);
+                }
+
+                return true;
+            }
+
+            return false;
+        }
+
+        /// <summary>
+        /// Parse line for molecule information
+        /// </summary>
+        /// <returns>true if line was shown to be molecule info, and parser can advance to next line</returns>
+        private bool ParseMolecule(string line, Dictionary<string, string> otherKeys, long lineCount, ref string formula, ref string inChiKey,
+            ref string inChi, ref string CAS, ref string KEGG, ref string SMILES, ref Adduct adduct, ref double? precursorMz,
+            ref double? molWeight, ref bool? isPositive)
+        {
+            Match match;
+            if (formula == null)
+            {
+                match = REGEX_FORMULA.Match(line);
+                if (match.Success)
+                {
+                    formula = match.Groups[2].Value;
+                    if (string.Equals(MZVAULT_FORMULA_UNKNOWN, formula,
+                            StringComparison.OrdinalIgnoreCase)) // As in mzVault output
+                    {
+                        formula = null;
+                    }
+
+                    return true;  // Line is fully consumed
+                }
+            }
+
+            if (inChiKey == null)
+            {
+                match = REGEX_INCHIKEY.Match(line);
+                if (match.Success)
+                {
+                    inChiKey = match.Groups[1].Value;
+                    return true;  // Line is fully consumed
+                }
+            }
+
+            if (inChi == null)
+            {
+                match = REGEX_INCHI.Match(line);
+                if (match.Success)
+                {
+                    otherKeys.Add(MoleculeAccessionNumbers.TagInChI, inChi = match.Groups[1].Value);
+                    return true;  // Line is fully consumed
+                }
+            }
+
+            if (CAS == null)
+            {
+                match = REGEX_CAS.Match(line);
+                if (match.Success)
+                {
+                    otherKeys.Add(MoleculeAccessionNumbers.TagCAS, CAS = match.Groups[1].Value);
+                    return true;  // Line is fully consumed
+                }
+            }
+
+            if (KEGG == null)
+            {
+                match = REGEX_KEGG.Match(line);
+                if (match.Success)
+                {
+                    otherKeys.Add(MoleculeAccessionNumbers.TagKEGG, KEGG = match.Groups[1].Value);
+                    return true;  // Line is fully consumed
+                }
+            }
+
+            if (SMILES == null)
+            {
+                match = REGEX_SMILES.Match(line);
+                if (match.Success)
+                {
+                    otherKeys.Add(MoleculeAccessionNumbers.TagSMILES, SMILES = match.Groups[1].Value);
+                    return true;  // Line is fully consumed
+                }
+            }
+
+            if (adduct.IsEmpty)
+            {
+                match = REGEX_ADDUCT.Match(line);
+                if (match.Success)
+                {
+                    // We've seen strange adducts for MS3 data like "[109.1]+" - just pass over these
+                    if (!Adduct.TryParse(match.Groups[1].Value, out adduct))
+                        adduct = Adduct.EMPTY;
+                    return true;  // Line is fully consumed
+                }
+            }
+
+            if (!precursorMz.HasValue)
+            {
+                match = REGEX_PRECURSORMZ.Match(line);
+                if (match.Success)
+                {
+                    try
+                    {
+                        precursorMz = double.Parse(match.Groups[1].Value, CultureInfo.InvariantCulture);
+                    }
+                    catch
+                    {
+                        ThrowIOException(lineCount,
+                            string.Format(Resources.NistLibraryBase_CreateCache_Could_not_read_the_precursor_m_z_value___0__,
+                                line));
+                    }
+
+                    return true;  // Line is fully consumed
+                }
+            }
+
+            if (!molWeight.HasValue)
+            {
+                match = REGEX_MOLWEIGHT.Match(line);
+                if (match.Success)
+                {
+                    try
+                    {
+                        molWeight = double.Parse(match.Groups[1].Value, CultureInfo.InvariantCulture);
+                    }
+                    catch
+                    {
+                        ThrowIOException(lineCount,
+                            string.Format(Resources.NistLibraryBase_CreateCache_Could_not_read_the_precursor_m_z_value___0__,
+                                line));
+                    }
+
+                    return true;  // Line is fully consumed
+                }
+            }
+
+            if (!isPositive.HasValue)
+            {
+                match = REGEX_IONMODE.Match(line);
+                if (match.Success)
+                {
+                    if (string.Equals(@"positive", match.Groups[1].Value))
+                        isPositive = true;
+                    else if (string.Equals(@"negative", match.Groups[1].Value))
+                        isPositive = false;
+                    return true;  // Line is fully consumed
+                }
+            }
+
+            return false;
+        }
+
+        /// <summary>
+        /// Parse line for RT information
+        /// </summary>
+        /// <returns>true if line was shown to be RT info, and parser can advance to next line</returns>
+        private static bool ParseRT(string line, bool isMzVault, ref double? rt, ref bool isGC)
+        {
+            if (!rt.HasValue)
+            {
+                var match = REGEX_RT_LINE.Match(line); // RT may also be found in comments (originally only in comments)
+                if (match.Success)
+                {
+                    rt = GetRetentionTime(match.Groups[2].Value,
+                        isMzVault || !string.IsNullOrEmpty(match.Groups[1].Value)); // RetentionTime: vs RetentionTimeMins:
+                    return true;  // Line is fully consumed
+                }
+
+                match = REGEX_RI_LINE.Match(line);
+                if (!match.Success)
+                    match = REGEX_RI.Match(line);
+                if (match.Success)
+                {
+                    // Note using RT as stand-in for RI (retention Time vs retention Index, LC vs GC)
+                    // CONSIDER: track RT and RI simultaneously so lib is useful for GC and LC?
+                    rt = GetRetentionTime(match.Groups[1].Value, true);
+                    isGC = true;
+                    return true;  // Line is fully consumed
+                }
+            }
+
+            return false;
         }
 
         // Deal with mzVault MSP export which tends to emit things like ""MS:1009003|Name = Epirizole"
