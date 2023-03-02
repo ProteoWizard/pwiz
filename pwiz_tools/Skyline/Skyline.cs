@@ -1756,7 +1756,8 @@ namespace pwiz.Skyline
             var nodeTranGroupTree = SequenceTree.SelectedNode as TransitionGroupTreeNode;
             addTransitionMoleculeContextMenuItem.Visible = enabled && nodeTranGroupTree != null &&
                 nodeTranGroupTree.PepNode.Peptide.IsCustomMolecule;
-            editSpectrumFilterContextMenuItem.Visible = SequenceTree.GetNodeOfType<TransitionGroupTreeNode>() != null;
+            editSpectrumFilterContextMenuItem.Visible = SequenceTree.SelectedPaths
+                .SelectMany(path => DocumentUI.EnumeratePathsAtLevel(path, SrmDocument.Level.TransitionGroups)).Any();
             var selectedQuantitativeValues = SelectedQuantitativeValues();
             if (selectedQuantitativeValues.Length == 0)
             {

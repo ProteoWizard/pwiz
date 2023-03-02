@@ -422,42 +422,9 @@ namespace pwiz.Skyline.Controls.Spectra
 
         public HashSet<IdentityPath> GetSelectedPrecursorPaths()
         {
-            return GetPrecursorPathsFromSelectedPaths(SkylineWindow.DocumentUI,
-                SkylineWindow.SequenceTree.SelectedPaths);
-        }
-
-        public HashSet<IdentityPath> GetPrecursorPathsFromSelectedPaths(SrmDocument document,
-            IEnumerable<IdentityPath> selectedPaths)
-        {
-            HashSet<IdentityPath> result = new HashSet<IdentityPath>();
-            foreach (var identityPath in selectedPaths)
-            {
-                if (identityPath.Length == 1)
-                {
-                    var peptideGroupDocNode = (PeptideGroupDocNode) document.FindNode(identityPath);
-                    if (peptideGroupDocNode != null)
-                    {
-                        result.UnionWith(peptideGroupDocNode.Molecules.SelectMany(molecule =>
-                            molecule.TransitionGroups.Select(tg => new IdentityPath(peptideGroupDocNode.PeptideGroup,
-                                molecule.Peptide, tg.TransitionGroup))));
-                    }
-                }
-                else if (identityPath.Length == 2)
-                {
-                    var molecule = (PeptideDocNode) document.FindNode(identityPath);
-                    if (molecule != null)
-                    {
-                        result.UnionWith(molecule.TransitionGroups.Select(tg =>
-                            new IdentityPath(identityPath, tg.TransitionGroup)));
-                    }
-                }
-                else if (identityPath.Length > 2)
-                {
-                    result.Add(identityPath.GetPathTo(2));
-                }
-            }
-
-            return result;
+            var document = SkylineWindow.DocumentUI;
+            return SkylineWindow.SequenceTree.SelectedPaths
+                .SelectMany(path => document.EnumeratePathsAtLevel(path, SrmDocument.Level.TransitionGroups)).ToHashSet();
         }
 
         private void UpdateProgress(string text, int value)

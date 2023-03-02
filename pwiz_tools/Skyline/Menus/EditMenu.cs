@@ -1696,21 +1696,28 @@ namespace pwiz.Skyline.Menus
 
         public void EditSpectrumFilter()
         {
-            var transitionGroupTreeNode = SequenceTree.GetNodeOfType<TransitionGroupTreeNode>();
-            if (transitionGroupTreeNode == null)
+            var transitionGroupPaths = SequenceTree.SelectedPaths.SelectMany(path =>
+                SkylineWindow.DocumentUI.EnumeratePathsAtLevel(path, SrmDocument.Level.TransitionGroups)).ToHashSet();
+            if (transitionGroupPaths.Count == 0)
             {
                 return;
             }
 
-            var precursorIdentityPath = transitionGroupTreeNode.Path;
-            using (var dlg = new EditSpectrumFilterDlg(transitionGroupTreeNode.DocNode.SpectrumClassFilter))
+            var spectrumClassFilters = transitionGroupPaths.Select(path =>
+                ((TransitionGroupDocNode) SkylineWindow.DocumentUI.FindNode(path)).SpectrumClassFilter).ToHashSet();
+            using (var dlg = new EditSpectrumFilterDlg(spectrumClassFilters.Count == 1 ? spectrumClassFilters.First() : null))
             {
+                if (spectrumClassFilters.Count != 1)
+                {
+                    dlg.CreateCopy = true;
+                    dlg.CreateCopyEnabled = false;
+                }
                 if (dlg.ShowDialog(this) != DialogResult.OK)
                 {
                     return;
                 }
 
-                ChangeSpectrumFilter(new[] {precursorIdentityPath}, dlg.SpectrumClassFilter, dlg.CreateCopy);
+                ChangeSpectrumFilter(transitionGroupPaths, dlg.SpectrumClassFilter, dlg.CreateCopy);
             }
         }
 

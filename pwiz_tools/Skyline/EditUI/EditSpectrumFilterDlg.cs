@@ -139,6 +139,18 @@ namespace pwiz.Skyline.EditUI
             set { cbCreateCopy.Checked = value; }
         }
 
+        public bool CreateCopyEnabled
+        {
+            get
+            {
+                return cbCreateCopy.Enabled;
+            }
+            set
+            {
+                cbCreateCopy.Enabled = false;
+            }
+        }
+
         private void btnReset_Click(object sender, EventArgs e)
         {
             Reset();
