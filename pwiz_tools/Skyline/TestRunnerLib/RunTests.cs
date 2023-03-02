@@ -593,8 +593,8 @@ namespace TestRunnerLib
             if (_cleanupLevelAll)
             {
                 CleanupAbandonedFiles(TestContext.TestDir, true, abandonedFilesList);
-                CleanupAbandonedFiles(tmpTestDir, !final, abandonedFilesList);
             }
+            CleanupAbandonedFiles(tmpTestDir, !final, abandonedFilesList); // It's always an error to leave any tempfiles behind
 
             return abandonedFilesList;
         }
