@@ -572,7 +572,7 @@ namespace pwiz.Skyline.Model.AuditLog
         public static bool ProcessDefaults(ObjectInfo<object> objectInfo, Property property, ref IList<object> defaults, out bool ignore)
         {
             ignore = false;
-            defaults = defaults.Where(d => d != null).Select(property.GetValue).ToList();
+            defaults = GetPropertyValues(defaults, property);
 
             var comparable = objectInfo.NewObject as IAuditLogComparable;
             if (comparable != null)
@@ -591,6 +591,29 @@ namespace pwiz.Skyline.Model.AuditLog
             }
 
             return !property.IgnoreDefaultParent && defaults.Any(d => ReferenceEquals(d, objectInfo.NewObject));
+        }
+
+        private static List<object> GetPropertyValues(IEnumerable<object> parents, Property property)
+        {
+            List<object> newList = new List<object>();
+            foreach (var parent in parents)
+            {
+                if (parent != null)
+                {
+                    try
+                    {
+                        newList.Add(property.GetValue(parent));
+                    }
+                    catch (Exception exception)
+                    {
+                        string message = string.Format(@"Error getting property {0}:{1} on object {2}",
+                            property.DeclaringType, property.PropertyName, parent.GetType());
+                        throw new Exception(message, exception);
+                    }
+                }
+            }
+
+            return newList;
         }
 
         #region Wrapper functions

@@ -26,6 +26,7 @@ using System.Text;
 using System.Xml;
 using System.Xml.Schema;
 using System.Xml.Serialization;
+using JetBrains.Annotations;
 using pwiz.BiblioSpec;
 using pwiz.Common.Chemistry;
 using pwiz.Common.Collections;
@@ -221,31 +222,23 @@ namespace pwiz.Skyline.Model.Lib
                         var newChromatograms = MidasLibrary.UnflagFiles(docNew.Settings.MeasuredResults.Chromatograms, missingMidasFiles.Select(Path.GetFileName)).ToList();
                         if (!ArrayUtil.ReferencesEqual(docNew.Settings.MeasuredResults.Chromatograms, newChromatograms))
                         {
-                            docNew = docNew.ChangeMeasuredResults(docNew.Settings.MeasuredResults.ChangeChromatograms(newChromatograms));
+                            docNew = CallWithSettingsChangeMonitor(container, docCurrent,
+                                settingsChangeMonitor => docNew.ChangeMeasuredResults(
+                                    docNew.Settings.MeasuredResults.ChangeChromatograms(newChromatograms),
+                                    settingsChangeMonitor));
+                            if (docNew == null)
+                            {
+                                break;
+                            }
                         }
                     }
 
-                    using (var settingsChangeMonitor = new SrmSettingsChangeMonitor(
-                            new LoadMonitor(this, container, null), Resources.LibraryManager_LoadBackground_Updating_library_settings_for__0_, container, docCurrent))
+                    docNew = CallWithSettingsChangeMonitor(container, docCurrent, settingsChangeMonitor =>
+                        docNew.ChangeSettings(docNew.Settings.ChangePeptideSettings(
+                            docNew.Settings.PeptideSettings.ChangeLibraries(libraries)), settingsChangeMonitor));
+                    if (docNew == null)
                     {
-                        try
-                        {
-                            docNew = docNew.ChangeSettings(docNew.Settings.ChangePeptideSettings(
-                                docNew.Settings.PeptideSettings.ChangeLibraries(libraries)), settingsChangeMonitor);
-                        }
-                        catch (OperationCanceledException)
-                        {
-                            docNew = docCurrent;    // Just continue
-                        }
-                        catch (Exception x)
-                        {
-                            if (ExceptionUtil.IsProgrammingDefect(x))
-                            {
-                                throw;
-                            }
-                            settingsChangeMonitor.ChangeProgress(s => s.ChangeErrorException(x));
-                            break;
-                        }
+                        break;
                     }
                 }
                 while (!CompleteProcessing(container, docNew, docCurrent));
@@ -263,6 +256,44 @@ namespace pwiz.Skyline.Model.Lib
             }
 
             return true;
+        }
+
+        /// <summary>
+        /// Calls a function which takes a SettingsChangeMonitor, and which returns a SrmDocument.
+        /// <returns>If successful, returns the result of the function call.
+        /// Returns the original document if the document in the IDocumentContainer has changed.
+        /// Returns null if an error occurred that was reported to the user.</returns>
+        /// </summary>
+        [CanBeNull]
+        private SrmDocument CallWithSettingsChangeMonitor(IDocumentContainer container, SrmDocument docCurrent,
+            [InstantHandle] Func<SrmSettingsChangeMonitor, SrmDocument> changeFunc)
+        {
+            using (var settingsChangeMonitor = new SrmSettingsChangeMonitor(
+                       new LoadMonitor(this, container, null),
+                       Resources.LibraryManager_LoadBackground_Updating_library_settings_for__0_, container,
+                       docCurrent))
+            {
+                try
+                {
+                    return changeFunc(settingsChangeMonitor);
+                }
+                catch (OperationCanceledException)
+                {
+                    // Document in the container was changed. Just return the original document, since the
+                    // CompleteProcessing call will fail, and the libraries will attempt to be loaded again
+                    // with a more current document
+                    return docCurrent;
+                }
+                catch (Exception x)
+                {
+                    if (ExceptionUtil.IsProgrammingDefect(x))
+                    {
+                        throw;
+                    }
+                    settingsChangeMonitor.ChangeProgress(s => s.ChangeErrorException(x));
+                    return null;
+                }
+            }
         }
 
         public Library LoadLibrary(LibrarySpec spec, Func<ILoadMonitor> getMonitor)
