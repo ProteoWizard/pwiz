@@ -183,7 +183,7 @@ namespace pwiz.Skyline.Model
             get { return GetFragmentIonName(LocalizationHelper.CurrentCulture); }
         }
 
-        public string GetFragmentIonName(CultureInfo cultureInfo, double? tolerance = null)
+        public string GetFragmentIonName(CultureInfo cultureInfo, MzTolerance tolerance = null)
         {
             if (ComplexFragmentIon.IsCrosslinked)
             {

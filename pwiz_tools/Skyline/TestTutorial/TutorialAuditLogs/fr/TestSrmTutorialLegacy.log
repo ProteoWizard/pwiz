@@ -35,7 +35,7 @@ Settings > Transition Settings -- Filter > Product ion selection start changed f
 Settings > Transition Settings -- Filter > Product ion selection end changed from "3 ions" to "last ion"
 Settings > Transition Settings -- Filter > Special ions: removed all
 Settings > Transition Settings -- Filter > Precursor m/z exclusion window changed from "0" to "5"
-Settings > Transition Settings -- Library > Ion match tolerance changed from "0,5" to "1"
+Settings > Transition Settings -- Library > Ion match tolerance changed from "0,5" m/z to "1" m/z
 Settings > Transition Settings -- Library > Product ions changed from "3" to "5"
 Settings > Transition Settings -- Library > Pick changed from "From filtered ion charges and types" to "From filtered product ions"
 Settings > Transition Settings -- Instrument > Min m/z changed from "50" to "300"

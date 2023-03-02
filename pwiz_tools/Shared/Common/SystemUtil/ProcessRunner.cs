@@ -203,35 +203,5 @@ namespace pwiz.Common.SystemUtil
         {
             return _messageLog;
         }
-
-        public class ProcessRunnerTester: IProcessRunner
-        {
-            public string stringToWriteToWriter { get; set; }
-            public ProgressStatus progressStatus { get; set; }
-            public bool shouldCancel { get; set; }
-            public string StatusPrefix { get; set; }
-            public string HideLinePrefix { get; set; }
-            public void Run(ProcessStartInfo psi, string stdin, IProgressMonitor progress, ref IProgressStatus status,
-                ProcessPriorityClass priorityClass = ProcessPriorityClass.Normal)
-            {
-                Run(psi, stdin, progress, ref status, null, priorityClass);
-            }
-
-            public void Run(ProcessStartInfo psi, string stdin, IProgressMonitor progress, ref IProgressStatus status, TextWriter writer,
-                ProcessPriorityClass priorityClass = ProcessPriorityClass.Normal)
-            {
-                if (shouldCancel)
-                {
-                    status.Cancel();
-                    progress.UpdateProgress(status = status.Cancel());
-                    return;
-                }
-
-                if (!string.IsNullOrEmpty(stringToWriteToWriter))
-                    writer.WriteLine(stringToWriteToWriter);
-                status.ChangePercentComplete(100);
-                progress.UpdateProgress(status);
-            }
-        }
     }
 }

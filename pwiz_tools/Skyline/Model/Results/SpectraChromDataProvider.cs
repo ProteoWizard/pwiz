@@ -1053,8 +1053,8 @@ namespace pwiz.Skyline.Model.Results
                             var msLevel = _lookaheadContext.GetMsLevel(i);
                             if (!_filter.EnabledMsMs && msLevel != 1)
                                 continue;
-                            // And if full gradient MS1 is not required and MS1 filtering is not enabled, skip MS1 spectra
-                            if (!_filter.EnabledMs && msLevel == 1 && !_filter.IsFilteringFullGradientMs1)
+                            // And if full gradient MS1 is not required and MS1 filtering is not enabled, skip MS1 spectra (unless this is GC-EI, where everything is fragmented)
+                            if (!_filter.EnabledMs && msLevel == 1 && !_filter.IsFilteringFullGradientMs1 && !_filter.IsElectronIonizationMse)
                                 continue;
 
                             // Skip quickly through the chromatographic lead-in and tail when possible 

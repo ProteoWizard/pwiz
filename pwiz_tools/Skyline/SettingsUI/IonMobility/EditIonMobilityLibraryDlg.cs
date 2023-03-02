@@ -211,8 +211,8 @@ namespace pwiz.Skyline.SettingsUI.IonMobility
             //Create file, initialize db
             try
             {
-                IonMobilityLibrary = new IonMobilityLibrary(libraryName, path, 
-                    IonMobilityDb.CreateIonMobilityDb(path, libraryName, false));
+                    IonMobilityLibrary = new IonMobilityLibrary(libraryName, path, 
+                        IonMobilityDb.CreateIonMobilityDb(path, libraryName, false));
 
                 textDatabase.Text = path;
 

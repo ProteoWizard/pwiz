@@ -64,8 +64,8 @@ namespace pwiz.SkylineTestFunctional
                     Assert.IsTrue(errorDlg.Message.Contains(String.Format(
                         Resources.PeptideGroupDocNode_ChangeSettings_The_current_document_settings_would_cause_the_number_of_targeted_transitions_to_exceed__0_n0___The_document_settings_must_be_more_restrictive_or_add_fewer_proteins_,
                         SrmDocument.MaxTransitionCount)));
-                    errorDlg.OkDialog();
                 });
+                OkDialog(errorDlg, errorDlg.OkDialog);
             }
             finally
             {

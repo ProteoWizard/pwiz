@@ -1314,7 +1314,7 @@ namespace pwiz.Skyline.Controls.Graphs
 
                             if (spectrum != null)
                                 dotp = PrositHelpers.CalculateSpectrumDotpMzMatch(GraphItem.SpectrumInfo, mirrorGraphItem.SpectrumInfo,
-                                    settings.TransitionSettings.Libraries.IonMatchTolerance);
+                                    settings.TransitionSettings.Libraries.IonMatchMzTolerance);
                         }
 
                         if (mirrorSpectrum != null && mirrorGraphItem != null) // one implies the other, but resharper..
