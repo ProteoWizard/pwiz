@@ -184,7 +184,7 @@ namespace pwiz.Skyline.Util
         /// <returns>A Molecule whose formula is the combination of the input formula and adduct</returns>
         public static FormulaWithMassModification ApplyAdductToFormula(string formula, Adduct adduct)
         {
-            var resultDict = ApplyAdductToMoleculeAsDictionary(formula, adduct);
+            var resultDict = ApplyAdductToFormulaAsDictionary(formula, adduct);
             var resultMol = FormulaWithMassModification.FromDict(resultDict);
             if (!resultMol.Keys.All(k => FormulaWithMassModification.IsKnownSymbol(k)))
             {
@@ -194,16 +194,17 @@ namespace pwiz.Skyline.Util
         }
 
         /// <summary>
-        /// Take a molecular formula and apply the described adduct to it.
+        /// Take a chemical formula (possibly with mass modifier) and apply the described adduct to it.
         /// </summary>
-        /// <param name="formula">A string like "C12H3"</param>
+        /// <param name="formula">A string like "C12H3" or C11N3H5[+2.34]</param>
         /// <param name="adduct">An adduct derived from a string like "[M+H]" or "[2M+K]" or "M+H" or "[M+H]+" or "[M+Br]- or "M2C13+Na" </param>
         /// <returns>A dictionary of atomic elements and counts, resulting from the combination of the input formula and adduct</returns>
-        public static Dictionary<string, int> ApplyAdductToMoleculeAsDictionary(string formula, Adduct adduct)
+        public static Dictionary<string, int> ApplyAdductToFormulaAsDictionary(string formula, Adduct adduct)
         {
-            var molecule = Molecule.Parse(formula.Trim());
+            var trimmed = formula.Trim();
+            var molecule = BioMassCalc.MONOISOTOPIC.ParseMassExpressionToDictionary(ref trimmed);
             var resultDict = new Dictionary<string, int>();
-            adduct.ApplyToMolecule(molecule, resultDict);
+            adduct.ApplyToDictionary(molecule, resultDict);
             return resultDict;
         }
 

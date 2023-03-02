@@ -46,8 +46,8 @@ namespace pwiz.SkylineTest
             if (!Equals(expectedFormula, actualFormula))
             {
                 // ApplyAdductToFormula doesn't necessarily preserve element order, so check again as dictionary
-                var dictExpected = IonInfo.ApplyAdductToMoleculeAsDictionary(expectedFormula, Adduct.EMPTY);
-                var dictActual = IonInfo.ApplyAdductToMoleculeAsDictionary(PENTANE, adduct);
+                var dictExpected = IonInfo.ApplyAdductToFormulaAsDictionary(expectedFormula, Adduct.EMPTY);
+                var dictActual = IonInfo.ApplyAdductToFormulaAsDictionary(PENTANE, adduct);
                 if (dictExpected.Count != dictActual.Count || 
                     !dictExpected.All(kvp => dictActual.TryGetValue(kvp.Key, out var v) && v == kvp.Value))
                 {

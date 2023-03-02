@@ -937,6 +937,7 @@ namespace pwiz.Skyline.Util
                         molReturn.Add(sym, count);
                     }
                 }
+                FormulaWithMassModification.RegularizeMassModifications(molReturn); // Combine any multiples of mass mods
             }
             return totalMass;            
         }
@@ -954,6 +955,32 @@ namespace pwiz.Skyline.Util
                 totalMass -= ParseMass(ref desc);
             }
             return totalMass;
+        }
+
+        /// <summary>
+        /// Parse a formula which may contain both positive and negative parts (e.g. "C'4-C4").
+        /// </summary>
+        public Dictionary<string, int> ParseMassExpressionToDictionary(ref string desc)
+        {
+            var dict = new Dictionary<string, int>();
+            ParseMass(ref desc, dict);
+            if (desc.StartsWith(@"-"))
+            {
+                // As is deprotonation description ie C12H8O2-H (=C12H7O2) or even C12H8O2-H2O (=C12H6O)
+                desc = desc.Substring(1);
+                var dictNeg = new Dictionary<string, int>();
+                ParseMass(ref desc, dictNeg);
+                foreach (var kvp in dictNeg)
+                {
+                    if (!dict.TryGetValue(kvp.Key, out var count))
+                    {
+                        count = 0;
+                    }
+                    dict[kvp.Key] = count - kvp.Value;
+                }
+            }
+            FormulaWithMassModification.RegularizeMassModifications(dict);
+            return dict;
         }
 
         public double ParseMass(IDictionary<string, int> desc)

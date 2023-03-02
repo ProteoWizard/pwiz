@@ -299,6 +299,16 @@ namespace pwiz.SkylineTest
         }
 
         [TestMethod]
+        public void TestEscapePathForXML()
+        {
+            Assert.AreEqual("&amp;oops", PathEx.EscapePathForXML("&oops")); // Unescaped ampersand in filename
+            Assert.AreEqual("&amp;oops &amp;oops", PathEx.EscapePathForXML("&oops &oops")); // More than one
+            Assert.AreEqual("&amp;oops", PathEx.EscapePathForXML("&amp;oops")); // Already escaped
+            Assert.AreEqual("&amp;oops &amp;oops &amp;oops", PathEx.EscapePathForXML("&oops &oops &amp;oops")); // Mix of escaped and unescaped
+            Assert.AreEqual("&amp;oops &amp;oops &apos;oops", PathEx.EscapePathForXML("&oops &oops &apos;oops")); // Use of & to escape apostrophe
+        }
+
+        [TestMethod]
         public void FilesDirTest()
         {
             var cleanupLevel = DesiredCleanupLevel;

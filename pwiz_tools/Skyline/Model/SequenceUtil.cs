@@ -856,7 +856,7 @@ namespace pwiz.Skyline.Model
             var charge = adduct.AdductCharge;
             // Note we use the traditional peptide-oriented calculation when adduct is protonated and not an n-mer, mostly for stability in tests
             var protonated = adduct.IsProtonated && (adduct.GetMassMultiplier() == 1);
-            var mol = protonated ? molecule.Elements : adduct.ApplyToMolecule(molecule.Elements);
+            var mol = protonated ? molecule.Elements : adduct.ApplyToFormulaDictionary(molecule.Elements);
             foreach (var element in mol)
             {
                 if (abundances.TryGetValue(element.Key, out var massDistribution))

@@ -214,15 +214,19 @@ namespace pwiz.SkylineTest
             Assert.AreEqual(14.2, bioMassCalc.ParseMassExpression(ref description), .01);
             description = "C'2[-1.2]H-C'[+1.2]";
             Assert.AreEqual(11.61, bioMassCalc.ParseMassExpression(ref description), .01);
-            var dict = Molecule.ParseExpressionToDictionary("C12H5[-0.33]H3-C2[-0.11]");
-            Assert.AreEqual(1, dict["[-0.22]"]); // -0.33 + 0.11
-            Assert.AreEqual(10, dict["C"]);
-            Assert.AreEqual(8, dict["H"]);
-            var molA = Molecule.Parse("C12H5[-0.33]H3");
-            var molB = Molecule.Parse("C2[-0.11]");
-            var molC  = molA.Difference(molB);
-            Assert.AreEqual(1, molC["[-0.22]"]); // -0.33 + 0.11
-            Assert.AreEqual(10, molC["C"]);
+            var str = "C12H5[-0.33]H3-C2[-0.11]";
+            Assert.AreEqual(127.84, bioMassCalc.ParseMassExpression(ref str), .01); // C10H8[-0.22] = 128.06-.22 = 127.84
+            var strA = "C12H5[-0.33]H3";
+            var strB = "C2[-0.11]";
+            var strC = strA + strB;
+            var molA = new Dictionary<string, int>();
+            bioMassCalc.ParseMass(ref strA, molA);
+            var molB = new Dictionary<string, int>();
+            bioMassCalc.ParseMass(ref strB, molB);
+            var molC = new Dictionary<string, int>();
+            bioMassCalc.ParseMass(ref strC, molC);
+            Assert.AreEqual(1, molC["[-0.44]"]); // -0.33 - 0.11
+            Assert.AreEqual(14, molC["C"]);
             Assert.AreEqual(8, molC["H"]);
 
             Assert.IsTrue(IonInfo.IsFormulaWithAdduct("C12H5[+3.2/3.3][2M1.234+3H]", out var mol, out var adduct, out var neutralFormula));

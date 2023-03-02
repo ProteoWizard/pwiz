@@ -1290,22 +1290,22 @@ namespace pwiz.Skyline.Util
             return charges;
         }
 
-        public Dictionary<string, int> ApplyToMolecule(IDictionary<string, int> molecule)
+        public Dictionary<string, int> ApplyToFormulaDictionary(IDictionary<string, int> molecule)
         {
             var resultDict = new Dictionary<string, int>();
-            ApplyToMolecule(molecule, resultDict);
+            ApplyToDictionary(molecule, resultDict);
             return resultDict;
         }
 
         /// <summary>
         /// Handle the "2" and "4Cl37" in "[2M4Cl37+H]", and add the H
         /// </summary>
-        public void ApplyToMolecule(IDictionary<string, int> molecule, IDictionary<string, int> resultDict)
+        public void ApplyToDictionary(IDictionary<string, int> molecule, IDictionary<string, int> resultDict)
         {
             if (IsotopeLabels != null && IsotopeLabels.Count != 0 && molecule.Keys.Any(BioMassCalc.ContainsIsotopicElement))
             {
                 // Don't apply labels twice
-                Unlabeled.ApplyToMolecule(molecule, resultDict);
+                Unlabeled.ApplyToDictionary(molecule, resultDict);
                 return;
             }
             // Deal with any mass multipler (the 2 in "[2M+Na]")
@@ -1379,11 +1379,13 @@ namespace pwiz.Skyline.Util
                     }
                 }
             }
+
+            FormulaWithMassModification.RegularizeMassModifications(resultDict);
         }
 
         public string ApplyToFormula(string formula)
         {
-            var resultMol = Molecule.FromDict(ApplyToMolecule(Molecule.ParseExpressionToDictionary(formula)));
+            var resultMol = FormulaWithMassModification.FromDict(ApplyToFormulaDictionary(FormulaWithMassModification.ParseExpressionToDictionary(formula)));
             return resultMol.ToString();
         }
 
