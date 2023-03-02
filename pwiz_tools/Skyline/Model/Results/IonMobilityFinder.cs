@@ -53,6 +53,7 @@ namespace pwiz.Skyline.Model.Results
         private double _maxHighEnergyDriftOffsetMsec;
         private bool _useHighEnergyOffset;
         private IonMobilityValue _ms1IonMobilityBest;
+        private double _ms2IonMobilityFilterLow, _ms2IonMobilityFilterHigh; // For rejecting extreme MS2 high energy offset values
 
         private struct IonMobilityIntensityPair
         {
@@ -141,12 +142,16 @@ namespace pwiz.Skyline.Model.Results
                     // Choose the ion mobility which gave the largest signal
                     // CONSIDER: average IM and CCS values that fall "near" the IM of largest signal? Or consider them multiple conformers?
                     var ms1IonMobility = dt.Value.OrderByDescending(p => p.Intensity).First().IonMobility;
+                    double highEnergyIonMobilityValueOffset = 0;
+                    if (_useHighEnergyOffset)
+                    {
                     // Check for MS2 data to use for high energy offset
                     List<IonMobilityIntensityPair> listDt;
                     var ms2IonMobility = _ms2IonMobilities.TryGetValue(dt.Key, out listDt)
                         ? listDt.OrderByDescending(p => p.Intensity).First().IonMobility
                         : ms1IonMobility;
-                    var highEnergyIonMobilityValueOffset = Math.Round(ms2IonMobility.IonMobility.Mobility.Value - ms1IonMobility.IonMobility.Mobility.Value, 6); // Excessive precision is just distracting noise TODO(bspratt) ask vendors what "excessive" means here
+                        highEnergyIonMobilityValueOffset = Math.Round(ms2IonMobility.IonMobility.Mobility.Value - ms1IonMobility.IonMobility.Mobility.Value, 6); // Excessive precision is just distracting noise TODO(bspratt) ask vendors what "excessive" means here
+                    }
                     var value =  IonMobilityAndCCS.GetIonMobilityAndCCS(ms1IonMobility.IonMobility, ms1IonMobility.CollisionalCrossSectionSqA, highEnergyIonMobilityValueOffset);
                     if (!measured.ContainsKey(dt.Key))
                         measured.Add(dt.Key, value);
@@ -365,6 +370,22 @@ namespace pwiz.Skyline.Model.Results
                     _ms1IonMobilities[libKey].OrderByDescending(p => p.Intensity)
                         .FirstOrDefault()
                         .IonMobility.IonMobility;
+                var imMS1 = _ms1IonMobilityBest.Mobility ?? 0;
+                switch (_ms1IonMobilityBest.Units)
+                {
+                    case eIonMobilityUnits.drift_time_msec:
+                        _ms2IonMobilityFilterHigh = imMS1; // Fragments go faster, not slower
+                        _ms2IonMobilityFilterLow = imMS1 - _maxHighEnergyDriftOffsetMsec; // But not a lot faster
+                        break;
+                    case eIonMobilityUnits.inverse_K0_Vsec_per_cm2:
+                        // Within 5% - arbitrary value, normally not used with Bruker data, anyway
+                        _ms2IonMobilityFilterHigh = imMS1*1.05;
+                        _ms2IonMobilityFilterLow = imMS1*.95;
+                        break;
+                    case eIonMobilityUnits.compensation_V:
+                    default:
+                        break;
+                }
             }
             else
             {
@@ -473,12 +494,21 @@ namespace pwiz.Skyline.Model.Results
             return mzHigh;
         }
 
+        // Ignore proposed fragment IM values that are too far away from the parent IM
         private bool IsExtremeMs2Value(double im)
         {
-            return _ms1IonMobilityBest.HasValue &&
-                   _ms1IonMobilityBest.Units != eIonMobilityUnits.compensation_V && // Makes no sense in FAIMS
-                   (im < _ms1IonMobilityBest.Mobility - _maxHighEnergyDriftOffsetMsec ||
-                    im > _ms1IonMobilityBest.Mobility + _maxHighEnergyDriftOffsetMsec);
+            if ((_ms1IonMobilityBest.Mobility ?? 0) == 0)
+            {
+                return false; // No MS1 to compare with
+            }
+
+            if (_ms1IonMobilityBest.Units == eIonMobilityUnits.compensation_V)
+            {
+                return false;  // Makes no sense in FAIMS
+            }
+
+            // These limits are set in EvaluateBestIonMobilityValue()
+            return im <_ms2IonMobilityFilterLow || im > _ms2IonMobilityFilterHigh;
         }
 
         private void HandleLoadScanException(Exception ex)

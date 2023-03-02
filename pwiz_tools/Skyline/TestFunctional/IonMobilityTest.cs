@@ -812,7 +812,7 @@ namespace pwiz.SkylineTestFunctional
             var key3 = new LibKey("GLAGVENVTELKK", Adduct.TRIPLY_PROTONATED);
             var key2 = new LibKey("GLAGVENVTELKK", Adduct.DOUBLY_PROTONATED);
             const double expectedDT3= 4.0709;
-            const double expectedOffset3 = 0.8969;
+            const double expectedOffset3 = -0.758987;
             AssertEx.AreEqual(expectedDT3, result.GetIonMobilityInfo(key3).First().IonMobility.Mobility.Value, .001);
             AssertEx.AreEqual(expectedOffset3, result.GetIonMobilityInfo(key3).First().HighEnergyIonMobilityValueOffset.Value, .001); // High energy offset
             const double expectedDT2 = 5.5889;

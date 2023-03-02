@@ -147,7 +147,7 @@ namespace TestPerf // Note: tests in the "TestPerf" namespace only run when the 
                 AssertEx.AreEqual(validatingIonMobilityPeptide0.CollisionalCrossSectionSqA, validatingIonMobilityPeptide1.CollisionalCrossSectionSqA, 1.0, "averaged measured CCS differs for " + key);
             }
             AssertEx.AreEqual(document.MoleculeTransitionGroupCount, ccount, "did not find drift times for all precursors"); // Expect to find a value for each precursor
-            AssertEx.IsTrue(noChange.Count < ccount/2,"expected most values to shift a little without the nice clean training data");
+            AssertEx.IsTrue(noChange.Count < .75*ccount,"expected a few values to shift a little without the nice clean training data");
 
 
             // And finally verify ability to reimport with altered drift filter (would formerly fail on an erroneous Assume)
