@@ -236,7 +236,26 @@ namespace pwiz.Common.SystemUtil
             }
             return path;
         }
-        
+
+        /// <summary>
+        /// Like Path.GetRandomFileName(), but in test context adds some legal but unusual characters for robustness testing
+        /// </summary>
+        /// <returns>a random filename</returns>
+        public static string GetRandomFileName()
+        {
+            var result = Path.GetRandomFileName();
+            if (!string.IsNullOrEmpty(RandomFileNameDecoration))
+            {
+                // Introduce some potentially troublesome characters like space, caret, ampersand to test our handling
+                // Adding Unicode here (e.g. 试验, means "test") breaks many 3rd party tools (e.g. msFragger), causes trouble
+                // with mz5 reader, etc so we don't do it for certain tests
+                result = RandomFileNameDecoration + result;
+            }
+            return result;
+        }
+
+        // Test framework can set this to something like  @""t^m&p 试验" to help check our handling of unusual filename characters
+        public static string RandomFileNameDecoration { get; set; }
     }
 
     /// <summary>

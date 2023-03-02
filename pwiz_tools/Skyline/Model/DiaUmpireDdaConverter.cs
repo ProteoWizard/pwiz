@@ -140,8 +140,8 @@ namespace pwiz.Skyline.Model
                     if (File.Exists(outputFilepath))
                         FileEx.SafeDelete(outputFilepath);
 
-                    string tmpFilepath = Path.Combine(Path.GetTempPath(), Path.GetRandomFileName() + MsConvertOutputExtension);
-                    string tmpParams = Path.Combine(Path.GetTempPath(), Path.GetRandomFileName() + @".params");
+                    string tmpFilepath = Path.Combine(Path.GetTempPath(), PathEx.GetRandomFileName() + MsConvertOutputExtension); // N.B. FileEx.GetRandomFileName adds unusual characters in test mode
+                    string tmpParams = Path.Combine(Path.GetTempPath(), PathEx.GetRandomFileName() + @".params");
                     //_diaUmpireConfig.Parameters["Thread"] = 1; // needed to compare DIAUMPIRE_DEBUG output
                     _diaUmpireConfig.WriteConfigToFile(tmpParams);
 
