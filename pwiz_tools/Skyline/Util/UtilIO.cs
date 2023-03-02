@@ -1323,7 +1323,7 @@ namespace pwiz.Skyline.Util
         public TemporaryDirectory(string dirPath = null, string tempPrefix = TEMP_PREFIX)
         {
             if (string.IsNullOrEmpty(dirPath))
-                DirPath = Path.Combine(Path.GetTempPath(), tempPrefix + Path.GetRandomFileName());
+                DirPath = Path.Combine(Path.GetTempPath(), tempPrefix + PathEx.GetRandomFileName()); // N.B. FileEx.GetRandomFileName adds unusual characters in test mode
             else
                 DirPath = dirPath;
             Helpers.TryTwice(() => Directory.CreateDirectory(DirPath));

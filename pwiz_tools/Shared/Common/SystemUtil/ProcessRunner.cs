@@ -30,9 +30,9 @@ namespace pwiz.Common.SystemUtil
         string StatusPrefix { get; set; }
         string HideLinePrefix { get; set; }
         void Run(ProcessStartInfo psi, string stdin, IProgressMonitor progress, ref IProgressStatus status,
-            ProcessPriorityClass priorityClass = ProcessPriorityClass.Normal);
+            ProcessPriorityClass priorityClass = ProcessPriorityClass.Normal, bool forceTempfilesCleanup = false);
         void Run(ProcessStartInfo psi, string stdin, IProgressMonitor progress, ref IProgressStatus status,
-                 TextWriter writer, ProcessPriorityClass priorityClass = ProcessPriorityClass.Normal);
+                 TextWriter writer, ProcessPriorityClass priorityClass = ProcessPriorityClass.Normal, bool forceTempfilesCleanup = false);
     }
 
     public class ProcessRunner : IProcessRunner
@@ -53,13 +53,13 @@ namespace pwiz.Common.SystemUtil
         public string HideLinePrefix { get; set; }
 
         public void Run(ProcessStartInfo psi, string stdin, IProgressMonitor progress, ref IProgressStatus status,
-            ProcessPriorityClass priorityClass = ProcessPriorityClass.Normal)
+            ProcessPriorityClass priorityClass = ProcessPriorityClass.Normal, bool forceTempfilesCleanup = false)
         {
-            Run(psi, stdin, progress,ref status, null, priorityClass);
+            Run(psi, stdin, progress,ref status, null, priorityClass, forceTempfilesCleanup);
         }
 
         public void Run(ProcessStartInfo psi, string stdin, IProgressMonitor progress, ref IProgressStatus status, TextWriter writer,
-            ProcessPriorityClass priorityClass = ProcessPriorityClass.Normal)
+            ProcessPriorityClass priorityClass = ProcessPriorityClass.Normal, bool forceTempfilesCleanup = false)
         {
             // Make sure required streams are redirected.
             psi.RedirectStandardOutput = true;
@@ -69,6 +69,9 @@ namespace pwiz.Common.SystemUtil
                 psi.StandardOutputEncoding = psi.StandardErrorEncoding = OutputEncoding;
 
             _messageLog.Clear();
+
+            // Optionally create a subdir in the current TMP directory, run the new process with TMP set to that so we can clean it out afterward
+            var tmpDirForCleanup = forceTempfilesCleanup ? SetTmpDirForCleanup(psi) : null;
 
             Process proc = null;
             var msgFailureStartingCommand = @"Failure starting command ""{0} {1}"".";
@@ -191,17 +194,60 @@ namespace pwiz.Common.SystemUtil
                     if (progress != null)
                         progress.UpdateProgress(status);
                 }
+
             }
             finally
             {
+                if (!string.IsNullOrEmpty(tmpDirForCleanup))
+                {
+                    // Clean out any tempfiles left behind
+                    try
+                    {
+                        Directory.Delete(tmpDirForCleanup, true);
+                    }
+                    catch (Exception e)
+                    {
+                        _messageLog.Add($@"warning: cleanup of temporary directory {tmpDirForCleanup} failed: {e.Message}");
+                    }
+                }
                 if (!proc.HasExited)
                     try { proc.Kill(); } catch (InvalidOperationException) { }
             }
+        }
+
+        // Create a subdir in the current TMP directory, run the new process with TMP set to that so we can clean it out afterward
+        private string SetTmpDirForCleanup(ProcessStartInfo psi)
+        {
+            string tmpDirForCleanup = null;
+            
+            if (psi.UseShellExecute)
+            {
+                _messageLog.Add(@"warning: UseShellExecute is set, cannot change environment for tempfile cleanup");
+            }
+            else
+            {
+                try
+                {
+                    tmpDirForCleanup = Path.GetTempFileName(); // Creates a file
+                    File.Delete(tmpDirForCleanup); // But we want a directory
+                    Directory.CreateDirectory(tmpDirForCleanup);
+                    psi.Environment[@"TMP"] = tmpDirForCleanup; // Process will create its tempfiles here
+                }
+                catch (Exception e)
+                {
+                    _messageLog.Add(
+                        $@"warning: could not create directory {tmpDirForCleanup} for tempfile cleanup: {e.Message}");
+                    tmpDirForCleanup = null;
+                }
+            }
+
+            return tmpDirForCleanup;
         }
 
         public IEnumerable<string> MessageLog()
         {
             return _messageLog;
         }
+
     }
 }
