@@ -881,12 +881,15 @@ namespace pwiz.Skyline.Model.Lib
 
                         readChars += line.Length;
 
-                        // Handle quirky line construction by mzVault msp export
+                        // Handle quirky line construction by mzVault msp export before proceeding with parsing
                         line = HandleMzVaultLineVariant(line, out var isMzVault);
 
                         // "SYNON" is a clue that this isn't actually peptide data
                         isPeptide &= !line.StartsWith(SYNON, StringComparison.InvariantCultureIgnoreCase);
 
+                        //
+                        // Note the following parsing steps are ordered in descending likelihood of matching, for efficiency
+                        //
                         if (ParseRT(line, isMzVault, ref rt, ref isGC))
                         {
                             continue; // Line is fully consumed
@@ -905,20 +908,22 @@ namespace pwiz.Skyline.Model.Lib
                         }
 
                         // The peaks count line marks the end of the data header
-                        var match = REGEX_NUM_PEAKS.Match(line);
-                        if (match.Success)
+                        if (ParseNumPeaks(line, ref numPeaksDeclared))
                         {
-                            numPeaksDeclared = int.Parse(match.Groups[1].Value, CultureInfo.InvariantCulture);
-                            break; // This marks the end of an entry
+                            break; // Proceed on to parse the peaks
                         }
 
-                        if (line.StartsWith(@"_EOF_", StringComparison.InvariantCultureIgnoreCase)) // Case insensitive
-                            ThrowIOException(lineCount, Resources.NistLibraryBase_CreateCache_Unexpected_end_of_file);
-                        else if (line.StartsWith(NAME, StringComparison.InvariantCultureIgnoreCase)) // Case insensitive
-                            break;
-
                         // MzVault has its own peculiarities, including scan polarity declarations, but rare so try this last
-                        ParseMzVaultPolarity(line, ref isPositive, ref mzMatchTolerance);
+                        if (ParseMzVaultPolarity(line, ref isPositive, ref mzMatchTolerance))
+                        {
+                            continue;  // Line is fully consumed
+                        }
+
+                        if (line.StartsWith(@"_EOF_", StringComparison.InvariantCultureIgnoreCase))
+                            ThrowIOException(lineCount, Resources.NistLibraryBase_CreateCache_Unexpected_end_of_file);
+                        else if (line.StartsWith(NAME, StringComparison.InvariantCultureIgnoreCase))
+                            break; // Start of next section - no peaks declared for this one, apparently, but not necessarily an error
+
                     } // End parser loop
 
                     if (formula != null)
@@ -1209,6 +1214,18 @@ namespace pwiz.Skyline.Model.Lib
             return true;
         }
 
+        private static bool ParseNumPeaks(string line, ref int numPeaksDeclared)
+        {
+            var match = REGEX_NUM_PEAKS.Match(line);
+            if (match.Success)
+            {
+                numPeaksDeclared = int.Parse(match.Groups[1].Value, CultureInfo.InvariantCulture);
+                return true;
+            }
+
+            return false;
+        }
+
         private static bool ParseName(string line, out bool isPeptide, out string sequence, out int charge)
         {
             isPeptide = true;
@@ -1239,7 +1256,7 @@ namespace pwiz.Skyline.Model.Lib
         }
 
         // MzVault has its own peculiarities, including scan polarity declarations
-        private static void ParseMzVaultPolarity(string line, ref bool? isPositive, ref double mzMatchTolerance)
+        private static bool ParseMzVaultPolarity(string line, ref bool? isPositive, ref double mzMatchTolerance)
         {
             var isMzVault = false;
             if (line.StartsWith(MZVAULT_POSITIVE_SCAN_INIDCATOR))
@@ -1259,7 +1276,7 @@ namespace pwiz.Skyline.Model.Lib
                 mzMatchTolerance = 10.0 * DEFAULT_MZ_MATCH_TOLERANCE;
             }
 
-            // return isMzVault; // Line was consumed
+            return isMzVault; // Line was consumed
         }
 
         /// <summary>
