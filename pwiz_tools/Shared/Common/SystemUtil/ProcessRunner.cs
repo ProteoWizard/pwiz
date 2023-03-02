@@ -67,33 +67,11 @@ namespace pwiz.Common.SystemUtil
             psi.RedirectStandardInput = stdin != null;
             if (OutputEncoding != null)
                 psi.StandardOutputEncoding = psi.StandardErrorEncoding = OutputEncoding;
-            string tmpDirForCleanup = null;
 
             _messageLog.Clear();
 
-            if (forceTempfilesCleanup)
-            {
-                // Create a subdir in the current TMP directory, run the new process with TMP set to that so we can clean it out afterward
-                if (psi.UseShellExecute)
-                {
-                    _messageLog.Add(@"warning: UseShellExecute is set, cannot change environment for tempfile cleanup");
-                }
-                else
-                {
-                    try
-                    {
-                        tmpDirForCleanup = Path.GetTempFileName(); // Creates a file
-                        File.Delete(tmpDirForCleanup); // But we want a directory
-                        Directory.CreateDirectory(tmpDirForCleanup);
-                        psi.Environment[@"TMP"] = tmpDirForCleanup; // Process will create its tempfiles here
-                    }
-                    catch (Exception e)
-                    {
-                        _messageLog.Add($@"warning: could not create directory {tmpDirForCleanup} for tempfile cleanup: {e.Message}");
-                        tmpDirForCleanup = null;
-                    }
-                }
-            }
+            // Optionally create a subdir in the current TMP directory, run the new process with TMP set to that so we can clean it out afterward
+            var tmpDirForCleanup = forceTempfilesCleanup ? SetTmpDirForCleanup(psi) : null;
 
             Process proc = null;
             var msgFailureStartingCommand = @"Failure starting command ""{0} {1}"".";
@@ -235,6 +213,35 @@ namespace pwiz.Common.SystemUtil
                 if (!proc.HasExited)
                     try { proc.Kill(); } catch (InvalidOperationException) { }
             }
+        }
+
+        // Create a subdir in the current TMP directory, run the new process with TMP set to that so we can clean it out afterward
+        private string SetTmpDirForCleanup(ProcessStartInfo psi)
+        {
+            string tmpDirForCleanup = null;
+            
+            if (psi.UseShellExecute)
+            {
+                _messageLog.Add(@"warning: UseShellExecute is set, cannot change environment for tempfile cleanup");
+            }
+            else
+            {
+                try
+                {
+                    tmpDirForCleanup = Path.GetTempFileName(); // Creates a file
+                    File.Delete(tmpDirForCleanup); // But we want a directory
+                    Directory.CreateDirectory(tmpDirForCleanup);
+                    psi.Environment[@"TMP"] = tmpDirForCleanup; // Process will create its tempfiles here
+                }
+                catch (Exception e)
+                {
+                    _messageLog.Add(
+                        $@"warning: could not create directory {tmpDirForCleanup} for tempfile cleanup: {e.Message}");
+                    tmpDirForCleanup = null;
+                }
+            }
+
+            return tmpDirForCleanup;
         }
 
         public IEnumerable<string> MessageLog()
