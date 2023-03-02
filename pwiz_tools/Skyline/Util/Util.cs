@@ -27,7 +27,6 @@ using System.Text;
 using System.Collections.ObjectModel;
 using System.Net;
 using System.Reflection;
-using System.Runtime.InteropServices;
 using System.Text.RegularExpressions;
 using System.Threading;
 using System.Windows.Forms;
@@ -1941,17 +1940,6 @@ namespace pwiz.Skyline.Util
         public static bool RunningResharperAnalysis => !string.IsNullOrEmpty(Environment.GetEnvironmentVariable(@"JETBRAINS_DPA_AGENT_ENABLE"));
 
         public static bool IsParallelClient => !string.IsNullOrEmpty(Environment.GetEnvironmentVariable(@"SKYLINE_TESTER_PARALLEL_CLIENT_ID"));
-
-        [DllImport("kernel32.dll", CharSet = CharSet.Unicode, SetLastError = true)]
-        static extern IntPtr GetModuleHandle([MarshalAs(UnmanagedType.LPWStr)] string lpModuleName);
-
-        [DllImport("kernel32", CharSet = CharSet.Ansi, ExactSpelling = true, SetLastError = true)]
-        static extern IntPtr GetProcAddress(IntPtr hModule, string procName);
-
-        /// <summary>
-        /// Returns true iff the process is running under Wine (the "wine_get_version" function is exported by ntdll.dll)
-        /// </summary>
-        public static bool IsRunningOnWine => GetProcAddress(GetModuleHandle(@"ntdll.dll"), @"wine_get_version") != IntPtr.Zero;
 
         /// <summary>
         /// Try an action that might throw an exception.  If it does, sleep for a little while and
