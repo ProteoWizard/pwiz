@@ -86,6 +86,7 @@ static void copyReaderConfig(pwiz::msdata::Reader::Config& config, ReaderConfig^
     config.sortAndJitter = readerConfig->sortAndJitter;
     config.globalChromatogramsAreMs1Only = readerConfig->globalChromatogramsAreMs1Only;
     config.ddaProcessing = readerConfig->ddaProcessing;
+    config.ignoreScheduledLimitsForChromatograms = readerConfig->ignoreScheduledLimitsForChromatograms;
 
     if (readerConfig->isolationMzAndMobilityFilter != nullptr)
         for each (MzMobilityWindow^ filter in readerConfig->isolationMzAndMobilityFilter)
