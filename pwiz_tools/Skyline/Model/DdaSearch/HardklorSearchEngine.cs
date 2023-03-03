@@ -44,7 +44,6 @@ namespace pwiz.Skyline.Model.DdaSearch
         // Temp files we'll need to clean up at the end the end if !_keepIntermediateFiles
         private Dictionary<MsDataFileUri, string> _inputsAndOutputs;
         private string _isotopesFilename;
-        private string _tempDirectory;
         private string _paramsFilename;
 
         public HardklorSearchEngine(ImportPeptideSearch searchSettings)
@@ -66,6 +65,7 @@ namespace pwiz.Skyline.Model.DdaSearch
 
         public override bool Run(CancellationTokenSource cancelToken, IProgressStatus status)
         {
+            using var tmpDir = new TempDir(); // Set TMP to a new directory that we'll destroy on exit
             _cancelToken = cancelToken;
             _progressStatus = status;
             _success = true;
@@ -200,7 +200,6 @@ namespace pwiz.Skyline.Model.DdaSearch
                     }
                 }
             }
-            DirectoryEx.SafeDelete(_tempDirectory);
         }
 
         [Localizable(false)]
@@ -239,10 +238,7 @@ namespace pwiz.Skyline.Model.DdaSearch
         private string GenerateHardklorConfigFile(string skylineWorkingDirectory)
         {
             _inputsAndOutputs = new Dictionary<MsDataFileUri, string>();
-            // Create a temporary directory for output
-            _tempDirectory = Path.Combine(Path.GetTempPath(), Path.GetRandomFileName());
-            Directory.CreateDirectory(_tempDirectory);
-            var workingDirectory = string.IsNullOrEmpty(skylineWorkingDirectory) ? _tempDirectory : skylineWorkingDirectory;
+            var workingDirectory = string.IsNullOrEmpty(skylineWorkingDirectory) ? Path.GetTempPath() : skylineWorkingDirectory;
 
             foreach (var input in SpectrumFileNames)
             {
@@ -328,20 +324,20 @@ namespace pwiz.Skyline.Model.DdaSearch
                 $@"molecule_max_mz 	= 	5000		#Maximum m/z of molecules to detect. Set this higher than largest expected molecule.",
                 $@"",
                 $@"# Parameters used by Skyline",
-                $@"isotope_peaks_min =  3           # Don't report features identified with fewer isotopic peaks than this",
-                $@"report_averagine  =  1           # include feature's averagine formula and mass shift in report e.g. C12H5[+1.23]",
+                $@"isotope_peaks_min	= 	3		# Don't report features identified with fewer isotopic peaks than this",
+                $@"report_averagine		=	1		# include feature's averagine formula and mass shift in report e.g. C12H5[+1.23]",
                 $@"",
                 $@"# Parameters used to customize the Hardklor output",
                 $@"distribution_area	=	1	#Report sum of distribution peaks instead of highest peak only. 0=off, 1=on",
                 $@"xml					=	0	#Output results as XML. 0=off, 1=on #MAY NEED UI IN FUTURE",
                 $@"",
-                $@"isotope_data =  ""{_isotopesFilename}"" # Using Skyline's isotope abundance values",
+                $@"isotope_data	=	""{_isotopesFilename}""	# Using Skyline's isotope abundance values",
                 $@"",
                 $@"# Below this point is where files to be analyzed should go. They should be listed contain ",
                 $@"# both the input file name, and the output file name. Each file to be analyzed should begin ",
                 $@"# on a new line. By convention Hardklor output should have this extension: .hk",
                 $@"",
-                TextUtil.LineSeparate(_inputsAndOutputs.Select(kvp => ($@"""{kvp.Key}"" ""{kvp.Value}""")))
+                TextUtil.LineSeparate(_inputsAndOutputs.Select(kvp => ($@"""{kvp.Key}""	""{kvp.Value}""")))
             );
         }
     }
