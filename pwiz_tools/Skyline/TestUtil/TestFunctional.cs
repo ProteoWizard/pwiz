@@ -133,6 +133,7 @@ namespace pwiz.SkylineTestUtil
         public const string MZ5_UNICODE_ISSUES = "mz5 doesn't handle unicode paths";
         public const string MSGFPLUS_UNICODE_ISSUES = "MsgfPlus doesn't handle unicode paths";
         public const string MSFRAGGER_UNICODE_ISSUES = "MsFragger doesn't handle unicode paths";
+        public const string HARDKLOR_UNICODE_ISSUES = "Hardklor doesn't handle unicode paths";
     }
 
     /// <summary>
