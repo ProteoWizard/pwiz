@@ -425,6 +425,8 @@ namespace pwiz.Skyline.Model.Tools
                             //p.Refresh();
                             p.Exited += (sender, processExitedEventArgs) =>
                                 boxStreamWriterHelper.HandleProcessExit(p.Id);
+                            boxStreamWriterHelper.AddFileForDeleteOnExit(ReportTempPath_toDelete);
+                            ReportTempPath_toDelete = null;
                         }
                         // ReSharper disable LocalizableElement
                         textWriter.WriteLine("\"" + p.StartInfo.FileName + "\" " + p.StartInfo.Arguments);
@@ -484,12 +486,15 @@ namespace pwiz.Skyline.Model.Tools
                 }
                 // CONSIDER: We don't delete the temp path here, because the file may be open
                 //           in a long running application like Excel.
-//                if (ReportTempPath_toDelete != null)
-//                {
-//                    FileEx.SafeDelete(ReportTempPath_toDelete, true);
-//                    ReportTempPath_toDelete = null;
-//                }  
-            }      
+                // (bspratt note Feb 2023) Actually the concern is for a race condition - the process that's using this
+                // file might not get a chance to read it before this code deletes it.
+                // Use TextBoxStreamWriterHelper.AddFileForDeleteOnExit instead.
+                //                if (ReportTempPath_toDelete != null)
+                //                {
+                //                    FileEx.SafeDelete(ReportTempPath_toDelete, true);
+                //                    ReportTempPath_toDelete = null;
+                //                }  
+            }
         }
 
         private bool CallArgsCollector(Control parent, string args, TextReader reportReader, ProcessStartInfo startInfo)
