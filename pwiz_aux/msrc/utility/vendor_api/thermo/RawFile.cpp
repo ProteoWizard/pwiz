@@ -584,7 +584,7 @@ void RawFileImpl::setCurrentController(ControllerType type, long controllerNumbe
     }
     CATCH_AND_FORWARD
 #else
-    raw_->SelectInstrument((Thermo::Device) type, controllerNumber);
+    try { raw_->SelectInstrument((Thermo::Device)type, controllerNumber); } CATCH_AND_FORWARD
     getRawByThread(0)->setCurrentController(type, controllerNumber);
 #endif
 }

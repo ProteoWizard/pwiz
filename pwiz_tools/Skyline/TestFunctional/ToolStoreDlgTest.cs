@@ -17,6 +17,7 @@
  * limitations under the License.
  */
 
+using System;
 using System.Collections.Generic;
 using System.IO;
 using System.Linq;
@@ -25,7 +26,8 @@ using pwiz.Skyline.Alerts;
 using pwiz.Skyline.Model.DocSettings;
 using pwiz.Skyline.Model.Tools;
 using pwiz.Skyline.Properties;
-using pwiz.Skyline.ToolsUI; 
+using pwiz.Skyline.ToolsUI;
+using pwiz.Skyline.Util;
 using pwiz.SkylineTestUtil;
 
 namespace pwiz.SkylineTestFunctional
@@ -52,6 +54,8 @@ namespace pwiz.SkylineTestFunctional
             TestToolDownload();
             TestInstallation();
             TestReinstall();
+            // Tidy up our tempfiles
+            FileEx.SafeDelete(Path.Combine(Environment.GetEnvironmentVariable(@"TMP") ?? string.Empty, INFO_NAME + @"Tool.zip"));
         }
 
         private void TestStoreLoad()
