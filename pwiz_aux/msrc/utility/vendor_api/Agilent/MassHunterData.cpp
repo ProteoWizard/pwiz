@@ -221,7 +221,8 @@ class MassHunterDataImpl : public MassHunterData
     mutable vector<Signal> signals_;
     mutable gcroot<System::Collections::Generic::Dictionary<String^, MHDAC::ISignalInfo^>^> signalInfoMap_;
 
-    mutable gcroot<MHDAC::IBDAChromData^> chromDad_;
+    void initNonMsData() const;
+    mutable vector<double> dadTimes_;
 
     bool hasProfileData_;
 };
@@ -505,6 +506,11 @@ MassHunterDataImpl::MassHunterDataImpl(const std::string& path)
 MassHunterDataImpl::~MassHunterDataImpl() noexcept(false)
 {
     try {reader_->CloseDataFile();} CATCH_AND_FORWARD
+    if (!dadTimes_.empty())
+    {
+        System::GC::Collect();
+        force_close_handles_to_filepath((bfs::path(massHunterRootPath_) / "AcqData" / "DAD1.sp").string());
+    }
 }
 
 std::string MassHunterDataImpl::getVersion() const
@@ -715,30 +721,37 @@ SignalChromatogramPtr MassHunterDataImpl::getSignal(const Signal& signal) const
     CATCH_AND_FORWARD
 }
 
-int MassHunterDataImpl::getNonMsScanCount() const
+void MassHunterDataImpl::initNonMsData() const
 {
+    if (!dadTimes_.empty())
+        return;
     try
     {
-        if (!chromDad_)
-        {
-            MHDAC::IBDAChromFilter^ filter = gcnew MHDAC::BDAChromFilter();
-            filter->ChromatogramType = MHDAC::ChromType::ExtractedWavelength;
-            filter->DeviceName = "DAD";
-            chromDad_ = reader_->GetChromatogram(filter)[0];
-        }
-        return chromDad_->TotalDataPoints;
+        MHDAC::IBDAChromFilter^ filter = gcnew MHDAC::BDAChromFilter();
+        filter->ChromatogramType = MHDAC::ChromType::ExtractedWavelength;
+        filter->DeviceName = "DAD";
+        auto chromatograms = reader_->GetChromatogram(filter);
+        if (chromatograms->Length > 0)
+            ToStdVector(chromatograms[0]->XArray, dadTimes_);
     }
     CATCH_AND_FORWARD
 }
 
+int MassHunterDataImpl::getNonMsScanCount() const
+{
+    initNonMsData();
+    return dadTimes_.size();
+}
+
 SpectrumPtr MassHunterDataImpl::getNonMsSpectrum(int index) const
 {
+    initNonMsData();
     try
     {
         MHDAC::IBDASpecFilter^ specFilter = gcnew MHDAC::BDASpecFilter();
         specFilter->SpectrumType = MHDAC::SpecType::UVSpectrum;
         specFilter->ScanRange = gcnew cli::array<MHDAC::MinMaxRange^>(1);
-        specFilter->ScanRange[0] = gcnew MHDAC::MinMaxRange(chromDad_->XArray[index], chromDad_->XArray[index]);
+        specFilter->ScanRange[0] = gcnew MHDAC::MinMaxRange(dadTimes_[index], dadTimes_[index]);
         return SpectrumPtr(new SpectrumImpl(reader_->GetSpectrum(specFilter)[0]));
     }
     CATCH_AND_FORWARD
