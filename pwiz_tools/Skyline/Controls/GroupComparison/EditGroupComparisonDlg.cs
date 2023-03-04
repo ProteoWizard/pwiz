@@ -30,6 +30,7 @@ using pwiz.Skyline.Model.GroupComparison;
 using pwiz.Skyline.Model.Results;
 using pwiz.Skyline.Properties;
 using pwiz.Skyline.Util;
+using pwiz.Skyline.Util.Extensions;
 
 namespace pwiz.Skyline.Controls.GroupComparison
 {
@@ -60,7 +61,7 @@ namespace pwiz.Skyline.Controls.GroupComparison
             : this(foldChangeBindingSource.GroupComparisonModel)
         {
             // ReSharper disable VirtualMemberCallInConstructor
-            Text = string.Format(Text, foldChangeBindingSource.GroupComparisonModel.GroupComparisonName);
+            Text = TextUtil.ColonSeparate(Text, foldChangeBindingSource.GroupComparisonModel.GroupComparisonName);
             // ReSharper restore VirtualMemberCallInConstructor
             panelName.Visible = false;
             panelButtons.Visible = false;
@@ -502,7 +503,16 @@ namespace pwiz.Skyline.Controls.GroupComparison
 
         private void comboMsLevel_SelectedIndexChanged(object sender, EventArgs e)
         {
+            if (_inChangeSettings)
+            {
+                return;
+            }
 
+            var newMsLevelOption = comboMsLevel.SelectedItem as MsLevelOption;
+            if (newMsLevelOption != null)
+            {
+                GroupComparisonDef = GroupComparisonDef.ChangeMsLevel(newMsLevelOption);
+            }
         }
 
         public NormalizationItem MakeNormalizationItem(NormalizeOption normalizeOption)

@@ -121,6 +121,7 @@
             resources.GetString("comboMsLevel.Items3"),
             resources.GetString("comboMsLevel.Items4")});
             this.comboMsLevel.Name = "comboMsLevel";
+            this.comboMsLevel.SelectedIndexChanged += new System.EventHandler(this.comboMsLevel_SelectedIndexChanged);
             // 
             // lblMsLevel
             // 
