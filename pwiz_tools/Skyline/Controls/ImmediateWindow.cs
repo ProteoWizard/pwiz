@@ -223,15 +223,25 @@ namespace pwiz.Skyline.Controls
 
         private readonly Dictionary<int, int> _pidToSmallInt;
         private readonly BitArrayEx _indexesInUse;
+        private List<string> _tempFiles; // List of files to delete on exit
 
         public TextBoxStreamWriterHelper()
         {
             Text = string.Empty;
             _pidToSmallInt = new Dictionary<int, int>();
             _indexesInUse = new BitArrayEx(NUM_PROC);
+            _tempFiles = new List<string>();
         }
 
         public string Text { get; set; }
+
+        public void AddFileForDeleteOnExit(string filename)
+        {
+            if (!string.IsNullOrEmpty(filename))
+            {
+                _tempFiles.Add(filename);
+            }
+        }
 
         public void WriteLineWithIdentifier(int process, string s)
         {
@@ -288,6 +298,12 @@ namespace pwiz.Skyline.Controls
                     _pidToSmallInt.Remove(pid);
                     if (_indexesInUse.IndexInRange(index) && _indexesInUse.Get(index))
                         _indexesInUse.Set(index, false);
+                }
+
+                foreach (var tempFile in _tempFiles)
+                {
+                    FileEx.SafeDelete(tempFile, true); // Don't throw if file can't be deleted
+                    DirectoryEx.SafeDelete(tempFile); // In case that was actually a directory name 
                 }
             }
         }
