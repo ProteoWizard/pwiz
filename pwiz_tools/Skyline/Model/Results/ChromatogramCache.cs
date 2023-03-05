@@ -282,7 +282,7 @@ namespace pwiz.Skyline.Model.Results
                 im.ReadStream.CloseStream();
                 im.ReadStream = manager.CreatePooledStream(prop,false);
             });
-        }        
+        }
 
         public void Dispose()
         {
