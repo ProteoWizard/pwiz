@@ -74,7 +74,8 @@ namespace TestPerf
         private string RootName { get; set; }
 
         [TestMethod, 
-         NoParallelTesting(TestExclusionReason.VENDOR_FILE_LOCKING), // Bruker wants exclusive read access to raw data)
+         NoParallelTesting(TestExclusionReason.VENDOR_FILE_LOCKING), // Reader wants exclusive read access to raw data?
+         NoUnicodeTesting(TestExclusionReason.MZ5_UNICODE_ISSUES),
          NoNightlyTesting(TestExclusionReason.EXCESSIVE_TIME)] // Do not run full filesets for nightly tests
         public void TestDiaUmpireWiffFile()
         {

@@ -66,7 +66,11 @@ namespace pwiz.SkylineTestFunctional
             var importResultsNameDlg = ShowDialog<ImportResultsNameDlg>(importResults.OkDialog);
             OkDialog(importResultsNameDlg, importResultsNameDlg.NoDialog);
             
-            WaitForCondition(() => SkylineWindow.Document.Settings.PeptideSettings.Libraries.HasMidasLibrary);
+            WaitForConditionUI(() => {
+                var document = SkylineWindow.DocumentUI;
+                return document.Settings.HasResults && document.Settings.MeasuredResults.IsLoaded && 
+                       document.Settings.PeptideSettings.Libraries.HasMidasLibrary;
+            });
             doc = SkylineWindow.Document;
 
             Assert.AreEqual(3, doc.Settings.MeasuredResults.Chromatograms.Count);

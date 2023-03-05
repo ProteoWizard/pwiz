@@ -688,7 +688,9 @@ namespace SkylineTester
                 {
                     var nightlyRoot = dlg.SelectedPath;
                     var userFolder = Environment.GetFolderPath(Environment.SpecialFolder.UserProfile);
-                    if (nightlyRoot.StartsWith(userFolder))
+                    if (nightlyRoot.Equals(userFolder))
+                        nightlyRoot = string.Empty;
+                    else if (nightlyRoot.StartsWith(userFolder))
                         nightlyRoot = nightlyRoot.Remove(0, userFolder.Length+1);
                     MainWindow.NightlyRoot.Text = nightlyRoot;
 
