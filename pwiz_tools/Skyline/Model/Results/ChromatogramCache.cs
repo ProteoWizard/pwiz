@@ -1289,152 +1289,155 @@ namespace pwiz.Skyline.Model.Results
             using (var fsScores = new FileSaver(cachePathOpt + SCORES_EXT, true))
             using (var fs = new FileSaver(cachePathOpt))
             {
-                var inStream = ReadStream.Stream;
-                fs.Stream = streamManager.CreateStream(fs.SafeName, FileMode.Create, true);
-                int peakCount = 0, scoreCount = 0;
-
-                byte[] buffer = new byte[0x40000]; // 256K
-
-                int i = 0;
-                do
+                lock (ReadStream)
                 {
-                    var firstEntry = ChromGroupHeaderInfos[listEntries[i].Item3];
-                    var lastEntry = firstEntry;
-                    int fileIndex = firstEntry.FileIndex;
-                    long offsetPoints = fs.Stream.Position - firstEntry.LocationPoints;
+                    var inStream = ReadStream.Stream;
+                    fs.Stream = streamManager.CreateStream(fs.SafeName, FileMode.Create, true);
+                    int peakCount = 0, scoreCount = 0;
 
-                    int iNext = i;
-                    int firstPeakToTransfer = 0;
-                    int numPeaksToTransfer = 0;
-                    // Enumerate until end of current file encountered
-                    while (iNext < listEntries.Length && fileIndex == ChromGroupHeaderInfos[listEntries[iNext].Item3].FileIndex)
+                    byte[] buffer = new byte[0x40000]; // 256K
+
+                    int i = 0;
+                    do
                     {
-                        lastEntry = ChromGroupHeaderInfos[listEntries[iNext++].Item3];
-                        // Otherwise add entries to the keep lists
-                        int textIdIndex = -1;
-                        if (lastEntry.TextIdIndex != -1 &&
-                            !dictKeepTextIdIndices.TryGetValue(lastEntry.TextIdIndex, out textIdIndex))
+                        var firstEntry = ChromGroupHeaderInfos[listEntries[i].Item3];
+                        var lastEntry = firstEntry;
+                        int fileIndex = firstEntry.FileIndex;
+                        long offsetPoints = fs.Stream.Position - firstEntry.LocationPoints;
+
+                        int iNext = i;
+                        int firstPeakToTransfer = 0;
+                        int numPeaksToTransfer = 0;
+                        // Enumerate until end of current file encountered
+                        while (iNext < listEntries.Length && fileIndex == ChromGroupHeaderInfos[listEntries[iNext].Item3].FileIndex)
                         {
-                            textIdIndex = listKeepTextIdBytes.Count;
-                            dictKeepTextIdIndices.Add(lastEntry.TextIdIndex, textIdIndex);
+                            lastEntry = ChromGroupHeaderInfos[listEntries[iNext++].Item3];
+                            // Otherwise add entries to the keep lists
+                            int textIdIndex = -1;
+                            if (lastEntry.TextIdIndex != -1 &&
+                                !dictKeepTextIdIndices.TryGetValue(lastEntry.TextIdIndex, out textIdIndex))
+                            {
+                                textIdIndex = listKeepTextIdBytes.Count;
+                                dictKeepTextIdIndices.Add(lastEntry.TextIdIndex, textIdIndex);
+                            }
+                            listKeepEntries.Add(new ChromGroupHeaderInfo(lastEntry.Precursor,
+                                textIdIndex,
+                                lastEntry.TextIdLen,
+                                listKeepCachedFiles.Count,
+                                lastEntry.NumTransitions,
+                                listKeepTransitions.Count,
+                                lastEntry.NumPeaks,
+                                peakCount,
+                                scoreCount,
+                                lastEntry.MaxPeakIndex,
+                                lastEntry.NumPoints,
+                                lastEntry.CompressedSize,
+                                lastEntry.UncompressedSize,
+                                lastEntry.LocationPoints + offsetPoints,
+                                lastEntry.Flags,
+                                lastEntry.StatusId,
+                                lastEntry.StatusRank,
+                                lastEntry.StartTime,
+                                lastEntry.EndTime,
+                                lastEntry.CollisionalCrossSection, 
+                                lastEntry.IonMobilityUnits));
+                            int start = lastEntry.StartTransitionIndex;
+                            int end = start + lastEntry.NumTransitions;
+                            for (int j = start; j < end; j++)
+                                listKeepTransitions.Add(_rawData.ChromTransitions[j]);
+                            int numEntryPeaks = lastEntry.NumPeaks * lastEntry.NumTransitions;
+                            if (lastEntry.StartPeakIndex == firstPeakToTransfer + numPeaksToTransfer)
+                            {
+                                numPeaksToTransfer += numEntryPeaks;
+                            }
+                            else
+                            {
+                                if (numPeaksToTransfer > 0)
+                                {
+                                    TransferPeaks(cacheFormat, firstPeakToTransfer, numPeaksToTransfer, fsPeaks.FileStream);
+                                }
+
+                                firstPeakToTransfer = lastEntry.StartPeakIndex;
+                                numPeaksToTransfer = numEntryPeaks;
+                            }
+                            peakCount += numEntryPeaks;
+                        
+                            start = lastEntry.TextIdIndex;
+                            end = start + lastEntry.TextIdLen;
+                            for (int j = start; j < end; j++)
+                                listKeepTextIdBytes.Add(_rawData.TextIdBytes[j]);
+
+                            start = lastEntry.StartScoreIndex;
+                            if (start != -1)
+                            {
+                                end = start + lastEntry.NumPeaks * ScoreTypes.Count;
+                                scoreCount += end - start;
+                                if (scoreCount > 0)
+                                {
+                                    inStream.Seek(_rawData.LocationScoreValues + start * SCORE_VALUE_SIZE, SeekOrigin.Begin);
+                                    inStream.TransferBytes(fsScores.FileStream, (end - start) * SCORE_VALUE_SIZE);
+                                }
+                            }
                         }
-                        listKeepEntries.Add(new ChromGroupHeaderInfo(lastEntry.Precursor,
-                            textIdIndex,
-                            lastEntry.TextIdLen,
-                            listKeepCachedFiles.Count,
-                            lastEntry.NumTransitions,
-                            listKeepTransitions.Count,
-                            lastEntry.NumPeaks,
-                            peakCount,
-                            scoreCount,
-                            lastEntry.MaxPeakIndex,
-                            lastEntry.NumPoints,
-                            lastEntry.CompressedSize,
-                            lastEntry.UncompressedSize,
-                            lastEntry.LocationPoints + offsetPoints,
-                            lastEntry.Flags,
-                            lastEntry.StatusId,
-                            lastEntry.StatusRank,
-                            lastEntry.StartTime,
-                            lastEntry.EndTime,
-                            lastEntry.CollisionalCrossSection, 
-                            lastEntry.IonMobilityUnits));
-                        int start = lastEntry.StartTransitionIndex;
-                        int end = start + lastEntry.NumTransitions;
-                        for (int j = start; j < end; j++)
-                            listKeepTransitions.Add(_rawData.ChromTransitions[j]);
-                        int numEntryPeaks = lastEntry.NumPeaks * lastEntry.NumTransitions;
-                        if (lastEntry.StartPeakIndex == firstPeakToTransfer + numPeaksToTransfer)
+
+                        if (numPeaksToTransfer > 0)
                         {
-                            numPeaksToTransfer += numEntryPeaks;
+                            TransferPeaks(cacheFormat, firstPeakToTransfer, numPeaksToTransfer, fsPeaks.FileStream);
                         }
+
+                        if (_rawData.ChromCacheFiles[fileIndex].SizeScanIds == 0)
+                            listKeepCachedFiles.Add(_rawData.ChromCacheFiles[fileIndex]);
                         else
                         {
-                            if (numPeaksToTransfer > 0)
-                            {
-                                TransferPeaks(cacheFormat, firstPeakToTransfer, numPeaksToTransfer, fsPeaks.FileStream);
-                            }
-
-                            firstPeakToTransfer = lastEntry.StartPeakIndex;
-                            numPeaksToTransfer = numEntryPeaks;
+                            // Write all scan ids for the last file to the scan ids output stream
+                            inStream.Seek(_rawData.LocationScanIds + _rawData.ChromCacheFiles[fileIndex].LocationScanIds, SeekOrigin.Begin);
+                            int lenReadIds = _rawData.ChromCacheFiles[fileIndex].SizeScanIds;
+                            long locationScanIds = fsScans.Stream.Position;
+                            inStream.TransferBytes(fsScans.Stream, lenReadIds, buffer);
+                            listKeepCachedFiles.Add(_rawData.ChromCacheFiles[fileIndex].RelocateScanIds(locationScanIds));
                         }
-                        peakCount += numEntryPeaks;
-                        
-                        start = lastEntry.TextIdIndex;
-                        end = start + lastEntry.TextIdLen;
-                        for (int j = start; j < end; j++)
-                            listKeepTextIdBytes.Add(_rawData.TextIdBytes[j]);
 
-                        start = lastEntry.StartScoreIndex;
-                        if (start != -1)
-                        {
-                            end = start + lastEntry.NumPeaks * ScoreTypes.Count;
-                            scoreCount += end - start;
-                            if (scoreCount > 0)
-                            {
-                                inStream.Seek(_rawData.LocationScoreValues + start * SCORE_VALUE_SIZE, SeekOrigin.Begin);
-                                inStream.TransferBytes(fsScores.FileStream, (end - start) * SCORE_VALUE_SIZE);
-                            }
-                        }
-                    }
+                        // Write all points for the last file to the output stream
+                        inStream.Seek(firstEntry.LocationPoints, SeekOrigin.Begin);
+                        long lenRead = lastEntry.LocationPoints + lastEntry.CompressedSize - firstEntry.LocationPoints;
+                        inStream.TransferBytes(fs.Stream, lenRead, buffer);
 
-                    if (numPeaksToTransfer > 0)
-                    {
-                        TransferPeaks(cacheFormat, firstPeakToTransfer, numPeaksToTransfer, fsPeaks.FileStream);
-                    }
+                        // Advance to next file
+                        i = iNext;
 
-                    if (_rawData.ChromCacheFiles[fileIndex].SizeScanIds == 0)
-                        listKeepCachedFiles.Add(_rawData.ChromCacheFiles[fileIndex]);
-                    else
-                    {
-                        // Write all scan ids for the last file to the scan ids output stream
-                        inStream.Seek(_rawData.LocationScanIds + _rawData.ChromCacheFiles[fileIndex].LocationScanIds, SeekOrigin.Begin);
-                        int lenReadIds = _rawData.ChromCacheFiles[fileIndex].SizeScanIds;
-                        long locationScanIds = fsScans.Stream.Position;
-                        inStream.TransferBytes(fsScans.Stream, lenReadIds, buffer);
-                        listKeepCachedFiles.Add(_rawData.ChromCacheFiles[fileIndex].RelocateScanIds(locationScanIds));
-                    }
+                        if (progress != null)
+                            progress.SetProgressCheckCancel(i, listEntries.Length);
+                    } while (i < listEntries.Length);
 
-                    // Write all points for the last file to the output stream
-                    inStream.Seek(firstEntry.LocationPoints, SeekOrigin.Begin);
-                    long lenRead = lastEntry.LocationPoints + lastEntry.CompressedSize - firstEntry.LocationPoints;
-                    inStream.TransferBytes(fs.Stream, lenRead, buffer);
+                    // CONSIDER: We should be able to figure out the order from the original order
+                    //           without needing this second sort
+                    listKeepEntries.Sort();
 
-                    // Advance to next file
-                    i = iNext;
+                    var newCacheHeader = WriteStructs(
+                        cacheFormat,
+                        fs.Stream,
+                        fsScans.Stream,
+                        fsPeaks.Stream,
+                        fsScores.Stream,
+                        listKeepCachedFiles,
+                        listKeepEntries,
+                        listKeepTransitions,
+                        listKeepTextIdBytes,
+                        ScoreTypes,
+                        scoreCount,
+                        peakCount, out long scoreValueLocation);
 
-                    if (progress != null)
-                        progress.SetProgressCheckCancel(i, listEntries.Length);
-                } while (i < listEntries.Length);
+                    CommitCache(fs);
 
-                // CONSIDER: We should be able to figure out the order from the original order
-                //           without needing this second sort
-                listKeepEntries.Sort();
-
-                var newCacheHeader = WriteStructs(
-                    cacheFormat,
-                    fs.Stream,
-                    fsScans.Stream,
-                    fsPeaks.Stream,
-                    fsScores.Stream,
-                    listKeepCachedFiles,
-                    listKeepEntries,
-                    listKeepTransitions,
-                    listKeepTextIdBytes,
-                    ScoreTypes,
-                    scoreCount,
-                    peakCount, out long scoreValueLocation);
-
-                CommitCache(fs);
-
-                fsPeaks.Stream.Seek(0, SeekOrigin.Begin);
-                fsScores.Stream.Seek(0, SeekOrigin.Begin);
-                var rawData =
-                    new RawData(newCacheHeader, listKeepCachedFiles, listKeepEntries.ToBlockedArray(),
-                        listKeepTransitions.ToBlockedArray(), ScoreTypes, scoreValueLocation, listKeepTextIdBytes.ToArray());
-                return new ChromatogramCache(cachePathOpt, rawData,
-                    // Create a new read stream, for the newly created file
-                    streamManager.CreatePooledStream(cachePathOpt, false));
+                    fsPeaks.Stream.Seek(0, SeekOrigin.Begin);
+                    fsScores.Stream.Seek(0, SeekOrigin.Begin);
+                    var rawData =
+                        new RawData(newCacheHeader, listKeepCachedFiles, listKeepEntries.ToBlockedArray(),
+                            listKeepTransitions.ToBlockedArray(), ScoreTypes, scoreValueLocation, listKeepTextIdBytes.ToArray());
+                    return new ChromatogramCache(cachePathOpt, rawData,
+                        // Create a new read stream, for the newly created file
+                        streamManager.CreatePooledStream(cachePathOpt, false));
+                }
             }
         }
 
@@ -1573,9 +1576,9 @@ namespace pwiz.Skyline.Model.Results
 
         private T CallWithStream<T>(Func<Stream, T> func)
         {
-            var stream = ReadStream.Stream;
-            lock (stream)
+            lock (ReadStream)
             {
+                var stream = ReadStream.Stream;
                 try
                 {
                     return func(stream);
