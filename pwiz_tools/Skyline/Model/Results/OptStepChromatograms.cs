@@ -32,17 +32,16 @@ namespace pwiz.Skyline.Model.Results
     public class OptStepChromatograms
     {
         public static readonly OptStepChromatograms EMPTY =
-            new OptStepChromatograms(SignedMz.ZERO, ImmutableList.Empty<ChromatogramInfo>(), 0);
+            new OptStepChromatograms(ImmutableList.Empty<ChromatogramInfo>(), 0);
         private readonly int _centerIndex;
         private ImmutableList<ChromatogramInfo> _chromatogramInfos;
 
         /// <summary>
         /// 
         /// </summary>
-        /// <param name="productMz">The m/z of the transition that these chromatograms are for</param>
         /// <param name="chromatograms">List chromatograms </param>
         /// <param name="stepCount"></param>
-        public OptStepChromatograms(SignedMz productMz, IEnumerable<ChromatogramInfo> chromatograms, int stepCount)
+        public OptStepChromatograms(IEnumerable<ChromatogramInfo> chromatograms, int stepCount)
         {
             _chromatogramInfos = ImmutableList.ValueOf(chromatograms);
             StepCount = stepCount;
@@ -68,7 +67,7 @@ namespace pwiz.Skyline.Model.Results
             {
                 return EMPTY;
             }
-            return new OptStepChromatograms(chromatogramInfo.ProductMz, ImmutableList.Singleton(chromatogramInfo), 0);
+            return new OptStepChromatograms(ImmutableList.Singleton(chromatogramInfo), 0);
         }
 
         /// <summary>

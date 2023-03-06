@@ -541,7 +541,7 @@ namespace pwiz.Skyline.Model.Results
                         doFindPeaks = true;
                     }
                 }
-                if (doFindPeaks)
+                if (doFindPeaks && chromData.OptimizationStep == 0)
                 {
                     chromData.FindPeaks(retentionTimes, TimeIntervals, explicitRT);
                 }

@@ -280,7 +280,7 @@ namespace pwiz.Skyline.Model.Results
 
             if (fixCEOptForShimadzu)
             {
-                SetOptStepsFromCeValues(document);
+                SetOptStepsFromCeValues();
             }
             else if (_optimizableRegression != null)
             {
@@ -343,7 +343,7 @@ namespace pwiz.Skyline.Model.Results
                 }
             }
         }
-        private void SetOptStepsFromCeValues(SrmDocument doc)
+        private void SetOptStepsFromCeValues()
         {
             // Shimadzu can't do the necessary product m/z stepping for itself.
             // So, they provide the CE values in their IDs and we need to adjust
@@ -385,7 +385,7 @@ namespace pwiz.Skyline.Model.Results
                 return;
             }
 
-            int centerIdx = (chromDatas.Count + 1) / 2;
+            int centerIdx = (chromDatas.Count + 1) / 2 - 1;
             if (transitionGroupDocNode != null)
             {
                 var centerMz = chromDatas[centerIdx].Key.Product;

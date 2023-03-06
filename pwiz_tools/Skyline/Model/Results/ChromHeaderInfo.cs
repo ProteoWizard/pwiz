@@ -2516,7 +2516,7 @@ namespace pwiz.Skyline.Model.Results
                 } while (i < endTran && _allTransitions[i].OptimizationStep == _allTransitions[i - 1].OptimizationStep + 1);
             }
 
-            return new OptStepChromatograms(nodeTran?.Mz ?? SignedMz.ZERO, listChromInfo, regression.StepCount);
+            return new OptStepChromatograms(listChromInfo, regression.StepCount);
         }
 
         private int? GetBestProductIndex(TransitionDocNode nodeTran, float tolerance)

@@ -52,7 +52,7 @@ namespace pwiz.Skyline.Model.Results
 
         public ChromData(ChromKey key, int providerId)
         {
-            Key = PrimaryKey = key;
+            Key = key;
             ProviderId = providerId;
             Peaks = new List<ChromPeak>();
             MaxPeakIndex = -1;
@@ -300,7 +300,17 @@ namespace pwiz.Skyline.Model.Results
         public IList<ChromPeak> Peaks { get; private set; }
         public int MaxPeakIndex { get; set; }
         public int OptimizationStep => Key.OptimizationStep;
-        public ChromKey PrimaryKey { get; set; }
+        public ChromKey PrimaryKey
+        {
+            get
+            {
+                if (Key.OptimizationStep == 0)
+                {
+                    return Key;
+                }
+                return Key.ChangeOptimizationStep(0, null);
+            }
+        }
 
         public void FixChromatogram(float[] timesNew, float[] intensitiesNew, int[] scanIndexesNew)
         {
