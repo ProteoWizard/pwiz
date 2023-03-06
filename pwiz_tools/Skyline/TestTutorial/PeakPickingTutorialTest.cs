@@ -96,7 +96,7 @@ namespace pwiz.SkylineTestTutorial
 
         private readonly string[] EXPECTED_COEFFICIENTS =
         {
-            "-0.0786|-0.7490|2.2393|1.2082|0.0330|0.1517|0.1764| null |0.4993|6.3960|-0.0482|0.5479|0.6292| null | null | null | null | null ",
+            "-0.0783|-0.7492|2.2424|1.2062|0.0331|0.1515|0.1767| null |0.4983|6.3997|-0.0482|0.5476|0.6281| null | null | null | null | null ",
             "0.2900| null | null |5.9842|-0.0624|0.6681|0.7968| null | null | null | null | null | null | null | null | null | null | null ",
         };
 
