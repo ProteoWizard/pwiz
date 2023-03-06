@@ -388,7 +388,7 @@ namespace TestPerf
                 ChromatogramClickPoint = new PointF(10.79F, 3800.0F),
                 //TargetCounts = new[] { 4937, 37152, 38716, 232296 },
                 FinalTargetCounts = new[] { 2697, 27225, 28373, 170238 },
-                ScoringModelCoefficients = "-0.3352|-0.9057|4.5016|3.5315|-0.1012|0.7389|0.4436|-0.1320",
+                ScoringModelCoefficients = "-0.3354|-0.9055|4.5023|3.5337|-0.1011|0.7388|0.4436|-0.1320",
                 MassErrorStats = new[]
                 {
                     new[] {3.6, 2.7},
