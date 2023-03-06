@@ -166,9 +166,9 @@ namespace TestPerf
                     new[] {-0.4, 3.9},
                     new[] {1.0, 4.1},
                 },
-                DiffPeptideCounts = new[] { 12807, 7963, 2691, 2142 },
-                UnpolishedProteins = 2206,
-                PolishedProteins = 2206,
+                DiffPeptideCounts = new[] { 12808, 7963, 2692, 2142 },
+                UnpolishedProteins = 2207,
+                PolishedProteins = 2207,
             };
 
             if (!IsCoverShotMode)
@@ -197,8 +197,8 @@ namespace TestPerf
                 LibraryPeptideCount = 18600,
                 ExpectedIrtPeptideCount = 11,
                 IrtStandard = IrtStandard.BIOGNOSYS_11,
-                IrtSlope = 2.9257,
-                IrtIntercept = -68.8503,
+                IrtSlope = 2.926,
+                IrtIntercept = -68.850,
                 HasAmbiguousMatches = true,
                 IsolationSchemeName = "ETH TTOF (64 variable)",
                 IsolationSchemeFile = "64_variable_windows.csv",
@@ -264,9 +264,9 @@ namespace TestPerf
                     new[] {2.2, 4.6},
                     new[] {1.9, 4.7},
                 },
-                DiffPeptideCounts = new[] { 10461, 6387, 2240, 1823 },
-                UnpolishedProteins = 1648,
-                PolishedProteins = 1648,
+                DiffPeptideCounts = new[] { 10459, 6387, 2238, 1823 },
+                UnpolishedProteins = 1647,
+                PolishedProteins = 1647,
             };
 
             if (!IsCoverShotMode)
@@ -399,7 +399,7 @@ namespace TestPerf
                     new[] {3.9, 2.6},
                     new[] {3.6, 2.7},
                 },
-                DiffPeptideCounts = new[] { 12621, 8497, 2255, 1854 },
+                DiffPeptideCounts = new[] { 12621, 8498, 2254, 1854 },
                 UnpolishedProteins = 2314,
                 PolishedProteins = 2314,
             };
