@@ -33,7 +33,7 @@ namespace {
     boost::mutex m;
 }
 
-PWIZ_API_DECL void pwiz::msdata::SpectrumListBase::warn_once(const char * msg) const
+PWIZ_API_DECL void pwiz::msdata::ListBase::warn_once(const char * msg) const
 {
     boost::lock_guard<boost::mutex> g(m);
     if (warn_msg_hashes_.insert(hash(msg)).second) // .second is true iff value is new
@@ -66,7 +66,7 @@ PWIZ_API_DECL size_t pwiz::msdata::SpectrumListBase::checkNativeIdFindResult(siz
             boost::lock_guard<boost::mutex> g(m);
 
             // early exit if warning already issued, to avoid potentially doing these calculations for thousands of ids
-            if (!warn_msg_hashes_.insert(spectrum_id_mismatch_hash_).second)
+            if (!impl_.warn_msg_hashes().insert(spectrum_id_mismatch_hash_).second)
                 return size();
         }
 
@@ -94,7 +94,7 @@ PWIZ_API_DECL size_t pwiz::msdata::SpectrumListBase::checkNativeIdFindResult(siz
     }
 }
 
-size_t pwiz::msdata::SpectrumListBase::hash(const char* msg) const
+size_t pwiz::msdata::ListBase::hash(const char* msg) const
 {
     return boost::hash_range(msg, msg + strlen(msg));
 }

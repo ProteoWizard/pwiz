@@ -124,7 +124,7 @@ namespace TestPerf
                 ChromatogramClickPoint = new PointF(34.18F, 108.0F),
                 //TargetCounts = new[] { 14, 279, 299, 1793 },
                 FinalTargetCounts = new[] { 13, 279, 299, 1793 },
-                ScoringModelCoefficients = "0.2676|-0.6468|3.4197|-0.0179|-0.4724|0.9272|0.0764|-0.0496",
+                ScoringModelCoefficients = "0.2674|-0.6467|3.4194|-0.0171|-0.4723|0.9270|0.0768|-0.0496",
                 MassErrorStats = new[]
                 {
                     new[] {3.0, 4.4},
@@ -155,7 +155,7 @@ namespace TestPerf
                 ChromatogramClickPoint = new PointF(34.18F, 108.0F),
                 //TargetCounts = new[] { 4700, 36628, 37960, 227760 },
                 FinalTargetCounts = new[] { 2399, 26144, 27078, 162468 },
-                ScoringModelCoefficients = "-0.0852|-0.7449|4.2686|-0.2087|-0.2642|0.7596|0.3133|-0.0659",
+                ScoringModelCoefficients = "-0.0842|-0.7448|4.2689|-0.2083|-0.2644|0.7594|0.3123|-0.0659",
                 MassErrorStats = new[]
                 {
                     new[] {2.8, 4.6},
@@ -221,7 +221,7 @@ namespace TestPerf
                 ChromatogramClickPoint = new PointF(31.98F, 285741.3F),
                 //TargetCounts = new[] { 14, 271, 331, 1985 },
                 FinalTargetCounts = new[] { 13, 271, 331, 1985 },
-                ScoringModelCoefficients = "0.3105|-0.7827|4.9928|-0.5000|-0.0813|0.7381|0.0969|-0.0538",
+                ScoringModelCoefficients = "0.3065|-0.7855|4.9580|-0.4976|-0.0812|0.7443|0.0988|-0.0542",
                 MassErrorStats = new[]
                 {
                     new[] {1.6, 4.2},
@@ -253,7 +253,7 @@ namespace TestPerf
                 ChromatogramClickPoint = new PointF(32.05F, 268334.7F),
                 //TargetCounts = new[] { 3991, 30916, 33841, 203044 },
                 FinalTargetCounts = new[] { 2038, 21960, 24013, 144076 },
-                ScoringModelCoefficients = "0.3178|-0.8917|3.7829|0.2247|-0.0826|0.7334|0.0011|-0.0605",
+                ScoringModelCoefficients = "0.3173|-0.8915|3.7830|0.2262|-0.0825|0.7332|0.0012|-0.0606",
                 MassErrorStats = new[]
                 {
                     new[] {2.0, 4.7},
@@ -318,7 +318,7 @@ namespace TestPerf
                 ChromatogramClickPoint = new PointF(10.79F, 3800.0F),
                 //TargetCounts = new[] { 14, 75, 83, 498 },
                 FinalTargetCounts = new[] { 12, 75, 83, 498 },
-                ScoringModelCoefficients = "-0.5435|-2.3125|7.5279|6.0311|-0.1596|0.6412|0.8679|-0.3131",
+                ScoringModelCoefficients = "-0.5430|-2.3111|7.5218|6.0404|-0.1598|0.6420|0.8685|-0.3133",
                 MassErrorStats = new[]
                 {
                     new[] {3.9, 1.9},

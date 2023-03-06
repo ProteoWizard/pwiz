@@ -194,6 +194,7 @@ namespace MSConvertGUI
                     workItem = _unifiCredentialsByUrl[workItem].GetUrlWithAuthentication(workItem);
 
                 var config = runProgram.ParseCommandLine(_outputFolder, (workItem + "|" + _options).Trim('|'));
+                config.WriteConfig.continueOnError = true;
                 runProgram.QueueWork(config);
             }
 

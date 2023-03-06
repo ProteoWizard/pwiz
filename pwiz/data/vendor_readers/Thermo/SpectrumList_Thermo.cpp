@@ -144,8 +144,7 @@ InstrumentConfigurationPtr SpectrumList_Thermo::findInstrumentConfiguration(cons
         }
     }
 
-    warn_once(("no matching instrument configuration for analyzer type " + cvTermInfo(massAnalyzerType).shortName()).c_str());
-    return InstrumentConfigurationPtr();
+    throw runtime_error("no matching instrument configuration for analyzer type " + cvTermInfo(massAnalyzerType).shortName());
 }
 
 inline boost::optional<double> getElectronvoltActivationEnergy(const ScanInfo& scanInfo)
@@ -274,14 +273,7 @@ PWIZ_API_DECL SpectrumPtr SpectrumList_Thermo::spectrum(size_t index, DetailLeve
         scanInfo = raw->getScanInfo(ie.scan);
         if (!scanInfo.get())
             throw runtime_error("[SpectrumList_Thermo::spectrum()] Error retrieving ScanInfo.");
-    }
-    catch (RawEgg& e)
-    {
-        throw runtime_error(string("[SpectrumList_Thermo::spectrum()] Error retrieving ScanInfo: ") + e.what());
-    }
 
-    try
-    {
         if (scanInfo->isConstantNeutralLoss())
         {
             scan.set(MS_analyzer_scan_offset, scanInfo->analyzerScanOffset(), MS_m_z);
