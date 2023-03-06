@@ -488,7 +488,7 @@ namespace pwiz.Skyline.Model.GroupComparison
 
                 foreach (var peptide in selector.ListPeptides())
                 {
-                    QuantificationSettings quantificationSettings = QuantificationSettings.DEFAULT
+                    QuantificationSettings quantificationSettings = SrmDocument.Settings.PeptideSettings.Quantification
                         .ChangeNormalizationMethod(normalizationMethod)
                         .ChangeMsLevel(selector.MsLevel);
                     var peptideQuantifier = new PeptideQuantifier(GetNormalizationData, selector.Protein, peptide,
