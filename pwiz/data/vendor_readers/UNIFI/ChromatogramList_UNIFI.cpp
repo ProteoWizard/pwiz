@@ -100,7 +100,7 @@ PWIZ_API_DECL void ChromatogramList_UNIFI::makeFullFileChromatogram(pwiz::msdata
 
         if (!bxp::regex_match(info.id, what, functionNumberRegex))
         {
-            msd_.run.spectrumListPtr->warn_once(("unable to parse function number from chromatogram name: " + info.id).c_str());
+            warn_once(("unable to parse function number from chromatogram name: " + info.id).c_str());
             continue;
         }
 

@@ -2379,7 +2379,7 @@ void write(minimxml::XMLWriter& writer, const SpectrumList& spectrumList, const 
            const BinaryDataEncoder::Config& config,
            vector<boost::iostreams::stream_offset>* spectrumPositions,
            const IterationListenerRegistry* iterationListenerRegistry,
-           bool useWorkerThreads)
+           bool useWorkerThreads, bool continueOnError)
 {
     XMLWriter::Attributes attributes;
     attributes.add("count", spectrumList.size());
@@ -2390,7 +2390,7 @@ void write(minimxml::XMLWriter& writer, const SpectrumList& spectrumList, const 
 
     writer.startElement("spectrumList", attributes); // required by schema, even if empty
 
-    SpectrumWorkerThreads spectrumWorkers(spectrumList, useWorkerThreads);
+    SpectrumWorkerThreads spectrumWorkers(spectrumList, useWorkerThreads, continueOnError);
 
     for (size_t i=0; i<spectrumList.size(); i++)
     {
@@ -2412,12 +2412,23 @@ void write(minimxml::XMLWriter& writer, const SpectrumList& spectrumList, const 
 
         // write the spectrum
 
-        //SpectrumPtr spectrum = spectrumList.spectrum(i, true);
-        SpectrumPtr spectrum = spectrumWorkers.processBatch(i);
-        BOOST_ASSERT(spectrum->binaryDataArrayPtrs.empty() ||
-                     spectrum->defaultArrayLength == spectrum->getMZArray()->data.size());
-        if (spectrum->index != i) throw runtime_error("[IO::write(SpectrumList)] Bad index.");
-        write(writer, *spectrum, msd, config);
+        SpectrumPtr spectrum;
+        try
+        {
+            //spectrum = spectrumList.spectrum(i, true);
+            spectrum = spectrumWorkers.processBatch(i);
+            BOOST_ASSERT(spectrum->binaryDataArrayPtrs.empty() ||
+                         spectrum->defaultArrayLength == spectrum->getMZArray()->data.size());
+            if (spectrum->index != i) throw runtime_error("[IO::write(SpectrumList)] Bad index.");
+            write(writer, *spectrum, msd, config);
+        }
+        catch (std::exception& e)
+        {
+            if (continueOnError)
+                cerr << "Skipping spectrum " << i << " \"" << (spectrum ? spectrum->id : spectrumList.spectrumIdentity(i).id) << "\": " << e.what() << endl;
+            else
+                throw;
+        }
     }
 
     writer.endElement();
@@ -2482,7 +2493,8 @@ PWIZ_API_DECL
 void write(minimxml::XMLWriter& writer, const ChromatogramList& chromatogramList,
            const BinaryDataEncoder::Config& config,
            vector<boost::iostreams::stream_offset>* chromatogramPositions,
-           const IterationListenerRegistry* iterationListenerRegistry)
+           const IterationListenerRegistry* iterationListenerRegistry,
+           bool continueOnError)
 {
     if (chromatogramList.empty()) // chromatogramList not required by schema
         return;
@@ -2515,10 +2527,20 @@ void write(minimxml::XMLWriter& writer, const ChromatogramList& chromatogramList
             chromatogramPositions->push_back(writer.positionNext());
 
         // write the chromatogram
-
-        ChromatogramPtr chromatogram = chromatogramList.chromatogram(i, true);
-        if (chromatogram->index != i) throw runtime_error("[IO::write(ChromatogramList)] Bad index.");
-        write(writer, *chromatogram, config);
+        ChromatogramPtr chromatogram;
+        try
+        {
+            chromatogram = chromatogramList.chromatogram(i, true);
+            if (chromatogram->index != i) throw runtime_error("[IO::write(ChromatogramList)] Bad index.");
+            write(writer, *chromatogram, config);
+        }
+        catch (std::exception& e)
+        {
+            if (continueOnError)
+                cerr << "Skipping chromatogram " << i << " \"" << (chromatogram ? chromatogram->id : chromatogramList.chromatogramIdentity(i).id) << "\": " << e.what() << endl;
+            else
+                throw;
+        }
     }
 
     writer.endElement();
@@ -2584,7 +2606,7 @@ void write(minimxml::XMLWriter& writer, const Run& run, const MSData& msd,
            vector<boost::iostreams::stream_offset>* spectrumPositions,
            vector<boost::iostreams::stream_offset>* chromatogramPositions,
            const pwiz::util::IterationListenerRegistry* iterationListenerRegistry,
-           bool useWorkerThreads)
+           bool useWorkerThreads, bool continueOnError)
 {
     XMLWriter::Attributes attributes;
     attributes.add("id", encode_xml_id_copy(run.id));
@@ -2614,10 +2636,10 @@ void write(minimxml::XMLWriter& writer, const Run& run, const MSData& msd,
     bool hasChromatogramList = run.chromatogramListPtr.get() && run.chromatogramListPtr->size() > 0;
 
     if (hasSpectrumList)
-        write(writer, *run.spectrumListPtr, msd, config, spectrumPositions, iterationListenerRegistry, useWorkerThreads);
+        write(writer, *run.spectrumListPtr, msd, config, spectrumPositions, iterationListenerRegistry, useWorkerThreads, continueOnError);
 
     if (hasChromatogramList)
-        write(writer, *run.chromatogramListPtr, config, chromatogramPositions, iterationListenerRegistry);
+        write(writer, *run.chromatogramListPtr, config, chromatogramPositions, iterationListenerRegistry, continueOnError);
 
     writer.endElement();
 }
@@ -2725,7 +2747,7 @@ void write(minimxml::XMLWriter& writer, const MSData& msd,
            vector<boost::iostreams::stream_offset>* spectrumPositions,
            vector<boost::iostreams::stream_offset>* chromatogramPositions,
            const pwiz::util::IterationListenerRegistry* iterationListenerRegistry,
-           bool useWorkerThreads)
+           bool useWorkerThreads, bool continueOnError)
 {
     XMLWriter::Attributes attributes;
     attributes.add("xmlns", "http://psi.hupo.org/ms/mzml");
@@ -2768,7 +2790,7 @@ void write(minimxml::XMLWriter& writer, const MSData& msd,
 
     writeList(writer, msd.allDataProcessingPtrs(), "dataProcessingList");
 
-    write(writer, msd.run, msd, config, spectrumPositions, chromatogramPositions, iterationListenerRegistry, useWorkerThreads);
+    write(writer, msd.run, msd, config, spectrumPositions, chromatogramPositions, iterationListenerRegistry, useWorkerThreads, continueOnError);
 
     writer.endElement();
 }

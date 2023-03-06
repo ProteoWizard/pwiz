@@ -67,10 +67,13 @@ namespace pwiz.Skyline.Model.DdaSearch
         private const string MAX_LOADED_SPECTRA_AT_ONCE = "MaxLoadedSpectraAtOnce";
         private const string CONSIDERED_CHARGES = "ConsideredCharges";
 
-        private readonly TemporaryDirectory _baseDir = new TemporaryDirectory(tempPrefix: @"~SK_MSAmanda/");
+        public const string MS_AMANDA_TMP = @"~SK_MSAmanda";
+        private readonly TemporaryDirectory _baseDir; // Created as %TMP%/~SK_MSAmanda/<random dirname>
+        // TODO(MattC): tidy up MSAmanda implementation so that we can distinguish intentional uses of tmp dir (caching potentially re-used files) from accidental directory creation and/or not-reused files within
 
         public MSAmandaSearchWrapper()
         {
+            _baseDir = new TemporaryDirectory(tempPrefix: MS_AMANDA_TMP + @"/"); // Creates %TMP%/~SK_MSAmanda/<random dirname>
             Settings = new MSAmandaSettings();
             helper = new MSHelper();
             helper.InitLogWriter(_baseDir.DirPath);

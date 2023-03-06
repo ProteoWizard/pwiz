@@ -86,6 +86,22 @@ namespace pwiz.SkylineTestUtil
     }
 
     /// <summary>
+    /// Test method attribute which specifies a test is not suitable for use with Unicode paths
+    /// Note that the constructor expects a string explaining why a test is unsuitable for use with Unicde 
+    /// </summary>
+    [AttributeUsage(AttributeTargets.Method, AllowMultiple = false)]
+    public sealed class NoUnicodeTestingAttribute : Attribute
+    {
+        public string Reason { get; private set; } // Reason for declaring test as unsuitable for unicode
+
+        public NoUnicodeTestingAttribute(string reason)
+        {
+            Reason = reason; // e.g. "calls MSFragger", "uses mz5" etc
+        }
+
+    }
+
+    /// <summary>
     /// Test method attribute which specifies a test is not suitable for parallel testing
     /// (e.g. memory hungry or writes to the filesystem outside of the test's working directory)
     /// Note that the constructor expects a string explaining why a test is unsuitable for parallel use 
@@ -114,6 +130,9 @@ namespace pwiz.SkylineTestUtil
         public const string EXCESSIVE_TIME = "Requires more time than can be justified in nightly tests";
         public const string VENDOR_FILE_LOCKING = "Vendor readers require exclusive read access";
         public const string SHARED_DIRECTORY_WRITE = "Requires write access to directory shared by all workers";
+        public const string MZ5_UNICODE_ISSUES = "mz5 doesn't handle unicode paths";
+        public const string MSGFPLUS_UNICODE_ISSUES = "MsgfPlus doesn't handle unicode paths";
+        public const string MSFRAGGER_UNICODE_ISSUES = "MsFragger doesn't handle unicode paths";
     }
 
     /// <summary>
@@ -530,6 +549,7 @@ namespace pwiz.SkylineTestUtil
             {
                 using (var stream = File.OpenRead(filePath))
                 {
+                    using var newTmpDir = new TempDir(); // Causes ExcelReaderFactory to drop its tempfiles in a place that we can clean up on Dispose
                     IExcelDataReader excelDataReader;
                     if (legacyFile)
                     {

@@ -85,10 +85,13 @@ void SpectrumListFactory::wrap(msdata::MSData^ msd, System::String^ wrapper)
 
 void SpectrumListFactory::wrap(msdata::MSData^ msd, System::String^ wrapper, util::IterationListenerRegistry^ ilr)
 {
-    b::SpectrumListFactory::wrap(msd->base(), ToStdString(wrapper), ilr ? &ilr->base() : nullptr);
-    System::GC::KeepAlive(ilr);
-    System::GC::KeepAlive(wrapper);
-    System::GC::KeepAlive(msd);
+    try
+    {
+        b::SpectrumListFactory::wrap(msd->base(), ToStdString(wrapper), ilr ? &ilr->base() : nullptr);
+        System::GC::KeepAlive(ilr);
+        System::GC::KeepAlive(wrapper);
+        System::GC::KeepAlive(msd);
+    } CATCH_AND_FORWARD
 }
 
 void SpectrumListFactory::wrap(msdata::MSData^ msd, System::Collections::Generic::IList<System::String^>^ wrappers)
@@ -98,13 +101,16 @@ void SpectrumListFactory::wrap(msdata::MSData^ msd, System::Collections::Generic
 
 void SpectrumListFactory::wrap(msdata::MSData^ msd, System::Collections::Generic::IList<System::String^>^ wrappers, util::IterationListenerRegistry^ ilr)
 {
-    std::vector<std::string> nativeWrappers;
-    for each(System::String^ wrapper in wrappers)
-        nativeWrappers.push_back(ToStdString(wrapper));
-    b::SpectrumListFactory::wrap(msd->base(), nativeWrappers, ilr ? &ilr->base() : nullptr);
-    System::GC::KeepAlive(ilr);
-    System::GC::KeepAlive(wrappers);
-    System::GC::KeepAlive(msd);
+    try
+    {
+        std::vector<std::string> nativeWrappers;
+        for each (System::String ^ wrapper in wrappers)
+            nativeWrappers.push_back(ToStdString(wrapper));
+        b::SpectrumListFactory::wrap(msd->base(), nativeWrappers, ilr ? &ilr->base() : nullptr);
+        System::GC::KeepAlive(ilr);
+        System::GC::KeepAlive(wrappers);
+        System::GC::KeepAlive(msd);
+    } CATCH_AND_FORWARD
 }
 
 System::String^ SpectrumListFactory::usage()
@@ -158,51 +164,68 @@ bool SpectrumList_FilterPredicate_Custom::done() const
 
 SpectrumList_FilterPredicate_IndexSet::SpectrumList_FilterPredicate_IndexSet(System::String^ indexSet)
 {
-    IntegerSet parsedIndexSet;
-    parsedIndexSet.parse(ToStdString(indexSet));
-    base_ = new b::SpectrumList_FilterPredicate_IndexSet(parsedIndexSet);
+    try
+    {
+        IntegerSet parsedIndexSet;
+        parsedIndexSet.parse(ToStdString(indexSet));
+        base_ = new b::SpectrumList_FilterPredicate_IndexSet(parsedIndexSet);
+    } CATCH_AND_FORWARD
 }
 
 SpectrumList_FilterPredicate_ScanNumberSet::SpectrumList_FilterPredicate_ScanNumberSet(System::String^ scanNumberSet)
 {
-    IntegerSet parsedIndexSet;
-    parsedIndexSet.parse(ToStdString(scanNumberSet));
-    base_ = new b::SpectrumList_FilterPredicate_ScanNumberSet(parsedIndexSet);
+    try
+    {
+        IntegerSet parsedIndexSet;
+        parsedIndexSet.parse(ToStdString(scanNumberSet));
+        base_ = new b::SpectrumList_FilterPredicate_ScanNumberSet(parsedIndexSet);
+    } CATCH_AND_FORWARD
 }
 
 SpectrumList_FilterPredicate_ScanEventSet::SpectrumList_FilterPredicate_ScanEventSet(System::String^ scanEventSet)
 {
-    IntegerSet parsedIndexSet;
-    parsedIndexSet.parse(ToStdString(scanEventSet));
-    base_ = new b::SpectrumList_FilterPredicate_ScanEventSet(parsedIndexSet);
+    try
+    {
+        IntegerSet parsedIndexSet;
+        parsedIndexSet.parse(ToStdString(scanEventSet));
+        base_ = new b::SpectrumList_FilterPredicate_ScanEventSet(parsedIndexSet);
+    } CATCH_AND_FORWARD
 }
 
 SpectrumList_FilterPredicate_ScanTimeRange::SpectrumList_FilterPredicate_ScanTimeRange(double scanTimeLow, double scanTimeHigh)
 {
-    base_ = new b::SpectrumList_FilterPredicate_ScanTimeRange(scanTimeLow, scanTimeHigh);
+    try { base_ = new b::SpectrumList_FilterPredicate_ScanTimeRange(scanTimeLow, scanTimeHigh); } CATCH_AND_FORWARD
 }
 
 SpectrumList_FilterPredicate_MSLevelSet::SpectrumList_FilterPredicate_MSLevelSet(System::String^ msLevelSet)
 {
-    IntegerSet parsedIndexSet;
-    parsedIndexSet.parse(ToStdString(msLevelSet));
-    base_ = new b::SpectrumList_FilterPredicate_MSLevelSet(parsedIndexSet);
+    {
+        IntegerSet parsedIndexSet;
+        parsedIndexSet.parse(ToStdString(msLevelSet));
+        base_ = new b::SpectrumList_FilterPredicate_MSLevelSet(parsedIndexSet);
+    }
 }
 
 SpectrumList_FilterPredicate_ChargeStateSet::SpectrumList_FilterPredicate_ChargeStateSet(System::String^ chargeStateSet)
 {
-    IntegerSet parsedIndexSet;
-    parsedIndexSet.parse(ToStdString(chargeStateSet));
-    base_ = new b::SpectrumList_FilterPredicate_ChargeStateSet(parsedIndexSet);
+    try
+    {
+        IntegerSet parsedIndexSet;
+        parsedIndexSet.parse(ToStdString(chargeStateSet));
+        base_ = new b::SpectrumList_FilterPredicate_ChargeStateSet(parsedIndexSet);
+    } CATCH_AND_FORWARD
 }
 
 SpectrumList_FilterPredicate_PrecursorMzSet::SpectrumList_FilterPredicate_PrecursorMzSet(System::Collections::Generic::IEnumerable<double>^ precursorMzSet, chemistry::MZTolerance tolerance, FilterMode mode)
 {
     std::set<double> nativeSet;
     for each (double d in precursorMzSet) nativeSet.insert(d);
-    base_ = new b::SpectrumList_FilterPredicate_PrecursorMzSet(nativeSet,
-                                                               pwiz::chemistry::MZTolerance(tolerance.value, (pwiz::chemistry::MZTolerance::Units) tolerance.units),
-                                                               (b::SpectrumList_Filter::Predicate::FilterMode) mode);
+    try
+    {
+        base_ = new b::SpectrumList_FilterPredicate_PrecursorMzSet(nativeSet,
+                                                                   pwiz::chemistry::MZTolerance(tolerance.value, (pwiz::chemistry::MZTolerance::Units) tolerance.units),
+                                                                   (b::SpectrumList_Filter::Predicate::FilterMode) mode);
+    } CATCH_AND_FORWARD
 }
 
 SpectrumList_FilterPredicate_DefaultArrayLengthSet::SpectrumList_FilterPredicate_DefaultArrayLengthSet(System::String^ defaultArrayLengthSet)
@@ -212,28 +235,31 @@ SpectrumList_FilterPredicate_ActivationType::SpectrumList_FilterPredicate_Activa
 {
     std::set<pwiz::cv::CVID> nativeSet;
     for each (CVID d in filterItem) nativeSet.insert((pwiz::cv::CVID) d);
-    base_ = new b::SpectrumList_FilterPredicate_ActivationType(nativeSet, hasNoneOf);
+    try { base_ = new b::SpectrumList_FilterPredicate_ActivationType(nativeSet, hasNoneOf); } CATCH_AND_FORWARD
 }
 
 SpectrumList_FilterPredicate_AnalyzerType::SpectrumList_FilterPredicate_AnalyzerType(System::Collections::Generic::IEnumerable<CVID>^ filterItem, System::String^ msLevelSet)
 {
-    IntegerSet parsedMsLevelSet;
-    parsedMsLevelSet.parse(ToStdString(msLevelSet));
-    std::set<pwiz::cv::CVID> nativeSet;
-    for each (CVID d in filterItem) nativeSet.insert((pwiz::cv::CVID) d);
-    base_ = new b::SpectrumList_FilterPredicate_AnalyzerType(nativeSet, parsedMsLevelSet);
+    try
+    {
+        IntegerSet parsedMsLevelSet;
+        parsedMsLevelSet.parse(ToStdString(msLevelSet));
+        std::set<pwiz::cv::CVID> nativeSet;
+        for each (CVID d in filterItem) nativeSet.insert((pwiz::cv::CVID)d);
+        base_ = new b::SpectrumList_FilterPredicate_AnalyzerType(nativeSet, parsedMsLevelSet);
+    } CATCH_AND_FORWARD
 }
 
 SpectrumList_FilterPredicate_Polarity::SpectrumList_FilterPredicate_Polarity(CVID polarity)
 {
-    base_ = new b::SpectrumList_FilterPredicate_Polarity((pwiz::cv::CVID) polarity);
+    try { base_ = new b::SpectrumList_FilterPredicate_Polarity((pwiz::cv::CVID) polarity); } CATCH_AND_FORWARD
 }
 
 //SpectrumList_FilterPredicate_MzPresent::SpectrumList_FilterPredicate_MzPresent(chemistry::MZTolerance mzt, System::Collections::Generic::Generic::ISet<double> mzSet, ThresholdFilter tf, FilterMode mode);
 
 SpectrumList_FilterPredicate_ThermoScanFilter::SpectrumList_FilterPredicate_ThermoScanFilter(System::String^ matchString, bool matchExact, bool inverse)
 {
-    base_ = new b::SpectrumList_FilterPredicate_ThermoScanFilter(ToStdString(matchString), matchExact, inverse);
+    try { base_ = new b::SpectrumList_FilterPredicate_ThermoScanFilter(ToStdString(matchString), matchExact, inverse); } CATCH_AND_FORWARD
 }
 
 
@@ -281,12 +307,12 @@ SpectrumList_Filter::SpectrumList_Filter(msdata::SpectrumList^ inner,
 : msdata::SpectrumList(0), impl_(gcnew Impl(predicate))
 {
     try {
-    SpectrumList_FilterAcceptSpectrumWrapper^ wrapper = gcnew SpectrumList_FilterAcceptSpectrumWrapper(impl_, &SpectrumList_Filter::Impl::marshal);
-    System::IntPtr predicatePtr = System::Runtime::InteropServices::Marshal::GetFunctionPointerForDelegate(wrapper);
-    base_ = new b::SpectrumList_Filter(*inner->base_, SpectrumList_FilterPredicate_Custom(predicatePtr.ToPointer()));
-    msdata::SpectrumList::base_ = new boost::shared_ptr<pwiz::msdata::SpectrumList>(base_);
-    System::GC::KeepAlive(inner);
-    System::GC::KeepAlive(predicate);
+        SpectrumList_FilterAcceptSpectrumWrapper^ wrapper = gcnew SpectrumList_FilterAcceptSpectrumWrapper(impl_, &SpectrumList_Filter::Impl::marshal);
+        System::IntPtr predicatePtr = System::Runtime::InteropServices::Marshal::GetFunctionPointerForDelegate(wrapper);
+        base_ = new b::SpectrumList_Filter(*inner->base_, SpectrumList_FilterPredicate_Custom(predicatePtr.ToPointer()));
+        msdata::SpectrumList::base_ = new boost::shared_ptr<pwiz::msdata::SpectrumList>(base_);
+        System::GC::KeepAlive(inner);
+        System::GC::KeepAlive(predicate);
     } CATCH_AND_FORWARD
 }
 
@@ -295,10 +321,10 @@ SpectrumList_Filter::SpectrumList_Filter(msdata::SpectrumList^ inner,
 : msdata::SpectrumList(0), impl_(gcnew Impl(predicate))
 {
     try {
-    base_ = new b::SpectrumList_Filter(*inner->base_, *impl_->managedPredicate->base_);
-    msdata::SpectrumList::base_ = new boost::shared_ptr<pwiz::msdata::SpectrumList>(base_);
-    System::GC::KeepAlive(inner);
-    System::GC::KeepAlive(predicate);
+        base_ = new b::SpectrumList_Filter(*inner->base_, *impl_->managedPredicate->base_);
+        msdata::SpectrumList::base_ = new boost::shared_ptr<pwiz::msdata::SpectrumList>(base_);
+        System::GC::KeepAlive(inner);
+        System::GC::KeepAlive(predicate);
     } CATCH_AND_FORWARD
 }
 
@@ -389,13 +415,13 @@ SpectrumList_PeakPicker::SpectrumList_PeakPicker(msdata::SpectrumList^ inner,
 : msdata::SpectrumList(0)
 {
     try {
-    pwiz::util::IntegerSet msLevelSet;
-    for each(int i in msLevelsToPeakPick)
-        msLevelSet.insert(i);
-    base_ = new b::SpectrumList_PeakPicker(*inner->base_, *algorithm->base_, preferVendorPeakPicking, msLevelSet);
-    msdata::SpectrumList::base_ = new boost::shared_ptr<pwiz::msdata::SpectrumList>(base_);
-    System::GC::KeepAlive(inner);
-    System::GC::KeepAlive(algorithm);
+        pwiz::util::IntegerSet msLevelSet;
+        for each(int i in msLevelsToPeakPick)
+            msLevelSet.insert(i);
+        base_ = new b::SpectrumList_PeakPicker(*inner->base_, *algorithm->base_, preferVendorPeakPicking, msLevelSet);
+        msdata::SpectrumList::base_ = new boost::shared_ptr<pwiz::msdata::SpectrumList>(base_);
+        System::GC::KeepAlive(inner);
+        System::GC::KeepAlive(algorithm);
     } CATCH_AND_FORWARD
 }
 
@@ -416,9 +442,9 @@ SpectrumList_LockmassRefiner::SpectrumList_LockmassRefiner(msdata::SpectrumList^
     : msdata::SpectrumList(0)
 {
     try {
-    base_ = new b::SpectrumList_LockmassRefiner(*inner->base_, lockmassMzPosScans, lockmassMzNegScans, lockmassTolerance);
-    msdata::SpectrumList::base_ = new boost::shared_ptr<pwiz::msdata::SpectrumList>(base_);
-    System::GC::KeepAlive(inner);
+        base_ = new b::SpectrumList_LockmassRefiner(*inner->base_, lockmassMzPosScans, lockmassMzNegScans, lockmassTolerance);
+        msdata::SpectrumList::base_ = new boost::shared_ptr<pwiz::msdata::SpectrumList>(base_);
+        System::GC::KeepAlive(inner);
     } CATCH_AND_FORWARD
 }
 
@@ -439,14 +465,14 @@ SpectrumList_ChargeStateCalculator::SpectrumList_ChargeStateCalculator(
 : msdata::SpectrumList(0)
 {
     try {
-    base_ = new b::SpectrumList_ChargeStateCalculator(
-                *inner->base_, 
-                overrideExistingChargeState,
-                maxMultipleCharge,
-                minMultipleCharge,
-                intensityFractionBelowPrecursorForSinglyCharged);
-    msdata::SpectrumList::base_ = new boost::shared_ptr<pwiz::msdata::SpectrumList>(base_);
-    System::GC::KeepAlive(inner);
+        base_ = new b::SpectrumList_ChargeStateCalculator(
+                    *inner->base_, 
+                    overrideExistingChargeState,
+                    maxMultipleCharge,
+                    minMultipleCharge,
+                    intensityFractionBelowPrecursorForSinglyCharged);
+        msdata::SpectrumList::base_ = new boost::shared_ptr<pwiz::msdata::SpectrumList>(base_);
+        System::GC::KeepAlive(inner);
     } CATCH_AND_FORWARD
 }
 
@@ -471,9 +497,9 @@ SpectrumList_3D::SpectrumList_3D(msdata::SpectrumList^ inner)
     : msdata::SpectrumList(0)
 {
     try {
-    base_ = new b::SpectrumList_3D(*inner->base_);
-    msdata::SpectrumList::base_ = new boost::shared_ptr<pwiz::msdata::SpectrumList>(base_);
-    System::GC::KeepAlive(inner);
+        base_ = new b::SpectrumList_3D(*inner->base_);
+        msdata::SpectrumList::base_ = new boost::shared_ptr<pwiz::msdata::SpectrumList>(base_);
+        System::GC::KeepAlive(inner);
     } CATCH_AND_FORWARD
 }
 
@@ -507,9 +533,9 @@ SpectrumList_IonMobility::SpectrumList_IonMobility(msdata::SpectrumList^ inner)
     : msdata::SpectrumList(0)
 {
     try {
-    base_ = new b::SpectrumList_IonMobility(*inner->base_);
-    msdata::SpectrumList::base_ = new boost::shared_ptr<pwiz::msdata::SpectrumList>(base_);
-    System::GC::KeepAlive(inner);
+        base_ = new b::SpectrumList_IonMobility(*inner->base_);
+        msdata::SpectrumList::base_ = new boost::shared_ptr<pwiz::msdata::SpectrumList>(base_);
+        System::GC::KeepAlive(inner);
     } CATCH_AND_FORWARD
 }
 
