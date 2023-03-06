@@ -382,9 +382,7 @@ namespace pwiz.Skyline.Model.Results
                         _ms2IonMobilityFilterHigh = imMS1*1.05;
                         _ms2IonMobilityFilterLow = imMS1*.95;
                         break;
-                    case eIonMobilityUnits.compensation_V:
-                    default:
-                        break;
+                    // case eIonMobilityUnits.compensation_V: Not a meaningful concept for FAIMS
                 }
             }
             else
