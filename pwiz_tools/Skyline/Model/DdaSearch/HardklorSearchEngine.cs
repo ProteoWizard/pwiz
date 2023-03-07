@@ -67,7 +67,7 @@ namespace pwiz.Skyline.Model.DdaSearch
         {
             using var tmpDir = new TempDir(); // Set TMP to a new directory that we'll destroy on exit
             _cancelToken = cancelToken;
-            _progressStatus = status;
+            _progressStatus = status.ChangePercentComplete(0);
             _success = true;
             _isotopesFilename = null;
             _paramsFilename = null;

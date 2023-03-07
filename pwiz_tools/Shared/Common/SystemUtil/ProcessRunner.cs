@@ -144,7 +144,7 @@ namespace pwiz.Common.SystemUtil
                             if (double.TryParse(percentPart.Substring(0, percentPart.Length - 1), out percent))
                             {
                                 percentLast = (int)percent;
-                                status = status.ChangePercentComplete(percentLast);
+                                status = status.ChangePercentComplete(percentLast).ChangeMessage(percentPart);
                                 if (percent >= 100 && status.SegmentCount > 0)
                                     status = status.NextSegment();
                                 progress.UpdateProgress(status);
