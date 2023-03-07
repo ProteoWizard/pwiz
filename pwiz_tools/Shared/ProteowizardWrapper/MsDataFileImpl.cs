@@ -30,7 +30,9 @@ using pwiz.CLI.util;
 using pwiz.Common.Chemistry;
 using pwiz.Common.Collections;
 using pwiz.Common.SystemUtil;
+using ComponentType = pwiz.CLI.msdata.ComponentType;
 using Version = pwiz.CLI.msdata.Version;
+
 
 namespace pwiz.ProteowizardWrapper
 {
@@ -1022,7 +1024,7 @@ namespace pwiz.ProteowizardWrapper
                 throw new ArgumentException(string.Format(@"Empty spectrum ID (and index = {0}) for scan {1}",
                     spectrum.index, spectrumIndex)); 
             }
-
+            // Start building properties object here.
             bool expectIonMobilityValue = IonMobilityUnits != eIonMobilityUnits.none;
             var msDataSpectrum = new MsDataSpectrum
             {
@@ -1094,6 +1096,10 @@ namespace pwiz.ProteowizardWrapper
                     {
                         msDataSpectrum.Precursors = ImmutableList.ValueOf(GetMs1Precursors(spectrum));
                     }
+
+                    msDataSpectrum.SourceFilePath = FilePath;
+                    msDataSpectrum.InstrumentInfo = GetInstrumentConfigInfoList().FirstOrDefault();
+                    msDataSpectrum.InstrumentSerialNumber = GetInstrumentSerialNumber();
 
                     return msDataSpectrum;
                 }
@@ -1726,7 +1732,9 @@ namespace pwiz.ProteowizardWrapper
 
     public sealed class MsDataSpectrum
     {
+
         private IonMobilityValue _ionMobility;
+        public string SourceFilePath { get; set; }
         public string Id { get; set; }
         public int Level { get; set; }
         public int Index { get; set; } // index into parent file, if any
@@ -1781,6 +1789,9 @@ namespace pwiz.ProteowizardWrapper
         public int WindowGroup { get; set; } // For Bruker diaPASEF
 
         public string ScanDescription { get; set; }
+
+        public MsInstrumentConfigInfo InstrumentInfo { get; set; }
+        public string InstrumentSerialNumber { get; set; }
 
         public static int WatersFunctionNumberFromId(string id, bool isCombinedIonMobility)
         {
