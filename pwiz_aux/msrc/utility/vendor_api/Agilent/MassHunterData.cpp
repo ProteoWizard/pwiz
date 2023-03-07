@@ -188,6 +188,9 @@ class MassHunterDataImpl : public MassHunterData
     virtual const vector<Signal>& getSignals() const;
     virtual SignalChromatogramPtr getSignal(const Signal& signal) const;
 
+    virtual int getNonMsScanCount() const;
+    virtual SpectrumPtr getNonMsSpectrum(int index) const;
+
     virtual const BinaryData<double>& getTicTimes(bool ms1Only) const;
     virtual const BinaryData<double>& getBpcTimes(bool ms1Only) const;
     virtual const BinaryData<float>& getTicIntensities(bool ms1Only) const;
@@ -217,6 +220,9 @@ class MassHunterDataImpl : public MassHunterData
 
     mutable vector<Signal> signals_;
     mutable gcroot<System::Collections::Generic::Dictionary<String^, MHDAC::ISignalInfo^>^> signalInfoMap_;
+
+    void initNonMsData() const;
+    mutable vector<double> dadTimes_;
 
     bool hasProfileData_;
 };
@@ -265,6 +271,7 @@ struct SpectrumImpl : public Spectrum
     virtual double getCollisionEnergy() const {return specData_->CollisionEnergy;}
     virtual int getTotalDataPoints() const {return specData_->TotalDataPoints;}
     virtual int getParentScanId() const {return (int) specData_->ParentScanId;}
+    virtual double getRetentionTime() const {return specData_->AcquiredTimeRange[0]->Start;}
 
     virtual MassRange getMeasuredMassRange() const;
     virtual void getPrecursorIons(vector<double>& precursorIons) const;
@@ -499,6 +506,11 @@ MassHunterDataImpl::MassHunterDataImpl(const std::string& path)
 MassHunterDataImpl::~MassHunterDataImpl() noexcept(false)
 {
     try {reader_->CloseDataFile();} CATCH_AND_FORWARD
+    if (!dadTimes_.empty())
+    {
+        System::GC::Collect();
+        force_close_handles_to_filepath((bfs::path(massHunterRootPath_) / "AcqData" / "DAD1.sp").string());
+    }
 }
 
 std::string MassHunterDataImpl::getVersion() const
@@ -705,6 +717,42 @@ SignalChromatogramPtr MassHunterDataImpl::getSignal(const Signal& signal) const
 
         auto nonMsDataReader = (MHDAC::INonmsDataReader^) (MHDAC::IMsdrDataReader^) reader_;
         return SignalChromatogramPtr(new SignalChromatogramImpl(nonMsDataReader->GetSignal(signalInfoMap_->default[signalKey])));
+    }
+    CATCH_AND_FORWARD
+}
+
+void MassHunterDataImpl::initNonMsData() const
+{
+    if (!dadTimes_.empty())
+        return;
+    try
+    {
+        MHDAC::IBDAChromFilter^ filter = gcnew MHDAC::BDAChromFilter();
+        filter->ChromatogramType = MHDAC::ChromType::ExtractedWavelength;
+        filter->DeviceName = "DAD";
+        auto chromatograms = reader_->GetChromatogram(filter);
+        if (chromatograms->Length > 0)
+            ToStdVector(chromatograms[0]->XArray, dadTimes_);
+    }
+    CATCH_AND_FORWARD
+}
+
+int MassHunterDataImpl::getNonMsScanCount() const
+{
+    initNonMsData();
+    return dadTimes_.size();
+}
+
+SpectrumPtr MassHunterDataImpl::getNonMsSpectrum(int index) const
+{
+    initNonMsData();
+    try
+    {
+        MHDAC::IBDASpecFilter^ specFilter = gcnew MHDAC::BDASpecFilter();
+        specFilter->SpectrumType = MHDAC::SpecType::UVSpectrum;
+        specFilter->ScanRange = gcnew cli::array<MHDAC::MinMaxRange^>(1);
+        specFilter->ScanRange[0] = gcnew MHDAC::MinMaxRange(dadTimes_[index], dadTimes_[index]);
+        return SpectrumPtr(new SpectrumImpl(reader_->GetSpectrum(specFilter)[0]));
     }
     CATCH_AND_FORWARD
 }
