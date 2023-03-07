@@ -245,6 +245,25 @@ namespace pwiz.SkylineTest
             Assert.AreEqual(12, formulaDict["C"]);
             Assert.AreEqual(7, formulaDict["H"]);
 
+            FormulaWithMassModification.Decompose("NC12H5[+3.2]", out var atoms, out var mono, out var avg);
+            Assert.AreEqual("NC12H5", atoms); // Note how it leaves element order alone
+            Assert.AreEqual(3.2, mono);
+            Assert.AreEqual(mono, avg);
+
+            FormulaWithMassModification.Decompose("NC112H5[+3.1/3.11]", out atoms, out mono, out avg);
+            Assert.AreEqual("NC112H5", atoms);
+            Assert.AreEqual(3.1, mono);
+            Assert.AreEqual(3.11, avg);
+
+            FormulaWithMassModification.Decompose("NC132H53", out atoms, out mono, out avg);
+            Assert.AreEqual("NC132H53", atoms);
+            Assert.AreEqual(0, mono);
+            Assert.AreEqual(mono, avg);
+
+            // Test Hill System ordering when converting from dictionary to string
+            var dict = FormulaWithMassModification.ParseToDictionary("ClD2ONC12H5[+3.2/3.23]");
+            Assert.AreEqual("C12H5D2ClNO[+3.2/3.23]", FormulaWithMassModification.FromDict(dict).ToString());
+
             Assert.AreEqual(1, formulaDict["[+2.1]"]); // Make sure MoleculeMassOffset ctor left input molecule alone
             Assert.AreEqual(153.1547, BioMassCalc.MONOISOTOPIC.CalculateMassFromFormula(formulaDict).Value, .001);
             Assert.AreEqual(153.2857, BioMassCalc.AVERAGE.CalculateMassFromFormula(formulaDict).Value, .0001);

@@ -847,7 +847,9 @@ namespace pwiz.Skyline.Model
                 {
                     return new MoleculeMassOffset(Molecule.Empty, CustomMolecule.MonoisotopicMass, CustomMolecule.AverageMass);
                 }
-                return new MoleculeMassOffset(Molecule.ParseExpression(CustomMolecule.Formula), 0, 0);
+                // Custom ion formulas may contain mass offsets, pick those out
+                FormulaWithMassModification.Decompose(CustomMolecule.Formula, out var atoms, out var monoOffset, out var avgOffset);
+                return new MoleculeMassOffset(Molecule.Parse(atoms), monoOffset, avgOffset);
             }
             IPrecursorMassCalc massCalc = settings.GetPrecursorCalc(LabelType, mods);
             MoleculeMassOffset moleculeMassOffset = new MoleculeMassOffset(Molecule.Parse(massCalc.GetMolecularFormula(Peptide.Sequence)), 0, 0);

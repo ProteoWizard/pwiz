@@ -22,6 +22,7 @@ using System.Collections.Generic;
 using System.Globalization;
 using System.Linq;
 using System.Text;
+using System.Text.RegularExpressions;
 using pwiz.Common.Chemistry;
 using pwiz.Common.Collections;
 
@@ -217,9 +218,28 @@ namespace pwiz.Skyline.Util
             throw new InvalidOperationException();
         }
 
-        public static FormulaWithMassModification Parse(String formula)
+        public static FormulaWithMassModification Parse(string formula)
         {
-            return new FormulaWithMassModification {Dictionary = ImmutableSortedList.FromValues(ParseToDictionary(formula))};
+            return new FormulaWithMassModification { Dictionary = ImmutableSortedList.FromValues(ParseToDictionary(formula)) };
+        }
+
+        // Break a formula string into a string and offset e.g. "C12H3[-1.2/1.21]" returns "C12H3", -1.2, -1.21
+        public static void Decompose(string formula, out string atoms, out double monoOffset, out double avgOffset)
+        {
+            monoOffset = 0;
+            avgOffset = 0;
+            if (!formula.Contains(MASS_MOD_START))
+            {
+                atoms = formula;
+                return;
+            }
+            var dictionary = ParseToDictionary(formula);
+            foreach (var kvp in dictionary.Where(kvp => kvp.Key.StartsWith(MASS_MOD_START)))
+            {
+                monoOffset += ParseMassModification(kvp.Key, false) * kvp.Value;
+                avgOffset += ParseMassModification(kvp.Key, true) * kvp.Value;
+            }
+            atoms = Regex.Replace(formula, @"\[[^\]]+\]", ""); // Remove brackets and contents, preserve atom order
         }
 
         public static Dictionary<string, int> ParseToDictionary(string formula)
@@ -307,12 +327,12 @@ namespace pwiz.Skyline.Util
         }
 
         // Handle formulae which may contain subtractions, as is deprotonation description ie C12H8O2-H (=C12H7O2) or even C12H8O2-H2O (=C12H6O)
-        public static FormulaWithMassModification ParseExpression(String formula)
+        public static FormulaWithMassModification ParseExpression(string formula)
         {
             return FromDict(ParseExpressionToDictionary(formula));
         }
 
-        public static Dictionary<String, int> ParseExpressionToDictionary(string expression)
+        public static Dictionary<string, int> ParseExpressionToDictionary(string expression)
         {
             var parts = expression.Split('-');
             for (var i = 0; i < parts.Length;) // Make sure we didn't hit a mass modification by accident e.g. C12H5[-0.33]
@@ -511,31 +531,44 @@ namespace pwiz.Skyline.Util
             return left.Equals(right);
         }
 
+        // Hill System order (C then H then alphabetical) for ToString() 
+        private static readonly string[] orderHillSystem = { @"C", @"C'", @"C""",
+            @"H", @"H'", @"H""", @"D", @"T",
+            @"*" }; // Everything else
+
         public override string ToString()
         {
             var result = new StringBuilder();
-            bool anyNegative = false;
-            foreach (var entry in this)
+            var anyNegative = false;
+
+            var keysSorted = this.Dictionary.Keys.OrderBy(k => k).ToArray();
+
+            foreach (var c in orderHillSystem) // Write in standard Hill system order
             {
-                if (entry.Value >= 0)
+                foreach (var key in
+                         keysSorted.Where(k => (k.Equals(c) || (c == @"*" && !orderHillSystem.Contains(k)))))
                 {
-                    if (entry.Key.StartsWith(MASS_MOD_START))
+                    var count = this[key];
+                    if (count > 0)
                     {
-                        continue; // Move mass modifications to end of string
+                        if (key.StartsWith(MASS_MOD_START))
+                        {
+                            continue; // Move mass modifications to end of string
+                        }
+                        result.Append(key);
+                        if (count > 1)
+                        {
+                            result.Append(count);
+                        }
                     }
-                    result.Append(entry.Key);
-                    if (entry.Value != 1)
+                    else
                     {
-                        result.Append(entry.Value);
+                        anyNegative = true; // Write any negative counts as a subtracted formula expression
                     }
-                }
-                else
-                {
-                    anyNegative = true;
                 }
             }
 
-            foreach (var entry in this.Where(k => k.Key.StartsWith(MASS_MOD_START) && k.Value > 0))
+            foreach (var entry in this.Where(k => (k.Value > 0) && k.Key.StartsWith(MASS_MOD_START)))
             {
                 result.Append(entry.Key);
             }
@@ -546,22 +579,24 @@ namespace pwiz.Skyline.Util
             }
 
             result.Append(@"-");
-            foreach (var entry in this)
+            foreach (var c in orderHillSystem) // Write in standard Hill system order
             {
-                if (entry.Value < 0)
+                foreach (var key in
+                         keysSorted.Where(k => (k.Equals(c) || (c == @"*" && !orderHillSystem.Contains(k)))))
                 {
-                    if (entry.Key.StartsWith(MASS_MOD_START))
+                    var count = this[key];
+                    if (key.StartsWith(MASS_MOD_START))
                     {
                         continue; // Move mass modifications to end of string
                     }
-                    result.Append(entry.Key);
-                    if (entry.Value != -1)
+                    result.Append(key);
+                    if (count < -1)
                     {
-                        result.Append(-entry.Value);
+                        result.Append(-count);
                     }
                 }
             }
-            foreach (var entry in this.Where(k => k.Key.StartsWith(MASS_MOD_START) && k.Value < 0))
+            foreach (var entry in this.Where(k => (k.Value < 0) && k.Key.StartsWith(MASS_MOD_START)))
             {
                 result.Append(entry.Key.Contains(@"+") ? entry.Key.Replace(@"+", @"-") : entry.Key.Replace(@"-", @"+"));
             }

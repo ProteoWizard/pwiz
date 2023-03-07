@@ -458,7 +458,7 @@ namespace pwiz.Skyline.Util
                         {
                             ion = realname;
                         }
-                        var ionMolecule = Molecule.Parse(ion);
+                        var ionMolecule = FormulaWithMassModification.Parse(ion);
                         if (ionMolecule.Count == 0)
                         {
                             success = multiplierM == 1 && remaining != 0; // Allow pointless + in "M+-H2O+H" but not trailing +in "M-H2O+H+"
@@ -480,7 +480,7 @@ namespace pwiz.Skyline.Util
             }
             AdductCharge = calculatedCharge ?? declaredCharge ?? 0;
             Composition = new ImmutableDictionary<string, int>(composition);
-            var resultMol = Molecule.FromDict(composition);
+            var resultMol = FormulaWithMassModification.FromDict(composition);
             if (!resultMol.Keys.All(k => BioMassCalc.MONOISOTOPIC.IsKnownSymbol(k)))
             {
                 throw new InvalidOperationException(
@@ -722,8 +722,8 @@ namespace pwiz.Skyline.Util
         public static Adduct FromFormulaDiff(string left, string right, int charge)
         {
             // Take adduct as the difference between two chemical formulas
-            var l = Molecule.Parse(left.Trim());
-            var r = Molecule.Parse(right.Trim());
+            var l = FormulaWithMassModification.Parse(left.Trim());
+            var r = FormulaWithMassModification.Parse(right.Trim());
             var adductFormula = l.Difference(r).ToString();
             if (string.IsNullOrEmpty(adductFormula))
             {
@@ -738,8 +738,8 @@ namespace pwiz.Skyline.Util
         public static Adduct ProtonatedFromFormulaDiff(string left, string right, int charge)
         {
             // Take adduct as the difference between two chemical formulas, assuming that H is for protonation
-            var l = Molecule.Parse(left.Trim());
-            var r = Molecule.Parse(right.Trim());
+            var l = FormulaWithMassModification.Parse(left.Trim());
+            var r = FormulaWithMassModification.Parse(right.Trim());
             var d = l.Difference(r);
             if (d.Values.Any(count => count < 0) || d.Values.All(count => count == 0))
             {
@@ -1330,7 +1330,7 @@ namespace pwiz.Skyline.Util
                 {
                     throw new InvalidOperationException(
                         string.Format(Resources.Adduct_ApplyToMolecule_Adduct___0___calls_for_removing_more__1__atoms_than_are_found_in_the_molecule__2_,
-                            this, pair.Key, Molecule.FromDict(molecule)));
+                            this, pair.Key, FormulaWithMassModification.FromDict(molecule)));
                 }
             }
 
@@ -1365,7 +1365,7 @@ namespace pwiz.Skyline.Util
                         {
                             throw new InvalidOperationException(
                                 string.Format(Resources.Adduct_ApplyToMolecule_Adduct___0___calls_for_labeling_more__1__atoms_than_are_found_in_the_molecule__2_,
-                                    this, unlabeledSymbol, Molecule.FromDict(molecule)));
+                                    this, unlabeledSymbol, FormulaWithMassModification.FromDict(molecule)));
                         }
                         int exist;
                         if (resultDict.TryGetValue(isotopeSymbol, out exist))
@@ -1395,7 +1395,7 @@ namespace pwiz.Skyline.Util
             {
                 return formula;
             }
-            var molecule = Molecule.ParseExpressionToDictionary(formula);
+            var molecule = FormulaWithMassModification.ParseExpressionToDictionary(formula);
             var resultDict = new Dictionary<string, int>();
             foreach (var pair in molecule)
             {
@@ -1420,7 +1420,7 @@ namespace pwiz.Skyline.Util
                     {
                         throw new InvalidOperationException(
                             string.Format(Resources.Adduct_ApplyToMolecule_Adduct___0___calls_for_labeling_more__1__atoms_than_are_found_in_the_molecule__2_,
-                                this, pair.Key, Molecule.FromDict(molecule)));
+                                this, pair.Key, FormulaWithMassModification.FromDict(molecule)));
                     }
                     int exist;
                     if (resultDict.TryGetValue(isotope.Key, out exist))
@@ -1450,7 +1450,7 @@ namespace pwiz.Skyline.Util
             {
                 FormulaWithMassModification.AddMassModification(resultDict, IsotopeLabelMass.Value);
             }
-            var resultMol = Molecule.FromDict(resultDict);
+            var resultMol = FormulaWithMassModification.FromDict(resultDict);
             return resultMol.ToString();
         }
 

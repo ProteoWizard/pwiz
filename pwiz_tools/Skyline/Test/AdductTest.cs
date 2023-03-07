@@ -414,11 +414,11 @@ namespace pwiz.SkylineTest
             var mz = BioMassCalc.CalculateIonMz(BioMassCalc.MONOISOTOPIC.CalculateMassFromFormula(Hectochlorin), adduct);
             Assert.AreEqual(665.11555415, mz, .000001);  // GNPS says 665.0 for Hectochlorin M+H
             mol = IonInfo.ApplyAdductToFormula(Hectochlorin, Adduct.FromStringAssumeProtonated("MCl37+H")).ToString();
-            Assert.AreEqual("C27ClCl'H35N2O9S2", mol);
+            Assert.AreEqual("C27H35ClCl'N2O9S2", mol);
             mass = BioMassCalc.MONOISOTOPIC.CalculateMassFromFormula(mol);
             Assert.AreEqual(667.11315, mass, .00001);
             mol = IonInfo.ApplyAdductToFormula(Hectochlorin, Adduct.FromStringAssumeProtonated("M2Cl37+H")).ToString();
-            Assert.AreEqual("C27Cl'2H35N2O9S2", mol);
+            Assert.AreEqual("C27H35Cl'2N2O9S2", mol);
 
             // Test ability to describe isotope label by mass only
             var heavy = Adduct.FromStringAssumeProtonated("2M1.2345+H");
