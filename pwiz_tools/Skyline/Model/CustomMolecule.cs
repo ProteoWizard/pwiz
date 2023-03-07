@@ -572,7 +572,7 @@ namespace pwiz.Skyline.Model
             get { return GetDisplayName(); }
         }
 
-        public string GetDisplayName(double? tolerance = null)
+        public string GetDisplayName(MzTolerance tolerance = null)
         {
             string key;
             if (!string.IsNullOrEmpty(Name))
@@ -581,7 +581,7 @@ namespace pwiz.Skyline.Model
                 return key;
             else if (!string.IsNullOrEmpty(Formula))
                 return Formula;
-            else if (tolerance.HasValue)
+            else if (tolerance != null)
             {
                 // Display mass at same precision as the tolerance value. Also do not repeat mass if mono and average are the same.
                 var format = MonoisotopicMass.Value.Equals(AverageMass.Value) ? massFormatSameMass : massFormat;
@@ -848,7 +848,7 @@ namespace pwiz.Skyline.Model
             return DisplayName;
         }
 
-        public string ToString(double? tolerance)
+        public string ToString(MzTolerance tolerance)
         {
             return GetDisplayName(tolerance);
         }

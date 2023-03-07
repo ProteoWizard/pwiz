@@ -77,9 +77,8 @@ namespace pwiz.SkylineTestFunctional
             RunUI(() =>
             {
                 Assert.AreEqual(Settings.Default.AnnotationColor, editNoteDlg.ColorIndex);
-                editNoteDlg.OkDialog();
             });
-            WaitForClosedForm(editNoteDlg);
+            OkDialog(editNoteDlg, editNoteDlg.OkDialog);
             // Select just the first protein.
             RunUI(() =>
             {
@@ -99,9 +98,8 @@ namespace pwiz.SkylineTestFunctional
             {
                 editNoteDlg4.ColorIndex = 3;
                 editNoteDlg4.NoteText = "Text";
-                editNoteDlg4.OkDialog();
             });
-            WaitForClosedForm(editNoteDlg4);
+            OkDialog(editNoteDlg4, editNoteDlg4.OkDialog);
             RunDlg<EditNoteDlg>(SkylineWindow.EditNote, editNoteDlg0 =>
             {
                 // Test annotations set correctly.
@@ -138,7 +136,10 @@ namespace pwiz.SkylineTestFunctional
             {
                 editNoteDlg1.ColorIndex = 3;
                 editNoteDlg1.NoteText = "Text";
-                editNoteDlg1.OkDialog();
+            });
+            OkDialog(editNoteDlg1, editNoteDlg1.OkDialog);
+            RunUI(() =>
+            {
                 // Select the first protein again, also keeping the peptide selected.
                 SkylineWindow.SequenceTree.SelectedPaths = new List<IdentityPath>
                 {
@@ -146,7 +147,6 @@ namespace pwiz.SkylineTestFunctional
                     SkylineWindow.Document.GetPathTo((int)SrmDocument.Level.MoleculeGroups, 0)
                 };
             });
-            WaitForClosedForm(editNoteDlg1);
             WaitForDocumentChange(doc);
             RunDlg<EditNoteDlg>(SkylineWindow.EditNote, editNoteDlg2 =>
             {

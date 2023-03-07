@@ -259,6 +259,8 @@ namespace TestRunner
             Application.SetUnhandledExceptionMode(UnhandledExceptionMode.CatchException);
             Application.ThreadException += ThreadExceptionEventHandler;
 
+            _testRunStartTime = DateTime.UtcNow;
+
             // Parse command line args and initialize default values.
             var commandLineArgs = new CommandLineArgs(args, commandLineOptions);
 
@@ -656,7 +658,8 @@ namespace TestRunner
         private static string LaunchDockerWorker(int i, CommandLineArgs commandLineArgs, ref string workerNames, bool bigWorker, long workerBytes, int workerPort, StreamWriter log)
         {
             var pwizRoot = Path.GetDirectoryName(Path.GetDirectoryName(GetSkylineDirectory().FullName));
-            string workerName = bigWorker ? $"docker_big_worker_{i}" : $"docker_worker_{i}";
+            // Adding timestamp to worker name voids conflicts between this and any previous invocation
+            string workerName = bigWorker ? $"docker_big_worker{GetTestRunTimeStamp()}_{i}" : $"docker_worker{GetTestRunTimeStamp()}_{i}";
             string dockerRunRedirect = string.Empty;
             string testRunnerLog = @$"c:\AlwaysUpCLT\TestRunner-{workerName}.log";
             if (commandLineArgs.ArgAsBool("keepworkerlogs"))
@@ -669,11 +672,13 @@ namespace TestRunner
             testRunnerExe = iRelative != -1
                 ? Path.Combine(@"c:\pwiz", testRunnerExe.Substring(iRelative))
                 : @"c:\pwiz\pwiz_tools\Skyline\bin\x64\Release\TestRunner.exe";
-            var testRunnerCmd = $@"{testRunnerExe} parallelmode=client showheader=0 results=c:\AlwaysUpCLT\TestResults log={testRunnerLog}";
+            // N.B. TestResults_<n> could technically just be TestResults since each VM has its own drive, but it makes for a more readable log and
+            // is also used in pwiz_tools\Skyline\TestRunnerLib\RunTests.cs to determine the test client ID
+            var testRunnerCmd = $@"{testRunnerExe} parallelmode=client showheader=0 results=c:\AlwaysUpCLT\TestResults_{i} log={testRunnerLog}";
             testRunnerCmd = AddPassThroughArguments(commandLineArgs, testRunnerCmd);
             testRunnerCmd += $" workerport={workerPort}";
 
-            string dockerArgs = $"run --name {workerName} -it --rm -m {workerBytes}b -v {PathEx.GetDownloadsPath()}:c:\\downloads -v {pwizRoot}:c:\\pwiz {RunTests.DOCKER_IMAGE_NAME} \"{testRunnerCmd} workername={workerName}\" {dockerRunRedirect}";
+            string dockerArgs = $"run --name {workerName} -it --rm -m {workerBytes}b -v \"{PathEx.GetDownloadsPath()}\":c:\\downloads -v \"{pwizRoot}\":c:\\pwiz {RunTests.DOCKER_IMAGE_NAME} \"{testRunnerCmd} workername={workerName}\" {dockerRunRedirect}";
             Console.WriteLine($"Launching {workerName}: docker {dockerArgs}");
             log?.WriteLine($"Launching {workerName}: docker {dockerArgs}");
             workerNames = (workerNames ?? "") + $"{workerName} ";
@@ -688,6 +693,15 @@ namespace TestRunner
                 log?.WriteLine($"Error launching docker worker: {proc?.ExitCode ?? -1}");
             }
             return workerName;
+        }
+
+        private static DateTime _testRunStartTime;
+        // Avoids conflicts between this and any previous invocation that may not have torn down its workers yet
+        // Helps when a run is cancelled then quickly restarted, as often happens when you realize you've forgotten
+        // to select certain tests etc
+        private static string GetTestRunTimeStamp()
+        {
+            return $"_{_testRunStartTime.ToString("yyyyMMddHHmmss")}";
         }
 
         private static string AddPassThroughArguments(CommandLineArgs commandLineArgs, string testRunnerCmd)
@@ -866,10 +880,12 @@ namespace TestRunner
                         }
 
                         string testName = testInfo.TestInfo.TestMethod.Name;
+                        // Adding timestamp to worker name voids conflicts between this and any previous invocation
+                        var serverWorkerLogName = $"serverWorker{GetTestRunTimeStamp()}.log";
                         try
                         {
                             // running RunTestPasses() for GUI tests directly is problematic because we're no longer on the main thread
-                            var testRunnerCmd = $@"test={testName} offscreen=1 showheader=0 log=serverWorker.log parallelmode=server_worker loop=1 language={testInfo.Language}";
+                            var testRunnerCmd = $@"test={testName} offscreen=1 showheader=0 log={serverWorkerLogName} parallelmode=server_worker loop=1 language={testInfo.Language}";
                             testRunnerCmd = AddPassThroughArguments(commandLineArgs, testRunnerCmd);
 
                             var psi = new ProcessStartInfo(Assembly.GetExecutingAssembly().Location, testRunnerCmd);
@@ -886,7 +902,7 @@ namespace TestRunner
                             bool testPassed = p.ExitCode == 0;
                             if (!testPassed)
                                 Interlocked.Increment(ref testsFailed);
-                            var testOutput = File.ReadAllText("serverWorker.log");
+                            var testOutput = File.ReadAllText(serverWorkerLogName);
                             LogTestOutput(testOutput, log, testInfo.LoopCount);
                             Interlocked.Increment(ref testsResultsReturned);
                             Thread.Sleep(500); // wait a bit in case SkylineTester killed the server_worker TestRunner
@@ -908,7 +924,8 @@ namespace TestRunner
                     (loop <= 0) ? " forever" : (loop == 1) ? "" : " in " + loop + " loops",
                     "", /*(repeat <= 1) ? "" : ", repeated " + repeat + " times each per language",*/
                     workerCount);
-                Console.WriteLine("(If prompted to \"Allow TestRunner to communicate on these networks\", be sure to check BOTH public and private options.)\r\n");
+                Console.WriteLine("Be sure to check BOTH public and private options if prompted to \"Allow TestRunner to communicate on these networks\".");
+                Console.WriteLine("See https://skyline.ms/wiki/home/development/page.view?name=Troubleshooting_parallel_mode for troubleshooting tips.\r\n");
 
                 // main thread listens for workers to connect
                 while (!cts.IsCancellationRequested)
@@ -1113,25 +1130,21 @@ namespace TestRunner
             bool clientMode = parallelMode == "client" || parallelMode == "server_worker";
             bool asNightly = offscreen && qualityMode;  // While it is possible to run quality off screen from the Quality tab, this is what we use to distinguish for treatment of perf tests
 
+            // If running Nightly tests, remove any flagged for exclusion by the NoNightlyTesting custom attribute
+            if (asNightly)
+            {
+                testList.RemoveAll(test => test.DoNotRunInNightly);
+                unfilteredTestList.RemoveAll(test => test.DoNotRunInNightly);
+            }
+
             // If we haven't been told to run perf tests, remove any from the list
             // which may have shown up by default
             if (!perftests)
             {
-                for (var t = testList.Count; t-- > 0; )
-                {
-                    if (testList[t].IsPerfTest)
-                    {
-                        testList.RemoveAt(t);
-                    }
-                }
-                for (var ut = unfilteredTestList.Count; ut-- > 0; )
-                {
-                    if (unfilteredTestList[ut].IsPerfTest)
-                    {
-                        unfilteredTestList.RemoveAt(ut);
-                    }
-                }
+                testList.RemoveAll(test => test.IsPerfTest);
+                unfilteredTestList.RemoveAll(test => test.IsPerfTest);
             }
+
             // Even if we have been told to run perftests, if none are in the list
             // then make sure we don't chat about perf tests in the log
             perftests &= testList.Any(t => t.IsPerfTest);

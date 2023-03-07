@@ -9,9 +9,10 @@ AllVsMz5OptimzeCeImportPerformanceTests
 #BrukerDiaPasefImportTest
 #BrukerPrmPasefImportTest
 DecoysMatchTest
+TestDiaPasefFullDataset
 TestDiaTtofDiaUmpireTutorialFullFileset
 TestDiaTtofFullSearchTutorial
-#TestDiaUmpireWiffFile
+TestDiaUmpireWiffFile
 TestDiaQeDiaUmpireTutorial
 TestDiaQeDiaUmpireTutorialFullFileset
 TestDiaQeFullSearchTutorial

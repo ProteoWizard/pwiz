@@ -22,7 +22,7 @@ namespace pwiz.BiblioSpec.Properties {
     [global::System.CodeDom.Compiler.GeneratedCodeAttribute("System.Resources.Tools.StronglyTypedResourceBuilder", "17.0.0.0")]
     [global::System.Diagnostics.DebuggerNonUserCodeAttribute()]
     [global::System.Runtime.CompilerServices.CompilerGeneratedAttribute()]
-    internal class Resources {
+    public class Resources {
         
         private static global::System.Resources.ResourceManager resourceMan;
         
@@ -135,7 +135,7 @@ namespace pwiz.BiblioSpec.Properties {
         /// <summary>
         ///   Looks up a localized string similar to PeptideProphet confidence.
         /// </summary>
-        internal static string BiblioSpecScoreType_DisplayName_PeptideProphet_confidence {
+        public static string BiblioSpecScoreType_DisplayName_PeptideProphet_confidence {
             get {
                 return ResourceManager.GetString("BiblioSpecScoreType_DisplayName_PeptideProphet_confidence", resourceCulture);
             }
