@@ -299,12 +299,6 @@ namespace pwiz.Skyline.Controls
                     if (_indexesInUse.IndexInRange(index) && _indexesInUse.Get(index))
                         _indexesInUse.Set(index, false);
                 }
-
-                foreach (var tempFile in _tempFiles)
-                {
-                    FileEx.SafeDelete(tempFile, true); // Don't throw if file can't be deleted
-                    DirectoryEx.SafeDelete(tempFile); // In case that was actually a directory name 
-                }
             }
         }
         
@@ -353,6 +347,16 @@ namespace pwiz.Skyline.Controls
         {
             Text = string.Empty;
         }
+
+        public void DeleteTempFiles()
+        {
+            foreach (var tempFile in _tempFiles)
+            {
+                FileEx.SafeDelete(tempFile, true); // Don't throw if file can't be deleted
+                DirectoryEx.SafeDelete(tempFile); // In case that was actually a directory name 
+            }
+            _tempFiles.Clear();
+        }
     }
     
     public delegate void WriteLineEvent(object sender, string args);
@@ -382,6 +386,7 @@ namespace pwiz.Skyline.Controls
         {
             // Stop writing to the text box we are about to dispose of. 
             WriterHelper.Wrote -= HandleOnWroteLine;
+            WriterHelper.DeleteTempFiles();
         }
 
         /// <summary>
