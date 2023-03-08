@@ -132,16 +132,19 @@ namespace pwiz.Skyline.Model
             if(this.GetType() != obj.GetType())
                 return false;
             var other = (GlobalizedObject)obj;
-            if(GetProperties().Count != other.GetProperties().Count)
+            if(GetPropertiesForComparison().Count != other.GetPropertiesForComparison().Count)
                 return false;
-            var thisProps = GetProperties().Cast<PropertyDescriptor>()
-                .Where(prop => !prop.Attributes.Contains(UseToCompare.No))
+            var thisProps = GetPropertiesForComparison()
                 .ToDictionary(prop => prop.Name, prop => prop.GetValue(this));
-            var otherProps = other.GetProperties().Cast<PropertyDescriptor>()
-                .Where(prop => !prop.Attributes.Contains(UseToCompare.No))
+            var otherProps = other.GetPropertiesForComparison()
                 .ToDictionary(prop => prop.Name, prop => prop.GetValue(other));
 
             return ArrayUtil.EqualsDeep(thisProps, otherProps);
+        }
+
+        private List<PropertyDescriptor> GetPropertiesForComparison()
+        {
+            return GetProperties().Cast<PropertyDescriptor>().Where(prop => !prop.Attributes.Contains(UseToCompare.No)).ToList();
         }
 
         public override int GetHashCode()
@@ -154,9 +157,11 @@ namespace pwiz.Skyline.Model
 
         public string Serialize()
         {
-            var thisProps = GetType().GetProperties().ToDictionary(prop => prop.Name, prop => prop.GetValue(this));
+            var thisProps = GetProperties().Cast<PropertyDescriptor>()
+                .Where(prop => !prop.Attributes.Contains(UseToCompare.No) && prop.GetValue(this) != null)
+                .ToDictionary(prop => prop.Name, prop => prop.GetValue(this));
 
-            return JsonConvert.SerializeObject(thisProps, Formatting.Indented);
+            return JsonConvert.SerializeObject(thisProps, Formatting.Indented).Replace('"', '\'');
         }
 
         public void Deserialize(string str)
