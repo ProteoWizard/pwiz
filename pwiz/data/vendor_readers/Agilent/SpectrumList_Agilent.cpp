@@ -41,6 +41,61 @@ namespace detail {
 using namespace Agilent;
 namespace AgilentAPI = pwiz::vendor_api::Agilent;
 
+
+namespace {
+
+SpectrumPtr& getNonMsSpectrum(const MassHunterDataPtr& rawfile, SpectrumPtr& result, Scan& scan, int rowNumber)
+{
+    AgilentAPI::SpectrumPtr spectrumPtr = rawfile->getNonMsSpectrum(rowNumber);
+
+    result->set(MS_EMR_spectrum);
+    result->set(MS_profile_spectrum);
+    scan.set(MS_scan_start_time, spectrumPtr->getRetentionTime(), UO_minute);
+
+    result->setMZIntensityArrays(vector<double>(), vector<double>(), MS_number_of_detector_counts);
+
+    pwiz::util::BinaryData<double>& wavelengthArray = result->getMZArray()->data;
+    pwiz::util::BinaryData<double>& intensityArray = result->getIntensityArray()->data;
+    pwiz::util::BinaryData<float> yArray;
+
+    // replace "m/z array" term with "wavelength array"
+    BinaryDataArray& mzArray = *result->getMZArray();
+    vector<CVParam>::iterator itr = std::find_if(mzArray.cvParams.begin(), mzArray.cvParams.end(), CVParamIs(MS_m_z_array));
+    *itr = CVParam(MS_wavelength_array, "", UO_nanometer);
+
+    spectrumPtr->getXArray(wavelengthArray);
+    spectrumPtr->getYArray(yArray);
+
+    intensityArray.assign(yArray.begin(), yArray.end());
+
+    if (!wavelengthArray.empty())
+    {
+        for (size_t i = 0; i < 10; ++i)
+        {
+            if (intensityArray[i] != 0)
+            {
+                result->set(MS_lowest_observed_wavelength, wavelengthArray[i], UO_nanometer);
+                break;
+            }
+        }
+
+        for (size_t i = intensityArray.size() - 1; i > 0; --i)
+        {
+            if (intensityArray[i] != 0)
+            {
+                result->set(MS_highest_observed_wavelength, wavelengthArray[i], UO_nanometer);
+                break;
+            }
+        }
+    }
+    result->defaultArrayLength = wavelengthArray.size();
+
+    return result;
+}
+
+} // namespace
+
+
 SpectrumList_Agilent::SpectrumList_Agilent(const MSData& msd, MassHunterDataPtr rawfile, const Reader::Config& config)
 :   msd_(msd),
     rawfile_(rawfile),
@@ -129,6 +184,14 @@ PWIZ_API_DECL SpectrumPtr SpectrumList_Agilent::spectrum(size_t index, DetailLev
     result->index = index;
     result->id = ie.id;
 
+    result->scanList.set(MS_no_combination);
+    result->scanList.scans.push_back(Scan());
+    Scan& scan = result->scanList.scans[0];
+    scan.instrumentConfigurationPtr = msd_.run.defaultInstrumentConfigurationPtr;
+
+    if (ie.scanId < 0) // non-MS spectrum
+        return getNonMsSpectrum(rawfile_, result, scan, ie.rowNumber);
+
     if (lastRowNumber_ != ie.rowNumber)
         lastScanRecord_ = rawfile_->getScanRecord(lastRowNumber_ = ie.rowNumber); // equivalent to frameIndex
     ScanRecordPtr scanRecordPtr = lastScanRecord_;
@@ -139,11 +202,6 @@ PWIZ_API_DECL SpectrumPtr SpectrumList_Agilent::spectrum(size_t index, DetailLev
     CVID spectrumType = translateAsSpectrumType(scanType);
 
     result->set(translateAsPolarityType(scanRecordPtr->getIonPolarity()));
-
-    result->scanList.set(MS_no_combination);
-    result->scanList.scans.push_back(Scan());
-    Scan& scan = result->scanList.scans[0];
-    scan.instrumentConfigurationPtr = msd_.run.defaultInstrumentConfigurationPtr;
 
     if (isIonMobilityScan)
     {
@@ -643,6 +701,11 @@ PWIZ_API_DECL void SpectrumList_Agilent::createIndex() const
 	{
 		MSScanType scanTypes = rawfile_->getScanTypes();
 
+        int numMassSpectra = rawfile_->getTotalScansPresent();
+        int numNonMsSpectra = rawfile_->getNonMsScanCount();
+        int size = numMassSpectra + numNonMsSpectra;
+        index_.reserve(size);
+
 		// if any of these types are present, we enumerate each spectrum
 		if (scanTypes & MSScanType_Scan ||
 			scanTypes & MSScanType_ProductIon ||
@@ -650,10 +713,8 @@ PWIZ_API_DECL void SpectrumList_Agilent::createIndex() const
             scanTypes & MSScanType_SelectedIon ||
             scanTypes & MSScanType_MultipleReaction)
 		{
-			int size = rawfile_->getTotalScansPresent();
-			index_.reserve(size);
 
-			for (size_t i = 0, end = (size_t)size; i < end; ++i)
+			for (size_t i = 0, end = (size_t)numMassSpectra; i < end; ++i)
 			{
 				ScanRecordPtr scanRecordPtr = rawfile_->getScanRecord(i);
 				MSScanType scanType = scanRecordPtr->getMSScanType();
@@ -675,6 +736,20 @@ PWIZ_API_DECL void SpectrumList_Agilent::createIndex() const
                 generate(sink, "scanId=" << int_, ie.scanId);
                 idToIndexMap_[ie.id] = ie.index;
 			}
+
+            for (size_t i = 0, end = (size_t)numNonMsSpectra; i < end; ++i)
+            {
+                index_.push_back(IndexEntry());
+                IndexEntry& ie = index_.back();
+                ie.rowNumber = (int)i;
+                ie.scanId = -1;
+                ie.frameIndex = ie.driftBinIndex = 0;
+                ie.index = index_.size() - 1;
+
+                std::back_insert_iterator<std::string> sink(ie.id);
+                generate(sink, "merged=" << int_ << " row=" << int_, ie.index, ie.rowNumber);
+                idToIndexMap_[ie.id] = ie.index;
+            }
 		}
 	}
 

@@ -772,7 +772,7 @@ namespace pwiz.Skyline.Model.Results
                         if (intervalIndex >= 0 && intervalIndex < intersectedTimeIntervals.Count)
                         {
                             startTime = Math.Max(startTime, intersectedTimeIntervals.Starts[intervalIndex]);
-                            endTime = Math.Min(endTime, intersectedTimeIntervals.Ends[intervalIndex]);
+                            endTime = Math.Max(startTime, Math.Min(endTime, intersectedTimeIntervals.Ends[intervalIndex]));
                         }
 
                         var chromPeak = ChromPeak.IntegrateWithoutBackground(peak.Data.RawTimeIntensities, startTime, endTime, flags, peakGroupIntegrator.GetMedianChromatogram(startTime, endTime));

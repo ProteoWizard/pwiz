@@ -304,7 +304,7 @@ namespace pwiz.Skyline.Model.Results
                 im.ReadStream.CloseStream();
                 im.ReadStream = manager.CreatePooledStream(prop,false);
             });
-        }        
+        }
 
         public void Dispose()
         {
@@ -1406,6 +1406,8 @@ namespace pwiz.Skyline.Model.Results
             using (var fsScores = new FileSaver(cachePathOpt + SCORES_EXT, true))
             using (var fs = new FileSaver(cachePathOpt))
             {
+                lock (ReadStream)
+                {
                 var inStream = ReadStream.Stream;
                 fs.Stream = streamManager.CreateStream(fs.SafeName, FileMode.Create, true);
                 int peakCount = 0, scoreCount = 0;
@@ -1544,6 +1546,7 @@ namespace pwiz.Skyline.Model.Results
                     streamManager.CreatePooledStream(cachePathOpt, false));
             }
         }
+        }
 
         public void TransferPeaks(CacheFormat targetFormat, int firstPeakIndex, int peakCount, Stream writeStream)
         {
@@ -1674,9 +1677,9 @@ namespace pwiz.Skyline.Model.Results
 
         private T CallWithStream<T>(Func<Stream, T> func)
         {
-            var stream = ReadStream.Stream;
-            lock (stream)
+            lock (ReadStream)
             {
+            var stream = ReadStream.Stream;
                 try
                 {
                     return func(stream);
