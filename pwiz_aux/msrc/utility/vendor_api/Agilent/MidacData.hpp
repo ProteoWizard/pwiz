@@ -81,6 +81,9 @@ class MidacDataImpl : public MassHunterData
     virtual const vector<Signal>& getSignals() const { return signals_; }
     virtual SignalChromatogramPtr getSignal(const Signal& signal) const { return nullptr; }
 
+    virtual int getNonMsScanCount() const { return 0; }
+    virtual SpectrumPtr getNonMsSpectrum(int index) const { return nullptr; }
+
     virtual const BinaryData<double>& getTicTimes(bool ms1Only) const;
     virtual const BinaryData<double>& getBpcTimes(bool ms1Only) const;
     virtual const BinaryData<float>& getTicIntensities(bool ms1Only) const;
