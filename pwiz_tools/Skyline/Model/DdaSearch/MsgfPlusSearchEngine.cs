@@ -122,7 +122,7 @@ namespace pwiz.Skyline.Model.DdaSearch
         //private int minPeptideLength, maxPeptideLength, minCharge, maxCharge;
         //private double chargeCarrierMass;
         private int maxVariableMods = 2;
-        private string modsFile = Path.GetTempFileName();
+        private string modsFile = Path.ChangeExtension(Path.GetTempFileName(),@"mods");
         private CancellationTokenSource _cancelToken;
         private IProgressStatus _progressStatus;
         private bool _success;
