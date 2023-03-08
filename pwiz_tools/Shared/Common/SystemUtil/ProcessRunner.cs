@@ -230,6 +230,15 @@ namespace pwiz.Common.SystemUtil
                 {
                     tmpDirForCleanup = Path.GetTempFileName(); // Creates a file
                     File.Delete(tmpDirForCleanup); // But we want a directory
+                    if (!string.IsNullOrEmpty(psi.FileName))
+                    {
+                        // Name the directory so as to be more obviously associated with the process
+                        var exeName = Path.GetFileNameWithoutExtension(psi.FileName);
+                        if (!string.IsNullOrEmpty(exeName))
+                        {
+                            tmpDirForCleanup = Path.ChangeExtension(tmpDirForCleanup, exeName);
+                        }
+                    }
                     Directory.CreateDirectory(tmpDirForCleanup);
                     psi.Environment[@"TMP"] = tmpDirForCleanup; // Process will create its tempfiles here
                 }
