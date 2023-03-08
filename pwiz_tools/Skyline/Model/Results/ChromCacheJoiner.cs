@@ -92,7 +92,7 @@ namespace pwiz.Skyline.Model.Results
                         _fs.Stream = _loader.StreamManager.CreateStream(_fs.SafeName, FileMode.Create, true);
 
                     ChromatogramCache.RawData rawData;
-                    long bytesData = ChromatogramCache.LoadStructs(inStream, null, null, out rawData, _doc);
+                    long bytesData = ChromatogramCache.LoadStructs(inStream, null, null, out rawData);
 
                     // If joining, then format version should have already been checked.
                     Assume.IsTrue(ChromatogramCache.IsVersionCurrent(rawData.FormatVersion) ||

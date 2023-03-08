@@ -47,6 +47,8 @@ namespace pwiz.Skyline.Model.Results
         public const CacheFormatVersion FORMAT_VERSION_CACHE_3 = CacheFormatVersion.Three;
         public const CacheFormatVersion FORMAT_VERSION_CACHE_2 = CacheFormatVersion.Two;
 
+        public const CacheFormatVersion FORMAT_VERSION_CHROM_TRANSITION_OPTSTEP = CacheFormatVersion.Seventeen;
+
         public const string EXT = ".skyd";
         public const string PEAKS_EXT = ".peaks";
         public const string SCANS_EXT = ".scans";
@@ -635,9 +637,10 @@ namespace pwiz.Skyline.Model.Results
                 readStream = loader.StreamManager.CreatePooledStream(cachePath, false);
                 // DebugLog.Info("{0}. {1} - loaded", readStream.GlobalIndex, cachePath);
 
-                LoadStructs(readStream.Stream, status, loader, out var raw, doc);
+                LoadStructs(readStream.Stream, status, loader, out var raw);
 
                 var result = new ChromatogramCache(cachePath, raw, readStream);
+                result = result.UpdateChargeSigns(doc);
                 result = result.UpdateOptimizationSteps(doc);
                 loader.UpdateProgress(status.Complete());
                 return result;
@@ -758,7 +761,7 @@ namespace pwiz.Skyline.Model.Results
                 throw new IOException(errorMessage.ToString());
         }
 
-        public static long LoadStructs(Stream stream, IProgressStatus status, IProgressMonitor progressMonitor, out RawData raw, SrmDocument doc)
+        public static long LoadStructs(Stream stream, IProgressStatus status, IProgressMonitor progressMonitor, out RawData raw)
         {
             CacheHeaderStruct cacheHeader = CacheHeaderStruct.Read(stream);
             if (cacheHeader.formatVersion < CacheFormatVersion.Two || cacheHeader.numFiles == 0)
@@ -857,14 +860,6 @@ namespace pwiz.Skyline.Model.Results
                 progressMonitor,
                 status));
 
-            // Watch out for older caches that didn't record chromatogram polarity.  We can only reliably handle this for completely negative docs.
-            if (formatVersion < CacheFormatVersion.Eleven &&
-                doc != null && doc.MoleculeTransitionGroups.All(p => p.PrecursorMz.IsNegative))
-            {
-                raw = raw.ChangeChromatogramEntries(raw.ChromatogramEntries.ChangeAll(
-                    chromGroupHeader => chromGroupHeader.ChangeChargeToNegative()));
-            }
-
             if (formatVersion > CacheFormatVersion.Four)
             {
                 // Read textId bytes (sequence, or custom ion id)
@@ -956,8 +951,16 @@ namespace pwiz.Skyline.Model.Results
 
             // Write the transitions
             long locationTrans = outStream.Position;
-            
-            cacheFormat.ChromTransitionSerializer().WriteItems(outStream, chromTransitions);
+            IEnumerable<ChromTransition> transitionsToWrite = chromTransitions;
+            if (formatVersion < FORMAT_VERSION_CHROM_TRANSITION_OPTSTEP &&
+                chromTransitions.Any(chromTransition => 0 != chromTransition.OptimizationStep))
+            {
+                transitionsToWrite = chromTransitions.Select(chromTransition =>
+                    chromTransition.ChangeOptimizationStep(0,
+                        chromTransition.Product +
+                        ChromatogramInfo.OPTIMIZE_SHIFT_SIZE * chromTransition.OptimizationStep));
+            }
+            cacheFormat.ChromTransitionSerializer().WriteItems(outStream, transitionsToWrite);
             long locationScores = outStream.Position;
             long locationTextIdBytes = outStream.Position;
             int countScores = (int) (outStreamScores.Position/sizeof (float));
@@ -1230,6 +1233,29 @@ namespace pwiz.Skyline.Model.Results
                 }
             }
         }
+        /// <summary>
+        /// If the cache format is less than 11, and all of the precursors in the document
+        /// are negative, then assume that all of the chromatograms in the .skyd file
+        /// should be negative.
+        /// </summary>
+        private ChromatogramCache UpdateChargeSigns(SrmDocument doc)
+        {
+            if (_rawData.FormatVersion >= CacheFormatVersion.Eleven)
+            {
+                return this;
+            }
+
+            if (doc.MoleculeTransitionGroups.Any(p => !p.PrecursorMz.IsNegative))
+            {
+                return this;
+            }
+
+            var raw = _rawData;
+            raw = raw.ChangeChromatogramEntries(raw.ChromatogramEntries.ChangeAll(
+                chromGroupHeader => chromGroupHeader.ChangeChargeToNegative()));
+            return ChangeRawData(raw);
+
+        }
 
         /// <summary>
         /// When reading older format .skyd files, find the groups of ChromTransition's whose product
@@ -1238,7 +1264,7 @@ namespace pwiz.Skyline.Model.Results
         /// </summary>
         private ChromatogramCache UpdateOptimizationSteps(SrmDocument doc)
         {
-            if (!doc.Settings.HasResults || Version >= CacheFormatVersion.Seventeen)
+            if (!doc.Settings.HasResults || Version >= FORMAT_VERSION_CHROM_TRANSITION_OPTSTEP)
                 return this;
 
             // Determine which files belong to ChromatogramSets with optimization functions.
@@ -1443,16 +1469,7 @@ namespace pwiz.Skyline.Model.Results
                         int start = lastEntry.StartTransitionIndex;
                         int end = start + lastEntry.NumTransitions;
                         for (int j = start; j < end; j++)
-                        {
-                            var chromTransition = _rawData.ChromTransitions[j];
-                            if (formatVersion < CacheFormatVersion.Seventeen && chromTransition.OptimizationStep != 0)
-                            {
-                                // Convert to old format with shifted m/z.
-                                var newProduct = chromTransition.Product + chromTransition.OptimizationStep * ChromatogramInfo.OPTIMIZE_SHIFT_SIZE;
-                                chromTransition = chromTransition.ChangeOptimizationStep(0, newProduct);
-                            }
-                            listKeepTransitions.Add(chromTransition);
-                        }
+                                listKeepTransitions.Add(_rawData.ChromTransitions[j]);
                         int numEntryPeaks = lastEntry.NumPeaks * lastEntry.NumTransitions;
                         if (lastEntry.StartPeakIndex == firstPeakToTransfer + numPeaksToTransfer)
                         {
