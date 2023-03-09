@@ -628,7 +628,7 @@ namespace pwiz.Skyline.Controls.Graphs
                     types = ImmutableList.ValueOf(types), charges = ImmutableList.ValueOf(charges),
                     rankTypes = ImmutableList.ValueOf(rankTypes), rankAdducts = ImmutableList.ValueOf(rankAdducts)};
 
-                if (_rmis == null || rankContext == null || !rankContext.Equals(newRankingContext))
+                if (_rmis == null || rankContext == null || !rankContext.Equals(newRankingContext) || !_rmis.Tolerance.Equals(settings.TransitionSettings.Libraries.IonMatchMzTolerance))
                 {
                     rankContext = newRankingContext;
                     _rmis = LibraryRankedSpectrumInfo.NewLibraryRankedSpectrumInfo(spectrumInfo,
@@ -944,6 +944,12 @@ namespace pwiz.Skyline.Controls.Graphs
 
         public void OnDocumentUIChanged(object sender, DocumentChangedEventArgs e)
         {
+            if (ReferenceEquals(DocumentUI.Id, e.DocumentPrevious.Id) &&
+                !ReferenceEquals(e.DocumentPrevious?.Settings.TransitionSettings.Libraries, DocumentUI.Settings.TransitionSettings.Libraries))
+            {
+                LoadScan(true, true);
+                return;
+            }
             // If document changed, reload scan.
             // Also reload if ion mobility is in use (as implied by visibility of related controls), as changes to
             // the IM library don't cause a document ID change (similar to spectral libraries, its contents exist outside of Skyline)
@@ -1001,6 +1007,14 @@ namespace pwiz.Skyline.Controls.Graphs
 
             graphControl.Refresh();
         }
+
+        public void SetIntensityScale(double maxIntensity)
+        {
+            GraphPane.YAxis.Scale.MaxAuto = false;
+            GraphPane.YAxis.Scale.Max = maxIntensity;
+            GraphPane.AxisChange();
+        }
+
         public MzRange Range
         {
             get { return new MzRange(GraphPane.XAxis.Scale.Min, GraphPane.XAxis.Scale.Max); }

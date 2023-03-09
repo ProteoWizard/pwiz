@@ -221,7 +221,20 @@ using (new Assume.DebugOnFail())  // TODO(bspratt) remove then when this intermi
             }
             else
             {
-                OkDialog(peptideSettingsUI, peptideSettingsUI.OkDialog);
+                bool settingsChanged = false;
+                RunUI(() => settingsChanged = peptideSettingsUI.IsSettingsChanged);
+                if (!settingsChanged)
+                {
+                    // Click the OK button but it is not expected to change anything
+                    OkDialog(peptideSettingsUI, peptideSettingsUI.OkDialog);
+                }
+                else
+                {
+                    using (new WaitDocumentChange(null, true))
+                    {
+                        OkDialog(peptideSettingsUI, peptideSettingsUI.OkDialog);
+                    }
+                }
             }
         }
 

@@ -53,7 +53,7 @@ namespace pwiz.SkylineTest
         /// control, that means that somebody neglected to copy current.xsd to a newly created Skyline_yy_n.xsd file.
         ///
         /// </summary>
-        [TestMethod]
+        [TestMethod, NoParallelTesting(TestExclusionReason.SHARED_DIRECTORY_WRITE)] // May write current schema version for release
         public void TestDocumentFormatSchemaFiles()
         {
             string explicitCurrentResourceName = GetVersionSpecificXsdResourceName(DocumentFormat.CURRENT); // e.g. if DocumentFormat.CURRENT is 21.3, returns "Skyline_21_3.xsd"

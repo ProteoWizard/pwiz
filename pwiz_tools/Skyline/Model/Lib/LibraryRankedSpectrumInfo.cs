@@ -18,6 +18,7 @@
  */
 using System.Collections.Generic;
 using System.Linq;
+using pwiz.Common.Chemistry;
 using pwiz.Common.Collections;
 using pwiz.Common.SystemUtil;
 using pwiz.Skyline.Model.Crosslinking;
@@ -68,7 +69,7 @@ namespace pwiz.Skyline.Model.Lib
                 charges, types, rankCharges, rankTypes, score, useFilter, matchAll, minPeaks);
         }
 
-        public LibraryRankedSpectrumInfo(IsotopeLabelType labelType, double tolerance, IEnumerable<RankedMI> spectrum, double? score)
+        public LibraryRankedSpectrumInfo(IsotopeLabelType labelType, MzTolerance tolerance, IEnumerable<RankedMI> spectrum, double? score)
         {
             LabelType = labelType;
             _spectrum = ImmutableList.ValueOf(spectrum);
@@ -83,7 +84,7 @@ namespace pwiz.Skyline.Model.Lib
             return ChangeProp(ImClone(this), im=>im.Score = score);
         }
         public IsotopeLabelType LabelType { get; private set; }
-        public double Tolerance { get; private set; }
+        public MzTolerance Tolerance { get; private set; }
 
         public IList<RankedMI> Peaks { get { return _spectrum; } }
 

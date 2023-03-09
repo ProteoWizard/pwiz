@@ -36,6 +36,8 @@
 #include <iostream>
 #include <fstream>
 
+#pragma warning (push)
+#pragma warning (disable: 4189)
 //#include "MassLynxRawDataFile.h"
 #include "MassLynxRawBase.hpp"
 #include "MassLynxRawScanReader.hpp"
@@ -48,6 +50,7 @@
 #include "MassLynxParameters.hpp"
 //#include "cdtdefs.h"
 //#include "compresseddatacluster.h"
+#pragma warning (pop)
 
 namespace pwiz {
 namespace vendor_api {
