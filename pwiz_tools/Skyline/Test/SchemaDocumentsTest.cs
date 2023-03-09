@@ -17,6 +17,7 @@
  * limitations under the License.
  */
 
+using System.Diagnostics;
 using System.Globalization;
 using System.IO;
 using System.Reflection;
@@ -52,21 +53,23 @@ namespace pwiz.SkylineTest
         /// control, that means that somebody neglected to copy current.xsd to a newly created Skyline_yy_n.xsd file.
         ///
         /// </summary>
-        [TestMethod]
+        [TestMethod, NoParallelTesting(TestExclusionReason.SHARED_DIRECTORY_WRITE)] // May write current schema version for release
         public void TestDocumentFormatSchemaFiles()
         {
             string explicitCurrentResourceName = GetVersionSpecificXsdResourceName(DocumentFormat.CURRENT); // e.g. if DocumentFormat.CURRENT is 21.3, returns "Skyline_21_3.xsd"
             var explicitCurrentXsdContents = GetResourceText(explicitCurrentResourceName); // May be null if DocumentFormat.CURRENT is pre-release and explicit file hasn't been created yet
-            if (IsOfficialBuild())
+            if (IsOfficialBuild() && explicitCurrentXsdContents == null)
             {
-                // When we are releasing a new Skyline or Skyline-daily, we expect that there will exist
-                // a "Skyline_YY.N.xsd" file with the current version.
-                // That way, the next time someone wants to modify Skyline_Current.xsd, they will know that they
-                // also have to increment the current version number.
-                Assert.IsNotNull(explicitCurrentXsdContents,
-                    "Resource file {0} should exist for official Daily or Release builds\r\n" +
-                    "Copy pwiz_tools/Skyline/TestUtil/Schemas/Skyline_Current.xsd to pwiz_tools/Skyline/TestUtil/Schemas/Skyline_{1}.xsd and mark it as an embedded resource.",
-                    explicitCurrentResourceName, DocumentFormat.CURRENT.ToString());
+                if (!CreateCurrentXsdFile())
+                {
+                    // When we are releasing a new Skyline or Skyline-daily, we expect that there will exist
+                    // a "Skyline_YY.N.xsd" file with the current version.
+                    // That way, the next time someone wants to modify Skyline_Current.xsd, they will know that they
+                    // also have to increment the current version number.
+                    Assert.Fail("Resource file {0} should exist for official Daily or Release builds\r\n" +
+                                "Copy pwiz_tools/Skyline/TestUtil/Schemas/Skyline_Current.xsd to pwiz_tools/Skyline/TestUtil/Schemas/Skyline_{1}.xsd and mark it as an embedded resource.",
+                        explicitCurrentResourceName, DocumentFormat.CURRENT.ToString());
+                }
             }
 
             // If there's a schema file Skyline_yy.n.xsd and current version is yy.n, then Skyline_yy.n.xsd should be an exact copy of Skyline_Current.xsd
@@ -131,7 +134,7 @@ namespace pwiz.SkylineTest
         {
             string resourceName =
                 typeof(SchemaDocuments).Namespace + @"." +
-                string.Format(CultureInfo.InvariantCulture, @"Skyline_{0}.xsd", documentFormat);
+                GetVersionSpecificXsdFileName(documentFormat);
             if (!Equals(documentFormat, DocumentFormat.CURRENT))
             {
                 Assert.AreEqual(SchemaDocuments.GetSkylineSchemaResourceName(documentFormat.ToString()), resourceName);
@@ -140,12 +143,61 @@ namespace pwiz.SkylineTest
             return resourceName;
         }
 
+        private string GetVersionSpecificXsdFileName(DocumentFormat documentFormat)
+        {
+            return string.Format(CultureInfo.InvariantCulture, @"Skyline_{0}.xsd", documentFormat);
+        }
+
         /// <summary>
         /// Returns true if Skyline was built with the "--official" command line flag.
         /// </summary>
         private static bool IsOfficialBuild()
         {
             return !Install.IsDeveloperInstall && !Install.IsAutomatedBuild;
+        }
+
+        /// <summary>
+        /// Copies the file "Skyline_Current.xsd" to the version-specific name corresponding to
+        /// the current version number. Also, runs "git.exe add" on that file.
+        /// </summary>
+        /// <returns>true if the new file was created</returns>
+        private bool CreateCurrentXsdFile()
+        {
+            var codeBaseRoot = GetCodeBaseRoot();
+            if (codeBaseRoot == null)
+            {
+                return false;
+            }
+
+            var schemasFolder = Path.Combine(codeBaseRoot, "TestUtil\\Schemas");
+            var expectedFileName = GetVersionSpecificXsdFileName(DocumentFormat.CURRENT);
+            var currentXsd = Path.Combine(schemasFolder, "Skyline_Current.xsd");
+            var expectedFilePath = Path.Combine(schemasFolder, expectedFileName);
+            if (File.Exists(expectedFilePath))
+            {
+                // We should not get here if the file already exists, so return false so the test will fail
+                return false;
+            }
+            File.Copy(currentXsd, expectedFilePath);
+            var processStartInfo = new ProcessStartInfo("git.exe", "add " + expectedFileName)
+            {
+                WorkingDirectory = schemasFolder
+            };
+            var process = Process.Start(processStartInfo);
+            Assert.IsNotNull(process);
+            process.WaitForExit();
+            return true;
+        }
+
+        private string GetCodeBaseRoot()
+        {
+            var thisFile = new StackTrace(true).GetFrame(0).GetFileName();
+            if (string.IsNullOrEmpty(thisFile))
+            {
+                return null;
+            }
+            // ReSharper disable once PossibleNullReferenceException
+            return thisFile.Replace("\\Test\\SchemaDocumentsTest.cs", string.Empty);
         }
     }
 }

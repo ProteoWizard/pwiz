@@ -17,6 +17,7 @@
  * limitations under the License.
  */
 
+using System;
 using System.Linq;
 using Microsoft.VisualStudio.TestTools.UnitTesting;
 using pwiz.Common.Collections;
@@ -51,6 +52,47 @@ namespace pwiz.SkylineTestData.Results
             Assert.AreEqual(oddTimes.Times, addedToOdds.Times);
             var addedToEvens = evenTimes.AddIntensities(oddTimes);
             Assert.AreEqual(evenTimes.Times, addedToEvens.Times);
+        }
+
+        [TestMethod]
+        public void TestGetInterpolatedIntensity()
+        {
+            var timeIntensities = new TimeIntensities(new[] { 1f, 3f, 4.5f }, new[] { 4f, 5, 3 });
+            Assert.AreEqual(4f, timeIntensities.GetInterpolatedIntensity(0));
+            Assert.AreEqual(4.5f, timeIntensities.GetInterpolatedIntensity(2));
+            Assert.AreEqual(3, timeIntensities.GetInterpolatedIntensity(5));
+        }
+
+        [TestMethod]
+        public void TestMaxIntensityInRange()
+        {
+            var timeIntensities = new TimeIntensities(new[] { 1f, 3f, 4.5f }, new[] { 4f, 5, 3 });
+            Assert.AreEqual(4f, timeIntensities.MaxIntensityInRange(0, .5f));
+            Assert.AreEqual(4.5f, timeIntensities.MaxIntensityInRange(0, 2));
+
+        }
+
+        /// <summary>
+        /// Verifies that <see cref="TimeIntensities.GetInterpolatedIntensities"/> returns the same thing as
+        /// repeatedly calling <see cref="TimeIntensities.GetInterpolatedIntensity"/>.
+        /// </summary>
+        [TestMethod]
+        public void TestGetInterpolatedIntensities()
+        {
+            var random = new Random(0);
+            for (int nPoints = 0; nPoints < 1000; nPoints = nPoints * 2 + 1)
+            {
+                var times = Enumerable.Range(0, nPoints).Select(i => (float) random.NextDouble()).OrderBy(t=>t).ToList();
+                var intensities = Enumerable.Range(0, nPoints).Select(i => (float) random.NextDouble()).ToList();
+                var timeIntensities = new TimeIntensities(times, intensities);
+
+                var interpolatedTimes = Enumerable.Range(0, 100).Select(i => (float)(.1 + i * .8)).ToList();
+                var interpolatedIntensities = timeIntensities.GetInterpolatedIntensities(interpolatedTimes).ToList();
+                for (int i = 0; i < interpolatedIntensities.Count; i++)
+                {
+                    Assert.AreEqual(interpolatedIntensities[i], timeIntensities.GetInterpolatedIntensity(interpolatedTimes[i]), "nPoints: {0} index: {1}", nPoints, i);
+                }
+            }
         }
     }
 }

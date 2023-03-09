@@ -117,7 +117,7 @@ namespace MSConvertGUI
             // 
             this.AutoScaleDimensions = new System.Drawing.SizeF(6F, 13F);
             this.AutoScaleMode = System.Windows.Forms.AutoScaleMode.Font;
-            this.ClientSize = new System.Drawing.Size(337, 85);
+            this.ClientSize = new System.Drawing.Size(337, 84);
             this.Controls.Add(this.inputCheckBox);
             this.Controls.Add(this.inputLabel);
             this.Controls.Add(this.inputTextBox);

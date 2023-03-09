@@ -30,9 +30,9 @@ namespace pwiz.Common.SystemUtil
         string StatusPrefix { get; set; }
         string HideLinePrefix { get; set; }
         void Run(ProcessStartInfo psi, string stdin, IProgressMonitor progress, ref IProgressStatus status,
-            ProcessPriorityClass priorityClass = ProcessPriorityClass.Normal);
+            ProcessPriorityClass priorityClass = ProcessPriorityClass.Normal, bool forceTempfilesCleanup = false);
         void Run(ProcessStartInfo psi, string stdin, IProgressMonitor progress, ref IProgressStatus status,
-                 TextWriter writer, ProcessPriorityClass priorityClass = ProcessPriorityClass.Normal);
+                 TextWriter writer, ProcessPriorityClass priorityClass = ProcessPriorityClass.Normal, bool forceTempfilesCleanup = false);
     }
 
     public class ProcessRunner : IProcessRunner
@@ -43,6 +43,7 @@ namespace pwiz.Common.SystemUtil
 
         public string MessagePrefix { get; set; }
         private readonly List<string> _messageLog = new List<string>();
+        private string _tmpDirForCleanup;
 
         /// <summary>
         /// Used in R package installation. We print progress % for processRunner progress
@@ -53,13 +54,13 @@ namespace pwiz.Common.SystemUtil
         public string HideLinePrefix { get; set; }
 
         public void Run(ProcessStartInfo psi, string stdin, IProgressMonitor progress, ref IProgressStatus status,
-            ProcessPriorityClass priorityClass = ProcessPriorityClass.Normal)
+            ProcessPriorityClass priorityClass = ProcessPriorityClass.Normal, bool forceTempfilesCleanup = false)
         {
-            Run(psi, stdin, progress,ref status, null, priorityClass);
+            Run(psi, stdin, progress,ref status, null, priorityClass, forceTempfilesCleanup);
         }
 
         public void Run(ProcessStartInfo psi, string stdin, IProgressMonitor progress, ref IProgressStatus status, TextWriter writer,
-            ProcessPriorityClass priorityClass = ProcessPriorityClass.Normal)
+            ProcessPriorityClass priorityClass = ProcessPriorityClass.Normal, bool forceTempfilesCleanup = false)
         {
             // Make sure required streams are redirected.
             psi.RedirectStandardOutput = true;
@@ -69,6 +70,9 @@ namespace pwiz.Common.SystemUtil
                 psi.StandardOutputEncoding = psi.StandardErrorEncoding = OutputEncoding;
 
             _messageLog.Clear();
+
+            // Optionally create a subdir in the current TMP directory, run the new process with TMP set to that so we can clean it out afterward
+            _tmpDirForCleanup = forceTempfilesCleanup ? SetTmpDirForCleanup(psi) : null;
 
             Process proc = null;
             var msgFailureStartingCommand = @"Failure starting command ""{0} {1}"".";
@@ -126,6 +130,7 @@ namespace pwiz.Common.SystemUtil
                         {
                             proc.Kill();
                             progress.UpdateProgress(status = status.Cancel());
+                            CleanupTmpDir(); // Clean out any tempfiles left behind, if forceTempfilesCleanup was set
                             return;
                         }
 
@@ -191,12 +196,69 @@ namespace pwiz.Common.SystemUtil
                     if (progress != null)
                         progress.UpdateProgress(status);
                 }
+
             }
             finally
             {
                 if (!proc.HasExited)
                     try { proc.Kill(); } catch (InvalidOperationException) { }
+
+                CleanupTmpDir(); // Clean out any tempfiles left behind, if forceTempfilesCleanup was set
             }
+        }
+
+        // Clean out any tempfiles left behind, if forceTempfilesCleanup was set
+        private void CleanupTmpDir()
+        {
+            if (!string.IsNullOrEmpty(_tmpDirForCleanup))
+            {
+                try
+                {
+                    Directory.Delete(_tmpDirForCleanup, true);
+                }
+                catch (Exception e)
+                {
+                    _messageLog.Add($@"warning: cleanup of temporary directory {_tmpDirForCleanup} failed: {e.Message}");
+                }
+            }
+        }
+
+        // Create a subdir in the current TMP directory, run the new process with TMP set to that so we can clean it out afterward
+        private string SetTmpDirForCleanup(ProcessStartInfo psi)
+        {
+            string tmpDirForCleanup = null;
+            
+            if (psi.UseShellExecute)
+            {
+                _messageLog.Add(@"warning: UseShellExecute is set, cannot change environment for tempfile cleanup");
+            }
+            else
+            {
+                try
+                {
+                    tmpDirForCleanup = Path.GetTempFileName(); // Creates a file
+                    File.Delete(tmpDirForCleanup); // But we want a directory
+                    if (!string.IsNullOrEmpty(psi.FileName))
+                    {
+                        // Name the directory so as to be more obviously associated with the process
+                        var exeName = Path.GetFileNameWithoutExtension(psi.FileName);
+                        if (!string.IsNullOrEmpty(exeName))
+                        {
+                            tmpDirForCleanup = Path.ChangeExtension(tmpDirForCleanup, exeName);
+                        }
+                    }
+                    Directory.CreateDirectory(tmpDirForCleanup);
+                    psi.Environment[@"TMP"] = tmpDirForCleanup; // Process will create its tempfiles here
+                }
+                catch (Exception e)
+                {
+                    _messageLog.Add(
+                        $@"warning: could not create directory {tmpDirForCleanup} for tempfile cleanup: {e.Message}");
+                    tmpDirForCleanup = null;
+                }
+            }
+
+            return tmpDirForCleanup;
         }
 
         public IEnumerable<string> MessageLog()
@@ -204,34 +266,5 @@ namespace pwiz.Common.SystemUtil
             return _messageLog;
         }
 
-        public class ProcessRunnerTester: IProcessRunner
-        {
-            public string stringToWriteToWriter { get; set; }
-            public ProgressStatus progressStatus { get; set; }
-            public bool shouldCancel { get; set; }
-            public string StatusPrefix { get; set; }
-            public string HideLinePrefix { get; set; }
-            public void Run(ProcessStartInfo psi, string stdin, IProgressMonitor progress, ref IProgressStatus status,
-                ProcessPriorityClass priorityClass = ProcessPriorityClass.Normal)
-            {
-                Run(psi, stdin, progress, ref status, null, priorityClass);
-            }
-
-            public void Run(ProcessStartInfo psi, string stdin, IProgressMonitor progress, ref IProgressStatus status, TextWriter writer,
-                ProcessPriorityClass priorityClass = ProcessPriorityClass.Normal)
-            {
-                if (shouldCancel)
-                {
-                    status.Cancel();
-                    progress.UpdateProgress(status = status.Cancel());
-                    return;
-                }
-
-                if (!string.IsNullOrEmpty(stringToWriteToWriter))
-                    writer.WriteLine(stringToWriteToWriter);
-                status.ChangePercentComplete(100);
-                progress.UpdateProgress(status);
-            }
-        }
     }
 }

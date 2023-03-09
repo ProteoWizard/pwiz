@@ -47,7 +47,7 @@ class Serializer_MGF::Impl
 
     void write(ostream& os, const MSData& msd,
                const pwiz::util::IterationListenerRegistry* iterationListenerRegistry,
-               bool useWorkerThreads) const;
+               bool useWorkerThreads, bool continueOnError) const;
 
     void read(shared_ptr<istream> is, MSData& msd) const;
 };
@@ -64,7 +64,7 @@ struct nosci10_policy : boost::spirit::karma::real_policies<T>
 
 void Serializer_MGF::Impl::write(ostream& os, const MSData& msd,
     const pwiz::util::IterationListenerRegistry* iterationListenerRegistry,
-    bool useWorkerThreads) const
+    bool useWorkerThreads, bool continueOnError) const
 {
     bool titleIsThermoDTA = false;
     if (msd.fileDescription.sourceFilePtrs.size() >= 1)
@@ -76,11 +76,26 @@ void Serializer_MGF::Impl::write(ostream& os, const MSData& msd,
 
     os << std::setprecision(10); // 1234.567890
     SpectrumList& sl = *msd.run.spectrumListPtr;
-    SpectrumWorkerThreads spectrumWorkers(sl, useWorkerThreads);
+    SpectrumWorkerThreads spectrumWorkers(sl, useWorkerThreads, continueOnError);
     for (size_t i=0, end=sl.size(); i < end; ++i)
     {
-        //SpectrumPtr s = sl.spectrum(i, true);
-        SpectrumPtr s = spectrumWorkers.processBatch(i);
+        SpectrumPtr s;
+        try
+        {
+            // s = sl->spectrum(i, true);
+            s = spectrumWorkers.processBatch(i);
+        }
+        catch (std::exception& e)
+        {
+            if (continueOnError)
+            {
+                cerr << "Skipping spectrum " << i << " \"" << (s ? s->id : sl.spectrumIdentity(i).id) << "\": " << e.what() << endl;
+                continue;
+            }
+            else
+                throw;
+        }
+
         Scan* scan = !s->scanList.empty() ? &s->scanList.scans[0] : 0;
 
         if (s->cvParam(MS_ms_level).valueAs<int>() > 1 &&
@@ -208,10 +223,10 @@ PWIZ_API_DECL Serializer_MGF::Serializer_MGF()
 
 PWIZ_API_DECL void Serializer_MGF::write(ostream& os, const MSData& msd,
     const pwiz::util::IterationListenerRegistry* iterationListenerRegistry,
-    bool useWorkerThreads) const
+    bool useWorkerThreads, bool continueOnError) const
   
 {
-    return impl_->write(os, msd, iterationListenerRegistry, useWorkerThreads);
+    return impl_->write(os, msd, iterationListenerRegistry, useWorkerThreads, continueOnError);
 }
 
 

@@ -688,15 +688,20 @@ namespace SkylineTester
                 {
                     var nightlyRoot = dlg.SelectedPath;
                     var userFolder = Environment.GetFolderPath(Environment.SpecialFolder.UserProfile);
-                    if (nightlyRoot.StartsWith(userFolder))
+                    if (nightlyRoot.Equals(userFolder))
+                        nightlyRoot = string.Empty;
+                    else if (nightlyRoot.StartsWith(userFolder))
                         nightlyRoot = nightlyRoot.Remove(0, userFolder.Length+1);
                     MainWindow.NightlyRoot.Text = nightlyRoot;
 
                     MainWindow.Summary = null;
                     MainWindow.InitLogSelector(MainWindow.NightlyRunDate, MainWindow.NightlyViewLog);
-                    MainWindow.NightlyLogFile = (MainWindow.Summary.Runs.Count > 0)
-                        ? MainWindow.Summary.GetLogFile(MainWindow.Summary.Runs[MainWindow.Summary.Runs.Count - 1])
-                        : null;
+                    if (MainWindow.Summary != null) // For ReSharper - should never be null
+                    {
+                        MainWindow.NightlyLogFile = (MainWindow.Summary.Runs.Count > 0)
+                            ? MainWindow.Summary.GetLogFile(MainWindow.Summary.Runs[MainWindow.Summary.Runs.Count - 1])
+                            : null;
+                    }
 
                     MainWindow.InitNightly();
                     Enter();
