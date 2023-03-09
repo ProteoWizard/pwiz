@@ -122,7 +122,7 @@ namespace pwiz.Skyline.Model.DdaSearch
         //private int minPeptideLength, maxPeptideLength, minCharge, maxCharge;
         //private double chargeCarrierMass;
         private int maxVariableMods = 2;
-        private string modsFile = Path.GetTempFileName();
+        private string modsFile = PathEx.GetTempFileNameWithExtension(@"mods");
         private CancellationTokenSource _cancelToken;
         private IProgressStatus _progressStatus;
         private bool _success;
@@ -149,7 +149,7 @@ namespace pwiz.Skyline.Model.DdaSearch
                     var psi = new ProcessStartInfo(JavaDownloadInfo.JavaBinary,
                         $@"-Xmx{javaMaxHeapMB}M -jar """ + MsgfPlusBinary + @""" -tasks -2 " +
                         $@"-s ""{spectrumFilename}"" -d ""{FastaFileNames[0]}"" -tda 1 " +
-                        $@"-t {precursorMzTolerance} -ti {isotopeErrorRange.Item1},{isotopeErrorRange.Item2} " +
+                        $@"-t {precursorMzTolerance.Value}{precursorMzTolerance.UnitName} -ti {isotopeErrorRange.Item1},{isotopeErrorRange.Item2} " +
                         $@"-m {fragmentationMethod} -inst {instrumentType} -e {enzyme} -ntt {ntt} -maxMissedCleavages {maxMissedCleavages} " +
                         $@"-mod ""{modsFile}""")
                     {
@@ -160,7 +160,7 @@ namespace pwiz.Skyline.Model.DdaSearch
                         RedirectStandardInput = false
                     };
 
-                    pr.Run(psi, string.Empty, this, ref _progressStatus, ProcessPriorityClass.BelowNormal);
+                    pr.Run(psi, string.Empty, this, ref _progressStatus, ProcessPriorityClass.BelowNormal, true);
                     _progressStatus = _progressStatus.NextSegment();
                 }
                 catch (Exception ex)
@@ -317,6 +317,7 @@ namespace pwiz.Skyline.Model.DdaSearch
 
         public override void Dispose()
         {
+            FileEx.SafeDelete(modsFile, true); // In case cancel came at an awkward time
         }
     }
 }
