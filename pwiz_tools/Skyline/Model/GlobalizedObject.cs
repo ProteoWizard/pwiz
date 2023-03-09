@@ -142,7 +142,7 @@ namespace pwiz.Skyline.Model
             return ArrayUtil.EqualsDeep(thisProps, otherProps);
         }
 
-        private List<PropertyDescriptor> GetPropertiesForComparison()
+        public List<PropertyDescriptor> GetPropertiesForComparison()
         {
             return GetProperties().Cast<PropertyDescriptor>().Where(prop => !prop.Attributes.Contains(UseToCompare.No)).ToList();
         }

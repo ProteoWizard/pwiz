@@ -2563,11 +2563,12 @@ namespace pwiz.Skyline.Model.Lib
 
                 if (biblioAdditionalInfo != null)
                 {
-                    res.SpecIdInFile = biblioAdditionalInfo.SpecIdInFile;
-                    res.IdFileName = biblioAdditionalInfo.IDFileName;
-                    res.SetFileName(biblioAdditionalInfo.FileName);
-                    res.Score = biblioAdditionalInfo.Score;
-                    res.ScoreType = biblioAdditionalInfo.ScoreType;
+                    res.SpecIdInFile = biblioAdditionalInfo.SpecIdInFile ?? res.SpecIdInFile;
+                    res.IdFileName = biblioAdditionalInfo.IDFileName ?? res.IdFileName;
+                    if(biblioAdditionalInfo.FileName != null)
+                        res.SetFileName(biblioAdditionalInfo.FileName);
+                    res.Score = biblioAdditionalInfo.Score ?? res.Score;
+                    res.ScoreType = biblioAdditionalInfo.ScoreType ?? res.ScoreType;
                 }
             }
             return res;

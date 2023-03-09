@@ -85,6 +85,7 @@ namespace pwiz.SkylineTestTutorial
             //            IsPauseForScreenShots = true;
             //            IsCoverShotMode = true;
             CoverShotName = "TargetedMSMS";
+RunSmallMoleculeTestVersions = true;
 
             if (smallMoleculesTestMode != RefinementSettings.ConvertToSmallMoleculesMode.none &&
                 SkipSmallMoleculeTestVersions())
@@ -1109,7 +1110,7 @@ namespace pwiz.SkylineTestTutorial
         }
 
         /// <summary>
-        /// Tests the property sheet on the ViewLibraryDlg property sheet to confirm it shows up and displays accurate information
+        /// Tests the property sheet on the ViewLibraryDlg to confirm it shows up and displays accurate information
         /// </summary>
         private void TestPropertySheet()
         {
@@ -1118,6 +1119,7 @@ namespace pwiz.SkylineTestTutorial
             if (isSmallMolecules)
                 expectedPropertiesJson =
                     @"{
+                      'FileName': 'klc_20100329v_Protea_Peptide_Curve_80fmol_uL_tech1.ms2',
                       'LibraryName': 'BSA_Protea_label_free_meth3.converted_to_small_molecules',
                       'PrecursorMz': '523.7745',
                       'Charge': 2,
@@ -1169,7 +1171,7 @@ namespace pwiz.SkylineTestTutorial
             Assert.IsNotNull(currentProperties);
 
             // To write new json string for the expected property values into the output stream uncomment the next line
-            // Trace.Write(currentProperties.Serialize());
+            //Trace.Write(currentProperties.Serialize());
             Assert.IsTrue(expectedProperties.Equals(currentProperties));
 
             // Checks the number of properties displayed is the expected number
@@ -1227,10 +1229,32 @@ namespace pwiz.SkylineTestTutorial
             var isSmallMolecules = AsSmallMoleculesTestMode != RefinementSettings.ConvertToSmallMoleculesMode.none;
 
             var expectedPropertiesJson =
-                    "{  \"IdFileName\": \"klc_20100329v_Protea_Peptide_Curve_20fmol_uL_tech1.perc.xml\",  \"FileName\": \"klc_20100329v_Protea_Peptide_Curve_20fmol_uL_tech1.ms2\",  \"FilePath\": \"C:\\\\Users\\\\RitaCh\\\\Workspaces\\\\ProteoWiz\\\\pwiz2\\\\pwiz_tools\\\\Skyline\\\\TestResults\\\\TargetedMSMSMzml_2\\\\TargetedMSMSMzml\\\\Low Res\\\\search\\\\klc_20100329v_Protea_Peptide_Curve_20fmol_uL_tech1.ms2\",  \"LibraryName\": \"BSA_Protea_label_free_meth3\",  \"PrecursorMz\": \"582.319\",  \"Charge\": 2,  \"Label\": \"light\",  \"RetentionTime\": \"46.81\", \"CCS\": null,  \"IonMobility\": null,  \"SpecIdInFile\": \"7901\",  \"Score\": 0.0,  \"ScoreType\": \"Percolator q-value\",  \"SpectrumCount\": 118}";
-            if (isSmallMolecules)
+                    @"{
+                        'IdFileName': 'klc_20100329v_Protea_Peptide_Curve_20fmol_uL_tech1.perc.xml',
+                        'FileName': 'klc_20100329v_Protea_Peptide_Curve_20fmol_uL_tech1.ms2',
+                        'LibraryName': 'BSA_Protea_label_free_meth3',
+                        'PrecursorMz': '582.319',
+                        'Charge': 2,
+                        'Label': 'light',
+                        'RetentionTime': '46.81',
+                        'SpecIdInFile': '7901',
+                        'Score': 0.0,
+                        'ScoreType': 'Percolator q-value',
+                        'SpectrumCount': 118
+                    }";
+                        if (isSmallMolecules)
                 expectedPropertiesJson =
-                    "{  \"IdFileName\": null,  \"FileName\": null,  \"FilePath\": null,  \"LibraryName\": \"BSA_Protea_label_free_meth3.converted_to_small_molecules\",  \"PrecursorMz\": \"582.319\",  \"Charge\": 2,  \"Label\": \"light\",  \"RetentionTime\": \"46.81\", \"CCS\": null,  \"IonMobility\": null,  \"SpecIdInFile\": null,  \"Score\": 0.0,  \"ScoreType\": \"Percolator q-value\",  \"SpectrumCount\": 118}";
+                    @"{
+                        'FileName': 'klc_20100329v_Protea_Peptide_Curve_20fmol_uL_tech1.ms2',
+                        'LibraryName': 'BSA_Protea_label_free_meth3.converted_to_small_molecules',
+                        'PrecursorMz': '582.319',
+                        'Charge': 2,
+                        'Label': 'light',
+                        'RetentionTime': '46.81',
+                        'Score': 0.0,
+                        'ScoreType': 'Percolator q-value',
+                        'SpectrumCount': 118
+                    }";
 
             var expectedProperties = new SpectrumProperties();
             expectedProperties.Deserialize(expectedPropertiesJson);
@@ -1253,6 +1277,8 @@ namespace pwiz.SkylineTestTutorial
             });
                 
             Assert.IsNotNull(currentProperties);
+            // To write new json string for the expected property values into the output stream uncomment the next line
+            //Trace.Write(currentProperties.Serialize());
             Assert.IsTrue(expectedProperties.Equals(currentProperties));
             Assert.IsTrue(propertiesButton.Checked);
             // make sure properties are updated when spectrum combo selection changes
@@ -1299,7 +1325,8 @@ namespace pwiz.SkylineTestTutorial
 
         private static void ValidatePropertyCount(int expectedPropCount, PropertyGrid pg)
         {
-            Assert.AreEqual(expectedPropCount, GetProperties(pg).Count);
+            Assert.AreEqual(expectedPropCount, 
+                (pg.SelectedObject as GlobalizedObject)?.GetPropertiesForComparison()?.Count);
         }
 
         private static void ValidateSpectrumCount(int expectedSpectrumCount, PropertyGrid pg)
