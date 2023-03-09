@@ -30,19 +30,16 @@ namespace pwiz.Skyline.Model.Results
     {
         private int _currentPartIndex = -1;
         private int _scoreTypesCount = -1;
-        private readonly SrmDocument _doc;
 
         private readonly byte[] _buffer = new byte[0x40000];  // 256K
         private readonly Dictionary<Target, int> _dictTextIdToByteIndex = new Dictionary<Target, int>();
 
         public ChromCacheJoiner(string cachePath, IPooledStream streamDest, IList<string> cacheFilePaths,
-            ILoadMonitor loader, IProgressStatus status, Action<ChromatogramCache, IProgressStatus> completed,
-            SrmDocument doc) : base(cachePath, loader, status, completed)
+            ILoadMonitor loader, IProgressStatus status, Action<ChromatogramCache, IProgressStatus> completed) : base(cachePath, loader, status, completed)
         {
             _destinationStream = streamDest;
 
             CacheFilePaths = cacheFilePaths;
-            _doc = doc;
         }
 
         private IList<string> CacheFilePaths { get; set; }

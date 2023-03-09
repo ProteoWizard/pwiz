@@ -1438,7 +1438,7 @@ namespace pwiz.Skyline.Model.Results
                         Assume.IsNull(streamDestination);
                         streamDestination = streamRecalc;
                     }
-                    ChromatogramCache.Join(cachePath, streamDestination, listPaths, _loadMonitor, FinishCacheJoin, _document);
+                    ChromatogramCache.Join(cachePath, streamDestination, listPaths, _loadMonitor, FinishCacheJoin);
                 }
             }
 

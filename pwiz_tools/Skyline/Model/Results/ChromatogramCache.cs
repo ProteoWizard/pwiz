@@ -659,12 +659,12 @@ namespace pwiz.Skyline.Model.Results
         }
 
         public static void Join(string cachePath, IPooledStream streamDest, IList<string> listCachePaths,
-            ILoadMonitor loader, Action<ChromatogramCache, IProgressStatus> complete, SrmDocument doc)
+            ILoadMonitor loader, Action<ChromatogramCache, IProgressStatus> complete)
         {
             var status = new ProgressStatus(string.Empty);
             try
             {
-                var joiner = new ChromCacheJoiner(cachePath, streamDest, listCachePaths, loader, status, complete, doc);
+                var joiner = new ChromCacheJoiner(cachePath, streamDest, listCachePaths, loader, status, complete);
                 joiner.JoinParts();
             }
             catch (Exception x)
