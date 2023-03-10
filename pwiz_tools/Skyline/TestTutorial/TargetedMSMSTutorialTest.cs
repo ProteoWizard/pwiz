@@ -1114,37 +1114,37 @@ namespace pwiz.SkylineTestTutorial
         private void TestPropertySheet()
         {
             var isSmallMolecules = AsSmallMoleculesTestMode != RefinementSettings.ConvertToSmallMoleculesMode.none;
-            Dictionary<string, object> expectedPropertiesJson;
-            if (isSmallMolecules)
-                expectedPropertiesJson = new Dictionary<string, object>()
+            var expectedPropertiesDict = isSmallMolecules
+                    ? new Dictionary<string, object>
                     {
-                        {"FileName", "klc_20100329v_Protea_Peptide_Curve_80fmol_uL_tech1.ms2"},
+                        { "FileName", "klc_20100329v_Protea_Peptide_Curve_80fmol_uL_tech1.ms2" },
                         { "LibraryName", "BSA_Protea_label_free_meth3.converted_to_small_molecules" },
-                        { "PrecursorMz", "523.7745" },
+                        { "PrecursorMz", 523.7745 },
                         { "Charge", 2 },
-                        { "Label", "light" },
-                        { "RetentionTime", "44.29" },
+                        { "Label", IsotopeLabelType.LIGHT_NAME },
+                        { "RetentionTime", 44.29 },
                         { "Score", 0.0 },
-                        { "ScoreType", "Percolator q-value" },
+                        { "ScoreType", BiblioSpec.Properties.Resources.BiblioSpecScoreType_DisplayName_Percolator_q_value },
                         { "SpectrumCount", 24 }
-                    };
-            else
-                expectedPropertiesJson = new Dictionary<string, object>()
+                    }
+                    : new Dictionary<string, object>
                     {
                         { "IdFileName", "klc_20100329v_Protea_Peptide_Curve_20fmol_uL_tech1.perc.xml" },
                         { "FileName", "klc_20100329v_Protea_Peptide_Curve_20fmol_uL_tech1.ms2" },
                         { "LibraryName", "BSA_Protea_label_free_meth3" },
-                        { "PrecursorMz", "417.7271" },
+                        { "PrecursorMz", 417.7271 },
                         { "Charge", 2 },
-                        { "Label", "light" },
-                        { "RetentionTime", "17" },
-                        { "SpecIdInFile", "488" },
+                        { "Label", IsotopeLabelType.LIGHT_NAME },
+                        { "RetentionTime", 17 },
+                        { "SpecIdInFile", 488 },
                         { "Score", 0.0 },
-                        { "ScoreType", "Percolator q-value" },
+                        { "ScoreType", BiblioSpec.Properties.Resources.BiblioSpecScoreType_DisplayName_Percolator_q_value },
                         { "SpectrumCount", 4 }
-                    };
+                    }
+                ;
+
             var expectedProperties = new SpectrumProperties();
-            expectedProperties.Deserialize(expectedPropertiesJson);
+            expectedProperties.Deserialize(expectedPropertiesDict);
 
             var dlg = ShowDialog<ViewLibraryDlg>(SkylineWindow.ViewSpectralLibraries);
             WaitForConditionUI(() => dlg.IsUpdateComplete);
@@ -1227,34 +1227,28 @@ namespace pwiz.SkylineTestTutorial
         {
             var isSmallMolecules = AsSmallMoleculesTestMode != RefinementSettings.ConvertToSmallMoleculesMode.none;
 
-            var expectedPropertiesJson = new Dictionary<string, object>() {
-                        { "IdFileName", "klc_20100329v_Protea_Peptide_Curve_20fmol_uL_tech1.perc.xml" },
-                        { "FileName", "klc_20100329v_Protea_Peptide_Curve_20fmol_uL_tech1.ms2" },
-                        { "LibraryName", "BSA_Protea_label_free_meth3" },
-                        { "PrecursorMz", "582.319" },
-                        { "Charge", 2 },
-                        { "Label", "light" },
-                        { "RetentionTime", "46.81" },
-                        { "SpecIdInFile", "7901" },
-                        { "Score", 0.0 },
-                        { "ScoreType", "Percolator q-value" },
-                        { "SpectrumCount", 118 }
-                    };
-                        if (isSmallMolecules)
-                expectedPropertiesJson = new Dictionary<string, object>() {
-                        { "FileName", "klc_20100329v_Protea_Peptide_Curve_20fmol_uL_tech1.ms2" },
-                        { "LibraryName", "BSA_Protea_label_free_meth3.converted_to_small_molecules" },
-                        { "PrecursorMz", "582.319" },
-                        { "Charge", 2 },
-                        { "Label", "light" },
-                        { "RetentionTime", "46.81" },
-                        { "Score", 0.0 },
-                        { "ScoreType", "Percolator q-value" },
-                        { "SpectrumCount", 118 }
-                    };
+            var expectedPropertiesDict = new Dictionary<string, object>
+            {
+                { "FileName", "klc_20100329v_Protea_Peptide_Curve_20fmol_uL_tech1.ms2" },
+                { "PrecursorMz", 582.319 },
+                { "Charge", 2 },
+                { "Label", IsotopeLabelType.LIGHT_NAME },
+                { "RetentionTime", 46.81 },
+                { "Score", 0.0 },
+                { "ScoreType", BiblioSpec.Properties.Resources.BiblioSpecScoreType_DisplayName_Percolator_q_value },
+                { "SpectrumCount", 118 }
+            };
+            if (isSmallMolecules)
+                expectedPropertiesDict.Add("LibraryName", "BSA_Protea_label_free_meth3.converted_to_small_molecules");
+            else
+            {
+                expectedPropertiesDict.Add("LibraryName", "BSA_Protea_label_free_meth3");
+                expectedPropertiesDict.Add("IdFileName", "klc_20100329v_Protea_Peptide_Curve_20fmol_uL_tech1.perc.xml");
+                expectedPropertiesDict.Add("SpecIdInFile", 7901);
+            }
 
             var expectedProperties = new SpectrumProperties();
-            expectedProperties.Deserialize(expectedPropertiesJson);
+            expectedProperties.Deserialize(expectedPropertiesDict);
             var msGraph = SkylineWindow.GraphSpectrum.MsGraphExtension;
 
             Assert.IsTrue(SkylineWindow.GraphSpectrum != null && SkylineWindow.GraphSpectrum.Visible);
@@ -1293,7 +1287,7 @@ namespace pwiz.SkylineTestTutorial
             var lastNodeIndex = SkylineWindow.SequenceTree.Nodes.Count;
             IdentityPath oldPath = null;
             RunUI(() => { oldPath = SkylineWindow.SequenceTree.SelectedPath; });
-            FindNode("547.3174");
+            FindNode((547.3174).ToString(CultureInfo.CurrentCulture));
             RunUI(() =>
             {
                 SkylineWindow.SequenceTree.SelectPath(new IdentityPath(new[] { SequenceTree.NODE_INSERT_ID }));
