@@ -164,12 +164,11 @@ namespace pwiz.Skyline.Model
             return JsonConvert.SerializeObject(thisProps, Formatting.Indented).Replace('"', '\'');
         }
 
-        public void Deserialize(string str)
+        public void Deserialize(Dictionary<string, object> valueDict)
         {
-            if(str == null)
+            if(valueDict == null)
                 return;
 
-            var valueDict = JsonConvert.DeserializeObject<Dictionary<string, object>>(str);
             var propDict = GetType().GetProperties().ToDictionary(prop => prop.Name, prop => prop);
             foreach (var val in valueDict)
             {

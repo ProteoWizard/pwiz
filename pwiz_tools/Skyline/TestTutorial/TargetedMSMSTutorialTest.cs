@@ -85,7 +85,6 @@ namespace pwiz.SkylineTestTutorial
             //            IsPauseForScreenShots = true;
             //            IsCoverShotMode = true;
             CoverShotName = "TargetedMSMS";
-RunSmallMoleculeTestVersions = true;
 
             if (smallMoleculesTestMode != RefinementSettings.ConvertToSmallMoleculesMode.none &&
                 SkipSmallMoleculeTestVersions())
@@ -1115,35 +1114,35 @@ RunSmallMoleculeTestVersions = true;
         private void TestPropertySheet()
         {
             var isSmallMolecules = AsSmallMoleculesTestMode != RefinementSettings.ConvertToSmallMoleculesMode.none;
-            string expectedPropertiesJson;
+            Dictionary<string, object> expectedPropertiesJson;
             if (isSmallMolecules)
-                expectedPropertiesJson =
-                    @"{
-                      'FileName': 'klc_20100329v_Protea_Peptide_Curve_80fmol_uL_tech1.ms2',
-                      'LibraryName': 'BSA_Protea_label_free_meth3.converted_to_small_molecules',
-                      'PrecursorMz': '523.7745',
-                      'Charge': 2,
-                      'Label': 'light',
-                      'RetentionTime': '44.29',
-                      'Score': 0.0,
-                      'ScoreType': 'Percolator q-value',
-                      'SpectrumCount': 24
-                    }";
+                expectedPropertiesJson = new Dictionary<string, object>()
+                    {
+                        {"FileName", "klc_20100329v_Protea_Peptide_Curve_80fmol_uL_tech1.ms2"},
+                        { "LibraryName", "BSA_Protea_label_free_meth3.converted_to_small_molecules" },
+                        { "PrecursorMz", "523.7745" },
+                        { "Charge", 2 },
+                        { "Label", "light" },
+                        { "RetentionTime", "44.29" },
+                        { "Score", 0.0 },
+                        { "ScoreType", "Percolator q-value" },
+                        { "SpectrumCount", 24 }
+                    };
             else
-                expectedPropertiesJson =
-                    @"{
-                      'IdFileName': 'klc_20100329v_Protea_Peptide_Curve_20fmol_uL_tech1.perc.xml',
-                      'FileName': 'klc_20100329v_Protea_Peptide_Curve_20fmol_uL_tech1.ms2',
-                      'LibraryName': 'BSA_Protea_label_free_meth3',
-                      'PrecursorMz': '417.7271',
-                      'Charge': 2,
-                      'Label': 'light',
-                      'RetentionTime': '17',
-                      'SpecIdInFile': '488',
-                      'Score': 0.0,
-                      'ScoreType': 'Percolator q-value',
-                      'SpectrumCount': 4
-                    }";
+                expectedPropertiesJson = new Dictionary<string, object>()
+                    {
+                        { "IdFileName", "klc_20100329v_Protea_Peptide_Curve_20fmol_uL_tech1.perc.xml" },
+                        { "FileName", "klc_20100329v_Protea_Peptide_Curve_20fmol_uL_tech1.ms2" },
+                        { "LibraryName", "BSA_Protea_label_free_meth3" },
+                        { "PrecursorMz", "417.7271" },
+                        { "Charge", 2 },
+                        { "Label", "light" },
+                        { "RetentionTime", "17" },
+                        { "SpecIdInFile", "488" },
+                        { "Score", 0.0 },
+                        { "ScoreType", "Percolator q-value" },
+                        { "SpectrumCount", 4 }
+                    };
             var expectedProperties = new SpectrumProperties();
             expectedProperties.Deserialize(expectedPropertiesJson);
 
@@ -1228,33 +1227,31 @@ RunSmallMoleculeTestVersions = true;
         {
             var isSmallMolecules = AsSmallMoleculesTestMode != RefinementSettings.ConvertToSmallMoleculesMode.none;
 
-            var expectedPropertiesJson =
-                    @"{
-                        'IdFileName': 'klc_20100329v_Protea_Peptide_Curve_20fmol_uL_tech1.perc.xml',
-                        'FileName': 'klc_20100329v_Protea_Peptide_Curve_20fmol_uL_tech1.ms2',
-                        'LibraryName': 'BSA_Protea_label_free_meth3',
-                        'PrecursorMz': '582.319',
-                        'Charge': 2,
-                        'Label': 'light',
-                        'RetentionTime': '46.81',
-                        'SpecIdInFile': '7901',
-                        'Score': 0.0,
-                        'ScoreType': 'Percolator q-value',
-                        'SpectrumCount': 118
-                    }";
+            var expectedPropertiesJson = new Dictionary<string, object>() {
+                        { "IdFileName", "klc_20100329v_Protea_Peptide_Curve_20fmol_uL_tech1.perc.xml" },
+                        { "FileName", "klc_20100329v_Protea_Peptide_Curve_20fmol_uL_tech1.ms2" },
+                        { "LibraryName", "BSA_Protea_label_free_meth3" },
+                        { "PrecursorMz", "582.319" },
+                        { "Charge", 2 },
+                        { "Label", "light" },
+                        { "RetentionTime", "46.81" },
+                        { "SpecIdInFile", "7901" },
+                        { "Score", 0.0 },
+                        { "ScoreType", "Percolator q-value" },
+                        { "SpectrumCount", 118 }
+                    };
                         if (isSmallMolecules)
-                expectedPropertiesJson =
-                    @"{
-                        'FileName': 'klc_20100329v_Protea_Peptide_Curve_20fmol_uL_tech1.ms2',
-                        'LibraryName': 'BSA_Protea_label_free_meth3.converted_to_small_molecules',
-                        'PrecursorMz': '582.319',
-                        'Charge': 2,
-                        'Label': 'light',
-                        'RetentionTime': '46.81',
-                        'Score': 0.0,
-                        'ScoreType': 'Percolator q-value',
-                        'SpectrumCount': 118
-                    }";
+                expectedPropertiesJson = new Dictionary<string, object>() {
+                        { "FileName", "klc_20100329v_Protea_Peptide_Curve_20fmol_uL_tech1.ms2" },
+                        { "LibraryName", "BSA_Protea_label_free_meth3.converted_to_small_molecules" },
+                        { "PrecursorMz", "582.319" },
+                        { "Charge", 2 },
+                        { "Label", "light" },
+                        { "RetentionTime", "46.81" },
+                        { "Score", 0.0 },
+                        { "ScoreType", "Percolator q-value" },
+                        { "SpectrumCount", 118 }
+                    };
 
             var expectedProperties = new SpectrumProperties();
             expectedProperties.Deserialize(expectedPropertiesJson);
