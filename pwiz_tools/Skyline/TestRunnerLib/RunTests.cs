@@ -541,15 +541,15 @@ namespace TestRunnerLib
             var testDir = TestContext.Properties["TestDir"].ToString();
             var unicode = test.DoNotUseUnicode ? string.Empty : @"试验";
             var tmpTestDir =
-                Path.GetFullPath(Path.Combine(testDir, @"..", @"SkylineTester temp&di^rs", test.TestMethod.Name + unicode));
+                Path.GetFullPath(Path.Combine(testDir, @"~test &tmp^", test.TestMethod.Name + unicode));
             if (tmpTestDir.Length > 100)
             {
                 // Avoid pushing the 260 character limit for windows paths - remember that there will be subdirs below this
                 // e.g. in case of a long root path, use
-                //      c:\crazy long username\massive subdir name\wacky installation dirnamne\pwiz_tools\Skyline\~t&mp ^\TMMENF910 试验"
+                //      c:\crazy long username\massive subdir name\wacky installation dirnamne\pwiz_tools\Skyline\~test &tmp^\TMMENF910 试验"
                 // instead of
-                //      c:\crazy long username\massive subdir name\wacky installation dirnamne\pwiz_tools\Skyline\SkylineTester temp&di^rs\TestMyMostExcellentNebulousFunction 试验"
-                tmpTestDir = Path.GetFullPath(Path.Combine(testDir, @"..", @"~t&mp ^",
+                //      c:\crazy long username\massive subdir name\wacky installation dirnamne\pwiz_tools\Skyline\~test &tmp^\TestMyMostExcellentNebulousFunction 试验"
+                tmpTestDir = Path.GetFullPath(Path.Combine(testDir, @"~&tmp ^",
                     $"{string.Concat(test.TestMethod.Name.Where(char.IsUpper))}{test.TestMethod.Name.Sum(c => c)}{unicode}"));
             }
 
