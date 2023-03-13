@@ -493,6 +493,7 @@ namespace pwiz.Skyline.Model.Results
                         collector.IonMobility,
                         pairProduct.Key.TargetMz,
                         0,
+                        0,
                         pairProduct.Key.FilterWidth,
                         chromMap.ChromSource,
                         modSeq.Extractor);

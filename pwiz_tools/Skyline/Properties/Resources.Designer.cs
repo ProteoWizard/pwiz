@@ -4343,15 +4343,6 @@ namespace pwiz.Skyline.Properties {
         }
         
         /// <summary>
-        ///   Looks up a localized string similar to Incorrectly sorted chromatograms {0} &gt; {1}.
-        /// </summary>
-        public static string ChromDataSet_MarkOptimizationData_Incorrectly_sorted_chromatograms__0__1__ {
-            get {
-                return ResourceManager.GetString("ChromDataSet_MarkOptimizationData_Incorrectly_sorted_chromatograms__0__1__", resourceCulture);
-            }
-        }
-        
-        /// <summary>
         ///   Looks up a localized string similar to Unexpected null peak.
         /// </summary>
         public static string ChromDataSet_MergePeaks_Unexpected_null_peak {
@@ -4495,6 +4486,16 @@ namespace pwiz.Skyline.Properties {
         public static string ClipboardHelper_GetPasteErrorMessage_Failed_getting_data_from_the_clipboard_ {
             get {
                 return ResourceManager.GetString("ClipboardHelper_GetPasteErrorMessage_Failed_getting_data_from_the_clipboard_", resourceCulture);
+            }
+        }
+        
+        /// <summary>
+        ///   Looks up a localized resource of type System.Drawing.Bitmap.
+        /// </summary>
+        public static System.Drawing.Bitmap Close {
+            get {
+                object obj = ResourceManager.GetObject("Close", resourceCulture);
+                return ((System.Drawing.Bitmap)(obj));
             }
         }
         

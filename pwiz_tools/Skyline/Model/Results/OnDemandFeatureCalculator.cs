@@ -204,8 +204,7 @@ namespace pwiz.Skyline.Model.Results
                 var chromatogramGroupInfo = chromatogramGroupInfos[iTransitionGroup];
                 foreach (var transition in transitionGroupDocNode.Transitions)
                 {
-                    var chromatogramInfo = chromatogramGroupInfo.GetTransitionInfo(transition, MzMatchTolerance,
-                        TransformChrom.raw, ChromatogramSet.OptimizationFunction);
+                    var chromatogramInfo = chromatogramGroupInfo.GetTransitionInfo(transition, MzMatchTolerance, TransformChrom.raw);
                     if (chromatogramInfo == null)
                     {
                         continue;
@@ -352,7 +351,7 @@ namespace pwiz.Skyline.Model.Results
                 foreach (var transition in transitionGroup.Transitions)
                 {
                     var chromatogramInfo =
-                        chromatogramGroupInfo.GetTransitionInfo(transition, MzMatchTolerance, TransformChrom.raw, null);
+                        chromatogramGroupInfo.GetTransitionInfo(transition, MzMatchTolerance, TransformChrom.raw);
                     if (chromatogramInfo == null)
                     {
                         continue;
@@ -361,7 +360,7 @@ namespace pwiz.Skyline.Model.Results
                     var chromKey = new ChromKey(
                         new ChromatogramGroupId(PeptideDocNode.ModifiedTarget, transitionGroup.SpectrumClassFilter),
                         transitionGroup.PrecursorMz, null,
-                        transition.Mz, 0, 0, transition.IsMs1 ? ChromSource.ms1 : ChromSource.fragment,
+                        transition.Mz, 0, 0, 0, transition.IsMs1 ? ChromSource.ms1 : ChromSource.fragment,
                         ChromExtractor.summed);
                     chromDatas.Add(new ChromData(chromKey, transition, rawTimeIntensities, rawTimeIntensities));
                 }
