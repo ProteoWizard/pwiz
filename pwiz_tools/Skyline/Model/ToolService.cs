@@ -482,19 +482,21 @@ namespace pwiz.Skyline.Model
             {
                 var originalDocument = _skylineWindow.Document;
                 var document = originalDocument;
-                var identityPathsToDelete = new HashSet<IdentityPath>();
+                var nodeRefs = new List<NodeRef>();
                 foreach (var elementLocator in elementLocators)
                 {
                     var elementRef = ElementRefs.FromObjectReference(elementLocator);
                     if (elementRef is NodeRef nodeRef)
                     {
-                        identityPathsToDelete.Add(nodeRef.ToIdentityPath(document));
+                        nodeRefs.Add(nodeRef);
                     }
                     else
                     {
                         throw new ArgumentException(string.Format(Resources.ToolService_DeleteElementsNow_Unsupported_element__0_, elementLocator));
                     }
                 }
+
+                var identityPathsToDelete = NodeRef.GetIdentityPaths(document, nodeRefs).ToHashSet();
 
                 if (!identityPathsToDelete.Any())
                 {

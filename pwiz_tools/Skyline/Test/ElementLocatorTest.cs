@@ -18,8 +18,12 @@
  */
 
 using System.Collections.Generic;
+using System.Linq;
 using Microsoft.VisualStudio.TestTools.UnitTesting;
+using pwiz.ProteomeDatabase.API;
+using pwiz.Skyline.Model;
 using pwiz.Skyline.Model.ElementLocators;
+using pwiz.Skyline.Properties;
 using pwiz.SkylineTestUtil;
 
 namespace pwiz.SkylineTest
@@ -60,6 +64,26 @@ namespace pwiz.SkylineTest
             var docKeyRoundTrip = ElementLocator.Parse(str);
             Assert.AreEqual(objectReference, docKeyRoundTrip);
             Assert.AreEqual(str, docKeyRoundTrip.ToString());
+        }
+
+        [TestMethod]
+        public void TestNodeRefGetIdentityPaths()
+        {
+            var peptideGroup = new PeptideGroup();
+
+            var peptideGroupDocNode = new PeptideGroupDocNode(peptideGroup, Annotations.EMPTY, ProteinMetadata.EMPTY,
+                new[]
+                {
+                    new PeptideDocNode(new Peptide("ELVIS")),
+                    new PeptideDocNode(new Peptide("LIVES"))
+                }, false);
+            var document = (SrmDocument) new SrmDocument(SrmSettingsList.GetDefault()).ChangeChildren(new[] { peptideGroupDocNode });
+            var elementRefs = new ElementRefs(document);
+            var identityPaths = document.GetMoleculeGroupPairs().Select(pair =>
+                new IdentityPath(pair.NodeMoleculeGroup.Id, pair.NodeMolecule.Id)).ToList();
+            var nodeRefs = identityPaths.Select(path => elementRefs.GetNodeRef(path)).ToList();
+            var idPathsFromNodeRefs = NodeRef.GetIdentityPaths(document, nodeRefs).ToList();
+            CollectionAssert.AreEqual(identityPaths, idPathsFromNodeRefs);
         }
     }
 }

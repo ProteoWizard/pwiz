@@ -19,6 +19,7 @@
 using System.Collections.Generic;
 using System.Globalization;
 using System.Linq;
+using pwiz.Common.Collections;
 using pwiz.Common.SystemUtil;
 using pwiz.Skyline.Model.DocSettings;
 
@@ -53,8 +54,98 @@ namespace pwiz.Skyline.Model.ElementLocators
                 throw new IdentityNotFoundException(identityPath.Child);
             }
             var parentRef = Parent.ChangeIdentityPath(document, identityPath.Parent);
-            return (NodeRef)
-                ((NodeRef)ChangeParent(parentRef)).EnumerateSiblings(document).Skip(index).FirstOrDefault();
+            return ((NodeRef)ChangeParent(parentRef)).EnumerateSiblings(document).Skip(index).FirstOrDefault();
+        }
+
+        public static IEnumerable<IdentityPath> GetIdentityPaths(SrmDocument document, IEnumerable<NodeRef> nodeRefs)
+        {
+            Dictionary<NodeRef, NodeRefParentData> parentDatas = new Dictionary<NodeRef, NodeRefParentData>();
+
+            foreach (var nodeRef in nodeRefs)
+            {
+                if (nodeRef.Parent == null)
+                {
+                    yield return IdentityPath.ROOT;
+                    continue;
+                }
+
+                var parentData = GetNodeRefParentData(document, parentDatas, nodeRef);
+                if (parentData == null)
+                {
+                    yield return null;
+                    continue;
+                }
+
+                var index = parentData.IndexOf(nodeRef);
+                if (index >= 0)
+                {
+                    yield return new IdentityPath(parentData.IdentityPath, parentData.DocNode.Children[index].Id);
+                }
+            }
+        }
+
+        private static NodeRefParentData GetNodeRefParentData(SrmDocument document,
+            Dictionary<NodeRef, NodeRefParentData> parentDatas, NodeRef nodeRef)
+        {
+            if (parentDatas.TryGetValue(nodeRef.Parent, out var parentData))
+            {
+                return parentData;
+            }
+
+            if (nodeRef.Parent.Parent != null)
+            {
+                var grandParentData = GetNodeRefParentData(document, parentDatas, nodeRef.Parent);
+                if (grandParentData == null)
+                {
+                    return null;
+                }
+                int parentIndex = grandParentData.IndexOf(nodeRef.Parent);
+                if (parentIndex < 0)
+                {
+                    return null;
+                }
+
+                var parentDocNode = (DocNodeParent)grandParentData.DocNode.Children[parentIndex];
+                parentData = new NodeRefParentData(new IdentityPath(grandParentData.IdentityPath, parentDocNode.Id), parentDocNode,
+                    nodeRef.EnumerateSiblings(parentDocNode));
+            }
+            else
+            {
+                parentData = new NodeRefParentData(IdentityPath.ROOT, document, nodeRef.EnumerateSiblings(document));
+            }
+            parentDatas.Add(nodeRef.Parent, parentData);
+            return parentData;
+        }
+
+        protected abstract IEnumerable<NodeRef> EnumerateSiblings(DocNodeParent docNodeParent);
+
+        class NodeRefParentData
+        {
+            private Dictionary<NodeRef, int> _childNodeRefIndex;
+            public NodeRefParentData(IdentityPath identityPath, DocNodeParent docNode, IEnumerable<NodeRef> childNodeRefs)
+            {
+                IdentityPath = identityPath;
+                DocNode = docNode;
+                ChildNodeRefs = ImmutableList.ValueOf(childNodeRefs);
+                _childNodeRefIndex = new Dictionary<NodeRef, int>();
+                foreach (var childNodeRef in ChildNodeRefs)
+                {
+                    _childNodeRefIndex.Add(childNodeRef, _childNodeRefIndex.Count);
+                }
+            }
+            public IdentityPath IdentityPath { get; }
+            public DocNodeParent DocNode { get; }
+            public ImmutableList<NodeRef> ChildNodeRefs { get; }
+
+            public int IndexOf(NodeRef child)
+            {
+                if (_childNodeRefIndex.TryGetValue(child, out int index))
+                {
+                    return index;
+                }
+
+                return -1;
+            }
         }
     }
     public abstract class NodeRef<TDocNode> : NodeRef where TDocNode : DocNode
@@ -131,14 +222,19 @@ namespace pwiz.Skyline.Model.ElementLocators
         {
             if (Parent == null)
             {
-                yield return this;
-                yield break;
+                return ImmutableList.Singleton(this);
             }
             var parentNode = Parent.FindNode(document) as DocNodeParent;
             if (parentNode == null)
             {
-                yield break;
+                return ImmutableList.Empty<ElementRef>();
             }
+
+            return EnumerateSiblings(parentNode);
+        }
+
+        protected sealed override IEnumerable<NodeRef> EnumerateSiblings(DocNodeParent parentNode)
+        {
             var counts = new Dictionary<ElementRef, int>();
             foreach (TDocNode child in parentNode.Children)
             {
@@ -146,7 +242,7 @@ namespace pwiz.Skyline.Model.ElementLocators
                 int count;
                 if (counts.TryGetValue(elementRef, out count))
                 {
-                    yield return elementRef.ChangeIndex(count);
+                    yield return (NodeRef) elementRef.ChangeIndex(count);
                     counts[elementRef] = count + 1;
                 }
                 else

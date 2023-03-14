@@ -59,7 +59,7 @@
   </resheader>
   <assembly alias="System.Drawing" name="System.Drawing, Version=4.0.0.0, Culture=neutral, PublicKeyToken=b03f5f7f11d50a3a" />
   <data name="comboMethod.Location" type="System.Drawing.Point, System.Drawing">
-    <value>45, 58</value>
+    <value>45, 71</value>
   </data>
   <data name="comboMethod.Size" type="System.Drawing.Size, System.Drawing">
     <value>235, 23</value>
@@ -78,13 +78,13 @@
     <value>$this</value>
   </data>
   <data name="&gt;&gt;comboMethod.ZOrder" xml:space="preserve">
-    <value>2</value>
+    <value>11</value>
   </data>
   <data name="lblConnection.AutoSize" type="System.Boolean, mscorlib">
     <value>True</value>
   </data>
   <data name="lblConnection.Location" type="System.Drawing.Point, System.Drawing">
-    <value>50, 6</value>
+    <value>45, 6</value>
   </data>
   <data name="lblConnection.Size" type="System.Drawing.Size, System.Drawing">
     <value>72, 15</value>
@@ -105,7 +105,7 @@
     <value>$this</value>
   </data>
   <data name="&gt;&gt;lblConnection.ZOrder" xml:space="preserve">
-    <value>1</value>
+    <value>10</value>
   </data>
   <data name="tbxConnection.Location" type="System.Drawing.Point, System.Drawing">
     <value>45, 24</value>
@@ -126,6 +126,247 @@
     <value>$this</value>
   </data>
   <data name="&gt;&gt;tbxConnection.ZOrder" xml:space="preserve">
+    <value>9</value>
+  </data>
+  <data name="lblMethod.AutoSize" type="System.Boolean, mscorlib">
+    <value>True</value>
+  </data>
+  <data name="lblMethod.Location" type="System.Drawing.Point, System.Drawing">
+    <value>45, 53</value>
+  </data>
+  <data name="lblMethod.Size" type="System.Drawing.Size, System.Drawing">
+    <value>52, 15</value>
+  </data>
+  <data name="lblMethod.TabIndex" type="System.Int32, mscorlib">
+    <value>3</value>
+  </data>
+  <data name="lblMethod.Text" xml:space="preserve">
+    <value>Method:</value>
+  </data>
+  <data name="&gt;&gt;lblMethod.Name" xml:space="preserve">
+    <value>lblMethod</value>
+  </data>
+  <data name="&gt;&gt;lblMethod.Type" xml:space="preserve">
+    <value>System.Windows.Forms.Label, System.Windows.Forms, Culture=neutral, PublicKeyToken=b77a5c561934e089</value>
+  </data>
+  <data name="&gt;&gt;lblMethod.Parent" xml:space="preserve">
+    <value>$this</value>
+  </data>
+  <data name="&gt;&gt;lblMethod.ZOrder" xml:space="preserve">
+    <value>8</value>
+  </data>
+  <data name="lblArgument1.AutoSize" type="System.Boolean, mscorlib">
+    <value>True</value>
+  </data>
+  <data name="lblArgument1.Location" type="System.Drawing.Point, System.Drawing">
+    <value>45, 97</value>
+  </data>
+  <data name="lblArgument1.Size" type="System.Drawing.Size, System.Drawing">
+    <value>73, 15</value>
+  </data>
+  <data name="lblArgument1.TabIndex" type="System.Int32, mscorlib">
+    <value>4</value>
+  </data>
+  <data name="lblArgument1.Text" xml:space="preserve">
+    <value>Argument 1:</value>
+  </data>
+  <data name="&gt;&gt;lblArgument1.Name" xml:space="preserve">
+    <value>lblArgument1</value>
+  </data>
+  <data name="&gt;&gt;lblArgument1.Type" xml:space="preserve">
+    <value>System.Windows.Forms.Label, System.Windows.Forms, Culture=neutral, PublicKeyToken=b77a5c561934e089</value>
+  </data>
+  <data name="&gt;&gt;lblArgument1.Parent" xml:space="preserve">
+    <value>$this</value>
+  </data>
+  <data name="&gt;&gt;lblArgument1.ZOrder" xml:space="preserve">
+    <value>7</value>
+  </data>
+  <assembly alias="System.Windows.Forms" name="System.Windows.Forms, Culture=neutral, PublicKeyToken=b77a5c561934e089" />
+  <data name="tbxArgument1.Anchor" type="System.Windows.Forms.AnchorStyles, System.Windows.Forms">
+    <value>Top, Left, Right</value>
+  </data>
+  <data name="tbxArgument1.Location" type="System.Drawing.Point, System.Drawing">
+    <value>50, 115</value>
+  </data>
+  <data name="tbxArgument1.Multiline" type="System.Boolean, mscorlib">
+    <value>True</value>
+  </data>
+  <data name="tbxArgument1.Size" type="System.Drawing.Size, System.Drawing">
+    <value>738, 54</value>
+  </data>
+  <data name="tbxArgument1.TabIndex" type="System.Int32, mscorlib">
+    <value>5</value>
+  </data>
+  <data name="&gt;&gt;tbxArgument1.Name" xml:space="preserve">
+    <value>tbxArgument1</value>
+  </data>
+  <data name="&gt;&gt;tbxArgument1.Type" xml:space="preserve">
+    <value>System.Windows.Forms.TextBox, System.Windows.Forms, Culture=neutral, PublicKeyToken=b77a5c561934e089</value>
+  </data>
+  <data name="&gt;&gt;tbxArgument1.Parent" xml:space="preserve">
+    <value>$this</value>
+  </data>
+  <data name="&gt;&gt;tbxArgument1.ZOrder" xml:space="preserve">
+    <value>6</value>
+  </data>
+  <data name="lblArgument2.AutoSize" type="System.Boolean, mscorlib">
+    <value>True</value>
+  </data>
+  <data name="lblArgument2.ImeMode" type="System.Windows.Forms.ImeMode, System.Windows.Forms">
+    <value>NoControl</value>
+  </data>
+  <data name="lblArgument2.Location" type="System.Drawing.Point, System.Drawing">
+    <value>50, 172</value>
+  </data>
+  <data name="lblArgument2.Size" type="System.Drawing.Size, System.Drawing">
+    <value>73, 15</value>
+  </data>
+  <data name="lblArgument2.TabIndex" type="System.Int32, mscorlib">
+    <value>6</value>
+  </data>
+  <data name="lblArgument2.Text" xml:space="preserve">
+    <value>Argument 2:</value>
+  </data>
+  <data name="&gt;&gt;lblArgument2.Name" xml:space="preserve">
+    <value>lblArgument2</value>
+  </data>
+  <data name="&gt;&gt;lblArgument2.Type" xml:space="preserve">
+    <value>System.Windows.Forms.Label, System.Windows.Forms, Culture=neutral, PublicKeyToken=b77a5c561934e089</value>
+  </data>
+  <data name="&gt;&gt;lblArgument2.Parent" xml:space="preserve">
+    <value>$this</value>
+  </data>
+  <data name="&gt;&gt;lblArgument2.ZOrder" xml:space="preserve">
+    <value>5</value>
+  </data>
+  <data name="tbxArgument2.Anchor" type="System.Windows.Forms.AnchorStyles, System.Windows.Forms">
+    <value>Top, Left, Right</value>
+  </data>
+  <data name="tbxArgument2.Location" type="System.Drawing.Point, System.Drawing">
+    <value>50, 190</value>
+  </data>
+  <data name="tbxArgument2.Multiline" type="System.Boolean, mscorlib">
+    <value>True</value>
+  </data>
+  <data name="tbxArgument2.Size" type="System.Drawing.Size, System.Drawing">
+    <value>738, 54</value>
+  </data>
+  <data name="tbxArgument2.TabIndex" type="System.Int32, mscorlib">
+    <value>7</value>
+  </data>
+  <data name="&gt;&gt;tbxArgument2.Name" xml:space="preserve">
+    <value>tbxArgument2</value>
+  </data>
+  <data name="&gt;&gt;tbxArgument2.Type" xml:space="preserve">
+    <value>System.Windows.Forms.TextBox, System.Windows.Forms, Culture=neutral, PublicKeyToken=b77a5c561934e089</value>
+  </data>
+  <data name="&gt;&gt;tbxArgument2.Parent" xml:space="preserve">
+    <value>$this</value>
+  </data>
+  <data name="&gt;&gt;tbxArgument2.ZOrder" xml:space="preserve">
+    <value>4</value>
+  </data>
+  <data name="btnInvokeMethod.Location" type="System.Drawing.Point, System.Drawing">
+    <value>48, 252</value>
+  </data>
+  <data name="btnInvokeMethod.Size" type="System.Drawing.Size, System.Drawing">
+    <value>154, 23</value>
+  </data>
+  <data name="btnInvokeMethod.TabIndex" type="System.Int32, mscorlib">
+    <value>8</value>
+  </data>
+  <data name="btnInvokeMethod.Text" xml:space="preserve">
+    <value>Invoke Method</value>
+  </data>
+  <data name="&gt;&gt;btnInvokeMethod.Name" xml:space="preserve">
+    <value>btnInvokeMethod</value>
+  </data>
+  <data name="&gt;&gt;btnInvokeMethod.Type" xml:space="preserve">
+    <value>System.Windows.Forms.Button, System.Windows.Forms, Culture=neutral, PublicKeyToken=b77a5c561934e089</value>
+  </data>
+  <data name="&gt;&gt;btnInvokeMethod.Parent" xml:space="preserve">
+    <value>$this</value>
+  </data>
+  <data name="&gt;&gt;btnInvokeMethod.ZOrder" xml:space="preserve">
+    <value>3</value>
+  </data>
+  <data name="lblResult.AutoSize" type="System.Boolean, mscorlib">
+    <value>True</value>
+  </data>
+  <data name="lblResult.Location" type="System.Drawing.Point, System.Drawing">
+    <value>54, 281</value>
+  </data>
+  <data name="lblResult.Size" type="System.Drawing.Size, System.Drawing">
+    <value>42, 15</value>
+  </data>
+  <data name="lblResult.TabIndex" type="System.Int32, mscorlib">
+    <value>9</value>
+  </data>
+  <data name="lblResult.Text" xml:space="preserve">
+    <value>Result:</value>
+  </data>
+  <data name="&gt;&gt;lblResult.Name" xml:space="preserve">
+    <value>lblResult</value>
+  </data>
+  <data name="&gt;&gt;lblResult.Type" xml:space="preserve">
+    <value>System.Windows.Forms.Label, System.Windows.Forms, Culture=neutral, PublicKeyToken=b77a5c561934e089</value>
+  </data>
+  <data name="&gt;&gt;lblResult.Parent" xml:space="preserve">
+    <value>$this</value>
+  </data>
+  <data name="&gt;&gt;lblResult.ZOrder" xml:space="preserve">
+    <value>2</value>
+  </data>
+  <data name="tbxResult.Anchor" type="System.Windows.Forms.AnchorStyles, System.Windows.Forms">
+    <value>Top, Bottom, Left, Right</value>
+  </data>
+  <data name="tbxResult.Location" type="System.Drawing.Point, System.Drawing">
+    <value>54, 309</value>
+  </data>
+  <data name="tbxResult.Multiline" type="System.Boolean, mscorlib">
+    <value>True</value>
+  </data>
+  <data name="tbxResult.Size" type="System.Drawing.Size, System.Drawing">
+    <value>734, 129</value>
+  </data>
+  <data name="tbxResult.TabIndex" type="System.Int32, mscorlib">
+    <value>10</value>
+  </data>
+  <data name="&gt;&gt;tbxResult.Name" xml:space="preserve">
+    <value>tbxResult</value>
+  </data>
+  <data name="&gt;&gt;tbxResult.Type" xml:space="preserve">
+    <value>System.Windows.Forms.TextBox, System.Windows.Forms, Culture=neutral, PublicKeyToken=b77a5c561934e089</value>
+  </data>
+  <data name="&gt;&gt;tbxResult.Parent" xml:space="preserve">
+    <value>$this</value>
+  </data>
+  <data name="&gt;&gt;tbxResult.ZOrder" xml:space="preserve">
+    <value>1</value>
+  </data>
+  <data name="btnPaste1.Location" type="System.Drawing.Point, System.Drawing">
+    <value>692, 88</value>
+  </data>
+  <data name="btnPaste1.Size" type="System.Drawing.Size, System.Drawing">
+    <value>84, 21</value>
+  </data>
+  <data name="btnPaste1.TabIndex" type="System.Int32, mscorlib">
+    <value>11</value>
+  </data>
+  <data name="btnPaste1.Text" xml:space="preserve">
+    <value>Paste</value>
+  </data>
+  <data name="&gt;&gt;btnPaste1.Name" xml:space="preserve">
+    <value>btnPaste1</value>
+  </data>
+  <data name="&gt;&gt;btnPaste1.Type" xml:space="preserve">
+    <value>System.Windows.Forms.Button, System.Windows.Forms, Culture=neutral, PublicKeyToken=b77a5c561934e089</value>
+  </data>
+  <data name="&gt;&gt;btnPaste1.Parent" xml:space="preserve">
+    <value>$this</value>
+  </data>
+  <data name="&gt;&gt;btnPaste1.ZOrder" xml:space="preserve">
     <value>0</value>
   </data>
   <metadata name="$this.Localizable" type="System.Boolean, mscorlib, Version=4.0.0.0, Culture=neutral, PublicKeyToken=b77a5c561934e089">
