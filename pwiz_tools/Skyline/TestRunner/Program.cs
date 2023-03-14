@@ -1132,7 +1132,7 @@ namespace TestRunner
         {
             string skylinePath = Path.GetDirectoryName(Assembly.GetExecutingAssembly().Location);
             var skylineDirectory = skylinePath != null ? new DirectoryInfo(skylinePath) : null;
-            while (skylineDirectory != null && skylineDirectory.Name != "Skyline")
+            while (skylineDirectory != null && skylineDirectory.Name.ToLowerInvariant() != "skyline")
                 skylineDirectory = skylineDirectory.Parent;
             return skylineDirectory;
         }
