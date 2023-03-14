@@ -491,7 +491,8 @@ namespace TestRunner
                 int heartbeatPort = 0;
 
                 // start heartbeat thread from server
-                factory.StartNew(() => {
+                void SendWorkerHeartbeat()
+                {
                     using (var heartbeatReceiver = new PushSocket())
                     {
                         Interlocked.Add(ref heartbeatPort, heartbeatReceiver.BindRandomPort("tcp://*"));
@@ -514,6 +515,18 @@ namespace TestRunner
                             }
                             Thread.Sleep(3000);
                         }
+                    }
+                }
+
+                factory.StartNew(() => {
+                    try
+                    {
+                        SendWorkerHeartbeat();
+                    }
+                    catch (Exception e)
+                    {
+                        TeeLog("Error sending worker heartbeat: " + e);
+                        Environment.Exit(1);
                     }
                 }, TaskCreationOptions.LongRunning);
 
@@ -831,7 +844,7 @@ namespace TestRunner
 
                     long perWorkerBytes = availableBytesForNormalWorkers / normalWorkerCount;
 
-                    factory.StartNew(() =>
+                    void LaunchDockerWorkers()
                     {
                         bool waitForWorkerConnect = commandLineArgs.ArgAsBool("waitforworkers");
                         if (waitForWorkerConnect)
@@ -851,11 +864,24 @@ namespace TestRunner
                             }
                         }
                         //LaunchDockerWorker(normalWorkerCount, commandLineArgs, ref workerNames, true);
+                    }
+
+                    factory.StartNew(() => {
+                        try
+                        {
+                            LaunchDockerWorkers();
+                        }
+                        catch (Exception e)
+                        {
+                            Console.Error.WriteLine("Error launching Docker workers: " + e);
+                            Environment.Exit(1);
+                        }
                     });
                 }
 
                 // handle big tests on the server
-                tasks.Add(factory.StartNew(() => {
+                void RunServerWorker()
+                {
                     while (!cts.IsCancellationRequested)
                     {
                         QueuedTestInfo testInfo = null;
@@ -916,6 +942,18 @@ namespace TestRunner
                             Console.Error.WriteLine(e.ToString());
                         }
                     }
+                }
+
+                tasks.Add(factory.StartNew(() => {
+                    try
+                    {
+                        RunServerWorker();
+                    }
+                    catch (Exception e)
+                    {
+                        Console.Error.WriteLine("Error running server worker: " + e);
+                        Environment.Exit(1);
+                    }
                 }, TaskCreationOptions.LongRunning));
 
                 Console.WriteLine("Running {0}{1} tests{2}{3} in parallel with {4} workers...",
@@ -924,8 +962,9 @@ namespace TestRunner
                     (loop <= 0) ? " forever" : (loop == 1) ? "" : " in " + loop + " loops",
                     "", /*(repeat <= 1) ? "" : ", repeated " + repeat + " times each per language",*/
                     workerCount);
-                Console.WriteLine("Be sure to check BOTH public and private options if prompted to \"Allow TestRunner to communicate on these networks\".");
-                Console.WriteLine("See https://skyline.ms/wiki/home/development/page.view?name=Troubleshooting_parallel_mode for troubleshooting tips.\r\n");
+
+                var waitingForWorkers = new Stopwatch();
+                waitingForWorkers.Start();
 
                 // main thread listens for workers to connect
                 while (!cts.IsCancellationRequested)
@@ -933,8 +972,18 @@ namespace TestRunner
                     // listen for workerName/IP/tasksPort/resultsPort/heartbeatPort string from a worker
                     if (!receiver.TryReceiveFrameString(TimeSpan.FromSeconds(1), out var workerId))
                     {
+                        const int MAX_SECONDS_TO_WAIT_FOR_WORKER_CONNECTION = 15;
+                        if (waitingForWorkers.Elapsed.TotalSeconds > MAX_SECONDS_TO_WAIT_FOR_WORKER_CONNECTION)
+                        {
+                            Console.Error.WriteLine($"No workers connected to the server in {MAX_SECONDS_TO_WAIT_FOR_WORKER_CONNECTION} seconds.");
+                            Console.Error.WriteLine("Be sure to check BOTH public and private options if prompted to \"Allow TestRunner to communicate on these networks\".");
+                            Console.Error.WriteLine("See https://skyline.ms/wiki/home/development/page.view?name=Troubleshooting_parallel_mode for troubleshooting tips.\r\n");
+                            Environment.Exit(1);
+                        }
                         continue;
                     }
+
+                    waitingForWorkers.Stop();
 
                     string[] workerIdParts = workerId.Split('/');
                     string workerName = workerIdParts[0];
@@ -945,7 +994,8 @@ namespace TestRunner
                     bool isBigWorker = workerName.Contains("big_worker");
 
                     Console.WriteLine($"Connection from worker {workerId}");
-                    tasks.Add(factory.StartNew(() => {
+                    void HandleWorkerConnection()
+                    {
                         using (var workerSender = new PushSocket($">tcp://{workerIP}:{tasksPort}"))
                         using (var workerReceiver = new PullSocket($">tcp://{workerIP}:{resultsPort}"))
                         {
@@ -1011,10 +1061,23 @@ namespace TestRunner
                                 }
                             }
                         }
+                    }
+
+                    tasks.Add(factory.StartNew(() => {
+                        try
+                        {
+                            HandleWorkerConnection();
+                        }
+                        catch (Exception e)
+                        {
+                            Console.Error.WriteLine("Error in worker handling thread: " + e);
+                            Environment.Exit(1);
+                        }
                     }, TaskCreationOptions.LongRunning));
 
                     // start heartbeat for worker
-                    factory.StartNew(() => {
+                    void ListenForWorkerHeartbeat()
+                    {
                         using (var workerHeartbeat = new PullSocket($">tcp://{workerIP}:{heartbeatPort}"))
                         {
                             var msg = new Msg();
@@ -1040,6 +1103,18 @@ namespace TestRunner
                                 Thread.Sleep(3000);
                             }
                             workerIsAlive[workerName] = false;
+                        }
+                    }
+
+                    factory.StartNew(() => {
+                        try
+                        {
+                            ListenForWorkerHeartbeat();
+                        }
+                        catch (Exception e)
+                        {
+                            Console.Error.WriteLine("Error listening for worker heartbeat: " + e);
+                            Environment.Exit(1);
                         }
                     }, TaskCreationOptions.LongRunning);
                 }
