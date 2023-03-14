@@ -429,26 +429,30 @@ namespace pwiz.Skyline.Model
             SendChange((sender, arg) => sender.SelectionChanged());
         }
 
-        private class DocumentChangeSender : RemoteClient, IDocumentChangeReceiver
+        private class DocumentChangeSender : IDocumentChangeReceiver
         {
+            private RemoteClient _remoteClient;
             private int _timeoutCount;
 
             public string Name { get; private set; }
 
-            public DocumentChangeSender(string connectionName, string name) : base(connectionName)
+            public DocumentChangeSender(string connectionName, string name)
             {
-                Timeout = 10;
+                _remoteClient = new RemoteClient(connectionName)
+                {
+                    Timeout = 10
+                };
                 Name = name;
             }
 
             public void DocumentChanged()
             {
-                RemoteCall(DocumentChanged);
+                _remoteClient.RemoteCall(DocumentChanged);
             }
 
             public void SelectionChanged()
             {
-                RemoteCall(SelectionChanged);
+                _remoteClient.RemoteCall(SelectionChanged);
             }
 
             public void ResetTimeouts()

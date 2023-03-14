@@ -158,104 +158,105 @@ namespace SkylineTool
             }
         }
 
-        private class Client : RemoteClient, IToolService
+        private class Client : IToolService
         {
+            private readonly RemoteClient _remoteClient;
             public Client(string connectionName)
-                : base(connectionName)
             {
+                _remoteClient = new RemoteClient(connectionName);
             }
 
             public string GetReport(string toolName, string reportName)
             {
-                return RemoteCallFunction(GetReport, toolName, reportName);
+                return _remoteClient.RemoteCallFunction(GetReport, toolName, reportName);
             }
 
             public string GetReportFromDefinition(string reportDefinition)
             {
-                return RemoteCallFunction(GetReportFromDefinition, reportDefinition);
+                return _remoteClient.RemoteCallFunction(GetReportFromDefinition, reportDefinition);
             }
 
             [Obsolete]
             public DocumentLocation GetDocumentLocation()
             {
-                return RemoteCallFunction(GetDocumentLocation);
+                return _remoteClient.RemoteCallFunction(GetDocumentLocation);
             }
 
             [Obsolete]
             public void SetDocumentLocation(DocumentLocation documentLocation)
             {
-                RemoteCall(SetDocumentLocation, documentLocation);
+                _remoteClient.RemoteCall(SetDocumentLocation, documentLocation);
             }
 
             public string GetDocumentLocationName()
             {
-                return RemoteCallFunction(GetDocumentLocationName);
+                return _remoteClient.RemoteCallFunction(GetDocumentLocationName);
             }
 
             public string GetReplicateName()
             {
-                return RemoteCallFunction(GetReplicateName);
+                return _remoteClient.RemoteCallFunction(GetReplicateName);
             }
 
             [Obsolete]
             public Chromatogram[] GetChromatograms(DocumentLocation documentLocation)
             {
-                return RemoteCallFunction(GetChromatograms, documentLocation);
+                return _remoteClient.RemoteCallFunction(GetChromatograms, documentLocation);
             }
 
             public string GetDocumentPath()
             {
-                return RemoteCallFunction(GetDocumentPath);
+                return _remoteClient.RemoteCallFunction(GetDocumentPath);
             }
 
             public Version GetVersion()
             {
-                return (Version) RemoteCallFunction((Func<object>) GetVersion);
+                return (Version) _remoteClient.RemoteCallFunction((Func<object>) GetVersion);
             }
 
             public void ImportFasta(string textFasta)
             {
-                RemoteCall(ImportFasta, textFasta);
+                _remoteClient.RemoteCall(ImportFasta, textFasta);
             }
 
             public void InsertSmallMoleculeTransitionList(string textCSV)
             {
-                RemoteCall(InsertSmallMoleculeTransitionList, textCSV);
+                _remoteClient.RemoteCall(InsertSmallMoleculeTransitionList, textCSV);
             }
 
             public void AddSpectralLibrary(string libraryName, string libraryPath)
             {
-                RemoteCall(AddSpectralLibrary, libraryName, libraryPath);
+                _remoteClient.RemoteCall(AddSpectralLibrary, libraryName, libraryPath);
             }
 
             public void AddDocumentChangeReceiver(string receiverName, string name)
             {
-                RemoteCall(AddDocumentChangeReceiver, receiverName, name);
+                _remoteClient.RemoteCall(AddDocumentChangeReceiver, receiverName, name);
             }
 
             public void RemoveDocumentChangeReceiver(string receiverName)
             {
-                RemoteCall(RemoveDocumentChangeReceiver, receiverName);
+                _remoteClient.RemoteCall(RemoveDocumentChangeReceiver, receiverName);
             }
 
             public int GetProcessId()
             {
-                return RemoteCallFunction(GetProcessId);
+                return _remoteClient.RemoteCallFunction(GetProcessId);
             }
 
             public void DeleteElements(string[] elementLocators)
             {
-                RemoteCall(DeleteElements, elementLocators);
+                _remoteClient.RemoteCall(DeleteElements, elementLocators);
             }
 
             public void ImportProperties(string csvText)
             {
-                RemoteCall(ImportProperties, csvText);
+                _remoteClient.RemoteCall(ImportProperties, csvText);
             }
 
             public string GetSelectedElementLocator(string elementType)
             {
-                return RemoteCallFunction(GetSelectedElementLocator, elementType);
+                return _remoteClient.RemoteCallFunction(GetSelectedElementLocator, elementType);
             }
         }
 

@@ -96,27 +96,14 @@ namespace ToolServiceTestHarness
 
             try
             {
-                var client = new MyClient(tbxConnection.Text);
-                var result = client.RemoteCall(method, arguments.ToArray()!);
+                var client = new RemoteClient(tbxConnection.Text);
+                var result = client.RemoteCallName(method.Name, arguments.ToArray());
                 tbxResult.Text = result?.ToString() ?? string.Empty;
             }
             catch (Exception ex)
             {
                 ShowError(ex.Message);
                 tbxResult.Text = ex.ToString();
-            }
-        }
-
-        public class MyClient : RemoteClient
-        {
-            public MyClient(string connectionName) : base(connectionName)
-            {
-
-            }
-
-            public object? RemoteCall(MethodInfo method, object[] arguments)
-            {
-                return RemoteCallName(method.Name, arguments);
             }
         }
 
