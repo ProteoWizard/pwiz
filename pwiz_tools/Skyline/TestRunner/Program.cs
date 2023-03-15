@@ -1260,6 +1260,7 @@ namespace TestRunner
                 results, log, verbose, clientMode);
 
             var timer = new Stopwatch();
+            timer.Start();
             using (new DebuggerListener(runTests))
             {
                 if (asNightly && !string.IsNullOrEmpty(dmpDir) && Directory.Exists(dmpDir))
