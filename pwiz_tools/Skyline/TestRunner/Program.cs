@@ -1132,9 +1132,21 @@ namespace TestRunner
         {
             string skylinePath = Path.GetDirectoryName(Assembly.GetExecutingAssembly().Location);
             var skylineDirectory = skylinePath != null ? new DirectoryInfo(skylinePath) : null;
-            while (skylineDirectory != null && skylineDirectory.Name.ToLowerInvariant() != "skyline")
+            while (skylineDirectory != null)
+            {
                 skylineDirectory = skylineDirectory.Parent;
-            return skylineDirectory;
+                if (skylineDirectory == null)
+                    break;
+
+                if (skylineDirectory.Name.ToLowerInvariant() == "skyline")
+                    return skylineDirectory;
+                else
+                    foreach (var subdir in skylineDirectory.GetDirectories())
+                        if (Directory.Exists(Path.Combine(subdir.FullName, "pwiz_tools", "Skyline")))
+                            return new DirectoryInfo(Path.Combine(subdir.FullName, "pwiz_tools", "Skyline"));
+            }
+
+            return null;
         }
 
         private static void TeamCitySettings(CommandLineArgs commandLineArgs, out bool teamcityTestDecoration, out string testSpecification)
@@ -1247,6 +1259,7 @@ namespace TestRunner
                 pauseDialogs, pauseSeconds, pauseStartingPage, useVendorReaders, timeoutMultiplier, 
                 results, log, verbose, clientMode);
 
+            var timer = new Stopwatch();
             using (new DebuggerListener(runTests))
             {
                 if (asNightly && !string.IsNullOrEmpty(dmpDir) && Directory.Exists(dmpDir))
@@ -1583,6 +1596,7 @@ namespace TestRunner
                 }
             }
 
+            Console.WriteLine($"Tests finished in {timer.Elapsed} ({timer.Elapsed.TotalSeconds}s)");
             return runTests.FailureCount == 0;
         }
 
