@@ -242,7 +242,7 @@ namespace TestRunner
             "?;/?;-?;help;skylinetester;debug;results;" +
             "test;skip;filter;form;" +
             "loop=0;repeat=1;pause=0;startingpage=1;random=off;offscreen=on;multi=1;wait=off;internet=off;originalurls=off;" +
-            "parallelmode=off;workercount=0;waitforworkers=off;keepworkerlogs=off;workername;queuehost;workerport;alwaysupcltpassword;" +
+            "parallelmode=off;workercount=0;waitforworkers=off;keepworkerlogs=off;workername;queuehost;workerport;workertimeout;alwaysupcltpassword;" +
             "maxsecondspertest=-1;" +
             "demo=off;showformnames=off;showpages=off;status=off;buildcheck=0;screenshotlist;" +
             "quality=off;pass0=off;pass1=off;pass2=on;" +
@@ -770,6 +770,7 @@ namespace TestRunner
             int testsFailed = 0;
             int testsResultsReturned = 0;
             int workerCount = (int) commandLineArgs.ArgAsLong("workercount");
+            int workerTimeout = Convert.ToInt32(commandLineArgs.ArgAsStringOrDefault("workertimeout", "15"));
             int loop = (int) commandLineArgs.ArgAsLong("loop");
             var languages = commandLineArgs.ArgAsString("language").Split(',');
 
@@ -972,10 +973,9 @@ namespace TestRunner
                     // listen for workerName/IP/tasksPort/resultsPort/heartbeatPort string from a worker
                     if (!receiver.TryReceiveFrameString(TimeSpan.FromSeconds(1), out var workerId))
                     {
-                        const int MAX_SECONDS_TO_WAIT_FOR_WORKER_CONNECTION = 15;
-                        if (waitingForWorkers.Elapsed.TotalSeconds > MAX_SECONDS_TO_WAIT_FOR_WORKER_CONNECTION)
+                        if (waitingForWorkers.Elapsed.TotalSeconds > workerTimeout)
                         {
-                            Console.Error.WriteLine($"No workers connected to the server in {MAX_SECONDS_TO_WAIT_FOR_WORKER_CONNECTION} seconds.");
+                            Console.Error.WriteLine($"No workers connected to the server in {workerTimeout} seconds.");
                             Console.Error.WriteLine("Be sure to check BOTH public and private options if prompted to \"Allow TestRunner to communicate on these networks\".");
                             Console.Error.WriteLine("See https://skyline.ms/wiki/home/development/page.view?name=Troubleshooting_parallel_mode for troubleshooting tips.\r\n");
                             Environment.Exit(1);
