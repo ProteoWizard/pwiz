@@ -1438,9 +1438,7 @@ namespace pwiz.Skyline.Model.Results
                         Assume.IsNull(streamDestination);
                         streamDestination = streamRecalc;
                     }
-                    var assumeNegativeChargeInPreV11Caches = _document.MoleculeTransitionGroups.All(tg => tg.PrecursorMz.IsNegative);
-                    ChromatogramCache.Join(cachePath, streamDestination,
-                        listPaths, _loadMonitor, FinishCacheJoin, assumeNegativeChargeInPreV11Caches);
+                    ChromatogramCache.Join(cachePath, streamDestination, listPaths, _loadMonitor, FinishCacheJoin);
                 }
             }
 
@@ -1511,9 +1509,7 @@ namespace pwiz.Skyline.Model.Results
                         var status = new ProgressStatus();
                         try
                         {
-                            // Watch out for older caches that didn't record chromatogram polarity.  We can only reliably handle this for completely negative docs.
-                            bool assumeNegativeChargesInPreV11Caches = _document.MoleculeTransitionGroups.All(p => p.PrecursorMz.IsNegative);
-                            var cache = ChromatogramCache.Load(cachePath, status, _loadMonitor, assumeNegativeChargesInPreV11Caches);
+                            var cache = ChromatogramCache.Load(cachePath, status, _loadMonitor, _document);
                             if (_resultsClone.IsValidCache(cache, false))
                                 _resultsClone._listPartialCaches = ImmutableList.Singleton(cache);
                             else
@@ -1611,8 +1607,7 @@ namespace pwiz.Skyline.Model.Results
                         {
                             try
                             {
-                                var assumeNegativeChargeInPreV11Caches = _document.MoleculeTransitionGroups.All(t => t.PrecursorMz.IsNegative);
-                                var cache = ChromatogramCache.Load(sharedCachePath, status, _loadMonitor, assumeNegativeChargeInPreV11Caches);
+                                var cache = ChromatogramCache.Load(sharedCachePath, status, _loadMonitor, _document);
                                 if (cache.IsSupportedVersion)
                                     listAddCaches.Add(cache);
                                 else
@@ -1682,9 +1677,7 @@ namespace pwiz.Skyline.Model.Results
                                 var status = new ProgressStatus();
                                 try
                                 {
-                                    // Deal with older cache formats where we did not record chromatogram polarity
-                                    var assumeNegativeChargeInPreV11Caches = _document.MoleculeTransitionGroups.All(tg => tg.PrecursorMz.IsNegative);
-                                    var cache = ChromatogramCache.Load(dataFileReplicates.PartPath, status, _loadMonitor, assumeNegativeChargeInPreV11Caches);
+                                    var cache = ChromatogramCache.Load(dataFileReplicates.PartPath, status, _loadMonitor, _document);
                                     if (cache.IsSupportedVersion && EnsurePathsMatch(cache))
                                     {
                                         var listPartialCaches = new List<ChromatogramCache>();
@@ -1722,9 +1715,7 @@ namespace pwiz.Skyline.Model.Results
                 var status = new ProgressStatus();
                 try
                 {
-                    // Deal with older cache formats where we did not record chromatogram polarity
-                    var assumeNegativeChargeInPreV11Caches = _document.MoleculeTransitionGroups.All(tg => tg.PrecursorMz.IsNegative);
-                    var cache = ChromatogramCache.Load(replicatePath, status, _loadMonitor, assumeNegativeChargeInPreV11Caches);
+                    var cache = ChromatogramCache.Load(replicatePath, status, _loadMonitor, _document);
                     if (cache.IsSupportedVersion)
                         listPartialCaches.Add(EnsureOptimalMemoryUse(cache));
                     else
