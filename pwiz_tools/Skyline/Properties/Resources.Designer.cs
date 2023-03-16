@@ -8116,16 +8116,6 @@ namespace pwiz.Skyline.Properties {
         }
         
         /// <summary>
-        ///   Looks up a localized string similar to There is a naming conflict in unpacking the zip. Tool importing canceled!.
-        /// </summary>
-        public static string ConfigureToolsDlg_unpackZipTool_There_is_a_naming_conflict_in_unpacking_the_zip__Tool_importing_canceled_ {
-            get {
-                return ResourceManager.GetString("ConfigureToolsDlg_unpackZipTool_There_is_a_naming_conflict_in_unpacking_the_zip__" +
-                        "Tool_importing_canceled_", resourceCulture);
-            }
-        }
-        
-        /// <summary>
         ///   Looks up a localized string similar to Title and Command are required.
         /// </summary>
         public static string ConfigureToolsDlg_unpackZipTool_Title_and_Command_are_required {

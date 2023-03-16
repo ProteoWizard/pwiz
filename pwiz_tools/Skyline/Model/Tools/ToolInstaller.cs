@@ -289,9 +289,9 @@ namespace pwiz.Skyline.Model.Tools
                     {
                         zipFile.ExtractAll(tempToolPath, ExtractExistingFileAction.OverwriteSilently);
                     }
-                    catch (Exception)
+                    catch (Exception ex)
                     {
-                        throw new ToolExecutionException(Resources.ConfigureToolsDlg_unpackZipTool_There_is_a_naming_conflict_in_unpacking_the_zip__Tool_importing_canceled_);
+                        throw new ToolExecutionException(Resources.ConfigureToolsDlg_unpackZipTool_Error_unpacking_zipped_tools, ex);
                     }
                 }
 

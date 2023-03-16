@@ -7895,9 +7895,6 @@ Please contact the Panorama server administrator to upgrade the server.</value>
   <data name="ShareListDlg_ImportFile_Failure_loading__0__" xml:space="preserve">
     <value>Failure loading {0}.</value>
   </data>
-  <data name="ConfigureToolsDlg_unpackZipTool_There_is_a_naming_conflict_in_unpacking_the_zip__Tool_importing_canceled_" xml:space="preserve">
-    <value>There is a naming conflict in unpacking the zip. Tool importing canceled!</value>
-  </data>
   <data name="RCalcIrt_RequireUsable_Unexpected_use_of_iRT_calculator_before_successful_initialization_" xml:space="preserve">
     <value>Unexpected use of iRT calculator before successful initialization.</value>
   </data>
