@@ -32856,6 +32856,16 @@ namespace pwiz.Skyline.Properties {
         }
         
         /// <summary>
+        ///   Looks up a localized string similar to This selected zip file did not specify any items to add to the Tools menu..
+        /// </summary>
+        public static string ToolInstaller_UnpackZipTool_This_selected_zip_file_did_not_specify_any_items_to_add_to_the_Tools_menu_ {
+            get {
+                return ResourceManager.GetString("ToolInstaller_UnpackZipTool_This_selected_zip_file_did_not_specify_any_items_to_a" +
+                        "dd_to_the_Tools_menu_", resourceCulture);
+            }
+        }
+        
+        /// <summary>
         ///   Looks up a localized string similar to Tool Uses R and specifies Packages without an {0} file in the tool-inf directory..
         /// </summary>
         public static string ToolInstaller_UnpackZipTool_Tool_Uses_R_and_specifies_Packages_without_an__0__file_in_the_tool_inf_directory_ {
