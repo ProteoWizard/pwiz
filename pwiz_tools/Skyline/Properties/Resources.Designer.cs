@@ -4343,15 +4343,6 @@ namespace pwiz.Skyline.Properties {
         }
         
         /// <summary>
-        ///   Looks up a localized string similar to Incorrectly sorted chromatograms {0} &gt; {1}.
-        /// </summary>
-        public static string ChromDataSet_MarkOptimizationData_Incorrectly_sorted_chromatograms__0__1__ {
-            get {
-                return ResourceManager.GetString("ChromDataSet_MarkOptimizationData_Incorrectly_sorted_chromatograms__0__1__", resourceCulture);
-            }
-        }
-        
-        /// <summary>
         ///   Looks up a localized string similar to Unexpected null peak.
         /// </summary>
         public static string ChromDataSet_MergePeaks_Unexpected_null_peak {
