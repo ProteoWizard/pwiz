@@ -123,6 +123,16 @@ namespace pwiz.Skyline
         public static readonly Argument ARG_SAVE_SETTINGS = new DocArgument(@"save-settings", (c, p) => c.SaveSettings = true);
         public static readonly Argument ARG_OUT = new DocArgument(@"out", PATH_TO_DOCUMENT,
             (c, p) => { c.SaveFile = p.ValueFullPath; });
+        public static readonly Argument ARG_NEW = new DocArgument(@"new", PATH_TO_DOCUMENT, (c, p) =>
+        {
+            c.CreateNewFile = true;
+            c.SaveFile = p.ValueFullPath;
+            c.SkylineFile = p.ValueFullPath;
+        });
+        public static readonly Argument ARG_OVERWRITE = new DocArgument(@"overwrite", (c, p) =>
+        {
+            c.OverwriteExisting = p.IsNameOnly || bool.Parse(p.Value);
+        });
         public static readonly Argument ARG_SHARE_ZIP = new DocArgument(@"share-zip", () => GetPathToFile(SrmDocumentSharing.EXT_SKY_ZIP),
             (c, p) =>
             {
@@ -164,7 +174,7 @@ namespace pwiz.Skyline
         public static readonly Argument ARG_VERSION = new Argument(@"version", (c, p) => c.Version());
 
         private static readonly ArgumentGroup GROUP_GENERAL_IO = new ArgumentGroup(() => CommandArgUsage.CommandArgs_GROUP_GENERAL_IO_General_input_output, true,
-            ARG_IN, ARG_SAVE, ARG_SAVE_SETTINGS, ARG_OUT, ARG_SHARE_ZIP, ARG_SHARE_TYPE, ARG_BATCH, ARG_DIR, ARG_TIMESTAMP, ARG_MEMSTAMP,
+            ARG_IN, ARG_SAVE, ARG_SAVE_SETTINGS, ARG_OUT, ARG_NEW, ARG_OVERWRITE, ARG_SHARE_ZIP, ARG_SHARE_TYPE, ARG_BATCH, ARG_DIR, ARG_TIMESTAMP, ARG_MEMSTAMP,
             ARG_LOG_FILE, ARG_HELP, ARG_VERSION)
         {
             Validate = c => c.ValidateGeneralArgs()
@@ -202,6 +212,8 @@ namespace pwiz.Skyline
 
         public string LogFile { get; private set; }
         public string SkylineFile { get; private set; }
+        public bool CreateNewFile { get; private set; }
+        public bool OverwriteExisting { get; private set; }
         public string SaveFile { get; private set; }
         private bool _saving;
         public bool Saving
@@ -1215,6 +1227,24 @@ namespace pwiz.Skyline
             (c, p) => c.PredictCoVName = p.Value) { WrapValue = true };
         public static readonly Argument ARG_TRAN_PREDICT_OPTDB = new DocArgument(@"tran-predict-optdb", () => GetDisplayNames(Settings.Default.OptimizationLibraryList),
             (c, p) => c.PredictOpimizationLibraryName = p.Value) { WrapValue = true };
+
+        public static readonly Argument ARG_FULL_SCAN_PRECURSOR_ISOTOPES = new DocArgument(@"full-scan-precursor-isotopes",
+                () => Enum.GetNames(typeof(FullScanPrecursorIsotopes)),
+                (c, p) => c.FullScanPrecursorIsotopes = (FullScanPrecursorIsotopes) Enum.Parse(typeof(FullScanPrecursorIsotopes), p.Value))
+            { WrapValue = true };
+        public static readonly Argument ARG_FULL_SCAN_PRECURSOR_ANALYZER = new DocArgument(@"full-scan-precursor-analyzer",
+                () => Enum.GetNames(typeof(FullScanMassAnalyzerType)),
+                (c, p) => c.FullScanPrecursorMassAnalyzerType = (FullScanMassAnalyzerType) Enum.Parse(typeof(FullScanMassAnalyzerType), p.Value))
+            { WrapValue = true };
+        public static readonly Argument ARG_FULL_SCAN_PRECURSOR_THRESHOLD = new DocArgument(@"full-scan-precursor-threshold", NUM_VALUE,
+                (c, p) => c.FullScanPrecursorThreshold = p.GetValueDouble(0, 100)) { WrapValue = true };
+        public static readonly Argument ARG_FULL_SCAN_PRECURSOR_ISOTOPE_ENRICHMENT = new DocArgument(@"full-scan-precursor-isotope-enrichment",
+                () => GetDisplayNames(Settings.Default.IsotopeEnrichmentsList),
+                (c, p) => c.FullScanPrecursorIsotopeEnrichment = p.Value)
+            { WrapValue = true };
+        public static readonly Argument ARG_FULL_SCAN_PRECURSOR_IGNORE_SIM = new DocArgument(@"full-scan-precursor-ignore-sim",
+                (c, p) => c.FullScanPrecursorIgnoreSimScans = p.IsNameOnly || bool.Parse(p.Value))
+            { WrapValue = true, OptionalValue = true };
         public static readonly Argument ARG_FULL_SCAN_PRECURSOR_RES = new DocArgument(@"full-scan-precursor-res", RP_VALUE,
             (c, p) => c.FullScanPrecursorRes = p.ValueDouble) { WrapValue = true };
         public static readonly Argument ARG_FULL_SCAN_PRECURSOR_RES_MZ = new DocArgument(@"full-scan-precursor-res-mz", MZ_VALUE,
@@ -1232,6 +1262,8 @@ namespace pwiz.Skyline
         private static readonly ArgumentGroup GROUP_SETTINGS = new ArgumentGroup(() => CommandArgUsage.CommandArgs_GROUP_SETTINGS_Document_Settings, false,
             ARG_TRAN_PRECURSOR_ION_CHARGES, ARG_TRAN_FRAGMENT_ION_CHARGES, ARG_TRAN_FRAGMENT_ION_TYPES,
             ARG_TRAN_PREDICT_CE, ARG_TRAN_PREDICT_DP, ARG_TRAN_PREDICT_COV, ARG_TRAN_PREDICT_OPTDB,
+            ARG_FULL_SCAN_PRECURSOR_ISOTOPES, ARG_FULL_SCAN_PRECURSOR_ANALYZER, ARG_FULL_SCAN_PRECURSOR_THRESHOLD,
+            ARG_FULL_SCAN_PRECURSOR_IGNORE_SIM, 
             ARG_FULL_SCAN_PRECURSOR_RES, ARG_FULL_SCAN_PRECURSOR_RES_MZ,
             ARG_FULL_SCAN_PRODUCT_RES, ARG_FULL_SCAN_PRODUCT_RES_MZ,
             ARG_FULL_SCAN_RT_FILTER_TOLERANCE, ARG_IMS_LIBRARY_RES)
@@ -1301,6 +1333,11 @@ namespace pwiz.Skyline
                         PredictOpimizationLibraryName != null);
             }
         }
+        public FullScanPrecursorIsotopes? FullScanPrecursorIsotopes { get; private set; }
+        public FullScanMassAnalyzerType? FullScanPrecursorMassAnalyzerType { get; private set; }
+        public double? FullScanPrecursorThreshold { get; private set; }
+        public string FullScanPrecursorIsotopeEnrichment { get; private set; }
+        public bool? FullScanPrecursorIgnoreSimScans { get; private set; }
         public double? FullScanPrecursorRes { get; private set; }
         public double? FullScanPrecursorResMz { get; private set; }
         public double? FullScanProductRes { get; private set; }
@@ -1311,11 +1348,12 @@ namespace pwiz.Skyline
         {
             get
             {
-                return (FullScanPrecursorRes
-                        ?? FullScanPrecursorResMz
-                        ?? FullScanProductRes
-                        ?? FullScanProductResMz
-                        ?? FullScanRetentionTimeFilterLength).HasValue;
+                return FullScanPrecursorIsotopes.HasValue
+                       || (FullScanPrecursorRes
+                           ?? FullScanPrecursorResMz
+                           ?? FullScanProductRes
+                           ?? FullScanProductResMz
+                           ?? FullScanRetentionTimeFilterLength).HasValue;
             }
         }
 

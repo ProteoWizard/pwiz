@@ -198,10 +198,11 @@ namespace pwiz.Skyline
             }
 
             var skylineFile = commandArgs.SkylineFile;
-            if ((skylineFile != null && !OpenSkyFile(skylineFile)) ||
-                (skylineFile == null && _doc == null))
+            if ((skylineFile != null && (commandArgs.CreateNewFile && !NewSkyFile(skylineFile, commandArgs.OverwriteExisting)) ||
+                (skylineFile != null && (!commandArgs.CreateNewFile && !OpenSkyFile(skylineFile))) ||
+                (skylineFile == null && _doc == null)))
             {
-               _out.WriteLine(Resources.CommandLine_Run_Exiting___);
+                _out.WriteLine(Resources.CommandLine_Run_Exiting___);
                 return Program.EXIT_CODE_RAN_WITH_ERRORS;
             }
 
@@ -946,10 +947,47 @@ namespace pwiz.Skyline
         {
             try
             {
+                if (commandArgs.FullScanPrecursorIsotopes.HasValue)
+                {
+                    var precursorIsotopes = commandArgs.FullScanPrecursorIsotopes.Value;
+                    double? threshold = commandArgs.FullScanPrecursorThreshold;
+                    IsotopeEnrichments isotopeEnrichments = null;
+                    _out.WriteLine("Changing full scan precursor isotope peaks to {0}", precursorIsotopes);
+
+                    if (precursorIsotopes == FullScanPrecursorIsotopes.Count)
+                    {
+                        threshold ??= (double?) TransitionFullScan.DEFAULT_ISOTOPE_COUNT;
+                        _out.WriteLine("Changing full scan precursor isotope peaks percentage to {0}", threshold);
+                    }
+                    else if (precursorIsotopes == FullScanPrecursorIsotopes.Percent)
+                    {
+                        threshold ??= (double?) TransitionFullScan.DEFAULT_ISOTOPE_PERCENT;
+                        _out.WriteLine("Changing full scan precursor isotope peak count to {0}", threshold);
+                    }
+
+                    if (!string.IsNullOrEmpty(commandArgs.FullScanPrecursorIsotopeEnrichment))
+                    {
+                        isotopeEnrichments = Settings.Default.IsotopeEnrichmentsList.FirstOrDefault(standard =>
+                            Equals(standard.Name, commandArgs.FullScanPrecursorIsotopeEnrichment));
+                        _out.WriteLine("Changing full scan precursor isotope enrichment to {0}", isotopeEnrichments);
+
+                    }
+
+                    ModifyDocument(d => d.ChangeSettings(_doc.Settings.ChangeTransitionFullScan(f =>
+                            f.ChangePrecursorIsotopes(commandArgs.FullScanPrecursorIsotopes.Value, threshold, isotopeEnrichments))),
+                        AuditLogEntry.SettingsLogFunction);
+                }
+                if (commandArgs.FullScanPrecursorIgnoreSimScans.HasValue)
+                {
+                    _out.WriteLine("Changing full scan ignore SIM scans to {0}", commandArgs.FullScanPrecursorIgnoreSimScans);
+                    ModifyDocument(d => d.ChangeSettings(_doc.Settings.ChangeTransitionFullScan(f =>
+                        f.ChangeIgnoreSimScans(commandArgs.FullScanPrecursorIgnoreSimScans.Value))), AuditLogEntry.SettingsLogFunction);
+                }
                 if (commandArgs.FullScanPrecursorRes.HasValue)
                 {
                     double res = commandArgs.FullScanPrecursorRes.Value;
                     double? resMz = commandArgs.FullScanPrecursorResMz;
+                    var precursorAnalyzer = commandArgs.FullScanPrecursorMassAnalyzerType;
                     if (!_doc.Settings.TransitionSettings.FullScan.IsHighResPrecursor)
                         _out.WriteLine(Resources.CommandLine_SetFullScanSettings_Changing_full_scan_precursor_resolution_to__0__, res);
                     else if (_doc.Settings.TransitionSettings.FullScan.IsCentroidedMs)
@@ -958,9 +996,10 @@ namespace pwiz.Skyline
                         _out.WriteLine(Resources.CommandLine_SetFullScanSettings_Changing_full_scan_precursor_resolving_power_to__0__at__1__, res, resMz);
                     else
                         _out.WriteLine(Resources.CommandLine_SetFullScanSettings_Changing_full_scan_precursor_resolving_power_to__0__, res);
-
+                    if (precursorAnalyzer.HasValue)
+                        _out.WriteLine("Changing full scan precursor mass analyzer to {0}", precursorAnalyzer);
                     ModifyDocument(d => d.ChangeSettings(_doc.Settings.ChangeTransitionFullScan(f =>
-                        f.ChangePrecursorResolution(f.PrecursorMassAnalyzer, res, resMz ?? f.PrecursorResMz))), AuditLogEntry.SettingsLogFunction);
+                        f.ChangePrecursorResolution(precursorAnalyzer ?? f.PrecursorMassAnalyzer, res, resMz ?? f.PrecursorResMz))), AuditLogEntry.SettingsLogFunction);
                 }
                 if (commandArgs.FullScanProductRes.HasValue)
                 {
@@ -1029,6 +1068,37 @@ namespace pwiz.Skyline
             {
                 _out.WriteLine(Resources.CommandLine_SetImsSettings_Error__Failed_attempting_to_change_the_ion_mobility_settings_);
                 _out.WriteLine(x.Message);
+                return false;
+            }
+        }
+
+        public bool NewSkyFile(string skylineFile, bool overwrite)
+        {
+            try
+            {
+                if (File.Exists(skylineFile))
+                {
+                    if (!overwrite)
+                        throw new IOException(string.Format("File '{0}' already exists; use --in= instead or add --overwrite.", skylineFile));
+                    _out.WriteLine("Deleting existing file '{0}'", skylineFile);
+                    File.Delete(skylineFile);
+                }
+
+                SetDocument(new SrmDocument(Settings.Default.SrmSettingsList[0]));
+                if (_doc == null)
+                    return false;
+
+                _out.WriteLine(Resources.CommandLine_OpenSkyFile_File__0__opened_, Path.GetFileName(skylineFile));
+
+                // Update settings for this file
+                _doc.Settings.UpdateLists(skylineFile);
+
+                return true;
+            }
+            catch (Exception x)
+            {
+                _out.WriteLine(Resources.CommandLine_OpenSkyFile_Error__There_was_an_error_opening_the_file__0_, skylineFile);
+                _out.WriteLine(XmlUtil.GetInvalidDataMessage(skylineFile, x));
                 return false;
             }
         }
