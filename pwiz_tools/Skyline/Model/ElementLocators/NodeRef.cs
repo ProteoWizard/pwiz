@@ -54,7 +54,7 @@ namespace pwiz.Skyline.Model.ElementLocators
                 throw new IdentityNotFoundException(identityPath.Child);
             }
             var parentRef = Parent.ChangeIdentityPath(document, identityPath.Parent);
-            return ((NodeRef)ChangeParent(parentRef)).EnumerateSiblings(document).Skip(index).FirstOrDefault();
+            return ((NodeRef)ChangeParent(parentRef)).EnumerateSiblingNodeRefs(document).Skip(index).FirstOrDefault();
         }
 
         public static IEnumerable<IdentityPath> GetIdentityPaths(SrmDocument document, IEnumerable<NodeRef> nodeRefs)
@@ -107,19 +107,19 @@ namespace pwiz.Skyline.Model.ElementLocators
 
                 var parentDocNode = (DocNodeParent)grandParentData.DocNode.Children[parentIndex];
                 parentData = new NodeRefParentData(new IdentityPath(grandParentData.IdentityPath, parentDocNode.Id), parentDocNode,
-                    nodeRef.EnumerateSiblings(parentDocNode));
+                    nodeRef.EnumerateSiblingNodeRefs(parentDocNode));
             }
             else
             {
-                parentData = new NodeRefParentData(IdentityPath.ROOT, document, nodeRef.EnumerateSiblings(document));
+                parentData = new NodeRefParentData(IdentityPath.ROOT, document, nodeRef.EnumerateSiblingNodeRefs(document));
             }
             parentDatas.Add(nodeRef.Parent, parentData);
             return parentData;
         }
 
-        protected abstract IEnumerable<NodeRef> EnumerateSiblings(DocNodeParent docNodeParent);
+        protected abstract IEnumerable<NodeRef> EnumerateSiblingNodeRefs(DocNodeParent docNodeParent);
 
-        class NodeRefParentData
+        private class NodeRefParentData
         {
             private Dictionary<NodeRef, int> _childNodeRefIndex;
             public NodeRefParentData(IdentityPath identityPath, DocNodeParent docNode, IEnumerable<NodeRef> childNodeRefs)
@@ -230,10 +230,10 @@ namespace pwiz.Skyline.Model.ElementLocators
                 return ImmutableList.Empty<ElementRef>();
             }
 
-            return EnumerateSiblings(parentNode);
+            return EnumerateSiblingNodeRefs(parentNode);
         }
 
-        protected sealed override IEnumerable<NodeRef> EnumerateSiblings(DocNodeParent parentNode)
+        protected sealed override IEnumerable<NodeRef> EnumerateSiblingNodeRefs(DocNodeParent parentNode)
         {
             var counts = new Dictionary<ElementRef, int>();
             foreach (TDocNode child in parentNode.Children)
@@ -283,7 +283,6 @@ namespace pwiz.Skyline.Model.ElementLocators
         {
             get { return AnnotationDef.AnnotationTargetSet.Singleton(AnnotationDef.AnnotationTarget.protein); }
         }
-
     }
 
     public class MoleculeRef : NodeRef<PeptideDocNode>

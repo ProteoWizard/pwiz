@@ -11,8 +11,27 @@
 
   <ItemGroup>
     <Reference Include="SkylineTool">
-      <HintPath>..\..\..\bin\x64\Release\SkylineTool.dll</HintPath>
+      <HintPath>..\..\..\bin\x64\$(Configuration)\SkylineTool.dll</HintPath>
     </Reference>
   </ItemGroup>
+
+  <ItemGroup>
+    <Compile Update="Resources.Designer.cs">
+      <DesignTime>True</DesignTime>
+      <AutoGen>True</AutoGen>
+      <DependentUpon>Resources.resx</DependentUpon>
+    </Compile>
+  </ItemGroup>
+
+  <ItemGroup>
+    <EmbeddedResource Update="Resources.resx">
+      <Generator>ResXFileCodeGenerator</Generator>
+      <LastGenOutput>Resources.Designer.cs</LastGenOutput>
+    </EmbeddedResource>
+  </ItemGroup>
+
+  <Target Name="PostBuild" AfterTargets="PostBuildEvent">
+    <Exec Command="pushd $(TargetDir)&#xD;&#xA;&quot;$(SolutionDir)..\..\..\..\..\libraries\7za.exe&quot; a $(SolutionDir)\ToolServiceTestHarness.zip *&#xD;&#xA;popd&#xD;&#xA;pushd &quot;$(SolutionDir)&quot;&#xD;&#xA;&quot;$(SolutionDir)..\..\..\..\..\libraries\7za.exe&quot; a ToolServiceTestHarness.zip tool-inf&#xD;&#xA;popd" />
+  </Target>
 
 </Project>

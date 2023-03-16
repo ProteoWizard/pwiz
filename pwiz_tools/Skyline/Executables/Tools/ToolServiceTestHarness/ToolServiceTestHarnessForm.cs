@@ -29,11 +29,13 @@ namespace ToolServiceTestHarness
             {
                 lblArgument1.Text = parameters[0].Name;
                 tbxArgument1.Enabled = true;
+                btnPaste1.Enabled = true;
             }
             else
             {
                 lblArgument1.Text = _arg1OriginalLabel;
                 tbxArgument1.Enabled = false;
+                btnPaste1.Enabled = false;
             }
 
             if (parameters.Length > 1)
@@ -121,25 +123,36 @@ namespace ToolServiceTestHarness
 
         public bool TryConvertArgument(TextBox textBox, Type targetType, out object? value)
         {
-            var argumentConverter = new ArgumentConverter();
-            try
+            string stringValue = textBox.Text;
+            if (targetType == typeof(string))
             {
-                value = argumentConverter.ConvertArgument(textBox.Text, targetType);
+                value = stringValue;
                 return true;
             }
-            catch (Exception ex)
-            {
-                value = null;
-                MessageBox.Show(ex.Message);
-                if (ex is LineNumberException argConvEx)
-                {
-                    textBox.SelectionLength = 0;
-                    textBox.SelectionStart = textBox.GetFirstCharIndexFromLine(argConvEx.LineNumber);
-                }
 
-                textBox.Focus();
-                return false;
+            if (targetType == typeof(DocumentLocation))
+            {
+                try
+                {
+                    value = DocumentLocation.Parse(stringValue);
+                    return true;
+                }
+                catch (Exception exception)
+                {
+                    ShowError(exception.Message);
+                    textBox.Focus();
+                }
             }
+
+            if (targetType == typeof(string[]))
+            {
+                value = stringValue.Split(new[] { "\r\n", "\r", "\n" }, StringSplitOptions.None);
+                return true;
+            }
+
+            value = null;
+            ShowError(string.Format(Resources.ToolServiceTestHarnessForm_TryConvertArgument_Unsupported_argument_type__0_, targetType));
+            return false;
         }
 
         public void ShowError(string message)
