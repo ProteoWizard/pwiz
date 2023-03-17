@@ -32828,6 +32828,16 @@ namespace pwiz.Skyline.Properties {
         }
         
         /// <summary>
+        ///   Looks up a localized string similar to The selected zip file did not specify any items to add to the Tools menu..
+        /// </summary>
+        public static string ToolInstaller_UnpackZipTool_The_selected_zip_file_did_not_specify_any_items_to_add_to_the_Tools_menu_ {
+            get {
+                return ResourceManager.GetString("ToolInstaller_UnpackZipTool_The_selected_zip_file_did_not_specify_any_items_to_ad" +
+                        "d_to_the_Tools_menu_", resourceCulture);
+            }
+        }
+        
+        /// <summary>
         ///   Looks up a localized string similar to The selected zip file is not a valid installable tool..
         /// </summary>
         public static string ToolInstaller_UnpackZipTool_The_selected_zip_file_is_not_a_valid_installable_tool_ {
@@ -32843,16 +32853,6 @@ namespace pwiz.Skyline.Properties {
         public static string ToolInstaller_UnpackZipTool_The_selected_zip_file_is_not_an_installable_tool_ {
             get {
                 return ResourceManager.GetString("ToolInstaller_UnpackZipTool_The_selected_zip_file_is_not_an_installable_tool_", resourceCulture);
-            }
-        }
-        
-        /// <summary>
-        ///   Looks up a localized string similar to This selected zip file did not specify any items to add to the Tools menu..
-        /// </summary>
-        public static string ToolInstaller_UnpackZipTool_This_selected_zip_file_did_not_specify_any_items_to_add_to_the_Tools_menu_ {
-            get {
-                return ResourceManager.GetString("ToolInstaller_UnpackZipTool_This_selected_zip_file_did_not_specify_any_items_to_a" +
-                        "dd_to_the_Tools_menu_", resourceCulture);
             }
         }
         

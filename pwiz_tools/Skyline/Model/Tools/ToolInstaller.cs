@@ -428,9 +428,9 @@ namespace pwiz.Skyline.Model.Tools
                     Helpers.TryTwice(() => Directory.Move(tempToolPath, permToolPath),
                         $@"Directory.Move({tempToolPath}, {permToolPath})");
                 }
-                else
+                else if (retval.MessagesThrown.Count == 0)
                 {
-                    throw new ToolExecutionException(Resources.ToolInstaller_UnpackZipTool_This_selected_zip_file_did_not_specify_any_items_to_add_to_the_Tools_menu_);
+                    retval.MessagesThrown.Add(Resources.ToolInstaller_UnpackZipTool_The_selected_zip_file_did_not_specify_any_items_to_add_to_the_Tools_menu_);
                 }
             }
             return retval;
