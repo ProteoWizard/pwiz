@@ -59,18 +59,14 @@
   </resheader>
   <assembly alias="System.Drawing" name="System.Drawing, Version=4.0.0.0, Culture=neutral, PublicKeyToken=b03f5f7f11d50a3a" />
   <data name="comboMethod.Location" type="System.Drawing.Point, System.Drawing">
-    <value>12, 87</value>
-  </data>
-  <assembly alias="System.Windows.Forms" name="System.Windows.Forms, Version=4.0.0.0, Culture=neutral, PublicKeyToken=b77a5c561934e089" />
-  <data name="comboMethod.Margin" type="System.Windows.Forms.Padding, System.Windows.Forms">
-    <value>3, 4, 3, 4</value>
+    <value>9, 56</value>
   </data>
   <data name="comboMethod.Size" type="System.Drawing.Size, System.Drawing">
-    <value>268, 28</value>
+    <value>202, 21</value>
   </data>
   <assembly alias="mscorlib" name="mscorlib, Version=4.0.0.0, Culture=neutral, PublicKeyToken=b77a5c561934e089" />
   <data name="comboMethod.TabIndex" type="System.Int32, mscorlib">
-    <value>0</value>
+    <value>3</value>
   </data>
   <data name="&gt;&gt;comboMethod.Name" xml:space="preserve">
     <value>comboMethod</value>
@@ -88,13 +84,13 @@
     <value>True</value>
   </data>
   <data name="lblConnection.Location" type="System.Drawing.Point, System.Drawing">
-    <value>12, 8</value>
+    <value>9, 5</value>
   </data>
   <data name="lblConnection.Size" type="System.Drawing.Size, System.Drawing">
-    <value>87, 20</value>
+    <value>64, 13</value>
   </data>
   <data name="lblConnection.TabIndex" type="System.Int32, mscorlib">
-    <value>1</value>
+    <value>0</value>
   </data>
   <data name="lblConnection.Text" xml:space="preserve">
     <value>Connection:</value>
@@ -112,16 +108,13 @@
     <value>9</value>
   </data>
   <data name="tbxConnection.Location" type="System.Drawing.Point, System.Drawing">
-    <value>12, 32</value>
-  </data>
-  <data name="tbxConnection.Margin" type="System.Windows.Forms.Padding, System.Windows.Forms">
-    <value>3, 4, 3, 4</value>
+    <value>9, 21</value>
   </data>
   <data name="tbxConnection.Size" type="System.Drawing.Size, System.Drawing">
-    <value>234, 27</value>
+    <value>176, 19</value>
   </data>
   <data name="tbxConnection.TabIndex" type="System.Int32, mscorlib">
-    <value>2</value>
+    <value>1</value>
   </data>
   <data name="&gt;&gt;tbxConnection.Name" xml:space="preserve">
     <value>tbxConnection</value>
@@ -139,13 +132,13 @@
     <value>True</value>
   </data>
   <data name="lblMethod.Location" type="System.Drawing.Point, System.Drawing">
-    <value>12, 63</value>
+    <value>9, 41</value>
   </data>
   <data name="lblMethod.Size" type="System.Drawing.Size, System.Drawing">
-    <value>64, 20</value>
+    <value>46, 13</value>
   </data>
   <data name="lblMethod.TabIndex" type="System.Int32, mscorlib">
-    <value>3</value>
+    <value>2</value>
   </data>
   <data name="lblMethod.Text" xml:space="preserve">
     <value>Method:</value>
@@ -166,10 +159,10 @@
     <value>True</value>
   </data>
   <data name="lblArgument1.Location" type="System.Drawing.Point, System.Drawing">
-    <value>12, 125</value>
+    <value>9, 81</value>
   </data>
   <data name="lblArgument1.Size" type="System.Drawing.Size, System.Drawing">
-    <value>90, 20</value>
+    <value>64, 13</value>
   </data>
   <data name="lblArgument1.TabIndex" type="System.Int32, mscorlib">
     <value>4</value>
@@ -194,10 +187,7 @@
     <value>Top, Left, Right</value>
   </data>
   <data name="tbxArgument1.Location" type="System.Drawing.Point, System.Drawing">
-    <value>12, 149</value>
-  </data>
-  <data name="tbxArgument1.Margin" type="System.Windows.Forms.Padding, System.Windows.Forms">
-    <value>3, 4, 3, 4</value>
+    <value>9, 97</value>
   </data>
   <data name="tbxArgument1.MaxLength" type="System.Int32, mscorlib">
     <value>2147483647</value>
@@ -206,7 +196,7 @@
     <value>True</value>
   </data>
   <data name="tbxArgument1.Size" type="System.Drawing.Size, System.Drawing">
-    <value>890, 71</value>
+    <value>668, 47</value>
   </data>
   <data name="tbxArgument1.TabIndex" type="System.Int32, mscorlib">
     <value>5</value>
@@ -230,10 +220,10 @@
     <value>NoControl</value>
   </data>
   <data name="lblArgument2.Location" type="System.Drawing.Point, System.Drawing">
-    <value>12, 229</value>
+    <value>9, 149</value>
   </data>
   <data name="lblArgument2.Size" type="System.Drawing.Size, System.Drawing">
-    <value>90, 20</value>
+    <value>64, 13</value>
   </data>
   <data name="lblArgument2.TabIndex" type="System.Int32, mscorlib">
     <value>6</value>
@@ -257,10 +247,7 @@
     <value>Top, Left, Right</value>
   </data>
   <data name="tbxArgument2.Location" type="System.Drawing.Point, System.Drawing">
-    <value>12, 253</value>
-  </data>
-  <data name="tbxArgument2.Margin" type="System.Windows.Forms.Padding, System.Windows.Forms">
-    <value>3, 4, 3, 4</value>
+    <value>9, 165</value>
   </data>
   <data name="tbxArgument2.MaxLength" type="System.Int32, mscorlib">
     <value>2147483647</value>
@@ -269,7 +256,7 @@
     <value>True</value>
   </data>
   <data name="tbxArgument2.Size" type="System.Drawing.Size, System.Drawing">
-    <value>890, 71</value>
+    <value>668, 47</value>
   </data>
   <data name="tbxArgument2.TabIndex" type="System.Int32, mscorlib">
     <value>7</value>
@@ -287,13 +274,10 @@
     <value>3</value>
   </data>
   <data name="btnInvokeMethod.Location" type="System.Drawing.Point, System.Drawing">
-    <value>12, 340</value>
-  </data>
-  <data name="btnInvokeMethod.Margin" type="System.Windows.Forms.Padding, System.Windows.Forms">
-    <value>3, 4, 3, 4</value>
+    <value>9, 221</value>
   </data>
   <data name="btnInvokeMethod.Size" type="System.Drawing.Size, System.Drawing">
-    <value>176, 31</value>
+    <value>132, 20</value>
   </data>
   <data name="btnInvokeMethod.TabIndex" type="System.Int32, mscorlib">
     <value>8</value>
@@ -317,10 +301,10 @@
     <value>True</value>
   </data>
   <data name="lblResult.Location" type="System.Drawing.Point, System.Drawing">
-    <value>12, 375</value>
+    <value>9, 244</value>
   </data>
   <data name="lblResult.Size" type="System.Drawing.Size, System.Drawing">
-    <value>52, 20</value>
+    <value>40, 13</value>
   </data>
   <data name="lblResult.TabIndex" type="System.Int32, mscorlib">
     <value>9</value>
@@ -344,16 +328,13 @@
     <value>Top, Bottom, Left, Right</value>
   </data>
   <data name="tbxResult.Location" type="System.Drawing.Point, System.Drawing">
-    <value>12, 399</value>
-  </data>
-  <data name="tbxResult.Margin" type="System.Windows.Forms.Padding, System.Windows.Forms">
-    <value>3, 4, 3, 4</value>
+    <value>9, 259</value>
   </data>
   <data name="tbxResult.Multiline" type="System.Boolean, mscorlib">
     <value>True</value>
   </data>
   <data name="tbxResult.Size" type="System.Drawing.Size, System.Drawing">
-    <value>888, 184</value>
+    <value>667, 121</value>
   </data>
   <data name="tbxResult.TabIndex" type="System.Int32, mscorlib">
     <value>10</value>
@@ -374,13 +355,13 @@
     <value>True</value>
   </metadata>
   <data name="$this.AutoScaleDimensions" type="System.Drawing.SizeF, System.Drawing">
-    <value>8, 20</value>
+    <value>6, 13</value>
   </data>
   <data name="$this.ClientSize" type="System.Drawing.Size, System.Drawing">
-    <value>914, 600</value>
+    <value>686, 390</value>
   </data>
-  <data name="$this.Margin" type="System.Windows.Forms.Padding, System.Windows.Forms">
-    <value>3, 4, 3, 4</value>
+  <data name="$this.Font" type="System.Drawing.Font, System.Drawing">
+    <value>Microsoft Sans Serif, 7.8pt</value>
   </data>
   <data name="$this.Text" xml:space="preserve">
     <value>Tool Service Test Harness</value>
