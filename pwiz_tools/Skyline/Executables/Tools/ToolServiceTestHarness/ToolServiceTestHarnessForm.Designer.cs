@@ -40,7 +40,6 @@
             btnInvokeMethod = new Button();
             lblResult = new Label();
             tbxResult = new TextBox();
-            btnPaste1 = new Button();
             SuspendLayout();
             // 
             // comboMethod
@@ -103,18 +102,10 @@
             resources.ApplyResources(tbxResult, "tbxResult");
             tbxResult.Name = "tbxResult";
             // 
-            // btnPaste1
-            // 
-            resources.ApplyResources(btnPaste1, "btnPaste1");
-            btnPaste1.Name = "btnPaste1";
-            btnPaste1.UseVisualStyleBackColor = true;
-            btnPaste1.Click += btnPaste1_Click;
-            // 
             // ToolServiceTestHarnessForm
             // 
             resources.ApplyResources(this, "$this");
             AutoScaleMode = AutoScaleMode.Font;
-            Controls.Add(btnPaste1);
             Controls.Add(tbxResult);
             Controls.Add(lblResult);
             Controls.Add(btnInvokeMethod);
@@ -144,6 +135,5 @@
         private Button btnInvokeMethod;
         private Label lblResult;
         private TextBox tbxResult;
-        private Button btnPaste1;
     }
 }

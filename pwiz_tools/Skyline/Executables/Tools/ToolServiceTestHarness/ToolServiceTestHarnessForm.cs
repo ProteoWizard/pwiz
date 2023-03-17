@@ -29,13 +29,11 @@ namespace ToolServiceTestHarness
             {
                 lblArgument1.Text = parameters[0].Name;
                 tbxArgument1.Enabled = true;
-                btnPaste1.Enabled = true;
             }
             else
             {
                 lblArgument1.Text = _arg1OriginalLabel;
                 tbxArgument1.Enabled = false;
-                btnPaste1.Enabled = false;
             }
 
             if (parameters.Length > 1)
@@ -130,6 +128,7 @@ namespace ToolServiceTestHarness
                 return true;
             }
 
+#pragma warning disable CS0612 // "Obsolete"
             if (targetType == typeof(DocumentLocation))
             {
                 try
@@ -143,6 +142,7 @@ namespace ToolServiceTestHarness
                     textBox.Focus();
                 }
             }
+#pragma warning restore CS0612
 
             if (targetType == typeof(string[]))
             {
@@ -158,11 +158,6 @@ namespace ToolServiceTestHarness
         public void ShowError(string message)
         {
             MessageBox.Show(this, message);
-        }
-
-        private void btnPaste1_Click(object sender, EventArgs e)
-        {
-            tbxArgument1.Text = Clipboard.GetText();
         }
     }
 }
