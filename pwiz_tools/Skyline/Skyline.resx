@@ -1371,6 +1371,12 @@
   <data name="publishMenuItem.Text" xml:space="preserve">
     <value>&amp;Upload to Panorama...</value>
   </data>
+  <data name="openPanoramaMenuItem.Size" type="System.Drawing.Size, System.Drawing">
+    <value>197, 22</value>
+  </data>
+  <data name="openPanoramaMenuItem.Text" xml:space="preserve">
+    <value>Open from Panorama</value>
+  </data>
   <data name="toolStripSeparator2.Size" type="System.Drawing.Size, System.Drawing">
     <value>194, 6</value>
   </data>
@@ -3178,6 +3184,12 @@
     <value>publishMenuItem</value>
   </data>
   <data name="&gt;&gt;publishMenuItem.Type" xml:space="preserve">
+    <value>System.Windows.Forms.ToolStripMenuItem, System.Windows.Forms, Version=4.0.0.0, Culture=neutral, PublicKeyToken=b77a5c561934e089</value>
+  </data>
+  <data name="&gt;&gt;openPanoramaMenuItem.Name" xml:space="preserve">
+    <value>openPanoramaMenuItem</value>
+  </data>
+  <data name="&gt;&gt;openPanoramaMenuItem.Type" xml:space="preserve">
     <value>System.Windows.Forms.ToolStripMenuItem, System.Windows.Forms, Version=4.0.0.0, Culture=neutral, PublicKeyToken=b77a5c561934e089</value>
   </data>
   <data name="&gt;&gt;toolStripSeparator2.Name" xml:space="preserve">

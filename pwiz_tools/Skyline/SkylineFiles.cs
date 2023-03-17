@@ -29,6 +29,7 @@ using System.Xml;
 using System.Xml.Serialization;
 using Ionic.Zip;
 using Newtonsoft.Json.Linq;
+using PanoramaDownload;
 using pwiz.Common.Collections;
 using pwiz.Common.DataBinding;
 using pwiz.Common.SystemUtil;
@@ -61,6 +62,7 @@ using pwiz.Skyline.Properties;
 using pwiz.Skyline.Util;
 using pwiz.Skyline.Util.Extensions;
 using DatabaseOpeningException = pwiz.Skyline.Model.Irt.DatabaseOpeningException;
+using Server = pwiz.Skyline.Util.Server;
 
 namespace pwiz.Skyline
 {
@@ -892,6 +894,40 @@ namespace pwiz.Skyline
             }
 
             return true;
+        }
+
+        private void openPanorama_Click(object sender, EventArgs e)
+        {
+            OpenFromPanorama();
+        }
+
+        private void OpenFromPanorama()
+        {
+            var servers = Settings.Default.ServerList;
+            var user = string.Empty;
+            var pass = string.Empty;
+            Uri server = null;
+            if (servers.Count > 0)
+            {
+                user = servers[0].Username;
+                pass = servers[0].Password;
+                server = servers[0].URI;
+            }
+
+            using var dlg = new RemoteFileDialog(user, pass, server);
+            if (dlg.ShowDialog() != DialogResult.Cancel)
+            {
+                if (dlg.FileName.EndsWith(SrmDocumentSharing.EXT))
+                {
+                    var path = Path.Combine(dlg.Folder, dlg.FileName);
+                    OpenSharedFile(path);
+                }
+                else if (dlg.FileName.EndsWith(SrmDocument.EXT))
+                {
+                    var path = Path.Combine(dlg.Folder, dlg.FileName);
+                    OpenFile(path);
+                }
+            }
         }
 
         private void saveMenuItem_Click(object sender, EventArgs e)
