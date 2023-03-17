@@ -254,6 +254,11 @@ namespace SkylineTool
                 _remoteClient.RemoteCall(ImportProperties, csvText);
             }
 
+            public void ImportPeakBoundaries(string csvText)
+            {
+                _remoteClient.RemoteCall(ImportPeakBoundaries, csvText);
+            }
+
             public string GetSelectedElementLocator(string elementType)
             {
                 return _remoteClient.RemoteCallFunction(GetSelectedElementLocator, elementType);

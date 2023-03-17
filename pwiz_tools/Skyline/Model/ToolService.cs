@@ -521,6 +521,47 @@ namespace pwiz.Skyline.Model
             }));
         }
 
+        public void ImportPeakBoundaries(string csvText)
+        {
+            _skylineWindow.Invoke(new Action(() =>
+            {
+                lock (_skylineWindow.GetDocumentChangeLock())
+                {
+                    var originalDocument = _skylineWindow.DocumentUI;
+                    var document = originalDocument;
+                    var peakBoundaryImporter = new PeakBoundaryImporter(document);
+                    bool isMinutes = peakBoundaryImporter.IsMinutesPeakBoundaries(new StringReader(csvText));
+                    using (var longWaitDlg = new LongWaitDlg())
+                    {
+                        longWaitDlg.PerformWork(_skylineWindow, 1000, progressMonitor =>
+                        {
+                            document = peakBoundaryImporter.Import(new StringReader(csvText), progressMonitor,
+                                Helpers.CountLinesInString(csvText), isMinutes);
+                        });
+                        if (longWaitDlg.IsCanceled)
+                        {
+                            throw new OperationCanceledException();
+                        }
+                    }
+                    _skylineWindow.ModifyDocument(
+                        Resources.ToolService_ImportPeakBoundaries_Import_peak_boundaries_from_external_tool,
+                        doc =>
+                        {
+                            if (!ReferenceEquals(doc, originalDocument))
+                            {
+                                // Should not be possible because of the lock on GetDocumentChangeLock
+                                throw new InvalidOperationException(Resources
+                                    .SkylineDataSchema_VerifyDocumentCurrent_The_document_was_modified_in_the_middle_of_the_operation_);
+                            }
+                            return document;
+                        }, docPair =>
+                            AuditLogEntry.CreateSingleMessageEntry(new MessageInfo(MessageType.imported_peak_boundaries,
+                                _skylineWindow.DocumentUI.DocumentType,
+                                Resources.ToolService_ImportPeakBoundaries_Import_peak_boundaries_from_external_tool)));
+                }
+            }));
+        }
+
         public string GetSelectedElementLocator(string elementType)
         {
             ElementRef result = null;
