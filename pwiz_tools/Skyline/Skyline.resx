@@ -306,7 +306,7 @@
     <value>System.Windows.Forms.ContextMenuStrip, System.Windows.Forms, Version=4.0.0.0, Culture=neutral, PublicKeyToken=b77a5c561934e089</value>
   </data>
   <metadata name="contextMenuSpectrum.TrayLocation" type="System.Drawing.Point, System.Drawing, Version=4.0.0.0, Culture=neutral, PublicKeyToken=b03f5f7f11d50a3a">
-    <value>197, 56</value>
+    <value>1304, 17</value>
   </metadata>
   <data name="ionTypesContextMenuItem.Size" type="System.Drawing.Size, System.Drawing">
     <value>193, 22</value>
@@ -747,7 +747,7 @@
     <value>System.Windows.Forms.ContextMenuStrip, System.Windows.Forms, Version=4.0.0.0, Culture=neutral, PublicKeyToken=b77a5c561934e089</value>
   </data>
   <metadata name="contextMenuPeakAreas.TrayLocation" type="System.Drawing.Point, System.Drawing, Version=4.0.0.0, Culture=neutral, PublicKeyToken=b03f5f7f11d50a3a">
-    <value>17, 56</value>
+    <value>1124, 17</value>
   </metadata>
   <data name="areaReplicateComparisonContextMenuItem.Size" type="System.Drawing.Size, System.Drawing">
     <value>190, 22</value>
@@ -1159,7 +1159,7 @@
     <value>7</value>
   </data>
   <metadata name="mainToolStrip.TrayLocation" type="System.Drawing.Point, System.Drawing, Version=4.0.0.0, Culture=neutral, PublicKeyToken=b03f5f7f11d50a3a">
-    <value>373, 56</value>
+    <value>1480, 17</value>
   </metadata>
   <data name="newToolBarButton.ImageTransparentColor" type="System.Drawing.Color, System.Drawing">
     <value>Magenta</value>
@@ -1300,7 +1300,7 @@
     <value>Fuchsia</value>
   </data>
   <data name="startPageMenuItem.Size" type="System.Drawing.Size, System.Drawing">
-    <value>197, 22</value>
+    <value>198, 22</value>
   </data>
   <data name="startPageMenuItem.Text" xml:space="preserve">
     <value>Sta&amp;rt...</value>
@@ -1312,7 +1312,7 @@
     <value>Ctrl+N</value>
   </data>
   <data name="newMenuItem.Size" type="System.Drawing.Size, System.Drawing">
-    <value>197, 22</value>
+    <value>198, 22</value>
   </data>
   <data name="newMenuItem.Text" xml:space="preserve">
     <value>&amp;New</value>
@@ -1324,19 +1324,19 @@
     <value>Ctrl+O</value>
   </data>
   <data name="openMenuItem.Size" type="System.Drawing.Size, System.Drawing">
-    <value>197, 22</value>
+    <value>198, 22</value>
   </data>
   <data name="openMenuItem.Text" xml:space="preserve">
     <value>&amp;Open...</value>
   </data>
   <data name="openContainingFolderMenuItem.Size" type="System.Drawing.Size, System.Drawing">
-    <value>197, 22</value>
+    <value>198, 22</value>
   </data>
   <data name="openContainingFolderMenuItem.Text" xml:space="preserve">
     <value>Open &amp;containing folder</value>
   </data>
   <data name="toolStripSeparator53.Size" type="System.Drawing.Size, System.Drawing">
-    <value>194, 6</value>
+    <value>195, 6</value>
   </data>
   <data name="saveMenuItem.ImageTransparentColor" type="System.Drawing.Color, System.Drawing">
     <value>Fuchsia</value>
@@ -1345,19 +1345,19 @@
     <value>Ctrl+S</value>
   </data>
   <data name="saveMenuItem.Size" type="System.Drawing.Size, System.Drawing">
-    <value>197, 22</value>
+    <value>198, 22</value>
   </data>
   <data name="saveMenuItem.Text" xml:space="preserve">
     <value>&amp;Save</value>
   </data>
   <data name="saveAsMenuItem.Size" type="System.Drawing.Size, System.Drawing">
-    <value>197, 22</value>
+    <value>198, 22</value>
   </data>
   <data name="saveAsMenuItem.Text" xml:space="preserve">
     <value>Save &amp;As...</value>
   </data>
   <data name="shareDocumentMenuItem.Size" type="System.Drawing.Size, System.Drawing">
-    <value>197, 22</value>
+    <value>198, 22</value>
   </data>
   <data name="shareDocumentMenuItem.Text" xml:space="preserve">
     <value>S&amp;hare...</value>
@@ -1366,19 +1366,19 @@
     <value>Fuchsia</value>
   </data>
   <data name="publishMenuItem.Size" type="System.Drawing.Size, System.Drawing">
-    <value>197, 22</value>
+    <value>198, 22</value>
   </data>
   <data name="publishMenuItem.Text" xml:space="preserve">
     <value>&amp;Upload to Panorama...</value>
   </data>
   <data name="openPanoramaMenuItem.Size" type="System.Drawing.Size, System.Drawing">
-    <value>197, 22</value>
+    <value>198, 22</value>
   </data>
   <data name="openPanoramaMenuItem.Text" xml:space="preserve">
-    <value>Open from Panorama</value>
+    <value>Open from Panorama...</value>
   </data>
   <data name="toolStripSeparator2.Size" type="System.Drawing.Size, System.Drawing">
-    <value>194, 6</value>
+    <value>195, 6</value>
   </data>
   <data name="importResultsMenuItem.Size" type="System.Drawing.Size, System.Drawing">
     <value>170, 22</value>
@@ -1435,7 +1435,7 @@
     <value>A&amp;nnotations...</value>
   </data>
   <data name="importToolStripMenuItem.Size" type="System.Drawing.Size, System.Drawing">
-    <value>197, 22</value>
+    <value>198, 22</value>
   </data>
   <data name="importToolStripMenuItem.Text" xml:space="preserve">
     <value>&amp;Import</value>
@@ -1504,22 +1504,22 @@
     <value>&amp;Annotations...</value>
   </data>
   <data name="exportToolStripMenuItem.Size" type="System.Drawing.Size, System.Drawing">
-    <value>197, 22</value>
+    <value>198, 22</value>
   </data>
   <data name="exportToolStripMenuItem.Text" xml:space="preserve">
     <value>&amp;Export</value>
   </data>
   <data name="mruBeforeToolStripSeparator.Size" type="System.Drawing.Size, System.Drawing">
-    <value>194, 6</value>
+    <value>195, 6</value>
   </data>
   <data name="mruAfterToolStripSeparator.Size" type="System.Drawing.Size, System.Drawing">
-    <value>194, 6</value>
+    <value>195, 6</value>
   </data>
   <data name="mruAfterToolStripSeparator.Visible" type="System.Boolean, mscorlib">
     <value>False</value>
   </data>
   <data name="exitMenuItem.Size" type="System.Drawing.Size, System.Drawing">
-    <value>197, 22</value>
+    <value>198, 22</value>
   </data>
   <data name="exitMenuItem.Text" xml:space="preserve">
     <value>E&amp;xit</value>
@@ -2098,7 +2098,7 @@
     <value>modeUIHandler</value>
   </data>
   <data name="&gt;&gt;modeUIHandler.Type" xml:space="preserve">
-    <value>pwiz.Skyline.Util.Helpers+ModeUIExtender, Skyline-daily, Version=22.2.1.341, Culture=neutral, PublicKeyToken=null</value>
+    <value>pwiz.Skyline.Util.Helpers+ModeUIExtender, Skyline-daily, Version=22.2.1.441, Culture=neutral, PublicKeyToken=null</value>
   </data>
   <data name="&gt;&gt;cutContextMenuItem.Name" xml:space="preserve">
     <value>cutContextMenuItem</value>
@@ -3582,6 +3582,12 @@
   <data name="&gt;&gt;submitErrorReportMenuItem.Type" xml:space="preserve">
     <value>System.Windows.Forms.ToolStripMenuItem, System.Windows.Forms, Version=4.0.0.0, Culture=neutral, PublicKeyToken=b77a5c561934e089</value>
   </data>
+  <data name="&gt;&gt;crashSkylineMenuItem.Name" xml:space="preserve">
+    <value>crashSkylineMenuItem</value>
+  </data>
+  <data name="&gt;&gt;crashSkylineMenuItem.Type" xml:space="preserve">
+    <value>System.Windows.Forms.ToolStripMenuItem, System.Windows.Forms, Version=4.0.0.0, Culture=neutral, PublicKeyToken=b77a5c561934e089</value>
+  </data>
   <data name="&gt;&gt;checkForUpdatesSeparator.Name" xml:space="preserve">
     <value>checkForUpdatesSeparator</value>
   </data>
@@ -3870,16 +3876,10 @@
   <data name="&gt;&gt;detectionsToolStripSeparator3.Type" xml:space="preserve">
     <value>System.Windows.Forms.ToolStripSeparator, System.Windows.Forms, Version=4.0.0.0, Culture=neutral, PublicKeyToken=b77a5c561934e089</value>
   </data>
-  <data name="&gt;&gt;crashSkylineMenuItem.Name" xml:space="preserve">
-    <value>crashSkylineMenuItem</value>
-  </data>
-  <data name="&gt;&gt;crashSkylineMenuItem.Type" xml:space="preserve">
-    <value>System.Windows.Forms.ToolStripMenuItem, System.Windows.Forms, Version=4.0.0.0, Culture=neutral, PublicKeyToken=b77a5c561934e089</value>
-  </data>
   <data name="&gt;&gt;$this.Name" xml:space="preserve">
     <value>SkylineWindow</value>
   </data>
   <data name="&gt;&gt;$this.Type" xml:space="preserve">
-    <value>pwiz.Skyline.Util.FormEx, Skyline-daily, Version=22.2.1.341, Culture=neutral, PublicKeyToken=null</value>
+    <value>pwiz.Skyline.Util.FormEx, Skyline-daily, Version=22.2.1.441, Culture=neutral, PublicKeyToken=null</value>
   </data>
 </root>

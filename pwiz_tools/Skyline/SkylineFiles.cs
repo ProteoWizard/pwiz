@@ -904,6 +904,34 @@ namespace pwiz.Skyline
         private void OpenFromPanorama()
         {
             var servers = Settings.Default.ServerList;
+            if (servers.Count == 0)
+            {
+                DialogResult buttonPress = MultiButtonMsgDlg.Show(
+                    this,
+                    TextUtil.LineSeparate(
+                        Resources.SkylineWindow_ShowPublishDlg_There_are_no_Panorama_servers_to_upload_to,
+                        Resources.SkylineWindow_ShowPublishDlg_Press_Register_to_register_for_a_project_on_PanoramaWeb_,
+                        Resources.SkylineWindow_ShowPublishDlg_Press_Continue_to_use_the_server_of_your_choice_),
+                    Resources.SkylineWindow_ShowPublishDlg_Register, Resources.SkylineWindow_ShowPublishDlg_Continue,
+                    true);
+                if (buttonPress == DialogResult.Cancel)
+                    return;
+
+                object tag = null;
+                if (buttonPress == DialogResult.Yes)
+                {
+                    // person intends to register                   
+                    WebHelpers.OpenLink(this, @"https://panoramaweb.org/signup.url");
+                    tag = true;
+                }
+
+                var serverPanoramaWeb = new Server(PanoramaUtil.PANORAMA_WEB, string.Empty, string.Empty);
+                var newServer = servers.EditItem(this, serverPanoramaWeb, null, tag);
+                if (newServer == null)
+                    return;
+
+                servers.Add(newServer);
+            }
             var user = string.Empty;
             var pass = string.Empty;
             Uri server = null;
@@ -913,7 +941,7 @@ namespace pwiz.Skyline
                 pass = servers[0].Password;
                 server = servers[0].URI;
             }
-
+            
             using var dlg = new RemoteFileDialog(user, pass, server);
             if (dlg.ShowDialog() != DialogResult.Cancel)
             {
