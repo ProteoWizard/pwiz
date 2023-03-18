@@ -147,7 +147,7 @@ namespace pwiz.Skyline.EditUI
             }
             set
             {
-                cbCreateCopy.Enabled = false;
+                cbCreateCopy.Enabled = value;
             }
         }
 
