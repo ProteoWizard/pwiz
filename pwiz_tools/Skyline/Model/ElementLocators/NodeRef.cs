@@ -283,6 +283,7 @@ namespace pwiz.Skyline.Model.ElementLocators
         {
             get { return AnnotationDef.AnnotationTargetSet.Singleton(AnnotationDef.AnnotationTarget.protein); }
         }
+
     }
 
     public class MoleculeRef : NodeRef<PeptideDocNode>

@@ -20,7 +20,6 @@
 using System;
 using System.Globalization;
 using System.Threading;
-using JetBrains.Annotations;
 
 namespace pwiz.Common.SystemUtil
 {
