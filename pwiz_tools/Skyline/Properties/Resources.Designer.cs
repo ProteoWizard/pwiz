@@ -8107,16 +8107,6 @@ namespace pwiz.Skyline.Properties {
         }
         
         /// <summary>
-        ///   Looks up a localized string similar to There is a naming conflict in unpacking the zip. Tool importing canceled!.
-        /// </summary>
-        public static string ConfigureToolsDlg_unpackZipTool_There_is_a_naming_conflict_in_unpacking_the_zip__Tool_importing_canceled_ {
-            get {
-                return ResourceManager.GetString("ConfigureToolsDlg_unpackZipTool_There_is_a_naming_conflict_in_unpacking_the_zip__" +
-                        "Tool_importing_canceled_", resourceCulture);
-            }
-        }
-        
-        /// <summary>
         ///   Looks up a localized string similar to Title and Command are required.
         /// </summary>
         public static string ConfigureToolsDlg_unpackZipTool_Title_and_Command_are_required {
@@ -32961,6 +32951,16 @@ namespace pwiz.Skyline.Properties {
         public static string ToolInstaller_UnpackZipTool_Error__There_is_a_file_missing_the__0__zip {
             get {
                 return ResourceManager.GetString("ToolInstaller_UnpackZipTool_Error__There_is_a_file_missing_the__0__zip", resourceCulture);
+            }
+        }
+        
+        /// <summary>
+        ///   Looks up a localized string similar to The selected zip file did not specify any items to add to the Tools menu..
+        /// </summary>
+        public static string ToolInstaller_UnpackZipTool_The_selected_zip_file_did_not_specify_any_items_to_add_to_the_Tools_menu_ {
+            get {
+                return ResourceManager.GetString("ToolInstaller_UnpackZipTool_The_selected_zip_file_did_not_specify_any_items_to_ad" +
+                        "d_to_the_Tools_menu_", resourceCulture);
             }
         }
         

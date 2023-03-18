@@ -38,12 +38,28 @@ namespace pwiz.Common.SystemUtil
             {
                 _newTMP = Path.GetTempFileName(); // Creates a file
                 File.Delete(_newTMP); // But we want a directory
+            }
+            catch // It's nice to tidy up but not critical (though we do have tests for this in Skyline)
+            {
+                _newTMP = null;
+                return;
+            }
+
+            if (Directory.Exists(_newTMP) || File.Exists(_newTMP))
+            {
+                // Should never happen
+                _newTMP = null;
+                throw new IOException($@"proposed temp directory {_newTMP} already exists");
+            }
+
+            try
+            {
                 Directory.CreateDirectory(_newTMP);
                 Environment.SetEnvironmentVariable(TMP, _newTMP);
             }
-            catch // If this doesn't work out for any reason, let it go - this tidyness is just nice to have
+            catch // Ignored - it's nice to tidy up but not critical (though we do have tests for this in Skyline)
             {
-                // ignored
+                _newTMP = null;
             }
         }
 
@@ -51,11 +67,14 @@ namespace pwiz.Common.SystemUtil
         {
             try
             {
-                Directory.Delete(_newTMP, true);
+                if (_newTMP != null)
+                {
+                    Directory.Delete(_newTMP, true);
+                }
             }
             catch
             {
-                // ignored
+                // ignored - it's nice to tidy up but not critical (though we do have tests for this in Skyline)
             }
             Environment.SetEnvironmentVariable(TMP, _savedTMP);
         }
