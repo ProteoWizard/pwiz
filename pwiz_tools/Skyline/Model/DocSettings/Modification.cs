@@ -385,10 +385,10 @@ namespace pwiz.Skyline.Model.DocSettings
         {
             if (string.IsNullOrEmpty(Formula))
             {
-                return new MoleculeMassOffset(Molecule.Empty, MonoisotopicMass ?? 0, AverageMass ?? 0);
+                return MoleculeMassOffset.Create( MonoisotopicMass, AverageMass);
             }
 
-            return new MoleculeMassOffset(Molecule.ParseExpression(Formula), 0, 0);
+            return MoleculeMassOffset.Create(Formula);
         }
 
         public ItemDescription ItemDescription

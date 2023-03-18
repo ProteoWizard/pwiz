@@ -35,7 +35,7 @@ namespace pwiz.Skyline.Model
 
         private FragmentedMolecule()
         {
-            PrecursorFormula = FragmentFormula = Molecule.Empty;
+            PrecursorFormula = FragmentFormula = MoleculeMassOffset.EMPTY;
             FragmentIonType = IonType.custom;
             FragmentOrdinal = 0;
             FragmentLosses = ImmutableList<FragmentLoss>.EMPTY;
@@ -113,7 +113,7 @@ namespace pwiz.Skyline.Model
 
         public Molecule FragmentFormula { get; private set; }
 
-        public FragmentedMolecule ChangeFragmentFormula(Molecule fragmentFormula)
+        public FragmentedMolecule ChangeFragmentFormula(MoleculeMassOffset fragmentFormula)
         {
             return ChangeProp(ImClone(this), im =>
             {
@@ -238,19 +238,20 @@ namespace pwiz.Skyline.Model
                 AddAminoAcidFormula(massType, aminoAcid, molecule, ref unexplainedMassShift);
                 foreach (var mod in modifications[i])
                 {
-                    string formula = mod.Formula;
+                    var formula = mod.Formula;
+                    MoleculeMassOffset heavy = null;
                     if (formula == null)
                     {
                         var staticMod = mod.StaticMod;
                         var aa = unmodifiedSequence[i];
                         if ((staticMod.LabelAtoms & LabelAtoms.LabelsAA) != LabelAtoms.None && AminoAcid.IsAA(aa))
                         {
-                            formula = SequenceMassCalc.GetHeavyFormula(aa, staticMod.LabelAtoms);
+                            heavy = SequenceMassCalc.GetHeavyFormula(aa, staticMod.LabelAtoms);
                         }
                     }
-                    if (formula != null)
+                    if (formula != null || heavy != null)
                     {
-                        var modFormula = Molecule.ParseExpression(formula);
+                        var modFormula = heavy ?? Molecule.ParseExpression(formula);
                         Add(molecule, modFormula);
                     }
                     else
@@ -371,7 +372,7 @@ namespace pwiz.Skyline.Model
         public static Molecule AddFragmentLosses(Molecule molecule, IList<FragmentLoss> fragmentLosses, 
             MassType massType, ref double unexplainedMass)
         {
-            MoleculeMassOffset moleculeMassOffset = new MoleculeMassOffset(molecule, unexplainedMass, unexplainedMass);
+            MoleculeMassOffset moleculeMassOffset = MoleculeMassOffset.Create(molecule, unexplainedMass, unexplainedMass);
             foreach (var fragmentLoss in fragmentLosses)
             {
                 moleculeMassOffset = moleculeMassOffset.Minus(ToMoleculeMassOffset(fragmentLoss));
@@ -385,7 +386,7 @@ namespace pwiz.Skyline.Model
             {
                 unexplainedMass = moleculeMassOffset.AverageMassOffset;
             }
-            return moleculeMassOffset.Molecule;
+            return Molecule.FromDict(moleculeMassOffset);
         }
 
         public static FragmentedMolecule GetFragmentedMolecule(SrmSettings settings, PeptideDocNode peptideDocNode,
@@ -430,19 +431,18 @@ namespace pwiz.Skyline.Model
             if (transitionGroupDocNode == null)
             {
                 return fragmentedMolecule
-                    .ChangePrecursorFormula(
-                        Molecule.Parse(peptideDocNode.CustomMolecule.Formula ?? string.Empty));
+                    .ChangePrecursorFormula(peptideDocNode.CustomMolecule.Formula);
             }
             var customMolecule = transitionGroupDocNode.CustomMolecule;
             fragmentedMolecule =
                 fragmentedMolecule.ChangePrecursorCharge(transitionGroupDocNode.TransitionGroup
                     .PrecursorCharge);
-            if (customMolecule.Formula != null)
+            if (!MoleculeMassOffset.IsNullOrEmpty(customMolecule.Formula))
             {
                 var ionInfo = new IonInfo(customMolecule.Formula,
                     transitionGroupDocNode.PrecursorAdduct);
                 fragmentedMolecule = fragmentedMolecule
-                    .ChangePrecursorFormula(Molecule.Parse(ionInfo.FormulaWithAdductApplied));
+                    .ChangePrecursorFormula(ionInfo.FormulaWithAdductApplied);
             }
             else
             {
@@ -460,7 +460,7 @@ namespace pwiz.Skyline.Model
             if (customIon.Formula != null)
             {
                 fragmentedMolecule = fragmentedMolecule.ChangeFragmentFormula(
-                    Molecule.Parse(customIon.FormulaWithAdductApplied));
+                    customIon.FormulaWithAdductApplied);
             }
             else
             {
@@ -502,7 +502,7 @@ namespace pwiz.Skyline.Model
                 return ChangeProp(ImClone(this), im => im.IsotopeAbundances = isotopeAbundances ?? DEFAULT.IsotopeAbundances);
             }
 
-            public MassDistribution GetMassDistribution(Molecule molecule, double massShift, int charge)
+            public MassDistribution GetMassDistribution(IEnumerable <KeyValuePair<string, int>> molecule, double massShift, int charge)
             {
                 var emptyMassDistribution = new MassDistribution(MassResolution, MinAbundance);
                 var massDistribution = emptyMassDistribution;
@@ -518,7 +518,7 @@ namespace pwiz.Skyline.Model
                 return massDistribution;
             }
 
-            public double GetMonoMass(Molecule molecule)
+            public double GetMonoMass(IEnumerable<KeyValuePair<string, int>> molecule)
             {
                 double totalMass = 0;
                 foreach (var entry in molecule)
@@ -530,10 +530,10 @@ namespace pwiz.Skyline.Model
 
             public double GetMonoMass(MoleculeMassOffset moleculeMassOffset)
             {
-                return GetMonoMass(moleculeMassOffset.Molecule) + moleculeMassOffset.MonoMassOffset;
+                return GetMonoMass(moleculeMassOffset.Dictionary) + moleculeMassOffset.MonoMassOffset;
             }
 
-            public double GetAverageMass(Molecule molecule)
+            public double GetAverageMass(IEnumerable<KeyValuePair<string, int>> molecule)
             {
                 double totalMass = 0;
                 foreach (var entry in molecule)
@@ -546,14 +546,14 @@ namespace pwiz.Skyline.Model
 
             public double GetAverageMass(MoleculeMassOffset moleculeMassOffset)
             {
-                return GetAverageMass(moleculeMassOffset.Molecule) + moleculeMassOffset.AverageMassOffset;
+                return GetAverageMass(moleculeMassOffset.Dictionary) + moleculeMassOffset.AverageMassOffset;
             }
 
             public MoleculeMassOffset ReplaceMoleculeWithMassOffset(MoleculeMassOffset moleculeMassOffset)
             {
-                double monoMass = GetMonoMass(moleculeMassOffset.Molecule) + moleculeMassOffset.MonoMassOffset;
-                double averageMass = GetAverageMass(moleculeMassOffset.Molecule) + moleculeMassOffset.AverageMassOffset;
-                return new MoleculeMassOffset(Molecule.Empty, monoMass, averageMass);
+                double monoMass = GetMonoMass(moleculeMassOffset.Dictionary) + moleculeMassOffset.MonoMassOffset;
+                double averageMass = GetAverageMass(moleculeMassOffset.Dictionary) + moleculeMassOffset.AverageMassOffset;
+                return MoleculeMassOffset.Create(Molecule.Empty, monoMass, averageMass);
             }
 
             protected bool Equals(Settings other)
@@ -586,7 +586,7 @@ namespace pwiz.Skyline.Model
         {
             if (string.IsNullOrEmpty(fragmentLoss.Formula))
             {
-                return new MoleculeMassOffset(Molecule.Empty, fragmentLoss.MonoisotopicMass, fragmentLoss.AverageMass);
+                return MoleculeMassOffset.Create( fragmentLoss.MonoisotopicMass, fragmentLoss.AverageMass);
             }
             Molecule lossFormula;
             int ichMinus = fragmentLoss.Formula.IndexOf('-');
@@ -599,7 +599,7 @@ namespace pwiz.Skyline.Model
                 lossFormula = Molecule.Parse(fragmentLoss.Formula.Substring(0, ichMinus));
                 lossFormula = lossFormula.Difference(Molecule.Parse(fragmentLoss.Formula.Substring(ichMinus + 1)));
             }
-            return new MoleculeMassOffset(lossFormula, 0, 0);
+            return MoleculeMassOffset.Create(lossFormula, 0, 0);
         }
     }
 }

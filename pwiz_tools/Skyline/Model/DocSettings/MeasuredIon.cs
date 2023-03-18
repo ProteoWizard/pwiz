@@ -22,6 +22,7 @@ using System.IO;
 using System.Linq;
 using System.Xml;
 using System.Xml.Serialization;
+using pwiz.Common.Chemistry;
 using pwiz.Common.SystemUtil;
 using pwiz.Skyline.Properties;
 using pwiz.Skyline.Util;
@@ -267,8 +268,8 @@ namespace pwiz.Skyline.Model.DocSettings
                     if (string.IsNullOrEmpty(parsedIon.NeutralFormula)) // Adjust the user-supplied masses
                     {
                         SettingsCustomIon = new SettingsCustomIon(parsedIon.NeutralFormula, adduct,
-                            Math.Round(parsedIon.MonoisotopicMass + charges[0]*BioMassCalc.MONOISOTOPIC.GetMass(BioMassCalc.H), SequenceMassCalc.MassPrecision), // Assume user provided neutral mass.  Round new value easiest XML roundtripping.
-                            Math.Round(parsedIon.AverageMass + charges[0]*BioMassCalc.AVERAGE.GetMass(BioMassCalc.H), SequenceMassCalc.MassPrecision), // Assume user provided neutral mass.  Round new value easiest XML roundtripping.
+                            Math.Round(parsedIon.MonoisotopicMass + charges[0]*BioMassCalc.MONOISOTOPIC.GetMass(BioMassCalcBase.H), SequenceMassCalc.MassPrecision), // Assume user provided neutral mass.  Round new value easiest XML roundtripping.
+                            Math.Round(parsedIon.AverageMass + charges[0]*BioMassCalc.AVERAGE.GetMass(BioMassCalcBase.H), SequenceMassCalc.MassPrecision), // Assume user provided neutral mass.  Round new value easiest XML roundtripping.
                             parsedIon.Name);
                     }
                     else // Adjust the formula to include ion atoms
@@ -276,7 +277,7 @@ namespace pwiz.Skyline.Model.DocSettings
                         if (charges[0] > 1) // XML deserializer will have added an H already
                         {
                             var adductProtonated = Adduct.FromChargeProtonated(charges[0]-1);
-                            var formula = adductProtonated.ApplyToFormula(parsedIon.NeutralFormula);
+                            var formula = adductProtonated.ApplyToFormula(parsedIon.NeutralFormula).ChemicalFormulaPart();
                             parsedIon = new CustomIon(formula, adduct, parsedIon.MonoisotopicMass, parsedIon.AverageMass, Name);
                         }
                     }

@@ -764,7 +764,7 @@ namespace pwiz.Skyline.Model
             var seq = TransitionGroup.Peptide.Target;
             var adduct = TransitionGroup.PrecursorAdduct;
             IsotopeLabelType labelType = TransitionGroup.LabelType;
-            string isotopicFormula = null;
+            MoleculeMassOffset isotopicFormula = null;
             double mz;
             IPrecursorMassCalc calc;
             if (IsCustomIon)
@@ -782,7 +782,7 @@ namespace pwiz.Skyline.Model
                 mz = SequenceMassCalc.GetMZ(mass, adduct) + 
                      SequenceMassCalc.GetPeptideInterval(TransitionGroup.DecoyMassShift);
                 if (TransitionGroup.DecoyMassShift.HasValue)
-                    mass = new TypedMass(SequenceMassCalc.GetMH(mz, adduct.AdductCharge), calc.MassType);
+                    mass = TypedMass.Create(SequenceMassCalc.GetMH(mz, adduct.AdductCharge), calc.MassType);
             }
 
             isotopeDist = null;
@@ -798,7 +798,7 @@ namespace pwiz.Skyline.Model
                 }
                 else if (isotopicFormula != null)
                 {
-                    massDist = calc.GetMZDistributionFromFormula(isotopicFormula, adduct, fullScan.IsotopeAbundances);
+                    massDist = calc.GetMZDistribution(isotopicFormula, adduct, fullScan.IsotopeAbundances);
                 }
                 else
                 {
@@ -843,16 +843,10 @@ namespace pwiz.Skyline.Model
         {
             if (IsCustomIon)
             {
-                if (string.IsNullOrEmpty(CustomMolecule.Formula))
-                {
-                    return new MoleculeMassOffset(Molecule.Empty, CustomMolecule.MonoisotopicMass, CustomMolecule.AverageMass);
-                }
-                // Custom ion formulas may contain mass offsets, pick those out
-                FormulaWithMassModification.Decompose(CustomMolecule.Formula, out var atoms, out var monoOffset, out var avgOffset);
-                return new MoleculeMassOffset(Molecule.Parse(atoms), monoOffset, avgOffset);
+                return CustomMolecule.Formula;
             }
             IPrecursorMassCalc massCalc = settings.GetPrecursorCalc(LabelType, mods);
-            MoleculeMassOffset moleculeMassOffset = new MoleculeMassOffset(Molecule.Parse(massCalc.GetMolecularFormula(Peptide.Sequence)), 0, 0);
+            MoleculeMassOffset moleculeMassOffset = MoleculeMassOffset.Create(massCalc.GetMolecularFormula(Peptide.Sequence), 0, 0);
             moleculeMassOffset = moleculeMassOffset.Plus((mods?.CrosslinkStructure ?? CrosslinkStructure.EMPTY)
                 .GetNeutralFormula(settings, LabelType));
             

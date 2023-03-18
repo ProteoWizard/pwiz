@@ -21,6 +21,7 @@ using System;
 using System.Collections.Generic;
 using System.Globalization;
 using System.Linq;
+using pwiz.Common.Chemistry;
 using pwiz.Common.DataBinding.Attributes;
 using pwiz.Skyline.Model.Databinding.Collections;
 using pwiz.Skyline.Model.DocSettings;
@@ -119,7 +120,7 @@ namespace pwiz.Skyline.Model.Databinding.Entities
             get
             {
                 return IsCustomTransition()
-                ? (DocNode.Transition.CustomIon.Formula ?? string.Empty)
+                ? (DocNode.Transition.CustomIon.Formula.ToString())
                 : string.Empty;
             }
         }

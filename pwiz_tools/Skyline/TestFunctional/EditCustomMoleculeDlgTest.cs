@@ -424,7 +424,7 @@ namespace pwiz.SkylineTestFunctional
             var editMoleculeDlg =
                 ShowDialog<EditCustomMoleculeDlg>(
                     () => SkylineWindow.ModifyTransition((TransitionTreeNode) SkylineWindow.SequenceTree.SelectedNode));
-            var monoMass = new TypedMass(805, MassType.Monoisotopic);
+            var monoMass = TypedMass.Create(805, MassType.Monoisotopic);
             RunUI(() =>
             {
                 // Check neutral mass calculation
@@ -533,7 +533,7 @@ namespace pwiz.SkylineTestFunctional
             var editMoleculeDlg =
                 ShowDialog<EditCustomMoleculeDlg>(
                     () => SkylineWindow.ModifyTransition((TransitionTreeNode)SkylineWindow.SequenceTree.SelectedNode));
-            var monoMass = new TypedMass(805, MassType.Monoisotopic);
+            var monoMass = TypedMass.Create(805, MassType.Monoisotopic);
             RunUI(() =>
             {
                 Assert.AreEqual(BioMassCalc.MONOISOTOPIC.CalculateMassFromFormula(C12H12),
@@ -788,7 +788,7 @@ namespace pwiz.SkylineTestFunctional
             });
             OkDialog(editMoleculeDlg, editMoleculeDlg.OkDialog);
             var newDoc = WaitForDocumentChange(doc);
-            var compareIon = new CustomMolecule(new TypedMass(monoMass, MassType.Monoisotopic), new TypedMass(averageMass, MassType.Average), formula);
+            var compareIon = new CustomMolecule(TypedMass.Create(monoMass, MassType.Monoisotopic), TypedMass.Create(averageMass, MassType.Average), formula);
             Assert.AreEqual(compareIon, newDoc.Molecules.ElementAt(0).CustomMolecule);
             Assert.AreEqual(compareIon, newDoc.MoleculeTransitionGroups.ElementAt(0).CustomMolecule);
             Assert.AreEqual(adduct.AdductCharge, newDoc.MoleculeTransitionGroups.ElementAt(0).PrecursorCharge);

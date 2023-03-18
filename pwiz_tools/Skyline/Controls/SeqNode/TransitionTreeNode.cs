@@ -181,7 +181,7 @@ namespace pwiz.Skyline.Controls.SeqNode
             {
                 if (!string.IsNullOrEmpty(tran.CustomIon.Name))
                     labelPrefix = tran.CustomIon.Name + labelPrefixSpacer;
-                else if (!string.IsNullOrEmpty(tran.CustomIon.Formula))
+                else if (!string.IsNullOrEmpty(tran.CustomIon.Formula.ChemicalFormulaPart()))
                     labelPrefix = tran.CustomIon.Formula + labelPrefixSpacer;
                 else
                     labelPrefix = string.Empty;
@@ -269,7 +269,7 @@ namespace pwiz.Skyline.Controls.SeqNode
                     table.AddDetailRow(Resources.TransitionTreeNode_RenderTip_Library_intensity, MathEx.RoundAboveZero(intensity,
                         (intensity < 10 ? 1 : 0), 4).ToString(LocalizationHelper.CurrentCulture), rt);
                 }
-                if (nodeTran.Transition.IsCustom() && !string.IsNullOrEmpty(nodeTran.Transition.CustomIon.Formula))
+                if (nodeTran.Transition.IsCustom() && !nodeTran.Transition.CustomIon.Formula.IsMassOnly)
                 {
                     table.AddDetailRow(Resources.TransitionTreeNode_RenderTip_Formula, nodeTran.Transition.CustomIon.Formula + nodeTran.Transition.Adduct.AdductFormula.ToString(LocalizationHelper.CurrentCulture), rt);
                 }

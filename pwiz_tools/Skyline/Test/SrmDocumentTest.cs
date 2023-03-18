@@ -152,9 +152,9 @@ namespace pwiz.SkylineTest
             var neutralMassMolecule = precursorAdduct.MassFromMz(mzPrecursor, MassType.Monoisotopic);
             var fragmentAdduct = Adduct.M_PLUS;
             var neutralMassTransition = fragmentAdduct.MassFromMz(mzFragment, MassType.Monoisotopic);
-            var transition = new CustomIon(null, precursorAdduct, new TypedMass(neutralMassMolecule, MassType.Monoisotopic), new TypedMass(neutralMassMolecule, MassType.Average), "molecule");
-            var transition2 = new CustomIon(null, fragmentAdduct, new TypedMass(neutralMassTransition, MassType.Monoisotopic), new TypedMass(neutralMassTransition, MassType.Average), "molecule fragment");
-            var precursor = new CustomMolecule(new TypedMass(neutralMassMolecule, MassType.Monoisotopic), new TypedMass(neutralMassMolecule, MassType.Average), "molecule");
+            var transition = new CustomIon(null, precursorAdduct, TypedMass.Create(neutralMassMolecule, MassType.Monoisotopic), TypedMass.Create(neutralMassMolecule, MassType.Average), "molecule");
+            var transition2 = new CustomIon(null, fragmentAdduct, TypedMass.Create(neutralMassTransition, MassType.Monoisotopic), TypedMass.Create(neutralMassTransition, MassType.Average), "molecule fragment");
+            var precursor = new CustomMolecule(TypedMass.Create(neutralMassMolecule, MassType.Monoisotopic), TypedMass.Create(neutralMassMolecule, MassType.Average), "molecule");
             Assert.AreEqual(BioMassCalc.CalculateIonMz(precursor.GetMass(MassType.Monoisotopic), precursorAdduct), doc.MoleculeTransitionGroups.ElementAt(0).PrecursorMz, 1E-5);
             Assert.AreEqual(BioMassCalc.CalculateIonMz(transition.GetMass(MassType.Monoisotopic), precursorAdduct), doc.MoleculeTransitions.ElementAt(0).Mz, 1E-5);
             Assert.AreEqual(BioMassCalc.CalculateIonMz(transition2.GetMass(MassType.Monoisotopic), fragmentAdduct), doc.MoleculeTransitions.ElementAt(1).Mz, 1E-5);

@@ -680,8 +680,8 @@ namespace pwiz.Skyline.SettingsUI
             {
                 // Create custom ion node for midas library
                 var precursor = pepInfo.Key.PrecursorMz.GetValueOrDefault();
-                var precursorMono = new TypedMass(precursor, MassType.Monoisotopic);
-                var precursorAverage = new TypedMass(precursor, MassType.Average);
+                var precursorMono = TypedMass.Create(precursor, MassType.Monoisotopic);
+                var precursorAverage = TypedMass.Create(precursor, MassType.Average);
                 var peptide = new Peptide(new CustomMolecule(precursorMono, precursorAverage, precursor.ToString(CultureInfo.CurrentCulture)));
                 transitionGroup = new TransitionGroupDocNode(new TransitionGroup(peptide, Adduct.EMPTY, IsotopeLabelType.light, true, null), null);
                 mods = new ExplicitMods(peptide, new ExplicitMod[0], new TypedExplicitModifications[0]);

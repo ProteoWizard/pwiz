@@ -4,6 +4,7 @@ using System.Data.SQLite;
 using System.IO;
 using System.Linq;
 using Microsoft.VisualStudio.TestTools.UnitTesting;
+using pwiz.Common.Chemistry;
 using pwiz.Skyline.Alerts;
 using pwiz.Skyline.FileUI;
 using pwiz.Skyline.Model;
@@ -157,12 +158,12 @@ namespace pwiz.SkylineTestFunctional
             {
                 AssertEx.IsTrue(docAfter.MoleculeTransitions.Contains(m =>
                     m.Transition.Group.Peptide.CustomMolecule.Name.Equals("PE(18:0_18:1)") &&
-                    string.IsNullOrEmpty(m.Transition.Group.Peptide.CustomMolecule.Formula) &&
+                    MoleculeMassOffset.IsNullOrEmpty(m.Transition.Group.Peptide.CustomMolecule.Formula) &&
                     Equals(m.Transition.FragmentIonName, fragmentName)));
             }
             AssertEx.IsTrue(docAfter.MoleculeTransitions.Contains(m =>
                 m.Transition.Group.Peptide.CustomMolecule.Name.Equals("PE(12:0_14:0)") &&
-                Equals(m.Transition.Group.Peptide.CustomMolecule.Formula, "C31H62NO8P")));
+                Equals(m.Transition.Group.Peptide.CustomMolecule.Formula.ChemicalFormulaPart(), "C31H62NO8P")));
         }
 
         private void CheckRefSpectra(IList<DbRefSpectra> spectra, string name, string formula, string precursorAdduct, 

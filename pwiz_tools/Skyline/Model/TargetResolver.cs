@@ -58,9 +58,9 @@ namespace pwiz.Skyline.Model
 
                 // Allow lookup by formula
                 var formula = target.Molecule.Formula;
-                if (!string.IsNullOrEmpty(formula))
+                if (!formula.IsEmpty)
                 {
-                    accessions.Add(new Tuple<string, Target>(formula, target));
+                    accessions.Add(new Tuple<string, Target>(formula.ToStringInvariant(), target));
                 }
             }
 

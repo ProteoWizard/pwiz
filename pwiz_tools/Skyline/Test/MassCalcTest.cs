@@ -236,39 +236,46 @@ namespace pwiz.SkylineTest
             Assert.AreEqual(24, mol["C"]);
             Assert.AreEqual(13, mol["H"]); // 2*5 + 3
             Assert.IsTrue(mol.HasMassModifications);
-            Assert.AreEqual(8.868, mol.GetMonoMassOffset());
-            Assert.AreEqual(9.068, mol.GetAverageMassOffset());
+            Assert.AreEqual(8.868, mol.MonoMassOffset);
+            Assert.AreEqual(9.068, mol.AverageMassOffset);
 
             var massAdduct = Adduct.FromStringAssumeChargeOnly("M(-1.1)+2H");
-            var formulaDict = FormulaWithMassModification.Parse(massAdduct.ApplyToFormula("C12H5[+3.2]"));
+            var formulaDict = massAdduct.ApplyToFormula("C12H5[+3.2]");
             Assert.AreEqual(1, formulaDict["[+2.1]"]); // 3.2-1.1
             Assert.AreEqual(12, formulaDict["C"]);
             Assert.AreEqual(7, formulaDict["H"]);
 
-            FormulaWithMassModification.Decompose("NC12H5[+3.2]", out var atoms, out var mono, out var avg);
-            Assert.AreEqual("NC12H5", atoms); // Note how it leaves element order alone
-            Assert.AreEqual(3.2, mono);
-            Assert.AreEqual(mono, avg);
+            var atoms = MoleculeMassOffset.Parse("NC12H5[+3.2]");
+            Assert.AreEqual("NC12H5", atoms.ChemicalFormulaPart()); // Note how it leaves element order alone
+            Assert.AreEqual(3.2, atoms.MonoMassOffset);
+            Assert.AreEqual(3.2, atoms.AverageMassOffset);
 
-            FormulaWithMassModification.Decompose("NC112H5[+3.1/3.11]", out atoms, out mono, out avg);
-            Assert.AreEqual("NC112H5", atoms);
-            Assert.AreEqual(3.1, mono);
-            Assert.AreEqual(3.11, avg);
+            atoms = MoleculeMassOffset.Parse("NC112H5[+3.1/3.11]");
+            Assert.AreEqual("NC112H5", atoms.ChemicalFormulaPart());
+            Assert.AreEqual(3.1, atoms.MonoMassOffset);
+            Assert.AreEqual(3.11, atoms.AverageMassOffset);
 
-            FormulaWithMassModification.Decompose("NC132H53", out atoms, out mono, out avg);
+            atoms = MoleculeMassOffset.Parse("NC132H53");
             Assert.AreEqual("NC132H53", atoms);
-            Assert.AreEqual(0, mono);
-            Assert.AreEqual(mono, avg);
+            Assert.AreEqual(0, atoms.MonoMassOffset);
+            Assert.AreEqual(0, atoms.AverageMassOffset);
+            Assert.IsFalse(atoms.HasMassModifications);
+
+            atoms = MoleculeMassOffset.Parse("[+3.1/3.11]");
+            Assert.IsTrue(atoms.IsMassOnly);
+            Assert.AreEqual(3.1, atoms.MonoMassOffset);
+            Assert.AreEqual(3.11, atoms.AverageMassOffset);
+
 
             // Test Hill System ordering when converting from dictionary to string
-            var dict = FormulaWithMassModification.ParseToDictionary("ClD2ONC12H5[+3.2/3.23]");
-            Assert.AreEqual("C12H5D2ClNO[+3.2/3.23]", FormulaWithMassModification.FromDict(dict).ToString());
+            var dict = MoleculeMassOffset.ParseToDictionary("ClD2ONC12H5[+3.2/3.23]");
+            Assert.AreEqual("C12H5D2ClNO[+3.2/3.23]", MoleculeMassOffset.FromDict(dict).ToString());
 
             Assert.AreEqual(1, formulaDict["[+2.1]"]); // Make sure MoleculeMassOffset ctor left input molecule alone
             Assert.AreEqual(153.1547, BioMassCalc.MONOISOTOPIC.CalculateMassFromFormula(formulaDict).Value, .001);
             Assert.AreEqual(153.2857, BioMassCalc.AVERAGE.CalculateMassFromFormula(formulaDict).Value, .0001);
-            Assert.AreEqual(151.0547, BioMassCalc.MONOISOTOPIC.CalculateMassFromFormula(formulaDict.WithoutMassModifications).Value, .001);
-            Assert.AreEqual(151.1857, BioMassCalc.AVERAGE.CalculateMassFromFormula(formulaDict.WithoutMassModifications).Value, .0001);
+            Assert.AreEqual(151.0547, BioMassCalc.MONOISOTOPIC.CalculateMassFromFormula(formulaDict.ChemicalFormulaPart()).Value, .001);
+            Assert.AreEqual(151.1857, BioMassCalc.AVERAGE.CalculateMassFromFormula(formulaDict.ChemicalFormulaPart()).Value, .0001);
 
             // Check formula math
             description = "C'2";
@@ -328,16 +335,6 @@ namespace pwiz.SkylineTest
             Assert.AreEqual(Molecule.Parse("C12H9S2P0").ToString(), Molecule.Parse("C12H9S2").ToString()); // P0 is weird
             Assert.AreEqual(Molecule.Parse("C12H9S2P1").ToString(), Molecule.Parse("C12H9S2P").ToString()); // P1 is weird
             Assert.AreEqual(Molecule.Parse("C12H9S0P").ToString(), Molecule.Parse("C12H9P").ToString()); // S0 is weird, and not at end
-        }
-
-        [TestMethod]
-        public void TestTokenizeFormula()
-        {
-            CollectionAssert.AreEqual(new[] {"C'", "6", "Cl", "2", "C", "H", "4", "-", "H", "24", "O"},
-                SequenceMassCalc.TokenizeFormula("C'6Cl2CH4-H24O").ToArray());
-            // Test garbage characters before an element name.
-            CollectionAssert.AreEqual(new[] {"x", "y", "z", "Element"},
-                SequenceMassCalc.TokenizeFormula("xyzElement").ToArray());
         }
 
         [TestMethod]

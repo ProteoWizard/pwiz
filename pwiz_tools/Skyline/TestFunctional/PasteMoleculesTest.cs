@@ -1315,7 +1315,7 @@ namespace pwiz.SkylineTestFunctional
                     foreach (var transition in precursor.Transitions)
                     {
                         AssertEx.IsTrue(precursor.PrecursorAdduct.HasIsotopeLabels == transition.Transition.Adduct.HasIsotopeLabels ||
-                                        !transition.Transition.CustomIon.Formula.Contains(@"C")); // Can't C13-label a fragment with no C in it
+                                        !transition.Transition.CustomIon.Formula.HasElement(@"C")); // Can't C13-label a fragment with no C in it
                     }
                 }
                 NewDocument();
@@ -1533,11 +1533,11 @@ namespace pwiz.SkylineTestFunctional
             RunUI(() => SkylineWindow.Paste());
             AssertEx.IsDocumentState(SkylineWindow.Document, null, 1, 5, 5, 5);
             var docMolecules = SkylineWindow.Document.CustomMolecules.Select(mol => mol.CustomMolecule.Formula).ToArray();
-            AssertEx.AreEqual("C28H42N2O1Xe", docMolecules[0]);
-            AssertEx.AreEqual("C30H46N2O1Xe", docMolecules[1]);
-            AssertEx.AreEqual("C28H41N2OXe", docMolecules[2]);
-            AssertEx.AreEqual("C28N2O1Xe", docMolecules[3]);
-            AssertEx.AreEqual("C30N2OXeH45", docMolecules[4]); // We intentionally preserve nonstandard order
+            AssertEx.AreEqual("C28H42N2O1Xe", docMolecules[0].ToStringInvariant());
+            AssertEx.AreEqual("C30H46N2O1Xe", docMolecules[1].ToStringInvariant());
+            AssertEx.AreEqual("C28H41N2OXe", docMolecules[2].ToStringInvariant());
+            AssertEx.AreEqual("C28N2O1Xe", docMolecules[3].ToStringInvariant());
+            AssertEx.AreEqual("C30N2OXeH45", docMolecules[4].ToStringInvariant()); // We intentionally preserve nonstandard order
             NewDocument();
         }
 

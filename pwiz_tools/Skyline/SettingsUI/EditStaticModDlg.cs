@@ -570,7 +570,7 @@ namespace pwiz.Skyline.SettingsUI
                 string aaString = comboAA.Text;
                 if (!string.IsNullOrEmpty(aaString) && aaString.Length == 1 &&
                         AminoAcid.IsAA(aaString[0])&& labelAtoms != LabelAtoms.None)
-                    formula = SequenceMassCalc.GetHeavyFormula(aaString[0], labelAtoms);
+                    formula = SequenceMassCalc.GetHeavyFormula(aaString[0], labelAtoms).ToStringInvariant();
             }
 
             if (string.IsNullOrEmpty(formula))

@@ -43,7 +43,7 @@ namespace pwiz.SkylineTest
             var srmSettings = SrmSettingsList.GetDefault();
             var transitionGroupDocNode = new TransitionGroupDocNode(transitionGroup, Annotations.EMPTY, srmSettings, null, null, ExplicitTransitionGroupValues.EMPTY, null, null, false);
             var moleculeOffset = transitionGroupDocNode.GetNeutralFormula(srmSettings, null);
-            Assert.AreEqual("C34H53N7O15", moleculeOffset.Molecule.ToString());
+            Assert.AreEqual("C34H53N7O15", moleculeOffset.ToString());
         }
 
         [TestMethod]
@@ -74,7 +74,7 @@ namespace pwiz.SkylineTest
             var crosslinkedFormula =
                 mainTransitionGroupDocNode.GetNeutralFormula(srmSettings, explicitModsWithCrosslink);
             
-            Assert.AreEqual("C67H112N24O23S3Se", crosslinkedFormula.Molecule.ToString());
+            Assert.AreEqual("C67H112N24O23S3Se", crosslinkedFormula.ToString());
         }
 
         [TestMethod]
@@ -90,13 +90,13 @@ namespace pwiz.SkylineTest
                 ExplicitTransitionGroupValues.EMPTY, null, new TransitionDocNode[0], false);
             var modsWithoutLinkedPeptide = new ExplicitMods(mainPeptide, new[]{new ExplicitMod(0, staticMod), }, new TypedExplicitModifications[0]);
             Assert.AreEqual("C3H7NO2", AminoAcidFormulas.Default.GetFormula("A").ToString());
-            Assert.AreEqual("C3H7NO2", mainTransitionGroupDocNode.GetNeutralFormula(srmSettings, null).Molecule.ToString());
-            Assert.AreEqual("CH7NO2", mainTransitionGroupDocNode.GetNeutralFormula(srmSettings, modsWithoutLinkedPeptide).Molecule.ToString());
+            Assert.AreEqual("C3H7NO2", mainTransitionGroupDocNode.GetNeutralFormula(srmSettings, null).ToString());
+            Assert.AreEqual("CH7NO2", mainTransitionGroupDocNode.GetNeutralFormula(srmSettings, modsWithoutLinkedPeptide).ToString());
             Assert.AreEqual("C4H7NO4", AminoAcidFormulas.Default.GetFormula("D").ToString());
             var modsWithLinkedPeptide = new ExplicitMods(mainPeptide,
                 null,
                 null).ChangeCrosslinkStructure(CrosslinkStructure.ToPeptide(linkedPeptide, null, staticMod, 0, 0));
-            Assert.AreEqual("C5H14N2O6", mainTransitionGroupDocNode.GetNeutralFormula(srmSettings, modsWithLinkedPeptide).Molecule.ToString());
+            Assert.AreEqual("C5H14N2O6", mainTransitionGroupDocNode.GetNeutralFormula(srmSettings, modsWithLinkedPeptide).ToString());
             var mainComplexFragmentIon = NeutralFragmentIon.Simple(
                 new Transition(mainTransitionGroup, IonType.precursor, mainPeptide.Length - 1, 0,
                     Adduct.SINGLY_PROTONATED), null);
@@ -169,7 +169,7 @@ namespace pwiz.SkylineTest
                 Annotations.EMPTY, srmSettings, null, null, ExplicitTransitionGroupValues.EMPTY, 
                 null, null, false);
             var fullFormula = fullTransitionGroup.GetNeutralFormula(srmSettings, null);
-            Assert.AreEqual("C25H45N5O9", fullFormula.Molecule.ToString());
+            Assert.AreEqual("C25H45N5O9", fullFormula.ToString());
 
             var hydrolysisDef = new StaticMod("hydrolysis", null, ModTerminus.C, "-H2O")
                 .ChangeCrosslinkerSettings(CrosslinkerSettings.EMPTY);

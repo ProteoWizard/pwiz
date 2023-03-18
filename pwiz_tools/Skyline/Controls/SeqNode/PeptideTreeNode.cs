@@ -588,7 +588,7 @@ namespace pwiz.Skyline.Controls.SeqNode
                 if (peptide.IsCustomMolecule)
                 {
                     table.AddDetailRow(Resources.TransitionGroupTreeNode_RenderTip_Molecule, nodePep.CustomMolecule.Name, rt);
-                    table.AddDetailRow(Resources.TransitionTreeNode_RenderTip_Formula, nodePep.CustomMolecule.Formula, rt);
+                    table.AddDetailRow(Resources.TransitionTreeNode_RenderTip_Formula, nodePep.CustomMolecule.Formula.ToString(), rt);
                     table.AddDetailRow(Resources.PeptideTreeNode_RenderTip_Neutral_Mass,
                         nodePep.CustomMolecule.GetMass(settings.TransitionSettings.Prediction.PrecursorMassType).ToString(LocalizationHelper.CurrentCulture), rt);
                     foreach (var id in nodePep.CustomMolecule.AccessionNumbers.AccessionNumbers)

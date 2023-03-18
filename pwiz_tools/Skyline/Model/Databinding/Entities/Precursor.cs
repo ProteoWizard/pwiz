@@ -141,7 +141,7 @@ namespace pwiz.Skyline.Model.Databinding.Entities
         {
             if (IsSmallMolecule())
             {
-                formula = (DocNode.CustomMolecule.Formula ?? string.Empty);
+                formula = DocNode.CustomMolecule.Formula.ToStringInvariant();
                 adduct = DocNode.PrecursorAdduct;
             }
             else
@@ -149,7 +149,7 @@ namespace pwiz.Skyline.Model.Databinding.Entities
                 var crosslinkBuilder = new CrosslinkBuilder(SrmDocument.Settings, DocNode.TransitionGroup.Peptide,
                     Peptide.DocNode.ExplicitMods, DocNode.LabelType);
                 adduct = Util.Adduct.FromChargeProtonated(Charge);
-                formula = crosslinkBuilder.GetPrecursorFormula().Molecule.ToString();
+                formula = crosslinkBuilder.GetPrecursorFormula().ChemicalFormulaPart();
             }
         }
 
@@ -162,7 +162,7 @@ namespace pwiz.Skyline.Model.Databinding.Entities
                 Adduct adduct;
                 string formula;
                 GetPrecursorFormulaAndAdduct(out adduct, out formula);
-                return string.IsNullOrEmpty(formula) ? string.Empty : adduct.ApplyToFormula(formula);
+                return string.IsNullOrEmpty(formula) ? string.Empty : adduct.ApplyToFormula(formula).ToStringInvariant();
             }
         }
 
@@ -176,7 +176,7 @@ namespace pwiz.Skyline.Model.Databinding.Entities
                 Adduct adduct;
                 string formula;
                 GetPrecursorFormulaAndAdduct(out adduct, out formula);
-                return string.IsNullOrEmpty(formula) ? string.Empty : adduct.ApplyIsotopeLabelsToFormula(formula);
+                return string.IsNullOrEmpty(formula) ? string.Empty : adduct.ApplyIsotopeLabelsToFormula(formula).ToStringInvariant();
             }
         }
 

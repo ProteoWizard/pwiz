@@ -127,11 +127,11 @@ namespace pwiz.Skyline.Model.Crosslinking
             MassType massType = settings.TransitionSettings.Prediction.FragmentMassType;
             if (massType.IsMonoisotopic())
             {
-                return new TypedMass(fragmentedMoleculeSettings.GetMonoMass(formula.Molecule) + formula.MonoMassOffset + BioMassCalc.MassProton, MassType.MonoisotopicMassH);
+                return TypedMass.Create(fragmentedMoleculeSettings.GetMonoMass(formula) + formula.MonoMassOffset + BioMassCalc.MassProton, MassType.MonoisotopicMassH);
             }
             else
             {
-                return new TypedMass(fragmentedMoleculeSettings.GetAverageMass(formula.Molecule) + formula.AverageMassOffset + BioMassCalc.MassProton, MassType.AverageMassH);
+                return TypedMass.Create(fragmentedMoleculeSettings.GetAverageMass(formula) + formula.AverageMassOffset + BioMassCalc.MassProton, MassType.AverageMassH);
             }
         }
 
@@ -156,7 +156,7 @@ namespace pwiz.Skyline.Model.Crosslinking
                 mass += BioMassCalc.MassProton;
             }
 
-            return new TypedMass(mass, massType);
+            return TypedMass.Create(mass, massType);
         }
 
         private MassDistribution _precursorMassDistribution;
@@ -166,7 +166,7 @@ namespace pwiz.Skyline.Model.Crosslinking
             {
                 var fragmentedMoleculeSettings = FragmentedMolecule.Settings.FromSrmSettings(Settings);
                 _precursorMassDistribution = fragmentedMoleculeSettings
-                    .GetMassDistribution(GetPrecursorFormula().Molecule, 0, 0);
+                    .GetMassDistribution(GetPrecursorFormula(), 0, 0);
             }
 
             return _precursorMassDistribution;
@@ -178,8 +178,7 @@ namespace pwiz.Skyline.Model.Crosslinking
             for (int i = 0; i < PeptideStructure.Peptides.Count; i++)
             {
                 moleculeMassOffset =
-                    moleculeMassOffset.Plus(
-                        new MoleculeMassOffset(_peptideBuilders[i].GetPrecursorMolecule().PrecursorFormula));
+                    moleculeMassOffset.Plus(_peptideBuilders[i].GetPrecursorMolecule().PrecursorFormula);
             }
 
             foreach (var crosslink in PeptideStructure.Crosslinks)

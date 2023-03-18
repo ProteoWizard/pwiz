@@ -254,10 +254,8 @@ namespace pwiz.Skyline.Model.IonMobility
         {
             get
             {
-                SmallMoleculeLibraryAttributes.ParseMolecularFormulaOrMassesString(ChemicalFormula,
-                    out var molecularFormula, out var massMono, out var massAverage);
                 return string.IsNullOrEmpty(PeptideModifiedSequence)
-                    ? SmallMoleculeLibraryAttributes.Create(MoleculeName, molecularFormula, massMono, massAverage, InChiKey, OtherKeys)
+                    ? SmallMoleculeLibraryAttributes.Create(MoleculeName, ChemicalFormula, InChiKey, OtherKeys)
                     : SmallMoleculeLibraryAttributes.EMPTY;
             }
         }

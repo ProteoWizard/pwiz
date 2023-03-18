@@ -102,7 +102,7 @@ namespace pwiz.Skyline.Model
             Assume.IsTrue(Transition.IsCustom() || MzMassType.IsMassH());
             return Transition.IsCustom()
                 ? Transition.CustomIon.GetMass(MzMassType)
-                : new TypedMass(SequenceMassCalc.GetMH(Mz, Transition.Charge), MzMassType);            
+                : TypedMass.Create(SequenceMassCalc.GetMH(Mz, Transition.Charge), MzMassType);            
         }
 
         public bool IsDecoy { get { return Transition.DecoyMassShift.HasValue; } }
@@ -635,7 +635,7 @@ namespace pwiz.Skyline.Model
         {
             if (Transition.IsNonReporterCustomIon())
             {
-                transitionProto.Formula = Transition.CustomIon.Formula;
+                transitionProto.Formula = Transition.CustomIon.Formula.ChemicalFormulaPart();
                 if (Transition.CustomIon.AverageMass.IsMassH())
                     transitionProto.AverageMassH = Transition.CustomIon.AverageMass;
                 else
@@ -690,8 +690,8 @@ namespace pwiz.Skyline.Model
                     var monoMass = transitionProto.MonoMass ?? monoMassH;
                     var averageMass = transitionProto.AverageMass ?? averageMassH;
                     customIon = new CustomMolecule(formula,
-                        new TypedMass(monoMass.Value, monoMassH.HasValue ? MassType.MonoisotopicMassH : MassType.Monoisotopic),
-                        new TypedMass(averageMass.Value, averageMassH.HasValue ? MassType.AverageMassH : MassType.Average),
+                        TypedMass.Create(monoMass.Value, monoMassH.HasValue ? MassType.MonoisotopicMassH : MassType.Monoisotopic),
+                        TypedMass.Create(averageMass.Value, averageMassH.HasValue ? MassType.AverageMassH : MassType.Average),
                         transitionProto.CustomIonName, moleculeID);
                 }
             }

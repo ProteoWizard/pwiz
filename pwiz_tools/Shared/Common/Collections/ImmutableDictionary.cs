@@ -19,10 +19,11 @@
 using System;
 using System.Collections;
 using System.Collections.Generic;
+using System.Linq;
 
 namespace pwiz.Common.Collections
 {
-    public class ImmutableDictionary<TKey,TValue> : ImmutableCollection<KeyValuePair<TKey,TValue>>, IDictionary<TKey,TValue>
+    public class ImmutableDictionary<TKey,TValue> : ImmutableCollection<KeyValuePair<TKey,TValue>>, IDictionary<TKey,TValue>, IEquatable<ImmutableDictionary<TKey, TValue>>
     {
         public ImmutableDictionary(IDictionary<TKey,TValue> dict) : base(dict)
         {
@@ -72,6 +73,56 @@ namespace pwiz.Common.Collections
         public ICollection<TValue> Values
         {
             get { return new ImmutableCollection<TValue>(Dictionary.Values); }
+        }
+
+        public ImmutableDictionary<TKey, TValue> RemoveKey(TKey key)
+        {
+            if (!ContainsKey(key))
+            {
+                return this;
+            }
+            return new ImmutableDictionary<TKey, TValue>(new Dictionary<TKey, TValue>(Dictionary
+                .Where(kvp => !Equals(key, kvp.Key)).ToDictionary(kv => kv.Key, kv => kv.Value)));
+        }
+
+        public ImmutableDictionary<TKey, TValue> Replace(TKey key, TValue value)
+        {
+            if (TryGetValue(key, out var oldValue) && Equals(oldValue, value))
+            {
+                return this;
+            }
+            var newDict = new Dictionary<TKey, TValue>(Dictionary);
+            newDict[key] = value;
+            return new ImmutableDictionary<TKey, TValue>(new Dictionary<TKey, TValue>(newDict));
+        }
+
+        public bool Equals(ImmutableDictionary<TKey, TValue> other)
+        {
+            if (other == null || Count != other.Count)
+            {
+                return false;
+            }
+            foreach (var kvp in this)
+            {
+                if (!other.TryGetValue(kvp.Key, out var otherValue) || !Equals(kvp.Value, otherValue))
+                {
+                    return false;
+                }
+            }
+            return true;
+        }
+
+        public override bool Equals(object obj)
+        {
+            if (ReferenceEquals(null, obj)) return false;
+            if (ReferenceEquals(this, obj)) return true;
+            if (obj.GetType() != this.GetType()) return false;
+            return Equals((ImmutableDictionary<TKey, TValue>)obj);
+        }
+
+        public override int GetHashCode()
+        {
+            return this.Aggregate(0, (current, kvp) => current ^ kvp.GetHashCode());
         }
     }
 }

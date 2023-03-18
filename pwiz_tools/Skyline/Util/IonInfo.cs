@@ -17,11 +17,11 @@
  * limitations under the License.
  */
 using System;
-using System.Collections.Generic;
 using System.Linq;
 using pwiz.Common.Chemistry;
 using pwiz.Common.SystemUtil;
 using pwiz.Skyline.Properties;
+using static pwiz.Skyline.Util.Adduct;
 
 namespace pwiz.Skyline.Util
 {
@@ -32,22 +32,29 @@ namespace pwiz.Skyline.Util
     ///  </summary>
     public class IonInfo : Immutable
     {
-
-        private string _formula;  // Chemical formula, possibly followed by adduct description - something like "C12H3[M+H]" or "[2M+K]" or "M+H" or "[M+H]+" or "[M+Br]-" 
-        private string _unlabledFormula;   // Chemical formula after adduct application and stripping of labels
-
+        private MoleculeMassOffset _neutralFormula; // Chemical formula and/or unexplained masses, no adduct applied
+        private Adduct _adduct;
+        private MoleculeMassOffset _ionFormula;  // Chemical formula and/or unexplained masses after adduct application
+        private MoleculeMassOffset _unlabledFormula;   // Chemical formula after adduct application and stripping of labels
 
         /// <summary>
         /// Constructs an IonInfo, which holds a neutral formula and adduct, or possibly just a chemical formula if no adduct is included in the description
         /// </summary>
         public IonInfo(string formulaWithOptionalAdduct, Adduct adduct)
         {
-            Formula = formulaWithOptionalAdduct + adduct.AdductFormula;
+            var ionString = Adduct.SplitFormulaAndTrailingAdduct(formulaWithOptionalAdduct, ADDUCT_TYPE.charge_only, out var parsedAdduct);
+            _adduct = Adduct.IsNullOrEmpty(adduct) ? parsedAdduct : adduct;
+            Formula = MoleculeMassOffset.Parse(ionString);
         }
 
-        public IonInfo(string formulaWithOptionalAdduct)
+        public IonInfo(MoleculeMassOffset formula, Adduct adduct)
         {
-            Formula = formulaWithOptionalAdduct;
+            _adduct = Adduct.IsNullOrEmpty(adduct) ? Adduct.EMPTY : adduct;
+            Formula = formula;
+        }
+
+        public IonInfo(string formulaWithOptionalAdduct) : this(formulaWithOptionalAdduct, Adduct.EMPTY)
+        {
         }
 
         /// <summary>
@@ -60,30 +67,28 @@ namespace pwiz.Skyline.Util
         /// <summary>
         /// Formula description as originally provided to constructor.
         /// </summary>
-        public string Formula
+        public MoleculeMassOffset Formula
         {
-            get { return _formula; }
+            get { return _ionFormula; }
             protected set
             {
-                _formula = value;
-                _unlabledFormula = BioMassCalc.MONOISOTOPIC.StripLabelsFromFormula(FormulaWithAdductApplied);
-                Helpers.AssignIfEquals(ref _unlabledFormula, _formula); // Save some string space if actually unlableled
+                _neutralFormula = value;
+                _ionFormula = _adduct.IsEmpty ?  _neutralFormula : _adduct.ApplyToMolecule(_neutralFormula);
+                var unlabeled = _ionFormula.StripLabelsFromFormula();
+                _unlabledFormula = Equals(_ionFormula, unlabeled) ? 
+                    _ionFormula : 
+                    unlabeled; // Save some space if actually unlabeled
             }
         }
 
         /// <summary>
         /// Internal formula description with adduct description stripped off, or null if there is no adduct description
         /// </summary>
-        public string NeutralFormula
+        public MoleculeMassOffset NeutralFormula
         {
             get
             {
-                var adductStart = AdductStartIndex;
-                if (adductStart == 0)
-                {
-                    return null; // There is no formula, just an adduct
-                }
-                return adductStart < 0 ? _formula : _formula.Substring(0, adductStart);
+                return _neutralFormula;
             }
         }
 
@@ -94,23 +99,14 @@ namespace pwiz.Skyline.Util
         {
             get
             {
-                int adductStart = AdductStartIndex;
-                return adductStart < 0 ? null : _formula.Substring(adductStart);
-            }
-        }
-
-        private int AdductStartIndex
-        {
-            get
-            {
-                return _formula != null ? _formula.IndexOf('[') : -1;
+                return _adduct.AdductFormula;
             }
         }
 
         /// <summary>
         /// Returns chemical formula with adduct applied then labels stripped
         /// </summary>
-        public string UnlabeledFormula
+        public MoleculeMassOffset UnlabeledFormula
         {
             get { return _unlabledFormula; }
         }
@@ -118,59 +114,23 @@ namespace pwiz.Skyline.Util
         /// <summary>
         /// Chemical formula after adduct description, if any, is applied
         /// </summary>
-        public string FormulaWithAdductApplied
+        public MoleculeMassOffset FormulaWithAdductApplied
         {
             get
             {
-                if (string.IsNullOrEmpty(AdductText))
-                {
-                    return _formula;
-                }
-                int charge;
-                var mol = ApplyAdductInFormula(_formula, out charge);
-                return mol.ToString();
+                return _ionFormula;
             }
-        }
-
-        public static bool EquivalentFormulas(string fL, string fR)
-        {
-            if (fL == null)
-            {
-                return fR == null;
-            }
-            if (fR == null)
-            {
-                return false;
-            }
-            if (Equals(fL, fR))
-            {
-                return true;
-            }
-            var moleculeL = Molecule.Parse(fL.Trim());
-            var moleculeR = Molecule.Parse(fR.Trim());
-            return moleculeL.Equals(moleculeR);
         }
 
         /// <summary>
-        /// Check to see if an adduct is only a charge declaration, as in "[M+]".
-        /// </summary>
-        /// <param name="formula">A string like "C12H3[M+H]"</param>
-        /// <returns>True if the adduct description contributes nothing to the ion formula other than charge information, such as "[M+]"</returns>
-        public static bool AdductIsChargeOnly(string formula)
-        {
-            int charge;
-            return Equals(ApplyAdductInFormula(formula, out charge), ApplyAdductInFormula(formula.Split('[')[0], out charge));
-        }
-
-        /// <summary>
-        /// Take a molecular formula with adduct in it and return a FormulaWithMassModification.
+        /// Take a molecular formula with adduct in it and return a MoleculeMassOffset.
         /// </summary>
         /// <param name="formula">A string like "C12H3[M+H]"</param>
         /// <param name="charge">Charge derived from adduct description by counting H, K etc as found in DICT_ADDUCT_ION_CHARGES</param>
         /// <returns></returns>
-        public static FormulaWithMassModification ApplyAdductInFormula(string formula, out int charge)
+        public static MoleculeMassOffset ApplyAdductInFormula(string formula, out int charge)
         {
-            var withoutAdduct = (formula ?? string.Empty).Split('[')[0];
+            var withoutAdduct = Adduct.SplitFormulaAndTrailingAdduct(formula, ADDUCT_TYPE.charge_only, out _); // Split on [ but not on [+ or [-
             var adduct = Adduct.FromStringAssumeProtonated((formula ?? string.Empty).Substring(withoutAdduct.Length));
             charge = adduct.AdductCharge;
             return ApplyAdductToFormula(withoutAdduct, adduct);
@@ -182,15 +142,14 @@ namespace pwiz.Skyline.Util
         /// <param name="formula">A string like "C12H3"</param>
         /// <param name="adduct">An adduct derived from a string like "[M+H]" or "[2M+K]" or "M+H" or "[M+H]+" or "[M+Br]- or "M2C13+Na" </param>
         /// <returns>A Molecule whose formula is the combination of the input formula and adduct</returns>
-        public static FormulaWithMassModification ApplyAdductToFormula(string formula, Adduct adduct)
+        public static MoleculeMassOffset ApplyAdductToFormula(string formula, Adduct adduct)
         {
             var resultDict = ApplyAdductToFormulaAsDictionary(formula, adduct);
-            var resultMol = FormulaWithMassModification.FromDict(resultDict);
-            if (!resultMol.Keys.All(k => FormulaWithMassModification.IsKnownSymbol(k)))
+            if (!resultDict.Keys.All(k => BioMassCalc.MONOISOTOPIC.IsKnownSymbol(k)))
             {
-                throw new InvalidOperationException(string.Format(Resources.BioMassCalc_ApplyAdductToFormula_Unknown_symbol___0___in_adduct_description___1__, resultMol.Keys.First(k => !BioMassCalc.MONOISOTOPIC.IsKnownSymbol(k)), formula + adduct));
+                throw new InvalidOperationException(string.Format(Resources.BioMassCalc_ApplyAdductToFormula_Unknown_symbol___0___in_adduct_description___1__, resultDict.Keys.First(k => !BioMassCalc.MONOISOTOPIC.IsKnownSymbol(k)), formula + adduct));
             }
-            return resultMol;
+            return resultDict;
         }
 
         /// <summary>
@@ -199,16 +158,14 @@ namespace pwiz.Skyline.Util
         /// <param name="formula">A string like "C12H3" or C11N3H5[+2.34]</param>
         /// <param name="adduct">An adduct derived from a string like "[M+H]" or "[2M+K]" or "M+H" or "[M+H]+" or "[M+Br]- or "M2C13+Na" </param>
         /// <returns>A dictionary of atomic elements and counts, resulting from the combination of the input formula and adduct</returns>
-        public static Dictionary<string, int> ApplyAdductToFormulaAsDictionary(string formula, Adduct adduct)
+        public static MoleculeMassOffset ApplyAdductToFormulaAsDictionary(string formula, Adduct adduct)
         {
             var trimmed = formula.Trim();
-            var molecule = BioMassCalc.MONOISOTOPIC.ParseMassExpressionToDictionary(ref trimmed);
-            var resultDict = new Dictionary<string, int>();
-            adduct.ApplyToDictionary(molecule, resultDict);
-            return resultDict;
+            var molecule = MoleculeMassOffset.Parse(trimmed);
+            return adduct.ApplyToMolecule(molecule);
         }
 
-        public static bool IsFormulaWithAdduct(string formula, out FormulaWithMassModification molecule, out Adduct adduct, out string neutralFormula, bool strict = false)
+        public static bool IsFormulaWithAdduct(string formula, out MoleculeMassOffset molecule, out Adduct adduct, out string neutralFormula, bool strict = false)
         {
             molecule = null;
             adduct = Adduct.EMPTY;
@@ -219,25 +176,18 @@ namespace pwiz.Skyline.Util
             }
             // Does formula contain an adduct description?  If so, pull charge from that.
             // Watch out for mass modifications, e.g. C12H5[+1.23][M+3H] 
-            var possibleAdductStart = formula.LastIndexOf('[');
-            if (possibleAdductStart >= 0 && // Has '['
-                formula.Substring(possibleAdductStart).Count(c => c == ']') == 1 && // Has closing ']'
-                formula[possibleAdductStart+1] != '+' && formula[possibleAdductStart+1] != '-') // Isn't a mass modification
+            neutralFormula = Adduct.SplitFormulaAndTrailingAdduct(formula, ADDUCT_TYPE.non_proteomic, out adduct);
+            if (!adduct.IsEmpty)
             {
-                neutralFormula = formula.Substring(0, possibleAdductStart);
-                var adductString = formula.Substring(neutralFormula.Length);
-                if (Adduct.TryParse(adductString, out adduct, Adduct.ADDUCT_TYPE.non_proteomic, strict))
-                {
-                    molecule = neutralFormula.Length > 0 ? ApplyAdductToFormula(neutralFormula, adduct) : FormulaWithMassModification.Empty;
-                    return true;
-                }
+                molecule = !string.IsNullOrEmpty(neutralFormula) ? ApplyAdductToFormula(neutralFormula, adduct) : MoleculeMassOffset.EMPTY;
+                return true;
             }
             return false;
         }
 
         public override string ToString()
         {
-            return _formula ?? string.Empty;
+            return _ionFormula?.ToStringInvariant() ?? string.Empty;
         }
     }
 }

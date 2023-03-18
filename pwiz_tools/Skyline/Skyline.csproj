@@ -814,7 +814,7 @@
     </Compile>
     <Compile Include="Util\DocumentCancellationToken.cs" />
     <Compile Include="Util\FormGroup.cs" />
-    <Compile Include="Util\FormulaWithMassModification.cs" />
+    <Compile Include="Util\MassTypeLocalizationExtension.cs" />
     <Compile Include="Util\PersistentString.cs" />
     <Compile Include="Util\UiModes.cs" />
     <Compile Include="ToolsUI\ColorGrid.cs">

@@ -621,7 +621,7 @@ namespace pwiz.SkylineTestData.Results
                     Assert.IsTrue(isotopePeaks.GetMZI(massIndex - 1) < isotopePeaks.GetMZI(massIndex));
                     double massDelta = GetMassDelta(isotopePeaks, massIndex);
                     bool containsSulfur = nodeGroup.TransitionGroup.Peptide.IsCustomMolecule
-                        ? (nodeGroup.CustomMolecule.Formula.IndexOfAny("S".ToCharArray()) != -1)
+                        ? (nodeGroup.CustomMolecule.Formula.ChemicalFormulaPart().IndexOfAny("S".ToCharArray()) != -1)
                         : (nodeGroup.TransitionGroup.Peptide.Sequence.IndexOfAny("CM".ToCharArray()) != -1);
                     if (massIndex == 0)
                     {

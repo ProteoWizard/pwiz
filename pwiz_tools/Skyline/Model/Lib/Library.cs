@@ -2064,14 +2064,18 @@ namespace pwiz.Skyline.Model.Lib
                 Encoding.UTF8.GetString(buf, itemStarts[3], itemLengths[3]));
         }
 
+
         public static void ParseMolecularFormulaOrMassesString(string molecularFormulaOrMassesString,
             out string molecularFormula, out TypedMass? massMono, out TypedMass? massAverage)
         {
-            if (molecularFormulaOrMassesString != null && molecularFormulaOrMassesString.Contains(CustomMolecule.MASS_SPLITTER))
+            if (molecularFormulaOrMassesString != null && 
+                molecularFormulaOrMassesString.Contains(CustomMolecule.MASS_SPLITTER) && // e.g. "1.23/1.24", a mass-only record
+                !molecularFormulaOrMassesString.Contains(MoleculeMassOffset.MASS_MOD_CUE_PLUS) &&  // But not "[+1.23/1.24]" or  "[-1.23/1.24]" a mass offset record
+                !molecularFormulaOrMassesString.Contains(MoleculeMassOffset.MASS_MOD_CUE_MINUS))
             {
                 var parts = molecularFormulaOrMassesString.Split(CustomMolecule.MASS_SPLITTER); // We didn't have a formula so we saved masses
-                massMono = new TypedMass(double.Parse(parts[0], CultureInfo.InvariantCulture), MassType.Monoisotopic);
-                massAverage = new TypedMass(double.Parse(parts[1], CultureInfo.InvariantCulture), MassType.Average);
+                massMono = TypedMass.Create(double.Parse(parts[0], CultureInfo.InvariantCulture), MassType.Monoisotopic);
+                massAverage = TypedMass.Create(double.Parse(parts[1], CultureInfo.InvariantCulture), MassType.Average);
                 molecularFormula = null;
             }
             else
@@ -2082,15 +2086,23 @@ namespace pwiz.Skyline.Model.Lib
             }
         }
 
+        public static string FormatChemicalFormulaOrMassesString(MoleculeMassOffset mol)
+        {
+            return mol.ToStringInvariant();
+        }
+
         public static string FormatChemicalFormulaOrMassesString(string chemicalFormula, TypedMass? massMono, TypedMass? massAverage) // For serialization - represents formula or masses, depending on what's available
         {
             if (!string.IsNullOrEmpty(chemicalFormula))
             {
-                return chemicalFormula;
-
+                // Return formula and mass offsets if any e.g. "C12H5[-1.23/1.24]"
+                return (massMono != null && massMono.Value.Value != 0)
+                    ? $@"{chemicalFormula}{(massMono < 0 ? MoleculeMassOffset.MASS_MOD_CUE_MINUS : MoleculeMassOffset.MASS_MOD_CUE_PLUS)}{CustomMolecule.FormattedMasses(Math.Abs(massMono.Value.Value), Math.Abs(massAverage.Value.Value))}]"
+                    : chemicalFormula;
             }
             if (massMono != null && massAverage != null)
             {
+                // Return mass- only description y e.g. "1.23/1.24"
                 Assume.IsTrue(massMono.Value.IsMonoIsotopic());
                 Assume.IsTrue(massAverage.Value.IsAverage());
                 return CustomMolecule.FormattedMasses(massMono.Value.Value, massAverage.Value.Value); // Format as dd.ddd/dd.ddd
@@ -2126,16 +2138,15 @@ namespace pwiz.Skyline.Model.Lib
             return results;
         }
 
-        public static SmallMoleculeLibraryAttributes Create(string moleculeName, string chemicalFormula, TypedMass? massMono, TypedMass? massAverage,
+        public static SmallMoleculeLibraryAttributes Create(string moleculeName, MoleculeMassOffset molecule,
             string inChiKey, string otherKeys)
         {
-            if (string.IsNullOrEmpty(moleculeName) && string.IsNullOrEmpty(chemicalFormula) &&
-                massMono == null && massAverage == null &&
+            if (string.IsNullOrEmpty(moleculeName) && MoleculeMassOffset.IsNullOrEmpty(molecule) &&
                 string.IsNullOrEmpty(inChiKey) && string.IsNullOrEmpty(otherKeys))
             {
                 return EMPTY;
             }
-            return new SmallMoleculeLibraryAttributes(moleculeName, chemicalFormula, massMono, massAverage, inChiKey, otherKeys);
+            return new SmallMoleculeLibraryAttributes(moleculeName, molecule, inChiKey, otherKeys);
         }
 
         public static SmallMoleculeLibraryAttributes Create(string moleculeName, string chemicalFormulaOrMassesString,
@@ -2147,15 +2158,21 @@ namespace pwiz.Skyline.Model.Lib
         public static SmallMoleculeLibraryAttributes Create(string moleculeName, string chemicalFormulaOrMassesString,
             string inChiKey, string otherKeys)
         {
-            ParseMolecularFormulaOrMassesString(chemicalFormulaOrMassesString,
-                out var chemicalFormula, out var massMono, out var massAverage);
-            if (string.IsNullOrEmpty(moleculeName) && string.IsNullOrEmpty(chemicalFormula) &&
-                massMono == null && massAverage == null &&
+            var moleculeMassOffset = MoleculeMassOffset.Parse(chemicalFormulaOrMassesString);
+            if (string.IsNullOrEmpty(moleculeName) && MoleculeMassOffset.IsNullOrEmpty(moleculeMassOffset) &&
                 string.IsNullOrEmpty(inChiKey) && string.IsNullOrEmpty(otherKeys))
             {
                 return EMPTY;
             }
-            return new SmallMoleculeLibraryAttributes(moleculeName, chemicalFormula, massMono, massAverage, inChiKey, otherKeys);
+            return new SmallMoleculeLibraryAttributes(moleculeName, moleculeMassOffset, inChiKey, otherKeys);
+        }
+
+        private SmallMoleculeLibraryAttributes(string moleculeName, MoleculeMassOffset mol, string inChiKey, string otherKeys)
+        {
+            MoleculeName = moleculeName;
+            ChemicalFormulaOrMassesString = FormatChemicalFormulaOrMassesString(mol); // If no formula provided, encode monoMass and averageMass instead
+            InChiKey = inChiKey;
+            OtherKeys = otherKeys;
         }
 
         private SmallMoleculeLibraryAttributes(string moleculeName, string chemicalFormula, TypedMass? massMono, TypedMass? massAverage, string inChiKey, string otherKeys)
@@ -2805,7 +2822,7 @@ namespace pwiz.Skyline.Model.Lib
             }
             else
             {
-                LibraryKey = new MoleculeLibraryKey(SmallMoleculeLibraryAttributes.Create(primaryKey, null, null, string.Empty), adduct);
+                LibraryKey = new MoleculeLibraryKey(SmallMoleculeLibraryAttributes.Create(primaryKey, string.Empty, null, string.Empty), adduct);
             }
         }
 
