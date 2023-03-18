@@ -38,7 +38,6 @@ namespace pwiz.Skyline.Model.DocSettings.AbsoluteQuantification
         {
             var linearPoints = points.Where(pt => pt.X > xOffset).ToList();
             var baselinePoints = points.Where(pt => pt.X <= xOffset).ToList();
-            CalibrationCurve candidateCurve;
             if (linearPoints.Select(pt => pt.X).Distinct().Count() >= 2)
             {
                 var linearCurve = RegressionFit.LINEAR.Fit(linearPoints) as CalibrationCurve.Linear;
