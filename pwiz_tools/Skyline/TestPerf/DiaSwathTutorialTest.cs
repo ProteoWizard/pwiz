@@ -24,6 +24,7 @@ using System.Globalization;
 using System.IO;
 using System.Linq;
 using Microsoft.VisualStudio.TestTools.UnitTesting;
+using pwiz.Common.Chemistry;
 using pwiz.Common.DataBinding;
 using pwiz.Common.DataBinding.Controls;
 using pwiz.Common.DataBinding.Controls.Editor;
@@ -123,7 +124,7 @@ namespace TestPerf
                 ChromatogramClickPoint = new PointF(34.18F, 108.0F),
                 //TargetCounts = new[] { 14, 279, 299, 1793 },
                 FinalTargetCounts = new[] { 13, 279, 299, 1793 },
-                ScoringModelCoefficients = "0.2676|-0.6468|3.4197|-0.0179|-0.4724|0.9272|0.0764|-0.0496",
+                ScoringModelCoefficients = "0.2674|-0.6467|3.4194|-0.0171|-0.4723|0.9270|0.0768|-0.0496",
                 MassErrorStats = new[]
                 {
                     new[] {3.0, 4.4},
@@ -154,7 +155,7 @@ namespace TestPerf
                 ChromatogramClickPoint = new PointF(34.18F, 108.0F),
                 //TargetCounts = new[] { 4700, 36628, 37960, 227760 },
                 FinalTargetCounts = new[] { 2399, 26144, 27078, 162468 },
-                ScoringModelCoefficients = "-0.0852|-0.7449|4.2686|-0.2087|-0.2642|0.7596|0.3133|-0.0659",
+                ScoringModelCoefficients = "-0.0842|-0.7448|4.2689|-0.2083|-0.2644|0.7594|0.3123|-0.0659",
                 MassErrorStats = new[]
                 {
                     new[] {2.8, 4.6},
@@ -165,9 +166,9 @@ namespace TestPerf
                     new[] {-0.4, 3.9},
                     new[] {1.0, 4.1},
                 },
-                DiffPeptideCounts = new[] { 12807, 7963, 2691, 2142 },
-                UnpolishedProteins = 2206,
-                PolishedProteins = 2206,
+                DiffPeptideCounts = new[] { 12808, 7963, 2692, 2142 },
+                UnpolishedProteins = 2207,
+                PolishedProteins = 2207,
             };
 
             if (!IsCoverShotMode)
@@ -196,8 +197,8 @@ namespace TestPerf
                 LibraryPeptideCount = 18600,
                 ExpectedIrtPeptideCount = 11,
                 IrtStandard = IrtStandard.BIOGNOSYS_11,
-                IrtSlope = 2.9257,
-                IrtIntercept = -68.8503,
+                IrtSlope = 2.926,
+                IrtIntercept = -68.850,
                 HasAmbiguousMatches = true,
                 IsolationSchemeName = "ETH TTOF (64 variable)",
                 IsolationSchemeFile = "64_variable_windows.csv",
@@ -220,7 +221,7 @@ namespace TestPerf
                 ChromatogramClickPoint = new PointF(31.98F, 285741.3F),
                 //TargetCounts = new[] { 14, 271, 331, 1985 },
                 FinalTargetCounts = new[] { 13, 271, 331, 1985 },
-                ScoringModelCoefficients = "0.3105|-0.7827|4.9928|-0.5000|-0.0813|0.7381|0.0969|-0.0538",
+                ScoringModelCoefficients = "0.3065|-0.7855|4.9580|-0.4976|-0.0812|0.7443|0.0988|-0.0542",
                 MassErrorStats = new[]
                 {
                     new[] {1.6, 4.2},
@@ -252,7 +253,7 @@ namespace TestPerf
                 ChromatogramClickPoint = new PointF(32.05F, 268334.7F),
                 //TargetCounts = new[] { 3991, 30916, 33841, 203044 },
                 FinalTargetCounts = new[] { 2038, 21960, 24013, 144076 },
-                ScoringModelCoefficients = "0.3178|-0.8917|3.7829|0.2247|-0.0826|0.7334|0.0011|-0.0605",
+                ScoringModelCoefficients = "0.3173|-0.8915|3.7830|0.2262|-0.0825|0.7332|0.0012|-0.0606",
                 MassErrorStats = new[]
                 {
                     new[] {2.0, 4.7},
@@ -263,9 +264,9 @@ namespace TestPerf
                     new[] {2.2, 4.6},
                     new[] {1.9, 4.7},
                 },
-                DiffPeptideCounts = new[] { 10461, 6387, 2240, 1823 },
-                UnpolishedProteins = 1648,
-                PolishedProteins = 1648,
+                DiffPeptideCounts = new[] { 10459, 6387, 2238, 1823 },
+                UnpolishedProteins = 1647,
+                PolishedProteins = 1647,
             };
 
             if (!IsCoverShotMode)
@@ -317,7 +318,7 @@ namespace TestPerf
                 ChromatogramClickPoint = new PointF(10.79F, 3800.0F),
                 //TargetCounts = new[] { 14, 75, 83, 498 },
                 FinalTargetCounts = new[] { 12, 75, 83, 498 },
-                ScoringModelCoefficients = "-0.5435|-2.3125|7.5279|6.0311|-0.1596|0.6412|0.8679|-0.3131",
+                ScoringModelCoefficients = "-0.5430|-2.3111|7.5218|6.0404|-0.1598|0.6420|0.8685|-0.3133",
                 MassErrorStats = new[]
                 {
                     new[] {3.9, 1.9},
@@ -387,7 +388,7 @@ namespace TestPerf
                 ChromatogramClickPoint = new PointF(10.79F, 3800.0F),
                 //TargetCounts = new[] { 4937, 37152, 38716, 232296 },
                 FinalTargetCounts = new[] { 2697, 27225, 28373, 170238 },
-                ScoringModelCoefficients = "-0.3352|-0.9057|4.5016|3.5315|-0.1012|0.7389|0.4436|-0.1320",
+                ScoringModelCoefficients = "-0.3354|-0.9055|4.5023|3.5337|-0.1011|0.7388|0.4436|-0.1320",
                 MassErrorStats = new[]
                 {
                     new[] {3.6, 2.7},
@@ -398,7 +399,7 @@ namespace TestPerf
                     new[] {3.9, 2.6},
                     new[] {3.6, 2.7},
                 },
-                DiffPeptideCounts = new[] { 12621, 8497, 2255, 1854 },
+                DiffPeptideCounts = new[] { 12621, 8498, 2254, 1854 },
                 UnpolishedProteins = 2314,
                 PolishedProteins = 2314,
             };
@@ -526,8 +527,15 @@ namespace TestPerf
                 importPeptideSearchDlg.BuildPepSearchLibControl.AddSearchFiles(searchFiles);
                 importPeptideSearchDlg.BuildPepSearchLibControl.IrtStandards = _instrumentValues.IrtStandard;
                 importPeptideSearchDlg.BuildPepSearchLibControl.WorkflowType = ImportPeptideSearchDlg.Workflow.dia;
+            });
+            WaitForConditionUI(() =>
+                Equals(pwiz.BiblioSpec.Properties.Resources.BiblioSpecScoreType_DisplayName_PeptideProphet_confidence,
+                    importPeptideSearchDlg.BuildPepSearchLibControl.Grid.Files.FirstOrDefault()?.ScoreType?.ToString()));
+            RunUI(() =>
+            {
                 // Check default settings shown in the tutorial
-                Assert.AreEqual(0.95, importPeptideSearchDlg.BuildPepSearchLibControl.CutOffScore);
+                Assert.AreEqual(0.95, importPeptideSearchDlg.BuildPepSearchLibControl.Grid.Files.First().ScoreThreshold);
+                Assert.IsNull(importPeptideSearchDlg.BuildPepSearchLibControl.CutOffScore);
                 Assert.IsFalse(importPeptideSearchDlg.BuildPepSearchLibControl.IncludeAmbiguousMatches);
             });
             WaitForConditionUI(() => importPeptideSearchDlg.IsNextButtonEnabled);
@@ -675,7 +683,8 @@ namespace TestPerf
                 Assert.AreEqual(TransitionFilter.EndFragmentFinder.LAST_ION.Label, importPeptideSearchDlg.TransitionSettingsControl.IonRangeTo);
                 Assert.AreEqual(6, importPeptideSearchDlg.TransitionSettingsControl.IonCount);
                 Assert.AreEqual(6, importPeptideSearchDlg.TransitionSettingsControl.MinIonCount);
-                Assert.AreEqual(0.05, importPeptideSearchDlg.TransitionSettingsControl.IonMatchTolerance);
+                Assert.AreEqual(0.05, importPeptideSearchDlg.TransitionSettingsControl.IonMatchMzTolerance.Value);
+                Assert.AreEqual(MzTolerance.Units.mz, importPeptideSearchDlg.TransitionSettingsControl.IonMatchMzTolerance.Unit);
                 // CONSIDER: Not that easy to validate 1, 2 in ion charges.
             });
             PauseForScreenShot<ImportPeptideSearchDlg.TransitionSettingsPage>("Transition settings", screenshotPage++);

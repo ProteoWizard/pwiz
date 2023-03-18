@@ -10,7 +10,7 @@
     <AppDesignerFolder>Properties</AppDesignerFolder>
     <RootNamespace>pwiz.SkylineTestFunctional</RootNamespace>
     <AssemblyName>TestFunctional</AssemblyName>
-    <TargetFrameworkVersion>v4.8</TargetFrameworkVersion>
+    <TargetFrameworkVersion>v4.7.2</TargetFrameworkVersion>
     <FileAlignment>512</FileAlignment>
     <ProjectTypeGuids>{3AC096D0-A1C2-E12C-1390-A8335801FDAB};{FAE04EC0-301F-11D3-BF4B-00C04F79EFBC}</ProjectTypeGuids>
     <FileUpgradeFlags>
@@ -185,6 +185,7 @@
     <Compile Include="ExportPropertiesTest.cs" />
     <Compile Include="IgnoreSimScansTest.cs" />
     <Compile Include="InteractiveCommandLineToolTest.cs" />
+    <Compile Include="LegacyOptimizationStepTest.cs" />
     <Compile Include="LegacyScoringModelTest.cs" />
     <Compile Include="LibraryMatchViewTest.cs" />
     <Compile Include="LiteDropdownListTest.cs" />
@@ -552,6 +553,7 @@
     <None Include="IrtTest.zip" />
     <None Include="LabelPeakPickingTest.zip" />
     <None Include="LegacyCrosslinkTest.zip" />
+    <None Include="LegacyOptimizationStepTest.zip" />
     <None Include="LegacyScoringModelTest.zip" />
     <None Include="LibraryBuildShareTest.zip" />
     <None Include="LibraryBuildTest.zip" />

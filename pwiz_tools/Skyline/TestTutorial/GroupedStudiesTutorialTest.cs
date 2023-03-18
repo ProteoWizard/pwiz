@@ -160,9 +160,8 @@ namespace pwiz.SkylineTestTutorial
                     Assert.AreEqual(71, addPeptidesDlg.PeptidesCount);
                     Assert.AreEqual(0, addPeptidesDlg.RunsConvertedCount);
                     Assert.AreEqual(0, addPeptidesDlg.RunsFailedCount);
-                    addPeptidesDlg.OkDialog();
                 });
-                WaitForClosedForm(addPeptidesDlg);
+                OkDialog(addPeptidesDlg, addPeptidesDlg.OkDialog);
 
                 PauseForScreenShot();   // Edit iRT Calculator form
 

@@ -362,6 +362,9 @@ Config parseCommandLine(int argc, char** argv)
         ("singleThreaded",
             po::value<boost::tribool>(&config.singleThreaded)->implicit_value(true)->default_value(boost::indeterminate),
             ": if true, reading and writing spectra will be done on a single thread")
+        ("continueOnError",
+            po::value<bool>(&config.writeConfig.continueOnError)->zero_tokens()->default_value(config.writeConfig.continueOnError),
+            ": if true, if an error is seen when enumerating a spectrum or chromatogram, it is skipped and enumeration will attempt to continue (but keep in mind a crash may follow, or the remaining data might be obviously or subtly incorrect)")
         ("help",
             po::value<bool>(&detailedHelp)->zero_tokens(),
             ": show this message, with extra detail on filter options")

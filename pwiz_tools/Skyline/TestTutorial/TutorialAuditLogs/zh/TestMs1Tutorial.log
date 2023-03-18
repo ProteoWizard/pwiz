@@ -2,7 +2,6 @@ Undo Redo : 已添加谱图库“Ms1FilterTutorial”
 Summary   : 已添加谱图库“Ms1FilterTutorial”
 All Info  :
 已添加谱图库“Ms1FilterTutorial”
-建立谱图库 > 截止值 是 "0.95"
 建立谱图库 > 搜索文件 : 包含 { 文件 = "100803_0001_MCF7_TiB_L.group.xml", 得分类型 = "ProteinPilot 置信度", 得分阈值 = "0.95" }
 建立谱图库 > 搜索文件 : 包含 { 文件 = "100803_0005b_MCF7_TiTip3.group.xml", 得分类型 = "ProteinPilot 置信度", 得分阈值 = "0.95" }
 建立谱图库 > iRT 标准肽段 是 无
@@ -10,8 +9,7 @@ All Info  :
 建立谱图库 > 文档肽段筛选器 是 假
 建立谱图库 > 工作流程 是 "含有 MS1 筛选器的 DDA"
 建立谱图库 > 输入文件类型 是 "搜索结果（直接构建库）"
-Extra Info: 截止值 = "0.95",
-搜索文件 = 
+Extra Info: 搜索文件 = 
 [
     {
         文件 = "100803_0001_MCF7_TiB_L.group.xml",

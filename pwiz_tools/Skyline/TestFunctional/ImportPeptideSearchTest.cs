@@ -22,6 +22,7 @@ using System.Collections.Generic;
 using System.IO;
 using System.Linq;
 using Microsoft.VisualStudio.TestTools.UnitTesting;
+using pwiz.Common.Chemistry;
 using pwiz.Skyline.Alerts;
 using pwiz.Skyline.Controls.Graphs;
 using pwiz.Skyline.EditUI;
@@ -621,6 +622,11 @@ namespace pwiz.SkylineTestFunctional
                 Assert.IsTrue(importPeptideSearchDlg.CurrentPage == ImportPeptideSearchDlg.Pages.match_modifications_page);
                 Assert.IsTrue(importPeptideSearchDlg.ClickNextButton());
                 Assert.IsTrue(importPeptideSearchDlg.CurrentPage == ImportPeptideSearchDlg.Pages.transition_settings_page);
+                var oldTolerance = importPeptideSearchDlg.TransitionSettingsControl.IonMatchTolerance;
+                importPeptideSearchDlg.TransitionSettingsControl.IonMatchToleranceUnits = MzTolerance.Units.ppm;
+                Assert.IsTrue(
+                    Math.Abs(importPeptideSearchDlg.TransitionSettingsControl.IonMatchTolerance / oldTolerance - 1000.0d) < 0.001d);
+                importPeptideSearchDlg.TransitionSettingsControl.IonMatchTolerance = 10;
                 Assert.IsTrue(importPeptideSearchDlg.ClickNextButton());
                 Assert.IsTrue(importPeptideSearchDlg.CurrentPage == ImportPeptideSearchDlg.Pages.full_scan_settings_page);
                 Assert.IsTrue(importPeptideSearchDlg.ClickNextButton());
@@ -642,6 +648,8 @@ namespace pwiz.SkylineTestFunctional
             var irtMap = new TargetMap<bool>(IrtStandard.BIOGNOSYS_11.Peptides.Select(pep => new KeyValuePair<Target, bool>(pep.ModifiedTarget, true)));
             foreach (var nodePep in irt.Peptides)
                 Assert.IsTrue(irtMap.ContainsKey(nodePep.ModifiedTarget));
+
+            Assert.AreEqual(new MzTolerance(10, MzTolerance.Units.ppm), doc.Settings.TransitionSettings.Libraries.IonMatchMzTolerance); 
 
             RunUI(() => SkylineWindow.SaveDocument());
         }

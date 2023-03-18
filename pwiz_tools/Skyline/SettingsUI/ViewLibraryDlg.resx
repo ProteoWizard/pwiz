@@ -1326,11 +1326,17 @@
   <data name="toolStripSeparator14.Size" type="System.Drawing.Size, System.Drawing">
     <value>260, 6</value>
   </data>
+  <data name="graphPropsContextMenuItem.Size" type="System.Drawing.Size, System.Drawing">
+    <value>263, 32</value>
+  </data>
+  <data name="graphPropsContextMenuItem.Text" xml:space="preserve">
+    <value>Graph Properties...</value>
+  </data>
   <data name="spectrumPropsContextMenuItem.Size" type="System.Drawing.Size, System.Drawing">
     <value>263, 32</value>
   </data>
   <data name="spectrumPropsContextMenuItem.Text" xml:space="preserve">
-    <value>Properties...</value>
+    <value>Spectrum Properties</value>
   </data>
   <data name="showChromatogramsContextMenuItem.Size" type="System.Drawing.Size, System.Drawing">
     <value>263, 32</value>
@@ -1622,6 +1628,12 @@
   </data>
   <data name="&gt;&gt;toolStripSeparator14.Type" xml:space="preserve">
     <value>System.Windows.Forms.ToolStripSeparator, System.Windows.Forms, Version=4.0.0.0, Culture=neutral, PublicKeyToken=b77a5c561934e089</value>
+  </data>
+  <data name="&gt;&gt;graphPropsContextMenuItem.Name" xml:space="preserve">
+    <value>graphPropsContextMenuItem</value>
+  </data>
+  <data name="&gt;&gt;graphPropsContextMenuItem.Type" xml:space="preserve">
+    <value>System.Windows.Forms.ToolStripMenuItem, System.Windows.Forms, Version=4.0.0.0, Culture=neutral, PublicKeyToken=b77a5c561934e089</value>
   </data>
   <data name="&gt;&gt;spectrumPropsContextMenuItem.Name" xml:space="preserve">
     <value>spectrumPropsContextMenuItem</value>

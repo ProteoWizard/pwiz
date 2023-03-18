@@ -282,15 +282,11 @@ namespace pwiz.SkylineTestFunctional
                 var expectedMsg = string.Format(Resources.MessageBoxHelper_ValidateNameTextBox__0__cannot_be_empty, editServerDlg.GetTextServerUrlControlLabel());
                 Assert.AreEqual(expectedMsg, errorMsg);
             }
-            RunUI(() =>
-                      {
-                          messageDlg.OkDialog();
-                          editServerDlg.CancelButton.PerformClick();
-                          editServerListDlg.OkDialog();
-                      });
-            WaitForClosedForm(editServerDlg);
-            WaitForClosedForm(editServerListDlg);
-            Assert.AreEqual(expectedServerCount, Settings.Default.ServerList.Count);
+            OkDialog(messageDlg, messageDlg.OkDialog);
+            OkDialog(editServerDlg, editServerDlg.CancelDialog);
+            OkDialog(editServerListDlg, editServerListDlg.OkDialog);
+            TryWaitForConditionUI(() => expectedServerCount == Settings.Default.ServerList.Count);
+            RunUI(() => Assert.AreEqual(expectedServerCount, Settings.Default.ServerList.Count));
         }
 
         private void CheckServerInfoSuccess(TestPanoramaClient testClient, int expectedServerCount)
@@ -303,12 +299,11 @@ namespace pwiz.SkylineTestFunctional
                           editServerDlg.URL = testClient.Server;
                           editServerDlg.Username = testClient.Username;
                           editServerDlg.Password = testClient.Password;
-                          editServerDlg.OkDialog();
-                          editServerListDlg.OkDialog();
                       });
-            WaitForClosedForm(editServerDlg);
-            WaitForClosedForm(editServerListDlg);
-            Assert.AreEqual(expectedServerCount, Settings.Default.ServerList.Count);
+            OkDialog(editServerDlg, editServerDlg.OkDialog);
+            OkDialog(editServerListDlg, editServerListDlg.OkDialog);
+            TryWaitForConditionUI(() => expectedServerCount == Settings.Default.ServerList.Count);
+            RunUI(() => Assert.AreEqual(expectedServerCount, Settings.Default.ServerList.Count));
         }
 
         private void TestPanoramaServerUrls()
