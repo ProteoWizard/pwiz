@@ -21,6 +21,7 @@ using System;
 using System.Collections.Generic;
 using System.Diagnostics;
 using System.Drawing;
+using System.Globalization;
 using System.IO;
 using System.Linq;
 using System.Reflection;
@@ -529,14 +530,16 @@ namespace pwiz.Skyline.Model
                 {
                     var originalDocument = _skylineWindow.DocumentUI;
                     var document = originalDocument;
-                    var peakBoundaryImporter = new PeakBoundaryImporter(document);
-                    bool isMinutes = peakBoundaryImporter.IsMinutesPeakBoundaries(new StringReader(csvText));
                     using (var longWaitDlg = new LongWaitDlg())
                     {
                         longWaitDlg.PerformWork(_skylineWindow, 1000, progressMonitor =>
                         {
-                            document = peakBoundaryImporter.Import(new StringReader(csvText), progressMonitor,
-                                Helpers.CountLinesInString(csvText), isMinutes);
+                            document = LocalizationHelper.CallWithCulture(CultureInfo.InvariantCulture, () =>
+                            {
+                                var peakBoundaryImporter = new PeakBoundaryImporter(originalDocument);
+                                return peakBoundaryImporter.Import(new StringReader(csvText), progressMonitor,
+                                    Helpers.CountLinesInString(csvText), true);
+                            });
                         });
                         if (longWaitDlg.IsCanceled)
                         {

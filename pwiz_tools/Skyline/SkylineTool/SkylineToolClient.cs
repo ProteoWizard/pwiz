@@ -135,6 +135,11 @@ namespace SkylineTool
             _client.ImportProperties(propertiesCsv);
         }
 
+        public void ImportPeakBoundaries(string peakBoundariesCsv)
+        {
+            _client.ImportPeakBoundaries(peakBoundariesCsv);
+        }
+
         private class DocumentChangeReceiver : RemoteService, IDocumentChangeReceiver
         {
             private readonly SkylineToolClient _toolClient;
