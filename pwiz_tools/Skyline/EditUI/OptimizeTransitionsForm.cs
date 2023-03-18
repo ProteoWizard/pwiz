@@ -31,6 +31,9 @@ namespace pwiz.Skyline.EditUI
         public OptimizeTransitionsForm(SkylineWindow skylineWindow)
         {
             InitializeComponent();
+            databoundGridControl.Parent.Controls.Remove(databoundGridControl);
+            databoundGridControl.Dock = DockStyle.Fill;
+            splitContainer1.Panel1.Controls.Add(databoundGridControl);
             SkylineWindow = skylineWindow;
             _bindingList = new BindingList<Row>(_rowList);
             _dataSchema = new SkylineWindowDataSchema(skylineWindow, SkylineDataSchema.GetLocalizedSchemaLocalizer());
@@ -255,7 +258,8 @@ namespace pwiz.Skyline.EditUI
                 peptideQuantifier = peptideQuantifier.MakeAllTransitionsQuantitative();
             }
 
-            var calibrationCurveFitter = new CalibrationCurveFitter(peptideQuantifier, selection.Document.Settings);
+            var calibrationCurveFitter =
+                selection.Settings.GetCalibrationCurveFitter(peptideQuantifier, selection.Document.Settings);
             var details = new OptimizeTransitionDetails();
             bilinearCurveFitter.OptimizeTransitions(calibrationCurveFitter, details);
             return details;
@@ -361,15 +365,11 @@ namespace pwiz.Skyline.EditUI
         public void DisplayTransitionQuantLimit(TransitionsQuantLimit transitionQuantLimit)
         {
             var document = _selection.Document;
-            var quantificationSettings = document.Settings.PeptideSettings.Quantification;
-            quantificationSettings = quantificationSettings
-                .ChangeRegressionFit(RegressionFit.BILINEAR)
-                .ChangeRegressionWeighting(RegressionWeighting.ONE_OVER_X_SQUARED);
-
             var peptideQuantifier = PeptideQuantifier.GetPeptideQuantifier(_selection.Document,
                     _selection.PeptideGroupDocNode, _selection.PeptideDocNode)
                 .WithQuantifiableTransitions(transitionQuantLimit.TransitionIdentityPaths);
-            var calibrationCurveFitter = new CalibrationCurveFitter(peptideQuantifier, _selection.Document.Settings);
+            var calibrationCurveFitter =
+                _selection.Settings.GetCalibrationCurveFitter(peptideQuantifier, _selection.Document.Settings);
             var settings = new CalibrationGraphControl.Settings(document, calibrationCurveFitter,
                 Properties.Settings.Default.CalibrationCurveOptions);
             calibrationGraphControl1.Update(settings);

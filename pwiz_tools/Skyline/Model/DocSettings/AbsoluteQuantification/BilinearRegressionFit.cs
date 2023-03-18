@@ -55,6 +55,10 @@ namespace pwiz.Skyline.Model.DocSettings.AbsoluteQuantification
                 {
                     var baselineHeight = baselinePoints.Select(pt => pt.Y).Mean();
                     var turningPoint = linearCurve.GetX(baselineHeight).GetValueOrDefault();
+                    if (turningPoint < 0)
+                    {
+                        return null;
+                    }
                     return new CalibrationCurve.Bilinear(linearCurve, turningPoint);
                 }
             }

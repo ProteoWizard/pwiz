@@ -3,6 +3,7 @@ using System.Collections.Generic;
 using System.ComponentModel;
 using System.Linq;
 using System.Threading;
+using MathNet.Numerics.Providers.LinearAlgebra;
 using NHibernate.Loader;
 using pwiz.Common.Collections;
 using pwiz.Common.DataBinding;
@@ -68,6 +69,15 @@ namespace pwiz.Skyline.EditUI
                 {
                     propertyPaths.Add(ppFom.Property(nameof(FiguresOfMerit.LimitOfQuantification)));
                 }
+            }
+
+            if (OptimizeType == OptimizeType.LOD)
+            {
+                propertyPaths.Add(PropertyPath.Root.Property(nameof(Row.LodImprovement)));
+            }
+            else
+            {
+                propertyPaths.Add(PropertyPath.Root.Property(nameof(Row.LoqImprovement)));
             }
 
             return new ViewSpec().SetRowType(typeof(Row)).SetColumns(propertyPaths.Select(pp => new ColumnSpec(pp)));
@@ -149,9 +159,30 @@ namespace pwiz.Skyline.EditUI
                 {
                     return null;
                 }
-                var calibrationCurveFitter = new CalibrationCurveFitter(peptideQuantifier, document.Settings);
+
+                var calibrationCurveFitter =
+                    _bilinearCurveFitter.OptimizeTransitionSettings.GetCalibrationCurveFitter(peptideQuantifier,
+                        document.Settings);
                 return MakeFiguresOfMerit(_bilinearCurveFitter.ComputeQuantLimits(calibrationCurveFitter),
                     document.Settings);
+            }
+
+            public double? LoqImprovement
+            {
+                get
+                {
+                    return _originalFiguresOfMerit.Value?.LimitOfQuantification -
+                           _optimizedFiguresOfMerit.Value?.LimitOfQuantification;
+                }
+            }
+
+            public double? LodImprovement
+            {
+                get
+                {
+                    return _optimizedFiguresOfMerit.Value?.LimitOfDetection -
+                           _optimizedFiguresOfMerit.Value?.LimitOfDetection;
+                }
             }
         }
 
@@ -197,7 +228,10 @@ namespace pwiz.Skyline.EditUI
                 {
                     peptideQuantifier = peptideQuantifier.MakeAllTransitionsQuantitative();
                 }
-                var calibrationCurveFitter = new CalibrationCurveFitter(peptideQuantifier, document.Settings);
+
+                var calibrationCurveFitter =
+                    bilinearCurveFitter.OptimizeTransitionSettings.GetCalibrationCurveFitter(peptideQuantifier,
+                        document.Settings);
                 var optimizedMolecule =
                     bilinearCurveFitter.OptimizeTransitions(calibrationCurveFitter, null);
                 newMoleculeArrays[moleculeListMoleculeIndex.Item1][moleculeListMoleculeIndex.Item2] = optimizedMolecule;

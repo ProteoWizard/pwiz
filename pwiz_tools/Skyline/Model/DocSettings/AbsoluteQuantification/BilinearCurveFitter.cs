@@ -27,7 +27,6 @@ namespace pwiz.Skyline.Model.DocSettings.AbsoluteQuantification
         public int GridSize { get; set; }
         public double CvThreshold { get; set; }
         public CancellationToken CancellationToken { get; set; }
-
         public int RandomSeed
         {
             get
@@ -199,10 +198,18 @@ namespace pwiz.Skyline.Model.DocSettings.AbsoluteQuantification
         {
             var weightedPoints = calibrationCurveFitter.EnumerateCalibrationPoints()
                 .Select(calibrationCurveFitter.GetWeightedPoint).OfType<WeightedPoint>().ToList();
-            var combinedWeightedPoints = new List<WeightedPoint>();
-            foreach (var pointGroup in weightedPoints.GroupBy(pt => pt.X))
+            List<WeightedPoint> combinedWeightedPoints;
+            if (OptimizeTransitionSettings.CombinePointsWithSameConcentration)
             {
-                combinedWeightedPoints.Add(new WeightedPoint(pointGroup.Key, pointGroup.Average(pt=>pt.Y), pointGroup.First().Weight));
+                combinedWeightedPoints = new List<WeightedPoint>();
+                foreach (var pointGroup in weightedPoints.GroupBy(pt => pt.X))
+                {
+                    combinedWeightedPoints.Add(new WeightedPoint(pointGroup.Key, pointGroup.Average(pt => pt.Y), pointGroup.First().Weight));
+                }
+            }
+            else
+            {
+                combinedWeightedPoints = weightedPoints;
             }
             return ComputeQuantLimits(combinedWeightedPoints);
         }

@@ -36,6 +36,7 @@
             this.cbxPreserveNonQuantitative = new System.Windows.Forms.CheckBox();
             this.tbxMinTransitions = new System.Windows.Forms.NumericUpDown();
             this.lblMinTransitions = new System.Windows.Forms.Label();
+            this.cbxAvgAtConcLevel = new System.Windows.Forms.CheckBox();
             this.groupBoxOptimize.SuspendLayout();
             ((System.ComponentModel.ISupportInitialize)(this.tbxMinTransitions)).BeginInit();
             this.SuspendLayout();
@@ -130,10 +131,22 @@
             this.lblMinTransitions.TabIndex = 9;
             this.lblMinTransitions.Text = "Minimum number of transitions";
             // 
+            // cbxAvgAtConcLevel
+            // 
+            this.cbxAvgAtConcLevel.AutoSize = true;
+            this.cbxAvgAtConcLevel.Location = new System.Drawing.Point(6, 78);
+            this.cbxAvgAtConcLevel.Name = "cbxAvgAtConcLevel";
+            this.cbxAvgAtConcLevel.Size = new System.Drawing.Size(174, 17);
+            this.cbxAvgAtConcLevel.TabIndex = 15;
+            this.cbxAvgAtConcLevel.Text = "Average pts at each conc level";
+            this.cbxAvgAtConcLevel.UseVisualStyleBackColor = true;
+            this.cbxAvgAtConcLevel.CheckedChanged += new System.EventHandler(this.SettingsValueChange);
+            // 
             // OptimizeTransitionsSettingsControl
             // 
             this.AutoScaleDimensions = new System.Drawing.SizeF(6F, 13F);
             this.AutoScaleMode = System.Windows.Forms.AutoScaleMode.Font;
+            this.Controls.Add(this.cbxAvgAtConcLevel);
             this.Controls.Add(this.tbxRandomSeed);
             this.Controls.Add(this.lblRandomSeed);
             this.Controls.Add(this.groupBoxOptimize);
@@ -141,7 +154,7 @@
             this.Controls.Add(this.tbxMinTransitions);
             this.Controls.Add(this.lblMinTransitions);
             this.Name = "OptimizeTransitionsSettingsControl";
-            this.Size = new System.Drawing.Size(563, 85);
+            this.Size = new System.Drawing.Size(563, 101);
             this.groupBoxOptimize.ResumeLayout(false);
             this.groupBoxOptimize.PerformLayout();
             ((System.ComponentModel.ISupportInitialize)(this.tbxMinTransitions)).EndInit();
@@ -160,5 +173,6 @@
         private System.Windows.Forms.CheckBox cbxPreserveNonQuantitative;
         private System.Windows.Forms.NumericUpDown tbxMinTransitions;
         private System.Windows.Forms.Label lblMinTransitions;
+        private System.Windows.Forms.CheckBox cbxAvgAtConcLevel;
     }
 }

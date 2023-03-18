@@ -70,7 +70,7 @@ namespace pwiz.Skyline.Model.Databinding.Entities
                     double? scoreCalc = peptidePrediction.RetentionTime.Calculator.ScoreSequence(textId);
                     if (scoreCalc.HasValue)
                     {
-                        return peptidePrediction.RetentionTime.GetRetentionTime(scoreCalc.Value, ResultFile.ChromFileInfoId);
+                        return peptidePrediction.RetentionTime.GetRetentionTime(scoreCalc.Value, ResultFile.ChromFileInfoId, true);
                     }
                 }
                 return null;

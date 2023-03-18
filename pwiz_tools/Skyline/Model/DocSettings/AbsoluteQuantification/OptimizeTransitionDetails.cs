@@ -1,5 +1,6 @@
 ﻿using pwiz.Common.SystemUtil;
 using System.Collections.Generic;
+using pwiz.Skyline.Model.GroupComparison;
 
 namespace pwiz.Skyline.Model.DocSettings.AbsoluteQuantification
 {
@@ -56,9 +57,22 @@ namespace pwiz.Skyline.Model.DocSettings.AbsoluteQuantification
             return ChangeProp(ImClone(this), im => im.PreserveNonQuantitative = value);
         }
 
+        public bool CombinePointsWithSameConcentration { get; private set; }
+
+        public OptimizeTransitionSettings ChangeCombinePointsWithSameConcentration(bool value)
+        {
+            return ChangeProp(ImClone(this), im => im.CombinePointsWithSameConcentration = value);
+        }
+
+        
+
         protected bool Equals(OptimizeTransitionSettings other)
         {
-            return RandomSeed == other.RandomSeed && MinimumNumberOfTransitions == other.MinimumNumberOfTransitions && OptimizeType.Equals(other.OptimizeType) && PreserveNonQuantitative == other.PreserveNonQuantitative;
+            return RandomSeed == other.RandomSeed && 
+                   MinimumNumberOfTransitions == other.MinimumNumberOfTransitions &&
+                   OptimizeType.Equals(other.OptimizeType) &&
+                   PreserveNonQuantitative == other.PreserveNonQuantitative && 
+                   CombinePointsWithSameConcentration == other.CombinePointsWithSameConcentration;
         }
 
         public override bool Equals(object obj)
@@ -77,8 +91,17 @@ namespace pwiz.Skyline.Model.DocSettings.AbsoluteQuantification
                 hashCode = (hashCode * 397) ^ MinimumNumberOfTransitions;
                 hashCode = (hashCode * 397) ^ OptimizeType.GetHashCode();
                 hashCode = (hashCode * 397) ^ PreserveNonQuantitative.GetHashCode();
+                hashCode = (hashCode * 397) ^ CombinePointsWithSameConcentration.GetHashCode();
                 return hashCode;
             }
+        }
+
+        public CalibrationCurveFitter GetCalibrationCurveFitter(PeptideQuantifier peptideQuantifier, SrmSettings srmSettings)
+        {
+            return new CalibrationCurveFitter(peptideQuantifier, srmSettings)
+            {
+                CombinePointsWithSameConcentration = CombinePointsWithSameConcentration
+            };
         }
     }
 }

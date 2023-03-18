@@ -18,9 +18,10 @@ namespace pwiz.Skyline.EditUI.OptimizeTransitions
             get
             {
                 var settings = OptimizeTransitionSettings.DEFAULT
-                    .ChangeMinimumNumberOfTransitions((int)tbxMinTransitions.Value)
-                    .ChangeOptimizeType(radioLOD.Checked ? OptimizeType.LOD : OptimizeType.LOQ)
-                    .ChangePreserveNonQuantitative(cbxPreserveNonQuantitative.Checked);
+                    .ChangeMinimumNumberOfTransitions(MinNumberOfTransitions)
+                    .ChangeOptimizeType(OptimizeType)
+                    .ChangePreserveNonQuantitative(PreserveNonQuantitative)
+                    .ChangeCombinePointsWithSameConcentration(CombinePointsWithSameConcentration);
                 if (!string.IsNullOrEmpty(tbxRandomSeed.Text) && int.TryParse(tbxRandomSeed.Text, out int randomSeed))
                 {
                     settings = settings.ChangeRandomSeed(randomSeed);
@@ -74,6 +75,7 @@ namespace pwiz.Skyline.EditUI.OptimizeTransitions
                 .ChangeMinimumNumberOfTransitions(MinNumberOfTransitions)
                 .ChangeOptimizeType(OptimizeType)
                 .ChangePreserveNonQuantitative(PreserveNonQuantitative)
+                .ChangeCombinePointsWithSameConcentration(CombinePointsWithSameConcentration)
                 .ChangeRandomSeed(randomSeed);
         }
 
@@ -141,6 +143,18 @@ namespace pwiz.Skyline.EditUI.OptimizeTransitions
             set
             {
                 cbxPreserveNonQuantitative.Checked = value;
+            }
+        }
+
+        public bool CombinePointsWithSameConcentration
+        {
+            get
+            {
+                return cbxAvgAtConcLevel.Checked;
+            }
+            set
+            {
+                cbxAvgAtConcLevel.Checked = value;
             }
         }
 

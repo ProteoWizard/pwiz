@@ -60,6 +60,7 @@ namespace pwiz.Skyline.Model.DocSettings.AbsoluteQuantification
         public bool IsotopologResponseCurve { get; set; }
 
         public int? SingleBatchReplicateIndex { get; set; }
+        public bool CombinePointsWithSameConcentration { get; set; }
 
         public IDictionary<IdentityPath, PeptideQuantifier.Quantity> GetTransitionQuantities(CalibrationPoint calibrationPoint)
         {
@@ -335,14 +336,24 @@ namespace pwiz.Skyline.Model.DocSettings.AbsoluteQuantification
 
                 return new CalibrationCurve.Simple(1);
             }
+
+            var allPoints = new List<WeightedPoint>();
             foreach (var replicateIndex in GetValidStandardReplicates())
             {
                 WeightedPoint? weightedPoint = GetWeightedPoint(replicateIndex);
                 if (weightedPoint.HasValue)
                 {
-                    points.Add(weightedPoint.Value);
+                    allPoints.Add(weightedPoint.Value);
                 }
             }
+
+            if (CombinePointsWithSameConcentration)
+            {
+                allPoints = allPoints.GroupBy(pt => pt.X).Select(group =>
+                    new WeightedPoint(group.Key, group.Average(pt => pt.Y), group.First().Weight)).ToList();
+            }
+
+            points.AddRange(allPoints);
 
             if (points.Count == 0)
             {
@@ -765,7 +776,10 @@ namespace pwiz.Skyline.Model.DocSettings.AbsoluteQuantification
         public CalibrationCurveFitter MakeCalibrationCurveFitterWithTransitions(IEnumerable<IdentityPath> transitionIdentityPaths)
         {
             return new CalibrationCurveFitter(PeptideQuantifier.WithQuantifiableTransitions(transitionIdentityPaths),
-                SrmSettings);
+                SrmSettings)
+            {
+                CombinePointsWithSameConcentration = CombinePointsWithSameConcentration
+            };
         }
 
         /// <summary>

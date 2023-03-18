@@ -742,6 +742,14 @@ namespace pwiz.Skyline.Model
             }
         }
 
+        public IEnumerable<TransitionDocNode> QuantifiableTransitions
+        {
+            get
+            {
+                return TransitionGroups.SelectMany(t => t.Transitions).Where(t => t.ExplicitQuantitative);
+            }
+        }
+
         public bool HasHeavyTransitionGroups
         {
             get
