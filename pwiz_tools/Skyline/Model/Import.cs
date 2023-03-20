@@ -25,6 +25,7 @@ using System.Linq;
 using System.Text;
 using System.Text.RegularExpressions;
 using pwiz.Common.Chemistry;
+using pwiz.Common.Collections;
 using pwiz.Common.SystemUtil;
 using pwiz.ProteomeDatabase.API;
 using pwiz.Skyline.Model.Crosslinking;
@@ -2805,7 +2806,7 @@ namespace pwiz.Skyline.Model
             {
                 BaseName = Name = fastaSequence.Name;
                 Description = fastaSequence.Description;
-                Alternatives = fastaSequence.Alternatives.ToArray();
+                Alternatives = fastaSequence.Alternatives;
             }
             _settings = settings;
             _enzyme = _settings.PeptideSettings.Enzyme;
@@ -2832,33 +2833,14 @@ namespace pwiz.Skyline.Model
             {
                 _customName = true;
                 start++;
-            }
-            // Split ID from description at first space or tab
-            int split = _customName ? -1 : IndexEndId(line);
-            if (split == -1)
-            {
                 BaseName = Name = line.Substring(start);
-                Description = string.Empty;
             }
             else
             {
-                BaseName = Name = line.Substring(start, split - start);
-                string[] descriptions = line.Substring(split + 1).Split((char)1);
-                Description = descriptions[0];
-                var listAlternatives = new List<ProteinMetadata>();
-                for (int i = 1; i < descriptions.Length; i++)
-                {
-                    string alternative = descriptions[i];
-                    split = IndexEndId(alternative);
-                    if (split == -1)
-                        listAlternatives.Add(new ProteinMetadata(alternative, null));
-                    else
-                    {
-                        listAlternatives.Add(new ProteinMetadata(alternative.Substring(0, split),
-                            alternative.Substring(split + 1)));
-                    }
-                }
-                Alternatives = listAlternatives.ToArray();
+                var fastaSequence = FastaData.MakeFastaSequence(line, @"A");
+                BaseName = Name = fastaSequence.Name;
+                Description = fastaSequence.Description;
+                Alternatives = fastaSequence.Alternatives;
             }
             PeptideList = peptideList;
         }
@@ -2867,11 +2849,6 @@ namespace pwiz.Skyline.Model
             : this(line, true, settings, sourceFile, irtTargets)
         {
             _modMatcher = modMatcher;
-        }
-
-        private static int IndexEndId(string line)
-        {
-            return line.IndexOfAny(new[] { TextUtil.SEPARATOR_SPACE, TextUtil.SEPARATOR_TSV });
         }
 
         /// <summary>
@@ -2886,7 +2863,7 @@ namespace pwiz.Skyline.Model
 
         public string Name { get; private set; }
         public string Description { get; private set; }
-        public ProteinMetadata[] Alternatives { get; private set; }
+        public ImmutableList<ProteinMetadata> Alternatives { get; private set; }
         public string AA
         {
             get
@@ -3457,18 +3434,10 @@ namespace pwiz.Skyline.Model
         }
     }
 
-    public class FastaData
+    public static class FastaData
     {
-        private FastaData(string name, string sequence)
-        {
-            Name = name;
-            Sequence = sequence;
-        }
-
-        public string Name { get; private set; }
-        public string Sequence { get; private set; }
-
-        public static void AppendSequence(StringBuilder sequence, string line)
+        private static string EMPTY_PROTEIN_SEQUENCE = @"EMPTY";
+        private static void AppendSequence(StringBuilder sequence, string line)
         {
             var seq = FastaSequence.StripModifications(line);
             // Get rid of whitespace
@@ -3479,30 +3448,36 @@ namespace pwiz.Skyline.Model
             sequence.Append(seq);
         }
 
-        public static IEnumerable<FastaData> ParseFastaFile(TextReader reader, bool readNamesOnly = false)
+        public static bool IsValidFastaChar(char c)
+        {
+            return c >= 0x20 && c <= 0x7E ||
+                   c == '\t' || c == 0x01;
+        }
+
+        public static IEnumerable<FastaSequence> ParseFastaFile(TextReader reader, bool readNamesOnly = false)
         {
             string line;
-            string name = string.Empty;
+            string fastaDescriptionLine = string.Empty;
             StringBuilder sequence = new StringBuilder();
             int lineNum = 0;
 
             while ((line = reader.ReadLine()) != null)
             {
+                ++lineNum;
                 for (int i=0; i < line.Length; ++i)
-                    if (line[i] < 32 || line[i] > 126)
-                        throw new InvalidDataException(string.Format(Resources.FastaData_ParseFastaFile_Error_on_line__0___invalid_non_ASCII_character___1___at_position__2___are_you_sure_this_is_a_FASTA_file_, lineNum, line[i], i));
+                    if (!IsValidFastaChar(line[i]))
+                        throw new InvalidDataException(string.Format(
+                            Resources.FastaData_ParseFastaFile_Error_on_line__0___invalid_non_ASCII_character___1___at_position__2___are_you_sure_this_is_a_FASTA_file_,
+                            lineNum, line[i], i));
                     
                 if (line.StartsWith(@">"))
                 {
-                    if (!string.IsNullOrEmpty(name))
+                    if (!string.IsNullOrEmpty(fastaDescriptionLine))
                     {
-                        yield return new FastaData(name, sequence.ToString());
-
+                        yield return MakeFastaSequence(fastaDescriptionLine, sequence.ToString());
                         sequence.Clear();
                     }
-                    var split = line.Split(TextUtil.SEPARATOR_SPACE);
-                    // Remove the '>'
-                    name = split[0].Remove(0, 1).Trim();
+                    fastaDescriptionLine = line;
                 }
                 else if (!readNamesOnly)
                 {
@@ -3511,8 +3486,54 @@ namespace pwiz.Skyline.Model
             }
 
             // Add the last fasta sequence
-            if (!string.IsNullOrEmpty(name))
-                yield return new FastaData(name, sequence.ToString());
+            if (!string.IsNullOrEmpty(fastaDescriptionLine))
+                yield return MakeFastaSequence(fastaDescriptionLine, sequence.ToString());
+        }
+
+        public static FastaSequence MakeFastaSequence(string fastaDescriptionLine, string sequence)
+        {
+            int start = fastaDescriptionLine.StartsWith(@">") ? 1 : 0;
+            int split = IndexEndId(fastaDescriptionLine);
+            string name;
+            string description;
+            ImmutableList<ProteinMetadata> alternatives;
+            if (split < 0)
+            {
+                name = fastaDescriptionLine.Substring(start);
+                description = string.Empty;
+                alternatives = ImmutableList<ProteinMetadata>.EMPTY;
+            }
+            else
+            {
+                name = fastaDescriptionLine.Substring(start, split - start);
+                string[] descriptions = fastaDescriptionLine.Substring(split + 1).Split((char)1);
+                description = descriptions[0];
+                var listAlternatives = new List<ProteinMetadata>();
+                for (int i = 1; i < descriptions.Length; i++)
+                {
+                    string alternative = descriptions[i];
+                    split = IndexEndId(alternative);
+                    if (split == -1)
+                        listAlternatives.Add(new ProteinMetadata(alternative, null));
+                    else
+                    {
+                        listAlternatives.Add(new ProteinMetadata(alternative.Substring(0, split),
+                            alternative.Substring(split + 1)));
+                    }
+                }
+                alternatives = ImmutableList.ValueOf(listAlternatives);
+            }
+
+            if (string.IsNullOrEmpty(sequence))
+            {
+                sequence = EMPTY_PROTEIN_SEQUENCE;
+            }
+            return new FastaSequence(name, string.IsNullOrEmpty(description) ? null : description, alternatives, sequence);
+        }
+
+        private static int IndexEndId(string line)
+        {
+            return line.IndexOfAny(new[] { TextUtil.SEPARATOR_SPACE, TextUtil.SEPARATOR_TSV });
         }
     }
 }

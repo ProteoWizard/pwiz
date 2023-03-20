@@ -61,6 +61,23 @@ namespace pwiz.SkylineTestUtil
             }
         }
 
+        public static void AreEqual<TKey,TValue>(IDictionary<TKey,TValue> expected, IDictionary<TKey, TValue> actual, string message = null)
+        {
+            AreEqual(expected.Count, actual.Count, message);
+
+            foreach (var keyValuePairExpected in expected)
+            {
+                if (!actual.TryGetValue(keyValuePairExpected.Key, out var valueActual ))
+                {
+                    AreEqual(keyValuePairExpected.Key.ToString(), null, message);
+                }
+                else
+                {
+                    AreEqual(keyValuePairExpected.Value, valueActual, message);
+                }
+            }
+        }
+
         public static void AreEqual<T>(T expected, T actual, string message = null)
         {
             if (!Equals(expected, actual))
@@ -839,7 +856,7 @@ namespace pwiz.SkylineTestUtil
                     // If only difference appears to be generated GUIDs or timestamps, let it pass
                     if (!LinesEquivalentIgnoringTimeStampsAndGUIDs(lineTarget, lineActual, columnTolerances))
                     {
-                        Fail(string.Format(@"Diff found at line {0}:\r\n{1}\r\n>\r\n{2}", count, lineTarget, lineActual));
+                        Fail(helpMsg + string.Format(@"Diff found at line {0}:\r\n{1}\r\n>\r\n{2}", count, lineTarget, lineActual));
                     }
                     lineEqualLast = lineTarget;
                     count++;

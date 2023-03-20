@@ -201,7 +201,7 @@ namespace pwiz.Skyline
                     }
                     else if (dlg.FileName.EndsWith(SkypFile.EXT))
                     {
-                        OpenSkypFile(dlg.FileName);
+                        OpenSkypFile(dlg.FileName, this);
                     }
                     else
                     {
@@ -1216,35 +1216,42 @@ namespace pwiz.Skyline
             string fileName = DocumentFilePath;
             ShareType shareType;
             DocumentFormat? fileFormatOnDisk = GetFileFormatOnDisk();
-            using (var dlgType = new ShareTypeDlg(document, fileFormatOnDisk))
+            using (var dlgType = new ShareTypeDlg(document, fileName, fileFormatOnDisk))
             {
                 if (dlgType.ShowDialog(this) == DialogResult.Cancel)
                     return;
                 shareType = dlgType.ShareType;
             }
 
-            if (skyZipFileName == null)
+            skyZipFileName ??= GetShareFileName();
+            if (skyZipFileName != null)
+                ShareDocument(skyZipFileName, shareType);
+        }
+
+        /// <summary>
+        /// Gets a share file path from the users.
+        /// This cannot be tested because it uses a CommonDialog form.
+        /// </summary>
+        private string GetShareFileName()
+        {
+            using var dlg = new SaveFileDialog
             {
-                using (var dlg = new SaveFileDialog
-                {
-                    Title = Resources.SkylineWindow_shareDocumentMenuItem_Click_Share_Document,
-                    OverwritePrompt = true,
-                    DefaultExt = SrmDocumentSharing.EXT_SKY_ZIP,
-                    SupportMultiDottedExtensions = true,
-                    Filter = TextUtil.FileDialogFilterAll(Resources.SkylineWindow_shareDocumentMenuItem_Click_Skyline_Shared_Documents, SrmDocumentSharing.EXT),
-                })
-                {
-                    if (fileName != null)
-                    {
-                        dlg.InitialDirectory = Path.GetDirectoryName(fileName);
-                        dlg.FileName = Path.GetFileNameWithoutExtension(fileName) + SrmDocumentSharing.EXT_SKY_ZIP;
-                    }
-                    if (dlg.ShowDialog(this) == DialogResult.Cancel)
-                        return;
-                    skyZipFileName = dlg.FileName;
-                }
+                Title = Resources.SkylineWindow_shareDocumentMenuItem_Click_Share_Document,
+                OverwritePrompt = true,
+                DefaultExt = SrmDocumentSharing.EXT_SKY_ZIP,
+                SupportMultiDottedExtensions = true,
+                Filter = TextUtil.FileDialogFilterAll(
+                    Resources.SkylineWindow_shareDocumentMenuItem_Click_Skyline_Shared_Documents,
+                    SrmDocumentSharing.EXT),
+            };
+            string fileName = DocumentFilePath;
+            if (fileName != null)
+            {
+                dlg.InitialDirectory = Path.GetDirectoryName(fileName);
+                dlg.FileName = Path.GetFileNameWithoutExtension(fileName) + SrmDocumentSharing.EXT_SKY_ZIP;
             }
-            ShareDocument(skyZipFileName, shareType);
+
+            return dlg.ShowDialog(this) == DialogResult.OK ? dlg.FileName : null;
         }
 
         private DocumentFormat? GetFileFormatOnDisk()
@@ -3350,7 +3357,7 @@ namespace pwiz.Skyline
             try
             {
                 var cancelled = false;
-                shareType = publishClient.GetShareType(fileInfo, DocumentUI, GetFileFormatOnDisk(), this, ref cancelled);
+                shareType = publishClient.GetShareType(fileInfo, DocumentUI, DocumentFilePath, GetFileFormatOnDisk(), this, ref cancelled);
                 if (cancelled)
                 {
                     return true;
@@ -3420,6 +3427,43 @@ namespace pwiz.Skyline
             catch (Exception exception)
             {
                 MessageDlg.ShowException(this, exception);
+            }
+        }
+
+        public void ImportAnnotationsFromFile(string filename)
+        {
+            using (var reader = new StreamReader(filename))
+            {
+                ImportAnnotations(reader, new MessageInfo(MessageType.imported_annotations, Document.DocumentType, filename));
+            }
+        }
+
+        public void ImportAnnotations(TextReader reader, MessageInfo messageInfo)
+        {
+            lock (GetDocumentChangeLock())
+            {
+                var originalDocument = Document;
+                SrmDocument newDocument = null;
+                using (var longWaitDlg = new LongWaitDlg(this))
+                {
+                    longWaitDlg.PerformWork(this, 1000, broker =>
+                    {
+                        var documentAnnotations = new DocumentAnnotations(originalDocument);
+                        newDocument = documentAnnotations.ReadAnnotationsFromTextReader(broker.CancellationToken, reader);
+                    });
+                }
+                if (newDocument != null)
+                {
+                    ModifyDocument(Resources.SkylineWindow_ImportAnnotations_Import_Annotations, doc =>
+                    {
+                        if (!ReferenceEquals(doc, originalDocument))
+                        {
+                            throw new ApplicationException(Resources
+                                .SkylineDataSchema_VerifyDocumentCurrent_The_document_was_modified_in_the_middle_of_the_operation_);
+                        }
+                        return newDocument;
+                    }, docPair => AuditLogEntry.CreateSingleMessageEntry(messageInfo));
+                }
             }
         }
 

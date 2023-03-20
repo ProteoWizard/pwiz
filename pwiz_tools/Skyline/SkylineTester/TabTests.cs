@@ -32,6 +32,7 @@ namespace SkylineTester
         public override void Enter()
         {
             MainWindow.DefaultButton = MainWindow.RunTests;
+            MainWindow.UpdateTestTabControls(); // Force initial (in)visibility of Offset button
         }
 
         public override bool Run()
@@ -54,7 +55,7 @@ namespace SkylineTester
             var args = new StringBuilder();
 
             args.Append("offscreen=");
-            args.Append(MainWindow.Offscreen.Checked);
+            args.Append(MainWindow.Offscreen.Checked || MainWindow.RunParallel.Checked);
 
             if (!MainWindow.RunIndefinitely.Checked)
             {
@@ -139,6 +140,14 @@ namespace SkylineTester
             MainWindow.AddTestRunner(args.ToString());
             MainWindow.RunCommands();
             return true;
+        }
+
+        public override void Cancel()
+        {
+            base.Cancel();
+
+            if (MainWindow.RunParallel.Checked)
+                RunTests.SendDockerKill();
         }
 
         public override int Find(string text, int position)

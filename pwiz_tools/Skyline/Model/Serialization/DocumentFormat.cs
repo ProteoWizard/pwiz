@@ -100,7 +100,18 @@ namespace pwiz.Skyline.Model.Serialization
         public static readonly DocumentFormat VERSION_22_13 = new DocumentFormat(22.13); // protein_group and protein_association added
         public static readonly DocumentFormat PROTEIN_GROUPS = VERSION_22_13;
         public static readonly DocumentFormat VERSION_22_2 = new DocumentFormat(22.2); // Release format
-        public static readonly DocumentFormat CURRENT = VERSION_22_2;
+        /// <summary>
+        /// Shared (.sky.zip) files may contain mass spec data files.
+        /// This is not really a document format change, but a way to keep users from using
+        /// File > Share to save to an older format with mass spec data folders included, since
+        /// older versions of Skyline show an error with a .sky.zip or .zip file containing
+        /// subfolders which Agilent, Bruker, and Waters all use for their mass spec data.
+        /// </summary>
+        public static readonly DocumentFormat VERSION_22_21 = new DocumentFormat(22.21);
+        public static readonly DocumentFormat SHARE_DATA_FOLDERS = VERSION_22_21;
+        public static readonly DocumentFormat VERSION_22_22 = new DocumentFormat(22.22); // skewness and kurtosis
+        public static readonly DocumentFormat VERSION_22_23 = new DocumentFormat(22.23); // ion match tolerance units
+        public static readonly DocumentFormat CURRENT = VERSION_22_23;
 
         private readonly double _versionNumber;
         public DocumentFormat(double versionNumber)

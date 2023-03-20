@@ -97,8 +97,7 @@ namespace pwiz.SkylineTestFunctional
                 exportChromDlg.WriteChromatograms(exportActual);
             });
             AssertEx.FileEquals(exportExpected, exportActual);
-            RunUI(exportChromDlg.CancelDialog);
-            WaitForClosedForm(exportChromDlg);
+            OkDialog(exportChromDlg, exportChromDlg.CancelDialog);
         }
     }
 }

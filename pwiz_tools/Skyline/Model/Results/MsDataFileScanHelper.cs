@@ -61,7 +61,19 @@ namespace pwiz.Skyline.Model.Results
 
         public int TransitionIndex { get; set; }
 
+        public TransitionFullScanInfo CurrentTransition
+        {
+            get
+            {
+                if (ScanProvider.Transitions.Length > TransitionIndex)
+                    return ScanProvider.Transitions[TransitionIndex];
+                return null;
+            }
+        }
+
         public int ScanIndex { get; set; }
+
+        public int? OptStep { get; private set; }
 
         public string[] SourceNames { get; set; }
 
@@ -77,9 +89,9 @@ namespace pwiz.Skyline.Model.Results
                     return;
                 }
 
-                var oldTimeIntensities = GetTimeIntensities(Source);
+                var oldTimeIntensities = TimeIntensities;
                 _chromSource = value;
-                var newTimeIntensities = GetTimeIntensities(Source);
+                var newTimeIntensities = TimeIntensities;
                 if (newTimeIntensities != null)
                 {
                     if (oldTimeIntensities != null && ScanIndex >= 0 && ScanIndex < oldTimeIntensities.Times.Count)
@@ -243,27 +255,12 @@ namespace pwiz.Skyline.Model.Results
             }
         }
 
-        public TimeIntensities GetTimeIntensities(ChromSource source)
-        {
-            if (ScanProvider != null)
-            {
-                foreach (var transition in ScanProvider.Transitions)
-                {
-                    if (transition.Source == source)
-                        return transition.TimeIntensities;
-                }
-            }
-            return null;
-        }
-
-        public IList<int> GetScanIndexes(ChromSource source)
-        {
-            return GetTimeIntensities(source)?.ScanIds;
-        }
+        public TimeIntensities TimeIntensities => ScanProvider?.Transitions
+            .FirstOrDefault(transition => transition.Source == Source)?.TimeIntensities;
 
         public int GetScanIndex()
         {
-            var scanIndexes = GetScanIndexes(Source);
+            var scanIndexes = TimeIntensities?.ScanIds;
             var result = scanIndexes != null ? scanIndexes[ScanIndex] : -1;
             if (result < 0)
                 MsDataSpectra = null;
@@ -293,7 +290,7 @@ namespace pwiz.Skyline.Model.Results
                 : FindScanIndex(times, retentionTime, index, endIndex);
         }
 
-        public void UpdateScanProvider(IScanProvider scanProvider, int transitionIndex, int scanIndex)
+        public void UpdateScanProvider(IScanProvider scanProvider, int transitionIndex, int scanIndex, int? optStep)
         {
             ScanProvider.SetScanProvider(scanProvider);
             if (scanProvider != null)
@@ -303,6 +300,7 @@ namespace pwiz.Skyline.Model.Results
                     Assume.Fail($@"unexpected ChromSource '{ScanProvider.Source}' in transition {transitionIndex} ({scanProvider.Transitions[transitionIndex]})");
                 TransitionIndex = transitionIndex;
                 ScanIndex = scanIndex;
+                OptStep = optStep;
                 FileName = scanProvider.DataFilePath.GetFileName();
             }
             else
@@ -310,7 +308,6 @@ namespace pwiz.Skyline.Model.Results
                 MsDataSpectra = null;
                 FileName = null;
             }
-            
         }
         /// <summary>
         /// Provides a constant background thread with responsibility for all interactions

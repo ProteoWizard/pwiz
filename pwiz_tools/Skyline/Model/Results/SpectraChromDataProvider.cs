@@ -62,6 +62,9 @@ namespace pwiz.Skyline.Model.Results
         private ChromGroups _chromGroups;
         private BlockWriter _blockWriter;
         private bool _isSrm;
+
+        private readonly OptimizableRegression _optimization;
+
         private readonly object _disposeLock = new object();
         private bool _isDisposing;
 
@@ -112,6 +115,9 @@ namespace pwiz.Skyline.Model.Results
             // during interpolation.
             _isProcessedScans = dataFile.IsMzWiffXml;
 
+            _optimization = _document.Settings.MeasuredResults.Chromatograms
+                .FirstOrDefault(chromSet => chromSet.ContainsFile(fileInfo.FilePath))?.OptimizationFunction;
+
             UpdatePercentComplete();
 
             if (NeedMaxIonMobilityValue(dataFile))
@@ -120,7 +126,7 @@ namespace pwiz.Skyline.Model.Results
             // Create the filter responsible for chromatogram extraction
             bool firstPass = (_retentionTimePredictor != null);
             _filter = new SpectrumFilter(_document, FileInfo.FilePath, new DataFileInstrumentInfo(dataFile),
-                _maxIonMobilityValue, _retentionTimePredictor, firstPass, _globalChromatogramExtractor);
+                _optimization, _maxIonMobilityValue, _retentionTimePredictor, firstPass, _globalChromatogramExtractor);
 
             if (!_isSrm && (_filter.EnabledMs || _filter.EnabledMsMs))
             {
@@ -215,7 +221,8 @@ namespace pwiz.Skyline.Model.Results
             var dataFile = _spectra.Detach();
 
             // Start the second pass
-            _filter = new SpectrumFilter(_document, FileInfo.FilePath, _filter, _maxIonMobilityValue, _retentionTimePredictor, false, _globalChromatogramExtractor);
+            _filter = new SpectrumFilter(_document, FileInfo.FilePath, _filter, _optimization, _maxIonMobilityValue,
+                _retentionTimePredictor, false, _globalChromatogramExtractor);
             _spectra = null;
             _isSrm = false;
 
@@ -483,6 +490,7 @@ namespace pwiz.Skyline.Model.Results
                         collector.PrecursorMz,
                         collector.IonMobility,
                         pairProduct.Key.TargetMz,
+                        0,
                         0,
                         pairProduct.Key.FilterWidth,
                         chromMap.ChromSource,
@@ -1046,8 +1054,8 @@ namespace pwiz.Skyline.Model.Results
                             var msLevel = _lookaheadContext.GetMsLevel(i);
                             if (!_filter.EnabledMsMs && msLevel != 1)
                                 continue;
-                            // And if full gradient MS1 is not required and MS1 filtering is not enabled, skip MS1 spectra
-                            if (!_filter.EnabledMs && msLevel == 1 && !_filter.IsFilteringFullGradientMs1)
+                            // And if full gradient MS1 is not required and MS1 filtering is not enabled, skip MS1 spectra (unless this is GC-EI, where everything is fragmented)
+                            if (!_filter.EnabledMs && msLevel == 1 && !_filter.IsFilteringFullGradientMs1 && !_filter.IsElectronIonizationMse)
                                 continue;
 
                             // Skip quickly through the chromatographic lead-in and tail when possible 
@@ -1642,7 +1650,7 @@ namespace pwiz.Skyline.Model.Results
             ChromExtractor extractor = spectrum.Extractor;
             int ionScanCount = spectrum.ProductFilters.Length;
             ChromDataCollector collector;
-            var key = new PrecursorTextId(precursorMz, ionMobility, target, extractor);
+            var key = new PrecursorTextId(precursorMz, null, null, ionMobility, target, extractor);
             int index = spectrum.FilterIndex;
             while (PrecursorCollectorMap.Count <= index)
                 PrecursorCollectorMap.Add(null);

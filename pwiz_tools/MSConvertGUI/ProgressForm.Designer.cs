@@ -54,9 +54,10 @@ namespace MSConvertGUI
             this.JobDataView = new System.Windows.Forms.DataGridView();
             this.NameColumn = new System.Windows.Forms.DataGridViewTextBoxColumn();
             this.ProgressColumn = new CustomProgressCell.DataGridViewProgressColumn();
+            ((System.ComponentModel.ISupportInitialize)(this.ProgressSplit)).BeginInit();
             this.ProgressSplit.Panel1.SuspendLayout();
             this.ProgressSplit.SuspendLayout();
-            ((System.ComponentModel.ISupportInitialize) (this.JobDataView)).BeginInit();
+            ((System.ComponentModel.ISupportInitialize)(this.JobDataView)).BeginInit();
             this.SuspendLayout();
             // 
             // ProgressSplit
@@ -119,14 +120,15 @@ namespace MSConvertGUI
             this.ClientSize = new System.Drawing.Size(713, 454);
             this.Controls.Add(this.ProgressSplit);
             this.Name = "ProgressForm";
-            this.Text = "ProgressForm";
             this.ShowIcon = false;
             this.ShowInTaskbar = false;
-            this.Load += new System.EventHandler(this.ProgressForm_Load);
+            this.Text = "ProgressForm";
             this.FormClosing += new System.Windows.Forms.FormClosingEventHandler(this.ProgressForm_FormClosing);
+            this.Load += new System.EventHandler(this.ProgressForm_Load);
             this.ProgressSplit.Panel1.ResumeLayout(false);
+            ((System.ComponentModel.ISupportInitialize)(this.ProgressSplit)).EndInit();
             this.ProgressSplit.ResumeLayout(false);
-            ((System.ComponentModel.ISupportInitialize) (this.JobDataView)).EndInit();
+            ((System.ComponentModel.ISupportInitialize)(this.JobDataView)).EndInit();
             this.ResumeLayout(false);
 
         }

@@ -205,6 +205,7 @@ blib-test-build ssl-rt : -o : output/ssl-rt.blib : ssl-rt.check : $(TEST_INPUTS_
 blib-test-build ssl-index-rt : -o : output/ssl-index-rt.blib : ssl-index-rt.check : $(TEST_INPUTS_PATH)/ssl-index-with-rt.ssl ;
 blib-test-build ssl-name-rt : -o : output/ssl-name-rt.blib : ssl-name-rt.check : $(TEST_INPUTS_PATH)/ssl-name-with-rt.ssl ;
 blib-test-build ssl-small-mol : -o : output/ssl-small-mol.blib : ssl-small-mol.check : $(TEST_INPUTS_PATH)/ssl-small-mol.ssl ;
+blib-test-build ssl-invalid-sequence : -o -e@Only_uppercase_letters : output/ssl-invalid-sequence.blib : ssl-invalid-sequence.check : $(TEST_INPUTS_PATH)/ssl-invalid-sequence.ssl ;
 
 # Test building with percolator XML files
 
@@ -248,6 +249,8 @@ blib-test-build pride-mill : -o : output/pride-mill.blib : pride-mill.check zbui
 blib-test-build tiny-proxl : --unicode -o : output/tiny-proxl.blib : tiny-proxl.check zbuild.skip-lines : $(TEST_INPUTS_PATH)/tiny.proxl.xml ;
 blib-test-build tinyByonic-proxl : -o : output/tinyByonic-proxl.blib : tinyByonic-proxl.check zbuild.skip-lines : $(TEST_INPUTS_PATH)/tinyByonic.proxl.xml ;
 blib-test-build tinyPlink-proxl : -o : output/tinyPlink-proxl.blib : tinyPlink-proxl.check zbuild.skip-lines : $(TEST_INPUTS_PATH)/tinyPlink.proxl.xml ;
+blib-test-build tinyPeptideProphet-proxl : -o : output/tinyPeptideProphet-proxl.blib : tinyPeptideProphet-proxl.check zbuild.skip-lines : $(TEST_INPUTS_PATH)/tinyPeptideProphet.proxl.xml ;
+blib-test-build tinyMerox-proxl : -o : output/tinyMerox-proxl.blib : tinyMerox-proxl.check zbuild.skip-lines : $(TEST_INPUTS_PATH)/tinyMerox.proxl.xml ;
 blib-test-build tiny-msf : --unicode -o : output/tiny-msf.blib : tiny-msf.check zbuild.skip-lines : $(TEST_INPUTS_PATH)/tiny.msf ;
 blib-test-build tiny-v2-msf : -o : output/tiny-v2-msf.blib : tiny-v2-msf.check zbuild.skip-lines : $(TEST_INPUTS_PATH)/tiny-v2.msf ;
 blib-test-build tiny-v2-filtered-pdResult : -o : output/tiny-v2-filtered-pdResult.blib : tiny-v2-filtered-pdResult.check zbuild.skip-lines : $(TEST_INPUTS_PATH)/tiny-v2-filtered.pdResult ;

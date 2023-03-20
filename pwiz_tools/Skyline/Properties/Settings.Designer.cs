@@ -12,7 +12,7 @@ namespace pwiz.Skyline.Properties {
     
     
     [global::System.Runtime.CompilerServices.CompilerGeneratedAttribute()]
-    [global::System.CodeDom.Compiler.GeneratedCodeAttribute("Microsoft.VisualStudio.Editors.SettingsDesigner.SettingsSingleFileGenerator", "17.1.0.0")]
+    [global::System.CodeDom.Compiler.GeneratedCodeAttribute("Microsoft.VisualStudio.Editors.SettingsDesigner.SettingsSingleFileGenerator", "17.4.0.0")]
     public sealed partial class Settings : global::System.Configuration.ApplicationSettingsBase {
         
         private static Settings defaultInstance = ((Settings)(global::System.Configuration.ApplicationSettingsBase.Synchronized(new Settings())));
@@ -209,6 +209,18 @@ namespace pwiz.Skyline.Properties {
             }
             set {
                 this["ExportMethodDwellTime"] = value;
+            }
+        }
+        
+        [global::System.Configuration.UserScopedSettingAttribute()]
+        [global::System.Diagnostics.DebuggerNonUserCodeAttribute()]
+        [global::System.Configuration.DefaultSettingValueAttribute("0.1")]
+        public double ExportMethodAccumulationTime {
+            get {
+                return ((double)(this["ExportMethodAccumulationTime"]));
+            }
+            set {
+                this["ExportMethodAccumulationTime"] = value;
             }
         }
         
@@ -1217,18 +1229,6 @@ namespace pwiz.Skyline.Properties {
             }
             set {
                 this["ShowRegressionReplicateEnum"] = value;
-            }
-        }
-        
-        [global::System.Configuration.UserScopedSettingAttribute()]
-        [global::System.Diagnostics.DebuggerNonUserCodeAttribute()]
-        [global::System.Configuration.DefaultSettingValueAttribute("single")]
-        public string ShowTreeReplicateEnum {
-            get {
-                return ((string)(this["ShowTreeReplicateEnum"]));
-            }
-            set {
-                this["ShowTreeReplicateEnum"] = value;
             }
         }
         
@@ -3371,13 +3371,25 @@ namespace pwiz.Skyline.Properties {
         
         [global::System.Configuration.UserScopedSettingAttribute()]
         [global::System.Diagnostics.DebuggerNonUserCodeAttribute()]
-        [global::System.Configuration.DefaultSettingValueAttribute("0")]
-        public int ViewLibrarySplitPropsDist {
+        [global::System.Configuration.DefaultSettingValueAttribute("0.33")]
+        public float ViewLibrarySplitPropsDist {
             get {
-                return ((int)(this["ViewLibrarySplitPropsDist"]));
+                return ((float)(this["ViewLibrarySplitPropsDist"]));
             }
             set {
                 this["ViewLibrarySplitPropsDist"] = value;
+            }
+        }
+        
+        [global::System.Configuration.UserScopedSettingAttribute()]
+        [global::System.Diagnostics.DebuggerNonUserCodeAttribute()]
+        [global::System.Configuration.DefaultSettingValueAttribute("False")]
+        public bool ViewLibraryMatchPropsVisible {
+            get {
+                return ((bool)(this["ViewLibraryMatchPropsVisible"]));
+            }
+            set {
+                this["ViewLibraryMatchPropsVisible"] = value;
             }
         }
     }

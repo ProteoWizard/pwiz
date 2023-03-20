@@ -67,7 +67,7 @@ using TestRunnerLib;
 namespace pwiz.SkylineTestUtil
 {
     /// <summary>
-    /// Test method attribute which hides the test from SkylineTester.
+    /// Test method attribute which excludes the test from SkylineTester's list of tutorial L10N checks.
     /// </summary>
     [AttributeUsage(AttributeTargets.Method, AllowMultiple = false)]
     public sealed class NoLocalizationAttribute : Attribute
@@ -86,12 +86,69 @@ namespace pwiz.SkylineTestUtil
     }
 
     /// <summary>
+    /// Test method attribute which specifies a test is not suitable for use with Unicode paths
+    /// Note that the constructor expects a string explaining why a test is unsuitable for use with Unicde 
+    /// </summary>
+    [AttributeUsage(AttributeTargets.Method, AllowMultiple = false)]
+    public sealed class NoUnicodeTestingAttribute : Attribute
+    {
+        public string Reason { get; private set; } // Reason for declaring test as unsuitable for unicode
+
+        public NoUnicodeTestingAttribute(string reason)
+        {
+            Reason = reason; // e.g. "calls MSFragger", "uses mz5" etc
+        }
+
+    }
+
+    /// <summary>
     /// Test method attribute which specifies a test is not suitable for parallel testing
     /// (e.g. memory hungry or writes to the filesystem outside of the test's working directory)
+    /// Note that the constructor expects a string explaining why a test is unsuitable for parallel use 
     /// </summary>
     [AttributeUsage(AttributeTargets.Method, AllowMultiple = false)]
     public sealed class NoParallelTestingAttribute : Attribute
     {
+        public string Reason { get; private set; } // Reason for declaring test as unsuitable for parallel use
+
+        public NoParallelTestingAttribute(string reason)
+        {
+            Reason = reason; // Usually one of the strings in TestExclusionReason
+        }
+
+    }
+
+    // Some common reasons for excluding test from nightly and/or parallel testing
+    //
+    // CONSIDER: in future we might want more find-grained test exclusion handling
+    // For example RESOURCE_INTENSIVE tests might actually work in parallel with beefier workers,
+    // VENDOR_FILE_LOCKING and SHARED_DIRECTORY_WRITE might be able to run on workers so long as
+    // all instances are queued on same worker
+    public class TestExclusionReason
+    {
+        public const string RESOURCE_INTENSIVE = "Resource heavy test, best to run on server instead of worker";
+        public const string EXCESSIVE_TIME = "Requires more time than can be justified in nightly tests";
+        public const string VENDOR_FILE_LOCKING = "Vendor readers require exclusive read access";
+        public const string SHARED_DIRECTORY_WRITE = "Requires write access to directory shared by all workers";
+        public const string MZ5_UNICODE_ISSUES = "mz5 doesn't handle unicode paths";
+        public const string MSGFPLUS_UNICODE_ISSUES = "MsgfPlus doesn't handle unicode paths";
+        public const string MSFRAGGER_UNICODE_ISSUES = "MsFragger doesn't handle unicode paths";
+    }
+
+    /// <summary>
+    /// Test method attribute which specifies a test is not suitable for automated nightly testing
+    /// (e.g. memory hungry or excessively time consuming)
+    /// </summary>
+    [AttributeUsage(AttributeTargets.Method, AllowMultiple = false)]
+    public sealed class NoNightlyTestingAttribute : Attribute
+    {
+        public string Reason { get; private set; } // Reason for declaring test as unsuitable for Nightly
+
+        public NoNightlyTestingAttribute(string reason)
+        {
+            Reason = reason; // Usually one of the strings in TestExclusionReason
+        }
+
     }
 
     /// <summary>
@@ -178,7 +235,7 @@ namespace pwiz.SkylineTestUtil
             SkylineWindow.DocumentChangedEvent += OnDocumentChangedLogging;
         }
 
-        protected static TDlg ShowDialog<TDlg>([InstantHandle] Action act, int millis = -1) where TDlg : Form
+        protected static TDlg ShowDialog<TDlg>(Action act, int millis = -1) where TDlg : Form
         {
             var existingDialog = FindOpenForm<TDlg>();
             if (existingDialog != null)
@@ -210,7 +267,7 @@ namespace pwiz.SkylineTestUtil
         /// <summary>
         /// Brings up a dialog where the Type might be the same as a form which is already open.
         /// </summary>
-        protected static TDlg ShowNestedDlg<TDlg>([InstantHandle] Action act) where TDlg : Form
+        protected static TDlg ShowNestedDlg<TDlg>(Action act) where TDlg : Form
         {
             var existingDialogs = FormUtil.OpenForms.OfType<TDlg>().ToHashSet(new IdentityEqualityComparer<TDlg>());
             SkylineBeginInvoke(act);
@@ -263,27 +320,70 @@ namespace pwiz.SkylineTestUtil
             }
         }
 
-        protected static void RunDlg<TDlg>([InstantHandle] Action show, [InstantHandle] Action<TDlg> act = null, bool pause = false, int millis = -1) where TDlg : Form
+        /// <summary>
+        /// Shows a dialog and executes a test action on the dialog.
+        /// </summary>
+        /// <param name="showDlgAction">Action which causes the dialog to be shown</param>
+        /// <param name="exerciseDlgAction">Action which can do some things and then must close the dialog.</param>
+        protected static void RunDlg<TDlg>([InstantHandle] Action showDlgAction,
+            [InstantHandle] [NotNull] Action<TDlg> exerciseDlgAction)
+            where TDlg : Form
         {
-            RunDlg(show, false, act, pause, millis);
+            bool showDlgActionCompleted = false;
+            TDlg dlg = ShowDialog<TDlg>(() =>
+            {
+                showDlgAction();
+                showDlgActionCompleted = true;
+            });
+            OkDialog(dlg, () => exerciseDlgAction(dlg));
+            WaitForConditionUI(() => showDlgActionCompleted);
         }
 
-        protected static void RunDlg<TDlg>(Action show, bool waitForDocument, Action<TDlg> act = null, bool pause = false, int millis = -1) where TDlg : Form
+        /// <summary>
+        /// Shows a dialog and tests the dialog by invoking an action on the test thread.
+        /// Unlike <see cref="RunDlg{TDlg}"/>, the test action runs on the test thread instead of the
+        /// event thread. This method can be used for testing dialogs which in turn bring up other dialogs,
+        /// or which for other reasons cannot be tested by RunDlg.
+        /// </summary>
+        /// <param name="showDlgAction">Action which runs on the UI thread and causes the dialog to be shown</param>
+        /// <param name="exerciseDlgAction">Action which runs on the test thread and interacts with the dialog</param>
+        /// <param name="closeDlgAction">Action which runs on the UI thread and closes the dialog</param>
+        protected static void RunLongDlg<TDlg>([InstantHandle] Action showDlgAction, [InstantHandle] Action<TDlg> exerciseDlgAction, Action<TDlg> closeDlgAction) where TDlg : Form
         {
-            var doc = SkylineWindow.Document;
-            TDlg dlg = ShowDialog<TDlg>(show, millis);
-            if (pause)
-                PauseTest();
-            RunUI(() =>
+            bool showDlgActionCompleted = false;
+            TDlg dlg = ShowDialog<TDlg>(() =>
             {
-                if (act != null)
-                    act(dlg);
-                else
-                    dlg.CancelButton.PerformClick();
+                showDlgAction();
+                showDlgActionCompleted = true;
             });
-            WaitForClosedForm(dlg);
-            if (waitForDocument)
-                WaitForDocumentChange(doc);
+            exerciseDlgAction(dlg);
+            OkDialog(dlg, ()=>closeDlgAction(dlg));
+            WaitForConditionUI(() => showDlgActionCompleted);
+        }
+
+        /// <summary>
+        /// Invoke an action that causes a dialog to appear, and then dismiss that dialog.
+        /// This method waits for the dialog to be closed, but, unlike <see cref="RunDlg{TDlg}"/>,
+        /// this does not wait until the action which displayed the dialog returns.
+        /// </summary>
+        /// <param name="showAction">Action which causes the dialog to appear</param>
+        /// <param name="dismissAction">Action which causes the dialog to close.</param>
+        protected static void ShowAndDismissDlg<TDlg>(Action showAction,
+            Action<TDlg> dismissAction) where TDlg : Form
+        {
+            TDlg dlg = ShowDialog<TDlg>(showAction);
+            OkDialog(dlg, () =>
+            {
+                dismissAction(dlg);
+            });
+        }
+
+        /// <summary>
+        /// Invoke an action which displays a dialog and then click that dialog's cancel button.
+        /// </summary>
+        protected static void ShowAndCancelDlg<TDlg>(Action showAction) where TDlg : Form
+        {
+            ShowAndDismissDlg<TDlg>(showAction, dlg=>dlg.CancelButton.PerformClick());
         }
 
         protected static void SelectNode(SrmDocument.Level level, int iNode)
@@ -449,6 +549,7 @@ namespace pwiz.SkylineTestUtil
             {
                 using (var stream = File.OpenRead(filePath))
                 {
+                    using var newTmpDir = new TempDir(); // Causes ExcelReaderFactory to drop its tempfiles in a place that we can clean up on Dispose
                     IExcelDataReader excelDataReader;
                     if (legacyFile)
                     {
@@ -1783,11 +1884,13 @@ namespace pwiz.SkylineTestUtil
             var skylineWindow = Program.MainWindow;
             if (skylineWindow == null || skylineWindow.IsDisposed || !IsFormOpen(skylineWindow))
             {
-                if (Program.StartWindow != null)
+                var startWindow = Program.StartWindow;
+                if (startWindow != null)
                 {
                     CloseOpenForms(typeof(StartPage));
                     _testCompleted = true;
-                    RunUI(Program.StartWindow.Close);
+                    if (!startWindow.IsDisposed && IsFormOpen(startWindow))
+                        startWindow.Invoke((Action)Program.StartWindow.Close);
                 }
 
                 return;
@@ -2225,15 +2328,10 @@ namespace pwiz.SkylineTestUtil
         private static void AddMod(string uniModName, bool isVariable, EditListDlg<SettingsListBase<StaticMod>, StaticMod> editModsDlg)
         {
             var addStaticModDlg = ShowAddModDlg(editModsDlg);
-            RunUI(() =>
-            {
-                addStaticModDlg.SetModification(uniModName, isVariable);
-                addStaticModDlg.OkDialog();
-            });
-            WaitForClosedForm(addStaticModDlg);
+            RunUI(() => addStaticModDlg.SetModification(uniModName, isVariable));
+            OkDialog(addStaticModDlg, addStaticModDlg.OkDialog);
 
-            RunUI(editModsDlg.OkDialog);
-            WaitForClosedForm(editModsDlg);
+            OkDialog(editModsDlg, editModsDlg.OkDialog);
         }
 
         public static void SetStaticModifications(Func<IList<string>, IList<string>> changeMods)

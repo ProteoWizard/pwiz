@@ -22,7 +22,7 @@ namespace pwiz.BiblioSpec.Properties {
     [global::System.CodeDom.Compiler.GeneratedCodeAttribute("System.Resources.Tools.StronglyTypedResourceBuilder", "17.0.0.0")]
     [global::System.Diagnostics.DebuggerNonUserCodeAttribute()]
     [global::System.Runtime.CompilerServices.CompilerGeneratedAttribute()]
-    internal class Resources {
+    public class Resources {
         
         private static global::System.Resources.ResourceManager resourceMan;
         
@@ -135,7 +135,7 @@ namespace pwiz.BiblioSpec.Properties {
         /// <summary>
         ///   Looks up a localized string similar to PeptideProphet confidence.
         /// </summary>
-        internal static string BiblioSpecScoreType_DisplayName_PeptideProphet_confidence {
+        public static string BiblioSpecScoreType_DisplayName_PeptideProphet_confidence {
             get {
                 return ResourceManager.GetString("BiblioSpecScoreType_DisplayName_PeptideProphet_confidence", resourceCulture);
             }
@@ -153,7 +153,7 @@ namespace pwiz.BiblioSpec.Properties {
         /// <summary>
         ///   Looks up a localized string similar to Percolator q-value.
         /// </summary>
-        internal static string BiblioSpecScoreType_DisplayName_Percolator_q_value {
+        public static string BiblioSpecScoreType_DisplayName_Percolator_q_value {
             get {
                 return ResourceManager.GetString("BiblioSpecScoreType_DisplayName_Percolator_q_value", resourceCulture);
             }
@@ -257,6 +257,26 @@ namespace pwiz.BiblioSpec.Properties {
         internal static string LibraryBuildActionExtension_LOCALIZED_VALUES_Create {
             get {
                 return ResourceManager.GetString("LibraryBuildActionExtension_LOCALIZED_VALUES_Create", resourceCulture);
+            }
+        }
+        
+        /// <summary>
+        ///   Looks up a localized string similar to Score threshold maximum (score is probability that identification is incorrect).
+        /// </summary>
+        internal static string ScoreType_ScoreThresholdDescription_Score_threshold_maximum__score_is_probability_that_identification_is_incorrect_ {
+            get {
+                return ResourceManager.GetString("ScoreType_ScoreThresholdDescription_Score_threshold_maximum__score_is_probability" +
+                        "_that_identification_is_incorrect_", resourceCulture);
+            }
+        }
+        
+        /// <summary>
+        ///   Looks up a localized string similar to Score threshold minimum (score is probability that identification is correct).
+        /// </summary>
+        internal static string ScoreType_ScoreThresholdDescription_Score_threshold_minimum__score_is_probability_that_identification_is_correct_ {
+            get {
+                return ResourceManager.GetString("ScoreType_ScoreThresholdDescription_Score_threshold_minimum__score_is_probability" +
+                        "_that_identification_is_correct_", resourceCulture);
             }
         }
     }

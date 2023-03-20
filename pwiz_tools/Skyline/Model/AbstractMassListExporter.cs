@@ -45,6 +45,9 @@ namespace pwiz.Skyline.Model
         public const int DWELL_TIME_MAX = 1000;
         public const int DWELL_TIME_DEFAULT = 20;
 
+        public const double ACCUMULATION_TIME_MIN = 0;
+        public const double ACCUMULATION_TIME_MAX = 500;
+
         public const int RUN_LENGTH_MIN = 0; // Not inclusive
         public const int RUN_LENGTH_MAX = 500;
         public const int RUN_LENGTH_DEFAULT = 60;
@@ -334,18 +337,11 @@ namespace pwiz.Skyline.Model
                         if (DocNode is TransitionGroupDocNode && !ReferenceEquals(group, DocNode))
                             continue;
 
-                        if (IsolationList)
-                        {
-                            fileIterator.WriteTransition(this, seq, peptide, group, null, null, 0, SortByMz);
-                        }
-                        else
-                        {
-                            var groupPrimary = PrimaryTransitionCount > 0
-                                                       ? peptide.GetPrimaryResultsGroup(group)
-                                                       : null;
+                        var groupPrimary = !IsolationList && PrimaryTransitionCount > 0
+                            ? peptide.GetPrimaryResultsGroup(group)
+                            : null;
 
-                            WriteTransitions(fileIterator, seq, peptide, group, groupPrimary);
-                        }
+                        WriteTransitions(fileIterator, seq, peptide, group, groupPrimary);
                     }
                 }
             }
@@ -561,10 +557,7 @@ namespace pwiz.Skyline.Model
                 if (groupTransitions < MinTransitions)
                     continue;
 
-                if (IsolationList)
-                    fileIterator.WriteTransition(this, nodePepGroup, nodePep, nodeGroup, null, null, 0, SortByMz);
-                else
-                    WriteTransitions(fileIterator, nodePepGroup, nodePep, nodeGroup, nodeGroupPrimary);
+                WriteTransitions(fileIterator, nodePepGroup, nodePep, nodeGroup, nodeGroupPrimary);
             }
             fileIterator.WriteRequiredTransitions(this, RequiredPeptides, SortByMz);
         }
@@ -572,7 +565,9 @@ namespace pwiz.Skyline.Model
         private void WriteTransitions(FileIterator fileIterator, PeptideGroupDocNode nodePepGroup, PeptideDocNode nodePep, TransitionGroupDocNode nodeGroup, TransitionGroupDocNode nodeGroupPrimary)
         {
             // Allow derived classes a chance to reorder the transitions.  Currently only used by AB SCIEX.
-            var reorderedTransitions = GetTransitionsInBestOrder(nodeGroup, nodeGroupPrimary);
+            var transitions = !IsolationList
+                ? GetTransitionsInBestOrder(nodeGroup, nodeGroupPrimary).Where(PassesPolarityFilter)
+                : new TransitionDocNode[] { null };
 
             // When exporting CoV optimization methods, only write top ranked transitions.
             var onlyTopRankedTransitions =
@@ -580,7 +575,7 @@ namespace pwiz.Skyline.Model
                 ExportOptimize.CompensationVoltageTuneTypes.Contains(OptimizeType) &&
                 Document.Settings.TransitionSettings.Prediction.CompensationVoltage != null;
 
-            foreach (TransitionDocNode nodeTran in reorderedTransitions.Where(PassesPolarityFilter))
+            foreach (var nodeTran in transitions)
             {
                 if (OptimizeType == null)
                 {

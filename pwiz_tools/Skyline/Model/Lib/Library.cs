@@ -26,6 +26,8 @@ using System.Text;
 using System.Xml;
 using System.Xml.Schema;
 using System.Xml.Serialization;
+using JetBrains.Annotations;
+using pwiz.BiblioSpec;
 using pwiz.Common.Chemistry;
 using pwiz.Common.Collections;
 using pwiz.Common.SystemUtil;
@@ -33,6 +35,7 @@ using pwiz.Skyline.Model.AuditLog;
 using pwiz.Skyline.Model.Crosslinking;
 using pwiz.Skyline.Model.DocSettings;
 using pwiz.Skyline.Model.DocSettings.Extensions;
+using pwiz.Skyline.Model.Hibernate;
 using pwiz.Skyline.Model.Irt;
 using pwiz.Skyline.Model.Lib.ChromLib;
 using pwiz.Skyline.Model.Lib.Midas;
@@ -220,31 +223,23 @@ namespace pwiz.Skyline.Model.Lib
                         var newChromatograms = MidasLibrary.UnflagFiles(docNew.Settings.MeasuredResults.Chromatograms, missingMidasFiles.Select(Path.GetFileName)).ToList();
                         if (!ArrayUtil.ReferencesEqual(docNew.Settings.MeasuredResults.Chromatograms, newChromatograms))
                         {
-                            docNew = docNew.ChangeMeasuredResults(docNew.Settings.MeasuredResults.ChangeChromatograms(newChromatograms));
+                            docNew = CallWithSettingsChangeMonitor(container, docCurrent,
+                                settingsChangeMonitor => docNew.ChangeMeasuredResults(
+                                    docNew.Settings.MeasuredResults.ChangeChromatograms(newChromatograms),
+                                    settingsChangeMonitor));
+                            if (docNew == null)
+                            {
+                                break;
+                            }
                         }
                     }
 
-                    using (var settingsChangeMonitor = new SrmSettingsChangeMonitor(
-                            new LoadMonitor(this, container, null), Resources.LibraryManager_LoadBackground_Updating_library_settings_for__0_, container, docCurrent))
+                    docNew = CallWithSettingsChangeMonitor(container, docCurrent, settingsChangeMonitor =>
+                        docNew.ChangeSettings(docNew.Settings.ChangePeptideSettings(
+                            docNew.Settings.PeptideSettings.ChangeLibraries(libraries)), settingsChangeMonitor));
+                    if (docNew == null)
                     {
-                        try
-                        {
-                            docNew = docNew.ChangeSettings(docNew.Settings.ChangePeptideSettings(
-                                docNew.Settings.PeptideSettings.ChangeLibraries(libraries)), settingsChangeMonitor);
-                        }
-                        catch (OperationCanceledException)
-                        {
-                            docNew = docCurrent;    // Just continue
-                        }
-                        catch (Exception x)
-                        {
-                            if (ExceptionUtil.IsProgrammingDefect(x))
-                            {
-                                throw;
-                            }
-                            settingsChangeMonitor.ChangeProgress(s => s.ChangeErrorException(x));
-                            break;
-                        }
+                        break;
                     }
                 }
                 while (!CompleteProcessing(container, docNew, docCurrent));
@@ -262,6 +257,44 @@ namespace pwiz.Skyline.Model.Lib
             }
 
             return true;
+        }
+
+        /// <summary>
+        /// Calls a function which takes a SettingsChangeMonitor, and which returns a SrmDocument.
+        /// <returns>If successful, returns the result of the function call.
+        /// Returns the original document if the document in the IDocumentContainer has changed.
+        /// Returns null if an error occurred that was reported to the user.</returns>
+        /// </summary>
+        [CanBeNull]
+        private SrmDocument CallWithSettingsChangeMonitor(IDocumentContainer container, SrmDocument docCurrent,
+            [InstantHandle] Func<SrmSettingsChangeMonitor, SrmDocument> changeFunc)
+        {
+            using (var settingsChangeMonitor = new SrmSettingsChangeMonitor(
+                       new LoadMonitor(this, container, null),
+                       Resources.LibraryManager_LoadBackground_Updating_library_settings_for__0_, container,
+                       docCurrent))
+            {
+                try
+                {
+                    return changeFunc(settingsChangeMonitor);
+                }
+                catch (OperationCanceledException)
+                {
+                    // Document in the container was changed. Just return the original document, since the
+                    // CompleteProcessing call will fail, and the libraries will attempt to be loaded again
+                    // with a more current document
+                    return docCurrent;
+                }
+                catch (Exception x)
+                {
+                    if (ExceptionUtil.IsProgrammingDefect(x))
+                    {
+                        throw;
+                    }
+                    settingsChangeMonitor.ChangeProgress(s => s.ChangeErrorException(x));
+                    return null;
+                }
+            }
         }
 
         public Library LoadLibrary(LibrarySpec spec, Func<ILoadMonitor> getMonitor)
@@ -1462,7 +1495,7 @@ namespace pwiz.Skyline.Model.Lib
         }
     }
 
-    public abstract class LibrarySpec : XmlNamedElement
+    public abstract class LibrarySpec : XmlNamedElement, IHasItemDescription
     {
         public static readonly PeptideRankId PEP_RANK_COPIES =
             new PeptideRankId(@"Spectrum count", () => Resources.LibrarySpec_PEP_RANK_COPIES_Spectrum_count);
@@ -1530,6 +1563,24 @@ namespace pwiz.Skyline.Model.Lib
 
         [Track(defaultValues:typeof(DefaultValuesTrue))]
         public bool UseExplicitPeakBounds { get; private set; }
+
+        public virtual ItemDescription ItemDescription
+        {
+            get
+            {
+                var lines = new List<string>();
+                lines.Add(GetLibraryTypeName());
+                lines.Add(TextUtil.ColonSeparate(PropertyNames.LibrarySpec_FilePathAuditLog, FilePath));
+                if (!UseExplicitPeakBounds)
+                {
+                    lines.Add(Resources.LibrarySpec_ItemDescription_Ignore_explicit_peak_boundaries);
+                }
+
+                return new ItemDescription(FilePath).ChangeTitle(Name).ChangeDetailLines(lines);
+            }
+        }
+
+        public abstract string GetLibraryTypeName();
 
         #region Property change methods
 
@@ -2489,6 +2540,70 @@ namespace pwiz.Skyline.Model.Lib
         public double? RetentionTime { get; set; }
         public IonMobilityAndCCS IonMobilityInfo { get; private set; }
         public string Protein { get; private set; } // Also used as Molecule List Name for small molecules
+
+        public SpectrumProperties CreateProperties(ViewLibraryPepInfo pepInfo, TransitionGroupDocNode precursorInfo, LibKeyModificationMatcher matcher, SpectrumProperties currentProperties = null)
+        {
+            string baseCCS = null;
+            string baseIM = null;
+            string baseRT = null;
+
+            var rt = ChromatogramData?.RetentionTime ?? RetentionTime;
+
+            if (rt.HasValue)
+                baseRT = rt.Value.ToString(Formats.RETENTION_TIME);
+            if (IonMobilityInfo != null && !IonMobilityInfo.IsEmpty)
+            {
+                var ccsText = string.Empty;
+                var imText = string.Empty;
+                var ccs = ChromatogramData?.CCS ?? IonMobilityInfo.CollisionalCrossSectionSqA;
+                if (ccs.HasValue)
+                    baseCCS = string.Format(@"{0:F2}", ccs.Value);
+
+                if (IonMobilityInfo.HasIonMobilityValue)
+                    baseIM = string.Format(@"{0:F2} {1}", IonMobilityInfo.IonMobility.Mobility, IonMobilityInfo.IonMobility.UnitsString);
+            }
+
+            var res = new SpectrumProperties()
+            {
+                LibraryName = Name,
+                PrecursorMz = precursorInfo.PrecursorMz.Value.ToString(Formats.Mz),
+                Score = (SpectrumHeaderInfo as BiblioSpecSpectrumHeaderInfo)?.Score,
+                Charge = pepInfo.Charge,
+                RetentionTime = baseRT,
+                CCS = baseCCS,
+                IonMobility = baseIM,
+                Label = precursorInfo.LabelType.ToString()
+            };
+            res.SetFileName(FileName);
+
+            if (_library is BiblioSpecLiteLibrary)
+            {
+                BiblioSpecLiteLibrary.BiblioSpecSheetInfo biblioAdditionalInfo;
+                BiblioSpecLiteLibrary selectedBiblioSpecLib = _library as BiblioSpecLiteLibrary;
+                if (IsBest)
+                {
+                    biblioAdditionalInfo = selectedBiblioSpecLib?.GetBestSheetInfo(pepInfo.Key);
+                    res.SpectrumCount = biblioAdditionalInfo?.Count;
+                }
+                else
+                {
+                    biblioAdditionalInfo = selectedBiblioSpecLib?.GetRedundantSheetInfo(((SpectrumLiteKey)SpectrumKey).RedundantId);
+                    // Redundant spectra always return a count of 1, so hold on to the count from the best spectrum
+                    res.SpectrumCount = currentProperties?.SpectrumCount ?? biblioAdditionalInfo?.Count;
+                }
+
+                if (biblioAdditionalInfo != null)
+                {
+                    res.SpecIdInFile = biblioAdditionalInfo.SpecIdInFile ?? res.SpecIdInFile;
+                    res.IdFileName = biblioAdditionalInfo.IDFileName ?? res.IdFileName;
+                    if(biblioAdditionalInfo.FileName != null)
+                        res.SetFileName(biblioAdditionalInfo.FileName);
+                    res.Score = biblioAdditionalInfo.Score ?? res.Score;
+                    res.ScoreType = biblioAdditionalInfo.ScoreType ?? res.ScoreType;
+                }
+            }
+            return res;
+        }
     }
 
     public class SpectrumInfoProsit : SpectrumInfo
@@ -2916,14 +3031,14 @@ namespace pwiz.Skyline.Model.Lib
         {
             FilePath = filePath;
             IdFilePath = idFilePath;
-            CutoffScores = new Dictionary<string, double?>();
+            ScoreThresholds = new Dictionary<ScoreType, double?>();
             BestSpectrum = 0;
             MatchedSpectrum = 0;
         }
 
         public string FilePath { get; private set; }
         public string IdFilePath { get; set; }
-        public Dictionary<string, double?> CutoffScores { get; private set; }
+        public Dictionary<ScoreType, double?> ScoreThresholds { get; private set; }
         public int BestSpectrum { get; set; }
         public int MatchedSpectrum { get; set; }
 

@@ -17,6 +17,9 @@
  * limitations under the License.
  */
 using System;
+using System.Collections.Generic;
+using System.Linq;
+using pwiz.Common.Collections;
 using pwiz.Common.PeakFinding;
 using pwiz.Skyline.Model.DocSettings;
 using pwiz.Skyline.Util;
@@ -27,27 +30,33 @@ namespace pwiz.Skyline.Model.Results
     public class PeakIntegrator
     {
         public PeakIntegrator(TimeIntensities interpolatedTimeIntensities)
-            : this(FullScanAcquisitionMethod.None, null, ChromSource.unknown, null, interpolatedTimeIntensities, null)
+            : this(new PeakGroupIntegrator(FullScanAcquisitionMethod.None, null), ChromSource.unknown, null, interpolatedTimeIntensities, null)
         {
         }
 
-        public PeakIntegrator(FullScanAcquisitionMethod acquisitionMethod, TimeIntervals timeIntervals, ChromSource chromSource, TimeIntensities rawTimeIntensities, TimeIntensities interpolatedTimeIntensities, IPeakFinder peakFinder)
+        public PeakIntegrator(PeakGroupIntegrator peakGroupIntegrator, ChromSource chromSource, TimeIntensities rawTimeIntensities, TimeIntensities interpolatedTimeIntensities, IPeakFinder peakFinder)
         {
-            FullScanAcquisitionMethod = acquisitionMethod;
-            TimeIntervals = timeIntervals;
+            PeakGroupIntegrator = peakGroupIntegrator;
             ChromSource = chromSource;
             RawTimeIntensities = rawTimeIntensities;
             InterpolatedTimeIntensities = interpolatedTimeIntensities;
             PeakFinder = peakFinder;
         }
 
-        public FullScanAcquisitionMethod FullScanAcquisitionMethod { get; }
+        public PeakGroupIntegrator PeakGroupIntegrator { get; }
+        public FullScanAcquisitionMethod FullScanAcquisitionMethod
+        {
+            get { return PeakGroupIntegrator.FullScanAcquisitionMethod; }
+        }
         public ChromSource ChromSource { get; }
 
         public IPeakFinder PeakFinder { get; private set; }
         public TimeIntensities InterpolatedTimeIntensities { get; }
         public TimeIntensities RawTimeIntensities { get; }
-        public TimeIntervals TimeIntervals { get; }
+        public TimeIntervals TimeIntervals
+        {
+            get { return PeakGroupIntegrator.TimeIntervals; }
+        }
 
         /// <summary>
         /// Return the ChromPeak with the specified start and end times chosen by a user.
@@ -72,7 +81,8 @@ namespace pwiz.Skyline.Model.Results
                 return ChromPeak.EMPTY;
             }
             var foundPeak = PeakFinder.GetPeak(startIndex, endIndex);
-            return new ChromPeak(PeakFinder, foundPeak, flags, InterpolatedTimeIntensities, RawTimeIntensities?.Times);
+            var chromPeak = new ChromPeak(PeakFinder, foundPeak, flags, InterpolatedTimeIntensities, RawTimeIntensities?.Times, PeakGroupIntegrator.GetMedianChromatogram(startTime, endTime));
+            return chromPeak;
         }
 
         /// <summary>
@@ -86,10 +96,12 @@ namespace pwiz.Skyline.Model.Results
             if ((flags & ChromPeak.FlagValues.forced_integration) != 0 && ChromData.AreCoeluting(peakMax, interpolatedPeak))
                 flags &= ~ChromPeak.FlagValues.forced_integration;
 
-            var chromPeak = new ChromPeak(PeakFinder, interpolatedPeak, flags, InterpolatedTimeIntensities, RawTimeIntensities?.Times);
+            var startTime = InterpolatedTimeIntensities.Times[peakMax.StartIndex];
+            var endTime = InterpolatedTimeIntensities.Times[peakMax.EndIndex];
+            var chromPeak = new ChromPeak(PeakFinder, interpolatedPeak, flags, InterpolatedTimeIntensities, RawTimeIntensities?.Times, PeakGroupIntegrator.GetMedianChromatogram(startTime, endTime));
             if (!BackgroundSubtraction)
             {
-                chromPeak = IntegratePeakWithoutBackground(InterpolatedTimeIntensities.Times[peakMax.StartIndex], InterpolatedTimeIntensities.Times[peakMax.EndIndex], flags);
+                chromPeak = IntegratePeakWithoutBackground(startTime, endTime, flags);
             }
 
             return Tuple.Create(chromPeak, interpolatedPeak);
@@ -106,11 +118,11 @@ namespace pwiz.Skyline.Model.Results
                 if (intervalIndex >= 0 && intervalIndex < TimeIntervals.Count)
                 {
                     startTime = Math.Max(startTime, TimeIntervals.Starts[intervalIndex]);
-                    endTime = Math.Min(endTime, TimeIntervals.Ends[intervalIndex]);
+                    endTime = Math.Max(startTime, Math.Min(endTime, TimeIntervals.Ends[intervalIndex]));
                 }
             }
             return ChromPeak.IntegrateWithoutBackground(RawTimeIntensities ?? InterpolatedTimeIntensities, startTime,
-                endTime, flags);
+                endTime, flags, PeakGroupIntegrator.GetMedianChromatogram(startTime, endTime));
         }
 
         public bool BackgroundSubtraction
@@ -142,6 +154,45 @@ namespace pwiz.Skyline.Model.Results
             var peakFinder = PeakFinders.NewDefaultPeakFinder();
             peakFinder.SetChromatogram(interpolatedTimeIntensities.Times, interpolatedTimeIntensities.Intensities);
             return peakFinder;
+        }
+
+        public TimeIntensities GetChromatogramNormalizedToOne(float startTime, float endTime)
+        {
+            var timeIntensities = RawTimeIntensities ?? InterpolatedTimeIntensities;
+            var times = new List<float>();
+            var intensities = new List<float>();
+            int index = CollectionUtil.BinarySearch(timeIntensities.Times, startTime);
+            if (index < 0)
+            {
+                times.Add(startTime);
+                intensities.Add(timeIntensities.GetInterpolatedIntensity(startTime));
+                index = ~index;
+            }
+
+            for (; index < timeIntensities.NumPoints; index++)
+            {
+                var time = timeIntensities.Times[index];
+                if (time > endTime)
+                {
+                    break;
+                }
+                times.Add(time);
+                intensities.Add(timeIntensities.Intensities[index]);
+            }
+
+            if (times[times.Count - 1] < endTime)
+            {
+                times.Add(endTime);
+                intensities.Add(timeIntensities.GetInterpolatedIntensity(endTime));
+            }
+
+            var max = intensities.Max();
+            if (max == 0)
+            {
+                return new TimeIntensities(times, intensities);
+            }
+
+            return new TimeIntensities(times, intensities.Select(i => i / max));
         }
     }
 }

@@ -445,7 +445,7 @@ namespace TestPerf // Note: tests in the "TestPerf" namespace only run when the 
                 });
                 if (dialogSkip == 0)
                 {
-                    RunUI(addPeakCompareDlg.OkDialog);
+                    OkDialog(addPeakCompareDlg, addPeakCompareDlg.OkDialog);
                 }
                 else
                 {

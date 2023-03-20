@@ -81,22 +81,13 @@ namespace pwiz.Skyline.Model.Proteome
 
         public void UseFastaFile(string file, Func<FastaSequence, IEnumerable<Peptide>> digestProteinToPeptides, ILongWaitBroker broker)
         {
-            try
+            ResetMapping();
+            using var stream = File.Open(file, FileMode.Open, FileAccess.Read, FileShare.Read);
+            var fastaSource = new FastaSource(stream);
+            var proteinAssociations = FindProteinMatches(fastaSource, digestProteinToPeptides, broker);
+            if (proteinAssociations != null)
             {
-                ResetMapping();
-                using (var stream = File.Open(file, FileMode.Open, FileAccess.Read, FileShare.Read))
-                {
-                    var fastaSource = new FastaSource(stream);
-                    var proteinAssociations = FindProteinMatches(fastaSource, digestProteinToPeptides, broker);
-                    if (proteinAssociations != null)
-                    {
-                        AssociatedProteins = proteinAssociations;
-                    }
-                }
-            }
-            catch (Exception e)
-            {
-                throw new InvalidDataException(Resources.AssociateProteinsDlg_UseFastaFile_There_was_an_error_reading_from_the_file_, e);
+                AssociatedProteins = proteinAssociations;
             }
         }
 
@@ -892,7 +883,7 @@ namespace pwiz.Skyline.Model.Proteome
             long streamLength = stream.Length;
             foreach (var fastaData in FastaData.ParseFastaFile(new StreamReader(stream)))
             {
-                yield return new FastaRecord(index, (int) (stream.Position * 100 / streamLength), new FastaSequence(fastaData.Name, null, null, fastaData.Sequence));
+                yield return new FastaRecord(index, (int) (stream.Position * 100 / streamLength), fastaData);
                 index++;
             }
         }

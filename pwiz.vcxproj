@@ -88,6 +88,7 @@
   </ItemDefinitionGroup>
   <ItemGroup>
     <ClCompile Include="libraries\boost_aux\libs\nowide\src\iostream.cpp" />
+    <ClCompile Include="libraries\SQLite\sqlite3pp.cpp" />
     <ClCompile Include="pwiz\analysis\chromatogram_processing\ChromatogramListFactory.cpp" />
     <ClCompile Include="pwiz\analysis\chromatogram_processing\ChromatogramListFactoryTest.cpp" />
     <ClCompile Include="pwiz\analysis\chromatogram_processing\ChromatogramListWrapperTest.cpp" />
@@ -841,6 +842,7 @@
     <ClCompile Include="pwiz_aux\msrc\utility\vendor_api\Bruker\CompassData.cpp" />
     <ClCompile Include="pwiz_aux\msrc\utility\vendor_api\Bruker\CompassDataTest.cpp" />
     <ClCompile Include="pwiz_aux\msrc\utility\vendor_api\Bruker\TimsData.cpp" />
+    <ClCompile Include="pwiz_aux\msrc\utility\vendor_api\Bruker\TsfData.cpp" />
     <ClCompile Include="pwiz_aux\msrc\utility\vendor_api\Shimadzu\ShimadzuReader.cpp">
       <AdditionalUsingDirectories>%(Directory);%(AdditionalUsingDirectories)</AdditionalUsingDirectories>
       <ForcedUsingFiles>Shimadzu.LabSolutions.IO.IoModule.dll;QTFLProtoCS.dll;%(ForcedUsingFiles)</ForcedUsingFiles>
@@ -906,6 +908,7 @@
     <ClInclude Include="libraries\boost_aux\boost\nowide\stackstring.hpp" />
     <ClInclude Include="libraries\boost_aux\boost\nowide\system.hpp" />
     <ClInclude Include="libraries\boost_aux\boost\nowide\windows.hpp" />
+    <ClInclude Include="libraries\SQLite\sqlite3pp.h" />
     <ClInclude Include="pwiz\analysis\chromatogram_processing\ChromatogramListFactory.hpp" />
     <ClInclude Include="pwiz\analysis\chromatogram_processing\ChromatogramList_Filter.hpp" />
     <ClInclude Include="pwiz\analysis\chromatogram_processing\ChromatogramList_LockmassRefiner.hpp" />
@@ -1328,6 +1331,7 @@
     <ClInclude Include="pwiz_aux\msrc\utility\vendor_api\Agilent\MidacData.hpp" />
     <ClInclude Include="pwiz_aux\msrc\utility\vendor_api\Bruker\Baf2Sql.hpp" />
     <ClInclude Include="pwiz_aux\msrc\utility\vendor_api\Bruker\CompassData.hpp" />
+    <ClInclude Include="pwiz_aux\msrc\utility\vendor_api\Bruker\TsfData.hpp" />
     <ClInclude Include="pwiz_aux\msrc\utility\vendor_api\Mobilion\MBICalibration.h" />
     <ClInclude Include="pwiz_aux\msrc\utility\vendor_api\Mobilion\MBICollection.h" />
     <ClInclude Include="pwiz_aux\msrc\utility\vendor_api\Mobilion\MBIConstants.h" />

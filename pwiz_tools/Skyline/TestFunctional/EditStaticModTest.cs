@@ -65,8 +65,7 @@ namespace pwiz.SkylineTestFunctional
                 mod = editModDlg.Modification;
                 editModDlg.OkDialog();
             });
-            RunUI(editModsDlg.OkDialog);
-            WaitForClosedForm(editModsDlg);
+            OkDialog(editModsDlg, editModsDlg.OkDialog);
             // Check that the modification added to the document matches the modification in UniMod.
             RunUI(() => 
             { 
@@ -89,17 +88,15 @@ namespace pwiz.SkylineTestFunctional
                 mod = editModDlg.Modification;
                 editModDlg.OkDialog();
             });
-            RunUI(editModsDlg2.OkDialog);
-            WaitForClosedForm(editModsDlg2);
+            OkDialog(editModsDlg2, editModsDlg2.OkDialog);
             RunUI(() =>
             {
                 Assert.IsTrue(Settings.Default.HeavyModList.Contains(mod));
                 StaticMod uniMod;
                 Assert.IsTrue(UniMod.DictIsotopeModNames.TryGetValue(mod.Name, out uniMod));
                 Assert.AreEqual(mod, uniMod);
-                peptideSettingsUI.OkDialog();
             });
-            WaitForClosedForm(peptideSettingsUI);
+            OkDialog(peptideSettingsUI, peptideSettingsUI.OkDialog);
         }
     }
 }

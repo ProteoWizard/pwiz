@@ -121,12 +121,8 @@ namespace pwiz.SkylineTestFunctional
             var countDlg = ShowDialog<AddIrtStandardsDlg>(calibrateDlg.UseResults);
             RunUI(() => countDlg.StandardCount = CalibrateIrtDlg.MIN_STANDARD_PEPTIDES - 1);
             RunDlg<MessageDlg>(countDlg.OkDialog, messageDlg => messageDlg.OkDialog());
-            RunUI(() =>
-            {
-                countDlg.StandardCount = peptideCount;
-                countDlg.OkDialog();
-            });
-            WaitForClosedForm(countDlg);
+            RunUI(() => countDlg.StandardCount = peptideCount);
+            OkDialog(countDlg, countDlg.OkDialog);
 
             Assert.AreEqual(peptideCount, calibrateDlg.StandardPeptideCount);
 
@@ -155,10 +151,8 @@ namespace pwiz.SkylineTestFunctional
                           //and 3 above 100
                           calibrateDlg.SetFixedPoints(3, 7);
                           calibrateDlg.StandardName = "Document1";
-
-                          calibrateDlg.OkDialog();
                       });
-            WaitForClosedForm(calibrateDlg);
+            OkDialog(calibrateDlg, calibrateDlg.OkDialog);
 
             //Now check that the peptides were passed to the EditIrtCalcDlg
             RunUI(() =>
@@ -335,9 +329,8 @@ namespace pwiz.SkylineTestFunctional
                           editRT1.SetRegressionName("iRT Regression");
                           editRT1.AddResults();
                           editRT1.ChooseCalculator(irtCalc);
-                          editRT1.OkDialog();
                       });
-            WaitForClosedForm(editRT1);
+            OkDialog(editRT1, editRT1.OkDialog);
 
             var editRT1A = ShowDialog<EditRTDlg>(peptideSettingsDlg1.AddRTRegression);
 
@@ -351,8 +344,7 @@ namespace pwiz.SkylineTestFunctional
             RunDlg<RTDetails>(editRT1A.ShowDetails, detailsDlg => detailsDlg.Close());
 
             OkDialog(editRT1A, editRT1A.OkDialog);
-            RunUI(peptideSettingsDlg1.CancelButton.PerformClick);
-            WaitForClosedForm(peptideSettingsDlg1);
+            OkDialog(peptideSettingsDlg1, peptideSettingsDlg1.CancelButton.PerformClick);
 
             var docPeptides = new List<MeasuredRetentionTime>();
             RunUI(() =>
@@ -577,35 +569,27 @@ namespace pwiz.SkylineTestFunctional
             var recalibrateDlg2 = ShowDialog<MultiButtonMsgDlg>(addPeptidesDlg.OkDialog);
             OkDialog(recalibrateDlg2, recalibrateDlg2.Btn1Click);
 
-            RunUI(() =>
-                      {
-                          Assert.AreEqual(18, irtDlg3.LibraryPeptideCount);
-                          irtDlg3.OkDialog();
-                      });
-            WaitForClosedForm(irtDlg3);
+            RunUI(() => Assert.AreEqual(18, irtDlg3.LibraryPeptideCount));
+            OkDialog(irtDlg3, irtDlg3.OkDialog);
             
-            RunUI(editCalculator.OkDialog);
-            WaitForClosedForm(editCalculator);
+            OkDialog(editCalculator, editCalculator.OkDialog);
 
             RunUI(() =>
                       {
                           editRT3.AddResults();
                           editRT3.ChooseCalculator("iRT Document Calculator");
                           editRT3.SetTimeWindow(2.0);
-                          editRT3.OkDialog();
                       });
-            WaitForClosedForm(editRT3);
+            OkDialog(editRT3, editRT3.OkDialog);
 
             //Then choose the new, document-based regression and turn off prediction
             RunUI(() =>
                       {
                           peptideSettingsDlg3.ChooseRegression("iRT Document Regression");
                           peptideSettingsDlg3.IsUseMeasuredRT = true;
-                          peptideSettingsDlg3.OkDialog();
-
                       });
             
-            WaitForClosedForm(peptideSettingsDlg3);
+            OkDialog(peptideSettingsDlg3, peptideSettingsDlg3.OkDialog);
 
             Assert.IsNull(FindOpenForm<MessageDlg>());
 
@@ -614,12 +598,8 @@ namespace pwiz.SkylineTestFunctional
 
             //Turn on prediction for scheduling
             var peptideSettingsDlg4 = ShowDialog<PeptideSettingsUI>(SkylineWindow.ShowPeptideSettingsUI);
-            RunUI(() =>
-                                          {
-                                              peptideSettingsDlg4.IsUseMeasuredRT = false;
-                                              peptideSettingsDlg4.OkDialog();
-                                          });
-            WaitForClosedForm(peptideSettingsDlg4);
+            RunUI(() => peptideSettingsDlg4.IsUseMeasuredRT = false);
+            OkDialog(peptideSettingsDlg4, peptideSettingsDlg4.OkDialog);
 
             //Export the prediction-based transition list 
             ExportMethod(testFilesDir.GetTestPath("PredictionTL.csv"));
@@ -678,8 +658,7 @@ namespace pwiz.SkylineTestFunctional
             //Try to open a file that does not exist: error
             RunDlg<MessageDlg>(() => irtDlg5.OpenDatabase(databasePath), messageDlg => messageDlg.OkDialog());
 
-            RunUI(() => irtDlg5.CancelButton.PerformClick());
-            WaitForClosedForm(irtDlg5);
+            OkDialog(irtDlg5, irtDlg5.CancelDialog);
 
             //In order to export a transition list, we have to set the RT regression to have the iRT Calc.
             //This means that the iRT calc must have its database connected - else the dialog will not let
@@ -695,17 +674,15 @@ namespace pwiz.SkylineTestFunctional
                           editRT5.SetRegressionName("iRT Test Regression");
                           editRT5.AddResults();
                           editRT5.ChooseCalculator(irtCalc);
-                          editRT5.OkDialog();
                       });
-            WaitForClosedForm(editRT5);
+            OkDialog(editRT5, editRT5.OkDialog);
 
             RunUI(() =>
                       {
                           peptideSettingsDlg5.ChooseRegression("iRT Test Regression");
                           peptideSettingsDlg5.IsUseMeasuredRT = false; //Use prediction
-                          peptideSettingsDlg5.OkDialog();
                       });
-            WaitForClosedForm(peptideSettingsDlg5);
+            OkDialog(peptideSettingsDlg5, peptideSettingsDlg5.OkDialog);
 
             RunUI(() => SkylineWindow.SaveDocument());
 
@@ -720,8 +697,7 @@ namespace pwiz.SkylineTestFunctional
             // Used to cause a message box, but should work now, because iRT databases get loaded once
             RunUI(() => exportTransList.SetMethodType(ExportMethodType.Scheduled));
 
-            RunUI(() => exportTransList.CancelButton.PerformClick());
-            WaitForClosedForm(exportTransList);
+            OkDialog(exportTransList, exportTransList.CancelDialog);
 
             // Used to cause a message box, but should work now, because iRT databases get loaded once
             RunUI(() => SkylineWindow.ChooseCalculator(irtCalc));
@@ -781,31 +757,31 @@ namespace pwiz.SkylineTestFunctional
                 Assert.IsTrue(regressionOptions.Select(opt => opt.Name).Contains(IrtStandard.PIERCE.Name));
                 Assert.IsTrue(ReferenceEquals(calibrateIrtDlg.SelectedRegressionOption, regressionOptions[0]));
             });
-            RunDlg<MessageDlg>(() => calibrateIrtDlg.GraphRegression(), false);
-            RunDlg<MessageDlg>(() => calibrateIrtDlg.GraphIrts(), false);
+            ShowAndCancelDlg<MessageDlg>(() => calibrateIrtDlg.GraphRegression());
+            ShowAndCancelDlg<MessageDlg>(() => calibrateIrtDlg.GraphIrts());
             var addIrtDlg = ShowDialog<AddIrtStandardsDlg>(calibrateIrtDlg.UseResults);
-            RunDlg<MessageDlg>(() => addIrtDlg.OkDialog(), false); // try empty textbox
+            ShowAndCancelDlg<MessageDlg>(() => addIrtDlg.OkDialog()); // try empty textbox
             RunUI(() => addIrtDlg.StandardCount = CalibrateIrtDlg.MIN_STANDARD_PEPTIDES - 1);
-            RunDlg<MessageDlg>(() => addIrtDlg.OkDialog(), false); // try below minimum
+            ShowAndCancelDlg<MessageDlg>(() => addIrtDlg.OkDialog()); // try below minimum
             RunUI(() => addIrtDlg.StandardCount = SkylineWindow.Document.PeptideCount + 1);
-            RunDlg<MessageDlg>(() => addIrtDlg.OkDialog(), false); // try above maximum
+            ShowAndCancelDlg<MessageDlg>(() => addIrtDlg.OkDialog()); // try above maximum
             RunUI(() => addIrtDlg.StandardCount = 10);
             OkDialog(addIrtDlg, addIrtDlg.OkDialog);
             RunUI(() => Assert.AreEqual(10, calibrateIrtDlg.StandardPeptideCount));
-            RunDlg<GraphRegression>(() => calibrateIrtDlg.GraphRegression(), false, dlg =>
+            RunDlg<GraphRegression>(() => calibrateIrtDlg.GraphRegression(), dlg =>
             {
                 Assert.AreEqual(1, dlg.RegressionGraphDatas.Count);
                 Assert.AreEqual(2, dlg.RegressionGraphDatas.First().RegularPoints.Count);
                 dlg.CloseDialog();
             });
-            RunDlg<GraphRegression>(() => calibrateIrtDlg.GraphIrts(), false, dlg =>
+            RunDlg<GraphRegression>(() => calibrateIrtDlg.GraphIrts(), dlg =>
             {
                 Assert.AreEqual(1, dlg.RegressionGraphDatas.Count);
                 Assert.AreEqual(10, dlg.RegressionGraphDatas.First().RegularPoints.Count);
                 dlg.CloseDialog();
             });
             RunUI(() => calibrateIrtDlg.SelectedRegressionOption = calibrateIrtDlg.RegressionOptions.First(opt => opt.Name.Equals(IrtStandard.PIERCE.Name)));
-            RunDlg<AddIrtStandardsDlg>(() => calibrateIrtDlg.UseResults(), false, dlg =>
+            RunDlg<AddIrtStandardsDlg>(() => calibrateIrtDlg.UseResults(), dlg =>
             {
                 dlg.StandardCount = 10;
                 dlg.OkDialog();
@@ -832,7 +808,7 @@ namespace pwiz.SkylineTestFunctional
             var irtDb = IrtDb.GetIrtDb(calcPath, null);
             Assert.IsFalse(string.IsNullOrEmpty(irtDb.DocumentXml));
             // Set RT regression to None
-            RunDlg<PeptideSettingsUI>(() => SkylineWindow.ShowPeptideSettingsUI(), true, dlg =>
+            RunDlg<PeptideSettingsUI>(() => SkylineWindow.ShowPeptideSettingsUI(), dlg =>
             {
                 dlg.ChooseRegression(Resources.SettingsList_ELEMENT_NONE_None);
                 dlg.OkDialog();
@@ -879,11 +855,11 @@ namespace pwiz.SkylineTestFunctional
                 Assert.AreEqual(10, calibrateIrtDlg2.StandardPeptideCount);
                 foreach (var pep in calibrateIrtDlg2.StandardPeptideList)
                 {
-                    Assert.IsTrue(predefinedIrts.ContainsKey(pep.Target));
+                    Assert.IsTrue(predefinedIrts.ContainsKey(pep.Target), $@"calibrateIrtDlg2.StandardPeptideList entry ""{pep.Target}"" not found in predefinedIrts");
                     Assert.AreEqual(predefinedIrts[pep.Target], pep.Irt);
                 }
             });
-            RunDlg<GraphRegression>(() => calibrateIrtDlg2.GraphRegression(), false, dlg =>
+            RunDlg<GraphRegression>(() => calibrateIrtDlg2.GraphRegression(), dlg =>
             {
                 Assert.AreEqual(1, dlg.RegressionGraphDatas.Count);
                 var data = dlg.RegressionGraphDatas.First();
@@ -893,7 +869,7 @@ namespace pwiz.SkylineTestFunctional
                 Assert.IsTrue(data.R >= RCalcIrt.MIN_IRT_TO_TIME_CORRELATION);
                 dlg.CloseDialog();
             });
-            RunDlg<GraphRegression>(() => calibrateIrtDlg2.GraphIrts(), false, dlg =>
+            RunDlg<GraphRegression>(() => calibrateIrtDlg2.GraphIrts(), dlg =>
             {
                 Assert.AreEqual(1, dlg.RegressionGraphDatas.Count);
                 Assert.AreEqual(10, dlg.RegressionGraphDatas.First().RegularPoints.Count);
@@ -936,7 +912,7 @@ namespace pwiz.SkylineTestFunctional
                     Assert.AreEqual(expectedIrt, pep.Irt);
                 }
             });
-            RunDlg<GraphRegression>(() => calibrateIrtDlg3.GraphRegression(), false, dlg =>
+            RunDlg<GraphRegression>(() => calibrateIrtDlg3.GraphRegression(), dlg =>
             {
                 Assert.AreEqual(1, dlg.RegressionGraphDatas.Count);
                 var data = dlg.RegressionGraphDatas.First();
@@ -946,7 +922,7 @@ namespace pwiz.SkylineTestFunctional
                 Assert.IsTrue(data.R >= RCalcIrt.MIN_IRT_TO_TIME_CORRELATION);
                 dlg.CloseDialog();
             });
-            RunDlg<GraphRegression>(() => calibrateIrtDlg3.GraphIrts(), false, dlg =>
+            RunDlg<GraphRegression>(() => calibrateIrtDlg3.GraphIrts(), dlg =>
             {
                 Assert.AreEqual(1, dlg.RegressionGraphDatas.Count);
                 Assert.AreEqual(10, dlg.RegressionGraphDatas.First().RegularPoints.Count);
@@ -1037,8 +1013,7 @@ namespace pwiz.SkylineTestFunctional
                 OkDialog(recalibrateDlg, recalibrateDlg.Btn1Click);
             }
 
-            RunUI(dlg.OkDialog);
-            WaitForClosedForm(dlg);
+            OkDialog(dlg, dlg.OkDialog);
         }
     }
 

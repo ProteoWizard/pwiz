@@ -40,7 +40,7 @@ namespace pwiz.SkylineTest
         private const string STATIC_LIST_FILE = "UniModStaticList.xml";
         private const string HEAVY_LIST_FILE = "UniModHeavyList.xml";
 
-        [TestMethod]
+        [TestMethod, NoParallelTesting(TestExclusionReason.SHARED_DIRECTORY_WRITE)] // Writes XML to the project
         public void TestUniMod()
         {
             // UpdateTestXML is used to update the test files if the modifications in UniMod.cs

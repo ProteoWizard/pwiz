@@ -134,7 +134,6 @@ namespace pwiz.Skyline.Model.Databinding.Entities
             var peptideDocNode = _precursorResult.Precursor.Peptide.DocNode;
             var chromatogramSet = _precursorResult.GetResultFile().Replicate.ChromatogramSet;
             var filePath = _precursorResult.GetResultFile().ChromFileInfo.FilePath;
-            var optimizableRegression = _precursorResult.GetResultFile().Replicate.ChromatogramSet.OptimizationFunction;
             ChromatogramGroupInfo[] chromatogramGroupInfos = null;
             SrmDocument.Settings.MeasuredResults?.TryLoadChromatogram(chromatogramSet,
                 peptideDocNode, transitionGroupDocNode, tolerance,
@@ -148,7 +147,7 @@ namespace pwiz.Skyline.Model.Databinding.Entities
             }
             foreach (var transitionDocNode in transitionGroupDocNode.Transitions)
             {
-                var chromatogramInfo = chromatogramGroupInfo.GetTransitionInfo(transitionDocNode, tolerance, optimizableRegression);
+                var chromatogramInfo = chromatogramGroupInfo.GetTransitionInfo(transitionDocNode, tolerance);
                 if (chromatogramInfo != null)
                 {
                     ChromPeak peak;

@@ -40,7 +40,7 @@ namespace TestPerf // Note: tests in the "TestPerf" namespace only run when the 
     public class MeasuredDriftTimesPerfTest : AbstractFunctionalTest
     {
 
-        [TestMethod] 
+        [TestMethod, NoParallelTesting(TestExclusionReason.VENDOR_FILE_LOCKING)] 
         public void MeasuredDriftValuesPerfTest()
         {
             TestFilesZip = GetPerfTestDataURL(@"PerfMeauredDriftTimes.zip");
@@ -86,17 +86,9 @@ namespace TestPerf // Note: tests in the "TestPerf" namespace only run when the 
                     ionMobilityLibraryDlg.GetIonMobilitiesFromResults();
                 });
                 PauseForScreenShot("values updated");// For a quick demo when you need it
-                RunUI(() =>
-                {
-                    measuredDTs.Add(ionMobilityLibraryDlg.LibraryMobilitiesFlat.ToList());
-                    ionMobilityLibraryDlg.OkDialog();
-                });
-                WaitForClosedForm(ionMobilityLibraryDlg);
-                RunUI(() =>
-                {
-                    transitionSettingsDlg.OkDialog();
-                });
-                WaitForClosedForm(transitionSettingsDlg);
+                RunUI(() => measuredDTs.Add(ionMobilityLibraryDlg.LibraryMobilitiesFlat.ToList()));
+                OkDialog(ionMobilityLibraryDlg, ionMobilityLibraryDlg.OkDialog);
+                OkDialog(transitionSettingsDlg, transitionSettingsDlg.OkDialog);
                 
                 document = SkylineWindow.Document;
                 var count = 0;
@@ -176,14 +168,9 @@ namespace TestPerf // Note: tests in the "TestPerf" namespace only run when the 
                             item.CollisionalCrossSectionSqA * 1.02, heo *1.02)));
                 }
                 editIonMobilityLibraryDlg.LibraryMobilitiesFlat = revised;
-                editIonMobilityLibraryDlg.OkDialog();
             });
-            WaitForClosedForm(editIonMobilityLibraryDlg);
-            RunUI(() =>
-            {
-                transitionSettingsDlg2.OkDialog();
-            });
-            WaitForClosedForm(transitionSettingsDlg2);
+            OkDialog(editIonMobilityLibraryDlg, editIonMobilityLibraryDlg.OkDialog);
+            OkDialog(transitionSettingsDlg2, transitionSettingsDlg2.OkDialog);
             var docChangedDriftTimePredictor = WaitForDocumentChange(document);
 
             // Reimport data for a replicate - without the fix this will throw

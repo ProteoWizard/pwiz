@@ -24,6 +24,7 @@ using System.Linq;
 using System.Windows.Forms;
 using Microsoft.VisualStudio.TestTools.UnitTesting;
 using pwiz.Common.Collections;
+using pwiz.Skyline.Alerts;
 using pwiz.Skyline.Controls;
 using pwiz.Skyline.EditUI;
 using pwiz.Skyline.Model;
@@ -54,9 +55,33 @@ namespace pwiz.SkylineTestFunctional
         {
             _fastaFile = TestFilesDir.GetTestPath("AssociateProteinMatches.fasta");
             TestUseFasta();
+            TestInvalidFasta();
             TestUseBackgroundProteome();
             TestParsimonyOptions();
             TestFastaOverride();
+        }
+
+        private void TestInvalidFasta()
+        {
+            RunUI(() => SkylineWindow.OpenFile(TestFilesDir.GetTestPath("AssociateProteinsTest.sky")));
+
+            AssociateProteinsDlg associateProteinsDlg = ShowDialog<AssociateProteinsDlg>(SkylineWindow.ShowAssociateProteinsDlg);
+
+            string invalidFastaFilepath = TestFilesDir.GetTestPath("invalidFasta.fasta");
+            // ReSharper disable LocalizableElement
+            File.WriteAllLines(invalidFastaFilepath, new[]
+            {
+                ">FOOBAR\tThe first header line\x01",
+                "The second header line that I've never seen in a protein FASTA",
+                "ELVISLIVES",
+                ">BAZ|Another header. Where did it g\x02 wrong?",
+                "PEPTIDEK"
+            });
+            // ReSharper enable LocalizableElement
+            var errorDlg = ShowDialog<MessageDlg>(() => associateProteinsDlg.FastaFileName = invalidFastaFilepath);
+            AssertEx.Contains(errorDlg.Message, Resources.AssociateProteinsDlg_UseFastaFile_An_error_occurred_during_protein_association_, "\x02");
+            OkDialog(errorDlg, errorDlg.OkDialog);
+            OkDialog(associateProteinsDlg, associateProteinsDlg.CancelDialog);
         }
 
         /// <summary>

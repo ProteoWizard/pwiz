@@ -19,6 +19,7 @@
 
 using System;
 using System.Collections.Generic;
+using System.Net.Mail;
 using System.Windows.Forms;
 using pwiz.Skyline.Controls;
 using pwiz.Skyline.Properties;
@@ -77,13 +78,26 @@ namespace pwiz.Skyline.ToolsUI
         {
             MessageBoxHelper helper = new MessageBoxHelper(this);
             string serverName;
-            if (!helper.ValidateNameTextBox(textServerURL, out serverName))
+            if (!helper.ValidateNotEmptyTextBox(textServerURL, out serverName))
                 return;
 
             Uri uriServer = PanoramaUtil.ServerNameToUri(serverName);
             if (uriServer == null)
             {
                 helper.ShowTextBoxError(textServerURL, Resources.EditServerDlg_OkDialog_The_text__0__is_not_a_valid_server_name_, serverName);
+                return;
+            }
+
+            if (!(helper.ValidateNotEmptyTextBox(textUsername, out _) && helper.ValidateNotEmptyTextBox(textPassword, out _)))
+                return;
+
+            try
+            {
+                var unused = new MailAddress(textUsername.Text);
+            }
+            catch (Exception)
+            {
+                helper.ShowTextBoxError(textServerURL, Resources.EditServerDlg_OkDialog__0__is_not_a_valid_email_address_, textUsername.Text);
                 return;
             }
 
@@ -117,6 +131,11 @@ namespace pwiz.Skyline.ToolsUI
         private void btnOK_Click(object sender, EventArgs e)
         {
             OkDialog();
+        }
+
+        public string GetTextServerUrlControlLabel()
+        {
+            return new MessageBoxHelper(this).GetControlMessage(textServerURL);
         }
     }
 }

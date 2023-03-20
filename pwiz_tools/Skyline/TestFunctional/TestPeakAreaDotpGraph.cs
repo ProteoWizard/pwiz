@@ -58,12 +58,12 @@ namespace pwiz.SkylineTestFunctional
             RunUI(() =>
             {
                 propertyDialog.SetDotpCutoffValue(AreaExpectedValue.ratio_to_label, "asdf");
-                propertyDialog.OkDialog();
+                propertyDialog.OkDialog();  // Does not dismiss the form
                 Assert.IsNotNull(propertyDialog.GetRdotpErrorText());
                 propertyDialog.SetShowCutoffProperty(true);
                 propertyDialog.SetDotpCutoffValue(AreaExpectedValue.ratio_to_label, (0.9).ToString(CultureInfo.CurrentCulture));
-                propertyDialog.OkDialog();
             });
+            OkDialog(propertyDialog, propertyDialog.OkDialog);
 
             FindNode((529.2855).ToString(LocalizationHelper.CurrentCulture) + "++");
             WaitForGraphs();
@@ -95,8 +95,8 @@ namespace pwiz.SkylineTestFunctional
                 propertyDialog.SetShowCutoffProperty(true);
                 propertyDialog.SetDotpCutoffValue(AreaExpectedValue.isotope_dist, (0.94).ToString(CultureInfo.CurrentCulture));
                 propertyDialog.SetDotpCutoffValue(AreaExpectedValue.library, (0.85).ToString(CultureInfo.CurrentCulture));
-                propertyDialog.OkDialog();
             });
+            OkDialog(propertyDialog, propertyDialog.OkDialog);
             FindNode((873.9438).ToString(LocalizationHelper.CurrentCulture) + "++");
             WaitForGraphs();
             RunUI(() =>
@@ -119,21 +119,17 @@ namespace pwiz.SkylineTestFunctional
         private void VerifydotPLabels(string[] replicates, double[] dotps, string dotpLabel, int paneIndex = 0)
         {
             var pane = (AreaReplicateGraphPane) SkylineWindow.GraphPeakArea.GraphControl.MasterPane[paneIndex];
-            if (!Program.SkylineOffscreen)
-            {
-                var rdotpLabels = pane.GraphObjList.OfType<TextObj>().ToList()
-                    .FindAll(txt => txt.Text.StartsWith(dotpLabel)).Select((obj) => obj.Text).ToArray();
+            var dotpLabels = pane.DotProductStrings.ToArray();
 
-                for (var i = 0; i < replicates.Length; i++)
-                {
-                    var repIndex = pane.GetOriginalXAxisLabels().ToList()
-                        .FindIndex(label => replicates[i].Equals(label));
-                    Assert.IsTrue(repIndex >= 0, "Replicate labels of the peak area graph are incorrect.");
-                    var expectedLabel = TextUtil.LineSeparate(dotpLabel,
-                        string.Format(CultureInfo.CurrentCulture, "{0:F02}", dotps[i]));
-                    Assert.AreEqual(expectedLabel, rdotpLabels[repIndex],
-                        "Dotp labels of the peak area graph are incorrect.");
-                }
+            for (var i = 0; i < replicates.Length; i++)
+            {
+                var repIndex = pane.GetOriginalXAxisLabels().ToList()
+                    .FindIndex(label => replicates[i].Equals(label));
+                Assert.IsTrue(repIndex >= 0, "Replicate labels of the peak area graph are incorrect.");
+                var expectedLabel = TextUtil.LineSeparate(dotpLabel,
+                    string.Format(CultureInfo.CurrentCulture, "{0:F02}", dotps[i]));
+                Assert.AreEqual(expectedLabel, dotpLabels[repIndex],
+                    "Dotp labels of the peak area graph are incorrect.");
             }
         }
 

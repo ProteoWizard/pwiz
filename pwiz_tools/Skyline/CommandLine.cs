@@ -432,7 +432,7 @@ namespace pwiz.Skyline
                 }
                 catch (Exception e)
                 {
-                    _out.WriteLine(Resources.CommandLine_GeneralException_Error___0_, e.Message);
+                    _out.WriteLine(Resources.Error___0_, e.Message);
                     return false;
                 }
                 
@@ -513,7 +513,10 @@ namespace pwiz.Skyline
             try
             {
                 var documentAnnotations = new DocumentAnnotations(_doc);
-                ModifyDocument(d => documentAnnotations.ReadAnnotationsFromFile(CancellationToken.None, commandArgs.ImportAnnotations));
+                using (var streamReader = new StreamReader(commandArgs.ImportAnnotations))
+                {
+                    ModifyDocument(d => documentAnnotations.ReadAnnotationsFromFile(CancellationToken.None, commandArgs.ImportAnnotations));
+                }
                 return true;
             }
             catch (Exception x)
@@ -584,7 +587,7 @@ namespace pwiz.Skyline
             {
                 if (!_out.IsErrorReported)
                 {
-                    _out.WriteLine(Resources.CommandLine_GeneralException_Error___0_, x.Message);
+                    _out.WriteLine(Resources.Error___0_, x.Message);
                 }
                 else
                 {
@@ -618,7 +621,7 @@ namespace pwiz.Skyline
             {
                 if (!_out.IsErrorReported)
                 {
-                    _out.WriteLine(Resources.CommandLine_GeneralException_Error___0_, x.Message);
+                    _out.WriteLine(Resources.Error___0_, x.Message);
                 }
                 else
                 {
@@ -2146,7 +2149,7 @@ namespace pwiz.Skyline
             int numComparableGroups = RefinementSettings.SuggestDecoyCount(_doc);
             if (numComparableGroups == 0)
             {
-                _out.WriteLine(Resources.CommandLine_GeneralException_Error___0_, Resources.GenerateDecoysError_No_peptide_precursor_models_for_decoys_were_found_);
+                _out.WriteLine(Resources.Error___0_, Resources.GenerateDecoysError_No_peptide_precursor_models_for_decoys_were_found_);
                 return false;
             }
             int numDecoys = commandArgs.AddDecoysCount ?? numComparableGroups;
@@ -2643,7 +2646,7 @@ namespace pwiz.Skyline
             }
             catch (Exception x)
             {
-                _out.WriteLine(Resources.CommandLine_GeneralException_Error___0_, x);
+                _out.WriteLine(Resources.Error___0_, x);
                 return false;
             }
             return true;
@@ -3640,7 +3643,7 @@ namespace pwiz.Skyline
             }
             catch (Exception x)
             {
-                statusWriter.WriteLine(Resources.CommandLine_GeneralException_Error___0_,
+                statusWriter.WriteLine(Resources.Error___0_,
                     Resources.SkylineWindow_ShareDocument_Failed_attempting_to_create_sharing_file__0__, fileDest);
                 statusWriter.WriteLine(x.Message);
             }
@@ -3673,7 +3676,7 @@ namespace pwiz.Skyline
                 }
                 catch (PanoramaServerException panoramaServerException)
                 {
-                    _statusWriter.WriteLine(Resources.CommandLine_GeneralException_Error___0_, panoramaServerException.Message);
+                    _statusWriter.WriteLine(Resources.Error___0_, panoramaServerException.Message);
                     return false;
                 }
                 var zipFilePath = FileEx.GetTimeStampedFileName(documentPath);
@@ -4054,7 +4057,7 @@ namespace pwiz.Skyline
                 }
                 else if (!IsLibraryMissingSpectra(status))
                 {
-                    _out.WriteLine(Resources.CommandLine_GeneralException_Error___0_, status.ErrorException.Message);
+                    _out.WriteLine(Resources.Error___0_, status.ErrorException.Message);
                 }
                 writeMessage = false;
             }

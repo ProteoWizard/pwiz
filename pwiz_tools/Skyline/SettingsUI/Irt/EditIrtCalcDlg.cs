@@ -550,7 +550,7 @@ namespace pwiz.Skyline.SettingsUI.Irt
             {
                 var seqModified = peptide.ModifiedTarget;
                 // CONSIDER: Select the peptide row
-                if (seqModified.IsProteomic && !FastaSequence.IsExSequence(seqModified.Sequence))
+                if (seqModified.IsProteomic && !FastaSequence.IsValidPeptideSequence(seqModified.Sequence))
                 {
                     MessageDlg.Show(this, ModeUIAwareStringFormat(Resources.EditIrtCalcDlg_ValidatePeptideList_The_value__0__is_not_a_valid_modified_peptide_sequence,
                         seqModified));
@@ -715,6 +715,7 @@ namespace pwiz.Skyline.SettingsUI.Irt
                 SortableBindingList<DbIrtPeptide> items)
                 : base(gridView, bindingSource, items)
             {
+                SetRequiredColumns(COLUMN_SEQUENCE, COLUMN_TIME);
                 AllowNegativeTime = true;
                 GridView.CellValueChanged += parent.HandleStandardsChanged;
                 Items.ListChanged += parent.HandleStandardsChanged;
@@ -796,6 +797,7 @@ namespace pwiz.Skyline.SettingsUI.Irt
             public LibraryGridViewDriver(DataGridViewEx gridView, BindingSource bindingSource, SortableBindingList<DbIrtPeptide> items)
                 : base(gridView, bindingSource, items)
             {
+                SetRequiredColumns(COLUMN_SEQUENCE, COLUMN_TIME);
                 AllowNegativeTime = true;
                 _newHistories = new Dictionary<Target, double>();
                 GridView.CellValueChanged += FireCellChanged;
