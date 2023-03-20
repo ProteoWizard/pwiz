@@ -118,6 +118,7 @@ enum PWIZ_API_DECL InstrumentModelType
     InstrumentModelType_Orbitrap_Fusion,
     InstrumentModelType_Orbitrap_Fusion_Lumos,
     InstrumentModelType_Orbitrap_Fusion_ETD,
+    InstrumentModelType_Orbitrap_Ascend,
     InstrumentModelType_Orbitrap_ID_X,
     InstrumentModelType_TSQ_Quantiva,
     InstrumentModelType_TSQ_Endura,
@@ -243,6 +244,7 @@ const InstrumentNameToModelMapping nameToModelMapping[] =
     {"FUSION ETD", InstrumentModelType_Orbitrap_Fusion_ETD, Contains},
     {"FUSION LUMOS", InstrumentModelType_Orbitrap_Fusion_Lumos, Contains},
     {"FUSION", InstrumentModelType_Orbitrap_Fusion, Contains},
+    {"ASCEND", InstrumentModelType_Orbitrap_Ascend, Contains},
     {"SURVEYOR PDA", InstrumentModelType_Surveyor_PDA, Exact},
     {"ACCELA PDA", InstrumentModelType_Accela_PDA, Exact},
 };
@@ -329,6 +331,7 @@ inline std::vector<IonizationType> getIonSourcesForInstrumentModel(InstrumentMod
         case InstrumentModelType_Orbitrap_Fusion:
         case InstrumentModelType_Orbitrap_Fusion_Lumos:
         case InstrumentModelType_Orbitrap_Fusion_ETD:
+        case InstrumentModelType_Orbitrap_Ascend:
         case InstrumentModelType_Orbitrap_ID_X:
         case InstrumentModelType_TSQ:
         case InstrumentModelType_TSQ_Quantum:
@@ -453,6 +456,7 @@ inline MassAnalyzerType convertScanFilterMassAnalyzer(ScanFilterMassAnalyzerType
         case InstrumentModelType_Orbitrap_Fusion:
         case InstrumentModelType_Orbitrap_Fusion_Lumos:
         case InstrumentModelType_Orbitrap_Fusion_ETD:
+        case InstrumentModelType_Orbitrap_Ascend:
         case InstrumentModelType_Orbitrap_ID_X:
         case InstrumentModelType_Orbitrap_Eclipse:
         {
@@ -590,6 +594,7 @@ inline std::vector<MassAnalyzerType> getMassAnalyzersForInstrumentModel(Instrume
         case InstrumentModelType_Orbitrap_Fusion: // has a quadrupole but only for mass filtering, not analysis
         case InstrumentModelType_Orbitrap_Fusion_Lumos: // ditto
         case InstrumentModelType_Orbitrap_Fusion_ETD: // ditto
+        case InstrumentModelType_Orbitrap_Ascend:
         case InstrumentModelType_Orbitrap_ID_X: // ditto
         case InstrumentModelType_Orbitrap_Eclipse:
             massAnalyzers.push_back(MassAnalyzerType_Orbitrap);
@@ -732,6 +737,7 @@ inline std::vector<DetectorType> getDetectorsForInstrumentModel(InstrumentModelT
         case InstrumentModelType_Orbitrap_Fusion:
         case InstrumentModelType_Orbitrap_Fusion_Lumos:
         case InstrumentModelType_Orbitrap_Fusion_ETD:
+        case InstrumentModelType_Orbitrap_Ascend:
         case InstrumentModelType_Orbitrap_ID_X:
         case InstrumentModelType_Orbitrap_Eclipse:
             detectors.push_back(DetectorType_Inductive);

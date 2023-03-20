@@ -112,15 +112,11 @@ PWIZ_API_DECL size_t SpectrumList_Thermo::find(const string& id) const
     size_t scanNumber = lexical_cast<size_t>(id, success);
     if (success && scanNumber>=1 && scanNumber<=size())
         return scanNumber-1;
-    else
-    {
-        map<string, size_t>::const_iterator scanItr = idToIndexMap_.find(id);
-        if (scanItr == idToIndexMap_.end())
-            return checkNativeIdFindResult(size_, id);
-        return scanItr->second;
-    }
 
-    return checkNativeIdFindResult(size_, id);
+    map<string, size_t>::const_iterator scanItr = idToIndexMap_.find(id);
+    if (scanItr == idToIndexMap_.end())
+        return checkNativeIdFindResult(size_, id);
+    return scanItr->second;
 }
 
 
