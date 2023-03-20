@@ -957,12 +957,12 @@ namespace pwiz.Skyline
                     if (precursorIsotopes == FullScanPrecursorIsotopes.Count)
                     {
                         threshold ??= (double?) TransitionFullScan.DEFAULT_ISOTOPE_COUNT;
-                        _out.WriteLine("Changing full scan precursor isotope peaks percentage to {0}", threshold);
+                        _out.WriteLine("Changing full scan precursor isotope peaks count to {0}", threshold);
                     }
                     else if (precursorIsotopes == FullScanPrecursorIsotopes.Percent)
                     {
                         threshold ??= (double?) TransitionFullScan.DEFAULT_ISOTOPE_PERCENT;
-                        _out.WriteLine("Changing full scan precursor isotope peak count to {0}", threshold);
+                        _out.WriteLine("Changing full scan precursor isotope peak percentage to {0}", threshold);
                     }
 
                     if (!string.IsNullOrEmpty(commandArgs.FullScanPrecursorIsotopeEnrichment))
@@ -983,6 +983,35 @@ namespace pwiz.Skyline
                     ModifyDocument(d => d.ChangeSettings(_doc.Settings.ChangeTransitionFullScan(f =>
                         f.ChangeIgnoreSimScans(commandArgs.FullScanPrecursorIgnoreSimScans.Value))), AuditLogEntry.SettingsLogFunction);
                 }
+
+                if (commandArgs.FullScanAcquisitionMethod != FullScanAcquisitionMethod.None)
+                {
+                    string isolationSchemeName = commandArgs.FullScanProductIsolationScheme;
+                    IsolationScheme isolationScheme = null;
+
+                    if (!string.IsNullOrEmpty(isolationSchemeName))
+                    {
+                        isolationScheme = Settings.Default.IsolationSchemeList.FirstOrDefault(scheme =>
+                            Equals(scheme.Name, isolationSchemeName));
+                        if (isolationScheme == null && MsDataFileImpl.IsValidFile(isolationSchemeName))
+                        {
+                            string isolationSchemeImportFilepath = isolationSchemeName;
+                            isolationSchemeName = Path.GetFileNameWithoutExtension(isolationSchemeImportFilepath);
+                            var reader = new IsolationSchemeReader(new MsDataFileUri[]
+                                { new MsDataFilePath(isolationSchemeImportFilepath) });
+                            var progressMonitor = new CommandProgressMonitor(_out, new ProgressStatus(String.Empty));
+                            isolationScheme = reader.Import(isolationSchemeName, progressMonitor);
+                        }
+                    }
+
+                    _out.WriteLine("Changing full scan acquisition method to {0} with isolation scheme '{1}'",
+                        commandArgs.FullScanAcquisitionMethod, isolationSchemeName);
+
+                    ModifyDocument(d => d.ChangeSettings(_doc.Settings.ChangeTransitionFullScan(f =>
+                            f.ChangeAcquisitionMethod(commandArgs.FullScanAcquisitionMethod, isolationScheme))),
+                        AuditLogEntry.SettingsLogFunction);
+                }
+
                 if (commandArgs.FullScanPrecursorRes.HasValue)
                 {
                     double res = commandArgs.FullScanPrecursorRes.Value;

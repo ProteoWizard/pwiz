@@ -1245,6 +1245,23 @@ namespace pwiz.Skyline
         public static readonly Argument ARG_FULL_SCAN_PRECURSOR_IGNORE_SIM = new DocArgument(@"full-scan-precursor-ignore-sim",
                 (c, p) => c.FullScanPrecursorIgnoreSimScans = p.IsNameOnly || bool.Parse(p.Value))
             { WrapValue = true, OptionalValue = true };
+
+        public static readonly Argument ARG_FULL_SCAN_ACQUISITION_METHOD = new DocArgument(@"full-scan-acquisition-method",
+                () => FullScanAcquisitionMethod.AVAILABLE.Select(m => m.Name).ToArray(),
+                (c, p) => c.FullScanAcquisitionMethod = FullScanAcquisitionMethod.FromName(p.Value))
+            { WrapValue = true };
+        public static readonly Argument ARG_FULL_SCAN_PRODUCT_ANALYZER = new DocArgument(@"full-scan-product-analyzer",
+                () => Enum.GetNames(typeof(FullScanMassAnalyzerType)),
+                (c, p) => c.FullScanProductMassAnalyzerType = (FullScanMassAnalyzerType) Enum.Parse(typeof(FullScanMassAnalyzerType), p.Value))
+            { WrapValue = true };
+        public static readonly Argument ARG_FULL_SCAN_PRODUCT_ISOLATION_SCHEME = new DocArgument(
+                @"full-scan-isolation-scheme",
+                () => string.Join(TextUtil.SEPARATOR_CSV + @" ",
+                    GetDisplayNames(Settings.Default.IsolationSchemeList)
+                        .Append("or a result filepath to import the scheme from")),
+                (c, p) => c.FullScanProductIsolationScheme = p.Value)
+            { WrapValue = true };
+
         public static readonly Argument ARG_FULL_SCAN_PRECURSOR_RES = new DocArgument(@"full-scan-precursor-res", RP_VALUE,
             (c, p) => c.FullScanPrecursorRes = p.ValueDouble) { WrapValue = true };
         public static readonly Argument ARG_FULL_SCAN_PRECURSOR_RES_MZ = new DocArgument(@"full-scan-precursor-res-mz", MZ_VALUE,
@@ -1263,7 +1280,8 @@ namespace pwiz.Skyline
             ARG_TRAN_PRECURSOR_ION_CHARGES, ARG_TRAN_FRAGMENT_ION_CHARGES, ARG_TRAN_FRAGMENT_ION_TYPES,
             ARG_TRAN_PREDICT_CE, ARG_TRAN_PREDICT_DP, ARG_TRAN_PREDICT_COV, ARG_TRAN_PREDICT_OPTDB,
             ARG_FULL_SCAN_PRECURSOR_ISOTOPES, ARG_FULL_SCAN_PRECURSOR_ANALYZER, ARG_FULL_SCAN_PRECURSOR_THRESHOLD,
-            ARG_FULL_SCAN_PRECURSOR_IGNORE_SIM, 
+            ARG_FULL_SCAN_PRECURSOR_IGNORE_SIM, ARG_FULL_SCAN_PRECURSOR_ISOTOPE_ENRICHMENT,
+            ARG_FULL_SCAN_ACQUISITION_METHOD, ARG_FULL_SCAN_PRODUCT_ANALYZER, ARG_FULL_SCAN_PRODUCT_ISOLATION_SCHEME,
             ARG_FULL_SCAN_PRECURSOR_RES, ARG_FULL_SCAN_PRECURSOR_RES_MZ,
             ARG_FULL_SCAN_PRODUCT_RES, ARG_FULL_SCAN_PRODUCT_RES_MZ,
             ARG_FULL_SCAN_RT_FILTER_TOLERANCE, ARG_IMS_LIBRARY_RES)
@@ -1273,6 +1291,7 @@ namespace pwiz.Skyline
             {
                 {ARG_FULL_SCAN_PRECURSOR_RES_MZ, ARG_FULL_SCAN_PRECURSOR_RES},
                 {ARG_FULL_SCAN_PRODUCT_RES_MZ, ARG_FULL_SCAN_PRODUCT_RES},
+                {ARG_FULL_SCAN_ACQUISITION_METHOD, ARG_FULL_SCAN_PRODUCT_ISOLATION_SCHEME},
             }
         };
 
@@ -1340,6 +1359,9 @@ namespace pwiz.Skyline
         public bool? FullScanPrecursorIgnoreSimScans { get; private set; }
         public double? FullScanPrecursorRes { get; private set; }
         public double? FullScanPrecursorResMz { get; private set; }
+        public FullScanAcquisitionMethod FullScanAcquisitionMethod { get; private set; }
+        public FullScanMassAnalyzerType? FullScanProductMassAnalyzerType { get; private set; }
+        public string FullScanProductIsolationScheme { get; private set; }
         public double? FullScanProductRes { get; private set; }
         public double? FullScanProductResMz { get; private set; }
         public double? FullScanRetentionTimeFilterLength { get; private set; }
