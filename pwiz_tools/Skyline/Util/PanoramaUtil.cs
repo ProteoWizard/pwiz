@@ -1065,7 +1065,6 @@ namespace pwiz.Skyline.Util
 
             // Retrieve folders from server.
             Uri uri = PanoramaUtil.GetContainersUri(server.URI, folder, true);
-
             using (var webClient = new WebClientWithCredentials(server.URI, server.Username, server.Password))
             {
                 return webClient.Get(uri);
@@ -1258,9 +1257,7 @@ namespace pwiz.Skyline.Util
         public override JObject SupportedVersionsJson(Server server)
         {
             var uri = PanoramaUtil.Call(server.URI, @"targetedms", null, @"getMaxSupportedVersions");
-
             string supportedVersionsJson;
-
             using (var webClient = new WebClientWithCredentials(server.URI, server.Username, server.Password))
             {
                 try
