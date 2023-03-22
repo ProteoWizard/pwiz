@@ -1065,7 +1065,6 @@ namespace pwiz.Skyline.Util
 
             // Retrieve folders from server.
             Uri uri = PanoramaUtil.GetContainersUri(server.URI, folder, true);
-
             using (var webClient = new WebClientWithCredentials(server.URI, server.Username, server.Password))
             {
                 return webClient.Get(uri);
@@ -1259,7 +1258,6 @@ namespace pwiz.Skyline.Util
         {
             var uri = PanoramaUtil.Call(server.URI, @"targetedms", null, @"getMaxSupportedVersions");
             string supportedVersionsJson;
-
             using (var webClient = new WebClientWithCredentials(server.URI, server.Username, server.Password))
             {
                 try
@@ -1277,10 +1275,9 @@ namespace pwiz.Skyline.Util
             {
                 return JObject.Parse(supportedVersionsJson);
             }
-            catch (Exception e)
+            catch (Exception)
             {
                 // If there was an error in parsing the JSON.
-                MessageDlg.ShowWithException(Program.MainWindow, TextUtil.LineSeparate(Resources.WebPanoramaPublishClient_SupportedVersionsJson_Error_parsing_JSON_data, e.Message), e);
                 return null;
             }
         }
