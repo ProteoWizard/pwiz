@@ -36200,6 +36200,15 @@ namespace pwiz.Skyline.Properties {
         }
         
         /// <summary>
+        ///   Looks up a localized string similar to Error parsing JSON data.
+        /// </summary>
+        public static string WebPanoramaPublishClient_SupportedVersionsJson_Error_parsing_JSON_data {
+            get {
+                return ResourceManager.GetString("WebPanoramaPublishClient_SupportedVersionsJson_Error_parsing_JSON_data", resourceCulture);
+            }
+        }
+        
+        /// <summary>
         ///   Looks up a localized string similar to Importing data. {0}% complete..
         /// </summary>
         public static string WebPanoramaPublishClient_updateProgressAndWait_Importing_data___0___complete_ {

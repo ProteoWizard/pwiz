@@ -1258,7 +1258,6 @@ namespace pwiz.Skyline.Util
         public override JObject SupportedVersionsJson(Server server)
         {
             var uri = PanoramaUtil.Call(server.URI, @"targetedms", null, @"getMaxSupportedVersions");
-
             string supportedVersionsJson;
 
             using (var webClient = new WebClientWithCredentials(server.URI, server.Username, server.Password))
@@ -1278,9 +1277,10 @@ namespace pwiz.Skyline.Util
             {
                 return JObject.Parse(supportedVersionsJson);
             }
-            catch (Exception)
+            catch (Exception e)
             {
                 // If there was an error in parsing the JSON.
+                MessageDlg.ShowWithException(Program.MainWindow, TextUtil.LineSeparate(Resources.WebPanoramaPublishClient_SupportedVersionsJson_Error_parsing_JSON_data, e.Message), e);
                 return null;
             }
         }
