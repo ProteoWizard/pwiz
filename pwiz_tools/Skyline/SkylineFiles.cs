@@ -3329,11 +3329,11 @@ namespace pwiz.Skyline
                     return false;
                 }
 
-                folderPathNoCtx = folderPath.Remove(0, @"/labkey".Length); 
+                folderPathNoCtx = folderPath.Remove(0, @"/labkey".Length);
                 try
                 {
                     folders =
-                        publishClient.GetInfoForFolders(server, folderPathNoCtx.TrimEnd('/').TrimStart('/')); 
+                        publishClient.GetInfoForFolders(server, folderPathNoCtx.TrimEnd('/').TrimStart('/'));
                 }
                 catch (Exception)
                 {
@@ -3342,6 +3342,11 @@ namespace pwiz.Skyline
             }
             catch (PanoramaServerException)
             {
+                return false;
+            }
+            catch (Exception e)
+            {
+                MessageDlg.ShowWithException(this, TextUtil.LineSeparate(Resources.RemoteSession_FetchContents_There_was_an_error_communicating_with_the_server__, e.Message), e);
                 return false;
             }
 
