@@ -3346,7 +3346,7 @@ namespace pwiz.Skyline
             }
             catch (Exception e)
             {
-                MessageDlg.ShowWithException(Program.MainWindow, TextUtil.LineSeparate(Resources.WebPanoramaPublishClient_SupportedVersionsJson_Error_parsing_JSON_data, e.Message), e);
+                MessageDlg.ShowWithException(this, TextUtil.LineSeparate(Resources.RemoteSession_FetchContents_There_was_an_error_communicating_with_the_server__, e.Message), e);
                 return false;
             }
 
