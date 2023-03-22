@@ -140,7 +140,11 @@ InstrumentConfigurationPtr SpectrumList_Thermo::findInstrumentConfiguration(cons
         }
     }
 
-    throw runtime_error("no matching instrument configuration for analyzer type " + cvTermInfo(massAnalyzerType).shortName());
+    string msg = "no matching instrument configuration for analyzer type " + cvTermInfo(massAnalyzerType).shortName();
+    if (config_.unknownInstrumentIsError)
+        throw runtime_error(msg);
+    warn_once(msg.c_str());
+    return InstrumentConfigurationPtr();
 }
 
 inline boost::optional<double> getElectronvoltActivationEnergy(const ScanInfo& scanInfo)

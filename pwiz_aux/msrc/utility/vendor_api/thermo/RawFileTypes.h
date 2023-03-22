@@ -29,6 +29,7 @@
 #include <vector>
 #include <boost/algorithm/string/case_conv.hpp>
 #include <boost/algorithm/string/predicate.hpp>
+#include <boost/algorithm/string/replace.hpp>
 namespace bal = boost::algorithm;
 
 namespace pwiz {
@@ -143,7 +144,8 @@ enum MatchType
     Exact,
     Contains,
     StartsWith,
-    EndsWith
+    EndsWith,
+    ExactNoSpaces
 };
 
 }
@@ -163,13 +165,12 @@ const InstrumentNameToModelMapping nameToModelMapping[] =
     {"MAT900XP TRAP", InstrumentModelType_MAT900XP_Trap, Exact},
     {"MAT95XP", InstrumentModelType_MAT95XP, Exact},
     {"MAT95XP TRAP", InstrumentModelType_MAT95XP_Trap, Exact},
-    {"SSQ 7000", InstrumentModelType_SSQ_7000, Exact},
-    {"TSQ 7000", InstrumentModelType_TSQ_7000, Exact},
-    {"TSQ 8000 EVO", InstrumentModelType_TSQ_8000_Evo, Exact},
-    {"TSQ 9000", InstrumentModelType_TSQ_9000, Exact},
+    {"SSQ7000", InstrumentModelType_SSQ_7000, ExactNoSpaces},
+    {"TSQ7000", InstrumentModelType_TSQ_7000, ExactNoSpaces},
+    {"TSQ8000EVO", InstrumentModelType_TSQ_8000_Evo, ExactNoSpaces},
+    {"TSQ9000", InstrumentModelType_TSQ_9000, ExactNoSpaces},
     {"TSQ", InstrumentModelType_TSQ, Exact},
-    {"ELEMENT2", InstrumentModelType_Element_2, Exact},
-    {"ELEMENT 2", InstrumentModelType_Element_2, Exact},
+    {"ELEMENT2", InstrumentModelType_Element_2, ExactNoSpaces},
     {"DELTA PLUSADVANTAGE", InstrumentModelType_Delta_Plus_Advantage, Exact},
     {"DELTAPLUSXP", InstrumentModelType_Delta_Plus_XP, Exact},
     {"LCQ ADVANTAGE", InstrumentModelType_LCQ_Advantage, Exact},
@@ -252,10 +253,12 @@ const InstrumentNameToModelMapping nameToModelMapping[] =
 inline InstrumentModelType parseInstrumentModelType(const std::string& instrumentModel)
 {
     std::string type = bal::to_upper_copy(instrumentModel);
+    std::string typeNoSpaces = bal::replace_all_copy(type, " ", "");
     for (const auto& mapping : nameToModelMapping)
         switch (mapping.matchType)
         {
             case Exact: if (mapping.name == type) return mapping.modelType; break;
+            case ExactNoSpaces: if (mapping.name == typeNoSpaces) return mapping.modelType; break;
             case Contains: if (bal::contains(type, mapping.name)) return mapping.modelType; break;
             case StartsWith: if (bal::starts_with(type, mapping.name)) return mapping.modelType; break;
             case EndsWith: if (bal::ends_with(type, mapping.name)) return mapping.modelType; break;
