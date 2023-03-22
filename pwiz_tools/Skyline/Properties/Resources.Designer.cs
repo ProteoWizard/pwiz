@@ -36199,7 +36199,6 @@ namespace pwiz.Skyline.Properties {
             }
         }
         
-        
         /// <summary>
         ///   Looks up a localized string similar to Importing data. {0}% complete..
         /// </summary>
