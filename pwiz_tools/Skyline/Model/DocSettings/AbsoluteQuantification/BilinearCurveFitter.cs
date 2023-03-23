@@ -197,7 +197,7 @@ namespace pwiz.Skyline.Model.DocSettings.AbsoluteQuantification
 
         public QuantLimit ComputeQuantLimits(CalibrationCurveFitter calibrationCurveFitter)
         {
-            var weightedPoints = calibrationCurveFitter.EnumerateCalibrationWeightedPoints().ToList();
+            var weightedPoints = calibrationCurveFitter.GetStandardPoints().ToList();
             List<WeightedPoint> combinedWeightedPoints;
             if (OptimizeTransitionSettings.CombinePointsWithSameConcentration)
             {

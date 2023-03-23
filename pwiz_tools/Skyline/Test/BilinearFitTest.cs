@@ -16,7 +16,7 @@ namespace pwiz.SkylineTest
         public void TestFitBilinearCurve()
         {
             var points = GetWeightedPoints();
-            var result = new BilinearCurveFitter().FitBilinearCurve(points);
+            var result = BilinearCurveFitter.FitBilinearCurve(points);
             Assert.AreEqual(0.025854009062249942, result.Slope, delta);
             Assert.AreEqual(0.16317916521766687, result.Intercept, delta);
             Assert.AreEqual(0.172315, result.BaselineHeight, delta);
@@ -115,7 +115,7 @@ namespace pwiz.SkylineTest
         public void TestComputeLod()
         {
             var points = GetWeightedPoints();
-            var lod = new BilinearCurveFitter().ComputeLod(points);
+            var lod = BilinearCurveFitter.ComputeLod(points);
             Assert.AreEqual(0.3845768874492954, lod, delta);
         }
 
@@ -177,7 +177,7 @@ namespace pwiz.SkylineTest
                     Enumerable.Range(0, areas.GetLength(0)).Select(i => areas[i, iTransition]).ToList();
                 Assert.AreEqual(concentrations.Length, transitionAreas.Count);
                 var weightedPoints = MakeWeightedPoints(concentrations, transitionAreas);
-                var lod = new BilinearCurveFitter().ComputeLod(weightedPoints);
+                var lod = BilinearCurveFitter.ComputeLod(weightedPoints);
                 Assert.AreEqual(expectedLods[iTransition], lod, delta, "Lod Mismatch Transition #{0}", iTransition);
                 var loq = new BilinearCurveFitter {MaxBootstrapIterations = 10000}.ComputeBootstrappedLoq(weightedPoints);
                 Assert.AreEqual(expectedLoqs[iTransition], loq, delta, "Loq Mismatch Transition #{0}", loq);
