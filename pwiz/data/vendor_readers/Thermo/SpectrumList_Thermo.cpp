@@ -112,15 +112,11 @@ PWIZ_API_DECL size_t SpectrumList_Thermo::find(const string& id) const
     size_t scanNumber = lexical_cast<size_t>(id, success);
     if (success && scanNumber>=1 && scanNumber<=size())
         return scanNumber-1;
-    else
-    {
-        map<string, size_t>::const_iterator scanItr = idToIndexMap_.find(id);
-        if (scanItr == idToIndexMap_.end())
-            return checkNativeIdFindResult(size_, id);
-        return scanItr->second;
-    }
 
-    return checkNativeIdFindResult(size_, id);
+    map<string, size_t>::const_iterator scanItr = idToIndexMap_.find(id);
+    if (scanItr == idToIndexMap_.end())
+        return checkNativeIdFindResult(size_, id);
+    return scanItr->second;
 }
 
 
@@ -144,7 +140,11 @@ InstrumentConfigurationPtr SpectrumList_Thermo::findInstrumentConfiguration(cons
         }
     }
 
-    throw runtime_error("no matching instrument configuration for analyzer type " + cvTermInfo(massAnalyzerType).shortName());
+    string msg = "no matching instrument configuration for analyzer type " + cvTermInfo(massAnalyzerType).shortName();
+    if (config_.unknownInstrumentIsError)
+        throw runtime_error(msg);
+    warn_once(msg.c_str());
+    return InstrumentConfigurationPtr();
 }
 
 inline boost::optional<double> getElectronvoltActivationEnergy(const ScanInfo& scanInfo)
