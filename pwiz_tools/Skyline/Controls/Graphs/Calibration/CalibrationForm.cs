@@ -94,10 +94,14 @@ namespace pwiz.Skyline.Controls.Graphs.Calibration
             }
         }
 
-        public CalibrationCurve CalibrationCurve { get; private set; }
-        public CalibrationCurveMetrics CalibrationCurveMetrics { get; private set; }
-        public FiguresOfMerit FiguresOfMerit { get; private set; }
-
+        public CalibrationCurve CalibrationCurve
+        {
+            get { return calibrationGraphControl1.CalibrationCurve; }
+        }
+        public CalibrationCurveMetrics CalibrationCurveMetrics
+        {
+            get { return calibrationGraphControl1.CalibrationCurveMetrics; }
+        }
         private void DisplayCalibrationCurve()
         {
             Text = TabText = _originalFormTitle;

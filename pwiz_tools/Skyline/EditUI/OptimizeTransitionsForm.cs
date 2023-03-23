@@ -1,6 +1,7 @@
 ﻿using System;
 using System.Collections.Generic;
 using System.ComponentModel;
+using System.Drawing;
 using System.Linq;
 using System.Threading;
 using System.Windows.Forms;
@@ -15,7 +16,9 @@ using pwiz.Skyline.Model;
 using pwiz.Skyline.Model.Databinding;
 using pwiz.Skyline.Model.DocSettings.AbsoluteQuantification;
 using pwiz.Skyline.Model.GroupComparison;
+using pwiz.Skyline.Util;
 using pwiz.Skyline.Util.Extensions;
+using ZedGraph;
 
 namespace pwiz.Skyline.EditUI
 {
@@ -28,6 +31,7 @@ namespace pwiz.Skyline.EditUI
         private SkylineDataSchema _dataSchema;
         private SequenceTree _sequenceTree;
         private OptimizeTransitionDetails _details;
+        private string _originalTitle;
         public OptimizeTransitionsForm(SkylineWindow skylineWindow)
         {
             InitializeComponent();
@@ -44,6 +48,8 @@ namespace pwiz.Skyline.EditUI
                 SkylineViewContext.GetDefaultViewInfo(rootColumn));
             BindingListSource.SetViewContext(new SkylineViewContext(_dataSchema, ImmutableList.Singleton(rowSourceInfo)));
             DataGridView.CurrentCellChanged += DataGridView_OnCurrentCellChanged;
+            calibrationGraphControl1.ZedGraphControl.ContextMenuBuilder += zedGraphControl_ContextMenuBuilder;
+            _originalTitle = Text;
         }
 
         private void DataGridView_OnCurrentCellChanged(object sender, EventArgs e)
@@ -223,6 +229,10 @@ namespace pwiz.Skyline.EditUI
             {
                 return;
             }
+
+            Text = TabText = selection.PeptideDocNode == null
+                ? _originalTitle
+                : TextUtil.ColonSeparate(_originalTitle, selection.PeptideDocNode.ModifiedSequenceDisplay);
             _rowList.Clear();
             _details = details;
             if (details != null)
@@ -373,6 +383,15 @@ namespace pwiz.Skyline.EditUI
             var settings = new CalibrationGraphControl.Settings(document, calibrationCurveFitter,
                 Properties.Settings.Default.CalibrationCurveOptions);
             calibrationGraphControl1.Update(settings);
+        }
+        private void zedGraphControl_ContextMenuBuilder(ZedGraphControl sender, ContextMenuStrip menuStrip, Point mousePt, ZedGraphControl.ContextMenuObjectState objState)
+        {
+            ZedGraphHelper.BuildContextMenu(sender, menuStrip, true);
+        }
+
+        private void btnOptimizeDocumentTransitions_Click(object sender, EventArgs e)
+        {
+            SkylineWindow.ShowOptimizeDocumentTransitionsForm();
         }
     }
 }

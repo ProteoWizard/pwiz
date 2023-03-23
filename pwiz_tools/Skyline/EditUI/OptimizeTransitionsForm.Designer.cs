@@ -29,6 +29,7 @@
         private void InitializeComponent()
         {
             this.panel1 = new System.Windows.Forms.Panel();
+            this.btnOptimizeDocumentTransitions = new System.Windows.Forms.Button();
             this.optimizeTransitionsSettingsControl1 = new pwiz.Skyline.EditUI.OptimizeTransitions.OptimizeTransitionsSettingsControl();
             this.calibrationGraphControl1 = new pwiz.Skyline.Controls.Graphs.Calibration.CalibrationGraphControl();
             this.splitContainer1 = new System.Windows.Forms.SplitContainer();
@@ -46,6 +47,7 @@
             // 
             // panel1
             // 
+            this.panel1.Controls.Add(this.btnOptimizeDocumentTransitions);
             this.panel1.Controls.Add(this.optimizeTransitionsSettingsControl1);
             this.panel1.Dock = System.Windows.Forms.DockStyle.Top;
             this.panel1.Location = new System.Drawing.Point(0, 0);
@@ -53,8 +55,20 @@
             this.panel1.Size = new System.Drawing.Size(800, 94);
             this.panel1.TabIndex = 1;
             // 
+            // btnOptimizeDocumentTransitions
+            // 
+            this.btnOptimizeDocumentTransitions.Anchor = ((System.Windows.Forms.AnchorStyles)((System.Windows.Forms.AnchorStyles.Top | System.Windows.Forms.AnchorStyles.Right)));
+            this.btnOptimizeDocumentTransitions.Location = new System.Drawing.Point(635, 12);
+            this.btnOptimizeDocumentTransitions.Name = "btnOptimizeDocumentTransitions";
+            this.btnOptimizeDocumentTransitions.Size = new System.Drawing.Size(153, 23);
+            this.btnOptimizeDocumentTransitions.TabIndex = 1;
+            this.btnOptimizeDocumentTransitions.Text = "Optimize Entire Document...";
+            this.btnOptimizeDocumentTransitions.UseVisualStyleBackColor = true;
+            this.btnOptimizeDocumentTransitions.Click += new System.EventHandler(this.btnOptimizeDocumentTransitions_Click);
+            // 
             // optimizeTransitionsSettingsControl1
             // 
+            this.optimizeTransitionsSettingsControl1.CombinePointsWithSameConcentration = false;
             this.optimizeTransitionsSettingsControl1.Dock = System.Windows.Forms.DockStyle.Fill;
             this.optimizeTransitionsSettingsControl1.Location = new System.Drawing.Point(0, 0);
             this.optimizeTransitionsSettingsControl1.MinNumberOfTransitions = 4;
@@ -72,7 +86,7 @@
             this.calibrationGraphControl1.Location = new System.Drawing.Point(0, 0);
             this.calibrationGraphControl1.ModeUIAwareFormHelper = null;
             this.calibrationGraphControl1.Name = "calibrationGraphControl1";
-            this.calibrationGraphControl1.Size = new System.Drawing.Size(800, 172);
+            this.calibrationGraphControl1.Size = new System.Drawing.Size(800, 173);
             this.calibrationGraphControl1.TabIndex = 2;
             // 
             // splitContainer1
@@ -86,7 +100,7 @@
             // 
             this.splitContainer1.Panel2.Controls.Add(this.calibrationGraphControl1);
             this.splitContainer1.Size = new System.Drawing.Size(800, 303);
-            this.splitContainer1.SplitterDistance = 127;
+            this.splitContainer1.SplitterDistance = 126;
             this.splitContainer1.TabIndex = 3;
             // 
             // OptimizeTransitionsForm
@@ -97,7 +111,7 @@
             this.Controls.Add(this.splitContainer1);
             this.Controls.Add(this.panel1);
             this.Name = "OptimizeTransitionsForm";
-            this.Text = "OptimizeTransitionDetails";
+            this.Text = "Optimize Transitions";
             this.Controls.SetChildIndex(this.panel1, 0);
             this.Controls.SetChildIndex(this.databoundGridControl, 0);
             this.Controls.SetChildIndex(this.splitContainer1, 0);
@@ -115,5 +129,6 @@
         private OptimizeTransitions.OptimizeTransitionsSettingsControl optimizeTransitionsSettingsControl1;
         private Controls.Graphs.Calibration.CalibrationGraphControl calibrationGraphControl1;
         private System.Windows.Forms.SplitContainer splitContainer1;
+        private System.Windows.Forms.Button btnOptimizeDocumentTransitions;
     }
 }

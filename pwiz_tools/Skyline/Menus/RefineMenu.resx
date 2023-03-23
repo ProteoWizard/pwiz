@@ -281,7 +281,7 @@ first occurrence of any peptide.</value>
     <value>246, 22</value>
   </data>
   <data name="optimizeTransitionsMenuItem.Text" xml:space="preserve">
-    <value>Optimize Transitions...</value>
+    <value>Optimize Transitions</value>
   </data>
   <data name="toolStripSeparator35.Size" type="System.Drawing.Size, System.Drawing">
     <value>243, 6</value>
@@ -308,7 +308,7 @@ first occurrence of any peptide.</value>
     <value>modeUIHandler</value>
   </data>
   <data name="&gt;&gt;modeUIHandler.Type" xml:space="preserve">
-    <value>pwiz.Skyline.Util.Helpers+ModeUIExtender, Skyline-daily, Version=21.2.1.510, Culture=neutral, PublicKeyToken=null</value>
+    <value>pwiz.Skyline.Util.Helpers+ModeUIExtender, Skyline-daily, Version=22.2.1.442, Culture=neutral, PublicKeyToken=null</value>
   </data>
   <data name="&gt;&gt;refineToolStripMenuItem.Name" xml:space="preserve">
     <value>refineToolStripMenuItem</value>
@@ -464,6 +464,6 @@ first occurrence of any peptide.</value>
     <value>RefineMenu</value>
   </data>
   <data name="&gt;&gt;$this.Type" xml:space="preserve">
-    <value>pwiz.Skyline.Menus.SkylineControl, Skyline-daily, Version=21.2.1.510, Culture=neutral, PublicKeyToken=null</value>
+    <value>pwiz.Skyline.Menus.SkylineControl, Skyline-daily, Version=22.2.1.442, Culture=neutral, PublicKeyToken=null</value>
   </data>
 </root>

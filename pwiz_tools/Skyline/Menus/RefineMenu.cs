@@ -22,6 +22,7 @@ using System.IO;
 using System.Linq;
 using System.Windows.Forms;
 using pwiz.Common.Collections;
+using pwiz.Common.SystemUtil;
 using pwiz.Skyline.Alerts;
 using pwiz.Skyline.Controls;
 using pwiz.Skyline.EditUI;
@@ -390,10 +391,34 @@ namespace pwiz.Skyline.Menus
             }
         }
 
+        private void optimizePeptideTransitionsToolStripMenuItem_Click(object sender, EventArgs e)
+        {
+            var optimizeTransitionsForm = FormUtil.OpenForms.OfType<OptimizeTransitionsForm>().FirstOrDefault();
+            if (optimizeTransitionsForm != null)
+            {
+                optimizeTransitionsForm.Activate();
+                return;
+            }
+
+            optimizeTransitionsForm = new OptimizeTransitionsForm(SkylineWindow);
+            optimizeTransitionsForm.Show(SkylineWindow);
+        }
+
+        private void optimizedDocumentTransitionsToolStripMenuItem_Click(object sender, EventArgs e)
+        {
+            var optimizeTransitionsDlg = FormUtil.OpenForms.OfType<OptimizeDocumentTransitionsForm>().FirstOrDefault();
+            if (optimizeTransitionsDlg != null)
+            {
+                optimizeTransitionsDlg.Activate();
+                return;
+            }
+            optimizeTransitionsDlg = new OptimizeDocumentTransitionsForm(SkylineWindow);
+            optimizeTransitionsDlg.Show(SkylineWindow);
+        }
+
         private void optimizeTransitionsMenuItem_Click(object sender, EventArgs e)
         {
-            var optimizeTransitionsDlg = new OptimizeDocumentTransitionsForm(SkylineWindow);
-            optimizeTransitionsDlg.Show(SkylineWindow);
+            SkylineWindow.ShowOptimizeTransitionsForm();
         }
     }
 }
