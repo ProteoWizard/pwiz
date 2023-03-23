@@ -152,6 +152,11 @@ namespace pwiz.Skyline.Model.DocSettings.AbsoluteQuantification
                 EnumerateReplicates().Select(replicateIndex => new CalibrationPoint(replicateIndex, labelType)));
         }
 
+        public IEnumerable<WeightedPoint> EnumerateCalibrationWeightedPoints()
+        {
+            return EnumerateCalibrationPoints().Select(GetWeightedPoint).OfType<WeightedPoint>();
+        }
+
         public IEnumerable<IsotopeLabelType> EnumerateLabelTypes()
         {
             if (!IsotopologResponseCurve)
@@ -438,11 +443,9 @@ namespace pwiz.Skyline.Model.DocSettings.AbsoluteQuantification
             {
                 var fitter = new BilinearCurveFitter
                 {
-                    CvThreshold = QuantificationSettings.MaxLoqCv.Value
+                    CvThreshold = QuantificationSettings.MaxLoqCv.Value / 100
                 };
-                var points = new List<WeightedPoint>();
-                GetCalibrationCurveAndPoints(points);
-                return fitter.ComputeBootstrappedLoq(points);
+                return fitter.ComputeQuantLimits(EnumerateCalibrationWeightedPoints().ToList()).Loq;
             }
             double? bestLoq = null;
             var concentrationReplicateLookup = GetStandardConcentrations().ToLookup(entry=>entry.Value, entry=>entry.Key);

@@ -18,6 +18,7 @@ namespace pwiz.Skyline.Model.DocSettings.AbsoluteQuantification
             MinSameLoqCountForAccept = 25;
             GridSize = 100;
             CvThreshold = .2;
+            OptimizeTransitionSettings = OptimizeTransitionSettings.DEFAULT;
         }
 
         public OptimizeTransitionSettings OptimizeTransitionSettings { get; set; }
@@ -35,7 +36,7 @@ namespace pwiz.Skyline.Model.DocSettings.AbsoluteQuantification
             }
         }
 
-        public BilinearCurveFit FitBilinearCurve(IEnumerable<WeightedPoint> points)
+        public static BilinearCurveFit FitBilinearCurve(IEnumerable<WeightedPoint> points)
         {
             var pointsList = points as IList<WeightedPoint> ?? points.ToList();
             return BilinearCurveFit.FromCalibrationCurve(RegressionFit.BILINEAR.Fit(pointsList), pointsList);
@@ -132,7 +133,7 @@ namespace pwiz.Skyline.Model.DocSettings.AbsoluteQuantification
             return runningStatistics.StandardDeviation / runningStatistics.Mean;
         }
 
-        public double ComputeLod(IList<WeightedPoint> points)
+        public static double ComputeLod(IList<WeightedPoint> points)
         {
             if (points.Count == 0)
             {
@@ -196,8 +197,7 @@ namespace pwiz.Skyline.Model.DocSettings.AbsoluteQuantification
 
         public QuantLimit ComputeQuantLimits(CalibrationCurveFitter calibrationCurveFitter)
         {
-            var weightedPoints = calibrationCurveFitter.EnumerateCalibrationPoints()
-                .Select(calibrationCurveFitter.GetWeightedPoint).OfType<WeightedPoint>().ToList();
+            var weightedPoints = calibrationCurveFitter.EnumerateCalibrationWeightedPoints().ToList();
             List<WeightedPoint> combinedWeightedPoints;
             if (OptimizeTransitionSettings.CombinePointsWithSameConcentration)
             {
@@ -343,6 +343,10 @@ namespace pwiz.Skyline.Model.DocSettings.AbsoluteQuantification
             {
                 foreach (var transitionDocNode in transitionGroupDocNode.Transitions)
                 {
+                    if (OptimizeTransitionSettings.PreserveNonQuantitative && !transitionDocNode.ExplicitQuantitative)
+                    {
+                        continue;
+                    }
                     var identityPath = new IdentityPath(
                         calibrationCurveFitter.PeptideQuantifier.PeptideGroupDocNode.PeptideGroup,
                         calibrationCurveFitter.PeptideQuantifier.PeptideDocNode.Peptide,
