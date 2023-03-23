@@ -12,6 +12,7 @@ using pwiz.Common.SystemUtil;
 using pwiz.Skyline.Controls;
 using pwiz.Skyline.Controls.Databinding;
 using pwiz.Skyline.Controls.Graphs.Calibration;
+using pwiz.Skyline.Controls.SeqNode;
 using pwiz.Skyline.Model;
 using pwiz.Skyline.Model.Databinding;
 using pwiz.Skyline.Model.DocSettings.AbsoluteQuantification;
@@ -19,8 +20,9 @@ using pwiz.Skyline.Model.GroupComparison;
 using pwiz.Skyline.Util;
 using pwiz.Skyline.Util.Extensions;
 using ZedGraph;
+using Transition = pwiz.Skyline.Model.Transition;
 
-namespace pwiz.Skyline.EditUI
+namespace pwiz.Skyline.EditUI.OptimizeTransitions
 {
     public partial class OptimizeTransitionsForm : DataboundGridForm
     {
@@ -48,50 +50,73 @@ namespace pwiz.Skyline.EditUI
                 SkylineViewContext.GetDefaultViewInfo(rootColumn));
             BindingListSource.SetViewContext(new SkylineViewContext(_dataSchema, ImmutableList.Singleton(rowSourceInfo)));
             DataGridView.CurrentCellChanged += DataGridView_OnCurrentCellChanged;
+            DataGridView.SelectionChanged += DataGridView_OnCurrentCellChanged;
             calibrationGraphControl1.ZedGraphControl.ContextMenuBuilder += zedGraphControl_ContextMenuBuilder;
             _originalTitle = Text;
         }
 
         private void DataGridView_OnCurrentCellChanged(object sender, EventArgs e)
         {
-            var currentCell = DataGridView.CurrentCell;
-            if (currentCell == null)
+            DisplayQuantLimitForSelection();
+        }
+
+        private void DisplayQuantLimitForSelection()
+        {
+            var transitionIdentityPaths = DataGridView.SelectedCells.Cast<DataGridViewCell>().SelectMany(GetCellTransitionIdentityPaths)
+                .Concat(DataGridView.SelectedRows.Cast<DataGridViewRow>().SelectMany(GetRowTransitionIdentityPaths)).ToHashSet();
+            if (transitionIdentityPaths.Count == 0)
             {
-                return;
+                transitionIdentityPaths.UnionWith(GetCellTransitionIdentityPaths(DataGridView.CurrentCell));
             }
-            var rowIndex = currentCell.RowIndex;
-            if (rowIndex < 0 || rowIndex >= BindingListSource.Count)
+
+            if (transitionIdentityPaths.Count == 0)
             {
                 return;
             }
 
+            DisplayTransitionQuantLimit(transitionIdentityPaths);
+
+        }
+
+        private IEnumerable<IdentityPath> GetCellTransitionIdentityPaths(DataGridViewCell cell)
+        {
+            IEnumerable<IdentityPath> identityPaths = Array.Empty<IdentityPath>();
+            if (cell == null)
+            {
+                return identityPaths;
+            }
+            var rowIndex = cell.RowIndex;
+            if (rowIndex < 0 || rowIndex >= BindingListSource.Count)
+            {
+                return identityPaths;
+            }
             var row = (BindingListSource[rowIndex] as RowItem)?.Value as Row;
             if (row == null)
             {
-                return;
+                return identityPaths;
             }
 
             var transitionIdentityPath = row.Transition.IdentityPath;
+            identityPaths = new[] { transitionIdentityPath };
 
-            var columnIndex = currentCell.ColumnIndex;
+            var columnIndex = cell.ColumnIndex;
             if (columnIndex < 0 || columnIndex >= DataGridView.ColumnCount)
             {
-                return;
+                return identityPaths;
             }
-
             var dataPropertyName = DataGridView.Columns[columnIndex]?.DataPropertyName;
             if (dataPropertyName == null)
             {
-                return;
+                return identityPaths;
             }
-
             var propertyPath =
                 (BindingListSource.ItemProperties.FindByName(dataPropertyName) as ColumnPropertyDescriptor)
                 ?.PropertyPath;
             if (propertyPath == null)
             {
-                return;
+                return identityPaths;
             }
+
 
             IList<TransitionsQuantLimit> quantLimitList = null;
             if (propertyPath.StartsWith(PropertyPath.Root.Property(nameof(Row.SingleQuantLimit))))
@@ -107,19 +132,32 @@ namespace pwiz.Skyline.EditUI
                 quantLimitList = _details.RejectedQuantLimits;
             }
 
-            if (quantLimitList == null)
+            if (quantLimitList != null)
             {
-                return;
+                var transitionQuantLimit = quantLimitList.FirstOrDefault(tql =>
+                    Equals(transitionIdentityPath, tql.TransitionIdentityPaths.Last()));
+                if (transitionQuantLimit != null)
+                {
+                    return transitionQuantLimit.TransitionIdentityPaths;
+                }
+            }
+            return identityPaths;
+        }
+
+        private IEnumerable<IdentityPath> GetRowTransitionIdentityPaths(DataGridViewRow dataGridViewRow)
+        {
+            var rowIndex = dataGridViewRow.Index;
+            if (rowIndex < 0 || rowIndex >= BindingListSource.Count)
+            {
+                return Array.Empty<IdentityPath>();
+            }
+            var row = (BindingListSource[rowIndex] as RowItem)?.Value as Row;
+            if (row == null)
+            {
+                return Array.Empty<IdentityPath>();
             }
 
-            var transitionQuantLimit = quantLimitList.FirstOrDefault(tql =>
-                Equals(transitionIdentityPath, tql.TransitionIdentityPaths.Last()));
-            if (transitionQuantLimit == null)
-            {
-                return;
-            }
-
-            DisplayTransitionQuantLimit(transitionQuantLimit);
+            return new[] { row.Transition.IdentityPath };
         }
 
         public SkylineWindow SkylineWindow { get; }
@@ -257,7 +295,7 @@ namespace pwiz.Skyline.EditUI
             };
             var peptideQuantifier =
                 OptimizeDocumentTransitionsForm.GetPeptideQuantifier(null, selection.Document,
-                    selection.MoleculeIdentityPath);
+                    selection.MoleculeIdentityPath, selection.Settings);
             if (peptideQuantifier == null)
             {
                 return null;
@@ -297,18 +335,6 @@ namespace pwiz.Skyline.EditUI
                         .FirstOrDefault(tql => Equals(transition.IdentityPath, tql.TransitionIdentityPaths.Last()))
                         ?.QuantLimit
                 };
-            }
-        }
-
-        public OptimizeTransitionSettings Settings
-        {
-            get
-            {
-                return optimizeTransitionsSettingsControl1.CurrentSettings;
-            }
-            set
-            {
-                optimizeTransitionsSettingsControl1.CurrentSettings = value;
             }
         }
 
@@ -372,18 +398,76 @@ namespace pwiz.Skyline.EditUI
             UpdateSelection();
         }
 
-        public void DisplayTransitionQuantLimit(TransitionsQuantLimit transitionQuantLimit)
+        public void DisplayTransitionQuantLimit(HashSet<IdentityPath> transitionIdentityPaths)
         {
             var document = _selection.Document;
+            var quantificationSettings = _selection.Settings.GetQuantificationSettings(_selection.Document.Settings);
+            quantificationSettings = quantificationSettings.ChangeLodCalculation(LodCalculation.TURNING_POINT_STDERR);
             var peptideQuantifier = PeptideQuantifier.GetPeptideQuantifier(_selection.Document,
                     _selection.PeptideGroupDocNode, _selection.PeptideDocNode)
-                .WithQuantifiableTransitions(transitionQuantLimit.TransitionIdentityPaths);
+                .WithQuantificationSettings(quantificationSettings)
+                .WithQuantifiableTransitions(transitionIdentityPaths);
             var calibrationCurveFitter =
                 _selection.Settings.GetCalibrationCurveFitter(peptideQuantifier, _selection.Document.Settings);
             var settings = new CalibrationGraphControl.Settings(document, calibrationCurveFitter,
                 Properties.Settings.Default.CalibrationCurveOptions);
             calibrationGraphControl1.Update(settings);
+            calibrationGraphControl1.ZedGraphControl.GraphPane.Title.Text =
+                GetCalibrationCurveTitle(document, transitionIdentityPaths);
         }
+
+        public string GetCalibrationCurveTitle(SrmDocument document, ICollection<IdentityPath> transitionIdentityPaths)
+        {
+            if (transitionIdentityPaths.Count == 0)
+            {
+                return string.Empty;
+            }
+
+            if (transitionIdentityPaths.Count == 1)
+            {
+                return string.Format("Calibration curve using only {0} transition", GetTransitionLabel(document, transitionIdentityPaths.Single()));
+            }
+
+            return string.Format("Calibration curve using {0} transitions", transitionIdentityPaths.Count);
+        }
+
+        public string GetTransitionLabel(SrmDocument document, IdentityPath transitionIdentityPath)
+        {
+            var peptideDocNode = (PeptideDocNode) document.FindNode(transitionIdentityPath.GetPathTo((int)SrmDocument.Level.Molecules));
+            var transitionGroupDocNode =
+                (TransitionGroupDocNode)peptideDocNode?.FindNode(
+                    transitionIdentityPath.GetIdentity((int)SrmDocument.Level.TransitionGroups));
+            var transitionDocNode =
+                (TransitionDocNode)transitionGroupDocNode?.FindNode(
+                    transitionIdentityPath.GetIdentity((int)SrmDocument.Level.Transitions));
+            if (transitionDocNode == null)
+            {
+                return transitionIdentityPath.ToString();
+            }
+
+            var transition = transitionDocNode.Transition;
+            string transitionText;
+            if (transition.IsCustom() || transition.IsPrecursor())
+            {
+                transitionText = transition.ToString();
+            }
+            else
+            {
+                transitionText = string.Concat(transition.IonType.ToString().ToLowerInvariant(),
+                    transition.Ordinal,
+                    Transition.GetChargeIndicator(transition.Adduct));
+            }
+                
+            if (peptideDocNode.Children.Count == 1)
+            {
+                return transitionText;
+            }
+
+            string precursorText = TransitionGroupTreeNode.GetLabel(transitionGroupDocNode.TransitionGroup,
+                transitionGroupDocNode.PrecursorMz, string.Empty);
+            return TextUtil.ColonSeparate(precursorText, transitionText);
+        }
+
         private void zedGraphControl_ContextMenuBuilder(ZedGraphControl sender, ContextMenuStrip menuStrip, Point mousePt, ZedGraphControl.ContextMenuObjectState objState)
         {
             ZedGraphHelper.BuildContextMenu(sender, menuStrip, true);

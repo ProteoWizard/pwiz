@@ -38,6 +38,9 @@ namespace pwiz.Skyline.Model.DocSettings.AbsoluteQuantification
             () => QuantificationStrings.LodCalculation_BLANK_PLUS_3SD_Blank_plus_3___SD,
             (curve, fitter)=>BlankPlusSdMultiple(curve, fitter, 3.0));
 
+        public static readonly LodCalculation TURNING_POINT_STDERR = new LodCalculation("turning_point_stderr",
+            () => "Bilinear turning point with standard error", CalculateLodFromTurningPointWithStdErr);
+
         public static readonly ImmutableList<LodCalculation> ALL = ImmutableList.ValueOf(new[]
         {
             NONE, BLANK_PLUS_2SD, BLANK_PLUS_3SD, TURNING_POINT
@@ -75,6 +78,14 @@ namespace pwiz.Skyline.Model.DocSettings.AbsoluteQuantification
             CalibrationCurveFitter fitter)
         {
             return (calibrationCurve as CalibrationCurve.Bilinear)?.TurningPoint;
+        }
+
+        public static double? CalculateLodFromTurningPointWithStdErr(CalibrationCurve curve, CalibrationCurveFitter fitter)
+        {
+            var bilinearCurveFitter = new BilinearCurveFitter();
+            List<WeightedPoint> points = new List<WeightedPoint>();
+            fitter.GetCalibrationCurveAndPoints(points);
+            return bilinearCurveFitter.ComputeLod(points);
         }
 
         public static double? BlankPlusSdMultiple(CalibrationCurve calibrationCurve, CalibrationCurveFitter fitter, double sdMultiple)

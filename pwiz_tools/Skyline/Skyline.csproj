@@ -425,16 +425,16 @@
     <Compile Include="EditUI\EditLinkedPeptidesDlg.Designer.cs">
       <DependentUpon>EditLinkedPeptidesDlg.cs</DependentUpon>
     </Compile>
-    <Compile Include="EditUI\OptimizeTransitionsForm.cs">
+    <Compile Include="EditUI\OptimizeTransitions\OptimizeTransitionsForm.cs">
       <SubType>Form</SubType>
     </Compile>
-    <Compile Include="EditUI\OptimizeTransitionsForm.Designer.cs">
+    <Compile Include="EditUI\OptimizeTransitions\OptimizeTransitionsForm.Designer.cs">
       <DependentUpon>OptimizeTransitionsForm.cs</DependentUpon>
     </Compile>
-    <Compile Include="EditUI\OptimizeDocumentTransitionsForm.cs">
+    <Compile Include="EditUI\OptimizeTransitions\OptimizeDocumentTransitionsForm.cs">
       <SubType>Form</SubType>
     </Compile>
-    <Compile Include="EditUI\OptimizeDocumentTransitionsForm.Designer.cs">
+    <Compile Include="EditUI\OptimizeTransitions\OptimizeDocumentTransitionsForm.Designer.cs">
       <DependentUpon>OptimizeDocumentTransitionsForm.cs</DependentUpon>
     </Compile>
     <Compile Include="EditUI\OptimizeTransitions\OptimizeTransitionsSettingsControl.cs">
@@ -2639,10 +2639,10 @@
     <EmbeddedResource Include="EditUI\MassErrorChartPropertyDlg.zh-CHS.resx">
       <DependentUpon>MassErrorChartPropertyDlg.cs</DependentUpon>
     </EmbeddedResource>
-    <EmbeddedResource Include="EditUI\OptimizeTransitionsForm.resx">
+    <EmbeddedResource Include="EditUI\OptimizeTransitions\OptimizeTransitionsForm.resx">
       <DependentUpon>OptimizeTransitionsForm.cs</DependentUpon>
     </EmbeddedResource>
-    <EmbeddedResource Include="EditUI\OptimizeDocumentTransitionsForm.resx">
+    <EmbeddedResource Include="EditUI\OptimizeTransitions\OptimizeDocumentTransitionsForm.resx">
       <DependentUpon>OptimizeDocumentTransitionsForm.cs</DependentUpon>
     </EmbeddedResource>
     <EmbeddedResource Include="EditUI\OptimizeTransitions\OptimizeTransitionsSettingsControl.resx">

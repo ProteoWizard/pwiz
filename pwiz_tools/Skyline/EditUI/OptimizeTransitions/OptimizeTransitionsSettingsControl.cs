@@ -1,6 +1,5 @@
 ﻿using System;
 using System.Windows.Forms;
-using pwiz.Skyline.Controls;
 using pwiz.Skyline.Model.DocSettings.AbsoluteQuantification;
 
 namespace pwiz.Skyline.EditUI.OptimizeTransitions
@@ -8,6 +7,8 @@ namespace pwiz.Skyline.EditUI.OptimizeTransitions
     public partial class OptimizeTransitionsSettingsControl : UserControl
     {
         private bool _inSettingsChange;
+        private OptimizeTransitionSettings _currentSettings = OptimizeTransitionSettings.DEFAULT;
+        private bool _syncWithGlobalSettings = true;
         public OptimizeTransitionsSettingsControl()
         {
             InitializeComponent();
@@ -17,90 +18,54 @@ namespace pwiz.Skyline.EditUI.OptimizeTransitions
         {
             get
             {
-                var settings = OptimizeTransitionSettings.DEFAULT
-                    .ChangeMinimumNumberOfTransitions(MinNumberOfTransitions)
-                    .ChangeOptimizeType(OptimizeType)
-                    .ChangePreserveNonQuantitative(PreserveNonQuantitative)
-                    .ChangeCombinePointsWithSameConcentration(CombinePointsWithSameConcentration);
-                if (!string.IsNullOrEmpty(tbxRandomSeed.Text) && int.TryParse(tbxRandomSeed.Text, out int randomSeed))
-                {
-                    settings = settings.ChangeRandomSeed(randomSeed);
-                }
-
-                return settings;
-            }
-            set
-            {
-                if (Equals(value, CurrentSettings))
-                {
-                    return;
-                }
-
-                bool inSettingsChangeOld = _inSettingsChange;
-                try
-                {
-                    _inSettingsChange = true;
-                    tbxMinTransitions.Value = value.MinimumNumberOfTransitions;
-                    if (value.OptimizeType == OptimizeType.LOD)
-                    {
-                        radioLOD.Checked = true;
-                    }
-                    else
-                    {
-                        radioLOQ.Checked = true;
-                    }
-
-                    cbxPreserveNonQuantitative.Checked = value.PreserveNonQuantitative;
-                    tbxRandomSeed.Text = value.RandomSeed.ToString();
-                }
-                finally
-                {
-                    _inSettingsChange = inSettingsChangeOld;
-                }
+                return _currentSettings;
             }
         }
 
-        public OptimizeTransitionSettings GetCurrentSettings()
-        {
-            if (string.IsNullOrEmpty(tbxRandomSeed.Text))
-            {
-                tbxRandomSeed.Text = ((int)DateTime.UtcNow.Ticks).ToString();
-            }
-            var helper = new MessageBoxHelper( ParentForm);
-            if (!helper.ValidateNumberTextBox(tbxRandomSeed, null, null, out int randomSeed))
-            {
-                return null;
-            }
-            return OptimizeTransitionSettings.DEFAULT
-                .ChangeMinimumNumberOfTransitions(MinNumberOfTransitions)
-                .ChangeOptimizeType(OptimizeType)
-                .ChangePreserveNonQuantitative(PreserveNonQuantitative)
-                .ChangeCombinePointsWithSameConcentration(CombinePointsWithSameConcentration)
-                .ChangeRandomSeed(randomSeed);
-        }
-
-        public int? RandomSeed
+        public bool SyncWithGlobalSettings
         {
             get
             {
-                if (string.IsNullOrEmpty(tbxRandomSeed.Text) || !int.TryParse(tbxRandomSeed.Text, out int randomSeed))
-                {
-                    return null;
-                }
-
-                return randomSeed;
+                return _syncWithGlobalSettings;
             }
             set
             {
-                if (value.HasValue)
-                {
-                    tbxRandomSeed.Text = value.ToString();
-                }
-                else
-                {
-                    tbxRandomSeed.Text = string.Empty;
-                }
+                _syncWithGlobalSettings = value;
             }
+        }
+
+        protected override void OnHandleCreated(EventArgs e)
+        {
+            base.OnHandleCreated(e);
+            if (SyncWithGlobalSettings)
+            {
+                _currentSettings = OptimizeTransitionSettings.GlobalSettings;
+            }
+            OptimizeTransitionSettings.GlobalSettingsChange += OptimizeTransitionSettings_OnGlobalSettingsChange;
+        }
+
+        private void OptimizeTransitionSettings_OnGlobalSettingsChange()
+        {
+            if (_inSettingsChange)
+            {
+                return;
+            }
+
+            try
+            {
+                _inSettingsChange = true;
+
+            }
+            finally
+            {
+                _inSettingsChange = false;
+            }
+        }
+
+        protected override void OnHandleDestroyed(EventArgs e)
+        {
+            OptimizeTransitionSettings.GlobalSettingsChange -= OptimizeTransitionSettings_OnGlobalSettingsChange;
+            base.OnHandleDestroyed(e);
         }
 
         public int MinNumberOfTransitions
@@ -146,30 +111,50 @@ namespace pwiz.Skyline.EditUI.OptimizeTransitions
             }
         }
 
-        public bool CombinePointsWithSameConcentration
-        {
-            get
-            {
-                return cbxAvgAtConcLevel.Checked;
-            }
-            set
-            {
-                cbxAvgAtConcLevel.Checked = value;
-            }
-        }
-
-        public event EventHandler SettingsChanged;
+        public event EventHandler SettingsChange;
 
         private void SettingsValueChange(object sender, EventArgs e)
         {
-            FireSettingsChange();
+            FireSettingsChange(true);
         }
 
-        private void FireSettingsChange()
+        private void FireSettingsChange(bool fromUi)
         {
-            if (!_inSettingsChange)
+            var settings = _currentSettings;
+            if (fromUi)
             {
-                SettingsChanged?.Invoke(this, EventArgs.Empty);
+                settings = settings
+                    .ChangeMinimumNumberOfTransitions((int)tbxMinTransitions.Value)
+                    .ChangeOptimizeType(radioLOD.Checked ? OptimizeType.LOD : OptimizeType.LOQ)
+                    .ChangePreserveNonQuantitative(cbxPreserveNonQuantitative.Checked);
+            }
+
+            _currentSettings = settings;
+            if (_inSettingsChange)
+            {
+                return;
+            }
+
+            try
+            {
+                _inSettingsChange = true;
+                if (!fromUi)
+                {
+                    tbxMinTransitions.Value = settings.MinimumNumberOfTransitions;
+                    radioLOD.Checked = settings.OptimizeType == OptimizeType.LOD;
+                    radioLOQ.Checked = settings.OptimizeType == OptimizeType.LOQ;
+                    cbxPreserveNonQuantitative.Checked = settings.PreserveNonQuantitative;
+                }
+
+                if (SyncWithGlobalSettings)
+                {
+                    OptimizeTransitionSettings.GlobalSettings = settings;
+                }
+                SettingsChange?.Invoke(this, EventArgs.Empty);
+            }
+            finally
+            {
+                _inSettingsChange = false;
             }
         }
     }

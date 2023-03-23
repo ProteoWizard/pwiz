@@ -191,7 +191,7 @@ namespace pwiz.Skyline.Model.DocSettings.AbsoluteQuantification
             {
                 loq = lod;
             }
-            return new QuantLimit(loq, lod);
+            return new QuantLimit(lod, loq);
         }
 
         public QuantLimit ComputeQuantLimits(CalibrationCurveFitter calibrationCurveFitter)

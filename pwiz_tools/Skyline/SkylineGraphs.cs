@@ -43,6 +43,7 @@ using pwiz.Skyline.Controls.AuditLog;
 using pwiz.Skyline.Controls.Clustering;
 using pwiz.Skyline.Controls.Graphs.Calibration;
 using pwiz.Skyline.Controls.GroupComparison;
+using pwiz.Skyline.EditUI.OptimizeTransitions;
 using pwiz.Skyline.Model.AuditLog;
 using pwiz.Skyline.Model.DocSettings.AbsoluteQuantification;
 using pwiz.Skyline.Model.ElementLocators.ExportAnnotations;

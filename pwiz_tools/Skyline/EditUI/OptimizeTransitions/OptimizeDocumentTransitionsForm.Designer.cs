@@ -1,4 +1,4 @@
-﻿namespace pwiz.Skyline.EditUI
+﻿namespace pwiz.Skyline.EditUI.OptimizeTransitions
 {
     partial class OptimizeDocumentTransitionsForm
     {
@@ -69,12 +69,10 @@
             this.optimizeTransitionsSettingsControl1.Anchor = ((System.Windows.Forms.AnchorStyles)((((System.Windows.Forms.AnchorStyles.Top | System.Windows.Forms.AnchorStyles.Bottom) 
             | System.Windows.Forms.AnchorStyles.Left) 
             | System.Windows.Forms.AnchorStyles.Right)));
-            this.optimizeTransitionsSettingsControl1.CombinePointsWithSameConcentration = false;
             this.optimizeTransitionsSettingsControl1.Location = new System.Drawing.Point(0, 0);
             this.optimizeTransitionsSettingsControl1.MinNumberOfTransitions = 4;
             this.optimizeTransitionsSettingsControl1.Name = "optimizeTransitionsSettingsControl1";
             this.optimizeTransitionsSettingsControl1.PreserveNonQuantitative = false;
-            this.optimizeTransitionsSettingsControl1.RandomSeed = null;
             this.optimizeTransitionsSettingsControl1.Size = new System.Drawing.Size(700, 104);
             this.optimizeTransitionsSettingsControl1.TabIndex = 4;
             // 

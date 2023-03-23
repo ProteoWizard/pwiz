@@ -3,8 +3,6 @@ using System.Collections.Generic;
 using System.ComponentModel;
 using System.Linq;
 using System.Threading;
-using MathNet.Numerics.Providers.LinearAlgebra;
-using NHibernate.Loader;
 using pwiz.Common.Collections;
 using pwiz.Common.DataBinding;
 using pwiz.Common.DataBinding.Attributes;
@@ -21,7 +19,7 @@ using pwiz.Skyline.Model.GroupComparison;
 using pwiz.Skyline.Properties;
 using pwiz.Skyline.Util;
 
-namespace pwiz.Skyline.EditUI
+namespace pwiz.Skyline.EditUI.OptimizeTransitions
 {
     public partial class OptimizeDocumentTransitionsForm : DataboundGridForm
     {
@@ -96,11 +94,11 @@ namespace pwiz.Skyline.EditUI
                 _originalDocument = originalDocument;
                 _optimizedDocument = optimizedDocument;
                 _bilinearCurveFitter = bilinearCurveFitter;
-                _originalFiguresOfMerit = new Lazy<FiguresOfMerit>(() => GetFiguresOfMerit(_originalDocument));
-                _optimizedFiguresOfMerit = new Lazy<FiguresOfMerit>(() => GetFiguresOfMerit(_optimizedDocument));
+                _originalFiguresOfMerit = new Lazy<FiguresOfMerit>(() => GetFiguresOfMerit(_originalDocument, bilinearCurveFitter.OptimizeTransitionSettings));
+                _optimizedFiguresOfMerit = new Lazy<FiguresOfMerit>(() => GetFiguresOfMerit(_optimizedDocument, bilinearCurveFitter.OptimizeTransitionSettings));
                 if (optimizedDocument != null)
                 {
-                    var peptideQuantifier = GetPeptideQuantifier(null, optimizedDocument, molecule.IdentityPath);
+                    var peptideQuantifier = GetPeptideQuantifier(null, optimizedDocument, molecule.IdentityPath, bilinearCurveFitter.OptimizeTransitionSettings);
                     int countQuantitative = 0;
                     int countNonQuantitative = 0;
                     foreach (var tg in peptideQuantifier.PeptideDocNode.TransitionGroups)
@@ -147,14 +145,14 @@ namespace pwiz.Skyline.EditUI
                 get { return _optimizedFiguresOfMerit.Value; }
             }
 
-            private FiguresOfMerit GetFiguresOfMerit(SrmDocument document)
+            private FiguresOfMerit GetFiguresOfMerit(SrmDocument document, OptimizeTransitionSettings optimizeTransitionSettings)
             {
                 if (document == null)
                 {
                     return null;
                 }
 
-                var peptideQuantifier = GetPeptideQuantifier(null, document, Molecule.IdentityPath);
+                var peptideQuantifier = GetPeptideQuantifier(null, document, Molecule.IdentityPath, optimizeTransitionSettings);
                 if (peptideQuantifier == null)
                 {
                     return null;
@@ -223,7 +221,7 @@ namespace pwiz.Skyline.EditUI
                 var molecule = (PeptideDocNode) moleculeList.Children[moleculeListMoleculeIndex.Item2];
                 longWaitBroker.CancellationToken.ThrowIfCancellationRequested();
                 var peptideQuantifier = GetPeptideQuantifier(normalizationData, document,
-                    new IdentityPath(moleculeList.PeptideGroup, molecule.Peptide));
+                    new IdentityPath(moleculeList.PeptideGroup, molecule.Peptide), bilinearCurveFitter.OptimizeTransitionSettings);
                 if (!bilinearCurveFitter.OptimizeTransitionSettings.PreserveNonQuantitative)
                 {
                     peptideQuantifier = peptideQuantifier.MakeAllTransitionsQuantitative();
@@ -355,7 +353,7 @@ namespace pwiz.Skyline.EditUI
             }
         }
 
-        public static PeptideQuantifier GetPeptideQuantifier(NormalizationData normalizationData, SrmDocument document, IdentityPath peptideIdentityPath)
+        public static PeptideQuantifier GetPeptideQuantifier(NormalizationData normalizationData, SrmDocument document, IdentityPath peptideIdentityPath, OptimizeTransitionSettings optimizeTransitionSettings)
         {
             var moleculeList = (PeptideGroupDocNode)
                 document.FindNode(peptideIdentityPath.GetIdentity((int) SrmDocument.Level.MoleculeGroups));
@@ -365,13 +363,14 @@ namespace pwiz.Skyline.EditUI
                 return null;
             }
 
+            var quantificationSettings = optimizeTransitionSettings.GetQuantificationSettings(document.Settings);
             if (normalizationData == null)
             {
-                return PeptideQuantifier.GetPeptideQuantifier(document, moleculeList, molecule);
+                return PeptideQuantifier.GetPeptideQuantifier(document, moleculeList, molecule)
+                    .WithQuantificationSettings(quantificationSettings);
             }
-
             return new PeptideQuantifier(() => normalizationData, moleculeList, molecule,
-                document.Settings.PeptideSettings.Quantification);
+                quantificationSettings);
         }
 
         public OptimizeType OptimizeType

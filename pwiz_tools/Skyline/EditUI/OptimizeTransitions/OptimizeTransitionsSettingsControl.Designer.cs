@@ -28,35 +28,15 @@
         /// </summary>
         private void InitializeComponent()
         {
-            this.tbxRandomSeed = new System.Windows.Forms.TextBox();
-            this.lblRandomSeed = new System.Windows.Forms.Label();
             this.groupBoxOptimize = new System.Windows.Forms.GroupBox();
             this.radioLOQ = new System.Windows.Forms.RadioButton();
             this.radioLOD = new System.Windows.Forms.RadioButton();
             this.cbxPreserveNonQuantitative = new System.Windows.Forms.CheckBox();
             this.tbxMinTransitions = new System.Windows.Forms.NumericUpDown();
             this.lblMinTransitions = new System.Windows.Forms.Label();
-            this.cbxAvgAtConcLevel = new System.Windows.Forms.CheckBox();
             this.groupBoxOptimize.SuspendLayout();
             ((System.ComponentModel.ISupportInitialize)(this.tbxMinTransitions)).BeginInit();
             this.SuspendLayout();
-            // 
-            // tbxRandomSeed
-            // 
-            this.tbxRandomSeed.Location = new System.Drawing.Point(450, 38);
-            this.tbxRandomSeed.Name = "tbxRandomSeed";
-            this.tbxRandomSeed.Size = new System.Drawing.Size(100, 20);
-            this.tbxRandomSeed.TabIndex = 14;
-            this.tbxRandomSeed.Leave += new System.EventHandler(this.SettingsValueChange);
-            // 
-            // lblRandomSeed
-            // 
-            this.lblRandomSeed.AutoSize = true;
-            this.lblRandomSeed.Location = new System.Drawing.Point(449, 18);
-            this.lblRandomSeed.Name = "lblRandomSeed";
-            this.lblRandomSeed.Size = new System.Drawing.Size(76, 13);
-            this.lblRandomSeed.TabIndex = 13;
-            this.lblRandomSeed.Text = "Random seed:";
             // 
             // groupBoxOptimize
             // 
@@ -131,30 +111,16 @@
             this.lblMinTransitions.TabIndex = 9;
             this.lblMinTransitions.Text = "Minimum number of transitions";
             // 
-            // cbxAvgAtConcLevel
-            // 
-            this.cbxAvgAtConcLevel.AutoSize = true;
-            this.cbxAvgAtConcLevel.Location = new System.Drawing.Point(6, 78);
-            this.cbxAvgAtConcLevel.Name = "cbxAvgAtConcLevel";
-            this.cbxAvgAtConcLevel.Size = new System.Drawing.Size(174, 17);
-            this.cbxAvgAtConcLevel.TabIndex = 15;
-            this.cbxAvgAtConcLevel.Text = "Average pts at each conc level";
-            this.cbxAvgAtConcLevel.UseVisualStyleBackColor = true;
-            this.cbxAvgAtConcLevel.CheckedChanged += new System.EventHandler(this.SettingsValueChange);
-            // 
             // OptimizeTransitionsSettingsControl
             // 
             this.AutoScaleDimensions = new System.Drawing.SizeF(6F, 13F);
             this.AutoScaleMode = System.Windows.Forms.AutoScaleMode.Font;
-            this.Controls.Add(this.cbxAvgAtConcLevel);
-            this.Controls.Add(this.tbxRandomSeed);
-            this.Controls.Add(this.lblRandomSeed);
             this.Controls.Add(this.groupBoxOptimize);
             this.Controls.Add(this.cbxPreserveNonQuantitative);
             this.Controls.Add(this.tbxMinTransitions);
             this.Controls.Add(this.lblMinTransitions);
             this.Name = "OptimizeTransitionsSettingsControl";
-            this.Size = new System.Drawing.Size(563, 101);
+            this.Size = new System.Drawing.Size(563, 85);
             this.groupBoxOptimize.ResumeLayout(false);
             this.groupBoxOptimize.PerformLayout();
             ((System.ComponentModel.ISupportInitialize)(this.tbxMinTransitions)).EndInit();
@@ -164,15 +130,11 @@
         }
 
         #endregion
-
-        private System.Windows.Forms.TextBox tbxRandomSeed;
-        private System.Windows.Forms.Label lblRandomSeed;
         private System.Windows.Forms.GroupBox groupBoxOptimize;
         private System.Windows.Forms.RadioButton radioLOQ;
         private System.Windows.Forms.RadioButton radioLOD;
         private System.Windows.Forms.CheckBox cbxPreserveNonQuantitative;
         private System.Windows.Forms.NumericUpDown tbxMinTransitions;
         private System.Windows.Forms.Label lblMinTransitions;
-        private System.Windows.Forms.CheckBox cbxAvgAtConcLevel;
     }
 }

@@ -1,4 +1,5 @@
-﻿using pwiz.Common.SystemUtil;
+﻿using System;
+using pwiz.Common.SystemUtil;
 using System.Collections.Generic;
 using pwiz.Skyline.Model.GroupComparison;
 
@@ -20,11 +21,31 @@ namespace pwiz.Skyline.Model.DocSettings.AbsoluteQuantification
 
     public class OptimizeTransitionSettings : Immutable
     {
-        public static readonly OptimizeTransitionSettings DEFAULT = new OptimizeTransitionSettings()
+        public static readonly OptimizeTransitionSettings DEFAULT = new OptimizeTransitionSettings
         {
             OptimizeType = OptimizeType.LOQ,
             MinimumNumberOfTransitions = 5,
         };
+
+        private static OptimizeTransitionSettings _globalSettings = DEFAULT;
+        public static OptimizeTransitionSettings GlobalSettings
+        {
+            get
+            {
+                return _globalSettings;
+            }
+            set
+            {
+                if (!Equals(value, _globalSettings))
+                {
+                    _globalSettings = value;
+                    GlobalSettingsChange?.Invoke();
+                }
+            }
+        }
+        public static event Action GlobalSettingsChange;
+
+
         private OptimizeTransitionSettings()
         {
             
@@ -63,9 +84,6 @@ namespace pwiz.Skyline.Model.DocSettings.AbsoluteQuantification
         {
             return ChangeProp(ImClone(this), im => im.CombinePointsWithSameConcentration = value);
         }
-
-        
-
         protected bool Equals(OptimizeTransitionSettings other)
         {
             return RandomSeed == other.RandomSeed && 
@@ -102,6 +120,19 @@ namespace pwiz.Skyline.Model.DocSettings.AbsoluteQuantification
             {
                 CombinePointsWithSameConcentration = CombinePointsWithSameConcentration
             };
+        }
+
+        public QuantificationSettings GetQuantificationSettings(SrmSettings settings)
+        {
+            var quantificationSettings = settings.PeptideSettings.Quantification;
+            quantificationSettings = quantificationSettings.ChangeLodCalculation(LodCalculation.TURNING_POINT_STDERR)
+                .ChangeMaxLoqBias(null).ChangeRegressionFit(RegressionFit.BILINEAR);
+            if (!quantificationSettings.MaxLoqCv.HasValue)
+            {
+                quantificationSettings = quantificationSettings.ChangeMaxLoqCv(.2);
+            }
+
+            return quantificationSettings;
         }
     }
 }

@@ -325,7 +325,7 @@ namespace pwiz.Skyline.Model.DocSettings.AbsoluteQuantification
             calibrationCurveMetrics = calibrationCurve.GetMetrics(points);
         }
 
-        private CalibrationCurve GetCalibrationCurveAndPoints(List<WeightedPoint> points) 
+        public CalibrationCurve GetCalibrationCurveAndPoints(List<WeightedPoint> points) 
         {
             if (RegressionFit.NONE.Equals(QuantificationSettings.RegressionFit))
             {
@@ -433,6 +433,17 @@ namespace pwiz.Skyline.Model.DocSettings.AbsoluteQuantification
                 return null;
             }
 
+            if (QuantificationSettings.RegressionFit == RegressionFit.BILINEAR &&
+                QuantificationSettings.MaxLoqCv.HasValue && !QuantificationSettings.MaxLoqBias.HasValue)
+            {
+                var fitter = new BilinearCurveFitter
+                {
+                    CvThreshold = QuantificationSettings.MaxLoqCv.Value
+                };
+                var points = new List<WeightedPoint>();
+                GetCalibrationCurveAndPoints(points);
+                return fitter.ComputeBootstrappedLoq(points);
+            }
             double? bestLoq = null;
             var concentrationReplicateLookup = GetStandardConcentrations().ToLookup(entry=>entry.Value, entry=>entry.Key);
             foreach (var concentrationReplicate in concentrationReplicateLookup.OrderByDescending(grouping=>grouping.Key))
