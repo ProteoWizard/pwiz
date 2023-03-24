@@ -543,8 +543,6 @@ namespace pwiz.Skyline.Controls.Graphs.Calibration
             return false;
         }
 
-
-
         public event Action<CalibrationPoint> PointClicked;
     }
 }

@@ -77,7 +77,6 @@ namespace pwiz.Skyline
         private AuditLogForm _auditLogForm;
         private CandidatePeakForm _candidatePeakForm;
         private OptimizeTransitionsForm _optimizeTransitionsForm;
-        private OptimizeDocumentTransitionsForm _optimizeDocumentTransitionsForm;
         public static int MAX_GRAPH_CHROM = 100; // Never show more than this many chromatograms, lest we hit the Windows handle limit
         private readonly List<GraphChromatogram> _listGraphChrom = new List<GraphChromatogram>(); // List order is MRU, with oldest in position 0
         private bool _inGraphUpdate;
@@ -669,10 +668,6 @@ namespace pwiz.Skyline
             if (Equals(persistentString, typeof(OptimizeTransitionsForm).ToString()))
             {
                 return _optimizeTransitionsForm ?? CreateOptimizeTransitionsForm();
-            }
-            if (Equals(persistentString, typeof(OptimizeDocumentTransitionsForm).ToString()))
-            {
-                return _optimizeDocumentTransitionsForm ?? CreateOptimizeDocumentTransitionsForm();
             }
             if (persistentString.StartsWith(typeof(GraphChromatogram).ToString()))
             {
@@ -5921,28 +5916,15 @@ namespace pwiz.Skyline
         #region OptimizeDocumentTransitionsForm
         public void ShowOptimizeDocumentTransitionsForm()
         {
-            if (_optimizeDocumentTransitionsForm != null)
+            var optimizeDocumentTransitionsForm = OwnedForms.OfType<OptimizeDocumentTransitionsForm>().FirstOrDefault();
+            if (optimizeDocumentTransitionsForm != null)
             {
-                _optimizeDocumentTransitionsForm.Activate();
+                optimizeDocumentTransitionsForm.Activate();
+                return;
             }
-            else
-            {
-                _optimizeDocumentTransitionsForm = CreateOptimizeDocumentTransitionsForm();
-                _optimizeDocumentTransitionsForm.Show(dockPanel, GetFloatingRectangleForNewWindow());
-            }
-        }
 
-        private OptimizeDocumentTransitionsForm CreateOptimizeDocumentTransitionsForm()
-        {
-            _optimizeDocumentTransitionsForm = new OptimizeDocumentTransitionsForm(this);
-            _optimizeDocumentTransitionsForm.FormClosed += OptimizeDocumentTransitionsForm_OnFormClosed;
-
-            return _optimizeDocumentTransitionsForm;
-        }
-
-        private void OptimizeDocumentTransitionsForm_OnFormClosed(object sender, FormClosedEventArgs e)
-        {
-            _optimizeDocumentTransitionsForm = null;
+            optimizeDocumentTransitionsForm = new OptimizeDocumentTransitionsForm(this) { Owner = this };
+            optimizeDocumentTransitionsForm.Show(this);
         }
         #endregion  
 
