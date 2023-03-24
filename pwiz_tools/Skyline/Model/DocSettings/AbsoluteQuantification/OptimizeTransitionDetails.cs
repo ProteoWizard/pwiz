@@ -1,6 +1,7 @@
 ﻿using System;
 using pwiz.Common.SystemUtil;
 using System.Collections.Generic;
+using System.Linq;
 using pwiz.Skyline.Model.GroupComparison;
 
 namespace pwiz.Skyline.Model.DocSettings.AbsoluteQuantification
@@ -13,10 +14,18 @@ namespace pwiz.Skyline.Model.DocSettings.AbsoluteQuantification
             AcceptedQuantLimits = new List<TransitionsQuantLimit>();
             RejectedQuantLimits = new List<TransitionsQuantLimit>();
         }
-
+        public TransitionsQuantLimit Original { get; set; }
         public List<TransitionsQuantLimit> SingleQuantLimits { get; }
         public List<TransitionsQuantLimit> AcceptedQuantLimits { get; }
         public List<TransitionsQuantLimit> RejectedQuantLimits { get; }
+
+        public TransitionsQuantLimit Optimized
+        {
+            get
+            {
+                return AcceptedQuantLimits.OrderByDescending(q => q.TransitionIdentityPaths.Count).FirstOrDefault();
+            }
+        }
     }
 
     public class OptimizeTransitionSettings : Immutable

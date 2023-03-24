@@ -14,9 +14,12 @@ using pwiz.Skyline.Controls.Databinding;
 using pwiz.Skyline.Controls.Graphs.Calibration;
 using pwiz.Skyline.Controls.SeqNode;
 using pwiz.Skyline.Model;
+using pwiz.Skyline.Model.AuditLog;
 using pwiz.Skyline.Model.Databinding;
 using pwiz.Skyline.Model.DocSettings.AbsoluteQuantification;
 using pwiz.Skyline.Model.GroupComparison;
+using pwiz.Skyline.Model.Hibernate;
+using pwiz.Skyline.Properties;
 using pwiz.Skyline.Util;
 using pwiz.Skyline.Util.Extensions;
 using ZedGraph;
@@ -34,6 +37,7 @@ namespace pwiz.Skyline.EditUI.OptimizeTransitions
         private SequenceTree _sequenceTree;
         private OptimizeTransitionDetails _details;
         private string _originalTitle;
+        private bool _updateTransitionPending;
         public OptimizeTransitionsForm(SkylineWindow skylineWindow)
         {
             InitializeComponent();
@@ -49,21 +53,30 @@ namespace pwiz.Skyline.EditUI.OptimizeTransitions
             var rowSourceInfo = new RowSourceInfo(BindingListRowSource.Create(_bindingList),
                 SkylineViewContext.GetDefaultViewInfo(rootColumn));
             BindingListSource.SetViewContext(new SkylineViewContext(_dataSchema, ImmutableList.Singleton(rowSourceInfo)));
-            DataGridView.CurrentCellChanged += DataGridView_OnCurrentCellChanged;
-            DataGridView.SelectionChanged += DataGridView_OnCurrentCellChanged;
+            DataGridView.CurrentCellChanged += DataGridView_OnSelectionChanged;
+            DataGridView.SelectionChanged += DataGridView_OnSelectionChanged;
             calibrationGraphControl1.ZedGraphControl.ContextMenuBuilder += zedGraphControl_ContextMenuBuilder;
             _originalTitle = Text;
+            Icon = Resources.Skyline;
         }
 
-        private void DataGridView_OnCurrentCellChanged(object sender, EventArgs e)
+        private void DataGridView_OnSelectionChanged(object sender, EventArgs e)
         {
-            DisplayQuantLimitForSelection();
+            if (!_updateTransitionPending)
+            {
+                _updateTransitionPending = true;
+                BeginInvoke(new Action(DisplayQuantLimitForSelection));
+            }
         }
 
         private void DisplayQuantLimitForSelection()
         {
-            var transitionIdentityPaths = DataGridView.SelectedCells.Cast<DataGridViewCell>().SelectMany(GetCellTransitionIdentityPaths)
-                .Concat(DataGridView.SelectedRows.Cast<DataGridViewRow>().SelectMany(GetRowTransitionIdentityPaths)).ToHashSet();
+            _updateTransitionPending = false;
+            var transitionIdentityPaths = DataGridView.SelectedCells.Cast<DataGridViewCell>()
+                .SelectMany(GetCellTransitionIdentityPaths)
+                .Concat(DataGridView.SelectedRows.Cast<DataGridViewRow>()
+                    .Select(row => GetRowTransitionIdentityPath(row.Index)).Where(path => null != path))
+                .ToHashSet();
             if (transitionIdentityPaths.Count == 0)
             {
                 transitionIdentityPaths.UnionWith(GetCellTransitionIdentityPaths(DataGridView.CurrentCell));
@@ -144,20 +157,19 @@ namespace pwiz.Skyline.EditUI.OptimizeTransitions
             return identityPaths;
         }
 
-        private IEnumerable<IdentityPath> GetRowTransitionIdentityPaths(DataGridViewRow dataGridViewRow)
+        private IdentityPath GetRowTransitionIdentityPath(int rowIndex)
         {
-            var rowIndex = dataGridViewRow.Index;
             if (rowIndex < 0 || rowIndex >= BindingListSource.Count)
             {
-                return Array.Empty<IdentityPath>();
+                return null;
             }
             var row = (BindingListSource[rowIndex] as RowItem)?.Value as Row;
             if (row == null)
             {
-                return Array.Empty<IdentityPath>();
+                return null;
             }
 
-            return new[] { row.Transition.IdentityPath };
+            return row.Transition.IdentityPath;
         }
 
         public SkylineWindow SkylineWindow { get; }
@@ -268,11 +280,27 @@ namespace pwiz.Skyline.EditUI.OptimizeTransitions
                 return;
             }
 
+            if (selection.Settings.OptimizeType == OptimizeType.LOD)
+            {
+                lblOriginal.Text = "Original LLOD";
+                lblOptimized.Text = "Optimized LLOD";
+            }
+            else
+            {
+                lblOriginal.Text = "Original LLOQ";
+                lblOptimized.Text = "Optimized LLOQ";
+            }
+
+
             Text = TabText = selection.PeptideDocNode == null
                 ? _originalTitle
                 : TextUtil.ColonSeparate(_originalTitle, selection.PeptideDocNode.ModifiedSequenceDisplay);
             _rowList.Clear();
             _details = details;
+            lblOriginal.Text = FormatQuantLimitString("Original {0}: {1}", details?.Original?.QuantLimit);
+            var optimizedQuantLimit = details?.Optimized?.QuantLimit;
+            lblOptimized.Text = FormatQuantLimitString("Optimized {0}: {1}", optimizedQuantLimit);
+            btnApply.Enabled = optimizedQuantLimit != null;
             if (details != null)
             {
                 foreach (var singleQuantLimit in details.SingleQuantLimits)
@@ -284,6 +312,35 @@ namespace pwiz.Skyline.EditUI.OptimizeTransitions
                 }
             }
             _bindingList.ResetBindings();
+        }
+
+        private string FormatQuantLimitString(string template, QuantLimit quantLimit)
+        {
+            string limitName;
+            double? value = null;
+            if (_selection.Settings.OptimizeType == OptimizeType.LOD)
+            {
+                limitName = "LLOD";
+                value = quantLimit?.Lod;
+            }
+            else
+            {
+                limitName = "LLOQ";
+                value = quantLimit?.Loq;
+            }
+
+            string valueText;
+            if (value.HasValue)
+            {
+                valueText = FiguresOfMerit.FormatValue(value.Value,
+                    !string.IsNullOrEmpty(_selection.Document.Settings.PeptideSettings.Quantification.Units));
+            }
+            else
+            {
+                valueText = "Unknown";
+            }
+
+            return string.Format(template, limitName, valueText);
         }
 
         private OptimizeTransitionDetails OptimizeTransitions(CancellationToken cancellationToken, Selection selection)
@@ -476,6 +533,97 @@ namespace pwiz.Skyline.EditUI.OptimizeTransitions
         private void btnOptimizeDocumentTransitions_Click(object sender, EventArgs e)
         {
             SkylineWindow.ShowOptimizeDocumentTransitionsForm();
+        }
+
+        private void lblOriginal_LinkClicked(object sender, LinkLabelLinkClickedEventArgs e)
+        {
+            SelectTransitionRows(_details?.Original?.TransitionIdentityPaths);
+        }
+
+        private void lblOptimized_LinkClicked(object sender, LinkLabelLinkClickedEventArgs e)
+        {
+            SelectTransitionRows(_details.Optimized?.TransitionIdentityPaths);
+        }
+
+        public void SelectTransitionRows(IEnumerable<IdentityPath> transitionIdentityPaths)
+        {
+            if (transitionIdentityPaths == null)
+            {
+                return;
+            }
+            var set = transitionIdentityPaths.ToHashSet();
+            DataGridView.ClearSelection();
+            foreach (DataGridViewRow row in DataGridView.Rows)
+            {
+                var identityPath = GetRowTransitionIdentityPath(row.Index);
+                if (identityPath != null)
+                {
+                    row.Selected = set.Contains(identityPath);
+                }
+            }
+        }
+
+        private void btnApply_Click(object sender, EventArgs e)
+        {
+            var optimizedTransitions = _details?.Optimized?.TransitionIdentityPaths;
+            if (optimizedTransitions == null)
+            {
+                return;
+            }
+
+            SetQuantifiableTransitions(_selection.PeptideGroupDocNode.PeptideGroup, _selection.PeptideDocNode.Peptide,
+                optimizedTransitions);
+        }
+
+        public void SetQuantifiableTransitions(PeptideGroup peptideGroup, Peptide peptide, IEnumerable<IdentityPath> identityPaths)
+        {
+            if (identityPaths == null)
+            {
+                return;
+            }
+
+            string message = string.Empty;
+            var set = identityPaths.ToHashSet();
+            SkylineWindow.ModifyDocument("Optimize Transitions", doc =>
+            {
+                var peptideIdentityPath = new IdentityPath(peptideGroup, peptide);
+                var peptideDocNode = (PeptideDocNode)doc.FindNode(peptideIdentityPath);
+                if (peptideDocNode == null)
+                {
+                    return doc;
+                }
+
+                var newTransitionGroups = new List<DocNode>();
+                foreach (var transitionGroupDocNode in peptideDocNode.TransitionGroups)
+                {
+                    var newTransitions = new List<DocNode>();
+                    foreach (var transition in transitionGroupDocNode.Transitions)
+                    {
+                        var identityPath = new IdentityPath(peptideGroup, peptide,
+                            transitionGroupDocNode.TransitionGroup, transition.Transition);
+                        newTransitions.Add(transition.ChangeQuantitative(set.Contains(identityPath)));
+                    }
+
+                    if (newTransitions.SequenceEqual(transitionGroupDocNode.Transitions))
+                    {
+                        newTransitionGroups.Add(transitionGroupDocNode);
+                    }
+                    else
+                    {
+                        newTransitionGroups.Add(
+                            (TransitionGroupDocNode)transitionGroupDocNode.ChangeChildren(newTransitions));
+                    }
+                }
+
+                if (peptideDocNode.TransitionGroups.SequenceEqual(newTransitionGroups))
+                {
+                    return doc;
+                }
+
+                message = peptideDocNode.ModifiedSequenceDisplay;
+                return (SrmDocument)doc.ReplaceChild(new IdentityPath(peptideGroup),
+                    peptideDocNode.ChangeChildren(newTransitionGroups));
+            }, docPair => AuditLogEntry.DiffDocNodes(MessageType.changed_quantitative, docPair, message));
         }
     }
 }

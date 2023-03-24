@@ -42,9 +42,9 @@
             // 
             this.groupBoxOptimize.Controls.Add(this.radioLOQ);
             this.groupBoxOptimize.Controls.Add(this.radioLOD);
-            this.groupBoxOptimize.Location = new System.Drawing.Point(223, 13);
+            this.groupBoxOptimize.Location = new System.Drawing.Point(223, 0);
             this.groupBoxOptimize.Name = "groupBoxOptimize";
-            this.groupBoxOptimize.Size = new System.Drawing.Size(211, 70);
+            this.groupBoxOptimize.Size = new System.Drawing.Size(211, 59);
             this.groupBoxOptimize.TabIndex = 12;
             this.groupBoxOptimize.TabStop = false;
             this.groupBoxOptimize.Text = "Optimize";
@@ -53,7 +53,7 @@
             // 
             this.radioLOQ.AutoSize = true;
             this.radioLOQ.Checked = true;
-            this.radioLOQ.Location = new System.Drawing.Point(6, 42);
+            this.radioLOQ.Location = new System.Drawing.Point(6, 39);
             this.radioLOQ.Name = "radioLOQ";
             this.radioLOQ.Size = new System.Drawing.Size(124, 17);
             this.radioLOQ.TabIndex = 1;
@@ -65,7 +65,7 @@
             // radioLOD
             // 
             this.radioLOD.AutoSize = true;
-            this.radioLOD.Location = new System.Drawing.Point(6, 19);
+            this.radioLOD.Location = new System.Drawing.Point(6, 16);
             this.radioLOD.Name = "radioLOD";
             this.radioLOD.Size = new System.Drawing.Size(105, 17);
             this.radioLOD.TabIndex = 0;
@@ -76,7 +76,7 @@
             // cbxPreserveNonQuantitative
             // 
             this.cbxPreserveNonQuantitative.AutoSize = true;
-            this.cbxPreserveNonQuantitative.Location = new System.Drawing.Point(6, 55);
+            this.cbxPreserveNonQuantitative.Location = new System.Drawing.Point(6, 42);
             this.cbxPreserveNonQuantitative.Name = "cbxPreserveNonQuantitative";
             this.cbxPreserveNonQuantitative.Size = new System.Drawing.Size(197, 17);
             this.cbxPreserveNonQuantitative.TabIndex = 11;
@@ -86,7 +86,7 @@
             // 
             // tbxMinTransitions
             // 
-            this.tbxMinTransitions.Location = new System.Drawing.Point(6, 29);
+            this.tbxMinTransitions.Location = new System.Drawing.Point(6, 16);
             this.tbxMinTransitions.Minimum = new decimal(new int[] {
             1,
             0,
@@ -105,7 +105,7 @@
             // lblMinTransitions
             // 
             this.lblMinTransitions.AutoSize = true;
-            this.lblMinTransitions.Location = new System.Drawing.Point(3, 13);
+            this.lblMinTransitions.Location = new System.Drawing.Point(3, 0);
             this.lblMinTransitions.Name = "lblMinTransitions";
             this.lblMinTransitions.Size = new System.Drawing.Size(148, 13);
             this.lblMinTransitions.TabIndex = 9;
@@ -120,7 +120,7 @@
             this.Controls.Add(this.tbxMinTransitions);
             this.Controls.Add(this.lblMinTransitions);
             this.Name = "OptimizeTransitionsSettingsControl";
-            this.Size = new System.Drawing.Size(563, 85);
+            this.Size = new System.Drawing.Size(453, 65);
             this.groupBoxOptimize.ResumeLayout(false);
             this.groupBoxOptimize.PerformLayout();
             ((System.ComponentModel.ISupportInitialize)(this.tbxMinTransitions)).EndInit();

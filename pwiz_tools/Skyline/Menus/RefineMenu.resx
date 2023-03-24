@@ -281,7 +281,7 @@ first occurrence of any peptide.</value>
     <value>246, 22</value>
   </data>
   <data name="optimizeTransitionsMenuItem.Text" xml:space="preserve">
-    <value>Optimize Transitions</value>
+    <value>Optimize Transitions...</value>
   </data>
   <data name="toolStripSeparator35.Size" type="System.Drawing.Size, System.Drawing">
     <value>243, 6</value>

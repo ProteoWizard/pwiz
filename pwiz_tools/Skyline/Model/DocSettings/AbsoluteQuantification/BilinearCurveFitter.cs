@@ -60,6 +60,10 @@ namespace pwiz.Skyline.Model.DocSettings.AbsoluteQuantification
         {
             var random = new Random(RandomSeed);
             var lod = ComputeLod(points);
+            if (points.Count == 0)
+            {
+                return double.MaxValue;
+            }
             var maxConcentration = points.Max(pt => pt.X);
             var concentrationValues = Enumerable.Range(0, GridSize)
                 .Select(i => lod + (maxConcentration - lod) * i / (GridSize - 1)).ToList();
@@ -357,6 +361,17 @@ namespace pwiz.Skyline.Model.DocSettings.AbsoluteQuantification
                         singleQuantLimits.Add(quantLimit);
                     }
                 }
+            }
+
+            if (singleQuantLimits.Count == 0)
+            {
+                return peptideDocNode;
+            }
+
+            if (details != null)
+            {
+                details.Original = ComputeTransitionsQuantLimit(calibrationCurveFitter,
+                    singleQuantLimits.SelectMany(q => q.TransitionIdentityPaths));
             }
             var lowestLimits = new Dictionary<OptimizeType, double>()
             {

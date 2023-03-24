@@ -16,6 +16,7 @@ using pwiz.Skyline.Model.Databinding.Entities;
 using pwiz.Skyline.Model.DocSettings;
 using pwiz.Skyline.Model.DocSettings.AbsoluteQuantification;
 using pwiz.Skyline.Model.GroupComparison;
+using pwiz.Skyline.Model.Hibernate;
 using pwiz.Skyline.Properties;
 using pwiz.Skyline.Util;
 
@@ -165,6 +166,7 @@ namespace pwiz.Skyline.EditUI.OptimizeTransitions
                     document.Settings);
             }
 
+            [Format(Formats.CalibrationCurve)]
             public double? LoqImprovement
             {
                 get
@@ -174,6 +176,7 @@ namespace pwiz.Skyline.EditUI.OptimizeTransitions
                 }
             }
 
+            [Format(Formats.CalibrationCurve)]
             public double? LodImprovement
             {
                 get
@@ -399,12 +402,6 @@ namespace pwiz.Skyline.EditUI.OptimizeTransitions
             {
                 BindingListSource.SetViewContext(viewContext);
             }
-        }
-
-        private void btnDetails_Click(object sender, EventArgs e)
-        {
-            var details = new OptimizeTransitionsForm(SkylineWindow);
-            details.Show(SkylineWindow);
         }
     }
 }

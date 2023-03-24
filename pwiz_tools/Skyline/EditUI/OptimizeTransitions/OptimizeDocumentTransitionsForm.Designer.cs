@@ -29,7 +29,6 @@
         private void InitializeComponent()
         {
             this.panel1 = new System.Windows.Forms.Panel();
-            this.btnDetails = new System.Windows.Forms.Button();
             this.optimizeTransitionsSettingsControl1 = new pwiz.Skyline.EditUI.OptimizeTransitions.OptimizeTransitionsSettingsControl();
             this.btnApply = new System.Windows.Forms.Button();
             this.btnPreview = new System.Windows.Forms.Button();
@@ -38,42 +37,30 @@
             // 
             // databoundGridControl
             // 
-            this.databoundGridControl.Location = new System.Drawing.Point(0, 105);
-            this.databoundGridControl.Size = new System.Drawing.Size(800, 345);
+            this.databoundGridControl.Location = new System.Drawing.Point(0, 65);
+            this.databoundGridControl.Size = new System.Drawing.Size(800, 385);
             // 
             // panel1
             // 
-            this.panel1.Controls.Add(this.btnDetails);
             this.panel1.Controls.Add(this.optimizeTransitionsSettingsControl1);
             this.panel1.Controls.Add(this.btnApply);
             this.panel1.Controls.Add(this.btnPreview);
             this.panel1.Dock = System.Windows.Forms.DockStyle.Top;
             this.panel1.Location = new System.Drawing.Point(0, 0);
             this.panel1.Name = "panel1";
-            this.panel1.Size = new System.Drawing.Size(800, 105);
+            this.panel1.Size = new System.Drawing.Size(800, 65);
             this.panel1.TabIndex = 1;
-            // 
-            // btnDetails
-            // 
-            this.btnDetails.Anchor = ((System.Windows.Forms.AnchorStyles)((System.Windows.Forms.AnchorStyles.Top | System.Windows.Forms.AnchorStyles.Right)));
-            this.btnDetails.Location = new System.Drawing.Point(713, 59);
-            this.btnDetails.Name = "btnDetails";
-            this.btnDetails.Size = new System.Drawing.Size(75, 23);
-            this.btnDetails.TabIndex = 5;
-            this.btnDetails.Text = "Details";
-            this.btnDetails.UseVisualStyleBackColor = true;
-            this.btnDetails.Click += new System.EventHandler(this.btnDetails_Click);
             // 
             // optimizeTransitionsSettingsControl1
             // 
-            this.optimizeTransitionsSettingsControl1.Anchor = ((System.Windows.Forms.AnchorStyles)((((System.Windows.Forms.AnchorStyles.Top | System.Windows.Forms.AnchorStyles.Bottom) 
-            | System.Windows.Forms.AnchorStyles.Left) 
+            this.optimizeTransitionsSettingsControl1.Anchor = ((System.Windows.Forms.AnchorStyles)(((System.Windows.Forms.AnchorStyles.Top | System.Windows.Forms.AnchorStyles.Left) 
             | System.Windows.Forms.AnchorStyles.Right)));
             this.optimizeTransitionsSettingsControl1.Location = new System.Drawing.Point(0, 0);
             this.optimizeTransitionsSettingsControl1.MinNumberOfTransitions = 4;
             this.optimizeTransitionsSettingsControl1.Name = "optimizeTransitionsSettingsControl1";
             this.optimizeTransitionsSettingsControl1.PreserveNonQuantitative = false;
-            this.optimizeTransitionsSettingsControl1.Size = new System.Drawing.Size(700, 104);
+            this.optimizeTransitionsSettingsControl1.Size = new System.Drawing.Size(700, 73);
+            this.optimizeTransitionsSettingsControl1.SyncWithGlobalSettings = true;
             this.optimizeTransitionsSettingsControl1.TabIndex = 4;
             // 
             // btnApply
@@ -119,6 +106,5 @@
         private System.Windows.Forms.Button btnApply;
         private System.Windows.Forms.Button btnPreview;
         private OptimizeTransitions.OptimizeTransitionsSettingsControl optimizeTransitionsSettingsControl1;
-        private System.Windows.Forms.Button btnDetails;
     }
 }
