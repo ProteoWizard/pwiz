@@ -138,7 +138,7 @@ namespace pwiz.Skyline.Model.DocSettings.AbsoluteQuantification
                 .ChangeMaxLoqBias(null).ChangeRegressionFit(RegressionFit.BILINEAR);
             if (!quantificationSettings.MaxLoqCv.HasValue)
             {
-                quantificationSettings = quantificationSettings.ChangeMaxLoqCv(.2);
+                quantificationSettings = quantificationSettings.ChangeMaxLoqCv(20);
             }
 
             return quantificationSettings;

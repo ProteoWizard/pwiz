@@ -96,6 +96,14 @@ namespace pwiz.Skyline.Model.DocSettings.AbsoluteQuantification
             return ChangeProp(ImClone(this), im => im.ShowFiguresOfMerit = value);
         }
 
+        public bool ShowBootstrapCurves { get; private set; }
+
+        public CalibrationCurveOptions ChangeShowBootstrapCurves(bool value)
+        {
+            return ChangeProp(ImClone(this), im => im.ShowBootstrapCurves = value);
+        }
+
+        
         public CalibrationCurveOptions SetDisplaySampleType(SampleType sampleType, bool display)
         {
             if (display)
@@ -116,13 +124,15 @@ namespace pwiz.Skyline.Model.DocSettings.AbsoluteQuantification
             display_sample_type,
         }
 
-        private enum Attr
+        private enum ATTR
         {
             log_x_axis,
             log_y_axis,
             single_batch,
             show_legend,
-            show_figures_of_merit
+            show_selection,
+            show_figures_of_merit,
+            show_bootstrap_curves
         }
 
         private CalibrationCurveOptions()
@@ -141,19 +151,25 @@ namespace pwiz.Skyline.Model.DocSettings.AbsoluteQuantification
                 throw new InvalidOperationException();
             }
 
-            LogXAxis = reader.GetBoolAttribute(Attr.log_x_axis);
-            LogYAxis = reader.GetBoolAttribute(Attr.log_y_axis);
-            SingleBatch = reader.GetBoolAttribute(Attr.single_batch);
-            ShowLegend = reader.GetBoolAttribute(Attr.show_legend);
-            ShowFiguresOfMerit = reader.GetBoolAttribute(Attr.show_legend);
-            var xElement = (XElement) XNode.ReadFrom(reader);
+            LogXAxis = reader.GetBoolAttribute(ATTR.log_x_axis);
+            LogYAxis = reader.GetBoolAttribute(ATTR.log_y_axis);
+            SingleBatch = reader.GetBoolAttribute(ATTR.single_batch);
+            ShowLegend = reader.GetBoolAttribute(ATTR.show_legend);
+            ShowSelection = reader.GetBoolAttribute(ATTR.show_selection);
+            ShowFiguresOfMerit = reader.GetBoolAttribute(ATTR.show_legend);
+            ShowBootstrapCurves = reader.GetBoolAttribute(ATTR.show_bootstrap_curves);
+            bool isEmpty = reader.IsEmptyElement;
+            reader.Read();
             var displaySampleTypes = new List<SampleType>();
-            foreach (var el in xElement.Elements(EL.display_sample_type))
+            if (!isEmpty)
             {
-                var sampleType = SampleType.FromName(el.Value);
-                if (sampleType != null)
+                while (reader.IsStartElement(EL.display_sample_type))
                 {
-                    displaySampleTypes.Add(sampleType);
+                    var sampleType = SampleType.FromName(reader.ReadElementContentAsString());
+                    if (sampleType != null)
+                    {
+                        displaySampleTypes.Add(sampleType);
+                    }
                 }
             }
             DisplaySampleTypes = ImmutableList.ValueOf(displaySampleTypes.Distinct());
@@ -161,14 +177,16 @@ namespace pwiz.Skyline.Model.DocSettings.AbsoluteQuantification
 
         public void WriteXml(XmlWriter writer)
         {
-            writer.WriteAttribute(Attr.log_x_axis, LogXAxis);
-            writer.WriteAttribute(Attr.log_y_axis, LogYAxis);
-            writer.WriteAttribute(Attr.single_batch, SingleBatch);
-            writer.WriteAttribute(Attr.show_legend, ShowLegend);
-            writer.WriteAttribute(Attr.show_figures_of_merit, ShowFiguresOfMerit);
+            writer.WriteAttribute(ATTR.log_x_axis, LogXAxis);
+            writer.WriteAttribute(ATTR.log_y_axis, LogYAxis);
+            writer.WriteAttribute(ATTR.single_batch, SingleBatch);
+            writer.WriteAttribute(ATTR.show_legend, ShowLegend);
+            writer.WriteAttribute(ATTR.show_selection, ShowSelection);
+            writer.WriteAttribute(ATTR.show_figures_of_merit, ShowFiguresOfMerit);
+            writer.WriteAttribute(ATTR.show_bootstrap_curves, ShowBootstrapCurves);
             foreach (var displaySampleType in DisplaySampleTypes)
             {
-                writer.WriteElementString(EL.display_sample_type, displaySampleType);
+                writer.WriteElementString(EL.display_sample_type, displaySampleType.Name);
             }
         }
 
@@ -179,7 +197,7 @@ namespace pwiz.Skyline.Model.DocSettings.AbsoluteQuantification
             return LogXAxis == other.LogXAxis && LogYAxis == other.LogYAxis &&
                    DisplaySampleTypes.Equals(other.DisplaySampleTypes) && SingleBatch == other.SingleBatch &&
                    ShowLegend == other.ShowLegend && ShowSelection == other.ShowSelection &&
-                   ShowFiguresOfMerit == other.ShowFiguresOfMerit;
+                   ShowFiguresOfMerit == other.ShowFiguresOfMerit && ShowBootstrapCurves == other.ShowBootstrapCurves;
         }
 
         public override bool Equals(object obj)
@@ -201,6 +219,7 @@ namespace pwiz.Skyline.Model.DocSettings.AbsoluteQuantification
                 hashCode = (hashCode * 397) ^ ShowLegend.GetHashCode();
                 hashCode = (hashCode * 397) ^ ShowSelection.GetHashCode();
                 hashCode = (hashCode * 397) ^ ShowFiguresOfMerit.GetHashCode();
+                hashCode = (hashCode * 397) ^ ShowBootstrapCurves.GetHashCode();
                 return hashCode;
             }
         }

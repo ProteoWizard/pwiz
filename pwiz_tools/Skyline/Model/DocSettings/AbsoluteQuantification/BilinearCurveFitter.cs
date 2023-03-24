@@ -5,6 +5,7 @@ using System.Linq;
 using System.Threading;
 using MathNet.Numerics.Statistics;
 using pwiz.Common.Collections;
+using ZedGraph;
 
 namespace pwiz.Skyline.Model.DocSettings.AbsoluteQuantification
 {
@@ -58,6 +59,11 @@ namespace pwiz.Skyline.Model.DocSettings.AbsoluteQuantification
 
         public double ComputeBootstrappedLoq(IList<WeightedPoint> points)
         {
+            return ComputeBootstrappedLoq(points, null);
+        }
+
+        public double ComputeBootstrappedLoq(IList<WeightedPoint> points, List<ImmutableList<PointPair>> bootstrapCurves)
+        {
             var random = new Random(RandomSeed);
             var lod = ComputeLod(points);
             if (points.Count == 0)
@@ -74,11 +80,19 @@ namespace pwiz.Skyline.Model.DocSettings.AbsoluteQuantification
             {
                 CancellationToken.ThrowIfCancellationRequested();
                 var p = ComputeBootstrapParams(random, points);
+                List<double> areaValues = null;
+                if (bootstrapCurves != null)
+                {
+                    areaValues = new List<double>();
+                }
                 for (int iConcentration = 0; iConcentration < concentrationValues.Count; iConcentration++)
                 {
                     var area = p.CalibrationCurve.GetY(concentrationValues[iConcentration]);
                     areaGrid[iConcentration].Push(area);
+                    areaValues?.Add(area);
                 }
+
+                bootstrapCurves?.Add(ImmutableList.ValueOf(concentrationValues.Zip(areaValues, (x, y)=>new PointPair(x, y))));
 
                 if (i > MinBootstrapIterations)
                 {
@@ -188,10 +202,10 @@ namespace pwiz.Skyline.Model.DocSettings.AbsoluteQuantification
             return result;
         }
 
-        public QuantLimit ComputeQuantLimits(IList<WeightedPoint> areas)
+        public QuantLimit ComputeQuantLimits(IList<WeightedPoint> areas, List<ImmutableList<PointPair>> bootstrapCurves = null)
         {
             var lod = ComputeLod(areas);
-            var loq = ComputeBootstrappedLoq(areas);
+            var loq = ComputeBootstrappedLoq(areas, bootstrapCurves);
             if (loq < lod)
             {
                 loq = lod;

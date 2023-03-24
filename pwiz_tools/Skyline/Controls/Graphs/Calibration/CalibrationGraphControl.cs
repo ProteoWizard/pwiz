@@ -4,6 +4,7 @@ using System.ComponentModel;
 using System.Drawing;
 using System.Linq;
 using System.Windows.Forms;
+using pwiz.Common.Collections;
 using pwiz.Common.SystemUtil;
 using pwiz.Skyline.Controls.SeqNode;
 using pwiz.Skyline.Model;
@@ -157,7 +158,8 @@ namespace pwiz.Skyline.Controls.Graphs.Calibration
             CalibrationCurve = calibrationCurve;
             CalibrationCurveMetrics = calibrationCurveRow;
 
-            FiguresOfMerit = curveFitter.GetFiguresOfMerit(CalibrationCurve);
+            var bootstrapCurves = new List<ImmutableList<PointPair>>();
+            FiguresOfMerit = curveFitter.GetFiguresOfMerit(CalibrationCurve, bootstrapCurves);
             double minX = double.MaxValue, maxX = double.MinValue;
             double minY = double.MaxValue;
             _scatterPlots = new CurveList();
@@ -413,6 +415,17 @@ namespace pwiz.Skyline.Controls.Graphs.Calibration
                     zedGraphControl.GraphPane.GraphObjList.Add(loqLine);
                 }
             }
+
+            if (options.ShowBootstrapCurves)
+            {
+                var color = Color.FromArgb(40, Color.Teal);
+                foreach (var points in bootstrapCurves)
+                {
+                    var curve = new LineItem(null, new PointPairList(points), color,
+                        SymbolType.None);
+                    zedGraphControl.GraphPane.CurveList.Add(curve);
+                }
+            }
             if (labelLines.Any())
             {
                 TextObj text = new TextObj(TextUtil.LineSeparate(labelLines), .01, 0,
@@ -574,6 +587,10 @@ namespace pwiz.Skyline.Controls.Graphs.Calibration
         public event Action<CalibrationPoint> PointClicked;
         private void zedGraphControl_ContextMenuBuilder(ZedGraphControl sender, ContextMenuStrip menuStrip, Point mousePt, ZedGraphControl.ContextMenuObjectState objState)
         {
+            if (DisplaySettings == null)
+            {
+                return;
+            }
             var calibrationCurveOptions = Options;
             singleBatchContextMenuItem.Checked = calibrationCurveOptions.SingleBatch;
             if (IsEnableIsotopologResponseCurve())
@@ -607,6 +624,7 @@ namespace pwiz.Skyline.Controls.Graphs.Calibration
             showLegendContextMenuItem.Checked = Options.ShowLegend;
             showSelectionContextMenuItem.Checked = Options.ShowSelection;
             showFiguresOfMeritContextMenuItem.Checked = Options.ShowFiguresOfMerit;
+            showBootstrapCurvesToolStripMenuItem.Checked = Options.ShowBootstrapCurves;
             ZedGraphHelper.BuildContextMenu(sender, menuStrip, true);
             if (!menuStrip.Items.Contains(logXContextMenuItem))
             {
@@ -618,6 +636,7 @@ namespace pwiz.Skyline.Controls.Graphs.Calibration
                 menuStrip.Items.Insert(index++, showLegendContextMenuItem);
                 menuStrip.Items.Insert(index++, showSelectionContextMenuItem);
                 menuStrip.Items.Insert(index++, showFiguresOfMeritContextMenuItem);
+                menuStrip.Items.Insert(index++, showBootstrapCurvesToolStripMenuItem);
                 menuStrip.Items.Insert(index++, new ToolStripSeparator());
             }
         }
@@ -754,6 +773,11 @@ namespace pwiz.Skyline.Controls.Graphs.Calibration
         private void singleBatchContextMenuItem_Click(object sender, EventArgs e)
         {
             Options = Options.ChangeSingleBatch(!Options.SingleBatch);
+        }
+
+        private void showBootstrapCurvesToolStripMenuItem_Click(object sender, EventArgs e)
+        {
+            Options = Options.ChangeShowBootstrapCurves(!Options.ShowBootstrapCurves);
         }
     }
 }

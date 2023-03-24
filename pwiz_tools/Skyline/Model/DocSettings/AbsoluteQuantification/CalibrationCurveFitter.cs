@@ -26,6 +26,7 @@ using pwiz.Skyline.Model.Databinding.Entities;
 using pwiz.Skyline.Model.GroupComparison;
 using pwiz.Skyline.Model.Results;
 using pwiz.Skyline.Util.Extensions;
+using ZedGraph;
 
 namespace pwiz.Skyline.Model.DocSettings.AbsoluteQuantification
 {
@@ -381,7 +382,7 @@ namespace pwiz.Skyline.Model.DocSettings.AbsoluteQuantification
             return weightedPoint;
         }
 
-        public FiguresOfMerit GetFiguresOfMerit(CalibrationCurve calibrationCurve)
+        public FiguresOfMerit GetFiguresOfMerit(CalibrationCurve calibrationCurve, List<ImmutableList<PointPair>> bootstrapCurves = null)
         {
             var figuresOfMerit = FiguresOfMerit.EMPTY;
             if (calibrationCurve != null)
@@ -389,7 +390,7 @@ namespace pwiz.Skyline.Model.DocSettings.AbsoluteQuantification
                 figuresOfMerit = figuresOfMerit.ChangeLimitOfDetection(
                     QuantificationSettings.LodCalculation.CalculateLod(calibrationCurve, this));
             }
-            figuresOfMerit = figuresOfMerit.ChangeLimitOfQuantification(GetLimitOfQuantification(calibrationCurve));
+            figuresOfMerit = figuresOfMerit.ChangeLimitOfQuantification(GetLimitOfQuantification(calibrationCurve, bootstrapCurves));
             if (!FiguresOfMerit.EMPTY.Equals(figuresOfMerit))
             {
                 figuresOfMerit = figuresOfMerit.ChangeUnits(QuantificationSettings.Units);
@@ -431,7 +432,7 @@ namespace pwiz.Skyline.Model.DocSettings.AbsoluteQuantification
             return null;
         }
 
-        public double? GetLimitOfQuantification(CalibrationCurve calibrationCurve)
+        public double? GetLimitOfQuantification(CalibrationCurve calibrationCurve, List<ImmutableList<PointPair>> bootstrapCurves)
         {
             if (!QuantificationSettings.MaxLoqBias.HasValue && !QuantificationSettings.MaxLoqCv.HasValue)
             {
@@ -445,7 +446,7 @@ namespace pwiz.Skyline.Model.DocSettings.AbsoluteQuantification
                 {
                     CvThreshold = QuantificationSettings.MaxLoqCv.Value / 100
                 };
-                return fitter.ComputeQuantLimits(GetStandardPoints().ToList()).Loq;
+                return fitter.ComputeQuantLimits(GetStandardPoints().ToList(), bootstrapCurves).Loq;
             }
             double? bestLoq = null;
             var concentrationReplicateLookup = GetStandardConcentrations().ToLookup(entry=>entry.Value, entry=>entry.Key);
