@@ -12,6 +12,7 @@ namespace pwiz.Skyline.EditUI.OptimizeTransitions
         public OptimizeTransitionsSettingsControl()
         {
             InitializeComponent();
+            FireSettingsChange(false);
         }
 
         public OptimizeTransitionSettings CurrentSettings
@@ -37,28 +38,24 @@ namespace pwiz.Skyline.EditUI.OptimizeTransitions
         protected override void OnHandleCreated(EventArgs e)
         {
             base.OnHandleCreated(e);
+            OptimizeTransitionSettings.GlobalSettingsChange += OptimizeTransitionSettings_OnGlobalSettingsChange;
             if (SyncWithGlobalSettings)
             {
-                _currentSettings = OptimizeTransitionSettings.GlobalSettings;
+                OptimizeTransitionSettings_OnGlobalSettingsChange();
             }
-            OptimizeTransitionSettings.GlobalSettingsChange += OptimizeTransitionSettings_OnGlobalSettingsChange;
         }
 
         private void OptimizeTransitionSettings_OnGlobalSettingsChange()
         {
-            if (_inSettingsChange)
+            if (!_syncWithGlobalSettings || _inSettingsChange)
             {
                 return;
             }
 
-            try
+            if (!Equals(_currentSettings, OptimizeTransitionSettings.GlobalSettings))
             {
-                _inSettingsChange = true;
-
-            }
-            finally
-            {
-                _inSettingsChange = false;
+                _currentSettings = OptimizeTransitionSettings.GlobalSettings;
+                FireSettingsChange(false);
             }
         }
 

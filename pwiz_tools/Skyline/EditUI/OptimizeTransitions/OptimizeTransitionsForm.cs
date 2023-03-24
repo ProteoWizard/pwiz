@@ -55,7 +55,6 @@ namespace pwiz.Skyline.EditUI.OptimizeTransitions
             BindingListSource.SetViewContext(new SkylineViewContext(_dataSchema, ImmutableList.Singleton(rowSourceInfo)));
             DataGridView.CurrentCellChanged += DataGridView_OnSelectionChanged;
             DataGridView.SelectionChanged += DataGridView_OnSelectionChanged;
-            calibrationGraphControl1.ZedGraphControl.ContextMenuBuilder += zedGraphControl_ContextMenuBuilder;
             _originalTitle = Text;
             Icon = Resources.Skyline;
         }
@@ -72,11 +71,27 @@ namespace pwiz.Skyline.EditUI.OptimizeTransitions
         private void DisplayQuantLimitForSelection()
         {
             _updateTransitionPending = false;
-            var transitionIdentityPaths = DataGridView.SelectedCells.Cast<DataGridViewCell>()
-                .SelectMany(GetCellTransitionIdentityPaths)
-                .Concat(DataGridView.SelectedRows.Cast<DataGridViewRow>()
-                    .Select(row => GetRowTransitionIdentityPath(row.Index)).Where(path => null != path))
-                .ToHashSet();
+            var selectedRowIndexes = DataGridView.SelectedRows.Cast<DataGridViewRow>()
+                .Select(row => row.Index).ToHashSet();
+            var transitionIdentityPaths = new HashSet<IdentityPath>();
+            foreach (var rowIndex in selectedRowIndexes)
+            {
+                var identityPath = GetRowTransitionIdentityPath(rowIndex);
+                if (identityPath != null)
+                {
+                    transitionIdentityPaths.Add(identityPath);
+                }
+            }
+
+            foreach (DataGridViewCell cell in DataGridView.SelectedCells)
+            {
+                if (selectedRowIndexes.Contains(cell.RowIndex))
+                {
+                    continue;
+                }
+                transitionIdentityPaths.UnionWith(GetCellTransitionIdentityPaths(cell));
+            }
+
             if (transitionIdentityPaths.Count == 0)
             {
                 transitionIdentityPaths.UnionWith(GetCellTransitionIdentityPaths(DataGridView.CurrentCell));
@@ -466,8 +481,7 @@ namespace pwiz.Skyline.EditUI.OptimizeTransitions
                 .WithQuantifiableTransitions(transitionIdentityPaths);
             var calibrationCurveFitter =
                 _selection.Settings.GetCalibrationCurveFitter(peptideQuantifier, _selection.Document.Settings);
-            var settings = new CalibrationGraphControl.Settings(document, calibrationCurveFitter,
-                Properties.Settings.Default.CalibrationCurveOptions);
+            var settings = new CalibrationGraphControl.Settings(document, calibrationCurveFitter);
             calibrationGraphControl1.Update(settings);
             calibrationGraphControl1.ZedGraphControl.GraphPane.Title.Text =
                 GetCalibrationCurveTitle(document, transitionIdentityPaths);
@@ -523,11 +537,6 @@ namespace pwiz.Skyline.EditUI.OptimizeTransitions
             string precursorText = TransitionGroupTreeNode.GetLabel(transitionGroupDocNode.TransitionGroup,
                 transitionGroupDocNode.PrecursorMz, string.Empty);
             return TextUtil.ColonSeparate(precursorText, transitionText);
-        }
-
-        private void zedGraphControl_ContextMenuBuilder(ZedGraphControl sender, ContextMenuStrip menuStrip, Point mousePt, ZedGraphControl.ContextMenuObjectState objState)
-        {
-            ZedGraphHelper.BuildContextMenu(sender, menuStrip, true);
         }
 
         private void btnOptimizeDocumentTransitions_Click(object sender, EventArgs e)

@@ -16,8 +16,17 @@
  * See the License for the specific language governing permissions and
  * limitations under the License.
  */
+
+using System;
+using System.Collections.Generic;
 using System.Linq;
+using System.Xml;
+using System.Xml.Linq;
+using System.Xml.Schema;
 using System.Xml.Serialization;
+using pwiz.Common.Collections;
+using pwiz.Common.SystemUtil;
+using pwiz.Skyline.Util;
 
 namespace pwiz.Skyline.Model.DocSettings.AbsoluteQuantification
 {
@@ -25,47 +34,175 @@ namespace pwiz.Skyline.Model.DocSettings.AbsoluteQuantification
     /// Options for the display of the calibration curve window, which get persisted in Settings.
     /// </summary>
     [XmlRoot("calibration_curve")]
-    public class CalibrationCurveOptions
+    public class CalibrationCurveOptions : Immutable, IXmlSerializable
     {
-        public CalibrationCurveOptions()
+        public static readonly CalibrationCurveOptions DEFAULT = new CalibrationCurveOptions()
         {
-            DisplaySampleTypes = new[] { SampleType.STANDARD.Name, SampleType.BLANK.Name, SampleType.QC.Name, SampleType.UNKNOWN.Name };
-            ShowLegend = true;
-            ShowSelection = true;
-            ShowFiguresOfMerit = true;
+            DisplaySampleTypes = ImmutableList.ValueOf(
+                new[] { SampleType.STANDARD, SampleType.BLANK, SampleType.QC, SampleType.UNKNOWN}),
+            ShowLegend = true,
+            ShowSelection = true,
+            ShowFiguresOfMerit = true
+            
+        };
+        public bool LogXAxis { get; private set; }
+
+        public CalibrationCurveOptions ChangeLogXAxis(bool value)
+        {
+            return ChangeProp(ImClone(this), im => im.LogXAxis = value);
         }
 
-        public bool LogXAxis { get; set; }
-        public bool LogYAxis { get; set; }
-        public string[] DisplaySampleTypes { get; set; }
-        public bool SingleBatch { get; set; }
+        public bool LogYAxis { get; private set; }
+
+        public CalibrationCurveOptions ChangeLogYAxis(bool value)
+        {
+            return ChangeProp(ImClone(this), im => im.LogYAxis = value);
+        }
+
+        public ImmutableList<SampleType> DisplaySampleTypes { get; private set; }
+
+        public CalibrationCurveOptions ChangeDisplaySampleTypes(IEnumerable<SampleType> value)
+        {
+            return ChangeProp(ImClone(this), im => im.DisplaySampleTypes = ImmutableList.ValueOf(value));
+        }
+        public bool SingleBatch { get; private set; }
+
+        public CalibrationCurveOptions ChangeSingleBatch(bool value)
+        {
+            return ChangeProp(ImClone(this), im => im.SingleBatch = value);
+        }
 
         public bool DisplaySampleType(SampleType sampleType)
         {
-            return DisplaySampleTypes.Contains(sampleType.Name);
+            return DisplaySampleTypes.Contains(sampleType);
         }
 
-        public bool ShowLegend { get; set; }
-        public bool ShowSelection { get; set; }
-        public bool ShowFiguresOfMerit { get; set; }
+        public bool ShowLegend { get; private set; }
 
-        public void SetDisplaySampleType(SampleType sampleType, bool display)
+        public CalibrationCurveOptions ChangeShowLegend(bool value)
+        {
+            return ChangeProp(ImClone(this), im => im.ShowLegend = value);
+        }
+        public bool ShowSelection { get; private set; }
+
+        public CalibrationCurveOptions ChangeShowSelection(bool value)
+        {
+            return ChangeProp(ImClone(this), im => im.ShowSelection = value);
+        }
+        public bool ShowFiguresOfMerit { get; private set; }
+
+        public CalibrationCurveOptions ChangeShowFiguresOfMerit(bool value)
+        {
+            return ChangeProp(ImClone(this), im => im.ShowFiguresOfMerit = value);
+        }
+
+        public CalibrationCurveOptions SetDisplaySampleType(SampleType sampleType, bool display)
         {
             if (display)
             {
-                DisplaySampleTypes = DisplaySampleTypes.Concat(new[] {sampleType.Name}).Distinct().ToArray();
+                return ChangeDisplaySampleTypes(DisplaySampleTypes.Concat(new[] { sampleType }).Distinct()
+                    .ToArray());
             }
             else
             {
-                DisplaySampleTypes = DisplaySampleTypes.Except(new[] {sampleType.Name}).ToArray();
+                return ChangeDisplaySampleTypes(DisplaySampleTypes.Except(new[] {sampleType}).ToArray());
             }
         }
 
-        public CalibrationCurveOptions Clone()
+        #region serialization
+
+        private enum EL
         {
-            var clone = (CalibrationCurveOptions)MemberwiseClone();
-            clone.DisplaySampleTypes = (string[]) DisplaySampleTypes.Clone();
-            return clone;
+            display_sample_type,
+        }
+
+        private enum Attr
+        {
+            log_x_axis,
+            log_y_axis,
+            single_batch,
+            show_legend,
+            show_figures_of_merit
+        }
+
+        private CalibrationCurveOptions()
+        {
+        }
+
+        public XmlSchema GetSchema()
+        {
+            return null;
+        }
+
+        public void ReadXml(XmlReader reader)
+        {
+            if (DisplaySampleTypes != null)
+            {
+                throw new InvalidOperationException();
+            }
+
+            LogXAxis = reader.GetBoolAttribute(Attr.log_x_axis);
+            LogYAxis = reader.GetBoolAttribute(Attr.log_y_axis);
+            SingleBatch = reader.GetBoolAttribute(Attr.single_batch);
+            ShowLegend = reader.GetBoolAttribute(Attr.show_legend);
+            ShowFiguresOfMerit = reader.GetBoolAttribute(Attr.show_legend);
+            var xElement = (XElement) XNode.ReadFrom(reader);
+            var displaySampleTypes = new List<SampleType>();
+            foreach (var el in xElement.Elements(EL.display_sample_type))
+            {
+                var sampleType = SampleType.FromName(el.Value);
+                if (sampleType != null)
+                {
+                    displaySampleTypes.Add(sampleType);
+                }
+            }
+            DisplaySampleTypes = ImmutableList.ValueOf(displaySampleTypes.Distinct());
+        }
+
+        public void WriteXml(XmlWriter writer)
+        {
+            writer.WriteAttribute(Attr.log_x_axis, LogXAxis);
+            writer.WriteAttribute(Attr.log_y_axis, LogYAxis);
+            writer.WriteAttribute(Attr.single_batch, SingleBatch);
+            writer.WriteAttribute(Attr.show_legend, ShowLegend);
+            writer.WriteAttribute(Attr.show_figures_of_merit, ShowFiguresOfMerit);
+            foreach (var displaySampleType in DisplaySampleTypes)
+            {
+                writer.WriteElementString(EL.display_sample_type, displaySampleType);
+            }
+        }
+
+        #endregion
+
+        protected bool Equals(CalibrationCurveOptions other)
+        {
+            return LogXAxis == other.LogXAxis && LogYAxis == other.LogYAxis &&
+                   DisplaySampleTypes.Equals(other.DisplaySampleTypes) && SingleBatch == other.SingleBatch &&
+                   ShowLegend == other.ShowLegend && ShowSelection == other.ShowSelection &&
+                   ShowFiguresOfMerit == other.ShowFiguresOfMerit;
+        }
+
+        public override bool Equals(object obj)
+        {
+            if (ReferenceEquals(null, obj)) return false;
+            if (ReferenceEquals(this, obj)) return true;
+            if (obj.GetType() != this.GetType()) return false;
+            return Equals((CalibrationCurveOptions)obj);
+        }
+
+        public override int GetHashCode()
+        {
+            unchecked
+            {
+                var hashCode = LogXAxis.GetHashCode();
+                hashCode = (hashCode * 397) ^ LogYAxis.GetHashCode();
+                hashCode = (hashCode * 397) ^ DisplaySampleTypes.GetHashCode();
+                hashCode = (hashCode * 397) ^ SingleBatch.GetHashCode();
+                hashCode = (hashCode * 397) ^ ShowLegend.GetHashCode();
+                hashCode = (hashCode * 397) ^ ShowSelection.GetHashCode();
+                hashCode = (hashCode * 397) ^ ShowFiguresOfMerit.GetHashCode();
+                return hashCode;
+            }
         }
     }
 }

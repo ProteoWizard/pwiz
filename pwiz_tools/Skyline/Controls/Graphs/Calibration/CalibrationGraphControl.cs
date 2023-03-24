@@ -1,13 +1,17 @@
 ﻿using System;
 using System.Collections.Generic;
+using System.ComponentModel;
 using System.Drawing;
 using System.Linq;
 using System.Windows.Forms;
 using pwiz.Common.SystemUtil;
+using pwiz.Skyline.Controls.SeqNode;
 using pwiz.Skyline.Model;
+using pwiz.Skyline.Model.AuditLog;
 using pwiz.Skyline.Model.Databinding.Entities;
 using pwiz.Skyline.Model.DocSettings.AbsoluteQuantification;
 using pwiz.Skyline.Model.GroupComparison;
+using pwiz.Skyline.Model.Results;
 using pwiz.Skyline.Util;
 using pwiz.Skyline.Util.Extensions;
 using ZedGraph;
@@ -35,12 +39,47 @@ namespace pwiz.Skyline.Controls.Graphs.Calibration
             zedGraphControl.GraphPane.YAxis.MajorTic.IsOpposite = false;
             zedGraphControl.GraphPane.YAxis.MinorTic.IsOpposite = false;
             zedGraphControl.IsZoomOnMouseCenter = true;
+            zedGraphControl.ContextMenuBuilder += zedGraphControl_ContextMenuBuilder;
         }
+
+        public SkylineWindow SkylineWindow { get; set; }
 
         public Helpers.ModeUIAwareFormHelper ModeUIAwareFormHelper
         {
             get;
             set;
+        }
+
+        public CalibrationCurveOptions Options
+        {
+            get
+            {
+                return Properties.Settings.Default.CalibrationCurveOptions;
+            }
+            set
+            {
+                Properties.Settings.Default.CalibrationCurveOptions = value;
+            }
+        }
+
+        protected override void OnHandleCreated(EventArgs e)
+        {
+            base.OnHandleCreated(e);
+            Properties.Settings.Default.PropertyChanged += Settings_OnPropertyChanged;
+        }
+
+        private void Settings_OnPropertyChanged(object sender, PropertyChangedEventArgs e)
+        {
+            if (DisplaySettings != null)
+            {
+                Update(DisplaySettings);
+            }
+        }
+
+        protected override void OnHandleDestroyed(EventArgs e)
+        {
+            Properties.Settings.Default.PropertyChanged -= Settings_OnPropertyChanged;
+            base.OnHandleDestroyed(e);
         }
 
         public Settings DisplaySettings { get; private set; }
@@ -65,7 +104,7 @@ namespace pwiz.Skyline.Controls.Graphs.Calibration
         {
             Clear();
             DisplaySettings = displaySettings;
-            var options = displaySettings.Options;
+            var options = Options;
             zedGraphControl.GraphPane.YAxis.Type = options.LogYAxis ? AxisType.Log : AxisType.Linear;
             zedGraphControl.GraphPane.XAxis.Type = options.LogXAxis ? AxisType.Log : AxisType.Linear;
             bool logPlot = options.LogXAxis || options.LogYAxis;
@@ -394,25 +433,14 @@ namespace pwiz.Skyline.Controls.Graphs.Calibration
 
         public class Settings : Immutable
         {
-            private CalibrationCurveOptions _options;
-            public Settings(SrmDocument document, CalibrationCurveFitter calibrationCurveFitter,
-                CalibrationCurveOptions options)
+            public Settings(SrmDocument document, CalibrationCurveFitter calibrationCurveFitter)
             {
                 Document = document;
                 CalibrationCurveFitter = calibrationCurveFitter;
-                _options = options.Clone();
             }
 
             public SrmDocument Document { get; }
             public CalibrationCurveFitter CalibrationCurveFitter { get; }
-
-            public CalibrationCurveOptions Options
-            {
-                get
-                {
-                    return _options.Clone();
-                }
-            }
 
             public int? SelectedResultsIndex { get; private set; }
 
@@ -544,5 +572,188 @@ namespace pwiz.Skyline.Controls.Graphs.Calibration
         }
 
         public event Action<CalibrationPoint> PointClicked;
+        private void zedGraphControl_ContextMenuBuilder(ZedGraphControl sender, ContextMenuStrip menuStrip, Point mousePt, ZedGraphControl.ContextMenuObjectState objState)
+        {
+            var calibrationCurveOptions = Options;
+            singleBatchContextMenuItem.Checked = calibrationCurveOptions.SingleBatch;
+            if (IsEnableIsotopologResponseCurve())
+            {
+                singleBatchContextMenuItem.Visible = true;
+            }
+            else
+            {
+                singleBatchContextMenuItem.Visible = CalibrationCurveFitter.AnyBatchNames(DisplaySettings.Document.Settings);
+            }
+            var replicateIndexFromPoint = ReplicateIndexFromPoint(mousePt);
+            if (replicateIndexFromPoint.HasValue && null == replicateIndexFromPoint.Value.LabelType)
+            {
+                ToolStripMenuItem excludeStandardMenuItem
+                    = MakeExcludeStandardMenuItem(replicateIndexFromPoint.Value.ReplicateIndex);
+                if (excludeStandardMenuItem != null)
+                {
+                    menuStrip.Items.Clear();
+                    menuStrip.Items.Add(excludeStandardMenuItem);
+                    return;
+                }
+            }
+
+            showSampleTypesContextMenuItem.DropDownItems.Clear();
+            foreach (var sampleType in SampleType.ListSampleTypes())
+            {
+                showSampleTypesContextMenuItem.DropDownItems.Add(MakeShowSampleTypeMenuItem(sampleType));
+            }
+            logXContextMenuItem.Checked = Options.LogXAxis;
+            logYAxisContextMenuItem.Checked = Options.LogYAxis;
+            showLegendContextMenuItem.Checked = Options.ShowLegend;
+            showSelectionContextMenuItem.Checked = Options.ShowSelection;
+            showFiguresOfMeritContextMenuItem.Checked = Options.ShowFiguresOfMerit;
+            ZedGraphHelper.BuildContextMenu(sender, menuStrip, true);
+            if (!menuStrip.Items.Contains(logXContextMenuItem))
+            {
+                int index = 0;
+                menuStrip.Items.Insert(index++, logXContextMenuItem);
+                menuStrip.Items.Insert(index++, logYAxisContextMenuItem);
+                menuStrip.Items.Insert(index++, showSampleTypesContextMenuItem);
+                menuStrip.Items.Insert(index++, singleBatchContextMenuItem);
+                menuStrip.Items.Insert(index++, showLegendContextMenuItem);
+                menuStrip.Items.Insert(index++, showSelectionContextMenuItem);
+                menuStrip.Items.Insert(index++, showFiguresOfMeritContextMenuItem);
+                menuStrip.Items.Insert(index++, new ToolStripSeparator());
+            }
+        }
+        private bool IsEnableIsotopologResponseCurve()
+        {
+            return TryGetSelectedPeptide(out _, out var peptide) &&
+                   peptide.TransitionGroups.Any(tg => tg.PrecursorConcentration.HasValue);
+        }
+
+        private bool TryGetSelectedPeptide(out PeptideGroupDocNode peptideGroup, out PeptideDocNode peptide)
+        {
+            peptide = null;
+            peptideGroup = null;
+            SequenceTree sequenceTree = SkylineWindow?.SequenceTree;
+            if (null != sequenceTree)
+            {
+                PeptideTreeNode peptideTreeNode = sequenceTree.GetNodeOfType<PeptideTreeNode>();
+                if (null != peptideTreeNode)
+                {
+                    peptide = peptideTreeNode.DocNode;
+                }
+                PeptideGroupTreeNode peptideGroupTreeNode = sequenceTree.GetNodeOfType<PeptideGroupTreeNode>();
+                if (null != peptideGroupTreeNode)
+                {
+                    peptideGroup = peptideGroupTreeNode.DocNode;
+                }
+            }
+            return peptide != null;
+        }
+
+
+        public ToolStripMenuItem MakeExcludeStandardMenuItem(int replicateIndex)
+        {
+            var measuredResults =SkylineWindow?.DocumentUI.Settings.MeasuredResults;
+            if (measuredResults == null)
+            {
+                return null;
+            }
+            ChromatogramSet chromatogramSet = null;
+            if (replicateIndex >= 0 &&
+                replicateIndex < measuredResults.Chromatograms.Count)
+            {
+                chromatogramSet = measuredResults.Chromatograms[replicateIndex];
+            }
+            if (chromatogramSet == null)
+            {
+                return null;
+            }
+            if (!chromatogramSet.SampleType.AllowExclude)
+            {
+                return null;
+            }
+            PeptideDocNode peptideDocNode;
+            PeptideGroupDocNode peptideGroupDocNode;
+            if (!TryGetSelectedPeptide(out peptideGroupDocNode, out peptideDocNode))
+            {
+                return null;
+            }
+            bool isExcluded = peptideDocNode.IsExcludeFromCalibration(replicateIndex);
+            var menuItemText = isExcluded ? QuantificationStrings.CalibrationForm_MakeExcludeStandardMenuItem_Include_Standard
+                : QuantificationStrings.CalibrationForm_MakeExcludeStandardMenuItem_Exclude_Standard;
+            var peptideIdPath = new IdentityPath(peptideGroupDocNode.Id, peptideDocNode.Id);
+            var menuItem = new ToolStripMenuItem(menuItemText, null, (sender, args) =>
+            {
+                SkylineWindow.ModifyDocument(menuItemText,
+                    doc => SetExcludeStandard(doc, peptideIdPath, replicateIndex, !isExcluded), docPair =>
+                    {
+                        var msgType = isExcluded
+                            ? MessageType.set_included_standard
+                            : MessageType.set_excluded_standard;
+                        return AuditLogEntry.CreateSingleMessageEntry(new MessageInfo(msgType, docPair.NewDocumentType, PeptideTreeNode.GetLabel(peptideDocNode, string.Empty), chromatogramSet.Name));
+                    });
+            });
+            return menuItem;
+        }
+
+        private ToolStripMenuItem MakeShowSampleTypeMenuItem(SampleType sampleType)
+        {
+            ToolStripMenuItem menuItem = new ToolStripMenuItem(sampleType.ToString())
+            {
+                Checked = Options.DisplaySampleTypes.Contains(sampleType)
+            };
+            menuItem.Click += (sender, args) =>
+            {
+                Options = Options.SetDisplaySampleType(sampleType, !menuItem.Checked);
+            };
+            return menuItem;
+        }
+        private SrmDocument SetExcludeStandard(SrmDocument document, IdentityPath peptideIdPath, int resultsIndex, bool exclude)
+        {
+            if (!document.Settings.HasResults)
+            {
+                return document;
+            }
+            var peptideDocNode = (PeptideDocNode)document.FindNode(peptideIdPath);
+            if (peptideDocNode == null)
+            {
+                return document;
+            }
+            if (resultsIndex < 0 || resultsIndex >= document.Settings.MeasuredResults.Chromatograms.Count)
+            {
+                return document;
+            }
+            bool wasExcluded = peptideDocNode.IsExcludeFromCalibration(resultsIndex);
+            return (SrmDocument)document.ReplaceChild(peptideIdPath.Parent,
+                peptideDocNode.ChangeExcludeFromCalibration(resultsIndex, !wasExcluded));
+        }
+
+        private void logXAxisContextMenuItem_Click(object sender, EventArgs e)
+        {
+            Options = Options.ChangeLogXAxis(!Options.LogXAxis);
+        }
+
+        private void logYAxisContextMenuItem_Click(object sender, EventArgs e)
+        {
+            Options = Options.ChangeLogYAxis(!Options.LogYAxis);
+        }
+        private void showLegendContextMenuItem_Click(object sender, EventArgs e)
+        {
+            Options = Options.ChangeShowLegend(!Options.ShowLegend);
+        }
+
+        private void showSelectionContextMenuItem_Click(object sender, EventArgs e)
+        {
+            Options = Options.ChangeShowSelection(!Options.ShowSelection);
+        }
+
+
+        private void showFiguresOfMeritContextMenuItem_Click(object sender, EventArgs e)
+        {
+            Options = Options.ChangeShowFiguresOfMerit(!Options.ShowFiguresOfMerit);
+        }
+
+        private void singleBatchContextMenuItem_Click(object sender, EventArgs e)
+        {
+            Options = Options.ChangeSingleBatch(!Options.SingleBatch);
+        }
     }
 }

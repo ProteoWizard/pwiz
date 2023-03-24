@@ -17,7 +17,7 @@
  * limitations under the License.
  */
 using System;
-using System.Drawing;
+using System.ComponentModel;
 using System.Linq;
 using System.Windows.Forms;
 using pwiz.Skyline.Controls.SeqNode;
@@ -31,7 +31,6 @@ using pwiz.Skyline.Properties;
 using pwiz.Skyline.Util;
 using pwiz.Skyline.Util.Extensions;
 using ZedGraph;
-using SampleType = pwiz.Skyline.Model.DocSettings.AbsoluteQuantification.SampleType;
 
 namespace pwiz.Skyline.Controls.Graphs.Calibration
 {
@@ -44,10 +43,7 @@ namespace pwiz.Skyline.Controls.Graphs.Calibration
             InitializeComponent();
             _skylineWindow = skylineWindow;
             _originalFormTitle = Text;
-            calibrationGraphControl1.ZedGraphControl.ContextMenuBuilder += zedGraphControl_ContextMenuBuilder;
         }
-
-        public static CalibrationCurveOptions Options { get { return Settings.Default.CalibrationCurveOptions; } }
 
         protected override void OnHandleCreated(EventArgs e)
         {
@@ -55,6 +51,15 @@ namespace pwiz.Skyline.Controls.Graphs.Calibration
             if (null != _skylineWindow)
             {
                 _skylineWindow.DocumentUIChangedEvent += SkylineWindowOnDocumentUIChangedEvent;
+                Settings.Default.PropertyChanged += Settings_OnPropertyChanged;
+                UpdateUI(false);
+            }
+        }
+
+        private void Settings_OnPropertyChanged(object sender, PropertyChangedEventArgs e)
+        {
+            if (e.PropertyName == nameof(Settings.CalibrationCurveOptions))
+            {
                 UpdateUI(false);
             }
         }
@@ -66,6 +71,7 @@ namespace pwiz.Skyline.Controls.Graphs.Calibration
 
         protected override void OnHandleDestroyed(EventArgs e)
         {
+            Settings.Default.PropertyChanged -= Settings_OnPropertyChanged;
             if (null != _skylineWindow)
             {
                 _skylineWindow.DocumentUIChangedEvent -= SkylineWindowOnDocumentUIChangedEvent;
@@ -105,7 +111,6 @@ namespace pwiz.Skyline.Controls.Graphs.Calibration
         private void DisplayCalibrationCurve()
         {
             Text = TabText = _originalFormTitle;
-            CalibrationCurveOptions options = Settings.Default.CalibrationCurveOptions;
             var document = _skylineWindow.DocumentUI;
 
             if (!document.Settings.HasResults)
@@ -169,7 +174,7 @@ namespace pwiz.Skyline.Controls.Graphs.Calibration
                 }
             }
 
-            var settings = new CalibrationGraphControl.Settings(document, curveFitter, options)
+            var settings = new CalibrationGraphControl.Settings(document, curveFitter)
                 .ChangeSelectedResultsIndex(_skylineWindow.SelectedResultsIndex);
             if (curveFitter.IsotopologResponseCurve)
             {
@@ -241,56 +246,6 @@ namespace pwiz.Skyline.Controls.Graphs.Calibration
                    peptide.TransitionGroups.Any(tg => tg.PrecursorConcentration.HasValue);
         }
 
-        private void zedGraphControl_ContextMenuBuilder(ZedGraphControl sender, ContextMenuStrip menuStrip, Point mousePt, ZedGraphControl.ContextMenuObjectState objState)
-        {
-            var calibrationCurveOptions = Settings.Default.CalibrationCurveOptions;
-            singleBatchContextMenuItem.Checked = calibrationCurveOptions.SingleBatch;
-            if (IsEnableIsotopologResponseCurve())
-            {
-                singleBatchContextMenuItem.Visible = true;
-            }
-            else
-            {
-                singleBatchContextMenuItem.Visible = CalibrationCurveFitter.AnyBatchNames(_skylineWindow.Document.Settings);
-            }
-            var replicateIndexFromPoint = calibrationGraphControl1.ReplicateIndexFromPoint(mousePt);
-            if (replicateIndexFromPoint.HasValue && null == replicateIndexFromPoint.Value.LabelType)
-            {
-                ToolStripMenuItem excludeStandardMenuItem 
-                    = MakeExcludeStandardMenuItem(replicateIndexFromPoint.Value.ReplicateIndex);
-                if (excludeStandardMenuItem != null)
-                {
-                    menuStrip.Items.Clear();
-                    menuStrip.Items.Add(excludeStandardMenuItem);
-                    return;
-                }
-            }
-            
-            showSampleTypesContextMenuItem.DropDownItems.Clear();
-            foreach (var sampleType in SampleType.ListSampleTypes())
-            {
-                showSampleTypesContextMenuItem.DropDownItems.Add(MakeShowSampleTypeMenuItem(sampleType));
-            }
-            logXContextMenuItem.Checked = Options.LogXAxis;
-            logYAxisContextMenuItem.Checked = Options.LogYAxis;
-            showLegendContextMenuItem.Checked = Options.ShowLegend;
-            showSelectionContextMenuItem.Checked = Options.ShowSelection;
-            showFiguresOfMeritContextMenuItem.Checked = Options.ShowFiguresOfMerit;
-            ZedGraphHelper.BuildContextMenu(sender, menuStrip, true);
-            if (!menuStrip.Items.Contains(logXContextMenuItem))
-            {
-                int index = 0;
-                menuStrip.Items.Insert(index++, logXContextMenuItem);
-                menuStrip.Items.Insert(index++, logYAxisContextMenuItem);
-                menuStrip.Items.Insert(index++, showSampleTypesContextMenuItem);
-                menuStrip.Items.Insert(index++, singleBatchContextMenuItem);
-                menuStrip.Items.Insert(index++, showLegendContextMenuItem);
-                menuStrip.Items.Insert(index++, showSelectionContextMenuItem);
-                menuStrip.Items.Insert(index++, showFiguresOfMeritContextMenuItem);
-                menuStrip.Items.Insert(index++, new ToolStripSeparator());
-            }
-        }
-
         public ToolStripMenuItem MakeExcludeStandardMenuItem(int replicateIndex)
         {
             var document = DocumentUiContainer.DocumentUI;
@@ -336,67 +291,11 @@ namespace pwiz.Skyline.Controls.Graphs.Calibration
             return menuItem;
         }
 
-        private ToolStripMenuItem MakeShowSampleTypeMenuItem(SampleType sampleType)
-        {
-            ToolStripMenuItem menuItem = new ToolStripMenuItem(sampleType.ToString())
-            {
-                Checked = Options.DisplaySampleTypes.Contains(sampleType.Name)
-            };
-            menuItem.Click += (sender, args) =>
-            {
-                if (menuItem.Checked)
-                {
-                    Options.DisplaySampleTypes = Options.DisplaySampleTypes.Except(new[] {sampleType.Name}).ToArray();
-                }
-                else
-                {
-                    Options.DisplaySampleTypes =
-                        Options.DisplaySampleTypes.Concat(new[] {sampleType.Name}).Distinct().ToArray();
-                }
-                UpdateUI(false);
-            };
-            return menuItem;
-        }
-
-
         protected override void OnFormClosed(FormClosedEventArgs e)
         {
             base.OnFormClosed(e);
             Dispose();
         }
-
-        private void logXAxisContextMenuItem_Click(object sender, EventArgs e)
-        {
-            Options.LogXAxis = !Options.LogXAxis;
-            UpdateUI(false);
-        }
-
-        private void logYAxisContextMenuItem_Click(object sender, EventArgs e)
-        {
-            Options.LogYAxis = !Options.LogYAxis;
-            UpdateUI(false);
-        }
-
-
-        private void showLegendContextMenuItem_Click(object sender, EventArgs e)
-        {
-            Options.ShowLegend = !Options.ShowLegend;
-            UpdateUI(false);
-        }
-
-        private void showSelectionContextMenuItem_Click(object sender, EventArgs e)
-        {
-            Options.ShowSelection = !Options.ShowSelection;
-            UpdateUI(false);
-        }
-
-
-        private void showFiguresOfMeritContextMenuItem_Click(object sender, EventArgs e)
-        {
-            Options.ShowFiguresOfMerit = !Options.ShowFiguresOfMerit;
-            UpdateUI(false);
-        }
-
 
         private void CalibrationForm_KeyDown(object sender, KeyEventArgs e)
         {
@@ -444,13 +343,6 @@ namespace pwiz.Skyline.Controls.Graphs.Calibration
             bool wasExcluded = peptideDocNode.IsExcludeFromCalibration(resultsIndex);
             return (SrmDocument) document.ReplaceChild(peptideIdPath.Parent,
                 peptideDocNode.ChangeExcludeFromCalibration(resultsIndex, !wasExcluded));
-        }
-
-        private void singleBatchContextMenuItem_Click(object sender, EventArgs e)
-        {
-            Settings.Default.CalibrationCurveOptions.SingleBatch =
-                !Settings.Default.CalibrationCurveOptions.SingleBatch;
-            UpdateUI(false);
         }
 
         public void DisplayError(string message)

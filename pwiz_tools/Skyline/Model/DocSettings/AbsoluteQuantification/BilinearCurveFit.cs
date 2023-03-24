@@ -52,11 +52,11 @@ namespace pwiz.Skyline.Model.DocSettings.AbsoluteQuantification
                 var baselinePoints = points.Where(pt => pt.X <= bilinear.TurningPoint);
                 var baselineStats = new Statistics(baselinePoints.Select(pt => pt.Y));
 
-                fit.StdDevBaseline = baselineStats.Length == 0 ? double.NaN : baselineStats.StdDevP();
+                fit.StdDevBaseline = baselineStats.Length == 0 ? 0 : baselineStats.StdDevP();
             }
             else
             {
-                fit.StdDevBaseline = double.NaN;
+                fit.StdDevBaseline = 0;
             }
 
             fit.Error = BilinearRegressionFit.CalculateError(calibrationCurve, points);

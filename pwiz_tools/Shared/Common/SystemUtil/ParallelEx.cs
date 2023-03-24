@@ -27,7 +27,7 @@ namespace pwiz.Common.SystemUtil
     public static class ParallelEx
     {
         // This can be set to true to make debugging easier.
-        public static readonly bool SINGLE_THREADED = true;
+        public static readonly bool SINGLE_THREADED = false;
 
         private class IntHolder
         {

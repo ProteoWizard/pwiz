@@ -29,6 +29,7 @@ using pwiz.Skyline.Model.GroupComparison;
 using pwiz.Skyline.Model.Hibernate;
 using pwiz.Skyline.Model.Results;
 using pwiz.Skyline.Model.Results.Scoring;
+using pwiz.Skyline.Properties;
 using pwiz.Skyline.Util.Extensions;
 
 namespace pwiz.Skyline.Model.Databinding.Entities
@@ -197,7 +198,8 @@ namespace pwiz.Skyline.Model.Databinding.Entities
                         skylineWindow.ShowCalibrationForm();
                         skylineWindow.SelectedResultsIndex = GetResultFile().Replicate.ReplicateIndex;
                         skylineWindow.SelectedPath = Precursor.IdentityPath;
-                        Properties.Settings.Default.CalibrationCurveOptions.SingleBatch = true;
+                        Settings.Default.CalibrationCurveOptions =
+                            Settings.Default.CalibrationCurveOptions.ChangeSingleBatch(true);
                     }
                 });
             }

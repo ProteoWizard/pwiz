@@ -145,6 +145,7 @@
     <Compile Include="BilinearCurveFitTest.cs" />
     <Compile Include="BilinearFitTest.cs" />
     <Compile Include="BookmarkEnumeratorTest.cs" />
+    <Compile Include="CalibrationCurveOptionsTest.cs" />
     <Compile Include="ChromatogramExporterTest.cs" />
     <Compile Include="FastaSequenceTest.cs" />
     <Compile Include="OnDemandFeatureCalculatorTest.cs" />
