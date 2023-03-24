@@ -349,6 +349,60 @@ namespace pwiz.Skyline {
         }
         
         /// <summary>
+        ///   Looks up a localized string similar to The acquisition method for extracting from full scan data..
+        /// </summary>
+        internal static string _full_scan_acquisition_method {
+            get {
+                return ResourceManager.GetString("_full_scan_acquisition_method", resourceCulture);
+            }
+        }
+        
+        /// <summary>
+        ///   Looks up a localized string similar to The isolation scheme used when extracting from full scan data..
+        /// </summary>
+        internal static string _full_scan_isolation_scheme {
+            get {
+                return ResourceManager.GetString("_full_scan_isolation_scheme", resourceCulture);
+            }
+        }
+        
+        /// <summary>
+        ///   Looks up a localized string similar to The mass analyzer for precursor scans..
+        /// </summary>
+        internal static string _full_scan_precursor_analyzer {
+            get {
+                return ResourceManager.GetString("_full_scan_precursor_analyzer", resourceCulture);
+            }
+        }
+        
+        /// <summary>
+        ///   Looks up a localized string similar to Skip SIM scans when extracting from full scan data..
+        /// </summary>
+        internal static string _full_scan_precursor_ignore_sim {
+            get {
+                return ResourceManager.GetString("_full_scan_precursor_ignore_sim", resourceCulture);
+            }
+        }
+        
+        /// <summary>
+        ///   Looks up a localized string similar to The isotope enrichment settings to use for extracting from full scan data..
+        /// </summary>
+        internal static string _full_scan_precursor_isotope_enrichment {
+            get {
+                return ResourceManager.GetString("_full_scan_precursor_isotope_enrichment", resourceCulture);
+            }
+        }
+        
+        /// <summary>
+        ///   Looks up a localized string similar to How precursor isotope intensities are extracted from full scan data..
+        /// </summary>
+        internal static string _full_scan_precursor_isotopes {
+            get {
+                return ResourceManager.GetString("_full_scan_precursor_isotopes", resourceCulture);
+            }
+        }
+        
+        /// <summary>
         ///   Looks up a localized string similar to Resolving power of the precursor mass analyzer. If the mass analyzer is &apos;Centroided&apos; the value is in PPM..
         /// </summary>
         internal static string _full_scan_precursor_res {
@@ -363,6 +417,24 @@ namespace pwiz.Skyline {
         internal static string _full_scan_precursor_res_mz {
             get {
                 return ResourceManager.GetString("_full_scan_precursor_res_mz", resourceCulture);
+            }
+        }
+        
+        /// <summary>
+        ///   Looks up a localized string similar to The number of isotopes or percentage of isotope intensity to extract from full scan data..
+        /// </summary>
+        internal static string _full_scan_precursor_threshold {
+            get {
+                return ResourceManager.GetString("_full_scan_precursor_threshold", resourceCulture);
+            }
+        }
+        
+        /// <summary>
+        ///   Looks up a localized string similar to The mass analyzer for product scans..
+        /// </summary>
+        internal static string _full_scan_product_analyzer {
+            get {
+                return ResourceManager.GetString("_full_scan_product_analyzer", resourceCulture);
             }
         }
         
@@ -637,6 +709,15 @@ namespace pwiz.Skyline {
         }
         
         /// <summary>
+        ///   Looks up a localized string similar to Skip sources used to build a library .
+        /// </summary>
+        internal static string _import_search_exclude_library_sources {
+            get {
+                return ResourceManager.GetString("_import_search_exclude_library_sources", resourceCulture);
+            }
+        }
+        
+        /// <summary>
         ///   Looks up a localized string similar to Import a peptide search results file into the open document, building a document-specific spectral library. This may be specified multiple times for multiple files. Use –import-fasta argument to add matched peptides as targets..
         /// </summary>
         internal static string _import_search_file {
@@ -817,11 +898,29 @@ namespace pwiz.Skyline {
         }
         
         /// <summary>
+        ///   Looks up a localized string similar to Create a new document..
+        /// </summary>
+        internal static string _new {
+            get {
+                return ResourceManager.GetString("_new", resourceCulture);
+            }
+        }
+        
+        /// <summary>
         ///   Looks up a localized string similar to Same as save except writes to the specified file.
         /// </summary>
         internal static string _out {
             get {
                 return ResourceManager.GetString("_out", resourceCulture);
+            }
+        }
+        
+        /// <summary>
+        ///   Looks up a localized string similar to Overwrite instead of producing an error when a --new filepath exists..
+        /// </summary>
+        internal static string _overwrite {
+            get {
+                return ResourceManager.GetString("_overwrite", resourceCulture);
             }
         }
         
@@ -1560,6 +1659,15 @@ namespace pwiz.Skyline {
         }
         
         /// <summary>
+        ///   Looks up a localized string similar to The biggest product ion to create a transition for..
+        /// </summary>
+        internal static string _tran_product_end_ion {
+            get {
+                return ResourceManager.GetString("_tran_product_end_ion", resourceCulture);
+            }
+        }
+        
+        /// <summary>
         ///   Looks up a localized string similar to A comma-separated list of product ion charge states to apply to peptide fragments to generate product ion transitions. Changes the transition filter settings for the open document..
         /// </summary>
         internal static string _tran_product_ion_charges {
@@ -1574,6 +1682,15 @@ namespace pwiz.Skyline {
         internal static string _tran_product_ion_types {
             get {
                 return ResourceManager.GetString("_tran_product_ion_types", resourceCulture);
+            }
+        }
+        
+        /// <summary>
+        ///   Looks up a localized string similar to The smallest product ion to create a transition for..
+        /// </summary>
+        internal static string _tran_product_start_ion {
+            get {
+                return ResourceManager.GetString("_tran_product_start_ion", resourceCulture);
             }
         }
         
@@ -2120,6 +2237,15 @@ namespace pwiz.Skyline {
         internal static string CommandArgs_USERNAME_VALUE {
             get {
                 return ResourceManager.GetString("CommandArgs_USERNAME_VALUE", resourceCulture);
+            }
+        }
+        
+        /// <summary>
+        ///   Looks up a localized string similar to .
+        /// </summary>
+        internal static string String1 {
+            get {
+                return ResourceManager.GetString("String1", resourceCulture);
             }
         }
     }

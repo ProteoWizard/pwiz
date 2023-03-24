@@ -931,6 +931,10 @@ namespace pwiz.Skyline
                         f = f.ChangePeptideProductCharges(commandArgs.FilterProductCharges);
                     if (commandArgs.FilterProductTypes != null)
                         f = f.ChangePeptideIonTypes(commandArgs.FilterProductTypes);
+                    if (commandArgs.FilterStartProductIon != null)
+                        f = f.ChangeFragmentRangeFirstName(commandArgs.FilterStartProductIon.Label);
+                    if (commandArgs.FilterEndProductIon != null)
+                        f = f.ChangeFragmentRangeLastName(commandArgs.FilterEndProductIon.Label);
                     return f;
                 })), AuditLogEntry.SettingsLogFunction);
                 return true;
@@ -1004,8 +1008,11 @@ namespace pwiz.Skyline
                         }
                     }
 
-                    _out.WriteLine("Changing full scan acquisition method to {0} with isolation scheme '{1}'",
-                        commandArgs.FullScanAcquisitionMethod, isolationSchemeName);
+                    if (commandArgs.FullScanAcquisitionMethod == FullScanAcquisitionMethod.DIA)
+                        _out.WriteLine("Changing full scan acquisition method to {0} with isolation scheme '{1}'",
+                            commandArgs.FullScanAcquisitionMethod, isolationSchemeName);
+                    else
+                        _out.WriteLine("Changing full scan acquisition method to {0}", commandArgs.FullScanAcquisitionMethod);
 
                     ModifyDocument(d => d.ChangeSettings(_doc.Settings.ChangeTransitionFullScan(f =>
                             f.ChangeAcquisitionMethod(commandArgs.FullScanAcquisitionMethod, isolationScheme))),
@@ -1108,9 +1115,16 @@ namespace pwiz.Skyline
                 if (File.Exists(skylineFile))
                 {
                     if (!overwrite)
-                        throw new IOException(string.Format("File '{0}' already exists; use --in= instead or add --overwrite.", skylineFile));
+                        throw new IOException(string.Format(Resources.CommandLine_NewSkyFile_FileAlreadyExists, skylineFile));
                     _out.WriteLine("Deleting existing file '{0}'", skylineFile);
                     File.Delete(skylineFile);
+
+                    string skydFile = Path.ChangeExtension(skylineFile, ChromatogramCache.EXT);
+                    if (File.Exists(skydFile))
+                    {
+                        _out.WriteLine("Deleting existing file '{0}'", skydFile);
+                        File.Delete(skydFile);
+                    }
                 }
 
                 SetDocument(new SrmDocument(Settings.Default.SrmSettingsList[0]));
@@ -2128,17 +2142,20 @@ namespace pwiz.Skyline
             }
 
             // Look for results files to import
-            import.InitializeSpectrumSourceFiles(doc);
-            import.UpdateSpectrumSourceFilesFromDirs(import.GetDirsToSearch(Path.GetDirectoryName(commandArgs.SkylineFile)), false, null);
-            var missingResultsFiles = import.GetMissingResultsFiles().ToArray();
-            if (missingResultsFiles.Any())
+            if (!commandArgs.ExcludeLibrarySources)
             {
-                foreach (var file in missingResultsFiles)
+                import.InitializeSpectrumSourceFiles(doc);
+                import.UpdateSpectrumSourceFilesFromDirs(import.GetDirsToSearch(Path.GetDirectoryName(commandArgs.SkylineFile)), false, null);
+                var missingResultsFiles = import.GetMissingResultsFiles().ToArray();
+                if (missingResultsFiles.Any())
                 {
-                    if (doc.Settings.HasResults && doc.Settings.MeasuredResults.FindMatchingMSDataFile(new MsDataFilePath(file)) != null)
-                        continue;
+                    foreach (var file in missingResultsFiles)
+                    {
+                        if (doc.Settings.HasResults && doc.Settings.MeasuredResults.FindMatchingMSDataFile(new MsDataFilePath(file)) != null)
+                            continue;
 
-                    _out.WriteLine(Resources.CommandLine_ImportSearch_Warning__Unable_to_locate_results_file___0__, Path.GetFileName(file));
+                        _out.WriteLine(Resources.CommandLine_ImportSearch_Warning__Unable_to_locate_results_file___0__, Path.GetFileName(file));
+                    }
                 }
             }
 

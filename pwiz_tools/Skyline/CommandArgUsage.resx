@@ -252,8 +252,8 @@
   <data name="_import_optimizing" xml:space="preserve">
     <value>Indicates the data being imported contains extra transitions for detecting optimal collision energy or declustering potential.</value>
   </data>
-	<data name="_import_peak_boundaries" xml:space="preserve">
-	<value>Read peak boundaries from a comma or tab separated file</value>	
+  <data name="_import_peak_boundaries" xml:space="preserve">
+    <value>Read peak boundaries from a comma or tab separated file</value>
   </data>
   <data name="_import_process_count" xml:space="preserve">
     <value>A number of sub-processes will be run for single-file import, after which the results from each single file will be joined by the main process. This can produce 10x performance gains on24-core NUMA servers and 3-4x even on i7 processors, under the right conditions. Be sure to test with your system.</value>
@@ -825,5 +825,44 @@ greater peak area.</value>
   </data>
   <data name="_chromatograms_limit_noise" xml:space="preserve">
     <value>Limits the length of the chromatagrams to a number of minutes around the chromatogram peak, i.e. ± minutes.</value>
+  </data>
+  <data name="_full_scan_acquisition_method" xml:space="preserve">
+    <value>The acquisition method for extracting from full scan data.</value>
+  </data>
+  <data name="_full_scan_isolation_scheme" xml:space="preserve">
+    <value>The isolation scheme used when extracting from full scan data.</value>
+  </data>
+  <data name="_full_scan_precursor_analyzer" xml:space="preserve">
+    <value>The mass analyzer for precursor scans.</value>
+  </data>
+  <data name="_full_scan_precursor_ignore_sim" xml:space="preserve">
+    <value>Skip SIM scans when extracting from full scan data.</value>
+  </data>
+  <data name="_full_scan_precursor_isotopes" xml:space="preserve">
+    <value>How precursor isotope intensities are extracted from full scan data.</value>
+  </data>
+  <data name="_full_scan_precursor_isotope_enrichment" xml:space="preserve">
+    <value>The isotope enrichment settings to use for extracting from full scan data.</value>
+  </data>
+  <data name="_full_scan_precursor_threshold" xml:space="preserve">
+    <value>The number of isotopes or percentage of isotope intensity to extract from full scan data.</value>
+  </data>
+  <data name="_full_scan_product_analyzer" xml:space="preserve">
+    <value>The mass analyzer for product scans.</value>
+  </data>
+  <data name="_import_search_exclude_library_sources" xml:space="preserve">
+    <value>Skip sources used to build a library </value>
+  </data>
+  <data name="_new" xml:space="preserve">
+    <value>Create a new document.</value>
+  </data>
+  <data name="_overwrite" xml:space="preserve">
+    <value>Overwrite instead of producing an error when a --new filepath exists.</value>
+  </data>
+  <data name="_tran_product_end_ion" xml:space="preserve">
+    <value>The biggest product ion to create a transition for.</value>
+  </data>
+  <data name="_tran_product_start_ion" xml:space="preserve">
+    <value>The smallest product ion to create a transition for.</value>
   </data>
 </root>

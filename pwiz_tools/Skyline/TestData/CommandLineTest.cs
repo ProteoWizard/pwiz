@@ -290,6 +290,40 @@ namespace pwiz.SkylineTestData
         }
 
         [TestMethod]
+        public void ConsoleNewDocumentTest()
+        {
+            TestFilesDir = new TestFilesDir(TestContext, ZIP_FILE);
+            string docPath = TestFilesDir.GetTestPath("BSA_Protea_label_free_20100323_meth3_multi.sky");
+            string outPath = TestFilesDir.GetTestPath("AddFasta_Out.sky");
+            string fastaPath = TestFilesDir.GetTestPath("sample.fasta");
+
+            // arguments that would normally be quoted on the command-line shouldn't be quoted here
+            var settings = new[]
+            {
+                "--new=" + docPath,
+                "--full-scan-precursor-isotopes=Count",
+                "--full-scan-acquisition-method=DDA",
+                "--tran-precursor-ion-charges=2,3,4",
+                "--tran-product-ion-charges=1,2",
+                "--tran-product-start-ion=ion 1",
+                "--tran-product-end-ion=last ion - 1"
+            };
+
+            string output = RunCommand(settings);
+            StringAssert.Contains(output, string.Format(Resources.CommandLine_NewSkyFile_FileAlreadyExists, docPath));
+
+            output = RunCommand(settings.Append("--overwrite").ToArray());
+            StringAssert.Contains(output, string.Format("Deleting existing file '{0}'", docPath));
+            AssertEx.DoesNotContain(output, Resources.CommandLineTest_ConsoleAddFastaTest_Error);
+            AssertEx.DoesNotContain(output, Resources.CommandLineTest_ConsoleAddFastaTest_Warning);
+
+            SrmDocument doc = ResultsUtil.DeserializeDocument(docPath);
+            Assert.AreEqual(FullScanPrecursorIsotopes.Count, doc.Settings.TransitionSettings.FullScan.PrecursorIsotopes);
+            Assert.AreEqual(FullScanAcquisitionMethod.DDA, doc.Settings.TransitionSettings.FullScan.AcquisitionMethod);
+            Assert.AreEqual("2, 3, 4", doc.Settings.TransitionSettings.Filter.PeptidePrecursorChargesString);
+        }
+
+        [TestMethod]
         public void ConsoleReportExportTest()
         {
             TestFilesDir = new TestFilesDir(TestContext, ZIP_FILE);

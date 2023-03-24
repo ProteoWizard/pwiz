@@ -6598,6 +6598,15 @@ namespace pwiz.Skyline.Properties {
         }
         
         /// <summary>
+        ///   Looks up a localized string similar to File &apos;{0}&apos; already exists; use --in= instead or add --overwrite..
+        /// </summary>
+        public static string CommandLine_NewSkyFile_FileAlreadyExists {
+            get {
+                return ResourceManager.GetString("CommandLine_NewSkyFile_FileAlreadyExists", resourceCulture);
+            }
+        }
+        
+        /// <summary>
         ///   Looks up a localized string similar to Error: The Skyline file {0} does not exist..
         /// </summary>
         public static string CommandLine_OpenSkyFile_Error__The_Skyline_file__0__does_not_exist_ {

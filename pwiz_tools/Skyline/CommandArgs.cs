@@ -1178,12 +1178,15 @@ namespace pwiz.Skyline
             (c, p) => c.AcceptAllModifications = true);
         public static readonly Argument ARG_IMPORT_PEPTIDE_SEARCH_AMBIGUOUS = new Argument(@"import-search-include-ambiguous",
             (c, p) => c.IncludeAmbiguousMatches = true);
+        public static readonly Argument ARG_IMPORT_PEPTIDE_SEARCH_EXCLUDE_SOURCES = new Argument(@"import-search-exclude-library-sources",
+            (c, p) => c.ExcludeLibrarySources = true);
         public static readonly Argument ARG_IMPORT_PEPTIDE_SEARCH_PREFER_EMBEDDED = new Argument(@"import-search-prefer-embedded-spectra",
             (c, p) => c.PreferEmbeddedSpectra = true);
 
         private static readonly ArgumentGroup GROUP_IMPORT_SEARCH = new ArgumentGroup(() => CommandArgUsage.CommandArgs_GROUP_IMPORT_SEARCH_Importing_peptide_searches, false, 
             ARG_IMPORT_PEPTIDE_SEARCH_FILE, ARG_IMPORT_PEPTIDE_SEARCH_CUTOFF, ARG_IMPORT_PEPTIDE_SEARCH_IRTS, ARG_IMPORT_PEPTIDE_SEARCH_NUM_CIRTS,
-            ARG_IMPORT_PEPTIDE_SEARCH_RECALIBRATE_IRTS, ARG_IMPORT_PEPTIDE_SEARCH_MODS, ARG_IMPORT_PEPTIDE_SEARCH_AMBIGUOUS, ARG_IMPORT_PEPTIDE_SEARCH_PREFER_EMBEDDED)
+            ARG_IMPORT_PEPTIDE_SEARCH_RECALIBRATE_IRTS, ARG_IMPORT_PEPTIDE_SEARCH_MODS, ARG_IMPORT_PEPTIDE_SEARCH_AMBIGUOUS, ARG_IMPORT_PEPTIDE_SEARCH_EXCLUDE_SOURCES,
+            ARG_IMPORT_PEPTIDE_SEARCH_PREFER_EMBEDDED)
         {
             Dependencies =
             {
@@ -1204,6 +1207,7 @@ namespace pwiz.Skyline
         public bool RecalibrateIrts { get; private set; }
         public bool AcceptAllModifications { get; private set; }
         public bool IncludeAmbiguousMatches { get; private set; }
+        public bool ExcludeLibrarySources { get; private set; }
         public bool? PreferEmbeddedSpectra { get; private set; }
         public bool ImportingSearch
         {
@@ -1219,6 +1223,12 @@ namespace pwiz.Skyline
             { WrapValue = true };
         public static readonly Argument ARG_TRAN_FRAGMENT_ION_TYPES = new DocArgument(@"tran-product-ion-types", ION_TYPE_LIST_VALUE,
             (c, p) => c.FilterProductTypes = ParseIonTypes(p)) { WrapValue = true };
+        public static readonly Argument ARG_TRAN_PRODUCT_START_ION = new DocArgument(@"tran-product-start-ion",
+                () => TransitionFilter.GetStartFragmentFinderLabels().ToArray(),
+                (c, p) => c.FilterStartProductIon = TransitionFilter.GetStartFragmentFinder(p.Value)) { WrapValue = true };
+        public static readonly Argument ARG_TRAN_PRODUCT_END_ION = new DocArgument(@"tran-product-end-ion",
+                () => TransitionFilter.GetEndFragmentFinderLabels().ToArray(),
+                (c, p) => c.FilterEndProductIon = TransitionFilter.GetEndFragmentFinder(p.Value)) { WrapValue = true };
         public static readonly Argument ARG_TRAN_PREDICT_CE = new DocArgument(@"tran-predict-ce", () => GetDisplayNames(Settings.Default.CollisionEnergyList),
             (c, p) => c.PredictCEName = p.Value) { WrapValue = true };
         public static readonly Argument ARG_TRAN_PREDICT_DP = new DocArgument(@"tran-predict-dp", () => GetDisplayNames(Settings.Default.DeclusterPotentialList),
@@ -1232,10 +1242,8 @@ namespace pwiz.Skyline
                 () => Enum.GetNames(typeof(FullScanPrecursorIsotopes)),
                 (c, p) => c.FullScanPrecursorIsotopes = (FullScanPrecursorIsotopes) Enum.Parse(typeof(FullScanPrecursorIsotopes), p.Value))
             { WrapValue = true };
-        public static readonly Argument ARG_FULL_SCAN_PRECURSOR_ANALYZER = new DocArgument(@"full-scan-precursor-analyzer",
-                () => Enum.GetNames(typeof(FullScanMassAnalyzerType)),
-                (c, p) => c.FullScanPrecursorMassAnalyzerType = (FullScanMassAnalyzerType) Enum.Parse(typeof(FullScanMassAnalyzerType), p.Value))
-            { WrapValue = true };
+        public static readonly Argument ARG_FULL_SCAN_PRECURSOR_ANALYZER = DocArgument.FromEnumType<FullScanMassAnalyzerType>(@"full-scan-precursor-analyzer",
+            (c, p) => c.FullScanPrecursorMassAnalyzerType = p);
         public static readonly Argument ARG_FULL_SCAN_PRECURSOR_THRESHOLD = new DocArgument(@"full-scan-precursor-threshold", NUM_VALUE,
                 (c, p) => c.FullScanPrecursorThreshold = p.GetValueDouble(0, 100)) { WrapValue = true };
         public static readonly Argument ARG_FULL_SCAN_PRECURSOR_ISOTOPE_ENRICHMENT = new DocArgument(@"full-scan-precursor-isotope-enrichment",
@@ -1250,10 +1258,8 @@ namespace pwiz.Skyline
                 () => FullScanAcquisitionMethod.AVAILABLE.Select(m => m.Name).ToArray(),
                 (c, p) => c.FullScanAcquisitionMethod = FullScanAcquisitionMethod.FromName(p.Value))
             { WrapValue = true };
-        public static readonly Argument ARG_FULL_SCAN_PRODUCT_ANALYZER = new DocArgument(@"full-scan-product-analyzer",
-                () => Enum.GetNames(typeof(FullScanMassAnalyzerType)),
-                (c, p) => c.FullScanProductMassAnalyzerType = (FullScanMassAnalyzerType) Enum.Parse(typeof(FullScanMassAnalyzerType), p.Value))
-            { WrapValue = true };
+        public static readonly Argument ARG_FULL_SCAN_PRODUCT_ANALYZER = DocArgument.FromEnumType<FullScanMassAnalyzerType>(@"full-scan-product-analyzer",
+            (c, p) => c.FullScanProductMassAnalyzerType = p);
         public static readonly Argument ARG_FULL_SCAN_PRODUCT_ISOLATION_SCHEME = new DocArgument(
                 @"full-scan-isolation-scheme",
                 () => string.Join(TextUtil.SEPARATOR_CSV + @" ",
@@ -1277,7 +1283,7 @@ namespace pwiz.Skyline
             { WrapValue = true };
 
         private static readonly ArgumentGroup GROUP_SETTINGS = new ArgumentGroup(() => CommandArgUsage.CommandArgs_GROUP_SETTINGS_Document_Settings, false,
-            ARG_TRAN_PRECURSOR_ION_CHARGES, ARG_TRAN_FRAGMENT_ION_CHARGES, ARG_TRAN_FRAGMENT_ION_TYPES,
+            ARG_TRAN_PRECURSOR_ION_CHARGES, ARG_TRAN_FRAGMENT_ION_CHARGES, ARG_TRAN_FRAGMENT_ION_TYPES, ARG_TRAN_PRODUCT_START_ION, ARG_TRAN_PRODUCT_END_ION,
             ARG_TRAN_PREDICT_CE, ARG_TRAN_PREDICT_DP, ARG_TRAN_PREDICT_COV, ARG_TRAN_PREDICT_OPTDB,
             ARG_FULL_SCAN_PRECURSOR_ISOTOPES, ARG_FULL_SCAN_PRECURSOR_ANALYZER, ARG_FULL_SCAN_PRECURSOR_THRESHOLD,
             ARG_FULL_SCAN_PRECURSOR_IGNORE_SIM, ARG_FULL_SCAN_PRECURSOR_ISOTOPE_ENRICHMENT,
@@ -1286,12 +1292,21 @@ namespace pwiz.Skyline
             ARG_FULL_SCAN_PRODUCT_RES, ARG_FULL_SCAN_PRODUCT_RES_MZ,
             ARG_FULL_SCAN_RT_FILTER_TOLERANCE, ARG_IMS_LIBRARY_RES)
         {            
-            LeftColumnWidth = 34,
+            LeftColumnWidth = 40,
             Dependencies =
             {
                 {ARG_FULL_SCAN_PRECURSOR_RES_MZ, ARG_FULL_SCAN_PRECURSOR_RES},
                 {ARG_FULL_SCAN_PRODUCT_RES_MZ, ARG_FULL_SCAN_PRODUCT_RES},
-                {ARG_FULL_SCAN_ACQUISITION_METHOD, ARG_FULL_SCAN_PRODUCT_ISOLATION_SCHEME},
+            },
+            Validate = c =>
+            {
+                if (c.FullScanAcquisitionMethod == FullScanAcquisitionMethod.DIA && c.FullScanProductIsolationScheme == null)
+                {
+                    c.WarnArgRequirement(ARG_FULL_SCAN_ACQUISITION_METHOD, ARG_FULL_SCAN_PRODUCT_ISOLATION_SCHEME);
+                    return false;
+                }
+
+                return true;
             }
         };
 
@@ -1327,14 +1342,18 @@ namespace pwiz.Skyline
         public Adduct[] FilterPrecursorCharges { get; private set; }
         public Adduct[] FilterProductCharges { get; private set; }
         public IonType[] FilterProductTypes { get; private set; }
+        public IStartFragmentFinder FilterStartProductIon { get; private set; }
+        public IEndFragmentFinder FilterEndProductIon { get; private set; }
 
         public bool FilterSettings
         {
             get
             {
-                return (FilterPrecursorCharges != null ||
-                        FilterProductCharges != null ||
-                        FilterProductTypes != null);
+                return FilterPrecursorCharges != null ||
+                       FilterProductCharges != null ||
+                       FilterProductTypes != null ||
+                       FilterStartProductIon != null ||
+                       FilterEndProductIon != null;
             }
         }
         public string PredictCEName { get; private set; }
@@ -1371,10 +1390,15 @@ namespace pwiz.Skyline
             get
             {
                 return FullScanPrecursorIsotopes.HasValue
+                       || FullScanPrecursorMassAnalyzerType.HasValue
+                       || FullScanProductMassAnalyzerType.HasValue
+                       || FullScanPrecursorIgnoreSimScans.HasValue
+                       || FullScanAcquisitionMethod != FullScanAcquisitionMethod.None
                        || (FullScanPrecursorRes
                            ?? FullScanPrecursorResMz
                            ?? FullScanProductRes
                            ?? FullScanProductResMz
+                           ?? FullScanPrecursorThreshold
                            ?? FullScanRetentionTimeFilterLength).HasValue;
             }
         }
@@ -2281,6 +2305,14 @@ namespace pwiz.Skyline
             public DocArgument(string name, Func<string[]> values, Action<CommandArgs, NameValuePair> processValue)
                 : base(name, values, (c, p) => ProcessValueOverride(c, p, processValue))
             {
+            }
+
+            public static DocArgument FromEnumType<TEnum>(string name, Action<CommandArgs, TEnum> processValue)
+            {
+                var enumType = typeof(TEnum);
+                return new DocArgument(name, () => System.Enum.GetNames(enumType),
+                        (c, p) => processValue(c, (TEnum)System.Enum.Parse(enumType, p.Value)))
+                    { WrapValue = true };
             }
 
             private static bool ProcessValueOverride(CommandArgs c, NameValuePair p, Func<CommandArgs, NameValuePair, bool> processValue)
