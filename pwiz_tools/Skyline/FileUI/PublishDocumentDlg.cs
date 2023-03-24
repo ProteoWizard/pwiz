@@ -77,25 +77,32 @@ namespace pwiz.Skyline.FileUI
         public string FileName { get { return tbFilePath.Text; } }
         public ShareType ShareType { get; set; }
 
+        //add method in pc that takes listServerFolders, treeViewFolders
         private void PublishDocumentDlg_Load(object sender, EventArgs e)
         {
             var listServerFolders = new List<KeyValuePair<Server, JToken>>();
 
             try
             {
+                //don't create a form unless it is re-usable, could have a custom treeview
+                //pass name of specific server, treeViewFolders
+                //try and use in remotefiledialog and here: publishdocumentdlgload should be replaced by pc InitializeTreeview(), grab list of servers and initialize treeview, keep serverstaterestorer
+                PanoramaClient.PanoramaClient pc = new PanoramaClient.PanoramaClient();
                 using (var waitDlg = new LongWaitDlg
-                    {
-                        Text = Resources.PublishDocumentDlg_PublishDocumentDlg_Load_Retrieving_information_on_servers
-                    })
+                       {
+                           Text = Resources.PublishDocumentDlg_PublishDocumentDlg_Load_Retrieving_information_on_servers
+                       })
                 {
-                    waitDlg.PerformWork(this, 800, () => PublishDocumentDlgLoad(listServerFolders));
+                    //waitDlg.PerformWork(this, 800, () => PublishDocumentDlgLoad(listServerFolders));
+                    waitDlg.PerformWork(this, 800, () => pc.InitializeTreeView(_panoramaServers[0], treeViewFolders, true));
                 }
             }
             catch (Exception x)
             {
                 MessageDlg.ShowException(this, x);
             }
-
+            
+            /*
             foreach (var serverFolder in listServerFolders)
             {
                 var server = serverFolder.Key;
@@ -103,7 +110,7 @@ namespace pwiz.Skyline.FileUI
                 treeViewFolders.Nodes.Add(treeNode);
                 if (serverFolder.Value != null)
                     AddSubFolders(server, treeNode, serverFolder.Value);
-            }
+            }*/
 
             ServerTreeStateRestorer.RestoreExpansionAndSelection(Settings.Default.PanoramaServerExpansion);
             ServerTreeStateRestorer.UpdateTopNode();
@@ -166,6 +173,7 @@ namespace pwiz.Skyline.FileUI
             Settings.Default.PanoramaServerExpansion = ServerTreeStateRestorer.GetPersistentString();
         }
 
+        /*
         private void AddSubFolders(Server server, TreeNode node, JToken folder)
         {
             try
@@ -178,8 +186,15 @@ namespace pwiz.Skyline.FileUI
                                                             x.Message), x);
             }
         }
+        */
+        
 
         public static void AddChildContainers(Server server, TreeNode node, JToken folder)
+        {
+            AddChildContainers(server, node, folder, true);
+        }
+
+        public static void AddChildContainers(Server server, TreeNode node, JToken folder, bool requireUploadPerms)
         {
             JEnumerable<JToken> subFolders = folder[@"children"].Children();
             foreach (var subFolder in subFolders)
@@ -187,11 +202,13 @@ namespace pwiz.Skyline.FileUI
                 string folderName = (string)subFolder[@"name"];
 
                 TreeNode folderNode = new TreeNode(folderName);
-                AddChildContainers(server, folderNode, subFolder);
+                AddChildContainers(server, folderNode, subFolder, requireUploadPerms);
 
                 // User can only upload to folders where TargetedMS is an active module.
-                var canUpload = PanoramaUtil.CheckFolderPermissions(subFolder) && PanoramaUtil.CheckFolderType(subFolder);
-
+                var canUpload = requireUploadPerms
+                    ? PanoramaUtil.CheckFolderPermissions(subFolder) && PanoramaUtil.CheckFolderType(subFolder)
+                    : true;
+                
                 // If the user does not have write permissions in this folder or any
                 // of its subfolders, do not add it to the tree.
                 if (folderNode.Nodes.Count == 0 && !canUpload)

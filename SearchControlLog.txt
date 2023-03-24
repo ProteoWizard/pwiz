@@ -1,0 +1,107 @@
+MS-GF+ Release (v2021.09.06) (06 September 2021)
+Java 17.0.1 (Oracle Corporation)
+Windows Server 2019 (amd64, version 10.0)
+Loading database files...
+Creating C:\Users\srpall\Proteowizard2\pwiz\pwiz_tools\Skyline\TestResults\TestRunner results\DdaSearchTest\rpal-subset.revCat.fasta.
+Creating the suffix array indexed file... Size: 846365
+AlphabetSize: 28
+Sorting suffixes... Size: 17210368
+Counting number of distinct peptides in rpal-subset.revCat.csarr using rpal-subset.revCat.cnlcp
+Loading database finished (elapsed time: 0.74 sec)
+Reading spectra...
+Opening mzML file Rpal_Std_2d_FullMS_Orbi30k_MSMS_Orbi7k_Centroid_Run1_102006_02.mzML
+Ignoring 0 profile spectra.
+Ignoring 0 spectra having less than 10 peaks.
+Reading spectra finished (elapsed time: 1.76 sec)
+Note: under 250 spectra; using 1 thread instead of 36
+Using 1 thread.
+Search Parameters:
+	PrecursorMassTolerance: 15.0 ppm
+	IsotopeError: 0,0
+	TargetDecoyAnalysis: true
+	FragmentationMethod: CID
+	Instrument: HighRes (Orbitrap/FTICR/Lumos)
+	Enzyme: Tryp
+	Protocol: Standard
+	NumTolerableTermini: 2
+	IgnoreMetCleavage: false
+	MinPepLength: 6
+	MaxPepLength: 40
+	MinCharge: 2
+	MaxCharge: 3
+	NumMatchesPerSpec: 1
+	MaxMissedCleavages: 0
+	MaxNumModsPerPeptide: 2
+	ChargeCarrierMass: 1.00727649 (proton)
+	MinNumPeaksPerSpectrum: 10
+	NumIsoforms: 128
+Post translational modifications in use:
+	Fixed (static):     Se80 on U (+79.9166)
+	Variable (dynamic): Mod1 on * at the peptide N-terminus (+504.0)
+	Fixed (static):     Mod2 on U (+82.9687)
+	Variable (dynamic): Oxi on M (+15.9949)
+
+Spectrum 0-340 (total: 341)
+Splitting work into 2 tasks.
+Search progress: 0 / 2 tasks, 0.00%		0.00 seconds elapsed
+Loading built-in param file: CID_HighRes_Tryp.param
+Search progress: 1 / 2 tasks, 50.00%		2.62 seconds elapsed
+Search progress: 2 / 2 tasks, 100.00%		5.83 seconds elapsed
+Computing q-values...
+Computing q-values finished (elapsed time: 0.00 sec)
+Writing results...
+Writing results finished (elapsed time: 0.64 sec)
+File: C:\Users\srpall\Proteowizard2\pwiz\pwiz_tools\Skyline\TestResults\TestRunner results\DdaSearchTest\Rpal_Std_2d_FullMS_Orbi30k_MSMS_Orbi7k_Centroid_Run1_102006_02.mzid
+MS-GF+ complete (total elapsed time: 8.39 sec)
+MS-GF+ Release (v2021.09.06) (06 September 2021)
+Java 17.0.1 (Oracle Corporation)
+Windows Server 2019 (amd64, version 10.0)
+Loading database files...
+Counting number of distinct peptides in rpal-subset.revCat.csarr using rpal-subset.revCat.cnlcp
+Loading database finished (elapsed time: 0.27 sec)
+Reading spectra...
+Opening mzML file Rpal_Std_2d_FullMS_Orbi30k_MSMS_Orbi7k_Centroid_Run1_102006_03.mzML
+Ignoring 0 profile spectra.
+Ignoring 1 spectra having less than 10 peaks.
+Reading spectra finished (elapsed time: 1.28 sec)
+Note: under 250 spectra; using 1 thread instead of 36
+Using 1 thread.
+Search Parameters:
+	PrecursorMassTolerance: 15.0 ppm
+	IsotopeError: 0,0
+	TargetDecoyAnalysis: true
+	FragmentationMethod: CID
+	Instrument: HighRes (Orbitrap/FTICR/Lumos)
+	Enzyme: Tryp
+	Protocol: Standard
+	NumTolerableTermini: 2
+	IgnoreMetCleavage: false
+	MinPepLength: 6
+	MaxPepLength: 40
+	MinCharge: 2
+	MaxCharge: 3
+	NumMatchesPerSpec: 1
+	MaxMissedCleavages: 0
+	MaxNumModsPerPeptide: 2
+	ChargeCarrierMass: 1.00727649 (proton)
+	MinNumPeaksPerSpectrum: 10
+	NumIsoforms: 128
+Post translational modifications in use:
+	Fixed (static):     Se80 on U (+79.9166)
+	Variable (dynamic): Mod1 on * at the peptide N-terminus (+504.0)
+	Fixed (static):     Mod2 on U (+82.9687)
+	Variable (dynamic): Oxi on M (+15.9949)
+
+Spectrum 0-338 (total: 339)
+Splitting work into 2 tasks.
+Search progress: 0 / 2 tasks, 0.00%		0.00 seconds elapsed
+Loading built-in param file: CID_HighRes_Tryp.param
+Search progress: 1 / 2 tasks, 50.00%		2.61 seconds elapsed
+Search progress: 2 / 2 tasks, 100.00%		6.02 seconds elapsed
+Computing q-values...
+Computing q-values finished (elapsed time: 0.00 sec)
+Writing results...
+Writing results finished (elapsed time: 0.57 sec)
+File: C:\Users\srpall\Proteowizard2\pwiz\pwiz_tools\Skyline\TestResults\TestRunner results\DdaSearchTest\Rpal_Std_2d_FullMS_Orbi30k_MSMS_Orbi7k_Centroid_Run1_102006_03.mzid
+MS-GF+ complete (total elapsed time: 8.02 sec)
+Search done.

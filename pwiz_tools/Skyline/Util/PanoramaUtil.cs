@@ -372,7 +372,20 @@ namespace pwiz.Skyline.Util
 
         public static IPanoramaClient CreatePanoramaClient(Uri serverUri)
         { return new WebPanoramaClient(serverUri);}
+
+        public static void InitializeTreeView(pwiz.Skyline.Util.Server server, TreeView treeViewFolders, bool requireUploadPerms)
+        {
+
+            var panoramaPublishClient = new WebPanoramaPublishClient();
+            var folder = panoramaPublishClient.GetInfoForFolders(server, null);
+            var treeNode = new TreeNode(server.GetKey());
+            treeViewFolders.Invoke(new Action(() => treeViewFolders.Nodes.Add(treeNode)));
+            treeViewFolders.Invoke(new Action(() => PublishDocumentDlg.AddChildContainers(server, treeNode, folder, requireUploadPerms)));
+
+        }
     }
+
+
 
     [XmlRoot("server")]
     public sealed class Server : Immutable, IKeyContainer<string>, IXmlSerializable
@@ -1036,7 +1049,7 @@ namespace pwiz.Skyline.Util
         }
     }
 
-    class WebPanoramaPublishClient : AbstractPanoramaPublishClient
+    public class WebPanoramaPublishClient : AbstractPanoramaPublishClient
     {
         private WebClientWithCredentials _webClient;
         private IProgressMonitor _progressMonitor;

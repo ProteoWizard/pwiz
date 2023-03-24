@@ -25,11 +25,12 @@ using System.Net;
 using System.Reflection;
 using System.Text;
 using System.Windows.Forms;
+using System.Windows.Forms.VisualStyles;
 using System.Xml;
 using System.Xml.Serialization;
 using Ionic.Zip;
 using Newtonsoft.Json.Linq;
-using PanoramaDownload;
+using pwiz.PanoramaClient;
 using pwiz.Common.Collections;
 using pwiz.Common.DataBinding;
 using pwiz.Common.SystemUtil;
@@ -941,21 +942,29 @@ namespace pwiz.Skyline
                 pass = servers[0].Password;
                 server = servers[0].URI;
             }
+
+            PanoramaClient.PanoramaClient pc = new PanoramaClient.PanoramaClient();
+            using var dlg = new RemoteFileDialog(user, pass, server, servers[0]);
             
-            using var dlg = new RemoteFileDialog(user, pass, server);
-            if (dlg.ShowDialog() != DialogResult.Cancel)
+            //result should be path to file or folder, move the downloading code into a separate location in PanoramaClient
+            //PanoramaClient: ShowPanoramaBrowser() returns path, DownloadFromPanorama()
+            DialogResult result = dlg.ShowDialog();
+
+            if (result != DialogResult.Cancel)
             {
+                string downloadPath = pc.DownloadAndSave(server, user, pass, dlg.FileName, dlg.DownloadName);
                 if (dlg.FileName.EndsWith(SrmDocumentSharing.EXT))
                 {
-                    var path = Path.Combine(dlg.Folder, dlg.FileName);
-                    OpenSharedFile(path);
+                    var path = Path.Combine(dlg.Folder, dlg.FileURL);
+                    OpenSharedFile(downloadPath);
                 }
                 else if (dlg.FileName.EndsWith(SrmDocument.EXT))
                 {
-                    var path = Path.Combine(dlg.Folder, dlg.FileName);
-                    OpenFile(path);
+                    var path = Path.Combine(dlg.Folder, dlg.FileURL);
+                    OpenFile(downloadPath);
                 }
             }
+            
         }
 
         private void saveMenuItem_Click(object sender, EventArgs e)
