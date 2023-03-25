@@ -1147,6 +1147,7 @@ namespace TestRunnerLib
             workerNames ??= string.Join(" ", GetDockerWorkerNames());
 
             Console.WriteLine(@"Sending docker kill command to all workers.");
+            Console.WriteLine(@$"docker kill {workerNames}");
             var psi = new ProcessStartInfo("docker", $@"kill {workerNames}");
             psi.CreateNoWindow = true;
             psi.UseShellExecute = false;
