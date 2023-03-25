@@ -78,6 +78,9 @@ namespace pwiz.Skyline.Controls.Graphs
             };
             graphControl.GraphPane.AllowLabelOverlap = true;
             graphControl.ContextMenuBuilder += graphControl_ContextMenuBuilder;
+            graphControl.MouseMoveEvent += graphControl_MouseMove;
+            graphControl.MouseClick += graphControl_MouseClick;
+            graphControl.ZoomEvent += graphControl_ZoomEvent;
 
             Icon = Resources.SkylineData;
             _graphHelper = GraphHelper.Attach(graphControl);
@@ -526,7 +529,7 @@ namespace pwiz.Skyline.Controls.Graphs
                 spectrumProperties = FullScanProperties.CreateProperties(spectra[0]);
 
                 var ces = _msDataFileScanHelper.MsDataSpectra.SelectMany(spectrum => spectrum.Precursors)
-                    .Select(precursor => precursor.PrecursorCollisionEnergy).Where(ce => ce.HasValue).Select(ce => ce.Value)
+                    .Select(pre=> pre.PrecursorCollisionEnergy).Where(ce => ce.HasValue).Select(ce => ce.Value)
                     .Distinct().ToArray();
                 if (ces.Length == 1)
                     spectrumProperties.CE = ces[0].ToString(Formats.OPT_PARAMETER);
@@ -546,9 +549,22 @@ namespace pwiz.Skyline.Controls.Graphs
                         if(imAndCss.HasCollisionalCrossSection)
                             spectrumProperties.CCS = imAndCss.CollisionalCrossSectionSqA.Value.ToString(Formats.CCS);
                     }
+
+                    if (_documentContainer is SkylineWindow stateProvider)
+                    {
+                        var selection = GraphSpectrum.SpectrumNodeSelection.GetCurrent(stateProvider);
+                        //CONSIDER: calculate dot products for the current spectrum rather than whole peak
+                        var dotp = selection.NodeTranGroup.GetLibraryDotProduct(stateProvider.SelectedResultsIndex);
+                        if(dotp.HasValue)
+                            spectrumProperties.dotp = dotp.Value.ToString(Formats.PEAK_FOUND_RATIO);
+                        dotp = selection.NodeTranGroup.GetIsotopeDotProduct(stateProvider.SelectedResultsIndex);
+                        if(dotp.HasValue)
+                            spectrumProperties.idotp = dotp.Value.ToString(Formats.PEAK_FOUND_RATIO);
+                        spectrumProperties.Label = selection.NodeTranGroup.LabelType.ToString();;
+                    }
                 }
 
-                if (hasIonMobilityDimension)
+                    if (hasIonMobilityDimension)
                 {
                     double minIonMobilityFilter, maxIonMobilityFilter;
                     var fullScans = _msDataFileScanHelper.GetFilteredScans(out minIonMobilityFilter, out maxIonMobilityFilter); // Get range of IM values for all products and precursors
@@ -591,6 +607,7 @@ namespace pwiz.Skyline.Controls.Graphs
                         spectrumProperties.IonMobility = ionMobility.ToString();
                 }
             }
+
             graphControlExtension.PropertiesSheet.SelectedObject = spectrumProperties;
         }
         private class RankingContext
@@ -1530,6 +1547,9 @@ namespace pwiz.Skyline.Controls.Graphs
                 }
             }
         }
+
+        public ToolStripButton PropertyButton => propertiesBtn;
+        public MsGraphExtension MsGraphExtension => graphControlExtension;
 
         #endregion Test support
 

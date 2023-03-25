@@ -526,6 +526,24 @@ namespace pwiz.ProteowizardWrapper
             get { return _msDataFile.softwareList.Any(software => software.hasCVParamChild(CVID.MS_Shimadzu_Corporation_software)); }
         }
 
+        private string InstrumentVendorName
+        {
+            get
+            {
+                if (IsABFile)
+                    return @"Sciex";
+                if (IsAgilentFile)
+                    return @"Agilent";
+                if (IsShimadzuFile)
+                    return @"Shimadzu";
+                if (IsThermoFile)
+                    return @"Thermo";
+                if (IsWatersFile)
+                    return @"Waters";
+                return null;
+            }
+        }
+
         public bool ProvidesCollisionalCrossSectionConverter
         {
             get { return SpectrumList != null && _providesConversionCCStoIonMobility; } // Checking SpectrumList provokes initialization of ionMobility info
@@ -1100,6 +1118,7 @@ namespace pwiz.ProteowizardWrapper
                     msDataSpectrum.SourceFilePath = FilePath;
                     msDataSpectrum.InstrumentInfo = GetInstrumentConfigInfoList().FirstOrDefault();
                     msDataSpectrum.InstrumentSerialNumber = GetInstrumentSerialNumber();
+                    msDataSpectrum.InstrumentVendor = InstrumentVendorName;
 
                     return msDataSpectrum;
                 }
@@ -1787,11 +1806,11 @@ namespace pwiz.ProteowizardWrapper
         public double? MinIonMobility { get; set; }
         public double? MaxIonMobility { get; set; }
         public int WindowGroup { get; set; } // For Bruker diaPASEF
-
         public string ScanDescription { get; set; }
 
         public MsInstrumentConfigInfo InstrumentInfo { get; set; }
         public string InstrumentSerialNumber { get; set; }
+        public string InstrumentVendor { get; set; }
 
         public static int WatersFunctionNumberFromId(string id, bool isCombinedIonMobility)
         {

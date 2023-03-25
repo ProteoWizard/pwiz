@@ -1,9 +1,11 @@
 ﻿using System;
 using System.Collections.Generic;
 using System.ComponentModel;
+using System.IO;
 using System.Linq;
 using System.Reflection;
 using System.Resources;
+using System.Text;
 using Newtonsoft.Json;
 using pwiz.Skyline.Util;
 
@@ -139,7 +141,13 @@ namespace pwiz.Skyline.Model
             var otherProps = other.GetPropertiesForComparison()
                 .ToDictionary(prop => prop.Name, prop => prop.GetValue(other));
 
-            return ArrayUtil.EqualsDeep(thisProps, otherProps);
+            var joinedValues = (from t in thisProps
+                join o in otherProps on t.Key equals o.Key
+                select new { t = t.Value, o = o.Value }).ToList();
+            if (joinedValues.Count != thisProps.Count)
+                return false;
+            var res = joinedValues.Any(tuple => !tuple.t.Equals(tuple.o));
+            return !res;
         }
 
         public List<PropertyDescriptor> GetPropertiesForComparison()
@@ -157,11 +165,34 @@ namespace pwiz.Skyline.Model
 
         public string Serialize()
         {
+            StringBuilder sb = new StringBuilder();
+            StringWriter sw = new StringWriter(sb);
+
+            using (JsonWriter writer = new JsonTextWriter(sw))
+            {
+                writer.Formatting = Formatting.Indented;
+
+                SerializeToJson(writer);
+            }
+            return sb.ToString();
+        }
+
+        private void SerializeToJson(JsonWriter writer)
+        {
             var thisProps = GetProperties().Cast<PropertyDescriptor>()
                 .Where(prop => !prop.Attributes.Contains(UseToCompare.No) && prop.GetValue(this) != null)
                 .ToDictionary(prop => prop.Name, prop => prop.GetValue(this));
 
-            return JsonConvert.SerializeObject(thisProps, Formatting.Indented).Replace('"', '\'');
+            writer.WriteStartObject();
+            foreach (var propName in thisProps.Keys)
+            {
+                writer.WritePropertyName(propName);
+                if (thisProps[propName] is GlobalizedObject nested)
+                    nested.SerializeToJson(writer);
+                else
+                    writer.WriteValue(thisProps[propName]);
+            }
+            writer.WriteEndObject();
         }
 
         public void Deserialize(Dictionary<string, object> valueDict)
@@ -176,23 +207,32 @@ namespace pwiz.Skyline.Model
                 {
                     var actualPropType = propDict[val.Key].PropertyType;
                     var converterKey = GetConverterKey(val.Value.GetType(), actualPropType);
-                    if (!TypeConverterDictionary.ContainsKey(converterKey) && propDict[val.Key].PropertyType.Name.StartsWith(@"Nullable"))
+                    if (actualPropType.BaseType == typeof(GlobalizedObject) && val.Value is Dictionary<string, object> nestedDictionary)
                     {
-                        actualPropType = propDict[val.Key].PropertyType.GetGenericArguments()[0];
-                        converterKey = GetConverterKey(val.Value.GetType(), actualPropType);
-                    }
-                    if (TypeConverterDictionary.ContainsKey(converterKey))
-                    {
-                        var parseMethod = TypeConverterDictionary[converterKey];
-                        var value = parseMethod.Invoke(this, new[] { val.Value });
-                        propDict[val.Key].SetValue(this, value);
+                        var nestedObject = (GlobalizedObject) actualPropType.InvokeMember(actualPropType.Name, BindingFlags.Public |
+                            BindingFlags.Instance |
+                            BindingFlags.CreateInstance,
+                            null, null, new object[] { });
+                        nestedObject.Deserialize(nestedDictionary);
+                        propDict[val.Key].SetValue(this, nestedObject);
                     }
                     else
-                        propDict[val.Key].SetValue(this, null);
+                    {
+                        if (!TypeConverterDictionary.ContainsKey(converterKey) && propDict[val.Key].PropertyType.Name.StartsWith(@"Nullable"))
+                        {
+                            actualPropType = propDict[val.Key].PropertyType.GetGenericArguments()[0];
+                            converterKey = GetConverterKey(val.Value.GetType(), actualPropType);
+                        }
+                        if (TypeConverterDictionary.ContainsKey(converterKey))
+                        {
+                            var parseMethod = TypeConverterDictionary[converterKey];
+                            var value = parseMethod.Invoke(this, new[] { val.Value });
+                            propDict[val.Key].SetValue(this, value);
+                        }
+                        else
+                            propDict[val.Key].SetValue(this, null);
+                    }
                 }
-                else
-                    propDict[val.Key].SetValue(this, null);
-
             }
         }
 #endregion

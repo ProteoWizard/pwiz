@@ -1,9 +1,11 @@
 ﻿using System.ComponentModel;
+using System.Globalization;
 using System.IO;
 using System.Linq;
 using System.Resources;
 using pwiz.ProteowizardWrapper;
 using pwiz.Skyline.Model.Hibernate;
+using pwiz.Skyline.Util.Extensions;
 
 namespace pwiz.Skyline.Model
 {
@@ -40,8 +42,8 @@ namespace pwiz.Skyline.Model
 
             public override string ToString()
             {
-                if(InstrumentModel != null)
-                    return InstrumentModel;
+                if(InstrumentModel != null || InstrumentManufacturer != null)
+                    return TextUtil.SpaceSeparate(InstrumentManufacturer, InstrumentModel);
                 return base.ToString();
             }
         } 
@@ -62,6 +64,12 @@ namespace pwiz.Skyline.Model
                 var precursor = spectrum.Precursors.FirstOrDefault();
                 res.PrecursorMz = precursor.PrecursorMz.HasValue ? precursor.PrecursorMz.Value.Value.ToString(Formats.Mz) : null;
                 res.Charge = spectrum.NegativeCharge ? @"-" : @"+" + precursor.ChargeState;
+                if(precursor.IsolationMz != null && precursor.IsolationWindowLower != null && precursor.IsolationWindowUpper != null)
+                    res.IsolationWindow = string.Format(@"{0}:{1} (-{2}:+{3})", 
+                        (precursor.IsolationMz - precursor.IsolationWindowLower).Value.RawValue.ToString(Formats.Mz),
+                        (precursor.IsolationMz + precursor.IsolationWindowUpper).Value.RawValue.ToString(Formats.Mz),
+                        precursor.IsolationWindowLower.Value.ToString(Formats.Mz), 
+                        precursor.IsolationWindowUpper.Value.ToString(Formats.Mz));
             }
 
             res.RetentionTime = spectrum.RetentionTime.HasValue ? spectrum.RetentionTime.Value.ToString(Formats.RETENTION_TIME) : null;
@@ -72,6 +80,7 @@ namespace pwiz.Skyline.Model
             if (spectrum.InstrumentInfo != null)
             {
                 res.Instrument = new InstrumentInfo();
+                res.Instrument.InstrumentManufacturer = spectrum.InstrumentVendor;
                 res.Instrument.InstrumentModel = spectrum.InstrumentInfo.Model;
                 if (new[]
                     {
@@ -88,6 +97,7 @@ namespace pwiz.Skyline.Model
             }
 
             res.Instrument.InstrumentSerialNumber = spectrum.InstrumentSerialNumber;
+            res.IsCentroided = spectrum.Centroided.ToString(CultureInfo.CurrentCulture);
             return res;
         }
         [Category("FileInfo")] public string FileName { get; set; }
@@ -100,20 +110,22 @@ namespace pwiz.Skyline.Model
         [Category("PrecursorInfo")] public string RetentionTime { get; set; }
         [Category("PrecursorInfo")] public string CCS { get; set; }
         [Category("PrecursorInfo")] public string IonMobility { get; set; }
+        [Category("PrecursorInfo")] public string IsolationWindow { get; set; }
         [Category("AcquisitionInfo")] public string IonMobilityRange { get; set; }
         [Category("AcquisitionInfo")] public string IonMobilityFilterRange { get; set; }
+        [Category("PrecursorInfo")] public string HighEnergyOffset { get; set; }
         [Category("AcquisitionInfo")] public string ScanId { get; set; }
         [Category("AcquisitionInfo")] public string CE { get; set; }
         [Category("AcquisitionInfo")] public string MSStage { get; set; }
         [Category("AcquisitionInfo")] public InstrumentInfo Instrument { get; set; }
-        [Category("AcquisitionInfo")] public string IsolationWindow { get; set; }
         [Category("AcquisitionInfo")] public int? DataPoints { get; set; }
         [Category("AcquisitionInfo")] public int? MzCount { get; set; }
         [Category("AcquisitionInfo")] public int? IonMobilityCount { get; set; }
         [Category("AcquisitionInfo")] public string InjectionTime { get; set; }
-        [Category("MatchInfo")] public double? dotp { get; set; }
-        [Category("MatchInfo")] public double? idotp { get; set; }
-        [Category("MatchInfo")] public double? rdotp { get; set; }
+        [Category("AcquisitionInfo")] public string IsCentroided { get; set; }
+        [Category("MatchInfo")] public string dotp { get; set; }
+        [Category("MatchInfo")] public string idotp { get; set; }
+        [Category("MatchInfo")] public string rdotp { get; set; }
 
         public void SetFileName(string fileName)
         {

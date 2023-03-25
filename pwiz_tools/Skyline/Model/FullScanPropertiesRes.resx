@@ -99,13 +99,13 @@
 		<value>System.Resources.ResXResourceWriter, System.Windows.Forms, Version=2.0.3500.0, Culture=neutral, PublicKeyToken=b77a5c561934e089</value>
 	</resheader>
   <data name="Category_AcquisitionInfo" xml:space="preserve">
-    <value>Measured</value>
+    <value>Acquisition</value>
   </data>
   <data name="Category_FileInfo" xml:space="preserve">
     <value>File</value>
   </data>
   <data name="Category_MatchInfo" xml:space="preserve">
-    <value>Search</value>
+    <value>Match</value>
   </data>
   <data name="Category_PrecursorInfo" xml:space="preserve">
     <value>Precursor</value>
@@ -277,8 +277,20 @@
   <data name="Description_InjectionTime" xml:space="preserve">
     <value>Injection time used to obtain this spectrum.</value>
   </data>
+  <data name="IsCentroided" xml:space="preserve">
+    <value>Is Centroided</value>
+  </data>
+  <data name="Description_IsCentroided" xml:space="preserve">
+    <value>Is this a centroided or high resolution spectrum.</value>
+  </data>
+  <data name="HighEnergyOffset" xml:space="preserve">
+    <value>High Energy Offset</value>
+  </data>
+  <data name="Description_HighEnergyOffset" xml:space="preserve">
+    <value>High Energy Offset used to obtain the MS2 spectrum.</value>
+  </data>
   <data name="dotp" xml:space="preserve">
-    <value>dotp</value>
+    <value>Library dotp</value>
   </data>
   <data name="Description_dotp" xml:space="preserve">
     <value>Measure of similarity between this spectrum and its library match.</value>

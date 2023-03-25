@@ -70,7 +70,7 @@ namespace pwiz.Skyline.Model {
         }
         
         /// <summary>
-        ///   Looks up a localized string similar to Measured.
+        ///   Looks up a localized string similar to Acquisition.
         /// </summary>
         internal static string Category_AcquisitionInfo {
             get {
@@ -97,7 +97,7 @@ namespace pwiz.Skyline.Model {
         }
         
         /// <summary>
-        ///   Looks up a localized string similar to Search.
+        ///   Looks up a localized string similar to Match.
         /// </summary>
         internal static string Category_MatchInfo {
             get {
@@ -223,6 +223,15 @@ namespace pwiz.Skyline.Model {
         }
         
         /// <summary>
+        ///   Looks up a localized string similar to High Energy Offset used to obtain the MS2 spectrum..
+        /// </summary>
+        internal static string Description_HighEnergyOffset {
+            get {
+                return ResourceManager.GetString("Description_HighEnergyOffset", resourceCulture);
+            }
+        }
+        
+        /// <summary>
         ///   Looks up a localized string similar to Measure of similarity between precurson isotopic peaks and expected isotope distribution..
         /// </summary>
         internal static string Description_idotp {
@@ -331,6 +340,15 @@ namespace pwiz.Skyline.Model {
         }
         
         /// <summary>
+        ///   Looks up a localized string similar to Is this a centroided or high resolution spectrum..
+        /// </summary>
+        internal static string Description_IsCentroided {
+            get {
+                return ResourceManager.GetString("Description_IsCentroided", resourceCulture);
+            }
+        }
+        
+        /// <summary>
         ///   Looks up a localized string similar to DIA isolation window of this spectrum..
         /// </summary>
         internal static string Description_IsolationWindow {
@@ -421,7 +439,7 @@ namespace pwiz.Skyline.Model {
         }
         
         /// <summary>
-        ///   Looks up a localized string similar to dotp.
+        ///   Looks up a localized string similar to Library dotp.
         /// </summary>
         internal static string dotp {
             get {
@@ -444,6 +462,15 @@ namespace pwiz.Skyline.Model {
         internal static string FilePath {
             get {
                 return ResourceManager.GetString("FilePath", resourceCulture);
+            }
+        }
+        
+        /// <summary>
+        ///   Looks up a localized string similar to High Energy Offset.
+        /// </summary>
+        internal static string HighEnergyOffset {
+            get {
+                return ResourceManager.GetString("HighEnergyOffset", resourceCulture);
             }
         }
         
@@ -552,6 +579,15 @@ namespace pwiz.Skyline.Model {
         internal static string IonMobilityRange {
             get {
                 return ResourceManager.GetString("IonMobilityRange", resourceCulture);
+            }
+        }
+        
+        /// <summary>
+        ///   Looks up a localized string similar to Is Centroided.
+        /// </summary>
+        internal static string IsCentroided {
+            get {
+                return ResourceManager.GetString("IsCentroided", resourceCulture);
             }
         }
         
