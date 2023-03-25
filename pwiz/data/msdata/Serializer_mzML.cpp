@@ -77,9 +77,18 @@ void writeSpectrumIndex(XMLWriter& xmlWriter,
         if (spectrumListPtr->size() != positions.size())
             throw runtime_error("[Serializer_mzML::writeSpectrumIndex()] Sizes differ.");
 
+        int skipped = 0;
         for (unsigned int i=0; i<positions.size(); ++i)
         {
-            const SpectrumIdentity& spectrum = spectrumListPtr->spectrumIdentity(i);
+            if (positions[i] < 0)
+            {
+                ++skipped;
+                continue;
+            }
+
+            SpectrumIdentity spectrum = spectrumListPtr->spectrumIdentity(i);
+            if (skipped > 0)
+                spectrum.index -= skipped;
 
             XMLWriter::Attributes attributes;
             attributes.push_back(make_pair("idRef", spectrum.id));
@@ -109,9 +118,18 @@ void writeChromatogramIndex(XMLWriter& xmlWriter,
         if (chromatogramListPtr->size() != positions.size())
             throw runtime_error("[Serializer_mzML::WriteChromatogramIndex()] sizes differ.");
 
+        int skipped = 0;
         for (unsigned int i=0; i<positions.size(); ++i)
         {
-            const ChromatogramIdentity& chromatogram = chromatogramListPtr->chromatogramIdentity(i);
+            if (positions[i] < 0)
+            {
+                ++skipped;
+                continue;
+            }
+
+            ChromatogramIdentity chromatogram = chromatogramListPtr->chromatogramIdentity(i);
+            if (skipped > 0)
+                chromatogram.index -= skipped;
 
             XMLWriter::Attributes Attributes;
             Attributes.push_back(make_pair("idRef", chromatogram.id));        
