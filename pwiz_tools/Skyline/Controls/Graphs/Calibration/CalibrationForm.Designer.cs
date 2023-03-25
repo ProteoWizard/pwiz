@@ -35,7 +35,6 @@
             // calibrationGraphControl1
             // 
             resources.ApplyResources(this.calibrationGraphControl1, "calibrationGraphControl1");
-            this.calibrationGraphControl1.GraphTitle = "Title";
             this.calibrationGraphControl1.ModeUIAwareFormHelper = null;
             this.calibrationGraphControl1.Name = "calibrationGraphControl1";
             this.calibrationGraphControl1.Options = null;

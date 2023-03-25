@@ -142,23 +142,24 @@ namespace pwiz.Skyline.Controls.Graphs.Calibration
             }
 
             Text = TabText = GetFormTitle(curveFitter);
+            string graphTitle;
             if (peptideQuantifier.QuantificationSettings.RegressionFit == RegressionFit.NONE)
             {
                 if (!(peptideQuantifier.NormalizationMethod is NormalizationMethod.RatioToLabel))
                 {
-                    GraphTitle =
+                    graphTitle =
                         ModeUIAwareStringFormat(QuantificationStrings.CalibrationForm_DisplayCalibrationCurve_Use_the_Quantification_tab_on_the_Peptide_Settings_dialog_to_control_the_conversion_of_peak_areas_to_concentrations_);
                 }
                 else
                 {
                     if (!peptide.InternalStandardConcentration.HasValue)
                     {
-                        GraphTitle =
+                        graphTitle =
                             ModeUIAwareStringFormat(QuantificationStrings.CalibrationForm_DisplayCalibrationCurve_To_convert_peak_area_ratios_to_concentrations__specify_the_internal_standard_concentration_for__0__, peptide);
                     }
                     else
                     {
-                        GraphTitle = null;
+                        graphTitle = null;
                     }
                 }
             }
@@ -166,16 +167,17 @@ namespace pwiz.Skyline.Controls.Graphs.Calibration
             {
                 if (curveFitter.GetStandardConcentrations().Any())
                 {
-                    GraphTitle = null;
+                    graphTitle = null;
                 }
                 else
                 {
-                    GraphTitle = QuantificationStrings.CalibrationForm_DisplayCalibrationCurve_To_fit_a_calibration_curve__set_the_Sample_Type_of_some_replicates_to_Standard__and_specify_their_concentration_;
+                    graphTitle = QuantificationStrings.CalibrationForm_DisplayCalibrationCurve_To_fit_a_calibration_curve__set_the_Sample_Type_of_some_replicates_to_Standard__and_specify_their_concentration_;
                 }
             }
 
             var settings = new CalibrationGraphControl.Settings(document, curveFitter)
-                .ChangeSelectedResultsIndex(_skylineWindow.SelectedResultsIndex);
+                .ChangeSelectedResultsIndex(_skylineWindow.SelectedResultsIndex)
+                .ChangeGraphTitle(graphTitle);
             if (curveFitter.IsotopologResponseCurve)
             {
                 var labelType = (_skylineWindow.SequenceTree.SelectedNode as SrmTreeNode)
@@ -348,18 +350,6 @@ namespace pwiz.Skyline.Controls.Graphs.Calibration
         public void DisplayError(string message)
         {
             calibrationGraphControl1.DisplayError(message);
-        }
-
-        public string GraphTitle
-        {
-            get
-            {
-                return calibrationGraphControl1.GraphTitle;
-            }
-            set
-            {
-                calibrationGraphControl1.GraphTitle = value;
-            }
         }
 
         private void calibrationGraphControl1_PointClicked(CalibrationPoint calibrationPoint)

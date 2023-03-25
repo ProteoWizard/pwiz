@@ -2,6 +2,7 @@
 using System.Collections.Generic;
 using System.ComponentModel;
 using System.Drawing;
+using System.Drawing.Drawing2D;
 using System.Linq;
 using System.Windows.Forms;
 using pwiz.Common.Collections;
@@ -43,14 +44,20 @@ namespace pwiz.Skyline.Controls.Graphs.Calibration
             zedGraphControl.ContextMenuBuilder += zedGraphControl_ContextMenuBuilder;
         }
 
+        [DesignerSerializationVisibility(DesignerSerializationVisibility.Hidden)]
+        [EditorBrowsable(EditorBrowsableState.Never)]
         public SkylineWindow SkylineWindow { get; set; }
 
+        [DesignerSerializationVisibility(DesignerSerializationVisibility.Hidden)]
+        [EditorBrowsable(EditorBrowsableState.Never)]
         public Helpers.ModeUIAwareFormHelper ModeUIAwareFormHelper
         {
             get;
             set;
         }
 
+        [DesignerSerializationVisibility(DesignerSerializationVisibility.Hidden)]
+        [EditorBrowsable(EditorBrowsableState.Never)]
         public CalibrationCurveOptions Options
         {
             get
@@ -83,11 +90,14 @@ namespace pwiz.Skyline.Controls.Graphs.Calibration
             base.OnHandleDestroyed(e);
         }
 
+        [DesignerSerializationVisibility(DesignerSerializationVisibility.Hidden)]
+        [EditorBrowsable(EditorBrowsableState.Never)]
         public Settings DisplaySettings { get; private set; }
 
         public void Update(Settings displaySettings)
         {
             DoUpdate(displaySettings);
+            GraphHelper.FormatFontSize(zedGraphControl.GraphPane, Options.FontSize);
             zedGraphControl.AxisChange();
             zedGraphControl.Invalidate();
         }
@@ -111,10 +121,15 @@ namespace pwiz.Skyline.Controls.Graphs.Calibration
             bool logPlot = options.LogXAxis || options.LogYAxis;
             zedGraphControl.GraphPane.Legend.IsVisible = options.ShowLegend;
             SrmDocument document = displaySettings.Document;
+            if (document == null)
+            {
+                zedGraphControl.GraphPane.Title.Text = displaySettings.GraphTitle;
+                return;
+            }
             if (!document.Settings.HasResults)
             {
                 zedGraphControl.GraphPane.Title.Text =
-                    QuantificationStrings.CalibrationForm_DisplayCalibrationCurve_No_results_available;
+                    TextUtil.LineSeparate(displaySettings.GraphTitle, QuantificationStrings.CalibrationForm_DisplayCalibrationCurve_No_results_available);
                 return;
             }
             CalibrationCurveFitter curveFitter = displaySettings.CalibrationCurveFitter;
@@ -125,18 +140,24 @@ namespace pwiz.Skyline.Controls.Graphs.Calibration
                 if (!(peptideQuantifier.NormalizationMethod is NormalizationMethod.RatioToLabel))
                 {
                     zedGraphControl.GraphPane.Title.Text =
-                        ModeUIAwareStringFormat(QuantificationStrings.CalibrationForm_DisplayCalibrationCurve_Use_the_Quantification_tab_on_the_Peptide_Settings_dialog_to_control_the_conversion_of_peak_areas_to_concentrations_);
+                        TextUtil.LineSeparate(displaySettings.GraphTitle,
+                            ModeUIAwareStringFormat(QuantificationStrings
+                                .CalibrationForm_DisplayCalibrationCurve_Use_the_Quantification_tab_on_the_Peptide_Settings_dialog_to_control_the_conversion_of_peak_areas_to_concentrations_));
                 }
                 else
                 {
                     if (!peptide.InternalStandardConcentration.HasValue)
                     {
                         zedGraphControl.GraphPane.Title.Text =
-                            ModeUIAwareStringFormat(QuantificationStrings.CalibrationForm_DisplayCalibrationCurve_To_convert_peak_area_ratios_to_concentrations__specify_the_internal_standard_concentration_for__0__, peptide);
+                            TextUtil.LineSeparate(displaySettings.GraphTitle,
+                                ModeUIAwareStringFormat(
+                                    QuantificationStrings
+                                        .CalibrationForm_DisplayCalibrationCurve_To_convert_peak_area_ratios_to_concentrations__specify_the_internal_standard_concentration_for__0__,
+                                    peptide));
                     }
                     else
                     {
-                        zedGraphControl.GraphPane.Title.Text = null;
+                        zedGraphControl.GraphPane.Title.Text = displaySettings.GraphTitle;
                     }
                 }
             }
@@ -144,11 +165,11 @@ namespace pwiz.Skyline.Controls.Graphs.Calibration
             {
                 if (curveFitter.GetStandardConcentrations().Any())
                 {
-                    zedGraphControl.GraphPane.Title.Text = null;
+                    zedGraphControl.GraphPane.Title.Text = displaySettings.GraphTitle;
                 }
                 else
                 {
-                    zedGraphControl.GraphPane.Title.Text = QuantificationStrings.CalibrationForm_DisplayCalibrationCurve_To_fit_a_calibration_curve__set_the_Sample_Type_of_some_replicates_to_Standard__and_specify_their_concentration_;
+                    zedGraphControl.GraphPane.Title.Text = TextUtil.LineSeparate(displaySettings.GraphTitle, QuantificationStrings.CalibrationForm_DisplayCalibrationCurve_To_fit_a_calibration_curve__set_the_Sample_Type_of_some_replicates_to_Standard__and_specify_their_concentration_);
                 }
             }
 
@@ -161,7 +182,7 @@ namespace pwiz.Skyline.Controls.Graphs.Calibration
             var bootstrapCurves = new List<ImmutableList<PointPair>>();
             FiguresOfMerit = curveFitter.GetFiguresOfMerit(CalibrationCurve, bootstrapCurves);
             double minX = double.MaxValue, maxX = double.MinValue;
-            double minY = double.MaxValue;
+            double minY = double.MaxValue, maxY = double.MinValue;
             _scatterPlots = new CurveList();
 
             IEnumerable<SampleType> sampleTypes = SampleType.ListSampleTypes()
@@ -213,6 +234,7 @@ namespace pwiz.Skyline.Controls.Graphs.Calibration
                                 minX = Math.Min(minX, xCalculated.Value);
                             }
                         }
+                        maxY = Math.Max(maxY, y.Value);
                     }
                 }
                 if (pointPairList.Any())
@@ -232,7 +254,7 @@ namespace pwiz.Skyline.Controls.Graphs.Calibration
                     _scatterPlots.Add(lineItem);
                 }
             }
-            List<string> labelLines = new List<String>();
+            List<string> labelLines = new List<string>();
             RegressionFit regressionFit = document.Settings.PeptideSettings.Quantification.RegressionFit;
             if (regressionFit != RegressionFit.NONE)
             {
@@ -266,6 +288,8 @@ namespace pwiz.Skyline.Controls.Graphs.Calibration
                     {
                         zedGraphControl.GraphPane.CurveList.Add(interpolatedLine);
                     }
+
+                    maxY = Math.Max(maxY, GetMaxY(interpolatedLine.Points));
                 }
                 labelLines.Add(CalibrationCurveMetrics.ToString());
 
@@ -352,8 +376,8 @@ namespace pwiz.Skyline.Controls.Graphs.Calibration
                         {
                             // If the point has a specified concentration, then use that.
                             ArrowObj arrow = new ArrowObj(xSpecified.Value, ySelected.Value, xSpecified.Value,
-                                ySelected.Value)
-                            { Line = { Color = GraphSummary.ColorSelected } };
+                                    ySelected.Value)
+                                { Line = { Color = GraphSummary.ColorSelected } };
                             zedGraphControl.GraphPane.GraphObjList.Insert(0, arrow);
                         }
                         else
@@ -394,38 +418,41 @@ namespace pwiz.Skyline.Controls.Graphs.Calibration
                     labelLines.Add(QuantificationStrings.CalibrationForm_DisplayCalibrationCurve_The_selected_replicate_has_missing_or_truncated_transitions);
                 }
             }
-            if (options.ShowFiguresOfMerit)
-            {
-                if (IsNumber(FiguresOfMerit.LimitOfDetection))
-                {
-                    var lodLine = new LineObj(Color.DarkMagenta, FiguresOfMerit.LimitOfDetection.Value, 0,
-                        FiguresOfMerit.LimitOfDetection.Value, 1)
-                    {
-                        Location = { CoordinateFrame = CoordType.XScaleYChartFraction }
-                    };
-                    zedGraphControl.GraphPane.GraphObjList.Add(lodLine);
-                }
-                if (IsNumber(FiguresOfMerit.LimitOfQuantification))
-                {
-                    var loqLine = new LineObj(Color.DarkCyan, FiguresOfMerit.LimitOfQuantification.Value, 0,
-                        FiguresOfMerit.LimitOfQuantification.Value, 1)
-                    {
-                        Location = { CoordinateFrame = CoordType.XScaleYChartFraction }
-                    };
-                    zedGraphControl.GraphPane.GraphObjList.Add(loqLine);
-                }
-            }
-
             if (options.ShowBootstrapCurves)
             {
                 var color = Color.FromArgb(40, Color.Teal);
                 foreach (var points in bootstrapCurves)
                 {
                     var curve = new LineItem(null, new PointPairList(points), color,
-                        SymbolType.None);
+                        SymbolType.None, options.LineWidth);
+                    maxY = Math.Max(maxY, GetMaxY(curve.Points));
                     zedGraphControl.GraphPane.CurveList.Add(curve);
                 }
             }
+            if (options.ShowFiguresOfMerit)
+            {
+                if (IsNumber(FiguresOfMerit.LimitOfDetection))
+                {
+                    var lod = FiguresOfMerit.LimitOfDetection.Value;
+                    var points = new PointPairList(new[] { lod, lod }, new[] { minY, maxY });
+                    var lodLine = new LineItem("Lower Limit of Detection", points, Color.Black, SymbolType.None)
+                    {
+                        Line = { Style = DashStyle.Dot, Width = options.LineWidth}
+                    };
+                    zedGraphControl.GraphPane.CurveList.Add(lodLine);
+                }
+                if (IsNumber(FiguresOfMerit.LimitOfQuantification))
+                {
+                    var loq = FiguresOfMerit.LimitOfQuantification.Value;
+                    var points = new PointPairList(new[] { loq, loq }, new[] { minY, maxY });
+                    var loqLine = new LineItem("Lower Limit of Quantification", points, Color.Black, SymbolType.None)
+                    {
+                        Line = { Style = DashStyle.Dash, Width = options.LineWidth}
+                    };
+                    zedGraphControl.GraphPane.CurveList.Add(loqLine);
+                }
+            }
+
             if (labelLines.Any())
             {
                 TextObj text = new TextObj(TextUtil.LineSeparate(labelLines), .01, 0,
@@ -435,6 +462,7 @@ namespace pwiz.Skyline.Controls.Graphs.Calibration
                     ZOrder = ZOrder.E_BehindCurves,
                     FontSpec = GraphSummary.CreateFontSpec(Color.Black),
                 };
+                text.FontSpec.Size = options.FontSize;
                 zedGraphControl.GraphPane.GraphObjList.Add(text);
             }
 
@@ -446,6 +474,7 @@ namespace pwiz.Skyline.Controls.Graphs.Calibration
 
         public class Settings : Immutable
         {
+            public static readonly Settings EMPTY = new Settings(null, null);
             public Settings(SrmDocument document, CalibrationCurveFitter calibrationCurveFitter)
             {
                 Document = document;
@@ -467,6 +496,13 @@ namespace pwiz.Skyline.Controls.Graphs.Calibration
             public Settings ChangeSelectedLabelType(IsotopeLabelType value)
             {
                 return ChangeProp(ImClone(this), im => im.SelectedLabelType = value);
+            }
+
+            public string GraphTitle { get; private set; }
+
+            public Settings ChangeGraphTitle(string value)
+            {
+                return ChangeProp(ImClone(this), im => im.GraphTitle = value ?? string.Empty);
             }
         }
         private LineItem CreateInterpolatedLine(CalibrationCurve calibrationCurve, double[] xValues, int pointCount, bool logPlot)
@@ -495,7 +531,7 @@ namespace pwiz.Skyline.Controls.Graphs.Calibration
             {
                 return null;
             }
-            return new LineItem(QuantificationStrings.Calibration_Curve, pointPairList, Color.Gray, SymbolType.None);
+            return new LineItem(QuantificationStrings.Calibration_Curve, pointPairList, Color.Gray, SymbolType.None, Options.LineWidth);
         }
 
 
@@ -509,24 +545,9 @@ namespace pwiz.Skyline.Controls.Graphs.Calibration
             return CalibrationForm.IsNumber(value);
         }
 
-        public string GraphTitle
-        {
-            get
-            {
-                return zedGraphControl.GraphPane.Title.Text;
-            }
-            set
-            {
-                zedGraphControl.GraphPane.Title.Text = value;
-            }
-        }
-
         public void DisplayError(string message)
         {
-            Clear();
-            GraphTitle = message;
-            zedGraphControl.AxisChange();
-            zedGraphControl.Invalidate();
+            Update(Settings.EMPTY.ChangeGraphTitle(message));
         }
         public CalibrationPoint? ReplicateIndexFromPoint(Point pt)
         {
@@ -637,6 +658,7 @@ namespace pwiz.Skyline.Controls.Graphs.Calibration
                 menuStrip.Items.Insert(index++, showSelectionContextMenuItem);
                 menuStrip.Items.Insert(index++, showFiguresOfMeritContextMenuItem);
                 menuStrip.Items.Insert(index++, showBootstrapCurvesToolStripMenuItem);
+                menuStrip.Items.Insert(index++, moreDisplayOptionsContextMenuItem);
                 menuStrip.Items.Insert(index++, new ToolStripSeparator());
             }
         }
@@ -778,6 +800,25 @@ namespace pwiz.Skyline.Controls.Graphs.Calibration
         private void showBootstrapCurvesToolStripMenuItem_Click(object sender, EventArgs e)
         {
             Options = Options.ChangeShowBootstrapCurves(!Options.ShowBootstrapCurves);
+        }
+
+        private void moreDisplayOptionsContextMenuItem_Click(object sender, EventArgs e)
+        {
+            using (var dlg = new CalibrationCurveOptionsDlg())
+            {
+                dlg.ShowDialog(this);
+            }
+        }
+
+        private double GetMaxY(IPointList pointList)
+        {
+            var max = double.MinValue;
+            for (int i = 0; i < pointList.Count; i++)
+            {
+                max = Math.Max(max, pointList[i].Y);
+            }
+
+            return max;
         }
     }
 }

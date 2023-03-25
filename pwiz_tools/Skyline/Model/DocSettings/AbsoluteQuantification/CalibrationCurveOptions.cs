@@ -21,11 +21,11 @@ using System;
 using System.Collections.Generic;
 using System.Linq;
 using System.Xml;
-using System.Xml.Linq;
 using System.Xml.Schema;
 using System.Xml.Serialization;
 using pwiz.Common.Collections;
 using pwiz.Common.SystemUtil;
+using pwiz.Skyline.Controls.Graphs;
 using pwiz.Skyline.Util;
 
 namespace pwiz.Skyline.Model.DocSettings.AbsoluteQuantification
@@ -42,8 +42,9 @@ namespace pwiz.Skyline.Model.DocSettings.AbsoluteQuantification
                 new[] { SampleType.STANDARD, SampleType.BLANK, SampleType.QC, SampleType.UNKNOWN}),
             ShowLegend = true,
             ShowSelection = true,
-            ShowFiguresOfMerit = true
-            
+            ShowFiguresOfMerit = true,
+            FontSize = GraphFontSize.NORMAL.PointSize,
+            LineWidth = 2
         };
         public bool LogXAxis { get; private set; }
 
@@ -103,6 +104,18 @@ namespace pwiz.Skyline.Model.DocSettings.AbsoluteQuantification
             return ChangeProp(ImClone(this), im => im.ShowBootstrapCurves = value);
         }
 
+        public float LineWidth { get; private set; }
+
+        public CalibrationCurveOptions ChangeLineWidth(float value)
+        {
+            return ChangeProp(ImClone(this), im => im.LineWidth = value);
+        }
+        public float FontSize { get; private set; }
+
+        public CalibrationCurveOptions ChangeFontSize(float value)
+        {
+            return ChangeProp(ImClone(this), im => im.FontSize = value);
+        }
         
         public CalibrationCurveOptions SetDisplaySampleType(SampleType sampleType, bool display)
         {
@@ -132,7 +145,9 @@ namespace pwiz.Skyline.Model.DocSettings.AbsoluteQuantification
             show_legend,
             show_selection,
             show_figures_of_merit,
-            show_bootstrap_curves
+            show_bootstrap_curves,
+            line_width,
+            font_size
         }
 
         private CalibrationCurveOptions()
@@ -158,6 +173,8 @@ namespace pwiz.Skyline.Model.DocSettings.AbsoluteQuantification
             ShowSelection = reader.GetBoolAttribute(ATTR.show_selection);
             ShowFiguresOfMerit = reader.GetBoolAttribute(ATTR.show_legend);
             ShowBootstrapCurves = reader.GetBoolAttribute(ATTR.show_bootstrap_curves);
+            LineWidth = reader.GetFloatAttribute(ATTR.line_width, 1);
+            FontSize = reader.GetFloatAttribute(ATTR.font_size, GraphFontSize.NORMAL.PointSize);
             bool isEmpty = reader.IsEmptyElement;
             reader.Read();
             var displaySampleTypes = new List<SampleType>();
@@ -184,6 +201,8 @@ namespace pwiz.Skyline.Model.DocSettings.AbsoluteQuantification
             writer.WriteAttribute(ATTR.show_selection, ShowSelection);
             writer.WriteAttribute(ATTR.show_figures_of_merit, ShowFiguresOfMerit);
             writer.WriteAttribute(ATTR.show_bootstrap_curves, ShowBootstrapCurves);
+            writer.WriteAttribute(ATTR.font_size, FontSize);
+            writer.WriteAttribute(ATTR.line_width, LineWidth);
             foreach (var displaySampleType in DisplaySampleTypes)
             {
                 writer.WriteElementString(EL.display_sample_type, displaySampleType.Name);
@@ -197,7 +216,8 @@ namespace pwiz.Skyline.Model.DocSettings.AbsoluteQuantification
             return LogXAxis == other.LogXAxis && LogYAxis == other.LogYAxis &&
                    DisplaySampleTypes.Equals(other.DisplaySampleTypes) && SingleBatch == other.SingleBatch &&
                    ShowLegend == other.ShowLegend && ShowSelection == other.ShowSelection &&
-                   ShowFiguresOfMerit == other.ShowFiguresOfMerit && ShowBootstrapCurves == other.ShowBootstrapCurves;
+                   ShowFiguresOfMerit == other.ShowFiguresOfMerit && ShowBootstrapCurves == other.ShowBootstrapCurves &&
+                   Equals(FontSize, other.FontSize) && Equals(LineWidth, other.LineWidth);
         }
 
         public override bool Equals(object obj)
@@ -220,6 +240,8 @@ namespace pwiz.Skyline.Model.DocSettings.AbsoluteQuantification
                 hashCode = (hashCode * 397) ^ ShowSelection.GetHashCode();
                 hashCode = (hashCode * 397) ^ ShowFiguresOfMerit.GetHashCode();
                 hashCode = (hashCode * 397) ^ ShowBootstrapCurves.GetHashCode();
+                hashCode = (hashCode * 397) ^ LineWidth.GetHashCode();
+                hashCode = (hashCode * 397) ^ FontSize.GetHashCode();
                 return hashCode;
             }
         }

@@ -481,10 +481,9 @@ namespace pwiz.Skyline.EditUI.OptimizeTransitions
                 .WithQuantifiableTransitions(transitionIdentityPaths);
             var calibrationCurveFitter =
                 _selection.Settings.GetCalibrationCurveFitter(peptideQuantifier, _selection.Document.Settings);
-            var settings = new CalibrationGraphControl.Settings(document, calibrationCurveFitter);
+            var settings = new CalibrationGraphControl.Settings(document, calibrationCurveFitter)
+                .ChangeGraphTitle(GetCalibrationCurveTitle(document, transitionIdentityPaths));
             calibrationGraphControl1.Update(settings);
-            calibrationGraphControl1.ZedGraphControl.GraphPane.Title.Text =
-                GetCalibrationCurveTitle(document, transitionIdentityPaths);
         }
 
         public string GetCalibrationCurveTitle(SrmDocument document, ICollection<IdentityPath> transitionIdentityPaths)

@@ -33,13 +33,13 @@
             this.contextMenuStrip1 = new System.Windows.Forms.ContextMenuStrip(this.components);
             this.logXContextMenuItem = new System.Windows.Forms.ToolStripMenuItem();
             this.logYAxisContextMenuItem = new System.Windows.Forms.ToolStripMenuItem();
-            this.showToolStripMenuItem = new System.Windows.Forms.ToolStripMenuItem();
             this.showSampleTypesContextMenuItem = new System.Windows.Forms.ToolStripMenuItem();
             this.singleBatchContextMenuItem = new System.Windows.Forms.ToolStripMenuItem();
             this.showLegendContextMenuItem = new System.Windows.Forms.ToolStripMenuItem();
             this.showSelectionContextMenuItem = new System.Windows.Forms.ToolStripMenuItem();
             this.showFiguresOfMeritContextMenuItem = new System.Windows.Forms.ToolStripMenuItem();
             this.showBootstrapCurvesToolStripMenuItem = new System.Windows.Forms.ToolStripMenuItem();
+            this.moreDisplayOptionsContextMenuItem = new System.Windows.Forms.ToolStripMenuItem();
             this.contextMenuStrip1.SuspendLayout();
             this.SuspendLayout();
             // 
@@ -69,15 +69,15 @@
             this.contextMenuStrip1.Items.AddRange(new System.Windows.Forms.ToolStripItem[] {
             this.logXContextMenuItem,
             this.logYAxisContextMenuItem,
-            this.showToolStripMenuItem,
             this.showSampleTypesContextMenuItem,
             this.singleBatchContextMenuItem,
             this.showLegendContextMenuItem,
             this.showSelectionContextMenuItem,
             this.showFiguresOfMeritContextMenuItem,
-            this.showBootstrapCurvesToolStripMenuItem});
+            this.showBootstrapCurvesToolStripMenuItem,
+            this.moreDisplayOptionsContextMenuItem});
             this.contextMenuStrip1.Name = "contextMenuStrip1";
-            this.contextMenuStrip1.Size = new System.Drawing.Size(199, 224);
+            this.contextMenuStrip1.Size = new System.Drawing.Size(198, 224);
             // 
             // logXContextMenuItem
             // 
@@ -92,12 +92,6 @@
             this.logYAxisContextMenuItem.Size = new System.Drawing.Size(198, 22);
             this.logYAxisContextMenuItem.Text = "Log Y Axis";
             this.logYAxisContextMenuItem.Click += new System.EventHandler(this.logYAxisContextMenuItem_Click);
-            // 
-            // showToolStripMenuItem
-            // 
-            this.showToolStripMenuItem.Name = "showToolStripMenuItem";
-            this.showToolStripMenuItem.Size = new System.Drawing.Size(198, 22);
-            this.showToolStripMenuItem.Text = "Show Calibration Curve";
             // 
             // showSampleTypesContextMenuItem
             // 
@@ -140,6 +134,13 @@
             this.showBootstrapCurvesToolStripMenuItem.Text = "Show Bootstrap Curves";
             this.showBootstrapCurvesToolStripMenuItem.Click += new System.EventHandler(this.showBootstrapCurvesToolStripMenuItem_Click);
             // 
+            // moreDisplayOptionsContextMenuItem
+            // 
+            this.moreDisplayOptionsContextMenuItem.Name = "moreDisplayOptionsContextMenuItem";
+            this.moreDisplayOptionsContextMenuItem.Size = new System.Drawing.Size(198, 22);
+            this.moreDisplayOptionsContextMenuItem.Text = "More Display Options...";
+            this.moreDisplayOptionsContextMenuItem.Click += new System.EventHandler(this.moreDisplayOptionsContextMenuItem_Click);
+            // 
             // CalibrationGraphControl
             // 
             this.AutoScaleDimensions = new System.Drawing.SizeF(6F, 13F);
@@ -157,12 +158,12 @@
         private System.Windows.Forms.ContextMenuStrip contextMenuStrip1;
         private System.Windows.Forms.ToolStripMenuItem logXContextMenuItem;
         private System.Windows.Forms.ToolStripMenuItem logYAxisContextMenuItem;
-        private System.Windows.Forms.ToolStripMenuItem showToolStripMenuItem;
         private System.Windows.Forms.ToolStripMenuItem showSampleTypesContextMenuItem;
         private System.Windows.Forms.ToolStripMenuItem singleBatchContextMenuItem;
         private System.Windows.Forms.ToolStripMenuItem showLegendContextMenuItem;
         private System.Windows.Forms.ToolStripMenuItem showSelectionContextMenuItem;
         private System.Windows.Forms.ToolStripMenuItem showFiguresOfMeritContextMenuItem;
         private System.Windows.Forms.ToolStripMenuItem showBootstrapCurvesToolStripMenuItem;
+        private System.Windows.Forms.ToolStripMenuItem moreDisplayOptionsContextMenuItem;
     }
 }

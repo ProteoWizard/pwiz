@@ -108,7 +108,6 @@
             // calibrationGraphControl1
             // 
             this.calibrationGraphControl1.Dock = System.Windows.Forms.DockStyle.Fill;
-            this.calibrationGraphControl1.GraphTitle = null;
             this.calibrationGraphControl1.Location = new System.Drawing.Point(0, 0);
             this.calibrationGraphControl1.ModeUIAwareFormHelper = null;
             this.calibrationGraphControl1.Name = "calibrationGraphControl1";
