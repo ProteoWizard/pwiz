@@ -332,8 +332,8 @@ namespace pwiz.Skyline.Model.GroupComparison
         {
             IList<IGrouping<IdentityPath, DataRowDetails>> dataRowsByFeature = 
                 SumMs1Transitions(dataRows).ToLookup(row => row.IdentityPath)
-                .Where(IncludeFeatureForMedianPolish)
-                .ToArray();
+                    .Where(IncludeFeatureForMedianPolish)
+                    .ToArray();
 #pragma warning disable 162
             // ReSharper disable HeuristicUnreachableCode
             if (false)
@@ -402,6 +402,11 @@ namespace pwiz.Skyline.Model.GroupComparison
 
         private IList<DataRowDetails> SumMs1Transitions(IList<DataRowDetails> dataRows)
         {
+            if ((int)SrmDocument.Level.Molecules >= dataRows.FirstOrDefault()?.IdentityPath.Depth)
+            {
+                // When using "calibrated" normalization method, there no transition-level values.
+                return dataRows;
+            }
             var dataRowsByReplicateIndexAndTransitionGroup =
                 dataRows.ToLookup(row =>
                     new Tuple<int, IdentityPath>(row.ReplicateIndex,
@@ -475,6 +480,11 @@ namespace pwiz.Skyline.Model.GroupComparison
             bool useCalibrationCurve = false;
             if (normalizationMethod == null)
             {
+                if (selector.Peptide == null)
+                {
+                    // Protein level fold changes using calibrated values is not yet supported.
+                    return;
+                }
                 normalizationMethod = SrmDocument.Settings.PeptideSettings.Quantification.NormalizationMethod;
                 useCalibrationCurve = true;
             }
@@ -516,8 +526,8 @@ namespace pwiz.Skyline.Model.GroupComparison
                                 ReplicateIndex = replicateEntry.Key
                             };
                             foldChangeDetails.Add(dataRowDetails);
-                            continue;
                         }
+                        continue;
                     }
                     if (null != selector.LabelType)
                     {

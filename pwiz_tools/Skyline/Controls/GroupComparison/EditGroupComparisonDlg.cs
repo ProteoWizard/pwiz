@@ -19,6 +19,7 @@
 using System;
 using System.Collections.Generic;
 using System.ComponentModel;
+using System.Drawing;
 using System.Globalization;
 using System.Linq;
 using System.Windows.Forms;
@@ -264,6 +265,18 @@ namespace pwiz.Skyline.Controls.GroupComparison
                 if(!_pushChangesToDocument)
                     def = value.ChangeName(tbxName.Text);
                 ChangeGroupComparisonDef(_pushChangesToDocument, GroupComparisonModel, def);
+
+                if (def.PerProtein && Equals(NormalizeOption.CALIBRATED, def.NormalizationMethod))
+                {
+                    radioScopeProtein.ForeColor = Color.Red;
+                    toolTip1.SetToolTip(radioScopeProtein, GroupComparisonStrings
+                        .EditGroupComparisonDlg_GroupComparisonDef_Group_comparisons_at_the_protein_level_using_calibrated_values_is_not_yet_supported_in_Skyline_);
+                }
+                else
+                {
+                    radioScopeProtein.ForeColor = radioScopePeptide.ForeColor;
+                    toolTip1.SetToolTip(radioScopeProtein, null);
+                }
             }
         }
 

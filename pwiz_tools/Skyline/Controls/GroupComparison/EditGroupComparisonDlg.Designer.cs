@@ -28,6 +28,7 @@
         /// </summary>
         private void InitializeComponent()
         {
+            this.components = new System.ComponentModel.Container();
             System.ComponentModel.ComponentResourceManager resources = new System.ComponentModel.ComponentResourceManager(typeof(EditGroupComparisonDlg));
             this.btnOK = new System.Windows.Forms.Button();
             this.btnCancel = new System.Windows.Forms.Button();
@@ -64,6 +65,7 @@
             this.panelName = new System.Windows.Forms.Panel();
             this.panelButtons = new System.Windows.Forms.Panel();
             this.panelAdvanced = new System.Windows.Forms.Panel();
+            this.toolTip1 = new System.Windows.Forms.ToolTip(this.components);
             this.panelMain.SuspendLayout();
             this.groupBoxScope.SuspendLayout();
             this.flowLayoutPanel1.SuspendLayout();
@@ -402,5 +404,6 @@
         private System.Windows.Forms.Panel panelAdvanced;
         private System.Windows.Forms.ComboBox comboMsLevel;
         private System.Windows.Forms.Label lblMsLevel;
+        private System.Windows.Forms.ToolTip toolTip1;
     }
 }
