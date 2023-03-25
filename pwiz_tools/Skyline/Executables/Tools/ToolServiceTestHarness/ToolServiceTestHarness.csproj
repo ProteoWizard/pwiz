@@ -10,9 +10,7 @@
   </PropertyGroup>
 
   <ItemGroup>
-    <Reference Include="SkylineTool">
-      <HintPath>..\..\..\bin\x64\$(Configuration)\SkylineTool.dll</HintPath>
-    </Reference>
+    <ProjectReference Include="..\..\..\SkylineTool\SkylineTool.csproj" />
   </ItemGroup>
 
   <ItemGroup>

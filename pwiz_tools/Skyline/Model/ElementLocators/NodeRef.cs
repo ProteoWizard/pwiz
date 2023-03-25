@@ -238,7 +238,11 @@ namespace pwiz.Skyline.Model.ElementLocators
             var counts = new Dictionary<ElementRef, int>();
             foreach (TDocNode child in parentNode.Children)
             {
-                var elementRef = ChangeDocNode(parentNode, child);
+                var elementRef = (NodeRef) ChangeDocNode(parentNode, child);
+                if (elementRef.Index != 0)
+                {
+                    elementRef = (NodeRef) elementRef.ChangeIndex(0);
+                }
                 int count;
                 if (counts.TryGetValue(elementRef, out count))
                 {

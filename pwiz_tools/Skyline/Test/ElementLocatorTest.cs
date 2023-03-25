@@ -17,8 +17,10 @@
  * limitations under the License.
  */
 
+using System;
 using System.Collections.Generic;
 using System.Linq;
+using System.Xml.Serialization;
 using Microsoft.VisualStudio.TestTools.UnitTesting;
 using pwiz.ProteomeDatabase.API;
 using pwiz.Skyline.Model;
@@ -78,12 +80,60 @@ namespace pwiz.SkylineTest
                     new PeptideDocNode(new Peptide("LIVES"))
                 }, false);
             var document = (SrmDocument) new SrmDocument(SrmSettingsList.GetDefault()).ChangeChildren(new[] { peptideGroupDocNode });
+            VerifyNodeRefGetIdentityPaths(document);
+            VerifyNodeRefGetIdentityPaths(LoadDocumentFromResource(typeof(DocumentSerializerTest), "DocumentSerializerTest.sky"));
+            VerifyNodeRefGetIdentityPaths(LoadDocumentFromResource(typeof(BookmarkEnumeratorTest), "BookmarkEnumeratorTest.sky"));
+        }
+
+        private SrmDocument LoadDocumentFromResource(Type type, string resource)
+        {
+            using (var stream = type.Assembly.GetManifestResourceStream(type, resource))
+            {
+                Assert.IsNotNull(stream, "Unable to find resource {0} for type {1}", resource, type);
+                return (SrmDocument)new XmlSerializer(typeof(SrmDocument)).Deserialize(stream);
+            }
+        }
+
+        /// <summary>
+        /// Verifies that <see cref="NodeRef.GetIdentityPaths"/> works when called on random lists of IdentityPaths.
+        /// </summary>
+        private void VerifyNodeRefGetIdentityPaths(SrmDocument document)
+        {
+            var seed = (int)DateTime.UtcNow.Ticks;
+            var random = new Random(seed);
+            var identityPathEnumerator = EnumerateIdentityPaths(IdentityPath.ROOT, document)
+                .OrderBy(x => random.Next());
             var elementRefs = new ElementRefs(document);
-            var identityPaths = document.GetMoleculeGroupPairs().Select(pair =>
-                new IdentityPath(pair.NodeMoleculeGroup.Id, pair.NodeMolecule.Id)).ToList();
-            var nodeRefs = identityPaths.Select(path => elementRefs.GetNodeRef(path)).ToList();
-            var idPathsFromNodeRefs = NodeRef.GetIdentityPaths(document, nodeRefs).ToList();
-            CollectionAssert.AreEqual(identityPaths, idPathsFromNodeRefs);
+            var nodeRefs = new List<NodeRef>();
+            List<IdentityPath> identityPaths = new List<IdentityPath>();
+            foreach (var identityPath in identityPathEnumerator)
+            {
+                try
+                {
+                    nodeRefs.Add(elementRefs.GetNodeRef(identityPath));
+                    identityPaths.Add(identityPath);
+                    var identityPathsCompare = NodeRef.GetIdentityPaths(document, nodeRefs).ToList();
+                    CollectionAssert.AreEqual(identityPaths, identityPathsCompare);
+                }
+                catch (Exception ex)
+                {
+                    throw new AssertFailedException(string.Format("Failed on iteration #{0} using random seed {1}", 
+                        identityPaths.Count, seed), ex);
+                }
+            }
+        }
+
+        private IEnumerable<IdentityPath> EnumerateIdentityPaths(IdentityPath identityPath, DocNode docNode)
+        {
+            IEnumerable<IdentityPath> identityPaths = new[] { identityPath };
+            if (docNode is DocNodeParent docNodeParent)
+            {
+                identityPaths =
+                    identityPaths.Concat(
+                        docNodeParent.Children.SelectMany(child => EnumerateIdentityPaths(new IdentityPath(identityPath, child.Id), child)));
+            }
+
+            return identityPaths;
         }
     }
 }

@@ -18,9 +18,10 @@
   </ItemGroup>
 
   <ItemGroup>
-    <Reference Include="SkylineTool">
-      <HintPath>..\..\..\bin\x64\$(Configuration)\SkylineTool.dll</HintPath>
-    </Reference>
+    <ProjectReference Include="..\..\..\SkylineTool\SkylineTool.csproj" />
+  </ItemGroup>
+
+  <ItemGroup>
     <Reference Include="System.CommandLine">
       <HintPath>lib\System.CommandLine.dll</HintPath>
     </Reference>
