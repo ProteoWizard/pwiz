@@ -94,7 +94,7 @@ string getRetentionTime(const Scan& scan)
 }
 
 
-void start_msRun(XMLWriter& xmlWriter, const MSData& msd)
+void start_msRun(XMLWriter& xmlWriter, const MSData& msd, bool continueOnError)
 {
     string scanCount, startTime, endTime;
 
@@ -105,20 +105,41 @@ void start_msRun(XMLWriter& xmlWriter, const MSData& msd)
 
         if (sl.size() > 0)
         {
-            SpectrumPtr spectrum = sl.spectrum(0);
-            if (!spectrum->scanList.scans.empty())
-                startTime = getRetentionTime(spectrum->scanList.scans[0]);
+            try
+            {
+                SpectrumPtr spectrum = sl.spectrum(0);
+                if (!spectrum->scanList.scans.empty())
+                    startTime = getRetentionTime(spectrum->scanList.scans[0]);
+            }
+            catch(exception& e)
+            {
+                if (!continueOnError)
+                    throw;
+                sl.warn_once((string("error getting run start time: ") + e.what()).c_str());
+            }
+            if (startTime.empty())
+                startTime = "PT0";
 
-            spectrum = sl.spectrum(sl.size()-1);
-            if (!spectrum->scanList.scans.empty())
-                endTime = getRetentionTime(spectrum->scanList.scans[0]);
+            try
+            {
+                SpectrumPtr spectrum = sl.spectrum(sl.size()-1);
+                if (!spectrum->scanList.scans.empty())
+                    endTime = getRetentionTime(spectrum->scanList.scans[0]);
+            }
+            catch (exception& e)
+            {
+                if (!continueOnError)
+                    throw;
+                sl.warn_once((string("error getting run end time: ") + e.what()).c_str());
+            }
         }
     }
 
     XMLWriter::Attributes attributes; 
     attributes.add("scanCount", scanCount);
     attributes.add("startTime", startTime);
-    attributes.add("endTime", endTime);
+    if (!endTime.empty())
+        attributes.add("endTime", endTime);
     xmlWriter.startElement("msRun", attributes);
 }
 
@@ -798,7 +819,7 @@ void Serializer_mzXML::Impl::write(ostream& os, const MSData& msd,
 
     map<InstrumentConfigurationPtr, int> instrumentIndexByPtr;
 
-    start_msRun(xmlWriter, msd);
+    start_msRun(xmlWriter, msd, continueOnError);
     write_parentFile(xmlWriter, msd);  
     write_msInstruments(xmlWriter, msd, cvTranslator_, instrumentIndexByPtr);
     write_dataProcessing(xmlWriter, msd, cvTranslator_);

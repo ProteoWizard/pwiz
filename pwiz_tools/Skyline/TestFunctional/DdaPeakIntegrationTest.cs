@@ -87,7 +87,7 @@ namespace pwiz.SkylineTestFunctional
                             // Assert.IsNotNull(transitionChromInfo.PointsAcrossPeak);
 
                             var chromatogramInfo = chromatogramGroupInfo.GetTransitionInfo(transitionDocNode, tolerance,
-                                TransformChrom.raw, null);
+                                TransformChrom.raw);
                             Assert.IsNotNull(chromatogramInfo);
                             if (transitionDocNode.IsMs1)
                             {

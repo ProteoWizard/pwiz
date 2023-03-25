@@ -81,13 +81,13 @@ namespace pwiz.Skyline.Model
 
             float totalArea = chromGroupInfo.TransitionPointSets.Sum(chromInfo => chromInfo.Peaks.Sum(peak => peak.Area));
             for (int i = 0; i < chromGroupInfo.NumPeaks; i++)
-                referenceMatchDataList.Add(new PeakMatchData(nodeTranGroup, chromGroupInfo, mzMatchTolerance, i, totalArea, chromSet.OptimizationFunction));
+                referenceMatchDataList.Add(new PeakMatchData(nodeTranGroup, chromGroupInfo, mzMatchTolerance, i, totalArea));
 
             // Get ion abundance information
             var abundances = new IonAbundances();
             foreach (var nodeTran in nodeTranGroup.Transitions)
             {
-                var chromInfoCached = chromGroupInfo.GetTransitionInfo(nodeTran, mzMatchTolerance, chromSet.OptimizationFunction);
+                var chromInfoCached = chromGroupInfo.GetTransitionInfo(nodeTran, mzMatchTolerance);
                 if (chromInfoCached == null)
                     continue;
 
@@ -221,7 +221,7 @@ namespace pwiz.Skyline.Model
             var matchData = new List<PeakMatchData>();
             double totalArea = chromGroupInfo.TransitionPointSets.Sum(chromInfo => chromInfo.Peaks.Sum(peak => peak.Area));
             for (int i = 0; i < chromGroupInfo.NumPeaks; i++)
-                matchData.Add(new PeakMatchData(nodeTranGroup, chromGroupInfo, mzMatchTolerance, i, totalArea, chromSet.OptimizationFunction));
+                matchData.Add(new PeakMatchData(nodeTranGroup, chromGroupInfo, mzMatchTolerance, i, totalArea));
 
             // TODO: Try to improve this. Align peaks in area descending order until peaks do not match
             var alignments = new List<PeakAlignment>();
@@ -298,13 +298,12 @@ namespace pwiz.Skyline.Model
         }
 
         private static ChromPeak GetLargestPeak(TransitionGroupDocNode nodeTranGroup,
-            ChromatogramGroupInfo chromGroupInfo, int peakIndex, float mzMatchTolerance,
-            OptimizableRegression regression)
+            ChromatogramGroupInfo chromGroupInfo, int peakIndex, float mzMatchTolerance)
         {
             var largestPeak = ChromPeak.EMPTY;
             foreach (var peak in
                      from transitionDocNode in nodeTranGroup.Transitions
-                     select chromGroupInfo.GetTransitionInfo(transitionDocNode, mzMatchTolerance, regression)
+                     select chromGroupInfo.GetTransitionInfo(transitionDocNode, mzMatchTolerance)
                      into chromInfo where chromInfo != null
                      select chromInfo.GetPeak(peakIndex))
             {
@@ -472,12 +471,11 @@ namespace pwiz.Skyline.Model
             }
 
             public PeakMatchData(TransitionGroupDocNode nodeTranGroup, ChromatogramGroupInfo chromGroupInfo,
-                float mzMatchTolerance, int peakIndex, double totalChromArea,
-                OptimizableRegression regression)
+                float mzMatchTolerance, int peakIndex, double totalChromArea)
             {
-                Abundances = new IonAbundances(nodeTranGroup, chromGroupInfo, mzMatchTolerance, peakIndex, regression);
+                Abundances = new IonAbundances(nodeTranGroup, chromGroupInfo, mzMatchTolerance, peakIndex);
                 PercentArea = Abundances.Sum()/totalChromArea;
-                var peak = GetLargestPeak(nodeTranGroup, chromGroupInfo, peakIndex, mzMatchTolerance, regression);
+                var peak = GetLargestPeak(nodeTranGroup, chromGroupInfo, peakIndex, mzMatchTolerance);
                 RetentionTime = peak.RetentionTime;
                 StartTime = peak.StartTime;
                 EndTime = peak.EndTime;
@@ -510,12 +508,11 @@ namespace pwiz.Skyline.Model
             }
 
             public IonAbundances(TransitionGroupDocNode nodeTranGroup, ChromatogramGroupInfo chromGroupInfo,
-                float mzMatchTolerance, int peakIndex,
-                OptimizableRegression regression) : this()
+                float mzMatchTolerance, int peakIndex) : this()
             {
                 foreach (var nodeTran in nodeTranGroup.Transitions)
                 {
-                    var chromInfoCached = chromGroupInfo.GetTransitionInfo(nodeTran, mzMatchTolerance, regression);
+                    var chromInfoCached = chromGroupInfo.GetTransitionInfo(nodeTran, mzMatchTolerance);
                     if (chromInfoCached == null)
                         continue;
 

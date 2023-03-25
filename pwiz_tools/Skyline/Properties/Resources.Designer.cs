@@ -4343,15 +4343,6 @@ namespace pwiz.Skyline.Properties {
         }
         
         /// <summary>
-        ///   Looks up a localized string similar to Incorrectly sorted chromatograms {0} &gt; {1}.
-        /// </summary>
-        public static string ChromDataSet_MarkOptimizationData_Incorrectly_sorted_chromatograms__0__1__ {
-            get {
-                return ResourceManager.GetString("ChromDataSet_MarkOptimizationData_Incorrectly_sorted_chromatograms__0__1__", resourceCulture);
-            }
-        }
-        
-        /// <summary>
         ///   Looks up a localized string similar to Unexpected null peak.
         /// </summary>
         public static string ChromDataSet_MergePeaks_Unexpected_null_peak {
@@ -4495,6 +4486,16 @@ namespace pwiz.Skyline.Properties {
         public static string ClipboardHelper_GetPasteErrorMessage_Failed_getting_data_from_the_clipboard_ {
             get {
                 return ResourceManager.GetString("ClipboardHelper_GetPasteErrorMessage_Failed_getting_data_from_the_clipboard_", resourceCulture);
+            }
+        }
+        
+        /// <summary>
+        ///   Looks up a localized resource of type System.Drawing.Bitmap.
+        /// </summary>
+        public static System.Drawing.Bitmap Close {
+            get {
+                object obj = ResourceManager.GetObject("Close", resourceCulture);
+                return ((System.Drawing.Bitmap)(obj));
             }
         }
         
@@ -8102,16 +8103,6 @@ namespace pwiz.Skyline.Properties {
                 return ResourceManager.GetString("ConfigureToolsDlg_UnpackZipTool_There_is_a_naming_conflict__You_already_installed" +
                         "_a_tool_from_a_zip_folder_with_the_name__0___Would_you_like_to_overwrite_or_inst" +
                         "all_in_parallel_", resourceCulture);
-            }
-        }
-        
-        /// <summary>
-        ///   Looks up a localized string similar to There is a naming conflict in unpacking the zip. Tool importing canceled!.
-        /// </summary>
-        public static string ConfigureToolsDlg_unpackZipTool_There_is_a_naming_conflict_in_unpacking_the_zip__Tool_importing_canceled_ {
-            get {
-                return ResourceManager.GetString("ConfigureToolsDlg_unpackZipTool_There_is_a_naming_conflict_in_unpacking_the_zip__" +
-                        "Tool_importing_canceled_", resourceCulture);
             }
         }
         
@@ -32833,6 +32824,16 @@ namespace pwiz.Skyline.Properties {
         public static string ToolInstaller_UnpackZipTool_Error__There_is_a_file_missing_the__0__zip {
             get {
                 return ResourceManager.GetString("ToolInstaller_UnpackZipTool_Error__There_is_a_file_missing_the__0__zip", resourceCulture);
+            }
+        }
+        
+        /// <summary>
+        ///   Looks up a localized string similar to The selected zip file did not specify any items to add to the Tools menu..
+        /// </summary>
+        public static string ToolInstaller_UnpackZipTool_The_selected_zip_file_did_not_specify_any_items_to_add_to_the_Tools_menu_ {
+            get {
+                return ResourceManager.GetString("ToolInstaller_UnpackZipTool_The_selected_zip_file_did_not_specify_any_items_to_ad" +
+                        "d_to_the_Tools_menu_", resourceCulture);
             }
         }
         
