@@ -21,7 +21,9 @@ using System;
 using System.Collections.Generic;
 using System.Globalization;
 using System.Linq;
+using pwiz.Common.Chemistry;
 using pwiz.Common.DataBinding.Attributes;
+using pwiz.Skyline.Model.Crosslinking;
 using pwiz.Skyline.Model.Databinding.Collections;
 using pwiz.Skyline.Model.DocSettings;
 using pwiz.Skyline.Model.ElementLocators;
@@ -118,19 +120,39 @@ namespace pwiz.Skyline.Model.Databinding.Entities
         {
             get
             {
-                return IsCustomTransition()
-                ? (DocNode.Transition.CustomIon.Formula ?? string.Empty)
-                : string.Empty;
+                if (IsCustomTransition())
+                {
+                    return DocNode.Transition.CustomIon.Formula;
+                }
+
+                var neutralFormula = GetNeutralProductFormula();
+                var adduct = DocNode.Transition.Adduct;
+                var formulaWithAdductApplied = adduct.ApplyToMolecule(neutralFormula.Molecule);
+                var moleculeMassOffsetWithAdductApplied = new MoleculeMassOffset(
+                    Molecule.FromDict(formulaWithAdductApplied), neutralFormula.MonoMassOffset,
+                    neutralFormula.AverageMassOffset);
+                return moleculeMassOffsetWithAdductApplied.ToString();
             }
         }
         public string ProductNeutralFormula
         {
             get
             {
-                return IsCustomTransition()
-                ? DocNode.Transition.CustomIon.NeutralFormula ?? string.Empty
-                : string.Empty;
+                if (IsCustomTransition())
+                {
+                    return DocNode.Transition.CustomIon.NeutralFormula;
+                }
+
+                return GetNeutralProductFormula().ToString();
             }
+        }
+
+        private MoleculeMassOffset GetNeutralProductFormula()
+        {
+            var peptide = Precursor.Peptide;
+            var crosslinkBuilder = new CrosslinkBuilder(SrmDocument.Settings, peptide.DocNode.Peptide,
+                peptide.DocNode.ExplicitMods, Precursor.IsotopeLabelType);
+            return crosslinkBuilder.GetNeutralFormula(DocNode.ComplexFragmentIon.NeutralFragmentIon);
         }
         [Hidden(InUiMode = UiModes.PROTEOMIC)]
         public string ProductAdduct

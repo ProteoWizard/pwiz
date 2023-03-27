@@ -106,7 +106,7 @@ namespace pwiz.Skyline.Model.Crosslinking
             result = SubtractLosses(result, complexFragmentIon.Losses);
             foreach (var crosslink in PeptideStructure.Crosslinks)
             {
-                if (true == complexFragmentIon.ContainsCrosslink(PeptideStructure, crosslink.Sites))
+                if (false != complexFragmentIon.ContainsCrosslink(PeptideStructure, crosslink.Sites))
                 {
                     result = result.Plus(crosslink.Crosslinker.GetMoleculeMassOffset());
                 }
