@@ -418,15 +418,20 @@ namespace pwiz.Skyline.Controls.Graphs.Calibration
                     labelLines.Add(QuantificationStrings.CalibrationForm_DisplayCalibrationCurve_The_selected_replicate_has_missing_or_truncated_transitions);
                 }
             }
+
+            List<CurveItem> bootstrapCurveItems = new List<CurveItem>();
             if (options.ShowBootstrapCurves)
             {
                 var color = Color.FromArgb(40, Color.Teal);
                 foreach (var points in bootstrapCurves)
                 {
-                    var curve = new LineItem(null, new PointPairList(points), color,
+                    // Only assign a title to the first curve so that only one item appears in the Legend
+                    string title = bootstrapCurveItems.Count == 0 ? "Bootstrap Curve" : null;
+
+                    var curve = new LineItem(title, new PointPairList(points), color,
                         SymbolType.None, options.LineWidth);
                     maxY = Math.Max(maxY, GetMaxY(curve.Points));
-                    zedGraphControl.GraphPane.CurveList.Add(curve);
+                    bootstrapCurveItems.Add(curve);
                 }
             }
             if (options.ShowFiguresOfMerit)
@@ -452,7 +457,7 @@ namespace pwiz.Skyline.Controls.Graphs.Calibration
                     zedGraphControl.GraphPane.CurveList.Add(loqLine);
                 }
             }
-
+            zedGraphControl.GraphPane.CurveList.AddRange(bootstrapCurveItems);
             if (labelLines.Any())
             {
                 TextObj text = new TextObj(TextUtil.LineSeparate(labelLines), .01, 0,

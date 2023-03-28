@@ -234,7 +234,7 @@
             this.ShowIcon = false;
             this.ShowInTaskbar = false;
             this.StartPosition = System.Windows.Forms.FormStartPosition.CenterParent;
-            this.Text = "CalibrationCurveOptionsDlg";
+            this.Text = "Calibration Curve Display Options";
             ((System.ComponentModel.ISupportInitialize)(this.textLineWidth)).EndInit();
             this.ResumeLayout(false);
             this.PerformLayout();
