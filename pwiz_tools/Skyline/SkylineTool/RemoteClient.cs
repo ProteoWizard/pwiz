@@ -25,7 +25,7 @@ namespace SkylineTool
 {
     public class RemoteClient : RemoteBase
     {
-        protected RemoteClient(string connectionName)
+        public RemoteClient(string connectionName)
         {
             Timeout = 1000;
             ConnectionName = connectionName;
@@ -40,7 +40,7 @@ namespace SkylineTool
         /// <param name="methodName">Name of method to execute on the server.</param>
         /// <param name="arguments">Data to pass to the server method.</param>
         /// <returns>Result from server method.</returns>
-        protected object RemoteCallName(string methodName, object[] arguments)
+        public object RemoteCallName(string methodName, object[] arguments)
         {
             using (var client = new NamedPipeClientStream(@".", ConnectionName, PipeDirection.InOut))
             {
@@ -63,32 +63,32 @@ namespace SkylineTool
             }
         }
 
-        protected void RemoteCall(Action action)
+        public void RemoteCall(Action action)
         {
             RemoteCallName(action.Method.Name, new object[0]);
         }
 
-        protected void RemoteCall<T>(Action<T> action, T arg)
+        public void RemoteCall<T>(Action<T> action, T arg)
         {
             RemoteCallName(action.Method.Name, new object[]{arg});
         }
 
-        protected void RemoteCall<T1, T2>(Action<T1, T2> action, T1 arg1, T2 arg2)
+        public void RemoteCall<T1, T2>(Action<T1, T2> action, T1 arg1, T2 arg2)
         {
             RemoteCallName(action.Method.Name, new object[]{arg1, arg2});
         }
 
-        protected T RemoteCallFunction<T>(Func<T> func)
+        public T RemoteCallFunction<T>(Func<T> func)
         {
             return (T) RemoteCallName(func.Method.Name, new object[0]);
         }
 
-        protected TReturn RemoteCallFunction<T, TReturn>(Func<T, TReturn> func, T arg)
+        public TReturn RemoteCallFunction<T, TReturn>(Func<T, TReturn> func, T arg)
         {
             return (TReturn) RemoteCallName(func.Method.Name, new object[]{arg});
         }
 
-        protected TReturn RemoteCallFunction<T1, T2, TReturn>(Func<T1, T2, TReturn> func, T1 arg1, T2 arg2)
+        public TReturn RemoteCallFunction<T1, T2, TReturn>(Func<T1, T2, TReturn> func, T1 arg1, T2 arg2)
         {
             return (TReturn) RemoteCallName(func.Method.Name, new object[]{arg1, arg2});
         }
