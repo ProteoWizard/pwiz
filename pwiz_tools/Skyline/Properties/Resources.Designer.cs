@@ -33209,6 +33209,15 @@ namespace pwiz.Skyline.Properties {
         }
         
         /// <summary>
+        ///   Looks up a localized string similar to Import peak boundaries from external tool.
+        /// </summary>
+        public static string ToolService_ImportPeakBoundaries_Import_peak_boundaries_from_external_tool {
+            get {
+                return ResourceManager.GetString("ToolService_ImportPeakBoundaries_Import_peak_boundaries_from_external_tool", resourceCulture);
+            }
+        }
+        
+        /// <summary>
         ///   Looks up a localized string similar to Import Properties from external tool.
         /// </summary>
         public static string ToolService_ImportProperties_Import_Properties_from_external_tool {
