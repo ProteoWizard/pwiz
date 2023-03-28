@@ -434,7 +434,7 @@ namespace pwiz.Skyline.EditUI.OptimizeTransitions
             {
                 get
                 {
-                    return (PeptideDocNode)PeptideGroupDocNode.FindNode(MoleculeIdentityPath.GetIdentity(1));
+                    return (PeptideDocNode)PeptideGroupDocNode?.FindNode(MoleculeIdentityPath.GetIdentity(1));
                 }
             }
 

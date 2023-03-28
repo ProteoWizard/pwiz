@@ -13,31 +13,28 @@ namespace pwiz.Skyline.Model.DocSettings.AbsoluteQuantification
 
         protected override CalibrationCurve FitPoints(IList<WeightedPoint> points)
         {
-            var uniqueConcentrations = points.Select(pt => pt.X).Distinct().OrderBy(x => x).ToList();
-            CalibrationCurve bestCurve = null;
-            double bestError = double.MaxValue;
-            foreach (var xOffset in uniqueConcentrations)
+            var concentrations = points.Select(pt => pt.X).Distinct().OrderBy(x=>x).ToList();
+            BilinearCurveFit bestCurve = null;
+            foreach (var xOffset in concentrations)
             {
-                CalibrationCurve candidateCurve = FitPointsWithOffset(xOffset, points);
-                if (candidateCurve == null)
+                var candidateCurveFit = BilinearCurveFit.WithOffset(xOffset, points);
+                if (candidateCurveFit == null)
                 {
                     continue;
                 }
-                double error = CalculateError(candidateCurve, points);
-                if (bestCurve == null || error < bestError)
+                if (bestCurve == null || candidateCurveFit.Error < bestCurve.Error)
                 {
-                    bestCurve = candidateCurve;
-                    bestError = error;
+                    bestCurve = candidateCurveFit;
                 }
             }
 
-            return bestCurve;
+            return bestCurve?.CalibrationCurve;
         }
 
-        public static CalibrationCurve FitPointsWithOffset(double xOffset, IList<WeightedPoint> points)
+        public static CalibrationCurve FitPointsWithOffset(double xOffset, double baselineWeight, IList<WeightedPoint> points)
         {
             var linearPoints = points.Where(pt => pt.X > xOffset).ToList();
-            var baselinePoints = points.Where(pt => pt.X <= xOffset).ToList();
+            var baselinePoints = points.Where(pt => pt.X <= xOffset).Select(pt=>new WeightedPoint(pt.X, pt.Y, baselineWeight)).ToList();
             if (linearPoints.Select(pt => pt.X).Distinct().Count() >= 2)
             {
                 var linearCurve = RegressionFit.LINEAR.Fit(linearPoints) as CalibrationCurve.Linear;
@@ -72,17 +69,5 @@ namespace pwiz.Skyline.Model.DocSettings.AbsoluteQuantification
             }
         }
 
-        public static double CalculateError(CalibrationCurve calibrationCurve, IList<WeightedPoint> points)
-        {
-            double totalError = 0;
-            foreach (var point in points)
-            {
-                double expected = calibrationCurve.GetY(point.X);
-                double difference = expected - point.Y;
-                totalError += difference * difference * point.Weight;
-            }
-
-            return totalError;
-        }
     }
 }

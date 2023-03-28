@@ -46,8 +46,7 @@ namespace pwiz.Skyline.Model.DocSettings.AbsoluteQuantification
         public BilinearCurveFit FitBilinearCurveWithOffset(double offset, IEnumerable<WeightedPoint> points)
         {
             var pointsList = points as IList<WeightedPoint> ?? points.ToList();
-            return BilinearCurveFit.FromCalibrationCurve(
-                BilinearRegressionFit.FitPointsWithOffset(offset, pointsList), pointsList);
+            return BilinearCurveFit.WithOffset(offset, pointsList);
         }
 
         public BilinearCurveFit ComputeBootstrapParams(Random random, IList<WeightedPoint> points)
