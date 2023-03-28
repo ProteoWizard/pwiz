@@ -16,6 +16,8 @@
  * See the License for the specific language governing permissions and
  * limitations under the License.
  */
+
+using System.Linq;
 using Microsoft.VisualStudio.TestTools.UnitTesting;
 using pwiz.Skyline.Model;
 using pwiz.Skyline.ToolsUI;
@@ -51,6 +53,7 @@ namespace pwiz.SkylineTestFunctional
                 Assert.AreEqual("Delete Selected Node", SkylineWindow.GetToolText(0));
                 Assert.AreEqual("Monitor Selection", SkylineWindow.GetToolText(1));
                 Assert.AreEqual("Set Note On Selected Node", SkylineWindow.GetToolText(2));
+                Assert.AreEqual("Shrink Peak Boundaries", SkylineWindow.GetToolText(3));
                 SkylineWindow.OpenFile(TestFilesDir.GetTestPath("MultiLabel.sky"));
             });
             IdentityPath idPath = SkylineWindow.Document.GetPathTo((int)SrmDocument.Level.TransitionGroups, 3);
@@ -64,6 +67,20 @@ namespace pwiz.SkylineTestFunctional
                 var transitionGroup = (TransitionGroupDocNode)SkylineWindow.Document.FindNode(idPath);
                 return transitionGroup.Note == "Test Interactive Tool Note";
             });
+            var originalPeakWidth = GetPeakWidth(idPath);
+            Assert.AreNotEqual(0, originalPeakWidth);
+            RunUI(()=>SkylineWindow.RunTool(3));
+            WaitForCondition(() => originalPeakWidth != GetPeakWidth(idPath));
+            var newPeakWidth = GetPeakWidth(idPath);
+            Assert.AreEqual(originalPeakWidth / 2, newPeakWidth, .001);
+        }
+
+        private double GetPeakWidth(IdentityPath transitionGroupIdentityPath)
+        {
+            var transitionGroupDocNode = (TransitionGroupDocNode) SkylineWindow.Document.FindNode(transitionGroupIdentityPath);
+            var transitionGroupChromInfo = transitionGroupDocNode.ChromInfos.FirstOrDefault();
+            return transitionGroupChromInfo?.EndRetentionTime - transitionGroupChromInfo?.StartRetentionTime ?? 0;
         }
     }
+
 }
