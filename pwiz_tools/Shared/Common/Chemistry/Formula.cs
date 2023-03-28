@@ -391,11 +391,6 @@ namespace pwiz.Common.Chemistry
             return result.ToString();
         }
 
-        public T TimesMinusOne()
-        {
-            return new T { Dictionary = Dictionary.ReplaceValues(Dictionary.Values.Select(count => -count)) };
-        }
-
         public static T Sum(IEnumerable<T> items)
         {
             var dictionary = new Dictionary<string, int>();

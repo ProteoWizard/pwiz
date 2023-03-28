@@ -111,7 +111,7 @@ namespace pwiz.Skyline.Model.Crosslinking
                     parts.Add(crosslink.Crosslinker.GetMoleculeMassOffset());
                 }
             }
-            return MoleculeMassOffset.Sum(parts);
+            return FragmentedMolecule.SumMoleculeMassOffsets(parts);
         }
 
         public TypedMass GetFragmentMass(NeutralFragmentIon complexFragmentIon)
@@ -183,7 +183,7 @@ namespace pwiz.Skyline.Model.Crosslinking
             {
                 parts.Add(crosslink.Crosslinker.GetMoleculeMassOffset());
             }
-            return MoleculeMassOffset.Sum(parts);
+            return FragmentedMolecule.SumMoleculeMassOffsets(parts);
         }
 
         public FragmentedMolecule.Settings GetFragmentedMoleculeSettings()
@@ -192,7 +192,6 @@ namespace pwiz.Skyline.Model.Crosslinking
         }
 
         public IEnumerable<NeutralFragmentIon> GetComplexFragmentIons(TransitionGroup transitionGroup,
-            double precursorMz,
             bool useFilter)
         {
             var simpleTransitions = new List<IList<SingleFragmentIon>>();
@@ -222,7 +221,7 @@ namespace pwiz.Skyline.Model.Crosslinking
             Dictionary<double, LibraryRankedSpectrumInfo.RankedMI> transitionRanks,
             bool useFilter)
         {
-            var complexFragmentIons = GetComplexFragmentIons(transitionGroup, precursorMz, useFilter);
+            var complexFragmentIons = GetComplexFragmentIons(transitionGroup, useFilter);
             
             var allTransitions =
                 RemoveUnmeasurable(precursorMz,

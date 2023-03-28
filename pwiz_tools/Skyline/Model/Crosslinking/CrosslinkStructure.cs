@@ -147,7 +147,7 @@ namespace pwiz.Skyline.Model.Crosslinking
                 parts.Add(crosslink.Crosslinker.GetMoleculeMassOffset());
             }
 
-            return MoleculeMassOffset.Sum(parts);
+            return FragmentedMolecule.SumMoleculeMassOffsets(parts);
         }
 
         public bool IsConnected()

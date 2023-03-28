@@ -127,7 +127,7 @@ namespace pwiz.Skyline.Model
             {
                 return;
             }
-            var precursorNeutralFormula = MoleculeMassOffset.Sum(
+            var precursorNeutralFormula = SumMoleculeMassOffsets(
                 GetSequenceFormula(ModifiedSequence).Append(H2O));
             PrecursorFormula = precursorNeutralFormula.Plus(FormulaForCharge(PrecursorCharge));
             if (FragmentIonType == IonType.custom)
@@ -153,7 +153,7 @@ namespace pwiz.Skyline.Model
             }
             else
             {
-                FragmentFormula = MoleculeMassOffset.Sum(
+                FragmentFormula = SumMoleculeMassOffsets(
                     GetSequenceFormula(fragmentSequence)
                         .Concat(FragmentLosses.Select(LossAsMoleculeMassOffset))
                         .Append(FormulaDiffForIonType(FragmentIonType))
@@ -439,7 +439,39 @@ namespace pwiz.Skyline.Model
                 return new MoleculeMassOffset(Molecule.Empty, -fragmentLoss.MonoisotopicMass, -fragmentLoss.AverageMass);
             }
             Molecule lossFormula = Molecule.ParseExpression(fragmentLoss.Formula);
-            return new MoleculeMassOffset(lossFormula.TimesMinusOne());
+            return MoleculeMassOffset.EMPTY.Minus(new MoleculeMassOffset(lossFormula));
+        }
+
+        public static MoleculeMassOffset SumMoleculeMassOffsets(IEnumerable<MoleculeMassOffset> parts)
+        {
+            List<Molecule> moleculeParts = new List<Molecule>();
+            double monoMassOffset = 0;
+            double averageMassOffset = 0;
+            foreach (var part in parts)
+            {
+                monoMassOffset += part.MonoMassOffset;
+                averageMassOffset += part.AverageMassOffset;
+                if (part.Molecule.Count > 0)
+                {
+                    moleculeParts.Add(part.Molecule);
+                }
+            }
+
+            Molecule molecule;
+            switch (moleculeParts.Count)
+            {
+                case 0:
+                    molecule = Molecule.Empty;
+                    break;
+                case 1:
+                    molecule = moleculeParts[0];
+                    break;
+                default:
+                    molecule = Molecule.Sum(moleculeParts);
+                    break;
+            }
+
+            return new MoleculeMassOffset(molecule, monoMassOffset, averageMassOffset);
         }
     }
 }
