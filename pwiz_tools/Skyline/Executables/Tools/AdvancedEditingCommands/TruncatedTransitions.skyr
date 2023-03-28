@@ -1,0 +1,7 @@
+﻿<views>
+  <view name="Truncated Transitions" rowsource="pwiz.Skyline.Model.Databinding.Entities.Transition" sublist="Results!*" uimode="proteomic">
+    <column name="Locator" />
+    <filter column="Results!*.Value.Truncated" opname="equals" operand="True" />
+    <filter column="Quantitative" opname="equals" operand="True" />
+  </view>
+</views>

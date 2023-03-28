@@ -1,0 +1,35 @@
+﻿<Project Sdk="Microsoft.NET.Sdk">
+
+  <PropertyGroup>
+    <OutputType>WinExe</OutputType>
+    <TargetFramework>net7.0-windows</TargetFramework>
+    <Nullable>enable</Nullable>
+    <UseWindowsForms>true</UseWindowsForms>
+    <ImplicitUsings>enable</ImplicitUsings>
+    <LangVersion>latest</LangVersion>
+  </PropertyGroup>
+
+  <ItemGroup>
+    <ProjectReference Include="..\..\..\SkylineTool\SkylineTool.csproj" />
+  </ItemGroup>
+
+  <ItemGroup>
+    <Compile Update="Resources.Designer.cs">
+      <DesignTime>True</DesignTime>
+      <AutoGen>True</AutoGen>
+      <DependentUpon>Resources.resx</DependentUpon>
+    </Compile>
+  </ItemGroup>
+
+  <ItemGroup>
+    <EmbeddedResource Update="Resources.resx">
+      <Generator>ResXFileCodeGenerator</Generator>
+      <LastGenOutput>Resources.Designer.cs</LastGenOutput>
+    </EmbeddedResource>
+  </ItemGroup>
+
+  <Target Name="PostBuild" AfterTargets="PostBuildEvent">
+    <Exec Command="pushd $(TargetDir)&#xD;&#xA;&quot;$(SolutionDir)..\..\..\..\..\libraries\7za.exe&quot; a $(SolutionDir)\ToolServiceTestHarness.zip *&#xD;&#xA;popd&#xD;&#xA;pushd &quot;$(SolutionDir)&quot;&#xD;&#xA;&quot;$(SolutionDir)..\..\..\..\..\libraries\7za.exe&quot; a ToolServiceTestHarness.zip tool-inf&#xD;&#xA;popd" />
+  </Target>
+
+</Project>
