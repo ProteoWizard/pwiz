@@ -511,7 +511,7 @@ namespace pwiz.SkylineTest
             var transitionGroupDocNodePlus100 = new TransitionGroupDocNode(transitionGroup, Annotations.EMPTY,
                 srmSettings,
                 explicitModsPlus100, null, null, null, Array.Empty<TransitionDocNode>(), false);
-            Assert.AreEqual(transitionGroupDocNode.PrecursorMz + 100, transitionGroupDocNodePlus100.PrecursorMz);
+            Assert.AreEqual(transitionGroupDocNode.PrecursorMz + 100 / 3.0, transitionGroupDocNodePlus100.PrecursorMz, .00001);
         }
     }
 }

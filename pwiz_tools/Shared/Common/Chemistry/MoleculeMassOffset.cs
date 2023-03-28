@@ -42,7 +42,6 @@ namespace pwiz.Common.Chemistry
 
         public MoleculeMassOffset(Molecule molecule) : this(molecule, 0, 0)
         {
-
         }
 
         public Molecule Molecule { get; private set; }
@@ -60,6 +59,16 @@ namespace pwiz.Common.Chemistry
             var newMolecule = MoleculeFromEntries(Molecule.Concat(
                 moleculeMassOffset.Molecule.Select(entry => new KeyValuePair<string, int>(entry.Key, -entry.Value))));
             return new MoleculeMassOffset(newMolecule, MonoMassOffset - moleculeMassOffset.MonoMassOffset, AverageMassOffset - moleculeMassOffset.AverageMassOffset);
+        }
+
+        public MoleculeMassOffset ChangeMolecule(Molecule newMolecule)
+        {
+            return ChangeProp(ImClone(this), im => im.Molecule = newMolecule);
+        }
+
+        public MoleculeMassOffset TimesMinusOne()
+        {
+            return new MoleculeMassOffset(Molecule.TimesMinusOne(), -MonoMassOffset, -AverageMassOffset);
         }
 
         public override string ToString()
@@ -145,6 +154,43 @@ namespace pwiz.Common.Chemistry
             }
 
             return Molecule.FromDict(dictionary);
+        }
+
+        public static MoleculeMassOffset Sum(IEnumerable<MoleculeMassOffset> parts)
+        {
+            IList<Molecule> molecules = new List<Molecule>();
+            double monoMassOffset = 0;
+            double averageMassOffset = 0;
+            MoleculeMassOffset firstPart = null;
+            foreach (var part in parts)
+            {
+                firstPart = part;
+                molecules.Add(part.Molecule);
+                monoMassOffset += part.MonoMassOffset;
+                averageMassOffset += part.AverageMassOffset;
+            }
+
+            if (molecules.Count <= 1)
+            {
+                return firstPart ?? EMPTY;
+            }
+
+            return new MoleculeMassOffset(Molecule.Sum(molecules), monoMassOffset, averageMassOffset);
+        }
+
+        public static MoleculeMassOffset Sum(params MoleculeMassOffset[] parts)
+        {
+            if (parts.Length == 0)
+            {
+                return EMPTY;
+            }
+
+            if (parts.Length == 1)
+            {
+                return parts[0];
+            }
+
+            return Sum((IEnumerable<MoleculeMassOffset>)parts);
         }
     }
 }
