@@ -25,14 +25,15 @@ using System.Net;
 using System.Reflection;
 using System.Text;
 using System.Windows.Forms;
+using System.Windows.Forms.VisualStyles;
 using System.Xml;
 using System.Xml.Serialization;
 using Ionic.Zip;
 using Newtonsoft.Json.Linq;
+using pwiz.PanoramaClient;
 using pwiz.Common.Collections;
 using pwiz.Common.DataBinding;
 using pwiz.Common.SystemUtil;
-using pwiz.PanoramaClient;
 using pwiz.ProteomeDatabase.API;
 using pwiz.Skyline.Alerts;
 using pwiz.Skyline.Controls;
@@ -62,6 +63,7 @@ using pwiz.Skyline.Properties;
 using pwiz.Skyline.Util;
 using pwiz.Skyline.Util.Extensions;
 using DatabaseOpeningException = pwiz.Skyline.Model.Irt.DatabaseOpeningException;
+using Server = pwiz.Skyline.Util.Server;
 
 namespace pwiz.Skyline
 {
@@ -253,7 +255,8 @@ namespace pwiz.Skyline
         public bool OpenSkypFile(string skypPath, FormEx parentWindow = null)
         {
             var skypSupport = new SkypSupport(this);
-            return skypSupport.Open(skypPath, Settings.Default.ServerList, parentWindow);
+            //return skypSupport.Open(skypPath, Settings.Default.ServerList, parentWindow);
+            return false;
         }
 
         private AuditLogEntry AskForLogEntry(FormEx parentWindow)
@@ -893,6 +896,78 @@ namespace pwiz.Skyline
             }
 
             return true;
+        }
+
+        private void openPanorama_Click(object sender, EventArgs e)
+        {
+            OpenFromPanorama();
+        }
+
+        private void OpenFromPanorama()
+        {
+            var servers = Settings.Default.ServerList;
+            if (servers.Count == 0)
+            {
+                DialogResult buttonPress = MultiButtonMsgDlg.Show(
+                    this,
+                    TextUtil.LineSeparate(
+                        Resources.SkylineWindow_ShowPublishDlg_There_are_no_Panorama_servers_to_upload_to,
+                        Resources.SkylineWindow_ShowPublishDlg_Press_Register_to_register_for_a_project_on_PanoramaWeb_,
+                        Resources.SkylineWindow_ShowPublishDlg_Press_Continue_to_use_the_server_of_your_choice_),
+                    Resources.SkylineWindow_ShowPublishDlg_Register, Resources.SkylineWindow_ShowPublishDlg_Continue,
+                    true);
+                if (buttonPress == DialogResult.Cancel)
+                    return;
+
+                object tag = null;
+                if (buttonPress == DialogResult.Yes)
+                {
+                    // person intends to register                   
+                    WebHelpers.OpenLink(this, @"https://panoramaweb.org/signup.url");
+                    tag = true;
+                }
+
+                var serverPanoramaWeb = new Server(pwiz.PanoramaClient.PanoramaUtil.PANORAMA_WEB, string.Empty, string.Empty);
+                var newServer = servers.EditItem(this, serverPanoramaWeb, null, tag);
+                if (newServer == null)
+                    return;
+
+                servers.Add(newServer);
+            }
+            //using var dlg = new RemoteFileDialog(user, pass, server, "", true);
+            /*
+            var user = string.Empty;
+            var pass = string.Empty;
+            Uri server = null;
+            if (servers.Count > 0)
+            {
+                user = servers[0].Username;
+                pass = servers[0].Password;
+                server = servers[0].URI;
+            }
+
+            var pc = new PanoramaClient.PanoramaClient();
+            using var dirPicker = new DirectoryPicker(server, user, pass);
+            using var dlg = new RemoteFileDialog(user, pass, server, Settings.Default.PanoramaClientExpansion,
+                Settings.Default.PanoramaSkyFiles);
+            //result should be path to file or folder, move the downloading code into a separate location in PanoramaClient
+            //PanoramaClient: ShowPanoramaBrowser() returns path, DownloadFromPanorama()
+            
+            if (dlg.ShowDialog() != DialogResult.Cancel)
+            {
+                var downloadPath = pc.DownloadAndSave(server, user, pass, dlg.FileName, dlg.DownloadName);
+                if (dlg.FileName.EndsWith(SrmDocumentSharing.EXT) && !string.IsNullOrEmpty(downloadPath))
+                {
+                    OpenSharedFile(downloadPath);
+                }
+                else if (dlg.FileName.EndsWith(SrmDocument.EXT) && !string.IsNullOrEmpty(downloadPath))
+                {
+                    OpenFile(downloadPath);
+                }
+            }
+            Settings.Default.PanoramaSkyFiles = dlg.ShowingSky;
+            Settings.Default.PanoramaClientExpansion = dlg.TreeState;
+            Settings.Default.Save();*/
         }
 
         private void saveMenuItem_Click(object sender, EventArgs e)

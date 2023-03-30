@@ -225,6 +225,7 @@ namespace pwiz.Skyline
             this.saveAsMenuItem = new System.Windows.Forms.ToolStripMenuItem();
             this.shareDocumentMenuItem = new System.Windows.Forms.ToolStripMenuItem();
             this.publishMenuItem = new System.Windows.Forms.ToolStripMenuItem();
+            this.openPanoramaMenuItem = new System.Windows.Forms.ToolStripMenuItem();
             this.toolStripSeparator2 = new System.Windows.Forms.ToolStripSeparator();
             this.importToolStripMenuItem = new System.Windows.Forms.ToolStripMenuItem();
             this.importResultsMenuItem = new System.Windows.Forms.ToolStripMenuItem();
@@ -290,6 +291,7 @@ namespace pwiz.Skyline
             this.supportMenuItem = new System.Windows.Forms.ToolStripMenuItem();
             this.issuesMenuItem = new System.Windows.Forms.ToolStripMenuItem();
             this.submitErrorReportMenuItem = new System.Windows.Forms.ToolStripMenuItem();
+            this.crashSkylineMenuItem = new System.Windows.Forms.ToolStripMenuItem();
             this.checkForUpdatesSeparator = new System.Windows.Forms.ToolStripSeparator();
             this.checkForUpdatesMenuItem = new System.Windows.Forms.ToolStripMenuItem();
             this.toolStripSeparator29 = new System.Windows.Forms.ToolStripSeparator();
@@ -340,7 +342,6 @@ namespace pwiz.Skyline
             this.detectionsToolStripSeparator2 = new System.Windows.Forms.ToolStripSeparator();
             this.detectionsPropertiesToolStripMenuItem = new System.Windows.Forms.ToolStripMenuItem();
             this.detectionsToolStripSeparator3 = new System.Windows.Forms.ToolStripSeparator();
-            this.crashSkylineMenuItem = new System.Windows.Forms.ToolStripMenuItem();
             this.contextMenuTreeNode.SuspendLayout();
             this.contextMenuSpectrum.SuspendLayout();
             this.contextMenuRetentionTimes.SuspendLayout();
@@ -1654,6 +1655,7 @@ namespace pwiz.Skyline
             this.saveAsMenuItem,
             this.shareDocumentMenuItem,
             this.publishMenuItem,
+            this.openPanoramaMenuItem,
             this.toolStripSeparator2,
             this.importToolStripMenuItem,
             this.exportToolStripMenuItem,
@@ -1721,6 +1723,13 @@ namespace pwiz.Skyline
             resources.ApplyResources(this.publishMenuItem, "publishMenuItem");
             this.publishMenuItem.Name = "publishMenuItem";
             this.publishMenuItem.Click += new System.EventHandler(this.publishMenuItem_Click);
+            // 
+            // openPanoramaMenuItem
+            // 
+            this.openPanoramaMenuItem.Image = global::pwiz.Skyline.Properties.Resources.Panorama;
+            this.openPanoramaMenuItem.Name = "openPanoramaMenuItem";
+            resources.ApplyResources(this.openPanoramaMenuItem, "openPanoramaMenuItem");
+            this.openPanoramaMenuItem.Click += new System.EventHandler(this.openPanorama_Click);
             // 
             // toolStripSeparator2
             // 
@@ -2161,6 +2170,12 @@ namespace pwiz.Skyline
             resources.ApplyResources(this.submitErrorReportMenuItem, "submitErrorReportMenuItem");
             this.submitErrorReportMenuItem.Click += new System.EventHandler(this.submitErrorReportMenuItem_Click);
             // 
+            // crashSkylineMenuItem
+            // 
+            this.crashSkylineMenuItem.Name = "crashSkylineMenuItem";
+            resources.ApplyResources(this.crashSkylineMenuItem, "crashSkylineMenuItem");
+            this.crashSkylineMenuItem.Click += new System.EventHandler(this.crashSkylineMenuItem_Click);
+            // 
             // checkForUpdatesSeparator
             // 
             this.checkForUpdatesSeparator.Name = "checkForUpdatesSeparator";
@@ -2508,12 +2523,6 @@ namespace pwiz.Skyline
             this.detectionsToolStripSeparator3.Name = "detectionsToolStripSeparator3";
             resources.ApplyResources(this.detectionsToolStripSeparator3, "detectionsToolStripSeparator3");
             // 
-            // crashSkylineMenuItem
-            // 
-            this.crashSkylineMenuItem.Name = "crashSkylineMenuItem";
-            resources.ApplyResources(this.crashSkylineMenuItem, "crashSkylineMenuItem");
-            this.crashSkylineMenuItem.Click += new System.EventHandler(this.crashSkylineMenuItem_Click);
-            // 
             // SkylineWindow
             // 
             resources.ApplyResources(this, "$this");
@@ -2854,6 +2863,7 @@ namespace pwiz.Skyline
         private System.Windows.Forms.ToolStripMenuItem synchMzScaleToolStripMenuItem;
         private System.Windows.Forms.ToolStripMenuItem submitErrorReportMenuItem;
         private System.Windows.Forms.ToolStripMenuItem crashSkylineMenuItem;
+        private System.Windows.Forms.ToolStripMenuItem openPanoramaMenuItem;
     }
 }
 
