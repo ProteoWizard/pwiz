@@ -38,6 +38,7 @@ namespace pwiz.PanoramaClient
         private const string RECENT_VER = "Most recent version";
 
         //Ask Brendan where RemoteFileDialog should live
+        //Two different forms, directoryChooser FilePicker both use the same control which will be the tree of folders
         //3rd parameter: only show folders, only show Panorama folders (targetedms module)
         public RemoteFileDialog(string user, string pass, Uri server, string stateString, bool showingSky)
         {
@@ -95,7 +96,7 @@ namespace pwiz.PanoramaClient
             var serverUri = new Uri(Server);
             if (!ShowingSky)
             {
-                pc.InitializeTreeView(serverUri, User, Pass, treeView, false, true);
+                pc.InitializeTreeView(serverUri, User, Pass, treeView, false, true, false);
             }
             else
             {
@@ -139,7 +140,6 @@ namespace pwiz.PanoramaClient
                     var nextFolder = folders[1];
                     var replaced = "/" + nextFolder;
                     var replaceTest = path.Substring(replaced.Length);
-                    //path = path.Replace(replaced, string.Empty);
                     if (!node.Nodes.ContainsKey(nextFolder))
                     {
                         var newNode = new TreeNode(nextFolder);
@@ -543,7 +543,7 @@ namespace pwiz.PanoramaClient
                 {
                     var pc = new PanoramaClient();
                     var serverUri = new Uri(Server);
-                    pc.InitializeTreeView(serverUri, User, Pass, treeView, false, true);
+                    pc.InitializeTreeView(serverUri, User, Pass, treeView, false, true, false);
                     ShowingSky = false;
                 }
             }

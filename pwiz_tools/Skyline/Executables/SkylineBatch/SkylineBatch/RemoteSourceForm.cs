@@ -110,6 +110,8 @@ namespace SkylineBatch
         {
             //What server should we use by default?
             var serverUri = new Uri(@"https://panoramaweb.org");
+            using var dirPicker = new DirectoryPicker(serverUri, textUserName.Text, textPassword.Text);
+            dirPicker.ShowDialog();
             using var dlg = new RemoteFileDialog(textUserName.Text, textPassword.Text, serverUri, Settings.Default.PanoramaClientExpansion,
                 Settings.Default.PanoramaSkyFiles);
             if (dlg.ShowDialog() != DialogResult.Cancel)

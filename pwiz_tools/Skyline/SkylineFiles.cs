@@ -944,11 +944,12 @@ namespace pwiz.Skyline
             }
 
             var pc = new PanoramaClient.PanoramaClient();
+            using var dirPicker = new DirectoryPicker(server, user, pass);
             using var dlg = new RemoteFileDialog(user, pass, server, Settings.Default.PanoramaClientExpansion,
                 Settings.Default.PanoramaSkyFiles);
             //result should be path to file or folder, move the downloading code into a separate location in PanoramaClient
             //PanoramaClient: ShowPanoramaBrowser() returns path, DownloadFromPanorama()
-
+            
             if (dlg.ShowDialog() != DialogResult.Cancel)
             {
                 var downloadPath = pc.DownloadAndSave(server, user, pass, dlg.FileName, dlg.DownloadName);

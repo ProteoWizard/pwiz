@@ -97,7 +97,7 @@ namespace pwiz.Skyline.FileUI
                        })
                 {
                     //waitDlg.PerformWork(this, 800, () => PublishDocumentDlgLoad(listServerFolders));
-                    waitDlg.PerformWork(this, 800, () => pc.InitializeTreeView(serverUri, serverUser, serverPass, treeViewFolders, true, false));
+                    waitDlg.PerformWork(this, 800, () => pc.InitializeTreeView(serverUri, serverUser, serverPass, treeViewFolders, true, false, false));
                 }
             }
             catch (Exception x)

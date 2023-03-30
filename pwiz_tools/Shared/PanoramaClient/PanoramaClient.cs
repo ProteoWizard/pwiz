@@ -60,13 +60,25 @@ namespace pwiz.PanoramaClient
             }
         }
 
-        public void InitializeTreeView(Uri serverUri, string user, string pass, TreeView treeViewFolders, bool requireUploadPerms, bool showFiles)
+        public void InitializeTreeView(Uri serverUri, string user, string pass, TreeView treeViewFolders, bool requireUploadPerms, bool showFiles, bool showSky)
         {
             var folder = GetInfoForFolders(serverUri, user, pass, null);
             var treeNode = new TreeNode(serverUri.ToString());
 
             treeViewFolders.Invoke(new Action(() => treeViewFolders.Nodes.Add(treeNode)));
-            treeViewFolders.Invoke(new Action(() => AddChildContainers(treeNode, folder, requireUploadPerms, showFiles)));
+            if (showSky)
+            {
+                var cols = new[] { @"Container", @"FileName", @"Container/Path" };
+                var initQuery = BuildQuery(serverUri.ToString(), @"/Panorama Public/", @"Runs", @"AllFolders", cols, string.Empty, string.Empty);
+                JToken json = GetJson(initQuery, user, pass);
+                treeViewFolders.Invoke(new Action(() => LoadSkyFolders(json, treeNode, new HashSet<string>())));
+
+            }
+            else
+            {
+                treeViewFolders.Invoke(new Action(() => AddChildContainers(treeNode, folder, requireUploadPerms, showFiles)));
+            }
+            
 
         }
 
@@ -103,6 +115,7 @@ namespace pwiz.PanoramaClient
             return new Uri(serverUri, path);
         }
 
+        //IPanorama
         public static bool CheckFolderPermissions(JToken folderJson)
         {
             if (folderJson != null)
@@ -214,6 +227,95 @@ namespace pwiz.PanoramaClient
                 }
 
             }
+        }
+
+        private void LoadSkyFolders(JToken folders, TreeNode node, HashSet<string> prevFolders)
+        {
+            JToken rows = folders[@"rows"];
+            foreach (var row in rows)
+            {
+                //get the path
+                var fullPath = (string)row[@"Container/Path"];
+                if (!prevFolders.Contains(fullPath))
+                {
+                    prevFolders.Add(fullPath);
+                    AddFolderPath(fullPath, fullPath, node);
+                }
+            }
+        }
+
+        private void AddFolderPath(string full, string path, TreeNode node)
+        {
+            if (!string.IsNullOrEmpty(path))
+            {
+                var folders = path.Split('/');
+                if (folders.Length > 1)
+                {
+                    var nextFolder = folders[1];
+                    var replaced = "/" + nextFolder;
+                    var replaceTest = path.Substring(replaced.Length);
+                    if (!node.Nodes.ContainsKey(nextFolder))
+                    {
+                        var newNode = new TreeNode(nextFolder);
+                        newNode.Name = nextFolder;
+                        if (node.Tag == null)
+                        {
+                            newNode.Tag = "/" + nextFolder;
+                        }
+                        else
+                        {
+                            newNode.Tag = node.Tag + "/" + nextFolder;
+                        }
+
+                        node.Nodes.Add(newNode);
+
+                        AddFolderPath(full, replaceTest, newNode);
+                    }
+                    else
+                    {
+                        var getKey = node.Nodes.IndexOfKey(nextFolder);
+
+                        AddFolderPath(full, replaceTest, node.Nodes[getKey]);
+                    }
+                }
+
+            }
+
+        }
+
+        private JToken GetJson(string query, string user, string pass)
+        {
+            var queryUri = new Uri(query);
+            var webClient = new WebClientWithCredentials(queryUri, user, pass);
+            JToken json = webClient.Get(queryUri);
+            return json;
+        }
+
+        private string BuildQuery(string server, string folderPath, string queryName, string folderFilter, string[] columns, string sortParam, string equalityParam)
+        {
+            var query = string.Format(@"{0}{1}/query-selectRows.view?schemaName=targetedms&query.queryName={2}&query.containerFilterName={3}", server, folderPath, queryName, folderFilter);
+            if (columns != null)
+            {
+                query = string.Format(@"{0}&query.columns=", query);
+                string allCols = string.Empty;
+                foreach (var col in columns)
+                {
+                    allCols = string.Format(@"{0},{1}", col, allCols);
+                }
+
+                query = string.Format(@"{0}{1}", query, allCols);
+            }
+
+            if (!string.IsNullOrEmpty(sortParam))
+            {
+                query = string.Format(@"{0}&query.sort={1}", query, sortParam);
+            }
+
+            if (!string.IsNullOrEmpty(equalityParam))
+            {
+                query = string.Format(@"{0}&query.{1}~eq=", query, equalityParam);
+            }
+            return query;
         }
 
 
