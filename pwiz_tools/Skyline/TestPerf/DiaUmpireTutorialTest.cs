@@ -162,7 +162,7 @@ namespace TestPerf
 
                 TargetCounts = new[] { 6945, 41874, 46365, 278190 },
                 FinalTargetCounts = new[] { 2642, 27840, 31188, 187128 },
-                ScoringModelCoefficients = "0.1950|-0.6249|4.0515|0.1456|-0.1799|0.5898|0.1468|-0.0444",
+                ScoringModelCoefficients = "0.1951|-0.6248|4.0530|0.1456|-0.1801|0.5896|0.1466|-0.0445",
                 MassErrorStats = new[]
                 {
                     new[] {2.7, 5.1},
