@@ -12,7 +12,7 @@ namespace pwiz.Skyline.Properties {
     
     
     [global::System.Runtime.CompilerServices.CompilerGeneratedAttribute()]
-    [global::System.CodeDom.Compiler.GeneratedCodeAttribute("Microsoft.VisualStudio.Editors.SettingsDesigner.SettingsSingleFileGenerator", "17.4.0.0")]
+    [global::System.CodeDom.Compiler.GeneratedCodeAttribute("Microsoft.VisualStudio.Editors.SettingsDesigner.SettingsSingleFileGenerator", "17.2.0.0")]
     public sealed partial class Settings : global::System.Configuration.ApplicationSettingsBase {
         
         private static Settings defaultInstance = ((Settings)(global::System.Configuration.ApplicationSettingsBase.Synchronized(new Settings())));
@@ -3383,13 +3383,25 @@ namespace pwiz.Skyline.Properties {
         
         [global::System.Configuration.UserScopedSettingAttribute()]
         [global::System.Diagnostics.DebuggerNonUserCodeAttribute()]
-        [global::System.Configuration.DefaultSettingValueAttribute("False")]
-        public bool ViewLibraryMatchPropsVisible {
+        [global::System.Configuration.DefaultSettingValueAttribute("")]
+        public string PanoramaClientExpansion {
             get {
-                return ((bool)(this["ViewLibraryMatchPropsVisible"]));
+                return ((string)(this["PanoramaClientExpansion"]));
             }
             set {
-                this["ViewLibraryMatchPropsVisible"] = value;
+                this["PanoramaClientExpansion"] = value;
+            }
+        }
+        
+        [global::System.Configuration.UserScopedSettingAttribute()]
+        [global::System.Diagnostics.DebuggerNonUserCodeAttribute()]
+        [global::System.Configuration.DefaultSettingValueAttribute("False")]
+        public bool PanoramaSkyFiles {
+            get {
+                return ((bool)(this["PanoramaSkyFiles"]));
+            }
+            set {
+                this["PanoramaSkyFiles"] = value;
             }
         }
     }

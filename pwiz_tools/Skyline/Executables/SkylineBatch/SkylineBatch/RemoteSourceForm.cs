@@ -1,7 +1,9 @@
 ﻿using System;
 using System.Collections.Immutable;
+using System.IO;
 using System.Threading;
 using System.Windows.Forms;
+using pwiz.PanoramaClient;
 using SharedBatch;
 using SkylineBatch.Properties;
 
@@ -34,7 +36,8 @@ namespace SkylineBatch
             {
                 _editingSourceName = editingRemoteSource.Name;
                 textName.Text = editingRemoteSource.Name;
-                textFolderUrl.Text = editingRemoteSource.URI.AbsoluteUri;
+                textFolderUrl.Text = editingRemoteSource.URI.PathAndQuery;
+                textServer.Text = editingRemoteSource.URI.GetLeftPart(UriPartial.Authority);
                 textUserName.Text = editingRemoteSource.Username;
                 textPassword.Text = editingRemoteSource.Password;
                 checkBoxNoEncryption.Checked = !editingRemoteSource.Encrypt;
@@ -70,7 +73,7 @@ namespace SkylineBatch
 
             try
             {
-                RemoteFileSource = RemoteFileSource.RemoteSourceFromUi(textName.Text, textFolderUrl.Text,
+                RemoteFileSource = RemoteFileSource.RemoteSourceFromUi(textName.Text, (string.Concat(textServer.Text, textFolderUrl.Text)),
                     textUserName.Text, textPassword.Text, !checkBoxNoEncryption.Checked);
                 if (_adding)
                     State.UserAddRemoteFileSource(RemoteFileSource, _preferPanoramaSource, _mainControl);
@@ -100,6 +103,42 @@ namespace SkylineBatch
         private void btnCancel_Click(object sender, EventArgs e)
         {
             State = _initialState;
+        }
+
+        //SkylineBatch is expecting a _webdav link, take the path add /_webdav and /@files/
+        private void openPanorama_Click(object sender, EventArgs e)
+        {
+            //What server should we use by default?
+            var serverUri = new Uri(@"https://panoramaweb.org");
+            using var dlg = new RemoteFileDialog(textUserName.Text, textPassword.Text, serverUri, Settings.Default.PanoramaClientExpansion,
+                Settings.Default.PanoramaSkyFiles);
+            if (dlg.ShowDialog() != DialogResult.Cancel)
+            {
+                //dlg.Folder returns folder path, should just show folders in this dlg
+                textServer.Text = serverUri.GetLeftPart(UriPartial.Authority);
+                textFolderUrl.Text = dlg.DownloadName;
+            }
+            Settings.Default.PanoramaSkyFiles = dlg.ShowingSky;
+            Settings.Default.PanoramaClientExpansion = dlg.TreeState;
+            Settings.Default.Save();
+        }
+
+        private void textFolderUrl_TextChanged(object sender, EventArgs e)
+        {
+            if (textFolderUrl.Focused)
+            {
+                var textUri = new Uri(textFolderUrl.Text);
+                var tempUrl = textFolderUrl.Text;
+                if (!string.IsNullOrEmpty(textUri.Host))
+                {
+                    textServer.Text = textUri.GetLeftPart(UriPartial.Authority);
+                    var hostString = textUri.GetLeftPart(UriPartial.Authority);
+                    var noHostString = tempUrl.LastIndexOf(hostString) + hostString.Length;
+                    tempUrl = tempUrl.Substring(noHostString);
+                    textFolderUrl.Text = tempUrl;
+                }
+            }
+
         }
     }
 }

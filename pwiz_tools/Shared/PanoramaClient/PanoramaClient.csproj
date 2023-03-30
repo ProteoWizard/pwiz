@@ -53,7 +53,7 @@
   <ItemGroup>
     <Reference Include="Newtonsoft.Json, Version=13.0.0.0, Culture=neutral, PublicKeyToken=30ad4fe6b2a6aeed, processorArchitecture=MSIL">
       <SpecificVersion>False</SpecificVersion>
-      <HintPath>..\..\..\Skyline\bin\x64\Release\Newtonsoft.Json.dll</HintPath>
+      <HintPath>..\..\Skyline\bin\x64\Release\Newtonsoft.Json.dll</HintPath>
     </Reference>
     <Reference Include="System" />
     <Reference Include="System.Core" />
@@ -68,7 +68,6 @@
     <Reference Include="System.Xml" />
   </ItemGroup>
   <ItemGroup>
-    <Compile Include="CodeFile1.cs" />
     <Compile Include="PanoramaClient.cs" />
     <Compile Include="Program.cs" />
     <Compile Include="Properties\AssemblyInfo.cs" />
@@ -141,6 +140,9 @@
   </ItemGroup>
   <ItemGroup>
     <None Include="Resources\Icojam-Blueberry-Basic-Arrow-right1.ico" />
+  </ItemGroup>
+  <ItemGroup>
+    <Content Include="Resources\Folder.png" />
   </ItemGroup>
   <Import Project="$(MSBuildToolsPath)\Microsoft.CSharp.targets" />
 </Project>

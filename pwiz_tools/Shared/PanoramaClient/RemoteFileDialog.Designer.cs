@@ -74,7 +74,10 @@ namespace pwiz.PanoramaClient
             // 
             this.imageList1.ImageStream = ((System.Windows.Forms.ImageListStreamer)(resources.GetObject("imageList1.ImageStream")));
             this.imageList1.TransparentColor = System.Drawing.Color.Transparent;
-            this.imageList1.Images.SetKeyName(0, "Folder.png");
+            this.imageList1.Images.SetKeyName(0, "Panorama.bmp");
+            this.imageList1.Images.SetKeyName(1, "LabKey.bmp");
+            this.imageList1.Images.SetKeyName(2, "ChromLib.bmp");
+            this.imageList1.Images.SetKeyName(3, "Folder.png");
             // 
             // imageList2
             // 
@@ -85,6 +88,7 @@ namespace pwiz.PanoramaClient
             // 
             // checkBox1
             // 
+            this.checkBox1.Anchor = ((System.Windows.Forms.AnchorStyles)((System.Windows.Forms.AnchorStyles.Top | System.Windows.Forms.AnchorStyles.Right)));
             this.checkBox1.AutoSize = true;
             this.checkBox1.Location = new System.Drawing.Point(558, 25);
             this.checkBox1.Name = "checkBox1";
@@ -96,6 +100,7 @@ namespace pwiz.PanoramaClient
             // 
             // comboBox1
             // 
+            this.comboBox1.Anchor = ((System.Windows.Forms.AnchorStyles)((System.Windows.Forms.AnchorStyles.Top | System.Windows.Forms.AnchorStyles.Right)));
             this.comboBox1.FormattingEnabled = true;
             this.comboBox1.Items.AddRange(new object[] {
             "All versions",
@@ -131,6 +136,7 @@ namespace pwiz.PanoramaClient
             // 
             // versionLabel
             // 
+            this.versionLabel.Anchor = ((System.Windows.Forms.AnchorStyles)((System.Windows.Forms.AnchorStyles.Top | System.Windows.Forms.AnchorStyles.Right)));
             this.versionLabel.AutoSize = true;
             this.versionLabel.Location = new System.Drawing.Point(414, 9);
             this.versionLabel.Margin = new System.Windows.Forms.Padding(2, 0, 2, 0);
@@ -167,7 +173,6 @@ namespace pwiz.PanoramaClient
             this.treeView.Name = "treeView";
             this.treeView.Size = new System.Drawing.Size(237, 483);
             this.treeView.TabIndex = 8;
-            this.treeView.BeforeExpand += new System.Windows.Forms.TreeViewCancelEventHandler(this.treeView2_BeforeExpand);
             this.treeView.AfterSelect += new System.Windows.Forms.TreeViewEventHandler(this.treeView_AfterSelect);
             this.treeView.NodeMouseClick += new System.Windows.Forms.TreeNodeMouseClickEventHandler(this.treeView2_NodeMouseClick);
             // 

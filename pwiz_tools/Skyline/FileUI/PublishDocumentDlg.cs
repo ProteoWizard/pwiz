@@ -88,13 +88,16 @@ namespace pwiz.Skyline.FileUI
                 //pass name of specific server, treeViewFolders
                 //try and use in remotefiledialog and here: publishdocumentdlgload should be replaced by pc InitializeTreeview(), grab list of servers and initialize treeview, keep serverstaterestorer
                 PanoramaClient.PanoramaClient pc = new PanoramaClient.PanoramaClient();
+                var serverUri = _panoramaServers[0].URI;
+                var serverUser = _panoramaServers[0].Username;
+                var serverPass = _panoramaServers[0].Password;
                 using (var waitDlg = new LongWaitDlg
                        {
                            Text = Resources.PublishDocumentDlg_PublishDocumentDlg_Load_Retrieving_information_on_servers
                        })
                 {
                     //waitDlg.PerformWork(this, 800, () => PublishDocumentDlgLoad(listServerFolders));
-                    waitDlg.PerformWork(this, 800, () => pc.InitializeTreeView(_panoramaServers[0], treeViewFolders, true));
+                    waitDlg.PerformWork(this, 800, () => pc.InitializeTreeView(serverUri, serverUser, serverPass, treeViewFolders, true, false));
                 }
             }
             catch (Exception x)
@@ -102,7 +105,7 @@ namespace pwiz.Skyline.FileUI
                 MessageDlg.ShowException(this, x);
             }
             
-            /*
+            
             foreach (var serverFolder in listServerFolders)
             {
                 var server = serverFolder.Key;
@@ -110,7 +113,7 @@ namespace pwiz.Skyline.FileUI
                 treeViewFolders.Nodes.Add(treeNode);
                 if (serverFolder.Value != null)
                     AddSubFolders(server, treeNode, serverFolder.Value);
-            }*/
+            }
 
             ServerTreeStateRestorer.RestoreExpansionAndSelection(Settings.Default.PanoramaServerExpansion);
             ServerTreeStateRestorer.UpdateTopNode();
@@ -173,7 +176,7 @@ namespace pwiz.Skyline.FileUI
             Settings.Default.PanoramaServerExpansion = ServerTreeStateRestorer.GetPersistentString();
         }
 
-        /*
+        
         private void AddSubFolders(Server server, TreeNode node, JToken folder)
         {
             try
@@ -186,15 +189,15 @@ namespace pwiz.Skyline.FileUI
                                                             x.Message), x);
             }
         }
-        */
+        
         
 
         public static void AddChildContainers(Server server, TreeNode node, JToken folder)
         {
-            AddChildContainers(server, node, folder, true);
+            AddChildContainers(server, node, folder, true, false);
         }
 
-        public static void AddChildContainers(Server server, TreeNode node, JToken folder, bool requireUploadPerms)
+        public static void AddChildContainers(Server server, TreeNode node, JToken folder, bool requireUploadPerms, bool showFiles)
         {
             JEnumerable<JToken> subFolders = folder[@"children"].Children();
             foreach (var subFolder in subFolders)
@@ -202,19 +205,40 @@ namespace pwiz.Skyline.FileUI
                 string folderName = (string)subFolder[@"name"];
 
                 TreeNode folderNode = new TreeNode(folderName);
-                AddChildContainers(server, folderNode, subFolder, requireUploadPerms);
+                AddChildContainers(server, folderNode, subFolder, requireUploadPerms, showFiles);
 
                 // User can only upload to folders where TargetedMS is an active module.
-                var canUpload = requireUploadPerms
+                bool canUpload; /*=requireUploadPerms
                     ? PanoramaUtil.CheckFolderPermissions(subFolder) && PanoramaUtil.CheckFolderType(subFolder)
-                    : true;
+                    : true;*/
                 
+                if (requireUploadPerms)
+                {
+                    canUpload = PanoramaUtil.CheckFolderPermissions(subFolder) &&
+                                PanoramaUtil.CheckFolderType(subFolder);
+                }
+                else
+                {
+                    var userPermissions = subFolder.Value<int?>(@"userPermissions");
+                    canUpload = userPermissions != null && Equals(userPermissions & 1, 1);
+                }
                 // If the user does not have write permissions in this folder or any
                 // of its subfolders, do not add it to the tree.
-                if (folderNode.Nodes.Count == 0 && !canUpload)
+                if (requireUploadPerms)
                 {
-                    continue;
+                    if (folderNode.Nodes.Count == 0 && !canUpload)
+                    {
+                        continue;
+                    }
                 }
+                else
+                {
+                    if (!canUpload)
+                    {
+                        continue;
+                    }
+                }
+                
 
                 node.Nodes.Add(folderNode);
 
@@ -240,7 +264,15 @@ namespace pwiz.Skyline.FileUI
                     }
                 }
 
-                folderNode.Tag = new FolderInformation(server, canUpload);
+                if (showFiles)
+                {
+                    folderNode.Tag = (string)subFolder[@"path"];
+                }
+                else
+                {
+                    folderNode.Tag = new FolderInformation(server, canUpload);
+                }
+                
             } 
         }
 

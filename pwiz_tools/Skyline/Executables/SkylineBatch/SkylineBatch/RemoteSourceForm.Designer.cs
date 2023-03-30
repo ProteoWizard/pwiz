@@ -41,6 +41,9 @@
             this.textFolderUrl = new System.Windows.Forms.TextBox();
             this.btnSave = new System.Windows.Forms.Button();
             this.btnCancel = new System.Windows.Forms.Button();
+            this.openPanorama = new System.Windows.Forms.Button();
+            this.label5 = new System.Windows.Forms.Label();
+            this.textServer = new System.Windows.Forms.TextBox();
             ((System.ComponentModel.ISupportInitialize)(this.splitContainer1)).BeginInit();
             this.splitContainer1.Panel1.SuspendLayout();
             this.splitContainer1.Panel2.SuspendLayout();
@@ -110,6 +113,7 @@
             // 
             resources.ApplyResources(this.textFolderUrl, "textFolderUrl");
             this.textFolderUrl.Name = "textFolderUrl";
+            this.textFolderUrl.TextChanged += new System.EventHandler(this.textFolderUrl_TextChanged);
             // 
             // btnSave
             // 
@@ -126,12 +130,32 @@
             this.btnCancel.UseVisualStyleBackColor = true;
             this.btnCancel.Click += new System.EventHandler(this.btnCancel_Click);
             // 
+            // openPanorama
+            // 
+            resources.ApplyResources(this.openPanorama, "openPanorama");
+            this.openPanorama.Name = "openPanorama";
+            this.openPanorama.UseVisualStyleBackColor = true;
+            this.openPanorama.Click += new System.EventHandler(this.openPanorama_Click);
+            // 
+            // label5
+            // 
+            resources.ApplyResources(this.label5, "label5");
+            this.label5.Name = "label5";
+            // 
+            // textServer
+            // 
+            resources.ApplyResources(this.textServer, "textServer");
+            this.textServer.Name = "textServer";
+            // 
             // RemoteSourceForm
             // 
             this.AcceptButton = this.btnSave;
             resources.ApplyResources(this, "$this");
             this.AutoScaleMode = System.Windows.Forms.AutoScaleMode.Font;
             this.CancelButton = this.btnCancel;
+            this.Controls.Add(this.textServer);
+            this.Controls.Add(this.label5);
+            this.Controls.Add(this.openPanorama);
             this.Controls.Add(this.btnSave);
             this.Controls.Add(this.btnCancel);
             this.Controls.Add(this.label4);
@@ -167,5 +191,8 @@
         public System.Windows.Forms.TextBox textFolderUrl;
         public System.Windows.Forms.Button btnSave;
         private System.Windows.Forms.Button btnCancel;
+        private System.Windows.Forms.Button openPanorama;
+        private System.Windows.Forms.Label label5;
+        public System.Windows.Forms.TextBox textServer;
     }
 }

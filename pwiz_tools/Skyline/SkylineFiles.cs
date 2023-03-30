@@ -943,28 +943,27 @@ namespace pwiz.Skyline
                 server = servers[0].URI;
             }
 
-            PanoramaClient.PanoramaClient pc = new PanoramaClient.PanoramaClient();
-            using var dlg = new RemoteFileDialog(user, pass, server, servers[0]);
-            
+            var pc = new PanoramaClient.PanoramaClient();
+            using var dlg = new RemoteFileDialog(user, pass, server, Settings.Default.PanoramaClientExpansion,
+                Settings.Default.PanoramaSkyFiles);
             //result should be path to file or folder, move the downloading code into a separate location in PanoramaClient
             //PanoramaClient: ShowPanoramaBrowser() returns path, DownloadFromPanorama()
-            DialogResult result = dlg.ShowDialog();
 
-            if (result != DialogResult.Cancel)
+            if (dlg.ShowDialog() != DialogResult.Cancel)
             {
-                string downloadPath = pc.DownloadAndSave(server, user, pass, dlg.FileName, dlg.DownloadName);
-                if (dlg.FileName.EndsWith(SrmDocumentSharing.EXT))
+                var downloadPath = pc.DownloadAndSave(server, user, pass, dlg.FileName, dlg.DownloadName);
+                if (dlg.FileName.EndsWith(SrmDocumentSharing.EXT) && !string.IsNullOrEmpty(downloadPath))
                 {
-                    var path = Path.Combine(dlg.Folder, dlg.FileURL);
                     OpenSharedFile(downloadPath);
                 }
-                else if (dlg.FileName.EndsWith(SrmDocument.EXT))
+                else if (dlg.FileName.EndsWith(SrmDocument.EXT) && !string.IsNullOrEmpty(downloadPath))
                 {
-                    var path = Path.Combine(dlg.Folder, dlg.FileURL);
                     OpenFile(downloadPath);
                 }
             }
-            
+            Settings.Default.PanoramaSkyFiles = dlg.ShowingSky;
+            Settings.Default.PanoramaClientExpansion = dlg.TreeState;
+            Settings.Default.Save();
         }
 
         private void saveMenuItem_Click(object sender, EventArgs e)
