@@ -56,8 +56,6 @@ namespace pwiz.Skyline.SettingsUI
 
             // Seems like there should be a way to set this in the properties.
             comboDirection.SelectedIndex = 0;
-
-           
         }
 
         public MeasuredIon MeasuredIon
@@ -100,9 +98,9 @@ namespace pwiz.Skyline.SettingsUI
                                       ? _measuredIon.MinFragmentLength.Value.ToString(LocalizationHelper.CurrentCulture)
                                       : string.Empty;
             }
-            else if (!string.IsNullOrEmpty(_measuredIon.SettingsCustomIon.NeutralFormula))
+            else if (!_measuredIon.SettingsCustomIon.MoleculeAndMassOffset.IsMassOnly)
             {
-                _formulaBox.Formula = _measuredIon.SettingsCustomIon.NeutralFormula;
+                _formulaBox.Formula = _measuredIon.SettingsCustomIon.MoleculeAndMassOffset.ToDisplayString();
                 textCharge.Text = _measuredIon.Charge.ToString(LocalizationHelper.CurrentCulture);
                 _formulaBox.Adduct = _measuredIon.Adduct;
             }
@@ -289,6 +287,8 @@ namespace pwiz.Skyline.SettingsUI
             if (!charge.HasValue)
                 return;
             Charge = charge.Value;
+            // Update mass to match current mz and new charge
+
         }
 
         private void UpdateIonType()

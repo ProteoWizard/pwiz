@@ -77,7 +77,7 @@ namespace pwiz.Skyline.Model.DocSettings
         public const double MIN_LOSS_MASS = 0.0001;
         public const double MAX_LOSS_MASS = 5000;
 
-        private string _formula;
+        private Molecule _formula;
 
         public FragmentLoss(string formula)
             : this(formula, null, null)
@@ -97,21 +97,21 @@ namespace pwiz.Skyline.Model.DocSettings
         [Track]
         public string Formula
         {
-            get { return _formula; }
+            get { return _formula == null ? null : _formula.ToString(); }
             private set
             {
-                _formula = value;
+                _formula = string.IsNullOrEmpty(value) ? null : Molecule.Parse(value);
                 if (_formula != null)
                 {
-                    MonoisotopicMass = SequenceMassCalc.FormulaMass(BioMassCalc.MONOISOTOPIC, Formula, SequenceMassCalc.MassPrecision);
-                    AverageMass = SequenceMassCalc.FormulaMass(BioMassCalc.AVERAGE, Formula, SequenceMassCalc.MassPrecision);
+                    MonoisotopicMass = SequenceMassCalc.FormulaMass(BioMassCalc.MONOISOTOPIC, _formula, SequenceMassCalc.MassPrecision);
+                    AverageMass = SequenceMassCalc.FormulaMass(BioMassCalc.AVERAGE, _formula, SequenceMassCalc.MassPrecision);
                 }
             }
         }
 
         public string FormulaNoNull
         {
-            get { return _formula ?? Resources.Loss_FormulaUnknown; }
+            get { return Molecule.IsNullOrEmpty(_formula) ? Resources.Loss_FormulaUnknown : _formula.ToString(); }
         }
 
         [Track]
@@ -148,7 +148,7 @@ namespace pwiz.Skyline.Model.DocSettings
             get
             {
                 StringBuilder stringBuilder = new StringBuilder();
-                stringBuilder.Append(StaticMod.FormatFormulaOrMass(Formula, -MonoisotopicMass, -AverageMass));
+                stringBuilder.Append(StaticMod.FormatFormulaOrMass(_formula, -MonoisotopicMass, -AverageMass));
                 if (Charge != 0)
                 {
                     stringBuilder.Append(Adduct.FromChargeProtonated(Charge));

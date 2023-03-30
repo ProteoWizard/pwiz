@@ -151,7 +151,7 @@ namespace pwiz.Skyline.Model.DocSettings
             AAs = aas;
             Terminus = term;
             IsVariable = IsExplicit = isVariable;   // All variable mods are explicit
-            Formula = formula;
+            Molecule = string.IsNullOrEmpty(formula) ? null : Molecule.Parse(formula);
             LabelAtoms = labelAtoms;
             RelativeRT = relativeRT;
             MonoisotopicMass = monoMass;
@@ -176,7 +176,9 @@ namespace pwiz.Skyline.Model.DocSettings
         public bool IsVariable { get; private set; }
 
         [Track]
-        public string Formula { get; private set; }
+        public string Formula { get { return Molecule == null ? null : Molecule.ToString(); } } 
+        public Molecule Molecule { get; private set; }
+
         [Track]
         public double? MonoisotopicMass { get; private set; }
         [Track]
@@ -205,6 +207,7 @@ namespace pwiz.Skyline.Model.DocSettings
             return new StaticMod();
         }
 
+        // ReSharper disable AccessToStaticMemberViaDerivedType
         public double IonLabelMassDiff
         {
             get
@@ -254,6 +257,7 @@ namespace pwiz.Skyline.Model.DocSettings
                 return names;
             }
         }
+        // ReSharper restore AccessToStaticMemberViaDerivedType
 
         [Track(defaultValues: typeof(DefaultValuesRelativeRtMatching))]
         public RelativeRT RelativeRT { get; private set; }
@@ -333,7 +337,7 @@ namespace pwiz.Skyline.Model.DocSettings
         /// </summary>
         public bool HasMod
         {
-            get { return (Formula != null || LabelAtoms != LabelAtoms.None || MonoisotopicMass.HasValue); }
+            get { return (Molecule != null || LabelAtoms != LabelAtoms.None || MonoisotopicMass.HasValue); }
         }
 
         public bool IsLoss(char aa, int indexAA, int len)
@@ -383,12 +387,12 @@ namespace pwiz.Skyline.Model.DocSettings
 
         public MoleculeMassOffset GetMoleculeMassOffset()
         {
-            if (string.IsNullOrEmpty(Formula))
+            if (Molecule.IsNullOrEmpty(Molecule))
             {
                 return MoleculeMassOffset.Create( MonoisotopicMass, AverageMass);
             }
 
-            return MoleculeMassOffset.Create(Formula);
+            return MoleculeMassOffset.Create(Molecule);
         }
 
         public ItemDescription ItemDescription
@@ -468,7 +472,7 @@ namespace pwiz.Skyline.Model.DocSettings
                 {
                     if (HasMod || !HasLoss)
                     {
-                        lines.Add(summary = FormatFormulaOrMass(Formula, MonoisotopicMass, AverageMass));
+                        lines.Add(summary = FormatFormulaOrMass(Molecule, MonoisotopicMass, AverageMass));
                     }
                 }
 
@@ -525,11 +529,11 @@ namespace pwiz.Skyline.Model.DocSettings
         /// For example: H2O (-18)
         /// If the formula is blank then return <see cref="FormatMass"/>
         /// </summary>
-        public static string FormatFormulaOrMass(string formula, double? monoMass, double? averageMass)
+        public static string FormatFormulaOrMass(Molecule formula, double? monoMass, double? averageMass)
         {
-            if (!string.IsNullOrEmpty(formula))
+            if (!Molecule.IsNullOrEmpty(formula))
             {
-                var parts = new List<string> { formula };
+                var parts = new List<string> { formula.ToDisplayString() };
                 if (monoMass.HasValue)
                 {
                     var massString = monoMass.Value.ToString(@"0.#");
@@ -594,9 +598,9 @@ namespace pwiz.Skyline.Model.DocSettings
             return ChangeProp(ImClone(this), im => im.IsVariable = im.IsExplicit = prop);
         }
 
-        public StaticMod ChangeFormula(string prop)
+        public StaticMod ChangeFormula(Molecule prop)
         {
-            return ChangeProp(ImClone(this), im => im.Formula = prop);
+            return ChangeProp(ImClone(this), im => im.Molecule = prop);
         }
 
         public StaticMod ChangeLabelAtoms(LabelAtoms prop)
@@ -705,7 +709,7 @@ namespace pwiz.Skyline.Model.DocSettings
             {
                 throw new InvalidDataException(Resources.StaticMod_Validate_Terminal_modification_with_labeled_atoms_not_allowed);
             }
-            if (Formula == null && LabelAtoms == LabelAtoms.None)
+            if (Molecule == null && LabelAtoms == LabelAtoms.None)
             {
                 if (MonoisotopicMass == null || AverageMass == null)
                 {
@@ -722,16 +726,16 @@ namespace pwiz.Skyline.Model.DocSettings
                 // No explicit masses with formula or label atoms
                 if (MonoisotopicMass != null || AverageMass != null)
                     throw new InvalidDataException(Resources.StaticMod_Validate_Modification_with_a_formula_may_not_specify_modification_masses);
-                if (Formula != null)
+                if (Molecule != null)
                 {
-                    if (string.IsNullOrEmpty(Formula))
+                    if (Molecule.IsNullOrEmpty(Molecule))
                         throw new InvalidDataException(Resources.StaticMod_Validate_Modification_formula_may_not_be_empty);
                     if (LabelAtoms != LabelAtoms.None)
                         throw new InvalidDataException(Resources.StaticMod_Validate_Formula_not_allowed_with_labeled_atoms);
                     // Cache mass values to improve performance of variable modifications
                     // Throws an exception, if given an invalid formula.
-                    MonoisotopicMass = SequenceMassCalc.FormulaMass(BioMassCalc.MONOISOTOPIC, Formula, SequenceMassCalc.MassPrecision);
-                    AverageMass = SequenceMassCalc.FormulaMass(BioMassCalc.AVERAGE, Formula, SequenceMassCalc.MassPrecision);
+                    MonoisotopicMass = SequenceMassCalc.FormulaMass(BioMassCalc.MONOISOTOPIC, Molecule, SequenceMassCalc.MassPrecision);
+                    AverageMass = SequenceMassCalc.FormulaMass(BioMassCalc.AVERAGE, Molecule, SequenceMassCalc.MassPrecision);
                 }
             }
 
@@ -774,7 +778,8 @@ namespace pwiz.Skyline.Model.DocSettings
 
             Terminus = reader.GetAttribute(ATTR.terminus, ToModTerminus);
             IsVariable = IsExplicit = reader.GetBoolAttribute(ATTR.variable);
-            Formula = reader.GetAttribute(ATTR.formula);
+            var formula = reader.GetAttribute(ATTR.formula);
+            Molecule = string.IsNullOrEmpty(formula) ? null : Molecule.Parse(formula);
             if (reader.GetBoolAttribute(ATTR.label_13C))
                 LabelAtoms |= LabelAtoms.C13;
             if (reader.GetBoolAttribute(ATTR.label_15N))
@@ -835,7 +840,7 @@ namespace pwiz.Skyline.Model.DocSettings
             writer.WriteAttributeIfString(ATTR.aminoacid, AAs);
             writer.WriteAttributeNullable(ATTR.terminus, Terminus);
             writer.WriteAttribute(ATTR.variable, IsVariable);
-            writer.WriteAttributeIfString(ATTR.formula, Formula);
+            writer.WriteAttributeIfString(ATTR.formula, Molecule.IsNullOrEmpty(Molecule) ? null : Molecule.ToString());
             writer.WriteAttribute(ATTR.label_13C, Label13C);
             writer.WriteAttribute(ATTR.label_15N, Label15N);
             writer.WriteAttribute(ATTR.label_18O, Label18O);
@@ -844,7 +849,7 @@ namespace pwiz.Skyline.Model.DocSettings
 //            writer.WriteAttribute(ATTR.label_37Cl, Label37Cl);
 //            writer.WriteAttribute(ATTR.label_81Br, Label81Br);
             writer.WriteAttribute(ATTR.relative_rt, RelativeRT, RelativeRT.Matching);
-            if (string.IsNullOrEmpty(Formula))
+            if (Molecule.IsNullOrEmpty(Molecule))
             {
                 writer.WriteAttributeNullable(ATTR.massdiff_monoisotopic, MonoisotopicMass);
                 writer.WriteAttributeNullable(ATTR.massdiff_average, AverageMass);
@@ -945,15 +950,9 @@ namespace pwiz.Skyline.Model.DocSettings
 
         private bool EquivalentFormulas(FragmentLoss loss1, FragmentLoss loss2)
         {
-            return ArrayUtil.EqualsDeep(GetFormulaCounts(loss1.Formula).ToArray(),
-                                        GetFormulaCounts(loss2.Formula).ToArray());
-        }
-
-        private IDictionary<string, int> GetFormulaCounts(string formula)
-        {
-            SortedDictionary<string, int> dictCounts = new SortedDictionary<string, int>();
-            BioMassCalc.MONOISOTOPIC.ParseCounts(ref formula, dictCounts, false);
-            return dictCounts;
+            BioMassCalc.MONOISOTOPIC.ParseFormulaWithAdductMass(loss1.Formula, out var mol1);
+            BioMassCalc.MONOISOTOPIC.ParseFormulaWithAdductMass(loss2.Formula, out var mol2);
+            return mol1.Equals(mol2);
         }
 
         private bool EquivalentFormulas(char aa, StaticMod obj)
@@ -962,24 +961,17 @@ namespace pwiz.Skyline.Model.DocSettings
 
             double unexplainedMassThis, unexplainedMassObj;
 
-            string formulaThis = modCalc.GetModFormula(aa, this, out unexplainedMassThis);
-            string formulaObj = modCalc.GetModFormula(aa, obj, out unexplainedMassObj);
+            var formulaThis = modCalc.GetModFormula(aa, this, out unexplainedMassThis);
+            var formulaObj = modCalc.GetModFormula(aa, obj, out unexplainedMassObj);
 
             // If either is null, both must be null.
             if (formulaThis == null || formulaObj == null)
                 return formulaThis == null && formulaObj == null;
 
             return unexplainedMassThis == unexplainedMassObj &&
-                   ArrayUtil.EqualsDeep(GetFormulaModCounts(formulaThis).ToArray(),
-                                        GetFormulaModCounts(formulaObj).ToArray());
+                   formulaThis.Equals(formulaObj);
         }
 
-        private IDictionary<string, int> GetFormulaModCounts(string formula)
-        {
-            SortedDictionary<string, int> dictCounts = new SortedDictionary<string, int>();
-            SequenceMassCalc.ParseModCounts(BioMassCalc.MONOISOTOPIC, formula, dictCounts);
-            return dictCounts;
-        }
 
         public bool Equals(StaticMod obj)
         {
@@ -1005,7 +997,7 @@ namespace pwiz.Skyline.Model.DocSettings
                 result = (result*397) ^ (Terminus.HasValue ? Terminus.Value.GetHashCode() : 0);
                 result = (result*397) ^ IsVariable.GetHashCode();
                 result = (result*397) ^ (AverageMass.HasValue ? AverageMass.Value.GetHashCode() : 0);
-                result = (result*397) ^ (Formula != null ? Formula.GetHashCode() : 0);
+                result = (result*397) ^ (Molecule != null ? Molecule.GetHashCode() : 0);
                 result = (result*397) ^ IsExplicit.GetHashCode();
                 result = (result*397) ^ LabelAtoms.GetHashCode();
                 result = (result*397) ^ RelativeRT.GetHashCode();

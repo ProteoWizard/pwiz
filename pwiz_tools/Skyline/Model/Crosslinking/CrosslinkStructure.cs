@@ -139,12 +139,12 @@ namespace pwiz.Skyline.Model.Crosslinking
             for (int i = 0; i < LinkedPeptides.Count; i++)
             {
                 IPrecursorMassCalc massCalc = settings.GetPrecursorCalc(labelType, LinkedExplicitMods[i]);
-                result = result.Plus(MoleculeMassOffset.Create(massCalc.GetMolecularFormula(LinkedPeptides[i].Sequence)));
+                result = result.Add(massCalc.GetMolecularFormula(LinkedPeptides[i].Sequence));
             }
 
             foreach (var crosslink in Crosslinks)
             {
-                result = result.Plus(crosslink.Crosslinker.GetMoleculeMassOffset());
+                result = result.Add(crosslink.Crosslinker.GetMoleculeMassOffset());
             }
 
             return result;

@@ -101,14 +101,14 @@ namespace pwiz.Skyline.Model.Crosslinking
             MoleculeMassOffset result = MoleculeMassOffset.EMPTY;
             for (int i = 0; i < complexFragmentIon.IonChain.Count; i++)
             {
-                result = result.Plus(_peptideBuilders[i].GetFragmentFormula(complexFragmentIon.IonChain[i]));
+                result = result.Add(_peptideBuilders[i].GetFragmentFormula(complexFragmentIon.IonChain[i]));
             }
             result = SubtractLosses(result, complexFragmentIon.Losses);
             foreach (var crosslink in PeptideStructure.Crosslinks)
             {
                 if (true == complexFragmentIon.ContainsCrosslink(PeptideStructure, crosslink.Sites))
                 {
-                    result = result.Plus(crosslink.Crosslinker.GetMoleculeMassOffset());
+                    result = result.Add(crosslink.Crosslinker.GetMoleculeMassOffset());
                 }
             }
 
@@ -174,16 +174,17 @@ namespace pwiz.Skyline.Model.Crosslinking
 
         public MoleculeMassOffset GetPrecursorFormula()
         {
-            var moleculeMassOffset = MoleculeMassOffset.EMPTY;
+            var molecules = new List<Molecule>();
             for (int i = 0; i < PeptideStructure.Peptides.Count; i++)
             {
-                moleculeMassOffset =
-                    moleculeMassOffset.Plus(_peptideBuilders[i].GetPrecursorMolecule().PrecursorFormula);
+                molecules.Add(_peptideBuilders[i].GetPrecursorMolecule().PrecursorFormula);
             }
+
+            var moleculeMassOffset = MoleculeMassOffset.Create(Molecule.Sum(molecules));
 
             foreach (var crosslink in PeptideStructure.Crosslinks)
             {
-                moleculeMassOffset = moleculeMassOffset.Plus(crosslink.Crosslinker.GetMoleculeMassOffset());
+                moleculeMassOffset = moleculeMassOffset.Add(crosslink.Crosslinker.GetMoleculeMassOffset());
             }
             return moleculeMassOffset;
         }

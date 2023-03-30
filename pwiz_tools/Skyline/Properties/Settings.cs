@@ -2567,6 +2567,7 @@ namespace pwiz.Skyline.Properties
     public sealed class IsotopeEnrichmentsList : SettingsList<IsotopeEnrichments>
     {
         public static readonly IsotopeEnrichments DEFAULT = new IsotopeEnrichments(@"Default",   // Persisted in XML
+            // ReSharper disable once AccessToStaticMemberViaDerivedType
             BioMassCalc.HeavySymbols.Select(sym => new IsotopeEnrichmentItem(sym)).ToArray());
 
         public static IsotopeEnrichments GetDefault()

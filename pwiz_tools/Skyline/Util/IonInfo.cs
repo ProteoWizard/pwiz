@@ -44,7 +44,7 @@ namespace pwiz.Skyline.Util
         {
             var ionString = Adduct.SplitFormulaAndTrailingAdduct(formulaWithOptionalAdduct, ADDUCT_TYPE.charge_only, out var parsedAdduct);
             _adduct = Adduct.IsNullOrEmpty(adduct) ? parsedAdduct : adduct;
-            Formula = MoleculeMassOffset.Parse(ionString);
+            Formula = MoleculeMassOffset.Create(ionString);
         }
 
         public IonInfo(MoleculeMassOffset formula, Adduct adduct)
@@ -74,7 +74,7 @@ namespace pwiz.Skyline.Util
             {
                 _neutralFormula = value;
                 _ionFormula = _adduct.IsEmpty ?  _neutralFormula : _adduct.ApplyToMolecule(_neutralFormula);
-                var unlabeled = _ionFormula.StripLabelsFromFormula();
+                var unlabeled = _ionFormula.StripIsotopicLabelsFromFormulaAndMassOffset();
                 _unlabledFormula = Equals(_ionFormula, unlabeled) ? 
                     _ionFormula : 
                     unlabeled; // Save some space if actually unlabeled
@@ -161,13 +161,13 @@ namespace pwiz.Skyline.Util
         public static MoleculeMassOffset ApplyAdductToFormulaAsDictionary(string formula, Adduct adduct)
         {
             var trimmed = formula.Trim();
-            var molecule = MoleculeMassOffset.Parse(trimmed);
+            var molecule = MoleculeMassOffset.Create(trimmed);
             return adduct.ApplyToMolecule(molecule);
         }
 
         public static bool IsFormulaWithAdduct(string formula, out MoleculeMassOffset molecule, out Adduct adduct, out string neutralFormula, bool strict = false)
         {
-            molecule = null;
+            molecule = MoleculeMassOffset.EMPTY;
             adduct = Adduct.EMPTY;
             neutralFormula = null;
             if (string.IsNullOrEmpty(formula))

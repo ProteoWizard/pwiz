@@ -45,8 +45,8 @@ namespace pwiz.Skyline.SettingsUI
         private readonly EditMode _editMode;
         private string _neutralFormula;
         private Dictionary<string, string> _isotopeLabelsForMassCalc;
-        private TypedMass _neutralMonoMass;
-        private TypedMass _neutralAverageMass;
+        private TypedMass _neutralMonoMass = TypedMass.ZERO_MONO_MASSNEUTRAL;
+        private TypedMass _neutralAverageMass = TypedMass.ZERO_AVERAGE_MASSNEUTRAL;
         private double? _averageMass; // Our internal value for mass, regardless of whether displaying mass or mz
         private double? _monoMass;    // Our internal value for mass, regardless of whether displaying mass or mz
 
@@ -204,8 +204,8 @@ namespace pwiz.Skyline.SettingsUI
                     // Update masses for this new formula value
                     try
                     {
-                        _neutralMonoMass = BioMassCalc.MONOISOTOPIC.CalculateMassFromFormula(value);
-                        _neutralAverageMass = BioMassCalc.AVERAGE.CalculateMassFromFormula(value);
+                        _neutralMonoMass = BioMassCalc.MONOISOTOPIC.CalculateMassFromFormula(value, out _);
+                        _neutralAverageMass = BioMassCalc.AVERAGE.CalculateMassFromFormula(value, out _);
                     }
                     catch
                     {
@@ -240,7 +240,7 @@ namespace pwiz.Skyline.SettingsUI
                     {
                         ChargeChange(this, EventArgs.Empty);
                     }
-                    if (!Equals(textFormula.Text, DisplayFormula))
+                    if (!Equals(textFormula.Text ?? string.Empty, DisplayFormula??string.Empty))
                     {
                         SetFormulaText(DisplayFormula);
                     }
@@ -434,6 +434,7 @@ namespace pwiz.Skyline.SettingsUI
             textFormula.SelectionStart = Math.Min(insertAt, text?.Length ?? 0);
         }
 
+        // ReSharper disable AccessToStaticMemberViaDerivedType
         private void hToolStripMenuItem_Click(object sender, EventArgs e)
         {
             AddFormulaSymbol(BioMassCalc.H);
@@ -556,6 +557,7 @@ namespace pwiz.Skyline.SettingsUI
         {
             AddFormulaSymbol(BioMassCalc.O18);
         }
+        // ReSharper restore AccessToStaticMemberViaDerivedType
 
         private bool _inTextChanged;
         private void textFormula_TextChanged(object sender, EventArgs e)

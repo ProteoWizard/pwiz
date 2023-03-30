@@ -382,7 +382,7 @@ namespace pwiz.SkylineTestFunctional
             var newdoc = WaitForDocumentChange(doc);
             Assert.AreEqual(massAverage, newdoc.MoleculeTransitionGroups.ElementAt(0).CustomMolecule.AverageMass, massPrecisionTolerance);
             Assert.AreEqual(massMono, newdoc.MoleculeTransitionGroups.ElementAt(0).CustomMolecule.MonoisotopicMass, massPrecisionTolerance);
-            Assert.IsNotNull(newdoc.Molecules.ElementAt(0).CustomMolecule.Formula); // Molecule and children share base molecule 
+            Assert.IsNotNull(newdoc.Molecules.ElementAt(0).CustomMolecule.MoleculeAndMassOffset); // Molecule and children share base molecule 
             Assert.AreEqual(.5 * massMono + BioMassCalc.MassProton, newdoc.MoleculeTransitionGroups.ElementAt(0).PrecursorMz, .001);
 
             Assert.IsFalse(newdoc.MoleculeTransitionGroups.ElementAt(0).EqualsId(peptideDocNode));  // Changing the adduct changes the Id node

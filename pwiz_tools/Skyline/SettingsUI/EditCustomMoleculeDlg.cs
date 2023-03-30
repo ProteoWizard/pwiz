@@ -197,7 +197,7 @@ namespace pwiz.Skyline.SettingsUI
             string labelMono = !defaultCharge.IsEmpty
                 ? Resources.EditCustomMoleculeDlg_EditCustomMoleculeDlg__Monoisotopic_m_z_
                 : Resources.EditCustomMoleculeDlg_EditCustomMoleculeDlg__Monoisotopic_mass_;
-            var defaultFormula = (molecule == null || molecule.Formula.IsMassOnly) ? string.Empty : molecule.Formula.ToString();
+            var defaultFormula = (molecule == null || molecule.MoleculeAndMassOffset.IsMassOnly) ? string.Empty : molecule.MoleculeAndMassOffset.ToString();
             var transition = initialId as Transition;
 
             FormulaBox.EditMode editMode;
@@ -854,11 +854,11 @@ namespace pwiz.Skyline.SettingsUI
             else
             {
                 textName.Text = ResultCustomMolecule.Name ?? string.Empty;
-                var displayFormula = ResultCustomMolecule.Formula.IsMassOnly ? string.Empty : ResultCustomMolecule.Formula.ToString();
+                var displayFormula = ResultCustomMolecule.MoleculeAndMassOffset.IsMassOnly ? string.Empty : ResultCustomMolecule.MoleculeAndMassOffset.ToString();
                 _formulaBox.Formula = displayFormula + (ResultAdduct.IsEmpty || ResultAdduct.IsProteomic
                                           ? string.Empty
                                           : ResultAdduct.AdductFormula);
-                if (ResultCustomMolecule.Formula == null)
+                if (ResultCustomMolecule.MoleculeAndMassOffset == null)
                 {
                     _formulaBox.AverageMass = ResultCustomMolecule.AverageMass;
                     _formulaBox.MonoMass = ResultCustomMolecule.MonoisotopicMass;

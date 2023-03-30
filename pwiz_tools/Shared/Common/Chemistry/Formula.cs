@@ -22,21 +22,19 @@ using System.Collections.Generic;
 using System.Linq;
 using System.Text;
 using pwiz.Common.Collections;
-using pwiz.Common.SystemUtil;
 
 namespace pwiz.Common.Chemistry
 {
-    public abstract class AbstractFormula<T,TValue> : Immutable, IDictionary<string, TValue>, IComparable<T>
+    public abstract class AbstractFormula<T,TValue> : IDictionary<string, TValue>, IComparable<T>
         where T : AbstractFormula<T, TValue>, new()
         where TValue : IComparable<TValue>
     {
 // ReSharper disable InconsistentNaming
-        public static readonly T Empty = new T { Dictionary = new ImmutableDictionary<string, TValue>(new Dictionary<string, TValue>()) };
-        // ReSharper restore InconsistentNaming
+        public static readonly T Empty = new T { Dictionary = ImmutableSortedList<string, TValue>.EMPTY };
+// ReSharper restore InconsistentNaming
         public abstract override string ToString();
         private int _hashCode;
-        private ImmutableDictionary<string, TValue> _dict;
-        protected List<string> _elementOrder; // For use in ToString - preserves element order of original formula string, if any. Not considered in comparisons.
+        private ImmutableSortedList<string, TValue> _dict;
         public virtual String ToDisplayString()
         {
             return ToString();
@@ -44,19 +42,11 @@ namespace pwiz.Common.Chemistry
 
         public T SetElementCount(String element, TValue count)
         {
-            if (count.Equals(default(TValue))) // That is to say, zero
+            if (count.Equals(default(TValue)))
             {
-                return new T
-                {
-                    Dictionary = Dictionary.RemoveKey(element),
-                    _elementOrder = this._elementOrder
-                };
+                return new T {Dictionary = Dictionary.RemoveKey(element)};
             }
-            return new T
-            {
-                Dictionary = Dictionary.Replace(element, count),
-                _elementOrder = this._elementOrder
-            };
+            return new T {Dictionary = Dictionary.Replace(element, count)};
         }
 
         public TValue GetElementCount(String element)
@@ -90,34 +80,30 @@ namespace pwiz.Common.Chemistry
 
         public int CompareTo(T that)
         {
-            var compareCount = this.Count.CompareTo(that.Count);
-            if (compareCount != 0)
+            using (var thisEnumerator = GetEnumerator())
+            using (var thatEnumerator = that.GetEnumerator())
             {
-                return compareCount;
-            }
-            foreach (var kvp in this)
-            {
-                if (!that.TryGetValue(kvp.Key, out var thatValue))
+                while (thisEnumerator.MoveNext())
                 {
-                    return -1; // Different keys
-                }
-                if ((kvp.Value == null) != (thatValue == null))
-                {
-                    return -1; // Different values
-                }
-                if (kvp.Value != null)
-                {
-                    var compareValue = kvp.Value.CompareTo(thatValue);
-                    if (compareValue != 0)
+                    if (!thatEnumerator.MoveNext())
                     {
-                        return compareValue;
+                        return 1;
+                    }
+                    int keyCompare = string.CompareOrdinal(thisEnumerator.Current.Key, thatEnumerator.Current.Key);
+                    if (keyCompare != 0)
+                    {
+                        return keyCompare;
+                    }
+                    int valueCompare = thisEnumerator.Current.Value.CompareTo(thatEnumerator.Current.Value);
+                    if (valueCompare != 0)
+                    {
+                        return valueCompare;
                     }
                 }
+                return thatEnumerator.MoveNext() ? -1 : 0;
             }
-            return 0;
         }
-
-        public ImmutableDictionary<string, TValue> Dictionary
+        public ImmutableSortedList<string, TValue> Dictionary
         {
             get { return _dict; }
             protected set 
@@ -206,31 +192,17 @@ namespace pwiz.Common.Chemistry
         {
             throw new InvalidOperationException();
         }
-
     }
 
     public class Formula<T> : AbstractFormula<T, int>
         where T : Formula<T>, new()
     {
-        public static T EMPTY = new T() { Dictionary = new ImmutableDictionary<string, int>(new Dictionary<string, int>()), _elementOrder = null };
-
-        public static T Parse(string formula)
+        public static T Parse(String formula)
         {
-            if (string.IsNullOrEmpty(formula))
-            {
-                return EMPTY;
-            }
-            var elementOrder = new List<string>();
-            return new T
-            {
-                Dictionary = new ImmutableDictionary<string, int>(ParseToDictionary(formula, elementOrder)),
-                _elementOrder = elementOrder
-            };
+            return new T {Dictionary = ImmutableSortedList.FromValues(ParseToDictionary(formula))};
         }
 
-        public static bool IsNullOrEmpty(T f) => f == null || f.Count == 0;
-
-        public static Dictionary<string, int> ParseToDictionary(string formula, List<string> elementOrder = null)
+        public static Dictionary<string, int> ParseToDictionary(string formula)
         {
             var result = new Dictionary<string, int>();
             string currentElement = null;
@@ -255,7 +227,6 @@ namespace pwiz.Common.Chemistry
                         else if (currentAtomCount != 0) // Beware explicitly declared 0 count
                         {
                             result.Add(currentElement, previousAtomCount + currentAtomCount);
-                            elementOrder?.Add(currentElement);
                         }
                     }
                     currentQuantity = null;
@@ -278,7 +249,6 @@ namespace pwiz.Common.Chemistry
                 else if (currentAtomCount != 0) // Beware explicitly declared 0 count
                 {
                     result.Add(currentElement, currentAtomCount);
-                    elementOrder?.Add(currentElement);
                 }
             }
             return result;
@@ -287,18 +257,17 @@ namespace pwiz.Common.Chemistry
         // Handle formulae which may contain subtractions, as is deprotonation description ie C12H8O2-H (=C12H7O2) or even C12H8O2-H2O (=C12H6O)
         public static T ParseExpression(String formula)
         {
-            var elementOrder = new List<string>();
-            return FromDict(ParseExpressionToDictionary(formula, elementOrder), elementOrder);
+            return FromDict(ParseExpressionToDictionary(formula));
         }
 
-        public static Dictionary<String, int> ParseExpressionToDictionary(string expression, List<string> elementOrder = null)
+        public static Dictionary<String, int> ParseExpressionToDictionary(string expression)
         {
             var parts = expression.Split('-');
             if (parts.Length > 2)
             {
                 throw new ArgumentException(@"Molecular formula subtraction expressions are limited a single operation");
             }
-            var result = ParseToDictionary(parts[0], elementOrder);
+            var result = ParseToDictionary(parts[0]);
             if (parts.Length > 1)
             {
                 var subtractive = ParseToDictionary(parts[1]);
@@ -344,21 +313,30 @@ namespace pwiz.Common.Chemistry
                 }
             }
 
-            return FromDict(resultDict, _elementOrder);
+            return FromDict(resultDict);
         }
 
-        public T ChangeFormula(IEnumerable<KeyValuePair<string, int>> formula)
+        public static T FromDict(IDictionary<string, int> dict)
         {
-            return FromDict(formula, _elementOrder);
+            return new T {Dictionary = ImmutableSortedList.FromValues(dict.Where(entry=>entry.Value != 0))};
         }
 
-        public static T FromDict(IEnumerable<KeyValuePair<string, int>> dict, List<string> elementOrder = null)
+        public static string AdjustElementCount(string formula, string element, int delta)
         {
-            return new T
+            var dict = ParseToDictionary(formula);
+            int count;
+            if (!dict.TryGetValue(element, out count))
+                count = 0;
+            if ((count > 0) || (delta > 0)) // There are some to take away, or we're planning to add some
             {
-                Dictionary = new ImmutableDictionary<string, int>(dict.Where(kvp=> kvp.Value != 0).ToDictionary(kvp => kvp.Key, kvp => kvp.Value)),
-                _elementOrder = elementOrder
-            };
+                count += delta;
+                if (count >= 0)
+                {
+                    dict[element] = count;
+                    return FromDict(dict).ToString();
+                }
+            }
+            return formula;
         }
 
         public static bool AreEquivalentFormulas(string formulaLeft, string formulaRight)
@@ -373,121 +351,43 @@ namespace pwiz.Common.Chemistry
             return left.Equals(right);
         }
 
-        public bool HasElement(string element) => Dictionary.ContainsKey(element);
-
-
-        // For use in ToString(), try to emit the formula string in a sensible order
-        private class ElementOrderComparer : IComparer<string>
-        {
-            public ElementOrderComparer(List<string> elementOrder)
-            {
-                if (elementOrder != null && elementOrder.Count > 0)
-                {
-                    _elementOrder = elementOrder.ToArray();
-                }
-            }
-
-            // Default to Hill System order (C then H then alphabetical) if no other order specified
-            private readonly string[] _elementOrder = { @"C", @"H" };
-
-            // Try to find element's place in the original order, treating elements and their isotopes as interchangeable for position purposes
-            private int IndexOfElementOrRelatedIsotope(string element)
-            {
-                var order = Array.IndexOf(_elementOrder, element);
-                if (order != -1)
-                {
-                    return order;
-                }
-
-                // Maybe it was an isotope that got changed to light e.g. original string was C'2 but now dictionary holds C2
-                if (BioMassCalcBase.DICT_HEAVYSYMBOL_TO_MONOSYMBOL.TryGetValue(element, out var light))
-                {
-                    order = Array.IndexOf(_elementOrder, light);
-                    if (order != -1)
-                    {
-                        return order;
-                    }
-                }
-
-                // Maybe it was a light that got changed to an isotope  e.g. original string was C2 but now dictionary holds C"2
-                if (element.IndexOfAny(BioMassCalcBase.HEAVYSYMBOL_HINTS) != -1) // Looks light it might be an isotope
-                {
-                    foreach (var kvp in 
-                             BioMassCalcBase.DICT_HEAVYSYMBOL_TO_MONOSYMBOL.Where(kvp => Equals(kvp.Value, element)))
-                    {
-                        order = Array.IndexOf(_elementOrder, kvp.Key);
-                        if (order != -1)
-                        {
-                            return order;
-                        }
-                    }
-                }
-
-                return order;
-            }
-
-            int IComparer<string>.Compare(string xElement, string yElement)
-            {
-                var xOrder = IndexOfElementOrRelatedIsotope(xElement);
-                var yOrder = IndexOfElementOrRelatedIsotope(yElement);
-
-                if (xOrder == yOrder)
-                {
-                    // Either isotopes of each other (e.g. H and H'), or two elements that weren't in the ordered list at all
-                    return string.Compare(xElement, yElement, StringComparison.Ordinal);
-                }
-
-                return xOrder == -1 ?
-                    1 : // Only yElement is in the known order, xElement should appear after yElement in output string
-                    yOrder == -1 ? -1 : // Only xElement is in the known order, yElement should appear after xElement in output string
-                        xOrder.CompareTo(yOrder); // Both in known order, sort on that basis
-            }
-        }
-
-
         public override string ToString()
         {
             var result = new StringBuilder();
-            var anyNegative = false;
-
-            var elementOrderComparer = new ElementOrderComparer(_elementOrder);
-
-            foreach (var key in Keys.OrderBy(k => k, elementOrderComparer))
+            bool anyNegative = false;
+            foreach (var entry in this)
             {
-                var count = this[key];
-                if (count > 0)
+                if (entry.Value >= 0)
                 {
-                    result.Append(key);
-                    if (count != 1) // "H" is same as "H1"
+                    result.Append(entry.Key);
+                    if (entry.Value != 1)
                     {
-                        result.Append(count);
+                        result.Append(entry.Value);
                     }
                 }
-                else if (count < 0)
+                else
                 {
                     anyNegative = true;
                 }
             }
 
-            if (anyNegative)
+            if (!anyNegative)
             {
-                result.Append("-");
-                foreach (var key in Keys.OrderBy(k => k, elementOrderComparer)) // Write in standard Hill system order
+                return result.ToString();
+            }
+
+            result.Append("-");
+            foreach (var entry in this)
+            {
+                if (entry.Value < 0)
                 {
-                    var count = this[key];
-                    if (count < 0)
+                    result.Append(entry.Key);
+                    if (entry.Value != -1)
                     {
-                        {
-                            result.Append(key);
-                            if (count != -1)
-                            {
-                                result.Append(-count);
-                            }
-                        }
+                        result.Append(-entry.Value);
                     }
                 }
             }
-
             return result.ToString();
         }
 

@@ -265,9 +265,9 @@ namespace pwiz.Skyline.Model.DocSettings
                 if (charges.Any())  // Old style - fix it up a little for our revised ideas about custom ion ionization
                 {
                     adduct = Adduct.FromChargeNoMass(charges[0]);
-                    if (string.IsNullOrEmpty(parsedIon.NeutralFormula)) // Adjust the user-supplied masses
+                    if (parsedIon.MoleculeAndMassOffset.IsMassOnly) // Adjust the user-supplied masses
                     {
-                        SettingsCustomIon = new SettingsCustomIon(parsedIon.NeutralFormula, adduct,
+                        SettingsCustomIon = new SettingsCustomIon(string.Empty, adduct,
                             Math.Round(parsedIon.MonoisotopicMass + charges[0]*BioMassCalc.MONOISOTOPIC.GetMass(BioMassCalcBase.H), SequenceMassCalc.MassPrecision), // Assume user provided neutral mass.  Round new value easiest XML roundtripping.
                             Math.Round(parsedIon.AverageMass + charges[0]*BioMassCalc.AVERAGE.GetMass(BioMassCalcBase.H), SequenceMassCalc.MassPrecision), // Assume user provided neutral mass.  Round new value easiest XML roundtripping.
                             parsedIon.Name);
@@ -277,7 +277,7 @@ namespace pwiz.Skyline.Model.DocSettings
                         if (charges[0] > 1) // XML deserializer will have added an H already
                         {
                             var adductProtonated = Adduct.FromChargeProtonated(charges[0]-1);
-                            var formula = adductProtonated.ApplyToFormula(parsedIon.NeutralFormula).ChemicalFormulaPart();
+                            var formula = adductProtonated.ApplyToMolecule(parsedIon.MoleculeAndMassOffset).ChemicalFormulaWithoutOffsets();
                             parsedIon = new CustomIon(formula, adduct, parsedIon.MonoisotopicMass, parsedIon.AverageMass, Name);
                         }
                     }
@@ -288,7 +288,7 @@ namespace pwiz.Skyline.Model.DocSettings
                 }
                 if (SettingsCustomIon == null)
                 {
-                    SettingsCustomIon = new SettingsCustomIon(parsedIon.NeutralFormula, adduct,
+                    SettingsCustomIon = new SettingsCustomIon(parsedIon.MoleculeAndMassOffset.ToStringInvariant(), adduct,
                         parsedIon.MonoisotopicMass,
                         parsedIon.AverageMass,
                         parsedIon.Name);
@@ -314,7 +314,7 @@ namespace pwiz.Skyline.Model.DocSettings
             }
             else
             {
-                writer.WriteAttributeIfString(ATTR.ion_formula, SettingsCustomIon.NeutralFormula);
+                writer.WriteAttributeIfString(ATTR.ion_formula, SettingsCustomIon.MoleculeAndMassOffset.IsMassOnly ? null : SettingsCustomIon.MoleculeAndMassOffset.ToStringInvariant());
                 // Masses are information only, if there is a formula, but Panorama may need these
                 writer.WriteAttribute(ATTR.mass_monoisotopic, SettingsCustomIon.MonoisotopicMass.Value);
                 writer.WriteAttribute(ATTR.mass_average, SettingsCustomIon.AverageMass.Value);

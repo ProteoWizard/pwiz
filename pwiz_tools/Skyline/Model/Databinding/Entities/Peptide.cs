@@ -166,13 +166,13 @@ namespace pwiz.Skyline.Model.Databinding.Entities
             {
                 if (IsSmallMolecule())
                 {
-                    return DocNode.CustomMolecule.Formula.ToString();
+                    return DocNode.CustomMolecule.MoleculeAndMassOffset.ToString();
                 }
                 else
                 {
                     var crosslinkBuilder = new CrosslinkBuilder(SrmDocument.Settings, DocNode.Peptide,
                         DocNode.ExplicitMods, IsotopeLabelType.light);
-                    return crosslinkBuilder.GetPrecursorFormula().ChemicalFormulaPart().ToString();
+                    return crosslinkBuilder.GetPrecursorFormula().ChemicalFormulaWithoutOffsets();
                 }
             }
         }

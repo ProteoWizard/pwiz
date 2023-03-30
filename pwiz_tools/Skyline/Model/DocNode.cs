@@ -1333,10 +1333,31 @@ namespace pwiz.Skyline.Model
         {
             if (ReferenceEquals(null, obj)) return false;
             if (ReferenceEquals(this, obj)) return true;
-            var equal = base.Equals(obj) 
-                && ArrayUtil.EqualsDeep(obj.Children, Children)
-                && AutoManageChildren == obj.AutoManageChildren;
-            return equal; // For debugging convenience
+
+            if (!base.Equals(obj))
+            {
+                return false;
+            }
+
+            if (Children.Count != obj.Children.Count)
+            {
+                return false;
+            }
+
+            // This could be handled more compactly by EqualsDeep, but that makes it difficult to set breakpoints
+            for (var i = 0; i < Children.Count; i++)
+            {
+                if (Children[i] == null && obj.Children[i] != null)
+                {
+                    return false;
+                }
+                if (!Children[i].Equals(obj.Children[i]))
+                {
+                    return false;
+                }
+            }
+
+            return AutoManageChildren == obj.AutoManageChildren;
         }
 
         public override bool Equals(object obj)

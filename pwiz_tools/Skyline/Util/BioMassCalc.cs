@@ -16,8 +16,7 @@
  * See the License for the specific language governing permissions and
  * limitations under the License.
  */
-using System.Collections.Generic;
-using System.Linq;
+
 using pwiz.Common.Chemistry;
 using pwiz.Skyline.Properties;
 
@@ -49,28 +48,6 @@ namespace pwiz.Skyline.Util
         public static readonly IsotopeAbundances DEFAULT_ABUNDANCES = IsotopeAbundances.Default;
 
         /// <summary>
-        /// Find the first atomic symbol in a given expression.
-        /// </summary>
-        /// <param name="expression">The expression to search</param>
-        /// <returns>The first atomic symbol</returns>
-        private static string NextSymbol(string expression)
-        {
-
-            // Skip the first character, since it is always the start of
-            // the symbol, and then look for the end of the symbol.
-            var i = 1;
-            foreach (var c in expression.Skip(1))
-            {
-                if (!char.IsLower(c) && c != '\'' && c != '"')
-                {
-                    return expression.Substring(0, i);
-                }
-                i++;
-            }
-            return expression;
-        }
-
-        /// <summary>
         /// Create a simple mass calculator for use in calculating
         /// protein, peptide and fragment masses.
         /// </summary>
@@ -86,7 +63,7 @@ namespace pwiz.Skyline.Util
         /// </summary>
         public double CalculateIonMz(string desc, Adduct adduct)
         {
-            var mass = CalculateMassFromFormula(desc);
+            var mass = CalculateMassFromFormula(desc, out _);
             return adduct.MzFromNeutralMass(mass);
         }
 
@@ -110,59 +87,20 @@ namespace pwiz.Skyline.Util
         /// Parses a chemical formula expressed as "[{atom}[count][spaces]]*",
         /// e.g. "C6H11ON", where supported atoms are H, O, N, C, S or P, etc.
         /// returning the total mass for the formula.
+        ///
+        /// If the formula contains and adduct, e.g. "[M+2H]" in "C12H5[M+2H]", that is factored in.
         /// 
-        /// The parser removes atoms and counts until it encounters a character
-        /// it does not understand as being part of the chemical formula.
-        /// The remainder is returned in the desc parameter.
-        /// 
-        /// This parser will stop at the first minus sign. If you need to parse
-        /// an expression that might contain a minus sign, use <see cref="BioMassCalcBase.ParseMassExpression"/>.
         /// </summary>
-        /// <param name="desc">Input description, and remaining string after parsing</param>
-        /// <param name="molReturn">Optional dictionary for returning the atoms and counts</param>
+        /// <param name="desc">Input description</param>
+        /// <param name="molReturn">Molecule object for returning the atoms and counts</param>
         /// <returns>Total mass of formula parsed</returns>
-        public double ParseMass(ref string desc, Dictionary<string, int> molReturn = null)
+        public double ParseFormulaWithAdductMass(string desc, out MoleculeMassOffset molReturn)
         {
-            double totalMass = 0.0;
-            desc = desc.Trim();
-            Adduct adduct;
-            string neutralFormula;
-            Dictionary<string, int> dict = null;
-            if (IonInfo.IsFormulaWithAdduct(desc, out var mol, out adduct, out neutralFormula))
+            if (!IonInfo.IsFormulaWithAdduct(desc, out molReturn, out _, out _))
             {
-                totalMass = mol.Sum(p => p.Value*GetMass(p.Key));
-                desc = string.Empty; // Signal that we parsed the whole thing
-                if (molReturn != null)
-                {
-                    dict = mol.Dictionary.ToDictionary(kvp=>kvp.Key, kvp=>kvp.Value);
-                }
+                molReturn = MoleculeMassOffset.Create(desc);
             }
-            else
-            {
-                if (molReturn != null)
-                {
-                    dict = new Dictionary<string, int>();
-                }
-                totalMass = ParseFormulaMass(ref desc, dict);
-            }
-
-            if (molReturn != null)
-            {
-                foreach (var kvp in dict)
-                {
-                    var sym = kvp.Key;
-                    var count = kvp.Value;
-                    if (molReturn.TryGetValue(sym, out var oldCount))
-                    {
-                        molReturn[sym] = count + oldCount;
-                    }
-                    else
-                    {
-                        molReturn.Add(sym, count);
-                    }
-                }
-            }
-            return totalMass;            
+            return molReturn.GetTotalMass(this.MassType);
         }
     }
 }

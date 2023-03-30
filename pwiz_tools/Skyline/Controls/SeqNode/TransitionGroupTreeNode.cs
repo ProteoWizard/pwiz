@@ -402,8 +402,8 @@ namespace pwiz.Skyline.Controls.SeqNode
                             return true;
                         }
                         else if (tranGroup.IsCustomIon && nodeTree.IsSynchable() &&
-                                 tranGroupThis.CustomMolecule.Formula.IsMassOnly ==
-                                 tranGroup.CustomMolecule.Formula.IsMassOnly)
+                                 tranGroupThis.CustomMolecule.MoleculeAndMassOffset.IsMassOnly ==
+                                 tranGroup.CustomMolecule.MoleculeAndMassOffset.IsMassOnly)
                         {
                             return true;
                         }
@@ -462,10 +462,10 @@ namespace pwiz.Skyline.Controls.SeqNode
                         FormatAdductTip(nodeGroup.TransitionGroup.PrecursorAdduct), rt);
                     customTable.AddDetailRow(Resources.TransitionGroupTreeNode_RenderTip_Precursor_mz,
                         string.Format(@"{0:F04}", nodeGroup.PrecursorMz), rt);
-                    if (nodeGroup.CustomMolecule.Formula != null)
+                    if (nodeGroup.CustomMolecule.MoleculeAndMassOffset != null)
                     {
                         customTable.AddDetailRow(Resources.TransitionTreeNode_RenderTip_Formula,
-                            nodeGroup.CustomMolecule.Formula + nodeGroup.TransitionGroup.PrecursorAdduct.AdductFormula.ToString(LocalizationHelper.CurrentCulture), rt);
+                            nodeGroup.CustomMolecule.MoleculeAndMassOffset + nodeGroup.TransitionGroup.PrecursorAdduct.AdductFormula.ToString(LocalizationHelper.CurrentCulture), rt);
                     }
                     SizeF size = customTable.CalcDimensions(g);
                     customTable.Draw(g);

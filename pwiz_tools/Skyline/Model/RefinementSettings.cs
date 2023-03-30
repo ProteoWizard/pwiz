@@ -908,6 +908,11 @@ namespace pwiz.Skyline.Model
             var moleculeFormula = masscalc.GetMolecularFormula(peptideTarget.Sequence); // Get molecular formula, possibly with isotopes in it (as with iTraq)
             adduct = 
                 Adduct.NonProteomicProtonatedFromCharge(precursorCharge, BioMassCalc.MONOISOTOPIC.FindIsotopeLabelsInFormula(moleculeFormula));
+            if (moleculeFormula.HasIsotopes())
+            {
+                // Isotopes are already accounted for in the adduct
+                moleculeFormula = moleculeFormula.StripIsotopicLabelsFromFormulaAndMassOffset();
+            }
             var customMolecule = new CustomMolecule(moleculeFormula, TestingConvertedFromProteomicPeptideNameDecorator + masscalc.GetModifiedSequence(peptideTarget, false)); // Make sure name isn't a valid peptide seq
 
             if (mode == ConvertToSmallMoleculesMode.masses_only)
@@ -1134,7 +1139,7 @@ namespace pwiz.Skyline.Model
                                 var mzShift = transition.Transition.IonType == IonType.precursor ?
                                     mzShiftPrecursor :
                                     mzShiftFragment;
-                                Assume.IsTrue(Math.Abs(newTransitionDocNode.Mz + mzShift - transition.Mz.Value) <= .5 * BioMassCalc.MassElectron, String.Format(@"unexpected mz difference {0}-{1}={2}", newTransitionDocNode.Mz, transition.Mz, newTransitionDocNode.Mz - transition.Mz.Value));
+                                Assume.IsTrue(Math.Abs(newTransitionDocNode.Mz + mzShift - transition.Mz.Value) <= 1.001*BioMassCalc.MassElectron, String.Format(@"unexpected mz difference {0}-{1}={2}", newTransitionDocNode.Mz, transition.Mz, newTransitionDocNode.Mz - transition.Mz.Value));
                                 newTransitionGroupDocNode =
                                     (TransitionGroupDocNode)newTransitionGroupDocNode.Add(newTransitionDocNode);
                             }

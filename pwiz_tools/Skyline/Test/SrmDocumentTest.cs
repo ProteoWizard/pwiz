@@ -100,26 +100,27 @@ namespace pwiz.SkylineTest
             AssertEx.ValidatesAgainstSchema(DOC_MOLECULES_31);
             var doc = AssertEx.Deserialize<SrmDocument>(DOC_MOLECULES_31);
             AssertEx.IsDocumentState(doc, null, 1, 1, 1, 1);
-            Assert.AreEqual("C12H99", doc.MoleculeTransitionGroups.First().CustomMolecule.Formula);
+            Assert.AreEqual("C12H99", doc.MoleculeTransitionGroups.First().CustomMolecule.MoleculeAndMassOffset.ToStringInvariant());
             Assert.AreEqual(doc.Molecules.First().CustomMolecule , doc.MoleculeTransitionGroups.First().CustomMolecule);
         }
 
         [TestMethod]
         public void MoleculeParseTest()
         {
-            // Verify handling of simple formula arithmetic as used in ion forumlas
+            // Verify handling of simple formula arithmetic as used in ion formulas
             const string C12H8S2O6 = "C12H8S2O6";
             const string SO4 = "SO4";
             Assert.AreEqual(311.976229, BioMassCalc.MONOISOTOPIC.CalculateMassFromFormula(C12H8S2O6),.00001);
             var subtracted = C12H8S2O6+"-"+SO4;
-            AssertEx.ThrowsException<ArgumentException>(() => Molecule.ParseExpressionToDictionary(subtracted + subtracted));  // More than one subtraction operation not supported
-            Assert.AreEqual(BioMassCalc.MONOISOTOPIC.CalculateMassFromFormula(subtracted), BioMassCalc.MONOISOTOPIC.CalculateMassFromFormula(C12H8S2O6) - BioMassCalc.MONOISOTOPIC.CalculateMassFromFormula(SO4));
-            Assert.AreEqual(BioMassCalc.MONOISOTOPIC.CalculateMassFromFormula(C12H8S2O6+SO4), BioMassCalc.MONOISOTOPIC.CalculateMassFromFormula(C12H8S2O6) + BioMassCalc.MONOISOTOPIC.CalculateMassFromFormula(SO4));
+            AssertEx.ThrowsException<ArgumentException>(() => Molecule.ParseToDictionary(subtracted + subtracted, out _));  // More than one subtraction operation not supported
+            AssertEx.AreEqual(BioMassCalc.MONOISOTOPIC.CalculateMassFromFormula(subtracted), 
+                BioMassCalc.MONOISOTOPIC.CalculateMassFromFormula(C12H8S2O6) - BioMassCalc.MONOISOTOPIC.CalculateMassFromFormula(SO4), .1 * BioMassCalcBase.MassTolerance);
+            Assert.AreEqual(BioMassCalc.MONOISOTOPIC.CalculateMassFromFormula(C12H8S2O6+SO4), 
+                BioMassCalc.MONOISOTOPIC.CalculateMassFromFormula(C12H8S2O6) + BioMassCalc.MONOISOTOPIC.CalculateMassFromFormula(SO4), .1 * BioMassCalcBase.MassTolerance);
             var desc = subtracted;
-            var counts = new Dictionary<string, int>();
             var expected = new Dictionary<string,int> {{"C",12},{"H",8},{"S",1},{"O",2}};
-            BioMassCalc.MONOISOTOPIC.ParseCounts(ref desc, counts, false);
-            Assert.IsTrue(CollectionUtil.EqualsDeep(expected, counts));
+            BioMassCalc.MONOISOTOPIC.ParseFormulaWithAdductMass(desc, out var counts);
+            Assert.IsTrue(CollectionUtil.EqualsDeep(expected, counts.Dictionary));
         }
 
         [TestMethod]
@@ -175,6 +176,7 @@ namespace pwiz.SkylineTest
             if (doc.FormatVersion.CompareTo(DocumentFormat.VERSION_3_61) >= 0)
                 Assert.AreEqual(345.6, doc.MoleculeTransitionGroups.ElementAt(0).ExplicitValues.CollisionalCrossSectionSqA.Value, 1E-12);
             Assert.IsTrue(doc.MoleculeTransitions.ElementAt(0).Transition.IsCustom());
+            Assert.AreEqual(mzPrecursor, doc.MoleculeTransitionGroups.ElementAt(0).PrecursorMz, BioMassCalcBase.MassTolerance);
             Assert.AreEqual(transition.MonoisotopicMassMz, doc.MoleculeTransitions.ElementAt(0).Transition.CustomIon.MonoisotopicMassMz, mzToler);
             Assert.AreEqual(transition2.MonoisotopicMassMz, doc.MoleculeTransitions.ElementAt(1).Transition.CustomIon.MonoisotopicMassMz, mzToler);
             Assert.AreEqual(1, doc.MoleculeTransitionGroups.ElementAt(0).TransitionGroup.PrecursorAdduct.AdductCharge);

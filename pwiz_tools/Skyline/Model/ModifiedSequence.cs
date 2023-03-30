@@ -301,9 +301,9 @@ namespace pwiz.Skyline.Model
             {
                 return mod.MonoisotopicMass.ToString(CultureInfo.CurrentCulture);
             }
-            if (!string.IsNullOrEmpty(mod.Formula))
+            if (!Molecule.IsNullOrEmpty(mod.Formula))
             {
-                return mod.Formula;
+                return mod.Formula.ToString();
             }
             return @"#UNKNOWNMODIFICATION#";
         }
@@ -358,7 +358,7 @@ namespace pwiz.Skyline.Model
 
             public string Name { get { return StaticMod.Name; } }
             public string ShortName { get { return StaticMod.ShortName; } }
-            public string Formula { get { return StaticMod.Formula; } }
+            public Molecule Formula { get { return StaticMod.Molecule; } }
             public int? UnimodId { get { return StaticMod.UnimodId; } }
             public double MonoisotopicMass { get; private set; }
             public double AverageMass { get; private set; }

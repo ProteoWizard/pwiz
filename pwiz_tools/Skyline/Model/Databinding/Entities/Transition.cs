@@ -120,7 +120,7 @@ namespace pwiz.Skyline.Model.Databinding.Entities
             get
             {
                 return IsCustomTransition()
-                ? (DocNode.Transition.CustomIon.Formula.ToString())
+                ? (DocNode.Transition.CustomIon.MoleculeAndMassOffset.ToString())
                 : string.Empty;
             }
         }
@@ -129,7 +129,7 @@ namespace pwiz.Skyline.Model.Databinding.Entities
             get
             {
                 return IsCustomTransition()
-                ? DocNode.Transition.CustomIon.NeutralFormula ?? string.Empty
+                ? DocNode.Transition.CustomIon.MoleculeAndMassOffset.ToDisplayString()
                 : string.Empty;
             }
         }

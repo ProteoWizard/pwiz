@@ -29,13 +29,20 @@ namespace pwiz.Common.Chemistry
     /// <summary>
     /// There are many places where we carry a mass or massH and also need to track how it was derived
     /// </summary>
-    public struct TypedMass :  IComparable<TypedMass>, IEquatable<TypedMass>, IFormattable
+    public class TypedMass :  IComparable<TypedMass>, IEquatable<TypedMass>, IFormattable
     {
-        public static TypedMass ZERO_AVERAGE_MASSNEUTRAL = TypedMass.Create(0.0, MassType.Average);
-        public static TypedMass ZERO_MONO_MASSNEUTRAL = TypedMass.Create(0.0, MassType.Monoisotopic);
+        public static TypedMass ZERO_AVERAGE_MASSNEUTRAL = new TypedMass(0.0, MassType.Average);
+        public static TypedMass ZERO_MONO_MASSNEUTRAL = new TypedMass(0.0, MassType.Monoisotopic);
 
-        public static TypedMass ZERO_AVERAGE_MASSH = TypedMass.Create(0.0, MassType.AverageMassH);
-        public static TypedMass ZERO_MONO_MASSH = TypedMass.Create(0.0, MassType.MonoisotopicMassH);
+        public static TypedMass ZERO_AVERAGE_MASSH = new TypedMass(0.0, MassType.AverageMassH);
+        public static TypedMass ZERO_MONO_MASSH = new TypedMass(0.0, MassType.MonoisotopicMassH);
+
+        public static TypedMass ZERO_AVERAGE_MASSNEUTRAL_HEAVY = new TypedMass(0.0, MassType.AverageHeavy);
+        public static TypedMass ZERO_MONO_MASSNEUTRAL_HEAVY = new TypedMass(0.0, MassType.MonoisotopicHeavy);
+
+        public static TypedMass ZERO_AVERAGE_MASSH_HEAVY = new TypedMass(0.0, MassType.AverageMassH | MassType.bHeavy);
+        public static TypedMass ZERO_MONO_MASSH_HEAVY = new TypedMass(0.0, MassType.MonoisotopicMassH | MassType.bHeavy);
+
 
         private readonly double _value;
         private readonly MassType _massType;
@@ -51,7 +58,7 @@ namespace pwiz.Common.Chemistry
         [Pure]
         public bool IsHeavy() { return _massType.IsHeavy(); }
         [Pure]
-        public static bool IsEmpty(TypedMass t) => t._value == 0;
+        public static bool IsNullOrEmpty(TypedMass t) => ReferenceEquals(t, null) || t._value == 0;
 
         private TypedMass(double value, MassType t)
         {
@@ -66,10 +73,14 @@ namespace pwiz.Common.Chemistry
             {
                 if (t.IsAverage())
                 {
-                    return t.IsMassH() ? ZERO_AVERAGE_MASSH : ZERO_AVERAGE_MASSNEUTRAL;
+                    return t.IsHeavy() ?
+                        (t.IsMassH() ? ZERO_AVERAGE_MASSH_HEAVY : ZERO_AVERAGE_MASSNEUTRAL_HEAVY) :
+                        (t.IsMassH() ? ZERO_AVERAGE_MASSH : ZERO_AVERAGE_MASSNEUTRAL);
                 }
 
-                return t.IsMassH() ? ZERO_MONO_MASSH : ZERO_MONO_MASSNEUTRAL;
+                return t.IsHeavy() ?
+                    (t.IsMassH() ? ZERO_MONO_MASSH_HEAVY : ZERO_MONO_MASSNEUTRAL_HEAVY) : 
+                    (t.IsMassH() ? ZERO_MONO_MASSH : ZERO_MONO_MASSNEUTRAL);
             }
 
             return new TypedMass(value, t);
@@ -95,6 +106,34 @@ namespace pwiz.Common.Chemistry
             return TypedMass.Create(_value, newIsMassH ? _massType | MassType.bMassH : _massType & ~MassType.bMassH);
         }
 
+        public TypedMass ChangeMass(double mass)
+        {
+            return (_value != mass) ? TypedMass.Create(mass, _massType) : this;
+        }
+
+        public TypedMass ChangeIsHeavy(bool newIsHeavy)
+        {
+            if (Equals(newIsHeavy, IsHeavy()))
+            {
+                return this;
+            }
+            return TypedMass.Create(_value, newIsHeavy ? _massType | MassType.bHeavy : _massType & ~MassType.bHeavy);
+        }
+
+        public TypedMass ChangeIsMonoIsotopic(bool bIsMono)
+        {
+            return (bIsMono == IsMonoIsotopic()) ?
+                this :
+                TypedMass.Create(_value, (_massType & ~(MassType.Monoisotopic | MassType.Average)) | (bIsMono ? MassType.Monoisotopic : MassType.Average));
+        }
+
+        public TypedMass ChangeMassType(MassType massType)
+        {
+            return (massType == _massType) ?
+                this :
+                TypedMass.Create(_value, massType);
+        }
+
         public static implicit operator double(TypedMass d)
         {
             return d.Value;
@@ -102,18 +141,95 @@ namespace pwiz.Common.Chemistry
 
         public static TypedMass operator +(TypedMass tm, double step)
         {
-            return TypedMass.Create(tm.Value + step, tm._massType);
+            return step == 0 ? tm : TypedMass.Create(tm.Value + step, tm._massType);
         }
 
         public static TypedMass operator -(TypedMass tm, double step)
         {
-            return TypedMass.Create(tm.Value - step, tm._massType);
+            return step == 0 ? tm : TypedMass.Create(tm.Value - step, tm._massType);
+        }
+
+        public static TypedMass operator+(TypedMass tm, TypedMass step)
+        {
+            return step.Value == 0 && tm._massType == step._massType ? // If step is zero, and the mass types are the same, return the original
+                tm : 
+                tm.Value == 0 && tm._massType == step._massType ? // If tm is zero, and the mass types are the same, return the step
+                step :
+                Create(tm.Value + step.Value, tm._massType | step._massType); // Make sure that the mass type includes bHeavy if either is heavy
+        }
+
+        public static TypedMass operator -(TypedMass tm, TypedMass step)
+        {
+            return step.Value == 0 && tm._massType == step._massType ? // If step is zero, and the mass types are the same, return the original
+                tm : 
+                Create(tm.Value - step.Value, tm._massType | step._massType); // Make sure that the mass type includes bHeavy if either is heavy
+        }
+
+        public static TypedMass operator *(TypedMass tm, double step)
+        {
+            return step == 1 ? tm : TypedMass.Create(tm.Value * step, tm._massType);
         }
 
         public int CompareTo(TypedMass other)
         {
-            Debug.Assert(_massType == other._massType);  // It's a mistake to mix these types
-            return Value.CompareTo(other.Value);
+            if (ReferenceEquals(other, null))
+            {
+                return 1;
+            }
+            Debug.Assert(_massType.IsMonoisotopic() == other._massType.IsMonoisotopic());  // It's a mistake to compare mono and average
+            var d = Value.CompareTo(other.Value);
+            return d;
+        }
+
+        public int CompareTolerant(TypedMass other, double tolerance)
+        {
+            var d = CompareTo(other);
+            if (d != 0)
+            {
+                if (Math.Abs(Value - other.Value) <= tolerance)
+                {
+                    return 0;
+                }
+            }
+            return d;
+        }
+
+        public static bool operator <(TypedMass massA, TypedMass massB)
+        {
+            return massA.CompareTo(massB) < 0;
+        }
+
+        public static bool operator <=(TypedMass massA, TypedMass massB)
+        {
+            return massA.CompareTo(massB) <= 0;
+        }
+
+        public static bool operator >=(TypedMass massA, TypedMass massB)
+        {
+            return massA.CompareTo(massB) >= 0;
+        }
+
+        public static bool operator >(TypedMass massA, TypedMass massB)
+        {
+            return massA.CompareTo(massB) > 0;
+        }
+
+        public static bool operator ==(TypedMass massA, TypedMass massB)
+        {
+            return ReferenceEquals(massA, null) ? ReferenceEquals(massB, null) : massA.CompareTo(massB) == 0;
+        }
+
+        public static bool operator !=(TypedMass massA, TypedMass massB)
+        {
+            return !(massA == massB);
+        }
+
+        public override bool Equals(object obj)
+        {
+            if (ReferenceEquals(null, obj)) return false;
+            if (ReferenceEquals(this, obj)) return true;
+            if (obj.GetType() != this.GetType()) return false;
+            return Equals((TypedMass)obj);
         }
 
         public bool Equals(TypedMass other)
@@ -147,6 +263,7 @@ namespace pwiz.Common.Chemistry
         {
             return Value.ToString(format, formatProvider);
         }
+
     }
 
     /// <summary>

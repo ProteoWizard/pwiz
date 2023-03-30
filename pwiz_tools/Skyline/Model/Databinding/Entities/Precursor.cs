@@ -137,11 +137,11 @@ namespace pwiz.Skyline.Model.Databinding.Entities
         }
 
         // Helper function for PrecursorIonFormula and PrecursorNeutralFormula
-        private void GetPrecursorFormulaAndAdduct(out Adduct adduct, out string formula)
+        private void GetPrecursorFormulaAndAdduct(out Adduct adduct, out MoleculeMassOffset formula)
         {
             if (IsSmallMolecule())
             {
-                formula = DocNode.CustomMolecule.Formula.ToStringInvariant();
+                formula = DocNode.CustomMolecule.MoleculeAndMassOffset;
                 adduct = DocNode.PrecursorAdduct;
             }
             else
@@ -149,7 +149,7 @@ namespace pwiz.Skyline.Model.Databinding.Entities
                 var crosslinkBuilder = new CrosslinkBuilder(SrmDocument.Settings, DocNode.TransitionGroup.Peptide,
                     Peptide.DocNode.ExplicitMods, DocNode.LabelType);
                 adduct = Util.Adduct.FromChargeProtonated(Charge);
-                formula = crosslinkBuilder.GetPrecursorFormula().ChemicalFormulaPart();
+                formula = crosslinkBuilder.GetPrecursorFormula();
             }
         }
 
@@ -159,10 +159,8 @@ namespace pwiz.Skyline.Model.Databinding.Entities
             get
             {
                 // Given formula C12H8O3 and adduct M3H2+H, apply label 3H2 and ionization +H to return C12H'3H6
-                Adduct adduct;
-                string formula;
-                GetPrecursorFormulaAndAdduct(out adduct, out formula);
-                return string.IsNullOrEmpty(formula) ? string.Empty : adduct.ApplyToFormula(formula).ToStringInvariant();
+                GetPrecursorFormulaAndAdduct(out var adduct, out var formula);
+                return MoleculeMassOffset.IsNullOrEmpty(formula) ? string.Empty : adduct.ApplyToMolecule(formula).ToDisplayString();
             }
         }
 
@@ -173,10 +171,8 @@ namespace pwiz.Skyline.Model.Databinding.Entities
             {
                 // Given formula C12H8O3 and adduct M3H2+H, apply label 3H2 but not ionization +H to return C12H'3H5
                 // Given formula C12H8O3 and adduct M(-0.234)+H, apply mass-only label (-0.234) but not ionization +H to return C12H8O3[-0.234]
-                Adduct adduct;
-                string formula;
-                GetPrecursorFormulaAndAdduct(out adduct, out formula);
-                return string.IsNullOrEmpty(formula) ? string.Empty : adduct.ApplyIsotopeLabelsToFormula(formula).ToStringInvariant();
+                GetPrecursorFormulaAndAdduct(out var adduct, out var formula);
+                return MoleculeMassOffset.IsNullOrEmpty(formula) ? string.Empty : adduct.ApplyIsotopeLabelsToMolecule(formula).ToDisplayString();
             }
         }
 

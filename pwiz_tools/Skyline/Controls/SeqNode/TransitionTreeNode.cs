@@ -19,6 +19,7 @@
 using System;
 using System.Diagnostics;
 using System.Drawing;
+using pwiz.Common.Chemistry;
 using pwiz.Common.SystemUtil;
 using pwiz.Skyline.Model;
 using pwiz.Skyline.Model.GroupComparison;
@@ -181,8 +182,9 @@ namespace pwiz.Skyline.Controls.SeqNode
             {
                 if (!string.IsNullOrEmpty(tran.CustomIon.Name))
                     labelPrefix = tran.CustomIon.Name + labelPrefixSpacer;
-                else if (!string.IsNullOrEmpty(tran.CustomIon.Formula.ChemicalFormulaPart()))
-                    labelPrefix = tran.CustomIon.Formula + labelPrefixSpacer;
+                else if (!MoleculeMassOffset.IsNullOrEmpty(tran.CustomIon.MoleculeAndMassOffset) &&
+                         !tran.CustomIon.MoleculeAndMassOffset.IsMassOnly)
+                    labelPrefix = tran.CustomIon.MoleculeAndMassOffset + labelPrefixSpacer;
                 else
                     labelPrefix = string.Empty;
             }
@@ -269,9 +271,9 @@ namespace pwiz.Skyline.Controls.SeqNode
                     table.AddDetailRow(Resources.TransitionTreeNode_RenderTip_Library_intensity, MathEx.RoundAboveZero(intensity,
                         (intensity < 10 ? 1 : 0), 4).ToString(LocalizationHelper.CurrentCulture), rt);
                 }
-                if (nodeTran.Transition.IsCustom() && !nodeTran.Transition.CustomIon.Formula.IsMassOnly)
+                if (nodeTran.Transition.IsCustom() && !nodeTran.Transition.CustomIon.MoleculeAndMassOffset.IsMassOnly)
                 {
-                    table.AddDetailRow(Resources.TransitionTreeNode_RenderTip_Formula, nodeTran.Transition.CustomIon.Formula + nodeTran.Transition.Adduct.AdductFormula.ToString(LocalizationHelper.CurrentCulture), rt);
+                    table.AddDetailRow(Resources.TransitionTreeNode_RenderTip_Formula, nodeTran.Transition.CustomIon.MoleculeAndMassOffset + nodeTran.Transition.Adduct.AdductFormula.ToString(LocalizationHelper.CurrentCulture), rt);
                 }
 
                 SizeF size = table.CalcDimensions(g);

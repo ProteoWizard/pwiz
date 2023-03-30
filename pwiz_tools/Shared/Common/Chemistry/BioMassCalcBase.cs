@@ -18,6 +18,7 @@
  */
 using System;
 using System.Collections.Generic;
+using System.Collections.ObjectModel;
 using System.Globalization;
 using System.Linq;
 
@@ -40,6 +41,11 @@ namespace pwiz.Common.Chemistry
     ///  </summary>
     public class BioMassCalcBase
     {
+        // Reasonable values for comparison and serialization of masses
+        public const int MassPrecision = 6;
+        public const double MassTolerance = 1e-6;
+        public const string MASS_FORMAT = @"0.######";
+
         public static BioMassCalcBase MONO = new BioMassCalcBase(MassType.Monoisotopic);
         public static BioMassCalcBase AVG = new BioMassCalcBase(MassType.Average);
 
@@ -132,22 +138,23 @@ namespace pwiz.Common.Chemistry
         /// CONSIDER(bspratt) would be trivial to add support for pwiz-style _2H -> H' _37Cl-> CL' etc
         /// NB if you do so, make sure to update BiblioSpec BuildParser.cpp which explicitly rejects '_' in formulas
         /// </summary>
-        private static Dictionary<string, string> DICT_HEAVYSYMBOL_NICKNAMES => new Dictionary<string, string>
-                {
+        public static ReadOnlyDictionary<string, string> DICT_HEAVYSYMBOL_NICKNAMES => new ReadOnlyDictionary<string, string>(
+                new Dictionary<string, string>(){
                     {D, H2}, // IUPAC Deuterium
                     {T, H3} // IUPAC Tritium
-                };
+                });
 
         /// <summary>
         /// A dictionary mapping heavy isotope symbols to their corresponding monoisotopic element.
         /// This dictionary contains entries for Skyline-style isotope symbols (e.g. H' for Deuterium -> H)
         /// as well as common synonyms (e.g. D for Deuterium -> H)
         /// </summary>
-        public static readonly Dictionary<string, string> DICT_HEAVYSYMBOL_TO_MONOSYMBOL = // Map Cl' to Cl, D to H etc
+        public static readonly ReadOnlyDictionary<string, string> DICT_HEAVYSYMBOL_TO_MONOSYMBOL = // Map Cl' to Cl, D to H etc
+            new ReadOnlyDictionary<string, string>(
              DICT_HEAVYSYMBOL_TO_MASS.ToDictionary(kvp => kvp.Key, kvp => kvp.Key)
                 .ToArray().Concat(DICT_HEAVYSYMBOL_NICKNAMES.ToDictionary(kvp => kvp.Key, kvp => kvp.Value).ToArray())
                     .ToDictionary(kvp => kvp.Key,
-                        kvp => kvp.Value.Replace(SKYLINE_ISOTOPE_HINT1, string.Empty).Replace(SKYLINE_ISOTOPE_HINT2, string.Empty));
+                        kvp => kvp.Value.Replace(SKYLINE_ISOTOPE_HINT1, string.Empty).Replace(SKYLINE_ISOTOPE_HINT2, string.Empty)));
 
         public static readonly char[] HEAVYSYMBOL_HINTS = new char[] {'\'', '"', 'D', 'T'}; // If a formula does not contain any of these, it's not heavy labeled
 
@@ -156,6 +163,23 @@ namespace pwiz.Common.Chemistry
         /// DOES NOT include synonyms such as D for Deuterium
         /// </summary>
         public static IEnumerable<string> HeavySymbols { get { return DICT_HEAVYSYMBOL_TO_MASS.Keys; } }
+
+        /// <summary>
+        /// Determine whether a string describes and isotope of an element
+        /// </summary>
+        /// <param name="xElement">string describing an element, possibly an isotope, e.g. "Cl" or "Cl'" </param>
+        /// <param name="yElement">string describing another element that might be the light version of xElement</param>
+        /// <returns>true if, for example, xElement is "N'" and yElement is "N"</returns>
+        public static bool ElementIsIsotopeOf(string xElement, string yElement)
+        {
+            if ((yElement.StartsWith(xElement) || BioMassCalcBase.DICT_HEAVYSYMBOL_NICKNAMES.ContainsKey(xElement)) &&
+                BioMassCalcBase.DICT_HEAVYSYMBOL_TO_MONOSYMBOL.TryGetValue(xElement, out var light) &&
+                Equals(yElement, light))
+            {
+                return true;
+            }
+            return false;
+        }
 
         /// <summary>
         /// Returns the index of an atomic symbol the mass distribution
@@ -339,21 +363,21 @@ namespace pwiz.Common.Chemistry
 
         // These can be localized in the constructor
         // A bit clunky but there isn't a well maintained L10N resource set for this namespace
-        private string The_expression__0__is_not_a_valid_chemical_formula =
+        private static string The_expression__0__is_not_a_valid_chemical_formula =
             @"The expression {0} is not a valid chemical formula";
-        private string Supported_chemical_symbols_include =
+        private static string Supported_chemical_symbols_include =
             @"Supported chemical symbols include: ";
-        public string FormatArgumentExceptionMessage(string desc)
+        public static string FormatArgumentExceptionMessage(string desc)
         {
-            string errmsg =
+            var errmsg =
                 string.Format(The_expression__0__is_not_a_valid_chemical_formula, desc) +
                 Supported_chemical_symbols_include;
-            foreach (var key in _atomicMasses.Keys)
+            foreach (var key in MONO._atomicMasses.Keys)
                 errmsg += key + @" "; 
             return errmsg;
         }
 
-        public void ThrowArgumentException(string desc)
+        public static void ThrowArgumentException(string desc)
         {
             throw new ArgumentException(FormatArgumentExceptionMessage(desc));
         }
@@ -369,28 +393,20 @@ namespace pwiz.Common.Chemistry
         }
 
 
-        public bool TryParseFormula(string formula, out Molecule resultMolecule, out string errMessage)
+        public bool TryParseFormula(string formula, out MoleculeMassOffset resultMolecule, out string errorMessage)
         {
             try
             {
-                var unprocessed = formula;
-                var resultDict = new Dictionary<string, int>();
                 // ParseMass checks for unknown symbols, so it's useful to us as a syntax checking parser even if we don't care about mass
                 // N.B. Monoisotopic vs Average doesn't actually matter here as we're just interested in the atom counts in resultDict
-                MONO.ParseFormulaMass(ref unprocessed, resultDict); 
-                if (unprocessed.Length > 0)
-                {
-                    ThrowArgumentException(formula); // Did not parse completely
-                }
-
-                resultMolecule = Molecule.FromDict(resultDict);
-                errMessage = string.Empty;
+                MONO.ParseFormulaMass(formula, out resultMolecule);
+                errorMessage = string.Empty;
                 return true;
             }
             catch (ArgumentException e)
             {
-                resultMolecule = Molecule.Empty;
-                errMessage = e.Message;
+                resultMolecule = MoleculeMassOffset.EMPTY;
+                errorMessage = e.Message;
                 return false;
             }
         }
@@ -401,31 +417,56 @@ namespace pwiz.Common.Chemistry
         /// atoms are chemical symbols like H, or C, or C' etc.
         /// </summary>
         /// <param name="desc">The molecule description string</param>
+        /// <param name="mol">The resulting molecule object</param>
         /// <returns>The mass of the specified molecule</returns>
+        public TypedMass CalculateMassFromFormula(string desc, out MoleculeMassOffset mol)
+        {
+            double totalMass = ParseFormulaMass(desc, out mol);
+            if (totalMass == 0.0)
+                ThrowArgumentException(desc);
+            return mol.GetTotalMass(MassType);
+        }
+
         public TypedMass CalculateMassFromFormula(string desc)
         {
-            string parse = desc;
-            double totalMass = ParseMassExpression(ref parse);
+            return CalculateMassFromFormula(desc, out _);
+        }
 
-            if (totalMass == 0.0 || parse.Length > 0)
-                ThrowArgumentException(desc);
-            var massType = ContainsIsotopicElement(desc) ?
-                MassType.IsAverage() ? MassType.AverageHeavy : MassType.MonoisotopicHeavy : // Formula contained isotope declaration
-                MassType.IsAverage() ? MassType.Average : MassType.Monoisotopic;
+        public bool TryCalculateMassFromFormula(string desc, out TypedMass mass)
+        {
+            try
+            {
+                mass = CalculateMassFromFormula(desc, out _);
+                return true;
+            }
+            catch
+            {
+                mass = TypedMass.Create(0, MassType);
+            }
+            return true;
+        }
 
-            return TypedMass.Create(totalMass, massType);
+        public TypedMass CalculateMassFromFormula(MoleculeMassOffset mol)
+        {
+            return mol == null ? TypedMass.Create(0, this.MassType) : mol.GetTotalMass(this.MassType);
+        }
+
+        public TypedMass CalculateMassFromFormula(Molecule mol)
+        {
+            return mol == null ? TypedMass.Create(0, this.MassType) : mol.GetTotalMass(this.MassType);
         }
 
         public TypedMass CalculateMassFromFormula(IDictionary<string, int> desc)
         {
-            double totalMass = ParseMass(desc);
+            var totalMass = GetChemicalMass(desc);
 
             if (desc.Count > 0 && totalMass == 0.0) // Non-empty description should produce a mass
             {
                 ThrowArgumentException(desc.ToString());
             }
 
-            return TypedMass.Create(totalMass, MassType);
+            var massType = ContainsIsotopicElement(desc) ? (MassType | MassType.bHeavy) : MassType;
+            return totalMass;
         }
 
         /// <summary>
@@ -435,7 +476,7 @@ namespace pwiz.Common.Chemistry
         /// </summary>
         /// <param name="desc">the formula</param>
         /// <returns>the tidied up formula</returns>
-        public string RegularizeFormula(string desc)
+        public static string RegularizeFormula(string desc)
         {
             if (string.IsNullOrEmpty(desc))
             {
@@ -464,7 +505,7 @@ namespace pwiz.Common.Chemistry
 
                 if (atomCount != 0) // Drop "H0"
                 {
-                    atomCounts.Add(new KeyValuePair<string, string> (atom, atomCountString));
+                    atomCounts.Add(new KeyValuePair<string, string>(atom, atomCountString));
                 }
 
                 desc = desc.Substring(nDigits).TrimStart();
@@ -474,6 +515,7 @@ namespace pwiz.Common.Chemistry
                 $@"{atomCount.Key}{atomCount.Value}"));
 
         }
+
 
         /// <summary>
         /// Turn a formula like C5H9H'3NO2S into C5H12NO2S
@@ -486,50 +528,15 @@ namespace pwiz.Common.Chemistry
             {
                 return desc; // Nothing there that looks like a heavy label
             }
-            var parse = desc;
-            var dictAtomCounts = new Dictionary<string, int>();
-            var atomOrder = new List<string>(); // Returned as the original order of elements - e.g. C3C'4H2O7 => C,C',H,O
-            ParseCounts(ref parse, dictAtomCounts, false, atomOrder);
-            if (!string.IsNullOrEmpty(parse))
+            if (!Molecule.TryParse(desc, out var mol))
             {
                 return desc; // That wasn't understood as a formula
             }
 
             // Look for any heavy isotopes in the formula and replace them with unlabeled versions
-            foreach (var kvp in dictAtomCounts.ToArray())
-            {
-                // For each heavy isotope in the formula
-                if (DICT_HEAVYSYMBOL_TO_MONOSYMBOL.TryGetValue(kvp.Key, out var unlabeled))
-                {
-                    dictAtomCounts.TryGetValue(unlabeled, out var count); // Get current count of unlabeled version, if any
-                    dictAtomCounts[unlabeled] = count + kvp.Value; // Add the heavy version's count to the unlabeled version's count
-                    dictAtomCounts.Remove(kvp.Key); // And remove heavy isotope from the formula
-                    // Preserve order - e.g. C3C'4H2O3 comes out as C7H2O3 and not something dependent on dictionary implementation like H2O3C7 etc
-                    var index = atomOrder.IndexOf(kvp.Key);
-                    if (index >= 0)
-                    {
-                        if (atomOrder.Contains(unlabeled))
-                        {
-                            atomOrder.RemoveAt(index); // Formula was mixed heavy and light - e.g. C and C'
-                        }
-                        else
-                        {
-                            atomOrder[index] = unlabeled; // Formula was all heavy - e.g. C' but no C
-                        }
-                    }
-                }
-            }
+            var dictUnlabeled = StripLabelsFromFormula(mol);
 
-            if (!atomOrder.Any())
-            {
-                return null;
-            }
-            return string.Concat(atomOrder.Select(atom =>
-            {
-                return dictAtomCounts.TryGetValue(atom, out var atomCount) && atomCount != 0 ? // We have seen things like C30H46N2O1XeH'0 in the wild - H' won't be in dictAtomCounts
-                    (atomCount > 1 ? $@"{atom}{atomCount.ToString(CultureInfo.InvariantCulture)}" : atom) :
-                    string.Empty;
-            })); 
+            return !dictUnlabeled.Any() ? null : mol.ChangeFormula(dictUnlabeled).ToString();
         }
 
         public static Dictionary<string, int> StripLabelsFromFormula(IEnumerable<KeyValuePair<string, int>> atomCounts)
@@ -559,10 +566,8 @@ namespace pwiz.Common.Chemistry
         {
             if (string.IsNullOrEmpty(desc))
                 return null;
-            var parse = desc;
-            var dictAtomCounts = new Dictionary<string, int>();
-            ParseCounts(ref parse, dictAtomCounts, false);
-            return FindIsotopeLabelsInFormula(dictAtomCounts);
+            var mol = Molecule.Parse(desc);
+            return FindIsotopeLabelsInFormula(mol);
         }
 
         public IDictionary<string, int> FindIsotopeLabelsInFormula(IEnumerable<KeyValuePair<string, int>> desc)
@@ -574,9 +579,9 @@ namespace pwiz.Common.Chemistry
         /// Find the intersection of a list of formulas, ignoring labels
         /// e.g. for C12H3H'2S2, C10H5, and C10H4Nz, return C10H4
         /// </summary>
-        public MoleculeMassOffset FindFormulaIntersectionUnlabeled(IEnumerable<MoleculeMassOffset> formulas)
+        public Molecule FindFormulaIntersectionUnlabeled(IEnumerable<Molecule> formulas)
         {
-            var unlabeled = formulas.Select(f => f.StripLabelsFromFormula()).ToList();
+            var unlabeled = formulas.Select(f => f.StripIsotopicLabels()).ToList();
             return FindFormulaIntersection(unlabeled);
         }
 
@@ -584,13 +589,13 @@ namespace pwiz.Common.Chemistry
         /// Find the intersection of a list of formulas
         /// e.g. for C12H5S2, C10H5, and C10H4Nz, return C10H4
         /// </summary>
-        public MoleculeMassOffset FindFormulaIntersection(IList<MoleculeMassOffset> formulas)
+        public Molecule FindFormulaIntersection(IList<Molecule> formulas)
         {
             if (formulas.Count == 0)
                 return MoleculeMassOffset.EMPTY;
             if (formulas.Count == 1)
                 return formulas[0];
-            if (formulas.Count == 2 && Collections.CollectionUtil.EqualsDeep(formulas[0].Dictionary, formulas[1].Dictionary))
+            if (formulas.Count == 2 && formulas[0].Equals(formulas[1]))
                 return formulas[0];
             var common = new Dictionary<string, int>(formulas[0].Dictionary);
             for (var i = 1; i < formulas.Count; i++)
@@ -620,180 +625,38 @@ namespace pwiz.Common.Chemistry
         /// Parses a chemical formula expressed as "[{atom}[count][spaces]]*",
         /// e.g. "C6H11ON", where supported atoms are H, O, N, C, S or P, etc.
         /// returning the total mass for the formula.
+        ///
+        /// Simple formula math like "C12H5-C3H2" is supported.
         /// 
-        /// The parser removes atoms and counts until it encounters a character
-        /// it does not understand as being part of the chemical formula.
-        /// The remainder is returned in the desc parameter.
-        /// 
-        /// This parser will stop at the first minus sign. If you need to parse
-        /// an expression that might contain a minus sign, use <see cref="ParseMassExpression"/>.
         /// </summary>
-        /// <param name="desc">Input description, and remaining string after parsing</param>
-        /// <param name="molReturn">Optional dictionary for returning the atoms and counts</param>
+        /// <param name="formula">Input description, and remaining string after parsing</param>
+        /// <param name="molReturn">Returns the atoms and counts</param>
         /// <returns>Total mass of formula parsed</returns>
-        public double ParseFormulaMass(ref string desc, Dictionary<string, int> molReturn = null)
+        public TypedMass ParseFormulaMass(string formula, out MoleculeMassOffset molReturn)
         {
-            double totalMass = 0.0;
-            desc = desc.Trim();
-            Dictionary<string, int> dict = null;
-            if (molReturn != null)
-            {
-                dict = new Dictionary<string, int>();
-            }
-            while (desc.Length > 0)
-            {
-                string sym = NextSymbol(desc);
-                double massAtom = GetMass(sym);
-
-                // Stop if unrecognized atom found.
-                if (massAtom == 0)
-                {
-                    // CONSIDER: Throw with a useful message?
-                    break;
-                }
-
-                desc = desc.Substring(sym.Length);
-                int endCount = 0;
-                while (endCount < desc.Length && Char.IsDigit(desc[endCount]))
-                    endCount++;
-
-                var count = 1;
-                if (endCount > 0)
-                {
-                    if (!int.TryParse(desc.Substring(0, endCount), out count))
-                        count = int.MaxValue; // We know at this point that it should parse, so it's probably just too big
-                }
-                totalMass += massAtom * count;
-                if (dict != null)
-                {
-                    if (dict.TryGetValue(sym, out var oldCount))
-                    {
-                        dict[sym] = count + oldCount;
-                    }
-                    else
-                    {
-                        dict.Add(sym, count);
-                    }
-                }
-                desc = desc.Substring(endCount).TrimStart();
-            }
-
-            if (molReturn != null)
-            {
-                foreach (var kvp in dict)
-                {
-                    var sym = kvp.Key;
-                    var count = kvp.Value;
-                    if (molReturn.TryGetValue(sym, out var oldCount))
-                    {
-                        molReturn[sym] = count + oldCount;
-                    }
-                    else
-                    {
-                        molReturn.Add(sym, count);
-                    }
-                }
-            }
-            return totalMass;            
+            molReturn = MoleculeMassOffset.Parse(formula);
+            return molReturn.GetTotalMass(MassType);
         }
 
-        /// <summary>
-        /// Parse a formula which may contain both positive and negative parts (e.g. "C'4-C4").
-        /// </summary>
-        public double ParseMassExpression(ref string desc, Dictionary<string, int> molReturn = null)
-        {
-            double totalMass = ParseFormulaMass(ref desc, molReturn);
-            if (desc.StartsWith(@"-"))
-            {
-                // As is deprotonation description ie C12H8O2-H (=C12H7O2) or even C12H8O2-H2O (=C12H6O)
-                desc = desc.Substring(1);
-                totalMass -= ParseFormulaMass(ref desc, molReturn);
-            }
-            return totalMass;
-        }
-
-        public double ParseMass(IEnumerable<KeyValuePair<string, int>> desc)
+        public TypedMass GetChemicalMass(IDictionary<string, int> desc)
         {
             double totalMass = 0;
-            foreach (var elementCount in desc)
+            var isHeavy = false;
+            foreach (var element in desc.Keys.OrderBy(k => k)) // For consistent result independent of storage order
             {
-                double massAtom = GetMass(elementCount.Key);
+                var massAtom = GetMass(element);
 
                 // Stop if unrecognized atom found.
                 if (massAtom == 0)
                 {
-                    // CONSIDER: Throw with a useful message?
-                    break;
+                    ThrowArgumentException(element); // Did not parse completely
                 }
-                totalMass += massAtom * elementCount.Value;
+                totalMass += massAtom * desc[element];
+                isHeavy |= DICT_HEAVYSYMBOL_TO_MONOSYMBOL.ContainsKey(element);
             }
-            return totalMass;
-        }
 
-        /// <summary>
-        /// Add or subtract the atom counts from a molecular formula to a <see cref="IDictionary{TKey,TValue}"/>
-        /// of atomic symbols and counts.
-        /// </summary>
-        /// <param name="desc">Molecular formula</param>
-        /// <param name="dictAtomCounts">Dictionary of atomic symbols and counts (may already contain counts from other formulas)</param>
-        /// <param name="negative">True if counts should be subtracted</param>
-        /// <param name="atomOrder">If non-null, used to note order of appearance of atomic symbols in formula</param>
-        public void ParseCounts(ref string desc, IDictionary<string, int> dictAtomCounts, bool negative, IList<string> atomOrder=null)
-        {
-            if (string.IsNullOrEmpty(desc))
-            {
-                return;
-            }
-            desc = desc.Trim();
-            while (desc.Length > 0)
-            {
-                if (desc.StartsWith(@"-"))
-                {
-                    // As is deprotonation description ie C12H8O2-H (=C12H7O2) or even C12H8O2-H2O (=C12H6O)
-                    desc = desc.Substring(1);
-                    ParseCounts(ref desc, dictAtomCounts, !negative, atomOrder);
-                    break;
-                }
-                string sym = NextSymbol(desc);
-                double massAtom = GetMass(sym);
-
-                // Stop if unrecognized atom found.
-                if (massAtom == 0)
-                {
-                    // CONSIDER: Throw with a useful message?
-                    break;
-                }
-
-                desc = desc.Substring(sym.Length);
-                int endCount = 0;
-                while (endCount < desc.Length && Char.IsDigit(desc[endCount]))
-                    endCount++;
-
-                int count = 1;
-                if (endCount > 0)
-                    count = int.Parse(desc.Substring(0, endCount), CultureInfo.InvariantCulture);
-
-                if (negative)
-                    count = -count;
-
-                if (dictAtomCounts.ContainsKey(sym))
-                {
-                    dictAtomCounts[sym] += count;
-                }
-                else
-                {
-                    dictAtomCounts.Add(sym, count);
-                    if (atomOrder != null)
-                    {
-                        atomOrder.Add(sym);
-                    }
-                }
-
-                if (dictAtomCounts[sym] == 0)
-                    dictAtomCounts.Remove(sym);
-
-                desc = desc.Substring(endCount).TrimStart();
-            }
+            var massType = isHeavy ? (MassType | MassType.bHeavy) : MassType;
+            return TypedMass.Create(totalMass, massType);
         }
 
         /// <summary>

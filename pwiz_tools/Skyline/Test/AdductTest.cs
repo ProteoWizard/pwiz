@@ -63,14 +63,16 @@ namespace pwiz.SkylineTest
         {
             // See http://fiehnlab.ucdavis.edu/staff/kind/Metabolomics/MS-Adduct-Calculator/
             var Taxol = "C47H51NO14"; // M=853.33089 (agrees with chemspider)
-            var calcMass = BioMassCalc.MONOISOTOPIC.CalculateMassFromFormula(Taxol);
+            var calcMass = BioMassCalc.MONOISOTOPIC.CalculateMassFromFormula(Taxol, out _);
             Assert.AreEqual(massTaxol, calcMass, .0001);
             var adduct = Adduct.FromStringAssumeProtonated(adductText);
             Assert.AreEqual(expectedCharge, adduct.AdductCharge);
             var mz = BioMassCalc.CalculateIonMz(calcMass, adduct);
             Assert.AreEqual(expectedMz, mz, .001);
             var massWithIsotopes = adduct.MassFromMz(mz, MassType.Monoisotopic);
-            Assert.AreEqual(massTaxol, massWithIsotopes - adduct.GetIsotopesIncrementalMonoisotopicMass() / adduct.GetMassMultiplier(), .0001);
+            var incrementalMassFromIsotopes = adduct.ApplyIsotopeLabelsToMass(TypedMass.ZERO_MONO_MASSNEUTRAL);
+            Assert.AreNotEqual(massWithIsotopes, incrementalMassFromIsotopes);
+            Assert.AreEqual(massTaxol, massWithIsotopes - incrementalMassFromIsotopes / adduct.GetMassMultiplier(), .0001);
             coverage.Add(adduct.AsFormula());
         }
 
@@ -83,26 +85,34 @@ namespace pwiz.SkylineTest
             });
         }
 
+        private string RoundtripFormulaString(string f)
+        {
+            BioMassCalc.MONOISOTOPIC.TryParseFormula(f, out var mol, out _);
+            return mol.ToDisplayString();
+        }
+
         private void TestAdductOperators()
         {
             // Test some underlying formula handling for fanciful user-supplied values
-            AssertEx.AreEqual("COOOHN", BioMassCalc.MONOISOTOPIC.RegularizeFormula("COOOHNS0"));
-            AssertEx.AreEqual("XeC12N1", BioMassCalc.MONOISOTOPIC.RegularizeFormula("XeC12N1H0"));
-            AssertEx.AreEqual("XeC12N1", BioMassCalc.MONOISOTOPIC.RegularizeFormula("XeC12N01H0"));
-            AssertEx.AreEqual("C'3C2H9NO2O\"2S1", BioMassCalc.MONOISOTOPIC.RegularizeFormula("C'3C2H9H'0NO2O\"2S001"));
+            AssertEx.AreEqual("COOOHN", RoundtripFormulaString("COOOHNS0"));
+            AssertEx.AreEqual("XeC12N1", RoundtripFormulaString("XeC12N1H0"));
+            AssertEx.AreEqual("XeC12N1", RoundtripFormulaString("XeC12N01H0"));
+            AssertEx.AreEqual("C'3C2H9NO2O\"2S1", RoundtripFormulaString("C'3C2H9H'0NO2O\"2S001"));
             var labels = new Dictionary<string, int>(){{"C'",3},{"O\"",2}}; // Find the C'3O"2 in  C'3C2H9H'0NO2O"2S (yes, H'0 - seen in the wild - but we drop zero counts)
             AssertEx.AreEqual(labels, BioMassCalc.MONOISOTOPIC.FindIsotopeLabelsInFormula("C'3C2H9H'0NO2O\"2S"));
+            AssertEx.AreEqual(0, Adduct.SINGLY_PROTONATED.CompareTo(Adduct.FromStringAssumeProtonated("(M+H)+")));
             AssertEx.AreEqual(Adduct.SINGLY_PROTONATED, Adduct.FromStringAssumeProtonated("(M+H)+") );
+            AssertEx.IsTrue(ReferenceEquals(Adduct.SINGLY_PROTONATED, Adduct.FromStringAssumeProtonated("(M+H)+"))); // Check our cacheing
             AssertEx.IsTrue(Adduct.FromStringAssumeProtonatedNonProteomic("[M-H2O+H]+").SameEffect(Adduct.FromStringAssumeProtonatedNonProteomic("(M+H)+[-H2O]")));
             Assert.IsTrue(Molecule.AreEquivalentFormulas("C10H30Si5O5H-CH4", "C9H27O5Si5"));
             AssertEx.AreEqual("C7H27O2Si4", BioMassCalc.MONOISOTOPIC.FindFormulaIntersection(new[] { 
                 MoleculeMassOffset.Create("C8H305O2Si5H-CH4"), // N.B. should preserve the element order of first in list
                 MoleculeMassOffset.Create("C9H27O5Si4"),
-                MoleculeMassOffset.Create("C9H27O5Si5Na")}).ToStringInvariant());
+                MoleculeMassOffset.Create("C9H27O5Si5Na")}).ToString());
             AssertEx.AreEqual("C7H27Si4O5", BioMassCalc.MONOISOTOPIC.FindFormulaIntersectionUnlabeled(new[] {
                 MoleculeMassOffset.Create("C7C'H30Si5O5H-CH4"), // N.B. should preserve the element order of first in list
                 MoleculeMassOffset.Create("C9H27O5Si4"),
-                MoleculeMassOffset.Create("C9H25H'2O5Si5Na")}).ToStringInvariant());
+                MoleculeMassOffset.Create("C9H25H'2O5Si5Na")}).ToString());
 
             // There is a difference between a proteomic adduct and non proteomic, primarily in how they display
             Assert.AreEqual(Adduct.FromStringAssumeChargeOnly("M+H"), Adduct.M_PLUS_H);
@@ -113,7 +123,12 @@ namespace pwiz.SkylineTest
             Assert.AreEqual(Adduct.FromStringAssumeProtonated("M+H"), Adduct.SINGLY_PROTONATED);
             Assert.AreEqual(Adduct.FromStringAssumeChargeOnly("M+H").AsFormula(), Adduct.SINGLY_PROTONATED.AsFormula()); // But the underlying chemistry is the same
 
-            Assert.AreEqual(Adduct.FromStringAssumeProtonated("[M+S]+"), Adduct.FromStringAssumeProtonated("M+S").ChangeCharge(1));
+            var mPlusSPlus = Adduct.FromStringAssumeProtonated("[M+S]+");
+            AssertEx.AreEqual(1, mPlusSPlus.AdductCharge);
+            var mPlusS = Adduct.FromStringAssumeProtonated("M+S");
+            var mPlusSchangeCharge = mPlusS.ChangeCharge(1);
+            AssertEx.IsTrue(mPlusSPlus.SameEffect(mPlusSchangeCharge));
+            Assert.AreEqual(mPlusSPlus, mPlusSchangeCharge);
             Assert.AreEqual(Adduct.FromStringAssumeProtonated("M(-1.234)+2Na"), Adduct.FromStringAssumeProtonated("M(-1.234)+3Na").ChangeCharge(2));
             Assert.AreEqual(Adduct.FromStringAssumeProtonated("M1.234+2Na"), Adduct.FromStringAssumeProtonated("M1.234+3Na").ChangeCharge(2));
             Assert.AreEqual(Adduct.FromStringAssumeProtonated("M2Cl37-2Na"), Adduct.FromStringAssumeProtonated("M2Cl37+3Na").ChangeCharge(-2));
@@ -265,7 +280,7 @@ namespace pwiz.SkylineTest
             // Check Deuterium and Tritium handling
             Assert.AreEqual(BioMassCalc.MONOISOTOPIC.GetMass("Cl2Cl'3H5H'4N12"), BioMassCalc.MONOISOTOPIC.GetMass("Cl2Cl'3H5D4N12"));
             Assert.AreEqual(BioMassCalc.MONOISOTOPIC.GetMass("Cl2Cl'3H5H\"4N12"), BioMassCalc.MONOISOTOPIC.GetMass("Cl2Cl'3H5T4N12"));
-            Assert.AreEqual(MoleculeMassOffset.Parse("Cl2Cl'3H5H'4N12".Replace("Cl'", label).Replace("Cl", unlabel)),
+            Assert.AreEqual(MoleculeMassOffset.Create("Cl2Cl'3H5H'4N12".Replace("Cl'", label).Replace("Cl", unlabel)),
                 relabeled.ApplyIsotopeLabelsToFormula("Cl5H9N12".Replace("Cl", unlabel))); // Replaces three of five Cl and four of nine H
             var m100 = TypedMass.Create(100, MassType.Monoisotopic);
             var mdiff = 2 * (3 * (BioMassCalc.MONOISOTOPIC.GetMass(label) -
@@ -415,17 +430,17 @@ namespace pwiz.SkylineTest
             var Hectochlorin = "C27H34Cl2N2O9S2";
             var massHectochlorin = 664.108276; // http://www.chemspider.com/Chemical-Structure.552449.html?rid=3a7c08af-0886-4e82-9e4f-5211b8efb373
             var adduct = Adduct.FromStringAssumeProtonated("M+H");
-            var mol = IonInfo.ApplyAdductToFormula(Hectochlorin, adduct).ToStringInvariant();
-            var mass = BioMassCalc.MONOISOTOPIC.CalculateMassFromFormula(mol);
-            Assert.AreEqual(massHectochlorin + BioMassCalc.MONOISOTOPIC.CalculateMassFromFormula("H"), mass, 0.00001);
-            var mz = BioMassCalc.CalculateIonMz(BioMassCalc.MONOISOTOPIC.CalculateMassFromFormula(Hectochlorin), adduct);
+            var mol = IonInfo.ApplyAdductToFormula(Hectochlorin, adduct);
+            var mass = BioMassCalc.MONOISOTOPIC.CalculateMassFromFormula(mol.ToString(), out _);
+            Assert.AreEqual(massHectochlorin + BioMassCalc.MONOISOTOPIC.CalculateMassFromFormula("H", out _), mass, 0.00001);
+            var mz = BioMassCalc.CalculateIonMz(BioMassCalc.MONOISOTOPIC.CalculateMassFromFormula(Hectochlorin, out _), adduct);
             Assert.AreEqual(665.11555415, mz, .000001);  // GNPS says 665.0 for Hectochlorin M+H
-            mol = IonInfo.ApplyAdductToFormula(Hectochlorin, Adduct.FromStringAssumeProtonated("MCl37+H")).ToStringInvariant();
-            Assert.AreEqual("C27H35ClCl'N2O9S2", mol);
-            mass = BioMassCalc.MONOISOTOPIC.CalculateMassFromFormula(mol);
+            mol = IonInfo.ApplyAdductToFormula(Hectochlorin, Adduct.FromStringAssumeProtonated("MCl37+H"));
+            Assert.AreEqual("C27H35ClCl'N2O9S2", mol.ToString());
+            mass = BioMassCalc.MONOISOTOPIC.CalculateMassFromFormula(mol.ToString(), out _);
             Assert.AreEqual(667.11315, mass, .00001);
-            mol = IonInfo.ApplyAdductToFormula(Hectochlorin, Adduct.FromStringAssumeProtonated("M2Cl37+H")).ToStringInvariant();
-            Assert.AreEqual("C27H35Cl'2N2O9S2", mol);
+            mol = IonInfo.ApplyAdductToFormula(Hectochlorin, Adduct.FromStringAssumeProtonated("M2Cl37+H"));
+            Assert.AreEqual("C27H35Cl'2N2O9S2", mol.ToString());
 
             // Test ability to describe isotope label by mass only
             var heavy = Adduct.FromStringAssumeProtonated("2M1.2345+H");
@@ -438,13 +453,13 @@ namespace pwiz.SkylineTest
             Assert.AreEqual(massHectochlorin + 1.23456, mz, .001);
             heavy = Adduct.FromStringAssumeProtonated("2M(-1.2345)+H");
             mz = BioMassCalc.CalculateIonMz(TypedMass.Create(massHectochlorin, MassType.Monoisotopic), heavy);
-            Assert.AreEqual((2 * (massHectochlorin - 1.23456) + BioMassCalc.MONOISOTOPIC.CalculateMassFromFormula("H")), mz, .001);
+            Assert.AreEqual((2 * (massHectochlorin - 1.23456) + BioMassCalc.MONOISOTOPIC.CalculateMassFromFormula("H", out _)), mz, .001);
             heavy = Adduct.FromStringAssumeProtonated("2M(-1.2345)");
             mz = BioMassCalc.CalculateIonMass(TypedMass.Create(massHectochlorin, MassType.Monoisotopic), heavy);
             Assert.AreEqual(2 * (massHectochlorin - 1.23456), mz, .001);
             heavy = Adduct.FromStringAssumeProtonated("2M(1.2345)+H");
             mz = BioMassCalc.CalculateIonMz(TypedMass.Create(massHectochlorin, MassType.Monoisotopic), heavy);
-            Assert.AreEqual((2 * (massHectochlorin + 1.23456) + BioMassCalc.MONOISOTOPIC.CalculateMassFromFormula("H")), mz, .001);
+            Assert.AreEqual((2 * (massHectochlorin + 1.23456) + BioMassCalc.MONOISOTOPIC.CalculateMassFromFormula("H", out _)), mz, .001);
             heavy = Adduct.FromStringAssumeProtonated("2M(1.2345)");
             mz = BioMassCalc.CalculateIonMass(TypedMass.Create(massHectochlorin, MassType.Monoisotopic), heavy);
             Assert.AreEqual(2 * (massHectochlorin + 1.23456), mz, .001);
@@ -463,7 +478,7 @@ namespace pwiz.SkylineTest
             Assert.AreEqual("C5H9NO2S", (new IonInfo("C5H9H'3NO2S[M-3H]")).UnlabeledFormula.ToStringInvariant());
 
             // Peptide representations
-            Assert.AreEqual("C40H65N11O16", (new SequenceMassCalc(MassType.Average)).GetNeutralFormula("PEPTIDER", null).ToStringInvariant());
+            Assert.AreEqual("C40H65N11O16", (new SequenceMassCalc(MassType.Average)).GetNeutralFormula("PEPTIDER", null).ToString());
 
             // Figuring out adducts from old style skyline doc ion molecules and ion precursors
             var adductDiff = Adduct.FromFormulaDiff("C6H27NO2Si2C'5", "C'5H11NO2", 3);

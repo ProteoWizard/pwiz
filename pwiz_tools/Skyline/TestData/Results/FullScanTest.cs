@@ -21,6 +21,7 @@ using System.Collections.Generic;
 using System.IO;
 using System.Linq;
 using Microsoft.VisualStudio.TestTools.UnitTesting;
+using pwiz.Common.Chemistry;
 using pwiz.Skyline.Model;
 using pwiz.Skyline.Model.DocSettings;
 using pwiz.Skyline.Model.Results;
@@ -444,10 +445,10 @@ namespace pwiz.SkylineTestData.Results
             Assert.IsFalse(docSM.MoleculeTransitionGroups.Any(nodeGroup => nodeGroup.IsotopeDist != null));
             AssertEx.Serializable(docSM, AssertEx.Cloned);
 
-            double c13Delta = BioMassCalc.MONOISOTOPIC.GetMass(BioMassCalc.C13) -
-                              BioMassCalc.MONOISOTOPIC.GetMass(BioMassCalc.C);
-            double n15Delta = BioMassCalc.MONOISOTOPIC.GetMass(BioMassCalc.N15) -
-                              BioMassCalc.MONOISOTOPIC.GetMass(BioMassCalc.N);
+            double c13Delta = BioMassCalc.MONOISOTOPIC.GetMass(BioMassCalcBase.C13) -
+                              BioMassCalc.MONOISOTOPIC.GetMass(BioMassCalcBase.C);
+            double n15Delta = BioMassCalc.MONOISOTOPIC.GetMass(BioMassCalcBase.N15) -
+                              BioMassCalc.MONOISOTOPIC.GetMass(BioMassCalcBase.N);
 
             // Verify isotope distributions calculated when MS1 filtering enabled
             var enrichments = IsotopeEnrichmentsList.DEFAULT;
@@ -566,7 +567,7 @@ namespace pwiz.SkylineTestData.Results
             AssertEx.Serializable(docIsotopesP2, AssertEx.Cloned);
 
             // Use lower enrichment of 13C, and verify that this add M-1 for 13C labeled precursors
-            var enrichmentsLow13C = enrichments.ChangeEnrichment(new IsotopeEnrichmentItem(BioMassCalc.C13, 0.9));
+            var enrichmentsLow13C = enrichments.ChangeEnrichment(new IsotopeEnrichmentItem(BioMassCalcBase.C13, 0.9));
             var docIsotopesLow13C = docIsotopesP1.ChangeSettings(docIsotopesP1.Settings.ChangeTransitionFullScan(fs =>
                 fs.ChangePrecursorIsotopes(FullScanPrecursorIsotopes.Percent, minPercent2, enrichmentsLow13C)));
             tranGroupsNew = docIsotopesLow13C.MoleculeTransitionGroups.ToArray();
@@ -584,7 +585,7 @@ namespace pwiz.SkylineTestData.Results
             AssertEx.Serializable(docIsotopesLow13C, AssertEx.Cloned); // Express any failure as XML diffs
 
             // Use 0%, and check that everything has M-1 and lower
-            var enrichmentsLow = enrichmentsLow13C.ChangeEnrichment(new IsotopeEnrichmentItem(BioMassCalc.N15, 0.97));
+            var enrichmentsLow = enrichmentsLow13C.ChangeEnrichment(new IsotopeEnrichmentItem(BioMassCalcBase.N15, 0.97));
             var docIsotopesLowP0 = docIsotopesP1.ChangeSettings(docIsotopesP1.Settings.ChangeTransitionFullScan(fs =>
                 fs.ChangePrecursorIsotopes(FullScanPrecursorIsotopes.Percent, 0, enrichmentsLow)));
             docCheckPoints.Add(docIsotopesLowP0);
@@ -621,7 +622,7 @@ namespace pwiz.SkylineTestData.Results
                     Assert.IsTrue(isotopePeaks.GetMZI(massIndex - 1) < isotopePeaks.GetMZI(massIndex));
                     double massDelta = GetMassDelta(isotopePeaks, massIndex);
                     bool containsSulfur = nodeGroup.TransitionGroup.Peptide.IsCustomMolecule
-                        ? (nodeGroup.CustomMolecule.Formula.ChemicalFormulaPart().IndexOfAny("S".ToCharArray()) != -1)
+                        ? (nodeGroup.CustomMolecule.MoleculeAndMassOffset.ChemicalFormulaWithoutOffsets().IndexOfAny("S".ToCharArray()) != -1)
                         : (nodeGroup.TransitionGroup.Peptide.Sequence.IndexOfAny("CM".ToCharArray()) != -1);
                     if (massIndex == 0)
                     {

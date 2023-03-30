@@ -764,7 +764,7 @@ namespace pwiz.Skyline.Model
             var seq = TransitionGroup.Peptide.Target;
             var adduct = TransitionGroup.PrecursorAdduct;
             IsotopeLabelType labelType = TransitionGroup.LabelType;
-            MoleculeMassOffset isotopicFormula = null;
+            Molecule isotopicFormula = null;
             double mz;
             IPrecursorMassCalc calc;
             if (IsCustomIon)
@@ -843,11 +843,11 @@ namespace pwiz.Skyline.Model
         {
             if (IsCustomIon)
             {
-                return CustomMolecule.Formula;
+                return CustomMolecule.MoleculeAndMassOffset;
             }
             IPrecursorMassCalc massCalc = settings.GetPrecursorCalc(LabelType, mods);
-            MoleculeMassOffset moleculeMassOffset = MoleculeMassOffset.Create(massCalc.GetMolecularFormula(Peptide.Sequence), 0, 0);
-            moleculeMassOffset = moleculeMassOffset.Plus((mods?.CrosslinkStructure ?? CrosslinkStructure.EMPTY)
+            MoleculeMassOffset moleculeMassOffset = MoleculeMassOffset.Create(massCalc.GetMolecularFormula(Peptide.Sequence));
+            moleculeMassOffset = moleculeMassOffset.Add((mods?.CrosslinkStructure ?? CrosslinkStructure.EMPTY)
                 .GetNeutralFormula(settings, LabelType));
             
             return moleculeMassOffset;

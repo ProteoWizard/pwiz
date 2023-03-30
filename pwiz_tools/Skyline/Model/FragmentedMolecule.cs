@@ -79,7 +79,7 @@ namespace pwiz.Skyline.Model
             });
         }
 
-        public double PrecursorMassShift { get; private set; }
+        public double PrecursorMassShift { get; private set; } // CONSIDER - why not just a TypedMass here? Or better yet, a MoleculeMassOffset for PrecursorFormula?
         public MassType PrecursorMassType { get; private set; }
 
         public FragmentedMolecule ChangePrecursorMassShift(double precursorMassShift, MassType precursorMassType)
@@ -223,7 +223,7 @@ namespace pwiz.Skyline.Model
                     negative.Key);
                 throw new InvalidOperationException(message);
             }
-            return Molecule.FromDict(difference);
+            return Molecule.FromDictionary(difference);
         }
 
         private static Molecule GetSequenceFormula(ModifiedSequence modifiedSequence, MassType massType, out double unexplainedMassShift)
@@ -239,7 +239,7 @@ namespace pwiz.Skyline.Model
                 foreach (var mod in modifications[i])
                 {
                     var formula = mod.Formula;
-                    MoleculeMassOffset heavy = null;
+                    Molecule heavy = null;
                     if (formula == null)
                     {
                         var staticMod = mod.StaticMod;
@@ -251,7 +251,7 @@ namespace pwiz.Skyline.Model
                     }
                     if (formula != null || heavy != null)
                     {
-                        var modFormula = heavy ?? Molecule.ParseExpression(formula);
+                        var modFormula = heavy ?? formula;
                         Add(molecule, modFormula);
                     }
                     else
@@ -260,7 +260,7 @@ namespace pwiz.Skyline.Model
                     }
                 }
             }
-            return Molecule.FromDict(molecule);
+            return Molecule.FromDictionary(molecule);
         }
 
         private static void AddAminoAcidFormula(MassType massType, char aminoAcid, Dictionary<string, int> molecule, ref double unexplainedMass)
@@ -372,7 +372,7 @@ namespace pwiz.Skyline.Model
         public static Molecule AddFragmentLosses(Molecule molecule, IList<FragmentLoss> fragmentLosses, 
             MassType massType, ref double unexplainedMass)
         {
-            MoleculeMassOffset moleculeMassOffset = MoleculeMassOffset.Create(molecule, unexplainedMass, unexplainedMass);
+            var moleculeMassOffset = MoleculeMassOffset.Create(molecule, unexplainedMass, unexplainedMass);
             foreach (var fragmentLoss in fragmentLosses)
             {
                 moleculeMassOffset = moleculeMassOffset.Minus(ToMoleculeMassOffset(fragmentLoss));
@@ -386,7 +386,7 @@ namespace pwiz.Skyline.Model
             {
                 unexplainedMass = moleculeMassOffset.AverageMassOffset;
             }
-            return Molecule.FromDict(moleculeMassOffset);
+            return Molecule.FromDictionary(moleculeMassOffset);
         }
 
         public static FragmentedMolecule GetFragmentedMolecule(SrmSettings settings, PeptideDocNode peptideDocNode,
@@ -431,15 +431,15 @@ namespace pwiz.Skyline.Model
             if (transitionGroupDocNode == null)
             {
                 return fragmentedMolecule
-                    .ChangePrecursorFormula(peptideDocNode.CustomMolecule.Formula);
+                    .ChangePrecursorFormula(peptideDocNode.CustomMolecule.MoleculeAndMassOffset);
             }
             var customMolecule = transitionGroupDocNode.CustomMolecule;
             fragmentedMolecule =
                 fragmentedMolecule.ChangePrecursorCharge(transitionGroupDocNode.TransitionGroup
                     .PrecursorCharge);
-            if (!MoleculeMassOffset.IsNullOrEmpty(customMolecule.Formula))
+            if (!MoleculeMassOffset.IsNullOrEmpty(customMolecule.MoleculeAndMassOffset))
             {
-                var ionInfo = new IonInfo(customMolecule.Formula,
+                var ionInfo = new IonInfo(customMolecule.MoleculeAndMassOffset,
                     transitionGroupDocNode.PrecursorAdduct);
                 fragmentedMolecule = fragmentedMolecule
                     .ChangePrecursorFormula(ionInfo.FormulaWithAdductApplied);
@@ -457,7 +457,7 @@ namespace pwiz.Skyline.Model
                 return fragmentedMolecule;
             }
             var customIon = transitionDocNode.Transition.CustomIon;
-            if (customIon.Formula != null)
+            if (customIon.MoleculeAndMassOffset != null)
             {
                 fragmentedMolecule = fragmentedMolecule.ChangeFragmentFormula(
                     customIon.FormulaWithAdductApplied);
@@ -553,7 +553,7 @@ namespace pwiz.Skyline.Model
             {
                 double monoMass = GetMonoMass(moleculeMassOffset.Dictionary) + moleculeMassOffset.MonoMassOffset;
                 double averageMass = GetAverageMass(moleculeMassOffset.Dictionary) + moleculeMassOffset.AverageMassOffset;
-                return MoleculeMassOffset.Create(Molecule.Empty, monoMass, averageMass);
+                return MoleculeMassOffset.Create(Molecule.EMPTY, monoMass, averageMass);
             }
 
             protected bool Equals(Settings other)
@@ -587,19 +587,9 @@ namespace pwiz.Skyline.Model
             if (string.IsNullOrEmpty(fragmentLoss.Formula))
             {
                 return MoleculeMassOffset.Create( fragmentLoss.MonoisotopicMass, fragmentLoss.AverageMass);
-            }
-            Molecule lossFormula;
-            int ichMinus = fragmentLoss.Formula.IndexOf('-');
-            if (ichMinus < 0)
-            {
-                lossFormula = Molecule.Parse(fragmentLoss.Formula);
-            }
-            else
-            {
-                lossFormula = Molecule.Parse(fragmentLoss.Formula.Substring(0, ichMinus));
-                lossFormula = lossFormula.Difference(Molecule.Parse(fragmentLoss.Formula.Substring(ichMinus + 1)));
-            }
-            return MoleculeMassOffset.Create(lossFormula, 0, 0);
+            } 
+            var lossFormula = Molecule.Parse(fragmentLoss.Formula);
+            return MoleculeMassOffset.Create(lossFormula);
         }
     }
 }

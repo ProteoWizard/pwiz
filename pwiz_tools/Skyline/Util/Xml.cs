@@ -278,6 +278,12 @@ namespace pwiz.Skyline.Util
                 writer.WriteAttribute(name, value.Value);
         }
 
+        public static void WriteAttributeNullable(this XmlWriter writer, Enum name, double? value, int precision)
+        {
+            if (value.HasValue)
+                writer.WriteAttribute(name, value.Value, precision);
+        }
+
         public static void WriteAttributeIfString(this XmlWriter writer, Enum name, string value)
         {
             if (!string.IsNullOrEmpty(value))

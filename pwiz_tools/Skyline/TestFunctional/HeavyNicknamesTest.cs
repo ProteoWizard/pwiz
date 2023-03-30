@@ -18,6 +18,7 @@
  */
 using System.Linq;
 using Microsoft.VisualStudio.TestTools.UnitTesting;
+using pwiz.Common.Chemistry;
 using pwiz.Skyline.EditUI;
 using pwiz.Skyline.FileUI;
 using pwiz.Skyline.Model;
@@ -172,7 +173,7 @@ namespace pwiz.SkylineTestFunctional
             RunDlg<EditIsotopeEnrichmentDlg>(transitionSettingsUi.AddToEnrichmentsList, dlg =>
             {
                 var defaultEnrichments = IsotopeEnrichmentsList.DEFAULT;
-                var newEnrichments = defaultEnrichments.ChangeEnrichment(new IsotopeEnrichmentItem(BioMassCalc.H2, .95));
+                var newEnrichments = defaultEnrichments.ChangeEnrichment(new IsotopeEnrichmentItem(BioMassCalcBase.H2, .95));
                 Assert.AreNotEqual(newEnrichments, defaultEnrichments);
                 newEnrichments = (IsotopeEnrichments) newEnrichments.ChangeName("NewEnrichments");
                 dlg.Enrichments = newEnrichments;

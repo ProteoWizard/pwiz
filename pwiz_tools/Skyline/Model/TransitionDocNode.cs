@@ -635,7 +635,7 @@ namespace pwiz.Skyline.Model
         {
             if (Transition.IsNonReporterCustomIon())
             {
-                transitionProto.Formula = Transition.CustomIon.Formula.ChemicalFormulaPart();
+                transitionProto.Formula = Transition.CustomIon.MoleculeAndMassOffset.ToStringInvariant();
                 if (Transition.CustomIon.AverageMass.IsMassH())
                     transitionProto.AverageMassH = Transition.CustomIon.AverageMass;
                 else
@@ -689,10 +689,11 @@ namespace pwiz.Skyline.Model
                     var averageMassH = transitionProto.AverageMassH;
                     var monoMass = transitionProto.MonoMass ?? monoMassH;
                     var averageMass = transitionProto.AverageMass ?? averageMassH;
-                    customIon = new CustomMolecule(formula,
-                        TypedMass.Create(monoMass.Value, monoMassH.HasValue ? MassType.MonoisotopicMassH : MassType.Monoisotopic),
-                        TypedMass.Create(averageMass.Value, averageMassH.HasValue ? MassType.AverageMassH : MassType.Average),
-                        transitionProto.CustomIonName, moleculeID);
+                    customIon = string.IsNullOrEmpty(formula) ?
+                        new CustomMolecule(TypedMass.Create(monoMass??0, monoMassH.HasValue ? MassType.MonoisotopicMassH : MassType.Monoisotopic),
+                            TypedMass.Create(averageMass??0, averageMassH.HasValue ? MassType.AverageMassH : MassType.Average),
+                            transitionProto.CustomIonName, moleculeID) :
+                        new CustomMolecule(formula, transitionProto.CustomIonName, moleculeID);
                 }
             }
             Transition transition;
@@ -1029,7 +1030,8 @@ namespace pwiz.Skyline.Model
         {
             if (ReferenceEquals(null, obj)) return false;
             if (ReferenceEquals(this, obj)) return true;
-            var equal =  base.Equals(obj) && obj.Mz == Mz &&
+            var equal =  base.Equals(obj) && 
+                   (obj.Mz.CompareTolerant(Mz, BioMassCalcBase.MassTolerance) == 0) && // Allow for XML rounding
                    Equals(obj.IsotopeDistInfo, IsotopeDistInfo) &&
                    Equals(obj.LibInfo, LibInfo) &&
                    Equals(obj.Results, Results) &&

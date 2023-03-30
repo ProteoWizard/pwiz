@@ -77,7 +77,7 @@ namespace pwiz.Common.Chemistry
 
         public static SignedMz operator +(SignedMz mz, double step)
         {
-            return new SignedMz(mz.Value + step, mz.IsNegative);
+            return step == 0 ? mz : new SignedMz(mz.Value + step, mz.IsNegative);
         }
 
         public static SignedMz operator +(SignedMz mz, SignedMz step)
@@ -85,7 +85,7 @@ namespace pwiz.Common.Chemistry
             // Extra care necessary to deal with zero correctly
             if (mz.IsNegative != step.IsNegative && mz.Value != 0 && step.Value != 0)
                 throw new InvalidOperationException(@"polarity mismatch");
-            return new SignedMz(mz.Value + step.Value, mz.IsNegative || step.IsNegative);
+            return step.Value == 0 ? mz : new SignedMz(mz.Value + step.Value, mz.IsNegative || step.IsNegative);
         }
 
         /// <summary>
@@ -94,7 +94,7 @@ namespace pwiz.Common.Chemistry
         /// </summary>
         public static SignedMz operator -(SignedMz mz, double step)
         {
-            return new SignedMz(mz.Value - step, mz.IsNegative);
+            return step == 0 ? mz : new SignedMz(mz.Value - step, mz.IsNegative);
         }
 
         /// <summary>
@@ -107,7 +107,7 @@ namespace pwiz.Common.Chemistry
             // Extra care necessary to deal with zero correctly
             if (mz.IsNegative != step.IsNegative && mz.Value != 0 && step.Value != 0)
                 throw new InvalidOperationException(@"polarity mismatch");
-            return new SignedMz(mz.Value - step.Value, mz.IsNegative || step.IsNegative);
+            return step.Value == 0 ? mz : new SignedMz(mz.Value - step.Value, mz.IsNegative || step.IsNegative);
         }
 
         public static bool operator <(SignedMz mzA, SignedMz mzB)

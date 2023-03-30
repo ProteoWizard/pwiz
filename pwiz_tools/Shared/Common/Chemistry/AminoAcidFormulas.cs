@@ -182,7 +182,7 @@ namespace pwiz.Common.Chemistry
         public Molecule GetFormula(String peptide)
         {
             var formulas = peptide.Select(aa =>
-                _molecules.TryGetValue(aa, out Molecule aaFormula) ? aaFormula : Molecule.Empty
+                _molecules.TryGetValue(aa, out Molecule aaFormula) ? aaFormula : Molecule.EMPTY
             ).Append(H2O);
             return Molecule.Sum(formulas);
         }

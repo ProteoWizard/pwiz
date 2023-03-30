@@ -84,6 +84,7 @@ namespace pwiz.Skyline.Model.DocSettings
                                                                e => e.CalcDistribution(isotopes));
 
             // Make sure all heavy symbols used in Skyline are represented.
+            // ReSharper disable AccessToStaticMemberViaDerivedType
             foreach (string symbol in BioMassCalc.HeavySymbols.Where(symbol => !dictSymDist.ContainsKey(symbol)))
             {
                 dictSymDist.Add(symbol, new IsotopeEnrichmentItem(symbol, 1.0).CalcDistribution(isotopes));
@@ -91,6 +92,7 @@ namespace pwiz.Skyline.Model.DocSettings
 
             IsotopeAbundances = BioMassCalc.AddHeavyNicknames(isotopes.SetAbundances(dictSymDist));
         }
+        // ReSharper restore AccessToStaticMemberViaDerivedType
 
         public static IsotopeEnrichments Deserialize(XmlReader reader)
         {
@@ -168,6 +170,7 @@ namespace pwiz.Skyline.Model.DocSettings
         public const double MAX_ATOM_PERCENT_ENRICHMENT = 1.0;
 
         public IsotopeEnrichmentItem(string isotopeSymbol)
+            // ReSharper disable AccessToStaticMemberViaDerivedType
             : this(isotopeSymbol, BioMassCalc.GetIsotopeEnrichmentDefault(isotopeSymbol))
         {
         }
