@@ -2,6 +2,7 @@
 using System.Collections.Generic;
 using System.Net;
 using System.Windows.Forms;
+using pwiz.PanoramaClient;
 using pwiz.Common.SystemUtil;
 using pwiz.Skyline.Alerts;
 using pwiz.Skyline.Controls;
@@ -337,7 +338,7 @@ namespace pwiz.Skyline.FileUI
             {
                 if (skyp.HasCredentials())
                 {
-                    wc.Headers.Add(HttpRequestHeader.Authorization, Server.GetBasicAuthHeader(skyp.ServerMatch.Username, skyp.ServerMatch.Password));
+                    wc.Headers.Add(HttpRequestHeader.Authorization, PanoramaServer.GetBasicAuthHeader(skyp.ServerMatch.Username, skyp.ServerMatch.Password));
                 }
 
                 wc.DownloadProgressChanged += (s,e) =>

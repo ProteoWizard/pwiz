@@ -12169,30 +12169,11 @@ namespace pwiz.Skyline.Properties {
         }
         
         /// <summary>
-        ///   Looks up a localized string similar to The username and password could not be authenticated with the panorama server..
-        /// </summary>
-        public static string EditServerDlg_OkDialog_The_username_and_password_could_not_be_authenticated_with_the_panorama_server {
-            get {
-                return ResourceManager.GetString("EditServerDlg_OkDialog_The_username_and_password_could_not_be_authenticated_with_" +
-                        "the_panorama_server", resourceCulture);
-            }
-        }
-        
-        /// <summary>
         ///   Looks up a localized string similar to Verifying server information..
         /// </summary>
         public static string EditServerDlg_OkDialog_Verifying_server_information {
             get {
                 return ResourceManager.GetString("EditServerDlg_OkDialog_Verifying_server_information", resourceCulture);
-            }
-        }
-        
-        /// <summary>
-        ///   Looks up a localized string similar to The server {0} does not exist..
-        /// </summary>
-        public static string EditServerDlg_VerifyServerInformation_The_server__0__does_not_exist {
-            get {
-                return ResourceManager.GetString("EditServerDlg_VerifyServerInformation_The_server__0__does_not_exist", resourceCulture);
             }
         }
         
@@ -21735,63 +21716,6 @@ namespace pwiz.Skyline.Properties {
         }
         
         /// <summary>
-        ///   Looks up a localized string similar to Could not authenticate user. Response received from server: {0} {1}.
-        /// </summary>
-        public static string PanoramaUtil_EnsureLogin_Could_not_authenticate_user__Response_received_from_server___0___1_ {
-            get {
-                return ResourceManager.GetString("PanoramaUtil_EnsureLogin_Could_not_authenticate_user__Response_received_from_serv" +
-                        "er___0___1_", resourceCulture);
-            }
-        }
-        
-        /// <summary>
-        ///   Looks up a localized string similar to Server did not return a valid JSON response. {0} is not a Panorama server..
-        /// </summary>
-        public static string PanoramaUtil_EnsureLogin_Server_did_not_return_a_valid_JSON_response___0__is_not_a_Panorama_server_ {
-            get {
-                return ResourceManager.GetString("PanoramaUtil_EnsureLogin_Server_did_not_return_a_valid_JSON_response___0__is_not_" +
-                        "a_Panorama_server_", resourceCulture);
-            }
-        }
-        
-        /// <summary>
-        ///   Looks up a localized string similar to Unexpected JSON response from the server: {0}.
-        /// </summary>
-        public static string PanoramaUtil_EnsureLogin_Unexpected_JSON_response_from_the_server___0_ {
-            get {
-                return ResourceManager.GetString("PanoramaUtil_EnsureLogin_Unexpected_JSON_response_from_the_server___0_", resourceCulture);
-            }
-        }
-        
-        /// <summary>
-        ///   Looks up a localized string similar to {0} is not a Panorama folder.
-        /// </summary>
-        public static string PanoramaUtil_VerifyFolder__0__is_not_a_Panorama_folder {
-            get {
-                return ResourceManager.GetString("PanoramaUtil_VerifyFolder__0__is_not_a_Panorama_folder", resourceCulture);
-            }
-        }
-        
-        /// <summary>
-        ///   Looks up a localized string similar to Folder {0} does not exist on the Panorama server {1}.
-        /// </summary>
-        public static string PanoramaUtil_VerifyFolder_Folder__0__does_not_exist_on_the_Panorama_server__1_ {
-            get {
-                return ResourceManager.GetString("PanoramaUtil_VerifyFolder_Folder__0__does_not_exist_on_the_Panorama_server__1_", resourceCulture);
-            }
-        }
-        
-        /// <summary>
-        ///   Looks up a localized string similar to User {0} does not have permissions to upload to the Panorama folder {1}.
-        /// </summary>
-        public static string PanoramaUtil_VerifyFolder_User__0__does_not_have_permissions_to_upload_to_the_Panorama_folder__1_ {
-            get {
-                return ResourceManager.GetString("PanoramaUtil_VerifyFolder_User__0__does_not_have_permissions_to_upload_to_the_Pan" +
-                        "orama_folder__1_", resourceCulture);
-            }
-        }
-        
-        /// <summary>
         ///   Looks up a localized string similar to {0} at position {1}.
         /// </summary>
         public static string ParseExceptionDetail_ToString__at_position__0_ {
@@ -27560,15 +27484,6 @@ namespace pwiz.Skyline.Properties {
         public static string ServerList_Title_Edit_Servers {
             get {
                 return ResourceManager.GetString("ServerList_Title_Edit_Servers", resourceCulture);
-            }
-        }
-        
-        /// <summary>
-        ///   Looks up a localized string similar to Unable to connect to the server {0}..
-        /// </summary>
-        public static string ServerState_GetErrorMessage_Unable_to_connect_to_the_server__0__ {
-            get {
-                return ResourceManager.GetString("ServerState_GetErrorMessage_Unable_to_connect_to_the_server__0__", resourceCulture);
             }
         }
         
@@ -35181,16 +35096,6 @@ namespace pwiz.Skyline.Properties {
         public static string UpgradeManager_updateCheck_Complete_Upgrading__0_ {
             get {
                 return ResourceManager.GetString("UpgradeManager_updateCheck_Complete_Upgrading__0_", resourceCulture);
-            }
-        }
-        
-        /// <summary>
-        ///   Looks up a localized string similar to There was an error authenticating user credentials on the server {0}..
-        /// </summary>
-        public static string UserState_getErrorMessage_There_was_an_error_authenticating_user_credentials_on_the_server__0__ {
-            get {
-                return ResourceManager.GetString("UserState_getErrorMessage_There_was_an_error_authenticating_user_credentials_on_t" +
-                        "he_server__0__", resourceCulture);
             }
         }
         

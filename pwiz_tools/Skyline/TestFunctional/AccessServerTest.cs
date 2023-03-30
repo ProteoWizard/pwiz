@@ -29,6 +29,7 @@ using pwiz.Skyline.SettingsUI;
 using pwiz.Skyline.ToolsUI;
 using pwiz.SkylineTestUtil;
 using Newtonsoft.Json.Linq;
+using pwiz.PanoramaClient;
 using pwiz.Common.SystemUtil;
 using pwiz.Skyline.Model;
 using pwiz.Skyline.Model.Serialization;
@@ -315,24 +316,24 @@ namespace pwiz.SkylineTestFunctional
 
             var serverUri = PanoramaUtil.ServerNameToUri(PWEB);
             var pServer = new PanoramaServer(serverUri, string.Empty, string.Empty);
-            Assert.AreEqual(pServer.ServerUri.AbsoluteUri, PWEB_FULL);
+            Assert.AreEqual(pServer.URI.AbsoluteUri, PWEB_FULL);
             Assert.IsFalse(pServer.RemoveContextPath());
             Assert.IsTrue(pServer.AddLabKeyContextPath());
-            Assert.AreEqual(pServer.ServerUri.AbsoluteUri, PWEB_LK_FULL);
+            Assert.AreEqual(pServer.URI.AbsoluteUri, PWEB_LK_FULL);
 
             serverUri = PanoramaUtil.ServerNameToUri(PWEB_LK);
             pServer = new PanoramaServer(serverUri, string.Empty, string.Empty);
-            Assert.AreEqual(pServer.ServerUri.AbsoluteUri, PWEB_LK_FULL);
+            Assert.AreEqual(pServer.URI.AbsoluteUri, PWEB_LK_FULL);
             Assert.IsFalse(pServer.AddLabKeyContextPath());
             Assert.IsTrue(pServer.RemoveContextPath());
-            Assert.AreEqual(pServer.ServerUri.AbsoluteUri, PWEB_FULL);
+            Assert.AreEqual(pServer.URI.AbsoluteUri, PWEB_FULL);
 
             serverUri = PanoramaUtil.ServerNameToUri(PWEB_LK);
             pServer = new PanoramaServer(serverUri, string.Empty, string.Empty);
-            Assert.AreEqual(pServer.ServerUri, PWEB_LK_FULL);
+            Assert.AreEqual(pServer.URI, PWEB_LK_FULL);
             Assert.IsTrue(pServer.Redirect(PWEB_FULL + PanoramaUtil.ENSURE_LOGIN_PATH,
                 PanoramaUtil.ENSURE_LOGIN_PATH));
-            Assert.AreEqual(pServer.ServerUri, PWEB_FULL);
+            Assert.AreEqual(pServer.URI, PWEB_FULL);
 
             Assert.IsFalse(pServer.Redirect("/labkey/" + PanoramaUtil.ENSURE_LOGIN_PATH, PanoramaUtil.ENSURE_LOGIN_PATH)); // Need full URL
             Assert.IsFalse(pServer.Redirect("http:/another.server/" + PanoramaUtil.ENSURE_LOGIN_PATH, PanoramaUtil.ENSURE_LOGIN_PATH)); // Not the same host
@@ -400,6 +401,11 @@ namespace pwiz.SkylineTestFunctional
             {
                 throw new NotImplementedException();
             }
+
+            public JToken GetInfoForFolders(PanoramaServer server, string folder)
+            {
+                throw new NotImplementedException();
+            }
         }
 
         private class TestPanoramaPublishClient : AbstractPanoramaPublishClient
@@ -437,7 +443,7 @@ namespace pwiz.SkylineTestFunctional
                 return obj;
             }
 
-            public override JToken GetInfoForFolders(Server server, string folder)
+            public override JToken GetInfoForFolders(PanoramaServer server, string folder)
             {
                 JObject testFolders = new JObject();
                 // this addition is hacky but necessary as far as I can tell to get PanoramaSavedUri testing to work
@@ -452,12 +458,12 @@ namespace pwiz.SkylineTestFunctional
                 return testFolders;
             }
 
-            public override Uri SendZipFile(Server server, string folderPath, string zipFilePath, IProgressMonitor progressMonitor)
+            public override Uri SendZipFile(PanoramaServer server, string folderPath, string zipFilePath, IProgressMonitor progressMonitor)
             {
                 return null;
             }
 
-            public override JObject SupportedVersionsJson(Server server)
+            public override JObject SupportedVersionsJson(PanoramaServer server)
             {
                 var obj = new JObject();
                 obj["SKYD_version"] = ServerSkydVersion;
