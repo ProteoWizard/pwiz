@@ -770,7 +770,7 @@ namespace TestRunner
             int testsFailed = 0;
             int testsResultsReturned = 0;
             int workerCount = (int) commandLineArgs.ArgAsLong("workercount");
-            int workerTimeout = Convert.ToInt32(commandLineArgs.ArgAsStringOrDefault("workertimeout", "15"));
+            int workerTimeout = Convert.ToInt32(commandLineArgs.ArgAsStringOrDefault("workertimeout", "30"));
             int loop = (int) commandLineArgs.ArgAsLong("loop");
             var languages = commandLineArgs.ArgAsString("language").Split(',');
 
