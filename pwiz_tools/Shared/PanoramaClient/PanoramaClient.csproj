@@ -71,14 +71,10 @@
     <Reference Include="System.Xml" />
   </ItemGroup>
   <ItemGroup>
-    <Compile Include="DirectoryPicker.cs">
-      <SubType>Form</SubType>
-    </Compile>
-    <Compile Include="DirectoryPicker.Designer.cs">
-      <DependentUpon>DirectoryPicker.cs</DependentUpon>
-    </Compile>
     <Compile Include="PanoramaClient.cs" />
+    <Compile Include="PanoramaForms.cs" />
     <Compile Include="PanoramaUtil.cs" />
+    <Compile Include="Program.cs" />
     <Compile Include="Properties\AssemblyInfo.cs" />
     <Compile Include="RemoteFileDialog.cs">
       <SubType>Form</SubType>
@@ -87,15 +83,6 @@
       <DependentUpon>RemoteFileDialog.cs</DependentUpon>
     </Compile>
     <Compile Include="TextUtil.cs" />
-    <Compile Include="FolderBrowser.cs">
-      <SubType>UserControl</SubType>
-    </Compile>
-    <Compile Include="FolderBrowser.Designer.cs">
-      <DependentUpon>FolderBrowser.cs</DependentUpon>
-    </Compile>
-    <EmbeddedResource Include="DirectoryPicker.resx">
-      <DependentUpon>DirectoryPicker.cs</DependentUpon>
-    </EmbeddedResource>
     <EmbeddedResource Include="Properties\Resources.resx">
       <Generator>PublicResXFileCodeGenerator</Generator>
       <LastGenOutput>Resources.Designer.cs</LastGenOutput>
@@ -109,21 +96,12 @@
     <EmbeddedResource Include="RemoteFileDialog.resx">
       <DependentUpon>RemoteFileDialog.cs</DependentUpon>
     </EmbeddedResource>
-    <EmbeddedResource Include="FolderBrowser.resx">
-      <DependentUpon>FolderBrowser.cs</DependentUpon>
-    </EmbeddedResource>
   </ItemGroup>
   <ItemGroup>
     <ProjectReference Include="..\Common\CommonUtil.csproj">
       <Project>{13bf2ffb-50a1-4ab1-83a4-5733e36905ce}</Project>
       <Name>CommonUtil</Name>
     </ProjectReference>
-  </ItemGroup>
-  <ItemGroup>
-    <None Include="Resources\Icojam-Blueberry-Basic-Arrow-left.ico" />
-  </ItemGroup>
-  <ItemGroup>
-    <None Include="Resources\Icojam-Blueberry-Basic-Arrow-right.ico" />
   </ItemGroup>
   <Import Project="$(MSBuildToolsPath)\Microsoft.CSharp.targets" />
 </Project>

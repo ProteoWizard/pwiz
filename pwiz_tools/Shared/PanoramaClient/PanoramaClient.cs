@@ -1,318 +1,355 @@
 ﻿using System;
 using System.Collections.Generic;
-using System.Drawing;
-using System.IO;
-using System.Windows.Forms;
+using System.Collections.Specialized;
+using System.Net;
+using System.Text;
+using Newtonsoft.Json;
 using Newtonsoft.Json.Linq;
-
 
 namespace pwiz.PanoramaClient
 {
-    //PanoramaUtil should become PanoramaClient
-
-    public class PanoramaClient
+    public interface IPanoramaClient
     {
-        public enum ImageId
+        Uri ServerUri { get; }
+        ServerState GetServerState();
+        UserState IsValidUser(string username, string password);
+        FolderState IsValidFolder(string folderPath, string username, string password);
+
+        /**
+         * Returns FolderOperationStatus.OK if created successfully, otherwise returns the reason
+         * why the folder was not created.
+         */
+        FolderOperationStatus CreateFolder(string parentPath, string folderName, string username, string password);
+        /**
+         * Returns FolderOperationStatus.OK if the folder was successfully deleted, otherwise returns the reason
+         * why the folder was not deleted.
+         */
+        FolderOperationStatus DeleteFolder(string folderPath, string username, string password);
+
+        JToken GetInfoForFolders(PanoramaServer server, string folder);
+
+    }
+
+    public class WebPanoramaClient : IPanoramaClient
+    {
+        public Uri ServerUri { get; private set; }
+
+        public WebPanoramaClient(Uri server)
         {
-            panorama,
-            labkey,
-            chrom_lib,
-            folder
+            ServerUri = server;
         }
-        
-        public string DownloadAndSave(Uri serverUri, string user, string pass, string fileName, string downloadName)
+
+        public ServerState GetServerState()
         {
-            var dlg = new FolderBrowserDialog();
-            //dlg.Description = Resources.RemoteFileDialog_open_Click_Select_the_folder_the_file_will_be_downloaded_to;
-            if (dlg.ShowDialog() == DialogResult.OK)
+            return TryGetServerState();
+        }
+
+        private ServerState TryGetServerState(bool tryNewProtocol = true)
+        {
+            try
             {
-                var path = dlg.SelectedPath;
-                var selected = dlg.SelectedPath;
-                DownloadFile(path, serverUri, user, pass, fileName, downloadName);
-                return Path.Combine(selected, fileName);
+                using (var webClient = new WebClient())
+                {
+                    webClient.DownloadString(ServerUri);
+                    return ServerState.VALID;
+                }
+            }
+            catch (WebException ex)
+            {
+                // Invalid URL
+                if (ex.Status == WebExceptionStatus.NameResolutionFailure)
+                {
+                    return new ServerState(ServerStateEnum.missing, ex.Message, ServerUri);
+                }
+                else if (tryNewProtocol)
+                {
+                    if (TryNewProtocol(() => TryGetServerState(false).IsValid()))
+                        return ServerState.VALID;
+
+                    return new ServerState(ServerStateEnum.unknown, ex.Message, ServerUri);
+                }
+            }
+            return new ServerState(ServerStateEnum.unknown, null, ServerUri);
+        }
+
+        // This function must be true/false returning; no exceptions can be thrown
+        private bool TryNewProtocol(Func<bool> testFunc)
+        {
+            Uri currentUri = ServerUri;
+
+            // try again using https
+            if (ServerUri.Scheme.Equals(@"http"))
+            {
+                ServerUri = new Uri(currentUri.AbsoluteUri.Replace(@"http", @"https"));
+                return testFunc();
+            }
+            // We assume "https" (PanoramaClient.ServerNameToUrl) if there is no scheme in the user provided URL.
+            // Try http. LabKey Server may not be running under SSL. 
+            else if (ServerUri.Scheme.Equals(@"https"))
+            {
+                ServerUri = new Uri(currentUri.AbsoluteUri.Replace(@"https", @"http"));
+                return testFunc();
+            }
+
+            ServerUri = currentUri;
+            return false;
+        }
+
+        public UserState IsValidUser(string username, string password)
+        {
+            var refServerUri = ServerUri;
+            var userState = PanoramaUtil.ValidateServerAndUser(ref refServerUri, username, password);
+            if (userState.IsValid())
+            {
+                ServerUri = refServerUri;
+            }
+            return userState;
+        }
+
+        public FolderState IsValidFolder(string folderPath, string username, string password)
+        {
+            try
+            {
+                var uri = PanoramaUtil.GetContainersUri(ServerUri, folderPath, false);
+
+                using (var webClient = new WebClientWithCredentials(ServerUri, username, password))
+                {
+                    JToken response = webClient.Get(uri);
+
+                    // User needs write permissions to publish to the folder
+                    if (!PanoramaUtil.CheckFolderPermissions(response))
+                    {
+                        return FolderState.nopermission;
+                    }
+
+                    // User can only upload to a TargetedMS folder type.
+                    if (!PanoramaUtil.CheckFolderType(response))
+                    {
+                        return FolderState.notpanorama;
+                    }
+                }
+            }
+            catch (WebException ex)
+            {
+                var response = ex.Response as HttpWebResponse;
+                if (response != null && response.StatusCode == HttpStatusCode.NotFound)
+                {
+                    return FolderState.notfound;
+                }
+                else throw;
+            }
+            return FolderState.valid;
+        }
+
+        public FolderOperationStatus CreateFolder(string folderPath, string folderName, string username, string password)
+        {
+
+            if (IsValidFolder($@"{folderPath}/{folderName}", username, password) == FolderState.valid)
+                return FolderOperationStatus.alreadyexists;        //cannot create a folder with the same name
+            var parentFolderStatus = IsValidFolder(folderPath, username, password);
+            switch (parentFolderStatus)
+            {
+                case FolderState.nopermission:
+                    return FolderOperationStatus.nopermission;
+                case FolderState.notfound:
+                    return FolderOperationStatus.notfound;
+                case FolderState.notpanorama:
+                    return FolderOperationStatus.notpanorama;
+            }
+
+            //Create JSON body for the request
+            Dictionary<string, string> requestData = new Dictionary<string, string>();
+            requestData[@"name"] = folderName;
+            requestData[@"title"] = folderName;
+            requestData[@"description"] = folderName;
+            requestData[@"type"] = @"normal";
+            requestData[@"folderType"] = @"Targeted MS";
+            string createRequest = JsonConvert.SerializeObject(requestData);
+
+            try
+            {
+                using (var webClient = new WebClientWithCredentials(ServerUri, username, password))
+                {
+                    Uri requestUri = PanoramaUtil.CallNewInterface(ServerUri, @"core", folderPath, @"createContainer", "", true);
+                    JObject result = webClient.Post(requestUri, createRequest);
+                    return FolderOperationStatus.OK;
+                }
+            }
+            catch (WebException ex)
+            {
+                var response = ex.Response as HttpWebResponse;
+                if (response != null && response.StatusCode != HttpStatusCode.OK)
+                {
+                    return FolderOperationStatus.error;
+                }
+                else throw;
+            }
+        }
+
+        public FolderOperationStatus DeleteFolder(string folderPath, string username, string password)
+        {
+            var parentFolderStatus = IsValidFolder(folderPath, username, password);
+            switch (parentFolderStatus)
+            {
+                case FolderState.nopermission:
+                    return FolderOperationStatus.nopermission;
+                case FolderState.notfound:
+                    return FolderOperationStatus.notfound;
+                case FolderState.notpanorama:
+                    return FolderOperationStatus.notpanorama;
+            }
+
+            try
+            {
+                using (var webClient = new WebClientWithCredentials(ServerUri, username, password))
+                {
+                    Uri requestUri = PanoramaUtil.CallNewInterface(ServerUri, @"core", folderPath, @"deleteContainer", "", true);
+                    JObject result = webClient.Post(requestUri, "");
+                    return FolderOperationStatus.OK;
+                }
+            }
+            catch (WebException ex)
+            {
+                var response = ex.Response as HttpWebResponse;
+                if (response != null && response.StatusCode != HttpStatusCode.OK)
+                {
+                    return FolderOperationStatus.error;
+                }
+                else throw;
+            }
+        }
+
+        public PanoramaServer EnsureLogin(PanoramaServer server)
+        {
+            var refServerUri = server.URI;
+            UserState userState = PanoramaUtil.ValidateServerAndUser(ref refServerUri, server.Username, server.Password);
+            if (userState.IsValid())
+            {
+                return server.ChangeUri(refServerUri);
             }
             else
             {
-                return string.Empty;
+                throw new PanoramaServerException(userState.GetErrorMessage(refServerUri));
             }
         }
 
-        private void DownloadFile(string path, Uri server, string user, string pass, string fileName, string downloadName)
+        public JToken GetInfoForFolders(PanoramaServer server, string folder)
         {
-            var serverUri = server;
-            
-            
-            var downloadUri = server + downloadName;
-            using (var wc = new WebClientWithCredentials(serverUri, user, pass))
-            {
-                wc.DownloadFile(
-
-                    // Param1 = Link of file
-                    new Uri(downloadUri),
-                    // Param2 = Path to save
-                    Path.Combine(path, fileName)
-                );
-            }
-        }
-
-        public void InitializeTreeView(Uri serverUri, string user, string pass, TreeView treeViewFolders, bool requireUploadPerms, bool showFiles, bool showSky)
-        {
-            var folder = GetInfoForFolders(serverUri, user, pass, null);
-            var treeNode = new TreeNode(serverUri.ToString());
-
-            treeViewFolders.Invoke(new Action(() => treeViewFolders.Nodes.Add(treeNode)));
-            if (showSky)
-            {
-                var cols = new[] { @"Container", @"FileName", @"Container/Path" };
-                var initQuery = BuildQuery(serverUri.ToString(), @"/Panorama Public/", @"Runs", @"AllFolders", cols, string.Empty, string.Empty);
-                JToken json = GetJson(initQuery, user, pass);
-                treeViewFolders.Invoke(new Action(() => LoadSkyFolders(json, treeNode, new HashSet<string>())));
-
-            }
-            else
-            {
-                treeViewFolders.Invoke(new Action(() => AddChildContainers(treeNode, folder, requireUploadPerms, showFiles)));
-            }
-            
-
-        }
-
-        public JToken GetInfoForFolders(Uri serUri, string user, string pass, string folder)
-        {
+            server = EnsureLogin(server);
 
             // Retrieve folders from server.
-            var uri = GetContainersUri(serUri, folder, true);
+            Uri uri = PanoramaUtil.GetContainersUri(server.URI, folder, true);
 
-            using (var webClient = new WebClientWithCredentials(serUri, user, pass))
+            using (var webClient = new WebClientWithCredentials(server.URI, server.Username, server.Password))
             {
                 return webClient.Get(uri);
             }
         }
 
-        public static Uri GetContainersUri(Uri serverUri, string folder, bool includeSubfolders)
+    }
+
+    public class WebClientWithCredentials : UTF8WebClient
+    {
+        private CookieContainer _cookies = new CookieContainer();
+        private string _csrfToken;
+        private Uri _serverUri;
+
+        private static string LABKEY_CSRF = @"X-LABKEY-CSRF";
+
+        public WebClientWithCredentials(Uri serverUri, string username, string password)
         {
-            var queryString = string.Format(@"includeSubfolders={0}&moduleProperties=TargetedMS",
-                includeSubfolders ? @"true" : @"false");
-            return Call(serverUri, @"project", folder, @"getContainers", queryString);
+            // Add the Authorization header
+            Headers.Add(HttpRequestHeader.Authorization, PanoramaServer.GetBasicAuthHeader(username, password));
+            _serverUri = serverUri;
         }
 
-        public static Uri Call(Uri serverUri, string controller, string folderPath, string method, string query,
-            bool isApi = false)
+        public JObject Post(Uri uri, NameValueCollection postData)
         {
-            string path = controller + @"/" + (folderPath ?? string.Empty) + @"/" +
-                          method + (isApi ? @".api" : @".view");
-
-            if (!string.IsNullOrEmpty(query))
+            if (string.IsNullOrEmpty(_csrfToken))
             {
-                path = path + @"?" + query;
+                // After this the client should have the X-LABKEY-CSRF token 
+                DownloadString(new Uri(_serverUri, PanoramaUtil.ENSURE_LOGIN_PATH));
             }
-
-            return new Uri(serverUri, path);
-        }
-
-        //IPanorama
-        public static bool CheckFolderPermissions(JToken folderJson)
-        {
-            if (folderJson != null)
+            if (postData == null)
             {
-                var userPermissions = folderJson.Value<int?>(@"userPermissions");
-                return userPermissions != null && Equals(userPermissions & 2, 2);
+                postData = new NameValueCollection();
             }
-
-            return false;
+            var responseBytes = UploadValues(uri, PanoramaUtil.FORM_POST, postData);
+            var response = Encoding.UTF8.GetString(responseBytes);
+            return JObject.Parse(response);
         }
 
-        public static bool CheckFolderType(JToken folderJson)
+        public JObject Post(Uri uri, string postData)
         {
-            if (folderJson != null)
+            if (string.IsNullOrEmpty(_csrfToken))
             {
-
-                var folderType = (string)folderJson[@"folderType"];
-                var modules = folderJson[@"activeModules"];
-                return modules != null && ContainsTargetedMSModule(modules) &&
-                       Equals(@"Targeted MS", folderType);
+                // After this the client should have the X-LABKEY-CSRF token 
+                DownloadString(new Uri(_serverUri, PanoramaUtil.ENSURE_LOGIN_PATH));
             }
-
-            return false;
+            Headers.Add(HttpRequestHeader.ContentType, "application/json");
+            var response = UploadString(uri, PanoramaUtil.FORM_POST, postData);
+            return JObject.Parse(response);
         }
 
-        private static bool ContainsTargetedMSModule(IEnumerable<JToken> modules)
+        protected override WebRequest GetWebRequest(Uri address)
         {
-            foreach (var module in modules)
+            var request = base.GetWebRequest(address);
+
+            var httpWebRequest = request as HttpWebRequest;
+            if (httpWebRequest != null)
             {
-                if (string.Equals(module.ToString(), @"TargetedMS"))
-                    return true;
-            }
+                httpWebRequest.CookieContainer = _cookies;
 
-            return false;
-        }
-
-        public static void AddChildContainers(TreeNode node, JToken folder, bool requireUploadPerms, bool showFiles)
-        {
-            JEnumerable<JToken> subFolders = folder[@"children"].Children();
-            foreach (var subFolder in subFolders)
-            {
-                var folderName = (string)subFolder[@"name"];
-
-                var folderNode = new TreeNode(folderName);
-                AddChildContainers(folderNode, subFolder, requireUploadPerms, showFiles);
-
-                // User can only upload to folders where TargetedMS is an active module.
-                bool canUpload; 
-
-                if (requireUploadPerms)
+                if (request.Method == PanoramaUtil.FORM_POST)
                 {
-                    canUpload = CheckFolderPermissions(subFolder) &&
-                                CheckFolderType(subFolder);
-                }
-                else
-                {
-                    var userPermissions = subFolder.Value<int?>(@"userPermissions");
-                    canUpload = userPermissions != null && Equals(userPermissions & 1, 1);
-                }
-                // If the user does not have write permissions in this folder or any
-                // of its subfolders, do not add it to the tree.
-                if (requireUploadPerms)
-                {
-                    if (folderNode.Nodes.Count == 0 && !canUpload)
+                    if (!string.IsNullOrEmpty(_csrfToken))
                     {
-                        continue;
+                        // All POST requests to LabKey Server will be checked for a CSRF token
+                        request.Headers.Add(LABKEY_CSRF, _csrfToken);
                     }
                 }
-                else
-                {
-                    if (!canUpload)
-                    {
-                        continue;
-                    }
-                }
-
-
-                node.Nodes.Add(folderNode);
-
-                // User cannot upload files to folder
-                if (!canUpload)
-                {
-                    folderNode.ForeColor = Color.Gray;
-                    folderNode.ImageIndex = folderNode.SelectedImageIndex = (int)ImageId.folder;
-                }
-                else
-                {
-                    JToken moduleProperties = subFolder[@"moduleProperties"];
-                    if (moduleProperties == null)
-                        folderNode.ImageIndex = folderNode.SelectedImageIndex = (int)ImageId.labkey;
-                    else
-                    {
-                        string effectiveValue = (string)moduleProperties[0][@"effectiveValue"];
-                        folderNode.ImageIndex =
-                            folderNode.SelectedImageIndex =
-                            (effectiveValue.Equals(@"Library") || effectiveValue.Equals(@"LibraryProtein"))
-                                ? (int)ImageId.chrom_lib
-                                : (int)ImageId.labkey;
-                    }
-                }
-
-                if (showFiles)
-                {
-                    folderNode.Tag = (string)subFolder[@"path"];
-                }
-                else
-                {
-                    //folderNode.Tag = new FolderInformation(server, canUpload);
-                }
-
             }
+            return request;
         }
 
-        private void LoadSkyFolders(JToken folders, TreeNode node, HashSet<string> prevFolders)
+        protected override WebResponse GetWebResponse(WebRequest request)
         {
-            JToken rows = folders[@"rows"];
-            foreach (var row in rows)
+            var response = base.GetWebResponse(request);
+            var httpResponse = response as HttpWebResponse;
+            if (httpResponse != null)
             {
-                //get the path
-                var fullPath = (string)row[@"Container/Path"];
-                if (!prevFolders.Contains(fullPath))
-                {
-                    prevFolders.Add(fullPath);
-                    AddFolderPath(fullPath, fullPath, node);
-                }
+                GetCsrfToken(httpResponse);
             }
+            return response;
         }
 
-        private void AddFolderPath(string full, string path, TreeNode node)
+        private void GetCsrfToken(HttpWebResponse response)
         {
-            if (!string.IsNullOrEmpty(path))
+            if (!string.IsNullOrEmpty(_csrfToken))
             {
-                var folders = path.Split('/');
-                if (folders.Length > 1)
-                {
-                    var nextFolder = folders[1];
-                    var replaced = "/" + nextFolder;
-                    var replaceTest = path.Substring(replaced.Length);
-                    if (!node.Nodes.ContainsKey(nextFolder))
-                    {
-                        var newNode = new TreeNode(nextFolder);
-                        newNode.Name = nextFolder;
-                        if (node.Tag == null)
-                        {
-                            newNode.Tag = "/" + nextFolder;
-                        }
-                        else
-                        {
-                            newNode.Tag = node.Tag + "/" + nextFolder;
-                        }
-
-                        node.Nodes.Add(newNode);
-
-                        AddFolderPath(full, replaceTest, newNode);
-                    }
-                    else
-                    {
-                        var getKey = node.Nodes.IndexOfKey(nextFolder);
-
-                        AddFolderPath(full, replaceTest, node.Nodes[getKey]);
-                    }
-                }
-
+                return;
             }
 
+            var csrf = response.Cookies[LABKEY_CSRF];
+            if (csrf != null)
+            {
+                // The server set a cookie called X-LABKEY-CSRF, get its value
+                _csrfToken = csrf.Value;
+            }
         }
+    }
 
-        private JToken GetJson(string query, string user, string pass)
+    public class UTF8WebClient : WebClient
+    {
+        public UTF8WebClient()
         {
-            var queryUri = new Uri(query);
-            var webClient = new WebClientWithCredentials(queryUri, user, pass);
-            JToken json = webClient.Get(queryUri);
-            return json;
+            Encoding = Encoding.UTF8;
         }
 
-        private string BuildQuery(string server, string folderPath, string queryName, string folderFilter, string[] columns, string sortParam, string equalityParam)
+        public JObject Get(Uri uri)
         {
-            var query = string.Format(@"{0}{1}/query-selectRows.view?schemaName=targetedms&query.queryName={2}&query.containerFilterName={3}", server, folderPath, queryName, folderFilter);
-            if (columns != null)
-            {
-                query = string.Format(@"{0}&query.columns=", query);
-                string allCols = string.Empty;
-                foreach (var col in columns)
-                {
-                    allCols = string.Format(@"{0},{1}", col, allCols);
-                }
-
-                query = string.Format(@"{0}{1}", query, allCols);
-            }
-
-            if (!string.IsNullOrEmpty(sortParam))
-            {
-                query = string.Format(@"{0}&query.sort={1}", query, sortParam);
-            }
-
-            if (!string.IsNullOrEmpty(equalityParam))
-            {
-                query = string.Format(@"{0}&query.{1}~eq=", query, equalityParam);
-            }
-            return query;
+            var response = DownloadString(uri);
+            return JObject.Parse(response);
         }
-
-
     }
 }
