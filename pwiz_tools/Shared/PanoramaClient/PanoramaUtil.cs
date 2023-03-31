@@ -6,7 +6,6 @@ using System.Net;
 using System.Text;
 using Newtonsoft.Json;
 using Newtonsoft.Json.Linq;
-using PanoramaClient;
 using pwiz.Common.SystemUtil;
 using pwiz.PanoramaClient.Properties;
 
@@ -665,13 +664,13 @@ namespace pwiz.PanoramaClient
             }
         }
 
-        public void EnsureLogin(PanoramaServer server)
+        public PanoramaServer EnsureLogin(PanoramaServer server)
         {
             var refServerUri = server.URI;
             UserState userState = PanoramaUtil.ValidateServerAndUser(ref refServerUri, server.Username, server.Password);
             if (userState.IsValid())
             {
-                server.URI = refServerUri;
+                return server.ChangeUri(refServerUri);
             }
             else
             {
@@ -681,7 +680,7 @@ namespace pwiz.PanoramaClient
 
         public JToken GetInfoForFolders(PanoramaServer server, string folder)
         {
-            EnsureLogin(server);
+            server = EnsureLogin(server);
 
             // Retrieve folders from server.
             Uri uri = PanoramaUtil.GetContainersUri(server.URI, folder, true);
@@ -696,18 +695,13 @@ namespace pwiz.PanoramaClient
 
     public class PanoramaServer: Immutable
     {
-        public Uri URI { get; set; }
-        public string Username { get; set; }
-        public string Password { get; set; }
+        public Uri URI { get; protected set; }
+        public string Username { get; protected set; }
+        public string Password { get; protected set; }
 
         protected PanoramaServer()
         {
         }
-
-        // public string GetKey()
-        // {
-        //     return URI.ToString();
-        // }
 
         public PanoramaServer(Uri serverUri, string username, string password)
         {
@@ -737,6 +731,11 @@ namespace pwiz.PanoramaClient
         }
 
         public string AuthHeader => GetBasicAuthHeader(Username, Password);
+
+        public PanoramaServer ChangeUri(Uri uri)
+        {
+            return ChangeProp(ImClone(this), im => im.URI = uri);
+        }
 
         public bool RemoveContextPath()
         {

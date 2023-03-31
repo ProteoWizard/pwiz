@@ -2,9 +2,9 @@
 using System.Linq;
 using System.Text;
 
-namespace PanoramaClient
+namespace pwiz.PanoramaClient
 {
-    public static class TextUtil
+    static class TextUtil
     {
         public const char SEPARATOR_SPACE = ' ';
         
