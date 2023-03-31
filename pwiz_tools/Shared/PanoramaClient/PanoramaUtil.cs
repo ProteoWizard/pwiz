@@ -6,7 +6,6 @@ using System.Net;
 using System.Text;
 using Newtonsoft.Json;
 using Newtonsoft.Json.Linq;
-using PanoramaClient;
 using pwiz.Common.SystemUtil;
 using pwiz.PanoramaClient.Properties;
 

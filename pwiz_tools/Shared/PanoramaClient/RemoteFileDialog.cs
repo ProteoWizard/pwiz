@@ -1,15 +1,10 @@
 using System;
 using System.Collections;
 using System.Collections.Generic;
-using System.ComponentModel;
 using System.Drawing;
-using System.Net;
-using System.Runtime.InteropServices;
-using System.Text;
 using System.Linq;
 using Newtonsoft.Json.Linq;
 using System.Windows.Forms;
-using pwiz.PanoramaClient.Properties;
 
 
 namespace pwiz.PanoramaClient
@@ -22,11 +17,13 @@ namespace pwiz.PanoramaClient
         private static string CheckIfVersions;
         private static string PeptideInfoQuery;
         private string InitQuery;
+        private FolderBrowser folders;
         public TreeNodeCollection _nodesState;
         public List<TreeView> tree = new List<TreeView>();
-        public TreeViewStateRestorer state;
+        //public TreeViewStateRestorer state;
         private TreeNode lastSelected;
         private bool restoring;
+        private PanoramaClient pc;
         private Stack<TreeNode> previous = new Stack<TreeNode>();
         private TreeNode priorNode;
         private Stack<TreeNode> next = new Stack<TreeNode>();
@@ -53,7 +50,7 @@ namespace pwiz.PanoramaClient
             var cols = new [] { @"Container", @"FileName", @"Container/Path" };
             InitQuery = BuildQuery(Server, @"/Panorama Public/", @"Runs", @"AllFolders", cols, string.Empty, string.Empty);
             InitializeComponent();
-            state = new TreeViewStateRestorer(treeView);
+            //state = new TreeViewStateRestorer(treeView);
             back.Enabled = false;
             forward.Enabled = false;
             treeView.ImageList = imageList1;
@@ -92,11 +89,16 @@ namespace pwiz.PanoramaClient
                 open.Text = OKButtonText;
             }
 
-            var pc = new PanoramaClient();
+            pc = new PanoramaClient();
             var serverUri = new Uri(Server);
             if (!ShowingSky)
             {
-                pc.InitializeTreeView(serverUri, User, Pass, treeView, false, true, false);
+                folders = new FolderBrowser(serverUri, User, Pass, false, treeView);
+                folders.Dock = DockStyle.Fill;
+                //treeView.Hide();
+                splitContainer1.Panel1.Controls.Add(folders);
+                //treeView.Controls.Add(folders);
+                //pc.InitializeTreeView(serverUri, User, Pass, treeView, false, true, false);
             }
             else
             {
@@ -110,8 +112,8 @@ namespace pwiz.PanoramaClient
             }
             
             
-            state.RestoreExpansionAndSelection(TreeState);
-            state.UpdateTopNode();
+            //state.RestoreExpansionAndSelection(TreeState);
+            //state.UpdateTopNode();
             AddSelectedFiles(treeView.Nodes);
         }
 
@@ -442,6 +444,7 @@ namespace pwiz.PanoramaClient
         /// <param name="e"></param>
         private void treeView2_NodeMouseClick(object sender, TreeNodeMouseClickEventArgs e)
         {
+            MessageBox.Show("Clicked!");
             ClearTreeRecursive(treeView.Nodes);
             var hit = e.Node.TreeView.HitTest(e.Location);
             if (hit.Location != TreeViewHitTestLocations.PlusMinus)
@@ -516,7 +519,13 @@ namespace pwiz.PanoramaClient
         /// <param name="e"></param>
         private void checkBox1_CheckedChanged(object sender, EventArgs e)
         {
-            if (!restoring)
+            var type = checkBox1.Checked;
+            //folders.SwitchFolderType(type);
+            treeView.Show();
+            folders.SetTreeColor(treeView);
+            //pc.InitializeTreeView(new Uri(Server), User, Pass, treeView, false, true, type);
+            //treeView.TopNode.Expand();
+            /*if (!restoring)
             {
                 previous.Clear();
                 next.Clear();
@@ -546,7 +555,7 @@ namespace pwiz.PanoramaClient
                     pc.InitializeTreeView(serverUri, User, Pass, treeView, false, true, false);
                     ShowingSky = false;
                 }
-            }
+            }*/
         }
 
         private void AddSelectedFiles(IEnumerable nodes)
@@ -592,6 +601,7 @@ namespace pwiz.PanoramaClient
         /// <param name="e"></param>
         private void comboBox1_SelectedIndexChanged(object sender, EventArgs e)
         {
+            
             listView.Items.Clear();
             if (comboBox1.Text.Equals(RECENT_VER))
             {
@@ -655,7 +665,7 @@ namespace pwiz.PanoramaClient
                 Folder = string.Empty;
             } 
             tree.Add(treeView);
-            var treeStateStr = state.GetPersistentString();
+            //var treeStateStr = state.GetPersistentString();
             if (checkBox1.Checked)
             {
                 ShowingSky = true;
@@ -669,7 +679,7 @@ namespace pwiz.PanoramaClient
                 lastSelected.Name = SELECTED_NODE + lastSelected.Name;
             }
             
-            TreeState = treeStateStr;
+            //TreeState = treeStateStr;
         }
 
         private void treeView_AfterSelect(object sender, TreeViewEventArgs e)
@@ -843,7 +853,7 @@ namespace pwiz.PanoramaClient
 
     }*/
 
-    public sealed class Server
+    /*public sealed class Server
     {
         public Server(string uriText, string username, string password)
             : this(new Uri(uriText), username, password)
@@ -878,12 +888,13 @@ namespace pwiz.PanoramaClient
             return authHeader;
         }
     }
+    */
 
 
 
 
 
-    public class TreeViewStateRestorer
+    /*public class TreeViewStateRestorer
     {
         private readonly TreeView _tree;
 
@@ -1207,7 +1218,7 @@ namespace pwiz.PanoramaClient
                     yield return node;
             }
         }
-    }
+    }*/
     
 
    
@@ -1217,7 +1228,7 @@ namespace pwiz.PanoramaClient
     /// <para>
     /// Inspired by the example at http://www.codeproject.com/KB/tree/treeviewms.aspx for details.</para>
     /// </summary>
-    public abstract class TreeViewMS : TreeView
+    /*public abstract class TreeViewMS : TreeView
     {
         // Length of the horizontal dashed lines representing each branch of the tree
         protected internal const int HORZ_DASH_LENGTH = 11;
@@ -1640,9 +1651,9 @@ namespace pwiz.PanoramaClient
                 get { return false; }
             }
         }
-    }
+    }*/
 
-    public class TreeNodeMS : TreeNode
+    /*public class TreeNodeMS : TreeNode
     {
         private const TextFormatFlags FORMAT_TEXT = TextFormatFlags.SingleLine | TextFormatFlags.VerticalCenter;
 
@@ -1798,9 +1809,9 @@ namespace pwiz.PanoramaClient
            
 
             
-    }
+    }*/
 
-    public class FileSizeFormatProvider : IFormatProvider, ICustomFormatter
+    class FileSizeFormatProvider : IFormatProvider, ICustomFormatter
     {
         public object GetFormat(Type formatType)
         {
@@ -1876,7 +1887,7 @@ namespace pwiz.PanoramaClient
         }
     }
 
-    public struct FileSize : IComparable
+    struct FileSize : IComparable
     {
         private static readonly FileSizeFormatProvider FORMAT_PROVIDER = new FileSizeFormatProvider();
         public static FileSizeFormatProvider FormatProvider

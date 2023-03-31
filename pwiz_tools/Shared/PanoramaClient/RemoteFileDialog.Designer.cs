@@ -235,14 +235,14 @@ namespace pwiz.PanoramaClient
             this.up});
             this.toolStrip.Location = new System.Drawing.Point(9, 2);
             this.toolStrip.Name = "toolStrip";
-            this.toolStrip.Size = new System.Drawing.Size(96, 31);
+            this.toolStrip.Size = new System.Drawing.Size(127, 31);
             this.toolStrip.TabIndex = 18;
             this.toolStrip.Text = "toolStrip1";
             // 
             // back
             // 
             this.back.DisplayStyle = System.Windows.Forms.ToolStripItemDisplayStyle.Image;
-            //this.back.Image = global::pwiz.PanoramaClient.Properties.Resources.Icojam_Blueberry_Basic_Arrow_left1;
+            this.back.Image = global::pwiz.PanoramaClient.Properties.Resources.Icojam_Blueberry_Basic_Arrow_left;
             this.back.ImageTransparentColor = System.Drawing.Color.Magenta;
             this.back.Name = "back";
             this.back.Size = new System.Drawing.Size(28, 28);
@@ -252,7 +252,7 @@ namespace pwiz.PanoramaClient
             // forward
             // 
             this.forward.DisplayStyle = System.Windows.Forms.ToolStripItemDisplayStyle.Image;
-            //this.forward.Image = global::pwiz.PanoramaClient.Properties.Resources.Icojam_Blueberry_Basic_Arrow_right1;
+            this.forward.Image = global::pwiz.PanoramaClient.Properties.Resources.Icojam_Blueberry_Basic_Arrow_right;
             this.forward.ImageTransparentColor = System.Drawing.Color.Magenta;
             this.forward.Name = "forward";
             this.forward.Size = new System.Drawing.Size(28, 28);
