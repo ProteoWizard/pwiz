@@ -617,6 +617,7 @@
     <Compile Include="Controls\Databinding\RowActions\RowAction.cs" />
     <Compile Include="Model\DdaSearch\MsFraggerSearchEngine.cs" />
     <Compile Include="Model\DiaUmpireDdaConverter.cs" />
+    <Compile Include="Model\GroupComparison\MsLevelOption.cs" />
     <Compile Include="Model\DocSettings\AbsoluteQuantification\ScoredBilinearCurve.cs" />
     <Compile Include="Model\DocSettings\AbsoluteQuantification\BilinearTransitionOptimizer.cs" />
     <Compile Include="Model\DocSettings\AbsoluteQuantification\BilinearRegressionFit.cs" />
@@ -2468,6 +2469,7 @@
     </EmbeddedResource>
     <EmbeddedResource Include="Controls\GroupComparison\EditGroupComparisonDlg.resx">
       <DependentUpon>EditGroupComparisonDlg.cs</DependentUpon>
+      <SubType>Designer</SubType>
     </EmbeddedResource>
     <EmbeddedResource Include="Controls\GroupComparison\EditGroupComparisonDlg.zh-CHS.resx">
       <DependentUpon>EditGroupComparisonDlg.cs</DependentUpon>
