@@ -208,7 +208,7 @@ namespace pwiz.Skyline.Model
         public double? QValueCutoff { get; set; }
         [Track]
         public int? MinimumDetections { get; set; }
-        [Track]
+        [Track(defaultValues: typeof(NormalizeOption.DefaultNone))]
         public NormalizeOption NormalizationMethod { get; set; }
         [Track]
         public AreaCVTransitions Transitions { get; set; }

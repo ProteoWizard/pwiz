@@ -88,20 +88,22 @@ namespace pwiz.Skyline.Model.DocSettings
         {
             MonoisotopicMass = monoisotopicMass ?? 0;
             AverageMass = averageMass ?? 0;
-            Formula = formula;
+            Molecule = Molecule.Parse(formula);
             Inclusion = inclusion;
 
             Validate();
         }
 
         [Track]
-        public string Formula
+        public string Formula => Molecule.IsNullOrEmpty(Molecule) ? null : Molecule.ToString();
+
+        public Molecule Molecule
         {
-            get { return _formula == null ? null : _formula.ToString(); }
+            get { return _formula; }
             private set
             {
-                _formula = string.IsNullOrEmpty(value) ? null : Molecule.Parse(value);
-                if (_formula != null)
+                _formula = value ?? Molecule.EMPTY;
+                if (!Molecule.IsNullOrEmpty(_formula))
                 {
                     MonoisotopicMass = SequenceMassCalc.FormulaMass(BioMassCalc.MONOISOTOPIC, _formula, SequenceMassCalc.MassPrecision);
                     AverageMass = SequenceMassCalc.FormulaMass(BioMassCalc.AVERAGE, _formula, SequenceMassCalc.MassPrecision);
@@ -111,7 +113,7 @@ namespace pwiz.Skyline.Model.DocSettings
 
         public string FormulaNoNull
         {
-            get { return Molecule.IsNullOrEmpty(_formula) ? Resources.Loss_FormulaUnknown : _formula.ToString(); }
+            get { return Common.Chemistry.Molecule.IsNullOrEmpty(_formula) ? Resources.Loss_FormulaUnknown : _formula.ToString(); }
         }
 
         [Track]
@@ -233,7 +235,7 @@ namespace pwiz.Skyline.Model.DocSettings
             // Read tag attributes
             MonoisotopicMass = reader.GetNullableDoubleAttribute(ATTR.massdiff_monoisotopic) ?? 0;
             AverageMass = reader.GetNullableDoubleAttribute(ATTR.massdiff_average) ?? 0;
-            Formula = reader.GetAttribute(ATTR.formula);
+            Molecule = Molecule.Parse(reader.GetAttribute(ATTR.formula));
             Inclusion = reader.GetEnumAttribute(ATTR.inclusion, LossInclusion.Library);
             Charge = reader.GetIntAttribute(ATTR.charge, 0);
 
@@ -273,7 +275,7 @@ namespace pwiz.Skyline.Model.DocSettings
         {
             if (ReferenceEquals(null, other)) return false;
             if (ReferenceEquals(this, other)) return true;
-            return Equals(other.Formula, Formula) &&
+            return Equals(other.Molecule, Molecule) &&
                    other.MonoisotopicMass.Equals(MonoisotopicMass) &&
                    other.AverageMass.Equals(AverageMass) &&
                    other.Inclusion.Equals(Inclusion) &&
@@ -292,7 +294,7 @@ namespace pwiz.Skyline.Model.DocSettings
         {
             unchecked
             {
-                int result = (Formula != null ? Formula.GetHashCode() : 0);
+                int result = (Molecule != null ? Molecule.GetHashCode() : 0);
                 result = (result * 397) ^ MonoisotopicMass.GetHashCode();
                 result = (result * 397) ^ AverageMass.GetHashCode();
                 result = (result * 397) ^ Inclusion.GetHashCode();

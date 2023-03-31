@@ -183,6 +183,17 @@ namespace pwiz.Common.Chemistry
             return new MoleculeMassOffset(dict, monoMassOffset, averageMassOffset, _orderHintString, _originalHashCode);
         }
 
+        public MoleculeMassOffset ChangeIsMassH(bool isMassH)
+        {
+            if (GetTotalMass(MassType.Monoisotopic).IsMassH() == isMassH)
+            {
+                return this;
+            }
+
+            return new MoleculeMassOffset(Dictionary, MonoMassOffset.ChangeIsMassH(isMassH),
+                AverageMassOffset.ChangeIsMassH(isMassH), _orderHintString, _originalHashCode);
+        }
+
         public MoleculeMassOffset AdjustElementCountNoMassOffsetChange(string element, int delta)
         {
             return AdjustElementCount(element, delta) as MoleculeMassOffset;
@@ -341,6 +352,8 @@ namespace pwiz.Common.Chemistry
         public TypedMass MonoMassOffset { get; private set; }
         public TypedMass AverageMassOffset { get; private set; }
 
+        public Molecule Molecule => this; // Convenience for code written before inheritance model changed
+
         public bool IsEmpty =>
             ReferenceEquals(this, MoleculeMassOffset.EMPTY) ||
             (IsMassOnly && AverageMassOffset == 0 && MonoMassOffset == 0);
@@ -386,6 +399,20 @@ namespace pwiz.Common.Chemistry
             }
             var newMolecule = base.Difference(molecule); // Deal with the formula
             return ChangeFormulaAndMassOffset(newMolecule.Dictionary, MonoMassOffset, AverageMassOffset); // Don't change the mass offset
+        }
+
+        public static MoleculeMassOffset Sum(IEnumerable<MoleculeMassOffset> molecules)
+        {
+            var items = molecules.ToArray();
+            var mol = Molecule.Sum(items);
+            double monoMassOffset = 0;
+            double averageMassOffset = 0;
+            foreach (var item in items)
+            {
+                monoMassOffset += item.MonoMassOffset;
+                averageMassOffset += item.AverageMassOffset;
+            }
+            return new MoleculeMassOffset(mol.Dictionary, monoMassOffset, averageMassOffset);
         }
 
         #endregion

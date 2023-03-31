@@ -128,7 +128,7 @@ void enumerateSpectra(const string& filename, DetailLevel detailLevel, const vec
 
     start = boost::chrono::process_cpu_clock::now();
 
-    SpectrumWorkerThreads multithreadedSpectrumList(sl, useWorkerThreads);
+    SpectrumWorkerThreads multithreadedSpectrumList(sl, useWorkerThreads, false);
 
     IterationListenerRegistry ilr;
     IterationListenerPtr il(new UserFeedbackIterationListener);

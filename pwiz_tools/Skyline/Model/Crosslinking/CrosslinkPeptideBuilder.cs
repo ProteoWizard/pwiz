@@ -62,7 +62,7 @@ namespace pwiz.Skyline.Model.Crosslinking
 
             var fragmentedMolecule = GetPrecursorMolecule().ChangeFragmentIon(part.Type.Value, part.Ordinal);
                 
-            moleculeMassOffset = MoleculeMassOffset.Create(fragmentedMolecule.FragmentFormula);
+            moleculeMassOffset = fragmentedMolecule.FragmentFormula;
             _fragmentedMolecules.Add(part, moleculeMassOffset);
             return moleculeMassOffset;
         }

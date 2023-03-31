@@ -135,19 +135,19 @@ namespace pwiz.Skyline.Model.Crosslinking
 
         public MoleculeMassOffset GetNeutralFormula(SrmSettings settings, IsotopeLabelType labelType)
         {
-            MoleculeMassOffset result = MoleculeMassOffset.EMPTY;
+            List<MoleculeMassOffset> parts = new List<MoleculeMassOffset>();
             for (int i = 0; i < LinkedPeptides.Count; i++)
             {
                 IPrecursorMassCalc massCalc = settings.GetPrecursorCalc(labelType, LinkedExplicitMods[i]);
-                result = result.Add(massCalc.GetMolecularFormula(LinkedPeptides[i].Sequence));
+                parts.Add(MoleculeMassOffset.Create(massCalc.GetMolecularFormula(LinkedPeptides[i].Sequence)));
             }
 
             foreach (var crosslink in Crosslinks)
             {
-                result = result.Add(crosslink.Crosslinker.GetMoleculeMassOffset());
+                parts.Add(crosslink.Crosslinker.GetMoleculeMassOffset());
             }
 
-            return result;
+            return MoleculeMassOffset.Sum(parts);
         }
 
         public bool IsConnected()

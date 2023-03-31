@@ -729,7 +729,7 @@ class PWIZ_API_DECL SpectrumList
     virtual const boost::shared_ptr<const DataProcessing> dataProcessingPtr() const;
 
     /// issues a warning once per SpectrumList instance (based on string hash)
-    virtual void warn_once(const char* msg) const; 
+    virtual void warn_once(const char* msg) const = 0; 
 
     /// returns the minimum DetailLevel for which the given predicate returns true
     /// - if the predicate returns indeterminate, another spectrum will be tried
@@ -762,6 +762,7 @@ struct PWIZ_API_DECL SpectrumListSimple : public SpectrumList
     virtual const SpectrumIdentity& spectrumIdentity(size_t index) const;
     virtual SpectrumPtr spectrum(size_t index, bool getBinaryData) const;
     virtual const boost::shared_ptr<const DataProcessing> dataProcessingPtr() const;
+    virtual void warn_once(const char* msg) const {}
 };
 
 
@@ -821,6 +822,9 @@ class PWIZ_API_DECL ChromatogramList
     /// - may return a null shared pointer
     virtual const boost::shared_ptr<const DataProcessing> dataProcessingPtr() const;
 
+    /// issues a warning once per ChromatogramList instance (based on string hash)
+    virtual void warn_once(const char* msg) const = 0;
+
     virtual ~ChromatogramList(){} 
 };
 
@@ -842,6 +846,7 @@ struct PWIZ_API_DECL ChromatogramListSimple : public ChromatogramList
     virtual const ChromatogramIdentity& chromatogramIdentity(size_t index) const;
     virtual ChromatogramPtr chromatogram(size_t index, bool getBinaryData) const;
     virtual const boost::shared_ptr<const DataProcessing> dataProcessingPtr() const;
+    virtual void warn_once(const char* msg) const {}
 };
 
 

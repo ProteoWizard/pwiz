@@ -117,9 +117,8 @@ namespace pwiz.Skyline.SettingsUI
                 }
                 else if (entry.Target != null)
                 {
-                    entry.PrecursorMz = ViewLibraryDlg.CalcMz(entry, _matcher);
+                    entry.PrecursorMz = entry.CalcMz(_matcher);
                 }
-
                 if (progressMonitor.IsCanceled)
                 {
                     _mzCalculated = false;

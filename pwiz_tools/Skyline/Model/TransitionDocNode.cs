@@ -635,7 +635,9 @@ namespace pwiz.Skyline.Model
         {
             if (Transition.IsNonReporterCustomIon())
             {
-                transitionProto.Formula = Transition.CustomIon.MoleculeAndMassOffset.ToStringInvariant();
+                transitionProto.Formula = Transition.CustomIon.MoleculeAndMassOffset.IsMassOnly ?
+                    null : 
+                    Transition.CustomIon.MoleculeAndMassOffset.ToStringInvariant();
                 if (Transition.CustomIon.AverageMass.IsMassH())
                     transitionProto.AverageMassH = Transition.CustomIon.AverageMass;
                 else
@@ -683,17 +685,18 @@ namespace pwiz.Skyline.Model
                 }
                 else
                 {
-                    var formula = transitionProto.Formula;
+                    var formula = MoleculeMassOffset.Create(transitionProto.Formula);
                     var moleculeID = MoleculeAccessionNumbers.FromString(transitionProto.MoleculeId); // Tab separated list of InChiKey, CAS etc
                     var monoMassH = transitionProto.MonoMassH;
                     var averageMassH = transitionProto.AverageMassH;
                     var monoMass = transitionProto.MonoMass ?? monoMassH;
                     var averageMass = transitionProto.AverageMass ?? averageMassH;
-                    customIon = string.IsNullOrEmpty(formula) ?
-                        new CustomMolecule(TypedMass.Create(monoMass??0, monoMassH.HasValue ? MassType.MonoisotopicMassH : MassType.Monoisotopic),
+                    var monoMassType = monoMassH.HasValue ? MassType.MonoisotopicMassH : MassType.Monoisotopic;
+                    customIon = MoleculeMassOffset.IsNullOrEmpty(formula) ?
+                        new CustomMolecule(TypedMass.Create(monoMass??0, monoMassType),
                             TypedMass.Create(averageMass??0, averageMassH.HasValue ? MassType.AverageMassH : MassType.Average),
                             transitionProto.CustomIonName, moleculeID) :
-                        new CustomMolecule(formula, transitionProto.CustomIonName, moleculeID);
+                        new CustomMolecule(formula.ChangeIsMassH(monoMassType.IsMassH()), transitionProto.CustomIonName, moleculeID);
                 }
             }
             Transition transition;

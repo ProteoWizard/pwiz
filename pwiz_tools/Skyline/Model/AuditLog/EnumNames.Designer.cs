@@ -871,6 +871,42 @@ namespace pwiz.Skyline.Model.AuditLog {
         }
         
         /// <summary>
+        ///   Looks up a localized string similar to All.
+        /// </summary>
+        public static string MsLevelOption_ {
+            get {
+                return ResourceManager.GetString("MsLevelOption_", resourceCulture);
+            }
+        }
+        
+        /// <summary>
+        ///   Looks up a localized string similar to 1.
+        /// </summary>
+        public static string MsLevelOption_1 {
+            get {
+                return ResourceManager.GetString("MsLevelOption_1", resourceCulture);
+            }
+        }
+        
+        /// <summary>
+        ///   Looks up a localized string similar to 2.
+        /// </summary>
+        public static string MsLevelOption_2 {
+            get {
+                return ResourceManager.GetString("MsLevelOption_2", resourceCulture);
+            }
+        }
+        
+        /// <summary>
+        ///   Looks up a localized string similar to Default.
+        /// </summary>
+        public static string MsLevelOption_default {
+            get {
+                return ResourceManager.GetString("MsLevelOption_default", resourceCulture);
+            }
+        }
+        
+        /// <summary>
         ///   Looks up a localized string similar to (m/z &gt; precursor) - 1.
         /// </summary>
         public static string MzFragmentFinder__m_z__gt__precursor___minus__1 {
@@ -1546,6 +1582,69 @@ namespace pwiz.Skyline.Model.AuditLog {
         }
         
         /// <summary>
+        ///   Looks up a localized string similar to Equalize Medians.
+        /// </summary>
+        public static string Simple_equalize_medians {
+            get {
+                return ResourceManager.GetString("Simple_equalize_medians", resourceCulture);
+            }
+        }
+        
+        /// <summary>
+        ///   Looks up a localized string similar to Ratio to Global Standards.
+        /// </summary>
+        public static string Simple_global_standards {
+            get {
+                return ResourceManager.GetString("Simple_global_standards", resourceCulture);
+            }
+        }
+        
+        /// <summary>
+        ///   Looks up a localized string similar to None.
+        /// </summary>
+        public static string Simple_none {
+            get {
+                return ResourceManager.GetString("Simple_none", resourceCulture);
+            }
+        }
+        
+        /// <summary>
+        ///   Looks up a localized string similar to Quantile.
+        /// </summary>
+        public static string Simple_quantile {
+            get {
+                return ResourceManager.GetString("Simple_quantile", resourceCulture);
+            }
+        }
+        
+        /// <summary>
+        ///   Looks up a localized string similar to Ratio to Heavy.
+        /// </summary>
+        public static string Simple_ratio_to_heavy {
+            get {
+                return ResourceManager.GetString("Simple_ratio_to_heavy", resourceCulture);
+            }
+        }
+        
+        /// <summary>
+        ///   Looks up a localized string similar to Ratio to Light.
+        /// </summary>
+        public static string Simple_ratio_to_light {
+            get {
+                return ResourceManager.GetString("Simple_ratio_to_light", resourceCulture);
+            }
+        }
+        
+        /// <summary>
+        ///   Looks up a localized string similar to Total Ion Current.
+        /// </summary>
+        public static string Simple_tic {
+            get {
+                return ResourceManager.GetString("Simple_tic", resourceCulture);
+            }
+        }
+        
+        /// <summary>
         ///   Looks up a localized string similar to Linear.
         /// </summary>
         public static string SimpleRegressionFit_linear {
@@ -1614,6 +1713,42 @@ namespace pwiz.Skyline.Model.AuditLog {
         public static string SingletonNormalizationMethod_tic {
             get {
                 return ResourceManager.GetString("SingletonNormalizationMethod_tic", resourceCulture);
+            }
+        }
+        
+        /// <summary>
+        ///   Looks up a localized string similar to Calibration Curve.
+        /// </summary>
+        public static string Special_calibrated {
+            get {
+                return ResourceManager.GetString("Special_calibrated", resourceCulture);
+            }
+        }
+        
+        /// <summary>
+        ///   Looks up a localized string similar to Default Normalization Method.
+        /// </summary>
+        public static string Special_default {
+            get {
+                return ResourceManager.GetString("Special_default", resourceCulture);
+            }
+        }
+        
+        /// <summary>
+        ///   Looks up a localized string similar to Maximum.
+        /// </summary>
+        public static string Special_maximum {
+            get {
+                return ResourceManager.GetString("Special_maximum", resourceCulture);
+            }
+        }
+        
+        /// <summary>
+        ///   Looks up a localized string similar to Total.
+        /// </summary>
+        public static string Special_total {
+            get {
+                return ResourceManager.GetString("Special_total", resourceCulture);
             }
         }
         

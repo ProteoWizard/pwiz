@@ -27,6 +27,7 @@ using pwiz.Common.Chemistry;
 using pwiz.Skyline.Util;
 using System.IO;
 using System.Linq;
+using System.Text;
 using pwiz.Common.Collections;
 using pwiz.Common.SystemUtil;
 using pwiz.Skyline.Model.Results;
@@ -122,7 +123,7 @@ namespace pwiz.Skyline.Model.DdaSearch
         //private int minPeptideLength, maxPeptideLength, minCharge, maxCharge;
         //private double chargeCarrierMass;
         private int maxVariableMods = 2;
-        private string modsFile = Path.GetTempFileName();
+        private StringBuilder modsText;
         private CancellationTokenSource _cancelToken;
         private IProgressStatus _progressStatus;
         private bool _success;
@@ -141,6 +142,9 @@ namespace pwiz.Skyline.Model.DdaSearch
 
             foreach (var spectrumFilename in SpectrumFileNames)
             {
+                string modsFile = PathEx.GetTempFileNameWithExtension(@"mods");
+                File.WriteAllText(modsFile, modsText.ToString());
+
                 try
                 {
                     long javaMaxHeapMB = Math.Min(16 * 1024L * 1024 * 1024, MemoryInfo.TotalBytes / 2) / 1024 / 1024;
@@ -168,6 +172,10 @@ namespace pwiz.Skyline.Model.DdaSearch
                     _progressStatus = _progressStatus.ChangeErrorException(ex).ChangeMessage(string.Format(Resources.DdaSearch_Search_failed__0, ex.Message));
                     _success = false;
                 }
+                finally
+                {
+                    FileEx.SafeDelete(modsFile);
+                }
 
                 if (IsCanceled && !_progressStatus.IsCanceled)
                 {
@@ -186,7 +194,6 @@ namespace pwiz.Skyline.Model.DdaSearch
                 _progressStatus = _progressStatus.Complete().ChangeMessage(Resources.DDASearchControl_SearchProgress_Search_done);
             UpdateProgress(_progressStatus);
 
-            FileEx.SafeDelete(modsFile);
             return _success;
         }
 
@@ -216,7 +223,8 @@ namespace pwiz.Skyline.Model.DdaSearch
                 #   - E.g. Phospho, Acetyl
                 #   - Visit http://www.unimod.org to get PSI-MS names.
              */
-            using (var modsFileStream = new StreamWriter(modsFile, false))
+            modsText = new StringBuilder();
+            using (var modsFileStream = new StringWriter(modsText))
             {
                 int modCounter = 0;
                 modsFileStream.WriteLine($@"NumMods={maxVariableMods}");
@@ -321,7 +329,6 @@ namespace pwiz.Skyline.Model.DdaSearch
 
         public override void Dispose()
         {
-            FileEx.SafeDelete(modsFile, true); // In case cancel came at an awkward time
         }
     }
 }

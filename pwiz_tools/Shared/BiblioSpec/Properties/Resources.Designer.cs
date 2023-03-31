@@ -162,7 +162,7 @@ namespace pwiz.BiblioSpec.Properties {
         /// <summary>
         ///   Looks up a localized string similar to Percolator q-value.
         /// </summary>
-        internal static string BiblioSpecScoreType_DisplayName_Percolator_q_value {
+        public static string BiblioSpecScoreType_DisplayName_Percolator_q_value {
             get {
                 return ResourceManager.GetString("BiblioSpecScoreType_DisplayName_Percolator_q_value", resourceCulture);
             }

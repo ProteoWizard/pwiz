@@ -122,6 +122,8 @@ namespace pwiz.Skyline.Model
             return ion;
         }
 
+        public string NeutralFormula { get { return Formula; } }
+
         public MoleculeMassOffset FormulaWithAdductApplied
         {
             get

@@ -481,7 +481,7 @@ namespace pwiz.Skyline.Model
         public string Name { get; protected set; }
 
         [Track]
-        public string Formula => MoleculeAndMassOffset.ToStringInvariant();
+        public string Formula => MoleculeAndMassOffset.ToString();
 
         public MoleculeMassOffset MoleculeAndMassOffset // The molecular formula and/or unknown masses - may contain isotopes
         {

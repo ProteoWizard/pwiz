@@ -950,9 +950,7 @@ namespace pwiz.Skyline.Model.DocSettings
 
         private bool EquivalentFormulas(FragmentLoss loss1, FragmentLoss loss2)
         {
-            BioMassCalc.MONOISOTOPIC.ParseFormulaWithAdductMass(loss1.Formula, out var mol1);
-            BioMassCalc.MONOISOTOPIC.ParseFormulaWithAdductMass(loss2.Formula, out var mol2);
-            return mol1.Equals(mol2);
+            return loss1.Molecule.Equals(loss2.Molecule);
         }
 
         private bool EquivalentFormulas(char aa, StaticMod obj)

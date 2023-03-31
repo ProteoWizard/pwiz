@@ -73,6 +73,7 @@ namespace SkylineTool
         int GetProcessId();
         void DeleteElements(string[] elementLocators);
         void ImportProperties(string csvText);
+        void ImportPeakBoundaries(string csvText);
         string GetSelectedElementLocator(string elementType);
     }
 
