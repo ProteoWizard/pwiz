@@ -1,11 +1,10 @@
 ﻿using System.Collections.Generic;
 using System.Linq;
-using System.Net.NetworkInformation;
 using pwiz.Skyline.Util;
 
 namespace pwiz.Skyline.Model.DocSettings.AbsoluteQuantification
 {
-    public class BilinearCurveFit
+    public class ScoredBilinearCurve
     {
         public CalibrationCurve CalibrationCurve { get; private set; }
         public double StdDevBaseline { get; private set; }
@@ -44,13 +43,18 @@ namespace pwiz.Skyline.Model.DocSettings.AbsoluteQuantification
             get; private set;
         }
 
-        public static BilinearCurveFit FromCalibrationCurve(CalibrationCurve calibrationCurve, IList<WeightedPoint> points)
+        public static ScoredBilinearCurve FromPoints(IList<WeightedPoint> points)
+        {
+            return FromCalibrationCurve(RegressionFit.BILINEAR.Fit(points), points);
+        }
+
+        public static ScoredBilinearCurve FromCalibrationCurve(CalibrationCurve calibrationCurve, IList<WeightedPoint> points)
         {
             if (calibrationCurve == null)
             {
                 return null;
             }
-            var fit = new BilinearCurveFit {CalibrationCurve = calibrationCurve};
+            var fit = new ScoredBilinearCurve {CalibrationCurve = calibrationCurve};
             IList<WeightedPoint> reweightedPoints = points;
             if (calibrationCurve is CalibrationCurve.Bilinear bilinear)
             {
@@ -77,7 +81,7 @@ namespace pwiz.Skyline.Model.DocSettings.AbsoluteQuantification
             return fit;
         }
 
-        public static BilinearCurveFit WithOffset(double xOffset, IList<WeightedPoint> points)
+        public static ScoredBilinearCurve WithOffset(double xOffset, IList<WeightedPoint> points)
         {
             if (points.Count == 0)
             {
@@ -111,7 +115,7 @@ namespace pwiz.Skyline.Model.DocSettings.AbsoluteQuantification
             return FromCalibrationCurve(curve, points);
         }
 
-        private static BilinearCurveFit FlatBilinearCurve(IList<WeightedPoint> points)
+        private static ScoredBilinearCurve FlatBilinearCurve(IList<WeightedPoint> points)
         {
             if (points.Count == 0)
             {

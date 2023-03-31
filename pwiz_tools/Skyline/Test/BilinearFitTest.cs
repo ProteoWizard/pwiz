@@ -16,7 +16,7 @@ namespace pwiz.SkylineTest
         public void TestFitBilinearCurve()
         {
             var points = GetWeightedPoints();
-            var result = BilinearCurveFitter.FitBilinearCurve(points);
+            var result = ScoredBilinearCurve.FromPoints(points);
             Assert.AreEqual(0.025854009062249942, result.Slope, delta);
             Assert.AreEqual(0.16317916521766687, result.Intercept, delta);
             Assert.AreEqual(0.172315, result.BaselineHeight, delta);
@@ -28,7 +28,7 @@ namespace pwiz.SkylineTest
         public void TestBilinearFitWithOffset()
         {
             var points = GetWeightedPoints();
-            var result = new BilinearCurveFitter().FitBilinearCurveWithOffset(0.03, points);
+            var result = ScoredBilinearCurve.WithOffset(0.03, points);
             Assert.AreEqual(0.00239897, result.Slope, delta);
             Assert.AreEqual(0.16965172, result.Intercept, delta);
             Assert.AreEqual(0.17205111, result.BaselineHeight, delta);
@@ -40,7 +40,7 @@ namespace pwiz.SkylineTest
         public void TestBilinearFitTooFewPoints()
         {
             var points = GetWeightedPoints();
-            var result = new BilinearCurveFitter().FitBilinearCurveWithOffset(0.7, points);
+            var result = ScoredBilinearCurve.WithOffset(0.7, points);
             Assert.AreEqual(0, result.Slope);
             Assert.AreEqual(0, result.Intercept);
             Assert.AreEqual(0.17326666666666662, result.BaselineHeight, delta);
@@ -115,7 +115,7 @@ namespace pwiz.SkylineTest
         public void TestComputeLod()
         {
             var points = GetWeightedPoints();
-            var lod = BilinearCurveFitter.ComputeLod(points);
+            var lod = BilinearTransitionOptimizer.ComputeLod(points);
             Assert.AreEqual(0.3845768874492954, lod, delta);
         }
 
@@ -138,11 +138,9 @@ namespace pwiz.SkylineTest
                 0.1, 0.3, 0.3, 0.3, 0.5, 0.5, 0.5, 0.7, 0.7, 0.7, 1.0, 1.0, 1.0
             };
             var weightedPoints = MakeWeightedPoints(concentrations, areas);
-            var loq = new BilinearCurveFitter()
-            {
-                MaxBootstrapIterations = 10000,
-                MinBootstrapIterations = 1000,
-            }.ComputeBootstrappedLoq(weightedPoints);
+            var loq = new BootstrapFiguresOfMeritCalculator(.2).ChangeMinBootstrapIterations(1000)
+                .ChangeMaxBootstrapIterations(10000)
+                .ComputeBootstrappedLoq(weightedPoints);
             Assert.AreEqual(0.07947949229870066, loq, delta);
         }
 
@@ -177,9 +175,10 @@ namespace pwiz.SkylineTest
                     Enumerable.Range(0, areas.GetLength(0)).Select(i => areas[i, iTransition]).ToList();
                 Assert.AreEqual(concentrations.Length, transitionAreas.Count);
                 var weightedPoints = MakeWeightedPoints(concentrations, transitionAreas);
-                var lod = BilinearCurveFitter.ComputeLod(weightedPoints);
+                var lod = BilinearTransitionOptimizer.ComputeLod(weightedPoints);
                 Assert.AreEqual(expectedLods[iTransition], lod, delta, "Lod Mismatch Transition #{0}", iTransition);
-                var loq = new BilinearCurveFitter {MaxBootstrapIterations = 10000}.ComputeBootstrappedLoq(weightedPoints);
+                var loq = new BootstrapFiguresOfMeritCalculator(.2).ChangeMaxBootstrapIterations(10000)
+                    .ComputeBootstrappedLoq(weightedPoints);
                 Assert.AreEqual(expectedLoqs[iTransition], loq, delta, "Loq Mismatch Transition #{0}", loq);
             }
         }
@@ -189,7 +188,7 @@ namespace pwiz.SkylineTest
         {
             var concentrations = datasetConcentrations;
             var areas = datasetTransitionAreas;
-            var curveFitter = new BilinearCurveFitter();
+            var curveFitter = new BilinearTransitionOptimizer();
             var weightedPoints = new List<IList<WeightedPoint>>();
             for (int iTransition = 0; iTransition < areas.GetLength(1); iTransition++)
             {

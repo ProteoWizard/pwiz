@@ -14,10 +14,10 @@ namespace pwiz.Skyline.Model.DocSettings.AbsoluteQuantification
         protected override CalibrationCurve FitPoints(IList<WeightedPoint> points)
         {
             var concentrations = points.Select(pt => pt.X).Distinct().OrderBy(x=>x).ToList();
-            BilinearCurveFit bestCurve = null;
+            ScoredBilinearCurve bestCurve = null;
             foreach (var xOffset in concentrations)
             {
-                var candidateCurveFit = BilinearCurveFit.WithOffset(xOffset, points);
+                var candidateCurveFit = ScoredBilinearCurve.WithOffset(xOffset, points);
                 if (candidateCurveFit == null)
                 {
                     continue;

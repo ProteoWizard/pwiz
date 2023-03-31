@@ -51,7 +51,7 @@
     <PublisherName>MacCoss Lab, UW</PublisherName>
     <CreateWebPageOnPublish>true</CreateWebPageOnPublish>
     <WebPage>index.html</WebPage>
-    <ApplicationRevision>453</ApplicationRevision>
+    <ApplicationRevision>454</ApplicationRevision>
     <ApplicationVersion>22.2.1.%2a</ApplicationVersion>
     <UseApplicationTrust>false</UseApplicationTrust>
     <PublishWizardCompleted>true</PublishWizardCompleted>
@@ -502,6 +502,8 @@
       <DesignTime>True</DesignTime>
       <DependentUpon>ColumnCaptions.resx</DependentUpon>
     </Compile>
+    <Compile Include="Model\DocSettings\AbsoluteQuantification\BootstrapFiguresOfMeritCalculator.cs" />
+    <Compile Include="Model\DocSettings\AbsoluteQuantification\IFiguresOfMeritCalculator.cs" />
     <Compile Include="Model\GlobalizedObject.cs">
       <SubType>UserControl</SubType>
     </Compile>
@@ -615,8 +617,8 @@
     <Compile Include="Controls\Databinding\RowActions\RowAction.cs" />
     <Compile Include="Model\DdaSearch\MsFraggerSearchEngine.cs" />
     <Compile Include="Model\DiaUmpireDdaConverter.cs" />
-    <Compile Include="Model\DocSettings\AbsoluteQuantification\BilinearCurveFit.cs" />
-    <Compile Include="Model\DocSettings\AbsoluteQuantification\BilinearCurveFitter.cs" />
+    <Compile Include="Model\DocSettings\AbsoluteQuantification\ScoredBilinearCurve.cs" />
+    <Compile Include="Model\DocSettings\AbsoluteQuantification\BilinearTransitionOptimizer.cs" />
     <Compile Include="Model\DocSettings\AbsoluteQuantification\BilinearRegressionFit.cs" />
     <Compile Include="Model\DocSettings\AbsoluteQuantification\OptimizeTransitionDetails.cs" />
     <Compile Include="Model\DocSettings\AbsoluteQuantification\OptimizeType.cs" />

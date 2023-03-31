@@ -3,58 +3,22 @@ using System.Collections.Generic;
 using System.Diagnostics.CodeAnalysis;
 using System.Linq;
 using System.Threading;
-using MathNet.Numerics.Statistics;
 using pwiz.Common.Collections;
 using ZedGraph;
 
 namespace pwiz.Skyline.Model.DocSettings.AbsoluteQuantification
 {
-    public class BilinearCurveFitter
+    public class BilinearTransitionOptimizer
     {
-        private const double SAME_LOQ_REL_THRESHOLD = .001;
-        public BilinearCurveFitter()
+        public BilinearTransitionOptimizer()
         {
-            MaxBootstrapIterations = 100;
-            MinBootstrapIterations = 10;
-            MinSameLoqCountForAccept = 25;
-            GridSize = 100;
-            CvThreshold = .2;
             OptimizeTransitionSettings = OptimizeTransitionSettings.DEFAULT;
+            BootstrapFiguresOfMeritCalculator = new BootstrapFiguresOfMeritCalculator(.2);
         }
 
         public OptimizeTransitionSettings OptimizeTransitionSettings { get; set; }
-        public int MaxBootstrapIterations { get; set; }
-        public int MinBootstrapIterations { get; set; }
-        public int MinSameLoqCountForAccept { get; set; }
-        public int GridSize { get; set; }
-        public double CvThreshold { get; set; }
         public CancellationToken CancellationToken { get; set; }
-        public int RandomSeed
-        {
-            get
-            {
-                return OptimizeTransitionSettings.RandomSeed;
-            }
-        }
-
-        public static BilinearCurveFit FitBilinearCurve(IEnumerable<WeightedPoint> points)
-        {
-            var pointsList = points as IList<WeightedPoint> ?? points.ToList();
-            return BilinearCurveFit.FromCalibrationCurve(RegressionFit.BILINEAR.Fit(pointsList), pointsList);
-        }
-
-        public BilinearCurveFit FitBilinearCurveWithOffset(double offset, IEnumerable<WeightedPoint> points)
-        {
-            var pointsList = points as IList<WeightedPoint> ?? points.ToList();
-            return BilinearCurveFit.WithOffset(offset, pointsList);
-        }
-
-        public BilinearCurveFit ComputeBootstrapParams(Random random, IList<WeightedPoint> points)
-        {
-            var randomPoints = Enumerable.Range(0, points.Count)
-                .Select(i => points[random.Next(points.Count)]).ToList();
-            return FitBilinearCurve(randomPoints);
-        }
+        public BootstrapFiguresOfMeritCalculator BootstrapFiguresOfMeritCalculator { get; set; }
 
         public double ComputeBootstrappedLoq(IList<WeightedPoint> points)
         {
@@ -63,142 +27,12 @@ namespace pwiz.Skyline.Model.DocSettings.AbsoluteQuantification
 
         public double ComputeBootstrappedLoq(IList<WeightedPoint> points, List<ImmutableList<PointPair>> bootstrapCurves)
         {
-            var random = new Random(RandomSeed);
-            var lod = ComputeLod(points);
-            if (points.Count == 0)
-            {
-                return double.MaxValue;
-            }
-            var maxConcentration = points.Max(pt => pt.X);
-            var concentrationValues = Enumerable.Range(0, GridSize)
-                .Select(i => lod + (maxConcentration - lod) * i / (GridSize - 1)).ToList();
-            var areaGrid = Enumerable.Range(0, GridSize).Select(i => new RunningStatistics()).ToList();
-            int numItersWithSameLoq = 0;
-            double lastLoq = maxConcentration;
-            for (int i = 0; i < MaxBootstrapIterations; i++)
-            {
-                CancellationToken.ThrowIfCancellationRequested();
-                var p = ComputeBootstrapParams(random, points);
-                List<double> areaValues = null;
-                if (bootstrapCurves != null)
-                {
-                    areaValues = new List<double>();
-                }
-                for (int iConcentration = 0; iConcentration < concentrationValues.Count; iConcentration++)
-                {
-                    var area = p.CalibrationCurve.GetY(concentrationValues[iConcentration]);
-                    areaGrid[iConcentration].Push(area);
-                    areaValues?.Add(area);
-                }
-
-                bootstrapCurves?.Add(ImmutableList.ValueOf(concentrationValues.Zip(areaValues, (x, y)=>new PointPair(x, y))));
-
-                if (i > MinBootstrapIterations)
-                {
-                    var loqCheck = maxConcentration;
-                    for (int iConcentration = concentrationValues.Count - 1; iConcentration >= 0; iConcentration--)
-                    {
-                        if (GetCv(areaGrid[iConcentration]) > CvThreshold)
-                        {
-                            break;
-                        }
-                        else
-                        {
-                            loqCheck = concentrationValues[iConcentration];
-                        }
-                    }
-
-                    if (loqCheck >= 0 && Math.Abs(loqCheck - lastLoq) / loqCheck < SAME_LOQ_REL_THRESHOLD)
-                    {
-                        numItersWithSameLoq++;
-                    }
-                    else
-                    {
-                        numItersWithSameLoq = 0;
-                    }
-
-                    lastLoq = loqCheck;
-                    if (numItersWithSameLoq > MinSameLoqCountForAccept)
-                    {
-                        break;
-                    }
-                }
-            }
-
-            double loq = maxConcentration;
-            for (int iConcentration = concentrationValues.Count - 1; iConcentration >= 0; iConcentration--)
-            {
-                var cv = GetCv(areaGrid[iConcentration]);
-                if (cv > CvThreshold)
-                {
-                    break;
-                }
-
-                loq = concentrationValues[iConcentration];
-            }
-
-            return loq;
-        }
-
-        private double GetCv(RunningStatistics runningStatistics)
-        {
-            if (runningStatistics.Mean <= 0)
-            {
-                return CvThreshold * 2;
-            }
-
-            return runningStatistics.StandardDeviation / runningStatistics.Mean;
+            return BootstrapFiguresOfMeritCalculator.ComputeBootstrappedLoq(points, bootstrapCurves);
         }
 
         public static double ComputeLod(IList<WeightedPoint> points)
         {
-            if (points.Count == 0)
-            {
-                return double.MaxValue;
-            }
-            BilinearCurveFit fit = FitBilinearCurve(points);
-            if (fit == null || double.IsNaN(fit.StdDevBaseline))
-            {
-                return double.MaxValue;
-            }
-            var largestConc = points.Max(pt => pt.X);
-            var lodArea = fit.BaselineHeight + fit.StdDevBaseline;
-            var smallestNonzeroConc = points.Where(pt => pt.X > 0).Select(pt => pt.X).Append(largestConc).Min();
-            double lodConc;
-            if (fit.Slope == 0)
-            {
-                lodConc = largestConc;
-            }
-            else
-            {
-                lodConc = (lodArea - fit.Intercept) / fit.Slope;
-            }
-
-            lodConc = Math.Max(smallestNonzeroConc, Math.Min(lodConc, largestConc));
-            return lodConc;
-        }
-
-        public IDictionary<CalibrationPoint, double> GetCalibrationPoints(CalibrationCurveFitter calibrationCurveFitter)
-        {
-            var result = new Dictionary<CalibrationPoint, double>();
-            foreach (var calibrationPoint in calibrationCurveFitter.EnumerateCalibrationPoints())
-            {
-                var concentration = calibrationCurveFitter.GetPeptideConcentration(calibrationPoint);
-                if (!concentration.HasValue)
-                {
-                    continue;
-                }
-
-                var area = calibrationCurveFitter.GetNormalizedPeakArea(calibrationPoint);
-                if (!area.HasValue)
-                {
-                    continue;
-                }
-
-                result[calibrationPoint] = area.Value;
-            }
-
-            return result;
+            return BootstrapFiguresOfMeritCalculator.ComputeLod(points);
         }
 
         public QuantLimit ComputeQuantLimits(IList<WeightedPoint> areas, List<ImmutableList<PointPair>> bootstrapCurves = null)

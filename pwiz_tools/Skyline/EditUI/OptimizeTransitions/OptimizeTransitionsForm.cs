@@ -1,7 +1,6 @@
 ﻿using System;
 using System.Collections.Generic;
 using System.ComponentModel;
-using System.Drawing;
 using System.Linq;
 using System.Threading;
 using System.Windows.Forms;
@@ -18,11 +17,8 @@ using pwiz.Skyline.Model.AuditLog;
 using pwiz.Skyline.Model.Databinding;
 using pwiz.Skyline.Model.DocSettings.AbsoluteQuantification;
 using pwiz.Skyline.Model.GroupComparison;
-using pwiz.Skyline.Model.Hibernate;
 using pwiz.Skyline.Properties;
-using pwiz.Skyline.Util;
 using pwiz.Skyline.Util.Extensions;
-using ZedGraph;
 using Transition = pwiz.Skyline.Model.Transition;
 
 namespace pwiz.Skyline.EditUI.OptimizeTransitions
@@ -360,7 +356,7 @@ namespace pwiz.Skyline.EditUI.OptimizeTransitions
 
         private OptimizeTransitionDetails OptimizeTransitions(CancellationToken cancellationToken, Selection selection)
         {
-            var bilinearCurveFitter = new BilinearCurveFitter()
+            var bilinearCurveFitter = new BilinearTransitionOptimizer()
             {
                 CancellationToken = cancellationToken,
                 OptimizeTransitionSettings = selection.Settings

@@ -440,7 +440,7 @@ namespace pwiz.Skyline.Controls.Graphs.Calibration
                 {
                     var lod = FiguresOfMerit.LimitOfDetection.Value;
                     var points = new PointPairList(new[] { lod, lod }, new[] { minY, maxY });
-                    var lodLine = new LineItem("Lower Limit of Detection", points, Color.Black, SymbolType.None)
+                    var lodLine = new LineItem("Limit of Detection", points, Color.Black, SymbolType.None)
                     {
                         Line = { Style = DashStyle.Dot, Width = options.LineWidth}
                     };

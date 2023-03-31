@@ -28,15 +28,15 @@ namespace pwiz.Skyline.Model.DocSettings.AbsoluteQuantification
     public class LodCalculation : LabeledValues<string>
     {
         public static readonly LodCalculation NONE = new LodCalculation(@"none",
-            () => QuantificationStrings.LodCalculation_NONE_None, (curve, fitter) => null);
+            () => QuantificationStrings.LodCalculation_NONE_None, args => null);
         public static readonly LodCalculation TURNING_POINT = new LodCalculation(@"turning_point",
             () => QuantificationStrings.LodCalculation_TURNING_POINT_Bilinear_turning_point, CalculateLodFromTurningPoint);
         public static readonly LodCalculation BLANK_PLUS_2SD = new LodCalculation(@"blank_plus_2_sd",
             () => QuantificationStrings.LodCalculation_BLANK_PLUS_2SD_Blank_plus_2___SD,
-            (curve, fitter)=>BlankPlusSdMultiple(curve, fitter, 2.0));
+            args=>BlankPlusSdMultiple(args, 2.0));
         public static readonly LodCalculation BLANK_PLUS_3SD = new LodCalculation(@"blank_plus_3_sd",
             () => QuantificationStrings.LodCalculation_BLANK_PLUS_3SD_Blank_plus_3___SD,
-            (curve, fitter)=>BlankPlusSdMultiple(curve, fitter, 3.0));
+            args=>BlankPlusSdMultiple(args, 3.0));
 
         public static readonly LodCalculation TURNING_POINT_STDERR = new LodCalculation("turning_point_stderr",
             () => "Bilinear turning point with standard error", CalculateLodFromTurningPointWithStdErr);
@@ -46,9 +46,9 @@ namespace pwiz.Skyline.Model.DocSettings.AbsoluteQuantification
             NONE, BLANK_PLUS_2SD, BLANK_PLUS_3SD, TURNING_POINT
         });
 
-        private readonly Func<CalibrationCurve, CalibrationCurveFitter, double?> _calculateLodFunc;
+        private readonly Func<LodCalculationArgs, double?> _calculateLodFunc;
 
-        private LodCalculation(string name, Func<string> getLabelFunc, Func<CalibrationCurve, CalibrationCurveFitter, double?> calculateLodFunc) :
+        private LodCalculation(string name, Func<string> getLabelFunc, Func<LodCalculationArgs, double?> calculateLodFunc) :
             base(name, getLabelFunc)
         {
             _calculateLodFunc = calculateLodFunc;
@@ -69,44 +69,24 @@ namespace pwiz.Skyline.Model.DocSettings.AbsoluteQuantification
         }
 
 
-        public double? CalculateLod(CalibrationCurve calibrationCurve, CalibrationCurveFitter calibrationCurveFitter)
+        public double? CalculateLod(LodCalculationArgs args)
         {
-            return _calculateLodFunc(calibrationCurve, calibrationCurveFitter);
+            return _calculateLodFunc(args);
         }
 
-        public static double? CalculateLodFromTurningPoint(CalibrationCurve calibrationCurve,
-            CalibrationCurveFitter fitter)
+        public static double? CalculateLodFromTurningPoint(LodCalculationArgs args)
         {
-            return (calibrationCurve as CalibrationCurve.Bilinear)?.TurningPoint;
+            return (args.CalibrationCurve as CalibrationCurve.Bilinear)?.TurningPoint;
         }
 
-        public static double? CalculateLodFromTurningPointWithStdErr(CalibrationCurve curve, CalibrationCurveFitter fitter)
+        public static double? CalculateLodFromTurningPointWithStdErr(LodCalculationArgs args)
         {
-            return BilinearCurveFitter.ComputeLod(fitter.GetStandardPoints().ToList());
+            return BootstrapFiguresOfMeritCalculator.ComputeLod(args.Standards);
         }
 
-        public static double? BlankPlusSdMultiple(CalibrationCurve calibrationCurve, CalibrationCurveFitter fitter, double sdMultiple)
+        public static double? BlankPlusSdMultiple(LodCalculationArgs args, double sdMultiple)
         {
-            List<double> blankPeakAreas = new List<double>();
-            var measuredResults = fitter.SrmSettings.MeasuredResults;
-            if (measuredResults == null)
-            {
-                return null;
-            }
-            for (int iReplicate = 0; iReplicate < measuredResults.Chromatograms.Count; iReplicate++)
-            {
-                var chromatogramSet = measuredResults.Chromatograms[iReplicate];
-                if (!SampleType.BLANK.Equals(chromatogramSet.SampleType))
-                {
-                    continue;
-                }
-                double? peakArea = fitter.GetNormalizedPeakArea(new CalibrationPoint(iReplicate, null));
-                if (!peakArea.HasValue)
-                {
-                    continue;
-                }
-                blankPeakAreas.Add(peakArea.Value);
-            }
+            var blankPeakAreas = args.Blanks;
             if (!blankPeakAreas.Any())
             {
                 return null;
@@ -120,7 +100,20 @@ namespace pwiz.Skyline.Model.DocSettings.AbsoluteQuantification
             {
                 return null;
             }
-            return calibrationCurve.GetXValueForLimitOfDetection(meanPlusSd);
+            return args.CalibrationCurve.GetXValueForLimitOfDetection(meanPlusSd);
+        }
+        public class LodCalculationArgs
+        {
+            public LodCalculationArgs(CalibrationCurve calibrationCurve, IEnumerable<WeightedPoint> standards,
+                IEnumerable<double> blanks)
+            {
+                CalibrationCurve = calibrationCurve;
+                Standards = ImmutableList.ValueOf(standards);
+                Blanks = ImmutableList.ValueOf(blanks);
+            }
+            public CalibrationCurve CalibrationCurve { get; }
+            public ImmutableList<WeightedPoint> Standards { get; }
+            public ImmutableList<double> Blanks { get; }
         }
     }
 }

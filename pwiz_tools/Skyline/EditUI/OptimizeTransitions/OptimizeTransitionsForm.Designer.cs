@@ -29,13 +29,13 @@
         private void InitializeComponent()
         {
             this.panel1 = new System.Windows.Forms.Panel();
+            this.btnApply = new System.Windows.Forms.Button();
             this.lblOriginal = new System.Windows.Forms.LinkLabel();
             this.lblOptimized = new System.Windows.Forms.LinkLabel();
             this.btnOptimizeDocumentTransitions = new System.Windows.Forms.Button();
             this.optimizeTransitionsSettingsControl1 = new pwiz.Skyline.EditUI.OptimizeTransitions.OptimizeTransitionsSettingsControl();
             this.calibrationGraphControl1 = new pwiz.Skyline.Controls.Graphs.Calibration.CalibrationGraphControl();
             this.splitContainer1 = new System.Windows.Forms.SplitContainer();
-            this.btnApply = new System.Windows.Forms.Button();
             this.panel1.SuspendLayout();
             ((System.ComponentModel.ISupportInitialize)(this.splitContainer1)).BeginInit();
             this.splitContainer1.Panel2.SuspendLayout();
@@ -60,6 +60,17 @@
             this.panel1.Name = "panel1";
             this.panel1.Size = new System.Drawing.Size(800, 94);
             this.panel1.TabIndex = 1;
+            // 
+            // btnApply
+            // 
+            this.btnApply.Anchor = ((System.Windows.Forms.AnchorStyles)((System.Windows.Forms.AnchorStyles.Top | System.Windows.Forms.AnchorStyles.Right)));
+            this.btnApply.Location = new System.Drawing.Point(635, 11);
+            this.btnApply.Name = "btnApply";
+            this.btnApply.Size = new System.Drawing.Size(153, 23);
+            this.btnApply.TabIndex = 3;
+            this.btnApply.Text = "Apply Optimization";
+            this.btnApply.UseVisualStyleBackColor = true;
+            this.btnApply.Click += new System.EventHandler(this.btnApply_Click);
             // 
             // lblOriginal
             // 
@@ -109,7 +120,6 @@
             // 
             this.calibrationGraphControl1.Dock = System.Windows.Forms.DockStyle.Fill;
             this.calibrationGraphControl1.Location = new System.Drawing.Point(0, 0);
-            this.calibrationGraphControl1.ModeUIAwareFormHelper = null;
             this.calibrationGraphControl1.Name = "calibrationGraphControl1";
             this.calibrationGraphControl1.Size = new System.Drawing.Size(800, 173);
             this.calibrationGraphControl1.TabIndex = 2;
@@ -128,17 +138,6 @@
             this.splitContainer1.SplitterDistance = 126;
             this.splitContainer1.TabIndex = 3;
             // 
-            // btnApply
-            // 
-            this.btnApply.Anchor = ((System.Windows.Forms.AnchorStyles)((System.Windows.Forms.AnchorStyles.Top | System.Windows.Forms.AnchorStyles.Right)));
-            this.btnApply.Location = new System.Drawing.Point(635, 11);
-            this.btnApply.Name = "btnApply";
-            this.btnApply.Size = new System.Drawing.Size(153, 23);
-            this.btnApply.TabIndex = 3;
-            this.btnApply.Text = "Apply Optimization";
-            this.btnApply.UseVisualStyleBackColor = true;
-            this.btnApply.Click += new System.EventHandler(this.btnApply_Click);
-            // 
             // OptimizeTransitionsForm
             // 
             this.AutoScaleDimensions = new System.Drawing.SizeF(6F, 13F);
@@ -147,6 +146,7 @@
             this.Controls.Add(this.splitContainer1);
             this.Controls.Add(this.panel1);
             this.Name = "OptimizeTransitionsForm";
+            this.TabText = "Optimize Transitions";
             this.Text = "Optimize Transitions";
             this.Controls.SetChildIndex(this.panel1, 0);
             this.Controls.SetChildIndex(this.databoundGridControl, 0);
