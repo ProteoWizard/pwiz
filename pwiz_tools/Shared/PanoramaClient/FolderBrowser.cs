@@ -8,7 +8,7 @@ namespace pwiz.PanoramaClient
     {
         private PanoramaServer _server;
         private bool _uploadPerms;
-        private PanoramaForms formsUtil;
+        private PanoramaFormUtil _formUtil;
         public string FolderPath;
 
         //Needs to take server information
@@ -24,7 +24,7 @@ namespace pwiz.PanoramaClient
         public void SwitchFolderType(bool type)
         {
             treeView.Nodes.Clear();
-            formsUtil.InitializeTreeView(_server, treeView, _uploadPerms, true, type);
+            _formUtil.InitializeTreeView(_server, treeView, _uploadPerms, true, type);
             treeView.TopNode.Expand();
         }
 
@@ -38,8 +38,8 @@ namespace pwiz.PanoramaClient
 
         private void FolderBrowser_Load(object sender, EventArgs e)
         {
-            formsUtil = new PanoramaForms();
-            formsUtil.InitializeTreeView(_server, treeView, _uploadPerms, true, false);
+            _formUtil = new PanoramaFormUtil();
+            _formUtil.InitializeTreeView(_server, treeView, _uploadPerms, true, false);
             treeView.TopNode.Expand();
         }
     }

@@ -14,7 +14,7 @@ namespace pwiz.PanoramaClient
         folder
     }
 
-    internal class PanoramaForms
+    internal class PanoramaFormUtil
     {
         public void InitializeTreeView(PanoramaServer server, TreeView treeViewFolders, bool requireUploadPerms, bool showFiles, bool showSky)
         {
