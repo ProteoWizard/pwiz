@@ -167,7 +167,7 @@ namespace pwiz.Skyline.SettingsUI
                 textMaxTime.Text = Instrument.MaxTime.Value.ToString(LocalizationHelper.CurrentCulture);
 
             // Initialize full-scan settings
-            FullScanSettingsControl = new FullScanSettingsControl(_parent, false)
+            FullScanSettingsControl = new FullScanSettingsControl(_parent)
                                           {
                                               Anchor = (AnchorStyles.Top | AnchorStyles.Left),
                                               Location = new Point(0, 0),
