@@ -131,8 +131,8 @@ namespace pwiz.Skyline.Model
     /// </summary>
     public class SequenceMassCalc : IPrecursorMassCalc, IFragmentMassCalc
     {
-        public static int MassPrecision { get { return BioMassCalcBase.MassPrecision; } }
-        public static double MassTolerance { get { return BioMassCalcBase.MassTolerance; } }
+        public static int MassPrecision { get { return BioMassCalc.MassPrecision; } }
+        public static double MassTolerance { get { return BioMassCalc.MassTolerance; } }
 
 #pragma warning disable 1570 /// invalid character (&) in XML comment, and this URL doesn't work if we replace "&" with "&amp;"
         /// <summary>
@@ -221,11 +221,11 @@ namespace pwiz.Skyline.Model
             return deltaMz*1000*1000/mz;
         }
 
-        public static TypedMass FormulaMass(BioMassCalc calc, string desc, int? precision = null)
+        public static TypedMass FormulaMass(SkylineBioMassCalc calc, string desc, int? precision = null)
         {
             double totalMass = calc.ParseFormulaWithAdductMass(desc, out _);
             if (totalMass == 0.0)
-                BioMassCalcBase.ThrowArgumentException(desc);
+                BioMassCalc.ThrowArgumentException(desc);
 
             return TypedMass.Create(precision.HasValue ? Math.Round(totalMass, precision.Value) : totalMass,
                 calc.MassType);
@@ -246,7 +246,7 @@ namespace pwiz.Skyline.Model
 
         }
 
-        public static string[] ParseModParts(BioMassCalc calc, string desc)
+        public static string[] ParseModParts(SkylineBioMassCalc calc, string desc)
         {
             calc.ParseFormulaWithAdductMass(desc, out _); // Throw if it can't be understood as a formula or as formulaA-formulaB
 
@@ -255,7 +255,7 @@ namespace pwiz.Skyline.Model
             string part2 = parts.Length == 2 ?parts[1].Trim() : string.Empty;
 
             if ((part1.Length == 0 && part2.Length == 0))
-                BioMassCalcBase.ThrowArgumentException(desc);
+                BioMassCalc.ThrowArgumentException(desc);
 
             return new[] { part1, part2 };
         }
@@ -323,7 +323,7 @@ namespace pwiz.Skyline.Model
             return _aminoMasses[c];
         }
 
-        private readonly BioMassCalc _massCalc;
+        private readonly SkylineBioMassCalc _massCalc;
         public readonly double[] _aminoMasses = new double[128];
 
         private sealed class ModMasses
@@ -390,7 +390,7 @@ namespace pwiz.Skyline.Model
             // These values will be used to calculate masses that are later assumed to be massH
             type = type.IsMonoisotopic() ? MassType.MonoisotopicMassH : MassType.AverageMassH;
 
-            _massCalc = new BioMassCalc(type);
+            _massCalc = new SkylineBioMassCalc(type);
 
             Labels = new HashSet<StaticMod>(); // Used by small molecules
 
@@ -1286,7 +1286,6 @@ namespace pwiz.Skyline.Model
         private static readonly ImmutableList<Tuple<LabelAtoms, string, string>> 
             ALL_LABEL_SUBSTITUTIONS = ImmutableList.ValueOf(new[]
         {
-            // ReSharper disable AccessToStaticMemberViaDerivedType
             Tuple.Create(LabelAtoms.C13, BioMassCalc.C, BioMassCalc.C13),
             Tuple.Create(LabelAtoms.N15, BioMassCalc.N, BioMassCalc.N15),
             Tuple.Create(LabelAtoms.O18, BioMassCalc.O, BioMassCalc.O18),
@@ -1295,7 +1294,6 @@ namespace pwiz.Skyline.Model
             Tuple.Create(LabelAtoms.Br81, BioMassCalc.Br, BioMassCalc.Br81),
             Tuple.Create(LabelAtoms.P32, BioMassCalc.P, BioMassCalc.P32),
             Tuple.Create(LabelAtoms.S34, BioMassCalc.S, BioMassCalc.S34),
-            // ReSharper restore AccessToStaticMemberViaDerivedType
         });
 
         public static Molecule GetHeavyFormula(string formulaString, LabelAtoms labelAtoms)

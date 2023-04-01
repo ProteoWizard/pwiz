@@ -793,9 +793,9 @@ namespace pwiz.Skyline.Util
 
             // Any difference in H can be used as explanation for charge
             int nH;
-            if (d.TryGetValue(BioMassCalcBase.H, out nH) && nH != 0)
+            if (d.TryGetValue(BioMassCalc.H, out nH) && nH != 0)
             {
-                d = d.SetElementCount(BioMassCalcBase.H, Math.Max(0, nH - charge));
+                d = d.SetElementCount(BioMassCalc.H, Math.Max(0, nH - charge));
             }
 
             var adductFormula = d.ToString();
@@ -1122,7 +1122,6 @@ namespace pwiz.Skyline.Util
                 {"TMS", "C3H8Si"}, // MSTFA(N-methyl-N-trimethylsilytrifluoroacetamide)
             };
 
-        // ReSharper disable AccessToStaticMemberViaDerivedType
         public static readonly IDictionary<string, string> DICT_ADDUCT_ISOTOPE_NICKNAMES =
             new Dictionary<string, string>
             {
@@ -1159,7 +1158,6 @@ namespace pwiz.Skyline.Util
                 {@"HCOO", -1}, // Formate (deprotonated FA)  
                 {@"NH4", 1}
             };
-        // ReSharper restore AccessToStaticMemberViaDerivedType
 
         // Popular adducts (declared way down here because it has to follow some other statics)
         public static readonly Adduct EMPTY = new Adduct(0, false);
@@ -1374,7 +1372,7 @@ namespace pwiz.Skyline.Util
                 {
                     resultDict.Add(pair.Key, pair.Value);
                 }
-                if (resultDict[pair.Key] < 0 && !Equals(pair.Key, BioMassCalcBase.H)) // Treat H loss as a general proton loss
+                if (resultDict[pair.Key] < 0 && !Equals(pair.Key, BioMassCalc.H)) // Treat H loss as a general proton loss
                 {
                     throw new InvalidOperationException(
                         string.Format(Resources.Adduct_ApplyToMolecule_Adduct___0___calls_for_removing_more__1__atoms_than_are_found_in_the_molecule__2_,
@@ -1416,7 +1414,7 @@ namespace pwiz.Skyline.Util
                 // N.B. in "[2M4Cl37+2H]" we'd replace 8 Cl rather than 4
                 foreach (var isotopeSymbolAndCount in IsotopeLabels)
                 {
-                    var unlabeledSymbol = BioMassCalcBase.DICT_HEAVYSYMBOL_TO_MONOSYMBOL[isotopeSymbolAndCount.Key];
+                    var unlabeledSymbol = BioMassCalc.DICT_HEAVYSYMBOL_TO_MONOSYMBOL[isotopeSymbolAndCount.Key];
                     resultDict.TryGetValue(unlabeledSymbol, out var unlabeledCount);
                     // If label is "2Cl37" and molecule is CH4Cl5 then result is CH4Cl3Cl'2
                     var isotopeCount = massMultiplier * isotopeSymbolAndCount.Value;
@@ -1582,7 +1580,7 @@ namespace pwiz.Skyline.Util
             foreach (var isotope in IsotopeLabels)
             {
                 // Account for the added mass of any labels declared in the adduct, e.g. for [2M4Cl37+H] add 2x4x the difference in mass between CL37 and Cl
-                var unlabled = BioMassCalcBase.GetMonoisotopicSymbol(isotope.Key);
+                var unlabled = BioMassCalc.GetMonoisotopicSymbol(isotope.Key);
                 var label = isotope.Key;
                 var labelCount = isotope.Value;
                 isotopeLabelsAverageMassOffset += labelCount*(BioMassCalc.AVERAGE.GetMass(label) - BioMassCalc.AVERAGE.GetMass(unlabled));
@@ -1594,7 +1592,7 @@ namespace pwiz.Skyline.Util
                 isotopeLabelsMonoMassOffset == 0 ? MassType.Monoisotopic : MassType.MonoisotopicHeavy);
             Unlabeled = ChangeIsotopeLabels(string.Empty); // Useful for dealing with labels and mass-only small molecule declarations
             IsProtonated = Composition.Any() && Composition.All(pair => // All H, H', H", D or T
-                BioMassCalcBase.GetMonoisotopicSymbol(pair.Key) == BioMassCalcBase.H);
+                BioMassCalc.GetMonoisotopicSymbol(pair.Key) == BioMassCalc.H);
             IsProteomic = IsProtonated && string.IsNullOrEmpty(Description); 
         }
 

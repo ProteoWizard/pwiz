@@ -122,7 +122,7 @@ namespace pwiz.SkylineTest
                 Transition tran = tranNode.Transition;
                 Assert.AreEqual(reporterIons[i].SettingsCustomIon, tran.CustomIon);
                 Assert.AreEqual(tran.Charge, i + 1);
-                Assert.AreEqual(BioMassCalc.CalculateIonMz(mass, tran.Adduct), tranNode.Mz, BioMassCalc.MassElectron / 100);
+                Assert.AreEqual(SkylineBioMassCalc.CalculateIonMz(mass, tran.Adduct), tranNode.Mz, BioMassCalc.MassElectron / 100);
             }
 
             //Check with Average
@@ -138,7 +138,7 @@ namespace pwiz.SkylineTest
                 Transition tran = tranNode.Transition;
                 Assert.AreEqual(reporterIons[i].SettingsCustomIon, tran.CustomIon);
                 Assert.AreEqual(tran.Charge, i + 1);
-                Assert.AreEqual(BioMassCalc.CalculateIonMz(mass, tran.Adduct), tranNode.Mz, BioMassCalc.MassElectron / 100);
+                Assert.AreEqual(SkylineBioMassCalc.CalculateIonMz(mass, tran.Adduct), tranNode.Mz, BioMassCalc.MassElectron / 100);
             }
 
             //Make sure the rest of the transitions aren't reporter ions

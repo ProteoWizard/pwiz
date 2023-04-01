@@ -264,7 +264,7 @@ namespace pwiz.Skyline.Controls.Graphs
             {
                 // Showing precursor m/z, so avoid showing ion masses as in DisplayName
                 var customIon = nodeGroup.CustomMolecule;
-                seq = customIon.Name ?? customIon.MoleculeAndMassOffset.ToString();
+                seq = customIon.Name ?? customIon.Formula;
             }
             string prefix = string.Empty;
             if (seq != null)

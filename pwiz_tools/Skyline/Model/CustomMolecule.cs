@@ -449,6 +449,8 @@ namespace pwiz.Skyline.Model
             return mol == null || mol.IsEmpty;
         }
 
+        public bool HasChemicalFormula => _formulaAndOrMass!= null && _formulaAndOrMass.HasChemicalFormula;
+
         public CustomMolecule AdjustElementCount(string element, int adjustCountBy)
         {
             return adjustCountBy == 0 ? 
@@ -481,7 +483,7 @@ namespace pwiz.Skyline.Model
         public string Name { get; protected set; }
 
         [Track]
-        public string Formula => MoleculeAndMassOffset.ToString();
+        public string Formula => _formulaAndOrMass?.ToString();
 
         public MoleculeMassOffset MoleculeAndMassOffset // The molecular formula and/or unknown masses - may contain isotopes
         {
@@ -489,9 +491,9 @@ namespace pwiz.Skyline.Model
             protected set
             {
                 _formulaAndOrMass = value ?? MoleculeMassOffset.EMPTY;
-                if (BioMassCalcBase.ContainsIsotopicElement(_formulaAndOrMass))
+                if (BioMassCalc.ContainsIsotopicElement(_formulaAndOrMass))
                 {
-                    var unlabeled = BioMassCalcBase.StripLabelsFromFormula(_formulaAndOrMass);
+                    var unlabeled = BioMassCalc.StripLabelsFromFormula(_formulaAndOrMass);
                     UnlabeledFormula = _formulaAndOrMass.ChangeFormulaNoOffsetMassChange(unlabeled);
                 }
                 else
@@ -515,7 +517,7 @@ namespace pwiz.Skyline.Model
             get => _formulaAndOrMass.GetTotalMass(MassType.Average);
         }
 
-        protected const int DEFAULT_ION_MASS_PRECISION = BioMassCalcBase.MassPrecision;
+        protected const int DEFAULT_ION_MASS_PRECISION = BioMassCalc.MassPrecision;
         protected static readonly string massFormat = @"{0} [{1:F0"+DEFAULT_ION_MASS_PRECISION+@"}/{2:F0"+DEFAULT_ION_MASS_PRECISION+@"}]";
         protected static readonly string massFormatSameMass = @"{0} [{1:F0" + DEFAULT_ION_MASS_PRECISION + @"}]";
         protected const string massFormatRegex = @"(?:[a-z][a-z]+)\s+\[([+-]?\d*\.\d+)(?![-+0-9\.])\/([+-]?\d*\.\d+)(?![-+0-9\.])\]";
@@ -795,7 +797,7 @@ namespace pwiz.Skyline.Model
                 formula = MoleculeMassOffset.Create(text);
                 if (!string.IsNullOrEmpty(text))
                 {
-                    formula = formula.AdjustElementCountNoMassOffsetChange(BioMassCalcBase.H, 1);  // Update this old style formula to current by adding the hydrogen we formerly left out due to assuming protonation
+                    formula = formula.AdjustElementCountNoMassOffsetChange(BioMassCalc.H, 1);  // Update this old style formula to current by adding the hydrogen we formerly left out due to assuming protonation
                 }
                 else
                 {
@@ -849,8 +851,8 @@ namespace pwiz.Skyline.Model
             }
             Assume.IsFalse(AverageMass.IsMassH()); // We're going to read these as neutral masses
             Assume.IsFalse(MonoisotopicMass.IsMassH());
-            writer.WriteAttributeNullable(ATTR.neutral_mass_average, MoleculeAndMassOffset.IsMassOnly ? AverageMass : Math.Round(AverageMass, BioMassCalcBase.MassPrecision));
-            writer.WriteAttributeNullable(ATTR.neutral_mass_monoisotopic, MoleculeAndMassOffset.IsMassOnly ? MonoisotopicMass : Math.Round(MonoisotopicMass, BioMassCalcBase.MassPrecision));
+            writer.WriteAttributeNullable(ATTR.neutral_mass_average, MoleculeAndMassOffset.IsMassOnly ? AverageMass : Math.Round(AverageMass, BioMassCalc.MassPrecision));
+            writer.WriteAttributeNullable(ATTR.neutral_mass_monoisotopic, MoleculeAndMassOffset.IsMassOnly ? MonoisotopicMass : Math.Round(MonoisotopicMass, BioMassCalc.MassPrecision));
             if (!string.IsNullOrEmpty(Name))
                 writer.WriteAttribute(ATTR.custom_ion_name, Name);
             writer.WriteAttributeIfString(ATTR.id, AccessionNumbers.ToSerializableString());
@@ -886,7 +888,7 @@ namespace pwiz.Skyline.Model
         {
             try
             {
-                SequenceMassCalc.FormulaMass(BioMassCalc.AVERAGE, key);
+                SequenceMassCalc.FormulaMass(SkylineBioMassCalc.AVERAGE, key);
             }
             catch
             {

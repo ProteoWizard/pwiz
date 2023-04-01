@@ -57,10 +57,10 @@ namespace pwiz.Skyline.Model
                 }
 
                 // Allow lookup by formula
-                var formula = target.Molecule.MoleculeAndMassOffset;
-                if (!formula.IsEmpty)
+                var formula = target.Molecule.Formula;
+                if (!string.IsNullOrEmpty(formula))
                 {
-                    accessions.Add(new Tuple<string, Target>(formula.ToString(), target));
+                    accessions.Add(new Tuple<string, Target>(formula, target));
                 }
             }
 

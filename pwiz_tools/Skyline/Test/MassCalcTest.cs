@@ -202,12 +202,12 @@ namespace pwiz.SkylineTest
         }
 
         /// <summary>
-        /// Tests that <see cref="BioMassCalc.ParseFormulaWithAdductMass"/> works correctly and stops at the first minus sign.
+        /// Tests that <see cref="SkylineBioMassCalc.ParseFormulaWithAdductMass"/> works correctly and stops at the first minus sign.
         /// </summary>
         [TestMethod]
         public void TestParseMass()
         {
-            var bioMassCalc = new BioMassCalc(MassType.Monoisotopic);
+            var bioMassCalc = new SkylineBioMassCalc(MassType.Monoisotopic);
 
             // Check handling of mass modifications
             var description = "C'2[+1.2]";
@@ -293,7 +293,7 @@ namespace pwiz.SkylineTest
         [TestMethod]
         public void TestParseModParts()
         {
-            var bioMassCalc = new BioMassCalc(MassType.Monoisotopic);
+            var bioMassCalc = new SkylineBioMassCalc(MassType.Monoisotopic);
             CollectionAssert.AreEqual(new[]{"C'2", ""}, SequenceMassCalc.ParseModParts(bioMassCalc, "C'2"));
             CollectionAssert.AreEqual(new[]{"", "C2"}, SequenceMassCalc.ParseModParts(bioMassCalc, "-C2"));
             CollectionAssert.AreEqual(new[]{"C'2", "C2"}, SequenceMassCalc.ParseModParts(bioMassCalc, "C'2-C2"));
@@ -342,9 +342,9 @@ namespace pwiz.SkylineTest
             Assert.AreEqual("S'", SequenceMassCalc.GetHeavyFormula("S", LabelAtoms.S34).ToString());
 
             // Make sure IUPAC nicknames don't find their way into our list of heavy symbols
-            Assume.IsTrue(BioMassCalcBase.IsSkylineHeavySymbol("H'"));
-            Assume.IsFalse(BioMassCalcBase.IsSkylineHeavySymbol("D"));
-            Assume.IsFalse(BioMassCalcBase.IsSkylineHeavySymbol("T"));
+            Assume.IsTrue(BioMassCalc.IsSkylineHeavySymbol("H'"));
+            Assume.IsFalse(BioMassCalc.IsSkylineHeavySymbol("D"));
+            Assume.IsFalse(BioMassCalc.IsSkylineHeavySymbol("T"));
         }
 
         [TestMethod]

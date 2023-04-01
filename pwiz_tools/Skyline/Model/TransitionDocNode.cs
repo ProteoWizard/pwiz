@@ -1034,7 +1034,7 @@ namespace pwiz.Skyline.Model
             if (ReferenceEquals(null, obj)) return false;
             if (ReferenceEquals(this, obj)) return true;
             var equal =  base.Equals(obj) && 
-                   (obj.Mz.CompareTolerant(Mz, BioMassCalcBase.MassTolerance) == 0) && // Allow for XML rounding
+                   (obj.Mz.CompareTolerant(Mz, BioMassCalc.MassTolerance) == 0) && // Allow for XML rounding
                    Equals(obj.IsotopeDistInfo, IsotopeDistInfo) &&
                    Equals(obj.LibInfo, LibInfo) &&
                    Equals(obj.Results, Results) &&

@@ -23,6 +23,7 @@ using System.Globalization;
 using System.Linq;
 using System.Text;
 using System.Windows.Forms;
+using pwiz.Common.Chemistry;
 using pwiz.Common.Controls;
 using pwiz.Common.SystemUtil;
 using pwiz.Skyline.Alerts;
@@ -354,7 +355,7 @@ namespace pwiz.Skyline.SettingsUI
             {
                 try
                 {
-                    SequenceMassCalc.FormulaMass(BioMassCalc.MONOISOTOPIC, formula, SequenceMassCalc.MassPrecision);
+                    SequenceMassCalc.FormulaMass(SkylineBioMassCalc.MONOISOTOPIC, formula, SequenceMassCalc.MassPrecision);
                 }
                 catch (ArgumentException x)
                 {

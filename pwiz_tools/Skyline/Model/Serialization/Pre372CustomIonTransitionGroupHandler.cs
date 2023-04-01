@@ -226,7 +226,7 @@ namespace pwiz.Skyline.Model.Serialization
                 var precursorsWithFormulas = _precursorRawDetails.Where(d => !d._formulaUnlabeled.IsMassOnly).ToList();
                 foreach (var detail in precursorsWithFormulas)
                 {
-                    var revisedCommonFormula = commonFormula.AdjustElementCountNoMassOffsetChange( BioMassCalcBase.H, -detail._declaredCharge);
+                    var revisedCommonFormula = commonFormula.AdjustElementCountNoMassOffsetChange( BioMassCalc.H, -detail._declaredCharge);
                     var adjustedMolecule = new CustomMolecule(revisedCommonFormula, peptide.CustomMolecule.Name);
                     var mass = adjustedMolecule.MonoisotopicMass;
                     if (precursorsWithFormulas.TrueForAll(d =>
@@ -281,7 +281,7 @@ namespace pwiz.Skyline.Model.Serialization
                 {
                     foreach (var kvpIsotopeCount in precursor._labels)
                     {
-                        var unlabeled = BioMassCalcBase.GetMonoisotopicSymbol(kvpIsotopeCount.Key);
+                        var unlabeled = BioMassCalc.GetMonoisotopicSymbol(kvpIsotopeCount.Key);
                         int parentCount;
                         parentComposition.TryGetValue(unlabeled, out parentCount);
                         if (kvpIsotopeCount.Value > parentCount)

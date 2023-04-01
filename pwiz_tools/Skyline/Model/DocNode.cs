@@ -1344,7 +1344,7 @@ namespace pwiz.Skyline.Model
                 return false;
             }
 
-            // This could be handled more compactly by EqualsDeep, but that makes it difficult to set breakpoints
+            // This could be handled more compactly (though no more efficiently) by EqualsDeep, but that makes it difficult to set breakpoints
             for (var i = 0; i < Children.Count; i++)
             {
                 if (Children[i] == null && obj.Children[i] != null)

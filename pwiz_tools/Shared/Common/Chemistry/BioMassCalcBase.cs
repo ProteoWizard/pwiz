@@ -39,15 +39,17 @@ namespace pwiz.Common.Chemistry
     /// But at 12.01085 is slightly higher than the current Unimod standard
     /// of 12.0107.
     ///  </summary>
-    public class BioMassCalcBase
+    public class BioMassCalc
     {
         // Reasonable values for comparison and serialization of masses
         public const int MassPrecision = 6;
         public const double MassTolerance = 1e-6;
         public const string MASS_FORMAT = @"0.######";
 
-        public static BioMassCalcBase MONO = new BioMassCalcBase(MassType.Monoisotopic);
-        public static BioMassCalcBase AVG = new BioMassCalcBase(MassType.Average);
+        public static BioMassCalc MONOISOTOPIC = new BioMassCalc(MassType.Monoisotopic);
+        public static BioMassCalc AVERAGE = new BioMassCalc(MassType.Average);
+
+        public static readonly IsotopeAbundances DEFAULT_ABUNDANCES = IsotopeAbundances.Default;
 
         public const string SKYLINE_ISOTOPE_HINT1 = @"'"; // Denotes most abundant isotope
         public const string SKYLINE_ISOTOPE_HINT2 = @""""; // Denotes second most abundant isotope
@@ -162,7 +164,7 @@ namespace pwiz.Common.Chemistry
         /// A list of Skyline-style isotope symbols (e.g. H')
         /// DOES NOT include synonyms such as D for Deuterium
         /// </summary>
-        public static IEnumerable<string> HeavySymbols { get { return DICT_HEAVYSYMBOL_TO_MASS.Keys; } }
+        public static readonly string[] HeavySymbols = DICT_HEAVYSYMBOL_TO_MASS.Keys.ToArray();
 
         /// <summary>
         /// Determine whether a string describes and isotope of an element
@@ -172,8 +174,8 @@ namespace pwiz.Common.Chemistry
         /// <returns>true if, for example, xElement is "N'" and yElement is "N"</returns>
         public static bool ElementIsIsotopeOf(string xElement, string yElement)
         {
-            if ((yElement.StartsWith(xElement) || BioMassCalcBase.DICT_HEAVYSYMBOL_NICKNAMES.ContainsKey(xElement)) &&
-                BioMassCalcBase.DICT_HEAVYSYMBOL_TO_MONOSYMBOL.TryGetValue(xElement, out var light) &&
+            if ((yElement.StartsWith(xElement) || BioMassCalc.DICT_HEAVYSYMBOL_NICKNAMES.ContainsKey(xElement)) &&
+                BioMassCalc.DICT_HEAVYSYMBOL_TO_MONOSYMBOL.TryGetValue(xElement, out var light) &&
                 Equals(yElement, light))
             {
                 return true;
@@ -206,7 +208,7 @@ namespace pwiz.Common.Chemistry
 
         /// <summary>
         /// Returns the monoisotopic symbol for the atomic symbols associated
-        /// with <see cref="BioMassCalcBase"/>.
+        /// with <see cref="BioMassCalc"/>.
         /// </summary>
         /// <param name="symbol"></param>
         /// <returns></returns>
@@ -260,7 +262,7 @@ namespace pwiz.Common.Chemistry
         /// <param name="type">Monoisotopic or average mass calculations</param>
         /// <param name="msg_The_expression__0__is_not_a_valid_chemical_formula_">Localized error message</param>
         /// <param name="msg_Supported_chemical_symbols_include_">Localized error message</param>
-        public BioMassCalcBase(MassType type, 
+        public BioMassCalc(MassType type, 
             string msg_The_expression__0__is_not_a_valid_chemical_formula_ = null,
             string msg_Supported_chemical_symbols_include_ = null)
         {
@@ -367,12 +369,13 @@ namespace pwiz.Common.Chemistry
             @"The expression {0} is not a valid chemical formula";
         private static string Supported_chemical_symbols_include =
             @"Supported chemical symbols include: ";
+
         public static string FormatArgumentExceptionMessage(string desc)
         {
             var errmsg =
                 string.Format(The_expression__0__is_not_a_valid_chemical_formula, desc) +
                 Supported_chemical_symbols_include;
-            foreach (var key in MONO._atomicMasses.Keys)
+            foreach (var key in MONOISOTOPIC._atomicMasses.Keys)
                 errmsg += key + @" "; 
             return errmsg;
         }
@@ -398,8 +401,7 @@ namespace pwiz.Common.Chemistry
             try
             {
                 // ParseMass checks for unknown symbols, so it's useful to us as a syntax checking parser even if we don't care about mass
-                // N.B. Monoisotopic vs Average doesn't actually matter here as we're just interested in the atom counts in resultDict
-                MONO.ParseFormulaMass(formula, out resultMolecule);
+                ParseFormulaMass(formula, out resultMolecule);
                 errorMessage = string.Empty;
                 return true;
             }
@@ -710,5 +712,6 @@ namespace pwiz.Common.Chemistry
         {
             return _atomicMasses.ContainsKey(sym);
         }
+
     }
 }

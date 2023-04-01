@@ -485,7 +485,7 @@ namespace pwiz.SkylineTestFunctional
                 {
                     Resources.PasteDlg_ShowNoErrors_No_errors, Resources.PasteDlg_ShowNoErrors_No_errors,
                     Resources.PasteDlg_ShowNoErrors_No_errors, // No name, no problem
-                    BioMassCalcBase.FormatArgumentExceptionMessage(badfields[3]),
+                    BioMassCalc.FormatArgumentExceptionMessage(badfields[3]),
                     Resources
                         .SmallMoleculeTransitionListReader_ReadPrecursorOrProductColumns_Formula_already_contains_an_adduct_description__and_it_does_not_match_,
                     string.Format(Resources.PasteDlg_ReadPrecursorOrProductColumns_Invalid_m_z_value__0_, badfields[5]),

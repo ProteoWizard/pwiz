@@ -434,7 +434,6 @@ namespace pwiz.Skyline.SettingsUI
             textFormula.SelectionStart = Math.Min(insertAt, text?.Length ?? 0);
         }
 
-        // ReSharper disable AccessToStaticMemberViaDerivedType
         private void hToolStripMenuItem_Click(object sender, EventArgs e)
         {
             AddFormulaSymbol(BioMassCalc.H);
@@ -557,7 +556,6 @@ namespace pwiz.Skyline.SettingsUI
         {
             AddFormulaSymbol(BioMassCalc.O18);
         }
-        // ReSharper restore AccessToStaticMemberViaDerivedType
 
         private bool _inTextChanged;
         private void textFormula_TextChanged(object sender, EventArgs e)
@@ -683,8 +681,8 @@ namespace pwiz.Skyline.SettingsUI
                     {
                         neutralFormula = IsotopeLabelsForMassCalc.Aggregate(neutralFormula, (current, kvp) => current.Replace(kvp.Key, kvp.Value));
                     }
-                    var monoMass = SequenceMassCalc.FormulaMass(BioMassCalc.MONOISOTOPIC, neutralFormula, SequenceMassCalc.MassPrecision);
-                    var averageMass = SequenceMassCalc.FormulaMass(BioMassCalc.AVERAGE, neutralFormula, SequenceMassCalc.MassPrecision);
+                    var monoMass = SequenceMassCalc.FormulaMass(SkylineBioMassCalc.MONOISOTOPIC, neutralFormula, SequenceMassCalc.MassPrecision);
+                    var averageMass = SequenceMassCalc.FormulaMass(SkylineBioMassCalc.AVERAGE, neutralFormula, SequenceMassCalc.MassPrecision);
                     GetTextFromMass(monoMass, MassType.Monoisotopic); // Just to see if it throws or not
                     GetTextFromMass(averageMass, MassType.Average); // Just to see if it throws or not
                     MonoMass = monoMass;

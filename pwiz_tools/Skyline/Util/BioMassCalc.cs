@@ -23,36 +23,21 @@ using pwiz.Skyline.Properties;
 namespace pwiz.Skyline.Util
 {
     /// <summary>
-    /// Calculates molecular masses based on atomic masses.
-    /// Atomic masses come from http://www.unimod.org/unimod_help.html.
-    /// Some heavy isotopes come from pwiz/utility/chemistry/isotopes.text, which
-    /// comes from http://physics.nist.gov/PhysRefData/Compositions/index.html
-    /// The average mass of Carbon comes from Michael MacCoss, which he claims
-    /// was derived by Dwight Matthews and John Hayes in the 70s.  It takes into
-    /// account carbon 12 enrichment in living organisms:
-    /// 
-    /// http://www.madsci.org/posts/archives/2003-06/1055532737.Bc.r.html
-    /// 
-    /// But at 12.01085 is slightly higher than the current Unimod standard
-    /// of 12.0107.
+    /// Extends BioMassCalc to add Skyline-specific functionality.
     ///  </summary>
-    public class BioMassCalc : BioMassCalcBase
+    public class SkylineBioMassCalc : BioMassCalc
     {
-        public static readonly BioMassCalc MONOISOTOPIC = new BioMassCalc(MassType.Monoisotopic);
-        public static readonly BioMassCalc AVERAGE = new BioMassCalc(MassType.Average);
 
-        public new static double MassProton => BioMassCalcBase.MassProton;
-        public new static double MassElectron => BioMassCalcBase.MassElectron;
+        public new static SkylineBioMassCalc MONOISOTOPIC = new SkylineBioMassCalc(MassType.Monoisotopic);
+        public new static SkylineBioMassCalc AVERAGE = new SkylineBioMassCalc(MassType.Average);
 
-
-        public static readonly IsotopeAbundances DEFAULT_ABUNDANCES = IsotopeAbundances.Default;
 
         /// <summary>
         /// Create a simple mass calculator for use in calculating
         /// protein, peptide and fragment masses.
         /// </summary>
         /// <param name="type">Monoisotopic or average mass calculations</param>
-        public BioMassCalc(MassType type) : base(type,
+        public SkylineBioMassCalc(MassType type) : base(type,
             Resources.BioMassCalc_CalculateMass_The_expression__0__is_not_a_valid_chemical_formula,
             Resources.BioMassCalc_FormatArgumentException__Supported_chemical_symbols_include__)
         {

@@ -701,8 +701,8 @@ namespace pwiz.Skyline.Model
             if (adductInferred.IsEmpty)
             {
                 // That formula and this mz don't yield a reasonable charge state - try adding an H
-                var ion2 = ion.FormulaWithAdductApplied.SetElementCount(BioMassCalcBase.H,
-                    ion.FormulaWithAdductApplied.GetElementCount(BioMassCalcBase.H)+1);
+                var ion2 = ion.FormulaWithAdductApplied.SetElementCount(BioMassCalc.H,
+                    ion.FormulaWithAdductApplied.GetElementCount(BioMassCalc.H)+1);
                 monoMass = ion2.GetTotalMass(MassType.Monoisotopic);
                 averageMass = ion2.GetTotalMass(MassType.Average);
                 mass = useMonoIsotopicMass
@@ -792,7 +792,7 @@ namespace pwiz.Skyline.Model
                 if (Formula.IsMassOnly && !Formula.IsEmpty)
                 {
                     // BioMassCalc parser will accept a mass-only formula, but we don't want to allow that here
-                    throw new ArgumentException(BioMassCalcBase.FormatArgumentExceptionMessage(formula));
+                    throw new ArgumentException(BioMassCalc.FormatArgumentExceptionMessage(formula));
                 }
             }
 
@@ -1654,7 +1654,7 @@ namespace pwiz.Skyline.Model
                     {
                         Column = indexNeutralLoss,
                         Line = row.Index,
-                        Message = BioMassCalcBase.FormatArgumentExceptionMessage(neutralLoss)
+                        Message = BioMassCalc.FormatArgumentExceptionMessage(neutralLoss)
                     });
                     return false;
                 }

@@ -1365,7 +1365,7 @@ namespace pwiz.Skyline.Model.Serialization
                 {
                     var ion = precursorAdduct.ApplyToFormula(neutralFormula);
                     var moleculeWithAdduct = precursorAdduct.ApplyToMolecule(peptide.CustomMolecule.MoleculeAndMassOffset);
-                    Assume.IsTrue(ion.CompareTolerant(moleculeWithAdduct, BioMassCalcBase.MassTolerance) == 0, @"Expected precursor ion formula to match parent molecule with adduct applied");
+                    Assume.IsTrue(ion.CompareTolerant(moleculeWithAdduct, BioMassCalc.MassTolerance) == 0, @"Expected precursor ion formula to match parent molecule with adduct applied");
                 }
             }
             var group = new TransitionGroup(peptide, precursorAdduct, typedMods.LabelType, false, decoyMassShift);

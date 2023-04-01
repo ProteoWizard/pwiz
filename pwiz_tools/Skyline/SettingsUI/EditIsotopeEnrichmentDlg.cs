@@ -38,7 +38,6 @@ namespace pwiz.Skyline.SettingsUI
         private static readonly IList<KeyValuePair<string, string>> LIST_NAME_SYMBOL =
             new[]
                 {
-                    // ReSharper disable AccessToStaticMemberViaDerivedType
                     new KeyValuePair<string, string>(@"2H", BioMassCalc.H2),
                     new KeyValuePair<string, string>(@"13C", BioMassCalc.C13),
                     new KeyValuePair<string, string>(@"15N", BioMassCalc.N15),
@@ -48,7 +47,6 @@ namespace pwiz.Skyline.SettingsUI
 //                    new KeyValuePair<string, string>(@"37Cl", BioMassCalc.Cl37),
 //                    new KeyValuePair<string, string>(@"81Br", BioMassCalc.Br81),
 //                    new KeyValuePair<string, string>(@"14C", BioMassCalc.C14),
-                    // ReSharper restore AccessToStaticMemberViaDerivedType
                 };
 
         private IsotopeEnrichments _enrichments;
@@ -89,7 +87,7 @@ namespace pwiz.Skyline.SettingsUI
                             Equals(e.IsotopeSymbol, isotopeSymbol));
                         enrichmentValue = iEnrichment != -1
                             ? _enrichments.Enrichments[iEnrichment].AtomPercentEnrichment
-                            : BioMassCalcBase.GetIsotopeEnrichmentDefault(isotopeSymbol);
+                            : BioMassCalc.GetIsotopeEnrichmentDefault(isotopeSymbol);
                     }
                     row.Cells[COL_ENRICHMENT].Value = enrichmentValue.HasValue
                         ? (enrichmentValue.Value * 100).ToString(LocalizationHelper.CurrentCulture)

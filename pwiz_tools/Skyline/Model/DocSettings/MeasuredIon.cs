@@ -268,8 +268,8 @@ namespace pwiz.Skyline.Model.DocSettings
                     if (parsedIon.MoleculeAndMassOffset.IsMassOnly) // Adjust the user-supplied masses
                     {
                         SettingsCustomIon = new SettingsCustomIon(string.Empty, adduct,
-                            Math.Round(parsedIon.MonoisotopicMass + charges[0]*BioMassCalc.MONOISOTOPIC.GetMass(BioMassCalcBase.H), SequenceMassCalc.MassPrecision), // Assume user provided neutral mass.  Round new value easiest XML roundtripping.
-                            Math.Round(parsedIon.AverageMass + charges[0]*BioMassCalc.AVERAGE.GetMass(BioMassCalcBase.H), SequenceMassCalc.MassPrecision), // Assume user provided neutral mass.  Round new value easiest XML roundtripping.
+                            Math.Round(parsedIon.MonoisotopicMass + charges[0]*BioMassCalc.MONOISOTOPIC.GetMass(BioMassCalc.H), SequenceMassCalc.MassPrecision), // Assume user provided neutral mass.  Round new value easiest XML roundtripping.
+                            Math.Round(parsedIon.AverageMass + charges[0]*BioMassCalc.AVERAGE.GetMass(BioMassCalc.H), SequenceMassCalc.MassPrecision), // Assume user provided neutral mass.  Round new value easiest XML roundtripping.
                             parsedIon.Name);
                     }
                     else // Adjust the formula to include ion atoms

@@ -142,8 +142,8 @@ namespace pwiz.Common.Chemistry
                 }
 
                 // Cache the total mass
-                _totalMassMonoisotopic = BioMassCalcBase.MONO.GetChemicalMass(_dict);
-                _totalMassAverage = BioMassCalcBase.AVG.GetChemicalMass(_dict);
+                _totalMassMonoisotopic = BioMassCalc.MONOISOTOPIC.GetChemicalMass(_dict);
+                _totalMassAverage = BioMassCalc.AVERAGE.GetChemicalMass(_dict);
             }
         }
 
@@ -240,7 +240,7 @@ namespace pwiz.Common.Chemistry
                 }
                 else if ((currentQuantity??0) != 0) // Input was something like "123" or "5C12H"
                 {
-                    throw new ArgumentException(BioMassCalcBase.FormatArgumentExceptionMessage(formula));
+                    throw new ArgumentException(BioMassCalc.FormatArgumentExceptionMessage(formula));
                 }
             }
 
@@ -393,7 +393,7 @@ namespace pwiz.Common.Chemistry
 
         public bool HasElement(string element) => Dictionary.ContainsKey(element);
 
-        public bool HasIsotopes() => Dictionary.Keys.Any(k => BioMassCalcBase.DICT_HEAVYSYMBOL_TO_MONOSYMBOL.ContainsKey(k));
+        public bool HasIsotopes() => Dictionary.Keys.Any(k => BioMassCalc.DICT_HEAVYSYMBOL_TO_MONOSYMBOL.ContainsKey(k));
 
         // For use in ToString(), try to emit the formula string in a sensible order
         private class ElementOrderComparer : IComparer<string>
@@ -420,7 +420,7 @@ namespace pwiz.Common.Chemistry
                         {
                             _elementOrder[m.Value] = _elementOrder.Count;
                         }
-                        _hasIsotopesInOrderHint |= BioMassCalcBase.DICT_HEAVYSYMBOL_TO_MONOSYMBOL.ContainsKey(m.Value);
+                        _hasIsotopesInOrderHint |= BioMassCalc.DICT_HEAVYSYMBOL_TO_MONOSYMBOL.ContainsKey(m.Value);
                     }
                     _checkIsotopes = true;
                 }
@@ -444,7 +444,7 @@ namespace pwiz.Common.Chemistry
                 }
 
                 // Maybe it was an isotope that got changed to light e.g. original string was C'2 but now dictionary holds C2
-                if (BioMassCalcBase.DICT_HEAVYSYMBOL_TO_MONOSYMBOL.TryGetValue(element, out var light))
+                if (BioMassCalc.DICT_HEAVYSYMBOL_TO_MONOSYMBOL.TryGetValue(element, out var light))
                 {
                     if (_elementOrder.TryGetValue(light, out order))
                     {
@@ -456,7 +456,7 @@ namespace pwiz.Common.Chemistry
                 {
                     // Maybe it was a light that got changed to an isotope  e.g. original string was C2 but now dictionary holds C"2
                     foreach (var kvp in
-                             BioMassCalcBase.DICT_HEAVYSYMBOL_TO_MONOSYMBOL.Where(kvp => Equals(kvp.Value, element)))
+                             BioMassCalc.DICT_HEAVYSYMBOL_TO_MONOSYMBOL.Where(kvp => Equals(kvp.Value, element)))
                     {
                         if (_elementOrder.TryGetValue(kvp.Key, out order))
                         {
@@ -476,11 +476,11 @@ namespace pwiz.Common.Chemistry
                 if (xOrder == yOrder)
                 {
                     // Either they're isotopes of each other (e.g. H and H'), or two elements that weren't in the ordered list at all
-                    if (BioMassCalcBase.ElementIsIsotopeOf(xElement, yElement))
+                    if (BioMassCalc.ElementIsIsotopeOf(xElement, yElement))
                     {
                         return 1; // X is an isotope of Y, so X should appear after Y in output string
                     }
-                    if (BioMassCalcBase.ElementIsIsotopeOf(yElement, xElement))
+                    if (BioMassCalc.ElementIsIsotopeOf(yElement, xElement))
                     {
                         return -1; // Y is an isotope of X, so Y should appear after X in output string
                     }
@@ -579,7 +579,7 @@ namespace pwiz.Common.Chemistry
 
         public virtual Molecule StripIsotopicLabels()
         {
-            var stripped = BioMassCalcBase.StripLabelsFromFormula(Dictionary);
+            var stripped = BioMassCalc.StripLabelsFromFormula(Dictionary);
 
             return ChangeFormula(stripped);
         }

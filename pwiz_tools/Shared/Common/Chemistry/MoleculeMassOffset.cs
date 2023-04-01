@@ -161,7 +161,7 @@ namespace pwiz.Common.Chemistry
             AverageMassOffset = averageMassOffset;
         }
 
-        public bool IsHeavy() => Keys.Any(BioMassCalcBase.ContainsIsotopicElement) || MonoMassOffset.IsHeavy();
+        public bool IsHeavy() => Keys.Any(BioMassCalc.ContainsIsotopicElement) || MonoMassOffset.IsHeavy();
 
         public MoleculeMassOffset ChangeFormulaAndMassOffset(IDictionary<string, int> dict, TypedMass monoMassOffset, TypedMass averageMassOffset)
         {
@@ -364,6 +364,8 @@ namespace pwiz.Common.Chemistry
         public static bool IsNullOrEmpty(MoleculeMassOffset moleculeMassOffset) =>
             moleculeMassOffset == null || moleculeMassOffset.IsEmpty;
 
+        public bool HasChemicalFormula => Count != 0;
+
         public bool IsMassOnly => Count == 0;
 
         public bool HasMassModifications => MonoMassOffset != 0;
@@ -422,13 +424,13 @@ namespace pwiz.Common.Chemistry
 
         // N.B. The mass portion is always written with InvariantCulture.
 
-        public static string FormatMassModification(double massMod, int desiredDecimals = BioMassCalcBase.MassPrecision)
+        public static string FormatMassModification(double massMod, int desiredDecimals = BioMassCalc.MassPrecision)
         {
             var sign = massMod > 0 ? @"+" : string.Empty;
             return string.Format($@"[{sign}{massMod.ToString($"F{desiredDecimals}", CultureInfo.InvariantCulture).TrimEnd('0')}]");
         }
 
-        public static string FormatMassModification(double massModMono, double massModAverage, int desiredDecimals = BioMassCalcBase.MassPrecision)
+        public static string FormatMassModification(double massModMono, double massModAverage, int desiredDecimals = BioMassCalc.MassPrecision)
         {
             if (Equals(massModMono, massModAverage))
             {
@@ -446,12 +448,12 @@ namespace pwiz.Common.Chemistry
 
         public override string ToDisplayString()
         {
-            return ToString(BioMassCalcBase.MassPrecision);
+            return ToString(BioMassCalc.MassPrecision);
         }
 
         public override string ToString()
         {
-            return ToString(BioMassCalcBase.MassPrecision);
+            return ToString(BioMassCalc.MassPrecision);
         }
 
         public string ToString(int desiredDigits)

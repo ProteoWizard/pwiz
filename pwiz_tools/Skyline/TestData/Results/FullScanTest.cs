@@ -445,10 +445,10 @@ namespace pwiz.SkylineTestData.Results
             Assert.IsFalse(docSM.MoleculeTransitionGroups.Any(nodeGroup => nodeGroup.IsotopeDist != null));
             AssertEx.Serializable(docSM, AssertEx.Cloned);
 
-            double c13Delta = BioMassCalc.MONOISOTOPIC.GetMass(BioMassCalcBase.C13) -
-                              BioMassCalc.MONOISOTOPIC.GetMass(BioMassCalcBase.C);
-            double n15Delta = BioMassCalc.MONOISOTOPIC.GetMass(BioMassCalcBase.N15) -
-                              BioMassCalc.MONOISOTOPIC.GetMass(BioMassCalcBase.N);
+            double c13Delta = BioMassCalc.MONOISOTOPIC.GetMass(BioMassCalc.C13) -
+                              BioMassCalc.MONOISOTOPIC.GetMass(BioMassCalc.C);
+            double n15Delta = BioMassCalc.MONOISOTOPIC.GetMass(BioMassCalc.N15) -
+                              BioMassCalc.MONOISOTOPIC.GetMass(BioMassCalc.N);
 
             // Verify isotope distributions calculated when MS1 filtering enabled
             var enrichments = IsotopeEnrichmentsList.DEFAULT;
@@ -473,7 +473,7 @@ namespace pwiz.SkylineTestData.Results
 
                 Assert.AreEqual(nodeGroup.PrecursorMz, nodeGroup.IsotopeDist.GetMZI(0), SequenceMassCalc.MassTolerance);
                 Assert.AreEqual(nodeGroup.PrecursorMz, nodeGroup.TransitionGroup.IsCustomIon ?
-                                BioMassCalc.CalculateIonMz(nodeGroup.IsotopeDist.GetMassI(0),
+                                SkylineBioMassCalc.CalculateIonMz(nodeGroup.IsotopeDist.GetMassI(0),
                                                        nodeGroup.TransitionGroup.PrecursorAdduct.Unlabeled) :
                                 SequenceMassCalc.GetMZ(nodeGroup.IsotopeDist.GetMassI(0),
                                                        nodeGroup.TransitionGroup.PrecursorAdduct), SequenceMassCalc.MassTolerance);
@@ -567,7 +567,7 @@ namespace pwiz.SkylineTestData.Results
             AssertEx.Serializable(docIsotopesP2, AssertEx.Cloned);
 
             // Use lower enrichment of 13C, and verify that this add M-1 for 13C labeled precursors
-            var enrichmentsLow13C = enrichments.ChangeEnrichment(new IsotopeEnrichmentItem(BioMassCalcBase.C13, 0.9));
+            var enrichmentsLow13C = enrichments.ChangeEnrichment(new IsotopeEnrichmentItem(BioMassCalc.C13, 0.9));
             var docIsotopesLow13C = docIsotopesP1.ChangeSettings(docIsotopesP1.Settings.ChangeTransitionFullScan(fs =>
                 fs.ChangePrecursorIsotopes(FullScanPrecursorIsotopes.Percent, minPercent2, enrichmentsLow13C)));
             tranGroupsNew = docIsotopesLow13C.MoleculeTransitionGroups.ToArray();
@@ -585,7 +585,7 @@ namespace pwiz.SkylineTestData.Results
             AssertEx.Serializable(docIsotopesLow13C, AssertEx.Cloned); // Express any failure as XML diffs
 
             // Use 0%, and check that everything has M-1 and lower
-            var enrichmentsLow = enrichmentsLow13C.ChangeEnrichment(new IsotopeEnrichmentItem(BioMassCalcBase.N15, 0.97));
+            var enrichmentsLow = enrichmentsLow13C.ChangeEnrichment(new IsotopeEnrichmentItem(BioMassCalc.N15, 0.97));
             var docIsotopesLowP0 = docIsotopesP1.ChangeSettings(docIsotopesP1.Settings.ChangeTransitionFullScan(fs =>
                 fs.ChangePrecursorIsotopes(FullScanPrecursorIsotopes.Percent, 0, enrichmentsLow)));
             docCheckPoints.Add(docIsotopesLowP0);

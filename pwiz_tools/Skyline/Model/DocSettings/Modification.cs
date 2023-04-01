@@ -207,7 +207,6 @@ namespace pwiz.Skyline.Model.DocSettings
             return new StaticMod();
         }
 
-        // ReSharper disable AccessToStaticMemberViaDerivedType
         public double IonLabelMassDiff
         {
             get
@@ -257,7 +256,6 @@ namespace pwiz.Skyline.Model.DocSettings
                 return names;
             }
         }
-        // ReSharper restore AccessToStaticMemberViaDerivedType
 
         [Track(defaultValues: typeof(DefaultValuesRelativeRtMatching))]
         public RelativeRT RelativeRT { get; private set; }

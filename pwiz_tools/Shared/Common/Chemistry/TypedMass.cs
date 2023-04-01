@@ -91,8 +91,8 @@ namespace pwiz.Common.Chemistry
         {
             if (IsMassH() != other.IsMassH())
             {
-                var adjust = IsMassH() ? - BioMassCalcBase.MassProton : BioMassCalcBase.MassProton;
-                return Math.Abs(_value + adjust - other.Value) < BioMassCalcBase.MassElectron;
+                var adjust = IsMassH() ? - BioMassCalc.MassProton : BioMassCalc.MassProton;
+                return Math.Abs(_value + adjust - other.Value) < BioMassCalc.MassElectron;
             }
             return Equals(other); // Can't lead with this, as it will throw if IsMassH doesn't agree
         }
