@@ -21,6 +21,7 @@ using System.Collections.Generic;
 using System.IO;
 using System.Linq;
 using Microsoft.VisualStudio.TestTools.UnitTesting;
+using pwiz.Common.Chemistry;
 using pwiz.Skyline.Model;
 using pwiz.Skyline.Model.DocSettings;
 using pwiz.Skyline.Model.Results;
@@ -472,7 +473,7 @@ namespace pwiz.SkylineTestData.Results
 
                 Assert.AreEqual(nodeGroup.PrecursorMz, nodeGroup.IsotopeDist.GetMZI(0), SequenceMassCalc.MassTolerance);
                 Assert.AreEqual(nodeGroup.PrecursorMz, nodeGroup.TransitionGroup.IsCustomIon ?
-                                BioMassCalc.CalculateIonMz(nodeGroup.IsotopeDist.GetMassI(0),
+                                SkylineBioMassCalc.CalculateIonMz(nodeGroup.IsotopeDist.GetMassI(0),
                                                        nodeGroup.TransitionGroup.PrecursorAdduct.Unlabeled) :
                                 SequenceMassCalc.GetMZ(nodeGroup.IsotopeDist.GetMassI(0),
                                                        nodeGroup.TransitionGroup.PrecursorAdduct), SequenceMassCalc.MassTolerance);

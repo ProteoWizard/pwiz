@@ -1118,7 +1118,7 @@ namespace TestRunnerLib
 
             p?.WaitForExit();
             if (p == null || p.ExitCode != 0)
-                throw new InvalidOperationException($"{message}\r\n\r\nDetails:\r\n'{command} {args}' returned an error ({output.ToString().Trim()});");
+                throw new InvalidOperationException($"{message}\r\n\r\nDetails:\r\n'\"{command}\" {args}' returned an error ({output.ToString().Trim()});");
              
             return output.ToString();
         }

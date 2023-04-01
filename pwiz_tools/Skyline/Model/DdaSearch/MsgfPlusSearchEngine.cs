@@ -238,7 +238,7 @@ namespace pwiz.Skyline.Model.DdaSearch
                         continue;
 
                     // can't use mod with no formula or mass; CONSIDER throwing exception
-                    if (mod.LabelAtoms == LabelAtoms.None && mod.Formula == null && mod.MonoisotopicMass == null ||
+                    if (mod.LabelAtoms == LabelAtoms.None && mod.Molecule == null && mod.MonoisotopicMass == null ||
                         mod.LabelAtoms != LabelAtoms.None && mod.AAs.IsNullOrEmpty())
                         continue;
 
@@ -273,7 +273,11 @@ namespace pwiz.Skyline.Model.DdaSearch
                         }
                     }
                     else
-                        addMod(mod.Formula ?? mod.MonoisotopicMass.ToString(), mod.AAs ?? @"*");
+                    {
+                        // ReSharper disable once PossibleNullReferenceException
+                        var modString = Molecule.IsNullOrEmpty(mod.Molecule) ? null : mod.Molecule.ToString();
+                        addMod(modString ?? mod.MonoisotopicMass.ToString(), mod.AAs ?? @"*");
+                    }
                 }
             }
         }

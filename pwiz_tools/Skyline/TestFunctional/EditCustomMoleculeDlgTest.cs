@@ -163,7 +163,7 @@ namespace pwiz.SkylineTestFunctional
                 Assert.AreEqual(COOO13H, editMoleculeDlg.NameText);
                 editMoleculeDlg.NameText = nameText;  // Simulate user changing the name
                 Assert.AreEqual(COOO13H, editMoleculeDlg.FormulaBox.NeutralFormula); // Comes from the docnode
-                Assert.AreEqual(BioMassCalc.MONOISOTOPIC.CalculateMassFromFormula(COOO13H), editMoleculeDlg.FormulaBox.MonoMass ?? -1, massPrecisionTolerance);
+                Assert.AreEqual(SkylineBioMassCalc.MONOISOTOPIC.CalculateMassFromFormula(COOO13H), editMoleculeDlg.FormulaBox.MonoMass ?? -1, massPrecisionTolerance);
                 Assert.AreEqual(BioMassCalc.AVERAGE.CalculateMassFromFormula(COOO13H), editMoleculeDlg.FormulaBox.AverageMass ?? -1, massPrecisionTolerance);
                 // Now try something crazy
                 editMoleculeDlg.FormulaBox.Formula = "H500000000";
@@ -424,7 +424,7 @@ namespace pwiz.SkylineTestFunctional
             var editMoleculeDlg =
                 ShowDialog<EditCustomMoleculeDlg>(
                     () => SkylineWindow.ModifyTransition((TransitionTreeNode) SkylineWindow.SequenceTree.SelectedNode));
-            var monoMass = new TypedMass(805, MassType.Monoisotopic);
+            var monoMass = TypedMass.Create(805, MassType.Monoisotopic);
             RunUI(() =>
             {
                 // Check neutral mass calculation
@@ -464,7 +464,7 @@ namespace pwiz.SkylineTestFunctional
             OkDialog(editMoleculeDlg,editMoleculeDlg.OkDialog);
             var newdoc = WaitForDocumentChange(doc);
             Assert.AreEqual("Fragment", newdoc.MoleculeTransitions.ElementAt(0).Transition.CustomIon.ToString());
-            Assert.AreEqual(BioMassCalc.CalculateIonMz(monoMass, editMoleculeDlg.Adduct), newdoc.MoleculeTransitions.ElementAt(0).Mz, massPrecisionTolerance);
+            Assert.AreEqual(SkylineBioMassCalc.CalculateIonMz(monoMass, editMoleculeDlg.Adduct), newdoc.MoleculeTransitions.ElementAt(0).Mz, massPrecisionTolerance);
             Assert.IsFalse(ReferenceEquals(doc.MoleculeTransitions.ElementAt(0).Id, newdoc.MoleculeTransitions.ElementAt(0).Id)); // Changing the mass changes the Id
 
             // Verify that the explicitly set drift time overrides any calculations
@@ -487,12 +487,12 @@ namespace pwiz.SkylineTestFunctional
             RunUI(() => SkylineWindow.Undo());
             newdoc = WaitForDocumentChange(newdoc);
             Assert.AreNotEqual("Fragment", newdoc.MoleculeTransitions.ElementAt(0).Transition.CustomIon.ToString());
-            Assert.AreNotEqual(BioMassCalc.CalculateIonMz(monoMass, editMoleculeDlg.Adduct), newdoc.MoleculeTransitions.ElementAt(0).Mz, massPrecisionTolerance);
+            Assert.AreNotEqual(SkylineBioMassCalc.CalculateIonMz(monoMass, editMoleculeDlg.Adduct), newdoc.MoleculeTransitions.ElementAt(0).Mz, massPrecisionTolerance);
             Assert.IsTrue(ReferenceEquals(doc.MoleculeTransitions.ElementAt(0).Id, newdoc.MoleculeTransitions.ElementAt(0).Id));
             RunUI(() => SkylineWindow.Redo());
             newdoc = WaitForDocumentChange(newdoc);
             Assert.AreEqual("Fragment", newdoc.MoleculeTransitions.ElementAt(0).Transition.CustomIon.ToString());
-            Assert.AreEqual(BioMassCalc.CalculateIonMz(monoMass, editMoleculeDlg.Adduct), newdoc.MoleculeTransitions.ElementAt(0).Mz, massPrecisionTolerance);
+            Assert.AreEqual(SkylineBioMassCalc.CalculateIonMz(monoMass, editMoleculeDlg.Adduct), newdoc.MoleculeTransitions.ElementAt(0).Mz, massPrecisionTolerance);
 
             // Verify that tree selection doesn't change just because we changed an ID object
             // (formerly the tree node would collapse and focus would jump up a level)
@@ -533,15 +533,15 @@ namespace pwiz.SkylineTestFunctional
             var editMoleculeDlg =
                 ShowDialog<EditCustomMoleculeDlg>(
                     () => SkylineWindow.ModifyTransition((TransitionTreeNode)SkylineWindow.SequenceTree.SelectedNode));
-            var monoMass = new TypedMass(805, MassType.Monoisotopic);
+            var monoMass = TypedMass.Create(805, MassType.Monoisotopic);
             RunUI(() =>
             {
                 Assert.AreEqual(BioMassCalc.MONOISOTOPIC.CalculateMassFromFormula(C12H12),
                     editMoleculeDlg.FormulaBox.MonoMass ?? -1, massPrecisionTolerance);
                 Assert.AreEqual(BioMassCalc.AVERAGE.CalculateMassFromFormula(C12H12),
                     editMoleculeDlg.FormulaBox.AverageMass ?? -1, massPrecisionTolerance);
-                Assert.AreEqual(BioMassCalc.CalculateIonMz(BioMassCalc.MONOISOTOPIC.CalculateMassFromFormula(C12H12), editMoleculeDlg.Adduct), double.Parse(editMoleculeDlg.FormulaBox.MonoText), massPrecisionTolerance);
-                Assert.AreEqual(BioMassCalc.CalculateIonMz(BioMassCalc.AVERAGE.CalculateMassFromFormula(C12H12), editMoleculeDlg.Adduct), double.Parse(editMoleculeDlg.FormulaBox.AverageText), massPrecisionTolerance);
+                Assert.AreEqual(SkylineBioMassCalc.CalculateIonMz(BioMassCalc.MONOISOTOPIC.CalculateMassFromFormula(C12H12), editMoleculeDlg.Adduct), double.Parse(editMoleculeDlg.FormulaBox.MonoText), massPrecisionTolerance);
+                Assert.AreEqual(SkylineBioMassCalc.CalculateIonMz(BioMassCalc.AVERAGE.CalculateMassFromFormula(C12H12), editMoleculeDlg.Adduct), double.Parse(editMoleculeDlg.FormulaBox.AverageText), massPrecisionTolerance);
 
                 Assert.AreEqual(Adduct.M_PLUS.AdductFormula, editMoleculeDlg.FormulaBox.Adduct.AdductFormula);
                 editMoleculeDlg.FormulaBox.AverageMass = 800;
@@ -551,7 +551,7 @@ namespace pwiz.SkylineTestFunctional
             OkDialog(editMoleculeDlg, editMoleculeDlg.OkDialog);
             var newdoc = WaitForDocumentChange(doc);
             Assert.AreEqual("Fragment", newdoc.MoleculeTransitions.ElementAt(0).Transition.CustomIon.ToString());
-            Assert.AreEqual(BioMassCalc.CalculateIonMz(monoMass, editMoleculeDlg.Adduct), newdoc.MoleculeTransitions.ElementAt(0).Mz, massPrecisionTolerance);
+            Assert.AreEqual(SkylineBioMassCalc.CalculateIonMz(monoMass, editMoleculeDlg.Adduct), newdoc.MoleculeTransitions.ElementAt(0).Mz, massPrecisionTolerance);
             Assert.IsFalse(ReferenceEquals(doc.MoleculeTransitions.ElementAt(0).Id, newdoc.MoleculeTransitions.ElementAt(0).Id)); // Changing the mass changes the Id
 
             // Verify that tree selection doesn't change just because we changed an ID object
@@ -565,12 +565,12 @@ namespace pwiz.SkylineTestFunctional
             RunUI(() => SkylineWindow.Undo());
             newdoc = WaitForDocumentChange(newdoc);
             Assert.AreNotEqual("Fragment", newdoc.MoleculeTransitions.ElementAt(0).Transition.CustomIon.ToString());
-            Assert.AreNotEqual(BioMassCalc.CalculateIonMz(monoMass, editMoleculeDlg.Adduct), newdoc.MoleculeTransitions.ElementAt(0).Mz, massPrecisionTolerance);
+            Assert.AreNotEqual(SkylineBioMassCalc.CalculateIonMz(monoMass, editMoleculeDlg.Adduct), newdoc.MoleculeTransitions.ElementAt(0).Mz, massPrecisionTolerance);
             Assert.IsTrue(ReferenceEquals(doc.MoleculeTransitions.ElementAt(0).Id, newdoc.MoleculeTransitions.ElementAt(0).Id));
             RunUI(() => SkylineWindow.Redo());
             newdoc = WaitForDocumentChange(newdoc);
             Assert.AreEqual("Fragment", newdoc.MoleculeTransitions.ElementAt(0).Transition.CustomIon.ToString());
-            Assert.AreEqual(BioMassCalc.CalculateIonMz(monoMass, editMoleculeDlg.Adduct), newdoc.MoleculeTransitions.ElementAt(0).Mz, massPrecisionTolerance);
+            Assert.AreEqual(SkylineBioMassCalc.CalculateIonMz(monoMass, editMoleculeDlg.Adduct), newdoc.MoleculeTransitions.ElementAt(0).Mz, massPrecisionTolerance);
 
             // Verify that tree selection doesn't change just because we changed an ID object
             // (formerly the tree node would collapse and focus would jump up a level)
@@ -696,10 +696,10 @@ namespace pwiz.SkylineTestFunctional
                 Assert.AreEqual(
                     Math.Round(BioMassCalc.AVERAGE.CalculateMassFromFormula(C12H12), SequenceMassCalc.MassPrecision),
                     average);
-                Assert.AreEqual(BioMassCalc.MONOISOTOPIC.CalculateIonMz(C12H12, editMoleculeDlg.Adduct),
+                Assert.AreEqual(SkylineBioMassCalc.MONOISOTOPIC.CalculateIonMz(C12H12, editMoleculeDlg.Adduct),
                     mono + BioMassCalc.MassProton,
                     massPrecisionTolerance);
-                Assert.AreEqual(BioMassCalc.AVERAGE.CalculateIonMz(C12H12, editMoleculeDlg.Adduct),
+                Assert.AreEqual(SkylineBioMassCalc.AVERAGE.CalculateIonMz(C12H12, editMoleculeDlg.Adduct),
                     average + BioMassCalc.MassProton,
                     massPrecisionTolerance);
                 editMoleculeDlg.Adduct = Adduct.NonProteomicProtonatedFromCharge(-1);  // Validate negative charges
@@ -709,10 +709,10 @@ namespace pwiz.SkylineTestFunctional
                 Assert.AreEqual(
                     Math.Round(BioMassCalc.AVERAGE.CalculateMassFromFormula(C12H12), SequenceMassCalc.MassPrecision),
                     average);
-                Assert.AreEqual(BioMassCalc.MONOISOTOPIC.CalculateIonMz(C12H12, editMoleculeDlg.Adduct),
+                Assert.AreEqual(SkylineBioMassCalc.MONOISOTOPIC.CalculateIonMz(C12H12, editMoleculeDlg.Adduct),
                     mono - BioMassCalc.MassProton,
                     massPrecisionTolerance);
-                Assert.AreEqual(BioMassCalc.AVERAGE.CalculateIonMz(C12H12, editMoleculeDlg.Adduct),
+                Assert.AreEqual(SkylineBioMassCalc.AVERAGE.CalculateIonMz(C12H12, editMoleculeDlg.Adduct),
                     average - BioMassCalc.MassProton,
                     massPrecisionTolerance);
 
@@ -759,7 +759,7 @@ namespace pwiz.SkylineTestFunctional
             Assert.AreEqual(compareIon, newDoc.Molecules.ElementAt(0).CustomMolecule);
             Assert.AreEqual(compareIon, newDoc.MoleculeTransitionGroups.ElementAt(0).CustomMolecule);
             Assert.AreEqual(adduct.AdductCharge, newDoc.MoleculeTransitionGroups.ElementAt(0).PrecursorCharge);
-            var predictedMz = BioMassCalc.MONOISOTOPIC.CalculateIonMz(COOO13H, adduct);
+            var predictedMz = SkylineBioMassCalc.MONOISOTOPIC.CalculateIonMz(COOO13H, adduct);
             var actualMz = newDoc.MoleculeTransitionGroups.ElementAt(0).PrecursorMz;
             Assert.AreEqual(predictedMz, actualMz, Math.Pow(10, -SequenceMassCalc.MassPrecision));
         }
@@ -788,11 +788,11 @@ namespace pwiz.SkylineTestFunctional
             });
             OkDialog(editMoleculeDlg, editMoleculeDlg.OkDialog);
             var newDoc = WaitForDocumentChange(doc);
-            var compareIon = new CustomMolecule(new TypedMass(monoMass, MassType.Monoisotopic), new TypedMass(averageMass, MassType.Average), formula);
+            var compareIon = new CustomMolecule(TypedMass.Create(monoMass, MassType.Monoisotopic), TypedMass.Create(averageMass, MassType.Average), formula);
             Assert.AreEqual(compareIon, newDoc.Molecules.ElementAt(0).CustomMolecule);
             Assert.AreEqual(compareIon, newDoc.MoleculeTransitionGroups.ElementAt(0).CustomMolecule);
             Assert.AreEqual(adduct.AdductCharge, newDoc.MoleculeTransitionGroups.ElementAt(0).PrecursorCharge);
-            var predictedMz = BioMassCalc.MONOISOTOPIC.CalculateIonMz(formula, adduct);
+            var predictedMz = SkylineBioMassCalc.MONOISOTOPIC.CalculateIonMz(formula, adduct);
             var actualMz = newDoc.MoleculeTransitionGroups.ElementAt(0).PrecursorMz;
             Assert.AreEqual(predictedMz, actualMz, Math.Pow(10, -SequenceMassCalc.MassPrecision));
         }
@@ -824,7 +824,7 @@ namespace pwiz.SkylineTestFunctional
             newDoc = WaitForDocumentChange(newDoc);
 
             Assert.AreEqual(adduct, newDoc.MoleculeTransitionGroups.ElementAt(1).TransitionGroup.PrecursorAdduct);
-            var predictedMz = BioMassCalc.MONOISOTOPIC.CalculateIonMz(COOO13H, adduct);
+            var predictedMz = SkylineBioMassCalc.MONOISOTOPIC.CalculateIonMz(COOO13H, adduct);
             var actualMz = newDoc.MoleculeTransitionGroups.ElementAt(1).PrecursorMz;
             Assert.AreEqual(predictedMz, actualMz, Math.Pow(10, -SequenceMassCalc.MassPrecision));
 

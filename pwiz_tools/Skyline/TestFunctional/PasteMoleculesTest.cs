@@ -135,6 +135,7 @@ namespace pwiz.SkylineTestFunctional
         protected override void DoTest()
         {
             var docEmpty = NewDocument();
+            TestErrors();
             TestFormulaWithAtomCountZero();
             TestIrregularColumnCounts();
             TestMissingAccessionNumbers();
@@ -163,253 +164,8 @@ namespace pwiz.SkylineTestFunctional
             TestFullyDescribedPrecursors();
             TestTransitionListArrangementAndReporting();
 
-            // Load a document whose settings understand heavy labeling
-            RunUI(() => SkylineWindow.OpenFile(TestFilesDir.GetTestPath("heavy.sky"))); 
-
-            var fullColumnOrder = new[]
-                {
-                    Resources.ImportTransitionListColumnSelectDlg_ComboChanged_Molecule_List_Name,
-                    Resources.ImportTransitionListColumnSelectDlg_ComboChanged_Molecule_Name,
-                    Resources.PasteDlg_UpdateMoleculeType_Product_Name,
-                    Resources.ImportTransitionListColumnSelectDlg_headerList_Molecular_Formula,
-                    Resources.PasteDlg_UpdateMoleculeType_Product_Formula,
-                    Resources.ImportTransitionListColumnSelectDlg_PopulateComboBoxes_Precursor_m_z,
-                    Resources.ImportTransitionListColumnSelectDlg_PopulateComboBoxes_Product_m_z,
-                    Resources.ImportTransitionListColumnSelectDlg_PopulateComboBoxes_Precursor_Charge,
-                    Resources.PasteDlg_UpdateMoleculeType_Product_Charge,
-                    Resources.ImportTransitionListColumnSelectDlg_PopulateComboBoxes_Label_Type,
-                    Resources.PasteDlg_UpdateMoleculeType_Explicit_Retention_Time,
-                    Resources.PasteDlg_UpdateMoleculeType_Explicit_Retention_Time_Window,
-                    Resources.PasteDlg_UpdateMoleculeType_Explicit_Collision_Energy,
-                    Resources.PasteDlg_UpdateMoleculeType_Note,
-                    Resources.PasteDlg_UpdateMoleculeType_Precursor_Adduct,
-                    Resources.PasteDlg_UpdateMoleculeType_Product_Adduct,
-                    Resources.ImportTransitionListColumnSelectDlg_PopulateComboBoxes_Ignore_Column, // Drift time columns are now obsolete
-                    Resources.ImportTransitionListColumnSelectDlg_PopulateComboBoxes_Ignore_Column, // Drift time columns are now obsolete
-                    Resources.PasteDlg_UpdateMoleculeType_Explicit_Collision_Cross_Section__sq_A_,
-                    Resources.PasteDlg_UpdateMoleculeType_S_Lens,
-                    Resources.PasteDlg_UpdateMoleculeType_Cone_Voltage,
-                    Resources.PasteDlg_UpdateMoleculeType_Explicit_Compensation_Voltage,
-                    Resources.ImportTransitionListColumnSelectDlg_ComboChanged_Explicit_Declustering_Potential,
-                    @"InChiKey",
-                    @"HMDB",
-                    @"InChi",
-                    @"CAS",
-                    @"SMILES",
-                    @"KEGG",
-                    Resources.PasteDlg_UpdateMoleculeType_Explicit_Ion_Mobility,
-                    Resources.PasteDlg_UpdateMoleculeType_Explicit_Ion_Mobility_High_Energy_Offset,
-                    Resources.PasteDlg_UpdateMoleculeType_Explicit_Ion_Mobility_Units,
-                    Resources.PasteDlg_UpdateMoleculeType_Product_Neutral_Loss,
-                };
-
-            // Default col order is listname, preName, PreFormula, preAdduct, preMz, preCharge, prodName, ProdFormula, prodAdduct, prodMz, prodCharge
-            var line1 = BuildTestLine(true);
-            const string line2start = "\r\nMyMolecule2\tMyMol2\tMyFrag2\tCH12O4\tCH3O\t";
-            const string line3 = "\r\nMyMolecule2\tMyMol2\tMyFrag2\tCH12O4\tCHH500000000\t\t\t1\t1";
-            const string line4 = "\r\nMyMolecule3\tMyMol3\tMyFrag3\tH2\tH\t\t\t1\t1";
-            string line5 = line1.Replace(caffeineFormula,"C8H12N4O2[M-2H]").Replace(caffeineFragment,"C34H32").Replace(note + "\t\t\t", note + "\t\tM-2H\t"); // Legit
-            string line6 = line1.Replace(caffeineFormula, "").Replace(caffeineFragment, "").Replace(note + "\t\t\t", note + "\t\tM-3H\t"); // mz only, but charge and adduct disagree
-
-            // Provoke some errors
-            TestError(line1.Replace("\t-2\t-2", "\t-2\t2").Replace(productMzAtZNeg2.ToString(CultureInfo.CurrentCulture),""), // precursor and charge polarities disagree
-                Resources.Transition_Validate_Precursor_and_product_ion_polarity_do_not_agree_, fullColumnOrder);
-            TestError(line1.Replace(caffeineFormula, "C77H12O4"), // mz and formula disagree
-                String.Format(Resources.SmallMoleculeTransitionListReader_Precursor_mz_does_not_agree_with_calculated_value_,
-                (float)precursorMzAtZNeg2, 499.0295, 402.9966, docEmpty.Settings.TransitionSettings.Instrument.MzMatchTolerance), fullColumnOrder);
-            TestError(line1.Replace(caffeineFragment, "C76H3"), // mz and formula disagree
-                String.Format(Resources.SmallMoleculeTransitionListReader_Product_mz_does_not_agree_with_calculated_value_,
-                (float)productMzAtZNeg2, 456.5045, 396.9916, docEmpty.Settings.TransitionSettings.Instrument.MzMatchTolerance), fullColumnOrder);
-            var badcharge = Transition.MAX_PRODUCT_CHARGE + 1;
-            TestError(line1 + line2start + "\t\t1\t" + badcharge, // Excessively large charge for product
-                String.Format(Resources.Transition_Validate_Product_ion_charge__0__must_be_non_zero_and_between__1__and__2__,
-                badcharge, -Transition.MAX_PRODUCT_CHARGE, Transition.MAX_PRODUCT_CHARGE), fullColumnOrder);
-            badcharge = 120;
-            TestError(line1 + line2start + "\t\t" + badcharge + "\t1", // Insanely large charge for precursor
-                String.Format(Resources.Transition_Validate_Precursor_charge__0__must_be_non_zero_and_between__1__and__2__,
-                badcharge, -TransitionGroup.MAX_PRECURSOR_CHARGE, TransitionGroup.MAX_PRECURSOR_CHARGE), fullColumnOrder);
-            TestError(line1 + line2start + "\t\t1\t", // No mz or charge for product
-                Resources.SmallMoleculeTransitionListReader_ReadPrecursorOrProductColumns_Product_needs_values_for_any_two_of__Formula__m_z_or_Charge_, fullColumnOrder);
-            TestError(line1 + line2start + "19\t5", // Precursor Formula and m/z don't make sense together
-                Resources.SmallMoleculeTransitionListReader_ReadPrecursorOrProductColumns_Precursor_formula_and_m_z_value_do_not_agree_for_any_charge_state_, fullColumnOrder);
-            TestError(line1 + line2start + "\t7\t1", // Product Formula and m/z don't make sense together
-                Resources.SmallMoleculeTransitionListReader_ReadPrecursorOrProductColumns_Product_formula_and_m_z_value_do_not_agree_for_any_charge_state_, fullColumnOrder);
-            TestError(line1 + line2start + "\t", // No mz or charge for precursor or product
-                Resources.SmallMoleculeTransitionListReader_ReadPrecursorOrProductColumns_Precursor_needs_values_for_any_two_of__Formula__m_z_or_Charge_, fullColumnOrder);
-            TestError(line1 + line3, // Insanely large molecule
-                string.Format(Resources.CustomMolecule_Validate_The_mass__0__of_the_custom_molecule_exceeeds_the_maximum_of__1__, 503970013.01879, CustomMolecule.MAX_MASS), fullColumnOrder);
-            TestError(line1 + line4, // Insanely small molecule
-                string.Format(Resources.CustomMolecule_Validate_The_mass__0__of_the_custom_molecule_is_less_than_the_minimum_of__1__, 2.01588, CustomMolecule.MIN_MASS), fullColumnOrder);
-            TestError(line1 + line2start + +precursorMzAtZNeg2 + "\t" + productMzAtZNeg2 + "\t-2\t-2\t\t\t" + precursorRTWindow + "\t" + explicitCE + "\t" + note + "\t\t\t" + precursorDT + "\t" + highEnergyDtOffset, // Explicit retention time window without retention time
-                Resources.Peptide_ExplicitRetentionTimeWindow_Explicit_retention_time_window_requires_an_explicit_retention_time_value_, fullColumnOrder);
-            TestError(line5.Replace("[M-2H]", "[M+H]"), string.Format(Resources.SmallMoleculeTransitionListReader_ReadPrecursorOrProductColumns_Adduct__0__charge__1__does_not_agree_with_declared_charge__2_, "[M+H]", 1, -2), fullColumnOrder);
-            TestError(line6, string.Format(Resources.SmallMoleculeTransitionListReader_ReadPrecursorOrProductColumns_Adduct__0__charge__1__does_not_agree_with_declared_charge__2_, "M-3H", -3, -2), fullColumnOrder);
-            for (int withSpecials = 2; withSpecials-- > 0; )
-            {
-                // By default we don't show drift or other exotic columns
-                var columnOrder = (withSpecials == 0) ? fullColumnOrder.Take(16).ToArray() : fullColumnOrder;
-                int imIndex = 0;
-                int covIndex = 0;
-                // Take a legit full paste and mess with each field in turn
-                string[] fields =
-                {
-                    "MyMol", "MyPrecursor", "MyProduct", "C12H9O4", "C6H4O2", "217.049535420091", "108.020580420091", "1", "1", "heavy", "123", "5", "25", "this is a note", "[M+]", "[M+]", "7", "9", "123", "88.5", "99.6", "77.3", "66.2",
-                                caffeineInChiKey, caffeineHMDB, caffeineInChi, caffeineCAS, caffeineSMILES, caffeineKEGG, "123.4", "-0.234", "Vsec/cm2", "C6H5O2"  };
-                string[] badfields =
-                {
-                    "", "", "", "123", "C6H2O2[M+2H]", "fish", "-345", "cat", "pig", "12", "frog", "hamster", "boston", "", "[M+foo]", "wut", "foosballDT", "greasyDTHEO", "mumbleCCS", "gumdropSLEN", "dingleConeV", "dangleCompV", "gorseDP", "AHHHHHRGHinchik", "bananananahndb",
-                    "shamble-raft4-inchi", "bags34cas","flansmile", "boozlekegg", "12-fooim", "bumbleimheo", "dingoimunit", "C6H15O5"};
-                Assert.AreEqual(fields.Length, badfields.Length);
-
-                var expectedErrors = new List<string>()
-                {
-                    Resources.PasteDlg_ShowNoErrors_No_errors, Resources.PasteDlg_ShowNoErrors_No_errors, Resources.PasteDlg_ShowNoErrors_No_errors,  // No name, no problem
-                    BioMassCalc.MONOISOTOPIC.FormatArgumentExceptionMessage(badfields[3]),
-                    Resources.SmallMoleculeTransitionListReader_ReadPrecursorOrProductColumns_Formula_already_contains_an_adduct_description__and_it_does_not_match_,
-                    string.Format(Resources.PasteDlg_ReadPrecursorOrProductColumns_Invalid_m_z_value__0_, badfields[5]),
-                    string.Format(Resources.PasteDlg_ReadPrecursorOrProductColumns_Invalid_m_z_value__0_,  badfields[6]),
-                    string.Format(Resources.PasteDlg_ReadPrecursorOrProductColumns_Invalid_charge_value__0_,  badfields[7]),
-                    string.Format(Resources.PasteDlg_ReadPrecursorOrProductColumns_Invalid_charge_value__0_,  badfields[8]),
-                    string.Format(Resources.SrmDocument_ReadLabelType_The_isotope_modification_type__0__does_not_exist_in_the_document_settings,  badfields[9]),
-                    string.Format(Resources.PasteDlg_ReadPrecursorOrProductColumns_Invalid_retention_time_value__0_,  badfields[10]),
-                    string.Format(Resources.PasteDlg_ReadPrecursorOrProductColumns_Invalid_retention_time_window_value__0_,  badfields[11]),
-                    string.Format(Resources.PasteDlg_ReadPrecursorOrProductColumns_Invalid_collision_energy_value__0_,  badfields[12]),
-                    badfields[13], // This is empty, as notes are freeform, so any value is fine
-                    string.Format(Resources.BioMassCalc_ApplyAdductToFormula_Unknown_symbol___0___in_adduct_description___1__,  "foo", badfields[14]),
-                    string.Format(Resources.BioMassCalc_ApplyAdductToFormula_Failed_parsing_adduct_description___0__, "["+ badfields[15] + "]"),
-                };
-                if (withSpecials > 0)
-                {
-                    // With addition of Explicit Ion Mobility, Explicit Compensation Voltage becomes a conflict
-                    expectedErrors[0] = Resources.SmallMoleculeTransitionListReader_ReadPrecursorOrProductColumns_Multiple_ion_mobility_declarations;
-
-                    var s = expectedErrors.Count;
-                    expectedErrors.Add(
-                        string.Format(Resources.PasteDlg_ShowNoErrors_No_errors)); s++; // No longer possible to have both "drift" and "ion mobility" columns at once, user would have to set this as "Ignore" so no error
-                    expectedErrors.Add(
-                        string.Format(Resources.PasteDlg_ShowNoErrors_No_errors)); s++; // No longer possible to have both "drift" and "ion mobility" columns at once, user would have to set this as "Ignore" so no error
-                    expectedErrors.Add(
-                        string.Format(Resources.SmallMoleculeTransitionListReader_ReadPrecursorOrProductColumns_Invalid_collisional_cross_section_value__0_, badfields[s++]));
-                    expectedErrors.Add(
-                        string.Format(Resources.PasteDlg_ReadPrecursorOrProductColumns_Invalid_S_Lens_value__0_, badfields[s++]));
-                    expectedErrors.Add(
-                        string.Format(Resources.PasteDlg_ReadPrecursorOrProductColumns_Invalid_cone_voltage_value__0_, badfields[s++]));
-                    expectedErrors.Add(
-                        string.Format(Resources.PasteDlg_ReadPrecursorOrProductColumns_Invalid_compensation_voltage__0_, badfields[covIndex = s++]));
-                    expectedErrors.Add(
-                        string.Format(Resources.PasteDlg_ReadPrecursorOrProductColumns_Invalid_declustering_potential__0_, badfields[s++]));
-                    expectedErrors.Add(
-                        string.Format(Resources.SmallMoleculeTransitionListReader_ReadMoleculeIdColumns__0__is_not_a_valid_InChiKey_, badfields[s++]));
-                    expectedErrors.Add(
-                        string.Format(Resources.SmallMoleculeTransitionListReader_ReadMoleculeIdColumns__0__is_not_a_valid_HMDB_identifier_, badfields[s++]));
-                    expectedErrors.Add(
-                        string.Format(Resources.SmallMoleculeTransitionListReader_ReadMoleculeIdColumns__0__is_not_a_valid_InChI_identifier_, badfields[s++]));
-                    expectedErrors.Add(
-                        string.Format(Resources.SmallMoleculeTransitionListReader_ReadMoleculeIdColumns__0__is_not_a_valid_CAS_registry_number_, badfields[s++]));
-                    expectedErrors.Add(
-                        Resources.PasteDlg_ShowNoErrors_No_errors); s++;  // We don't have a proper SMILES syntax check yet
-                    expectedErrors.Add(
-                        Resources.PasteDlg_ShowNoErrors_No_errors); s++;  // We don't have a proper KEGG syntax check yet
-                    expectedErrors.Add(
-                        string.Format(Resources.SmallMoleculeTransitionListReader_ReadPrecursorOrProductColumns_Invalid_ion_mobility_value__0_, badfields[imIndex = s++]));
-                    expectedErrors.Add(
-                        string.Format(Resources.SmallMoleculeTransitionListReader_ReadPrecursorOrProductColumns_Invalid_ion_mobility_high_energy_offset_value__0_, badfields[s++]));
-                    expectedErrors.Add(
-                        string.Format(Resources.SmallMoleculeTransitionListReader_ReadPrecursorOrProductColumns_Invalid_ion_mobility_units_value__0___accepted_values_are__1__, badfields[s++], SmallMoleculeTransitionListReader.GetAcceptedIonMobilityUnitsString()));
-                    expectedErrors.Add(
-                        string.Format(Resources.SmallMoleculeTransitionListReader_ProcessNeutralLoss_Precursor_molecular_formula__0__does_not_contain_sufficient_atoms_to_be_used_with_neutral_loss__1_, fields[3], badfields[s++]));
-                }
-                expectedErrors.Add(Resources.PasteDlg_ShowNoErrors_No_errors); // N+1'th pass is unadulterated
-                for (var bad = 0; bad < expectedErrors.Count; bad++)
-                {
-                    var line = "";
-                    for (var f = 0; f < expectedErrors.Count-1; f++)
-                        line += ((bad == f) ? badfields[f] : fields[f]).Replace(".", LocalizationHelper.CurrentCulture.NumberFormat.NumberDecimalSeparator) + "\t";
-                    if (!string.IsNullOrEmpty(expectedErrors[bad]))
-                        TestError(line, expectedErrors[bad], columnOrder);
-                    if (imIndex > 0)
-                    {
-                        // Now that we have tested the warning, clear up the conflict between declared CoV and declared ion mobility
-                        if (bad < covIndex)
-                        {
-                            columnOrder[imIndex] = Resources.ImportTransitionListColumnSelectDlg_PopulateComboBoxes_Ignore_Column;
-                            columnOrder[covIndex] = Resources.PasteDlg_UpdateMoleculeType_Explicit_Compensation_Voltage;
-                        }
-                        else
-                        {
-                            columnOrder[imIndex] = Resources.PasteDlg_UpdateMoleculeType_Explicit_Ion_Mobility;
-                            columnOrder[covIndex] = Resources.ImportTransitionListColumnSelectDlg_PopulateComboBoxes_Ignore_Column;
-                        }
-                    }
-                }
-            }
-            TestError(line1.Replace(caffeineFormula, caffeineFormula + "[M-H]").Replace(caffeineFragment, caffeineFragment + "[M-H]") + line2start + "\t\t1\t1", 
-                string.Format(Resources.SmallMoleculeTransitionListReader_ReadPrecursorOrProductColumns_Adduct__0__charge__1__does_not_agree_with_declared_charge__2_,"[M-H]",-1,-2), fullColumnOrder);
-
-            // Now load the document with a legit paste
-            foreach (var imTypeIsDrift in new[]{ true, false }) // Check interplay of explicit Compensation Voltage and explicit IM
-            {
-                docEmpty = NewDocument();
-                line1 = BuildTestLine(imTypeIsDrift);
-                var expectedIM = imTypeIsDrift ? precursorDT : compensationVoltage;
-                double? expectedCV = imTypeIsDrift ? (double?)null : compensationVoltage;
-                var expectedTypeIM = imTypeIsDrift ? eIonMobilityUnits.drift_time_msec : eIonMobilityUnits.compensation_V;
-                TestError(line1 + line2start.Replace("CH3O", "CH29") + "\t\t1\t\t\t\t\t\t\t\tM+H", String.Empty, fullColumnOrder);
-                var docTest = WaitForDocumentChange(docEmpty);
-                var testTransitionGroups = docTest.MoleculeTransitionGroups.ToArray();
-                Assert.AreEqual(2, testTransitionGroups.Length);
-                var transitionGroup = testTransitionGroups[0];
-                var precursor = docTest.Molecules.First();
-                var product = transitionGroup.Transitions.First();
-                Assert.AreEqual(explicitCE, product.ExplicitValues.CollisionEnergy?? transitionGroup.ExplicitValues.CollisionEnergy);
-                Assert.AreEqual(expectedIM, transitionGroup.ExplicitValues.IonMobility);
-                Assert.AreEqual(expectedTypeIM, transitionGroup.ExplicitValues.IonMobilityUnits);
-                Assert.AreEqual(precursorCCS, transitionGroup.ExplicitValues.CollisionalCrossSectionSqA);
-                Assert.AreEqual(slens, product.ExplicitValues.SLens);
-                Assert.AreEqual(coneVoltage, product.ExplicitValues.ConeVoltage);
-                Assert.AreEqual(expectedCV, transitionGroup.ExplicitValues.CompensationVoltage);
-                Assert.AreEqual(declusteringPotential, product.ExplicitValues.DeclusteringPotential);
-                Assert.AreEqual(note, product.Annotations.Note);
-                Assert.AreEqual(highEnergyDtOffset, product.ExplicitValues.IonMobilityHighEnergyOffset.Value, 1E-7);
-                Assert.AreEqual(precursorRT, precursor.ExplicitRetentionTime.RetentionTime);
-                Assert.AreEqual(precursorRTWindow, precursor.ExplicitRetentionTime.RetentionTimeWindow);
-                Assert.IsTrue(ReferenceEquals(transitionGroup.TransitionGroup, product.Transition.Group));
-                Assert.AreEqual(precursorMzAtZNeg2, transitionGroup.PrecursorAdduct.MzFromNeutralMass(transitionGroup.CustomMolecule.MonoisotopicMass), 1E-6);
-                Assert.AreEqual(productMzAtZNeg2, product.Transition.Adduct.MzFromNeutralMass(product.GetMoleculeMass()), 1E-6);
-                Assert.AreEqual(precursorMzAtZNeg2, transitionGroup.PrecursorAdduct.MzFromNeutralMass(transitionGroup.CustomMolecule.MonoisotopicMass.Value, transitionGroup.CustomMolecule.MonoisotopicMass.MassType), 1E-6);
-                Assert.AreEqual(productMzAtZNeg2, product.Transition.Adduct.MzFromNeutralMass(product.GetMoleculeMass().Value, product.GetMoleculeMass().MassType), 1E-6);
-                Assert.AreEqual(caffeineInChiKey, precursor.CustomMolecule.PrimaryEquivalenceKey); // Use InChiKey as primary library key when available
-                Assert.AreEqual(caffeineInChiKey, precursor.CustomMolecule.AccessionNumbers.PrimaryAccessionValue); // Use InChiKey as primary library key when available
-                Assert.AreEqual(MoleculeAccessionNumbers.TagInChiKey, precursor.CustomMolecule.AccessionNumbers.PrimaryAccessionType); // Use InChiKey as primary library key when available
-                Assert.AreEqual(caffeineInChiKey, precursor.CustomMolecule.AccessionNumbers.AccessionNumbers[0].Value); // Use InChiKey as primary library key when available
-                string hmdb;
-                precursor.CustomMolecule.AccessionNumbers.AccessionNumbers.TryGetValue("HMDB", out hmdb);
-                Assert.AreEqual(caffeineHMDB.Substring(4), hmdb);
-                string inchi;
-                precursor.CustomMolecule.AccessionNumbers.AccessionNumbers.TryGetValue("InChi", out inchi);
-                Assert.AreEqual(caffeineInChi.Substring(6), inchi);
-                string cas;
-                precursor.CustomMolecule.AccessionNumbers.AccessionNumbers.TryGetValue("cAs", out cas); // Should be case insensitive
-                Assert.AreEqual(caffeineCAS, cas);
-                string smiles;
-                precursor.CustomMolecule.AccessionNumbers.AccessionNumbers.TryGetValue("smILes", out smiles); // Should be case insensitive
-                Assert.AreEqual(caffeineSMILES, smiles);
-                string kegg;
-                precursor.CustomMolecule.AccessionNumbers.AccessionNumbers.TryGetValue("kEgG", out kegg); // Should be case insensitive
-                Assert.AreEqual(caffeineKEGG, kegg);
-                // Does that produce the expected transition list file?
-                TestTransitionListOutput(docTest, "PasteMoleculeTinyTest.csv", "PasteMoleculeTinyTestExpected.csv", ExportFileType.IsolationList);
-                // Does serialization of imported values work properly?
-                AssertEx.Serializable(docTest);
-
-                // Verify that this text can be imported as a file with File > Import > Transition List
-                TestFileImportTransitionList(line1);
-
-            }
-            // Reset
-            var docOrig = NewDocument();
-
             // Now a proper user data set
+            var docOrig = NewDocument();
             var showDialog = ShowDialog<InsertTransitionListDlg>(SkylineWindow.ShowPasteTransitionListDlg);
             // Formerly SetExcelFileClipboardText(TestFilesDir.GetTestPath("MoleculeTransitionList.xlsx"),"sheet1",6,false); but TeamCity doesn't like that
             var windowDlg = ShowDialog<ImportTransitionListColumnSelectDlg>(() => showDialog.TransitionListText = GetCsvFileText(TestFilesDir.GetTestPath("MoleculeTransitionList.csv")));
@@ -577,6 +333,382 @@ namespace pwiz.SkylineTestFunctional
             TestError(pasteText,
                 string.Empty,
                 columnOrderC);
+        }
+
+        private void TestErrors()
+        {
+            var docEmpty = NewDocument();
+
+            // Load a document whose settings understand heavy labeling
+            RunUI(() => SkylineWindow.OpenFile(TestFilesDir.GetTestPath("heavy.sky")));
+
+            var fullColumnOrder = new[]
+            {
+                Resources.ImportTransitionListColumnSelectDlg_ComboChanged_Molecule_List_Name,
+                Resources.ImportTransitionListColumnSelectDlg_ComboChanged_Molecule_Name,
+                Resources.PasteDlg_UpdateMoleculeType_Product_Name,
+                Resources.ImportTransitionListColumnSelectDlg_headerList_Molecular_Formula,
+                Resources.PasteDlg_UpdateMoleculeType_Product_Formula,
+                Resources.ImportTransitionListColumnSelectDlg_PopulateComboBoxes_Precursor_m_z,
+                Resources.ImportTransitionListColumnSelectDlg_PopulateComboBoxes_Product_m_z,
+                Resources.ImportTransitionListColumnSelectDlg_PopulateComboBoxes_Precursor_Charge,
+                Resources.PasteDlg_UpdateMoleculeType_Product_Charge,
+                Resources.ImportTransitionListColumnSelectDlg_PopulateComboBoxes_Label_Type,
+                Resources.PasteDlg_UpdateMoleculeType_Explicit_Retention_Time,
+                Resources.PasteDlg_UpdateMoleculeType_Explicit_Retention_Time_Window,
+                Resources.PasteDlg_UpdateMoleculeType_Explicit_Collision_Energy,
+                Resources.PasteDlg_UpdateMoleculeType_Note,
+                Resources.PasteDlg_UpdateMoleculeType_Precursor_Adduct,
+                Resources.PasteDlg_UpdateMoleculeType_Product_Adduct,
+                Resources
+                    .ImportTransitionListColumnSelectDlg_PopulateComboBoxes_Ignore_Column, // Drift time columns are now obsolete
+                Resources
+                    .ImportTransitionListColumnSelectDlg_PopulateComboBoxes_Ignore_Column, // Drift time columns are now obsolete
+                Resources.PasteDlg_UpdateMoleculeType_Explicit_Collision_Cross_Section__sq_A_,
+                Resources.PasteDlg_UpdateMoleculeType_S_Lens,
+                Resources.PasteDlg_UpdateMoleculeType_Cone_Voltage,
+                Resources.PasteDlg_UpdateMoleculeType_Explicit_Compensation_Voltage,
+                Resources.ImportTransitionListColumnSelectDlg_ComboChanged_Explicit_Declustering_Potential,
+                @"InChiKey",
+                @"HMDB",
+                @"InChi",
+                @"CAS",
+                @"SMILES",
+                @"KEGG",
+                Resources.PasteDlg_UpdateMoleculeType_Explicit_Ion_Mobility,
+                Resources.PasteDlg_UpdateMoleculeType_Explicit_Ion_Mobility_High_Energy_Offset,
+                Resources.PasteDlg_UpdateMoleculeType_Explicit_Ion_Mobility_Units,
+                Resources.PasteDlg_UpdateMoleculeType_Product_Neutral_Loss,
+            };
+
+            // Default col order is listname, preName, PreFormula, preAdduct, preMz, preCharge, prodName, ProdFormula, prodAdduct, prodMz, prodCharge
+            var line1 = BuildTestLine(true);
+            const string line2start = "\r\nMyMolecule2\tMyMol2\tMyFrag2\tCH12O4\tCH3O\t";
+            const string line3 = "\r\nMyMolecule2\tMyMol2\tMyFrag2\tCH12O4\tCHH500000000\t\t\t1\t1";
+            const string line4 = "\r\nMyMolecule3\tMyMol3\tMyFrag3\tH2\tH\t\t\t1\t1";
+            string line5 = line1.Replace(caffeineFormula, "C8H12N4O2[M-2H]").Replace(caffeineFragment, "C34H32")
+                .Replace(note + "\t\t\t", note + "\t\tM-2H\t"); // Legit
+            string line6 = line1.Replace(caffeineFormula, "").Replace(caffeineFragment, "")
+                .Replace(note + "\t\t\t", note + "\t\tM-3H\t"); // mz only, but charge and adduct disagree
+
+            TestLegitimatePaste(line2start, fullColumnOrder);
+
+            // Provoke some errors
+            TestError(
+                line1.Replace("\t-2\t-2", "\t-2\t2")
+                    .Replace(productMzAtZNeg2.ToString(CultureInfo.CurrentCulture),
+                        ""), // precursor and charge polarities disagree
+                Resources.Transition_Validate_Precursor_and_product_ion_polarity_do_not_agree_, fullColumnOrder);
+            TestError(line1.Replace(caffeineFormula, "C77H12O4"), // mz and formula disagree
+                String.Format(Resources.SmallMoleculeTransitionListReader_Precursor_mz_does_not_agree_with_calculated_value_,
+                    (float)precursorMzAtZNeg2, 499.0295, 402.9966,
+                    docEmpty.Settings.TransitionSettings.Instrument.MzMatchTolerance), fullColumnOrder);
+            TestError(line1.Replace(caffeineFragment, "C76H3"), // mz and formula disagree
+                String.Format(Resources.SmallMoleculeTransitionListReader_Product_mz_does_not_agree_with_calculated_value_,
+                    (float)productMzAtZNeg2, 456.5045, 396.9916,
+                    docEmpty.Settings.TransitionSettings.Instrument.MzMatchTolerance), fullColumnOrder);
+            var badcharge = Transition.MAX_PRODUCT_CHARGE + 1;
+            TestError(line1 + line2start + "\t\t1\t" + badcharge, // Excessively large charge for product
+                String.Format(Resources.Transition_Validate_Product_ion_charge__0__must_be_non_zero_and_between__1__and__2__,
+                    badcharge, -Transition.MAX_PRODUCT_CHARGE, Transition.MAX_PRODUCT_CHARGE), fullColumnOrder);
+            badcharge = 120;
+            TestError(line1 + line2start + "\t\t" + badcharge + "\t1", // Insanely large charge for precursor
+                String.Format(Resources.Transition_Validate_Precursor_charge__0__must_be_non_zero_and_between__1__and__2__,
+                    badcharge, -TransitionGroup.MAX_PRECURSOR_CHARGE, TransitionGroup.MAX_PRECURSOR_CHARGE), fullColumnOrder);
+            TestError(line1 + line2start + "\t\t1\t", // No mz or charge for product
+                Resources
+                    .SmallMoleculeTransitionListReader_ReadPrecursorOrProductColumns_Product_needs_values_for_any_two_of__Formula__m_z_or_Charge_,
+                fullColumnOrder);
+            TestError(line1 + line2start + "19\t5", // Precursor Formula and m/z don't make sense together
+                Resources
+                    .SmallMoleculeTransitionListReader_ReadPrecursorOrProductColumns_Precursor_formula_and_m_z_value_do_not_agree_for_any_charge_state_,
+                fullColumnOrder);
+            TestError(line1 + line2start + "\t7\t1", // Product Formula and m/z don't make sense together
+                Resources
+                    .SmallMoleculeTransitionListReader_ReadPrecursorOrProductColumns_Product_formula_and_m_z_value_do_not_agree_for_any_charge_state_,
+                fullColumnOrder);
+            TestError(line1 + line2start + "\t", // No mz or charge for precursor or product
+                Resources
+                    .SmallMoleculeTransitionListReader_ReadPrecursorOrProductColumns_Precursor_needs_values_for_any_two_of__Formula__m_z_or_Charge_,
+                fullColumnOrder);
+            TestError(line1 + line3, // Insanely large molecule
+                string.Format(
+                    Resources.CustomMolecule_Validate_The_mass__0__of_the_custom_molecule_exceeeds_the_maximum_of__1__,
+                    503970013.01879, CustomMolecule.MAX_MASS), fullColumnOrder);
+            TestError(line1 + line4, // Insanely small molecule
+                string.Format(
+                    Resources.CustomMolecule_Validate_The_mass__0__of_the_custom_molecule_is_less_than_the_minimum_of__1__,
+                    2.01588, CustomMolecule.MIN_MASS), fullColumnOrder);
+            TestError(
+                line1 + line2start + +precursorMzAtZNeg2 + "\t" + productMzAtZNeg2 + "\t-2\t-2\t\t\t" + precursorRTWindow +
+                "\t" + explicitCE + "\t" + note + "\t\t\t" + precursorDT + "\t" +
+                highEnergyDtOffset, // Explicit retention time window without retention time
+                Resources
+                    .Peptide_ExplicitRetentionTimeWindow_Explicit_retention_time_window_requires_an_explicit_retention_time_value_,
+                fullColumnOrder);
+            TestError(line5.Replace("[M-2H]", "[M+H]"),
+                string.Format(
+                    Resources
+                        .SmallMoleculeTransitionListReader_ReadPrecursorOrProductColumns_Adduct__0__charge__1__does_not_agree_with_declared_charge__2_,
+                    "[M+H]", 1, -2), fullColumnOrder);
+            TestError(line6,
+                string.Format(
+                    Resources
+                        .SmallMoleculeTransitionListReader_ReadPrecursorOrProductColumns_Adduct__0__charge__1__does_not_agree_with_declared_charge__2_,
+                    "M-3H", -3, -2), fullColumnOrder);
+            for (int withSpecials = 2; withSpecials-- > 0;)
+            {
+                // By default we don't show drift or other exotic columns
+                var columnOrder = (withSpecials == 0) ? fullColumnOrder.Take(16).ToArray() : fullColumnOrder;
+                int imIndex = 0;
+                int covIndex = 0;
+                // Take a legit full paste and mess with each field in turn
+                string[] fields =
+                {
+                    "MyMol", "MyPrecursor", "MyProduct", "C12H9O4", "C6H4O2", "217.049535420091", "108.020580420091", "1", "1",
+                    "heavy", "123", "5", "25", "this is a note", "[M+]", "[M+]", "7", "9", "123", "88.5", "99.6", "77.3",
+                    "66.2",
+                    caffeineInChiKey, caffeineHMDB, caffeineInChi, caffeineCAS, caffeineSMILES, caffeineKEGG, "123.4", "-0.234",
+                    "Vsec/cm2", "C6H5O2"
+                };
+                string[] badfields =
+                {
+                    "", "", "", "123", "C6H2O2[M+2H]", "fish", "-345", "cat", "pig", "12", "frog", "hamster", "boston", "",
+                    "[M+foo]", "wut", "foosballDT", "greasyDTHEO", "mumbleCCS", "gumdropSLEN", "dingleConeV", "dangleCompV",
+                    "gorseDP", "AHHHHHRGHinchik", "bananananahndb",
+                    "shamble-raft4-inchi", "bags34cas", "flansmile", "boozlekegg", "12-fooim", "bumbleimheo", "dingoimunit",
+                    "C6H15O5"
+                };
+                Assert.AreEqual(fields.Length, badfields.Length);
+
+                var expectedErrors = new List<string>()
+                {
+                    Resources.PasteDlg_ShowNoErrors_No_errors, Resources.PasteDlg_ShowNoErrors_No_errors,
+                    Resources.PasteDlg_ShowNoErrors_No_errors, // No name, no problem
+                    BioMassCalc.FormatArgumentExceptionMessage(badfields[3]),
+                    Resources
+                        .SmallMoleculeTransitionListReader_ReadPrecursorOrProductColumns_Formula_already_contains_an_adduct_description__and_it_does_not_match_,
+                    string.Format(Resources.PasteDlg_ReadPrecursorOrProductColumns_Invalid_m_z_value__0_, badfields[5]),
+                    string.Format(Resources.PasteDlg_ReadPrecursorOrProductColumns_Invalid_m_z_value__0_, badfields[6]),
+                    string.Format(Resources.PasteDlg_ReadPrecursorOrProductColumns_Invalid_charge_value__0_, badfields[7]),
+                    string.Format(Resources.PasteDlg_ReadPrecursorOrProductColumns_Invalid_charge_value__0_, badfields[8]),
+                    string.Format(
+                        Resources
+                            .SrmDocument_ReadLabelType_The_isotope_modification_type__0__does_not_exist_in_the_document_settings,
+                        badfields[9]),
+                    string.Format(Resources.PasteDlg_ReadPrecursorOrProductColumns_Invalid_retention_time_value__0_,
+                        badfields[10]),
+                    string.Format(Resources.PasteDlg_ReadPrecursorOrProductColumns_Invalid_retention_time_window_value__0_,
+                        badfields[11]),
+                    string.Format(Resources.PasteDlg_ReadPrecursorOrProductColumns_Invalid_collision_energy_value__0_,
+                        badfields[12]),
+                    badfields[13], // This is empty, as notes are freeform, so any value is fine
+                    string.Format(Resources.BioMassCalc_ApplyAdductToFormula_Unknown_symbol___0___in_adduct_description___1__,
+                        "foo", badfields[14]),
+                    string.Format(Resources.BioMassCalc_ApplyAdductToFormula_Failed_parsing_adduct_description___0__,
+                        "[" + badfields[15] + "]"),
+                };
+                if (withSpecials > 0)
+                {
+                    // With addition of Explicit Ion Mobility, Explicit Compensation Voltage becomes a conflict
+                    expectedErrors[0] = Resources
+                        .SmallMoleculeTransitionListReader_ReadPrecursorOrProductColumns_Multiple_ion_mobility_declarations;
+
+                    var s = expectedErrors.Count;
+                    expectedErrors.Add(
+                        string.Format(Resources.PasteDlg_ShowNoErrors_No_errors));
+                    s++; // No longer possible to have both "drift" and "ion mobility" columns at once, user would have to set this as "Ignore" so no error
+                    expectedErrors.Add(
+                        string.Format(Resources.PasteDlg_ShowNoErrors_No_errors));
+                    s++; // No longer possible to have both "drift" and "ion mobility" columns at once, user would have to set this as "Ignore" so no error
+                    expectedErrors.Add(
+                        string.Format(
+                            Resources
+                                .SmallMoleculeTransitionListReader_ReadPrecursorOrProductColumns_Invalid_collisional_cross_section_value__0_,
+                            badfields[s++]));
+                    expectedErrors.Add(
+                        string.Format(Resources.PasteDlg_ReadPrecursorOrProductColumns_Invalid_S_Lens_value__0_,
+                            badfields[s++]));
+                    expectedErrors.Add(
+                        string.Format(Resources.PasteDlg_ReadPrecursorOrProductColumns_Invalid_cone_voltage_value__0_,
+                            badfields[s++]));
+                    expectedErrors.Add(
+                        string.Format(Resources.PasteDlg_ReadPrecursorOrProductColumns_Invalid_compensation_voltage__0_,
+                            badfields[covIndex = s++]));
+                    expectedErrors.Add(
+                        string.Format(Resources.PasteDlg_ReadPrecursorOrProductColumns_Invalid_declustering_potential__0_,
+                            badfields[s++]));
+                    expectedErrors.Add(
+                        string.Format(
+                            Resources.SmallMoleculeTransitionListReader_ReadMoleculeIdColumns__0__is_not_a_valid_InChiKey_,
+                            badfields[s++]));
+                    expectedErrors.Add(
+                        string.Format(
+                            Resources
+                                .SmallMoleculeTransitionListReader_ReadMoleculeIdColumns__0__is_not_a_valid_HMDB_identifier_,
+                            badfields[s++]));
+                    expectedErrors.Add(
+                        string.Format(
+                            Resources
+                                .SmallMoleculeTransitionListReader_ReadMoleculeIdColumns__0__is_not_a_valid_InChI_identifier_,
+                            badfields[s++]));
+                    expectedErrors.Add(
+                        string.Format(
+                            Resources
+                                .SmallMoleculeTransitionListReader_ReadMoleculeIdColumns__0__is_not_a_valid_CAS_registry_number_,
+                            badfields[s++]));
+                    expectedErrors.Add(
+                        Resources.PasteDlg_ShowNoErrors_No_errors);
+                    s++; // We don't have a proper SMILES syntax check yet
+                    expectedErrors.Add(
+                        Resources.PasteDlg_ShowNoErrors_No_errors);
+                    s++; // We don't have a proper KEGG syntax check yet
+                    expectedErrors.Add(
+                        string.Format(
+                            Resources
+                                .SmallMoleculeTransitionListReader_ReadPrecursorOrProductColumns_Invalid_ion_mobility_value__0_,
+                            badfields[imIndex = s++]));
+                    expectedErrors.Add(
+                        string.Format(
+                            Resources
+                                .SmallMoleculeTransitionListReader_ReadPrecursorOrProductColumns_Invalid_ion_mobility_high_energy_offset_value__0_,
+                            badfields[s++]));
+                    expectedErrors.Add(
+                        string.Format(
+                            Resources
+                                .SmallMoleculeTransitionListReader_ReadPrecursorOrProductColumns_Invalid_ion_mobility_units_value__0___accepted_values_are__1__,
+                            badfields[s++], SmallMoleculeTransitionListReader.GetAcceptedIonMobilityUnitsString()));
+                    expectedErrors.Add(
+                        string.Format(
+                            Resources
+                                .SmallMoleculeTransitionListReader_ProcessNeutralLoss_Precursor_molecular_formula__0__does_not_contain_sufficient_atoms_to_be_used_with_neutral_loss__1_,
+                            fields[3], badfields[s++]));
+                }
+
+                expectedErrors.Add(Resources.PasteDlg_ShowNoErrors_No_errors); // N+1'th pass is unadulterated
+                for (var bad = 0; bad < expectedErrors.Count; bad++)
+                {
+                    var line = "";
+                    for (var f = 0; f < expectedErrors.Count - 1; f++)
+                        line += ((bad == f) ? badfields[f] : fields[f]).Replace(".",
+                            LocalizationHelper.CurrentCulture.NumberFormat.NumberDecimalSeparator) + "\t";
+                    if (!string.IsNullOrEmpty(expectedErrors[bad]))
+                        TestError(line, expectedErrors[bad], columnOrder);
+                    if (imIndex > 0)
+                    {
+                        // Now that we have tested the warning, clear up the conflict between declared CoV and declared ion mobility
+                        if (bad < covIndex)
+                        {
+                            columnOrder[imIndex] =
+                                Resources.ImportTransitionListColumnSelectDlg_PopulateComboBoxes_Ignore_Column;
+                            columnOrder[covIndex] = Resources.PasteDlg_UpdateMoleculeType_Explicit_Compensation_Voltage;
+                        }
+                        else
+                        {
+                            columnOrder[imIndex] = Resources.PasteDlg_UpdateMoleculeType_Explicit_Ion_Mobility;
+                            columnOrder[covIndex] =
+                                Resources.ImportTransitionListColumnSelectDlg_PopulateComboBoxes_Ignore_Column;
+                        }
+                    }
+                }
+            }
+
+            TestError(
+                line1.Replace(caffeineFormula, caffeineFormula + "[M-H]")
+                    .Replace(caffeineFragment, caffeineFragment + "[M-H]") + line2start + "\t\t1\t1",
+                string.Format(
+                    Resources
+                        .SmallMoleculeTransitionListReader_ReadPrecursorOrProductColumns_Adduct__0__charge__1__does_not_agree_with_declared_charge__2_,
+                    "[M-H]", -1, -2), fullColumnOrder);
+
+            // Reset
+            NewDocument();
+        }
+
+        private void TestLegitimatePaste(string line2start, string[] fullColumnOrder)
+        {
+            SrmDocument docEmpty;
+            string line1;
+            // Now load the document with a legit paste
+            foreach (var imTypeIsDrift in
+                     new[] { true, false }) // Check interplay of explicit Compensation Voltage and explicit IM
+            {
+                docEmpty = NewDocument();
+                line1 = BuildTestLine(imTypeIsDrift);
+                var expectedIM = imTypeIsDrift ? precursorDT : compensationVoltage;
+                double? expectedCV = imTypeIsDrift ? (double?)null : compensationVoltage;
+                var expectedTypeIM = imTypeIsDrift ? eIonMobilityUnits.drift_time_msec : eIonMobilityUnits.compensation_V;
+                TestError(line1 + line2start.Replace("CH3O", "CH29") + "\t\t1\t\t\t\t\t\t\t\tM+H", String.Empty,
+                    fullColumnOrder);
+                var docTest = WaitForDocumentChange(docEmpty);
+                var testTransitionGroups = docTest.MoleculeTransitionGroups.ToArray();
+                Assert.AreEqual(2, testTransitionGroups.Length);
+                var transitionGroup = testTransitionGroups[0];
+                var precursor = docTest.Molecules.First();
+                var product = transitionGroup.Transitions.First();
+                Assert.AreEqual(explicitCE,
+                    product.ExplicitValues.CollisionEnergy ?? transitionGroup.ExplicitValues.CollisionEnergy);
+                Assert.AreEqual(expectedIM, transitionGroup.ExplicitValues.IonMobility);
+                Assert.AreEqual(expectedTypeIM, transitionGroup.ExplicitValues.IonMobilityUnits);
+                Assert.AreEqual(precursorCCS, transitionGroup.ExplicitValues.CollisionalCrossSectionSqA);
+                Assert.AreEqual(slens, product.ExplicitValues.SLens);
+                Assert.AreEqual(coneVoltage, product.ExplicitValues.ConeVoltage);
+                Assert.AreEqual(expectedCV, transitionGroup.ExplicitValues.CompensationVoltage);
+                Assert.AreEqual(declusteringPotential, product.ExplicitValues.DeclusteringPotential);
+                Assert.AreEqual(note, product.Annotations.Note);
+                Assert.AreEqual(highEnergyDtOffset, product.ExplicitValues.IonMobilityHighEnergyOffset.Value, 1E-7);
+                Assert.AreEqual(precursorRT, precursor.ExplicitRetentionTime.RetentionTime);
+                Assert.AreEqual(precursorRTWindow, precursor.ExplicitRetentionTime.RetentionTimeWindow);
+                Assert.IsTrue(ReferenceEquals(transitionGroup.TransitionGroup, product.Transition.Group));
+                Assert.AreEqual(precursorMzAtZNeg2,
+                    transitionGroup.PrecursorAdduct.MzFromNeutralMass(transitionGroup.CustomMolecule.MonoisotopicMass), 1E-6);
+                Assert.AreEqual(productMzAtZNeg2, product.Transition.Adduct.MzFromNeutralMass(product.GetMoleculeMass()), 1E-6);
+                Assert.AreEqual(precursorMzAtZNeg2,
+                    transitionGroup.PrecursorAdduct.MzFromNeutralMass(transitionGroup.CustomMolecule.MonoisotopicMass.Value,
+                        transitionGroup.CustomMolecule.MonoisotopicMass.MassType), 1E-6);
+                Assert.AreEqual(productMzAtZNeg2,
+                    product.Transition.Adduct.MzFromNeutralMass(product.GetMoleculeMass().Value,
+                        product.GetMoleculeMass().MassType), 1E-6);
+                Assert.AreEqual(caffeineInChiKey,
+                    precursor.CustomMolecule.PrimaryEquivalenceKey); // Use InChiKey as primary library key when available
+                Assert.AreEqual(caffeineInChiKey,
+                    precursor.CustomMolecule.AccessionNumbers
+                        .PrimaryAccessionValue); // Use InChiKey as primary library key when available
+                Assert.AreEqual(MoleculeAccessionNumbers.TagInChiKey,
+                    precursor.CustomMolecule.AccessionNumbers
+                        .PrimaryAccessionType); // Use InChiKey as primary library key when available
+                Assert.AreEqual(caffeineInChiKey,
+                    precursor.CustomMolecule.AccessionNumbers.AccessionNumbers[0]
+                        .Value); // Use InChiKey as primary library key when available
+                string hmdb;
+                precursor.CustomMolecule.AccessionNumbers.AccessionNumbers.TryGetValue("HMDB", out hmdb);
+                Assert.AreEqual(caffeineHMDB.Substring(4), hmdb);
+                string inchi;
+                precursor.CustomMolecule.AccessionNumbers.AccessionNumbers.TryGetValue("InChi", out inchi);
+                Assert.AreEqual(caffeineInChi.Substring(6), inchi);
+                string cas;
+                precursor.CustomMolecule.AccessionNumbers.AccessionNumbers
+                    .TryGetValue("cAs", out cas); // Should be case insensitive
+                Assert.AreEqual(caffeineCAS, cas);
+                string smiles;
+                precursor.CustomMolecule.AccessionNumbers.AccessionNumbers
+                    .TryGetValue("smILes", out smiles); // Should be case insensitive
+                Assert.AreEqual(caffeineSMILES, smiles);
+                string kegg;
+                precursor.CustomMolecule.AccessionNumbers.AccessionNumbers
+                    .TryGetValue("kEgG", out kegg); // Should be case insensitive
+                Assert.AreEqual(caffeineKEGG, kegg);
+                // Does that produce the expected transition list file?
+                TestTransitionListOutput(docTest, "PasteMoleculeTinyTest.csv", "PasteMoleculeTinyTestExpected.csv",
+                    ExportFileType.IsolationList);
+                // Does serialization of imported values work properly?
+                AssertEx.Serializable(docTest);
+
+                // Verify that this text can be imported as a file with File > Import > Transition List
+                TestFileImportTransitionList(line1);
+            }
+
+            NewDocument(); // Reset
         }
 
         private void TestHeavyLightPairs()
@@ -1315,7 +1447,7 @@ namespace pwiz.SkylineTestFunctional
                     foreach (var transition in precursor.Transitions)
                     {
                         AssertEx.IsTrue(precursor.PrecursorAdduct.HasIsotopeLabels == transition.Transition.Adduct.HasIsotopeLabels ||
-                                        !transition.Transition.CustomIon.Formula.Contains(@"C")); // Can't C13-label a fragment with no C in it
+                                        !transition.Transition.CustomIon.MoleculeAndMassOffset.HasElement(@"C")); // Can't C13-label a fragment with no C in it
                     }
                 }
                 NewDocument();
@@ -1532,12 +1664,12 @@ namespace pwiz.SkylineTestFunctional
             // Paste directly into targets area - no interaction expected
             RunUI(() => SkylineWindow.Paste());
             AssertEx.IsDocumentState(SkylineWindow.Document, null, 1, 5, 5, 5);
-            var docMolecules = SkylineWindow.Document.CustomMolecules.Select(mol => mol.CustomMolecule.Formula).ToArray();
-            AssertEx.AreEqual("C28H42N2O1Xe", docMolecules[0]);
-            AssertEx.AreEqual("C30H46N2O1Xe", docMolecules[1]);
-            AssertEx.AreEqual("C28H41N2OXe", docMolecules[2]);
-            AssertEx.AreEqual("C28N2O1Xe", docMolecules[3]);
-            AssertEx.AreEqual("C30N2OXeH45", docMolecules[4]); // We intentionally preserve nonstandard order
+            var docMolecules = SkylineWindow.Document.CustomMolecules.Select(mol => mol.CustomMolecule.MoleculeAndMassOffset).ToArray();
+            AssertEx.AreEqual("C28H42N2O1Xe", docMolecules[0].ToString());
+            AssertEx.AreEqual("C30H46N2O1Xe", docMolecules[1].ToString());
+            AssertEx.AreEqual("C28N2OXeH41", docMolecules[2].ToString());
+            AssertEx.AreEqual("C28N2O1Xe", docMolecules[3].ToString());
+            AssertEx.AreEqual("C30N2OXeH45", docMolecules[4].ToString()); // We intentionally preserve nonstandard order
             NewDocument();
         }
 
@@ -1639,8 +1771,8 @@ namespace pwiz.SkylineTestFunctional
             Assume.AreEqual(1, pastedDoc.MoleculeCount);
             var transitions = pastedDoc.MoleculeTransitions.ToArray();
             Assume.AreEqual(2, transitions.Count(t => !t.IsMs1));
-            Assume.AreEqual("C20H30O", transitions[1].CustomIon.NeutralFormula); // As given literally
-            Assume.AreEqual("C20H30O2", transitions[2].CustomIon.NeutralFormula); // As given by neutral loss
+            Assume.AreEqual("C20H30O", transitions[1].CustomIon.MoleculeAndMassOffset.ToString()); // As given literally
+            Assume.AreEqual("C20H30O2", transitions[2].CustomIon.MoleculeAndMassOffset.ToString()); // As given by neutral loss
             NewDocument();
 
         }

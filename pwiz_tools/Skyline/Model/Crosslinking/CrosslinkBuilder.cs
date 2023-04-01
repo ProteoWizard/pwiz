@@ -111,7 +111,7 @@ namespace pwiz.Skyline.Model.Crosslinking
                     parts.Add(crosslink.Crosslinker.GetMoleculeMassOffset());
                 }
             }
-            return FragmentedMolecule.SumMoleculeMassOffsets(parts);
+            return MoleculeMassOffset.Sum(parts);
         }
 
         public TypedMass GetFragmentMass(NeutralFragmentIon complexFragmentIon)
@@ -126,11 +126,11 @@ namespace pwiz.Skyline.Model.Crosslinking
             MassType massType = settings.TransitionSettings.Prediction.FragmentMassType;
             if (massType.IsMonoisotopic())
             {
-                return new TypedMass(fragmentedMoleculeSettings.GetMonoMass(formula.Molecule) + formula.MonoMassOffset + BioMassCalc.MassProton, MassType.MonoisotopicMassH);
+                return TypedMass.Create(fragmentedMoleculeSettings.GetMonoMass(formula.Molecule) + formula.MonoMassOffset + BioMassCalc.MassProton, MassType.MonoisotopicMassH);
             }
             else
             {
-                return new TypedMass(fragmentedMoleculeSettings.GetAverageMass(formula.Molecule) + formula.AverageMassOffset + BioMassCalc.MassProton, MassType.AverageMassH);
+                return TypedMass.Create(fragmentedMoleculeSettings.GetAverageMass(formula.Molecule) + formula.AverageMassOffset + BioMassCalc.MassProton, MassType.AverageMassH);
             }
         }
 
@@ -155,7 +155,7 @@ namespace pwiz.Skyline.Model.Crosslinking
                 mass += BioMassCalc.MassProton;
             }
 
-            return new TypedMass(mass, massType);
+            return TypedMass.Create(mass, massType);
         }
 
         private MassDistribution _precursorMassDistribution;
@@ -183,7 +183,7 @@ namespace pwiz.Skyline.Model.Crosslinking
             {
                 parts.Add(crosslink.Crosslinker.GetMoleculeMassOffset());
             }
-            return FragmentedMolecule.SumMoleculeMassOffsets(parts);
+            return MoleculeMassOffset.Sum(parts);
         }
 
         public FragmentedMolecule.Settings GetFragmentedMoleculeSettings()

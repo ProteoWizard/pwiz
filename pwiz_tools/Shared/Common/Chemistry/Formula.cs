@@ -323,7 +323,7 @@ namespace pwiz.Common.Chemistry
 
         public static string AdjustElementCount(string formula, string element, int delta)
         {
-            var dict = Molecule.ParseToDictionary(formula);
+            var dict = ParseToDictionary(formula);
             int count;
             if (!dict.TryGetValue(element, out count))
                 count = 0;
@@ -333,7 +333,7 @@ namespace pwiz.Common.Chemistry
                 if (count >= 0)
                 {
                     dict[element] = count;
-                    return Molecule.FromDict(dict).ToString();
+                    return FromDict(dict).ToString();
                 }
             }
             return formula;

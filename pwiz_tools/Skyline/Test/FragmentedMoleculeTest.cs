@@ -21,10 +21,10 @@ namespace pwiz.SkylineTest
             var modifiedSequence = new ModifiedSequence("PEPTIDE", new ModifiedSequence.Modification[0], MassType.Monoisotopic);
             var fragmentedMolecule = FragmentedMolecule.EMPTY.ChangeModifiedSequence(modifiedSequence);
             var precursorFormula = fragmentedMolecule.PrecursorFormula;
-            Assert.AreEqual(0, fragmentedMolecule.PrecursorFormula.MonoMassOffset);
-            Assert.AreEqual(0, fragmentedMolecule.PrecursorFormula.AverageMassOffset);
+            Assert.AreEqual(0.0, fragmentedMolecule.PrecursorFormula.MonoMassOffset);
+            Assert.AreEqual(0.0, fragmentedMolecule.PrecursorFormula.AverageMassOffset);
             var sequenceMassCalc = new SequenceMassCalc(MassType.Monoisotopic);
-            var expectedFormula = Molecule.Parse(sequenceMassCalc.GetMolecularFormula(modifiedSequence.GetUnmodifiedSequence()));
+            var expectedFormula = sequenceMassCalc.GetMolecularFormula(modifiedSequence.GetUnmodifiedSequence());
             Assert.AreEqual(expectedFormula.Count, precursorFormula.Molecule.Count);
             foreach (var entry in expectedFormula)
             {
@@ -55,7 +55,7 @@ namespace pwiz.SkylineTest
                     var expectedMz = sequenceMassCalc.GetFragmentMass(transition, transitionGroupDocNode.IsotopeDist);
                     if (expectedMz.IsMassH())
                     {
-                        expectedMz = new TypedMass(expectedMz.Value - BioMassCalc.MassProton, expectedMz.MassType & ~MassType.bMassH);
+                        expectedMz = TypedMass.Create(expectedMz.Value - BioMassCalc.MassProton, expectedMz.MassType & ~MassType.bMassH);
                     }
                     var actualMz = actualMassDistribution.MostAbundanceMass;
                     if (Math.Abs(expectedMz - actualMz) > .001)

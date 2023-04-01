@@ -22,6 +22,7 @@ using System.Drawing;
 using System.Globalization;
 using System.Text;
 using System.Windows.Forms;
+using pwiz.Common.Chemistry;
 using pwiz.Common.SystemUtil;
 using pwiz.Skyline.Controls;
 using pwiz.Skyline.Model;
@@ -100,9 +101,9 @@ namespace pwiz.Skyline.SettingsUI
                                       ? _measuredIon.MinFragmentLength.Value.ToString(LocalizationHelper.CurrentCulture)
                                       : string.Empty;
             }
-            else if (!string.IsNullOrEmpty(_measuredIon.SettingsCustomIon.NeutralFormula))
+            else if (!_measuredIon.SettingsCustomIon.MoleculeAndMassOffset.IsMassOnly)
             {
-                _formulaBox.Formula = _measuredIon.SettingsCustomIon.NeutralFormula;
+                _formulaBox.Formula = _measuredIon.SettingsCustomIon.MoleculeAndMassOffset.ToDisplayString();
                 textCharge.Text = _measuredIon.Charge.ToString(LocalizationHelper.CurrentCulture);
                 _formulaBox.Adduct = _measuredIon.Adduct;
             }
@@ -191,8 +192,8 @@ namespace pwiz.Skyline.SettingsUI
                 // Mass is specified by chemical formula
                 try
                 {
-                    monoMass = SequenceMassCalc.FormulaMass(BioMassCalc.MONOISOTOPIC, formula, SequenceMassCalc.MassPrecision);
-                    avgMass = SequenceMassCalc.FormulaMass(BioMassCalc.AVERAGE, formula, SequenceMassCalc.MassPrecision);
+                    monoMass = SequenceMassCalc.FormulaMass(SkylineBioMassCalc.MONOISOTOPIC, formula, SequenceMassCalc.MassPrecision);
+                    avgMass = SequenceMassCalc.FormulaMass(SkylineBioMassCalc.AVERAGE, formula, SequenceMassCalc.MassPrecision);
                 }
                 catch (ArgumentException x)
                 {

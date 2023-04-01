@@ -821,6 +821,7 @@
     </Compile>
     <Compile Include="Util\DocumentCancellationToken.cs" />
     <Compile Include="Util\FormGroup.cs" />
+    <Compile Include="Util\MassTypeLocalizationExtension.cs" />
     <Compile Include="Util\PersistentString.cs" />
     <Compile Include="Util\UiModes.cs" />
     <Compile Include="ToolsUI\ColorGrid.cs">
@@ -4442,7 +4443,6 @@
     <Compile Include="Util\Adduct.cs" />
     <Compile Include="Util\AxisLabelScaler.cs" />
     <Compile Include="Util\BackgroundEventThreads.cs" />
-    <Compile Include="Util\BioMassCalc.cs" />
     <Compile Include="Util\ConsoleTable.cs" />
     <Compile Include="Util\CreateHandleDebugBase.cs">
       <SubType>Form</SubType>
@@ -4483,6 +4483,7 @@
     <Compile Include="Util\UtilIOExtra.cs" />
     <Compile Include="Util\Extensions\UtilDB.cs" />
     <Compile Include="Util\ListViewColumnSorter.cs" />
+    <Compile Include="Util\SkylineBioMassCalc.cs" />
     <Compile Include="Util\SSRCalc3.cs" />
     <Compile Include="Util\Statistics.cs" />
     <Compile Include="Util\Util.cs" />

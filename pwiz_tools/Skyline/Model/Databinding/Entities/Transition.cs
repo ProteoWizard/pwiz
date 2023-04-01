@@ -128,10 +128,9 @@ namespace pwiz.Skyline.Model.Databinding.Entities
                 var neutralFormula = GetNeutralProductFormula();
                 var adduct = DocNode.Transition.Adduct;
                 var formulaWithAdductApplied = adduct.ApplyToMolecule(neutralFormula.Molecule);
-                var moleculeMassOffsetWithAdductApplied = new MoleculeMassOffset(
-                    Molecule.FromDict(formulaWithAdductApplied), neutralFormula.MonoMassOffset,
+                var moleculeMassOffsetWithAdductApplied = MoleculeMassOffset.Create(formulaWithAdductApplied, neutralFormula.MonoMassOffset,
                     neutralFormula.AverageMassOffset);
-                return moleculeMassOffsetWithAdductApplied.Molecule.ToString();
+                return moleculeMassOffsetWithAdductApplied.ToString();
             }
         }
         public string ProductNeutralFormula

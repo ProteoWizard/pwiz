@@ -25,6 +25,7 @@ using System.Xml;
 using System.Xml.Schema;
 using System.Xml.Serialization;
 using JetBrains.Annotations;
+using pwiz.Common.Chemistry;
 using pwiz.Common.SystemUtil;
 using pwiz.Skyline.Model.AuditLog;
 using pwiz.Skyline.Model.Serialization;
@@ -76,7 +77,7 @@ namespace pwiz.Skyline.Model.DocSettings
         public const double MIN_LOSS_MASS = 0.0001;
         public const double MAX_LOSS_MASS = 5000;
 
-        private string _formula;
+        private Molecule _formula;
 
         public FragmentLoss(string formula)
             : this(formula, null, null)
@@ -87,30 +88,32 @@ namespace pwiz.Skyline.Model.DocSettings
         {
             MonoisotopicMass = monoisotopicMass ?? 0;
             AverageMass = averageMass ?? 0;
-            Formula = formula;
+            Molecule = Molecule.Parse(formula);
             Inclusion = inclusion;
 
             Validate();
         }
 
         [Track]
-        public string Formula
+        public string Formula => Molecule.IsNullOrEmpty(Molecule) ? null : Molecule.ToString();
+
+        public Molecule Molecule
         {
             get { return _formula; }
             private set
             {
-                _formula = value;
-                if (_formula != null)
+                _formula = value ?? Molecule.EMPTY;
+                if (!Molecule.IsNullOrEmpty(_formula))
                 {
-                    MonoisotopicMass = SequenceMassCalc.FormulaMass(BioMassCalc.MONOISOTOPIC, Formula, SequenceMassCalc.MassPrecision);
-                    AverageMass = SequenceMassCalc.FormulaMass(BioMassCalc.AVERAGE, Formula, SequenceMassCalc.MassPrecision);
+                    MonoisotopicMass = SequenceMassCalc.FormulaMass(BioMassCalc.MONOISOTOPIC, _formula, SequenceMassCalc.MassPrecision);
+                    AverageMass = SequenceMassCalc.FormulaMass(BioMassCalc.AVERAGE, _formula, SequenceMassCalc.MassPrecision);
                 }
             }
         }
 
         public string FormulaNoNull
         {
-            get { return _formula ?? Resources.Loss_FormulaUnknown; }
+            get { return Common.Chemistry.Molecule.IsNullOrEmpty(_formula) ? Resources.Loss_FormulaUnknown : _formula.ToString(); }
         }
 
         [Track]
@@ -147,7 +150,7 @@ namespace pwiz.Skyline.Model.DocSettings
             get
             {
                 StringBuilder stringBuilder = new StringBuilder();
-                stringBuilder.Append(StaticMod.FormatFormulaOrMass(Formula, -MonoisotopicMass, -AverageMass));
+                stringBuilder.Append(StaticMod.FormatFormulaOrMass(_formula, -MonoisotopicMass, -AverageMass));
                 if (Charge != 0)
                 {
                     stringBuilder.Append(Adduct.FromChargeProtonated(Charge));
@@ -232,7 +235,7 @@ namespace pwiz.Skyline.Model.DocSettings
             // Read tag attributes
             MonoisotopicMass = reader.GetNullableDoubleAttribute(ATTR.massdiff_monoisotopic) ?? 0;
             AverageMass = reader.GetNullableDoubleAttribute(ATTR.massdiff_average) ?? 0;
-            Formula = reader.GetAttribute(ATTR.formula);
+            Molecule = Molecule.Parse(reader.GetAttribute(ATTR.formula));
             Inclusion = reader.GetEnumAttribute(ATTR.inclusion, LossInclusion.Library);
             Charge = reader.GetIntAttribute(ATTR.charge, 0);
 
@@ -272,7 +275,7 @@ namespace pwiz.Skyline.Model.DocSettings
         {
             if (ReferenceEquals(null, other)) return false;
             if (ReferenceEquals(this, other)) return true;
-            return Equals(other.Formula, Formula) &&
+            return Equals(other.Molecule, Molecule) &&
                    other.MonoisotopicMass.Equals(MonoisotopicMass) &&
                    other.AverageMass.Equals(AverageMass) &&
                    other.Inclusion.Equals(Inclusion) &&
@@ -291,7 +294,7 @@ namespace pwiz.Skyline.Model.DocSettings
         {
             unchecked
             {
-                int result = (Formula != null ? Formula.GetHashCode() : 0);
+                int result = (Molecule != null ? Molecule.GetHashCode() : 0);
                 result = (result * 397) ^ MonoisotopicMass.GetHashCode();
                 result = (result * 397) ^ AverageMass.GetHashCode();
                 result = (result * 397) ^ Inclusion.GetHashCode();

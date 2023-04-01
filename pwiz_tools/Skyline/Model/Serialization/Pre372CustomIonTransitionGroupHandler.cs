@@ -40,7 +40,7 @@ namespace pwiz.Skyline.Model.Serialization
         // Needed since we actually stored the precursor description rather than the molecule description in v3.71 and earlier
         private class PrecursorRawDetails
         {
-            public string _formulaUnlabeled;
+            public MoleculeMassOffset _formulaUnlabeled;
             public IDictionary<string,int> _labels;
             public Adduct _nominalAdduct;
             public Adduct _proposedAdduct;
@@ -79,7 +79,7 @@ namespace pwiz.Skyline.Model.Serialization
             {
                 var details = new PrecursorRawDetails
                 {
-                    _formulaUnlabeled = string.Empty,
+                    _formulaUnlabeled = MoleculeMassOffset.EMPTY,
                     _labels = null,
                     _nominalAdduct = Adduct.EMPTY,
                     _proposedAdduct = Adduct.EMPTY,
@@ -88,21 +88,18 @@ namespace pwiz.Skyline.Model.Serialization
                     _declaredHeavy = !IsotopeLabelType.LIGHT_NAME.Equals(reader.GetAttribute(DocumentSerializer.ATTR.isotope_label) ?? IsotopeLabelType.LIGHT_NAME)
                 };
                 var formula = reader.GetAttribute(DocumentSerializer.ATTR.ion_formula);
-                if (formula != null)
+                if (!string.IsNullOrEmpty(formula))
                 {
-                    details._formulaUnlabeled = formula.Trim(); // We've seen tailing spaces in the wild
-                    string precursorFormula;
-                    Adduct precursorAdduct;
-                    Molecule precursorMol;
-                    if (IonInfo.IsFormulaWithAdduct(formula, out precursorMol, out precursorAdduct, out precursorFormula))
+                    var isFormulaWithAdduct = IonInfo.IsFormulaWithAdduct(formula.Trim(), out var _, out var precursorAdduct, out var precursorFormula);
+                    details._formulaUnlabeled = MoleculeMassOffset.Create(precursorFormula);
+                    if (isFormulaWithAdduct)
                     {
-                        details._formulaUnlabeled = precursorFormula;
                         details._nominalAdduct = precursorAdduct;
                     }
                     else
                     {
                         details._labels = BioMassCalc.MONOISOTOPIC.FindIsotopeLabelsInFormula(details._formulaUnlabeled);
-                        details._formulaUnlabeled = BioMassCalc.MONOISOTOPIC.StripLabelsFromFormula(details._formulaUnlabeled);
+                        details._formulaUnlabeled = details._formulaUnlabeled.StripIsotopicLabelsFromFormulaAndMassOffset();
                     }
                 }
                 _precursorRawDetails.Add(details);
@@ -136,7 +133,7 @@ namespace pwiz.Skyline.Model.Serialization
             ProposeMoleculeWithCommonFormula(peptide);
 
             // Deal with mass-only declarations if no formulas were found
-            if (string.IsNullOrEmpty(ProposedMolecule.Formula))
+            if (ProposedMolecule.MoleculeAndMassOffset.IsMassOnly)
             {
                 return HandleMassOnlyDeclarations(ref peptide);
             } 
@@ -162,7 +159,7 @@ namespace pwiz.Skyline.Model.Serialization
 
         private XmlReader ConsiderMassShiftAdducts(ref Peptide peptide)
         {
-            var commonFormula = ProposedMolecule.Formula;
+            var commonFormula = ProposedMolecule.MoleculeAndMassOffset;
             var molMass = ProposedMolecule.MonoisotopicMass;
             foreach (var d in _precursorRawDetails.Where(d => Adduct.IsNullOrEmpty(d._proposedAdduct)))
             {
@@ -225,11 +222,11 @@ namespace pwiz.Skyline.Model.Serialization
                 // Start with the most common scenario, which is that the user meant (de)protonation
                 // See if we can arrive at a common formula ( by adding or removing H) that works with all charges as (de)protonations
                 // N.B. the parent molecule may well be completely unrelated to the children, as users were allowed to enter anything they wanted
-                var commonFormula = ProposedMolecule.Formula;
-                var precursorsWithFormulas = _precursorRawDetails.Where(d => !string.IsNullOrEmpty(d._formulaUnlabeled)).ToList();
+                var commonFormula = ProposedMolecule.MoleculeAndMassOffset;
+                var precursorsWithFormulas = _precursorRawDetails.Where(d => !d._formulaUnlabeled.IsMassOnly).ToList();
                 foreach (var detail in precursorsWithFormulas)
                 {
-                    var revisedCommonFormula = Molecule.AdjustElementCount(commonFormula, BioMassCalc.H, -detail._declaredCharge);
+                    var revisedCommonFormula = commonFormula.AdjustElementCountNoMassOffsetChange( BioMassCalc.H, -detail._declaredCharge);
                     var adjustedMolecule = new CustomMolecule(revisedCommonFormula, peptide.CustomMolecule.Name);
                     var mass = adjustedMolecule.MonoisotopicMass;
                     if (precursorsWithFormulas.TrueForAll(d =>
@@ -260,11 +257,11 @@ namespace pwiz.Skyline.Model.Serialization
         {
             // Examine any provided formulas (including parent molecule and/or precursor ions) and find common basis
             ProposedMolecule = peptide.CustomMolecule;
-            var precursorsWithFormulas = _precursorRawDetails.Where(d => !string.IsNullOrEmpty(d._formulaUnlabeled)).ToList();
+            var precursorsWithFormulas = _precursorRawDetails.Where(d => !d._formulaUnlabeled.IsMassOnly).ToList();
             var parentFormula = peptide.CustomMolecule.UnlabeledFormula;
-            var commonFormula = string.IsNullOrEmpty(parentFormula)
-                ? BioMassCalc.MONOISOTOPIC.FindFormulaIntersectionUnlabeled(
-                    precursorsWithFormulas.Select(p => p._formulaUnlabeled))
+            var commonFormula = parentFormula.IsMassOnly
+                ? MoleculeMassOffset.Create(BioMassCalc.MONOISOTOPIC.FindFormulaIntersectionUnlabeled(
+                    precursorsWithFormulas.Select(p => p._formulaUnlabeled)))
                 : parentFormula;
 
             // Check for consistent and correctly declared precursor formula+adduct
@@ -276,9 +273,9 @@ namespace pwiz.Skyline.Model.Serialization
                 commonFormula = precursorsWithFormulasAndAdducts[0]._formulaUnlabeled;
             }
 
-            if (!string.IsNullOrEmpty(commonFormula))
+            if (!Molecule.IsNullOrEmpty(commonFormula))
             {
-                var parentComposition = Molecule.ParseExpression(commonFormula);
+                var parentComposition = commonFormula;
                 // Check for children proposing to label more atoms than parent provides, adjust parent as needed
                 foreach (var precursor in _precursorRawDetails.Where(d => d._labels != null))
                 {
@@ -291,12 +288,12 @@ namespace pwiz.Skyline.Model.Serialization
                         {
                             // Child proposes to label more of an atom than the parent possesses (seen in the wild) - update the parent
                             commonFormula =
-                                Molecule.AdjustElementCount(commonFormula, unlabeled, kvpIsotopeCount.Value - parentCount);
-                            parentComposition = Molecule.ParseExpression(commonFormula);
+                                commonFormula.AdjustElementCountNoMassOffsetChange(unlabeled, kvpIsotopeCount.Value - parentCount);
+                            parentComposition = commonFormula;
                         }
                     }
                 }
-                if (!Equals(peptide.CustomMolecule.Formula, commonFormula))
+                if (!Equals(peptide.CustomMolecule.MoleculeAndMassOffset, commonFormula))
                 {
                     ProposedMolecule = new CustomMolecule(commonFormula, peptide.CustomMolecule.Name);
                 }
@@ -312,8 +309,8 @@ namespace pwiz.Skyline.Model.Serialization
                 foreach (var detail in _precursorRawDetails.OrderBy(d => d._declaredHeavy ? 1 : 0)) // Look at lights first
                 {
                     var parentMassAdjustment = adjustParentMass
-                        ? Adduct.NonProteomicProtonatedFromCharge(detail._declaredCharge).ApplyToMass(TypedMass.ZERO_MONO_MASSH)
-                        : TypedMass.ZERO_MONO_MASSH;
+                        ? Adduct.NonProteomicProtonatedFromCharge(detail._declaredCharge).ApplyToMass(TypedMass.ZERO_MONO_MASSNEUTRAL)
+                        : TypedMass.ZERO_MONO_MASSNEUTRAL;
                     var parentMonoisotopicMass = ProposedMolecule.MonoisotopicMass - parentMassAdjustment;
                     if (_precursorRawDetails.TrueForAll(d =>
                     {
@@ -357,7 +354,7 @@ namespace pwiz.Skyline.Model.Serialization
         private XmlReader UpdatePeptideAndInsertAdductsInXML(ref Peptide peptide, IEnumerable<Adduct> adducts)
         {
             var updatedPeptide = ReferenceEquals(ProposedMolecule, peptide.CustomMolecule) ? peptide : new Peptide(ProposedMolecule);
-            var ionFormulas = adducts.Select(a => updatedPeptide.CustomMolecule.Formula + a.ToString()).ToList();
+            var ionFormulas = adducts.Select(a => updatedPeptide.CustomMolecule.MoleculeAndMassOffset.ChemicalFormulaWithoutOffsets() + a.ToString()).ToList();
             ReadAhead.ModifyAttributesInElement(DocumentSerializer.EL.precursor, DocumentSerializer.ATTR.ion_formula,
                 ionFormulas); // N.B. "ion_formula" consists of just the adduct for mass only molecules
             peptide = updatedPeptide;
