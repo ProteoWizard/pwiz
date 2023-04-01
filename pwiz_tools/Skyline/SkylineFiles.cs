@@ -25,7 +25,6 @@ using System.Net;
 using System.Reflection;
 using System.Text;
 using System.Windows.Forms;
-using System.Windows.Forms.VisualStyles;
 using System.Xml;
 using System.Xml.Serialization;
 using Ionic.Zip;
@@ -63,7 +62,6 @@ using pwiz.Skyline.Properties;
 using pwiz.Skyline.Util;
 using pwiz.Skyline.Util.Extensions;
 using DatabaseOpeningException = pwiz.Skyline.Model.Irt.DatabaseOpeningException;
-using Server = pwiz.Skyline.Util.Server;
 
 namespace pwiz.Skyline
 {
@@ -927,7 +925,7 @@ namespace pwiz.Skyline
                     tag = true;
                 }
 
-                var serverPanoramaWeb = new Server(pwiz.PanoramaClient.PanoramaUtil.PANORAMA_WEB, string.Empty, string.Empty);
+                var serverPanoramaWeb = new Server(PanoramaUtil.PANORAMA_WEB, string.Empty, string.Empty);
                 var newServer = servers.EditItem(this, serverPanoramaWeb, null, tag);
                 if (newServer == null)
                     return;
