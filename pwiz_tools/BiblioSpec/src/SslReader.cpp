@@ -27,6 +27,8 @@
  */
 
 #include "SslReader.h"
+#include <boost/algorithm/string/join.hpp>
+#include "pwiz/data/proteome/Peptide.hpp"
 
 namespace BiblioSpec {
 
@@ -61,9 +63,18 @@ SslReader::SslReader(BlibBuilder& maker,
       curPSM->modifiedSeq.clear();
       curPSM->mods.clear();
 
-      // parse the modified sequence
-      parseModSeq(curPSM->mods, curPSM->unmodSeq);
-      unmodifySequence(curPSM->unmodSeq);
+      if (curPSM->unmodSeq.find('@') == string::npos)
+      {
+          // parse the modified sequence
+          parseModSeq(curPSM->mods, curPSM->unmodSeq);
+          unmodifySequence(curPSM->unmodSeq);
+      }
+      else
+      {
+          curPSM->modifiedSeq = curPSM->unmodSeq;
+      	  // parse the crosslinked modified sequence
+          curPSM->unmodSeq = parseCrosslinkedSequence(curPSM->mods, curPSM->modifiedSeq);
+      }
 
       if (!curPSM->IsCompleteEnough())
       {
@@ -226,6 +237,47 @@ SslReader::SslReader(BlibBuilder& maker,
         i = closePos;
       }
     }
+  }
+  string SslReader::parseCrosslinkedSequence(vector<SeqMod>& mods, const string& crosslinkedSequence) {
+      vector<string> peptideSequences;
+	  vector<vector<SeqMod>> peptideSeqMods;
+      string currentPeptideSequence = "";
+      vector<SeqMod> currentSeqMods;
+      double crosslinkerMass = 0;
+      int crosslinkerFirstPosition = 0;
+      for (size_t i = 0; i < crosslinkedSequence.length(); i++) {
+          char c = crosslinkedSequence[i];
+          if (c >= 'A' && c <= 'Z') {
+              currentPeptideSequence += c;
+          } else if (c == '-') {
+              peptideSequences.push_back(currentPeptideSequence);
+              currentPeptideSequence = "";
+          } else if (c == '[') {
+              size_t closePos = crosslinkedSequence.find(']', ++i);
+              if (closePos == string::npos) {
+                  throw BlibException(false, "Sequence had opening bracket without closing bracket: %s", crosslinkedSequence.c_str());
+              }
+              if (currentPeptideSequence.length() == 0)
+              {
+                  size_t atPos = crosslinkedSequence.find('@', i);
+                  crosslinkerMass = atof(crosslinkedSequence.substr(i, atPos - i).c_str());
+                  crosslinkerFirstPosition = atoi(crosslinkedSequence.substr(atPos + 1).c_str());
+              }
+              else
+              {
+                  string mass = crosslinkedSequence.substr(i, closePos - i);
+                  mods.push_back(SeqMod(static_cast<int>(currentPeptideSequence.length()), atof(mass.c_str())));
+              }
+              i = closePos;
+          }
+      }
+      double crosslinkedMass = crosslinkerMass;
+      for (size_t i = 1; i < peptideSequences.size(); i++)
+      {
+      	crosslinkedMass += pwiz::proteome::Peptide(peptideSequences[i].c_str()).monoisotopicMass();
+      }
+      mods.push_back(SeqMod(crosslinkerFirstPosition, crosslinkedMass));
+      return boost::algorithm::join(peptideSequences, "-");
   }
 
   /**
