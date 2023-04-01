@@ -100,7 +100,7 @@ namespace pwiz.SkylineTest
             AssertEx.ValidatesAgainstSchema(DOC_MOLECULES_31);
             var doc = AssertEx.Deserialize<SrmDocument>(DOC_MOLECULES_31);
             AssertEx.IsDocumentState(doc, null, 1, 1, 1, 1);
-            Assert.AreEqual("C12H99", doc.MoleculeTransitionGroups.First().CustomMolecule.MoleculeAndMassOffset.ToStringInvariant());
+            Assert.AreEqual("C12H99", doc.MoleculeTransitionGroups.First().CustomMolecule.MoleculeAndMassOffset.ToString());
             Assert.AreEqual(doc.Molecules.First().CustomMolecule , doc.MoleculeTransitionGroups.First().CustomMolecule);
         }
 

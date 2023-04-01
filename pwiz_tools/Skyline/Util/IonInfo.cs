@@ -187,7 +187,7 @@ namespace pwiz.Skyline.Util
 
         public override string ToString()
         {
-            return _ionFormula?.ToStringInvariant() ?? string.Empty;
+            return _ionFormula?.ToString() ?? string.Empty;
         }
     }
 }

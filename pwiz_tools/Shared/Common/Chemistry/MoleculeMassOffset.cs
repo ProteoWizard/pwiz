@@ -261,6 +261,9 @@ namespace pwiz.Common.Chemistry
             return Create(formulaAndMasses);
         }
 
+        public static bool StringContainsMassOffsetCue(string formula) =>
+            formula.Contains(MASS_MOD_CUE_PLUS) || formula.Contains(MASS_MOD_CUE_MINUS);
+
         /// <summary>
         ///  Separate the formula and mass offset declarations in a string
         /// </summary>
@@ -282,7 +285,7 @@ namespace pwiz.Common.Chemistry
             double modMassMono = 0;
             double modMassAvg = 0;
             var position = 0;
-            while (formula.Contains(MASS_MOD_CUE_PLUS) || formula.Contains(MASS_MOD_CUE_MINUS))
+            while (StringContainsMassOffsetCue(formula))
             {
                 var cuePlus = formula.IndexOf(MASS_MOD_CUE_PLUS, position, StringComparison.InvariantCulture);
                 var cueMinus = formula.IndexOf(MASS_MOD_CUE_MINUS, position, StringComparison.InvariantCulture);
@@ -417,6 +420,8 @@ namespace pwiz.Common.Chemistry
 
         #endregion
 
+        // N.B. The mass portion is always written with InvariantCulture.
+
         public static string FormatMassModification(double massMod, int desiredDecimals = BioMassCalcBase.MassPrecision)
         {
             var sign = massMod > 0 ? @"+" : string.Empty;
@@ -445,11 +450,6 @@ namespace pwiz.Common.Chemistry
         }
 
         public override string ToString()
-        {
-            return ToString(BioMassCalcBase.MassPrecision);
-        }
-
-        public string ToStringInvariant()
         {
             return ToString(BioMassCalcBase.MassPrecision);
         }
@@ -564,10 +564,11 @@ namespace pwiz.Common.Chemistry
 
         public int CompareTolerant(MoleculeMassOffset other, double massTolerance)
         {
-            if (CompareTo(other) == 0)
+            if (ReferenceEquals(this, other))
             {
                 return 0;
             }
+
             if (ReferenceEquals(null, other))
             {
                 return 1;

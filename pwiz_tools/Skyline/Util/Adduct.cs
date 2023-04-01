@@ -763,7 +763,7 @@ namespace pwiz.Skyline.Util
 
         public static Adduct FromFormulaDiff(MoleculeMassOffset left, MoleculeMassOffset right, int charge)
         {
-            var adductFormula = left.Minus(right).ToStringInvariant();
+            var adductFormula = left.Minus(right).ToString();
             if (string.IsNullOrEmpty(adductFormula))
             {
                 return FromChargeNoMass(charge);
@@ -798,7 +798,7 @@ namespace pwiz.Skyline.Util
                 d = d.SetElementCount(BioMassCalcBase.H, Math.Max(0, nH - charge));
             }
 
-            var adductFormula = d.ToStringInvariant();
+            var adductFormula = d.ToString();
 
             if (string.IsNullOrEmpty(adductFormula))
             {
@@ -1431,7 +1431,7 @@ namespace pwiz.Skyline.Util
                             string.Format(
                                 Resources
                                     .Adduct_ApplyToMolecule_Adduct___0___calls_for_labeling_more__1__atoms_than_are_found_in_the_molecule__2_,
-                                this, unlabeledSymbol, molecule.ToStringInvariant()));
+                                this, unlabeledSymbol, molecule.ToString()));
                     }
 
                     var isotopeSymbol = isotopeSymbolAndCount.Key;

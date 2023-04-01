@@ -261,7 +261,7 @@ namespace pwiz.SkylineTest
             Assert.AreEqual(3.11, atoms.AverageMassOffset);
 
             atoms = MoleculeMassOffset.Create("NC132H53");
-            Assert.AreEqual("NC132H53", atoms.ToStringInvariant());
+            Assert.AreEqual("NC132H53", atoms.ToString());
             Assert.AreEqual(0.0, atoms.MonoMassOffset);
             Assert.AreEqual(0.0, atoms.AverageMassOffset);
             Assert.IsFalse(atoms.HasMassModifications);
@@ -304,22 +304,22 @@ namespace pwiz.SkylineTest
         {
             SequenceMassCalc sequenceMassCalc = new SequenceMassCalc(MassType.Monoisotopic);
             Assert.AreEqual(147.11, sequenceMassCalc.GetPrecursorMass("K"), .1);
-            Assert.AreEqual("C6H14N2O2", sequenceMassCalc.GetMolecularFormula("K").ToStringInvariant());
+            Assert.AreEqual("C6H14N2O2", sequenceMassCalc.GetMolecularFormula("K").ToString());
 
             var label13C6K = new StaticMod("label13C6K", "K", null, LabelAtoms.C13);
             sequenceMassCalc.AddStaticModifications(new []{label13C6K});
             Assert.AreEqual(153.11, sequenceMassCalc.GetPrecursorMass("K"), .1);
-            Assert.AreEqual("C'6H14N2O2", sequenceMassCalc.GetMolecularFormula("K").ToStringInvariant());
+            Assert.AreEqual("C'6H14N2O2", sequenceMassCalc.GetMolecularFormula("K").ToString());
 
             var label15N2K = new StaticMod("label15N2K", "K", null, LabelAtoms.N15);
             sequenceMassCalc.AddStaticModifications(new[]{label15N2K});
             Assert.AreEqual(155.11, sequenceMassCalc.GetPrecursorMass("K"), .1);
-            Assert.AreEqual("C'6H14N'2O2", sequenceMassCalc.GetMolecularFormula("K").ToStringInvariant());
+            Assert.AreEqual("C'6H14N'2O2", sequenceMassCalc.GetMolecularFormula("K").ToString());
 
             var labelLaK = new StaticMod("labelLaK", "K", null, "La");
             sequenceMassCalc.AddStaticModifications(new[] { labelLaK });
             Assert.AreEqual(294.033, sequenceMassCalc.GetPrecursorMass("K"), .1);
-            Assert.AreEqual("C'6H14LaN'2O2", sequenceMassCalc.GetMolecularFormula("K").ToStringInvariant());
+            Assert.AreEqual("C'6H14LaN'2O2", sequenceMassCalc.GetMolecularFormula("K").ToString());
             
             // Check our ability to handle strangely constructed chemical formulas, and preserve nonstandard order
             Assert.AreEqual("C12H9S2", Molecule.Parse("C12H9S2P0").ToString()); // P0 is weird, drop it

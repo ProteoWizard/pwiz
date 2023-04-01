@@ -713,7 +713,7 @@ namespace pwiz.Skyline.Model
                     maxCharge, new int[0], TransitionCalc.MassShiftType.none, out _, out _);
                 if (!adductInferred.IsEmpty)
                 {
-                    moleculeFormula = ion2.ToStringInvariant();
+                    moleculeFormula = ion2.ToString();
                 }
                 else
                 {

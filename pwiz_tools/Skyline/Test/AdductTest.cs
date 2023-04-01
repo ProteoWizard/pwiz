@@ -43,7 +43,7 @@ namespace pwiz.SkylineTest
         private void TestPentaneAdduct(string adductText, string expectedFormula, int expectedCharge, HashSet<string> coverage)
         {
             var adduct = Adduct.FromStringAssumeProtonated(adductText);
-            var actualFormula = IonInfo.ApplyAdductToFormula(PENTANE, adduct).ToStringInvariant();
+            var actualFormula = IonInfo.ApplyAdductToFormula(PENTANE, adduct).ToString();
             if (!Equals(expectedFormula, actualFormula))
             {
                 // ApplyAdductToFormula doesn't necessarily preserve element order, so check again as dictionary
@@ -475,7 +475,7 @@ namespace pwiz.SkylineTest
             TestException(PENTANE, "[M-2H]3-"); // Declared charge doesn't match described charge
 
             // Test label stripping
-            Assert.AreEqual("C5H9NO2S", (new IonInfo("C5H9H'3NO2S[M-3H]")).UnlabeledFormula.ToStringInvariant());
+            Assert.AreEqual("C5H9NO2S", (new IonInfo("C5H9H'3NO2S[M-3H]")).UnlabeledFormula.ToString());
 
             // Peptide representations
             Assert.AreEqual("C40H65N11O16", (new SequenceMassCalc(MassType.Average)).GetNeutralFormula("PEPTIDER", null).ToString());

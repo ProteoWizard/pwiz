@@ -75,7 +75,7 @@ namespace TestPerf
             public bool HasMissingDependencies { get; private set; }
         }
 
-        [TestMethod, NoUnicodeTesting(TestExclusionReason.HARDKLOR_UNICODE_ISSUES)]
+        [TestMethod, NoUnicodeTesting(TestExclusionReason.HARDKLOR_UNICODE_ISSUES), NoParallelTesting(TestExclusionReason.RESOURCE_INTENSIVE)]
         public void TestDdaFeatureDetection()
         {
             TestFilesZip = GetPerfTestDataURL("PerfImportResultsThermoDDAVsMz5.zip");

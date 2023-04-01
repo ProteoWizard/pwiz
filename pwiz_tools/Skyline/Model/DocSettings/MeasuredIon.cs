@@ -288,7 +288,7 @@ namespace pwiz.Skyline.Model.DocSettings
                 }
                 if (SettingsCustomIon == null)
                 {
-                    SettingsCustomIon = new SettingsCustomIon(parsedIon.MoleculeAndMassOffset.ToStringInvariant(), adduct,
+                    SettingsCustomIon = new SettingsCustomIon(parsedIon.MoleculeAndMassOffset.ToString(), adduct,
                         parsedIon.MonoisotopicMass,
                         parsedIon.AverageMass,
                         parsedIon.Name);
@@ -314,7 +314,7 @@ namespace pwiz.Skyline.Model.DocSettings
             }
             else
             {
-                writer.WriteAttributeIfString(ATTR.ion_formula, SettingsCustomIon.MoleculeAndMassOffset.IsMassOnly ? null : SettingsCustomIon.MoleculeAndMassOffset.ToStringInvariant());
+                writer.WriteAttributeIfString(ATTR.ion_formula, SettingsCustomIon.MoleculeAndMassOffset.IsMassOnly ? null : SettingsCustomIon.MoleculeAndMassOffset.ToString());
                 // Masses are information only, if there is a formula, but Panorama may need these
                 writer.WriteAttribute(ATTR.mass_monoisotopic, SettingsCustomIon.MonoisotopicMass.Value);
                 writer.WriteAttribute(ATTR.mass_average, SettingsCustomIon.AverageMass.Value);

@@ -48,7 +48,7 @@ namespace pwiz.Skyline.SettingsUI
         private IsolationScheme _prevval_comboIsolationScheme;
         private IModifyDocumentContainer _documentContainer { get; set; }
 
-        public FullScanSettingsControl(IModifyDocumentContainer documentContainer, bool forFeatureDetection)
+        public FullScanSettingsControl(IModifyDocumentContainer documentContainer, bool forFeatureDetection = false)
         {
             _documentContainer = documentContainer;
 

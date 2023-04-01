@@ -1665,11 +1665,11 @@ namespace pwiz.SkylineTestFunctional
             RunUI(() => SkylineWindow.Paste());
             AssertEx.IsDocumentState(SkylineWindow.Document, null, 1, 5, 5, 5);
             var docMolecules = SkylineWindow.Document.CustomMolecules.Select(mol => mol.CustomMolecule.MoleculeAndMassOffset).ToArray();
-            AssertEx.AreEqual("C28H42N2O1Xe", docMolecules[0].ToStringInvariant());
-            AssertEx.AreEqual("C30H46N2O1Xe", docMolecules[1].ToStringInvariant());
-            AssertEx.AreEqual("C28N2OXeH41", docMolecules[2].ToStringInvariant());
-            AssertEx.AreEqual("C28N2O1Xe", docMolecules[3].ToStringInvariant());
-            AssertEx.AreEqual("C30N2OXeH45", docMolecules[4].ToStringInvariant()); // We intentionally preserve nonstandard order
+            AssertEx.AreEqual("C28H42N2O1Xe", docMolecules[0].ToString());
+            AssertEx.AreEqual("C30H46N2O1Xe", docMolecules[1].ToString());
+            AssertEx.AreEqual("C28N2OXeH41", docMolecules[2].ToString());
+            AssertEx.AreEqual("C28N2O1Xe", docMolecules[3].ToString());
+            AssertEx.AreEqual("C30N2OXeH45", docMolecules[4].ToString()); // We intentionally preserve nonstandard order
             NewDocument();
         }
 

@@ -637,7 +637,7 @@ namespace pwiz.Skyline.Model
             {
                 transitionProto.Formula = Transition.CustomIon.MoleculeAndMassOffset.IsMassOnly ?
                     null : 
-                    Transition.CustomIon.MoleculeAndMassOffset.ToStringInvariant();
+                    Transition.CustomIon.MoleculeAndMassOffset.ToString();
                 if (Transition.CustomIon.AverageMass.IsMassH())
                     transitionProto.AverageMassH = Transition.CustomIon.AverageMass;
                 else

@@ -2097,7 +2097,7 @@ namespace pwiz.Skyline.Model.Lib
             if (!ChemicalFormulaOrMasses.IsMassOnly)
             {
                 // Return formula and mass offsets if any e.g. "C12H5[-1.23/1.24]"
-                return ChemicalFormulaOrMasses.ToStringInvariant();
+                return ChemicalFormulaOrMasses.ToString();
             }
             else
             {
@@ -2106,34 +2106,6 @@ namespace pwiz.Skyline.Model.Lib
             }
         }
 
-        /*
-        public static byte[] ToBytes(SmallMoleculeLibraryAttributes attributes)
-        {
-            attributes = attributes ?? EMPTY;
-            // Encode as <length><item><length><item>etc
-            var items = new List<byte[]>
-            {
-                Encoding.UTF8.GetBytes(attributes.MoleculeName ?? string.Empty),
-                Encoding.UTF8.GetBytes(attributes.FormatChemicalFormulaOrMassesString()), // If no formula provided, encode monoMass and averageMass instead
-                Encoding.UTF8.GetBytes(attributes.InChiKey ?? string.Empty),
-                Encoding.UTF8.GetBytes(attributes.OtherKeys ?? string.Empty)
-            };
-            Assume.IsTrue(Equals(nItems,items.Count));
-            var results = new byte[items.Sum(item => item.Length + sizeof(int))];
-            var index = 0;
-            foreach (var item in items)
-            {
-                Array.Copy(BitConverter.GetBytes(item.Length), 0, results, index, sizeof(int));
-                index += sizeof(int);
-            }
-            foreach (var item in items)
-            {
-                Array.Copy(item, 0, results, index, item.Length);
-                index += item.Length;
-            }
-            return results;
-        }
-        */
         public static SmallMoleculeLibraryAttributes Create(string moleculeName, MoleculeMassOffset molecule,
             string inChiKey, string otherKeys)
         {
@@ -2196,7 +2168,7 @@ namespace pwiz.Skyline.Model.Lib
         public string MoleculeName { get; private set; }
         public MoleculeMassOffset ChemicalFormulaOrMasses { get; private set; } // If no formula provided, encodes monoMass and averageMass instead as <mono>-slash-<average>
         public string ChemicalFormula => ChemicalFormulaOrMasses != null && !ChemicalFormulaOrMasses.IsMassOnly // Returns null if ChemicalFormulaOrMassesString encodes masses instead of formula
-            ? ChemicalFormulaOrMasses.ToStringInvariant()
+            ? ChemicalFormulaOrMasses.ToString()
             : null;
 
         public string InChiKey { get; private set; }

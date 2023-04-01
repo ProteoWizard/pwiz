@@ -60,7 +60,7 @@ namespace pwiz.Skyline.Model
                 var formula = target.Molecule.MoleculeAndMassOffset;
                 if (!formula.IsEmpty)
                 {
-                    accessions.Add(new Tuple<string, Target>(formula.ToStringInvariant(), target));
+                    accessions.Add(new Tuple<string, Target>(formula.ToString(), target));
                 }
             }
 

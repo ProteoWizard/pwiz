@@ -475,7 +475,7 @@ namespace pwiz.Skyline.Model
                        Name.Replace(TextUtil.SEPARATOR_TSV_STR, @" "); // Tab is a reserved char in our lib cache scheme
             }
         }
-        public string SecondaryEquivalenceKey { get { return UnlabeledFormula.IsMassOnly ? string.Empty : UnlabeledFormula.ToStringInvariant(); } }
+        public string SecondaryEquivalenceKey { get { return UnlabeledFormula.IsMassOnly ? string.Empty : UnlabeledFormula.ToString(); } }
 
         [Track]
         public string Name { get; protected set; }
@@ -549,7 +549,7 @@ namespace pwiz.Skyline.Model
         {
             var massOrFormula = MoleculeAndMassOffset.IsMassOnly ? 
                 FormattedMasses(MonoisotopicMass, AverageMass) : // e.g. "1.2345678/1.2345679"
-                MoleculeAndMassOffset.ToString( 9); // e.g. "C12H5[+1.2345678/1.2345679]"
+                MoleculeAndMassOffset.ToString(SERIALIZATION_DIGITS); // e.g. "C12H5[+1.2345678/1.2345679]"
             var parts = new[] { Name, massOrFormula, AccessionNumbers.ToString() };
             return (parts.All(string.IsNullOrEmpty) ? new[] { InvariantName } : parts).ToList();
         }
@@ -584,7 +584,7 @@ namespace pwiz.Skyline.Model
                     }
                 }
             }
-            else if (formula != null && formula.Contains(MASS_SPLITTER))
+            else if (formula != null && (formula.Contains(MASS_SPLITTER) || MoleculeMassOffset.StringContainsMassOffsetCue(formula)))
             {
                 // "formula" is actually mono and average masses, e.g. "1.23/1.24", or possibly a formula and mass offset e.g. "C12H5[-1.2/1.21]"
                 try
@@ -642,13 +642,15 @@ namespace pwiz.Skyline.Model
                 if (!string.IsNullOrEmpty(key))
                     return key;
                 else if (!MoleculeAndMassOffset.IsMassOnly)
-                    return MoleculeAndMassOffset.ToStringInvariant();
+                    return MoleculeAndMassOffset.ToString();
                 else
                     return String.Format(CultureInfo.InvariantCulture, massFormat, InvariantNameDetail, MonoisotopicMass, AverageMass);
             }
         }
 
         public const string INVARIANT_NAME_DETAIL = "Molecule";
+        private const int SERIALIZATION_DIGITS = 9; // Number of digits to use when serializing masses
+        private const double SERIALIZATION_TOLERANCE = 5E-10; // Tolerance for comparing serializing masses
         public virtual string InvariantNameDetail { get { return INVARIANT_NAME_DETAIL; } } 
         public virtual string DisplayNameDetail { get { return Resources.CustomMolecule_DisplayName_Molecule; } }
 
@@ -837,12 +839,12 @@ namespace pwiz.Skyline.Model
         {
             if (adduct.IsEmpty)
             {
-                writer.WriteAttributeIfString(ATTR.neutral_formula,  MoleculeAndMassOffset.IsMassOnly ? string.Empty : MoleculeAndMassOffset.ToStringInvariant()); // If it's mass only, let ATTR.neutral_mass_* show that
+                writer.WriteAttributeIfString(ATTR.neutral_formula,  MoleculeAndMassOffset.IsMassOnly ? string.Empty : MoleculeAndMassOffset.ToString()); // If it's mass only, let ATTR.neutral_mass_* show that
             }
             else
             {
                 writer.WriteAttributeIfString(ATTR.ion_formula,
-                    (MoleculeAndMassOffset.IsMassOnly ? string.Empty : MoleculeAndMassOffset.ToStringInvariant()) + // If it's mass only, let ATTR.neutral_mass_* show that
+                    (MoleculeAndMassOffset.IsMassOnly ? string.Empty : MoleculeAndMassOffset.ToString()) + // If it's mass only, let ATTR.neutral_mass_* show that
                                                         (adduct.IsProteomic ? string.Empty : adduct.ToString())); 
             }
             Assume.IsFalse(AverageMass.IsMassH()); // We're going to read these as neutral masses
@@ -861,15 +863,10 @@ namespace pwiz.Skyline.Model
             var result = string.CompareOrdinal(Name, other.Name);
             if (result == 0)
             {
-                result = MoleculeAndMassOffset.CompareTo(other.MoleculeAndMassOffset);
+                result = MoleculeAndMassOffset.CompareTolerant(other.MoleculeAndMassOffset, SERIALIZATION_TOLERANCE);  // Allow for float vs double serialization effects
                 if (result == 0)
                 {
                     result = AccessionNumbers.CompareTo(other.AccessionNumbers);
-                    if (result == 0)
-                    {
-                        result = MonoisotopicMass.Equals(other.MonoisotopicMass, BioMassCalcBase.MassTolerance) ? // Allow for float vs double serialization effects
-                            0 : MonoisotopicMass.CompareTo(other.MonoisotopicMass);
-                    }
                 }
             }
             return result;
