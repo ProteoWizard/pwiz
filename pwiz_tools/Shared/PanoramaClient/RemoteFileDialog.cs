@@ -17,9 +17,7 @@ namespace pwiz.PanoramaClient
         private static string CheckIfVersions;
         private static string PeptideInfoQuery;
         private string InitQuery;
-        // -- UNCOMMENT when FolderBrowser.cs has been added
-        // private FolderBrowser folders;
-        // --------------------------------------------------
+        private FolderBrowser folders;
         public TreeNodeCollection _nodesState;
         public List<TreeView> tree = new List<TreeView>();
         //public TreeViewStateRestorer state;
@@ -93,12 +91,13 @@ namespace pwiz.PanoramaClient
             var serverUri = new Uri(Server);
             if (!ShowingSky)
             {
-                // -- UNCOMMENT when FolderBrowser.cs has been added
-                // folders = new FolderBrowser(serverUri, User, Pass, false, treeView);
-                // folders.Dock = DockStyle.Fill;
-                // //treeView.Hide();
-                // splitContainer1.Panel1.Controls.Add(folders);
-                // -----------------------------------------------------
+                folders = new FolderBrowser(serverUri, User, Pass, false
+                    /* Note from Vagisha: FolderBrowser constructor does not take 5 arguments.
+                     * , treeView
+                     */);
+                folders.Dock = DockStyle.Fill;
+                //treeView.Hide();
+                splitContainer1.Panel1.Controls.Add(folders);
                 //treeView.Controls.Add(folders);
                 //pc.InitializeTreeView(serverUri, User, Pass, treeView, false, true, false);
             }
@@ -524,9 +523,10 @@ namespace pwiz.PanoramaClient
             var type = checkBox1.Checked;
             //folders.SwitchFolderType(type);
             treeView.Show();
-            // -- UNCOMMENT when FolderBrowser.cs has been added
-            // folders.SetTreeColor(treeView);
-            // -------------------------------------------------
+            /*
+             * Note from Vagisha:  No SetTreeColor method in FolderBrowser
+             * folders.SetTreeColor(treeView);
+             */
             //pc.InitializeTreeView(new Uri(Server), User, Pass, treeView, false, true, type);
             //treeView.TopNode.Expand();
             /*if (!restoring)

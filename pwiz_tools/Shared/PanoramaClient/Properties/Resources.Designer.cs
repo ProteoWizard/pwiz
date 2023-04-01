@@ -61,6 +61,36 @@ namespace pwiz.PanoramaClient.Properties {
         }
         
         /// <summary>
+        ///   Looks up a localized resource of type System.Drawing.Bitmap.
+        /// </summary>
+        public static System.Drawing.Bitmap ChromLib {
+            get {
+                object obj = ResourceManager.GetObject("ChromLib", resourceCulture);
+                return ((System.Drawing.Bitmap)(obj));
+            }
+        }
+        
+        /// <summary>
+        ///   Looks up a localized resource of type System.Drawing.Bitmap.
+        /// </summary>
+        public static System.Drawing.Bitmap Edit_Undo {
+            get {
+                object obj = ResourceManager.GetObject("Edit_Undo", resourceCulture);
+                return ((System.Drawing.Bitmap)(obj));
+            }
+        }
+        
+        /// <summary>
+        ///   Looks up a localized resource of type System.Drawing.Bitmap.
+        /// </summary>
+        public static System.Drawing.Bitmap Folder {
+            get {
+                object obj = ResourceManager.GetObject("Folder", resourceCulture);
+                return ((System.Drawing.Bitmap)(obj));
+            }
+        }
+        
+        /// <summary>
         ///   Looks up a localized string similar to Error: {0}.
         /// </summary>
         public static string GenericState_AppendErrorAndUri_Error___0_ {
@@ -75,26 +105,6 @@ namespace pwiz.PanoramaClient.Properties {
         public static string GenericState_AppendErrorAndUri_URL___0_ {
             get {
                 return ResourceManager.GetString("GenericState_AppendErrorAndUri_URL___0_", resourceCulture);
-            }
-        }
-        
-        /// <summary>
-        ///   Looks up a localized resource of type System.Drawing.Bitmap.
-        /// </summary>
-        public static System.Drawing.Bitmap Icojam_Blueberry_Basic_Arrow_left {
-            get {
-                object obj = ResourceManager.GetObject("Icojam-Blueberry-Basic-Arrow-left", resourceCulture);
-                return ((System.Drawing.Bitmap)(obj));
-            }
-        }
-        
-        /// <summary>
-        ///   Looks up a localized resource of type System.Drawing.Bitmap.
-        /// </summary>
-        public static System.Drawing.Bitmap Icojam_Blueberry_Basic_Arrow_right {
-            get {
-                object obj = ResourceManager.GetObject("Icojam-Blueberry-Basic-Arrow-right", resourceCulture);
-                return ((System.Drawing.Bitmap)(obj));
             }
         }
         
@@ -141,6 +151,16 @@ namespace pwiz.PanoramaClient.Properties {
         public static string ServerState_GetErrorMessage_Unable_to_connect_to_the_server__0__ {
             get {
                 return ResourceManager.GetString("ServerState_GetErrorMessage_Unable_to_connect_to_the_server__0__", resourceCulture);
+            }
+        }
+        
+        /// <summary>
+        ///   Looks up a localized resource of type System.Drawing.Bitmap.
+        /// </summary>
+        public static System.Drawing.Bitmap up_pro32 {
+            get {
+                object obj = ResourceManager.GetObject("up_pro32", resourceCulture);
+                return ((System.Drawing.Bitmap)(obj));
             }
         }
         

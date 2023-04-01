@@ -121,6 +121,28 @@
     <value>17, 17</value>
   </metadata>
   <assembly alias="System.Drawing" name="System.Drawing, Version=4.0.0.0, Culture=neutral, PublicKeyToken=b03f5f7f11d50a3a" />
+  <data name="back.Image" type="System.Drawing.Bitmap, System.Drawing" mimetype="application/x-microsoft.net.object.bytearray.base64">
+    <value>
+        iVBORw0KGgoAAAANSUhEUgAAACAAAAAgCAYAAABzenr0AAAAAXNSR0IArs4c6QAAAARnQU1BAACxjwv8
+        YQUAAAAJcEhZcwAADsMAAA7DAcdvqGQAAAElSURBVFhH7Y6xSgNBEIbv0SxS2NqkSWEnpBBLSZCAZQqL
+        gI0oIiSEI4IIgqRJiCGFBDtLwVcZmb1/uM3eRg3sTAjkg5+53Zm9b7I9O0nn8YMGiy/C0RaWS3Blhy83
+        XyCUmy7QzpdOGFa0dWHZumBEj/PhO6UKLyz1afn99/LhD1IHmjixB6kDVZWzh7kb0Kwc6FaRpkWgLAkH
+        Tu/fVM/QFoRDFhXqgubtlKwDdYnf5A39s0agXeXkZuKax9djt4ScuUrkB/7dJpH3UFZhOQ+E1f9BeLdp
+        +D10cXhAO1CtJ/YoZaD5nUbvlTRyN/n83wLMUfeZ6lcv7iF/+xUj+rAwFrRtOLwcEYfF8o2WHSLe2gJM
+        rZOTBFf2HFwMqdWfbW+BPenIsh9lGoeCmcAw0gAAAABJRU5ErkJggg==
+</value>
+  </data>
+  <data name="forward.Image" type="System.Drawing.Bitmap, System.Drawing" mimetype="application/x-microsoft.net.object.bytearray.base64">
+    <value>
+        iVBORw0KGgoAAAANSUhEUgAAACAAAAAgCAYAAABzenr0AAAAAXNSR0IArs4c6QAAAARnQU1BAACxjwv8
+        YQUAAAAJcEhZcwAADsMAAA7DAcdvqGQAAAEySURBVFhH7ZaxS0JRFMbfn+bQ0OrS0uAWNERjCPLA0aFB
+        aIkkgsIsQQRBWpSKhhK3xqB/5cSn39H39LyX+rz3IfiDj+s759z7u3cz2LPzPHz8SNgeCz/9A7mGJb9E
+        L5DLJSpPI1kMW36wLoCw7R5LruHI/3RGv1J+/DIPuWh+ZgoV6UQ3nN+9T8RYo/UsoSYZa9O2Q5UNXlu+
+        f5292tVK3TIY8BUq46BxdvsWG1z3e51QO0cPy7quGsxTPeX0Zii+Q/UUa2CT4GVWfTHUzkHx5HowaWLd
+        NKWrl8QztE5lHN2YdsAqSduLs6lbBk3XocrG2rDNUJNMY/Atx/W+k1DhjqPLnmggLNa6s5UjboHICtvu
+        Oaw+CwKp/mbLDyrNRQ4OwpZoWPIL/kcUKs185HuyEwR/UFmHnV3u2vkAAAAASUVORK5CYII=
+</value>
+  </data>
   <data name="up.Image" type="System.Drawing.Bitmap, System.Drawing" mimetype="application/x-microsoft.net.object.bytearray.base64">
     <value>
         iVBORw0KGgoAAAANSUhEUgAAABAAAAAQCAYAAAAf8/9hAAAAAXNSR0IArs4c6QAAAARnQU1BAACxjwv8

@@ -113,7 +113,7 @@
             // back
             // 
             this.back.DisplayStyle = System.Windows.Forms.ToolStripItemDisplayStyle.Image;
-            this.back.Image = global::pwiz.PanoramaClient.Properties.Resources.Icojam_Blueberry_Basic_Arrow_left;
+            this.back.Image = ((System.Drawing.Image)(resources.GetObject("back.Image")));
             this.back.ImageTransparentColor = System.Drawing.Color.Magenta;
             this.back.Name = "back";
             this.back.Size = new System.Drawing.Size(28, 28);
@@ -123,7 +123,7 @@
             // forward
             // 
             this.forward.DisplayStyle = System.Windows.Forms.ToolStripItemDisplayStyle.Image;
-            this.forward.Image = global::pwiz.PanoramaClient.Properties.Resources.Icojam_Blueberry_Basic_Arrow_right;
+            this.forward.Image = ((System.Drawing.Image)(resources.GetObject("forward.Image")));
             this.forward.ImageTransparentColor = System.Drawing.Color.Magenta;
             this.forward.Name = "forward";
             this.forward.Size = new System.Drawing.Size(28, 28);

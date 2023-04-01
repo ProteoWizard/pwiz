@@ -6,11 +6,9 @@ namespace pwiz.PanoramaClient
     //instead of having a TreeView, have the user pass in a treeView that has things done to it that way RemoteFileDialog can still detect a click event?
     public partial class FolderBrowser : UserControl
     {
-        private Uri _serverUri;
-        private string _user;
-        private string _pass;
+        private PanoramaServer _server;
         private bool _uploadPerms;
-        private PanoramaClient pc;
+        private PanoramaForms formsUtil;
         public string FolderPath;
 
         //Needs to take server information
@@ -19,16 +17,14 @@ namespace pwiz.PanoramaClient
         {
             InitializeComponent();
             treeView.ImageList = imageList1;
-            _serverUri = serverUri;
-            _user = user;
-            _pass = pass;
+            _server = new PanoramaServer(serverUri, user, pass);
             _uploadPerms = uploadPerms;
         }
 
         public void SwitchFolderType(bool type)
         {
             treeView.Nodes.Clear();
-            pc.InitializeTreeView(_serverUri, _user, _pass, treeView, _uploadPerms, true, type);
+            formsUtil.InitializeTreeView(_server, treeView, _uploadPerms, true, type);
             treeView.TopNode.Expand();
         }
 
@@ -42,8 +38,8 @@ namespace pwiz.PanoramaClient
 
         private void FolderBrowser_Load(object sender, EventArgs e)
         {
-            pc = new PanoramaClient();
-            pc.InitializeTreeView(_serverUri, _user, _pass, treeView, _uploadPerms, true, false);
+            formsUtil = new PanoramaForms();
+            formsUtil.InitializeTreeView(_server, treeView, _uploadPerms, true, false);
             treeView.TopNode.Expand();
         }
     }

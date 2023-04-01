@@ -16,17 +16,18 @@ namespace pwiz.PanoramaClient
 
     internal class PanoramaForms
     {
-        public void InitializeTreeView(Uri serverUri, string user, string pass, TreeView treeViewFolders, bool requireUploadPerms, bool showFiles, bool showSky)
+        public void InitializeTreeView(PanoramaServer server, TreeView treeViewFolders, bool requireUploadPerms, bool showFiles, bool showSky)
         {
-            var folder = GetInfoForFolders(serverUri, user, pass, null);
-            var treeNode = new TreeNode(serverUri.ToString());
+            IPanoramaClient panoramaClient = new WebPanoramaClient(server.URI);
+            var folder = panoramaClient.GetInfoForFolders(server, null);
+            var treeNode = new TreeNode(server.URI.ToString());
 
             treeViewFolders.Invoke(new Action(() => treeViewFolders.Nodes.Add(treeNode)));
             if (showSky)
             {
                 var cols = new[] { @"Container", @"FileName", @"Container/Path" };
-                var initQuery = BuildQuery(serverUri.ToString(), @"/Panorama Public/", @"Runs", @"AllFolders", cols, string.Empty, string.Empty);
-                JToken json = GetJson(initQuery, user, pass);
+                var initQuery = BuildQuery(server.URI.ToString(), @"/Panorama Public/", @"Runs", @"AllFolders", cols, string.Empty, string.Empty);
+                JToken json = GetJson(initQuery, server.Username, server.Password);
                 treeViewFolders.Invoke(new Action(() => LoadSkyFolders(json, treeNode, new HashSet<string>())));
 
             }
@@ -34,25 +35,6 @@ namespace pwiz.PanoramaClient
             {
                 treeViewFolders.Invoke(new Action(() => AddChildContainers(treeNode, folder, requireUploadPerms, showFiles)));
             }
-        }
-
-        public JToken GetInfoForFolders(Uri serUri, string user, string pass, string folder)
-        {
-
-            // Retrieve folders from server.
-            var uri = GetContainersUri(serUri, folder, true);
-
-            using (var webClient = new WebClientWithCredentials(serUri, user, pass))
-            {
-                return webClient.Get(uri);
-            }
-        }
-
-        public static Uri GetContainersUri(Uri serverUri, string folder, bool includeSubfolders)
-        {
-            var queryString = string.Format(@"includeSubfolders={0}&moduleProperties=TargetedMS",
-                includeSubfolders ? @"true" : @"false");
-            return PanoramaUtil.Call(serverUri, @"project", folder, @"getContainers", queryString);
         }
 
         private static bool ContainsTargetedMSModule(IEnumerable<JToken> modules)
