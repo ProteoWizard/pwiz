@@ -238,13 +238,18 @@ SslReader::SslReader(BlibBuilder& maker,
       }
     }
   }
+
+  /**
+   * Parses a crosslinked peptide sequence, adds the modifications from the first crosslinked peptide 
+   * to the "mods" vector, and returns the unmodified sequence.
+   * The modifications that get added to the mods vector will include a modification representing the
+   * mass of the crosslinker plus the masses of all of the linked peptides.
+   */
   string SslReader::parseCrosslinkedSequence(vector<SeqMod>& mods, const string& crosslinkedSequence) {
       vector<string> peptideSequences;
-	  vector<vector<SeqMod>> peptideSeqMods;
       string currentPeptideSequence = "";
-      vector<SeqMod> currentSeqMods;
-      double crosslinkerMass = 0;
-      int crosslinkerFirstPosition = 0;
+      double massOfCrosslinkedPeptides = 0;
+      int positionOfCrosslinkerInFirstPeptide = 0;
       for (size_t i = 0; i < crosslinkedSequence.length(); i++) {
           char c = crosslinkedSequence[i];
           if (c >= 'A' && c <= 'Z') {
@@ -257,26 +262,30 @@ SslReader::SslReader(BlibBuilder& maker,
               if (closePos == string::npos) {
                   throw BlibException(false, "Sequence had opening bracket without closing bracket: %s", crosslinkedSequence.c_str());
               }
-              if (currentPeptideSequence.length() == 0)
-              {
-                  size_t atPos = crosslinkedSequence.find('@', i);
-                  crosslinkerMass = atof(crosslinkedSequence.substr(i, atPos - i).c_str());
-                  crosslinkerFirstPosition = atoi(crosslinkedSequence.substr(atPos + 1).c_str());
-              }
-              else
-              {
-                  string mass = crosslinkedSequence.substr(i, closePos - i);
-                  mods.push_back(SeqMod(static_cast<int>(currentPeptideSequence.length()), atof(mass.c_str())));
+              if (currentPeptideSequence.length() == 0) {
+                  size_t atSignPos = crosslinkedSequence.find('@', i);
+                  if (atSignPos == string::npos) {
+                      throw BlibException(false, "Unable to find crosslinker mass in sequence: %s", crosslinkedSequence.c_str());
+                  }
+                  massOfCrosslinkedPeptides += atof(crosslinkedSequence.substr(i, atSignPos - i).c_str());
+                  positionOfCrosslinkerInFirstPeptide = atoi(crosslinkedSequence.substr(atSignPos + 1).c_str());
+              } else {
+                  double modificationMass = atof(crosslinkedSequence.substr(i, closePos - i).c_str());
+                  if (peptideSequences.size() == 0) {
+                      mods.push_back(SeqMod(static_cast<int>(currentPeptideSequence.length()), modificationMass));
+                  } else {
+                      massOfCrosslinkedPeptides += modificationMass;
+                  }
               }
               i = closePos;
+          } else {
+              throw BlibException(false, "Unexpected character '%c' at position %i in crosslinked peptide: %s", c, i + 1, crosslinkedSequence.c_str());
           }
       }
-      double crosslinkedMass = crosslinkerMass;
-      for (size_t i = 1; i < peptideSequences.size(); i++)
-      {
-      	crosslinkedMass += pwiz::proteome::Peptide(peptideSequences[i].c_str()).monoisotopicMass();
+      for (size_t iPeptide = 1; iPeptide < peptideSequences.size(); iPeptide++) {
+          massOfCrosslinkedPeptides += pwiz::proteome::Peptide(peptideSequences[iPeptide].c_str()).monoisotopicMass();
       }
-      mods.push_back(SeqMod(crosslinkerFirstPosition, crosslinkedMass));
+      mods.push_back(SeqMod(positionOfCrosslinkerInFirstPeptide, massOfCrosslinkedPeptides));
       return boost::algorithm::join(peptideSequences, "-");
   }
 
