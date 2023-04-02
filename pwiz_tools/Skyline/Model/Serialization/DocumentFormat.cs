@@ -111,7 +111,8 @@ namespace pwiz.Skyline.Model.Serialization
         public static readonly DocumentFormat SHARE_DATA_FOLDERS = VERSION_22_21;
         public static readonly DocumentFormat VERSION_22_22 = new DocumentFormat(22.22); // skewness and kurtosis
         public static readonly DocumentFormat VERSION_22_23 = new DocumentFormat(22.23); // ion match tolerance units
-        public static readonly DocumentFormat CURRENT = VERSION_22_23;
+        public static readonly DocumentFormat VERSION_22_24 = new DocumentFormat(22.24); // Group Comparison MS level
+        public static readonly DocumentFormat CURRENT = VERSION_22_24;
 
         private readonly double _versionNumber;
         public DocumentFormat(double versionNumber)

@@ -1684,6 +1684,11 @@ namespace pwiz.Skyline.Model.Serialization
         /// </summary>
         private void ValidateSerializedVsCalculatedProductMz(double? declaredProductMz, TransitionDocNode node)
         {
+            if (node.ComplexFragmentIon.IsCrosslinked && FormatVersion <= DocumentFormat.VERSION_22_23)
+            {
+                // Recent bugfixes for crosslinked peptides might result in different m/z's
+                return;
+            }
             if (declaredProductMz.HasValue && Math.Abs(declaredProductMz.Value - node.Mz.Value) >= .001)
             {
                 var toler = node.Transition.IsPrecursor() ? .5 : // We do see mz-only transition lists where precursor mz is given as double and product mz as int
