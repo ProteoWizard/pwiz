@@ -19,7 +19,6 @@
 using System;
 using System.Diagnostics;
 using System.Drawing;
-using pwiz.Common.Chemistry;
 using pwiz.Common.SystemUtil;
 using pwiz.Skyline.Model;
 using pwiz.Skyline.Model.GroupComparison;

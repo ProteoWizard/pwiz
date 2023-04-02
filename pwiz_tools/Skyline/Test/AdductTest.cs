@@ -105,13 +105,13 @@ namespace pwiz.SkylineTest
             AssertEx.IsTrue(Adduct.FromStringAssumeProtonatedNonProteomic("[M-H2O+H]+").SameEffect(Adduct.FromStringAssumeProtonatedNonProteomic("(M+H)+[-H2O]")));
             Assert.IsTrue(Molecule.AreEquivalentFormulas("C10H30Si5O5H-CH4", "C9H27O5Si5"));
             AssertEx.AreEqual("C7H27O2Si4", BioMassCalc.MONOISOTOPIC.FindFormulaIntersection(new[] { 
-                MoleculeMassOffset.Create("C8H305O2Si5H-CH4"), // N.B. should preserve the element order of first in list
-                MoleculeMassOffset.Create("C9H27O5Si4"),
-                MoleculeMassOffset.Create("C9H27O5Si5Na")}).ToString());
+                Molecule.Parse("C8H305O2Si5H-CH4"), // N.B. should preserve the element order of first in list
+                Molecule.Parse("C9H27O5Si4"),
+                Molecule.Parse("C9H27O5Si5Na")}).ToString());
             AssertEx.AreEqual("C7H27Si4O5", BioMassCalc.MONOISOTOPIC.FindFormulaIntersectionUnlabeled(new[] {
-                MoleculeMassOffset.Create("C7C'H30Si5O5H-CH4"), // N.B. should preserve the element order of first in list
-                MoleculeMassOffset.Create("C9H27O5Si4"),
-                MoleculeMassOffset.Create("C9H25H'2O5Si5Na")}).ToString());
+                Molecule.Parse("C7C'H30Si5O5H-CH4"), // N.B. should preserve the element order of first in list
+                Molecule.Parse("C9H27O5Si4"),
+                Molecule.Parse("C9H25H'2O5Si5Na")}).ToString());
 
             // There is a difference between a proteomic adduct and non proteomic, primarily in how they display
             Assert.AreEqual(Adduct.FromStringAssumeChargeOnly("M+H"), Adduct.M_PLUS_H);

@@ -496,9 +496,17 @@ namespace pwiz.Skyline.Util
                                 int count;
                                 if (composition.TryGetValue(pair.Key, out count))
                                 {
-                                    composition[pair.Key] = count + pair.Value * multiplierM;
+                                    count += pair.Value * multiplierM;
+                                    if (count == 0)
+                                    {
+                                        composition.Remove(pair.Key);
+                                    }
+                                    else
+                                    {
+                                        composition[pair.Key] = count;
+                                    }
                                 }
-                                else
+                                else if (pair.Value != 0)
                                 {
                                     composition.Add(pair.Key, pair.Value * multiplierM);
                                 }
@@ -520,7 +528,7 @@ namespace pwiz.Skyline.Util
                     string.Format(Resources.BioMassCalc_ApplyAdductToFormula_Unknown_symbol___0___in_adduct_description___1__,
                         composition.Keys.First(k => !BioMassCalc.MONOISOTOPIC.IsKnownSymbol(k)), input));
             }
-            Composition = MoleculeMassOffset.Create(composition, 0.0, 0.0, string.Empty);
+            Composition = Molecule.FromDictionary(composition);
             if (!success)
             {
                 // Allow charge free neutral like [M] or nmer like [3M]
@@ -763,7 +771,7 @@ namespace pwiz.Skyline.Util
 
         public static Adduct FromFormulaDiff(MoleculeMassOffset left, MoleculeMassOffset right, int charge)
         {
-            var adductFormula = left.Minus(right).ToString();
+            var adductFormula = left.Difference(right).ToString();
             if (string.IsNullOrEmpty(adductFormula))
             {
                 return FromChargeNoMass(charge);
@@ -785,7 +793,7 @@ namespace pwiz.Skyline.Util
         public static Adduct ProtonatedFromFormulaDiff(MoleculeMassOffset left, MoleculeMassOffset right, int charge)
         {
             // Take adduct as the difference between two chemical formulas, assuming that H is for protonation
-            var d = left.Minus(right);
+            var d = left.Difference(right);
             if (d.Values.Any(count => count < 0) || d.Values.All(count => count == 0))
             {
                 return NonProteomicProtonatedFromCharge(charge); // No difference in formulas, try straight protonation
@@ -1344,13 +1352,13 @@ namespace pwiz.Skyline.Util
         /// </summary>
         public MoleculeMassOffset ApplyToMolecule(MoleculeMassOffset molecule)
         {
-            if (HasIsotopeLabels && molecule.IsHeavy())
+            if (HasIsotopeLabels && molecule.HasIsotopes())
             {
                 // Molecule is already labeled, use the unlabeled version of this adduct 
                 return Unlabeled.ApplyToMolecule(molecule);
             }
 
-            var resultDict = new Dictionary<string, int>(molecule);
+            var resultDict = new Dictionary<string, int>(molecule.Molecule);
 
             // Deal with any mass multiplier (the 2 in "[2M+Na]")
             if (MassMultiplier != 1)
@@ -1366,13 +1374,22 @@ namespace pwiz.Skyline.Util
             {
                 if (resultDict.TryGetValue(pair.Key, out var count))
                 {
-                    resultDict[pair.Key] = count + pair.Value;
+                    count += pair.Value;
+                    if (count == 0)
+                    {
+                        resultDict.Remove(pair.Key);
+                    }
+                    else
+                    {
+                        resultDict[pair.Key] = count;
+                    }
                 }
-                else
+                else if (pair.Value != 0)
                 {
                     resultDict.Add(pair.Key, pair.Value);
+                    count = pair.Value;
                 }
-                if (resultDict[pair.Key] < 0 && !Equals(pair.Key, BioMassCalc.H)) // Treat H loss as a general proton loss
+                if (count < 0 && !Equals(pair.Key, BioMassCalc.H)) // Treat H loss as a general proton loss
                 {
                     throw new InvalidOperationException(
                         string.Format(Resources.Adduct_ApplyToMolecule_Adduct___0___calls_for_removing_more__1__atoms_than_are_found_in_the_molecule__2_,
@@ -1387,7 +1404,7 @@ namespace pwiz.Skyline.Util
         {
             if (!HasIsotopeLabels)
             {
-                return molecule.ChangeFormulaNoOffsetMassChange(resultDict); // Nothing to do, but previous caller may have manipulated the formula as represented in resultDict
+                return molecule.ChangeFormula(resultDict); // Nothing to do, but previous caller may have manipulated the formula as represented in resultDict
             }
 
             TypedMass massModMono;
@@ -1419,9 +1436,13 @@ namespace pwiz.Skyline.Util
                     // If label is "2Cl37" and molecule is CH4Cl5 then result is CH4Cl3Cl'2
                     var isotopeCount = massMultiplier * isotopeSymbolAndCount.Value;
                     unlabeledCount -= isotopeCount;
-                    if (unlabeledCount >= 0)
+                    if (unlabeledCount > 0)
                     {
                         resultDict[unlabeledSymbol] = unlabeledCount; // Number of remaining non-label atoms
+                    }
+                    else if (unlabeledCount == 0)
+                    {
+                        resultDict.Remove(unlabeledSymbol); // Number of remaining non-label atoms)
                     }
                     else // Can't remove that which is not there
                     {
@@ -1435,9 +1456,17 @@ namespace pwiz.Skyline.Util
                     var isotopeSymbol = isotopeSymbolAndCount.Key;
                     if (resultDict.TryGetValue(isotopeSymbol, out var exist))
                     {
-                        resultDict[isotopeSymbol] = exist + isotopeCount;
+                        exist += isotopeCount;
+                        if (exist == 0)
+                        {
+                            resultDict.Remove(isotopeSymbol);
+                        }
+                        else
+                        {
+                            resultDict[isotopeSymbol] = exist;
+                        }
                     }
-                    else
+                    else if (isotopeCount != 0)
                     {
                         resultDict.Add(isotopeSymbol, isotopeCount);
                     }

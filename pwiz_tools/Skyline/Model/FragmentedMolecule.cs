@@ -24,7 +24,6 @@ using pwiz.Common.Collections;
 using pwiz.Common.SystemUtil;
 using pwiz.Skyline.Model.DocSettings;
 using pwiz.Skyline.Properties;
-using pwiz.Skyline.Util;
 
 namespace pwiz.Skyline.Model
 {
@@ -129,7 +128,7 @@ namespace pwiz.Skyline.Model
             }
             var precursorNeutralFormula = MoleculeMassOffset.Sum(
                 GetSequenceFormula(ModifiedSequence).Append(H2O));
-            PrecursorFormula = precursorNeutralFormula.Add(FormulaForCharge(PrecursorCharge));
+            PrecursorFormula = precursorNeutralFormula.Plus(FormulaForCharge(PrecursorCharge));
             if (FragmentIonType == IonType.custom)
             {
                 return;
@@ -149,7 +148,7 @@ namespace pwiz.Skyline.Model
 
             if (FragmentIonType == IonType.precursor && FragmentLosses.Count == 0)
             {
-                FragmentFormula = precursorNeutralFormula.Add(FormulaForCharge(FragmentCharge));
+                FragmentFormula = precursorNeutralFormula.Plus(FormulaForCharge(FragmentCharge));
             }
             else
             {
@@ -185,7 +184,7 @@ namespace pwiz.Skyline.Model
 
         public MoleculeMassOffset GetComplementaryProductFormula()
         {
-            var result = PrecursorFormula.Minus(FragmentFormula);
+            var result = PrecursorFormula.Difference(FragmentFormula);
             var negative = result.Molecule.FirstOrDefault(entry => entry.Value < 0);
             if (null != negative.Key)
             {
@@ -214,7 +213,7 @@ namespace pwiz.Skyline.Model
                         var aa = unmodifiedSequence[i];
                         if ((staticMod.LabelAtoms & LabelAtoms.LabelsAA) != LabelAtoms.None && AminoAcid.IsAA(aa))
                         {
-                            formula = SequenceMassCalc.GetHeavyFormula(aa, staticMod.LabelAtoms);
+                            yield return SequenceMassCalc.GetHeavyFormula(aa, staticMod.LabelAtoms);
                         }
                     }
                     if (formula != null)

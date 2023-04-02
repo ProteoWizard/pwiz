@@ -430,8 +430,6 @@ namespace pwiz.Skyline.Model
             return new CustomMolecule(mol, libraryAttributes.MoleculeName, libraryAttributes.CreateMoleculeID());
         }
 
-
-
         private void SetFormula(MoleculeMassOffset mol)
         {
             MoleculeAndMassOffset = mol;
@@ -455,7 +453,7 @@ namespace pwiz.Skyline.Model
         {
             return adjustCountBy == 0 ? 
                 this : 
-                new CustomMolecule(MoleculeAndMassOffset.AdjustElementCountNoMassOffsetChange(element, adjustCountBy), this.Name, this.AccessionNumbers);
+                new CustomMolecule(MoleculeAndMassOffset.AdjustElementCount(element, adjustCountBy), this.Name, this.AccessionNumbers);
         }
 
         /// <summary>
@@ -494,7 +492,7 @@ namespace pwiz.Skyline.Model
                 if (BioMassCalc.ContainsIsotopicElement(_formulaAndOrMass))
                 {
                     var unlabeled = BioMassCalc.StripLabelsFromFormula(_formulaAndOrMass);
-                    UnlabeledFormula = _formulaAndOrMass.ChangeFormulaNoOffsetMassChange(unlabeled);
+                    UnlabeledFormula = _formulaAndOrMass.ChangeFormula(unlabeled);
                 }
                 else
                 {
@@ -797,7 +795,7 @@ namespace pwiz.Skyline.Model
                 formula = MoleculeMassOffset.Create(text);
                 if (!string.IsNullOrEmpty(text))
                 {
-                    formula = formula.AdjustElementCountNoMassOffsetChange(BioMassCalc.H, 1);  // Update this old style formula to current by adding the hydrogen we formerly left out due to assuming protonation
+                    formula = formula.AdjustElementCount(BioMassCalc.H, 1);  // Update this old style formula to current by adding the hydrogen we formerly left out due to assuming protonation
                 }
                 else
                 {

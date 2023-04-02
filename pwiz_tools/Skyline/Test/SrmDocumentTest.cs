@@ -120,7 +120,7 @@ namespace pwiz.SkylineTest
             var desc = subtracted;
             var expected = new Dictionary<string,int> {{"C",12},{"H",8},{"S",1},{"O",2}};
             SkylineBioMassCalc.MONOISOTOPIC.ParseFormulaWithAdductMass(desc, out var counts);
-            Assert.IsTrue(CollectionUtil.EqualsDeep(expected, counts.Dictionary));
+            Assert.IsTrue(CollectionUtil.EqualsDeep(expected, counts.Molecule.Dictionary));
         }
 
         [TestMethod]

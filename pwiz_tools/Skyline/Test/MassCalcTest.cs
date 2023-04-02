@@ -240,8 +240,8 @@ namespace pwiz.SkylineTest
             Assert.AreEqual("C12H5[+3.2/3.3]", neutralFormula);
             Assert.AreEqual(8.868, mol.MonoMassOffset); // 3.2 + 2*1.234 mono 3.3 + 2*1.234 average
             Assert.AreEqual(9.068, mol.AverageMassOffset); // 3.2 + 2*1.234 mono 3.3 + 2*1.234 average
-            Assert.AreEqual(24, mol["C"]);
-            Assert.AreEqual(13, mol["H"]); // 2*5 + 3
+            Assert.AreEqual(24, mol.Molecule["C"]);
+            Assert.AreEqual(13, mol.Molecule["H"]); // 2*5 + 3
             Assert.IsTrue(mol.HasMassModifications);
 
             var massAdduct = Adduct.FromStringAssumeChargeOnly("M(-1.1)+2H");

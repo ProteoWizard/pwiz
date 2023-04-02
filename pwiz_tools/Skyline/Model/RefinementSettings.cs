@@ -911,7 +911,7 @@ namespace pwiz.Skyline.Model
             if (moleculeFormula.HasIsotopes())
             {
                 // Isotopes are already accounted for in the adduct
-                moleculeFormula = moleculeFormula.StripIsotopicLabelsFromFormulaAndMassOffset();
+                moleculeFormula = moleculeFormula.StripIsotopicLabels();
             }
             var customMolecule = new CustomMolecule(moleculeFormula, TestingConvertedFromProteomicPeptideNameDecorator + masscalc.GetModifiedSequence(peptideTarget, false)); // Make sure name isn't a valid peptide seq
 

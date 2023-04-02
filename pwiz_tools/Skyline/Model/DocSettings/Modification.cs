@@ -955,17 +955,10 @@ namespace pwiz.Skyline.Model.DocSettings
         {
             SequenceMassCalc modCalc = new SequenceMassCalc(MassType.Monoisotopic);
 
-            double unexplainedMassThis, unexplainedMassObj;
+            var formulaThis = modCalc.GetModFormula(aa, this);
+            var formulaObj = modCalc.GetModFormula(aa, obj);
 
-            var formulaThis = modCalc.GetModFormula(aa, this, out unexplainedMassThis);
-            var formulaObj = modCalc.GetModFormula(aa, obj, out unexplainedMassObj);
-
-            // If either is null, both must be null.
-            if (formulaThis == null || formulaObj == null)
-                return formulaThis == null && formulaObj == null;
-
-            return unexplainedMassThis == unexplainedMassObj &&
-                   formulaThis.Equals(formulaObj);
+            return formulaThis.Equals(formulaObj);
         }
 
 

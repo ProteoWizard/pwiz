@@ -73,7 +73,7 @@ namespace pwiz.Skyline.Util
             {
                 _neutralFormula = value;
                 _ionFormula = _adduct.IsEmpty ?  _neutralFormula : _adduct.ApplyToMolecule(_neutralFormula);
-                var unlabeled = _ionFormula.StripIsotopicLabelsFromFormulaAndMassOffset();
+                var unlabeled = _ionFormula.StripIsotopicLabels();
                 _unlabledFormula = Equals(_ionFormula, unlabeled) ? 
                     _ionFormula : 
                     unlabeled; // Save some space if actually unlabeled

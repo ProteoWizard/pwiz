@@ -113,7 +113,7 @@ namespace pwiz.Skyline.Model.DocSettings
 
         public string FormulaNoNull
         {
-            get { return Common.Chemistry.Molecule.IsNullOrEmpty(_formula) ? Resources.Loss_FormulaUnknown : _formula.ToString(); }
+            get { return Molecule.IsNullOrEmpty(_formula) ? Resources.Loss_FormulaUnknown : _formula.ToString(); }
         }
 
         [Track]

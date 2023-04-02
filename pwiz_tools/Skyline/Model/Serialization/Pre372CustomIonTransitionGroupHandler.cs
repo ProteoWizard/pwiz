@@ -98,8 +98,8 @@ namespace pwiz.Skyline.Model.Serialization
                     }
                     else
                     {
-                        details._labels = BioMassCalc.MONOISOTOPIC.FindIsotopeLabelsInFormula(details._formulaUnlabeled);
-                        details._formulaUnlabeled = details._formulaUnlabeled.StripIsotopicLabelsFromFormulaAndMassOffset();
+                        details._labels = BioMassCalc.MONOISOTOPIC.FindIsotopeLabelsInFormula(details._formulaUnlabeled.Molecule);
+                        details._formulaUnlabeled = details._formulaUnlabeled.StripIsotopicLabels();
                     }
                 }
                 _precursorRawDetails.Add(details);
@@ -226,7 +226,7 @@ namespace pwiz.Skyline.Model.Serialization
                 var precursorsWithFormulas = _precursorRawDetails.Where(d => !d._formulaUnlabeled.IsMassOnly).ToList();
                 foreach (var detail in precursorsWithFormulas)
                 {
-                    var revisedCommonFormula = commonFormula.AdjustElementCountNoMassOffsetChange( BioMassCalc.H, -detail._declaredCharge);
+                    var revisedCommonFormula = commonFormula.AdjustElementCount(BioMassCalc.H, -detail._declaredCharge);
                     var adjustedMolecule = new CustomMolecule(revisedCommonFormula, peptide.CustomMolecule.Name);
                     var mass = adjustedMolecule.MonoisotopicMass;
                     if (precursorsWithFormulas.TrueForAll(d =>
@@ -260,9 +260,9 @@ namespace pwiz.Skyline.Model.Serialization
             var precursorsWithFormulas = _precursorRawDetails.Where(d => !d._formulaUnlabeled.IsMassOnly).ToList();
             var parentFormula = peptide.CustomMolecule.UnlabeledFormula;
             var commonFormula = parentFormula.IsMassOnly
-                ? MoleculeMassOffset.Create(BioMassCalc.MONOISOTOPIC.FindFormulaIntersectionUnlabeled(
-                    precursorsWithFormulas.Select(p => p._formulaUnlabeled)))
-                : parentFormula;
+                ? BioMassCalc.MONOISOTOPIC.FindFormulaIntersectionUnlabeled(
+                    precursorsWithFormulas.Select(p => p._formulaUnlabeled.Molecule))
+                : parentFormula.Molecule;
 
             // Check for consistent and correctly declared precursor formula+adduct
             var precursorsWithFormulasAndAdducts = precursorsWithFormulas.Where(d => !Adduct.IsNullOrEmpty(d._nominalAdduct)).ToList();
@@ -270,7 +270,7 @@ namespace pwiz.Skyline.Model.Serialization
                 precursorsWithFormulas.All(
                     d => d._formulaUnlabeled.Equals(precursorsWithFormulasAndAdducts[0]._formulaUnlabeled)))
             {
-                commonFormula = precursorsWithFormulasAndAdducts[0]._formulaUnlabeled;
+                commonFormula = precursorsWithFormulasAndAdducts[0]._formulaUnlabeled.Molecule;
             }
 
             if (!Molecule.IsNullOrEmpty(commonFormula))
@@ -288,14 +288,14 @@ namespace pwiz.Skyline.Model.Serialization
                         {
                             // Child proposes to label more of an atom than the parent possesses (seen in the wild) - update the parent
                             commonFormula =
-                                commonFormula.AdjustElementCountNoMassOffsetChange(unlabeled, kvpIsotopeCount.Value - parentCount);
+                                commonFormula.AdjustElementCount(unlabeled, kvpIsotopeCount.Value - parentCount);
                             parentComposition = commonFormula;
                         }
                     }
                 }
-                if (!Equals(peptide.CustomMolecule.MoleculeAndMassOffset, commonFormula))
+                if (!Equals(peptide.CustomMolecule.MoleculeAndMassOffset.Molecule, commonFormula))
                 {
-                    ProposedMolecule = new CustomMolecule(commonFormula, peptide.CustomMolecule.Name);
+                    ProposedMolecule = new CustomMolecule(MoleculeMassOffset.Create(commonFormula), peptide.CustomMolecule.Name);
                 }
             }
         }

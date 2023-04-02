@@ -33,7 +33,7 @@ namespace pwiz.Common.Chemistry
     /// Represents a parsed molecular formula.  Formulas consist of capital letters, lowercase letters
     /// and numbers.  Element names start with a capital letter.
     /// </summary>
-    public class Molecule : IDictionary<string, int>
+    public sealed class Molecule : IDictionary<string, int>
     {
         internal int _hashCode;
         internal int? _originalHashCode; // If this matches _hashCode, then _orderHintString should match the contents and can be used for ToString()
@@ -119,7 +119,7 @@ namespace pwiz.Common.Chemistry
         public ReadOnlyDictionary<string, int> Dictionary
         {
             get { return _dict; }
-            protected set
+            private set
             {
                 _dict = value ?? new ReadOnlyDictionary<string, int>(new Dictionary<string, int>());
                 // We want a hashcode that is invariant to the order of the storage.
@@ -146,8 +146,6 @@ namespace pwiz.Common.Chemistry
                 _totalMassAverage = BioMassCalc.AVERAGE.GetChemicalMass(_dict);
             }
         }
-
-
 
         public static Molecule EMPTY = new Molecule() { Dictionary = new ReadOnlyDictionary<string, int>(new Dictionary<string, int>()), _orderHintString = null };
 
@@ -283,7 +281,7 @@ namespace pwiz.Common.Chemistry
         }
 
         // Subtract other's atom counts from ours
-        public virtual Molecule Difference(Molecule other)
+        public Molecule Difference(Molecule other)
         {
             if (other == null || other.Count == 0)
             {
@@ -305,11 +303,11 @@ namespace pwiz.Common.Chemistry
             }
 
             return FromDictionary(resultDict,
-                (_orderHintString ?? string.Empty) + (string.IsNullOrEmpty(other._orderHintString) ? string.Empty : ("-" + other._orderHintString)));
+                (_orderHintString ?? string.Empty) + (string.IsNullOrEmpty(other._orderHintString) ? string.Empty : ("-" + other._orderHintString)), null);
         }
 
         // Add other's contents to ours
-        public virtual Molecule Plus(Molecule other)
+        public Molecule Plus(Molecule other)
         {
             if (other == null || other.Count == 0)
             {
@@ -336,23 +334,29 @@ namespace pwiz.Common.Chemistry
                 }
             }
 
-            return FromDictionary(resultDict, (_orderHintString ?? string.Empty) + (other._orderHintString ?? string.Empty));
+            return FromDictionary(resultDict, (_orderHintString ?? string.Empty) + (other._orderHintString ?? string.Empty), null);
         }
 
-        public virtual Molecule ChangeFormula(IDictionary<string, int> formula)
+        public Molecule ChangeFormula(IDictionary<string, int> formula)
         {
             return (formula == null ? Dictionary.Count == 0 : CollectionUtil.EqualsDeep(formula, Dictionary)) ?
                 this :
-                FromDictionary(formula, _orderHintString, _originalHashCode);
+                FromDictionary(formula, _orderHintString, _originalHashCode);  // Give the old hashcode for use in quick ToString()
         }
 
-        public virtual Molecule ChangeFormula(IEnumerable<KeyValuePair<string, int>> formula)
+        public Molecule ChangeFormula(IEnumerable<KeyValuePair<string, int>> formula)
         {
             var dict = formula.ToDictionary(kvp => kvp.Key, kvp => kvp.Value);
-            return FromDictionary(dict, _orderHintString, _originalHashCode); // Give the old hashcode for use in quick ToString()
+            return ChangeFormula(dict);
         }
 
-        public static Molecule FromDictionary(IDictionary<string, int> dict, string orderHintString = null, int? oldHashCode = null)
+    
+        public static Molecule FromDictionary(IDictionary<string, int> dict)
+        {
+            return FromDictionary(dict, null, null);
+        }
+
+        private static Molecule FromDictionary(IDictionary<string, int> dict, string orderHintString, int? oldHashCode)
         {
             if (dict == null)
             {
@@ -372,7 +376,7 @@ namespace pwiz.Common.Chemistry
             };
         }
 
-        public virtual TypedMass GetTotalMass(MassType massType)
+        public TypedMass GetTotalMass(MassType massType)
         {
             return massType.IsMonoisotopic() ?
                 _totalMassMonoisotopic :
@@ -494,7 +498,7 @@ namespace pwiz.Common.Chemistry
             }
         }
 
-        public virtual string ToDisplayString()
+        public string ToDisplayString()
         {
             return ToString();
         }
@@ -557,7 +561,7 @@ namespace pwiz.Common.Chemistry
             return result.ToString();
         }
 
-        public virtual Molecule AdjustElementCount(string element, int delta)
+        public Molecule AdjustElementCount(string element, int delta)
         {
             if (delta == 0)
             {
@@ -577,7 +581,7 @@ namespace pwiz.Common.Chemistry
             return ChangeFormula(newDict);
         }
 
-        public virtual Molecule StripIsotopicLabels()
+        public Molecule StripIsotopicLabels()
         {
             var stripped = BioMassCalc.StripLabelsFromFormula(Dictionary);
 

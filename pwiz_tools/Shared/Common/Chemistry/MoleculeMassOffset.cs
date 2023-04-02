@@ -17,8 +17,8 @@
  * limitations under the License.
  */
 using System;
+using System.Collections;
 using System.Collections.Generic;
-using System.Collections.ObjectModel;
 using System.Globalization;
 using System.Linq;
 using System.Text;
@@ -32,9 +32,9 @@ namespace pwiz.Common.Chemistry
     /// and other things where the user has only told us the mono and average masses.
     /// Examples of these formulas with mass offsets include crosslinking and Hardklor output.
     /// </summary>
-    public class MoleculeMassOffset : Molecule, IEquatable<MoleculeMassOffset>, IComparable<MoleculeMassOffset>
+    public class MoleculeMassOffset : IEquatable<MoleculeMassOffset>, IComparable<MoleculeMassOffset>, IDictionary<string, int>
     {
-        public new static readonly MoleculeMassOffset EMPTY = new MoleculeMassOffset(null, 0, 0);
+        public static readonly MoleculeMassOffset EMPTY = new MoleculeMassOffset(Molecule.EMPTY, TypedMass.ZERO_MONO_MASSNEUTRAL, TypedMass.ZERO_AVERAGE_MASSNEUTRAL);
 
         /// <summary>
         /// We provide these Create methods to avoid producing copies of an empty object
@@ -59,7 +59,7 @@ namespace pwiz.Common.Chemistry
                 averageMassOffset == 0 ? TypedMass.ZERO_AVERAGE_MASSNEUTRAL : TypedMass.Create(averageMassOffset, MassType.Average));
         }
 
-        public static MoleculeMassOffset Create(IEnumerable<KeyValuePair<string, int>> molecule, double monoMassOffset = 0, double averageMassOffset = 0, string elementOrderHint = null)
+        public static MoleculeMassOffset Create(IEnumerable<KeyValuePair<string, int>> molecule, double monoMassOffset = 0, double averageMassOffset = 0)
         {
             var dict = molecule?.Where(kvp => kvp.Value != 0)
                 .ToDictionary(kvp => kvp.Key, kvp => kvp.Value);
@@ -67,7 +67,10 @@ namespace pwiz.Common.Chemistry
             {
                 return EMPTY;
             }
-            return new MoleculeMassOffset(dict, monoMassOffset, averageMassOffset, elementOrderHint);
+
+            var mol = Molecule.FromDictionary(dict);
+            return new MoleculeMassOffset(mol, 
+                TypedMass.Create(monoMassOffset, MassType.Monoisotopic), TypedMass.Create(averageMassOffset, MassType.Average));
         }
 
         public static MoleculeMassOffset Create(string formulaAndMasses, TypedMass monoMassOffset, TypedMass averageMassOffset)
@@ -85,56 +88,21 @@ namespace pwiz.Common.Chemistry
                 return EMPTY;
             }
 
-            var dictionary = new ReadOnlyDictionary<string, int>(ParseToDictionary(formula, out var orderHintString));
+            var molecule = Molecule.Parse(formula);
             monoMassOffset = TypedMass.IsNullOrEmpty(monoMassOffset) ? TypedMass.ZERO_MONO_MASSNEUTRAL : monoMassOffset;
             averageMassOffset = TypedMass.IsNullOrEmpty(averageMassOffset) ? TypedMass.ZERO_AVERAGE_MASSNEUTRAL : averageMassOffset;
-            return new MoleculeMassOffset(dictionary, monoMassOffset, averageMassOffset, orderHintString);
+            return new MoleculeMassOffset(molecule, monoMassOffset, averageMassOffset);
         }
 
         public static MoleculeMassOffset Create(Molecule molecule)
         {
-            return Molecule.IsNullOrEmpty(molecule) ? EMPTY : new MoleculeMassOffset(molecule.Dictionary, null, null, molecule._orderHintString, molecule._originalHashCode);
-        }
-
-        private MoleculeMassOffset(IEnumerable<KeyValuePair<string, int>> molecule, double monoMassOffset, double averageMassOffset, string elementOrderHint = null) :
-            this(molecule,
-                monoMassOffset == 0 ? TypedMass.ZERO_MONO_MASSNEUTRAL : TypedMass.Create(monoMassOffset, MassType.Monoisotopic),
-                averageMassOffset == 0 ? TypedMass.ZERO_AVERAGE_MASSNEUTRAL : TypedMass.Create(averageMassOffset, MassType.Average),
-                elementOrderHint)
-        {
-        }
-
-        private MoleculeMassOffset(IEnumerable<KeyValuePair<string, int>> molecule, TypedMass monoMassOffset,
-            TypedMass averageMassOffset, string elementOrderHint = null, int? previousHashCode = null) :
-            this(molecule == null
-                    ? new ReadOnlyDictionary<string, int>(new Dictionary<string, int>())
-                    : molecule is ReadOnlyDictionary<string, int> readOnlyDictionary ?
-                        readOnlyDictionary :
-                        new ReadOnlyDictionary<string, int>(molecule.Where(kvp => kvp.Value != 0)
-                            .ToDictionary(kvp => kvp.Key, kvp => kvp.Value)),
-                monoMassOffset, averageMassOffset, elementOrderHint, previousHashCode)
-        {
-        }
-
-        private MoleculeMassOffset(ReadOnlyDictionary<string, int> dictionary, double monoMassOffset, double averageMassOffset)
-            : this(dictionary, 
-                monoMassOffset == 0
-                    ? TypedMass.ZERO_MONO_MASSNEUTRAL
-                    : TypedMass.Create(monoMassOffset, MassType.Monoisotopic),
-                averageMassOffset == 0
-                    ? TypedMass.ZERO_AVERAGE_MASSNEUTRAL
-                    : TypedMass.Create(averageMassOffset, MassType.Average),
-                null, null)
-        {
+            return Molecule.IsNullOrEmpty(molecule) ? EMPTY : new MoleculeMassOffset(molecule, null, null);
         }
 
 
-        private MoleculeMassOffset(ReadOnlyDictionary<string, int> molecule, TypedMass monoMassOffset, TypedMass averageMassOffset, 
-            string elementOrderHint, int? previousHashCode)
+        private MoleculeMassOffset(Molecule molecule, TypedMass monoMassOffset, TypedMass averageMassOffset)
         {
-            _originalHashCode = previousHashCode;  // Important to set this before setting Dictionary
-            Dictionary = molecule;
-            _orderHintString = elementOrderHint;
+            Molecule = molecule ?? Molecule.EMPTY;
 
             if (monoMassOffset == null)
             {
@@ -161,7 +129,17 @@ namespace pwiz.Common.Chemistry
             AverageMassOffset = averageMassOffset;
         }
 
-        public bool IsHeavy() => Keys.Any(BioMassCalc.ContainsIsotopicElement) || MonoMassOffset.IsHeavy();
+        public bool HasIsotopes() => Molecule.HasIsotopes()|| MonoMassOffset.IsHeavy();
+
+        public MoleculeMassOffset ChangeFormula(Molecule newMolecule)
+        {
+            return ChangeFormulaAndMassOffset(newMolecule, MonoMassOffset, AverageMassOffset); // Don't change the mass offset
+        }
+
+        public MoleculeMassOffset ChangeFormula(IDictionary<string, int> dict)
+        {
+            return ChangeFormulaAndMassOffset(dict, MonoMassOffset, AverageMassOffset); // Don't change the mass offset
+        }
 
         public MoleculeMassOffset ChangeFormulaAndMassOffset(IDictionary<string, int> dict, TypedMass monoMassOffset, TypedMass averageMassOffset)
         {
@@ -170,7 +148,7 @@ namespace pwiz.Common.Chemistry
                 dict = new Dictionary<string, int>();
             }
 
-            if (CollectionUtil.EqualsDeep(dict, Dictionary) && MonoMassOffset.Equals(monoMassOffset) && AverageMassOffset.Equals(averageMassOffset))
+            if (CollectionUtil.EqualsDeep(dict, Molecule.Dictionary) && MonoMassOffset.Equals(monoMassOffset) && AverageMassOffset.Equals(averageMassOffset))
             {
                 return this;
             }
@@ -180,7 +158,7 @@ namespace pwiz.Common.Chemistry
                 return EMPTY;
             }
 
-            return new MoleculeMassOffset(dict, monoMassOffset, averageMassOffset, _orderHintString, _originalHashCode);
+            return new MoleculeMassOffset(Molecule.ChangeFormula(dict), monoMassOffset, averageMassOffset);
         }
 
         public MoleculeMassOffset ChangeIsMassH(bool isMassH)
@@ -190,50 +168,29 @@ namespace pwiz.Common.Chemistry
                 return this;
             }
 
-            return new MoleculeMassOffset(Dictionary, MonoMassOffset.ChangeIsMassH(isMassH),
-                AverageMassOffset.ChangeIsMassH(isMassH), _orderHintString, _originalHashCode);
-        }
-
-        public MoleculeMassOffset AdjustElementCountNoMassOffsetChange(string element, int delta)
-        {
-            return AdjustElementCount(element, delta) as MoleculeMassOffset;
-        }
-
-
-        public override Molecule AdjustElementCount(string element, int delta)
-        {
-            var newDict = base.AdjustElementCount(element, delta).Dictionary;
-            return ChangeFormulaAndMassOffset(newDict, MonoMassOffset, AverageMassOffset);
-        }
-
-        public MoleculeMassOffset ChangeFormulaNoOffsetMassChange(IDictionary<string, int> formula)
-        {
-            return ChangeFormula(formula) as MoleculeMassOffset;
-        }
-
-
-        public override Molecule ChangeFormula(IDictionary<string, int> formula)
-        {
-            return ChangeFormulaAndMassOffset(formula, MonoMassOffset, AverageMassOffset);
+            return new MoleculeMassOffset(Molecule, MonoMassOffset.ChangeIsMassH(isMassH),
+                AverageMassOffset.ChangeIsMassH(isMassH));
         }
 
         public MoleculeMassOffset ChangeMassOffset(TypedMass mono, TypedMass avg)
         {
             return (!Equals(MonoMassOffset, mono) || !Equals(AverageMassOffset, avg)) ?
-                new MoleculeMassOffset(Dictionary, mono, avg, _orderHintString, _originalHashCode) :
+                new MoleculeMassOffset(Molecule.ChangeFormula(Molecule), mono, avg) :
                 this;
         }
 
-        public MoleculeMassOffset StripIsotopicLabelsFromFormulaAndMassOffset()
+        public MoleculeMassOffset ChangeMassOffset(double mass)
         {
-            return StripIsotopicLabels() as MoleculeMassOffset;
+            return (!Equals(MonoMassOffset.Value, mass) || !Equals(AverageMassOffset.Value, mass)) ?
+                new MoleculeMassOffset(Molecule.ChangeFormula(Molecule), TypedMass.Create(mass, MassType.Monoisotopic), TypedMass.Create(mass, MassType.Average)) :
+                this;
         }
 
-        public override Molecule StripIsotopicLabels()
+        public MoleculeMassOffset StripIsotopicLabels()
         {
-            var stripped = base.StripIsotopicLabels();
+            var stripped = Molecule.StripIsotopicLabels();
 
-            return ChangeFormulaAndMassOffset(stripped.Dictionary, MonoMassOffset.ChangeIsHeavy(false), AverageMassOffset.ChangeIsHeavy(false));
+            return ChangeFormulaAndMassOffset(stripped, MonoMassOffset.ChangeIsHeavy(false), AverageMassOffset.ChangeIsHeavy(false));
         }
 
 
@@ -256,7 +213,7 @@ namespace pwiz.Common.Chemistry
             }
         }
 
-        public new static MoleculeMassOffset Parse(string formulaAndMasses)
+        public static MoleculeMassOffset Parse(string formulaAndMasses)
         {
             return Create(formulaAndMasses);
         }
@@ -324,38 +281,31 @@ namespace pwiz.Common.Chemistry
             average = TypedMass.Create(modMassAvg, MassType.Average);
         }
 
-        public override TypedMass GetTotalMass(MassType massType)
+        public TypedMass GetTotalMass(MassType massType)
         {
             return massType.IsMonoisotopic()
-                ? base.GetTotalMass(MassType.Monoisotopic) + MonoMassOffset
-                : base.GetTotalMass(MassType.Average) + AverageMassOffset;
+                ? Molecule.GetTotalMass(MassType.Monoisotopic) + MonoMassOffset
+                : Molecule.GetTotalMass(MassType.Average) + AverageMassOffset;
         }
 
-        public new MoleculeMassOffset SetElementCount(string element, int count)
+        public MoleculeMassOffset SetElementCount(string element, int count)
         {
-            if (TryGetValue(element, out var existing))
-            {
-                if (existing == count)
-                {
-                    return this;
-                }
-            }
-            else if (count == 0)
-            {
-                return this; // There weren't any, and caller doesn't want any, we're all set
-            }
+            var newMolecule = Molecule.SetElementCount(element, count);
+            return ChangeFormula(newMolecule);
+        }
 
-            var newMolecule = new Dictionary<string, int>(Dictionary)
-            {
-                [element] = count
-            };
-            return new MoleculeMassOffset(newMolecule, MonoMassOffset, AverageMassOffset, _orderHintString, _originalHashCode);
+        public bool HasElement(string element) => Molecule.ContainsKey(element);
+
+        public int GetElementCount(string element)
+        {
+            Molecule.TryGetValue(element, out var count);
+            return count;
         }
 
         public TypedMass MonoMassOffset { get; private set; }
         public TypedMass AverageMassOffset { get; private set; }
 
-        public Molecule Molecule => this; // Convenience for code written before inheritance model changed
+        public Molecule Molecule; 
 
         public bool IsEmpty =>
             ReferenceEquals(this, MoleculeMassOffset.EMPTY) ||
@@ -364,52 +314,50 @@ namespace pwiz.Common.Chemistry
         public static bool IsNullOrEmpty(MoleculeMassOffset moleculeMassOffset) =>
             moleculeMassOffset == null || moleculeMassOffset.IsEmpty;
 
-        public bool HasChemicalFormula => Count != 0;
+        public bool HasChemicalFormula => !Molecule.IsNullOrEmpty(Molecule);
 
-        public bool IsMassOnly => Count == 0;
+        public bool IsMassOnly => Molecule.IsNullOrEmpty(Molecule);
 
         public bool HasMassModifications => MonoMassOffset != 0;
 
         public TypedMass GetMassOffset(MassType t) => t.IsMonoisotopic() ? MonoMassOffset : AverageMassOffset;
 
+        public MoleculeMassOffset AdjustElementCount(string element, int delta)
+        {
+            var newMolecule = Molecule.AdjustElementCount(element, delta); // Deal with the formula
+            return ChangeFormula(newMolecule);
+        }
+
         #region math
 
-        public MoleculeMassOffset Add(MoleculeMassOffset moleculeMassOffset)
+        public MoleculeMassOffset Plus(MoleculeMassOffset moleculeMassOffset)
         {
-            var newMolecule = base.Plus(moleculeMassOffset).Dictionary; // Deal with the formula
+            var newMolecule = Molecule.Plus(moleculeMassOffset.Molecule); // Deal with the formula
             return ChangeFormulaAndMassOffset(newMolecule, MonoMassOffset + moleculeMassOffset.MonoMassOffset, AverageMassOffset + moleculeMassOffset.AverageMassOffset);
         }
 
-        public override Molecule Plus(Molecule molecule)
+        public MoleculeMassOffset Plus(Molecule molecule)
         {
-            if (molecule is MoleculeMassOffset moleculeAsMoleculeMassOffset)
-            {
-                return Add(moleculeAsMoleculeMassOffset); // Deal with the formula and mass offset
-            }
-            var newMolecule = base.Plus(molecule); // Deal with the formula
-            return ChangeFormulaAndMassOffset(newMolecule.Dictionary, MonoMassOffset, AverageMassOffset); // Don't change the mass offset
+            var newMolecule =  Molecule.Plus(molecule); // Deal with the formula
+            return ChangeFormula(newMolecule); // Don't change the mass offset
         }
 
-        public MoleculeMassOffset Minus(MoleculeMassOffset moleculeMassOffset)
+        public MoleculeMassOffset Difference(MoleculeMassOffset moleculeMassOffset)
         {
-            var newMolecule = base.Difference(moleculeMassOffset);
-            return ChangeFormulaAndMassOffset(newMolecule.Dictionary, MonoMassOffset - moleculeMassOffset.MonoMassOffset, AverageMassOffset - moleculeMassOffset.AverageMassOffset);
+            var newMolecule = Molecule.Difference(moleculeMassOffset.Molecule);
+            return ChangeFormulaAndMassOffset(newMolecule, MonoMassOffset - moleculeMassOffset.MonoMassOffset, AverageMassOffset - moleculeMassOffset.AverageMassOffset);
         }
 
-        public override Molecule Difference(Molecule molecule)
+        public MoleculeMassOffset Difference(Molecule molecule)
         {
-            if (molecule is MoleculeMassOffset moleculeAsMoleculeMassOffset)
-            {
-                return Minus(moleculeAsMoleculeMassOffset); // Deal with the formula and mass offset
-            }
-            var newMolecule = base.Difference(molecule); // Deal with the formula
-            return ChangeFormulaAndMassOffset(newMolecule.Dictionary, MonoMassOffset, AverageMassOffset); // Don't change the mass offset
+            var newMolecule = Molecule.Difference(molecule); // Deal with the formula
+            return ChangeFormula(newMolecule); // Don't change the mass offset
         }
 
         public static MoleculeMassOffset Sum(IEnumerable<MoleculeMassOffset> molecules)
         {
             var items = molecules.ToArray();
-            var mol = Molecule.Sum(items);
+            var mol = Molecule.Sum(items.Select(mmo => mmo.Molecule));
             double monoMassOffset = 0;
             double averageMassOffset = 0;
             foreach (var item in items)
@@ -417,7 +365,7 @@ namespace pwiz.Common.Chemistry
                 monoMassOffset += item.MonoMassOffset;
                 averageMassOffset += item.AverageMassOffset;
             }
-            return new MoleculeMassOffset(mol.Dictionary, monoMassOffset, averageMassOffset);
+            return MoleculeMassOffset.Create(mol, monoMassOffset, averageMassOffset);
         }
 
         #endregion
@@ -443,12 +391,17 @@ namespace pwiz.Common.Chemistry
         public string ChemicalFormulaWithoutOffsets()
         {
             // Nicely format the part of the object that's described as a chemical formula.
-            return IsMassOnly ? string.Empty : base.ToString();
+            return IsMassOnly ? string.Empty : Molecule.ToString();
         }
 
-        public override string ToDisplayString()
+        public string ToDisplayString()
         {
             return ToString(BioMassCalc.MassPrecision);
+        }
+
+        public IEnumerator<KeyValuePair<string, int>> GetEnumerator()
+        {
+            return Molecule.GetEnumerator();
         }
 
         public override string ToString()
@@ -458,13 +411,14 @@ namespace pwiz.Common.Chemistry
 
         public string ToString(int desiredDigits)
         {
+            if (MonoMassOffset == 0 && AverageMassOffset == 0)
+            {
+                return ChemicalFormulaWithoutOffsets();
+            }
+            
             var stringBuilder = new StringBuilder();
             stringBuilder.Append(ChemicalFormulaWithoutOffsets());
-
-            if (MonoMassOffset != 0 || AverageMassOffset != 0)
-            {
-                stringBuilder.Append(FormatMassModification(MonoMassOffset, AverageMassOffset, desiredDigits)); // Use our standard notation e.g. [+1.23/1.24], [-1.2] etc
-            }
+            stringBuilder.Append(FormatMassModification(MonoMassOffset, AverageMassOffset, desiredDigits)); // Use our standard notation e.g. [+1.23/1.24], [-1.2] etc
 
             return stringBuilder.ToString();
         }
@@ -493,41 +447,16 @@ namespace pwiz.Common.Chemistry
         {
             unchecked
             {
-                var hashCode = base.GetHashCode();
+                var hashCode = Molecule.GetHashCode();
                 hashCode = (hashCode * 397) ^ MonoMassOffset.GetHashCode();
                 hashCode = (hashCode * 397) ^ AverageMassOffset.GetHashCode();
                 return hashCode;
             }
         }
 
-        private static Dictionary<string, int> MoleculeFromEntries(IEnumerable<KeyValuePair<string, int>> entries)
+        IEnumerator IEnumerable.GetEnumerator()
         {
-            var dictionary = new Dictionary<string, int>();
-            foreach (var entry in entries)
-            {
-                int count;
-                if (dictionary.TryGetValue(entry.Key, out count))
-                {
-                    count += entry.Value;
-                    if (count == 0)
-                    {
-                        dictionary.Remove(entry.Key);
-                    }
-                    else
-                    {
-                        dictionary[entry.Key] = count;
-                    }
-                }
-                else
-                {
-                    if (entry.Value != 0)
-                    {
-                        dictionary.Add(entry.Key, entry.Value);
-                    }
-                }
-            }
-
-            return dictionary;
+            return ((IEnumerable)this).GetEnumerator();
         }
 
         public int CompareTo(MoleculeMassOffset other)
@@ -542,7 +471,7 @@ namespace pwiz.Common.Chemistry
             }
 
             // Compare formulas
-            var d = base.CompareTo(other);
+            var d = Molecule.CompareTo(other.Molecule);
             if (d != 0)
             {
                 return d;
@@ -577,7 +506,7 @@ namespace pwiz.Common.Chemistry
             }
 
             // Compare formulas
-            var d = base.CompareTo(other);
+            var d = Molecule.CompareTo(other.Molecule);
             if (d != 0)
             {
                 return d;
@@ -597,5 +526,68 @@ namespace pwiz.Common.Chemistry
 
             return 0;
         }
+
+        #region implement IDictionary<string, int> 
+        // N.B. most of these blow up since Molecule uses a ReadOnlyDictionary
+        public void Add(KeyValuePair<string, int> item)
+        {
+            throw new InvalidOperationException();
+        }
+
+        public void Clear()
+        {
+            throw new InvalidOperationException();
+        }
+
+        public bool Contains(KeyValuePair<string, int> item)
+        {
+            return Molecule.Contains(item);
+        }
+
+        public void CopyTo(KeyValuePair<string, int>[] array, int arrayIndex)
+        {
+            Molecule.CopyTo(array, arrayIndex);
+        }
+
+        public bool Remove(KeyValuePair<string, int> item)
+        {
+            throw new InvalidOperationException();
+        }
+
+        public int Count => Molecule.Count;
+
+        public bool IsReadOnly => true;
+
+        public bool ContainsKey(string key)
+        {
+            return Molecule.ContainsKey(key);
+        }
+
+        public void Add(string key, int value)
+        {
+            throw new InvalidOperationException();
+        }
+
+        public bool Remove(string key)
+        {
+            throw new InvalidOperationException();
+        }
+
+        public bool TryGetValue(string key, out int value)
+        {
+            return Molecule.TryGetValue(key, out value);
+        }
+
+        public int this[string key]
+        {
+            get => Molecule[key];
+            set => throw new InvalidOperationException();
+        }
+
+        public ICollection<string> Keys => Molecule.Keys;
+
+        public ICollection<int> Values => Molecule.Values;
+
+#endregion
     }
 }

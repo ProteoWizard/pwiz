@@ -594,7 +594,7 @@ namespace pwiz.Common.Chemistry
         public Molecule FindFormulaIntersection(IList<Molecule> formulas)
         {
             if (formulas.Count == 0)
-                return MoleculeMassOffset.EMPTY;
+                return Molecule.EMPTY;
             if (formulas.Count == 1)
                 return formulas[0];
             if (formulas.Count == 2 && formulas[0].Equals(formulas[1]))

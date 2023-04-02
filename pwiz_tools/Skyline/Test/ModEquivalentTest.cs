@@ -153,10 +153,9 @@ namespace pwiz.SkylineTest
                     modToMatch = (StaticMod)original.ChangeName("Test");
                     if (labelAtoms != LabelAtoms.None && original.AAs != null && original.AAs.Length == 1)
                     {
-                        double unexplainedMass;
-                        var newFormula = massCalc.GetModFormula(original.AAs[0], original, out unexplainedMass);
-                        Assert.AreEqual(0, unexplainedMass);
-                        modToMatch = modToMatch.ChangeFormula(newFormula).ChangeLabelAtoms(LabelAtoms.None);
+                        var newFormula = massCalc.GetModFormula(original.AAs[0], original);
+                        Assert.AreEqual(0.0, newFormula.MonoMassOffset); // Should be no unexplained mass.
+                        modToMatch = modToMatch.ChangeFormula(newFormula.Molecule).ChangeLabelAtoms(LabelAtoms.None);
                     }
 
                     count = CountEquivalent(unimodArray, modToMatch, compareDict, i);
