@@ -5,9 +5,7 @@ using System.IO;
 using System.Linq;
 using System.Reflection;
 using System.Resources;
-using System.Text;
 using Newtonsoft.Json;
-using pwiz.Skyline.Util;
 
 namespace pwiz.Skyline.Model
 {
@@ -127,13 +125,12 @@ namespace pwiz.Skyline.Model
 
         #region Test suppport
 
-        public override bool Equals(object obj)
+        public bool IsSameAs(GlobalizedObject other)
         {
-            if(obj == null)
+            if(other == null)
                 return false;
-            if(this.GetType() != obj.GetType())
+            if(this.GetType() != other.GetType())
                 return false;
-            var other = (GlobalizedObject)obj;
             if(GetPropertiesForComparison().Count != other.GetPropertiesForComparison().Count)
                 return false;
             var thisProps = GetPropertiesForComparison()
@@ -146,7 +143,12 @@ namespace pwiz.Skyline.Model
                 select new { t = t.Value, o = o.Value }).ToList();
             if (joinedValues.Count != thisProps.Count)
                 return false;
-            var res = joinedValues.Any(tuple => !tuple.t.Equals(tuple.o));
+            var res = joinedValues.Any(tuple =>
+            {
+                if(tuple.t is GlobalizedObject tg && tuple.o is GlobalizedObject to)
+                    return tg.IsSameAs(to);
+                return !tuple.t.Equals(tuple.o);
+            });
             return !res;
         }
 
@@ -155,18 +157,10 @@ namespace pwiz.Skyline.Model
             return GetProperties().Cast<PropertyDescriptor>().Where(prop => !prop.Attributes.Contains(UseToCompare.No)).ToList();
         }
 
-        public override int GetHashCode()
-        {
-            var valueList = GetType().GetProperties().ToList().Select(prop => prop.Name + @"=" + prop.GetValue(this)).ToList();
-            valueList.Sort();
-            
-            return valueList.ToString(@",").GetHashCode();
-        }
 
         public string Serialize()
         {
-            StringBuilder sb = new StringBuilder();
-            StringWriter sw = new StringWriter(sb);
+            StringWriter sw = new StringWriter();
 
             using (JsonWriter writer = new JsonTextWriter(sw))
             {
@@ -174,7 +168,7 @@ namespace pwiz.Skyline.Model
 
                 SerializeToJson(writer);
             }
-            return sb.ToString();
+            return sw.ToString();
         }
 
         private void SerializeToJson(JsonWriter writer)

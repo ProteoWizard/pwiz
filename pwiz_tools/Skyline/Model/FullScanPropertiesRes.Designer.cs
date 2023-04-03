@@ -439,7 +439,7 @@ namespace pwiz.Skyline.Model {
         }
         
         /// <summary>
-        ///   Looks up a localized string similar to Library dotp.
+        ///   Looks up a localized string similar to Library Dot Product.
         /// </summary>
         internal static string dotp {
             get {
@@ -475,7 +475,7 @@ namespace pwiz.Skyline.Model {
         }
         
         /// <summary>
-        ///   Looks up a localized string similar to Isotopic dotp.
+        ///   Looks up a localized string similar to Isotopic Dot Product.
         /// </summary>
         internal static string idotp {
             get {
@@ -637,7 +637,7 @@ namespace pwiz.Skyline.Model {
         }
         
         /// <summary>
-        ///   Looks up a localized string similar to Ratio dotp.
+        ///   Looks up a localized string similar to Ratio Dot Product.
         /// </summary>
         internal static string rdotp {
             get {

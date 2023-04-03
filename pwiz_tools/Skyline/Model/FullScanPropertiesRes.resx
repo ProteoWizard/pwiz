@@ -290,19 +290,19 @@
     <value>High Energy Offset used to obtain the MS2 spectrum.</value>
   </data>
   <data name="dotp" xml:space="preserve">
-    <value>Library dotp</value>
+    <value>Library Dot Product</value>
   </data>
   <data name="Description_dotp" xml:space="preserve">
     <value>Measure of similarity between this spectrum and its library match.</value>
   </data>
   <data name="idotp" xml:space="preserve">
-    <value>Isotopic dotp</value>
+    <value>Isotopic Dot Product</value>
   </data>
   <data name="Description_idotp" xml:space="preserve">
     <value>Measure of similarity between precurson isotopic peaks and expected isotope distribution.</value>
   </data>
   <data name="rdotp" xml:space="preserve">
-    <value>Ratio dotp</value>
+    <value>Ratio Dot Product</value>
   </data>
   <data name="Description_rdotp" xml:space="preserve">
     <value>Measure of similarity between labeled and non-labeled spectra.</value>

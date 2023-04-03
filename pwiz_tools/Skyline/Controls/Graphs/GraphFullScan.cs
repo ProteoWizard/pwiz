@@ -552,15 +552,20 @@ namespace pwiz.Skyline.Controls.Graphs
 
                     if (_documentContainer is SkylineWindow stateProvider)
                     {
-                        var selection = GraphSpectrum.SpectrumNodeSelection.GetCurrent(stateProvider);
+                        var chromSet = stateProvider.DocumentUI.Settings.MeasuredResults.Chromatograms.FirstOrDefault(chrom =>
+                            chrom.ContainsFile(MsDataFilePath.ParseUri(spectra[0].SourceFilePath)));
+                        spectrumProperties.ReplicateName = chromSet?.Name;
+                        var resultsIndex = stateProvider.DocumentUI.Settings.MeasuredResults.Chromatograms.IndexOf(chromSet);
+                        var nodePath = DocNodePath.GetNodePath(_msDataFileScanHelper.CurrentTransition?.Id, _documentContainer.DocumentUI);
+
                         //CONSIDER: calculate dot products for the current spectrum rather than whole peak
-                        var dotp = selection.NodeTranGroup.GetLibraryDotProduct(stateProvider.SelectedResultsIndex);
+                        var dotp = nodePath.Precursor.GetLibraryDotProduct(resultsIndex);
                         if(dotp.HasValue)
                             spectrumProperties.dotp = dotp.Value.ToString(Formats.PEAK_FOUND_RATIO);
-                        dotp = selection.NodeTranGroup.GetIsotopeDotProduct(stateProvider.SelectedResultsIndex);
+                        dotp = nodePath.Precursor.GetIsotopeDotProduct(resultsIndex);
                         if(dotp.HasValue)
                             spectrumProperties.idotp = dotp.Value.ToString(Formats.PEAK_FOUND_RATIO);
-                        spectrumProperties.Label = selection.NodeTranGroup.LabelType.ToString();;
+                        spectrumProperties.Label = nodePath.Precursor.LabelType.ToString();
                     }
                 }
 
@@ -591,7 +596,13 @@ namespace pwiz.Skyline.Controls.Graphs
                         spectrumProperties.IonMobilityCount = fullScans.Where(scan => scan.IonMobilities != null)
                             .Select(scan => scan.IonMobilities.Distinct().Count()).Sum();
                     
-                    spectrumProperties.ScanId = TextUtil.SpaceSeparate(_msDataFileScanHelper.MsDataSpectra[0].Id, @"-", _msDataFileScanHelper.MsDataSpectra.Last().Id);
+                    if(_msDataFileScanHelper.MsDataSpectra.Length > 1)
+                        spectrumProperties.ScanId = TextUtil.SpaceSeparate(_msDataFileScanHelper.MsDataSpectra[0].Id, @"-", _msDataFileScanHelper.MsDataSpectra.Last().Id);
+                    else
+                        spectrumProperties.ScanId = _msDataFileScanHelper.MsDataSpectra[0].Id; 
+
+                    if (_msDataFileScanHelper.CurrentTransition?.IonMobilityInfo?.HighEnergyIonMobilityOffset != null)
+                        spectrumProperties.HighEnergyOffset = _msDataFileScanHelper.CurrentTransition?.IonMobilityInfo?.HighEnergyIonMobilityOffset.ToString();
                 }
                 else
                 {
@@ -608,7 +619,9 @@ namespace pwiz.Skyline.Controls.Graphs
                 }
             }
 
-            graphControlExtension.PropertiesSheet.SelectedObject = spectrumProperties;
+            //avoid control refresh if there are no changes
+            if (graphControlExtension.PropertiesSheet.SelectedObject == null || graphControlExtension.PropertiesSheet.SelectedObject is FullScanProperties currentProps && !currentProps.IsSameAs(spectrumProperties))
+                graphControlExtension.PropertiesSheet.SelectedObject = spectrumProperties;
         }
         private class RankingContext
         {
