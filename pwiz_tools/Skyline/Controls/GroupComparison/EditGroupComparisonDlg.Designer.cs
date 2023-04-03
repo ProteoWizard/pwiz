@@ -28,10 +28,13 @@
         /// </summary>
         private void InitializeComponent()
         {
+            this.components = new System.ComponentModel.Container();
             System.ComponentModel.ComponentResourceManager resources = new System.ComponentModel.ComponentResourceManager(typeof(EditGroupComparisonDlg));
             this.btnOK = new System.Windows.Forms.Button();
             this.btnCancel = new System.Windows.Forms.Button();
             this.panelMain = new System.Windows.Forms.Panel();
+            this.comboMsLevel = new System.Windows.Forms.ComboBox();
+            this.lblMsLevel = new System.Windows.Forms.Label();
             this.btnAdvanced = new System.Windows.Forms.Button();
             this.lblControlAnnotation = new System.Windows.Forms.Label();
             this.comboControlAnnotation = new System.Windows.Forms.ComboBox();
@@ -62,6 +65,7 @@
             this.panelName = new System.Windows.Forms.Panel();
             this.panelButtons = new System.Windows.Forms.Panel();
             this.panelAdvanced = new System.Windows.Forms.Panel();
+            this.toolTip1 = new System.Windows.Forms.ToolTip(this.components);
             this.panelMain.SuspendLayout();
             this.groupBoxScope.SuspendLayout();
             this.flowLayoutPanel1.SuspendLayout();
@@ -87,6 +91,8 @@
             // 
             // panelMain
             // 
+            this.panelMain.Controls.Add(this.comboMsLevel);
+            this.panelMain.Controls.Add(this.lblMsLevel);
             this.panelMain.Controls.Add(this.btnAdvanced);
             this.panelMain.Controls.Add(this.lblControlAnnotation);
             this.panelMain.Controls.Add(this.comboControlAnnotation);
@@ -104,6 +110,25 @@
             this.panelMain.Controls.Add(this.lblNormalizationMethod);
             resources.ApplyResources(this.panelMain, "panelMain");
             this.panelMain.Name = "panelMain";
+            // 
+            // comboMsLevel
+            // 
+            resources.ApplyResources(this.comboMsLevel, "comboMsLevel");
+            this.comboMsLevel.DropDownStyle = System.Windows.Forms.ComboBoxStyle.DropDownList;
+            this.comboMsLevel.FormattingEnabled = true;
+            this.comboMsLevel.Items.AddRange(new object[] {
+            resources.GetString("comboMsLevel.Items"),
+            resources.GetString("comboMsLevel.Items1"),
+            resources.GetString("comboMsLevel.Items2"),
+            resources.GetString("comboMsLevel.Items3"),
+            resources.GetString("comboMsLevel.Items4")});
+            this.comboMsLevel.Name = "comboMsLevel";
+            this.comboMsLevel.SelectedIndexChanged += new System.EventHandler(this.comboMsLevel_SelectedIndexChanged);
+            // 
+            // lblMsLevel
+            // 
+            resources.ApplyResources(this.lblMsLevel, "lblMsLevel");
+            this.lblMsLevel.Name = "lblMsLevel";
             // 
             // btnAdvanced
             // 
@@ -377,5 +402,8 @@
         private System.Windows.Forms.GroupBox groupBoxQValueCutoff;
         private System.Windows.Forms.Button btnAdvanced;
         private System.Windows.Forms.Panel panelAdvanced;
+        private System.Windows.Forms.ComboBox comboMsLevel;
+        private System.Windows.Forms.Label lblMsLevel;
+        private System.Windows.Forms.ToolTip toolTip1;
     }
 }
