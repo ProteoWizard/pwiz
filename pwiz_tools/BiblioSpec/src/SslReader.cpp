@@ -28,6 +28,7 @@
 
 #include "SslReader.h"
 #include <boost/algorithm/string/join.hpp>
+#include <boost/lexical_cast.hpp>
 #include "pwiz/data/proteome/Peptide.hpp"
 
 namespace BiblioSpec {
@@ -244,12 +245,25 @@ SslReader::SslReader(BlibBuilder& maker,
    * to the "mods" vector, and returns the unmodified sequence.
    * The modifications that get added to the mods vector will include a modification representing the
    * mass of the crosslinker plus the masses of all of the linked peptides.
+   *
+   * An example of a crosslinked peptide sequence is:
+   * KC[+57.021464]DDK-EC[+57.021464]PKC[+57.021464]HEK-[+138.06808@1,4]
+   * where "138.06808" is the mass of the crosslinker, and the numbers after the "@" symbol are the
+   * one-based indexes of the residues that the crosslinker is attached to.
+   *
+   * There could potentially be multiple crosslinkers specified at the end of the sequence, each inside of its
+   * own set of square brackets.
+   *
+   * If a crosslinker attaches to the same peptide at two locations, those indexes would be separated by hyphen.
+   * The usual case would be a loop-link: [+138.06808@1-2]
+   * If a particular crosslinker does not attach to a particular peptide, then there would be an asterisk:
+   * [+138.06808@*,1-2]
    */
   string SslReader::parseCrosslinkedSequence(vector<SeqMod>& mods, const string& crosslinkedSequence) {
       vector<string> peptideSequences;
       string currentPeptideSequence = "";
       double massOfCrosslinkedPeptides = 0;
-      int positionOfCrosslinkerInFirstPeptide = 0;
+      int positionOfFirstCrosslinkerInFirstPeptide = -1;
       for (size_t i = 0; i < crosslinkedSequence.length(); i++) {
           char c = crosslinkedSequence[i];
           if (c >= 'A' && c <= 'Z') {
@@ -267,10 +281,18 @@ SslReader::SslReader(BlibBuilder& maker,
                   if (atSignPos == string::npos) {
                       throw BlibException(false, "Unable to find crosslinker mass in sequence: %s", crosslinkedSequence.c_str());
                   }
-                  massOfCrosslinkedPeptides += atof(crosslinkedSequence.substr(i, atSignPos - i).c_str());
-                  positionOfCrosslinkerInFirstPeptide = atoi(crosslinkedSequence.substr(atSignPos + 1).c_str());
+                  massOfCrosslinkedPeptides += boost::lexical_cast<double>(crosslinkedSequence.substr(i, atSignPos - i).c_str());
+                  size_t numberEnd = crosslinkedSequence.find_first_of("-,]", atSignPos + 1);
+                  if (numberEnd == string::npos) {
+                      throw BlibException(false, "Unable to interpret crosslink positions in sequence: %s", crosslinkedSequence.c_str());
+                  }
+                  if (positionOfFirstCrosslinkerInFirstPeptide == -1) {
+                      if (crosslinkedSequence.at(atSignPos + 1) != '*') {
+                          positionOfFirstCrosslinkerInFirstPeptide = boost::lexical_cast<int>(crosslinkedSequence.substr(atSignPos + 1, numberEnd));
+                      }
+                  }
               } else {
-                  double modificationMass = atof(crosslinkedSequence.substr(i, closePos - i).c_str());
+                  double modificationMass = boost::lexical_cast<double>(crosslinkedSequence.substr(i, closePos - i));
                   if (peptideSequences.size() == 0) {
                       mods.push_back(SeqMod(static_cast<int>(currentPeptideSequence.length()), modificationMass));
                   } else {
@@ -282,10 +304,13 @@ SslReader::SslReader(BlibBuilder& maker,
               throw BlibException(false, "Unexpected character '%c' at position %i in crosslinked peptide: %s", c, i + 1, crosslinkedSequence.c_str());
           }
       }
+	  if (positionOfFirstCrosslinkerInFirstPeptide == -1) {
+          throw BlibException(false, "Crosslinked peptide is not connected: %s", crosslinkedSequence.c_str());
+	  }
       for (size_t iPeptide = 1; iPeptide < peptideSequences.size(); iPeptide++) {
           massOfCrosslinkedPeptides += pwiz::proteome::Peptide(peptideSequences[iPeptide].c_str()).monoisotopicMass();
       }
-      mods.push_back(SeqMod(positionOfCrosslinkerInFirstPeptide, massOfCrosslinkedPeptides));
+      mods.push_back(SeqMod(positionOfFirstCrosslinkerInFirstPeptide, massOfCrosslinkedPeptides));
       return boost::algorithm::join(peptideSequences, "-");
   }
 

@@ -1,2 +1,4 @@
 file	scan	charge	sequence
 ssl-crosslink.mzML	controllerType=0 controllerNumber=1 scan=1	3	KC[+57.021464]DDDSETSNWIAANTK-EC[+57.021464]PKC[+57.021464]HVTIEK-[+138.06808@1,4]
+ssl-crosslink.mzML	controllerType=0 controllerNumber=1 scan=1	3	KCDDDSETSNWIAANTK-ECPKCHVTIEK-[+138.06808@1,4][-2.01565@*,2-5]
+ssl-crosslink.mzML	controllerType=0 controllerNumber=1 scan=1	3	EC[+57.021464]PKC[+57.021464]HVTIEK-[+138.06808@4,4-11]

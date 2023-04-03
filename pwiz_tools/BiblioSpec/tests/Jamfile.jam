@@ -206,7 +206,7 @@ blib-test-build ssl-index-rt : -o : output/ssl-index-rt.blib : ssl-index-rt.chec
 blib-test-build ssl-name-rt : -o : output/ssl-name-rt.blib : ssl-name-rt.check : $(TEST_INPUTS_PATH)/ssl-name-with-rt.ssl ;
 blib-test-build ssl-small-mol : -o : output/ssl-small-mol.blib : ssl-small-mol.check : $(TEST_INPUTS_PATH)/ssl-small-mol.ssl ;
 blib-test-build ssl-invalid-sequence : -o -e@Only_uppercase_letters : output/ssl-invalid-sequence.blib : ssl-invalid-sequence.check : $(TEST_INPUTS_PATH)/ssl-invalid-sequence.ssl ;
-blib-test-build ssl-crosslink : -o : output/ssl-crosslink.blib : ssl-crosslink.check : $(TEST_INPUTS_PATH)/ssl-crosslink.ssl ;
+blib-test-build ssl-crosslink : -o -K : output/ssl-crosslink.blib : ssl-crosslink.check : $(TEST_INPUTS_PATH)/ssl-crosslink.ssl ;
 
 # Test building with percolator XML files
 
