@@ -28,14 +28,20 @@
         /// </summary>
         private void InitializeComponent()
         {
+            this.components = new System.ComponentModel.Container();
+            System.ComponentModel.ComponentResourceManager resources = new System.ComponentModel.ComponentResourceManager(typeof(SpectraGridForm));
             this.statusPanel = new System.Windows.Forms.Panel();
+            this.btnCancelReadingFile = new System.Windows.Forms.Button();
+            this.imageList1 = new System.Windows.Forms.ImageList(this.components);
             this.progressBar1 = new System.Windows.Forms.ProgressBar();
             this.lblStatus = new System.Windows.Forms.Label();
             this.splitContainer1 = new System.Windows.Forms.SplitContainer();
+            this.btnRemoveFile = new System.Windows.Forms.Button();
             this.btnBrowse = new System.Windows.Forms.Button();
             this.btnAddSpectrumFilter = new System.Windows.Forms.Button();
             this.checkedListBoxSpectrumClassColumns = new System.Windows.Forms.CheckedListBox();
             this.listBoxFiles = new System.Windows.Forms.ListBox();
+            this.toolTip1 = new System.Windows.Forms.ToolTip(this.components);
             this.statusPanel.SuspendLayout();
             ((System.ComponentModel.ISupportInitialize)(this.splitContainer1)).BeginInit();
             this.splitContainer1.Panel1.SuspendLayout();
@@ -50,6 +56,7 @@
             // 
             // statusPanel
             // 
+            this.statusPanel.Controls.Add(this.btnCancelReadingFile);
             this.statusPanel.Controls.Add(this.progressBar1);
             this.statusPanel.Controls.Add(this.lblStatus);
             this.statusPanel.Dock = System.Windows.Forms.DockStyle.Bottom;
@@ -59,12 +66,31 @@
             this.statusPanel.TabIndex = 0;
             this.statusPanel.Visible = false;
             // 
+            // btnCancelReadingFile
+            // 
+            this.btnCancelReadingFile.Anchor = ((System.Windows.Forms.AnchorStyles)((System.Windows.Forms.AnchorStyles.Top | System.Windows.Forms.AnchorStyles.Right)));
+            this.btnCancelReadingFile.ImageIndex = 0;
+            this.btnCancelReadingFile.ImageList = this.imageList1;
+            this.btnCancelReadingFile.Location = new System.Drawing.Point(767, 6);
+            this.btnCancelReadingFile.Name = "btnCancelReadingFile";
+            this.btnCancelReadingFile.Size = new System.Drawing.Size(23, 23);
+            this.btnCancelReadingFile.TabIndex = 6;
+            this.toolTip1.SetToolTip(this.btnCancelReadingFile, "Cancel");
+            this.btnCancelReadingFile.UseVisualStyleBackColor = true;
+            this.btnCancelReadingFile.Click += new System.EventHandler(this.btnCancelReadingFile_Click);
+            // 
+            // imageList1
+            // 
+            this.imageList1.ImageStream = ((System.Windows.Forms.ImageListStreamer)(resources.GetObject("imageList1.ImageStream")));
+            this.imageList1.TransparentColor = System.Drawing.Color.Magenta;
+            this.imageList1.Images.SetKeyName(0, "Delete.bmp");
+            // 
             // progressBar1
             // 
             this.progressBar1.Anchor = ((System.Windows.Forms.AnchorStyles)((System.Windows.Forms.AnchorStyles.Top | System.Windows.Forms.AnchorStyles.Right)));
-            this.progressBar1.Location = new System.Drawing.Point(568, 6);
+            this.progressBar1.Location = new System.Drawing.Point(547, 6);
             this.progressBar1.Name = "progressBar1";
-            this.progressBar1.Size = new System.Drawing.Size(220, 23);
+            this.progressBar1.Size = new System.Drawing.Size(217, 23);
             this.progressBar1.TabIndex = 1;
             // 
             // lblStatus
@@ -73,9 +99,9 @@
             | System.Windows.Forms.AnchorStyles.Right)));
             this.lblStatus.Location = new System.Drawing.Point(3, 6);
             this.lblStatus.Name = "lblStatus";
-            this.lblStatus.Size = new System.Drawing.Size(559, 23);
+            this.lblStatus.Size = new System.Drawing.Size(538, 23);
             this.lblStatus.TabIndex = 0;
-            this.lblStatus.Text = "label1";
+            this.lblStatus.Text = "File reading status";
             this.lblStatus.TextAlign = System.Drawing.ContentAlignment.MiddleLeft;
             // 
             // splitContainer1
@@ -88,6 +114,7 @@
             // 
             // splitContainer1.Panel1
             // 
+            this.splitContainer1.Panel1.Controls.Add(this.btnRemoveFile);
             this.splitContainer1.Panel1.Controls.Add(this.btnBrowse);
             this.splitContainer1.Panel1.Controls.Add(this.btnAddSpectrumFilter);
             this.splitContainer1.Panel1.Controls.Add(this.checkedListBoxSpectrumClassColumns);
@@ -95,6 +122,20 @@
             this.splitContainer1.Size = new System.Drawing.Size(800, 415);
             this.splitContainer1.SplitterDistance = 98;
             this.splitContainer1.TabIndex = 2;
+            // 
+            // btnRemoveFile
+            // 
+            this.btnRemoveFile.Anchor = ((System.Windows.Forms.AnchorStyles)((System.Windows.Forms.AnchorStyles.Top | System.Windows.Forms.AnchorStyles.Right)));
+            this.btnRemoveFile.Enabled = false;
+            this.btnRemoveFile.ImageIndex = 0;
+            this.btnRemoveFile.ImageList = this.imageList1;
+            this.btnRemoveFile.Location = new System.Drawing.Point(639, 3);
+            this.btnRemoveFile.Name = "btnRemoveFile";
+            this.btnRemoveFile.Size = new System.Drawing.Size(23, 23);
+            this.btnRemoveFile.TabIndex = 5;
+            this.toolTip1.SetToolTip(this.btnRemoveFile, "Remove from list");
+            this.btnRemoveFile.UseVisualStyleBackColor = true;
+            this.btnRemoveFile.Click += new System.EventHandler(this.btnRemoveFile_Click);
             // 
             // btnBrowse
             // 
@@ -139,8 +180,11 @@
             this.listBoxFiles.IntegralHeight = false;
             this.listBoxFiles.Location = new System.Drawing.Point(294, 3);
             this.listBoxFiles.Name = "listBoxFiles";
-            this.listBoxFiles.Size = new System.Drawing.Size(375, 92);
+            this.listBoxFiles.SelectionMode = System.Windows.Forms.SelectionMode.MultiExtended;
+            this.listBoxFiles.Size = new System.Drawing.Size(339, 92);
             this.listBoxFiles.TabIndex = 2;
+            this.toolTip1.SetToolTip(this.listBoxFiles, "Remove from list");
+            this.listBoxFiles.SelectedIndexChanged += new System.EventHandler(this.listBoxFiles_SelectedIndexChanged);
             // 
             // SpectraGridForm
             // 
@@ -173,5 +217,9 @@
         private System.Windows.Forms.Button btnAddSpectrumFilter;
         private System.Windows.Forms.CheckedListBox checkedListBoxSpectrumClassColumns;
         private System.Windows.Forms.ListBox listBoxFiles;
+        private System.Windows.Forms.Button btnRemoveFile;
+        private System.Windows.Forms.ImageList imageList1;
+        private System.Windows.Forms.ToolTip toolTip1;
+        private System.Windows.Forms.Button btnCancelReadingFile;
     }
 }

@@ -19,7 +19,7 @@ namespace pwiz.Skyline.Model.Results.Spectra
         private ImmutableList<SpectrumPrecursor> _precursors;
         public SpectrumPrecursors(IEnumerable<SpectrumPrecursor> precursors)
         {
-            _precursors = ImmutableList.ValueOf(precursors.OrderBy(p=>p.PrecursorMz.RawValue));
+            _precursors = SortedByMz(precursors);
         }
 
         public static SpectrumPrecursors FromPrecursors(IEnumerable<SpectrumPrecursor> precursors)
@@ -98,6 +98,21 @@ namespace pwiz.Skyline.Model.Results.Spectra
 
                 return Parse(culture, stringValue);
             }
+        }
+
+        private static ImmutableList<SpectrumPrecursor> SortedByMz(IEnumerable<SpectrumPrecursor> precursors)
+        {
+            var list = ImmutableList.ValueOf(precursors);
+            for (int i = 1; i < list.Count; i++)
+            {
+                if (list[i].PrecursorMz.RawValue < list[i - 1].PrecursorMz.RawValue)
+                {
+                    // List was not sorted: return a new list in the correct order
+                    return ImmutableList.ValueOf(list.OrderBy(p => p.PrecursorMz.RawValue));
+                }
+            }
+            // list was already sorted
+            return list;
         }
     }
 }

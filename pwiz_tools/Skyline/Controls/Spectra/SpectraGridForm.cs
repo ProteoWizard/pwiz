@@ -33,11 +33,14 @@ namespace pwiz.Skyline.Controls.Spectra
 
         private Dictionary<DataFileItem, SpectrumMetadataList> _spectrumLists =
             new Dictionary<DataFileItem, SpectrumMetadataList>();
+
+        private HashSet<DataFileItem> _excludedFiles = new HashSet<DataFileItem>();
         private readonly SpectrumReader _spectrumReader;
         private List<DataFileItem> _dataFileList = new List<DataFileItem>();
         private HashSet<MsDataFileUri> _dataFileSet = new HashSet<MsDataFileUri>();
         private ImmutableList<SpectrumClassColumn> _allSpectrumClassColumns;
         private bool _updatePending;
+        private MsDataFileUri _fileBeingLoaded;
 
         public SpectraGridForm(SkylineWindow skylineWindow)
         {
@@ -50,7 +53,7 @@ namespace pwiz.Skyline.Controls.Spectra
                 checkedListBoxSpectrumClassColumns.SetItemCheckState(i, CheckState.Indeterminate);
             }
             checkedListBoxSpectrumClassColumns.ItemCheck += CheckedListBoxSpectrumClassColumns_OnItemCheck;
-            _dataSchema = new SkylineDataSchema(skylineWindow, SkylineDataSchema.GetLocalizedSchemaLocalizer());
+            _dataSchema = new SkylineWindowDataSchema(skylineWindow, SkylineDataSchema.GetLocalizedSchemaLocalizer());
             BindingListSource.QueryLock = _dataSchema.QueryLock;
             _spectrumClasses = new List<SpectrumClassRow>();
             _bindingList = new BindingList<SpectrumClassRow>(_spectrumClasses);
@@ -299,12 +302,16 @@ namespace pwiz.Skyline.Controls.Spectra
             {
                 foreach (var chromFileInfo in chromatogramSet.MSDataFileInfos)
                 {
+                    var key = new DataFileItem(chromatogramSet.Name, chromFileInfo.FilePath);
+                    if (_excludedFiles.Contains(key))
+                    {
+                        continue;
+                    }
                     if (!resultFileMetadatas.TryGetValue(chromFileInfo.FilePath, out var resultFileMetadata))
                     {
                         continue;
                     }
 
-                    var key = new DataFileItem(chromatogramSet.Name, chromFileInfo.FilePath);
                     if (_spectrumLists.ContainsKey(key))
                     {
                         continue;
@@ -418,6 +425,7 @@ namespace pwiz.Skyline.Controls.Spectra
             _spectrumLists[new DataFileItem(null, dataFile)] = new SpectrumMetadataList(spectra);
             QueueUpdateSpectrumRows();
             statusPanel.Visible = false;
+            _fileBeingLoaded = null;
         }
 
         public HashSet<IdentityPath> GetSelectedPrecursorPaths()
@@ -427,8 +435,9 @@ namespace pwiz.Skyline.Controls.Spectra
                 .SelectMany(path => document.EnumeratePathsAtLevel(path, SrmDocument.Level.TransitionGroups)).ToHashSet();
         }
 
-        private void UpdateProgress(string text, int value)
+        private void UpdateProgress(string text, int value, MsDataFileUri msDataFileUri)
         {
+            _fileBeingLoaded = msDataFileUri;
             statusPanel.Visible = true;
             lblStatus.Text = text;
             progressBar1.Value = value;
@@ -523,7 +532,7 @@ namespace pwiz.Skyline.Controls.Spectra
             private bool ReadSpectraFromFile(MsDataFileUri file)
             {
                 string message = string.Format(Resources.SpectrumReader_ReadSpectraFromFile_Reading_spectra_from__0_, file.GetFileName());
-                CommonActionUtil.SafeBeginInvoke(_form, () => _form.UpdateProgress(message, 0));
+                CommonActionUtil.SafeBeginInvoke(_form, () => _form.UpdateProgress(message, 0, file));
                 using (var msDataFile = file.OpenMsDataFile(true, false, false, false, true))
                 {
                     var spectra = new List<SpectrumMetadata>();
@@ -543,7 +552,7 @@ namespace pwiz.Skyline.Controls.Spectra
                         if (progress != lastProgress)
                         {
                             lastProgress = progress;
-                            CommonActionUtil.SafeBeginInvoke(_form, () => _form.UpdateProgress(message, progress));
+                            CommonActionUtil.SafeBeginInvoke(_form, () => _form.UpdateProgress(message, progress, file));
                         }
 
                         var spectrumMetadata = msDataFile.GetSpectrumMetadata(i);
@@ -741,8 +750,7 @@ namespace pwiz.Skyline.Controls.Spectra
             foreach (var classColumn in activeClassColumns)
             {
                 object value = classColumn.GetValue(row.Properties);
-                FilterPredicate filterPredicate;
-                filterPredicate = FilterPredicate.CreateFilterPredicate(FilterOperations.OP_EQUALS, value);
+                var filterPredicate = FilterPredicate.CreateFilterPredicate(FilterOperations.OP_EQUALS, value);
                 filterSpecs.Add(new FilterSpec(classColumn.PropertyPath, filterPredicate));
             }
             return new SpectrumClassFilter(filterSpecs);
@@ -764,6 +772,50 @@ namespace pwiz.Skyline.Controls.Spectra
                     e.NewValue = CheckState.Indeterminate;
                     break;
             }
+        }
+
+        private void listBoxFiles_SelectedIndexChanged(object sender, EventArgs e)
+        {
+            btnRemoveFile.Enabled = listBoxFiles.SelectedIndices.Count > 0;
+        }
+
+        private void btnRemoveFile_Click(object sender, EventArgs e)
+        {
+            RemoveDataFileItems(listBoxFiles.SelectedIndices.OfType<int>().Select(i => _dataFileList[i]).ToArray());
+            QueueUpdateSpectrumRows();
+        }
+
+        private void btnCancelReadingFile_Click(object sender, EventArgs e)
+        {
+            if (_fileBeingLoaded != null)
+            {
+                RemoveDataFileItems(new DataFileItem(null, _fileBeingLoaded));
+            }
+        }
+
+        private void RemoveDataFileItems(params DataFileItem[] dataFileItems)
+        {
+            if (dataFileItems.Length == 0)
+            {
+                return;
+            }
+
+            foreach (var dataFileItem in dataFileItems)
+            {
+                int index = _dataFileList.IndexOf(dataFileItem);
+                if (dataFileItem.ReplicateName == null)
+                {
+                    _dataFileSet.Remove(dataFileItem.MsDataFileUri);
+                    _spectrumReader.RemoveFile(dataFileItem.MsDataFileUri);
+                }
+                else
+                {
+                    _excludedFiles.Add(dataFileItem);
+                }
+                _dataFileList.RemoveAt(index);
+                listBoxFiles.Items.RemoveAt(index);
+            }
+            QueueUpdateSpectrumRows();
         }
     }
 }
