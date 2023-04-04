@@ -133,6 +133,15 @@ namespace pwiz.Skyline.Model.Databinding.Entities {
         }
         
         /// <summary>
+        ///   Looks up a localized string similar to Analyzer.
+        /// </summary>
+        public static string Analyzer {
+            get {
+                return ResourceManager.GetString("Analyzer", resourceCulture);
+            }
+        }
+        
+        /// <summary>
         ///   Looks up a localized string similar to Area.
         /// </summary>
         public static string Area {
@@ -507,6 +516,15 @@ namespace pwiz.Skyline.Model.Databinding.Entities {
         public static string CollisionEnergy {
             get {
                 return ResourceManager.GetString("CollisionEnergy", resourceCulture);
+            }
+        }
+        
+        /// <summary>
+        ///   Looks up a localized string similar to Compensation Voltage.
+        /// </summary>
+        public static string CompensationVoltage {
+            get {
+                return ResourceManager.GetString("CompensationVoltage", resourceCulture);
             }
         }
         
@@ -2113,6 +2131,24 @@ namespace pwiz.Skyline.Model.Databinding.Entities {
         }
         
         /// <summary>
+        ///   Looks up a localized string similar to MS1 Precursors.
+        /// </summary>
+        public static string Ms1Precursors {
+            get {
+                return ResourceManager.GetString("Ms1Precursors", resourceCulture);
+            }
+        }
+        
+        /// <summary>
+        ///   Looks up a localized string similar to MS2 Precursors.
+        /// </summary>
+        public static string Ms2Precursors {
+            get {
+                return ResourceManager.GetString("Ms2Precursors", resourceCulture);
+            }
+        }
+        
+        /// <summary>
         ///   Looks up a localized string similar to MS Level.
         /// </summary>
         public static string MsLevel {
@@ -2685,6 +2721,15 @@ namespace pwiz.Skyline.Model.Databinding.Entities {
         public static string PredictedRetentionTime {
             get {
                 return ResourceManager.GetString("PredictedRetentionTime", resourceCulture);
+            }
+        }
+        
+        /// <summary>
+        ///   Looks up a localized string similar to Preset Scan Configuration.
+        /// </summary>
+        public static string PresetScanConfiguration {
+            get {
+                return ResourceManager.GetString("PresetScanConfiguration", resourceCulture);
             }
         }
         
@@ -3306,6 +3351,24 @@ namespace pwiz.Skyline.Model.Databinding.Entities {
         public static string SampleType {
             get {
                 return ResourceManager.GetString("SampleType", resourceCulture);
+            }
+        }
+        
+        /// <summary>
+        ///   Looks up a localized string similar to Scan Description.
+        /// </summary>
+        public static string ScanDescription {
+            get {
+                return ResourceManager.GetString("ScanDescription", resourceCulture);
+            }
+        }
+        
+        /// <summary>
+        ///   Looks up a localized string similar to Scan Window Width.
+        /// </summary>
+        public static string ScanWindowWidth {
+            get {
+                return ResourceManager.GetString("ScanWindowWidth", resourceCulture);
             }
         }
         

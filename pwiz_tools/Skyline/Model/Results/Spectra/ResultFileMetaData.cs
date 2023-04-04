@@ -60,7 +60,7 @@ namespace pwiz.Skyline.Model.Results.Spectra
                 }
 
                 var precursorsByLevel =
-                    protoSpectrum.PrecursorIndex.ToLookup(index => proto.Precursors[index].MsLevel, index=>precursors[index]);
+                    protoSpectrum.PrecursorIndex.ToLookup(index => proto.Precursors[index - 1].MsLevel, index=>precursors[index - 1]);
                 if (precursorsByLevel.Any())
                 {
                     spectrumMetadata = spectrumMetadata.ChangePrecursors(Enumerable
@@ -114,7 +114,7 @@ namespace pwiz.Skyline.Model.Results.Spectra
                 {
                     foreach (var precursor in spectrumMetadata.GetPrecursors(msLevel))
                     {
-                        spectrum.PrecursorIndex.Add(precursors.Add((msLevel, precursor)));
+                        spectrum.PrecursorIndex.Add(precursors.Add((msLevel, precursor)) + 1);
                     }
                 }
                 proto.Spectra.Add(spectrum);

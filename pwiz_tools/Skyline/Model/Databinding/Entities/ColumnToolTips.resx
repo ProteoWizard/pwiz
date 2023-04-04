@@ -122,6 +122,10 @@ replicate data. Or #N/A if the file was imported with a version older than 1.1.<
   <data name="AnalyteConcentration">
     <value>Known quantity of analyte that was spiked into the external or quality control standard.</value>
   </data>
+  <data name="Analyzer">
+    <value>The type of analyzer that was used to collect the spectrum.
+If more than one analyzer was used, the names of the analyzers will be separated by slashes.</value>
+  </data>
   <data name="Area">
     <value>Area under the curve (AUC), minus background, for the transition peak.</value>
   </data>
@@ -260,6 +264,9 @@ peptide was cleaved upon fragmentation. (e.g. P, M, S, T, etc.)</value>
   <data name="CollisionEnergy">
     <value>Collision Energy for the precursor ion according to instrument/vendor
 specific default collision energy equation within Skyline</value>
+  </data>
+  <data name="CompensationVoltage">
+    <value>The voltage that was applied when the FAIMS spectrum was collected</value>
   </data>
   <data name="ConcentrationMultiplier">
     <value>Value to multiply the replicate's "analyte concentration" by in order to get the specific concentration of the specific peptide or molecule.</value>
@@ -849,6 +856,12 @@ The Molecule List Abundance will be blank if any transitions have missing values
   <data name="MonoisotopicMasses">
     <value>The modified sequence where modifications are referred to by their monoisotopic masses, e.g. "C[+57.021464]".</value>
   </data>
+  <data name="Ms1Precursors">
+    <value>The m/z values of the precursors that were isolated</value>
+  </data>
+  <data name="Ms2Precursors">
+    <value>For spectra that are MS Level 3 or higher, the m/z values of the precursors that were isolated after the first level of precursors were fragmented</value>
+  </data>
   <data name="MsLevel">
     <value>Indicates whether the result was obtained using only precursor intensities (MS Level 1) or product intensities (MS Level 2).</value>
   </data>
@@ -1063,6 +1076,9 @@ using the Results Grid.</value>
     <value>The retention time predicted by a retention time regression
 between a set of measured results and a retention time calculator (currently only
 SSRCalc 3.0 is available), or #N/A if no retention time regression has been assigned.</value>
+  </data>
+  <data name="PresetScanConfiguration">
+    <value>A number representing the settings that were applied to the spectrum</value>
   </data>
   <data name="PreviousAa">
     <value>Previous Aa</value>
@@ -1301,6 +1317,12 @@ file, or the file name again for other file types.</value>
       Solvent
       Blank
       Double Blank</value>
+  </data>
+  <data name="ScanDescription">
+    <value>Text description that was added to the spectrum by the instrument method</value>
+  </data>
+  <data name="ScanWindowWidth">
+    <value>Difference between the upper and lower m/z values that the spectrum might have intensity values for</value>
   </data>
   <data name="Score">
     <value>The numerical value for the particular feature.</value>

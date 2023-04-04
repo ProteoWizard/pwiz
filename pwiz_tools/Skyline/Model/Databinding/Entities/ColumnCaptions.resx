@@ -141,6 +141,9 @@
   <data name="AnalyteConcentration">
     <value>Analyte Concentration</value>
   </data>
+  <data name="Analyzer">
+    <value>Analyzer</value>
+  </data>
   <data name="Area">
     <value>Area</value>
   </data>
@@ -266,6 +269,9 @@
   </data>
   <data name="CollisionEnergy">
     <value>Collision Energy</value>
+  </data>
+  <data name="CompensationVoltage">
+    <value>Compensation Voltage</value>
   </data>
   <data name="ConcentrationMultiplier">
     <value>Concentration Multiplier</value>
@@ -801,6 +807,12 @@
   <data name="MonoisotopicMasses">
     <value>Monoisotopic Masses</value>
   </data>
+  <data name="Ms1Precursors">
+    <value>MS1 Precursors</value>
+  </data>
+  <data name="Ms2Precursors">
+    <value>MS2 Precursors</value>
+  </data>
   <data name="MsLevel">
     <value>MS Level</value>
   </data>
@@ -992,6 +1004,9 @@
   </data>
   <data name="PredictedRetentionTime">
     <value>Predicted Retention Time</value>
+  </data>
+  <data name="PresetScanConfiguration">
+    <value>Preset Scan Configuration</value>
   </data>
   <data name="PreviousAa">
     <value>Previous Aa</value>
@@ -1199,6 +1214,12 @@
   </data>
   <data name="SampleType">
     <value>Sample Type</value>
+  </data>
+  <data name="ScanDescription">
+    <value>Scan Description</value>
+  </data>
+  <data name="ScanWindowWidth">
+    <value>Scan Window Width</value>
   </data>
   <data name="Score">
     <value>Score</value>
