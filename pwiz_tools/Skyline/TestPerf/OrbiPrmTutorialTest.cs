@@ -909,8 +909,8 @@ namespace TestPerf
                 Assert.IsTrue(editGroupComparisonDlg.ComboCaseValue.Items.Contains(caseValue));
                 editGroupComparisonDlg.ComboIdentityAnnotation.SelectedItem = identityAnnotation;
                 Assert.IsTrue(editGroupComparisonDlg.ComboIdentityAnnotation.Items.Contains(identityAnnotation));
-                editGroupComparisonDlg.ComboNormalizationMethod.SelectedItem =
-                    NormalizationMethod.FromIsotopeLabelTypeName("heavy");
+                editGroupComparisonDlg.NormalizeOption =
+                    NormalizeOption.FromNormalizationMethod(NormalizationMethod.FromIsotopeLabelTypeName("heavy"));
                 editGroupComparisonDlg.TextBoxConfidenceLevel.Text = 95.ToString(CultureInfo.CurrentCulture);
                 editGroupComparisonDlg.RadioScopePerProtein.Checked = true;
                 editGroupComparisonDlg.ShowAdvanced(true);
