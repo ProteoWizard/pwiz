@@ -1129,6 +1129,15 @@ namespace pwiz.ProteowizardWrapper
                     .Select(precursor => new SpectrumPrecursor(precursor.IsolationMz.Value))));
             metadata = metadata.ChangeScanDescription(GetScanDescription(spectrum));
             metadata = metadata.ChangePresetScanConfiguration(GetPresetScanConfiguration(spectrum));
+            var instrumentConfig = spectrum.scanList.scans.FirstOrDefault()?.instrumentConfiguration;
+            if (instrumentConfig != null)
+            {
+                GetInstrumentConfig(instrumentConfig, out string ionSource, out string analyzer, out string detector);
+                if (analyzer != null)
+                {
+                    metadata = metadata.ChangeAnalyzer(analyzer);
+                }
+            }
             IonMobilityValue ionMobilityValue = GetIonMobility(spectrum);
             if (ionMobilityValue != null)
             {

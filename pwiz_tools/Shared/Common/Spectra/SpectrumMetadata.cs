@@ -99,6 +99,13 @@ namespace pwiz.Common.Spectra
             return ChangeProp(ImClone(this), im => im.CollisionEnergy = collisionEnergy);
         }
 
+        public string Analyzer { get; private set; }
+
+        public SpectrumMetadata ChangeAnalyzer(string value)
+        {
+            return ChangeProp(ImClone(this), im => im.Analyzer = value);
+        }
+
         protected bool Equals(SpectrumMetadata other)
         {
             return _precursorsByMsLevel.Equals(other._precursorsByMsLevel) && Id == other.Id &&
@@ -108,7 +115,8 @@ namespace pwiz.Common.Spectra
                    Nullable.Equals(ScanWindowLowerLimit, other.ScanWindowLowerLimit) &&
                    Nullable.Equals(ScanWindowUpperLimit, other.ScanWindowUpperLimit) &&
                    Nullable.Equals(CompensationVoltage, other.CompensationVoltage) &&
-                   Equals(PresetScanConfiguration, other.PresetScanConfiguration);
+                   Equals(PresetScanConfiguration, other.PresetScanConfiguration) &&
+                   Equals(Analyzer, other.Analyzer);
         }
 
         public override bool Equals(object obj)

@@ -38,6 +38,7 @@ message ResultFileMetaDataProto {
 		repeated int32 precursorIndex = 4;
 		int32 scanDescriptionIndex = 5;
 		int32 presetScanConfiguration = 6;
+		int32 analyzerIndex = 7;
 	}
 
 	message Precursor {
@@ -51,6 +52,7 @@ message ResultFileMetaDataProto {
 	repeated SpectrumMetadata spectra = 1;
 	repeated Precursor precursors = 2;
 	repeated string scanDescriptions = 3;
+	repeated string analyzers = 4;
 }
 message ChromatogramGroupIdsProto {
 	enum FilterOperation {

@@ -40,9 +40,13 @@ namespace pwiz.Skyline.Model.Results.Spectra
         public static readonly SpectrumClassColumn MsLevel =
             MakeColumn(nameof(SpectrumClass.MsLevel), spectrum => spectrum.MsLevel);
 
+        public static readonly SpectrumClassColumn Analyzer =
+            MakeColumn(nameof(SpectrumClass.Analyzer), spectrum => spectrum.Analyzer);
+
         public static readonly ImmutableList<SpectrumClassColumn> ALL = ImmutableList.ValueOf(new[]
         {
-            Ms1Precursors, Ms2Precursors, ScanDescription, CollisionEnergy, ScanWindowWidth, CompensationVoltage, PresetScanConfiguration, MsLevel
+            Ms1Precursors, Ms2Precursors, ScanDescription, CollisionEnergy, ScanWindowWidth, CompensationVoltage,
+            PresetScanConfiguration, MsLevel, Analyzer
         });
 
         /// <summary>

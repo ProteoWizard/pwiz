@@ -53,8 +53,14 @@ namespace pwiz.Skyline.Model.Results.Spectra
                             proto.ScanDescriptions[protoSpectrum.ScanDescriptionIndex - 1]);
                 }
 
+                if (protoSpectrum.AnalyzerIndex > 0)
+                {
+                    spectrumMetadata =
+                        spectrumMetadata.ChangeAnalyzer(proto.Analyzers[protoSpectrum.AnalyzerIndex - 1]);
+                }
+
                 var precursorsByLevel =
-                    protoSpectrum.PrecursorIndex.ToLookup(index => proto.Precursors[index - 1].MsLevel, index=>precursors[index - 1]);
+                    protoSpectrum.PrecursorIndex.ToLookup(index => proto.Precursors[index].MsLevel, index=>precursors[index]);
                 if (precursorsByLevel.Any())
                 {
                     spectrumMetadata = spectrumMetadata.ChangePrecursors(Enumerable
@@ -82,8 +88,9 @@ namespace pwiz.Skyline.Model.Results.Spectra
         public ResultFileMetaDataProto ToProtoBuf()
         {
             var proto = new ResultFileMetaDataProto();
-            var precursors = new Dictionary<Tuple<int, SpectrumPrecursor>, int>();
-            var scanDescriptions = new Dictionary<string, int>();
+            var precursors = new DistinctList<(int MsLevel, SpectrumPrecursor SpectrumPrecuror)>();
+            var scanDescriptions = new DistinctList<string>{null};
+            var analyzers = new DistinctList<string>{null};
             foreach (var spectrumMetadata in SpectrumMetadatas)
             {
                 var spectrum = new ResultFileMetaDataProto.Types.SpectrumMetadata
@@ -101,44 +108,34 @@ namespace pwiz.Skyline.Model.Results.Spectra
                     spectrum.ScanIdParts.AddRange(intParts);
                 }
 
-                if (!string.IsNullOrEmpty(spectrumMetadata.ScanDescription))
-                {
-                    if (!scanDescriptions.TryGetValue(spectrumMetadata.ScanDescription, out int scanDescriptionIndex))
-                    {
-                        proto.ScanDescriptions.Add(spectrumMetadata.ScanDescription);
-                        scanDescriptionIndex = proto.ScanDescriptions.Count;
-                        scanDescriptions.Add(spectrumMetadata.ScanDescription, scanDescriptionIndex);
-                    }
-
-                    spectrum.ScanDescriptionIndex = scanDescriptionIndex;
-                } 
-
+                spectrum.ScanDescriptionIndex = scanDescriptions.Add(spectrumMetadata.ScanDescription);
+                spectrum.AnalyzerIndex = analyzers.Add(spectrumMetadata.Analyzer);
                 for (int msLevel = 1; msLevel < spectrumMetadata.MsLevel; msLevel++)
                 {
                     foreach (var precursor in spectrumMetadata.GetPrecursors(msLevel))
                     {
-                        var key = Tuple.Create(msLevel, precursor);
-                        if (!precursors.TryGetValue(key, out int precursorIndex))
-                        {
-                            var protoPrecursor = new ResultFileMetaDataProto.Types.Precursor()
-                            {
-                                MsLevel = msLevel,
-                                TargetMz = precursor.PrecursorMz.RawValue
-                            };
-                            if (precursor.CollisionEnergy.HasValue)
-                            {
-                                protoPrecursor.CollisionEnergy = precursor.CollisionEnergy.Value;
-                            }
-                            proto.Precursors.Add(protoPrecursor);
-                            precursorIndex = proto.Precursors.Count;
-                            precursors.Add(key, precursorIndex);
-                        }
-                        spectrum.PrecursorIndex.Add(precursorIndex);
+                        spectrum.PrecursorIndex.Add(precursors.Add((msLevel, precursor)));
                     }
                 }
                 proto.Spectra.Add(spectrum);
             }
 
+            proto.ScanDescriptions.AddRange(scanDescriptions.Skip(1));
+            proto.Analyzers.AddRange(analyzers.Skip(1));
+            foreach (var precursorTuple in precursors)
+            {
+                var spectrumPrecursor = precursorTuple.SpectrumPrecuror;
+                var protoPrecursor = new ResultFileMetaDataProto.Types.Precursor()
+                {
+                    MsLevel = precursorTuple.MsLevel,
+                    TargetMz = spectrumPrecursor.PrecursorMz.RawValue
+                };
+                if (spectrumPrecursor.CollisionEnergy.HasValue)
+                {
+                    protoPrecursor.CollisionEnergy = spectrumPrecursor.CollisionEnergy.Value;
+                }
+                proto.Precursors.Add(protoPrecursor);
+            }
             return proto;
         }
 
