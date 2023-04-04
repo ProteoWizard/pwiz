@@ -1,4 +1,6 @@
 ﻿using System;
+using System.Collections;
+using System.Drawing;
 using System.Windows.Forms;
 
 namespace pwiz.PanoramaClient
@@ -10,6 +12,8 @@ namespace pwiz.PanoramaClient
         private bool _uploadPerms;
         private PanoramaFormUtil _formUtil;
         public string FolderPath;
+        private RemoteFileDialog _dialog;
+        public TreeNode clicked;
 
         //Needs to take server information
         //public void InitializeTreeView(Uri serverUri, string user, string pass, TreeView treeViewFolders, bool requireUploadPerms, bool showFiles)
@@ -19,6 +23,22 @@ namespace pwiz.PanoramaClient
             treeView.ImageList = imageList1;
             _server = new PanoramaServer(serverUri, user, pass);
             _uploadPerms = uploadPerms;
+        }
+
+        /// <summary>
+        /// This constructor takes a reference to RemoteFileDialog to call methods inside it for adding files 
+        /// </summary>
+        /// <param name="serverUri"></param>
+        /// <param name="user"></param>
+        /// <param name="pass"></param>
+        /// <param name="dlg"></param>
+        public FolderBrowser(Uri serverUri, string user, string pass, RemoteFileDialog dlg)
+        {
+            InitializeComponent();
+            treeView.ImageList = imageList1;
+            _server = new PanoramaServer(serverUri, user, pass);
+            _uploadPerms = false;
+            _dialog = dlg;
         }
 
         public void SwitchFolderType(bool type)
@@ -41,6 +61,31 @@ namespace pwiz.PanoramaClient
             _formUtil = new PanoramaFormUtil();
             _formUtil.InitializeTreeView(_server, treeView, _uploadPerms, true, false);
             treeView.TopNode.Expand();
+        }
+
+        private void treeView_NodeMouseClick(object sender, TreeNodeMouseClickEventArgs e)
+        {
+            if (_dialog != null)
+            {
+                clicked = e.Node;
+                ClearTreeRecursive(treeView.Nodes);
+                var hit = e.Node.TreeView.HitTest(e.Location);
+                if (hit.Location != TreeViewHitTestLocations.PlusMinus)
+                {
+                    _dialog.AddFiles(e.Node);
+                }
+            }
+        }
+
+        private void ClearTreeRecursive(IEnumerable nodes)
+        {
+            foreach (TreeNode node in nodes)
+            {
+                node.BackColor = Color.White;
+                node.ForeColor = Color.Black;
+                ClearTreeRecursive(node.Nodes);
+            }
+
         }
     }
 }

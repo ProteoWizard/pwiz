@@ -10,15 +10,14 @@ namespace pwiz.PanoramaClient
 
         public DirectoryPicker(Uri server, string user, string pass)
         {
-            //treeView.Hide();
             InitializeComponent();
-            treeView.Hide();
             folders = new FolderBrowser(server, user, pass, false);
             folders.Dock = DockStyle.Fill;
             folderPanel.Controls.Add(folders);
         }
 
         public string Folder { get; set; }
+        public string OKButtonText { get; set; }
 
 
         private void cancel_Click_1(object sender, EventArgs e)
@@ -29,6 +28,7 @@ namespace pwiz.PanoramaClient
         private void open_Click(object sender, EventArgs e)
         {
             //Return the selected folder path
+            Folder = folders.FolderPath;
             MessageBox.Show(Folder);
         }
 
@@ -53,11 +53,16 @@ namespace pwiz.PanoramaClient
 
         }
 
-        private void treeView_AfterSelect(object sender, TreeViewEventArgs e)
+
+        private void DirectoryPicker_Load(object sender, EventArgs e)
         {
-            if (e.Node.Tag != null)
+            if (string.IsNullOrEmpty(OKButtonText))
             {
-                Folder = e.Node.Tag.ToString();
+                open.Text = "Open";
+            }
+            else
+            {
+                open.Text = OKButtonText;
             }
         }
     }

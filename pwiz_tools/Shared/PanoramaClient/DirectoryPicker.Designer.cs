@@ -30,7 +30,6 @@
         {
             System.ComponentModel.ComponentResourceManager resources = new System.ComponentModel.ComponentResourceManager(typeof(DirectoryPicker));
             this.folderPanel = new System.Windows.Forms.Panel();
-            this.treeView = new System.Windows.Forms.TreeView();
             this.cancel = new System.Windows.Forms.Button();
             this.open = new System.Windows.Forms.Button();
             this.checkBox1 = new System.Windows.Forms.CheckBox();
@@ -38,7 +37,6 @@
             this.back = new System.Windows.Forms.ToolStripButton();
             this.forward = new System.Windows.Forms.ToolStripButton();
             this.up = new System.Windows.Forms.ToolStripButton();
-            this.folderPanel.SuspendLayout();
             this.toolStrip.SuspendLayout();
             this.SuspendLayout();
             // 
@@ -47,20 +45,10 @@
             this.folderPanel.Anchor = ((System.Windows.Forms.AnchorStyles)((((System.Windows.Forms.AnchorStyles.Top | System.Windows.Forms.AnchorStyles.Bottom) 
             | System.Windows.Forms.AnchorStyles.Left) 
             | System.Windows.Forms.AnchorStyles.Right)));
-            this.folderPanel.Controls.Add(this.treeView);
             this.folderPanel.Location = new System.Drawing.Point(12, 44);
             this.folderPanel.Name = "folderPanel";
             this.folderPanel.Size = new System.Drawing.Size(640, 243);
             this.folderPanel.TabIndex = 0;
-            // 
-            // treeView
-            // 
-            this.treeView.Dock = System.Windows.Forms.DockStyle.Fill;
-            this.treeView.Location = new System.Drawing.Point(0, 0);
-            this.treeView.Name = "treeView";
-            this.treeView.Size = new System.Drawing.Size(640, 243);
-            this.treeView.TabIndex = 0;
-            this.treeView.AfterSelect += new System.Windows.Forms.TreeViewEventHandler(this.treeView_AfterSelect);
             // 
             // cancel
             // 
@@ -154,8 +142,9 @@
             this.MaximizeBox = false;
             this.MinimizeBox = false;
             this.Name = "DirectoryPicker";
+            this.StartPosition = System.Windows.Forms.FormStartPosition.CenterScreen;
             this.Text = "Panorama folders";
-            this.folderPanel.ResumeLayout(false);
+            this.Load += new System.EventHandler(this.DirectoryPicker_Load);
             this.toolStrip.ResumeLayout(false);
             this.toolStrip.PerformLayout();
             this.ResumeLayout(false);
@@ -173,6 +162,5 @@
         private System.Windows.Forms.ToolStripButton back;
         private System.Windows.Forms.ToolStripButton forward;
         private System.Windows.Forms.ToolStripButton up;
-        private System.Windows.Forms.TreeView treeView;
     }
 }

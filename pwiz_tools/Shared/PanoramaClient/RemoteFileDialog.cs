@@ -5,6 +5,7 @@ using System.Drawing;
 using System.Linq;
 using Newtonsoft.Json.Linq;
 using System.Windows.Forms;
+using pwiz.Common.Collections;
 
 
 namespace pwiz.PanoramaClient
@@ -91,12 +92,9 @@ namespace pwiz.PanoramaClient
             var serverUri = new Uri(Server);
             if (!ShowingSky)
             {
-                folders = new FolderBrowser(serverUri, User, Pass, false
-                    /* Note from Vagisha: FolderBrowser constructor does not take 5 arguments.
-                     * , treeView
-                     */);
+                folders = new FolderBrowser(serverUri, User, Pass, this);
                 folders.Dock = DockStyle.Fill;
-                //treeView.Hide();
+                treeView.Hide();
                 splitContainer1.Panel1.Controls.Add(folders);
                 //treeView.Controls.Add(folders);
                 //pc.InitializeTreeView(serverUri, User, Pass, treeView, false, true, false);
@@ -276,9 +274,9 @@ namespace pwiz.PanoramaClient
             fileInfos[3] = (string)rowOne[@"TransitionCount"];
             fileInfos[4] = (string)rowOne[@"ReplicateCount"];
             var fileNode = new ListViewItem(result, 1);
-            //fileNode.ToolTipText =
-                //string.Format(Resources.RemoteFileDialog_GetLatestVersion_Proteins___0___Peptides___1___Prescursors___2___Transitions___3___Replicates___4_,
-                    //fileInfos[0], fileInfos[1], fileInfos[2], fileInfos[3], fileInfos[4]);
+            fileNode.ToolTipText =
+                string.Format("Proteins: {0}, Peptides: {1}, Precursors: {2}, Transitions: {3}, Replicates: {4}",
+                    fileInfos[0], fileInfos[1], fileInfos[2], fileInfos[3], fileInfos[4]);
             fileNode.Name = (string)rowOne[@"_labkeyurl_FileName"];
             listView.Items.Add(fileNode);
             
@@ -380,9 +378,9 @@ namespace pwiz.PanoramaClient
             try
             {
                 JToken json = GetJson(query);
-                var rows = json[@"rows"];
+                var rows = json[@"rows"]; 
                 var versions = HasVersions(nodePath);
-                foreach (var row in rows)
+                foreach (JToken? row in rows)
                 {
                     var fileName = (string)row[@"FileName"];
                     var filePath = (string)row[@"Container/Path"];
@@ -396,18 +394,26 @@ namespace pwiz.PanoramaClient
                             options.Visible = true;
                             numVersions = GetVersionInfo(nodePath, fileName);
                         }
-                        else
+                        else 
                         {
                             l.Visible = false;
                             options.Visible = false;
                         }
                         listItem[0] = fileName;
-                        if (row[@"DocumentSize"] != null)
+                        //var test = row[@"DocumentSize"];
+                        try
                         {
                             var size = (long)row[@"DocumentSize"];
                             var sizeObj = new FileSize(size);
                             listItem[1] = sizeObj.ToString();
                         }
+                        catch (Exception ex)
+                        {
+
+                        }
+
+                      
+                        
 
                         if (numVersions[0] != null)
                         {
@@ -424,15 +430,13 @@ namespace pwiz.PanoramaClient
                         }
                         var fileNode = new ListViewItem(listItem, 1);
                         fileNode.Name = (string)row[@"_labkeyurl_FileName"];
-                        /*fileNode.ToolTipText =
-                            string.Format(
-                                Resources.RemoteFileDialog_AddQueryFiles_Proteins___0___Peptides___1___Precursors___2___Transitions___3___Replicates___4_, row[@"PeptideGroupCount"], row[@"PeptideCount"], row[@"PrecursorCount"], row[@"TransitionCount"], row[@"ReplicateCount"]);
-                        listView.Items.Add(fileNode);*/
+                        fileNode.ToolTipText =
+                            string.Format("Proteins: {0}, Peptides: {1}, Precursors: {2}, Transitions: {3}, Replicates: {4}", row[@"PeptideGroupCount"], row[@"PeptideCount"], row[@"PrecursorCount"], row[@"TransitionCount"], row[@"ReplicateCount"]);
+                        listView.Items.Add(fileNode);
                     }
                 }
             } catch (Exception)
             {
-
             }       
         }
 
@@ -445,7 +449,6 @@ namespace pwiz.PanoramaClient
         /// <param name="e"></param>
         private void treeView2_NodeMouseClick(object sender, TreeNodeMouseClickEventArgs e)
         {
-            MessageBox.Show("Clicked!");
             ClearTreeRecursive(treeView.Nodes);
             var hit = e.Node.TreeView.HitTest(e.Location);
             if (hit.Location != TreeViewHitTestLocations.PlusMinus)
@@ -484,6 +487,42 @@ namespace pwiz.PanoramaClient
             }
         }
 
+        public void AddFiles(TreeNode node)
+        {
+            forward.Enabled = false;
+            if (priorNode != null && priorNode != node)
+            {
+                previous.Push(priorNode);
+                back.Enabled = true;
+            }
+            priorNode = node;
+            if (node.Parent == null)
+            {
+                up.Enabled = false;
+            }
+            else
+            {
+                up.Enabled = true;
+            }
+            var path = (string)node.Tag;
+            listView.Items.Clear();
+            if (!string.IsNullOrEmpty(path))
+            {
+                if (checkBox1.Checked)
+                {
+                    AddQueryFiles(listView, (string)node.Tag, versionLabel, comboBox1);
+                }
+                else
+                {
+                    var uriString = string.Concat(Server, "_webdav/", path + "/@files?method=json");
+                    var uri = new Uri(uriString);
+                    AddChildFiles(uri, listView);
+                }
+            }
+            node.BackColor = SystemColors.MenuHighlight;
+            node.ForeColor = Color.White;
+        }
+
         /// <summary>
         /// De-selects all nodes in the tree
         /// </summary>
@@ -520,9 +559,12 @@ namespace pwiz.PanoramaClient
         /// <param name="e"></param>
         private void checkBox1_CheckedChanged(object sender, EventArgs e)
         {
+            listView.Items.Clear();
+            comboBox1.Visible = false;
+            versionLabel.Visible = false;
             var type = checkBox1.Checked;
-            //folders.SwitchFolderType(type);
-            treeView.Show();
+            folders.SwitchFolderType(type);
+            //treeView.Show();
             /*
              * Note from Vagisha:  No SetTreeColor method in FolderBrowser
              * folders.SetTreeColor(treeView);
@@ -609,11 +651,13 @@ namespace pwiz.PanoramaClient
             listView.Items.Clear();
             if (comboBox1.Text.Equals(RECENT_VER))
             {
-                GetLatestVersion((string)treeView.SelectedNode.Tag, listView);
+                //GetLatestVersion((string)treeView.SelectedNode.Tag, listView);
+                GetLatestVersion((string)folders.clicked.Tag, listView);
             }
             else
             {
-                AddQueryFiles(listView, (string)treeView.SelectedNode.Tag, versionLabel, comboBox1);
+                //AddQueryFiles(listView, (string)treeView.SelectedNode.Tag, versionLabel, comboBox1);
+                AddQueryFiles(listView, (string)folders.clicked.Tag, versionLabel, comboBox1);
             }
         }
 
@@ -626,9 +670,6 @@ namespace pwiz.PanoramaClient
         {
             if (listView.SelectedItems.Count != 0 && listView.SelectedItems[0] != null)
             {
-                var dlg = new FolderBrowserDialog();
-                
-                //dlg.Description = Resources.RemoteFileDialog_open_Click_Select_the_folder_the_file_will_be_downloaded_to;
                 if (treeView.SelectedNode != null)
                 {
                     Folder = (string)treeView.SelectedNode.Tag;
@@ -647,7 +688,7 @@ namespace pwiz.PanoramaClient
             else
             {
                 
-                //MessageBox.Show(Resources.RemoteFileDialog_open_Click_You_must_select_a_file_first_);
+                MessageBox.Show("You must select a file first!");
                 
             }
         }

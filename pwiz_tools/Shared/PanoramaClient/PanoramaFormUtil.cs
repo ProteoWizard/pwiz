@@ -16,12 +16,18 @@ namespace pwiz.PanoramaClient
 
     internal class PanoramaFormUtil
     {
+
+        public string Server;
+        public string User;
+        public string Pass;
         public void InitializeTreeView(PanoramaServer server, TreeView treeViewFolders, bool requireUploadPerms, bool showFiles, bool showSky)
         {
             IPanoramaClient panoramaClient = new WebPanoramaClient(server.URI);
             var folder = panoramaClient.GetInfoForFolders(server, null);
             var treeNode = new TreeNode(server.URI.ToString());
-
+            Server = server.URI.ToString();
+            User = server.Username;
+            Pass = server.Password;
             treeViewFolders.Invoke(new Action(() => treeViewFolders.Nodes.Add(treeNode)));
             if (showSky)
             {
@@ -211,6 +217,46 @@ namespace pwiz.PanoramaClient
                 query = string.Format(@"{0}&query.{1}~eq=", query, equalityParam);
             }
             return query;
+        }
+
+        public void AddChildFiles(Uri newUri, ListView listView)
+        {
+            JToken json = GetJson(newUri.ToString(), User, Pass);
+            if ((int)json[@"fileCount"] != 0)
+            {
+                JToken files = json[@"files"];
+                foreach (dynamic file in files)
+                {
+                    var listItem = new string[2];
+                    var fileName = (string)file[@"text"];
+                    listItem[0] = fileName;
+                    var isFile = (bool)file[@"leaf"];
+                    if (isFile)
+                    {
+                        var canRead = (bool)file[@"canRead"];
+                        if (!canRead)
+                        {
+                            continue;
+                        }
+                        var size = (long)file[@"size"];
+                        var sizeObj = new FileSize(size);
+                        listItem[1] = sizeObj.ToString();
+                        ListViewItem fileNode;
+                        if (fileName.Contains(".sky"))
+                        {
+                            fileNode = new ListViewItem(listItem, 1);
+
+                        }
+                        else
+                        {
+                            fileNode = new ListViewItem(listItem, 0);
+                        }
+                        fileNode.Tag = (string)file[@"id"];
+                        fileNode.Name = (string)file[@"href"];
+                        listView.Items.Add(fileNode);
+                    }
+                }
+            }
         }
 
     }

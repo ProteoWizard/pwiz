@@ -932,7 +932,17 @@ namespace pwiz.Skyline
 
                 servers.Add(newServer);
             }
-            //using var dlg = new RemoteFileDialog(user, pass, server, "", true);
+            var user = string.Empty;
+            var pass = string.Empty;
+            Uri server = null;
+            if (servers.Count > 0)
+            {
+                user = servers[0].Username;
+                pass = servers[0].Password;
+                server = servers[0].URI;
+            }
+            using var dlg = new RemoteFileDialog(user, pass, server, "", false);
+            dlg.ShowDialog();
             /*
             var user = string.Empty;
             var pass = string.Empty;
