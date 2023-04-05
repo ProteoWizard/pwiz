@@ -1562,6 +1562,7 @@ namespace pwiz.Skyline.Controls.Graphs
         }
 
         public ToolStripButton PropertyButton => propertiesBtn;
+        public ToolStripButton LeftButton => leftButton;
         public MsGraphExtension MsGraphExtension => graphControlExtension;
 
         #endregion Test support

@@ -19,6 +19,7 @@
 
 using System;
 using System.Collections.Generic;
+using System.Diagnostics;
 using System.Drawing;
 using System.Globalization;
 using System.IO;
@@ -542,6 +543,7 @@ namespace pwiz.SkylineTestTutorial
                     SkylineWindow.GraphFullScan.SetPeakTypeSelection(MsDataFileScanHelper.PeakType.chromDefault);
                 });
             }
+            TestFullScanProperties();
 
             RunUI(() => SkylineWindow.HideFullScanGraph());
 
@@ -960,6 +962,84 @@ namespace pwiz.SkylineTestTutorial
             // Remove the shared prefix and everything after the first period
             const int prefixLen = 10;
             return searchFile.Substring(prefixLen, searchFile.IndexOf('.') - prefixLen);
+        }
+
+        private void TestFullScanProperties()
+        {
+            var expectedPropertiesDict = new Dictionary<string, object> {
+                {"FileName","100803_0005b_MCF7_TiTip3.wiff"},
+                {"ReplicateName","5b_MCF7_TiTip3"},
+                {"PrecursorMz","732.3099"},
+                {"Charge","+3"},
+                {"Label","light"},
+                {"RetentionTime","33.19"},
+                {"IsolationWindow","350:1600 (-625:+625)"},
+                {"ScanId","1.4067-1.1"},
+                {"MSStage","1"},
+                {"Instrument",new Dictionary<string, object> {
+                        {"InstrumentSerialNumber","AP11280707"},
+                        {"InstrumentModel","QSTAR Elite"},
+                        {"InstrumentManufacturer","Sciex"},
+                        {"InstrumentComponents",new Dictionary<string, object> {
+                                {"Ionization","electrospray ionization"},
+                                {"Analyzer","quadrupole/quadrupole/time-of-flight"},
+                                {"Detector","electron multiplier"}
+                            }
+                        }
+                    }
+                },
+                {"MzCount","37828"},
+                {"IsCentroided","False"},
+                {"idotp","0.96"}
+            };
+            var expectedProperties = new FullScanProperties();
+            expectedProperties.Deserialize(expectedPropertiesDict);
+
+            Assert.IsTrue(SkylineWindow.GraphFullScan != null && SkylineWindow.GraphFullScan.Visible);
+            var msGraph = SkylineWindow.GraphFullScan.MsGraphExtension;
+
+            var propertiesButton = SkylineWindow.GraphFullScan.PropertyButton;
+            Assert.IsFalse(propertiesButton.Checked);
+            RunUI(() =>
+            {
+                propertiesButton.PerformClick();
+
+            });
+            WaitForConditionUI(() => msGraph.PropertiesVisible);
+            WaitForGraphs();
+            FullScanProperties currentProperties = null;
+            RunUI(() =>
+            {
+                currentProperties = msGraph.PropertiesSheet.SelectedObject as FullScanProperties;
+            });
+            Assert.IsNotNull(currentProperties);
+            // To write new json string for the expected property values into the output stream uncomment the next line
+            Trace.Write(currentProperties.Serialize());
+            Assert.IsTrue(expectedProperties.IsSameAs(currentProperties));
+            Assert.IsTrue(propertiesButton.Checked);
+
+            // make sure the properties are updated when the spectrum changes
+            RunUI(() =>
+            {
+                SkylineWindow.GraphFullScan.LeftButton?.PerformClick();
+            });
+            WaitForGraphs();
+            WaitForConditionUI(() => SkylineWindow.GraphFullScan.IsLoaded);
+            RunUI(() =>
+            {
+                currentProperties = msGraph.PropertiesSheet.SelectedObject as FullScanProperties;
+            });
+
+            Assert.IsFalse(currentProperties.IsSameAs(expectedProperties));
+            RunUI(() =>
+            {
+                propertiesButton.PerformClick();
+
+            });
+            WaitForConditionUI(() => !msGraph.PropertiesVisible);
+            WaitForGraphs();
+            Assert.IsFalse(propertiesButton.Checked);
+
         }
     }
 }

@@ -348,29 +348,29 @@ namespace pwiz.SkylineTestFunctional
 
         private void TestPropertySheet()
         {
-            var expectedPropertiesDict = new Dictionary<string, object>() 
-            {
-                { "FileName", "ID12692_01_UCA168_3727_040714.mzML"},
-                { "PrecursorMz", "453.261"},
-                { "Charge", "+3" },
-                { "Label", "light" },
-                { "RetentionTime", "33.05" },
-                { "IonMobility", "3.477msec" },
-                { "IsolationWindow", "50:2000 (-975:+975)" },
-                { "IonMobilityRange", "0.069:13.8" },
-                { "IonMobilityFilterRange", "3.152:3.651" },
-                { "ScanId", "1.0.309201 - 1.0.309400" },
-                { "MSStage", "1" },
-                { "Instrument", new Dictionary<string, object>() {
-                    {"InstrumentModel", "Waters instrument model"},
-                    { "InstrumentManufacturer", "Waters" }
+            var expectedPropertiesDict = new Dictionary<string, object> {
+                {"FileName","ID12692_01_UCA168_3727_040714.mzML"},
+                {"ReplicateName","ID12692_01_UCA168_3727_040714"},
+                {"PrecursorMz","453.261"},
+                {"Charge","+3"},
+                {"Label","light"},
+                {"RetentionTime","33.05"},
+                {"IonMobility","3.477msec"},
+                {"IsolationWindow","50:2000 (-975:+975)"},
+                {"IonMobilityRange","0.069:13.8"},
+                {"IonMobilityFilterRange","3.152:3.651"},
+                {"ScanId","1.0.309201 - 1.0.309400"},
+                {"MSStage","1"},
+                {"Instrument",new Dictionary<string, object> {
+                        {"InstrumentModel","Waters instrument model"},
+                        {"InstrumentManufacturer","Waters"}
                     }
                 },
-                { "DataPoints", 105373 },
-                { "MzCount", 104118 },
-                { "IsCentroided", "False" },
-                { "dotp", "0.61" },
-                { "idotp", "0.84" }
+                {"DataPoints","105373"},
+                {"MzCount","104118"},
+                {"IsCentroided","False"},
+                {"dotp","0.61"},
+                {"idotp","0.84"}
             };
             var expectedProperties = new FullScanProperties();
             expectedProperties.Deserialize(expectedPropertiesDict);
@@ -397,6 +397,20 @@ namespace pwiz.SkylineTestFunctional
             //Trace.Write(currentProperties.Serialize());
             Assert.IsTrue(expectedProperties.IsSameAs(currentProperties));
             Assert.IsTrue(propertiesButton.Checked);
+
+            // make sure the properties are updated when the spectrum changes
+            RunUI(() =>
+            {
+                SkylineWindow.GraphFullScan.LeftButton?.PerformClick();
+            });
+            WaitForGraphs();
+            WaitForConditionUI(() => SkylineWindow.GraphFullScan.IsLoaded);
+            RunUI(() =>
+            {
+                currentProperties = msGraph.PropertiesSheet.SelectedObject as FullScanProperties;
+            });
+            
+            Assert.IsFalse(currentProperties.IsSameAs(expectedProperties));
             RunUI(() =>
             {
                 propertiesButton.PerformClick();

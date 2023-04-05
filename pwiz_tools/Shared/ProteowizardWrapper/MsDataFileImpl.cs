@@ -395,52 +395,63 @@ namespace pwiz.ProteowizardWrapper
 
                 foreach (InstrumentConfiguration ic in _msDataFile.instrumentConfigurationList)
                 {
-                    string instrumentModel = null;
-                    string ionization;
-                    string analyzer;
-                    string detector;
-
-                    using CVParam param = ic.cvParamChild(CVID.MS_instrument_model);
-                    if (!param.empty() && param.cvid != CVID.MS_instrument_model)
+                    var config = CreateMsInstrumentConfigInfo(ic);
+                    if (config != null)
                     {
-                        instrumentModel = param.name;
-
-                        // if instrument model free string is present, it is probably more specific than CVID model (which may only indicate manufacturer)
-                        using UserParam uParam = ic.userParam(@"instrument model");
-                        if (HasInfo(uParam))
-                        {
-                            instrumentModel = uParam.value;
-                        }
-                    }
-
-                    if (instrumentModel == null)
-                    {
-                        // If we did not find the instrument model in a CVParam it may be in a UserParam
-                        using UserParam uParam = ic.userParam(@"msModel");
-                        if (HasInfo(uParam))
-                        {
-                            instrumentModel = uParam.value;
-                        }
-                        else
-                        {
-                            using UserParam uParam2 = ic.userParam(@"instrument model");
-                            if (HasInfo(uParam2))
-                            {
-                                instrumentModel = uParam2.value;
-                            }
-                        }
-                    }
-
-                    // get the ionization type, analyzer and detector
-                    GetInstrumentConfig(ic, out ionization, out analyzer, out detector);
-
-                    if (instrumentModel != null || ionization != null || analyzer != null || detector != null)
-                    {
-                        configList.Add(new MsInstrumentConfigInfo(instrumentModel, ionization, analyzer, detector));
+                        configList.Add(config);
                     }
                 }
                 return configList;
             }
+        }
+
+        public static MsInstrumentConfigInfo CreateMsInstrumentConfigInfo(InstrumentConfiguration ic)
+        {
+            string instrumentModel = null;
+            string ionization;
+            string analyzer;
+            string detector;
+
+            using CVParam param = ic.cvParamChild(CVID.MS_instrument_model);
+            if (!param.empty() && param.cvid != CVID.MS_instrument_model)
+            {
+                instrumentModel = param.name;
+
+                // if instrument model free string is present, it is probably more specific than CVID model (which may only indicate manufacturer)
+                using UserParam uParam = ic.userParam(@"instrument model");
+                if (HasInfo(uParam))
+                {
+                    instrumentModel = uParam.value;
+                }
+            }
+
+            if (instrumentModel == null)
+            {
+                // If we did not find the instrument model in a CVParam it may be in a UserParam
+                using UserParam uParam = ic.userParam(@"msModel");
+                if (HasInfo(uParam))
+                {
+                    instrumentModel = uParam.value;
+                }
+                else
+                {
+                    using UserParam uParam2 = ic.userParam(@"instrument model");
+                    if (HasInfo(uParam2))
+                    {
+                        instrumentModel = uParam2.value;
+                    }
+                }
+            }
+
+            // get the ionization type, analyzer and detector
+            GetInstrumentConfig(ic, out ionization, out analyzer, out detector);
+
+            if (instrumentModel != null || ionization != null || analyzer != null || detector != null)
+            {
+                return new MsInstrumentConfigInfo(instrumentModel, ionization, analyzer, detector);
+            }
+            else
+                return null;
         }
 
         public string GetInstrumentSerialNumber()
@@ -1116,7 +1127,7 @@ namespace pwiz.ProteowizardWrapper
                     }
 
                     msDataSpectrum.SourceFilePath = FilePath;
-                    msDataSpectrum.InstrumentInfo = GetInstrumentConfigInfoList().FirstOrDefault();
+                    msDataSpectrum.InstrumentInfo = CreateMsInstrumentConfigInfo(spectrum.scanList.scans[0].instrumentConfiguration); 
                     msDataSpectrum.InstrumentSerialNumber = GetInstrumentSerialNumber();
                     msDataSpectrum.InstrumentVendor = InstrumentVendorName;
 

@@ -143,13 +143,13 @@ namespace pwiz.Skyline.Model
                 select new { t = t.Value, o = o.Value }).ToList();
             if (joinedValues.Count != thisProps.Count)
                 return false;
-            var res = joinedValues.Any(tuple =>
+            var res = joinedValues.Where(tuple =>
             {
                 if(tuple.t is GlobalizedObject tg && tuple.o is GlobalizedObject to)
-                    return tg.IsSameAs(to);
+                    return !tg.IsSameAs(to);
                 return !tuple.t.Equals(tuple.o);
             });
-            return !res;
+            return !res.Any();
         }
 
         public List<PropertyDescriptor> GetPropertiesForComparison()
@@ -161,13 +161,7 @@ namespace pwiz.Skyline.Model
         public string Serialize()
         {
             StringWriter sw = new StringWriter();
-
-            using (JsonWriter writer = new JsonTextWriter(sw))
-            {
-                writer.Formatting = Formatting.Indented;
-
-                SerializeToJson(writer);
-            }
+            SerializeToDictionary(sw);
             return sw.ToString();
         }
 
@@ -187,6 +181,30 @@ namespace pwiz.Skyline.Model
                     writer.WriteValue(thisProps[propName]);
             }
             writer.WriteEndObject();
+        }
+
+        private void SerializeToDictionary(StringWriter sw)
+        {
+            var thisProps = GetProperties().Cast<PropertyDescriptor>()
+                .Where(prop => !prop.Attributes.Contains(UseToCompare.No) && prop.GetValue(this) != null)
+                .Select(prop => new {name = prop.Name, val = prop.GetValue(this)}).ToList();
+            sw.WriteLine(@"new Dictionary<string, object> {");
+            for(int i = 0; i < thisProps.Count; i++)
+            {
+                sw.Write(@"{");
+                sw.Write('"' + thisProps[i].name + '"');
+                sw.Write(',');
+                if (thisProps[i].val is GlobalizedObject nested)
+                    nested.SerializeToDictionary(sw);
+                else
+                    sw.Write('"' + thisProps[i].val.ToString() + '"');
+                if(i < thisProps.Count - 1)
+                    sw.WriteLine(@"},");
+                else
+                    sw.WriteLine(@"}");
+
+            }
+            sw.WriteLine(@"}");
         }
 
         public void Deserialize(Dictionary<string, object> valueDict)
