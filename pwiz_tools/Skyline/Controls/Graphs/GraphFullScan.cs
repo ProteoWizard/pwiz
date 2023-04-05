@@ -74,7 +74,8 @@ namespace pwiz.Skyline.Controls.Graphs
             graphControl.GraphPane = new HeatMapGraphPane
             {
                 MinDotRadius = MIN_DOT_RADIUS,
-                MaxDotRadius = MAX_DOT_RADIUS
+                MaxDotRadius = MAX_DOT_RADIUS,
+                ShowHeatMap = !Settings.Default.SumScansFullScan
             };
             graphControl.GraphPane.AllowLabelOverlap = true;
             graphControl.ContextMenuBuilder += graphControl_ContextMenuBuilder;
