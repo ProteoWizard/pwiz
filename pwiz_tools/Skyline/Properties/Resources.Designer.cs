@@ -31507,6 +31507,16 @@ namespace pwiz.Skyline.Properties {
         }
         
         /// <summary>
+        ///   Looks up a localized string similar to {0} precursor filters will be added to the document..
+        /// </summary>
+        public static string SpectraGridForm_AddSpectrumFilters__0__precursor_filters_will_be_added_to_the_document_ {
+            get {
+                return ResourceManager.GetString("SpectraGridForm_AddSpectrumFilters__0__precursor_filters_will_be_added_to_the_doc" +
+                        "ument_", resourceCulture);
+            }
+        }
+        
+        /// <summary>
         ///   Looks up a localized string similar to Change spectrum filter.
         /// </summary>
         public static string SpectraGridForm_AddSpectrumFilters_Change_spectrum_filter {
@@ -31521,6 +31531,26 @@ namespace pwiz.Skyline.Properties {
         public static string SpectraGridForm_AddSpectrumFilters_Examining_filters {
             get {
                 return ResourceManager.GetString("SpectraGridForm_AddSpectrumFilters_Examining_filters", resourceCulture);
+            }
+        }
+        
+        /// <summary>
+        ///   Looks up a localized string similar to No precursor filters were added to the document..
+        /// </summary>
+        public static string SpectraGridForm_AddSpectrumFilters_No_precursor_filters_were_added_to_the_document_ {
+            get {
+                return ResourceManager.GetString("SpectraGridForm_AddSpectrumFilters_No_precursor_filters_were_added_to_the_documen" +
+                        "t_", resourceCulture);
+            }
+        }
+        
+        /// <summary>
+        ///   Looks up a localized string similar to One precursor filter will be added to the document..
+        /// </summary>
+        public static string SpectraGridForm_AddSpectrumFilters_One_precursor_filter_will_be_added_to_the_document_ {
+            get {
+                return ResourceManager.GetString("SpectraGridForm_AddSpectrumFilters_One_precursor_filter_will_be_added_to_the_docu" +
+                        "ment_", resourceCulture);
             }
         }
         
@@ -31558,6 +31588,43 @@ namespace pwiz.Skyline.Properties {
         public static string SpectraGridForm_GetDefaultViewSpec_Default {
             get {
                 return ResourceManager.GetString("SpectraGridForm_GetDefaultViewSpec_Default", resourceCulture);
+            }
+        }
+        
+        /// <summary>
+        ///   Looks up a localized string similar to Showing all spectra.
+        /// </summary>
+        public static string SpectraGridForm_GetSummaryMessage_Showing_all_spectra {
+            get {
+                return ResourceManager.GetString("SpectraGridForm_GetSummaryMessage_Showing_all_spectra", resourceCulture);
+            }
+        }
+        
+        /// <summary>
+        ///   Looks up a localized string similar to Showing spectra near {0} precursors between {1} and {2}.
+        /// </summary>
+        public static string SpectraGridForm_GetSummaryMessage_Showing_spectra_near__0__precursors_between__1__and__2_ {
+            get {
+                return ResourceManager.GetString("SpectraGridForm_GetSummaryMessage_Showing_spectra_near__0__precursors_between__1_" +
+                        "_and__2_", resourceCulture);
+            }
+        }
+        
+        /// <summary>
+        ///   Looks up a localized string similar to Showing spectra near precursor m/z {0}.
+        /// </summary>
+        public static string SpectraGridForm_GetSummaryMessage_Showing_spectra_near_precursor_m_z__0_ {
+            get {
+                return ResourceManager.GetString("SpectraGridForm_GetSummaryMessage_Showing_spectra_near_precursor_m_z__0_", resourceCulture);
+            }
+        }
+        
+        /// <summary>
+        ///   Looks up a localized string similar to Showing spectra near precursor m/z {0} and {1}.
+        /// </summary>
+        public static string SpectraGridForm_GetSummaryMessage_Showing_spectra_near_precursor_m_z__0__and__1_ {
+            get {
+                return ResourceManager.GetString("SpectraGridForm_GetSummaryMessage_Showing_spectra_near_precursor_m_z__0__and__1_", resourceCulture);
             }
         }
         

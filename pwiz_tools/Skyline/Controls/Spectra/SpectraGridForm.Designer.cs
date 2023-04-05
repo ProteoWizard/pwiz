@@ -36,6 +36,7 @@
             this.progressBar1 = new System.Windows.Forms.ProgressBar();
             this.lblStatus = new System.Windows.Forms.Label();
             this.splitContainer1 = new System.Windows.Forms.SplitContainer();
+            this.lblSummary = new System.Windows.Forms.Label();
             this.btnRemoveFile = new System.Windows.Forms.Button();
             this.btnBrowse = new System.Windows.Forms.Button();
             this.btnAddSpectrumFilter = new System.Windows.Forms.Button();
@@ -114,14 +115,26 @@
             // 
             // splitContainer1.Panel1
             // 
+            this.splitContainer1.Panel1.Controls.Add(this.lblSummary);
             this.splitContainer1.Panel1.Controls.Add(this.btnRemoveFile);
             this.splitContainer1.Panel1.Controls.Add(this.btnBrowse);
             this.splitContainer1.Panel1.Controls.Add(this.btnAddSpectrumFilter);
             this.splitContainer1.Panel1.Controls.Add(this.checkedListBoxSpectrumClassColumns);
             this.splitContainer1.Panel1.Controls.Add(this.listBoxFiles);
             this.splitContainer1.Size = new System.Drawing.Size(800, 415);
-            this.splitContainer1.SplitterDistance = 98;
+            this.splitContainer1.SplitterDistance = 122;
             this.splitContainer1.TabIndex = 2;
+            // 
+            // lblSummary
+            // 
+            this.lblSummary.Anchor = ((System.Windows.Forms.AnchorStyles)(((System.Windows.Forms.AnchorStyles.Bottom | System.Windows.Forms.AnchorStyles.Left) 
+            | System.Windows.Forms.AnchorStyles.Right)));
+            this.lblSummary.AutoEllipsis = true;
+            this.lblSummary.Location = new System.Drawing.Point(10, 100);
+            this.lblSummary.Name = "lblSummary";
+            this.lblSummary.Size = new System.Drawing.Size(623, 23);
+            this.lblSummary.TabIndex = 6;
+            this.lblSummary.Text = "Summary";
             // 
             // btnRemoveFile
             // 
@@ -151,11 +164,11 @@
             // btnAddSpectrumFilter
             // 
             this.btnAddSpectrumFilter.Anchor = ((System.Windows.Forms.AnchorStyles)((System.Windows.Forms.AnchorStyles.Bottom | System.Windows.Forms.AnchorStyles.Right)));
-            this.btnAddSpectrumFilter.Location = new System.Drawing.Point(675, 72);
+            this.btnAddSpectrumFilter.Location = new System.Drawing.Point(639, 96);
             this.btnAddSpectrumFilter.Name = "btnAddSpectrumFilter";
-            this.btnAddSpectrumFilter.Size = new System.Drawing.Size(113, 23);
+            this.btnAddSpectrumFilter.Size = new System.Drawing.Size(149, 23);
             this.btnAddSpectrumFilter.TabIndex = 4;
-            this.btnAddSpectrumFilter.Text = "Add Spectrum Filter";
+            this.btnAddSpectrumFilter.Text = "Add Spectrum Filter...";
             this.btnAddSpectrumFilter.UseVisualStyleBackColor = true;
             this.btnAddSpectrumFilter.Click += new System.EventHandler(this.btnAddSpectrumFilter_Click);
             // 
@@ -167,7 +180,7 @@
             this.checkedListBoxSpectrumClassColumns.IntegralHeight = false;
             this.checkedListBoxSpectrumClassColumns.Location = new System.Drawing.Point(3, 3);
             this.checkedListBoxSpectrumClassColumns.Name = "checkedListBoxSpectrumClassColumns";
-            this.checkedListBoxSpectrumClassColumns.Size = new System.Drawing.Size(285, 91);
+            this.checkedListBoxSpectrumClassColumns.Size = new System.Drawing.Size(285, 93);
             this.checkedListBoxSpectrumClassColumns.TabIndex = 3;
             this.checkedListBoxSpectrumClassColumns.ItemCheck += new System.Windows.Forms.ItemCheckEventHandler(this.checkedListBoxSpectrumClassColumns_ItemCheck);
             // 
@@ -181,7 +194,7 @@
             this.listBoxFiles.Location = new System.Drawing.Point(294, 3);
             this.listBoxFiles.Name = "listBoxFiles";
             this.listBoxFiles.SelectionMode = System.Windows.Forms.SelectionMode.MultiExtended;
-            this.listBoxFiles.Size = new System.Drawing.Size(339, 92);
+            this.listBoxFiles.Size = new System.Drawing.Size(339, 93);
             this.listBoxFiles.TabIndex = 2;
             this.toolTip1.SetToolTip(this.listBoxFiles, "Remove from list");
             this.listBoxFiles.SelectedIndexChanged += new System.EventHandler(this.listBoxFiles_SelectedIndexChanged);
@@ -221,5 +234,6 @@
         private System.Windows.Forms.ImageList imageList1;
         private System.Windows.Forms.ToolTip toolTip1;
         private System.Windows.Forms.Button btnCancelReadingFile;
+        private System.Windows.Forms.Label lblSummary;
     }
 }

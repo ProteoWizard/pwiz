@@ -1724,14 +1724,15 @@ namespace pwiz.Skyline.Menus
         public void ChangeSpectrumFilter(ICollection<IdentityPath> precursorIdentityPaths,
             SpectrumClassFilter spectrumClassFilter, bool copy)
         {
-            SkylineWindow.ModifyDocument(Resources.EditMenu_ChangeSpectrumFilter_Change_spectrum_filter, doc => ChangeSpectrumFilter(doc, precursorIdentityPaths, spectrumClassFilter, copy),
+            SkylineWindow.ModifyDocument(Resources.EditMenu_ChangeSpectrumFilter_Change_spectrum_filter, doc => ChangeSpectrumFilter(doc, precursorIdentityPaths, spectrumClassFilter, copy, out _),
                 docPair => AuditLogEntry.CreateSimpleEntry(MessageType.added_spectrum_filter, docPair.NewDocumentType));
 
         }
 
         public SrmDocument ChangeSpectrumFilter(SrmDocument document, IEnumerable<IdentityPath> precursorIdentityPaths,
-            SpectrumClassFilter spectrumClassFilter, bool copy)
+            SpectrumClassFilter spectrumClassFilter, bool copy, out int changeCount)
         {
+            changeCount = 0;
             foreach (var peptidePathGroup in precursorIdentityPaths.GroupBy(path => path.Parent))
             {
                 var peptideDocNode = (PeptideDocNode)document.FindNode(peptidePathGroup.Key);
@@ -1740,42 +1741,37 @@ namespace pwiz.Skyline.Menus
                     continue;
                 }
 
-                var transitionGroupDocNodes = peptidePathGroup
-                    .Select(idPath => peptideDocNode.FindNode(idPath.Child))
-                    .OfType<TransitionGroupDocNode>().ToList();
-                var newTransitionGroups = new List<DocNode>();
-                if (copy)
-                {
-                    newTransitionGroups.AddRange(peptideDocNode.Children);
-                }
-                else
-                {
-                    var idPathSet = peptidePathGroup.ToHashSet();
-                    newTransitionGroups.AddRange(peptideDocNode.Children.Where(tg=>!idPathSet.Contains(new IdentityPath(peptidePathGroup.Key, tg.Id))));
-                }
                 bool changed = false;
-                var precursorGroups = transitionGroupDocNodes.GroupBy(tg =>
+                var idPathSet = peptidePathGroup.ToHashSet();
+                var precursorGroups = peptideDocNode.TransitionGroups.GroupBy(tg =>
                     tg.PrecursorKey.ChangeSpectrumClassFilter(null)).ToList();
+                var newTransitionGroups = new List<DocNode>();
                 foreach (var precursorGroup in precursorGroups)
                 {
-                    if (precursorGroup.Any(tg => Equals(tg.SpectrumClassFilter, spectrumClassFilter)))
+                    if (!precursorGroup.Any(tg =>
+                            idPathSet.Contains(new IdentityPath(peptidePathGroup.Key, tg.TransitionGroup)))
+                        || precursorGroup.Any(tg => Equals(tg.SpectrumClassFilter, spectrumClassFilter)))
                     {
-                        if (!copy)
-                        {
-                            newTransitionGroups.AddRange(precursorGroup);
-                        }
+                        newTransitionGroups.AddRange(precursorGroup);
                         continue;
                     }
 
-                    var transitionGroup = precursorGroup.First();
+                    var transitionGroupToAdd = precursorGroup.First();
                     if (copy)
                     {
-                        transitionGroup = transitionGroup.CloneTransitionGroupId();
+                        newTransitionGroups.AddRange(precursorGroup);
+                        transitionGroupToAdd = transitionGroupToAdd.CloneTransitionGroupId();
+                    }
+                    else
+                    {
+                        newTransitionGroups.AddRange(precursorGroup.Where(tg =>
+                            !idPathSet.Contains(new IdentityPath(peptidePathGroup.Key, tg.Id))));
                     }
 
-                    transitionGroup = transitionGroup.ChangeSpectrumClassFilter(spectrumClassFilter);
-                    newTransitionGroups.Add(transitionGroup);
+                    transitionGroupToAdd = transitionGroupToAdd.ChangeSpectrumClassFilter(spectrumClassFilter);
+                    newTransitionGroups.Add(transitionGroupToAdd);
                     changed = true;
+                    changeCount++;
                 }
 
                 if (changed)
