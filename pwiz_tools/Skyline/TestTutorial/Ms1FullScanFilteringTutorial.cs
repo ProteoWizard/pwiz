@@ -19,7 +19,6 @@
 
 using System;
 using System.Collections.Generic;
-using System.Diagnostics;
 using System.Drawing;
 using System.Globalization;
 using System.IO;
@@ -1014,7 +1013,7 @@ namespace pwiz.SkylineTestTutorial
             });
             Assert.IsNotNull(currentProperties);
             // To write new json string for the expected property values into the output stream uncomment the next line
-            Trace.Write(currentProperties.Serialize());
+            //Trace.Write(currentProperties.Serialize());
             Assert.IsTrue(expectedProperties.IsSameAs(currentProperties));
             Assert.IsTrue(propertiesButton.Checked);
 
