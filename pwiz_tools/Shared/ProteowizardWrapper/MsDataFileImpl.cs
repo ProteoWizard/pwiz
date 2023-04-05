@@ -407,6 +407,8 @@ namespace pwiz.ProteowizardWrapper
 
         public static MsInstrumentConfigInfo CreateMsInstrumentConfigInfo(InstrumentConfiguration ic)
         {
+            if (ic == null)
+                return null;
             string instrumentModel = null;
             string ionization;
             string analyzer;
@@ -1127,7 +1129,8 @@ namespace pwiz.ProteowizardWrapper
                     }
 
                     msDataSpectrum.SourceFilePath = FilePath;
-                    msDataSpectrum.InstrumentInfo = CreateMsInstrumentConfigInfo(spectrum.scanList.scans[0].instrumentConfiguration); 
+                    if(spectrum.scanList.scans.Count > 0)
+                        msDataSpectrum.InstrumentInfo = CreateMsInstrumentConfigInfo(spectrum.scanList.scans[0].instrumentConfiguration); 
                     msDataSpectrum.InstrumentSerialNumber = GetInstrumentSerialNumber();
                     msDataSpectrum.InstrumentVendor = InstrumentVendorName;
 
