@@ -235,7 +235,11 @@ namespace pwiz.PanoramaClient
 
         public JToken GetInfoForFolders(PanoramaServer server, string folder)
         {
-            server = EnsureLogin(server);
+            if (server.HasUserCredentials())
+            { 
+                server = EnsureLogin(server);
+            }
+           
 
             // Retrieve folders from server.
             Uri uri = PanoramaUtil.GetContainersUri(server.URI, folder, true);

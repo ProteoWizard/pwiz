@@ -5,7 +5,6 @@ using System.Drawing;
 using System.Linq;
 using Newtonsoft.Json.Linq;
 using System.Windows.Forms;
-using pwiz.Common.Collections;
 
 
 namespace pwiz.PanoramaClient
@@ -18,7 +17,7 @@ namespace pwiz.PanoramaClient
         private static string CheckIfVersions;
         private static string PeptideInfoQuery;
         private string InitQuery;
-        private FolderBrowser folders;
+        private FolderBrowser folderBrowser;
         public TreeNodeCollection _nodesState;
         public List<TreeView> tree = new List<TreeView>();
         //public TreeViewStateRestorer state;
@@ -80,24 +79,20 @@ namespace pwiz.PanoramaClient
         /// </summary>
         private void RemoteFileDialog_Load(object sender, EventArgs e)
         {
-            if (string.IsNullOrEmpty(OKButtonText))
-            {
-                //open.Text = Resources.RemoteFileDialog_Form1_Load_Open;
-            }
-            else
+            if (!string.IsNullOrEmpty(OKButtonText))
             {
                 open.Text = OKButtonText;
+
             }
+
 
             var serverUri = new Uri(Server);
             if (!ShowingSky)
             {
-                folders = new FolderBrowser(serverUri, User, Pass, this);
-                folders.Dock = DockStyle.Fill;
+                folderBrowser = new FolderBrowser(serverUri, User, Pass, this);
+                folderBrowser.Dock = DockStyle.Fill;
                 treeView.Hide();
-                splitContainer1.Panel1.Controls.Add(folders);
-                //treeView.Controls.Add(folders);
-                //pc.InitializeTreeView(serverUri, User, Pass, treeView, false, true, false);
+                splitContainer1.Panel1.Controls.Add(folderBrowser);
             }
             else
             {
@@ -380,7 +375,7 @@ namespace pwiz.PanoramaClient
                 JToken json = GetJson(query);
                 var rows = json[@"rows"]; 
                 var versions = HasVersions(nodePath);
-                foreach (JToken? row in rows)
+                foreach (JToken row in rows)
                 {
                     var fileName = (string)row[@"FileName"];
                     var filePath = (string)row[@"Container/Path"];
@@ -407,13 +402,11 @@ namespace pwiz.PanoramaClient
                             var sizeObj = new FileSize(size);
                             listItem[1] = sizeObj.ToString();
                         }
-                        catch (Exception ex)
+                        catch (Exception)
                         {
-
+                            // ignored
                         }
 
-                      
-                        
 
                         if (numVersions[0] != null)
                         {
@@ -435,9 +428,11 @@ namespace pwiz.PanoramaClient
                         listView.Items.Add(fileNode);
                     }
                 }
-            } catch (Exception)
+            }
+            catch (Exception)
             {
-            }       
+                // ignored
+            }
         }
 
         
@@ -489,6 +484,7 @@ namespace pwiz.PanoramaClient
 
         public void AddFiles(TreeNode node)
         {
+            lastSelected = node;
             forward.Enabled = false;
             if (priorNode != null && priorNode != node)
             {
@@ -563,7 +559,7 @@ namespace pwiz.PanoramaClient
             comboBox1.Visible = false;
             versionLabel.Visible = false;
             var type = checkBox1.Checked;
-            folders.SwitchFolderType(type);
+            folderBrowser.SwitchFolderType(type);
             //treeView.Show();
             /*
              * Note from Vagisha:  No SetTreeColor method in FolderBrowser
@@ -652,12 +648,12 @@ namespace pwiz.PanoramaClient
             if (comboBox1.Text.Equals(RECENT_VER))
             {
                 //GetLatestVersion((string)treeView.SelectedNode.Tag, listView);
-                GetLatestVersion((string)folders.clicked.Tag, listView);
+                GetLatestVersion((string)folderBrowser.clicked.Tag, listView);
             }
             else
             {
                 //AddQueryFiles(listView, (string)treeView.SelectedNode.Tag, versionLabel, comboBox1);
-                AddQueryFiles(listView, (string)folders.clicked.Tag, versionLabel, comboBox1);
+                AddQueryFiles(listView, (string)folderBrowser.clicked.Tag, versionLabel, comboBox1);
             }
         }
 
@@ -688,7 +684,7 @@ namespace pwiz.PanoramaClient
             else
             {
                 
-                MessageBox.Show("You must select a file first!");
+                MessageBox.Show(@"You must select a file first!");
                 
             }
         }
@@ -719,11 +715,8 @@ namespace pwiz.PanoramaClient
                 ShowingSky = false;
             }
 
-            if (lastSelected != null)
-            {
-                lastSelected.Name = SELECTED_NODE + lastSelected.Name;
-            }
-            
+
+            if (lastSelected != null) FileName = string.Concat(Server, @"/_webdav", lastSelected.Tag);
             //TreeState = treeStateStr;
         }
 

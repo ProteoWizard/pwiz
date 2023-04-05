@@ -941,29 +941,13 @@ namespace pwiz.Skyline
                 pass = servers[0].Password;
                 server = servers[0].URI;
             }
-            using var dlg = new RemoteFileDialog(user, pass, server, "", false);
-            dlg.ShowDialog();
-            /*
-            var user = string.Empty;
-            var pass = string.Empty;
-            Uri server = null;
-            if (servers.Count > 0)
-            {
-                user = servers[0].Username;
-                pass = servers[0].Password;
-                server = servers[0].URI;
-            }
 
-            var pc = new PanoramaClient.PanoramaClient();
-            using var dirPicker = new DirectoryPicker(server, user, pass);
-            using var dlg = new RemoteFileDialog(user, pass, server, Settings.Default.PanoramaClientExpansion,
-                Settings.Default.PanoramaSkyFiles);
-            //result should be path to file or folder, move the downloading code into a separate location in PanoramaClient
-            //PanoramaClient: ShowPanoramaBrowser() returns path, DownloadFromPanorama()
-            
+            using var dlg = new RemoteFileDialog(user, pass, server, string.Empty,false);
             if (dlg.ShowDialog() != DialogResult.Cancel)
             {
-                var downloadPath = pc.DownloadAndSave(server, user, pass, dlg.FileName, dlg.DownloadName);
+                //Gets path to download on _webdav but still needs a /@files 
+                var downloadPath = dlg.FileName;
+                /*var downloadPath = pc.DownloadAndSave(server, user, pass, dlg.FileName, dlg.DownloadName);
                 if (dlg.FileName.EndsWith(SrmDocumentSharing.EXT) && !string.IsNullOrEmpty(downloadPath))
                 {
                     OpenSharedFile(downloadPath);
@@ -971,11 +955,9 @@ namespace pwiz.Skyline
                 else if (dlg.FileName.EndsWith(SrmDocument.EXT) && !string.IsNullOrEmpty(downloadPath))
                 {
                     OpenFile(downloadPath);
-                }
+                }*/
             }
-            Settings.Default.PanoramaSkyFiles = dlg.ShowingSky;
-            Settings.Default.PanoramaClientExpansion = dlg.TreeState;
-            Settings.Default.Save();*/
+            
         }
 
         private void saveMenuItem_Click(object sender, EventArgs e)

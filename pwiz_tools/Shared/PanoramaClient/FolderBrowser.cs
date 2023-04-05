@@ -15,13 +15,13 @@ namespace pwiz.PanoramaClient
         private RemoteFileDialog _dialog;
         public TreeNode clicked;
 
+
         //Needs to take server information
-        //public void InitializeTreeView(Uri serverUri, string user, string pass, TreeView treeViewFolders, bool requireUploadPerms, bool showFiles)
         public FolderBrowser(Uri serverUri, string user, string pass, bool uploadPerms)
         {
             InitializeComponent();
             treeView.ImageList = imageList1;
-            _server = new PanoramaServer(serverUri, user, pass);
+            _server = string.IsNullOrEmpty(user) ? new PanoramaServer(serverUri) : new PanoramaServer(serverUri, user, pass);
             _uploadPerms = uploadPerms;
         }
 
@@ -65,9 +65,9 @@ namespace pwiz.PanoramaClient
 
         private void treeView_NodeMouseClick(object sender, TreeNodeMouseClickEventArgs e)
         {
+            clicked = e.Node;
             if (_dialog != null)
             {
-                clicked = e.Node;
                 ClearTreeRecursive(treeView.Nodes);
                 var hit = e.Node.TreeView.HitTest(e.Location);
                 if (hit.Location != TreeViewHitTestLocations.PlusMinus)
@@ -75,6 +75,7 @@ namespace pwiz.PanoramaClient
                     _dialog.AddFiles(e.Node);
                 }
             }
+
         }
 
         private void ClearTreeRecursive(IEnumerable nodes)
@@ -87,5 +88,7 @@ namespace pwiz.PanoramaClient
             }
 
         }
+
+   
     }
 }

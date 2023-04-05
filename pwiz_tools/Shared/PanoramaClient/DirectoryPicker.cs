@@ -18,6 +18,7 @@ namespace pwiz.PanoramaClient
 
         public string Folder { get; set; }
         public string OKButtonText { get; set; }
+        public string Server { get; set;  }
 
 
         private void cancel_Click_1(object sender, EventArgs e)
@@ -29,7 +30,8 @@ namespace pwiz.PanoramaClient
         {
             //Return the selected folder path
             Folder = folders.FolderPath;
-            MessageBox.Show(Folder);
+            DialogResult = DialogResult.Yes;
+            Close();
         }
 
         private void checkBox1_CheckedChanged_1(object sender, EventArgs e)
@@ -38,32 +40,18 @@ namespace pwiz.PanoramaClient
             folders.SwitchFolderType(type);
         }
 
-        private void back_Click(object sender, EventArgs e)
-        {
-
-        }
-
-        private void forward_Click(object sender, EventArgs e)
-        {
-
-        }
-
-        private void up_Click(object sender, EventArgs e)
-        {
-
-        }
-
 
         private void DirectoryPicker_Load(object sender, EventArgs e)
         {
             if (string.IsNullOrEmpty(OKButtonText))
             {
-                open.Text = "Open";
+                open.Text = @"Open";
             }
             else
             {
                 open.Text = OKButtonText;
             }
+
         }
     }
 }

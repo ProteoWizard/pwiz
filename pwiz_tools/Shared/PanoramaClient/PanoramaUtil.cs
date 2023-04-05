@@ -462,6 +462,10 @@ namespace pwiz.PanoramaClient
         {
         }
 
+        public PanoramaServer(Uri serverUri) : this(serverUri, null, null)
+        {
+        }
+
         public PanoramaServer(Uri serverUri, string username, string password)
         {
             Username = username;
@@ -494,6 +498,11 @@ namespace pwiz.PanoramaClient
         public PanoramaServer ChangeUri(Uri uri)
         {
             return ChangeProp(ImClone(this), im => im.URI = uri);
+        }
+
+        public bool HasUserCredentials()
+        {
+            return Username != null;
         }
 
         public bool RemoveContextPath()
