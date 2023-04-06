@@ -242,7 +242,7 @@ class PWIZ_API_DECL SpectrumList_FilterPredicate_DefaultArrayLengthSet : public 
 class PWIZ_API_DECL SpectrumList_FilterPredicate_ActivationType : public SpectrumList_Filter::Predicate
 {
     public:
-    SpectrumList_FilterPredicate_ActivationType(const std::set<pwiz::cv::CVID> filterItem, bool hasNoneOf_ = false);
+    SpectrumList_FilterPredicate_ActivationType(const std::set<pwiz::cv::CVID>& filterItem, bool hasNoneOf_ = false);
     virtual boost::logic::tribool accept(const msdata::SpectrumIdentity& spectrumIdentity) const {return boost::logic::indeterminate;}
     virtual boost::logic::tribool accept(const msdata::Spectrum& spectrum) const;
     virtual std::string describe() const { return "set of activation types"; }
@@ -256,7 +256,7 @@ class PWIZ_API_DECL SpectrumList_FilterPredicate_ActivationType : public Spectru
 class PWIZ_API_DECL SpectrumList_FilterPredicate_AnalyzerType : public SpectrumList_Filter::Predicate
 {
     public:
-    SpectrumList_FilterPredicate_AnalyzerType(const std::set<pwiz::cv::CVID> filterItem, const util::IntegerSet& msLevelSet);
+    SpectrumList_FilterPredicate_AnalyzerType(const std::set<pwiz::cv::CVID>& filterItem, const util::IntegerSet& msLevelSet);
     virtual boost::logic::tribool accept(const msdata::SpectrumIdentity& spectrumIdentity) const {return boost::logic::indeterminate;}
     virtual boost::logic::tribool accept(const msdata::Spectrum& spectrum) const;
     virtual std::string describe() const { return "set of analyzer types"; }
@@ -284,7 +284,7 @@ class PWIZ_API_DECL SpectrumList_FilterPredicate_Polarity : public SpectrumList_
 class PWIZ_API_DECL SpectrumList_FilterPredicate_MzPresent : public SpectrumList_Filter::Predicate
 {
     public:
-    SpectrumList_FilterPredicate_MzPresent(chemistry::MZTolerance mzt, std::set<double> mzSet, ThresholdFilter tf, FilterMode mode);
+    SpectrumList_FilterPredicate_MzPresent(const chemistry::MZTolerance& mzt, const std::set<double>& mzSet, ThresholdFilter tf, FilterMode mode);
     virtual msdata::DetailLevel suggestedDetailLevel() const {return msdata::DetailLevel_FullData;}
     virtual boost::logic::tribool accept(const msdata::SpectrumIdentity& spectrumIdentity) const {return boost::logic::indeterminate;}
     virtual boost::logic::tribool accept(const msdata::Spectrum& spectrum) const;

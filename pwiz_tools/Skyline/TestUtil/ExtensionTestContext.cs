@@ -100,13 +100,15 @@ namespace pwiz.SkylineTestUtil
                     return directory;
             }
 
-            // As last resort, hunt around the current working directory to find the pwiz repository root (e.g. when running TestRunner in Docker container)
+            // As last resort, hunt around the current working directory and its subdirectories to find the pwiz repository root
+            // (e.g. when running TestRunner in Docker container or from SkylineTester.zip)
             var up = string.Empty;
             var relPath = @".";
             for (var depth = 0; depth < 10; depth++)
             {
-                if (File.Exists(Path.Combine(relPath, "pwiz_tools", "Skyline", "Skyline.sln")))
-                    return Path.GetFullPath(Path.Combine(relPath, "pwiz_tools", "Skyline"));
+                foreach(var subdir in Directory.GetDirectories(relPath).Append(relPath))
+                    if (File.Exists(Path.Combine(subdir, "pwiz_tools", "Skyline", "Skyline.sln")))
+                        return Path.GetFullPath(Path.Combine(subdir, "pwiz_tools", "Skyline"));
                 up = Path.Combine(up, @"..");
                 relPath = Path.Combine(Directory.GetCurrentDirectory(), up);
             }

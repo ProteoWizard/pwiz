@@ -69,6 +69,7 @@ namespace pwiz.Skyline.Controls.Graphs
         SpectrumControlType ControlType { get; }
         bool IsAnnotated { get; }
         LibraryRankedSpectrumInfo SpectrumInfo { get; }
+        bool ShowPropertiesSheet { get; set; }
     }
 
     public interface ISpectrumScaleProvider
@@ -144,10 +145,13 @@ namespace pwiz.Skyline.Controls.Graphs
         // TODO
         // private object _spectrumKeySave;
         private readonly GraphHelper _graphHelper;
+        private MSGraphControl graphControl => msGraphExtension.Graph;
 
         public GraphSpectrum(IDocumentUIContainer documentUIContainer)
         {
             InitializeComponent();
+            graphControl.ContextMenuBuilder += graphControl_ContextMenuBuilder;
+            msGraphExtension.PropertiesSheetVisibilityChanged += msGraphExtension_PropertiesSheetVisibilityChanged;
 
             Icon = Resources.SkylineData;
             _graphHelper = GraphHelper.Attach(graphControl);
@@ -159,6 +163,7 @@ namespace pwiz.Skyline.Controls.Graphs
 
             // ReSharper disable once PossibleNullReferenceException
             comboPrecursor.ComboBox.DisplayMember = nameof(Precursor.DisplayString);
+            msGraphExtension.RestorePropertiesSheet();
 
             if (DocumentUI != null)
                 ZoomSpectrumToSettings();
@@ -385,10 +390,13 @@ namespace pwiz.Skyline.Controls.Graphs
             UpdateUI();
         }
 
-        private bool NodeGroupChanged(TransitionGroupDocNode nodeGroup)
+        private void propertiesMenuItem_Click(object sender, EventArgs e)
         {
-            return (_nodeGroup == null) ||
-                   (!ReferenceEquals(_nodeGroup.Id, nodeGroup.Id));
+            ShowPropertiesSheet = !ShowPropertiesSheet;
+        }
+        private void msGraphExtension_PropertiesSheetVisibilityChanged(object sender, EventArgs e)
+        {
+            propertiesButton.Checked = ShowPropertiesSheet;
         }
 
         private class ToolbarUpdate : IDisposable
@@ -520,6 +528,7 @@ namespace pwiz.Skyline.Controls.Graphs
 
             // Show only if we made any of the things visible
             toolBar.Visible = showPrecursorSelect || showSpectraSelect || enableCE;
+            propertiesButton.Checked = ShowPropertiesSheet;
         }
 
         public void SelectSpectrum(SpectrumIdentifier spectrumIdentifier)
@@ -942,7 +951,6 @@ namespace pwiz.Skyline.Controls.Graphs
                 ShowCharges = charges,
                 ShowLosses = losses,
                 ShowRanks = Settings.Default.ShowRanks,
-                ShowScores = Settings.Default.ShowLibraryScores,
                 ShowMz = Settings.Default.ShowIonMz,
                 ShowObservedMz = Settings.Default.ShowObservedMz,
                 ShowMassError = Settings.Default.ShowFullScanMassError,
@@ -1347,6 +1355,16 @@ namespace pwiz.Skyline.Controls.Graphs
                         }
 
                         _graphHelper.ZoomSpectrumToSettings(DocumentUI, selection.NodeTranGroup);
+
+                        if (GraphItem.PeptideDocNode != null && GraphItem.TransitionGroupNode != null && spectrum?.SpectrumInfo is SpectrumInfoLibrary libInfo)
+                        {
+                            var pepInfo = new ViewLibraryPepInfo(
+                                GraphItem.PeptideDocNode.ModifiedTarget.GetLibKey(GraphItem.TransitionGroupNode.PrecursorAdduct), 
+                                    libInfo.SpectrumHeaderInfo)
+                                .ChangePeptideNode(selection.NodePep);
+                            var props = libInfo.CreateProperties(pepInfo, spectrum.Precursor, new LibKeyModificationMatcher());
+                            msGraphExtension.SetPropertiesObject(props);
+                        }
                     }
                     else
                     {
@@ -1375,6 +1393,7 @@ namespace pwiz.Skyline.Controls.Graphs
             {
                 ClearGraphPane();
                 _graphHelper.SetErrorGraphItem(new ExceptionMSGraphItem(ex));
+                msGraphExtension.SetPropertiesObject(null);
                 return;
             }
             catch (Exception)
@@ -1383,6 +1402,7 @@ namespace pwiz.Skyline.Controls.Graphs
                 //_graphHelper.SetErrorGraphItem(new NoDataMSGraphItem(ex.Message));
                 _graphHelper.SetErrorGraphItem(new NoDataMSGraphItem(
                     Resources.GraphSpectrum_UpdateUI_Failure_loading_spectrum__Library_may_be_corrupted));
+                msGraphExtension.SetPropertiesObject(null);
                 return;
             }
 
@@ -1393,8 +1413,23 @@ namespace pwiz.Skyline.Controls.Graphs
                 UpdateToolbar();
                 _nodeGroup = null;
                 _graphHelper.SetErrorGraphItem(new UnavailableMSGraphItem());
+                msGraphExtension.SetPropertiesObject(null);
             }
         }
+
+        public bool ShowPropertiesSheet 
+        {
+            set
+            {
+                msGraphExtension.ShowPropertiesSheet(value);
+                propertiesButton.Checked = value;
+            }
+            get
+            {
+                return msGraphExtension.PropertiesVisible;
+            }
+        }
+
 
         private static bool DisplayTypeMatches(LibraryChromGroup.ChromData chromData, DisplayTypeChrom displayType)
         {
@@ -1553,6 +1588,9 @@ namespace pwiz.Skyline.Controls.Graphs
                     ionTypeSelector.HostedControl.LossChanged -= skylineWindow.IonTypeSelector_LossChanged;
                 }
             }
+
+            if (msGraphExtension.PropertiesSheet.PropertySort == PropertySort.Alphabetical)
+                Settings.Default.ViewLibraryPropertiesSorted = true;
         }
 
         protected override void OnClosed(EventArgs e)
@@ -1638,10 +1676,20 @@ namespace pwiz.Skyline.Controls.Graphs
                 {
                     new ChromTransition(chromData.Mz, 0,
                         (float) (ionMobilityFilter.IonMobilityAndCCS.IonMobility.Mobility ?? 0),
-                        (float) (ionMobilityFilter.IonMobilityExtractionWindowWidth ?? 0), ChromSource.unknown),
+                        (float) (ionMobilityFilter.IonMobilityExtractionWindowWidth ?? 0),
+                        ChromSource.unknown, transitionChromInfo.OptimizationStep),
                 }, peaks, TimeIntensitiesGroup.Singleton(timeIntensities));
             chromatogramInfo = new ChromatogramInfo(groupInfo, 0);
         }
+
+        #region Test support
+
+        public ToolStripButton PropertyButton => propertiesButton;
+        public MsGraphExtension MsGraphExtension => msGraphExtension;
+        public ToolStripComboBox SpectrumCombo => comboSpectrum;
+
+        #endregion
+
     }
 
     public class GraphSpectrumSettings

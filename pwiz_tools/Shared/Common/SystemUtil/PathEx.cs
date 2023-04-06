@@ -256,6 +256,23 @@ namespace pwiz.Common.SystemUtil
 
         // Test framework can set this to something like  @""t^m&p 试验" to help check our handling of unusual filename characters
         public static string RandomFileNameDecoration { get; set; }
+
+        // Like Path.GetTempFileName(), but allows you to set the extension of the created tempfile
+        public static string GetTempFileNameWithExtension(string ext)
+        {
+            var fileName = Path.GetTempFileName();
+            if (!string.IsNullOrWhiteSpace(ext))
+            {
+                var fileNameNew = Path.ChangeExtension(fileName, ext);
+                if (!fileName.Equals(fileNameNew))
+                {
+                    File.Move(fileName, fileNameNew);
+                    return fileNameNew;
+                }
+            }
+            return fileName;
+        }
+
     }
 
     /// <summary>

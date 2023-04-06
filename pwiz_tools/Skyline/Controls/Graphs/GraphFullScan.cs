@@ -72,7 +72,8 @@ namespace pwiz.Skyline.Controls.Graphs
             graphControl.GraphPane = new HeatMapGraphPane
             {
                 MinDotRadius = MIN_DOT_RADIUS,
-                MaxDotRadius = MAX_DOT_RADIUS
+                MaxDotRadius = MAX_DOT_RADIUS,
+                ShowHeatMap = !Settings.Default.SumScansFullScan
             };
             graphControl.GraphPane.AllowLabelOverlap = true;
 
@@ -679,7 +680,6 @@ namespace pwiz.Skyline.Controls.Graphs
                     ShowCharges = charges,
                     ShowLosses = losses,
                     ShowRanks = Settings.Default.ShowRanks,
-                    ShowScores = Settings.Default.ShowLibraryScores,
                     ShowMz = Settings.Default.ShowIonMz,
                     ShowObservedMz = Settings.Default.ShowObservedMz,
                     ShowMassError = Settings.Default.ShowFullScanMassError,
@@ -1053,6 +1053,12 @@ namespace pwiz.Skyline.Controls.Graphs
 
         public bool IsAnnotated => _showIonSeriesAnnotations;
         public LibraryRankedSpectrumInfo SpectrumInfo => _rmis;
+
+        public bool ShowPropertiesSheet
+        {
+            get { return false; }
+            set { }
+        }
 
         private void ZoomYAxis()
         {

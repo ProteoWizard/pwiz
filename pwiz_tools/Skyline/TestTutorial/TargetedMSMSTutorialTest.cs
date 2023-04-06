@@ -82,8 +82,8 @@ namespace pwiz.SkylineTestTutorial
         public void DoTestTargetedMSMSTutorial(RefinementSettings.ConvertToSmallMoleculesMode smallMoleculesTestMode)
         {
             // Set true to look at tutorial screenshots.
-//            IsPauseForScreenShots = true;
-//            IsCoverShotMode = true;
+            //            IsPauseForScreenShots = true;
+            //            IsCoverShotMode = true;
             CoverShotName = "TargetedMSMS";
 
             if (smallMoleculesTestMode != RefinementSettings.ConvertToSmallMoleculesMode.none &&
@@ -498,6 +498,9 @@ namespace pwiz.SkylineTestTutorial
             }
 
             ValidatePeakRanks(1, 176, true);
+
+            if(AsSmallMoleculesTestMode != RefinementSettings.ConvertToSmallMoleculesMode.masses_only)  
+                TestLibraryMatchPropertySheet();
 
             if (!AsSmallMoleculeMasses)
             {
@@ -1106,14 +1109,45 @@ namespace pwiz.SkylineTestTutorial
         }
 
         /// <summary>
-        /// Tests the property sheet on the ViewLibraryDlg property sheet to confirm it shows up and displays accurate information
+        /// Tests the property sheet on the ViewLibraryDlg to confirm it shows up and displays accurate information
         /// </summary>
         private void TestPropertySheet()
         {
+            var isSmallMolecules = AsSmallMoleculesTestMode != RefinementSettings.ConvertToSmallMoleculesMode.none;
+            var expectedPropertiesDict = isSmallMolecules
+                    ? new Dictionary<string, object>
+                    {
+                        { "FileName", "klc_20100329v_Protea_Peptide_Curve_80fmol_uL_tech1.ms2" },
+                        { "LibraryName", "BSA_Protea_label_free_meth3.converted_to_small_molecules" },
+                        { "PrecursorMz", 523.7745 },
+                        { "Charge", 2 },
+                        { "Label", IsotopeLabelType.LIGHT_NAME },
+                        { "RetentionTime", 44.29 },
+                        { "Score", 0.0 },
+                        { "ScoreType", BiblioSpec.Properties.Resources.BiblioSpecScoreType_DisplayName_Percolator_q_value },
+                        { "SpectrumCount", 24 }
+                    }
+                    : new Dictionary<string, object>
+                    {
+                        { "IdFileName", "klc_20100329v_Protea_Peptide_Curve_20fmol_uL_tech1.perc.xml" },
+                        { "FileName", "klc_20100329v_Protea_Peptide_Curve_20fmol_uL_tech1.ms2" },
+                        { "LibraryName", "BSA_Protea_label_free_meth3" },
+                        { "PrecursorMz", 417.7271 },
+                        { "Charge", 2 },
+                        { "Label", IsotopeLabelType.LIGHT_NAME },
+                        { "RetentionTime", 17 },
+                        { "SpecIdInFile", 488 },
+                        { "Score", 0.0 },
+                        { "ScoreType", BiblioSpec.Properties.Resources.BiblioSpecScoreType_DisplayName_Percolator_q_value },
+                        { "SpectrumCount", 4 }
+                    }
+                ;
+
+            var expectedProperties = new SpectrumProperties();
+            expectedProperties.Deserialize(expectedPropertiesDict);
+
             var dlg = ShowDialog<ViewLibraryDlg>(SkylineWindow.ViewSpectralLibraries);
             WaitForConditionUI(() => dlg.IsUpdateComplete);
-            // Consider(nicksh): I don't think "isSmallMolecules" ever ends up being true
-            var isSmallMolecules = dlg.PeptideDisplayCount < 11;
             var graphExtension = dlg.GraphExtensionControl;
             RunUI(() => Assert.IsFalse(graphExtension.PropertiesVisible));
             ToolStripButton propertiesButton = null;
@@ -1131,20 +1165,21 @@ namespace pwiz.SkylineTestTutorial
 
             var propertyGrid = graphExtension.PropertiesSheet;
             Assert.IsNotNull(propertyGrid);
+            SpectrumProperties currentProperties = null;
+            RunUI(() => currentProperties = propertyGrid.SelectedObject as SpectrumProperties);
+            Assert.IsNotNull(currentProperties);
+
+            // To write new json string for the expected property values into the output stream uncomment the next line
+            //Trace.Write(currentProperties.Serialize());
+            Assert.IsTrue(expectedProperties.Equals(currentProperties));
 
             // Checks the number of properties displayed is the expected number
-            int expectedPropCount = isSmallMolecules ? 7 : 11;
-            RunUI(() =>
-            {
-                // If the ViewLibraryDlg property grid is updated with new properties, these values likely need to change
-                ValidatePropertyCount(expectedPropCount, propertyGrid);
-            });
             // Checks that the property sheet updates upon switching peptides
             RunUI(() =>
             {
                 dlg.FilterString = isSmallMolecules ? @"pep_HLVD" : @"HLVD";
                 // If the ViewLibraryDlg property grid is updated with new properties, these values likely need to change
-                ValidatePropertyCount(expectedPropCount, propertyGrid);
+                ValidatePropertyCount(expectedProperties.GetProperties().Count, propertyGrid);
                 ValidateSpectrumCount(401, propertyGrid);
 
                 Assert.IsTrue(graphExtension.PropertiesVisible);
@@ -1188,6 +1223,92 @@ namespace pwiz.SkylineTestTutorial
             OkDialog(dlg, () => dlg.Close());
         }
 
+        private void TestLibraryMatchPropertySheet()
+        {
+            var isSmallMolecules = AsSmallMoleculesTestMode != RefinementSettings.ConvertToSmallMoleculesMode.none;
+
+            var expectedPropertiesDict = new Dictionary<string, object>
+            {
+                { "FileName", "klc_20100329v_Protea_Peptide_Curve_20fmol_uL_tech1.ms2" },
+                { "PrecursorMz", 582.319 },
+                { "Charge", 2 },
+                { "Label", IsotopeLabelType.LIGHT_NAME },
+                { "RetentionTime", 46.81 },
+                { "Score", 0.0 },
+                { "ScoreType", BiblioSpec.Properties.Resources.BiblioSpecScoreType_DisplayName_Percolator_q_value },
+                { "SpectrumCount", 118 }
+            };
+            if (isSmallMolecules)
+                expectedPropertiesDict.Add("LibraryName", "BSA_Protea_label_free_meth3.converted_to_small_molecules");
+            else
+            {
+                expectedPropertiesDict.Add("LibraryName", "BSA_Protea_label_free_meth3");
+                expectedPropertiesDict.Add("IdFileName", "klc_20100329v_Protea_Peptide_Curve_20fmol_uL_tech1.perc.xml");
+                expectedPropertiesDict.Add("SpecIdInFile", 7901);
+            }
+
+            var expectedProperties = new SpectrumProperties();
+            expectedProperties.Deserialize(expectedPropertiesDict);
+            var msGraph = SkylineWindow.GraphSpectrum.MsGraphExtension;
+
+            Assert.IsTrue(SkylineWindow.GraphSpectrum != null && SkylineWindow.GraphSpectrum.Visible);
+            var propertiesButton = SkylineWindow.GraphSpectrum.PropertyButton;
+            Assert.IsFalse(propertiesButton.Checked);
+            RunUI(() =>
+            {
+                propertiesButton.PerformClick();
+
+            }); 
+            WaitForConditionUI(() => msGraph.PropertiesVisible);
+            WaitForGraphs();
+            SpectrumProperties currentProperties = null;
+            RunUI(() =>
+            {
+                currentProperties = msGraph.PropertiesSheet.SelectedObject as SpectrumProperties;
+            });
+                
+            Assert.IsNotNull(currentProperties);
+            // To write new json string for the expected property values into the output stream uncomment the next line
+            //Trace.Write(currentProperties.Serialize());
+            Assert.IsTrue(expectedProperties.Equals(currentProperties));
+            Assert.IsTrue(propertiesButton.Checked);
+            // make sure properties are updated when spectrum combo selection changes
+            RunUI(() =>
+            {
+                SkylineWindow.GraphSpectrum.SpectrumCombo.SelectedIndex = 1;
+            });
+            WaitForGraphs();
+            RunUI(() =>
+            {
+                currentProperties = msGraph.PropertiesSheet.SelectedObject as SpectrumProperties;
+                Assert.IsNotNull(currentProperties);
+                Assert.AreEqual(isSmallMolecules ? 118 : 4000, currentProperties.SpectrumCount);
+            });
+            var lastNodeIndex = SkylineWindow.SequenceTree.Nodes.Count;
+            IdentityPath oldPath = null;
+            RunUI(() => { oldPath = SkylineWindow.SequenceTree.SelectedPath; });
+            FindNode((547.3174).ToString(CultureInfo.CurrentCulture));
+            RunUI(() =>
+            {
+                SkylineWindow.SequenceTree.SelectPath(new IdentityPath(new[] { SequenceTree.NODE_INSERT_ID }));
+            });
+            WaitForGraphs();
+            RunUI(() =>
+            {
+                currentProperties = msGraph.PropertiesSheet.SelectedObject as SpectrumProperties;
+                Assert.IsNull(currentProperties);
+            });
+
+            // test the close button
+            RunUI(() =>
+            {
+                Assert.IsTrue(msGraph.CloseButton.Visible);
+                msGraph.CloseButton.PerformClick();
+            });
+            WaitForConditionUI(() => !msGraph.PropertiesVisible);
+            RunUI(() => { SkylineWindow.SequenceTree.SelectPath(oldPath); });
+            WaitForGraphs();
+        }
         private static PropertyDescriptorCollection GetProperties(PropertyGrid propertyGrid)
         {
             return ((ICustomTypeDescriptor)propertyGrid.SelectedObject).GetProperties();
@@ -1195,7 +1316,8 @@ namespace pwiz.SkylineTestTutorial
 
         private static void ValidatePropertyCount(int expectedPropCount, PropertyGrid pg)
         {
-            Assert.AreEqual(expectedPropCount, GetProperties(pg).Count);
+            Assert.AreEqual(expectedPropCount, 
+                (pg.SelectedObject as GlobalizedObject)?.GetPropertiesForComparison()?.Count);
         }
 
         private static void ValidateSpectrumCount(int expectedSpectrumCount, PropertyGrid pg)

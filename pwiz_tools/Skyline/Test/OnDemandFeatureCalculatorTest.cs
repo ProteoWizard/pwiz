@@ -41,7 +41,7 @@ namespace pwiz.SkylineTest
 
             var chromatogramCache = ChromatogramCache.Load(
                 TestFilesDir.GetTestPath("OnDemandFeatureCalculatorTest.skyd"), new ProgressStatus(),
-                new DefaultFileLoadMonitor(new SilentProgressMonitor()), false);
+                new DefaultFileLoadMonitor(new SilentProgressMonitor()), document);
         }
     }
 }
