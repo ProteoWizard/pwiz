@@ -155,7 +155,7 @@ namespace pwiz.Skyline.SettingsUI
                     else
                         comboTerm.SelectedItem = modification.Terminus.Value.ToString();
                     cbVariableMod.Checked = modification.IsVariable;
-                    if (modification.Formula != null)
+                    if (modification.ParsedMoleculeMassOffset != null)
                     {
                         Formula = modification.Formula;
                         // Make sure the formula is showing
@@ -570,7 +570,7 @@ namespace pwiz.Skyline.SettingsUI
                 string aaString = comboAA.Text;
                 if (!string.IsNullOrEmpty(aaString) && aaString.Length == 1 &&
                         AminoAcid.IsAA(aaString[0])&& labelAtoms != LabelAtoms.None)
-                    formula = SequenceMassCalc.GetHeavyFormula(aaString[0], labelAtoms);
+                    formula = SequenceMassCalc.GetHeavyFormula(aaString[0], labelAtoms).ToString();
             }
 
             if (string.IsNullOrEmpty(formula))

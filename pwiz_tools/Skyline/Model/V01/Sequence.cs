@@ -20,6 +20,7 @@ using System;
 using System.Collections.Generic;
 using System.Diagnostics;
 using System.Text;
+using pwiz.Common.Chemistry;
 using pwiz.Skyline.Model.DocSettings;
 using pwiz.Skyline.Properties;
 using pwiz.Skyline.Util;
@@ -222,7 +223,7 @@ namespace pwiz.Skyline.Model.V01
                        double mh, double? rt)
             : this(fastaSequence, begin, end, missedCleavages)
         {
-            MassH = new TypedMass(mh, MassType.MonoisotopicMassH);
+            MassH = TypedMass.Create(mh, MassType.MonoisotopicMassH);
             PredictedRetentionTime = rt;
         }
 
@@ -447,7 +448,7 @@ namespace pwiz.Skyline.Model.V01
 
             IType = type;
             CleavageOffset = offset;
-            MassH = new TypedMass(mh, MassType.MonoisotopicMassH);
+            MassH = TypedMass.Create(mh, MassType.MonoisotopicMassH);
 
             // Derived values
             if (IsNTerminal())

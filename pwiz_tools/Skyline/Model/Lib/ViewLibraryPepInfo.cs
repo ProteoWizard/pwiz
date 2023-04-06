@@ -20,6 +20,7 @@
 using System.Collections.Generic;
 using System.Globalization;
 using System.Linq;
+using pwiz.Common.Chemistry;
 using pwiz.Common.SystemUtil;
 using pwiz.Skyline.Model.DocSettings;
 using pwiz.Skyline.Model.DocSettings.Extensions;
@@ -239,7 +240,7 @@ namespace pwiz.Skyline.Model.Lib
                 massH = settings.GetPrecursorCalc(transitionGroup.TransitionGroup.LabelType, mods)
                     .GetPrecursorMass(Target);
             else
-                massH = new TypedMass(Key.PrecursorMz ?? 0, MassType.Monoisotopic);
+                massH = TypedMass.Create(Key.PrecursorMz ?? 0, MassType.Monoisotopic);
             return SequenceMassCalc.PersistentMZ(SequenceMassCalc.GetMZ(massH, transitionGroup.PrecursorAdduct));
         }
 
@@ -294,8 +295,8 @@ namespace pwiz.Skyline.Model.Lib
             {
                 // Create custom ion node for midas library
                 var precursor = Key.PrecursorMz.GetValueOrDefault();
-                var precursorMono = new TypedMass(precursor, MassType.Monoisotopic);
-                var precursorAverage = new TypedMass(precursor, MassType.Average);
+                var precursorMono = TypedMass.Create(precursor, MassType.Monoisotopic);
+                var precursorAverage = TypedMass.Create(precursor, MassType.Average);
                 var peptide = new Peptide(new CustomMolecule(precursorMono, precursorAverage, precursor.ToString(CultureInfo.CurrentCulture)));
                 transitionGroup = new TransitionGroupDocNode(new TransitionGroup(peptide, Adduct.EMPTY, IsotopeLabelType.light, true, null), null);
                 mods = new ExplicitMods(peptide, new ExplicitMod[0], new TypedExplicitModifications[0]);

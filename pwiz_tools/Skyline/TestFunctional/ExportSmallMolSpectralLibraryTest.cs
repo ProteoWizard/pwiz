@@ -157,12 +157,12 @@ namespace pwiz.SkylineTestFunctional
             {
                 AssertEx.IsTrue(docAfter.MoleculeTransitions.Contains(m =>
                     m.Transition.Group.Peptide.CustomMolecule.Name.Equals("PE(18:0_18:1)") &&
-                    string.IsNullOrEmpty(m.Transition.Group.Peptide.CustomMolecule.Formula) &&
+                    m.Transition.Group.Peptide.CustomMolecule.MoleculeAndMassOffset.IsMassOnly &&
                     Equals(m.Transition.FragmentIonName, fragmentName)));
             }
             AssertEx.IsTrue(docAfter.MoleculeTransitions.Contains(m =>
                 m.Transition.Group.Peptide.CustomMolecule.Name.Equals("PE(12:0_14:0)") &&
-                Equals(m.Transition.Group.Peptide.CustomMolecule.Formula, "C31H62NO8P")));
+                Equals(m.Transition.Group.Peptide.CustomMolecule.MoleculeAndMassOffset.ToString(), "C31H62NO8P")));
         }
 
         private void CheckRefSpectra(IList<DbRefSpectra> spectra, string name, string formula, string precursorAdduct, 

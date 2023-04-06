@@ -121,6 +121,7 @@
     <Compile Include="Chemistry\MoleculeMassOffset.cs" />
     <Compile Include="Chemistry\MzTolerance.cs" />
     <Compile Include="Chemistry\SignedMz.cs" />
+    <Compile Include="Chemistry\TypedMass.cs" />
     <Compile Include="Collections\AbstractReadOnlyCollection.cs" />
     <Compile Include="Collections\AbstractReadOnlyDictionary.cs" />
     <Compile Include="Collections\AbstractReadOnlyList.cs" />

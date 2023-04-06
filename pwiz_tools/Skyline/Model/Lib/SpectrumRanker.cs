@@ -20,6 +20,7 @@ using System;
 using System.Collections.Generic;
 using System.Globalization;
 using System.Linq;
+using pwiz.Common.Chemistry;
 using pwiz.Common.Collections;
 using pwiz.Common.SystemUtil;
 using pwiz.Skyline.Model.Crosslinking;
@@ -106,7 +107,7 @@ namespace pwiz.Skyline.Model.Lib
             }
 
             var spectrumRanker = new SpectrumRanker(targetInfo, settings, fragmentFilter);
-            return spectrumRanker.RankSpectrum(info, minPeaks, score);
+            return spectrumRanker.RankSpectrum(info ?? SpectrumPeaksInfo.EMPTY, minPeaks, score);
         }
 
 
@@ -155,7 +156,6 @@ namespace pwiz.Skyline.Model.Lib
                 }
                 else if (!isProteomic && !Sequence.IsProteomic)
                 {
-                    string isotopicFormula;
                     var knownFragments = new List<MatchedFragmentIon>();
                     foreach (var tran in groupDocNode.Transitions)
                     {
@@ -178,7 +178,7 @@ namespace pwiz.Skyline.Model.Lib
                         new MoleculeMasses(
                             SequenceMassCalc.GetMZ(
                                 calcMatchPre.GetPrecursorMass(Sequence.Molecule, null, PrecursorAdduct,
-                                    out isotopicFormula), PrecursorAdduct), ionMasses);
+                                    out _), PrecursorAdduct), ionMasses);
                 }
                 else
                 {

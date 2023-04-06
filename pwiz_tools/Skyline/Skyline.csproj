@@ -820,7 +820,10 @@
       <DependentUpon>DDASearchControl.cs</DependentUpon>
     </Compile>
     <Compile Include="Util\DocumentCancellationToken.cs" />
+    <Compile Include="Util\Extensions\MassTypeLocalizationExtension.cs" />
     <Compile Include="Util\FormGroup.cs" />
+    <Compile Include="Util\HillSystemOrdering.cs" />
+    <Compile Include="Util\ParsedMoleculeMassOffset.cs" />
     <Compile Include="Util\PersistentString.cs" />
     <Compile Include="Util\UiModes.cs" />
     <Compile Include="ToolsUI\ColorGrid.cs">

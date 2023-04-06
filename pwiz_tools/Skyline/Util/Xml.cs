@@ -27,6 +27,7 @@ using System.Xml;
 using System.Xml.Linq;
 using System.Xml.Schema;
 using System.Xml.Serialization;
+using pwiz.Common.Chemistry;
 using pwiz.Skyline.Model;
 using pwiz.Skyline.Model.Hibernate;
 using pwiz.Skyline.Properties;
@@ -275,6 +276,12 @@ namespace pwiz.Skyline.Util
         {
             if (value.HasValue)
                 writer.WriteAttribute(name, value.Value);
+        }
+
+        public static void WriteAttributeNullable(this XmlWriter writer, Enum name, double? value, int precision)
+        {
+            if (value.HasValue)
+                writer.WriteAttribute(name, value.Value, precision);
         }
 
         public static void WriteAttributeIfString(this XmlWriter writer, Enum name, string value)
@@ -959,6 +966,18 @@ namespace pwiz.Skyline.Util
                 sb.Append(str[i]);
             }
             return sb.ToString();
+        }
+
+        // Inspect a file path for characters that must be escaped for use in XML (currently just "&")
+        // Return a suitably escaped version of the string
+        public static string EscapePath(string path)
+        {
+            if (path.Contains(@"&")) // Valid windows filename character, may need escaping
+            {
+                // But it may also be in use as an escape character - don't mess with &quot; etc
+                path = Regex.Replace(path, @"&(?!(?:apos|quot|[gl]t|amp);|#)", @"&amp;");
+            }
+            return path;
         }
 
         public static string GetInvalidDataMessage(string path, Exception x)

@@ -22,6 +22,7 @@ using System.ComponentModel;
 using System.Globalization;
 using System.Linq;
 using System.Text;
+using pwiz.Common.Chemistry;
 using pwiz.Common.Collections;
 using pwiz.Common.SystemUtil;
 using pwiz.Skyline.Model.DocSettings;
@@ -300,9 +301,9 @@ namespace pwiz.Skyline.Model
             {
                 return mod.MonoisotopicMass.ToString(CultureInfo.CurrentCulture);
             }
-            if (!string.IsNullOrEmpty(mod.Formula))
+            if (!ParsedMoleculeMassOffset.IsNullOrEmpty(mod.Formula))
             {
-                return mod.Formula;
+                return mod.Formula.ToString();
             }
             return @"#UNKNOWNMODIFICATION#";
         }
@@ -357,7 +358,7 @@ namespace pwiz.Skyline.Model
 
             public string Name { get { return StaticMod.Name; } }
             public string ShortName { get { return StaticMod.ShortName; } }
-            public string Formula { get { return StaticMod.Formula; } }
+            public ParsedMoleculeMassOffset Formula { get { return StaticMod.ParsedMoleculeMassOffset; } }
             public int? UnimodId { get { return StaticMod.UnimodId; } }
             public double MonoisotopicMass { get; private set; }
             public double AverageMass { get; private set; }
@@ -438,7 +439,7 @@ namespace pwiz.Skyline.Model
                 char aa = unmodifiedSequence[i];
                 if ((staticMod.LabelAtoms & LabelAtoms.LabelsAA) != LabelAtoms.None && AminoAcid.IsAA(aa))
                 {
-                    string heavyFormula = SequenceMassCalc.GetHeavyFormula(aa, staticMod.LabelAtoms);
+                    var heavyFormula = SequenceMassCalc.GetHeavyFormula(aa, staticMod.LabelAtoms);
                     monoMass = SequenceMassCalc.FormulaMass(BioMassCalc.MONOISOTOPIC, heavyFormula,
                         SequenceMassCalc.MassPrecision);
                     avgMass = SequenceMassCalc.FormulaMass(BioMassCalc.AVERAGE, heavyFormula,

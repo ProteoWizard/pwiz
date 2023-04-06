@@ -23,6 +23,7 @@ using System.Diagnostics;
 using System.IO;
 using System.Linq;
 using System.Threading;
+using pwiz.Common.Chemistry;
 using pwiz.Common.DataBinding;
 using pwiz.Common.SystemUtil;
 using pwiz.Skyline.Controls.Graphs;
@@ -891,6 +892,11 @@ namespace pwiz.Skyline.Model
         {
             // We're just using this masscalc to get the ion formula, so mono vs average doesn't matter
             isotopeLabelType = isotopeLabelType ?? IsotopeLabelType.light;
+            if (nodePep == null) // Can happen when called from document grid handler when doc changes
+            {
+                adduct = Adduct.EMPTY;
+                return CustomMolecule.EMPTY;
+            }
             var peptideTarget = nodePep.Peptide.Target;
             var masscalc = document.Settings.TryGetPrecursorCalc(isotopeLabelType, nodePep.ExplicitMods);
             if (masscalc == null)
@@ -901,8 +907,15 @@ namespace pwiz.Skyline.Model
             // Determine the molecular formula of the charged/labeled peptide
             var moleculeFormula = masscalc.GetMolecularFormula(peptideTarget.Sequence); // Get molecular formula, possibly with isotopes in it (as with iTraq)
             adduct = 
-                Adduct.NonProteomicProtonatedFromCharge(precursorCharge, BioMassCalc.MONOISOTOPIC.FindIsotopeLabelsInFormula(moleculeFormula));
-            var customMolecule = new CustomMolecule(moleculeFormula, TestingConvertedFromProteomicPeptideNameDecorator + masscalc.GetModifiedSequence(peptideTarget, false)); // Make sure name isn't a valid peptide seq
+                Adduct.NonProteomicProtonatedFromCharge(precursorCharge, BioMassCalc.FindIsotopeLabelsInFormula(moleculeFormula.Molecule));
+            if (BioMassCalc.ContainsIsotopicElement(moleculeFormula.Molecule) || moleculeFormula.MonoMassOffset.IsHeavy())
+            {
+                // Isotopes are already accounted for in the adduct
+                moleculeFormula = BioMassCalc.StripLabelsFromFormula(moleculeFormula);
+            }
+
+            var mol = ParsedMoleculeMassOffset.Create(moleculeFormula); // Convert to ParsedMolecule
+            var customMolecule = new CustomMolecule(mol, TestingConvertedFromProteomicPeptideNameDecorator + masscalc.GetModifiedSequence(peptideTarget, false)); // Make sure name isn't a valid peptide seq
 
             if (mode == ConvertToSmallMoleculesMode.masses_only)
             {
@@ -1091,8 +1104,8 @@ namespace pwiz.Skyline.Model
                                     var chargeOnly = Adduct.FromChargeNoMass(transition.Transition.Charge);
                                     mass = chargeOnly.MassFromMz(transition.Mz, mzMassType);
                                     // We can't really get at both mono and average mass from m/z, but for test purposes this is fine
-                                    var massMono = new TypedMass(mass.Value, MassType.Monoisotopic);
-                                    var massAverage = new TypedMass(mass.Value, MassType.Average);
+                                    var massMono = TypedMass.Create(mass.Value, MassType.Monoisotopic);
+                                    var massAverage = TypedMass.Create(mass.Value, MassType.Average);
                                     var name = transition.HasLoss ?
                                         string.Format(@"{0}[-{1}]", transition.Transition.FragmentIonName, (int)transition.LostMass) :
                                         transition.Transition.FragmentIonName;

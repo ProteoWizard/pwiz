@@ -20,6 +20,7 @@ using System;
 using System.Collections.Generic;
 using System.IO;
 using System.Linq;
+using pwiz.Common.Chemistry;
 using pwiz.Skyline.Model.DocSettings;
 using pwiz.Skyline.Model.Lib;
 using pwiz.Skyline.Model.Results;
@@ -206,9 +207,8 @@ namespace pwiz.Skyline.Model
             {
                 // Get the normal precursor m/z for filtering, so that light and heavy ion picks will match.
                 var adduct = groupDocNode.TransitionGroup.PrecursorAdduct;
-                string isotopicFormula;
                 precursorMz = IsCustomIon ?
-                    adduct.MzFromNeutralMass(calcFilterPre.GetPrecursorMass(groupDocNode.CustomMolecule, null, Adduct.EMPTY, out isotopicFormula), 
+                    adduct.MzFromNeutralMass(calcFilterPre.GetPrecursorMass(groupDocNode.CustomMolecule, null, Adduct.EMPTY, out _), 
                         calcFilterPre.MassType.IsMonoisotopic() ? MassType.Monoisotopic : MassType.Average) : // Don't pass the isMassH bit
                     SequenceMassCalc.GetMZ(calcFilterPre.GetPrecursorMass(sequence), adduct);
             }

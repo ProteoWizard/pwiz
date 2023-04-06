@@ -52,7 +52,7 @@ namespace pwiz.SkylineTest
             foreach (StaticMod mod in UniMod.DictUniModIds.Values)
             {
                 // UniModCompiler should not set the masses.
-                if (mod.Formula == null)
+                if (mod.ParsedMoleculeMassOffset == null)
                 {
                     Assert.IsNull(mod.MonoisotopicMass);
                     Assert.IsNull(mod.AverageMass);
@@ -60,9 +60,9 @@ namespace pwiz.SkylineTest
                 else
                 {
                     Assert.AreEqual(mod.MonoisotopicMass,
-                                    SequenceMassCalc.FormulaMass(BioMassCalc.MONOISOTOPIC, mod.Formula, SequenceMassCalc.MassPrecision));
+                                    SequenceMassCalc.FormulaMass(BioMassCalc.MONOISOTOPIC, mod.ParsedMoleculeMassOffset, SequenceMassCalc.MassPrecision));
                     Assert.AreEqual(mod.AverageMass,
-                                    SequenceMassCalc.FormulaMass(BioMassCalc.AVERAGE, mod.Formula, SequenceMassCalc.MassPrecision));
+                                    SequenceMassCalc.FormulaMass(BioMassCalc.AVERAGE, mod.ParsedMoleculeMassOffset, SequenceMassCalc.MassPrecision));
                 }
                 // Everything amino acid/terminus that is part of the modification should be present in   
                 // the name of the modification.

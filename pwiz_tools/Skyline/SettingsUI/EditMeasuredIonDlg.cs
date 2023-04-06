@@ -100,9 +100,9 @@ namespace pwiz.Skyline.SettingsUI
                                       ? _measuredIon.MinFragmentLength.Value.ToString(LocalizationHelper.CurrentCulture)
                                       : string.Empty;
             }
-            else if (!string.IsNullOrEmpty(_measuredIon.SettingsCustomIon.NeutralFormula))
+            else if (!_measuredIon.SettingsCustomIon.MoleculeAndMassOffset.IsMassOnly)
             {
-                _formulaBox.Formula = _measuredIon.SettingsCustomIon.NeutralFormula;
+                _formulaBox.Formula = _measuredIon.SettingsCustomIon.MoleculeAndMassOffset.ToString();
                 textCharge.Text = _measuredIon.Charge.ToString(LocalizationHelper.CurrentCulture);
                 _formulaBox.Adduct = _measuredIon.Adduct;
             }

@@ -86,8 +86,12 @@ namespace pwiz.SkylineTest
         public void SequenceMassCalcTest()
         {
             // Test case that caused unexpected exception when O- was not parsed correctly.
-            SequenceMassCalc.ParseModCounts(BioMassCalc.MONOISOTOPIC, "OO-HNHN", new Dictionary<string, int>());            
-            
+            BioMassCalc.MONOISOTOPIC.ParseFormulaMass("OO-HNHN", out var mol);
+            AssertEx.AreEqual(2, mol.Molecule["O"]);
+            AssertEx.AreEqual(-2, mol.Molecule["H"]);
+            AssertEx.AreEqual(-2, mol.Molecule["N"]);
+            AssertEx.AreEqual("OO-HNHN", mol.ToString()); // Strange but valid string should be preserved
+
             // Test normal function
             var sequence = new Target("VEDELK");
             var calc = new SequenceMassCalc(MassType.Monoisotopic);
@@ -198,41 +202,92 @@ namespace pwiz.SkylineTest
         }
 
         /// <summary>
-        /// Tests that <see cref="BioMassCalc.ParseMass(ref string, Dictionary&lt;string, int&gt;)"/> works correctly and stops at the first minus sign.
+        /// Tests that <see cref="BioMassCalc.ParseFormulaMass"/> works correctly and stops at the first minus sign.
         /// </summary>
         [TestMethod]
         public void TestParseMass()
         {
-            var bioMassCalc = new BioMassCalc(MassType.Monoisotopic);
-            string description = "C'2";
-            Assert.AreEqual(26, bioMassCalc.ParseMass(ref description), .01);
-            Assert.AreEqual(string.Empty, description);
-            description = "-C'2";
-            Assert.AreEqual(0, bioMassCalc.ParseMass(ref description));
-            Assert.AreEqual("-C'2", description);
-            description = "C'2-C2";
-            Assert.AreEqual(26, bioMassCalc.ParseMass(ref description), .01);
-            Assert.AreEqual("-C2", description);
+            var bioMassCalc = BioMassCalc.GetBioMassCalc(MassType.Monoisotopic);
+
+            // Check handling of mass modifications
+            var description = "C'2[+1.2]";
+            Assert.AreEqual(27.2, bioMassCalc.ParseFormulaMass(description, out _), .01);
+            description = "C'2H[-1.2]";
+            Assert.AreEqual(25.815, bioMassCalc.ParseFormulaMass(description, out _), .01);
+            description = "C'2[+1.2]-C'";
+            Assert.AreEqual(14.2, bioMassCalc.ParseFormulaMass(description, out _), .01);
+            description = "C12H5[-1.2 / 1.21] - C2H[-1.1]";
+            var parsed = ParsedMoleculeMassOffset.Create(description);
+            Assert.AreEqual(-.1, parsed.GetMassOffset(MassType.Monoisotopic), .01);
+            Assert.AreEqual(-.11, parsed.GetMassOffset(MassType.Average), .01);
+            Assert.AreEqual(123.93130014, BioMassCalc.MONOISOTOPIC.CalculateMass(parsed), .01);
+            description = "C'2H[-1.2]-C'[+1.2]";
+            Assert.AreEqual(11.61, bioMassCalc.ParseFormulaMass(description, out _), .01);
+            var str = "C12H5H3[-0.33]-C2[-0.11]";
+            Assert.AreEqual(127.84, bioMassCalc.ParseFormulaMass(str, out _), .01); // C10H8[-0.22] = 128.06-.22 = 127.84
+            var strA = "C12H5H3[-0.33]";
+            var strB = "C2[-0.11]";
+            var strC = strA + strB;
+            bioMassCalc.ParseFormulaMass(strA, out var molA);
+            bioMassCalc.ParseFormulaMass(strB, out var molB);
+            bioMassCalc.ParseFormulaMass(strC, out var molC);
+            Assert.AreEqual(-.44, molC.MonoMassOffset); // -0.33 - 0.11
+            Assert.AreEqual(14, molC.Molecule["C"]);
+            Assert.AreEqual(8, molC.Molecule["H"]);
+
+            Assert.IsTrue(IonInfo.IsFormulaWithAdduct("C12H5[+3.2/3.3][2M1.234+3H]", out var mol, out var adduct, out var neutralFormula));
+            Assert.AreEqual(Adduct.FromStringAssumeChargeOnly("2M1.234+3H"), adduct);
+            Assert.AreEqual("C12H5[+3.2/3.3]", neutralFormula);
+            Assert.AreEqual(8.868, mol.MonoMassOffset); // 3.2 + 2*1.234 mono 3.3 + 2*1.234 average
+            Assert.AreEqual(9.068, mol.AverageMassOffset); // 3.2 + 2*1.234 mono 3.3 + 2*1.234 average
+            Assert.AreEqual(24, mol.Molecule["C"]);
+            Assert.AreEqual(13, mol.Molecule["H"]); // 2*5 + 3
+            Assert.IsTrue(mol.HasMassModifications);
+
+            var massAdduct = Adduct.FromStringAssumeChargeOnly("M(-1.1)+2H");
+            var formulaDict = massAdduct.ApplyToFormula("C12H5[+3.2]");
+            Assert.AreEqual(2.1, formulaDict.MonoMassOffset); // 3.2-1.1
+            Assert.AreEqual(12, formulaDict.Molecule["C"]);
+            Assert.AreEqual(7, formulaDict.Molecule["H"]);
+
+            var atoms = ParsedMoleculeMassOffset.Create("NC12H5[+3.2]");
+            Assert.AreEqual("NC12H5", atoms.ChemicalFormulaString()); // Note how it leaves element order alone
+            Assert.AreEqual(3.2, atoms.MonoMassOffset);
+            Assert.AreEqual(3.2, atoms.AverageMassOffset);
+
+            atoms = ParsedMoleculeMassOffset.Create("NC112H5[+3.1/3.11]");
+            Assert.AreEqual("NC112H5", atoms.ChemicalFormulaString());
+            Assert.AreEqual(3.1, atoms.MonoMassOffset);
+            Assert.AreEqual(3.11, atoms.AverageMassOffset);
+
+            atoms = ParsedMoleculeMassOffset.Create("NC132H53");
+            Assert.AreEqual("NC132H53", atoms.ToString());
+            Assert.AreEqual(0.0, atoms.MonoMassOffset);
+            Assert.AreEqual(0.0, atoms.AverageMassOffset);
+            Assert.IsFalse(atoms.HasMassModifications);
+
+            atoms = ParsedMoleculeMassOffset.Create("[+3.1/3.11]");
+            Assert.IsTrue(atoms.IsMassOnly);
+            Assert.AreEqual(3.1, atoms.MonoMassOffset);
+            Assert.AreEqual(3.11, atoms.AverageMassOffset);
+
+
+            // Test Hill System ordering when there's no string order hint
+            var dict = MoleculeMassOffset.Create(Molecule.Parse("ClD2ONC12H5"), 0, 0);
+            Assert.AreEqual("C12H5D2ClNO", ParsedMoleculeMassOffset.Create(dict).ToString());
+
+            Assert.AreEqual(153.1547, BioMassCalc.MONOISOTOPIC.CalculateMass(formulaDict).Value, .001);
+            Assert.AreEqual(153.2857, BioMassCalc.AVERAGE.CalculateMass(formulaDict).Value, .0001);
+            Assert.AreEqual(151.0547, BioMassCalc.MONOISOTOPIC.CalculateMass(formulaDict.Molecule).Value, .001);
+            Assert.AreEqual(151.1857, BioMassCalc.AVERAGE.CalculateMass(formulaDict.Molecule).Value, .0001);
+
+            // Check formula math
             description = "C'2";
-            Assert.AreEqual(26, bioMassCalc.ParseMassExpression(ref description), .01);
-            Assert.AreEqual(string.Empty, description);
+            Assert.AreEqual(26, bioMassCalc.CalculateMassFromFormula(description, out _), .01);
             description = "C'2-C2";
-            Assert.AreEqual(2, bioMassCalc.ParseMassExpression(ref description), .01);
-            Assert.AreEqual(string.Empty, description);
-            description = "C'2-C2-N2";
-            Assert.AreEqual(2, bioMassCalc.ParseMassExpression(ref description), .01);
-            Assert.AreEqual("-N2", description);
+            Assert.AreEqual(2, bioMassCalc.CalculateMassFromFormula(description, out _), .01);
             Assert.AreEqual(2, bioMassCalc.CalculateMassFromFormula("C'2-C2"), .01);
             AssertEx.ThrowsException<ArgumentException>(()=>bioMassCalc.CalculateMassFromFormula("C'2-C2-N2"));
-        }
-
-        [TestMethod]
-        public void TestParseModParts()
-        {
-            var bioMassCalc = new BioMassCalc(MassType.Monoisotopic);
-            CollectionAssert.AreEqual(new[]{"C'2", ""}, SequenceMassCalc.ParseModParts(bioMassCalc, "C'2"));
-            CollectionAssert.AreEqual(new[]{"", "C2"}, SequenceMassCalc.ParseModParts(bioMassCalc, "-C2"));
-            CollectionAssert.AreEqual(new[]{"C'2", "C2"}, SequenceMassCalc.ParseModParts(bioMassCalc, "C'2-C2"));
         }
 
         [TestMethod]
@@ -240,52 +295,42 @@ namespace pwiz.SkylineTest
         {
             SequenceMassCalc sequenceMassCalc = new SequenceMassCalc(MassType.Monoisotopic);
             Assert.AreEqual(147.11, sequenceMassCalc.GetPrecursorMass("K"), .1);
-            Assert.AreEqual("C6H14N2O2", sequenceMassCalc.GetMolecularFormula("K"));
+            Assert.AreEqual("C6H14N2O2", sequenceMassCalc.GetMolecularFormula("K").ToString());
 
             var label13C6K = new StaticMod("label13C6K", "K", null, LabelAtoms.C13);
             sequenceMassCalc.AddStaticModifications(new []{label13C6K});
             Assert.AreEqual(153.11, sequenceMassCalc.GetPrecursorMass("K"), .1);
-            Assert.AreEqual("C'6H14N2O2", sequenceMassCalc.GetMolecularFormula("K"));
+            Assert.AreEqual("C'6H14N2O2", sequenceMassCalc.GetMolecularFormula("K").ToString());
 
             var label15N2K = new StaticMod("label15N2K", "K", null, LabelAtoms.N15);
             sequenceMassCalc.AddStaticModifications(new[]{label15N2K});
             Assert.AreEqual(155.11, sequenceMassCalc.GetPrecursorMass("K"), .1);
-            Assert.AreEqual("C'6H14N'2O2", sequenceMassCalc.GetMolecularFormula("K"));
+            Assert.AreEqual("C'6H14N'2O2", sequenceMassCalc.GetMolecularFormula("K").ToString());
 
             var labelLaK = new StaticMod("labelLaK", "K", null, "La");
             sequenceMassCalc.AddStaticModifications(new[] { labelLaK });
             Assert.AreEqual(294.033, sequenceMassCalc.GetPrecursorMass("K"), .1);
-            Assert.AreEqual("C'6H14LaN'2O2", sequenceMassCalc.GetMolecularFormula("K"));
+            Assert.AreEqual("C'6H14LaN'2O2", sequenceMassCalc.GetMolecularFormula("K").ToString());
             
-            // Check our ability to handle strangely constructed chemical formulas
-            Assert.AreEqual(Molecule.Parse("C12H9S2P0").ToString(), Molecule.Parse("C12H9S2").ToString()); // P0 is weird
-            Assert.AreEqual(Molecule.Parse("C12H9S2P1").ToString(), Molecule.Parse("C12H9S2P").ToString()); // P1 is weird
-            Assert.AreEqual(Molecule.Parse("C12H9S0P").ToString(), Molecule.Parse("C12H9P").ToString()); // S0 is weird, and not at end
-        }
-
-        [TestMethod]
-        public void TestTokenizeFormula()
-        {
-            CollectionAssert.AreEqual(new[] {"C'", "6", "Cl", "2", "C", "H", "4", "-", "H", "24", "O"},
-                SequenceMassCalc.TokenizeFormula("C'6Cl2CH4-H24O").ToArray());
-            // Test garbage characters before an element name.
-            CollectionAssert.AreEqual(new[] {"x", "y", "z", "Element"},
-                SequenceMassCalc.TokenizeFormula("xyzElement").ToArray());
+            // Check our ability to handle strangely constructed chemical formulas, and preserve nonstandard order
+            Assert.AreEqual("C12H9S2", ParsedMoleculeMassOffset.Create("C12H9S2P0").ToString()); // P0 is weird, drop it
+            Assert.AreEqual("C12H9S2P1", ParsedMoleculeMassOffset.Create("C12H9S2P1").ToString()); // P1 is weird, but preserve it
+            Assert.AreEqual("H9C12P", ParsedMoleculeMassOffset.Create("H9C12S0P").ToString()); // S0 is weird, and not at end
         }
 
         [TestMethod]
         public void TestGetHeavyFormula()
         {
-            Assert.AreEqual("C'O2", SequenceMassCalc.GetHeavyFormula("CO2", LabelAtoms.C13));
-            Assert.AreEqual("C'O2", SequenceMassCalc.GetHeavyFormula("C'O2", LabelAtoms.C13));
-            Assert.AreEqual("C'", SequenceMassCalc.GetHeavyFormula("C", LabelAtoms.C13));
-            Assert.AreEqual("N'", SequenceMassCalc.GetHeavyFormula("N", LabelAtoms.N15));
-            Assert.AreEqual("O'", SequenceMassCalc.GetHeavyFormula("O", LabelAtoms.O18));
-            Assert.AreEqual("H'", SequenceMassCalc.GetHeavyFormula("H", LabelAtoms.H2));
-            Assert.AreEqual("Cl'", SequenceMassCalc.GetHeavyFormula("Cl", LabelAtoms.Cl37));
-            Assert.AreEqual("Br'", SequenceMassCalc.GetHeavyFormula("Br", LabelAtoms.Br81));
-            Assert.AreEqual("P'", SequenceMassCalc.GetHeavyFormula("P", LabelAtoms.P32));
-            Assert.AreEqual("S'", SequenceMassCalc.GetHeavyFormula("S", LabelAtoms.S34));
+            Assert.AreEqual("C'O2", SequenceMassCalc.GetHeavyFormula("CO2", LabelAtoms.C13).ToString());
+            Assert.AreEqual("C'O2", SequenceMassCalc.GetHeavyFormula("C'O2", LabelAtoms.C13).ToString());
+            Assert.AreEqual("C'", SequenceMassCalc.GetHeavyFormula("C", LabelAtoms.C13).ToString());
+            Assert.AreEqual("N'", SequenceMassCalc.GetHeavyFormula("N", LabelAtoms.N15).ToString());
+            Assert.AreEqual("O'", SequenceMassCalc.GetHeavyFormula("O", LabelAtoms.O18).ToString());
+            Assert.AreEqual("H'", SequenceMassCalc.GetHeavyFormula("H", LabelAtoms.H2).ToString());
+            Assert.AreEqual("Cl'", SequenceMassCalc.GetHeavyFormula("Cl", LabelAtoms.Cl37).ToString());
+            Assert.AreEqual("Br'", SequenceMassCalc.GetHeavyFormula("Br", LabelAtoms.Br81).ToString());
+            Assert.AreEqual("P'", SequenceMassCalc.GetHeavyFormula("P", LabelAtoms.P32).ToString());
+            Assert.AreEqual("S'", SequenceMassCalc.GetHeavyFormula("S", LabelAtoms.S34).ToString());
 
             // Make sure IUPAC nicknames don't find their way into our list of heavy symbols
             Assume.IsTrue(BioMassCalc.IsSkylineHeavySymbol("H'"));

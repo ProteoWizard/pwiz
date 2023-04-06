@@ -21,6 +21,7 @@ using System.Collections.Generic;
 using System.IO;
 using System.Linq;
 using Microsoft.VisualStudio.TestTools.UnitTesting;
+using pwiz.Common.Chemistry;
 using pwiz.Skyline.Model;
 using pwiz.Skyline.Model.DocSettings;
 using pwiz.Skyline.Model.DocSettings.Extensions;
@@ -95,8 +96,8 @@ namespace pwiz.SkylineTest
         public void ReporterIonTest()
         {
             // Test the code that updates old-style formulas
-            Assert.AreEqual("C5C'H13N2", BioMassCalc.AddH("C5C'H12N2"));
-            Assert.AreEqual("CO2H", BioMassCalc.AddH("CO2"));
+            Assert.AreEqual("C5C'H13N2", ParsedMoleculeMassOffset.Create("C5C'H12N2").AdjustElementCount("H",1).ToString());
+            Assert.AreEqual("CO2H", ParsedMoleculeMassOffset.Create("CO2").AdjustElementCount("H", 1).ToString());
 
             var docOriginal = new SrmDocument(SrmSettingsList.GetDefault().ChangeTransitionInstrument(instrument => instrument.ChangeMinMz(10)));  // H2O2 is not very heavy!
             IdentityPath path;
