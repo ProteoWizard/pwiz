@@ -52,7 +52,9 @@ namespace pwiz.SkylineTest
                 Assert.AreEqual(customMolecule, roundTrip.Molecule);
                 Assert.AreEqual(customMolecule.AccessionNumbers, roundTrip.Molecule.AccessionNumbers);
                 smallMoleculeLibraryAttributes = // Masses instead of formula
-                    SmallMoleculeLibraryAttributes.Create("MyMolecule", null, new TypedMass(123.4, MassType.Monoisotopic), new TypedMass(123.45, MassType.Average), "MyInChiKey", moleculeAccessionNumbers.GetNonInChiKeys());
+                    SmallMoleculeLibraryAttributes.Create("MyMolecule", 
+                        ParsedMolecule.Create(TypedMass.Create(123.4, MassType.Monoisotopic), TypedMass.Create(123.45, MassType.Average)), 
+                        "MyInChiKey", moleculeAccessionNumbers.GetNonInChiKeys());
             }
         }
     }

@@ -310,6 +310,10 @@ namespace pwiz.Skyline.Model.Results
 
         public ChromSetFileMatch FindMatchingMSDataFile(MsDataFileUri filePathFind)
         {
+            if (filePathFind == null)
+            {
+                return null;
+            }
             // First look for an exact match
             var exactMatch = FindExactNameMatchingMSDataFile(filePathFind);
             if (exactMatch != null)
@@ -359,6 +363,10 @@ namespace pwiz.Skyline.Model.Results
         /// </summary>
         private ChromSetFileMatch FindExactNameMatchingMSDataFile(MsDataFileUri fileUri)
         {
+            if (fileUri == null)
+            {
+                return null;
+            }
             var filePathFind = fileUri.GetFilePath();
             string sampleName = fileUri.GetSampleName();
             int fileOrder = 0;

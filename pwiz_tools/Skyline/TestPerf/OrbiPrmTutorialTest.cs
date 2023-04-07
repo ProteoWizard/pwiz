@@ -69,7 +69,7 @@ namespace TestPerf
         private static string SAMPLES_DIR = Path.Combine(DATA_DIR, "Samples");
         private static string STANDARDS_DIR = Path.Combine(DATA_DIR, "Standards");
 
-        [TestMethod]
+        [TestMethod, NoParallelTesting(TestExclusionReason.RESOURCE_INTENSIVE)]
         public void TestOrbiPrmTutorial()
         {
 //            IsPauseForScreenShots = true;

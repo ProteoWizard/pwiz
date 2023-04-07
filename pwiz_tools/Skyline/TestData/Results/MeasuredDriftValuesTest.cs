@@ -141,7 +141,7 @@ namespace pwiz.SkylineTestData.Results
                 revised.Add(new PrecursorIonMobilities(libKey, IonMobilityAndCCS.GetIonMobilityAndCCS(IonMobilityValue.GetIonMobilityValue(expectedDT=4, eIonMobilityUnits.drift_time_msec), null, expectedOffset=0.234)));  // N.B. CCS handling would require actual raw data in this test, it's covered in a perf test
                 var pepSequence = "DEADEELS";
                 var libKey2 = asSmallMolecules ?
-                    new LibKey(SmallMoleculeLibraryAttributes.Create(pepSequence, "C12H5", null, null, null, null), Adduct.M_PLUS_2H) : 
+                    new LibKey(SmallMoleculeLibraryAttributes.Create(pepSequence, "C12H5", null, string.Empty), Adduct.M_PLUS_2H) : 
                     new LibKey(pepSequence, Adduct.DOUBLY_PROTONATED);
                 revised.Add(new PrecursorIonMobilities(libKey2, IonMobilityAndCCS.GetIonMobilityAndCCS(IonMobilityValue.GetIonMobilityValue(5, eIonMobilityUnits.drift_time_msec), null, 0.123)));
                 var libraryName = "test";

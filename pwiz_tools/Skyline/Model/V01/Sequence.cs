@@ -222,7 +222,7 @@ namespace pwiz.Skyline.Model.V01
                        double mh, double? rt)
             : this(fastaSequence, begin, end, missedCleavages)
         {
-            MassH = new TypedMass(mh, MassType.MonoisotopicMassH);
+            MassH = TypedMass.Create(mh, MassType.MonoisotopicMassH);
             PredictedRetentionTime = rt;
         }
 
@@ -447,7 +447,7 @@ namespace pwiz.Skyline.Model.V01
 
             IType = type;
             CleavageOffset = offset;
-            MassH = new TypedMass(mh, MassType.MonoisotopicMassH);
+            MassH = TypedMass.Create(mh, MassType.MonoisotopicMassH);
 
             // Derived values
             if (IsNTerminal())
