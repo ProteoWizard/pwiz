@@ -499,10 +499,22 @@ namespace pwiz.Skyline.Model
             var docStandards = new TargetMap<bool>(doc.Peptides
                 .Where(nodePep => standardMap.ContainsKey(nodePep.ModifiedTarget))
                 .Select(nodePep => new KeyValuePair<Target, bool>(nodePep.ModifiedTarget, true)));
-            if (standard.Peptides.All(pep => docStandards.ContainsKey(pep.ModifiedTarget)))
-                return doc; // document already contains all standards
-            else if (standard.HasDocument)
+            if (standard.Peptides.Any(pep => !docStandards.ContainsKey(pep.ModifiedTarget)) && standard.HasDocument)
                 return standard.ImportTo(doc);
+
+            // Move iRT proteins to top
+            var irtPeptides = new HashSet<Target>(RCalcIrt.IrtPeptides(doc));
+            var proteins = new List<PeptideGroupDocNode>(doc.PeptideGroups);
+            var proteinsIrt = new List<PeptideGroupDocNode>();
+            for (var i = 0; i < proteins.Count; i++)
+            {
+                var nodePepGroup = proteins[i];
+                if (nodePepGroup.Peptides.All(nodePep => irtPeptides.Contains(new Target(nodePep.ModifiedSequence))))
+                {
+                    //proteinsIrt.Add(nodePepGroup);
+                    proteins.RemoveAt(i--);
+                }
+            }
 
             var modMatcher = new ModificationMatcher();
             modMatcher.CreateMatches(doc.Settings, standard.Peptides.Select(pep => pep.ModifiedTarget.ToString()),
@@ -510,7 +522,12 @@ namespace pwiz.Skyline.Model
             var group = new PeptideGroupDocNode(new PeptideGroup(), Resources.ImportFastaControl_ImportFasta_iRT_standards, null,
                 standard.Peptides.Select(pep => modMatcher.GetModifiedNode(pep.ModifiedTarget.ToString()).ChangeSettings(doc.Settings, SrmSettingsDiff.ALL)
                 ).ToArray());
-            return (SrmDocument) doc.Insert(doc.Children.FirstOrDefault()?.Id, group);
+            proteins.Insert(0, group);
+            return (SrmDocument) doc.ChangeChildrenChecked(proteins.Cast<DocNode>().ToArray());
+
+            //if (proteinsIrt.Any())
+            //    return (SrmDocument)result.ChangeChildrenChecked(proteins.Cast<DocNode>().ToArray());
+            //return result;
         }
 
         public class FoundResultsFile

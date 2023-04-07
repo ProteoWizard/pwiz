@@ -457,6 +457,15 @@ namespace pwiz.Skyline {
         }
         
         /// <summary>
+        ///   Looks up a localized string similar to Sets whether chromatogram start and stop times will be limited by a range around predicted RTs or MS/MS Id RTs..
+        /// </summary>
+        internal static string _full_scan_rt_filter {
+            get {
+                return ResourceManager.GetString("_full_scan_rt_filter", resourceCulture);
+            }
+        }
+        
+        /// <summary>
         ///   Looks up a localized string similar to The number of minutes on either side of the predicted time or MS/MS IDs, i.e. ± minutes..
         /// </summary>
         internal static string _full_scan_rt_filter_tolerance {
@@ -876,6 +885,33 @@ namespace pwiz.Skyline {
         internal static string _keep_empty_proteins {
             get {
                 return ResourceManager.GetString("_keep_empty_proteins", resourceCulture);
+            }
+        }
+        
+        /// <summary>
+        ///   Looks up a localized string similar to Maximum delta allowed when matching predicted product ion m/z values with measured MS/MS spectral library peak m/z values..
+        /// </summary>
+        internal static string _library_match_tolerance {
+            get {
+                return ResourceManager.GetString("_library_match_tolerance", resourceCulture);
+            }
+        }
+        
+        /// <summary>
+        ///   Looks up a localized string similar to Pick precursors with at least this many transitions..
+        /// </summary>
+        internal static string _library_min_product_ions {
+            get {
+                return ResourceManager.GetString("_library_min_product_ions", resourceCulture);
+            }
+        }
+        
+        /// <summary>
+        ///   Looks up a localized string similar to Pick this many transitions for each precursor by library spectrum peak intensity ranking..
+        /// </summary>
+        internal static string _library_product_ions {
+            get {
+                return ResourceManager.GetString("_library_product_ions", resourceCulture);
             }
         }
         
@@ -2237,15 +2273,6 @@ namespace pwiz.Skyline {
         internal static string CommandArgs_USERNAME_VALUE {
             get {
                 return ResourceManager.GetString("CommandArgs_USERNAME_VALUE", resourceCulture);
-            }
-        }
-        
-        /// <summary>
-        ///   Looks up a localized string similar to .
-        /// </summary>
-        internal static string String1 {
-            get {
-                return ResourceManager.GetString("String1", resourceCulture);
             }
         }
     }

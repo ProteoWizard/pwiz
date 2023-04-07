@@ -865,4 +865,16 @@ greater peak area.</value>
   <data name="_tran_product_start_ion" xml:space="preserve">
     <value>The smallest product ion to create a transition for.</value>
   </data>
+  <data name="_full_scan_rt_filter" xml:space="preserve">
+    <value>Sets whether chromatogram start and stop times will be limited by a range around predicted RTs or MS/MS Id RTs.</value>
+  </data>
+  <data name="_library_match_tolerance" xml:space="preserve">
+    <value>Maximum delta allowed when matching predicted product ion m/z values with measured MS/MS spectral library peak m/z values.</value>
+  </data>
+  <data name="_library_min_product_ions" xml:space="preserve">
+    <value>Pick precursors with at least this many transitions.</value>
+  </data>
+  <data name="_library_product_ions" xml:space="preserve">
+    <value>Pick this many transitions for each precursor by library spectrum peak intensity ranking.</value>
+  </data>
 </root>

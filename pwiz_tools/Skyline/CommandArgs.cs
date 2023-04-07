@@ -27,6 +27,7 @@ using System.Text.RegularExpressions;
 using System.Threading;
 using System.Web;
 using System.Xml.Serialization;
+using pwiz.Common.Chemistry;
 using pwiz.Common.DataBinding.Documentation;
 using pwiz.Common.SystemUtil;
 using pwiz.ProteowizardWrapper;
@@ -36,12 +37,15 @@ using pwiz.Skyline.Model.DocSettings;
 using pwiz.Skyline.Model.GroupComparison;
 using pwiz.Skyline.Model.IonMobility;
 using pwiz.Skyline.Model.Irt;
+using pwiz.Skyline.Model.Proteome;
 using pwiz.Skyline.Model.Results;
 using pwiz.Skyline.Model.Results.Scoring;
 using pwiz.Skyline.Model.Tools;
 using pwiz.Skyline.Properties;
+using pwiz.Skyline.SettingsUI;
 using pwiz.Skyline.Util;
 using pwiz.Skyline.Util.Extensions;
+using static pwiz.Skyline.Model.Proteome.ProteinAssociation;
 
 namespace pwiz.Skyline
 {
@@ -80,6 +84,8 @@ namespace pwiz.Skyline
         // ReSharper disable LocalizableElement
         private static readonly Func<string> INT_LIST_VALUE = () => "\"1, 2, 3...\"";  // Not L10N
         private static readonly Func<string> ION_TYPE_LIST_VALUE = () => "\"a, b, c, x, y, z, p\"";    // Not L10N
+
+        private static readonly Func<string> MZTOLERANCE_VALUE = () => "\"0.5mz or 15ppm\"";
         // ReSharper restore LocalizableElement
 
         // Internal use arguments
@@ -1161,10 +1167,7 @@ namespace pwiz.Skyline
             (c, p) =>
             {
                 c.SearchResultsFiles.Add(p.ValueFullPath);
-                c.CutoffScore = c.CutoffScore ?? Settings.Default.LibraryResultCutOff;
-                c.IrtStandardName = null;
-                c.NumCirts = null;
-                c.RecalibrateIrts = false;
+                c.CutoffScore ??= Settings.Default.LibraryResultCutOff;
             });
         public static readonly Argument ARG_IMPORT_PEPTIDE_SEARCH_CUTOFF = new Argument(@"import-search-cutoff-score", NUM_VALUE,
             (c, p) => c.CutoffScore = p.GetValueDouble(0, 1));
@@ -1214,6 +1217,32 @@ namespace pwiz.Skyline
             get { return SearchResultsFiles.Count > 0; }
         }
 
+
+        public static readonly Argument ARG_AP_GROUP_PROTEINS = new Argument(@"associate-proteins-group-proteins", NAME_VALUE,
+            (c, p) => c.AssociateProteinsGroupProteins = p.IsNameOnly || bool.Parse(p.Value));
+        public static readonly Argument ARG_AP_SHARED_PEPTIDES = DocArgument.FromEnumType<SharedPeptides>(@"associate-proteins-shared-peptides",
+            (c, p) => c.AssociateProteinsSharedPeptides = p);
+        public static readonly Argument ARG_AP_MINIMAL_LIST = new Argument(@"associate-proteins-minimal-protein-list", NAME_VALUE,
+            (c, p) => c.AssociateProteinsFindMinimalProteinList = p.IsNameOnly || bool.Parse(p.Value));
+        public static readonly Argument ARG_AP_REMOVE_SUBSETS = new Argument(@"associate-proteins-remove-subsets", NAME_VALUE,
+            (c, p) => c.AssociateProteinsRemoveSubsetProteins = p.IsNameOnly || bool.Parse(p.Value));
+        public static readonly Argument ARG_AP_MIN_PEPTIDES = new Argument(@"associate-proteins-min-peptides", NAME_VALUE,
+            (c, p) => c.AssociateProteinsMinPeptidesPerProtein = p.ValueInt);
+
+        private static readonly ArgumentGroup GROUP_ASSOCIATE_PROTEINS = new ArgumentGroup(() => "Associating peptides with proteins", false,
+            ARG_AP_GROUP_PROTEINS, ARG_AP_SHARED_PEPTIDES, ARG_AP_MINIMAL_LIST, ARG_AP_MIN_PEPTIDES, ARG_AP_REMOVE_SUBSETS);
+
+        public bool? AssociateProteinsGroupProteins { get; private set; }
+        public bool? AssociateProteinsFindMinimalProteinList { get; private set; }
+        public bool? AssociateProteinsRemoveSubsetProteins { get; private set; }
+        public SharedPeptides? AssociateProteinsSharedPeptides { get; private set; }
+        public int? AssociateProteinsMinPeptidesPerProtein { get; private set; }
+        public bool AssociatingProteins => AssociateProteinsFindMinimalProteinList.HasValue ||
+                                           AssociateProteinsGroupProteins.HasValue ||
+                                           AssociateProteinsMinPeptidesPerProtein.HasValue ||
+                                           AssociateProteinsRemoveSubsetProteins.HasValue ||
+                                           AssociateProteinsSharedPeptides.HasValue;
+
         // For adjusting transition filter and full-scan settings
         public static readonly Argument ARG_TRAN_PRECURSOR_ION_CHARGES = new DocArgument(@"tran-precursor-ion-charges", INT_LIST_VALUE,
                 (c, p) => c.FilterPrecursorCharges = ParseIonCharges(p, TransitionGroup.MIN_PRECURSOR_CHARGE, TransitionGroup.MAX_PRECURSOR_CHARGE))
@@ -1224,11 +1253,31 @@ namespace pwiz.Skyline
         public static readonly Argument ARG_TRAN_FRAGMENT_ION_TYPES = new DocArgument(@"tran-product-ion-types", ION_TYPE_LIST_VALUE,
             (c, p) => c.FilterProductTypes = ParseIonTypes(p)) { WrapValue = true };
         public static readonly Argument ARG_TRAN_PRODUCT_START_ION = new DocArgument(@"tran-product-start-ion",
-                () => TransitionFilter.GetStartFragmentFinderLabels().ToArray(),
-                (c, p) => c.FilterStartProductIon = TransitionFilter.GetStartFragmentFinder(p.Value)) { WrapValue = true };
+            () => TransitionFilter.GetStartFragmentFinderLabels().ToArray(),
+            (c, p) => c.FilterStartProductIon = TransitionFilter.GetStartFragmentFinder(p.Value)) { WrapValue = true };
         public static readonly Argument ARG_TRAN_PRODUCT_END_ION = new DocArgument(@"tran-product-end-ion",
-                () => TransitionFilter.GetEndFragmentFinderLabels().ToArray(),
-                (c, p) => c.FilterEndProductIon = TransitionFilter.GetEndFragmentFinder(p.Value)) { WrapValue = true };
+            () => TransitionFilter.GetEndFragmentFinderLabels().ToArray(),
+            (c, p) => c.FilterEndProductIon = TransitionFilter.GetEndFragmentFinder(p.Value)) { WrapValue = true };
+        public static readonly Argument ARG_TRAN_PRODUCT_SPECIAL_IONS_CLEAR = new DocArgument(@"tran-product-clear-special-ions",
+                (c, p) => c.FilterSpecialIons = Array.Empty<string>())
+            { OptionalValue = true };
+        public static readonly Argument ARG_TRAN_PRODUCT_SPECIAL_IONS_ADD = new DocArgument(@"tran-product-add-special-ion",
+                () => GetDisplayNames(Settings.Default.MeasuredIonList),
+                (c, p) => c.FilterSpecialIons = c.FilterSpecialIons == null ? new[] { p.Value } : c.FilterSpecialIons.Append(p.Value))
+            { WrapValue = true };
+        public static readonly Argument ARG_TRAN_DIA_WINDOW_EXCLUSION = new DocArgument(@"tran-use-dia-window-exclusion",
+                (c, p) => c.FilterUseDIAWindowExclusion = p.IsNameOnly || bool.Parse(p.Value))
+            { OptionalValue = true };
+
+        public static readonly Argument ARG_TRAN_LIBRARY_ION_MATCH_TOLERANCE = new DocArgument(@"library-match-tolerance", MZTOLERANCE_VALUE,
+            (c, p) => c.LibraryIonMatchTolerance = ParseMzTolerance(p)) { WrapValue = true };
+        public static readonly Argument ARG_TRAN_LIBRARY_PRODUCT_IONS = new DocArgument(@"library-product-ions", INT_VALUE,
+            (c, p) => c.LibraryProductIons = p.GetValueInt(1, Int32.MaxValue)) { WrapValue = true };
+        public static readonly Argument ARG_TRAN_LIBRARY_MIN_PRODUCT_IONS = new DocArgument(@"library-min-product-ions", INT_VALUE,
+            (c, p) => c.LibraryMinProductIons = p.GetValueInt(0, Int32.MaxValue)) { WrapValue = true };
+        public static readonly Argument ARG_TRAN_LIBRARY_PICK_PRODUCT_IONS = DocArgument.FromEnumType<TransitionLibraryPick>(@"library-pick-product-ions",
+            (c, p) => c.LibraryPickIons = p);
+
         public static readonly Argument ARG_TRAN_PREDICT_CE = new DocArgument(@"tran-predict-ce", () => GetDisplayNames(Settings.Default.CollisionEnergyList),
             (c, p) => c.PredictCEName = p.Value) { WrapValue = true };
         public static readonly Argument ARG_TRAN_PREDICT_DP = new DocArgument(@"tran-predict-dp", () => GetDisplayNames(Settings.Default.DeclusterPotentialList),
@@ -1238,14 +1287,12 @@ namespace pwiz.Skyline
         public static readonly Argument ARG_TRAN_PREDICT_OPTDB = new DocArgument(@"tran-predict-optdb", () => GetDisplayNames(Settings.Default.OptimizationLibraryList),
             (c, p) => c.PredictOpimizationLibraryName = p.Value) { WrapValue = true };
 
-        public static readonly Argument ARG_FULL_SCAN_PRECURSOR_ISOTOPES = new DocArgument(@"full-scan-precursor-isotopes",
-                () => Enum.GetNames(typeof(FullScanPrecursorIsotopes)),
-                (c, p) => c.FullScanPrecursorIsotopes = (FullScanPrecursorIsotopes) Enum.Parse(typeof(FullScanPrecursorIsotopes), p.Value))
-            { WrapValue = true };
+        public static readonly Argument ARG_FULL_SCAN_PRECURSOR_ISOTOPES = DocArgument.FromEnumType<FullScanPrecursorIsotopes>(@"full-scan-precursor-isotopes",
+            (c, p) => c.FullScanPrecursorIsotopes = p);
         public static readonly Argument ARG_FULL_SCAN_PRECURSOR_ANALYZER = DocArgument.FromEnumType<FullScanMassAnalyzerType>(@"full-scan-precursor-analyzer",
             (c, p) => c.FullScanPrecursorMassAnalyzerType = p);
         public static readonly Argument ARG_FULL_SCAN_PRECURSOR_THRESHOLD = new DocArgument(@"full-scan-precursor-threshold", NUM_VALUE,
-                (c, p) => c.FullScanPrecursorThreshold = p.GetValueDouble(0, 100)) { WrapValue = true };
+            (c, p) => c.FullScanPrecursorThreshold = p.GetValueDouble(0, 100)) { WrapValue = true };
         public static readonly Argument ARG_FULL_SCAN_PRECURSOR_ISOTOPE_ENRICHMENT = new DocArgument(@"full-scan-precursor-isotope-enrichment",
                 () => GetDisplayNames(Settings.Default.IsotopeEnrichmentsList),
                 (c, p) => c.FullScanPrecursorIsotopeEnrichment = p.Value)
@@ -1269,28 +1316,52 @@ namespace pwiz.Skyline
             { WrapValue = true };
 
         public static readonly Argument ARG_FULL_SCAN_PRECURSOR_RES = new DocArgument(@"full-scan-precursor-res", RP_VALUE,
-            (c, p) => c.FullScanPrecursorRes = p.ValueDouble) { WrapValue = true };
+            (c, p) => c.FullScanPrecursorRes = p.ValueDouble);
         public static readonly Argument ARG_FULL_SCAN_PRECURSOR_RES_MZ = new DocArgument(@"full-scan-precursor-res-mz", MZ_VALUE,
-            (c, p) => c.FullScanPrecursorResMz = p.ValueDouble) { WrapValue = true };
+            (c, p) => c.FullScanPrecursorResMz = p.ValueDouble);
         public static readonly Argument ARG_FULL_SCAN_PRODUCT_RES = new DocArgument(@"full-scan-product-res", RP_VALUE,
-            (c, p) => c.FullScanProductRes = p.ValueDouble) { WrapValue = true };
+            (c, p) => c.FullScanProductRes = p.ValueDouble);
         public static readonly Argument ARG_FULL_SCAN_PRODUCT_RES_MZ = new DocArgument(@"full-scan-product-res-mz", MZ_VALUE,
-            (c, p) => c.FullScanProductResMz = p.ValueDouble) { WrapValue = true };
+            (c, p) => c.FullScanProductResMz = p.ValueDouble);
+        public static readonly Argument ARG_FULL_SCAN_RT_FILTER = DocArgument.FromEnumType<RetentionTimeFilterType>(@"full-scan-rt-filter",
+            (c, p) => c.FullScanRetentionTimeFilter = p);
         public static readonly Argument ARG_FULL_SCAN_RT_FILTER_TOLERANCE = new DocArgument(@"full-scan-rt-filter-tolerance", MINUTES_VALUE,
             (c, p) => c.FullScanRetentionTimeFilterLength = p.ValueDouble) { WrapValue = true };
         public static readonly Argument ARG_IMS_LIBRARY_RES = new DocArgument(@"ims-library-res", RP_VALUE,
-                (c, p) => c.IonMobilityLibraryRes = p.ValueDouble)
-            { WrapValue = true };
+                (c, p) => c.IonMobilityLibraryRes = p.ValueDouble);
+
+        public static readonly Argument ARG_INST_MIN_MZ = new DocArgument(@"instrument-min-mz", MZ_VALUE,
+                (c, p) => c.InstrumentMinMz = p.ValueDouble);
+        public static readonly Argument ARG_INST_MAX_MZ = new DocArgument(@"instrument-max-mz", MZ_VALUE,
+            (c, p) => c.InstrumentMaxMz = p.ValueDouble);
+        public static readonly Argument ARG_INST_DYNAMIC_MIN_MZ = new DocArgument(@"instrument-dynamic-min-mz",
+                (c, p) => c.InstrumentIsDynamicMinMz = p.IsNameOnly || bool.Parse(p.Value))
+            { OptionalValue = true };
+        public static readonly Argument ARG_INST_METHOD_TOLERANCE = new DocArgument(@"instrument-method-mz-tolerance", MZ_VALUE,
+            (c, p) => c.InstrumentMethodMatchTolerance = p.ValueDouble);
+        public static readonly Argument ARG_INST_MIN_TIME = new DocArgument(@"instrument-min-time", MINUTES_VALUE,
+            (c, p) => c.InstrumentMinTimeMinutes = p.ValueDouble);
+        public static readonly Argument ARG_INST_MAX_TIME = new DocArgument(@"instrument-max-time", MINUTES_VALUE,
+            (c, p) => c.InstrumentMaxTimeMinutes = p.ValueDouble);
+        public static readonly Argument ARG_INST_TRIGGERED_CHROMATOGRAMS = new DocArgument(@"instrument-triggered-chromatograms",
+                (c, p) => c.InstrumentIsTriggeredChromatogramAcquisition = p.IsNameOnly || bool.Parse(p.Value))
+            { OptionalValue = true };
 
         private static readonly ArgumentGroup GROUP_SETTINGS = new ArgumentGroup(() => CommandArgUsage.CommandArgs_GROUP_SETTINGS_Document_Settings, false,
-            ARG_TRAN_PRECURSOR_ION_CHARGES, ARG_TRAN_FRAGMENT_ION_CHARGES, ARG_TRAN_FRAGMENT_ION_TYPES, ARG_TRAN_PRODUCT_START_ION, ARG_TRAN_PRODUCT_END_ION,
+            ARG_TRAN_PRECURSOR_ION_CHARGES, ARG_TRAN_FRAGMENT_ION_CHARGES, ARG_TRAN_FRAGMENT_ION_TYPES,
+            ARG_TRAN_PRODUCT_START_ION, ARG_TRAN_PRODUCT_END_ION, ARG_TRAN_PRODUCT_SPECIAL_IONS_CLEAR, ARG_TRAN_PRODUCT_SPECIAL_IONS_ADD,
             ARG_TRAN_PREDICT_CE, ARG_TRAN_PREDICT_DP, ARG_TRAN_PREDICT_COV, ARG_TRAN_PREDICT_OPTDB,
+            ARG_TRAN_DIA_WINDOW_EXCLUSION, ARG_TRAN_LIBRARY_PICK_PRODUCT_IONS,
+            ARG_TRAN_LIBRARY_ION_MATCH_TOLERANCE, ARG_TRAN_LIBRARY_PRODUCT_IONS, ARG_TRAN_LIBRARY_MIN_PRODUCT_IONS,
             ARG_FULL_SCAN_PRECURSOR_ISOTOPES, ARG_FULL_SCAN_PRECURSOR_ANALYZER, ARG_FULL_SCAN_PRECURSOR_THRESHOLD,
             ARG_FULL_SCAN_PRECURSOR_IGNORE_SIM, ARG_FULL_SCAN_PRECURSOR_ISOTOPE_ENRICHMENT,
             ARG_FULL_SCAN_ACQUISITION_METHOD, ARG_FULL_SCAN_PRODUCT_ANALYZER, ARG_FULL_SCAN_PRODUCT_ISOLATION_SCHEME,
             ARG_FULL_SCAN_PRECURSOR_RES, ARG_FULL_SCAN_PRECURSOR_RES_MZ,
             ARG_FULL_SCAN_PRODUCT_RES, ARG_FULL_SCAN_PRODUCT_RES_MZ,
-            ARG_FULL_SCAN_RT_FILTER_TOLERANCE, ARG_IMS_LIBRARY_RES)
+            ARG_FULL_SCAN_RT_FILTER, ARG_FULL_SCAN_RT_FILTER_TOLERANCE, ARG_IMS_LIBRARY_RES,
+            ARG_INST_MIN_MZ, ARG_INST_MAX_MZ, ARG_INST_DYNAMIC_MIN_MZ,
+            ARG_INST_METHOD_TOLERANCE, ARG_INST_MIN_TIME, ARG_INST_MAX_TIME,
+            ARG_INST_TRIGGERED_CHROMATOGRAMS)
         {            
             LeftColumnWidth = 40,
             Dependencies =
@@ -1339,11 +1410,35 @@ namespace pwiz.Skyline
             return types;
         }
 
+        private static MzTolerance ParseMzTolerance(NameValuePair p)
+        {
+            Assume.IsNotNull(p.Match); // Must be matched before accessing this
+
+            var match = Regex.Match(p.Value, @"([+-]?(?:\d+\.?\d*)|(?:\.\d+))\s*(ppm|mz|m/z|da|daltons|th)", RegexOptions.IgnoreCase);
+            if (!match.Success)
+                throw new ValueInvalidMzToleranceException(p.Match, p.Value);
+            if (!double.TryParse(match.Groups[1].Value, out double value))
+                throw new ValueInvalidMzToleranceException(p.Match, p.Value);
+            var units = match.Groups[2].Value.ToLowerInvariant() switch
+            {
+                "ppm" => MzTolerance.Units.ppm,
+                "mz" => MzTolerance.Units.mz,
+                "m/z" => MzTolerance.Units.mz,
+                "da" => MzTolerance.Units.mz,
+                "daltons" => MzTolerance.Units.mz,
+                "th" => MzTolerance.Units.mz,
+                _ => throw new ValueInvalidMzToleranceException(p.Match, p.Value)
+            };
+            return new MzTolerance(value, units);
+        }
+
         public Adduct[] FilterPrecursorCharges { get; private set; }
         public Adduct[] FilterProductCharges { get; private set; }
         public IonType[] FilterProductTypes { get; private set; }
         public IStartFragmentFinder FilterStartProductIon { get; private set; }
         public IEndFragmentFinder FilterEndProductIon { get; private set; }
+        public IEnumerable<string> FilterSpecialIons { get; private set; }
+        public bool? FilterUseDIAWindowExclusion { get; private set; }
 
         public bool FilterSettings
         {
@@ -1353,9 +1448,28 @@ namespace pwiz.Skyline
                        FilterProductCharges != null ||
                        FilterProductTypes != null ||
                        FilterStartProductIon != null ||
-                       FilterEndProductIon != null;
+                       FilterEndProductIon != null ||
+                       FilterUseDIAWindowExclusion != null;
             }
         }
+
+        public MzTolerance LibraryIonMatchTolerance { get; private set; }
+        public int? LibraryProductIons { get; private set; }
+        public int? LibraryMinProductIons { get; private set; }
+        public TransitionLibraryPick? LibraryPickIons {get; private set; }
+
+
+        public bool LibrarySettings
+        {
+            get
+            {
+                return LibraryIonMatchTolerance != null ||
+                       LibraryProductIons != null ||
+                       LibraryMinProductIons != null ||
+                       LibraryPickIons != null;
+            }
+        }
+
         public string PredictCEName { get; private set; }
         public string PredictDPName { get; private set; }
         public string PredictCoVName { get; private set; }
@@ -1383,6 +1497,7 @@ namespace pwiz.Skyline
         public string FullScanProductIsolationScheme { get; private set; }
         public double? FullScanProductRes { get; private set; }
         public double? FullScanProductResMz { get; private set; }
+        public RetentionTimeFilterType? FullScanRetentionTimeFilter { get; private set; }
         public double? FullScanRetentionTimeFilterLength { get; private set; }
 
         public bool FullScanSettings
@@ -1394,6 +1509,7 @@ namespace pwiz.Skyline
                        || FullScanProductMassAnalyzerType.HasValue
                        || FullScanPrecursorIgnoreSimScans.HasValue
                        || FullScanAcquisitionMethod != FullScanAcquisitionMethod.None
+                       || FullScanRetentionTimeFilter != null
                        || (FullScanPrecursorRes
                            ?? FullScanPrecursorResMz
                            ?? FullScanProductRes
@@ -1409,6 +1525,22 @@ namespace pwiz.Skyline
         {
             get { return IonMobilityLibraryRes.HasValue; }
         }
+
+        public double? InstrumentMinMz { get; private set; }
+        public double? InstrumentMaxMz { get; private set; }
+        public bool? InstrumentIsDynamicMinMz { get; private set; }
+        public double? InstrumentMethodMatchTolerance { get; private set; }
+        public double? InstrumentMinTimeMinutes { get; private set; }
+        public double? InstrumentMaxTimeMinutes { get; private set; }
+        public bool? InstrumentIsTriggeredChromatogramAcquisition {get; private set; }
+
+        public bool InstrumentSettings => InstrumentMinMz.HasValue
+                                          || InstrumentMaxMz.HasValue
+                                          || InstrumentIsDynamicMinMz.HasValue
+                                          || InstrumentMethodMatchTolerance.HasValue
+                                          || InstrumentMinTimeMinutes.HasValue
+                                          || InstrumentMaxTimeMinutes.HasValue
+                                          || InstrumentIsTriggeredChromatogramAcquisition.HasValue;
 
         // For importing a tool from a zip file.
         public static readonly Argument ARG_TOOL_ADD = new ToolArgument(@"tool-add", NAME_VALUE,
@@ -1890,6 +2022,7 @@ namespace pwiz.Skyline
                     GROUP_ANNOTATIONS,
                     GROUP_FASTA,
                     GROUP_IMPORT_SEARCH,
+                    GROUP_ASSOCIATE_PROTEINS,
                     GROUP_IMPORT_LIST,
                     GROUP_ADD_LIBRARY,
                     GROUP_CREATE_IMSDB,
@@ -2783,6 +2916,14 @@ namespace pwiz.Skyline
         {
             public ValueInvalidIonTypeListException(Argument arg, string value)
                 : base(string.Format(Resources.ValueInvalidIonTypeListException_ValueInvalidIonTypeListException_The_value___0___is_not_valid_for_the_argument__1__which_requires_an_comma_separated_list_of_fragment_ion_types__a__b__c__x__y__z__p__, value, arg.ArgumentText))
+            {
+            }
+        }
+
+        public class ValueInvalidMzToleranceException : UsageException
+        {
+            public ValueInvalidMzToleranceException(Argument arg, string value)
+                : base(string.Format("The value {0} is not valid for the argument {1} which requires a value and a unit. For example: '0.5mz' or '15ppm'.", value, arg.ArgumentText))
             {
             }
         }
