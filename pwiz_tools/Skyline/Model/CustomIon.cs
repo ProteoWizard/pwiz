@@ -44,8 +44,8 @@ namespace pwiz.Skyline.Model
         /// <param name="averageMass">The average mass of the molecule (can be calculated by the formula)</param>
         /// <param name="name">The arbitrary name given to this molecule</param>
         public CustomIon(string formula, Adduct adduct, double? monoisotopicMass = null, double? averageMass = null, string name = null)
-            : this(formula, adduct, TypedMass.Create(monoisotopicMass ?? averageMass ?? 0, MassType.Monoisotopic),
-                                    TypedMass.Create(averageMass ?? monoisotopicMass ?? 0, MassType.Average), name)
+            : this(formula, adduct, new TypedMass(monoisotopicMass ?? averageMass ?? 0, MassType.Monoisotopic),
+                                    new TypedMass(averageMass ?? monoisotopicMass ?? 0, MassType.Average), name)
         {
         }
 

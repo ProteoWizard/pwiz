@@ -206,12 +206,15 @@ namespace pwiz.Common.Chemistry
 
         public static T Parse(string formula)
         {
-            return Parse(formula, out _);
+            return new T { Dictionary = ImmutableSortedList.FromValues(ParseToDictionary(formula)) };
         }
 
         public static T Parse(string formula, out string regularizedFormula)
         {
-            return new T { Dictionary = ImmutableSortedList.FromValues(ParseToDictionary(formula, out regularizedFormula)) };
+            var formulaCleanup = new StringBuilder(string.IsNullOrEmpty(formula) ? 0 : formula.Length);
+            var keyValuePairs = ParseToDictionary(formula, formulaCleanup);
+            regularizedFormula = formulaCleanup.ToString();
+            return new T { Dictionary = ImmutableSortedList.FromValues(keyValuePairs) };
         }
 
         /// <summary>
@@ -220,15 +223,14 @@ namespace pwiz.Common.Chemistry
         /// Returns a tidied-up version of the input that removes zero-count elements but preserves idiosyncratic things like "HOOON1"
         /// </summary>
         /// <param name="formula">original string describing the formula</param>
-        /// <param name="regularizedFormula">cleaned up formula string</param>
+        /// <param name="regularizedFormula">optional StringBuilder for cleaned up formula string</param>
         /// <returns></returns>
-        public static Dictionary<string, int> ParseToDictionary(string formula, out string regularizedFormula)
+        public static Dictionary<string, int> ParseToDictionary(string formula, StringBuilder regularizedFormula = null)
         {
             // Watch for trivial case
             var result = new Dictionary<string, int>();
             if (string.IsNullOrEmpty(formula))
             {
-                regularizedFormula = string.Empty;
                 return result;
             }
 
@@ -236,7 +238,6 @@ namespace pwiz.Common.Chemistry
             int? currentQuantity = null;
             var currentPolarity = 1;
             var polarityNext = 1;
-            var tidied = new StringBuilder(formula.Length);
 
             void CloseOutCurrentElement()
             {
@@ -261,12 +262,15 @@ namespace pwiz.Common.Chemistry
                         result.Add(currentElement, newAtomCount);
                     }
 
-                    if ((currentQuantity ?? 1) > 0) // Omit any zero counts e.g. N0, but save any explicit counts e.g. "N1"
+                    if (regularizedFormula != null)
                     {
-                        tidied.Append(currentElement);
-                        if (currentQuantity.HasValue) // Preserve the "1" in "N1" if that's how the user presented it
+                        if ((currentQuantity ?? 1) > 0) // Omit any zero counts e.g. N0, but save any explicit counts e.g. "N1"
                         {
-                            tidied.Append(currentQuantity.Value.ToString(CultureInfo.InvariantCulture));
+                            regularizedFormula.Append(currentElement);
+                            if (currentQuantity.HasValue) // Preserve the "1" in "N1" if that's how the user presented it
+                            {
+                                regularizedFormula.Append(currentQuantity.Value.ToString(CultureInfo.InvariantCulture));
+                            }
                         }
                     }
                 }
@@ -290,7 +294,7 @@ namespace pwiz.Common.Chemistry
                     currentElement = string.Empty + ch;
                     if (currentPolarity != polarityNext)
                     {
-                        tidied.Append(@"-");
+                        regularizedFormula?.Append(@"-");
                         currentPolarity = polarityNext;
                     }
                 }
@@ -310,7 +314,6 @@ namespace pwiz.Common.Chemistry
             }
             CloseOutCurrentElement(); // Finish up the last element
 
-            regularizedFormula = tidied.ToString();
             return result;
         }
 

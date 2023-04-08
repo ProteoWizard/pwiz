@@ -734,7 +734,7 @@ namespace pwiz.Skyline.Model
             var ion = new CustomMolecule(moleculeFormula);
             monoMass = ion.GetMass(MassType.Monoisotopic);
             averageMass = ion.GetMass(MassType.Average);
-            return TypedMass.Create(adduct.MzFromNeutralMass(massType.IsMonoisotopic() ? monoMass : averageMass, massType), massType); // m/z is not actually a mass, of course, but mono vs avg is interesting
+            return new TypedMass(adduct.MzFromNeutralMass(massType.IsMonoisotopic() ? monoMass : averageMass, massType), massType); // m/z is not actually a mass, of course, but mono vs avg is interesting
         }
 
         public static string NullForEmpty(string str)
@@ -1047,7 +1047,7 @@ namespace pwiz.Skyline.Model
                 }
                 mzParsed = 0;
             }
-            var mz = TypedMass.Create(mzParsed, mzType); // mz is not actually a mass, of course, but we want to track mass type it was calculated from
+            var mz = new TypedMass(mzParsed, mzType); // mz is not actually a mass, of course, but we want to track mass type it was calculated from
             if ((mz < 0) || badMz)
             {
                 ShowTransitionError(new PasteError

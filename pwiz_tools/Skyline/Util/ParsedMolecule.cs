@@ -39,15 +39,15 @@ namespace pwiz.Skyline.Util
         public static ParsedMolecule Create(double monoMassOffset, double averageMassOffset)
         {
             return Create(Molecule.Empty,
-                monoMassOffset == 0 ? TypedMass.ZERO_MONO_MASSNEUTRAL : TypedMass.Create(monoMassOffset, MassType.Monoisotopic),
-                averageMassOffset == 0 ? TypedMass.ZERO_AVERAGE_MASSNEUTRAL : TypedMass.Create(averageMassOffset, MassType.Average));
+                monoMassOffset == 0 ? TypedMass.ZERO_MONO_MASSNEUTRAL : new TypedMass(monoMassOffset, MassType.Monoisotopic),
+                averageMassOffset == 0 ? TypedMass.ZERO_AVERAGE_MASSNEUTRAL : new TypedMass(averageMassOffset, MassType.Average));
         }
 
         public static ParsedMolecule Create(string formula, double monoMassOffset = 0, double averageMassOffset = 0)
         {
             return Create(formula,
-                monoMassOffset == 0 ? TypedMass.ZERO_MONO_MASSNEUTRAL : TypedMass.Create(monoMassOffset, MassType.Monoisotopic),
-                averageMassOffset == 0 ? TypedMass.ZERO_AVERAGE_MASSNEUTRAL : TypedMass.Create(averageMassOffset, MassType.Average));
+                monoMassOffset == 0 ? TypedMass.ZERO_MONO_MASSNEUTRAL : new TypedMass(monoMassOffset, MassType.Monoisotopic),
+                averageMassOffset == 0 ? TypedMass.ZERO_AVERAGE_MASSNEUTRAL : new TypedMass(averageMassOffset, MassType.Average));
         }
 
         public static ParsedMolecule Create(MoleculeMassOffset formula)
@@ -55,8 +55,8 @@ namespace pwiz.Skyline.Util
             return MoleculeMassOffset.IsNullOrEmpty(formula) ?
                 EMPTY :
                 new ParsedMolecule(formula.Molecule,
-                    TypedMass.Create(formula.MonoMassOffset, MassType.Monoisotopic),
-                    TypedMass.Create(formula.AverageMassOffset, MassType.Average),
+                    new TypedMass(formula.MonoMassOffset, MassType.Monoisotopic),
+                    new TypedMass(formula.AverageMassOffset, MassType.Average),
                     string.Empty, 0);
         }
 
@@ -81,8 +81,8 @@ namespace pwiz.Skyline.Util
             MoleculeMassOffset.SplitFormulaAndMasses(formulaAndMasses, out var formula, out var monoDeclaredD, out var averageDeclaredD);
             if (monoDeclaredD.HasValue)
             {
-                monoMassOffset = TypedMass.Create(monoDeclaredD.Value, MassType.Monoisotopic);
-                averageMassOffset = TypedMass.Create(averageDeclaredD.Value, MassType.Average);
+                monoMassOffset = new TypedMass(monoDeclaredD.Value, MassType.Monoisotopic);
+                averageMassOffset = new TypedMass(averageDeclaredD.Value, MassType.Average);
             }
 
             if (string.IsNullOrEmpty(formula) && TypedMass.IsNullOrEmpty(monoMassOffset) && TypedMass.IsNullOrEmpty(averageMassOffset))

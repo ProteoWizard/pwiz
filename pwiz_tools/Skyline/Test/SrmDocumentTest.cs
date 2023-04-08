@@ -112,7 +112,7 @@ namespace pwiz.SkylineTest
             const string SO4 = "SO4";
             Assert.AreEqual(311.976229, BioMassCalc.MONOISOTOPIC.CalculateMassFromFormula(C12H8S2O6),.00001);
             var subtracted = C12H8S2O6+"-"+SO4;
-            AssertEx.ThrowsException<ArgumentException>(() => Molecule.ParseToDictionary(subtracted + subtracted, out _));  // More than one subtraction operation not supported
+            AssertEx.ThrowsException<ArgumentException>(() => Molecule.ParseToDictionary(subtracted + subtracted));  // More than one subtraction operation not supported
             AssertEx.AreEqual(BioMassCalc.MONOISOTOPIC.CalculateMassFromFormula(subtracted), 
                 BioMassCalc.MONOISOTOPIC.CalculateMassFromFormula(C12H8S2O6) - BioMassCalc.MONOISOTOPIC.CalculateMassFromFormula(SO4), .1 * BioMassCalc.MassTolerance);
             Assert.AreEqual(BioMassCalc.MONOISOTOPIC.CalculateMassFromFormula(C12H8S2O6+SO4), 
@@ -153,9 +153,9 @@ namespace pwiz.SkylineTest
             var neutralMassMolecule = precursorAdduct.MassFromMz(mzPrecursor, MassType.Monoisotopic);
             var fragmentAdduct = Adduct.M_PLUS;
             var neutralMassTransition = fragmentAdduct.MassFromMz(mzFragment, MassType.Monoisotopic);
-            var transition = new CustomIon(null, precursorAdduct, TypedMass.Create(neutralMassMolecule, MassType.Monoisotopic), TypedMass.Create(neutralMassMolecule, MassType.Average), "molecule");
-            var transition2 = new CustomIon(null, fragmentAdduct, TypedMass.Create(neutralMassTransition, MassType.Monoisotopic), TypedMass.Create(neutralMassTransition, MassType.Average), "molecule fragment");
-            var precursor = new CustomMolecule(TypedMass.Create(neutralMassMolecule, MassType.Monoisotopic), TypedMass.Create(neutralMassMolecule, MassType.Average), "molecule");
+            var transition = new CustomIon(null, precursorAdduct, new TypedMass(neutralMassMolecule, MassType.Monoisotopic), new TypedMass(neutralMassMolecule, MassType.Average), "molecule");
+            var transition2 = new CustomIon(null, fragmentAdduct, new TypedMass(neutralMassTransition, MassType.Monoisotopic), new TypedMass(neutralMassTransition, MassType.Average), "molecule fragment");
+            var precursor = new CustomMolecule(new TypedMass(neutralMassMolecule, MassType.Monoisotopic), new TypedMass(neutralMassMolecule, MassType.Average), "molecule");
             Assert.AreEqual(BioMassCalc.CalculateIonMz(precursor.GetMass(MassType.Monoisotopic), precursorAdduct), doc.MoleculeTransitionGroups.ElementAt(0).PrecursorMz, 1E-5);
             Assert.AreEqual(BioMassCalc.CalculateIonMz(transition.GetMass(MassType.Monoisotopic), precursorAdduct), doc.MoleculeTransitions.ElementAt(0).Mz, 1E-5);
             Assert.AreEqual(BioMassCalc.CalculateIonMz(transition2.GetMass(MassType.Monoisotopic), fragmentAdduct), doc.MoleculeTransitions.ElementAt(1).Mz, 1E-5);

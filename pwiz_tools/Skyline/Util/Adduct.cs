@@ -405,8 +405,8 @@ namespace pwiz.Skyline.Util
                         }
                     }
                     IsotopeLabels = ParsedMolecule.Create(Molecule.FromDict(isotopeLabels), 
-                       TypedMass.Create(labelMass, MassType.MonoisotopicHeavy), 
-                       TypedMass.Create(labelMass, MassType.AverageHeavy));
+                       new TypedMass(labelMass, MassType.MonoisotopicHeavy), 
+                       new TypedMass(labelMass, MassType.AverageHeavy));
                 }
 
                 var declaredChargeCountStr = match.Groups[@"declaredChargeCount"].Value;
@@ -1583,10 +1583,10 @@ namespace pwiz.Skyline.Util
             if (IsProtonated)
             {
                 // Treat this as a special case, so the numbers agree with how we deal with peptide charges
-                return TypedMass.Create((mz * Math.Abs(AdductCharge) - AdductCharge * BioMassCalc.MassProton) / MassMultiplier, t);
+                return new TypedMass((mz * Math.Abs(AdductCharge) - AdductCharge * BioMassCalc.MassProton) / MassMultiplier, t);
             }
             var adductMass = t.IsAverage() ? AverageMassAdduct : MonoMassAdduct;
-            return TypedMass.Create((mz * Math.Abs(AdductCharge) + AdductCharge * BioMassCalc.MassElectron - adductMass) / MassMultiplier, t);
+            return new TypedMass((mz * Math.Abs(AdductCharge) + AdductCharge * BioMassCalc.MassElectron - adductMass) / MassMultiplier, t);
         }
 
         private void InitializeAsCharge(int charge, ADDUCT_TYPE mode)
@@ -1622,9 +1622,9 @@ namespace pwiz.Skyline.Util
                 isotopeLabelsAverageMassOffset += labelCount*(BioMassCalc.AVERAGE.GetMass(label) - BioMassCalc.AVERAGE.GetMass(unlabled));
                 isotopeLabelsMonoMassOffset += labelCount*(BioMassCalc.MONOISOTOPIC.GetMass(label) - BioMassCalc.MONOISOTOPIC.GetMass(unlabled));
             }
-            IsotopesIncrementalAverageMass = TypedMass.Create(MassMultiplier * isotopeLabelsAverageMassOffset,
+            IsotopesIncrementalAverageMass = new TypedMass(MassMultiplier * isotopeLabelsAverageMassOffset,
                 isotopeLabelsAverageMassOffset == 0 ? MassType.Average : MassType.AverageHeavy);
-            IsotopesIncrementalMonoMass = TypedMass.Create(MassMultiplier * isotopeLabelsMonoMassOffset,
+            IsotopesIncrementalMonoMass = new TypedMass(MassMultiplier * isotopeLabelsMonoMassOffset,
                 isotopeLabelsMonoMassOffset == 0 ? MassType.Monoisotopic : MassType.MonoisotopicHeavy);
             Unlabeled = ChangeIsotopeLabels(string.Empty); // Useful for dealing with labels and mass-only small molecule declarations
             IsProtonated = Composition.Any() && Composition.All(pair => // All H, H', H", D or T

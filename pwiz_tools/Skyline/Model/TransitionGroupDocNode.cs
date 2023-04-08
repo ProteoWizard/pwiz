@@ -782,7 +782,7 @@ namespace pwiz.Skyline.Model
                 mz = SequenceMassCalc.GetMZ(mass, adduct) + 
                      SequenceMassCalc.GetPeptideInterval(TransitionGroup.DecoyMassShift);
                 if (TransitionGroup.DecoyMassShift.HasValue)
-                    mass = TypedMass.Create(SequenceMassCalc.GetMH(mz, adduct.AdductCharge), calc.MassType);
+                    mass = new TypedMass(SequenceMassCalc.GetMH(mz, adduct.AdductCharge), calc.MassType);
             }
 
             isotopeDist = null;

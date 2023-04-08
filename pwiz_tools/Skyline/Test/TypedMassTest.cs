@@ -36,13 +36,13 @@ namespace pwiz.SkylineTest
         [TestMethod]
         public void TypedMassUnitTest()
         {
-            var a = TypedMass.Create(1, MassType.Average);
-            var b = TypedMass.Create(2, MassType.Average);
-            var c = TypedMass.Create(0, MassType.Average);
-            var d = TypedMass.Create(1, MassType.Average);
-            var e = TypedMass.Create(1, MassType.Monoisotopic);
-            var f = TypedMass.Create(1, MassType.MonoisotopicHeavy);
-            var g = TypedMass.Create(-1, MassType.MonoisotopicMassH);
+            var a = new TypedMass(1, MassType.Average);
+            var b = new TypedMass(2, MassType.Average);
+            var c = new TypedMass(0, MassType.Average);
+            var d = new TypedMass(1, MassType.Average);
+            var e = new TypedMass(1, MassType.Monoisotopic);
+            var f = new TypedMass(1, MassType.MonoisotopicHeavy);
+            var g = new TypedMass(-1, MassType.MonoisotopicMassH);
 
             AssertEx.AreNotEqual(a, b, "these are not equal");
             AssertEx.AreEqual(a, a);

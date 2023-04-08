@@ -36,14 +36,7 @@ namespace pwiz.Skyline.Util
 
         public static TypedMass ZERO_AVERAGE_MASSH = new TypedMass(0.0, MassType.AverageMassH);
         public static TypedMass ZERO_MONO_MASSH = new TypedMass(0.0, MassType.MonoisotopicMassH);
-
-        public static TypedMass ZERO_AVERAGE_MASSNEUTRAL_HEAVY = new TypedMass(0.0, MassType.AverageHeavy);
-        public static TypedMass ZERO_MONO_MASSNEUTRAL_HEAVY = new TypedMass(0.0, MassType.MonoisotopicHeavy);
-
-        public static TypedMass ZERO_AVERAGE_MASSH_HEAVY = new TypedMass(0.0, MassType.AverageMassH | MassType.bHeavy);
-        public static TypedMass ZERO_MONO_MASSH_HEAVY = new TypedMass(0.0, MassType.MonoisotopicMassH | MassType.bHeavy);
-
-
+        
         private readonly double _value;
         private readonly MassType _massType;
 
@@ -60,30 +53,10 @@ namespace pwiz.Skyline.Util
         [Pure]
         public static bool IsNullOrEmpty(TypedMass t) => t._value == 0;
 
-        private TypedMass(double value, MassType t)
+        public TypedMass(double value, MassType t)
         {
             _value = value;
             _massType = t;
-        }
-
-        // Use this instead of ctor to avoid lots of copies of ZERO_*_*
-        public static TypedMass Create(double value, MassType t)
-        {
-            if (value == 0)
-            {
-                if (t.IsAverage())
-                {
-                    return t.IsHeavy() ?
-                        (t.IsMassH() ? ZERO_AVERAGE_MASSH_HEAVY : ZERO_AVERAGE_MASSNEUTRAL_HEAVY) :
-                        (t.IsMassH() ? ZERO_AVERAGE_MASSH : ZERO_AVERAGE_MASSNEUTRAL);
-                }
-
-                return t.IsHeavy() ?
-                    (t.IsMassH() ? ZERO_MONO_MASSH_HEAVY : ZERO_MONO_MASSNEUTRAL_HEAVY) : 
-                    (t.IsMassH() ? ZERO_MONO_MASSH : ZERO_MONO_MASSNEUTRAL);
-            }
-
-            return new TypedMass(value, t);
         }
 
         [Pure]
@@ -103,12 +76,12 @@ namespace pwiz.Skyline.Util
             {
                 return this;
             }
-            return TypedMass.Create(_value, newIsMassH ? _massType | MassType.bMassH : _massType & ~MassType.bMassH);
+            return new TypedMass(_value, newIsMassH ? _massType | MassType.bMassH : _massType & ~MassType.bMassH);
         }
 
         public TypedMass ChangeMass(double mass)
         {
-            return (_value != mass) ? TypedMass.Create(mass, _massType) : this;
+            return (_value != mass) ? new TypedMass(mass, _massType) : this;
         }
 
         public TypedMass ChangeIsHeavy(bool newIsHeavy)
@@ -117,21 +90,21 @@ namespace pwiz.Skyline.Util
             {
                 return this;
             }
-            return TypedMass.Create(_value, newIsHeavy ? _massType | MassType.bHeavy : _massType & ~MassType.bHeavy);
+            return new TypedMass(_value, newIsHeavy ? _massType | MassType.bHeavy : _massType & ~MassType.bHeavy);
         }
 
         public TypedMass ChangeIsMonoIsotopic(bool bIsMono)
         {
             return (bIsMono == IsMonoIsotopic()) ?
                 this :
-                TypedMass.Create(_value, (_massType & ~(MassType.Monoisotopic | MassType.Average)) | (bIsMono ? MassType.Monoisotopic : MassType.Average));
+                new TypedMass(_value, (_massType & ~(MassType.Monoisotopic | MassType.Average)) | (bIsMono ? MassType.Monoisotopic : MassType.Average));
         }
 
         public TypedMass ChangeMassType(MassType massType)
         {
             return (massType == _massType) ?
                 this :
-                TypedMass.Create(_value, massType);
+                new TypedMass(_value, massType);
         }
 
         public static implicit operator double(TypedMass d)
@@ -141,12 +114,12 @@ namespace pwiz.Skyline.Util
 
         public static TypedMass operator +(TypedMass tm, double step)
         {
-            return step == 0 ? tm : TypedMass.Create(tm.Value + step, tm._massType);
+            return step == 0 ? tm : new TypedMass(tm.Value + step, tm._massType);
         }
 
         public static TypedMass operator -(TypedMass tm, double step)
         {
-            return step == 0 ? tm : TypedMass.Create(tm.Value - step, tm._massType);
+            return step == 0 ? tm : new TypedMass(tm.Value - step, tm._massType);
         }
 
         public static TypedMass operator+(TypedMass tm, TypedMass step)
@@ -155,19 +128,19 @@ namespace pwiz.Skyline.Util
                 tm : 
                 tm.Value == 0 && tm._massType == step._massType ? // If tm is zero, and the mass types are the same, return the step
                 step :
-                Create(tm.Value + step.Value, tm._massType | step._massType); // Make sure that the mass type includes bHeavy if either is heavy
+                new TypedMass(tm.Value + step.Value, tm._massType | step._massType); // Make sure that the mass type includes bHeavy if either is heavy
         }
 
         public static TypedMass operator -(TypedMass tm, TypedMass step)
         {
             return step.Value == 0 && tm._massType == step._massType ? // If step is zero, and the mass types are the same, return the original
                 tm : 
-                Create(tm.Value - step.Value, tm._massType | step._massType); // Make sure that the mass type includes bHeavy if either is heavy
+                new TypedMass(tm.Value - step.Value, tm._massType | step._massType); // Make sure that the mass type includes bHeavy if either is heavy
         }
 
         public static TypedMass operator *(TypedMass tm, double step)
         {
-            return step == 1 ? tm : TypedMass.Create(tm.Value * step, tm._massType);
+            return step == 1 ? tm : new TypedMass(tm.Value * step, tm._massType);
         }
 
         public int CompareTo(TypedMass other)

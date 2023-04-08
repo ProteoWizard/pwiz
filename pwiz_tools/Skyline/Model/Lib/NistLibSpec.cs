@@ -1107,7 +1107,7 @@ namespace pwiz.Skyline.Model.Lib
                     {
                         var formulaIn = formula;
                         charge = SmallMoleculeTransitionListReader.ValidateFormulaWithMzAndAdduct(mzMatchTolerance, true,
-                            ref formulaIn, ref adduct, TypedMass.Create(precursorMz.Value, MassType.Monoisotopic), null, isPositive, true, out _, out _, out _) ?? 0;
+                            ref formulaIn, ref adduct, new TypedMass(precursorMz.Value, MassType.Monoisotopic), null, isPositive, true, out _, out _, out _) ?? 0;
                         if (!Equals(formula, formulaIn))
                         {
                             // We would not expect to adjust the formula in a library import

@@ -156,8 +156,8 @@ namespace pwiz.SkylineTest
             Assert.IsFalse(label.MassFromMz(300.0, MassType.Average).IsHeavy());
             Assert.IsTrue(label.MassFromMz(300.0, MassType.AverageHeavy).IsHeavy());
             Assert.IsTrue(label.MassFromMz(300.0, MassType.Average).IsAverage());
-            var massHeavy = label.ApplyToMass(TypedMass.Create(300, MassType.MonoisotopicHeavy)); // Will not have isotope effect added in mz calc, as it's already heavy
-            var massLight = label.ApplyToMass(TypedMass.Create(300, MassType.Monoisotopic)); // Will have isotope effect added in mz calc
+            var massHeavy = label.ApplyToMass(new TypedMass(300, MassType.MonoisotopicHeavy)); // Will not have isotope effect added in mz calc, as it's already heavy
+            var massLight = label.ApplyToMass(new TypedMass(300, MassType.Monoisotopic)); // Will have isotope effect added in mz calc
             Assert.AreNotEqual(massHeavy, massLight);
             Assert.AreNotEqual(label.MzFromNeutralMass(massHeavy), label.MzFromNeutralMass(massLight));
 
@@ -266,7 +266,7 @@ namespace pwiz.SkylineTest
             Assert.AreEqual(
                 2 * (massNeutral + 3 * (BioMassCalc.MONOISOTOPIC.GetMass("C'") - BioMassCalc.MONOISOTOPIC.GetMass("C"))) -
                 BioMassCalc.MONOISOTOPIC.GetMass("Na"),
-                labeled.ApplyToMass(TypedMass.Create(massNeutral, MassType.Monoisotopic)));
+                labeled.ApplyToMass(new TypedMass(massNeutral, MassType.Monoisotopic)));
             Assert.AreEqual(unlabeled, labeled.ChangeIsotopeLabels(null));
             var labels = new Dictionary<string, int> {{label, 3}, {"H2", 4}};
             Assert.AreEqual(relabeled, labeled.ChangeIsotopeLabels(labels));
@@ -281,7 +281,7 @@ namespace pwiz.SkylineTest
             Assert.AreEqual(BioMassCalc.MONOISOTOPIC.GetMass("Cl2Cl'3H5H\"4N12"), BioMassCalc.MONOISOTOPIC.GetMass("Cl2Cl'3H5T4N12"));
             Assert.AreEqual(ParsedMolecule.Create("Cl2Cl'3H5H'4N12".Replace("Cl'", label).Replace("Cl", unlabel)),
                 relabeled.ApplyIsotopeLabelsToFormula("Cl5H9N12".Replace("Cl", unlabel))); // Replaces three of five Cl and four of nine H
-            var m100 = TypedMass.Create(100, MassType.Monoisotopic);
+            var m100 = new TypedMass(100, MassType.Monoisotopic);
             var mdiff = 2 * (3 * (BioMassCalc.MONOISOTOPIC.GetMass(label) -
                                   BioMassCalc.MONOISOTOPIC.GetMass(unlabel)) +
                              4 * (BioMassCalc.MONOISOTOPIC.GetMass(BioMassCalc.H2) -
@@ -443,24 +443,24 @@ namespace pwiz.SkylineTest
 
             // Test ability to describe isotope label by mass only
             var heavy = Adduct.FromStringAssumeProtonated("2M1.2345+H");
-            mz = BioMassCalc.CalculateIonMz(TypedMass.Create(massHectochlorin, MassType.Monoisotopic), heavy);
+            mz = BioMassCalc.CalculateIonMz(new TypedMass(massHectochlorin, MassType.Monoisotopic), heavy);
             heavy = Adduct.FromStringAssumeProtonated("2M1.2345");
-            mz = BioMassCalc.CalculateIonMass(TypedMass.Create(massHectochlorin, MassType.Monoisotopic), heavy);
+            mz = BioMassCalc.CalculateIonMass(new TypedMass(massHectochlorin, MassType.Monoisotopic), heavy);
             Assert.AreEqual(2 * (massHectochlorin + 1.23456), mz, .001);
             heavy = Adduct.FromStringAssumeProtonated("M1.2345");
-            mz = BioMassCalc.CalculateIonMass(TypedMass.Create(massHectochlorin, MassType.Monoisotopic), heavy);
+            mz = BioMassCalc.CalculateIonMass(new TypedMass(massHectochlorin, MassType.Monoisotopic), heavy);
             Assert.AreEqual(massHectochlorin + 1.23456, mz, .001);
             heavy = Adduct.FromStringAssumeProtonated("2M(-1.2345)+H");
-            mz = BioMassCalc.CalculateIonMz(TypedMass.Create(massHectochlorin, MassType.Monoisotopic), heavy);
+            mz = BioMassCalc.CalculateIonMz(new TypedMass(massHectochlorin, MassType.Monoisotopic), heavy);
             Assert.AreEqual((2 * (massHectochlorin - 1.23456) + BioMassCalc.MONOISOTOPIC.CalculateMassFromFormula("H")), mz, .001);
             heavy = Adduct.FromStringAssumeProtonated("2M(-1.2345)");
-            mz = BioMassCalc.CalculateIonMass(TypedMass.Create(massHectochlorin, MassType.Monoisotopic), heavy);
+            mz = BioMassCalc.CalculateIonMass(new TypedMass(massHectochlorin, MassType.Monoisotopic), heavy);
             Assert.AreEqual(2 * (massHectochlorin - 1.23456), mz, .001);
             heavy = Adduct.FromStringAssumeProtonated("2M(1.2345)+H");
-            mz = BioMassCalc.CalculateIonMz(TypedMass.Create(massHectochlorin, MassType.Monoisotopic), heavy);
+            mz = BioMassCalc.CalculateIonMz(new TypedMass(massHectochlorin, MassType.Monoisotopic), heavy);
             Assert.AreEqual((2 * (massHectochlorin + 1.23456) + BioMassCalc.MONOISOTOPIC.CalculateMassFromFormula("H")), mz, .001);
             heavy = Adduct.FromStringAssumeProtonated("2M(1.2345)");
-            mz = BioMassCalc.CalculateIonMass(TypedMass.Create(massHectochlorin, MassType.Monoisotopic), heavy);
+            mz = BioMassCalc.CalculateIonMass(new TypedMass(massHectochlorin, MassType.Monoisotopic), heavy);
             Assert.AreEqual(2 * (massHectochlorin + 1.23456), mz, .001);
 
             TestException(PENTANE, "zM+2H"); // That "z" doesn't make any sense as a mass multiplier (must be a positive integer)

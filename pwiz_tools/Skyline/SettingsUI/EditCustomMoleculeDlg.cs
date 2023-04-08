@@ -682,8 +682,8 @@ namespace pwiz.Skyline.SettingsUI
                     return;
             }
 
-            var monoMass = TypedMass.Create(_formulaBox.MonoMass ?? 0, MassType.Monoisotopic);
-            var averageMass = TypedMass.Create(_formulaBox.AverageMass ?? 0, MassType.Average);
+            var monoMass = new TypedMass(_formulaBox.MonoMass ?? 0, MassType.Monoisotopic);
+            var averageMass = new TypedMass(_formulaBox.AverageMass ?? 0, MassType.Average);
             if (monoMass < CustomMolecule.MIN_MASS || averageMass < CustomMolecule.MIN_MASS)
             {
                 _formulaBox.ShowTextBoxErrorFormula(helper,

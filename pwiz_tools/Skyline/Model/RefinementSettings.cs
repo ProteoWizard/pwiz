@@ -1103,8 +1103,8 @@ namespace pwiz.Skyline.Model
                                     var chargeOnly = Adduct.FromChargeNoMass(transition.Transition.Charge);
                                     mass = chargeOnly.MassFromMz(transition.Mz, mzMassType);
                                     // We can't really get at both mono and average mass from m/z, but for test purposes this is fine
-                                    var massMono = TypedMass.Create(mass.Value, MassType.Monoisotopic);
-                                    var massAverage = TypedMass.Create(mass.Value, MassType.Average);
+                                    var massMono = new TypedMass(mass.Value, MassType.Monoisotopic);
+                                    var massAverage = new TypedMass(mass.Value, MassType.Average);
                                     var name = transition.HasLoss ?
                                         string.Format(@"{0}[-{1}]", transition.Transition.FragmentIonName, (int)transition.LostMass) :
                                         transition.Transition.FragmentIonName;

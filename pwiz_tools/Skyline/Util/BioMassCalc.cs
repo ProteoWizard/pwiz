@@ -430,7 +430,7 @@ namespace pwiz.Skyline.Util
             }
             catch
             {
-                mass = TypedMass.Create(0, MassType);
+                mass = new TypedMass(0, MassType);
             }
             return true;
         }
@@ -439,7 +439,7 @@ namespace pwiz.Skyline.Util
         {
             if (ParsedMolecule.IsNullOrEmpty(mol))
             {
-                return TypedMass.Create(0, this.MassType);
+                return new TypedMass(0, this.MassType);
             }
             return CalculateMass((IDictionary<string, int>)mol.Molecule) + (MassType.IsMonoisotopic()
                 ? mol.MonoMassOffset
@@ -450,7 +450,7 @@ namespace pwiz.Skyline.Util
         {
             if (MoleculeMassOffset.IsNullOrEmpty(mol))
             {
-                return TypedMass.Create(0, this.MassType);
+                return new TypedMass(0, this.MassType);
             }
             return CalculateMass((IDictionary<string, int>)mol.Molecule) + (MassType.IsMonoisotopic()
                 ? mol.MonoMassOffset
@@ -461,7 +461,7 @@ namespace pwiz.Skyline.Util
         {
             if (Molecule.IsNullOrEmpty(mol))
             {
-                return TypedMass.Create(0, this.MassType);
+                return new TypedMass(0, this.MassType);
             }
             return CalculateMass((IDictionary<string, int>)mol);
         }
@@ -523,10 +523,10 @@ namespace pwiz.Skyline.Util
 
             try
             {
-                var molecule = Molecule.Parse(desc, out var _);
+                var molecule = ParsedMolecule.Create(desc); // Using ParsedMolecule to preserve the atom order
                 // Look for any heavy isotopes in the formula and replace them with unlabeled versions
                 var dictUnlabeled = StripLabelsFromFormula(molecule);
-                return !dictUnlabeled.Any() ? null : dictUnlabeled.ToString();
+                return ParsedMolecule.IsNullOrEmpty(dictUnlabeled) ? null : dictUnlabeled.ToString();
             }
             catch (ArgumentException)
             {
@@ -691,7 +691,7 @@ namespace pwiz.Skyline.Util
             }
 
             var massType = isHeavy ? (MassType | MassType.bHeavy) : MassType;
-            return TypedMass.Create(totalMass, massType);
+            return new TypedMass(totalMass, massType);
         }
 
         /// <summary>

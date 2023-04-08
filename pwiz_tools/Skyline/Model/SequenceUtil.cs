@@ -172,7 +172,7 @@ namespace pwiz.Skyline.Model
         public static TypedMass PersistentNeutral(TypedMass mh)
         {
             Assume.IsTrue(mh.IsMassH());
-            return TypedMass.Create(Math.Round(mh - BioMassCalc.MassProton, MassPrecision), mh.MassType);
+            return new TypedMass(Math.Round(mh - BioMassCalc.MassProton, MassPrecision), mh.MassType);
         }
 
         /// <summary>
@@ -207,7 +207,7 @@ namespace pwiz.Skyline.Model
                 MassType massType) // CONSIDER(bspratt) internally standardize on mass rather than massH?
         {
             Assume.IsTrue(adduct.IsProtonated, @"Expected a protonated adduct");
-            return TypedMass.Create(mz * adduct.AdductCharge - (adduct.AdductCharge - 1) * BioMassCalc.MassProton,
+            return new TypedMass(mz * adduct.AdductCharge - (adduct.AdductCharge - 1) * BioMassCalc.MassProton,
                 massType.IsMonoisotopic() ? MassType.MonoisotopicMassH : MassType.AverageMassH);
         }
 
@@ -381,7 +381,7 @@ namespace pwiz.Skyline.Model
             // _massAmmonia = _massCalc.CalculateMass("NH3");
 
             // ReSharper disable LocalizableElement
-            _massDiffB = TypedMass.Create(0.0, type);
+            _massDiffB = new TypedMass(0.0, type);
             _massDiffA = _massDiffB - _massCalc.CalculateMassFromFormula("CO");
             _massDiffC = _massCalc.CalculateMassFromFormula("NH3");
             _massDiffY = _massCalc.CalculateMassFromFormula("H2O");
@@ -913,7 +913,7 @@ namespace pwiz.Skyline.Model
                     mass += mods.ModMasses[i];
             }
 
-            return TypedMass.Create(mass, MassType.IsMonoisotopic() ? MassType.MonoisotopicMassH : MassType.AverageMassH); // This is massH (due to +BioMassCalc.MassProton above)
+            return new TypedMass(mass, MassType.IsMonoisotopic() ? MassType.MonoisotopicMassH : MassType.AverageMassH); // This is massH (due to +BioMassCalc.MassProton above)
         }
 
         public IonTable<TypedMass> GetFragmentIonMasses(Target seq)
@@ -1112,7 +1112,7 @@ namespace pwiz.Skyline.Model
 
             mass += GetTermDeltaMass(type);    // Exactly match GetFragmentIonMasses()
 
-            return TypedMass.Create(mass, MassType.IsMonoisotopic() ? MassType.MonoisotopicMassH : MassType.AverageMassH); // This is massH ( + BioMassCalc.MassProton above)
+            return new TypedMass(mass, MassType.IsMonoisotopic() ? MassType.MonoisotopicMassH : MassType.AverageMassH); // This is massH ( + BioMassCalc.MassProton above)
         }
 
         private double GetTermMass(IonType type, ExplicitSequenceMods mods)

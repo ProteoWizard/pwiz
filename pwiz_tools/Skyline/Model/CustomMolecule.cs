@@ -385,8 +385,8 @@ namespace pwiz.Skyline.Model
         /// <param name="moleculeAccessionNumbers">Provides InChiKey, CAS number etc</param>
         public CustomMolecule(string formula, double? monoisotopicMass, double? averageMass, string name, MoleculeAccessionNumbers moleculeAccessionNumbers = null)
             : this(formula, 
-                TypedMass.Create(monoisotopicMass ?? averageMass ?? 0, MassType.Monoisotopic),
-                TypedMass.Create(averageMass ?? monoisotopicMass ?? 0, MassType.Average), 
+                new TypedMass(monoisotopicMass ?? averageMass ?? 0, MassType.Monoisotopic),
+                new TypedMass(averageMass ?? monoisotopicMass ?? 0, MassType.Average), 
                 name, moleculeAccessionNumbers)
         {
         }
@@ -566,8 +566,8 @@ namespace pwiz.Skyline.Model
                 {
                     try
                     {
-                        var massMono = TypedMass.Create(double.Parse(m.Groups[1].Value, CultureInfo.InvariantCulture), MassType.Monoisotopic);
-                        var massAvg =  TypedMass.Create(double.Parse(m.Groups[2].Value, CultureInfo.InvariantCulture), MassType.Average);
+                        var massMono = new TypedMass(double.Parse(m.Groups[1].Value, CultureInfo.InvariantCulture), MassType.Monoisotopic);
+                        var massAvg =  new TypedMass(double.Parse(m.Groups[2].Value, CultureInfo.InvariantCulture), MassType.Average);
                         return new CustomMolecule(massMono, massAvg);
                     }
                     catch
@@ -748,9 +748,9 @@ namespace pwiz.Skyline.Model
             var mass = reader.GetNullableDoubleAttribute(ATTR.mass_average); // Pre-3.62 we wrote out massH for custom ions but not for reporter ions
             if (mass.HasValue)
             {
-                return TypedMass.Create(mass.Value, (this is SettingsCustomIon) ? MassType.Average : MassType.AverageMassH);
+                return new TypedMass(mass.Value, (this is SettingsCustomIon) ? MassType.Average : MassType.AverageMassH);
             }
-            return TypedMass.Create(reader.GetDoubleAttribute(ATTR.neutral_mass_average), MassType.Average); 
+            return new TypedMass(reader.GetDoubleAttribute(ATTR.neutral_mass_average), MassType.Average); 
         }
 
         public TypedMass ReadMonoisotopicMass(XmlReader reader)
@@ -758,9 +758,9 @@ namespace pwiz.Skyline.Model
             var mass = reader.GetNullableDoubleAttribute(ATTR.mass_monoisotopic); // Pre-3.62 we wrote out massH for custom ions but not for reporter ions
             if (mass.HasValue)
             {
-                return TypedMass.Create(mass.Value, (this is SettingsCustomIon) ? MassType.Monoisotopic : MassType.MonoisotopicMassH);
+                return new TypedMass(mass.Value, (this is SettingsCustomIon) ? MassType.Monoisotopic : MassType.MonoisotopicMassH);
             }
-            return TypedMass.Create(reader.GetDoubleAttribute(ATTR.neutral_mass_monoisotopic), MassType.Monoisotopic);
+            return new TypedMass(reader.GetDoubleAttribute(ATTR.neutral_mass_monoisotopic), MassType.Monoisotopic);
         }
 
         /// <summary>

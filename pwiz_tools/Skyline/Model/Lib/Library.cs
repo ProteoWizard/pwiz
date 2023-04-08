@@ -2059,8 +2059,8 @@ namespace pwiz.Skyline.Model.Lib
                 !molecularFormulaOrMassesString.Contains(MoleculeMassOffset.MASS_MOD_CUE_MINUS))
             {
                 var parts = molecularFormulaOrMassesString.Split(CustomMolecule.MASS_SPLITTER); // We didn't have a formula so we saved masses
-                massMono = TypedMass.Create(double.Parse(parts[0], CultureInfo.InvariantCulture), MassType.Monoisotopic);
-                massAverage = TypedMass.Create(double.Parse(parts[1], CultureInfo.InvariantCulture), MassType.Average);
+                massMono = new TypedMass(double.Parse(parts[0], CultureInfo.InvariantCulture), MassType.Monoisotopic);
+                massAverage = new TypedMass(double.Parse(parts[1], CultureInfo.InvariantCulture), MassType.Average);
             }
             else
             {

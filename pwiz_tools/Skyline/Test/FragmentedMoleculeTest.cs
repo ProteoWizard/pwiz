@@ -55,7 +55,7 @@ namespace pwiz.SkylineTest
                     var expectedMz = sequenceMassCalc.GetFragmentMass(transition, transitionGroupDocNode.IsotopeDist);
                     if (expectedMz.IsMassH())
                     {
-                        expectedMz = TypedMass.Create(expectedMz.Value - BioMassCalc.MassProton, expectedMz.MassType & ~MassType.bMassH);
+                        expectedMz = new TypedMass(expectedMz.Value - BioMassCalc.MassProton, expectedMz.MassType & ~MassType.bMassH);
                     }
                     var actualMz = actualMassDistribution.MostAbundanceMass;
                     if (Math.Abs(expectedMz - actualMz) > .001)

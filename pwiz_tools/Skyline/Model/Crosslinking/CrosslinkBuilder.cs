@@ -126,11 +126,11 @@ namespace pwiz.Skyline.Model.Crosslinking
             MassType massType = settings.TransitionSettings.Prediction.FragmentMassType;
             if (massType.IsMonoisotopic())
             {
-                return TypedMass.Create(fragmentedMoleculeSettings.GetMonoMass(formula.Molecule) + formula.MonoMassOffset + BioMassCalc.MassProton, MassType.MonoisotopicMassH);
+                return new TypedMass(fragmentedMoleculeSettings.GetMonoMass(formula.Molecule) + formula.MonoMassOffset + BioMassCalc.MassProton, MassType.MonoisotopicMassH);
             }
             else
             {
-                return TypedMass.Create(fragmentedMoleculeSettings.GetAverageMass(formula.Molecule) + formula.AverageMassOffset + BioMassCalc.MassProton, MassType.AverageMassH);
+                return new TypedMass(fragmentedMoleculeSettings.GetAverageMass(formula.Molecule) + formula.AverageMassOffset + BioMassCalc.MassProton, MassType.AverageMassH);
             }
         }
 
@@ -155,7 +155,7 @@ namespace pwiz.Skyline.Model.Crosslinking
                 mass += BioMassCalc.MassProton;
             }
 
-            return TypedMass.Create(mass, massType);
+            return new TypedMass(mass, massType);
         }
 
         private MassDistribution _precursorMassDistribution;
