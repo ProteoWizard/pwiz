@@ -1111,7 +1111,9 @@ struct HandlerScanSettings : public HandlerParamContainer
             return Status(Status::Delegate, &handlerTarget_);
         }
 
-        throw runtime_error(("[IO::HandlerScanSettings] Unexpected element name: " + name).c_str());
+		HandlerParamContainer::paramContainer = scanSettings;
+		return HandlerParamContainer::startElement(name, attributes, position);
+        //throw runtime_error(("[IO::HandlerScanSettings] Unexpected element name: " + name).c_str());
     }
 
     private:
