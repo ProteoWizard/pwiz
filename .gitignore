@@ -455,3 +455,13 @@ SkylineTester Results
 /pwiz_tools/Skyline/Test/ProtocolBuffers/tmp/*.cs
 /pwiz_tools/Skyline/Test/ProtocolBuffers/tmp
 /pwiz_aux/msrc/utility/vendor_api/ABI/SCIEX.Apis.Data.v1.xml
+Enolase_repeats_AQv1.4.2-试验.wiff.scan
+PressureTrace1-试验.wiff.scan
+swath.api-试验.wiff.scan
+timstof_prm_scheduler.prmsqlite
+UserSettings.data
+UserSettings.data-journal
+temp.MSDataFileTest.mgf
+temp.MSDataFileTest.mzXML
+temp.RAMPAdapterTest.tiny.mzML
+pwiz_aux/msrc/utility/vendor_api/thermo/x64/MSFileReader.XRawfile2.SxS.manifest

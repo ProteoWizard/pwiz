@@ -203,7 +203,7 @@ struct PWIZ_API_DECL Target : public ParamContainer {};
 
 
 /// Description of the acquisition settings of the instrument prior to the start of the run.
-struct PWIZ_API_DECL ScanSettings
+struct PWIZ_API_DECL ScanSettings : public ParamContainer 
 {
     /// a unique identifier for this acquisition setting.
     std::string id;
