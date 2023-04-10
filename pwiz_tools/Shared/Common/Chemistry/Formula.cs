@@ -19,6 +19,7 @@
 using System;
 using System.Collections;
 using System.Collections.Generic;
+using System.Globalization;
 using System.Linq;
 using System.Text;
 using pwiz.Common.Collections;
@@ -197,40 +198,113 @@ namespace pwiz.Common.Chemistry
     public class Formula<T> : AbstractFormula<T, int>
         where T : Formula<T>, new()
     {
-        public static T Parse(String formula)
+
+        public static bool IsNullOrEmpty(Formula<T> value)
         {
-            return new T {Dictionary = ImmutableSortedList.FromValues(ParseToDictionary(formula))};
+            return value == null || value.IsEmpty();
         }
 
-        public static Dictionary<string, int> ParseToDictionary(string formula)
+        public static T Parse(string formula)
         {
+            return new T { Dictionary = ImmutableSortedList.FromValues(ParseToDictionary(formula)) };
+        }
+
+        public static T Parse(string formula, out string regularizedFormula)
+        {
+            var formulaCleanup = new StringBuilder(string.IsNullOrEmpty(formula) ? 0 : formula.Length);
+            var keyValuePairs = ParseToDictionary(formula, formulaCleanup);
+            regularizedFormula = formulaCleanup.ToString();
+            return new T { Dictionary = ImmutableSortedList.FromValues(keyValuePairs) };
+        }
+
+        /// <summary>
+        /// Parse a string like C12H5 into a dictionary.
+        /// Handles simple math like "C12H5-C3H2"
+        /// Returns a tidied-up version of the input that removes zero-count elements but preserves idiosyncratic things like "HOOON1"
+        /// </summary>
+        /// <param name="formula">original string describing the formula</param>
+        /// <param name="regularizedFormula">optional StringBuilder for cleaned up formula string</param>
+        /// <returns></returns>
+        public static Dictionary<string, int> ParseToDictionary(string formula, StringBuilder regularizedFormula = null)
+        {
+            // Watch for trivial case
             var result = new Dictionary<string, int>();
+            if (string.IsNullOrEmpty(formula))
+            {
+                return result;
+            }
+
             string currentElement = null;
             int? currentQuantity = null;
+            var currentPolarity = 1;
+            var polarityNext = 1;
+
+            void CloseOutCurrentElement()
+            {
+                if (currentElement != null)
+                {
+                    var currentAtomCount = currentPolarity * (currentQuantity ?? 1); // No count declared implies 1
+                    var hasAtom = result.TryGetValue(currentElement, out var previousAtomCount);
+                    var newAtomCount = previousAtomCount + currentAtomCount;
+                    if (hasAtom)
+                    {
+                        if (newAtomCount == 0)
+                        {
+                            result.Remove(currentElement);
+                        }
+                        else
+                        {
+                            result[currentElement] = newAtomCount;
+                        }
+                    }
+                    else if (newAtomCount != 0) // Beware explicitly declared 0 count e.g. "H0"
+                    {
+                        result.Add(currentElement, newAtomCount);
+                    }
+
+                    if (regularizedFormula != null)
+                    {
+                        if ((currentQuantity ?? 1) > 0) // Omit any zero counts e.g. N0, but save any explicit counts e.g. "N1"
+                        {
+                            regularizedFormula.Append(currentElement);
+                            if (currentQuantity.HasValue) // Preserve the "1" in "N1" if that's how the user presented it
+                            {
+                                regularizedFormula.Append(currentQuantity.Value.ToString(CultureInfo.InvariantCulture));
+                            }
+                        }
+                    }
+                }
+                else if ((currentQuantity ?? 0) != 0) // Input was something like "123" or "5C12H"
+                {
+                    throw new ArgumentException($@"""{formula}""");
+                }
+            }
+
             foreach (char ch in formula)
             {
                 if (Char.IsDigit(ch))
                 {
-                    currentQuantity = (currentQuantity??0) * 10 + (ch - '0');
+                    currentQuantity = (currentQuantity ?? 0) * 10 + (ch - '0');
                 }
                 else if (Char.IsUpper(ch))
                 {
                     // Close out current element, if any
-                    if (currentElement != null)
-                    {
-                        int previousAtomCount;
-                        var currentAtomCount = currentQuantity ?? 1; // No count declared implies 1
-                        if (result.TryGetValue(currentElement, out previousAtomCount))
-                        {
-                            result[currentElement] = previousAtomCount + currentAtomCount;
-                        }
-                        else if (currentAtomCount != 0) // Beware explicitly declared 0 count
-                        {
-                            result.Add(currentElement, previousAtomCount + currentAtomCount);
-                        }
-                    }
+                    CloseOutCurrentElement();
                     currentQuantity = null;
                     currentElement = string.Empty + ch;
+                    if (currentPolarity != polarityNext)
+                    {
+                        regularizedFormula?.Append(@"-");
+                        currentPolarity = polarityNext;
+                    }
+                }
+                else if (Equals(ch, '-'))
+                {
+                    if (currentPolarity < 0)
+                    {
+                        throw new ArgumentException($@"Failed parsing ""{formula}"": molecular formula subtraction expressions are limited to a single operation");
+                    }
+                    polarityNext = -currentPolarity; // Flip +/- after we process the previous element
                 }
                 // Allow apostrophe for heavy isotopes (e.g. C' for 13C)
                 else if (!Char.IsWhiteSpace(ch))
@@ -238,82 +312,79 @@ namespace pwiz.Common.Chemistry
                     currentElement = currentElement + ch;
                 }
             }
-            if (currentElement != null)
-            {
-                int previousAtomCount;
-                var currentAtomCount = currentQuantity ?? 1; // No count declared implies 1
-                if (result.TryGetValue(currentElement, out previousAtomCount))
-                {
-                    result[currentElement] = previousAtomCount + currentAtomCount;
-                }
-                else if (currentAtomCount != 0) // Beware explicitly declared 0 count
-                {
-                    result.Add(currentElement, currentAtomCount);
-                }
-            }
+            CloseOutCurrentElement(); // Finish up the last element
+
             return result;
         }
 
-        // Handle formulae which may contain subtractions, as is deprotonation description ie C12H8O2-H (=C12H7O2) or even C12H8O2-H2O (=C12H6O)
-        public static T ParseExpression(String formula)
-        {
-            return FromDict(ParseExpressionToDictionary(formula));
-        }
 
-        public static Dictionary<String, int> ParseExpressionToDictionary(string expression)
-        {
-            var parts = expression.Split('-');
-            if (parts.Length > 2)
-            {
-                throw new ArgumentException(@"Molecular formula subtraction expressions are limited a single operation");
-            }
-            var result = ParseToDictionary(parts[0]);
-            if (parts.Length > 1)
-            {
-                var subtractive = ParseToDictionary(parts[1]);
-                foreach (var element in subtractive)
-                {
-                    int previous;
-                    if (result.TryGetValue(element.Key, out previous))
-                    {
-                        int newCount = previous - element.Value;
-                        if (newCount == 0)
-                        {
-                            result.Remove(element.Key);
-                        }
-                        else
-                        {
-                            result[element.Key] = newCount;
-                        }
-                    }
-                    else
-                    {
-                        result.Add(element.Key, -element.Value);  // Seems weird, but possibly describing a proton lost from something other that H?
-                    }
-                }
-            }
-            return result;
-        }
 
         // Subtract other's atom counts from ours
         public T Difference(T other)
         {
-            var resultDict = new Dictionary<string, int>(this);
-            foreach (var kvp in other)
+            if (other == null || other.Count == 0)
             {
-                TryGetValue(kvp.Key, out int count);
-                count -= kvp.Value;
-                if (count == 0)
+                return (T)this;
+            }
+
+            var resultDict = new Dictionary<string, int>(this);
+            foreach (var kvpOther in other)
+            {
+                if (TryGetValue(kvpOther.Key, out var countCurrent))
                 {
-                    resultDict.Remove(kvp.Key);
+                    var newCount = countCurrent - kvpOther.Value;
+                    if (newCount == 0)
+                    {
+                        resultDict.Remove(kvpOther.Key);
+                    }
+                    else
+                    {
+                        resultDict[kvpOther.Key] = newCount;
+                    }
                 }
                 else
                 {
-                    resultDict[kvp.Key] = count;
+                    resultDict.Add(kvpOther.Key, -kvpOther.Value);
                 }
             }
 
             return FromDict(resultDict);
+        }
+
+        public T Plus(T other)
+        {
+            if (other == null || other.Count == 0)
+            {
+                return (T)this;
+            }
+
+            var resultDict = new Dictionary<string, int>(this);
+            foreach (var kvpOther in other)
+            {
+                if (TryGetValue(kvpOther.Key, out var count))
+                {
+                    var newCount = count + kvpOther.Value;
+                    if (newCount == 0)
+                    {
+                        resultDict.Remove(kvpOther.Key);
+                    }
+                    else
+                    {
+                        resultDict[kvpOther.Key] = newCount;
+                    }
+                }
+                else
+                {
+                    resultDict.Add(kvpOther.Key, kvpOther.Value);
+                }
+            }
+
+            return FromDict(resultDict);
+        }
+
+        public bool IsEmpty()
+        {
+            return Dictionary == null || Dictionary.Count == 0;
         }
 
         public static T FromDict(IDictionary<string, int> dict)
@@ -321,22 +392,39 @@ namespace pwiz.Common.Chemistry
             return new T {Dictionary = ImmutableSortedList.FromValues(dict.Where(entry=>entry.Value != 0))};
         }
 
+        public T AdjustElementCount(string element, int delta, bool allowNegative = false)
+        {
+            TryGetValue(element, out var existing);
+            var newCount = existing + delta;
+            if (allowNegative || newCount >= 0) // There are some to take away, or we're planning to add some
+            {
+                var dict = new Dictionary<string, int>(this);
+                if (newCount == 0)
+                {
+                    if (existing != 0)
+                    {
+                        dict.Remove(element);
+                        return FromDict(dict);
+                    }
+                    return this as T;
+                }
+                if (existing == 0)
+                {
+                    dict.Add(element, newCount);
+                }
+                else
+                {
+                    dict[element] = newCount;
+                }
+                return FromDict(dict);
+            }
+            return this as T;
+        }
+
         public static string AdjustElementCount(string formula, string element, int delta)
         {
-            var dict = Molecule.ParseToDictionary(formula);
-            int count;
-            if (!dict.TryGetValue(element, out count))
-                count = 0;
-            if ((count > 0) || (delta > 0)) // There are some to take away, or we're planning to add some
-            {
-                count += delta;
-                if (count >= 0)
-                {
-                    dict[element] = count;
-                    return Molecule.FromDict(dict).ToString();
-                }
-            }
-            return formula;
+            var dict = Parse(formula);
+            return dict.AdjustElementCount(element, delta).ToString();
         }
 
         public static bool AreEquivalentFormulas(string formulaLeft, string formulaRight)
@@ -346,8 +434,8 @@ namespace pwiz.Common.Chemistry
                 return true;
             }
             // Consider C2C'4H5 to be same as H5C'4C2, or "C10H30Si5O5H-CH4" same as "C9H26O5Si5", etc
-            var left = ParseExpression(formulaLeft);
-            var right = ParseExpression(formulaRight);
+            var left = Parse(formulaLeft);
+            var right = Parse(formulaRight);
             return left.Equals(right);
         }
 
