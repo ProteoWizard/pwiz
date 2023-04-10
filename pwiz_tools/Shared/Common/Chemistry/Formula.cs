@@ -328,12 +328,12 @@ namespace pwiz.Common.Chemistry
         // Subtract other's atom counts from ours
         public T Difference(T other)
         {
-            return Sum(new T{Dictionary = Dictionary}, other.TimesMinusOne());
+            return Plus(other.TimesMinusOne());
         }
 
         public T Plus(T other)
         {
-            return Sum(new T { Dictionary = Dictionary }, other);
+            return new T { Dictionary = Merge(new[] { Dictionary, other.Dictionary }, 0, 2) };
         }
 
         public bool IsEmpty()
@@ -435,19 +435,15 @@ namespace pwiz.Common.Chemistry
 
         public static T Sum(IEnumerable<T> items)
         {
-            return Sum(items as T[] ?? items.ToArray());
+            var dictionaries = items.Select(item => item.Dictionary).ToArray();
+            return new T() { Dictionary = Merge(dictionaries, 0, dictionaries.Length) };
         }
 
-        public static T Sum(params T[] parts)
-        {
-            return Merge(parts, 0, parts.Length);
-        }
-
-        private static T Merge(T[] parts, int start, int count)
+        private static ImmutableSortedList<string, int> Merge(ImmutableSortedList<string, int>[] parts, int start, int count)
         {
             if (count == 0)
             {
-                return Empty;
+                return Empty.Dictionary;
             }
 
             if (count == 1)
@@ -455,10 +451,10 @@ namespace pwiz.Common.Chemistry
                 return parts[start];
             }
 
-            T left = Merge(parts, start, count / 2);
-            T right = Merge(parts, start + count / 2, count - count / 2);
-            var newDictionary = left.Dictionary.Merge(right.Dictionary, MergeValues);
-            return new T() {Dictionary = newDictionary};
+            var left = Merge(parts, start, count / 2);
+            var right = Merge(parts, start + count / 2, count - count / 2);
+            var newDictionary = left.Merge(right, MergeValues);
+            return newDictionary;
         }
 
         private static bool MergeValues(int left, int right, out int result)

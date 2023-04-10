@@ -72,22 +72,29 @@ namespace pwiz.Common.Chemistry
 
         public static MoleculeMassOffset Sum(IEnumerable<MoleculeMassOffset> parts)
         {
-            var array = parts.ToArray();
-            var monoMassOffset = array.Sum(part => part.MonoMassOffset);
-            var averageMassOffset = array.Sum(part => part.AverageMassOffset);
-            return MoleculeMassOffset.Create(MoleculeFromEntries(array.SelectMany(part => part.Molecule??Molecule.Empty)), monoMassOffset, averageMassOffset);
+            return Sum(parts.ToList());
         }
+
+        private static MoleculeMassOffset Sum(IList<MoleculeMassOffset> parts)
+        {
+            var monoMassOffset = parts.Sum(part => part.MonoMassOffset);
+            var averageMassOffset = parts.Sum(part => part.AverageMassOffset);
+            return Create(Formula<Molecule>.Sum(parts.Select(mol => mol.Molecule)), monoMassOffset, averageMassOffset);
+        }
+
         public MoleculeMassOffset Plus(MoleculeMassOffset moleculeMassOffset)
         {
-            var newMolecule = MoleculeFromEntries(Molecule.Concat(moleculeMassOffset.Molecule));
-            return new MoleculeMassOffset(newMolecule, MonoMassOffset + moleculeMassOffset.MonoMassOffset, AverageMassOffset + moleculeMassOffset.AverageMassOffset);
+            return Sum(new[] { this, moleculeMassOffset });
+        }
+
+        public MoleculeMassOffset TimesMinusOne()
+        {
+            return Create(Molecule.TimesMinusOne(), -MonoMassOffset, -AverageMassOffset);
         }
 
         public MoleculeMassOffset Minus(MoleculeMassOffset moleculeMassOffset)
         {
-            var newMolecule = MoleculeFromEntries(Molecule.Concat(
-                moleculeMassOffset.Molecule.Select(entry => new KeyValuePair<string, int>(entry.Key, -entry.Value))));
-            return new MoleculeMassOffset(newMolecule, MonoMassOffset - moleculeMassOffset.MonoMassOffset, AverageMassOffset - moleculeMassOffset.AverageMassOffset);
+            return Plus(moleculeMassOffset.TimesMinusOne());
         }
 
         /// <summary>
@@ -218,35 +225,6 @@ namespace pwiz.Common.Chemistry
                 return hashCode;
             }
         }
-
-        private static Molecule MoleculeFromEntries(IEnumerable<KeyValuePair<string, int>> entries)
-        {
-            var dictionary = new Dictionary<string, int>();
-            foreach (var entry in entries)
-            {
-                int count;
-                if (dictionary.TryGetValue(entry.Key, out count))
-                {
-                    count += entry.Value;
-                    if (count == 0)
-                    {
-                        dictionary.Remove(entry.Key);
-                    }
-                    else
-                    {
-                        dictionary[entry.Key] = count;
-                    }
-                }
-                else
-                {
-                    if (entry.Value != 0)
-                    {
-                        dictionary.Add(entry.Key, entry.Value);
-                    }
-                }
-            }
-
-            return Molecule.FromDict(dictionary);
-        }
+        
     }
 }

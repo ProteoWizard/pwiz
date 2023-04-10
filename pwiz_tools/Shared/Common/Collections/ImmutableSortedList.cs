@@ -300,6 +300,8 @@ namespace pwiz.Common.Collections
                 return other;
             }
 
+            bool matchesLeftKeys = true;
+            bool matchesRightKeys = true;
             List<TKey> newKeys = new List<TKey>();
             List<TValue> newValues = new List<TValue>();
             int iLeft = 0;
@@ -313,6 +315,7 @@ namespace pwiz.Common.Collections
                         break;
                     }
 
+                    matchesLeftKeys = false;
                     newKeys.Add(other.Keys[iRight]);
                     newValues.Add(other.Values[iRight]);
                     iRight++;
@@ -321,6 +324,7 @@ namespace pwiz.Common.Collections
 
                 if (iRight == other.Count)
                 {
+                    matchesRightKeys = false;
                     newKeys.Add(Keys[iLeft]);
                     newValues.Add(Values[iLeft]);
                     iLeft++;
@@ -332,14 +336,16 @@ namespace pwiz.Common.Collections
                 int compare = KeyComparer.Compare(leftKey, rightKey);
                 if (compare < 0)
                 {
+                    matchesRightKeys = false;
                     newKeys.Add(leftKey);
                     newValues.Add(Values[iLeft]);
                     iLeft++;
                 }
                 else if (compare > 0)
                 {
+                    matchesLeftKeys = false;
                     newKeys.Add(rightKey);
-                    newValues.Add(Values[iRight]);
+                    newValues.Add(other.Values[iRight]);
                     iRight++;
                 }
                 else
@@ -349,29 +355,30 @@ namespace pwiz.Common.Collections
                         newKeys.Add(leftKey);
                         newValues.Add(result);
                     }
+                    else
+                    {
+                        matchesLeftKeys = false;
+                        matchesRightKeys = false;
+                    }
 
                     iLeft++;
                     iRight++;
                 }
             }
 
-            ImmutableList<TKey> newKeyList = null;
-            if (newKeys.Count == Keys.Count)
+            ImmutableList<TKey> newKeyList;
+            if (matchesLeftKeys)
             {
-                if (newKeys.SequenceEqual(Keys))
-                {
-                    newKeyList = Keys;
-                }
+                newKeyList = Keys;
             }
-            else if (newKeys.Count == other.Keys.Count)
+            else if (matchesRightKeys)
             {
-                if (newKeys.SequenceEqual(other.Keys))
-                {
-                    newKeyList = other.Keys;
-                }
+                newKeyList = other.Keys;
             }
-
-            newKeyList = newKeyList ?? ImmutableList.ValueOf(newKeys);
+            else
+            {
+                newKeyList = ImmutableList.ValueOf(newKeys);
+            }
             return new ImmutableSortedList<TKey, TValue>(newKeyList, ImmutableList.ValueOf(newValues), KeyComparer);
         }
 
