@@ -260,7 +260,7 @@ namespace SkylineTester
         private void RegenerateSummaryFile()
         {
             var logpath = Path.GetDirectoryName(SummaryFile);
-            if (logpath == null)
+            if (logpath == null || !Directory.Exists(logpath))
                 return;
             // Get list of logs in logpath, inspect the newest ones
             var logs = Directory.GetFiles(logpath, "*.xml").
