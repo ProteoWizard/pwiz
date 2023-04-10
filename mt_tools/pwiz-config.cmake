@@ -157,6 +157,46 @@ set(pwiz_LIBS_RELEASE
 
 set(pwiz_REDISTR_DEBUG
     ${pwiz_LIB_PREFIX}/msvc-debug-x86_64/agtsampleinforw.dll
+    ${pwiz_LIB_PREFIX}/msvc-debug-x86_64/api-ms-win-core-console-l1-1-0.dll
+    ${pwiz_LIB_PREFIX}/msvc-debug-x86_64/api-ms-win-core-datetime-l1-1-0.dll
+    ${pwiz_LIB_PREFIX}/msvc-debug-x86_64/api-ms-win-core-debug-l1-1-0.dll
+    ${pwiz_LIB_PREFIX}/msvc-debug-x86_64/api-ms-win-core-errorhandling-l1-1-0.dll
+    ${pwiz_LIB_PREFIX}/msvc-debug-x86_64/api-ms-win-core-file-l1-1-0.dll
+    ${pwiz_LIB_PREFIX}/msvc-debug-x86_64/api-ms-win-core-file-l1-2-0.dll
+    ${pwiz_LIB_PREFIX}/msvc-debug-x86_64/api-ms-win-core-file-l2-1-0.dll
+    ${pwiz_LIB_PREFIX}/msvc-debug-x86_64/api-ms-win-core-handle-l1-1-0.dll
+    ${pwiz_LIB_PREFIX}/msvc-debug-x86_64/api-ms-win-core-heap-l1-1-0.dll
+    ${pwiz_LIB_PREFIX}/msvc-debug-x86_64/api-ms-win-core-interlocked-l1-1-0.dll
+    ${pwiz_LIB_PREFIX}/msvc-debug-x86_64/api-ms-win-core-libraryloader-l1-1-0.dll
+    ${pwiz_LIB_PREFIX}/msvc-debug-x86_64/api-ms-win-core-localization-l1-2-0.dll
+    ${pwiz_LIB_PREFIX}/msvc-debug-x86_64/api-ms-win-core-memory-l1-1-0.dll
+    ${pwiz_LIB_PREFIX}/msvc-debug-x86_64/api-ms-win-core-namedpipe-l1-1-0.dll
+    ${pwiz_LIB_PREFIX}/msvc-debug-x86_64/api-ms-win-core-processenvironment-l1-1-0.dll
+    ${pwiz_LIB_PREFIX}/msvc-debug-x86_64/api-ms-win-core-processthreads-l1-1-0.dll
+    ${pwiz_LIB_PREFIX}/msvc-debug-x86_64/api-ms-win-core-processthreads-l1-1-1.dll
+    ${pwiz_LIB_PREFIX}/msvc-debug-x86_64/api-ms-win-core-profile-l1-1-0.dll
+    ${pwiz_LIB_PREFIX}/msvc-debug-x86_64/api-ms-win-core-rtlsupport-l1-1-0.dll
+    ${pwiz_LIB_PREFIX}/msvc-debug-x86_64/api-ms-win-core-string-l1-1-0.dll
+    ${pwiz_LIB_PREFIX}/msvc-debug-x86_64/api-ms-win-core-synch-l1-1-0.dll
+    ${pwiz_LIB_PREFIX}/msvc-debug-x86_64/api-ms-win-core-synch-l1-2-0.dll
+    ${pwiz_LIB_PREFIX}/msvc-debug-x86_64/api-ms-win-core-sysinfo-l1-1-0.dll
+    ${pwiz_LIB_PREFIX}/msvc-debug-x86_64/api-ms-win-core-timezone-l1-1-0.dll
+    ${pwiz_LIB_PREFIX}/msvc-debug-x86_64/api-ms-win-core-util-l1-1-0.dll
+    ${pwiz_LIB_PREFIX}/msvc-debug-x86_64/api-ms-win-crt-conio-l1-1-0.dll
+    ${pwiz_LIB_PREFIX}/msvc-debug-x86_64/api-ms-win-crt-convert-l1-1-0.dll
+    ${pwiz_LIB_PREFIX}/msvc-debug-x86_64/api-ms-win-crt-environment-l1-1-0.dll
+    ${pwiz_LIB_PREFIX}/msvc-debug-x86_64/api-ms-win-crt-filesystem-l1-1-0.dll
+    ${pwiz_LIB_PREFIX}/msvc-debug-x86_64/api-ms-win-crt-heap-l1-1-0.dll
+    ${pwiz_LIB_PREFIX}/msvc-debug-x86_64/api-ms-win-crt-locale-l1-1-0.dll
+    ${pwiz_LIB_PREFIX}/msvc-debug-x86_64/api-ms-win-crt-math-l1-1-0.dll
+    ${pwiz_LIB_PREFIX}/msvc-debug-x86_64/api-ms-win-crt-multibyte-l1-1-0.dll
+    ${pwiz_LIB_PREFIX}/msvc-debug-x86_64/api-ms-win-crt-private-l1-1-0.dll
+    ${pwiz_LIB_PREFIX}/msvc-debug-x86_64/api-ms-win-crt-process-l1-1-0.dll
+    ${pwiz_LIB_PREFIX}/msvc-debug-x86_64/api-ms-win-crt-runtime-l1-1-0.dll
+    ${pwiz_LIB_PREFIX}/msvc-debug-x86_64/api-ms-win-crt-stdio-l1-1-0.dll
+    ${pwiz_LIB_PREFIX}/msvc-debug-x86_64/api-ms-win-crt-string-l1-1-0.dll
+    ${pwiz_LIB_PREFIX}/msvc-debug-x86_64/api-ms-win-crt-time-l1-1-0.dll
+    ${pwiz_LIB_PREFIX}/msvc-debug-x86_64/api-ms-win-crt-utility-l1-1-0.dll
     ${pwiz_LIB_PREFIX}/msvc-debug-x86_64/BaseCommon.dll
     ${pwiz_LIB_PREFIX}/msvc-debug-x86_64/BaseDataAccess.dll
     ${pwiz_LIB_PREFIX}/msvc-debug-x86_64/BaseError.dll
@@ -166,18 +206,72 @@ set(pwiz_REDISTR_DEBUG
     ${pwiz_LIB_PREFIX}/msvc-debug-x86_64/MassSpecDataReader.dll
     ${pwiz_LIB_PREFIX}/msvc-debug-x86_64/mfc90.dll
     ${pwiz_LIB_PREFIX}/msvc-debug-x86_64/MIDAC.dll
+    ${pwiz_LIB_PREFIX}/msvc-debug-x86_64/msvcm90.dll
+    ${pwiz_LIB_PREFIX}/msvc-debug-x86_64/msvcp110.dll
+    ${pwiz_LIB_PREFIX}/msvc-debug-x86_64/msvcp120.dll
+    ${pwiz_LIB_PREFIX}/msvc-debug-x86_64/msvcp140.dll
+    ${pwiz_LIB_PREFIX}/msvc-debug-x86_64/msvcp90.dll
+    ${pwiz_LIB_PREFIX}/msvc-debug-x86_64/msvcr110.dll
+    ${pwiz_LIB_PREFIX}/msvc-debug-x86_64/msvcr120.dll
+    ${pwiz_LIB_PREFIX}/msvc-debug-x86_64/msvcr90.dll
     ${pwiz_LIB_PREFIX}/msvc-debug-x86_64/Newtonsoft.Json.dll
     ${pwiz_LIB_PREFIX}/msvc-debug-x86_64/ParallelExtensionsExtras.dll
     ${pwiz_LIB_PREFIX}/msvc-debug-x86_64/System.Data.SQLite.dll
     ${pwiz_LIB_PREFIX}/msvc-debug-x86_64/System.Runtime.Caching.Generic.dll
     ${pwiz_LIB_PREFIX}/msvc-debug-x86_64/ThermoFisher.CommonCore.Data.dll
     ${pwiz_LIB_PREFIX}/msvc-debug-x86_64/ThermoFisher.CommonCore.RawFileReader.dll
+    ${pwiz_LIB_PREFIX}/msvc-debug-x86_64/ucrtbase.dll
     ${pwiz_LIB_PREFIX}/msvc-debug-x86_64/UIMFLibrary.dll
     ${pwiz_LIB_PREFIX}/msvc-debug-x86_64/unifi-protobuf-net.dll
+    ${pwiz_LIB_PREFIX}/msvc-debug-x86_64/vcomp110.dll
+    ${pwiz_LIB_PREFIX}/msvc-debug-x86_64/vcomp140.dll
+    ${pwiz_LIB_PREFIX}/msvc-debug-x86_64/vcomp90.dll
+    ${pwiz_LIB_PREFIX}/msvc-debug-x86_64/vcruntime140.dll
+    ${pwiz_LIB_PREFIX}/msvc-debug-x86_64/vcruntime140_1.dll
     )
 
 set(pwiz_REDISTR_RELEASE
     ${pwiz_LIB_PREFIX}/msvc-release-x86_64/agtsampleinforw.dll
+    ${pwiz_LIB_PREFIX}/msvc-release-x86_64/api-ms-win-core-console-l1-1-0.dll
+    ${pwiz_LIB_PREFIX}/msvc-release-x86_64/api-ms-win-core-datetime-l1-1-0.dll
+    ${pwiz_LIB_PREFIX}/msvc-release-x86_64/api-ms-win-core-debug-l1-1-0.dll
+    ${pwiz_LIB_PREFIX}/msvc-release-x86_64/api-ms-win-core-errorhandling-l1-1-0.dll
+    ${pwiz_LIB_PREFIX}/msvc-release-x86_64/api-ms-win-core-file-l1-1-0.dll
+    ${pwiz_LIB_PREFIX}/msvc-release-x86_64/api-ms-win-core-file-l1-2-0.dll
+    ${pwiz_LIB_PREFIX}/msvc-release-x86_64/api-ms-win-core-file-l2-1-0.dll
+    ${pwiz_LIB_PREFIX}/msvc-release-x86_64/api-ms-win-core-handle-l1-1-0.dll
+    ${pwiz_LIB_PREFIX}/msvc-release-x86_64/api-ms-win-core-heap-l1-1-0.dll
+    ${pwiz_LIB_PREFIX}/msvc-release-x86_64/api-ms-win-core-interlocked-l1-1-0.dll
+    ${pwiz_LIB_PREFIX}/msvc-release-x86_64/api-ms-win-core-libraryloader-l1-1-0.dll
+    ${pwiz_LIB_PREFIX}/msvc-release-x86_64/api-ms-win-core-localization-l1-2-0.dll
+    ${pwiz_LIB_PREFIX}/msvc-release-x86_64/api-ms-win-core-memory-l1-1-0.dll
+    ${pwiz_LIB_PREFIX}/msvc-release-x86_64/api-ms-win-core-namedpipe-l1-1-0.dll
+    ${pwiz_LIB_PREFIX}/msvc-release-x86_64/api-ms-win-core-processenvironment-l1-1-0.dll
+    ${pwiz_LIB_PREFIX}/msvc-release-x86_64/api-ms-win-core-processthreads-l1-1-0.dll
+    ${pwiz_LIB_PREFIX}/msvc-release-x86_64/api-ms-win-core-processthreads-l1-1-1.dll
+    ${pwiz_LIB_PREFIX}/msvc-release-x86_64/api-ms-win-core-profile-l1-1-0.dll
+    ${pwiz_LIB_PREFIX}/msvc-release-x86_64/api-ms-win-core-rtlsupport-l1-1-0.dll
+    ${pwiz_LIB_PREFIX}/msvc-release-x86_64/api-ms-win-core-string-l1-1-0.dll
+    ${pwiz_LIB_PREFIX}/msvc-release-x86_64/api-ms-win-core-synch-l1-1-0.dll
+    ${pwiz_LIB_PREFIX}/msvc-release-x86_64/api-ms-win-core-synch-l1-2-0.dll
+    ${pwiz_LIB_PREFIX}/msvc-release-x86_64/api-ms-win-core-sysinfo-l1-1-0.dll
+    ${pwiz_LIB_PREFIX}/msvc-release-x86_64/api-ms-win-core-timezone-l1-1-0.dll
+    ${pwiz_LIB_PREFIX}/msvc-release-x86_64/api-ms-win-core-util-l1-1-0.dll
+    ${pwiz_LIB_PREFIX}/msvc-release-x86_64/api-ms-win-crt-conio-l1-1-0.dll
+    ${pwiz_LIB_PREFIX}/msvc-release-x86_64/api-ms-win-crt-convert-l1-1-0.dll
+    ${pwiz_LIB_PREFIX}/msvc-release-x86_64/api-ms-win-crt-environment-l1-1-0.dll
+    ${pwiz_LIB_PREFIX}/msvc-release-x86_64/api-ms-win-crt-filesystem-l1-1-0.dll
+    ${pwiz_LIB_PREFIX}/msvc-release-x86_64/api-ms-win-crt-heap-l1-1-0.dll
+    ${pwiz_LIB_PREFIX}/msvc-release-x86_64/api-ms-win-crt-locale-l1-1-0.dll
+    ${pwiz_LIB_PREFIX}/msvc-release-x86_64/api-ms-win-crt-math-l1-1-0.dll
+    ${pwiz_LIB_PREFIX}/msvc-release-x86_64/api-ms-win-crt-multibyte-l1-1-0.dll
+    ${pwiz_LIB_PREFIX}/msvc-release-x86_64/api-ms-win-crt-private-l1-1-0.dll
+    ${pwiz_LIB_PREFIX}/msvc-release-x86_64/api-ms-win-crt-process-l1-1-0.dll
+    ${pwiz_LIB_PREFIX}/msvc-release-x86_64/api-ms-win-crt-runtime-l1-1-0.dll
+    ${pwiz_LIB_PREFIX}/msvc-release-x86_64/api-ms-win-crt-stdio-l1-1-0.dll
+    ${pwiz_LIB_PREFIX}/msvc-release-x86_64/api-ms-win-crt-string-l1-1-0.dll
+    ${pwiz_LIB_PREFIX}/msvc-release-x86_64/api-ms-win-crt-time-l1-1-0.dll
+    ${pwiz_LIB_PREFIX}/msvc-release-x86_64/api-ms-win-crt-utility-l1-1-0.dll
     ${pwiz_LIB_PREFIX}/msvc-release-x86_64/BaseCommon.dll
     ${pwiz_LIB_PREFIX}/msvc-release-x86_64/BaseDataAccess.dll
     ${pwiz_LIB_PREFIX}/msvc-release-x86_64/BaseError.dll
@@ -187,14 +281,28 @@ set(pwiz_REDISTR_RELEASE
     ${pwiz_LIB_PREFIX}/msvc-release-x86_64/MassSpecDataReader.dll
     ${pwiz_LIB_PREFIX}/msvc-release-x86_64/mfc90.dll
     ${pwiz_LIB_PREFIX}/msvc-release-x86_64/MIDAC.dll
+    ${pwiz_LIB_PREFIX}/msvc-release-x86_64/msvcm90.dll
+    ${pwiz_LIB_PREFIX}/msvc-release-x86_64/msvcp110.dll
+    ${pwiz_LIB_PREFIX}/msvc-release-x86_64/msvcp120.dll
+    ${pwiz_LIB_PREFIX}/msvc-release-x86_64/msvcp140.dll
+    ${pwiz_LIB_PREFIX}/msvc-release-x86_64/msvcp90.dll
+    ${pwiz_LIB_PREFIX}/msvc-release-x86_64/msvcr110.dll
+    ${pwiz_LIB_PREFIX}/msvc-release-x86_64/msvcr120.dll
+    ${pwiz_LIB_PREFIX}/msvc-release-x86_64/msvcr90.dll
     ${pwiz_LIB_PREFIX}/msvc-release-x86_64/Newtonsoft.Json.dll
     ${pwiz_LIB_PREFIX}/msvc-release-x86_64/ParallelExtensionsExtras.dll
     ${pwiz_LIB_PREFIX}/msvc-release-x86_64/System.Data.SQLite.dll
     ${pwiz_LIB_PREFIX}/msvc-release-x86_64/System.Runtime.Caching.Generic.dll
     ${pwiz_LIB_PREFIX}/msvc-release-x86_64/ThermoFisher.CommonCore.Data.dll
     ${pwiz_LIB_PREFIX}/msvc-release-x86_64/ThermoFisher.CommonCore.RawFileReader.dll
+    ${pwiz_LIB_PREFIX}/msvc-release-x86_64/ucrtbase.dll
     ${pwiz_LIB_PREFIX}/msvc-release-x86_64/UIMFLibrary.dll
     ${pwiz_LIB_PREFIX}/msvc-release-x86_64/unifi-protobuf-net.dll
+    ${pwiz_LIB_PREFIX}/msvc-release-x86_64/vcomp110.dll
+    ${pwiz_LIB_PREFIX}/msvc-release-x86_64/vcomp140.dll
+    ${pwiz_LIB_PREFIX}/msvc-release-x86_64/vcomp90.dll
+    ${pwiz_LIB_PREFIX}/msvc-release-x86_64/vcruntime140.dll
+    ${pwiz_LIB_PREFIX}/msvc-release-x86_64/vcruntime140_1.dll
     )
 
 if (CMAKE_BUILD_TYPE STREQUAL "Debug")

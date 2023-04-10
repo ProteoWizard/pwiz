@@ -15,12 +15,12 @@ def get_dlls(fdir):
 
     # remove all files with names starting with 'api-ms-win-' from the list
 
-    dll_files = [x for x in dll_files if not x.startswith('api-ms-win-') 
-                 and not x.startswith('vcruntime')
-                 and not x.startswith('msvc')
-                 and not x.startswith('msvcrt')
-                 and not x.startswith('vcomp')
-                 and not x.startswith('ucrt')]
+    # dll_files = [x for x in dll_files if not x.startswith('api-ms-win-') 
+    #              and not x.startswith('vcruntime')
+    #              and not x.startswith('msvc')
+    #              and not x.startswith('msvcrt')
+    #              and not x.startswith('vcomp')
+    #              and not x.startswith('ucrt')]
     
     # dll_files = [x for x in dll_files if not x.startswith('api-ms-win-')]
     # for i in range(len(lib_files)):
@@ -196,7 +196,6 @@ with open(version_file, 'r') as f:
             version_minor_str = line.split()[3]
             version_minor = version_minor_str.split(';')[0]
             have_minor = True
-            print(version_minor)
         if 'Revision' in line and not have_revision:
             version_build_str = line.split()[3]
             version_build = version_build_str.split(';')[0]
