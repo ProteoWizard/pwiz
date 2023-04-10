@@ -34,6 +34,7 @@ using pwiz.Skyline.Model.Optimization;
 using pwiz.Skyline.Properties;
 using pwiz.Skyline.SettingsUI.IonMobility;
 using pwiz.Skyline.Util;
+using pwiz.Skyline.Util.Extensions;
 
 namespace pwiz.Skyline.SettingsUI
 {

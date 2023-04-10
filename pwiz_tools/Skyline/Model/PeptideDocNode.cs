@@ -101,7 +101,7 @@ namespace pwiz.Skyline.Model
             get
             {
                 var label = PeptideTreeNode.GetLabel(this, string.Empty);
-                return (CustomMolecule != null && !CustomMolecule.MoleculeAndMassOffset.IsMassOnly) ? string.Format(@"{0} ({1})", label, CustomMolecule.MoleculeAndMassOffset) : label;
+                return (CustomMolecule != null && !CustomMolecule.ParsedMolecule.IsMassOnly) ? string.Format(@"{0} ({1})", label, CustomMolecule.ParsedMolecule) : label;
             }
         }
 

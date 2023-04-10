@@ -20,7 +20,6 @@ using System;
 using System.Collections.Generic;
 using System.Globalization;
 using System.Linq;
-using pwiz.Common.Chemistry;
 using pwiz.Common.Collections;
 using pwiz.Common.SystemUtil;
 using pwiz.Skyline.Model.Crosslinking;

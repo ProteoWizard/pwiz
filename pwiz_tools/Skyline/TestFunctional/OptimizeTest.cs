@@ -22,7 +22,6 @@ using System.Globalization;
 using System.IO;
 using System.Linq;
 using Microsoft.VisualStudio.TestTools.UnitTesting;
-using pwiz.Common.Chemistry;
 using pwiz.Common.SystemUtil;
 using pwiz.ProteowizardWrapper;
 using pwiz.Skyline.Alerts;
@@ -947,7 +946,7 @@ namespace pwiz.SkylineTestFunctional
             {
                 var masscalc = new SequenceMassCalc(MassType.Monoisotopic);
                 var moleculeFormula = masscalc.GetMolecularFormula(seq);
-                var customMolecule = new CustomMolecule(moleculeFormula, 
+                var customMolecule = new CustomMolecule(ParsedMolecule.Create(moleculeFormula), 
                     RefinementSettings.TestingConvertedFromProteomicPeptideNameDecorator + seq.Replace(@"[", @"(").Replace(@"]", @")"));
                 return new Target(customMolecule);
             }

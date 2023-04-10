@@ -22,7 +22,6 @@ using System.Drawing;
 using System.Globalization;
 using System.Text;
 using System.Windows.Forms;
-using pwiz.Common.Chemistry;
 using pwiz.Common.SystemUtil;
 using pwiz.Skyline.Controls;
 using pwiz.Skyline.Model;
@@ -57,6 +56,8 @@ namespace pwiz.Skyline.SettingsUI
 
             // Seems like there should be a way to set this in the properties.
             comboDirection.SelectedIndex = 0;
+
+           
         }
 
         public MeasuredIon MeasuredIon
@@ -99,9 +100,9 @@ namespace pwiz.Skyline.SettingsUI
                                       ? _measuredIon.MinFragmentLength.Value.ToString(LocalizationHelper.CurrentCulture)
                                       : string.Empty;
             }
-            else if (!_measuredIon.SettingsCustomIon.MoleculeAndMassOffset.IsMassOnly)
+            else if (!_measuredIon.SettingsCustomIon.ParsedMolecule.IsMassOnly)
             {
-                _formulaBox.Formula = _measuredIon.SettingsCustomIon.MoleculeAndMassOffset.ToDisplayString();
+                _formulaBox.Formula = _measuredIon.SettingsCustomIon.ParsedMolecule.ToString();
                 textCharge.Text = _measuredIon.Charge.ToString(LocalizationHelper.CurrentCulture);
                 _formulaBox.Adduct = _measuredIon.Adduct;
             }
@@ -190,8 +191,8 @@ namespace pwiz.Skyline.SettingsUI
                 // Mass is specified by chemical formula
                 try
                 {
-                    monoMass = SequenceMassCalc.FormulaMass(SkylineBioMassCalc.MONOISOTOPIC, formula, SequenceMassCalc.MassPrecision);
-                    avgMass = SequenceMassCalc.FormulaMass(SkylineBioMassCalc.AVERAGE, formula, SequenceMassCalc.MassPrecision);
+                    monoMass = SequenceMassCalc.FormulaMass(BioMassCalc.MONOISOTOPIC, formula, SequenceMassCalc.MassPrecision);
+                    avgMass = SequenceMassCalc.FormulaMass(BioMassCalc.AVERAGE, formula, SequenceMassCalc.MassPrecision);
                 }
                 catch (ArgumentException x)
                 {
@@ -288,8 +289,6 @@ namespace pwiz.Skyline.SettingsUI
             if (!charge.HasValue)
                 return;
             Charge = charge.Value;
-            // Update mass to match current mz and new charge
-
         }
 
         private void UpdateIonType()

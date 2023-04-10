@@ -25,8 +25,8 @@ namespace pwiz.SkylineTest
             Assert.AreEqual(0.0, fragmentedMolecule.PrecursorFormula.AverageMassOffset);
             var sequenceMassCalc = new SequenceMassCalc(MassType.Monoisotopic);
             var expectedFormula = sequenceMassCalc.GetMolecularFormula(modifiedSequence.GetUnmodifiedSequence());
-            Assert.AreEqual(expectedFormula.Count, precursorFormula.Molecule.Count);
-            foreach (var entry in expectedFormula)
+            Assert.AreEqual(expectedFormula.Molecule.Count, precursorFormula.Molecule.Count);
+            foreach (var entry in expectedFormula.Molecule)
             {
                 Assert.AreEqual(entry.Value, precursorFormula.Molecule.GetElementCount(entry.Key));
             }
@@ -55,7 +55,7 @@ namespace pwiz.SkylineTest
                     var expectedMz = sequenceMassCalc.GetFragmentMass(transition, transitionGroupDocNode.IsotopeDist);
                     if (expectedMz.IsMassH())
                     {
-                        expectedMz = TypedMass.Create(expectedMz.Value - BioMassCalc.MassProton, expectedMz.MassType & ~MassType.bMassH);
+                        expectedMz = new TypedMass(expectedMz.Value - BioMassCalc.MassProton, expectedMz.MassType & ~MassType.bMassH);
                     }
                     var actualMz = actualMassDistribution.MostAbundanceMass;
                     if (Math.Abs(expectedMz - actualMz) > .001)

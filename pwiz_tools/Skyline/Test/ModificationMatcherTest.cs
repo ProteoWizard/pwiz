@@ -266,9 +266,9 @@ namespace pwiz.SkylineTest
                 libkeyModMatcher.CreateMatches(modMatchDocContainer.Document.Settings,
                     docLibraries[yeastLibIndex].Keys, defSetSetLight, defSetHeavy);
                 Assert.IsTrue(libkeyModMatcher.MatcherPepMods.StaticModifications.Contains(mod =>
-                    mod.Molecule.Equals(UniMod.GetModification(StaticModList.DEFAULT_NAME, true).Molecule) && !mod.IsVariable));
+                    mod.ParsedMolecule.Equals(UniMod.GetModification(StaticModList.DEFAULT_NAME, true).ParsedMolecule) && !mod.IsVariable));
                 Assert.IsTrue(libkeyModMatcher.MatcherPepMods.StaticModifications.Contains(mod =>
-                    mod.Molecule.ToString().Equals("O") && mod.IsVariable));
+                    mod.ParsedMolecule.ToString().Equals("O") && mod.IsVariable));
             }
         }
 

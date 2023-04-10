@@ -962,7 +962,7 @@ namespace pwiz.Skyline.Util
 // ReSharper disable EmptyGeneralCatchClause
             catch (Exception) { }
 // ReSharper restore EmptyGeneralCatchClause
-            }
+        }
 
         public static string GetUniqueName(string dirName)
         {

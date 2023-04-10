@@ -17,7 +17,6 @@
  * limitations under the License.
  */
 using System;
-using pwiz.Common.Chemistry;
 using pwiz.Common.Collections;
 using pwiz.Common.SystemUtil;
 using pwiz.Skyline.Model.DocSettings;

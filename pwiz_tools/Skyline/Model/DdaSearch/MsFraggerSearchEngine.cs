@@ -645,7 +645,7 @@ add_Nterm_protein = 0.000000
             foreach (var mod in fixedAndVariableModifs)
             {
                 // can't use mod with no formula or mass; CONSIDER throwing exception
-                if (mod.LabelAtoms == LabelAtoms.None && mod.Molecule == null && mod.MonoisotopicMass == null ||
+                if (mod.LabelAtoms == LabelAtoms.None && ParsedMolecule.IsNullOrEmpty(mod.ParsedMolecule) && mod.MonoisotopicMass == null ||
                     mod.LabelAtoms != LabelAtoms.None && mod.AAs.IsNullOrEmpty())
                     continue;
 
@@ -692,7 +692,7 @@ add_Nterm_protein = 0.000000
 
                 if (mod.LabelAtoms == LabelAtoms.None)
                 {
-                    double mass = mod.MonoisotopicMass ?? SequenceMassCalc.FormulaMass(BioMassCalc.MONOISOTOPIC, mod.Molecule, SequenceMassCalc.MassPrecision).Value;
+                    double mass = mod.MonoisotopicMass ?? SequenceMassCalc.FormulaMass(BioMassCalc.MONOISOTOPIC, mod.ParsedMolecule, SequenceMassCalc.MassPrecision).Value;
 
                     string residues = string.Empty;
                     if (position.IsNullOrEmpty() || mod.AAs == null)

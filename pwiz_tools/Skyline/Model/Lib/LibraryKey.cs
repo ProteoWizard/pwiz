@@ -23,7 +23,6 @@ using System.IO;
 using System.Linq;
 using System.Text;
 using Google.Protobuf;
-using pwiz.Common.Chemistry;
 using pwiz.Common.Collections;
 using pwiz.Common.SystemUtil;
 using pwiz.Skyline.Model.Crosslinking;
@@ -400,7 +399,7 @@ namespace pwiz.Skyline.Model.Lib
             {
                 smallMoleculeLibraryAttributes = SmallMoleculeLibraryAttributes.Create(
                     smallMoleculeLibraryAttributes.MoleculeName ?? string.Empty,
-                    smallMoleculeLibraryAttributes.ChemicalFormulaOrMasses ?? MoleculeMassOffset.EMPTY,
+                    smallMoleculeLibraryAttributes.ChemicalFormulaOrMasses ?? ParsedMolecule.EMPTY,
                     smallMoleculeLibraryAttributes.InChiKey ?? string.Empty,
                     smallMoleculeLibraryAttributes.OtherKeys ?? string.Empty);
             }

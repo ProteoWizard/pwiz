@@ -19,7 +19,6 @@
 using System;
 using System.Diagnostics;
 using System.Drawing;
-using pwiz.Common.Chemistry;
 using pwiz.Common.SystemUtil;
 using pwiz.Skyline.Model;
 using pwiz.Skyline.Model.GroupComparison;
@@ -270,7 +269,7 @@ namespace pwiz.Skyline.Controls.SeqNode
                     table.AddDetailRow(Resources.TransitionTreeNode_RenderTip_Library_intensity, MathEx.RoundAboveZero(intensity,
                         (intensity < 10 ? 1 : 0), 4).ToString(LocalizationHelper.CurrentCulture), rt);
                 }
-                if (nodeTran.Transition.IsCustom() && nodeTran.Transition.CustomIon.MoleculeAndMassOffset.HasChemicalFormula)
+                if (nodeTran.Transition.IsCustom() && nodeTran.Transition.CustomIon.ParsedMolecule.HasChemicalFormula)
                 {
                     table.AddDetailRow(Resources.TransitionTreeNode_RenderTip_Formula, nodeTran.Transition.CustomIon.Formula + nodeTran.Transition.Adduct.AdductFormula.ToString(LocalizationHelper.CurrentCulture), rt);
                 }

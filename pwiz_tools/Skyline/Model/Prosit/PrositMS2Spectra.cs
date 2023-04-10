@@ -20,7 +20,6 @@
 using System;
 using System.Collections.Generic;
 using System.Linq;
-using pwiz.Common.Chemistry;
 using pwiz.Skyline.Model.DocSettings;
 using pwiz.Skyline.Model.Lib;
 using pwiz.Skyline.Model.Prosit.Models;

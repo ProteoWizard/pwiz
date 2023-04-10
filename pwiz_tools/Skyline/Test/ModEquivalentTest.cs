@@ -22,7 +22,6 @@ using System.Collections.Generic;
 using System.Linq;
 using System.Text;
 using Microsoft.VisualStudio.TestTools.UnitTesting;
-using pwiz.Common.Chemistry;
 using pwiz.Skyline.Model;
 using pwiz.Skyline.Model.DocSettings;
 using pwiz.Skyline.Util;
@@ -85,15 +84,15 @@ namespace pwiz.SkylineTest
                 {
                     var original = unimodArray[i].Value;
                     modToMatch = (StaticMod)original.ChangeName("Test");
-                    var formula = original.Molecule;
-                    if (!Molecule.IsNullOrEmpty(formula))
+                    var formula = original.ParsedMolecule;
+                    if (!ParsedMolecule.IsNullOrEmpty(formula))
                     {
 
-                        var dictCounts = new Dictionary<string, int>(formula);
+                        var dictCounts = new Dictionary<string, int>(formula.Molecule);
 
-                        var newFormula = GetFormula(formula.ToDisplayString(), dictCounts);
+                        var newFormula = GetFormula(formula.ToString(), dictCounts);
 
-                        modToMatch = modToMatch.ChangeFormula(Molecule.Parse(newFormula));
+                        modToMatch = modToMatch.ChangeFormula(ParsedMolecule.Create(newFormula));
                     }
 
                     count = CountEquivalent(unimodArray, modToMatch, compareDict, i);
@@ -112,13 +111,13 @@ namespace pwiz.SkylineTest
                 {
                     var original = unimodArray[i].Value;
 
-                    var formula = original.Molecule;
+                    var formula = original.ParsedMolecule;
 
                     modToMatch = (StaticMod) original.ChangeName("Test");
                     if (formula != null)
                     {
 
-                        var dictCounts = new Dictionary<string, int>(formula);
+                        var dictCounts = new Dictionary<string, int>(formula.Molecule);
 
                         if (dictCounts.TryGetValue("H", out count))
                             dictCounts["H"] = count + 5;
@@ -130,7 +129,7 @@ namespace pwiz.SkylineTest
                             newFormula = newFormula + "H5";
                         else
                             newFormula = newFormula + " - H5";
-                        modToMatch = modToMatch.ChangeFormula(Molecule.Parse(newFormula));
+                        modToMatch = modToMatch.ChangeFormula(ParsedMolecule.Create(newFormula));
                     }
                     
                     count = CountEquivalent(unimodArray, modToMatch, compareDict, i);
@@ -153,9 +152,8 @@ namespace pwiz.SkylineTest
                     modToMatch = (StaticMod)original.ChangeName("Test");
                     if (labelAtoms != LabelAtoms.None && original.AAs != null && original.AAs.Length == 1)
                     {
-                        double unexplainedMass;
-                        var newFormula = massCalc.GetModFormula(original.AAs[0], original, out unexplainedMass);
-                        Assert.AreEqual(0, unexplainedMass);
+                        var newFormula = ParsedMolecule.Create(massCalc.GetModFormula(original.AAs[0], original));
+                        Assert.AreEqual(0.0, newFormula.MonoMassOffset); // Should be no unexplained mass.
                         modToMatch = modToMatch.ChangeFormula(newFormula).ChangeLabelAtoms(LabelAtoms.None);
                     }
 
@@ -170,10 +168,10 @@ namespace pwiz.SkylineTest
                 foreach (StaticMod original in dict.Values)
                 {
                     modToMatch = (StaticMod)original.ChangeName("Test");
-                    if (original.Molecule != null || original.Losses != null)
-                        modToMatch = modToMatch.ChangeFormula(Molecule.Parse("H2OCl"));
+                    if (original.ParsedMolecule != null || original.Losses != null)
+                        modToMatch = modToMatch.ChangeFormula(ParsedMolecule.Create("H2OCl"));
                     else if (original.LabelAtoms != LabelAtoms.None)
-                        modToMatch = modToMatch.ChangeFormula(Molecule.Parse("H2OCl")).ChangeLabelAtoms(LabelAtoms.None);
+                        modToMatch = modToMatch.ChangeFormula(ParsedMolecule.Create("H2OCl")).ChangeLabelAtoms(LabelAtoms.None);
 
                     count = CountEquivalent(unimodArray, modToMatch, compareDict, -1);
                     Assert.AreEqual(0, count);
@@ -208,7 +206,14 @@ namespace pwiz.SkylineTest
             }
             if (firstMod.Value != 0)
             {
-               sbNewFormula.Append(firstMod.Key).Append(firstMod.Value);
+                if (firstMod.Value < 0)
+                {
+                    sbSubtractFormula.Append(firstMod.Key).Append(Math.Abs(firstMod.Value));
+                }
+                else
+                {
+                    sbNewFormula.Append(firstMod.Key).Append(firstMod.Value);
+                }
             }
             if (sbSubtractFormula.Length > 0)
                 sbNewFormula.Append("-").Append(sbSubtractFormula);

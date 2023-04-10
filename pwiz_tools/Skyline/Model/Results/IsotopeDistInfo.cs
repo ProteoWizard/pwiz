@@ -214,7 +214,7 @@ namespace pwiz.Skyline.Model.Results
             double shift = SequenceMassCalc.GetPeptideInterval(decoyMassShift);    // Correct for shift applied to the distribution
             // ReSharper disable ImpureMethodCallOnReadonlyValueField
             return _monoisotopicMass.IsMassH() ? 
-                TypedMass.Create(SequenceMassCalc.GetMH(ExpectedPeaks[MassIndexToPeakIndex(massIndex)].Mz - shift, _adduct.AdductCharge), _monoisotopicMass.MassType) :
+                new TypedMass(SequenceMassCalc.GetMH(ExpectedPeaks[MassIndexToPeakIndex(massIndex)].Mz - shift, _adduct.AdductCharge), _monoisotopicMass.MassType) :
                 _adduct.MassFromMz(ExpectedPeaks[MassIndexToPeakIndex(massIndex)].Mz - shift, _monoisotopicMass.MassType);
             // ReSharper restore ImpureMethodCallOnReadonlyValueField
         }

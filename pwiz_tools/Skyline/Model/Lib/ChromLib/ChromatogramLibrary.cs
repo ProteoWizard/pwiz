@@ -490,8 +490,8 @@ namespace pwiz.Skyline.Model.Lib.ChromLib
                             var accessionNumbers = MoleculeAccessionNumbers.FromSerializableString(peptide13.MoleculeAccession);
 
                             var molecule = formula == null ? 
-                                new CustomMolecule(TypedMass.Create(peptide13.MassMonoisotopic, MassType.Monoisotopic), 
-                                    TypedMass.Create(peptide13.MassAverage, MassType.Average), name, accessionNumbers) : 
+                                new CustomMolecule(new TypedMass(peptide13.MassMonoisotopic, MassType.Monoisotopic), 
+                                    new TypedMass(peptide13.MassAverage, MassType.Average), name, accessionNumbers) : 
                                 new CustomMolecule(formula, name, accessionNumbers);
                             dictMolecules.Add(peptideId, molecule);
                             dictMoleculeLists.Add(peptideId, peptide13.Protein); // For small molecules "Protein" is really molecule list name

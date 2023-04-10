@@ -234,7 +234,6 @@ class SslReader : public BuildParser, DelimitedFileConsumer<sslPSM>, public Pwiz
     void unmodifySequence(string& seq);
     string parseCrosslinkedSequence(vector<SeqMod>& mods, const string& modSeq);
     static void setRtInfo(SpecData& returnData, const RTINFO& rtInfo);
-
   };
 
 } // namespace

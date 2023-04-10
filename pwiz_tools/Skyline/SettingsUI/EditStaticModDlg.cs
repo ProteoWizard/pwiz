@@ -23,7 +23,6 @@ using System.Globalization;
 using System.Linq;
 using System.Text;
 using System.Windows.Forms;
-using pwiz.Common.Chemistry;
 using pwiz.Common.Controls;
 using pwiz.Common.SystemUtil;
 using pwiz.Skyline.Alerts;
@@ -156,7 +155,7 @@ namespace pwiz.Skyline.SettingsUI
                     else
                         comboTerm.SelectedItem = modification.Terminus.Value.ToString();
                     cbVariableMod.Checked = modification.IsVariable;
-                    if (modification.Molecule != null)
+                    if (modification.ParsedMolecule != null)
                     {
                         Formula = modification.Formula;
                         // Make sure the formula is showing
@@ -355,7 +354,7 @@ namespace pwiz.Skyline.SettingsUI
             {
                 try
                 {
-                    SequenceMassCalc.FormulaMass(SkylineBioMassCalc.MONOISOTOPIC, formula, SequenceMassCalc.MassPrecision);
+                    SequenceMassCalc.FormulaMass(BioMassCalc.MONOISOTOPIC, formula, SequenceMassCalc.MassPrecision);
                 }
                 catch (ArgumentException x)
                 {

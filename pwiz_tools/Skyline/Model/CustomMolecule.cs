@@ -371,7 +371,7 @@ namespace pwiz.Skyline.Model
 
     public class CustomMolecule : IValidating, IComparable<CustomMolecule>
     {
-        private MoleculeMassOffset _formulaAndOrMass;
+        private ParsedMolecule _formulaAndOrMass;
         public const double MAX_MASS = 160000;
         public const double MIN_MASS = MeasuredIon.MIN_REPORTER_MASS;
 
@@ -385,8 +385,8 @@ namespace pwiz.Skyline.Model
         /// <param name="moleculeAccessionNumbers">Provides InChiKey, CAS number etc</param>
         public CustomMolecule(string formula, double? monoisotopicMass, double? averageMass, string name, MoleculeAccessionNumbers moleculeAccessionNumbers = null)
             : this(formula, 
-                TypedMass.Create(monoisotopicMass ?? averageMass ?? 0, MassType.Monoisotopic),
-                TypedMass.Create(averageMass ?? monoisotopicMass ?? 0, MassType.Average), 
+                new TypedMass(monoisotopicMass ?? averageMass ?? 0, MassType.Monoisotopic),
+                new TypedMass(averageMass ?? monoisotopicMass ?? 0, MassType.Average), 
                 name, moleculeAccessionNumbers)
         {
         }
@@ -402,11 +402,11 @@ namespace pwiz.Skyline.Model
         }
 
         public CustomMolecule(string formula, TypedMass monoisotopicMass, TypedMass averageMass, string name = null, MoleculeAccessionNumbers moleculeAccessionNumbers = null)
-            : this(MoleculeMassOffset.Create(formula, monoisotopicMass ?? TypedMass.ZERO_MONO_MASSNEUTRAL, averageMass ?? TypedMass.ZERO_AVERAGE_MASSNEUTRAL), name, moleculeAccessionNumbers)
+            : this(ParsedMolecule.Create(formula, monoisotopicMass, averageMass), name, moleculeAccessionNumbers)
         {
         }
 
-        public CustomMolecule(MoleculeMassOffset mol, string name, MoleculeAccessionNumbers moleculeAccessionNumbers = null)
+        public CustomMolecule(ParsedMolecule mol, string name, MoleculeAccessionNumbers moleculeAccessionNumbers = null)
         {
             SetFormula(mol);
             Name = name ?? string.Empty;
@@ -418,7 +418,7 @@ namespace pwiz.Skyline.Model
         {
             _formulaAndOrMass = other._formulaAndOrMass;
             Name = other.Name;
-            MoleculeAndMassOffset = other.MoleculeAndMassOffset;
+            ParsedMolecule = other.ParsedMolecule;
             UnlabeledFormula = other.UnlabeledFormula;
             AccessionNumbers = other.AccessionNumbers;
         }
@@ -430,16 +430,14 @@ namespace pwiz.Skyline.Model
             return new CustomMolecule(mol, libraryAttributes.MoleculeName, libraryAttributes.CreateMoleculeID());
         }
 
-
-
-        private void SetFormula(MoleculeMassOffset mol)
+        private void SetFormula(ParsedMolecule mol)
         {
-            MoleculeAndMassOffset = mol;
+            ParsedMolecule = mol;
         }
 
         public static CustomMolecule EMPTY = new CustomMolecule
         {
-            MoleculeAndMassOffset = MoleculeMassOffset.EMPTY,
+            ParsedMolecule = ParsedMolecule.EMPTY,
             AccessionNumbers = MoleculeAccessionNumbers.EMPTY,
             Name = string.Empty
         };
@@ -455,7 +453,7 @@ namespace pwiz.Skyline.Model
         {
             return adjustCountBy == 0 ? 
                 this : 
-                new CustomMolecule(MoleculeAndMassOffset.AdjustElementCountNoMassOffsetChange(element, adjustCountBy), this.Name, this.AccessionNumbers);
+                new CustomMolecule(ParsedMolecule.AdjustElementCount(element, adjustCountBy), this.Name, this.AccessionNumbers);
         }
 
         /// <summary>
@@ -485,36 +483,28 @@ namespace pwiz.Skyline.Model
         [Track]
         public string Formula => _formulaAndOrMass?.ToString();
 
-        public MoleculeMassOffset MoleculeAndMassOffset // The molecular formula and/or unknown masses - may contain isotopes
+        public ParsedMolecule ParsedMolecule // The molecular formula and/or unknown masses - may contain isotopes
         {
             get { return _formulaAndOrMass; }
             protected set
             {
-                _formulaAndOrMass = value ?? MoleculeMassOffset.EMPTY;
-                if (BioMassCalc.ContainsIsotopicElement(_formulaAndOrMass))
-                {
-                    var unlabeled = BioMassCalc.StripLabelsFromFormula(_formulaAndOrMass);
-                    UnlabeledFormula = _formulaAndOrMass.ChangeFormulaNoOffsetMassChange(unlabeled);
-                }
-                else
-                {
-                    UnlabeledFormula = _formulaAndOrMass;
-                }
+                _formulaAndOrMass = value ?? ParsedMolecule.EMPTY;
+                UnlabeledFormula = BioMassCalc.StripLabelsFromFormula(_formulaAndOrMass);
             }
         } 
 
-        public MoleculeMassOffset UnlabeledFormula { get; private set; } // Formula with any heavy isotopes translated to light
+        public ParsedMolecule UnlabeledFormula { get; private set; } // Formula with any heavy isotopes translated to light
 
         public MoleculeAccessionNumbers AccessionNumbers { get; private set; } // InChiKey, CAS, etc to match blib, (see pwiz_tools\BiblioSpec\src\SmallMolMetadata.h)
 
         public TypedMass MonoisotopicMass  // Calculated mass of formula, or explicitly set mass (which clears any formula)
         {
-            get => _formulaAndOrMass.GetTotalMass(MassType.Monoisotopic);
+            get => BioMassCalc.MONOISOTOPIC.CalculateMass(_formulaAndOrMass);
         }
 
         public TypedMass AverageMass // Calculated mass, or explicitly set mass (which clears any formula)
         {
-            get => _formulaAndOrMass.GetTotalMass(MassType.Average);
+            get => BioMassCalc.AVERAGE.CalculateMass(_formulaAndOrMass);
         }
 
         protected const int DEFAULT_ION_MASS_PRECISION = BioMassCalc.MassPrecision;
@@ -524,7 +514,7 @@ namespace pwiz.Skyline.Model
 
         public SmallMoleculeLibraryAttributes GetSmallMoleculeLibraryAttributes()
         {
-            return SmallMoleculeLibraryAttributes.Create(Name, MoleculeAndMassOffset,
+            return SmallMoleculeLibraryAttributes.Create(Name, ParsedMolecule,
                 AccessionNumbers.GetInChiKey(), AccessionNumbers.GetNonInChiKeys());
         }
 
@@ -549,9 +539,9 @@ namespace pwiz.Skyline.Model
 
         public List<string> AsFields()
         {
-            var massOrFormula = MoleculeAndMassOffset.IsMassOnly ? 
+            var massOrFormula = ParsedMolecule.IsMassOnly ? 
                 FormattedMasses(MonoisotopicMass, AverageMass) : // e.g. "1.2345678/1.2345679"
-                MoleculeAndMassOffset.ToString(SERIALIZATION_DIGITS); // e.g. "C12H5[+1.2345678/1.2345679]"
+                ParsedMolecule.ToString(SERIALIZATION_DIGITS); // e.g. "C12H5[+1.2345678/1.2345679]"
             var parts = new[] { Name, massOrFormula, AccessionNumbers.ToString() };
             return (parts.All(string.IsNullOrEmpty) ? new[] { InvariantName } : parts).ToList();
         }
@@ -576,8 +566,8 @@ namespace pwiz.Skyline.Model
                 {
                     try
                     {
-                        var massMono = TypedMass.Create(double.Parse(m.Groups[1].Value, CultureInfo.InvariantCulture), MassType.Monoisotopic);
-                        var massAvg =  TypedMass.Create(double.Parse(m.Groups[2].Value, CultureInfo.InvariantCulture), MassType.Average);
+                        var massMono = new TypedMass(double.Parse(m.Groups[1].Value, CultureInfo.InvariantCulture), MassType.Monoisotopic);
+                        var massAvg =  new TypedMass(double.Parse(m.Groups[2].Value, CultureInfo.InvariantCulture), MassType.Average);
                         return new CustomMolecule(massMono, massAvg);
                     }
                     catch
@@ -591,7 +581,7 @@ namespace pwiz.Skyline.Model
                 // "formula" is actually mono and average masses, e.g. "1.23/1.24", or possibly a formula and mass offset e.g. "C12H5[-1.2/1.21]"
                 try
                 {
-                    return new CustomMolecule(MoleculeMassOffset.Create(formula), name, new MoleculeAccessionNumbers(keysTSV));
+                    return new CustomMolecule(ParsedMolecule.Create(formula), name, new MoleculeAccessionNumbers(keysTSV));
                 }
                 catch
                 {
@@ -601,9 +591,9 @@ namespace pwiz.Skyline.Model
             return new CustomMolecule(formula, null, null, name, new MoleculeAccessionNumbers(keysTSV));
         }
 
-        public CustomMolecule ChangeFormula(MoleculeMassOffset formula)
+        public CustomMolecule ChangeFormula(ParsedMolecule formula)
         {
-            if (Equals(MoleculeAndMassOffset, formula))
+            if (Equals(ParsedMolecule, formula))
                 return this;
             return new CustomMolecule(formula, Name, AccessionNumbers);
         }
@@ -620,8 +610,8 @@ namespace pwiz.Skyline.Model
                 return Name;
             else if (!string.IsNullOrEmpty(key = PrimaryEquivalenceKey))
                 return key;
-            else if (!MoleculeAndMassOffset.IsMassOnly)
-                return MoleculeAndMassOffset.ToString();
+            else if (!ParsedMolecule.IsMassOnly)
+                return ParsedMolecule.ToString();
             else if (tolerance != null)
             {
                 // Display mass at same precision as the tolerance value. Also do not repeat mass if mono and average are the same.
@@ -643,8 +633,8 @@ namespace pwiz.Skyline.Model
                 var key = PrimaryEquivalenceKey;
                 if (!string.IsNullOrEmpty(key))
                     return key;
-                else if (!MoleculeAndMassOffset.IsMassOnly)
-                    return MoleculeAndMassOffset.ToString();
+                else if (!ParsedMolecule.IsMassOnly)
+                    return ParsedMolecule.ToString();
                 else
                     return String.Format(CultureInfo.InvariantCulture, massFormat, InvariantNameDetail, MonoisotopicMass, AverageMass);
             }
@@ -679,7 +669,7 @@ namespace pwiz.Skyline.Model
             {
                 return ReferenceEquals(this, EMPTY) ||
                        string.IsNullOrEmpty(Name) &&
-                       MoleculeMassOffset.IsNullOrEmpty(MoleculeAndMassOffset) &&
+                       ParsedMolecule.IsNullOrEmpty(ParsedMolecule) &&
                        AccessionNumbers.IsEmpty;
             }
         }
@@ -702,7 +692,7 @@ namespace pwiz.Skyline.Model
         {
             unchecked
             {
-                int hashCode = (MoleculeAndMassOffset != null ? MoleculeAndMassOffset.GetHashCode() : 0);
+                int hashCode = (ParsedMolecule != null ? ParsedMolecule.GetHashCode() : 0);
                 hashCode = (hashCode*397) ^ (Name != null ? Name.GetHashCode() : 0);
                 hashCode = (hashCode*397) ^ MonoisotopicMass.GetHashCode();
                 hashCode = (hashCode * 397) ^ AverageMass.GetHashCode();
@@ -758,9 +748,9 @@ namespace pwiz.Skyline.Model
             var mass = reader.GetNullableDoubleAttribute(ATTR.mass_average); // Pre-3.62 we wrote out massH for custom ions but not for reporter ions
             if (mass.HasValue)
             {
-                return TypedMass.Create(mass.Value, (this is SettingsCustomIon) ? MassType.Average : MassType.AverageMassH);
+                return new TypedMass(mass.Value, (this is SettingsCustomIon) ? MassType.Average : MassType.AverageMassH);
             }
-            return TypedMass.Create(reader.GetDoubleAttribute(ATTR.neutral_mass_average), MassType.Average); 
+            return new TypedMass(reader.GetDoubleAttribute(ATTR.neutral_mass_average), MassType.Average); 
         }
 
         public TypedMass ReadMonoisotopicMass(XmlReader reader)
@@ -768,9 +758,9 @@ namespace pwiz.Skyline.Model
             var mass = reader.GetNullableDoubleAttribute(ATTR.mass_monoisotopic); // Pre-3.62 we wrote out massH for custom ions but not for reporter ions
             if (mass.HasValue)
             {
-                return TypedMass.Create(mass.Value, (this is SettingsCustomIon) ? MassType.Monoisotopic : MassType.MonoisotopicMassH);
+                return new TypedMass(mass.Value, (this is SettingsCustomIon) ? MassType.Monoisotopic : MassType.MonoisotopicMassH);
             }
-            return TypedMass.Create(reader.GetDoubleAttribute(ATTR.neutral_mass_monoisotopic), MassType.Monoisotopic);
+            return new TypedMass(reader.GetDoubleAttribute(ATTR.neutral_mass_monoisotopic), MassType.Monoisotopic);
         }
 
         /// <summary>
@@ -790,20 +780,20 @@ namespace pwiz.Skyline.Model
 
             var text = reader.GetAttribute(ATTR.formula);
             text = text?.Trim(); // We've seen some trailing spaces in the wild
-            MoleculeMassOffset formula;
+            ParsedMolecule formula;
             try
             {
                 text = Adduct.FindInFormula(text, out embeddedAdduct);
-                formula = MoleculeMassOffset.Create(text);
+                formula = ParsedMolecule.Create(text);
                 if (!string.IsNullOrEmpty(text))
                 {
-                    formula = formula.AdjustElementCountNoMassOffsetChange(BioMassCalc.H, 1);  // Update this old style formula to current by adding the hydrogen we formerly left out due to assuming protonation
+                    formula = formula.AdjustElementCount(BioMassCalc.H, 1);  // Update this old style formula to current by adding the hydrogen we formerly left out due to assuming protonation
                 }
                 else
                 {
                     text = reader.GetAttribute(ATTR.ion_formula) ?? reader.GetAttribute(ATTR.neutral_formula);
                     text = Adduct.FindInFormula(text, out embeddedAdduct);
-                    formula = MoleculeMassOffset.Create(text);
+                    formula = ParsedMolecule.Create(text);
                 }
             }
             catch (Exception e)
@@ -820,9 +810,9 @@ namespace pwiz.Skyline.Model
                 throw new InvalidDataException(Resources.CustomMolecule_Validate_Custom_molecules_must_specify_a_formula_or_valid_monoisotopic_and_average_masses_);
             }
 
-            SetFormula(MoleculeMassOffset.IsNullOrEmpty(formula) ? 
+            SetFormula(ParsedMolecule.IsNullOrEmpty(formula) ? 
                 // ReSharper disable once PossibleNullReferenceException
-                formula.ChangeMassOffset(monoisotopicMass.ChangeIsMassH(false), averageMass.ChangeIsMassH(false)) : // Mass-only description
+                formula.Change(monoisotopicMass.ChangeIsMassH(false), averageMass.ChangeIsMassH(false)) : // Mass-only description
                 formula);
 
             Name = reader.GetAttribute(ATTR.custom_ion_name);
@@ -841,18 +831,18 @@ namespace pwiz.Skyline.Model
         {
             if (adduct.IsEmpty)
             {
-                writer.WriteAttributeIfString(ATTR.neutral_formula,  MoleculeAndMassOffset.IsMassOnly ? string.Empty : MoleculeAndMassOffset.ToString()); // If it's mass only, let ATTR.neutral_mass_* show that
+                writer.WriteAttributeIfString(ATTR.neutral_formula,  ParsedMolecule.IsMassOnly ? string.Empty : ParsedMolecule.ToString()); // If it's mass only, let ATTR.neutral_mass_* show that
             }
             else
             {
                 writer.WriteAttributeIfString(ATTR.ion_formula,
-                    (MoleculeAndMassOffset.IsMassOnly ? string.Empty : MoleculeAndMassOffset.ToString()) + // If it's mass only, let ATTR.neutral_mass_* show that
+                    (ParsedMolecule.IsMassOnly ? string.Empty : ParsedMolecule.ToString()) + // If it's mass only, let ATTR.neutral_mass_* show that
                                                         (adduct.IsProteomic ? string.Empty : adduct.ToString())); 
             }
             Assume.IsFalse(AverageMass.IsMassH()); // We're going to read these as neutral masses
             Assume.IsFalse(MonoisotopicMass.IsMassH());
-            writer.WriteAttributeNullable(ATTR.neutral_mass_average, MoleculeAndMassOffset.IsMassOnly ? AverageMass : Math.Round(AverageMass, BioMassCalc.MassPrecision));
-            writer.WriteAttributeNullable(ATTR.neutral_mass_monoisotopic, MoleculeAndMassOffset.IsMassOnly ? MonoisotopicMass : Math.Round(MonoisotopicMass, BioMassCalc.MassPrecision));
+            writer.WriteAttributeNullable(ATTR.neutral_mass_average, ParsedMolecule.IsMassOnly ? AverageMass : Math.Round(AverageMass, BioMassCalc.MassPrecision));
+            writer.WriteAttributeNullable(ATTR.neutral_mass_monoisotopic, ParsedMolecule.IsMassOnly ? MonoisotopicMass : Math.Round(MonoisotopicMass, BioMassCalc.MassPrecision));
             if (!string.IsNullOrEmpty(Name))
                 writer.WriteAttribute(ATTR.custom_ion_name, Name);
             writer.WriteAttributeIfString(ATTR.id, AccessionNumbers.ToSerializableString());
@@ -865,7 +855,7 @@ namespace pwiz.Skyline.Model
             var result = string.CompareOrdinal(Name, other.Name);
             if (result == 0)
             {
-                result = MoleculeAndMassOffset.CompareTolerant(other.MoleculeAndMassOffset, SERIALIZATION_TOLERANCE);  // Allow for float vs double serialization effects
+                result = ParsedMolecule.CompareTolerant(other.ParsedMolecule, SERIALIZATION_TOLERANCE);  // Allow for float vs double serialization effects
                 if (result == 0)
                 {
                     result = AccessionNumbers.CompareTo(other.AccessionNumbers);
@@ -888,7 +878,7 @@ namespace pwiz.Skyline.Model
         {
             try
             {
-                SequenceMassCalc.FormulaMass(SkylineBioMassCalc.AVERAGE, key);
+                SequenceMassCalc.FormulaMass(BioMassCalc.AVERAGE, key);
             }
             catch
             {

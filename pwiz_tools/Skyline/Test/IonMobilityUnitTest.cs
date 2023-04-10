@@ -114,7 +114,7 @@ namespace pwiz.SkylineTest
             Assert.AreEqual(molser, CustomMolecule.FromSerializableString(text));
 
             // Test handling of SmallMoleculeLibraryAttributes for mass-only descriptions
-            var molserB = CustomMolecule.FromSmallMoleculeLibraryAttributes(SmallMoleculeLibraryAttributes.Create("caffeine$", MoleculeMassOffset.Create(TypedMass.Create(123.4, MassType.Monoisotopic), TypedMass.Create(123.45, MassType.Average)), caffeineInChiKey, caffeineHMDB));
+            var molserB = CustomMolecule.FromSmallMoleculeLibraryAttributes(SmallMoleculeLibraryAttributes.Create("caffeine$", ParsedMolecule.Create(new TypedMass(123.4, MassType.Monoisotopic), new TypedMass(123.45, MassType.Average)), caffeineInChiKey, caffeineHMDB));
             var textB = molserB.ToSerializableString();
             Assert.AreEqual(molserB, CustomMolecule.FromSerializableString(textB));
 

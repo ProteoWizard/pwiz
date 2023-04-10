@@ -113,7 +113,6 @@
   </ItemGroup>
   <ItemGroup>
     <Compile Include="Chemistry\AminoAcidFormulas.cs" />
-    <Compile Include="Chemistry\BioMassCalcBase.cs" />
     <Compile Include="Chemistry\Formula.cs" />
     <Compile Include="Chemistry\IonMobilityValue.cs" />
     <Compile Include="Chemistry\IsotopeAbundances.cs" />
@@ -122,7 +121,6 @@
     <Compile Include="Chemistry\MoleculeMassOffset.cs" />
     <Compile Include="Chemistry\MzTolerance.cs" />
     <Compile Include="Chemistry\SignedMz.cs" />
-    <Compile Include="Chemistry\TypedMass.cs" />
     <Compile Include="Collections\AbstractReadOnlyCollection.cs" />
     <Compile Include="Collections\AbstractReadOnlyDictionary.cs" />
     <Compile Include="Collections\AbstractReadOnlyList.cs" />

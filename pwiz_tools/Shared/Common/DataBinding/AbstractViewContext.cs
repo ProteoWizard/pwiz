@@ -493,7 +493,9 @@ namespace pwiz.Common.DataBinding
                 var constructor = columnTypeAttribute.ColumnType.GetConstructor(Array.Empty<Type>());
                 Debug.Assert(null != constructor);
                 // ReSharper disable ConditionIsAlwaysTrueOrFalse
+                // ReSharper disable ConstantConditionalAccessQualifier
                 return (DataGridViewColumn) constructor?.Invoke(Array.Empty<object>());
+                // ReSharper restore ConstantConditionalAccessQualifier
                 // ReSharper restore ConditionIsAlwaysTrueOrFalse
             }
             catch (Exception exception)

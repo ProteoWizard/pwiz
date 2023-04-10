@@ -314,7 +314,7 @@ namespace pwiz.Skyline.Model.DocSettings
             return precursorCalc.GetPrecursorMass(seq);
         }
 
-        public TypedMass GetPrecursorMass(IsotopeLabelType labelType, CustomMolecule mol, TypedModifications mods, Adduct adductForIsotopeLabels, out Molecule isotopicFormula)
+        public TypedMass GetPrecursorMass(IsotopeLabelType labelType, CustomMolecule mol, TypedModifications mods, Adduct adductForIsotopeLabels, out ParsedMolecule isotopicFormula)
         {
             return GetPrecursorCalc(labelType, ExplicitMods.EMPTY).GetPrecursorMass(mol, mods, adductForIsotopeLabels, out isotopicFormula);
         }
@@ -425,7 +425,7 @@ namespace pwiz.Skyline.Model.DocSettings
             return new Target(strModifiedSequence);
         }
 
-        public Adduct GetModifiedAdduct(Adduct adduct, MoleculeMassOffset neutralFormula,
+        public Adduct GetModifiedAdduct(Adduct adduct, ParsedMolecule neutralFormula,
                                           IsotopeLabelType labelType,
                                           ExplicitMods mods)
         {
@@ -2284,19 +2284,18 @@ namespace pwiz.Skyline.Model.DocSettings
     {
         MassType MassType { get; }
         TypedMass GetPrecursorMass(Target seq);
-        TypedMass GetPrecursorMass(CustomMolecule custom, TypedModifications mods, Adduct adductForIsotopeLabels, out Molecule isotopicFormula);
+        TypedMass GetPrecursorMass(CustomMolecule custom, TypedModifications mods, Adduct adductForIsotopeLabels, out ParsedMolecule isotopicFormula);
         bool IsModified(Target seq);
         Target GetModifiedSequence(Target seq, bool narrow);
         Target GetModifiedSequence(Target seq, SequenceModFormatType format, bool explicitModsOnly);
         Target GetModifiedSequenceDisplay(Target seq);
         double GetAAModMass(char aa, int seqIndex, int seqLength);
         MassDistribution GetMzDistribution(Target target, Adduct adduct, IsotopeAbundances abundances);
-     //   MassDistribution GetMZDistributionFromFormula(string formula, Adduct adduct, IsotopeAbundances abundances);
-        MassDistribution GetMZDistribution(Molecule formula, Adduct adduct, IsotopeAbundances abundances);
+        MassDistribution GetMZDistribution(MoleculeMassOffset formula, Adduct adduct, IsotopeAbundances abundances);
         MassDistribution GetMZDistributionSinglePoint(double mz);
         MoleculeMassOffset GetMolecularFormula(string peptideSequence);
         bool HasLabels { get; }
-        Adduct GetModifiedAdduct(Adduct adduct, MoleculeMassOffset neutralFormula);
+        Adduct GetModifiedAdduct(Adduct adduct, ParsedMolecule neutralFormula);
     }
 
     /// <summary>

@@ -100,7 +100,7 @@ namespace pwiz.SkylineTestFunctional
             FindNodes(out var peptideDocNode, out var precursorDocNode, out var transitionDocNode);
             var molecule = peptideDocNode.Target;
             AssertEx.AreEqual("PC aa C24:0", molecule.DisplayName);
-            AssertEx.AreEqual("C32H64NO8P", molecule.Molecule.MoleculeAndMassOffset.ToString());
+            AssertEx.AreEqual("C32H64NO8P", molecule.Molecule.Formula);
             AssertEx.AreEqual(
                 "1S/C32H64NO8P/c1-6-8-10-12-14-16-18-20-22-24-31(34)38-28-30(29-40-42(36,37)39-27-26-33(3,4)5)41-32(35)25-23-21-19-17-15-13-11-9-7-2/h30H,6-29H2,1-5H3/p+1/t30-/m0/s1",
                 molecule.Molecule.AccessionNumbers.GetInChI());

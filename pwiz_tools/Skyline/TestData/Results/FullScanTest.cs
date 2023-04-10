@@ -21,7 +21,6 @@ using System.Collections.Generic;
 using System.IO;
 using System.Linq;
 using Microsoft.VisualStudio.TestTools.UnitTesting;
-using pwiz.Common.Chemistry;
 using pwiz.Skyline.Model;
 using pwiz.Skyline.Model.DocSettings;
 using pwiz.Skyline.Model.Results;
@@ -473,7 +472,7 @@ namespace pwiz.SkylineTestData.Results
 
                 Assert.AreEqual(nodeGroup.PrecursorMz, nodeGroup.IsotopeDist.GetMZI(0), SequenceMassCalc.MassTolerance);
                 Assert.AreEqual(nodeGroup.PrecursorMz, nodeGroup.TransitionGroup.IsCustomIon ?
-                                SkylineBioMassCalc.CalculateIonMz(nodeGroup.IsotopeDist.GetMassI(0),
+                                BioMassCalc.CalculateIonMz(nodeGroup.IsotopeDist.GetMassI(0),
                                                        nodeGroup.TransitionGroup.PrecursorAdduct.Unlabeled) :
                                 SequenceMassCalc.GetMZ(nodeGroup.IsotopeDist.GetMassI(0),
                                                        nodeGroup.TransitionGroup.PrecursorAdduct), SequenceMassCalc.MassTolerance);
@@ -622,7 +621,7 @@ namespace pwiz.SkylineTestData.Results
                     Assert.IsTrue(isotopePeaks.GetMZI(massIndex - 1) < isotopePeaks.GetMZI(massIndex));
                     double massDelta = GetMassDelta(isotopePeaks, massIndex);
                     bool containsSulfur = nodeGroup.TransitionGroup.Peptide.IsCustomMolecule
-                        ? (nodeGroup.CustomMolecule.MoleculeAndMassOffset.ChemicalFormulaWithoutOffsets().IndexOfAny("S".ToCharArray()) != -1)
+                        ? (nodeGroup.CustomMolecule.Formula.IndexOfAny("S".ToCharArray()) != -1)
                         : (nodeGroup.TransitionGroup.Peptide.Sequence.IndexOfAny("CM".ToCharArray()) != -1);
                     if (massIndex == 0)
                     {

@@ -19,7 +19,6 @@
 using System;
 using System.Collections.Generic;
 using System.Diagnostics;
-using pwiz.Common.Chemistry;
 using pwiz.Skyline.Model.DocSettings;
 using pwiz.Skyline.Util;
 

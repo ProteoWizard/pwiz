@@ -44,7 +44,7 @@ namespace pwiz.SkylineTestFunctional
 
             var doc = SkylineWindow.Document;
             var originalMolecule = doc.Molecules.First();
-            Assert.AreEqual("C54H93O40N3", originalMolecule.CustomMolecule.MoleculeAndMassOffset.ToString());
+            Assert.AreEqual("C54H93O40N3", originalMolecule.CustomMolecule.Formula);
             int precursorTransitionCount = originalMolecule.TransitionGroups.First().Transitions.Count(t => t.IsMs1);
             Assert.AreEqual(5, precursorTransitionCount);
             int productTransitionCount = originalMolecule.TransitionGroups.First().Transitions.Count(t => !t.IsMs1);
@@ -59,7 +59,7 @@ namespace pwiz.SkylineTestFunctional
             });
             doc = WaitForDocumentChange(doc);
             var newMolecule = doc.Molecules.First();
-            Assert.AreEqual(newFormula, newMolecule.CustomMolecule.MoleculeAndMassOffset.ToString());
+            Assert.AreEqual(newFormula, newMolecule.CustomMolecule.Formula);
 
             // Number of precursor transitions should be reduced, but number of product transitions should stay the same.
             Assert.AreEqual(3, newMolecule.TransitionGroups.First().Transitions.Count(t=>t.IsMs1));

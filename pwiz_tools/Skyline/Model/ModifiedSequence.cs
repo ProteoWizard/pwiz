@@ -22,7 +22,6 @@ using System.ComponentModel;
 using System.Globalization;
 using System.Linq;
 using System.Text;
-using pwiz.Common.Chemistry;
 using pwiz.Common.Collections;
 using pwiz.Common.SystemUtil;
 using pwiz.Skyline.Model.DocSettings;
@@ -301,7 +300,7 @@ namespace pwiz.Skyline.Model
             {
                 return mod.MonoisotopicMass.ToString(CultureInfo.CurrentCulture);
             }
-            if (!Molecule.IsNullOrEmpty(mod.Formula))
+            if (!ParsedMolecule.IsNullOrEmpty(mod.Formula))
             {
                 return mod.Formula.ToString();
             }
@@ -358,7 +357,7 @@ namespace pwiz.Skyline.Model
 
             public string Name { get { return StaticMod.Name; } }
             public string ShortName { get { return StaticMod.ShortName; } }
-            public Molecule Formula { get { return StaticMod.Molecule; } }
+            public ParsedMolecule Formula { get { return StaticMod.ParsedMolecule; } }
             public int? UnimodId { get { return StaticMod.UnimodId; } }
             public double MonoisotopicMass { get; private set; }
             public double AverageMass { get; private set; }

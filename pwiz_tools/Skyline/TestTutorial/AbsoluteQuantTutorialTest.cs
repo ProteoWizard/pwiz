@@ -22,7 +22,6 @@ using System.Drawing;
 using System.IO;
 using System.Linq;
 using Microsoft.VisualStudio.TestTools.UnitTesting;
-using pwiz.Common.Chemistry;
 using pwiz.Common.DataBinding;
 using pwiz.Skyline.Controls;
 using pwiz.Skyline.Controls.Databinding;

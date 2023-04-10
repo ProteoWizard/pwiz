@@ -23,7 +23,6 @@ using System.ComponentModel;
 using System.Linq;
 using System.Reflection;
 using Microsoft.VisualStudio.TestTools.UnitTesting;
-using pwiz.Common.Chemistry;
 using pwiz.Common.Collections;
 using pwiz.Common.DataBinding;
 using pwiz.Common.SystemUtil;

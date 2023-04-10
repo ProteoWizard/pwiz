@@ -23,7 +23,6 @@ using System.Drawing;
 using System.Globalization;
 using System.Linq;
 using System.Windows.Forms;
-using pwiz.Common.Chemistry;
 using pwiz.Skyline.Alerts;
 using pwiz.Skyline.Controls;
 using pwiz.Skyline.Model;
@@ -681,8 +680,8 @@ namespace pwiz.Skyline.SettingsUI
                     {
                         neutralFormula = IsotopeLabelsForMassCalc.Aggregate(neutralFormula, (current, kvp) => current.Replace(kvp.Key, kvp.Value));
                     }
-                    var monoMass = SequenceMassCalc.FormulaMass(SkylineBioMassCalc.MONOISOTOPIC, neutralFormula, SequenceMassCalc.MassPrecision);
-                    var averageMass = SequenceMassCalc.FormulaMass(SkylineBioMassCalc.AVERAGE, neutralFormula, SequenceMassCalc.MassPrecision);
+                    var monoMass = SequenceMassCalc.FormulaMass(BioMassCalc.MONOISOTOPIC, neutralFormula, SequenceMassCalc.MassPrecision);
+                    var averageMass = SequenceMassCalc.FormulaMass(BioMassCalc.AVERAGE, neutralFormula, SequenceMassCalc.MassPrecision);
                     GetTextFromMass(monoMass, MassType.Monoisotopic); // Just to see if it throws or not
                     GetTextFromMass(averageMass, MassType.Average); // Just to see if it throws or not
                     MonoMass = monoMass;

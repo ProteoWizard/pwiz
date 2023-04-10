@@ -578,7 +578,10 @@ namespace TestRunnerLib
             var msAmandaTmpDir = Path.Combine(Path.GetTempPath(), @"~SK_MSAmanda" /* must match MSAmandaSearchWrapper.MS_AMANDA_TMP */);
             try
             {
-                Directory.Delete(msAmandaTmpDir, true);
+                if (Directory.Exists(msAmandaTmpDir))
+                {
+                    Directory.Delete(msAmandaTmpDir, true);
+                }
             }
             catch
             {

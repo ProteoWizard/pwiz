@@ -23,7 +23,6 @@ using System.Diagnostics;
 using System.IO;
 using System.Linq;
 using System.Threading;
-using pwiz.Common.Chemistry;
 using pwiz.Common.DataBinding;
 using pwiz.Common.SystemUtil;
 using pwiz.Skyline.Controls.Graphs;
@@ -907,13 +906,15 @@ namespace pwiz.Skyline.Model
             // Determine the molecular formula of the charged/labeled peptide
             var moleculeFormula = masscalc.GetMolecularFormula(peptideTarget.Sequence); // Get molecular formula, possibly with isotopes in it (as with iTraq)
             adduct = 
-                Adduct.NonProteomicProtonatedFromCharge(precursorCharge, BioMassCalc.MONOISOTOPIC.FindIsotopeLabelsInFormula(moleculeFormula));
-            if (moleculeFormula.HasIsotopes())
+                Adduct.NonProteomicProtonatedFromCharge(precursorCharge, BioMassCalc.FindIsotopeLabelsInFormula(moleculeFormula.Molecule));
+            if (BioMassCalc.ContainsIsotopicElement(moleculeFormula.Molecule))
             {
                 // Isotopes are already accounted for in the adduct
-                moleculeFormula = moleculeFormula.StripIsotopicLabelsFromFormulaAndMassOffset();
+                moleculeFormula = BioMassCalc.StripLabelsFromFormula(moleculeFormula);
             }
-            var customMolecule = new CustomMolecule(moleculeFormula, TestingConvertedFromProteomicPeptideNameDecorator + masscalc.GetModifiedSequence(peptideTarget, false)); // Make sure name isn't a valid peptide seq
+
+            var mol = ParsedMolecule.Create(moleculeFormula); // Convert to ParsedMolecule
+            var customMolecule = new CustomMolecule(mol, TestingConvertedFromProteomicPeptideNameDecorator + masscalc.GetModifiedSequence(peptideTarget, false)); // Make sure name isn't a valid peptide seq
 
             if (mode == ConvertToSmallMoleculesMode.masses_only)
             {
@@ -1102,8 +1103,8 @@ namespace pwiz.Skyline.Model
                                     var chargeOnly = Adduct.FromChargeNoMass(transition.Transition.Charge);
                                     mass = chargeOnly.MassFromMz(transition.Mz, mzMassType);
                                     // We can't really get at both mono and average mass from m/z, but for test purposes this is fine
-                                    var massMono = TypedMass.Create(mass.Value, MassType.Monoisotopic);
-                                    var massAverage = TypedMass.Create(mass.Value, MassType.Average);
+                                    var massMono = new TypedMass(mass.Value, MassType.Monoisotopic);
+                                    var massAverage = new TypedMass(mass.Value, MassType.Average);
                                     var name = transition.HasLoss ?
                                         string.Format(@"{0}[-{1}]", transition.Transition.FragmentIonName, (int)transition.LostMass) :
                                         transition.Transition.FragmentIonName;
@@ -1139,7 +1140,7 @@ namespace pwiz.Skyline.Model
                                 var mzShift = transition.Transition.IonType == IonType.precursor ?
                                     mzShiftPrecursor :
                                     mzShiftFragment;
-                                Assume.IsTrue(Math.Abs(newTransitionDocNode.Mz + mzShift - transition.Mz.Value) <= 1.001*BioMassCalc.MassElectron, String.Format(@"unexpected mz difference {0}-{1}={2}", newTransitionDocNode.Mz, transition.Mz, newTransitionDocNode.Mz - transition.Mz.Value));
+                                Assume.IsTrue(Math.Abs(newTransitionDocNode.Mz + mzShift - transition.Mz.Value) <= .5 * BioMassCalc.MassElectron, String.Format(@"unexpected mz difference {0}-{1}={2}", newTransitionDocNode.Mz, transition.Mz, newTransitionDocNode.Mz - transition.Mz.Value));
                                 newTransitionGroupDocNode =
                                     (TransitionGroupDocNode)newTransitionGroupDocNode.Add(newTransitionDocNode);
                             }

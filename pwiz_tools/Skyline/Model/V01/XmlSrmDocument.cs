@@ -21,7 +21,6 @@ using System.Collections.Generic;
 using System.Globalization;
 using System.Text;
 using System.Xml.Serialization;
-using pwiz.Common.Chemistry;
 using pwiz.Skyline.Model.DocSettings;
 using pwiz.Skyline.Util;
 

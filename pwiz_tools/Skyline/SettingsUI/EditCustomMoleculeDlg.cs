@@ -197,7 +197,7 @@ namespace pwiz.Skyline.SettingsUI
             string labelMono = !defaultCharge.IsEmpty
                 ? Resources.EditCustomMoleculeDlg_EditCustomMoleculeDlg__Monoisotopic_m_z_
                 : Resources.EditCustomMoleculeDlg_EditCustomMoleculeDlg__Monoisotopic_mass_;
-            var defaultFormula = (molecule == null || molecule.MoleculeAndMassOffset.IsMassOnly) ? string.Empty : molecule.MoleculeAndMassOffset.ToString();
+            var defaultFormula = (molecule == null || molecule.ParsedMolecule.IsMassOnly) ? string.Empty : molecule.ParsedMolecule.ToString();
             var transition = initialId as Transition;
 
             FormulaBox.EditMode editMode;
@@ -682,8 +682,8 @@ namespace pwiz.Skyline.SettingsUI
                     return;
             }
 
-            var monoMass = TypedMass.Create(_formulaBox.MonoMass ?? 0, MassType.Monoisotopic);
-            var averageMass = TypedMass.Create(_formulaBox.AverageMass ?? 0, MassType.Average);
+            var monoMass = new TypedMass(_formulaBox.MonoMass ?? 0, MassType.Monoisotopic);
+            var averageMass = new TypedMass(_formulaBox.AverageMass ?? 0, MassType.Average);
             if (monoMass < CustomMolecule.MIN_MASS || averageMass < CustomMolecule.MIN_MASS)
             {
                 _formulaBox.ShowTextBoxErrorFormula(helper,
@@ -854,11 +854,11 @@ namespace pwiz.Skyline.SettingsUI
             else
             {
                 textName.Text = ResultCustomMolecule.Name ?? string.Empty;
-                var displayFormula = ResultCustomMolecule.MoleculeAndMassOffset.IsMassOnly ? string.Empty : ResultCustomMolecule.MoleculeAndMassOffset.ToString();
+                var displayFormula = ResultCustomMolecule.ParsedMolecule.IsMassOnly ? string.Empty : ResultCustomMolecule.ParsedMolecule.ToString();
                 _formulaBox.Formula = displayFormula + (ResultAdduct.IsEmpty || ResultAdduct.IsProteomic
                                           ? string.Empty
                                           : ResultAdduct.AdductFormula);
-                if (ResultCustomMolecule.MoleculeAndMassOffset == null)
+                if (ParsedMolecule.IsNullOrEmpty(ResultCustomMolecule.ParsedMolecule))
                 {
                     _formulaBox.AverageMass = ResultCustomMolecule.AverageMass;
                     _formulaBox.MonoMass = ResultCustomMolecule.MonoisotopicMass;

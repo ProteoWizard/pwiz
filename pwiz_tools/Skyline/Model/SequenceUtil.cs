@@ -172,7 +172,7 @@ namespace pwiz.Skyline.Model
         public static TypedMass PersistentNeutral(TypedMass mh)
         {
             Assume.IsTrue(mh.IsMassH());
-            return TypedMass.Create(Math.Round(mh - BioMassCalc.MassProton, MassPrecision), mh.MassType);
+            return new TypedMass(Math.Round(mh - BioMassCalc.MassProton, MassPrecision), mh.MassType);
         }
 
         /// <summary>
@@ -207,7 +207,7 @@ namespace pwiz.Skyline.Model
                 MassType massType) // CONSIDER(bspratt) internally standardize on mass rather than massH?
         {
             Assume.IsTrue(adduct.IsProtonated, @"Expected a protonated adduct");
-            return TypedMass.Create(mz * adduct.AdductCharge - (adduct.AdductCharge - 1) * BioMassCalc.MassProton,
+            return new TypedMass(mz * adduct.AdductCharge - (adduct.AdductCharge - 1) * BioMassCalc.MassProton,
                 massType.IsMonoisotopic() ? MassType.MonoisotopicMassH : MassType.AverageMassH);
         }
 
@@ -221,43 +221,22 @@ namespace pwiz.Skyline.Model
             return deltaMz*1000*1000/mz;
         }
 
-        public static TypedMass FormulaMass(SkylineBioMassCalc calc, string desc, int? precision = null)
+        public static TypedMass FormulaMass(BioMassCalc calc, string desc, int? precision = null)
         {
-            double totalMass = calc.ParseFormulaWithAdductMass(desc, out _);
-            if (totalMass == 0.0)
-                BioMassCalc.ThrowArgumentException(desc);
-
-            return TypedMass.Create(precision.HasValue ? Math.Round(totalMass, precision.Value) : totalMass,
-                calc.MassType);
+            var mol = ParsedMolecule.Create(desc);
+            return FormulaMass(calc, mol, precision);
         }
+
         public static TypedMass FormulaMass(BioMassCalc calc, Molecule mol, int? precision = null)
         {
-            var totalMass = calc.GetChemicalMass(mol);
-            var newMassType = mol.HasIsotopes() ? (calc.MassType | MassType.bHeavy) : calc.MassType;
-            return TypedMass.Create(precision.HasValue ? Math.Round(totalMass, precision.Value) : totalMass, newMassType);
-
+            var totalMass = calc.CalculateMass((IDictionary<string, int>)mol);
+            return (precision.HasValue ? totalMass.ChangeMass(Math.Round(totalMass, precision.Value)) : totalMass);
         }
 
-        public static TypedMass FormulaMass(BioMassCalc calc, MoleculeMassOffset mol, int? precision = null)
+        public static TypedMass FormulaMass(BioMassCalc calc, ParsedMolecule mol, int? precision = null)
         {
-            var totalMass = mol.GetTotalMass(calc.MassType);
-            var newMassType = mol.IsHeavy() ? (calc.MassType | MassType.bHeavy) : calc.MassType;
-            return TypedMass.Create(precision.HasValue ? Math.Round(totalMass, precision.Value) : totalMass, newMassType);
-
-        }
-
-        public static string[] ParseModParts(SkylineBioMassCalc calc, string desc)
-        {
-            calc.ParseFormulaWithAdductMass(desc, out _); // Throw if it can't be understood as a formula or as formulaA-formulaB
-
-            var parts = desc.Split('-');
-            string part1 = parts[0].Trim();
-            string part2 = parts.Length == 2 ?parts[1].Trim() : string.Empty;
-
-            if ((part1.Length == 0 && part2.Length == 0))
-                BioMassCalc.ThrowArgumentException(desc);
-
-            return new[] { part1, part2 };
+            var totalMass = calc.CalculateMass(mol);
+            return (precision.HasValue ? totalMass.ChangeMass( Math.Round(totalMass, precision.Value)) : totalMass);
         }
 
         public static string GetModDiffDescription(double massDiff)
@@ -323,7 +302,7 @@ namespace pwiz.Skyline.Model
             return _aminoMasses[c];
         }
 
-        private readonly SkylineBioMassCalc _massCalc;
+        private readonly BioMassCalc _massCalc;
         public readonly double[] _aminoMasses = new double[128];
 
         private sealed class ModMasses
@@ -390,7 +369,7 @@ namespace pwiz.Skyline.Model
             // These values will be used to calculate masses that are later assumed to be massH
             type = type.IsMonoisotopic() ? MassType.MonoisotopicMassH : MassType.AverageMassH;
 
-            _massCalc = new SkylineBioMassCalc(type);
+            _massCalc = BioMassCalc.GetBioMassCalc(type);
 
             Labels = new HashSet<StaticMod>(); // Used by small molecules
 
@@ -402,7 +381,7 @@ namespace pwiz.Skyline.Model
             // _massAmmonia = _massCalc.CalculateMass("NH3");
 
             // ReSharper disable LocalizableElement
-            _massDiffB = TypedMass.Create(0.0, type);
+            _massDiffB = new TypedMass(0.0, type);
             _massDiffA = _massDiffB - _massCalc.CalculateMassFromFormula("CO");
             _massDiffC = _massCalc.CalculateMassFromFormula("NH3");
             _massDiffY = _massCalc.CalculateMassFromFormula("H2O");
@@ -424,11 +403,6 @@ namespace pwiz.Skyline.Model
             InitAminoAcidMasses();
         }
 
-        public double ParseModMass(string formula)
-        {
-            return FormulaMass(_massCalc, formula, MassPrecision);
-        }
-
         public double GetModMass(char aa, StaticMod mod)
         {
             if (_massCalc.MassType.IsMonoisotopic())
@@ -441,31 +415,20 @@ namespace pwiz.Skyline.Model
                 if (mod.AverageMass.HasValue)
                     return mod.AverageMass.Value;
             }
-            if (!Molecule.IsNullOrEmpty(mod.Molecule))
-                return FormulaMass(_massCalc, mod.Molecule, MassPrecision);
+            if (!ParsedMolecule.IsNullOrEmpty(mod.ParsedMolecule))
+                return FormulaMass(_massCalc, mod.ParsedMolecule, MassPrecision);
             else if ((mod.LabelAtoms & LabelAtoms.LabelsAA) != LabelAtoms.None && AminoAcid.IsAA(aa))
                 return FormulaMass(_massCalc, GetHeavyFormula(aa, mod.LabelAtoms), MassPrecision);
             return 0;
         }
 
-        public Molecule GetModFormula(char aa, StaticMod mod, out double unexplainedMass)
+        public MoleculeMassOffset GetModFormula(char aa, StaticMod mod)
         {
-            unexplainedMass = 0;
-            if (!Molecule.IsNullOrEmpty(mod.Molecule))
-                return mod.Molecule;
+            if (!ParsedMolecule.IsNullOrEmpty(mod.ParsedMolecule))
+                return mod.GetMoleculeMassOffset(); // If it has a formula, use it
             else if ((mod.LabelAtoms & LabelAtoms.LabelsAA) != LabelAtoms.None)
-                return GetHeavyFormula(aa, mod.LabelAtoms);
-            if (_massCalc.MassType.IsMonoisotopic())
-            {
-                if (mod.MonoisotopicMass.HasValue)
-                    unexplainedMass = mod.MonoisotopicMass.Value;
-            }
-            else
-            {
-                if (mod.AverageMass.HasValue)
-                    unexplainedMass = mod.AverageMass.Value;
-            }
-            return null;
+                return GetHeavyFormula(aa, mod.LabelAtoms).GetMoleculeMassOffset(); // If it has a label, use the labeled version of the amino acid
+            return mod.GetMoleculeMassOffset(); // Return the mass offset information
         }
 
         public void AddStaticModifications(IEnumerable<StaticMod> mods)
@@ -492,8 +455,9 @@ namespace pwiz.Skyline.Model
                     if (mod.Terminus != null)
                     {
                         double mass = GetModMass('\0', mod);
-                        double unexplainedMass;
-                        var formula = GetModFormula('\0', mod, out unexplainedMass);
+                        var formulaAndMassOffset = GetModFormula('\0', mod);
+                        var formula = formulaAndMassOffset.Molecule;
+                        var unexplainedMass = formulaAndMassOffset.GetMassOffset(_massCalc.MassType.IsMonoisotopic());
                         if (mod.Terminus == ModTerminus.C)
                         {
                             modMasses._massModCleaveC += mass;
@@ -546,11 +510,10 @@ namespace pwiz.Skyline.Model
             modMasses[aa] = modMasses[char.ToLowerInvariant(aa)] += GetModMass(aa, mod);
 
             // Deal with formulas and unexplained masses
-            double unexplainedMass;
-            var formula = GetModFormula(aa, mod, out unexplainedMass);
+            var formula = GetModFormula(aa, mod);
             modFormulas[aa] = modFormulas[char.ToLowerInvariant(aa)] = 
-                Molecule.IsNullOrEmpty(modFormulas[aa]) ? formula : modFormulas[aa].Plus(formula);
-            modMassesExtra[aa] = modMassesExtra[char.ToLowerInvariant(aa)] += unexplainedMass;
+                Molecule.IsNullOrEmpty(modFormulas[aa]) ? formula.Molecule : modFormulas[aa].Plus(formula.Molecule);
+            modMassesExtra[aa] = modMassesExtra[char.ToLowerInvariant(aa)] += formula.GetMassOffset(_massCalc.MassType.IsMonoisotopic());
         }
 
         public bool IsModified(Target val)
@@ -619,17 +582,17 @@ namespace pwiz.Skyline.Model
             return GetModifiedSequence(seq, SequenceModFormatType.mass_diff_narrow, false);
         }
 
-        public Adduct GetModifiedAdduct(Adduct adduct, MoleculeMassOffset neutralFormula)
+        public Adduct GetModifiedAdduct(Adduct adduct, ParsedMolecule neutralFormula)
         {
             return HasLabels ? GetModifiedAdduct(adduct, neutralFormula, Labels) : adduct;
         }
 
-        public static Adduct GetModifiedAdduct(Adduct adduct, MoleculeMassOffset neutralFormula, IEnumerable<StaticMod> labels)
+        public static Adduct GetModifiedAdduct(Adduct adduct, ParsedMolecule neutralFormula, IEnumerable<StaticMod> labels)
         {
             // Pick out any label atoms
             var atoms = labels.Aggregate(LabelAtoms.None, (current, staticMod) => current | staticMod.LabelAtoms);
             var heavy = GetHeavyFormula(neutralFormula, atoms);
-            adduct = adduct.ChangeIsotopeLabels(BioMassCalc.MONOISOTOPIC.FindIsotopeLabelsInFormula(heavy));
+            adduct = adduct.ChangeIsotopeLabels(BioMassCalc.FindIsotopeLabelsInFormula(heavy.Molecule));
             return adduct;
         }
 
@@ -718,31 +681,29 @@ namespace pwiz.Skyline.Model
 
         public MassDistribution GetMzDistribution(Target target, Adduct adduct, IsotopeAbundances abundances, ExplicitSequenceMods mods = null)
         {
-            double unexplainedMass;
-            Molecule molecule;
+            MoleculeMassOffset molecule;
             if (target.IsProteomic)
             {
-                molecule = GetFormula(target.Sequence, mods, out unexplainedMass);
+                molecule = GetFormula(target.Sequence, mods);
             }
             else
             {
-                molecule = target.Molecule.MoleculeAndMassOffset;
-                unexplainedMass = 0;
+                molecule = target.Molecule.ParsedMolecule.GetMoleculeMassOffset();
             }
-            return GetMzDistribution(molecule, adduct, abundances, unexplainedMass);
+            return GetMzDistribution(molecule, adduct, abundances);
         }
 
         public MassDistribution GetMZDistributionFromFormula(string formula, Adduct adduct,
             IsotopeAbundances abundances)
         {
-            var molecule = MoleculeMassOffset.Create(formula);
-            return GetMzDistribution(molecule, adduct, abundances, 0);
+            var molecule = ParsedMolecule.Create(formula).GetMoleculeMassOffset();
+            return GetMzDistribution(molecule, adduct, abundances);
         }
 
-        public MassDistribution GetMZDistribution(Molecule molecule, Adduct adduct,
+        public MassDistribution GetMZDistribution(MoleculeMassOffset molecule, Adduct adduct,
             IsotopeAbundances abundances)
         {
-            return GetMzDistribution(molecule, adduct, abundances, 0);
+            return GetMzDistribution(molecule, adduct, abundances);
         }
 
         public MassDistribution GetMZDistributionSinglePoint(double mz)
@@ -760,16 +721,15 @@ namespace pwiz.Skyline.Model
         /// </summary>
         public MoleculeMassOffset GetNeutralFormula(string seq, ExplicitSequenceMods mods)
         {
-            double unexplainedMass;
-            var molecule = GetFormula(seq, mods, out unexplainedMass);
-            if (unexplainedMass != 0.0)
+            var molecule = GetFormula(seq, mods);
+            if (molecule.MonoMassOffset != 0.0 || molecule.Molecule.Values.Any(v => v < 0))
                 throw new ArgumentException(@"Unexplained mass when deriving molecular formula from sequence "+seq);
-            return MoleculeMassOffset.Create(molecule.Dictionary); // N.B. intentional side effect of clearing atom order hint, so ToString() gives Hill order
+            return molecule;
         }
 
-// ReSharper disable once ParameterTypeCanBeEnumerable.Local
+        // ReSharper disable once ParameterTypeCanBeEnumerable.Local
 
-        private MassDistribution GetMzDistribution(Molecule molecule, Adduct adduct, IsotopeAbundances abundances, double unexplainedMass)
+        private MassDistribution GetMzDistribution(MoleculeMassOffset molecule, Adduct adduct, IsotopeAbundances abundances)
         {
             // Low resolution to get back only peaks at Dalton (i.e. neutron) boundaries
             var md = new MassDistribution(_massResolution, _minimumAbundance);
@@ -777,26 +737,20 @@ namespace pwiz.Skyline.Model
             var charge = adduct.AdductCharge;
             // Note we use the traditional peptide-oriented calculation when adduct is protonated and not an n-mer, mostly for stability in tests
             var protonated = adduct.IsProtonated && (adduct.GetMassMultiplier() == 1);
-            var mol = protonated ? molecule : adduct.ApplyToMolecule(molecule);
-            foreach (var key in mol.Keys.OrderBy(k => k)) // Sort to ensure consistent order, mostly for stability in tests
+            var mol = protonated ? molecule.Molecule : adduct.ApplyToMolecule(molecule).Molecule;
+            foreach (var element in mol)
             {
-                result = result.Add(md.Add(abundances[key]).Multiply(mol[key]));
+                result = result.Add(md.Add(abundances[element.Key]).Multiply(element.Value));
             }
-
-            if (mol is MoleculeMassOffset moleculeMassOffset)
-            {
-                // Watch for a mass modification e.g. the [+2.45,2.46] in H12C5[+2.45,2.46]
-                unexplainedMass += _massCalc.MassType.IsMonoisotopic()
-                    ? moleculeMassOffset.MonoMassOffset
-                    : moleculeMassOffset.AverageMassOffset;
-            }
-
+            var unexplainedMass = _massCalc.MassType.IsMonoisotopic()
+                ? molecule.MonoMassOffset
+                : molecule.AverageMassOffset;
             return result.OffsetAndDivide(unexplainedMass + charge * (protonated ? BioMassCalc.MassProton : -BioMassCalc.MassElectron), charge);
         }
 
-        private Molecule GetFormula(string seq, ExplicitSequenceMods mods, out double unexplainedMass)
+        private MoleculeMassOffset GetFormula(string seq, ExplicitSequenceMods mods)
         {
-            var formula = new FormulaBuilder(_massCalc);
+            var formula = new FormulaBuilder();
             var modMasses = GetModMasses(mods);
             formula.Append(modMasses._massModCleaveNFormula, modMasses._massModCleaveNExtra);
             formula.Append(modMasses._massModCleaveCFormula, modMasses._massModCleaveCExtra);
@@ -804,8 +758,8 @@ namespace pwiz.Skyline.Model
             {
                 char c = seq[i];
 
-                formula.Append(AMINO_FORMULAS[c])
-                       .Append(modMasses._aminoModFormulas[c], modMasses._aminoModMassesExtra[c]);
+                formula.Append(AMINO_FORMULAS[c]);
+                formula.Append(modMasses._aminoModFormulas[c], modMasses._aminoModMassesExtra[c]);
                 // Terminal modifications
                 if (i == 0)
                     formula.Append(modMasses._aminoNTermModFormulas[c], modMasses._aminoNTermModMassesExtra[c]);
@@ -816,76 +770,73 @@ namespace pwiz.Skyline.Model
             {
                 foreach (ExplicitMod mod in mods.AllMods)
                 {
-                    double modUnexplainedMass;
-                    var modFormula = GetModFormula(seq[mod.IndexAA], mod.Modification, out modUnexplainedMass);
-                    formula.Append(modFormula, modUnexplainedMass);
+                    var modFormula = GetModFormula(seq[mod.IndexAA], mod.Modification);
+                    formula.Append(modFormula);
                 }
             }
             formula.Append(H2O); // N-term = H, C-term = OH
-            unexplainedMass = formula.UnexplainedMass;
-            return formula.DictAtomCounts;
+            return formula.Sum();
         }
 
         private sealed class FormulaBuilder
         {
-            private readonly BioMassCalc _massCalc;
-            private Molecule _dictAtomCounts;
-            private double _unexplainedMass;
+            private List<Molecule> _listAtomCounts;
+            private double _massOffsetMono;
+            private double _massOffsetAverage;
 
-            public FormulaBuilder(BioMassCalc massCalc)
+            public FormulaBuilder()
             {
-                _massCalc = massCalc;
-                _dictAtomCounts = MoleculeMassOffset.EMPTY;
+                _listAtomCounts = new List<Molecule>();
             }
 
-            // ReSharper disable once UnusedMethodReturnValue.Local
-            public FormulaBuilder Append(string formula, double unexplainedMass = 0)
+            public void Append(MoleculeMassOffset formula)
             {
-                _unexplainedMass += unexplainedMass;
-                if (formula != null)
+                if (!MoleculeMassOffset.IsNullOrEmpty(formula))
                 {
-                    _massCalc.ParseFormulaMass(formula, out var mol);
-                    Append(mol);
+                    _listAtomCounts.Add(formula.Molecule);
+                    _massOffsetMono += formula.MonoMassOffset;
+                    _massOffsetAverage += formula.AverageMassOffset;
                 }
-                return this;
             }
 
-            public FormulaBuilder Append(Molecule formula, double unexplainedMass = 0)
+            public void Append(ParsedMolecule formula)
             {
-                _unexplainedMass += unexplainedMass;
-                _dictAtomCounts = _dictAtomCounts.Plus(formula);
-                return this;
-            }
-
-            public Molecule DictAtomCounts => _dictAtomCounts;
-
-            /// <summary>
-            /// Returns any accumulated unexplained mass, plus the mass of any atoms with
-            /// negative counts.
-            /// </summary>
-            public double UnexplainedMass
-            {
-                get
+                if (!ParsedMolecule.IsNullOrEmpty(formula))
                 {
-                    double unexplainedMass = _unexplainedMass;
-                    foreach (var atomCount in _dictAtomCounts.Where(p => p.Value < 0))
-                    {
-                        unexplainedMass += _massCalc.CalculateMassFromFormula(atomCount.Key + (-atomCount.Value));
-                    }
-                    return unexplainedMass;
+                    _listAtomCounts.Add(formula.Molecule);
+                    _massOffsetMono += formula.MonoMassOffset;
+                    _massOffsetAverage += formula.AverageMassOffset;
                 }
+            }
+
+            public void Append(Molecule formula, double extraMass = 0)
+            {
+                if (!Molecule.IsNullOrEmpty(formula))
+                {
+                    _listAtomCounts.Add(formula);
+                }
+                _massOffsetMono += extraMass;
+                _massOffsetAverage += extraMass;
+            }
+
+            public MoleculeMassOffset Sum()
+            {
+                return MoleculeMassOffset.Create(Molecule.Sum(_listAtomCounts), _massOffsetMono, _massOffsetAverage);
             }
 
             public override string ToString()
             {
                 var formulaText = new StringBuilder();
-                foreach (var atomCount in _dictAtomCounts.OrderBy(p => p.Key).Where(p => p.Value > 0))
+                var mol = Sum();
+                foreach (var atomCount in mol.Molecule.OrderBy(p => p.Key).Where(p => p.Value > 0))
                 {
                     formulaText.Append(atomCount.Key);
                     if (atomCount.Value > 1)
                         formulaText.Append(atomCount.Value);
                 }
-                return formulaText.ToString();
+                var txt = formulaText.ToString();
+                txt += MoleculeMassOffset.FormatMassModification(mol.MonoMassOffset, mol.AverageMassOffset, 6);
+                return txt;
             }
         }
 
@@ -904,28 +855,27 @@ namespace pwiz.Skyline.Model
             get { return _massCalc.MassType; }
         }
 
-        public TypedMass GetPrecursorMass(CustomMolecule mol, Adduct adductForIsotopeLabels, out Molecule isotopicFormula)       {
+        public TypedMass GetPrecursorMass(CustomMolecule mol, Adduct adductForIsotopeLabels, out ParsedMolecule isotopicFormula)       {
             return GetPrecursorMass(mol, null, adductForIsotopeLabels, out isotopicFormula);
         }
 
-        public TypedMass GetPrecursorMass(CustomMolecule mol, TypedModifications typedMods, Adduct adductForIsotopeLabels, out Molecule isotopicFormula)
+        public TypedMass GetPrecursorMass(CustomMolecule mol, TypedModifications typedMods, Adduct adductForIsotopeLabels, out ParsedMolecule isotopicFormula)
         {
             TypedMass mass;
 
             // Isotope descriptions may be found in the typedMods, or in the adduct as when dealing with small molecules
             var isotopeDescriptionIsInAdduct = adductForIsotopeLabels.HasIsotopeLabels;
-            var formula = mol.MoleculeAndMassOffset;
+            var formula = mol.ParsedMolecule;
             if (typedMods != null && !isotopeDescriptionIsInAdduct)
             {
-                var massCalc = MassType.IsMonoisotopic() ? BioMassCalc.MONOISOTOPIC : BioMassCalc.AVERAGE;
                 isotopicFormula = typedMods.LabelType.IsLight || !typedMods.Modifications.Any() ? formula : GetHeavyFormula(formula, typedMods.Modifications[0].LabelAtoms);
-                mass = massCalc.CalculateMassFromFormula(isotopicFormula);
             }
             else
             {
                 isotopicFormula = adductForIsotopeLabels.ApplyIsotopeLabelsToMolecule(formula);
-                mass = isotopicFormula.GetTotalMass(MassType);
             }
+            var massCalc = MassType.IsMonoisotopic() ? BioMassCalc.MONOISOTOPIC : BioMassCalc.AVERAGE;
+            mass = massCalc.CalculateMass(isotopicFormula);
             return mass;
         }
 
@@ -963,7 +913,7 @@ namespace pwiz.Skyline.Model
                     mass += mods.ModMasses[i];
             }
 
-            return TypedMass.Create(mass, MassType.IsMonoisotopic() ? MassType.MonoisotopicMassH : MassType.AverageMassH); // This is massH (due to +BioMassCalc.MassProton above)
+            return new TypedMass(mass, MassType.IsMonoisotopic() ? MassType.MonoisotopicMassH : MassType.AverageMassH); // This is massH (due to +BioMassCalc.MassProton above)
         }
 
         public IonTable<TypedMass> GetFragmentIonMasses(Target seq)
@@ -1067,20 +1017,20 @@ namespace pwiz.Skyline.Model
                     return isotopeDist.GetMassI(massIndex);
                 }
                 else if (transition.IsNonReporterCustomIon() && // Don't apply labels to reporter ions
-                         !transition.CustomIon.MoleculeAndMassOffset.IsMassOnly)
+                         !transition.CustomIon.ParsedMolecule.IsMassOnly)
                 {
                     if (Labels.Any())
                     {
                         var union = Labels.Aggregate(LabelAtoms.None, (current, staticMod) => current | staticMod.LabelAtoms);
-                        var formula = GetHeavyFormula(transition.CustomIon.MoleculeAndMassOffset, union);
-                        return _massCalc.CalculateMassFromFormula(formula);
+                        var formula = GetHeavyFormula(transition.CustomIon.ParsedMolecule, union);
+                        return _massCalc.CalculateMass(formula).ChangeIsMassH(false);
                     }
                     else if (Transition.IsPrecursor(type) && transition.Group.PrecursorAdduct.HasIsotopeLabels)
                     {
                         // Apply any labels found in the adduct description
                         var formula =
-                            transition.Group.PrecursorAdduct.ApplyIsotopeLabelsToMolecule(transition.CustomIon.MoleculeAndMassOffset);
-                        return _massCalc.CalculateMassFromFormula(formula);
+                            transition.Group.PrecursorAdduct.ApplyIsotopeLabelsToMolecule(transition.CustomIon.ParsedMolecule);
+                        return _massCalc.CalculateMass(formula).ChangeIsMassH(false);
                     }
                 }
                 return MassType.IsAverage() 
@@ -1162,7 +1112,7 @@ namespace pwiz.Skyline.Model
 
             mass += GetTermDeltaMass(type);    // Exactly match GetFragmentIonMasses()
 
-            return TypedMass.Create(mass, MassType.IsMonoisotopic() ? MassType.MonoisotopicMassH : MassType.AverageMassH); // This is massH ( + BioMassCalc.MassProton above)
+            return new TypedMass(mass, MassType.IsMonoisotopic() ? MassType.MonoisotopicMassH : MassType.AverageMassH); // This is massH ( + BioMassCalc.MassProton above)
         }
 
         private double GetTermMass(IonType type, ExplicitSequenceMods mods)
@@ -1214,7 +1164,7 @@ namespace pwiz.Skyline.Model
             {
                 var formula = AMINO_FORMULAS[i];
                 if (formula != null)
-                    _aminoMasses[i] = _massCalc.CalculateMassFromFormula(formula);
+                    _aminoMasses[i] = _massCalc.CalculateMass(formula);
             }
 
 
@@ -1232,8 +1182,8 @@ namespace pwiz.Skyline.Model
             // ReSharper restore CharImplicitlyConvertedToNumeric
         }
 
-        private static readonly Molecule[] AMINO_FORMULAS = new Molecule[128];
-        private static readonly Molecule H2O = Molecule.Parse(@"H2O");
+        private static readonly ParsedMolecule[] AMINO_FORMULAS = new ParsedMolecule[128];
+        private static readonly ParsedMolecule H2O = ParsedMolecule.Create(@"H2O");
         static SequenceMassCalc()
         {
 
@@ -1242,45 +1192,44 @@ namespace pwiz.Skyline.Model
             // ReSharper disable CharImplicitlyConvertedToNumeric
             // ReSharper disable LocalizableElement
             // CONSIDER(bspratt): what about B and Z? (see average values above for masses)
-            AMINO_FORMULAS['a'] = AMINO_FORMULAS['A'] = Molecule.Parse("C3H5ON");
-            AMINO_FORMULAS['c'] = AMINO_FORMULAS['C'] = Molecule.Parse("C3H5ONS");
-            AMINO_FORMULAS['d'] = AMINO_FORMULAS['D'] = Molecule.Parse("C4H5O3N");
-            AMINO_FORMULAS['e'] = AMINO_FORMULAS['E'] = Molecule.Parse("C5H7O3N");
-            AMINO_FORMULAS['f'] = AMINO_FORMULAS['F'] = Molecule.Parse("C9H9ON");
-            AMINO_FORMULAS['g'] = AMINO_FORMULAS['G'] = Molecule.Parse("C2H3ON");
-            AMINO_FORMULAS['h'] = AMINO_FORMULAS['H'] = Molecule.Parse("C6H7ON3");
-            AMINO_FORMULAS['i'] = AMINO_FORMULAS['I'] = Molecule.Parse("C6H11ON");
-            AMINO_FORMULAS['k'] = AMINO_FORMULAS['K'] = Molecule.Parse("C6H12ON2");
-            AMINO_FORMULAS['l'] = AMINO_FORMULAS['L'] = Molecule.Parse("C6H11ON");
-            AMINO_FORMULAS['m'] = AMINO_FORMULAS['M'] = Molecule.Parse("C5H9ONS");
-            AMINO_FORMULAS['n'] = AMINO_FORMULAS['N'] = Molecule.Parse("C4H6O2N2");
-            AMINO_FORMULAS['o'] = AMINO_FORMULAS['O'] = Molecule.Parse("C12H19N3O2");
-            AMINO_FORMULAS['p'] = AMINO_FORMULAS['P'] = Molecule.Parse("C5H7ON");
-            AMINO_FORMULAS['q'] = AMINO_FORMULAS['Q'] = Molecule.Parse("C5H8O2N2");
-            AMINO_FORMULAS['r'] = AMINO_FORMULAS['R'] = Molecule.Parse("C6H12ON4");
-            AMINO_FORMULAS['s'] = AMINO_FORMULAS['S'] = Molecule.Parse("C3H5O2N");
-            AMINO_FORMULAS['t'] = AMINO_FORMULAS['T'] = Molecule.Parse("C4H7O2N");
-            AMINO_FORMULAS['u'] = AMINO_FORMULAS['U'] = Molecule.Parse("C3H5NOSe");
-            AMINO_FORMULAS['v'] = AMINO_FORMULAS['V'] = Molecule.Parse("C5H9ON");
-            AMINO_FORMULAS['w'] = AMINO_FORMULAS['W'] = Molecule.Parse("C11H10ON2");
-            AMINO_FORMULAS['y'] = AMINO_FORMULAS['Y'] = Molecule.Parse("C9H9O2N");
+            AMINO_FORMULAS['a'] = AMINO_FORMULAS['A'] = ParsedMolecule.Create("C3H5ON");
+            AMINO_FORMULAS['c'] = AMINO_FORMULAS['C'] = ParsedMolecule.Create("C3H5ONS");
+            AMINO_FORMULAS['d'] = AMINO_FORMULAS['D'] = ParsedMolecule.Create("C4H5O3N");
+            AMINO_FORMULAS['e'] = AMINO_FORMULAS['E'] = ParsedMolecule.Create("C5H7O3N");
+            AMINO_FORMULAS['f'] = AMINO_FORMULAS['F'] = ParsedMolecule.Create("C9H9ON");
+            AMINO_FORMULAS['g'] = AMINO_FORMULAS['G'] = ParsedMolecule.Create("C2H3ON");
+            AMINO_FORMULAS['h'] = AMINO_FORMULAS['H'] = ParsedMolecule.Create("C6H7ON3");
+            AMINO_FORMULAS['i'] = AMINO_FORMULAS['I'] = ParsedMolecule.Create("C6H11ON");
+            AMINO_FORMULAS['k'] = AMINO_FORMULAS['K'] = ParsedMolecule.Create("C6H12ON2");
+            AMINO_FORMULAS['l'] = AMINO_FORMULAS['L'] = ParsedMolecule.Create("C6H11ON");
+            AMINO_FORMULAS['m'] = AMINO_FORMULAS['M'] = ParsedMolecule.Create("C5H9ONS");
+            AMINO_FORMULAS['n'] = AMINO_FORMULAS['N'] = ParsedMolecule.Create("C4H6O2N2");
+            AMINO_FORMULAS['o'] = AMINO_FORMULAS['O'] = ParsedMolecule.Create("C12H19N3O2");
+            AMINO_FORMULAS['p'] = AMINO_FORMULAS['P'] = ParsedMolecule.Create("C5H7ON");
+            AMINO_FORMULAS['q'] = AMINO_FORMULAS['Q'] = ParsedMolecule.Create("C5H8O2N2");
+            AMINO_FORMULAS['r'] = AMINO_FORMULAS['R'] = ParsedMolecule.Create("C6H12ON4");
+            AMINO_FORMULAS['s'] = AMINO_FORMULAS['S'] = ParsedMolecule.Create("C3H5O2N");
+            AMINO_FORMULAS['t'] = AMINO_FORMULAS['T'] = ParsedMolecule.Create("C4H7O2N");
+            AMINO_FORMULAS['u'] = AMINO_FORMULAS['U'] = ParsedMolecule.Create("C3H5NOSe");
+            AMINO_FORMULAS['v'] = AMINO_FORMULAS['V'] = ParsedMolecule.Create("C5H9ON");
+            AMINO_FORMULAS['w'] = AMINO_FORMULAS['W'] = ParsedMolecule.Create("C11H10ON2");
+            AMINO_FORMULAS['y'] = AMINO_FORMULAS['Y'] = ParsedMolecule.Create("C9H9O2N");
             // ReSharper restore LocalizableElement
             // ReSharper restore CharImplicitlyConvertedToNumeric
         }
 
-        public static Molecule GetAminoAcidFormula(char aa)
+        public static ParsedMolecule GetAminoAcidFormula(char aa)
         {
             return AMINO_FORMULAS[aa];
         }
 
-        public static Molecule GetHeavyFormula(char aa, LabelAtoms labelAtoms)
+        public static ParsedMolecule GetHeavyFormula(char aa, LabelAtoms labelAtoms)
         {
             var formulaAA = AMINO_FORMULAS[aa];
             if (formulaAA == null)
                 throw new ArgumentOutOfRangeException(string.Format(Resources.SequenceMassCalc_GetHeavyFormula_No_formula_found_for_the_amino_acid___0__, aa));
 
-            var fAA = MoleculeMassOffset.Create(formulaAA);
-            return GetHeavyFormula(fAA, labelAtoms).Difference(fAA);
+            return formulaAA.ChangeMolecule(GetHeavyFormula(formulaAA, labelAtoms).Difference(formulaAA).Molecule);
         }
 
         private static readonly ImmutableList<Tuple<LabelAtoms, string, string>> 
@@ -1296,36 +1245,43 @@ namespace pwiz.Skyline.Model
             Tuple.Create(LabelAtoms.S34, BioMassCalc.S, BioMassCalc.S34),
         });
 
-        public static Molecule GetHeavyFormula(string formulaString, LabelAtoms labelAtoms)
+        public static ParsedMolecule GetHeavyFormula(string formulaString, LabelAtoms labelAtoms)
         {
-            var formula = MoleculeMassOffset.Create(formulaString);
+            var formula = ParsedMolecule.Create(formulaString);
             return GetHeavyFormula(formula, labelAtoms);
         }
 
-        public static Molecule GetHeavyFormula(Molecule formula, LabelAtoms labelAtoms)
+        public static ParsedMolecule GetHeavyFormula(ParsedMolecule formula, LabelAtoms labelAtoms)
         {
             if (labelAtoms == LabelAtoms.None)
             {
                 return formula;
             }
-            var subsitutions = ALL_LABEL_SUBSTITUTIONS
+            var substitutions = ALL_LABEL_SUBSTITUTIONS
                 .Where(tuple => (tuple.Item1 & labelAtoms) != 0).ToArray();
             var result = new Dictionary<string, int>();
-            foreach (var kvp in formula)
+            bool bHasSubstitutions = false;
+            foreach (var kvp in formula.Molecule)
             {
                 var symbol = kvp.Key;
-                var subTuple = subsitutions.FirstOrDefault(tuple => tuple.Item2 == symbol);
+                var subTuple = substitutions.FirstOrDefault(tuple => tuple.Item2 == symbol);
                 if (subTuple != null)
                 {
                     symbol = subTuple.Item3;
+                    bHasSubstitutions = true;
                 }
 
-                result.TryGetValue(symbol, out var count); // In case two or more substitutions map to same original key
-                count += kvp.Value;
-                result[symbol] = count;
+                if (result.TryGetValue(symbol, out var count)) // In case two or more substitutions map to same original key
+                {
+                    result[symbol] = count + kvp.Value;
+                }
+                else
+                {
+                    result.Add(symbol, kvp.Value);
+                }
             }
 
-            return formula.ChangeFormula(result);
+            return bHasSubstitutions ? formula.ChangeMolecule(Molecule.FromDict(result)).ChangeIsHeavy(true) : formula;
         }
     }
 
@@ -1363,7 +1319,7 @@ namespace pwiz.Skyline.Model
             get { return _massCalcBase.MassType; }
         }
 
-        public TypedMass GetPrecursorMass(CustomMolecule mol, TypedModifications mods, Adduct adductForIsotopeLabels, out Molecule isotopicFormula)
+        public TypedMass GetPrecursorMass(CustomMolecule mol, TypedModifications mods, Adduct adductForIsotopeLabels, out ParsedMolecule isotopicFormula)
         {
             return _massCalcBase.GetPrecursorMass(mol, mods, adductForIsotopeLabels, out isotopicFormula);
         }
@@ -1407,7 +1363,7 @@ namespace pwiz.Skyline.Model
             return GetModifiedSequence(seq, SequenceModFormatType.mass_diff_narrow, false);
         }
 
-        public Adduct GetModifiedAdduct(Adduct adduct,  MoleculeMassOffset neutralFormula)
+        public Adduct GetModifiedAdduct(Adduct adduct,  ParsedMolecule neutralFormula)
         {
             return HasLabels ? 
                 SequenceMassCalc.GetModifiedAdduct(adduct, neutralFormula, _massCalcBase.Labels) : 
@@ -1429,7 +1385,7 @@ namespace pwiz.Skyline.Model
             return _massCalcBase.GetMzDistribution(target, adduct, abundances, _mods);
         }
 
-        public MassDistribution GetMZDistribution(Molecule molecule, Adduct adduct, IsotopeAbundances abundances)
+        public MassDistribution GetMZDistribution(MoleculeMassOffset molecule, Adduct adduct, IsotopeAbundances abundances)
         {
             return _massCalcBase.GetMZDistribution(molecule, adduct, abundances);
         }

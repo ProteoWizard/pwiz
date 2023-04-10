@@ -60,7 +60,7 @@ namespace pwiz.Skyline.Model.Lib.BlibData
                                 RefSpectra = refSpectra,
                                 PeakIndex = i,
                                 Name = annotation.Ion.Name,
-                                Formula = annotation.Ion.MoleculeAndMassOffset.ToString(),
+                                Formula = annotation.Ion.NeutralFormula,
                                 InchiKey = annotation.Ion.AccessionNumbers.GetInChiKey(),
                                 OtherKeys = annotation.Ion.AccessionNumbers.GetNonInChiKeys(),
                                 Adduct = annotation.Ion.Adduct.ToString(),

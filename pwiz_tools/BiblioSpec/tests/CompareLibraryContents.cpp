@@ -239,6 +239,8 @@ int test (const vector<string>& args)
     string expected;
     getline(compareFile, expected);
     bool inScoreTypesSection = false;
+    bool inRefSpectraIdSectionExpected = false;
+    bool inRefSpectraIdSectionObserved = false;
 
     while( !compareFile.eof() )
     {
@@ -250,6 +252,19 @@ int test (const vector<string>& args)
         }
 
         string& observed = outputLines[lineNum];
+
+        // Some files have a section beyond ScoreTypes
+        const char* refSpectraHint = "RefSpectraID\tRedundantRefSpectraID\t";
+        while(inRefSpectraIdSectionExpected && !inRefSpectraIdSectionObserved)
+        {
+            if (!(inRefSpectraIdSectionObserved |= (observed.rfind(refSpectraHint, 0) == 0)))
+            {
+                lineNum++;
+                if (lineNum >= outputLines.size())
+                    break;
+                observed = outputLines[lineNum];
+            }
+        }
 
         if( ! linesMatch(expected, observed, compareDetails) )
         {
@@ -263,6 +278,8 @@ int test (const vector<string>& args)
         getline(compareFile, expected);
         lineNum++;
         inScoreTypesSection |= (expected == "id\tscoreType\tprobabilityType");
+        inRefSpectraIdSectionExpected |= (expected.rfind(refSpectraHint, 0) == 0);
+
     }
 
     if (lineNum < outputLines.size() && !inScoreTypesSection) // Allow the output file to have additional score types

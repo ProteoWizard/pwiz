@@ -20,7 +20,6 @@
 using System;
 using System.Collections.Generic;
 using System.Xml;
-using pwiz.Common.Chemistry;
 using pwiz.Common.SystemUtil;
 using pwiz.Skyline.Model.Lib;
 using pwiz.Skyline.Properties;
@@ -45,8 +44,8 @@ namespace pwiz.Skyline.Model
         /// <param name="averageMass">The average mass of the molecule (can be calculated by the formula)</param>
         /// <param name="name">The arbitrary name given to this molecule</param>
         public CustomIon(string formula, Adduct adduct, double? monoisotopicMass = null, double? averageMass = null, string name = null)
-            : this(formula, adduct, TypedMass.Create(monoisotopicMass ?? averageMass ?? 0, MassType.Monoisotopic),
-                                    TypedMass.Create(averageMass ?? monoisotopicMass ?? 0, MassType.Average), name)
+            : this(formula, adduct, new TypedMass(monoisotopicMass ?? averageMass ?? 0, MassType.Monoisotopic),
+                                    new TypedMass(averageMass ?? monoisotopicMass ?? 0, MassType.Average), name)
         {
         }
 
@@ -64,7 +63,7 @@ namespace pwiz.Skyline.Model
         {
         }
 
-        public CustomIon(MoleculeMassOffset mol, Adduct adduct, string name) : base(mol, name)
+        public CustomIon(ParsedMolecule mol, Adduct adduct, string name) : base(mol, name)
         {
             Adduct = adduct;
         }
@@ -77,10 +76,10 @@ namespace pwiz.Skyline.Model
         {
             if (adduct.IsEmpty)
             {
-                var ionInfo = new IonInfo(MoleculeAndMassOffset, adduct); // Analyzes the formula to see if it's something like "CH12[M+Na]"
-                if (!Equals(MoleculeAndMassOffset, ionInfo.NeutralFormula))
+                var ionInfo = new IonInfo(ParsedMolecule, adduct); // Analyzes the formula to see if it's something like "CH12[M+Na]"
+                if (!Equals(ParsedMolecule, ionInfo.NeutralFormula))
                 {
-                    MoleculeAndMassOffset = ionInfo.NeutralFormula;
+                    ParsedMolecule = ionInfo.NeutralFormula;
                 }
                 Adduct = Adduct.FromStringAssumeProtonated(ionInfo.AdductText);
             }
@@ -102,7 +101,7 @@ namespace pwiz.Skyline.Model
         /// </summary>
         protected CustomIon()
         {
-            MoleculeAndMassOffset = MoleculeMassOffset.EMPTY;
+            ParsedMolecule = ParsedMolecule.EMPTY;
             Adduct = Adduct.EMPTY;
         }
 
@@ -110,7 +109,7 @@ namespace pwiz.Skyline.Model
         {
             if (Equals(Name, name))
                 return this;
-            return new CustomIon(MoleculeAndMassOffset, Adduct, name);
+            return new CustomIon(ParsedMolecule, Adduct, name);
         }
 
         public static CustomIon Deserialize(XmlReader reader)
@@ -124,11 +123,11 @@ namespace pwiz.Skyline.Model
 
         public string NeutralFormula { get { return Formula; } }
 
-        public MoleculeMassOffset FormulaWithAdductApplied
+        public ParsedMolecule FormulaWithAdductApplied
         {
             get
             {
-                var ionInfo = new IonInfo(MoleculeAndMassOffset, Adduct);
+                var ionInfo = new IonInfo(ParsedMolecule, Adduct);
                 return ionInfo.FormulaWithAdductApplied;
             }
         }

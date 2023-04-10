@@ -1447,7 +1447,7 @@ namespace pwiz.SkylineTestFunctional
                     foreach (var transition in precursor.Transitions)
                     {
                         AssertEx.IsTrue(precursor.PrecursorAdduct.HasIsotopeLabels == transition.Transition.Adduct.HasIsotopeLabels ||
-                                        !transition.Transition.CustomIon.MoleculeAndMassOffset.HasElement(@"C")); // Can't C13-label a fragment with no C in it
+                                        !transition.Transition.CustomIon.ParsedMolecule.Molecule.TryGetValue(@"C", out _)); // Can't C13-label a fragment with no C in it
                     }
                 }
                 NewDocument();
@@ -1664,7 +1664,7 @@ namespace pwiz.SkylineTestFunctional
             // Paste directly into targets area - no interaction expected
             RunUI(() => SkylineWindow.Paste());
             AssertEx.IsDocumentState(SkylineWindow.Document, null, 1, 5, 5, 5);
-            var docMolecules = SkylineWindow.Document.CustomMolecules.Select(mol => mol.CustomMolecule.MoleculeAndMassOffset).ToArray();
+            var docMolecules = SkylineWindow.Document.CustomMolecules.Select(mol => mol.CustomMolecule.ParsedMolecule).ToArray();
             AssertEx.AreEqual("C28H42N2O1Xe", docMolecules[0].ToString());
             AssertEx.AreEqual("C30H46N2O1Xe", docMolecules[1].ToString());
             AssertEx.AreEqual("C28N2OXeH41", docMolecules[2].ToString());
@@ -1771,8 +1771,8 @@ namespace pwiz.SkylineTestFunctional
             Assume.AreEqual(1, pastedDoc.MoleculeCount);
             var transitions = pastedDoc.MoleculeTransitions.ToArray();
             Assume.AreEqual(2, transitions.Count(t => !t.IsMs1));
-            Assume.AreEqual("C20H30O", transitions[1].CustomIon.MoleculeAndMassOffset.ToString()); // As given literally
-            Assume.AreEqual("C20H30O2", transitions[2].CustomIon.MoleculeAndMassOffset.ToString()); // As given by neutral loss
+            Assume.AreEqual("C20H30O", transitions[1].CustomIon.ParsedMolecule.ToString()); // As given literally
+            Assume.AreEqual("C20H30O2", transitions[2].CustomIon.ParsedMolecule.ToString()); // As given by neutral loss
             NewDocument();
 
         }

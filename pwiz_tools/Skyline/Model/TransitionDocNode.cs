@@ -102,7 +102,7 @@ namespace pwiz.Skyline.Model
             Assume.IsTrue(Transition.IsCustom() || MzMassType.IsMassH());
             return Transition.IsCustom()
                 ? Transition.CustomIon.GetMass(MzMassType)
-                : TypedMass.Create(SequenceMassCalc.GetMH(Mz, Transition.Charge), MzMassType);            
+                : new TypedMass(SequenceMassCalc.GetMH(Mz, Transition.Charge), MzMassType);            
         }
 
         public bool IsDecoy { get { return Transition.DecoyMassShift.HasValue; } }
@@ -635,9 +635,9 @@ namespace pwiz.Skyline.Model
         {
             if (Transition.IsNonReporterCustomIon())
             {
-                transitionProto.Formula = Transition.CustomIon.MoleculeAndMassOffset.IsMassOnly ?
+                transitionProto.Formula = Transition.CustomIon.ParsedMolecule.IsMassOnly ?
                     null : 
-                    Transition.CustomIon.MoleculeAndMassOffset.ToString();
+                    Transition.CustomIon.ParsedMolecule.ToString();
                 if (Transition.CustomIon.AverageMass.IsMassH())
                     transitionProto.AverageMassH = Transition.CustomIon.AverageMass;
                 else
@@ -685,16 +685,16 @@ namespace pwiz.Skyline.Model
                 }
                 else
                 {
-                    var formula = MoleculeMassOffset.Create(transitionProto.Formula);
+                    var formula = ParsedMolecule.Create(transitionProto.Formula);
                     var moleculeID = MoleculeAccessionNumbers.FromString(transitionProto.MoleculeId); // Tab separated list of InChiKey, CAS etc
                     var monoMassH = transitionProto.MonoMassH;
                     var averageMassH = transitionProto.AverageMassH;
                     var monoMass = transitionProto.MonoMass ?? monoMassH;
                     var averageMass = transitionProto.AverageMass ?? averageMassH;
                     var monoMassType = monoMassH.HasValue ? MassType.MonoisotopicMassH : MassType.Monoisotopic;
-                    customIon = MoleculeMassOffset.IsNullOrEmpty(formula) ?
-                        new CustomMolecule(TypedMass.Create(monoMass??0, monoMassType),
-                            TypedMass.Create(averageMass??0, averageMassH.HasValue ? MassType.AverageMassH : MassType.Average),
+                    customIon = ParsedMolecule.IsNullOrEmpty(formula) ?
+                        new CustomMolecule(new TypedMass(monoMass??0, monoMassType),
+                            new TypedMass(averageMass??0, averageMassH.HasValue ? MassType.AverageMassH : MassType.Average),
                             transitionProto.CustomIonName, moleculeID) :
                         new CustomMolecule(formula.ChangeIsMassH(monoMassType.IsMassH()), transitionProto.CustomIonName, moleculeID);
                 }
@@ -1033,8 +1033,7 @@ namespace pwiz.Skyline.Model
         {
             if (ReferenceEquals(null, obj)) return false;
             if (ReferenceEquals(this, obj)) return true;
-            var equal =  base.Equals(obj) && 
-                   (obj.Mz.CompareTolerant(Mz, BioMassCalc.MassTolerance) == 0) && // Allow for XML rounding
+            var equal =  base.Equals(obj) && obj.Mz == Mz &&
                    Equals(obj.IsotopeDistInfo, IsotopeDistInfo) &&
                    Equals(obj.LibInfo, LibInfo) &&
                    Equals(obj.Results, Results) &&

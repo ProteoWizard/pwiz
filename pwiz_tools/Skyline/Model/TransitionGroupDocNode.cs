@@ -764,7 +764,7 @@ namespace pwiz.Skyline.Model
             var seq = TransitionGroup.Peptide.Target;
             var adduct = TransitionGroup.PrecursorAdduct;
             IsotopeLabelType labelType = TransitionGroup.LabelType;
-            Molecule isotopicFormula = null;
+            ParsedMolecule isotopicFormula = null;
             double mz;
             IPrecursorMassCalc calc;
             if (IsCustomIon)
@@ -782,7 +782,7 @@ namespace pwiz.Skyline.Model
                 mz = SequenceMassCalc.GetMZ(mass, adduct) + 
                      SequenceMassCalc.GetPeptideInterval(TransitionGroup.DecoyMassShift);
                 if (TransitionGroup.DecoyMassShift.HasValue)
-                    mass = TypedMass.Create(SequenceMassCalc.GetMH(mz, adduct.AdductCharge), calc.MassType);
+                    mass = new TypedMass(SequenceMassCalc.GetMH(mz, adduct.AdductCharge), calc.MassType);
             }
 
             isotopeDist = null;
@@ -798,7 +798,7 @@ namespace pwiz.Skyline.Model
                 }
                 else if (isotopicFormula != null)
                 {
-                    massDist = calc.GetMZDistribution(isotopicFormula, adduct, fullScan.IsotopeAbundances);
+                    massDist = calc.GetMZDistribution(isotopicFormula.GetMoleculeMassOffset(), adduct, fullScan.IsotopeAbundances);
                 }
                 else
                 {
@@ -839,18 +839,18 @@ namespace pwiz.Skyline.Model
             return IsotopeDistInfo.MakeIsotopeDistInfo(massDist, monoMassH, PrecursorAdduct, settings.TransitionSettings.FullScan);
         }
 
-        public MoleculeMassOffset GetNeutralFormula(SrmSettings settings, ExplicitMods mods)
+        public ParsedMolecule GetNeutralFormula(SrmSettings settings, ExplicitMods mods)
         {
             if (IsCustomIon)
             {
-                return CustomMolecule.MoleculeAndMassOffset;
+                return CustomMolecule.ParsedMolecule;
             }
             IPrecursorMassCalc massCalc = settings.GetPrecursorCalc(LabelType, mods);
-            MoleculeMassOffset moleculeMassOffset = MoleculeMassOffset.Create(massCalc.GetMolecularFormula(Peptide.Sequence));
-            moleculeMassOffset = moleculeMassOffset.Add((mods?.CrosslinkStructure ?? CrosslinkStructure.EMPTY)
+            var moleculeMassOffset = massCalc.GetMolecularFormula(Peptide.Sequence);
+            moleculeMassOffset = moleculeMassOffset.Plus((mods?.CrosslinkStructure ?? CrosslinkStructure.EMPTY)
                 .GetNeutralFormula(settings, LabelType));
             
-            return moleculeMassOffset;
+            return ParsedMolecule.Create(moleculeMassOffset);
         }
 
         private static MassDistribution ShiftMzDistribution(MassDistribution massDist, int massShift)

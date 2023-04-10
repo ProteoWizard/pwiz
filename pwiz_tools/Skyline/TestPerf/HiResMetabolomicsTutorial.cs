@@ -40,7 +40,6 @@ using System.Drawing;
 using System.IO;
 using System.Linq;
 using System.Windows.Forms;
-using pwiz.Common.Chemistry;
 
 namespace TestPerf // This would be in TestTutorials if it didn't involve a 2GB download
 {

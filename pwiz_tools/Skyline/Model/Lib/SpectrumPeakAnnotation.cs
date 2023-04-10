@@ -20,7 +20,6 @@
 using System;
 using System.Collections.Generic;
 using System.Linq;
-using pwiz.Common.Chemistry;
 using pwiz.Skyline.Util;
 using pwiz.Skyline.Util.Extensions;
 

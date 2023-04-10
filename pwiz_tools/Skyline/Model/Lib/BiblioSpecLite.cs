@@ -797,7 +797,7 @@ namespace pwiz.Skyline.Model.Lib
                                 TypedMass monoMass = precursorAdduct.MassFromMz(precursorMz, MassType.Monoisotopic);
                                 TypedMass avgMass = precursorAdduct.MassFromMz(precursorMz, MassType.Average);
                                 smallMoleculeLibraryAttributes = SmallMoleculeLibraryAttributes.Create(moleculeName,
-                                    MoleculeMassOffset.Create(monoMass, avgMass), inChiKey, otherKeys);
+                                    ParsedMolecule.Create(monoMass, avgMass), inChiKey, otherKeys);
                             }
                             else
                             {

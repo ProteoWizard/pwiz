@@ -357,11 +357,10 @@ namespace pwiz.Skyline.Model
                     adduct.MzFromNeutralMass(pep.CustomMolecule.AverageMass, MassType.Average);
                 var labelType = precursor.IsotopeLabelType ?? IsotopeLabelType.light;
                 // Match existing molecule if same formula or identical formula when stripped of labels
-                pepFound |= !pep.CustomMolecule.MoleculeAndMassOffset.IsMassOnly &&
-                            (Equals(pep.CustomMolecule.MoleculeAndMassOffset, precursor.NeutralFormula) ||
-                             Equals(pep.CustomMolecule.MoleculeAndMassOffset, precursor.Formula) ||
-                             Equals(pep.CustomMolecule.UnlabeledFormula,
-                                 precursor.NeutralFormula.StripIsotopicLabels()) ||
+                pepFound |= !pep.CustomMolecule.ParsedMolecule.IsMassOnly &&
+                            (Equals(pep.CustomMolecule.ParsedMolecule, precursor.NeutralFormula) ||
+                             Equals(pep.CustomMolecule.ParsedMolecule, precursor.Formula) ||
+                             Equals(pep.CustomMolecule.UnlabeledFormula, BioMassCalc.StripLabelsFromFormula(precursor.NeutralFormula)) ||
                              Equals(pep.CustomMolecule.UnlabeledFormula, precursor.UnlabeledFormula));
                 // Match existing molecule if similar m/z at the precursor charge
                 pepFound |= Math.Abs(ionMonoMz - precursorMonoMz) <= MzMatchTolerance &&
@@ -369,7 +368,7 @@ namespace pwiz.Skyline.Model
                             MzMatchTolerance && // (we don't just check mass since we don't have a tolerance value for that)
                             (adduct.AdductCharge < 0 == precursor.Adduct.AdductCharge < 0);
                 // Or no formula, and different isotope labels or matching label and mz
-                pepFound |= pep.CustomMolecule.MoleculeAndMassOffset.IsMassOnly &&
+                pepFound |= pep.CustomMolecule.ParsedMolecule.IsMassOnly &&
                             precursor.Formula.IsMassOnly &&
                             (!pep.TransitionGroups.Any(t => Equals(t.TransitionGroup.LabelType,
                                  labelType)) || // First label of this kind
@@ -701,10 +700,9 @@ namespace pwiz.Skyline.Model
             if (adductInferred.IsEmpty)
             {
                 // That formula and this mz don't yield a reasonable charge state - try adding an H
-                var ion2 = ion.FormulaWithAdductApplied.SetElementCount(BioMassCalc.H,
-                    ion.FormulaWithAdductApplied.GetElementCount(BioMassCalc.H)+1);
-                monoMass = ion2.GetTotalMass(MassType.Monoisotopic);
-                averageMass = ion2.GetTotalMass(MassType.Average);
+                var ion2 = ion.FormulaWithAdductApplied.AdjustElementCount(BioMassCalc.H,1);
+                monoMass = BioMassCalc.MONOISOTOPIC.CalculateMass(ion2);
+                averageMass = BioMassCalc.AVERAGE.CalculateMass(ion2);
                 mass = useMonoIsotopicMass
                     ? monoMass
                     : averageMass;
@@ -736,7 +734,7 @@ namespace pwiz.Skyline.Model
             var ion = new CustomMolecule(moleculeFormula);
             monoMass = ion.GetMass(MassType.Monoisotopic);
             averageMass = ion.GetMass(MassType.Average);
-            return TypedMass.Create(adduct.MzFromNeutralMass(massType.IsMonoisotopic() ? monoMass : averageMass, massType), massType); // m/z is not actually a mass, of course, but mono vs avg is interesting
+            return new TypedMass(adduct.MzFromNeutralMass(massType.IsMonoisotopic() ? monoMass : averageMass, massType), massType); // m/z is not actually a mass, of course, but mono vs avg is interesting
         }
 
         public static string NullForEmpty(string str)
@@ -1049,7 +1047,7 @@ namespace pwiz.Skyline.Model
                 }
                 mzParsed = 0;
             }
-            var mz = TypedMass.Create(mzParsed, mzType); // mz is not actually a mass, of course, but we want to track mass type it was calculated from
+            var mz = new TypedMass(mzParsed, mzType); // mz is not actually a mass, of course, but we want to track mass type it was calculated from
             if ((mz < 0) || badMz)
             {
                 ShowTransitionError(new PasteError
@@ -1436,7 +1434,7 @@ namespace pwiz.Skyline.Model
                         // If formula contains isotope info, move it to the adduct
                         if (!adduct.IsEmpty)
                         {
-                            var labels = BioMassCalc.MONOISOTOPIC.FindIsotopeLabelsInFormula(formula);
+                            var labels = BioMassCalc.FindIsotopeLabelsInFormula(formula);
                             if (labels.Any())
                             {
                                 adduct = adduct.ChangeIsotopeLabels(labels);
@@ -1614,7 +1612,7 @@ namespace pwiz.Skyline.Model
                 // Parse molecule and neutral loss formulas to dictionaries, with syntax checking
                 // N.B. here we use pwiz.Skyline.Util.BioMassCalc rather than pwiz.Common.Chemistry.Molecule because it
                 // understands Skyline isotope symbols (e.g. H', C" etc) while pwiz.Common.Chemistry.Molecule does not
-                if (!BioMassCalc.MONOISOTOPIC.TryParseFormula(precursorFormula, out var precursorMolecule, out var errMessage))
+                if (!ParsedMolecule.TryParseFormula(precursorFormula, out var precursorMolecule, out var errMessage))
                 {
                     ShowTransitionError(new PasteError
                     {
@@ -1637,7 +1635,7 @@ namespace pwiz.Skyline.Model
                     return false;
                 }
 
-                if (!BioMassCalc.MONOISOTOPIC.TryParseFormula(neutralLoss, out var lossMolecule, out errMessage))
+                if (!ParsedMolecule.TryParseFormula(neutralLoss, out var lossMolecule, out errMessage))
                 {
                     ShowTransitionError(new PasteError
                     {
@@ -1660,7 +1658,7 @@ namespace pwiz.Skyline.Model
                 }
                 // Calculate the resulting fragment as precursor-loss, checking to see that we're not losing atoms that aren't there in the first place
                 var fragmentMolecule = precursorMolecule.Difference(lossMolecule);
-                if (fragmentMolecule.Values.Any(v => v < 0))
+                if (fragmentMolecule.Molecule.Values.Any(v => v < 0))
                 {
                     ShowTransitionError(new PasteError
                     {
@@ -1673,7 +1671,7 @@ namespace pwiz.Skyline.Model
                     return false;
                 }
 
-                formula = fragmentMolecule.ToDisplayString();
+                formula = fragmentMolecule.ToString();
             }
 
             return true; // Success
@@ -1790,8 +1788,8 @@ namespace pwiz.Skyline.Model
                 var ionH = adductH.ApplyToFormula(formula);
                 var ionM = adductM.ApplyToFormula(formula);
                 var mass = mz * Math.Abs(charge);
-                adduct = Math.Abs(ionH.GetTotalMass(MassType.Monoisotopic) - mass) <
-                         Math.Abs(ionM.GetTotalMass(MassType.Monoisotopic) - mass)
+                adduct = Math.Abs(BioMassCalc.MONOISOTOPIC.CalculateMass(ionH) - mass) <
+                         Math.Abs(BioMassCalc.MONOISOTOPIC.CalculateMass(ionM) - mass)
                     ? adductH
                     : adductM;
             }
@@ -1825,7 +1823,7 @@ namespace pwiz.Skyline.Model
                 // Identify items with same formula and different adducts
                 var neutralFormula = parsedIonInfo.NeutralFormula;
                 var shortName = parsedIonInfo.MoleculeID.Name;
-                if (!MoleculeMassOffset.IsNullOrEmpty(neutralFormula))
+                if (!ParsedMolecule.IsNullOrEmpty(neutralFormula))
                 {
                     molecule = new CustomMolecule(neutralFormula, shortName, parsedIonInfo.MoleculeID.AccessionNumbers);
                 }
@@ -1936,7 +1934,7 @@ namespace pwiz.Skyline.Model
                 return false;
             }
             // Formulas and/or masses must be non-empty, and match
-            return !((MoleculeMassOffset.IsNullOrEmpty(precursor.Formula) || !Equals(precursor.Formula, fragment.Formula)) &&
+            return !((ParsedMolecule.IsNullOrEmpty(precursor.Formula) || !Equals(precursor.Formula, fragment.Formula)) &&
                      !Equals(precursor.MonoMass, fragment.MonoMass));
         }
 

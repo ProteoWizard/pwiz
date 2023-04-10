@@ -860,7 +860,7 @@ namespace pwiz.Skyline.Model
                 var text = CustomIon.ToString();
                 // Was there enough information to generate a string more distinctive that just "Ion"?
                 if (String.IsNullOrEmpty(CustomIon.Name) && 
-                    CustomIon.MoleculeAndMassOffset.IsMassOnly)
+                    CustomIon.ParsedMolecule.IsMassOnly)
                 {
                     // No, add mz and charge to whatever generic text was used to describe it
                     var mz = Adduct.MzFromNeutralMass(CustomIon.MonoisotopicMass);

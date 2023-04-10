@@ -62,7 +62,7 @@ namespace pwiz.SkylineTestFunctional
             });
             OkDialog(columnSelectDlg, columnSelectDlg.OkDialog);
             Assert.AreEqual(1, SkylineWindow.Document.MoleculeTransitionCount);
-            Assert.AreEqual("HO10", SkylineWindow.Document.MoleculeTransitions.First().CustomIon.MoleculeAndMassOffset.ToString());
+            Assert.AreEqual("HO10", SkylineWindow.Document.MoleculeTransitions.First().CustomIon.Formula);
         }
     }
 }

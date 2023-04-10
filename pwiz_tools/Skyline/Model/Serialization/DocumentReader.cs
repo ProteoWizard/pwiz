@@ -1014,7 +1014,7 @@ namespace pwiz.Skyline.Model.Serialization
             var customMolecule = isCustomMolecule ? CustomMolecule.Deserialize(reader, out adduct) : null; // This Deserialize only reads attributes, doesn't advance the reader
             if (customMolecule != null)
             {
-                if (DocumentMayContainMoleculesWithEmbeddedIons && customMolecule.MoleculeAndMassOffset.IsMassOnly && customMolecule.MonoisotopicMass.IsMassH())
+                if (DocumentMayContainMoleculesWithEmbeddedIons && customMolecule.ParsedMolecule.IsMassOnly && customMolecule.MonoisotopicMass.IsMassH())
                 {
                     // Defined by mass only, assume it's not massH despite how it may have been written
                     customMolecule = new CustomMolecule(
@@ -1364,7 +1364,7 @@ namespace pwiz.Skyline.Model.Serialization
                 if (!string.IsNullOrEmpty(neutralFormula))
                 {
                     var ion = precursorAdduct.ApplyToFormula(neutralFormula);
-                    var moleculeWithAdduct = precursorAdduct.ApplyToMolecule(peptide.CustomMolecule.MoleculeAndMassOffset);
+                    var moleculeWithAdduct = precursorAdduct.ApplyToMolecule(peptide.CustomMolecule.ParsedMolecule);
                     Assume.IsTrue(ion.CompareTolerant(moleculeWithAdduct, BioMassCalc.MassTolerance) == 0, @"Expected precursor ion formula to match parent molecule with adduct applied");
                 }
             }
@@ -1571,7 +1571,7 @@ namespace pwiz.Skyline.Model.Serialization
                 else
                 {
                     customMolecule = CustomMolecule.Deserialize(reader, out adduct);
-                    if (DocumentMayContainMoleculesWithEmbeddedIons && customMolecule.MoleculeAndMassOffset.IsMassOnly && customMolecule.MonoisotopicMass.IsMassH())
+                    if (DocumentMayContainMoleculesWithEmbeddedIons && customMolecule.ParsedMolecule.IsMassOnly && customMolecule.MonoisotopicMass.IsMassH())
                     {
                         // Defined by mass only, assume it's not massH despite how it may have been written
                         customMolecule = new CustomMolecule(customMolecule.MonoisotopicMass.ChangeIsMassH(false), customMolecule.AverageMass.ChangeIsMassH(false),
@@ -1596,7 +1596,7 @@ namespace pwiz.Skyline.Model.Serialization
                     Math.Abs(declaredProductMz.Value - customMolecule.MonoisotopicMass / Math.Abs(adduct.AdductCharge)) < .001)
                 {
                     CustomMolecule newFormula = null;
-                    if (!customMolecule.MoleculeAndMassOffset.IsMassOnly &&
+                    if (!customMolecule.ParsedMolecule.IsMassOnly &&
                         Math.Abs(customMolecule.MonoisotopicMass - Math.Abs(adduct.AdductCharge) * declaredProductMz.Value) < .01)
                     {
                         // Adjust hydrogen count to get a molecular mass that makes sense for charge and mz

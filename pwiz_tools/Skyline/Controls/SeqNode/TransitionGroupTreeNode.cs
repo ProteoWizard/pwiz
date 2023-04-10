@@ -23,7 +23,6 @@ using System.Drawing;
 using System.Globalization;
 using System.Linq;
 using System.Text;
-using pwiz.Common.Chemistry;
 using pwiz.Common.SystemUtil;
 using pwiz.Skyline.Model;
 using pwiz.Skyline.Model.DocSettings;
@@ -402,8 +401,8 @@ namespace pwiz.Skyline.Controls.SeqNode
                             return true;
                         }
                         else if (tranGroup.IsCustomIon && nodeTree.IsSynchable() &&
-                                 tranGroupThis.CustomMolecule.MoleculeAndMassOffset.IsMassOnly ==
-                                 tranGroup.CustomMolecule.MoleculeAndMassOffset.IsMassOnly)
+                                 tranGroupThis.CustomMolecule.ParsedMolecule.IsMassOnly ==
+                                 tranGroup.CustomMolecule.ParsedMolecule.IsMassOnly)
                         {
                             return true;
                         }

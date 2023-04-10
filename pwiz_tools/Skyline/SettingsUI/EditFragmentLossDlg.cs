@@ -21,7 +21,6 @@ using System.Collections.Generic;
 using System.Drawing;
 using System.Linq;
 using System.Windows.Forms;
-using pwiz.Common.Chemistry;
 using pwiz.Skyline.Alerts;
 using pwiz.Skyline.Controls;
 using pwiz.Skyline.Model;
@@ -105,8 +104,8 @@ namespace pwiz.Skyline.SettingsUI
             {
                 try
                 {
-                    double massMono = SequenceMassCalc.FormulaMass(SkylineBioMassCalc.MONOISOTOPIC, formulaLoss, SequenceMassCalc.MassPrecision);
-                    double massAverage = SequenceMassCalc.FormulaMass(SkylineBioMassCalc.AVERAGE, formulaLoss, SequenceMassCalc.MassPrecision);
+                    double massMono = SequenceMassCalc.FormulaMass(BioMassCalc.MONOISOTOPIC, formulaLoss, SequenceMassCalc.MassPrecision);
+                    double massAverage = SequenceMassCalc.FormulaMass(BioMassCalc.AVERAGE, formulaLoss, SequenceMassCalc.MassPrecision);
                     if (FragmentLoss.MIN_LOSS_MASS > massMono || FragmentLoss.MIN_LOSS_MASS > massAverage)
                     {
                         _formulaBox.ShowTextBoxErrorFormula(helper, string.Format(Resources.EditFragmentLossDlg_OkDialog_Neutral_loss_masses_must_be_greater_than_or_equal_to__0__,
