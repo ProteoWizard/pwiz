@@ -43,7 +43,6 @@ namespace pwiz.Common.Chemistry
         public Molecule Molecule { get; private set; }
         public double MonoMassOffset { get; private set; }
         public double AverageMassOffset { get; private set; }
-
         public double GetMassOffset(bool bMono) => bMono ? MonoMassOffset : AverageMassOffset;
         public bool IsEmpty =>
             ReferenceEquals(this, MoleculeMassOffset.EMPTY) ||
@@ -70,18 +69,6 @@ namespace pwiz.Common.Chemistry
             return Create(molecule, MonoMassOffset, AverageMassOffset);
         }
 
-        public static MoleculeMassOffset Sum(IEnumerable<MoleculeMassOffset> parts)
-        {
-            return Sum(parts.ToList());
-        }
-
-        private static MoleculeMassOffset Sum(IList<MoleculeMassOffset> parts)
-        {
-            var monoMassOffset = parts.Sum(part => part.MonoMassOffset);
-            var averageMassOffset = parts.Sum(part => part.AverageMassOffset);
-            return Create(Formula<Molecule>.Sum(parts.Select(mol => mol.Molecule)), monoMassOffset, averageMassOffset);
-        }
-
         public MoleculeMassOffset Plus(MoleculeMassOffset moleculeMassOffset)
         {
             return Sum(new[] { this, moleculeMassOffset });
@@ -95,6 +82,18 @@ namespace pwiz.Common.Chemistry
         public MoleculeMassOffset Minus(MoleculeMassOffset moleculeMassOffset)
         {
             return Plus(moleculeMassOffset.TimesMinusOne());
+        }
+
+        public static MoleculeMassOffset Sum(IEnumerable<MoleculeMassOffset> parts)
+        {
+            return Sum(parts.ToList());
+        }
+
+        private static MoleculeMassOffset Sum(IList<MoleculeMassOffset> parts)
+        {
+            var monoMassOffset = parts.Sum(part => part.MonoMassOffset);
+            var averageMassOffset = parts.Sum(part => part.AverageMassOffset);
+            return Create(Formula<Molecule>.Sum(parts.Select(mol => mol.Molecule)), monoMassOffset, averageMassOffset);
         }
 
         /// <summary>

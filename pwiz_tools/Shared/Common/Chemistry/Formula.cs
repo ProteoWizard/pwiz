@@ -317,6 +317,8 @@ namespace pwiz.Common.Chemistry
             return result;
         }
 
+
+
         public T TimesMinusOne()
         {
             return new T
