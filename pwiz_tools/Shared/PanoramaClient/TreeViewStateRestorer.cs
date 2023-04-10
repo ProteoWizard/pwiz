@@ -1,743 +1,17 @@
-using System;
+﻿using System;
 using System.Collections;
 using System.Collections.Generic;
+using System.ComponentModel;
 using System.Drawing;
 using System.Linq;
-using Newtonsoft.Json.Linq;
+using System.Runtime.InteropServices;
+using System.Text;
+using System.Threading.Tasks;
 using System.Windows.Forms;
-
 
 namespace pwiz.PanoramaClient
 {
-    public partial class RemoteFileDialog : Form
-    {
-        private static string ReplacedInfo; 
-        private static string ReplacedBy;
-        private static string LatestVersion; 
-        private static string CheckIfVersions;
-        private static string PeptideInfoQuery;
-        private string InitQuery;
-        private FolderBrowser folderBrowser;
-        public TreeNodeCollection _nodesState;
-        public List<TreeView> tree = new List<TreeView>();
-        //public TreeViewStateRestorer state;
-        private TreeNode lastSelected;
-        private bool restoring;
-        private Stack<TreeNode> previous = new Stack<TreeNode>();
-        private TreeNode priorNode;
-        private Stack<TreeNode> next = new Stack<TreeNode>();
-        private string most_Recent;
-        private string recent_vers;
-        private const string SELECTED_NODE = "Selected";
-        private const string EXT = ".sky";
-        private const string RECENT_VER = "Most recent version";
-
-        //Ask Brendan where RemoteFileDialog should live
-        //Two different forms, directoryChooser FilePicker both use the same control which will be the tree of folders
-        //3rd parameter: only show folders, only show Panorama folders (targetedms module)
-        public RemoteFileDialog(string user, string pass, Uri server, string stateString, bool showingSky)
-        {
-            User = user;
-            Pass = pass;
-            Server = server.ToString();
-            var cols = new [] { @"Container", @"FileName", @"Container/Path" };
-            InitQuery = BuildQuery(Server, @"/Panorama Public/", @"Runs", @"AllFolders", cols, string.Empty, string.Empty);
-            InitializeComponent();
-            //state = new TreeViewStateRestorer(treeView);
-            //back.Enabled = false;
-            //forward.Enabled = false;
-            TreeState = stateString;
-            restoring = true;
-            ShowingSky = showingSky;
-            checkBox1.Checked = ShowingSky;
-            restoring = false;
-
-            //Could be a conflict with AutoQC settings
-            //Variables saved inside of PanoramaClient instead of writing to settings?
-
-        }
-
-        public string Server { get; set; }
-        public string User { get; set; }
-        public string Pass { get; set; }
-        public string OKButtonText { get; set; }
-        public string TreeState { get; set; }
-
-        public string FileURL;
-        public string FileName;
-        public string Folder;
-        public string DownloadName;
-        public bool ShowingSky;
-
-
-        /// <summary>
-        /// Sets a username and password and changes the 'Open' button text if a custom string is passed in
-        /// </summary>
-        private void RemoteFileDialog_Load(object sender, EventArgs e)
-        {
-            if (!string.IsNullOrEmpty(OKButtonText))
-            {
-                open.Text = OKButtonText;
-
-            }
-            var serverUri = new Uri(Server);
-            folderBrowser = new FolderBrowser(serverUri, User, Pass, false, ShowingSky, TreeState);
-            folderBrowser.AddFiles += AddFiles;
-            folderBrowser.Dock = DockStyle.Fill;
-            splitContainer1.Panel1.Controls.Add(folderBrowser);
-            folderBrowser.NodeClick += MouseClick;
-
-
-
-
-            //state.RestoreExpansionAndSelection(TreeState);
-            //state.UpdateTopNode();
-            //AddSelectedFiles(treeView.Nodes);
-        }
-
-        private void LoadSkyFolders(JToken folders, TreeNode node, HashSet<string> prevFolders)
-        {
-            JToken rows = folders[@"rows"];
-            foreach (var row in rows)
-            {
-                //get the path
-                var fullPath = (string)row[@"Container/Path"];
-                if (!prevFolders.Contains(fullPath))
-                {
-                    prevFolders.Add(fullPath);
-                    AddFolderPath(fullPath, fullPath, node);
-                }
-            }
-        }
-
-        private void AddFolderPath(string full, string path, TreeNode node)
-        {
-            if (!string.IsNullOrEmpty(path))
-            {
-                var folders = path.Split('/');
-                if (folders.Length > 1)
-                {
-                    var nextFolder = folders[1];
-                    var replaced = "/" + nextFolder;
-                    var replaceTest = path.Substring(replaced.Length);
-                    if (!node.Nodes.ContainsKey(nextFolder))
-                    {
-                        var newNode = new TreeNode(nextFolder);
-                        newNode.Name = nextFolder;
-                        if (node.Tag == null)
-                        {
-                            newNode.Tag = "/" + nextFolder;
-                        }
-                        else
-                        {
-                            newNode.Tag = node.Tag + "/" + nextFolder;
-                        }
-                        
-                        node.Nodes.Add(newNode);
-
-                        AddFolderPath(full, replaceTest, newNode);
-                    }
-                    else
-                    {
-                        var getKey = node.Nodes.IndexOfKey(nextFolder);
-
-                        AddFolderPath(full, replaceTest, node.Nodes[getKey]);
-                    }
-                }
-                
-            }
-            
-        }
-
-        /// <summary>
-        /// Builds a string that will be used as a URI to find all .sky folders
-        /// </summary>
-        /// <returns></returns>
-        private string BuildQuery(string server, string folderPath, string queryName, string folderFilter, string[] columns, string sortParam, string equalityParam)
-        {
-            var query = string.Format(@"{0}{1}/query-selectRows.view?schemaName=targetedms&query.queryName={2}&query.containerFilterName={3}", server, folderPath, queryName, folderFilter);
-            if (columns != null)
-            {
-                query = string.Format(@"{0}&query.columns=", query);
-                string allCols = string.Empty;
-                foreach (var col in columns)
-                {
-                    allCols = string.Format(@"{0},{1}", col, allCols);
-                }
-
-                query = string.Format(@"{0}{1}", query, allCols);
-            }
-
-            if (!string.IsNullOrEmpty(sortParam))
-            {
-                query = string.Format(@"{0}&query.sort={1}", query, sortParam);
-            }
-
-            if (!string.IsNullOrEmpty(equalityParam))
-            {
-                query = string.Format(@"{0}&query.{1}~eq=", query, equalityParam);
-            }
-            return query;
-        }
-
-        private JToken GetJson(string query)
-        {
-            var queryUri = new Uri(query);
-            var webClient = new WebClientWithCredentials(queryUri, User, Pass);
-            JToken json = webClient.Get(queryUri);
-            return json;
-        }
-
-
-        /// <summary>
-        /// Adds all files in a particular folder 
-        /// </summary>
-        /// <param name="newUri"></param>
-        /// <param name="listView"></param> 
-        public void AddChildFiles(Uri newUri, ListView listView)
-        {
-            JToken json = GetJson(newUri.ToString());
-            if ((int)json[@"fileCount"] != 0)
-            {
-                JToken files = json[@"files"];
-                foreach (dynamic file in files)
-                {
-                    var listItem = new string[5];
-                    var fileName = (string)file[@"text"];
-                    listItem[0] = fileName;
-                    var isFile = (bool)file[@"leaf"];
-                    if (isFile)
-                    {
-                        var canRead = (bool)file[@"canRead"];
-                        if (!canRead)
-                        {
-                            continue;
-                        }
-                        var size = (long)file[@"size"];
-                        var sizeObj = new FileSize(size);
-                        listItem[1] = sizeObj.ToString();
-                        listItem[4] = (string)file[@"creationdate"];
-                        ListViewItem fileNode;
-                        if (fileName.Contains(EXT))
-                        {
-                            fileNode = new ListViewItem(listItem, 1);
-
-                        } else
-                        {
-                            fileNode = new ListViewItem(listItem, 0);
-                        }
-                        fileNode.Tag = (string)file[@"id"];
-                        fileNode.Name = (string)file[@"href"];
-                        listView.Items.Add(fileNode);
-                    }
-                }
-            }
-        }
-
-        private void GetLatestVersion(string path, ListView listView)
-        {
-            listView.Items.Clear();
-            var result = new string[5];
-            var fileInfos = new string[5];
-            LatestVersion = BuildQuery(Server, path, @"Runs", @"Current", new []{ @"Container", @"FileName", @"Created", @"Container/Path", @"DocumentSize", @"PeptideGroupCount", @"PeptideCount", @"PrecursorCount", @"TransitionCount", @"ReplicateCount" }, @"Created", @"FileName");
-            var query = LatestVersion + most_Recent;
-            JToken json = GetJson(query);
-            result[2] = recent_vers;
-            var rowOne = json[@"rows"].First();
-            var name = rowOne[@"FileName"].ToString();
-            result[0] = name;
-            var size = (long)rowOne[@"DocumentSize"];
-            result[1] = new FileSize(size).ToString();
-            fileInfos[0] = (string)rowOne[@"PeptideGroupCount"];
-            fileInfos[1] = (string)rowOne[@"PeptideCount"];
-            fileInfos[2] = (string)rowOne[@"PrecursorCount"];
-            fileInfos[3] = (string)rowOne[@"TransitionCount"];
-            fileInfos[4] = (string)rowOne[@"ReplicateCount"];
-            result[4] = (string)rowOne[@"Created"];
-            var fileNode = new ListViewItem(result, 1);
-            fileNode.ToolTipText =
-                string.Format("Proteins: {0}, Peptides: {1}, Precursors: {2}, Transitions: {3}, Replicates: {4}",
-                    fileInfos[0], fileInfos[1], fileInfos[2], fileInfos[3], fileInfos[4]);
-            fileNode.Name = (string)rowOne[@"_labkeyurl_FileName"];
-            listView.Items.Add(fileNode);
-            
-        }
-
-        /// <summary>
-        /// Returns true if a file has multiple versions, and false if not
-        /// </summary>
-        /// <param name="path"></param>
-        /// <returns></returns>
-        private bool HasVersions(string path)
-        {
-            CheckIfVersions = BuildQuery(Server, path, @"TargetedMSRuns", @"Current", new []{ @"Name", @"Replaced", @"ReplacedByRun", @"Folder", @"RowId", @"Created" }, @"Created", @"Replaced");
-            var query = CheckIfVersions + bool.TrueString;
-            JToken json = GetJson(query);
-            var rowNum = json[@"rowCount"];
-            var rowCount = (int)rowNum;
-            return rowCount != 0;
-        }
-
-        /// <summary>
-        /// Find number of rows which gives version, and latest version is the only version where replaced is false
-        /// </summary>
-        /// <param name="path"></param>
-        /// <param name="fileName"></param>
-        /// <returns></returns>
-        private string[] GetVersionInfo(string path, string fileName)
-        {
-            ReplacedInfo = BuildQuery(Server, path, @"TargetedMSRuns", @"Current", new[] { @"Name", @"File/Versions", @"ReplacedBy", @"Folder", @"RowId", @"Created", @"ReplacesRun" }, @"Created", @"Name");
-            var query = ReplacedInfo + fileName;
-            JToken json = GetJson(query);
-            var rowNum = json[@"rowCount"];
-            var result = new string[2];
-            var rowCount = (int)rowNum;
-            if (rowCount == 0)
-            {
-                result[0] = 1.ToString();
-                return result;
-            }
-
-            var rows = json[@"rows"];
-            foreach (var row in rows)
-            {
-                var count = (string)row[@"File/Versions"];
-                var name = (string)row[@"Name"];
-                var rowReplaced = (string)row[@"ReplacedBy"];
-                var replaces = (string)row[@"ReplacesRun"];
-                if (!string.IsNullOrEmpty(replaces) && string.IsNullOrEmpty(rowReplaced))
-                {
-                    most_Recent = name;
-                    recent_vers = count;
-                }
-                if (!string.IsNullOrEmpty(rowReplaced))
-                {
-                    result[1] = FindReplaced(path, rowReplaced);
-                }
-                else
-                {
-                    result[1] = string.Empty;
-                }
-                result[0] = count;
-            }
-            return result;
-        }
-
-
-        private string FindReplaced(string path, string rowReplaced)
-        {
-            try
-            {
-                ReplacedBy = BuildQuery(Server, path, @"Runs", @"Current", null, @"Created", @"Id");
-                var query = ReplacedBy + rowReplaced;
-                JToken json = GetJson(query);
-                var firstRow = json[@"rows"].First;
-                var file = (string)firstRow[@"FileName"];
-                return file;
-            }
-            catch( Exception ex)
-            {
-                var exc = ex.Message;
-                return string.Empty;
-            }
-
-        }
-
-
-        /// <summary>
-        /// Given a folder path, try and add all .sky files inside that folder to this ListView
-        /// </summary>
-        /// <param name="listView"></param>
-        /// <param name="nodePath"></param>
-        /// <param name="l"></param>
-        /// <param name="options"></param>
-        private void AddQueryFiles(ListView listView, string nodePath, Label l, ComboBox options)
-        {
-            //Use this one query once Vagisha can link up the file size column 
-            //https://panoramaweb-dr.gs.washington.edu/00Developer/Sophie/Versions/query-selectRows.api?schemaName=targetedms&query.queryName=TargetedMSRuns&query.columns=File%2FId%2CRowId%2CCreated%2CFile%2FProteins%2CFile%2FPeptides%2CFile%2FPrecursors%2CFile%2FTransitions%2CFile%2FReplicates%2CReplacedByRun%2CReplacesRun,File%2FVersions,Container%2FPath,Name
-            PeptideInfoQuery = BuildQuery(Server, nodePath, @"Runs", @"Current",
-                new[] { @"Container", @"FileName", @"Deleted", @"Container/Path", @"DocumentSize", @"PeptideGroupCount", @"PeptideCount", @"PrecursorCount", @"TransitionCount", @"ReplicateCount", @"Created" }, string.Empty, string.Empty); //Add created date to listView
-            var query = PeptideInfoQuery;
-            try
-            {
-                JToken json = GetJson(query);
-                var rows = json[@"rows"]; 
-                var versions = HasVersions(nodePath);
-                foreach (JToken row in rows)
-                {
-                    var fileName = (string)row[@"FileName"];
-                    var filePath = (string)row[@"Container/Path"];
-                    if (filePath.Equals(nodePath))
-                    {
-                        var listItem = new string[5];
-                        var numVersions = new string[2];
-                        if (versions)
-                        {
-                            l.Visible = true;
-                            options.Visible = true;
-                            numVersions = GetVersionInfo(nodePath, fileName);
-                        }
-                        else 
-                        {
-                            l.Visible = false;
-                            options.Visible = false;
-                        }
-                        listItem[0] = fileName;
-                        try
-                        {
-                            var size = (long)row[@"DocumentSize"];
-                            var sizeObj = new FileSize(size);
-                            listItem[1] = sizeObj.ToString();
-                        }
-                        catch (Exception)
-                        {
-                            // ignored
-                        }
-
-
-                        if (numVersions[0] != null)
-                        {
-                            listItem[2] = numVersions[0];
-                        }
-                        else
-                        {
-                            listItem[2] = 1.ToString();
-                        }
-
-                        if (numVersions[1] != null)
-                        {
-                            listItem[3] = numVersions[1].ToString();
-                        }
-
-                        listItem[4] = (string)row[@"Created"];
-                        var fileNode = new ListViewItem(listItem, 1);
-                        fileNode.Name = (string)row[@"_labkeyurl_FileName"];
-                        fileNode.ToolTipText =
-                            string.Format("Proteins: {0}, Peptides: {1}, Precursors: {2}, Transitions: {3}, Replicates: {4}", row[@"PeptideGroupCount"], row[@"PeptideCount"], row[@"PrecursorCount"], row[@"TransitionCount"], row[@"ReplicateCount"]);
-                        listView.Items.Add(fileNode);
-                    }
-                }
-            }
-            catch (Exception)
-            {
-                // ignored
-            }
-        }
-
-
-        public void AddFiles(object sender, EventArgs e)
-        {
-            var path = folderBrowser.Path;
-            listView.Items.Clear();
-            if (!string.IsNullOrEmpty(path))
-            {
-                if (folderBrowser.showSky)
-                {
-                    AddQueryFiles(listView, path, versionLabel, comboBox1);
-                }
-                else
-                {
-                    var uriString = string.Concat(Server, @"_webdav/", path + @"/@files?method=json");
-                    var uri = new Uri(uriString);
-                     AddChildFiles(uri, listView);
-                }
-            }
-        }
-
-
-        /// <summary>
-        /// De-selects all nodes in the tree
-        /// </summary>
-        /// <param name="nodes"></param>
-        private void ClearTreeRecursive(IEnumerable nodes)
-        {
-            foreach (TreeNode node in nodes)
-            {
-                node.BackColor = Color.White;
-                node.ForeColor = Color.Black;
-                ClearTreeRecursive(node.Nodes);
-            }
-
-        }
-
-
-        /// <summary>
-        /// Resets the TreeView to display either all Panorama folders, or only Panorama folders containing .sky files
-        /// </summary>
-        /// <param name="sender"></param>
-        /// <param name="e"></param>
-        private void checkBox1_CheckedChanged(object sender, EventArgs e)
-        {
-            if (!restoring)
-            {
-                listView.Items.Clear();
-                comboBox1.Visible = false;
-                versionLabel.Visible = false;
-                var type = checkBox1.Checked;
-                folderBrowser.SwitchFolderType(type);
-            }
-        }
-
-        private void AddSelectedFiles(IEnumerable nodes)
-        {
-            foreach (TreeNode node in nodes)
-            {
-                if (node.IsSelected)
-                {
-                    node.Name = node.Name.Replace(SELECTED_NODE, string.Empty);
-                    //Highlight the selected node
-                    priorNode = node;
-                    node.BackColor = SystemColors.MenuHighlight;
-                    node.ForeColor = Color.White;
-                    if (node.Parent == null)
-                    {
-                        up.Enabled = false;
-                    }
-                    lastSelected = node;
-                    if (ShowingSky)
-                    {
-                        AddQueryFiles(listView, (string)node.Tag, versionLabel, comboBox1);
-                    } else
-                    {
-                        var query = FileQueryBuilder(node);
-                        var uri = new Uri(query);
-                        AddChildFiles(uri, listView);
-                    }
-                } else
-                {
-                    AddSelectedFiles(node.Nodes);
-                }
-
-            }
-        }
-
-
-        /// <summary>
-        /// Displays either all versions of a Skyline file, or only the most recent version
-        /// </summary>
-        /// <param name="sender"></param>
-        /// <param name="e"></param>
-        private void comboBox1_SelectedIndexChanged(object sender, EventArgs e)
-        {
-            
-            listView.Items.Clear();
-            if (comboBox1.Text.Equals(RECENT_VER))
-            {
-                GetLatestVersion((string)folderBrowser.clicked.Tag, listView);
-            }
-            else
-            {
-                AddQueryFiles(listView, (string)folderBrowser.clicked.Tag, versionLabel, comboBox1);
-            }
-        }
-
-        private void cancel_Click(object sender, EventArgs e)
-        {
-            Close();
-        }
-
-        private void open_Click(object sender, EventArgs e)
-        {
-            if (listView.SelectedItems.Count != 0 && listView.SelectedItems[0] != null)
-            {
-                var downloadName = listView.SelectedItems[0].Name;
-                if (ShowingSky)
-                {
-                    downloadName = downloadName.Replace(@"showPrecursorList", @"downloadDocument");
-                }
-                DownloadName = downloadName;
-                FileURL = Server + downloadName;
-
-                DialogResult = DialogResult.Yes;
-                Close();
-            }
-            else
-            {
-                MessageBox.Show(@"You must select a file first!");
-            }
-        }
-
-
-
-        private void Form1_FormClosing(object sender, FormClosingEventArgs e)
-        {
-            
-            if (listView.SelectedItems.Count != 0)
-            {
-                FileName = listView.SelectedItems[0].Text;
-            } else
-            { 
-                FileURL = string.Empty;
-            }
-            //var treeStateStr = state.GetPersistentString();
-            if (checkBox1.Checked)
-            {
-                ShowingSky = true;
-            } else
-            {
-                ShowingSky = false;
-            }
-
-            TreeState = folderBrowser.ClosingState();
-            if (folderBrowser.Path != null) FileName = string.Concat(Server, @"/_webdav", folderBrowser.Path);
-            //TreeState = treeStateStr;
-        }
-
-
-        /// <summary>
-        /// Navigates to the parent folder of the currently selected folder
-        /// and displays it's files 
-        /// </summary>
-        /// <param name="sender"></param>
-        /// <param name="e"></param>
-        private void upButton_Click(object sender, EventArgs e)
-        {
-            up.Enabled = folderBrowser.UpEnabled();
-            folderBrowser.UpClick();
-        }
-
-        /// <summary>
-        /// Navigates to the previous folder a user was looking at
-        /// and displays it's files
-        /// </summary>
-        /// <param name="sender"></param>
-        /// <param name="e"></param>
-        private void back_Click(object sender, EventArgs e)
-        {
-            back.Enabled = folderBrowser.BackEnabled();
-            folderBrowser.BackClick();
-        }
-
-        private void ShowSelectedFiles(TreeNode node)
-        {
-            if (ShowingSky)
-            {
-                AddQueryFiles(listView, (string)node.Tag, versionLabel, comboBox1);
-            }
-            else
-            {
-                var stringUri = FileQueryBuilder(node);
-                var uri = new Uri(stringUri);
-                AddChildFiles(uri, listView);
-            }
-        }
-
-        /// <summary>
-        /// Navigates to the next folder a user was looking at
-        /// and displays it's files
-        /// </summary>
-        /// <param name="sender"></param>
-        /// <param name="e"></param>
-        private void forward_Click(object sender, EventArgs e)
-        {
-            forward.Enabled = folderBrowser.ForwardEnabled();
-            folderBrowser.ForwardClick();
-        }
-
-
-        private string FileQueryBuilder(TreeNode node)
-        {
-            if (ShowingSky)
-            {
-                //return string.Format(Resources.RemoteFileDialog_QueryBuilder__0__1_, Server, node.Tag);
-            }
-            else
-            {
-                //return string.Format(Resources.RemoteFileDialog_treeView2_NodeMouseClick_, Server, node.Tag);
-            }
-
-            return "";
-
-        }
-
-        public void MouseClick(object sender, EventArgs e)
-        {
-            up.Enabled = folderBrowser.UpEnabled();
-            forward.Enabled = folderBrowser.ForwardEnabled();
-            back.Enabled = folderBrowser.BackEnabled();
-        }
-    }
-
-
-
-    /*public class UTF8WebClient : WebClient
-    {
-        public UTF8WebClient()
-        {
-            Encoding = Encoding.UTF8;
-        }
-
-        public Uri ServerUri { get; private set; }
-
-        public JObject Get(Uri uri)
-        {
-            var response = DownloadString(uri);
-            return JObject.Parse(response);
-        }
-
-        
-    }*/
-
-    /*public class WebClientWithCredentials : UTF8WebClient
-    {
-        private CookieContainer _cookies = new CookieContainer();
-        private string _csrfToken;
-        private Uri _serverUri;
-
-        private static string LABKEY_CSRF = @"X-LABKEY-CSRF";
-
-        public WebClientWithCredentials(Uri serverUri, string username, string password)
-        {
-            // Add the Authorization header
-            Headers.Add(HttpRequestHeader.Authorization, Server.GetBasicAuthHeader(username, password));
-            _serverUri = serverUri;
-        }
-
-
-    }*/
-
-    /*public sealed class Server
-    {
-        public Server(string uriText, string username, string password)
-            : this(new Uri(uriText), username, password)
-        {
-        }
-
-        public Server(Uri uri, string username, string password)
-        {
-            Username = username;
-            Password = password;
-            URI = uri;
-        }
-
-        internal string Username { get; set; }
-        internal string Password { get; set; }
-        internal Uri URI { get; set; }
-
-        public string GetKey()
-        {
-            return URI.ToString();
-        }
-
-        internal string AuthHeader
-        {
-            get { return GetBasicAuthHeader(Username, Password); }
-        }
-
-        internal static string GetBasicAuthHeader(string username, string password)
-        {
-            byte[] authBytes = Encoding.UTF8.GetBytes(String.Format(@"{0}:{1}", username, password));
-            var authHeader = @"Basic " + Convert.ToBase64String(authBytes);
-            return authHeader;
-        }
-    }
-    */
-
-
-
-
-
-    /*public class TreeViewStateRestorer
+    public class TreeViewStateRestorer
     {
         private readonly TreeView _tree;
 
@@ -788,8 +62,10 @@ namespace pwiz.PanoramaClient
                         result.Append('(').Append(children).Append(')');
                     }
                 }
+
                 index++;
             }
+
             return result.ToString();
         }
 
@@ -806,6 +82,7 @@ namespace pwiz.PanoramaClient
                     return index;
                 index++;
             }
+
             return 0;
         }
 
@@ -840,6 +117,7 @@ namespace pwiz.PanoramaClient
                         AppendRange(selectedRanges, rangeStart, prevSelection);
                         rangeStart = index;
                     }
+
                     prevSelection = index;
                 }
 
@@ -883,6 +161,7 @@ namespace pwiz.PanoramaClient
                     return index;
                 index++;
             }
+
             return 0;
         }
 
@@ -965,7 +244,8 @@ namespace pwiz.PanoramaClient
                         finishedEnumerating = !data.MoveNext();
 
                         // enumerate until the next element is not an integer
-                        while (!finishedEnumerating && data.Current != ',' && data.Current != '(' && data.Current != ')')
+                        while (!finishedEnumerating && data.Current != ',' && data.Current != '(' &&
+                               data.Current != ')')
                         {
                             dataIndex.Append(data.Current);
                             finishedEnumerating = !data.MoveNext();
@@ -980,6 +260,7 @@ namespace pwiz.PanoramaClient
                         break;
                 }
             }
+
             return true;
         }
 
@@ -1057,21 +338,15 @@ namespace pwiz.PanoramaClient
         {
             get
             {
-                for (TreeNode node = _tree.Nodes.Count > 0 ? _tree.Nodes[0] : null; node != null; node = node.NextVisibleNode)
+                for (TreeNode node = _tree.Nodes.Count > 0 ? _tree.Nodes[0] : null;
+                     node != null;
+                     node = node.NextVisibleNode)
                     yield return node;
             }
         }
-    }*/
-    
+    }
 
-   
-
-    /// <summary>
-    /// A MultiSelect TreeView.
-    /// <para>
-    /// Inspired by the example at http://www.codeproject.com/KB/tree/treeviewms.aspx for details.</para>
-    /// </summary>
-    /*public abstract class TreeViewMS : TreeView
+    public abstract class TreeViewMS : TreeView
     {
         // Length of the horizontal dashed lines representing each branch of the tree
         protected internal const int HORZ_DASH_LENGTH = 11;
@@ -1494,9 +769,9 @@ namespace pwiz.PanoramaClient
                 get { return false; }
             }
         }
-    }*/
+    }
 
-    /*public class TreeNodeMS : TreeNode
+    public class TreeNodeMS : TreeNode
     {
         private const TextFormatFlags FORMAT_TEXT = TextFormatFlags.SingleLine | TextFormatFlags.VerticalCenter;
 
@@ -1528,7 +803,7 @@ namespace pwiz.PanoramaClient
 
 
 
-     
+
 
         protected double _textZoomFactor;
         protected string _widthText;
@@ -1540,7 +815,7 @@ namespace pwiz.PanoramaClient
             get { return _widthCustom > 0 ? _widthCustom : Bounds.Width; }
         }
 
-  
+
 
         /// <summary>
         /// Because these nodes allow override of text drawing, this virtual
@@ -1646,121 +921,11 @@ namespace pwiz.PanoramaClient
                 g.DrawImageUnscaled(nodeImg, imgLocX, bounds.Top + (bounds.Height - imgHeight) / 2, imgWidth, imgHeight);
             }
 
-               
+
         }
 
-           
 
-            
-    }*/
 
-    class FileSizeFormatProvider : IFormatProvider, ICustomFormatter
-    {
-        public object GetFormat(Type formatType)
-        {
-            if (formatType == typeof(ICustomFormatter)) return this;
-            return null;
-        }
 
-        private const string FILE_SIZE_FORMAT = "fs";
-        private const Decimal ONE_KILO_BYTE = 1024M;
-        private const Decimal ONE_MEGA_BYTE = ONE_KILO_BYTE * 1024M;
-        private const Decimal ONE_GIGA_BYTE = ONE_MEGA_BYTE * 1024M;
-
-        public string Format(string format, object arg, IFormatProvider formatProvider)
-        {
-            if (format == null || !format.StartsWith(FILE_SIZE_FORMAT))
-            {
-                return DefaultFormat(format, arg, formatProvider);
-            }
-
-            if (arg is string)
-            {
-                return DefaultFormat(format, arg, formatProvider);
-            }
-
-            Decimal size;
-
-            try
-            {
-                size = Convert.ToDecimal(arg);
-            }
-            catch (InvalidCastException)
-            {
-                return DefaultFormat(format, arg, formatProvider);
-            }
-
-            string suffix;
-
-            if (size > ONE_GIGA_BYTE)
-            {
-                size /= ONE_GIGA_BYTE;
-                suffix = @" GB";
-            }
-            else if (size > ONE_MEGA_BYTE)
-            {
-                size /= ONE_MEGA_BYTE;
-                suffix = @" MB";
-            }
-            else if (size > ONE_KILO_BYTE)
-            {
-                size /= ONE_KILO_BYTE;
-                suffix = @" KB";
-            }
-            else
-            {
-                suffix = @" B";
-            }
-
-            string precision = format.Substring(2);
-            if (String.IsNullOrEmpty(precision))
-                precision = @"2";
-            string formatString = @"{0:N" + precision + @"}{1}";  // Avoid ReSharper analysis
-            return String.Format(formatString, size, suffix);
-        }
-
-        private static string DefaultFormat(string format, object arg, IFormatProvider formatProvider)
-        {
-            IFormattable formattableArg = arg as IFormattable;
-            if (formattableArg != null)
-            {
-                return formattableArg.ToString(format, formatProvider);
-            }
-            return arg.ToString();
-        }
     }
-
-    struct FileSize : IComparable
-    {
-        private static readonly FileSizeFormatProvider FORMAT_PROVIDER = new FileSizeFormatProvider();
-        public static FileSizeFormatProvider FormatProvider
-        {
-            get { return FORMAT_PROVIDER; }
-        }
-        public FileSize(long byteCount) : this()
-        {
-            ByteCount = byteCount;
-        }
-
-        public long ByteCount { get; private set; }
-        public override string ToString()
-        {
-            return String.Format(FORMAT_PROVIDER, @"{0:fs}", ByteCount);
-        }
-
-        public int CompareTo(object obj)
-        {
-            if (null == obj)
-            {
-                return 1;
-            }
-            if (!(obj is FileSize))
-            {
-                throw new ArgumentException(@"Must be FileSize");
-            }
-            return ByteCount.CompareTo(((FileSize)obj).ByteCount);
-        }
-    }
-
-
 }

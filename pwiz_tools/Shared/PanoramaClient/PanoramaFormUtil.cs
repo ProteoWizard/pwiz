@@ -1,6 +1,10 @@
 ﻿using System;
+using System.Collections;
 using System.Collections.Generic;
+using System.ComponentModel;
 using System.Drawing;
+using System.IO;
+using System.Runtime.InteropServices;
 using System.Windows.Forms;
 using Newtonsoft.Json.Linq;
 
@@ -31,11 +35,11 @@ namespace pwiz.PanoramaClient
             treeViewFolders.Invoke(new Action(() => treeViewFolders.Nodes.Add(treeNode)));
             if (showSky)
             {
-                var cols = new[] { @"Container", @"FileName", @"Container/Path" };
+                var cols = new[] { @"Container/Path", @"Container", @"FileName" };  //@"Container/Path"
                 var initQuery = BuildQuery(server.URI.ToString(), @"/Panorama Public/", @"Runs", @"AllFolders", cols, string.Empty, string.Empty);
                 JToken json = GetJson(initQuery, server.Username, server.Password);
                 treeViewFolders.Invoke(new Action(() => LoadSkyFolders(json, treeNode, new HashSet<string>())));
-
+                
             }
             else
             {
@@ -93,6 +97,7 @@ namespace pwiz.PanoramaClient
                         continue;
                     }
                 }
+                
 
 
                 node.Nodes.Add(folderNode);
@@ -138,6 +143,7 @@ namespace pwiz.PanoramaClient
             {
                 //get the path
                 var fullPath = (string)row[@"Container/Path"];
+
                 if (!prevFolders.Contains(fullPath))
                 {
                     prevFolders.Add(fullPath);
@@ -146,15 +152,17 @@ namespace pwiz.PanoramaClient
             }
         }
 
+        public const char SLASH = '/';
+
         private void AddFolderPath(string full, string path, TreeNode node)
         {
             if (!string.IsNullOrEmpty(path))
             {
-                var folders = path.Split('/');
+                var folders = path.Split(SLASH);
                 if (folders.Length > 1)
                 {
                     var nextFolder = folders[1];
-                    var replaced = "/" + nextFolder;
+                    var replaced = string.Concat(SLASH.ToString(), nextFolder); //"/" + nextFolder;
                     var replaceTest = path.Substring(replaced.Length);
                     if (!node.Nodes.ContainsKey(nextFolder))
                     {
@@ -162,11 +170,12 @@ namespace pwiz.PanoramaClient
                         newNode.Name = nextFolder;
                         if (node.Tag == null)
                         {
-                            newNode.Tag = "/" + nextFolder;
+                            newNode.Tag =
+                                replaced; //string.Concat(Path.DirectorySeparatorChar, nextFolder); //string.Concat(SLASH.ToString(), nextFolder); //"/" + nextFolder;
                         }
                         else
                         {
-                            newNode.Tag = node.Tag + "/" + nextFolder;
+                            newNode.Tag = string.Concat(node.Tag.ToString(), SLASH.ToString(), nextFolder); //node.Tag + "/" + nextFolder;
                         }
 
                         node.Nodes.Add(newNode);
@@ -194,7 +203,7 @@ namespace pwiz.PanoramaClient
 
         private string BuildQuery(string server, string folderPath, string queryName, string folderFilter, string[] columns, string sortParam, string equalityParam)
         {
-            var query = string.Format(@"{0}{1}/query-selectRows.view?schemaName=targetedms&query.queryName={2}&query.containerFilterName={3}", server, folderPath, queryName, folderFilter);
+            var query = string.Format(@"{0}{1}query-selectRows.view?schemaName=targetedms&query.queryName={2}&query.containerFilterName={3}", server, folderPath, queryName, folderFilter);
             if (columns != null)
             {
                 query = string.Format(@"{0}&query.columns=", query);
@@ -252,7 +261,7 @@ namespace pwiz.PanoramaClient
                             fileNode = new ListViewItem(listItem, 0);
                         }
                         fileNode.Tag = (string)file[@"id"];
-                        fileNode.Name = (string)file[@"href"];
+                        fileNode.Name = Path.GetFullPath((string)file[@"href"]);
                         listView.Items.Add(fileNode);
                     }
                 }
@@ -260,5 +269,6 @@ namespace pwiz.PanoramaClient
         }
 
     }
+
 
 }

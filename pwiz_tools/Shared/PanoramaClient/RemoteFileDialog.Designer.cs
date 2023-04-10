@@ -42,19 +42,18 @@ namespace pwiz.PanoramaClient
             this.cancel = new System.Windows.Forms.Button();
             this.versionLabel = new System.Windows.Forms.Label();
             this.splitContainer1 = new System.Windows.Forms.SplitContainer();
-            this.treeView = new System.Windows.Forms.TreeView();
             this.listView = new System.Windows.Forms.ListView();
             this.colName = ((System.Windows.Forms.ColumnHeader)(new System.Windows.Forms.ColumnHeader()));
             this.colSize = ((System.Windows.Forms.ColumnHeader)(new System.Windows.Forms.ColumnHeader()));
             this.colVersions = ((System.Windows.Forms.ColumnHeader)(new System.Windows.Forms.ColumnHeader()));
             this.colReplacedBy = ((System.Windows.Forms.ColumnHeader)(new System.Windows.Forms.ColumnHeader()));
+            this.colCreated = ((System.Windows.Forms.ColumnHeader)(new System.Windows.Forms.ColumnHeader()));
             this.panel1 = new System.Windows.Forms.Panel();
             this.toolStrip = new System.Windows.Forms.ToolStrip();
             this.back = new System.Windows.Forms.ToolStripButton();
             this.forward = new System.Windows.Forms.ToolStripButton();
             this.up = new System.Windows.Forms.ToolStripButton();
             ((System.ComponentModel.ISupportInitialize)(this.splitContainer1)).BeginInit();
-            this.splitContainer1.Panel1.SuspendLayout();
             this.splitContainer1.Panel2.SuspendLayout();
             this.splitContainer1.SuspendLayout();
             this.panel1.SuspendLayout();
@@ -153,10 +152,6 @@ namespace pwiz.PanoramaClient
             this.splitContainer1.Margin = new System.Windows.Forms.Padding(2);
             this.splitContainer1.Name = "splitContainer1";
             // 
-            // splitContainer1.Panel1
-            // 
-            this.splitContainer1.Panel1.Controls.Add(this.treeView);
-            // 
             // splitContainer1.Panel2
             // 
             this.splitContainer1.Panel2.Controls.Add(this.listView);
@@ -165,25 +160,16 @@ namespace pwiz.PanoramaClient
             this.splitContainer1.SplitterWidth = 3;
             this.splitContainer1.TabIndex = 7;
             // 
-            // treeView
-            // 
-            this.treeView.Dock = System.Windows.Forms.DockStyle.Fill;
-            this.treeView.Location = new System.Drawing.Point(0, 0);
-            this.treeView.Margin = new System.Windows.Forms.Padding(2);
-            this.treeView.Name = "treeView";
-            this.treeView.Size = new System.Drawing.Size(237, 483);
-            this.treeView.TabIndex = 8;
-            this.treeView.AfterSelect += new System.Windows.Forms.TreeViewEventHandler(this.treeView_AfterSelect);
-            this.treeView.NodeMouseClick += new System.Windows.Forms.TreeNodeMouseClickEventHandler(this.treeView2_NodeMouseClick);
-            // 
             // listView
             // 
             this.listView.Columns.AddRange(new System.Windows.Forms.ColumnHeader[] {
             this.colName,
             this.colSize,
             this.colVersions,
-            this.colReplacedBy});
+            this.colReplacedBy,
+            this.colCreated});
             this.listView.Dock = System.Windows.Forms.DockStyle.Fill;
+            this.listView.FullRowSelect = true;
             this.listView.HideSelection = false;
             this.listView.LargeImageList = this.imageList2;
             this.listView.Location = new System.Drawing.Point(0, 0);
@@ -199,7 +185,7 @@ namespace pwiz.PanoramaClient
             // colName
             // 
             this.colName.Text = "Name";
-            this.colName.Width = 300;
+            this.colName.Width = 175;
             // 
             // colSize
             // 
@@ -212,7 +198,11 @@ namespace pwiz.PanoramaClient
             // colReplacedBy
             // 
             this.colReplacedBy.Text = "Replaced By";
-            this.colReplacedBy.Width = 160;
+            this.colReplacedBy.Width = 100;
+            // 
+            // colCreated
+            // 
+            this.colCreated.Text = "Created";
             // 
             // panel1
             // 
@@ -235,7 +225,7 @@ namespace pwiz.PanoramaClient
             this.up});
             this.toolStrip.Location = new System.Drawing.Point(9, 2);
             this.toolStrip.Name = "toolStrip";
-            this.toolStrip.Size = new System.Drawing.Size(127, 31);
+            this.toolStrip.Size = new System.Drawing.Size(96, 31);
             this.toolStrip.TabIndex = 18;
             this.toolStrip.Text = "toolStrip1";
             // 
@@ -291,7 +281,6 @@ namespace pwiz.PanoramaClient
             this.Text = "Panorama folders";
             this.FormClosing += new System.Windows.Forms.FormClosingEventHandler(this.Form1_FormClosing);
             this.Load += new System.EventHandler(this.RemoteFileDialog_Load);
-            this.splitContainer1.Panel1.ResumeLayout(false);
             this.splitContainer1.Panel2.ResumeLayout(false);
             ((System.ComponentModel.ISupportInitialize)(this.splitContainer1)).EndInit();
             this.splitContainer1.ResumeLayout(false);
@@ -313,7 +302,6 @@ namespace pwiz.PanoramaClient
         private Button cancel;
         private Label versionLabel;
         private SplitContainer splitContainer1;
-        private TreeView treeView;
         private ListView listView;
         private Panel panel1;
         private ToolStrip toolStrip;
@@ -324,5 +312,6 @@ namespace pwiz.PanoramaClient
         private ColumnHeader colSize;
         private ColumnHeader colVersions;
         private ColumnHeader colReplacedBy;
+        private ColumnHeader colCreated;
     }
 }

@@ -942,12 +942,23 @@ namespace pwiz.Skyline
                 server = servers[0].URI;
             }
 
-            using var dlg = new RemoteFileDialog(user, pass, server, string.Empty,false);
+            /*using var dirPicker = new DirectoryPicker(server, user, pass, true, false);
+            dirPicker.ShowDialog();*/
+            string state = string.Empty;
+            bool showingSky = Settings.Default.PanoramaSkyFiles; 
+            
+            if (!string.IsNullOrEmpty(Settings.Default.FileExpansion))
+            {
+                state = Settings.Default.FileExpansion;
+            }
+            
+            using var dlg = new RemoteFileDialog(user, pass, server, state, showingSky);
             if (dlg.ShowDialog() != DialogResult.Cancel)
             {
-                //Gets path to download on _webdav but still needs a /@files 
                 var downloadPath = dlg.FileName;
-                /*var downloadPath = pc.DownloadAndSave(server, user, pass, dlg.FileName, dlg.DownloadName);
+                //Gets path to download on _webdav but still needs a /@files 
+                /*
+                var downloadPath = pc.DownloadAndSave(server, user, pass, dlg.FileName, dlg.DownloadName);
                 if (dlg.FileName.EndsWith(SrmDocumentSharing.EXT) && !string.IsNullOrEmpty(downloadPath))
                 {
                     OpenSharedFile(downloadPath);
@@ -957,7 +968,11 @@ namespace pwiz.Skyline
                     OpenFile(downloadPath);
                 }*/
             }
-            
+
+            Settings.Default.FileExpansion = dlg.TreeState;
+            Settings.Default.PanoramaSkyFiles = dlg.ShowingSky;
+            Settings.Default.Save();
+
         }
 
         private void saveMenuItem_Click(object sender, EventArgs e)

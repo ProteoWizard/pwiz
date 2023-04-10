@@ -71,6 +71,7 @@
     <Reference Include="System.Xml" />
   </ItemGroup>
   <ItemGroup>
+    <Compile Include="TreeViewStateRestorer.cs" />
     <Compile Include="DirectoryPicker.cs">
       <SubType>Form</SubType>
     </Compile>

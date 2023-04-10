@@ -3392,5 +3392,41 @@ namespace pwiz.Skyline.Properties {
                 this["ViewLibraryMatchPropsVisible"] = value;
             }
         }
+        
+        [global::System.Configuration.UserScopedSettingAttribute()]
+        [global::System.Diagnostics.DebuggerNonUserCodeAttribute()]
+        [global::System.Configuration.DefaultSettingValueAttribute("")]
+        public string DirectoryExpansion {
+            get {
+                return ((string)(this["DirectoryExpansion"]));
+            }
+            set {
+                this["DirectoryExpansion"] = value;
+            }
+        }
+        
+        [global::System.Configuration.UserScopedSettingAttribute()]
+        [global::System.Diagnostics.DebuggerNonUserCodeAttribute()]
+        [global::System.Configuration.DefaultSettingValueAttribute("False")]
+        public bool PanoramaSkyFiles {
+            get {
+                return ((bool)(this["PanoramaSkyFiles"]));
+            }
+            set {
+                this["PanoramaSkyFiles"] = value;
+            }
+        }
+        
+        [global::System.Configuration.UserScopedSettingAttribute()]
+        [global::System.Diagnostics.DebuggerNonUserCodeAttribute()]
+        [global::System.Configuration.DefaultSettingValueAttribute("")]
+        public string FileExpansion {
+            get {
+                return ((string)(this["FileExpansion"]));
+            }
+            set {
+                this["FileExpansion"] = value;
+            }
+        }
     }
 }

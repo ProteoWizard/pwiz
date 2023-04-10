@@ -72,7 +72,7 @@ namespace pwiz.Skyline.FileUI
             treeViewFolders.ImageList.Images.Add(Resources.ChromLib);
             treeViewFolders.ImageList.Images.Add(Resources.Folder);
 
-            ServerTreeStateRestorer = new TreeViewStateRestorer(treeViewFolders);
+            ServerTreeStateRestorer = new pwiz.Skyline.Controls.TreeViewStateRestorer(treeViewFolders);
         }
 
         public string FileName { get { return tbFilePath.Text; } }
@@ -160,7 +160,7 @@ namespace pwiz.Skyline.FileUI
             return TextUtil.LineSeparate(servers.Select(t => TextUtil.LineSeparate(t.Item1.URI.ToString(), t.Item2)));
         }
 
-        private TreeViewStateRestorer ServerTreeStateRestorer { get; set; }
+        private pwiz.Skyline.Controls.TreeViewStateRestorer ServerTreeStateRestorer { get; set; }
 
         private void SaveServerTreeExpansion()
         {
