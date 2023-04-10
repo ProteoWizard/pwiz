@@ -35,7 +35,7 @@ namespace pwiz.Common.Chemistry
         public static readonly MoleculeMassOffset EMPTY = new MoleculeMassOffset(Molecule.Empty, 0, 0);
         private MoleculeMassOffset(Molecule molecule, double monoMassOffset, double averageMassOffset)
         {
-            Molecule = molecule;
+            Molecule = molecule ?? Molecule.Empty;
             MonoMassOffset = monoMassOffset;
             AverageMassOffset = averageMassOffset;
         }
@@ -44,10 +44,7 @@ namespace pwiz.Common.Chemistry
         public double MonoMassOffset { get; private set; }
         public double AverageMassOffset { get; private set; }
         public double GetMassOffset(bool bMono) => bMono ? MonoMassOffset : AverageMassOffset;
-        public bool IsEmpty =>
-            ReferenceEquals(this, MoleculeMassOffset.EMPTY) ||
-            (Molecule.IsNullOrEmpty(Molecule) && AverageMassOffset == 0 && MonoMassOffset == 0);
-
+        public bool IsEmpty => Equals(EMPTY);
         public static bool IsNullOrEmpty(MoleculeMassOffset moleculeMassOffset) =>
             moleculeMassOffset == null || moleculeMassOffset.IsEmpty;
 
