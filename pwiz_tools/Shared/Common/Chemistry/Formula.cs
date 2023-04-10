@@ -436,7 +436,7 @@ namespace pwiz.Common.Chemistry
         public static T Sum(IEnumerable<T> items)
         {
             var dictionaries = items.Select(item => item.Dictionary).ToArray();
-            return new T() { Dictionary = Merge(dictionaries, 0, dictionaries.Length) };
+            return new T { Dictionary = Merge(dictionaries, 0, dictionaries.Length) };
         }
 
         private static ImmutableSortedList<string, int> Merge(ImmutableSortedList<string, int>[] parts, int start, int count)

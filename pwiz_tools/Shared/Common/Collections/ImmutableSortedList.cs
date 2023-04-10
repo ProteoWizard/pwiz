@@ -286,6 +286,16 @@ namespace pwiz.Common.Collections
             return new ImmutableSortedList<TKey, TNewValue>(Keys, newValueList, KeyComparer);
         }
 
+        /// <summary>
+        /// Function which can be provided to <see cref="Merge"/> to handle combining two
+        /// values together. Either sets <paramref name="result"/> to the merged value or
+        /// returns false indicating that the entry should be removed from the resulting merged
+        /// list.
+        /// </summary>
+        /// <param name="left">value from the left list</param>
+        /// <param name="right">value from the right list</param>
+        /// <param name="result">holds the merged value</param>
+        /// <returns>false if the merged list should not contain any value for these two entries</returns>
         public delegate bool MergeValues(TValue left, TValue right, out TValue result);
 
         public ImmutableSortedList<TKey, TValue> Merge(ImmutableSortedList<TKey, TValue> other, MergeValues mergeFunc)
