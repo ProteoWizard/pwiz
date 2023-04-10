@@ -57,7 +57,7 @@ namespace pwiz.Common.Collections
         {
         }
 
-        private ImmutableSortedList(IList<TKey> keys, IList<TValue> values, IComparer<TKey> keyComparer)
+        private ImmutableSortedList(ImmutableList<TKey> keys, ImmutableList<TValue> values, IComparer<TKey> keyComparer)
         {
             Keys = keys;
             Values = values;
@@ -77,12 +77,12 @@ namespace pwiz.Common.Collections
             }
         }
 
-        public IList<TKey> Keys
+        public ImmutableList<TKey> Keys
         {
             get; private set;
         }
 
-        public IList<TValue> Values
+        public ImmutableList<TValue> Values
         {
             get; private set;
         }
@@ -262,7 +262,7 @@ namespace pwiz.Common.Collections
         public ImmutableSortedList<TKey, TValue> Replace(TKey key, TValue value)
         {
             var range = BinarySearch(key);
-            IList<TKey> keys;
+            ImmutableList<TKey> keys;
             if (range.Length == 1)
             {
                 keys = Keys;
@@ -284,6 +284,95 @@ namespace pwiz.Common.Collections
                 throw new ArgumentException();
             }
             return new ImmutableSortedList<TKey, TNewValue>(Keys, newValueList, KeyComparer);
+        }
+
+        public delegate bool MergeValues(TValue left, TValue right, out TValue result);
+
+        public ImmutableSortedList<TKey, TValue> Merge(ImmutableSortedList<TKey, TValue> other, MergeValues mergeFunc)
+        {
+            if (other.Count == 0)
+            {
+                return this;
+            }
+
+            if (Count == 0)
+            {
+                return other;
+            }
+
+            List<TKey> newKeys = new List<TKey>();
+            List<TValue> newValues = new List<TValue>();
+            int iLeft = 0;
+            int iRight = 0;
+            while (true)
+            {
+                if (iLeft == Count)
+                {
+                    if (iRight == other.Count)
+                    {
+                        break;
+                    }
+
+                    newKeys.Add(other.Keys[iRight]);
+                    newValues.Add(other.Values[iRight]);
+                    iRight++;
+                    continue;
+                }
+
+                if (iRight == other.Count)
+                {
+                    newKeys.Add(Keys[iLeft]);
+                    newValues.Add(Values[iLeft]);
+                    iLeft++;
+                    continue;
+                }
+
+                var leftKey = Keys[iLeft];
+                var rightKey = other.Keys[iRight];
+                int compare = KeyComparer.Compare(leftKey, rightKey);
+                if (compare < 0)
+                {
+                    newKeys.Add(leftKey);
+                    newValues.Add(Values[iLeft]);
+                    iLeft++;
+                }
+                else if (compare > 0)
+                {
+                    newKeys.Add(rightKey);
+                    newValues.Add(Values[iRight]);
+                    iRight++;
+                }
+                else
+                {
+                    if (mergeFunc(Values[iLeft], other.Values[iRight], out var result))
+                    {
+                        newKeys.Add(leftKey);
+                        newValues.Add(result);
+                    }
+
+                    iLeft++;
+                    iRight++;
+                }
+            }
+
+            ImmutableList<TKey> newKeyList = null;
+            if (newKeys.Count == Keys.Count)
+            {
+                if (newKeys.SequenceEqual(Keys))
+                {
+                    newKeyList = Keys;
+                }
+            }
+            else if (newKeys.Count == other.Keys.Count)
+            {
+                if (newKeys.SequenceEqual(other.Keys))
+                {
+                    newKeyList = other.Keys;
+                }
+            }
+
+            newKeyList = newKeyList ?? ImmutableList.ValueOf(newKeys);
+            return new ImmutableSortedList<TKey, TValue>(newKeyList, ImmutableList.ValueOf(newValues), KeyComparer);
         }
 
 
