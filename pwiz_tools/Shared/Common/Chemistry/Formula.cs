@@ -319,67 +319,23 @@ namespace pwiz.Common.Chemistry
 
 
 
+        public T TimesMinusOne()
+        {
+            return new T
+            {
+                Dictionary = Dictionary.ReplaceValues(Dictionary.Values.Select(v => v * -1))
+            };
+        }
+
         // Subtract other's atom counts from ours
         public T Difference(T other)
         {
-            if (other == null || other.Count == 0)
-            {
-                return (T)this;
-            }
-
-            var resultDict = new Dictionary<string, int>(this);
-            foreach (var kvpOther in other)
-            {
-                if (TryGetValue(kvpOther.Key, out var countCurrent))
-                {
-                    var newCount = countCurrent - kvpOther.Value;
-                    if (newCount == 0)
-                    {
-                        resultDict.Remove(kvpOther.Key);
-                    }
-                    else
-                    {
-                        resultDict[kvpOther.Key] = newCount;
-                    }
-                }
-                else
-                {
-                    resultDict.Add(kvpOther.Key, -kvpOther.Value);
-                }
-            }
-
-            return FromDict(resultDict);
+            return Plus(other.TimesMinusOne());
         }
 
         public T Plus(T other)
         {
-            if (other == null || other.Count == 0)
-            {
-                return (T)this;
-            }
-
-            var resultDict = new Dictionary<string, int>(this);
-            foreach (var kvpOther in other)
-            {
-                if (TryGetValue(kvpOther.Key, out var count))
-                {
-                    var newCount = count + kvpOther.Value;
-                    if (newCount == 0)
-                    {
-                        resultDict.Remove(kvpOther.Key);
-                    }
-                    else
-                    {
-                        resultDict[kvpOther.Key] = newCount;
-                    }
-                }
-                else
-                {
-                    resultDict.Add(kvpOther.Key, kvpOther.Value);
-                }
-            }
-
-            return FromDict(resultDict);
+            return new T { Dictionary = Merge(new[] { Dictionary, other.Dictionary }, 0, 2) };
         }
 
         public bool IsEmpty()
@@ -481,24 +437,32 @@ namespace pwiz.Common.Chemistry
 
         public static T Sum(IEnumerable<T> items)
         {
-            var dictionary = new Dictionary<string, int>();
-            foreach (var item in items)
+            var dictionaries = items.Select(item => item.Dictionary).ToArray();
+            return new T { Dictionary = Merge(dictionaries, 0, dictionaries.Length) };
+        }
+
+        private static ImmutableSortedList<string, int> Merge(ImmutableSortedList<string, int>[] parts, int start, int count)
+        {
+            if (count == 0)
             {
-                foreach (var entry in item)
-                {
-                    int count;
-                    if (dictionary.TryGetValue(entry.Key, out count))
-                    {
-                        dictionary[entry.Key] = count + entry.Value;
-                    }
-                    else
-                    {
-                        dictionary.Add(entry.Key, entry.Value);
-                    }
-                }
+                return Empty.Dictionary;
             }
 
-            return FromDict(dictionary);
+            if (count == 1)
+            {
+                return parts[start];
+            }
+
+            var left = Merge(parts, start, count / 2);
+            var right = Merge(parts, start + count / 2, count - count / 2);
+            var newDictionary = left.Merge(right, MergeValues);
+            return newDictionary;
+        }
+
+        private static bool MergeValues(int left, int right, out int result)
+        {
+            result = left + right;
+            return result != 0;
         }
     }
 }
