@@ -199,12 +199,12 @@ namespace SkylineTester
                 // Add the --progress flag for richer logging - git leaves out most progress info when it isn't writing to an actual terminal
                 if (branchName.Contains("master"))
                 {
-                    commandShell.AddWithRetry("{0} clone {1} --progress {2} --recurse-submodules", git.Quote(), branchUrl.Quote(), buildRoot.Quote());
+                    commandShell.AddWithRetry("{0} clone {1} --recurse-submodules --progress {2}", git.Quote(), branchUrl.Quote(), buildRoot.Quote());
                 }
                 else
                 {
                     var branch = branchUrl.Split(new[] {"tree/"}, StringSplitOptions.None)[1];
-                    commandShell.AddWithRetry("{0} clone {1} --progress -b {2} --recurse-submodules {3}", git.Quote(), GetMasterUrl().Quote(), branch.Quote(), buildRoot.Quote());
+                    commandShell.AddWithRetry("{0} clone {1} --recurse-submodules --progress -b {2} {3}", git.Quote(), GetMasterUrl().Quote(), branch.Quote(), buildRoot.Quote());
                 }
             }
 
