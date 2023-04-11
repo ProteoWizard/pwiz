@@ -1,8 +1,10 @@
 ﻿using System;
 using System.Collections.Generic;
 using System.Collections.Specialized;
+using System.IO;
 using System.Net;
 using System.Text;
+using System.Windows.Forms;
 using Newtonsoft.Json;
 using Newtonsoft.Json.Linq;
 
@@ -248,6 +250,35 @@ namespace pwiz.PanoramaClient
             {
                 return webClient.Get(uri);
             }
+        }
+
+        public string DownloadAndSave(Uri serverUri, string user, string pass, string fileName, string downloadName)
+        {
+            var dlg = new FolderBrowserDialog();
+            var selected = string.Empty;
+            dlg.Description = "Select the folder the file will be downloaded to";
+            if (dlg.ShowDialog() == DialogResult.OK)
+            {
+                var path = dlg.SelectedPath;
+                selected = dlg.SelectedPath;
+                DownloadFile(path, serverUri, user, pass, fileName, downloadName);
+            }
+            return Path.Combine(selected, fileName);
+        }
+
+        private void DownloadFile(string path, Uri server, string user, string pass, string fileName, string downloadName)
+        {
+            using (var wc = new WebClientWithCredentials(server, user, pass))
+            {
+                wc.DownloadFile(
+
+                    // Param1 = Link of file
+                    new Uri(downloadName),
+                    // Param2 = Path to save
+                    Path.Combine(path, fileName)
+                );
+            }
+
         }
 
     }

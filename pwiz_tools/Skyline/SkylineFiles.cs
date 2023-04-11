@@ -942,23 +942,24 @@ namespace pwiz.Skyline
                 server = servers[0].URI;
             }
 
-            /*using var dirPicker = new DirectoryPicker(server, user, pass, true, false);
-            dirPicker.ShowDialog();*/
-            string state = string.Empty;
-            bool showingSky = Settings.Default.PanoramaSkyFiles; 
-            
+            var state = string.Empty;
+            var showingSky = Settings.Default.PanoramaSkyFiles;
+            var panoramaClient = new WebPanoramaClient(server);
             if (!string.IsNullOrEmpty(Settings.Default.FileExpansion))
             {
                 state = Settings.Default.FileExpansion;
             }
-            
-            using var dlg = new RemoteFileDialog(user, pass, server, state, showingSky);
+            /*if (!string.IsNullOrEmpty(Settings.Default.DirectoryExpansion))
+            {
+                state = Settings.Default.DirectoryExpansion;
+            }*/
+            /*using var dirPicker = new DirectoryPicker(server, user, pass, true, state, false);
+            dirPicker.ShowDialog();*/
+            using var dlg = new RemoteFileDialog(user, pass, server, true, state, showingSky);
             if (dlg.ShowDialog() != DialogResult.Cancel)
             {
-                var downloadPath = dlg.FileName;
-                //Gets path to download on _webdav but still needs a /@files 
-                /*
-                var downloadPath = pc.DownloadAndSave(server, user, pass, dlg.FileName, dlg.DownloadName);
+                var downloadPath = panoramaClient.DownloadAndSave(server, user, pass, dlg.FileName, dlg.FileURL);
+
                 if (dlg.FileName.EndsWith(SrmDocumentSharing.EXT) && !string.IsNullOrEmpty(downloadPath))
                 {
                     OpenSharedFile(downloadPath);
@@ -966,9 +967,10 @@ namespace pwiz.Skyline
                 else if (dlg.FileName.EndsWith(SrmDocument.EXT) && !string.IsNullOrEmpty(downloadPath))
                 {
                     OpenFile(downloadPath);
-                }*/
+                }
             }
 
+            //Settings.Default.DirectoryExpansion = dirPicker.State;
             Settings.Default.FileExpansion = dlg.TreeState;
             Settings.Default.PanoramaSkyFiles = dlg.ShowingSky;
             Settings.Default.Save();

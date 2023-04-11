@@ -6,7 +6,6 @@ using System.Windows.Forms;
 
 namespace pwiz.PanoramaClient
 {
-    //instead of having a TreeView, have the user pass in a treeView that has things done to it that way RemoteFileDialog can still detect a click event?
     public partial class FolderBrowser : UserControl
     {
         private PanoramaServer _server;
@@ -18,7 +17,6 @@ namespace pwiz.PanoramaClient
         private TreeNode priorNode;
         private Stack<TreeNode> next = new Stack<TreeNode>();
         public event EventHandler NodeClick;
-        //public event EventHandler FileClick;
         public event EventHandler AddFiles;
         private TreeNode lastSelected;
         public bool showSky;
@@ -69,8 +67,6 @@ namespace pwiz.PanoramaClient
                 Restorer.UpdateTopNode();
                 AddSelectedFiles(treeView.Nodes, e);
             }
-            //treeView.TopNode.Expand();
-            
         }
 
         public void treeView_NodeMouseClick(object sender, TreeNodeMouseClickEventArgs e)
@@ -80,6 +76,7 @@ namespace pwiz.PanoramaClient
             if (hit.Location != TreeViewHitTestLocations.PlusMinus)
             {
                 Path = e.Node.Tag.ToString();
+                //If there's a file browser observer, add corresponding files
                 if (AddFiles != null)
                 {
                     AddFiles(this, e);
@@ -90,7 +87,7 @@ namespace pwiz.PanoramaClient
                 }
                 priorNode = e.Node;
                 clicked = e.Node;
-                //Observer pattern 
+                //Observer pattern for navigation buttons
                 if (NodeClick != null)
                 {
                     NodeClick(this, e);

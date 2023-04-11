@@ -1,7 +1,5 @@
 using System;
-using System.Collections;
 using System.Collections.Generic;
-using System.Drawing;
 using System.Linq;
 using Newtonsoft.Json.Linq;
 using System.Windows.Forms;
@@ -16,45 +14,32 @@ namespace pwiz.PanoramaClient
         private static string LatestVersion; 
         private static string CheckIfVersions;
         private static string PeptideInfoQuery;
-        private string InitQuery;
         private FolderBrowser folderBrowser;
         public TreeNodeCollection _nodesState;
         public List<TreeView> tree = new List<TreeView>();
-        //public TreeViewStateRestorer state;
-        private TreeNode lastSelected;
         private bool restoring;
-        private Stack<TreeNode> previous = new Stack<TreeNode>();
-        private TreeNode priorNode;
-        private Stack<TreeNode> next = new Stack<TreeNode>();
         private string most_Recent;
         private string recent_vers;
-        private const string SELECTED_NODE = "Selected";
         private const string EXT = ".sky";
         private const string RECENT_VER = "Most recent version";
 
         //Ask Brendan where RemoteFileDialog should live
         //Two different forms, directoryChooser FilePicker both use the same control which will be the tree of folders
         //3rd parameter: only show folders, only show Panorama folders (targetedms module)
-        public RemoteFileDialog(string user, string pass, Uri server, string stateString, bool showingSky)
+        public RemoteFileDialog(string user, string pass, Uri server, bool showCheckbox, string stateString, bool showingSky)
         {
             User = user;
             Pass = pass;
             Server = server.ToString();
             var cols = new [] { @"Container", @"FileName", @"Container/Path" };
-            InitQuery = BuildQuery(Server, @"/Panorama Public/", @"Runs", @"AllFolders", cols, string.Empty, string.Empty);
+            var initQuery = BuildQuery(Server, @"/Panorama Public/", @"Runs", @"AllFolders", cols, string.Empty, string.Empty);
             InitializeComponent();
-            //state = new TreeViewStateRestorer(treeView);
-            //back.Enabled = false;
-            //forward.Enabled = false;
             TreeState = stateString;
             restoring = true;
             ShowingSky = showingSky;
             checkBox1.Checked = ShowingSky;
             restoring = false;
-
-            //Could be a conflict with AutoQC settings
-            //Variables saved inside of PanoramaClient instead of writing to settings?
-
+            checkBox1.Visible = showCheckbox;
         }
 
         public string Server { get; set; }
@@ -86,67 +71,6 @@ namespace pwiz.PanoramaClient
             folderBrowser.Dock = DockStyle.Fill;
             splitContainer1.Panel1.Controls.Add(folderBrowser);
             folderBrowser.NodeClick += MouseClick;
-
-
-
-
-            //state.RestoreExpansionAndSelection(TreeState);
-            //state.UpdateTopNode();
-            //AddSelectedFiles(treeView.Nodes);
-        }
-
-        private void LoadSkyFolders(JToken folders, TreeNode node, HashSet<string> prevFolders)
-        {
-            JToken rows = folders[@"rows"];
-            foreach (var row in rows)
-            {
-                //get the path
-                var fullPath = (string)row[@"Container/Path"];
-                if (!prevFolders.Contains(fullPath))
-                {
-                    prevFolders.Add(fullPath);
-                    AddFolderPath(fullPath, fullPath, node);
-                }
-            }
-        }
-
-        private void AddFolderPath(string full, string path, TreeNode node)
-        {
-            if (!string.IsNullOrEmpty(path))
-            {
-                var folders = path.Split('/');
-                if (folders.Length > 1)
-                {
-                    var nextFolder = folders[1];
-                    var replaced = "/" + nextFolder;
-                    var replaceTest = path.Substring(replaced.Length);
-                    if (!node.Nodes.ContainsKey(nextFolder))
-                    {
-                        var newNode = new TreeNode(nextFolder);
-                        newNode.Name = nextFolder;
-                        if (node.Tag == null)
-                        {
-                            newNode.Tag = "/" + nextFolder;
-                        }
-                        else
-                        {
-                            newNode.Tag = node.Tag + "/" + nextFolder;
-                        }
-                        
-                        node.Nodes.Add(newNode);
-
-                        AddFolderPath(full, replaceTest, newNode);
-                    }
-                    else
-                    {
-                        var getKey = node.Nodes.IndexOfKey(nextFolder);
-
-                        AddFolderPath(full, replaceTest, node.Nodes[getKey]);
-                    }
-                }
-                
-            }
-            
         }
 
         /// <summary>
@@ -218,7 +142,7 @@ namespace pwiz.PanoramaClient
                         listItem[1] = sizeObj.ToString();
                         listItem[4] = (string)file[@"creationdate"];
                         ListViewItem fileNode;
-                        if (fileName.Contains(EXT))
+                        if (fileName.EndsWith(EXT))
                         {
                             fileNode = new ListViewItem(listItem, 1);
 
@@ -439,27 +363,10 @@ namespace pwiz.PanoramaClient
                 {
                     var uriString = string.Concat(Server, @"_webdav/", path + @"/@files?method=json");
                     var uri = new Uri(uriString);
-                     AddChildFiles(uri, listView);
+                    AddChildFiles(uri, listView);
                 }
             }
         }
-
-
-        /// <summary>
-        /// De-selects all nodes in the tree
-        /// </summary>
-        /// <param name="nodes"></param>
-        private void ClearTreeRecursive(IEnumerable nodes)
-        {
-            foreach (TreeNode node in nodes)
-            {
-                node.BackColor = Color.White;
-                node.ForeColor = Color.Black;
-                ClearTreeRecursive(node.Nodes);
-            }
-
-        }
-
 
         /// <summary>
         /// Resets the TreeView to display either all Panorama folders, or only Panorama folders containing .sky files
@@ -475,39 +382,6 @@ namespace pwiz.PanoramaClient
                 versionLabel.Visible = false;
                 var type = checkBox1.Checked;
                 folderBrowser.SwitchFolderType(type);
-            }
-        }
-
-        private void AddSelectedFiles(IEnumerable nodes)
-        {
-            foreach (TreeNode node in nodes)
-            {
-                if (node.IsSelected)
-                {
-                    node.Name = node.Name.Replace(SELECTED_NODE, string.Empty);
-                    //Highlight the selected node
-                    priorNode = node;
-                    node.BackColor = SystemColors.MenuHighlight;
-                    node.ForeColor = Color.White;
-                    if (node.Parent == null)
-                    {
-                        up.Enabled = false;
-                    }
-                    lastSelected = node;
-                    if (ShowingSky)
-                    {
-                        AddQueryFiles(listView, (string)node.Tag, versionLabel, comboBox1);
-                    } else
-                    {
-                        var query = FileQueryBuilder(node);
-                        var uri = new Uri(query);
-                        AddChildFiles(uri, listView);
-                    }
-                } else
-                {
-                    AddSelectedFiles(node.Nodes);
-                }
-
             }
         }
 
@@ -541,9 +415,11 @@ namespace pwiz.PanoramaClient
             if (listView.SelectedItems.Count != 0 && listView.SelectedItems[0] != null)
             {
                 var downloadName = listView.SelectedItems[0].Name;
-                if (ShowingSky)
+                if (folderBrowser.showSky)
                 {
-                    downloadName = downloadName.Replace(@"showPrecursorList", @"downloadDocument");
+                    downloadName =
+                        string.Concat(@"/_webdav", folderBrowser.clicked.Tag, @"/@files/", listView.SelectedItems[0]
+                            .Text); 
                 }
                 DownloadName = downloadName;
                 FileURL = Server + downloadName;
@@ -553,7 +429,7 @@ namespace pwiz.PanoramaClient
             }
             else
             {
-                MessageBox.Show(@"You must select a file first!");
+                MessageBox.Show("You must select a file first!");
             }
         }
 
@@ -562,25 +438,10 @@ namespace pwiz.PanoramaClient
         private void Form1_FormClosing(object sender, FormClosingEventArgs e)
         {
             
-            if (listView.SelectedItems.Count != 0)
-            {
-                FileName = listView.SelectedItems[0].Text;
-            } else
-            { 
-                FileURL = string.Empty;
-            }
-            //var treeStateStr = state.GetPersistentString();
-            if (checkBox1.Checked)
-            {
-                ShowingSky = true;
-            } else
-            {
-                ShowingSky = false;
-            }
+            FileName = listView.SelectedItems.Count != 0 ? listView.SelectedItems[0].Text : string.Empty;
+            ShowingSky = checkBox1.Checked;
 
             TreeState = folderBrowser.ClosingState();
-            if (folderBrowser.Path != null) FileName = string.Concat(Server, @"/_webdav", folderBrowser.Path);
-            //TreeState = treeStateStr;
         }
 
 
@@ -608,20 +469,6 @@ namespace pwiz.PanoramaClient
             folderBrowser.BackClick();
         }
 
-        private void ShowSelectedFiles(TreeNode node)
-        {
-            if (ShowingSky)
-            {
-                AddQueryFiles(listView, (string)node.Tag, versionLabel, comboBox1);
-            }
-            else
-            {
-                var stringUri = FileQueryBuilder(node);
-                var uri = new Uri(stringUri);
-                AddChildFiles(uri, listView);
-            }
-        }
-
         /// <summary>
         /// Navigates to the next folder a user was looking at
         /// and displays it's files
@@ -634,21 +481,6 @@ namespace pwiz.PanoramaClient
             folderBrowser.ForwardClick();
         }
 
-
-        private string FileQueryBuilder(TreeNode node)
-        {
-            if (ShowingSky)
-            {
-                //return string.Format(Resources.RemoteFileDialog_QueryBuilder__0__1_, Server, node.Tag);
-            }
-            else
-            {
-                //return string.Format(Resources.RemoteFileDialog_treeView2_NodeMouseClick_, Server, node.Tag);
-            }
-
-            return "";
-
-        }
 
         public void MouseClick(object sender, EventArgs e)
         {
