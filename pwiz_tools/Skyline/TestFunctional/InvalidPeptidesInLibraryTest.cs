@@ -17,7 +17,6 @@
  * limitations under the License.
  */
 
-using System.Globalization;
 using System.IO;
 using System.Linq;
 using System.Threading;
@@ -81,11 +80,14 @@ namespace pwiz.SkylineTestFunctional
             });
 
             var messageDlg = ShowDialog<AlertDlg>(peptideSettingsUI.OkDialog);
-            var expectedMessage = string.Format(Resources.CachedLibrary_WarnInvalidEntries_, libName, expectedInvalidCount,
-                expectedTotalCount, string.Empty);
-            // TODO: This assertion currently only works in English
-            if (Thread.CurrentThread.CurrentCulture.Equals(new CultureInfo("en")))
+
+            // N.B. This assertion does not work in Japanese because it places text after the list of invalid peptides so StartsWith fails.
+            if (!Thread.CurrentThread.CurrentCulture.TwoLetterISOLanguageName.Equals(@"ja"))
+            {
+                var expectedMessage = string.Format(Resources.CachedLibrary_WarnInvalidEntries_, libName, expectedInvalidCount,
+                    expectedTotalCount, string.Empty);
                 StringAssert.StartsWith(messageDlg.Message, expectedMessage);
+            }
             OkDialog(messageDlg, messageDlg.OkDialog);
             WaitForClosedForm(peptideSettingsUI);
         }

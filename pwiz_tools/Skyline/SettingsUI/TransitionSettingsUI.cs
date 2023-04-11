@@ -34,6 +34,7 @@ using pwiz.Skyline.Model.Optimization;
 using pwiz.Skyline.Properties;
 using pwiz.Skyline.SettingsUI.IonMobility;
 using pwiz.Skyline.Util;
+using pwiz.Skyline.Util.Extensions;
 
 namespace pwiz.Skyline.SettingsUI
 {
@@ -359,9 +360,9 @@ namespace pwiz.Skyline.SettingsUI
 
             // Validate and store prediction settings
             string massType = comboPrecursorMass.SelectedItem.ToString();
-            MassType precursorMassType = MassTypeExtension.GetEnum(massType);
+            MassType precursorMassType = MassTypeLocalizationExtension.GetEnum(massType);
             massType = comboIonMass.SelectedItem.ToString();
-            MassType fragmentMassType = MassTypeExtension.GetEnum(massType);
+            MassType fragmentMassType = MassTypeLocalizationExtension.GetEnum(massType);
             string nameCE = comboCollisionEnergy.SelectedItem.ToString();
             CollisionEnergyRegression collisionEnergy =
                 Settings.Default.GetCollisionEnergyByName(nameCE);
@@ -773,7 +774,7 @@ namespace pwiz.Skyline.SettingsUI
         {
             get
             {
-                return MassTypeExtension.GetEnum(comboPrecursorMass.SelectedItem.ToString());
+                return MassTypeLocalizationExtension.GetEnum(comboPrecursorMass.SelectedItem.ToString());
             }
             set
             {
@@ -785,7 +786,7 @@ namespace pwiz.Skyline.SettingsUI
         {
             get
             {
-                return MassTypeExtension.GetEnum(comboIonMass.SelectedItem.ToString());
+                return MassTypeLocalizationExtension.GetEnum(comboIonMass.SelectedItem.ToString());
             }
             set
             {

@@ -21,12 +21,12 @@ namespace pwiz.SkylineTest
             var modifiedSequence = new ModifiedSequence("PEPTIDE", new ModifiedSequence.Modification[0], MassType.Monoisotopic);
             var fragmentedMolecule = FragmentedMolecule.EMPTY.ChangeModifiedSequence(modifiedSequence);
             var precursorFormula = fragmentedMolecule.PrecursorFormula;
-            Assert.AreEqual(0, fragmentedMolecule.PrecursorFormula.MonoMassOffset);
-            Assert.AreEqual(0, fragmentedMolecule.PrecursorFormula.AverageMassOffset);
+            Assert.AreEqual(0.0, fragmentedMolecule.PrecursorFormula.MonoMassOffset);
+            Assert.AreEqual(0.0, fragmentedMolecule.PrecursorFormula.AverageMassOffset);
             var sequenceMassCalc = new SequenceMassCalc(MassType.Monoisotopic);
-            var expectedFormula = Molecule.Parse(sequenceMassCalc.GetMolecularFormula(modifiedSequence.GetUnmodifiedSequence()));
-            Assert.AreEqual(expectedFormula.Count, precursorFormula.Molecule.Count);
-            foreach (var entry in expectedFormula)
+            var expectedFormula = sequenceMassCalc.GetMolecularFormula(modifiedSequence.GetUnmodifiedSequence());
+            Assert.AreEqual(expectedFormula.Molecule.Count, precursorFormula.Molecule.Count);
+            foreach (var entry in expectedFormula.Molecule)
             {
                 Assert.AreEqual(entry.Value, precursorFormula.Molecule.GetElementCount(entry.Key));
             }

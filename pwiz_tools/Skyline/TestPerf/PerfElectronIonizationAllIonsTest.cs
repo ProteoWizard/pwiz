@@ -35,7 +35,7 @@ namespace TestPerf // Note: tests in the "TestPerf" namespace only run when the 
     public class ElectronIonizationAllIonsTest : AbstractFunctionalTestEx
     {
 
-        [TestMethod] 
+        [TestMethod, NoParallelTesting(TestExclusionReason.RESOURCE_INTENSIVE)] 
         public void ElectronIonizationAllIonsPerfTest()
         {
             TestFilesZip = GetPerfTestDataURL(@"PerfElectronIonizationAllIonsTest.zip");
