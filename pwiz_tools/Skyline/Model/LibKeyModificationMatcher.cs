@@ -110,15 +110,14 @@ namespace pwiz.Skyline.Model
             }
             else if (_libKeys.Current.LibraryKey is CrosslinkLibraryKey crosslinkLibraryKey)
             {
-                if (crosslinkLibraryKey.IsSupportedBySkyline())
+                if (!crosslinkLibraryKey.IsSupportedBySkyline())
                 {
-                    return crosslinkLibraryKey.PeptideLibraryKeys.SelectMany(
-                            libKey => EnumerateSequenceInfos(libKey, false))
-                        .Concat(crosslinkLibraryKey.Crosslinks.Select(crosslink =>
-                            MakeCrosslinkAaModInfo(crosslinkLibraryKey, crosslink)));
+                    return Array.Empty<AAModInfo>();
                 }
-
-                return Array.Empty<AAModInfo>();
+                return crosslinkLibraryKey.PeptideLibraryKeys.SelectMany(
+                        libKey => EnumerateSequenceInfos(libKey, false))
+                    .Concat(crosslinkLibraryKey.Crosslinks.Select(crosslink =>
+                        MakeCrosslinkAaModInfo(crosslinkLibraryKey, crosslink)));
             }
             return Array.Empty<AAModInfo>();
         }
