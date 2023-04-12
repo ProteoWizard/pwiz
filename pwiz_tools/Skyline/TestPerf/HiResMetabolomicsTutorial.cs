@@ -40,7 +40,7 @@ using System.Drawing;
 using System.IO;
 using System.Linq;
 using System.Windows.Forms;
-using pwiz.Skyline.EditUI;
+using pwiz.Skyline.Alerts;
 
 namespace TestPerf // This would be in TestTutorials if it didn't involve a 2GB download
 {
@@ -85,48 +85,11 @@ namespace TestPerf // This would be in TestTutorials if it didn't involve a 2GB 
         {
             RunUI(() => SkylineWindow.SetUIMode(SrmDocument.DOCUMENT_TYPE.small_molecules));
 
-            // Inserting a Transition List, p. 2
             {
                 var doc = SkylineWindow.Document;
 
-                var importDialog = ShowDialog<InsertTransitionListDlg>(SkylineWindow.ShowPasteTransitionListDlg);
-                RunUI(() => importDialog.Size = new Size(600, 300));
-                PauseForScreenShot<InsertTransitionListDlg>("Insert Transition List ready to accept paste of transition list", 3);
-
-                var text = GetCsvFileText(GetTestPath("PUFA_TransitionList.csv"));
-                var col4Dlg = ShowDialog<ImportTransitionListColumnSelectDlg>(() => importDialog.TransitionListText = text);
-
-                RunUI(() => {
-                    col4Dlg.radioMolecule.PerformClick();
-                });
-
-                PauseForScreenShot<ImportTransitionListColumnSelectDlg>("Insert Transition List column picker", 3);
-
-                var errDlg = ShowDialog<ImportTransitionListErrorDlg>(col4Dlg.CheckForErrors);
-                RunUI(() => errDlg.Size = new Size(680, 250));
-                PauseForScreenShot<ImportTransitionListErrorDlg>("Check For Errors dialog showing charge problem", 4);
-                OkDialog(errDlg, errDlg.OkDialog);
-
-                RunUI(() => col4Dlg.ComboBoxes[4].SelectedIndex = 0); // Set the Precursor charge column to "ignore"
-
-                PauseForScreenShot<ImportTransitionListColumnSelectDlg>("Paste Dialog with validated contents", 4);
-                OkDialog(col4Dlg, col4Dlg.OkDialog);
-                var docTargets = WaitForDocumentChange(doc);
-
-                AssertEx.IsDocumentState(docTargets, null, 1, 4, 7, 7);
-                Assert.IsFalse(docTargets.MoleculeTransitions.Any(t => !t.Transition.IsPrecursor()));
-
-                RunUI(() =>
-                {
-                    SkylineWindow.ChangeTextSize(TreeViewMS.LRG_TEXT_FACTOR);
-                    SkylineWindow.Size = new Size(957, 654);
-                    SkylineWindow.ExpandPrecursors();
-                });
-                RestoreViewOnScreen(5);
-                PauseForScreenShot<SkylineWindow>("Skyline with small molecule targets", 5);
-
+                // Setting up the Transition Settings, p. 4
                 var transitionSettingsUI = ShowDialog<TransitionSettingsUI>(SkylineWindow.ShowTransitionSettingsUI);
-
                 RunUI(() =>
                 {
                     // Filter Settings
@@ -139,9 +102,7 @@ namespace TestPerf // This would be in TestTutorials if it didn't involve a 2GB 
                     transitionSettingsUI.FragmentMassType = MassType.Monoisotopic;
                     transitionSettingsUI.SetAutoSelect = true;
                 });
-                PauseForScreenShot<TransitionSettingsUI.PredictionTab>("Transition Settings -Filter tab", 6);
-
-
+                PauseForScreenShot<TransitionSettingsUI.PredictionTab>("Transition Settings -Filter tab", 4);
                 RunUI(() =>
                 {
                     // Full Scan Settings
@@ -153,25 +114,53 @@ namespace TestPerf // This would be in TestTutorials if it didn't involve a 2GB 
                     transitionSettingsUI.PrecursorResMz = 200;
                     transitionSettingsUI.RetentionTimeFilterType = RetentionTimeFilterType.none;
                 });
-                PauseForScreenShot<TransitionSettingsUI.PredictionTab>("Transition Settings -Full Scan tab", 7);
+                PauseForScreenShot<TransitionSettingsUI.PredictionTab>("Transition Settings -Full Scan tab", 5);
 
                 OkDialog(transitionSettingsUI, transitionSettingsUI.OkDialog);
-                docTargets = WaitForDocumentChange(docTargets);
+                var docTargets = WaitForDocumentChange(doc);
 
-                // Turn on auto-manage
-                AssertEx.IsDocumentState(docTargets, null, 1, 4, 7, 7);
-                var refineDialog = ShowDialog<RefineDlg>(SkylineWindow.ShowRefineDlg);
-                RunUI(() =>
-                {
-                    refineDialog.SelectedTab = RefineDlg.TABS.Document;
-                    refineDialog.AutoTransitions = true;
+
+                var importDialog = ShowDialog<InsertTransitionListDlg>(SkylineWindow.ShowPasteTransitionListDlg);
+                RunUI(() => importDialog.Size = new Size(600, 300));
+                PauseForScreenShot<InsertTransitionListDlg>("Insert Transition List ready to accept paste of transition list", 6);
+
+                var text = GetCsvFileText(GetTestPath("PUFA_TransitionList.csv"));
+                var col4Dlg = ShowDialog<ImportTransitionListColumnSelectDlg>(() => importDialog.TransitionListText = text);
+
+                RunUI(() => {
+                    col4Dlg.radioMolecule.PerformClick();
                 });
-                PauseForScreenShot<RefineDlg>("Refine Advanced", 8);
-                OkDialog(refineDialog, refineDialog.OkDialog);
+
+                PauseForScreenShot<ImportTransitionListColumnSelectDlg>("Insert Transition List column picker", 6);
+
+                var errDlg = ShowDialog<ImportTransitionListErrorDlg>(col4Dlg.CheckForErrors);
+                RunUI(() => errDlg.Size = new Size(680, 250));
+                PauseForScreenShot<ImportTransitionListErrorDlg>("Check For Errors dialog showing charge problem", 7);
+                OkDialog(errDlg, errDlg.OkDialog);
+
+                RunUI(() => col4Dlg.ComboBoxes[4].SelectedIndex = 0); // Set the Precursor charge column to "ignore"
+
+                PauseForScreenShot<ImportTransitionListColumnSelectDlg>("Paste Dialog with validated contents", 7);
+                OkDialog(col4Dlg, col4Dlg.OkDialog);
+
+                var autoSelectDlg = WaitForOpenForm<MultiButtonMsgDlg>();
+                PauseForScreenShot("Auto-select query", 8);
+                OkDialog(autoSelectDlg, autoSelectDlg.OkDialog);
+
                 docTargets = WaitForDocumentChange(docTargets);
 
                 AssertEx.IsDocumentState(docTargets, null, 1, 4, 7, 14);
-                PauseForScreenShot<SkylineWindow>("Skyline with 14 transition - show the right-click menu for setting DHA to be a surrogate standard", 10);
+                Assert.IsFalse(docTargets.MoleculeTransitions.Any(t => !t.Transition.IsPrecursor()));
+
+                RunUI(() =>
+                {
+                    SkylineWindow.ChangeTextSize(TreeViewMS.DEFAULT_TEXT_FACTOR);
+                    SkylineWindow.Size = new Size(957, 654);
+                    SkylineWindow.ExpandPrecursors();
+                });
+                RestoreViewOnScreen(5);
+
+                PauseForScreenShot<SkylineWindow>("Skyline with 14 transition - show the right-click menu for setting DHA to be a surrogate standard", 9);
 
                 // Set the standard type of the surrogate standards to StandardType.SURROGATE_STANDARD
                 RunUI(() =>

@@ -925,13 +925,14 @@ namespace pwiz.SkylineTestFunctional
             RunUI(() =>
             {
                 SkylineWindow.NewDocument(true);
-                var transitionList =
+            });
+            var docCurrent = SkylineWindow.Document;
+            var transitionList =
                 "Molecule List Name,Precursor Name,Precursor Formula,Precursor Adduct,Precursor m/z,Precursor Charge,Product Name,Product Formula,Product Adduct,Product m/z,Product Charge,Note\n"+
                 "Cer,Cer 12:0;2/12:0,C24H49NO3,[M-H]1-,398.3639681499,-1,F,C12H22O,[M-H]1-,181.1597889449,-1,\n"+
                 "Cer,Cer 12:0;2/12:0,C24H49NO3,[M-H]1-,398.3639681499,-1,V',,[M-H]1-,186.1863380499,-1,";
-                SetClipboardText(transitionList);
-                SkylineWindow.Paste();
-            });
+            SetClipboardText(transitionList);
+            PasteSmallMoleculeListNoAutoManage(); // Paste the clipboard text, dismiss the offer to enable automanage
             VerifyFragmentTransitionMz(186.18633804, 186.18633804, 1);
         }
 
@@ -971,6 +972,10 @@ namespace pwiz.SkylineTestFunctional
             RunUI(() =>
             {
                 SkylineWindow.NewDocument(true);
+            });
+            var docCurrent = SkylineWindow.Document;
+            RunUI(() =>
+            {
                 var transitionList =
                     "Molecule List Name,Precursor Name,Precursor Formula,Precursor Adduct,Precursor m/z,Precursor Charge,Product Name,Product Formula,Product Adduct,Product m/z,Product Charge,Note\n" +
                     "Cer,Cer 12:0;2/12:0,C24H49NO3,[M-H]1-,398.3639681499,-1,F,C12H22O,[M-H]1-,181.1597889449,-1,\n" +
@@ -980,6 +985,7 @@ namespace pwiz.SkylineTestFunctional
                 SetClipboardText(transitionList);
                 SkylineWindow.Paste();
             });
+            DismissAutoManageDialog(docCurrent); // Say no to the offer to set new nodes to automanage
             var doc = WaitForDocumentLoaded();
             AssertEx.IsDocumentState(doc, null, 1, 1, 2, 4);
 

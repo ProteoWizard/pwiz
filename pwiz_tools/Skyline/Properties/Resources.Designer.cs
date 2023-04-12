@@ -29154,6 +29154,23 @@ namespace pwiz.Skyline.Properties {
         }
         
         /// <summary>
+        ///   Looks up a localized string similar to Do you want to turn on Auto-select and use the document settings to manage these new transitions?
+        ///
+        ///With Auto-select enabled, {0} precursor and {1} fragment transitions will be added to the current document.
+        ///
+        ///Without Auto-select management, {2} precursor and {3} fragment transitions will be added to the current document.
+        ///
+        ///If you select No, you can enable Auto-select later with the &quot;Refine Advanced...&quot; menu item.
+        ///.
+        /// </summary>
+        public static string SkylineWindow_ImportMassList_Do_you_want_to_use_the_document_settings_to_automanage_these_new_transitions {
+            get {
+                return ResourceManager.GetString("SkylineWindow_ImportMassList_Do_you_want_to_use_the_document_settings_to_automana" +
+                        "ge_these_new_transitions", resourceCulture);
+            }
+        }
+        
+        /// <summary>
         ///   Looks up a localized string similar to Failed reading the file.  Peptide {0} matches an existing iRT standard peptide..
         /// </summary>
         public static string SkylineWindow_ImportMassList_Failed_reading_the_file___Peptide__0__matches_an_existing_iRT_standard_peptide_ {
