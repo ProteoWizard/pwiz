@@ -20,7 +20,6 @@ using System;
 using System.Collections.Generic;
 using System.Diagnostics;
 using System.Drawing;
-using System.IO;
 using System.Linq;
 using pwiz.Common.Chemistry;
 using pwiz.Common.Collections;
@@ -514,9 +513,6 @@ namespace pwiz.Skyline.Model.Results
             // Make sure chromatograms are in sorted order
             _listChromData.Sort();
 
-            // Mark all optimization chromatograms
-            MarkOptimizationData();
-
 //            if (Math.Round(_listChromData[0].Key.Precursor) == 585)
 //                Console.WriteLine("Issue");
 
@@ -545,7 +541,7 @@ namespace pwiz.Skyline.Model.Results
                         doFindPeaks = true;
                     }
                 }
-                if (doFindPeaks)
+                if (doFindPeaks && chromData.OptimizationStep == 0)
                 {
                     chromData.FindPeaks(retentionTimes, TimeIntervals, explicitRT);
                 }
@@ -923,43 +919,6 @@ namespace pwiz.Skyline.Model.Results
                     return true;
             }
             return false;
-        }
-
-        private void MarkOptimizationData()
-        {
-            int iFirst = 0;
-            for (int i = 0; i < _listChromData.Count; i++)
-            {
-                if (i < _listChromData.Count - 1 &&
-                    ChromatogramInfo.IsOptimizationSpacing(_listChromData[i].Key.Product, _listChromData[i + 1].Key.Product))
-                {
-                    // CONSIDER: This is no longer possible, since IsOptimizationSpacing checked for order
-                    //           optimization spacing could happen at a boundary changing between ion types
-                    if (_listChromData[i + 1].Key.Product < _listChromData[i].Key.Product)
-                    {
-                        throw new InvalidDataException(string.Format(Resources.ChromDataSet_MarkOptimizationData_Incorrectly_sorted_chromatograms__0__1__,
-                                                                     _listChromData[i + 1].Key.Product, _listChromData[i].Key.Product));
-                    }
-                }
-                else
-                {
-                    if (iFirst != i)
-                    {
-                        // The middle element in the run is the regression value.
-                        // Mark it as not optimization data.
-                        int middleIndex = (i - iFirst)/2 + iFirst;
-                        var primaryData = _listChromData[middleIndex];
-                        // Set the primary key for all members of this group.
-                        for (int j = iFirst; j <= i; j++)
-                        {
-                            _listChromData[j].OptimizationStep = middleIndex - j;
-                            _listChromData[j].PrimaryKey = primaryData.Key;
-                        }
-                    }
-                    // Start a new run with the next value
-                    iFirst = i + 1;
-                }
-            }
         }
 
         // Moved to ProteoWizard

@@ -1137,16 +1137,27 @@ namespace pwiz.Skyline.Model.Lib
                         lenAnnotations = annotationsTSV.Length;
                         outStream.Write(annotationsTSV, 0, lenAnnotations);
                     }
-                    var key = isPeptide ? new LibKey(sequence, charge) : new LibKey(SmallMoleculeLibraryAttributes.Create(sequence, formula, inChiKey, otherKeys), adduct);
-                    var info = new NistSpectrumInfo(key, tfRatio ?? 1000, rt, irt, Convert.ToSingle(totalIntensity),
-                        (ushort) (copies ?? 1), (ushort) numNonZeroPeaks, lenCompressed, lenAnnotations, location);
-                    if (!isPeptide)
+
+                    NistSpectrumInfo info;
+                    try
                     {
-                        // Keep an eye out for ambiguous keys, probably due to library containing multiple machine types etc
-                        if (!knownKeys.Add(key))
+                        var key = isPeptide ? new LibKey(sequence, charge) : new LibKey(SmallMoleculeLibraryAttributes.Create(sequence, formula, inChiKey, otherKeys), adduct);
+                        info = new NistSpectrumInfo(key, tfRatio ?? 1000, rt, irt, Convert.ToSingle(totalIntensity),
+                            (ushort)(copies ?? 1), (ushort)numNonZeroPeaks, lenCompressed, lenAnnotations, location);
+                        if (!isPeptide)
                         {
-                            ambiguousKeys.Add(key); // Already in knownKeys, note ambiguity
+                            // Keep an eye out for ambiguous keys, probably due to library containing multiple machine types etc
+                            if (!knownKeys.Add(key))
+                            {
+                                ambiguousKeys.Add(key); // Already in knownKeys, note ambiguity
+                            }
                         }
+                    }
+                    catch (InvalidDataException)
+                    {
+                        // If the key is invalid, build a representation of the key that can be used to note failures
+                        var key = new LibKey(sequence ?? @"???", 0);
+                        info = new NistSpectrumInfo(key, 0, null, null, 0, 0, 0, 0, 0, location);
                     }
                     libraryEntries.Add(info);
                 }

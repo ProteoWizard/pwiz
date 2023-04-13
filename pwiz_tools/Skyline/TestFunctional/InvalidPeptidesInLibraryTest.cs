@@ -77,7 +77,6 @@ namespace pwiz.SkylineTestFunctional
             {
                 peptideSettingsUI.PickedLibraries = peptideSettingsUI.PickedLibraries.Append(libName).ToArray();
             });
-
             var messageDlg = ShowDialog<AlertDlg>(peptideSettingsUI.OkDialog);
             var expectedMessage = string.Format(Resources.CachedLibrary_WarnInvalidEntries_, libName, expectedInvalidCount,
                 expectedTotalCount, expectedFailedExample);
