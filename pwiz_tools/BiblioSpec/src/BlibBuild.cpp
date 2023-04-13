@@ -26,9 +26,6 @@
  *
  * $ BlibBuild,v 1.0 2009/01/07 15:53:52 Ning Zhang Exp $
  */
-#ifdef _WIN23
-#define _MATRIX_USE_STATIC_LIB
-#endif
 
 #include "pwiz/utility/misc/Filesystem.hpp"
 #include "CommandLine.h"
