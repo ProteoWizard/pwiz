@@ -492,7 +492,7 @@ namespace pwiz.Skyline.Model
 
         public static SrmDocument AddStandardsToDocument(SrmDocument doc, IrtStandard standard)
         {
-            if (standard == null)
+            if (standard == null || standard.IsEmpty)
                 return doc;
 
             var standardMap = new TargetMap<bool>(standard.Peptides.Select(pep => new KeyValuePair<Target, bool>(pep.ModifiedTarget, true)));
@@ -519,9 +519,12 @@ namespace pwiz.Skyline.Model
             var modMatcher = new ModificationMatcher();
             modMatcher.CreateMatches(doc.Settings, standard.Peptides.Select(pep => pep.ModifiedTarget.ToString()),
                 Settings.Default.StaticModList, Settings.Default.HeavyModList);
+            var settingsWithNoMinIon = doc.Settings.ChangeTransitionSettings(t => t.ChangeLibraries(t.Libraries.ChangeMinIonCount(0)));
             var group = new PeptideGroupDocNode(new PeptideGroup(), Resources.ImportFastaControl_ImportFasta_iRT_standards, null,
-                standard.Peptides.Select(pep => modMatcher.GetModifiedNode(pep.ModifiedTarget.ToString()).ChangeSettings(doc.Settings, SrmSettingsDiff.ALL)
+                standard.Peptides.Select(pep => modMatcher.GetModifiedNode(pep.ModifiedTarget.ToString()).ChangeSettings(settingsWithNoMinIon, SrmSettingsDiff.ALL).ChangeStandardType(StandardType.IRT)
                 ).ToArray());
+            //var transitions = group.Peptides.SelectMany(p => p.TransitionGroups.SelectMany(t => t.Transitions.Select(t2 => t2.Id)));
+            //Console.WriteLine(transitions.Count());
             proteins.Insert(0, group);
             return (SrmDocument) doc.ChangeChildrenChecked(proteins.Cast<DocNode>().ToArray());
 

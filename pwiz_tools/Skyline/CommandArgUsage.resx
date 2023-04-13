@@ -877,4 +877,55 @@ greater peak area.</value>
   <data name="_library_product_ions" xml:space="preserve">
     <value>Pick this many transitions for each precursor by library spectrum peak intensity ranking.</value>
   </data>
+  <data name="_associate_proteins_group_proteins" xml:space="preserve">
+    <value>Proteins that match the same set of peptides will be combined into a single target in the document.</value>
+  </data>
+  <data name="_associate_proteins_minimal_protein_list" xml:space="preserve">
+    <value>Apply an algorithm to find the smallest (parsimonious) set of proteins that explains all of the peptides.</value>
+  </data>
+  <data name="_associate_proteins_min_peptides" xml:space="preserve">
+    <value>The minimum number of peptides a protein must have to be added to the document.</value>
+  </data>
+  <data name="_associate_proteins_remove_subsets" xml:space="preserve">
+    <value>Remove subset proteins but keep non-parsimonious, non-subset proteins.</value>
+  </data>
+  <data name="_associate_proteins_shared_peptides" xml:space="preserve">
+    <value>Sets how to assign peptides that are contained in more than one protein in the FASTA or background proteome.</value>
+  </data>
+  <data name="_instrument_dynamic_min_mz" xml:space="preserve">
+    <value>If set, minimum m/z value for product ions is calculate dynamically from the precursor m/z using a specific equation provided by Thermo-Scientific for LTQ instruments</value>
+  </data>
+  <data name="_instrument_max_mz" xml:space="preserve">
+    <value>Maximum measurable m/z value for the target instrument</value>
+  </data>
+  <data name="_instrument_max_time" xml:space="preserve">
+    <value>Maximum time allowed in chromatograms regardless of how they were acquired.  Setting this can save memory and disk space that might be used on uninteresting parts of the gradient.</value>
+  </data>
+  <data name="_instrument_method_mz_tolerance" xml:space="preserve">
+    <value>Maximum delta for matching instrument method transition m/z values with predicted transition m/z values. (Applies only to SRM and targeted-MS/MS data.)</value>
+  </data>
+  <data name="_instrument_min_mz" xml:space="preserve">
+    <value>Minimum measurable m/z value for the target instrument</value>
+  </data>
+  <data name="_instrument_min_time" xml:space="preserve">
+    <value>Minimum time allowed in chromatograms regardless of how they were acquired.  Setting this can save memory and disk space that might be used on uninteresting parts of the gradient.</value>
+  </data>
+  <data name="_instrument_triggered_chromatograms" xml:space="preserve">
+    <value>Indicates that there may be large gaps in the retention times when spectra were acquired for certain analytes. Peaks will be truncated to not overlap with these gaps and background subtraction will not be performed.</value>
+  </data>
+  <data name="_library_pick_min_product_ions" xml:space="preserve">
+    <value>Pick precursors with at least this many transitions.</value>
+  </data>
+  <data name="_library_pick_product_ions" xml:space="preserve">
+    <value>Pick this many transitions for each precursor by library spectrum peak intensity ranking.</value>
+  </data>
+  <data name="_tran_product_add_special_ion" xml:space="preserve">
+    <value>Select a named special ion in the transition settings.</value>
+  </data>
+  <data name="_tran_product_clear_special_ions" xml:space="preserve">
+    <value>Unselect all special ions in the transition settings.</value>
+  </data>
+  <data name="_tran_use_dia_window_exclusion" xml:space="preserve">
+    <value>Take precursor exclusion window from the Full-Scan settings instead of being symmetric around the precursor m/z. This is recommended for DIA/SWATH data.</value>
+  </data>
 </root>

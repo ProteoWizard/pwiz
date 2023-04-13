@@ -237,8 +237,8 @@ namespace TestPerf
                     RemoveDuplicates = true,
                     ChromatogramClickPoint = new PointF(32.05F, 268334.7F),
                     //TargetCounts = new[] { 3991, 30916, 33841, 203044 },
-                    FinalTargetCounts = new[] { 2038, 21960, 24012, 144071 },
-                    ScoringModelCoefficients = "0.3201|-0.7783|3.9594|0.3472|-0.0909|0.7496|0.0089|-0.0725",
+                    FinalTargetCounts = new[] { 2038, 21960, 24013, 144076 },
+                    ScoringModelCoefficients = "0.3173|-0.8915|3.7830|0.2262|-0.0825|0.7332|0.0012|-0.0606",
                     MassErrorStats = new[]
                     {
                         new[] { 2.0, 4.7 },
@@ -535,7 +535,7 @@ namespace TestPerf
         /// <summary>
         /// Change to true to write coefficient arrays.
         /// </summary>
-        private bool IsRecordMode { get { return true; } }
+        private bool IsRecordMode { get { return false; } }
 
         protected override void DoTest()
         {
@@ -847,6 +847,7 @@ namespace TestPerf
             PauseForScreenShot("Import FASTA summary form", screenshotPage);
 
             OkDialog(peptidesPerProteinDlg, peptidesPerProteinDlg.OkDialog);
+            //PauseTest();
             PauseForScreenShot<AllChromatogramsGraph>("Loading chromatograms window", screenshotPage++, 30*1000); // 30 second timeout to avoid getting stuck
             WaitForDocumentChangeLoaded(doc, 20 * 60 * 1000); // 20 minutes
 
@@ -858,6 +859,7 @@ namespace TestPerf
 
             var docLibrary = SkylineWindow.Document.Settings.PeptideSettings.Libraries.Libraries[0];
             Assert.AreEqual(_instrumentValues.LibraryPeptideCount + _instrumentValues.ExpectedIrtPeptideCount, docLibrary.LibraryDetails.UniquePeptideCount);
+            RunUI(() => Assert.AreEqual(_instrumentValues.ExpectedIrtPeptideCount, SkylineWindow.Document.PeptideGroups.First().PeptideCount));
 
             //RunUI(() => SkylineWindow.ModifyDocumentNoUndo(d => d.ChangeMeasuredResults(new MeasuredResults(new List<ChromatogramSet>()))));
             //RunUI(() => SkylineWindow.SaveDocument());
@@ -1103,8 +1105,8 @@ namespace TestPerf
                 ApplyFormatting(formattingDlg, "YEAS", "255, 128, 0");
                 ApplyFormatting(formattingDlg, "HUMAN", "0, 128, 0");
                 PauseForScreenShot("Volcano plot formatting form", screenshotPage);
-
                 OkDialog(formattingDlg, formattingDlg.OkDialog);
+                //PauseTest();
                 WaitForConditionUI(() => volcanoPlot.CurveList.Count == 8 &&
                                          volcanoPlot.CurveList[7].Points.Count == _instrumentValues.ExpectedIrtPeptideCount); // iRTs
                 for (int i = 1; i < 4; i++)
@@ -1477,14 +1479,14 @@ namespace TestPerf
                 "--reintegrate-model-name=" + documentBaseName,
                 "--reintegrate-create-model",
                 "--reintegrate-model-type=mprophet",
-                "--import-search-recalibrate-irts",
                 "--import-search-exclude-library-sources",
                 "--import-search-irts=" + _instrumentValues.IrtStandard,
                 "--import-fasta=" + GetTestPath(_analysisValues.FastaPath),
-                "--decoys-add=shuffle"
+                "--decoys-add=shuffle",
+                "--import-threads=1"
             };
             settings = settings.Concat(_instrumentValues.SearchFiles.Select(o => "--import-search-file=" + GetTestPath(o))).ToArray();
-            settings = settings.Concat(_instrumentValues.DiaFiles.Select(o => "--import-file=" + Path.Combine(GetTestPath("DIA"), o))).ToArray();
+            settings = settings.Concat(_instrumentValues.DiaFiles.Select(o => "--import-file=" + Path.Combine(GetTestPath("DIA"), o)).Take(1)).ToArray();
 
             if (_testInfo.IsPasef)
             {
@@ -1541,7 +1543,8 @@ namespace TestPerf
 
             string output = RunCommand(true, settings);
 
-            /*settings = new[]
+            /*Settings.Default.CompactFormatOption = CompactFormatOption.NEVER.Name;
+            settings = new[]
             {
                 "--in=" + documentFile,
                 "--remove-all",

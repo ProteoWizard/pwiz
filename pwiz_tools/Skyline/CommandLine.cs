@@ -998,9 +998,6 @@ namespace pwiz.Skyline
         {
             try
             {
-                ModifyDocumentWithLogging(doc =>
-                    doc.ChangeSettings(doc.Settings.ChangeTransitionSettings(f =>
-                        f.ChangeInstrument(f.Instrument.ChangeMaxMz(2000)))), AuditLogEntry.SettingsLogFunction);
                 ModifyDocumentWithLogging(doc => doc.ChangeSettings(doc.Settings.ChangeTransitionFilter(f =>
                 {
                     if (commandArgs.FilterPrecursorCharges != null)

@@ -1226,11 +1226,12 @@ namespace pwiz.Skyline
             (c, p) => c.AssociateProteinsFindMinimalProteinList = p.IsNameOnly || bool.Parse(p.Value));
         public static readonly Argument ARG_AP_REMOVE_SUBSETS = new Argument(@"associate-proteins-remove-subsets", NAME_VALUE,
             (c, p) => c.AssociateProteinsRemoveSubsetProteins = p.IsNameOnly || bool.Parse(p.Value));
-        public static readonly Argument ARG_AP_MIN_PEPTIDES = new Argument(@"associate-proteins-min-peptides", NAME_VALUE,
-            (c, p) => c.AssociateProteinsMinPeptidesPerProtein = p.ValueInt);
+        public static readonly Argument ARG_AP_MIN_PEPTIDES = new Argument(@"associate-proteins-min-peptides", INT_VALUE,
+            (c, p) => c.AssociateProteinsMinPeptidesPerProtein = p.ValueInt) { WrapValue = true };
 
         private static readonly ArgumentGroup GROUP_ASSOCIATE_PROTEINS = new ArgumentGroup(() => "Associating peptides with proteins", false,
-            ARG_AP_GROUP_PROTEINS, ARG_AP_SHARED_PEPTIDES, ARG_AP_MINIMAL_LIST, ARG_AP_MIN_PEPTIDES, ARG_AP_REMOVE_SUBSETS);
+            ARG_AP_GROUP_PROTEINS, ARG_AP_SHARED_PEPTIDES, ARG_AP_MINIMAL_LIST, ARG_AP_MIN_PEPTIDES, ARG_AP_REMOVE_SUBSETS)
+            { LeftColumnWidth = 45 };
 
         public bool? AssociateProteinsGroupProteins { get; private set; }
         public bool? AssociateProteinsFindMinimalProteinList { get; private set; }
