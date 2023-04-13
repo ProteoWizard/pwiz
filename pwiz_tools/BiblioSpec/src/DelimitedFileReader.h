@@ -88,7 +88,7 @@ template <typename STORAGE_TYPE> class DelimitedFileReader {
     DelimitedFileConsumer<STORAGE_TYPE>* fileConsumer_; // where to send data
     int curLineNumber_;
     bool hasHeader_;
-    // For use with less elaborate inout formats
+    // For use with less elaborate input formats - noticeable performance improvement on large files vs Boost csv tokenizer
     bool isSimpleReader_;
     string simpleDelimiter_;
 
@@ -287,8 +287,12 @@ template <typename STORAGE_TYPE> class DelimitedFileReader {
                     // for each token in this line
                     char* next_token;
                     memmove(simple_buf, line.c_str(), line.size() + 1);
-                    
-                    char* token = strtok_s(simple_buf, sep, &next_token);
+#ifdef BOOST_MSVC // MSVC silliness with non-POSIX function names
+#define STRTOK_R strtok_s
+#else
+#define STRTOK_R strtok_r
+#endif
+                    char* token = STRTOK_R(simple_buf, sep, &next_token);
                     while (token) {
                         // if it's in the right position
                         if (lineColNumber == targetColumns_[colListIdx].position_) {
@@ -302,7 +306,7 @@ template <typename STORAGE_TYPE> class DelimitedFileReader {
                             }
                         }
                         lineColNumber++; // next token in the line
-                        token = strtok_s(NULL, sep, &next_token);
+                        token = STRTOK_R(NULL, sep, &next_token);
                     }
                 }
                 else
