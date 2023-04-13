@@ -21,6 +21,7 @@ using System;
 using System.Collections.Generic;
 using System.Diagnostics;
 using System.Drawing;
+using System.Globalization;
 using System.IO;
 using System.Linq;
 using System.Reflection;
@@ -429,26 +430,30 @@ namespace pwiz.Skyline.Model
             SendChange((sender, arg) => sender.SelectionChanged());
         }
 
-        private class DocumentChangeSender : RemoteClient, IDocumentChangeReceiver
+        private class DocumentChangeSender : IDocumentChangeReceiver
         {
+            private RemoteClient _remoteClient;
             private int _timeoutCount;
 
             public string Name { get; private set; }
 
-            public DocumentChangeSender(string connectionName, string name) : base(connectionName)
+            public DocumentChangeSender(string connectionName, string name)
             {
-                Timeout = 10;
+                _remoteClient = new RemoteClient(connectionName)
+                {
+                    Timeout = 10
+                };
                 Name = name;
             }
 
             public void DocumentChanged()
             {
-                RemoteCall(DocumentChanged);
+                _remoteClient.RemoteCall(DocumentChanged);
             }
 
             public void SelectionChanged()
             {
-                RemoteCall(SelectionChanged);
+                _remoteClient.RemoteCall(SelectionChanged);
             }
 
             public void ResetTimeouts()
@@ -482,19 +487,21 @@ namespace pwiz.Skyline.Model
             {
                 var originalDocument = _skylineWindow.Document;
                 var document = originalDocument;
-                var identityPathsToDelete = new HashSet<IdentityPath>();
+                var nodeRefs = new List<NodeRef>();
                 foreach (var elementLocator in elementLocators)
                 {
                     var elementRef = ElementRefs.FromObjectReference(elementLocator);
                     if (elementRef is NodeRef nodeRef)
                     {
-                        identityPathsToDelete.Add(nodeRef.ToIdentityPath(document));
+                        nodeRefs.Add(nodeRef);
                     }
                     else
                     {
                         throw new ArgumentException(string.Format(Resources.ToolService_DeleteElementsNow_Unsupported_element__0_, elementLocator));
                     }
                 }
+
+                var identityPathsToDelete = NodeRef.GetIdentityPaths(document, nodeRefs).ToHashSet();
 
                 if (!identityPathsToDelete.Any())
                 {
@@ -512,6 +519,49 @@ namespace pwiz.Skyline.Model
                 _skylineWindow.ImportAnnotations(new StringReader(csvText),
                     new MessageInfo(MessageType.imported_annotations, _skylineWindow.Document.DocumentType,
                         Resources.ToolService_ImportProperties_Import_Properties_from_external_tool));
+            }));
+        }
+
+        public void ImportPeakBoundaries(string csvText)
+        {
+            _skylineWindow.Invoke(new Action(() =>
+            {
+                lock (_skylineWindow.GetDocumentChangeLock())
+                {
+                    var originalDocument = _skylineWindow.DocumentUI;
+                    var document = originalDocument;
+                    using (var longWaitDlg = new LongWaitDlg())
+                    {
+                        longWaitDlg.PerformWork(_skylineWindow, 1000, progressMonitor =>
+                        {
+                            document = LocalizationHelper.CallWithCulture(CultureInfo.InvariantCulture, () =>
+                            {
+                                var peakBoundaryImporter = new PeakBoundaryImporter(originalDocument);
+                                return peakBoundaryImporter.Import(new StringReader(csvText), progressMonitor,
+                                    Helpers.CountLinesInString(csvText), true);
+                            });
+                        });
+                        if (longWaitDlg.IsCanceled)
+                        {
+                            throw new OperationCanceledException();
+                        }
+                    }
+                    _skylineWindow.ModifyDocument(
+                        Resources.ToolService_ImportPeakBoundaries_Import_peak_boundaries_from_external_tool,
+                        doc =>
+                        {
+                            if (!ReferenceEquals(doc, originalDocument))
+                            {
+                                // Should not be possible because of the lock on GetDocumentChangeLock
+                                throw new InvalidOperationException(Resources
+                                    .SkylineDataSchema_VerifyDocumentCurrent_The_document_was_modified_in_the_middle_of_the_operation_);
+                            }
+                            return document;
+                        }, docPair =>
+                            AuditLogEntry.CreateSingleMessageEntry(new MessageInfo(MessageType.imported_peak_boundaries,
+                                _skylineWindow.DocumentUI.DocumentType,
+                                Resources.ToolService_ImportPeakBoundaries_Import_peak_boundaries_from_external_tool)));
+                }
             }));
         }
 

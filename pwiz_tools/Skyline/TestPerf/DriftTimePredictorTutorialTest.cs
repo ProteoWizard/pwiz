@@ -52,7 +52,7 @@ namespace TestPerf // This would be in tutorial tests if it didn't take about 10
 
         private const string EXT_ZIP = ".zip";
 
-        [TestMethod]
+        [TestMethod, NoParallelTesting(TestExclusionReason.RESOURCE_INTENSIVE)]
         public void TestDriftTimePredictorTutorial()
         {
 //            IsPauseForScreenShots = true;

@@ -110,7 +110,7 @@ namespace pwiz.SkylineTest
 
         private ChromTransition MakeChromTransition(ChromSource chromSource)
         {
-            return new ChromTransition(0, 0, 0, 0, chromSource);
+            return new ChromTransition(0, 0, 0, 0, chromSource, 0);
         }
     }
 }

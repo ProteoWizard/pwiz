@@ -50,7 +50,7 @@ namespace pwiz.SkylineTest
             var modifications = docStudy7.Settings.PeptideSettings.Modifications;
             Assert.AreEqual(0, modifications.StaticModifications.Count(mod => mod.IsExplicit));
             Assert.AreEqual(2, modifications.AllHeavyModifications.Count(mod => mod.IsExplicit));
-            Assert.AreEqual(4, modifications.AllHeavyModifications.Count(mod => mod.Formula != null));
+            Assert.AreEqual(4, modifications.AllHeavyModifications.Count(mod => mod.ParsedMolecule != null));
             Assert.AreEqual(3, docStudy7.Peptides.Count(peptide => peptide.HasExplicitMods));
             Assert.AreEqual(2, docStudy7.Peptides.Count(peptide => peptide.HasExplicitMods &&
                 peptide.ExplicitMods.StaticModifications.Count > 0 &&
@@ -133,7 +133,7 @@ namespace pwiz.SkylineTest
 
             modifications = docStudy7.Settings.PeptideSettings.Modifications;
             Assert.AreEqual(2, modifications.AllHeavyModifications.Count(mod => mod.IsExplicit && mod.Label13C));
-            Assert.AreEqual(2, modifications.AllHeavyModifications.Count(mod => mod.Formula != null));
+            Assert.AreEqual(2, modifications.AllHeavyModifications.Count(mod => mod.ParsedMolecule != null));
             Assert.AreEqual(3, docStudy7.Peptides.Count(peptide => peptide.HasExplicitMods));
             Assert.AreEqual(2, docStudy7.Peptides.Count(peptide => peptide.HasExplicitMods &&
                 peptide.ExplicitMods.StaticModifications.Count > 0 &&
@@ -258,7 +258,7 @@ namespace pwiz.SkylineTest
 
             var modSettings = docHeavyV.Settings.PeptideSettings.Modifications;
             Assert.AreEqual(5, modSettings.AllHeavyModifications.Count());
-            Assert.AreEqual(4, modSettings.AllHeavyModifications.Count(mod => mod.Formula != null));
+            Assert.AreEqual(4, modSettings.AllHeavyModifications.Count(mod => mod.ParsedMolecule != null));
             Assert.AreEqual(1, modSettings.AllHeavyModifications.Count(mod => mod.Label13C && mod.Label15N));
             Assert.AreEqual(3, docHeavyV.Peptides.Count(peptide => peptide.HasExplicitMods));
             Assert.AreEqual(1, docHeavyV.Peptides.Count(peptide => peptide.HasExplicitMods &&
@@ -279,7 +279,7 @@ namespace pwiz.SkylineTest
 
             modSettings = doc13V.Settings.PeptideSettings.Modifications;
             Assert.AreEqual(4, modSettings.AllHeavyModifications.Count());
-            Assert.AreEqual(3, modSettings.AllHeavyModifications.Count(mod => mod.Formula != null));
+            Assert.AreEqual(3, modSettings.AllHeavyModifications.Count(mod => mod.ParsedMolecule != null));
             Assert.AreEqual(1, modSettings.AllHeavyModifications.Count(mod => mod.Label13C));
             Assert.AreEqual(3, doc13V.Peptides.Count(peptide => peptide.HasExplicitMods));
             Assert.AreEqual(2, doc13V.Peptides.Count(peptide => peptide.HasExplicitMods &&
@@ -293,7 +293,7 @@ namespace pwiz.SkylineTest
 
             modSettings = doc13V.Settings.PeptideSettings.Modifications;
             Assert.AreEqual(4, modSettings.AllHeavyModifications.Count());
-            Assert.AreEqual(3, modSettings.AllHeavyModifications.Count(mod => mod.Formula != null));
+            Assert.AreEqual(3, modSettings.AllHeavyModifications.Count(mod => mod.ParsedMolecule != null));
             Assert.AreEqual(1, modSettings.AllHeavyModifications.Count(mod => mod.Label13C));
             Assert.AreEqual(3, doc13V.Peptides.Count(peptide => peptide.HasExplicitMods));
             Assert.AreEqual(2, doc13V.Peptides.Count(peptide => peptide.HasExplicitMods &&

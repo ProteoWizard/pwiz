@@ -272,12 +272,17 @@ namespace pwiz.SkylineTest
                 {
                     for (var p = 0; p < peaksInfo.Peaks.Length; p++)
                     {
-                        List<SpectrumPeakAnnotation> annotations;
-                        if (!fragmentAnnotations.TryGetValue(p, out annotations))
+                        if (!fragmentAnnotations.TryGetValue(p, out var annotations))
                         {
-                            annotations = null;
+                            Assume.IsTrue(peaksInfo.Peaks[p].Annotations == null);
                         }
-                        Assume.IsTrue(CollectionUtil.EqualsDeep(annotations, peaksInfo.Peaks[p].Annotations), "did not find expected annotation in converted library");
+                        else
+                        {
+                            // Examine as strings to avoid issues with rounding in I/O
+                            Assume.IsTrue(CollectionUtil.EqualsDeep(
+                                annotations.Select(a => a.ToString()).ToList(),
+                                peaksInfo.Peaks[p].Annotations.Select(a => a.ToString()).ToList()), "did not find expected annotation in converted library");
+                        }
                     }
                 }
             }            
