@@ -186,6 +186,9 @@
       <Component Id="grpc_csharp_ext.x86.dll">
         <File Source="$(var.Skyline.TargetDir)/grpc_csharp_ext.x86.dll" KeyPath="yes"/>
       </Component>
+      <Component Id="hardklor.exe">
+        <File Source="$(var.Skyline.TargetDir)/hardklor.exe" KeyPath="yes"/>
+      </Component>
       <Component Id="Iesi.Collections.dll">
         <File Source="$(var.Skyline.TargetDir)/Iesi.Collections.dll" KeyPath="yes"/>
       </Component>
