@@ -41,7 +41,7 @@ startTime REAL, -- start retention time in minutes, if known
 endTime REAL, -- end retention time in minutes, if known
 totalIonCurrent REAL, -- total ion current of spectrum
 moleculeName VARCHAR(128), -- precursor molecule's name (not needed for peptides)
-chemicalFormula VARCHAR(128), -- precursor molecule's neutral formula (not needed for peptides)
+chemicalFormula VARCHAR(128), -- precursor molecule's neutral formula, may include value for unexplained mass e.g. H84C44N12O13[+3.3122] (not needed for peptides)
 precursorAdduct VARCHAR(128), -- ionizing adduct e.g. [M+Na], [2M-H2O+2H] etc (not needed for peptides)
 inchiKey VARCHAR(128), -- molecular identifier for structure retrieval (not needed for peptides)
 otherKeys VARCHAR(128), -- alternative molecular identifiers for structure retrieval, tab separated name:value pairs e.g. cas:58-08-2\thmdb:01847 (not needed for peptides)
