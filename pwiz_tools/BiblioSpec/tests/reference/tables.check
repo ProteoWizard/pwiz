@@ -20,7 +20,7 @@ minorVersion INTEGER -- Schema version number:
 -- Version 2 added ion mobility information
 )
 
-INSERT INTO LibInfo values('urn:lsid:proteome.gs.washington.edu:spectral_library:bibliospec:redundant:example','Fri Feb 21 16:04:56 2020',-1,0,10)
+INSERT INTO LibInfo values('urn:lsid:proteome.gs.washington.edu:spectral_library:bibliospec:redundant:example','Fri Apr 14 09:57:02 2023',-1,0,10)
 
 CREATE TABLE RefSpectra ( -- spectrum metadata - actual mz/intensity pairs in RefSpectraPeaks
 id INTEGER primary key autoincrement not null, -- lookup key for RefSpectraPeaks
@@ -141,6 +141,8 @@ INSERT INTO ScoreTypes(id, scoreType, probabilityType) VALUES(17, 'BYONIC SCORE'
 INSERT INTO ScoreTypes(id, scoreType, probabilityType) VALUES(18, 'PEPTIDE SHAKER CONFIDENCE', 'PROBABILITY_THAT_IDENTIFICATION_IS_CORRECT')
 
 INSERT INTO ScoreTypes(id, scoreType, probabilityType) VALUES(19, 'GENERIC Q-VALUE', 'PROBABILITY_THAT_IDENTIFICATION_IS_INCORRECT')
+
+INSERT INTO ScoreTypes(id, scoreType, probabilityType) VALUES(20, 'HARDKLOR CORRELATION SCORE', 'PROBABILITY_THAT_IDENTIFICATION_IS_CORRECT')
 
 CREATE TABLE IonMobilityTypes ( -- table of known ion mobility units
 id INTEGER PRIMARY KEY, -- as used in ionMobilityType field of RefSpectra

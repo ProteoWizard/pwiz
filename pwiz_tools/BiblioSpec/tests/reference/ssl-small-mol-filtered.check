@@ -1,12 +1,10 @@
 libLSID	numSpecs	majorVersion	minorVersion
-urn:lsid:proteome.gs.washington.edu:spectral_library:bibliospec:nr:ssl-small-mol.blib	5	1	10
+urn:lsid:proteome.gs.washington.edu:spectral_library:bibliospec:nr:ssl-small-mol.blib	3	1	10
 id	RefSpectraID	position	mass
 id	peptideSeq	precursorMZ	precursorCharge	peptideModSeq	prevAA	nextAA	copies	numPeaks	ionMobility	collisionalCrossSectionSqA	ionMobilityHighEnergyOffset	ionMobilityType	retentionTime	startTime	endTime	totalIonCurrent	moleculeName	chemicalFormula	precursorAdduct	inchiKey	otherKeys	fileID	SpecIDinFile	score	scoreType
-1	N/A	717.07	3	N/A	-	-	1	109	0.0	0.0	0.0	0	20.0	19.0	21.5	499.00000858	Caffeine	C8H10N4O2	[M+3H]3+	RYYVLZVUVIJVGH-UHFFFAOYSA-N	N/A	1	136	0.0	0
-2	N/A	717.06	3	N/A	-	-	1	108	0.0	0.0	0.0	0	8.8483	31.0	33.2	505.00000584	Ethanol	C2H6O	[M+3H]	LFQSCWFLJHTTHZ-UHFFFAOYAB	N/A	1	140	0.0	0
-3	N/A	715.07	3	N/A	-	-	1	75	0.0	0.0	0.0	0	60.0	N/A	N/A	324.70000457	Theobromine	C7H8N4O2	[M+3H]	YAPQBXQYLJRXSA-UHFFFAOYSA-N	N/A	1	142	0.0	0
-4	N/A	904.0	2	N/A	-	-	1	214	0.0	0.0	0.0	0	N/A	N/A	N/A	33789.70	Unknown-1	N/A	[M+2]	N/A	N/A	1	144	0.0	0
-5	N/A	602.0	2	N/A	-	-	1	0	0.0	0.0	0.0	0	15.0	14.0	17.0	N/A	Unknown-2	N/A	[M+2]	N/A	N/A	1	N/A	0.0	0
+1	N/A	717.07	3	N/A	-	-	1	109	0.0	0.0	0.0	0	20.0	N/A	N/A	499.00000858	Caffeine	C8H10N4O2	[M+3H]3+	RYYVLZVUVIJVGH-UHFFFAOYSA-N	N/A	1	136	0.0	0
+2	N/A	717.06	3	N/A	-	-	1	108	0.0	0.0	0.0	0	8.8483	N/A	N/A	505.00000584	Ethanol	C2H6O	[M+3H]	LFQSCWFLJHTTHZ-UHFFFAOYAB	N/A	1	140	0.0	0
+3	N/A	715.07	3	N/A	-	-	1	75	0.0	0.0	0.0	0	60.0	N/A	N/A	324.70000457	Theobromine	C7H8N4O2	[M+3H]	YAPQBXQYLJRXSA-UHFFFAOYSA-N 	N/A	1	142	0.0	0
 id	fileName	idFileName	cutoffScore
 1	/BiblioSpec/tests/inputs/demo.ms2	/BiblioSpec/tests/inputs/ssl-small-mol.ssl	-1.0
 id	scoreType	probabilityType
@@ -30,10 +28,7 @@ id	scoreType	probabilityType
 17	BYONIC SCORE	PROBABILITY_THAT_IDENTIFICATION_IS_INCORRECT
 18	PEPTIDE SHAKER CONFIDENCE	PROBABILITY_THAT_IDENTIFICATION_IS_CORRECT
 19	GENERIC Q-VALUE	PROBABILITY_THAT_IDENTIFICATION_IS_INCORRECT
-20	HARDKLOR CORRELATION SCORE	PROBABILITY_THAT_IDENTIFICATION_IS_CORRECT
 RefSpectraID	RedundantRefSpectraID	SpectrumSourceID	ionMobility	collisionalCrossSectionSqA	ionMobilityHighEnergyOffset	ionMobilityType	retentionTime	startTime	endTime	score	bestSpectrum
-1	1	1	0.0	0.0	0.0	0	20.0	19.0	21.5	0.0	1
-2	2	1	0.0	0.0	0.0	0	8.8483	31.0	33.2	0.0	1
+1	1	1	0.0	0.0	0.0	0	20.0	N/A	N/A	0.0	1
+2	2	1	0.0	0.0	0.0	0	8.8483	N/A	N/A	0.0	1
 3	3	1	0.0	0.0	0.0	0	60.0	N/A	N/A	0.0	1
-4	4	1	0.0	0.0	0.0	0	N/A	N/A	N/A	0.0	1
-5	5	1	0.0	0.0	0.0	0	15.0	14.0	17.0	0.0	1
