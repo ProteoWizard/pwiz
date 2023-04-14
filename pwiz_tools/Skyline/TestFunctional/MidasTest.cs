@@ -147,7 +147,11 @@ namespace pwiz.SkylineTestFunctional
             OkDialog(peptideSettings, peptideSettings.OkDialog);
 
             var libExplorerDlg = ShowDialog<ViewLibraryDlg>(SkylineWindow.ViewSpectralLibraries);
-            Assert.AreEqual(218, libExplorerDlg.PeptidesCount);
+            const int expectedPeptides = 218;
+            if (!TryWaitForCondition(() => expectedPeptides == libExplorerDlg.PeptidesCount))
+            {
+                Assert.AreEqual(expectedPeptides, libExplorerDlg.PeptidesCount);    // Expecting a failure message
+            }
             OkDialog(libExplorerDlg, libExplorerDlg.Close);
 
             // Get transition rankings

@@ -72,7 +72,7 @@ namespace pwiz.ProteomeDatabase.API
 
         public virtual ProteinMetadata ChangeName(string name)
         {
-            return new ProteinMetadata(this){Name = name};
+            return new ProteinMetadata(this) { Name = string.IsNullOrEmpty(name) ? null : name };
         }
 
         public virtual ProteinMetadata ChangeDescription(string descr)
@@ -146,8 +146,8 @@ namespace pwiz.ProteomeDatabase.API
 
         public ProteinMetadata(string name, string description, string preferredName, string accession, string gene, string species, string websearchterm=null)
         {
-            Name = name;
-            Description = description;
+            Name = string.IsNullOrEmpty(name) ? null : name;
+            Description = string.IsNullOrEmpty(description) ? null : description;
             PreferredName = preferredName;
             Accession = accession;
             Gene = gene;

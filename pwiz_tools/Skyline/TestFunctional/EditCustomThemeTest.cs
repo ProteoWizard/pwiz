@@ -22,6 +22,7 @@ using System.Linq;
 using System.Windows.Forms;
 using Microsoft.VisualStudio.TestTools.UnitTesting;
 using pwiz.Skyline.Alerts;
+using pwiz.Skyline.Model;
 using pwiz.Skyline.Model.Themes;
 using pwiz.Skyline.Properties;
 using pwiz.Skyline.ToolsUI;
@@ -197,7 +198,7 @@ namespace pwiz.SkylineTestFunctional
             RunUI(() => editCustomThemeDlg.changeCateogry(EditCustomThemeDlg.ThemeCategory.precursors));
             Assert.AreEqual(grid.Rows[rowIndex].Cells[_rgbColIndex].Value, "0, 0, 255"); // check rgb
             Assert.AreEqual(grid.Rows[rowIndex].Cells[_hexColIndex].Value, "#0000FF"); // check hex  
-            Assert.AreEqual(ColorScheme.ColorSchemeDemo.PrecursorColors.First(), Color.Blue); // check hex 
+            Assert.AreEqual(ColorScheme.ColorSchemeDemo.PrecursorColors.First(), RgbHexColor.NormalizeColor(Color.Blue)); // check hex 
         }
     }
 }

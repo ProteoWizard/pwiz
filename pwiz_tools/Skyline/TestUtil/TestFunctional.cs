@@ -178,7 +178,7 @@ namespace pwiz.SkylineTestUtil
             SkylineWindow.DocumentChangedEvent += OnDocumentChangedLogging;
         }
 
-        protected static TDlg ShowDialog<TDlg>([InstantHandle] Action act, int millis = -1) where TDlg : Form
+        protected static TDlg ShowDialog<TDlg>(Action act, int millis = -1) where TDlg : Form
         {
             var existingDialog = FindOpenForm<TDlg>();
             if (existingDialog != null)
@@ -210,7 +210,7 @@ namespace pwiz.SkylineTestUtil
         /// <summary>
         /// Brings up a dialog where the Type might be the same as a form which is already open.
         /// </summary>
-        protected static TDlg ShowNestedDlg<TDlg>([InstantHandle] Action act) where TDlg : Form
+        protected static TDlg ShowNestedDlg<TDlg>(Action act) where TDlg : Form
         {
             var existingDialogs = FormUtil.OpenForms.OfType<TDlg>().ToHashSet(new IdentityEqualityComparer<TDlg>());
             SkylineBeginInvoke(act);
@@ -263,27 +263,70 @@ namespace pwiz.SkylineTestUtil
             }
         }
 
-        protected static void RunDlg<TDlg>([InstantHandle] Action show, [InstantHandle] Action<TDlg> act = null, bool pause = false, int millis = -1) where TDlg : Form
+        /// <summary>
+        /// Shows a dialog and executes a test action on the dialog.
+        /// </summary>
+        /// <param name="showDlgAction">Action which causes the dialog to be shown</param>
+        /// <param name="exerciseDlgAction">Action which can do some things and then must close the dialog.</param>
+        protected static void RunDlg<TDlg>([InstantHandle] Action showDlgAction,
+            [InstantHandle] [NotNull] Action<TDlg> exerciseDlgAction)
+            where TDlg : Form
         {
-            RunDlg(show, false, act, pause, millis);
+            bool showDlgActionCompleted = false;
+            TDlg dlg = ShowDialog<TDlg>(() =>
+            {
+                showDlgAction();
+                showDlgActionCompleted = true;
+            });
+            OkDialog(dlg, () => exerciseDlgAction(dlg));
+            WaitForConditionUI(() => showDlgActionCompleted);
         }
 
-        protected static void RunDlg<TDlg>(Action show, bool waitForDocument, Action<TDlg> act = null, bool pause = false, int millis = -1) where TDlg : Form
+        /// <summary>
+        /// Shows a dialog and tests the dialog by invoking an action on the test thread.
+        /// Unlike <see cref="RunDlg{TDlg}"/>, the test action runs on the test thread instead of the
+        /// event thread. This method can be used for testing dialogs which in turn bring up other dialogs,
+        /// or which for other reasons cannot be tested by RunDlg.
+        /// </summary>
+        /// <param name="showDlgAction">Action which runs on the UI thread and causes the dialog to be shown</param>
+        /// <param name="exerciseDlgAction">Action which runs on the test thread and interacts with the dialog</param>
+        /// <param name="closeDlgAction">Action which runs on the UI thread and closes the dialog</param>
+        protected static void RunLongDlg<TDlg>([InstantHandle] Action showDlgAction, [InstantHandle] Action<TDlg> exerciseDlgAction, Action<TDlg> closeDlgAction) where TDlg : Form
         {
-            var doc = SkylineWindow.Document;
-            TDlg dlg = ShowDialog<TDlg>(show, millis);
-            if (pause)
-                PauseTest();
-            RunUI(() =>
+            bool showDlgActionCompleted = false;
+            TDlg dlg = ShowDialog<TDlg>(() =>
             {
-                if (act != null)
-                    act(dlg);
-                else
-                    dlg.CancelButton.PerformClick();
+                showDlgAction();
+                showDlgActionCompleted = true;
             });
-            WaitForClosedForm(dlg);
-            if (waitForDocument)
-                WaitForDocumentChange(doc);
+            exerciseDlgAction(dlg);
+            OkDialog(dlg, ()=>closeDlgAction(dlg));
+            WaitForConditionUI(() => showDlgActionCompleted);
+        }
+
+        /// <summary>
+        /// Invoke an action that causes a dialog to appear, and then dismiss that dialog.
+        /// This method waits for the dialog to be closed, but, unlike <see cref="RunDlg{TDlg}"/>,
+        /// this does not wait until the action which displayed the dialog returns.
+        /// </summary>
+        /// <param name="showAction">Action which causes the dialog to appear</param>
+        /// <param name="dismissAction">Action which causes the dialog to close.</param>
+        protected static void ShowAndDismissDlg<TDlg>(Action showAction,
+            Action<TDlg> dismissAction) where TDlg : Form
+        {
+            TDlg dlg = ShowDialog<TDlg>(showAction);
+            OkDialog(dlg, () =>
+            {
+                dismissAction(dlg);
+            });
+        }
+
+        /// <summary>
+        /// Invoke an action which displays a dialog and then click that dialog's cancel button.
+        /// </summary>
+        protected static void ShowAndCancelDlg<TDlg>(Action showAction) where TDlg : Form
+        {
+            ShowAndDismissDlg<TDlg>(showAction, dlg=>dlg.CancelButton.PerformClick());
         }
 
         protected static void SelectNode(SrmDocument.Level level, int iNode)
@@ -1407,7 +1450,7 @@ namespace pwiz.SkylineTestUtil
             threadTest.Start();
             using (var documentSerializabilityVerifier = new DocumentSerializabilityVerifier())
             {
-                documentSerializabilityVerifier.RunAsync();
+                documentSerializabilityVerifier.Start();
                 Program.Main();
             }
             threadTest.Join();
@@ -1787,11 +1830,13 @@ namespace pwiz.SkylineTestUtil
             var skylineWindow = Program.MainWindow;
             if (skylineWindow == null || skylineWindow.IsDisposed || !IsFormOpen(skylineWindow))
             {
-                if (Program.StartWindow != null)
+                var startWindow = Program.StartWindow;
+                if (startWindow != null)
                 {
                     CloseOpenForms(typeof(StartPage));
                     _testCompleted = true;
-                    RunUI(Program.StartWindow.Close);
+                    if (!startWindow.IsDisposed && IsFormOpen(startWindow))
+                        startWindow.Invoke((Action)Program.StartWindow.Close);
                 }
 
                 return;
@@ -2236,8 +2281,7 @@ namespace pwiz.SkylineTestUtil
             });
             WaitForClosedForm(addStaticModDlg);
 
-            RunUI(editModsDlg.OkDialog);
-            WaitForClosedForm(editModsDlg);
+            OkDialog(editModsDlg, editModsDlg.OkDialog);
         }
 
         public static void SetStaticModifications(Func<IList<string>, IList<string>> changeMods)

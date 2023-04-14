@@ -68,7 +68,10 @@ namespace pwiz.Skyline.EditUI
                 splitContainer1.Panel2Collapsed = true;
             }
 
-            ColorIndex = annotations.ColorIndex;
+            if (annotations.ColorIndex >= 0)
+            {
+                ColorIndex = annotations.ColorIndex;
+            }
             if (ColorIndex >= 0 && ColorIndex < toolStrip1.Items.Count)
                 ((ToolStripButton) toolStrip1.Items[ColorIndex]).Checked = true;
 
@@ -175,7 +178,7 @@ namespace pwiz.Skyline.EditUI
                 colorIndex = Settings.Default.AnnotationColor;
             else if (!matchingColors)
                 colorIndex = -1;
-            return new Annotations(text, dictMatchingAnnotations, colorIndex);
+            return Annotations.FromValues(text, dictMatchingAnnotations, colorIndex);
         }
 
 
@@ -183,7 +186,7 @@ namespace pwiz.Skyline.EditUI
         {
             var annotations = GetAnnotations();
             // Only want to return new annotations if the user has changed the annotations.
-            if(ArrayUtil.EqualsDeep(_originalAnnotations.ListAnnotations(), annotations.ToArrayStd()))
+            if (_originalAnnotations.ListAnnotations().ToHashSet().SetEquals(annotations))
                 return null;
             return annotations;
         }

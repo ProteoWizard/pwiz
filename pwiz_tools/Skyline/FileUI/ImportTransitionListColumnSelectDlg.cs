@@ -1295,8 +1295,10 @@ namespace pwiz.Skyline.FileUI
                 }
             }
 
-            using (var longWaitDlg = new LongWaitDlg { Text = Resources.ImportTransitionListColumnSelectDlg_CheckForErrors_Checking_for_errors___ })
+            try
             {
+                using var longWaitDlg = new LongWaitDlg
+                    {Text = Resources.ImportTransitionListColumnSelectDlg_CheckForErrors_Checking_for_errors___};
                 longWaitDlg.PerformWork(this, 1000, progressMonitor =>
                 {
 
@@ -1325,6 +1327,18 @@ namespace pwiz.Skyline.FileUI
                         insertionParams.ProteinAssociations);
                     errorCheckCanceled = progressMonitor.IsCanceled;
                 });
+            }
+            catch (Exception exception)
+            {
+                if (ExceptionUtil.IsProgrammingDefect(exception))
+                {
+                    Program.ReportException(exception);
+                }
+                else
+                {
+                    MessageDlg.ShowWithException(this, exception.Message, exception);
+                }
+                Assume.IsTrue(errorCheckCanceled);
             }
 
             var isErrorAll = ReferenceEquals(insertionParams.Document, _docCurrent);

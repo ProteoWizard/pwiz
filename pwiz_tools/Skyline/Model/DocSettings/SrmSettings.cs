@@ -642,6 +642,18 @@ namespace pwiz.Skyline.Model.DocSettings
             return standardPeptides;
         }
 
+        public SrmSettings UpdateScoreQValueMap(IEnumerable<PeptideGroupDocNode> peptideGroupDocNodes)
+        {
+            var newScoreQValueMap = ScoreQValueMap.FromMoleculeGroups(peptideGroupDocNodes);
+            if (Equals(newScoreQValueMap, PeptideSettings.Integration.ScoreQValueMap))
+            {
+                return this;
+            }
+
+            return ChangePeptideSettings(
+                PeptideSettings.ChangeIntegration(PeptideSettings.Integration.ChangeScoreQValueMap(newScoreQValueMap)));
+        }
+
         public SrmSettings CachePeptideStandards(IList<DocNode> peptideGroupDocNodesOrig,
                                                  IList<DocNode> peptideGroupDocNodes)
         {

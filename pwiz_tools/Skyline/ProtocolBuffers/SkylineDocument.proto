@@ -68,6 +68,13 @@ message SkylineDocumentProto {
 		sint32 optimizationStep = 23;
 		Annotations annotations = 24;
 		bool forcedIntegration = 25;
+		PeakShapeValues peakShapeValues = 26;
+		message PeakShapeValues {
+			float stdDev = 1;
+			float skewness = 2;
+			float kurtosis = 3;
+			float shapeCorrelation = 4;
+		}
 	}
 	message TransitionResults {
 		repeated TransitionPeak peaks = 1;

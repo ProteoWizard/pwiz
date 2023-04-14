@@ -41,7 +41,7 @@ namespace CommonTest.DataBinding
                     new PivotSpec()
                         .ChangeRowHeaders(new[]
                             {new PivotSpec.Column(new ColumnId("RowHeaderOne")).ChangeCaption("MyCaption")})
-                        .ChangeColumnHeaders(new[] {new PivotSpec.Column(new ColumnId("ColumnOne")),})
+                        .ChangeColumnHeaders(new[] {new PivotSpec.Column(new ColumnId("ColumnOne")).ChangeVisible(false),})
                         .ChangeValues(new[]
                         {
                             (PivotSpec.AggregateColumn) new PivotSpec.AggregateColumn(new ColumnId("ValueOne"),
@@ -69,7 +69,7 @@ namespace CommonTest.DataBinding
             var viewLayoutList = new ViewLayoutList("Test").ChangeLayouts(new []{viewLayout})
                 .ChangeDefaultLayoutName("TestName");
             var roundTrip = RoundTripToXml(viewLayoutList);
-            Assert.AreEqual(viewLayoutList, roundTrip);
+            AssertEx.AreEqual(viewLayoutList, roundTrip);
         }
 
         private static ViewLayoutList RoundTripToXml(ViewLayoutList viewLayoutList)

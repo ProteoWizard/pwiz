@@ -1952,7 +1952,7 @@ namespace pwiz.Skyline.Model
                 // ReSharper disable LocalizableElement
                 note = String.IsNullOrEmpty(note) ? ion.Note : (note + "\r\n" + ion.Note);
                 // ReSharper restore LocalizableElement
-                annotations = new Annotations(note, document.Annotations.ListAnnotations(), 0);
+                annotations = Annotations.FromValues(note, document.Annotations.ListAnnotations(), 0);
             }
 
             var ionExplicitTransitionValues = ion.ExplicitTransitionValues;

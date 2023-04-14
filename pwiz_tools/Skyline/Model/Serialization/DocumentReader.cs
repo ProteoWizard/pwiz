@@ -209,7 +209,7 @@ namespace pwiz.Skyline.Model.Serialization
         public static Annotations ReadAnnotations(XmlReader reader)
         {
             string note = null;
-            int color = Annotations.EMPTY.ColorIndex;
+            int color = 0;
             var annotations = new Dictionary<string, string>();
             
             if (reader.IsStartElement(EL.note))
@@ -225,9 +225,7 @@ namespace pwiz.Skyline.Model.Serialization
                 annotations[name] = reader.ReadElementString();
             }
 
-            return note != null || annotations.Count > 0
-                ? new Annotations(note, annotations, color)
-                : Annotations.EMPTY;
+            return Annotations.FromValues(note, annotations, color);
         }
 
         /// <summary>
@@ -496,6 +494,17 @@ namespace pwiz.Skyline.Model.Serialization
                     reader.ReadStartElement();
                     annotations = _documentReader.ReadTargetAnnotations(reader, AnnotationDef.AnnotationTarget.transition_result);
                 }
+
+                float? stdDev = reader.GetNullableFloatAttribute(ATTR.std_dev);
+                float? skewness = reader.GetNullableFloatAttribute(ATTR.skewness);
+                float? kurtosis = reader.GetNullableFloatAttribute(ATTR.kurtosis);
+                float? shapeCorrelation = reader.GetNullableFloatAttribute(ATTR.shape_correlation);
+                PeakShapeValues? peakShapeValues = null;
+                if (stdDev.HasValue && skewness.HasValue && kurtosis.HasValue)
+                {
+                    peakShapeValues = new PeakShapeValues(stdDev.Value, skewness.Value, kurtosis.Value, shapeCorrelation??1);
+                }
+
                 return new TransitionChromInfo(fileInfo.FileId,
                     optimizationStep,
                     massError,
@@ -515,7 +524,8 @@ namespace pwiz.Skyline.Model.Serialization
                     rankByLevel,
                     annotations,
                     userSet,
-                    forcedIntegration);
+                    forcedIntegration,
+                    peakShapeValues);
             }
         }
 
@@ -995,7 +1005,6 @@ namespace pwiz.Skyline.Model.Serialization
                 : null;
             var annotations = Annotations.EMPTY;
             ExplicitMods mods = null, lookupMods = null;
-            CrosslinkStructure crosslinkStructure = null;
             Results<PeptideChromInfo> results = null;
             TransitionGroupDocNode[] children = null;
             Adduct adduct = Adduct.EMPTY;
@@ -1033,7 +1042,7 @@ namespace pwiz.Skyline.Model.Serialization
                     mods = ReadExplicitMods(reader, peptide)?.ConvertFromLegacyCrosslinkStructure();
                     SkipImplicitModsElement(reader);
                     lookupMods = ReadLookupMods(reader, lookupSequence);
-                    crosslinkStructure = ReadCrosslinkStructure(reader);
+                    var crosslinkStructure = ReadCrosslinkStructure(reader);
                     if (crosslinkStructure != null && !crosslinkStructure.IsEmpty)
                     {
                         mods = mods ?? new ExplicitMods(peptide, null, null);

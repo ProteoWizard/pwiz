@@ -762,7 +762,9 @@ namespace pwiz.Skyline.Model
             if (!DeferSettingsChanges)
             {
                 // Make sure peptide standards lists are up to date
-                docClone.Settings = docClone.Settings.CachePeptideStandards(Children, docClone.Children);
+                docClone.Settings = docClone.Settings
+                    .UpdateScoreQValueMap(docClone.MoleculeGroups)
+                    .CachePeptideStandards(Children, docClone.Children);
             }
 
             // Note protein metadata readiness
@@ -1282,7 +1284,7 @@ namespace pwiz.Skyline.Model
                     {
                         var CHUNKSIZE = 500; // Should be more than adequate to check for "?xml version="1.0" encoding="utf-8"?>< srm_settings format_version = "4.12" software_version = "Skyline (64-bit) " >"
                         var probeBuf = new byte[CHUNKSIZE];
-                        probeFile.Read(probeBuf, 0, CHUNKSIZE);
+                        probeFile.ReadOrThrow(probeBuf, 0, CHUNKSIZE);
                         probeBuf[CHUNKSIZE - 1] = 0;
                         var probeString = Encoding.UTF8.GetString(probeBuf);
                         if (!probeString.Contains(@"<srm_settings"))
@@ -1783,7 +1785,7 @@ namespace pwiz.Skyline.Model
         public SrmDocument ChangePeak(IdentityPath groupPath, string nameSet, MsDataFileUri filePath,
             Identity tranId, double retentionTime, UserSet userSet)
         {
-            return ChangePeak(groupPath, nameSet, filePath, false,
+            return ChangePeak(groupPath, nameSet, filePath,
                 (node, info, tol, iSet, fileId, reg) =>
                     node.ChangePeak(Settings, info, tol, iSet, fileId, reg, tranId, retentionTime, userSet));
         }
@@ -1822,9 +1824,9 @@ namespace pwiz.Skyline.Model
                         : PeakIdentification.FALSE;
                 }
             }
-            return ChangePeak(groupPath, nameSet, filePath, true,
+            return ChangePeak(groupPath, nameSet, filePath,
                 (node, info, tol, iSet, fileId, reg) =>
-                    node.ChangePeak(Settings, info, tol, iSet, fileId, reg, transition, startTime, 
+                    node.ChangePeak(Settings, info, iSet, fileId, reg, transition, startTime, 
                                     endTime, identified.Value, userSet, preserveMissingPeaks));
         }
 
@@ -1837,8 +1839,7 @@ namespace pwiz.Skyline.Model
             ChromatogramGroupInfo chromInfoGroup, double mzMatchTolerance, int indexSet,
             ChromFileInfoId indexFile, OptimizableRegression regression);
 
-        private SrmDocument ChangePeak(IdentityPath groupPath, string nameSet, MsDataFileUri filePath, bool loadPoints,
-            ChangeNodePeak change)
+        private SrmDocument ChangePeak(IdentityPath groupPath, string nameSet, MsDataFileUri filePath, ChangeNodePeak change)
         {
             var find = new FindChromInfos(this, groupPath, nameSet, filePath);
 
@@ -2161,7 +2162,9 @@ namespace pwiz.Skyline.Model
                 var children = documentReader.Children;
 
                 // Make sure peptide standards lists are up to date
-                Settings = Settings.CachePeptideStandards(new PeptideGroupDocNode[0], children);
+                Settings = Settings
+                    .UpdateScoreQValueMap(children)
+                    .CachePeptideStandards(new PeptideGroupDocNode[0], children);
 
                 SetChildren(UpdateResultsSummaries(children, new Dictionary<int, PeptideDocNode>()));
 
@@ -2358,7 +2361,7 @@ namespace pwiz.Skyline.Model
             var prediction = Settings.TransitionSettings.Prediction;
             var methodType = prediction.OptimizedMethodType;
             var lib = prediction.OptimizedLibrary;
-            if (lib != null && !lib.IsNone)
+            if (lib != null && !lib.IsNone && nodeTransition != null)
             {
                 var optimization = lib.GetOptimization(OptimizationType.collision_energy,
                     Settings.GetSourceTarget(nodePep), nodeGroup.PrecursorAdduct,

@@ -516,7 +516,7 @@ namespace pwiz.Skyline.Model.Results
     public sealed class TransitionChromInfo : ChromInfo
     {
         [Flags]
-        private enum Flags : byte
+        private enum Flags : short
         {
             HasMassError = 1,
             IsFwhmDegenerate = 2,
@@ -526,6 +526,7 @@ namespace pwiz.Skyline.Model.Results
             ForcedIntegration = 32,
             Identified = 64,
             IdentifiedByAlignment = 128,
+            HasPeakShape = 256,
         }
 
         private Flags _flags;
@@ -544,7 +545,8 @@ namespace pwiz.Skyline.Model.Results
                    peak.IsFwhmDegenerate, peak.IsTruncated, 
                    peak.PointsAcross, 
                    peak.Identified, 0, 0,
-                   annotations, userSet, peak.IsForcedIntegration)
+                   annotations, userSet, peak.IsForcedIntegration, 
+                   peak.PeakShapeValues)
         {
         }
 
@@ -554,7 +556,8 @@ namespace pwiz.Skyline.Model.Results
                                    float area, float backgroundArea, float height,
                                    float fwhm, bool fwhmDegenerate, bool? truncated, short? pointsAcrossPeak,
                                    PeakIdentification identified, short rank, short rankByLevel,
-                                   Annotations annotations, UserSet userSet, bool isForcedIntegration)
+                                   Annotations annotations, UserSet userSet, bool isForcedIntegration, 
+                                   PeakShapeValues? peakShapeValues)
             : base(fileId)
         {
             OptimizationStep = Convert.ToInt16(optimizationStep);
@@ -579,6 +582,7 @@ namespace pwiz.Skyline.Model.Results
             UserSet = userSet;
             PointsAcrossPeak = pointsAcrossPeak;
             IsForcedIntegration = isForcedIntegration;
+            PeakShapeValues = peakShapeValues;
         }
 
         /// <summary>
@@ -668,6 +672,7 @@ namespace pwiz.Skyline.Model.Results
         public short RankByLevel { get; private set; }
 
         private short _pointsAcrossPeak;
+        private PeakShapeValues _peakShapeValue;
 
         public short? PointsAcrossPeak
         {
@@ -679,6 +684,16 @@ namespace pwiz.Skyline.Model.Results
             {
                 SetFlag(Flags.HasPointsAcrossPeak, value.HasValue);
                 _pointsAcrossPeak = value ?? 0;
+            }
+        }
+
+        public PeakShapeValues? PeakShapeValues
+        {
+            get { return GetFlag(Flags.HasPeakShape) ? _peakShapeValue : (PeakShapeValues?) null; }
+            private set
+            {
+                SetFlag(Flags.HasPeakShape, value.HasValue);
+                _peakShapeValue = value.GetValueOrDefault();
             }
         }
 
@@ -803,22 +818,12 @@ namespace pwiz.Skyline.Model.Results
             chromInfo.UserSet = userSet;
             chromInfo.PointsAcrossPeak = peak.PointsAcross;
             chromInfo.IsForcedIntegration = peak.IsForcedIntegration;
+            chromInfo.PeakShapeValues = peak.PeakShapeValues;
             return chromInfo;
         }
 
-        /// <summary>
-        /// Because creating a copy shows up in a profiler, and this is currently only used
-        /// during calculation of this object, a copy flag was added to allow modified
-        /// immutability with direct setting allowed during extended creation time.
-        /// </summary>
-        public TransitionChromInfo ChangeRank(bool copy, short prop, short propByLevel)
+        public TransitionChromInfo ChangeRank(short prop, short propByLevel)
         {
-            if (!copy)
-            {
-                Rank = prop;
-                RankByLevel = propByLevel;
-                return this;
-            }
             return ChangeProp(ImClone(this), im =>
             {
                 im.Rank = prop;
@@ -870,7 +875,8 @@ namespace pwiz.Skyline.Model.Results
                    other.UserSet.Equals(UserSet) &&
                    Equals(other.IonMobility, IonMobility) &&
                    other.PointsAcrossPeak.Equals(PointsAcrossPeak) &&
-                   Equals(IsForcedIntegration, other.IsForcedIntegration);
+                   Equals(IsForcedIntegration, other.IsForcedIntegration) &&
+                   Equals(PeakShapeValues, other.PeakShapeValues);
             return result; // For ease of breakpoint setting
         }
 
@@ -905,6 +911,7 @@ namespace pwiz.Skyline.Model.Results
                 result = (result*397) ^ IonMobility.GetHashCode();
                 result = (result*397) ^ PointsAcrossPeak.GetHashCode();
                 result = (result*397) ^ IsForcedIntegration.GetHashCode();
+                result = (result*397) ^ PeakShapeValues.GetHashCode();
                 return result;
             }
         }
@@ -961,6 +968,13 @@ namespace pwiz.Skyline.Model.Results
                     peakIdentification = PeakIdentification.TRUE;
                     break;
             }
+
+            PeakShapeValues? peakShapeValues = null;
+            if (transitionPeak.PeakShapeValues != null)
+            {
+                peakShapeValues = new PeakShapeValues(transitionPeak.PeakShapeValues.StdDev,
+                    transitionPeak.PeakShapeValues.Skewness, transitionPeak.PeakShapeValues.Kurtosis, transitionPeak.PeakShapeValues.ShapeCorrelation);
+            }
             return new TransitionChromInfo(
                 fileId, 
                 transitionPeak.OptimizationStep,
@@ -981,8 +995,9 @@ namespace pwiz.Skyline.Model.Results
                 (short) transitionPeak.RankByLevel,
                 annotationScrubber.ScrubAnnotations(Annotations.FromProtoAnnotations(transitionPeak.Annotations), AnnotationDef.AnnotationTarget.transition_result), 
                 DataValues.FromUserSet(transitionPeak.UserSet),
-                transitionPeak.ForcedIntegration
-                );
+                transitionPeak.ForcedIntegration,
+                peakShapeValues
+            );
         }
 
         private bool GetFlag(Flags flag)

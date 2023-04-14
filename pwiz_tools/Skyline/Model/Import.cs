@@ -3231,7 +3231,7 @@ namespace pwiz.Skyline.Model
                     int? massShift = productExp.MassShift;
                     if (massShift == null && precursorExp.MassShift.HasValue)
                         massShift = 0;
-                    var annotations = string.IsNullOrEmpty(productExp.ExInfo.Note) ? Annotations.EMPTY : new Annotations(productExp.ExInfo.Note, null, 0);
+                    var annotations = Annotations.FromValues(productExp.ExInfo.Note, null, 0);
                     var tran = new Transition(transitionGroup, ionType, offset, 0, productExp.Adduct, massShift);
                     // m/z and library info calculated later
                     return new TransitionDocNode(tran, annotations, productExp.Losses, TypedMass.ZERO_MONO_MASSH, TransitionDocNode.TransitionQuantInfo.DEFAULT, productExp.ExInfo.ExplicitTransitionValues, null);
@@ -3479,6 +3479,12 @@ namespace pwiz.Skyline.Model
             sequence.Append(seq);
         }
 
+        public static bool IsValidFastaChar(char c)
+        {
+            return c >= 0x20 && c <= 0x7E ||
+                   c == '\t' || c == 0x01;
+        }
+
         public static IEnumerable<FastaData> ParseFastaFile(TextReader reader, bool readNamesOnly = false)
         {
             string line;
@@ -3488,9 +3494,12 @@ namespace pwiz.Skyline.Model
 
             while ((line = reader.ReadLine()) != null)
             {
+                ++lineNum;
                 for (int i=0; i < line.Length; ++i)
-                    if (line[i] < 32 || line[i] > 126)
-                        throw new InvalidDataException(string.Format(Resources.FastaData_ParseFastaFile_Error_on_line__0___invalid_non_ASCII_character___1___at_position__2___are_you_sure_this_is_a_FASTA_file_, lineNum, line[i], i));
+                    if (!IsValidFastaChar(line[i]))
+                        throw new InvalidDataException(string.Format(
+                            Resources.FastaData_ParseFastaFile_Error_on_line__0___invalid_non_ASCII_character___1___at_position__2___are_you_sure_this_is_a_FASTA_file_,
+                            lineNum, line[i], i));
                     
                 if (line.StartsWith(@">"))
                 {

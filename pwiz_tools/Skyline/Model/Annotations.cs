@@ -33,7 +33,7 @@ namespace pwiz.Skyline.Model
     /// Collection of annotation values (and the Note) found on a document node, 
     /// or a ChromInfo.
     /// </summary>
-    public sealed class Annotations
+    public sealed class Annotations : Immutable
     {
         public static readonly List<Brush> COLOR_BRUSHES = new List<Brush> {
                     Brushes.OrangeRed,
@@ -48,30 +48,42 @@ namespace pwiz.Skyline.Model
                     /*Purple*/ new SolidBrush(Color.FromArgb(128, 0, 255))
         };
 
-        public static readonly Annotations EMPTY = new Annotations(null, null, -1);
-        private readonly IDictionary<string, string> _annotations;
-        
-        public Annotations(String note, IEnumerable<KeyValuePair<string, string>> annotations, int colorIndex)
+        public static readonly Annotations EMPTY = new Annotations { ColorIndex = -1};
+
+        private Annotations()
         {
-            ColorIndex = colorIndex;
-            Note = note == string.Empty ? null : note;
+        }
+
+        public static Annotations FromValues(string note, IEnumerable<KeyValuePair<string, string>> annotations,
+            int colorIndex)
+        {
+            IDictionary<string, string> annotationsDict = null;
             if (annotations != null)
             {
-                var annotationsDict = new Dictionary<string, string>();
                 foreach (var entry in annotations)
                 {
                     if (!string.IsNullOrEmpty(entry.Value))
                     {
+                        annotationsDict ??= new Dictionary<string, string>();
                         annotationsDict.Add(entry.Key, entry.Value);
                     }
                 }
-                if (annotationsDict.Count > 0 )
-                {
-                    _annotations = annotationsDict;
-                }
             }
-        }
 
+            if (string.IsNullOrEmpty(note) && annotationsDict == null)
+            {
+                return EMPTY;
+            }
+
+            return new Annotations
+            {
+                Note = string.IsNullOrEmpty(note) ? null : note,
+                _annotations = annotationsDict,
+                ColorIndex = Math.Max(colorIndex, 0)
+            };
+        }
+        private IDictionary<string, string> _annotations;
+        
         [Track(defaultValues:typeof(DefaultValuesNull))]
         public String Note { get; private set; }
 
@@ -162,13 +174,14 @@ namespace pwiz.Skyline.Model
             }
         }
 
-        public KeyValuePair<string,string>[] ListAnnotations()
+        public IEnumerable<KeyValuePair<string,string>> ListAnnotations()
         {
             if (_annotations == null)
             {
-                return new KeyValuePair<string, string>[0];
+                return Array.Empty<KeyValuePair<string, string>>();
             }
-            return _annotations.ToArray();
+
+            return _annotations.AsEnumerable();
         }
         public String GetAnnotation(String name)
         {           
@@ -189,7 +202,17 @@ namespace pwiz.Skyline.Model
             {
                 note = null;
             }
-            return new Annotations(note, _annotations, ColorIndex);
+
+            if (note == null && _annotations == null)
+            {
+                return EMPTY;
+            }
+
+            return ChangeProp(ImClone(this), im =>
+            {
+                im.Note = note;
+                im.ColorIndex = Math.Max(im.ColorIndex, 0);
+            });
         }
 
         public Annotations ChangeAnnotation(string name, string value)
@@ -200,8 +223,12 @@ namespace pwiz.Skyline.Model
             if (newAnnotations.ContainsKey(name))
                 newAnnotations[name] = value;
             else
-                newAnnotations.Add(name, value);      
-            return new Annotations(Note, newAnnotations, ColorIndex);
+                newAnnotations.Add(name, value);
+            if (string.IsNullOrEmpty(Note) && newAnnotations.Count == 0)
+            {
+                return EMPTY;
+            }
+            return FromValues(Note, newAnnotations, ColorIndex);
         }
 
         public Annotations RemoveAnnotation(string name)
@@ -214,10 +241,7 @@ namespace pwiz.Skyline.Model
                 newAnnotations = new Dictionary<string, string>(_annotations);
                 newAnnotations.Remove(name);
             }
-            var result = new Annotations(Note, newAnnotations, ColorIndex);
-            if (result.IsEmpty)
-                result = EMPTY;
-            return result;
+            return FromValues(Note, newAnnotations, ColorIndex);
         }
 
         public Annotations ChangeAnnotation(AnnotationDef annotationDef, object value)
@@ -245,10 +269,7 @@ namespace pwiz.Skyline.Model
             }
             newColorIndex = newColorIndex != -1 ? newColorIndex : ColorIndex;
             newText = newText ?? Note;
-            var annotations = new Annotations(newText, dictNodeAnnotations, newColorIndex);
-            if (annotations.IsEmpty)
-                annotations.ColorIndex = -1;
-            return annotations;
+            return FromValues(newText, dictNodeAnnotations, newColorIndex);
         }
 
         public Annotations Merge(Annotations annotations)
@@ -290,7 +311,7 @@ namespace pwiz.Skyline.Model
                 }
             }
             int colorIndex = (ColorIndex != -1 ? ColorIndex : annotations.ColorIndex);
-            var merged = new Annotations(note, annotationsNew, colorIndex);
+            var merged = FromValues(note, annotationsNew, colorIndex);
             if (Equals(merged, this))
                 return this;
             if (Equals(merged, annotations))
@@ -403,11 +424,12 @@ namespace pwiz.Skyline.Model
             {
                 return EMPTY;
             }
-            return new Annotations(protoAnnotations.Note, protoAnnotations.Values
-                .Select(value=>new KeyValuePair<string, string>(
-                    value.Name, 
-                    value.TextValue)), 
-                    protoAnnotations.Color);
+
+            return FromValues(protoAnnotations.Note, protoAnnotations.Values
+                    .Select(value => new KeyValuePair<string, string>(
+                        value.Name,
+                        value.TextValue)),
+                protoAnnotations.Color);
         }
 
         /// <summary>
@@ -426,7 +448,7 @@ namespace pwiz.Skyline.Model
                 return this;
             }
 
-            return new Annotations(Note, newAnnotations, ColorIndex);
+            return FromValues(Note, newAnnotations, ColorIndex);
         }
     }
 }

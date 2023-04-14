@@ -31,6 +31,7 @@ using System.Xml.Serialization;
 using Microsoft.VisualStudio.TestTools.UnitTesting;
 using pwiz.Skyline.Model;
 using pwiz.Skyline.Model.DocSettings;
+using pwiz.Skyline.Model.Results.Scoring;
 using pwiz.Skyline.Model.Serialization;
 using pwiz.Skyline.Util;
 using pwiz.Skyline.Properties;
@@ -392,6 +393,7 @@ namespace pwiz.SkylineTestUtil
 
         public static void Serializable(SrmDocument doc)
         {
+            AreEqual(doc.Settings.PeptideSettings.Integration.ScoreQValueMap, ScoreQValueMap.FromDocument(doc));
             Serializable(doc, UnloadedDocumentCloned, DocumentFormat.CURRENT);
             VerifyModifiedSequences(doc);
             // Skyline uses a format involving protocol buffers if the document is very large.
