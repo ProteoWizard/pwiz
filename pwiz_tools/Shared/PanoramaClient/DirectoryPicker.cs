@@ -66,49 +66,42 @@ namespace pwiz.PanoramaClient
         private void back_Click(object sender, EventArgs e)
         {
             back.Enabled = folders.BackEnabled();
-            if (back.Enabled)
-            {
-                folders.BackClick();
-            }
-            back.Enabled = folders.BackEnabled();
-            forward.Enabled = folders.ForwardEnabled();
-            up.Enabled = folders.UpEnabled();
+            folders.BackClick();
+            checkEnabled();
         }
 
         private void forward_Click(object sender, EventArgs e)
         {
             forward.Enabled = folders.ForwardEnabled();
-            if (forward.Enabled)
-            {
-                folders.ForwardClick();
-            }
-            up.Enabled = folders.UpEnabled();
-            back.Enabled = folders.BackEnabled();
-            forward.Enabled = folders.ForwardEnabled();
+            folders.ForwardClick();
+            checkEnabled();
         }
 
         private void up_Click(object sender, EventArgs e)
         {
             up.Enabled = folders.UpEnabled();
-            if (up.Enabled)
-            {
-                folders.UpClick();
-            }
-            up.Enabled = folders.UpEnabled();
-            back.Enabled = folders.BackEnabled();
-            forward.Enabled = folders.ForwardEnabled();
+            folders.UpClick();
+            checkEnabled();
+            forward.Enabled = false;
         }
 
         public void MouseClick(object sender, EventArgs e)
         {
             up.Enabled = folders.UpEnabled();
-            forward.Enabled = folders.ForwardEnabled();
+            forward.Enabled = false;
             back.Enabled = folders.BackEnabled();
         }
 
         private void DirectoryPicker_FormClosing(object sender, FormClosingEventArgs e)
         {
             State = folders.ClosingState();
+        }
+
+        private void checkEnabled()
+        {
+            up.Enabled = folders.UpEnabled();
+            forward.Enabled = folders.ForwardEnabled();
+            back.Enabled = folders.BackEnabled();
         }
     }
 }
