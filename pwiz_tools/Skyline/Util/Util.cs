@@ -27,7 +27,6 @@ using System.Text;
 using System.Collections.ObjectModel;
 using System.Net;
 using System.Reflection;
-using System.Runtime.InteropServices;
 using System.Text.RegularExpressions;
 using System.Threading;
 using System.Windows.Forms;
@@ -1508,7 +1507,7 @@ namespace pwiz.Skyline.Util
 
         public static TEnum EnumFromLocalizedString<TEnum>(string value, string[] localizedStrings, TEnum defaultValue)
         {
-            int i = localizedStrings.IndexOf(v => Equals(v, value));
+            int i = localizedStrings.IndexOf(v => Equals(v, value??string.Empty));
             return (i == -1 ? defaultValue : (TEnum) (object) i);
         }
 
@@ -1902,9 +1901,11 @@ namespace pwiz.Skyline.Util
             DetailedTrace.WriteLine(string.Format(@"Encountered the following exception on attempt {0} of {1}{2}:", loopCount, maxLoopCount,
                 string.IsNullOrEmpty(hint) ? string.Empty : (@" of action " + hint)));
             DetailedTrace.WriteLine(x.Message);
-            if (RunningResharperAnalysis)
+            if (RunningResharperAnalysis || IsParallelClient)
             {
-                DetailedTrace.WriteLine($@"We're running under ReSharper analysis, which may throw off timing - adding some extra sleep time");
+                DetailedTrace.WriteLine(IsParallelClient ?
+                    $@"We're running under a virtual machine, which may throw off timing - adding some extra sleep time":
+                    $@"We're running under ReSharper analysis, which may throw off timing - adding some extra sleep time");
                 // Allow up to 5 sec extra time when running code coverage or other analysis
                 milliseconds += (5000 * (loopCount+1)) / maxLoopCount; // Each loop a little more desperate
             }
@@ -1919,16 +1920,7 @@ namespace pwiz.Skyline.Util
         // in case of dotCover and dotMemory."
         public static bool RunningResharperAnalysis => !string.IsNullOrEmpty(Environment.GetEnvironmentVariable(@"JETBRAINS_DPA_AGENT_ENABLE"));
 
-        [DllImport("kernel32.dll", CharSet = CharSet.Unicode, SetLastError = true)]
-        static extern IntPtr GetModuleHandle([MarshalAs(UnmanagedType.LPWStr)] string lpModuleName);
-
-        [DllImport("kernel32", CharSet = CharSet.Ansi, ExactSpelling = true, SetLastError = true)]
-        static extern IntPtr GetProcAddress(IntPtr hModule, string procName);
-
-        /// <summary>
-        /// Returns true iff the process is running under Wine (the "wine_get_version" function is exported by ntdll.dll)
-        /// </summary>
-        public static bool IsRunningOnWine => GetProcAddress(GetModuleHandle(@"ntdll.dll"), @"wine_get_version") != IntPtr.Zero;
+        public static bool IsParallelClient => !string.IsNullOrEmpty(Environment.GetEnvironmentVariable(@"SKYLINE_TESTER_PARALLEL_CLIENT_ID"));
 
         /// <summary>
         /// Try an action that might throw an exception.  If it does, sleep for a little while and

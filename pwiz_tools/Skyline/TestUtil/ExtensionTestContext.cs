@@ -64,7 +64,7 @@ namespace pwiz.SkylineTestUtil
 
         public static string GetTestPath(this TestContext testContext, string relativePath)
         {
-            return Path.GetFullPath(Path.Combine(GetProjectDirectory(), testContext.GetTestDir(), relativePath));
+            return Path.GetFullPath(Path.Combine(GetProjectDirectory(), testContext.GetTestDir(), relativePath ?? string.Empty));
         }
 
         public static string GetTestResultsPath(this TestContext testContext, string relativePath = null)
@@ -100,9 +100,18 @@ namespace pwiz.SkylineTestUtil
                     return directory;
             }
 
-            // as last resort, check if current directory is the pwiz repository root (e.g. when running TestRunner in Docker container)
-            if (File.Exists(Path.Combine("pwiz_tools", "Skyline", "Skyline.sln")))
-                return Path.Combine("pwiz_tools", "Skyline");
+            // As last resort, hunt around the current working directory and its subdirectories to find the pwiz repository root
+            // (e.g. when running TestRunner in Docker container or from SkylineTester.zip)
+            var up = string.Empty;
+            var relPath = @".";
+            for (var depth = 0; depth < 10; depth++)
+            {
+                foreach(var subdir in Directory.GetDirectories(relPath).Append(relPath))
+                    if (File.Exists(Path.Combine(subdir, "pwiz_tools", "Skyline", "Skyline.sln")))
+                        return Path.GetFullPath(Path.Combine(subdir, "pwiz_tools", "Skyline"));
+                up = Path.Combine(up, @"..");
+                relPath = Path.Combine(Directory.GetCurrentDirectory(), up);
+            }
 
             return null;
         }

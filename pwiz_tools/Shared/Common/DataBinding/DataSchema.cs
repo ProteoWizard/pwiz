@@ -57,7 +57,7 @@ namespace pwiz.Common.DataBinding
         {
             if (null == type)
             {
-                return new PropertyDescriptor[0];
+                return Array.Empty<PropertyDescriptor>();
             }
             var chainParent = GetChainedPropertyDescriptorParent(type);
             if (chainParent != null)
@@ -67,7 +67,7 @@ namespace pwiz.Common.DataBinding
             }
             if (IsScalar(type))
             {
-                return new PropertyDescriptor[0];
+                return Array.Empty<PropertyDescriptor>();
             }
             return ListProperties(new HashSet<string>(), type);
         }
@@ -86,7 +86,7 @@ namespace pwiz.Common.DataBinding
         {
             if (IsScalar(type))
             {
-                return new PropertyDescriptor[0];
+                return Array.Empty<PropertyDescriptor>();
             }
 
             var propertyDescriptors = new List<PropertyDescriptor>();

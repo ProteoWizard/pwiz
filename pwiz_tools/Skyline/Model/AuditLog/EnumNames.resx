@@ -669,4 +669,52 @@
   <data name="RelativeRT_Unknown" xml:space="preserve">
     <value>Unknown</value>
   </data>
+  <data name="MsLevelOption_" xml:space="preserve">
+    <value>All</value>
+  </data>
+  <data name="MsLevelOption_1" xml:space="preserve">
+    <value>1</value>
+  </data>
+  <data name="MsLevelOption_2" xml:space="preserve">
+    <value>2</value>
+  </data>
+  <data name="MsLevelOption_default" xml:space="preserve">
+    <value>Default</value>
+  </data>
+  <data name="Simple_none" xml:space="preserve">
+    <value>None</value>
+  </data>
+  <data name="Special_maximum" xml:space="preserve">
+    <value>Maximum</value>
+  </data>
+  <data name="Special_total" xml:space="preserve">
+    <value>Total</value>
+  </data>
+  <data name="Special_default" xml:space="preserve">
+    <value>Default Normalization Method</value>
+  </data>
+  <data name="Special_calibrated" xml:space="preserve">
+    <value>Calibration Curve</value>
+  </data>
+  <data name="Simple_equalize_medians" xml:space="preserve">
+    <value>Equalize Medians</value>
+  </data>
+  <data name="Simple_global_standards" xml:space="preserve">
+    <value>Ratio to Global Standards</value>
+  </data>
+  <data name="Simple_none" xml:space="preserve">
+    <value>None</value>
+  </data>
+  <data name="Simple_quantile" xml:space="preserve">
+    <value>Quantile</value>
+  </data>
+  <data name="Simple_tic" xml:space="preserve">
+    <value>Total Ion Current</value>
+  </data>
+  <data name="Simple_ratio_to_heavy" xml:space="preserve">
+    <value>Ratio to Heavy</value>
+  </data>
+  <data name="Simple_ratio_to_light" xml:space="preserve">
+    <value>Ratio to Light</value>
+  </data>
 </root>
