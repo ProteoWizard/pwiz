@@ -46,6 +46,8 @@ namespace pwiz.PanoramaClient
             next.Clear();
             previous.Clear();
             clicked = null;
+            lastSelected = null;
+            priorNode = null;
         }
 
         private void treeView_AfterSelect(object sender, TreeViewEventArgs e)
@@ -71,26 +73,33 @@ namespace pwiz.PanoramaClient
 
         public void treeView_NodeMouseClick(object sender, TreeNodeMouseClickEventArgs e)
         {
-            ClearTreeRecursive(treeView.Nodes);
-            var hit = e.Node.TreeView.HitTest(e.Location);
-            if (hit.Location != TreeViewHitTestLocations.PlusMinus)
+            if (lastSelected == null || (lastSelected != null && !lastSelected.Equals(e.Node)))
             {
-                Path = e.Node.Tag.ToString();
-                //If there's a file browser observer, add corresponding files
-                if (AddFiles != null)
+                if (e.Node.Bounds.Contains(e.Location))
                 {
-                    AddFiles(this, e);
-                }
-                if (priorNode != null && priorNode != e.Node)
-                {
-                    previous.Push(priorNode);
-                }
-                priorNode = e.Node;
-                clicked = e.Node;
-                //Observer pattern for navigation buttons
-                if (NodeClick != null)
-                {
-                    NodeClick(this, e);
+                    ClearTreeRecursive(treeView.Nodes);
+                    var hit = e.Node.TreeView.HitTest(e.Location);
+                    if (hit.Location != TreeViewHitTestLocations.PlusMinus)
+                    {
+                        Path = e.Node.Tag != null ? e.Node.Tag.ToString() : string.Empty;
+                        //If there's a file browser observer, add corresponding files
+                        if (AddFiles != null)
+                        {
+                            AddFiles(this, e);
+                        }
+                        if (priorNode != null && priorNode != e.Node)
+                        {
+                            previous.Push(priorNode);
+                        }
+                        priorNode = e.Node;
+                        clicked = e.Node;
+                        next.Clear();
+                        //Observer pattern for navigation buttons
+                        if (NodeClick != null)
+                        {
+                            NodeClick(this, e);
+                        }
+                    }
                 }
             }
         }
@@ -108,13 +117,20 @@ namespace pwiz.PanoramaClient
 
         public void UpClick()
         {
-            if (clicked != null)
+            if (clicked != null && clicked.Parent != null)
             {
                 lastSelected.BackColor = Color.White;
                 lastSelected.ForeColor = Color.Black;
                 var parent = lastSelected.Parent;
                 next.Clear();
-                if (lastSelected != null && lastSelected != parent)
+                if (previous.Count != 0)
+                {
+                    if (!previous.Peek().Equals(priorNode))
+                    {
+                        previous.Push(priorNode);
+                    }
+                }
+                else
                 {
                     previous.Push(priorNode);
                 }
@@ -122,26 +138,46 @@ namespace pwiz.PanoramaClient
                 treeView.SelectedNode = parent;
                 lastSelected = parent;
                 clicked = parent;
-                
-                //treeView.Focus();
+                Path = clicked.Tag != null ? clicked.Tag.ToString() : string.Empty;
+                treeView.Focus();
+                if (AddFiles != null)
+                {
+                    AddFiles(this, EventArgs.Empty);
+                }
             }
         }
 
         public bool UpEnabled()
         {
-            return clicked != null && !clicked.Text.Equals(_server.URI.ToString());
+            return clicked != null && clicked.Parent != null;
         }
 
         public void BackClick()
         {
             var prior = previous.Pop();
-            next.Push(lastSelected);
+            if (next.Count != 0)
+            {
+                if (!next.Peek().Equals(lastSelected))
+                {
+                    next.Push(lastSelected);
+                }
+            }
+            else
+            {
+                next.Push(lastSelected);
+            }
             lastSelected.BackColor = Color.White;
             lastSelected.ForeColor = Color.Black;
             lastSelected = prior;
             treeView.SelectedNode = prior;
             treeView.Focus();
             priorNode = prior;
+            clicked = prior;
+            Path = prior.Tag != null ? prior.Tag.ToString() : string.Empty;
+            if (AddFiles != null)
+            {
+                AddFiles(this, EventArgs.Empty);
+            }
         }
 
         public bool BackEnabled()
@@ -151,13 +187,30 @@ namespace pwiz.PanoramaClient
 
         public void ForwardClick()
         {
-            previous.Push(lastSelected);
+            if (previous.Count != 0)
+            {
+                if (!previous.Peek().Equals(lastSelected))
+                {
+                    previous.Push(lastSelected);
+                }
+            }
+            else
+            {
+                previous.Push(lastSelected);
+            }
+
             var nextNode = next.Pop();
             lastSelected.BackColor = Color.White;
             lastSelected.ForeColor = Color.Black;
             treeView.SelectedNode = nextNode;
             lastSelected = nextNode;
+            clicked = nextNode;
             treeView.Focus();
+            Path = nextNode.Tag != null ? nextNode.Tag.ToString() : string.Empty;
+            if (AddFiles != null)
+            {
+                AddFiles(this, EventArgs.Empty);
+            }
         }
 
         public bool ForwardEnabled()

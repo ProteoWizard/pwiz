@@ -31,8 +31,6 @@ namespace pwiz.PanoramaClient
             User = user;
             Pass = pass;
             Server = server.ToString();
-            var cols = new [] { @"Container", @"FileName", @"Container/Path" };
-            var initQuery = BuildQuery(Server, @"/Panorama Public/", @"Runs", @"AllFolders", cols, string.Empty, string.Empty);
             InitializeComponent();
             TreeState = stateString;
             restoring = true;
@@ -71,6 +69,18 @@ namespace pwiz.PanoramaClient
             folderBrowser.Dock = DockStyle.Fill;
             splitContainer1.Panel1.Controls.Add(folderBrowser);
             folderBrowser.NodeClick += MouseClick;
+            if (string.IsNullOrEmpty(TreeState))
+            {
+                up.Enabled = false;
+                back.Enabled = false;
+                forward.Enabled = false;
+            }
+            else
+            {
+                up.Enabled = folderBrowser.UpEnabled();
+                back.Enabled = folderBrowser.BackEnabled();
+                forward.Enabled = folderBrowser.ForwardEnabled();
+            }
         }
 
         /// <summary>
@@ -382,6 +392,10 @@ namespace pwiz.PanoramaClient
                 versionLabel.Visible = false;
                 var type = checkBox1.Checked;
                 folderBrowser.SwitchFolderType(type);
+                up.Enabled = false;
+                back.Enabled = false;
+                forward.Enabled = false;
+
             }
         }
 
@@ -440,7 +454,6 @@ namespace pwiz.PanoramaClient
             
             FileName = listView.SelectedItems.Count != 0 ? listView.SelectedItems[0].Text : string.Empty;
             ShowingSky = checkBox1.Checked;
-
             TreeState = folderBrowser.ClosingState();
         }
 
@@ -453,8 +466,9 @@ namespace pwiz.PanoramaClient
         /// <param name="e"></param>
         private void upButton_Click(object sender, EventArgs e)
         {
-            up.Enabled = folderBrowser.UpEnabled();
             folderBrowser.UpClick();
+            checkEnabled();
+            forward.Enabled = false;
         }
 
         /// <summary>
@@ -467,6 +481,7 @@ namespace pwiz.PanoramaClient
         {
             back.Enabled = folderBrowser.BackEnabled();
             folderBrowser.BackClick();
+            checkEnabled();
         }
 
         /// <summary>
@@ -479,10 +494,18 @@ namespace pwiz.PanoramaClient
         {
             forward.Enabled = folderBrowser.ForwardEnabled();
             folderBrowser.ForwardClick();
+            checkEnabled();
         }
 
 
         public void MouseClick(object sender, EventArgs e)
+        {
+            up.Enabled = folderBrowser.UpEnabled();
+            forward.Enabled = false;
+            back.Enabled = folderBrowser.BackEnabled();
+        }
+
+        private void checkEnabled()
         {
             up.Enabled = folderBrowser.UpEnabled();
             forward.Enabled = folderBrowser.ForwardEnabled();

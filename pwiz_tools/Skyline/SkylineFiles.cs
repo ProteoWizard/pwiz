@@ -901,7 +901,7 @@ namespace pwiz.Skyline
             OpenFromPanorama();
         }
 
-        private void OpenFromPanorama()
+        public void OpenFromPanorama()
         {
             var servers = Settings.Default.ServerList;
             if (servers.Count == 0)
