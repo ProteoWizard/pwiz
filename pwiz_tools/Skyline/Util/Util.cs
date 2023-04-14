@@ -1507,7 +1507,7 @@ namespace pwiz.Skyline.Util
 
         public static TEnum EnumFromLocalizedString<TEnum>(string value, string[] localizedStrings, TEnum defaultValue)
         {
-            int i = localizedStrings.IndexOf(v => Equals(v, value));
+            int i = localizedStrings.IndexOf(v => Equals(v, value??string.Empty));
             return (i == -1 ? defaultValue : (TEnum) (object) i);
         }
 

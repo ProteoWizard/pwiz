@@ -891,6 +891,11 @@ namespace pwiz.Skyline.Model
         {
             // We're just using this masscalc to get the ion formula, so mono vs average doesn't matter
             isotopeLabelType = isotopeLabelType ?? IsotopeLabelType.light;
+            if (nodePep == null) // Can happen when called from document grid handler when doc changes
+            {
+                adduct = Adduct.EMPTY;
+                return CustomMolecule.EMPTY;
+            }
             var peptideTarget = nodePep.Peptide.Target;
             var masscalc = document.Settings.TryGetPrecursorCalc(isotopeLabelType, nodePep.ExplicitMods);
             if (masscalc == null)
@@ -901,8 +906,15 @@ namespace pwiz.Skyline.Model
             // Determine the molecular formula of the charged/labeled peptide
             var moleculeFormula = masscalc.GetMolecularFormula(peptideTarget.Sequence); // Get molecular formula, possibly with isotopes in it (as with iTraq)
             adduct = 
-                Adduct.NonProteomicProtonatedFromCharge(precursorCharge, BioMassCalc.MONOISOTOPIC.FindIsotopeLabelsInFormula(moleculeFormula));
-            var customMolecule = new CustomMolecule(moleculeFormula, TestingConvertedFromProteomicPeptideNameDecorator + masscalc.GetModifiedSequence(peptideTarget, false)); // Make sure name isn't a valid peptide seq
+                Adduct.NonProteomicProtonatedFromCharge(precursorCharge, BioMassCalc.FindIsotopeLabelsInFormula(moleculeFormula.Molecule));
+            if (BioMassCalc.ContainsIsotopicElement(moleculeFormula.Molecule))
+            {
+                // Isotopes are already accounted for in the adduct
+                moleculeFormula = BioMassCalc.StripLabelsFromFormula(moleculeFormula);
+            }
+
+            var mol = ParsedMolecule.Create(moleculeFormula); // Convert to ParsedMolecule
+            var customMolecule = new CustomMolecule(mol, TestingConvertedFromProteomicPeptideNameDecorator + masscalc.GetModifiedSequence(peptideTarget, false)); // Make sure name isn't a valid peptide seq
 
             if (mode == ConvertToSmallMoleculesMode.masses_only)
             {

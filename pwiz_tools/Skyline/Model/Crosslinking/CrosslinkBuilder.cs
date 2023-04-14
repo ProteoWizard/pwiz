@@ -111,7 +111,7 @@ namespace pwiz.Skyline.Model.Crosslinking
                     parts.Add(crosslink.Crosslinker.GetMoleculeMassOffset());
                 }
             }
-            return FragmentedMolecule.SumMoleculeMassOffsets(parts);
+            return MoleculeMassOffset.Sum(parts);
         }
 
         public TypedMass GetFragmentMass(NeutralFragmentIon complexFragmentIon)
@@ -183,7 +183,7 @@ namespace pwiz.Skyline.Model.Crosslinking
             {
                 parts.Add(crosslink.Crosslinker.GetMoleculeMassOffset());
             }
-            return FragmentedMolecule.SumMoleculeMassOffsets(parts);
+            return MoleculeMassOffset.Sum(parts);
         }
 
         public FragmentedMolecule.Settings GetFragmentedMoleculeSettings()
