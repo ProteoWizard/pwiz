@@ -289,11 +289,11 @@ int test (const vector<string>& args)
 
     }
 
-    if (lineNum < outputLines.size() && !inScoreTypesSection) // Allow the output file to have additional score types
+    if ((lineNum < outputLines.size()) && !inScoreTypesSection) // Allow the output file to have additional score types
     {
         printObserved(outputLines, libName);
         throw runtime_error("Observed output has more lines (" + lexical_cast<string>(outputLines.size()) +
-                            ") than expected (" + lexical_cast<string>(lineNum) + ")");
+                            ") than expected (" + lexical_cast<string>(lineNum) + ") starting at at line \"" + outputLines[lineNum] + "\"");
         }
     cerr << "All output matches" << endl;
 
