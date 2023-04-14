@@ -284,8 +284,8 @@ int test (const vector<string>& args)
 
         getline(compareFile, expected);
         lineNum++;
-        inScoreTypesSection |= (expected.rfind("id\tscoreType\tprobabilityType", 0) == 0);
-        inRefSpectraIdSectionExpected |= (expected.rfind(refSpectraHint, 0) == 0);
+        inScoreTypesSection |= (expected.find("probabilityType") != string::npos); // Allow the output file to have additional score types
+        inRefSpectraIdSectionExpected |= (expected.rfind(refSpectraHint, 0) == 0); // Handle formats that have a section beyond ScoreTypes
 
     }
 
