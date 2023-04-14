@@ -188,6 +188,13 @@ void printObserved(vector<string>& outputLines, string& libName){
         outfile << outputLines[i] << endl;
     }
     outfile.close();
+#ifndef BOOST_MSVC
+    cerr << "Observed output written to " << outName << " with these contents:" << endl;
+    for (size_t ii = 0; ii < outputLines.size(); ii++) {
+        cerr << outputLines[ii] << endl;
+    }
+    cerr << "<end>" << endl;
+#endif
 }
 
 // Extract a pre-defined set of queries from the given library and
