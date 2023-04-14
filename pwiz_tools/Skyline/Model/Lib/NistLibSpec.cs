@@ -26,6 +26,7 @@ using System.Text;
 using System.Text.RegularExpressions;
 using System.Xml;
 using System.Xml.Serialization;
+using pwiz.Common.Chemistry;
 using pwiz.Common.Collections;
 using pwiz.Common.SystemUtil;
 using pwiz.Skyline.Model.DocSettings;
@@ -950,7 +951,7 @@ namespace pwiz.Skyline.Model.Lib
                         if (precursorMz.HasValue)
                         {
                             var formulaIn = formula;
-                            if (BioMassCalc.TryParseFormula(formula, out var _, out var errMessage))
+                            if (ParsedMolecule.TryParseFormula(formula, out var _, out var errMessage))
                             {
                                 charge = SmallMoleculeTransitionListReader.ValidateFormulaWithMzAndAdduct(mzMatchTolerance, true,
                                     ref formulaIn, ref adduct, new TypedMass(precursorMz.Value, MassType.Monoisotopic), null, isPositive, true, out _, out _, out _) ?? 0;
@@ -984,9 +985,7 @@ namespace pwiz.Skyline.Model.Lib
                         {
                             // Encode mass as string for library use. If none found, use a dummy value
                             var mass = precursorMz ?? (DUMMY_GC_ESI_MASS + (nMasslessEntries++ % DUMMY_GC_ESI_MASS)); // Limit to twice the initial dummy mass
-                            formula = SmallMoleculeLibraryAttributes.FormatChemicalFormulaOrMassesString(null,
-                                new TypedMass(mass, MassType.Monoisotopic),
-                                new TypedMass(mass, MassType.Average));
+                            formula = MoleculeMassOffset.FormatMassModification(mass, mass, BioMassCalc.MassPrecision);
                         }
                     }
 
