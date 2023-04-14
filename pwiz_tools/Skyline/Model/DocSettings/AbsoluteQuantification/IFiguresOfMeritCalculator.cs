@@ -1,7 +1,6 @@
 ﻿using System;
 using System.Collections.Generic;
 using System.Linq;
-using System.Runtime.InteropServices.WindowsRuntime;
 using MathNet.Numerics.Statistics;
 using pwiz.Common.Collections;
 using ZedGraph;

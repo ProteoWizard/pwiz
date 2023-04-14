@@ -33,7 +33,7 @@ namespace pwiz.Skyline.Model.DocSettings.AbsoluteQuantification
 
         public string ToString(string format, IFormatProvider formatProvider)
         {
-            return string.Format(formatProvider, "LLOD: {0} LLOQ: {1}", Lod.ToString(format, formatProvider),
+            return string.Format(formatProvider, "LOD: {0} LLOQ: {1}", Lod.ToString(format, formatProvider),
                 Loq.ToString(format, formatProvider));
         }
 

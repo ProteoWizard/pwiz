@@ -20,11 +20,6 @@ namespace pwiz.Skyline.Model.DocSettings.AbsoluteQuantification
         public CancellationToken CancellationToken { get; set; }
         public BootstrapFiguresOfMeritCalculator BootstrapFiguresOfMeritCalculator { get; set; }
 
-        public double ComputeBootstrappedLoq(IList<WeightedPoint> points)
-        {
-            return ComputeBootstrappedLoq(points, null);
-        }
-
         public double ComputeBootstrappedLoq(IList<WeightedPoint> points, List<ImmutableList<PointPair>> bootstrapCurves)
         {
             return BootstrapFiguresOfMeritCalculator.ComputeBootstrappedLoq(points, bootstrapCurves);

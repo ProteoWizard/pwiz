@@ -103,6 +103,10 @@ namespace pwiz.Common.Collections
 
         public void Insert(int index, T item)
         {
+            if (item == null)
+            {
+                throw new ArgumentNullException(nameof(item));
+            }
             if (index == Count)
             {
                 Add(item);
@@ -128,6 +132,10 @@ namespace pwiz.Common.Collections
             }
             set
             {
+                if (null == value)
+                {
+                    throw new ArgumentNullException();
+                }
                 var oldValue = _items[index];
                 _itemIndexes.Remove(oldValue);
                 _itemIndexes.Add(value, index);

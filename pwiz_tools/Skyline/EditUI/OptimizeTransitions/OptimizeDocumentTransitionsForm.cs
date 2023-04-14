@@ -95,8 +95,8 @@ namespace pwiz.Skyline.EditUI.OptimizeTransitions
                 _originalDocument = originalDocument;
                 _optimizedDocument = optimizedDocument;
                 _bilinearTransitionOptimizer = bilinearTransitionOptimizer;
-                _originalFiguresOfMerit = new Lazy<FiguresOfMerit>(() => GetFiguresOfMerit(_originalDocument, bilinearTransitionOptimizer.OptimizeTransitionSettings));
-                _optimizedFiguresOfMerit = new Lazy<FiguresOfMerit>(() => GetFiguresOfMerit(_optimizedDocument, bilinearTransitionOptimizer.OptimizeTransitionSettings));
+                _originalFiguresOfMerit = new Lazy<FiguresOfMerit>(GetOriginalFiguresOfMerit);
+                _optimizedFiguresOfMerit = new Lazy<FiguresOfMerit>(GetOptimizedFiguresOfMerit);
                 if (optimizedDocument != null)
                 {
                     var peptideQuantifier = GetPeptideQuantifier(null, optimizedDocument, molecule.IdentityPath, bilinearTransitionOptimizer.OptimizeTransitionSettings);
@@ -144,6 +144,16 @@ namespace pwiz.Skyline.EditUI.OptimizeTransitions
             public FiguresOfMerit OptimizedFiguresOfMerit
             {
                 get { return _optimizedFiguresOfMerit.Value; }
+            }
+
+            private FiguresOfMerit GetOriginalFiguresOfMerit()
+            {
+                return GetFiguresOfMerit(_originalDocument, _bilinearTransitionOptimizer.OptimizeTransitionSettings);
+            }
+
+            private FiguresOfMerit GetOptimizedFiguresOfMerit()
+            {
+                return GetFiguresOfMerit(_optimizedDocument, _bilinearTransitionOptimizer.OptimizeTransitionSettings);
             }
 
             private FiguresOfMerit GetFiguresOfMerit(SrmDocument document, OptimizeTransitionSettings optimizeTransitionSettings)
