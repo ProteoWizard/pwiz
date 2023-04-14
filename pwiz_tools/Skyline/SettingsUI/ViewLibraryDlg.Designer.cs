@@ -1,4 +1,5 @@
 using System;
+using pwiz.Skyline.Controls.Graphs;
 
 namespace pwiz.Skyline.SettingsUI
 {
@@ -52,7 +53,7 @@ namespace pwiz.Skyline.SettingsUI
             this.PeptideLabel = new System.Windows.Forms.Label();
             this.textPeptide = new System.Windows.Forms.TextBox();
             this.GraphPanel = new System.Windows.Forms.Panel();
-            this.msGraphExtension1 = new pwiz.Skyline.SettingsUI.MsGraphExtension();
+            this.msGraphExtension1 = new MsGraphExtension();
             this.toolStrip1 = new System.Windows.Forms.ToolStrip();
             this.specialionsContextMenuItem = new System.Windows.Forms.ToolStripMenuItem();
             this.ionTypesContextMenuItem = new System.Windows.Forms.ToolStripMenuItem();
@@ -99,6 +100,7 @@ namespace pwiz.Skyline.SettingsUI
             this.toolStripSeparator13 = new System.Windows.Forms.ToolStripSeparator();
             this.lockYaxisContextMenuItem = new System.Windows.Forms.ToolStripMenuItem();
             this.toolStripSeparator14 = new System.Windows.Forms.ToolStripSeparator();
+            this.graphPropsContextMenuItem = new System.Windows.Forms.ToolStripMenuItem();
             this.spectrumPropsContextMenuItem = new System.Windows.Forms.ToolStripMenuItem();
             this.showChromatogramsContextMenuItem = new System.Windows.Forms.ToolStripMenuItem();
             this.toolStripSeparator15 = new System.Windows.Forms.ToolStripSeparator();
@@ -292,6 +294,7 @@ namespace pwiz.Skyline.SettingsUI
             // 
             resources.ApplyResources(this.msGraphExtension1, "msGraphExtension1");
             this.msGraphExtension1.Name = "msGraphExtension1";
+            this.msGraphExtension1.PropertySheetVisibilityPropName = "ViewLibraryPropertiesVisible";
             // 
             // toolStrip1
             // 
@@ -541,6 +544,7 @@ namespace pwiz.Skyline.SettingsUI
             this.toolStripSeparator13,
             this.lockYaxisContextMenuItem,
             this.toolStripSeparator14,
+            this.graphPropsContextMenuItem,
             this.spectrumPropsContextMenuItem,
             this.showChromatogramsContextMenuItem,
             this.toolStripSeparator15,
@@ -655,6 +659,12 @@ namespace pwiz.Skyline.SettingsUI
             this.toolStripSeparator14.Name = "toolStripSeparator14";
             resources.ApplyResources(this.toolStripSeparator14, "toolStripSeparator14");
             // 
+            // graphPropsContextMenuItem
+            // 
+            this.graphPropsContextMenuItem.Name = "graphPropsContextMenuItem";
+            resources.ApplyResources(this.graphPropsContextMenuItem, "graphPropsContextMenuItem");
+            this.graphPropsContextMenuItem.Click += new System.EventHandler(this.graphPropsContextMenuItem_Click);
+            // 
             // spectrumPropsContextMenuItem
             // 
             this.spectrumPropsContextMenuItem.Name = "spectrumPropsContextMenuItem";
@@ -763,6 +773,7 @@ namespace pwiz.Skyline.SettingsUI
         private System.Windows.Forms.ToolStripSeparator toolStripSeparator13;
         private System.Windows.Forms.ToolStripMenuItem lockYaxisContextMenuItem;
         private System.Windows.Forms.ToolStripSeparator toolStripSeparator14;
+        private System.Windows.Forms.ToolStripMenuItem graphPropsContextMenuItem;
         private System.Windows.Forms.ToolStripMenuItem spectrumPropsContextMenuItem;
         private System.Windows.Forms.ToolStripSeparator toolStripSeparator15;
         private System.Windows.Forms.ToolStripMenuItem zoomSpectrumContextMenuItem;

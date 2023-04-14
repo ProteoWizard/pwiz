@@ -17,6 +17,7 @@
  * limitations under the License.
  */
 
+using System;
 using System.Collections.Generic;
 using System.Linq;
 using System.Xml;
@@ -35,18 +36,20 @@ namespace pwiz.Skyline.Model.GroupComparison
         private ImmutableList<MatchRgbHexColor> _colors;
         public static readonly GroupComparisonDef EMPTY = new GroupComparisonDef
         {
-            NormalizationMethod = NormalizationMethod.NONE,
+            NormalizationMethod = NormalizeOption.NONE,
             SummarizationMethod = SummarizationMethod.AVERAGING,
             ConfidenceLevelTimes100 = 95,
-            ColorRows = ImmutableList<MatchRgbHexColor>.EMPTY
+            ColorRows = ImmutableList<MatchRgbHexColor>.EMPTY,
+            MsLevel = MsLevelOption.ALL
         };
 
         public GroupComparisonDef(string name) : base(name)
         {
-            NormalizationMethod = NormalizationMethod.NONE;
+            NormalizationMethod = NormalizeOption.NONE;
             SummarizationMethod = SummarizationMethod.AVERAGING;
             ConfidenceLevelTimes100 = 95;
             ColorRows = ImmutableList<MatchRgbHexColor>.EMPTY;
+            MsLevel = MsLevelOption.ALL;
         }
 
         [Track]
@@ -89,11 +92,16 @@ namespace pwiz.Skyline.Model.GroupComparison
         }
 
         [Track]
-        public NormalizationMethod NormalizationMethod { get; private set; }
+        public NormalizeOption NormalizationMethod { get; private set; }
+
+        public GroupComparisonDef ChangeNormalizeOption(NormalizeOption value)
+        {
+            return ChangeProp(ImClone(this), im => im.NormalizationMethod = value);
+        }
 
         public GroupComparisonDef ChangeNormalizationMethod(NormalizationMethod value)
         {
-            return ChangeProp(ImClone(this), im => im.NormalizationMethod = value);
+            return ChangeNormalizeOption(NormalizeOption.FromNormalizationMethod(value));
         }
 
         public bool IncludeInteractionTransitions { get; private set; }
@@ -124,6 +132,14 @@ namespace pwiz.Skyline.Model.GroupComparison
         public GroupComparisonDef ChangeConfidenceLevelTimes100(double value)
         {
             return ChangeProp(ImClone(this), im => im.ConfidenceLevelTimes100 = value);
+        }
+
+        [Track(defaultValues: typeof(MsLevelOption.DefaultAll))]
+        public MsLevelOption MsLevel { get; private set; }
+
+        public GroupComparisonDef ChangeMsLevel(MsLevelOption msLevelOption)
+        {
+            return ChangeProp(ImClone(this), im => im.MsLevel = msLevelOption);
         }
 
         [Track]
@@ -210,6 +226,7 @@ namespace pwiz.Skyline.Model.GroupComparison
             include_interaction_transitions,
             summarization_method,
             confidence_level,
+            ms_level,
             per_protein,
             use_zero_for_missing_peaks,
             q_value_cutoff
@@ -222,16 +239,21 @@ namespace pwiz.Skyline.Model.GroupComparison
 
         public override void ReadXml(XmlReader reader)
         {
+            if (MsLevel != null)
+            {
+                throw new InvalidOperationException();
+            }
             base.ReadXml(reader);
             ControlAnnotation = reader.GetAttribute(ATTR.control_annotation);
             ControlValue = reader.GetAttribute(ATTR.control_value);
             CaseValue = reader.GetAttribute(ATTR.case_value);
             IdentityAnnotation = reader.GetAttribute(ATTR.identity_annotation);
             AverageTechnicalReplicates = reader.GetBoolAttribute(ATTR.avg_tech_replicates, true);
-            NormalizationMethod = NormalizationMethod.FromName(reader.GetAttribute(ATTR.normalization_method));
+            NormalizationMethod = GetNormalizeOption(reader.GetAttribute(ATTR.normalization_method));
             IncludeInteractionTransitions = reader.GetBoolAttribute(ATTR.include_interaction_transitions, false);
             SummarizationMethod = SummarizationMethod.FromName(reader.GetAttribute(ATTR.summarization_method));
             ConfidenceLevelTimes100 = reader.GetDoubleAttribute(ATTR.confidence_level, 95);
+            MsLevel = MsLevelOption.ForName(reader.GetAttribute(ATTR.ms_level));
             PerProtein = reader.GetBoolAttribute(ATTR.per_protein, false);
             UseZeroForMissingPeaks = reader.GetBoolAttribute(ATTR.use_zero_for_missing_peaks, false);
             QValueCutoff = reader.GetNullableDoubleAttribute(ATTR.q_value_cutoff);
@@ -264,11 +286,12 @@ namespace pwiz.Skyline.Model.GroupComparison
             writer.WriteAttribute(ATTR.avg_tech_replicates, AverageTechnicalReplicates, true);
             if (NormalizationMethod != null)
             {
-                writer.WriteAttributeIfString(ATTR.normalization_method, NormalizationMethod.Name);
+                writer.WriteAttributeIfString(ATTR.normalization_method, NormalizationMethod.PersistedName);
             }
             writer.WriteAttribute(ATTR.include_interaction_transitions, IncludeInteractionTransitions, false);
             writer.WriteAttribute(ATTR.summarization_method, SummarizationMethod.Name);
             writer.WriteAttribute(ATTR.confidence_level, ConfidenceLevelTimes100);
+            writer.WriteAttributeIfString(ATTR.ms_level, MsLevel.Name);
             writer.WriteAttribute(ATTR.per_protein, PerProtein, false);
             writer.WriteAttribute(ATTR.use_zero_for_missing_peaks, UseZeroForMissingPeaks, false);
             writer.WriteAttributeNullable(ATTR.q_value_cutoff, QValueCutoff);
@@ -291,6 +314,7 @@ namespace pwiz.Skyline.Model.GroupComparison
                    IncludeInteractionTransitions == other.IncludeInteractionTransitions &&
                    Equals(SummarizationMethod, other.SummarizationMethod) &&
                    ConfidenceLevelTimes100.Equals(other.ConfidenceLevelTimes100) &&
+                   Equals(MsLevel, other.MsLevel) &&
                    PerProtein == other.PerProtein &&
                    UseZeroForMissingPeaks == other.UseZeroForMissingPeaks &&
                    QValueCutoff.Equals(other.QValueCutoff) &&
@@ -318,6 +342,7 @@ namespace pwiz.Skyline.Model.GroupComparison
                 hashCode = (hashCode*397) ^ IncludeInteractionTransitions.GetHashCode();
                 hashCode = (hashCode*397) ^ (SummarizationMethod != null ? SummarizationMethod.GetHashCode() : 0);
                 hashCode = (hashCode*397) ^ ConfidenceLevelTimes100.GetHashCode();
+                hashCode = (hashCode*397) ^ MsLevel.GetHashCode();
                 hashCode = (hashCode*397) ^ PerProtein.GetHashCode();
                 hashCode = (hashCode*397) ^ UseZeroForMissingPeaks.GetHashCode();
                 hashCode = (hashCode*397) ^ QValueCutoff.GetHashCode();
@@ -327,5 +352,18 @@ namespace pwiz.Skyline.Model.GroupComparison
         }
 
         #endregion
+
+        public static NormalizeOption GetNormalizeOption(string name)
+        {
+            var normalizeOption = NormalizeOption.FromPersistedName(name);
+            if (normalizeOption is NormalizeOption.Special)
+            {
+                if (normalizeOption != NormalizeOption.DEFAULT && normalizeOption != NormalizeOption.CALIBRATED)
+                {
+                    return NormalizeOption.NONE;
+                }
+            }
+            return normalizeOption;
+        }
     }
 }

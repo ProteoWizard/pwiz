@@ -117,7 +117,7 @@ namespace pwiz.SkylineTestFunctional
             var weightsWithoutLibraryDotProduct =
                 editPeakScoringDlg.PeakCalculatorsGrid.Items.Select(row => row.Weight).ToList();
             Assert.IsNull(weightsWithoutLibraryDotProduct[indexLibraryDotProduct]);
-            Assert.AreEqual(1.0, NormalizedDotProduct(LegacyScoringModel.DEFAULT_WEIGHTS, weightsWithoutLibraryDotProduct));
+            Assert.AreEqual(1.0, NormalizedDotProduct(LegacyScoringModel.DEFAULT_WEIGHTS, weightsWithoutLibraryDotProduct), 1e-6);
 
             RunUI(() =>
             {

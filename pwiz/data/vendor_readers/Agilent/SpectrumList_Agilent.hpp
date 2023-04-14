@@ -88,7 +88,7 @@ class PWIZ_API_DECL SpectrumList_Agilent : public SpectrumListIonMobilityBase
     struct IndexEntry : public SpectrumIdentity
     {
         int rowNumber; // continguous 0-based index (not equal to SpectrumIdentity::index since some scan types are skipped)
-        int scanId; // unique but not contiguous
+        int scanId; // unique but not contiguous, -1 for non-MS scan
         int frameIndex; // 0-based in pwiz but 1-based in MIDAC
         int driftBinIndex; // 0-based
     };

@@ -32,7 +32,7 @@ namespace pwiz.SkylineTestData
     [TestClass]
     public class PwizFileInfoTest : AbstractUnitTest
     {
-        [TestMethod, NoParallelTesting]
+        [TestMethod, NoParallelTesting(TestExclusionReason.VENDOR_FILE_LOCKING)]
         public void TestInstrumentInfo()
         {
             if (SkipWiff2TestInTestExplorer(nameof(TestInstrumentInfo)))

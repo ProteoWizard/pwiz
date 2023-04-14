@@ -221,9 +221,9 @@ namespace pwiz.Skyline.Model
                 THERMO_QUANTIVA,
                 THERMO_ALTIS,
                 THERMO_EXPLORIS,
-                // THERMO_ECLIPSE,
+                THERMO_ECLIPSE,
                 THERMO_FUSION,
-                // THERMO_FUSION_LUMOS,
+                THERMO_FUSION_LUMOS,
                 WATERS_XEVO_TQ,
                 WATERS_QUATTRO_PREMIER,
             };
@@ -4695,7 +4695,7 @@ namespace pwiz.Skyline.Model
                 }
 
                 string dirWork = Path.GetDirectoryName(fileName) ?? Environment.CurrentDirectory;
-                using (var tmpDir = new TemporaryDirectory(Path.Combine(dirWork, Path.GetRandomFileName())))
+                using (var tmpDir = new TemporaryDirectory(Path.Combine(dirWork, PathEx.GetRandomFileName()))) // N.B. FileEx.GetRandomFileName adds unusual characters in test mode
                 {
                     var transitionsFile = Path.Combine(tmpDir.DirPath, @"transitions.txt");
                     File.WriteAllText(transitionsFile, stdinBuilder.ToString());
