@@ -284,7 +284,7 @@ int test (const vector<string>& args)
 
         getline(compareFile, expected);
         lineNum++;
-        inScoreTypesSection |= (expected == "id\tscoreType\tprobabilityType");
+        inScoreTypesSection |= (expected.rfind("id\tscoreType\tprobabilityType", 0) == 0);
         inRefSpectraIdSectionExpected |= (expected.rfind(refSpectraHint, 0) == 0);
 
     }
