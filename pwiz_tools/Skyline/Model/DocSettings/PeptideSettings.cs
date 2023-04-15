@@ -2734,6 +2734,8 @@ namespace pwiz.Skyline.Model.DocSettings
                     im._librarySpecs = ImmutableList.ValueOf(unloadedLibrarySpecs);
                 }
                 im._disconnectedLibraries = null;
+                im._rankIdName = im.RankId?.Value;
+                im.RankId = null;
             });
         }
 
