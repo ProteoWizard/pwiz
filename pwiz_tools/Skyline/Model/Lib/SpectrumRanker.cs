@@ -106,7 +106,7 @@ namespace pwiz.Skyline.Model.Lib
             }
 
             var spectrumRanker = new SpectrumRanker(targetInfo, settings, fragmentFilter);
-            return spectrumRanker.RankSpectrum(info, minPeaks, score);
+            return spectrumRanker.RankSpectrum(info ?? SpectrumPeaksInfo.EMPTY, minPeaks, score);
         }
 
 
@@ -155,7 +155,6 @@ namespace pwiz.Skyline.Model.Lib
                 }
                 else if (!isProteomic && !Sequence.IsProteomic)
                 {
-                    string isotopicFormula;
                     var knownFragments = new List<MatchedFragmentIon>();
                     foreach (var tran in groupDocNode.Transitions)
                     {
@@ -178,7 +177,7 @@ namespace pwiz.Skyline.Model.Lib
                         new MoleculeMasses(
                             SequenceMassCalc.GetMZ(
                                 calcMatchPre.GetPrecursorMass(Sequence.Molecule, null, PrecursorAdduct,
-                                    out isotopicFormula), PrecursorAdduct), ionMasses);
+                                    out _), PrecursorAdduct), ionMasses);
                 }
                 else
                 {

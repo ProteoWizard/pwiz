@@ -333,6 +333,10 @@ namespace pwiz.Skyline.Model.Results
         /// </summary>
         public TimeIntensities InterpolateTime(float newTime)
         {
+            if (Times.Count == 0)
+            {
+                return new TimeIntensities(new[] { newTime }, new[] { 0f }, null, null);
+            }
             int index = CollectionUtil.BinarySearch(Times, newTime);
             if (index >= 0)
             {

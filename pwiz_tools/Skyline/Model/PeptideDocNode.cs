@@ -101,13 +101,13 @@ namespace pwiz.Skyline.Model
             get
             {
                 var label = PeptideTreeNode.GetLabel(this, string.Empty);
-                return (CustomMolecule != null && !string.IsNullOrEmpty(CustomMolecule.Formula)) ? string.Format(@"{0} ({1})", label, CustomMolecule.Formula) : label;
+                return (CustomMolecule != null && !CustomMolecule.ParsedMolecule.IsMassOnly) ? string.Format(@"{0} ({1})", label, CustomMolecule.ParsedMolecule) : label;
             }
         }
 
         protected override IList<DocNode> OrderedChildren(IList<DocNode> children)
         {
-            if (Peptide.IsCustomMolecule && children.Any())
+            if (Peptide.IsCustomMolecule && children.Count > 1)
             {
                 // Enforce order for small molecules, except those that are fictions of the test system
                 return children.OrderBy(t => (TransitionGroupDocNode)t, new TransitionGroupDocNode.CustomIonPrecursorComparer()).ToArray();
@@ -873,7 +873,7 @@ namespace pwiz.Skyline.Model
                             explicitMods.GetHeavyModifications().ToArray(),
                             ExplicitMods.GetHeavyModifications().ToArray()) ||
                         !ReferenceEquals(explicitMods.StaticModifications, ExplicitMods.StaticModifications)
-                       )
+                        || !Equals(explicitMods.CrosslinkStructure, ExplicitMods.CrosslinkStructure))
                     {
                         diff = new SrmSettingsDiff(diff, SrmSettingsDiff.ALL);
                     }

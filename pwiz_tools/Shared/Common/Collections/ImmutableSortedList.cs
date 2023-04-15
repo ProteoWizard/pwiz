@@ -57,7 +57,7 @@ namespace pwiz.Common.Collections
         {
         }
 
-        private ImmutableSortedList(IList<TKey> keys, IList<TValue> values, IComparer<TKey> keyComparer)
+        private ImmutableSortedList(ImmutableList<TKey> keys, ImmutableList<TValue> values, IComparer<TKey> keyComparer)
         {
             Keys = keys;
             Values = values;
@@ -77,12 +77,12 @@ namespace pwiz.Common.Collections
             }
         }
 
-        public IList<TKey> Keys
+        public ImmutableList<TKey> Keys
         {
             get; private set;
         }
 
-        public IList<TValue> Values
+        public ImmutableList<TValue> Values
         {
             get; private set;
         }
@@ -262,7 +262,7 @@ namespace pwiz.Common.Collections
         public ImmutableSortedList<TKey, TValue> Replace(TKey key, TValue value)
         {
             var range = BinarySearch(key);
-            IList<TKey> keys;
+            ImmutableList<TKey> keys;
             if (range.Length == 1)
             {
                 keys = Keys;
@@ -284,6 +284,112 @@ namespace pwiz.Common.Collections
                 throw new ArgumentException();
             }
             return new ImmutableSortedList<TKey, TNewValue>(Keys, newValueList, KeyComparer);
+        }
+
+        /// <summary>
+        /// Function which can be provided to <see cref="Merge"/> to handle combining two
+        /// values together. Either sets <paramref name="result"/> to the merged value or
+        /// returns false indicating that the entry should be removed from the resulting merged
+        /// list.
+        /// </summary>
+        /// <param name="left">value from the left list</param>
+        /// <param name="right">value from the right list</param>
+        /// <param name="result">holds the merged value</param>
+        /// <returns>false if the merged list should not contain any value for these two entries</returns>
+        public delegate bool MergeValues(TValue left, TValue right, out TValue result);
+
+        public ImmutableSortedList<TKey, TValue> Merge(ImmutableSortedList<TKey, TValue> other, MergeValues mergeFunc)
+        {
+            if (other.Count == 0)
+            {
+                return this;
+            }
+
+            if (Count == 0)
+            {
+                return other;
+            }
+
+            bool matchesLeftKeys = true;
+            bool matchesRightKeys = true;
+            List<TKey> newKeys = new List<TKey>();
+            List<TValue> newValues = new List<TValue>();
+            int iLeft = 0;
+            int iRight = 0;
+            while (true)
+            {
+                if (iLeft == Count)
+                {
+                    if (iRight == other.Count)
+                    {
+                        break;
+                    }
+
+                    matchesLeftKeys = false;
+                    newKeys.Add(other.Keys[iRight]);
+                    newValues.Add(other.Values[iRight]);
+                    iRight++;
+                    continue;
+                }
+
+                if (iRight == other.Count)
+                {
+                    matchesRightKeys = false;
+                    newKeys.Add(Keys[iLeft]);
+                    newValues.Add(Values[iLeft]);
+                    iLeft++;
+                    continue;
+                }
+
+                var leftKey = Keys[iLeft];
+                var rightKey = other.Keys[iRight];
+                int compare = KeyComparer.Compare(leftKey, rightKey);
+                if (compare < 0)
+                {
+                    matchesRightKeys = false;
+                    newKeys.Add(leftKey);
+                    newValues.Add(Values[iLeft]);
+                    iLeft++;
+                }
+                else if (compare > 0)
+                {
+                    matchesLeftKeys = false;
+                    newKeys.Add(rightKey);
+                    newValues.Add(other.Values[iRight]);
+                    iRight++;
+                }
+                else
+                {
+                    if (mergeFunc(Values[iLeft], other.Values[iRight], out var result))
+                    {
+                        newKeys.Add(leftKey);
+                        newValues.Add(result);
+                    }
+                    else
+                    {
+                        matchesLeftKeys = false;
+                        matchesRightKeys = false;
+                    }
+
+                    iLeft++;
+                    iRight++;
+                }
+            }
+
+            ImmutableList<TKey> newKeyList;
+            if (matchesLeftKeys)
+            {
+                newKeyList = Keys;
+            }
+            else if (matchesRightKeys)
+            {
+                newKeyList = other.Keys;
+            }
+            else
+            {
+                newKeyList = ImmutableList.ValueOf(newKeys);
+            }
+            return new ImmutableSortedList<TKey, TValue>(newKeyList, ImmutableList.ValueOf(newValues), KeyComparer);
         }
 
 

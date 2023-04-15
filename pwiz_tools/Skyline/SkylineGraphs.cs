@@ -5506,6 +5506,9 @@ namespace pwiz.Skyline
                 if (_auditLogForm != null)
                 {
                     var rectFloat = GetFloatingRectangleForNewWindow();
+                    // Ensure the audit log window is wide enough to show the "Enable audit logging" checkbox
+                    rectFloat.Width = Math.Max(800, rectFloat.Width);
+
                     _auditLogForm.Show(dockPanel, rectFloat);
                 }
             }
