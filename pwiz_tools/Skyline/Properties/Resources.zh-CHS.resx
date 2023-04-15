@@ -6867,14 +6867,8 @@ Example: Looplink: T [4]
   <data name="OK" xml:space="preserve">
     <value>确定</value>
   </data>
-  <data name="OneOrManyList_Add_Attempted_modification_of_a_read_only_collection" xml:space="preserve">
-    <value>尝试修饰一个只读采集。</value>
-  </data>
   <data name="OneOrManyList_ValidateIndex_The_index__0__must_be_0_for_a_single_entry_list" xml:space="preserve">
     <value>指数 {0} 针对单一条目列表必须是 0。</value>
-  </data>
-  <data name="OneOrManyList_ValidateIndex_The_index__0__must_be_between_0_and__1__" xml:space="preserve">
-    <value>指数 {0} 必须在 0 和 {1} 之间。</value>
   </data>
   <data name="Open" type="System.Resources.ResXFileRef, System.Windows.Forms">
     <value>..\resources\open.bmp;System.Drawing.Bitmap, System.Drawing, Version=2.0.0.0, Culture=neutral, PublicKeyToken=b03f5f7f11d50a3a</value>
