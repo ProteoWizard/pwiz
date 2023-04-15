@@ -25,6 +25,7 @@ using System.Xml;
 using System.Xml.Schema;
 using System.Xml.Serialization;
 using JetBrains.Annotations;
+using pwiz.Common.Collections;
 using pwiz.Common.SystemUtil;
 using pwiz.Skyline.Model.AuditLog;
 using pwiz.Skyline.Model.Serialization;
@@ -325,7 +326,6 @@ namespace pwiz.Skyline.Model.DocSettings
 
     public sealed class TransitionLosses : Immutable
     {
-        private OneOrManyList<TransitionLoss> _losses;
 
         public TransitionLosses(List<TransitionLoss> losses, MassType massType)
         {
@@ -333,18 +333,18 @@ namespace pwiz.Skyline.Model.DocSettings
             if (losses.Count > 1)
                 losses.Sort((l1, l2) => Comparer<double>.Default.Compare(l1.Mass, l2.Mass));
 
-            _losses = new OneOrManyList<TransitionLoss>(losses);
+            Losses = ImmutableList.ValueOf(losses);
             MassType = massType;
             Mass = CalcLossMass(Losses);
         }
 
-        public IList<TransitionLoss> Losses { get { return _losses; } }
+        public ImmutableList<TransitionLoss> Losses { get; private set; }
         public MassType MassType { get; private set; }
         public double Mass { get; private set; }
 
         public int TotalCharge
         {
-            get { return _losses.Sum(loss => loss.Loss.Charge); }
+            get { return Losses.Sum(loss => loss.Loss.Charge); }
         }
 
         [CanBeNull]
@@ -377,14 +377,14 @@ namespace pwiz.Skyline.Model.DocSettings
 
         public TransitionLosses ChangeMassType(MassType massType)
         {
-            var listLosses = new List<TransitionLoss>();
-            foreach (var loss in Losses)
-                listLosses.Add(new TransitionLoss(loss.PrecursorMod, loss.Loss, massType));
-            if (ArrayUtil.EqualsDeep(listLosses, _losses))
+            var listLosses =
+                ImmutableList.ValueOf(Losses.Select(loss =>
+                    new TransitionLoss(loss.PrecursorMod, loss.Loss, massType)));
+            if (Equals(listLosses, Losses))
                 return this;
             return ChangeProp(ImClone(this), im =>
             {
-                im._losses = new OneOrManyList<TransitionLoss>(listLosses);
+                im.Losses = listLosses;
                 im.Mass = CalcLossMass(im.Losses);
             });
         }
@@ -394,7 +394,7 @@ namespace pwiz.Skyline.Model.DocSettings
         #region object overrides
 
         /// <summary>
-        /// From a transition loss perspective, losses with equall masses
+        /// From a transition loss perspective, losses with equal masses
         /// are equal.  It is not necessary to compare the exact losses.
         /// </summary>
         public bool Equals(TransitionLosses other)
