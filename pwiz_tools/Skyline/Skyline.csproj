@@ -1482,7 +1482,9 @@
     <Compile Include="Model\MultiProgressStatus.cs" />
     <Compile Include="Model\OptimizationStep.cs" />
     <Compile Include="Model\DocSettings\IsotopeEnrichments.cs" />
-    <Compile Include="Model\DocSettings\Loss.cs" />
+    <Compile Include="..\..\..\sky_assertserializable\pwiz_tools\Skyline\Model\DocSettings\Loss.cs">
+      <Link>Model\DocSettings\Loss.cs</Link>
+    </Compile>
     <Compile Include="Model\DocSettings\MeasuredIon.cs" />
     <Compile Include="Model\DocSettings\UniMod.cs" />
     <Compile Include="Model\DocSettings\UniModData.cs" />

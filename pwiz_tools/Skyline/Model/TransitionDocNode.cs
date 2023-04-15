@@ -845,7 +845,8 @@ namespace pwiz.Skyline.Model
                             {
                                 StdDev = peakShapeValues.Value.StdDev,
                                 Skewness = peakShapeValues.Value.Skewness,
-                                Kurtosis = peakShapeValues.Value.Kurtosis
+                                Kurtosis = peakShapeValues.Value.Kurtosis,
+                                ShapeCorrelation = peakShapeValues.Value.ShapeCorrelation
                             };
                     }
                     yield return transitionPeak;
