@@ -249,9 +249,6 @@ namespace pwiz.Skyline
                     
                 }
 
-                // Force live reports (though tests may reset this)
-                //Settings.Default.EnableLiveReports = true;
-
                 if (ReportShutdownDlg.HadUnexpectedShutdown())
                 {
                     using (var reportShutdownDlg = new ReportShutdownDlg())
