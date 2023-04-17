@@ -954,7 +954,7 @@ namespace pwiz.Skyline.Model
                             var tran = nodeTranResult.Transition;
                             var annotations = nodeTranResult.Annotations;
                             var explicitValues = nodeTranResult.ExplicitValues;
-                            var losses = nodeTranResult.Losses;
+                            var losses = nodeTran.Losses;
                             TypedMass massH = settingsNew.RecalculateTransitionMass(mods, nodeTran, isotopeDist);
                             var quantInfo = TransitionDocNode.TransitionQuantInfo
                                 .GetTransitionQuantInfo(nodeTranResult.ComplexFragmentIon, isotopeDist, Transition.CalcMass(massH, losses), transitionRanks)
@@ -964,12 +964,11 @@ namespace pwiz.Skyline.Model
                             var results = nodeTranResult.Results;
                             if (mods != null && mods.HasCrosslinks)
                             {
-                                crosslinkBuilder = crosslinkBuilder ??
-                                                   new CrosslinkBuilder(settingsNew, TransitionGroup.Peptide, mods,
-                                                       LabelType);
+                                crosslinkBuilder ??= new CrosslinkBuilder(settingsNew, TransitionGroup.Peptide, mods,
+                                    LabelType);
 
                                 nodeTranResult = crosslinkBuilder.MakeTransitionDocNode(
-                                    nodeTranResult.ComplexFragmentIon, isotopeDist, annotations, quantInfo,
+                                    nodeTran.ComplexFragmentIon, isotopeDist, annotations, quantInfo,
                                     explicitValues, results);
                             }
                             else
@@ -978,7 +977,16 @@ namespace pwiz.Skyline.Model
                                     massH, quantInfo, explicitValues, results);
                             }
 
-                            Helpers.AssignIfEquals(ref nodeTranResult, (TransitionDocNode) existing);
+                            // Reuse the object "existing" if it's the same as nodeTranResult
+                            if (Equals(nodeTranResult, existing))
+                            {
+                                // But be careful of the fact that "TransitionLosses.Equals" only compares the masses,
+                                // so also make sure that the TransitionLoss objects in the list are the same
+                                if (Equals(nodeTranResult.Losses?.Losses, ((TransitionDocNode)existing).Losses?.Losses))
+                                {
+                                    nodeTranResult = (TransitionDocNode) existing;
+                                }
+                            }
                         }
                     }
                     // Add the new node
