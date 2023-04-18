@@ -142,42 +142,8 @@ namespace pwiz.Skyline.Controls.Graphs.Calibration
             }
 
             Text = TabText = GetFormTitle(curveFitter);
-            string graphTitle;
-            if (peptideQuantifier.QuantificationSettings.RegressionFit == RegressionFit.NONE)
-            {
-                if (!(peptideQuantifier.NormalizationMethod is NormalizationMethod.RatioToLabel))
-                {
-                    graphTitle =
-                        ModeUIAwareStringFormat(QuantificationStrings.CalibrationForm_DisplayCalibrationCurve_Use_the_Quantification_tab_on_the_Peptide_Settings_dialog_to_control_the_conversion_of_peak_areas_to_concentrations_);
-                }
-                else
-                {
-                    if (!peptide.InternalStandardConcentration.HasValue)
-                    {
-                        graphTitle =
-                            ModeUIAwareStringFormat(QuantificationStrings.CalibrationForm_DisplayCalibrationCurve_To_convert_peak_area_ratios_to_concentrations__specify_the_internal_standard_concentration_for__0__, peptide);
-                    }
-                    else
-                    {
-                        graphTitle = null;
-                    }
-                }
-            }
-            else
-            {
-                if (curveFitter.GetStandardConcentrations().Any())
-                {
-                    graphTitle = null;
-                }
-                else
-                {
-                    graphTitle = QuantificationStrings.CalibrationForm_DisplayCalibrationCurve_To_fit_a_calibration_curve__set_the_Sample_Type_of_some_replicates_to_Standard__and_specify_their_concentration_;
-                }
-            }
-
             var settings = new CalibrationGraphControl.Settings(document, curveFitter)
-                .ChangeSelectedResultsIndex(_skylineWindow.SelectedResultsIndex)
-                .ChangeGraphTitle(graphTitle);
+                .ChangeSelectedResultsIndex(_skylineWindow.SelectedResultsIndex);
             if (curveFitter.IsotopologResponseCurve)
             {
                 var labelType = (_skylineWindow.SequenceTree.SelectedNode as SrmTreeNode)

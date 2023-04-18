@@ -542,6 +542,24 @@ namespace pwiz.Skyline.Model.Databinding.Entities {
         }
         
         /// <summary>
+        ///   Looks up a localized string similar to Number of transitions that were marked as non-quantitative after the optimization of the figures of merit.
+        /// </summary>
+        public static string CountNonQuantitative {
+            get {
+                return ResourceManager.GetString("CountNonQuantitative", resourceCulture);
+            }
+        }
+        
+        /// <summary>
+        ///   Looks up a localized string similar to Number of transitions that remained after the optimization of the figures of merit.
+        /// </summary>
+        public static string CountQuantitative {
+            get {
+                return ResourceManager.GetString("CountQuantitative", resourceCulture);
+            }
+        }
+        
+        /// <summary>
         ///   Looks up a localized string similar to The number of transitions for a precursor that integrate a peak with a
         ///boundary at either end of the acquisition time range, where intensity at the end is
         ///greater than 1% of the entire peak height higher than the other extent..
@@ -1581,6 +1599,24 @@ namespace pwiz.Skyline.Model.Databinding.Entities {
         }
         
         /// <summary>
+        ///   Looks up a localized string similar to Amount that the lower limit of quantification was improved by the marking some transitions as non-quantitative.
+        /// </summary>
+        public static string LloqImprovement {
+            get {
+                return ResourceManager.GetString("LloqImprovement", resourceCulture);
+            }
+        }
+        
+        /// <summary>
+        ///   Looks up a localized string similar to Amount that the limit of detection was improved by marking some transitions as non-quantitative.
+        /// </summary>
+        public static string LodImprovement {
+            get {
+                return ResourceManager.GetString("LodImprovement", resourceCulture);
+            }
+        }
+        
+        /// <summary>
         ///   Looks up a localized string similar to The logarithm base 2 of the fold change value..
         /// </summary>
         public static string Log2FoldChange {
@@ -2262,6 +2298,33 @@ namespace pwiz.Skyline.Model.Databinding.Entities {
         }
         
         /// <summary>
+        ///   Looks up a localized string similar to Figures of merit after marking some transitions as non-quantitative.
+        /// </summary>
+        public static string OptimizedFiguresOfMerit {
+            get {
+                return ResourceManager.GetString("OptimizedFiguresOfMerit", resourceCulture);
+            }
+        }
+        
+        /// <summary>
+        ///   Looks up a localized string similar to Limit of detection after marking some transitions as non-quantitative.
+        /// </summary>
+        public static string OptimizedLimitOfDetection {
+            get {
+                return ResourceManager.GetString("OptimizedLimitOfDetection", resourceCulture);
+            }
+        }
+        
+        /// <summary>
+        ///   Looks up a localized string similar to Lower limit of quantification after marking some transitions as non-quantitative.
+        /// </summary>
+        public static string OptimizedLimitOfQuantification {
+            get {
+                return ResourceManager.GetString("OptimizedLimitOfQuantification", resourceCulture);
+            }
+        }
+        
+        /// <summary>
         ///   Looks up a localized string similar to Optimization step value indicating distance from the default value for the
         ///parameter being optimized, 0 for the default parameter value, or if no optimization is
         ///being performed in the replicate..
@@ -2269,6 +2332,33 @@ namespace pwiz.Skyline.Model.Databinding.Entities {
         public static string OptStep {
             get {
                 return ResourceManager.GetString("OptStep", resourceCulture);
+            }
+        }
+        
+        /// <summary>
+        ///   Looks up a localized string similar to Figures of merit before marking any transitions as non-quantitative.
+        /// </summary>
+        public static string OriginalFiguresOfMerit {
+            get {
+                return ResourceManager.GetString("OriginalFiguresOfMerit", resourceCulture);
+            }
+        }
+        
+        /// <summary>
+        ///   Looks up a localized string similar to Limit of detection before marking any transitions as non-quantitative.
+        /// </summary>
+        public static string OriginalLimitOfDetection {
+            get {
+                return ResourceManager.GetString("OriginalLimitOfDetection", resourceCulture);
+            }
+        }
+        
+        /// <summary>
+        ///   Looks up a localized string similar to Lower limit of quantification before marking any transitions as non-quantitative.
+        /// </summary>
+        public static string OriginalLimitOfQuantification {
+            get {
+                return ResourceManager.GetString("OriginalLimitOfQuantification", resourceCulture);
             }
         }
         

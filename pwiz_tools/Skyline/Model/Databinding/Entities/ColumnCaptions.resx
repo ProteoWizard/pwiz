@@ -273,6 +273,12 @@
   <data name="ConfidenceLevel">
     <value>Confidence Level</value>
   </data>
+  <data name="CountNonQuantitative">
+    <value>Count Non Quantitative</value>
+  </data>
+  <data name="CountQuantitative">
+    <value>Count Quantitative</value>
+  </data>
   <data name="CountTruncated">
     <value>Count Truncated</value>
   </data>
@@ -606,6 +612,12 @@
   <data name="LinearFit">
     <value>Linear Fit</value>
   </data>
+  <data name="LloqImprovement">
+    <value>LLOQ Improvement</value>
+  </data>
+  <data name="LodImprovement">
+    <value>Lod Improvement</value>
+  </data>
   <data name="Log2FoldChange">
     <value>Log 2 Fold Change</value>
   </data>
@@ -828,6 +840,9 @@
   <data name="OptDeclusteringPotential">
     <value>Opt Declustering Potential</value>
   </data>
+  <data name="OptimizedFiguresOfMerit">
+    <value>Optimized Figures Of Merit</value>
+  </data>
   <data name="OptimizedLimitOfDetection">
     <value>Optimized Limit of Detection</value>
   </data>
@@ -836,6 +851,9 @@
   </data>
   <data name="OptStep">
     <value>Opt Step</value>
+  </data>
+  <data name="OriginalFiguresOfMerit">
+    <value>Original Figures Of Merit</value>
   </data>
   <data name="OriginalLimitOfDetection">
     <value>Original Limit of Detection</value>

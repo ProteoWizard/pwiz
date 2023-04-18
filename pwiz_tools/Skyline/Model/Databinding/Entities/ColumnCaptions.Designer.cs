@@ -529,6 +529,24 @@ namespace pwiz.Skyline.Model.Databinding.Entities {
         }
         
         /// <summary>
+        ///   Looks up a localized string similar to Count Non Quantitative.
+        /// </summary>
+        public static string CountNonQuantitative {
+            get {
+                return ResourceManager.GetString("CountNonQuantitative", resourceCulture);
+            }
+        }
+        
+        /// <summary>
+        ///   Looks up a localized string similar to Count Quantitative.
+        /// </summary>
+        public static string CountQuantitative {
+            get {
+                return ResourceManager.GetString("CountQuantitative", resourceCulture);
+            }
+        }
+        
+        /// <summary>
         ///   Looks up a localized string similar to Count Truncated.
         /// </summary>
         public static string CountTruncated {
@@ -1528,6 +1546,24 @@ namespace pwiz.Skyline.Model.Databinding.Entities {
         }
         
         /// <summary>
+        ///   Looks up a localized string similar to LLOQ Improvement.
+        /// </summary>
+        public static string LloqImprovement {
+            get {
+                return ResourceManager.GetString("LloqImprovement", resourceCulture);
+            }
+        }
+        
+        /// <summary>
+        ///   Looks up a localized string similar to Lod Improvement.
+        /// </summary>
+        public static string LodImprovement {
+            get {
+                return ResourceManager.GetString("LodImprovement", resourceCulture);
+            }
+        }
+        
+        /// <summary>
         ///   Looks up a localized string similar to Log 2 Fold Change.
         /// </summary>
         public static string Log2FoldChange {
@@ -2194,6 +2230,15 @@ namespace pwiz.Skyline.Model.Databinding.Entities {
         }
         
         /// <summary>
+        ///   Looks up a localized string similar to Optimized Figures Of Merit.
+        /// </summary>
+        public static string OptimizedFiguresOfMerit {
+            get {
+                return ResourceManager.GetString("OptimizedFiguresOfMerit", resourceCulture);
+            }
+        }
+        
+        /// <summary>
         ///   Looks up a localized string similar to Optimized Limit of Detection.
         /// </summary>
         public static string OptimizedLimitOfDetection {
@@ -2217,6 +2262,15 @@ namespace pwiz.Skyline.Model.Databinding.Entities {
         public static string OptStep {
             get {
                 return ResourceManager.GetString("OptStep", resourceCulture);
+            }
+        }
+        
+        /// <summary>
+        ///   Looks up a localized string similar to Original Figures Of Merit.
+        /// </summary>
+        public static string OriginalFiguresOfMerit {
+            get {
+                return ResourceManager.GetString("OriginalFiguresOfMerit", resourceCulture);
             }
         }
         

@@ -402,8 +402,12 @@ namespace pwiz.SkylineTestTutorial
                 });
 
                 PauseForScreenShot<DocumentGridForm>("Document Grid - Peptide Ratio Results - manually widen to show all columns", 25);
-                Settings.Default.CalibrationCurveOptions = Settings.Default.CalibrationCurveOptions.ChangeLogXAxis(true)
-                    .ChangeLogYAxis(true);
+                RunUI(() =>
+                {
+                    Settings.Default.CalibrationCurveOptions = Settings.Default.CalibrationCurveOptions
+                        .ChangeLogXAxis(true)
+                        .ChangeLogYAxis(true);
+                });
 
                 var calibrationForm = FindOpenForm<CalibrationForm>();
                 RunUI(()=>calibrationForm.UpdateUI(false));

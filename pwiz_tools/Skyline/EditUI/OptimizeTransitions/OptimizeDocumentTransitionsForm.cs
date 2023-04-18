@@ -76,7 +76,7 @@ namespace pwiz.Skyline.EditUI.OptimizeTransitions
             }
             else
             {
-                propertyPaths.Add(PropertyPath.Root.Property(nameof(Row.LoqImprovement)));
+                propertyPaths.Add(PropertyPath.Root.Property(nameof(Row.LloqImprovement)));
             }
 
             return new ViewSpec().SetRowType(typeof(Row)).SetColumns(propertyPaths.Select(pp => new ColumnSpec(pp)));
@@ -177,7 +177,7 @@ namespace pwiz.Skyline.EditUI.OptimizeTransitions
             }
 
             [Format(Formats.CalibrationCurve)]
-            public double? LoqImprovement
+            public double? LloqImprovement
             {
                 get
                 {

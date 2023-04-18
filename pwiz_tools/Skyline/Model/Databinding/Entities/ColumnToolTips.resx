@@ -267,6 +267,12 @@ specific default collision energy equation within Skyline</value>
   <data name="ConfidenceLevel">
     <value>Confidence level which was used to determine the confidence interval around the fold change.</value>
   </data>
+  <data name="CountNonQuantitative">
+    <value>Number of transitions that were marked as non-quantitative after the optimization of the figures of merit</value>
+  </data>
+  <data name="CountQuantitative">
+    <value>Number of transitions that remained after the optimization of the figures of merit</value>
+  </data>
   <data name="CountTruncated">
     <value>The number of transitions for a precursor that integrate a peak with a
 boundary at either end of the acquisition time range, where intensity at the end is
@@ -640,6 +646,12 @@ The options for determining this value can be specified on the Quantification ta
   <data name="LinearFit">
     <value>The result of doing the linear regression to determine the fold change.</value>
   </data>
+  <data name="LloqImprovement">
+    <value>Amount that the lower limit of quantification was improved by the marking some transitions as non-quantitative</value>
+  </data>
+  <data name="LodImprovement">
+    <value>Amount that the limit of detection was improved by marking some transitions as non-quantitative</value>
+  </data>
   <data name="Log2FoldChange">
     <value>The logarithm base 2 of the fold change value.</value>
   </data>
@@ -880,10 +892,28 @@ collision energy optimization is being performed</value>
     <value>The declustering potential value corresponding to the
 OptStep if declustering potential optimization is being performed</value>
   </data>
+  <data name="OptimizedFiguresOfMerit">
+    <value>Figures of merit after marking some transitions as non-quantitative</value>
+  </data>
+  <data name="OptimizedLimitOfDetection">
+    <value>Limit of detection after marking some transitions as non-quantitative</value>
+  </data>
+  <data name="OptimizedLimitOfQuantification">
+    <value>Lower limit of quantification after marking some transitions as non-quantitative</value>
+  </data>
   <data name="OptStep">
     <value>Optimization step value indicating distance from the default value for the
 parameter being optimized, 0 for the default parameter value, or if no optimization is
 being performed in the replicate.</value>
+  </data>
+  <data name="OriginalFiguresOfMerit">
+    <value>Figures of merit before marking any transitions as non-quantitative</value>
+  </data>
+  <data name="OriginalLimitOfDetection">
+    <value>Limit of detection before marking any transitions as non-quantitative</value>
+  </data>
+  <data name="OriginalLimitOfQuantification">
+    <value>Lower limit of quantification before marking any transitions as non-quantitative</value>
   </data>
   <data name="PeakGroupEndTime">
     <value>The maximum end time of the individual peaks in the peak group.</value>
