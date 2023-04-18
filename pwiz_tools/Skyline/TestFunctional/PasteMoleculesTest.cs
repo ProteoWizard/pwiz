@@ -1328,7 +1328,7 @@ namespace pwiz.SkylineTestFunctional
             {
                 SetClipboardText(textCSV8);
             });
-            DismissAutoManageDialog(docCurrent);  // Say no to the offer to set new nodes to automanage
+            PasteSmallMoleculeListNoAutoManage();  // Say no to the offer to set new nodes to automanage
             AssertEx.IsDocumentState(SkylineWindow.Document, null, 1, 2, 2, 4);
 
             // Paste in a peptide transition list with some distinctive small molecule headers
@@ -2454,14 +2454,18 @@ namespace pwiz.SkylineTestFunctional
                 if (withHeaders)
                 {
                     // With headers, should be no need for header selection
-                    if (asFile)
+                    var wantAutoManageDlg = ShowDialog<MultiButtonMsgDlg>(() =>
                     {
-                        RunUI(() => SkylineWindow.ImportMassList(tempFile));
-                    }
-                    else
-                    {
-                        RunUI(() => SkylineWindow.Paste());
-                    }
+                        if (asFile)
+                        {
+                            RunUI(() => SkylineWindow.ImportMassList(tempFile));
+                        }
+                        else
+                        {
+                            RunUI(() => SkylineWindow.Paste());
+                        }
+                    });
+                    OkDialog(wantAutoManageDlg, wantAutoManageDlg.ClickNo); // Decline the offer to turn on automanage
                 }
                 else
                 {
@@ -2490,9 +2494,9 @@ namespace pwiz.SkylineTestFunctional
                 
                     // Import the list
                     OkDialog(testImportDlg, testImportDlg.OkDialog);
+                    DismissAutoManageDialog(docOrig);  // Say no to the offer to set new nodes to automanage
                 }
 
-                DismissAutoManageDialog(docOrig);  // Say no to the offer to set new nodes to automanage
                 var pastedDoc = WaitForDocumentChange(docOrig);
                 AssertEx.IsDocumentState(pastedDoc, null, 2, 4, 8, 12);
             }
