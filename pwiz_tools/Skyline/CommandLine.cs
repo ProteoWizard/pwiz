@@ -74,6 +74,7 @@ namespace pwiz.Skyline
         }
 
         public SrmDocument Document { get { return _doc; } }
+        public IrtStandard IrtStandard { get; private set; }
 
         public CommandLine()
             : this(new CommandStatusWriter(new StringWriter()))
@@ -2169,14 +2170,13 @@ namespace pwiz.Skyline
             IrtStandard irtStandard = null;
             if (!string.IsNullOrEmpty(commandArgs.IrtStandardName))
             {
-                irtStandard =
-                    Settings.Default.IrtStandardList.FirstOrDefault(standard =>
-                        Equals(standard.Name, commandArgs.IrtStandardName));
+                irtStandard = Settings.Default.IrtStandardList.FirstOrDefault(standard =>
+                    Equals(standard.Name, commandArgs.IrtStandardName));
                 if (irtStandard == null)
                 {
                     _out.WriteLine(Resources.CommandLine_ImportSearchInternal_The_iRT_standard_name___0___is_invalid_,
                         commandArgs.IrtStandardName);
-                    return irtStandard;
+                    return null;
                 }
             }
 
@@ -2274,6 +2274,7 @@ namespace pwiz.Skyline
                         processed.CanRecalibrateStandards(import.IrtStandard.Peptides) && commandArgs.RecalibrateIrts, IrtRegressionType.DEFAULT, progressMonitor);
                 }
                 doc = ImportPeptideSearch.AddRetentionTimePredictor(doc, docLibSpec);
+                IrtStandard = import.IrtStandard;
             }
 
             if (!import.VerifyRetentionTimes(import.GetFoundResultsFiles().Select(f => f.Path)))

@@ -495,13 +495,6 @@ namespace pwiz.Skyline.Model
             if (standard == null || standard.IsEmpty)
                 return doc;
 
-            var standardMap = new TargetMap<bool>(standard.Peptides.Select(pep => new KeyValuePair<Target, bool>(pep.ModifiedTarget, true)));
-            var docStandards = new TargetMap<bool>(doc.Peptides
-                .Where(nodePep => standardMap.ContainsKey(nodePep.ModifiedTarget))
-                .Select(nodePep => new KeyValuePair<Target, bool>(nodePep.ModifiedTarget, true)));
-            if (standard.Peptides.Any(pep => !docStandards.ContainsKey(pep.ModifiedTarget)) && standard.HasDocument)
-                return standard.ImportTo(doc);
-
             // Move iRT proteins to top
             var irtPeptides = new HashSet<Target>(RCalcIrt.IrtPeptides(doc));
             var proteins = new List<PeptideGroupDocNode>(doc.PeptideGroups);
@@ -516,13 +509,20 @@ namespace pwiz.Skyline.Model
                 }
             }
 
+            var standardMap = new TargetMap<bool>(standard.Peptides.Select(pep => new KeyValuePair<Target, bool>(pep.ModifiedTarget, true)));
+            var docStandards = new TargetMap<bool>(doc.Peptides
+                .Where(nodePep => standardMap.ContainsKey(nodePep.ModifiedTarget))
+                .Select(nodePep => new KeyValuePair<Target, bool>(nodePep.ModifiedTarget, true)));
+            if (standard.HasDocument && standard.Peptides.Any(pep => !docStandards.ContainsKey(pep.ModifiedTarget)))
+                return standard.ImportTo(doc);
+
             var modMatcher = new ModificationMatcher();
             modMatcher.CreateMatches(doc.Settings, standard.Peptides.Select(pep => pep.ModifiedTarget.ToString()),
                 Settings.Default.StaticModList, Settings.Default.HeavyModList);
             var settingsWithNoMinIon = doc.Settings.ChangeTransitionSettings(t => t.ChangeLibraries(t.Libraries.ChangeMinIonCount(0)));
-            var group = new PeptideGroupDocNode(new PeptideGroup(), Resources.ImportFastaControl_ImportFasta_iRT_standards, null,
+            var group = new PeptideGroupDocNode(new PeptideGroup(), Annotations.EMPTY, Resources.ImportFastaControl_ImportFasta_iRT_standards, null,
                 standard.Peptides.Select(pep => modMatcher.GetModifiedNode(pep.ModifiedTarget.ToString()).ChangeSettings(settingsWithNoMinIon, SrmSettingsDiff.ALL).ChangeStandardType(StandardType.IRT)
-                ).ToArray());
+                ).ToArray(), false);
             //var transitions = group.Peptides.SelectMany(p => p.TransitionGroups.SelectMany(t => t.Transitions.Select(t2 => t2.Id)));
             //Console.WriteLine(transitions.Count());
             proteins.Insert(0, group);
