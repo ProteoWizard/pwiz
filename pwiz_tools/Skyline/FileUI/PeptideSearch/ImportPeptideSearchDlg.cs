@@ -823,8 +823,8 @@ namespace pwiz.Skyline.FileUI.PeptideSearch
             progressMonitor.UpdateProgress(status);
             Assume.IsTrue(
                 Document.Settings.PeptideSettings.Libraries.TryGetDocumentLibrary(out var docLib));
-            var lib = Document.Settings.PeptideSettings.Libraries.Libraries.FirstOrDefault(lib =>
-                Equals(docLib.Name, lib.Name));
+            var lib = Document.Settings.PeptideSettings.Libraries.Libraries.FirstOrDefault(l =>
+                Equals(docLib.Name, l.Name));
             var adducts = new HashSet<Adduct>(Document.Settings.TransitionSettings.Filter
                 .SmallMoleculeFragmentAdducts);
             if (lib != null)

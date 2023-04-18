@@ -90,7 +90,7 @@ namespace pwiz.Skyline.FileUI.PeptideSearch
 
         private void UpdateSearchEngineProgress(IProgressStatus status)
         {
-            string message = status.IsError ? status.ErrorException.ToString() : status.Message;
+            string message = (status.IsError ? status.ErrorException.ToString() : status.Message) ?? string.Empty;
 
             if (status.IsError)
             {
@@ -105,7 +105,7 @@ namespace pwiz.Skyline.FileUI.PeptideSearch
             if (_progressTextItems.Count > 0 && status.Message == _progressTextItems[_progressTextItems.Count - 1].Message)
                 return;
 
-            if (!((message??string.Empty).EndsWith(@"%") && double.TryParse(message.Substring(0, message.Length-1), out _)))
+            if (!(message.EndsWith(@"%") && double.TryParse(message.Substring(0, message.Length-1), out _)))
             {
                 // Don't update text if the message is just a percent complete update e.g. "13%"
                 var newEntry = new ProgressEntry(DateTime.Now, message);
