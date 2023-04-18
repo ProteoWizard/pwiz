@@ -101,7 +101,7 @@ namespace pwiz.SkylineTest
             // Check ability to parse strangely decorated formula
             Assert.AreEqual(5, lib2Keys.Count(k => Equals("[M+]", k.Adduct.AdductFormula)));
             Assert.AreEqual(1, lib2Keys.Count(k => Equals("C11H22NO4", k.SmallMoleculeLibraryAttributes.ChemicalFormula)));
-            Assert.AreEqual(1, lib2Keys.Count(k => Equals("C6 H14 F O2 P", k.SmallMoleculeLibraryAttributes.ChemicalFormula)));
+            Assert.AreEqual(1, lib2Keys.Count(k => Equals("C6H14FO2P1", k.SmallMoleculeLibraryAttributes.ChemicalFormula)));
 
             // Check use of "MW:"
             Assert.AreEqual(1, lib2Keys.Count(k => Equals(324.6, k.Target?.Molecule?.MonoisotopicMass.Value ?? 0)));
@@ -1311,7 +1311,7 @@ namespace pwiz.SkylineTest
         private const string TEXT_NIST_PARENTHESIS =
             "\n" +
             "NAME: 1,2-Dimethylpropyl methylphosphonofluoridate\n" +
-            "FORM: C6 H14 F O2 P\n" +
+            "FORM: C6 H14 F O2 P1\n" +  // N.B. we expect to retain this atom order, and that weird "1" in P1, but we'll drop the spaces
             "CASNBR: 6154-51-4\n" +
             "NUM PEAKS: 44\n" +
             "( 26 19) (  27 164) (29   131 ) ( 31 14  ) ( 38 21)\n" + // BSP note: I stuck some extra spaces in here just in case
