@@ -28,6 +28,7 @@ BuildLibraryDlg.FilesPage,TestFullScanId
 BuildLibraryNotification,*
 CalculateIsolationSchemeDlg,TestCalculateIsolationWindows
 CalibrateIrtDlg,IrtFunctionalTest
+CalibrationCurveOptionsDlg,TestTransitionOptimization
 CalibrationForm,TestCalibration
 CandidatePeakForm,TestCandidatePeaks
 ChangeIrtPeptidesDlg,IrtFunctionalTest
@@ -145,6 +146,8 @@ MultiButtonMsgDlg,TestShareSettings
 NameLayoutForm,TestPivotEditor
 NoModeUIDlg,UIModeSettingsTest
 OpenDataSourceDialog,TestRetentionTimeAlignment
+OptimizeDocumentTransitionsForm,TestTransitionOptimization
+OptimizeTransitionsForm,TestTransitionOptimization
 PasteDlg.FastaTab,ProteinMetadataFunctionalTests
 PasteDlg.PeptideListTab,TestMethodEditTutorial
 PasteDlg.ProteinListTab,TestMethodEditTutorial

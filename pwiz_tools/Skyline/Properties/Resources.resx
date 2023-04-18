@@ -11956,4 +11956,36 @@ If you do not have the original file, you may build the library with embedded sp
   <data name="ToolInstaller_UnpackZipTool_The_selected_zip_file_did_not_specify_any_items_to_add_to_the_Tools_menu_" xml:space="preserve">
     <value>The selected zip file did not specify any items to add to the Tools menu.</value>
   </data>
+  <data name="OptimizeTransitionsForm_FormatQuantLimitString_Unknown" xml:space="preserve">
+    <value>Unknown</value>
+  </data>
+  <data name="OptimizeTransitionsForm_GetCalibrationCurveTitle_Calibration_curve_using_only__0__transition" xml:space="preserve">
+    <value>Calibration curve using only {0} transition</value>
+    <comment>Example: Calibration curve using only b3+ transition</comment>
+  </data>
+  <data name="OptimizeTransitionsForm_GetCalibrationCurveTitle_Calibration_curve_using__0__transitions" xml:space="preserve">
+    <value>Calibration curve using {0} transitions</value>
+    <comment>Example: Calibration curve using 7 transitions</comment>
+  </data>
+  <data name="OptimizeTransitionsForm_SetDetails_Original_LOD" xml:space="preserve">
+    <value>Original LOD</value>
+    <comment>"LOD
+      "LOD" stands for "Limit of Detection"</comment>
+  </data>
+  <data name="OptimizeTransitionsForm_SetDetails_Optimized_LOD" xml:space="preserve">
+    <value>Optimized LOD</value>
+  </data>
+  <data name="OptimizeTransitionsForm_SetDetails_Original_LLOQ" xml:space="preserve">
+    <value>Original LLOQ</value>
+    <comment>"LLOQ" stands for "Lower limit of quantification"</comment>
+  </data>
+  <data name="OptimizeTransitionsForm_SetDetails_Optimized_LLOQ" xml:space="preserve">
+    <value>Optimized LLOQ</value>
+  </data>
+  <data name="OptimizeTransitionsForm_SetQuantifiableTransitions_Optimize_Transitions" xml:space="preserve">
+    <value>Optimize Transitions</value>
+  </data>
+  <data name="OptimizeDocumentTransitionsForm_OptimizeDocumentTransitionsForm_Optimize_Document_Transitions" xml:space="preserve">
+    <value>Optimize Document Transitions</value>
+  </data>
 </root>

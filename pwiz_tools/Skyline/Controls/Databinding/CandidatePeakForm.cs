@@ -403,7 +403,7 @@ namespace pwiz.Skyline.Controls.Databinding
             }
         }
 
-        public new bool IsComplete
+        public override bool IsComplete
         {
             get
             {

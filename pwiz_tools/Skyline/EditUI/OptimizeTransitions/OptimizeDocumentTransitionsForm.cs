@@ -38,7 +38,7 @@ namespace pwiz.Skyline.EditUI.OptimizeTransitions
             BindingListSource.QueryLock = _dataSchema.QueryLock;
             _bindingList = new BindingList<Row>(_rowList);
             UpdateViewContext();
-            Text = TabText = "Optimize Document Transitions";
+            Text = TabText = Resources.OptimizeDocumentTransitionsForm_OptimizeDocumentTransitionsForm_Optimize_Document_Transitions;
             Icon = Resources.Skyline;
         }
 
@@ -261,6 +261,11 @@ namespace pwiz.Skyline.EditUI.OptimizeTransitions
 
         private void btnPreview_Click(object sender, EventArgs e)
         {
+            Preview();
+        }
+
+        public void Preview()
+        {
             var originalDocument = SkylineWindow.Document;
             var optimizedDocument = GetOptimizedDocument(originalDocument);
             if (optimizedDocument != null)
@@ -343,9 +348,14 @@ namespace pwiz.Skyline.EditUI.OptimizeTransitions
 
         private void btnApply_Click(object sender, EventArgs e)
         {
+            Apply();
+        }
+
+        public void Apply()
+        {
             lock (SkylineWindow.GetDocumentChangeLock())
             {
-                SkylineWindow.ModifyDocument("Optimize transitions", doc=>
+                SkylineWindow.ModifyDocument("Optimize transitions", doc =>
                     {
                         if (null != _optimizedDocument && ReferenceEquals(doc, _originalDocument))
                         {
@@ -362,7 +372,7 @@ namespace pwiz.Skyline.EditUI.OptimizeTransitions
 
                         return doc;
                     },
-                    docPair=>AuditLogEntry.DiffDocNodes(MessageType.changed_quantitative, docPair, "Unknown"));
+                    docPair => AuditLogEntry.DiffDocNodes(MessageType.changed_quantitative, docPair, "Unknown"));
             }
         }
 

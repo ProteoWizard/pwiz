@@ -42,6 +42,7 @@ namespace pwiz.Skyline.Controls.Graphs.Calibration
         {
             InitializeComponent();
             _skylineWindow = skylineWindow;
+            calibrationGraphControl1.SkylineWindow = skylineWindow;
             _originalFormTitle = Text;
         }
 
@@ -208,55 +209,9 @@ namespace pwiz.Skyline.Controls.Graphs.Calibration
         }
 
 
-        private bool IsEnableIsotopologResponseCurve()
-        {
-            return TryGetSelectedPeptide(out _, out var peptide) &&
-                   peptide.TransitionGroups.Any(tg => tg.PrecursorConcentration.HasValue);
-        }
-
         public ToolStripMenuItem MakeExcludeStandardMenuItem(int replicateIndex)
         {
-            var document = DocumentUiContainer.DocumentUI;
-            if (!document.Settings.HasResults)
-            {
-                return null;
-            }
-            ChromatogramSet chromatogramSet = null;
-            if (replicateIndex >= 0 &&
-                replicateIndex < document.Settings.MeasuredResults.Chromatograms.Count)
-            {
-                chromatogramSet = document.Settings.MeasuredResults.Chromatograms[replicateIndex];
-            }
-            if (chromatogramSet == null)
-            {
-                return null;
-            }
-            if (!chromatogramSet.SampleType.AllowExclude)
-            {
-                return null;
-            }
-            PeptideDocNode peptideDocNode;
-            PeptideGroupDocNode peptideGroupDocNode;
-            if (!TryGetSelectedPeptide(out peptideGroupDocNode, out peptideDocNode))
-            {
-                return null;
-            }
-            bool isExcluded = peptideDocNode.IsExcludeFromCalibration(replicateIndex);
-            var menuItemText = isExcluded ? QuantificationStrings.CalibrationForm_MakeExcludeStandardMenuItem_Include_Standard 
-                : QuantificationStrings.CalibrationForm_MakeExcludeStandardMenuItem_Exclude_Standard;
-            var peptideIdPath = new IdentityPath(peptideGroupDocNode.Id, peptideDocNode.Id);
-            var menuItem = new ToolStripMenuItem(menuItemText, null, (sender, args) =>
-            {
-                _skylineWindow.ModifyDocument(menuItemText,
-                    doc => SetExcludeStandard(doc, peptideIdPath, replicateIndex, !isExcluded), docPair =>
-                    {
-                        var msgType = isExcluded
-                            ? MessageType.set_included_standard
-                            : MessageType.set_excluded_standard;
-                        return AuditLogEntry.CreateSingleMessageEntry(new MessageInfo(msgType, docPair.NewDocumentType, PeptideTreeNode.GetLabel(peptideDocNode, string.Empty), chromatogramSet.Name));
-                    });
-            });
-            return menuItem;
+            return calibrationGraphControl1.MakeExcludeStandardMenuItem(replicateIndex);
         }
 
         protected override void OnFormClosed(FormClosedEventArgs e)
@@ -292,26 +247,6 @@ namespace pwiz.Skyline.Controls.Graphs.Calibration
         #region Test Methods
         public ZedGraphControl ZedGraphControl { get { return calibrationGraphControl1.ZedGraphControl; } }
         #endregion
-
-        private SrmDocument SetExcludeStandard(SrmDocument document, IdentityPath peptideIdPath, int resultsIndex, bool exclude)
-        {
-            if (!document.Settings.HasResults)
-            {
-                return document;
-            }
-            var peptideDocNode = (PeptideDocNode) document.FindNode(peptideIdPath);
-            if (peptideDocNode == null)
-            {
-                return document;
-            }
-            if (resultsIndex < 0 || resultsIndex >= document.Settings.MeasuredResults.Chromatograms.Count)
-            {
-                return document;
-            }
-            bool wasExcluded = peptideDocNode.IsExcludeFromCalibration(resultsIndex);
-            return (SrmDocument) document.ReplaceChild(peptideIdPath.Parent,
-                peptideDocNode.ChangeExcludeFromCalibration(resultsIndex, !wasExcluded));
-        }
 
         public void DisplayError(string message)
         {

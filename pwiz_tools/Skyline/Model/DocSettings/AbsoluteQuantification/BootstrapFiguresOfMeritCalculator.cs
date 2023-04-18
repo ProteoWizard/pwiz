@@ -48,7 +48,7 @@ namespace pwiz.Skyline.Model.DocSettings.AbsoluteQuantification
                 .ChangeLimitOfQuantification(limitOfQuantification);
         }
 
-        public static double ComputeLod(IList<WeightedPoint> points)
+        public static double? ComputeLod(IList<WeightedPoint> points)
         {
             if (points.Count == 0)
             {

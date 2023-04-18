@@ -21529,6 +21529,90 @@ namespace pwiz.Skyline.Properties {
         }
         
         /// <summary>
+        ///   Looks up a localized string similar to Optimize Document Transitions.
+        /// </summary>
+        public static string OptimizeDocumentTransitionsForm_OptimizeDocumentTransitionsForm_Optimize_Document_Transitions {
+            get {
+                return ResourceManager.GetString("OptimizeDocumentTransitionsForm_OptimizeDocumentTransitionsForm_Optimize_Document" +
+                        "_Transitions", resourceCulture);
+            }
+        }
+        
+        /// <summary>
+        ///   Looks up a localized string similar to Unknown.
+        /// </summary>
+        public static string OptimizeTransitionsForm_FormatQuantLimitString_Unknown {
+            get {
+                return ResourceManager.GetString("OptimizeTransitionsForm_FormatQuantLimitString_Unknown", resourceCulture);
+            }
+        }
+        
+        /// <summary>
+        ///   Looks up a localized string similar to Calibration curve using {0} transitions.
+        /// </summary>
+        public static string OptimizeTransitionsForm_GetCalibrationCurveTitle_Calibration_curve_using__0__transitions {
+            get {
+                return ResourceManager.GetString("OptimizeTransitionsForm_GetCalibrationCurveTitle_Calibration_curve_using__0__tran" +
+                        "sitions", resourceCulture);
+            }
+        }
+        
+        /// <summary>
+        ///   Looks up a localized string similar to Calibration curve using only {0} transition.
+        /// </summary>
+        public static string OptimizeTransitionsForm_GetCalibrationCurveTitle_Calibration_curve_using_only__0__transition {
+            get {
+                return ResourceManager.GetString("OptimizeTransitionsForm_GetCalibrationCurveTitle_Calibration_curve_using_only__0_" +
+                        "_transition", resourceCulture);
+            }
+        }
+        
+        /// <summary>
+        ///   Looks up a localized string similar to Optimized LLOQ.
+        /// </summary>
+        public static string OptimizeTransitionsForm_SetDetails_Optimized_LLOQ {
+            get {
+                return ResourceManager.GetString("OptimizeTransitionsForm_SetDetails_Optimized_LLOQ", resourceCulture);
+            }
+        }
+        
+        /// <summary>
+        ///   Looks up a localized string similar to Optimized LOD.
+        /// </summary>
+        public static string OptimizeTransitionsForm_SetDetails_Optimized_LOD {
+            get {
+                return ResourceManager.GetString("OptimizeTransitionsForm_SetDetails_Optimized_LOD", resourceCulture);
+            }
+        }
+        
+        /// <summary>
+        ///   Looks up a localized string similar to Original LLOQ.
+        /// </summary>
+        public static string OptimizeTransitionsForm_SetDetails_Original_LLOQ {
+            get {
+                return ResourceManager.GetString("OptimizeTransitionsForm_SetDetails_Original_LLOQ", resourceCulture);
+            }
+        }
+        
+        /// <summary>
+        ///   Looks up a localized string similar to Original LOD.
+        /// </summary>
+        public static string OptimizeTransitionsForm_SetDetails_Original_LOD {
+            get {
+                return ResourceManager.GetString("OptimizeTransitionsForm_SetDetails_Original_LOD", resourceCulture);
+            }
+        }
+        
+        /// <summary>
+        ///   Looks up a localized string similar to Optimize Transitions.
+        /// </summary>
+        public static string OptimizeTransitionsForm_SetQuantifiableTransitions_Optimize_Transitions {
+            get {
+                return ResourceManager.GetString("OptimizeTransitionsForm_SetQuantifiableTransitions_Optimize_Transitions", resourceCulture);
+            }
+        }
+        
+        /// <summary>
         ///   Looks up a localized string similar to Missing scan time value on scan {0}. Scan times are required for overlap-based demultiplexing..
         /// </summary>
         public static string OverlapDeconvSolverHandler_BuildDeconvBlock_Missing_scan_time_value_on_scan__0___Scan_times_are_required_for_overlap_based_demultiplexing_ {

@@ -32,6 +32,7 @@ namespace pwiz.Skyline.EditUI.OptimizeTransitions
         private SkylineDataSchema _dataSchema;
         private SequenceTree _sequenceTree;
         private OptimizeTransitionDetails _details;
+        private Selection _detailsSelection;
         private string _originalTitle;
         private bool _updateTransitionPending;
         public OptimizeTransitionsForm(SkylineWindow skylineWindow)
@@ -41,6 +42,7 @@ namespace pwiz.Skyline.EditUI.OptimizeTransitions
             databoundGridControl.Dock = DockStyle.Fill;
             splitContainer1.Panel1.Controls.Add(databoundGridControl);
             SkylineWindow = skylineWindow;
+            calibrationGraphControl1.SkylineWindow = skylineWindow;
             _bindingList = new BindingList<Row>(_rowList);
             _dataSchema = new SkylineWindowDataSchema(skylineWindow, SkylineDataSchema.GetLocalizedSchemaLocalizer());
             BindingListSource.QueryLock = _dataSchema.QueryLock;
@@ -293,13 +295,13 @@ namespace pwiz.Skyline.EditUI.OptimizeTransitions
 
             if (selection.Settings.OptimizeType == OptimizeType.LOD)
             {
-                lblOriginal.Text = "Original LLOD";
-                lblOptimized.Text = "Optimized LLOD";
+                lblOriginal.Text = Resources.OptimizeTransitionsForm_SetDetails_Original_LOD;
+                lblOptimized.Text = Resources.OptimizeTransitionsForm_SetDetails_Optimized_LOD;
             }
             else
             {
-                lblOriginal.Text = "Original LLOQ";
-                lblOptimized.Text = "Optimized LLOQ";
+                lblOriginal.Text = Resources.OptimizeTransitionsForm_SetDetails_Original_LLOQ;
+                lblOptimized.Text = Resources.OptimizeTransitionsForm_SetDetails_Optimized_LLOQ;
             }
 
 
@@ -308,9 +310,10 @@ namespace pwiz.Skyline.EditUI.OptimizeTransitions
                 : TextUtil.ColonSeparate(_originalTitle, selection.PeptideDocNode.ModifiedSequenceDisplay);
             _rowList.Clear();
             _details = details;
-            lblOriginal.Text = FormatQuantLimitString("Original {0}: {1}", details?.Original?.QuantLimit);
+            _detailsSelection = selection;
+            lblOriginal.Text = FormatQuantLimitString(false, details?.Original?.QuantLimit);
             var optimizedQuantLimit = details?.Optimized?.QuantLimit;
-            lblOptimized.Text = FormatQuantLimitString("Optimized {0}: {1}", optimizedQuantLimit);
+            lblOptimized.Text = FormatQuantLimitString(true, optimizedQuantLimit);
             btnApply.Enabled = optimizedQuantLimit != null;
             if (details != null)
             {
@@ -323,20 +326,25 @@ namespace pwiz.Skyline.EditUI.OptimizeTransitions
                 }
             }
             _bindingList.ResetBindings();
+            DisplayQuantLimitForSelection();
         }
 
-        private string FormatQuantLimitString(string template, QuantLimit quantLimit)
+        private string FormatQuantLimitString(bool optimized, QuantLimit quantLimit)
         {
             string limitName;
-            double? value = null;
+            double? value;
             if (_selection.Settings.OptimizeType == OptimizeType.LOD)
             {
-                limitName = "LLOD";
+                limitName = optimized
+                    ? Resources.OptimizeTransitionsForm_SetDetails_Optimized_LOD
+                    : Resources.OptimizeTransitionsForm_SetDetails_Original_LOD;
                 value = quantLimit?.Lod;
             }
             else
             {
-                limitName = "LLOQ";
+                limitName = optimized
+                    ? Resources.OptimizeTransitionsForm_SetDetails_Optimized_LLOQ
+                    : Resources.OptimizeTransitionsForm_SetDetails_Original_LLOQ;
                 value = quantLimit?.Loq;
             }
 
@@ -348,10 +356,10 @@ namespace pwiz.Skyline.EditUI.OptimizeTransitions
             }
             else
             {
-                valueText = "Unknown";
+                valueText = Resources.OptimizeTransitionsForm_FormatQuantLimitString_Unknown;
             }
 
-            return string.Format(template, limitName, valueText);
+            return TextUtil.ColonSeparate(limitName, valueText);
         }
 
         private OptimizeTransitionDetails OptimizeTransitions(CancellationToken cancellationToken, Selection selection)
@@ -491,10 +499,10 @@ namespace pwiz.Skyline.EditUI.OptimizeTransitions
 
             if (transitionIdentityPaths.Count == 1)
             {
-                return string.Format("Calibration curve using only {0} transition", GetTransitionLabel(document, transitionIdentityPaths.Single()));
+                return string.Format(Resources.OptimizeTransitionsForm_GetCalibrationCurveTitle_Calibration_curve_using_only__0__transition, GetTransitionLabel(document, transitionIdentityPaths.Single()));
             }
 
-            return string.Format("Calibration curve using {0} transitions", transitionIdentityPaths.Count);
+            return string.Format(Resources.OptimizeTransitionsForm_GetCalibrationCurveTitle_Calibration_curve_using__0__transitions, transitionIdentityPaths.Count);
         }
 
         public string GetTransitionLabel(SrmDocument document, IdentityPath transitionIdentityPath)
@@ -536,17 +544,32 @@ namespace pwiz.Skyline.EditUI.OptimizeTransitions
 
         private void btnOptimizeDocumentTransitions_Click(object sender, EventArgs e)
         {
+            ShowOptimizeDocumentTransitionsForm();
+        }
+
+        public void ShowOptimizeDocumentTransitionsForm()
+        {
             SkylineWindow.ShowOptimizeDocumentTransitionsForm();
         }
 
         private void lblOriginal_LinkClicked(object sender, LinkLabelLinkClickedEventArgs e)
+        {
+            SelectOriginalTransitionRows();
+        }
+
+        public void SelectOriginalTransitionRows()
         {
             SelectTransitionRows(_details?.Original?.TransitionIdentityPaths);
         }
 
         private void lblOptimized_LinkClicked(object sender, LinkLabelLinkClickedEventArgs e)
         {
-            SelectTransitionRows(_details.Optimized?.TransitionIdentityPaths);
+            SelectOptimizedTransitionRows();
+        }
+
+        public void SelectOptimizedTransitionRows()
+        {
+            SelectTransitionRows(_details?.Optimized?.TransitionIdentityPaths);
         }
 
         public void SelectTransitionRows(IEnumerable<IdentityPath> transitionIdentityPaths)
@@ -566,6 +589,8 @@ namespace pwiz.Skyline.EditUI.OptimizeTransitions
                 }
             }
         }
+
+        
 
         private void btnApply_Click(object sender, EventArgs e)
         {
@@ -588,7 +613,7 @@ namespace pwiz.Skyline.EditUI.OptimizeTransitions
 
             string message = string.Empty;
             var set = identityPaths.ToHashSet();
-            SkylineWindow.ModifyDocument("Optimize Transitions", doc =>
+            SkylineWindow.ModifyDocument(Resources.OptimizeTransitionsForm_SetQuantifiableTransitions_Optimize_Transitions, doc =>
             {
                 var peptideIdentityPath = new IdentityPath(peptideGroup, peptide);
                 var peptideDocNode = (PeptideDocNode)doc.FindNode(peptideIdentityPath);
@@ -628,6 +653,19 @@ namespace pwiz.Skyline.EditUI.OptimizeTransitions
                 return (SrmDocument)doc.ReplaceChild(new IdentityPath(peptideGroup),
                     peptideDocNode.ChangeChildren(newTransitionGroups));
             }, docPair => AuditLogEntry.DiffDocNodes(MessageType.changed_quantitative, docPair, message));
+        }
+
+        public CalibrationGraphControl CalibrationGraphControl
+        {
+            get { return calibrationGraphControl1; }
+        }
+
+        public override bool IsComplete
+        {
+            get
+            {
+                return base.IsComplete && !_updateTransitionPending && Equals(_selection, _detailsSelection);
+            }
         }
     }
 }

@@ -634,6 +634,8 @@ namespace pwiz.Skyline.Controls.Graphs.Calibration
                     = MakeExcludeStandardMenuItem(replicateIndexFromPoint.Value.ReplicateIndex);
                 if (excludeStandardMenuItem != null)
                 {
+                    // If the user clicks on an external standard point, then show
+                    // them a menu with only the "Exclude Standard" item.
                     menuStrip.Items.Clear();
                     menuStrip.Items.Add(excludeStandardMenuItem);
                     return;
@@ -740,6 +742,7 @@ namespace pwiz.Skyline.Controls.Graphs.Calibration
             return menuItem;
         }
 
+
         private ToolStripMenuItem MakeShowSampleTypeMenuItem(SampleType sampleType)
         {
             ToolStripMenuItem menuItem = new ToolStripMenuItem(sampleType.ToString())
@@ -808,6 +811,11 @@ namespace pwiz.Skyline.Controls.Graphs.Calibration
         }
 
         private void moreDisplayOptionsContextMenuItem_Click(object sender, EventArgs e)
+        {
+            ShowCalibrationCurveOptions();
+        }
+
+        public void ShowCalibrationCurveOptions()
         {
             using (var dlg = new CalibrationCurveOptionsDlg())
             {
