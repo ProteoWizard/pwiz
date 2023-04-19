@@ -21149,29 +21149,11 @@ namespace pwiz.Skyline.Properties {
         }
         
         /// <summary>
-        ///   Looks up a localized string similar to Attempted modification of a read-only collection..
-        /// </summary>
-        public static string OneOrManyList_Add_Attempted_modification_of_a_read_only_collection {
-            get {
-                return ResourceManager.GetString("OneOrManyList_Add_Attempted_modification_of_a_read_only_collection", resourceCulture);
-            }
-        }
-        
-        /// <summary>
         ///   Looks up a localized string similar to The index {0} must be 0 for a single entry list..
         /// </summary>
         public static string OneOrManyList_ValidateIndex_The_index__0__must_be_0_for_a_single_entry_list {
             get {
                 return ResourceManager.GetString("OneOrManyList_ValidateIndex_The_index__0__must_be_0_for_a_single_entry_list", resourceCulture);
-            }
-        }
-        
-        /// <summary>
-        ///   Looks up a localized string similar to The index {0} must be between 0 and {1}..
-        /// </summary>
-        public static string OneOrManyList_ValidateIndex_The_index__0__must_be_between_0_and__1__ {
-            get {
-                return ResourceManager.GetString("OneOrManyList_ValidateIndex_The_index__0__must_be_between_0_and__1__", resourceCulture);
             }
         }
         
