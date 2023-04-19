@@ -54,12 +54,12 @@ namespace SkylineTool
         {
         }
 
-        public void Exit()
+        public bool Exit()
         {
             var processId = GetProcessId();
             var process = Process.GetProcessById(processId);
             Quit();
-            process.WaitForExit(10000);
+            return process.WaitForExit(10000);
         }
 
         public float TestFloat(float data)
