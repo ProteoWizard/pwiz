@@ -51,7 +51,7 @@ namespace TestPerf // Note: tests in the "TestPerf" namespace only run when the 
             OpenDocument(skyfile);
             
             SetCsvFileClipboardText(TestFilesDir.GetTestPath("Testing_list_for_skyline.csv"));
-            RunUI(SkylineWindow.Paste); // Paste into targets window
+            PasteSmallMoleculeListNoAutoManage();  // Paste into targets window, say no to the offer to set new nodes to automanage
             var doc0 = WaitForDocumentLoaded();
 
             // Enable automanage children so settings change will act on doc structure
