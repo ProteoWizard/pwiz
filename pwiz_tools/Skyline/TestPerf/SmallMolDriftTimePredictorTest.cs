@@ -104,6 +104,10 @@ namespace TestPerf
                 editIonMobilityLibraryDlg.CreateDatabaseFile(databasePath); // Simulate user click on Create button
                 editIonMobilityLibraryDlg.GetIonMobilitiesFromResults();
             });
+
+            // Make sure we haven't broken this dialog's use of TargetResolver (if we have, we'll probably get the serializable format)
+            AssertEx.AreEqual(@"Sulfamethizole", editIonMobilityLibraryDlg.GetTargetDisplayName(0));
+
             OkDialog(editIonMobilityLibraryDlg, () => editIonMobilityLibraryDlg.OkDialog());
 
             RunUI(() =>
