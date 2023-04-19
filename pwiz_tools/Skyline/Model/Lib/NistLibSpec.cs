@@ -799,7 +799,7 @@ namespace pwiz.Skyline.Model.Lib
         // N.B this was formerly "^PrecursorMz: ([^ ]+)" - no comma - I don't understand how double.Parse worked with existing
         // test inputs like "PrecursorMZ: 124.0757, 109.1" but somehow adding NOCASE suddenly made it necessary
         private static readonly Regex REGEX_PRECURSORMZ = new Regex(@"^(?:PrecursorMz|Selected Ion m/z):\s*([^ ,]+)", NOCASE);
-        private static readonly Regex REGEX_MOLWEIGHT = new Regex(@"^MW:\s*([^ ,]+)", NOCASE);
+        private static readonly Regex REGEX_MOLWEIGHT = new Regex(@"^MW:\s*(.*)", NOCASE);
         private static readonly Regex REGEX_IONMODE = new Regex(@" ^ IonMode:\s*(.*)", NOCASE);
         private const double DEFAULT_MZ_MATCH_TOLERANCE = 0.01; // Most .MSP formats we see present precursor m/z values that match at about this tolerance
         private const string MZVAULT_POSITIVE_SCAN_INIDCATOR = @"Positive scan";
@@ -1458,17 +1458,13 @@ namespace pwiz.Skyline.Model.Lib
                 match = REGEX_MOLWEIGHT.Match(line);
                 if (match.Success)
                 {
-                    try
-                    {
-                        molWeight = double.Parse(match.Groups[1].Value, CultureInfo.InvariantCulture);
-                    }
-                    catch
+                    if (!TryParseDoubleUncertainCulture(match.Groups[1].Value, out var mw))
                     {
                         ThrowIOException(lineCount,
                             string.Format(Resources.NistLibraryBase_CreateCache_Could_not_read_the_precursor_m_z_value___0__,
                                 line));
                     }
-
+                    molWeight = mw;
                     return true;  // Line is fully consumed
                 }
             }
