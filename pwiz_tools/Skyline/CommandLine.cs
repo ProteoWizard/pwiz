@@ -74,7 +74,7 @@ namespace pwiz.Skyline
         }
 
         public SrmDocument Document { get { return _doc; } }
-        public IrtStandard IrtStandard { get; private set; }
+        public ImportPeptideSearch ImportPeptideSearch { get; private set; }
 
         public CommandLine()
             : this(new CommandStatusWriter(new StringWriter()))
@@ -346,6 +346,15 @@ namespace pwiz.Skyline
             {
                 if (!AddDecoys(commandArgs))
                     return false;
+            }
+
+            // after importing search, importing FASTA, doing protein association, and creating decoys, add iRT standards
+            if (commandArgs.ImportingSearch || commandArgs.ImportingFasta || commandArgs.AssociatingProteins)
+            {
+                if (ImportPeptideSearch != null)
+                    SetDocument(ImportPeptideSearch.AddStandardsToDocument(_doc, ImportPeptideSearch.IrtStandard));
+                if (commandArgs.ImportingSearch)
+                    ImportFoundResultsFiles(commandArgs, ImportPeptideSearch);
             }
 
             if (commandArgs.RemovingResults && !commandArgs.RemoveBeforeDate.HasValue)
@@ -1008,9 +1017,9 @@ namespace pwiz.Skyline
                     if (commandArgs.FilterProductTypes != null)
                         f = f.ChangePeptideIonTypes(commandArgs.FilterProductTypes);
                     if (commandArgs.FilterStartProductIon != null)
-                        f = f.ChangeFragmentRangeFirstName(commandArgs.FilterStartProductIon.Label);
+                        f = f.ChangeFragmentRangeFirstName(commandArgs.FilterStartProductIon.GetKey());
                     if (commandArgs.FilterEndProductIon != null)
-                        f = f.ChangeFragmentRangeLastName(commandArgs.FilterEndProductIon.Label);
+                        f = f.ChangeFragmentRangeLastName(commandArgs.FilterEndProductIon.GetKey());
                     if (commandArgs.FilterSpecialIons != null)
                         f = f.ChangeMeasuredIons(commandArgs.FilterSpecialIons.Select(Settings.Default.GetMeasuredIonByName).ToList());
                     if (commandArgs.FilterUseDIAWindowExclusion != null)
@@ -2136,11 +2145,7 @@ namespace pwiz.Skyline
                     commandArgs.AssociateProteinsSharedPeptides.GetValueOrDefault(),
                     commandArgs.AssociateProteinsMinPeptidesPerProtein.GetValueOrDefault(),
                     progressMonitor);
-                ModifyDocument(doc =>
-                {
-                    var result = proteinAssociation.CreateDocTree(doc, progressMonitor);
-                    return ImportPeptideSearch.AddStandardsToDocument(result, GetIrtStandard(commandArgs));
-                }, AuditLogEntry.SettingsLogFunction);
+                ModifyDocument(doc => proteinAssociation.CreateDocTree(doc, progressMonitor), AuditLogEntry.SettingsLogFunction);
                 return true;
             }
             catch (Exception x)
@@ -2186,12 +2191,13 @@ namespace pwiz.Skyline
         private bool ImportSearchInternal(CommandArgs commandArgs, ref SrmDocument doc)
         {
             var progressMonitor = new CommandProgressMonitor(_out, new ProgressStatus(String.Empty));
-            var import = new ImportPeptideSearch
+            ImportPeptideSearch = new ImportPeptideSearch
             {
                 SearchFilenames = commandArgs.SearchResultsFiles.ToArray(),
                 CutoffScore = commandArgs.CutoffScore.GetValueOrDefault(),
                 IrtStandard = GetIrtStandard(commandArgs)
             };
+            var import = ImportPeptideSearch;
 
             // Build library
             var builder = import.GetLibBuilder(doc, commandArgs.Saving ? commandArgs.SaveFile : commandArgs.SkylineFile, commandArgs.IncludeAmbiguousMatches);
@@ -2274,7 +2280,6 @@ namespace pwiz.Skyline
                         processed.CanRecalibrateStandards(import.IrtStandard.Peptides) && commandArgs.RecalibrateIrts, IrtRegressionType.DEFAULT, progressMonitor);
                 }
                 doc = ImportPeptideSearch.AddRetentionTimePredictor(doc, docLibSpec);
-                IrtStandard = import.IrtStandard;
             }
 
             if (!import.VerifyRetentionTimes(import.GetFoundResultsFiles().Select(f => f.Path)))
@@ -2346,13 +2351,10 @@ namespace pwiz.Skyline
                 {
                     doc = ImportPeptideSearch.RemoveProteinsByPeptideCount(doc, 1);
                 }
-
-                doc = ImportPeptideSearch.AddStandardsToDocument(doc, import.IrtStandard);
             }
 
             // Import results
             SetDocument(doc);
-            ImportFoundResultsFiles(commandArgs, import);
             return true;
         }
 

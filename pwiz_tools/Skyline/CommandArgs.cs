@@ -37,12 +37,10 @@ using pwiz.Skyline.Model.DocSettings;
 using pwiz.Skyline.Model.GroupComparison;
 using pwiz.Skyline.Model.IonMobility;
 using pwiz.Skyline.Model.Irt;
-using pwiz.Skyline.Model.Proteome;
 using pwiz.Skyline.Model.Results;
 using pwiz.Skyline.Model.Results.Scoring;
 using pwiz.Skyline.Model.Tools;
 using pwiz.Skyline.Properties;
-using pwiz.Skyline.SettingsUI;
 using pwiz.Skyline.Util;
 using pwiz.Skyline.Util.Extensions;
 using static pwiz.Skyline.Model.Proteome.ProteinAssociation;
@@ -1255,10 +1253,10 @@ namespace pwiz.Skyline
             (c, p) => c.FilterProductTypes = ParseIonTypes(p)) { WrapValue = true };
         public static readonly Argument ARG_TRAN_PRODUCT_START_ION = new DocArgument(@"tran-product-start-ion",
             () => TransitionFilter.GetStartFragmentFinderLabels().ToArray(),
-            (c, p) => c.FilterStartProductIon = TransitionFilter.GetStartFragmentFinder(p.Value)) { WrapValue = true };
+            (c, p) => c.FilterStartProductIon = TransitionFilter.GetStartFragmentFinder(TransitionFilter.GetStartFragmentNameFromLabel(p.Value))) { WrapValue = true };
         public static readonly Argument ARG_TRAN_PRODUCT_END_ION = new DocArgument(@"tran-product-end-ion",
             () => TransitionFilter.GetEndFragmentFinderLabels().ToArray(),
-            (c, p) => c.FilterEndProductIon = TransitionFilter.GetEndFragmentFinder(p.Value)) { WrapValue = true };
+            (c, p) => c.FilterEndProductIon = TransitionFilter.GetEndFragmentFinder(TransitionFilter.GetEndFragmentNameFromLabel(p.Value))) { WrapValue = true };
         public static readonly Argument ARG_TRAN_PRODUCT_SPECIAL_IONS_CLEAR = new DocArgument(@"tran-product-clear-special-ions",
                 (c, p) => c.FilterSpecialIons = Array.Empty<string>())
             { OptionalValue = true };
@@ -1415,7 +1413,8 @@ namespace pwiz.Skyline
         {
             Assume.IsNotNull(p.Match); // Must be matched before accessing this
 
-            var match = Regex.Match(p.Value, @"([+-]?(?:\d+\.?\d*)|(?:\.\d+))\s*(ppm|mz|m/z|da|daltons|th)", RegexOptions.IgnoreCase);
+            var ds = LocalizationHelper.CurrentCulture.NumberFormat.NumberDecimalSeparator;
+            var match = Regex.Match(p.Value, @$"([+-]?(?:\d+\{ds}?\d*)|(?:\{ds}\d+))\s*(ppm|mz|m/z|da|daltons|th)", RegexOptions.IgnoreCase);
             if (!match.Success)
                 throw new ValueInvalidMzToleranceException(p.Match, p.Value);
             if (!double.TryParse(match.Groups[1].Value, out double value))

@@ -18,7 +18,6 @@
  */
 
 using System;
-using System.Collections.Generic;
 using System.ComponentModel;
 using System.Drawing;
 using System.Globalization;
@@ -29,6 +28,7 @@ using pwiz.Common.Chemistry;
 using pwiz.Common.DataBinding;
 using pwiz.Common.DataBinding.Controls;
 using pwiz.Common.DataBinding.Controls.Editor;
+using pwiz.Common.SystemUtil;
 using pwiz.Skyline;
 using pwiz.Skyline.Alerts;
 using pwiz.Skyline.Controls;
@@ -294,7 +294,7 @@ namespace TestPerf
                     ChromatogramClickPoint = new PointF(10.79F, 3800.0F),
                     //TargetCounts = new[] { 4937, 37152, 38716, 232296 },
                     FinalTargetCounts = new[] { 2697, 27225, 28373, 170238 },
-                    ScoringModelCoefficients = "-0.3354|-0.9055|4.5023|3.5337|-0.1011|0.7388|0.4436|-0.1320",
+                    ScoringModelCoefficients = "-0.3355|-0.9056|4.5022|3.5338|-0.1011|0.7389|0.4436|-0.1319",
                     MassErrorStats = new[]
                     {
                         new[] { 3.6, 2.7 },
@@ -424,15 +424,17 @@ namespace TestPerf
             if (recordMode)
             {
                 Console.WriteLine(@"{0} = new[] {{ {1}, {2}, {3}, {4} }},", propName, proteinCount, peptideCount, precursorCount, transitionCount);
-                return;
             }
 
             var targetCountsActual = new[] { proteinCount, peptideCount, precursorCount, transitionCount };
             if (!ArrayUtil.EqualsDeep(targetCounts, targetCountsActual))
             {
-                Assert.Fail("Expected target counts <{0}> do not match actual <{1}>.",
-                    string.Join(", ", targetCounts),
-                    string.Join(", ", targetCountsActual));
+                string msg = string.Format("Expected target counts <{0}> do not match actual <{1}>.",
+                    string.Join(", ", targetCounts), string.Join(", ", targetCountsActual));
+                if (!recordMode)
+                    Assert.Fail(msg);
+                else
+                    Console.Error.WriteLine(msg);
             }
         }
     }
@@ -860,11 +862,6 @@ namespace TestPerf
             var docLibrary = SkylineWindow.Document.Settings.PeptideSettings.Libraries.Libraries[0];
             Assert.AreEqual(_instrumentValues.LibraryPeptideCount + _instrumentValues.ExpectedIrtPeptideCount, docLibrary.LibraryDetails.UniquePeptideCount);
             RunUI(() => Assert.AreEqual(_instrumentValues.ExpectedIrtPeptideCount, SkylineWindow.Document.PeptideGroups.First().PeptideCount));
-
-            //RunUI(() => SkylineWindow.ModifyDocumentNoUndo(d => d.ChangeMeasuredResults(new MeasuredResults(new List<ChromatogramSet>()))));
-            //RunUI(() => SkylineWindow.SaveDocument());
-            //PauseTest();
-            //return;
 
             // Setup annotations
             var documentSettingsDlg = ShowDialog<DocumentSettingsDlg>(SkylineWindow.ShowDocumentSettingsDialog);
@@ -1324,10 +1321,20 @@ namespace TestPerf
         private void ValidateCoefficients(EditPeakScoringModelDlg editDlgFromSrm, string expectedCoefficients)
         {
             string coefficients = string.Join(@"|", GetCoefficientStrings(editDlgFromSrm));
-            if (IsRecordMode)
-                Console.WriteLine(@"ScoringModelCoefficients = ""{0}"",", coefficients);  // Not L10N
-            else
+            try
+            {
                 AssertEx.AreEqualLines(expectedCoefficients, coefficients);
+            }
+            catch (AssertFailedException e)
+            {
+                if (IsRecordMode)
+                {
+                    Console.WriteLine(@"ScoringModelCoefficients = ""{0}"",", coefficients); // Not L10N
+                    Console.Error.WriteLine("ScoringModelCoefficients: " + e.Message);
+                }
+                else
+                    throw;
+            }
         }
 
         private void ValidateMassErrors(MassErrorHistogramGraphPane massErrorPane, int index)
@@ -1467,13 +1474,13 @@ namespace TestPerf
                 "--full-scan-isolation-scheme=" + Path.Combine(GetTestPath("DIA"), _instrumentValues.DiaFiles[0]),
                 "--tran-precursor-ion-charges=2,3,4",
                 "--tran-product-ion-charges=1,2",
-                "--tran-product-start-ion=ion 3",
-                "--tran-product-end-ion=last ion",
+                "--tran-product-start-ion=" + TransitionFilter.StartFragmentFinder.ION_3.Label,
+                "--tran-product-end-ion=" + TransitionFilter.EndFragmentFinder.LAST_ION.Label,
                 "--tran-product-clear-special-ions",
                 "--tran-use-dia-window-exclusion",
                 "--library-product-ions=6",
                 "--library-min-product-ions=6",
-                "--library-match-tolerance=0.05mz",
+                "--library-match-tolerance=" + 0.05 + "mz",
                 "--library-pick-product-ions=filter",
                 "--instrument-max-mz=2000",
                 "--reintegrate-model-name=" + documentBaseName,
@@ -1482,8 +1489,7 @@ namespace TestPerf
                 "--import-search-exclude-library-sources",
                 "--import-search-irts=" + _instrumentValues.IrtStandard,
                 "--import-fasta=" + GetTestPath(_analysisValues.FastaPath),
-                "--decoys-add=shuffle",
-                "--import-threads=1"
+                "--decoys-add=shuffle"
             };
             settings = settings.Concat(_instrumentValues.SearchFiles.Select(o => "--import-search-file=" + GetTestPath(o))).ToArray();
             settings = settings.Concat(_instrumentValues.DiaFiles.Select(o => "--import-file=" + Path.Combine(GetTestPath("DIA"), o)).Take(1)).ToArray();
@@ -1539,19 +1545,10 @@ namespace TestPerf
             if (_analysisValues.MinPeptidesPerProtein.HasValue)
                 //settings = settings.Append("--refine-min-peptides=" + _analysisValues.MinPeptidesPerProtein.Value).ToArray();
                 settings = settings.Append("--associate-proteins-min-peptides=" + _analysisValues.MinPeptidesPerProtein.Value).ToArray();
-
+            else
+                settings = settings.Append("--associate-proteins-min-peptides=1").ToArray();
 
             string output = RunCommand(true, settings);
-
-            /*Settings.Default.CompactFormatOption = CompactFormatOption.NEVER.Name;
-            settings = new[]
-            {
-                "--in=" + documentFile,
-                "--remove-all",
-                "--save"
-            };
-            RunCommand(true, settings);
-            return;*/
 
             try
             {
