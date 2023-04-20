@@ -16,7 +16,7 @@ namespace pwiz.PanoramaClient
         {
             Application.EnableVisualStyles();
             Application.SetCompatibleTextRenderingDefault(false);
-            Application.Run(new RemoteFileDialog("", "", new Uri("https://panoramaweb.org/"), true, "", false));
+            Application.Run(new RemoteFileDialog("", "", new Uri("https://panoramaweb.org/"), true, "", false, new List<List<string>>()));
         }
     }
 }

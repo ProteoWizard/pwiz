@@ -14,11 +14,13 @@ namespace pwiz.PanoramaClient
         private static string LatestVersion; 
         private static string CheckIfVersions;
         private static string PeptideInfoQuery;
-        private FolderBrowser folderBrowser;
+        public FolderBrowser folderBrowser;
         public TreeNodeCollection _nodesState;
         public List<TreeView> tree = new List<TreeView>();
+        private List<List<String>> servers;
         private bool restoring;
         private string most_Recent;
+        public string ActiveServer;
         private string recent_vers;
         private const string EXT = ".sky";
         private const string RECENT_VER = "Most recent version";
@@ -26,8 +28,9 @@ namespace pwiz.PanoramaClient
         //Ask Brendan where RemoteFileDialog should live
         //Two different forms, directoryChooser FilePicker both use the same control which will be the tree of folders
         //3rd parameter: only show folders, only show Panorama folders (targetedms module)
-        public RemoteFileDialog(string user, string pass, Uri server, bool showCheckbox, string stateString, bool showingSky)
+        public RemoteFileDialog(string user, string pass, Uri server, bool showCheckbox, string stateString, bool showingSky, List<List<String>> serversInfo)
         {
+            IsLoaded = false;
             User = user;
             Pass = pass;
             Server = server.ToString();
@@ -38,6 +41,7 @@ namespace pwiz.PanoramaClient
             checkBox1.Checked = ShowingSky;
             restoring = false;
             checkBox1.Visible = showCheckbox;
+            servers = serversInfo;
         }
 
         public string Server { get; set; }
@@ -45,6 +49,7 @@ namespace pwiz.PanoramaClient
         public string Pass { get; set; }
         public string OKButtonText { get; set; }
         public string TreeState { get; set; }
+        public bool IsLoaded { get; set; }
 
         public string FileURL;
         public string FileName;
@@ -64,7 +69,7 @@ namespace pwiz.PanoramaClient
 
             }
             var serverUri = new Uri(Server);
-            folderBrowser = new FolderBrowser(serverUri, User, Pass, false, ShowingSky, TreeState);
+            folderBrowser = new FolderBrowser(serverUri, User, Pass, false, ShowingSky, TreeState, servers);
             folderBrowser.AddFiles += AddFiles;
             folderBrowser.Dock = DockStyle.Fill;
             splitContainer1.Panel1.Controls.Add(folderBrowser);
@@ -81,6 +86,7 @@ namespace pwiz.PanoramaClient
                 back.Enabled = folderBrowser.BackEnabled();
                 forward.Enabled = folderBrowser.ForwardEnabled();
             }
+            IsLoaded = true;
         }
 
         /// <summary>
@@ -116,6 +122,14 @@ namespace pwiz.PanoramaClient
 
         private JToken GetJson(string query)
         {
+            foreach (var server in servers)
+            {
+                if (server[0].Equals(ActiveServer))
+                {
+                    User = server[1];
+                    Pass = server[2];
+                }
+            }
             var queryUri = new Uri(query);
             var webClient = new WebClientWithCredentials(queryUri, User, Pass);
             JToken json = webClient.Get(queryUri);
@@ -173,7 +187,7 @@ namespace pwiz.PanoramaClient
             listView.Items.Clear();
             var result = new string[5];
             var fileInfos = new string[5];
-            LatestVersion = BuildQuery(Server, path, @"Runs", @"Current", new []{ @"Container", @"FileName", @"Created", @"Container/Path", @"DocumentSize", @"PeptideGroupCount", @"PeptideCount", @"PrecursorCount", @"TransitionCount", @"ReplicateCount" }, @"Created", @"FileName");
+            LatestVersion = BuildQuery(ActiveServer, path, @"Runs", @"Current", new []{ @"Container", @"FileName", @"Created", @"Container/Path", @"DocumentSize", @"PeptideGroupCount", @"PeptideCount", @"PrecursorCount", @"TransitionCount", @"ReplicateCount" }, @"Created", @"FileName");
             var query = LatestVersion + most_Recent;
             JToken json = GetJson(query);
             result[2] = recent_vers;
@@ -204,7 +218,7 @@ namespace pwiz.PanoramaClient
         /// <returns></returns>
         private bool HasVersions(string path)
         {
-            CheckIfVersions = BuildQuery(Server, path, @"TargetedMSRuns", @"Current", new []{ @"Name", @"Replaced", @"ReplacedByRun", @"Folder", @"RowId", @"Created" }, @"Created", @"Replaced");
+            CheckIfVersions = BuildQuery(ActiveServer, path, @"TargetedMSRuns", @"Current", new []{ @"Name", @"Replaced", @"ReplacedByRun", @"Folder", @"RowId", @"Created" }, @"Created", @"Replaced");
             var query = CheckIfVersions + bool.TrueString;
             JToken json = GetJson(query);
             var rowNum = json[@"rowCount"];
@@ -220,7 +234,7 @@ namespace pwiz.PanoramaClient
         /// <returns></returns>
         private string[] GetVersionInfo(string path, string fileName)
         {
-            ReplacedInfo = BuildQuery(Server, path, @"TargetedMSRuns", @"Current", new[] { @"Name", @"File/Versions", @"ReplacedBy", @"Folder", @"RowId", @"Created", @"ReplacesRun" }, @"Created", @"Name");
+            ReplacedInfo = BuildQuery(ActiveServer, path, @"TargetedMSRuns", @"Current", new[] { @"Name", @"File/Versions", @"ReplacedBy", @"Folder", @"RowId", @"Created", @"ReplacesRun" }, @"Created", @"Name");
             var query = ReplacedInfo + fileName;
             JToken json = GetJson(query);
             var rowNum = json[@"rowCount"];
@@ -262,7 +276,7 @@ namespace pwiz.PanoramaClient
         {
             try
             {
-                ReplacedBy = BuildQuery(Server, path, @"Runs", @"Current", null, @"Created", @"Id");
+                ReplacedBy = BuildQuery(ActiveServer, path, @"Runs", @"Current", null, @"Created", @"Id");
                 var query = ReplacedBy + rowReplaced;
                 JToken json = GetJson(query);
                 var firstRow = json[@"rows"].First;
@@ -289,8 +303,8 @@ namespace pwiz.PanoramaClient
         {
             //Use this one query once Vagisha can link up the file size column 
             //https://panoramaweb-dr.gs.washington.edu/00Developer/Sophie/Versions/query-selectRows.api?schemaName=targetedms&query.queryName=TargetedMSRuns&query.columns=File%2FId%2CRowId%2CCreated%2CFile%2FProteins%2CFile%2FPeptides%2CFile%2FPrecursors%2CFile%2FTransitions%2CFile%2FReplicates%2CReplacedByRun%2CReplacesRun,File%2FVersions,Container%2FPath,Name
-            PeptideInfoQuery = BuildQuery(Server, nodePath, @"Runs", @"Current",
-                new[] { @"Container", @"FileName", @"Deleted", @"Container/Path", @"DocumentSize", @"PeptideGroupCount", @"PeptideCount", @"PrecursorCount", @"TransitionCount", @"ReplicateCount", @"Created" }, string.Empty, string.Empty); //Add created date to listView
+            PeptideInfoQuery = BuildQuery(ActiveServer, nodePath, @"Runs", @"Current",
+                new[] { @"Container", @"FileName", @"Deleted", @"Container/Path", @"DocumentSize", @"PeptideGroupCount", @"PeptideCount", @"PrecursorCount", @"TransitionCount", @"ReplicateCount", @"Created"}, string.Empty, string.Empty); //Add created date to listView
             var query = PeptideInfoQuery;
             try
             {
@@ -361,21 +375,31 @@ namespace pwiz.PanoramaClient
 
         public void AddFiles(object sender, EventArgs e)
         {
-            var path = folderBrowser.Path;
-            listView.Items.Clear();
-            if (!string.IsNullOrEmpty(path))
+            //Use the correct server to show files
+            try
             {
-                if (folderBrowser.showSky)
+                var path = folderBrowser.Path;
+                listView.Items.Clear();
+                ActiveServer = folderBrowser.ActiveServer;
+                if (!string.IsNullOrEmpty(path))
                 {
-                    AddQueryFiles(listView, path, versionLabel, comboBox1);
-                }
-                else
-                {
-                    var uriString = string.Concat(Server, @"_webdav/", path + @"/@files?method=json");
-                    var uri = new Uri(uriString);
-                    AddChildFiles(uri, listView);
+                    if (folderBrowser.showSky)
+                    {
+                        AddQueryFiles(listView, path, versionLabel, comboBox1);
+                    }
+                    else
+                    {
+                        var uriString = string.Concat(ActiveServer, @"_webdav/", path + @"/@files?method=json");
+                        var uri = new Uri(uriString);
+                        AddChildFiles(uri, listView);
+                    }
                 }
             }
+            catch
+            {
+                //ignored
+            }
+            
         }
 
         /// <summary>
@@ -415,6 +439,7 @@ namespace pwiz.PanoramaClient
             }
             else
             {
+                ActiveServer = folderBrowser.ActiveServer;
                 AddQueryFiles(listView, (string)folderBrowser.clicked.Tag, versionLabel, comboBox1);
             }
         }
@@ -436,7 +461,7 @@ namespace pwiz.PanoramaClient
                             .Text); 
                 }
                 DownloadName = downloadName;
-                FileURL = Server + downloadName;
+                FileURL = ActiveServer + downloadName;
 
                 DialogResult = DialogResult.Yes;
                 Close();
@@ -497,6 +522,13 @@ namespace pwiz.PanoramaClient
             checkEnabled();
         }
 
+        public void ClickBack()
+        { 
+            //back.PerformClick();
+            folderBrowser.BackClick();
+            checkEnabled();
+        }
+
 
         public void MouseClick(object sender, EventArgs e)
         {
@@ -511,6 +543,23 @@ namespace pwiz.PanoramaClient
             forward.Enabled = folderBrowser.ForwardEnabled();
             back.Enabled = folderBrowser.BackEnabled();
         }
+
+        public bool upEnabled()
+        {
+            return up.Enabled;
+        }
+
+        public bool backEnabled()
+        {
+            return back.Enabled;
+        }
+
+        public bool forwardEnabled()
+        {
+            //return forward.Enabled;
+            return folderBrowser.ForwardEnabled();
+        }
+
     }
 
 

@@ -1,4 +1,5 @@
 ﻿using System;
+using System.Collections.Generic;
 using System.Windows.Forms;
 
 namespace pwiz.PanoramaClient
@@ -8,11 +9,12 @@ namespace pwiz.PanoramaClient
 
         private FolderBrowser folders;
         public string State;
+        public string Selected;
 
         public DirectoryPicker(Uri server, string user, string pass, bool showCheckBox, string state, bool showSkyFolders = false)
         {
             InitializeComponent();
-            folders = new FolderBrowser(server, user, pass, false, showSkyFolders, state);
+            folders = new FolderBrowser(server, user, pass, false, showSkyFolders, state, new List<List<string>>());
             folders.Dock = DockStyle.Fill;
             folderPanel.Controls.Add(folders);
             folders.NodeClick += MouseClick;
@@ -95,6 +97,7 @@ namespace pwiz.PanoramaClient
         private void DirectoryPicker_FormClosing(object sender, FormClosingEventArgs e)
         {
             State = folders.ClosingState();
+            Selected = folders.FolderPath;
         }
 
         private void checkEnabled()

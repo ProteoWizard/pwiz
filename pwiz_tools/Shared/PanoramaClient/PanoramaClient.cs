@@ -35,6 +35,7 @@ namespace pwiz.PanoramaClient
     public class WebPanoramaClient : IPanoramaClient
     {
         public Uri ServerUri { get; private set; }
+        public string SelectedPath { get; private set; }
 
         public WebPanoramaClient(Uri server)
         {
@@ -252,21 +253,24 @@ namespace pwiz.PanoramaClient
             }
         }
 
-        public string DownloadAndSave(Uri serverUri, string user, string pass, string fileName, string downloadName)
+        public string SaveFile(Uri serverUri, string user, string pass, string fileName, string downloadName, string lastPath)
         {
             var dlg = new FolderBrowserDialog();
+            dlg.SelectedPath = lastPath;
+            var downloadPath = string.Empty;
             var selected = string.Empty;
             dlg.Description = "Select the folder the file will be downloaded to";
             if (dlg.ShowDialog() == DialogResult.OK)
             {
-                var path = dlg.SelectedPath;
+                SelectedPath = dlg.SelectedPath;
                 selected = dlg.SelectedPath;
-                DownloadFile(path, serverUri, user, pass, fileName, downloadName);
+                //DownloadFile(selected, serverUri, user, pass, fileName, downloadName);
+                downloadPath = Path.Combine(selected, fileName);
             }
-            return Path.Combine(selected, fileName);
+            return downloadPath;
         }
 
-        private void DownloadFile(string path, Uri server, string user, string pass, string fileName, string downloadName)
+        public void DownloadFile(string path, Uri server, string user, string pass, string fileName, string downloadName)
         {
             using (var wc = new WebClientWithCredentials(server, user, pass))
             {
@@ -275,7 +279,7 @@ namespace pwiz.PanoramaClient
                     // Param1 = Link of file
                     new Uri(downloadName),
                     // Param2 = Path to save
-                    Path.Combine(path, fileName)
+                    path
                 );
             }
 
