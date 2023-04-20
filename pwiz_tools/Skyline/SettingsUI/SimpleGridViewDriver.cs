@@ -212,7 +212,8 @@ namespace pwiz.Skyline.SettingsUI
             }
             catch
             {
-                return obj;
+                // If object is empty string, convert to null.
+                return string.Empty.Equals(obj) ? null : obj;
             }
         }
 
