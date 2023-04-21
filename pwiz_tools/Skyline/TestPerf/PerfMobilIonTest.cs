@@ -20,6 +20,7 @@
 
 using System.Linq;
 using Microsoft.VisualStudio.TestTools.UnitTesting;
+using pwiz.Common.Chemistry;
 using pwiz.Skyline.FileUI;
 using pwiz.Skyline.Model;
 using pwiz.Skyline.Model.DocSettings;
@@ -79,6 +80,26 @@ namespace TestPerf
 
             var document = WaitForDocumentLoaded();
             AssertEx.IsDocumentState(document, null, groups, peptides, tranGroups, transitions);
+
+            // Change the first precursor so that it has explicit drift time instead of explicit CCS
+            RunUI(() =>
+            {
+                // Select the first precursor
+                SkylineWindow.SequenceTree.SelectedNode = SkylineWindow.SequenceTree.Nodes[0].FirstNode.Nodes[0];
+            });
+            var editMoleculeDlgA = ShowDialog<EditCustomMoleculeDlg>(SkylineWindow.ModifySmallMoleculeTransitionGroup);
+            RunUI(() =>
+            {
+                // Test the "set" part of "Issue 371: Small molecules: need to be able to import and/or set CE, RT and DT for individual precursors and products"
+                editMoleculeDlgA.IonMobility = 308.71;
+                editMoleculeDlgA.IonMobilityUnits = eIonMobilityUnits.drift_time_msec;
+                editMoleculeDlgA.CollisionalCrossSectionSqA = null;
+            });
+            OkDialog(editMoleculeDlgA, editMoleculeDlgA.OkDialog);
+            document = WaitForDocumentChange(document);
+            var im = document.MoleculePrecursorPairs.First().NodeGroup.ExplicitValues;
+            AssertEx.AreEqual(308.71, im.IonMobility, .01); // As set above
+            AssertEx.IsFalse(im.CollisionalCrossSectionSqA.HasValue); // As set during chromatogram extraction
 
             // Importing raw data
             var importResults = ShowDialog<ImportResultsDlg>(SkylineWindow.ImportResults);

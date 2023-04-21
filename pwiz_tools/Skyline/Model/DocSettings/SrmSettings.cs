@@ -1030,6 +1030,12 @@ namespace pwiz.Skyline.Model.DocSettings
                 var imAndCCS = IonMobilityAndCCS.GetIonMobilityAndCCS(IonMobilityValue.GetIonMobilityValue(nodeGroup.ExplicitValues.IonMobility, nodeGroup.ExplicitValues.IonMobilityUnits),
                     nodeGroup.ExplicitValues.CollisionalCrossSectionSqA,
                     ExplicitTransitionValues.Get(nodeTran).IonMobilityHighEnergyOffset ?? 0);
+                if (instrumentInfo != null && instrumentInfo.ProvidesCollisionalCrossSectionConverter)
+                {
+                    // Try to get a CCS value for this explicitly stated IM value - useful in reports
+                    var ccs = instrumentInfo.CCSFromIonMobility(imAndCCS.IonMobility, nodeGroup.PrecursorMz, nodeGroup.TransitionGroup.PrecursorCharge);
+                    imAndCCS = imAndCCS.ChangeCollisionalCrossSection(ccs);
+                }
                 // Now get the window width
                 var windowIM = TransitionSettings.IonMobilityFiltering.FilterWindowWidthCalculator.WidthAt(imAndCCS.IonMobility.Mobility.Value, ionMobilityMax);
                 return IonMobilityFilter.GetIonMobilityFilter(imAndCCS, windowIM);
@@ -1064,14 +1070,15 @@ namespace pwiz.Skyline.Model.DocSettings
             LibraryIonMobilityInfo libraryIonMobilityInfo,
             double ionMobilityMax)
         {
+            IonMobilityFilter result = null;
             foreach (var typedSequence in GetTypedSequences(nodePep.Target, nodePep.ExplicitMods, nodeGroup.PrecursorAdduct))
             {
                 var chargedPeptide = new LibKey(typedSequence.ModifiedSequence, typedSequence.Adduct); // N.B. this may actually be a small molecule
 
                 // Try for a ion mobility library value (.imsdb file)
-                var result = TransitionSettings.IonMobilityFiltering.GetIonMobilityFilter(chargedPeptide, nodeGroup.PrecursorMz,  ionMobilityFunctionsProvider, ionMobilityMax);
+                result = TransitionSettings.IonMobilityFiltering.GetIonMobilityFilter(chargedPeptide, nodeGroup.PrecursorMz,  ionMobilityFunctionsProvider, ionMobilityMax);
                 if (result != null && result.HasIonMobilityValue)
-                    return result;
+                    break;
 
                 // Try other sources - BiblioSpec, Chromatogram libraries etc
                 if (libraryIonMobilityInfo != null)
@@ -1080,9 +1087,20 @@ namespace pwiz.Skyline.Model.DocSettings
                     if (imAndCCS.IonMobility.HasValue && TransitionSettings.IonMobilityFiltering.UseSpectralLibraryIonMobilityValues)
                     {
                         var ionMobilityWindow = TransitionSettings.IonMobilityFiltering.FilterWindowWidthCalculator.WidthAt(imAndCCS.IonMobility.Mobility.Value, ionMobilityMax);
-                        return IonMobilityFilter.GetIonMobilityFilter(imAndCCS, ionMobilityWindow);
+                        result = IonMobilityFilter.GetIonMobilityFilter(imAndCCS, ionMobilityWindow);
+                        break;
                     }
                 }
+            }
+
+            if (result != null && result.HasIonMobilityValue && 
+                !result.CollisionalCrossSectionSqA.HasValue &&
+                ionMobilityFunctionsProvider != null && ionMobilityFunctionsProvider.ProvidesCollisionalCrossSectionConverter)
+            {
+                // Try to get a CCS value for this IM value - useful in reports
+                var ccs = ionMobilityFunctionsProvider.CCSFromIonMobility(result.IonMobility, nodeGroup.PrecursorMz, nodeGroup.TransitionGroup.PrecursorCharge);
+                result = result.ChangeCollisionCrossSection(ccs);
+                return result;
             }
             return IonMobilityFilter.EMPTY;
         }
