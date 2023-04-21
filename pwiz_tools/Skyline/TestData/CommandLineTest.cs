@@ -26,6 +26,7 @@ using System.Text;
 using System.Text.RegularExpressions;
 using System.Threading;
 using Microsoft.VisualStudio.TestTools.UnitTesting;
+using pwiz.Common.Chemistry;
 using pwiz.Common.Collections;
 using pwiz.Common.DataBinding;
 using pwiz.Common.SystemUtil;
@@ -35,6 +36,7 @@ using pwiz.Skyline.Model;
 using pwiz.Skyline.Model.Databinding;
 using pwiz.Skyline.Model.DocSettings;
 using pwiz.Skyline.Model.DocSettings.Extensions;
+using pwiz.Skyline.Model.Proteome;
 using pwiz.Skyline.Model.Results;
 using pwiz.Skyline.Model.Tools;
 using pwiz.Skyline.Properties;
@@ -302,25 +304,77 @@ namespace pwiz.SkylineTestData
             {
                 "--new=" + docPath,
                 "--full-scan-precursor-isotopes=Count",
-                "--full-scan-acquisition-method=DDA",
+                "--full-scan-precursor-analyzer=centroided",
+                "--full-scan-precursor-res=5",
+                "--full-scan-acquisition-method=DIA",
+                "--full-scan-isolation-scheme=All Ions",
+                "--full-scan-product-analyzer=centroided",
+                "--full-scan-product-res=5",
+                "--full-scan-rt-filter=scheduling_windows",
+                "--full-scan-rt-filter-tolerance=5",
                 "--tran-precursor-ion-charges=2,3,4",
                 "--tran-product-ion-charges=1,2",
-                "--tran-product-start-ion=ion 1",
-                "--tran-product-end-ion=last ion - 1"
+                "--tran-product-start-ion=" + TransitionFilter.StartFragmentFinder.ION_1.Label,
+                "--tran-product-end-ion=" + TransitionFilter.EndFragmentFinder.LAST_ION_MINUS_1.Label,
+                "--tran-product-clear-special-ions",
+                "--tran-use-dia-window-exclusion",
+                "--library-product-ions=6",
+                "--library-min-product-ions=6",
+                "--library-match-tolerance=" + 0.05 + "mz",
+                "--library-pick-product-ions=filter",
+                "--instrument-min-mz=42",
+                "--instrument-max-mz=2000",
+                "--instrument-min-time=" + 0.42,
+                "--instrument-max-time=" + 4.2,
+                "--instrument-dynamic-min-mz",
+                "--instrument-method-mz-tolerance=" + 0.42,
+                "--instrument-triggered-chromatograms",
+                "--import-fasta=" + fastaPath,
+                "--associate-proteins-group-proteins",
+                "--associate-proteins-shared-peptides=AssignedToBestProtein",
+                "--associate-proteins-minimal-protein-list",
+                "--associate-proteins-remove-subsets",
+                "--associate-proteins-min-peptides=2",
             };
 
             string output = RunCommand(settings);
             StringAssert.Contains(output, string.Format(Resources.CommandLine_NewSkyFile_FileAlreadyExists, docPath));
 
             output = RunCommand(settings.Append("--overwrite").ToArray());
-            StringAssert.Contains(output, string.Format("Deleting existing file '{0}'", docPath));
+            StringAssert.Contains(output, string.Format(Resources.CommandLine_NewSkyFile_Deleting_existing_file___0__, docPath));
             AssertEx.DoesNotContain(output, Resources.CommandLineTest_ConsoleAddFastaTest_Error);
             AssertEx.DoesNotContain(output, Resources.CommandLineTest_ConsoleAddFastaTest_Warning);
 
             SrmDocument doc = ResultsUtil.DeserializeDocument(docPath);
             Assert.AreEqual(FullScanPrecursorIsotopes.Count, doc.Settings.TransitionSettings.FullScan.PrecursorIsotopes);
-            Assert.AreEqual(FullScanAcquisitionMethod.DDA, doc.Settings.TransitionSettings.FullScan.AcquisitionMethod);
+            Assert.AreEqual(FullScanAcquisitionMethod.DIA, doc.Settings.TransitionSettings.FullScan.AcquisitionMethod);
+            Assert.AreEqual("All Ions", doc.Settings.TransitionSettings.FullScan.IsolationScheme.Name);
+            Assert.AreEqual(FullScanMassAnalyzerType.centroided, doc.Settings.TransitionSettings.FullScan.ProductMassAnalyzer);
+            Assert.AreEqual(FullScanMassAnalyzerType.centroided, doc.Settings.TransitionSettings.FullScan.PrecursorMassAnalyzer);
+            Assert.AreEqual(RetentionTimeFilterType.scheduling_windows, doc.Settings.TransitionSettings.FullScan.RetentionTimeFilterType);
+            Assert.AreEqual(5, doc.Settings.TransitionSettings.FullScan.RetentionTimeFilterLength);
             Assert.AreEqual("2, 3, 4", doc.Settings.TransitionSettings.Filter.PeptidePrecursorChargesString);
+            Assert.AreEqual(TransitionFilter.StartFragmentFinder.ION_1.Label, doc.Settings.TransitionSettings.Filter.StartFragmentFinderLabel.Label);
+            Assert.AreEqual(TransitionFilter.EndFragmentFinder.LAST_ION_MINUS_1.Label, doc.Settings.TransitionSettings.Filter.EndFragmentFinderLabel.Label);
+            Assert.AreEqual(0, doc.Settings.TransitionSettings.Filter.MeasuredIons.Count);
+            Assert.AreEqual(true, doc.Settings.TransitionSettings.Filter.ExclusionUseDIAWindow);
+            Assert.AreEqual(6, doc.Settings.TransitionSettings.Libraries.IonCount);
+            Assert.AreEqual(6, doc.Settings.TransitionSettings.Libraries.MinIonCount);
+            Assert.AreEqual(new MzTolerance(0.05), doc.Settings.TransitionSettings.Libraries.IonMatchMzTolerance);
+            Assert.AreEqual(TransitionLibraryPick.filter, doc.Settings.TransitionSettings.Libraries.Pick);
+            Assert.AreEqual(42, doc.Settings.TransitionSettings.Instrument.MinMz);
+            Assert.AreEqual(2000, doc.Settings.TransitionSettings.Instrument.MaxMz);
+            Assert.AreEqual(0, doc.Settings.TransitionSettings.Instrument.MinTime);
+            Assert.AreEqual(5, doc.Settings.TransitionSettings.Instrument.MaxTime);
+            Assert.AreEqual(true, doc.Settings.TransitionSettings.Instrument.IsDynamicMin);
+            Assert.AreEqual(0.42, doc.Settings.TransitionSettings.Instrument.MzMatchTolerance);
+            Assert.AreEqual(true, doc.Settings.TransitionSettings.Instrument.TriggeredAcquisition);
+            Assert.AreEqual(true, doc.Settings.PeptideSettings.ProteinAssociationSettings.GroupProteins);
+            Assert.AreEqual(ProteinAssociation.SharedPeptides.AssignedToBestProtein, doc.Settings.PeptideSettings.ProteinAssociationSettings.SharedPeptides);
+            Assert.AreEqual(true, doc.Settings.PeptideSettings.ProteinAssociationSettings.FindMinimalProteinList);
+            Assert.AreEqual(true, doc.Settings.PeptideSettings.ProteinAssociationSettings.RemoveSubsetProteins);
+            Assert.AreEqual(2, doc.Settings.PeptideSettings.ProteinAssociationSettings.MinPeptidesPerProtein);
+
         }
 
         [TestMethod]

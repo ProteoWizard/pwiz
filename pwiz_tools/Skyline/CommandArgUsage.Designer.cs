@@ -403,7 +403,7 @@ namespace pwiz.Skyline {
         }
         
         /// <summary>
-        ///   Looks up a localized string similar to The isolation scheme used when extracting from full scan data..
+        ///   Looks up a localized string similar to The isolation scheme used when extracting from full scan DIA data..
         /// </summary>
         internal static string _full_scan_isolation_scheme {
             get {
@@ -412,7 +412,7 @@ namespace pwiz.Skyline {
         }
         
         /// <summary>
-        ///   Looks up a localized string similar to The mass analyzer for precursor scans..
+        ///   Looks up a localized string similar to The mass analyzer for precursor scans, or &quot;centroided&quot; to use centroid data instead of profile..
         /// </summary>
         internal static string _full_scan_precursor_analyzer {
             get {
@@ -421,7 +421,7 @@ namespace pwiz.Skyline {
         }
         
         /// <summary>
-        ///   Looks up a localized string similar to Skip SIM scans when extracting from full scan data..
+        ///   Looks up a localized string similar to Skip SIM scans when extracting from full scan MS1 data..
         /// </summary>
         internal static string _full_scan_precursor_ignore_sim {
             get {
@@ -430,7 +430,7 @@ namespace pwiz.Skyline {
         }
         
         /// <summary>
-        ///   Looks up a localized string similar to The isotope enrichment settings to use for extracting from full scan data..
+        ///   Looks up a localized string similar to The name of the isotope enrichment settings preset to use for extracting from full scan data. If none are available, use the GUI Transition Settings to add a new preset..
         /// </summary>
         internal static string _full_scan_precursor_isotope_enrichment {
             get {
@@ -439,7 +439,7 @@ namespace pwiz.Skyline {
         }
         
         /// <summary>
-        ///   Looks up a localized string similar to How precursor isotope intensities are extracted from full scan data..
+        ///   Looks up a localized string similar to How the precursor threshold is applied when extracting intensities from full scan data..
         /// </summary>
         internal static string _full_scan_precursor_isotopes {
             get {
@@ -475,7 +475,7 @@ namespace pwiz.Skyline {
         }
         
         /// <summary>
-        ///   Looks up a localized string similar to The mass analyzer for product scans..
+        ///   Looks up a localized string similar to The mass analyzer for product scans, or &quot;centroided&quot; to use centroid data instead of profile..
         /// </summary>
         internal static string _full_scan_product_analyzer {
             get {
@@ -763,7 +763,7 @@ namespace pwiz.Skyline {
         }
         
         /// <summary>
-        ///   Looks up a localized string similar to Skip sources used to build a library .
+        ///   Looks up a localized string similar to Don&apos;t automatically import chromatograms from the result files used to build a library..
         /// </summary>
         internal static string _import_search_exclude_library_sources {
             get {
@@ -871,9 +871,7 @@ namespace pwiz.Skyline {
         }
         
         /// <summary>
-        ///   Looks up a localized string similar to If set, minimum m/z value for product ions is calculate
-        ///dynamically from the precursor m/z using a specific equation
-        ///provided by Thermo-Scientific for LTQ instruments.
+        ///   Looks up a localized string similar to If set, minimum m/z value for product ions is calculate dynamically from the precursor m/z using a specific equation provided by Thermo-Scientific for LTQ instruments.
         /// </summary>
         internal static string _instrument_dynamic_min_mz {
             get {
@@ -891,9 +889,7 @@ namespace pwiz.Skyline {
         }
         
         /// <summary>
-        ///   Looks up a localized string similar to Maximum time allowed in chromatograms regardless of how
-        ///they were acquired.  Setting this can save memory and disk space
-        ///that might be used on uninteresting parts of the gradient..
+        ///   Looks up a localized string similar to Maximum time allowed in chromatograms regardless of how they were acquired.  Setting this can save memory and disk space that might be used on uninteresting parts of the gradient..
         /// </summary>
         internal static string _instrument_max_time {
             get {
@@ -902,9 +898,7 @@ namespace pwiz.Skyline {
         }
         
         /// <summary>
-        ///   Looks up a localized string similar to Maximum delta for matching instrument method transition m/z values
-        ///with predicted transition m/z values.
-        ///(Applies only to SRM and targeted-MS/MS data.).
+        ///   Looks up a localized string similar to Maximum delta for matching instrument method transition m/z values with predicted transition m/z values. (Applies only to SRM and targeted-MS/MS data.).
         /// </summary>
         internal static string _instrument_method_mz_tolerance {
             get {
@@ -922,9 +916,7 @@ namespace pwiz.Skyline {
         }
         
         /// <summary>
-        ///   Looks up a localized string similar to Minimum time allowed in chromatograms regardless of how
-        ///they were acquired.  Setting this can save memory and disk space
-        ///that might be used on uninteresting parts of the gradient..
+        ///   Looks up a localized string similar to Minimum time allowed in chromatograms regardless of how they were acquired.  Setting this can save memory and disk space that might be used on uninteresting parts of the gradient..
         /// </summary>
         internal static string _instrument_min_time {
             get {
@@ -933,8 +925,7 @@ namespace pwiz.Skyline {
         }
         
         /// <summary>
-        ///   Looks up a localized string similar to Indicates that there may be large gaps in the retention times when spectra were acquired for certain analytes.
-        ///Peaks will be truncated to not overlap with these gaps and background subtraction will not be performed..
+        ///   Looks up a localized string similar to Indicates that there may be large gaps in the retention times when spectra were acquired for certain analytes. Peaks will be truncated to not overlap with these gaps and background subtraction will not be performed..
         /// </summary>
         internal static string _instrument_triggered_chromatograms {
             get {
@@ -1069,7 +1060,7 @@ namespace pwiz.Skyline {
         }
         
         /// <summary>
-        ///   Looks up a localized string similar to Create a new document..
+        ///   Looks up a localized string similar to Create a new document using the current Skyline settings..
         /// </summary>
         internal static string _new {
             get {
@@ -1087,7 +1078,7 @@ namespace pwiz.Skyline {
         }
         
         /// <summary>
-        ///   Looks up a localized string similar to Overwrite instead of producing an error when a --new filepath exists..
+        ///   Looks up a localized string similar to Overwrite the filepath specified by --new if it already exists, instead of producing an error..
         /// </summary>
         internal static string _overwrite {
             get {

@@ -830,34 +830,34 @@ greater peak area.</value>
     <value>The acquisition method for extracting from full scan data.</value>
   </data>
   <data name="_full_scan_isolation_scheme" xml:space="preserve">
-    <value>The isolation scheme used when extracting from full scan data.</value>
+    <value>The isolation scheme used when extracting from full scan DIA data.</value>
   </data>
   <data name="_full_scan_precursor_analyzer" xml:space="preserve">
-    <value>The mass analyzer for precursor scans.</value>
+    <value>The mass analyzer for precursor scans, or "centroided" to use centroid data instead of profile.</value>
   </data>
   <data name="_full_scan_precursor_ignore_sim" xml:space="preserve">
-    <value>Skip SIM scans when extracting from full scan data.</value>
+    <value>Skip SIM scans when extracting from full scan MS1 data.</value>
   </data>
   <data name="_full_scan_precursor_isotopes" xml:space="preserve">
-    <value>How precursor isotope intensities are extracted from full scan data.</value>
+    <value>How the precursor threshold is applied when extracting intensities from full scan data.</value>
   </data>
   <data name="_full_scan_precursor_isotope_enrichment" xml:space="preserve">
-    <value>The isotope enrichment settings to use for extracting from full scan data.</value>
+    <value>The name of the isotope enrichment settings preset to use for extracting from full scan data. If none are available, use the GUI Transition Settings to add a new preset.</value>
   </data>
   <data name="_full_scan_precursor_threshold" xml:space="preserve">
     <value>The number of isotopes or percentage of isotope intensity to extract from full scan data.</value>
   </data>
   <data name="_full_scan_product_analyzer" xml:space="preserve">
-    <value>The mass analyzer for product scans.</value>
+    <value>The mass analyzer for product scans, or "centroided" to use centroid data instead of profile.</value>
   </data>
   <data name="_import_search_exclude_library_sources" xml:space="preserve">
-    <value>Skip sources used to build a library </value>
+    <value>Don't automatically import chromatograms from the result files used to build a library.</value>
   </data>
   <data name="_new" xml:space="preserve">
-    <value>Create a new document.</value>
+    <value>Create a new document using the current Skyline settings.</value>
   </data>
   <data name="_overwrite" xml:space="preserve">
-    <value>Overwrite instead of producing an error when a --new filepath exists.</value>
+    <value>Overwrite the filepath specified by --new if it already exists, instead of producing an error.</value>
   </data>
   <data name="_tran_product_end_ion" xml:space="preserve">
     <value>The biggest product ion to create a transition for.</value>

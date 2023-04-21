@@ -966,7 +966,7 @@ namespace pwiz.Skyline
             }
             catch (Exception x)
             {
-                _out.WriteLine("Error: Failed attempting to change the transition library settings.");
+                _out.WriteLine(Resources.CommandLine_SetLibrarySettings_Error__Failed_attempting_to_change_the_transition_library_settings_);
                 _out.WriteLine(x.Message);
                 return false;
             }
@@ -987,9 +987,9 @@ namespace pwiz.Skyline
                     if (commandArgs.InstrumentMethodMatchTolerance.HasValue)
                         f = f.ChangeMzMatchTolerance(commandArgs.InstrumentMethodMatchTolerance.Value);
                     if (commandArgs.InstrumentMinTimeMinutes.HasValue)
-                        f = f.ChangeMinMz((int) Math.Floor(commandArgs.InstrumentMinTimeMinutes.Value));
+                        f = f.ChangeMinTime((int) Math.Floor(commandArgs.InstrumentMinTimeMinutes.Value));
                     if (commandArgs.InstrumentMaxTimeMinutes.HasValue)
-                        f = f.ChangeMaxMz((int) Math.Ceiling(commandArgs.InstrumentMaxTimeMinutes.Value));
+                        f = f.ChangeMaxTime((int) Math.Ceiling(commandArgs.InstrumentMaxTimeMinutes.Value));
                     if (commandArgs.InstrumentIsTriggeredChromatogramAcquisition.HasValue)
                         f = f.ChangeTriggeredAcquisition(commandArgs.InstrumentIsTriggeredChromatogramAcquisition.Value);
                     return f;
@@ -998,7 +998,7 @@ namespace pwiz.Skyline
             }
             catch (Exception x)
             {
-                _out.WriteLine("Error: Failed attempting to change the transition instrument settings.");
+                _out.WriteLine(Resources.CommandLine_SetInstrumentSettings_Error__Failed_attempting_to_change_the_transition_instrument_settings_);
                 _out.WriteLine(x.Message);
                 return false;
             }
@@ -1047,24 +1047,24 @@ namespace pwiz.Skyline
                     var precursorIsotopes = commandArgs.FullScanPrecursorIsotopes.Value;
                     double? threshold = commandArgs.FullScanPrecursorThreshold;
                     IsotopeEnrichments isotopeEnrichments = null;
-                    _out.WriteLine("Changing full scan precursor isotope peaks to {0}", precursorIsotopes);
+                    _out.WriteLine(Resources.CommandLine_SetFullScanSettings_Changing_full_scan_precursor_isotope_peaks_to__0_, precursorIsotopes);
 
                     if (precursorIsotopes == FullScanPrecursorIsotopes.Count)
                     {
                         threshold ??= (double?) TransitionFullScan.DEFAULT_ISOTOPE_COUNT;
-                        _out.WriteLine("Changing full scan precursor isotope peaks count to {0}", threshold);
+                        _out.WriteLine(Resources.CommandLine_SetFullScanSettings_Changing_full_scan_precursor_isotope_peaks_count_to__0_, threshold);
                     }
                     else if (precursorIsotopes == FullScanPrecursorIsotopes.Percent)
                     {
                         threshold ??= (double?) TransitionFullScan.DEFAULT_ISOTOPE_PERCENT;
-                        _out.WriteLine("Changing full scan precursor isotope peak percentage to {0}", threshold);
+                        _out.WriteLine(Resources.CommandLine_SetFullScanSettings_Changing_full_scan_precursor_isotope_peak_percentage_to__0_, threshold);
                     }
 
                     if (!string.IsNullOrEmpty(commandArgs.FullScanPrecursorIsotopeEnrichment))
                     {
                         isotopeEnrichments = Settings.Default.IsotopeEnrichmentsList.FirstOrDefault(standard =>
                             Equals(standard.Name, commandArgs.FullScanPrecursorIsotopeEnrichment));
-                        _out.WriteLine("Changing full scan precursor isotope enrichment to {0}", isotopeEnrichments);
+                        _out.WriteLine(Resources.CommandLine_SetFullScanSettings_Changing_full_scan_precursor_isotope_enrichment_to__0_, isotopeEnrichments);
 
                     }
 
@@ -1072,7 +1072,7 @@ namespace pwiz.Skyline
                 }
                 if (commandArgs.FullScanPrecursorIgnoreSimScans.HasValue)
                 {
-                    _out.WriteLine("Changing full scan ignore SIM scans to {0}", commandArgs.FullScanPrecursorIgnoreSimScans);
+                    _out.WriteLine(Resources.CommandLine_SetFullScanSettings_Changing_full_scan_ignore_SIM_scans_to__0_, commandArgs.FullScanPrecursorIgnoreSimScans);
                     newSettings = newSettings.ChangeIgnoreSimScans(commandArgs.FullScanPrecursorIgnoreSimScans.Value);
                 }
 
@@ -1100,10 +1100,10 @@ namespace pwiz.Skyline
                     }
 
                     if (commandArgs.FullScanAcquisitionMethod == FullScanAcquisitionMethod.DIA)
-                        _out.WriteLine("Changing full scan acquisition method to {0} with isolation scheme '{1}'",
+                        _out.WriteLine(Resources.CommandLine_SetFullScanSettings_Changing_full_scan_acquisition_method_to__0__with_isolation_scheme___1__,
                             commandArgs.FullScanAcquisitionMethod, isolationSchemeName);
                     else
-                        _out.WriteLine("Changing full scan acquisition method to {0}", commandArgs.FullScanAcquisitionMethod);
+                        _out.WriteLine(Resources.CommandLine_SetFullScanSettings_Changing_full_scan_acquisition_method_to__0_, commandArgs.FullScanAcquisitionMethod);
 
                     newSettings = newSettings.ChangeAcquisitionMethod(commandArgs.FullScanAcquisitionMethod, isolationScheme);
                 }
@@ -1114,9 +1114,9 @@ namespace pwiz.Skyline
                     double? resMz = commandArgs.FullScanPrecursorResMz;
                     var precursorAnalyzer = commandArgs.FullScanPrecursorMassAnalyzerType;
                     if (precursorAnalyzer.HasValue)
-                        _out.WriteLine("Changing full scan precursor mass analyzer to {0}", precursorAnalyzer);
+                        _out.WriteLine(Resources.CommandLine_SetFullScanSettings_Changing_full_scan_precursor_mass_analyzer_to__0_, precursorAnalyzer);
 
-                    if (!_doc.Settings.TransitionSettings.FullScan.IsHighResPrecursor)
+                    if (commandArgs.FullScanPrecursorRes.HasValue && !_doc.Settings.TransitionSettings.FullScan.IsHighResPrecursor)
                         _out.WriteLine(Resources.CommandLine_SetFullScanSettings_Changing_full_scan_precursor_resolution_to__0__, res);
                     else if (_doc.Settings.TransitionSettings.FullScan.IsCentroidedMs)
                         _out.WriteLine(Resources.CommandLine_SetFullScanSettings_Changing_full_scan_precursor_mass_accuracy_to__0__ppm_, res);
@@ -1136,9 +1136,9 @@ namespace pwiz.Skyline
                     double? resMz = commandArgs.FullScanProductResMz;
                     var productAnalyzer = commandArgs.FullScanProductMassAnalyzerType;
                     if (productAnalyzer.HasValue)
-                        _out.WriteLine("Changing full scan product mass analyzer to {0}", productAnalyzer);
+                        _out.WriteLine(Resources.CommandLine_SetFullScanSettings_Changing_full_scan_product_mass_analyzer_to__0_, productAnalyzer);
 
-                    if (!_doc.Settings.TransitionSettings.FullScan.IsHighResProduct)
+                    if (commandArgs.FullScanProductRes.HasValue && !_doc.Settings.TransitionSettings.FullScan.IsHighResProduct)
                         _out.WriteLine(Resources.CommandLine_SetFullScanSettings_Changing_full_scan_product_resolution_to__0__, res);
                     else if (_doc.Settings.TransitionSettings.FullScan.IsCentroidedMsMs)
                         _out.WriteLine(Resources.CommandLine_SetFullScanSettings_Changing_full_scan_product_mass_accuracy_to__0__ppm_, res);
@@ -1223,13 +1223,13 @@ namespace pwiz.Skyline
                 {
                     if (!overwrite)
                         throw new IOException(string.Format(Resources.CommandLine_NewSkyFile_FileAlreadyExists, skylineFile));
-                    _out.WriteLine("Deleting existing file '{0}'", skylineFile);
+                    _out.WriteLine(Resources.CommandLine_NewSkyFile_Deleting_existing_file___0__, skylineFile);
                     File.Delete(skylineFile);
 
                     string skydFile = Path.ChangeExtension(skylineFile, ChromatogramCache.EXT);
                     if (File.Exists(skydFile))
                     {
-                        _out.WriteLine("Deleting existing file '{0}'", skydFile);
+                        _out.WriteLine(Resources.CommandLine_NewSkyFile_Deleting_existing_file___0__, skydFile);
                         File.Delete(skydFile);
                     }
                 }
@@ -2135,7 +2135,7 @@ namespace pwiz.Skyline
         {
             try
             {
-                _out.WriteLine("Associating peptides with proteins");
+                _out.WriteLine(Resources.CommandLine_AssociateProteins_Associating_peptides_with_proteins);
                 var progressMonitor = new CommandProgressMonitor(_out, new ProgressStatus(String.Empty));
                 var proteinAssociation = new ProteinAssociation(Document, progressMonitor);
                 proteinAssociation.UseFastaFile(commandArgs.FastaPath, DigestProteinToPeptides, progressMonitor);
@@ -2150,7 +2150,7 @@ namespace pwiz.Skyline
             }
             catch (Exception x)
             {
-                _out.WriteLine("Failed to associate proteins");
+                _out.WriteLine(Resources.CommandLine_AssociateProteins_Failed_to_associate_proteins);
                 _out.WriteLine(x.Message);
                 return false;
             }
