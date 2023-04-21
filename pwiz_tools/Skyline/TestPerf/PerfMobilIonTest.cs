@@ -90,7 +90,6 @@ namespace TestPerf
             var editMoleculeDlgA = ShowDialog<EditCustomMoleculeDlg>(SkylineWindow.ModifySmallMoleculeTransitionGroup);
             RunUI(() =>
             {
-                // Test the "set" part of "Issue 371: Small molecules: need to be able to import and/or set CE, RT and DT for individual precursors and products"
                 editMoleculeDlgA.IonMobility = 308.71;
                 editMoleculeDlgA.IonMobilityUnits = eIonMobilityUnits.drift_time_msec;
                 editMoleculeDlgA.CollisionalCrossSectionSqA = null;

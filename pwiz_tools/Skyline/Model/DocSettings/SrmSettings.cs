@@ -1100,12 +1100,9 @@ namespace pwiz.Skyline.Model.DocSettings
                 // Try to get a CCS value for this IM value - useful in reports
                 var ccs = ionMobilityFunctionsProvider.CCSFromIonMobility(result.IonMobility, nodeGroup.PrecursorMz, nodeGroup.TransitionGroup.PrecursorCharge);
                 result = result.ChangeCollisionCrossSection(ccs);
-                return result;
             }
-            return IonMobilityFilter.EMPTY;
+            return result ?? IonMobilityFilter.EMPTY;
         }
-
-
 
         public bool TryGetRetentionTimes(Target sequence, Adduct adduct, ExplicitMods mods, MsDataFileUri filePath,
             out IsotopeLabelType type, out double[] retentionTimes)
