@@ -585,6 +585,7 @@
     <Compile Include="Controls\Databinding\RowActions\RowAction.cs" />
     <Compile Include="Model\DdaSearch\MsFraggerSearchEngine.cs" />
     <Compile Include="Model\DiaUmpireDdaConverter.cs" />
+    <Compile Include="Model\GroupComparison\MsLevelOption.cs" />
     <Compile Include="Model\DocSettings\AbsoluteQuantification\ValueStatus.cs" />
     <Compile Include="Model\DocSettings\AnnotationCalculator.cs" />
     <Compile Include="Model\DocSettings\AnnotationExpression.cs" />
@@ -819,8 +820,12 @@
       <DependentUpon>DDASearchControl.cs</DependentUpon>
     </Compile>
     <Compile Include="Util\DocumentCancellationToken.cs" />
+    <Compile Include="Util\Extensions\MassTypeLocalizationExtension.cs" />
     <Compile Include="Util\FormGroup.cs" />
+    <Compile Include="Util\HillSystemOrdering.cs" />
+    <Compile Include="Util\ParsedMolecule.cs" />
     <Compile Include="Util\PersistentString.cs" />
+    <Compile Include="Util\TypedMass.cs" />
     <Compile Include="Util\UiModes.cs" />
     <Compile Include="ToolsUI\ColorGrid.cs">
       <SubType>UserControl</SubType>
@@ -2424,6 +2429,7 @@
     </EmbeddedResource>
     <EmbeddedResource Include="Controls\GroupComparison\EditGroupComparisonDlg.resx">
       <DependentUpon>EditGroupComparisonDlg.cs</DependentUpon>
+      <SubType>Designer</SubType>
     </EmbeddedResource>
     <EmbeddedResource Include="Controls\GroupComparison\EditGroupComparisonDlg.zh-CHS.resx">
       <DependentUpon>EditGroupComparisonDlg.cs</DependentUpon>

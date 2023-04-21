@@ -578,7 +578,10 @@ namespace TestRunnerLib
             var msAmandaTmpDir = Path.Combine(Path.GetTempPath(), @"~SK_MSAmanda" /* must match MSAmandaSearchWrapper.MS_AMANDA_TMP */);
             try
             {
-                Directory.Delete(msAmandaTmpDir, true);
+                if (Directory.Exists(msAmandaTmpDir))
+                {
+                    Directory.Delete(msAmandaTmpDir, true);
+                }
             }
             catch
             {
@@ -1118,7 +1121,7 @@ namespace TestRunnerLib
 
             p?.WaitForExit();
             if (p == null || p.ExitCode != 0)
-                throw new InvalidOperationException($"{message}\r\n\r\nDetails:\r\n'{command} {args}' returned an error ({output.ToString().Trim()});");
+                throw new InvalidOperationException($"{message}\r\n\r\nDetails:\r\n'\"{command}\" {args}' returned an error ({output.ToString().Trim()});");
              
             return output.ToString();
         }

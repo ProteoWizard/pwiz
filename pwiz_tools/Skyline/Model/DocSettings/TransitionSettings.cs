@@ -742,7 +742,7 @@ namespace pwiz.Skyline.Model.DocSettings
 
         public static ImmutableList<Adduct> MakeChargeCollection(IList<Adduct> charges)
         {
-            var arrayCharges = charges.ToArrayStd();
+            var arrayCharges = charges.Select(adduct => adduct.Unlabeled).Distinct().ToArray(); // Ignore any isotope labeling in small mol adducts
             Array.Sort(arrayCharges);
             return MakeReadOnly(arrayCharges);
         }

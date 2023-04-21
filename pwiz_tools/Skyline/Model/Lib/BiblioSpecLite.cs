@@ -797,7 +797,7 @@ namespace pwiz.Skyline.Model.Lib
                                 TypedMass monoMass = precursorAdduct.MassFromMz(precursorMz, MassType.Monoisotopic);
                                 TypedMass avgMass = precursorAdduct.MassFromMz(precursorMz, MassType.Average);
                                 smallMoleculeLibraryAttributes = SmallMoleculeLibraryAttributes.Create(moleculeName,
-                                    null, monoMass, avgMass, inChiKey, otherKeys);
+                                    ParsedMolecule.Create(monoMass, avgMass), inChiKey, otherKeys);
                             }
                             else
                             {
@@ -1305,6 +1305,10 @@ namespace pwiz.Skyline.Model.Lib
 
         protected override SpectrumPeaksInfo.MI[] ReadSpectrum(BiblioLiteSpectrumInfo info)
         {
+            if (info.NumPeaks == 0)
+            {
+                return Array.Empty<SpectrumPeaksInfo.MI>();
+            }
             return _sqliteConnection.ExecuteWithConnection(connection =>
             {
                 using (SQLiteCommand select = new SQLiteCommand(_sqliteConnection.Connection))
@@ -1425,6 +1429,10 @@ namespace pwiz.Skyline.Model.Lib
 
         private SpectrumPeaksInfo.MI[] ReadPeaks(SQLiteDataReader reader, int numPeaks, int refSpectraId, PooledSqliteConnection connection)
         {
+            if (numPeaks == 0)
+            {
+                return Array.Empty<SpectrumPeaksInfo.MI>();
+            }
             const int sizeMz = sizeof(double);
             const int sizeInten = sizeof(float);
 
@@ -1935,7 +1943,7 @@ namespace pwiz.Skyline.Model.Lib
                     {
                         string filePath = reader.GetString(iFilePath);
                         int redundantId = iRedundantId < 0 ? -1 : reader.GetInt32(iRedundantId);
-                        double retentionTime = reader.GetDouble(iRetentionTime);
+                        var retentionTime = UtilDB.GetNullableDouble(reader, iRetentionTime);
                         bool isBest = !hasRetentionTimesTable || reader.GetInt16(iBestSpectrum) != 0;
 
                         IonMobilityAndCCS ionMobilityInfo = IonMobilityAndCCS.EMPTY;

@@ -122,7 +122,7 @@ namespace pwiz.Skyline.Model
 
         protected override IList<DocNode> OrderedChildren(IList<DocNode> children)
         {
-            if (IsCustomIon && children.Any() && !SrmDocument.IsConvertedFromProteomicTestDocNode(this))
+            if (IsCustomIon && children.Count > 1 && !SrmDocument.IsConvertedFromProteomicTestDocNode(this))
             {
                 // Enforce order that facilitates Isotope ratio calculation, especially in cases where all we have is mz
                 return children.OrderBy(t => (TransitionDocNode)t, new TransitionDocNode.CustomIonEquivalenceComparer()).ToArray();
@@ -764,7 +764,7 @@ namespace pwiz.Skyline.Model
             var seq = TransitionGroup.Peptide.Target;
             var adduct = TransitionGroup.PrecursorAdduct;
             IsotopeLabelType labelType = TransitionGroup.LabelType;
-            string isotopicFormula = null;
+            ParsedMolecule isotopicFormula = null;
             double mz;
             IPrecursorMassCalc calc;
             if (IsCustomIon)
@@ -798,7 +798,7 @@ namespace pwiz.Skyline.Model
                 }
                 else if (isotopicFormula != null)
                 {
-                    massDist = calc.GetMZDistributionFromFormula(isotopicFormula, adduct, fullScan.IsotopeAbundances);
+                    massDist = calc.GetMZDistribution(isotopicFormula.GetMoleculeMassOffset(), adduct, fullScan.IsotopeAbundances);
                 }
                 else
                 {
@@ -839,22 +839,18 @@ namespace pwiz.Skyline.Model
             return IsotopeDistInfo.MakeIsotopeDistInfo(massDist, monoMassH, PrecursorAdduct, settings.TransitionSettings.FullScan);
         }
 
-        public MoleculeMassOffset GetNeutralFormula(SrmSettings settings, ExplicitMods mods)
+        public ParsedMolecule GetNeutralFormula(SrmSettings settings, ExplicitMods mods)
         {
             if (IsCustomIon)
             {
-                if (string.IsNullOrEmpty(CustomMolecule.Formula))
-                {
-                    return new MoleculeMassOffset(Molecule.Empty, CustomMolecule.MonoisotopicMass, CustomMolecule.AverageMass);
-                }
-                return new MoleculeMassOffset(Molecule.ParseExpression(CustomMolecule.Formula), 0, 0);
+                return CustomMolecule.ParsedMolecule;
             }
             IPrecursorMassCalc massCalc = settings.GetPrecursorCalc(LabelType, mods);
-            MoleculeMassOffset moleculeMassOffset = new MoleculeMassOffset(Molecule.Parse(massCalc.GetMolecularFormula(Peptide.Sequence)), 0, 0);
+            var moleculeMassOffset = massCalc.GetMolecularFormula(Peptide.Sequence);
             moleculeMassOffset = moleculeMassOffset.Plus((mods?.CrosslinkStructure ?? CrosslinkStructure.EMPTY)
                 .GetNeutralFormula(settings, LabelType));
             
-            return moleculeMassOffset;
+            return ParsedMolecule.Create(moleculeMassOffset);
         }
 
         private static MassDistribution ShiftMzDistribution(MassDistribution massDist, int massShift)
@@ -958,7 +954,7 @@ namespace pwiz.Skyline.Model
                             var tran = nodeTranResult.Transition;
                             var annotations = nodeTranResult.Annotations;
                             var explicitValues = nodeTranResult.ExplicitValues;
-                            var losses = nodeTranResult.Losses;
+                            var losses = nodeTran.Losses;
                             TypedMass massH = settingsNew.RecalculateTransitionMass(mods, nodeTran, isotopeDist);
                             var quantInfo = TransitionDocNode.TransitionQuantInfo
                                 .GetTransitionQuantInfo(nodeTranResult.ComplexFragmentIon, isotopeDist, Transition.CalcMass(massH, losses), transitionRanks)
@@ -968,12 +964,11 @@ namespace pwiz.Skyline.Model
                             var results = nodeTranResult.Results;
                             if (mods != null && mods.HasCrosslinks)
                             {
-                                crosslinkBuilder = crosslinkBuilder ??
-                                                   new CrosslinkBuilder(settingsNew, TransitionGroup.Peptide, mods,
-                                                       LabelType);
+                                crosslinkBuilder ??= new CrosslinkBuilder(settingsNew, TransitionGroup.Peptide, mods,
+                                    LabelType);
 
                                 nodeTranResult = crosslinkBuilder.MakeTransitionDocNode(
-                                    nodeTranResult.ComplexFragmentIon, isotopeDist, annotations, quantInfo,
+                                    nodeTran.ComplexFragmentIon, isotopeDist, annotations, quantInfo,
                                     explicitValues, results);
                             }
                             else
@@ -982,7 +977,16 @@ namespace pwiz.Skyline.Model
                                     massH, quantInfo, explicitValues, results);
                             }
 
-                            Helpers.AssignIfEquals(ref nodeTranResult, (TransitionDocNode) existing);
+                            // Reuse the object "existing" if it's the same as nodeTranResult
+                            if (Equals(nodeTranResult, existing))
+                            {
+                                // But be careful of the fact that "TransitionLosses.Equals" only compares the masses,
+                                // so also make sure that the TransitionLoss objects in the list are the same
+                                if (Equals(nodeTranResult.Losses?.Losses, ((TransitionDocNode)existing).Losses?.Losses))
+                                {
+                                    nodeTranResult = (TransitionDocNode) existing;
+                                }
+                            }
                         }
                     }
                     // Add the new node

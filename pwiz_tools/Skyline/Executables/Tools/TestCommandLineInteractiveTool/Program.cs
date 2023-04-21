@@ -53,6 +53,10 @@ namespace TestCommandLineInteractiveTool
                     {
                         new DeleteSelectedNode(toolClient).RunCommand();
                     }
+                    else if (commandName == "ShrinkPeakBoundaries")
+                    {
+                        new ShrinkPeakBoundaries(toolClient).RunCommand();
+                    }
                     else
                     {
                         Console.Error.WriteLine("Unknown command: {0}", commandName);
