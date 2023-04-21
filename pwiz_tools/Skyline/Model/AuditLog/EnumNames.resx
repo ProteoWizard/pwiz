@@ -687,9 +687,6 @@
   <data name="MsLevelOption_default" xml:space="preserve">
     <value>Default</value>
   </data>
-  <data name="Simple_none" xml:space="preserve">
-    <value>None</value>
-  </data>
   <data name="Special_maximum" xml:space="preserve">
     <value>Maximum</value>
   </data>

@@ -19,7 +19,11 @@
 
 using System.Diagnostics;
 
+// This source file is both used by "ToolServiceTest" and by the test external tool
+// pwiz_tools\Skyline\Executables\Tools\TestInteractiveTool
 #pragma warning disable CS0612 // "obsolete"
+
+// ReSharper disable once CheckNamespace
 namespace SkylineTool
 {
     public interface ITestTool
@@ -40,7 +44,7 @@ namespace SkylineTool
         Version TestVersion();
         string TestDocumentPath();
         int GetDocumentChangeCount();
-        int Quit();
+        void Quit();
     }
 
     public class TestToolClient : RemoteClient, ITestTool
@@ -50,19 +54,12 @@ namespace SkylineTool
         {
         }
 
-        public void Exit()
+        public bool Exit()
         {
-            var processId = Quit();
+            var processId = GetProcessId();
             var process = Process.GetProcessById(processId);
-            process.Kill();
-            try
-            {
-                process.WaitForExit();
-            }
-// ReSharper disable once EmptyGeneralCatchClause
-            catch
-            {
-            }
+            Quit();
+            return process.WaitForExit(10000);
         }
 
         public float TestFloat(float data)
@@ -135,9 +132,14 @@ namespace SkylineTool
             return RemoteCallFunction(GetDocumentChangeCount);
         }
 
-        public int Quit()
+        public int GetProcessId()
         {
-            return RemoteCallFunction(Quit);
+            return RemoteCallFunction(GetProcessId);
+        }
+
+        public void Quit()
+        {
+            RemoteCall(Quit);
         }
     }
 }
