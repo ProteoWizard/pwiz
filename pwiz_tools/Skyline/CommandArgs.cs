@@ -1227,7 +1227,7 @@ namespace pwiz.Skyline
         public static readonly Argument ARG_AP_MIN_PEPTIDES = new Argument(@"associate-proteins-min-peptides", INT_VALUE,
             (c, p) => c.AssociateProteinsMinPeptidesPerProtein = p.ValueInt) { WrapValue = true };
 
-        private static readonly ArgumentGroup GROUP_ASSOCIATE_PROTEINS = new ArgumentGroup(() => "Associating peptides with proteins", false,
+        private static readonly ArgumentGroup GROUP_ASSOCIATE_PROTEINS = new ArgumentGroup(() => Resources.CommandLine_AssociateProteins_Associating_peptides_with_proteins, false,
             ARG_AP_GROUP_PROTEINS, ARG_AP_SHARED_PEPTIDES, ARG_AP_MINIMAL_LIST, ARG_AP_MIN_PEPTIDES, ARG_AP_REMOVE_SUBSETS)
             { LeftColumnWidth = 45 };
 
@@ -1310,7 +1310,7 @@ namespace pwiz.Skyline
                 @"full-scan-isolation-scheme",
                 () => string.Join(TextUtil.SEPARATOR_CSV + @" ",
                     GetDisplayNames(Settings.Default.IsolationSchemeList)
-                        .Append("or a result filepath to import the scheme from")),
+                        .Append(Resources.CommandArgs_FullScanProductIsolationScheme_or_a_result_filepath_to_import_the_isolation_scheme_from)),
                 (c, p) => c.FullScanProductIsolationScheme = p.Value)
             { WrapValue = true };
 
@@ -2443,8 +2443,8 @@ namespace pwiz.Skyline
             public static DocArgument FromEnumType<TEnum>(string name, Action<CommandArgs, TEnum> processValue)
             {
                 var enumType = typeof(TEnum);
-                return new DocArgument(name, () => System.Enum.GetNames(enumType),
-                        (c, p) => processValue(c, (TEnum)System.Enum.Parse(enumType, p.Value)))
+                return new DocArgument(name, () => Enum.GetNames(enumType),
+                        (c, p) => processValue(c, (TEnum) Enum.Parse(enumType, p.Value)))
                     { WrapValue = true };
             }
 
@@ -2923,7 +2923,7 @@ namespace pwiz.Skyline
         public class ValueInvalidMzToleranceException : UsageException
         {
             public ValueInvalidMzToleranceException(Argument arg, string value)
-                : base(string.Format("The value {0} is not valid for the argument {1} which requires a value and a unit. For example: '0.5mz' or '15ppm'.", value, arg.ArgumentText))
+                : base(string.Format(Resources.ValueInvalidMzToleranceException_ValueInvalidMzToleranceException_The_value__0__is_not_valid_for_the_argument__1__which_requires_a_value_and_a_unit__For_example___2__, value, arg.ArgumentText, MZTOLERANCE_VALUE))
             {
             }
         }
