@@ -196,6 +196,15 @@ namespace pwiz.Skyline.Model.AuditLog {
         }
         
         /// <summary>
+        ///   Looks up a localized string similar to Bilinear.
+        /// </summary>
+        public static string BilinearRegressionFit_bilinear {
+            get {
+                return ResourceManager.GetString("BilinearRegressionFit_bilinear", resourceCulture);
+            }
+        }
+        
+        /// <summary>
         ///   Looks up a localized string similar to Chebyshev.
         /// </summary>
         public static string ClusterMetricType_chebyshev {
@@ -804,6 +813,15 @@ namespace pwiz.Skyline.Model.AuditLog {
         public static string LodCalculation_turning_point {
             get {
                 return ResourceManager.GetString("LodCalculation_turning_point", resourceCulture);
+            }
+        }
+        
+        /// <summary>
+        ///   Looks up a localized string similar to Bilinear turning point standard error.
+        /// </summary>
+        public static string LodCalculation_turning_point_stderr {
+            get {
+                return ResourceManager.GetString("LodCalculation_turning_point_stderr", resourceCulture);
             }
         }
         

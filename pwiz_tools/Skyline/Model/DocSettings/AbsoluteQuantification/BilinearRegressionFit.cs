@@ -6,7 +6,7 @@ namespace pwiz.Skyline.Model.DocSettings.AbsoluteQuantification
 {
     public class BilinearRegressionFit : RegressionFit
     {
-        public BilinearRegressionFit() : base(@"bootstrap_bilinear", () => "Bilinear")
+        public BilinearRegressionFit() : base(@"bilinear", () => QuantificationStrings.RegressionFit_BILINEAR_Bilinear)
         {
 
         }

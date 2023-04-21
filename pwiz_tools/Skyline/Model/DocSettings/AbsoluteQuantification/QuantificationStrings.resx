@@ -257,7 +257,7 @@
     <value>None</value>
   </data>
   <data name="LodCalculation_TURNING_POINT_Bilinear_turning_point" xml:space="preserve">
-    <value>Bilinear turning point</value>
+    <value>Bilinear turning point (obsolete)</value>
   </data>
   <data name="LodCalculation_BLANK_PLUS_2SD_Blank_plus_2___SD" xml:space="preserve">
     <value>Blank plus 2 * SD</value>
@@ -335,5 +335,8 @@
   </data>
   <data name="MsLevelOption_DEFAULT_Default" xml:space="preserve">
     <value>Default</value>
+  </data>
+  <data name="LodCalculation_TURNING_POINT_STDERR_Bilinear_turning_point_standard_error" xml:space="preserve">
+    <value>Bilinear turning point standard error</value>
   </data>
 </root>

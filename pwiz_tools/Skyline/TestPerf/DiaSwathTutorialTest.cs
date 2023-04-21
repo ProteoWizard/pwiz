@@ -243,7 +243,6 @@ namespace TestPerf
         [TestMethod, NoParallelTesting(TestExclusionReason.RESOURCE_INTENSIVE)] // Times out on slower VMs
         public void TestDiaQeFullSearchTutorial()
         {
-            RunPerfTests = true;
             _analysisValues = new AnalysisValues
             {
                 KeepPrecursors = false,

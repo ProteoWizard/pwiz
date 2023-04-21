@@ -38,12 +38,12 @@ namespace pwiz.Skyline.Model.DocSettings.AbsoluteQuantification
             () => QuantificationStrings.LodCalculation_BLANK_PLUS_3SD_Blank_plus_3___SD,
             args=>BlankPlusSdMultiple(args, 3.0));
 
-        public static readonly LodCalculation TURNING_POINT_STDERR = new LodCalculation("turning_point_stderr",
-            () => "Bilinear turning point with standard error", CalculateLodFromTurningPointWithStdErr);
+        public static readonly LodCalculation TURNING_POINT_STDERR = new LodCalculation(@"turning_point_stderr",
+            () => QuantificationStrings.LodCalculation_TURNING_POINT_STDERR_Bilinear_turning_point_standard_error, CalculateLodFromTurningPointWithStdErr);
 
         public static readonly ImmutableList<LodCalculation> ALL = ImmutableList.ValueOf(new[]
         {
-            NONE, BLANK_PLUS_2SD, BLANK_PLUS_3SD, TURNING_POINT
+            NONE, BLANK_PLUS_2SD, BLANK_PLUS_3SD, TURNING_POINT, TURNING_POINT_STDERR
         });
 
         private readonly Func<LodCalculationArgs, double?> _calculateLodFunc;

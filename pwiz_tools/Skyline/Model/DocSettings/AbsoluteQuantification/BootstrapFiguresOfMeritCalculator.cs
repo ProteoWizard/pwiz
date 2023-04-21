@@ -44,11 +44,20 @@ namespace pwiz.Skyline.Model.DocSettings.AbsoluteQuantification
             var limitOfDetection = ComputeLod(standards);
             var limitOfQuantification = ComputeBootstrappedLoq(standards, bootstrapCurves);
             limitOfQuantification = Math.Max(limitOfDetection, limitOfQuantification);
-            return FiguresOfMerit.EMPTY.ChangeLimitOfDetection(limitOfDetection)
-                .ChangeLimitOfQuantification(limitOfQuantification);
+            var figuresOfMerit = FiguresOfMerit.EMPTY;
+            if (limitOfDetection < double.MaxValue)
+            {
+                figuresOfMerit = figuresOfMerit.ChangeLimitOfDetection(limitOfDetection);
+            }
+
+            if (limitOfQuantification < double.MaxValue)
+            {
+                figuresOfMerit = figuresOfMerit.ChangeLimitOfQuantification(limitOfQuantification);
+            }
+            return figuresOfMerit;
         }
 
-        public static double? ComputeLod(IList<WeightedPoint> points)
+        public static double ComputeLod(IList<WeightedPoint> points)
         {
             if (points.Count == 0)
             {
@@ -76,15 +85,11 @@ namespace pwiz.Skyline.Model.DocSettings.AbsoluteQuantification
             return lodConc;
         }
 
-        public double ComputeBootstrappedLoq(IList<WeightedPoint> points)
-        {
-            return ComputeBootstrappedLoq(points, null);
-        }
         public double ComputeBootstrappedLoq(IList<WeightedPoint> points, List<ImmutableList<PointPair>> bootstrapCurves)
         {
             var random = new Random(RandomSeed);
             var lod = ComputeLod(points);
-            if (points.Count == 0)
+            if (points.Count == 0 || lod >= double.MaxValue)
             {
                 return double.MaxValue;
             }
