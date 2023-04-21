@@ -63,6 +63,7 @@
             this.textPrimaryCount = new System.Windows.Forms.TextBox();
             this.textMs1RepetitionTime = new System.Windows.Forms.TextBox();
             this.textIntensityThresholdMin = new System.Windows.Forms.TextBox();
+            this.cbExportSciexOSQuantMethod = new System.Windows.Forms.CheckBox();
             this.textIntensityThreshold = new System.Windows.Forms.TextBox();
             this.comboOptimizing = new System.Windows.Forms.ComboBox();
             this.labelOptimizing = new System.Windows.Forms.Label();
@@ -88,6 +89,7 @@
             this.lblIntensityThresholdType = new System.Windows.Forms.Label();
             this.label7 = new System.Windows.Forms.Label();
             this.textAccumulationTime = new System.Windows.Forms.TextBox();
+            this.panelAbiSciexOS = new System.Windows.Forms.Panel();
             this.panelThermoColumns.SuspendLayout();
             this.panelAbSciexTOF.SuspendLayout();
             this.panelTriggered.SuspendLayout();
@@ -97,6 +99,7 @@
             this.panelTuneColumns.SuspendLayout();
             this.panelBrukerTimsTof.SuspendLayout();
             this.panelSureQuant.SuspendLayout();
+            this.panelAbiSciexOS.SuspendLayout();
             this.SuspendLayout();
             // 
             // radioSingle
@@ -338,6 +341,13 @@
             this.textIntensityThresholdMin.Name = "textIntensityThresholdMin";
             this.helpTip.SetToolTip(this.textIntensityThresholdMin, resources.GetString("textIntensityThresholdMin.ToolTip"));
             // 
+            // cbExportSciexOSQuantMethod
+            // 
+            resources.ApplyResources(this.cbExportSciexOSQuantMethod, "cbExportSciexOSQuantMethod");
+            this.cbExportSciexOSQuantMethod.Name = "cbExportSciexOSQuantMethod";
+            this.helpTip.SetToolTip(this.cbExportSciexOSQuantMethod, resources.GetString("cbExportSciexOSQuantMethod.ToolTip"));
+            this.cbExportSciexOSQuantMethod.UseVisualStyleBackColor = true;
+            // 
             // textIntensityThreshold
             // 
             resources.ApplyResources(this.textIntensityThreshold, "textIntensityThreshold");
@@ -489,12 +499,19 @@
             resources.ApplyResources(this.textAccumulationTime, "textAccumulationTime");
             this.textAccumulationTime.Name = "textAccumulationTime";
             // 
+            // panelAbiSciexOS
+            // 
+            this.panelAbiSciexOS.Controls.Add(this.cbExportSciexOSQuantMethod);
+            resources.ApplyResources(this.panelAbiSciexOS, "panelAbiSciexOS");
+            this.panelAbiSciexOS.Name = "panelAbiSciexOS";
+            // 
             // ExportMethodDlg
             // 
             this.AcceptButton = this.btnOk;
             resources.ApplyResources(this, "$this");
             this.AutoScaleMode = System.Windows.Forms.AutoScaleMode.Font;
             this.CancelButton = this.btnCancel;
+            this.Controls.Add(this.panelAbiSciexOS);
             this.Controls.Add(this.textAccumulationTime);
             this.Controls.Add(this.panelSureQuant);
             this.Controls.Add(this.panelBrukerTimsTof);
@@ -557,6 +574,8 @@
             this.panelBrukerTimsTof.PerformLayout();
             this.panelSureQuant.ResumeLayout(false);
             this.panelSureQuant.PerformLayout();
+            this.panelAbiSciexOS.ResumeLayout(false);
+            this.panelAbiSciexOS.PerformLayout();
             this.ResumeLayout(false);
             this.PerformLayout();
 
@@ -622,5 +641,7 @@
         private System.Windows.Forms.TextBox textIntensityThresholdMin;
         private System.Windows.Forms.Label lblIntensityThresholdMin;
         private System.Windows.Forms.TextBox textAccumulationTime;
+        private System.Windows.Forms.Panel panelAbiSciexOS;
+        private System.Windows.Forms.CheckBox cbExportSciexOSQuantMethod;
     }
 }

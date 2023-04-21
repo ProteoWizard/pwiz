@@ -401,6 +401,7 @@ namespace pwiz.Skyline.Model
 
         public virtual bool ExportMultiQuant { get; set; }
         public virtual bool ExportSureQuant { get; set; }
+        public virtual bool ExportSciexOSQuant { get; set; }
 
         public virtual double? IntensityThresholdPercent { get; set; }
         public virtual double? IntensityThresholdValue { get; set; }
@@ -593,6 +594,7 @@ namespace pwiz.Skyline.Model
         public AbstractMassListExporter ExportSciexOsMethod(SrmDocument document, string fileName, string templateName, string instrumentType)
         {
             var exporter = InitExporter(new SciexOsMethodExporter(document, instrumentType));
+            exporter.ExportSciexOSQuant = ExportSciexOSQuant;
             if (MethodType == ExportMethodType.Standard)
             {
                 switch (instrumentType)
@@ -2825,6 +2827,8 @@ namespace pwiz.Skyline.Model
 
         private readonly string _instrument;
 
+        public bool ExportSciexOSQuant { get; set; }
+
         public SciexOsMethodExporter(SrmDocument document, string instrumentType) : base(document)
         {
             _instrument = instrumentType;
@@ -2859,6 +2863,8 @@ namespace pwiz.Skyline.Model
 
             if (Equals(_instrument, ExportInstrumentType.ABI_7600))
                 args.Add(@"-t");
+            if(ExportSciexOSQuant)
+                args.Add(@"-q");
 
             MethodExporter.ExportMethod(EXE_NAME, args, fileName, templateName, MemoryOutput, progressMonitor);
         }

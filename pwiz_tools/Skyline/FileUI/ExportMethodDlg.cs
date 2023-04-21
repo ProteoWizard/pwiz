@@ -569,6 +569,7 @@ namespace pwiz.Skyline.FileUI
         private void UpdateAbSciexControls()
         {
             panelAbSciexTOF.Visible = InstrumentType == ExportInstrumentType.ABI_TOF;
+            panelAbiSciexOS.Visible = InstrumentType == ExportInstrumentType.ABI_7600;
         }
 
         private void UpdateWatersControls()
@@ -1238,6 +1239,7 @@ namespace pwiz.Skyline.FileUI
 
             _exportProperties.ExportMultiQuant = panelAbSciexTOF.Visible && cbExportMultiQuant.Checked;
             _exportProperties.ExportSureQuant = cbSureQuant.Visible && cbSureQuant.Checked;
+            _exportProperties.ExportSciexOSQuant = cbExportSciexOSQuantMethod.Visible && cbExportSciexOSQuantMethod.Checked;
 
             _exportProperties.RetentionStartAndEnd = panelThermoRt.Visible && cbUseStartAndEndRts.Checked;
 

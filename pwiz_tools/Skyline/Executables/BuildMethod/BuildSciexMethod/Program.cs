@@ -82,6 +82,7 @@ namespace BuildSciexMethod
                 "   -s               Transition list is read from stdin.\n" +
                 "                    e.g. cat TranList.csv | BuildSciexMethod -s -o new.ext temp.ext\n" +
                 "\n" +
+                "   -q               Export Sciex OS Quant method\n" +
                 "   -m               Multiple lists concatenated in the format:\n" +
                 "                    file1.ext\n" +
                 "                    <transition list>\n" +
@@ -108,6 +109,7 @@ namespace BuildSciexMethod
         private bool ScheduledMethod => !StandardMethod;
         private bool IsConnected { get; set; }
         private bool IsLoggedIn { get; set; }
+        private bool IsSciexOsQuantMethod { get; set; }
 
         public Builder()
         {
@@ -142,6 +144,9 @@ namespace BuildSciexMethod
                         break;
                     case 'm':
                         multiFile = true;
+                        break;
+                    case 'q':
+                        IsSciexOsQuantMethod = true;
                         break;
                     default:
                         throw new Program.UsageException();
