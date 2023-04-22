@@ -2483,6 +2483,29 @@ namespace pwiz.SkylineTestUtil
             WaitForDocumentChange(doc);
         }
 
+        public void VerifyAllTransitionsHaveChromatograms()
+        {
+            var doc = WaitForDocumentLoaded();
+            var tolerance = (float)doc.Settings.TransitionSettings.Instrument.MzMatchTolerance;
+            foreach (var molecule in doc.Molecules)
+            {
+                foreach (var precursor in molecule.TransitionGroups)
+                {
+                    foreach (var chromatogramSet in doc.MeasuredResults.Chromatograms)
+                    {
+                        ChromatogramGroupInfo[] chromatogramGroups;
+                        Assert.IsTrue(doc.MeasuredResults.TryLoadChromatogram(chromatogramSet, molecule, precursor, tolerance, out chromatogramGroups));
+                        Assert.AreEqual(1, chromatogramGroups.Length);
+                        foreach (var transition in precursor.Transitions)
+                        {
+                            var chromatogram = chromatogramGroups[0].GetTransitionInfo(transition, tolerance);
+                            Assert.IsNotNull(chromatogram);
+                        }
+                    }
+                }
+            }
+        }
+
         #endregion
 
         #region Spectral library test helpers
