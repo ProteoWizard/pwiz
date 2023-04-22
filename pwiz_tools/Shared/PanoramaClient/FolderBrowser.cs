@@ -18,7 +18,7 @@ namespace pwiz.PanoramaClient
         private TreeNode priorNode;
         private Stack<TreeNode> next = new Stack<TreeNode>();
         private List<List<String>> servers;
-        private List<PanoramaServer> serverList = new List<PanoramaServer>();
+        private List<PanoramaServer> serverList;// = new List<PanoramaServer>();
         public event EventHandler NodeClick;
         public event EventHandler AddFiles;
         private TreeNode lastSelected;
@@ -29,21 +29,22 @@ namespace pwiz.PanoramaClient
         public string ActiveServer;
 
         //Needs to take server information
-        public FolderBrowser(Uri serverUri, string user, string pass, bool uploadPerms, bool showSkyFolders, string state, List<List<String>> serversInfo)
+        public FolderBrowser(bool uploadPerms, bool showSkyFolders, string state, List<PanoramaServer> servers)
         {
             InitializeComponent();
             treeView.ImageList = imageList1;
-            foreach (var list in serversInfo)
+            serverList = servers;
+
+            /*foreach (var server in servers)
             {
-                var serverName = new Uri(list[0]);
-                var userName = list[1];
-                var password = list[2];
-                serverList.Add(string.IsNullOrEmpty(userName) ? new PanoramaServer(serverName) : new PanoramaServer(serverName, userName, password));
-            }
+                var user = server.Username;
+                var uri = server.URI;
+                var pass = server.Password;
+                serverList.Add(string.IsNullOrEmpty(user) ? new PanoramaServer(uri) : new PanoramaServer(uri, user, pass));
+            }*/
             _uploadPerms = uploadPerms;
             showSky = showSkyFolders;
             this.state = state;
-            servers = serversInfo;
             Restorer = new TreeViewStateRestorer(treeView);
         }
 
@@ -75,10 +76,12 @@ namespace pwiz.PanoramaClient
         private void FolderBrowser_Load(object sender, EventArgs e)
         {
             _formUtil = new PanoramaFormUtil();
+
             foreach (var server in serverList)
             {
                 _formUtil.InitializeTreeView(server, treeView, _uploadPerms, true, showSky);
             }
+            
             if (!string.IsNullOrEmpty(state))
             {
                 Restorer.RestoreExpansionAndSelection(state);
@@ -303,7 +306,6 @@ namespace pwiz.PanoramaClient
             var node = SearchTree(treeView.Nodes, nodeName);
             if (node != null)
             {
-                //MessageBox.Show(node.Text);
                 treeView.SelectedNode = node;
                 Path = node.Tag != null ? node.Tag.ToString() : string.Empty;
                 //If there's a file browser observer, add corresponding files
@@ -338,9 +340,6 @@ namespace pwiz.PanoramaClient
                         return result;
                     }
                 }
-                //return SearchTree(node.Nodes, nodeName);
-                
-
             }
             return null;
         }

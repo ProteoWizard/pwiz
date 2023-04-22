@@ -904,7 +904,7 @@ namespace pwiz.Skyline
         public void OpenFromPanorama(string server, string user, string pass)
         {
             var panoramaClient = new WebPanoramaClient(new Uri(server));
-            using var dlg = new RemoteFileDialog(user, pass, new Uri(server), true, string.Empty, false, new List<List<string>>());
+            using var dlg = new RemoteFileDialog(new List<PanoramaServer>(), true, string.Empty, false);
             if (dlg.ShowDialog() != DialogResult.Cancel)
             {
 
@@ -913,16 +913,7 @@ namespace pwiz.Skyline
                 {
                     folderPath = Settings.Default.LastFolderPath;
                 }
-                var downloadPath = panoramaClient.SaveFile(new Uri(server), user, pass, dlg.FileName, dlg.FileURL, folderPath);
-                panoramaClient.DownloadFile(downloadPath, new Uri(server), user, pass, dlg.FileName, dlg.FileURL);
-                if (dlg.FileName.EndsWith(SrmDocumentSharing.EXT) && !string.IsNullOrEmpty(downloadPath))
-                {
-                    OpenSharedFile(downloadPath);
-                }
-                else if (dlg.FileName.EndsWith(SrmDocument.EXT) && !string.IsNullOrEmpty(downloadPath))
-                {
-                    OpenFile(downloadPath);
-                }
+                
             }
         }
 
@@ -967,34 +958,15 @@ namespace pwiz.Skyline
                 server = servers[0].URI;
             }
 
-            List<List<String>> serversInfo = new List<List<string>>();
-            ConvertServers(servers, serversInfo);
+            var panoramaServers = servers.Cast<PanoramaServer>().ToList();
 
             var state = string.Empty;
-            var showingSky = Settings.Default.PanoramaSkyFiles;
             var panoramaClient = new WebPanoramaClient(server);
             if (!string.IsNullOrEmpty(Settings.Default.FileExpansion))
             {
                 state = Settings.Default.FileExpansion;
             }
-            /*if (!string.IsNullOrEmpty(Settings.Default.DirectoryExpansion))
-            {
-                state = Settings.Default.DirectoryExpansion;
-            }
-            using var dirPicker = new DirectoryPicker(server, user, pass, true, state, false);
-            dirPicker.ShowDialog();*/
-            /*RemoteFileDialog dlg = null;
-            using (var longWaitDlg = new LongWaitDlg(this)
-                   {
-                       Text = "Loading"
-                   })
-            {
-                longWaitDlg.PerformWork(this, 800, () =>
-                    dlg = new RemoteFileDialog(user, pass, server, true, state, showingSky, serversInfo));
-            }*/
-
-            
-            using var dlg = new RemoteFileDialog(user, pass, server, true, state, showingSky, serversInfo);
+            using var dlg = new RemoteFileDialog(panoramaServers, false, state, true);
             if (dlg.ShowDialog() != DialogResult.Cancel)
             {
                 var folderPath = string.Empty;
@@ -1004,65 +976,32 @@ namespace pwiz.Skyline
                 }
 
                 var curServer = dlg.ActiveServer;
-                foreach (var serv in serversInfo)
-                {
-                    if (serv[0].Equals(curServer))
-                    {
-                        user = serv[1];
-                        pass = serv[2];
-                    }
-                }
-
 
                 var downloadPath = panoramaClient.SaveFile(new Uri(curServer), user, pass, dlg.FileName, dlg.FileURL, folderPath);
-                MessageBox.Show(downloadPath);
-                using (var longWaitDlg = new LongWaitDlg(this)
-                       {
-                           Text = "Downloading"
-                       })
+                if (!string.IsNullOrEmpty(downloadPath))
                 {
-                    longWaitDlg.PerformWork(this, 800, () =>
-                        panoramaClient.DownloadFile(downloadPath, new Uri(curServer), user, pass, dlg.FileName, dlg.FileURL));
-                    if (longWaitDlg.IsCanceled)
+                    panoramaClient.DownloadFile(downloadPath, new Uri(curServer), user, pass, dlg.FileName, dlg.FileURL);
+                    if (dlg.FileName.EndsWith(SrmDocumentSharing.EXT) && !string.IsNullOrEmpty(downloadPath))
                     {
-                        throw new OperationCanceledException();
+                        OpenSharedFile(downloadPath);
                     }
-                        
+                    else if (dlg.FileName.EndsWith(SrmDocument.EXT) && !string.IsNullOrEmpty(downloadPath))
+                    {
+                        OpenFile(downloadPath);
+                    }
                 }
-
-
 
                 if (!string.IsNullOrEmpty(panoramaClient.SelectedPath))
                 {
                     Settings.Default.LastFolderPath = panoramaClient.SelectedPath;
                 }
-                if (dlg.FileName.EndsWith(SrmDocumentSharing.EXT) && !string.IsNullOrEmpty(downloadPath))
-                {
-                    OpenSharedFile(downloadPath);
-                }
-                else if (dlg.FileName.EndsWith(SrmDocument.EXT) && !string.IsNullOrEmpty(downloadPath))
-                {
-                    OpenFile(downloadPath);
-                }
+                
             }
 
-            //Settings.Default.DirectoryExpansion = dirPicker.State;
             Settings.Default.FileExpansion = dlg.TreeState;
             Settings.Default.PanoramaSkyFiles = dlg.ShowingSky;
             Settings.Default.Save();
 
-        }
-
-        public void ConvertServers(ServerList servers, List<List<String>> serversInfo)
-        {
-            foreach (var s in servers)
-            {
-                var serverInfo = new List<String>();
-                serverInfo.Add(s.URI.ToString());
-                serverInfo.Add(s.Username);
-                serverInfo.Add(s.Password);
-                serversInfo.Add(serverInfo);
-            }
         }
 
         private void saveMenuItem_Click(object sender, EventArgs e)

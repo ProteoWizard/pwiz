@@ -97,7 +97,7 @@ namespace pwiz.PanoramaClient
                         continue;
                     }
                 }
-                
+
 
 
                 node.Nodes.Add(folderNode);

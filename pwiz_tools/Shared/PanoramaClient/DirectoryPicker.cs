@@ -14,7 +14,7 @@ namespace pwiz.PanoramaClient
         public DirectoryPicker(Uri server, string user, string pass, bool showCheckBox, string state, bool showSkyFolders = false)
         {
             InitializeComponent();
-            folders = new FolderBrowser(server, user, pass, false, showSkyFolders, state, new List<List<string>>());
+            folders = new FolderBrowser( false, showSkyFolders, state, new List<PanoramaServer>());
             folders.Dock = DockStyle.Fill;
             folderPanel.Controls.Add(folders);
             folders.NodeClick += MouseClick;

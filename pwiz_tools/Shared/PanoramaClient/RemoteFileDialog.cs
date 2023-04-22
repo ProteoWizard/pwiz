@@ -17,36 +17,31 @@ namespace pwiz.PanoramaClient
         public FolderBrowser folderBrowser;
         public TreeNodeCollection _nodesState;
         public List<TreeView> tree = new List<TreeView>();
-        private List<List<String>> servers;
+        public List<PanoramaServer> servers;
         private bool restoring;
         private string most_Recent;
         public string ActiveServer;
         private string recent_vers;
         private const string EXT = ".sky";
         private const string RECENT_VER = "Most recent version";
+        private const string ALL_VER = "All versions";
 
         //Ask Brendan where RemoteFileDialog should live
         //Two different forms, directoryChooser FilePicker both use the same control which will be the tree of folders
         //3rd parameter: only show folders, only show Panorama folders (targetedms module)
-        public RemoteFileDialog(string user, string pass, Uri server, bool showCheckbox, string stateString, bool showingSky, List<List<String>> serversInfo)
+        public RemoteFileDialog(List<PanoramaServer> servers, bool showCheckbox, string stateString, bool showingSky)
         {
+            this.servers = servers;
             IsLoaded = false;
-            User = user;
-            Pass = pass;
-            Server = server.ToString();
             InitializeComponent();
             TreeState = stateString;
             restoring = true;
             ShowingSky = showingSky;
             checkBox1.Checked = ShowingSky;
+            comboBox1.Text = ALL_VER;
             restoring = false;
             checkBox1.Visible = showCheckbox;
-            servers = serversInfo;
         }
-
-        public string Server { get; set; }
-        public string User { get; set; }
-        public string Pass { get; set; }
         public string OKButtonText { get; set; }
         public string TreeState { get; set; }
         public bool IsLoaded { get; set; }
@@ -68,8 +63,8 @@ namespace pwiz.PanoramaClient
                 open.Text = OKButtonText;
 
             }
-            var serverUri = new Uri(Server);
-            folderBrowser = new FolderBrowser(serverUri, User, Pass, false, ShowingSky, TreeState, servers);
+
+            folderBrowser = new FolderBrowser(false, ShowingSky, TreeState, servers);
             folderBrowser.AddFiles += AddFiles;
             folderBrowser.Dock = DockStyle.Fill;
             splitContainer1.Panel1.Controls.Add(folderBrowser);
@@ -122,16 +117,16 @@ namespace pwiz.PanoramaClient
 
         private JToken GetJson(string query)
         {
-            foreach (var server in servers)
+            PanoramaServer curServer = null;
+            foreach (var panoramaServer in servers)
             {
-                if (server[0].Equals(ActiveServer))
+                if (ActiveServer.Equals(panoramaServer.URI.ToString()))
                 {
-                    User = server[1];
-                    Pass = server[2];
+                    curServer = panoramaServer;
                 }
             }
             var queryUri = new Uri(query);
-            var webClient = new WebClientWithCredentials(queryUri, User, Pass);
+            var webClient = new WebClientWithCredentials(queryUri, curServer.Username, curServer.Password);
             JToken json = webClient.Get(queryUri);
             return json;
         }
@@ -431,17 +426,20 @@ namespace pwiz.PanoramaClient
         /// <param name="e"></param>
         private void comboBox1_SelectedIndexChanged(object sender, EventArgs e)
         {
+            if (!restoring)
+            {
+                listView.Items.Clear();
+                if (comboBox1.Text.Equals(RECENT_VER))
+                {
+                    GetLatestVersion((string)folderBrowser.clicked.Tag, listView);
+                }
+                else
+                {
+                    ActiveServer = folderBrowser.ActiveServer;
+                    AddQueryFiles(listView, (string)folderBrowser.clicked.Tag, versionLabel, comboBox1);
+                }
+            }
             
-            listView.Items.Clear();
-            if (comboBox1.Text.Equals(RECENT_VER))
-            {
-                GetLatestVersion((string)folderBrowser.clicked.Tag, listView);
-            }
-            else
-            {
-                ActiveServer = folderBrowser.ActiveServer;
-                AddQueryFiles(listView, (string)folderBrowser.clicked.Tag, versionLabel, comboBox1);
-            }
         }
 
         private void cancel_Click(object sender, EventArgs e)
