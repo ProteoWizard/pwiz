@@ -1705,20 +1705,22 @@ namespace pwiz.Skyline.Menus
 
             var spectrumClassFilters = transitionGroupPaths.Select(path =>
                 ((TransitionGroupDocNode) SkylineWindow.DocumentUI.FindNode(path)).SpectrumClassFilter).ToHashSet();
-            using (var dlg = new EditSpectrumFilterDlg(spectrumClassFilters.Count == 1 ? spectrumClassFilters.First() : null))
+            using var autoComplete = new SpectrumFilterAutoComplete(SkylineWindow, transitionGroupPaths);
+            using var dlg = new EditSpectrumFilterDlg(spectrumClassFilters.Count == 1 ? spectrumClassFilters.First() : null)
             {
-                if (spectrumClassFilters.Count != 1)
-                {
-                    dlg.CreateCopy = true;
-                    dlg.CreateCopyEnabled = false;
-                }
-                if (dlg.ShowDialog(this) != DialogResult.OK)
-                {
-                    return;
-                }
-
-                ChangeSpectrumFilter(transitionGroupPaths, dlg.SpectrumClassFilter, dlg.CreateCopy);
+                AutoComplete = autoComplete
+            };
+            if (spectrumClassFilters.Count != 1)
+            {
+                dlg.CreateCopy = true;
+                dlg.CreateCopyEnabled = false;
             }
+            if (dlg.ShowDialog(this) != DialogResult.OK)
+            {
+                return;
+            }
+
+            ChangeSpectrumFilter(transitionGroupPaths, dlg.SpectrumClassFilter, dlg.CreateCopy);
         }
 
         public void ChangeSpectrumFilter(ICollection<IdentityPath> precursorIdentityPaths,

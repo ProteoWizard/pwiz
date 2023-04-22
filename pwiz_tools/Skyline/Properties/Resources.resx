@@ -12013,4 +12013,13 @@ If you do not have the original file, you may build the library with embedded sp
   <data name="SpectraGridForm_GetSummaryMessage_Showing_spectra_near__0__precursors_between__1__and__2_" xml:space="preserve">
     <value>Showing spectra near {0} precursors between {1} and {2}</value>
   </data>
+  <data name="SpectraGridForm_AddSpectrumFilters_One_precursor_filter_will_be_added_to_the_document_" xml:space="preserve">
+    <value>One precursor filter will be added to the document.</value>
+  </data>
+  <data name="SpectraGridForm_AddSpectrumFilters__0__precursor_filters_will_be_added_to_the_document_" xml:space="preserve">
+    <value>{0} precursor filters will be added to the document.</value>
+  </data>
+  <data name="SpectraGridForm_AddSpectrumFilters_No_precursor_filters_were_added_to_the_document_" xml:space="preserve">
+    <value>No precursor filters were added to the document.</value>
+  </data>
 </root>

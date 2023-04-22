@@ -492,6 +492,7 @@
     <Compile Include="Model\GlobalizedObject.cs">
       <SubType>UserControl</SubType>
     </Compile>
+    <Compile Include="Model\Results\Spectra\SpectrumFilterAutoComplete.cs" />
     <Compile Include="Model\SpectrumPropertiesResx.Designer.cs">
       <AutoGen>True</AutoGen>
       <DesignTime>True</DesignTime>

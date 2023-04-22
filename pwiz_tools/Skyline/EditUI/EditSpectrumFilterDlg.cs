@@ -1,4 +1,22 @@
-﻿using System;
+﻿/*
+ * Original author: Nicholas Shulman <nicksh .at. u.washington.edu>,
+ *                  MacCoss Lab, Department of Genome Sciences, UW
+ *
+ * Copyright 2023 University of Washington - Seattle, WA
+ *
+ * Licensed under the Apache License, Version 2.0 (the "License");
+ * you may not use this file except in compliance with the License.
+ * You may obtain a copy of the License at
+ *
+ *     http://www.apache.org/licenses/LICENSE-2.0
+ *
+ * Unless required by applicable law or agreed to in writing, software
+ * distributed under the License is distributed on an "AS IS" BASIS,
+ * WITHOUT WARRANTIES OR CONDITIONS OF ANY KIND, either express or implied.
+ * See the License for the specific language governing permissions and
+ * limitations under the License.
+ */
+using System;
 using System.Collections.Generic;
 using System.ComponentModel;
 using System.Linq;
@@ -30,15 +48,11 @@ namespace pwiz.Skyline.EditUI
             SpectrumClassFilter = spectrumClassFilter;
             propertyColumn.Items.AddRange(SpectrumClassColumn.ALL
                 .OrderBy(c=>c.ToString(), StringComparer.OrdinalIgnoreCase).Cast<object>().ToArray());
-            // operationColumn.DisplayMember = @"Key";
-            // operationColumn.ValueMember = @"Value";
-            // operationColumn.Items.AddRange(FilterOperations.ListOperations()
-            //     .Select(op => new KeyValuePair<string, string>(op.DisplayName, op.OpName)).ToArray());
-            // operationColumn.Items.Add(new KeyValuePair<string, string>(string.Empty, null));
             operationColumn.Items.AddRange(FilterOperations.ListOperations().Select(op=>(object) op.DisplayName).ToArray());
         }
 
         public SpectrumClassFilter SpectrumClassFilter { get; private set; }
+        public SpectrumFilterAutoComplete AutoComplete { get; set; }
 
         public class Row
         {
@@ -166,6 +180,38 @@ namespace pwiz.Skyline.EditUI
         public BindingList<Row> RowBindingList
         {
             get { return _rowBindingList; }
+        }
+
+        private void dataGridViewEx1_EditingControlShowing(object sender, DataGridViewEditingControlShowingEventArgs e)
+        {
+            int columnIndex = dataGridViewEx1.CurrentCell.ColumnIndex;
+            int rowIndex = dataGridViewEx1.CurrentCell.RowIndex;
+
+            AutoCompleteStringCollection autoCompleteStringCollection = null;
+            if (AutoComplete != null && columnIndex == valueColumn.Index && rowIndex >= 0 && rowIndex < _rowBindingList.Count)
+            {
+                var property = _rowBindingList[rowIndex].Property;
+                if (property != null)
+                {
+                    autoCompleteStringCollection = AutoComplete.GetAutoCompleteValues(property);
+                }
+            }
+            TextBox textBox = e.Control as TextBox;
+            if (textBox != null)
+            {
+                if (autoCompleteStringCollection == null)
+                {
+                    textBox.AutoCompleteMode = AutoCompleteMode.None;
+                    textBox.AutoCompleteCustomSource = null;
+                    textBox.AutoCompleteSource = AutoCompleteSource.None;
+                }
+                else
+                {
+                    textBox.AutoCompleteMode = AutoCompleteMode.Suggest;
+                    textBox.AutoCompleteCustomSource = autoCompleteStringCollection;
+                    textBox.AutoCompleteSource = AutoCompleteSource.CustomSource;
+                }
+            }
         }
     }
 }

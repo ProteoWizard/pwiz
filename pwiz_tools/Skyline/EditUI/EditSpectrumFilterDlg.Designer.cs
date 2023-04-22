@@ -40,7 +40,7 @@
             this.btnDeleteFilter = new System.Windows.Forms.ToolStripButton();
             this.propertyColumn = new System.Windows.Forms.DataGridViewComboBoxColumn();
             this.operationColumn = new System.Windows.Forms.DataGridViewComboBoxColumn();
-            this.dataGridViewTextBoxColumn1 = new System.Windows.Forms.DataGridViewTextBoxColumn();
+            this.valueColumn = new System.Windows.Forms.DataGridViewTextBoxColumn();
             ((System.ComponentModel.ISupportInitialize)(this.dataGridViewEx1)).BeginInit();
             this.panel1.SuspendLayout();
             this.toolStripFilter.SuspendLayout();
@@ -54,7 +54,7 @@
             this.dataGridViewEx1.Columns.AddRange(new System.Windows.Forms.DataGridViewColumn[] {
             this.propertyColumn,
             this.operationColumn,
-            this.dataGridViewTextBoxColumn1});
+            this.valueColumn});
             this.dataGridViewEx1.DataSource = new pwiz.Skyline.EditUI.EditSpectrumFilterDlg.Row[0];
             this.dataGridViewEx1.Dock = System.Windows.Forms.DockStyle.Fill;
             this.dataGridViewEx1.Location = new System.Drawing.Point(0, 0);
@@ -62,6 +62,7 @@
             this.dataGridViewEx1.Size = new System.Drawing.Size(677, 216);
             this.dataGridViewEx1.TabIndex = 0;
             this.dataGridViewEx1.DataError += new System.Windows.Forms.DataGridViewDataErrorEventHandler(this.dataGridViewEx1_DataError);
+            this.dataGridViewEx1.EditingControlShowing += new System.Windows.Forms.DataGridViewEditingControlShowingEventHandler(this.dataGridViewEx1_EditingControlShowing);
             // 
             // cbCreateCopy
             // 
@@ -170,12 +171,12 @@
             this.operationColumn.SortMode = System.Windows.Forms.DataGridViewColumnSortMode.Automatic;
             this.operationColumn.Width = 150;
             // 
-            // dataGridViewTextBoxColumn1
+            // valueColumn
             // 
-            this.dataGridViewTextBoxColumn1.AutoSizeMode = System.Windows.Forms.DataGridViewAutoSizeColumnMode.Fill;
-            this.dataGridViewTextBoxColumn1.DataPropertyName = "Value";
-            this.dataGridViewTextBoxColumn1.HeaderText = "Value";
-            this.dataGridViewTextBoxColumn1.Name = "dataGridViewTextBoxColumn1";
+            this.valueColumn.AutoSizeMode = System.Windows.Forms.DataGridViewAutoSizeColumnMode.Fill;
+            this.valueColumn.DataPropertyName = "Value";
+            this.valueColumn.HeaderText = "Value";
+            this.valueColumn.Name = "valueColumn";
             // 
             // EditSpectrumFilterDlg
             // 
@@ -215,6 +216,6 @@
         private System.Windows.Forms.ToolStripButton btnDeleteFilter;
         private System.Windows.Forms.DataGridViewComboBoxColumn propertyColumn;
         private System.Windows.Forms.DataGridViewComboBoxColumn operationColumn;
-        private System.Windows.Forms.DataGridViewTextBoxColumn dataGridViewTextBoxColumn1;
+        private System.Windows.Forms.DataGridViewTextBoxColumn valueColumn;
     }
 }

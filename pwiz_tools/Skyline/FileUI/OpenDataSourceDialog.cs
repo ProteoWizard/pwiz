@@ -1019,26 +1019,19 @@ namespace pwiz.Skyline.FileUI
             var selectedItem = (TreeNode) lookInComboBox.SelectedItem;
             var prevDirectory = CurrentDirectory;
             MsDataFileUri msDataFileUri = (MsDataFileUri) selectedItem.Tag;
-            if (msDataFileUri is MsDataFilePath)
+            if (msDataFileUri is MsDataFilePath msDataFilePath)
             {
-                bool isReady = false;
-                string location = ((MsDataFilePath) msDataFileUri).FilePath;
-                                    foreach (var drivePair in _driveReadiness)
-                    {
-                        if (location.StartsWith(drivePair.Key))
-                        {
-                            // If it is ready switch to it
-                            if (drivePair.Value)
-                            {
-                                isReady = true;
-                            }
-                            break;
-                        }
-                    }
-                if (!isReady)
+                if (msDataFilePath.FilePath.Length > 0)
                 {
-                    return;
+                    var driveReady = _driveReadiness
+                        .FirstOrDefault(keyValuePair => msDataFilePath.FilePath.StartsWith(keyValuePair.Key)).Value;
+                    if (!driveReady)
+                    {
+                        // If drive is not ready, then do not switch to it
+                        return;
+                    }
                 }
+
             }
             CurrentDirectory = msDataFileUri;
             if(!Equals(prevDirectory, CurrentDirectory))
