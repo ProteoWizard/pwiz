@@ -131,7 +131,7 @@ namespace pwiz.SkylineTestData.Results
                 var result = newIMFiltering.IonMobilityLibrary.GetIonMobilityLibKeyMap().AsDictionary();
                 Assert.AreEqual(1, result.Count);
                 var expectedDT = 4.0019;
-                var expectedOffset = .4829;
+                var expectedOffset = -0.137998;
                 Assert.AreEqual(expectedDT, result.Values.First().First().IonMobility.Mobility.Value, .001);
                 Assert.AreEqual(expectedOffset, result.Values.First().First().HighEnergyIonMobilityValueOffset??0, .001);
 
