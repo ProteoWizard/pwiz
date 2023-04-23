@@ -408,6 +408,7 @@
     <Compile Include="Controls\Spectra\SpectraGridForm.Designer.cs">
       <DependentUpon>SpectraGridForm.cs</DependentUpon>
     </Compile>
+    <Compile Include="Controls\Spectra\SpectrumClassRow.cs" />
     <Compile Include="Controls\Startup\TutorialImageResources.Designer.cs">
       <AutoGen>True</AutoGen>
       <DesignTime>True</DesignTime>
@@ -684,9 +685,7 @@
     <Compile Include="Model\Results\Spectra\SpectrumClassColumn.cs" />
     <Compile Include="Model\Results\Spectra\SpectrumClassFilter.cs" />
     <Compile Include="Model\Results\Spectra\SpectrumClassKey.cs" />
-    <Compile Include="Model\Results\Spectra\SpectrumClassRow.cs" />
     <Compile Include="Model\Results\Spectra\SpectrumMetadataList.cs" />
-    <Compile Include="Model\Results\Spectra\SpectrumSelector.cs" />
     <Compile Include="Model\Results\Spectra\SpectrumPrecursors.cs" />
     <Compile Include="Properties\Resources.Designer.cs">
       <AutoGen>True</AutoGen>

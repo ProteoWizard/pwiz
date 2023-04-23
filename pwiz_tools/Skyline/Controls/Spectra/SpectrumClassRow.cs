@@ -16,18 +16,21 @@
  * See the License for the specific language governing permissions and
  * limitations under the License.
  */
-using System;
 
-namespace pwiz.Common.DataBinding.Attributes
+using System.Collections.Generic;
+using pwiz.Skyline.Model.Results.Spectra;
+
+namespace pwiz.Skyline.Controls.Spectra
 {
-    /// <summary>
-    /// Use this attribute to indicate that a particular type can be used
-    /// in a filter operation, without converting to string.
-    /// <see cref="FilterOperations.GetTypeToConvertOperandTo"/>.
-    /// Usually used in conjunction with <see cref="System.ComponentModel.TypeConverterAttribute"/>.
-    /// </summary>
-    [AttributeUsage(AttributeTargets.Class | AttributeTargets.Struct)]
-    public class FilterableAttribute : Attribute
+    public class SpectrumClassRow
     {
+        public SpectrumClassRow(SpectrumClass spectrumClass)
+        {
+            Properties = spectrumClass;
+            Files = new Dictionary<string, FileSpectrumInfo>();
+        }
+
+        public SpectrumClass Properties { get; }
+        public Dictionary<string, FileSpectrumInfo> Files { get; }
     }
 }
