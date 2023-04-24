@@ -19,7 +19,6 @@
 
 using System.IO;
 using System.Linq;
-using System.Threading;
 using Microsoft.VisualStudio.TestTools.UnitTesting;
 using pwiz.Skyline.Alerts;
 using pwiz.Skyline.Model.Lib;
@@ -44,17 +43,17 @@ namespace pwiz.SkylineTestFunctional
 
         protected override void DoTest()
         {
-            VerifyInvalidPeptideMessage("BiblioSpecInvalidPeptides.blib", 2, 30);
-            VerifyInvalidPeptideMessage("SomeInvalidPeptides.sptxt", 1, 4);
-            VerifyInvalidPeptideMessage("InvalidElibPeptides.elib", 15, 48);
-            VerifyInvalidPeptideMessage("BadExample.msp", 2, 3);
+            VerifyInvalidPeptideMessage("BiblioSpecInvalidPeptides.blib", 2, 30, "NS33LLVK+\r\nNS33LLVK++");
+            VerifyInvalidPeptideMessage("SomeInvalidPeptides.sptxt", 1, 4, "D3YACR+");
+            VerifyInvalidPeptideMessage("InvalidElibPeptides.elib", 15, 48, "NSAAGLENTLF2LK++\r\nNSG2AILYETVK++\r\nNSFNILSAI2K++\r\nNSPSDFNKPDLPELI2R+++\r\nNSGYVSTAFGFL2K++\r\nNSSIDAAF2SL2K++\r\nNS2FEGSEDFIR++");
+            VerifyInvalidPeptideMessage("BadExample.msp", 1, 3, "M000880_A098001-101-xxx_NA_0_FALSE_MDN35_ALK_Glycine, N,N-dimethyl- (1TMS)"); // Garbage formula
         }
 
         /// <summary>
         /// Verifies that adding the specified library to the document results in a warning message detailing the correct
         /// number of invalid peptides that were found.
         /// </summary>
-        private void VerifyInvalidPeptideMessage(string libraryFile, int expectedInvalidCount, int expectedTotalCount)
+        private void VerifyInvalidPeptideMessage(string libraryFile, int expectedInvalidCount, int expectedTotalCount, string expectedFailedExample)
         {
             var peptideSettingsUI = ShowDialog<PeptideSettingsUI>(SkylineWindow.ShowPeptideSettingsUI);
             RunUI(() =>
@@ -78,16 +77,10 @@ namespace pwiz.SkylineTestFunctional
             {
                 peptideSettingsUI.PickedLibraries = peptideSettingsUI.PickedLibraries.Append(libName).ToArray();
             });
-
             var messageDlg = ShowDialog<AlertDlg>(peptideSettingsUI.OkDialog);
-
-            // N.B. This assertion does not work in Japanese because it places text after the list of invalid peptides so StartsWith fails.
-            if (!Thread.CurrentThread.CurrentCulture.TwoLetterISOLanguageName.Equals(@"ja"))
-            {
-                var expectedMessage = string.Format(Resources.CachedLibrary_WarnInvalidEntries_, libName, expectedInvalidCount,
-                    expectedTotalCount, string.Empty);
-                StringAssert.StartsWith(messageDlg.Message, expectedMessage);
-            }
+            var expectedMessage = string.Format(Resources.CachedLibrary_WarnInvalidEntries_, libName, expectedInvalidCount,
+                expectedTotalCount, expectedFailedExample);
+            StringAssert.StartsWith(messageDlg.Message, expectedMessage);
             OkDialog(messageDlg, messageDlg.OkDialog);
             WaitForClosedForm(peptideSettingsUI);
         }
