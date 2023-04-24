@@ -786,22 +786,19 @@ namespace pwiz.Skyline.Model.Serialization
 
             if (nodeTransition.HasResults)
             {
-                if (nodeTransition.HasResults)
+                if (UseCompactFormat())
                 {
-                    if (UseCompactFormat())
-                    {
-                        var protoResults = new SkylineDocumentProto.Types.TransitionResults();
-                        protoResults.Peaks.AddRange(nodeTransition.GetTransitionPeakProtos(Settings.MeasuredResults));
-                        byte[] bytes = protoResults.ToByteArray();
-                        writer.WriteStartElement(EL.results_data);
-                        writer.WriteBase64(bytes, 0, bytes.Length);
-                        writer.WriteEndElement();
-                    }
-                    else
-                    {
-                        WriteResults(writer, Settings, nodeTransition.Results,
-                            EL.transition_results, EL.transition_peak, WriteTransitionChromInfo);
-                    }
+                    var protoResults = new SkylineDocumentProto.Types.TransitionResults();
+                    protoResults.Peaks.AddRange(nodeTransition.GetTransitionPeakProtos(Settings.MeasuredResults));
+                    byte[] bytes = protoResults.ToByteArray();
+                    writer.WriteStartElement(EL.results_data);
+                    writer.WriteBase64(bytes, 0, bytes.Length);
+                    writer.WriteEndElement();
+                }
+                else
+                {
+                    WriteResults(writer, Settings, nodeTransition.Results,
+                        EL.transition_results, EL.transition_peak, WriteTransitionChromInfo);
                 }
             }
 
