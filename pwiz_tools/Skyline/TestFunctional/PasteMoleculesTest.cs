@@ -1879,8 +1879,11 @@ namespace pwiz.SkylineTestFunctional
             void SetValuesAffectingAutomanage()
             {
                 RunUI(() => SkylineWindow.ModifyDocument("Change isotope peaks count and ion types",
-                    doc => doc.ChangeSettings(doc.Settings.ChangeTransitionFullScan(fs =>
-                            fs.ChangePrecursorIsotopes(FullScanPrecursorIsotopes.Count, 3, IsotopeEnrichmentsList.GetDefault()))
+                    doc => doc.ChangeSettings(doc.Settings
+                        .ChangeTransitionInstrument(instrument => instrument.ChangeMaxMz(2500))
+                        .ChangeTransitionFullScan(fs =>
+                            fs.ChangePrecursorIsotopes(FullScanPrecursorIsotopes.Count, 3, IsotopeEnrichmentsList.GetDefault())
+                                .ChangeAcquisitionMethod(FullScanAcquisitionMethod.DIA, new IsolationScheme("Test", 2)))
                         .ChangeTransitionFilter(f => f.ChangeSmallMoleculeIonTypes(new[] {IonType.custom, IonType.precursor})))));
             }
 
@@ -1953,6 +1956,33 @@ namespace pwiz.SkylineTestFunctional
             pastedDoc = WaitForDocumentChange(docOrig);
             AssertEx.IsDocumentState(SkylineWindow.Document, null, 1, 1, 1, 5);
 
+            NewDocument(); // Clean up
+
+            // Now try with transition list that has more detail
+            const string text2 =
+                "Precursor name;Precursor formula;Precursor charge;Product name;Product formula;Product charge\n" +
+                "H7N2;H106C65N4O46;1;N1;H13C8N1O5;1\n" +
+                "H5N3F1;H109C67N5O45;1;N1;H13C8N1O5;1\n" +
+                "H7N2;H106C65N4O46;1;N1-2AB;H23C15N3O6;1\n" +
+                "H5N3F1;H109C67N5O45;1;N1-2AB;H23C15N3O6;1\n" +
+                "H7N2;H106C65N4O46;1;H1N3-2AB;H59C37N5O21;1\n" +
+                "H5N3F1;H109C67N5O45;1;H1N3-2AB;H59C37N5O21;1\n" +
+                "H7N2;H106C65N4O46;1;H1N3F1-2AB;H69C43N5O25;1\n" +
+                "H5N3F1;H109C67N5O45;1;H1N3F1-2AB;H69C43N5O25;1\n" +
+                "H7N2;H106C65N4O46;1;N2;H26C16N2O10;1\n" +
+                "H5N3F1;H109C67N5O45;1;N2;H26C16N2O10;1\n" +
+                "H7N2;H106C65N4O46;1;H1N1;H23C14N1O10;1\n" +
+                "H5N3F1;H109C67N5O45;1;H1N1;H23C14N1O10;1\n" +
+                "H7N2;H106C65N4O46;1;N1F1-2AB;H33C21N3O10;1\n" +
+                "H5N3F1;H109C67N5O45;1;N1F1-2AB;H33C21N3O10;1\n" +
+                "H7N2;H106C65N4O46;1;H1N1F1;H33C20N1O14;1";
+            SetValuesAffectingAutomanage();
+            docOrig = SkylineWindow.Document;
+            SetClipboardText(text2);
+            wantAutoManageDlg = ShowDialog<MultiButtonMsgDlg>(() => SkylineWindow.Paste());
+            OkDialog(wantAutoManageDlg, wantAutoManageDlg.OkDialog);
+            pastedDoc = WaitForDocumentChange(docOrig);
+            AssertEx.IsDocumentState(SkylineWindow.Document, null, 1, 2, 2, 21);
             NewDocument(); // Clean up
         }
 

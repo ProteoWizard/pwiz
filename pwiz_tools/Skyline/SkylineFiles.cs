@@ -2161,7 +2161,7 @@ namespace pwiz.Skyline
                             {
                                 doc = docCurrent;
                             }
-                            if (result == DialogResult.OK)
+                            else if (result != DialogResult.No)
                             {
                                 doc = docManaged;
                             }
