@@ -81,13 +81,16 @@ message ChromatogramGroupIdsProto {
 		string name = 3;
 		double monoMass = 4;
 		double averageMass = 5;
-		repeated AccessionNumber accessionNumbers = 6;
+		string inChiKey = 6;
+		string cas = 7;
+		string hmdb = 8;
+		string inChi = 9;
+		string smiles = 10;
+		string kegg = 11;
 	}
 	repeated Target targets = 1;
-	repeated string accessionTypeNames = 2;
-	repeated string scoreTypeNames = 3;
-	repeated SpectrumFilter filters = 4;
-	repeated ChromatogramGroupId chromatogramGroupIds = 5;
+	repeated SpectrumFilter filters = 2;
+	repeated ChromatogramGroupId chromatogramGroupIds = 3;
 
 	message ChromatogramGroupId {
 		int32 targetIndex = 1; // one-based index into "targets"

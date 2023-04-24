@@ -55,10 +55,9 @@ namespace pwiz.Skyline.Model.Results
             return new ChromatogramGroupId(null, name, null);
         }
 
-        public ChromatogramGroupId(Target target, SpectrumClassFilter spectrumClassFilter)
+        public ChromatogramGroupId(Target target, SpectrumClassFilter spectrumClassFilter) : this(target, null,
+            spectrumClassFilter)
         {
-            Target = target;
-            SpectrumClassFilter = spectrumClassFilter;
         }
 
         public Target Target { get; }
@@ -117,10 +116,9 @@ namespace pwiz.Skyline.Model.Results
                 }
                 else
                 {
-                    MoleculeAccessionNumbers moleculeAccessionNumbers = MoleculeAccessionNumbers.EMPTY; // TODO
                     targets.Add(new Target(new CustomMolecule(targetProto.Formula, new TypedMass(targetProto.MonoMass, MassType.Monoisotopic),
                         new TypedMass(targetProto.AverageMass, MassType.Average),
-                        targetProto.Name, moleculeAccessionNumbers)));
+                        targetProto.Name, GetAccessionNumbers(targetProto))));
                 }
             }
 
@@ -141,6 +139,27 @@ namespace pwiz.Skyline.Model.Results
             {
                 yield return new ChromatogramGroupId(targets[id.TargetIndex], id.QcTraceName, filters[id.FilterIndex]);
             }
+        }
+
+        private static MoleculeAccessionNumbers GetAccessionNumbers(ChromatogramGroupIdsProto.Types.Target target)
+        {
+            var values = new[]
+            {
+                Tuple.Create(MoleculeAccessionNumbers.TagInChiKey, target.InChiKey),
+                Tuple.Create(MoleculeAccessionNumbers.TagCAS, target.Cas),
+                Tuple.Create(MoleculeAccessionNumbers.TagHMDB, target.Hmdb),
+                Tuple.Create(MoleculeAccessionNumbers.TagInChI, target.InChi),
+                Tuple.Create(MoleculeAccessionNumbers.TagSMILES, target.Smiles),
+                Tuple.Create(MoleculeAccessionNumbers.TagKEGG, target.Kegg)
+            };
+            if (values.All(value => value.Item2.Length == 0))
+            {
+                return MoleculeAccessionNumbers.EMPTY;
+            }
+
+            var dictionary = values.Where(value => value.Item2.Length > 0)
+                .ToDictionary(value => value.Item1, value => value.Item2);
+            return new MoleculeAccessionNumbers(dictionary);
         }
 
         /// <summary>
@@ -312,7 +331,7 @@ namespace pwiz.Skyline.Model.Results
                 {
                     var molecule = target.Molecule;
                     targetProto.Name = molecule.Name;
-                    if (string.IsNullOrEmpty(molecule.Formula))
+                    if (molecule.ParsedMolecule.IsMassOnly)
                     {
                         targetProto.MonoMass = molecule.MonoisotopicMass;
                         targetProto.AverageMass = molecule.AverageMass;
@@ -321,7 +340,13 @@ namespace pwiz.Skyline.Model.Results
                     {
                         targetProto.Formula = molecule.Formula;
                     }
-                    // TODO: Accession numbers
+
+                    targetProto.InChiKey = molecule.AccessionNumbers.GetInChiKey() ?? string.Empty;
+                    targetProto.Cas = molecule.AccessionNumbers.GetCAS() ?? string.Empty;
+                    targetProto.Hmdb = molecule.AccessionNumbers.GetHMDB() ?? string.Empty;
+                    targetProto.InChi = molecule.AccessionNumbers.GetInChI() ?? string.Empty;
+                    targetProto.Smiles = molecule.AccessionNumbers.GetSMILES() ?? string.Empty;
+                    targetProto.Kegg = molecule.AccessionNumbers.GetKEGG() ?? string.Empty;
                 }
 
                 idsProto.Targets.Add(targetProto);
