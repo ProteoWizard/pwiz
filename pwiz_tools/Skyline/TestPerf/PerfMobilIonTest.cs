@@ -98,7 +98,7 @@ namespace TestPerf
             document = WaitForDocumentChange(document);
             var im = document.MoleculePrecursorPairs.First().NodeGroup.ExplicitValues;
             AssertEx.AreEqual(308.71, im.IonMobility, .01); // As set above
-            AssertEx.IsFalse(im.CollisionalCrossSectionSqA.HasValue); // As set during chromatogram extraction
+            AssertEx.IsFalse(im.CollisionalCrossSectionSqA.HasValue); // As set above
 
             // Importing raw data
             var importResults = ShowDialog<ImportResultsDlg>(SkylineWindow.ImportResults);
