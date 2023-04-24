@@ -34,7 +34,7 @@
     <MSBuildAssemblyName />
     <AssemblyName Condition=" '$(MSBuildAssemblyName)' == '' ">Skyline-daily</AssemblyName>
     <AssemblyName Condition=" '$(MSBuildAssemblyName)' != '' ">$(MSBuildAssemblyName)</AssemblyName>
-    <PublishUrl>publish\</PublishUrl>
+    <PublishUrl>T:\www\site\skyline.ms\html\software\Skyline-daily13-64\</PublishUrl>
     <Install>true</Install>
     <InstallFrom>Web</InstallFrom>
     <UpdateEnabled>false</UpdateEnabled>
@@ -44,15 +44,15 @@
     <UpdatePeriodically>false</UpdatePeriodically>
     <UpdateRequired>false</UpdateRequired>
     <MapFileExtensions>false</MapFileExtensions>
-    <InstallUrl>https://proteome.gs.washington.edu/~nicksh/SkylineTransitionOptimization/</InstallUrl>
-    <UpdateUrl>https://proteome.gs.washington.edu/~nicksh/SkylineTransitionOptimization/</UpdateUrl>
+    <InstallUrl>https://skyline.gs.washington.edu/software/Skyline-daily13-64/</InstallUrl>
+    <UpdateUrl>https://skyline.gs.washington.edu/software/Skyline-daily13-64/</UpdateUrl>
     <SupportUrl>https://skyline.ms/support.url</SupportUrl>
-    <ProductName>Transition Optimizing Skyline-daily</ProductName>
+    <ProductName>Skyline-daily</ProductName>
     <PublisherName>MacCoss Lab, UW</PublisherName>
     <CreateWebPageOnPublish>true</CreateWebPageOnPublish>
     <WebPage>index.html</WebPage>
-    <ApplicationRevision>454</ApplicationRevision>
-    <ApplicationVersion>22.2.1.%2a</ApplicationVersion>
+    <ApplicationRevision>425</ApplicationRevision>
+    <ApplicationVersion>22.2.1.425</ApplicationVersion>
     <UseApplicationTrust>false</UseApplicationTrust>
     <PublishWizardCompleted>true</PublishWizardCompleted>
     <BootstrapperEnabled>true</BootstrapperEnabled>
