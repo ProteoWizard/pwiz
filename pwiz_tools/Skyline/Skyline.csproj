@@ -826,8 +826,12 @@
       <DependentUpon>DDASearchControl.cs</DependentUpon>
     </Compile>
     <Compile Include="Util\DocumentCancellationToken.cs" />
+    <Compile Include="Util\Extensions\MassTypeLocalizationExtension.cs" />
     <Compile Include="Util\FormGroup.cs" />
+    <Compile Include="Util\HillSystemOrdering.cs" />
+    <Compile Include="Util\ParsedMolecule.cs" />
     <Compile Include="Util\PersistentString.cs" />
+    <Compile Include="Util\TypedMass.cs" />
     <Compile Include="Util\UiModes.cs" />
     <Compile Include="ToolsUI\ColorGrid.cs">
       <SubType>UserControl</SubType>

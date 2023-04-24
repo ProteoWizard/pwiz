@@ -23,7 +23,6 @@ using System.Drawing;
 using System.Globalization;
 using System.Linq;
 using System.Windows.Forms;
-using pwiz.Common.Chemistry;
 using pwiz.Skyline.Alerts;
 using pwiz.Skyline.Controls;
 using pwiz.Skyline.Model;
@@ -45,8 +44,8 @@ namespace pwiz.Skyline.SettingsUI
         private readonly EditMode _editMode;
         private string _neutralFormula;
         private Dictionary<string, string> _isotopeLabelsForMassCalc;
-        private TypedMass _neutralMonoMass;
-        private TypedMass _neutralAverageMass;
+        private TypedMass _neutralMonoMass = TypedMass.ZERO_MONO_MASSNEUTRAL;
+        private TypedMass _neutralAverageMass = TypedMass.ZERO_AVERAGE_MASSNEUTRAL;
         private double? _averageMass; // Our internal value for mass, regardless of whether displaying mass or mz
         private double? _monoMass;    // Our internal value for mass, regardless of whether displaying mass or mz
 
@@ -131,7 +130,6 @@ namespace pwiz.Skyline.SettingsUI
                 {
                     return; // Do nothing - just initializing
                 }
-                Molecule ion;
                 Adduct newAdduct;
                 string newNeutralFormula;
                 string newTextFormulaText = null;
@@ -146,7 +144,7 @@ namespace pwiz.Skyline.SettingsUI
                     Adduct = newAdduct;
                     newTextFormulaText = value;
                 }
-                else if (IonInfo.IsFormulaWithAdduct(value, out ion, out newAdduct, out newNeutralFormula))
+                else if (IonInfo.IsFormulaWithAdduct(value, out var ion, out newAdduct, out newNeutralFormula))
                 {
                     // If we're allowing edit of adduct only, set aside the formula portion
                     var displayText = editAdductOnly ? newAdduct.AdductFormula : value;
@@ -205,8 +203,8 @@ namespace pwiz.Skyline.SettingsUI
                     // Update masses for this new formula value
                     try
                     {
-                        _neutralMonoMass = BioMassCalc.MONOISOTOPIC.CalculateMassFromFormula(value);
-                        _neutralAverageMass = BioMassCalc.AVERAGE.CalculateMassFromFormula(value);
+                        _neutralMonoMass = BioMassCalc.MONOISOTOPIC.CalculateMassFromFormula(value, out _);
+                        _neutralAverageMass = BioMassCalc.AVERAGE.CalculateMassFromFormula(value, out _);
                     }
                     catch
                     {
@@ -241,7 +239,7 @@ namespace pwiz.Skyline.SettingsUI
                     {
                         ChargeChange(this, EventArgs.Empty);
                     }
-                    if (!Equals(textFormula.Text, DisplayFormula))
+                    if (!Equals(textFormula.Text ?? string.Empty, DisplayFormula??string.Empty))
                     {
                         SetFormulaText(DisplayFormula);
                     }
@@ -646,9 +644,8 @@ namespace pwiz.Skyline.SettingsUI
                     formula = userinput;
                 }
                 string neutralFormula;
-                Molecule ion;
                 Adduct adduct;
-                if (!IonInfo.IsFormulaWithAdduct(formula, out ion, out adduct, out neutralFormula, true))
+                if (!IonInfo.IsFormulaWithAdduct(formula, out var ion, out adduct, out neutralFormula, true))
                 {
                     neutralFormula = formula;
                     if (!Adduct.TryParse(userinput, out adduct, Adduct.ADDUCT_TYPE.non_proteomic, true))

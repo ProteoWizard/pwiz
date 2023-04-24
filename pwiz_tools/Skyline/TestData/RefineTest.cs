@@ -249,7 +249,7 @@ namespace pwiz.SkylineTestData
             // Exercise the code that helps match heavy labeled ion formulas with unlabled
             Assert.AreEqual("C5H12NO2S", BioMassCalc.MONOISOTOPIC.StripLabelsFromFormula("C5H9H'3NO2S")); // Partially labeled
             Assert.AreEqual("C5H12NO2S", BioMassCalc.MONOISOTOPIC.StripLabelsFromFormula("C'5H'9H3NO\"2S'")); // Completely labeled
-            Assert.AreEqual("C5H14NO2STiDb", BioMassCalc.MONOISOTOPIC.StripLabelsFromFormula("C5H9D2H'H\"TNO2STiDb"));
+            Assert.AreEqual("C5H14NO2STiDb", BioMassCalc.StripLabelsFromFormula(ParsedMolecule.Create("C5H9D2H'H\"TNO2STiDb")).ToString());
             Assert.IsNull(BioMassCalc.MONOISOTOPIC.StripLabelsFromFormula(""));
             Assert.IsNull(BioMassCalc.MONOISOTOPIC.StripLabelsFromFormula(null));
 

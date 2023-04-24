@@ -135,7 +135,6 @@ namespace TestRunnerLib
         public bool RetryDataDownloads { get; set; }
         public bool RecordAuditLogs { get; set; }
         public bool RunsSmallMoleculeVersions { get; set; }
-        public bool LiveReports { get; set; }
         public bool TeamCityTestDecoration { get; set; }
         public bool Verbose { get; set; }
         public bool IsParallelClient { get; private set; }
@@ -215,7 +214,6 @@ namespace TestRunnerLib
             RetryDataDownloads = retrydatadownloads; // When true, try re-downloading data files on test failure, in case the failure is due to stale data
             RunsSmallMoleculeVersions = runsmallmoleculeversions;  // Run the small molecule version of various tests?
             RecordAuditLogs = recordauditlogs; // Replace or create audit logs for tutorial tests
-            LiveReports = true;
             TeamCityTestDecoration = teamcityTestDecoration;
             Verbose = verbose;
 
@@ -330,7 +328,6 @@ namespace TestRunnerLib
                 TestContext.Properties["RunPerfTests"] = RunPerfTests.ToString();
                 TestContext.Properties["RetryDataDownloads"] = RetryDataDownloads.ToString();
                 TestContext.Properties["RunSmallMoleculeTestVersions"] = RunsSmallMoleculeVersions.ToString(); // Run the AsSmallMolecule version of tests when available?
-                TestContext.Properties["LiveReports"] = LiveReports.ToString();
                 TestContext.Properties["TestName"] = test.TestMethod.Name;
                 TestContext.Properties["RecordAuditLogs"] = RecordAuditLogs.ToString();
                 if (IsParallelClient)
@@ -578,7 +575,10 @@ namespace TestRunnerLib
             var msAmandaTmpDir = Path.Combine(Path.GetTempPath(), @"~SK_MSAmanda" /* must match MSAmandaSearchWrapper.MS_AMANDA_TMP */);
             try
             {
-                Directory.Delete(msAmandaTmpDir, true);
+                if (Directory.Exists(msAmandaTmpDir))
+                {
+                    Directory.Delete(msAmandaTmpDir, true);
+                }
             }
             catch
             {
@@ -1118,7 +1118,7 @@ namespace TestRunnerLib
 
             p?.WaitForExit();
             if (p == null || p.ExitCode != 0)
-                throw new InvalidOperationException($"{message}\r\n\r\nDetails:\r\n'{command} {args}' returned an error ({output.ToString().Trim()});");
+                throw new InvalidOperationException($"{message}\r\n\r\nDetails:\r\n'\"{command}\" {args}' returned an error ({output.ToString().Trim()});");
              
             return output.ToString();
         }

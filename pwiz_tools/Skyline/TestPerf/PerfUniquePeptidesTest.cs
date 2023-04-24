@@ -77,7 +77,7 @@ namespace TestPerf // Note: tests in the "TestPerf" namespace only run when the 
             }
         }
 
-        [TestMethod]
+        [TestMethod, NoParallelTesting(TestExclusionReason.RESOURCE_INTENSIVE)]
         public void UniquePeptides0PerfTest()
         {
             // Scenarios to test:
@@ -85,35 +85,35 @@ namespace TestPerf // Note: tests in the "TestPerf" namespace only run when the 
             scenario(PeptideFilter.PeptideUniquenessConstraint.none, "human_and_yeast.protdb");
         }
 
-        [TestMethod]
+        [TestMethod, NoParallelTesting(TestExclusionReason.RESOURCE_INTENSIVE)]
         public void UniquePeptides1PerfTest()
         {
             // 1)  No current background proteome
             scenario(PeptideFilter.PeptideUniquenessConstraint.gene, null, "human_and_yeast_no_metadata.protdb", true);
         }
 
-        [TestMethod]
+        [TestMethod, NoParallelTesting(TestExclusionReason.RESOURCE_INTENSIVE)]
         public void UniquePeptides2PerfTest()
         {
             // 2)  Current background proteome same as in new settings, needs digest and protein metadata search
             scenario(PeptideFilter.PeptideUniquenessConstraint.protein, "human_and_yeast_no_digest.protdb");
         }
 
-        [TestMethod]
+        [TestMethod, NoParallelTesting(TestExclusionReason.RESOURCE_INTENSIVE)]
         public void UniquePeptides3PerfTest()
         {
             // 3)  Current background proteome same as in new settings, needs protein metadata search
             scenario(PeptideFilter.PeptideUniquenessConstraint.gene, "human_and_yeast_no_metadata_too.protdb");
         }
 
-        [TestMethod]
+        [TestMethod, NoParallelTesting(TestExclusionReason.RESOURCE_INTENSIVE)]
         public void UniquePeptides4PerfTest()
         {
             // 4)  Current background proteome not same as in new settings
             scenario(PeptideFilter.PeptideUniquenessConstraint.species, "human_and_yeast.protdb", "human_and_yeast_no_metadata.protdb");
         }
 
-        [TestMethod]
+        [TestMethod, NoParallelTesting(TestExclusionReason.RESOURCE_INTENSIVE)]
         public void UniquePeptides5PerfTest()
         {
             // Just verify that we've fixed a problem with opening files with uniqueness mode already turned on
