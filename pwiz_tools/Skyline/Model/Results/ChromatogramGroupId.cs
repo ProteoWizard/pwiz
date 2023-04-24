@@ -312,9 +312,15 @@ namespace pwiz.Skyline.Model.Results
                 {
                     var molecule = target.Molecule;
                     targetProto.Name = molecule.Name;
-                    targetProto.Formula = molecule.Formula;
-                    targetProto.MonoMass = molecule.MonoisotopicMass;
-                    targetProto.AverageMass = molecule.AverageMass;
+                    if (string.IsNullOrEmpty(molecule.Formula))
+                    {
+                        targetProto.MonoMass = molecule.MonoisotopicMass;
+                        targetProto.AverageMass = molecule.AverageMass;
+                    }
+                    else
+                    {
+                        targetProto.Formula = molecule.Formula;
+                    }
                     // TODO: Accession numbers
                 }
 
