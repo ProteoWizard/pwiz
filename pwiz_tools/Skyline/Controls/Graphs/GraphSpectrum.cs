@@ -70,6 +70,7 @@ namespace pwiz.Skyline.Controls.Graphs
         bool IsAnnotated { get; }
         LibraryRankedSpectrumInfo SpectrumInfo { get; }
         bool ShowPropertiesSheet { get; set; }
+        bool HasChromatogramData { get; }
     }
 
     public interface ISpectrumScaleProvider
@@ -1500,6 +1501,11 @@ namespace pwiz.Skyline.Controls.Graphs
         }
 
         public LibraryRankedSpectrumInfo SpectrumInfo => GraphItem?.SpectrumInfo;
+
+        public bool HasChromatogramData
+        {
+            get { return _spectrum?.LoadChromatogramData() != null; }
+        }
 
         public Scale IntensityScale
         {

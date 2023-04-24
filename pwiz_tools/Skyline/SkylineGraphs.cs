@@ -1201,7 +1201,7 @@ namespace pwiz.Skyline
 
             menuStrip.Items.Insert(iInsert++, showSpectrumPropertiesContextMenuItem);
 
-            if (_listGraphChrom.Any(c => c.Visible)) // Don't offer to show chromatograms when there are none
+            if (control is { HasChromatogramData: true }) // Don't offer to show chromatograms when there are none
             {
                 showLibraryChromatogramsSpectrumContextMenuItem.Checked = set.ShowLibraryChromatograms;
                 menuStrip.Items.Insert(iInsert++, showLibraryChromatogramsSpectrumContextMenuItem);

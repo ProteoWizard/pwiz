@@ -1060,6 +1060,8 @@ namespace pwiz.Skyline.Controls.Graphs
             set { }
         }
 
+        public bool HasChromatogramData => false;
+
         private void ZoomYAxis()
         {
             if (_msDataFileScanHelper.ScanProvider == null || _msDataFileScanHelper.ScanProvider.Transitions.Length == 0)
