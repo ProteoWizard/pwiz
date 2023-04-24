@@ -140,5 +140,8 @@
   <ItemGroup>
     <None Include="Resources\Icojam-Blueberry-Basic-Arrow-right.ico" />
   </ItemGroup>
+  <ItemGroup>
+    <None Include="Resources\Icojam-Blueberry-Basic-Arrow-up2.bmp" />
+  </ItemGroup>
   <Import Project="$(MSBuildToolsPath)\Microsoft.CSharp.targets" />
 </Project>
