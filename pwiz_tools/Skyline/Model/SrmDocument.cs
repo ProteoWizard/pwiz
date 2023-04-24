@@ -1546,7 +1546,7 @@ namespace pwiz.Skyline.Model
                 }
                 catch (LineColNumberedIoException x)
                 {
-                    throw new InvalidDataException(x.Message, x);
+                    errorList.Add(new TransitionImportErrorInfo(x));
                 }
             }
             return docNew;

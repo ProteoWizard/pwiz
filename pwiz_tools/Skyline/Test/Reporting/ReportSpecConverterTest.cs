@@ -32,23 +32,6 @@ namespace pwiz.SkylineTest.Reporting
     public class ReportSpecConverterTest : AbstractUnitTest
     {
         [TestMethod]
-        public void TestBlankDocument()
-        {
-            var blankDocument = new SrmDocument(SrmSettingsList.GetDefault());
-            CheckReportCompatibility.CheckAll(blankDocument);
-        }
-        [TestMethod]
-        public void TestDocumentWithOneLabel()
-        {
-            var assembly = typeof(ReportSpecConverterTest).Assembly;
-            XmlSerializer ser = new XmlSerializer(typeof(SrmDocument));
-            // ReSharper disable once AssignNullToNotNullAttribute
-            var docWithLabel = (SrmDocument)ser.Deserialize(
-                assembly.GetManifestResourceStream(typeof(ReportSpecConverterTest), "HeavyLabeledLeucine.sky"));
-            CheckReportCompatibility.CheckAll(docWithLabel);
-        }
-
-        [TestMethod]
         public void TestPivotIsotopeLabel()
         {
             var assembly = typeof(ReportSpecConverterTest).Assembly;

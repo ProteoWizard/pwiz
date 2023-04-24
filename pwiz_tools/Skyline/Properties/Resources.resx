@@ -1341,9 +1341,6 @@
   <data name="FindNodeDlg_AdvancedVisible_Hide_Advanced" xml:space="preserve">
     <value>&lt;&lt; Hide Ad&amp;vanced</value>
   </data>
-  <data name="OneOrManyList_ValidateIndex_The_index__0__must_be_between_0_and__1__" xml:space="preserve">
-    <value>The index {0} must be between 0 and {1}.</value>
-  </data>
   <data name="OptimizationDb_GetOptimizationDb_The_file__0__could_not_be_opened___1_" xml:space="preserve">
     <value>The file {0} could not be opened. {1}</value>
   </data>
@@ -3434,9 +3431,6 @@ Are you sure you want to continue?</value>
   </data>
   <data name="DefineAnnotationDlg_OkDialog_Choose_at_least_one_type_for_this_annotation_to_apply_to" xml:space="preserve">
     <value>Choose at least one type for this annotation to apply to.</value>
-  </data>
-  <data name="OneOrManyList_Add_Attempted_modification_of_a_read_only_collection" xml:space="preserve">
-    <value>Attempted modification of a read-only collection.</value>
   </data>
   <data name="PeptideGridViewDriver_ValidateRow_Missing_value_on_line__0_" xml:space="preserve">
     <value>Missing value on line {0}</value>
@@ -11955,6 +11949,9 @@ If you do not have the original file, you may build the library with embedded sp
   </data>
   <data name="Close" type="System.Resources.ResXFileRef, System.Windows.Forms">
     <value>..\Resources\Close.bmp;System.Drawing.Bitmap, System.Drawing, Version=4.0.0.0, Culture=neutral, PublicKeyToken=b03f5f7f11d50a3a</value>
+  </data>
+  <data name="ToolService_ImportPeakBoundaries_Import_peak_boundaries_from_external_tool" xml:space="preserve">
+    <value>Import peak boundaries from external tool</value>
   </data>
   <data name="ToolInstaller_UnpackZipTool_The_selected_zip_file_did_not_specify_any_items_to_add_to_the_Tools_menu_" xml:space="preserve">
     <value>The selected zip file did not specify any items to add to the Tools menu.</value>

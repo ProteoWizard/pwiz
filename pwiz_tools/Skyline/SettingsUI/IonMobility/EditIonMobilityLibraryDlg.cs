@@ -70,9 +70,12 @@ namespace pwiz.Skyline.SettingsUI.IonMobility
             Icon = Resources.Skyline;
             var smallMoleculeUI = Program.MainWindow.Document.HasSmallMolecules || Program.MainWindow.ModeUI != SrmDocument.DOCUMENT_TYPE.proteomic;
 
+            var targetResolver = TargetResolver.MakeTargetResolver(Program.ActiveDocumentUI);
+            columnTarget.TargetResolver = targetResolver;
             _gridViewLibraryDriver = new CollisionalCrossSectionGridViewDriver(gridViewIonMobilities,
                 bindingSourceLibrary,
-                new SortableBindingList<ValidatingIonMobilityPrecursor>());
+                new SortableBindingList<ValidatingIonMobilityPrecursor>(),
+                targetResolver);
 
             // Show window width caclulation types in L10N, watch out for special type "unknown" which does not display
             object[] namesL10n = Enumerable.Range(0, Enum.GetNames(typeof(eIonMobilityUnits)).Length)
@@ -561,6 +564,11 @@ namespace pwiz.Skyline.SettingsUI.IonMobility
             return cbOffsetHighEnergySpectra.Checked;
         }
 
+        public string GetTargetDisplayName(int row)
+        {
+            return _gridViewLibraryDriver.GetCellFormattedValue(COLUMN_TARGET, row);
+        }
+
         #endregion
 
         private void btnUseResults_Click(object sender, EventArgs e)
@@ -671,20 +679,20 @@ namespace pwiz.Skyline.SettingsUI.IonMobility
     {
         public CollisionalCrossSectionGridViewDriver(DataGridViewEx gridView,
                                          BindingSource bindingSource,
-                                         SortableBindingList<ValidatingIonMobilityPrecursor> items)
-            : base(gridView, bindingSource, items)
+                                         SortableBindingList<ValidatingIonMobilityPrecursor> items,
+                                         TargetResolver targetResolver)
+            : base(gridView, bindingSource, items, targetResolver)
         {
         }
 
         protected override void DoPaste()
         {
             var mMeasuredCollisionalCrossSectionsNew = new List<ValidatingIonMobilityPrecursor>();
-            var targetResolver = TargetResolver.MakeTargetResolver(Program.ActiveDocumentUI);
             GridView.DoPaste(MessageParent, ValidateRow,
                 values =>
                 {
                     var columnCount = values.Length;
-                    var target = targetResolver.TryResolveTarget(values[EditIonMobilityLibraryDlg.COLUMN_TARGET], out _)  ?? new Target(values[EditIonMobilityLibraryDlg.COLUMN_TARGET]);
+                    var target = _targetResolver.TryResolveTarget(values[EditIonMobilityLibraryDlg.COLUMN_TARGET], out _)  ?? new Target(values[EditIonMobilityLibraryDlg.COLUMN_TARGET]);
                     var precursorAdduct = columnCount <= EditIonMobilityLibraryDlg.COLUMN_ADDUCT ? Adduct.EMPTY : 
                         target.IsProteomic
                             ? Adduct.FromStringAssumeProtonated(values[EditIonMobilityLibraryDlg.COLUMN_ADDUCT]) // e.g. "1" -> M+H
@@ -950,11 +958,13 @@ namespace pwiz.Skyline.SettingsUI.IonMobility
     public abstract class CollisionalCrossSectionGridViewDriverBase<TItem> : SimpleGridViewDriver<TItem>
         where TItem : ValidatingIonMobilityPrecursor
     {
+        protected readonly TargetResolver _targetResolver;
 
-        protected CollisionalCrossSectionGridViewDriverBase(DataGridViewEx gridView, BindingSource bindingSource, SortableBindingList<TItem> items)
+        protected CollisionalCrossSectionGridViewDriverBase(DataGridViewEx gridView, BindingSource bindingSource, SortableBindingList<TItem> items, TargetResolver targetResolver)
             : base(gridView, bindingSource, items)
         {
             GridView.RowValidating += gridView_RowValidating;
+            _targetResolver = targetResolver;
         }
 
         public static string ValidateRow(object[] columns, int lineNumber, TargetResolver targetResolver, out int badCell)
@@ -1109,10 +1119,9 @@ namespace pwiz.Skyline.SettingsUI.IonMobility
             return messages.Any() ? TextUtil.LineSeparate(messages) : null;
         }
 
-        public static bool ValidateRow(object[] columns, IWin32Window parent, int lineNumber)
+        public bool ValidateRow(object[] columns, IWin32Window parent, int lineNumber)
         {
-            var targetResolver = TargetResolver.MakeTargetResolver(Program.ActiveDocumentUI);
-            string message = ValidateRow(columns, lineNumber, targetResolver, out _);
+            string message = ValidateRow(columns, lineNumber, _targetResolver, out _);
             if (message == null)
                 return true;
             MessageDlg.Show(parent, message);
@@ -1130,13 +1139,12 @@ namespace pwiz.Skyline.SettingsUI.IonMobility
             var row = GridView.Rows[rowIndex];
             if (row.IsNewRow)
                 return true;
-            var targetResolver = TargetResolver.MakeTargetResolver(Program.ActiveDocumentUI);
             var cells = new List<object>();
             for (var i = 0; i < row.Cells.Count; i++)
             {
                 cells.Add(row.Cells[i].Value);
             }
-            var errorText = ValidateRow(cells.ToArray(), rowIndex, targetResolver, out var badCol);
+            var errorText = ValidateRow(cells.ToArray(), rowIndex, _targetResolver, out var badCol);
             if (errorText != null)
             {
                 bool messageShown = false;
