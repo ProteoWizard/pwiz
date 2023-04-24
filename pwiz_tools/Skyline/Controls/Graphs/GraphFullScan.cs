@@ -546,7 +546,8 @@ namespace pwiz.Skyline.Controls.Graphs
                     {
                         var imAndCss = precursor.IonMobilityInfo.IonMobilityAndCCS;
                         if (imAndCss.HasIonMobilityValue)
-                            spectrumProperties.IonMobility = imAndCss.IonMobility.Mobility.Value.ToString(Formats.IonMobility) + imAndCss.IonMobility.UnitsString;
+                            spectrumProperties.IonMobility = TextUtil.SpaceSeparate(imAndCss.IonMobility.Mobility.Value.ToString(Formats.IonMobility),
+                                imAndCss.IonMobility.UnitsString);
                         if(imAndCss.HasCollisionalCrossSection)
                             spectrumProperties.CCS = imAndCss.CollisionalCrossSectionSqA.Value.ToString(Formats.CCS);
                     }
@@ -554,7 +555,9 @@ namespace pwiz.Skyline.Controls.Graphs
                     if (_documentContainer is SkylineWindow stateProvider)
                     {
                         var chromSet = stateProvider.DocumentUI.Settings.MeasuredResults.Chromatograms.FirstOrDefault(chrom =>
-                            chrom.ContainsFile(MsDataFilePath.ParseUri(spectra[0].SourceFilePath)));
+                            chrom.ContainsFile(
+                                _msDataFileScanHelper.ScanProvider.DataFilePath
+                            ));
                         spectrumProperties.ReplicateName = chromSet?.Name;
                         var resultsIndex = stateProvider.DocumentUI.Settings.MeasuredResults.Chromatograms.IndexOf(chromSet);
                         var nodePath = DocNodePath.GetNodePath(_msDataFileScanHelper.CurrentTransition?.Id, _documentContainer.DocumentUI);
@@ -586,12 +589,12 @@ namespace pwiz.Skyline.Controls.Graphs
                         if (mobility.HasValue)
                             ionMobilityMax = Math.Max(ionMobilityMax, mobility.Value);
                     }
-                    spectrumProperties.IonMobilityRange = string.Format(@"{0}:{1}", ionMobilityMin.ToString(Formats.IonMobility), ionMobilityMax.ToString(Formats.IonMobility));
+                    spectrumProperties.IonMobilityRange = TextUtil.ColonSeparate(ionMobilityMin.ToString(Formats.IonMobility), ionMobilityMax.ToString(Formats.IonMobility));
                     if(_msDataFileScanHelper.GetIonMobilityFilterDisplayRange(out minIonMobilityFilter, out maxIonMobilityFilter, ChromSource.unknown))
-                        spectrumProperties.IonMobilityFilterRange = string.Format(@"{0}:{1}", 
-                            minIonMobilityFilter.ToString(Formats.IonMobility), maxIonMobilityFilter.ToString(Formats.IonMobility));
+                        spectrumProperties.IonMobilityFilterRange = TextUtil.ColonSeparate(minIonMobilityFilter.ToString(Formats.IonMobility), 
+                            maxIonMobilityFilter.ToString(Formats.IonMobility));
                     spectrumProperties.DataPoints = fullScans.Select(scan => scan.Intensities.Length).Sum();
-                    spectrumProperties.MzCount = fullScans.Select(scan => scan.Mzs.Distinct().Count()).Sum();
+                    spectrumProperties.MzCount = fullScans.SelectMany(scan => scan.Mzs).Distinct().Count();
                     
                     if(fullScans.Any(scan => scan.IonMobilities != null))
                         spectrumProperties.IonMobilityCount = fullScans.Where(scan => scan.IonMobilities != null)
