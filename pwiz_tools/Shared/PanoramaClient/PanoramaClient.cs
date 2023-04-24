@@ -253,6 +253,8 @@ namespace pwiz.PanoramaClient
             }
         }
 
+
+        // NOTE (vsharma): serverUri, user, pass are not used. Remove them. 
         public string SaveFile(Uri serverUri, string user, string pass, string fileName, string downloadName, string lastPath)
         {
             var dlg = new FolderBrowserDialog();

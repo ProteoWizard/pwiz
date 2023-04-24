@@ -12,7 +12,7 @@ namespace pwiz.PanoramaClient
         private PanoramaServer _server;
         private bool _uploadPerms;
         private PanoramaFormUtil _formUtil;
-        public string FolderPath;
+        public string FolderPath;  // NOTE (vsharma): make this a property with private setter. Same for all other public variables.
         public TreeNode clicked;
         private Stack<TreeNode> previous = new Stack<TreeNode>();
         private TreeNode priorNode;
@@ -25,7 +25,7 @@ namespace pwiz.PanoramaClient
         public bool showSky;
         public string Path;
         public string state;
-        public TreeViewStateRestorer Restorer;
+        private TreeViewStateRestorer Restorer;
         public string ActiveServer;
 
         //Needs to take server information

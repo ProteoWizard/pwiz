@@ -68,7 +68,7 @@ namespace pwiz.PanoramaClient
             folderBrowser.AddFiles += AddFiles;
             folderBrowser.Dock = DockStyle.Fill;
             splitContainer1.Panel1.Controls.Add(folderBrowser);
-            folderBrowser.NodeClick += MouseClick;
+            folderBrowser.NodeClick += RemoteFileDialog_MouseClick;
             if (string.IsNullOrEmpty(TreeState))
             {
                 up.Enabled = false;
@@ -528,7 +528,7 @@ namespace pwiz.PanoramaClient
         }
 
 
-        public void MouseClick(object sender, EventArgs e)
+        public void RemoteFileDialog_MouseClick(object sender, EventArgs e)
         {
             up.Enabled = folderBrowser.UpEnabled();
             forward.Enabled = false;

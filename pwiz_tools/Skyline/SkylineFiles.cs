@@ -961,6 +961,8 @@ namespace pwiz.Skyline
             var panoramaServers = servers.Cast<PanoramaServer>().ToList();
 
             var state = string.Empty;
+            // NOTE (vsharma): Why create a WebPanoramaClient with the first server in the list?  Will this then work if there are multiple 
+            // servers, and the user wants to download a file from another server? 
             var panoramaClient = new WebPanoramaClient(server);
             if (!string.IsNullOrEmpty(Settings.Default.FileExpansion))
             {
@@ -975,6 +977,7 @@ namespace pwiz.Skyline
                     folderPath = Settings.Default.LastFolderPath;
                 }
 
+                // // NOTE (vsharma): Create a panorama client here with dlg.ActiveServer
                 var curServer = dlg.ActiveServer;
 
                 var downloadPath = panoramaClient.SaveFile(new Uri(curServer), user, pass, dlg.FileName, dlg.FileURL, folderPath);

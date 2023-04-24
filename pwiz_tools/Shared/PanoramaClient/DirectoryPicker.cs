@@ -17,7 +17,7 @@ namespace pwiz.PanoramaClient
             folders = new FolderBrowser( false, showSkyFolders, state, new List<PanoramaServer>());
             folders.Dock = DockStyle.Fill;
             folderPanel.Controls.Add(folders);
-            folders.NodeClick += MouseClick;
+            folders.NodeClick += DirectoryPicker_MouseClick;
             up.Enabled = false;
             back.Enabled = false;
             forward.Enabled = false;
@@ -87,7 +87,7 @@ namespace pwiz.PanoramaClient
             forward.Enabled = false;
         }
 
-        public void MouseClick(object sender, EventArgs e)
+        public void DirectoryPicker_MouseClick(object sender, EventArgs e)
         {
             up.Enabled = folders.UpEnabled();
             forward.Enabled = false;
