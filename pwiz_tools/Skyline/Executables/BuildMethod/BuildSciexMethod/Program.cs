@@ -404,7 +404,7 @@ namespace BuildSciexMethod
                     transition.PrecursorMz,
                     transition.ProductMz,
                     0.02,
-                    transition.RTWindow);
+                    transition.DwellOrRt);
                 export += Environment.NewLine;
             }
             using (var file = new StreamWriter(filePath))
