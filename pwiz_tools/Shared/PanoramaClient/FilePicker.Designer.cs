@@ -36,8 +36,8 @@ namespace pwiz.PanoramaClient
             this.label3 = new System.Windows.Forms.Label();
             this.imageList1 = new System.Windows.Forms.ImageList(this.components);
             this.imageList2 = new System.Windows.Forms.ImageList(this.components);
-            this.checkBox1 = new System.Windows.Forms.CheckBox();
-            this.comboBox1 = new System.Windows.Forms.ComboBox();
+            this.showSkyCheckBox = new System.Windows.Forms.CheckBox();
+            this.versionOptions = new System.Windows.Forms.ComboBox();
             this.open = new System.Windows.Forms.Button();
             this.cancel = new System.Windows.Forms.Button();
             this.versionLabel = new System.Windows.Forms.Label();
@@ -85,31 +85,31 @@ namespace pwiz.PanoramaClient
             this.imageList2.Images.SetKeyName(0, "File.png");
             this.imageList2.Images.SetKeyName(1, "SkylineDoc.ico");
             // 
-            // checkBox1
+            // showSkyCheckBox
             // 
-            this.checkBox1.Anchor = ((System.Windows.Forms.AnchorStyles)((System.Windows.Forms.AnchorStyles.Top | System.Windows.Forms.AnchorStyles.Right)));
-            this.checkBox1.AutoSize = true;
-            this.checkBox1.Location = new System.Drawing.Point(558, 25);
-            this.checkBox1.Name = "checkBox1";
-            this.checkBox1.Size = new System.Drawing.Size(163, 17);
-            this.checkBox1.TabIndex = 8;
-            this.checkBox1.Text = "View folders with Skyline files";
-            this.checkBox1.UseVisualStyleBackColor = true;
-            this.checkBox1.CheckedChanged += new System.EventHandler(this.CheckBox1_CheckedChanged);
+            this.showSkyCheckBox.Anchor = ((System.Windows.Forms.AnchorStyles)((System.Windows.Forms.AnchorStyles.Top | System.Windows.Forms.AnchorStyles.Right)));
+            this.showSkyCheckBox.AutoSize = true;
+            this.showSkyCheckBox.Location = new System.Drawing.Point(250, 25);
+            this.showSkyCheckBox.Name = "showSkyCheckBox";
+            this.showSkyCheckBox.Size = new System.Drawing.Size(163, 17);
+            this.showSkyCheckBox.TabIndex = 8;
+            this.showSkyCheckBox.Text = "View folders with Skyline files";
+            this.showSkyCheckBox.UseVisualStyleBackColor = true;
+            this.showSkyCheckBox.CheckedChanged += new System.EventHandler(this.CheckBox1_CheckedChanged);
             // 
-            // comboBox1
+            // versionOptions
             // 
-            this.comboBox1.Anchor = ((System.Windows.Forms.AnchorStyles)((System.Windows.Forms.AnchorStyles.Top | System.Windows.Forms.AnchorStyles.Right)));
-            this.comboBox1.FormattingEnabled = true;
-            this.comboBox1.Items.AddRange(new object[] {
-            "All versions",
-            "Most recent version(s)"});
-            this.comboBox1.Location = new System.Drawing.Point(414, 25);
-            this.comboBox1.Name = "comboBox1";
-            this.comboBox1.Size = new System.Drawing.Size(138, 21);
-            this.comboBox1.TabIndex = 10;
-            this.comboBox1.Visible = false;
-            this.comboBox1.SelectedIndexChanged += new System.EventHandler(this.ComboBox1_SelectedIndexChanged);
+            this.versionOptions.Anchor = ((System.Windows.Forms.AnchorStyles)((System.Windows.Forms.AnchorStyles.Top | System.Windows.Forms.AnchorStyles.Right)));
+            this.versionOptions.FormattingEnabled = true;
+            this.versionOptions.Items.AddRange(new object[] {
+            "All",
+            "Most recent"});
+            this.versionOptions.Location = new System.Drawing.Point(573, 26);
+            this.versionOptions.Name = "versionOptions";
+            this.versionOptions.Size = new System.Drawing.Size(138, 21);
+            this.versionOptions.TabIndex = 10;
+            this.versionOptions.Visible = false;
+            this.versionOptions.SelectedIndexChanged += new System.EventHandler(this.ComboBox1_SelectedIndexChanged);
             // 
             // open
             // 
@@ -137,7 +137,7 @@ namespace pwiz.PanoramaClient
             // 
             this.versionLabel.Anchor = ((System.Windows.Forms.AnchorStyles)((System.Windows.Forms.AnchorStyles.Top | System.Windows.Forms.AnchorStyles.Right)));
             this.versionLabel.AutoSize = true;
-            this.versionLabel.Location = new System.Drawing.Point(414, 9);
+            this.versionLabel.Location = new System.Drawing.Point(570, 10);
             this.versionLabel.Margin = new System.Windows.Forms.Padding(2, 0, 2, 0);
             this.versionLabel.Name = "versionLabel";
             this.versionLabel.Size = new System.Drawing.Size(50, 13);
@@ -270,8 +270,8 @@ namespace pwiz.PanoramaClient
             this.Controls.Add(this.versionLabel);
             this.Controls.Add(this.cancel);
             this.Controls.Add(this.open);
-            this.Controls.Add(this.comboBox1);
-            this.Controls.Add(this.checkBox1);
+            this.Controls.Add(this.versionOptions);
+            this.Controls.Add(this.showSkyCheckBox);
             this.Controls.Add(this.label3);
             this.Icon = ((System.Drawing.Icon)(resources.GetObject("$this.Icon")));
             this.Margin = new System.Windows.Forms.Padding(2);
@@ -281,7 +281,7 @@ namespace pwiz.PanoramaClient
             this.StartPosition = System.Windows.Forms.FormStartPosition.CenterScreen;
             this.Text = "Panorama Folders";
             this.FormClosing += new System.Windows.Forms.FormClosingEventHandler(this.Form1_FormClosing);
-            this.Load += new System.EventHandler(this.RemoteFileDialog_Load);
+            this.Load += new System.EventHandler(this.FilePicker_Load);
             this.splitContainer1.Panel2.ResumeLayout(false);
             ((System.ComponentModel.ISupportInitialize)(this.splitContainer1)).EndInit();
             this.splitContainer1.ResumeLayout(false);
@@ -297,8 +297,8 @@ namespace pwiz.PanoramaClient
         private Label label3;
         private ImageList imageList1;
         private ImageList imageList2;
-        private CheckBox checkBox1;
-        private ComboBox comboBox1;
+        private CheckBox showSkyCheckBox;
+        private ComboBox versionOptions;
         private Button open;
         private Button cancel;
         private Label versionLabel;

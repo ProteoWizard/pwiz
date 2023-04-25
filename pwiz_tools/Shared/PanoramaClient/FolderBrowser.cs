@@ -263,6 +263,7 @@ namespace pwiz.PanoramaClient
                     _priorNode = node;
                     node.BackColor = SystemColors.MenuHighlight;
                     node.ForeColor = Color.White;
+                    treeView.Focus();
                     _lastSelected = node;
                     Clicked = node;
                     Path = (string)node.Tag;

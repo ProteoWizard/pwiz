@@ -79,12 +79,12 @@ namespace pwiz.Skyline
             this.duplicatesContextMenuItem = new System.Windows.Forms.ToolStripMenuItem();
             this.toolStripSeparator13 = new System.Windows.Forms.ToolStripSeparator();
             this.lockYaxisContextMenuItem = new System.Windows.Forms.ToolStripMenuItem();
-            this.showSpectrumPropertiesContextMenuItem = new System.Windows.Forms.ToolStripMenuItem();
             this.toolStripSeparator14 = new System.Windows.Forms.ToolStripSeparator();
             this.prositLibMatchItem = new System.Windows.Forms.ToolStripMenuItem();
             this.mirrorMenuItem = new System.Windows.Forms.ToolStripMenuItem();
             this.toolStripSeparator61 = new System.Windows.Forms.ToolStripSeparator();
             this.spectrumGraphPropsContextMenuItem = new System.Windows.Forms.ToolStripMenuItem();
+            this.showSpectrumPropertiesContextMenuItem = new System.Windows.Forms.ToolStripMenuItem();
             this.toolStripSeparator15 = new System.Windows.Forms.ToolStripSeparator();
             this.zoomSpectrumContextMenuItem = new System.Windows.Forms.ToolStripMenuItem();
             this.toolStripSeparator27 = new System.Windows.Forms.ToolStripSeparator();
@@ -704,7 +704,7 @@ namespace pwiz.Skyline
             this.toolStripSeparator61.Name = "toolStripSeparator61";
             resources.ApplyResources(this.toolStripSeparator61, "toolStripSeparator61");
             // 
-            // spectrumPropsContextMenuItem
+            // spectrumGraphPropsContextMenuItem
             // 
             this.spectrumGraphPropsContextMenuItem.Name = "spectrumGraphPropsContextMenuItem";
             resources.ApplyResources(this.spectrumGraphPropsContextMenuItem, "spectrumGraphPropsContextMenuItem");
@@ -1649,13 +1649,13 @@ namespace pwiz.Skyline
             this.startPageMenuItem,
             this.newMenuItem,
             this.openMenuItem,
+            this.openPanoramaMenuItem,
             this.openContainingFolderMenuItem,
             this.toolStripSeparator53,
             this.saveMenuItem,
             this.saveAsMenuItem,
             this.shareDocumentMenuItem,
             this.publishMenuItem,
-            this.openPanoramaMenuItem,
             this.toolStripSeparator2,
             this.importToolStripMenuItem,
             this.exportToolStripMenuItem,

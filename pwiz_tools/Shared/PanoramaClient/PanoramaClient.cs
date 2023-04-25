@@ -262,7 +262,7 @@ namespace pwiz.PanoramaClient
                 SelectedPath = lastPath
             };
             var downloadPath = string.Empty;
-            dlg.Description = "Select the folder the file will be downloaded to";
+            dlg.Description = "Select the folder where the file will be downloaded";
             if (dlg.ShowDialog() == DialogResult.OK)
             {
                 SelectedPath = dlg.SelectedPath;

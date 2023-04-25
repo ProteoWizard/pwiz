@@ -960,7 +960,17 @@ namespace pwiz.Skyline
             try
             {
                 using var dlg = new FilePicker(panoramaServers, false, state, true);
-                if (dlg.ShowDialog() != DialogResult.Cancel)
+                using (var waitDlg = new LongWaitDlg
+                       {
+                           Text = "Loading Panorama folders"
+                       })
+                {
+                    waitDlg.PerformWork(this, 100, () =>
+                    {
+                        dlg.ShowDialog();
+                    });
+                }
+                if (dlg.DialogResult != DialogResult.Cancel)
                 {
                     var folderPath = string.Empty;
                     if (!string.IsNullOrEmpty(Settings.Default.LastFolderPath))
@@ -974,7 +984,17 @@ namespace pwiz.Skyline
                     var downloadPath = panoramaClient.SaveFile(dlg._fileName, folderPath);
                     if (!string.IsNullOrEmpty(downloadPath))
                     {
-                        panoramaClient.DownloadFile(downloadPath, curServer, dlg._fileUrl);
+                        using (var waitDlg = new LongWaitDlg
+                               {
+                                   Text = "Downloading selected file"
+                               })
+                        {
+                            waitDlg.PerformWork(this, 100, () =>
+                            {
+                                panoramaClient.DownloadFile(downloadPath, curServer, dlg._fileUrl);
+                            });
+                        }
+                        //panoramaClient.DownloadFile(downloadPath, curServer, dlg._fileUrl);
                         if (dlg._fileName.EndsWith(SrmDocumentSharing.EXT) && !string.IsNullOrEmpty(downloadPath))
                         {
                             OpenSharedFile(downloadPath);

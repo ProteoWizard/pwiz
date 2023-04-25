@@ -13,21 +13,21 @@ namespace pwiz.PanoramaClient
         private bool _restoring;
         private List<string> _mostRecent = new List<string>();
         private const string EXT = ".sky";
-        private const string RECENT_VER = "Most recent version(s)";
-        private const string ALL_VER = "All versions";
+        private const string RECENT_VER = "Most recent";
+        private const string ALL_VER = "All";
 
         public FilePicker(List<PanoramaServer> servers, bool showCheckbox, string stateString, bool showingSky)
         {
-            this._servers = servers;
+            _servers = servers;
             IsLoaded = false;
             InitializeComponent();
             TreeState = stateString;
             _restoring = true;
             _showingSky = showingSky;
-            checkBox1.Checked = _showingSky;
-            comboBox1.Text = ALL_VER;
+            showSkyCheckBox.Checked = _showingSky;
+            versionOptions.Text = ALL_VER;
             _restoring = false;
-            checkBox1.Visible = showCheckbox;
+            showSkyCheckBox.Visible = showCheckbox;
         }
         public string OkButtonText { get; set; }
         public string TreeState { get; set; }
@@ -46,14 +46,13 @@ namespace pwiz.PanoramaClient
         /// <summary>
         /// Sets a username and password and changes the 'Open' button text if a custom string is passed in
         /// </summary>
-        private void RemoteFileDialog_Load(object sender, EventArgs e)
+        private void FilePicker_Load(object sender, EventArgs e)
         {
             if (!string.IsNullOrEmpty(OkButtonText))
             {
                 open.Text = OkButtonText;
 
             }
-
             _folderBrowser = new FolderBrowser(false, _showingSky, TreeState, _servers);
             _folderBrowser.AddFiles += AddFiles;
             _folderBrowser.Dock = DockStyle.Fill;
@@ -73,6 +72,7 @@ namespace pwiz.PanoramaClient
             }
             IsLoaded = true;
         }
+
 
         /// <summary>
         /// Builds a string that will be used as a URI to find all .sky folders
@@ -208,12 +208,10 @@ namespace pwiz.PanoramaClient
         /// <summary>
         /// Find number of rows which gives version, and latest version is the only version where replaced is false
         /// </summary>
-        /// <param name="path"></param>
-        /// <param name="fileName"></param>
         /// <param name="json"></param>
         /// <param name="replacedBy"></param>
         /// <returns></returns>
-        private string[] GetVersionInfo(string path, string fileName, JToken json, string replacedBy)
+        private string[] GetVersionInfo(JToken json, string replacedBy)
         {
             var result = new string[2];
 
@@ -250,11 +248,11 @@ namespace pwiz.PanoramaClient
             //Use this one query once Vagisha can link up the file size column 
             //https://panoramaweb-dr.gs.washington.edu/00Developer/Sophie/Versions/query-selectRows.api?schemaName=targetedms&query.queryName=TargetedMSRuns&query.columns=File%2FId%2CRowId%2CCreated%2CFile%2FProteins%2CFile%2FPeptides%2CFile%2FPrecursors%2CFile%2FTransitions%2CFile%2FReplicates%2CReplacedByRun%2CReplacesRun,File%2FVersions,Container%2FPath,Name
             _peptideInfoQuery = BuildQuery(_activeServer.URI.ToString(), nodePath, @"TargetedMSRuns", @"Current",
-                new[] { @"Name", @"Deleted", @"Container/Path", @"File/Proteins", @"File/Peptides", @"File/Precursors", @"File/Transitions", @"File/Replicates", @"Created", @"File/Versions", @"Replaced", @"ReplacedByRun" , @"ReplacesRun", @"File/Id", @"RowId" }, string.Empty, string.Empty); //Add created date to listView
+                new[] { @"Name", @"Deleted", @"Container/Path", @"File/Proteins", @"File/Peptides", @"File/Precursors", @"File/Transitions", @"File/Replicates", @"Created", @"File/Versions", @"Replaced", @"ReplacedByRun" , @"ReplacesRun", @"File/Id", @"RowId" }, string.Empty, string.Empty);
             var query = _peptideInfoQuery;
             var json = GetJson(query);
             var rows = json[@"rows"];
-            var rowCount = json[@"rowCount"] ;
+            var rowCount = json[@"rowCount"];
             if ((int)rowCount > 0)
             {
                 var versions = HasVersions(json);
@@ -267,15 +265,18 @@ namespace pwiz.PanoramaClient
                         var listItem = new string[5];
                         var numVersions = new string[2];
                         var replacedBy = row[@"ReplacedByRun"].ToString();
-                        var replaces = row[@"ReplacesRun"].ToString();
                         if (versions)
                         {
+                            listView.Columns[3].Width = 100;
+                            listView.Columns[2].Width = 60;
                             l.Visible = true;
                             options.Visible = true;
-                            numVersions = GetVersionInfo(nodePath, fileName, json, replacedBy);
+                            numVersions = GetVersionInfo(json, replacedBy);
                         }
                         else
                         {
+                            listView.Columns[3].Width = 0;
+                            listView.Columns[2].Width = 0;
                             l.Visible = false;
                             options.Visible = false;
                         }
@@ -294,7 +295,7 @@ namespace pwiz.PanoramaClient
 
                         if (numVersions[0] != null)
                         {
-                            listItem[2] = row[@"File/Versions"].ToString(); //numVersions[0];
+                            listItem[2] = row[@"File/Versions"].ToString(); 
                         }
                         else
                         {
@@ -329,7 +330,9 @@ namespace pwiz.PanoramaClient
             try
             {
                 _restoring = true;
-                comboBox1.Text = ALL_VER;
+                versionOptions.Visible = false;
+                versionLabel.Visible = false;
+                versionOptions.Text = ALL_VER;
                 var path = _folderBrowser.Path;
                 listView.Items.Clear();
                 _activeServer = _folderBrowser.ActiveServer;
@@ -338,7 +341,7 @@ namespace pwiz.PanoramaClient
                 {
                     if (_folderBrowser.ShowSky)
                     {
-                        AddQueryFiles(path, versionLabel, comboBox1);
+                        AddQueryFiles(path, versionLabel, versionOptions);
                     }
                     else
                     {
@@ -365,9 +368,9 @@ namespace pwiz.PanoramaClient
             if (!_restoring)
             {
                 listView.Items.Clear();
-                comboBox1.Visible = false;
+                versionOptions.Visible = false;
                 versionLabel.Visible = false;
-                var type = checkBox1.Checked;
+                var type = showSkyCheckBox.Checked;
                 _folderBrowser.SwitchFolderType(type);
                 up.Enabled = false;
                 back.Enabled = false;
@@ -387,14 +390,14 @@ namespace pwiz.PanoramaClient
             if (!_restoring)
             {
                 listView.Items.Clear();
-                if (comboBox1.Text.Equals(RECENT_VER))
+                if (versionOptions.Text.Equals(RECENT_VER))
                 {
                     GetLatestVersion((string)_folderBrowser.Clicked.Tag);
                 }
                 else
                 {
                     _activeServer = _folderBrowser.ActiveServer;
-                    AddQueryFiles((string)_folderBrowser.Clicked.Tag, versionLabel, comboBox1);
+                    AddQueryFiles((string)_folderBrowser.Clicked.Tag, versionLabel, versionOptions);
                 }
             }
             
@@ -434,7 +437,7 @@ namespace pwiz.PanoramaClient
         {
             
             _fileName = listView.SelectedItems.Count != 0 ? listView.SelectedItems[0].Text : string.Empty;
-            _showingSky = checkBox1.Checked;
+            _showingSky = showSkyCheckBox.Checked;
             TreeState = _folderBrowser.ClosingState();
         }
 
