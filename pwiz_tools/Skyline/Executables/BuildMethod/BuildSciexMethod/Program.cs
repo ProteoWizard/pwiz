@@ -109,7 +109,7 @@ namespace BuildSciexMethod
         private bool ScheduledMethod => !StandardMethod;
         private bool IsConnected { get; set; }
         private bool IsLoggedIn { get; set; }
-        private bool IsSciexOsQuantMethod { get; set; }
+        private bool WriteSciexOsQuantMethod { get; set; }
 
         public Builder()
         {
@@ -146,7 +146,7 @@ namespace BuildSciexMethod
                         multiFile = true;
                         break;
                     case 'q':
-                        IsSciexOsQuantMethod = true;
+                        WriteSciexOsQuantMethod = true;
                         break;
                     default:
                         throw new Program.UsageException();
@@ -341,6 +341,8 @@ namespace BuildSciexMethod
             // Validate and save method
             ExecuteAndCheck(new MsMethodValidationRequest(method));
             ExecuteAndCheck(new MsMethodSaveRequest(method, transitions.OutputMethod));
+            if (WriteSciexOsQuantMethod)
+                WriteQuantMethodFile(transitions);
         }
 
         private PropertiesTable InitMethod(IMsMethod method, int numTransitions)
@@ -382,6 +384,33 @@ namespace BuildSciexMethod
                 massTable.RemoveRows(massTable.Rows.Skip(numTransitions).ToArray());
 
             return massTable;
+        }
+
+        private void WriteQuantMethodFile(MethodTransitions transitions)
+        {
+            string filePath = Path.ChangeExtension(transitions.FinalMethod, ".Quant.txt");
+            string export = "Group Name\tName\tPrecursor\tFragment\tXIC Width\tRetention Time" + Environment.NewLine;
+
+            foreach (var transition in transitions.Transitions)
+            {
+                var nameParts = transition.Label.Split(new[] { '.' }, StringSplitOptions.RemoveEmptyEntries);
+                var groupName = nameParts.Length >= 2
+                    ? string.Format("{0}.{1}", nameParts[0], nameParts[1])
+                    : transition.Label;
+
+                export += string.Format("{0}\t{1}\t{2}\t{3}\t{4}\t{5}",
+                    groupName,
+                    transition.Label,
+                    transition.PrecursorMz,
+                    transition.ProductMz,
+                    0.02,
+                    transition.RTWindow);
+                export += Environment.NewLine;
+            }
+            using (var file = new StreamWriter(filePath))
+            {
+                file.Write(export);
+            }
         }
 
         public void Dispose()
