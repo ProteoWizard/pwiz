@@ -29136,19 +29136,37 @@ namespace pwiz.Skyline.Properties {
         }
         
         /// <summary>
+        ///   Looks up a localized string similar to &amp;Disable.
+        /// </summary>
+        public static string SkylineWindow_ImportMassList_Disable {
+            get {
+                return ResourceManager.GetString("SkylineWindow_ImportMassList_Disable", resourceCulture);
+            }
+        }
+        
+        /// <summary>
         ///   Looks up a localized string similar to Do you want to enable Auto-select and use the document settings to manage these new transitions?
         ///
-        ///With Auto-select enabled: {0} precursor and {1} fragment transitions will be added to the current document.
+        ///Enable Auto-select: {0} precursor and {1} fragment transitions will be added to the current document.
         ///
-        ///With Auto-select disabled: {2} precursor and {3} fragment transitions will be added to the current document.
+        ///Disable Auto-select: {2} precursor and {3} fragment transitions will be added to the current document.
         ///
-        ///If you choose No, you can enable Auto-select later with the &quot;Refine &gt; Advanced&quot; menu item.
+        ///If you choose Disable, you can enable Auto-select later with the &quot;Refine &gt; Advanced&quot; menu item.
         ///.
         /// </summary>
         public static string SkylineWindow_ImportMassList_Do_you_want_to_use_the_document_settings_to_automanage_these_new_transitions {
             get {
                 return ResourceManager.GetString("SkylineWindow_ImportMassList_Do_you_want_to_use_the_document_settings_to_automana" +
                         "ge_these_new_transitions", resourceCulture);
+            }
+        }
+        
+        /// <summary>
+        ///   Looks up a localized string similar to &amp;Enable.
+        /// </summary>
+        public static string SkylineWindow_ImportMassList_Enable {
+            get {
+                return ResourceManager.GetString("SkylineWindow_ImportMassList_Enable", resourceCulture);
             }
         }
         

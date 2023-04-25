@@ -2156,7 +2156,7 @@ namespace pwiz.Skyline
                                 managedFragmentCount - existingFragmentCount,
                                 docPrecursorCount - existingPrecursorCount,
                                 docFragmentCount - existingFragmentCount);
-                            var result = MultiButtonMsgDlg.Show(this, prompt, MessageBoxButtons.YesNoCancel);
+                            var result = MultiButtonMsgDlg.Show(this, prompt, Resources.SkylineWindow_ImportMassList_Enable, Resources.SkylineWindow_ImportMassList_Disable, true);
                             if (result == DialogResult.Cancel)
                             {
                                 doc = docCurrent;
