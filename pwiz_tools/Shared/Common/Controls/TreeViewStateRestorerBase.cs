@@ -23,13 +23,20 @@ using System.Linq;
 using System.Text;
 using System.Windows.Forms;
 
-namespace pwiz.Skyline.Controls
+namespace pwiz.Common.Controls
 {
-    public class TreeViewStateRestorer
+    public class TreeViewStateRestorer : TreeViewStateRestorerBase<TreeView>
     {
-        private readonly TreeView _tree;
+        public TreeViewStateRestorer(TreeView tree) : base(tree)
+        {
+        }
+    }
+
+    public class TreeViewStateRestorerBase <T> where T : TreeView
+    {
+        protected readonly T _tree;
         
-        public TreeViewStateRestorer(TreeView tree)
+        public TreeViewStateRestorerBase(T tree)
         {
             _tree = tree;
         }
@@ -43,12 +50,8 @@ namespace pwiz.Skyline.Controls
             StringBuilder result = new StringBuilder();
             result.Append(GenerateExpansionString(_tree.Nodes)).Append('|');
             
-            var treeMS = _tree as TreeViewMS;
-            if (treeMS != null)
-                result.Append(GenerateSelectionString()).Append('|');
-            else
-                result.Append(GenerateSingleSelectionString()).Append('|');
-            
+            result.Append(GenerateSelectionString()).Append('|');
+
             result.Append(GenerateScrollString());
             return result.ToString();
         }
@@ -85,77 +88,18 @@ namespace pwiz.Skyline.Controls
         /// Gets the index of the selected node in a single-select TreeView according to the
         /// visual order of the nodes in the tree
         /// </summary>
-        private int GenerateSingleSelectionString()
+        protected virtual string GenerateSelectionString()
         {
             int index = 0;
             foreach (TreeNode node in VisibleNodes)
             {
                 if (node.IsSelected)
-                    return index;
+                    return index.ToString();
                 index++;
             }
-            return 0;
+            return @"0";
         }
 
-        /// <summary>
-        /// <para>The selection string stores which nodes are selected in the graph. The first element
-        /// is a single integer representing which node "the" selected node of the underlying TreeView.
-        /// The remaining comma-separated elements in the string represent the indices of nodes
-        /// that are selected according to the visual order of the nodes</para> 
-        ///
-        /// <para>These selections can be a single element (e.g. 1), a range (e.g. 1-7) or a disjoint selection
-        /// consisting of multiple single elements and/or ranges (e.g. 1,3-6,8)</para>
-        /// </summary>
-        private string GenerateSelectionString()
-        {
-            StringBuilder selectedRanges = new StringBuilder();
-
-            int index = 0;
-            int rangeStart = -1;
-            int prevSelection = -1;
-            int selectedIndex = -1;
-
-            foreach (TreeNodeMS node in VisibleNodes)
-            {
-                if (node.IsInSelection)
-                {
-                    if (rangeStart == -1)
-                    {
-                        rangeStart = index;
-                    }
-                    else if (index != prevSelection + 1)
-                    {
-                        AppendRange(selectedRanges, rangeStart, prevSelection);
-                        rangeStart = index;
-                    }
-                    prevSelection = index;
-                }
-
-                // insert the TreeView selected node at the front of the string
-                if (node.IsSelected)
-                    selectedIndex = index;
-                index++;
-            }
-
-            // complete any selection(s) that occur at the end of the tree
-            if (rangeStart != -1)
-            {
-                AppendRange(selectedRanges, rangeStart, prevSelection);
-            }
-
-            return selectedIndex + @"," + selectedRanges;
-        }
-
-        private static void AppendRange(StringBuilder selectedRanges, int rangeStart, int prevSelection)
-        {
-            if (selectedRanges.Length > 0)
-                selectedRanges.Append(',');
-
-            if (rangeStart == prevSelection)
-                selectedRanges.Append(rangeStart);
-            else
-                selectedRanges.AppendFormat(@"{0}-{1}", rangeStart, prevSelection);
-        }
 
         /// <summary>
         /// The scroll string stores the numerical index of the first visible node in the form.
@@ -178,7 +122,7 @@ namespace pwiz.Skyline.Controls
         /// Restores the expansion and selection of the tree, and sets the top node for scrolling
         /// to be updated after all resizing has occured
         /// </summary>
-        public void RestoreExpansionAndSelection(string persistentString)
+        public virtual void RestoreExpansionAndSelection(string persistentString)
         {
             if (!string.IsNullOrEmpty(persistentString))
             {
@@ -187,25 +131,14 @@ namespace pwiz.Skyline.Controls
                 // check that the .view file will have the necessary information to rebuild the tree
                 if (stateStrings.Length > 2)
                 {
-                    TreeViewMS treeMS = null;
                     try
                     {
                         _tree.BeginUpdate();
 
-                        treeMS = _tree as TreeViewMS;
-                        if (treeMS != null)
-                            treeMS.AutoExpandSingleNodes = false;
-
                         ExpandTreeFromString(stateStrings[0]);
-
-                        if (treeMS != null)
-                            treeMS.AutoExpandSingleNodes = true;
 
                         SelectTreeFromString(stateStrings[1]);
                         NextTopNode = GetTopNodeFromString(stateStrings[2]);
-
-                        if (treeMS != null)
-                            treeMS.RestoredFromPersistentString = true;
                     }
                     catch (FormatException)
                     {
@@ -214,8 +147,6 @@ namespace pwiz.Skyline.Controls
                     finally
                     {
                         _tree.EndUpdate();
-                        if (treeMS != null)
-                            treeMS.AutoExpandSingleNodes = true;
                     }
                 }
             }
@@ -224,7 +155,7 @@ namespace pwiz.Skyline.Controls
         /// <summary>
         /// Expands the tree from the persistent string data
         /// </summary>
-        private void ExpandTreeFromString(string persistentString)
+        protected void ExpandTreeFromString(string persistentString)
         {
             IEnumerator<char> dataEnumerator = persistentString.GetEnumerator();
             ExpandTreeFromString(_tree.Nodes, dataEnumerator);
@@ -274,7 +205,7 @@ namespace pwiz.Skyline.Controls
         /// <summary>
         /// Reselects tree nodes from the persistent string data
         /// </summary>
-        private void SelectTreeFromString(string persistentString)
+        protected virtual void SelectTreeFromString(string persistentString)
         {
             IList<TreeNode> visualOrder = VisibleNodes.ToArray();
             int nodeCount = visualOrder.Count;
@@ -285,39 +216,12 @@ namespace pwiz.Skyline.Controls
             if (selectedIndex < 0 || selectedIndex >= nodeCount)
                 return;
             _tree.SelectedNode = visualOrder[selectedIndex];
-
-            var tree = _tree as TreeViewMS;
-
-            // add remaining nodes to selection (if TreeViewMS)
-            if(tree != null) {
-                for (int i = 1; i < selections.Length; i++)
-                {
-                    string selection = selections[i];
-                    if (selection.Contains(@"-")) // when true, the string represents a range and not a single element
-                    {
-                        string[] range = selection.Split('-');
-                        int start = Math.Min(nodeCount - 1, Math.Max(0, int.Parse(range[0])));
-                        int end = Math.Min(nodeCount - 1, Math.Max(0, int.Parse(range[1])));
-                        for (int j = start; j <= end; j++)
-                        {
-                            tree.SelectNode((TreeNodeMS) visualOrder[j], true);
-                        }
-                    }
-                    else // the string represents a single element
-                    {
-                        int index = int.Parse(selection);
-                        if (0 > index || index >= nodeCount)
-                            return;
-                        tree.SelectNode((TreeNodeMS) visualOrder[index], true);
-                    }
-                }
-            }
         }
 
         /// <summary>
         /// Sets the top node (for scrolling) for update when the tree has finished resizing
         /// </summary>
-        private TreeNode GetTopNodeFromString(string persistentString)
+        protected TreeNode GetTopNodeFromString(string persistentString)
         {
             IList<TreeNode> nodes = VisibleNodes.ToArray();
             int index = int.Parse(persistentString);
@@ -326,7 +230,7 @@ namespace pwiz.Skyline.Controls
             return nodes[index];
         }
 
-        private TreeNode NextTopNode { get; set; }
+        protected TreeNode NextTopNode { get; set; }
 
         /// <summary>
         /// Updates the top node in order to establish the correct scrolling of the tree. This should
@@ -340,7 +244,7 @@ namespace pwiz.Skyline.Controls
         /// <summary>
         /// Generates the visual order of nodes as they appear in the tree
         /// </summary>
-        private IEnumerable<TreeNode> VisibleNodes
+        protected IEnumerable<TreeNode> VisibleNodes
         {
             get
             {

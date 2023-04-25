@@ -99,6 +99,7 @@
     <Compile Include="Controls\LiteDropDownList.cs">
       <SubType>Component</SubType>
     </Compile>
+    <Compile Include="Controls\TreeViewStateRestorerBase.cs" />
     <Compile Include="DataAnalysis\Clustering\ClusterResults.cs" />
     <Compile Include="DataAnalysis\Clustering\DendrogramData.cs" />
     <Compile Include="Controls\Clustering\DendrogramFormat.cs" />
