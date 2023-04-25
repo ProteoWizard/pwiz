@@ -163,11 +163,6 @@ namespace pwiz.SkylineTestUtil
         private const int SLEEP_INTERVAL = 100;
         public const int WAIT_TIME = 3 * 60 * 1000;    // 3 minutes (was 1 minute, but in code coverage testing that may be too impatient)
 
-        static AbstractFunctionalTest()
-        {
-            IsCheckLiveReportsCompatibility = false;
-        }
-
         private bool _testCompleted;
         private ScreenshotManager _shotManager;
 
@@ -1250,8 +1245,6 @@ namespace pwiz.SkylineTestUtil
 
         public bool IsFullData { get { return IsPauseForScreenShots || IsCoverShotMode || IsDemoMode || IsPass0; } }
 
-        public static bool IsCheckLiveReportsCompatibility { get; set; }
-
         public string LinkPdf { get; set; }
 
         private string LinkPage(int? pageNum)
@@ -1286,8 +1279,6 @@ namespace pwiz.SkylineTestUtil
             if (Program.SkylineOffscreen)
                 return;
 
-            if (IsCheckLiveReportsCompatibility)
-                CheckReportCompatibility.CheckAll(SkylineWindow.Document);
             if (IsDemoMode)
                 Thread.Sleep(3 * 1000);
             else if (Program.PauseSeconds > 0)

@@ -176,7 +176,8 @@ void removeObservedFiles(const string& libName){
 // When the output does not match the expected, print the observed output
 // to a file named <libName>.observed
 void printObserved(vector<string>& outputLines, string& libName){
-    string outName = libName;
+    string sep(1, bfs::path::preferred_separator);
+    string outName = bal::replace_first_copy(libName, sep + "output" + sep, sep + "reference" + sep);
     outName += ".observed";
     ofstream outfile(outName.c_str());
     if( !outfile.good() ){
