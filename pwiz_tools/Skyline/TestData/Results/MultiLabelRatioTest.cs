@@ -43,7 +43,6 @@ namespace pwiz.SkylineTestData.Results
             Assert.AreNotEqual(0, customReports.Count);
             using (var checkReportCompatibility = new CheckReportCompatibility(document))
             {
-                checkReportCompatibility.CheckAll();
                 foreach (var customReport in customReports)
                 {
                     checkReportCompatibility.CheckReport(customReport);

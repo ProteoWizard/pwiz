@@ -50,10 +50,6 @@ namespace pwiz.SkylineTestUtil
         {
         }
 
-        public void CheckAll()
-        {
-        }
-
         public void CheckReport(ReportSpec reportSpec)
         {
             var converter = new ReportSpecConverter(_dataSchema);
@@ -83,14 +79,6 @@ namespace pwiz.SkylineTestUtil
             throw new ArgumentException(string.Format("No row source for {0}", viewInfo.ParentColumn.PropertyType));
         }
         
-        public static void CheckAll(SrmDocument document)
-        {
-            using (var checkReportCompatibility = new CheckReportCompatibility(document))
-            {
-                checkReportCompatibility.CheckAll();
-            }
-        }
-
         public static void ReportToCsv(ReportSpec reportSpec, SrmDocument doc, string fileName, CultureInfo cultureInfo)
         {
             var documentContainer = new MemoryDocumentContainer();
