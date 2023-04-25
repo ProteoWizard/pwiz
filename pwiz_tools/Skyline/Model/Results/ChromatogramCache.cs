@@ -417,7 +417,7 @@ namespace pwiz.Skyline.Model.Results
             {
                 return true;
             }
-            if (Equals(nodePep.Target, chromatogramGroupId.Target))
+            if (Equals(nodePep.ChromatogramTarget, chromatogramGroupId.Target))
             {
                 return true;
             }

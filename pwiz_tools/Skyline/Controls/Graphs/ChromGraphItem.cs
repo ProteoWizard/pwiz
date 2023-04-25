@@ -296,7 +296,7 @@ namespace pwiz.Skyline.Controls.Graphs
                         return string.Format(Resources.ChromGraphItem_Title__0____base_peak, title);
                     if (extractor == ChromExtractor.summed)
                         return string.Format(Resources.ChromGraphItem_Title__0____TIC, title);
-                    return Chromatogram.GroupInfo.ChromatogramGroupId?.Target?.ToString() ?? @"no summary text";
+                    return Chromatogram.GroupInfo.ChromatogramGroupId?.Target?.ToString() ?? @"no summary text"; // N.B. potential user confusion here if they have messed with the molecule name after extraction
                 }
                 if (OptimizationStep.HasValue && !OptimizationStep.Value.Equals(0))
                     return string.Format(Resources.ChromGraphItem_Title_Step__0_, OptimizationStep);

@@ -195,7 +195,7 @@ namespace pwiz.Skyline.Model.Results
                 return null;
             }
 
-            return new ChromatogramGroupId(peptideDocNode.ModifiedTarget, transitionGroupDocNode?.SpectrumClassFilter);
+            return new ChromatogramGroupId(peptideDocNode.ChromatogramTarget, transitionGroupDocNode?.SpectrumClassFilter);
         }
     }
 
