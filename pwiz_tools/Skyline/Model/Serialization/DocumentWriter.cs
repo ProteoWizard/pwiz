@@ -878,6 +878,7 @@ namespace pwiz.Skyline.Model.Serialization
                 writer.WriteAttribute(ATTR.retention_time, chromInfo.RetentionTime);
                 writer.WriteAttribute(ATTR.start_time, chromInfo.StartRetentionTime);
                 writer.WriteAttribute(ATTR.end_time, chromInfo.EndRetentionTime);
+                writer.WriteAttributeNullable(ATTR.ccs, chromInfo.IonMobility.CollisionalCrossSectionSqA);
                 writer.WriteAttributeNullable(ATTR.ion_mobility, chromInfo.IonMobility.IonMobility.Mobility);
                 writer.WriteAttributeNullable(ATTR.ion_mobility_window, chromInfo.IonMobility.IonMobilityExtractionWindowWidth);
                 writer.WriteAttribute(ATTR.area, chromInfo.Area);
