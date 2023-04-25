@@ -45,7 +45,7 @@ namespace pwiz.SkylineTestFunctional
         {
             VerifyInvalidPeptideMessage("BiblioSpecInvalidPeptides.blib", 2, 30, "NS33LLVK+\r\nNS33LLVK++");
             VerifyInvalidPeptideMessage("SomeInvalidPeptides.sptxt", 1, 4, "D3YACR+");
-            VerifyInvalidPeptideMessage("InvalidElibPeptides.elib", 15, 48, "NSAAGLENTLF2LK++\r\nNSG2AILYETVK++\r\nNSFNILSAI2K++\r\nNSPSDFNKPDLPELI2R+++\r\nNSGYVSTAFGFL2K++\r\nNSSIDAAF2SL2K++\r\nNS2FEGSEDFIR++");
+            VerifyInvalidPeptideMessage("InvalidElibPeptides.elib", 15, 48, "NSAAGLENTLF2LK++\r\nNSG2AILYETVK++\r\nNSFNILSAI2K++\r\nNSPSDFNKPDLPELI2R+++\r\nNSGYVSTAFGFL2K++\r\nNSSIDAAF2SL2K++\r\nNS2FEGSEDFIR++\r\nNSD2LYASC[+57.0214635]ADFK++\r\nNSIAAGADGVEIHSANGYLLN2FLDPHSNNR++++\r\nNSFE2FC[+57.0214635]INYANEK++");
             VerifyInvalidPeptideMessage("BadExample.msp", 1, 3, "M000880_A098001-101-xxx_NA_0_FALSE_MDN35_ALK_Glycine, N,N-dimethyl- (1TMS)"); // Garbage formula
         }
 
