@@ -4949,16 +4949,6 @@ namespace pwiz.Skyline.Properties {
         }
         
         /// <summary>
-        ///   Looks up a localized string similar to or a result filepath to import the isolation scheme from.
-        /// </summary>
-        public static string CommandArgs_FullScanProductIsolationScheme_or_a_result_filepath_to_import_the_isolation_scheme_from {
-            get {
-                return ResourceManager.GetString("CommandArgs_FullScanProductIsolationScheme_or_a_result_filepath_to_import_the_iso" +
-                        "lation_scheme_from", resourceCulture);
-            }
-        }
-        
-        /// <summary>
         ///   Looks up a localized string similar to The arguments below can be used to install tools onto the Tools menu and do not rely on the &apos;--in&apos; argument because they independent of a specific Skyline document..
         /// </summary>
         public static string CommandArgs_GROUP_TOOLS_The_arguments_below_can_be_used_to_install_tools_onto_the_Tools_menu_and_do_not_rely_on_the____in__argument_because_they_independent_of_a_specific_Skyline_document_ {

@@ -1949,6 +1949,16 @@ namespace pwiz.Skyline {
         }
         
         /// <summary>
+        ///   Looks up a localized string similar to path/to/result-file to import the isolation scheme.
+        /// </summary>
+        internal static string CommandArgs_ARG_FULL_SCAN_PRODUCT_ISOLATION_SCHEME_path_to_result_file_to_import_the_isolation_scheme {
+            get {
+                return ResourceManager.GetString("CommandArgs_ARG_FULL_SCAN_PRODUCT_ISOLATION_SCHEME_path_to_result_file_to_import_" +
+                        "the_isolation_scheme", resourceCulture);
+            }
+        }
+        
+        /// <summary>
         ///   Looks up a localized string similar to &quot;&lt;arguments&gt;&quot;.
         /// </summary>
         internal static string CommandArgs_COMMAND_ARGUMENTS_VALUE {

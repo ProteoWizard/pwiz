@@ -12001,9 +12001,6 @@ If you do not have the original file, you may build the library with embedded sp
   <data name="CommandLine_AssociateProteins_Failed_to_associate_proteins" xml:space="preserve">
     <value>Failed to associate proteins</value>
   </data>
-  <data name="CommandArgs_FullScanProductIsolationScheme_or_a_result_filepath_to_import_the_isolation_scheme_from" xml:space="preserve">
-    <value>or a result filepath to import the isolation scheme from</value>
-  </data>
   <data name="ValueInvalidMzToleranceException_ValueInvalidMzToleranceException_The_value__0__is_not_valid_for_the_argument__1__which_requires_a_value_and_a_unit__For_example___2__" xml:space="preserve">
     <value>The value {0} is not valid for the argument {1} which requires a value and a unit. For example: {2}.</value>
   </data>
