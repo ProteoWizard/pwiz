@@ -873,7 +873,7 @@ namespace pwiz.Skyline.Model
                             explicitMods.GetHeavyModifications().ToArray(),
                             ExplicitMods.GetHeavyModifications().ToArray()) ||
                         !ReferenceEquals(explicitMods.StaticModifications, ExplicitMods.StaticModifications)
-                       )
+                        || !Equals(explicitMods.CrosslinkStructure, ExplicitMods.CrosslinkStructure))
                     {
                         diff = new SrmSettingsDiff(diff, SrmSettingsDiff.ALL);
                     }

@@ -814,6 +814,7 @@ namespace pwiz.Skyline.Model
                     transitionPeak.EndRetentionTime = transitionChromInfo.EndRetentionTime;
                     transitionPeak.IonMobility = transitionChromInfo.IonMobility.IonMobility.Mobility;
                     transitionPeak.IonMobilityWindow = transitionChromInfo.IonMobility.IonMobilityExtractionWindowWidth;
+                    transitionPeak.IonMobilityCollisionCrossSection = transitionChromInfo.IonMobility.CollisionalCrossSectionSqA;
                     transitionPeak.Area = transitionChromInfo.Area;
                     transitionPeak.BackgroundArea = transitionChromInfo.BackgroundArea;
                     transitionPeak.Height = transitionChromInfo.Height;
@@ -845,7 +846,8 @@ namespace pwiz.Skyline.Model
                             {
                                 StdDev = peakShapeValues.Value.StdDev,
                                 Skewness = peakShapeValues.Value.Skewness,
-                                Kurtosis = peakShapeValues.Value.Kurtosis
+                                Kurtosis = peakShapeValues.Value.Kurtosis,
+                                ShapeCorrelation = peakShapeValues.Value.ShapeCorrelation
                             };
                     }
                     yield return transitionPeak;
