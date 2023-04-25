@@ -401,8 +401,8 @@ namespace pwiz.Skyline.Controls.SeqNode
                             return true;
                         }
                         else if (tranGroup.IsCustomIon && nodeTree.IsSynchable() &&
-                                 string.IsNullOrEmpty(tranGroupThis.CustomMolecule.Formula) ==
-                                 string.IsNullOrEmpty(tranGroup.CustomMolecule.Formula))
+                                 tranGroupThis.CustomMolecule.ParsedMolecule.IsMassOnly ==
+                                 tranGroup.CustomMolecule.ParsedMolecule.IsMassOnly)
                         {
                             return true;
                         }

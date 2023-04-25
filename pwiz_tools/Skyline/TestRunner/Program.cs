@@ -770,7 +770,7 @@ namespace TestRunner
             int testsFailed = 0;
             int testsResultsReturned = 0;
             int workerCount = (int) commandLineArgs.ArgAsLong("workercount");
-            int workerTimeout = Convert.ToInt32(commandLineArgs.ArgAsStringOrDefault("workertimeout", "30"));
+            int workerTimeout = Convert.ToInt32(commandLineArgs.ArgAsStringOrDefault("workertimeout", "60"));
             int loop = (int) commandLineArgs.ArgAsLong("loop");
             var languages = commandLineArgs.ArgAsString("language").Split(',');
 
@@ -1334,16 +1334,14 @@ namespace TestRunner
                 //         French number format,
                 //         No vendor readers,
                 //         No internet access,
-                //         Old reports
                 if (pass0)
                 {
                     runTests.Log("\r\n");
-                    runTests.Log("# Pass 0: Run with French number format, no vendor readers, no internet access, old reports.\r\n");
+                    runTests.Log("# Pass 0: Run with French number format, no vendor readers, no internet access.\r\n");
 
                     runTests.Language = new CultureInfo("fr");
                     runTests.Skyline.Set("NoVendorReaders", true);
                     runTests.AccessInternet = false;
-                    runTests.LiveReports = false;
                     runTests.RunPerfTests = false;
                     runTests.CheckCrtLeaks = CrtLeakThreshold;
                     bool warnedPass0PerfTest = false;
@@ -1368,7 +1366,6 @@ namespace TestRunner
                     }
                     runTests.Skyline.Set("NoVendorReaders", false);
                     runTests.AccessInternet = internet;
-                    runTests.LiveReports = true;
                     runTests.RunPerfTests = perftests;
                     runTests.CheckCrtLeaks = 0;
 

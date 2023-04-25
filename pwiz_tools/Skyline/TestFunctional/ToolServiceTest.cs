@@ -151,7 +151,7 @@ namespace pwiz.SkylineTestFunctional
                 _testToolClient.InsertSmallMoleculeTransitionList(GetSmallMoleculeTransitionsText());
 
                 // Exit the test tool.
-                _testToolClient.Exit();
+                Assert.IsTrue(_testToolClient.Exit());
 
                 // Make sure we got all the library info we expect.
                 Assert.IsTrue(docPreLibrary.Peptides.All(nodePep => !nodePep.HasLibInfo));
