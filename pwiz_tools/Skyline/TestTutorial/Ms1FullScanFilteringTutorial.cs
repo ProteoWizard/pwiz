@@ -974,7 +974,7 @@ namespace pwiz.SkylineTestTutorial
                 {"RetentionTime","33.19"},
                 {"IsolationWindow","350:1600 (-625:+625)"},
                 {"ScanId","1.4067-1.1"},
-                {"MSStage","1"},
+                {"MSLevel","1"},
                 {"Instrument",new Dictionary<string, object> {
                         {"InstrumentSerialNumber","AP11280707"},
                         {"InstrumentModel","QSTAR Elite"},

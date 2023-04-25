@@ -589,10 +589,9 @@ namespace pwiz.Skyline.Controls.Graphs
                         if (mobility.HasValue)
                             ionMobilityMax = Math.Max(ionMobilityMax, mobility.Value);
                     }
-                    spectrumProperties.IonMobilityRange = TextUtil.ColonSeparate(ionMobilityMin.ToString(Formats.IonMobility), ionMobilityMax.ToString(Formats.IonMobility));
+                    spectrumProperties.IonMobilityRange = TextUtil.AppendColon(ionMobilityMin.ToString(Formats.IonMobility)) + ionMobilityMax.ToString(Formats.IonMobility);
                     if(_msDataFileScanHelper.GetIonMobilityFilterDisplayRange(out minIonMobilityFilter, out maxIonMobilityFilter, ChromSource.unknown))
-                        spectrumProperties.IonMobilityFilterRange = TextUtil.ColonSeparate(minIonMobilityFilter.ToString(Formats.IonMobility), 
-                            maxIonMobilityFilter.ToString(Formats.IonMobility));
+                        spectrumProperties.IonMobilityFilterRange = TextUtil.AppendColon(minIonMobilityFilter.ToString(Formats.IonMobility)) + maxIonMobilityFilter.ToString(Formats.IonMobility);
                     spectrumProperties.DataPoints = fullScans.Select(scan => scan.Intensities.Length).Sum();
                     spectrumProperties.MzCount = fullScans.SelectMany(scan => scan.Mzs).Distinct().Count();
                     

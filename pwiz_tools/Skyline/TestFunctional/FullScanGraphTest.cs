@@ -355,19 +355,19 @@ namespace pwiz.SkylineTestFunctional
                 {"Charge","+3"},
                 {"Label","light"},
                 {"RetentionTime","33.05"},
-                {"IonMobility","3.477msec"},
+                {"IonMobility","3.477 msec"},
                 {"IsolationWindow","50:2000 (-975:+975)"},
                 {"IonMobilityRange","0.069:13.8"},
                 {"IonMobilityFilterRange","3.152:3.651"},
                 {"ScanId","1.0.309201 - 1.0.309400"},
-                {"MSStage","1"},
+                {"MSLevel","1"},
                 {"Instrument",new Dictionary<string, object> {
                         {"InstrumentModel","Waters instrument model"},
                         {"InstrumentManufacturer","Waters"}
                     }
                 },
                 {"DataPoints","105373"},
-                {"MzCount","104118"},
+                {"MzCount","45751"},
                 {"IsCentroided","False"},
                 {"dotp","0.61"},
                 {"idotp","0.84"}
