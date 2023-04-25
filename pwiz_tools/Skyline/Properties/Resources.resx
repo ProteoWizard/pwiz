@@ -11957,13 +11957,13 @@ If you do not have the original file, you may build the library with embedded sp
     <value>The selected zip file did not specify any items to add to the Tools menu.</value>
   </data>
   <data name="SkylineWindow_ImportMassList_Do_you_want_to_use_the_document_settings_to_automanage_these_new_transitions" xml:space="preserve">
-    <value>Do you want to turn on Auto-select and use the document settings to manage these new transitions?
+    <value>Do you want to enable Auto-select and use the document settings to manage these new transitions?
 
-With Auto-select enabled, {0} precursor and {1} fragment transitions will be added to the current document.
+With Auto-select enabled: {0} precursor and {1} fragment transitions will be added to the current document.
 
-Without Auto-select management, {2} precursor and {3} fragment transitions will be added to the current document.
+With Auto-select disabled: {2} precursor and {3} fragment transitions will be added to the current document.
 
-If you select No, you can enable Auto-select later with the "Refine Advanced..." menu item.
+If you choose No, you can enable Auto-select later with the "Refine &gt; Advanced" menu item.
 </value>
   </data>
 </root>
