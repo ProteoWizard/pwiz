@@ -904,7 +904,7 @@ namespace pwiz.Skyline
         public void OpenFromPanorama(string server, string user, string pass)
         {
             var panoramaClient = new WebPanoramaClient(new Uri(server));
-            using var dlg = new RemoteFileDialog(new List<PanoramaServer>(), true, string.Empty, false);
+            using var dlg = new FilePicker(new List<PanoramaServer>(), true, string.Empty, false);
             if (dlg.ShowDialog() != DialogResult.Cancel)
             {
 
@@ -948,63 +948,55 @@ namespace pwiz.Skyline
 
                 servers.Add(newServer);
             }
-            var user = string.Empty;
-            var pass = string.Empty;
-            Uri server = null;
-            if (servers.Count > 0)
-            {
-                user = servers[0].Username;
-                pass = servers[0].Password;
-                server = servers[0].URI;
-            }
 
             var panoramaServers = servers.Cast<PanoramaServer>().ToList();
 
             var state = string.Empty;
-            // NOTE (vsharma): Why create a WebPanoramaClient with the first server in the list?  Will this then work if there are multiple 
-            // servers, and the user wants to download a file from another server? 
-            var panoramaClient = new WebPanoramaClient(server);
             if (!string.IsNullOrEmpty(Settings.Default.FileExpansion))
             {
                 state = Settings.Default.FileExpansion;
             }
-            using var dlg = new RemoteFileDialog(panoramaServers, false, state, true);
-            if (dlg.ShowDialog() != DialogResult.Cancel)
+
+            try
             {
-                var folderPath = string.Empty;
-                if (!string.IsNullOrEmpty(Settings.Default.LastFolderPath))
+                using var dlg = new FilePicker(panoramaServers, false, state, true);
+                if (dlg.ShowDialog() != DialogResult.Cancel)
                 {
-                    folderPath = Settings.Default.LastFolderPath;
-                }
-
-                // // NOTE (vsharma): Create a panorama client here with dlg.ActiveServer
-                var curServer = dlg.ActiveServer;
-
-                var downloadPath = panoramaClient.SaveFile(new Uri(curServer), user, pass, dlg.FileName, dlg.FileURL, folderPath);
-                if (!string.IsNullOrEmpty(downloadPath))
-                {
-                    panoramaClient.DownloadFile(downloadPath, new Uri(curServer), user, pass, dlg.FileName, dlg.FileURL);
-                    if (dlg.FileName.EndsWith(SrmDocumentSharing.EXT) && !string.IsNullOrEmpty(downloadPath))
+                    var folderPath = string.Empty;
+                    if (!string.IsNullOrEmpty(Settings.Default.LastFolderPath))
                     {
-                        OpenSharedFile(downloadPath);
+                        folderPath = Settings.Default.LastFolderPath;
                     }
-                    else if (dlg.FileName.EndsWith(SrmDocument.EXT) && !string.IsNullOrEmpty(downloadPath))
-                    {
-                        OpenFile(downloadPath);
-                    }
-                }
+                    var curServer = dlg._activeServer;
+                    var panoramaClient = new WebPanoramaClient(curServer.URI);
 
-                if (!string.IsNullOrEmpty(panoramaClient.SelectedPath))
-                {
-                    Settings.Default.LastFolderPath = panoramaClient.SelectedPath;
+
+                    var downloadPath = panoramaClient.SaveFile(dlg._fileName, folderPath);
+                    if (!string.IsNullOrEmpty(downloadPath))
+                    {
+                        panoramaClient.DownloadFile(downloadPath, curServer, dlg._fileUrl);
+                        if (dlg._fileName.EndsWith(SrmDocumentSharing.EXT) && !string.IsNullOrEmpty(downloadPath))
+                        {
+                            OpenSharedFile(downloadPath);
+                        }
+                        else if (dlg._fileName.EndsWith(SrmDocument.EXT) && !string.IsNullOrEmpty(downloadPath))
+                        {
+                            OpenFile(downloadPath);
+                        }
+                    }
+                    if (!string.IsNullOrEmpty(panoramaClient.SelectedPath))
+                    {
+                        Settings.Default.LastFolderPath = panoramaClient.SelectedPath;
+                    }
                 }
-                
+                Settings.Default.FileExpansion = dlg.TreeState;
+                Settings.Default.PanoramaSkyFiles = dlg._showingSky;
+                Settings.Default.Save();
             }
-
-            Settings.Default.FileExpansion = dlg.TreeState;
-            Settings.Default.PanoramaSkyFiles = dlg.ShowingSky;
-            Settings.Default.Save();
-
+            catch (Exception e)
+            {
+                MessageDlg.ShowException(this, e);
+            }
         }
 
         private void saveMenuItem_Click(object sender, EventArgs e)

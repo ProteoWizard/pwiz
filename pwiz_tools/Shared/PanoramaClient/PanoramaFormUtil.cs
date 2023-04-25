@@ -1,10 +1,8 @@
 ﻿using System;
-using System.Collections;
 using System.Collections.Generic;
-using System.ComponentModel;
 using System.Drawing;
 using System.IO;
-using System.Runtime.InteropServices;
+using System.Linq;
 using System.Windows.Forms;
 using Newtonsoft.Json.Linq;
 
@@ -33,18 +31,7 @@ namespace pwiz.PanoramaClient
             User = server.Username;
             Pass = server.Password;
             treeViewFolders.Invoke(new Action(() => treeViewFolders.Nodes.Add(treeNode)));
-            if (showSky)
-            {
-                var cols = new[] { @"Container/Path", @"Container", @"FileName" };  //@"Container/Path"
-                var initQuery = BuildQuery(server.URI.ToString(), @"/Panorama Public/", @"Runs", @"AllFolders", cols, string.Empty, string.Empty);
-                JToken json = GetJson(initQuery, server.Username, server.Password);
-                treeViewFolders.Invoke(new Action(() => LoadSkyFolders(json, treeNode, new HashSet<string>())));
-                
-            }
-            else
-            {
-                treeViewFolders.Invoke(new Action(() => AddChildContainers(treeNode, folder, requireUploadPerms, showFiles)));
-            }
+            treeViewFolders.Invoke(new Action(() => AddChildContainers(treeNode, folder, requireUploadPerms, showFiles)));
         }
 
         private static bool ContainsTargetedMSModule(IEnumerable<JToken> modules)
@@ -201,29 +188,26 @@ namespace pwiz.PanoramaClient
             return json;
         }
 
-        private string BuildQuery(string server, string folderPath, string queryName, string folderFilter, string[] columns, string sortParam, string equalityParam)
+        private static string BuildQuery(string server, string folderPath, string queryName, string folderFilter, string[] columns, string sortParam, string equalityParam)
         {
-            var query = string.Format(@"{0}{1}query-selectRows.view?schemaName=targetedms&query.queryName={2}&query.containerFilterName={3}", server, folderPath, queryName, folderFilter);
+            var query =
+                $@"{server}{folderPath}query-selectRows.view?schemaName=targetedms&query.queryName={queryName}&query.containerFilterName={folderFilter}";
             if (columns != null)
             {
-                query = string.Format(@"{0}&query.columns=", query);
-                string allCols = string.Empty;
-                foreach (var col in columns)
-                {
-                    allCols = string.Format(@"{0},{1}", col, allCols);
-                }
+                query = $@"{query}&query.columns=";
+                var allCols = columns.Aggregate(string.Empty, (current, col) => $@"{col},{current}");
 
-                query = string.Format(@"{0}{1}", query, allCols);
+                query = $@"{query}{allCols}";
             }
 
             if (!string.IsNullOrEmpty(sortParam))
             {
-                query = string.Format(@"{0}&query.sort={1}", query, sortParam);
+                query = $@"{query}&query.sort={sortParam}";
             }
 
             if (!string.IsNullOrEmpty(equalityParam))
             {
-                query = string.Format(@"{0}&query.{1}~eq=", query, equalityParam);
+                query = $@"{query}&query.{equalityParam}~eq=";
             }
             return query;
         }

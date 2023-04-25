@@ -9,64 +9,56 @@ namespace pwiz.PanoramaClient
 {
     public partial class FolderBrowser : UserControl
     {
-        private PanoramaServer _server;
         private bool _uploadPerms;
         private PanoramaFormUtil _formUtil;
-        public string FolderPath;  // NOTE (vsharma): make this a property with private setter. Same for all other public variables.
-        public TreeNode clicked;
-        private Stack<TreeNode> previous = new Stack<TreeNode>();
-        private TreeNode priorNode;
-        private Stack<TreeNode> next = new Stack<TreeNode>();
-        private List<List<String>> servers;
-        private List<PanoramaServer> serverList;// = new List<PanoramaServer>();
-        public event EventHandler NodeClick;
-        public event EventHandler AddFiles;
-        private TreeNode lastSelected;
-        public bool showSky;
-        public string Path;
-        public string state;
-        private TreeViewStateRestorer Restorer;
-        public string ActiveServer;
+          // NOTE (vsharma): make this a property with private setter. Same for all other public variables.
+        private Stack<TreeNode> _previous = new Stack<TreeNode>();
+        private TreeNode _priorNode;
+        private Stack<TreeNode> _next = new Stack<TreeNode>();
+        private readonly List<PanoramaServer> _serverList;// = new List<PanoramaServer>();
+        private TreeNode _lastSelected;
+        private TreeViewStateRestorer _restorer;
 
         //Needs to take server information
         public FolderBrowser(bool uploadPerms, bool showSkyFolders, string state, List<PanoramaServer> servers)
         {
             InitializeComponent();
             treeView.ImageList = imageList1;
-            serverList = servers;
+            _serverList = servers;
 
-            /*foreach (var server in servers)
-            {
-                var user = server.Username;
-                var uri = server.URI;
-                var pass = server.Password;
-                serverList.Add(string.IsNullOrEmpty(user) ? new PanoramaServer(uri) : new PanoramaServer(uri, user, pass));
-            }*/
             _uploadPerms = uploadPerms;
-            showSky = showSkyFolders;
-            this.state = state;
-            Restorer = new TreeViewStateRestorer(treeView);
+            ShowSky = showSkyFolders;
+            this.State = state;
+            _restorer = new TreeViewStateRestorer(treeView);
         }
 
+        public event EventHandler NodeClick;
+        public event EventHandler AddFiles;
+        public string FolderPath { get; private set; }
+        public TreeNode Clicked { get; private set; }
+        public bool ShowSky { get; private set; }
+        public string Path { get; private set; }
+        public string State { get; private set; }
+        public PanoramaServer ActiveServer { get; private set; }
 
         public void SwitchFolderType(bool type)
         {
             treeView.Nodes.Clear();
-            showSky = type;
-            foreach (var server in serverList)
+            ShowSky = type;
+            foreach (var server in _serverList)
             {
                 _formUtil.InitializeTreeView(server, treeView, _uploadPerms, true, type);
             }
-            next.Clear();
-            previous.Clear();
-            clicked = null;
-            lastSelected = null;
-            priorNode = null;
+            _next.Clear();
+            _previous.Clear();
+            Clicked = null;
+            _lastSelected = null;
+            _priorNode = null;
         }
 
-        private void treeView_AfterSelect(object sender, TreeViewEventArgs e)
+        private void TreeView_AfterSelect(object sender, TreeViewEventArgs e)
         {
-            lastSelected = e.Node;
+            _lastSelected = e.Node;
             if (e.Node.Tag != null)
             {
                 FolderPath = e.Node.Tag.ToString();
@@ -77,15 +69,15 @@ namespace pwiz.PanoramaClient
         {
             _formUtil = new PanoramaFormUtil();
 
-            foreach (var server in serverList)
+            foreach (var server in _serverList)
             {
-                _formUtil.InitializeTreeView(server, treeView, _uploadPerms, true, showSky);
+                _formUtil.InitializeTreeView(server, treeView, _uploadPerms, true, ShowSky);
             }
             
-            if (!string.IsNullOrEmpty(state))
+            if (!string.IsNullOrEmpty(State))
             {
-                Restorer.RestoreExpansionAndSelection(state);
-                Restorer.UpdateTopNode();
+                _restorer.RestoreExpansionAndSelection(State);
+                _restorer.UpdateTopNode();
                 AddSelectedFiles(treeView.Nodes, e);
             }
             else
@@ -94,9 +86,9 @@ namespace pwiz.PanoramaClient
             }
         }
 
-        public void treeView_NodeMouseClick(object sender, TreeNodeMouseClickEventArgs e)
+        public void TreeView_NodeMouseClick(object sender, TreeNodeMouseClickEventArgs e)
         {
-            if (lastSelected == null || (lastSelected != null && !lastSelected.Equals(e.Node)))
+            if (_lastSelected == null || (_lastSelected != null && !_lastSelected.Equals(e.Node)))
             {
                 if (e.Node.Bounds.Contains(e.Location))
                 {
@@ -107,22 +99,16 @@ namespace pwiz.PanoramaClient
                         ActiveServer = CheckServer(e.Node);
                         Path = e.Node.Tag != null ? e.Node.Tag.ToString() : string.Empty;
                         //If there's a file browser observer, add corresponding files
-                        if (AddFiles != null)
+                        AddFiles?.Invoke(this, e);
+                        if (_priorNode != null && _priorNode != e.Node)
                         {
-                            AddFiles(this, e);
+                            _previous.Push(_priorNode);
                         }
-                        if (priorNode != null && priorNode != e.Node)
-                        {
-                            previous.Push(priorNode);
-                        }
-                        priorNode = e.Node;
-                        clicked = e.Node;
-                        next.Clear();
+                        _priorNode = e.Node;
+                        Clicked = e.Node;
+                        _next.Clear();
                         //Observer pattern for navigation buttons
-                        if (NodeClick != null)
-                        {
-                            NodeClick(this, e);
-                        }
+                        NodeClick?.Invoke(this, e);
                     }
                 }
             }
@@ -131,15 +117,21 @@ namespace pwiz.PanoramaClient
         /// <summary>
         /// Determines which server corresponds with a given node
         /// </summary>
-        /// <param name="nodes"></param>
+        /// <param name="node"></param>
         /// <returns></returns>
-        private string CheckServer(TreeNode node)
+        private PanoramaServer CheckServer(TreeNode node)
         {
             if (node != null)
             {
                 if (node.Parent == null)
                 {
-                    return node.Text;
+                    foreach (var pServer in _serverList)
+                    {
+                        if (pServer.URI.ToString().Equals(node.Text))
+                        {
+                            return pServer;
+                        }
+                    }
                 }
                 else
                 {
@@ -150,11 +142,10 @@ namespace pwiz.PanoramaClient
                     }
                 }
             }
-
-            return string.Empty;
+            return null;
         }
 
-        private void ClearTreeRecursive(IEnumerable nodes)
+        private static void ClearTreeRecursive(IEnumerable nodes)
         {
             foreach (TreeNode node in nodes)
             {
@@ -162,115 +153,103 @@ namespace pwiz.PanoramaClient
                 node.ForeColor = Color.Black;
                 ClearTreeRecursive(node.Nodes);
             }
-
         }
 
         public void UpClick()
         {
-            if (clicked != null && clicked.Parent != null)
+            if (Clicked?.Parent != null)
             {
-                lastSelected.BackColor = Color.White;
-                lastSelected.ForeColor = Color.Black;
-                var parent = lastSelected.Parent;
-                next.Clear();
-                if (previous.Count != 0)
+                _lastSelected.BackColor = Color.White;
+                _lastSelected.ForeColor = Color.Black;
+                var parent = _lastSelected.Parent;
+                _next.Clear();
+                if (_previous.Count != 0)
                 {
-                    if (!previous.Peek().Equals(priorNode))
+                    if (!_previous.Peek().Equals(_priorNode))
                     {
-                        previous.Push(priorNode);
+                        _previous.Push(_priorNode);
                     }
                 }
                 else
                 {
-                    previous.Push(priorNode);
+                    _previous.Push(_priorNode);
                 }
-                priorNode = parent;
+                _priorNode = parent;
                 treeView.SelectedNode = parent;
-                lastSelected = parent;
-                clicked = parent;
-                Path = clicked.Tag != null ? clicked.Tag.ToString() : string.Empty;
+                _lastSelected = parent;
+                Clicked = parent;
+                Path = Clicked.Tag != null ? Clicked.Tag.ToString() : string.Empty;
                 treeView.Focus();
-                if (AddFiles != null)
-                {
-                    AddFiles(this, EventArgs.Empty);
-                }
+                AddFiles?.Invoke(this, EventArgs.Empty);
             }
         }
 
         public bool UpEnabled()
         {
-            return clicked != null && clicked.Parent != null;
+            return Clicked != null && Clicked.Parent != null;
         }
 
         public void BackClick()
         {
-            var prior = previous.Pop();
-            if (next.Count != 0)
+            var prior = _previous.Pop();
+            if (_next.Count != 0)
             {
-                if (!next.Peek().Equals(lastSelected))
+                if (!_next.Peek().Equals(_lastSelected))
                 {
-                    next.Push(lastSelected);
+                    _next.Push(_lastSelected);
                 }
             }
             else
             {
-                next.Push(lastSelected);
+                _next.Push(_lastSelected);
             }
-            //lastSelected.BackColor = Color.White;
-            //lastSelected.ForeColor = Color.Black;
-            lastSelected = prior;
+            _lastSelected = prior;
             treeView.SelectedNode = prior;
             treeView.Focus();
-            priorNode = prior;
-            clicked = prior;
+            _priorNode = prior;
+            Clicked = prior;
             Path = prior.Tag != null ? prior.Tag.ToString() : string.Empty;
-            if (AddFiles != null)
-            {
-                AddFiles(this, EventArgs.Empty);
-            }
+            AddFiles?.Invoke(this, EventArgs.Empty);
         }
 
         public bool BackEnabled()
         {
-            return previous != null && previous.Count != 0;
+            return _previous != null && _previous.Count != 0;
         }
 
         public void ForwardClick()
         {
-            if (previous.Count != 0)
+            if (_previous.Count != 0)
             {
-                if (!previous.Peek().Equals(lastSelected))
+                if (!_previous.Peek().Equals(_lastSelected))
                 {
-                    previous.Push(lastSelected);
+                    _previous.Push(_lastSelected);
                 }
             }
             else
             {
-                previous.Push(lastSelected);
+                _previous.Push(_lastSelected);
             }
 
-            var nextNode = next.Pop();
-            lastSelected.BackColor = Color.White;
-            lastSelected.ForeColor = Color.Black;
+            var nextNode = _next.Pop();
+            _lastSelected.BackColor = Color.White;
+            _lastSelected.ForeColor = Color.Black;
             treeView.SelectedNode = nextNode;
-            lastSelected = nextNode;
-            clicked = nextNode;
+            _lastSelected = nextNode;
+            Clicked = nextNode;
             treeView.Focus();
             Path = nextNode.Tag != null ? nextNode.Tag.ToString() : string.Empty;
-            if (AddFiles != null)
-            {
-                AddFiles(this, EventArgs.Empty);
-            }
+            AddFiles?.Invoke(this, EventArgs.Empty);
         }
 
         public bool ForwardEnabled()
         {
-            return next != null && next.Count != 0;
+            return _next != null && _next.Count != 0;
         }
 
         public string ClosingState()
         { 
-            return state = Restorer.GetPersistentString();
+            return State = _restorer.GetPersistentString();
         }
 
         private void AddSelectedFiles(IEnumerable nodes, EventArgs e)
@@ -281,17 +260,14 @@ namespace pwiz.PanoramaClient
                 {
                     //Highlight the selected node
                     ActiveServer = CheckServer(node);
-                    priorNode = node;
+                    _priorNode = node;
                     node.BackColor = SystemColors.MenuHighlight;
                     node.ForeColor = Color.White;
-                    lastSelected = node;
-                    clicked = node;
+                    _lastSelected = node;
+                    Clicked = node;
                     Path = (string)node.Tag;
                     treeView.Focus();
-                    if (AddFiles != null)
-                    {
-                        AddFiles(this, e);
-                    }
+                    AddFiles?.Invoke(this, e);
                 }
                 else
                 {
@@ -309,17 +285,14 @@ namespace pwiz.PanoramaClient
                 treeView.SelectedNode = node;
                 Path = node.Tag != null ? node.Tag.ToString() : string.Empty;
                 //If there's a file browser observer, add corresponding files
-                if (priorNode != null && priorNode != node)
+                if (_priorNode != null && _priorNode != node)
                 {
-                    previous.Push(priorNode);
+                    _previous.Push(_priorNode);
                 }
-                priorNode = node;
-                clicked = node;
-                next.Clear();
-                if (NodeClick != null)
-                {
-                    NodeClick(this, EventArgs.Empty);
-                }
+                _priorNode = node;
+                Clicked = node;
+                _next.Clear();
+                NodeClick?.Invoke(this, EventArgs.Empty);
             }
         }
 

@@ -121,7 +121,7 @@
             // up
             // 
             this.up.DisplayStyle = System.Windows.Forms.ToolStripItemDisplayStyle.Image;
-            this.up.Image = ((System.Drawing.Image)(resources.GetObject("up.Image")));
+            this.up.Image = global::pwiz.PanoramaClient.Properties.Resources.Icojam_Blueberry_Basic_Arrow_up;
             this.up.ImageTransparentColor = System.Drawing.Color.Magenta;
             this.up.Name = "up";
             this.up.Size = new System.Drawing.Size(28, 28);
@@ -143,7 +143,7 @@
             this.MinimizeBox = false;
             this.Name = "DirectoryPicker";
             this.StartPosition = System.Windows.Forms.FormStartPosition.CenterScreen;
-            this.Text = "Panorama folders";
+            this.Text = "Panorama Folders";
             this.FormClosing += new System.Windows.Forms.FormClosingEventHandler(this.DirectoryPicker_FormClosing);
             this.Load += new System.EventHandler(this.DirectoryPicker_Load);
             this.toolStrip.ResumeLayout(false);

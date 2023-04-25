@@ -89,11 +89,11 @@
     <Compile Include="PanoramaUtil.cs" />
     <Compile Include="Program.cs" />
     <Compile Include="Properties\AssemblyInfo.cs" />
-    <Compile Include="RemoteFileDialog.cs">
+    <Compile Include="FilePicker.cs">
       <SubType>Form</SubType>
     </Compile>
-    <Compile Include="RemoteFileDialog.Designer.cs">
-      <DependentUpon>RemoteFileDialog.cs</DependentUpon>
+    <Compile Include="FilePicker.Designer.cs">
+      <DependentUpon>FilePicker.cs</DependentUpon>
     </Compile>
     <Compile Include="TextUtil.cs" />
     <EmbeddedResource Include="DirectoryPicker.resx">
@@ -112,8 +112,8 @@
       <DependentUpon>Resources.resx</DependentUpon>
       <DesignTime>True</DesignTime>
     </Compile>
-    <EmbeddedResource Include="RemoteFileDialog.resx">
-      <DependentUpon>RemoteFileDialog.cs</DependentUpon>
+    <EmbeddedResource Include="FilePicker.resx">
+      <DependentUpon>FilePicker.cs</DependentUpon>
     </EmbeddedResource>
   </ItemGroup>
   <ItemGroup>

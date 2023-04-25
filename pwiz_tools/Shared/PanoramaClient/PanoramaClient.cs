@@ -255,36 +255,33 @@ namespace pwiz.PanoramaClient
 
 
         // NOTE (vsharma): serverUri, user, pass are not used. Remove them. 
-        public string SaveFile(Uri serverUri, string user, string pass, string fileName, string downloadName, string lastPath)
+        public string SaveFile(string fileName, string lastPath)
         {
-            var dlg = new FolderBrowserDialog();
-            dlg.SelectedPath = lastPath;
+            var dlg = new FolderBrowserDialog
+            {
+                SelectedPath = lastPath
+            };
             var downloadPath = string.Empty;
-            var selected = string.Empty;
             dlg.Description = "Select the folder the file will be downloaded to";
             if (dlg.ShowDialog() == DialogResult.OK)
             {
                 SelectedPath = dlg.SelectedPath;
-                selected = dlg.SelectedPath;
-                //DownloadFile(selected, serverUri, user, pass, fileName, downloadName);
+                var selected = dlg.SelectedPath;
                 downloadPath = Path.Combine(selected, fileName);
             }
             return downloadPath;
         }
 
-        public void DownloadFile(string path, Uri server, string user, string pass, string fileName, string downloadName)
+        public void DownloadFile(string path, PanoramaServer server, string downloadName)
         {
-            using (var wc = new WebClientWithCredentials(server, user, pass))
-            {
-                wc.DownloadFile(
+            using var wc = new WebClientWithCredentials(server.URI, server.Username, server.Password);
+            wc.DownloadFile(
 
-                    // Param1 = Link of file
-                    new Uri(downloadName),
-                    // Param2 = Path to save
-                    path
-                );
-            }
-
+                // Param1 = Link of file
+                new Uri(downloadName),
+                // Param2 = Path to save
+                path
+            );
         }
 
     }
