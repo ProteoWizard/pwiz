@@ -367,11 +367,11 @@ namespace pwiz.Skyline.Model {
         }
         
         /// <summary>
-        ///   Looks up a localized string similar to Mass-spectrometry stage: MS1, MS2 etc....
+        ///   Looks up a localized string similar to Mass-spectrometry stage: MS1, MS2, etc....
         /// </summary>
-        internal static string Description_MSStage {
+        internal static string Description_MSLevel {
             get {
-                return ResourceManager.GetString("Description_MSStage", resourceCulture);
+                return ResourceManager.GetString("Description_MSLevel", resourceCulture);
             }
         }
         
@@ -610,11 +610,11 @@ namespace pwiz.Skyline.Model {
         }
         
         /// <summary>
-        ///   Looks up a localized string similar to MS Stage.
+        ///   Looks up a localized string similar to MS Level.
         /// </summary>
-        internal static string MSStage {
+        internal static string MSLevel {
             get {
-                return ResourceManager.GetString("MSStage", resourceCulture);
+                return ResourceManager.GetString("MSLevel", resourceCulture);
             }
         }
         

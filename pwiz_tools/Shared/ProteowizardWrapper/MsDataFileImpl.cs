@@ -1499,7 +1499,6 @@ namespace pwiz.ProteowizardWrapper
             return new MsPrecursor
             {
                 PrecursorMz = GetPrecursorMz(p, negativePolarity),
-                ChargeState = GetChargeStateValue(p),
                 PrecursorCollisionEnergy = GetPrecursorCollisionEnergy(p),
                 IsolationWindowTargetMz =
                     GetSignedMz(GetIsolationWindowValue(p, CVID.MS_isolation_window_target_m_z),

@@ -193,10 +193,10 @@
   <data name="Description_CE" xml:space="preserve">
     <value>Collision energy used to obtain this spectrum.</value>
   </data>
-  <data name="MSStage" xml:space="preserve">
-    <value>MS Stage</value>
+  <data name="MSLevel" xml:space="preserve">
+    <value>MS Level</value>
   </data>
-  <data name="Description_MSStage" xml:space="preserve">
+  <data name="Description_MSLevel" xml:space="preserve">
     <value>Mass-spectrometry stage: MS1, MS2 etc...</value>
   </data>
   <data name="Instrument" xml:space="preserve">

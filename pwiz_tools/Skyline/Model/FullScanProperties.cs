@@ -74,7 +74,7 @@ namespace pwiz.Skyline.Model
 
             res.RetentionTime = spectrum.RetentionTime.HasValue ? spectrum.RetentionTime.Value.ToString(Formats.RETENTION_TIME) : null;
 
-            res.MSStage = spectrum.Level.ToString();
+            res.MSLevel = spectrum.Level.ToString();
             res.ScanId = spectrum.Id;
 
             if (spectrum.InstrumentInfo != null)
@@ -116,7 +116,7 @@ namespace pwiz.Skyline.Model
         [Category("PrecursorInfo")] public string HighEnergyOffset { get; set; }
         [Category("AcquisitionInfo")] public string ScanId { get; set; }
         [Category("AcquisitionInfo")] public string CE { get; set; }
-        [Category("AcquisitionInfo")] public string MSStage { get; set; }
+        [Category("AcquisitionInfo")] public string MSLevel { get; set; }
         [Category("AcquisitionInfo")] public InstrumentInfo Instrument { get; set; }
         [Category("AcquisitionInfo")] public int? DataPoints { get; set; }
         [Category("AcquisitionInfo")] public int? MzCount { get; set; }

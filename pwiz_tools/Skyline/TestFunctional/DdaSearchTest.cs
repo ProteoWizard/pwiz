@@ -429,6 +429,7 @@ namespace pwiz.SkylineTestFunctional
 
             var emptyProteinsDlg = ShowDialog<AssociateProteinsDlg>(importPeptideSearchDlg.ClickNextButtonNoCheck);
             WaitForConditionUI(() => emptyProteinsDlg.DocumentFinalCalculated);
+            PauseTest();
             RunUI(()=>
             {
                 int proteinCount, peptideCount, precursorCount, transitionCount;
