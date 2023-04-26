@@ -43,7 +43,10 @@ namespace pwiz.Skyline.SettingsUI
     public partial class BuildLibraryDlg : FormEx, IMultipleViewProvider
     {
         public BuildLibraryGridView Grid { get; }
-        public static readonly string[] RESULTS_EXTS =
+        public static string[] RESULTS_EXTS =>
+            Program.ModeUI == SrmDocument.DOCUMENT_TYPE.small_molecules ? RESULTS_EXTS_SMALL_MOL : RESULTS_EXTS_PEPTIDES;
+
+        public static readonly string[] RESULTS_EXTS_PEPTIDES =
         {
             BiblioSpecLiteBuilder.EXT_DAT,
             BiblioSpecLiteBuilder.EXT_PEP_XML,
@@ -69,6 +72,11 @@ namespace pwiz.Skyline.SettingsUI
             BiblioSpecLiteBuilder.EXT_MZTAB_TXT,
             BiblioSpecLiteBuilder.EXT_OPEN_SWATH,
             BiblioSpecLiteBuilder.EXT_SPECLIB,
+        };
+
+        public static readonly string[] RESULTS_EXTS_SMALL_MOL =
+        {
+            BiblioSpecLiteBuilder.EXT_SSL,
         };
 
         public enum Pages { properties, files }
@@ -181,7 +189,12 @@ namespace pwiz.Skyline.SettingsUI
                 return false;                
             }
             string outputDir = Path.GetDirectoryName(outputPath);
-            if (string.IsNullOrEmpty(outputDir) || !Directory.Exists(outputDir))
+            if (string.IsNullOrEmpty(outputDir))
+            {
+                _helper.ShowTextBoxError(textPath, Resources.BuildLibraryDlg_ValidateBuilder_You_must_specify_an_output_file_path, outputPath);
+                return false;
+            }
+            if (!Directory.Exists(outputDir))
             {
                 _helper.ShowTextBoxError(textPath, Resources.BuildLibraryDlg_ValidateBuilder_The_directory__0__does_not_exist, outputDir);
                 return false;
@@ -402,6 +415,10 @@ namespace pwiz.Skyline.SettingsUI
             for (int i = 0; i < wildExts.Length; i++)
                 wildExts[i] = @"*" + RESULTS_EXTS[i];
 
+            // Adjust the button text for small molecule UI
+            var buttonText = parent is FormEx formEx ?
+                formEx.GetModeUIHelper().Translate(Resources.BuildLibraryDlg_btnAddFile_Click_Matched_Peptides) :
+                Resources.BuildLibraryDlg_btnAddFile_Click_Matched_Peptides;
             using (var dlg = new OpenFileDialog
                 {
                     Title = Resources.BuildLibraryDlg_btnAddFile_Click_Add_Input_Files,
@@ -411,7 +428,7 @@ namespace pwiz.Skyline.SettingsUI
                     Multiselect = true,
                     DefaultExt = BiblioSpecLibSpec.EXT,
                     Filter = TextUtil.FileDialogFiltersAll(
-                        Resources.BuildLibraryDlg_btnAddFile_Click_Matched_Peptides + string.Join(@",", wildExts) + @")|" +
+                        buttonText + string.Join(@",", wildExts) + @")|" +
                         string.Join(@";", wildExts),
                         BiblioSpecLiteSpec.FILTER_BLIB)
                 })
