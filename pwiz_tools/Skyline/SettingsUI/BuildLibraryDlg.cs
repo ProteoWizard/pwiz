@@ -137,6 +137,12 @@ namespace pwiz.Skyline.SettingsUI
 
             // Reposition checkboxes
             cbKeepRedundant.Left = cbIncludeAmbiguousMatches.Left = cbFilter.Left = actionLabel.Left;
+
+            // If we're not using dataSourceGroupBox (because we're in small molecule mode) shift other controls up where it was
+            if (modeUIHandler.ComponentsDisabledForModeUI(dataSourceGroupBox))
+            {
+                this.Height -= dataSourceGroupBox.Height;
+            }
         }
 
         private void BuildLibraryDlg_FormClosing(object sender, FormClosingEventArgs e)
