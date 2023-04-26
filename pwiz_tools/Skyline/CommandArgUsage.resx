@@ -824,34 +824,34 @@ greater peak area.</value>
     <value>Discard all unused chromatograms from the document.</value>
   </data>
   <data name="_chromatograms_limit_noise" xml:space="preserve">
-    <value>Limits the length of the chromatagrams to a number of minutes around the chromatogram peak, i.e. ± minutes.</value>
+    <value>Limits the length of the chromatograms to a number of minutes around the chromatogram peak, i.e. ± minutes.</value>
   </data>
   <data name="_full_scan_acquisition_method" xml:space="preserve">
-    <value>The acquisition method for extracting from full scan data.</value>
+    <value>The acquisition method (None, DIA, PRM, DDA, SureQuant) for extracting from full scan data.</value>
   </data>
   <data name="_full_scan_isolation_scheme" xml:space="preserve">
-    <value>The isolation scheme used when extracting from full scan DIA data.</value>
+    <value>The name of a predefined isolation scheme or a path to a data file from which to import the isolation scheme used when extracting from full scan DIA data.</value>
   </data>
   <data name="_full_scan_precursor_analyzer" xml:space="preserve">
-    <value>The mass analyzer for precursor scans, or "centroided" to use centroid data instead of profile.</value>
+    <value>The mass analyzer for precursor spectra (MS1), or "centroided" to use centroid spectra (and a mass error in PPM) instead of profile (and a resolving power).</value>
   </data>
   <data name="_full_scan_precursor_ignore_sim" xml:space="preserve">
-    <value>Skip SIM scans when extracting from full scan MS1 data.</value>
+    <value>Skip SIM scans when extracting from full scan MS1 spectra. For use when both survey MS1 and SIM scans are present to avoid chromatograms extracted from both.</value>
   </data>
   <data name="_full_scan_precursor_isotopes" xml:space="preserve">
-    <value>How the precursor threshold is applied when extracting intensities from full scan data.</value>
+    <value>The meaning of the precursor threshold value applied when choosing precursor isotope transitions for extraction from high-resolution mass spectra. Count indicates a constant number starting from the monoisotopic precursor. Percent indicates a minimum percentage from the most intense precursor species, i.e. the base peak. Defaults to Count.</value>
   </data>
   <data name="_full_scan_precursor_isotope_enrichment" xml:space="preserve">
-    <value>The name of the isotope enrichment settings preset to use for extracting from full scan data. If none are available, use the GUI Transition Settings to add a new preset.</value>
+    <value>The name of predefined isotope enrichment settings to use for extracting from full scan data. If none are available, use the Transition Settings form in the user interface to add a new isotope enrichment settings.</value>
   </data>
   <data name="_full_scan_precursor_threshold" xml:space="preserve">
-    <value>The number of isotopes or percentage of isotope intensity to extract from full scan data.</value>
+    <value>The constant number of isotopes (starting with the monoisotopic precursor) or the percentage of base isotope intensity to extract from high resolution spectra.</value>
   </data>
   <data name="_full_scan_product_analyzer" xml:space="preserve">
-    <value>The mass analyzer for product scans, or "centroided" to use centroid data instead of profile.</value>
+    <value>The mass analyzer for product spectra, or "centroided" to use centroid spectra (and a mass error in PPM) instead of profile (and a resolving power).</value>
   </data>
   <data name="_import_search_exclude_library_sources" xml:space="preserve">
-    <value>Don't automatically import chromatograms from the result files used to build a library.</value>
+    <value>Exclude the result files used to build a library from consideration for chromatogram extraction. This can be useful when conversion and pre-processing were used on the files used for peptide spectrum matching which may not be appropriate for chromatogram extraction.</value>
   </data>
   <data name="_new" xml:space="preserve">
     <value>Create a new document using the current Skyline settings.</value>
@@ -860,22 +860,22 @@ greater peak area.</value>
     <value>Overwrite the filepath specified by --new if it already exists, instead of producing an error.</value>
   </data>
   <data name="_tran_product_end_ion" xml:space="preserve">
-    <value>The biggest product ion to create a transition for.</value>
+    <value>The largest product ion to allow a transition for.</value>
   </data>
   <data name="_tran_product_start_ion" xml:space="preserve">
-    <value>The smallest product ion to create a transition for.</value>
+    <value>The smallest product ion to allow a transition for.</value>
   </data>
   <data name="_full_scan_rt_filter" xml:space="preserve">
-    <value>Sets whether chromatogram start and stop times will be limited by a range around predicted RTs or MS/MS Id RTs.</value>
+    <value>Sets whether chromatogram start and stop times will be limited by a range around either predicted retention times or MS/MS ID retention times.</value>
   </data>
   <data name="_library_match_tolerance" xml:space="preserve">
-    <value>Maximum delta allowed when matching predicted product ion m/z values with measured MS/MS spectral library peak m/z values.</value>
+    <value>Maximum delta allowed when matching predicted product ion m/z values with measured MS/MS spectral library peak m/z values. The delta may be specified in either m/z or PPM units.</value>
   </data>
   <data name="_library_min_product_ions" xml:space="preserve">
-    <value>Pick precursors with at least this many transitions.</value>
+    <value>Keep only precursors with at least this many product transitions matching peaks in a library spectrum.</value>
   </data>
   <data name="_library_product_ions" xml:space="preserve">
-    <value>Pick this many transitions for each precursor by library spectrum peak intensity ranking.</value>
+    <value>The maximum number of product transitions for each precursor matching peaks in a library spectrum, ordered by peak intensity ranking.</value>
   </data>
   <data name="_associate_proteins_group_proteins" xml:space="preserve">
     <value>Proteins that match the same set of peptides will be combined into a single target in the document.</value>
@@ -893,19 +893,19 @@ greater peak area.</value>
     <value>Sets how to assign peptides that are contained in more than one protein in the FASTA or background proteome.</value>
   </data>
   <data name="_instrument_dynamic_min_mz" xml:space="preserve">
-    <value>If set, minimum m/z value for product ions is calculate dynamically from the precursor m/z using a specific equation provided by Thermo-Scientific for LTQ instruments</value>
+    <value>If set, minimum m/z value for product ions is calculated dynamically from the precursor m/z using a specific equation provided by Thermo-Scientific for LTQ instruments.</value>
   </data>
   <data name="_instrument_max_mz" xml:space="preserve">
-    <value>Maximum measurable m/z value for the target instrument</value>
+    <value>Maximum measurable m/z value for the target instrument to avoid adding precursors and transitions that cannot be measured.</value>
   </data>
   <data name="_instrument_max_time" xml:space="preserve">
     <value>Maximum time allowed in chromatograms regardless of how they were acquired.  Setting this can save memory and disk space that might be used on uninteresting parts of the gradient.</value>
   </data>
   <data name="_instrument_method_mz_tolerance" xml:space="preserve">
-    <value>Maximum delta for matching instrument method transition m/z values with predicted transition m/z values. (Applies only to SRM and targeted-MS/MS data.)</value>
+    <value>Maximum delta for matching instrument method transition m/z values with predicted transition m/z values. (Applies only to SRM and PRM isolated m/z values.)</value>
   </data>
   <data name="_instrument_min_mz" xml:space="preserve">
-    <value>Minimum measurable m/z value for the target instrument</value>
+    <value>Minimum measurable m/z value for the target instrument to avoid adding precursors and transitions that cannot be measured.</value>
   </data>
   <data name="_instrument_min_time" xml:space="preserve">
     <value>Minimum time allowed in chromatograms regardless of how they were acquired.  Setting this can save memory and disk space that might be used on uninteresting parts of the gradient.</value>
@@ -913,22 +913,19 @@ greater peak area.</value>
   <data name="_instrument_triggered_chromatograms" xml:space="preserve">
     <value>Indicates that there may be large gaps in the retention times when spectra were acquired for certain analytes. Peaks will be truncated to not overlap with these gaps and background subtraction will not be performed.</value>
   </data>
-  <data name="_library_pick_min_product_ions" xml:space="preserve">
-    <value>Pick precursors with at least this many transitions.</value>
-  </data>
   <data name="_library_pick_product_ions" xml:space="preserve">
-    <value>Pick this many transitions for each precursor by library spectrum peak intensity ranking.</value>
+    <value>The set of product ions to consider in picking transitions matching library spectrum peak m/z values. (all: all specified ion charges and types, filter: filter based on start and end transitions and special ions, or all_plus: the union of the two other options)</value>
   </data>
   <data name="_tran_product_add_special_ion" xml:space="preserve">
-    <value>Select a named special ion in the transition settings.</value>
+    <value>Add a named predefined special ion as specified in the Transition Settings form.</value>
   </data>
   <data name="_tran_product_clear_special_ions" xml:space="preserve">
-    <value>Unselect all special ions in the transition settings.</value>
+    <value>Remove all special ions from the transition filter settings.</value>
   </data>
   <data name="_tran_use_dia_window_exclusion" xml:space="preserve">
-    <value>Take precursor exclusion window from the Full-Scan settings instead of being symmetric around the precursor m/z. This is recommended for DIA/SWATH data.</value>
+    <value>Exclude product ion transitions with m/z values that fall within the precursor isolation window range. This is recommended for DIA/SWATH data where signal from unfragmented precursors can increase the probability of interference.</value>
   </data>
   <data name="CommandArgs_ARG_FULL_SCAN_PRODUCT_ISOLATION_SCHEME_path_to_result_file_to_import_the_isolation_scheme" xml:space="preserve">
-      <value>path/to/result-file to import the isolation scheme</value>
+    <value>path/to/result-file to import the isolation scheme from</value>
   </data>
 </root>

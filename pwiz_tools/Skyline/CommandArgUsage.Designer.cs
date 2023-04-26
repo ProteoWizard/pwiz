@@ -187,7 +187,7 @@ namespace pwiz.Skyline {
         }
         
         /// <summary>
-        ///   Looks up a localized string similar to Limits the length of the chromatagrams to a number of minutes around the chromatogram peak, i.e. ± minutes..
+        ///   Looks up a localized string similar to Limits the length of the chromatograms to a number of minutes around the chromatogram peak, i.e. ± minutes..
         /// </summary>
         internal static string _chromatograms_limit_noise {
             get {
@@ -394,7 +394,7 @@ namespace pwiz.Skyline {
         }
         
         /// <summary>
-        ///   Looks up a localized string similar to The acquisition method for extracting from full scan data..
+        ///   Looks up a localized string similar to The acquisition method (None, DIA, PRM, DDA, SureQuant) for extracting from full scan data..
         /// </summary>
         internal static string _full_scan_acquisition_method {
             get {
@@ -403,7 +403,7 @@ namespace pwiz.Skyline {
         }
         
         /// <summary>
-        ///   Looks up a localized string similar to The isolation scheme used when extracting from full scan DIA data..
+        ///   Looks up a localized string similar to The name of a predefined isolation scheme or a path to a data file from which to import the isolation scheme used when extracting from full scan DIA data..
         /// </summary>
         internal static string _full_scan_isolation_scheme {
             get {
@@ -412,7 +412,7 @@ namespace pwiz.Skyline {
         }
         
         /// <summary>
-        ///   Looks up a localized string similar to The mass analyzer for precursor scans, or &quot;centroided&quot; to use centroid data instead of profile..
+        ///   Looks up a localized string similar to The mass analyzer for precursor spectra (MS1), or &quot;centroided&quot; to use centroid spectra (and a mass error in PPM) instead of profile (and a resolving power)..
         /// </summary>
         internal static string _full_scan_precursor_analyzer {
             get {
@@ -421,7 +421,7 @@ namespace pwiz.Skyline {
         }
         
         /// <summary>
-        ///   Looks up a localized string similar to Skip SIM scans when extracting from full scan MS1 data..
+        ///   Looks up a localized string similar to Skip SIM scans when extracting from full scan MS1 spectra. For use when both survey MS1 and SIM scans are present to avoid chromatograms extracted from both..
         /// </summary>
         internal static string _full_scan_precursor_ignore_sim {
             get {
@@ -430,7 +430,7 @@ namespace pwiz.Skyline {
         }
         
         /// <summary>
-        ///   Looks up a localized string similar to The name of the isotope enrichment settings preset to use for extracting from full scan data. If none are available, use the GUI Transition Settings to add a new preset..
+        ///   Looks up a localized string similar to The name of predefined isotope enrichment settings to use for extracting from full scan data. If none are available, use the Transition Settings form in the user interface to add a new isotope enrichment settings..
         /// </summary>
         internal static string _full_scan_precursor_isotope_enrichment {
             get {
@@ -439,7 +439,7 @@ namespace pwiz.Skyline {
         }
         
         /// <summary>
-        ///   Looks up a localized string similar to How the precursor threshold is applied when extracting intensities from full scan data..
+        ///   Looks up a localized string similar to The meaning of the precursor threshold value applied when choosing precursor isotope transitions for extraction from high-resolution mass spectra. Count indicates a constant number starting from the monoisotopic precursor. Percent indicates a minimum percentage from the most intense precursor species, i.e. the base peak. Defaults to Count..
         /// </summary>
         internal static string _full_scan_precursor_isotopes {
             get {
@@ -466,7 +466,7 @@ namespace pwiz.Skyline {
         }
         
         /// <summary>
-        ///   Looks up a localized string similar to The number of isotopes or percentage of isotope intensity to extract from full scan data..
+        ///   Looks up a localized string similar to The constant number of isotopes (starting with the monoisotopic precursor) or the percentage of base isotope intensity to extract from high resolution spectra..
         /// </summary>
         internal static string _full_scan_precursor_threshold {
             get {
@@ -475,7 +475,7 @@ namespace pwiz.Skyline {
         }
         
         /// <summary>
-        ///   Looks up a localized string similar to The mass analyzer for product scans, or &quot;centroided&quot; to use centroid data instead of profile..
+        ///   Looks up a localized string similar to The mass analyzer for product spectra, or &quot;centroided&quot; to use centroid spectra (and a mass error in PPM) instead of profile (and a resolving power)..
         /// </summary>
         internal static string _full_scan_product_analyzer {
             get {
@@ -502,7 +502,7 @@ namespace pwiz.Skyline {
         }
         
         /// <summary>
-        ///   Looks up a localized string similar to Sets whether chromatogram start and stop times will be limited by a range around predicted RTs or MS/MS Id RTs..
+        ///   Looks up a localized string similar to Sets whether chromatogram start and stop times will be limited by a range around either predicted retention times or MS/MS ID retention times..
         /// </summary>
         internal static string _full_scan_rt_filter {
             get {
@@ -763,7 +763,7 @@ namespace pwiz.Skyline {
         }
         
         /// <summary>
-        ///   Looks up a localized string similar to Don&apos;t automatically import chromatograms from the result files used to build a library..
+        ///   Looks up a localized string similar to Exclude the result files used to build a library from consideration for chromatogram extraction. This can be useful when conversion and pre-processing were used on the files used for peptide spectrum matching which may not be appropriate for chromatogram extraction..
         /// </summary>
         internal static string _import_search_exclude_library_sources {
             get {
@@ -871,7 +871,7 @@ namespace pwiz.Skyline {
         }
         
         /// <summary>
-        ///   Looks up a localized string similar to If set, minimum m/z value for product ions is calculate dynamically from the precursor m/z using a specific equation provided by Thermo-Scientific for LTQ instruments.
+        ///   Looks up a localized string similar to If set, minimum m/z value for product ions is calculated dynamically from the precursor m/z using a specific equation provided by Thermo-Scientific for LTQ instruments..
         /// </summary>
         internal static string _instrument_dynamic_min_mz {
             get {
@@ -880,7 +880,7 @@ namespace pwiz.Skyline {
         }
         
         /// <summary>
-        ///   Looks up a localized string similar to Maximum measurable m/z value for the target instrument.
+        ///   Looks up a localized string similar to Maximum measurable m/z value for the target instrument to avoid adding precursors and transitions that cannot be measured..
         /// </summary>
         internal static string _instrument_max_mz {
             get {
@@ -898,7 +898,7 @@ namespace pwiz.Skyline {
         }
         
         /// <summary>
-        ///   Looks up a localized string similar to Maximum delta for matching instrument method transition m/z values with predicted transition m/z values. (Applies only to SRM and targeted-MS/MS data.).
+        ///   Looks up a localized string similar to Maximum delta for matching instrument method transition m/z values with predicted transition m/z values. (Applies only to SRM and PRM isolated m/z values.).
         /// </summary>
         internal static string _instrument_method_mz_tolerance {
             get {
@@ -907,7 +907,7 @@ namespace pwiz.Skyline {
         }
         
         /// <summary>
-        ///   Looks up a localized string similar to Minimum measurable m/z value for the target instrument.
+        ///   Looks up a localized string similar to Minimum measurable m/z value for the target instrument to avoid adding precursors and transitions that cannot be measured..
         /// </summary>
         internal static string _instrument_min_mz {
             get {
@@ -997,7 +997,7 @@ namespace pwiz.Skyline {
         }
         
         /// <summary>
-        ///   Looks up a localized string similar to Maximum delta allowed when matching predicted product ion m/z values with measured MS/MS spectral library peak m/z values..
+        ///   Looks up a localized string similar to Maximum delta allowed when matching predicted product ion m/z values with measured MS/MS spectral library peak m/z values. The delta may be specified in either m/z or PPM units..
         /// </summary>
         internal static string _library_match_tolerance {
             get {
@@ -1006,7 +1006,7 @@ namespace pwiz.Skyline {
         }
         
         /// <summary>
-        ///   Looks up a localized string similar to Pick precursors with at least this many transitions..
+        ///   Looks up a localized string similar to Keep only precursors with at least this many product transitions matching peaks in a library spectrum..
         /// </summary>
         internal static string _library_min_product_ions {
             get {
@@ -1015,16 +1015,7 @@ namespace pwiz.Skyline {
         }
         
         /// <summary>
-        ///   Looks up a localized string similar to Pick precursors with at least this many transitions..
-        /// </summary>
-        internal static string _library_pick_min_product_ions {
-            get {
-                return ResourceManager.GetString("_library_pick_min_product_ions", resourceCulture);
-            }
-        }
-        
-        /// <summary>
-        ///   Looks up a localized string similar to Pick this many transitions for each precursor by library spectrum peak intensity ranking..
+        ///   Looks up a localized string similar to The set of product ions to consider in picking transitions matching library spectrum peak m/z values. (all: all specified ion charges and types, filter: filter based on start and end transitions and special ions, or all_plus: the union of the two other options).
         /// </summary>
         internal static string _library_pick_product_ions {
             get {
@@ -1033,7 +1024,7 @@ namespace pwiz.Skyline {
         }
         
         /// <summary>
-        ///   Looks up a localized string similar to Pick this many transitions for each precursor by library spectrum peak intensity ranking..
+        ///   Looks up a localized string similar to The maximum number of product transitions for each precursor matching peaks in a library spectrum, ordered by peak intensity ranking..
         /// </summary>
         internal static string _library_product_ions {
             get {
@@ -1821,7 +1812,7 @@ namespace pwiz.Skyline {
         }
         
         /// <summary>
-        ///   Looks up a localized string similar to Select a named special ion in the transition settings..
+        ///   Looks up a localized string similar to Add a named predefined special ion as specified in the Transition Settings form..
         /// </summary>
         internal static string _tran_product_add_special_ion {
             get {
@@ -1830,7 +1821,7 @@ namespace pwiz.Skyline {
         }
         
         /// <summary>
-        ///   Looks up a localized string similar to Unselect all special ions in the transition settings..
+        ///   Looks up a localized string similar to Remove all special ions from the transition filter settings..
         /// </summary>
         internal static string _tran_product_clear_special_ions {
             get {
@@ -1839,7 +1830,7 @@ namespace pwiz.Skyline {
         }
         
         /// <summary>
-        ///   Looks up a localized string similar to The biggest product ion to create a transition for..
+        ///   Looks up a localized string similar to The largest product ion to allow a transition for..
         /// </summary>
         internal static string _tran_product_end_ion {
             get {
@@ -1866,7 +1857,7 @@ namespace pwiz.Skyline {
         }
         
         /// <summary>
-        ///   Looks up a localized string similar to The smallest product ion to create a transition for..
+        ///   Looks up a localized string similar to The smallest product ion to allow a transition for..
         /// </summary>
         internal static string _tran_product_start_ion {
             get {
@@ -1875,7 +1866,7 @@ namespace pwiz.Skyline {
         }
         
         /// <summary>
-        ///   Looks up a localized string similar to Take precursor exclusion window from the Full-Scan settings instead of being symmetric around the precursor m/z. This is recommended for DIA/SWATH data..
+        ///   Looks up a localized string similar to Exclude product ion transitions with m/z values that fall within the precursor isolation window range. This is recommended for DIA/SWATH data where signal from unfragmented precursors can increase the probability of interference..
         /// </summary>
         internal static string _tran_use_dia_window_exclusion {
             get {
@@ -1949,7 +1940,7 @@ namespace pwiz.Skyline {
         }
         
         /// <summary>
-        ///   Looks up a localized string similar to path/to/result-file to import the isolation scheme.
+        ///   Looks up a localized string similar to path/to/result-file to import the isolation scheme from.
         /// </summary>
         internal static string CommandArgs_ARG_FULL_SCAN_PRODUCT_ISOLATION_SCHEME_path_to_result_file_to_import_the_isolation_scheme {
             get {
