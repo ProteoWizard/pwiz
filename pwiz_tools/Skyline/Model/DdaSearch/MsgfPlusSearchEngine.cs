@@ -30,8 +30,8 @@ using System.Linq;
 using System.Text;
 using pwiz.Common.Collections;
 using pwiz.Common.SystemUtil;
+using pwiz.Skyline.Controls.Tools;
 using pwiz.Skyline.Model.Results;
-using pwiz.Skyline.Model.Tools;
 using pwiz.Skyline.Properties;
 
 namespace pwiz.Skyline.Model.DdaSearch

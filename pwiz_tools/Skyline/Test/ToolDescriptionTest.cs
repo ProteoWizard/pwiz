@@ -21,7 +21,7 @@ using System.IO;
 using System.Linq;
 using System.Windows.Forms;
 using Microsoft.VisualStudio.TestTools.UnitTesting;
-using pwiz.Skyline.Model.Tools;
+using pwiz.Skyline.Controls.Tools;
 using pwiz.SkylineTestUtil;
 
 namespace pwiz.SkylineTest

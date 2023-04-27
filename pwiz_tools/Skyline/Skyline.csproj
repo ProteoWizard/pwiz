@@ -413,6 +413,7 @@
       <DependentUpon>TutorialTextResources.resx</DependentUpon>
     </Compile>
     <Compile Include="Controls\TargetColumn.cs" />
+    <Compile Include="Controls\Tools\ToolService.cs" />
     <Compile Include="EditUI\EditLinkedPeptidesDlg.cs">
       <SubType>Form</SubType>
     </Compile>
@@ -1754,9 +1755,9 @@
     <Compile Include="Model\ModificationMatcher.cs" />
     <Compile Include="Model\StandardType.cs" />
     <Compile Include="Model\Themes\ColorScheme.cs" />
-    <Compile Include="Model\Tools\ToolDescription.cs" />
-    <Compile Include="Model\Tools\ToolInstaller.cs" />
-    <Compile Include="Model\Tools\ToolMacros.cs" />
+    <Compile Include="Controls\Tools\ToolDescription.cs" />
+    <Compile Include="Controls\Tools\ToolInstaller.cs" />
+    <Compile Include="Controls\Tools\ToolMacros.cs" />
     <Compile Include="Model\Transition.cs" />
     <Compile Include="Model\TransitionCalc.cs" />
     <Compile Include="Model\TransitionDocNode.cs" />
@@ -4383,7 +4384,6 @@
     <Compile Include="SkylineGraphs.cs">
       <SubType>Form</SubType>
     </Compile>
-    <Compile Include="Model\ToolService.cs" />
     <Compile Include="Controls\ToolStripNumericUpDown.cs">
       <SubType>Component</SubType>
     </Compile>
@@ -5799,7 +5799,9 @@
       <FileType>File</FileType>
     </PublishFile>
   </ItemGroup>
-  <ItemGroup />
+  <ItemGroup>
+    <Folder Include="Model\Tools\" />
+  </ItemGroup>
   <Import Project="$(MSBuildToolsPath)\Microsoft.CSharp.targets" />
   <Target Name="AfterPublish">
     <Exec Command="SignAfterPublishPW.bat &quot;$(ProjectDir)University of Washington (MacCoss Lab).pfx&quot; &quot;$(ProjectDir)bin\$(Platform)\$(ConfigurationName)\app.publish&quot; $(TargetName)" />

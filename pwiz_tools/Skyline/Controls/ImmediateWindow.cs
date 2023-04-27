@@ -25,7 +25,7 @@ using System.Linq;
 using System.Text;
 using System.Windows.Forms;
 using pwiz.Skyline.Alerts;
-using pwiz.Skyline.Model.Tools;
+using pwiz.Skyline.Controls.Tools;
 using pwiz.Skyline.Properties;
 using pwiz.Skyline.Util;
 
