@@ -1545,7 +1545,7 @@ namespace pwiz.Skyline
 
                 if (docNew == null)
                     return;
-                if (!peakBoundaryImporter.UnrecognizedPeptidesCancel(this))
+                if (!new PeakBoundaryAlerts(peakBoundaryImporter).UnrecognizedPeptidesCancel(this))
                     return;
                 if (longWaitDlg.IsDocumentChanged(docCurrent))
                 {

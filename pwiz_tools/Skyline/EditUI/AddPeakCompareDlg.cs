@@ -182,7 +182,7 @@ namespace pwiz.Skyline.EditUI
                             return;
                     }
                     // Show a warning message and give a chance to cancel, if there are unrecognized peptides
-                    if (BoundaryComparer.Importer != null && !BoundaryComparer.Importer.UnrecognizedPeptidesCancel(this))
+                    if (BoundaryComparer.Importer != null && !new PeakBoundaryAlerts(BoundaryComparer.Importer).UnrecognizedPeptidesCancel(this))
                     {
                         return;
                     }

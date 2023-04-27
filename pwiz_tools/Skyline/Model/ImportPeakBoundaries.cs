@@ -22,7 +22,6 @@ using System.Globalization;
 using System.IO;
 using System.Linq;
 using System.Text;
-using System.Windows.Forms;
 using pwiz.Common.SystemUtil;
 using pwiz.Skyline.Model.Databinding.Entities;
 using pwiz.Skyline.Model.DocSettings;
@@ -245,8 +244,7 @@ namespace pwiz.Skyline.Model
             var peakTimes = new List<double>();
             string line = reader.ReadLine();
             int[] fieldIndices;
-            int fieldsTotal;
-            char correctSeparator = ReadFirstLine(line, FIELD_NAMES, REQUIRED_FIELDS, out fieldIndices, out fieldsTotal);
+            char correctSeparator = ReadFirstLine(line, FIELD_NAMES, REQUIRED_FIELDS, out fieldIndices, out _);
             // Find the first 50 peak times that are not #N/A, if any is larger than the maxRT, then times are in seconds
             while (peakTimes.Count < 50)
             {
@@ -705,107 +703,6 @@ namespace pwiz.Skyline.Model
             return null;
         }
 
-        /// <summary>
-        /// UI for warning about unrecognized peptides in imported file
-        /// </summary>
-        /// <param name="parent"></param>
-        /// <returns></returns>
-        public bool UnrecognizedPeptidesCancel(IWin32Window parent)
-        {
-            const int itemsToShow = 10;
-            if (!ShowMissingMessage(parent, itemsToShow, UnrecognizedPeptides, p => p.ToString(), PeptideMessages))
-                return false;
-            if (!ShowMissingMessage(parent, itemsToShow, UnrecognizedFiles, f => f.ToString(), FileMessages))
-                return false;
-            if (!ShowMissingMessage(parent, itemsToShow, UnrecognizedChargeStates, c => c.PrintLine(' '), ChargeMessages))
-                return false;
-            return true;
-        }
-
-        private class MissingMessageLines
-            {
-            public MissingMessageLines(string first, string last)
-                {
-                First = first;
-                Last = last;
-                }
-
-            public string First { get; private set; }
-            public string Last { get; private set; }
-        }
-
-        private MissingMessageLines PeptideMessages(int count)
-                {
-            if (count == 1)
-            {
-                return new MissingMessageLines(
-                    Resources.PeakBoundaryImporter_UnrecognizedPeptidesCancel_The_following_peptide_in_the_peak_boundaries_file_was_not_recognized_,
-                    Resources.PeakBoundaryImporter_UnrecognizedPeptidesCancel_Continue_peak_boundary_import_ignoring_this_peptide_);
-                }
-            else
-                {
-                return new MissingMessageLines(
-                    string.Format(Resources.SkylineWindow_ImportPeakBoundaries_The_following__0__peptides_in_the_peak_boundaries_file_were_not_recognized__, count),
-                    Resources.SkylineWindow_ImportPeakBoundaries_Continue_peak_boundary_import_ignoring_these_peptides_);
-                }
-            }
-
-        private MissingMessageLines FileMessages(int count)
-            {
-            if (count == 1)
-                {
-                return new MissingMessageLines(
-                    Resources.PeakBoundaryImporter_UnrecognizedPeptidesCancel_The_following_file_name_in_the_peak_boundaries_file_was_not_recognized_,
-                    Resources.PeakBoundaryImporter_UnrecognizedPeptidesCancel_Continue_peak_boundary_import_ignoring_this_file_);
-                }
-            else
-                {
-                return new MissingMessageLines(
-                    string.Format(Resources.SkylineWindow_ImportPeakBoundaries_The_following__0__file_names_in_the_peak_boundaries_file_were_not_recognized_, count),
-                    Resources.SkylineWindow_ImportPeakBoundaries_Continue_peak_boundary_import_ignoring_these_files_);
-                }
-        }
-
-        private MissingMessageLines ChargeMessages(int count)
-                {
-            if (count == 1)
-            {
-                return new MissingMessageLines(
-                    Resources.PeakBoundaryImporter_UnrecognizedPeptidesCancel_The_following_peptide__file__and_charge_state_combination_was_not_recognized_,
-                    Resources.PeakBoundaryImporter_UnrecognizedPeptidesCancel_Continue_peak_boundary_import_ignoring_these_charge_states_);
-                }
-            else
-            {
-                return new MissingMessageLines(
-                    string.Format(Resources.PeakBoundaryImporter_UnrecognizedPeptidesCancel_The_following__0__peptide__file__and_charge_state_combinations_were_not_recognized_, count),
-                    Resources.PeakBoundaryImporter_UnrecognizedPeptidesCancel_Continue_peak_boundary_import_ignoring_this_charge_state_);
-            }
-        }
-
-        private bool ShowMissingMessage<TItem>(IWin32Window parent, int maxItems, HashSet<TItem> items, Func<TItem, string> printLine, Func<int, MissingMessageLines> getMessageLines)
-            {
-            if (items.Any())
-            {
-                var sb = new StringBuilder();
-                var messageLines = getMessageLines(items.Count);
-                sb.AppendLine(messageLines.First);
-                sb.AppendLine();
-                int itemsToShow = Math.Min(items.Count, maxItems);
-                var itemsList = items.ToList();
-                for (int i = 0; i < itemsToShow; ++i)
-                    sb.AppendLine(printLine(itemsList[i]));
-                if (itemsToShow < items.Count)
-                    sb.AppendLine(@"...");
-                sb.AppendLine();
-                sb.Append(messageLines.Last);
-                var dlgFiles = Alerts.MultiButtonMsgDlg.Show(parent, sb.ToString(), Alerts.MultiButtonMsgDlg.BUTTON_OK);
-                if (dlgFiles == DialogResult.Cancel)
-                {
-                    return false;
-                }
-            }
-            return true;
-        }
 
         private class ResultsKey
         {

@@ -232,6 +232,7 @@
     <Compile Include="Alerts\PathChooserDlg.Designer.cs">
       <DependentUpon>PathChooserDlg.cs</DependentUpon>
     </Compile>
+    <Compile Include="Alerts\PeakBoundaryAlerts.cs" />
     <Compile Include="Alerts\ShareResultsFilesDlg.cs">
       <SubType>Form</SubType>
     </Compile>
