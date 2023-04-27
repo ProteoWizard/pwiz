@@ -24,7 +24,6 @@ using System.Linq;
 using System.Text;
 using System.Windows.Forms;
 using pwiz.Common.SystemUtil;
-using pwiz.Skyline.Alerts;
 using pwiz.Skyline.Model.Databinding.Entities;
 using pwiz.Skyline.Model.DocSettings;
 using pwiz.Skyline.Model.Results;
@@ -799,7 +798,7 @@ namespace pwiz.Skyline.Model
                     sb.AppendLine(@"...");
                 sb.AppendLine();
                 sb.Append(messageLines.Last);
-                var dlgFiles = MultiButtonMsgDlg.Show(parent, sb.ToString(), MultiButtonMsgDlg.BUTTON_OK);
+                var dlgFiles = Alerts.MultiButtonMsgDlg.Show(parent, sb.ToString(), Alerts.MultiButtonMsgDlg.BUTTON_OK);
                 if (dlgFiles == DialogResult.Cancel)
                 {
                     return false;

@@ -29,9 +29,6 @@ using System.Text;
 using System.Threading;
 using pwiz.Common.DataBinding;
 using pwiz.Common.SystemUtil;
-using pwiz.Skyline.Controls;
-using pwiz.Skyline.Controls.Databinding;
-using pwiz.Skyline.Controls.Databinding.RowActions;
 using pwiz.Skyline.Model.AuditLog;
 using pwiz.Skyline.Model.Databinding;
 using pwiz.Skyline.Model.DocSettings.Extensions;
@@ -101,7 +98,7 @@ namespace pwiz.Skyline.Model
             var container = new MemoryDocumentContainer();
             container.SetDocument(document, container.Document);
             var dataSchema = new SkylineDataSchema(container, DataSchemaLocalizer.INVARIANT);
-            var viewContext = new DocumentGridViewContext(dataSchema);
+            var viewContext = new Skyline.Controls.Databinding.DocumentGridViewContext(dataSchema);
             IProgressStatus status = new ProgressStatus(string.Format(Resources.ReportSpec_ReportToCsvString_Exporting__0__report,
                 viewSpec.Name));
             var writer = new StringWriter();
@@ -119,7 +116,7 @@ namespace pwiz.Skyline.Model
             DocumentLocation documentLocation = null;
             Program.MainWindow.Invoke(new Action(() =>
             {
-                if (!_skylineWindow.SelectedPath.Equals(new IdentityPath(SequenceTree.NODE_INSERT_ID)))
+                if (!_skylineWindow.SelectedPath.Equals(new IdentityPath(Controls.SequenceTree.NODE_INSERT_ID)))
                 {
                     documentLocation = new DocumentLocation(_skylineWindow.SequenceTree.SelectedPath.ToGlobalIndexList());
                     if (_skylineWindow.Document.Settings.HasResults)
@@ -145,7 +142,7 @@ namespace pwiz.Skyline.Model
             Program.MainWindow.Invoke(new Action(() =>
             {
                 if (documentLocation == null)
-                    Program.MainWindow.SelectPath(new IdentityPath(SequenceTree.NODE_INSERT_ID));
+                    Program.MainWindow.SelectPath(new IdentityPath(Controls.SequenceTree.NODE_INSERT_ID));
                 else
                 {
                     Bookmark bookmark = Bookmark.ToBookmark(documentLocation, Program.MainWindow.DocumentUI);
@@ -508,7 +505,7 @@ namespace pwiz.Skyline.Model
                     return;
                 }
 
-                DeleteNodesAction.DeleteIdentityPaths(_skylineWindow, identityPathsToDelete);
+                Controls.Databinding.RowActions.DeleteNodesAction.DeleteIdentityPaths(_skylineWindow, identityPathsToDelete);
             }
         }
 
@@ -530,7 +527,7 @@ namespace pwiz.Skyline.Model
                 {
                     var originalDocument = _skylineWindow.DocumentUI;
                     var document = originalDocument;
-                    using (var longWaitDlg = new LongWaitDlg())
+                    using (var longWaitDlg = new Controls.LongWaitDlg())
                     {
                         longWaitDlg.PerformWork(_skylineWindow, 1000, progressMonitor =>
                         {

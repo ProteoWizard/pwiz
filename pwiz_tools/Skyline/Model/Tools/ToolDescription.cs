@@ -32,8 +32,6 @@ using System.Xml.Schema;
 using System.Xml.Serialization;
 using pwiz.Common.DataBinding;
 using pwiz.Common.SystemUtil;
-using pwiz.Skyline.Controls;
-using pwiz.Skyline.Controls.Databinding;
 using pwiz.Skyline.Model.Databinding;
 using pwiz.Skyline.Model.DocSettings;
 using pwiz.Skyline.Properties;
@@ -408,7 +406,7 @@ namespace pwiz.Skyline.Model.Tools
                     if (OutputToImmediateWindow)
                     {
                         p.EnableRaisingEvents = true;
-                        TextBoxStreamWriterHelper boxStreamWriterHelper = textWriter as TextBoxStreamWriterHelper;
+                        Controls.TextBoxStreamWriterHelper boxStreamWriterHelper = textWriter as Controls.TextBoxStreamWriterHelper;
                         if (boxStreamWriterHelper == null)
                         {
                             p.OutputDataReceived += (sender, dataReceivedEventArgs)
@@ -873,7 +871,7 @@ namespace pwiz.Skyline.Model.Tools
             var container = new MemoryDocumentContainer();
             container.SetDocument(doc, container.Document);
             var dataSchema = new SkylineDataSchema(container, DataSchemaLocalizer.INVARIANT);
-            var viewContext = new DocumentGridViewContext(dataSchema);
+            var viewContext = new Controls.Databinding.DocumentGridViewContext(dataSchema);
             ViewInfo viewInfo = viewContext.GetViewInfo(PersistedViews.ExternalToolsGroup.Id.ViewName(reportTitle));
             if (null == viewInfo)
             {
