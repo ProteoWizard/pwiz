@@ -621,8 +621,14 @@ namespace pwiz.Skyline.Model.Results
                     return;
                 }
 
-                var peaks = CacheFormat.ChromPeakSerializer().ReadArray(readStream, peakCount);
-                targetFormat.ChromPeakSerializer().WriteItems(writeStream, peaks);
+                int peaksRemaining = peakCount;
+                while (peaksRemaining > 0)
+                {
+                    int blockSize = Math.Min(peaksRemaining, 10000);
+                    var peaks = CacheFormat.ChromPeakSerializer().ReadArray(readStream, blockSize);
+                    targetFormat.ChromPeakSerializer().WriteItems(writeStream, peaks);
+                    peaksRemaining -= blockSize;
+                }
             }
         }
 
