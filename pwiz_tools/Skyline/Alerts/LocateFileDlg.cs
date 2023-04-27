@@ -21,7 +21,7 @@ using System.Collections.Generic;
 using System.IO;
 using pwiz.Skyline.Properties;
 using System.Windows.Forms;
-using pwiz.Skyline.Controls.Tools;
+using pwiz.Skyline.ToolsUI;
 using pwiz.Skyline.Util;
 using pwiz.Skyline.Util.Extensions;
 

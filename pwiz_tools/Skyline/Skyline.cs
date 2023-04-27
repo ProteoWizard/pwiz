@@ -58,7 +58,6 @@ using pwiz.Skyline.Model.RetentionTimes;
 using pwiz.Skyline.Properties;
 using pwiz.Skyline.Controls;
 using pwiz.Skyline.Controls.Lists;
-using pwiz.Skyline.Controls.Tools;
 using pwiz.Skyline.FileUI.PeptideSearch;
 using pwiz.Skyline.Menus;
 using pwiz.Skyline.Model.ElementLocators;

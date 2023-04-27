@@ -414,7 +414,7 @@
       <DependentUpon>TutorialTextResources.resx</DependentUpon>
     </Compile>
     <Compile Include="Controls\TargetColumn.cs" />
-    <Compile Include="Controls\Tools\ToolService.cs" />
+    <Compile Include="ToolsUI\ToolService.cs" />
     <Compile Include="EditUI\EditLinkedPeptidesDlg.cs">
       <SubType>Form</SubType>
     </Compile>
@@ -1756,9 +1756,9 @@
     <Compile Include="Model\ModificationMatcher.cs" />
     <Compile Include="Model\StandardType.cs" />
     <Compile Include="Model\Themes\ColorScheme.cs" />
-    <Compile Include="Controls\Tools\ToolDescription.cs" />
-    <Compile Include="Controls\Tools\ToolInstaller.cs" />
-    <Compile Include="Controls\Tools\ToolMacros.cs" />
+    <Compile Include="ToolsUI\ToolDescription.cs" />
+    <Compile Include="ToolsUI\ToolInstaller.cs" />
+    <Compile Include="ToolsUI\ToolMacros.cs" />
     <Compile Include="Model\Transition.cs" />
     <Compile Include="Model\TransitionCalc.cs" />
     <Compile Include="Model\TransitionDocNode.cs" />
@@ -5801,6 +5801,7 @@
     </PublishFile>
   </ItemGroup>
   <ItemGroup>
+    <Folder Include="Controls\Tools\" />
     <Folder Include="Model\Tools\" />
   </ItemGroup>
   <Import Project="$(MSBuildToolsPath)\Microsoft.CSharp.targets" />

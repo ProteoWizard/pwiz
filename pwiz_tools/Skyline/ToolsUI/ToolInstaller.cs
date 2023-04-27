@@ -33,7 +33,7 @@ using pwiz.Skyline.Properties;
 using pwiz.Skyline.Util;
 using pwiz.Skyline.Util.Extensions;
 
-namespace pwiz.Skyline.Controls.Tools
+namespace pwiz.Skyline.ToolsUI
 {
     /// <summary>
     /// Class for reading .properties files that describe external tools. 

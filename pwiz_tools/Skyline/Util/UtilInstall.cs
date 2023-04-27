@@ -24,8 +24,8 @@ using System.Linq;
 using System.Net;
 using System.Text.RegularExpressions;
 using Ionic.Zip;
-using pwiz.Skyline.Controls.Tools;
 using pwiz.Skyline.Properties;
+using pwiz.Skyline.ToolsUI;
 
 namespace pwiz.Skyline.Util
 {

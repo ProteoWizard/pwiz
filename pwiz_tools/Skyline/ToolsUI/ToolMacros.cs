@@ -30,7 +30,7 @@ using pwiz.Skyline.Properties;
 using pwiz.Skyline.Util;
 using pwiz.Skyline.Util.Extensions;
 
-namespace pwiz.Skyline.Controls.Tools
+namespace pwiz.Skyline.ToolsUI
 {
     public class Macro
     {

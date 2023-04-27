@@ -32,6 +32,7 @@ using System.Xml.Schema;
 using System.Xml.Serialization;
 using pwiz.Common.DataBinding;
 using pwiz.Common.SystemUtil;
+using pwiz.Skyline.Controls;
 using pwiz.Skyline.Controls.Databinding;
 using pwiz.Skyline.Model;
 using pwiz.Skyline.Model.Databinding;
@@ -40,7 +41,7 @@ using pwiz.Skyline.Properties;
 using pwiz.Skyline.Util;
 using pwiz.Skyline.Util.Extensions;
 
-namespace pwiz.Skyline.Controls.Tools
+namespace pwiz.Skyline.ToolsUI
 {
 
     // A common interface for returning the relevant string for Tool Macros

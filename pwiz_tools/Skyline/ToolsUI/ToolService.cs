@@ -43,7 +43,7 @@ using pwiz.Skyline.Util;
 using pwiz.Skyline.Util.Extensions;
 using SkylineTool;
 
-namespace pwiz.Skyline.Controls.Tools
+namespace pwiz.Skyline.ToolsUI
 {
     /// <summary>
     /// A server that implements functionality for interactive Skyline tools.

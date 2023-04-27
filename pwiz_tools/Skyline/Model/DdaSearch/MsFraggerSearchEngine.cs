@@ -33,7 +33,7 @@ using System.Linq;
 using System.Text;
 using System.Text.RegularExpressions;
 using System.Threading;
-using pwiz.Skyline.Controls.Tools;
+using pwiz.Skyline.ToolsUI;
 
 namespace pwiz.Skyline.Model.DdaSearch
 {
