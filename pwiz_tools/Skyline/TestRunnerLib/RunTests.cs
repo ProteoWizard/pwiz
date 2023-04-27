@@ -316,7 +316,9 @@ namespace TestRunnerLib
                     Log("[WARNING] Exception thrown when creating memory dump: {0}\r\n{1}\r\n", ex.InnerException?.Message ?? ex.Message, ex.InnerException?.StackTrace ?? ex.StackTrace);
                 }
             }
-                
+
+            string tmpTestDir = null; // If non-null, we've put temp files in an elaborately named temp directory, so delete it when done
+
             try
             {
                 // Create test class.
@@ -335,10 +337,6 @@ namespace TestRunnerLib
                     Environment.SetEnvironmentVariable(@"SKYLINE_TESTER_PARALLEL_CLIENT_ID", ParallelClientId); // Accessed in pwiz_tools\Skyline\Util\Util.cs
                 }
 
-                // Set the TMP file path to something peculiar - helps guarantee support for
-                // unusual user names since temp file path is usually in the user directory
-                var tmpTestDir = SetTMP(test);
-
                 if (test.SetTestContext != null)
                 {
                     var context = new object[] { TestContext };
@@ -349,8 +347,18 @@ namespace TestRunnerLib
                 LocalizationHelper.CurrentCulture = LocalizationHelper.CurrentUICulture = Language;
                 LocalizationHelper.InitThread();
 
+                // Unit tests normally don't do disk access, so don't mess around with tempdir creation for those
+                var exerciseTMP = test.TestClassType?.BaseType?.Name != "AbstractUnitTest" &&
+                                  test.TestClassType?.BaseType?.Name != "AbstractUnitTestEx";
+                if (exerciseTMP)
+                {
+                    // Set the TMP file path to something peculiar - helps guarantee support for
+                    // unusual user names since temp file path is usually in the user directory
+                    tmpTestDir = SetTMP(test);
+                    CleanUpTestDir(tmpTestDir, false);   // Attempt to cleanup first, in case something was left behind by a failing test
+                }
+
                 // Run the test and time it.
-                CleanUpTestDir(tmpTestDir, false);   // Attempt to cleanup first, in case something was left behind by a failing test
                 if (test.TestInitialize != null)
                     test.TestInitialize.Invoke(testObject, null);
 
@@ -372,12 +380,15 @@ namespace TestRunnerLib
                 if (test.TestCleanup != null)
                     test.TestCleanup.Invoke(testObject, null);
 
-                // If everything is supposed to be cleaned up, then check for any left over files
-                var allEntries = CleanUpTestDir(tmpTestDir, true);
-                if (allEntries.Count > 0)
+                if (exerciseTMP)
                 {
-                    allEntries.Insert(0, string.Format("The test {0} left these files behind:", test.TestMethod.Name));
-                    throw new IOException(string.Join("\r\n", allEntries));
+                    // Check for any left over files
+                    var allEntries = CleanUpTestDir(tmpTestDir, true);
+                    if (allEntries.Count > 0)
+                    {
+                        allEntries.Insert(0, string.Format("The test {0} left these files behind:", test.TestMethod.Name));
+                        throw new IOException(string.Join("\r\n", allEntries));
+                    }
                 }
             }
             catch (Exception e)
@@ -386,15 +397,37 @@ namespace TestRunnerLib
             }
             stopwatch.Stop();
             LastTestDuration = (int) stopwatch.ElapsedMilliseconds;
-            // Allow as much to be garbage collected as possible
 
-            // Restore TMP
-            Environment.SetEnvironmentVariable(@"TMP", saveTmp);
+            if (tmpTestDir != null)
+            {
+                // Get rid of the temp directory we created as testdir/"~&TMP ^"/testname
+                try
+                {
+                    Directory.Delete(tmpTestDir, true);
+                }
+                catch (Exception)
+                {
+                    throw new IOException($"Unable to remove temp directory \"{tmpTestDir}\"");
+                }
+                // Get rid of the parent directory we created as testdir/"~&TMP ^"
+                try
+                {
+                    Directory.Delete(Path.Combine(tmpTestDir, ".."), true);
+                }
+                catch
+                {
+                    // ignored - if it's not empty we've already complained about that
+                }
+
+                // Restore TMP
+                Environment.SetEnvironmentVariable(@"TMP", saveTmp);
+            }
 
             // Restore culture.
             Thread.CurrentThread.CurrentCulture = saveCulture;
             Thread.CurrentThread.CurrentUICulture = saveUICulture;
 
+            // Allow as much to be garbage collected as possible
             MemoryManagement.FlushMemory();
             _process.Refresh();
             var heapCounts = ReportSystemHeaps
