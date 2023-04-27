@@ -327,7 +327,7 @@ namespace pwiz.Skyline.ToolsUI
             {
                 _skylineWindow.ModifyDocument(Resources.LibrarySpec_Add_spectral_library, doc =>
                     doc.ChangeSettings(doc.Settings.ChangePeptideLibraries(lib => lib.ChangeLibrarySpecs(
-                        Enumerable.Union(lib.LibrarySpecs, new[] { librarySpec }).ToArray()))), AuditLogEntry.SettingsLogFunction);
+                        lib.LibrarySpecs.Union(new[] { librarySpec }).ToArray()))), AuditLogEntry.SettingsLogFunction);
                 Settings.Default.SpectralLibraryList.Add(librarySpec);
             }));
         }
