@@ -102,6 +102,11 @@ namespace pwiz.PanoramaClient
             return query;
         }
 
+        /// <summary>
+        /// Takes in a query string and returns the associated JSON
+        /// </summary>
+        /// <param name="query"></param>
+        /// <returns></returns>
         private JToken GetJson(string query)
         {
             var queryUri = new Uri(query);
@@ -147,6 +152,10 @@ namespace pwiz.PanoramaClient
             }
         }
 
+        /// <summary>
+        /// Displays the latest versions of all files in a particular folder
+        /// </summary>
+        /// <param name="path"></param>
         private void GetLatestVersion(string path)
         {
             listView.Items.Clear();
@@ -159,12 +168,12 @@ namespace pwiz.PanoramaClient
             var rows = json[@"rows"];
             foreach (var row in rows)
             {
+                var versions = row[@"File/Versions"].ToString();
                 var rowId = row[@"RowId"].ToString();
                 if (_mostRecent.Contains(rowId))
                 {
                     _mostRecent.Remove(rowId);
-                    result[2] = row[@"File/Versions"].ToString();
-                    var rowOne = json[@"rows"].First();
+                    result[2] = versions;
                     var name = row[@"Name"].ToString();
                     result[0] = name;
                     /*var size = (long)rowOne[@"DocumentSize"];
@@ -178,7 +187,26 @@ namespace pwiz.PanoramaClient
                     var fileNode = new ListViewItem(result, 1)
                     {
                         ToolTipText = $"Proteins: {fileInfos[0]}, Peptides: {fileInfos[1]}, Precursors: {fileInfos[2]}, Transitions: {fileInfos[3]}, Replicates: {fileInfos[4]}",
-                        Name = (string)rowOne[@"_labkeyurl_FileName"]
+                        Name = (string)row[@"_labkeyurl_FileName"]
+                    };
+                    listView.Items.Add(fileNode);
+                } else if (versions.Equals(1.ToString()))
+                {
+                    result[2] = versions;
+                    var name = row[@"Name"].ToString();
+                    result[0] = name;
+                    /*var size = (long)rowOne[@"DocumentSize"];
+                    result[1] = new FileSize(size).ToString();*/
+                    fileInfos[0] = (string)row[@"File/Proteins"];
+                    fileInfos[1] = (string)row[@"File/Peptides"];
+                    fileInfos[2] = (string)row[@"File/Precursors"];
+                    fileInfos[3] = (string)row[@"File/Transitions"];
+                    fileInfos[4] = (string)row[@"File/Replicates"];
+                    result[4] = (string)row[@"Created"];
+                    var fileNode = new ListViewItem(result, 1)
+                    {
+                        ToolTipText = $"Proteins: {fileInfos[0]}, Peptides: {fileInfos[1]}, Precursors: {fileInfos[2]}, Transitions: {fileInfos[3]}, Replicates: {fileInfos[4]}",
+                        Name = (string)row[@"_labkeyurl_FileName"]
                     };
                     listView.Items.Add(fileNode);
                 }

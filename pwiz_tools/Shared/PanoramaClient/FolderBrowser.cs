@@ -252,6 +252,12 @@ namespace pwiz.PanoramaClient
             return State = _restorer.GetPersistentString();
         }
 
+        /// <summary>
+        /// If there was a previous selection made in FilePicker, reload the files in the
+        /// selected folder
+        /// </summary>
+        /// <param name="nodes"></param>
+        /// <param name="e"></param>
         private void AddSelectedFiles(IEnumerable nodes, EventArgs e)
         {
             foreach (TreeNode node in nodes)

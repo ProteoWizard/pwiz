@@ -100,6 +100,7 @@ namespace pwiz.PanoramaClient
             // versionOptions
             // 
             this.versionOptions.Anchor = ((System.Windows.Forms.AnchorStyles)((System.Windows.Forms.AnchorStyles.Top | System.Windows.Forms.AnchorStyles.Right)));
+            this.versionOptions.DropDownStyle = System.Windows.Forms.ComboBoxStyle.DropDownList;
             this.versionOptions.FormattingEnabled = true;
             this.versionOptions.Items.AddRange(new object[] {
             "All",
