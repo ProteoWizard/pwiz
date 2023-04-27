@@ -25,20 +25,16 @@ using System.Windows.Forms;
 
 namespace pwiz.Common.Controls
 {
-    public class TreeViewStateRestorer : TreeViewStateRestorerBase<TreeView>
+    public class TreeViewStateRestorer
     {
-        public TreeViewStateRestorer(TreeView tree) : base(tree)
+        public TreeViewStateRestorer(TreeView tree)
         {
+            Tree = tree;
         }
-    }
 
-    public class TreeViewStateRestorerBase <T> where T : TreeView
-    {
-        protected readonly T _tree;
-        
-        public TreeViewStateRestorerBase(T tree)
+        protected TreeView Tree
         {
-            _tree = tree;
+            get;
         }
 
         /// <summary>
@@ -48,7 +44,7 @@ namespace pwiz.Common.Controls
         public string GetPersistentString()
         {
             StringBuilder result = new StringBuilder();
-            result.Append(GenerateExpansionString(_tree.Nodes)).Append('|');
+            result.Append(GenerateExpansionString(Tree.Nodes)).Append('|');
             
             result.Append(GenerateSelectionString()).Append('|');
 
@@ -120,7 +116,7 @@ namespace pwiz.Common.Controls
 
         /// <summary>
         /// Restores the expansion and selection of the tree, and sets the top node for scrolling
-        /// to be updated after all resizing has occured
+        /// to be updated after all resizing has occurred
         /// </summary>
         public virtual void RestoreExpansionAndSelection(string persistentString)
         {
@@ -133,7 +129,7 @@ namespace pwiz.Common.Controls
                 {
                     try
                     {
-                        _tree.BeginUpdate();
+                        Tree.BeginUpdate();
 
                         ExpandTreeFromString(stateStrings[0]);
 
@@ -146,7 +142,7 @@ namespace pwiz.Common.Controls
                     }
                     finally
                     {
-                        _tree.EndUpdate();
+                        Tree.EndUpdate();
                     }
                 }
             }
@@ -158,7 +154,7 @@ namespace pwiz.Common.Controls
         protected void ExpandTreeFromString(string persistentString)
         {
             IEnumerator<char> dataEnumerator = persistentString.GetEnumerator();
-            ExpandTreeFromString(_tree.Nodes, dataEnumerator);
+            ExpandTreeFromString(Tree.Nodes, dataEnumerator);
         }
 
         private static bool ExpandTreeFromString(TreeNodeCollection nodes, IEnumerator<char> data)
@@ -215,7 +211,7 @@ namespace pwiz.Common.Controls
             int selectedIndex = int.Parse(selections[0]);
             if (selectedIndex < 0 || selectedIndex >= nodeCount)
                 return;
-            _tree.SelectedNode = visualOrder[selectedIndex];
+            Tree.SelectedNode = visualOrder[selectedIndex];
         }
 
         /// <summary>
@@ -234,11 +230,11 @@ namespace pwiz.Common.Controls
 
         /// <summary>
         /// Updates the top node in order to establish the correct scrolling of the tree. This should
-        /// not be called until all resizing of the tree has occured
+        /// not be called until all resizing of the tree has occurred
         /// </summary>
         public void UpdateTopNode()
         {
-            _tree.TopNode = NextTopNode ?? _tree.TopNode;
+            Tree.TopNode = NextTopNode ?? Tree.TopNode;
         }
 
         /// <summary>
@@ -248,7 +244,7 @@ namespace pwiz.Common.Controls
         {
             get
             {
-                for (TreeNode node = _tree.Nodes.Count > 0 ? _tree.Nodes[0] : null; node != null; node = node.NextVisibleNode)
+                for (TreeNode node = Tree.Nodes.Count > 0 ? Tree.Nodes[0] : null; node != null; node = node.NextVisibleNode)
                     yield return node;
             }
         }

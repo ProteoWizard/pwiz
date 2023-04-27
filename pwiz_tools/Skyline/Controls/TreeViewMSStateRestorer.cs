@@ -25,11 +25,16 @@ using pwiz.Common.Controls;
 
 namespace pwiz.Skyline.Controls
 {
-    public class TreeViewMSStateRestorer : TreeViewStateRestorerBase<TreeViewMS>
+    public class TreeViewMSStateRestorer : TreeViewStateRestorer
     {
         
         public TreeViewMSStateRestorer(TreeViewMS tree) : base(tree)
         {
+        }
+
+        protected new TreeViewMS Tree
+        {
+            get { return (TreeViewMS) base.Tree; }
         }
 
 
@@ -110,18 +115,18 @@ namespace pwiz.Skyline.Controls
 
                     try
                     {
-                        _tree.BeginUpdate();
+                        Tree.BeginUpdate();
 
-                        _tree.AutoExpandSingleNodes = false;
+                        Tree.AutoExpandSingleNodes = false;
 
                         ExpandTreeFromString(stateStrings[0]);
 
-                        _tree.AutoExpandSingleNodes = true;
+                        Tree.AutoExpandSingleNodes = true;
 
                         SelectTreeFromString(stateStrings[1]);
                         NextTopNode = GetTopNodeFromString(stateStrings[2]);
 
-                        _tree.RestoredFromPersistentString = true;
+                        Tree.RestoredFromPersistentString = true;
                     }
                     catch (FormatException)
                     {
@@ -129,8 +134,8 @@ namespace pwiz.Skyline.Controls
                     }
                     finally
                     {
-                        _tree.EndUpdate();
-                        _tree.AutoExpandSingleNodes = true;
+                        Tree.EndUpdate();
+                        Tree.AutoExpandSingleNodes = true;
                     }
                 }
             }
@@ -150,7 +155,7 @@ namespace pwiz.Skyline.Controls
             int selectedIndex = int.Parse(selections[0]);
             if (selectedIndex < 0 || selectedIndex >= nodeCount)
                 return;
-            _tree.SelectedNode = visualOrder[selectedIndex];
+            Tree.SelectedNode = visualOrder[selectedIndex];
 
             for (int i = 1; i < selections.Length; i++)
             {
@@ -162,7 +167,7 @@ namespace pwiz.Skyline.Controls
                     int end = Math.Min(nodeCount - 1, Math.Max(0, int.Parse(range[1])));
                     for (int j = start; j <= end; j++)
                     {
-                        _tree.SelectNode((TreeNodeMS)visualOrder[j], true);
+                        Tree.SelectNode((TreeNodeMS)visualOrder[j], true);
                     }
                 }
                 else // the string represents a single element
@@ -170,7 +175,7 @@ namespace pwiz.Skyline.Controls
                     int index = int.Parse(selection);
                     if (0 > index || index >= nodeCount)
                         return;
-                    _tree.SelectNode((TreeNodeMS)visualOrder[index], true);
+                    Tree.SelectNode((TreeNodeMS)visualOrder[index], true);
                 }
             }
         }
