@@ -16,9 +16,11 @@
  * See the License for the specific language governing permissions and
  * limitations under the License.
  */
-using System;
+
+using System.IO;
 using Microsoft.VisualStudio.TestTools.UnitTesting;
 using pwiz.Common.DataBinding.Controls.Editor;
+using pwiz.Skyline;
 using pwiz.Skyline.Controls.Databinding;
 using pwiz.Skyline.Model;
 using pwiz.SkylineTestUtil;
@@ -59,35 +61,48 @@ namespace pwiz.SkylineTestFunctional
             };
             foreach (var scenarioName in scenarioNames)
             {
-                RunScenario(scenarioName);
+                RunScenario(scenarioName, false);
+                RunScenario(scenarioName, true);
             }
         }
 
-        private void RunScenario(string scenarioName)
+        private void RunScenario(string scenarioName, bool forceMixedModeUI)
         {
             RunUI(()=>SkylineWindow.OpenFile(TestFilesDir.GetTestPath(scenarioName + ".sky")));
-            string baseName = TestContext.GetTestResultsPath(scenarioName);
-            RunUI(() => SkylineWindow.ShareDocument(baseName + ".sky.zip", ShareType.COMPLETE));
+            if (forceMixedModeUI)
+            {
+                // See how UI-mode affects the lis of available reports
+                RunUI(() => SkylineWindow.SetUIMode(SrmDocument.DOCUMENT_TYPE.mixed));
+            }
+            RunUI(() => SkylineWindow.ShareDocument(TestContext.GetTestResultsPath(scenarioName) + ".sky.zip", ShareType.COMPLETE));
             var reports = new[]
             {
                 "CalibrationCurves",
                 "PeptideResultQuantification"
             };
-            foreach (String report in reports)
+            foreach (var report in reports)
             {
-                ExportReport(baseName, report);
+                var reportName = (Program.ModeUI == SrmDocument.DOCUMENT_TYPE.small_molecules)
+                    ? ("Molecule" + report.Replace("Peptide", string.Empty))
+                    : report;
+                ExportReport(scenarioName, reportName);
             }
         }
 
-        private void ExportReport(string baseName, string reportName)
+        private void ExportReport(string scenarioName, string reportName)
         {
+            string baseName = TestContext.GetTestResultsPath(scenarioName);
             var exportReportDlg = ShowDialog<ExportLiveReportDlg>(SkylineWindow.ShowExportReportDialog);
             RunUI(() =>
             {
                 exportReportDlg.ReportName = reportName;
                 exportReportDlg.SetUseInvariantLanguage(true);
             });
-            OkDialog(exportReportDlg, () => exportReportDlg.OkDialog(baseName + "_" + reportName + ".csv", ','));
+            var outName = baseName + "_" + reportName;
+            var fileName = outName + "_.csv";
+            OkDialog(exportReportDlg, () => exportReportDlg.OkDialog(fileName, ','));
+            WaitForConditionUI(() => File.Exists(fileName));
+            AssertEx.NoDiff(File.ReadAllText(TestFilesDir.GetTestPath(scenarioName + "_" + reportName + ".csv")), File.ReadAllText(fileName));
         }
     }
 }
