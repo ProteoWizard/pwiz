@@ -41,6 +41,7 @@ using NetMQ.Sockets;
 using Newtonsoft.Json.Linq;
 using pwiz.Common.Collections;
 using pwiz.Common.SystemUtil;
+using pwiz.Skyline.Model.Tools;
 using pwiz.Skyline.ToolsUI;
 using pwiz.Skyline.Util;
 //WARNING: Including TestUtil in this project causes a strange build problem, where the first

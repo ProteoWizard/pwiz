@@ -31,8 +31,8 @@ using System.Text;
 using pwiz.Common.Collections;
 using pwiz.Common.SystemUtil;
 using pwiz.Skyline.Model.Results;
+using pwiz.Skyline.Model.Tools;
 using pwiz.Skyline.Properties;
-using pwiz.Skyline.ToolsUI;
 
 namespace pwiz.Skyline.Model.DdaSearch
 {
