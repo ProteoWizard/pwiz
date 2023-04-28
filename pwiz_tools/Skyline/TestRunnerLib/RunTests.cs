@@ -347,13 +347,13 @@ namespace TestRunnerLib
                 LocalizationHelper.CurrentCulture = LocalizationHelper.CurrentUICulture = Language;
                 LocalizationHelper.InitThread();
 
-                // Unit tests normally don't do disk access, so don't mess around with tempdir creation for those
-                var exerciseTMP = test.TestClassType?.BaseType?.Name != "AbstractUnitTest" &&
-                                  test.TestClassType?.BaseType?.Name != "AbstractUnitTestEx";
-                if (exerciseTMP)
+                // Unit tests normally don't create files in TMP, so don't mess around with temp dir creation for those
+                if (test.TestClassType?.BaseType?.Name != "AbstractUnitTest" &&
+                    test.TestClassType?.BaseType?.Name != "AbstractUnitTestEx")
                 {
                     // Set the TMP file path to something peculiar - helps guarantee support for
                     // unusual user names since temp file path is usually in the user directory
+                    // Also helps detect 3rd party tools that leave temp files behind
                     tmpTestDir = SetTMP(test);
                     CleanUpTestDir(tmpTestDir, false);   // Attempt to cleanup first, in case something was left behind by a failing test
                 }
@@ -365,7 +365,7 @@ namespace TestRunnerLib
                 if (CheckCrtLeaks > 0)
                 {
                     // TODO: CrtDebugHeap class used to be provided by Crawdad.dll
-                    // If we ever want to enable this funcationality again, we need to find another .dll
+                    // If we ever want to enable this functionality again, we need to find another .dll
                     // to put this in.
                     //CrtDebugHeap.Checkpoint();
                 }
@@ -380,15 +380,12 @@ namespace TestRunnerLib
                 if (test.TestCleanup != null)
                     test.TestCleanup.Invoke(testObject, null);
 
-                if (exerciseTMP)
+                // Check for any left over files
+                var allEntries = CleanUpTestDir(tmpTestDir, true);
+                if (allEntries.Count > 0)
                 {
-                    // Check for any left over files
-                    var allEntries = CleanUpTestDir(tmpTestDir, true);
-                    if (allEntries.Count > 0)
-                    {
-                        allEntries.Insert(0, string.Format("The test {0} left these files behind:", test.TestMethod.Name));
-                        throw new IOException(string.Join("\r\n", allEntries));
-                    }
+                    allEntries.Insert(0, string.Format("The test {0} left these temp files behind:", test.TestMethod.Name));
+                    throw new IOException(string.Join("\r\n", allEntries));
                 }
             }
             catch (Exception e)
@@ -400,10 +397,13 @@ namespace TestRunnerLib
 
             if (tmpTestDir != null)
             {
-                // Get rid of the temp directory we created as testdir/"~&TMP ^"/testname
+                // Get rid of the temp directory we created as testdir/"~&TMP ^"/testname (should be done already, double checking here)
                 try
                 {
-                    Directory.Delete(tmpTestDir, true);
+                    if (Directory.Exists(tmpTestDir))
+                    {
+                        Directory.Delete(tmpTestDir, true);
+                    }
                 }
                 catch (Exception)
                 {
@@ -412,7 +412,11 @@ namespace TestRunnerLib
                 // Get rid of the parent directory we created as testdir/"~&TMP ^"
                 try
                 {
-                    Directory.Delete(Path.Combine(tmpTestDir, ".."), true);
+                    var tmpParent = Path.Combine(tmpTestDir, "..");
+                    if (Directory.Exists(tmpParent))
+                    {
+                        Directory.Delete(tmpParent, true);
+                    }
                 }
                 catch
                 {
@@ -630,7 +634,7 @@ namespace TestRunnerLib
             // If everything is supposed to be cleaned up, then check for any left over files
             if (_cleanupLevelAll)
             {
-                CleanupAbandonedFiles(TestContext.TestDir, true, abandonedFilesList);
+                CleanupAbandonedFiles(TestContext.TestDir, !final, abandonedFilesList);
             }
             CleanupAbandonedFiles(tmpTestDir, !final, abandonedFilesList); // It's always an error to leave any tempfiles behind
 
@@ -639,7 +643,7 @@ namespace TestRunnerLib
 
         private void CleanupAbandonedFiles(string dir, bool recreateDirAfterClean, List<string> abandonedFilesList)
         {
-            if (Directory.Exists(dir))
+            if (!string.IsNullOrEmpty(dir) && Directory.Exists(dir))
             {
                 var oldCount = abandonedFilesList.Count; // List may have entries from a previous call
                 abandonedFilesList.AddRange(Directory.EnumerateFileSystemEntries(dir).Select(f => Path.Combine(dir, f)));
