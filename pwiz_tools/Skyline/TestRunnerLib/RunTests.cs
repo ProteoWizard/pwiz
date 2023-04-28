@@ -347,9 +347,9 @@ namespace TestRunnerLib
                 LocalizationHelper.CurrentCulture = LocalizationHelper.CurrentUICulture = Language;
                 LocalizationHelper.InitThread();
 
-                // Unit tests normally don't create files in TMP, so don't mess around with temp dir creation for those
-                if (test.TestClassType?.BaseType?.Name != "AbstractUnitTest" &&
-                    test.TestClassType?.BaseType?.Name != "AbstractUnitTestEx")
+                // Tests in Test.DLL normally don't create files in TMP, so don't mess around with temp dir creation for those
+                var assemblyName = test.TestClassType?.Assembly.ManifestModule.Name;
+                if (!Equals(assemblyName, "Test.dll"))
                 {
                     // Set the TMP file path to something peculiar - helps guarantee support for
                     // unusual user names since temp file path is usually in the user directory
