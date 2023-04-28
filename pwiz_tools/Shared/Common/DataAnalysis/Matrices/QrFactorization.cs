@@ -201,14 +201,16 @@ namespace pwiz.Common.DataAnalysis.Matrices
                 for (var j = columnStart; j < columnCount; j++)
                 {
                     var scale = 0.0;
+                    var newColIndex = 0;
                     for (var i = rowStart; i < rowCount; i++)
                     {
-                        scale += newColumn[i - rowStart] * a[i, j];
+                        scale += newColumn[newColIndex++] * a[i, j];
                     }
 
+                    newColIndex = 0;
                     for (var i = rowStart; i < rowCount; i++)
                     {
-                        a[i, j] -= newColumn[i - rowStart] * scale;
+                        a[i, j] -= newColumn[newColIndex++] * scale;
                     }
                 }
             }
