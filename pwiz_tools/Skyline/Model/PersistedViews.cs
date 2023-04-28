@@ -130,7 +130,7 @@ namespace pwiz.Skyline.Model
         }
 
         public int RevisionIndex { get; private set; }
-        public int RevisionIndexCurrent { get { return 13; } } // v13 adds small mol versions of "CalibrationCurves" and "PeptideResultQuantification"
+        public int RevisionIndexCurrent { get { return 12; } } // v12 adds small mol peak boundaries report
         public override void ReadXml(XmlReader reader)
         {
             RevisionIndex = reader.GetIntAttribute(Attr.revision);
@@ -192,11 +192,6 @@ namespace pwiz.Skyline.Model
             if (revisionIndex >= 12)
             {
                 reportStrings.Add(REPORTS_V12); // Including molecule peak boundaries export
-            }
-
-            if (revisionIndex >= 13)
-            {
-                reportStrings.Add(REPORTS_V13); // // v13 adds small mol versions of "CalibrationCurves" and "PeptideResultQuantification"
             }
 
             var list = new List<KeyValuePair<ViewGroupId, ViewSpec>>();
@@ -505,29 +500,6 @@ namespace pwiz.Skyline.Model
     <column name='Results!*.Value.MaxEndTime' />
     <column name='Adduct' />
     <filter column='Results!*.Value' opname='isnotnullorblank' />
-  </view>
-</views>";
-
-        // // v13 adds small mol versions of "CalibrationCurves" and "PeptideResultQuantification"
-        private const string REPORTS_V13 = @"<views>
-  <view name='MoleculeCalibrationCurves' rowsource='pwiz.Skyline.Model.Databinding.Entities.Peptide' sublist='Results!*' uimode='small_molecules'>
-    <column name='Protein' />
-    <column name='MoleculeName' />
-    <column name='CalibrationCurve.Slope' />
-    <column name='CalibrationCurve.Intercept' />
-    <column name='CalibrationCurve.PointCount' />
-    <column name='CalibrationCurve.QuadraticCoefficient' />
-    <column name='CalibrationCurve.RSquared' />
-    <column name='CalibrationCurve.ErrorMessage' />
-  </view>
-  <view name='MoleculeResultQuantification' rowsource='pwiz.Skyline.Model.Databinding.Entities.Peptide' sublist='Results!*' uimode='small_molecules'>
-    <column name='Protein.Name' />
-    <column name='MoleculeName' />
-    <column name='Results!*.Value.Quantification.NormalizedArea' />
-    <column name='Results!*.Value.Quantification.CalculatedConcentration' />
-    <column name='Results!*.Value.Quantification.Accuracy' />
-    <column name='Results!*.Value.ResultFile.Replicate' />
-    <column name='Results!*.Value.ResultFile.FileName' />
   </view>
 </views>";
 
