@@ -41,7 +41,8 @@ namespace pwiz.Skyline.ToolsUI
     {
         /// <summary>
         /// Run the tool. When you call run tool. call it on a different thread. 
-        /// </summary>       
+        /// </summary>
+        /// <param name="toolDesc">The <see cref="ToolDescription"/> object to run.</param>
         /// <param name="document"> The document to base reports off of. </param>
         /// <param name="toolMacroProvider"> Interface for replacing Tool Macros with the correct strings. </param>
         /// <param name="textWriter"> A textWriter to write to when the tool redirects stdout. (eg. Outputs to an Immediate Window) </param>
@@ -172,6 +173,7 @@ namespace pwiz.Skyline.ToolsUI
         /// <summary>
         ///  Method used to encapsulate the running of a executable for threading.
         /// </summary>
+        /// <param name="toolDesc">The <see cref="ToolDescription"/> object to run.</param>
         /// <param name="document"> Contains the document to base reports off of, as well as to serve as the parent for args collector forms. </param>
         /// <param name="toolMacroProvider"> Interface for determining what to replace macros with. </param>
         /// <param name="textWriter"> A textWriter to write to if outputting to the immediate window. </param>
