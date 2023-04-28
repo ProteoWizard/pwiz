@@ -140,6 +140,10 @@ namespace pwiz.SkylineTestUtil
                     {
                         foreach (ZipEntry zipEntry in zipFile)
                         {
+                            if (zipEntry.IsDirectory)
+                            {
+                                continue; // Directory creation handled by Extract of files (was getting occasional "file in use" exceptions on directory creation)
+                            }
                             if (IsPersistent(persistentFiles, zipEntry.FileName))
                                 zipEntry.Extract(persistentFilesDir, ExtractExistingFileAction.DoNotOverwrite);  // leave persistent files alone                        
                             else
