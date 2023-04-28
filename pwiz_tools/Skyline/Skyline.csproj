@@ -453,6 +453,7 @@
     <Compile Include="FileUI\InsertTransitionListDlg.Designer.cs">
       <DependentUpon>InsertTransitionListDlg.cs</DependentUpon>
     </Compile>
+    <Compile Include="FileUI\PeakBoundaryImporterUI.cs" />
     <Compile Include="FileUI\PeptideSearch\BuildLibraryGridView.cs">
       <SubType>Component</SubType>
     </Compile>
@@ -820,6 +821,8 @@
     <Compile Include="FileUI\PeptideSearch\DDASearchControl.Designer.cs">
       <DependentUpon>DDASearchControl.cs</DependentUpon>
     </Compile>
+    <Compile Include="ToolsUI\ToolDescriptionRunUI.cs" />
+    <Compile Include="ToolsUI\ToolService.cs" />
     <Compile Include="Util\DocumentCancellationToken.cs" />
     <Compile Include="Util\Extensions\MassTypeLocalizationExtension.cs" />
     <Compile Include="Util\FormGroup.cs" />
@@ -4383,7 +4386,6 @@
     <Compile Include="SkylineGraphs.cs">
       <SubType>Form</SubType>
     </Compile>
-    <Compile Include="Model\ToolService.cs" />
     <Compile Include="Controls\ToolStripNumericUpDown.cs">
       <SubType>Component</SubType>
     </Compile>

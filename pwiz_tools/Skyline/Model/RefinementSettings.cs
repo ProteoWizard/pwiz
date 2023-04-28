@@ -62,6 +62,10 @@ namespace pwiz.Skyline.Model
         }
     }
 
+    public enum AreaCVTransitions { all, best, count }
+
+    public enum AreaCVMsLevel { precursors, products }
+
     public sealed class RefinementSettings : AuditLogOperationSettings<RefinementSettings>, IAuditLogComparable
     {
         private bool _removeDuplicatePeptides;
