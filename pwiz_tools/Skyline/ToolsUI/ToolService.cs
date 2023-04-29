@@ -32,6 +32,7 @@ using pwiz.Common.SystemUtil;
 using pwiz.Skyline.Controls;
 using pwiz.Skyline.Controls.Databinding;
 using pwiz.Skyline.Controls.Databinding.RowActions;
+using pwiz.Skyline.Model;
 using pwiz.Skyline.Model.AuditLog;
 using pwiz.Skyline.Model.Databinding;
 using pwiz.Skyline.Model.DocSettings.Extensions;
@@ -46,7 +47,7 @@ using pwiz.Skyline.Util;
 using pwiz.Skyline.Util.Extensions;
 using SkylineTool;
 
-namespace pwiz.Skyline.Model
+namespace pwiz.Skyline.ToolsUI
 {
     /// <summary>
     /// A server that implements functionality for interactive Skyline tools.
