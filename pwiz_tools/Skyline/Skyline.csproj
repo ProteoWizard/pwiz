@@ -413,6 +413,7 @@
       <DependentUpon>TutorialTextResources.resx</DependentUpon>
     </Compile>
     <Compile Include="Controls\TargetColumn.cs" />
+    <Compile Include="Controls\TreeViewMSStateRestorer.cs" />
     <Compile Include="EditUI\EditLinkedPeptidesDlg.cs">
       <SubType>Form</SubType>
     </Compile>
@@ -1142,7 +1143,6 @@
     <Compile Include="Controls\TreeViewMS.cs">
       <SubType>Component</SubType>
     </Compile>
-    <Compile Include="Controls\TreeViewStateRestorer.cs" />
     <Compile Include="Controls\WizardPages.cs">
       <SubType>Component</SubType>
     </Compile>
