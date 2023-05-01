@@ -130,8 +130,9 @@ namespace TestPerf
 
         protected override void DoTest()
         {
-//IsPauseForScreenShots = true;
+//IsPauseForScreenShots = true; // enable for quick demo
             PrepareDocument("TestFeatureDetection.sky");
+            PauseForScreenShot("Ready to start Wizard (File > Import > Feature Detection...)");
             // Launch the wizard
             var importPeptideSearchDlg = ShowDialog<ImportPeptideSearchDlg>(SkylineWindow.ShowFeatureDetectionDlg);
             // We're on the "Select Files to Search" page of the wizard.
@@ -144,7 +145,7 @@ namespace TestPerf
                 AssertEx.AreEqual(ImportPeptideSearchDlg.Workflow.feature_detection, importPeptideSearchDlg.BuildPepSearchLibControl.WorkflowType); 
                 importPeptideSearchDlg.BuildPepSearchLibControl.CutOffScore = 0.95;
             });
-            PauseForScreenShot();
+            PauseForScreenShot("Hardklor settings - one search file");
             RunUI(() =>
             {
                 Assert.IsTrue(importPeptideSearchDlg.ClickNextButton());
@@ -153,10 +154,15 @@ namespace TestPerf
             // With only 1 source, no add/remove prefix/suffix dialog
 
             // Test back/next buttons
+            PauseForScreenShot("Testing back button");
             RunUI(() =>
             {
                 Assert.IsTrue(importPeptideSearchDlg.ClickBackButton());
                 Assert.IsTrue(importPeptideSearchDlg.CurrentPage == ImportPeptideSearchDlg.Pages.spectra_page);
+            });
+            PauseForScreenShot("and forward again");
+            RunUI(() =>
+            {
                 Assert.IsTrue(importPeptideSearchDlg.ClickNextButton());
                 // We're on the MS1 full scan settings page.
                 Assert.IsTrue(importPeptideSearchDlg.CurrentPage == ImportPeptideSearchDlg.Pages.full_scan_settings_page);
@@ -164,7 +170,7 @@ namespace TestPerf
                 importPeptideSearchDlg.FullScanSettingsControl.PrecursorMassAnalyzer = FullScanMassAnalyzerType.orbitrap;
                 importPeptideSearchDlg.FullScanSettingsControl.PrecursorRes = 70000; // That's the value at 200m/z per this data set, probably close enough for the 400m/z usd by Hardklor
             });
-            PauseForScreenShot();
+            PauseForScreenShot(" MS1 full scan settings page - next we'll start the mzML conversion then cancel the search");
             RunUI(() =>
             {
                 // Run the search
@@ -190,6 +196,7 @@ namespace TestPerf
             WaitForConditionUI(60000, () => searchSucceeded.HasValue);
             Assert.IsFalse(searchSucceeded.Value);
             searchSucceeded = null;
+            PauseForScreenShot("search cancelled, now go back and  test 2 input files with the same name in different directories");
             // Go back and test 2 input files with the same name in different directories
             RunUI(() =>
             {
@@ -198,8 +205,9 @@ namespace TestPerf
 
                 importPeptideSearchDlg.BuildPepSearchLibControl.DdaSearchDataSources = SearchFilesSameName.Select(o => (MsDataFileUri) new MsDataFilePath(o)).ToArray();
             });
-
+            PauseForScreenShot("same name, different directories");
             var removeSuffix = ShowDialog<ImportResultsNameDlg>(() => importPeptideSearchDlg.ClickNextButton());
+            PauseForScreenShot("expected dialog for name reduction - we'll cancel and go back to try unique names");
             OkDialog(removeSuffix, removeSuffix.CancelDialog);
 
             // Test with 2 files (different name - one of these is bogus, just checking the name handling)
@@ -211,22 +219,29 @@ namespace TestPerf
 
             // With 2 sources, we get the remove prefix/suffix dialog; accept default behavior
             var removeSuffix2 = ShowDialog<ImportResultsNameDlg>(() => importPeptideSearchDlg.ClickNextButton());
+            PauseForScreenShot("expected dialog for name reduction ");
             OkDialog(removeSuffix, () => removeSuffix2.YesDialog());
 
             // Go back and remove the bogus filename - we'll just process the one actual data set
+            PauseForScreenShot("Go back and remove the bogus filename - we'll just process the one actual data set");
             RunUI(() =>
             {
                 Assert.IsTrue(importPeptideSearchDlg.ClickBackButton());
                 importPeptideSearchDlg.BuildPepSearchLibControl.DdaSearchDataSources =
                     importPeptideSearchDlg.BuildPepSearchLibControl.DdaSearchDataSources = new []{(MsDataFileUri)new MsDataFilePath(SearchFiles[0])};
-                Assert.IsTrue(importPeptideSearchDlg.ClickNextButton());
             });
-
+            PauseForScreenShot("proceed to search settings");
             RunUI(() =>
             {
+                Assert.IsTrue(importPeptideSearchDlg.ClickNextButton());
                 // We're on the "Full Scan Settings" page again.
                 importPeptideSearchDlg.FullScanSettingsControl.PrecursorMassAnalyzer = FullScanMassAnalyzerType.orbitrap;
                 importPeptideSearchDlg.FullScanSettingsControl.PrecursorRes = 70000; // That's the value at 200m/z per this data set, probably close enough for the 400m/z usd by Hardklor
+            });
+
+            PauseForScreenShot("and go");
+            RunUI(() =>
+            {
                 Assert.IsTrue(importPeptideSearchDlg.ClickNextButton());
             });
             try
@@ -246,7 +261,15 @@ namespace TestPerf
 
             WaitForDocumentLoaded();
             RunUI(() => SkylineWindow.SaveDocument());
-//PauseTest();
+            AssertEx.IsDocumentState(SkylineWindow.Document, null, 1, 9055, 9038, 27114);
+            RunUI(() =>
+            {
+                SkylineWindow.SequenceTree.Nodes[0].Expand();
+                SkylineWindow.SequenceTree.Nodes[0].Nodes[3564].Expand();
+                SkylineWindow.SequenceTree.Nodes[0].Nodes[3564].Nodes[0].Expand();
+                SkylineWindow.SequenceTree.SelectedNode = SkylineWindow.SequenceTree.Nodes[0].Nodes[3564].Nodes[0];
+            });
+            PauseForScreenShot("complete");
         }
 
         private void PrepareDocument(string documentFile)
