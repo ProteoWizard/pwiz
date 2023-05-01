@@ -30,6 +30,7 @@ using pwiz.Skyline.Model.GroupComparison;
 using pwiz.Skyline.Model.Optimization;
 using pwiz.Skyline.Properties;
 using pwiz.Skyline.Util;
+using pwiz.Skyline.Util.Extensions;
 using pwiz.SkylineTestUtil;
 
 namespace pwiz.SkylineTestData
