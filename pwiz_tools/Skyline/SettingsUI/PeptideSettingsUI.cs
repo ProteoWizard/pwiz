@@ -82,18 +82,13 @@ namespace pwiz.Skyline.SettingsUI
         private readonly LabelTypeComboDriver _driverLabelType;
         private static readonly IList<int?> _quantMsLevels = ImmutableList.ValueOf(new int?[] {null, 1, 2});
         private readonly LabelTypeComboDriver _driverSmallMolInternalStandardTypes;
-        private readonly string _staticModsOriginalTooltip;
-        private readonly string _heavyModsOriginalTooltip;
-        private readonly string _librariesOriginalTooltip;
+        private string _staticModsOriginalTooltip;
+        private string _heavyModsOriginalTooltip;
+        private string _librariesOriginalTooltip;
 
         public PeptideSettingsUI(SkylineWindow parent, LibraryManager libraryManager, TABS? selectTab)
         {
             InitializeComponent();
-            // Remember the original tooltips which were set in the form designer.
-            // The original tooltip is displayed when the mouse is not pointing at any item in the list
-            _staticModsOriginalTooltip = helpTip.GetToolTip(listStaticMods);
-            _heavyModsOriginalTooltip = helpTip.GetToolTip(listHeavyMods);
-            _librariesOriginalTooltip = helpTip.GetToolTip(listLibraries);
 
             _tabPages = new Dictionary<TABS, TabWithPage>
             {
@@ -1874,6 +1869,12 @@ namespace pwiz.Skyline.SettingsUI
             {
                 staticMod = _driverStaticMod.Choices[itemIndex];
             }
+            // Remember the original tooltips which were set in the form designer.
+            // The original tooltip is displayed when the mouse is not pointing at any item in the list
+            if (string.IsNullOrEmpty(_staticModsOriginalTooltip))
+            {
+                _staticModsOriginalTooltip = helpTip.GetToolTip(listStaticMods);
+            }
             ChangeTooltip(listStaticMods, staticMod?.ItemDescription.ToString() ?? _staticModsOriginalTooltip);
         }
 
@@ -1885,6 +1886,12 @@ namespace pwiz.Skyline.SettingsUI
             {
                 heavyMod = _driverHeavyMod.Choices[itemIndex];
             }
+            // Remember the original tooltips which were set in the form designer.
+            // The original tooltip is displayed when the mouse is not pointing at any item in the list
+            if (string.IsNullOrEmpty(_heavyModsOriginalTooltip))
+            {
+                _heavyModsOriginalTooltip = helpTip.GetToolTip(listHeavyMods);
+            }
             ChangeTooltip(listHeavyMods, heavyMod?.ItemDescription.ToString() ?? _heavyModsOriginalTooltip);
         }
 
@@ -1895,6 +1902,12 @@ namespace pwiz.Skyline.SettingsUI
             if (itemIndex >= 0 && itemIndex < _driverLibrary.Choices.Length)
             {
                 librarySpec = _driverLibrary.Choices[itemIndex];
+            }
+            // Remember the original tooltips which were set in the form designer.
+            // The original tooltip is displayed when the mouse is not pointing at any item in the list
+            if (string.IsNullOrEmpty(_librariesOriginalTooltip))
+            {
+                _librariesOriginalTooltip = helpTip.GetToolTip(listLibraries);
             }
             ChangeTooltip(listLibraries, librarySpec?.ItemDescription?.ToString() ?? _librariesOriginalTooltip);
         }
