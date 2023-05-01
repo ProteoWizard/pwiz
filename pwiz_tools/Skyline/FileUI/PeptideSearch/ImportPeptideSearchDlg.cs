@@ -774,6 +774,12 @@ namespace pwiz.Skyline.FileUI.PeptideSearch
                     BuildPepSearchLibControl.Grid.Files = ImportPeptideSearch.SearchEngine.SpectrumFileNames.Select(f =>
                         new BuildLibraryGridView.File(ImportPeptideSearch.SearchEngine.GetSearchResultFilepath(f), scoreType, scoreThreshold));
                     BuildPepSearchLibControl.ImportPeptideSearch.SearchFilenames = BuildPepSearchLibControl.Grid.FilePaths.ToArray();
+                    if (IsFeatureDetectionWorkflow)
+                    {
+                        // Disable navigation while the library build is happening
+                        btnBack.Enabled = false;
+                        btnNext.Enabled = false; 
+                    }
 
                     if (!BuildPeptideSearchLibrary(eCancel2))
                         return;
@@ -992,8 +998,7 @@ namespace pwiz.Skyline.FileUI.PeptideSearch
             btnCancel.Enabled = true;
             btnBack.Enabled = true;
             ControlBox = true;
-            if (success)
-                btnNext.Enabled = true;
+            btnNext.Enabled = success;
         }
 
         private void btnBack_Click(object sender, EventArgs e)
@@ -1041,6 +1046,7 @@ namespace pwiz.Skyline.FileUI.PeptideSearch
                         _documents.Pop();
                         _fullScanSettingsChanged = false;
                     }
+                    btnNext.Enabled = true;
                     break;
                 case Pages.dda_search_settings_page:
                     btnNext.Enabled = true;
