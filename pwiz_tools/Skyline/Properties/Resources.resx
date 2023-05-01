@@ -11957,7 +11957,7 @@ If you do not have the original file, you may build the library with embedded sp
     <value>The selected zip file did not specify any items to add to the Tools menu.</value>
   </data>
   <data name="CommandLine_NewSkyFile_FileAlreadyExists" xml:space="preserve">
-    <value>File '{0}' already exists; use --in= instead or add --overwrite.</value>
+    <value>File '{0}' already exists; add --overwrite to allow Skyline to overwrite it.</value>
   </data>
   <data name="CommandLine_SetInstrumentSettings_Error__Failed_attempting_to_change_the_transition_instrument_settings_" xml:space="preserve">
     <value>Error: Failed attempting to change the transition instrument settings.</value>

@@ -66,6 +66,13 @@ namespace pwiz.SkylineTestData
         private const string ZIP_FILE = @"TestData\Results\FullScan.zip";
         private const string COMMAND_FILE = @"TestData\CommandLineTest.zip";
 
+        private new static string RunCommand(params string[] args)
+        {
+            if (args.Contains(a => a.StartsWith("--out=")))
+                args = args.Append("--overwrite").ToArray();
+            return AbstractUnitTestEx.RunCommand(args);
+        }
+
         [TestMethod]
         public void ConsoleReplicateOutTest()
         {
@@ -273,8 +280,8 @@ namespace pwiz.SkylineTestData
                                        "--out=" + outPath);
 
             SrmDocument doc = ResultsUtil.DeserializeDocument(outPath);
-            Assert.IsFalse(output.Contains(Resources.CommandLineTest_ConsoleAddFastaTest_Error));
-            Assert.IsFalse(output.Contains(Resources.CommandLineTest_ConsoleAddFastaTest_Warning));
+            AssertEx.DoesNotContain(output, Resources.CommandLineTest_ConsoleAddFastaTest_Error);
+            AssertEx.DoesNotContain(output, Resources.CommandLineTest_ConsoleAddFastaTest_Warning);
 
             // Before import, there are 2 peptides. 3 peptides after
             AssertEx.IsDocumentState(doc, 0, 3, 7, 7, 49);
@@ -285,8 +292,8 @@ namespace pwiz.SkylineTestData
                                 "--out=" + outPath);
 
             doc = ResultsUtil.DeserializeDocument(outPath);
-            Assert.IsFalse(output.Contains(Resources.CommandLineTest_ConsoleAddFastaTest_Error));
-            Assert.IsFalse(output.Contains(Resources.CommandLineTest_ConsoleAddFastaTest_Warning));
+            AssertEx.DoesNotContain(output, Resources.CommandLineTest_ConsoleAddFastaTest_Error);
+            AssertEx.DoesNotContain(output, Resources.CommandLineTest_ConsoleAddFastaTest_Warning);
 
             AssertEx.IsDocumentState(doc, 0, 2, 7, 7, 49);
         }
@@ -388,10 +395,10 @@ namespace pwiz.SkylineTestData
                     "--full-scan-precursor-isotopes=Count",
                 };
 
-                string output = RunCommand(settings);
+                string output = AbstractUnitTestEx.RunCommand(settings);
                 StringAssert.Contains(output, string.Format(Resources.CommandLine_NewSkyFile_FileAlreadyExists, docPath));
 
-                output = RunCommand(settings.Append("--overwrite").ToArray());
+                output = AbstractUnitTestEx.RunCommand(settings.Append("--overwrite").ToArray());
                 StringAssert.Contains(output, string.Format(Resources.CommandLine_NewSkyFile_Deleting_existing_file___0__, docPath));
                 AssertEx.DoesNotContain(output, Resources.CommandLineTest_ConsoleAddFastaTest_Error);
                 AssertEx.DoesNotContain(output, Resources.CommandLineTest_ConsoleAddFastaTest_Warning);
@@ -411,10 +418,10 @@ namespace pwiz.SkylineTestData
                     "--out=" + docPath2,
                     "--full-scan-precursor-isotopes=Percent",
                 };
-                string output = RunCommand(settings);
+                string output = AbstractUnitTestEx.RunCommand(settings);
                 StringAssert.Contains(output, string.Format(Resources.CommandLine_NewSkyFile_FileAlreadyExists, docPath2));
 
-                output = RunCommand(settings.Append("--overwrite").ToArray());
+                output = AbstractUnitTestEx.RunCommand(settings.Append("--overwrite").ToArray());
                 AssertEx.DoesNotContain(output, Resources.CommandLineTest_ConsoleAddFastaTest_Error);
                 AssertEx.DoesNotContain(output, Resources.CommandLineTest_ConsoleAddFastaTest_Warning);
 

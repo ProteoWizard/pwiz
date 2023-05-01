@@ -6625,7 +6625,7 @@ namespace pwiz.Skyline.Properties {
         }
         
         /// <summary>
-        ///   Looks up a localized string similar to File &apos;{0}&apos; already exists; use --in= instead or add --overwrite..
+        ///   Looks up a localized string similar to File &apos;{0}&apos; already exists; add --overwrite to allow Skyline to overwrite it..
         /// </summary>
         public static string CommandLine_NewSkyFile_FileAlreadyExists {
             get {

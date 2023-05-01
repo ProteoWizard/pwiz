@@ -413,7 +413,10 @@ namespace pwiz.Skyline
             if (commandArgs.Saving)
             {
                 // apply Overwrite check for --out/SaveFile option (but not for --save/SkylineFile)
-                if (!commandArgs.OverwriteExisting && commandArgs.SaveFile != null && File.Exists(commandArgs.SaveFile))
+                if (!commandArgs.OverwriteExisting &&
+                    commandArgs.Saving &&
+                    commandArgs.SaveFile != commandArgs.SkylineFile &&
+                    File.Exists(commandArgs.SaveFile))
                 {
                     _out.WriteLine(Resources.CommandStatusWriter_WriteLine_Error_ + @" " +
                                    Resources.CommandLine_NewSkyFile_FileAlreadyExists, commandArgs.SaveFile);

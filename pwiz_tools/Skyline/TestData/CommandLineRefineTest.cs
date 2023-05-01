@@ -49,6 +49,7 @@ namespace pwiz.SkylineTestData
             var listArgs = new List<string>(args);
             listArgs.Insert(0, CommandArgs.ARG_IN.GetArgumentTextWithValue(DocumentPath));
             listArgs.Add(CommandArgs.ARG_OUT.GetArgumentTextWithValue(OutPath));
+            listArgs.Add(CommandArgs.ARG_OVERWRITE.ArgumentText);
             return RunCommand(listArgs.ToArray());
         }
 
@@ -491,8 +492,11 @@ namespace pwiz.SkylineTestData
                 BadValueString(Resources.ValueInvalidNumberListException_ValueInvalidNumberListException_The_value__0__is_not_valid_for_the_argument__1__which_requires_a_list_of_decimal_numbers_),
                 BadValueString(Resources.ValueInvalidChargeListException_ValueInvalidChargeListException_The_value___0___is_not_valid_for_the_argument__1__which_requires_an_comma_separated_list_of_integers_),
                 BadValueString(Resources.ValueInvalidIonTypeListException_ValueInvalidIonTypeListException_The_value___0___is_not_valid_for_the_argument__1__which_requires_an_comma_separated_list_of_fragment_ion_types__a__b__c__x__y__z__p__),
-                string.Format(
-                    Resources.ValueInvalidMzToleranceException_ValueInvalidMzToleranceException_The_value__0__is_not_valid_for_the_argument__1__which_requires_a_value_and_a_unit__For_example___2__,
+                string.Format(Resources.CommandArgs_ParseArgsInternal_Error____0___is_not_a_valid_value_for__1___It_must_be_one_of_the_following___2_,
+                    BAD_VALUE, arg.ArgumentText, arg.ValueExample()),
+                string.Format(Resources.ValueInvalidException_ValueInvalidException_The_value___0___is_not_valid_for_the_argument__1___Use_one_of__2_,
+                    BAD_VALUE, arg.ArgumentText, arg.ValueExample()),
+                string.Format(Resources.ValueInvalidMzToleranceException_ValueInvalidMzToleranceException_The_value__0__is_not_valid_for_the_argument__1__which_requires_a_value_and_a_unit__For_example___2__,
                     BAD_VALUE, arg.ArgumentText, arg.ValueExample()),
             };
             Assert.IsTrue(badValueStrings.Any(s => output.Contains(s)),
