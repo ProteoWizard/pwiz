@@ -57,33 +57,40 @@ namespace pwiz.Skyline
             return PATH_TO_FILE() + ext;
         }
 
-        private static readonly Func<string> PATH_TO_DOCUMENT = () => GetPathToFile(SrmDocument.EXT);
-        private static readonly Func<string> PATH_TO_FOLDER = () => CommandArgUsage.CommandArgs_PATH_TO_FOLDER;
-        private static readonly Func<string> DATE_VALUE = () => CommandArgUsage.CommandArgs_DATE_VALUE;
-        private static readonly Func<string> INT_VALUE = () => CommandArgUsage.CommandArgs_INT_VALUE;
-        private static readonly Func<string> NUM_VALUE = () => CommandArgUsage.CommandArgs_NUM_VALUE;
-        private static readonly Func<string> NUM_LIST_VALUE = () => CommandArgUsage.CommandArgs_NUM_LIST_VALUE;
-        private static readonly Func<string> NAME_VALUE = () => CommandArgUsage.CommandArgs_NAME_VALUE;
-        private static readonly Func<string> FEATURE_NAME_VALUE = () => CommandArgUsage.CommandArgs_FEATURE_NAME_VALUE;
-        private static readonly Func<string> REPORT_NAME_VALUE = () => CommandArgUsage.CommandArgs_REPORT_NAME_VALUE;
-        private static readonly Func<string> PIPE_NAME_VALUE = () => CommandArgUsage.CommandArgs_PIPE_NAME_VALUE;
-        private static readonly Func<string> REGEX_VALUE = () => CommandArgUsage.CommandArgs_REGEX_VALUE;
-        private static readonly Func<string> RP_VALUE = () => CommandArgUsage.CommandArgs_RP_VALUE;
-        private static readonly Func<string> MZ_VALUE = () => CommandArgUsage.CommandArgs_MZ_VALUE;
-        private static readonly Func<string> MINUTES_VALUE = () => CommandArgUsage.CommandArgs_MINUTES_VALUE;
-        private static readonly Func<string> MILLIS_VALE = () => CommandArgUsage.CommandArgs_MILLIS_VALE;
-        private static readonly Func<string> SERVER_URL_VALUE = () => CommandArgUsage.CommandArgs_SERVER_URL_VALUE;
-        private static readonly Func<string> USERNAME_VALUE = () => CommandArgUsage.CommandArgs_USERNAME_VALUE;
-        private static readonly Func<string> PASSWORD_VALUE = () => CommandArgUsage.CommandArgs_PASSWORD_VALUE;
-        private static readonly Func<string> COMMAND_VALUE = () => CommandArgUsage.CommandArgs_COMMAND_VALUE;
-        private static readonly Func<string> COMMAND_ARGUMENTS_VALUE = () => CommandArgUsage.CommandArgs_COMMAND_ARGUMENTS_VALUE;
-        private static readonly Func<string> PROGRAM_MACRO_VALUE = () => CommandArgUsage.CommandArgs_PROGRAM_MACRO_VALUE;
-        private static readonly Func<string> LABEL_VALUE = () => CommandArgUsage.CommandArgs_LABEL_VALUE;
+        public static readonly Func<string> PATH_TO_DOCUMENT = () => GetPathToFile(SrmDocument.EXT);
+        public static readonly Func<string> PATH_TO_FOLDER = () => CommandArgUsage.CommandArgs_PATH_TO_FOLDER;
+        public static readonly Func<string> PATH_TO_ZIP = () => GetPathToFile(SrmDocumentSharing.EXT_SKY_ZIP);
+        public static readonly Func<string> PATH_TO_CSV = () => GetPathToFile(TextUtil.EXT_CSV);
+        public static readonly Func<string> PATH_TO_TSV = () => GetPathToFile(TextUtil.EXT_TSV);
+        public static readonly Func<string> PATH_TO_IRTDB = () => GetPathToFile(IrtDb.EXT);
+        public static readonly Func<string> PATH_TO_IMSDB = () => GetPathToFile(IonMobilityDb.EXT);
+        public static readonly Func<string> PATH_TO_REPORT = () => GetPathToFile(ReportSpecList.EXT_REPORTS);
+        public static readonly Func<string> PATH_TO_INSTALL = () => GetPathToFile(ToolDescription.EXT_INSTALL);
+        public static readonly Func<string> DATE_VALUE = () => CommandArgUsage.CommandArgs_DATE_VALUE;
+        public static readonly Func<string> INT_VALUE = () => CommandArgUsage.CommandArgs_INT_VALUE;
+        public static readonly Func<string> NUM_VALUE = () => CommandArgUsage.CommandArgs_NUM_VALUE;
+        public static readonly Func<string> NUM_LIST_VALUE = () => CommandArgUsage.CommandArgs_NUM_LIST_VALUE;
+        public static readonly Func<string> NAME_VALUE = () => CommandArgUsage.CommandArgs_NAME_VALUE;
+        public static readonly Func<string> FEATURE_NAME_VALUE = () => CommandArgUsage.CommandArgs_FEATURE_NAME_VALUE;
+        public static readonly Func<string> REPORT_NAME_VALUE = () => CommandArgUsage.CommandArgs_REPORT_NAME_VALUE;
+        public static readonly Func<string> PIPE_NAME_VALUE = () => CommandArgUsage.CommandArgs_PIPE_NAME_VALUE;
+        public static readonly Func<string> REGEX_VALUE = () => CommandArgUsage.CommandArgs_REGEX_VALUE;
+        public static readonly Func<string> RP_VALUE = () => CommandArgUsage.CommandArgs_RP_VALUE;
+        public static readonly Func<string> MZ_VALUE = () => CommandArgUsage.CommandArgs_MZ_VALUE;
+        public static readonly Func<string> MINUTES_VALUE = () => CommandArgUsage.CommandArgs_MINUTES_VALUE;
+        public static readonly Func<string> MILLIS_VALE = () => CommandArgUsage.CommandArgs_MILLIS_VALE;
+        public static readonly Func<string> SERVER_URL_VALUE = () => CommandArgUsage.CommandArgs_SERVER_URL_VALUE;
+        public static readonly Func<string> USERNAME_VALUE = () => CommandArgUsage.CommandArgs_USERNAME_VALUE;
+        public static readonly Func<string> PASSWORD_VALUE = () => CommandArgUsage.CommandArgs_PASSWORD_VALUE;
+        public static readonly Func<string> COMMAND_VALUE = () => CommandArgUsage.CommandArgs_COMMAND_VALUE;
+        public static readonly Func<string> COMMAND_ARGUMENTS_VALUE = () => CommandArgUsage.CommandArgs_COMMAND_ARGUMENTS_VALUE;
+        public static readonly Func<string> PROGRAM_MACRO_VALUE = () => CommandArgUsage.CommandArgs_PROGRAM_MACRO_VALUE;
+        public static readonly Func<string> LABEL_VALUE = () => CommandArgUsage.CommandArgs_LABEL_VALUE;
         // ReSharper disable LocalizableElement
-        private static readonly Func<string> INT_LIST_VALUE = () => "\"1, 2, 3...\"";  // Not L10N
-        private static readonly Func<string> ION_TYPE_LIST_VALUE = () => "\"a, b, c, x, y, z, p\"";    // Not L10N
+        public static readonly Func<string> INT_LIST_VALUE = () => "\"1, 2, 3...\"";  // Not L10N
+        public static readonly Func<string> ION_TYPE_LIST_VALUE = () => "\"a, b, c, x, y, z, p\"";    // Not L10N
 
-        private static readonly Func<string> MZTOLERANCE_VALUE = () => "\"" + 0.5 + "mz or 15ppm\"";
+        public static readonly Func<string> MZTOLERANCE_VALUE = () => "\"" + 0.5 + "mz or 15ppm\"";
         // ReSharper restore LocalizableElement
 
         // Internal use arguments
@@ -91,6 +98,18 @@ namespace pwiz.Skyline
             (c, p) => c._usageWidth = p.ValueInt) {InternalUse = true};
         public static readonly Argument ARG_INTERNAL_CULTURE = new Argument(@"culture", () => @"en|fr|ja|zh-CHS...",
             (c, p) => SetCulture(p.Value)) { InternalUse = true };
+
+        public static readonly HashSet<Func<string>> PATH_TYPE_VALUES = new HashSet<Func<string>>
+        {
+            PATH_TO_DOCUMENT, PATH_TO_FILE, PATH_TO_FOLDER, PATH_TO_ZIP, PATH_TO_REPORT, PATH_TO_TSV, PATH_TO_IMSDB,
+            PATH_TO_INSTALL, PATH_TO_CSV, PATH_TO_IRTDB
+        };
+
+        public static readonly HashSet<Func<string>> STRING_TYPE_VALUES = new HashSet<Func<string>>(new[]
+        {
+            FEATURE_NAME_VALUE, REPORT_NAME_VALUE, PIPE_NAME_VALUE, REGEX_VALUE, SERVER_URL_VALUE, USERNAME_VALUE,
+            PASSWORD_VALUE, COMMAND_VALUE, COMMAND_ARGUMENTS_VALUE, PROGRAM_MACRO_VALUE, LABEL_VALUE, NAME_VALUE
+        }.Concat(PATH_TYPE_VALUES));
 
         private static void SetCulture(string cultureName)
         {
@@ -137,7 +156,7 @@ namespace pwiz.Skyline
         {
             c.OverwriteExisting = p.IsNameOnly || bool.Parse(p.Value);
         });
-        public static readonly Argument ARG_SHARE_ZIP = new DocArgument(@"share-zip", () => GetPathToFile(SrmDocumentSharing.EXT_SKY_ZIP),
+        public static readonly Argument ARG_SHARE_ZIP = new DocArgument(@"share-zip", PATH_TO_ZIP,
             (c, p) =>
             {
                 c.SharingZipFile = true;
@@ -233,7 +252,7 @@ namespace pwiz.Skyline
         public ShareType SharedFileType { get; private set; }
 
         // For creating a .imsdb ion mobility library
-        public static readonly Argument ARG_IMSDB_CREATE = new DocArgument(@"ionmobility-library-create", () => GetPathToFile(IonMobilityDb.EXT),
+        public static readonly Argument ARG_IMSDB_CREATE = new DocArgument(@"ionmobility-library-create", PATH_TO_IMSDB,
             (c, p) => c.ImsDbFile = p.ValueFullPath);
 
         // For creating a .imsdb ion mobility library
@@ -281,12 +300,19 @@ namespace pwiz.Skyline
         public static readonly Argument ARG_IMPORT_PROCESS_COUNT = new Argument(@"import-process-count", INT_VALUE,
             (c, p) =>
             {
+                if (p.ValueInt < 0)
+                    throw new ValueInvalidIntException(ARG_IMPORT_PROCESS_COUNT, p.Value);
                 c.ImportThreads = p.ValueInt;
                 if (c.ImportThreads > 0)
                     Program.MultiProcImport = true;
             });
         public static readonly Argument ARG_IMPORT_THREADS = new Argument(@"import-threads", INT_VALUE,
-            (c, p) => c.ImportThreads = p.ValueInt);
+            (c, p) =>
+            {
+                if (p.ValueInt < 0)
+                    throw new ValueInvalidIntException(ARG_IMPORT_THREADS, p.Value);
+                c.ImportThreads = p.ValueInt;
+            });
         public static readonly Argument ARG_IMPORT_LOCKMASS_POSITIVE = new DocArgument(@"import-lockmass-positive", NUM_VALUE,
             (c, p) => c.LockmassPositive = p.ValueDouble);
         public static readonly Argument ARG_IMPORT_LOCKMASS_NEGATIVE = new DocArgument(@"import-lockmass-negative", NUM_VALUE,
@@ -510,7 +536,7 @@ namespace pwiz.Skyline
             (c, p) => c.IrtGroupName = p.Value);
         public static readonly Argument ARG_IRT_STANDARDS_FILE = new DocArgument(@"irt-standards-file", PATH_TO_FILE,
             (c, p) => c.IrtStandardsPath = p.ValueFullPath);
-        public static readonly Argument ARG_IRT_DATABASE_PATH = new DocArgument(@"irt-database-path", () => GetPathToFile(IrtDb.EXT),
+        public static readonly Argument ARG_IRT_DATABASE_PATH = new DocArgument(@"irt-database-path", PATH_TO_IRTDB,
             (c, p) => c.IrtDatabasePath = p.ValueFullPath);
         public static readonly Argument ARG_IRT_CALC_NAME = new DocArgument(@"irt-calc-name", NAME_VALUE,
             (c, p) => c.IrtCalcName = p.Value);
@@ -625,7 +651,7 @@ namespace pwiz.Skyline
         }
 
         // Annotations
-        private static readonly Argument ARG_IMPORT_ANNOTATIONS = new DocArgument(@"import-annotations", () => GetPathToFile(TextUtil.EXT_CSV),
+        private static readonly Argument ARG_IMPORT_ANNOTATIONS = new DocArgument(@"import-annotations", PATH_TO_CSV,
             (c, p) => c.ImportAnnotations = p.ValueFullPath);
 
         private static readonly ArgumentGroup GROUP_ANNOTATIONS = new ArgumentGroup(() => CommandArgUsage.CommandArgs_GROUP_ANNOTATIONS_Importing_annotations, false,
@@ -918,7 +944,7 @@ namespace pwiz.Skyline
         // Adding reports does not require a document
         public static readonly Argument ARG_REPORT_NAME = new Argument(@"report-name", NAME_VALUE,
             (c, p) => c.ReportName = p.Value);
-        public static readonly Argument ARG_REPORT_ADD = new Argument(@"report-add", () => GetPathToFile(ReportSpecList.EXT_REPORTS),
+        public static readonly Argument ARG_REPORT_ADD = new Argument(@"report-add", PATH_TO_REPORT,
             (c, p) =>
             {
                 c.ImportingSkyr = true;
@@ -928,7 +954,7 @@ namespace pwiz.Skyline
             new []{ARG_VALUE_OVERWRITE, ARG_VALUE_SKIP},
             (c, p) => c.ResolveSkyrConflictsBySkipping = p.IsValue(ARG_VALUE_SKIP)) { WrapValue = true };
         // Exporting reports does require a document
-        public static readonly Argument ARG_REPORT_FILE = new DocArgument(@"report-file", () => GetPathToFile(TextUtil.EXT_CSV),
+        public static readonly Argument ARG_REPORT_FILE = new DocArgument(@"report-file", PATH_TO_CSV,
             (c, p) => c.ReportFile = p.ValueFullPath);
         public static readonly Argument ARG_REPORT_FORMAT = new DocArgument(@"report-format",
             new []{ARG_VALUE_CSV, ARG_VALUE_TSV},
@@ -964,7 +990,7 @@ namespace pwiz.Skyline
         public bool? ResolveSkyrConflictsBySkipping { get; private set; }
 
         // For exporting chromatograms
-        private static readonly Argument ARG_CHROMATOGRAM_FILE = new DocArgument(@"chromatogram-file", () => GetPathToFile(TextUtil.EXT_TSV),
+        private static readonly Argument ARG_CHROMATOGRAM_FILE = new DocArgument(@"chromatogram-file", PATH_TO_TSV,
             (c, p) => c.ChromatogramsFile = p.ValueFullPath);
         private static readonly Argument ARG_CHROMATOGRAM_PRECURSORS = new DocArgument(@"chromatogram-precursors",
             (c, p) => c.ChromatogramsPrecursors = true);
@@ -1009,13 +1035,13 @@ namespace pwiz.Skyline
 
 
         // For publishing the document to Panorama
-        private static readonly Argument ARG_PANORAMA_SERVER = new DocArgument(@"panorama-server", SERVER_URL_VALUE,
+        public static readonly Argument ARG_PANORAMA_SERVER = new DocArgument(@"panorama-server", SERVER_URL_VALUE,
             (c, p) => c.PanoramaServerUri = p.Value);
-        private static readonly Argument ARG_PANORAMA_USERNAME = new DocArgument(@"panorama-username", USERNAME_VALUE,
+        public static readonly Argument ARG_PANORAMA_USERNAME = new DocArgument(@"panorama-username", USERNAME_VALUE,
             (c, p) => c.PanoramaUserName = p.Value);
-        private static readonly Argument ARG_PANORAMA_PASSWORD = new DocArgument(@"panorama-password", PASSWORD_VALUE,
+        public static readonly Argument ARG_PANORAMA_PASSWORD = new DocArgument(@"panorama-password", PASSWORD_VALUE,
             (c, p) => c.PanoramaPassword = p.Value);
-        private static readonly Argument ARG_PANORAMA_FOLDER = new DocArgument(@"panorama-folder", PATH_TO_FOLDER,
+        public static readonly Argument ARG_PANORAMA_FOLDER = new DocArgument(@"panorama-folder", PATH_TO_FOLDER,
             (c, p) => c.PanoramaFolder = p.Value);
 
         private static readonly ArgumentGroup GROUP_PANORAMA = new ArgumentGroup(() => CommandArgUsage.CommandArgs_GROUP_PANORAMA_Publishing_to_Panorama, false,
@@ -1308,8 +1334,8 @@ namespace pwiz.Skyline
             (c, p) => c.FullScanProductMassAnalyzerType = p);
         public static readonly Argument ARG_FULL_SCAN_PRODUCT_ISOLATION_SCHEME = new DocArgument(
                 @"full-scan-isolation-scheme",
-                () => Argument.ValuesToExample(GetDisplayNames(Settings.Default.IsolationSchemeList)
-                    .Append(CommandArgUsage.CommandArgs_ARG_FULL_SCAN_PRODUCT_ISOLATION_SCHEME_path_to_result_file_to_import_the_isolation_scheme).ToArray()),
+                () => GetDisplayNames(Settings.Default.IsolationSchemeList)
+                    .Append(CommandArgUsage.CommandArgs_ARG_FULL_SCAN_PRODUCT_ISOLATION_SCHEME_path_to_result_file_to_import_the_isolation_scheme).ToArray(),
                 (c, p) => c.FullScanProductIsolationScheme = p.Value)
             { WrapValue = true };
 
@@ -1372,6 +1398,15 @@ namespace pwiz.Skyline
                 if (c.FullScanAcquisitionMethod == FullScanAcquisitionMethod.DIA && c.FullScanProductIsolationScheme == null)
                 {
                     c.WarnArgRequirement(ARG_FULL_SCAN_ACQUISITION_METHOD, ARG_FULL_SCAN_PRODUCT_ISOLATION_SCHEME);
+                    return false;
+                }
+
+                if (c.FullScanProductIsolationScheme != null &&
+                    !Settings.Default.IsolationSchemeList.Contains(s => s.Name == c.FullScanProductIsolationScheme) &&
+                    !MsDataFileImpl.IsValidFile(c.FullScanProductIsolationScheme))
+                {
+                    c.WriteLine(Resources.CommandArgs_ParseArgsInternal_Error____0___is_not_a_valid_value_for__1___It_must_be_one_of_the_following___2_,
+                        c.FullScanProductIsolationScheme, ARG_FULL_SCAN_PRODUCT_ISOLATION_SCHEME.ArgumentText, ARG_FULL_SCAN_PRODUCT_ISOLATION_SCHEME.ValueExample());
                     return false;
                 }
 
@@ -1557,7 +1592,7 @@ namespace pwiz.Skyline
             (c, p) => c.ToolReportTitle = p.Value);
         public static readonly Argument ARG_TOOL_OUTPUT_TO_IMMEDIATE_WINDOW = new ToolArgument(@"tool-output-to-immediate-window",
             (c, p) => c.ToolOutputToImmediateWindow = true);
-        public static readonly Argument ARG_TOOL_ADD_ZIP = new Argument(@"tool-add-zip", () => GetPathToFile(ToolDescription.EXT_INSTALL),
+        public static readonly Argument ARG_TOOL_ADD_ZIP = new Argument(@"tool-add-zip", PATH_TO_INSTALL,
             (c, p) =>
             {
                 c.InstallingToolsFromZip = true;
@@ -2334,7 +2369,7 @@ namespace pwiz.Skyline
             public string GetArgumentTextWithValue(string value)
             {
                 if (ValueExample == null)
-                    throw new ArgumentException(@"The argument {0} is valueless.");
+                    throw new ValueUnexpectedException(this);
                 else if (Values != null && !Values.Any(v => v.Equals(value, StringComparison.CurrentCultureIgnoreCase)))
                     throw new ValueInvalidException(this, value, Values);
 
@@ -2362,7 +2397,7 @@ namespace pwiz.Skyline
                 return ArgumentDescription;
             }
 
-            public static string ValuesToExample(params string[] options)
+            public static string ValuesToExample(IEnumerable<string> options)
             {
                 var sb = new StringBuilder();
                 sb.Append('<');
@@ -2374,6 +2409,11 @@ namespace pwiz.Skyline
                 }
                 sb.Append('>');
                 return sb.ToString();
+            }
+
+            public static string ValuesToExample(params string[] options)
+            {
+                return ValuesToExample((IEnumerable<string>) options);
             }
 
             public static NameValuePair Parse(string arg)
@@ -2922,7 +2962,7 @@ namespace pwiz.Skyline
         public class ValueInvalidMzToleranceException : UsageException
         {
             public ValueInvalidMzToleranceException(Argument arg, string value)
-                : base(string.Format(Resources.ValueInvalidMzToleranceException_ValueInvalidMzToleranceException_The_value__0__is_not_valid_for_the_argument__1__which_requires_a_value_and_a_unit__For_example___2__, value, arg.ArgumentText, MZTOLERANCE_VALUE))
+                : base(string.Format(Resources.ValueInvalidMzToleranceException_ValueInvalidMzToleranceException_The_value__0__is_not_valid_for_the_argument__1__which_requires_a_value_and_a_unit__For_example___2__, value, arg.ArgumentText, arg.ValueExample()))
             {
             }
         }

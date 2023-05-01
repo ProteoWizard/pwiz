@@ -412,6 +412,14 @@ namespace pwiz.Skyline
 
             if (commandArgs.Saving)
             {
+                // apply Overwrite check for --out/SaveFile option (but not for --save/SkylineFile)
+                if (!commandArgs.OverwriteExisting && commandArgs.SaveFile != null && File.Exists(commandArgs.SaveFile))
+                {
+                    _out.WriteLine(Resources.CommandStatusWriter_WriteLine_Error_ + @" " +
+                                   Resources.CommandLine_NewSkyFile_FileAlreadyExists, commandArgs.SaveFile);
+                    return false;
+                }
+
                 var saveFile = commandArgs.SaveFile ?? _skylineFile;
                 if (!SaveFile(saveFile))
                     return false;
@@ -3132,8 +3140,8 @@ namespace pwiz.Skyline
             }
             catch (ToolExecutionException x)
             {
-                    _out.WriteLine(x.Message);
-                }
+                _out.WriteLine(x.Message);
+            }
             if (result != null)
             {
                 foreach (var message in result.MessagesThrown)
@@ -3906,7 +3914,7 @@ namespace pwiz.Skyline
             catch (Exception x)
             {
                 statusWriter.WriteLine(Resources.Error___0_,
-                    Resources.SkylineWindow_ShareDocument_Failed_attempting_to_create_sharing_file__0__, fileDest);
+                    string.Format(Resources.SkylineWindow_ShareDocument_Failed_attempting_to_create_sharing_file__0__, fileDest));
                 statusWriter.WriteLine(x.Message);
             }
             return false;

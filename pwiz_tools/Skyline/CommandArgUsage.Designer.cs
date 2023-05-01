@@ -718,7 +718,7 @@ namespace pwiz.Skyline {
         }
         
         /// <summary>
-        ///   Looks up a localized string similar to A number of sub-processes will be run for single-file import, after which the results from each single file will be joined by the main process. This can produce 10x performance gains on24-core NUMA servers and 3-4x even on i7 processors, under the right conditions. Be sure to test with your system..
+        ///   Looks up a localized string similar to A number of sub-processes will be run for single-file import, after which the results from each single file will be joined by the main process. This can produce 10x performance gains on 24-core NUMA servers and 3-4x even on i7 processors, under the right conditions. Be sure to test with your system..
         /// </summary>
         internal static string _import_process_count {
             get {

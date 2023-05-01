@@ -6680,6 +6680,15 @@ namespace pwiz.Skyline.Properties {
         }
         
         /// <summary>
+        ///   Looks up a localized string similar to Error: saving file.
+        /// </summary>
+        public static string CommandLine_ProcessDocument_Error_saving_file {
+            get {
+                return ResourceManager.GetString("CommandLine_ProcessDocument_Error_saving_file", resourceCulture);
+            }
+        }
+        
+        /// <summary>
         ///   Looks up a localized string similar to Choose one of {0}.
         /// </summary>
         public static string CommandLine_RefineDocument_Choose_one_of__0_ {

@@ -296,13 +296,13 @@ namespace pwiz.SkylineTestData
         {
             TestFilesDir = new TestFilesDir(TestContext, ZIP_FILE);
             string docPath = TestFilesDir.GetTestPath("BSA_Protea_label_free_20100323_meth3_multi.sky");
-            string outPath = TestFilesDir.GetTestPath("AddFasta_Out.sky");
             string fastaPath = TestFilesDir.GetTestPath("sample.fasta");
 
             // arguments that would normally be quoted on the command-line shouldn't be quoted here
             var settings = new[]
             {
                 "--new=" + docPath,
+                "--overwrite",
                 "--full-scan-precursor-isotopes=Count",
                 "--full-scan-precursor-analyzer=centroided",
                 "--full-scan-precursor-res=5",
@@ -338,9 +338,6 @@ namespace pwiz.SkylineTestData
             };
 
             string output = RunCommand(settings);
-            StringAssert.Contains(output, string.Format(Resources.CommandLine_NewSkyFile_FileAlreadyExists, docPath));
-
-            output = RunCommand(settings.Append("--overwrite").ToArray());
             StringAssert.Contains(output, string.Format(Resources.CommandLine_NewSkyFile_Deleting_existing_file___0__, docPath));
             AssertEx.DoesNotContain(output, Resources.CommandLineTest_ConsoleAddFastaTest_Error);
             AssertEx.DoesNotContain(output, Resources.CommandLineTest_ConsoleAddFastaTest_Warning);
@@ -375,6 +372,55 @@ namespace pwiz.SkylineTestData
             Assert.AreEqual(true, doc.Settings.PeptideSettings.ProteinAssociationSettings.RemoveSubsetProteins);
             Assert.AreEqual(2, doc.Settings.PeptideSettings.ProteinAssociationSettings.MinPeptidesPerProtein);
 
+        }
+
+        [TestMethod]
+        public void ConsoleOverwriteDocumentTest()
+        {
+            TestFilesDir = new TestFilesDir(TestContext, ZIP_FILE);
+            string docPath = TestFilesDir.GetTestPath("BSA_Protea_label_free_20100323_meth3_multi.sky");
+
+            // test --new
+            {
+                var settings = new[]
+                {
+                    "--new=" + docPath,
+                    "--full-scan-precursor-isotopes=Count",
+                };
+
+                string output = RunCommand(settings);
+                StringAssert.Contains(output, string.Format(Resources.CommandLine_NewSkyFile_FileAlreadyExists, docPath));
+
+                output = RunCommand(settings.Append("--overwrite").ToArray());
+                StringAssert.Contains(output, string.Format(Resources.CommandLine_NewSkyFile_Deleting_existing_file___0__, docPath));
+                AssertEx.DoesNotContain(output, Resources.CommandLineTest_ConsoleAddFastaTest_Error);
+                AssertEx.DoesNotContain(output, Resources.CommandLineTest_ConsoleAddFastaTest_Warning);
+
+                SrmDocument doc = ResultsUtil.DeserializeDocument(docPath);
+                Assert.AreEqual(FullScanPrecursorIsotopes.Count, doc.Settings.TransitionSettings.FullScan.PrecursorIsotopes);
+            }
+
+            // test --in/--out
+            {
+                string docPath2 = Path.ChangeExtension(docPath, ".2.sky");
+                File.Copy(docPath, docPath2);
+
+                var settings = new[]
+                {
+                    "--in=" + docPath,
+                    "--out=" + docPath2,
+                    "--full-scan-precursor-isotopes=Percent",
+                };
+                string output = RunCommand(settings);
+                StringAssert.Contains(output, string.Format(Resources.CommandLine_NewSkyFile_FileAlreadyExists, docPath2));
+
+                output = RunCommand(settings.Append("--overwrite").ToArray());
+                AssertEx.DoesNotContain(output, Resources.CommandLineTest_ConsoleAddFastaTest_Error);
+                AssertEx.DoesNotContain(output, Resources.CommandLineTest_ConsoleAddFastaTest_Warning);
+
+                SrmDocument doc = ResultsUtil.DeserializeDocument(docPath2);
+                Assert.AreEqual(FullScanPrecursorIsotopes.Percent, doc.Settings.TransitionSettings.FullScan.PrecursorIsotopes);
+            }
         }
 
         [TestMethod]
