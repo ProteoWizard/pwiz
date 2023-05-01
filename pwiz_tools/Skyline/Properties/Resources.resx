@@ -11974,4 +11974,20 @@ If you do not have the original file, you may build the library with embedded sp
   <data name="ImportPeptideSearchDlg_NextPage_Adding_detected_features_to_document" xml:space="preserve">
     <value>Adding detected features to document</value>
   </data>
+  <data name="SkylineWindow_ImportMassList_Do_you_want_to_use_the_document_settings_to_automanage_these_new_transitions" xml:space="preserve">
+    <value>Do you want to enable Auto-select and use the document settings to manage these new transitions?
+
+Enable Auto-select: {0} precursor and {1} fragment transitions will be added to the current document.
+
+Disable Auto-select: {2} precursor and {3} fragment transitions will be added to the current document.
+
+If you choose Disable, you can enable Auto-select later with the "Refine &gt; Advanced" menu item.
+</value>
+  </data>
+  <data name="SkylineWindow_ImportMassList_Enable" xml:space="preserve">
+    <value>&amp;Enable</value>
+  </data>
+  <data name="SkylineWindow_ImportMassList_Disable" xml:space="preserve">
+    <value>&amp;Disable</value>
+  </data>
 </root>
