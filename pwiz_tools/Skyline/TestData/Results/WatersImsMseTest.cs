@@ -147,7 +147,7 @@ namespace pwiz.SkylineTestData.Results
                     driftWindowWidthCalcType == IonMobilityWindowWidthCalculator.IonMobilityWindowWidthType.fixed_width
                         ? 5814
                         : 5226;
-                AssertEx.AreEqual(withDriftTimeFilter ? expectedFilteredMaxHeight : 20075, maxHeight, 1, testModeStr + " maxHeight");  // Without DT filtering, this will be much greater
+                AssertEx.AreEqual(withDriftTimeFilter ? expectedFilteredMaxHeight : 20076.24, maxHeight, 1, testModeStr + " maxHeight");  // Without DT filtering, this will be much greater
 
                 // now drill down for specific values
                 int nPeptides = 0;

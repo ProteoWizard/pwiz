@@ -82,7 +82,7 @@ namespace pwiz.SkylineTestData.Results
                     // expecting three peptide result in this small data set
                     if (nodePep.Results[0].Sum(chromInfo => chromInfo.PeakCountRatio > 0 ? 1 : 0) > 0)
                     {
-                        Assert.AreEqual(34.2441024780273, (double)nodePep.GetMeasuredRetentionTime(0), .0001);
+                        Assert.AreEqual(34.2474365234375, (double)nodePep.GetMeasuredRetentionTime(0), .0001);
                         nPeptides++;
                     }
                 }

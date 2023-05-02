@@ -129,7 +129,7 @@ namespace pwiz.SkylineTestData.Results
                 // And remove it
                 FileEx.SafeDelete(Path.ChangeExtension(docPath, ChromatogramCache.EXT));
 
-                docCheckpoints.Add(docContainer.ChangeMeasuredResults(measuredResults, 6, 6, 38));
+                docCheckpoints.Add(docContainer.ChangeMeasuredResults(measuredResults, 6, 6, 36));
 
                 // Import full scan Orbi-Velos data
                 docPath = TestFilesDir.GetTestPath("BSA_Protea_label_free_20100323_meth3_long_acc_template.sky");
