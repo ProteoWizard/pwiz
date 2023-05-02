@@ -106,7 +106,7 @@ namespace pwiz.Skyline.FileUI.PeptideSearch
             SetDocument(skylineWindow.Document, null);
 
             ImportPeptideSearch = new ImportPeptideSearch()
-                { IsFeatureDetection = (workflowType??Workflow.dda) == Workflow.feature_detection };
+                { IsFeatureDetection = workflowType == Workflow.feature_detection };
 
             InitializeComponent();
 
@@ -184,7 +184,7 @@ namespace pwiz.Skyline.FileUI.PeptideSearch
             }
 
             FullScanSettingsControl = new FullScanSettingsControl(this,
-                (workflowType??Workflow.dda) == Workflow.feature_detection);
+                workflowType == Workflow.feature_detection);
             AddPageControl(FullScanSettingsControl, ms1FullScanSettingsPage, 18, 50);
 
             FullScanSettingsControl.FullScanEnabledChanged += OnFullScanEnabledChanged; // Adjusts ion settings when full scan settings change
