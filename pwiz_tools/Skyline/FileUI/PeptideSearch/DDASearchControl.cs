@@ -102,15 +102,16 @@ namespace pwiz.Skyline.FileUI.PeptideSearch
                 return;
             }
 
-            if (_progressTextItems.Count > 0 && status.Message == _progressTextItems[_progressTextItems.Count - 1].Message)
-                return;
-
-            if (!(message.EndsWith(@"%") && double.TryParse(message.Substring(0, message.Length-1), out _)))
+            if (_progressTextItems.Count == 0 || status.Message != _progressTextItems[_progressTextItems.Count - 1].Message)
             {
-                // Don't update text if the message is just a percent complete update e.g. "13%"
-                var newEntry = new ProgressEntry(DateTime.Now, message);
-                _progressTextItems.Add(newEntry);
-                txtSearchProgress.AppendText($@"{newEntry.ToString(showTimestampsCheckbox.Checked)}{Environment.NewLine}");
+                // New message
+                if (!(message.EndsWith(@"%") && double.TryParse(message.Substring(0, message.Length-1), out _)))
+                {
+                    // Don't update text if the message is just a percent complete update e.g. "13%" - that gets parsed in ProcessRunner.Run
+                    var newEntry = new ProgressEntry(DateTime.Now, message);
+                    _progressTextItems.Add(newEntry);
+                    txtSearchProgress.AppendText($@"{newEntry.ToString(showTimestampsCheckbox.Checked)}{Environment.NewLine}");
+                }
             }
 
             int percentComplete = status.PercentComplete;
