@@ -87,6 +87,7 @@ ExportMethodDlg.IsolationListView,TestExportDiaList
 ExportMethodDlg.MethodView,TestExportDiaList
 ExportMethodDlg.TransitionListView,TestExportMethodDlg
 ExportMethodScheduleGraph,TestExportMethodDlg
+FilePicker, TestPanoramaClient
 FilterMatchedPeptidesDlg,TestInsert
 FilterMidasLibraryDlg,TestMidas
 FindColumnDlg,TestFindColumn

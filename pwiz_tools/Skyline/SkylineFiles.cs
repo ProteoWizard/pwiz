@@ -901,10 +901,11 @@ namespace pwiz.Skyline
             OpenFromPanorama();
         }
 
-        public void OpenFromPanorama(string server, string user, string pass)
+        public void OpenFromPanorama(string server, string user, string pass, JToken folderJson, JToken fileJson = null)
         {
             var panoramaClient = new WebPanoramaClient(new Uri(server));
-            using var dlg = new FilePicker(new List<PanoramaServer>(), true, string.Empty, false);
+            using var dlg = new FilePicker();
+            dlg.InitializeTestDialog(new Uri(server), user, pass, folderJson, fileJson);
             if (dlg.ShowDialog() != DialogResult.Cancel)
             {
 
@@ -960,17 +961,18 @@ namespace pwiz.Skyline
             try
             {
                 using var dlg = new FilePicker(panoramaServers, false, state, true);
-                using (var waitDlg = new LongWaitDlg
+                //dlg.InitializeDialog();
+                using (var longWaitDlg = new LongWaitDlg
                        {
-                           Text = "Loading Panorama folders"
+                           Text = Resources.SkypSupport_Open_Downloading_Skyline_Document_Archive,
                        })
                 {
-                    waitDlg.PerformWork(this, 100, () =>
-                    {
-                        dlg.ShowDialog();
-                    });
+                    longWaitDlg.PerformWork(this, 0,
+                        () => dlg.InitializeDialog());
+                    if (longWaitDlg.IsCanceled) //doesn't actually cancel the dialog
+                        return;
                 }
-                if (dlg.DialogResult != DialogResult.Cancel)
+                if (dlg.ShowDialog() != DialogResult.Cancel)
                 {
                     var folderPath = string.Empty;
                     if (!string.IsNullOrEmpty(Settings.Default.LastFolderPath))
@@ -980,21 +982,25 @@ namespace pwiz.Skyline
                     var curServer = dlg._activeServer;
                     var panoramaClient = new WebPanoramaClient(curServer.URI);
 
-
                     var downloadPath = panoramaClient.SaveFile(dlg._fileName, folderPath);
                     if (!string.IsNullOrEmpty(downloadPath))
                     {
-                        using (var waitDlg = new LongWaitDlg
+                        var size = dlg.FileSize;
+                        using (var longWaitDlg = new LongWaitDlg
                                {
-                                   Text = "Downloading selected file"
+                                   Text = Resources.SkypSupport_Open_Downloading_Skyline_Document_Archive,
                                })
                         {
-                            waitDlg.PerformWork(this, 100, () =>
+                            
+                            longWaitDlg.PerformWork(this, 800,
+                                progressMonitor => panoramaClient.DownloadFile(downloadPath, curServer, dlg._fileUrl, progressMonitor, size));
+                            if (!panoramaClient.Success)
                             {
-                                panoramaClient.DownloadFile(downloadPath, curServer, dlg._fileUrl);
-                            });
+                                FileEx.SafeDelete(downloadPath, true);
+                            }
+                            if (longWaitDlg.IsCanceled)
+                                return;
                         }
-                        //panoramaClient.DownloadFile(downloadPath, curServer, dlg._fileUrl);
                         if (dlg._fileName.EndsWith(SrmDocumentSharing.EXT) && !string.IsNullOrEmpty(downloadPath))
                         {
                             OpenSharedFile(downloadPath);

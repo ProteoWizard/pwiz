@@ -22,16 +22,27 @@ namespace pwiz.PanoramaClient
         public string Server;
         public string User;
         public string Pass;
+        public JToken FolderJson;
         public void InitializeTreeView(PanoramaServer server, TreeView treeViewFolders, bool requireUploadPerms, bool showFiles, bool showSky)
         {
             IPanoramaClient panoramaClient = new WebPanoramaClient(server.URI);
-            var folder = panoramaClient.GetInfoForFolders(server, null);
+            FolderJson = panoramaClient.GetInfoForFolders(server, null);
             var treeNode = new TreeNode(server.URI.ToString());
             Server = server.URI.ToString();
             User = server.Username;
             Pass = server.Password;
             treeViewFolders.Invoke(new Action(() => treeViewFolders.Nodes.Add(treeNode)));
-            treeViewFolders.Invoke(new Action(() => AddChildContainers(treeNode, folder, requireUploadPerms, showFiles)));
+            treeViewFolders.Invoke(new Action(() => AddChildContainers(treeNode, FolderJson, requireUploadPerms, showFiles)));
+        }
+
+        public void InitializeTreeViewTest(PanoramaServer server, TreeView treeView, JToken folderJson)
+        {
+            var treeNode = new TreeNode(server.URI.ToString());
+            Server = server.URI.ToString();
+            User = server.Username;
+            Pass = server.Password;
+            treeView.Invoke(new Action(() => treeView.Nodes.Add(treeNode)));
+            treeView.Invoke(new Action(() => AddChildContainers(treeNode, folderJson, false, true)));
         }
 
         private static bool ContainsTargetedMSModule(IEnumerable<JToken> modules)

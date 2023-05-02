@@ -219,13 +219,13 @@ namespace pwiz.Skyline
             this.startPageMenuItem = new System.Windows.Forms.ToolStripMenuItem();
             this.newMenuItem = new System.Windows.Forms.ToolStripMenuItem();
             this.openMenuItem = new System.Windows.Forms.ToolStripMenuItem();
+            this.openPanoramaMenuItem = new System.Windows.Forms.ToolStripMenuItem();
             this.openContainingFolderMenuItem = new System.Windows.Forms.ToolStripMenuItem();
             this.toolStripSeparator53 = new System.Windows.Forms.ToolStripSeparator();
             this.saveMenuItem = new System.Windows.Forms.ToolStripMenuItem();
             this.saveAsMenuItem = new System.Windows.Forms.ToolStripMenuItem();
             this.shareDocumentMenuItem = new System.Windows.Forms.ToolStripMenuItem();
             this.publishMenuItem = new System.Windows.Forms.ToolStripMenuItem();
-            this.openPanoramaMenuItem = new System.Windows.Forms.ToolStripMenuItem();
             this.toolStripSeparator2 = new System.Windows.Forms.ToolStripSeparator();
             this.importToolStripMenuItem = new System.Windows.Forms.ToolStripMenuItem();
             this.importResultsMenuItem = new System.Windows.Forms.ToolStripMenuItem();
@@ -1687,6 +1687,13 @@ namespace pwiz.Skyline
             this.openMenuItem.Name = "openMenuItem";
             this.openMenuItem.Click += new System.EventHandler(this.openMenuItem_Click);
             // 
+            // openPanoramaMenuItem
+            // 
+            this.openPanoramaMenuItem.Image = global::pwiz.Skyline.Properties.Resources.Panorama;
+            this.openPanoramaMenuItem.Name = "openPanoramaMenuItem";
+            resources.ApplyResources(this.openPanoramaMenuItem, "openPanoramaMenuItem");
+            this.openPanoramaMenuItem.Click += new System.EventHandler(this.openPanorama_Click);
+            // 
             // openContainingFolderMenuItem
             // 
             this.openContainingFolderMenuItem.Name = "openContainingFolderMenuItem";
@@ -1723,13 +1730,6 @@ namespace pwiz.Skyline
             resources.ApplyResources(this.publishMenuItem, "publishMenuItem");
             this.publishMenuItem.Name = "publishMenuItem";
             this.publishMenuItem.Click += new System.EventHandler(this.publishMenuItem_Click);
-            // 
-            // openPanoramaMenuItem
-            // 
-            this.openPanoramaMenuItem.Image = global::pwiz.Skyline.Properties.Resources.Panorama;
-            this.openPanoramaMenuItem.Name = "openPanoramaMenuItem";
-            resources.ApplyResources(this.openPanoramaMenuItem, "openPanoramaMenuItem");
-            this.openPanoramaMenuItem.Click += new System.EventHandler(this.openPanorama_Click);
             // 
             // toolStripSeparator2
             // 

@@ -4,9 +4,11 @@ using System.Collections.Specialized;
 using System.IO;
 using System.Net;
 using System.Text;
+using System.Threading;
 using System.Windows.Forms;
 using Newtonsoft.Json;
 using Newtonsoft.Json.Linq;
+using pwiz.Common.SystemUtil;
 
 namespace pwiz.PanoramaClient
 {
@@ -36,6 +38,9 @@ namespace pwiz.PanoramaClient
     {
         public Uri ServerUri { get; private set; }
         public string SelectedPath { get; private set; }
+        private IProgressMonitor ProgressMonitor { get; set; }
+        private IProgressStatus ProgressStatus { get; set; }
+        public bool Success { get; private set; } = true;
 
         public WebPanoramaClient(Uri server)
         {
@@ -254,7 +259,6 @@ namespace pwiz.PanoramaClient
         }
 
 
-        // NOTE (vsharma): serverUri, user, pass are not used. Remove them. 
         public string SaveFile(string fileName, string lastPath)
         {
             var dlg = new FolderBrowserDialog
@@ -262,7 +266,7 @@ namespace pwiz.PanoramaClient
                 SelectedPath = lastPath
             };
             var downloadPath = string.Empty;
-            dlg.Description = "Select the folder where the file will be downloaded";
+            dlg.Description = @"Select the folder where the file will be downloaded";
             if (dlg.ShowDialog() == DialogResult.OK)
             {
                 SelectedPath = dlg.SelectedPath;
@@ -272,18 +276,49 @@ namespace pwiz.PanoramaClient
             return downloadPath;
         }
 
-        public void DownloadFile(string path, PanoramaServer server, string downloadName)
+        public void DownloadFile(string path, PanoramaServer server, string downloadName, IProgressMonitor pm, long size)
         {
+            ProgressMonitor = pm;
+            ProgressStatus = new ProgressStatus("Downloading...");
             using var wc = new WebClientWithCredentials(server.URI, server.Username, server.Password);
-            wc.DownloadFile(
+            wc.DownloadProgressChanged += (s, e) =>
+            {
+                var progressPercent = e.ProgressPercentage > 0 ? e.ProgressPercentage : -1;
+                if (progressPercent == -1 && size > 0)
+                {
+                    progressPercent = (int)(e.BytesReceived * 100 / size);
+                }
+                ProgressStatus = ProgressStatus.ChangeMessage("Download progress: " + progressPercent + "% downloaded");
+                ProgressMonitor.UpdateProgress(ProgressStatus = ProgressStatus.ChangePercentComplete(progressPercent));
+
+            };
+            var downloadComplete = false;
+            wc.DownloadFileCompleted += (s, e) =>
+            {
+                if (e.Error != null && !ProgressMonitor.IsCanceled)
+                {
+                    Success = false;
+                    ProgressMonitor.UpdateProgress(ProgressStatus = ProgressStatus.ChangeErrorException(e.Error));
+                }
+                downloadComplete = true;
+            };
+            wc.DownloadFileAsync(
 
                 // Param1 = Link of file
                 new Uri(downloadName),
                 // Param2 = Path to save
                 path
             );
+            while (!downloadComplete)
+            {
+                if (ProgressMonitor.IsCanceled)
+                {
+                    wc.CancelAsync();
+                    Success = false;
+                }
+                Thread.Sleep(100);
+            }
         }
-
     }
 
     public class WebClientWithCredentials : UTF8WebClient
