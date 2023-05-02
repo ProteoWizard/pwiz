@@ -4442,7 +4442,7 @@ namespace pwiz.Skyline
 
         public bool HasProteomicMenuItems
         {
-            get { return GetModeUIHelper().MenuItemHasOriginalText(peptideSettingsMenuItem.Text); }
+            get { return GetModeUIHelper().MenuItemHasOriginalText(peptideSettingsMenuItem); }
         }
         #endregion
         /// <summary>

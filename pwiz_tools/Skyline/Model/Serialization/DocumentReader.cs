@@ -490,6 +490,7 @@ namespace pwiz.Skyline.Model.Serialization
                 }
                 double? ionMobilityWindow = reader.GetNullableDoubleAttribute(ATTR.drift_time_window) ??
                                             reader.GetNullableDoubleAttribute(ATTR.ion_mobility_window);
+                double? ccs = reader.GetNullableDoubleAttribute(ATTR.ccs);
                 var annotations = Annotations.EMPTY;
                 bool forcedIntegration = reader.GetBoolAttribute(ATTR.forced_integration, false);
                 if (!reader.IsEmptyElement)
@@ -514,7 +515,7 @@ namespace pwiz.Skyline.Model.Serialization
                     retentionTime,
                     startRetentionTime,
                     endRetentionTime,
-                    IonMobilityFilter.GetIonMobilityFilter(ionMobility, ionMobilityUnits, ionMobilityWindow, null), 
+                    IonMobilityFilter.GetIonMobilityFilter(ionMobility, ionMobilityUnits, ionMobilityWindow, ccs), 
                     area,
                     backgroundArea,
                     height,
