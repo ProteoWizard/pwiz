@@ -27,6 +27,7 @@ using System.Linq;
 using System.Reflection;
 using System.Runtime.InteropServices;
 using System.Text;
+using System.Text.RegularExpressions;
 using System.Threading;
 using System.Windows.Forms;
 using Excel;
@@ -2165,6 +2166,46 @@ namespace pwiz.SkylineTestUtil
             ImportAssayLibraryOrTransitionList(csvPath, true, errorList, proceedWithErrors);
         }
 
+        // Determine whether a message was created using the given string format
+        public static bool IsFormattedMessage(string format, string actual)
+        {
+            void Simplify(ref string str)
+            {
+                str = str.Replace("\r\n", string.Empty).Replace("\"", string.Empty).Replace(@".", @"_").Replace(@"?", @"_");
+            }
+
+            Simplify(ref format);
+            var regex = Regex.Replace(format, @"\{\d+\}",  match => @".*", RegexOptions.Multiline);
+            Simplify(ref actual);
+            return Regex.IsMatch(actual, regex);
+        }
+
+        // Importing a small molecule transition list typically provokes a dialog asking whether or not to automatically manage the resulting transitions
+        // The majority of our tests were written before this was an option, so we dismiss the dialog by default and the new nodes are automanage OFF
+        public static void PasteSmallMoleculeListNoAutoManage()
+        {
+            var wantAutoManageDlg = ShowDialog<MultiButtonMsgDlg>(SkylineWindow.Paste);
+            OkDialog(wantAutoManageDlg, wantAutoManageDlg.ClickNo); // Just use the transitions as given in the list
+        }
+
+        // Importing a small molecule transition list typically provokes a dialog asking whether or not to automatically manage the resulting transitions
+        // The majority of our tests were written before this was an option, so we dismiss the dialog by default and the new nodes are automanage OFF
+        public static void DismissAutoManageDialog(SrmDocument docCurrent)
+        {
+            var wantAutoManageDlg = TryWaitForOpenForm<MultiButtonMsgDlg>(5000, 
+                () => !ReferenceEquals(docCurrent, SkylineWindow.Document) ||
+                      FindOpenForm<ChooseIrtStandardPeptidesDlg>()!=null);  // May also provoke iRT dialog, don't interfere with that
+            if (wantAutoManageDlg != null)
+            {
+                // Make sure we haven't intercepted some other dialog
+                if (IsFormattedMessage(Resources.SkylineWindow_ImportMassList_Do_you_want_to_use_the_document_settings_to_automanage_these_new_transitions, 
+                        wantAutoManageDlg.Message))
+                {
+                    OkDialog(wantAutoManageDlg, wantAutoManageDlg.ClickNo); // Just use the transitions as given in the list
+                }
+            }
+        }
+
         private static void ImportAssayLibraryOrTransitionList(string csvPath, bool isAssayLibrary, ICollection<string> errorList, bool proceedWithErrors = true)
         {
             var columnSelectDlg = isAssayLibrary ?
@@ -2172,10 +2213,14 @@ namespace pwiz.SkylineTestUtil
                 ShowDialog<ImportTransitionListColumnSelectDlg>(() => SkylineWindow.ImportMassList(csvPath));
 
             VerifyExplicitUseInColumnSelect(isAssayLibrary, columnSelectDlg);
+            var currentDoc = SkylineWindow.Document;
 
             if (errorList == null)
             {
                 OkDialog(columnSelectDlg, columnSelectDlg.OkDialog);
+
+                // If we're asked about automanage, decline
+                DismissAutoManageDialog(currentDoc);
             }
             else
             {
@@ -2190,6 +2235,8 @@ namespace pwiz.SkylineTestUtil
                 {
                     OkDialog(errDlg, errDlg.AcceptButton.PerformClick);
                     WaitForClosedForm(columnSelectDlg);
+                    // If we're asked about automanage, decline
+                    DismissAutoManageDialog(currentDoc);
                 }
                 else
                 {
@@ -2243,7 +2290,7 @@ namespace pwiz.SkylineTestUtil
         public static string ParseIrtProperties(string irtFormula, CultureInfo cultureInfo = null)
         {
             var decimalSeparator = (cultureInfo ?? CultureInfo.CurrentCulture).NumberFormat.NumberDecimalSeparator;
-            var match = System.Text.RegularExpressions.Regex.Match(irtFormula, $@"iRT = (?<slope>\d+{decimalSeparator}\d+) \* [^+-]+? (?<sign>[+-]) (?<intercept>\d+{decimalSeparator}\d+)");
+            var match = Regex.Match(irtFormula, $@"iRT = (?<slope>\d+{decimalSeparator}\d+) \* [^+-]+? (?<sign>[+-]) (?<intercept>\d+{decimalSeparator}\d+)");
             Assert.IsTrue(match.Success);
             string slope = match.Groups["slope"].Value, intercept = match.Groups["intercept"].Value, sign = match.Groups["sign"].Value;
             if (sign == "+") sign = string.Empty;
