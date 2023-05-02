@@ -25,7 +25,6 @@ using System.IO;
 using System.Linq;
 using System.Windows.Forms;
 using pwiz.Common.DataBinding;
-using pwiz.Common.SystemUtil;
 using pwiz.Skyline.Alerts;
 using pwiz.Skyline.Controls.Databinding;
 using pwiz.Skyline.Model;
@@ -243,18 +242,6 @@ namespace pwiz.Skyline.ToolsUI
             return comboReport.Items.Cast<string>().Any(item => item == reportTitle);
         }
 
-        /// <summary>
-        /// Supported extensions
-        /// <para>Changes to this array require corresponding changes to the FileDialogFiltersAll call below</para>
-        /// </summary>
-        public static readonly string[] EXTENSIONS = {@".exe", @".com", @".pif", @".cmd", @".bat", @".py", @".pl"};
-
-        public static bool CheckExtension(string path)
-        {
-            // Avoid Path.GetExtension() because it throws an exception for an invalid path
-            return EXTENSIONS.Any(extension => PathEx.HasExtension(path, extension));
-        }
-
         public bool CheckPassTool(int toolIndex)
         {
             bool pass = CheckPassToolInternal(toolIndex);
@@ -314,9 +301,9 @@ namespace pwiz.Skyline.ToolsUI
             //If it is not a $(ProgramPath()) macro then do other checks.
             if (ToolMacros.GetProgramPathContainer(tool.Command) == null)
             {
-                string supportedTypes = String.Join(@"; ", EXTENSIONS);
+                string supportedTypes = String.Join(@"; ", ToolDescription.EXTENSIONS);
                 supportedTypes = supportedTypes.Replace(@".", @"*.");
-                if (!CheckExtension(tool.Command))
+                if (!ToolDescription.CheckExtension(tool.Command))
                 {
                     MessageDlg.Show(this, string.Format(TextUtil.LineSeparate(
                                 Resources.ConfigureToolsDlg_CheckPassTool_The_command_for__0__must_be_of_a_supported_type,
@@ -725,12 +712,12 @@ namespace pwiz.Skyline.ToolsUI
             using (var dlg = new OpenFileDialog
             {
                 Filter = TextUtil.FileDialogFiltersAll(
-                               TextUtil.FileDialogFilter(Resources.ConfigureToolsDlg_btnFindCommand_Click_All_Executables, EXTENSIONS[i++]),
-                               TextUtil.FileDialogFilter(Resources.ConfigureToolsDlg_btnFindCommand_Click_Command_Files, EXTENSIONS[i++]),
-                               TextUtil.FileDialogFilter(Resources.ConfigureToolsDlg_btnFindCommand_Click_Information_Files, EXTENSIONS[i++]),
-                               TextUtil.FileDialogFilter(Resources.ConfigureToolsDlg_btnFindCommand_Click_Batch_Files, EXTENSIONS[i++], EXTENSIONS[i++]),
-                               TextUtil.FileDialogFilter(Resources.ConfigureToolsDlg_btnFindCommand_Click_Python_Scripts, EXTENSIONS[i++]),
-                               TextUtil.FileDialogFilter(Resources.ConfigureToolsDlg_btnFindCommand_Click_Perl_Scripts, EXTENSIONS[i])
+                               TextUtil.FileDialogFilter(Resources.ConfigureToolsDlg_btnFindCommand_Click_All_Executables, ToolDescription.EXTENSIONS[i++]),
+                               TextUtil.FileDialogFilter(Resources.ConfigureToolsDlg_btnFindCommand_Click_Command_Files, ToolDescription.EXTENSIONS[i++]),
+                               TextUtil.FileDialogFilter(Resources.ConfigureToolsDlg_btnFindCommand_Click_Information_Files, ToolDescription.EXTENSIONS[i++]),
+                               TextUtil.FileDialogFilter(Resources.ConfigureToolsDlg_btnFindCommand_Click_Batch_Files, ToolDescription.EXTENSIONS[i++], ToolDescription.EXTENSIONS[i++]),
+                               TextUtil.FileDialogFilter(Resources.ConfigureToolsDlg_btnFindCommand_Click_Python_Scripts, ToolDescription.EXTENSIONS[i++]),
+                               TextUtil.FileDialogFilter(Resources.ConfigureToolsDlg_btnFindCommand_Click_Perl_Scripts, ToolDescription.EXTENSIONS[i])
                                ),
                 FilterIndex = 1,
                 Multiselect = false
@@ -1110,6 +1097,5 @@ namespace pwiz.Skyline.ToolsUI
         public ToolInstallUI.InstallProgram TestInstallProgram { get; set; }
 
         #endregion
-
     }
 }
