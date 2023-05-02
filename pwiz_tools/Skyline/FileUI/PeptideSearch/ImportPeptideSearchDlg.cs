@@ -99,14 +99,14 @@ namespace pwiz.Skyline.FileUI.PeptideSearch
         private readonly Stack<SrmDocument> _documents;
 
         public ImportPeptideSearchDlg(SkylineWindow skylineWindow, LibraryManager libraryManager,
-            Workflow workflowType = (Workflow)(-1))
+            Workflow? workflowType)
         {
             SkylineWindow = skylineWindow;
             _documents = new Stack<SrmDocument>();
             SetDocument(skylineWindow.Document, null);
 
             ImportPeptideSearch = new ImportPeptideSearch()
-                { IsFeatureDetection = workflowType == Workflow.feature_detection };
+                { IsFeatureDetection = (workflowType??Workflow.dda) == Workflow.feature_detection };
 
             InitializeComponent();
 
@@ -162,9 +162,9 @@ namespace pwiz.Skyline.FileUI.PeptideSearch
 
             _pagesToSkip = new HashSet<Pages>();
 
-            if ((int)workflowType >= 0)
+            if (workflowType.HasValue)
             {
-                if (workflowType == Workflow.feature_detection)
+                if (workflowType.Value == Workflow.feature_detection)
                 {
                     this.Text = Resources.ImportPeptideSearchDlg_ImportPeptideSearchDlg_Feature_Detection;
                     label14.Text =
@@ -172,11 +172,11 @@ namespace pwiz.Skyline.FileUI.PeptideSearch
                             .ImportPeptideSearchDlg_ImportPeptideSearchDlg_Select_Files_to_Search; // Was "Spectral Library"
                 }
 
-                BuildPepSearchLibControl.ForceWorkflow(workflowType);
+                BuildPepSearchLibControl.ForceWorkflow(workflowType.Value);
             }
         }
 
-        private void MakeFullScanSettingsControl(Workflow workflowType)
+        private void MakeFullScanSettingsControl(Workflow? workflowType)
         {
             if (FullScanSettingsControl != null)
             {
@@ -184,7 +184,7 @@ namespace pwiz.Skyline.FileUI.PeptideSearch
             }
 
             FullScanSettingsControl = new FullScanSettingsControl(this,
-                workflowType == Workflow.feature_detection);
+                (workflowType??Workflow.dda) == Workflow.feature_detection);
             AddPageControl(FullScanSettingsControl, ms1FullScanSettingsPage, 18, 50);
 
             FullScanSettingsControl.FullScanEnabledChanged += OnFullScanEnabledChanged; // Adjusts ion settings when full scan settings change

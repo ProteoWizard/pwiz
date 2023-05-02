@@ -3201,9 +3201,7 @@ namespace pwiz.Skyline
                 return;
             }
 
-            using (var dlg = !workflowType.HasValue
-                   ? new ImportPeptideSearchDlg(this, _libraryManager)
-                   : new ImportPeptideSearchDlg(this, _libraryManager, workflowType.Value))
+            using (var dlg = new ImportPeptideSearchDlg(this, _libraryManager, workflowType))
             {
                 if (dlg.ShowDialog(this) == DialogResult.OK)
                 {
