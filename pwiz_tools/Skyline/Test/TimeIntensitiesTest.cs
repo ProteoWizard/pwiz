@@ -70,7 +70,7 @@ namespace pwiz.SkylineTest
         {
             TimeIntensities timeIntensities = new TimeIntensities(new []{1f,2,3,4,5}, new []{1f,2,3,2,1}, null, null);
             var pointList = TimeIntensityPoint.RemovePointsAt(timeIntensities.ToPoints().ToArray(), new[]{2});
-            CollectionAssert.AreEqual(new[]{1.0,2,4,5}, pointList.Select(p=>p.Time).ToArray());
+            AssertListEqual(new[]{1.0,2,4,5}, pointList.Select(p=>p.Time).ToArray());
             Assert.AreEqual(1.0, pointList[0].Intensity);
             Assert.AreEqual(1.0, pointList[3].Intensity);
             Assert.AreEqual(7.0 / 3, pointList[1].Intensity, 1E-7);
@@ -151,8 +151,8 @@ namespace pwiz.SkylineTest
             };
             var oldInterpolated = timeIntensities.OldInterpolate(interpolatedTimes, false);
             var newInterpolated = timeIntensities.Interpolate(interpolatedTimes, false);
-            CollectionAssert.AreEqual(interpolatedTimes, oldInterpolated.Times.ToArray());
-            CollectionAssert.AreEqual(interpolatedTimes, newInterpolated.Times.ToArray());
+            AssertListEqual(interpolatedTimes, oldInterpolated.Times.ToArray());
+            AssertListEqual(interpolatedTimes, newInterpolated.Times.ToArray());
         }
 
         [TestMethod]
@@ -164,8 +164,8 @@ namespace pwiz.SkylineTest
             var interpolatedTimes = new[] { 99.4438f, 99.5009f, 99.558f, 99.6151047f, 99.6722f, 99.7293f };
             var newInterpolated = timeIntensities.Interpolate(interpolatedTimes, false);
             var oldInterpolated = timeIntensities.OldInterpolate(interpolatedTimes, false);
-            CollectionAssert.AreEqual(interpolatedTimes, oldInterpolated.Times.ToArray());
-            CollectionAssert.AreEqual(interpolatedTimes, newInterpolated.Times.ToArray());
+            AssertListEqual(interpolatedTimes, oldInterpolated.Times.ToArray());
+            AssertListEqual(interpolatedTimes, newInterpolated.Times.ToArray());
         }
 
         [TestMethod]
@@ -254,9 +254,9 @@ namespace pwiz.SkylineTest
             }
             Assert.AreEqual(interpolated.NumPoints, pointsRemovedFromLeft.Count);
             Assert.AreEqual(interpolated.NumPoints, pointsRemovedFromRight.Count);
-            CollectionAssert.AreEqual(interpolated.Intensities.ToArray(),
+            AssertListEqual(interpolated.Intensities.ToArray(),
                 pointsRemovedFromLeft.Select(p => (float) p.Intensity).ToArray());
-            CollectionAssert.AreEqual(interpolated.Intensities.ToArray(),
+            AssertListEqual(interpolated.Intensities.ToArray(),
                 pointsRemovedFromRight.Select(p => (float) p.Intensity).ToArray());
         }
 
