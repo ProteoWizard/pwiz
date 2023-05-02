@@ -864,10 +864,10 @@ namespace pwiz.Skyline.FileUI.PeptideSearch
                     var precursorDocNode = new TransitionGroupDocNode(precursor, Annotations.EMPTY,
                         Document.Settings, null, null, null, null,
                         new[] { precursorTransitionDocNode },
-                        true);
+                        false); // We will turn on autoManage in the next step
                     var peptideDocNode = new PeptideDocNode(peptide, Document.Settings, null, null,
                         null,
-                        new[] { precursorDocNode }, true);
+                        new[] { precursorDocNode }, false); // We will turn on autoManage in the next step
                     nodes.Add(peptideDocNode);
                     adducts.Add(key.Adduct);
                 }
@@ -888,11 +888,16 @@ namespace pwiz.Skyline.FileUI.PeptideSearch
                 var newTransitionSettings = transitionSettings.ChangeFilter(filter);
                 progressMonitor.UpdateProgress(status.ChangePercentComplete(90));
 
+                // Add new nodes with auto select enabled, being careful not to mess with any existing nodes
                 var docNew =
-                    (SrmDocument)(Document.Add(newPeptideGroupDocNode)); // Add the new nodes
-                docNew = docNew.ChangeSettings(
-                    docNew.Settings.ChangeTransitionSettings(
-                        newTransitionSettings)); // Update the settings
+                    (SrmDocument)(Document.ChangeChildren(new List<DocNode>(){newPeptideGroupDocNode})); // Temp doc with just the new nodes
+                docNew = docNew.ChangeSettings(docNew.Settings.ChangeTransitionSettings(newTransitionSettings)); // Update the settings
+                // Now apply auto pick so that M+1, M+2 etc precursors get created 
+                docNew = ImportPeptideSearch.ChangeAutoManageChildren(docNew, PickLevel.precursors | PickLevel.transitions, true);
+
+                // Finally, copy the resulting nodes to the actual doc, and update its settings too
+                docNew = ((SrmDocument)Document.Add(docNew.MoleculeGroups.First())).
+                    ChangeSettings(docNew.Settings.ChangeTransitionSettings(newTransitionSettings));
                 progressMonitor.UpdateProgress(status.ChangePercentComplete(100));
                 SetDocument(docNew, Document);
 
