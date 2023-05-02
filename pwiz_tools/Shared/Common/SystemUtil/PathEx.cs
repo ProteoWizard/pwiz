@@ -21,6 +21,7 @@ using System.Collections.Generic;
 using System.Globalization;
 using System.Runtime.InteropServices;
 using System.IO;
+using System.Text.RegularExpressions;
 
 namespace pwiz.Common.SystemUtil
 {
@@ -208,6 +209,70 @@ namespace pwiz.Common.SystemUtil
             }
             return path;
         }
+
+        /// <summary>
+        /// Puts escaped quotation marks before and after the text passed in if it contains any spaces
+        /// Useful for constructing command lines with arguments needing nested quotes
+        /// e.g. msconvert --filter "mzRefiner \"my input1.pepXML\" \"your input2.mzid\""
+        ///
+        /// </summary>
+        public static string EscapedPathForNestedCommandLineQuotes(this string text)
+        {
+            if (text.Contains(@" "))
+            {
+                return @"\""" + text + @"\""";
+            }
+            return text;
+        }
+
+        // Inspect a file path for characters that must be escaped for use in XML (currently just "&")
+        // Return a suitably escaped version of the string
+        public static string EscapePathForXML(string path)
+        {
+            if (path.Contains(@"&")) // Valid windows filename character, may need escaping
+            {
+                // But it may also be in use as an escape character - don't mess with &quot; etc
+                path = Regex.Replace(path, @"&(?!(?:apos|quot|[gl]t|amp);|#)", @"&amp;");
+            }
+            return path;
+        }
+
+        /// <summary>
+        /// Like Path.GetRandomFileName(), but in test context adds some legal but unusual characters for robustness testing
+        /// </summary>
+        /// <returns>a random filename</returns>
+        public static string GetRandomFileName()
+        {
+            var result = Path.GetRandomFileName();
+            if (!string.IsNullOrEmpty(RandomFileNameDecoration))
+            {
+                // Introduce some potentially troublesome characters like space, caret, ampersand to test our handling
+                // Adding Unicode here (e.g. 试验, means "test") breaks many 3rd party tools (e.g. msFragger), causes trouble
+                // with mz5 reader, etc so we don't do it for certain tests
+                result = RandomFileNameDecoration + result;
+            }
+            return result;
+        }
+
+        // Test framework can set this to something like  @""t^m&p 试验" to help check our handling of unusual filename characters
+        public static string RandomFileNameDecoration { get; set; }
+
+        // Like Path.GetTempFileName(), but allows you to set the extension of the created tempfile
+        public static string GetTempFileNameWithExtension(string ext)
+        {
+            var fileName = Path.GetTempFileName();
+            if (!string.IsNullOrWhiteSpace(ext))
+            {
+                var fileNameNew = Path.ChangeExtension(fileName, ext);
+                if (!fileName.Equals(fileNameNew))
+                {
+                    File.Move(fileName, fileNameNew);
+                    return fileNameNew;
+                }
+            }
+            return fileName;
+        }
+
     }
 
     /// <summary>

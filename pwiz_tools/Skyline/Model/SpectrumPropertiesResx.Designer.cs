@@ -8,7 +8,7 @@
 // </auto-generated>
 //------------------------------------------------------------------------------
 
-namespace pwiz.Skyline.SettingsUI {
+namespace pwiz.Skyline.Model {
     using System;
     
     
@@ -22,24 +22,24 @@ namespace pwiz.Skyline.SettingsUI {
     [global::System.CodeDom.Compiler.GeneratedCodeAttribute("System.Resources.Tools.StronglyTypedResourceBuilder", "17.0.0.0")]
     [global::System.Diagnostics.DebuggerNonUserCodeAttribute()]
     [global::System.Runtime.CompilerServices.CompilerGeneratedAttribute()]
-    public class MsGraphExtensionResx {
+    internal class SpectrumPropertiesResx {
         
         private static global::System.Resources.ResourceManager resourceMan;
         
         private static global::System.Globalization.CultureInfo resourceCulture;
         
         [global::System.Diagnostics.CodeAnalysis.SuppressMessageAttribute("Microsoft.Performance", "CA1811:AvoidUncalledPrivateCode")]
-        internal MsGraphExtensionResx() {
+        internal SpectrumPropertiesResx() {
         }
         
         /// <summary>
         ///   Returns the cached ResourceManager instance used by this class.
         /// </summary>
         [global::System.ComponentModel.EditorBrowsableAttribute(global::System.ComponentModel.EditorBrowsableState.Advanced)]
-        public static global::System.Resources.ResourceManager ResourceManager {
+        internal static global::System.Resources.ResourceManager ResourceManager {
             get {
                 if (object.ReferenceEquals(resourceMan, null)) {
-                    global::System.Resources.ResourceManager temp = new global::System.Resources.ResourceManager("pwiz.Skyline.SettingsUI.MsGraphExtensionResx", typeof(MsGraphExtensionResx).Assembly);
+                    global::System.Resources.ResourceManager temp = new global::System.Resources.ResourceManager("pwiz.Skyline.Model.SpectrumPropertiesResx", typeof(SpectrumPropertiesResx).Assembly);
                     resourceMan = temp;
                 }
                 return resourceMan;
@@ -51,7 +51,7 @@ namespace pwiz.Skyline.SettingsUI {
         ///   resource lookups using this strongly typed resource class.
         /// </summary>
         [global::System.ComponentModel.EditorBrowsableAttribute(global::System.ComponentModel.EditorBrowsableState.Advanced)]
-        public static global::System.Globalization.CultureInfo Culture {
+        internal static global::System.Globalization.CultureInfo Culture {
             get {
                 return resourceCulture;
             }
@@ -61,9 +61,45 @@ namespace pwiz.Skyline.SettingsUI {
         }
         
         /// <summary>
+        ///   Looks up a localized string similar to Measured.
+        /// </summary>
+        internal static string Category_AcquisitionInfo {
+            get {
+                return ResourceManager.GetString("Category_AcquisitionInfo", resourceCulture);
+            }
+        }
+        
+        /// <summary>
+        ///   Looks up a localized string similar to File.
+        /// </summary>
+        internal static string Category_FileInfo {
+            get {
+                return ResourceManager.GetString("Category_FileInfo", resourceCulture);
+            }
+        }
+        
+        /// <summary>
+        ///   Looks up a localized string similar to Search.
+        /// </summary>
+        internal static string Category_MatchInfo {
+            get {
+                return ResourceManager.GetString("Category_MatchInfo", resourceCulture);
+            }
+        }
+        
+        /// <summary>
+        ///   Looks up a localized string similar to Precursor.
+        /// </summary>
+        internal static string Category_PrecursorInfo {
+            get {
+                return ResourceManager.GetString("Category_PrecursorInfo", resourceCulture);
+            }
+        }
+        
+        /// <summary>
         ///   Looks up a localized string similar to CCS.
         /// </summary>
-        public static string CCS {
+        internal static string CCS {
             get {
                 return ResourceManager.GetString("CCS", resourceCulture);
             }
@@ -72,115 +108,106 @@ namespace pwiz.Skyline.SettingsUI {
         /// <summary>
         ///   Looks up a localized string similar to Charge.
         /// </summary>
-        public static string Charge {
+        internal static string Charge {
             get {
                 return ResourceManager.GetString("Charge", resourceCulture);
             }
         }
         
         /// <summary>
-        ///   Looks up a localized string similar to &lt;Insert SpecIdInFile Description&gt;.
+        ///   Looks up a localized string similar to Collisional cross section (CCS) of the ion isolated to acquire the spectrum.
         /// </summary>
-        public static string Desciption_SpecIdInFile {
-            get {
-                return ResourceManager.GetString("Desciption_SpecIdInFile", resourceCulture);
-            }
-        }
-        
-        /// <summary>
-        ///   Looks up a localized string similar to &lt;Insert CCS Description&gt;.
-        /// </summary>
-        public static string Description_CCS {
+        internal static string Description_CCS {
             get {
                 return ResourceManager.GetString("Description_CCS", resourceCulture);
             }
         }
         
         /// <summary>
-        ///   Looks up a localized string similar to &lt;Insert Charge Description&gt;.
+        ///   Looks up a localized string similar to Precursor charge of the selected ion.
         /// </summary>
-        public static string Description_Charge {
+        internal static string Description_Charge {
             get {
                 return ResourceManager.GetString("Description_Charge", resourceCulture);
             }
         }
         
         /// <summary>
-        ///   Looks up a localized string similar to &lt;Insert FileName Description&gt;.
+        ///   Looks up a localized string similar to File name and potentially full path to the file that was the source of the spectrum.
         /// </summary>
-        public static string Description_FileName {
+        internal static string Description_FileName {
             get {
                 return ResourceManager.GetString("Description_FileName", resourceCulture);
             }
         }
         
         /// <summary>
-        ///   Looks up a localized string similar to &lt;Insert IdFileName Description&gt;.
+        ///   Looks up a localized string similar to File name and potentially full path to the file that matched the targeted ion to the spectrum.
         /// </summary>
-        public static string Description_IdFileName {
+        internal static string Description_IdFileName {
             get {
                 return ResourceManager.GetString("Description_IdFileName", resourceCulture);
             }
         }
         
         /// <summary>
-        ///   Looks up a localized string similar to &lt;Insert Ion Mobility Description&gt;.
+        ///   Looks up a localized string similar to Raw ion mobility value of the ion isolated to acquire the spectrum (e.g. msec, Vs/cm^2, V).
         /// </summary>
-        public static string Description_Ion_Mobility {
+        internal static string Description_Ion_Mobility {
             get {
                 return ResourceManager.GetString("Description_Ion Mobility", resourceCulture);
             }
         }
         
         /// <summary>
-        ///   Looks up a localized string similar to &lt;Insert LibraryName Description&gt;.
+        ///   Looks up a localized string similar to Name of the library containing this spectrum match.
         /// </summary>
-        public static string Description_LibraryName {
+        internal static string Description_LibraryName {
             get {
                 return ResourceManager.GetString("Description_LibraryName", resourceCulture);
             }
         }
         
         /// <summary>
-        ///   Looks up a localized string similar to &lt;Insert PrecursorMz Description&gt;.
+        ///   Looks up a localized string similar to Precursor m/z used to select the ion.
         /// </summary>
-        public static string Description_PrecursorMz {
+        internal static string Description_PrecursorMz {
             get {
                 return ResourceManager.GetString("Description_PrecursorMz", resourceCulture);
             }
         }
         
         /// <summary>
-        ///   Looks up a localized string similar to &lt;Insert RetentionTime Description&gt;.
+        ///   Looks up a localized string similar to Retention time of the spectrum acquisition.
         /// </summary>
-        public static string Description_RetentionTime {
+        internal static string Description_RetentionTime {
             get {
                 return ResourceManager.GetString("Description_RetentionTime", resourceCulture);
             }
         }
         
         /// <summary>
-        ///   Looks up a localized string similar to &lt;Insert Score Description&gt;.
+        ///   Looks up a localized string similar to Probability score used to chose the best matching spectrum.
         /// </summary>
-        public static string Description_Score {
+        internal static string Description_Score {
             get {
                 return ResourceManager.GetString("Description_Score", resourceCulture);
             }
         }
         
         /// <summary>
-        ///   Looks up a localized string similar to &lt;Insert ScoreType Description&gt;.
+        ///   Looks up a localized string similar to Score type of the probability score used to choose the best matching spectrum (e.g. q value, posterior error probability).
         /// </summary>
-        public static string Description_ScoreType {
+        internal static string Description_ScoreType {
             get {
                 return ResourceManager.GetString("Description_ScoreType", resourceCulture);
             }
         }
         
         /// <summary>
-        ///   Looks up a localized string similar to &lt;Insert Spectra Id in File Description&gt;.
+        ///   Looks up a localized string similar to Spectrum ID of the spectrum in the spectrum source file.
         /// </summary>
-        public static string Description_SpecIdInFile {
+        internal static string Description_SpecIdInFile {
             get {
                 return ResourceManager.GetString("Description_SpecIdInFile", resourceCulture);
             }
@@ -189,34 +216,34 @@ namespace pwiz.Skyline.SettingsUI {
         /// <summary>
         ///   Looks up a localized string similar to Number of measured spectra for this peptide in the library.
         /// </summary>
-        public static string Description_SpectrumCount {
+        internal static string Description_SpectrumCount {
             get {
                 return ResourceManager.GetString("Description_SpectrumCount", resourceCulture);
             }
         }
         
         /// <summary>
-        ///   Looks up a localized string similar to File Info.
-        /// </summary>
-        public static string File_Info {
-            get {
-                return ResourceManager.GetString("File Info", resourceCulture);
-            }
-        }
-        
-        /// <summary>
         ///   Looks up a localized string similar to File Name.
         /// </summary>
-        public static string FileName {
+        internal static string FileName {
             get {
                 return ResourceManager.GetString("FileName", resourceCulture);
             }
         }
         
         /// <summary>
+        ///   Looks up a localized string similar to File Path.
+        /// </summary>
+        internal static string FilePath {
+            get {
+                return ResourceManager.GetString("FilePath", resourceCulture);
+            }
+        }
+        
+        /// <summary>
         ///   Looks up a localized string similar to Id File Name.
         /// </summary>
-        public static string IdFileName {
+        internal static string IdFileName {
             get {
                 return ResourceManager.GetString("IdFileName", resourceCulture);
             }
@@ -225,34 +252,34 @@ namespace pwiz.Skyline.SettingsUI {
         /// <summary>
         ///   Looks up a localized string similar to Ion Mobility.
         /// </summary>
-        public static string IonMobility {
+        internal static string IonMobility {
             get {
                 return ResourceManager.GetString("IonMobility", resourceCulture);
             }
         }
         
         /// <summary>
+        ///   Looks up a localized string similar to Label.
+        /// </summary>
+        internal static string Label {
+            get {
+                return ResourceManager.GetString("Label", resourceCulture);
+            }
+        }
+        
+        /// <summary>
         ///   Looks up a localized string similar to Library Name.
         /// </summary>
-        public static string LibraryName {
+        internal static string LibraryName {
             get {
                 return ResourceManager.GetString("LibraryName", resourceCulture);
             }
         }
         
         /// <summary>
-        ///   Looks up a localized string similar to Peptide Info.
+        ///   Looks up a localized string similar to Precursor m/z.
         /// </summary>
-        public static string Peptide_Info {
-            get {
-                return ResourceManager.GetString("Peptide Info", resourceCulture);
-            }
-        }
-        
-        /// <summary>
-        ///   Looks up a localized string similar to Precursor Mz.
-        /// </summary>
-        public static string PrecursorMz {
+        internal static string PrecursorMz {
             get {
                 return ResourceManager.GetString("PrecursorMz", resourceCulture);
             }
@@ -261,7 +288,7 @@ namespace pwiz.Skyline.SettingsUI {
         /// <summary>
         ///   Looks up a localized string similar to Retention Time.
         /// </summary>
-        public static string RetentionTime {
+        internal static string RetentionTime {
             get {
                 return ResourceManager.GetString("RetentionTime", resourceCulture);
             }
@@ -270,7 +297,7 @@ namespace pwiz.Skyline.SettingsUI {
         /// <summary>
         ///   Looks up a localized string similar to Score.
         /// </summary>
-        public static string Score {
+        internal static string Score {
             get {
                 return ResourceManager.GetString("Score", resourceCulture);
             }
@@ -279,25 +306,16 @@ namespace pwiz.Skyline.SettingsUI {
         /// <summary>
         ///   Looks up a localized string similar to Score Type.
         /// </summary>
-        public static string ScoreType {
+        internal static string ScoreType {
             get {
                 return ResourceManager.GetString("ScoreType", resourceCulture);
             }
         }
         
         /// <summary>
-        ///   Looks up a localized string similar to Small Molecule Info.
+        ///   Looks up a localized string similar to Spectrum Id in File.
         /// </summary>
-        public static string Small_Molecule_Info {
-            get {
-                return ResourceManager.GetString("Small Molecule Info", resourceCulture);
-            }
-        }
-        
-        /// <summary>
-        ///   Looks up a localized string similar to Spectra Id in File.
-        /// </summary>
-        public static string SpecIdInFile {
+        internal static string SpecIdInFile {
             get {
                 return ResourceManager.GetString("SpecIdInFile", resourceCulture);
             }
@@ -306,7 +324,7 @@ namespace pwiz.Skyline.SettingsUI {
         /// <summary>
         ///   Looks up a localized string similar to Spectrum Count.
         /// </summary>
-        public static string SpectrumCount {
+        internal static string SpectrumCount {
             get {
                 return ResourceManager.GetString("SpectrumCount", resourceCulture);
             }

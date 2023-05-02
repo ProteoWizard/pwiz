@@ -61,7 +61,7 @@ class PWIZ_API_DECL Serializer_mz5
      */
     void write(const std::string& filename, const MSData& msd,
                const pwiz::util::IterationListenerRegistry* iterationListenerRegistry = 0,
-               bool useWorkerThreads = true) const;
+               bool useWorkerThreads = true, bool continueOnError = false) const;
 
     /// This method is not supported by mz5 since mz5 can not write to ostreams.
     void write(std::ostream& os, const MSData& msd,

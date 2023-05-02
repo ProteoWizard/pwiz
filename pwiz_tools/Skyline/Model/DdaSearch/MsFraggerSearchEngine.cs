@@ -97,10 +97,23 @@ namespace pwiz.Skyline.Model.DdaSearch
         private int _maxCharge = 7;
         private string _fastaFilepath;
         private string _decoyPrefix;
+        private List<string> _intermediateFiles;
 
         private CancellationTokenSource _cancelToken;
         private IProgressStatus _progressStatus;
         private bool _success;
+
+        private void DeleteIntermediateFiles()
+        {
+            if (_intermediateFiles != null)
+            {
+                foreach (var path in _intermediateFiles)
+                {
+                    FileEx.SafeDelete(path, true); // Don't throw if file can't be deleted
+                    DirectoryEx.SafeDelete(path); // In case it's actually a directory
+                }
+            }
+        }
 
         public override string[] FragmentIons => FRAGMENTATION_METHODS;
         public override string[] Ms2Analyzers => new [] { @"Default" };
@@ -110,12 +123,14 @@ namespace pwiz.Skyline.Model.DdaSearch
 
         public override bool Run(CancellationTokenSource cancelToken, IProgressStatus status)
         {
+
             _cancelToken = cancelToken;
             _progressStatus = status;
             _success = true;
 
             try
             {
+                _intermediateFiles = new List<string>();
                 _fastaFilepath = FastaFileNames[0];
                 EnsureFastaHasDecoys();
 
@@ -142,6 +157,7 @@ namespace pwiz.Skyline.Model.DdaSearch
                 paramsFileText.Append(defaultClosedConfig);
 
                 string paramsFile = Path.GetTempFileName();
+                _intermediateFiles.Add(paramsFile);
                 File.WriteAllText(paramsFile, paramsFileText.ToString());
 
                 long javaMaxHeapMB = Math.Min(16 * 1024L * 1024 * 1024, MemoryInfo.TotalBytes / 2) / 1024 / 1024;
@@ -159,16 +175,18 @@ namespace pwiz.Skyline.Model.DdaSearch
                 };
                 foreach (var filename in SpectrumFileNames)
                     psi.Arguments += $@" ""{filename}""";
-                pr.Run(psi, string.Empty, this, ref _progressStatus, ProcessPriorityClass.BelowNormal);
+                pr.Run(psi, string.Empty, this, ref _progressStatus, ProcessPriorityClass.BelowNormal, true);
 
                 foreach (var spectrumFilename in SpectrumFileNames)
                 {
                     string msfraggerPepXmlFilepath = Path.ChangeExtension(spectrumFilename.GetFilePath(), ".pepXML");
                     string cruxInputFilepath = Path.ChangeExtension(spectrumFilename.GetFilePath(), ".pin");
                     string cruxFixedInputFilepath = Path.ChangeExtension(spectrumFilename.GetFilePath(), "fixed.pin");
+                    _intermediateFiles.Add(cruxInputFilepath);
                     FixMSFraggerPin(cruxInputFilepath, cruxFixedInputFilepath, msfraggerPepXmlFilepath, out var nativeIdByScanNumber);
 
                     string cruxParamsFile = Path.GetTempFileName();
+                    _intermediateFiles.Add(cruxParamsFile);
                     var cruxParamsFileText = GetCruxParamsText();
                     File.WriteAllText(cruxParamsFile, cruxParamsFileText);
 
@@ -179,19 +197,16 @@ namespace pwiz.Skyline.Model.DdaSearch
                     psi.Arguments += $@" ""{cruxFixedInputFilepath}""";
                     foreach (var settingName in PERCOLATOR_SETTINGS)
                         psi.Arguments += $@" --{AdditionalSettings[settingName].ToString(false, CultureInfo.InvariantCulture)}";
-                    pr.Run(psi, string.Empty, this, ref _progressStatus, ProcessPriorityClass.BelowNormal);
+                    pr.Run(psi, string.Empty, this, ref _progressStatus, ProcessPriorityClass.BelowNormal, true);
 
                     string cruxOutputFilepath = Path.Combine(cruxOutputDir, @"percolator.target.pep.xml");
                     string finalOutputFilepath = GetSearchResultFilepath(spectrumFilename);
+                    _intermediateFiles.Add(cruxOutputFilepath);
                     FixPercolatorPepXml(cruxOutputFilepath, finalOutputFilepath, spectrumFilename, nativeIdByScanNumber);
 
                     if (!(bool) AdditionalSettings[KEEP_INTERMEDIATE_FILES].Value)
                     {
-                        FileEx.SafeDelete(cruxInputFilepath);
-                        FileEx.SafeDelete(cruxFixedInputFilepath);
-                        FileEx.SafeDelete(cruxOutputFilepath);
-                        FileEx.SafeDelete(paramsFile);
-                        FileEx.SafeDelete(cruxParamsFile);
+                        DeleteIntermediateFiles();
                     }
                 }
 
@@ -211,6 +226,7 @@ namespace pwiz.Skyline.Model.DdaSearch
 
             if (!_success)
             {
+                DeleteIntermediateFiles();
                 _cancelToken.Cancel();
                 //break;
             }
@@ -309,15 +325,21 @@ namespace pwiz.Skyline.Model.DdaSearch
                 while ((line = pepXmlFile.ReadLine()) != null)
                 {
                     if (line.Contains(@"base_name"))
-                        line = Regex.Replace(line, "base_name=\"NA\"", $"base_name=\"{spectrumFilename.GetFileNameWithoutExtension()}\"");
+                        line = Regex.Replace(line, "base_name=\"NA\"", $"base_name=\"{PathEx.EscapePathForXML(spectrumFilename.GetFileNameWithoutExtension())}\"");
                     if (line.Contains(@"search_database"))
-                        line = Regex.Replace(line, "search_database local_path=\"\\(null\\)\"", $"search_database local_path=\"{_fastaFilepath}\"");
+                        line = Regex.Replace(line, "search_database local_path=\"\\(null\\)\"", $"search_database local_path=\"{PathEx.EscapePathForXML(_fastaFilepath)}\"");
 
                     if (line.Contains(@"<spectrum_query") &&
                         int.TryParse(Regex.Replace(line, ".* start_scan=\"(\\d+)\" .*", "$1"), out int scanNumber) &&
                         nativeIdByScanNumber.TryGetValue(scanNumber, out string nativeId))
                     {
                         line = line.Replace(@"start_scan=", $@"spectrumNativeID=""{nativeId}"" start_scan=");
+                    }
+
+                    else if (line.Contains(@"output-dir") || line.Contains(@"temp-dir") || line.Contains(@"parameter-file") || line.Contains(@"output-file"))
+                    {
+                        // Handle unescaped ampersands in paths
+                        line = PathEx.EscapePathForXML(line);
                     }
                     fixedPepXmlFile.WriteLine(line);
                 }
@@ -623,7 +645,7 @@ add_Nterm_protein = 0.000000
             foreach (var mod in fixedAndVariableModifs)
             {
                 // can't use mod with no formula or mass; CONSIDER throwing exception
-                if (mod.LabelAtoms == LabelAtoms.None && mod.Formula == null && mod.MonoisotopicMass == null ||
+                if (mod.LabelAtoms == LabelAtoms.None && ParsedMolecule.IsNullOrEmpty(mod.ParsedMolecule) && mod.MonoisotopicMass == null ||
                     mod.LabelAtoms != LabelAtoms.None && mod.AAs.IsNullOrEmpty())
                     continue;
 
@@ -670,7 +692,7 @@ add_Nterm_protein = 0.000000
 
                 if (mod.LabelAtoms == LabelAtoms.None)
                 {
-                    double mass = mod.MonoisotopicMass ?? SequenceMassCalc.FormulaMass(BioMassCalc.MONOISOTOPIC, mod.Formula, SequenceMassCalc.MassPrecision).Value;
+                    double mass = mod.MonoisotopicMass ?? SequenceMassCalc.FormulaMass(BioMassCalc.MONOISOTOPIC, mod.ParsedMolecule, SequenceMassCalc.MassPrecision).Value;
 
                     string residues = string.Empty;
                     if (position.IsNullOrEmpty() || mod.AAs == null)
@@ -766,6 +788,10 @@ add_Nterm_protein = 0.000000
 
         public override void Dispose()
         {
+            if (IsCanceled)
+            {
+                DeleteIntermediateFiles(); // In case cancel came at an awkward time
+            }
         }
     }
 }

@@ -316,6 +316,22 @@ if [ modules.peek : NT ] && --i-agree-to-the-vendor-licenses in [ modules.peek :
         $(OUTPUT_PATH)SkylineTester.exe $(OUTPUT_PATH)BiblioSpec.zip
     }
     
+    rule create_skylinetester_zip_with_testdata ( targets + : sources * : properties * )
+    {
+        return [ build-properties $(targets) : $(sources) : $(properties) ] ;
+    }
+
+    actions create_skylinetester_zip_with_testdata
+    {
+        $(MSVC_CURRENT_SETUP_SCRIPT)
+        echo SkylineTesterWithTestData in $(CONFIGURATION:L) configuration...
+        msbuild $(SKYLINE_PATH)/Skyline.sln /p:Configuration=$(CONFIGURATION);Platform=$(PLATFORM);OutDir=$(OUTPUT_PATH);MSBuildAssemblyName=$(TARGET_NAME) /t:SkylineTester /t:SkylineNightly /t:SkylineNightlyShim /nologo /verbosity:minimal
+        IF ERRORLEVEL 1 exit %ERRORLEVEL%
+
+        echo Creating SkylineTester.zip
+        $(OUTPUT_PATH)SkylineTester.exe $(OUTPUT_PATH)SkylineTesterWithTestData.zip
+    }
+    
     make msparser.dll : : @make_fake_msparser_dll : <location>$(PWIZ_WRAPPER_PATH)/obj/$(PLATFORM) ;
     make msparserD.dll : : @make_fake_msparser_dll : <location>$(PWIZ_WRAPPER_PATH)/obj/$(PLATFORM) ;
     explicit msparser.dll msparserD.dll ;
@@ -557,6 +573,19 @@ if [ modules.peek : NT ] && --i-agree-to-the-vendor-licenses in [ modules.peek :
             <conditional>@build-location
             <dependency>Skyline.exe
         ;
+
+    make SkylineTesterWithTestData.zip
+        : # sources
+        : # actions
+            @create_skylinetester_zip_with_testdata
+        : # requirements
+            <link>shared:<build>no
+            <conditional>@no-express-requirement
+            <conditional>@msvc-dotnet-requirement
+            <conditional>@build-location
+            <dependency>Skyline.exe
+        ;
+    explicit SkylineTesterWithTestData.zip ;
 
     explicit InspectCode ;
 }
