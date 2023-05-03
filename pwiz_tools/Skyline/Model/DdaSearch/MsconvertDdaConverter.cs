@@ -31,7 +31,7 @@ namespace pwiz.Skyline.Model.DdaSearch
     public class MsconvertDdaConverter : AbstractDdaConverter, IProgressMonitor
     {
         private const string MSCONVERT_EXE = "msconvert";
-        private const string OUTPUT_SUBDIRECTORY = "converted";
+        public const string OUTPUT_SUBDIRECTORY = "converted";
 
         private IProgressMonitor _parentProgressMonitor;
         private IProgressStatus _progressStatus;
@@ -190,14 +190,19 @@ namespace pwiz.Skyline.Model.DdaSearch
                     _stepCount = Convert.ToInt32(stepMatcher.Groups["count"].Value) + 1; // writing spectra is an extra step to consider
                 stepProgress = (Convert.ToInt32(stepMatcher.Groups["step"].Value) - 1) * 100 / _stepCount;
             }
-            //else if (status.Message.StartsWith(@"writing chromatograms"))
+            //else if (status.Message.Contains(@"writing chromatograms"))
             //    stepProgress = stepCount * 100 / (stepCount + 2);
-            else if (status.Message.StartsWith(@"writing spectra"))
-                stepProgress = (_stepCount - 1) * 100 / _stepCount;
+            else if (status.Message.Contains(@"writing spectra"))
+            {
+                var stepCount = Math.Max(_stepCount, 1);
+                stepProgress = (stepCount - 1) * 100 / stepCount;
+            }
             else
+            {
                 return _parentProgressMonitor.UpdateProgress(status.ChangePercentComplete(_lastPercentComplete)); // no change to percentComplete
+            }
 
-            _lastPercentComplete = stepProgress + (iterationIndex * 100 / iterationCount) / _stepCount;
+            _lastPercentComplete = stepProgress + (iterationIndex * 100 / iterationCount) / Math.Max(_stepCount, 1);
             status = status.ChangePercentComplete(_lastPercentComplete);
 
             return _parentProgressMonitor.UpdateProgress(status);
