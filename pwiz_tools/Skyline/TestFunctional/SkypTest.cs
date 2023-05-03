@@ -3,6 +3,8 @@ using System.Collections.Generic;
 using System.IO;
 using System.Net;
 using Microsoft.VisualStudio.TestTools.UnitTesting;
+using Newtonsoft.Json.Linq;
+using pwiz.PanoramaClient;
 using pwiz.Common.SystemUtil;
 using pwiz.Skyline.Alerts;
 using pwiz.Skyline.FileUI;
@@ -560,6 +562,11 @@ namespace pwiz.SkylineTestFunctional
         }
 
         public FolderOperationStatus DeleteFolder(string folderPath, string username, string password)
+        {
+            throw new NotImplementedException();
+        }
+
+        public JToken GetInfoForFolders(PanoramaServer server, string folder)
         {
             throw new NotImplementedException();
         }

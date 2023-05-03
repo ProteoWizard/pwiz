@@ -3992,14 +3992,8 @@ Example: Looplink: T [4]
   <data name="EditServerDlg_OkDialog_The_text__0__is_not_a_valid_server_name_" xml:space="preserve">
     <value>テキスト「{0}」は有効なサーバー名ではありません。</value>
   </data>
-  <data name="EditServerDlg_OkDialog_The_username_and_password_could_not_be_authenticated_with_the_panorama_server" xml:space="preserve">
-    <value>Panoramaサーバーでユーザー名とパスワードが認証できませんでした。</value>
-  </data>
   <data name="EditServerDlg_OkDialog_Verifying_server_information" xml:space="preserve">
     <value>サーバー情報の確認中。</value>
-  </data>
-  <data name="EditServerDlg_VerifyServerInformation_The_server__0__does_not_exist" xml:space="preserve">
-    <value>サーバー{0}が存在していません。</value>
   </data>
   <data name="EditStaticModDlg_EditStaticModDlg_Chemical_formula_" xml:space="preserve">
     <value>化学式(&amp;C)：</value>
@@ -7062,15 +7056,6 @@ Skylineにインポートする前に必要に応じてライブラリをフィ�
   </data>
   <data name="PanoramaPublishHelper_PublishDocToPanorama_Uploading_document_to_Panorama" xml:space="preserve">
     <value>ドキュメントをPanoramaにアップロード中</value>
-  </data>
-  <data name="PanoramaUtil_VerifyFolder__0__is_not_a_Panorama_folder" xml:space="preserve">
-    <value>{0}はPanoramaフォルダではありません</value>
-  </data>
-  <data name="PanoramaUtil_VerifyFolder_Folder__0__does_not_exist_on_the_Panorama_server__1_" xml:space="preserve">
-    <value>フォルダ{0}はPanoramaサーバー{1}上に存在しません</value>
-  </data>
-  <data name="PanoramaUtil_VerifyFolder_User__0__does_not_have_permissions_to_upload_to_the_Panorama_folder__1_" xml:space="preserve">
-    <value>ユーザー{0}には、Panoramaフォルダ{1}にアップロードする権限がありません</value>
   </data>
   <data name="ParseExceptionDetail_ToString__at_position__0_" xml:space="preserve">
     <value>位置{1}での{0}</value>

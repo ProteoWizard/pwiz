@@ -29,6 +29,7 @@ using System.Xml;
 using System.Xml.Serialization;
 using Ionic.Zip;
 using Newtonsoft.Json.Linq;
+using pwiz.PanoramaClient;
 using pwiz.Common.Collections;
 using pwiz.Common.DataBinding;
 using pwiz.Common.SystemUtil;
@@ -892,6 +893,129 @@ namespace pwiz.Skyline
             }
 
             return true;
+        }
+
+        private void openPanorama_Click(object sender, EventArgs e)
+        {
+            OpenFromPanorama();
+        }
+
+        public void OpenFromPanorama(string server, string user, string pass)
+        {
+            var panoramaClient = new WebPanoramaClient(new Uri(server));
+            using var dlg = new FilePicker(new List<PanoramaServer>(), true, string.Empty, false);
+            if (dlg.ShowDialog() != DialogResult.Cancel)
+            {
+
+                var folderPath = string.Empty;
+                if (!string.IsNullOrEmpty(Settings.Default.LastFolderPath))
+                {
+                    folderPath = Settings.Default.LastFolderPath;
+                }
+                
+            }
+        }
+
+        public void OpenFromPanorama()
+        {
+            var servers = Settings.Default.ServerList;
+            if (servers.Count == 0)
+            {
+                DialogResult buttonPress = MultiButtonMsgDlg.Show(
+                    this,
+                    TextUtil.LineSeparate(
+                        Resources.SkylineWindow_ShowPublishDlg_There_are_no_Panorama_servers_to_upload_to,
+                        Resources.SkylineWindow_ShowPublishDlg_Press_Register_to_register_for_a_project_on_PanoramaWeb_,
+                        Resources.SkylineWindow_ShowPublishDlg_Press_Continue_to_use_the_server_of_your_choice_),
+                    Resources.SkylineWindow_ShowPublishDlg_Register, Resources.SkylineWindow_ShowPublishDlg_Continue,
+                    true);
+                if (buttonPress == DialogResult.Cancel)
+                    return;
+
+                object tag = null;
+                if (buttonPress == DialogResult.Yes)
+                {
+                    // person intends to register                   
+                    WebHelpers.OpenLink(this, @"https://panoramaweb.org/signup.url");
+                    tag = true;
+                }
+
+                var serverPanoramaWeb = new Server(PanoramaUtil.PANORAMA_WEB, string.Empty, string.Empty);
+                var newServer = servers.EditItem(this, serverPanoramaWeb, null, tag);
+                if (newServer == null)
+                    return;
+
+                servers.Add(newServer);
+            }
+
+            var panoramaServers = servers.Cast<PanoramaServer>().ToList();
+
+            var state = string.Empty;
+            if (!string.IsNullOrEmpty(Settings.Default.FileExpansion))
+            {
+                state = Settings.Default.FileExpansion;
+            }
+
+            try
+            {
+                using var dlg = new FilePicker(panoramaServers, false, state, true);
+                using (var waitDlg = new LongWaitDlg
+                       {
+                           Text = "Loading Panorama folders"
+                       })
+                {
+                    waitDlg.PerformWork(this, 100, () =>
+                    {
+                        dlg.ShowDialog();
+                    });
+                }
+                if (dlg.DialogResult != DialogResult.Cancel)
+                {
+                    var folderPath = string.Empty;
+                    if (!string.IsNullOrEmpty(Settings.Default.LastFolderPath))
+                    {
+                        folderPath = Settings.Default.LastFolderPath;
+                    }
+                    var curServer = dlg._activeServer;
+                    var panoramaClient = new WebPanoramaClient(curServer.URI);
+
+
+                    var downloadPath = panoramaClient.SaveFile(dlg._fileName, folderPath);
+                    if (!string.IsNullOrEmpty(downloadPath))
+                    {
+                        using (var waitDlg = new LongWaitDlg
+                               {
+                                   Text = "Downloading selected file"
+                               })
+                        {
+                            waitDlg.PerformWork(this, 100, () =>
+                            {
+                                panoramaClient.DownloadFile(downloadPath, curServer, dlg._fileUrl);
+                            });
+                        }
+                        //panoramaClient.DownloadFile(downloadPath, curServer, dlg._fileUrl);
+                        if (dlg._fileName.EndsWith(SrmDocumentSharing.EXT) && !string.IsNullOrEmpty(downloadPath))
+                        {
+                            OpenSharedFile(downloadPath);
+                        }
+                        else if (dlg._fileName.EndsWith(SrmDocument.EXT) && !string.IsNullOrEmpty(downloadPath))
+                        {
+                            OpenFile(downloadPath);
+                        }
+                    }
+                    if (!string.IsNullOrEmpty(panoramaClient.SelectedPath))
+                    {
+                        Settings.Default.LastFolderPath = panoramaClient.SelectedPath;
+                    }
+                }
+                Settings.Default.FileExpansion = dlg.TreeState;
+                Settings.Default.PanoramaSkyFiles = dlg._showingSky;
+                Settings.Default.Save();
+            }
+            catch (Exception e)
+            {
+                MessageDlg.ShowException(this, e);
+            }
         }
 
         private void saveMenuItem_Click(object sender, EventArgs e)

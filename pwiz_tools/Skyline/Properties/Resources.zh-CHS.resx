@@ -3995,14 +3995,8 @@ Example: Looplink: T [4]
   <data name="EditServerDlg_OkDialog_The_text__0__is_not_a_valid_server_name_" xml:space="preserve">
     <value>文本“{0}”不是有效的服务器名称。</value>
   </data>
-  <data name="EditServerDlg_OkDialog_The_username_and_password_could_not_be_authenticated_with_the_panorama_server" xml:space="preserve">
-    <value>用户名和密码无法采用 panorama 服务器验证。</value>
-  </data>
   <data name="EditServerDlg_OkDialog_Verifying_server_information" xml:space="preserve">
     <value>验证服务器信息。</value>
-  </data>
-  <data name="EditServerDlg_VerifyServerInformation_The_server__0__does_not_exist" xml:space="preserve">
-    <value>服务器{0}不存在。</value>
   </data>
   <data name="EditStaticModDlg_EditStaticModDlg_Chemical_formula_" xml:space="preserve">
     <value>化学式(&amp;C)：</value>
@@ -7069,15 +7063,6 @@ Example: Looplink: T [4]
   </data>
   <data name="PanoramaPublishHelper_PublishDocToPanorama_Uploading_document_to_Panorama" xml:space="preserve">
     <value>正在向 Panorama 上传文档</value>
-  </data>
-  <data name="PanoramaUtil_VerifyFolder__0__is_not_a_Panorama_folder" xml:space="preserve">
-    <value>{0}不是 Panorama 文件夹</value>
-  </data>
-  <data name="PanoramaUtil_VerifyFolder_Folder__0__does_not_exist_on_the_Panorama_server__1_" xml:space="preserve">
-    <value>文件夹{0}不存在于 Panorama 服务器{1}中</value>
-  </data>
-  <data name="PanoramaUtil_VerifyFolder_User__0__does_not_have_permissions_to_upload_to_the_Panorama_folder__1_" xml:space="preserve">
-    <value>用户{0}没有权限上传至 Panorama 文件夹{1}</value>
   </data>
   <data name="ParseExceptionDetail_ToString__at_position__0_" xml:space="preserve">
     <value>位置 {1} 处的 {0}</value>

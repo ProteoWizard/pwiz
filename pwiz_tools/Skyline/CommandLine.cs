@@ -26,6 +26,7 @@ using System.Text.RegularExpressions;
 using System.Threading;
 using System.Xml;
 using System.Xml.Serialization;
+using pwiz.PanoramaClient;
 using pwiz.Common.Collections;
 using pwiz.Common.DataBinding;
 using pwiz.Common.SystemUtil;
@@ -3663,7 +3664,7 @@ namespace pwiz.Skyline
                 _statusWriter = statusWriter;
             }
 
-            public bool PublishToPanorama(Server panoramaServer, SrmDocument document, string documentPath, string panoramaFolder, ShareType selectedShareType)
+            public bool PublishToPanorama(PanoramaServer panoramaServer, SrmDocument document, string documentPath, string panoramaFolder, ShareType selectedShareType)
             {
                 try
                 {
@@ -3690,7 +3691,7 @@ namespace pwiz.Skyline
                 return published;
             }
 
-            private bool PublishDocToPanorama(Server panoramaServer, string zipFilePath, string panoramaFolder)
+            private bool PublishDocToPanorama(PanoramaServer panoramaServer, string zipFilePath, string panoramaFolder)
             {
                 var waitBroker = new CommandProgressMonitor(_statusWriter,
                     new ProgressStatus(Resources.PanoramaPublishHelper_PublishDocToPanorama_Uploading_document_to_Panorama));

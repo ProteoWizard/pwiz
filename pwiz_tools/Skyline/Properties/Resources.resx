@@ -1721,9 +1721,6 @@
   <data name="FastaSequence_ValidateSequence_A_protein_sequence_may_not_contain_the_character__0__at__1__" xml:space="preserve">
     <value>A protein sequence may not contain the character '{0}' at {1}.</value>
   </data>
-  <data name="PanoramaUtil_VerifyFolder__0__is_not_a_Panorama_folder" xml:space="preserve">
-    <value>{0} is not a Panorama folder</value>
-  </data>
   <data name="AggregateOp_AxisTitleCvPercent" xml:space="preserve">
     <value>{0} CV (%)</value>
   </data>
@@ -2092,9 +2089,6 @@
   </data>
   <data name="RetentionTimeList_Title_Edit_Retention_Time_Regressions" xml:space="preserve">
     <value>Edit Retention Time Regressions</value>
-  </data>
-  <data name="EditServerDlg_OkDialog_The_username_and_password_could_not_be_authenticated_with_the_panorama_server" xml:space="preserve">
-    <value>The username and password could not be authenticated with the panorama server.</value>
   </data>
   <data name="TransitionTreeNode_RenderTip_Charge" xml:space="preserve">
     <value>Charge</value>
@@ -3122,9 +3116,6 @@ Are you sure you want to continue?</value>
   <data name="SkylineWindow_ImportFasta_Would_you_like_to_use_the_Unimod_definitions_for_the_following_modifications" xml:space="preserve">
     <value>Would you like to use the Unimod definitions for the following modifications?</value>
   </data>
-  <data name="EditServerDlg_VerifyServerInformation_The_server__0__does_not_exist" xml:space="preserve">
-    <value>The server {0} does not exist.</value>
-  </data>
   <data name="FileProgressControl_SetStatus_canceled" xml:space="preserve">
     <value>canceled</value>
   </data>
@@ -3991,9 +3982,6 @@ Are you sure you want to continue?</value>
   </data>
   <data name="OptimizationDb_ConvertFromOldFormat_Failed_to_convert__0__optimizations_to_new_format_" xml:space="preserve">
     <value>Failed to convert {0} optimizations to new format.</value>
-  </data>
-  <data name="PanoramaUtil_VerifyFolder_User__0__does_not_have_permissions_to_upload_to_the_Panorama_folder__1_" xml:space="preserve">
-    <value>User {0} does not have permissions to upload to the Panorama folder {1}</value>
   </data>
   <data name="TransitionGroupLibDecoy" type="System.Resources.ResXFileRef, System.Windows.Forms">
     <value>..\Resources\TransitionGroupLibDecoy.bmp;System.Drawing.Bitmap, System.Drawing, Version=4.0.0.0, Culture=neutral, PublicKeyToken=b03f5f7f11d50a3a</value>
@@ -7123,9 +7111,6 @@ Please contact the Panorama server administrator to upgrade the server.</value>
   </data>
   <data name="CommandProgressMonitor_UpdateProgressInternal_Message__" xml:space="preserve">
     <value>Message: </value>
-  </data>
-  <data name="PanoramaUtil_VerifyFolder_Folder__0__does_not_exist_on_the_Panorama_server__1_" xml:space="preserve">
-    <value>Folder {0} does not exist on the Panorama server {1}</value>
   </data>
   <data name="HtmlFragment_HtmlFragment_StartFragment_is_already_declared" xml:space="preserve">
     <value>StartFragment is already declared</value>
@@ -11904,23 +11889,8 @@ If you do not have the original file, you may build the library with embedded sp
   <data name="GenericState_AppendErrorAndUri_URL___0_" xml:space="preserve">
     <value>URL: {0}</value>
   </data>
-  <data name="PanoramaUtil_EnsureLogin_Could_not_authenticate_user__Response_received_from_server___0___1_" xml:space="preserve">
-    <value>Could not authenticate user. Response received from server: {0} {1}</value>
-  </data>
-  <data name="PanoramaUtil_EnsureLogin_Unexpected_JSON_response_from_the_server___0_" xml:space="preserve">
-    <value>Unexpected JSON response from the server: {0}</value>
-  </data>
-  <data name="UserState_getErrorMessage_There_was_an_error_authenticating_user_credentials_on_the_server__0__" xml:space="preserve">
-    <value>There was an error authenticating user credentials on the server {0}.</value>
-  </data>
-  <data name="PanoramaUtil_EnsureLogin_Server_did_not_return_a_valid_JSON_response___0__is_not_a_Panorama_server_" xml:space="preserve">
-    <value>Server did not return a valid JSON response. {0} is not a Panorama server.</value>
-  </data>
   <data name="EditServerDlg_OkDialog__0__is_not_a_valid_email_address_" xml:space="preserve">
     <value>{0} is not a valid email address.</value>
-  </data>
-  <data name="ServerState_GetErrorMessage_Unable_to_connect_to_the_server__0__" xml:space="preserve">
-    <value>Unable to connect to the server {0}.</value>
   </data>
   <data name="StaticMod_FormatFormulaOrMass___0__Da_" xml:space="preserve">
     <value>({0} Da)</value>
