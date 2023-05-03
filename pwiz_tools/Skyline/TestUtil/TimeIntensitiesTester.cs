@@ -48,7 +48,7 @@ namespace pwiz.SkylineTestUtil
         public TimeIntensities ReplaceTimes(TimeIntensities timeIntensities, IList<float> times, bool inferZeroes, bool extrapolateZeroes)
         {
             var interpolated = timeIntensities.ReplaceTimes(times, inferZeroes, extrapolateZeroes);
-            CollectionAssert.AreEqual(times.ToArray(), interpolated.Times.ToArray());
+            AssertListsEqual(times.ToArray(), interpolated.Times.ToArray());
             if (!inferZeroes)
             {
                 VerifyInterpolationPreservedArea(timeIntensities, interpolated);
@@ -154,6 +154,14 @@ namespace pwiz.SkylineTestUtil
             if (Math.Abs(expected - actual) > allowableDifference)
             {
                 Assert.AreEqual(expected, actual, allowableDifference);
+            }
+        }
+        public void AssertListsEqual<T>(IList<T> expected, IList<T> actual)
+        {
+            Assert.AreEqual(expected.Count, actual.Count);
+            for (int i = 0; i < expected.Count; i++)
+            {
+                Assert.AreEqual(expected[i], actual[i], "Elements at position {0} differ", i);
             }
         }
     }

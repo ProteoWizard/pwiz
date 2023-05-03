@@ -49,7 +49,7 @@ namespace pwiz.SkylineTest
             var sumOfInterpolatedIntensities = oddInterpolated.Intensities
                 .Zip(evenInterpolated.Intensities, (f1, f2) => f1 + f2)
                 .ToArray();
-            AssertListEqual(sumOfInterpolatedIntensities, mergedAndAdded.Intensities);
+            AssertListsEqual(sumOfInterpolatedIntensities, mergedAndAdded.Intensities);
 
             var addedToOdds = oddTimes.AddIntensities(evenTimes);
             Assert.AreEqual(oddTimes.Times, addedToOdds.Times);
@@ -70,7 +70,7 @@ namespace pwiz.SkylineTest
         {
             TimeIntensities timeIntensities = new TimeIntensities(new []{1f,2,3,4,5}, new []{1f,2,3,2,1}, null, null);
             var pointList = TimeIntensityPoint.RemovePointsAt(timeIntensities.ToPoints().ToArray(), new[]{2});
-            AssertListEqual(new[]{1.0,2,4,5}, pointList.Select(p=>p.Time).ToArray());
+            AssertListsEqual(new[]{1.0,2,4,5}, pointList.Select(p=>p.Time).ToArray());
             Assert.AreEqual(1.0, pointList[0].Intensity);
             Assert.AreEqual(1.0, pointList[3].Intensity);
             Assert.AreEqual(7.0 / 3, pointList[1].Intensity, 1E-7);
@@ -151,8 +151,8 @@ namespace pwiz.SkylineTest
             };
             var oldInterpolated = timeIntensities.OldInterpolate(interpolatedTimes, false);
             var newInterpolated = timeIntensities.Interpolate(interpolatedTimes, false);
-            AssertListEqual(interpolatedTimes, oldInterpolated.Times.ToArray());
-            AssertListEqual(interpolatedTimes, newInterpolated.Times.ToArray());
+            AssertListsEqual(interpolatedTimes, oldInterpolated.Times);
+            AssertListsEqual(interpolatedTimes, newInterpolated.Times);
         }
 
         [TestMethod]
@@ -164,8 +164,8 @@ namespace pwiz.SkylineTest
             var interpolatedTimes = new[] { 99.4438f, 99.5009f, 99.558f, 99.6151047f, 99.6722f, 99.7293f };
             var newInterpolated = timeIntensities.Interpolate(interpolatedTimes, false);
             var oldInterpolated = timeIntensities.OldInterpolate(interpolatedTimes, false);
-            AssertListEqual(interpolatedTimes, oldInterpolated.Times.ToArray());
-            AssertListEqual(interpolatedTimes, newInterpolated.Times.ToArray());
+            AssertListsEqual(interpolatedTimes, oldInterpolated.Times);
+            AssertListsEqual(interpolatedTimes, newInterpolated.Times);
         }
 
         [TestMethod]
@@ -254,9 +254,9 @@ namespace pwiz.SkylineTest
             }
             Assert.AreEqual(interpolated.NumPoints, pointsRemovedFromLeft.Count);
             Assert.AreEqual(interpolated.NumPoints, pointsRemovedFromRight.Count);
-            AssertListEqual(interpolated.Intensities.ToArray(),
+            AssertListsEqual(interpolated.Intensities.ToArray(),
                 pointsRemovedFromLeft.Select(p => (float) p.Intensity).ToArray());
-            AssertListEqual(interpolated.Intensities.ToArray(),
+            AssertListsEqual(interpolated.Intensities.ToArray(),
                 pointsRemovedFromRight.Select(p => (float) p.Intensity).ToArray());
         }
 
@@ -287,13 +287,9 @@ namespace pwiz.SkylineTest
             }
         }
 
-        private void AssertListEqual<T>(IList<T> expected, IList<T> actual)
+        private void AssertListsEqual<T>(IList<T> expected, IList<T> actual)
         {
-            Assert.AreEqual(expected.Count, actual.Count);
-            for (int i = 0; i < expected.Count; i++)
-            {
-                Assert.AreEqual(expected[i], actual[i], "Elements at position {0} differ", i);
-            }
+            _tester.AssertListsEqual(expected, actual);
         }
     }
 }
