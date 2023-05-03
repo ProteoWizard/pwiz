@@ -227,7 +227,7 @@ namespace pwiz.PanoramaClient
             this.up});
             this.toolStrip.Location = new System.Drawing.Point(9, 2);
             this.toolStrip.Name = "toolStrip";
-            this.toolStrip.Size = new System.Drawing.Size(96, 31);
+            this.toolStrip.Size = new System.Drawing.Size(127, 31);
             this.toolStrip.TabIndex = 18;
             this.toolStrip.Text = "toolStrip1";
             // 
@@ -250,6 +250,14 @@ namespace pwiz.PanoramaClient
             this.forward.Size = new System.Drawing.Size(28, 28);
             this.forward.Text = "Forward";
             this.forward.Click += new System.EventHandler(this.Forward_Click);
+            // 
+            // up
+            // 
+            this.up.Image = ((System.Drawing.Image)(resources.GetObject("up.Image")));
+            this.up.ImageTransparentColor = System.Drawing.Color.Magenta;
+            this.up.Name = "up";
+            this.up.Size = new System.Drawing.Size(28, 28);
+            this.up.Click += new System.EventHandler(this.UpButton_Click);
             // 
             // FilePicker
             // 
