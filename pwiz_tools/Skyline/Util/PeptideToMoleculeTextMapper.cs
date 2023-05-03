@@ -327,16 +327,7 @@ namespace pwiz.Skyline.Util
             public void Translate(IEnumerable controls)
             {
                 // Prepare to disable anything tagged as being incompatible with current UI mode
-                var inappropriateComponents = ModeUI == SrmDocument.DOCUMENT_TYPE.proteomic
-                    ? HandledComponents.Where(item => item.Value.Equals(ModeUIExtender.MODE_UI_HANDLING_TYPE.small_mol) ||
-                                                      item.Value.Equals(ModeUIExtender.MODE_UI_HANDLING_TYPE.small_mol_only) ||
-                                                      item.Value.Equals(ModeUIExtender.MODE_UI_HANDLING_TYPE.mixed_only)).Select(item => item.Key).ToHashSet()
-                    : ModeUI == SrmDocument.DOCUMENT_TYPE.small_molecules
-                        ? HandledComponents.Where(item => item.Value.Equals(ModeUIExtender.MODE_UI_HANDLING_TYPE.proteomic) || 
-                                                          item.Value.Equals(ModeUIExtender.MODE_UI_HANDLING_TYPE.mixed_only)).Select(item => item.Key).ToHashSet()
-                    : ModeUI == SrmDocument.DOCUMENT_TYPE.mixed
-                            ? HandledComponents.Where(item => item.Value.Equals(ModeUIExtender.MODE_UI_HANDLING_TYPE.small_mol_only)).Select(item => item.Key).ToHashSet()
-                    : null;
+                var inappropriateComponents = GetComponentsDisabledForModeUI(HandledComponents, ModeUI);
 
                 foreach (var control in controls)
                 {
@@ -366,6 +357,14 @@ namespace pwiz.Skyline.Util
                             if (!Equals(translated, menuItem.Text))
                             {
                                 menuItem.Text = translated;
+                            }
+                            if (!string.IsNullOrEmpty(menuItem.ToolTipText))
+                            {
+                                translated = TranslateString(menuItem.ToolTipText);
+                                if (!Equals(translated, menuItem.ToolTipText))
+                                {
+                                    menuItem.ToolTipText = translated;
+                                }
                             }
                         }
                         continue;
@@ -427,6 +426,26 @@ namespace pwiz.Skyline.Util
                     }
                 }
             }
+
+            public static HashSet<IComponent> GetComponentsDisabledForModeUI(Dictionary<IComponent, ModeUIExtender.MODE_UI_HANDLING_TYPE> handledComponents, SrmDocument.DOCUMENT_TYPE modeUI)
+            {
+                var inappropriateComponents = modeUI == SrmDocument.DOCUMENT_TYPE.proteomic
+                    ? handledComponents.Where(item => item.Value.Equals(ModeUIExtender.MODE_UI_HANDLING_TYPE.small_mol) ||
+                                                      item.Value.Equals(ModeUIExtender.MODE_UI_HANDLING_TYPE.small_mol_only) ||
+                                                      item.Value.Equals(ModeUIExtender.MODE_UI_HANDLING_TYPE.mixed_only))
+                        .Select(item => item.Key).ToHashSet()
+                    : modeUI == SrmDocument.DOCUMENT_TYPE.small_molecules
+                        ? handledComponents.Where(item => item.Value.Equals(ModeUIExtender.MODE_UI_HANDLING_TYPE.proteomic) ||
+                                                          item.Value.Equals(ModeUIExtender.MODE_UI_HANDLING_TYPE.mixed_only))
+                            .Select(item => item.Key).ToHashSet()
+                        : modeUI == SrmDocument.DOCUMENT_TYPE.mixed
+                            ? handledComponents
+                                .Where(item => item.Value.Equals(ModeUIExtender.MODE_UI_HANDLING_TYPE.small_mol_only))
+                                .Select(item => item.Key).ToHashSet()
+                            : null;
+                return inappropriateComponents;
+            }
+
             private void FindInUseKeyboardAccelerators(IEnumerable controls)
             {
                 const char amp = '&';
