@@ -358,7 +358,7 @@ namespace pwiz.Skyline.Model.Results
                     }
                     var rawTimeIntensities = chromatogramInfo.TimeIntensities;
                     var chromKey = new ChromKey(
-                        new ChromatogramGroupId(PeptideDocNode.ModifiedTarget, transitionGroup.SpectrumClassFilter),
+                        new ChromatogramGroupId(PeptideDocNode.ChromatogramTarget, transitionGroup.SpectrumClassFilter),
                         transitionGroup.PrecursorMz, null,
                         transition.Mz, 0, 0, 0, transition.IsMs1 ? ChromSource.ms1 : ChromSource.fragment,
                         ChromExtractor.summed);

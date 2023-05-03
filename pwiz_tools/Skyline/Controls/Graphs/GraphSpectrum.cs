@@ -1358,7 +1358,7 @@ namespace pwiz.Skyline.Controls.Graphs
 
                         _graphHelper.ZoomSpectrumToSettings(DocumentUI, selection.NodeTranGroup);
 
-                        if (GraphItem.PeptideDocNode != null && GraphItem.TransitionGroupNode != null && spectrum?.SpectrumInfo is SpectrumInfoLibrary libInfo)
+                        if (GraphItem != null && GraphItem.PeptideDocNode != null && GraphItem.TransitionGroupNode != null && spectrum?.SpectrumInfo is SpectrumInfoLibrary libInfo)
                         {
                             var pepInfo = new ViewLibraryPepInfo(
                                 GraphItem.PeptideDocNode.ModifiedTarget.GetLibKey(GraphItem.TransitionGroupNode.PrecursorAdduct), 
