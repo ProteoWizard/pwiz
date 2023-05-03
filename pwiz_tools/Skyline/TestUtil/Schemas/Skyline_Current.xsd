@@ -1143,7 +1143,7 @@
     <xs:complexContent>
       <xs:extension base = "doc_parent_node_type">
         <xs:sequence>
-		  <xs:element name="spectrum_filter" minOccurs="0" maxOccurs="1">
+          <xs:element name="spectrum_filter" minOccurs="0" maxOccurs="1">
             <xs:complexType>
               <xs:sequence>
                 <xs:element name="filter" minOccurs="0" maxOccurs="unbounded">
@@ -1153,9 +1153,9 @@
                     <xs:attribute name="operand" type="xs:string"/>
                   </xs:complexType>
                 </xs:element>
-		      </xs:sequence>
+              </xs:sequence>
             </xs:complexType>
-	  	  </xs:element>
+          </xs:element>
           <xs:element name="bibliospec_spectrum_info" minOccurs="0" maxOccurs="unbounded">
             <xs:complexType>
               <xs:complexContent>
