@@ -43,7 +43,7 @@ namespace pwiz.SkylineTest
             var dictIsotopeModNames = UniMod.DictIsotopeModNames;
             var dictStructuralModNames = UniMod.DictStructuralModNames;
 
-            var compareDict = new Dictionary<string, int>();
+            var compareDict = new SortedDictionary<string, int>();
             var massCalc = new SequenceMassCalc(MassType.Monoisotopic);
 
             foreach (var dict in new[]
@@ -55,7 +55,7 @@ namespace pwiz.SkylineTest
                         })
             {
                 var unimodArray = dict.ToArray();
-                var actualDict = new Dictionary<string, int>();
+                var actualDict = new SortedDictionary<string, int>();
                 int actualCount = EquivalentValues(actualDict, unimodArray);
 
                 int count, totalCount = 0;
@@ -73,7 +73,7 @@ namespace pwiz.SkylineTest
                 }
 
                 Assert.AreEqual(actualCount, totalCount);
-                Assert.IsTrue(ArrayUtil.EqualsDeep(actualDict, compareDict));
+                Assert.IsTrue(ArrayUtil.EqualsDeep(actualDict.ToArray(), compareDict.ToArray()));
 
                 compareDict.Clear();
                 totalCount = 0;
@@ -100,7 +100,7 @@ namespace pwiz.SkylineTest
                     totalCount += count;
                 }
                 Assert.IsTrue(actualCount == totalCount);
-                Assert.IsTrue(ArrayUtil.EqualsDeep(actualDict, compareDict));
+                Assert.IsTrue(ArrayUtil.EqualsDeep(actualDict.ToArray(), compareDict.ToArray()));
 
                 compareDict.Clear();
                 totalCount = 0;
@@ -137,7 +137,7 @@ namespace pwiz.SkylineTest
                     totalCount += count;
                 }
                 Assert.IsTrue(actualCount == totalCount);
-                Assert.IsTrue(ArrayUtil.EqualsDeep(actualDict, compareDict));
+                Assert.IsTrue(ArrayUtil.EqualsDeep(actualDict.ToArray(), compareDict.ToArray()));
 
                 compareDict.Clear();
                 totalCount = 0;
@@ -162,7 +162,7 @@ namespace pwiz.SkylineTest
                     totalCount += count;
                 }
                 Assert.IsTrue(actualCount == totalCount);
-                Assert.IsTrue(ArrayUtil.EqualsDeep(actualDict, compareDict));
+                Assert.IsTrue(ArrayUtil.EqualsDeep(actualDict.ToArray(), compareDict.ToArray()));
 
                 // Nonexisting formulas.  
                 foreach (StaticMod original in dict.Values)
@@ -220,7 +220,7 @@ namespace pwiz.SkylineTest
             return sbNewFormula.ToString();
         }
 
-        public int EquivalentValues(Dictionary<string, int> equivMods, KeyValuePair<string, StaticMod>[] dict)
+        public int EquivalentValues(SortedDictionary<string, int> equivMods, KeyValuePair<string, StaticMod>[] dict)
             {
                 int totalCount = 0;
                 for (int i = 0; i < dict.Length; i++)
@@ -241,7 +241,7 @@ namespace pwiz.SkylineTest
         /// <param name="equivMods">Dictionary we add count for StaticMods equivalent to modToMatch.</param>
         /// <param name="index">Index of modToMatch in dict.</param>
         /// <returns>Number of StaticMods equivalent to modToMatch. If there are no equivalent values, function will return 1.</returns>
-        public int CountEquivalent(KeyValuePair<string, StaticMod>[] dict, StaticMod modToMatch, Dictionary<string, int> equivMods, int index)
+        public int CountEquivalent(KeyValuePair<string, StaticMod>[] dict, StaticMod modToMatch, SortedDictionary<string, int> equivMods, int index)
         {
             int totalCount = 0;
             for (int i = 0; i < dict.Length; i++)
