@@ -222,5 +222,14 @@ namespace pwiz.PanoramaClient.Properties {
                         "he_server__0__", resourceCulture);
             }
         }
+        
+        /// <summary>
+        ///   Looks up a localized string similar to Select the folder where the file will be downloaded.
+        /// </summary>
+        public static string WebPanoramaClient_SaveFile_Select_the_folder_where_the_file_will_be_downloaded {
+            get {
+                return ResourceManager.GetString("WebPanoramaClient_SaveFile_Select_the_folder_where_the_file_will_be_downloaded", resourceCulture);
+            }
+        }
     }
 }

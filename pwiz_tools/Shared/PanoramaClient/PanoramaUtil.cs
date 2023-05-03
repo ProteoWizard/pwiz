@@ -23,6 +23,7 @@ using System.Collections.Specialized;
 using System.IO;
 using System.Net;
 using System.Text;
+using System.Threading;
 using System.Windows.Forms;
 using Newtonsoft.Json;
 using Newtonsoft.Json.Linq;
@@ -498,7 +499,10 @@ namespace pwiz.PanoramaClient
     {
         public Uri ServerUri { get; private set; }
         public string SelectedPath { get; private set; }
-    
+        private IProgressMonitor ProgressMonitor { get; set; }
+        private IProgressStatus ProgressStatus { get; set; }
+        public bool Success { get; private set; } = true;
+
         public WebPanoramaClient(Uri server)
         {
             ServerUri = server;
@@ -714,7 +718,15 @@ namespace pwiz.PanoramaClient
                 return webClient.Get(uri);
             }
         }
-        
+
+        /// <summary>
+        /// Given the name of a file, allows a user to select
+        /// which folder on their machine to download the file to
+        /// and returns the path of the selected folder
+        /// </summary>
+        /// <param name="fileName"></param>
+        /// <param name="lastPath"></param>
+        /// <returns></returns>
         public string SaveFile(string fileName, string lastPath)
         {
             var dlg = new FolderBrowserDialog
@@ -722,7 +734,7 @@ namespace pwiz.PanoramaClient
                 SelectedPath = lastPath
             };
             var downloadPath = string.Empty;
-            dlg.Description = "Select the folder where the file will be downloaded";
+            dlg.Description = Resources.WebPanoramaClient_SaveFile_Select_the_folder_where_the_file_will_be_downloaded;
             if (dlg.ShowDialog() == DialogResult.OK)
             {
                 SelectedPath = dlg.SelectedPath;
@@ -731,19 +743,85 @@ namespace pwiz.PanoramaClient
             }
             return downloadPath;
         }
-    
-        public void DownloadFile(string path, PanoramaServer server, string downloadName)
+
+        /// <summary>
+        /// Downloads a given file to a given folder path and shows the progress
+        /// of the download during downloading
+        /// </summary>
+        /// <param name="path"></param>
+        /// <param name="server"></param>
+        /// <param name="downloadName"></param>
+        /// <param name="pm"></param>
+        /// <param name="size"></param>
+        /// <param name="fileName"></param>
+        public void DownloadFile(string path, PanoramaServer server, string downloadName, IProgressMonitor pm, long size, string fileName)
         {
+            ProgressMonitor = pm;
+            ProgressStatus = new ProgressStatus("Downloading...");
             using var wc = new WebClientWithCredentials(server.URI, server.Username, server.Password);
-            wc.DownloadFile(
-    
+            wc.DownloadProgressChanged += (s, e) =>
+            {
+                var progressPercent = e.ProgressPercentage > 0 ? e.ProgressPercentage : -1;
+                if (progressPercent == -1 && size > 0)
+                {
+                    progressPercent = (int)(e.BytesReceived * 100 / size);
+                }
+                var downloaded = e.BytesReceived;
+                var message = TextUtil.LineSeparate(
+                    string.Format("Downloading {0}", fileName, downloadName),
+                    string.Empty,
+                    GetDownloadedSize(downloaded, size > 0 ? (long)size : 0));
+                ProgressStatus = ProgressStatus.ChangeMessage(message);
+                ProgressStatus = ProgressStatus.ChangeMessage("Download progress: " + progressPercent + "% downloaded");
+                ProgressMonitor.UpdateProgress(ProgressStatus = ProgressStatus.ChangePercentComplete(progressPercent));
+            };
+            var downloadComplete = false;
+            wc.DownloadFileCompleted += (s, e) =>
+            {
+                if (e.Error != null && !ProgressMonitor.IsCanceled)
+                {
+                    Success = false;
+                    ProgressMonitor.UpdateProgress(ProgressStatus = ProgressStatus.ChangeErrorException(e.Error));
+                }
+                downloadComplete = true;
+            };
+            wc.DownloadFileAsync(
+
                 // Param1 = Link of file
                 new Uri(downloadName),
                 // Param2 = Path to save
                 path
             );
+            while (!downloadComplete)
+            {
+                if (ProgressMonitor.IsCanceled)
+                {
+                    wc.CancelAsync();
+                    Success = false;
+                }
+                Thread.Sleep(100);
+            }
         }
-    
+
+        /// <summary>
+        /// Borrowed from SkypSupport.cs, displays download progress
+        /// </summary>
+        /// <param name="downloaded"></param>
+        /// <param name="fileSize"></param>
+        /// <returns></returns>
+        public static string GetDownloadedSize(long downloaded, long fileSize)
+        {
+            var formatProvider = new FileSizeFormatProvider();
+            if (fileSize > 0)
+            {
+                return string.Format(@"{0} / {1}", string.Format(formatProvider, @"{0:fs1}", downloaded), string.Format(formatProvider, @"{0:fs1}", fileSize));
+            }
+            else
+            {
+                return string.Format(formatProvider, @"{0:fs1}", downloaded);
+            }
+        }
+
     }
 
     public class PanoramaServerException : Exception

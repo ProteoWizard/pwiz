@@ -900,10 +900,19 @@ namespace pwiz.Skyline
             OpenFromPanorama();
         }
 
-        public void OpenFromPanorama(string server, string user, string pass)
+        /// <summary>
+        /// Method used for testing server folder browser
+        /// </summary>
+        /// <param name="server"></param>
+        /// <param name="user"></param>
+        /// <param name="pass"></param>
+        /// <param name="folderJson"></param>
+        /// <param name="fileJson"></param>
+        public void OpenFromPanorama(string server, string user, string pass, JToken folderJson, JToken fileJson = null)
         {
             var panoramaClient = new WebPanoramaClient(new Uri(server));
-            using var dlg = new FilePicker(new List<PanoramaServer>(), true, string.Empty, false);
+            using var dlg = new FilePicker();
+            dlg.InitializeTestDialog(new Uri(server), user, pass, folderJson, fileJson);
             if (dlg.ShowDialog() != DialogResult.Cancel)
             {
 
@@ -959,46 +968,50 @@ namespace pwiz.Skyline
             try
             {
                 using var dlg = new FilePicker(panoramaServers, false, state, true);
-                using (var waitDlg = new LongWaitDlg
+                using (var longWaitDlg = new LongWaitDlg
                        {
-                           Text = "Loading Panorama folders"
+                           Text = "Loading remote server folders",
                        })
                 {
-                    waitDlg.PerformWork(this, 100, () =>
-                    {
-                        dlg.ShowDialog();
-                    });
+                    longWaitDlg.PerformWork(this, 0,
+                        () => dlg.InitializeDialog());
+                    if (longWaitDlg.IsCanceled)
+                        return;
                 }
-                if (dlg.DialogResult != DialogResult.Cancel)
+                if (dlg.ShowDialog() != DialogResult.Cancel)
                 {
                     var folderPath = string.Empty;
                     if (!string.IsNullOrEmpty(Settings.Default.LastFolderPath))
                     {
                         folderPath = Settings.Default.LastFolderPath;
                     }
-                    var curServer = dlg._activeServer;
+                    var curServer = dlg.ActiveServer;
                     var panoramaClient = new WebPanoramaClient(curServer.URI);
 
-
-                    var downloadPath = panoramaClient.SaveFile(dlg._fileName, folderPath);
+                    var downloadPath = panoramaClient.SaveFile(dlg.FileName, folderPath);
                     if (!string.IsNullOrEmpty(downloadPath))
                     {
-                        using (var waitDlg = new LongWaitDlg
+                        var size = dlg.FileSize;
+                        using (var longWaitDlg = new LongWaitDlg
                                {
-                                   Text = "Downloading selected file"
+                                   Text = "Downloading selected file",
                                })
                         {
-                            waitDlg.PerformWork(this, 100, () =>
+                            
+                            longWaitDlg.PerformWork(this, 800,
+                                progressMonitor => panoramaClient.DownloadFile(downloadPath, curServer, dlg.FileUrl, progressMonitor, size, dlg.FileName));
+                            if (!panoramaClient.Success)
                             {
-                                panoramaClient.DownloadFile(downloadPath, curServer, dlg._fileUrl);
-                            });
+                                FileEx.SafeDelete(downloadPath, true);
+                            }
+                            if (longWaitDlg.IsCanceled)
+                                return;
                         }
-                        //panoramaClient.DownloadFile(downloadPath, curServer, dlg._fileUrl);
-                        if (dlg._fileName.EndsWith(SrmDocumentSharing.EXT) && !string.IsNullOrEmpty(downloadPath))
+                        if (dlg.FileName.EndsWith(SrmDocumentSharing.EXT) && !string.IsNullOrEmpty(downloadPath))
                         {
                             OpenSharedFile(downloadPath);
                         }
-                        else if (dlg._fileName.EndsWith(SrmDocument.EXT) && !string.IsNullOrEmpty(downloadPath))
+                        else if (dlg.FileName.EndsWith(SrmDocument.EXT) && !string.IsNullOrEmpty(downloadPath))
                         {
                             OpenFile(downloadPath);
                         }
@@ -1009,7 +1022,7 @@ namespace pwiz.Skyline
                     }
                 }
                 Settings.Default.FileExpansion = dlg.TreeState;
-                Settings.Default.PanoramaSkyFiles = dlg._showingSky;
+                Settings.Default.PanoramaSkyFiles = dlg.ShowingSky;
                 Settings.Default.Save();
             }
             catch (Exception e)
@@ -2258,39 +2271,6 @@ namespace pwiz.Skyline
                     }
                     if (!ReferenceEquals(doc.Settings, newSettings))
                         doc = doc.ChangeSettings(newSettings);
-
-                    if (importer.InputType == SrmDocument.DOCUMENT_TYPE.small_molecules)
-                    {
-                        // We create new nodes with automanage turned off, but it might be interesting to user to have that on for isotopes etc
-                        // Try applying auto-pick refinement to see if that changes anything 
-                        var refine = new RefinementSettings { AutoPickChildrenAll = PickLevel.precursors | PickLevel.transitions, AutoPickChildrenOff = false };
-                        var docManaged = refine.Refine(doc);
-                        if (docManaged.MoleculeTransitionCount != 0 && // Automanage would turn everything off, not interesting
-                            !Equals(docManaged.MoleculeTransitionCount, doc.MoleculeTransitionCount))
-                        {
-                            var existingPrecursorCount = docCurrent.MoleculeTransitions?.Where(t => t.IsMs1).Count();
-                            var existingFragmentCount = docCurrent.MoleculeTransitions?.Where(t => !t.IsMs1).Count();
-                            var managedPrecursorCount = docManaged.MoleculeTransitions?.Where(t => t.IsMs1).Count();
-                            var managedFragmentCount = docManaged.MoleculeTransitions?.Where(t => !t.IsMs1).Count();
-                            var docPrecursorCount = doc.MoleculeTransitions?.Where(t => t.IsMs1).Count();
-                            var docFragmentCount = doc.MoleculeTransitions?.Where(t => !t.IsMs1).Count();
-                            var prompt = string.Format(
-                                Resources.SkylineWindow_ImportMassList_Do_you_want_to_use_the_document_settings_to_automanage_these_new_transitions,
-                                managedPrecursorCount - existingPrecursorCount,
-                                managedFragmentCount - existingFragmentCount,
-                                docPrecursorCount - existingPrecursorCount,
-                                docFragmentCount - existingFragmentCount);
-                            var result = MultiButtonMsgDlg.Show(this, prompt, Resources.SkylineWindow_ImportMassList_Enable, Resources.SkylineWindow_ImportMassList_Disable, true);
-                            if (result == DialogResult.Cancel)
-                            {
-                                doc = docCurrent;
-                            }
-                            else if (result != DialogResult.No)
-                            {
-                                doc = docManaged;
-                            }
-                        }
-                    }
                 }
                 catch (Exception x)
                 {

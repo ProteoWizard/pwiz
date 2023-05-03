@@ -118,16 +118,6 @@
             this.forward.Text = "Forward";
             this.forward.Click += new System.EventHandler(this.forward_Click);
             // 
-            // up
-            // 
-            this.up.DisplayStyle = System.Windows.Forms.ToolStripItemDisplayStyle.Image;
-            this.up.Image = global::pwiz.PanoramaClient.Properties.Resources.Icojam_Blueberry_Basic_Arrow_up;
-            this.up.ImageTransparentColor = System.Drawing.Color.Magenta;
-            this.up.Name = "up";
-            this.up.Size = new System.Drawing.Size(28, 28);
-            this.up.Text = "Up a level";
-            this.up.Click += new System.EventHandler(this.up_Click);
-            // 
             // DirectoryPicker
             // 
             this.AutoScaleDimensions = new System.Drawing.SizeF(6F, 13F);

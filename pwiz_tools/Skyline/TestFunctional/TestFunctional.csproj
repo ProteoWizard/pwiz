@@ -202,6 +202,7 @@
     <Compile Include="RemoveNeutralLossModificationTest.cs" />
     <Compile Include="SaveAfterProteinAssociationTest.cs" />
     <Compile Include="SequenceTreeRatioTest.cs" />
+    <Compile Include="TestPanoramaClient.cs" />
     <Compile Include="ToolServiceTestSharedClasses.cs" />
     <Compile Include="UnreadableBlibTest.cs" />
     <Compile Include="RemoveSmallMoleculeLabelTypeTest.cs" />

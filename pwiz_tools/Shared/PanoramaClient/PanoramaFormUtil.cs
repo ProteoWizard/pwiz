@@ -22,16 +22,30 @@ namespace pwiz.PanoramaClient
         public string Server;
         public string User;
         public string Pass;
-        public void InitializeTreeView(PanoramaServer server, TreeView treeViewFolders, bool requireUploadPerms, bool showFiles, bool showSky)
+        public void InitializeTreeView(PanoramaServer server, List<KeyValuePair<PanoramaServer, JToken>> listServers)
         {
             IPanoramaClient panoramaClient = new WebPanoramaClient(server.URI);
-            var folder = panoramaClient.GetInfoForFolders(server, null);
+            listServers.Add(new KeyValuePair<PanoramaServer, JToken>(server, panoramaClient.GetInfoForFolders(server, null)));
+            Server = server.URI.ToString();
+            User = server.Username;
+            Pass = server.Password;
+        }
+
+        public void InitializeFolder(TreeView treeViewFolders, bool requireUploadPerms, bool showFiles, JToken folder, PanoramaServer server)
+        {
+            var treeNode = new TreeNode(server.URI.ToString());
+            treeViewFolders.Invoke(new Action(() => treeViewFolders.Nodes.Add(treeNode)));
+            treeViewFolders.Invoke(new Action(() => AddChildContainers(treeNode, folder, requireUploadPerms, showFiles)));
+        }
+
+        public void InitializeTreeViewTest(PanoramaServer server, TreeView treeView, JToken folderJson)
+        {
             var treeNode = new TreeNode(server.URI.ToString());
             Server = server.URI.ToString();
             User = server.Username;
             Pass = server.Password;
-            treeViewFolders.Invoke(new Action(() => treeViewFolders.Nodes.Add(treeNode)));
-            treeViewFolders.Invoke(new Action(() => AddChildContainers(treeNode, folder, requireUploadPerms, showFiles)));
+            treeView.Invoke(new Action(() => treeView.Nodes.Add(treeNode)));
+            treeView.Invoke(new Action(() => AddChildContainers(treeNode, folderJson, false, true)));
         }
 
         private static bool ContainsTargetedMSModule(IEnumerable<JToken> modules)
