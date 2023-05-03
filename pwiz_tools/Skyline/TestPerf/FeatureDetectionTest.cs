@@ -23,6 +23,7 @@ using Microsoft.VisualStudio.TestTools.UnitTesting;
 using pwiz.Common.Chemistry;
 using pwiz.Skyline.FileUI;
 using pwiz.Skyline.FileUI.PeptideSearch;
+using pwiz.Skyline.Model.DdaSearch;
 using pwiz.Skyline.Model.DocSettings;
 using pwiz.Skyline.Model.Results;
 using pwiz.Skyline.Properties;
@@ -130,7 +131,16 @@ namespace TestPerf
 
         protected override void DoTest()
         {
-//IsPauseForScreenShots = true; // enable for quick demo
+            //IsPauseForScreenShots = true; // enable for quick demo
+
+            // Make sure we're testing the mzML conversion
+            var convertedFile = Path.Combine(Path.GetDirectoryName(GetTestPath(TestFilesPersistent[0])) ?? string.Empty,
+                MsconvertDdaConverter.OUTPUT_SUBDIRECTORY, (Path.GetFileNameWithoutExtension(TestFilesPersistent[0])+ @".mzML"));
+            if (File.Exists(convertedFile))
+            {
+                File.Delete(convertedFile);
+            }
+
             PrepareDocument("TestFeatureDetection.sky");
             PauseForScreenShot("Ready to start Wizard (File > Import > Feature Detection...)");
             // Launch the wizard
