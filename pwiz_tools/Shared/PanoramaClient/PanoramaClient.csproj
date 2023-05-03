@@ -84,7 +84,6 @@
     <Compile Include="FolderBrowser.Designer.cs">
       <DependentUpon>FolderBrowser.cs</DependentUpon>
     </Compile>
-    <Compile Include="PanoramaClient.cs" />
     <Compile Include="PanoramaFormUtil.cs" />
     <Compile Include="PanoramaUtil.cs" />
     <Compile Include="Program.cs" />
