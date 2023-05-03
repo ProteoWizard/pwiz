@@ -306,7 +306,7 @@ namespace pwiz.Skyline.Model.Results
                     var peptideNode = peptideFinder != null ? peptideFinder.FindPeptide(precursorMz) : null;
                     ProcessSrmSpectrum(
                         (float) dataSpectrum.RetentionTime.Value,
-                        peptideNode != null ? peptideNode.ModifiedTarget : null,
+                        peptideNode != null ? peptideNode.ChromatogramTarget : null,
                         peptideNode != null ? peptideNode.Color : PeptideDocNode.UNKNOWN_COLOR,
                         precursorMz,
                         filterIndex,
