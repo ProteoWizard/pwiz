@@ -269,7 +269,6 @@ namespace TestPerf
                 SkylineWindow.SequenceTree.Nodes[0].Nodes[3564].Nodes[0].Expand();
                 SkylineWindow.SequenceTree.SelectedNode = SkylineWindow.SequenceTree.Nodes[0].Nodes[3564].Nodes[0];
             });
-PauseTest();
             PauseForScreenShot("complete");
         }
 
