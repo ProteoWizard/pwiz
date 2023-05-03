@@ -581,7 +581,7 @@ namespace pwiz.PanoramaClient
         /// </summary>
         /// <param name="sender"></param>
         /// <param name="e"></param>
-        private void CheckBox1_CheckedChanged(object sender, EventArgs e)
+        private void ShowSkyCheckBox_CheckedChanged(object sender, EventArgs e)
         {
             if (!_restoring)
             {
@@ -603,7 +603,7 @@ namespace pwiz.PanoramaClient
         /// </summary>
         /// <param name="sender"></param>
         /// <param name="e"></param>
-        private void ComboBox1_SelectedIndexChanged(object sender, EventArgs e)
+        private void VersionOptions_SelectedIndexChanged(object sender, EventArgs e)
         {
             if (!_restoring)
             {

@@ -992,6 +992,8 @@ namespace pwiz.Skyline
                     if (!string.IsNullOrEmpty(downloadPath))
                     {
                         var size = dlg.FileSize;
+                        Settings.Default.FileExpansion = dlg.TreeState;
+                        Settings.Default.PanoramaSkyFiles = dlg.ShowingSky;
                         using (var longWaitDlg = new LongWaitDlg
                                {
                                    Text = "Downloading selected file",
@@ -1021,8 +1023,6 @@ namespace pwiz.Skyline
                         Settings.Default.LastFolderPath = panoramaClient.SelectedPath;
                     }
                 }
-                Settings.Default.FileExpansion = dlg.TreeState;
-                Settings.Default.PanoramaSkyFiles = dlg.ShowingSky;
                 Settings.Default.Save();
             }
             catch (Exception e)

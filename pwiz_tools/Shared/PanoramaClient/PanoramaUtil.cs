@@ -768,11 +768,10 @@ namespace pwiz.PanoramaClient
                 }
                 var downloaded = e.BytesReceived;
                 var message = TextUtil.LineSeparate(
-                    string.Format("Downloading {0}", fileName, downloadName),
+                    string.Format("Downloading {0}", fileName),
                     string.Empty,
                     GetDownloadedSize(downloaded, size > 0 ? (long)size : 0));
                 ProgressStatus = ProgressStatus.ChangeMessage(message);
-                ProgressStatus = ProgressStatus.ChangeMessage("Download progress: " + progressPercent + "% downloaded");
                 ProgressMonitor.UpdateProgress(ProgressStatus = ProgressStatus.ChangePercentComplete(progressPercent));
             };
             var downloadComplete = false;

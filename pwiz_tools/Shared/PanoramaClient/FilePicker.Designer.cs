@@ -95,7 +95,7 @@ namespace pwiz.PanoramaClient
             this.showSkyCheckBox.TabIndex = 8;
             this.showSkyCheckBox.Text = "View folders with Skyline files";
             this.showSkyCheckBox.UseVisualStyleBackColor = true;
-            this.showSkyCheckBox.CheckedChanged += new System.EventHandler(this.CheckBox1_CheckedChanged);
+            this.showSkyCheckBox.CheckedChanged += new System.EventHandler(this.ShowSkyCheckBox_CheckedChanged);
             // 
             // versionOptions
             // 
@@ -110,7 +110,7 @@ namespace pwiz.PanoramaClient
             this.versionOptions.Size = new System.Drawing.Size(138, 21);
             this.versionOptions.TabIndex = 10;
             this.versionOptions.Visible = false;
-            this.versionOptions.SelectedIndexChanged += new System.EventHandler(this.ComboBox1_SelectedIndexChanged);
+            this.versionOptions.SelectedIndexChanged += new System.EventHandler(this.VersionOptions_SelectedIndexChanged);
             // 
             // open
             // 
