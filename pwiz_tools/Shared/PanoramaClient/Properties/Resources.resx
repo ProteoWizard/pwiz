@@ -169,7 +169,4 @@
   <data name="PanoramaUtil_VerifyFolder_User__0__does_not_have_permissions_to_upload_to_the_Panorama_folder__1_" xml:space="preserve">
     <value>User {0} does not have permissions to upload to the Panorama folder {1}</value>
   </data>
-  <data name="Icojam-Blueberry-Basic-Arrow-up" type="System.Resources.ResXFileRef, System.Windows.Forms">
-    <value>..\Resources\Icojam-Blueberry-Basic-Arrow-up2.bmp;System.Drawing.Bitmap, System.Drawing, Version=4.0.0.0, Culture=neutral, PublicKeyToken=b03f5f7f11d50a3a</value>
-  </data>
 </root>

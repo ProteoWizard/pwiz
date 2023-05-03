@@ -132,7 +132,7 @@ namespace pwiz.SkylineTestFunctional
                 remoteDlg.FolderBrowser.SelectNode("Example Data");
                 remoteDlg.FolderBrowser.SelectNode("Chromatogram Library");
                 remoteDlg.TestCancel();
-                Assert.IsTrue(remoteDlg.FormClosed);
+                Assert.IsTrue(remoteDlg.FormHasClosed);
             });
             WaitForClosedForm(remoteDlg);
         }

@@ -258,7 +258,14 @@ namespace pwiz.PanoramaClient
             }
         }
 
-
+        /// <summary>
+        /// Given the name of a file, allows a user to select
+        /// which folder on their machine to download the file to
+        /// and returns the path of the selected folder
+        /// </summary>
+        /// <param name="fileName"></param>
+        /// <param name="lastPath"></param>
+        /// <returns></returns>
         public string SaveFile(string fileName, string lastPath)
         {
             var dlg = new FolderBrowserDialog
@@ -276,7 +283,17 @@ namespace pwiz.PanoramaClient
             return downloadPath;
         }
 
-        public void DownloadFile(string path, PanoramaServer server, string downloadName, IProgressMonitor pm, long size)
+        /// <summary>
+        /// Downloads a given file to a given folder path and shows the progress
+        /// of the download during downloading
+        /// </summary>
+        /// <param name="path"></param>
+        /// <param name="server"></param>
+        /// <param name="downloadName"></param>
+        /// <param name="pm"></param>
+        /// <param name="size"></param>
+        /// <param name="fileName"></param>
+        public void DownloadFile(string path, PanoramaServer server, string downloadName, IProgressMonitor pm, long size, string fileName)
         {
             ProgressMonitor = pm;
             ProgressStatus = new ProgressStatus("Downloading...");
@@ -288,9 +305,13 @@ namespace pwiz.PanoramaClient
                 {
                     progressPercent = (int)(e.BytesReceived * 100 / size);
                 }
-                ProgressStatus = ProgressStatus.ChangeMessage("Download progress: " + progressPercent + "% downloaded");
+                var downloaded = e.BytesReceived;
+                var message = TextUtil.LineSeparate(
+                    string.Format("Downloading {0}", fileName, downloadName),
+                    string.Empty,
+                    GetDownloadedSize(downloaded, size > 0 ? (long)size : 0));
+                ProgressStatus = ProgressStatus.ChangeMessage(message);
                 ProgressMonitor.UpdateProgress(ProgressStatus = ProgressStatus.ChangePercentComplete(progressPercent));
-
             };
             var downloadComplete = false;
             wc.DownloadFileCompleted += (s, e) =>
@@ -317,6 +338,25 @@ namespace pwiz.PanoramaClient
                     Success = false;
                 }
                 Thread.Sleep(100);
+            }
+        }
+
+        /// <summary>
+        /// Borrowed from SkypSupport.cs, displays download progress
+        /// </summary>
+        /// <param name="downloaded"></param>
+        /// <param name="fileSize"></param>
+        /// <returns></returns>
+        public static string GetDownloadedSize(long downloaded, long fileSize)
+        {
+            var formatProvider = new FileSizeFormatProvider();
+            if (fileSize > 0)
+            {
+                return string.Format(@"{0} / {1}", string.Format(formatProvider, @"{0:fs1}", downloaded), string.Format(formatProvider, @"{0:fs1}", fileSize));
+            }
+            else
+            {
+                return string.Format(formatProvider, @"{0:fs1}", downloaded);
             }
         }
     }

@@ -901,6 +901,14 @@ namespace pwiz.Skyline
             OpenFromPanorama();
         }
 
+        /// <summary>
+        /// Method used for testing server folder browser
+        /// </summary>
+        /// <param name="server"></param>
+        /// <param name="user"></param>
+        /// <param name="pass"></param>
+        /// <param name="folderJson"></param>
+        /// <param name="fileJson"></param>
         public void OpenFromPanorama(string server, string user, string pass, JToken folderJson, JToken fileJson = null)
         {
             var panoramaClient = new WebPanoramaClient(new Uri(server));
@@ -961,15 +969,14 @@ namespace pwiz.Skyline
             try
             {
                 using var dlg = new FilePicker(panoramaServers, false, state, true);
-                //dlg.InitializeDialog();
                 using (var longWaitDlg = new LongWaitDlg
                        {
-                           Text = Resources.SkypSupport_Open_Downloading_Skyline_Document_Archive,
+                           Text = "Loading remote server folders",
                        })
                 {
                     longWaitDlg.PerformWork(this, 0,
                         () => dlg.InitializeDialog());
-                    if (longWaitDlg.IsCanceled) //doesn't actually cancel the dialog
+                    if (longWaitDlg.IsCanceled)
                         return;
                 }
                 if (dlg.ShowDialog() != DialogResult.Cancel)
@@ -979,21 +986,21 @@ namespace pwiz.Skyline
                     {
                         folderPath = Settings.Default.LastFolderPath;
                     }
-                    var curServer = dlg._activeServer;
+                    var curServer = dlg.ActiveServer;
                     var panoramaClient = new WebPanoramaClient(curServer.URI);
 
-                    var downloadPath = panoramaClient.SaveFile(dlg._fileName, folderPath);
+                    var downloadPath = panoramaClient.SaveFile(dlg.FileName, folderPath);
                     if (!string.IsNullOrEmpty(downloadPath))
                     {
                         var size = dlg.FileSize;
                         using (var longWaitDlg = new LongWaitDlg
                                {
-                                   Text = Resources.SkypSupport_Open_Downloading_Skyline_Document_Archive,
+                                   Text = "Downloading selected file",
                                })
                         {
                             
                             longWaitDlg.PerformWork(this, 800,
-                                progressMonitor => panoramaClient.DownloadFile(downloadPath, curServer, dlg._fileUrl, progressMonitor, size));
+                                progressMonitor => panoramaClient.DownloadFile(downloadPath, curServer, dlg.FileUrl, progressMonitor, size, dlg.FileName));
                             if (!panoramaClient.Success)
                             {
                                 FileEx.SafeDelete(downloadPath, true);
@@ -1001,11 +1008,11 @@ namespace pwiz.Skyline
                             if (longWaitDlg.IsCanceled)
                                 return;
                         }
-                        if (dlg._fileName.EndsWith(SrmDocumentSharing.EXT) && !string.IsNullOrEmpty(downloadPath))
+                        if (dlg.FileName.EndsWith(SrmDocumentSharing.EXT) && !string.IsNullOrEmpty(downloadPath))
                         {
                             OpenSharedFile(downloadPath);
                         }
-                        else if (dlg._fileName.EndsWith(SrmDocument.EXT) && !string.IsNullOrEmpty(downloadPath))
+                        else if (dlg.FileName.EndsWith(SrmDocument.EXT) && !string.IsNullOrEmpty(downloadPath))
                         {
                             OpenFile(downloadPath);
                         }
@@ -1016,7 +1023,7 @@ namespace pwiz.Skyline
                     }
                 }
                 Settings.Default.FileExpansion = dlg.TreeState;
-                Settings.Default.PanoramaSkyFiles = dlg._showingSky;
+                Settings.Default.PanoramaSkyFiles = dlg.ShowingSky;
                 Settings.Default.Save();
             }
             catch (Exception e)

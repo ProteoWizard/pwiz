@@ -22,17 +22,20 @@ namespace pwiz.PanoramaClient
         public string Server;
         public string User;
         public string Pass;
-        public JToken FolderJson;
-        public void InitializeTreeView(PanoramaServer server, TreeView treeViewFolders, bool requireUploadPerms, bool showFiles, bool showSky)
+        public void InitializeTreeView(PanoramaServer server, List<KeyValuePair<PanoramaServer, JToken>> listServers)
         {
             IPanoramaClient panoramaClient = new WebPanoramaClient(server.URI);
-            FolderJson = panoramaClient.GetInfoForFolders(server, null);
-            var treeNode = new TreeNode(server.URI.ToString());
+            listServers.Add(new KeyValuePair<PanoramaServer, JToken>(server, panoramaClient.GetInfoForFolders(server, null)));
             Server = server.URI.ToString();
             User = server.Username;
             Pass = server.Password;
+        }
+
+        public void InitializeFolder(TreeView treeViewFolders, bool requireUploadPerms, bool showFiles, JToken folder, PanoramaServer server)
+        {
+            var treeNode = new TreeNode(server.URI.ToString());
             treeViewFolders.Invoke(new Action(() => treeViewFolders.Nodes.Add(treeNode)));
-            treeViewFolders.Invoke(new Action(() => AddChildContainers(treeNode, FolderJson, requireUploadPerms, showFiles)));
+            treeViewFolders.Invoke(new Action(() => AddChildContainers(treeNode, folder, requireUploadPerms, showFiles)));
         }
 
         public void InitializeTreeViewTest(PanoramaServer server, TreeView treeView, JToken folderJson)
