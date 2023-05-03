@@ -1841,7 +1841,7 @@ Checked uses single resolution for extraction width for hgher selectivity in com
     <value>Centroided &amp;data</value>
   </data>
   <data name="cbHardklorCentroided.ToolTip" xml:space="preserve">
-    <value>Hardklor needs to know whether data is centroided, or profile. If you are unsure, leave this unchecked and Skyline will attempt to determine this value by inspecting the converted mzML files.</value>
+    <value>Hardklör needs to know whether data is centroided, or profile. If you are unsure, leave this unchecked and Skyline will attempt to determine this value by inspecting the converted mzML files.</value>
   </data>
   <data name="&gt;&gt;cbHardklorCentroided.Name" xml:space="preserve">
     <value>cbHardklorCentroided</value>
@@ -1874,7 +1874,7 @@ Checked uses single resolution for extraction width for hgher selectivity in com
     <value>Si&amp;gnal to noise:</value>
   </data>
   <data name="lblHardklorSignalToNoise.ToolTip" xml:space="preserve">
-    <value>Hardklor filters spectra to remove peaks below this signal-to-noise ratio prior to finding features. The noise threshold is determined as described in the Hardklor manuscript.
+    <value>Hardklör filters spectra to remove peaks below this signal-to-noise ratio prior to finding features. The noise threshold is determined as described in the Hardklör manuscript.
 Setting this parameter to 1 turns on searches for non-covalently linked dimers (not cross-links). This will no worse than double search time and is only recommended for highly concentrated and purified samples.</value>
   </data>
   <data name="lblHardklorSignalToNoise.Visible" type="System.Boolean, mscorlib">
@@ -1947,7 +1947,7 @@ Setting this parameter to 1 turns on searches for non-covalently linked dimers (
     <value>17</value>
   </data>
   <data name="groupBoxHardklor.Text" xml:space="preserve">
-    <value>Hardklor search configuration</value>
+    <value>Hardklör search configuration</value>
   </data>
   <data name="&gt;&gt;groupBoxHardklor.Name" xml:space="preserve">
     <value>groupBoxHardklor</value>

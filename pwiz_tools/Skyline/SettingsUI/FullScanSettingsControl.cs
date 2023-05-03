@@ -28,6 +28,7 @@ using pwiz.Common.SystemUtil;
 using pwiz.Skyline.Alerts;
 using pwiz.Skyline.Controls;
 using pwiz.Skyline.FileUI.PeptideSearch;
+using pwiz.Skyline.Model.DdaSearch;
 using pwiz.Skyline.Model.DocSettings;
 using pwiz.Skyline.Model.Irt;
 using pwiz.Skyline.Model.Results;
@@ -94,6 +95,11 @@ namespace pwiz.Skyline.SettingsUI
                 // Set defaults
                 cbHardklorCentroided.Checked = false;
                 HardklorSignalToNoise = 3;
+                // Share some helpful tips
+                toolTip.SetToolTip(this.PrecursorChargesTextBox, string.Format(Resources.FullScanSettingsControl_InitializeFeatureDetectionUI_Hardklör_looks_for_isotope_envelopes_representing_charges_1__0___The_library_will_contain_only_ions_with_the_charges_listed_here_, HardklorSearchEngine.MaxCharge));
+                toolTip.SetToolTip(this.lblPrecursorCharges, string.Format(Resources.FullScanSettingsControl_InitializeFeatureDetectionUI_Hardklör_looks_for_isotope_envelopes_representing_charges_1__0___The_library_will_contain_only_ions_with_the_charges_listed_here_, HardklorSearchEngine.MaxCharge));
+                toolTip.SetToolTip(labelPrecursorAt, Resources.FullScanSettingsControl_InitializeFeatureDetectionUI_This_is_the_value_assumed_by_Hardklör__it_cannot_be_adjusted_);
+                toolTip.SetToolTip(this.textPrecursorAt, Resources.FullScanSettingsControl_InitializeFeatureDetectionUI_This_is_the_value_assumed_by_Hardklör__it_cannot_be_adjusted_);
             }
         }
 

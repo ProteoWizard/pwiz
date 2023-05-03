@@ -1438,7 +1438,7 @@ namespace pwiz.Skyline.Model.AuditLog {
         }
         
         /// <summary>
-        ///   Looks up a localized string similar to Hardklor.
+        ///   Looks up a localized string similar to Hardklör.
         /// </summary>
         public static string SearchEngine_Hardklor {
             get {

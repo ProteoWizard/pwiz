@@ -637,7 +637,7 @@
     <value>MS-GF+</value>
   </data>
   <data name="SearchEngine_Hardklor" xml:space="preserve">
-    <value>Hardklor</value>
+    <value>Hardklör</value>
   </data>
   <data name="SharedPeptides_AssignedToBestProtein" xml:space="preserve">
     <value>Assigned to the protein with the most peptides</value>

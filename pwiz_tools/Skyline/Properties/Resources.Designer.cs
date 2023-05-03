@@ -15039,7 +15039,28 @@ namespace pwiz.Skyline.Properties {
         }
         
         /// <summary>
-        ///   Looks up a localized string similar to Sets the MS type for Hardklor&apos;s FWHM calculation.
+        ///   Looks up a localized string similar to Hardklör looks for isotope envelopes representing charges 1-{0}. The resulting library will contain only ions with the charges listed here..
+        /// </summary>
+        public static string FullScanSettingsControl_InitializeFeatureDetectionUI_Hardklör_looks_for_isotope_envelopes_representing_charges_1__0___The_library_will_contain_only_ions_with_the_charges_listed_here_ {
+            get {
+                return ResourceManager.GetString("FullScanSettingsControl_InitializeFeatureDetectionUI_Hardklör_looks_for_isotope_e" +
+                        "nvelopes_representing_charges_1__0___The_library_will_contain_only_ions_with_the" +
+                        "_charges_listed_here_", resourceCulture);
+            }
+        }
+        
+        /// <summary>
+        ///   Looks up a localized string similar to This is the value assumed by Hardklör, it cannot be adjusted..
+        /// </summary>
+        public static string FullScanSettingsControl_InitializeFeatureDetectionUI_This_is_the_value_assumed_by_Hardklör__it_cannot_be_adjusted_ {
+            get {
+                return ResourceManager.GetString("FullScanSettingsControl_InitializeFeatureDetectionUI_This_is_the_value_assumed_by" +
+                        "_Hardklör__it_cannot_be_adjusted_", resourceCulture);
+            }
+        }
+        
+        /// <summary>
+        ///   Looks up a localized string similar to Sets the MS type for Hardklör&apos;s FWHM calculation.
         /// </summary>
         public static string FullScanSettingsControl_InitializeMs1FilterUI_Sets_the_MS_type_for_Hardklor_s_FWHM_calculation {
             get {

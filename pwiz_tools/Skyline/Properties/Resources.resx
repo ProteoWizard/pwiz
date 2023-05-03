@@ -11963,7 +11963,7 @@ If you do not have the original file, you may build the library with embedded sp
     <value>Feature Detection</value>
   </data>
   <data name="FullScanSettingsControl_InitializeMs1FilterUI_Sets_the_MS_type_for_Hardklor_s_FWHM_calculation" xml:space="preserve">
-    <value>Sets the MS type for Hardklor's FWHM calculation</value>
+    <value>Sets the MS type for Hardklör's FWHM calculation</value>
   </data>
   <data name="FullScanSettingsControl_Initialize_minutes_of_detected_features" xml:space="preserve">
     <value>minutes of detected features</value>
@@ -11989,5 +11989,11 @@ If you choose Disable, you can enable Auto-select later with the "Refine &gt; Ad
   </data>
   <data name="SkylineWindow_ImportMassList_Disable" xml:space="preserve">
     <value>&amp;Disable</value>
+  </data>
+  <data name="FullScanSettingsControl_InitializeFeatureDetectionUI_Hardklör_looks_for_isotope_envelopes_representing_charges_1__0___The_library_will_contain_only_ions_with_the_charges_listed_here_" xml:space="preserve">
+    <value>Hardklör looks for isotope envelopes representing charges 1-{0}. The resulting library will contain only ions with the charges listed here.</value>
+  </data>
+  <data name="FullScanSettingsControl_InitializeFeatureDetectionUI_This_is_the_value_assumed_by_Hardklör__it_cannot_be_adjusted_" xml:space="preserve">
+    <value>This is the value assumed by Hardklör, it cannot be adjusted.</value>
   </data>
 </root>

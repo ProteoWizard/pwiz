@@ -261,7 +261,7 @@ namespace TestPerf
 
             WaitForDocumentLoaded();
             RunUI(() => SkylineWindow.SaveDocument());
-            AssertEx.IsDocumentState(SkylineWindow.Document, null, 1, 9055, 9038, 27114);
+            AssertEx.IsDocumentState(SkylineWindow.Document, null, 1, 9011, 9011, 27033);
             RunUI(() =>
             {
                 SkylineWindow.SequenceTree.Nodes[0].Expand();
@@ -269,6 +269,7 @@ namespace TestPerf
                 SkylineWindow.SequenceTree.Nodes[0].Nodes[3564].Nodes[0].Expand();
                 SkylineWindow.SequenceTree.SelectedNode = SkylineWindow.SequenceTree.Nodes[0].Nodes[3564].Nodes[0];
             });
+PauseTest();
             PauseForScreenShot("complete");
         }
 

@@ -45,6 +45,7 @@ namespace pwiz.Skyline.Model.DdaSearch
         private Dictionary<MsDataFileUri, string> _inputsAndOutputs;
         private string _isotopesFilename;
         private string _paramsFilename;
+        public static int MaxCharge = 7; // Look for charge states up to and including this
 
         public HardklorSearchEngine(ImportPeptideSearch searchSettings)
         {
@@ -306,7 +307,7 @@ namespace pwiz.Skyline.Model.DdaSearch
                 $@"									#  Values are: Quick, FFT, Patterson, Senko, None",
                 $@"									#  If None is set, all charge states are assumed, slowing Hardklor",
                 $@"charge_min			=	1			#Lowest charge state allowed in the analysis. #MAY NEED UI IN FUTURE",
-                $@"charge_max			=	5			#Highest charge state allowed in the analysis. #MAY NEED UI IN FUTURE",
+                $@"charge_max			=	{MaxCharge}			#Highest charge state allowed in the analysis. #MAY NEED UI IN FUTURE",
                 $@"correlation			=	{_searchSettings.CutoffScore}		#Correlation threshold to accept a peptide feature. #NEED UI",
                 $@"averagine_mod		=	0			#Formula containing modifications to the averagine model.",
                 $@"									#  Read documentation carefully before using! 0=off",
