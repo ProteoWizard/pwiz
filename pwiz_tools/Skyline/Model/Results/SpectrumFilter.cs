@@ -281,7 +281,7 @@ namespace pwiz.Skyline.Model.Results
                             var ce = step.HasValue
                                 ? document.GetCollisionEnergy(nodePep, nodeGroup, null, step.Value)
                                 : (double?)null;
-                            var key = new PrecursorTextId(mz, step, ce, ionMobilityFilter, nodePep.ModifiedTarget, ChromExtractor.summed);
+                            var key = new PrecursorTextId(mz, step, ce, ionMobilityFilter, nodePep.ChromatogramTarget, ChromExtractor.summed);
 
                             if (!dictPrecursorMzToFilter.TryGetValue(key, out var filter))
                             {

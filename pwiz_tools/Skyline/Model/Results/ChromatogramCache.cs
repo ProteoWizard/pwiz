@@ -395,7 +395,7 @@ namespace pwiz.Skyline.Model.Results
             int textIdLen = entry.TextIdLen;
             if (nodePep.Peptide.IsCustomMolecule)
             {
-                if (EqualTextIdBytes(nodePep.CustomMolecule.ToSerializableString(), textIdIndex, textIdLen))
+                if (EqualTextIdBytes(nodePep.ChromatogramTarget.ToSerializableString(), textIdIndex, textIdLen))
                 {
                     return true;
                 }
