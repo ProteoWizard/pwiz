@@ -258,16 +258,17 @@ namespace pwiz.Skyline.FileUI.PeptideSearch
 
         private void LoadComboboxEntries()
         {
-            if (!ImportPeptideSearch.IsFeatureDetection)
+            if (ImportPeptideSearch.IsFeatureDetection)
             {
-                LoadFragmentIonEntries();
-                LoadMs2AnalyzerEntries();
-
-                var modSettings = _documentContainer.Document.Settings.PeptideSettings.Modifications;
-                cbMaxVariableMods.SelectedItem = modSettings.MaxVariableMods.ToString(LocalizationHelper.CurrentCulture);
-                if (cbMaxVariableMods.SelectedIndex < 0)
-                    cbMaxVariableMods.SelectedIndex = 2; // default max = 2
+                return;
             }
+            LoadFragmentIonEntries();
+            LoadMs2AnalyzerEntries();
+
+            var modSettings = _documentContainer.Document.Settings.PeptideSettings.Modifications;
+            cbMaxVariableMods.SelectedItem = modSettings.MaxVariableMods.ToString(LocalizationHelper.CurrentCulture);
+            if (cbMaxVariableMods.SelectedIndex < 0)
+                cbMaxVariableMods.SelectedIndex = 2; // default max = 2
         }
 
         private void LoadMassUnitEntries()
