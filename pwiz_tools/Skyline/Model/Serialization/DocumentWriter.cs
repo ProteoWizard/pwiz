@@ -786,22 +786,19 @@ namespace pwiz.Skyline.Model.Serialization
 
             if (nodeTransition.HasResults)
             {
-                if (nodeTransition.HasResults)
+                if (UseCompactFormat())
                 {
-                    if (UseCompactFormat())
-                    {
-                        var protoResults = new SkylineDocumentProto.Types.TransitionResults();
-                        protoResults.Peaks.AddRange(nodeTransition.GetTransitionPeakProtos(Settings.MeasuredResults));
-                        byte[] bytes = protoResults.ToByteArray();
-                        writer.WriteStartElement(EL.results_data);
-                        writer.WriteBase64(bytes, 0, bytes.Length);
-                        writer.WriteEndElement();
-                    }
-                    else
-                    {
-                        WriteResults(writer, Settings, nodeTransition.Results,
-                            EL.transition_results, EL.transition_peak, WriteTransitionChromInfo);
-                    }
+                    var protoResults = new SkylineDocumentProto.Types.TransitionResults();
+                    protoResults.Peaks.AddRange(nodeTransition.GetTransitionPeakProtos(Settings.MeasuredResults));
+                    byte[] bytes = protoResults.ToByteArray();
+                    writer.WriteStartElement(EL.results_data);
+                    writer.WriteBase64(bytes, 0, bytes.Length);
+                    writer.WriteEndElement();
+                }
+                else
+                {
+                    WriteResults(writer, Settings, nodeTransition.Results,
+                        EL.transition_results, EL.transition_peak, WriteTransitionChromInfo);
                 }
             }
 
@@ -888,6 +885,7 @@ namespace pwiz.Skyline.Model.Serialization
                 writer.WriteAttribute(ATTR.retention_time, chromInfo.RetentionTime);
                 writer.WriteAttribute(ATTR.start_time, chromInfo.StartRetentionTime);
                 writer.WriteAttribute(ATTR.end_time, chromInfo.EndRetentionTime);
+                writer.WriteAttributeNullable(ATTR.ccs, chromInfo.IonMobility.CollisionalCrossSectionSqA);
                 writer.WriteAttributeNullable(ATTR.ion_mobility, chromInfo.IonMobility.IonMobility.Mobility);
                 writer.WriteAttributeNullable(ATTR.ion_mobility_window, chromInfo.IonMobility.IonMobilityExtractionWindowWidth);
                 writer.WriteAttribute(ATTR.area, chromInfo.Area);
