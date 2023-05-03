@@ -166,21 +166,12 @@ namespace pwiz.SkylineTestFunctional
                 Assert.AreEqual(8, peptideCount);
                 Assert.AreEqual(8, precursorCount);
                 Assert.AreEqual(72, transitionCount);
-                //emptyProteinsDlg.CancelDialog();
             });
-            //PauseTest();
+
             using (new WaitDocumentChange(null, true))
             {
                 OkDialog(emptyProteinsDlg, emptyProteinsDlg.OkDialog);
             }
-            //WaitForDocumentLoaded();
-
-            //RunUI(importPeptideSearchDlg.CancelDialog);
-            //WaitForClosedForm(importPeptideSearchDlg);
-            //RunUI(searchDlg.CancelDialog);
-            //WaitForClosedForm(searchDlg);
-
-            //PauseTest();
 
             RunUI(() => SkylineWindow.SaveDocument());
         }

@@ -20,7 +20,6 @@ using System;
 using System.Collections.Generic;
 using System.Threading;
 using System.Windows.Forms;
-using MSAmanda.Utils;
 using pwiz.Common.Collections;
 using pwiz.Common.SystemUtil;
 using pwiz.Skyline.Alerts;
@@ -132,11 +131,6 @@ namespace pwiz.Skyline.FileUI.PeptideSearch
             var newEntry = new ProgressEntry(DateTime.Now, message);
             _progressTextItems.Add(newEntry);
             txtSearchProgress.AppendLineWithAutoScroll($@"{newEntry.ToString(showTimestampsCheckbox.Checked)}{Environment.NewLine}");
-        }
-
-        private InstrumentSetting GenerateIntrumentSettings()
-        {
-            return new InstrumentSetting();
         }
 
         protected CancellationTokenSource _cancelToken;
