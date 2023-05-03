@@ -77,8 +77,8 @@ namespace pwiz.SkylineTestFunctional
                 searchDlg.MaxMz = 705;
                 searchDlg.ImportFastaControl.MaxMissedCleavages = 2;
 
-                searchDlg.SetAdditionalSetting("PercolatorTrainingFDR", "0.1");
-                searchDlg.SetAdditionalSetting("PercolatorThreshold", "0.1");
+                searchDlg.SetAdditionalSetting("PercolatorTrainingFDR", "0.2");
+                searchDlg.SetAdditionalSetting("PercolatorThreshold", "0.2");
                 searchDlg.SetAdditionalSetting("MinNumOfQuantitativePeaks", "0");
                 searchDlg.SetAdditionalSetting("NumberOfQuantitativePeaks", "0");
             });

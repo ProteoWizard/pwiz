@@ -645,21 +645,21 @@ namespace pwiz.Skyline.FileUI.PeptideSearch
             txtSearchProgress.Text = string.Empty;
             _progressTextItems.Clear();
             btnCancel.Enabled = true;
-            cancelToken = new CancellationTokenSource();
+            _cancelToken = new CancellationTokenSource();
             IProgressStatus status = new ProgressStatus();
             progressBar.Visible = true;
             bool success = true;
 
-            if (!cancelToken.IsCancellationRequested)
+            if (!_cancelToken.IsCancellationRequested)
             {
                 UpdateSearchEngineProgress(status.ChangeMessage(Resources.DDASearchControl_SearchProgress_Starting_search));
 
-                t = Task<bool>.Factory.StartNew(() => Search(Settings, cancelToken, status),
-                    cancelToken.Token);
+                var t = Task<bool>.Factory.StartNew(() => Search(Settings, _cancelToken, status),
+                    _cancelToken.Token);
                 await t;
                 success = t.Result;
 
-                if (cancelToken.IsCancellationRequested)
+                if (_cancelToken.IsCancellationRequested)
                 {
                     UpdateSearchEngineProgress(status.ChangeMessage(Resources.DDASearchControl_SearchProgress_Search_canceled));
                     progressBar.Visible = false;

@@ -44,7 +44,7 @@ namespace TestPerf
     {
         private AnalysisValues _analysisValues;
 
-        [TestMethod, NoParallelTesting]
+        [TestMethod, NoParallelTesting(TestExclusionReason.RESOURCE_INTENSIVE)]
         public void TestEncyclopeDiaSearchTutorial()
         {
             _analysisValues = new AnalysisValues
@@ -82,13 +82,9 @@ namespace TestPerf
             RunTest();
         }
 
-        [TestMethod, NoParallelTesting, Timeout(36000000)] // 10 hours
+        [TestMethod, NoParallelTesting(TestExclusionReason.RESOURCE_INTENSIVE), NoNightlyTesting(TestExclusionReason.EXCESSIVE_TIME), Timeout(36000000)] // 10 hours
         public void TestEncyclopeDiaSearchTutorialFullFileset()
         {
-            // do not run full filesets for nightly tests
-            if (Program.SkylineOffscreen)
-                return;
-
             _analysisValues = new AnalysisValues
             {
                 //IsWholeProteome = true,
@@ -280,7 +276,6 @@ namespace TestPerf
             // now on Import Peptide Search wizard
             var importPeptideSearchDlg = ShowDialog<ImportPeptideSearchDlg>(searchDlg.NextPage);
             WaitForDocumentLoaded();
-            Console.WriteLine(SkylineWindow.Document.AuditLog.AuditLogEntries.EnExtraInfo);
 
             // starts on chromatogram page because we're using existing library
             RunUI(() =>

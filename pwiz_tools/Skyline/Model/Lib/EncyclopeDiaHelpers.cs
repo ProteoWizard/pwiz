@@ -147,12 +147,14 @@ namespace pwiz.Skyline.Model.Lib
             if (!EnsureRequiredFilesDownloaded(FilesToDownload, progressMonitor))
                 throw new InvalidOperationException(Resources.EncyclopeDiaHelpers_ConvertFastaToPrositInputCsv_could_not_find_EncyclopeDia);
 
+            using var tmpTmp = new TemporaryEnvironmentVariable(@"TMP", JAVA_TMPDIR_PATH);
+
             long javaMaxHeapMB = Math.Min(4 * 1024L * 1024 * 1024, MemoryInfo.TotalBytes / 2) / 1024 / 1024;
             const string csvToLibraryClasspath = "edu.washington.gs.maccoss.encyclopedia.cli.ConvertFastaToPrositCSV";
 
             var pr = new ProcessRunner();
             var psi = new ProcessStartInfo(Java8DownloadInfo.JavaBinary,
-                $" -Xmx{javaMaxHeapMB}M -cp {EncyclopeDiaBinary.Quote()} {csvToLibraryClasspath} {LOCALIZATION_PARAMS} -i {fastaFilepath.Quote()} -o {prositCsvFilepath.Quote()} {config}")
+                $" -Xmx{javaMaxHeapMB}M -cp {EncyclopeDiaBinary.Quote()} {csvToLibraryClasspath} {LOCALIZATION_PARAMS} {JAVA_TMPDIR} -i {fastaFilepath.Quote()} -o {prositCsvFilepath.Quote()} {config}")
             {
                 CreateNoWindow = true,
                 UseShellExecute = false
@@ -162,7 +164,7 @@ namespace pwiz.Skyline.Model.Lib
             if (progressMonitor.UpdateProgress(status) == UpdateProgressResponse.cancel)
                 return;
 
-            pr.Run(psi, null, progressMonitor, ref status, null, ProcessPriorityClass.BelowNormal, IsGoodEncyclopeDiaOutput, false);
+            pr.Run(psi, null, progressMonitor, ref status, null, ProcessPriorityClass.BelowNormal, true, IsGoodEncyclopeDiaOutput, false);
         }
 
         public static void ConvertPrositOutputToDlib(string prositBlibFilepath, string fastaFilepath,
@@ -171,12 +173,14 @@ namespace pwiz.Skyline.Model.Lib
             if (!EnsureRequiredFilesDownloaded(FilesToDownload, progressMonitor))
                 throw new InvalidOperationException(Resources.EncyclopeDiaHelpers_ConvertFastaToPrositInputCsv_could_not_find_EncyclopeDia);
 
+            using var tmpTmp = new TemporaryEnvironmentVariable(@"TMP", JAVA_TMPDIR_PATH);
+
             long javaMaxHeapMB = Math.Min(12 * 1024L * 1024 * 1024, MemoryInfo.TotalBytes / 2) / 1024 / 1024;
             const string csvToLibraryClasspath = "edu.washington.gs.maccoss.encyclopedia.cli.ConvertBLIBToLibrary";
 
             var pr = new ProcessRunner();
             var psi = new ProcessStartInfo(Java8DownloadInfo.JavaBinary,
-                $" -Xmx{javaMaxHeapMB}M -cp {EncyclopeDiaBinary.Quote()} {csvToLibraryClasspath} {LOCALIZATION_PARAMS} -i {prositBlibFilepath.Quote()} -f {fastaFilepath.Quote()} -o {encyclopeDiaDlibFilepath.Quote()}")
+                $" -Xmx{javaMaxHeapMB}M -cp {EncyclopeDiaBinary.Quote()} {csvToLibraryClasspath} {LOCALIZATION_PARAMS} {JAVA_TMPDIR} -i {prositBlibFilepath.Quote()} -f {fastaFilepath.Quote()} -o {encyclopeDiaDlibFilepath.Quote()}")
             {
                 CreateNoWindow = true,
                 UseShellExecute = false
@@ -186,7 +190,7 @@ namespace pwiz.Skyline.Model.Lib
             if (progressMonitor.UpdateProgress(status) == UpdateProgressResponse.cancel)
                 return;
 
-            pr.Run(psi, null, progressMonitor, ref status, null, ProcessPriorityClass.BelowNormal, IsGoodEncyclopeDiaOutput, false);
+            pr.Run(psi, null, progressMonitor, ref status, null, ProcessPriorityClass.BelowNormal, true, IsGoodEncyclopeDiaOutput, false);
         }
 
         public static void GenerateChromatogramLibrary(string encyclopeDiaDlibInputFilepath,
@@ -236,7 +240,7 @@ namespace pwiz.Skyline.Model.Lib
 
             try
             {
-                pr.Run(psi, null, progressMonitor, ref status, null, ProcessPriorityClass.BelowNormal, IsGoodEncyclopeDiaOutput, false);
+                pr.Run(psi, null, progressMonitor, ref status, null, ProcessPriorityClass.BelowNormal, false, IsGoodEncyclopeDiaOutput, false);
             }
             catch (IOException e)
             {
@@ -513,12 +517,20 @@ namespace pwiz.Skyline.Model.Lib
 
         private const string LOCALIZATION_PARAMS = "-Duser.language=en-US -Duser.region=US";
 
+        // EncyclopeDia and its embedded Percolator do not behave well with paths with spaces and/or Unicode and/or symbols that need escaping
+        // TODO(MattC/BrianS): update EncyclopeDia to fix this issue
+        private static string JAVA_TMPDIR_PATH => Path.Combine(Environment.GetEnvironmentVariable("SystemRoot")!, @"Temp");
+
+        private static string JAVA_TMPDIR => $@"-Djava.io.tmpdir={JAVA_TMPDIR_PATH}";
+
         private static void GenerateLibrary(string encyclopeDiaLibInputFilepath,
             string encyclopeDiaElibOutputFilepath, string fastaFilepath, IEnumerable<MsDataFileUri> diaDataFiles,
             IProgressMonitor progressMonitor, ref IProgressStatus status, EncyclopeDiaConfig config, bool quantLibrary)
         {
             if (!EnsureRequiredFilesDownloaded(FilesToDownload, progressMonitor))
                 throw new InvalidOperationException(Resources.EncyclopeDiaHelpers_ConvertFastaToPrositInputCsv_could_not_find_EncyclopeDia);
+
+            using var tmpTmp = new TemporaryEnvironmentVariable(@"TMP", JAVA_TMPDIR_PATH);
 
             long javaMaxHeapMB = Math.Min(12 * 1024L * 1024 * 1024, MemoryInfo.TotalBytes / 2) / 1024 / 1024;
             string diaDataPath = null;// = Path.GetDirectoryName(encyclopeDiaElibOutputFilepath);
@@ -547,12 +559,12 @@ namespace pwiz.Skyline.Model.Lib
                 ++step;
                 var pr = new ProcessRunner();
                 var psi = new ProcessStartInfo(Java8DownloadInfo.JavaBinary,
-                    $" -Xmx{javaMaxHeapMB}M -jar {EncyclopeDiaBinary.Quote()} {LOCALIZATION_PARAMS} {extraParams} -i {diaDataFilepath.Quote()} -f {fastaFilepath.Quote()} -l {encyclopeDiaLibInputFilepath.Quote()}")
+                    $" -Xmx{javaMaxHeapMB}M -jar {EncyclopeDiaBinary.Quote()} {LOCALIZATION_PARAMS} {JAVA_TMPDIR} {extraParams} -i {diaDataFilepath.Quote()} -f {fastaFilepath.Quote()} -l {encyclopeDiaLibInputFilepath.Quote()}")
                 {
                     CreateNoWindow = true,
                     UseShellExecute = false
                 };
-                pr.Run(psi, null, progressMonitor, ref status, null, ProcessPriorityClass.BelowNormal, IsGoodEncyclopeDiaOutput, false);
+                pr.Run(psi, null, progressMonitor, ref status, null, ProcessPriorityClass.BelowNormal, true, IsGoodEncyclopeDiaOutput, false);
             }
 
             // move the .mzML.*.txt files to .dia.*.txt because it won't merge with them named as mzML?
@@ -579,12 +591,12 @@ namespace pwiz.Skyline.Model.Lib
 
             var prMerge = new ProcessRunner();
             var psiMerge = new ProcessStartInfo(Java8DownloadInfo.JavaBinary,
-                $" -Xmx{javaMaxHeapMB}M -jar {EncyclopeDiaBinary.Quote()} {LOCALIZATION_PARAMS} {extraParams} -i {diaDataPath.Quote()} -libexport -a {aParam} -o {encyclopeDiaElibOutputFilepath.Quote()} -f {fastaFilepath.Quote()} -l {encyclopeDiaLibInputFilepath.Quote()}")
+                $" -Xmx{javaMaxHeapMB}M -jar {EncyclopeDiaBinary.Quote()} {LOCALIZATION_PARAMS} {JAVA_TMPDIR} {extraParams} -i {diaDataPath.Quote()} -libexport -a {aParam} -o {encyclopeDiaElibOutputFilepath.Quote()} -f {fastaFilepath.Quote()} -l {encyclopeDiaLibInputFilepath.Quote()}")
             {
                 CreateNoWindow = true,
                 UseShellExecute = false
             };
-            prMerge.Run(psiMerge, null, progressMonitor, ref status, null, ProcessPriorityClass.BelowNormal, IsGoodEncyclopeDiaOutput, false);
+            prMerge.Run(psiMerge, null, progressMonitor, ref status, null, ProcessPriorityClass.BelowNormal, true, IsGoodEncyclopeDiaOutput, false);
 
             status = status.ChangePercentComplete(100);
             progressMonitor.UpdateProgress(status);

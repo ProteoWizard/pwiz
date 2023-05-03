@@ -18,12 +18,10 @@
  */
 using System;
 using System.Collections.Generic;
-using System.Text.RegularExpressions;
 using System.Threading;
-using System.Threading.Tasks;
 using System.Windows.Forms;
+using MSAmanda.Utils;
 using pwiz.Common.Collections;
-using pwiz.Common.Controls;
 using pwiz.Common.SystemUtil;
 using pwiz.Skyline.Alerts;
 using pwiz.Skyline.Properties;
@@ -54,11 +52,8 @@ namespace pwiz.Skyline.FileUI.PeptideSearch
 
             public string ToString(bool showTimestamp)
             {
-                if (!showTimestamp)
-                    return Message;
-                string stripExistingTimestamp = Regex.Replace(Message, @"\[.*\]\s*(.*)", @"$1");
                 // ReSharper disable LocalizableElement
-                return $"[{Timestamp.ToString("yyyy/MM/dd HH:mm:ss")}]  {stripExistingTimestamp}";
+                return showTimestamp ? $"[{Timestamp.ToString("yyyy/MM/dd HH:mm:ss")}]  {Message}" : Message;
                 // ReSharper restore LocalizableElement
             }
         }
@@ -69,8 +64,6 @@ namespace pwiz.Skyline.FileUI.PeptideSearch
         {
             InitializeComponent();
             UpdateUI = UpdateSearchEngineProgress;
-            panelTextBoxBorder.BackColor = txtSearchProgress.BackColor;
-            progressBar.DisplayStyle = ProgressBarDisplayText.CustomText;
         }
 
         /// <summary>
@@ -80,7 +73,7 @@ namespace pwiz.Skyline.FileUI.PeptideSearch
         /// <param name="disposing">true if managed resources should be disposed; otherwise, false.</param>
         protected override void Dispose(bool disposing)
         {
-            cancelToken?.Cancel();
+            _cancelToken?.Cancel();
 
             if (disposing && (components != null))
             {
@@ -141,10 +134,42 @@ namespace pwiz.Skyline.FileUI.PeptideSearch
             txtSearchProgress.AppendLineWithAutoScroll($@"{newEntry.ToString(showTimestampsCheckbox.Checked)}{Environment.NewLine}");
         }
 
-        protected CancellationTokenSource cancelToken;
-        protected Task<bool> t;
+        private InstrumentSetting GenerateIntrumentSettings()
+        {
+            return new InstrumentSetting();
+        }
+
+        protected CancellationTokenSource _cancelToken;
 
         public abstract void RunSearch();
+
+        protected IProgressStatus UpdateSearchEngineProgressMilestone(IProgressStatus status,
+            bool success, int segmentsComplete, string cancelledMessage, string failedMessage, string succeededMessage)
+        {
+            if (_cancelToken.IsCancellationRequested)
+            {
+                UpdateSearchEngineProgress(status = status.ChangeMessage(cancelledMessage));
+                progressBar.Visible = false;
+            }
+            else if (!success)
+            {
+                UpdateSearchEngineProgress(status = status.ChangeMessage(failedMessage));
+                Cancel();
+            }
+            else
+            {
+                if (segmentsComplete == status.SegmentCount)
+                    status = status.ChangeSegments(0, 0);
+
+                status = status.ChangeMessage(succeededMessage).Complete();
+                UpdateSearchEngineProgress(status);
+
+                if (status.SegmentCount > segmentsComplete)
+                    status = status.ChangeSegments(segmentsComplete, status.SegmentCount);
+            }
+
+            return status;
+        }
 
         protected void SearchEngine_MessageNotificationEvent(object sender, IProgressStatus status)
         {
@@ -156,7 +181,7 @@ namespace pwiz.Skyline.FileUI.PeptideSearch
 
         public void Cancel()
         {
-            cancelToken?.Cancel();
+            _cancelToken?.Cancel();
             btnCancel.Enabled = false;
         }
 
@@ -170,7 +195,7 @@ namespace pwiz.Skyline.FileUI.PeptideSearch
             RefreshProgressTextbox();
         }
 
-        protected void RefreshProgressTextbox()
+        private void RefreshProgressTextbox()
         {
             txtSearchProgress.Clear();
             foreach (var entry in _progressTextItems)
@@ -180,7 +205,7 @@ namespace pwiz.Skyline.FileUI.PeptideSearch
         public string LogText => txtSearchProgress.Text;
 
         public bool HasUI => true;
-        public bool IsCanceled => cancelToken.IsCancellationRequested;
+        public bool IsCanceled => _cancelToken.IsCancellationRequested;
 
         /// progress updates from AbstractDdaConverter (should be prefixed by the file currently being processed)
         public UpdateProgressResponse UpdateProgress(IProgressStatus status)

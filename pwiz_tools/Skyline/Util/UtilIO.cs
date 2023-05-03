@@ -1358,6 +1358,26 @@ namespace pwiz.Skyline.Util
         }
     }
 
+    public class TemporaryEnvironmentVariable : IDisposable
+    {
+        public TemporaryEnvironmentVariable(string name, string newValue)
+        {
+            Name = name;
+            OldValue = Environment.GetEnvironmentVariable(name);
+            NewValue = newValue;
+            Environment.SetEnvironmentVariable(name, newValue);
+        }
+
+        public string Name { get; }
+        public string OldValue { get; }
+        public string NewValue { get; }
+
+        public void Dispose()
+        {
+            Environment.SetEnvironmentVariable(Name, OldValue);
+        }
+    }
+
     public static class FastRead
     {
         /// <summary>

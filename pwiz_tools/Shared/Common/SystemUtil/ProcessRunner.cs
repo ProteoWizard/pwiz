@@ -33,7 +33,8 @@ namespace pwiz.Common.SystemUtil
         void Run(ProcessStartInfo psi, string stdin, IProgressMonitor progress, ref IProgressStatus status,
             ProcessPriorityClass priorityClass = ProcessPriorityClass.Normal, bool forceTempfilesCleanup = false);
         void Run(ProcessStartInfo psi, string stdin, IProgressMonitor progress, ref IProgressStatus status,
-                 TextWriter writer, ProcessPriorityClass priorityClass = ProcessPriorityClass.Normal, bool forceTempfilesCleanup = false,
+                 TextWriter writer, ProcessPriorityClass priorityClass = ProcessPriorityClass.Normal,
+                 bool forceTempfilesCleanup = false,
                  Func<string, int, bool> outputAndExitCodeAreGoodFunc = null,
                  bool updateProgressPercentage = true);
     }
@@ -68,9 +69,10 @@ namespace pwiz.Common.SystemUtil
         }
 
         public void Run(ProcessStartInfo psi, string stdin, IProgressMonitor progress, ref IProgressStatus status, TextWriter writer,
-            ProcessPriorityClass priorityClass = ProcessPriorityClass.Normal, bool forceTempfilesCleanup = false,
-                 Func<string, int, bool> outputAndExitCodeAreGoodFunc = null,
-                 bool updateProgressPercentage = true)
+            ProcessPriorityClass priorityClass = ProcessPriorityClass.Normal,
+            bool forceTempfilesCleanup = false,
+            Func<string, int, bool> outputAndExitCodeAreGoodFunc = null,
+            bool updateProgressPercentage = true)
         {
             // Make sure required streams are redirected.
             psi.RedirectStandardOutput = true;
@@ -247,16 +249,12 @@ namespace pwiz.Common.SystemUtil
         private string SetTmpDirForCleanup(ProcessStartInfo psi)
         {
             string tmpDirForCleanup = null;
-            
+
             if (psi.UseShellExecute)
             {
                 _messageLog.Add(@"warning: UseShellExecute is set, cannot change environment for tempfile cleanup");
             }
-
-            public void Run(ProcessStartInfo psi, string stdin, IProgressMonitor progress, ref IProgressStatus status, TextWriter writer,
-                ProcessPriorityClass priorityClass = ProcessPriorityClass.Normal,
-                Func<string, int, bool> outputAndExitCodeAreGoodFunc = null,
-                bool updateProgressPercentage = true)
+            else
             {
                 try
                 {
