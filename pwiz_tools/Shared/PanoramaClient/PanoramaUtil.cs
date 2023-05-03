@@ -132,7 +132,7 @@ namespace pwiz.PanoramaClient
                     if (response.StatusCode != HttpStatusCode.OK)
                     {
                         return new UserState(UserStateEnum.nonvalid,
-                            string.Format("Could not authenticate user. Response received from server: {0} {1}",
+                            string.Format(Resources.PanoramaUtil_EnsureLogin_Could_not_authenticate_user__Response_received_from_server___0___1_,
                                 response.StatusCode, response.StatusDescription),
                             requestUri);
                     }
@@ -145,7 +145,7 @@ namespace pwiz.PanoramaClient
                     else if (jsonResponse == null)
                     {
                         return new UserState(UserStateEnum.unknown,
-                            string.Format("Server did not return a valid JSON response. {0} is not a Panorama server.", pServer.URI),
+                            string.Format(Resources.PanoramaUtil_EnsureLogin_Server_did_not_return_a_valid_JSON_response___0__is_not_a_Panorama_server_, pServer.URI),
                             requestUri);
                     }
                     else
@@ -153,7 +153,7 @@ namespace pwiz.PanoramaClient
                         var jsonText = jsonResponse.ToString(Formatting.None);
                         jsonText = jsonText.Replace(@"{", @"{{"); // escape curly braces
                         return new UserState(UserStateEnum.unknown,
-                            string.Format("Unexpected JSON response from the server: {0}", jsonText),
+                            string.Format(Resources.PanoramaUtil_EnsureLogin_Unexpected_JSON_response_from_the_server___0_, jsonText),
                             requestUri);
                     }
                 }

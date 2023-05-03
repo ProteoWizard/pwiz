@@ -119,6 +119,35 @@ namespace pwiz.PanoramaClient.Properties {
         }
         
         /// <summary>
+        ///   Looks up a localized string similar to Could not authenticate user. Response received from server: {0} {1}.
+        /// </summary>
+        public static string PanoramaUtil_EnsureLogin_Could_not_authenticate_user__Response_received_from_server___0___1_ {
+            get {
+                return ResourceManager.GetString("PanoramaUtil_EnsureLogin_Could_not_authenticate_user__Response_received_from_serv" +
+                        "er___0___1_", resourceCulture);
+            }
+        }
+        
+        /// <summary>
+        ///   Looks up a localized string similar to Server did not return a valid JSON response. {0} is not a Panorama server..
+        /// </summary>
+        public static string PanoramaUtil_EnsureLogin_Server_did_not_return_a_valid_JSON_response___0__is_not_a_Panorama_server_ {
+            get {
+                return ResourceManager.GetString("PanoramaUtil_EnsureLogin_Server_did_not_return_a_valid_JSON_response___0__is_not_" +
+                        "a_Panorama_server_", resourceCulture);
+            }
+        }
+        
+        /// <summary>
+        ///   Looks up a localized string similar to Unexpected JSON response from the server: {0}.
+        /// </summary>
+        public static string PanoramaUtil_EnsureLogin_Unexpected_JSON_response_from_the_server___0_ {
+            get {
+                return ResourceManager.GetString("PanoramaUtil_EnsureLogin_Unexpected_JSON_response_from_the_server___0_", resourceCulture);
+            }
+        }
+        
+        /// <summary>
         ///   Looks up a localized string similar to {0} is not a Panorama folder.
         /// </summary>
         public static string PanoramaUtil_VerifyFolder__0__is_not_a_Panorama_folder {
