@@ -316,7 +316,9 @@ namespace TestRunnerLib
                     Log("[WARNING] Exception thrown when creating memory dump: {0}\r\n{1}\r\n", ex.InnerException?.Message ?? ex.Message, ex.InnerException?.StackTrace ?? ex.StackTrace);
                 }
             }
-                
+
+            string tmpTestDir = null; // If non-null, we've put temp files in an elaborately named temp directory, so delete it when done
+
             try
             {
                 // Create test class.
@@ -335,10 +337,6 @@ namespace TestRunnerLib
                     Environment.SetEnvironmentVariable(@"SKYLINE_TESTER_PARALLEL_CLIENT_ID", ParallelClientId); // Accessed in pwiz_tools\Skyline\Util\Util.cs
                 }
 
-                // Set the TMP file path to something peculiar - helps guarantee support for
-                // unusual user names since temp file path is usually in the user directory
-                var tmpTestDir = SetTMP(test);
-
                 if (test.SetTestContext != null)
                 {
                     var context = new object[] { TestContext };
@@ -349,15 +347,25 @@ namespace TestRunnerLib
                 LocalizationHelper.CurrentCulture = LocalizationHelper.CurrentUICulture = Language;
                 LocalizationHelper.InitThread();
 
+                // Tests in Test.DLL normally don't create files in TMP, so don't mess around with temp dir creation for those
+                var assemblyName = test.TestClassType?.Assembly.ManifestModule.Name;
+                if (!Equals(assemblyName, "Test.dll"))
+                {
+                    // Set the TMP file path to something peculiar - helps guarantee support for
+                    // unusual user names since temp file path is usually in the user directory
+                    // Also helps detect 3rd party tools that leave temp files behind
+                    tmpTestDir = SetTMP(test);
+                    CleanUpTestDir(tmpTestDir, false);   // Attempt to cleanup first, in case something was left behind by a failing test
+                }
+
                 // Run the test and time it.
-                CleanUpTestDir(tmpTestDir, false);   // Attempt to cleanup first, in case something was left behind by a failing test
                 if (test.TestInitialize != null)
                     test.TestInitialize.Invoke(testObject, null);
 
                 if (CheckCrtLeaks > 0)
                 {
                     // TODO: CrtDebugHeap class used to be provided by Crawdad.dll
-                    // If we ever want to enable this funcationality again, we need to find another .dll
+                    // If we ever want to enable this functionality again, we need to find another .dll
                     // to put this in.
                     //CrtDebugHeap.Checkpoint();
                 }
@@ -372,11 +380,11 @@ namespace TestRunnerLib
                 if (test.TestCleanup != null)
                     test.TestCleanup.Invoke(testObject, null);
 
-                // If everything is supposed to be cleaned up, then check for any left over files
+                // Check for any left over files
                 var allEntries = CleanUpTestDir(tmpTestDir, true);
                 if (allEntries.Count > 0)
                 {
-                    allEntries.Insert(0, string.Format("The test {0} left these files behind:", test.TestMethod.Name));
+                    allEntries.Insert(0, string.Format("The test {0} left these temp files behind:", test.TestMethod.Name));
                     throw new IOException(string.Join("\r\n", allEntries));
                 }
             }
@@ -386,15 +394,44 @@ namespace TestRunnerLib
             }
             stopwatch.Stop();
             LastTestDuration = (int) stopwatch.ElapsedMilliseconds;
-            // Allow as much to be garbage collected as possible
 
-            // Restore TMP
-            Environment.SetEnvironmentVariable(@"TMP", saveTmp);
+            if (tmpTestDir != null)
+            {
+                // Get rid of the temp directory we created as testdir/"~&TMP ^"/testname (should be done already, double checking here)
+                try
+                {
+                    if (Directory.Exists(tmpTestDir))
+                    {
+                        Directory.Delete(tmpTestDir, true);
+                    }
+                }
+                catch (Exception)
+                {
+                    throw new IOException($"Unable to remove temp directory \"{tmpTestDir}\"");
+                }
+                // Get rid of the parent directory we created as testdir/"~&TMP ^"
+                try
+                {
+                    var tmpParent = Path.Combine(tmpTestDir, "..");
+                    if (Directory.Exists(tmpParent))
+                    {
+                        Directory.Delete(tmpParent, true);
+                    }
+                }
+                catch
+                {
+                    // ignored - if it's not empty we've already complained about that
+                }
+
+                // Restore TMP
+                Environment.SetEnvironmentVariable(@"TMP", saveTmp);
+            }
 
             // Restore culture.
             Thread.CurrentThread.CurrentCulture = saveCulture;
             Thread.CurrentThread.CurrentUICulture = saveUICulture;
 
+            // Allow as much to be garbage collected as possible
             MemoryManagement.FlushMemory();
             _process.Refresh();
             var heapCounts = ReportSystemHeaps
@@ -597,7 +634,7 @@ namespace TestRunnerLib
             // If everything is supposed to be cleaned up, then check for any left over files
             if (_cleanupLevelAll)
             {
-                CleanupAbandonedFiles(TestContext.TestDir, true, abandonedFilesList);
+                CleanupAbandonedFiles(TestContext.TestDir, !final, abandonedFilesList);
             }
             CleanupAbandonedFiles(tmpTestDir, !final, abandonedFilesList); // It's always an error to leave any tempfiles behind
 
@@ -606,7 +643,7 @@ namespace TestRunnerLib
 
         private void CleanupAbandonedFiles(string dir, bool recreateDirAfterClean, List<string> abandonedFilesList)
         {
-            if (Directory.Exists(dir))
+            if (!string.IsNullOrEmpty(dir) && Directory.Exists(dir))
             {
                 var oldCount = abandonedFilesList.Count; // List may have entries from a previous call
                 abandonedFilesList.AddRange(Directory.EnumerateFileSystemEntries(dir).Select(f => Path.Combine(dir, f)));
