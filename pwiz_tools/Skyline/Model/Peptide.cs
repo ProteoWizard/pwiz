@@ -410,8 +410,8 @@ namespace pwiz.Skyline.Model
             unchecked
             {
                 int result = (_fastaSequence != null ? _fastaSequence.GetHashCode() : 0);
-                result = (result * 397) ^ (Target != null ? Target.GetHashCode() : 0);
-                result = (result * 397) ^ (OriginalMoleculeTarget != null ? OriginalMoleculeTarget.GetHashCode() : 0);
+                result = (result*397) ^ (Target != null ? Target.GetHashCode() : 0);
+                result = (result*397) ^ (OriginalMoleculeTarget != null ? OriginalMoleculeTarget.GetHashCode() : 0);
                 result = (result*397) ^ (Begin.HasValue ? Begin.Value : 0);
                 result = (result*397) ^ (End.HasValue ? End.Value : 0);
                 result = (result*397) ^ MissedCleavages;
