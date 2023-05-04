@@ -925,7 +925,7 @@ namespace pwiz.Skyline.Model.AuditLog {
         }
         
         /// <summary>
-        ///   Looks up a localized string similar to EncyclopeDia Search.
+        ///   Looks up a localized string similar to EncyclopeDIA Search.
         /// </summary>
         public static string EncyclopeDiaSettings {
             get {
@@ -943,7 +943,7 @@ namespace pwiz.Skyline.Model.AuditLog {
         }
         
         /// <summary>
-        ///   Looks up a localized string similar to EncyclopeDia settings.
+        ///   Looks up a localized string similar to EncyclopeDIA settings.
         /// </summary>
         public static string EncyclopeDiaSettings_EncyclopeDiaConfig {
             get {
@@ -1240,6 +1240,15 @@ namespace pwiz.Skyline.Model.AuditLog {
         }
         
         /// <summary>
+        ///   Looks up a localized string similar to Enzyme.
+        /// </summary>
+        public static string FastaToPrositInputCsvConfig_Enzyme {
+            get {
+                return ResourceManager.GetString("FastaToPrositInputCsvConfig_Enzyme", resourceCulture);
+            }
+        }
+        
+        /// <summary>
         ///   Looks up a localized string similar to Max charge.
         /// </summary>
         public static string FastaToPrositInputCsvConfig_MaxCharge {
@@ -1258,11 +1267,29 @@ namespace pwiz.Skyline.Model.AuditLog {
         }
         
         /// <summary>
+        ///   Looks up a localized string similar to Max m/z.
+        /// </summary>
+        public static string FastaToPrositInputCsvConfig_MaxMz {
+            get {
+                return ResourceManager.GetString("FastaToPrositInputCsvConfig_MaxMz", resourceCulture);
+            }
+        }
+        
+        /// <summary>
         ///   Looks up a localized string similar to Min charge.
         /// </summary>
         public static string FastaToPrositInputCsvConfig_MinCharge {
             get {
                 return ResourceManager.GetString("FastaToPrositInputCsvConfig_MinCharge", resourceCulture);
+            }
+        }
+        
+        /// <summary>
+        ///   Looks up a localized string similar to Min m/z.
+        /// </summary>
+        public static string FastaToPrositInputCsvConfig_MinMz {
+            get {
+                return ResourceManager.GetString("FastaToPrositInputCsvConfig_MinMz", resourceCulture);
             }
         }
         

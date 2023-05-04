@@ -1754,4 +1754,13 @@
   <data name="FastaToPrositInputCsvConfig_MinCharge" xml:space="preserve">
     <value>Min charge</value>
   </data>
+  <data name="FastaToPrositInputCsvConfig_Enzyme" xml:space="preserve">
+    <value>Enzyme</value>
+  </data>
+  <data name="FastaToPrositInputCsvConfig_MaxMz" xml:space="preserve">
+    <value>Max m/z</value>
+  </data>
+  <data name="FastaToPrositInputCsvConfig_MinMz" xml:space="preserve">
+    <value>Min m/z</value>
+  </data>
 </root>

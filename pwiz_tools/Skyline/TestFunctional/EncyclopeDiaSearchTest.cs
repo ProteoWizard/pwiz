@@ -152,7 +152,8 @@ namespace pwiz.SkylineTestFunctional
                 importPeptideSearchDlg.ClickNextButton();
 
                 Assert.IsTrue(importPeptideSearchDlg.CurrentPage == ImportPeptideSearchDlg.Pages.import_fasta_page);
-                importPeptideSearchDlg.ImportFastaControl.DecoyGenerationEnabled = true;
+                importPeptideSearchDlg.ImportFastaControl.DecoyGenerationEnabled = false;
+                importPeptideSearchDlg.ImportFastaControl.AutoTrain = false;
             });
 
             // Finish wizard and the associate proteins dialog is shown.
@@ -162,10 +163,10 @@ namespace pwiz.SkylineTestFunctional
             {
                 int proteinCount, peptideCount, precursorCount, transitionCount;
                 emptyProteinsDlg.NewTargetsFinalSync(out proteinCount, out peptideCount, out precursorCount, out transitionCount);
-                Assert.AreEqual(5, proteinCount);
-                Assert.AreEqual(8, peptideCount);
-                Assert.AreEqual(8, precursorCount);
-                Assert.AreEqual(72, transitionCount);
+                Assert.AreEqual(4, proteinCount);
+                Assert.AreEqual(4, peptideCount);
+                Assert.AreEqual(4, precursorCount);
+                Assert.AreEqual(36, transitionCount);
             });
 
             using (new WaitDocumentChange(null, true))
