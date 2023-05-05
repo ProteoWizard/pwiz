@@ -632,9 +632,9 @@ namespace pwiz.Skyline.Model.Lib
         // ReSharper restore InconsistentNaming
         // ReSharper restore UnusedMember.Local
 
-        private byte[] CreateCache(ILoadMonitor loader, IProgressStatus status, int percent)
+        private MemoryStream CreateCache(ILoadMonitor loader, IProgressStatus status, int percent)
         {
-            byte[] cacheBytes = null;
+            MemoryStream outStream;
             var sm = loader.StreamManager;
             EnsureConnections(sm);
             using (SQLiteCommand select = new SQLiteCommand(_sqliteConnection.Connection))
@@ -881,7 +881,7 @@ namespace pwiz.Skyline.Model.Lib
 
                 }
 
-                var outStream = new MemoryStream();
+                outStream = new MemoryStream();
                 foreach (var info in libraryEntries)
                 {
                     // Write the spectrum header - order must match enum SpectrumCacheHeader
@@ -965,13 +965,13 @@ namespace pwiz.Skyline.Model.Lib
                 outStream.Write(BitConverter.GetBytes(libraryEntries.Count), 0, sizeof (int));
                 outStream.Write(BitConverter.GetBytes(sourcePosition), 0, sizeof (long));
                 outStream.Write(BitConverter.GetBytes(scoreTypesPosition), 0, sizeof(long));
-                cacheBytes = outStream.ToArray();
                 try
                 {
                     using (FileSaver fs = new FileSaver(CachePath, sm))
                     using (Stream cacheFileStream = sm.CreateStream(fs.SafeName, FileMode.Create, true))
                     {
-                        cacheFileStream.Write(cacheBytes, 0, cacheBytes.Length);
+                        outStream.Seek(0, SeekOrigin.Begin);
+                        outStream.CopyTo(cacheFileStream);
                         sm.Finish(cacheFileStream);
                         fs.Commit();
                         sm.SetCache(FilePath, CachePath);
@@ -984,7 +984,7 @@ namespace pwiz.Skyline.Model.Lib
             }
 
             loader.UpdateProgress(status.Complete());
-            return cacheBytes;
+            return outStream;
         }
 
         private Dictionary<int, string> ProteinsBySpectraID()
@@ -1050,7 +1050,7 @@ namespace pwiz.Skyline.Model.Lib
             {
                 var valueCache = new ValueCache();
                 int loadPercent = 100;
-                byte[] cacheBytes = null;
+                MemoryStream cacheBytes = null;
                 if (!cached)
                 {
                     // Building the cache will take 95% of the load time.
@@ -1076,7 +1076,8 @@ namespace pwiz.Skyline.Model.Lib
                 Stream stream;
                 if (cacheBytes != null)
                 {
-                    stream = new MemoryStream(cacheBytes, false);
+                    cacheBytes.Seek(0, SeekOrigin.Begin);
+                    stream = cacheBytes;
                 }
                 else
                 {
@@ -2753,9 +2754,8 @@ namespace pwiz.Skyline.Model.Lib
         }
     }
 
-    public struct BiblioLiteSpectrumInfo : ICachedSpectrumInfo
+    public class BiblioLiteSpectrumInfo : ICachedSpectrumInfo
     {
-
         public BiblioLiteSpectrumInfo(LibKey key, int copies, int numPeaks, int id, string protein,
             IndexedRetentionTimes retentionTimesByFileId = default(IndexedRetentionTimes), 
             IndexedIonMobilities ionMobilitiesByFileId = default(IndexedIonMobilities),
@@ -2776,7 +2776,6 @@ namespace pwiz.Skyline.Model.Lib
         }
 
         public LibKey Key { get; }
-        public SmallMoleculeLibraryAttributes SmallMoleculeLibraryAttributes { get { return Key.SmallMoleculeLibraryAttributes; } }
         public int Copies { get; }
         public int NumPeaks { get; }
         public int Id { get; }

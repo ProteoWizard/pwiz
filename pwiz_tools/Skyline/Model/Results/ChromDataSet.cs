@@ -194,7 +194,7 @@ namespace pwiz.Skyline.Model.Results
                     var peptideDocNode = NodeGroups.FirstOrDefault()?.Item1;
                     if (peptideDocNode != null)
                     {
-                        return peptideDocNode.ModifiedTarget;
+                        return peptideDocNode.ChromatogramTarget;
                     }
                 }
                 return _listChromData.Count > 0 ? BestChromatogram.Key.Target : null;

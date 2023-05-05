@@ -48,7 +48,6 @@ using pwiz.Skyline.Model.Results;
 using pwiz.Skyline.Model.Results.Scoring;
 using pwiz.Skyline.Model.Tools;
 using pwiz.Skyline.Properties;
-using pwiz.Skyline.ToolsUI;
 using pwiz.Skyline.Util;
 using pwiz.Skyline.Util.Extensions;
 
@@ -3190,9 +3189,9 @@ namespace pwiz.Skyline
                 return false;
             }
             // Check if the command is of a supported type and not a URL
-            else if (!ConfigureToolsDlg.CheckExtension(command) && !ToolDescription.IsWebPageCommand(command))
+            else if (!ToolDescription.CheckExtension(command) && !ToolDescription.IsWebPageCommand(command))
             {
-                string supportedTypes = String.Join(@"; ", ConfigureToolsDlg.EXTENSIONS);
+                string supportedTypes = string.Join(@"; ", ToolDescription.EXTENSIONS);
                 supportedTypes = supportedTypes.Replace(@".", @"*.");
                 _out.WriteLine(Resources.CommandLine_ImportTool_Error__the_provided_command_for_the_tool__0__is_not_of_a_supported_type___Supported_Types_are___1_, title, supportedTypes);
                 _out.WriteLine(Resources.CommandLine_ImportTool_The_tool_was_not_imported___);
