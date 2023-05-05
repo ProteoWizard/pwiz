@@ -8,8 +8,8 @@ namespace pwiz.PanoramaClient
 {
     public partial class FilePicker : Form
     {
-        private static Uri _peptideInfoQuery;
-        private static Uri _sizeInfoQuery;
+        private static JToken _peptideInfoQuery;
+        private static JToken _sizeInfoQuery;
         private bool _restoring;
         private List<string> _mostRecent = new List<string>();
         private JToken _fileJson;
@@ -202,11 +202,8 @@ namespace pwiz.PanoramaClient
             listView.Items.Clear();
             var result = new string[5];
             var fileInfos = new string[5];
-            var query = _peptideInfoQuery;
-            var json = GetJson(query);
-            var sizeJson = GetJson(_sizeInfoQuery);
-            var rowSize = sizeJson[@"rows"];
-            var rows = json[@"rows"];
+            var rowSize = _sizeInfoQuery[@"rows"];
+            var rows = _peptideInfoQuery[@"rows"];
             foreach (var row in rows)
             {
                 var versions = row[@"File/Versions"].ToString();
@@ -321,21 +318,20 @@ namespace pwiz.PanoramaClient
         private void AddQueryFiles(string nodePath, Control l, Control options)
         {
             //Add File/DocumentSize column when it is linked up
-            _peptideInfoQuery = BuildQuery(ActiveServer.URI.ToString(), nodePath, @"TargetedMSRuns", @"Current",
+            var query = BuildQuery(ActiveServer.URI.ToString(), nodePath, @"TargetedMSRuns", @"Current",
                 new[] { @"Name", @"Deleted", @"Container/Path", @"File/Proteins", @"File/Peptides", @"File/Precursors", @"File/Transitions", @"File/Replicates", @"Created", @"File/Versions", @"Replaced", @"ReplacedByRun" , @"ReplacesRun", @"File/Id", @"RowId" }, string.Empty);
-            _sizeInfoQuery = BuildQuery(ActiveServer.URI.ToString(), nodePath, "Runs", "Current",
+            var sizeQuery = BuildQuery(ActiveServer.URI.ToString(), nodePath, "Runs", "Current",
                 new[] { "DocumentSize", "Id" }, string.Empty);
-            var sizeJson = GetJson(_sizeInfoQuery);
-            var rowSize = sizeJson[@"rows"];
-            var query = _peptideInfoQuery;
-            var json = GetJson(query);
-            var rows = json[@"rows"];
-            var rowCount = json[@"rowCount"];
+            _sizeInfoQuery = GetJson(sizeQuery);
+            var rowSize = _sizeInfoQuery[@"rows"];
+            _peptideInfoQuery = GetJson(query);
+            var rows = _peptideInfoQuery[@"rows"];
+            var rowCount = _peptideInfoQuery[@"rowCount"];
             if ((int)rowCount > 0)
             {
                 listView.HeaderStyle = ColumnHeaderStyle.Clickable;
                 noFiles.Visible = false;
-                var versions = HasVersions(json);
+                var versions = HasVersions(_peptideInfoQuery);
                 foreach (var row in rows)
                 {
                     var fileName = (string)row[@"Name"];
@@ -352,7 +348,7 @@ namespace pwiz.PanoramaClient
                             listView.Columns[2].Width = 60;
                             l.Visible = true;
                             options.Visible = true;
-                            numVersions = GetVersionInfo(json, replacedBy);
+                            numVersions = GetVersionInfo(_peptideInfoQuery, replacedBy);
                         }
                         else
                         {
