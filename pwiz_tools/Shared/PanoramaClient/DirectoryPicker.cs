@@ -10,11 +10,13 @@ namespace pwiz.PanoramaClient
         private FolderBrowser folders;
         public string State;
         public string Selected;
+        public List<PanoramaServer> Servers { get; private set; }
 
-        public DirectoryPicker(Uri server, string user, string pass, bool showCheckBox, string state, bool showSkyFolders = false)
+        public DirectoryPicker(List<PanoramaServer> servers, bool showCheckBox, string state, bool showSkyFolders = false)
         {
             InitializeComponent();
-            folders = new FolderBrowser( false, showSkyFolders, state, new List<PanoramaServer>());
+            Servers = servers;
+            folders = new FolderBrowser( false, showSkyFolders, state, Servers);
             folders.Dock = DockStyle.Fill;
             folderPanel.Controls.Add(folders);
             folders.NodeClick += DirectoryPicker_MouseClick;
@@ -26,7 +28,6 @@ namespace pwiz.PanoramaClient
 
         public string Folder { get; set; }
         public string OKButtonText { get; set; }
-        public string Server { get; set; }
 
 
         private void cancel_Click_1(object sender, EventArgs e)
