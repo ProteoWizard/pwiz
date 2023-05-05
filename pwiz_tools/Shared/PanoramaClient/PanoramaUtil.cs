@@ -722,31 +722,6 @@ namespace pwiz.PanoramaClient
         }
 
         /// <summary>
-        /// Given the name of a file, allows a user to select
-        /// which folder on their machine to download the file to
-        /// and returns the path of the selected folder
-        /// </summary>
-        /// <param name="fileName"></param>
-        /// <param name="lastPath"></param>
-        /// <returns></returns>
-        public string SaveFile(string fileName, string lastPath)
-        {
-            var dlg = new FolderBrowserDialog
-            {
-                SelectedPath = lastPath
-            };
-            var downloadPath = string.Empty;
-            dlg.Description = Resources.WebPanoramaClient_SaveFile_Select_the_folder_where_the_file_will_be_downloaded;
-            if (dlg.ShowDialog() == DialogResult.OK)
-            {
-                SelectedPath = dlg.SelectedPath;
-                var selected = dlg.SelectedPath;
-                downloadPath = Path.Combine(selected, fileName);
-            }
-            return downloadPath;
-        }
-
-        /// <summary>
         /// Downloads a given file to a given folder path and shows the progress
         /// of the download during downloading
         /// </summary>

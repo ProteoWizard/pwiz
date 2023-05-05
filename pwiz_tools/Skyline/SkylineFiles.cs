@@ -933,7 +933,7 @@ namespace pwiz.Skyline
                 DialogResult buttonPress = MultiButtonMsgDlg.Show(
                     this,
                     TextUtil.LineSeparate(
-                        Resources.SkylineWindow_ShowPublishDlg_There_are_no_Panorama_servers_to_upload_to,
+                        "There are no Panorama servers to download from",
                         Resources.SkylineWindow_ShowPublishDlg_Press_Register_to_register_for_a_project_on_PanoramaWeb_,
                         Resources.SkylineWindow_ShowPublishDlg_Press_Continue_to_use_the_server_of_your_choice_),
                     Resources.SkylineWindow_ShowPublishDlg_Register, Resources.SkylineWindow_ShowPublishDlg_Continue,
@@ -988,7 +988,22 @@ namespace pwiz.Skyline
                     var curServer = dlg.ActiveServer;
                     var panoramaClient = new WebPanoramaClient(curServer.URI);
 
-                    var downloadPath = panoramaClient.SaveFile(dlg.FileName, folderPath);
+                    string downloadPath;
+                    using (var saveAsDlg = new SaveFileDialog
+                           {
+                               FileName = dlg.FileName,
+                               DefaultExt = SrmDocumentSharing.EXT_SKY_ZIP,
+                               Filter = TextUtil.FileDialogFilter(Resources.SrmDocument_FILTER_DOC_Skyline_Documents, SrmDocumentSharing.EXT_SKY_ZIP),
+                               InitialDirectory = folderPath,
+                               OverwritePrompt = true,
+                           })
+                    {
+                        if (saveAsDlg.ShowDialog(this) != DialogResult.OK)
+                        {
+                            return;
+                        }
+                        downloadPath = saveAsDlg.FileName;
+                    }
                     if (!string.IsNullOrEmpty(downloadPath))
                     {
                         var size = dlg.FileSize;
