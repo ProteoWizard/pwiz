@@ -1,7 +1,6 @@
 ﻿using System;
 using System.Collections.Generic;
 using System.Drawing;
-using System.IO;
 using System.Linq;
 using System.Windows.Forms;
 using Newtonsoft.Json.Linq;
@@ -19,16 +18,10 @@ namespace pwiz.PanoramaClient
     internal class PanoramaFormUtil
     {
 
-        public string Server;
-        public string User;
-        public string Pass;
         public void InitializeTreeView(PanoramaServer server, List<KeyValuePair<PanoramaServer, JToken>> listServers)
         {
             IPanoramaClient panoramaClient = new WebPanoramaClient(server.URI);
             listServers.Add(new KeyValuePair<PanoramaServer, JToken>(server, panoramaClient.GetInfoForFolders(server, null)));
-            Server = server.URI.ToString();
-            User = server.Username;
-            Pass = server.Password;
         }
 
         public void InitializeFolder(TreeView treeViewFolders, bool requireUploadPerms, bool showFiles, JToken folder, PanoramaServer server)
@@ -41,22 +34,8 @@ namespace pwiz.PanoramaClient
         public void InitializeTreeViewTest(PanoramaServer server, TreeView treeView, JToken folderJson)
         {
             var treeNode = new TreeNode(server.URI.ToString());
-            Server = server.URI.ToString();
-            User = server.Username;
-            Pass = server.Password;
             treeView.Invoke(new Action(() => treeView.Nodes.Add(treeNode)));
             treeView.Invoke(new Action(() => AddChildContainers(treeNode, folderJson, false, true)));
-        }
-
-        private static bool ContainsTargetedMSModule(IEnumerable<JToken> modules)
-        {
-            foreach (var module in modules)
-            {
-                if (string.Equals(module.ToString(), @"TargetedMS"))
-                    return true;
-            }
-
-            return false;
         }
 
         public static void AddChildContainers(TreeNode node, JToken folder, bool requireUploadPerms, bool showFiles)
@@ -190,82 +169,8 @@ namespace pwiz.PanoramaClient
                         AddFolderPath(full, replaceTest, node.Nodes[getKey]);
                     }
                 }
-
             }
         }
-
-        private JToken GetJson(string query, string user, string pass)
-        {
-            var queryUri = new Uri(query);
-            var webClient = new WebClientWithCredentials(queryUri, user, pass);
-            JToken json = webClient.Get(queryUri);
-            return json;
-        }
-
-        private static string BuildQuery(string server, string folderPath, string queryName, string folderFilter, string[] columns, string sortParam, string equalityParam)
-        {
-            var query =
-                $@"{server}{folderPath}query-selectRows.view?schemaName=targetedms&query.queryName={queryName}&query.containerFilterName={folderFilter}";
-            if (columns != null)
-            {
-                query = $@"{query}&query.columns=";
-                var allCols = columns.Aggregate(string.Empty, (current, col) => $@"{col},{current}");
-
-                query = $@"{query}{allCols}";
-            }
-
-            if (!string.IsNullOrEmpty(sortParam))
-            {
-                query = $@"{query}&query.sort={sortParam}";
-            }
-
-            if (!string.IsNullOrEmpty(equalityParam))
-            {
-                query = $@"{query}&query.{equalityParam}~eq=";
-            }
-            return query;
-        }
-
-        public void AddChildFiles(Uri newUri, ListView listView)
-        {
-            JToken json = GetJson(newUri.ToString(), User, Pass);
-            if ((int)json[@"fileCount"] != 0)
-            {
-                JToken files = json[@"files"];
-                foreach (dynamic file in files)
-                {
-                    var listItem = new string[2];
-                    var fileName = (string)file[@"text"];
-                    listItem[0] = fileName;
-                    var isFile = (bool)file[@"leaf"];
-                    if (isFile)
-                    {
-                        var canRead = (bool)file[@"canRead"];
-                        if (!canRead)
-                        {
-                            continue;
-                        }
-                        var size = (long)file[@"size"];
-                        var sizeObj = new FileSize(size);
-                        listItem[1] = sizeObj.ToString();
-                        ListViewItem fileNode;
-                        if (fileName.Contains(".sky"))
-                        {
-                            fileNode = new ListViewItem(listItem, 1);
-
-                        }
-                        else
-                        {
-                            fileNode = new ListViewItem(listItem, 0);
-                        }
-                        fileNode.Tag = (string)file[@"id"];
-                        fileNode.Name = Path.GetFullPath((string)file[@"href"]);
-                        listView.Items.Add(fileNode);
-                    }
-                }
-            }
-        }
-
     }
 
 
