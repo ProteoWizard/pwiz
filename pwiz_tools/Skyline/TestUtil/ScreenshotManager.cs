@@ -120,7 +120,7 @@ namespace pwiz.SkylineTestUtil
                 Rectangle snapshotBounds = Rectangle.Empty;
 
                 DockState[] dockedStates = new DockState[]{DockState.DockBottom, DockState.DockLeft, DockState.DockBottom, DockState.DockTop, DockState.Document};
-                if (frm is DockableForm && dockedStates.Any((state) => ((frm as DockableForm).DockState == state) )  )
+                if (frm is DockableForm && dockedStates.Any((state) => ((frm as DockableForm)?.DockState == state) )  )
                 {
                     Point origin = Point.Empty;
                     frm.Invoke(new Action(() => { origin = frm.PointToScreen(new Point(0, 0)); }));
@@ -192,12 +192,14 @@ namespace pwiz.SkylineTestUtil
             [NotNull]
             public override XmlNode Serialize(XmlDocument pDoc)
             {
+                // ReSharper disable PossibleNullReferenceException
                 XmlNode node = pDoc.CreateElement(SHOT_ELEMENT);
                 XmlAttribute typeAttr = pDoc.CreateAttribute(SHOT_TYPE_ATTRIBUTE);
                 typeAttr.Value = SHOT_TYPE_VAL_ACTIVE_FORM;
                 node.Attributes.Append(typeAttr);
                 pDoc.DocumentElement.AppendChild(node);
                 return node;
+                // ReSharper restore PossibleNullReferenceException
             }
 
         }
@@ -209,7 +211,9 @@ namespace pwiz.SkylineTestUtil
             {
                 if (pNode.FirstChild != null && pNode.FirstChild.LocalName == SHOT_FRAME_ELEMENT)
                 {
-                    XmlAttributeCollection rAtts = pNode.FirstChild.Attributes;
+                    XmlAttributeCollection rAtts = pNode.FirstChild.Attributes ??
+                                                   throw new NullReferenceException(
+                                                       nameof(pNode.FirstChild.Attributes));
                     _shotFrame = new Rectangle(Int16.Parse(rAtts[SHOT_FRAME_LEFT_ATTRIBUTE].Value),
                         Int16.Parse(rAtts[SHOT_FRAME_TOP_ATTRIBUTE].Value),
                         Int16.Parse(rAtts[SHOT_FRAME_RIGHT_ATTRIBUTE].Value),
@@ -277,6 +281,7 @@ namespace pwiz.SkylineTestUtil
             {
                 _storage.Load(FilePath);
                 XmlNode root = _storage.DocumentElement;
+                // ReSharper disable once PossibleNullReferenceException
                 if (root.HasChildNodes)
                 {
                     foreach (XmlNode shotNode in root.ChildNodes)
@@ -309,6 +314,7 @@ namespace pwiz.SkylineTestUtil
                 _shotSequence.Add(newShot);
                 _currentShotIndex = _shotSequence.Count - 1;
                 shotPic = _shotSequence.Last().Take(activeWindow);
+                // ReSharper disable once PossibleNullReferenceException
                 _storage.DocumentElement.AppendChild(newShot.Serialize(_storage));
                 SaveToFile();
             }

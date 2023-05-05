@@ -193,7 +193,7 @@ namespace TestPerf
                 .Replace(".fasta", $"-z3_nce33-prosit-{_analysisValues.PrositHash}.blib");
             FileEx.HardLinkOrCopyFile(persistentBlibFilepath, tempBlibFilepath);
 
-            string persistentPath = Path.GetDirectoryName(persistentBlibFilepath)!;
+            string persistentPath = Path.GetDirectoryName(persistentBlibFilepath) ?? string.Empty;
             DirectoryEx.SafeDelete(Path.Combine(persistentPath, "elib_chrom"));
             DirectoryEx.SafeDelete(Path.Combine(persistentPath, "elib_quant"));
 

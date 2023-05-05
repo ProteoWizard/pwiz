@@ -17,7 +17,6 @@
  */
 
 using System.Threading;
-using System.Threading.Tasks;
 using System.Windows.Forms;
 using pwiz.Common.SystemUtil;
 using pwiz.Skyline.Model;
