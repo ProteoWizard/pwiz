@@ -503,6 +503,8 @@ namespace pwiz.PanoramaClient
         private IProgressStatus ProgressStatus { get; set; }
         public bool Success { get; private set; } = true;
 
+        public string DownloadPath { get; private set; }
+
         public WebPanoramaClient(Uri server)
         {
             ServerUri = server;
@@ -756,6 +758,8 @@ namespace pwiz.PanoramaClient
         /// <param name="fileName"></param>
         public void DownloadFile(string path, PanoramaServer server, string downloadName, IProgressMonitor pm, long size, string fileName)
         {
+            path = GetDownloadName(path);
+            DownloadPath = path;
             ProgressMonitor = pm;
             ProgressStatus = new ProgressStatus("Downloading...");
             using var wc = new WebClientWithCredentials(server.URI, server.Username, server.Password);
@@ -783,6 +787,7 @@ namespace pwiz.PanoramaClient
                     ProgressMonitor.UpdateProgress(ProgressStatus = ProgressStatus.ChangeErrorException(e.Error));
                 }
                 downloadComplete = true;
+                Success = true;
             };
             wc.DownloadFileAsync(
 
@@ -800,6 +805,28 @@ namespace pwiz.PanoramaClient
                 }
                 Thread.Sleep(100);
             }
+        }
+
+        private string GetDownloadName(string fullPath)
+        {
+            var count = 1;
+            var fileName = fullPath;
+            var extension = Path.GetExtension(fullPath);
+            if (fullPath.EndsWith(".sky.zip"))
+            {
+                extension = ".sky.zip";
+                fileName = fileName.Replace(".sky.zip", string.Empty);
+            }
+            fileName = Path.GetFileNameWithoutExtension(fileName);
+            
+            var newName = fullPath;
+            var path = Path.GetDirectoryName(fullPath);
+            while (File.Exists(newName))
+            {
+                var formattedName = string.Format("{0}({1})", fileName, count++);
+                newName = Path.Combine(path, formattedName + extension);
+            }
+            return newName;
         }
 
         /// <summary>

@@ -88,7 +88,6 @@ namespace pwiz.PanoramaClient
                 {
                     treeView.TopNode.Expand();
                 }
-                NodeCount = treeView.Nodes.Count;
             }
             else
             {
@@ -145,9 +144,11 @@ namespace pwiz.PanoramaClient
         /// <param name="e"></param>
         public void TreeView_NodeMouseClick(object sender, TreeNodeMouseClickEventArgs e)
         {
+            NodeCount = treeView.Nodes.Count;
             if (_lastSelected == null || (_lastSelected != null && !_lastSelected.Equals(e.Node)))
             {
-                if (e.Node.Bounds.Contains(e.Location))
+                var hitTest = treeView.HitTest(e.Location);
+                if (hitTest.Location == TreeViewHitTestLocations.Label || hitTest.Location == TreeViewHitTestLocations.Image)
                 {
                     var hit = e.Node.TreeView.HitTest(e.Location);
                     if (hit.Location != TreeViewHitTestLocations.PlusMinus)
@@ -346,6 +347,7 @@ namespace pwiz.PanoramaClient
         /// <param name="nodeName"></param>
         public void SelectNode(string nodeName)
         {
+            NodeCount = treeView.GetNodeCount(true);
             Testing = true;
             var node = SearchTree(treeView.Nodes, nodeName);
             if (node != null)

@@ -1,6 +1,5 @@
 using System;
 using System.Collections.Generic;
-using System.Linq;
 using Newtonsoft.Json.Linq;
 using System.Windows.Forms;
 
@@ -9,7 +8,8 @@ namespace pwiz.PanoramaClient
 {
     public partial class FilePicker : Form
     {
-        private static string _peptideInfoQuery;
+        private static Uri _peptideInfoQuery;
+        private static Uri _sizeInfoQuery;
         private bool _restoring;
         private List<string> _mostRecent = new List<string>();
         private JToken _fileJson;
@@ -19,16 +19,17 @@ namespace pwiz.PanoramaClient
 
         public FilePicker(List<PanoramaServer> servers, bool showCheckbox, string stateString, bool showingSky)
         {
+            InitializeComponent();
             Servers = servers;
             IsLoaded = false;
-            InitializeComponent();
             TreeState = stateString;
             _restoring = true;
             ShowingSky = showingSky;
             showSkyCheckBox.Checked = ShowingSky;
             versionOptions.Text = ALL_VER;
-            _restoring = false;
             showSkyCheckBox.Visible = showCheckbox;
+            noFiles.Visible = false;
+            _restoring = false;
         }
 
         /// <summary>
@@ -72,6 +73,7 @@ namespace pwiz.PanoramaClient
             FolderBrowser.Dock = DockStyle.Fill;
             splitContainer1.Panel1.Controls.Add(FolderBrowser);
             FolderBrowser.NodeClick += FilePicker_MouseClick;
+            IsLoaded = true;
         }
 
         /// <summary>
@@ -92,7 +94,7 @@ namespace pwiz.PanoramaClient
                 back.Enabled = FolderBrowser.BackEnabled();
                 forward.Enabled = FolderBrowser.ForwardEnabled();
             }
-            IsLoaded = true;
+            //IsLoaded = true;
         }
 
         /// <summary>
@@ -131,28 +133,14 @@ namespace pwiz.PanoramaClient
         /// Builds a string that will be used as a URI to find all .sky folders
         /// </summary>
         /// <returns></returns>
-        private static string BuildQuery(string server, string folderPath, string queryName, string folderFilter, string[] columns, string sortParam, string equalityParam)
+        private static Uri BuildQuery(string server, string folderPath, string queryName, string folderFilter, string[] columns, string sortParam)
         {
-            var query =
-                $@"{server}{folderPath}/query-selectRows.view?schemaName=targetedms&query.queryName={queryName}&query.containerFilterName={folderFilter}";
-            if (columns != null)
-            {
-                query = $@"{query}&query.columns=";
-                var allCols = columns.Aggregate(string.Empty, (current, col) => $@"{col},{current}");
 
-                query = $@"{query}{allCols}";
-            }
-
-            if (!string.IsNullOrEmpty(sortParam))
-            {
-                query = $@"{query}&query.sort={sortParam}";
-            }
-
-            if (!string.IsNullOrEmpty(equalityParam))
-            {
-                query = $@"{query}&query.{equalityParam}~eq=";
-            }
-            return query;
+            var columnsQueryParam = columns != null ? "&query.columns=" + string.Join(",", columns) : string.Empty;
+            var sortQueryParam = !string.IsNullOrEmpty(sortParam) ? "&query.sort={sortParam}" : string.Empty;
+            var allQueryParams = $"schemaName=targetedms&query.queryName={queryName}&query.containerFilterName={folderFilter}{columnsQueryParam}{sortQueryParam}";
+            var queryUri = PanoramaUtil.CallNewInterface(new Uri(server), @"query", folderPath, @"selectRows", allQueryParams);
+            return queryUri;
         }
 
         /// <summary>
@@ -160,9 +148,9 @@ namespace pwiz.PanoramaClient
         /// </summary>
         /// <param name="query"></param>
         /// <returns></returns>
-        private JToken GetJson(string query)
+        private JToken GetJson(Uri queryUri)
         {
-            var queryUri = new Uri(query);
+            //var queryUri = new Uri(query);
             var webClient = new WebClientWithCredentials(queryUri, ActiveServer.Username, ActiveServer.Password);
             JToken json = webClient.Get(queryUri);
             return json;
@@ -175,7 +163,7 @@ namespace pwiz.PanoramaClient
         /// <param name="newUri"></param>
         public void AddChildFiles(Uri newUri)
         {
-            var json = GetJson(newUri.ToString());
+            var json = GetJson(newUri);
             if ((int)json[@"fileCount"] != 0)
             {
                 var files = json[@"files"];
@@ -214,13 +202,9 @@ namespace pwiz.PanoramaClient
             listView.Items.Clear();
             var result = new string[5];
             var fileInfos = new string[5];
-            _peptideInfoQuery = BuildQuery(ActiveServer.URI.ToString(), path, @"TargetedMSRuns", @"Current",
-                new[] { @"Name", @"Deleted", @"Container/Path", @"File/Proteins", @"File/Peptides", @"File/Precursors", @"File/Transitions", @"File/Replicates", @"Created", @"File/Versions", @"Replaced", @"ReplacedByRun", @"ReplacesRun", @"File/Id", @"RowId" }, string.Empty, string.Empty); 
             var query = _peptideInfoQuery;
             var json = GetJson(query);
-            var sizeQuery = BuildQuery(ActiveServer.URI.ToString(),path, "Runs", "Current",
-                new[] { "DocumentSize", "Id" }, string.Empty, string.Empty);
-            var sizeJson = GetJson(sizeQuery);
+            var sizeJson = GetJson(_sizeInfoQuery);
             var rowSize = sizeJson[@"rows"];
             var rows = json[@"rows"];
             foreach (var row in rows)
@@ -336,13 +320,12 @@ namespace pwiz.PanoramaClient
         /// <param name="options"></param>
         private void AddQueryFiles(string nodePath, Control l, Control options)
         {
-            //Use this one query once Vagisha can link up the file size column 
-            //https://panoramaweb-dr.gs.washington.edu/00Developer/Sophie/Versions/query-selectRows.api?schemaName=targetedms&query.queryName=TargetedMSRuns&query.columns=File%2FId%2CRowId%2CCreated%2CFile%2FProteins%2CFile%2FPeptides%2CFile%2FPrecursors%2CFile%2FTransitions%2CFile%2FReplicates%2CReplacedByRun%2CReplacesRun,File%2FVersions,Container%2FPath,Name
+            //Add File/DocumentSize column when it is linked up
             _peptideInfoQuery = BuildQuery(ActiveServer.URI.ToString(), nodePath, @"TargetedMSRuns", @"Current",
-                new[] { @"Name", @"Deleted", @"Container/Path", @"File/Proteins", @"File/Peptides", @"File/Precursors", @"File/Transitions", @"File/Replicates", @"Created", @"File/Versions", @"Replaced", @"ReplacedByRun" , @"ReplacesRun", @"File/Id", @"RowId" }, string.Empty, string.Empty);
-            var sizeQuery = BuildQuery(ActiveServer.URI.ToString(), nodePath, "Runs", "Current",
-                new[] { "DocumentSize", "Id" }, string.Empty, string.Empty);
-            var sizeJson = GetJson(sizeQuery);
+                new[] { @"Name", @"Deleted", @"Container/Path", @"File/Proteins", @"File/Peptides", @"File/Precursors", @"File/Transitions", @"File/Replicates", @"Created", @"File/Versions", @"Replaced", @"ReplacedByRun" , @"ReplacesRun", @"File/Id", @"RowId" }, string.Empty);
+            _sizeInfoQuery = BuildQuery(ActiveServer.URI.ToString(), nodePath, "Runs", "Current",
+                new[] { "DocumentSize", "Id" }, string.Empty);
+            var sizeJson = GetJson(_sizeInfoQuery);
             var rowSize = sizeJson[@"rows"];
             var query = _peptideInfoQuery;
             var json = GetJson(query);
@@ -350,6 +333,8 @@ namespace pwiz.PanoramaClient
             var rowCount = json[@"rowCount"];
             if ((int)rowCount > 0)
             {
+                listView.HeaderStyle = ColumnHeaderStyle.Clickable;
+                noFiles.Visible = false;
                 var versions = HasVersions(json);
                 foreach (var row in rows)
                 {
@@ -362,6 +347,7 @@ namespace pwiz.PanoramaClient
                         var replacedBy = row[@"ReplacedByRun"].ToString();
                         if (versions)
                         {
+                            
                             listView.Columns[3].Width = 100;
                             listView.Columns[2].Width = 60;
                             l.Visible = true;
@@ -427,6 +413,8 @@ namespace pwiz.PanoramaClient
             }
             else
             {
+                listView.HeaderStyle = ColumnHeaderStyle.None;
+                noFiles.Visible = true;
                 //Show a message saying there are no Skyline files in this folder
             }
         }
@@ -457,7 +445,7 @@ namespace pwiz.PanoramaClient
                         if (versions)
                         {
                             listView.Columns[3].Width = 100;
-                            listView.Columns[2].Width = 60;
+                            listView.Columns[2].Width = 52;
                             l.Visible = true;
                             options.Visible = true;
                             numVersions = GetVersionInfo(json, replacedBy);
@@ -510,7 +498,6 @@ namespace pwiz.PanoramaClient
         /// <exception cref="Exception"></exception>
         public void AddFiles(object sender, EventArgs e)
         {
- 
             try
             {
                 Cursor = Cursors.WaitCursor;
@@ -567,7 +554,8 @@ namespace pwiz.PanoramaClient
             }
             catch (SystemException)
             {
-                //Ignored
+                listView.HeaderStyle = ColumnHeaderStyle.None;
+                noFiles.Visible = true;
             }
             catch (Exception ex)
             {

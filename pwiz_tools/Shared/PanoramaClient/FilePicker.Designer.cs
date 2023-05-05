@@ -42,6 +42,7 @@ namespace pwiz.PanoramaClient
             this.cancel = new System.Windows.Forms.Button();
             this.versionLabel = new System.Windows.Forms.Label();
             this.splitContainer1 = new System.Windows.Forms.SplitContainer();
+            this.noFiles = new System.Windows.Forms.Label();
             this.listView = new System.Windows.Forms.ListView();
             this.colName = ((System.Windows.Forms.ColumnHeader)(new System.Windows.Forms.ColumnHeader()));
             this.colSize = ((System.Windows.Forms.ColumnHeader)(new System.Windows.Forms.ColumnHeader()));
@@ -155,11 +156,25 @@ namespace pwiz.PanoramaClient
             // 
             // splitContainer1.Panel2
             // 
+            this.splitContainer1.Panel2.Controls.Add(this.noFiles);
             this.splitContainer1.Panel2.Controls.Add(this.listView);
             this.splitContainer1.Size = new System.Drawing.Size(701, 483);
             this.splitContainer1.SplitterDistance = 237;
             this.splitContainer1.SplitterWidth = 3;
             this.splitContainer1.TabIndex = 7;
+            // 
+            // noFiles
+            // 
+            this.noFiles.Anchor = ((System.Windows.Forms.AnchorStyles)((((System.Windows.Forms.AnchorStyles.Top | System.Windows.Forms.AnchorStyles.Bottom) 
+            | System.Windows.Forms.AnchorStyles.Left) 
+            | System.Windows.Forms.AnchorStyles.Right)));
+            this.noFiles.AutoSize = true;
+            this.noFiles.Font = new System.Drawing.Font("Microsoft Sans Serif", 9.75F, System.Drawing.FontStyle.Regular, System.Drawing.GraphicsUnit.Point, ((byte)(0)));
+            this.noFiles.Location = new System.Drawing.Point(115, 78);
+            this.noFiles.Name = "noFiles";
+            this.noFiles.Size = new System.Drawing.Size(231, 16);
+            this.noFiles.TabIndex = 9;
+            this.noFiles.Text = "There are no Skyline files in this folder";
             // 
             // listView
             // 
@@ -172,7 +187,6 @@ namespace pwiz.PanoramaClient
             this.listView.Dock = System.Windows.Forms.DockStyle.Fill;
             this.listView.FullRowSelect = true;
             this.listView.HideSelection = false;
-            this.listView.LargeImageList = this.imageList2;
             this.listView.Location = new System.Drawing.Point(0, 0);
             this.listView.Margin = new System.Windows.Forms.Padding(2);
             this.listView.Name = "listView";
@@ -191,10 +205,12 @@ namespace pwiz.PanoramaClient
             // colSize
             // 
             this.colSize.Text = "Size";
+            this.colSize.Width = 75;
             // 
             // colVersions
             // 
             this.colVersions.Text = "Versions";
+            this.colVersions.Width = 52;
             // 
             // colReplacedBy
             // 
@@ -227,7 +243,7 @@ namespace pwiz.PanoramaClient
             this.up});
             this.toolStrip.Location = new System.Drawing.Point(9, 2);
             this.toolStrip.Name = "toolStrip";
-            this.toolStrip.Size = new System.Drawing.Size(127, 31);
+            this.toolStrip.Size = new System.Drawing.Size(96, 31);
             this.toolStrip.TabIndex = 18;
             this.toolStrip.Text = "toolStrip1";
             // 
@@ -282,6 +298,7 @@ namespace pwiz.PanoramaClient
             this.FormClosing += new System.Windows.Forms.FormClosingEventHandler(this.Form1_FormClosing);
             this.Load += new System.EventHandler(this.FilePicker_Load);
             this.splitContainer1.Panel2.ResumeLayout(false);
+            this.splitContainer1.Panel2.PerformLayout();
             ((System.ComponentModel.ISupportInitialize)(this.splitContainer1)).EndInit();
             this.splitContainer1.ResumeLayout(false);
             this.panel1.ResumeLayout(false);
@@ -313,5 +330,6 @@ namespace pwiz.PanoramaClient
         private ColumnHeader colVersions;
         private ColumnHeader colReplacedBy;
         private ColumnHeader colCreated;
+        private Label noFiles;
     }
 }
