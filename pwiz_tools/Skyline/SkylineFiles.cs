@@ -2271,6 +2271,39 @@ namespace pwiz.Skyline
                     }
                     if (!ReferenceEquals(doc.Settings, newSettings))
                         doc = doc.ChangeSettings(newSettings);
+
+                    if (importer.InputType == SrmDocument.DOCUMENT_TYPE.small_molecules)
+                    {
+                        // We create new nodes with automanage turned off, but it might be interesting to user to have that on for isotopes etc
+                        // Try applying auto-pick refinement to see if that changes anything 
+                        var refine = new RefinementSettings { AutoPickChildrenAll = PickLevel.precursors | PickLevel.transitions, AutoPickChildrenOff = false };
+                        var docManaged = refine.Refine(doc);
+                        if (docManaged.MoleculeTransitionCount != 0 && // Automanage would turn everything off, not interesting
+                            !Equals(docManaged.MoleculeTransitionCount, doc.MoleculeTransitionCount))
+                        {
+                            var existingPrecursorCount = docCurrent.MoleculeTransitions?.Where(t => t.IsMs1).Count();
+                            var existingFragmentCount = docCurrent.MoleculeTransitions?.Where(t => !t.IsMs1).Count();
+                            var managedPrecursorCount = docManaged.MoleculeTransitions?.Where(t => t.IsMs1).Count();
+                            var managedFragmentCount = docManaged.MoleculeTransitions?.Where(t => !t.IsMs1).Count();
+                            var docPrecursorCount = doc.MoleculeTransitions?.Where(t => t.IsMs1).Count();
+                            var docFragmentCount = doc.MoleculeTransitions?.Where(t => !t.IsMs1).Count();
+                            var prompt = string.Format(
+                                Resources.SkylineWindow_ImportMassList_Do_you_want_to_use_the_document_settings_to_automanage_these_new_transitions,
+                                managedPrecursorCount - existingPrecursorCount,
+                                managedFragmentCount - existingFragmentCount,
+                                docPrecursorCount - existingPrecursorCount,
+                                docFragmentCount - existingFragmentCount);
+                            var result = MultiButtonMsgDlg.Show(this, prompt, Resources.SkylineWindow_ImportMassList_Enable, Resources.SkylineWindow_ImportMassList_Disable, true);
+                            if (result == DialogResult.Cancel)
+                            {
+                                doc = docCurrent;
+                            }
+                            else if (result != DialogResult.No)
+                            {
+                                doc = docManaged;
+                            }
+                        }
+                    }
                 }
                 catch (Exception x)
                 {
