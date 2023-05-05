@@ -1966,6 +1966,14 @@ namespace pwiz.Skyline.FileUI
                     showRunLength = true;                    
                 }
             }
+            else
+            {
+                if (!IsDia && Equals(InstrumentType, ExportInstrumentType.ABI_7600))
+                {
+                    labelDwellTime.Text = ACCUMULATION_TIME_TXT;
+                    showAccumulation = true;
+                }
+            }
             labelDwellTime.Visible = showDwell || showAccumulation || showRunLength;
             labelDwellTime.TabIndex = textRunLength.TabIndex-1;
             textDwellTime.Visible = showDwell;

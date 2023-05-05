@@ -580,6 +580,7 @@ namespace BuildSciexMethod
         public float? AveragePeakArea { get; private set; }
         public double? RTWindow { get; private set; }
         public double? CoV { get; private set; }
+        public double? PredictedRt { get; private set; } 
 
         public override string ToString()
         {
