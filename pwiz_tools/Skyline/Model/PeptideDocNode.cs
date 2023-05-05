@@ -227,6 +227,9 @@ namespace pwiz.Skyline.Model
         public Color Color { get; private set; }
         public static readonly Color UNKNOWN_COLOR = Color.FromArgb(170, 170, 170);
 
+        // For robust chromatogram association in the event of user tweaking molecule details like name, CAS etc (but not mass!)
+        public Target ChromatogramTarget => Peptide.OriginalMoleculeTarget ?? ModifiedTarget;
+
         public Target Target { get { return Peptide.Target; }}
         public string TextId { get { return CustomInvariantNameOrText(Peptide.Sequence); } }
         public string RawTextId { get { return CustomInvariantNameOrText(ModifiedTarget.Sequence); } }
@@ -682,7 +685,10 @@ namespace pwiz.Skyline.Model
         // Note: this potentially returns a node with a different ID, which has to be Inserted rather than Replaced
         public PeptideDocNode ChangeCustomIonValues(SrmSettings settings, CustomMolecule customMolecule, ExplicitRetentionTimeInfo explicitRetentionTime)
         {
-            var newPeptide = new Peptide(customMolecule);
+            // Make note of original description for chromatogram association, if nothing has changed to affect the chromatogram, so we can keep the association
+            var sameMass = Equals(customMolecule.AverageMass, Peptide.CustomMolecule.AverageMass) && 
+                           Equals(customMolecule.Formula, Peptide.CustomMolecule.Formula);
+            var newPeptide = new Peptide(customMolecule, sameMass ? Peptide.Target : null);
             Helpers.AssignIfEquals(ref newPeptide, Peptide);
             if (Equals(Peptide, newPeptide))
             {
