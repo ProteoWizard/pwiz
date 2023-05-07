@@ -1,1 +1,0 @@
-pscp -r publish64\* proteome.gs.washington.edu:/www/html/software/topograph/daily/x64
