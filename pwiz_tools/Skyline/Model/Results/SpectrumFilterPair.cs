@@ -152,6 +152,24 @@ namespace pwiz.Skyline.Model.Results
             // All-ions extraction for MS1 scans only
             if (Q1 == 0)
                 return null;
+            if (CollisionEnergy.HasValue)
+            {
+                foreach (var spectrum in spectra)
+                {
+                    foreach (var precursor in spectrum.Precursors)
+                    {
+                        if (!precursor.PrecursorCollisionEnergy.HasValue)
+                        {
+                            return null;
+                        }
+
+                        if (Math.Abs(precursor.PrecursorCollisionEnergy.Value - CollisionEnergy.Value) > 0.05)
+                        {
+                            return null;
+                        }
+                    }
+                }
+            }
 
             return FilterSpectrumList(spectra, Ms2ProductFilters, HighAccQ3, useIonMobilityHighEnergyOffset);
         }
@@ -174,13 +192,6 @@ namespace pwiz.Skyline.Model.Results
             if (HasIonMobilityFAIMS() && spectra.All(s => !Equals(IonMobilityInfo.IonMobility, s.IonMobility)))
             {
                 return null; // No compensation voltage match
-            }
-
-            if (CollisionEnergy.HasValue &&
-                spectra.SelectMany(s => s.Precursors).Select(p => p.PrecursorCollisionEnergy)
-                    .Any(ce => !ce.HasValue || Math.Abs(ce.Value - CollisionEnergy.Value) > 0.05))
-            {
-                return null;
             }
 
             int targetCount = 1;
