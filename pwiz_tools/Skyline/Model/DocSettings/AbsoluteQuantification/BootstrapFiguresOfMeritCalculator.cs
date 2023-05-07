@@ -148,7 +148,7 @@ namespace pwiz.Skyline.Model.DocSettings.AbsoluteQuantification
                 }
             }
 
-            double loq = maxConcentration;
+            double loq = double.MaxValue;
             for (int iConcentration = concentrationValues.Count - 1; iConcentration >= 0; iConcentration--)
             {
                 var cv = GetCv(areaGrid[iConcentration]);

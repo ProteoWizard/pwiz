@@ -76,7 +76,17 @@ namespace pwiz.Skyline.Model.DocSettings.AbsoluteQuantification
 
         public static double? CalculateLodFromTurningPoint(LodCalculationArgs args)
         {
-            return (args.CalibrationCurve as CalibrationCurve.Bilinear)?.TurningPoint;
+            if (args.CalibrationCurve is CalibrationCurve.Bilinear bilinear)
+            {
+                return bilinear.TurningPoint;
+            }
+
+            if (args.CalibrationCurve is CalibrationCurve.Linear)
+            {
+                return args.Standards.Min(pt => pt.X);
+            }
+
+            return null;
         }
 
         public static double? CalculateLodFromTurningPointWithStdErr(LodCalculationArgs args)
