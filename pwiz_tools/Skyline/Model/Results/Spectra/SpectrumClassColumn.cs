@@ -45,7 +45,7 @@ namespace pwiz.Skyline.Model.Results.Spectra
             MakeColumn(nameof(SpectrumClass.ScanDescription), spectrum => spectrum.ScanDescription);
 
         public static readonly SpectrumClassColumn CollisionEnergy =
-            MakeColumn(nameof(SpectrumClass.CollisionEnergy), spectrum => spectrum.CollisionEnergy);
+            MakeColumn(nameof(SpectrumClass.CollisionEnergy), GetCollisionEnergy);
 
         public static readonly SpectrumClassColumn ScanWindowWidth =
             MakeColumn(nameof(SpectrumClass.ScanWindowWidth),
@@ -223,6 +223,22 @@ namespace pwiz.Skyline.Model.Results.Spectra
             {
                 return _getAbbreviatedColumName();
             }
+        }
+
+        /// <summary>
+        /// If the spectrum has only one collision energy, then return that collision energy.
+        /// Otherwise, return null.
+        /// </summary>
+        private static double? GetCollisionEnergy(SpectrumMetadata spectrumMetadata)
+        {
+            var collisionEnergies = spectrumMetadata.GetPrecursors(1).Select(precursor => precursor.CollisionEnergy)
+                .OfType<double>().Distinct().ToList();
+            if (collisionEnergies.Count == 1)
+            {
+                return collisionEnergies[0];
+            }
+
+            return null;
         }
     }
 }
