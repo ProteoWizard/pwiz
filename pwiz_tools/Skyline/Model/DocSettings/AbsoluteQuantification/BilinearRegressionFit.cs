@@ -15,6 +15,11 @@ namespace pwiz.Skyline.Model.DocSettings.AbsoluteQuantification
         {
             var concentrations = points.Select(pt => pt.X).Distinct().OrderBy(x=>x).ToList();
             ScoredBilinearCurve bestCurve = null;
+            var linearCurve = LINEAR.Fit(points) as CalibrationCurve.Linear;
+            if (linearCurve != null)
+            {
+                bestCurve = ScoredBilinearCurve.FromCalibrationCurve(linearCurve, points);
+            }
             foreach (var xOffset in concentrations)
             {
                 var candidateCurveFit = ScoredBilinearCurve.WithOffset(xOffset, points);

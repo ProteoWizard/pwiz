@@ -87,7 +87,7 @@ namespace pwiz.Skyline.Model.DocSettings.AbsoluteQuantification
             {
                 return FlatBilinearCurve(points);
             }
-            var linearPoints = points.Where(pt => pt.X >= xOffset).ToList();
+            var linearPoints = points.Where(pt => pt.X > xOffset).ToList();
             if (linearPoints.Select(pt=>pt.X).Distinct().Count() < 2)
             {
                 return FlatBilinearCurve(points);
