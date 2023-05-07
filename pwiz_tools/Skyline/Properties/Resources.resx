@@ -11956,7 +11956,6 @@ If you do not have the original file, you may build the library with embedded sp
   <data name="ToolInstaller_UnpackZipTool_The_selected_zip_file_did_not_specify_any_items_to_add_to_the_Tools_menu_" xml:space="preserve">
     <value>The selected zip file did not specify any items to add to the Tools menu.</value>
   </data>
-<<<<<<< HEAD
   <data name="OptimizeTransitionsForm_FormatQuantLimitString_Unknown" xml:space="preserve">
     <value>Unknown</value>
   </data>
