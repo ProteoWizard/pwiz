@@ -595,18 +595,12 @@ namespace pwiz.Skyline.Model
         {
             var exporter = InitExporter(new SciexOsMethodExporter(document, instrumentType));
             exporter.ExportSciexOSQuant = ExportSciexOSQuant;
-            if (MethodType == ExportMethodType.Standard)
-            {
-                switch (instrumentType)
-                {
-                    case ExportInstrumentType.ABI_7500:
-                        exporter.DwellTime = DwellTime;
-                        break;
-                    case ExportInstrumentType.ABI_7600:
-                        exporter.AccumulationTime = AccumulationTime;
-                        break;
-                }
-            }
+            
+            if (MethodType == ExportMethodType.Standard && instrumentType == ExportInstrumentType.ABI_7500)
+                exporter.DwellTime = DwellTime;
+            if(instrumentType == ExportInstrumentType.ABI_7600)
+                exporter.AccumulationTime = AccumulationTime;
+
             PerformLongExport(m => exporter.ExportMethod(fileName, templateName, m));
             return exporter;
         }
@@ -2236,7 +2230,7 @@ namespace pwiz.Skyline.Model
             string q1 = SequenceMassCalc.PersistentMZ(nodeTranGroup.PrecursorMz).ToString(CultureInfo);
             string q3 = nodeTran != null ? GetProductMz(SequenceMassCalc.PersistentMZ(nodeTran.Mz), step).ToString(CultureInfo) : string.Empty;
 
-            GetTransitionTimeValues(nodePep, nodeTranGroup, out var predictedRT, out var dwellOrRt);
+            GetTransitionTimeValues(nodePep, nodeTranGroup, out var predictedRT, out var dwellOrRt, out var xicOrRt);
             GetPeptideAndGroupNames(nodePepGroup, nodePep, nodeTranGroup, nodeTran, step, out var extPeptideId, out var extGroupId);
 
             double ceValue = GetCollisionEnergy(nodePep, nodeTranGroup, nodeTran, step);
@@ -2300,7 +2294,8 @@ namespace pwiz.Skyline.Model
                     extGroupId,
                     averagePeakAreaText,
                     rtWindowText,
-                    primaryOrSecondary),
+                    primaryOrSecondary,
+                    xicOrRt),
                 compensationVoltage);
 
             writer.Write(oneLine.Replace(',', FieldSeparator));
@@ -2314,7 +2309,8 @@ namespace pwiz.Skyline.Model
                                           string extGroupId,
                                           string averagePeakAreaText,
                                           string variableRtWindowText,
-                                          string primaryOrSecondary)
+                                          string primaryOrSecondary,
+                                          string xicOrRt)
         {
             if (MethodType == ExportMethodType.Triggered) // CSV for triggered
             {
@@ -2420,20 +2416,27 @@ namespace pwiz.Skyline.Model
             return string.Empty;
         }
 
-        private void GetTransitionTimeValues(PeptideDocNode nodePep, TransitionGroupDocNode nodeTranGroup, out double? predictedRT, out string dwellOrRt)
+        private void GetTransitionTimeValues(PeptideDocNode nodePep, TransitionGroupDocNode nodeTranGroup, out double? predictedRT, out string dwellOrRt, out string xicOrRt)
         {
-            if (MethodType == ExportMethodType.Standard)
-            {
-                predictedRT = new PeptidePrediction.WindowRT(0, false);
-                dwellOrRt = AccumulationTime.HasValue
-                    ? Math.Round(AccumulationTime.Value, 4).ToString(CultureInfo)
-                    : Math.Round(DwellTime.GetValueOrDefault(), 2).ToString(CultureInfo);
-                return;
-            }
-
             var prediction = Document.Settings.PeptideSettings.Prediction;
             predictedRT = prediction.PredictRetentionTime(Document, nodePep, nodeTranGroup,
                 SchedulingReplicateIndex, SchedulingAlgorithm, Document.Settings.HasResults, out var rtWindow);
+
+            if (MethodType == ExportMethodType.Standard)
+            {
+                //predictedRT = new PeptidePrediction.WindowRT(0, false);
+                dwellOrRt = AccumulationTime.HasValue
+                    ? Math.Round(AccumulationTime.Value, 4).ToString(CultureInfo)
+                    : Math.Round(DwellTime.GetValueOrDefault(), 2).ToString(CultureInfo);
+                xicOrRt = predictedRT.HasValue ? Math.Round(predictedRT.Value, 2).ToString(CultureInfo) : @"0";
+                return;
+            }
+            else
+            {
+                xicOrRt = AccumulationTime.HasValue
+                    ? Math.Round(AccumulationTime.Value, 4).ToString(CultureInfo)
+                    : Math.Round(DwellTime.GetValueOrDefault(), 2).ToString(CultureInfo);
+            }
 
             dwellOrRt = (RetentionTimeRegression.GetRetentionTimeDisplay(predictedRT) ?? 0).ToString(CultureInfo);
             RTWindow = rtWindow; // Store for later use
@@ -2667,7 +2670,7 @@ namespace pwiz.Skyline.Model
                                                      string extGroupId,
                                                      string averagePeakAreaText,
                                                      string variableRtWindowText,
-                                                     string primaryOrSecondary)
+                                                     string primaryOrSecondary, string xicOrRt)
         {
             // Provide all columns for method export
             return string.Format(@",{0},{1},{2},{3},{4},{5},{6},{7},{8}",
@@ -2923,10 +2926,11 @@ namespace pwiz.Skyline.Model
             string extGroupId,
             string averagePeakAreaText,
             string variableRtWindowText,
-            string primaryOrSecondary)
+            string primaryOrSecondary, 
+            string xicOrRt)
         {
             // Provide all columns for method export
-            return string.Format(@",{0},{1},{2},{3},{4},{5},{6},{7},{8}",
+            return string.Format(@",{0},{1},{2},{3},{4},{5},{6},{7},{8},{9}",
                 dp,
                 ce,
                 precursorWindow,
@@ -2935,7 +2939,8 @@ namespace pwiz.Skyline.Model
                 averagePeakAreaText,
                 variableRtWindowText,
                 string.Empty,  // Threshold for triggering secondary
-                primaryOrSecondary);
+                primaryOrSecondary,
+                xicOrRt);
         }
     }
 

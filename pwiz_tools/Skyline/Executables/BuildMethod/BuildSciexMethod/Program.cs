@@ -397,14 +397,21 @@ namespace BuildSciexMethod
                 var groupName = nameParts.Length >= 2
                     ? string.Format("{0}.{1}", nameParts[0], nameParts[1])
                     : transition.Label;
+                var rt = transition.DwellOrRt;
+                var xic = transition.XicOrRt;
+                if (StandardMethod)
+                {
+                    rt = transition.XicOrRt ?? 0;
+                    xic = transition.DwellOrRt;
+                }
 
                 export += string.Format("{0}\t{1}\t{2}\t{3}\t{4}\t{5}",
                     groupName,
                     transition.Label,
                     transition.PrecursorMz,
                     transition.ProductMz,
-                    0.02,
-                    transition.DwellOrRt);
+                    xic,
+                    rt);
                 export += Environment.NewLine;
             }
             using (var file = new StreamWriter(filePath))
@@ -544,7 +551,8 @@ namespace BuildSciexMethod
             [10] = (t, s) => { t.RTWindow = string.IsNullOrEmpty(s) ? (double?)null : 60 * double.Parse(s, CultureInfo.InvariantCulture); },
             [11] = (t, s) => { t.Threshold = string.IsNullOrEmpty(s) ? (double?)null : double.Parse(s, CultureInfo.InvariantCulture); },
             [12] = (t, s) => { t.Primary = string.IsNullOrEmpty(s) ? (int?)null : int.Parse(s, CultureInfo.InvariantCulture); },
-            [13] = (t, s) => { t.CoV = string.IsNullOrEmpty(s) ? (double?)null : double.Parse(s, CultureInfo.InvariantCulture); },
+            [13] = (t, s) => { t.XicOrRt = string.IsNullOrEmpty(s) ? (double?)null : double.Parse(s, CultureInfo.InvariantCulture); },
+            [14] = (t, s) => { t.CoV = string.IsNullOrEmpty(s) ? (double?)null : double.Parse(s, CultureInfo.InvariantCulture); },
         };
 
         public MethodTransition(string transitionListLine)
@@ -569,6 +577,7 @@ namespace BuildSciexMethod
         public double PrecursorMz { get; private set; }
         public double? ProductMz { get; private set; }
         public double DwellOrRt { get; private set; }
+        public double? XicOrRt { get; private set; }
         public string Label { get; set; }
         public double CE { get; private set; }
         public double DP { get; private set; }
