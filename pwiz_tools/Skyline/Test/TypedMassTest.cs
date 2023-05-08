@@ -43,6 +43,7 @@ namespace pwiz.SkylineTest
             var e = new TypedMass(1, MassType.Monoisotopic);
             var f = new TypedMass(1, MassType.MonoisotopicHeavy);
             var g = new TypedMass(-1, MassType.MonoisotopicMassH);
+            var h = new TypedMass(-1, MassType.Average);
 
             AssertEx.AreNotEqual(a, b, "these are not equal");
             AssertEx.AreEqual(a, a);
@@ -58,8 +59,9 @@ namespace pwiz.SkylineTest
             AssertEx.AreEqual(TypedMass.ZERO_AVERAGE_MASSNEUTRAL, d - a);
             AssertEx.AreEqual(b, a + d);
             AssertEx.AreEqual(b, a * 2);
-            AssertEx.AreEqual(g, d - b);
+            AssertEx.AreEqual(g.Value, (d - b).Value); // Can't compare directly because g is mono and d-b is average 
             AssertEx.AreEqual(-1.0, g);
+            AssertEx.AreEqual(h, d - b); // Can't compare directly because g is mono and d-b is average 
         }
     }
 }
