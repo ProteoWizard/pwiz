@@ -498,13 +498,7 @@ namespace pwiz.PanoramaClient
     public class WebPanoramaClient : IPanoramaClient
     {
         public Uri ServerUri { get; private set; }
-        public string SelectedPath { get; private set; }
-        private IProgressMonitor ProgressMonitor { get; set; }
-        private IProgressStatus ProgressStatus { get; set; }
-        public bool Success { get; private set; } = true;
-
-        public string DownloadPath { get; private set; }
-
+        
         public WebPanoramaClient(Uri server)
         {
             ServerUri = server;
@@ -725,84 +719,50 @@ namespace pwiz.PanoramaClient
         /// Downloads a given file to a given folder path and shows the progress
         /// of the download during downloading
         /// </summary>
-        /// <param name="path"></param>
-        /// <param name="server"></param>
-        /// <param name="downloadName"></param>
-        /// <param name="pm"></param>
-        /// <param name="size"></param>
-        /// <param name="fileName"></param>
-        public void DownloadFile(string path, PanoramaServer server, string downloadName, IProgressMonitor pm, long size, string fileName)
+        public void DownloadFile(string fileUrl, string fileName, long fileSize, string downloadPath, PanoramaServer server,  IProgressMonitor pm, IProgressStatus progressStatus)
         {
-            path = GetDownloadName(path);
-            DownloadPath = path;
-            ProgressMonitor = pm;
-            ProgressStatus = new ProgressStatus("Downloading...");
             using var wc = new WebClientWithCredentials(server.URI, server.Username, server.Password);
             wc.DownloadProgressChanged += (s, e) =>
             {
                 var progressPercent = e.ProgressPercentage > 0 ? e.ProgressPercentage : -1;
-                if (progressPercent == -1 && size > 0)
+                if (progressPercent == -1 && fileSize > 0)
                 {
-                    progressPercent = (int)(e.BytesReceived * 100 / size);
+                    progressPercent = (int)(e.BytesReceived * 100 / fileSize);
                 }
                 var downloaded = e.BytesReceived;
                 var message = TextUtil.LineSeparate(
                     string.Format("Downloading {0}", fileName),
                     string.Empty,
-                    GetDownloadedSize(downloaded, size > 0 ? (long)size : 0));
-                ProgressStatus = ProgressStatus.ChangeMessage(message);
-                ProgressMonitor.UpdateProgress(ProgressStatus = ProgressStatus.ChangePercentComplete(progressPercent));
+                    GetDownloadedSize(downloaded, fileSize > 0 ? (long)fileSize : 0));
+                progressStatus = progressStatus.ChangeMessage(message);
+                pm.UpdateProgress(progressStatus = progressStatus.ChangePercentComplete(progressPercent));
             };
             var downloadComplete = false;
             wc.DownloadFileCompleted += (s, e) =>
             {
-                if (e.Error != null && !ProgressMonitor.IsCanceled)
+                if (e.Error != null && !pm.IsCanceled)
                 {
-                    Success = false;
-                    ProgressMonitor.UpdateProgress(ProgressStatus = ProgressStatus.ChangeErrorException(e.Error));
+                    pm.UpdateProgress(progressStatus = progressStatus.ChangeErrorException(e.Error));
                 }
                 downloadComplete = true;
-                Success = true;
             };
             wc.DownloadFileAsync(
 
                 // Param1 = Link of file
-                new Uri(downloadName),
+                new Uri(fileUrl),
                 // Param2 = Path to save
-                path
+                downloadPath
             );
             while (!downloadComplete)
             {
-                if (ProgressMonitor.IsCanceled)
+                if (pm.IsCanceled)
                 {
                     wc.CancelAsync();
-                    Success = false;
                 }
                 Thread.Sleep(100);
             }
         }
 
-        private string GetDownloadName(string fullPath)
-        {
-            var count = 1;
-            var fileName = fullPath;
-            var extension = Path.GetExtension(fullPath);
-            if (fullPath.EndsWith(".sky.zip"))
-            {
-                extension = ".sky.zip";
-                fileName = fileName.Replace(".sky.zip", string.Empty);
-            }
-            fileName = Path.GetFileNameWithoutExtension(fileName);
-            
-            var newName = fullPath;
-            var path = Path.GetDirectoryName(fullPath);
-            while (File.Exists(newName))
-            {
-                var formattedName = string.Format("{0}({1})", fileName, count++);
-                newName = Path.Combine(path, formattedName + extension);
-            }
-            return newName;
-        }
 
         /// <summary>
         /// Borrowed from SkypSupport.cs, displays download progress

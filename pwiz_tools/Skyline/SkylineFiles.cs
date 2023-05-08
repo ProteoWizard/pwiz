@@ -1008,37 +1008,39 @@ namespace pwiz.Skyline
                     {
                         var size = dlg.FileSize;
                         //Use filesaver instead of my own method
-                        var fileSaver = new FileSaver(dlg.FileName);
-                        fileSaver.Commit();
-                        fileSaver.Dispose();
+                        // var fileSaver = new FileSaver(dlg.FileName);
+                        // fileSaver.Commit();
+                        // fileSaver.Dispose();
                         using (var longWaitDlg = new LongWaitDlg
                                {
-                                   Text = "Downloading selected file",
+                                   Text = $"Downloading file {dlg.FileName}.",
                                })
                         {
                             
-                            longWaitDlg.PerformWork(this, 800,
-                                progressMonitor => panoramaClient.DownloadFile(downloadPath, curServer, dlg.FileUrl, progressMonitor, size, dlg.FileName));
-                            if (!panoramaClient.Success)
+                            var progressStatus = longWaitDlg.PerformWork(this, 800,
+                                progressMonitor => panoramaClient.DownloadFile(dlg.FileUrl, dlg.FileName, size, downloadPath, curServer, 
+                                    progressMonitor, new ProgressStatus("Downloading...")));
+                            if (progressStatus.IsCanceled || progressStatus.IsError)
                             {
-                                FileEx.SafeDelete(panoramaClient.DownloadPath, true);
+                                FileEx.SafeDelete(downloadPath, true);
+                                return;
                             }
                             if (longWaitDlg.IsCanceled)
                                 return;
                         }
-                        if (panoramaClient.Success && dlg.FileName.EndsWith(SrmDocumentSharing.EXT) && !string.IsNullOrEmpty(downloadPath))
+                        if (dlg.FileName.EndsWith(SrmDocumentSharing.EXT) && !string.IsNullOrEmpty(downloadPath))
                         {
-                            OpenSharedFile(panoramaClient.DownloadPath);
+                            OpenSharedFile(downloadPath);
                         }
                         else if (dlg.FileName.EndsWith(SrmDocument.EXT) && !string.IsNullOrEmpty(downloadPath))
                         {
-                            OpenFile(panoramaClient.DownloadPath);
+                            OpenFile(downloadPath);
                         }
                     }
-                    if (!string.IsNullOrEmpty(panoramaClient.SelectedPath))
-                    {
-                        Settings.Default.LastFolderPath = panoramaClient.SelectedPath;
-                    }
+                    // if (!string.IsNullOrEmpty(downloadPath))
+                    // {
+                    //     Settings.Default.LastFolderPath = panoramaClient.SelectedPath;
+                    // }
                 }
                 Settings.Default.FileExpansion = dlg.TreeState;
                 Settings.Default.PanoramaSkyFiles = dlg.ShowingSky;
@@ -1048,6 +1050,28 @@ namespace pwiz.Skyline
             {
                 MessageDlg.ShowException(this, e);
             }
+        }
+
+        private string GetDownloadName(string fullPath)
+        {
+            var count = 1;
+            var fileName = fullPath;
+            var extension = Path.GetExtension(fullPath);
+            if (fullPath.EndsWith(".sky.zip"))
+            {
+                extension = ".sky.zip";
+                fileName = fileName.Replace(".sky.zip", string.Empty);
+            }
+            fileName = Path.GetFileNameWithoutExtension(fileName);
+
+            var newName = fullPath;
+            var path = Path.GetDirectoryName(fullPath);
+            while (File.Exists(newName))
+            {
+                var formattedName = string.Format("{0}({1})", fileName, count++);
+                newName = Path.Combine(path, formattedName + extension);
+            }
+            return newName;
         }
 
         private void saveMenuItem_Click(object sender, EventArgs e)
