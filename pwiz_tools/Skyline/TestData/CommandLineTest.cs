@@ -336,12 +336,6 @@ namespace pwiz.SkylineTestData
                 "--instrument-dynamic-min-mz",
                 "--instrument-method-mz-tolerance=" + 0.42,
                 "--instrument-triggered-chromatograms",
-                "--import-fasta=" + fastaPath,
-                "--associate-proteins-group-proteins",
-                "--associate-proteins-shared-peptides=AssignedToBestProtein",
-                "--associate-proteins-minimal-protein-list",
-                "--associate-proteins-remove-subsets",
-                "--associate-proteins-min-peptides=2",
             };
 
             string output = RunCommand(settings);
@@ -355,6 +349,8 @@ namespace pwiz.SkylineTestData
             Assert.AreEqual("All Ions", doc.Settings.TransitionSettings.FullScan.IsolationScheme.Name);
             Assert.AreEqual(FullScanMassAnalyzerType.centroided, doc.Settings.TransitionSettings.FullScan.ProductMassAnalyzer);
             Assert.AreEqual(FullScanMassAnalyzerType.centroided, doc.Settings.TransitionSettings.FullScan.PrecursorMassAnalyzer);
+            Assert.AreEqual(5, doc.Settings.TransitionSettings.FullScan.PrecursorRes);
+            Assert.AreEqual(5, doc.Settings.TransitionSettings.FullScan.ProductRes);
             Assert.AreEqual(RetentionTimeFilterType.scheduling_windows, doc.Settings.TransitionSettings.FullScan.RetentionTimeFilterType);
             Assert.AreEqual(5, doc.Settings.TransitionSettings.FullScan.RetentionTimeFilterLength);
             Assert.AreEqual("2, 3, 4", doc.Settings.TransitionSettings.Filter.PeptidePrecursorChargesString);
@@ -373,12 +369,114 @@ namespace pwiz.SkylineTestData
             Assert.AreEqual(true, doc.Settings.TransitionSettings.Instrument.IsDynamicMin);
             Assert.AreEqual(0.42, doc.Settings.TransitionSettings.Instrument.MzMatchTolerance);
             Assert.AreEqual(true, doc.Settings.TransitionSettings.Instrument.TriggeredAcquisition);
+
+            // test trying to associate proteins without a FASTA set
+            Settings.Default.LastProteinAssociationFastaFilepath = null;
+            settings = new[]
+            {
+                "--in=" + docPath,
+                "--associate-proteins-group-proteins",
+            };
+            output = RunCommand(settings);
+            StringAssert.Contains(output, Resources.CommandLine_AssociateProteins_Failed_to_associate_proteins);
+            StringAssert.Contains(output, Resources.CommandLine_AssociateProteins_a_FASTA_file_must_be_imported_before_associating_proteins);
+
+            // test importing FASTA and associating proteins
+            settings = new[]
+            {
+                "--in=" + docPath,
+                "--save",
+                "--import-fasta=" + fastaPath,
+                "--associate-proteins-group-proteins",
+                "--associate-proteins-shared-peptides=AssignedToBestProtein",
+                "--associate-proteins-minimal-protein-list",
+                "--associate-proteins-remove-subsets",
+                "--associate-proteins-min-peptides=2",
+            };
+            output = RunCommand(settings);
+            doc = ResultsUtil.DeserializeDocument(docPath);
+            StringAssert.Contains(output, Resources.CommandLine_AssociateProteins_Associating_peptides_with_proteins);
             Assert.AreEqual(true, doc.Settings.PeptideSettings.ProteinAssociationSettings.GroupProteins);
             Assert.AreEqual(ProteinAssociation.SharedPeptides.AssignedToBestProtein, doc.Settings.PeptideSettings.ProteinAssociationSettings.SharedPeptides);
             Assert.AreEqual(true, doc.Settings.PeptideSettings.ProteinAssociationSettings.FindMinimalProteinList);
             Assert.AreEqual(true, doc.Settings.PeptideSettings.ProteinAssociationSettings.RemoveSubsetProteins);
             Assert.AreEqual(2, doc.Settings.PeptideSettings.ProteinAssociationSettings.MinPeptidesPerProtein);
 
+            // test associating proteins in a file with a previously imported FASTA
+            settings = new[]
+            {
+                "--in=" + docPath,
+                "--save",
+                "--associate-proteins-shared-peptides=Removed",
+                "--associate-proteins-remove-subsets",
+                "--associate-proteins-min-peptides=1",
+            };
+
+            output = RunCommand(settings);
+            doc = ResultsUtil.DeserializeDocument(docPath);
+            StringAssert.Contains(output, Resources.CommandLine_AssociateProteins_Associating_peptides_with_proteins);
+            Assert.AreEqual(false, doc.Settings.PeptideSettings.ProteinAssociationSettings.GroupProteins);
+            Assert.AreEqual(ProteinAssociation.SharedPeptides.Removed, doc.Settings.PeptideSettings.ProteinAssociationSettings.SharedPeptides);
+            Assert.AreEqual(false, doc.Settings.PeptideSettings.ProteinAssociationSettings.FindMinimalProteinList);
+            Assert.AreEqual(true, doc.Settings.PeptideSettings.ProteinAssociationSettings.RemoveSubsetProteins);
+            Assert.AreEqual(1, doc.Settings.PeptideSettings.ProteinAssociationSettings.MinPeptidesPerProtein);
+
+            // test changing parameter order
+            settings = new[]
+            {
+                "--new=" + docPath,
+                "--overwrite",
+                "--full-scan-precursor-res=5",
+                "--full-scan-precursor-analyzer=centroided",
+                "--full-scan-precursor-isotopes=Count",
+            };
+
+            output = RunCommand(settings);
+            StringAssert.Contains(output, string.Format(Resources.CommandLine_NewSkyFile_Deleting_existing_file___0__, docPath));
+            doc = ResultsUtil.DeserializeDocument(docPath);
+            Assert.AreEqual(FullScanPrecursorIsotopes.Count, doc.Settings.TransitionSettings.FullScan.PrecursorIsotopes);
+            Assert.AreEqual(FullScanMassAnalyzerType.centroided, doc.Settings.TransitionSettings.FullScan.PrecursorMassAnalyzer);
+            Assert.AreEqual(5, doc.Settings.TransitionSettings.FullScan.PrecursorRes);
+
+            File.Delete(docPath);
+
+            // test parameter validation: analyzer specified with isotopes=none
+            settings = new[]
+            {
+                "--new=" + docPath,
+                "--full-scan-precursor-isotopes=None",
+                "--full-scan-precursor-analyzer=centroided",
+            };
+
+            output = RunCommand(settings);
+            StringAssert.Contains(output, string.Format(
+                Resources.CommandArgs_WarnArgRequirment_Warning__Use_of_the_argument__0__requires_the_argument__1_,
+                CommandArgs.ARG_FULL_SCAN_PRECURSOR_ANALYZER.ArgumentText,
+                CommandArgs.ARG_FULL_SCAN_PRECURSOR_RES.ArgumentText));
+
+            // test parameter validation: DDA method with isolation scheme
+            settings = new[]
+            {
+                "--new=" + docPath,
+                "--full-scan-acquisition-method=DDA",
+                "--full-scan-isolation-scheme=All Ions",
+            };
+
+            output = RunCommand(settings);
+            StringAssert.Contains(output, string.Format(
+                Resources.TransitionFullScan_DoValidate_An_isolation_window_width_value_is_not_allowed_in__0___mode,
+                FullScanAcquisitionMethod.DDA.Label));
+
+            // test parameter validation: DIA method without isolation scheme
+            settings = new[]
+            {
+                "--new=" + docPath,
+                "--full-scan-acquisition-method=DIA",
+            };
+
+            output = RunCommand(settings);
+            StringAssert.Contains(output,
+                Resources.TransitionFullScan_DoValidate_An_isolation_window_width_value_is_required_in_DIA_mode);
         }
 
         [TestMethod]

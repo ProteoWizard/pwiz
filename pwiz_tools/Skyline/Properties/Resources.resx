@@ -12023,4 +12023,7 @@ If you choose Disable, you can enable Auto-select later with the "Refine &gt; Ad
   <data name="SkylineWindow_ImportMassList_Disable" xml:space="preserve">
     <value>&amp;Disable</value>
   </data>
+  <data name="CommandLine_AssociateProteins_a_FASTA_file_must_be_imported_before_associating_proteins" xml:space="preserve">
+    <value>Error: a FASTA file must be imported before associating proteins</value>
+  </data>
 </root>

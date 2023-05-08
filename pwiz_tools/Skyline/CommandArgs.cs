@@ -1391,15 +1391,11 @@ namespace pwiz.Skyline
             {
                 {ARG_FULL_SCAN_PRECURSOR_RES_MZ, ARG_FULL_SCAN_PRECURSOR_RES},
                 {ARG_FULL_SCAN_PRODUCT_RES_MZ, ARG_FULL_SCAN_PRODUCT_RES},
+                {ARG_FULL_SCAN_PRECURSOR_ANALYZER, ARG_FULL_SCAN_PRECURSOR_RES},
+                {ARG_FULL_SCAN_PRODUCT_ANALYZER, ARG_FULL_SCAN_PRODUCT_RES},
             },
             Validate = c =>
             {
-                if (c.FullScanAcquisitionMethod == FullScanAcquisitionMethod.DIA && c.FullScanProductIsolationScheme == null)
-                {
-                    c.WarnArgRequirement(ARG_FULL_SCAN_ACQUISITION_METHOD, ARG_FULL_SCAN_PRODUCT_ISOLATION_SCHEME);
-                    return false;
-                }
-
                 if (c.FullScanProductIsolationScheme != null &&
                     !Settings.Default.IsolationSchemeList.Contains(s => s.Name == c.FullScanProductIsolationScheme) &&
                     !MsDataFileImpl.IsValidFile(c.FullScanProductIsolationScheme))

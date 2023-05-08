@@ -5404,6 +5404,16 @@ namespace pwiz.Skyline.Properties {
         }
         
         /// <summary>
+        ///   Looks up a localized string similar to a FASTA file must be imported before associating proteins.
+        /// </summary>
+        public static string CommandLine_AssociateProteins_a_FASTA_file_must_be_imported_before_associating_proteins {
+            get {
+                return ResourceManager.GetString("CommandLine_AssociateProteins_a_FASTA_file_must_be_imported_before_associating_pr" +
+                        "oteins", resourceCulture);
+            }
+        }
+        
+        /// <summary>
         ///   Looks up a localized string similar to Associating peptides with proteins.
         /// </summary>
         public static string CommandLine_AssociateProteins_Associating_peptides_with_proteins {

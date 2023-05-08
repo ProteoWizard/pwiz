@@ -2145,16 +2145,21 @@ namespace pwiz.Skyline
         {
             try
             {
+                var fastaPath = commandArgs.FastaPath ?? Settings.Default.LastProteinAssociationFastaFilepath;
+                if (fastaPath == null)
+                    throw new ArgumentException(Resources.CommandLine_AssociateProteins_a_FASTA_file_must_be_imported_before_associating_proteins);
                 _out.WriteLine(Resources.CommandLine_AssociateProteins_Associating_peptides_with_proteins);
                 var progressMonitor = new CommandProgressMonitor(_out, new ProgressStatus(String.Empty));
                 var proteinAssociation = new ProteinAssociation(Document, progressMonitor);
-                proteinAssociation.UseFastaFile(commandArgs.FastaPath, DigestProteinToPeptides, progressMonitor);
+                proteinAssociation.UseFastaFile(fastaPath, DigestProteinToPeptides, progressMonitor);
                 proteinAssociation.ApplyParsimonyOptions(commandArgs.AssociateProteinsGroupProteins.GetValueOrDefault(),
                     commandArgs.AssociateProteinsFindMinimalProteinList.GetValueOrDefault(),
                     commandArgs.AssociateProteinsRemoveSubsetProteins.GetValueOrDefault(),
                     commandArgs.AssociateProteinsSharedPeptides.GetValueOrDefault(),
                     commandArgs.AssociateProteinsMinPeptidesPerProtein.GetValueOrDefault(),
                     progressMonitor);
+                Settings.Default.LastProteinAssociationFastaFilepath = fastaPath;
+                Settings.Default.Save();
                 ModifyDocument(doc => proteinAssociation.CreateDocTree(doc, progressMonitor), AuditLogEntry.SettingsLogFunction);
                 return true;
             }
