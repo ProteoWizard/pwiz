@@ -355,7 +355,7 @@ namespace pwiz.Skyline.EditUI.OptimizeTransitions
         {
             lock (SkylineWindow.GetDocumentChangeLock())
             {
-                SkylineWindow.ModifyDocument("Optimize transitions", doc =>
+                SkylineWindow.ModifyDocument(QuantificationStrings.OptimizeDocumentTransitionsForm_Apply_Optimize_transitions, doc =>
                     {
                         if (null != _optimizedDocument && ReferenceEquals(doc, _originalDocument))
                         {
@@ -372,7 +372,7 @@ namespace pwiz.Skyline.EditUI.OptimizeTransitions
 
                         return doc;
                     },
-                    docPair => AuditLogEntry.DiffDocNodes(MessageType.changed_quantitative, docPair, "Unknown"));
+                    docPair => AuditLogEntry.DiffDocNodes(MessageType.changed_quantitative, docPair, QuantificationStrings.OptimizeDocumentTransitionsForm_Apply_Optimize_transitions));
             }
         }
 

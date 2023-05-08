@@ -426,7 +426,7 @@ namespace pwiz.Skyline.Controls.Graphs.Calibration
                 foreach (var points in bootstrapCurves)
                 {
                     // Only assign a title to the first curve so that only one item appears in the Legend
-                    string title = bootstrapCurveItems.Count == 0 ? "Bootstrap Curve" : null;
+                    string title = bootstrapCurveItems.Count == 0 ? QuantificationStrings.CalibrationGraphControl_DoUpdate_Bootstrap_Curve : null;
 
                     var curve = new LineItem(title, new PointPairList(points), color,
                         SymbolType.None, options.LineWidth);
@@ -440,7 +440,7 @@ namespace pwiz.Skyline.Controls.Graphs.Calibration
                 {
                     var lod = FiguresOfMerit.LimitOfDetection.Value;
                     var points = new PointPairList(new[] { lod, lod }, new[] { minY, maxY });
-                    var lodLine = new LineItem("Limit of Detection", points, Color.Black, SymbolType.None)
+                    var lodLine = new LineItem(QuantificationStrings.CalibrationGraphControl_DoUpdate_Limit_of_Detection, points, Color.Black, SymbolType.None)
                     {
                         Line = { Style = DashStyle.Dot, Width = options.LineWidth}
                     };
@@ -450,7 +450,7 @@ namespace pwiz.Skyline.Controls.Graphs.Calibration
                 {
                     var loq = FiguresOfMerit.LimitOfQuantification.Value;
                     var points = new PointPairList(new[] { loq, loq }, new[] { minY, maxY });
-                    var loqLine = new LineItem("Lower Limit of Quantification", points, Color.Black, SymbolType.None)
+                    var loqLine = new LineItem(QuantificationStrings.CalibrationGraphControl_DoUpdate_Lower_Limit_of_Quantification, points, Color.Black, SymbolType.None)
                     {
                         Line = { Style = DashStyle.Dash, Width = options.LineWidth}
                     };

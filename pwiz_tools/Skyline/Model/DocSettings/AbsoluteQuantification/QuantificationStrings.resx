@@ -339,4 +339,20 @@
   <data name="LodCalculation_TURNING_POINT_STDERR_Bilinear_turning_point_standard_error" xml:space="preserve">
     <value>Bilinear turning point standard error</value>
   </data>
+  <data name="CalibrationGraphControl_DoUpdate_Bootstrap_Curve" xml:space="preserve">
+    <value>Bootstrap Curve</value>
+  </data>
+  <data name="CalibrationGraphControl_DoUpdate_Limit_of_Detection" xml:space="preserve">
+    <value>Limit of Detection</value>
+  </data>
+  <data name="CalibrationGraphControl_DoUpdate_Lower_Limit_of_Quantification" xml:space="preserve">
+    <value>Lower Limit of Quantification</value>
+  </data>
+  <data name="OptimizeDocumentTransitionsForm_Apply_Optimize_transitions" xml:space="preserve">
+    <value>Optimize transitions</value>
+  </data>
+  <data name="QuantLimit_ToString_LOD___0__LLOQ___1_" xml:space="preserve">
+    <value>LOD: {0} LLOQ: {1}</value>
+    <comment>"LOD" stands for "Limit of detection" and "LLOQ" stands for "Lower limit of quantification"</comment>
+  </data>
 </root>
