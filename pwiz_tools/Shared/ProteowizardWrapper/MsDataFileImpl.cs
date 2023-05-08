@@ -1124,9 +1124,20 @@ namespace pwiz.ProteowizardWrapper
                 return null;
             }
             var metadata = new SpectrumMetadata(id.abbreviate(spectrum.id), retentionTime.Value);
-            metadata = metadata.ChangePrecursors(GetPrecursorsByMsLevel(spectrum).Select(level =>
-                level.Where(precursor => precursor.IsolationMz.HasValue)
-                    .Select(precursor => new SpectrumPrecursor(precursor.IsolationMz.Value))));
+            var precursorsByMsLevel = new List<IEnumerable<SpectrumPrecursor>>();
+            foreach (var level in GetPrecursorsByMsLevel(spectrum))
+            {
+                List<SpectrumPrecursor> spectrumPrecursors = new List<SpectrumPrecursor>();
+                foreach (var msPrecursor in level)
+                {
+                    if (msPrecursor.IsolationMz.HasValue)
+                    {
+                        spectrumPrecursors.Add(new SpectrumPrecursor(msPrecursor.IsolationMz.Value).ChangeCollisionEnergy(msPrecursor.PrecursorCollisionEnergy));
+                    }
+                }
+                precursorsByMsLevel.Add(spectrumPrecursors);
+            }
+            metadata = metadata.ChangePrecursors(precursorsByMsLevel);
             metadata = metadata.ChangeScanDescription(GetScanDescription(spectrum));
             metadata = metadata.ChangePresetScanConfiguration(GetPresetScanConfiguration(spectrum));
             var instrumentConfig = spectrum.scanList.scans.FirstOrDefault()?.instrumentConfiguration;

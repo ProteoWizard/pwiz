@@ -85,8 +85,6 @@ namespace pwiz.Common.Spectra
             return ChangeProp(ImClone(this), im => im.ScanDescription = scanDescription);
         }
 
-        public double? CollisionEnergy { get; private set; }
-
         public double? CompensationVoltage { get; private set; }
 
         public SpectrumMetadata ChangeCompensationVoltage(double? compensationVoltage)
@@ -106,16 +104,6 @@ namespace pwiz.Common.Spectra
             });
         }
 
-        public SpectrumMetadata ChangeCollisionEnergy(double? collisionEnergy)
-        {
-            if (CollisionEnergy == collisionEnergy)
-            {
-                return this;
-            }
-
-            return ChangeProp(ImClone(this), im => im.CollisionEnergy = collisionEnergy);
-        }
-
         public string Analyzer { get; private set; }
 
         public SpectrumMetadata ChangeAnalyzer(string value)
@@ -128,7 +116,6 @@ namespace pwiz.Common.Spectra
             return _precursorsByMsLevel.Equals(other._precursorsByMsLevel) && Id == other.Id &&
                    RetentionTime.Equals(other.RetentionTime) && NegativeCharge == other.NegativeCharge &&
                    ScanDescription == other.ScanDescription &&
-                   Nullable.Equals(CollisionEnergy, other.CollisionEnergy) &&
                    Nullable.Equals(ScanWindowLowerLimit, other.ScanWindowLowerLimit) &&
                    Nullable.Equals(ScanWindowUpperLimit, other.ScanWindowUpperLimit) &&
                    Nullable.Equals(CompensationVoltage, other.CompensationVoltage) &&
@@ -153,7 +140,6 @@ namespace pwiz.Common.Spectra
                 hashCode = (hashCode * 397) ^ RetentionTime.GetHashCode();
                 hashCode = (hashCode * 397) ^ NegativeCharge.GetHashCode();
                 hashCode = (hashCode * 397) ^ ScanDescription.GetHashCode();
-                hashCode = (hashCode * 397) ^ CollisionEnergy.GetHashCode();
                 hashCode = (hashCode * 397) ^ ScanWindowLowerLimit.GetHashCode();
                 hashCode = (hashCode * 397) ^ ScanWindowUpperLimit.GetHashCode();
                 hashCode = (hashCode * 397) ^ CompensationVoltage.GetHashCode();
