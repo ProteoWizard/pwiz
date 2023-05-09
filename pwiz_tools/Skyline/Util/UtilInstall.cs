@@ -27,6 +27,7 @@ using Ionic.Zip;
 using pwiz.Common.SystemUtil;
 using pwiz.Skyline.Model.Tools;
 using pwiz.Skyline.Properties;
+using pwiz.Skyline.Util.Extensions;
 
 namespace pwiz.Skyline.Util
 {
@@ -180,7 +181,7 @@ namespace pwiz.Skyline.Util
         /// <summary>
         /// This custom OpenJDK JRE was created with https://justinmahar.github.io/easyjre/
         /// </summary>
-        static Uri JRE_URL = new Uri($@"https://pwiz-upload.s3.us-west-2.amazonaws.com/skyline_tool_testing_mirror/{JRE_FILENAME}.zip");
+        static Uri JRE_URL = new Uri($@"https://ci.skyline.ms/skyline_tool_testing_mirror/{JRE_FILENAME}.zip");
         public static string JavaDirectory => Path.Combine(ToolDescriptionHelpers.GetToolsDirectory(), JRE_FILENAME);
         public static string JavaBinary => Path.Combine(JavaDirectory, JRE_SUBDIRECTORY, @"bin", @"java.exe");
 
@@ -261,7 +262,11 @@ namespace pwiz.Skyline.Util
                         using (var fileSaver = new FileSaver(downloadFilename))
                         {
                             if (!client.DownloadFileAsync(downloadUrl, fileSaver.SafeName, out var downloadError))
-                                throw new Exception(Resources.PythonInstaller_DownloadPip_Download_failed__Check_your_network_connection_or_contact_Skyline_developers_, downloadError);
+                            {
+                                throw new Exception(TextUtil.LineSeparate(
+                                    Resources.PythonInstaller_DownloadPip_Download_failed__Check_your_network_connection_or_contact_Skyline_developers_,
+                                    downloadUrl.ToString()), downloadError);
+                            }
                             fileSaver.Commit();
                         }
 

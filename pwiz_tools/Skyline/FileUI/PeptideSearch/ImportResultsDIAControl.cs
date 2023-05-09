@@ -32,9 +32,11 @@ namespace pwiz.Skyline.FileUI.PeptideSearch
 {
     public partial class ImportResultsDIAControl : UserControl, IImportResultsControl
     {
-        public ImportResultsDIAControl(IModifyDocumentContainer documentContainer)
+        public ImportResultsDIAControl(IModifyDocumentContainer documentContainer, string browseResultsDialogText = null)
         {
             DocumentContainer = documentContainer;
+            BrowseResultsDialogText = browseResultsDialogText ??
+                                      Resources.ImportResultsDIAControl_btnBrowse_Click_Browse_for_Results_Files;
 
             InitializeComponent();
 
@@ -47,6 +49,7 @@ namespace pwiz.Skyline.FileUI.PeptideSearch
 
         private BindingList<ImportPeptideSearch.FoundResultsFile> _foundResultsFiles;
         private IModifyDocumentContainer DocumentContainer { get; set; }
+        private string BrowseResultsDialogText { get; }
 
         public int SimultaneousFiles
         {
@@ -93,7 +96,7 @@ namespace pwiz.Skyline.FileUI.PeptideSearch
         {
             using (var dlgOpen = new OpenDataSourceDialog(Settings.Default.RemoteAccountList)
             {
-                Text = Resources.ImportResultsDIAControl_btnBrowse_Click_Browse_for_Results_Files
+                Text = BrowseResultsDialogText
             })
             {
                 // The dialog expects null to mean no directory was supplied, so don't assign an empty string.

@@ -75,7 +75,7 @@ namespace pwiz.Skyline.FileUI.PeptideSearch
             WideWindowResults = new ImportResultsDIAControl(this);
             AddPageControl(WideWindowResults, wideWindowPage, 2, 60);
 
-            SearchControl = new EncyclopeDiaSearchControl();
+            SearchControl = new EncyclopeDiaSearchControl(this);
             AddPageControl(SearchControl, runSearchPage, 2, 0);
             SearchControl.SearchFinished += SearchControlSearchFinished;
 
@@ -574,6 +574,11 @@ namespace pwiz.Skyline.FileUI.PeptideSearch
 
     public class EncyclopeDiaSearchControl : SearchControl
     {
+        public EncyclopeDiaSearchControl(Control hostControl)
+        {
+            Parent = hostControl;
+        }
+
         public EncyclopeDiaSearchDlg.EncyclopeDiaSettings Settings { get; set; }
         public string EncyclopeDiaChromLibraryPath { get; private set; }
         public string EncyclopeDiaQuantLibraryPath { get; private set; }
@@ -690,9 +695,19 @@ namespace pwiz.Skyline.FileUI.PeptideSearch
             if (!filesNotAlreadyDownloaded.Any())
                 return true;
 
-            Invoke(new Action(() => SimpleFileDownloaderDlg.Show(null,
-                string.Format(Resources.SearchSettingsControl_EnsureRequiredFilesDownloaded_Download__0_,
-                    @"EncyclopeDia"), filesNotAlreadyDownloaded)));
+            Invoke(new Action(() =>
+            {
+                try
+                {
+                    SimpleFileDownloaderDlg.Show(null,
+                        string.Format(Resources.SearchSettingsControl_EnsureRequiredFilesDownloaded_Download__0_,
+                            @"EncyclopeDia"), filesNotAlreadyDownloaded);
+                }
+                catch (Exception x)
+                {
+                    MessageDlg.ShowWithException(Parent, x.Message, x);
+                }
+            }));
 
             return !SimpleFileDownloader.FilesNotAlreadyDownloaded(filesNotAlreadyDownloaded).Any();
         }

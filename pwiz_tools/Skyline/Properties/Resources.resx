@@ -12020,4 +12020,10 @@ If you choose Disable, you can enable Auto-select later with the "Refine &gt; Ad
   <data name="EncyclopeDiaHelpers_GenerateLibrary_Combining_chromatogram_libraries" xml:space="preserve">
     <value>Combining chromatogram libraries</value>
   </data>
+  <data name="EncyclopeDiaSearchDlg_Browse_for_Narrow_Window_Results_Files" xml:space="preserve">
+    <value>Browse for Narrow Window Results Files</value>
+  </data>
+  <data name="EncyclopeDiaSearchDlg_Browse_For_Wide_Window_Results_Files" xml:space="preserve">
+    <value>Browse for Wide Window Results Files</value>
+  </data>
 </root>

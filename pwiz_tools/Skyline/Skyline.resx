@@ -1395,6 +1395,12 @@
   <data name="importPeptideSearchMenuItem.Text" xml:space="preserve">
     <value>&amp;Peptide Search...</value>
   </data>
+  <data name="encyclopeDiaSearchMenuItem.Size" type="System.Drawing.Size, System.Drawing">
+    <value>194, 22</value>
+  </data>
+  <data name="encyclopeDiaSearchMenuItem.Text" xml:space="preserve">
+    <value>EncyclopeDIA Search...</value>
+  </data>
   <data name="toolStripSeparator52.Size" type="System.Drawing.Size, System.Drawing">
     <value>167, 6</value>
   </data>

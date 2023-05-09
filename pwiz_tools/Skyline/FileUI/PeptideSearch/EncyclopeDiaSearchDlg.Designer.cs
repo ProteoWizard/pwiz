@@ -146,8 +146,8 @@ namespace pwiz.Skyline.FileUI.PeptideSearch
             // 
             // prositPage
             // 
-            this.prositPage.Controls.Add(this.prositPanel);
             this.prositPage.Controls.Add(this.panelFilesProps);
+            this.prositPage.Controls.Add(this.prositPanel);
             resources.ApplyResources(this.prositPage, "prositPage");
             this.prositPage.Name = "prositPage";
             this.prositPage.UseVisualStyleBackColor = true;
@@ -168,14 +168,14 @@ namespace pwiz.Skyline.FileUI.PeptideSearch
             // 
             // panelFilesProps
             // 
+            this.panelFilesProps.Controls.Add(this.label2);
+            this.panelFilesProps.Controls.Add(this.defaultChargeUpDown);
             this.panelFilesProps.Controls.Add(this.maxMzCombo);
             this.panelFilesProps.Controls.Add(this.minMzCombo);
             this.panelFilesProps.Controls.Add(this.label4);
             this.panelFilesProps.Controls.Add(this.label5);
             this.panelFilesProps.Controls.Add(this.maxChargeUpDown);
             this.panelFilesProps.Controls.Add(this.label3);
-            this.panelFilesProps.Controls.Add(this.defaultChargeUpDown);
-            this.panelFilesProps.Controls.Add(this.label2);
             this.panelFilesProps.Controls.Add(this.minChargeUpDown);
             this.panelFilesProps.Controls.Add(this.label1);
             this.panelFilesProps.Controls.Add(this.ceLabel);
