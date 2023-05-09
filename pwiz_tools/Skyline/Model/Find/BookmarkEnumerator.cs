@@ -117,7 +117,7 @@ namespace pwiz.Skyline.Model.Find
 
         public void MoveTo(Bookmark bookmark)
         {
-            IsValid = FindAndSetPosition(bookmark);
+            IsValid = FindAndSetPosition(bookmark) && IsValid;
         }
 
         /// <summary>
