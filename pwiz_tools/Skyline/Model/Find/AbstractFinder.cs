@@ -16,6 +16,8 @@
  * See the License for the specific language governing permissions and
  * limitations under the License.
  */
+
+using System;
 using pwiz.Common.SystemUtil;
 using System.Collections.Generic;
 
@@ -26,7 +28,6 @@ namespace pwiz.Skyline.Model.Find
     /// </summary>
     public abstract class AbstractFinder : IFinder
     {
-        public const long PROGRESS_UPDATE_FREQUENCY = 100;
         public abstract string Name
         { 
             get;
@@ -40,6 +41,7 @@ namespace pwiz.Skyline.Model.Find
         public virtual FindMatch NextMatch(BookmarkEnumerator bookmarkEnumerator, IProgressMonitor progressMonitor, ref IProgressStatus status)
         {
             long index = 0;
+            long updateFrequency = bookmarkEnumerator.GetProgressUpdateFrequency();
             do
             {
                 if (progressMonitor.IsCanceled)
@@ -47,10 +49,10 @@ namespace pwiz.Skyline.Model.Find
                     return null;
                 }
                 bookmarkEnumerator.MoveNext();
-                if (0 == index++ % PROGRESS_UPDATE_FREQUENCY)
+                if (0 == index++ % updateFrequency)
                 {
                     progressMonitor.UpdateProgress(status =
-                        status.ChangePercentComplete((int)bookmarkEnumerator.GetProgressValue()));
+                        status.ChangePercentComplete(bookmarkEnumerator.GetProgressValue()));
                 }
                 var findMatch = Match(bookmarkEnumerator);
                 if (findMatch != null)
@@ -66,6 +68,7 @@ namespace pwiz.Skyline.Model.Find
             var results = new List<Bookmark>();
             var bookmarkEnumerator = new BookmarkEnumerator(document);
             long index = 0;
+            long updateFrequency = bookmarkEnumerator.GetProgressUpdateFrequency();
             while (true)
             {
                 if (progressMonitor.IsCanceled)
@@ -73,10 +76,10 @@ namespace pwiz.Skyline.Model.Find
                     return results;
                 }
                 bookmarkEnumerator.MoveNext();
-                if (0 == index++ % PROGRESS_UPDATE_FREQUENCY)
+                if (0 == index++ % updateFrequency)
                 {
                     progressMonitor.UpdateProgress(status =
-                        status.ChangePercentComplete((int)bookmarkEnumerator.GetProgressValue()));
+                        status.ChangePercentComplete(bookmarkEnumerator.GetProgressValue()));
                 }
 
                 if (Match(bookmarkEnumerator) != null)

@@ -138,7 +138,7 @@ namespace pwiz.Skyline.Model.Find
                 segmentCount++;
             }
             IProgressStatus progressStatus = new ProgressStatus().ChangeSegments(0, segmentCount);
-            double closestPosition = double.MaxValue;
+            long closestPosition = long.MaxValue;
             Bookmark closestBookmark = null;
             FindResult closestResult = null;
 
@@ -155,7 +155,7 @@ namespace pwiz.Skyline.Model.Find
                 progressStatus = progressStatus.NextSegment();
                 if (nextMatch != null)
                 {
-                    var position = customEnumerator.GetProgressValue();
+                    var position = customEnumerator.GetPositionAsLong();
                     if (closestResult == null || position < closestPosition)
                     {
                         closestResult = new FindResult(this, customEnumerator, nextMatch);
@@ -167,6 +167,10 @@ namespace pwiz.Skyline.Model.Find
 
             if (hasFindText)
             {
+                long index = 0;
+                long updateFrequency = bookmarkEnumerator.GetProgressUpdateFrequency();
+                progressStatus =
+                    progressStatus.ChangeMessage(Resources.FindPredicate_FindNext_Searching_for_next_result);
                 do
                 {
                     if (progressMonitor.IsCanceled)
@@ -174,13 +178,15 @@ namespace pwiz.Skyline.Model.Find
                         return null;
                     }
 
-                    progressStatus =
-                        progressStatus.ChangeMessage(Resources.FindPredicate_FindNext_Searching_for_next_result);
-                    progressMonitor.UpdateProgress(progressStatus);
                     bookmarkEnumerator.MoveNext();
                     if (Equals(closestBookmark, bookmarkEnumerator.Current))
                     {
                         break;
+                    }
+                    if (0 == index++ % updateFrequency)
+                    {
+                        progressStatus = progressStatus.ChangePercentComplete(bookmarkEnumerator.GetProgressValue());
+                        progressMonitor.UpdateProgress(progressStatus);
                     }
 
                     FindMatch findMatch = MatchInternal(bookmarkEnumerator);
@@ -223,12 +229,13 @@ namespace pwiz.Skyline.Model.Find
                         break;
                     }
 
-                    var bookmarkEnumeratorMatch = new BookmarkEnumerator(document, bookmark);
-                    var findMatch = customFinder.Match(bookmarkEnumeratorMatch);
+                    var bookmarkEnumerator = new BookmarkEnumerator(document);
+                    bookmarkEnumerator.MoveTo(bookmark);
+                    var findMatch = customFinder.Match(bookmarkEnumerator);
                     if (findMatch != null)
                     {
-                        var findResult = new FindResult(this, bookmarkEnumeratorMatch, findMatch);
-                        var position = bookmarkEnumeratorMatch.GetPositionAsLong();
+                        var findResult = new FindResult(this, bookmarkEnumerator, findMatch);
+                        var position = bookmarkEnumerator.GetPositionAsLong();
                         results.Add(new KeyValuePair<long, FindResult>(position, findResult));
                     }
                     
@@ -241,6 +248,8 @@ namespace pwiz.Skyline.Model.Find
             {
                 progressStatus = progressStatus.ChangeMessage(GetProgressMessage(results.Count));
                 var bookmarkEnumerator = new BookmarkEnumerator(document);
+                long index = 0;
+                long updateFrequency = bookmarkEnumerator.GetProgressUpdateFrequency();
                 do
                 {
                     if (progressMonitor.IsCanceled)
@@ -248,8 +257,11 @@ namespace pwiz.Skyline.Model.Find
                         break;
                     }
                     bookmarkEnumerator.MoveNext();
-                    progressStatus = progressStatus.ChangePercentComplete((int) bookmarkEnumerator.GetProgressValue());
-                    progressMonitor.UpdateProgress(progressStatus);
+                    if (0 == index++ % updateFrequency)
+                    {
+                        progressStatus = progressStatus.ChangePercentComplete(bookmarkEnumerator.GetProgressValue());
+                        progressMonitor.UpdateProgress(progressStatus);
+                    }
                     var findMatch = MatchInternal(bookmarkEnumerator);
                     if (findMatch != null)
                     {

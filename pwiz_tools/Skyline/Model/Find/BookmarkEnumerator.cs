@@ -115,6 +115,11 @@ namespace pwiz.Skyline.Model.Find
             }
         }
 
+        public void MoveTo(Bookmark bookmark)
+        {
+            IsValid = FindAndSetPosition(bookmark);
+        }
+
         /// <summary>
         /// Move the enumerator forward to the next location in the document.
         /// DocNodes are enumerated in depth-first pre-order (parent before children).
@@ -631,15 +636,25 @@ namespace pwiz.Skyline.Model.Find
         /// <summary>
         /// Returns a number between 0 and 100 indicating how far the <see cref="Current"/> is from <see cref="Start"/>
         /// </summary>
-        public double GetProgressValue()
+        public int GetProgressValue()
         {
-            long totalNodeCount = Document.MoleculeGroupCount + Document.MoleculeCount +
-                                  Document.MoleculeTransitionGroupCount + Document.MoleculeTransitionCount;
-            if (Document.Settings.HasResults)
-            {
-                totalNodeCount *= Document.Settings.MeasuredResults.Chromatograms.Count + 1;
-            }
+            return (int) (100 * GetPositionAsLong() / GetTotalPositionCount());
+        }
 
+        /// <summary>
+        /// Returns approximately how many calls to "MoveNext" can happen without
+        /// GetProgressValue changing.
+        /// </summary>
+        public long GetProgressUpdateFrequency()
+        {
+            return Math.Max(1, GetTotalPositionCount() / 1000);
+        }
+
+        /// <summary>
+        /// Returns a number indicating how far Current is from Start
+        /// </summary>
+        public long GetPositionAsLong()
+        {
             long current = GetBookmarkPositionAsLong(Current);
             long start = GetBookmarkPositionAsLong(Start);
             long difference;
@@ -654,18 +669,10 @@ namespace pwiz.Skyline.Model.Find
 
             if (difference < 0)
             {
-                difference += totalNodeCount;
+                difference += GetTotalPositionCount();
             }
 
-            return difference * 100.0 / totalNodeCount;
-        }
-
-        /// <summary>
-        /// Returns a number indicating how far from the beginning of the document this bookmark is
-        /// </summary>
-        public long GetPositionAsLong()
-        {
-            return GetBookmarkPositionAsLong(Current);
+            return difference;
         }
 
         private long GetBookmarkPositionAsLong(Bookmark bookmark)
@@ -681,6 +688,18 @@ namespace pwiz.Skyline.Model.Find
             }
 
             return position;
+        }
+
+        private long GetTotalPositionCount()
+        {
+            long totalNodeCount = Document.MoleculeGroupCount + Document.MoleculeCount +
+                                  Document.MoleculeTransitionGroupCount + Document.MoleculeTransitionCount;
+            if (Document.Settings.HasResults)
+            {
+                totalNodeCount *= Document.Settings.MeasuredResults.Chromatograms.Count + 1;
+            }
+
+            return totalNodeCount;
         }
     }
 }
