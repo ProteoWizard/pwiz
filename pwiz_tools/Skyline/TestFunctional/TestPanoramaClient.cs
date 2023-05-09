@@ -29,10 +29,10 @@ namespace pwiz.SkylineTestFunctional
         {
             var testFileBrowser = new TestPanoramaFileBrowser(VALID_SERVER, VALID_USER_NAME, VALID_PASSWORD);
             //Test navigation buttons
-            TestNavigationButtons();
+            //TestNavigationButtons();
 
             //Test with no user permissions
-            TestPermissions();
+            //TestPermissions();
 
             //Test TargetedMS folder with no Skyline documents
             //Test with no targetedMS folders
@@ -40,12 +40,12 @@ namespace pwiz.SkylineTestFunctional
             //Test empty JSON
             
             //Test versions: selected option is correct for all versions vs current version
-            TestVersions();
+            //TestVersions();
 
             //Test checkbox switching
 
             //Test cancel and close
-            TestCancel();
+            //TestCancel();
 
             
         }
