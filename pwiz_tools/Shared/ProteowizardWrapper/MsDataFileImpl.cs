@@ -1576,7 +1576,7 @@ namespace pwiz.ProteowizardWrapper
         /// </summary>
         public static bool IsValidFile(string filepath)
         {
-            if (!File.Exists(filepath))
+            if (!File.Exists(filepath) && !Directory.Exists(filepath))
                 return false;
 
             try
