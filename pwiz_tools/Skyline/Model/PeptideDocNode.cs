@@ -101,13 +101,13 @@ namespace pwiz.Skyline.Model
             get
             {
                 var label = PeptideTreeNode.GetLabel(this, string.Empty);
-                return (CustomMolecule != null && !string.IsNullOrEmpty(CustomMolecule.Formula)) ? string.Format(@"{0} ({1})", label, CustomMolecule.Formula) : label;
+                return (CustomMolecule != null && !CustomMolecule.ParsedMolecule.IsMassOnly) ? string.Format(@"{0} ({1})", label, CustomMolecule.ParsedMolecule) : label;
             }
         }
 
         protected override IList<DocNode> OrderedChildren(IList<DocNode> children)
         {
-            if (Peptide.IsCustomMolecule && children.Any())
+            if (Peptide.IsCustomMolecule && children.Count > 1)
             {
                 // Enforce order for small molecules, except those that are fictions of the test system
                 return children.OrderBy(t => (TransitionGroupDocNode)t, new TransitionGroupDocNode.CustomIonPrecursorComparer()).ToArray();
@@ -226,6 +226,9 @@ namespace pwiz.Skyline.Model
 
         public Color Color { get; private set; }
         public static readonly Color UNKNOWN_COLOR = Color.FromArgb(170, 170, 170);
+
+        // For robust chromatogram association in the event of user tweaking molecule details like name, CAS etc (but not mass!)
+        public Target ChromatogramTarget => Peptide.OriginalMoleculeTarget ?? ModifiedTarget;
 
         public Target Target { get { return Peptide.Target; }}
         public string TextId { get { return CustomInvariantNameOrText(Peptide.Sequence); } }
@@ -682,7 +685,10 @@ namespace pwiz.Skyline.Model
         // Note: this potentially returns a node with a different ID, which has to be Inserted rather than Replaced
         public PeptideDocNode ChangeCustomIonValues(SrmSettings settings, CustomMolecule customMolecule, ExplicitRetentionTimeInfo explicitRetentionTime)
         {
-            var newPeptide = new Peptide(customMolecule);
+            // Make note of original description for chromatogram association, if nothing has changed to affect the chromatogram, so we can keep the association
+            var sameMass = Equals(customMolecule.AverageMass, Peptide.CustomMolecule.AverageMass) && 
+                           Equals(customMolecule.Formula, Peptide.CustomMolecule.Formula);
+            var newPeptide = new Peptide(customMolecule, sameMass ? Peptide.Target : null);
             Helpers.AssignIfEquals(ref newPeptide, Peptide);
             if (Equals(Peptide, newPeptide))
             {
@@ -873,7 +879,7 @@ namespace pwiz.Skyline.Model
                             explicitMods.GetHeavyModifications().ToArray(),
                             ExplicitMods.GetHeavyModifications().ToArray()) ||
                         !ReferenceEquals(explicitMods.StaticModifications, ExplicitMods.StaticModifications)
-                       )
+                        || !Equals(explicitMods.CrosslinkStructure, ExplicitMods.CrosslinkStructure))
                     {
                         diff = new SrmSettingsDiff(diff, SrmSettingsDiff.ALL);
                     }

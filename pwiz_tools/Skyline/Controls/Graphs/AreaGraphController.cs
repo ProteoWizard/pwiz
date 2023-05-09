@@ -33,10 +33,6 @@ namespace pwiz.Skyline.Controls.Graphs
 
     public enum PointsTypePeakArea { targets, decoys }
 
-    public enum AreaCVTransitions { all, best, count }
-
-    public enum AreaCVMsLevel { precursors, products }
-
     public static class AreCVMsLevelExtension
     {
         private static string[] LOCALIZED_VALUES

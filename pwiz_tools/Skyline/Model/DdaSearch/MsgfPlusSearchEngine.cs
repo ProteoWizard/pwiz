@@ -151,7 +151,7 @@ namespace pwiz.Skyline.Model.DdaSearch
 
                     var pr = new ProcessRunner();
                     var psi = new ProcessStartInfo(JavaDownloadInfo.JavaBinary,
-                        $@"-Xmx{javaMaxHeapMB}M -jar """ + MsgfPlusBinary + @""" -tasks -2 " +
+                        $@"-Xmx{javaMaxHeapMB}M -XX:-UsePerfData -jar """ + MsgfPlusBinary + @""" -tasks -2 " +
                         $@"-s ""{spectrumFilename}"" -d ""{FastaFileNames[0]}"" -tda 1 " +
                         $@"-t {precursorMzTolerance.Value}{precursorMzTolerance.UnitName} -ti {isotopeErrorRange.Item1},{isotopeErrorRange.Item2} " +
                         $@"-m {fragmentationMethod} -inst {instrumentType} -e {enzyme} -ntt {ntt} -maxMissedCleavages {maxMissedCleavages} " +
@@ -238,7 +238,7 @@ namespace pwiz.Skyline.Model.DdaSearch
                         continue;
 
                     // can't use mod with no formula or mass; CONSIDER throwing exception
-                    if (mod.LabelAtoms == LabelAtoms.None && mod.Formula == null && mod.MonoisotopicMass == null ||
+                    if (mod.LabelAtoms == LabelAtoms.None && ParsedMolecule.IsNullOrEmpty(mod.ParsedMolecule) && mod.MonoisotopicMass == null ||
                         mod.LabelAtoms != LabelAtoms.None && mod.AAs.IsNullOrEmpty())
                         continue;
 
@@ -273,7 +273,11 @@ namespace pwiz.Skyline.Model.DdaSearch
                         }
                     }
                     else
-                        addMod(mod.Formula ?? mod.MonoisotopicMass.ToString(), mod.AAs ?? @"*");
+                    {
+                        // ReSharper disable once PossibleNullReferenceException
+                        var modString = ParsedMolecule.IsNullOrEmpty(mod.ParsedMolecule) ? null : mod.ParsedMolecule.ToString();
+                        addMod(modString ?? mod.MonoisotopicMass.ToString(), mod.AAs ?? @"*");
+                    }
                 }
             }
         }

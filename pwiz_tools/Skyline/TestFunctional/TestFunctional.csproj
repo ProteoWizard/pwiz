@@ -169,6 +169,7 @@
     <Compile Include="AreaNormalizeOptionTest.cs" />
     <Compile Include="AssociateProteinVariantTest.cs" />
     <Compile Include="AutoTrainModelTest.cs" />
+    <Compile Include="BatchCalibrationGroupComparisonTest.cs" />
     <Compile Include="BlibMoleculeListsTest.cs" />
     <Compile Include="CandidatePeakTest.cs" />
     <Compile Include="CantReadSkydTest.cs" />
@@ -179,6 +180,7 @@
     <Compile Include="DdaScoringTest.cs" />
     <Compile Include="DocumentGridExportTest.cs" />
     <Compile Include="DocumentGridUndoTest.cs" />
+    <Compile Include="EditNeutralLossesTest.cs" />
     <Compile Include="EncyclopeDiaLibraryMatchTest.cs" />
     <Compile Include="EncyclopeDiaPeptidesWithNoSignalTest.cs" />
     <Compile Include="ExplicitMissingPeakBoundsTest.cs" />
@@ -200,6 +202,7 @@
     <Compile Include="RemoveNeutralLossModificationTest.cs" />
     <Compile Include="SaveAfterProteinAssociationTest.cs" />
     <Compile Include="SequenceTreeRatioTest.cs" />
+    <Compile Include="ToolServiceTestSharedClasses.cs" />
     <Compile Include="UnreadableBlibTest.cs" />
     <Compile Include="RemoveSmallMoleculeLabelTypeTest.cs" />
     <Compile Include="StartPageInsertTransitionListTest.cs" />

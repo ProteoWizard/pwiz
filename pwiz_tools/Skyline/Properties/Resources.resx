@@ -1341,9 +1341,6 @@
   <data name="FindNodeDlg_AdvancedVisible_Hide_Advanced" xml:space="preserve">
     <value>&lt;&lt; Hide Ad&amp;vanced</value>
   </data>
-  <data name="OneOrManyList_ValidateIndex_The_index__0__must_be_between_0_and__1__" xml:space="preserve">
-    <value>The index {0} must be between 0 and {1}.</value>
-  </data>
   <data name="OptimizationDb_GetOptimizationDb_The_file__0__could_not_be_opened___1_" xml:space="preserve">
     <value>The file {0} could not be opened. {1}</value>
   </data>
@@ -3434,9 +3431,6 @@ Are you sure you want to continue?</value>
   </data>
   <data name="DefineAnnotationDlg_OkDialog_Choose_at_least_one_type_for_this_annotation_to_apply_to" xml:space="preserve">
     <value>Choose at least one type for this annotation to apply to.</value>
-  </data>
-  <data name="OneOrManyList_Add_Attempted_modification_of_a_read_only_collection" xml:space="preserve">
-    <value>Attempted modification of a read-only collection.</value>
   </data>
   <data name="PeptideGridViewDriver_ValidateRow_Missing_value_on_line__0_" xml:space="preserve">
     <value>Missing value on line {0}</value>
@@ -11956,10 +11950,83 @@ If you do not have the original file, you may build the library with embedded sp
   <data name="Close" type="System.Resources.ResXFileRef, System.Windows.Forms">
     <value>..\Resources\Close.bmp;System.Drawing.Bitmap, System.Drawing, Version=4.0.0.0, Culture=neutral, PublicKeyToken=b03f5f7f11d50a3a</value>
   </data>
+  <data name="ToolService_ImportPeakBoundaries_Import_peak_boundaries_from_external_tool" xml:space="preserve">
+    <value>Import peak boundaries from external tool</value>
+  </data>
   <data name="ToolInstaller_UnpackZipTool_The_selected_zip_file_did_not_specify_any_items_to_add_to_the_Tools_menu_" xml:space="preserve">
     <value>The selected zip file did not specify any items to add to the Tools menu.</value>
   </data>
   <data name="FindPredicate_FindNext_Searching_for_next_result" xml:space="preserve">
     <value>Searching for next result</value>
+  </data>
+  <data name="CommandLine_NewSkyFile_FileAlreadyExists" xml:space="preserve">
+    <value>File '{0}' already exists; add --overwrite to allow Skyline to overwrite it.</value>
+  </data>
+  <data name="CommandLine_SetInstrumentSettings_Error__Failed_attempting_to_change_the_transition_instrument_settings_" xml:space="preserve">
+    <value>Error: Failed attempting to change the transition instrument settings.</value>
+  </data>
+  <data name="CommandLine_SetLibrarySettings_Error__Failed_attempting_to_change_the_transition_library_settings_" xml:space="preserve">
+    <value>Error: Failed attempting to change the transition library settings.</value>
+  </data>
+  <data name="CommandLine_SetFullScanSettings_Changing_full_scan_precursor_isotope_peaks_to__0_" xml:space="preserve">
+    <value>Changing full scan precursor isotope peaks to {0}</value>
+  </data>
+  <data name="CommandLine_SetFullScanSettings_Changing_full_scan_precursor_isotope_peaks_count_to__0_" xml:space="preserve">
+    <value>Changing full scan precursor isotope peaks count to {0}</value>
+  </data>
+  <data name="CommandLine_SetFullScanSettings_Changing_full_scan_precursor_isotope_peak_percentage_to__0_" xml:space="preserve">
+    <value>Changing full scan precursor isotope peak percentage to {0}</value>
+  </data>
+  <data name="CommandLine_SetFullScanSettings_Changing_full_scan_precursor_isotope_enrichment_to__0_" xml:space="preserve">
+    <value>Changing full scan precursor isotope enrichment to {0}</value>
+  </data>
+  <data name="CommandLine_SetFullScanSettings_Changing_full_scan_ignore_SIM_scans_to__0_" xml:space="preserve">
+    <value>Changing full scan ignore SIM scans to {0}</value>
+  </data>
+  <data name="CommandLine_SetFullScanSettings_Changing_full_scan_acquisition_method_to__0__with_isolation_scheme___1__" xml:space="preserve">
+    <value>Changing full scan acquisition method to {0} with isolation scheme '{1}'</value>
+  </data>
+  <data name="CommandLine_SetFullScanSettings_Changing_full_scan_acquisition_method_to__0_" xml:space="preserve">
+    <value>Changing full scan acquisition method to {0}</value>
+  </data>
+  <data name="CommandLine_SetFullScanSettings_Changing_full_scan_precursor_mass_analyzer_to__0_" xml:space="preserve">
+    <value>Changing full scan precursor mass analyzer to {0}</value>
+  </data>
+  <data name="CommandLine_SetFullScanSettings_Changing_full_scan_product_mass_analyzer_to__0_" xml:space="preserve">
+    <value>Changing full scan product mass analyzer to {0}</value>
+  </data>
+  <data name="CommandLine_NewSkyFile_Deleting_existing_file___0__" xml:space="preserve">
+    <value>Deleting existing file '{0}'</value>
+  </data>
+  <data name="CommandLine_AssociateProteins_Associating_peptides_with_proteins" xml:space="preserve">
+    <value>Associating peptides with proteins</value>
+  </data>
+  <data name="CommandLine_AssociateProteins_Failed_to_associate_proteins" xml:space="preserve">
+    <value>Failed to associate proteins</value>
+  </data>
+  <data name="ValueInvalidMzToleranceException_ValueInvalidMzToleranceException_The_value__0__is_not_valid_for_the_argument__1__which_requires_a_value_and_a_unit__For_example___2__" xml:space="preserve">
+    <value>The value {0} is not valid for the argument {1} which requires a value and a unit. For example: {2}.</value>
+  </data>
+  <data name="CommandLine_ProcessDocument_Error_saving_file" xml:space="preserve">
+    <value>Error: saving file</value>
+  </data>
+  <data name="SkylineWindow_ImportMassList_Do_you_want_to_use_the_document_settings_to_automanage_these_new_transitions" xml:space="preserve">
+    <value>Do you want to enable Auto-select and use the document settings to manage these new transitions?
+
+Enable Auto-select: {0} precursor and {1} fragment transitions will be added to the current document.
+
+Disable Auto-select: {2} precursor and {3} fragment transitions will be added to the current document.
+
+If you choose Disable, you can enable Auto-select later with the "Refine &gt; Advanced" menu item.
+</value>
+  </data>
+  <data name="SkylineWindow_ImportMassList_Enable" xml:space="preserve">
+    <value>&amp;Enable</value>
+  </data>
+  <data name="SkylineWindow_ImportMassList_Disable" xml:space="preserve">
+    <value>&amp;Disable</value>
+  </data>
+  <data name="CommandLine_AssociateProteins_a_FASTA_file_must_be_imported_before_associating_proteins" xml:space="preserve">
+    <value>Error: a FASTA file must be imported before associating proteins</value>
   </data>
 </root>

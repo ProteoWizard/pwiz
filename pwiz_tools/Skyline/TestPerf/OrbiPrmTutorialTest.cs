@@ -69,7 +69,7 @@ namespace TestPerf
         private static string SAMPLES_DIR = Path.Combine(DATA_DIR, "Samples");
         private static string STANDARDS_DIR = Path.Combine(DATA_DIR, "Standards");
 
-        [TestMethod]
+        [TestMethod, NoParallelTesting(TestExclusionReason.RESOURCE_INTENSIVE)]
         public void TestOrbiPrmTutorial()
         {
 //            IsPauseForScreenShots = true;
@@ -909,8 +909,8 @@ namespace TestPerf
                 Assert.IsTrue(editGroupComparisonDlg.ComboCaseValue.Items.Contains(caseValue));
                 editGroupComparisonDlg.ComboIdentityAnnotation.SelectedItem = identityAnnotation;
                 Assert.IsTrue(editGroupComparisonDlg.ComboIdentityAnnotation.Items.Contains(identityAnnotation));
-                editGroupComparisonDlg.ComboNormalizationMethod.SelectedItem =
-                    NormalizationMethod.FromIsotopeLabelTypeName("heavy");
+                editGroupComparisonDlg.NormalizeOption =
+                    NormalizeOption.FromNormalizationMethod(NormalizationMethod.FromIsotopeLabelTypeName("heavy"));
                 editGroupComparisonDlg.TextBoxConfidenceLevel.Text = 95.ToString(CultureInfo.CurrentCulture);
                 editGroupComparisonDlg.RadioScopePerProtein.Checked = true;
                 editGroupComparisonDlg.ShowAdvanced(true);

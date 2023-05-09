@@ -140,6 +140,14 @@ namespace pwiz.SkylineTestUtil
                     {
                         foreach (ZipEntry zipEntry in zipFile)
                         {
+                            if (zipEntry.IsDirectory && !IsPersistentDir(persistentFiles, zipEntry.FileName))
+                            {
+                                // Directory creation is implicitly handled by Extract of files
+                                // so skip that and avoid occasional "file in use" exceptions on directory creation.
+                                // N.B. some tests expect the persisted directory structure to be duplicated locally,
+                                // even if the files are not, so for those do the directory creation.
+                                continue; 
+                            }
                             if (IsPersistent(persistentFiles, zipEntry.FileName))
                                 zipEntry.Extract(persistentFilesDir, ExtractExistingFileAction.DoNotOverwrite);  // leave persistent files alone                        
                             else
@@ -157,6 +165,11 @@ namespace pwiz.SkylineTestUtil
         private static bool IsPersistent(string[] persistentFiles, string zipEntryFileName)
         {
             return persistentFiles != null && persistentFiles.Any(f => zipEntryFileName.Replace('\\', '/').Contains(f.Replace('\\', '/')));
+        }
+
+        private static bool IsPersistentDir(string[] persistentFiles, string zipEntryDirName)
+        {
+            return persistentFiles != null && persistentFiles.Any(f => f.Replace('\\', '/').Contains(zipEntryDirName.Replace('\\', '/')));
         }
 
         public static string ExtMzml

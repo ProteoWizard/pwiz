@@ -366,10 +366,12 @@ namespace pwiz.Skyline.Controls.Graphs
             {
                 var maxIntensity = 0.0;
 
-                if (DisplayedSpectrum != null)
+                var hasDisplayedSpectrumValues = DisplayedSpectrum != null && DisplayedSpectrum.Intensities.Any();
+                if (hasDisplayedSpectrumValues)
                     maxIntensity = DisplayedSpectrum.Intensities.Max();
 
-                if (DisplayedMirrorSpectrum != null)
+                var hasDisplayedMirrorSpectrumValues = DisplayedMirrorSpectrum != null && DisplayedMirrorSpectrum.Intensities.Any();
+                if (hasDisplayedMirrorSpectrumValues)
                     maxIntensity = Math.Max(maxIntensity, DisplayedMirrorSpectrum.Intensities.Max());
                 if (maxIntensity == 0)
                 {
@@ -378,8 +380,8 @@ namespace pwiz.Skyline.Controls.Graphs
                 }
                 maxIntensity *= YMAX_SCALE;
 
-                GraphPane.YAxis.Scale.Max = DisplayedSpectrum == null ? 0.0 : maxIntensity;
-                GraphPane.YAxis.Scale.Min = DisplayedMirrorSpectrum == null ? 0.0 : -maxIntensity;
+                GraphPane.YAxis.Scale.Max = !hasDisplayedSpectrumValues ? 0.0 : maxIntensity;
+                GraphPane.YAxis.Scale.Min = !hasDisplayedMirrorSpectrumValues ? 0.0 : -maxIntensity;
             }
 
             graphControl.Refresh();
@@ -1356,7 +1358,7 @@ namespace pwiz.Skyline.Controls.Graphs
 
                         _graphHelper.ZoomSpectrumToSettings(DocumentUI, selection.NodeTranGroup);
 
-                        if (GraphItem.PeptideDocNode != null && GraphItem.TransitionGroupNode != null && spectrum?.SpectrumInfo is SpectrumInfoLibrary libInfo)
+                        if (GraphItem != null && GraphItem.PeptideDocNode != null && GraphItem.TransitionGroupNode != null && spectrum?.SpectrumInfo is SpectrumInfoLibrary libInfo)
                         {
                             var pepInfo = new ViewLibraryPepInfo(
                                 GraphItem.PeptideDocNode.ModifiedTarget.GetLibKey(GraphItem.TransitionGroupNode.PrecursorAdduct), 
