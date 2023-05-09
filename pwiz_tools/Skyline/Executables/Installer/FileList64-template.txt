@@ -209,6 +209,8 @@ pwiz.Common.pdb
 pwiz.CommonUtil.dll
 pwiz.CommonUtil.pdb
 pwiz_data_cli.dll
+PanoramaClient.dll
+PanoramaClient.pdb
 QTFLDebugLog.dll (included automatically from ProteoWizard; DO NOT ADD TO THE WXS TEMPLATE!)
 QTFLProtoCS.dll (included automatically from ProteoWizard; DO NOT ADD TO THE WXS TEMPLATE!)
 quantitation_1.xsd (included automatically from ProteoWizard; DO NOT ADD TO THE WXS TEMPLATE!)
