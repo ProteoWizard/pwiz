@@ -19,6 +19,7 @@
 
 using System;
 using System.Collections.Generic;
+using System.Linq;
 using pwiz.Common.SystemUtil;
 using pwiz.Skyline.Controls.SeqNode;
 using pwiz.Skyline.Model.Results;
@@ -136,11 +137,12 @@ namespace pwiz.Skyline.Model.Find
 
             foreach (var finder in FindOptions.CustomFinders)
             {
-                progressStatus = progressStatus.ChangeMessage(string.Format(Resources.FindPredicate_FindAll_Searching_for__0__, finder.DisplayName));
-                if (progressMonitor.UpdateProgress(progressStatus) == UpdateProgressResponse.cancel)
+                if (progressMonitor.IsCanceled)
                 {
                     return null;
                 }
+                progressStatus = progressStatus.ChangeMessage(string.Format(Resources.FindPredicate_FindAll_Searching_for__0__, finder.DisplayName));
+                progressMonitor.UpdateProgress(progressStatus);
                 var customEnumerator = new BookmarkEnumerator(bookmarkEnumerator);
                 var nextMatch = finder.NextMatch(customEnumerator, progressMonitor, ref progressStatus);
                 progressStatus = progressStatus.NextSegment();
@@ -152,11 +154,12 @@ namespace pwiz.Skyline.Model.Find
             }
             do
             {
-                progressStatus = progressStatus.ChangeMessage(Resources.FindPredicate_FindNext_Searching_for_next_result);
-                if (progressMonitor.UpdateProgress(progressStatus) == UpdateProgressResponse.cancel)
+                if (progressMonitor.IsCanceled)
                 {
                     return null;
                 }
+                progressStatus = progressStatus.ChangeMessage(Resources.FindPredicate_FindNext_Searching_for_next_result);
+                progressMonitor.UpdateProgress(progressStatus);
                 bookmarkEnumerator.MoveNext();
                 FindMatch findMatch;
                 if (customMatches.TryGetValue(bookmarkEnumerator.Current, out findMatch))
@@ -174,62 +177,86 @@ namespace pwiz.Skyline.Model.Find
 
         public IEnumerable<FindResult> FindAll(IProgressMonitor progressMonitor, SrmDocument document)
         {
-            var progressStatus = new ProgressStatus().ChangeSegments(0, FindOptions.CustomFinders.Count + 1);
-            var customMatches = new HashSet<Bookmark>[FindOptions.CustomFinders.Count];
+            int segmentCount = FindOptions.CustomFinders.Count;
+            bool hasFindText = !string.IsNullOrEmpty(FindOptions.Text);
+            if (hasFindText)
+            {
+                segmentCount++;
+            }
+            var progressStatus = new ProgressStatus().ChangeSegments(0, segmentCount);
+            var results = new List<KeyValuePair<long, FindResult>>();
             for (int iFinder = 0; iFinder < FindOptions.CustomFinders.Count; iFinder++)
             {
+                if (progressMonitor.IsCanceled)
+                {
+                    break;
+                }
                 var customFinder = FindOptions.CustomFinders[iFinder];
-                var bookmarkSet = new HashSet<Bookmark>();
                 progressStatus = progressStatus.ChangeMessage(string.Format(
                     Resources.FindPredicate_FindAll_Searching_for__0__,
                     customFinder.DisplayName));
-                if (progressMonitor.UpdateProgress(progressStatus) == UpdateProgressResponse.cancel)
-                {
-                    yield break;
-                }
+                progressMonitor.UpdateProgress(progressStatus);
+
                 foreach (var bookmark in customFinder.FindAll(document, progressMonitor, ref progressStatus))
                 {
                     if (progressMonitor.IsCanceled)
                     {
-                        yield break;
+                        break;
                     }
 
-                    bookmarkSet.Add(bookmark);
+                    var bookmarkEnumeratorMatch = new BookmarkEnumerator(document, bookmark);
+                    var findMatch = customFinder.Match(bookmarkEnumeratorMatch);
+                    if (findMatch != null)
+                    {
+                        var findResult = new FindResult(this, bookmarkEnumeratorMatch, findMatch);
+                        var position = bookmarkEnumeratorMatch.GetBookmarkPositionAsLong(bookmark);
+                        results.Add(new KeyValuePair<long, FindResult>(position, findResult));
+                    }
+                    
                 }
 
                 progressStatus = progressStatus.NextSegment();
-                customMatches[iFinder] = bookmarkSet;
             }
 
-            var bookmarkEnumerator = new BookmarkEnumerator(document);
-            int matchCount = 0;
-            progressStatus = progressStatus.ChangeMessage(Resources.FindPredicate_FindAll_Found_0_matches);
-            do
+            if (hasFindText)
             {
-                bookmarkEnumerator.MoveNext();
-                progressStatus = progressStatus.ChangePercentComplete((int)bookmarkEnumerator.GetProgressValue());
-                if (progressMonitor.UpdateProgress(progressStatus) == UpdateProgressResponse.cancel)
+                progressStatus = progressStatus.ChangeMessage(GetProgressMessage(results.Count));
+                var bookmarkEnumerator = new BookmarkEnumerator(document);
+                do
                 {
-                    yield break;
-                }
-                FindMatch findMatch = null;
-                for (int iFinder = 0; iFinder < FindOptions.CustomFinders.Count; iFinder++)
-                {
-                    if (customMatches[iFinder].Contains(bookmarkEnumerator.Current))
+                    if (progressMonitor.IsCanceled)
                     {
-                        findMatch = FindOptions.CustomFinders[iFinder].Match(bookmarkEnumerator);
+                        break;
                     }
-                }
-                findMatch ??= MatchInternal(bookmarkEnumerator);
-                if (findMatch != null)
-                {
-                    progressStatus = progressStatus.ChangeMessage(matchCount == 1
-                        ? Resources.FindPredicate_FindAll_Found_1_match
-                        : string.Format(Resources.FindPredicate_FindAll_Found__0__matches, matchCount));
-                    matchCount++;
-                    yield return new FindResult(this, bookmarkEnumerator, findMatch);
-                }
-            } while (!bookmarkEnumerator.AtStart);
+                    bookmarkEnumerator.MoveNext();
+                    progressStatus = progressStatus.ChangePercentComplete((int)bookmarkEnumerator.GetProgressValue());
+                    progressMonitor.UpdateProgress(progressStatus);
+                    var findMatch = MatchInternal(bookmarkEnumerator);
+                    if (findMatch != null)
+                    {
+                        long position = bookmarkEnumerator.GetBookmarkPositionAsLong(bookmarkEnumerator.Current);
+                        var findResult = new FindResult(this, bookmarkEnumerator, findMatch);
+                        results.Add(new KeyValuePair<long, FindResult>(position, findResult));
+                        progressStatus = progressStatus.ChangeMessage(GetProgressMessage(results.Count));
+                    }
+                } while (!bookmarkEnumerator.AtStart);
+            }
+            return results.OrderBy(kvp => kvp.Key).Select(kvp => kvp.Value);
+        }
+
+        private string GetProgressMessage(int matchCount)
+        {
+            if (matchCount == 0)
+            {
+                return Resources.FindPredicate_FindAll_Found_0_matches;
+            }
+
+            if (matchCount == 1)
+            {
+                return Resources.FindPredicate_FindAll_Found_1_match;
+            }
+
+            return string.Format(Resources.FindPredicate_FindAll_Found__0__matches, matchCount);
         }
 
         static Annotations GetAnnotations(ChromInfo chromInfo)

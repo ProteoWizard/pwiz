@@ -660,7 +660,7 @@ namespace pwiz.Skyline.Model.Find
             return difference * 100.0 / totalNodeCount;
         }
 
-        private long GetBookmarkPositionAsLong(Bookmark bookmark)
+        public long GetBookmarkPositionAsLong(Bookmark bookmark)
         {
             long position = Document.GetNodePositions(bookmark.IdentityPath).Sum();
             if (Document.Settings.HasResults)
