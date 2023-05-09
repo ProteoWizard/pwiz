@@ -75,14 +75,14 @@ namespace pwiz.SkylineTest
             for (int x = doc.MoleculeCount; x > 0; x -= 2)
             {
                 // Test case insensitivity.
-                pathFound = doc.SearchDocumentForString(pathFound, listPeptides[x-1].ToString().ToLower(), displaySettings, true, false, default);
+                pathFound = doc.SearchDocumentForString(pathFound, listPeptides[x-1].ToString().ToLower(), displaySettings, true, false, new SilentProgressMonitor());
                 Assert.AreEqual(doc.GetPathTo((int)SrmDocument.Level.Molecules, x-1), pathFound);
                 // Test parents can find children.
                 pathFound = doc.SearchDocumentForString(pathFound, String.Format("{0:F04}", listTransitionGroups[x * 2 - 1].PrecursorMz.Value), displaySettings, 
-                    false, true, default);
+                    false, true, new SilentProgressMonitor());
                 Assert.AreEqual(doc.GetPathTo((int)SrmDocument.Level.TransitionGroups, x * 2 - 1), pathFound);
                 // Test Children can find parents.
-                pathFound = doc.SearchDocumentForString(pathFound, listPeptides[x - 1].ToString().ToLower(), displaySettings, true, false, default);
+                pathFound = doc.SearchDocumentForString(pathFound, listPeptides[x - 1].ToString().ToLower(), displaySettings, true, false, new SilentProgressMonitor());
                 Assert.AreEqual(doc.GetPathTo((int)SrmDocument.Level.Molecules, x - 1), pathFound);
             }
 
