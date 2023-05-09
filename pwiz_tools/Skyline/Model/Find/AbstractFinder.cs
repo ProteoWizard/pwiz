@@ -16,8 +16,11 @@
  * See the License for the specific language governing permissions and
  * limitations under the License.
  */
+using NHibernate.Mapping;
+using pwiz.Common.SystemUtil;
+using System;
 using System.Collections.Generic;
-using System.Threading;
+using System.Runtime.InteropServices;
 
 namespace pwiz.Skyline.Model.Find
 {
@@ -26,6 +29,7 @@ namespace pwiz.Skyline.Model.Find
     /// </summary>
     public abstract class AbstractFinder : IFinder
     {
+        public const long PROGRESS_UPDATE_FREQUENCY = 100;
         public abstract string Name
         { 
             get;
@@ -36,12 +40,21 @@ namespace pwiz.Skyline.Model.Find
         }
 
         public abstract FindMatch Match(BookmarkEnumerator bookmarkEnumerator);
-        public virtual FindMatch NextMatch(BookmarkEnumerator bookmarkEnumerator, CancellationToken cancellationToken)
+        public virtual FindMatch NextMatch(BookmarkEnumerator bookmarkEnumerator, IProgressMonitor progressMonitor, ref IProgressStatus status)
         {
+            long index = 0;
             do
             {
-                cancellationToken.ThrowIfCancellationRequested();
+                if (progressMonitor.IsCanceled)
+                {
+                    return null;
+                }
                 bookmarkEnumerator.MoveNext();
+                if (0 == index++ % PROGRESS_UPDATE_FREQUENCY)
+                {
+                    progressMonitor.UpdateProgress(status =
+                        status.ChangePercentComplete((int)bookmarkEnumerator.GetProgressValue()));
+                }
                 var findMatch = Match(bookmarkEnumerator);
                 if (findMatch != null)
                 {
@@ -51,20 +64,31 @@ namespace pwiz.Skyline.Model.Find
             return null;
         }
 
-        public virtual IEnumerable<Bookmark> FindAll(SrmDocument document, CancellationToken cancellationToken)
+        public virtual IEnumerable<Bookmark> FindAll(SrmDocument document, IProgressMonitor progressMonitor, ref IProgressStatus status)
         {
+            var results = new List<Bookmark>();
             var bookmarkEnumerator = new BookmarkEnumerator(document);
+            long index = 0;
             while (true)
             {
-                cancellationToken.ThrowIfCancellationRequested();
+                if (progressMonitor.IsCanceled)
+                {
+                    return results;
+                }
                 bookmarkEnumerator.MoveNext();
+                if (0 == index++ % PROGRESS_UPDATE_FREQUENCY)
+                {
+                    progressMonitor.UpdateProgress(status =
+                        status.ChangePercentComplete((int)bookmarkEnumerator.GetProgressValue()));
+                }
+
                 if (Match(bookmarkEnumerator) != null)
                 {
-                    yield return bookmarkEnumerator.Current;
+                    results.Add(bookmarkEnumerator.Current);
                 }
                 if (bookmarkEnumerator.AtStart)
                 {
-                    yield break;
+                    return results;
                 }
             }
         }

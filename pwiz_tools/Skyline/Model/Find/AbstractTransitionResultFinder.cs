@@ -18,7 +18,7 @@
  */
 using System.Collections.Generic;
 using System.Runtime.CompilerServices;
-using System.Threading;
+using pwiz.Common.SystemUtil;
 using pwiz.Skyline.Model.Results;
 
 namespace pwiz.Skyline.Model.Find
@@ -52,9 +52,9 @@ namespace pwiz.Skyline.Model.Find
         protected abstract FindMatch MatchTransition(TransitionChromInfo transitionChromInfo);
         protected abstract FindMatch MatchTransitionGroup(TransitionGroupChromInfo transitionGroupChromInfo);
 
-        public FindMatch NextMatch(BookmarkEnumerator bookmarkEnumerator, CancellationToken cancellationToken)
+        public FindMatch NextMatch(BookmarkEnumerator bookmarkEnumerator, IProgressMonitor progressMonitor, ref IProgressStatus status)
         {
-            var allBookmarks = new HashSet<Bookmark>(FindAll(bookmarkEnumerator.Document, cancellationToken));
+            var allBookmarks = new HashSet<Bookmark>(FindAll(bookmarkEnumerator.Document, progressMonitor, ref status));
             if (allBookmarks.Count == 0)
             {
                 return null;
@@ -74,14 +74,17 @@ namespace pwiz.Skyline.Model.Find
             return null;
         }
 
-        public IEnumerable<Bookmark> FindAll(SrmDocument document, CancellationToken cancellationToken)
+        public IEnumerable<Bookmark> FindAll(SrmDocument document, IProgressMonitor progressMonitor, ref IProgressStatus status)
         {
-            return FindAll(IdentityPath.ROOT, document, cancellationToken);
+            return FindAll(IdentityPath.ROOT, document, progressMonitor, ref status);
         }
-        private IEnumerable<Bookmark> FindAll(IdentityPath identityPath, DocNode docNode, CancellationToken cancellationToken)
+        private IEnumerable<Bookmark> FindAll(IdentityPath identityPath, DocNode docNode, IProgressMonitor progressMonitor, ref IProgressStatus status)
         {
-            cancellationToken.ThrowIfCancellationRequested();
             var results = new List<Bookmark>();
+            if (progressMonitor.IsCanceled)
+            {
+                return results;
+            }
             var transitionGroupDocNode = docNode as TransitionGroupDocNode;
             if (transitionGroupDocNode == null)
             {
@@ -92,7 +95,7 @@ namespace pwiz.Skyline.Model.Find
                 }
                 foreach (var child in docNodeParent.Children)
                 {
-                    results.AddRange(FindAll(new IdentityPath(identityPath, child.Id), child, cancellationToken));
+                    results.AddRange(FindAll(new IdentityPath(identityPath, child.Id), child, progressMonitor, ref status));
                 }
                 return results;
             }
@@ -102,7 +105,10 @@ namespace pwiz.Skyline.Model.Find
             }
             for (int iReplicate = 0; iReplicate < transitionGroupDocNode.Results.Count; iReplicate++)
             {
-                cancellationToken.ThrowIfCancellationRequested();
+                if (progressMonitor.IsCanceled)
+                {
+                    return results;
+                }
                 var replicate = transitionGroupDocNode.Results[iReplicate];
                 if (replicate.IsEmpty)
                 {

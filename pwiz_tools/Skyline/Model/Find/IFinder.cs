@@ -17,7 +17,7 @@
  * limitations under the License.
  */
 using System.Collections.Generic;
-using System.Threading;
+using pwiz.Common.SystemUtil;
 
 namespace pwiz.Skyline.Model.Find
 {
@@ -54,12 +54,12 @@ namespace pwiz.Skyline.Model.Find
         /// meets this IFinder's criteria, and returns a FindMatch.
         /// If no location in the document matches, returns null.
         /// </summary>
-        FindMatch NextMatch(BookmarkEnumerator bookmarkEnumerator, CancellationToken cancellationToken);
+        FindMatch NextMatch(BookmarkEnumerator bookmarkEnumerator, IProgressMonitor progressMonitor, ref IProgressStatus status);
         /// <summary>
         /// Returns all of the locations in the document which match this IFinder's criteria.
         /// The bookmarks can be returned in any order-- the caller will enumerate them in
         /// the correct order for display, and call <see cref="Match" /> as necessary.
         /// </summary>
-        IEnumerable<Bookmark> FindAll(SrmDocument document, CancellationToken cancellationToken);
+        IEnumerable<Bookmark> FindAll(SrmDocument document, IProgressMonitor progressMonitor, ref IProgressStatus status);
     }
 }

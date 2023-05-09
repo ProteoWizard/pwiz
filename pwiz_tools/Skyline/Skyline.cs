@@ -1382,10 +1382,10 @@ namespace pwiz.Skyline
             var document = DocumentUI;
             using (var longWaitDlg = new LongWaitDlg())
             {
-                longWaitDlg.PerformWork(this, 1000, longWaitBroker =>
+                longWaitDlg.PerformWork(this, 1000, progressMonitor =>
                 {
                     findResult = document.SearchDocument(bookmark,
-                        findOptions, displaySettings, longWaitBroker.CancellationToken);
+                        findOptions, displaySettings, progressMonitor);
                 });
                 if (longWaitDlg.IsCanceled)
                 {
@@ -1401,9 +1401,9 @@ namespace pwiz.Skyline
                 DisplayFindResult(null, findResult);
         }
 
-        private IEnumerable<FindResult> FindAll(ILongWaitBroker longWaitBroker, FindPredicate findPredicate)
+        private IEnumerable<FindResult> FindAll(IProgressMonitor progressMonitor, FindPredicate findPredicate)
         {
-            return findPredicate.FindAll(longWaitBroker, Document);
+            return findPredicate.FindAll(progressMonitor, Document);
         }
 
         public void FindAll(Control parent, FindOptions findOptions = null)
@@ -1414,9 +1414,9 @@ namespace pwiz.Skyline
             List<FindResult> results = new List<FindResult>();
             using (var longWaitDlg = new LongWaitDlg(this))
             {
-                longWaitDlg.PerformWork(parent, 2000, lwb =>
+                longWaitDlg.PerformWork(parent, 2000, progressMonitor =>
                 {
-                    results.AddRange(FindAll(lwb, findPredicate));
+                    results.AddRange(FindAll(progressMonitor, findPredicate));
                 });
                 if (results.Count == 0)
                 {

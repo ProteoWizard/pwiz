@@ -17,7 +17,7 @@
  */
 
 using System.Collections.Generic;
-using System.Threading;
+using pwiz.Common.SystemUtil;
 using pwiz.Skyline.Properties;
 
 namespace pwiz.Skyline.Model.Find
@@ -66,16 +66,22 @@ namespace pwiz.Skyline.Model.Find
                 : null;
         }
 
-        public override IEnumerable<Bookmark> FindAll(SrmDocument document, CancellationToken cancellationToken)
+        public override IEnumerable<Bookmark> FindAll(SrmDocument document, IProgressMonitor progressMonitor, ref IProgressStatus status)
         {
+            var results = new List<Bookmark>();
             InitializeIndex(document);
             foreach (var group in document.PeptideGroups)
             foreach (var peptide in group.Peptides)
             {
-                cancellationToken.ThrowIfCancellationRequested();
+                if (progressMonitor.IsCanceled)
+                {
+                    break;
+                }
                 if (_duplicatePeptideKeys.Contains(peptide.SequenceKey))
-                    yield return new Bookmark(new IdentityPath(group.Id, peptide.Id));
+                    results.Add(new Bookmark(new IdentityPath(group.Id, peptide.Id)));
             }
+
+            return results;
         }
     }
 }

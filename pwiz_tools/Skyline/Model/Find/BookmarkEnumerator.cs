@@ -628,5 +628,51 @@ namespace pwiz.Skyline.Model.Find
             public ResultPosition ResultPosition { get; }
             public ChromInfo ChromInfo { get; }
         }
+        /// <summary>
+        /// Returns a number between 0 and 100 indicating how far the <see cref="Current"/> is from <see cref="Start"/>
+        /// </summary>
+        public double GetProgressValue()
+        {
+            long totalNodeCount = Document.MoleculeGroupCount + Document.MoleculeCount +
+                                  Document.MoleculeTransitionGroupCount + Document.MoleculeTransitionCount;
+            if (Document.Settings.HasResults)
+            {
+                totalNodeCount *= Document.Settings.MeasuredResults.Chromatograms.Count + 1;
+            }
+
+            long current = GetBookmarkPositionAsLong(Current);
+            long start = GetBookmarkPositionAsLong(Start);
+            long difference;
+            if (Forward)
+            {
+                difference = current - start;
+            }
+            else
+            {
+                difference = start - current;
+            }
+
+            if (difference < 0)
+            {
+                difference += totalNodeCount;
+            }
+
+            return difference * 100.0 / totalNodeCount;
+        }
+
+        private long GetBookmarkPositionAsLong(Bookmark bookmark)
+        {
+            long position = Document.GetNodePositions(bookmark.IdentityPath).Sum();
+            if (Document.Settings.HasResults)
+            {
+                position *= Document.Settings.MeasuredResults.Chromatograms.Count + 1;
+                if (bookmark.ReplicateIndex.HasValue)
+                {
+                    position += bookmark.ReplicateIndex.Value + 1;
+                }
+            }
+
+            return position;
+        }
     }
 }
