@@ -5489,6 +5489,14 @@
     <Content Include="SkylineCmd.exe.config">
       <CopyToOutputDirectory>PreserveNewest</CopyToOutputDirectory>
     </Content>
+    <Content Condition="'$(Platform)' == 'x86'" Include="bin\x86\Release\SkylineCmd.exe">
+      <Link>SkylineCmd.exe</Link>
+      <CopyToOutputDirectory>PreserveNewest</CopyToOutputDirectory>
+    </Content>
+    <Content Condition="'$(Platform)' == 'x64'" Include="bin\x64\Release\SkylineCmd.exe">
+      <Link>SkylineCmd.exe</Link>
+      <CopyToOutputDirectory>PreserveNewest</CopyToOutputDirectory>
+    </Content>
     <None Include="SkylineLog4Net.config">
       <CopyToOutputDirectory>PreserveNewest</CopyToOutputDirectory>
     </None>
@@ -5553,10 +5561,6 @@
     <ProjectReference Include="..\Shared\zedgraph\ZedGraph.csproj">
       <Project>{b99650ee-af46-47b4-a4a9-212ade7809b7}</Project>
       <Name>ZedGraph</Name>
-    </ProjectReference>
-    <ProjectReference Include="SkylineCmd\SkylineCmd.csproj">
-      <Project>{fa16a0ef-edf7-4515-bd93-44badd7ab98a}</Project>
-      <Name>SkylineCmd</Name>
     </ProjectReference>
     <ProjectReference Include="SkylineTool\SkylineTool.csproj">
       <Project>{3FD4E167-8F9C-4116-8122-67C7AD143490}</Project>
@@ -5723,6 +5727,16 @@
       <PublishState>Include</PublishState>
       <IncludeHash>True</IncludeHash>
       <FileType>Assembly</FileType>
+    </PublishFile>
+    <PublishFile Include="PanoramaClient.pdb">
+      <Visible>False</Visible>
+      <Group>
+      </Group>
+      <TargetPath>
+      </TargetPath>
+      <PublishState>Include</PublishState>
+      <IncludeHash>True</IncludeHash>
+      <FileType>File</FileType>
     </PublishFile>
     <PublishFile Include="ProteomeDb.pdb">
       <Visible>False</Visible>

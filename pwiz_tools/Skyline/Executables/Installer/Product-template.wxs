@@ -269,6 +269,12 @@
       <Component Id="Remotion.Linq.EagerFetching.dll">
         <File Source="$(var.Skyline.TargetDir)/Remotion.Linq.EagerFetching.dll" KeyPath="yes"/>
       </Component>
+	  <Component Id="PanoramaClient.dll">
+        <File Source="$(var.Skyline.TargetDir)/PanoramaClient.dll" KeyPath="yes"/>
+      </Component>
+      <Component Id="PanoramaClient.pdb">
+        <File Source="$(var.Skyline.TargetDir)/PanoramaClient.pdb" KeyPath="yes"/>
+      </Component>
       <Component Id="SharedBatch.dll">
         <File Source="$(var.Skyline.TargetDir)/SharedBatch.dll" KeyPath="yes"/>
       </Component>
