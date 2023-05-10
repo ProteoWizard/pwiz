@@ -253,6 +253,7 @@
     <None Include="DiaSwathTTOFViews.zip" />
     <None Include="DriftTimePredictorExtra.zip" />
     <None Include="DriftTimePredictorViews.zip" />
+    <None Include="FeatureDetectionTest.zip" />
     <None Include="OrbiPrmViews.zip" />
     <None Include="PerfImportHundredsOfReplicatesTest.zip" />
     <None Include="HiResMetabolomicsViews.zip" />

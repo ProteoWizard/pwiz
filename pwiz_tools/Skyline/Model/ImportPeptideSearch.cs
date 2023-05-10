@@ -68,8 +68,15 @@ namespace pwiz.Skyline.Model
         public PeptideModifications MatcherPepMods { get { return _matcher.MatcherPepMods; } }
         public IList<StaticMod> MatcherHeavyMods { get { return MatcherPepMods.GetModifications(DefaultHeavyLabelType); } }
 
-        public BiblioSpecLiteBuilder GetLibBuilder(SrmDocument doc, string docFilePath, bool includeAmbiguousMatches)
+        public BiblioSpecLiteBuilder GetLibBuilder(SrmDocument doc, string docFilePath, bool includeAmbiguousMatches, bool isFeatureDetection = false)
         {
+            if (isFeatureDetection)
+            {
+                // Avoid confusion with any document library
+                // Change filename hint from foo\bar\baz.sky to foo\bar\baz detected features.sky so we get library name baz detected features.blib
+                var docfile_ext = Path.GetExtension(docFilePath);
+                docFilePath = docFilePath.Substring(0, docFilePath.Length-docfile_ext.Length) + @" " + Resources.ImportPeptideSearch_GetLibBuilder_detected_features + docfile_ext; 
+            }
             string outputPath = BiblioSpecLiteSpec.GetLibraryFileName(docFilePath);
 
             // Check to see if the library is already there, and if it is, 
@@ -78,7 +85,7 @@ namespace pwiz.Skyline.Model
             var libraryBuildAction = LibraryBuildAction.Create;
             if (libraryExists)
             {
-                if (doc.Settings.HasDocumentLibrary)
+                if (doc.Settings.HasDocumentLibrary || isFeatureDetection)
                 {
                     libraryBuildAction = LibraryBuildAction.Append;
                 }
@@ -92,7 +99,7 @@ namespace pwiz.Skyline.Model
             }
 
             string name = Path.GetFileNameWithoutExtension(docFilePath);
-            return new BiblioSpecLiteBuilder(name, outputPath, SearchFilenames)
+            return new BiblioSpecLiteBuilder(name, outputPath, SearchFilenames, null, !isFeatureDetection)
             {
                 Action = libraryBuildAction,
                 KeepRedundant = true,

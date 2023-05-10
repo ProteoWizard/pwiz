@@ -3285,6 +3285,25 @@ namespace pwiz.Skyline.Properties {
         }
         
         /// <summary>
+        ///   Looks up a localized string similar to Add spectral library.
+        /// </summary>
+        public static string BuildPeptideSearchLibraryControl_BuildPeptideSearchLibrary_Add_spectral_library {
+            get {
+                return ResourceManager.GetString("BuildPeptideSearchLibraryControl_BuildPeptideSearchLibrary_Add_spectral_library", resourceCulture);
+            }
+        }
+        
+        /// <summary>
+        ///   Looks up a localized string similar to Building Detected Features Library.
+        /// </summary>
+        public static string BuildPeptideSearchLibraryControl_BuildPeptideSearchLibrary_Building_Detected_Features_Library {
+            get {
+                return ResourceManager.GetString("BuildPeptideSearchLibraryControl_BuildPeptideSearchLibrary_Building_Detected_Feat" +
+                        "ures_Library", resourceCulture);
+            }
+        }
+        
+        /// <summary>
         ///   Looks up a localized string similar to Building document library for peptide search..
         /// </summary>
         public static string BuildPeptideSearchLibraryControl_BuildPeptideSearchLibrary_Building_document_library_for_peptide_search_ {
@@ -16265,6 +16284,15 @@ namespace pwiz.Skyline.Properties {
             get {
                 return ResourceManager.GetString("ImportIonMobilityFromSpectralLibrary_ValidateSpectralLibraryPath_The_file__0__is_" +
                         "not_a_BiblioSpec_library_", resourceCulture);
+            }
+        }
+        
+        /// <summary>
+        ///   Looks up a localized string similar to detected features.
+        /// </summary>
+        public static string ImportPeptideSearch_GetLibBuilder_detected_features {
+            get {
+                return ResourceManager.GetString("ImportPeptideSearch_GetLibBuilder_detected_features", resourceCulture);
             }
         }
         

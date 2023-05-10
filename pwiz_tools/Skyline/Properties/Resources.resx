@@ -6590,6 +6590,9 @@ You may be able to avoid this problem by installing a 64-bit version of {0}.</va
   <data name="BuildPeptideSearchLibraryControl_BuildPeptideSearchLibrary_Add_document_spectral_library" xml:space="preserve">
     <value>Add document spectral library</value>
   </data>
+  <data name="BuildPeptideSearchLibraryControl_BuildPeptideSearchLibrary_Add_spectral_library" xml:space="preserve">
+    <value>Add spectral library</value>
+  </data>
   <data name="ToolUpdatesDlg_btnUpdate_Click_Please_select_at_least_one_tool_to_update_" xml:space="preserve">
     <value>Please select at least one tool to update.</value>
   </data>
@@ -11995,5 +11998,11 @@ If you choose Disable, you can enable Auto-select later with the "Refine &gt; Ad
   </data>
   <data name="FullScanSettingsControl_InitializeFeatureDetectionUI_This_is_the_value_assumed_by_Hardklör__it_cannot_be_adjusted_" xml:space="preserve">
     <value>This is the value assumed by Hardklör, it cannot be adjusted.</value>
+  </data>
+  <data name="ImportPeptideSearch_GetLibBuilder_detected_features" xml:space="preserve">
+    <value>detected features</value>
+  </data>
+  <data name="BuildPeptideSearchLibraryControl_BuildPeptideSearchLibrary_Building_Detected_Features_Library" xml:space="preserve">
+    <value>Building Detected Features Library</value>
   </data>
 </root>

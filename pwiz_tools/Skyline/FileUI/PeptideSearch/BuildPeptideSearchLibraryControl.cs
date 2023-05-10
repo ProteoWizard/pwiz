@@ -78,7 +78,14 @@ namespace pwiz.Skyline.FileUI.PeptideSearch
             comboInputFileType.SelectedIndex = 0;
         }
 
-        public BuildPeptideSearchLibrarySettings BuildLibrarySettings => new BuildPeptideSearchLibrarySettings(this);
+        private BuildPeptideSearchLibrarySettings _buildPeptideSearchLibrarySettings;
+        public BuildPeptideSearchLibrarySettings BuildLibrarySettings
+        {
+            get
+            {
+                return _buildPeptideSearchLibrarySettings ??= new BuildPeptideSearchLibrarySettings(this);
+            }
+        }
 
         public class BuildPeptideSearchLibrarySettings : AuditLogOperationSettings<BuildPeptideSearchLibrarySettings>
         {
@@ -92,7 +99,7 @@ namespace pwiz.Skyline.FileUI.PeptideSearch
                 get
                 {
                     return new MessageInfo(MessageType.added_spectral_library, _docType,
-                        Settings.Default.SpectralLibraryList.First().Name);
+                       string.IsNullOrEmpty(LibraryName) ? Settings.Default.SpectralLibraryList.First().Name : LibraryName);
                 }
             }
 
@@ -130,6 +137,8 @@ namespace pwiz.Skyline.FileUI.PeptideSearch
             public ImportPeptideSearchDlg.Workflow WorkFlow { get; private set; }
             [Track(ignoreDefaultParent: true)]
             public ImportPeptideSearchDlg.InputFile InputFileType { get; private set; }
+
+            public string LibraryName; // Name of the library being built
 
             public object GetDefaultObject(ObjectInfo<object> info)
             {
@@ -252,7 +261,9 @@ namespace pwiz.Skyline.FileUI.PeptideSearch
                 MsDataFileUri[] dataSources;
                 using (var dlg = new OpenDataSourceDialog(Settings.Default.RemoteAccountList)
                        {
-                           Text = Resources.ImportResultsControl_browseToResultsFileButton_Click_Import_Peptide_Search,
+                           Text = _isFeatureDetectionWorkflow ? 
+                               Resources.ImportPeptideSearchDlg_ImportPeptideSearchDlg_Select_Files_to_Search :
+                               Resources.ImportResultsControl_browseToResultsFileButton_Click_Import_Peptide_Search,
                            InitialDirectory = new MsDataFilePath(Path.GetDirectoryName(DocumentContainer.DocumentFilePath)),
                        })
                 {
@@ -303,17 +314,17 @@ namespace pwiz.Skyline.FileUI.PeptideSearch
             set { cbIncludeAmbiguousMatches.Checked = value; }
         }
 
-        public bool BuildOrUsePeptideSearchLibrary(CancelEventArgs e, bool showWarnings)
+        public bool BuildOrUsePeptideSearchLibrary(CancelEventArgs e, bool showWarnings, bool isFeatureDetection)
         {
-            return UseExistingLibrary ? AddExistingLibrary(e) : BuildPeptideSearchLibrary(e, showWarnings);
+            return UseExistingLibrary ? AddExistingLibrary(e) : BuildPeptideSearchLibrary(e, showWarnings, isFeatureDetection);
         }
 
         public string LastBuildCommandArgs { get; private set; }
         public string LastBuildOutput { get; private set; }
 
-        private bool BuildPeptideSearchLibrary(CancelEventArgs e, bool showWarnings)
+        private bool BuildPeptideSearchLibrary(CancelEventArgs e, bool showWarnings, bool isFeatureDetection)
         {
-            // Nothing to build, if now search files were specified
+            // Nothing to build, if no search files were specified
             if (!SearchFilenames.Any())
             {
                 var libraries = DocumentContainer.Document.Settings.PeptideSettings.Libraries;
@@ -329,7 +340,7 @@ namespace pwiz.Skyline.FileUI.PeptideSearch
             BiblioSpecLiteBuilder builder;
             try
             {
-                builder = ImportPeptideSearch.GetLibBuilder(DocumentContainer.Document, DocumentContainer.DocumentFilePath, cbIncludeAmbiguousMatches.Checked);
+                builder = ImportPeptideSearch.GetLibBuilder(DocumentContainer.Document, DocumentContainer.DocumentFilePath, cbIncludeAmbiguousMatches.Checked, isFeatureDetection);
                 builder.ScoreThresholdsByFile = thresholdsByFile;
                 builder.PreferEmbeddedSpectra = PreferEmbeddedSpectra;
                 builder.DebugMode = DebugMode;
@@ -345,8 +356,12 @@ namespace pwiz.Skyline.FileUI.PeptideSearch
             {
                 using (var longWaitDlg = new LongWaitDlg
                        {
-                           Text = Resources.BuildPeptideSearchLibraryControl_BuildPeptideSearchLibrary_Building_Peptide_Search_Library,
-                           Message = Resources.BuildPeptideSearchLibraryControl_BuildPeptideSearchLibrary_Building_document_library_for_peptide_search_,
+                           Text = isFeatureDetection ?
+                               Resources.BuildPeptideSearchLibraryControl_BuildPeptideSearchLibrary_Building_Detected_Features_Library :
+                               Resources.BuildPeptideSearchLibraryControl_BuildPeptideSearchLibrary_Building_Peptide_Search_Library,
+                           Message = isFeatureDetection ?
+                               Resources.BuildPeptideSearchLibraryControl_BuildPeptideSearchLibrary_Building_Detected_Features_Library :
+                               Resources.BuildPeptideSearchLibraryControl_BuildPeptideSearchLibrary_Building_document_library_for_peptide_search_,
                        })
                 {
                     // Disable the wizard, because the LongWaitDlg does not
@@ -387,16 +402,26 @@ namespace pwiz.Skyline.FileUI.PeptideSearch
                 }
             } while (retry) ;
 
-            var docLibSpec = builder.LibrarySpec.ChangeDocumentLibrary(true);
-            Settings.Default.SpectralLibraryList.Insert(0, docLibSpec);
+            var docLibSpec = builder.LibrarySpec;
+            BuildLibrarySettings.LibraryName = docLibSpec.Name;
+            if (isFeatureDetection)
+            {
+                Settings.Default.SpectralLibraryList.Add(docLibSpec); // Won't displace the current document library
+            }
+            else
+            {
+                docLibSpec = builder.LibrarySpec.ChangeDocumentLibrary(true);
+                Settings.Default.SpectralLibraryList.Insert(0, docLibSpec);
+            }
 
             // Go ahead and load the library - we'll need it for 
             // the modifications and chromatograms page.
             if (!LoadPeptideSearchLibrary(docLibSpec))
                 return false;
 
-            var addedIrts = LibraryBuildNotificationHandler.AddIrts(IrtRegressionType.DEFAULT,
-                ImportPeptideSearch.DocLib, docLibSpec, _driverStandards.SelectedItem, WizardForm, false, out var outStandard);
+            IrtStandard outStandard = null;
+            var addedIrts = !isFeatureDetection && LibraryBuildNotificationHandler.AddIrts(IrtRegressionType.DEFAULT,
+                ImportPeptideSearch.DocLib, docLibSpec, _driverStandards.SelectedItem, WizardForm, false, out outStandard);
 
             var docNew = ImportPeptideSearch.AddDocumentSpectralLibrary(DocumentContainer.Document, docLibSpec);
             if (docNew == null)
@@ -411,7 +436,10 @@ namespace pwiz.Skyline.FileUI.PeptideSearch
             {
                 MessageDlg.Show(WizardForm, builder.AmbiguousMatchesMessage);
             }
-            ImportPeptideSearch.IrtStandard = outStandard;
+            if (!isFeatureDetection)
+            {
+                ImportPeptideSearch.IrtStandard = outStandard;
+            }
             return true;
         }
 

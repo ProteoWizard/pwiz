@@ -1525,11 +1525,11 @@ namespace pwiz.Skyline.Model.Lib
             return null;
         }
 
-        protected LibrarySpec(string name, string path)
+        protected LibrarySpec(string name, string path, bool useExplicitPeakBounds = true)
             : base(name)
         {
             FilePath = path;
-            UseExplicitPeakBounds = true;
+            UseExplicitPeakBounds = useExplicitPeakBounds;
         }
 
         [Track]

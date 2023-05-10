@@ -170,6 +170,7 @@ namespace pwiz.Skyline.FileUI.PeptideSearch
                     label14.Text =
                         Resources
                             .ImportPeptideSearchDlg_ImportPeptideSearchDlg_Select_Files_to_Search; // Was "Spectral Library"
+                    lblDDASearch.Text = Resources.ImportPeptideSearchDlg_ImportPeptideSearchDlg_Feature_Detection; // Was "DDA Search"
                 }
 
                 BuildPepSearchLibControl.ForceWorkflow(workflowType.Value);
@@ -394,6 +395,7 @@ namespace pwiz.Skyline.FileUI.PeptideSearch
         private bool _transitionSettingsChanged;
         private bool _fullScanSettingsChanged;
         private bool _expandedDdaSearchLog;
+        private PeptideLibraries _existingLibraries;
 
         public bool HasPeakBoundaries { get; private set; }
 
@@ -513,7 +515,7 @@ namespace pwiz.Skyline.FileUI.PeptideSearch
                     }
 
                     var eCancel = new CancelEventArgs();
-                    if (!BuildPepSearchLibControl.PerformDDASearch && !BuildPeptideSearchLibrary(eCancel))
+                    if (!BuildPepSearchLibControl.PerformDDASearch && !BuildPeptideSearchLibrary(eCancel, IsFeatureDetectionWorkflow))
                     {
                         // Page shows error
                         if (eCancel.Cancel)
@@ -774,6 +776,7 @@ namespace pwiz.Skyline.FileUI.PeptideSearch
                     BuildPepSearchLibControl.Grid.Files = ImportPeptideSearch.SearchEngine.SpectrumFileNames.Select(f =>
                         new BuildLibraryGridView.File(ImportPeptideSearch.SearchEngine.GetSearchResultFilepath(f), scoreType, scoreThreshold));
                     BuildPepSearchLibControl.ImportPeptideSearch.SearchFilenames = BuildPepSearchLibControl.Grid.FilePaths.ToArray();
+                    _existingLibraries = Document.Settings.PeptideSettings.Libraries;
                     if (IsFeatureDetectionWorkflow)
                     {
                         // Disable navigation while the library build is happening
@@ -781,7 +784,7 @@ namespace pwiz.Skyline.FileUI.PeptideSearch
                         btnNext.Enabled = false; 
                     }
 
-                    if (!BuildPeptideSearchLibrary(eCancel2))
+                    if (!BuildPeptideSearchLibrary(eCancel2, IsFeatureDetectionWorkflow))
                         return;
 
                     if (IsFeatureDetectionWorkflow)
@@ -827,77 +830,78 @@ namespace pwiz.Skyline.FileUI.PeptideSearch
             // Add the library molecules to the document
             var status = new ProgressStatus(Resources.ImportPeptideSearchDlg_NextPage_Adding_detected_features_to_document);
             progressMonitor.UpdateProgress(status);
-            Assume.IsTrue(
-                Document.Settings.PeptideSettings.Libraries.TryGetDocumentLibrary(out var docLib));
-            var lib = Document.Settings.PeptideSettings.Libraries.Libraries.FirstOrDefault(l =>
-                Equals(docLib.Name, l.Name));
-            var adducts = new HashSet<Adduct>(Document.Settings.TransitionSettings.Filter
-                .SmallMoleculeFragmentAdducts);
-            if (lib != null)
+            Assume.IsTrue(!Equals(Document.Settings.PeptideSettings.Libraries.LibrarySpecs, _existingLibraries.LibrarySpecs));
+            var docNew = Document;
+            foreach (var lib in Document.Settings.PeptideSettings.Libraries.Libraries.Where(l =>
+                         !_existingLibraries.Libraries.Contains(l)))
             {
-                var nodes = new List<PeptideDocNode>();
-                var keyCount = lib.Keys.Count();
-                var processed = 0;
-                foreach (var key in lib.Keys)
+                var adducts = new HashSet<Adduct>(Document.Settings.TransitionSettings.Filter.SmallMoleculeFragmentAdducts);
+                if (lib != null)
                 {
-                    progressMonitor.UpdateProgress(status.ChangePercentComplete(80 * (processed++ / keyCount)));
-                    // Filter on user-requested charge state
-                    if (!TransitionSettings.Filter.PeptidePrecursorCharges.Any(charge => Equals(charge.AdductCharge, key.Adduct.AdductCharge)))
+                    var nodes = new List<PeptideDocNode>();
+                    var keyCount = lib.Keys.Count();
+                    var processed = 0;
+                    foreach (var key in lib.Keys)
                     {
-                        continue;
+                        progressMonitor.UpdateProgress(status.ChangePercentComplete(80 * (processed++ / keyCount)));
+                        // Filter on user-requested charge state
+                        if (!TransitionSettings.Filter.PeptidePrecursorCharges.Any(charge => Equals(charge.AdductCharge, key.Adduct.AdductCharge)))
+                        {
+                            continue;
+                        }
+                        Assume.IsTrue(lib.TryLoadSpectrum(key, out SpectrumPeaksInfo spectrum));
+                        var customMolecule =
+                            CustomMolecule.FromSmallMoleculeLibraryAttributes(
+                                key.SmallMoleculeLibraryAttributes);
+                        var mass = customMolecule.GetMass(MassType.Monoisotopic);
+                        var peptide = new Peptide(customMolecule);
+                        var precursor = new TransitionGroup(peptide, key.Adduct,
+                            IsotopeLabelType.light);
+                        var precursorTransition = new Transition(precursor, key.Adduct, null,
+                            customMolecule,
+                            IonType.precursor);
+                        var precursorTransitionDocNode = new TransitionDocNode(precursorTransition,
+                            Annotations.EMPTY, null, mass,
+                            TransitionDocNode.TransitionQuantInfo.DEFAULT, null,
+                            null);
+                        var precursorDocNode = new TransitionGroupDocNode(precursor, Annotations.EMPTY,
+                            Document.Settings, null, null, null, null,
+                            new[] { precursorTransitionDocNode },
+                            false); // We will turn on autoManage in the next step
+                        var peptideDocNode = new PeptideDocNode(peptide, Document.Settings, null, null,
+                            null,
+                            new[] { precursorDocNode }, false); // We will turn on autoManage in the next step
+                        nodes.Add(peptideDocNode);
+                        adducts.Add(key.Adduct);
                     }
-                    Assume.IsTrue(lib.TryLoadSpectrum(key, out SpectrumPeaksInfo spectrum));
-                    var customMolecule =
-                        CustomMolecule.FromSmallMoleculeLibraryAttributes(
-                            key.SmallMoleculeLibraryAttributes);
-                    var mass = customMolecule.GetMass(MassType.Monoisotopic);
-                    var peptide = new Peptide(customMolecule);
-                    var precursor = new TransitionGroup(peptide, key.Adduct,
-                        IsotopeLabelType.light);
-                    var precursorTransition = new Transition(precursor, key.Adduct, null,
-                        customMolecule,
-                        IonType.precursor);
-                    var precursorTransitionDocNode = new TransitionDocNode(precursorTransition,
-                        Annotations.EMPTY, null, mass,
-                        TransitionDocNode.TransitionQuantInfo.DEFAULT, null,
-                        null);
-                    var precursorDocNode = new TransitionGroupDocNode(precursor, Annotations.EMPTY,
-                        Document.Settings, null, null, null, null,
-                        new[] { precursorTransitionDocNode },
-                        false); // We will turn on autoManage in the next step
-                    var peptideDocNode = new PeptideDocNode(peptide, Document.Settings, null, null,
-                        null,
-                        new[] { precursorDocNode }, false); // We will turn on autoManage in the next step
-                    nodes.Add(peptideDocNode);
-                    adducts.Add(key.Adduct);
+
+                    var newPeptideGroup = new PeptideGroup();
+                    var newPeptideGroupDocNode = new PeptideGroupDocNode(newPeptideGroup,
+                        Annotations.EMPTY,
+                        lib.Name,
+                        null, nodes.ToArray(), true);
+
+
+                    // Make sure that transition settings filters include any newly used adduct types, and both precursor and fragment ions
+                    var transitionSettings = Document.Settings.TransitionSettings;
+                    var filter = transitionSettings.Filter
+                        .ChangeSmallMoleculeFragmentAdducts(adducts.ToList())
+                        .ChangeSmallMoleculePrecursorAdducts(adducts.ToList())
+                        .ChangeSmallMoleculeIonTypes(new[] { IonType.custom, IonType.precursor });
+                    var newTransitionSettings = transitionSettings.ChangeFilter(filter);
+                    progressMonitor.UpdateProgress(status.ChangePercentComplete(90));
+
+                    // Add new nodes with auto select enabled, being careful not to mess with any existing nodes
+                    var docTmp = (SrmDocument)(Document.ChangeChildren(new List<DocNode>(){newPeptideGroupDocNode})); // Temp doc with just the new nodes
+                    docTmp = docTmp.ChangeSettings(docTmp.Settings.ChangeTransitionSettings(newTransitionSettings)); // Update the settings
+                    // Now apply auto pick so that M+1, M+2 etc precursors get created 
+                    docTmp = ImportPeptideSearch.ChangeAutoManageChildren(docTmp, PickLevel.precursors | PickLevel.transitions, true);
+
+                    // Copy the resulting nodes to the actual doc, and update its settings too
+                    docNew = ((SrmDocument)docNew.Add(docTmp.MoleculeGroups.First())).
+                        ChangeSettings(docTmp.Settings.ChangeTransitionSettings(newTransitionSettings));
                 }
 
-                var newPeptideGroup = new PeptideGroup();
-                var newPeptideGroupDocNode = new PeptideGroupDocNode(newPeptideGroup,
-                    Annotations.EMPTY,
-                    lib.Name,
-                    null, nodes.ToArray(), true);
-
-
-                // Make sure that transition settings filters include any newly used adduct types, and both precursor and fragment ions
-                var transitionSettings = Document.Settings.TransitionSettings;
-                var filter = transitionSettings.Filter
-                    .ChangeSmallMoleculeFragmentAdducts(adducts.ToList())
-                    .ChangeSmallMoleculePrecursorAdducts(adducts.ToList())
-                    .ChangeSmallMoleculeIonTypes(new[] { IonType.custom, IonType.precursor });
-                var newTransitionSettings = transitionSettings.ChangeFilter(filter);
-                progressMonitor.UpdateProgress(status.ChangePercentComplete(90));
-
-                // Add new nodes with auto select enabled, being careful not to mess with any existing nodes
-                var docNew =
-                    (SrmDocument)(Document.ChangeChildren(new List<DocNode>(){newPeptideGroupDocNode})); // Temp doc with just the new nodes
-                docNew = docNew.ChangeSettings(docNew.Settings.ChangeTransitionSettings(newTransitionSettings)); // Update the settings
-                // Now apply auto pick so that M+1, M+2 etc precursors get created 
-                docNew = ImportPeptideSearch.ChangeAutoManageChildren(docNew, PickLevel.precursors | PickLevel.transitions, true);
-
-                // Finally, copy the resulting nodes to the actual doc, and update its settings too
-                docNew = ((SrmDocument)Document.Add(docNew.MoleculeGroups.First())).
-                    ChangeSettings(docNew.Settings.ChangeTransitionSettings(newTransitionSettings));
                 progressMonitor.UpdateProgress(status.ChangePercentComplete(100));
                 SetDocument(docNew, Document);
 
@@ -1302,9 +1306,9 @@ namespace pwiz.Skyline.FileUI.PeptideSearch
             }
         }
 
-        private bool BuildPeptideSearchLibrary(CancelEventArgs e, bool showWarnings = true)
+        private bool BuildPeptideSearchLibrary(CancelEventArgs e, bool isFeatureDetection, bool showWarnings = true)
         {
-            var result = BuildPepSearchLibControl.BuildOrUsePeptideSearchLibrary(e, showWarnings);
+            var result = BuildPepSearchLibControl.BuildOrUsePeptideSearchLibrary(e, showWarnings, isFeatureDetection);
             if (result)
             {
                 Func<SrmDocumentPair, AuditLogEntry> logFunc;
@@ -1316,8 +1320,10 @@ namespace pwiz.Skyline.FileUI.PeptideSearch
                 {
                     logFunc = BuildPepSearchLibControl.BuildLibrarySettings.EntryCreator.Create;
                 }
-                SkylineWindow.ModifyDocument(
-                    Resources.BuildPeptideSearchLibraryControl_BuildPeptideSearchLibrary_Add_document_spectral_library,
+                SkylineWindow.ModifyDocument(!isFeatureDetection ?
+                    Resources.BuildPeptideSearchLibraryControl_BuildPeptideSearchLibrary_Add_document_spectral_library:
+                    Resources.BuildPeptideSearchLibraryControl_BuildPeptideSearchLibrary_Add_spectral_library
+                    ,
                     doc => Document, logFunc);
                 SetDocument(SkylineWindow.Document, _documents.Peek());
             }
@@ -1375,7 +1381,7 @@ namespace pwiz.Skyline.FileUI.PeptideSearch
                 else
                 {
                     var eCancel = new CancelEventArgs();
-                    if (!BuildPeptideSearchLibrary(eCancel))
+                    if (!BuildPeptideSearchLibrary(eCancel, WorkflowType == Workflow.feature_detection))
                     {
                         if (eCancel.Cancel)
                             return;

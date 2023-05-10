@@ -26,7 +26,6 @@ using pwiz.Skyline.FileUI.PeptideSearch;
 using pwiz.Skyline.Model.DdaSearch;
 using pwiz.Skyline.Model.DocSettings;
 using pwiz.Skyline.Model.Results;
-using pwiz.Skyline.Properties;
 using pwiz.SkylineTestUtil;
 
 //
@@ -76,43 +75,43 @@ namespace TestPerf
             public bool HasMissingDependencies { get; private set; }
         }
 
-        [TestMethod, NoUnicodeTesting(TestExclusionReason.HARDKLOR_UNICODE_ISSUES), NoParallelTesting(TestExclusionReason.RESOURCE_INTENSIVE)]
-        public void TestDdaFeatureDetection()
-        {
-            TestFilesZip = GetPerfTestDataURL("PerfImportResultsThermoDDAVsMz5.zip");
+        public bool UseWiff => false; // ExtensionTestContext.CanImportAbWiff; // Wiff reader fails in RunProcess with 
 
-            TestFilesPersistent = new[]
+        [TestMethod, NoUnicodeTesting(TestExclusionReason.HARDKLOR_UNICODE_ISSUES), NoParallelTesting(TestExclusionReason.RESOURCE_INTENSIVE)]
+        public void TestHardklorFeatureDetection()
+        {
+            TestFilesZipPaths = new[]
             {
-                "Thermo\\QE_DDA\\20130311_DDA_Pit01.raw"
+                UseWiff
+                    ? @"https://skyline.ms/tutorials/MS1Filtering_2.zip" 
+                    : @"https://skyline.ms/tutorials/MS1FilteringMzml_2.zip", 
+                @"TestPerf\FeatureDetectionTest.zip"
             };
-            TestDirectoryName = "DdaFeatureDetectionTest";
+            TestDirectoryName = "HardklorFeatureDetectionTest";
 
             RunFunctionalTest();
         }
 
-        public bool IsRecordMode => false;
+        private string GetDataPath(string path)
+        {
+            var folderMs1Filtering = UseWiff ? "Ms1Filtering" : "Ms1FilteringMzml";
+            return TestFilesDirs[0].GetTestPath(Path.Combine(folderMs1Filtering, path));
+        }
 
         private string GetTestPath(string path)
         {
-            var fullpath = TestFilesDir.GetTestPath(path);
-            if (!File.Exists(fullpath))
-            {
-                // Maybe it's one of the unzipped persistent files
-                var unzip = TestFilesDir.GetTestPath(Path.Combine("DdaSearchMs1Filtering",path));
-                if (File.Exists(unzip))
-                    return unzip;
-            }
-            return fullpath;
+            return TestFilesDirs[1].GetTestPath(path);
         }
 
         private string[] SearchFiles
         {
             get
             {
+                var ext = UseWiff ? ".wiff" : ".mzML";
                 return new[]
                 {
-                    GetTestPath(TestFilesPersistent[0]),
-                    GetTestPath("Thermo\\QE_DDA\\not_actually_there.raw") // Just for UI handling test
+                    GetDataPath("100803_0001_MCF7_TiB_L")+ext,
+                    GetDataPath("100803_0005b_MCF7_TiTip3")+ext
                 };
             }
         }
@@ -123,8 +122,8 @@ namespace TestPerf
             {
                 return new[]
                 {
-                    GetTestPath(TestFilesPersistent[0]),
-                    GetTestPath(Path.Combine("subdir", TestFilesPersistent[0]))
+                    SearchFiles[0],
+                    Path.Combine(Path.GetDirectoryName(SearchFiles[0]) ?? string.Empty, "subdir", Path.GetFileName(SearchFiles[0]))
                 };
             }
         }
@@ -134,14 +133,21 @@ namespace TestPerf
             //IsPauseForScreenShots = true; // enable for quick demo
 
             // Make sure we're testing the mzML conversion
-            var convertedFile = Path.Combine(Path.GetDirectoryName(GetTestPath(TestFilesPersistent[0])) ?? string.Empty,
-                MsconvertDdaConverter.OUTPUT_SUBDIRECTORY, (Path.GetFileNameWithoutExtension(TestFilesPersistent[0])+ @".mzML"));
-            if (File.Exists(convertedFile))
+            foreach (var file in SearchFiles)
             {
-                File.Delete(convertedFile);
+                AssertEx.IsTrue(File.Exists(file));
+                var convertedFile = Path.Combine(Path.GetDirectoryName(file) ?? string.Empty,
+                    MsconvertDdaConverter.OUTPUT_SUBDIRECTORY, (Path.GetFileNameWithoutExtension(file)+ @".mzML"));
+                if (File.Exists(convertedFile))
+                {
+                    File.Delete(convertedFile);
+                }
             }
 
-            PrepareDocument("TestFeatureDetection.sky");
+            // Load the document that we have at the end of the MS1 fullscan tutorial
+            RunUI(() => SkylineWindow.OpenFile(GetTestPath("Ms1FilteringTutorial-2min.sky")));
+            WaitForDocumentLoaded();
+
             PauseForScreenShot("Ready to start Wizard (File > Import > Feature Detection...)");
             // Launch the wizard
             var importPeptideSearchDlg = ShowDialog<ImportPeptideSearchDlg>(SkylineWindow.ShowFeatureDetectionDlg);
@@ -151,17 +157,15 @@ namespace TestPerf
             {
                 Assert.IsTrue(importPeptideSearchDlg.CurrentPage == ImportPeptideSearchDlg.Pages.spectra_page);
                 Assert.IsTrue(importPeptideSearchDlg.BuildPepSearchLibControl.PerformDDASearch);
-                importPeptideSearchDlg.BuildPepSearchLibControl.DdaSearchDataSources = SearchFiles.Select(o => (MsDataFileUri)new MsDataFilePath(o)).Take(1).ToArray();
+                importPeptideSearchDlg.BuildPepSearchLibControl.DdaSearchDataSources = SearchFiles.Select(o => (MsDataFileUri)new MsDataFilePath(o)).ToArray();
                 AssertEx.AreEqual(ImportPeptideSearchDlg.Workflow.feature_detection, importPeptideSearchDlg.BuildPepSearchLibControl.WorkflowType); 
-                importPeptideSearchDlg.BuildPepSearchLibControl.CutOffScore = 0.95;
+                importPeptideSearchDlg.BuildPepSearchLibControl.CutOffScore = 0.98;
             });
-            PauseForScreenShot("Hardklor settings - one search file");
-            RunUI(() =>
-            {
-                Assert.IsTrue(importPeptideSearchDlg.ClickNextButton());
-            });
+            PauseForScreenShot("these are the MS1 Filtering Tutorial files");
+            var importResultsNameDlg = ShowDialog<ImportResultsNameDlg>(() => importPeptideSearchDlg.ClickNextButton());
+            PauseForScreenShot<ImportResultsNameDlg>("Common prefix form");
 
-            // With only 1 source, no add/remove prefix/suffix dialog
+            OkDialog(importResultsNameDlg, importResultsNameDlg.YesDialog);
 
             // Test back/next buttons
             PauseForScreenShot("Testing back button");
@@ -171,16 +175,19 @@ namespace TestPerf
                 Assert.IsTrue(importPeptideSearchDlg.CurrentPage == ImportPeptideSearchDlg.Pages.spectra_page);
             });
             PauseForScreenShot("and forward again");
+            importResultsNameDlg = ShowDialog<ImportResultsNameDlg>(() => importPeptideSearchDlg.ClickNextButton());
+            PauseForScreenShot<ImportResultsNameDlg>("Common prefix form again");
+            OkDialog(importResultsNameDlg, importResultsNameDlg.YesDialog);
+
             RunUI(() =>
             {
-                Assert.IsTrue(importPeptideSearchDlg.ClickNextButton());
                 // We're on the MS1 full scan settings page.
                 Assert.IsTrue(importPeptideSearchDlg.CurrentPage == ImportPeptideSearchDlg.Pages.full_scan_settings_page);
                 importPeptideSearchDlg.FullScanSettingsControl.PrecursorCharges = new[] { 2, 3 };
-                importPeptideSearchDlg.FullScanSettingsControl.PrecursorMassAnalyzer = FullScanMassAnalyzerType.orbitrap;
-                importPeptideSearchDlg.FullScanSettingsControl.PrecursorRes = 70000; // That's the value at 200m/z per this data set, probably close enough for the 400m/z usd by Hardklor
+                importPeptideSearchDlg.FullScanSettingsControl.PrecursorMassAnalyzer = FullScanMassAnalyzerType.tof; // Per MS1 filtering tutorial
+                importPeptideSearchDlg.FullScanSettingsControl.PrecursorRes = 10000; // Per MS1 filtering tutorial
             });
-            PauseForScreenShot(" MS1 full scan settings page - next we'll start the mzML conversion then cancel the search");
+            PauseForScreenShot(" MS1 full scan settings page - next we'll start the mzML conversion if needed then cancel the search");
             RunUI(() =>
             {
                 // Run the search
@@ -189,11 +196,17 @@ namespace TestPerf
             bool? searchSucceeded = null;
             TryWaitForOpenForm(typeof(ImportPeptideSearchDlg.DDASearchPage));   // Stop to show this form during form testing
 
-            // Wait for the mzML conversion to complete before canceling
-            var converted = Path.Combine(Path.GetDirectoryName(SearchFiles[0]) ?? string.Empty,
-                @"converted",
-                Path.ChangeExtension(Path.GetFileName(SearchFiles[0]), @"mzML"));
-            WaitForCondition(() => File.Exists(converted));
+            if (UseWiff)
+            {
+                // Wait for the mzML conversion to complete before canceling
+                foreach (var searchFile in SearchFiles)
+                {
+                    var converted = Path.Combine(Path.GetDirectoryName(searchFile) ?? string.Empty,
+                        @"converted",
+                        Path.ChangeExtension(Path.GetFileName(searchFile), @"mzML"));
+                    WaitForCondition(() => File.Exists(converted));
+                }
+            }
 
             RunUI(() =>
             {
@@ -220,7 +233,7 @@ namespace TestPerf
             PauseForScreenShot("expected dialog for name reduction - we'll cancel and go back to try unique names");
             OkDialog(removeSuffix, removeSuffix.CancelDialog);
 
-            // Test with 2 files (different name - one of these is bogus, just checking the name handling)
+            // Test with 2 files
             RunUI(() =>
             {
                 Assert.IsTrue(importPeptideSearchDlg.ClickBackButton());
@@ -232,21 +245,11 @@ namespace TestPerf
             PauseForScreenShot("expected dialog for name reduction ");
             OkDialog(removeSuffix, () => removeSuffix2.YesDialog());
 
-            // Go back and remove the bogus filename - we'll just process the one actual data set
-            PauseForScreenShot("Go back and remove the bogus filename - we'll just process the one actual data set");
             RunUI(() =>
             {
-                Assert.IsTrue(importPeptideSearchDlg.ClickBackButton());
-                importPeptideSearchDlg.BuildPepSearchLibControl.DdaSearchDataSources =
-                    importPeptideSearchDlg.BuildPepSearchLibControl.DdaSearchDataSources = new []{(MsDataFileUri)new MsDataFilePath(SearchFiles[0])};
-            });
-            PauseForScreenShot("proceed to search settings");
-            RunUI(() =>
-            {
-                Assert.IsTrue(importPeptideSearchDlg.ClickNextButton());
                 // We're on the "Full Scan Settings" page again.
-                importPeptideSearchDlg.FullScanSettingsControl.PrecursorMassAnalyzer = FullScanMassAnalyzerType.orbitrap;
-                importPeptideSearchDlg.FullScanSettingsControl.PrecursorRes = 70000; // That's the value at 200m/z per this data set, probably close enough for the 400m/z usd by Hardklor
+                importPeptideSearchDlg.FullScanSettingsControl.PrecursorMassAnalyzer = FullScanMassAnalyzerType.tof;
+                importPeptideSearchDlg.FullScanSettingsControl.PrecursorRes = 10000; // per MS1 filtering tutorial
             });
 
             PauseForScreenShot("and go");
@@ -271,23 +274,10 @@ namespace TestPerf
 
             WaitForDocumentLoaded();
             RunUI(() => SkylineWindow.SaveDocument());
-            AssertEx.IsDocumentState(SkylineWindow.Document, null, 1, 9011, 9011, 27033);
-            RunUI(() =>
-            {
-                SkylineWindow.SequenceTree.Nodes[0].Expand();
-                SkylineWindow.SequenceTree.Nodes[0].Nodes[3564].Expand();
-                SkylineWindow.SequenceTree.Nodes[0].Nodes[3564].Nodes[0].Expand();
-                SkylineWindow.SequenceTree.SelectedNode = SkylineWindow.SequenceTree.Nodes[0].Nodes[3564].Nodes[0];
-            });
+            AssertEx.IsDocumentState(SkylineWindow.Document, null, 12, 1021, 1022, 3074);
+
             PauseForScreenShot("complete");
         }
 
-        private void PrepareDocument(string documentFile)
-        {
-            RunUI(SkylineWindow.NewDocument);
-            RunUI(() => SkylineWindow.ModifyDocument("Set default settings", 
-                doc => doc.ChangeSettings(SrmSettingsList.GetDefault())));
-            RunUI(() => SkylineWindow.SaveDocument(GetTestPath(documentFile)));
-        }
     }
 }
