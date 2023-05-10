@@ -16,7 +16,7 @@ namespace pwiz.PanoramaClient
         private Stack<TreeNode> _previous = new Stack<TreeNode>();
         private TreeNode _priorNode;
         private Stack<TreeNode> _next = new Stack<TreeNode>();
-        private readonly List<PanoramaServer> _serverList;// = new List<PanoramaServer>();
+        private readonly List<PanoramaServer> _serverList;
         private TreeNode _lastSelected;
         private TreeViewStateRestorer _restorer;
         private PanoramaServer _server;
@@ -56,6 +56,8 @@ namespace pwiz.PanoramaClient
         public TreeNode Clicked { get; private set; }
         public bool ShowSky { get; private set; }
         public string Path { get; private set; }
+
+        public string ContainsMS { get; private set; }
         public string State { get; private set; }
         public PanoramaServer ActiveServer { get; private set; }
         public bool Testing { get; private set; }
@@ -153,8 +155,9 @@ namespace pwiz.PanoramaClient
                     var hit = e.Node.TreeView.HitTest(e.Location);
                     if (hit.Location != TreeViewHitTestLocations.PlusMinus)
                     {
-                        ClearTreeRecursive(treeView.Nodes);
+                        //ClearTreeRecursive(treeView.Nodes);
                         ActiveServer = CheckServer(e.Node);
+                        ContainsMS = e.Node.Name;
                         Path = e.Node.Tag != null ? e.Node.Tag.ToString() : string.Empty;
                         //If there's a file browser observer, add corresponding files
                         AddFiles?.Invoke(this, e);
@@ -235,6 +238,7 @@ namespace pwiz.PanoramaClient
                 treeView.SelectedNode = parent;
                 _lastSelected = parent;
                 Clicked = parent;
+                ContainsMS = Clicked.Name;
                 Path = Clicked.Tag != null ? Clicked.Tag.ToString() : string.Empty;
                 treeView.Focus();
                 AddFiles?.Invoke(this, EventArgs.Empty);
@@ -265,6 +269,7 @@ namespace pwiz.PanoramaClient
             treeView.Focus();
             _priorNode = prior;
             Clicked = prior;
+            ContainsMS = Clicked.Name;
             Path = prior.Tag != null ? prior.Tag.ToString() : string.Empty;
             AddFiles?.Invoke(this, EventArgs.Empty);
         }
@@ -295,6 +300,7 @@ namespace pwiz.PanoramaClient
             _lastSelected = nextNode;
             Clicked = nextNode;
             treeView.Focus();
+            ContainsMS = Clicked.Name;
             Path = nextNode.Tag != null ? nextNode.Tag.ToString() : string.Empty;
             AddFiles?.Invoke(this, EventArgs.Empty);
         }
@@ -324,11 +330,12 @@ namespace pwiz.PanoramaClient
                     //Highlight the selected node
                     ActiveServer = CheckServer(node);
                     _priorNode = node;
-                    node.BackColor = SystemColors.MenuHighlight;
-                    node.ForeColor = Color.White;
+                    /*node.BackColor = SystemColors.MenuHighlight;
+                    node.ForeColor = Color.White;*/
                     treeView.Focus();
                     _lastSelected = node;
                     Clicked = node;
+                    ContainsMS = node.Name;
                     Path = (string)node.Tag;
                     treeView.Focus();
                     AddFiles?.Invoke(this, e);
@@ -354,6 +361,7 @@ namespace pwiz.PanoramaClient
             {
                 ActiveServer = _server;
                 treeView.SelectedNode = node;
+                ContainsMS = node.Name;
                 Path = node.Tag != null ? node.Tag.ToString() : string.Empty;
                 AddFiles?.Invoke(this, EventArgs.Empty);
                 //If there's a file browser observer, add corresponding files

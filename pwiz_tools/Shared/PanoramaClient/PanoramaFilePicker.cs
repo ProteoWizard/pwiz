@@ -6,18 +6,17 @@ using System.Windows.Forms;
 
 namespace pwiz.PanoramaClient
 {
-    public partial class FilePicker : Form
+    public partial class PanoramaFilePicker : Form
     {
-        private static JToken _peptideInfoQuery;
-        private static JToken _sizeInfoQuery;
+        private static JToken _runsInfoJson;
+        private static JToken _sizeInfoJson;
         private bool _restoring;
-        private List<string> _mostRecent = new List<string>();
         private JToken _fileJson;
         private const string EXT = ".sky";
         private const string RECENT_VER = "Most recent";
         private const string ALL_VER = "All";
 
-        public FilePicker(List<PanoramaServer> servers, bool showCheckbox, string stateString, bool showingSky)
+        public PanoramaFilePicker(List<PanoramaServer> servers, bool showCheckbox, string stateString, bool showingSky)
         {
             InitializeComponent();
             Servers = servers;
@@ -26,7 +25,7 @@ namespace pwiz.PanoramaClient
             _restoring = true;
             ShowingSky = showingSky;
             showSkyCheckBox.Checked = ShowingSky;
-            versionOptions.Text = ALL_VER;
+            versionOptions.Text = RECENT_VER;
             showSkyCheckBox.Visible = showCheckbox;
             noFiles.Visible = false;
             _restoring = false;
@@ -35,12 +34,12 @@ namespace pwiz.PanoramaClient
         /// <summary>
         /// Used for testing purposes
         /// </summary>
-        public FilePicker()
+        public PanoramaFilePicker()
         {
             InitializeComponent();
             _restoring = true;
             IsLoaded = false;
-            versionOptions.Text = ALL_VER;
+            versionOptions.Text = RECENT_VER;
             _restoring = false;
             //InitializeTestDialog(serverUri, user, pass, folderJson);
         }
@@ -74,6 +73,7 @@ namespace pwiz.PanoramaClient
             splitContainer1.Panel1.Controls.Add(FolderBrowser);
             FolderBrowser.NodeClick += FilePicker_MouseClick;
             IsLoaded = true;
+            CheckEnabled();
         }
 
         /// <summary>
@@ -87,12 +87,6 @@ namespace pwiz.PanoramaClient
                 up.Enabled = false;
                 back.Enabled = false;
                 forward.Enabled = false;
-            }
-            else
-            {
-                up.Enabled = FolderBrowser.UpEnabled();
-                back.Enabled = FolderBrowser.BackEnabled();
-                forward.Enabled = FolderBrowser.ForwardEnabled();
             }
             //IsLoaded = true;
         }
@@ -146,7 +140,7 @@ namespace pwiz.PanoramaClient
         /// <summary>
         /// Takes in a query string and returns the associated JSON
         /// </summary>
-        /// <param name="query"></param>
+        /// <param name="queryUri"></param>
         /// <returns></returns>
         private JToken GetJson(Uri queryUri)
         {
@@ -193,68 +187,95 @@ namespace pwiz.PanoramaClient
             }
         }
 
-        /// <summary>
-        /// Displays the latest versions of all files in a particular folder
-        /// </summary>
-        /// <param name="path"></param>
-        private void GetLatestVersion(string path)
+        private Dictionary<long, long> GetSizeDict()
         {
-            listView.Items.Clear();
-            var result = new string[5];
-            var fileInfos = new string[5];
-            var rowSize = _sizeInfoQuery[@"rows"];
-            var rows = _peptideInfoQuery[@"rows"];
-            foreach (var row in rows)
+            var rowSize = _sizeInfoJson[@"rows"];
+            var sizeDict = new Dictionary<long, long>();
+            foreach (var curRow in rowSize)
             {
-                var versions = row[@"File/Versions"].ToString();
-                var rowId = row[@"RowId"].ToString();
-
-                if (_mostRecent.Contains(rowId) || versions.Equals(1.ToString()))
+                var curId = (long)curRow[@"Id"];
+                var size = curRow[@"DocumentSize"];
+                if (size.Type != JTokenType.Null)
                 {
-                    if (_mostRecent.Contains(rowId))
+                    var lSize = size.ToObject<long>();
+                    sizeDict.Add(curId, lSize);
+                }
+            }
+            return sizeDict;
+        }
+
+        /// <summary>
+        /// Gets the latest versions of all files in a folder and adds
+        /// them to ListView
+        /// </summary>
+        /// <exception cref="Exception"></exception>
+        private void GetLatestVersion()
+        {
+            var rowCount = _runsInfoJson[@"rowCount"];
+            if ((int)rowCount > 0)
+            {
+                listView.HeaderStyle = ColumnHeaderStyle.Clickable;
+                noFiles.Visible = false;
+                listView.Columns[3].Width = 0;
+                listView.Items.Clear();
+                var result = new string[5];
+                var fileInfos = new string[5];
+                var rows = _runsInfoJson[@"rows"];
+                var sizeDict = GetSizeDict();
+
+                foreach (var row in rows)
+                {
+                    var versions = row[@"File/Versions"].ToString();
+                    var rowId = row[@"RowId"].ToString();
+                    var rowReplaced = (string)row[@"ReplacedByRun"];
+                    var replaces = (string)row[@"ReplacesRun"];
+                    if ((!string.IsNullOrEmpty(replaces) && string.IsNullOrEmpty(rowReplaced)) ||
+                        versions.Equals(1.ToString()))
                     {
-                        _mostRecent.Remove(rowId);
-                    }
-                    long size = 0;
-                    try
-                    {
-                        var id = (long)row[@"File/Id"];
-                        foreach (var curRow in rowSize)
+                        long size = 0;
+                        try
                         {
-                            var curId = (long)curRow[@"Id"];
-                            if (curId == id)
+                            var id = (long)row[@"File/Id"];
+                            if (sizeDict.ContainsKey(id))
                             {
-                                size = (long)curRow[@"DocumentSize"];
+                                size = sizeDict[id];
+                            }
+
+                            if (size > 0)
+                            {
+                                var sizeObj = new FileSize(size);
+                                result[1] = sizeObj.ToString();
                             }
                         }
-
-                        if (size > 0)
+                        catch (Exception e)
                         {
-                            var sizeObj = new FileSize(size);
-                            result[1] = sizeObj.ToString();
+                            throw new Exception(e.Message);
                         }
+
+                        result[2] = versions;
+                        var name = row[@"Name"].ToString();
+                        result[0] = name;
+                        fileInfos[0] = (string)row[@"File/Proteins"];
+                        fileInfos[1] = (string)row[@"File/Peptides"];
+                        fileInfos[2] = (string)row[@"File/Precursors"];
+                        fileInfos[3] = (string)row[@"File/Transitions"];
+                        fileInfos[4] = (string)row[@"File/Replicates"];
+                        result[4] = (string)row[@"Created"];
+                        var fileNode = new ListViewItem(result, 1)
+                        {
+                            ToolTipText =
+                                $"Proteins: {fileInfos[0]}, Peptides: {fileInfos[1]}, Precursors: {fileInfos[2]}, Transitions: {fileInfos[3]}, Replicates: {fileInfos[4]}",
+                            Name = (string)row[@"_labkeyurl_FileName"],
+                            Tag = size
+                        };
+                        listView.Items.Add(fileNode);
                     }
-                    catch (Exception e)
-                    {
-                        throw new Exception(e.Message);
-                    }
-                    result[2] = versions;
-                    var name = row[@"Name"].ToString();
-                    result[0] = name;
-                    fileInfos[0] = (string)row[@"File/Proteins"];
-                    fileInfos[1] = (string)row[@"File/Peptides"];
-                    fileInfos[2] = (string)row[@"File/Precursors"];
-                    fileInfos[3] = (string)row[@"File/Transitions"];
-                    fileInfos[4] = (string)row[@"File/Replicates"];
-                    result[4] = (string)row[@"Created"];
-                    var fileNode = new ListViewItem(result, 1)
-                    {
-                        ToolTipText = $"Proteins: {fileInfos[0]}, Peptides: {fileInfos[1]}, Precursors: {fileInfos[2]}, Transitions: {fileInfos[3]}, Replicates: {fileInfos[4]}",
-                        Name = (string)row[@"_labkeyurl_FileName"],
-                        Tag = size
-                    };
-                    listView.Items.Add(fileNode);
                 }
+            }
+            else
+            {
+                listView.HeaderStyle = ColumnHeaderStyle.None;
+                noFiles.Visible = true;
             }
         }
 
@@ -296,13 +317,6 @@ namespace pwiz.PanoramaClient
                     result[1] = (string)row[@"Name"];
                 }
                 var count = (string)row[@"File/Versions"];
-                var name = (string)row[@"Name"];
-                var rowReplaced = (string)row[@"ReplacedByRun"];
-                var replaces = (string)row[@"ReplacesRun"];
-                if (!string.IsNullOrEmpty(replaces) && string.IsNullOrEmpty(rowReplaced))
-                {
-                    _mostRecent.Add(rowId);
-                }
                 result[0] = count;
             }
             return result;
@@ -317,21 +331,14 @@ namespace pwiz.PanoramaClient
         /// <param name="options"></param>
         private void AddQueryFiles(string nodePath, Control l, Control options)
         {
-            //Add File/DocumentSize column when it is linked up
-            var query = BuildQuery(ActiveServer.URI.ToString(), nodePath, @"TargetedMSRuns", @"Current",
-                new[] { @"Name", @"Deleted", @"Container/Path", @"File/Proteins", @"File/Peptides", @"File/Precursors", @"File/Transitions", @"File/Replicates", @"Created", @"File/Versions", @"Replaced", @"ReplacedByRun" , @"ReplacesRun", @"File/Id", @"RowId" }, string.Empty);
-            var sizeQuery = BuildQuery(ActiveServer.URI.ToString(), nodePath, "Runs", "Current",
-                new[] { "DocumentSize", "Id" }, string.Empty);
-            _sizeInfoQuery = GetJson(sizeQuery);
-            var rowSize = _sizeInfoQuery[@"rows"];
-            _peptideInfoQuery = GetJson(query);
-            var rows = _peptideInfoQuery[@"rows"];
-            var rowCount = _peptideInfoQuery[@"rowCount"];
+            var sizeDict = GetSizeDict();
+            var versions = HasVersions(_runsInfoJson);
+            var rows = _runsInfoJson[@"rows"];
+            var rowCount = _runsInfoJson[@"rowCount"];
             if ((int)rowCount > 0)
             {
                 listView.HeaderStyle = ColumnHeaderStyle.Clickable;
                 noFiles.Visible = false;
-                var versions = HasVersions(_peptideInfoQuery);
                 foreach (var row in rows)
                 {
                     var fileName = (string)row[@"Name"];
@@ -341,6 +348,8 @@ namespace pwiz.PanoramaClient
                         var listItem = new string[5];
                         var numVersions = new string[2];
                         var replacedBy = row[@"ReplacedByRun"].ToString();
+
+                        //There should always be versions at this point
                         if (versions)
                         {
                             
@@ -348,7 +357,7 @@ namespace pwiz.PanoramaClient
                             listView.Columns[2].Width = 60;
                             l.Visible = true;
                             options.Visible = true;
-                            numVersions = GetVersionInfo(_peptideInfoQuery, replacedBy);
+                            numVersions = GetVersionInfo(_runsInfoJson, replacedBy);
                         }
                         else
                         {
@@ -359,29 +368,16 @@ namespace pwiz.PanoramaClient
                         }
                         listItem[0] = fileName;
                         long size = 0;
-                        try
+                        var id = (long)row[@"File/Id"];
+                        if (sizeDict.ContainsKey(id))
                         {
-                            var id = (long)row[@"File/Id"];
-                            foreach (var curRow in rowSize)
-                            {
-                                var curId = (long)curRow[@"Id"];
-                                if (curId == id)
-                                {
-                                    size = (long)curRow[@"DocumentSize"];
-                                }
-                            }
-
-                            if (size > 0)
-                            {
-                                var sizeObj = new FileSize(size);
-                                listItem[1] = sizeObj.ToString();
-                            }
+                            size = sizeDict[id];
                         }
-                        catch (Exception e)
+                        if (size > 0)
                         {
-                            throw new Exception(e.Message);
+                            var sizeObj = new FileSize(size);
+                            listItem[1] = sizeObj.ToString();
                         }
-
 
                         if (numVersions[0] != null)
                         {
@@ -411,7 +407,6 @@ namespace pwiz.PanoramaClient
             {
                 listView.HeaderStyle = ColumnHeaderStyle.None;
                 noFiles.Visible = true;
-                //Show a message saying there are no Skyline files in this folder
             }
         }
 
@@ -496,7 +491,6 @@ namespace pwiz.PanoramaClient
         {
             try
             {
-                Cursor = Cursors.WaitCursor;
                 if (FolderBrowser.Testing)
                 {
                     _restoring = true;
@@ -527,37 +521,64 @@ namespace pwiz.PanoramaClient
                     _restoring = true;
                     versionOptions.Visible = false;
                     versionLabel.Visible = false;
-                    versionOptions.Text = ALL_VER;
+                    versionOptions.Text = RECENT_VER;
                     var path = FolderBrowser.Path;
                     listView.Items.Clear();
                     ActiveServer = FolderBrowser.ActiveServer;
                     _restoring = false;
                     if (!string.IsNullOrEmpty(path))
                     {
-                        if (FolderBrowser.ShowSky)
+                        if (FolderBrowser.ContainsMS.Equals("True"))
                         {
-                            AddQueryFiles(path, versionLabel, versionOptions);
+                            
+                            if (FolderBrowser.ShowSky)
+                            {
+                                //Add File/DocumentSize column when it is linked up
+                                var query = BuildQuery(ActiveServer.URI.ToString(), path, @"TargetedMSRuns", @"Current",
+                                    new[] { @"Name", @"Deleted", @"Container/Path", @"File/Proteins", @"File/Peptides", @"File/Precursors", @"File/Transitions", @"File/Replicates", @"Created", @"File/Versions", @"Replaced", @"ReplacedByRun", @"ReplacesRun", @"File/Id", @"RowId" }, string.Empty);
+                                var sizeQuery = BuildQuery(ActiveServer.URI.ToString(), path, "Runs", "Current",
+                                    new[] { "DocumentSize", "Id" }, string.Empty);
+                                _sizeInfoJson = GetJson(sizeQuery);
+                                _runsInfoJson = GetJson(query);
+                                var versions = HasVersions(_runsInfoJson);
+                                if (versions)
+                                {
+
+                                    listView.Columns[3].Width = 100;
+                                    listView.Columns[2].Width = 60;
+                                    versionLabel.Visible = true;
+                                    versionOptions.Visible = true;
+                                }
+                                else
+                                {
+                                    listView.Columns[3].Width = 0;
+                                    listView.Columns[2].Width = 0;
+                                    versionLabel.Visible = false;
+                                    versionOptions.Visible = false;
+                                }
+                                GetLatestVersion();
+                                //AddQueryFiles(path, versionLabel, versionOptions);
+                            }
+                            else
+                            {
+                                var uriString = string.Concat(ActiveServer.URI.ToString(), @"_webdav/",
+                                    path + @"/@files?method=json");
+                                var uri = new Uri(uriString);
+                                AddChildFiles(uri);
+                            }
                         }
                         else
                         {
-                            var uriString = string.Concat(ActiveServer.URI.ToString(), @"_webdav/",
-                                path + @"/@files?method=json");
-                            var uri = new Uri(uriString);
-                            AddChildFiles(uri);
+                            listView.HeaderStyle = ColumnHeaderStyle.None;
+                            noFiles.Visible = true;
                         }
                     }
                 }
-            }
-            catch (SystemException)
-            {
-                listView.HeaderStyle = ColumnHeaderStyle.None;
-                noFiles.Visible = true;
             }
             catch (Exception ex)
             {
                 throw new Exception(ex.Message);
             }
-            Cursor = Cursors.Default;
         }
 
         /// <summary>
@@ -591,11 +612,10 @@ namespace pwiz.PanoramaClient
         {
             if (!_restoring)
             {
-                Cursor = Cursors.WaitCursor;
                 listView.Items.Clear();
                 if (versionOptions.Text.Equals(RECENT_VER))
                 {
-                    GetLatestVersion((string)FolderBrowser.Clicked.Tag);
+                    GetLatestVersion();
                 }
                 else
                 {
@@ -603,7 +623,6 @@ namespace pwiz.PanoramaClient
                     AddQueryFiles((string)FolderBrowser.Clicked.Tag, versionLabel, versionOptions);
                 }
 
-                Cursor = Cursors.Default;
             }
             
         }
@@ -642,7 +661,7 @@ namespace pwiz.PanoramaClient
                             .Text); 
                 }
                 DownloadName = downloadName;
-                FileUrl = ActiveServer.URI.ToString() + downloadName;
+                FileUrl = ActiveServer.URI + downloadName;
 
                 DialogResult = DialogResult.Yes;
                 Close();

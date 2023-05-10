@@ -4,7 +4,7 @@ using System.Windows.Forms;
 
 namespace pwiz.PanoramaClient
 {
-    public partial class DirectoryPicker : Form
+    public partial class PanoramaDirectoryPicker : Form
     {
 
         private FolderBrowser folders;
@@ -12,7 +12,7 @@ namespace pwiz.PanoramaClient
         public string Selected;
         public List<PanoramaServer> Servers { get; private set; }
 
-        public DirectoryPicker(List<PanoramaServer> servers, bool showCheckBox, string state, bool showSkyFolders = false)
+        public PanoramaDirectoryPicker(List<PanoramaServer> servers, bool showCheckBox, string state, bool showSkyFolders = false)
         {
             InitializeComponent();
             Servers = servers;

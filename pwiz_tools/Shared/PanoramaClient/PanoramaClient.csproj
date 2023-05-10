@@ -71,11 +71,11 @@
     <Reference Include="System.Xml" />
   </ItemGroup>
   <ItemGroup>
-    <Compile Include="DirectoryPicker.cs">
+    <Compile Include="PanoramaDirectoryPicker.cs">
       <SubType>Form</SubType>
     </Compile>
-    <Compile Include="DirectoryPicker.Designer.cs">
-      <DependentUpon>DirectoryPicker.cs</DependentUpon>
+    <Compile Include="PanoramaDirectoryPicker.Designer.cs">
+      <DependentUpon>PanoramaDirectoryPicker.cs</DependentUpon>
     </Compile>
     <Compile Include="FolderBrowser.cs">
       <SubType>UserControl</SubType>
@@ -87,15 +87,15 @@
     <Compile Include="PanoramaUtil.cs" />
     <Compile Include="Program.cs" />
     <Compile Include="Properties\AssemblyInfo.cs" />
-    <Compile Include="FilePicker.cs">
+    <Compile Include="PanoramaFilePicker.cs">
       <SubType>Form</SubType>
     </Compile>
-    <Compile Include="FilePicker.Designer.cs">
-      <DependentUpon>FilePicker.cs</DependentUpon>
+    <Compile Include="PanoramaFilePicker.Designer.cs">
+      <DependentUpon>PanoramaFilePicker.cs</DependentUpon>
     </Compile>
     <Compile Include="TextUtil.cs" />
-    <EmbeddedResource Include="DirectoryPicker.resx">
-      <DependentUpon>DirectoryPicker.cs</DependentUpon>
+    <EmbeddedResource Include="PanoramaDirectoryPicker.resx">
+      <DependentUpon>PanoramaDirectoryPicker.cs</DependentUpon>
     </EmbeddedResource>
     <EmbeddedResource Include="FolderBrowser.resx">
       <DependentUpon>FolderBrowser.cs</DependentUpon>
@@ -110,8 +110,8 @@
       <DependentUpon>Resources.resx</DependentUpon>
       <DesignTime>True</DesignTime>
     </Compile>
-    <EmbeddedResource Include="FilePicker.resx">
-      <DependentUpon>FilePicker.cs</DependentUpon>
+    <EmbeddedResource Include="PanoramaFilePicker.resx">
+      <DependentUpon>PanoramaFilePicker.cs</DependentUpon>
     </EmbeddedResource>
   </ItemGroup>
   <ItemGroup>

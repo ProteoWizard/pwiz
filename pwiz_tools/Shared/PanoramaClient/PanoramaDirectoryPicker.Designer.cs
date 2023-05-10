@@ -1,6 +1,6 @@
 ﻿namespace pwiz.PanoramaClient
 {
-    partial class DirectoryPicker
+    partial class PanoramaDirectoryPicker
     {
         /// <summary>
         /// Required designer variable.
@@ -28,7 +28,7 @@
         /// </summary>
         private void InitializeComponent()
         {
-            System.ComponentModel.ComponentResourceManager resources = new System.ComponentModel.ComponentResourceManager(typeof(DirectoryPicker));
+            System.ComponentModel.ComponentResourceManager resources = new System.ComponentModel.ComponentResourceManager(typeof(PanoramaDirectoryPicker));
             this.folderPanel = new System.Windows.Forms.Panel();
             this.cancel = new System.Windows.Forms.Button();
             this.open = new System.Windows.Forms.Button();

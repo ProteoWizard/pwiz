@@ -2,7 +2,7 @@
 
 namespace pwiz.PanoramaClient
 {
-    partial class FilePicker
+    partial class PanoramaFilePicker
     {
         /// <summary>
         ///  Required designer variable.
@@ -32,7 +32,7 @@ namespace pwiz.PanoramaClient
         private void InitializeComponent()
         {
             this.components = new System.ComponentModel.Container();
-            System.ComponentModel.ComponentResourceManager resources = new System.ComponentModel.ComponentResourceManager(typeof(FilePicker));
+            System.ComponentModel.ComponentResourceManager resources = new System.ComponentModel.ComponentResourceManager(typeof(PanoramaFilePicker));
             this.label3 = new System.Windows.Forms.Label();
             this.imageList1 = new System.Windows.Forms.ImageList(this.components);
             this.imageList2 = new System.Windows.Forms.ImageList(this.components);
