@@ -5489,11 +5489,11 @@
     <Content Include="SkylineCmd.exe.config">
       <CopyToOutputDirectory>PreserveNewest</CopyToOutputDirectory>
     </Content>
-    <Content Condition="'$(Platform)' == 'x86'" Include="bin\x86\Release\SkylineCmd.exe">
+    <Content Condition="'$(Platform)' == 'x86'" Include="bin\x86\$(Configuration)\SkylineCmd.exe">
       <Link>SkylineCmd.exe</Link>
       <CopyToOutputDirectory>PreserveNewest</CopyToOutputDirectory>
     </Content>
-    <Content Condition="'$(Platform)' == 'x64'" Include="bin\x64\Release\SkylineCmd.exe">
+    <Content Condition="'$(Platform)' == 'x64'" Include="bin\x64\$(Configuration)\SkylineCmd.exe">
       <Link>SkylineCmd.exe</Link>
       <CopyToOutputDirectory>PreserveNewest</CopyToOutputDirectory>
     </Content>
