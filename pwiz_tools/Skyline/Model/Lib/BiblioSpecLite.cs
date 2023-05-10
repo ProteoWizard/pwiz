@@ -266,7 +266,7 @@ namespace pwiz.Skyline.Model.Lib
             get
             {
                 var dataFiles = GetDataFileDetails();
-                var uniquePeptideCount = Keys.Select(entry => entry.Target).Distinct().Count();
+                var uniquePeptideCount = Keys.Select(entry => entry.Target.Sequence).Distinct().Count();
 
                 LibraryDetails details = new LibraryDetails
                                              {

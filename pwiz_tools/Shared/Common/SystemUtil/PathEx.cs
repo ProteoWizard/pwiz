@@ -71,7 +71,7 @@ namespace pwiz.Common.SystemUtil
             int lastSep = -1;
             for (int i = 0; i < len; i++)
             {
-                if (path1[i] != path2[i])
+                if (char.ToLowerInvariant(path1[i]) != char.ToLowerInvariant(path2[i]))
                     return path1.Substring(0, lastSep + 1);
 
                 if (path1[i] == Path.DirectorySeparatorChar)
@@ -189,7 +189,7 @@ namespace pwiz.Common.SystemUtil
         /// </summary>
         public static string RemovePrefix(string path, string prefix)
         {
-            if (path.StartsWith(prefix))
+            if (path.ToLowerInvariant().StartsWith(prefix.ToLowerInvariant()))
             {
                 return path.Substring(prefix.Length);
             }

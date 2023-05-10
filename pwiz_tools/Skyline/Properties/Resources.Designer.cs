@@ -5404,6 +5404,34 @@ namespace pwiz.Skyline.Properties {
         }
         
         /// <summary>
+        ///   Looks up a localized string similar to a FASTA file must be imported before associating proteins.
+        /// </summary>
+        public static string CommandLine_AssociateProteins_a_FASTA_file_must_be_imported_before_associating_proteins {
+            get {
+                return ResourceManager.GetString("CommandLine_AssociateProteins_a_FASTA_file_must_be_imported_before_associating_pr" +
+                        "oteins", resourceCulture);
+            }
+        }
+        
+        /// <summary>
+        ///   Looks up a localized string similar to Associating peptides with proteins.
+        /// </summary>
+        public static string CommandLine_AssociateProteins_Associating_peptides_with_proteins {
+            get {
+                return ResourceManager.GetString("CommandLine_AssociateProteins_Associating_peptides_with_proteins", resourceCulture);
+            }
+        }
+        
+        /// <summary>
+        ///   Looks up a localized string similar to Failed to associate proteins.
+        /// </summary>
+        public static string CommandLine_AssociateProteins_Failed_to_associate_proteins {
+            get {
+                return ResourceManager.GetString("CommandLine_AssociateProteins_Failed_to_associate_proteins", resourceCulture);
+            }
+        }
+        
+        /// <summary>
         ///   Looks up a localized string similar to Error: File does not exist: {0}..
         /// </summary>
         public static string CommandLine_CanReadFile_Error__File_does_not_exist___0__ {
@@ -6598,6 +6626,24 @@ namespace pwiz.Skyline.Properties {
         }
         
         /// <summary>
+        ///   Looks up a localized string similar to Deleting existing file &apos;{0}&apos;.
+        /// </summary>
+        public static string CommandLine_NewSkyFile_Deleting_existing_file___0__ {
+            get {
+                return ResourceManager.GetString("CommandLine_NewSkyFile_Deleting_existing_file___0__", resourceCulture);
+            }
+        }
+        
+        /// <summary>
+        ///   Looks up a localized string similar to File &apos;{0}&apos; already exists; add --overwrite to allow Skyline to overwrite it..
+        /// </summary>
+        public static string CommandLine_NewSkyFile_FileAlreadyExists {
+            get {
+                return ResourceManager.GetString("CommandLine_NewSkyFile_FileAlreadyExists", resourceCulture);
+            }
+        }
+        
+        /// <summary>
         ///   Looks up a localized string similar to Error: The Skyline file {0} does not exist..
         /// </summary>
         public static string CommandLine_OpenSkyFile_Error__The_Skyline_file__0__does_not_exist_ {
@@ -6640,6 +6686,15 @@ namespace pwiz.Skyline.Properties {
             get {
                 return ResourceManager.GetString("CommandLine_PerformExportOperations_Error__No_new_results_added__Skipping_Panoram" +
                         "a_import_", resourceCulture);
+            }
+        }
+        
+        /// <summary>
+        ///   Looks up a localized string similar to Error: saving file.
+        /// </summary>
+        public static string CommandLine_ProcessDocument_Error_saving_file {
+            get {
+                return ResourceManager.GetString("CommandLine_ProcessDocument_Error_saving_file", resourceCulture);
             }
         }
         
@@ -6886,6 +6941,25 @@ namespace pwiz.Skyline.Properties {
         }
         
         /// <summary>
+        ///   Looks up a localized string similar to Changing full scan acquisition method to {0}.
+        /// </summary>
+        public static string CommandLine_SetFullScanSettings_Changing_full_scan_acquisition_method_to__0_ {
+            get {
+                return ResourceManager.GetString("CommandLine_SetFullScanSettings_Changing_full_scan_acquisition_method_to__0_", resourceCulture);
+            }
+        }
+        
+        /// <summary>
+        ///   Looks up a localized string similar to Changing full scan acquisition method to {0} with isolation scheme &apos;{1}&apos;.
+        /// </summary>
+        public static string CommandLine_SetFullScanSettings_Changing_full_scan_acquisition_method_to__0__with_isolation_scheme___1__ {
+            get {
+                return ResourceManager.GetString("CommandLine_SetFullScanSettings_Changing_full_scan_acquisition_method_to__0__with" +
+                        "_isolation_scheme___1__", resourceCulture);
+            }
+        }
+        
+        /// <summary>
         ///   Looks up a localized string similar to Changing full-scan extraction to +/- {0} minutes from MS/MS IDs..
         /// </summary>
         public static string CommandLine_SetFullScanSettings_Changing_full_scan_extraction_to______0__minutes_from_MS_MS_IDs_ {
@@ -6906,12 +6980,71 @@ namespace pwiz.Skyline.Properties {
         }
         
         /// <summary>
+        ///   Looks up a localized string similar to Changing full scan ignore SIM scans to {0}.
+        /// </summary>
+        public static string CommandLine_SetFullScanSettings_Changing_full_scan_ignore_SIM_scans_to__0_ {
+            get {
+                return ResourceManager.GetString("CommandLine_SetFullScanSettings_Changing_full_scan_ignore_SIM_scans_to__0_", resourceCulture);
+            }
+        }
+        
+        /// <summary>
+        ///   Looks up a localized string similar to Changing full scan precursor isotope enrichment to {0}.
+        /// </summary>
+        public static string CommandLine_SetFullScanSettings_Changing_full_scan_precursor_isotope_enrichment_to__0_ {
+            get {
+                return ResourceManager.GetString("CommandLine_SetFullScanSettings_Changing_full_scan_precursor_isotope_enrichment_t" +
+                        "o__0_", resourceCulture);
+            }
+        }
+        
+        /// <summary>
+        ///   Looks up a localized string similar to Changing full scan precursor isotope peak percentage to {0}.
+        /// </summary>
+        public static string CommandLine_SetFullScanSettings_Changing_full_scan_precursor_isotope_peak_percentage_to__0_ {
+            get {
+                return ResourceManager.GetString("CommandLine_SetFullScanSettings_Changing_full_scan_precursor_isotope_peak_percent" +
+                        "age_to__0_", resourceCulture);
+            }
+        }
+        
+        /// <summary>
+        ///   Looks up a localized string similar to Changing full scan precursor isotope peaks count to {0}.
+        /// </summary>
+        public static string CommandLine_SetFullScanSettings_Changing_full_scan_precursor_isotope_peaks_count_to__0_ {
+            get {
+                return ResourceManager.GetString("CommandLine_SetFullScanSettings_Changing_full_scan_precursor_isotope_peaks_count_" +
+                        "to__0_", resourceCulture);
+            }
+        }
+        
+        /// <summary>
+        ///   Looks up a localized string similar to Changing full scan precursor isotope peaks to {0}.
+        /// </summary>
+        public static string CommandLine_SetFullScanSettings_Changing_full_scan_precursor_isotope_peaks_to__0_ {
+            get {
+                return ResourceManager.GetString("CommandLine_SetFullScanSettings_Changing_full_scan_precursor_isotope_peaks_to__0_" +
+                        "", resourceCulture);
+            }
+        }
+        
+        /// <summary>
         ///   Looks up a localized string similar to Changing full scan precursor mass accuracy to {0} ppm..
         /// </summary>
         public static string CommandLine_SetFullScanSettings_Changing_full_scan_precursor_mass_accuracy_to__0__ppm_ {
             get {
                 return ResourceManager.GetString("CommandLine_SetFullScanSettings_Changing_full_scan_precursor_mass_accuracy_to__0_" +
                         "_ppm_", resourceCulture);
+            }
+        }
+        
+        /// <summary>
+        ///   Looks up a localized string similar to Changing full scan precursor mass analyzer to {0}.
+        /// </summary>
+        public static string CommandLine_SetFullScanSettings_Changing_full_scan_precursor_mass_analyzer_to__0_ {
+            get {
+                return ResourceManager.GetString("CommandLine_SetFullScanSettings_Changing_full_scan_precursor_mass_analyzer_to__0_" +
+                        "", resourceCulture);
             }
         }
         
@@ -6951,6 +7084,15 @@ namespace pwiz.Skyline.Properties {
             get {
                 return ResourceManager.GetString("CommandLine_SetFullScanSettings_Changing_full_scan_product_mass_accuracy_to__0__p" +
                         "pm_", resourceCulture);
+            }
+        }
+        
+        /// <summary>
+        ///   Looks up a localized string similar to Changing full scan product mass analyzer to {0}.
+        /// </summary>
+        public static string CommandLine_SetFullScanSettings_Changing_full_scan_product_mass_analyzer_to__0_ {
+            get {
+                return ResourceManager.GetString("CommandLine_SetFullScanSettings_Changing_full_scan_product_mass_analyzer_to__0_", resourceCulture);
             }
         }
         
@@ -7024,6 +7166,16 @@ namespace pwiz.Skyline.Properties {
         }
         
         /// <summary>
+        ///   Looks up a localized string similar to Error: Failed attempting to change the transition instrument settings..
+        /// </summary>
+        public static string CommandLine_SetInstrumentSettings_Error__Failed_attempting_to_change_the_transition_instrument_settings_ {
+            get {
+                return ResourceManager.GetString("CommandLine_SetInstrumentSettings_Error__Failed_attempting_to_change_the_transiti" +
+                        "on_instrument_settings_", resourceCulture);
+            }
+        }
+        
+        /// <summary>
         ///   Looks up a localized string similar to Error: Cannot set library name without path..
         /// </summary>
         public static string CommandLine_SetLibrary_Error__Cannot_set_library_name_without_path_ {
@@ -7067,6 +7219,16 @@ namespace pwiz.Skyline.Properties {
             get {
                 return ResourceManager.GetString("CommandLine_SetLibrary_Error__The_library_you_are_trying_to_add_conflicts_with_a_" +
                         "library_already_in_the_file_", resourceCulture);
+            }
+        }
+        
+        /// <summary>
+        ///   Looks up a localized string similar to Error: Failed attempting to change the transition library settings..
+        /// </summary>
+        public static string CommandLine_SetLibrarySettings_Error__Failed_attempting_to_change_the_transition_library_settings_ {
+            get {
+                return ResourceManager.GetString("CommandLine_SetLibrarySettings_Error__Failed_attempting_to_change_the_transition_" +
+                        "library_settings_", resourceCulture);
             }
         }
         
@@ -35425,6 +35587,17 @@ namespace pwiz.Skyline.Properties {
                 return ResourceManager.GetString("ValueInvalidIonTypeListException_ValueInvalidIonTypeListException_The_value___0__" +
                         "_is_not_valid_for_the_argument__1__which_requires_an_comma_separated_list_of_fra" +
                         "gment_ion_types__a__b__c__x__y__z__p__", resourceCulture);
+            }
+        }
+        
+        /// <summary>
+        ///   Looks up a localized string similar to The value {0} is not valid for the argument {1} which requires a value and a unit. For example: {2}..
+        /// </summary>
+        public static string ValueInvalidMzToleranceException_ValueInvalidMzToleranceException_The_value__0__is_not_valid_for_the_argument__1__which_requires_a_value_and_a_unit__For_example___2__ {
+            get {
+                return ResourceManager.GetString("ValueInvalidMzToleranceException_ValueInvalidMzToleranceException_The_value__0__i" +
+                        "s_not_valid_for_the_argument__1__which_requires_a_value_and_a_unit__For_example_" +
+                        "__2__", resourceCulture);
             }
         }
         
