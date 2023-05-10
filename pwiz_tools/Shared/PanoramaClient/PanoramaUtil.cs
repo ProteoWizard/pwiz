@@ -719,7 +719,7 @@ namespace pwiz.PanoramaClient
         /// Downloads a given file to a given folder path and shows the progress
         /// of the download during downloading
         /// </summary>
-        public void DownloadFile(string fileUrl, string fileName, long fileSize, string downloadPath, PanoramaServer server,  IProgressMonitor pm, IProgressStatus progressStatus)
+        public void DownloadFile(string fileUrl, string fileName, long fileSize, string realName, PanoramaServer server,  IProgressMonitor pm, IProgressStatus progressStatus)
         {
             using var wc = new WebClientWithCredentials(server.URI, server.Username, server.Password);
             wc.DownloadProgressChanged += (s, e) =>
@@ -731,7 +731,7 @@ namespace pwiz.PanoramaClient
                 }
                 var downloaded = e.BytesReceived;
                 var message = TextUtil.LineSeparate(
-                    string.Format("Downloading {0}", fileName),
+                    string.Format("Downloading {0}", realName),
                     string.Empty,
                     GetDownloadedSize(downloaded, fileSize > 0 ? (long)fileSize : 0));
                 progressStatus = progressStatus.ChangeMessage(message);
@@ -751,7 +751,7 @@ namespace pwiz.PanoramaClient
                 // Param1 = Link of file
                 new Uri(fileUrl),
                 // Param2 = Path to save
-                downloadPath
+                fileName
             );
             while (!downloadComplete)
             {

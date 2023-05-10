@@ -1,7 +1,6 @@
 ﻿using System;
 using System.Collections.Generic;
 using System.Drawing;
-using System.Linq;
 using System.Windows.Forms;
 using Newtonsoft.Json.Linq;
 
@@ -90,23 +89,33 @@ namespace pwiz.PanoramaClient
                 }
                 else
                 {
-                    JToken moduleProperties = subFolder[@"moduleProperties"];
-                    if (moduleProperties == null)
-                        folderNode.ImageIndex = folderNode.SelectedImageIndex = (int)ImageId.labkey;
-                    else
+                    if ((PanoramaUtil.CheckFolderType(subFolder) && !requireUploadPerms) || requireUploadPerms)
                     {
-                        string effectiveValue = (string)moduleProperties[0][@"effectiveValue"];
-                        folderNode.ImageIndex =
-                            folderNode.SelectedImageIndex =
-                            (effectiveValue.Equals(@"Library") || effectiveValue.Equals(@"LibraryProtein"))
-                                ? (int)ImageId.chrom_lib
-                                : (int)ImageId.labkey;
+                        JToken moduleProperties = subFolder[@"moduleProperties"];
+                        if (moduleProperties == null)
+                            folderNode.ImageIndex = folderNode.SelectedImageIndex = (int)ImageId.labkey;
+                        else
+                        {
+                            string effectiveValue = (string)moduleProperties[0][@"effectiveValue"];
+
+                            folderNode.ImageIndex =
+                                folderNode.SelectedImageIndex =
+                                    (effectiveValue.Equals(@"Library") || effectiveValue.Equals(@"LibraryProtein"))
+                                        ? (int)ImageId.chrom_lib
+                                        : (int)ImageId.labkey;
+
+
+                        }
+                    } else
+                    {
+                        folderNode.ImageIndex = folderNode.SelectedImageIndex = (int)ImageId.folder;
                     }
                 }
 
                 if (showFiles)
                 {
                     folderNode.Tag = (string)subFolder[@"path"];
+                    folderNode.Name = PanoramaUtil.CheckFolderType(subFolder).ToString();
                 }
                 else
                 {
