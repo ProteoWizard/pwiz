@@ -170,11 +170,12 @@ namespace pwiz.PanoramaClient
             | System.Windows.Forms.AnchorStyles.Right)));
             this.noFiles.AutoSize = true;
             this.noFiles.Font = new System.Drawing.Font("Microsoft Sans Serif", 9.75F, System.Drawing.FontStyle.Regular, System.Drawing.GraphicsUnit.Point, ((byte)(0)));
-            this.noFiles.Location = new System.Drawing.Point(115, 78);
+            this.noFiles.Location = new System.Drawing.Point(115, 209);
             this.noFiles.Name = "noFiles";
             this.noFiles.Size = new System.Drawing.Size(231, 16);
             this.noFiles.TabIndex = 9;
             this.noFiles.Text = "There are no Skyline files in this folder";
+            this.noFiles.TextAlign = System.Drawing.ContentAlignment.MiddleCenter;
             // 
             // listView
             // 
@@ -275,7 +276,7 @@ namespace pwiz.PanoramaClient
             this.up.Size = new System.Drawing.Size(28, 28);
             this.up.Click += new System.EventHandler(this.UpButton_Click);
             // 
-            // FilePicker
+            // PanoramaFilePicker
             // 
             this.AutoScaleDimensions = new System.Drawing.SizeF(6F, 13F);
             this.AutoScaleMode = System.Windows.Forms.AutoScaleMode.Font;
@@ -292,11 +293,12 @@ namespace pwiz.PanoramaClient
             this.Margin = new System.Windows.Forms.Padding(2);
             this.MaximizeBox = false;
             this.MinimizeBox = false;
-            this.Name = "FilePicker";
+            this.Name = "PanoramaFilePicker";
             this.StartPosition = System.Windows.Forms.FormStartPosition.CenterScreen;
             this.Text = "Panorama Folders";
             this.FormClosing += new System.Windows.Forms.FormClosingEventHandler(this.Form1_FormClosing);
             this.Load += new System.EventHandler(this.FilePicker_Load);
+            this.SizeChanged += new System.EventHandler(this.PanoramaFilePicker_SizeChanged);
             this.splitContainer1.Panel2.ResumeLayout(false);
             this.splitContainer1.Panel2.PerformLayout();
             ((System.ComponentModel.ISupportInitialize)(this.splitContainer1)).EndInit();

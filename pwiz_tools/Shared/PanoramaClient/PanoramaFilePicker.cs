@@ -1,5 +1,6 @@
 using System;
 using System.Collections.Generic;
+using System.Drawing;
 using Newtonsoft.Json.Linq;
 using System.Windows.Forms;
 
@@ -349,23 +350,11 @@ namespace pwiz.PanoramaClient
                         var numVersions = new string[2];
                         var replacedBy = row[@"ReplacedByRun"].ToString();
 
-                        //There should always be versions at this point
-                        if (versions)
-                        {
-                            
-                            listView.Columns[3].Width = 100;
-                            listView.Columns[2].Width = 60;
-                            l.Visible = true;
-                            options.Visible = true;
-                            numVersions = GetVersionInfo(_runsInfoJson, replacedBy);
-                        }
-                        else
-                        {
-                            listView.Columns[3].Width = 0;
-                            listView.Columns[2].Width = 0;
-                            l.Visible = false;
-                            options.Visible = false;
-                        }
+                        listView.Columns[3].Width = 100;
+                        listView.Columns[2].Width = 60;
+                        l.Visible = true;
+                        options.Visible = true;
+                        numVersions = GetVersionInfo(_runsInfoJson, replacedBy);
                         listItem[0] = fileName;
                         long size = 0;
                         var id = (long)row[@"File/Id"];
@@ -785,6 +774,11 @@ namespace pwiz.PanoramaClient
             return showSkyCheckBox.Visible;
         }
 
+        private void PanoramaFilePicker_SizeChanged(object sender, EventArgs e)
+        {
+            noFiles.Location = new Point((listView.Location.Y + listView.Width - noFiles.Width) / 2,
+                noFiles.Location.Y);
+        }
     }
 
 
