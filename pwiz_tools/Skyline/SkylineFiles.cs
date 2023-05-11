@@ -184,13 +184,13 @@ namespace pwiz.Skyline
             if (!CheckSaveDocument())
                 return;
             using (OpenFileDialog dlg = new OpenFileDialog
-            {
-                InitialDirectory = Settings.Default.ActiveDirectory,
-                CheckPathExists = true,
-                SupportMultiDottedExtensions = true,
-                DefaultExt = SrmDocument.EXT,
-                Filter = TextUtil.FileDialogFiltersAll(SrmDocument.FILTER_DOC_AND_SKY_ZIP, SrmDocumentSharing.FILTER_SHARING, SkypFile.FILTER_SKYP)
-            })
+                   {
+                       InitialDirectory = Settings.Default.ActiveDirectory,
+                       CheckPathExists = true,
+                       SupportMultiDottedExtensions = true,
+                       DefaultExt = SrmDocument.EXT,
+                       Filter = TextUtil.FileDialogFiltersAll(SrmDocument.FILTER_DOC_AND_SKY_ZIP, SrmDocumentSharing.FILTER_SHARING, SkypFile.FILTER_SKYP)
+                   })
             {
                 if (dlg.ShowDialog(this) == DialogResult.OK)
                 {
@@ -926,9 +926,9 @@ namespace pwiz.Skyline
                 DialogResult buttonPress = MultiButtonMsgDlg.Show(
                     this,
                     TextUtil.LineSeparate(
-                        "No Panorama servers were found.",
-                        "Press 'Add' to add a new server."),
-                    "Add");
+                        Resources.SkylineWindow_OpenFromPanorama_No_Panorama_servers_were_found_,
+                        Resources.SkylineWindow_OpenFromPanorama_Press__Add__to_add_a_new_server_),
+                    Resources.SkylineWindow_OpenFromPanorama_Add);
                 if (buttonPress == DialogResult.Cancel)
                     return;
 
@@ -958,7 +958,7 @@ namespace pwiz.Skyline
                 {
                     using (var longWaitDlg = new LongWaitDlg 
                            { 
-                               Text = "Loading remote server folders",
+                               Text = Resources.SkylineWindow_OpenFromPanorama_Loading_remote_server_folders,
                            })
                     {
                         longWaitDlg.PerformWork(this, 0,
@@ -978,7 +978,7 @@ namespace pwiz.Skyline
                         var curServer = dlg.ActiveServer;
                         var panoramaClient = new WebPanoramaClient(curServer.URI);
 
-                        string downloadPath;
+                        var downloadPath = string.Empty;
                         var extension = dlg.FileName.EndsWith(SrmDocumentSharing.EXT) ? SrmDocumentSharing.EXT : SrmDocument.EXT;
                         using (var saveAsDlg = new SaveFileDialog 
                                { 
@@ -998,7 +998,10 @@ namespace pwiz.Skyline
                             Settings.Default.LastFolderPath = Path.GetDirectoryName(saveAsDlg.FileName);
                             var folder = Path.GetDirectoryName(saveAsDlg.FileName);
                             var formattedName = GetDownloadName(Path.GetFullPath(saveAsDlg.FileName));
-                            downloadPath = Path.Combine(folder, formattedName);
+                            if (!string.IsNullOrEmpty(folder))
+                            {
+                                downloadPath = Path.Combine(folder, formattedName);
+                            }
                         }
                         if (!string.IsNullOrEmpty(downloadPath))
                         {
@@ -1007,7 +1010,7 @@ namespace pwiz.Skyline
                             {
                                 using (var longWaitDlg = new LongWaitDlg 
                                        {
-                                           Text = $"Downloading file {dlg.FileName}",
+                                           Text = string.Format(Resources.SkylineWindow_OpenFromPanorama_Downloading_file__0_, dlg.FileName),
                                        })
                                 {
 
@@ -1062,8 +1065,8 @@ namespace pwiz.Skyline
             var path = Path.GetDirectoryName(fullPath);
             while (File.Exists(newName))
             {
-                var formattedName = string.Format("{0}({1})", fileName, count++);
-                newName = Path.Combine(path, formattedName + extension);
+                var formattedName = string.Format(Resources.SkylineWindow_GetDownloadName__0___1__, fileName, count++);
+                if (path != null) newName = Path.Combine(path, formattedName + extension);
             }
             return newName;
         }

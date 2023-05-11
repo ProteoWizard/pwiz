@@ -11997,21 +11997,21 @@ If you choose Disable, you can enable Auto-select later with the "Refine &gt; Ad
     <value>Error: a FASTA file must be imported before associating proteins</value>
   </data>
   <data name="SkylineWindow_OpenFromPanorama_No_Panorama_servers_were_found_" xml:space="preserve">
-	  <value>No Panorama servers were found.</value>
+    <value>No Panorama servers were found.</value>
   </data>
   <data name="SkylineWindow_OpenFromPanorama_Press__Add__to_add_a_new_server_" xml:space="preserve">
-	  <value>Press 'Add' to add a new server.</value>
+    <value>Press 'Add' to add a new server.</value>
   </data>
   <data name="SkylineWindow_OpenFromPanorama_Add" xml:space="preserve">
-	  <value>Add</value>
+    <value>Add</value>
   </data>
   <data name="SkylineWindow_OpenFromPanorama_Loading_remote_server_folders" xml:space="preserve">
-	  <value>Loading remote server folders</value>
+    <value>Loading remote server folders</value>
   </data>
   <data name="SkylineWindow_OpenFromPanorama_Downloading_file__0_" xml:space="preserve">
-	  <value>Downloading file {0}</value>
+    <value>Downloading file {0}</value>
   </data>
   <data name="SkylineWindow_GetDownloadName__0___1__" xml:space="preserve">
-	  <value>{0}({1})</value>
+    <value>{0}({1})</value>
   </data>
 </root>
