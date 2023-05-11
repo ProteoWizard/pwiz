@@ -21,7 +21,7 @@ namespace pwiz.SkylineTestConnected
 
         private void TestDownloadFile()
         {
-            var remoteDlg = ShowDialog<FilePicker>(() =>
+            var remoteDlg = ShowDialog<PanoramaFilePicker>(() =>
                 SkylineWindow.OpenFromPanorama());
 
             WaitForCondition(9000, () => remoteDlg.IsLoaded);

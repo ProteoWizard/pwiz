@@ -87,7 +87,6 @@ ExportMethodDlg.IsolationListView,TestExportDiaList
 ExportMethodDlg.MethodView,TestExportDiaList
 ExportMethodDlg.TransitionListView,TestExportMethodDlg
 ExportMethodScheduleGraph,TestExportMethodDlg
-FilePicker, TestPanorama
 FilterMatchedPeptidesDlg,TestInsert
 FilterMidasLibraryDlg,TestMidas
 FindColumnDlg,TestFindColumn
@@ -146,6 +145,7 @@ MultiButtonMsgDlg,TestShareSettings
 NameLayoutForm,TestPivotEditor
 NoModeUIDlg,UIModeSettingsTest
 OpenDataSourceDialog,TestRetentionTimeAlignment
+PanoramaFilePicker, TestPanorama
 PasteDlg.FastaTab,ProteinMetadataFunctionalTests
 PasteDlg.PeptideListTab,TestMethodEditTutorial
 PasteDlg.ProteinListTab,TestMethodEditTutorial

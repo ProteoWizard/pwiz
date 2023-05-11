@@ -3,11 +3,12 @@ using System.Collections.Generic;
 using System.Drawing;
 using Newtonsoft.Json.Linq;
 using System.Windows.Forms;
+using pwiz.Common.Controls;
 
 
 namespace pwiz.PanoramaClient
 {
-    public partial class PanoramaFilePicker : Form
+    public partial class PanoramaFilePicker : CommonFormEx
     {
         private static JToken _runsInfoJson;
         private static JToken _sizeInfoJson;

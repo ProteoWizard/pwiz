@@ -196,9 +196,12 @@ namespace pwiz.SkylineTest
                 }
             }
 
+            var panoramaHint = typeof(PanoramaClient.FolderBrowser); // Bit of a hack to get the test to look in that namespace
+
             // Collect forms that should be exercised in tutorials
             var foundForms = FindForms(new[]
                 {
+                    panoramaHint, // Bit of a hack to get the test to look in that namespace
                     typeof(Form),
                     typeof(FormEx),
                     typeof(DockableFormEx),
@@ -218,6 +221,7 @@ namespace pwiz.SkylineTest
             // Forms that we don't expect to see in any test
             var FormNamesNotExpectedInTutorialTests = new[]
             {
+                panoramaHint.Name, // Bit of a hack to get the test to look in that namespace
                 "DetectionsGraphController", // An intermediate type, actually exercised in DetectionsPlotTest
                 "MassErrorGraphController", // An intermediate type, actually exercised in MassErrorGraphsTest 
                 "PeptideSettingsUI.TabWithPage", // An intermediate type
@@ -244,7 +248,7 @@ namespace pwiz.SkylineTest
                     !FormNamesNotExpectedInTutorialTests.Contains(name) && // Known exclusion?
                     !foundForms.Any(f => name.EndsWith("." + f))) // Or perhaps lookup list declares parent.child
                 {
-                    missing.Add(string.Format("Form \"{0}\" referenced in TestRunnerLib\\TestRunnerFormLookup.csv is unknown or has unanticipated parent form type", name));
+                    missing.Add(string.Format("Form \"{0}\" referenced in TestRunnerLib\\TestRunnerFormLookup.csv is unknown or has unanticipated parent form type (maybe using Form instead of FormEx or CommonFormEx?)", name));
                 }
             }
 
@@ -422,8 +426,10 @@ namespace pwiz.SkylineTest
                     // Now find all forms that inherit from formType
                     var assembly = formType == typeof(Form) ? Assembly.GetAssembly(typeof(FormEx)) : Assembly.GetAssembly(formType);
                     foreach (var form in assembly.GetTypes()
-                        .Where(t => (t.IsClass && !t.IsAbstract && t.IsSubclassOf(formType)) || // Form type match
-                                    formType.IsAssignableFrom(t))) // Interface type match
+                                 .Where(t => (t.IsClass && !t.IsAbstract && 
+                                              (t.IsSubclassOf(formType) || // Form type match
+                                               t.IsSubclassOf(typeof(FormEx)) || t.IsSubclassOf(typeof(CommonFormEx)))) // Or acceptably subclassed Form
+                                             || formType.IsAssignableFrom(t))) // Interface type match
                     {
                         var formName = form.Name;
                         // Watch out for form types which are just derived from other form types (e.g FormEx -> ModeUIInvariantFormEx)

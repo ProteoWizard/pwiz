@@ -55,7 +55,7 @@ namespace pwiz.SkylineTestFunctional
         public void TestNavigationButtons()
         {
             var json =JObject.Parse(TARGETEDMS_JSON);
-            var remoteDlg = ShowDialog<FilePicker>(() => 
+            var remoteDlg = ShowDialog<PanoramaFilePicker>(() => 
                 SkylineWindow.OpenFromPanorama(VALID_SERVER, string.Empty, string.Empty, json));
 
             WaitForCondition(9000, () => remoteDlg.IsLoaded);
@@ -84,7 +84,7 @@ namespace pwiz.SkylineTestFunctional
         {
             var fileJson = JObject.Parse(FILE_VERSIONS);
             var json = JObject.Parse(NO_PERMISSIONS);
-            var remoteDlg = ShowDialog<FilePicker>(() =>
+            var remoteDlg = ShowDialog<PanoramaFilePicker>(() =>
                 SkylineWindow.OpenFromPanorama(VALID_SERVER, VALID_USER_NAME, VALID_PASSWORD, json, fileJson));
 
             WaitForCondition(9000, () => remoteDlg.IsLoaded);
@@ -105,7 +105,7 @@ namespace pwiz.SkylineTestFunctional
         private void TestPermissions()
         {
             var json = JObject.Parse(NO_PERMISSIONS);
-            var remoteDlg = ShowDialog<FilePicker>(() =>
+            var remoteDlg = ShowDialog<PanoramaFilePicker>(() =>
                 SkylineWindow.OpenFromPanorama(VALID_SERVER, string.Empty, string.Empty, json));
 
             WaitForCondition(9000, () => remoteDlg.IsLoaded);
@@ -121,7 +121,7 @@ namespace pwiz.SkylineTestFunctional
         private void TestCancel()
         {
             var json = JObject.Parse(TARGETEDMS_JSON);
-            var remoteDlg = ShowDialog<FilePicker>(() =>
+            var remoteDlg = ShowDialog<PanoramaFilePicker>(() =>
                 SkylineWindow.OpenFromPanorama(VALID_SERVER, string.Empty, string.Empty, json));
 
             WaitForCondition(9000, () => remoteDlg.IsLoaded);
