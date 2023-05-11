@@ -138,7 +138,7 @@ namespace pwiz.Skyline.Controls.GroupComparison
             }
         }
 
-        public bool IsComplete
+        public virtual bool IsComplete
         {
             get
             {
