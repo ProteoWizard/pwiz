@@ -12,6 +12,7 @@ namespace pwiz.PanoramaClient
     {
         private static JToken _runsInfoJson;
         private static JToken _sizeInfoJson;
+        private static Dictionary<long, long> _sizeDictionary = new Dictionary<long, long>();
         private bool _restoring;
         private JToken _fileJson;
         private const string EXT = ".sky";
@@ -191,8 +192,8 @@ namespace pwiz.PanoramaClient
 
         private Dictionary<long, long> GetSizeDict()
         {
+            _sizeDictionary.Clear();
             var rowSize = _sizeInfoJson[@"rows"];
-            var sizeDict = new Dictionary<long, long>();
             foreach (var curRow in rowSize)
             {
                 var curId = (long)curRow[@"Id"];
@@ -200,10 +201,10 @@ namespace pwiz.PanoramaClient
                 if (size.Type != JTokenType.Null)
                 {
                     var lSize = size.ToObject<long>();
-                    sizeDict.Add(curId, lSize);
+                    _sizeDictionary.Add(curId, lSize);
                 }
             }
-            return sizeDict;
+            return _sizeDictionary;
         }
 
         /// <summary>
@@ -333,7 +334,7 @@ namespace pwiz.PanoramaClient
         /// <param name="options"></param>
         private void AddQueryFiles(string nodePath, Control l, Control options)
         {
-            var sizeDict = GetSizeDict();
+            //var sizeDict = GetSizeDict();
             var versions = HasVersions(_runsInfoJson);
             var rows = _runsInfoJson[@"rows"];
             var rowCount = _runsInfoJson[@"rowCount"];
@@ -348,20 +349,19 @@ namespace pwiz.PanoramaClient
                     if (filePath.Equals(nodePath))
                     {
                         var listItem = new string[5];
-                        var numVersions = new string[2];
                         var replacedBy = row[@"ReplacedByRun"].ToString();
 
                         listView.Columns[3].Width = 100;
                         listView.Columns[2].Width = 60;
                         l.Visible = true;
                         options.Visible = true;
-                        numVersions = GetVersionInfo(_runsInfoJson, replacedBy);
+                        var numVersions = GetVersionInfo(_runsInfoJson, replacedBy);
                         listItem[0] = fileName;
                         long size = 0;
                         var id = (long)row[@"File/Id"];
-                        if (sizeDict.ContainsKey(id))
+                        if (_sizeDictionary.ContainsKey(id))
                         {
-                            size = sizeDict[id];
+                            size = _sizeDictionary[id];
                         }
                         if (size > 0)
                         {
