@@ -24,114 +24,12 @@
 import modules ;
 if [ modules.peek : NT ] && --i-agree-to-the-vendor-licenses in [ modules.peek : ARGV ]
 {
-    import path feature ;
-    path-constant TOPOGRAPH_PATH : $(PWIZ_ROOT_PATH)/pwiz_tools/Topograph ;
-    path-constant PWIZ_WRAPPER_PATH : $(PWIZ_ROOT_PATH)/pwiz_tools/Shared/ProteowizardWrapper ;
-    path-constant BIBLIO_SPEC_PATH :  $(PWIZ_ROOT_PATH)/pwiz_tools/Shared/BiblioSpec ;
-
-    # read these from global module
-    TEST_PRECOMMAND = [ modules.peek : TEST_PRECOMMAND ] ;
-    TEST_POSTCOMMAND = [ modules.peek : TEST_POSTCOMMAND ] ;
-
-    rule build-properties ( targets + : sources * : properties * )
-    {
-        if <variant>debug in $(properties) ||
-           <debug-symbols>on in $(properties)
-        {
-            CONFIGURATION on $(<[1]) = "Debug" ;
-        }
-        else
-        {
-            CONFIGURATION on $(<[1]) = "Release" ;
-        }
-
-        local location = [ path.make [ feature.get-values location : $(properties) ] ] ;
-        OUTPUT_PATH on $(<[1]) = [ path.native $(location)/ ] ; # OutDir requires trailing slash
-        JAM_SEMAPHORE on $(targets) = "dotNetSemaphore" ;
-        MSVC_CURRENT_SETUP_SCRIPT on $(targets[1]) = [ get-current-msvc-setup-script $(properties) ] ;
-    }
-    
-    rule do_topograph_build ( targets + : sources * : properties * )
-    {
-        return [ build-properties $(targets) : $(sources) : $(properties) ] ;
-    }
-
-    actions do_topograph_build
-    {
-        $(MSVC_CURRENT_SETUP_SCRIPT)
-        echo Building Topograph in $(CONFIGURATION:L) configuration...
-        msbuild $(TOPOGRAPH_PATH)/Topograph.sln /p:Configuration=$(CONFIGURATION);Platform=$(PLATFORM);OutDir=$(OUTPUT_PATH) /t:TopographApp /nologo /verbosity:minimal
-    }
-    
-    rule build-location ( properties * )
-    {
-        local result ;
-        # don't override the location when it's already set
-        if ! <location> in $(properties:G)
-        {
-            if <variant>debug in $(properties) ||
-               <debug-symbols>on in $(properties)
-            {
-                result = <location>$(TOPOGRAPH_PATH)/bin/$(PLATFORM)/Debug ;
-            }
-            else
-            {
-                result = <location>$(TOPOGRAPH_PATH)/bin/$(PLATFORM)/Release ;
-            }
-            return $(result) ;
-        }
-        else
-        {
-            return $(properties) ;
-        }
-    }
-
-
-    make Topograph.exe
-        : # sources
-        : # actions
-            @do_topograph_build
-        : # requirements
-            <link>shared:<build>no
-            <conditional>@no-express-requirement
-            <conditional>@msvc-dotnet-requirement
-            <toolset>msvc:<assembly>../../pwiz/utility/bindings/CLI//pwiz_data_cli
-            <conditional>@build-location
-            <dependency>../../pwiz/utility/bindings/CLI//pwiz_data_cli/<location>$(PWIZ_WRAPPER_PATH)/obj/$(PLATFORM)
-            <dependency>../../pwiz/utility/bindings/CLI//pwiz_data_cli.xml/<location>$(PWIZ_WRAPPER_PATH)/obj/$(PLATFORM)
-            <dependency>../../pwiz_tools/BiblioSpec/src//BlibBuild/<location>$(BIBLIO_SPEC_PATH)/obj/$(PLATFORM)
-            <dependency>../../pwiz_tools/BiblioSpec/src//BlibFilter/<location>$(BIBLIO_SPEC_PATH)/obj/$(PLATFORM)
-        ;
-#Test
-    rule do_topograph_test ( targets + : sources * : properties * )
-    {
-        return [ build-properties $(targets) : $(sources) : $(properties) ] ;
-    }
-
-    actions do_topograph_test
-    {
-        $(MSVC_CURRENT_SETUP_SCRIPT)
-        echo Unit testing Topograph in $(CONFIGURATION:L) configuration...
-        set name="Topograph unit test"
-        $(TEST_PRECOMMAND)
-        msbuild $(TOPOGRAPH_PATH)/Topograph.sln /p:Configuration=$(CONFIGURATION);Platform=$(PLATFORM);OutDir=$(OUTPUT_PATH) /t:TopographTestProject /nologo /verbosity:minimal
-        set status=%ERRORLEVEL%
-        IF %status%==0 (vstest.console.exe $(OUTPUT_PATH)/TopographTestProject.dll /Platform:$(PLATFORM) /Framework:.NETFramework,Version=4.7.2 /Settings:$(TOPOGRAPH_PATH)/LocalTestRun_$(PLATFORM).runsettings && set status=%ERRORLEVEL%)
-        REM echo Copying Topograph test output in $(CONFIGURATION:L) configuration...
-        REM IF %status%==0 (msbuild $(TOPOGRAPH_PATH)/Topograph.test.proj /p:SolutionDir=$(TOPOGRAPH_PATH);Platform=$(PLATFORM);OutDir=$(OUTPUT_PATH);TestProject=TopographTestProject /t:MSTest:Clean /nologo /verbosity:minimal && set status=%ERRORLEVEL%)
-        $(TEST_POSTCOMMAND)
-    }
-
-    make Topograph.passed
-        : # sources
-        : # actions
-            @do_topograph_test
-        : # requirements
-            <link>shared:<build>no
-            <conditional>@no-express-requirement
-            <conditional>@msvc-dotnet-requirement
-            <conditional>@build-location
-            <dependency>Topograph.exe
+    actions make_Topgraph.passed { }
+    make Topograph.passed 
+    : # sources 
+    : # actions
+    make_Topgraph.passed 
+    : # requirements
         ;
 
 }

@@ -104,7 +104,6 @@ explicit bumbershoot-bin.tar.bz2 ;
     "exclude:pwiz_tools/sld"
     "exclude:pwiz_tools/BiblioSpec"
     "exclude:pwiz_tools/Skyline"
-    "exclude:pwiz_tools/Topograph"
     "exclude:pwiz_tools/Shared/BiblioSpec"
     "exclude:pwiz_tools/Shared/Crawdad"
     "exclude:pwiz_tools/Shared/ProteomeDb"
