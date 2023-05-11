@@ -92,8 +92,8 @@ namespace pwiz.Skyline.FileUI
             this.label7 = new System.Windows.Forms.Label();
             this.textAccumulationTime = new System.Windows.Forms.TextBox();
             this.panelAbiSciexOS = new System.Windows.Forms.Panel();
-            this.textXICWidth = new System.Windows.Forms.TextBox();
             this.labelXICWidth = new System.Windows.Forms.Label();
+            this.textXICWidth = new System.Windows.Forms.TextBox();
             this.panelThermoColumns.SuspendLayout();
             this.panelAbSciexTOF.SuspendLayout();
             this.panelTriggered.SuspendLayout();
@@ -505,27 +505,22 @@ namespace pwiz.Skyline.FileUI
             // 
             // panelAbiSciexOS
             // 
-            this.panelAbiSciexOS.Controls.AddRange(new Control[]
-            {
-                this.cbExportSciexOSQuantMethod,
-                this.labelXICWidth,
-                this.textXICWidth
-            });
+            this.panelAbiSciexOS.BorderStyle = System.Windows.Forms.BorderStyle.FixedSingle;
+            this.panelAbiSciexOS.Controls.Add(this.cbExportSciexOSQuantMethod);
+            this.panelAbiSciexOS.Controls.Add(this.labelXICWidth);
+            this.panelAbiSciexOS.Controls.Add(this.textXICWidth);
             resources.ApplyResources(this.panelAbiSciexOS, "panelAbiSciexOS");
             this.panelAbiSciexOS.Name = "panelAbiSciexOS";
-            this.panelAbiSciexOS.BorderStyle = BorderStyle.Fixed3D;
-            //
+            // 
+            // labelXICWidth
+            // 
+            resources.ApplyResources(this.labelXICWidth, "labelXICWidth");
+            this.labelXICWidth.Name = "labelXICWidth";
+            // 
             // textXICWidth
-            //
+            // 
             resources.ApplyResources(this.textXICWidth, "textXICWidth");
             this.textXICWidth.Name = "textXICWidth";
-            //
-            // labelXICWidth
-            //
-            resources.ApplyResources(this.labelXICWidth, "labelXICWidth");
-            this.textXICWidth.Name = "labelXICWidth";
-
-
             // 
             // ExportMethodDlg
             // 

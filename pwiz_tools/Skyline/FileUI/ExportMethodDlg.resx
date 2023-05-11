@@ -1757,14 +1757,68 @@ If unchecked, zeros will be written in their place.</value>
   <data name="&gt;&gt;cbExportSciexOSQuantMethod.ZOrder" xml:space="preserve">
     <value>0</value>
   </data>
+  <data name="labelXICWidth.AutoSize" type="System.Boolean, mscorlib">
+    <value>True</value>
+  </data>
+  <data name="labelXICWidth.Location" type="System.Drawing.Point, System.Drawing">
+    <value>8, 40</value>
+  </data>
+  <data name="labelXICWidth.Margin" type="System.Windows.Forms.Padding, System.Windows.Forms">
+    <value>6, 0, 6, 0</value>
+  </data>
+  <data name="labelXICWidth.Size" type="System.Drawing.Size, System.Drawing">
+    <value>120, 20</value>
+  </data>
+  <data name="labelXICWidth.TabIndex" type="System.Int32, mscorlib">
+    <value>1</value>
+  </data>
+  <data name="labelXICWidth.Text" xml:space="preserve">
+    <value>XIC Width (Da):</value>
+  </data>
+  <data name="&gt;&gt;labelXICWidth.Name" xml:space="preserve">
+    <value>labelXICWidth</value>
+  </data>
+  <data name="&gt;&gt;labelXICWidth.Type" xml:space="preserve">
+    <value>System.Windows.Forms.Label, System.Windows.Forms, Version=4.0.0.0, Culture=neutral, PublicKeyToken=b77a5c561934e089</value>
+  </data>
+  <data name="&gt;&gt;labelXICWidth.Parent" xml:space="preserve">
+    <value>panelAbiSciexOS</value>
+  </data>
+  <data name="&gt;&gt;labelXICWidth.ZOrder" xml:space="preserve">
+    <value>1</value>
+  </data>
+  <data name="textXICWidth.Location" type="System.Drawing.Point, System.Drawing">
+    <value>8, 58</value>
+  </data>
+  <data name="textXICWidth.Margin" type="System.Windows.Forms.Padding, System.Windows.Forms">
+    <value>6, 8, 6, 8</value>
+  </data>
+  <data name="textXICWidth.Size" type="System.Drawing.Size, System.Drawing">
+    <value>100, 26</value>
+  </data>
+  <data name="textXICWidth.TabIndex" type="System.Int32, mscorlib">
+    <value>26</value>
+  </data>
+  <data name="&gt;&gt;textXICWidth.Name" xml:space="preserve">
+    <value>textXICWidth</value>
+  </data>
+  <data name="&gt;&gt;textXICWidth.Type" xml:space="preserve">
+    <value>System.Windows.Forms.TextBox, System.Windows.Forms, Version=4.0.0.0, Culture=neutral, PublicKeyToken=b77a5c561934e089</value>
+  </data>
+  <data name="&gt;&gt;textXICWidth.Parent" xml:space="preserve">
+    <value>panelAbiSciexOS</value>
+  </data>
+  <data name="&gt;&gt;textXICWidth.ZOrder" xml:space="preserve">
+    <value>2</value>
+  </data>
   <data name="panelAbiSciexOS.Location" type="System.Drawing.Point, System.Drawing">
-    <value>1039, 220</value>
+    <value>500, 211</value>
   </data>
   <data name="panelAbiSciexOS.Margin" type="System.Windows.Forms.Padding, System.Windows.Forms">
-    <value>4, 5, 4, 5</value>
+    <value>6, 9, 6, 9</value>
   </data>
   <data name="panelAbiSciexOS.Size" type="System.Drawing.Size, System.Drawing">
-    <value>220, 200</value>
+    <value>120, 90</value>
   </data>
   <data name="panelAbiSciexOS.TabIndex" type="System.Int32, mscorlib">
     <value>23</value>
@@ -1782,57 +1836,7 @@ If unchecked, zeros will be written in their place.</value>
     <value>$this</value>
   </data>
   <data name="&gt;&gt;panelAbiSciexOS.ZOrder" xml:space="preserve">
-     <value>0</value>
-   </data>
-
-  <data name="textXICWidth.Location" type="System.Drawing.Point, System.Drawing">
-    <value>50,20</value>
-  </data>
-  <data name="textXICWidth.Size" type="System.Drawing.Size, System.Drawing">
-    <value>100, 20</value>
-  </data>
-  <data name="textXICWidth.TabIndex" type="System.Int32, mscorlib">
-    <value>26</value>
-  </data>
-  <data name="textXICWidth.Visible" type="System.Boolean, mscorlib">
-    <value>True</value>
-  </data>
-  <data name="&gt;&gt;textXICWidth.Name" xml:space="preserve">
-    <value>textXICWidth</value>
-  </data>
-  <data name="&gt;&gt;textXICWidth.Type" xml:space="preserve">
-    <value>System.Windows.Forms.TextBox, System.Windows.Forms, Version=4.0.0.0, Culture=neutral, PublicKeyToken=b77a5c561934e089</value>
-  </data>
-  <data name="&gt;&gt;textXICWidth.Parent" xml:space="preserve">
-    <value>panelAbiSciexOS</value>
-  </data>
-  <data name="&gt;&gt;textXICWidth.ZOrder" xml:space="preserve">
     <value>0</value>
-  </data>
-
-  <data name="labelXICWidth.AutoSize" type="System.Boolean, mscorlib">
-    <value>True</value>
-  </data>
-  <data name="labelXICWidth.Location" type="System.Drawing.Point, System.Drawing">
-    <value>8, 25</value>
-  </data>
-  <data name="labelXICWidth.Size" type="System.Drawing.Size, System.Drawing">
-    <value>133, 13</value>
-  </data>
-  <data name="labelXICWidth.Text" xml:space="preserve">
-    <value>XIC Width (Da):</value>
-  </data>
-  <data name="&gt;&gt;labelXICWidth.Name" xml:space="preserve">
-    <value>labelXICWidth</value>
-  </data>
-  <data name="&gt;&gt;labelXICWidth.Type" xml:space="preserve">
-    <value>System.Windows.Forms.Label, System.Windows.Forms, Version=4.0.0.0, Culture=neutral, PublicKeyToken=b77a5c561934e089</value>
-  </data>
-  <data name="&gt;&gt;labelXICWidth.Parent" xml:space="preserve">
-    <value>panelAbiSciexOS</value>
-  </data>
-  <data name="&gt;&gt;labelXICWidth.ZOrder" xml:space="preserve">
-    <value>4</value>
   </data>
 
 </root>

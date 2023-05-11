@@ -235,6 +235,8 @@ namespace pwiz.Skyline.FileUI
             panelSciexTune.Top = labelOptimizing.Top;
             panelWaters.Top = labelDwellTime.Top - panelWaters.Height;
             panelBrukerTimsTof.Top = labelOptimizing.Top;
+            panelAbiSciexOS.Top = textMaxTransitions.Top;
+            panelAbiSciexOS.Left = cbSortByMz.Left - cbExportSciexOSQuantMethod.Left;
 
             foreach (string tuneType in ExportOptimize.CompensationVoltageTuneTypes)
                 comboTuning.Items.Add(tuneType);
