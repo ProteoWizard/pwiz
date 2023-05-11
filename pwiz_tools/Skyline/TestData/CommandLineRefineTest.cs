@@ -22,6 +22,8 @@ using System.Collections.Generic;
 using System.Globalization;
 using System.IO;
 using System.Linq;
+using System.Resources;
+using System.Security.Permissions;
 using Microsoft.VisualStudio.TestTools.UnitTesting;
 using pwiz.Skyline;
 using pwiz.Skyline.Model;
@@ -444,7 +446,6 @@ namespace pwiz.SkylineTestData
 
             TestFilesDir = new TestFilesDir(TestContext, @"TestData\CommandLineRefine.zip");
             DocumentPath = InitRefineDocument("SRM_mini_single_replicate.sky");
-
             // Automatically test arguments that have Values
             foreach (var arg in allArgumentsSet)
             {
@@ -524,6 +525,7 @@ namespace pwiz.SkylineTestData
             testedArguments.Add(arg);
         }
 
+        private static ResourceManager _ioResourceManager = new ResourceManager("mscorlib", typeof(FileIOPermission).Assembly);
         private void ValidateInvalidValuePath(CommandArgs.Argument arg, HashSet<CommandArgs.Argument> testedArguments)
         {
             const string BAD_VALUE = "Bad:\\Path\\Value";
@@ -542,6 +544,7 @@ namespace pwiz.SkylineTestData
                 string.Format(
                     Resources.ValueInvalidPathException_ValueInvalidPathException_The_value___0___is_not_valid_for_the_argument__1__failed_attempting_to_convert_it_to_a_full_file_path_,
                     BAD_VALUE, arg.ArgumentText),
+                _ioResourceManager.GetString("Argument_PathFormatNotSupported"),
                 "format is not supported" // apparently always in English for tools?
             };
             Assert.IsTrue(badPathStrings.Any(s => output.Contains(s)),
