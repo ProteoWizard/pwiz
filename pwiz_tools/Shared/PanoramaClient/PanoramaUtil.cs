@@ -24,7 +24,6 @@ using System.IO;
 using System.Net;
 using System.Text;
 using System.Threading;
-using System.Windows.Forms;
 using Newtonsoft.Json;
 using Newtonsoft.Json.Linq;
 using pwiz.Common.SystemUtil;
@@ -731,9 +730,9 @@ namespace pwiz.PanoramaClient
                 }
                 var downloaded = e.BytesReceived;
                 var message = TextUtil.LineSeparate(
-                    string.Format("Downloading {0}", realName),
+                    string.Format(Resources.WebPanoramaClient_DownloadFile_Downloading__0_, realName),
                     string.Empty,
-                    GetDownloadedSize(downloaded, fileSize > 0 ? (long)fileSize : 0));
+                    GetDownloadedSize(downloaded, fileSize > 0 ? fileSize : 0));
                 progressStatus = progressStatus.ChangeMessage(message);
                 pm.UpdateProgress(progressStatus = progressStatus.ChangePercentComplete(progressPercent));
             };

@@ -28852,6 +28852,15 @@ namespace pwiz.Skyline.Properties {
         }
         
         /// <summary>
+        ///   Looks up a localized string similar to {0}({1}).
+        /// </summary>
+        public static string SkylineWindow_GetDownloadName__0___1__ {
+            get {
+                return ResourceManager.GetString("SkylineWindow_GetDownloadName__0___1__", resourceCulture);
+            }
+        }
+        
+        /// <summary>
         ///   Looks up a localized string similar to Change peak end to {0:F01}.
         /// </summary>
         public static string SkylineWindow_graphChromatogram_ChangedPeakBounds_Change_peak_end_to__0_F01_ {
@@ -29944,6 +29953,51 @@ namespace pwiz.Skyline.Properties {
                 return ResourceManager.GetString("SkylineWindow_OpenFile_The_file_you_are_trying_to_open____0____does_not_appear_to" +
                         "_be_a_Skyline_document__Skyline_documents_normally_have_a___1___or___2___filenam" +
                         "e_extension_and_are_in_XML_format_", resourceCulture);
+            }
+        }
+        
+        /// <summary>
+        ///   Looks up a localized string similar to Add.
+        /// </summary>
+        public static string SkylineWindow_OpenFromPanorama_Add {
+            get {
+                return ResourceManager.GetString("SkylineWindow_OpenFromPanorama_Add", resourceCulture);
+            }
+        }
+        
+        /// <summary>
+        ///   Looks up a localized string similar to Downloading file {0}.
+        /// </summary>
+        public static string SkylineWindow_OpenFromPanorama_Downloading_file__0_ {
+            get {
+                return ResourceManager.GetString("SkylineWindow_OpenFromPanorama_Downloading_file__0_", resourceCulture);
+            }
+        }
+        
+        /// <summary>
+        ///   Looks up a localized string similar to Loading remote server folders.
+        /// </summary>
+        public static string SkylineWindow_OpenFromPanorama_Loading_remote_server_folders {
+            get {
+                return ResourceManager.GetString("SkylineWindow_OpenFromPanorama_Loading_remote_server_folders", resourceCulture);
+            }
+        }
+        
+        /// <summary>
+        ///   Looks up a localized string similar to No Panorama servers were found..
+        /// </summary>
+        public static string SkylineWindow_OpenFromPanorama_No_Panorama_servers_were_found_ {
+            get {
+                return ResourceManager.GetString("SkylineWindow_OpenFromPanorama_No_Panorama_servers_were_found_", resourceCulture);
+            }
+        }
+        
+        /// <summary>
+        ///   Looks up a localized string similar to Press &apos;Add&apos; to add a new server..
+        /// </summary>
+        public static string SkylineWindow_OpenFromPanorama_Press__Add__to_add_a_new_server_ {
+            get {
+                return ResourceManager.GetString("SkylineWindow_OpenFromPanorama_Press__Add__to_add_a_new_server_", resourceCulture);
             }
         }
         

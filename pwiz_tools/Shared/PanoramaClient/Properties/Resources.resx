@@ -184,4 +184,7 @@
   <data name="WebPanoramaClient_SaveFile_Select_the_folder_where_the_file_will_be_downloaded" xml:space="preserve">
 	  <value>Select the folder where the file will be downloaded</value>
   </data>
+  <data name="WebPanoramaClient_DownloadFile_Downloading__0_" xml:space="preserve">
+	  <value>Downloading {0}</value>
+  </data>
 </root>

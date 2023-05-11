@@ -224,6 +224,15 @@ namespace pwiz.PanoramaClient.Properties {
         }
         
         /// <summary>
+        ///   Looks up a localized string similar to Downloading {0}.
+        /// </summary>
+        public static string WebPanoramaClient_DownloadFile_Downloading__0_ {
+            get {
+                return ResourceManager.GetString("WebPanoramaClient_DownloadFile_Downloading__0_", resourceCulture);
+            }
+        }
+        
+        /// <summary>
         ///   Looks up a localized string similar to Select the folder where the file will be downloaded.
         /// </summary>
         public static string WebPanoramaClient_SaveFile_Select_the_folder_where_the_file_will_be_downloaded {

@@ -910,18 +910,11 @@ namespace pwiz.Skyline
         /// <param name="fileJson"></param>
         public void OpenFromPanorama(string server, string user, string pass, JToken folderJson, JToken fileJson = null)
         {
-            var panoramaClient = new WebPanoramaClient(new Uri(server));
             using var dlg = new PanoramaFilePicker();
             dlg.InitializeTestDialog(new Uri(server), user, pass, folderJson, fileJson);
             if (dlg.ShowDialog() != DialogResult.Cancel)
             {
 
-                var folderPath = string.Empty;
-                if (!string.IsNullOrEmpty(Settings.Default.LastFolderPath))
-                {
-                    folderPath = Settings.Default.LastFolderPath;
-                }
-                
             }
         }
 
@@ -939,11 +932,10 @@ namespace pwiz.Skyline
                 if (buttonPress == DialogResult.Cancel)
                     return;
 
-                object tag = null;
                 if (buttonPress == DialogResult.OK)
                 {
                     var serverPanoramaWeb = new Server(PanoramaUtil.PANORAMA_WEB, string.Empty, string.Empty);
-                    var newServer = servers.EditItem(this, serverPanoramaWeb, null, tag);
+                    var newServer = servers.EditItem(this, serverPanoramaWeb, null, null);
                     if (newServer == null)
                         return;
 
@@ -1015,13 +1007,13 @@ namespace pwiz.Skyline
                             {
                                 using (var longWaitDlg = new LongWaitDlg 
                                        {
-                                           Text = $"Downloading file {dlg.FileName}.",
+                                           Text = $"Downloading file {dlg.FileName}",
                                        })
                                 {
 
                                     var progressStatus = longWaitDlg.PerformWork(this, 800,
                                         progressMonitor => panoramaClient.DownloadFile(dlg.FileUrl, fileSaver.SafeName, size, dlg.FileName, curServer,
-                                            progressMonitor, new ProgressStatus("Downloading...")));
+                                            progressMonitor, new ProgressStatus()));
                                     if (progressStatus.IsCanceled || progressStatus.IsError)
                                     {
                                         FileEx.SafeDelete(downloadPath, true);

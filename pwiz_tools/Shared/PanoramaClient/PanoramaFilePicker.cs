@@ -229,7 +229,6 @@ namespace pwiz.PanoramaClient
                 foreach (var row in rows)
                 {
                     var versions = row[@"File/Versions"].ToString();
-                    var rowId = row[@"RowId"].ToString();
                     var rowReplaced = (string)row[@"ReplacedByRun"];
                     var replaces = (string)row[@"ReplacesRun"];
                     if ((!string.IsNullOrEmpty(replaces) && string.IsNullOrEmpty(rowReplaced)) ||
@@ -334,8 +333,6 @@ namespace pwiz.PanoramaClient
         /// <param name="options"></param>
         private void AddQueryFiles(string nodePath, Control l, Control options)
         {
-            //var sizeDict = GetSizeDict();
-            var versions = HasVersions(_runsInfoJson);
             var rows = _runsInfoJson[@"rows"];
             var rowCount = _runsInfoJson[@"rowCount"];
             if ((int)rowCount > 0)
@@ -380,7 +377,7 @@ namespace pwiz.PanoramaClient
 
                         if (numVersions[1] != null)
                         {
-                            listItem[3] = numVersions[1].ToString();
+                            listItem[3] = numVersions[1];
                         }
 
                         listItem[4] = (string)row[@"Created"];
@@ -452,7 +449,7 @@ namespace pwiz.PanoramaClient
 
                         if (numVersions[1] != null)
                         {
-                            listItem[3] = numVersions[1].ToString();
+                            listItem[3] = numVersions[1];
                         }
 
                         listItem[4] = (string)row[@"Created"];
