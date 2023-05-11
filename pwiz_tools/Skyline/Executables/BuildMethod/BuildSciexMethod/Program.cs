@@ -389,7 +389,7 @@ namespace BuildSciexMethod
         private void WriteQuantMethodFile(MethodTransitions transitions)
         {
             string filePath = Path.ChangeExtension(transitions.FinalMethod, ".Quant.txt");
-            string export = "Group Name\tName\tPrecursor\tFragment\tXIC Width\tRetention Time" + Environment.NewLine;
+            string export = "Group\tName\tPrecursor(Q1) Mass(Da)\tFragment(Q3) Mass(Da)\tXIC Width(Da)\tRetention Time(min)" + Environment.NewLine;
 
             foreach (var transition in transitions.Transitions)
             {

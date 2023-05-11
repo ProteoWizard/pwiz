@@ -1,4 +1,6 @@
-﻿namespace pwiz.Skyline.FileUI
+﻿using System.Windows.Forms;
+
+namespace pwiz.Skyline.FileUI
 {
     sealed partial class ExportMethodDlg
     {
@@ -90,6 +92,8 @@
             this.label7 = new System.Windows.Forms.Label();
             this.textAccumulationTime = new System.Windows.Forms.TextBox();
             this.panelAbiSciexOS = new System.Windows.Forms.Panel();
+            this.textXICWidth = new System.Windows.Forms.TextBox();
+            this.labelXICWidth = new System.Windows.Forms.Label();
             this.panelThermoColumns.SuspendLayout();
             this.panelAbSciexTOF.SuspendLayout();
             this.panelTriggered.SuspendLayout();
@@ -501,9 +505,27 @@
             // 
             // panelAbiSciexOS
             // 
-            this.panelAbiSciexOS.Controls.Add(this.cbExportSciexOSQuantMethod);
+            this.panelAbiSciexOS.Controls.AddRange(new Control[]
+            {
+                this.cbExportSciexOSQuantMethod,
+                this.labelXICWidth,
+                this.textXICWidth
+            });
             resources.ApplyResources(this.panelAbiSciexOS, "panelAbiSciexOS");
             this.panelAbiSciexOS.Name = "panelAbiSciexOS";
+            this.panelAbiSciexOS.BorderStyle = BorderStyle.Fixed3D;
+            //
+            // textXICWidth
+            //
+            resources.ApplyResources(this.textXICWidth, "textXICWidth");
+            this.textXICWidth.Name = "textXICWidth";
+            //
+            // labelXICWidth
+            //
+            resources.ApplyResources(this.labelXICWidth, "labelXICWidth");
+            this.textXICWidth.Name = "labelXICWidth";
+
+
             // 
             // ExportMethodDlg
             // 
@@ -643,5 +665,7 @@
         private System.Windows.Forms.TextBox textAccumulationTime;
         private System.Windows.Forms.Panel panelAbiSciexOS;
         private System.Windows.Forms.CheckBox cbExportSciexOSQuantMethod;
+        private System.Windows.Forms.TextBox textXICWidth;
+        private System.Windows.Forms.Label labelXICWidth;
     }
 }

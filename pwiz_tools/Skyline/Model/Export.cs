@@ -2840,7 +2840,7 @@ namespace pwiz.Skyline.Model
                 case ExportInstrumentType.ABI_7500:
                     break;
                 case ExportInstrumentType.ABI_7600:
-                    IsolationList = true;
+                    IsolationList = false;
                     break;
                 default:
                     throw new Exception(Resources.SciexOsMethodExporter_SciexOsMethodExporter_Invalid_instrument_type_for_SCIEX_OS_method_export_);
