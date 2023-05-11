@@ -21,6 +21,7 @@ using pwiz.Skyline.Model;
 using pwiz.Skyline.Model.Databinding;
 using pwiz.Skyline.Model.DocSettings;
 using pwiz.Skyline.Properties;
+using System;
 
 namespace pwiz.Skyline.Controls.Databinding
 {
@@ -73,6 +74,31 @@ namespace pwiz.Skyline.Controls.Databinding
                 });
                 return newDocument;
             }
+        }
+
+        protected override void AttachDocumentChangeEventHandler(EventHandler<DocumentChangedEventArgs> handler)
+        {
+            ((IDocumentUIContainer) SkylineWindow).ListenUI(handler);
+        }
+
+        protected override void DetachDocumentChangeEventHandler(EventHandler<DocumentChangedEventArgs> handler)
+        {
+            ((IDocumentUIContainer)SkylineWindow).UnlistenUI(handler);
+        }
+        /// <summary>
+        /// Returns true if SkylineWindow.DocumentUI is the same as SkylineWindow.Document
+        /// </summary>
+        public override bool IsDocumentUpToDate()
+        {
+
+            if (!SkylineWindow.InvokeRequired)
+            {
+                return ReferenceEquals(SkylineWindow.DocumentUI, SkylineWindow.Document);
+            }
+            bool result = false;
+            SkylineWindow.BeginInvoke(new Action(() =>
+                result = ReferenceEquals(SkylineWindow.DocumentUI, SkylineWindow.Document)));
+            return result;
         }
     }
 }

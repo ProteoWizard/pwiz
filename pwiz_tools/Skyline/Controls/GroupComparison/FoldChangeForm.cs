@@ -138,6 +138,13 @@ namespace pwiz.Skyline.Controls.GroupComparison
             }
         }
 
+        public bool IsComplete
+        {
+            get
+            {
+                return FoldChangeBindingSource.IsComplete;
+            }
+        }
 
         public static T FindForm<T>(IDocumentContainer documentContainer, string groupComparisonName) 
             where T : FoldChangeForm
