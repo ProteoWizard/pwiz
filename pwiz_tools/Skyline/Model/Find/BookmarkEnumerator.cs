@@ -40,6 +40,7 @@ namespace pwiz.Skyline.Model.Find
         {
             Start = startPosition;
             Current = Start.Location;
+            IsValid = FindAndSetPosition(Current);
         }
         public BookmarkEnumerator(SrmDocument document)
             : this(new BookmarkStartPosition(document, Bookmark.ROOT, true))
@@ -291,7 +292,7 @@ namespace pwiz.Skyline.Model.Find
 
         public bool IsValid
         {
-            get { return Start.IsValid; }
+            get; private set;
         }
 
         /// <summary>
@@ -418,12 +419,13 @@ namespace pwiz.Skyline.Model.Find
         /// </summary>
         public static BookmarkEnumerator TryGet(SrmDocument document, Bookmark bookmark)
         {
-            var startPosition = new BookmarkStartPosition(document, bookmark, true);
-            if (!startPosition.IsValid)
+            var bookmarkEnumerator = new BookmarkEnumerator(new BookmarkStartPosition(document, bookmark, true));
+            if (!bookmarkEnumerator.IsValid)
             {
                 return null;
             }
-            return new BookmarkEnumerator(startPosition);
+
+            return bookmarkEnumerator;
         }
 
         /// <summary>

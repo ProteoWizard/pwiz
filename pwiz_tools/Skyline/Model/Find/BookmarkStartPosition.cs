@@ -29,11 +29,6 @@ namespace pwiz.Skyline.Model.Find
         public SrmDocument Document { get; }
         public Bookmark Location { get; }
         public bool Forward { get; }
-        public bool IsValid
-        {
-            get { return _startPosition != null; }
-        }
-
         public int Compare(Bookmark a, Bookmark b)
         {
             return ComparePositions(GetPosition(a), GetPosition(b));
@@ -41,8 +36,8 @@ namespace pwiz.Skyline.Model.Find
 
         private int ComparePositions(Position a, Position b)
         {
-            int positionAComparedToStart = Math.Sign(a.CompareTo(_startPosition));
-            int positionBComparedToStart = Math.Sign(b.CompareTo(_startPosition));
+            int positionAComparedToStart = Math.Sign(Position.Compare(a, _startPosition));
+            int positionBComparedToStart = Math.Sign(Position.Compare(b, _startPosition));
             if (positionAComparedToStart == 0)
             {
                 if (positionBComparedToStart == 0)
@@ -145,21 +140,40 @@ namespace pwiz.Skyline.Model.Find
             public int OptStep { get; private set; }
             public int CompareTo(Position other)
             {
-                int result = NodeIndex.CompareTo(other.NodeIndex);
+                return Compare(this, other);
+            }
+            public static int Compare(Position a, Position b)
+            {
+                if (ReferenceEquals(a, b))
+                {
+                    return 0;
+                }
+                if (a == null)
+                {
+                    return -1;
+                }
+                if (b == null)
+                {
+                    return 1;
+                }
+
+                int result = a.NodeIndex.CompareTo(b.NodeIndex);
                 if (result == 0)
                 {
-                    result = Nullable.Compare(ReplicateIndex, other.ReplicateIndex);
+                    result = Nullable.Compare(a.ReplicateIndex, b.ReplicateIndex);
                 }
                 if (result == 0)
                 {
-                    result = Nullable.Compare(FileIndex, other.FileIndex);
+                    result = Nullable.Compare(a.FileIndex, b.FileIndex);
                 }
                 if (result == 0)
                 {
-                    result = OptStep.CompareTo(other.OptStep);
+                    result = a.OptStep.CompareTo(b.OptStep);
                 }
                 return result;
+
             }
+
         }
 
         private Position GetPosition(Bookmark bookmark)

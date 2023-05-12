@@ -35,9 +35,9 @@ namespace pwiz.Skyline.Model.Find
         {
             FindPredicate = findPredicate;
             Document = document;
+            FindMatch = match;
             LocationName = GetLocationName();
             LocationType = GetLocationType();
-            FindMatch = match;
             IsValid = true;
         }
 
