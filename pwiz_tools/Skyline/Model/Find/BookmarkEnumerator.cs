@@ -290,10 +290,7 @@ namespace pwiz.Skyline.Model.Find
             return SetPosition(bookmark, node, currentChromInfo);
         }
 
-        public bool IsValid
-        {
-            get; private set;
-        }
+        public bool IsValid { get; private set; }
 
         /// <summary>
         /// Returns true if this bookmark enumerator has wrapped back around to the start again.

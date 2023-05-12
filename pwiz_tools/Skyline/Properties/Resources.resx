@@ -12028,5 +12028,6 @@ If you choose Disable, you can enable Auto-select later with the "Refine &gt; Ad
   </data>
   <data name="FindOptions_GetNotFoundMessage_Nothing_could_be_found_matching_any_of_the__0__criteria" xml:space="preserve">
     <value>Nothing could be found matching any of the {0} criteria</value>
+    <comment>{0} is an integer greater than 1</comment>
   </data>
 </root>
