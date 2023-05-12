@@ -5404,7 +5404,7 @@ namespace pwiz.Skyline.Properties {
         }
         
         /// <summary>
-        ///   Looks up a localized string similar to a FASTA file must be imported before associating proteins.
+        ///   Looks up a localized string similar to Error: a FASTA file must be imported before associating proteins.
         /// </summary>
         public static string CommandLine_AssociateProteins_a_FASTA_file_must_be_imported_before_associating_proteins {
             get {
@@ -14777,11 +14777,12 @@ namespace pwiz.Skyline.Properties {
         }
         
         /// <summary>
-        ///   Looks up a localized string similar to Could not find any of {0} items..
+        ///   Looks up a localized string similar to Nothing could be found matching any of the {0} criteria.
         /// </summary>
-        public static string FindOptions_GetNotFoundMessage_Could_not_find_any_of__0__items {
+        public static string FindOptions_GetNotFoundMessage_Nothing_could_be_found_matching_any_of_the__0__criteria {
             get {
-                return ResourceManager.GetString("FindOptions_GetNotFoundMessage_Could_not_find_any_of__0__items", resourceCulture);
+                return ResourceManager.GetString("FindOptions_GetNotFoundMessage_Nothing_could_be_found_matching_any_of_the__0__cri" +
+                        "teria", resourceCulture);
             }
         }
         
@@ -14827,6 +14828,15 @@ namespace pwiz.Skyline.Properties {
         public static string FindPredicate_FindAll_Searching_for__0__ {
             get {
                 return ResourceManager.GetString("FindPredicate_FindAll_Searching_for__0__", resourceCulture);
+            }
+        }
+        
+        /// <summary>
+        ///   Looks up a localized string similar to Searching for next result.
+        /// </summary>
+        public static string FindPredicate_FindNext_Searching_for_next_result {
+            get {
+                return ResourceManager.GetString("FindPredicate_FindNext_Searching_for_next_result", resourceCulture);
             }
         }
         
