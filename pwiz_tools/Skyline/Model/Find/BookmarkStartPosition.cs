@@ -24,10 +24,12 @@ namespace pwiz.Skyline.Model.Find
 {
     /// <summary>
     /// Represents a starting location and direction for a search within a document.
+    /// Is able to compare bookmarks to determine which bookmark is closer to the start
+    /// position.
     /// </summary>
     public class BookmarkStartPosition : IComparer<Bookmark>
     {
-        private Position _startPosition;
+        private ComparablePosition _startPosition;
         private long _totalPositionCount;
         public BookmarkStartPosition(SrmDocument document, Bookmark start, bool forward)
         {
@@ -59,10 +61,12 @@ namespace pwiz.Skyline.Model.Find
             return ComparePositions(GetPosition(a), GetPosition(b));
         }
 
-        private int ComparePositions(Position a, Position b)
+        private int ComparePositions(ComparablePosition a, ComparablePosition b)
         {
-            int positionAComparedToStart = Math.Sign(Position.Compare(a, _startPosition));
-            int positionBComparedToStart = Math.Sign(Position.Compare(b, _startPosition));
+            int positionAComparedToStart = Math.Sign(ComparablePosition.Compare(a, _startPosition));
+            int positionBComparedToStart = Math.Sign(ComparablePosition.Compare(b, _startPosition));
+            // A position which is equal to start has wrapped around and is therefore greater than
+            // any other position
             if (positionAComparedToStart == 0)
             {
                 if (positionBComparedToStart == 0)
@@ -81,12 +85,10 @@ namespace pwiz.Skyline.Model.Find
             {
                 result = a.CompareTo(b);
             }
-
             if (!Forward)
             {
                 result *= -1;
             }
-
             return result;
         }
 
@@ -118,9 +120,9 @@ namespace pwiz.Skyline.Model.Find
             return (int) (100 * difference / _totalPositionCount);
         }
 
-        private class Position : IComparable<Position>
+        private class ComparablePosition : IComparable<ComparablePosition>
         {
-            public static Position ForBookmark(SrmDocument document, Bookmark bookmark)
+            public static ComparablePosition ForBookmark(SrmDocument document, Bookmark bookmark)
             {
                 if (document.FindNode(bookmark.IdentityPath) == null)
                 {
@@ -148,29 +150,29 @@ namespace pwiz.Skyline.Model.Find
                     }
                 }
 
-                return new Position
+                return new ComparablePosition
                 {
                     NodeIndex = nodeIndex,
-                    Depth = bookmark.IdentityPath.Depth,
+                    IdentityPathLength = bookmark.IdentityPath.Depth,
                     ReplicateIndex = bookmark.ReplicateIndex,
                     FileIndex = fileIndex,
                     OptStep = bookmark.OptStep
                 };
 
             }
-            private Position()
+            private ComparablePosition()
             {
             }
             public int NodeIndex { get; private set; }
-            public int Depth { get; private set; }
+            public int IdentityPathLength { get; private set; }
             public int? ReplicateIndex { get; private set; }
             public int? FileIndex { get; private set; }
             public int OptStep { get; private set; }
-            public int CompareTo(Position other)
+            public int CompareTo(ComparablePosition other)
             {
                 return Compare(this, other);
             }
-            public static int Compare(Position a, Position b)
+            public static int Compare(ComparablePosition a, ComparablePosition b)
             {
                 if (ReferenceEquals(a, b))
                 {
@@ -188,7 +190,7 @@ namespace pwiz.Skyline.Model.Find
                 int result = a.NodeIndex.CompareTo(b.NodeIndex);
                 if (result == 0)
                 {
-                    result = a.Depth.CompareTo(b.Depth);
+                    result = a.IdentityPathLength.CompareTo(b.IdentityPathLength);
                 }
                 if (result == 0)
                 {
@@ -206,12 +208,12 @@ namespace pwiz.Skyline.Model.Find
             }
         }
 
-        private Position GetPosition(Bookmark bookmark)
+        private ComparablePosition GetPosition(Bookmark bookmark)
         {
-            return Position.ForBookmark(Document, bookmark);
+            return ComparablePosition.ForBookmark(Document, bookmark);
         }
 
-        private long AsLong(Position position)
+        private long AsLong(ComparablePosition position)
         {
             long value = position.NodeIndex;
             if (Document.Settings.HasResults)

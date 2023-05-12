@@ -48,24 +48,24 @@ namespace pwiz.SkylineTest
             Assert.AreEqual(forwardList.Count, backwardList.Count);
             
             // The very last location is the same for both the forwards and backwards enumerators.
-            backwardList.Reverse(0, backwardList.Count - 1);
-            CollectionAssert.AreEqual(forwardList, backwardList);
+            var backwardListReversed = ReverseBookmarkList(backwardList);
+            CollectionAssert.AreEqual(forwardList, backwardListReversed);
 
             var forwardSet = new HashSet<Bookmark>(forwardList);
             Assert.AreEqual(forwardList.Count, forwardSet.Count);
             forwardSet.UnionWith(backwardList);
             Assert.AreEqual(forwardList.Count, forwardSet.Count);
-            VerifyDocument(document);
+            VerifyBookmarkEnumeratorOnDocument(document);
         }
 
         [TestMethod]
         public void TestBookmarkEnumeratorWithOptSteps()
         {
             var document = ReadDocument("BookmarkEnumeratorTest2.sky");
-            VerifyDocument(document);
+            VerifyBookmarkEnumeratorOnDocument(document);
         }
 
-        public void VerifyDocument(SrmDocument document)
+        public static void VerifyBookmarkEnumeratorOnDocument(SrmDocument document)
         {
             var expectedBookmarks = EnumerateBookmarks(new BookmarkStartPosition(document)).ToList();
             VerifyElementCounts(document, expectedBookmarks);
@@ -82,13 +82,12 @@ namespace pwiz.SkylineTest
                 var backward = new BookmarkStartPosition(document, expectedBookmarks[iBookmark], false);
                 var backwardBookmarks = EnumerateBookmarks(backward).ToList();
                 VerifyCompareBookmarks(backward, backwardBookmarks);
-                var backwardBookmarksReversed = backwardBookmarks.Take(backwardBookmarks.Count - 1).Reverse()
-                    .Append(backwardBookmarks.Last()).ToList();
+                var backwardBookmarksReversed = ReverseBookmarkList(backwardBookmarks);
                 AssertBookmarkListEqual(forwardBookmarks, backwardBookmarksReversed);
             }
         }
 
-        public void VerifyCompareBookmarks(BookmarkStartPosition startPosition, IList<Bookmark> bookmarks)
+        private static void VerifyCompareBookmarks(BookmarkStartPosition startPosition, IList<Bookmark> bookmarks)
         {
             // Ensure that each bookmark compares greater than its predecessor
             for (int i = 1; i < bookmarks.Count; i++)
@@ -113,7 +112,7 @@ namespace pwiz.SkylineTest
             }
         }
 
-        public void AssertBookmarkListEqual(IList<Bookmark> expectedList, IList<Bookmark> actualList)
+        private static void AssertBookmarkListEqual(IList<Bookmark> expectedList, IList<Bookmark> actualList)
         {
             AssertEx.AreEqual(expectedList.Count, actualList.Count);
             for (int i = 0; i < expectedList.Count; i++)
@@ -127,7 +126,7 @@ namespace pwiz.SkylineTest
             }
         }
 
-        public IEnumerable<Bookmark> EnumerateBookmarks(BookmarkStartPosition startPosition)
+        public static IEnumerable<Bookmark> EnumerateBookmarks(BookmarkStartPosition startPosition)
         {
             var hashSet = new HashSet<Bookmark>();
             var bookmarkEnumerator = new BookmarkEnumerator(startPosition);
@@ -143,7 +142,7 @@ namespace pwiz.SkylineTest
             } while (!bookmarkEnumerator.AtStart);
         }
 
-        public void VerifyElementCounts(SrmDocument document, IList<Bookmark> bookmarks)
+        private static void VerifyElementCounts(SrmDocument document, IList<Bookmark> bookmarks)
         {
             var expectedElementCounts = GetElementCounts(document);
             var actualElementCounts = new Dictionary<Type, int>();
@@ -166,7 +165,7 @@ namespace pwiz.SkylineTest
             dictionary[key] = count + difference;
         }
 
-        public Dictionary<Type, int> GetElementCounts(SrmDocument document)
+        private static Dictionary<Type, int> GetElementCounts(SrmDocument document)
         {
             var elementCounts = new Dictionary<Type, int>();
             elementCounts[typeof(SrmDocument)] = 1;
@@ -242,6 +241,17 @@ namespace pwiz.SkylineTest
             }
             Assert.Fail("Unrecognized bookmark {0}", bookmark);
             return null;
+        }
+
+        /// <summary>
+        /// Given a list of bookmarks from a backward iterator, reverse all of the
+        /// elements except for the last one so that it would be expected to match
+        /// the results of the forward iterator
+        /// </summary>
+        private static List<Bookmark> ReverseBookmarkList(IList<Bookmark> list)
+        {
+            return list.Take(list.Count - 1).Reverse()
+                .Append(list.Last()).ToList();
         }
     }
 }
