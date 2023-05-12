@@ -288,6 +288,7 @@ namespace pwiz.Skyline.Model
             DocumentHash = doc.DocumentHash;
             DeferSettingsChanges = doc.DeferSettingsChanges;
             DocumentType = doc.DocumentType;
+            _moleculeSynchronizer = doc._moleculeSynchronizer;
 
             if (changeProps != null)
                 changeProps(this);
@@ -745,6 +746,17 @@ namespace pwiz.Skyline.Model
             return ChangeProp(ImClone(this), im => im.UserRevisionIndex++);
         }
 
+        public override DocNodeParent ReplaceChild(DocNode childReplace)
+        {
+            SrmDocument newDocument = (SrmDocument) base.ReplaceChild(childReplace);
+            if (_moleculeSynchronizer == null)
+            {
+                return newDocument;
+            }
+
+            return _moleculeSynchronizer.AfterReplaceChild(newDocument, ((PeptideGroupDocNode) childReplace).PeptideGroup);
+        }
+
         /// <summary>
         /// Make sure every new copy of a document gets an incremented value
         /// for <see cref="RevisionIndex"/>.
@@ -758,6 +770,7 @@ namespace pwiz.Skyline.Model
 
             SrmDocument docClone = (SrmDocument)clone;
             docClone.RevisionIndex = RevisionIndex + 1;
+            docClone._moleculeSynchronizer = MoleculeSynchronizer.MakeMoleculeSynchronizer(docClone);
 
             if (!DeferSettingsChanges)
             {
@@ -2162,6 +2175,7 @@ namespace pwiz.Skyline.Model
                 Settings = Settings.CachePeptideStandards(new PeptideGroupDocNode[0], children);
 
                 SetChildren(UpdateResultsSummaries(children, new Dictionary<int, PeptideDocNode>()));
+                _moleculeSynchronizer = MoleculeSynchronizer.MakeMoleculeSynchronizer(this);
 
                 IsProteinMetadataPending = CalcIsProteinMetadataPending(); // Background loaders are about to kick in, they need this info.
             }
@@ -2674,6 +2688,13 @@ namespace pwiz.Skyline.Model
             }
 
             return @"Expected document does not match actual, but the difference does not appear in the XML representation. Difference may be in a library instead.";
+        }
+
+        private MoleculeSynchronizer _moleculeSynchronizer;
+
+        public IEnumerable<IdentityPath> FindMolecules(PeptideSequenceModKey key)
+        {
+            return _moleculeSynchronizer?.FindMolecules(key) ?? Array.Empty<IdentityPath>();
         }
 
         #region object overrides
