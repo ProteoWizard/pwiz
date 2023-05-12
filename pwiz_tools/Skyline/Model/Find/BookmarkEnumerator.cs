@@ -247,7 +247,7 @@ namespace pwiz.Skyline.Model.Find
                 if (chromInfoPosition.ResultPosition != null)
                 {
                     var resultPosition = chromInfoPosition.ResultPosition;
-                    SetPosition(new Bookmark(identityPath, replicateIndex, resultPosition.ChromFileInfoId, resultPosition.OptimizationStep), node, chromInfoPosition.ChromInfo);
+                    return SetPosition(new Bookmark(identityPath, replicateIndex, resultPosition.ChromFileInfoId, resultPosition.OptimizationStep), node, chromInfoPosition.ChromInfo);
                 }
             }
 
