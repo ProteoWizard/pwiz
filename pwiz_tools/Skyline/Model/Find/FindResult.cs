@@ -16,38 +16,33 @@
  * See the License for the specific language governing permissions and
  * limitations under the License.
  */
+
+using System.Collections.Generic;
+using System.Linq;
+using pwiz.Common.SystemUtil;
+using pwiz.Skyline.Controls.SeqNode;
+using pwiz.Skyline.Properties;
+using pwiz.Skyline.Util.Extensions;
+
 namespace pwiz.Skyline.Model.Find
 {
     /// <summary>
     /// Remembers a location in a document that text was searched for and found.
     /// </summary>
-    public class FindResult
+    public class FindResult : Immutable
     {
-        public FindResult(FindPredicate findPredicate, BookmarkEnumerator bookmarkEnumerator, FindMatch match)
+        public FindResult(FindPredicate findPredicate, SrmDocument document, FindMatch match)
         {
             FindPredicate = findPredicate;
-            Bookmark = bookmarkEnumerator.Current;
-            Document = bookmarkEnumerator.Document;
-            LocationName = bookmarkEnumerator.GetLocationName(findPredicate.DisplaySettings);
-            LocationType = bookmarkEnumerator.GetLocationType();
+            Document = document;
+            LocationName = GetLocationName();
+            LocationType = GetLocationType();
             FindMatch = match;
             IsValid = true;
         }
 
-        public FindResult(FindResult findResult)
-        {
-            FindPredicate = findResult.FindPredicate;
-            Bookmark = findResult.Bookmark;
-            Document = findResult.Document;
-            FindMatch = findResult.FindMatch;
-            LocationName = findResult.LocationName;
-            LocationType = findResult.LocationType;
-            IsValid = findResult.IsValid;
-        }
-
         public FindResult ChangeDocument(SrmDocument document)
         {
-            var result = new FindResult(this) {Document = document};
             var bookMarkEnumerator = BookmarkEnumerator.TryGet(document, Bookmark);
             FindMatch findMatch = null;
             if (bookMarkEnumerator != null)
@@ -56,19 +51,18 @@ namespace pwiz.Skyline.Model.Find
             }
             if (findMatch == null)
             {
-                result.IsValid = false;
+                return ChangeProp(ImClone(this), im => im.IsValid = false);
             }
-            else
-            {
-                result.IsValid = true;
-                result.FindMatch = findMatch;
-            }
-            return result;
+
+            return new FindResult(FindPredicate, document, findMatch);
         }
 
         public FindPredicate FindPredicate { get; private set; }
         public SrmDocument Document { get; private set; }
-        public Bookmark Bookmark { get; private set; }
+        public Bookmark Bookmark
+        {
+            get { return FindMatch.Bookmark; }
+        }
         public FindMatch FindMatch { get; private set; }
         public bool IsValid { get; private set; }
         public string LocationName { get; private set; }
@@ -78,7 +72,10 @@ namespace pwiz.Skyline.Model.Find
         {
             if (ReferenceEquals(null, other)) return false;
             if (ReferenceEquals(this, other)) return true;
-            return Equals(other.FindPredicate, FindPredicate) && Equals(other.Document, Document) && Equals(other.Bookmark, Bookmark) && Equals(other.FindMatch, FindMatch) && other.IsValid.Equals(IsValid) && Equals(other.LocationName, LocationName) && Equals(other.LocationType, LocationType);
+            return Equals(other.FindPredicate, FindPredicate) && Equals(other.Document, Document) &&
+                   Equals(other.Bookmark, Bookmark) && Equals(other.FindMatch, FindMatch) &&
+                   other.IsValid.Equals(IsValid) && Equals(other.LocationName, LocationName) &&
+                   Equals(other.LocationType, LocationType);
         }
 
         public override bool Equals(object obj)
@@ -103,6 +100,84 @@ namespace pwiz.Skyline.Model.Find
                 return result;
             }
         }
-#endregion
+
+        private static List<DocNode> GetNodePath(SrmDocument document, IdentityPath identityPath)
+        {
+            var nodePath = new List<DocNode> { document };
+            for (int i = 0; i < identityPath.Length; i++)
+            {
+                var next = (nodePath[nodePath.Count - 1] as DocNodeParent)?.FindNode(identityPath.GetIdentity(i));
+                if (next == null)
+                {
+                    return null;
+                }
+                nodePath.Add(next);
+            }
+            return nodePath;
+        }
+
+        private string GetLocationName()
+        {
+            var nodePath = GetNodePath(Document, Bookmark.IdentityPath);
+            if (nodePath == null)
+            {
+                return null;
+            }
+
+            var currentDocNode = nodePath.Last();
+            if (!Bookmark.ReplicateIndex.HasValue)
+            {
+                return currentDocNode.GetDisplayText(FindPredicate.DisplaySettings);
+            }
+            int resultsIndex = Bookmark.ReplicateIndex.Value;
+            if (!Document.Settings.HasResults || resultsIndex < 0 || resultsIndex >= Document.Settings.MeasuredResults.Chromatograms.Count)
+            {
+                return null;
+            }
+            var peptideDocNode = nodePath.OfType<PeptideDocNode>().FirstOrDefault();
+            if (peptideDocNode == null)
+            {
+                return null;
+            }
+            var chromatogramSets = Document.Settings.MeasuredResults.Chromatograms;
+            var chromatogramSet = chromatogramSets[resultsIndex];
+            var resultDisplaySettings = new DisplaySettings(FindPredicate.DisplaySettings.NormalizedValueCalculator,
+                peptideDocNode, false, resultsIndex, FindPredicate.DisplaySettings.NormalizeOption);
+            return currentDocNode.GetDisplayText(resultDisplaySettings) + @" (" + chromatogramSet.Name + @")";
+
+        }
+        #endregion
+
+        /// <summary>
+        /// Returns the string to display in the "Type" column of the Find Results window.
+        /// </summary>
+        public string GetLocationType()
+        {
+            string nodeType;
+            switch (Bookmark.IdentityPath.Depth)
+            {
+                case (int)SrmDocument.Level.MoleculeGroups:
+                    nodeType = Resources.BookmarkEnumerator_GetNodeTypeName_Protein;
+                    break;
+                case (int)SrmDocument.Level.Molecules:
+                    nodeType = PeptideTreeNode.TITLE;
+                    break;
+                case (int)SrmDocument.Level.TransitionGroups:
+                    nodeType = TransitionGroupTreeNode.TITLE;
+                    break;
+                case (int)SrmDocument.Level.Transitions:
+                    nodeType = TransitionTreeNode.TITLE;
+                    break;
+                default:
+                    nodeType = Resources.BookmarkEnumerator_GetNodeTypeName_Unknown;
+                    break;
+            }
+
+            if (Bookmark.ReplicateIndex.HasValue)
+            {
+                return TextUtil.SpaceSeparate(nodeType + @" " + Resources.BookmarkEnumerator_GetLocationType_Results);
+            }
+            return nodeType;
+        }
     }
 }

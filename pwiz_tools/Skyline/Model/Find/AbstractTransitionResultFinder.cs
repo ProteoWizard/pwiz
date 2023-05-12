@@ -17,6 +17,7 @@
  * limitations under the License.
  */
 using System.Collections.Generic;
+using System.Linq;
 using System.Runtime.CompilerServices;
 using pwiz.Common.SystemUtil;
 using pwiz.Skyline.Model.Results;
@@ -39,38 +40,36 @@ namespace pwiz.Skyline.Model.Find
             var transitionGroupChromInfo = bookmarkEnumerator.CurrentChromInfo as TransitionGroupChromInfo;
             if (transitionGroupChromInfo != null)
             {
-                return MatchTransitionGroup(transitionGroupChromInfo);
+                return MatchTransitionGroup(bookmarkEnumerator.Current, transitionGroupChromInfo);
             }
             var transitionChromInfo = bookmarkEnumerator.CurrentChromInfo as TransitionChromInfo;
             if (transitionChromInfo != null)
             {
-                return MatchTransition(transitionChromInfo);
+                return MatchTransition(bookmarkEnumerator.Current, transitionChromInfo);
             }
             return null;
         }
 
-        protected abstract FindMatch MatchTransition(TransitionChromInfo transitionChromInfo);
-        protected abstract FindMatch MatchTransitionGroup(TransitionGroupChromInfo transitionGroupChromInfo);
+        protected abstract FindMatch MatchTransition(Bookmark bookmark, TransitionChromInfo transitionChromInfo);
+        protected abstract FindMatch MatchTransitionGroup(Bookmark bookmark, TransitionGroupChromInfo transitionGroupChromInfo);
 
-        public FindMatch NextMatch(BookmarkEnumerator bookmarkEnumerator, IProgressMonitor progressMonitor, ref IProgressStatus status)
+        public FindMatch NextMatch(BookmarkStartPosition start, IProgressMonitor progressMonitor, ref IProgressStatus status)
         {
-            var allBookmarks = new HashSet<Bookmark>(FindAll(bookmarkEnumerator.Document, progressMonitor, ref status));
-            if (allBookmarks.Count == 0)
+            var nextBookmark = FindAll(start.Document, progressMonitor, ref status).OrderBy(x => x, start).FirstOrDefault();
+            if (nextBookmark == null)
             {
                 return null;
             }
-            do
+            var bookmarkEnumerator = BookmarkEnumerator.TryGet(start.Document, nextBookmark);
+            if (bookmarkEnumerator == null)
             {
-                bookmarkEnumerator.MoveNext();
-                if (allBookmarks.Contains(bookmarkEnumerator.Current))
-                {
-                    var findMatch = Match(bookmarkEnumerator);
-                    if (findMatch != null)
-                    {
-                        return findMatch;
-                    }
-                }
-            } while (!bookmarkEnumerator.AtStart);
+                return null;
+            }
+            var findMatch = Match(bookmarkEnumerator);
+            if (findMatch != null)
+            {
+                return findMatch;
+            }
             return null;
         }
 
@@ -145,9 +144,9 @@ namespace pwiz.Skyline.Model.Find
                     foreach (var chromInfo in transitionResults)
                     {
                         FinderChromFileData chromFileData;
-                        bool match = MatchTransition(chromInfo) != null;
                         var transitionBookmark = new Bookmark(transitionId, iReplicate, chromInfo.FileId,
-                                                              chromInfo.OptimizationStep);
+                            chromInfo.OptimizationStep);
+                        bool match = MatchTransition(transitionBookmark, chromInfo) != null;
                         var chromFileKey = new FinderChromFileKey(chromInfo);
                         if (!fileDatas.TryGetValue(chromFileKey, out chromFileData))
                         {
@@ -173,10 +172,14 @@ namespace pwiz.Skyline.Model.Find
                 {
                     if (fileDataEntry.Value.AllTransitionsMatch && fileDataEntry.Value.MatchingTransitionBookmarks.Count > 0)
                     {
-                        var transitionGroupMatch = MatchTransitionGroup(fileDataEntry.Value.TransitionGroupChromInfo);
+                        var bookmark = new Bookmark(identityPath, iReplicate,
+                            fileDataEntry.Value.TransitionGroupChromInfo.FileId,
+                            fileDataEntry.Value.TransitionGroupChromInfo.OptimizationStep);
+
+                        var transitionGroupMatch = MatchTransitionGroup(bookmark, fileDataEntry.Value.TransitionGroupChromInfo);
                         if (transitionGroupMatch != null)
                         {
-                            results.Add(new Bookmark(identityPath, iReplicate, fileDataEntry.Value.TransitionGroupChromInfo.FileId, fileDataEntry.Value.TransitionGroupChromInfo.OptimizationStep));
+                            results.Add(bookmark);
                             continue;
                         }
                     }

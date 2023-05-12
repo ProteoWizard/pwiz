@@ -2024,14 +2024,13 @@ namespace pwiz.Skyline.Model
 
         public FindResult SearchDocument(Bookmark startPath, FindOptions findOptions, DisplaySettings settings, IProgressMonitor progressMonitor)
         {
-            var bookmarkEnumerator = new BookmarkEnumerator(this, startPath) {Forward = findOptions.Forward};
-            return FindNext(bookmarkEnumerator, findOptions, settings, progressMonitor);
+            return FindNext(new BookmarkStartPosition(this, startPath, findOptions.Forward), findOptions, settings, progressMonitor);
         }
 
-        private static FindResult FindNext(BookmarkEnumerator bookmarkEnumerator, FindOptions findOptions, DisplaySettings settings, IProgressMonitor progressMonitor)
+        private static FindResult FindNext(BookmarkStartPosition　start, FindOptions findOptions, DisplaySettings settings, IProgressMonitor progressMonitor)
         {
             var findPredicate = new FindPredicate(findOptions, settings);
-            return findPredicate.FindNext(bookmarkEnumerator, progressMonitor);
+            return findPredicate.FindNext(start, progressMonitor);
         }
 
         public SrmDocument ChangeStandardType(StandardType standardType, IEnumerable<IdentityPath> selPaths)

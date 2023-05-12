@@ -50,7 +50,7 @@ namespace pwiz.Skyline.Model.Find
         
         
         string NormalizedFindText { get; set; }
-        FindMatch MatchText(string text)
+        FindMatch MatchText(Bookmark bookmark, string text)
         {
             if (text == null)
             {
@@ -64,15 +64,15 @@ namespace pwiz.Skyline.Model.Find
             {
                 return null;
             }
-            return new FindMatch(text).ChangeRange(offset, offset + FindOptions.Text.Length);
+            return new FindMatch(bookmark, text).ChangeRange(offset, offset + FindOptions.Text.Length);
         }
-        FindMatch MatchAnnotations(Annotations annotations)
+        FindMatch MatchAnnotations(Bookmark bookmark, Annotations annotations)
         {
             if (annotations == null)
             {
                 return null;
             }
-            var match = MatchText(annotations.Note);
+            var match = MatchText(bookmark, annotations.Note);
             if (match != null)
             {
                 return match.ChangeNote(true);
@@ -82,7 +82,7 @@ namespace pwiz.Skyline.Model.Find
                 string annotationText = keyValuePair.Key == keyValuePair.Value
                                             ? keyValuePair.Value
                                             : keyValuePair.Key + @"=" + keyValuePair.Value;
-                match = MatchText(annotationText);
+                match = MatchText(bookmark, annotationText);
                 if (match != null)
                 {
                     return match.ChangeAnnotationName(keyValuePair.Key);
@@ -118,18 +118,18 @@ namespace pwiz.Skyline.Model.Find
             var chromInfo = bookmarkEnumerator.CurrentChromInfo;
             if (chromInfo != null)
             {
-                return MatchAnnotations(GetAnnotations(chromInfo));
+                return MatchAnnotations(bookmarkEnumerator.Current, GetAnnotations(chromInfo));
             }
             var docNode = bookmarkEnumerator.CurrentDocNode;
             if (docNode == null)
             {
                 return null;
             }
-            return MatchText(docNode.GetDisplayText(DisplaySettings))
-                ?? MatchAnnotations(docNode.Annotations);
+            return MatchText(bookmarkEnumerator.Current, docNode.GetDisplayText(DisplaySettings))
+                ?? MatchAnnotations(bookmarkEnumerator.Current, docNode.Annotations);
         }
 
-        public FindResult FindNext(BookmarkEnumerator bookmarkEnumerator, IProgressMonitor progressMonitor)
+        public FindResult FindNext(BookmarkStartPosition start, IProgressMonitor progressMonitor)
         {
             int segmentCount = FindOptions.CustomFinders.Count;
             bool hasFindText = !string.IsNullOrEmpty(FindOptions.Text);
@@ -138,8 +138,6 @@ namespace pwiz.Skyline.Model.Find
                 segmentCount++;
             }
             IProgressStatus progressStatus = new ProgressStatus().ChangeSegments(0, segmentCount);
-            long closestPosition = long.MaxValue;
-            Bookmark closestBookmark = null;
             FindResult closestResult = null;
 
             foreach (var finder in FindOptions.CustomFinders)
@@ -150,17 +148,13 @@ namespace pwiz.Skyline.Model.Find
                 }
                 progressStatus = progressStatus.ChangeMessage(string.Format(Resources.FindPredicate_FindAll_Searching_for__0__, finder.DisplayName));
                 progressMonitor.UpdateProgress(progressStatus);
-                var customEnumerator = new BookmarkEnumerator(bookmarkEnumerator);
-                var nextMatch = finder.NextMatch(customEnumerator, progressMonitor, ref progressStatus);
+                var nextMatch = finder.NextMatch(start, progressMonitor, ref progressStatus);
                 progressStatus = progressStatus.NextSegment();
                 if (nextMatch != null)
                 {
-                    var position = customEnumerator.GetPositionAsLong();
-                    if (closestResult == null || position < closestPosition)
+                    if (closestResult == null || start.Compare(nextMatch.Bookmark, closestResult.Bookmark) < 0)
                     {
-                        closestResult = new FindResult(this, customEnumerator, nextMatch);
-                        closestPosition = position;
-                        closestBookmark = customEnumerator.Current;
+                        closestResult = new FindResult(this, start.Document, nextMatch);
                     }
                 }
             }
@@ -168,7 +162,8 @@ namespace pwiz.Skyline.Model.Find
             if (hasFindText)
             {
                 long index = 0;
-                long updateFrequency = bookmarkEnumerator.GetProgressUpdateFrequency();
+                long updateFrequency = start.GetProgressUpdateFrequency();
+                var bookmarkEnumerator = new BookmarkEnumerator(start);
                 progressStatus =
                     progressStatus.ChangeMessage(Resources.FindPredicate_FindNext_Searching_for_next_result);
                 do
@@ -179,20 +174,20 @@ namespace pwiz.Skyline.Model.Find
                     }
 
                     bookmarkEnumerator.MoveNext();
-                    if (Equals(closestBookmark, bookmarkEnumerator.Current))
+                    if (Equals(closestResult?.Bookmark, bookmarkEnumerator.Current))
                     {
                         break;
                     }
                     if (0 == index++ % updateFrequency)
                     {
-                        progressStatus = progressStatus.ChangePercentComplete(bookmarkEnumerator.GetProgressValue());
+                        progressStatus = progressStatus.ChangePercentComplete(start.GetPercentComplete(bookmarkEnumerator.Current));
                         progressMonitor.UpdateProgress(progressStatus);
                     }
 
                     FindMatch findMatch = MatchInternal(bookmarkEnumerator);
                     if (findMatch != null)
                     {
-                        return new FindResult(this, bookmarkEnumerator, findMatch);
+                        return new FindResult(this, start.Document, findMatch);
                     }
                 } while (!bookmarkEnumerator.AtStart);
             }
@@ -201,6 +196,7 @@ namespace pwiz.Skyline.Model.Find
 
         public IEnumerable<FindResult> FindAll(IProgressMonitor progressMonitor, SrmDocument document)
         {
+            var start = new BookmarkStartPosition(document);
             int segmentCount = FindOptions.CustomFinders.Count;
             bool hasFindText = !string.IsNullOrEmpty(FindOptions.Text);
             if (hasFindText)
@@ -209,7 +205,7 @@ namespace pwiz.Skyline.Model.Find
             }
 
             var progressStatus = new ProgressStatus().ChangeSegments(0, segmentCount);
-            var results = new List<KeyValuePair<long, FindResult>>();
+            var results = new List<FindResult>();
             for (int iFinder = 0; iFinder < FindOptions.CustomFinders.Count; iFinder++)
             {
                 if (progressMonitor.IsCanceled)
@@ -229,16 +225,17 @@ namespace pwiz.Skyline.Model.Find
                         break;
                     }
 
-                    var bookmarkEnumerator = new BookmarkEnumerator(document);
-                    bookmarkEnumerator.MoveTo(bookmark);
-                    var findMatch = customFinder.Match(bookmarkEnumerator);
-                    if (findMatch != null)
+                    var bookmarkEnumerator = BookmarkEnumerator.TryGet(document, bookmark);
+                    if (bookmarkEnumerator != null)
                     {
-                        var findResult = new FindResult(this, bookmarkEnumerator, findMatch);
-                        var position = bookmarkEnumerator.GetPositionAsLong();
-                        results.Add(new KeyValuePair<long, FindResult>(position, findResult));
+                        var findMatch = customFinder.Match(bookmarkEnumerator);
+                        if (findMatch != null)
+                        {
+                            var findResult = new FindResult(this, document, findMatch);
+                            results.Add(findResult);
+                        }
                     }
-                    
+
                 }
 
                 progressStatus = progressStatus.NextSegment();
@@ -247,9 +244,9 @@ namespace pwiz.Skyline.Model.Find
             if (hasFindText)
             {
                 progressStatus = progressStatus.ChangeMessage(GetProgressMessage(results.Count));
-                var bookmarkEnumerator = new BookmarkEnumerator(document);
+                var bookmarkEnumerator = new BookmarkEnumerator(start);
                 long index = 0;
-                long updateFrequency = bookmarkEnumerator.GetProgressUpdateFrequency();
+                long updateFrequency = start.GetProgressUpdateFrequency();
                 do
                 {
                     if (progressMonitor.IsCanceled)
@@ -265,14 +262,12 @@ namespace pwiz.Skyline.Model.Find
                     var findMatch = MatchInternal(bookmarkEnumerator);
                     if (findMatch != null)
                     {
-                        long position = bookmarkEnumerator.GetPositionAsLong();
-                        var findResult = new FindResult(this, bookmarkEnumerator, findMatch);
-                        results.Add(new KeyValuePair<long, FindResult>(position, findResult));
+                        results.Add(new FindResult(this, document, findMatch));
                         progressStatus = progressStatus.ChangeMessage(GetProgressMessage(results.Count));
                     }
                 } while (!bookmarkEnumerator.AtStart);
             }
-            return results.OrderBy(kvp => kvp.Key).Select(kvp => kvp.Value);
+            return results.OrderBy(result=>result.Bookmark, start);
         }
 
         private string GetProgressMessage(int matchCount)

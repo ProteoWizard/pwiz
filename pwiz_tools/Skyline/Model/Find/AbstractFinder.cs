@@ -37,10 +37,11 @@ namespace pwiz.Skyline.Model.Find
         }
 
         public abstract FindMatch Match(BookmarkEnumerator bookmarkEnumerator);
-        public virtual FindMatch NextMatch(BookmarkEnumerator bookmarkEnumerator, IProgressMonitor progressMonitor, ref IProgressStatus status)
+        public virtual FindMatch NextMatch(BookmarkStartPosition start, IProgressMonitor progressMonitor, ref IProgressStatus status)
         {
             long index = 0;
-            long updateFrequency = bookmarkEnumerator.GetProgressUpdateFrequency();
+            long updateFrequency = start.GetProgressUpdateFrequency();
+            var bookmarkEnumerator = new BookmarkEnumerator(start);
             do
             {
                 if (progressMonitor.IsCanceled)
@@ -65,9 +66,10 @@ namespace pwiz.Skyline.Model.Find
         public virtual IEnumerable<Bookmark> FindAll(SrmDocument document, IProgressMonitor progressMonitor, ref IProgressStatus status)
         {
             var results = new List<Bookmark>();
-            var bookmarkEnumerator = new BookmarkEnumerator(document);
+            var start = new BookmarkStartPosition(document);
+            var bookmarkEnumerator = new BookmarkEnumerator(start);
             long index = 0;
-            long updateFrequency = bookmarkEnumerator.GetProgressUpdateFrequency();
+            long updateFrequency = start.GetProgressUpdateFrequency();
             while (true)
             {
                 if (progressMonitor.IsCanceled)

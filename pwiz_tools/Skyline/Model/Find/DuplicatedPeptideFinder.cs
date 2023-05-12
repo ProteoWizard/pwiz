@@ -62,7 +62,7 @@ namespace pwiz.Skyline.Model.Find
             if (peptide == null)
                 return base.Match(bookmarkEnumerator);
             return _duplicatePeptideKeys.Contains(peptide.SequenceKey)
-                ? new FindMatch(DisplayName)
+                ? new FindMatch(bookmarkEnumerator.Current, DisplayName)
                 : null;
         }
 

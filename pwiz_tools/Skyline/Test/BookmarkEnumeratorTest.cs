@@ -42,7 +42,7 @@ namespace pwiz.SkylineTest
             var document = (SrmDocument) new XmlSerializer(typeof (SrmDocument)).Deserialize(stream);
             Assert.IsNotNull(document);
             var forwardEnumerator = new BookmarkEnumerator(document);
-            var backwardEnumerator = new BookmarkEnumerator(forwardEnumerator) {Forward = false};
+            var backwardEnumerator = new BookmarkEnumerator(new BookmarkStartPosition(document, Bookmark.ROOT, false));
             var forwardList = new List<Bookmark>(forwardEnumerator);
             var backwardList = new List<Bookmark>(backwardEnumerator);
             Assert.AreNotEqual(0, forwardList.Count);

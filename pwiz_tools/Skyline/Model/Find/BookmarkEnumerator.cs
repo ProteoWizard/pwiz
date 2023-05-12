@@ -24,13 +24,11 @@ using System.Linq;
 using pwiz.Skyline.Controls.SeqNode;
 using pwiz.Skyline.Model.Results;
 using pwiz.Skyline.Properties;
-using pwiz.Skyline.Util;
 
 namespace pwiz.Skyline.Model.Find
 {
     /// <summary>
     /// Handles iterating through all possible locations in a Skyline Document.
-    /// 
     /// </summary>
     public class BookmarkEnumerator : IEnumerable<Bookmark>
     {
@@ -38,32 +36,20 @@ namespace pwiz.Skyline.Model.Find
         /// Constructor for a BookmarkEnumerator initially positioned 
         /// at a particular Bookmark.
         /// </summary>
-        public BookmarkEnumerator(SrmDocument document, Bookmark bookmark)
+        public BookmarkEnumerator(BookmarkStartPosition startPosition)
         {
-            Document = document;
-            Start = bookmark;
-            Forward = true;
-            IsValid = FindAndSetPosition(bookmark);
-            Assume.IsNotNull(Current);
+            Start = startPosition;
+            Current = Start.Location;
         }
         public BookmarkEnumerator(SrmDocument document)
-            : this(document, Bookmark.ROOT)
+            : this(new BookmarkStartPosition(document, Bookmark.ROOT, true))
         {
         }
-        /// <summary>
-        /// Constructs a copy of a BookmarkEnumerator
-        /// </summary>
-        public BookmarkEnumerator(BookmarkEnumerator bookmarkEnumerator)
+        public BookmarkStartPosition Start { get; }
+        public SrmDocument Document
         {
-            Document = bookmarkEnumerator.Document;
-            Start = bookmarkEnumerator.Start;
-            Current = bookmarkEnumerator.Current;
-            Forward = bookmarkEnumerator.Forward;
-            CurrentDocNode = bookmarkEnumerator.CurrentDocNode;
-            CurrentChromInfo = bookmarkEnumerator.CurrentChromInfo;
-            IsValid = bookmarkEnumerator.IsValid;
+            get { return Start.Document; }
         }
-        public SrmDocument Document { get; }
 
         public Bookmark Current
         {
@@ -73,7 +59,10 @@ namespace pwiz.Skyline.Model.Find
         /// Whether this enumerator iterates forwards (true) or backwards (false) through
         /// the document
         /// </summary>
-        public bool Forward { get; set; }
+        public bool Forward
+        {
+            get { return Start.Forward; }
+        }
         
         /// <summary>
         /// The node in the document that <see cref="Current"/> points to.
@@ -90,12 +79,7 @@ namespace pwiz.Skyline.Model.Find
         {
             get; private set;
         }
-        /// <summary>
-        /// The initial bookmark that this BookmarkEnumerator was positioned at when this was
-        /// constructed.
-        /// </summary>
-        public Bookmark Start { get; }
-        
+
         /// <summary>
         /// Move to the next (or previous if !Forward) location in the document.
         /// Wraps around if moving beyond the end or beginning of the document.
@@ -113,11 +97,6 @@ namespace pwiz.Skyline.Model.Find
             {
                 MoveBackward();
             }
-        }
-
-        public void MoveTo(Bookmark bookmark)
-        {
-            IsValid = FindAndSetPosition(bookmark) && IsValid;
         }
 
         /// <summary>
@@ -310,7 +289,10 @@ namespace pwiz.Skyline.Model.Find
             return SetPosition(bookmark, node, currentChromInfo);
         }
 
-        public bool IsValid { get; private set; }
+        public bool IsValid
+        {
+            get { return Start.IsValid; }
+        }
 
         /// <summary>
         /// Returns true if this bookmark enumerator has wrapped back around to the start again.
@@ -326,12 +308,12 @@ namespace pwiz.Skyline.Model.Find
                     return true;
                 }
                 
-                if (Start.IsRoot)
+                if (Start.Location.IsRoot)
                 {
                     // Checking "IsRoot" is faster than performing "Equals"
                     return Current.IsRoot;
                 }
-                return Equals(Start, Current);
+                return Equals(Start.Location, Current);
             }
         }
 
@@ -431,51 +413,17 @@ namespace pwiz.Skyline.Model.Find
         }
 
         /// <summary>
-        /// Returns the string to display in the "Type" column of the Find Results window.
-        /// </summary>
-        public string GetLocationType()
-        {
-            string nodeType = GetNodeTypeName(CurrentDocNode);
-            if (ResultsIndex >= 0)
-            {
-                return nodeType + @" " + Resources.BookmarkEnumerator_GetLocationType_Results;
-            }
-            return nodeType;
-        }
-
-        private static string GetNodeTypeName(DocNode docNode)
-        {
-            if (docNode is TransitionDocNode)
-            {
-                return TransitionTreeNode.TITLE;
-            }
-            if (docNode is TransitionGroupDocNode)
-            {
-                return TransitionGroupTreeNode.TITLE;
-            }
-            if (docNode is PeptideDocNode)
-            {
-                return PeptideTreeNode.TITLE;
-            }
-            if (docNode is PeptideGroupDocNode)
-            {
-                return Resources.BookmarkEnumerator_GetNodeTypeName_Protein;
-            }
-            return Resources.BookmarkEnumerator_GetNodeTypeName_Unknown;
-        }
-
-        /// <summary>
         /// Constructs a BookmarkEnumerator positioned at the specific location in the
         /// document. Returns null if the location does not exist in the document.
         /// </summary>
         public static BookmarkEnumerator TryGet(SrmDocument document, Bookmark bookmark)
         {
-            var bookmarkEnumerator = new BookmarkEnumerator(document, bookmark);
-            if (bookmarkEnumerator.IsValid)
+            var startPosition = new BookmarkStartPosition(document, bookmark, true);
+            if (!startPosition.IsValid)
             {
-                return bookmarkEnumerator;
+                return null;
             }
-            return null;
+            return new BookmarkEnumerator(startPosition);
         }
 
         /// <summary>
@@ -633,73 +581,10 @@ namespace pwiz.Skyline.Model.Find
             public ResultPosition ResultPosition { get; }
             public ChromInfo ChromInfo { get; }
         }
-        /// <summary>
-        /// Returns a number between 0 and 100 indicating how far the <see cref="Current"/> is from <see cref="Start"/>
-        /// </summary>
+
         public int GetProgressValue()
         {
-            return (int) (100 * GetPositionAsLong() / GetTotalPositionCount());
-        }
-
-        /// <summary>
-        /// Returns approximately how many calls to "MoveNext" can happen without
-        /// GetProgressValue changing.
-        /// </summary>
-        public long GetProgressUpdateFrequency()
-        {
-            return Math.Max(1, GetTotalPositionCount() / 1000);
-        }
-
-        /// <summary>
-        /// Returns a number indicating how far Current is from Start
-        /// </summary>
-        public long GetPositionAsLong()
-        {
-            long current = GetBookmarkPositionAsLong(Current);
-            long start = GetBookmarkPositionAsLong(Start);
-            long difference;
-            if (Forward)
-            {
-                difference = current - start;
-            }
-            else
-            {
-                difference = start - current;
-            }
-
-            if (difference < 0)
-            {
-                difference += GetTotalPositionCount();
-            }
-
-            return difference;
-        }
-
-        private long GetBookmarkPositionAsLong(Bookmark bookmark)
-        {
-            long position = Document.GetNodePositions(bookmark.IdentityPath).Sum();
-            if (Document.Settings.HasResults)
-            {
-                position *= Document.Settings.MeasuredResults.Chromatograms.Count + 1;
-                if (bookmark.ReplicateIndex.HasValue)
-                {
-                    position += bookmark.ReplicateIndex.Value + 1;
-                }
-            }
-
-            return position;
-        }
-
-        private long GetTotalPositionCount()
-        {
-            long totalNodeCount = Document.MoleculeGroupCount + Document.MoleculeCount +
-                                  Document.MoleculeTransitionGroupCount + Document.MoleculeTransitionCount;
-            if (Document.Settings.HasResults)
-            {
-                totalNodeCount *= Document.Settings.MeasuredResults.Chromatograms.Count + 1;
-            }
-
-            return totalNodeCount;
+            return Start.GetPercentComplete(Current);
         }
     }
 }
