@@ -50,7 +50,7 @@ namespace pwiz.Skyline.Model.Find
             bool integrateAll = bookmarkEnumerator.Document.Settings.TransitionSettings.Integration.IsIntegrateAll;
             if (!transitionChromInfo.IsGoodPeak(integrateAll))
             {
-                return new FindMatch(Resources.UnintegratedTransitionFinder_Match_Unintegrated_transition);
+                return new FindMatch(bookmarkEnumerator.Current, Resources.UnintegratedTransitionFinder_Match_Unintegrated_transition);
             }
             return null;
         }
