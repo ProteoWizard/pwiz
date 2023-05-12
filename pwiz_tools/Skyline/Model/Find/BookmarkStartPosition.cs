@@ -95,6 +95,10 @@ namespace pwiz.Skyline.Model.Find
         {
             public static Position ForBookmark(SrmDocument document, Bookmark bookmark)
             {
+                if (document.FindNode(bookmark.IdentityPath) == null)
+                {
+                    return null;
+                }
                 int? nodeIndex = document.GetNodePositions(bookmark.IdentityPath)?.Sum();
                 if (!nodeIndex.HasValue)
                 {
