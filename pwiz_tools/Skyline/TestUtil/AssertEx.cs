@@ -268,6 +268,13 @@ namespace pwiz.SkylineTestUtil
             }
         }
 
+        public static void DoesNotContain(string str, string substr, string message = null)
+        {
+            IsNotNull(str, "No message found");
+            if (str.Contains(substr))
+                Fail(TextUtil.LineSeparate(string.Format("The text '{0}' must not contain '{1}'", str, substr), message ?? string.Empty));
+        }
+
         public static void FileExists(string filePath, string message = null)
         {
             if (!File.Exists(filePath))

@@ -767,9 +767,6 @@
   <data name="LibraryGridViewDriver_AddResults_The_active_document_must_contain_results_in_order_to_add_optimized_values_" xml:space="preserve">
     <value>The active document must contain results in order to add optimized values.</value>
   </data>
-  <data name="FindOptions_GetNotFoundMessage_Could_not_find_any_of__0__items" xml:space="preserve">
-    <value>Could not find any of {0} items.</value>
-  </data>
   <data name="ShareListDlg_ImportFile_The_following_names_already_exist" xml:space="preserve">
     <value>The following names already exist:</value>
   </data>
@@ -11956,6 +11953,60 @@ If you do not have the original file, you may build the library with embedded sp
   <data name="ToolInstaller_UnpackZipTool_The_selected_zip_file_did_not_specify_any_items_to_add_to_the_Tools_menu_" xml:space="preserve">
     <value>The selected zip file did not specify any items to add to the Tools menu.</value>
   </data>
+  <data name="FindPredicate_FindNext_Searching_for_next_result" xml:space="preserve">
+    <value>Searching for next result</value>
+  </data>
+  <data name="CommandLine_NewSkyFile_FileAlreadyExists" xml:space="preserve">
+    <value>File '{0}' already exists; add --overwrite to allow Skyline to overwrite it.</value>
+  </data>
+  <data name="CommandLine_SetInstrumentSettings_Error__Failed_attempting_to_change_the_transition_instrument_settings_" xml:space="preserve">
+    <value>Error: Failed attempting to change the transition instrument settings.</value>
+  </data>
+  <data name="CommandLine_SetLibrarySettings_Error__Failed_attempting_to_change_the_transition_library_settings_" xml:space="preserve">
+    <value>Error: Failed attempting to change the transition library settings.</value>
+  </data>
+  <data name="CommandLine_SetFullScanSettings_Changing_full_scan_precursor_isotope_peaks_to__0_" xml:space="preserve">
+    <value>Changing full scan precursor isotope peaks to {0}</value>
+  </data>
+  <data name="CommandLine_SetFullScanSettings_Changing_full_scan_precursor_isotope_peaks_count_to__0_" xml:space="preserve">
+    <value>Changing full scan precursor isotope peaks count to {0}</value>
+  </data>
+  <data name="CommandLine_SetFullScanSettings_Changing_full_scan_precursor_isotope_peak_percentage_to__0_" xml:space="preserve">
+    <value>Changing full scan precursor isotope peak percentage to {0}</value>
+  </data>
+  <data name="CommandLine_SetFullScanSettings_Changing_full_scan_precursor_isotope_enrichment_to__0_" xml:space="preserve">
+    <value>Changing full scan precursor isotope enrichment to {0}</value>
+  </data>
+  <data name="CommandLine_SetFullScanSettings_Changing_full_scan_ignore_SIM_scans_to__0_" xml:space="preserve">
+    <value>Changing full scan ignore SIM scans to {0}</value>
+  </data>
+  <data name="CommandLine_SetFullScanSettings_Changing_full_scan_acquisition_method_to__0__with_isolation_scheme___1__" xml:space="preserve">
+    <value>Changing full scan acquisition method to {0} with isolation scheme '{1}'</value>
+  </data>
+  <data name="CommandLine_SetFullScanSettings_Changing_full_scan_acquisition_method_to__0_" xml:space="preserve">
+    <value>Changing full scan acquisition method to {0}</value>
+  </data>
+  <data name="CommandLine_SetFullScanSettings_Changing_full_scan_precursor_mass_analyzer_to__0_" xml:space="preserve">
+    <value>Changing full scan precursor mass analyzer to {0}</value>
+  </data>
+  <data name="CommandLine_SetFullScanSettings_Changing_full_scan_product_mass_analyzer_to__0_" xml:space="preserve">
+    <value>Changing full scan product mass analyzer to {0}</value>
+  </data>
+  <data name="CommandLine_NewSkyFile_Deleting_existing_file___0__" xml:space="preserve">
+    <value>Deleting existing file '{0}'</value>
+  </data>
+  <data name="CommandLine_AssociateProteins_Associating_peptides_with_proteins" xml:space="preserve">
+    <value>Associating peptides with proteins</value>
+  </data>
+  <data name="CommandLine_AssociateProteins_Failed_to_associate_proteins" xml:space="preserve">
+    <value>Failed to associate proteins</value>
+  </data>
+  <data name="ValueInvalidMzToleranceException_ValueInvalidMzToleranceException_The_value__0__is_not_valid_for_the_argument__1__which_requires_a_value_and_a_unit__For_example___2__" xml:space="preserve">
+    <value>The value {0} is not valid for the argument {1} which requires a value and a unit. For example: {2}.</value>
+  </data>
+  <data name="CommandLine_ProcessDocument_Error_saving_file" xml:space="preserve">
+    <value>Error: saving file</value>
+  </data>
   <data name="SkylineWindow_ImportMassList_Do_you_want_to_use_the_document_settings_to_automanage_these_new_transitions" xml:space="preserve">
     <value>Do you want to enable Auto-select and use the document settings to manage these new transitions?
 
@@ -11971,5 +12022,12 @@ If you choose Disable, you can enable Auto-select later with the "Refine &gt; Ad
   </data>
   <data name="SkylineWindow_ImportMassList_Disable" xml:space="preserve">
     <value>&amp;Disable</value>
+  </data>
+  <data name="CommandLine_AssociateProteins_a_FASTA_file_must_be_imported_before_associating_proteins" xml:space="preserve">
+    <value>Error: a FASTA file must be imported before associating proteins</value>
+  </data>
+  <data name="FindOptions_GetNotFoundMessage_Nothing_could_be_found_matching_any_of_the__0__criteria" xml:space="preserve">
+    <value>Nothing could be found matching any of the {0} criteria</value>
+    <comment>{0} is an integer greater than 1</comment>
   </data>
 </root>
