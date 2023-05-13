@@ -38,7 +38,7 @@ namespace pwiz.Skyline.Model.Results.Spectra
     /// when extracting chromatograms for a particular precursor.
     /// </summary>
     [XmlRoot(XML_ROOT)]
-    public class SpectrumClassFilter : Immutable, IXmlSerializable, IComparable, IComparable<SpectrumClassFilter>
+    public class SpectrumClassFilter : Immutable, IXmlSerializable, IComparable, IComparable<SpectrumClassFilter>, IEquatable<SpectrumClassFilter>
     {
         public static SpectrumClassFilter EmptyToNull(SpectrumClassFilter spectrumClassFilter)
         {
@@ -51,10 +51,16 @@ namespace pwiz.Skyline.Model.Results.Spectra
         }
 
         public ImmutableList<FilterSpec> FilterSpecs { get; private set; }
+        public SpectrumClassFilter Alternative { get; private set; }
+
+        public SpectrumClassFilter ChangeAlternative(SpectrumClassFilter alternative)
+        {
+            return ChangeProp(ImClone(this), im => im.Alternative = alternative);
+        }
 
         public bool IsEmpty
         {
-            get { return FilterSpecs.Count == 0; }
+            get { return FilterSpecs.Count == 0 && Alternative == null; }
         }
 
         public Predicate<SpectrumMetadata> MakePredicate()
@@ -74,22 +80,30 @@ namespace pwiz.Skyline.Model.Results.Spectra
                 clauses.Add(spectrum=>filterPredicate(spectrumClassColumn.GetValue(spectrum)));
             }
 
+            Predicate<SpectrumMetadata> alternative = x=>true;
+            if (Alternative != null)
+            {
+                alternative = Alternative.MakePredicate();
+            }
+
             return spectrum =>
             {
                 for (int i = 0; i < clauses.Count; i++)
                 {
                     if (!clauses[i](spectrum))
                     {
-                        return false;
+                        return alternative(spectrum);
                     }
                 }
                 return true;
             };
         }
 
-        protected bool Equals(SpectrumClassFilter other)
+        public bool Equals(SpectrumClassFilter other)
         {
-            return FilterSpecs.Equals(other.FilterSpecs);
+            if (ReferenceEquals(null, other)) return false;
+            if (ReferenceEquals(this, other)) return true;
+            return Equals(FilterSpecs, other.FilterSpecs) && Equals(Alternative, other.Alternative);
         }
 
         public override bool Equals(object obj)
@@ -97,12 +111,15 @@ namespace pwiz.Skyline.Model.Results.Spectra
             if (ReferenceEquals(null, obj)) return false;
             if (ReferenceEquals(this, obj)) return true;
             if (obj.GetType() != this.GetType()) return false;
-            return Equals((SpectrumClassFilter) obj);
+            return Equals((SpectrumClassFilter)obj);
         }
 
         public override int GetHashCode()
         {
-            return FilterSpecs.GetHashCode();
+            unchecked
+            {
+                return FilterSpecs.GetHashCode() * 397 ^ (Alternative != null ? Alternative.GetHashCode() : 0);
+            }
         }
 
         private SpectrumClassFilter()
@@ -116,7 +133,8 @@ namespace pwiz.Skyline.Model.Results.Spectra
 
         private enum EL
         {
-            filter
+            filter,
+            spectrum_filter,
         }
 
         void IXmlSerializable.ReadXml(XmlReader reader)
@@ -126,6 +144,7 @@ namespace pwiz.Skyline.Model.Results.Spectra
                 throw new InvalidOperationException();
             }
 
+            SpectrumClassFilter alternative = null;
             var filterSpecs = new List<FilterSpec>();
             if (reader.IsEmptyElement)
             {
@@ -140,6 +159,12 @@ namespace pwiz.Skyline.Model.Results.Spectra
                     {
                         filterSpecs.Add(FilterSpec.ReadXml(reader));
                     }
+                    else if (reader.IsStartElement(EL.spectrum_filter))
+                    {
+                        var clause = Deserialize(reader);
+                        clause.Alternative = alternative;
+                        alternative = clause;
+                    }
                     else if (reader.NodeType == XmlNodeType.EndElement)
                     {
                         reader.ReadEndElement();
@@ -153,6 +178,7 @@ namespace pwiz.Skyline.Model.Results.Spectra
             }
 
             FilterSpecs = ImmutableList.ValueOf(filterSpecs);
+            Alternative = alternative;
         }
 
         public void WriteXml(XmlWriter writer)
@@ -161,6 +187,13 @@ namespace pwiz.Skyline.Model.Results.Spectra
             {
                 writer.WriteStartElement(EL.filter);
                 filterSpec.WriteXml(writer);
+                writer.WriteEndElement();
+            }
+
+            if (Alternative != null)
+            {
+                writer.WriteStartElement(EL.spectrum_filter);
+                Alternative.WriteXml(writer);
                 writer.WriteEndElement();
             }
         }
@@ -204,7 +237,11 @@ namespace pwiz.Skyline.Model.Results.Spectra
                 }
             }
 
-            return 0;
+            if (Alternative == null)
+            {
+                return other.Alternative == null ? 0 : -1;
+            }
+            return Alternative.CompareTo(other.Alternative);
         }
 
         int IComparable.CompareTo(object obj)
