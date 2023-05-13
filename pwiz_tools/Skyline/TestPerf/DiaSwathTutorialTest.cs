@@ -1443,6 +1443,9 @@ namespace TestPerf
 
         private void RunTest()
         {
+            if (!RunPerfTests)
+                return;
+
             TestFilesZipPaths = _testInfo.TestFilesZipPaths;
             TestFilesPersistent = _testInfo.TestFilesPersistent;
 
