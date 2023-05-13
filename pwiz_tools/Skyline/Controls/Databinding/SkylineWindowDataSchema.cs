@@ -96,7 +96,7 @@ namespace pwiz.Skyline.Controls.Databinding
                 return ReferenceEquals(SkylineWindow.DocumentUI, SkylineWindow.Document);
             }
             bool result = false;
-            SkylineWindow.BeginInvoke(new Action(() =>
+            SkylineWindow.Invoke(new Action(() =>
                 result = ReferenceEquals(SkylineWindow.DocumentUI, SkylineWindow.Document)));
             return result;
         }
