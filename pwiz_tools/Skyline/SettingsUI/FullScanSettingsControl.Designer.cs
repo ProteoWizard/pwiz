@@ -76,17 +76,12 @@
             this.textPrecursorCharges = new System.Windows.Forms.TextBox();
             this.toolTip = new System.Windows.Forms.ToolTip(this.components);
             this.cbHighSelectivity = new System.Windows.Forms.CheckBox();
-            this.cbHardklorCentroided = new System.Windows.Forms.CheckBox();
-            this.lblHardklorSignalToNoise = new System.Windows.Forms.Label();
             this.usercontrolIonMobilityFiltering = new pwiz.Skyline.SettingsUI.IonMobility.IonMobilityFilteringUserControl();
-            this.groupBoxHardklor = new System.Windows.Forms.GroupBox();
-            this.textHardklorSignalToNoise = new System.Windows.Forms.TextBox();
             this.groupBoxRetentionTimeToKeep.SuspendLayout();
             this.flowLayoutPanelUseSchedulingWindow.SuspendLayout();
             this.flowLayoutPanelTimeAroundMs2Ids.SuspendLayout();
             this.groupBoxMS1.SuspendLayout();
             this.groupBoxMS2.SuspendLayout();
-            this.groupBoxHardklor.SuspendLayout();
             this.SuspendLayout();
             // 
             // groupBoxRetentionTimeToKeep
@@ -396,19 +391,6 @@
             this.toolTip.SetToolTip(this.cbHighSelectivity, resources.GetString("cbHighSelectivity.ToolTip"));
             this.cbHighSelectivity.UseVisualStyleBackColor = true;
             // 
-            // cbHardklorCentroided
-            // 
-            resources.ApplyResources(this.cbHardklorCentroided, "cbHardklorCentroided");
-            this.cbHardklorCentroided.Name = "cbHardklorCentroided";
-            this.toolTip.SetToolTip(this.cbHardklorCentroided, resources.GetString("cbHardklorCentroided.ToolTip"));
-            this.cbHardklorCentroided.UseVisualStyleBackColor = true;
-            // 
-            // lblHardklorSignalToNoise
-            // 
-            resources.ApplyResources(this.lblHardklorSignalToNoise, "lblHardklorSignalToNoise");
-            this.lblHardklorSignalToNoise.Name = "lblHardklorSignalToNoise";
-            this.toolTip.SetToolTip(this.lblHardklorSignalToNoise, resources.GetString("lblHardklorSignalToNoise.ToolTip"));
-            // 
             // usercontrolIonMobilityFiltering
             // 
             this.usercontrolIonMobilityFiltering.IonMobilityFilterResolvingPower = null;
@@ -417,26 +399,11 @@
             this.usercontrolIonMobilityFiltering.Name = "usercontrolIonMobilityFiltering";
             this.usercontrolIonMobilityFiltering.WindowWidthType = pwiz.Skyline.Model.DocSettings.IonMobilityWindowWidthCalculator.IonMobilityWindowWidthType.none;
             // 
-            // groupBoxHardklor
-            // 
-            this.groupBoxHardklor.Controls.Add(this.cbHardklorCentroided);
-            this.groupBoxHardklor.Controls.Add(this.textHardklorSignalToNoise);
-            this.groupBoxHardklor.Controls.Add(this.lblHardklorSignalToNoise);
-            resources.ApplyResources(this.groupBoxHardklor, "groupBoxHardklor");
-            this.groupBoxHardklor.Name = "groupBoxHardklor";
-            this.groupBoxHardklor.TabStop = false;
-            // 
-            // textHardklorSignalToNoise
-            // 
-            resources.ApplyResources(this.textHardklorSignalToNoise, "textHardklorSignalToNoise");
-            this.textHardklorSignalToNoise.Name = "textHardklorSignalToNoise";
-            // 
             // FullScanSettingsControl
             // 
             resources.ApplyResources(this, "$this");
             this.AutoScaleMode = System.Windows.Forms.AutoScaleMode.Font;
             this.BackColor = System.Drawing.Color.Transparent;
-            this.Controls.Add(this.groupBoxHardklor);
             this.Controls.Add(this.usercontrolIonMobilityFiltering);
             this.Controls.Add(this.cbHighSelectivity);
             this.Controls.Add(this.textPrecursorCharges);
@@ -455,8 +422,6 @@
             this.groupBoxMS1.PerformLayout();
             this.groupBoxMS2.ResumeLayout(false);
             this.groupBoxMS2.PerformLayout();
-            this.groupBoxHardklor.ResumeLayout(false);
-            this.groupBoxHardklor.PerformLayout();
             this.ResumeLayout(false);
             this.PerformLayout();
 
@@ -511,9 +476,5 @@
         private System.Windows.Forms.CheckBox cbHighSelectivity;
         private IonMobility.IonMobilityFilteringUserControl usercontrolIonMobilityFiltering;
         private System.Windows.Forms.CheckBox cbIgnoreSim;
-        private System.Windows.Forms.GroupBox groupBoxHardklor;
-        private System.Windows.Forms.CheckBox cbHardklorCentroided;
-        private System.Windows.Forms.TextBox textHardklorSignalToNoise;
-        private System.Windows.Forms.Label lblHardklorSignalToNoise;
     }
 }

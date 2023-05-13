@@ -138,7 +138,7 @@
     <value>$this</value>
   </data>
   <data name="&gt;&gt;cbMS1TolUnit.ZOrder" xml:space="preserve">
-    <value>17</value>
+    <value>18</value>
   </data>
   <data name="lblMs1Tolerance.AutoSize" type="System.Boolean, mscorlib">
     <value>True</value>
@@ -165,7 +165,7 @@
     <value>$this</value>
   </data>
   <data name="&gt;&gt;lblMs1Tolerance.ZOrder" xml:space="preserve">
-    <value>16</value>
+    <value>17</value>
   </data>
   <data name="txtMS1Tolerance.Location" type="System.Drawing.Point, System.Drawing">
     <value>13, 106</value>
@@ -186,7 +186,7 @@
     <value>$this</value>
   </data>
   <data name="&gt;&gt;txtMS1Tolerance.ZOrder" xml:space="preserve">
-    <value>15</value>
+    <value>16</value>
   </data>
   <data name="txtMS2Tolerance.Location" type="System.Drawing.Point, System.Drawing">
     <value>13, 146</value>
@@ -207,7 +207,7 @@
     <value>$this</value>
   </data>
   <data name="&gt;&gt;txtMS2Tolerance.ZOrder" xml:space="preserve">
-    <value>12</value>
+    <value>13</value>
   </data>
   <data name="lblMs2Tolerance.AutoSize" type="System.Boolean, mscorlib">
     <value>True</value>
@@ -234,7 +234,7 @@
     <value>$this</value>
   </data>
   <data name="&gt;&gt;lblMs2Tolerance.ZOrder" xml:space="preserve">
-    <value>13</value>
+    <value>14</value>
   </data>
   <data name="cbMS2TolUnit.Location" type="System.Drawing.Point, System.Drawing">
     <value>153, 146</value>
@@ -255,7 +255,7 @@
     <value>$this</value>
   </data>
   <data name="&gt;&gt;cbMS2TolUnit.ZOrder" xml:space="preserve">
-    <value>14</value>
+    <value>15</value>
   </data>
   <data name="lblFragmentIons.AutoSize" type="System.Boolean, mscorlib">
     <value>True</value>
@@ -282,7 +282,7 @@
     <value>$this</value>
   </data>
   <data name="&gt;&gt;lblFragmentIons.ZOrder" xml:space="preserve">
-    <value>11</value>
+    <value>12</value>
   </data>
   <data name="cbFragmentIons.Location" type="System.Drawing.Point, System.Drawing">
     <value>13, 190</value>
@@ -303,7 +303,7 @@
     <value>$this</value>
   </data>
   <data name="&gt;&gt;cbFragmentIons.ZOrder" xml:space="preserve">
-    <value>10</value>
+    <value>11</value>
   </data>
   <assembly alias="System.Windows.Forms" name="System.Windows.Forms, Version=4.0.0.0, Culture=neutral, PublicKeyToken=b77a5c561934e089" />
   <data name="btnAdditionalSettings.Anchor" type="System.Windows.Forms.AnchorStyles, System.Windows.Forms">
@@ -331,7 +331,7 @@
     <value>$this</value>
   </data>
   <data name="&gt;&gt;btnAdditionalSettings.ZOrder" xml:space="preserve">
-    <value>9</value>
+    <value>10</value>
   </data>
   <data name="pBLogo.Anchor" type="System.Windows.Forms.AnchorStyles, System.Windows.Forms">
     <value>Top, Right</value>
@@ -355,7 +355,7 @@
     <value>$this</value>
   </data>
   <data name="&gt;&gt;pBLogo.ZOrder" xml:space="preserve">
-    <value>8</value>
+    <value>9</value>
   </data>
   <data name="label1.AutoSize" type="System.Boolean, mscorlib">
     <value>True</value>
@@ -382,7 +382,7 @@
     <value>$this</value>
   </data>
   <data name="&gt;&gt;label1.ZOrder" xml:space="preserve">
-    <value>7</value>
+    <value>8</value>
   </data>
   <data name="label3.AutoSize" type="System.Boolean, mscorlib">
     <value>True</value>
@@ -409,7 +409,7 @@
     <value>$this</value>
   </data>
   <data name="&gt;&gt;label3.ZOrder" xml:space="preserve">
-    <value>6</value>
+    <value>7</value>
   </data>
   <data name="lblMaxVariableMods.AutoSize" type="System.Boolean, mscorlib">
     <value>True</value>
@@ -439,7 +439,7 @@
     <value>$this</value>
   </data>
   <data name="&gt;&gt;lblMaxVariableMods.ZOrder" xml:space="preserve">
-    <value>5</value>
+    <value>6</value>
   </data>
   <data name="cbMaxVariableMods.Items" xml:space="preserve">
     <value>0</value>
@@ -490,7 +490,7 @@
     <value>$this</value>
   </data>
   <data name="&gt;&gt;cbMaxVariableMods.ZOrder" xml:space="preserve">
-    <value>4</value>
+    <value>5</value>
   </data>
   <data name="searchEngineComboBox.Items" xml:space="preserve">
     <value>MSAmanda</value>
@@ -520,7 +520,7 @@
     <value>$this</value>
   </data>
   <data name="&gt;&gt;searchEngineComboBox.ZOrder" xml:space="preserve">
-    <value>3</value>
+    <value>4</value>
   </data>
   <data name="label2.AutoSize" type="System.Boolean, mscorlib">
     <value>True</value>
@@ -550,7 +550,7 @@
     <value>$this</value>
   </data>
   <data name="&gt;&gt;label2.ZOrder" xml:space="preserve">
-    <value>2</value>
+    <value>3</value>
   </data>
   <data name="cbMs2Analyzer.Location" type="System.Drawing.Point, System.Drawing">
     <value>13, 239</value>
@@ -571,7 +571,7 @@
     <value>$this</value>
   </data>
   <data name="&gt;&gt;cbMs2Analyzer.ZOrder" xml:space="preserve">
-    <value>0</value>
+    <value>1</value>
   </data>
   <data name="lblMs2Analyzer.AutoSize" type="System.Boolean, mscorlib">
     <value>True</value>
@@ -601,7 +601,133 @@
     <value>$this</value>
   </data>
   <data name="&gt;&gt;lblMs2Analyzer.ZOrder" xml:space="preserve">
+    <value>2</value>
+  </data>
+  <data name="textHardklorCorrelation.Location" type="System.Drawing.Point, System.Drawing">
+    <value>17, 36</value>
+  </data>
+  <data name="textHardklorCorrelation.Size" type="System.Drawing.Size, System.Drawing">
+    <value>76, 20</value>
+  </data>
+  <data name="textHardklorCorrelation.TabIndex" type="System.Int32, mscorlib">
     <value>1</value>
+  </data>
+  <data name="&gt;&gt;textHardklorCorrelation.Name" xml:space="preserve">
+    <value>textHardklorCorrelation</value>
+  </data>
+  <data name="&gt;&gt;textHardklorCorrelation.Type" xml:space="preserve">
+    <value>System.Windows.Forms.TextBox, System.Windows.Forms, Version=4.0.0.0, Culture=neutral, PublicKeyToken=b77a5c561934e089</value>
+  </data>
+  <data name="&gt;&gt;textHardklorCorrelation.Parent" xml:space="preserve">
+    <value>groupBoxHardklor</value>
+  </data>
+  <data name="&gt;&gt;textHardklorCorrelation.ZOrder" xml:space="preserve">
+    <value>0</value>
+  </data>
+  <data name="labelHardklorCorrelationThreshold.AutoSize" type="System.Boolean, mscorlib">
+    <value>True</value>
+  </data>
+  <data name="labelHardklorCorrelationThreshold.ImeMode" type="System.Windows.Forms.ImeMode, System.Windows.Forms">
+    <value>NoControl</value>
+  </data>
+  <data name="labelHardklorCorrelationThreshold.Location" type="System.Drawing.Point, System.Drawing">
+    <value>14, 20</value>
+  </data>
+  <data name="labelHardklorCorrelationThreshold.Size" type="System.Drawing.Size, System.Drawing">
+    <value>107, 13</value>
+  </data>
+  <data name="labelHardklorCorrelationThreshold.TabIndex" type="System.Int32, mscorlib">
+    <value>0</value>
+  </data>
+  <data name="labelHardklorCorrelationThreshold.Text" xml:space="preserve">
+    <value>Co&amp;rrelation Threshold</value>
+  </data>
+  <data name="&gt;&gt;labelHardklorCorrelationThreshold.Name" xml:space="preserve">
+    <value>labelHardklorCorrelationThreshold</value>
+  </data>
+  <data name="&gt;&gt;labelHardklorCorrelationThreshold.Type" xml:space="preserve">
+    <value>System.Windows.Forms.Label, System.Windows.Forms, Version=4.0.0.0, Culture=neutral, PublicKeyToken=b77a5c561934e089</value>
+  </data>
+  <data name="&gt;&gt;labelHardklorCorrelationThreshold.Parent" xml:space="preserve">
+    <value>groupBoxHardklor</value>
+  </data>
+  <data name="&gt;&gt;labelHardklorCorrelationThreshold.ZOrder" xml:space="preserve">
+    <value>1</value>
+  </data>
+  <data name="textHardklorSignalToNoise.Location" type="System.Drawing.Point, System.Drawing">
+    <value>17, 85</value>
+  </data>
+  <data name="textHardklorSignalToNoise.Size" type="System.Drawing.Size, System.Drawing">
+    <value>76, 20</value>
+  </data>
+  <data name="textHardklorSignalToNoise.TabIndex" type="System.Int32, mscorlib">
+    <value>3</value>
+  </data>
+  <data name="&gt;&gt;textHardklorSignalToNoise.Name" xml:space="preserve">
+    <value>textHardklorSignalToNoise</value>
+  </data>
+  <data name="&gt;&gt;textHardklorSignalToNoise.Type" xml:space="preserve">
+    <value>System.Windows.Forms.TextBox, System.Windows.Forms, Version=4.0.0.0, Culture=neutral, PublicKeyToken=b77a5c561934e089</value>
+  </data>
+  <data name="&gt;&gt;textHardklorSignalToNoise.Parent" xml:space="preserve">
+    <value>groupBoxHardklor</value>
+  </data>
+  <data name="&gt;&gt;textHardklorSignalToNoise.ZOrder" xml:space="preserve">
+    <value>2</value>
+  </data>
+  <data name="lblHardklorSignalToNoise.AutoSize" type="System.Boolean, mscorlib">
+    <value>True</value>
+  </data>
+  <data name="lblHardklorSignalToNoise.ImeMode" type="System.Windows.Forms.ImeMode, System.Windows.Forms">
+    <value>NoControl</value>
+  </data>
+  <data name="lblHardklorSignalToNoise.Location" type="System.Drawing.Point, System.Drawing">
+    <value>14, 69</value>
+  </data>
+  <data name="lblHardklorSignalToNoise.Size" type="System.Drawing.Size, System.Drawing">
+    <value>79, 13</value>
+  </data>
+  <data name="lblHardklorSignalToNoise.TabIndex" type="System.Int32, mscorlib">
+    <value>2</value>
+  </data>
+  <data name="lblHardklorSignalToNoise.Text" xml:space="preserve">
+    <value>Si&amp;gnal to noise:</value>
+  </data>
+  <data name="&gt;&gt;lblHardklorSignalToNoise.Name" xml:space="preserve">
+    <value>lblHardklorSignalToNoise</value>
+  </data>
+  <data name="&gt;&gt;lblHardklorSignalToNoise.Type" xml:space="preserve">
+    <value>System.Windows.Forms.Label, System.Windows.Forms, Version=4.0.0.0, Culture=neutral, PublicKeyToken=b77a5c561934e089</value>
+  </data>
+  <data name="&gt;&gt;lblHardklorSignalToNoise.Parent" xml:space="preserve">
+    <value>groupBoxHardklor</value>
+  </data>
+  <data name="&gt;&gt;lblHardklorSignalToNoise.ZOrder" xml:space="preserve">
+    <value>3</value>
+  </data>
+  <data name="groupBoxHardklor.Location" type="System.Drawing.Point, System.Drawing">
+    <value>167, 274</value>
+  </data>
+  <data name="groupBoxHardklor.Size" type="System.Drawing.Size, System.Drawing">
+    <value>200, 116</value>
+  </data>
+  <data name="groupBoxHardklor.TabIndex" type="System.Int32, mscorlib">
+    <value>32</value>
+  </data>
+  <data name="groupBoxHardklor.Text" xml:space="preserve">
+    <value>Search parameters</value>
+  </data>
+  <data name="&gt;&gt;groupBoxHardklor.Name" xml:space="preserve">
+    <value>groupBoxHardklor</value>
+  </data>
+  <data name="&gt;&gt;groupBoxHardklor.Type" xml:space="preserve">
+    <value>System.Windows.Forms.GroupBox, System.Windows.Forms, Version=4.0.0.0, Culture=neutral, PublicKeyToken=b77a5c561934e089</value>
+  </data>
+  <data name="&gt;&gt;groupBoxHardklor.Parent" xml:space="preserve">
+    <value>$this</value>
+  </data>
+  <data name="&gt;&gt;groupBoxHardklor.ZOrder" xml:space="preserve">
+    <value>0</value>
   </data>
   <metadata name="$this.Localizable" type="System.Boolean, mscorlib, Version=4.0.0.0, Culture=neutral, PublicKeyToken=b77a5c561934e089">
     <value>True</value>

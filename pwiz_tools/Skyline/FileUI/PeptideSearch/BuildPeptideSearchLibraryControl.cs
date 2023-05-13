@@ -113,7 +113,10 @@ namespace pwiz.Skyline.FileUI.PeptideSearch
                 bool includeAmbiguousMatches, bool filterForDocumentPeptides,
                 ImportPeptideSearchDlg.Workflow workFlow, ImportPeptideSearchDlg.InputFile inputFileType, SrmDocument.DOCUMENT_TYPE docType)
             {
-                CutoffScore = cutoffScore;
+                if (workFlow != ImportPeptideSearchDlg.Workflow.feature_detection) // This gets set elsewhere for this workflow
+                {
+                    CutoffScore = cutoffScore;
+                }
                 SearchFileNames = files?.ToArray() ?? Array.Empty<BuildLibraryGridView.File>();
                 Standard = standard;
                 IncludeAmbiguousMatches = includeAmbiguousMatches;
@@ -652,7 +655,7 @@ namespace pwiz.Skyline.FileUI.PeptideSearch
             {
                 Grid.IsFileOnly = true;
                 Grid.FileUris = _ddaSearchDataSources;
-                panelSearchThreshold.Visible = true;
+                panelSearchThreshold.Visible = !_isFeatureDetectionWorkflow; // We'll get the search threshold in a different tab if we're doing feature detection
             }
             else
             {

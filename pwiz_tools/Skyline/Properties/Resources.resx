@@ -1668,7 +1668,7 @@
     <value>..\Resources\LogoAmanda_32.bmp;System.Drawing.Bitmap, System.Drawing, Version=2.0.0.0, Culture=neutral, PublicKeyToken=b03f5f7f11d50a3a</value>
   </data>
   <data name="HardklorLogo" type="System.Resources.ResXFileRef, System.Windows.Forms">
-    <value>..\Resources\hardklor64.ico;System.Drawing.Bitmap, System.Drawing, Version=2.0.0.0, Culture=neutral, PublicKeyToken=b03f5f7f11d50a3a</value>
+    <value>..\Resources\hardklor_logo.png;System.Drawing.Bitmap, System.Drawing, Version=2.0.0.0, Culture=neutral, PublicKeyToken=b03f5f7f11d50a3a</value>
   </data>
   <data name="ToolService_ImportFasta_Insert_proteins" xml:space="preserve">
     <value>Insert proteins</value>
@@ -6895,6 +6895,9 @@ Please contact the Panorama server administrator to upgrade the server.</value>
   <data name="SkylineWindow_ShowImportPeptideSearchDlg_You_must_save_this_document_before_importing_a_peptide_search_" xml:space="preserve">
     <value>You must save this document before importing a peptide search.</value>
   </data>
+  <data name="SkylineWindow_ShowImportPeptideSearchDlg_You_must_save_this_document_before_importing_feature_detection_" xml:space="preserve">
+    <value>You must save this document before importing feature detection.</value>
+  </data>
   <data name="CommandLine_Run_Writing_to_log_file__0_" xml:space="preserve">
     <value>Writing to log file {0}</value>
   </data>
@@ -10574,6 +10577,9 @@ Click 'Retry' to try building again after placing the original spectrum files in
   <data name="SkylineWindow_ShowRefineDlg_Refining_document" xml:space="preserve">
     <value>Refining document</value>
   </data>
+  <data name="SkylineWindow_ShowImportPeptideSearchDlg_The_document_must_be_fully_loaded_before_importing_feature_detection_" xml:space="preserve">
+    <value>The document must be fully loaded before importing feature detection.</value>
+  </data>
   <data name="SkylineWindow_ShowImportPeptideSearchDlg_The_document_must_be_fully_loaded_before_importing_a_peptide_search_" xml:space="preserve">
     <value>The document must be fully loaded before importing a peptide search.</value>
   </data>
@@ -12058,5 +12064,11 @@ If you choose Disable, you can enable Auto-select later with the "Refine &gt; Ad
   </data>
   <data name="BuildPeptideSearchLibraryControl_BuildPeptideSearchLibrary_Building_Detected_Features_Library" xml:space="preserve">
     <value>Building Detected Features Library</value>
+  </data>
+  <data name="FullScanSettingsControl_ModifyOptionsForImportPeptideSearchWizard_Instrument_Values" xml:space="preserve">
+    <value>Instru&amp;ment Values</value>
+  </data>
+  <data name="FullScanSettingsControl_ModifyOptionsForImportPeptideSearchWizard_Instrument_Values_from_Full_Scan_Settings" xml:space="preserve">
+    <value>(From Full-Scan Settings)</value>
   </data>
 </root>

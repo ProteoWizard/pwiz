@@ -675,4 +675,22 @@ For reference, the audit log is located here: "{0}"</value>
   <data name="permuted_isotope_label_complete" xml:space="preserve">
     <value>Added complete permutations of isotope modification '{0}'</value>
   </data>
+  <data name="HardklorSettings_Charges" xml:space="preserve">
+    <value>Charges</value>
+  </data>
+  <data name="HardklorSettings_CorrelationThreshold" xml:space="preserve">
+    <value>Correlation threshold</value>
+  </data>
+  <data name="HardklorSettings_Instrument" xml:space="preserve">
+    <value>Instrument</value>
+  </data>
+  <data name="HardklorSettings_Resolution" xml:space="preserve">
+    <value>Resolution</value>
+  </data>
+  <data name="HardklorSettings_SignalToNoise" xml:space="preserve">
+    <value>Signal to noise</value>
+  </data>
+  <data name="ImportPeptideSearchSettings_HardklorSearchSettings" xml:space="preserve">
+    <value>Hardklor Search Settings</value>
+  </data>
 </root>

@@ -19,7 +19,7 @@ namespace pwiz.Skyline.Model.AuditLog {
     // class via a tool like ResGen or Visual Studio.
     // To add or remove a member, edit your .ResX file then rerun ResGen
     // with the /str option, or rebuild your VS project.
-    [global::System.CodeDom.Compiler.GeneratedCodeAttribute("System.Resources.Tools.StronglyTypedResourceBuilder", "16.0.0.0")]
+    [global::System.CodeDom.Compiler.GeneratedCodeAttribute("System.Resources.Tools.StronglyTypedResourceBuilder", "17.0.0.0")]
     [global::System.Diagnostics.DebuggerNonUserCodeAttribute()]
     [global::System.Runtime.CompilerServices.CompilerGeneratedAttribute()]
     public class AuditLogStrings {
@@ -681,6 +681,51 @@ namespace pwiz.Skyline.Model.AuditLog {
         }
         
         /// <summary>
+        ///   Looks up a localized string similar to Charges.
+        /// </summary>
+        public static string HardklorSettings_Charges {
+            get {
+                return ResourceManager.GetString("HardklorSettings_Charges", resourceCulture);
+            }
+        }
+        
+        /// <summary>
+        ///   Looks up a localized string similar to Correlation threshold.
+        /// </summary>
+        public static string HardklorSettings_CorrelationThreshold {
+            get {
+                return ResourceManager.GetString("HardklorSettings_CorrelationThreshold", resourceCulture);
+            }
+        }
+        
+        /// <summary>
+        ///   Looks up a localized string similar to Instrument.
+        /// </summary>
+        public static string HardklorSettings_Instrument {
+            get {
+                return ResourceManager.GetString("HardklorSettings_Instrument", resourceCulture);
+            }
+        }
+        
+        /// <summary>
+        ///   Looks up a localized string similar to Resolution.
+        /// </summary>
+        public static string HardklorSettings_Resolution {
+            get {
+                return ResourceManager.GetString("HardklorSettings_Resolution", resourceCulture);
+            }
+        }
+        
+        /// <summary>
+        ///   Looks up a localized string similar to Signal to noise.
+        /// </summary>
+        public static string HardklorSettings_SignalToNoise {
+            get {
+                return ResourceManager.GetString("HardklorSettings_SignalToNoise", resourceCulture);
+            }
+        }
+        
+        /// <summary>
         ///   Looks up a localized string similar to Imported annotations from &quot;{0}&quot;.
         /// </summary>
         public static string imported_annotations {
@@ -812,6 +857,15 @@ namespace pwiz.Skyline.Model.AuditLog {
         public static string imported_transition_list_from_file {
             get {
                 return ResourceManager.GetString("imported_transition_list_from_file", resourceCulture);
+            }
+        }
+        
+        /// <summary>
+        ///   Looks up a localized string similar to Hardklor Search Settings.
+        /// </summary>
+        public static string ImportPeptideSearchSettings_HardklorSearchSettings {
+            get {
+                return ResourceManager.GetString("ImportPeptideSearchSettings_HardklorSearchSettings", resourceCulture);
             }
         }
         

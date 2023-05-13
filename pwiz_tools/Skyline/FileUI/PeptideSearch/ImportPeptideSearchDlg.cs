@@ -97,12 +97,14 @@ namespace pwiz.Skyline.FileUI.PeptideSearch
         };
 
         private readonly Stack<SrmDocument> _documents;
+        public bool Testing;
 
         public ImportPeptideSearchDlg(SkylineWindow skylineWindow, LibraryManager libraryManager,
             Workflow? workflowType)
         {
             SkylineWindow = skylineWindow;
             _documents = new Stack<SrmDocument>();
+            Testing = false;
             SetDocument(skylineWindow.Document, null);
 
             ImportPeptideSearch = new ImportPeptideSearch()
@@ -171,6 +173,9 @@ namespace pwiz.Skyline.FileUI.PeptideSearch
                         Resources
                             .ImportPeptideSearchDlg_ImportPeptideSearchDlg_Select_Files_to_Search; // Was "Spectral Library"
                     lblDDASearch.Text = Resources.ImportPeptideSearchDlg_ImportPeptideSearchDlg_Feature_Detection; // Was "DDA Search"
+                    // Set some defaults
+                    SearchSettingsControl.HardklorSignalToNoise = 3;
+                    SearchSettingsControl.HardklorCorrelationThreshold = .95;
                 }
 
                 BuildPepSearchLibControl.ForceWorkflow(workflowType.Value);
@@ -185,7 +190,7 @@ namespace pwiz.Skyline.FileUI.PeptideSearch
             }
 
             FullScanSettingsControl = new FullScanSettingsControl(this,
-                workflowType == Workflow.feature_detection);
+                workflowType == Workflow.feature_detection ? ImportPeptideSearch.eFeatureDetectionPhase.fullscan_settings : ImportPeptideSearch.eFeatureDetectionPhase.none);
             AddPageControl(FullScanSettingsControl, ms1FullScanSettingsPage, 18, 50);
 
             FullScanSettingsControl.FullScanEnabledChanged += OnFullScanEnabledChanged; // Adjusts ion settings when full scan settings change
@@ -281,6 +286,7 @@ namespace pwiz.Skyline.FileUI.PeptideSearch
                     ImportFastaControl.AssociateProteinsSettings,
                     ddaSearchSettings,
                     ConverterSettingsControl.ConverterSettings,
+                    ImportPeptideSearch.SettingsHardklor,
                     ModeUI);
             }
         }
@@ -302,6 +308,7 @@ namespace pwiz.Skyline.FileUI.PeptideSearch
                 AssociateProteinsSettings associateProteinsSettings,
                 SearchSettingsControl.DdaSearchSettings ddaSearchSettings,
                 ConverterSettingsControl.DdaConverterSettings ddaConverterSettings,
+                ImportPeptideSearch.HardklorSettings hardklorSearchSettings,
                 SrmDocument.DOCUMENT_TYPE docType)
             {
                 ImportResultsSettings = importResultsSettings;
@@ -312,6 +319,7 @@ namespace pwiz.Skyline.FileUI.PeptideSearch
                 AssociateProteinsSettings = associateProteinsSettings;
                 DdaSearchSettings = ddaSearchSettings;
                 DdaConverterSettings = ddaConverterSettings;
+                HardklorSearchSettings = hardklorSearchSettings;
                 _docType = docType;
             }
 
@@ -347,6 +355,10 @@ namespace pwiz.Skyline.FileUI.PeptideSearch
             [TrackChildren]
             public ConverterSettingsControl.DdaConverterSettings DdaConverterSettings { get; private set; }
 
+            // Hardklor settings
+            [TrackChildren]
+            public ImportPeptideSearch.HardklorSettings HardklorSearchSettings { get; private set; }
+
             public object GetDefaultObject(ObjectInfo<object> info)
             {
                 var doc = info.OldRootObject as SrmDocument;
@@ -361,6 +373,7 @@ namespace pwiz.Skyline.FileUI.PeptideSearch
                     doc.Settings.TransitionSettings.FullScan,
                     ImportFastaControl.ImportFastaSettings.GetDefault(doc.Settings.PeptideSettings),
                     AssociateProteinsSettings.DEFAULT,
+                    null,
                     null,
                     null,
                     SrmDocument.DOCUMENT_TYPE.proteomic);
@@ -388,7 +401,7 @@ namespace pwiz.Skyline.FileUI.PeptideSearch
 
         private SkylineWindow SkylineWindow { get; set; }
         private ImportPeptideSearch ImportPeptideSearch { get; set; }
-        private TransitionSettings TransitionSettings { get { return Document.Settings.TransitionSettings; } }
+        public TransitionSettings TransitionSettings { get { return Document.Settings.TransitionSettings; } }
         public TransitionFullScan FullScan { get { return TransitionSettings.FullScan; } }
 
         private bool _modificationSettingsChanged;
@@ -562,7 +575,6 @@ namespace pwiz.Skyline.FileUI.PeptideSearch
                         {
                             _pagesToSkip.Add(Pages.match_modifications_page);
                             _pagesToSkip.Add(Pages.import_fasta_page);
-                            _pagesToSkip.Add(Pages.dda_search_settings_page);
                         }
                     }
                     else
@@ -713,12 +725,7 @@ namespace pwiz.Skyline.FileUI.PeptideSearch
                         // we can verify that the MS1 full scan settings are valid.
                         return;
                     }
-
-                    if (IsFeatureDetectionWorkflow) // This was the next to last page, kick off the search
-                    {
-                        InitiateSearch();
-                    }
-
+                    SearchSettingsControl.UpdateControls(); // Feature Finding controls depend on FullScan settings
                     break;
 
                 case Pages.import_fasta_page: // This is the last page (if there is no dda search)
@@ -758,8 +765,9 @@ namespace pwiz.Skyline.FileUI.PeptideSearch
                     }
                     break;
                 case Pages.dda_search_settings_page:
-                    bool valid = SearchSettingsControl.SaveAllSettings();
-                    if (!valid) return;
+                    bool valid = SearchSettingsControl.SaveAllSettings(!Testing);
+                    if (!valid) 
+                        return;
                     InitiateSearch();
                     break;
 
@@ -925,20 +933,6 @@ namespace pwiz.Skyline.FileUI.PeptideSearch
             btnCancel.Enabled = false;
             btnBack.Enabled = false;
             ControlBox = false;
-            if (IsFeatureDetectionWorkflow)
-            {
-                ImportPeptideSearch.Instrument =
-                    TransitionFullScan.MassAnalyzerToString(FullScan.PrecursorMassAnalyzer);
-                ImportPeptideSearch.CutoffScore = BuildPepSearchLibControl.CutOffScore ?? 0;
-                ImportPeptideSearch.ResolutionAt400mz = FullScan.PrecursorRes ?? 0;
-                if (Equals(FullScan.PrecursorMassAnalyzer, FullScanMassAnalyzerType.orbitrap))
-                {
-                    Assume.AreEqual(FullScanSettingsControl.HARDKLOR_PRECURSOR_RES_MZ, FullScan.PrecursorResMz ?? 0);
-                }
-                ImportPeptideSearch.DataIsCentroided = FullScanSettingsControl.HardklorCentroided;
-                ImportPeptideSearch.SignalToNoise = FullScanSettingsControl.HardklorSignalToNoise ?? 3;
-                ImportPeptideSearch.Charges = TransitionSettings.Filter.PeptidePrecursorCharges.Select(a => a.AdductCharge).Distinct().ToList();
-            }
 
             AbstractDdaConverter.MsdataFileFormat requiredFormat =
                 IsFeatureDetectionWorkflow
@@ -1190,10 +1184,6 @@ namespace pwiz.Skyline.FileUI.PeptideSearch
             if (!FullScanSettingsControl.ValidateFullScanSettings(helper, out fullScan))
                 return false;
 
-            double? hardklorSignalToNoise;
-            if (!FullScanSettingsControl.ValidateHardklorSignalToNoise(helper, out hardklorSignalToNoise))
-                return false;
-
             Helpers.AssignIfEquals(ref fullScan, TransitionSettings.FullScan);
 
             var prediction = TransitionSettings.Prediction.ChangePrecursorMassType(precursorMassType);
@@ -1255,10 +1245,10 @@ namespace pwiz.Skyline.FileUI.PeptideSearch
             btnEarlyFinish.Visible = show;
         }
 
-        // In feature extraction, the MS1 resolution values we solicit from the user are for Hardklor's peak finding
+        // In feature detection, the MS1 resolution values we solicit from the user are for Hardklor's peak finding
         // purposes. This function translates those settings to be give the same tolerance sense to Skyline's chromatogram
         // extraction logic.
-        private void UpdateFullScanSettingsForFeatureExtraction()
+        private void UpdateFullScanSettingsForFeatureDetection()
         {
             if (!IsFeatureDetectionWorkflow)
             {
@@ -1297,7 +1287,7 @@ namespace pwiz.Skyline.FileUI.PeptideSearch
             }
             else
             {
-                UpdateFullScanSettingsForFeatureExtraction(); // Tweak full scan filter values if needed
+                UpdateFullScanSettingsForFeatureDetection(); // Tweak full scan filter values if needed
                 SkylineWindow.ModifyDocument(
                     Resources.ImportResultsControl_GetPeptideSearchChromatograms_Import_results,
                     doc => SkylineWindow.ImportResults(Document, namedResults, ExportOptimize.NONE), FormSettings.EntryCreator.Create);

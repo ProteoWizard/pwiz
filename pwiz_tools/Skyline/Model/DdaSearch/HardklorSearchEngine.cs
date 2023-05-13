@@ -240,15 +240,15 @@ namespace pwiz.Skyline.Model.DdaSearch
         {
             _inputsAndOutputs = new Dictionary<MsDataFileUri, string>();
             var workingDirectory = string.IsNullOrEmpty(skylineWorkingDirectory) ? Path.GetTempPath() : skylineWorkingDirectory;
+            int? isCentroided = null;
 
             foreach (var input in SpectrumFileNames)
             {
                 _inputsAndOutputs.Add(input, $@"{Path.Combine(workingDirectory, input.GetFileName())}.hk");
-                if (!_searchSettings.DataIsCentroided)
+                if (!isCentroided.HasValue)
                 {
-                    // User didn't declare data as centroided, but that might only be because they don't know.
-                    // Luckily mzML conversion makes that easy to discover for many raw formats, and we should
-                    // find a clue within the first few hundred lines.
+                    // Hardklor wants to know if the data is centroided, we should
+                    // find a clue within the first few hundred lines of mnML.
                     using var reader = new StreamReader(input.GetFilePath());
                     for (var lineNum = 0; lineNum < 500; lineNum++)
                     {
@@ -259,7 +259,12 @@ namespace pwiz.Skyline.Model.DdaSearch
                         }
                         if (line.Contains(@"MS:1000127") || line.Contains(@"centroid spectrum"))
                         {
-                            _searchSettings.DataIsCentroided = true;
+                            isCentroided = 1;
+                            break;
+                        }
+                        else if (line.Contains(@"MS:1000128") || line.Contains(@"profile spectrum"))
+                        {
+                            isCentroided = 0;
                             break;
                         }
                     }
@@ -268,6 +273,13 @@ namespace pwiz.Skyline.Model.DdaSearch
 
             // Make sure Hardklor is working with the same isotope information as Skyline
             InitializeIsotopes();
+
+            var instrument = _searchSettings.SettingsHardklor.Instrument;
+            var resolution = _searchSettings.SettingsHardklor.Resolution;
+            if (Equals(instrument, FullScanMassAnalyzerType.qit))
+            {
+                resolution = resolution / 5000.0; // per Hardklor source code CHardklor2::CalcFWHM(double mz, double res, int iType)
+            }
 
             return TextUtil.LineSeparate(
                 $@"# comments in ALL CAPS are from a discussion with Danielle Faivre about Skyline integration",
@@ -280,15 +292,15 @@ namespace pwiz.Skyline.Model.DdaSearch
                 $@"# All data files (including paths if necessary) to be analyzed are discussed below.",
                 $@"",
                 $@"# Parameters used to described the data being input to Hardklor",
-                $@"instrument	=	{_searchSettings.Instrument.Replace(@"-", string.Empty)}	#Values are: FTICR, Orbitrap, TOF, QIT #NEED UI",
-                $@"resolution	=	{_searchSettings.ResolutionAt400mz}		#Resolution at 400 m/z #NEED UI",
-                $@"centroided	=	{(_searchSettings.DataIsCentroided ? @"1" : @"0")}			#0=no, 1=yes #NEED UI",
+                $@"instrument	=	{TransitionFullScan.MassAnalyzerToString(instrument).Replace(@"-", string.Empty)}	#Values are: FTICR, Orbitrap, TOF, QIT #NEED UI",
+                $@"resolution	=	{resolution}		#Resolution at 400 m/z #NEED UI",
+                $@"centroided	=	{isCentroided}			#0=no, 1=yes",
                 $@"",
                 $@"# Parameters used in preprocessing spectra prior to analysis",
                 $@"ms_level			=	1		#1=MS1, 2=MS2, 3=MS3, 0=all",
                 $@"scan_range_min		=	0		#ignore any spectra lower than this number, 0=off",
                 $@"scan_range_max		=	0		#ignore any spectra higher than this number, 0=off",
-                $@"signal_to_noise		=	{_searchSettings.SignalToNoise}		#set signal-to-noise ratio, 0=off #NEED UI",
+                $@"signal_to_noise		=	{_searchSettings.SettingsHardklor.SignalToNoise}		#set signal-to-noise ratio, 0=off #NEED UI",
                 $@"sn_window			=	250.0	#size in m/z for computing localized noise level in a spectrum.",
                 $@"static_sn			=	0		#0=off, 1=on. Apply lowest localized noise level to entire spectrum.",
                 $@"boxcar_averaging	=	0		#0=off, or specify number of scans to average together, use odd numbers only #MAY NEED UI IN FUTURE",
@@ -308,7 +320,7 @@ namespace pwiz.Skyline.Model.DdaSearch
                 $@"									#  If None is set, all charge states are assumed, slowing Hardklor",
                 $@"charge_min			=	1			#Lowest charge state allowed in the analysis. #MAY NEED UI IN FUTURE",
                 $@"charge_max			=	{MaxCharge}			#Highest charge state allowed in the analysis. #MAY NEED UI IN FUTURE",
-                $@"correlation			=	{_searchSettings.CutoffScore}		#Correlation threshold to accept a peptide feature. #NEED UI",
+                $@"correlation			=	{_searchSettings.SettingsHardklor.CorrelationThreshold}	#Correlation threshold to accept a peptide feature. #NEED UI",
                 $@"averagine_mod		=	0			#Formula containing modifications to the averagine model.",
                 $@"									#  Read documentation carefully before using! 0=off",
                 $@"mz_window			=	5.25		#Breaks spectrum into windows not larger than this value for Version1 algorithm.",

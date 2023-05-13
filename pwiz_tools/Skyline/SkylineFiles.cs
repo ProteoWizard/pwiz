@@ -3191,13 +3191,18 @@ namespace pwiz.Skyline
 
         public void ShowImportPeptideSearchDlg(ImportPeptideSearchDlg.Workflow? workflowType)
         {
-            if (!CheckDocumentExists(Resources.SkylineWindow_ShowImportPeptideSearchDlg_You_must_save_this_document_before_importing_a_peptide_search_))
+            if (!CheckDocumentExists(workflowType is ImportPeptideSearchDlg.Workflow.feature_detection ?
+                    Resources.SkylineWindow_ShowImportPeptideSearchDlg_You_must_save_this_document_before_importing_feature_detection_ :
+                    Resources.SkylineWindow_ShowImportPeptideSearchDlg_You_must_save_this_document_before_importing_a_peptide_search_))
             {
                 return;
             }
             else if (!Document.IsLoaded)
             {
-                MessageDlg.Show(this, Resources.SkylineWindow_ShowImportPeptideSearchDlg_The_document_must_be_fully_loaded_before_importing_a_peptide_search_);
+                MessageDlg.Show(this,
+                    workflowType is ImportPeptideSearchDlg.Workflow.feature_detection ?
+                        Resources.SkylineWindow_ShowImportPeptideSearchDlg_The_document_must_be_fully_loaded_before_importing_feature_detection_ :
+                        Resources.SkylineWindow_ShowImportPeptideSearchDlg_The_document_must_be_fully_loaded_before_importing_a_peptide_search_);
                 return;
             }
 

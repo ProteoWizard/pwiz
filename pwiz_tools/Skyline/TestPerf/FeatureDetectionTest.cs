@@ -16,6 +16,7 @@
  * limitations under the License.
  */
 
+using System;
 using System.Collections.Generic;
 using System.IO;
 using System.Linq;
@@ -75,9 +76,9 @@ namespace TestPerf
             public bool HasMissingDependencies { get; private set; }
         }
 
-        public bool UseWiff => false; // ExtensionTestContext.CanImportAbWiff; // Wiff reader fails in RunProcess with 
+        public bool UseWiff => false; // ExtensionTestContext.CanImportAbWiff; // Wiff reader fails in msconvert step due to brittle embedded DLL load order when run in RunProcess
 
-        [TestMethod, NoUnicodeTesting(TestExclusionReason.HARDKLOR_UNICODE_ISSUES), NoParallelTesting(TestExclusionReason.RESOURCE_INTENSIVE)]
+        [TestMethod, NoUnicodeTesting(TestExclusionReason.HARDKLOR_UNICODE_ISSUES)]
         public void TestHardklorFeatureDetection()
         {
             TestFilesZipPaths = new[]
@@ -130,7 +131,7 @@ namespace TestPerf
 
         protected override void DoTest()
         {
-            //IsPauseForScreenShots = true; // enable for quick demo
+            // IsPauseForScreenShots = true; // enable for quick demo
 
             // Make sure we're testing the mzML conversion
             foreach (var file in SearchFiles)
@@ -151,6 +152,8 @@ namespace TestPerf
             PauseForScreenShot("Ready to start Wizard (File > Import > Feature Detection...)");
             // Launch the wizard
             var importPeptideSearchDlg = ShowDialog<ImportPeptideSearchDlg>(SkylineWindow.ShowFeatureDetectionDlg);
+            importPeptideSearchDlg.Testing = true; // Prevents form-called-by-form blockage TODO(bspratt) there must be a cleaner way
+
             // We're on the "Select Files to Search" page of the wizard.
 
             RunUI(() =>
@@ -159,7 +162,6 @@ namespace TestPerf
                 Assert.IsTrue(importPeptideSearchDlg.BuildPepSearchLibControl.PerformDDASearch);
                 importPeptideSearchDlg.BuildPepSearchLibControl.DdaSearchDataSources = SearchFiles.Select(o => (MsDataFileUri)new MsDataFilePath(o)).ToArray();
                 AssertEx.AreEqual(ImportPeptideSearchDlg.Workflow.feature_detection, importPeptideSearchDlg.BuildPepSearchLibControl.WorkflowType); 
-                importPeptideSearchDlg.BuildPepSearchLibControl.CutOffScore = 0.98;
             });
             PauseForScreenShot("these are the MS1 Filtering Tutorial files");
             var importResultsNameDlg = ShowDialog<ImportResultsNameDlg>(() => importPeptideSearchDlg.ClickNextButton());
@@ -187,7 +189,17 @@ namespace TestPerf
                 importPeptideSearchDlg.FullScanSettingsControl.PrecursorMassAnalyzer = FullScanMassAnalyzerType.tof; // Per MS1 filtering tutorial
                 importPeptideSearchDlg.FullScanSettingsControl.PrecursorRes = 10000; // Per MS1 filtering tutorial
             });
-            PauseForScreenShot(" MS1 full scan settings page - next we'll start the mzML conversion if needed then cancel the search");
+            PauseForScreenShot(" MS1 full scan settings page - next we'll tweak the search settings");
+            RunUI(() =>
+            {
+                Assert.IsTrue(importPeptideSearchDlg.ClickNextButton());
+                importPeptideSearchDlg.SearchSettingsControl.HardklorCorrelationThreshold = 0.98; // Default is 0.95, so this should be a change
+                importPeptideSearchDlg.SearchSettingsControl.HardklorSignalToNoise = 3.01; // Default is 3.0, so this should be a change
+                // The instrument values should be settable since we set them in Full Scan.
+                AssertEx.IsFalse(importPeptideSearchDlg.SearchSettingsControl.HardklorInstrumentSettingsAreEditable);
+
+            });
+            PauseForScreenShot(" Search settings page - next we'll start the mzML conversion if needed then cancel the search");
             RunUI(() =>
             {
                 // Run the search
@@ -225,6 +237,7 @@ namespace TestPerf
             {
                 Assert.IsTrue(importPeptideSearchDlg.ClickBackButton());
                 Assert.IsTrue(importPeptideSearchDlg.ClickBackButton());
+                Assert.IsTrue(importPeptideSearchDlg.ClickBackButton());
 
                 importPeptideSearchDlg.BuildPepSearchLibControl.DdaSearchDataSources = SearchFilesSameName.Select(o => (MsDataFileUri) new MsDataFilePath(o)).ToArray();
             });
@@ -245,18 +258,45 @@ namespace TestPerf
             PauseForScreenShot("expected dialog for name reduction ");
             OkDialog(removeSuffix, () => removeSuffix2.YesDialog());
 
-            RunUI(() =>
-            {
-                // We're on the "Full Scan Settings" page again.
-                importPeptideSearchDlg.FullScanSettingsControl.PrecursorMassAnalyzer = FullScanMassAnalyzerType.tof;
-                importPeptideSearchDlg.FullScanSettingsControl.PrecursorRes = 10000; // per MS1 filtering tutorial
-            });
 
-            PauseForScreenShot("and go");
+            PauseForScreenShot("Full scan settings - not set Centroided (this data set isn't compatible with that), so instrument settings on next page should not be operable");
             RunUI(() =>
             {
                 Assert.IsTrue(importPeptideSearchDlg.ClickNextButton());
             });
+
+            RunUI(() =>
+            {
+                // We're on the "Search Settings" page. These values should not be settable since we did not set "Centroided" in Full Scan.
+                AssertEx.IsFalse(importPeptideSearchDlg.SearchSettingsControl.HardklorInstrumentSettingsAreEditable);
+            });
+            PauseForScreenShot("Search settings - set Centroided, so instrument settings are operable.");
+            // Now check some value ranges
+            ExpectError(() => importPeptideSearchDlg.SearchSettingsControl.HardklorCorrelationThreshold = -1);
+            ExpectError(() => importPeptideSearchDlg.SearchSettingsControl.HardklorCorrelationThreshold = 1.1);
+            RunUI(() => importPeptideSearchDlg.SearchSettingsControl.HardklorCorrelationThreshold = .98); // Legal
+            ExpectError(() => importPeptideSearchDlg.SearchSettingsControl.HardklorSignalToNoise = -1); // Illegal
+            ExpectError(() => importPeptideSearchDlg.SearchSettingsControl.HardklorSignalToNoise = 11);
+            RunUI(() => importPeptideSearchDlg.SearchSettingsControl.HardklorSignalToNoise = 3.01); // Legal
+
+            void ExpectError(Action act)
+            {
+                RunUI(() =>
+                {                    
+                    var page = importPeptideSearchDlg.CurrentPage;
+                    act();
+                    importPeptideSearchDlg.ClickNextButton();
+                    AssertEx.AreEqual(page, importPeptideSearchDlg.CurrentPage); // Not expected to advance
+                });
+            }
+
+            RunUI(() =>
+            {
+                var page = importPeptideSearchDlg.CurrentPage;
+                Assert.IsTrue(importPeptideSearchDlg.ClickNextButton());
+                AssertEx.AreNotEqual(page, importPeptideSearchDlg.CurrentPage, "stuck?"); // Expected to advance
+            });
+
             try
             {
                 WaitForConditionUI(60000, () => searchSucceeded.HasValue);

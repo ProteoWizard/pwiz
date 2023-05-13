@@ -5423,7 +5423,7 @@ namespace pwiz.Skyline.Properties {
         }
         
         /// <summary>
-        ///   Looks up a localized string similar to a FASTA file must be imported before associating proteins.
+        ///   Looks up a localized string similar to Error: a FASTA file must be imported before associating proteins.
         /// </summary>
         public static string CommandLine_AssociateProteins_a_FASTA_file_must_be_imported_before_associating_proteins {
             get {
@@ -15247,6 +15247,26 @@ namespace pwiz.Skyline.Properties {
             get {
                 return ResourceManager.GetString("FullScanSettingsControl_InitializeMs1FilterUI_Sets_the_MS_type_for_Hardklor_s_FWH" +
                         "M_calculation", resourceCulture);
+            }
+        }
+        
+        /// <summary>
+        ///   Looks up a localized string similar to Instru&amp;ment Values.
+        /// </summary>
+        public static string FullScanSettingsControl_ModifyOptionsForImportPeptideSearchWizard_Instrument_Values {
+            get {
+                return ResourceManager.GetString("FullScanSettingsControl_ModifyOptionsForImportPeptideSearchWizard_Instrument_Valu" +
+                        "es", resourceCulture);
+            }
+        }
+        
+        /// <summary>
+        ///   Looks up a localized string similar to (From Full-Scan Settings).
+        /// </summary>
+        public static string FullScanSettingsControl_ModifyOptionsForImportPeptideSearchWizard_Instrument_Values_from_Full_Scan_Settings {
+            get {
+                return ResourceManager.GetString("FullScanSettingsControl_ModifyOptionsForImportPeptideSearchWizard_Instrument_Valu" +
+                        "es_from_Full_Scan_Settings", resourceCulture);
             }
         }
         
@@ -30838,12 +30858,32 @@ namespace pwiz.Skyline.Properties {
         }
         
         /// <summary>
+        ///   Looks up a localized string similar to The document must be fully loaded before importing feature detection..
+        /// </summary>
+        public static string SkylineWindow_ShowImportPeptideSearchDlg_The_document_must_be_fully_loaded_before_importing_feature_detection_ {
+            get {
+                return ResourceManager.GetString("SkylineWindow_ShowImportPeptideSearchDlg_The_document_must_be_fully_loaded_before" +
+                        "_importing_feature_detection_", resourceCulture);
+            }
+        }
+        
+        /// <summary>
         ///   Looks up a localized string similar to You must save this document before importing a peptide search..
         /// </summary>
         public static string SkylineWindow_ShowImportPeptideSearchDlg_You_must_save_this_document_before_importing_a_peptide_search_ {
             get {
                 return ResourceManager.GetString("SkylineWindow_ShowImportPeptideSearchDlg_You_must_save_this_document_before_impor" +
                         "ting_a_peptide_search_", resourceCulture);
+            }
+        }
+        
+        /// <summary>
+        ///   Looks up a localized string similar to You must save this document before importing feature detection..
+        /// </summary>
+        public static string SkylineWindow_ShowImportPeptideSearchDlg_You_must_save_this_document_before_importing_feature_detection_ {
+            get {
+                return ResourceManager.GetString("SkylineWindow_ShowImportPeptideSearchDlg_You_must_save_this_document_before_impor" +
+                        "ting_feature_detection_", resourceCulture);
             }
         }
         

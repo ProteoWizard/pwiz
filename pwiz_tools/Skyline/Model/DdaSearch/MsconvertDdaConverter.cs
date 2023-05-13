@@ -38,7 +38,6 @@ namespace pwiz.Skyline.Model.DdaSearch
         private int _currentSourceIndex;
         private int _stepCount;
         private int _lastPercentComplete;
-        protected bool _wantPeakPicking;
 
         public string MsConvertOutputExtension { get; private set; }
         public string MsConvertOutputFormatParam { get; private set; }
@@ -47,7 +46,6 @@ namespace pwiz.Skyline.Model.DdaSearch
         {
             MsConvertOutputExtension = @".mzML";
             MsConvertOutputFormatParam = @"--mzML";
-            _wantPeakPicking = true;
         }
 
         public override void SetSpectrumFiles(MsDataFileUri[] spectrumFiles)
@@ -111,7 +109,7 @@ namespace pwiz.Skyline.Model.DdaSearch
                             $"-o {Path.GetDirectoryName(tmpFilepath).Quote()} " +
                             $"--outfile {Path.GetFileName(tmpFilepath).Quote()} " +
                             " --acceptZeroLengthSpectra --simAsSpectra --combineIonMobilitySpectra" +
-                            (_wantPeakPicking ? @" --filter ""peakPicking true 1-"" " : string.Empty) +
+                            @" --filter ""peakPicking true 1-"" " +
                             FilterMslevel() +
                             spectrumSource.ToString().Quote()
                     };
@@ -217,7 +215,7 @@ namespace pwiz.Skyline.Model.DdaSearch
 
         public HardklorDdaConverter(ImportPeptideSearch importPeptideSearch) : base(importPeptideSearch)
         {
-            _wantPeakPicking = false; // Hardklor prefers to do its own
+            // Hardklor prefers to do its own peak picking, but that's a performance issue so we just do it ourselves
         }
 
         public override string FilterMslevel()

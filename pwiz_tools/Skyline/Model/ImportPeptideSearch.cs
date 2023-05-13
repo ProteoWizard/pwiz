@@ -46,13 +46,13 @@ namespace pwiz.Skyline.Model
             UserDefinedTypedMods = new HashSet<StaticMod>();
         }
 
+        public enum eFeatureDetectionPhase
+        {
+            none, fullscan_settings, hardklor_settings
+        }
+
         public string[] SearchFilenames { get; set; }
         public double CutoffScore { get; set; }
-        public string Instrument { get; set; } // Used by Hardklor
-        public double ResolutionAt400mz { get; set; } // Used by Hardklor
-        public double SignalToNoise { get; set; } // Used by Hardklor
-        public bool DataIsCentroided { get; set; } // Used by Hardklor
-        public List<int> Charges { get; set; } // Used by Hardklor, a list of desired charges for BlibBuild
         public Library DocLib { get; private set; }
         public Dictionary<string, FoundResultsFilePossibilities> SpectrumSourceFiles { get; set; }
         public AbstractDdaSearchEngine SearchEngine { get; set; }
@@ -62,11 +62,39 @@ namespace pwiz.Skyline.Model
         public IrtStandard IrtStandard { get; set; }
         public bool IsDDASearch { get; set; }
         public bool IsFeatureDetection { get; set; }
+        public HardklorSettings SettingsHardklor { get; set; }
         private readonly LibKeyModificationMatcher _matcher;
         private IsotopeLabelType DefaultHeavyLabelType { get; set; }
         public HashSet<StaticMod> UserDefinedTypedMods { get; private set; }
         public PeptideModifications MatcherPepMods { get { return _matcher.MatcherPepMods; } }
         public IList<StaticMod> MatcherHeavyMods { get { return MatcherPepMods.GetModifications(DefaultHeavyLabelType); } }
+
+
+        public class HardklorSettings
+        {
+            public HardklorSettings(FullScanMassAnalyzerType instrument, double resolution,
+                double correlationThreshold, double signalToNoise, IEnumerable<int> charges)
+            {
+                Instrument = instrument;
+                Resolution = resolution;
+                CorrelationThreshold = correlationThreshold;
+                SignalToNoise = signalToNoise;
+                Charges = charges.ToList();
+            }
+
+            [Track]
+            public double CorrelationThreshold { get; private set; }
+            [Track]
+            public double SignalToNoise { get; private set; }
+            [Track]
+            public FullScanMassAnalyzerType Instrument { get; private set; }
+            [Track]
+            public double Resolution { get; private set; }
+            [Track]
+            public List<int> Charges { get; set; } // A list of desired charges for BlibBuild
+
+        }
+
 
         public BiblioSpecLiteBuilder GetLibBuilder(SrmDocument doc, string docFilePath, bool includeAmbiguousMatches, bool isFeatureDetection = false)
         {
@@ -105,7 +133,7 @@ namespace pwiz.Skyline.Model
                 KeepRedundant = true,
                 CutOffScore = CutoffScore,
                 Id = Helpers.MakeId(name),
-                Charges = Charges, // Optional list of charges, if non-empty BlibBuild will ignore any not listed here
+                Charges = IsFeatureDetection ? SettingsHardklor.Charges : null, // Optional list of charges, if non-empty BlibBuild will ignore any not listed here
                 IncludeAmbiguousMatches = includeAmbiguousMatches
             };
         }
