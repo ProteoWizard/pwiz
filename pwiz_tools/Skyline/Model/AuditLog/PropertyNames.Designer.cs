@@ -1420,6 +1420,42 @@ namespace pwiz.Skyline.Model.AuditLog {
         }
         
         /// <summary>
+        ///   Looks up a localized string similar to Correlation threshold.
+        /// </summary>
+        public static string HardklorSettings_CorrelationThreshold {
+            get {
+                return ResourceManager.GetString("HardklorSettings_CorrelationThreshold", resourceCulture);
+            }
+        }
+        
+        /// <summary>
+        ///   Looks up a localized string similar to Instrument.
+        /// </summary>
+        public static string HardklorSettings_Instrument {
+            get {
+                return ResourceManager.GetString("HardklorSettings_Instrument", resourceCulture);
+            }
+        }
+        
+        /// <summary>
+        ///   Looks up a localized string similar to Resolution.
+        /// </summary>
+        public static string HardklorSettings_Resolution {
+            get {
+                return ResourceManager.GetString("HardklorSettings_Resolution", resourceCulture);
+            }
+        }
+        
+        /// <summary>
+        ///   Looks up a localized string similar to Signal to noise.
+        /// </summary>
+        public static string HardklorSettings_SignalToNoise {
+            get {
+                return ResourceManager.GetString("HardklorSettings_SignalToNoise", resourceCulture);
+            }
+        }
+        
+        /// <summary>
         ///   Looks up a localized string similar to Operation.
         /// </summary>
         public static string IFilterOperation_DisplayName {
@@ -1614,6 +1650,15 @@ namespace pwiz.Skyline.Model.AuditLog {
         public static string ImportPeptideSearchSettings_FullScanSettings {
             get {
                 return ResourceManager.GetString("ImportPeptideSearchSettings_FullScanSettings", resourceCulture);
+            }
+        }
+        
+        /// <summary>
+        ///   Looks up a localized string similar to Hardklor Search Settings.
+        /// </summary>
+        public static string ImportPeptideSearchSettings_HardklorSearchSettings {
+            get {
+                return ResourceManager.GetString("ImportPeptideSearchSettings_HardklorSearchSettings", resourceCulture);
             }
         }
         
