@@ -612,7 +612,7 @@ namespace pwiz.Skyline.Model.Serialization
             WriteAnnotations(writer, node.Annotations);
             if (false == node.SpectrumClassFilter?.IsEmpty)
             {
-                writer.WriteStartElement(SpectrumClassFilter.XML_ROOT);
+                writer.WriteStartElement(SpectrumClassFilterClause.XML_ROOT);
                 node.SpectrumClassFilter.WriteXml(writer);
                 writer.WriteEndElement();
             }

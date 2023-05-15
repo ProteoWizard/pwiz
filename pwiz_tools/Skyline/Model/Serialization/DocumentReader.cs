@@ -1401,7 +1401,7 @@ namespace pwiz.Skyline.Model.Serialization
             {
                 reader.ReadStartElement();
                 var annotations = ReadTargetAnnotations(reader, AnnotationDef.AnnotationTarget.precursor);
-                var spectrumClassFilter = reader.DeserializeElement<SpectrumClassFilter>();
+                var spectrumClassFilter = reader.DeserializeElement<SpectrumClassFilterClause>();
                 var libInfo = ReadTransitionGroupLibInfo(reader);
                 var results = ReadTransitionGroupResults(reader);
 

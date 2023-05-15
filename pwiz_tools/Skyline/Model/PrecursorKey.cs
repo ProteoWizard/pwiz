@@ -28,7 +28,7 @@ namespace pwiz.Skyline.Model
         public PrecursorKey(Adduct adduct) : this(adduct, null)
         {
         }
-        public PrecursorKey(Adduct adduct, SpectrumClassFilter spectrumClassFilter)
+        public PrecursorKey(Adduct adduct, SpectrumClassFilterClause spectrumClassFilter)
         {
             Adduct = adduct.Unlabeled;
             SpectrumClassFilter = spectrumClassFilter;
@@ -36,9 +36,9 @@ namespace pwiz.Skyline.Model
 
         public Adduct Adduct { get; private set; }
 
-        public SpectrumClassFilter SpectrumClassFilter { get; private set; }
+        public SpectrumClassFilterClause SpectrumClassFilter { get; private set; }
 
-        public PrecursorKey ChangeSpectrumClassFilter(SpectrumClassFilter spectrumClassFilter)
+        public PrecursorKey ChangeSpectrumClassFilter(SpectrumClassFilterClause spectrumClassFilter)
         {
             return ChangeProp(ImClone(this), im => im.SpectrumClassFilter = spectrumClassFilter);
         }

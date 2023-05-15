@@ -317,7 +317,7 @@ namespace pwiz.Skyline.Model.Results
             ReadStream.CloseStream();
         }
 
-        private IEnumerable<ChromatogramGroupInfo> GetHeaderInfos(PeptideDocNode nodePep, SpectrumClassFilter spectrumClassFilter, SignedMz precursorMz, double? explicitRT, float tolerance,
+        private IEnumerable<ChromatogramGroupInfo> GetHeaderInfos(PeptideDocNode nodePep, SpectrumClassFilterClause spectrumClassFilter, SignedMz precursorMz, double? explicitRT, float tolerance,
             ChromatogramSet chromatograms)
         {
             foreach (int i in ChromatogramIndexesMatching(nodePep, spectrumClassFilter, precursorMz, tolerance, chromatograms))
@@ -334,10 +334,10 @@ namespace pwiz.Skyline.Model.Results
             }
         }
 
-        public IEnumerable<int> ChromatogramIndexesMatching(PeptideDocNode nodePep, SpectrumClassFilter spectrumClassFilter, SignedMz precursorMz,
+        public IEnumerable<int> ChromatogramIndexesMatching(PeptideDocNode nodePep, SpectrumClassFilterClause spectrumClassFilter, SignedMz precursorMz,
             float tolerance, ChromatogramSet chromatograms)
         {
-            spectrumClassFilter = SpectrumClassFilter.EmptyToNull(spectrumClassFilter);
+            spectrumClassFilter = SpectrumClassFilterClause.EmptyToNull(spectrumClassFilter);
             var fileIndexesFound = new HashSet<int>();
             if (nodePep != null && nodePep.IsProteomic && _chromEntryIndex != null)
             {

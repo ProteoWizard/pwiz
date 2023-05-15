@@ -1,316 +1,84 @@
-﻿/*
- * Original author: Nicholas Shulman <nicksh .at. u.washington.edu>,
- *                  MacCoss Lab, Department of Genome Sciences, UW
- *
- * Copyright 2023 University of Washington - Seattle, WA
- *
- * Licensed under the Apache License, Version 2.0 (the "License");
- * you may not use this file except in compliance with the License.
- * You may obtain a copy of the License at
- *
- *     http://www.apache.org/licenses/LICENSE-2.0
- *
- * Unless required by applicable law or agreed to in writing, software
- * distributed under the License is distributed on an "AS IS" BASIS,
- * WITHOUT WARRANTIES OR CONDITIONS OF ANY KIND, either express or implied.
- * See the License for the specific language governing permissions and
- * limitations under the License.
- */
-using System;
+﻿using System;
+using System.Collections;
 using System.Collections.Generic;
-using System.Text;
-using System.Xml;
-using System.Xml.Schema;
-using System.Xml.Serialization;
+using System.Linq;
 using pwiz.Common.Collections;
 using pwiz.Common.DataBinding;
 using pwiz.Common.Spectra;
-using pwiz.Common.SystemUtil;
-using pwiz.Skyline.Model.Databinding;
-using pwiz.Skyline.Properties;
-using pwiz.Skyline.Util;
-using pwiz.Skyline.Util.Extensions;
 
 namespace pwiz.Skyline.Model.Results.Spectra
 {
-    /// <summary>
-    /// A filter which can be used to determine which spectra should be used
-    /// when extracting chromatograms for a particular precursor.
-    /// </summary>
-    [XmlRoot(XML_ROOT)]
-    public class SpectrumClassFilter : Immutable, IXmlSerializable, IComparable, IComparable<SpectrumClassFilter>, IEquatable<SpectrumClassFilter>
+    public struct SpectrumClassFilter : IEnumerable<SpectrumClassFilterClause>
     {
-        public static SpectrumClassFilter EmptyToNull(SpectrumClassFilter spectrumClassFilter)
+        private ImmutableList<SpectrumClassFilterClause> _clauses;
+
+        public SpectrumClassFilter(IEnumerable<SpectrumClassFilterClause> alternatives)
         {
-            return true == spectrumClassFilter?.IsEmpty ? null : spectrumClassFilter;
-        }
-        public const string XML_ROOT = "spectrum_filter";
-        public SpectrumClassFilter(IEnumerable<FilterSpec> filterSpecs)
-        {
-            FilterSpecs = ImmutableList.ValueOf(filterSpecs);
+            var list = ImmutableList.ValueOf(alternatives);
+            if (list?.Count > 0)
+            {
+                _clauses = list;
+            }
+            else
+            {
+                _clauses = null;
+            }
         }
 
-        public ImmutableList<FilterSpec> FilterSpecs { get; private set; }
-        public SpectrumClassFilter Alternative { get; private set; }
-
-        public SpectrumClassFilter ChangeAlternative(SpectrumClassFilter alternative)
+        public SpectrumClassFilter(params SpectrumClassFilterClause[] alternatives) : this(
+            (IEnumerable<SpectrumClassFilterClause>)alternatives)
         {
-            return ChangeProp(ImClone(this), im => im.Alternative = alternative);
+
+        }
+
+        public int Count
+        {
+            get { return _clauses?.Count ?? 0; }
+        }
+
+        IEnumerator IEnumerable.GetEnumerator()
+        {
+            return GetEnumerator();
+        }
+
+        public IEnumerator<SpectrumClassFilterClause> GetEnumerator()
+        {
+            return _clauses.GetEnumerator();
         }
 
         public bool IsEmpty
         {
-            get { return FilterSpecs.Count == 0 && Alternative == null; }
+            get { return Count == 0; }
         }
 
         public Predicate<SpectrumMetadata> MakePredicate()
         {
-            var dataSchema = new DataSchema();
-            var clauses = new List<Predicate<SpectrumMetadata>>();
-            foreach (var filterSpec in FilterSpecs)
+            if (IsEmpty)
             {
-                var spectrumClassColumn = SpectrumClassColumn.FindColumn(filterSpec.ColumnId);
-                if (spectrumClassColumn == null)
-                {
-                    throw new InvalidOperationException(string.Format(Resources.SpectrumClassFilter_MakePredicate_No_spectrum_column__0_,
-                        filterSpec.ColumnId));
-                }
-
-                var filterPredicate = filterSpec.Predicate.MakePredicate(dataSchema, spectrumClassColumn.ValueType);
-                clauses.Add(spectrum=>filterPredicate(spectrumClassColumn.GetValue(spectrum)));
+                return x => true;
             }
 
-            Predicate<SpectrumMetadata> alternative = x=>true;
-            if (Alternative != null)
+            var predicates = this.Select(x => x.MakePredicate()).ToList();
+            return x =>
             {
-                alternative = Alternative.MakePredicate();
-            }
-
-            return spectrum =>
-            {
-                for (int i = 0; i < clauses.Count; i++)
+                foreach (var predicate in predicates)
                 {
-                    if (!clauses[i](spectrum))
+                    if (predicate(x))
                     {
-                        return alternative(spectrum);
+                        return true;
                     }
                 }
-                return true;
+
+                return false;
             };
         }
 
-        public bool Equals(SpectrumClassFilter other)
+        public IEnumerable<FilterSpec> FilterSpecs
         {
-            if (ReferenceEquals(null, other)) return false;
-            if (ReferenceEquals(this, other)) return true;
-            return Equals(FilterSpecs, other.FilterSpecs) && Equals(Alternative, other.Alternative);
-        }
-
-        public override bool Equals(object obj)
-        {
-            if (ReferenceEquals(null, obj)) return false;
-            if (ReferenceEquals(this, obj)) return true;
-            if (obj.GetType() != this.GetType()) return false;
-            return Equals((SpectrumClassFilter)obj);
-        }
-
-        public override int GetHashCode()
-        {
-            unchecked
+            get
             {
-                return FilterSpecs.GetHashCode() * 397 ^ (Alternative != null ? Alternative.GetHashCode() : 0);
+                return this.SelectMany(clause => clause.FilterSpecs);
             }
-        }
-
-        private SpectrumClassFilter()
-        {
-
-        }
-        XmlSchema IXmlSerializable.GetSchema()
-        {
-            return null;
-        }
-
-        private enum EL
-        {
-            filter,
-            spectrum_filter,
-        }
-
-        void IXmlSerializable.ReadXml(XmlReader reader)
-        {
-            if (FilterSpecs != null)
-            {
-                throw new InvalidOperationException();
-            }
-
-            SpectrumClassFilter alternative = null;
-            var filterSpecs = new List<FilterSpec>();
-            if (reader.IsEmptyElement)
-            {
-                reader.Read();
-            }
-            else
-            {
-                reader.Read();
-                while (true)
-                {
-                    if (reader.IsStartElement(EL.filter))
-                    {
-                        filterSpecs.Add(FilterSpec.ReadXml(reader));
-                    }
-                    else if (reader.IsStartElement(EL.spectrum_filter))
-                    {
-                        var clause = Deserialize(reader);
-                        clause.Alternative = alternative;
-                        alternative = clause;
-                    }
-                    else if (reader.NodeType == XmlNodeType.EndElement)
-                    {
-                        reader.ReadEndElement();
-                        break;
-                    }
-                    else
-                    {
-                        reader.Skip();
-                    }
-                }
-            }
-
-            FilterSpecs = ImmutableList.ValueOf(filterSpecs);
-            Alternative = alternative;
-        }
-
-        public void WriteXml(XmlWriter writer)
-        {
-            foreach (var filterSpec in FilterSpecs)
-            {
-                writer.WriteStartElement(EL.filter);
-                filterSpec.WriteXml(writer);
-                writer.WriteEndElement();
-            }
-
-            if (Alternative != null)
-            {
-                writer.WriteStartElement(EL.spectrum_filter);
-                Alternative.WriteXml(writer);
-                writer.WriteEndElement();
-            }
-        }
-
-        public static SpectrumClassFilter Deserialize(XmlReader xmlReader)
-        {
-            return xmlReader.Deserialize(new SpectrumClassFilter());
-        }
-
-        public int CompareTo(SpectrumClassFilter other)
-        {
-            if (other == null)
-            {
-                return 1;
-            }
-
-            int result = FilterSpecs.Count.CompareTo(other.FilterSpecs.Count);
-            if (result != 0)
-            {
-                return result;
-            }
-            Assume.AreEqual(FilterSpecs.Count, other.FilterSpecs.Count);
-            for (int i = 0; i < FilterSpecs.Count; i++)
-            {
-                result = FilterSpecs[i].ColumnId.CompareTo(other.FilterSpecs[i].ColumnId);
-                if (result == 0)
-                {
-                    result = StringComparer.Ordinal.Compare(FilterSpecs[i].Operation.OpName,
-                        other.FilterSpecs[i].Operation.OpName);
-                }
-
-                if (result == 0)
-                {
-                    result = StringComparer.Ordinal.Compare(FilterSpecs[i].Predicate.InvariantOperandText,
-                        other.FilterSpecs[i].Predicate.InvariantOperandText);
-                }
-
-                if (result != 0)
-                {
-                    return result;
-                }
-            }
-
-            if (Alternative == null)
-            {
-                return other.Alternative == null ? 0 : -1;
-            }
-            return Alternative.CompareTo(other.Alternative);
-        }
-
-        int IComparable.CompareTo(object obj)
-        {
-            return CompareTo((SpectrumClassFilter) obj);
-        }
-
-        public static string GetOperandDisplayText(DataSchema dataSchema, FilterSpec filterSpec)
-        {
-            var spectrumClassColumn = SpectrumClassColumn.FindColumn(filterSpec.ColumnId);
-            if (spectrumClassColumn == null)
-            {
-                return filterSpec.Predicate.InvariantOperandText;
-            }
-
-            var operandType = filterSpec.Operation.GetOperandType(dataSchema, spectrumClassColumn.ValueType);
-            if (operandType == null)
-            {
-                return null;
-            }
-
-            try
-            {
-                var value = filterSpec.Predicate.GetOperandValue(dataSchema, spectrumClassColumn.ValueType);
-                if (value == null)
-                {
-                    return string.Empty;
-                }
-
-                return spectrumClassColumn.FormatAbbreviatedValue(value);
-            }
-            catch
-            {
-                return filterSpec.Predicate.GetOperandDisplayText(dataSchema, spectrumClassColumn.ValueType);
-            }
-        }
-
-        public string GetAbbreviatedText()
-        {
-            var dataSchema = new DataSchema(SkylineDataSchema.GetLocalizedSchemaLocalizer());
-            var clauses = new List<string>();
-            foreach (var filterSpec in FilterSpecs)
-            {
-                var spectrumClassColumn = SpectrumClassColumn.FindColumn(filterSpec.ColumnId);
-                if (spectrumClassColumn == null)
-                {
-                    clauses.Add(TextUtil.SpaceSeparate(filterSpec.Column, filterSpec.Operation?.DisplayName, filterSpec.Predicate.InvariantOperandText));
-                }
-                else
-                {
-                    var clauseText = new StringBuilder(spectrumClassColumn.GetAbbreviatedColumnName());
-                    var opText = filterSpec.Operation.ShortDisplayName;
-                    if (char.IsLetterOrDigit(opText[0]) || char.IsLetterOrDigit(opText[opText.Length - 1]))
-                    {
-                        clauseText.Append(@" ");
-                        clauseText.Append(opText);
-                        clauseText.Append(@" ");
-                    }
-                    else
-                    {
-                        clauseText.Append(opText);
-                    }
-
-                    clauseText.Append(GetOperandDisplayText(dataSchema, filterSpec));
-                    clauses.Add(clauseText.ToString().Trim());
-                }
-            }
-
-            return string.Join(Resources.SpectrumClassFilter_GetAbbreviatedText__AND_, clauses);
         }
     }
 }

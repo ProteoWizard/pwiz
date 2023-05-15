@@ -637,7 +637,7 @@ namespace pwiz.Skyline.Controls.SeqNode
 
         private static void RenderSpectrumClassFilterTip(TableDesc table, RenderTools rt, SpectrumClassFilter spectrumClassFilter)
         {
-            if (spectrumClassFilter == null)
+            if (spectrumClassFilter.IsEmpty)
             {
                 return;
             }
@@ -650,7 +650,7 @@ namespace pwiz.Skyline.Controls.SeqNode
                 {
                     CreateRowLabel(TextUtil.SpaceSeparate(column, filterSpec.Operation.DisplayName), rt),
                 };
-                var operand = SpectrumClassFilter.GetOperandDisplayText(dataSchema, filterSpec);
+                var operand = SpectrumClassFilterClause.GetOperandDisplayText(dataSchema, filterSpec);
                 if (operand != null)
                 {
                     row.Add(CreateData(operand, rt));

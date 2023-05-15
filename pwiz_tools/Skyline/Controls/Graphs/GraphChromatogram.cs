@@ -2055,7 +2055,7 @@ namespace pwiz.Skyline.Controls.Graphs
                     infoPrimary.Transform(Transform);
 
                     int iColor = GetColorIndex(nodeGroup, countLabelTypes, ref charge, ref iCharge);
-                    if (nodeGroup.SpectrumClassFilter != null)
+                    if (!nodeGroup.SpectrumClassFilter.IsEmpty)
                     {
                         var peptideDocNode = DocumentUI.FindNode(_groupPaths[i].Parent) as PeptideDocNode;
                         if (peptideDocNode != null)

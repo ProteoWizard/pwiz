@@ -1706,7 +1706,7 @@ namespace pwiz.Skyline.Menus
             var spectrumClassFilters = transitionGroupPaths.Select(path =>
                 ((TransitionGroupDocNode) SkylineWindow.DocumentUI.FindNode(path)).SpectrumClassFilter).ToHashSet();
             using var autoComplete = new SpectrumFilterAutoComplete(SkylineWindow, transitionGroupPaths);
-            using var dlg = new EditSpectrumFilterDlg(spectrumClassFilters.Count == 1 ? spectrumClassFilters.First() : null)
+            using var dlg = new EditSpectrumFilterDlg(spectrumClassFilters.Count == 1 ? spectrumClassFilters.First() : default)
             {
                 AutoComplete = autoComplete
             };
@@ -1724,7 +1724,7 @@ namespace pwiz.Skyline.Menus
         }
 
         public void ChangeSpectrumFilter(ICollection<IdentityPath> precursorIdentityPaths,
-            SpectrumClassFilter spectrumClassFilter, bool copy)
+            SpectrumClassFilterClause spectrumClassFilter, bool copy)
         {
             SkylineWindow.ModifyDocument(Resources.EditMenu_ChangeSpectrumFilter_Change_spectrum_filter, doc => ChangeSpectrumFilter(doc, precursorIdentityPaths, spectrumClassFilter, copy, out _),
                 docPair => AuditLogEntry.CreateSimpleEntry(MessageType.added_spectrum_filter, docPair.NewDocumentType));

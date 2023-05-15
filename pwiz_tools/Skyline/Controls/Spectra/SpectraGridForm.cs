@@ -671,7 +671,7 @@ namespace pwiz.Skyline.Controls.Spectra
 
         public void AddSpectrumFilters(IList<SpectrumClassRow> spectrumClassRows)
         {
-            var filters = new List<SpectrumClassFilter>();
+            var filters = new List<SpectrumClassFilterClause>();
             var transitionIdentityPathLists = new List<ICollection<IdentityPath>>();
             var activeClassColumns = GetActiveClassColumns().ToList();
             using (var longWaitDlg = new LongWaitDlg
@@ -773,7 +773,7 @@ namespace pwiz.Skyline.Controls.Spectra
             }
         }
 
-        private SrmDocument AddFilters(SrmDocument doc, IList<SpectrumClassFilter> filters,
+        private SrmDocument AddFilters(SrmDocument doc, IList<SpectrumClassFilterClause> filters,
             IList<ICollection<IdentityPath>> transitionGroupIdentityPaths, out int addedFilterCount)
         {
             SrmDocument newDocument = null;
@@ -787,7 +787,7 @@ namespace pwiz.Skyline.Controls.Spectra
                         broker.CancellationToken.ThrowIfCancellationRequested();
                         broker.ProgressValue = i * 100 / filters.Count;
                         doc = SkylineWindow.EditMenu.ChangeSpectrumFilter(doc, transitionGroupIdentityPaths[i],
-                            filters[i], true, out int changeCount);
+                            new SpectrumClassFilter(filters[i]), true, out int changeCount);
                         totalChangeCount += changeCount;
                     }
 
@@ -799,7 +799,7 @@ namespace pwiz.Skyline.Controls.Spectra
             return newDocument;
         }
 
-        public SpectrumClassFilter MakeFilter(SpectrumClassRow row, IList<SpectrumClassColumn> activeClassColumns)
+        public SpectrumClassFilterClause MakeFilter(SpectrumClassRow row, IList<SpectrumClassColumn> activeClassColumns)
         {
             var filterSpecs = new List<FilterSpec>();
             foreach (var classColumn in activeClassColumns)
@@ -808,7 +808,7 @@ namespace pwiz.Skyline.Controls.Spectra
                 var filterPredicate = FilterPredicate.CreateFilterPredicate(FilterOperations.OP_EQUALS, value);
                 filterSpecs.Add(new FilterSpec(classColumn.PropertyPath, filterPredicate));
             }
-            return new SpectrumClassFilter(filterSpecs);
+            return new SpectrumClassFilterClause(filterSpecs);
         }
 
         private void checkedListBoxSpectrumClassColumns_ItemCheck(object sender, ItemCheckEventArgs e)

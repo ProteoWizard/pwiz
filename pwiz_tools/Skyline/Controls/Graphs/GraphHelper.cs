@@ -658,7 +658,7 @@ namespace pwiz.Skyline.Controls.Graphs
                    nodeGroup != null ? nodeGroup.TransitionGroup.LabelType : null,
                    false)
         {
-            SpectrumClassFilter = nodeGroup?.SpectrumClassFilter;
+            SpectrumClassFilter = nodeGroup?.SpectrumClassFilter ?? default;
         }
 
         public PaneKey(IsotopeLabelType isotopeLabelType)
@@ -676,10 +676,10 @@ namespace pwiz.Skyline.Controls.Graphs
 
         public Adduct PrecursorAdduct { get; private set; }
         public IsotopeLabelType IsotopeLabelType { get; private set; }
-        public SpectrumClassFilter SpectrumClassFilter { get; private set; }
+        public SpectrumClassFilter? SpectrumClassFilter { get; private set; }
         public bool? IsProducts { get; private set; }
 
-        private Tuple<Adduct, IsotopeLabelType, SpectrumClassFilter, bool?> AsTuple()
+        private Tuple<Adduct, IsotopeLabelType, SpectrumClassFilter?, bool?> AsTuple()
         {
             return Tuple.Create(PrecursorAdduct, IsotopeLabelType, SpectrumClassFilter, IsProducts);
         }

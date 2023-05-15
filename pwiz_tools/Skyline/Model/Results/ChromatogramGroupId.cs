@@ -39,11 +39,11 @@ namespace pwiz.Skyline.Model.Results
     /// </summary>
     public class ChromatogramGroupId : Immutable, IComparable<ChromatogramGroupId>
     {
-        private ChromatogramGroupId(Target target, string qcTraceName, SpectrumClassFilter spectrumClassFilter)
+        private ChromatogramGroupId(Target target, string qcTraceName, SpectrumClassFilterClause spectrumClassFilter)
         {
             Target = target;
             QcTraceName = qcTraceName;
-            SpectrumClassFilter = SpectrumClassFilter.EmptyToNull(spectrumClassFilter);
+            SpectrumClassFilter = SpectrumClassFilterClause.EmptyToNull(spectrumClassFilter);
         }
 
         public static ChromatogramGroupId ForQcTraceName(string name)
@@ -55,18 +55,18 @@ namespace pwiz.Skyline.Model.Results
             return new ChromatogramGroupId(null, name, null);
         }
 
-        public ChromatogramGroupId(Target target, SpectrumClassFilter spectrumClassFilter) : this(target, null,
+        public ChromatogramGroupId(Target target, SpectrumClassFilterClause spectrumClassFilter) : this(target, null,
             spectrumClassFilter)
         {
         }
 
         public Target Target { get; }
         public string QcTraceName { get; }
-        public SpectrumClassFilter SpectrumClassFilter { get; private set; }
+        public SpectrumClassFilterClause SpectrumClassFilter { get; private set; }
 
-        public ChromatogramGroupId ChangeSpectrumClassFilter(SpectrumClassFilter spectrumClassFilter)
+        public ChromatogramGroupId ChangeSpectrumClassFilter(SpectrumClassFilterClause spectrumClassFilter)
         {
-            spectrumClassFilter = SpectrumClassFilter.EmptyToNull(spectrumClassFilter);
+            spectrumClassFilter = SpectrumClassFilterClause.EmptyToNull(spectrumClassFilter);
             if (ReferenceEquals(spectrumClassFilter, SpectrumClassFilter))
             {
                 return this;
@@ -107,7 +107,7 @@ namespace pwiz.Skyline.Model.Results
         public static IEnumerable<ChromatogramGroupId> FromProto(ChromatogramGroupIdsProto proto)
         {
             var targets = new List<Target> {null};
-            var filters = new List<SpectrumClassFilter> {null};
+            var filters = new List<SpectrumClassFilterClause> {null};
             foreach (var targetProto in proto.Targets)
             {
                 if (!string.IsNullOrEmpty(targetProto.ModifiedPeptideSequence))
@@ -132,7 +132,7 @@ namespace pwiz.Skyline.Model.Results
                             ChromatogramGroupIds.GetFilterOperation(filterPredicate.Operation),
                             filterPredicate.Operand)));
                 }
-                filters.Add(new SpectrumClassFilter(filterSpecs));
+                filters.Add(new SpectrumClassFilterClause(filterSpecs));
             }
 
             foreach (var id in proto.ChromatogramGroupIds)
@@ -309,7 +309,7 @@ namespace pwiz.Skyline.Model.Results
         public ChromatogramGroupIdsProto ToProtoMessage()
         {
             var targets = new DistinctList<Target> {null};
-            var filters = new DistinctList<SpectrumClassFilter> {null};
+            var filters = new DistinctList<SpectrumClassFilterClause> {null};
             var idsProto = new ChromatogramGroupIdsProto();
             foreach (var id in this)
             {

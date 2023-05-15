@@ -29,7 +29,7 @@ using pwiz.Skyline.Properties;
 namespace pwiz.Skyline.Model.Results.Spectra
 {
     /// <summary>
-    /// List of the columns on which one can apply a <see cref="SpectrumClassFilter"/>.
+    /// List of the columns on which one can apply a <see cref="SpectrumClassFilterClause"/>.
     /// Each of these columns corresponds to a property in the class <see cref="SpectrumClass"/>.
     /// </summary>
     public abstract class SpectrumClassColumn

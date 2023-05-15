@@ -56,7 +56,7 @@ namespace pwiz.SkylineTest
         public void TestSpectrumClassFilterSerialization()
         {
             var spectrumClassFilter = CreateTestSpectrumClassFilter();
-            var xmlSerializer = new XmlSerializer(typeof(SpectrumClassFilter));
+            var xmlSerializer = new XmlSerializer(typeof(SpectrumClassFilterClause));
             var stream = new MemoryStream();
             xmlSerializer.Serialize(stream, spectrumClassFilter);
             stream.Seek(0, SeekOrigin.Begin);
@@ -82,7 +82,7 @@ namespace pwiz.SkylineTest
             
         }
 
-        private SpectrumClassFilter CreateTestSpectrumClassFilter()
+        private SpectrumClassFilterClause CreateTestSpectrumClassFilter()
         {
             var spectrumPrecursors = new SpectrumPrecursors(new[]
             {
@@ -96,7 +96,7 @@ namespace pwiz.SkylineTest
                 new FilterSpec(SpectrumClassColumn.ScanDescription.PropertyPath,
                     FilterPredicate.CreateFilterPredicate(FilterOperations.OP_CONTAINS, "SCAN"))
             };
-            return new SpectrumClassFilter(filterSpecs);
+            return new SpectrumClassFilterClause(filterSpecs);
         }
     }
 }

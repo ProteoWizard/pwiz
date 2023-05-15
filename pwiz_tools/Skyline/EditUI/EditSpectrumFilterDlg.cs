@@ -78,10 +78,6 @@ namespace pwiz.Skyline.EditUI
 
         public IEnumerable<Row> GetRows(SpectrumClassFilter spectrumClassFilter)
         {
-            if (spectrumClassFilter == null)
-            {
-                yield break;
-}
             foreach (var filterSpec in spectrumClassFilter.FilterSpecs)
             {
                 var spectrumClassColumn = SpectrumClassColumn.FindColumn(filterSpec.ColumnId);
@@ -129,7 +125,7 @@ namespace pwiz.Skyline.EditUI
                 filterSpecs.Add(filterSpec);
             }
 
-            SpectrumClassFilter = new SpectrumClassFilter(filterSpecs);
+            SpectrumClassFilter = new SpectrumClassFilter(new SpectrumClassFilterClause(filterSpecs));
             DialogResult = DialogResult.OK;
         }
 

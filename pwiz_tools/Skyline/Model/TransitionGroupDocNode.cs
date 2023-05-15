@@ -250,7 +250,7 @@ namespace pwiz.Skyline.Model
 
         public TransitionGroupDocNode ChangeSpectrumClassFilter(SpectrumClassFilter spectrumClassFilter)
         {
-            spectrumClassFilter = SpectrumClassFilter.EmptyToNull(spectrumClassFilter);
+            spectrumClassFilter = spectrumClassFilter;
             if (Equals(SpectrumClassFilter, spectrumClassFilter))
             {
                 return this;
