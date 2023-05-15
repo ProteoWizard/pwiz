@@ -25,6 +25,7 @@ using System.Text;
 using JetBrains.Annotations;
 using pwiz.Common.Collections;
 using pwiz.Common.SystemUtil;
+using pwiz.Skyline.Model.DocSettings;
 using pwiz.Skyline.Model.Results;
 using pwiz.Skyline.Model.Tools;
 using pwiz.Skyline.Properties;
@@ -211,7 +212,13 @@ namespace pwiz.Skyline.Model.Lib
         {
             string outputFilepath = Path.Combine(outputPath, diaDataFile.GetFileNameWithoutExtension() + DataSourceUtil.EXT_MZML);
 
-            if (diaDataFile.GetExtension().ToLowerInvariant() == DataSourceUtil.EXT_MZML)
+            var reader = new IsolationSchemeReader(new [] { diaDataFile });
+            string isolationSchemeName = Path.GetFileNameWithoutExtension(diaDataFile.GetFileNameWithoutExtension());
+            var isolationScheme = reader.Import(isolationSchemeName, progressMonitor);
+            bool needsDemultiplexing = isolationScheme.SpecialHandling == IsolationScheme.SpecialHandlingType.OVERLAP ||
+                                       isolationScheme.SpecialHandling == IsolationScheme.SpecialHandlingType.OVERLAP_MULTIPLEXED;
+
+            if (!needsDemultiplexing && diaDataFile.GetExtension().ToLowerInvariant() == DataSourceUtil.EXT_MZML)
             {
                 outputFilepath = Path.Combine(outputPath, diaDataFile.GetFileName());
                 if (!File.Exists(outputFilepath))
@@ -222,6 +229,7 @@ namespace pwiz.Skyline.Model.Lib
             const string MSCONVERT_EXE = "msconvert";
             
             status = status.ChangeMessage(Resources.EncyclopeDiaHelpers_GetConvertedDiaDataFile_Converting_DIA_data_to_mzML);
+            progressMonitor.UpdateProgress(status);
 
             var pr = new ProcessRunner();
             var psi = new ProcessStartInfo(MSCONVERT_EXE)
@@ -234,7 +242,8 @@ namespace pwiz.Skyline.Model.Lib
                     $"--outfile {Path.GetFileName(outputFilepath).Quote()} " +
                     " --acceptZeroLengthSpectra --simAsSpectra --combineIonMobilitySpectra" +
                     " --filter \"peakPicking true 1-\" " +
-                    " --runIndex " + Math.Max(0, diaDataFile.GetSampleIndex()) +
+                    (needsDemultiplexing ? @" --filter ""demultiplex""" : "") +
+                    " --runIndex " + Math.Max(0, diaDataFile.GetSampleIndex()) + " " +
                     diaDataFile.GetFilePath().Quote()
             };
 
