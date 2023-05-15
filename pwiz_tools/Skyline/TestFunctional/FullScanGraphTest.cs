@@ -353,7 +353,6 @@ namespace pwiz.SkylineTestFunctional
                 {"ReplicateName","ID12692_01_UCA168_3727_040714"},
                 {"PrecursorMz","453.261"},
                 {"Charge","+3"},
-                {"Label","light"},
                 {"RetentionTime","33.05"},
                 {"IonMobility","3.477 msec"},
                 {"IsolationWindow","50:2000 (-975:+975)"},
@@ -368,9 +367,7 @@ namespace pwiz.SkylineTestFunctional
                 },
                 {"DataPoints","105373"},
                 {"MzCount","45751"},
-                {"IsCentroided","False"},
-                {"dotp","0.61"},
-                {"idotp","0.84"}
+                {"IsCentroided","False"}
             };
             var expectedProperties = new FullScanProperties();
             expectedProperties.Deserialize(expectedPropertiesDict);

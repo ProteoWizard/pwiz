@@ -559,6 +559,8 @@ namespace pwiz.Skyline.Controls.Graphs
                                 _msDataFileScanHelper.ScanProvider.DataFilePath
                             ));
                         spectrumProperties.ReplicateName = chromSet?.Name;
+
+                        /*
                         var resultsIndex = stateProvider.DocumentUI.Settings.MeasuredResults.Chromatograms.IndexOf(chromSet);
                         var nodePath = DocNodePath.GetNodePath(_msDataFileScanHelper.CurrentTransition?.Id, _documentContainer.DocumentUI);
 
@@ -570,6 +572,7 @@ namespace pwiz.Skyline.Controls.Graphs
                         if(dotp.HasValue)
                             spectrumProperties.idotp = dotp.Value.ToString(Formats.PEAK_FOUND_RATIO);
                         spectrumProperties.Label = nodePath.Precursor.LabelType.ToString();
+                        */
                     }
                 }
 
