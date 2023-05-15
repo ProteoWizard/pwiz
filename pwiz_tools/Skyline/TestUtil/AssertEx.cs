@@ -833,7 +833,7 @@ namespace pwiz.SkylineTestUtil
             return sb.ToString();
         }
 
-        public static void NoDiff(string target, string actual, string helpMsg=null, Dictionary<int, double> columnTolerances = null)
+        public static void NoDiff(string target, string actual, string helpMsg=null, Dictionary<int, double> columnTolerances = null, bool ignorePathDiferences = false)
         {
             if (helpMsg == null)
                 helpMsg = String.Empty;
@@ -860,6 +860,11 @@ namespace pwiz.SkylineTestUtil
                     {
                         Fail(GetEarlyEndingMessage(helpMsg, "Actual", count-1, lineEqualLast, lineTarget, readerTarget));
                     }
+
+                    if (ignorePathDiferences)
+                    {
+                        RemovePathDifferences(ref lineTarget, ref lineActual);
+                    }
                     // If only difference appears to be generated GUIDs or timestamps, let it pass
                     if (!LinesEquivalentIgnoringTimeStampsAndGUIDs(lineTarget, lineActual, columnTolerances))
                     {
@@ -871,6 +876,40 @@ namespace pwiz.SkylineTestUtil
 
             }
         }
+
+        // Look for one or more filenames, see if they match when ignoring path, or when filenames are tempfiles
+        private static void RemovePathDifferences(ref string lineExpected, ref string lineActual)
+        {
+            if (string.Equals(lineExpected, lineActual))
+            {
+                return; // Identical
+            }
+            var pattern = "\"([^\"]+)\"";
+            for (var matching = true; matching;)
+            {
+                matching = false;
+                var matchE = Regex.Match(lineExpected, pattern);
+                if (matchE.Success)
+                {
+                    var matchA = Regex.Match(lineActual, pattern);
+                    if (matchA.Success)
+                    {
+                        var pathE = matchE.Groups[1].Value;
+                        var pathA = matchA.Groups[1].Value;
+                        var fileE = Path.GetFileName(pathE);
+                        var fileA = Path.GetFileName(pathA);
+                        if (string.Equals(fileE, fileA) || 
+                            (Path.GetExtension(fileE) == @".tmp") && Path.GetExtension(fileE) == Path.GetExtension(fileA)) // Tmp file names will always vary
+                        {
+                            lineExpected = lineExpected.Replace(pathE, string.Empty);
+                            lineActual = lineActual.Replace(pathA, string.Empty);
+                            matching = true;
+                        }
+                    }
+                }
+            }
+        }
+
 
         private static bool LinesEquivalentIgnoringTimeStampsAndGUIDs(string lineExpected, string lineActual,
             Dictionary<int, double> columnTolerances = null)
@@ -946,11 +985,11 @@ namespace pwiz.SkylineTestUtil
                 name, count, lineEqualLast, lineNext, linesRemaining);
         }
 
-        public static void FileEquals(string path1, string path2, Dictionary<int, double> columnTolerances = null )
+        public static void FileEquals(string path1, string path2, Dictionary<int, double> columnTolerances = null, bool ignorePathDifferences = false )
         {
             string file1 = File.ReadAllText(path1);
             string file2 = File.ReadAllText(path2);
-            NoDiff(file1, file2, null, columnTolerances);
+            NoDiff(file1, file2, null, columnTolerances, ignorePathDifferences);
         }
 
         /// <summary>

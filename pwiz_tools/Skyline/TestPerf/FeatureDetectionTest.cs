@@ -306,6 +306,14 @@ namespace TestPerf
             {
                 File.WriteAllText("SearchControlLog.txt", importPeptideSearchDlg.SearchControl.LogText);
             }
+
+            // We've had some strange hard-to-reproduce failures, see if Hardklor outout is stable
+            var expectedHardklorFiles = @"expected_hardklor_files";
+            foreach (var hkFile in Directory.EnumerateFiles(GetTestPath(expectedHardklorFiles)))
+            {
+                AssertEx.FileEquals(hkFile, hkFile.Replace(expectedHardklorFiles, Path.Combine(expectedHardklorFiles,@"..")), null, true);
+            }
+
             RunUI(() =>
             {
                 // Click the "Finish" button.
