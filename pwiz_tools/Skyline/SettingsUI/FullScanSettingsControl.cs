@@ -179,7 +179,7 @@ namespace pwiz.Skyline.SettingsUI
                 double precursorRes;
                 return double.TryParse(textPrecursorRes.Text, out precursorRes) ? (double?)precursorRes : null;
             }
-            set { textPrecursorRes.Text = value.ToString(); }
+            set { textPrecursorRes.Text = value.HasValue ? value.Value.ToString(resolvingPowerFormat) : string.Empty; }
         }
 
         public double? PrecursorResMz
@@ -877,6 +877,8 @@ namespace pwiz.Skyline.SettingsUI
             get { return double.Parse(tbxTimeAroundPrediction.Text); }
         }
 
+        private const string resolvingPowerFormat = "#,0.####";
+
         public static void SetAnalyzerType(FullScanMassAnalyzerType analyzerTypeNew,
                                     FullScanMassAnalyzerType analyzerTypeCurrent,
                                     double? resCurrent,
@@ -905,8 +907,8 @@ namespace pwiz.Skyline.SettingsUI
                 textAt.Visible = false;
                 textRes.Enabled = true;
                 textRes.Text = resCurrent.HasValue && (analyzerTypeCurrent == analyzerTypeNew)
-                                  ? resCurrent.Value.ToString(LocalizationHelper.CurrentCulture)
-                                  : TransitionFullScan.DEFAULT_CENTROIDED_PPM.ToString(LocalizationHelper.CurrentCulture);
+                                  ? resCurrent.Value.ToString(resolvingPowerFormat)
+                                  : TransitionFullScan.DEFAULT_CENTROIDED_PPM.ToString(resolvingPowerFormat);
                 labelText = Resources.FullScanSettingsControl_SetAnalyzerType_Mass__Accuracy_;
                 labelPPM.Visible = true;
                 labelPPM.Left = textRes.Right;
@@ -931,7 +933,6 @@ namespace pwiz.Skyline.SettingsUI
                     }
                 }
 
-                const string resolvingPowerFormat = "#,0.####";
                 if (analyzerTypeNew == analyzerTypeCurrent && resCurrent.HasValue)
                     textRes.Text = resCurrent.Value.ToString(resolvingPowerFormat);
                 else
@@ -1282,5 +1283,6 @@ namespace pwiz.Skyline.SettingsUI
             public bool? MS1Enabled { get; private set; }
             public bool? MSMSEnabled { get; private set; }
         }
+
     }
 }
