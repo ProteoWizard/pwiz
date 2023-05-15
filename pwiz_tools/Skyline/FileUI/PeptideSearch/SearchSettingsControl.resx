@@ -634,13 +634,13 @@
     <value>14, 20</value>
   </data>
   <data name="labelHardklorCorrelationThreshold.Size" type="System.Drawing.Size, System.Drawing">
-    <value>107, 13</value>
+    <value>106, 13</value>
   </data>
   <data name="labelHardklorCorrelationThreshold.TabIndex" type="System.Int32, mscorlib">
     <value>0</value>
   </data>
   <data name="labelHardklorCorrelationThreshold.Text" xml:space="preserve">
-    <value>Co&amp;rrelation Threshold</value>
+    <value>&amp;Correlation threshold:</value>
   </data>
   <data name="&gt;&gt;labelHardklorCorrelationThreshold.Name" xml:space="preserve">
     <value>labelHardklorCorrelationThreshold</value>
@@ -691,7 +691,7 @@
     <value>2</value>
   </data>
   <data name="lblHardklorSignalToNoise.Text" xml:space="preserve">
-    <value>Si&amp;gnal to noise:</value>
+    <value>&amp;Signal to noise:</value>
   </data>
   <data name="&gt;&gt;lblHardklorSignalToNoise.Name" xml:space="preserve">
     <value>lblHardklorSignalToNoise</value>

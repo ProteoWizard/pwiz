@@ -12063,13 +12063,13 @@ If you choose Disable, you can enable Auto-select later with the "Refine &gt; Ad
     <value>detected features</value>
   </data>
   <data name="BuildPeptideSearchLibraryControl_BuildPeptideSearchLibrary_Building_Detected_Features_Library" xml:space="preserve">
-    <value>Building Detected Features Library</value>
+    <value>Building detected features library</value>
   </data>
   <data name="FullScanSettingsControl_ModifyOptionsForImportPeptideSearchWizard_Instrument_Values" xml:space="preserve">
-    <value>Instru&amp;ment Values</value>
+    <value>&amp;Instrument values</value>
   </data>
   <data name="FullScanSettingsControl_ModifyOptionsForImportPeptideSearchWizard_Instrument_Values_from_Full_Scan_Settings" xml:space="preserve">
-    <value>(From Full-Scan Settings)</value>
+    <value>Instrument values (from full-scan settings)</value>
   </data>
   <data name="FindOptions_GetNotFoundMessage_Nothing_could_be_found_matching_any_of_the__0__criteria" xml:space="preserve">
     <value>Nothing could be found matching any of the {0} criteria</value>

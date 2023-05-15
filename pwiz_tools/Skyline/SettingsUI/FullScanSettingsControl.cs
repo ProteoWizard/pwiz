@@ -179,7 +179,7 @@ namespace pwiz.Skyline.SettingsUI
                 double precursorRes;
                 return double.TryParse(textPrecursorRes.Text, out precursorRes) ? (double?)precursorRes : null;
             }
-            set { textPrecursorRes.Text = value.HasValue ? value.Value.ToString(resolvingPowerFormat) : string.Empty; }
+            set { textPrecursorRes.Text = FormatPrecursorRes(value, PrecursorMassAnalyzer); }
         }
 
         public double? PrecursorResMz
@@ -877,7 +877,14 @@ namespace pwiz.Skyline.SettingsUI
             get { return double.Parse(tbxTimeAroundPrediction.Text); }
         }
 
-        private const string resolvingPowerFormat = "#,0.####";
+        private static string FormatPrecursorRes(double? resolvingPower, FullScanMassAnalyzerType analyzerType)
+        {
+            if (!resolvingPower.HasValue)
+                return string.Empty;
+            return analyzerType == FullScanMassAnalyzerType.centroided ? 
+                resolvingPower.Value.ToString(CultureInfo.CurrentCulture) :
+                resolvingPower.Value.ToString(@"#,0.####");
+        }
 
         public static void SetAnalyzerType(FullScanMassAnalyzerType analyzerTypeNew,
                                     FullScanMassAnalyzerType analyzerTypeCurrent,
@@ -906,9 +913,11 @@ namespace pwiz.Skyline.SettingsUI
                 labelTh.Visible = false;
                 textAt.Visible = false;
                 textRes.Enabled = true;
-                textRes.Text = resCurrent.HasValue && (analyzerTypeCurrent == analyzerTypeNew)
-                                  ? resCurrent.Value.ToString(resolvingPowerFormat)
-                                  : TransitionFullScan.DEFAULT_CENTROIDED_PPM.ToString(resolvingPowerFormat);
+                textRes.Text = FormatPrecursorRes(
+                    resCurrent.HasValue && (analyzerTypeCurrent == analyzerTypeNew)
+                        ? resCurrent
+                        : TransitionFullScan.DEFAULT_CENTROIDED_PPM,
+                    analyzerTypeCurrent);
                 labelText = Resources.FullScanSettingsControl_SetAnalyzerType_Mass__Accuracy_;
                 labelPPM.Visible = true;
                 labelPPM.Left = textRes.Right;
@@ -934,9 +943,9 @@ namespace pwiz.Skyline.SettingsUI
                 }
 
                 if (analyzerTypeNew == analyzerTypeCurrent && resCurrent.HasValue)
-                    textRes.Text = resCurrent.Value.ToString(resolvingPowerFormat);
+                    textRes.Text = FormatPrecursorRes(resCurrent, analyzerTypeNew);
                 else
-                    textRes.Text = TransitionFullScan.DEFAULT_RES_VALUES[(int)analyzerTypeNew].ToString(resolvingPowerFormat);
+                    textRes.Text = FormatPrecursorRes(TransitionFullScan.DEFAULT_RES_VALUES[(int)analyzerTypeNew], analyzerTypeNew);
 
                 labelAt.Visible = variableRes;
                 textAt.Visible = variableRes;
@@ -1022,7 +1031,6 @@ namespace pwiz.Skyline.SettingsUI
                 var ms1ControlsNeeded = new Control[] { label32, comboPrecursorAnalyzerType, labelPrecursorRes, labelPrecursorAt, 
                     textPrecursorRes, textPrecursorAt, labelPrecursorPPM, labelPrecursorTh};
                 var leftShift = label32.Left - label23.Left;
-                groupBoxMS1.Width -= leftShift;
 
                 foreach (var cc in groupBoxMS1.Controls)
                 {

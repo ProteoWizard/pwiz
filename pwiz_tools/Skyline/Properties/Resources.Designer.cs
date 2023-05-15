@@ -3294,7 +3294,7 @@ namespace pwiz.Skyline.Properties {
         }
         
         /// <summary>
-        ///   Looks up a localized string similar to Building Detected Features Library.
+        ///   Looks up a localized string similar to Building detected features library.
         /// </summary>
         public static string BuildPeptideSearchLibraryControl_BuildPeptideSearchLibrary_Building_Detected_Features_Library {
             get {
@@ -15261,7 +15261,7 @@ namespace pwiz.Skyline.Properties {
         }
         
         /// <summary>
-        ///   Looks up a localized string similar to Instru&amp;ment Values.
+        ///   Looks up a localized string similar to Instru&amp;ment values.
         /// </summary>
         public static string FullScanSettingsControl_ModifyOptionsForImportPeptideSearchWizard_Instrument_Values {
             get {
@@ -15271,7 +15271,7 @@ namespace pwiz.Skyline.Properties {
         }
         
         /// <summary>
-        ///   Looks up a localized string similar to (From Full-Scan Settings).
+        ///   Looks up a localized string similar to Instru&amp;ment values (from full-scan settings).
         /// </summary>
         public static string FullScanSettingsControl_ModifyOptionsForImportPeptideSearchWizard_Instrument_Values_from_Full_Scan_Settings {
             get {
