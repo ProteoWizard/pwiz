@@ -174,6 +174,7 @@ namespace pwiz.Skyline.FileUI
 
             DwellTime = Settings.Default.ExportMethodDwellTime;
             AccumulationTime = Settings.Default.ExportMethodAccumulationTime;
+            XICWidth = Settings.Default.ExportMethodXICWidth;
             RunLength = Settings.Default.ExportMethodRunLength;
 
             Helpers.PeptideToMoleculeTextMapper.TranslateForm(this, document.DocumentType); // Use terminology like "Molecule List" instead of "Protein" if appropriate to document
@@ -762,6 +763,16 @@ namespace pwiz.Skyline.FileUI
             {
                 _exportProperties.AccumulationTime = value;
                 textAccumulationTime.Text = _exportProperties.AccumulationTime.ToString(LocalizationHelper.CurrentCulture);
+            }
+        }
+
+        public double XICWidth
+        {
+            get { return _exportProperties.XICWidth; }
+            set
+            {
+                _exportProperties.XICWidth = value;
+                textXICWidth.Text = _exportProperties.XICWidth.ToString(LocalizationHelper.CurrentCulture);
             }
         }
 
@@ -1380,6 +1391,14 @@ namespace pwiz.Skyline.FileUI
                     return false;
 
                 _exportProperties.AccumulationTime = accumulationTime;
+            }
+
+            if (textXICWidth.Visible)
+            {
+                if (!helper.ValidateDecimalTextBox(textXICWidth, AbiMassListExporter.XIC_WIDTH_MIN,
+                        AbiMassListExporter.XIC_WIDTH_MAX, out var xicWidth, false))
+                    return false;
+                _exportProperties.XICWidth = xicWidth;
             }
 
             _exportProperties.IntensityThresholdPercent = null;
@@ -2138,7 +2157,12 @@ namespace pwiz.Skyline.FileUI
                 MessageDlg.Show(this, Resources.ExportMethodDlg_cbIgnoreProteins_CheckedChanged_Grouping_peptides_by_protein_has_not_yet_been_implemented_for_scheduled_methods_);
             }
         }
-        
+
+        private void cbExportSciexOSQuantMethod_CheckedChanged(object sender, EventArgs e)
+        {
+            textXICWidth.Visible = cbExportSciexOSQuantMethod.Checked;
+            labelXICWidth.Visible = cbExportSciexOSQuantMethod.Checked;
+        }
         private void btnGraph_Click(object sender, EventArgs e)
         {
             ShowSchedulingGraph();

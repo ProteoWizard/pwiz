@@ -386,6 +386,7 @@ namespace pwiz.Skyline.Model
         public virtual int PrimaryTransitionCount { get; set; }
         public virtual int DwellTime { get; set; }
         public virtual double AccumulationTime { get; set; }
+        public virtual double XICWidth { get; set; }
         public virtual bool UseSlens { get; set; }
         public virtual bool WriteCompensationVoltages { get; set; }
         public virtual bool AddEnergyRamp { get; set; }
@@ -595,11 +596,22 @@ namespace pwiz.Skyline.Model
         {
             var exporter = InitExporter(new SciexOsMethodExporter(document, instrumentType));
             exporter.ExportSciexOSQuant = ExportSciexOSQuant;
-            
-            if (MethodType == ExportMethodType.Standard && instrumentType == ExportInstrumentType.ABI_7500)
-                exporter.DwellTime = DwellTime;
-            if(instrumentType == ExportInstrumentType.ABI_7600)
-                exporter.AccumulationTime = AccumulationTime;
+            if (ExportSciexOSQuant)
+                exporter.XICWidth = XICWidth;
+
+            if (MethodType == ExportMethodType.Standard)
+            {
+                switch (instrumentType)
+                {
+                    case ExportInstrumentType.ABI_7500:
+                        exporter.DwellTime = DwellTime;
+                        break;
+                    case ExportInstrumentType.ABI_7600:
+                        exporter.AccumulationTime = AccumulationTime;
+                        break;
+                }
+            }
+
 
             PerformLongExport(m => exporter.ExportMethod(fileName, templateName, m));
             return exporter;
@@ -2121,6 +2133,9 @@ namespace pwiz.Skyline.Model
 
     public class AbiMassListExporter : AbstractMassListExporter
     {
+        public const double XIC_WIDTH_MIN = 0;
+        public const double XIC_WIDTH_MAX = 1;
+
         public AbiMassListExporter(SrmDocument document)
             : this(document, null)
         {
@@ -2133,6 +2148,7 @@ namespace pwiz.Skyline.Model
 
         public double? DwellTime { get; set; }
         public double? AccumulationTime { get; set; }
+        public double? XICWidth { get; set; }
         protected PeptidePrediction.WindowRT RTWindow { get; private set; }
 
         private int OptimizeStepIndex { get; set; }
@@ -2433,8 +2449,8 @@ namespace pwiz.Skyline.Model
             }
             else
             {
-                xicOrRt = AccumulationTime.HasValue
-                    ? Math.Round(AccumulationTime.Value, 4).ToString(CultureInfo)
+                xicOrRt = XICWidth.HasValue
+                    ? Math.Round(XICWidth.Value, 4).ToString(CultureInfo)
                     : Math.Round(DwellTime.GetValueOrDefault(), 2).ToString(CultureInfo);
             }
 

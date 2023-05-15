@@ -848,5 +848,8 @@
     <Setting Name="ViewLibraryMatchPropsVisible" Type="System.Boolean" Scope="User">
       <Value Profile="(Default)">False</Value>
     </Setting>
+    <Setting Name="ExportMethodXICWidth" Type="System.Double" Scope="User">
+      <Value Profile="(Default)">0.02</Value>
+    </Setting>
   </Settings>
 </SettingsFile>
