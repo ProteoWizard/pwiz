@@ -24,6 +24,7 @@ using System.IO;
 using System.Linq;
 using System.Reflection;
 using System.Text;
+using System.Text.RegularExpressions;
 using SCIEX.Apis.Control.v1;
 using SCIEX.Apis.Control.v1.DeviceMethods;
 using SCIEX.Apis.Control.v1.DeviceMethods.Properties;
@@ -330,12 +331,14 @@ namespace BuildSciexMethod
             var method = loadResponse.MsMethod;
 
             // Edit method
-            var massTable = InitMethod(method, transitions.Transitions.Length);
+            // We need to write only precursors to the acquisition template. Fragments are used for the quant method only
+            var precursors = transitions.Transitions.Where(t => t.IsMs1Precursor).ToList();
+            var massTable = InitMethod(method, precursors.Count);
             var props = PropertyData.GetAll(Instrument, StandardMethod, massTable).ToArray();
-            for (var i = 0; i < transitions.Transitions.Length; i++)
+            for (var i = 0; i < precursors.Count; i++)
             {
                 foreach (var prop in props)
-                    prop.UpdateRow(massTable.Rows[i], transitions.Transitions[i]);
+                    prop.UpdateRow(massTable.Rows[i], precursors[i]);
             }
 
             // Validate and save method
@@ -389,28 +392,26 @@ namespace BuildSciexMethod
         private void WriteQuantMethodFile(MethodTransitions transitions)
         {
             string filePath = Path.ChangeExtension(transitions.FinalMethod, ".Quant.txt");
-            string export = "Group\tName\tPrecursor(Q1) Mass(Da)\tFragment(Q3) Mass(Da)\tXIC Width(Da)\tRetention Time(min)" + Environment.NewLine;
+            string export = "IS\tGroup\tName\tPrecursor (Q1) Mass (Da)\tFragment (Q3) Mass (Da)\tXIC Width (Da)\tRetention Time (min)\tIS Name" + Environment.NewLine;
 
-            foreach (var transition in transitions.Transitions)
+            foreach (var transition in transitions.Transitions.Where(t => !t.IsMs1Precursor))
             {
                 var nameParts = transition.Label.Split(new[] { '.' }, StringSplitOptions.RemoveEmptyEntries);
                 var groupName = nameParts.Length >= 2
                     ? string.Format("{0}.{1}", nameParts[0], nameParts[1])
                     : transition.Label;
-                var rt = transition.DwellOrRt;
-                var xic = transition.XicOrRt;
-                if (StandardMethod)
-                {
-                    rt = transition.XicOrRt ?? 0;
-                }
+                var rt = transition.Rt ?? 0; 
+                var xic = transition.Xic;
 
-                export += string.Format("{0}\t{1}\t{2}\t{3}\t{4}\t{5}",
+                export += string.Format("{0}\t{1}\t{2}\t{3}\t{4}\t{5}\t{6}\t{7}",
+                    transition.IsHeavy ? "TRUE": "FALSE",
                     groupName,
                     transition.Label,
                     transition.PrecursorMz,
-                    transition.ProductMz,
+                    transition.IsMs2Precursor ? -1 : transition.ProductMz,
                     xic,
-                    rt);
+                    rt,
+                    transition.IsHeavy? "" : transition.Label.Replace("light", "heavy"));
                 export += Environment.NewLine;
             }
             using (var file = new StreamWriter(filePath))
@@ -550,8 +551,9 @@ namespace BuildSciexMethod
             [10] = (t, s) => { t.RTWindow = string.IsNullOrEmpty(s) ? (double?)null : 60 * double.Parse(s, CultureInfo.InvariantCulture); },
             [11] = (t, s) => { t.Threshold = string.IsNullOrEmpty(s) ? (double?)null : double.Parse(s, CultureInfo.InvariantCulture); },
             [12] = (t, s) => { t.Primary = string.IsNullOrEmpty(s) ? (int?)null : int.Parse(s, CultureInfo.InvariantCulture); },
-            [13] = (t, s) => { t.XicOrRt = string.IsNullOrEmpty(s) ? (double?)null : double.Parse(s, CultureInfo.InvariantCulture); },
-            [14] = (t, s) => { t.CoV = string.IsNullOrEmpty(s) ? (double?)null : double.Parse(s, CultureInfo.InvariantCulture); },
+            [13] = (t, s) => { t.Xic = string.IsNullOrEmpty(s) ? (double?)null : double.Parse(s, CultureInfo.InvariantCulture); },
+            [14] = (t, s) => { t.Rt = string.IsNullOrEmpty(s) ? (double?)null : double.Parse(s, CultureInfo.InvariantCulture); },
+            [15] = (t, s) => { t.CoV = string.IsNullOrEmpty(s) ? (double?)null : double.Parse(s, CultureInfo.InvariantCulture); },
         };
 
         public MethodTransition(string transitionListLine)
@@ -576,7 +578,8 @@ namespace BuildSciexMethod
         public double PrecursorMz { get; private set; }
         public double? ProductMz { get; private set; }
         public double DwellOrRt { get; private set; }
-        public double? XicOrRt { get; private set; }
+        public double? Xic { get; private set; }
+        public double? Rt { get; private set; }
         public string Label { get; set; }
         public double CE { get; private set; }
         public double DP { get; private set; }
@@ -588,7 +591,15 @@ namespace BuildSciexMethod
         public float? AveragePeakArea { get; private set; }
         public double? RTWindow { get; private set; }
         public double? CoV { get; private set; }
-        public double? PredictedRt { get; private set; } 
+        public double? PredictedRt { get; private set; }
+
+        static Regex _ms1PrecursorRegEx = new Regex(@"^([^\.]+\.){2}(heavy|light)");
+        static Regex _ms2PrecursorRegEx = new Regex(@"^([^\.]+\.){2}[^\.]+precursor");
+        static Regex _heavyRegEx = new Regex(@"^([^\.]+\.)+heavy$");
+
+        public bool IsMs1Precursor => _ms1PrecursorRegEx.IsMatch(Label);
+        public bool IsMs2Precursor => _ms2PrecursorRegEx.IsMatch(Label);
+        public bool IsHeavy => _heavyRegEx.IsMatch(Label);
 
         public override string ToString()
         {
