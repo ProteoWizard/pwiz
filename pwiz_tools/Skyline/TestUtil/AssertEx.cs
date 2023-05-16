@@ -836,7 +836,7 @@ namespace pwiz.SkylineTestUtil
         public static void NoDiff(string target, string actual, string helpMsg=null, Dictionary<int, double> columnTolerances = null, bool ignorePathDiferences = false)
         {
             if (helpMsg == null)
-                helpMsg = String.Empty;
+                helpMsg = $@"Comparing files ""{target}"" and ""{actual}"" ";
             else
                 helpMsg += " ";
             using (StringReader readerTarget = new StringReader(target))

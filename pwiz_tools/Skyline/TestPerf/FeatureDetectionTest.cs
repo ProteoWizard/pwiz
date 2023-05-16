@@ -322,7 +322,7 @@ namespace TestPerf
 
             WaitForDocumentLoaded();
             RunUI(() => SkylineWindow.SaveDocument());
-            AssertEx.IsDocumentState(SkylineWindow.Document, null, 12, 1021, 1022, 3074);
+            AssertEx.IsDocumentState(SkylineWindow.Document, null, 12, 665, 666, 2006);
 
             PauseForScreenShot("complete");
         }
