@@ -64,6 +64,21 @@ namespace pwiz.Skyline.Model.Databinding.Entities
             {
                 return _chromatogramInfo.Value == null ? null : _chromatogramInfo.Value.ExtractionWidth;
             } }
+
+        [Format(Formats.RETENTION_TIME, NullValue = TextUtil.EXCEL_NA)]
+        public double? ChromatogramStartTime
+        {
+            get { return _chromatogramInfo.Value?.Header.StartTime; }
+        }
+        [Format(Formats.RETENTION_TIME, NullValue = TextUtil.EXCEL_NA)]
+        public double? ChromatogramEndTime
+        {
+            get { return _chromatogramInfo.Value?.Header.EndTime; }
+        }
+
+
+
+
         [Format(Formats.RETENTION_TIME, NullValue = TextUtil.EXCEL_NA)]
         public double? ChromatogramIonMobility { get { return _chromatogramInfo.Value == null ? null : _chromatogramInfo.Value.IonMobility; } }
         [Format(Formats.RETENTION_TIME, NullValue = TextUtil.EXCEL_NA)]
