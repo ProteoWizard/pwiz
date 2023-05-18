@@ -1731,13 +1731,6 @@ namespace pwiz.Skyline
             this.publishMenuItem.Name = "publishMenuItem";
             this.publishMenuItem.Click += new System.EventHandler(this.publishMenuItem_Click);
             // 
-            // openPanoramaMenuItem
-            // 
-            this.openPanoramaMenuItem.Image = global::pwiz.Skyline.Properties.Resources.Panorama;
-            this.openPanoramaMenuItem.Name = "openPanoramaMenuItem";
-            resources.ApplyResources(this.openPanoramaMenuItem, "openPanoramaMenuItem");
-            this.openPanoramaMenuItem.Click += new System.EventHandler(this.openPanorama_Click);
-            // 
             // toolStripSeparator2
             // 
             this.toolStripSeparator2.Name = "toolStripSeparator2";
