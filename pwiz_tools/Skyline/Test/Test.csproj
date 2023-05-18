@@ -286,6 +286,7 @@
   </ItemGroup>
   <ItemGroup>
     <EmbeddedResource Include="BookmarkEnumeratorTest.sky" />
+    <EmbeddedResource Include="BookmarkEnumeratorTest2.sky" />
     <None Include="ChromatogramExporterTest.zip" />
     <None Include="CommandLineAssayImportTest.zip" />
     <None Include="CommandLineImportAnnotationsTest.zip" />

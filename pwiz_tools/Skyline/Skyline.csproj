@@ -489,6 +489,7 @@
       <DesignTime>True</DesignTime>
       <DependentUpon>ColumnCaptions.resx</DependentUpon>
     </Compile>
+    <Compile Include="Model\Find\BookmarkStartPosition.cs" />
     <Compile Include="Model\GlobalizedObject.cs">
       <SubType>UserControl</SubType>
     </Compile>

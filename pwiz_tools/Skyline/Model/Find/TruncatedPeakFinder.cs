@@ -36,26 +36,28 @@ namespace pwiz.Skyline.Model.Find
             get { return Resources.TruncatedPeakFinder_DisplayName_Truncated_peaks; }
         }
 
-        protected override FindMatch MatchTransition(TransitionChromInfo transitionChromInfo)
+        protected override FindMatch MatchTransition(Bookmark bookmark, TransitionChromInfo transitionChromInfo)
         {
             if (transitionChromInfo.IsTruncated.GetValueOrDefault(false))
             {
-                return new FindMatch(Resources.TruncatedPeakFinder_MatchTransition_Truncated_peak);
+                return new FindMatch(bookmark, Resources.TruncatedPeakFinder_MatchTransition_Truncated_peak);
             }
             return null;
         }
 
-        protected override FindMatch MatchTransitionGroup(TransitionGroupChromInfo transitionGroupChromInfo)
+        protected override FindMatch MatchTransitionGroup(Bookmark bookmark, TransitionGroupChromInfo transitionGroupChromInfo)
         {
             int truncatedCount = transitionGroupChromInfo.Truncated.GetValueOrDefault(0);
             if (truncatedCount > 0)
             {
                 if (truncatedCount == 1)
                 {
-                    return new FindMatch(Resources.TruncatedPeakFinder_MatchTransitionGroup__1_truncated_peak);
+                    return new FindMatch(bookmark, Resources.TruncatedPeakFinder_MatchTransitionGroup__1_truncated_peak);
                 }
-                return new FindMatch(string.Format(Resources.TruncatedPeakFinder_MatchTransitionGroup__0__truncated_peaks,
-                                                   truncatedCount));
+
+                return new FindMatch(bookmark, string.Format(
+                    Resources.TruncatedPeakFinder_MatchTransitionGroup__0__truncated_peaks,
+                    truncatedCount));
             }
             return null;
         }

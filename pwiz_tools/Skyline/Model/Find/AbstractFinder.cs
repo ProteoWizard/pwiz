@@ -16,6 +16,8 @@
  * See the License for the specific language governing permissions and
  * limitations under the License.
  */
+
+using pwiz.Common.SystemUtil;
 using System.Collections.Generic;
 
 namespace pwiz.Skyline.Model.Find
@@ -35,11 +37,23 @@ namespace pwiz.Skyline.Model.Find
         }
 
         public abstract FindMatch Match(BookmarkEnumerator bookmarkEnumerator);
-        public virtual FindMatch NextMatch(BookmarkEnumerator bookmarkEnumerator)
+        public virtual FindMatch NextMatch(BookmarkStartPosition start, IProgressMonitor progressMonitor, ref IProgressStatus status)
         {
+            long index = 0;
+            long updateFrequency = start.GetProgressUpdateFrequency();
+            var bookmarkEnumerator = new BookmarkEnumerator(start);
             do
             {
+                if (progressMonitor.IsCanceled)
+                {
+                    return null;
+                }
                 bookmarkEnumerator.MoveNext();
+                if (0 == index++ % updateFrequency)
+                {
+                    progressMonitor.UpdateProgress(status =
+                        status.ChangePercentComplete(bookmarkEnumerator.GetProgressValue()));
+                }
                 var findMatch = Match(bookmarkEnumerator);
                 if (findMatch != null)
                 {
@@ -49,19 +63,33 @@ namespace pwiz.Skyline.Model.Find
             return null;
         }
 
-        public virtual IEnumerable<Bookmark> FindAll(SrmDocument document)
+        public virtual IEnumerable<Bookmark> FindAll(SrmDocument document, IProgressMonitor progressMonitor, ref IProgressStatus status)
         {
-            var bookmarkEnumerator = new BookmarkEnumerator(document);
+            var results = new List<Bookmark>();
+            var start = new BookmarkStartPosition(document);
+            var bookmarkEnumerator = new BookmarkEnumerator(start);
+            long index = 0;
+            long updateFrequency = start.GetProgressUpdateFrequency();
             while (true)
             {
+                if (progressMonitor.IsCanceled)
+                {
+                    return results;
+                }
                 bookmarkEnumerator.MoveNext();
+                if (0 == index++ % updateFrequency)
+                {
+                    progressMonitor.UpdateProgress(status =
+                        status.ChangePercentComplete(bookmarkEnumerator.GetProgressValue()));
+                }
+
                 if (Match(bookmarkEnumerator) != null)
                 {
-                    yield return bookmarkEnumerator.Current;
+                    results.Add(bookmarkEnumerator.Current);
                 }
                 if (bookmarkEnumerator.AtStart)
                 {
-                    yield break;
+                    return results;
                 }
             }
         }
