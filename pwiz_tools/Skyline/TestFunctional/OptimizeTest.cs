@@ -826,8 +826,6 @@ namespace pwiz.SkylineTestFunctional
             RunDlg<ImportResultsNameDlg>(importResultsDlg.OkDialog, dlg => dlg.OkDialog());
             doc = WaitForDocumentChangeLoaded(doc);
 
-            PauseTest();
-
             var expected = new[]
             {
                 new { Seq = "IGDYAGIK", Mz = 418.7293, Charge = 2, BestStep = -3 },
