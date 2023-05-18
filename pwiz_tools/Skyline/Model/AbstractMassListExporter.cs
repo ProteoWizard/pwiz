@@ -98,7 +98,7 @@ namespace pwiz.Skyline.Model
         public bool IsPrecursorLimited { get; set; }
         public bool FullScans { get; set; }
 
-        public enum IsolationStrategy{precursor, transition, all}
+        public enum IsolationStrategy{ transition, precursor, all}
         public IsolationStrategy IsolationList { get; set; }
         public int? MaxTransitions { get; set; }
         public int MinTransitions { get; set; }
