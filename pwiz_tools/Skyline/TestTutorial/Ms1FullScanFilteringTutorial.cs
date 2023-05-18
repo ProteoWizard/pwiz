@@ -968,8 +968,6 @@ namespace pwiz.SkylineTestTutorial
             var expectedPropertiesDict = new Dictionary<string, object> {
                 {"FileName","100803_0005b_MCF7_TiTip3.wiff"},
                 {"ReplicateName","5b_MCF7_TiTip3"},
-                {"PrecursorMz","732.3099"},
-                {"Charge","+3"},
                 {"RetentionTime","33.19"},
                 {"IsolationWindow","350:1600 (-625:+625)"},
                 {"ScanId","1.4067-1.1"},
@@ -986,7 +984,7 @@ namespace pwiz.SkylineTestTutorial
                         }
                     }
                 },
-                {"MzCount","37828"},
+                {"MzCount","37,828"},
                 {"IsCentroided","False"}
             };
             var expectedProperties = new FullScanProperties();

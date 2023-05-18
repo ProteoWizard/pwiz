@@ -351,8 +351,6 @@ namespace pwiz.SkylineTestFunctional
             var expectedPropertiesDict = new Dictionary<string, object> {
                 {"FileName","ID12692_01_UCA168_3727_040714.mzML"},
                 {"ReplicateName","ID12692_01_UCA168_3727_040714"},
-                {"PrecursorMz","453.261"},
-                {"Charge","+3"},
                 {"RetentionTime","33.05"},
                 {"IonMobility","3.477 msec"},
                 {"IsolationWindow","50:2000 (-975:+975)"},
@@ -365,8 +363,8 @@ namespace pwiz.SkylineTestFunctional
                         {"InstrumentManufacturer","Waters"}
                     }
                 },
-                {"DataPoints","105373"},
-                {"MzCount","45751"},
+                {"DataPoints","105,373"},
+                {"MzCount","45,751"},
                 {"IsCentroided","False"}
             };
             var expectedProperties = new FullScanProperties();

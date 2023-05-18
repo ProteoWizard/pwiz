@@ -63,7 +63,8 @@ namespace pwiz.Skyline.Model
             {
                 var precursor = spectrum.Precursors.FirstOrDefault();
                 res.PrecursorMz = precursor.PrecursorMz.HasValue ? precursor.PrecursorMz.Value.Value.ToString(Formats.Mz) : null;
-                res.Charge = spectrum.NegativeCharge ? @"-" : @"+" + precursor.ChargeState;
+                if(precursor.ChargeState != null)
+                    res.Charge = spectrum.NegativeCharge ? @"-" : @"+" + precursor.ChargeState;
                 if(precursor.IsolationMz != null && precursor.IsolationWindowLower != null && precursor.IsolationWindowUpper != null)
                     res.IsolationWindow = string.Format(@"{0}:{1} (-{2}:+{3})", 
                         (precursor.IsolationMz - precursor.IsolationWindowLower).Value.RawValue.ToString(Formats.Mz),
@@ -118,9 +119,9 @@ namespace pwiz.Skyline.Model
         [Category("AcquisitionInfo")] public string CE { get; set; }
         [Category("AcquisitionInfo")] public string MSLevel { get; set; }
         [Category("AcquisitionInfo")] public InstrumentInfo Instrument { get; set; }
-        [Category("AcquisitionInfo")] public int? DataPoints { get; set; }
-        [Category("AcquisitionInfo")] public int? MzCount { get; set; }
-        [Category("AcquisitionInfo")] public int? IonMobilityCount { get; set; }
+        [Category("AcquisitionInfo")] public string DataPoints { get; set; }
+        [Category("AcquisitionInfo")] public string MzCount { get; set; }
+        [Category("AcquisitionInfo")] public string IonMobilityCount { get; set; }
         [Category("AcquisitionInfo")] public string InjectionTime { get; set; }
         [Category("AcquisitionInfo")] public string IsCentroided { get; set; }
         [Category("MatchInfo")] public string dotp { get; set; }

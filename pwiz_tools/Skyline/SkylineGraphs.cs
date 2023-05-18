@@ -1226,7 +1226,7 @@ namespace pwiz.Skyline
                 synchMzScaleToolStripMenuItem.Checked = Settings.Default.SyncMZScale;
             }
             */
-            menuStrip.Items.Insert(iInsert, toolStripSeparator15);
+            //menuStrip.Items.Insert(iInsert, toolStripSeparator15);
 
             // Remove some ZedGraph menu items not of interest
             foreach (var item in items)

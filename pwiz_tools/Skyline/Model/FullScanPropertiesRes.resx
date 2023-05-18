@@ -296,10 +296,10 @@
     <value>Measure of similarity between this spectrum and its library match.</value>
   </data>
   <data name="idotp" xml:space="preserve">
-    <value>Isotopic Dot Product</value>
+    <value>Isotope Dot Product</value>
   </data>
   <data name="Description_idotp" xml:space="preserve">
-    <value>Measure of similarity between precurson isotopic peaks and expected isotope distribution.</value>
+    <value>Measure of similarity between precursor isotopic peaks and expected isotope distribution.</value>
   </data>
   <data name="rdotp" xml:space="preserve">
     <value>Ratio Dot Product</value>

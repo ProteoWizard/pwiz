@@ -21,6 +21,7 @@ using System;
 using System.Collections.Generic;
 using System.ComponentModel;
 using System.Drawing;
+using System.Globalization;
 using System.Linq;
 using System.Text;
 using System.Windows.Forms;
@@ -529,54 +530,24 @@ namespace pwiz.Skyline.Controls.Graphs
             {
                 spectrumProperties = FullScanProperties.CreateProperties(spectra[0]);
 
-                var ces = _msDataFileScanHelper.MsDataSpectra.SelectMany(spectrum => spectrum.Precursors)
-                    .Select(pre=> pre.PrecursorCollisionEnergy).Where(ce => ce.HasValue).Select(ce => ce.Value)
-                    .Distinct().ToArray();
-                if (ces.Length == 1)
-                    spectrumProperties.CE = ces[0].ToString(Formats.OPT_PARAMETER);
+                MsPrecursor spectrumPrecursor = _msDataFileScanHelper.MsDataSpectra.SelectMany(spectrum => spectrum.Precursors).LastOrDefault();
+                if (spectrumPrecursor.PrecursorCollisionEnergy != null)
+                    spectrumProperties.CE = spectrumPrecursor.PrecursorCollisionEnergy.Value.ToString(Formats.OPT_PARAMETER);
 
-                var precursor = _msDataFileScanHelper.ScanProvider.Transitions
-                    .FirstOrDefault(t => (t.Id as Transition)?.IonType == IonType.precursor);
-                if (precursor != null)
+                var transition = _msDataFileScanHelper.CurrentTransition;
+                if (transition != null)
                 {
-                    spectrumProperties.PrecursorMz = precursor.PrecursorMz.Value.ToString(Formats.Mz);
-                    spectrumProperties.Charge =
-                        spectra[0].NegativeCharge ? @"-" : @"+" + (precursor.Id as Transition)?.Charge;
-                    if (precursor.IonMobilityInfo != null && precursor.IonMobilityInfo.IonMobilityAndCCS != null)
+                    if (transition.IonMobilityInfo != null && transition.IonMobilityInfo.IonMobilityAndCCS != null)
                     {
-                        var imAndCss = precursor.IonMobilityInfo.IonMobilityAndCCS;
+                        var imAndCss = transition.IonMobilityInfo.IonMobilityAndCCS;
                         if (imAndCss.HasIonMobilityValue)
                             spectrumProperties.IonMobility = TextUtil.SpaceSeparate(imAndCss.IonMobility.Mobility.Value.ToString(Formats.IonMobility),
                                 imAndCss.IonMobility.UnitsString);
                         if(imAndCss.HasCollisionalCrossSection)
                             spectrumProperties.CCS = imAndCss.CollisionalCrossSectionSqA.Value.ToString(Formats.CCS);
                     }
-
-                    if (_documentContainer is SkylineWindow stateProvider)
-                    {
-                        var chromSet = stateProvider.DocumentUI.Settings.MeasuredResults.Chromatograms.FirstOrDefault(chrom =>
-                            chrom.ContainsFile(
-                                _msDataFileScanHelper.ScanProvider.DataFilePath
-                            ));
-                        spectrumProperties.ReplicateName = chromSet?.Name;
-
-                        /*
-                        var resultsIndex = stateProvider.DocumentUI.Settings.MeasuredResults.Chromatograms.IndexOf(chromSet);
-                        var nodePath = DocNodePath.GetNodePath(_msDataFileScanHelper.CurrentTransition?.Id, _documentContainer.DocumentUI);
-
-                        //CONSIDER: calculate dot products for the current spectrum rather than whole peak
-                        var dotp = nodePath.Precursor.GetLibraryDotProduct(resultsIndex);
-                        if(dotp.HasValue)
-                            spectrumProperties.dotp = dotp.Value.ToString(Formats.PEAK_FOUND_RATIO);
-                        dotp = nodePath.Precursor.GetIsotopeDotProduct(resultsIndex);
-                        if(dotp.HasValue)
-                            spectrumProperties.idotp = dotp.Value.ToString(Formats.PEAK_FOUND_RATIO);
-                        spectrumProperties.Label = nodePath.Precursor.LabelType.ToString();
-                        */
-                    }
                 }
-
-                    if (hasIonMobilityDimension)
+                if (hasIonMobilityDimension)
                 {
                     double minIonMobilityFilter, maxIonMobilityFilter;
                     var fullScans = _msDataFileScanHelper.GetFilteredScans(out minIonMobilityFilter, out maxIonMobilityFilter); // Get range of IM values for all products and precursors
@@ -595,12 +566,12 @@ namespace pwiz.Skyline.Controls.Graphs
                     spectrumProperties.IonMobilityRange = TextUtil.AppendColon(ionMobilityMin.ToString(Formats.IonMobility)) + ionMobilityMax.ToString(Formats.IonMobility);
                     if(_msDataFileScanHelper.GetIonMobilityFilterDisplayRange(out minIonMobilityFilter, out maxIonMobilityFilter, ChromSource.unknown))
                         spectrumProperties.IonMobilityFilterRange = TextUtil.AppendColon(minIonMobilityFilter.ToString(Formats.IonMobility)) + maxIonMobilityFilter.ToString(Formats.IonMobility);
-                    spectrumProperties.DataPoints = fullScans.Select(scan => scan.Intensities.Length).Sum();
-                    spectrumProperties.MzCount = fullScans.SelectMany(scan => scan.Mzs).Distinct().Count();
+                    spectrumProperties.DataPoints = fullScans.Select(scan => scan.Intensities.Length).Sum().ToString(@"N0");
+                    spectrumProperties.MzCount = fullScans.SelectMany(scan => scan.Mzs).Distinct().Count().ToString(@"N0");
                     
                     if(fullScans.Any(scan => scan.IonMobilities != null))
                         spectrumProperties.IonMobilityCount = fullScans.Where(scan => scan.IonMobilities != null)
-                            .Select(scan => scan.IonMobilities.Distinct().Count()).Sum();
+                            .Select(scan => scan.IonMobilities.Distinct().Count()).Sum().ToString(@"N0");
                     
                     if(_msDataFileScanHelper.MsDataSpectra.Length > 1)
                         spectrumProperties.ScanId = TextUtil.SpaceSeparate(_msDataFileScanHelper.MsDataSpectra[0].Id, @"-", _msDataFileScanHelper.MsDataSpectra.Last().Id);
@@ -612,7 +583,7 @@ namespace pwiz.Skyline.Controls.Graphs
                 }
                 else
                 {
-                    spectrumProperties.MzCount = spectra[0].Mzs.Length;
+                    spectrumProperties.MzCount = spectra[0].Mzs.Length.ToString(@"N0");
 
                     var parts = _msDataFileScanHelper.MsDataSpectra[0].Id.Split('.'); // Check for merge.frame.start.stop from 3-array IMS data
                     var id = parts.Length < 4
@@ -622,6 +593,12 @@ namespace pwiz.Skyline.Controls.Graphs
                     spectrumProperties.ScanId = id;
                     if (ionMobility.HasValue)
                         spectrumProperties.IonMobility = ionMobility.ToString();
+                }
+                if (_documentContainer is SkylineWindow stateProvider)
+                {
+                    var chromSet = stateProvider.DocumentUI.Settings.MeasuredResults.Chromatograms.FirstOrDefault(
+                        chrom => chrom.ContainsFile(_msDataFileScanHelper.ScanProvider.DataFilePath));
+                    spectrumProperties.ReplicateName = chromSet?.Name;
                 }
             }
 
@@ -1414,10 +1391,9 @@ namespace pwiz.Skyline.Controls.Graphs
         {
             if (_msDataFileScanHelper.MsDataSpectra != null)
             {
-                showCollisionEnergyContextMenuItem.Checked = Settings.Default.ShowFullScanCE;
-                menuStrip.Items.Insert(1, showCollisionEnergyContextMenuItem);
-                menuStrip.Items.Insert(2, showPeakAnnotationsContextMenuItem);
-                menuStrip.Items.Insert(3, toolStripSeparator1);
+                showPeakAnnotationsContextMenuItem.Checked = Settings.Default.ShowFullScanAnnotations = _showIonSeriesAnnotations;
+                menuStrip.Items.Insert(0, showPeakAnnotationsContextMenuItem);
+                menuStrip.Items.Insert(1, toolStripSeparator1);
 
                 var isProteomic = (_msDataFileScanHelper.CurrentTransition?.Id as Transition)?.Group.IsProteomic;
                 (_documentContainer as GraphSpectrum.IStateProvider)

@@ -232,7 +232,7 @@ namespace pwiz.Skyline.Model {
         }
         
         /// <summary>
-        ///   Looks up a localized string similar to Measure of similarity between precurson isotopic peaks and expected isotope distribution..
+        ///   Looks up a localized string similar to Measure of similarity between precursor isotopic peaks and expected isotope distribution..
         /// </summary>
         internal static string Description_idotp {
             get {
@@ -367,7 +367,7 @@ namespace pwiz.Skyline.Model {
         }
         
         /// <summary>
-        ///   Looks up a localized string similar to Mass-spectrometry stage: MS1, MS2, etc....
+        ///   Looks up a localized string similar to Mass-spectrometry stage: MS1, MS2 etc....
         /// </summary>
         internal static string Description_MSLevel {
             get {
@@ -475,7 +475,7 @@ namespace pwiz.Skyline.Model {
         }
         
         /// <summary>
-        ///   Looks up a localized string similar to Isotopic Dot Product.
+        ///   Looks up a localized string similar to Isotope Dot Product.
         /// </summary>
         internal static string idotp {
             get {
