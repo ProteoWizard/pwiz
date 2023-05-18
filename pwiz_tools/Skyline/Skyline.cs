@@ -1376,9 +1376,22 @@ namespace pwiz.Skyline
                     }
                     
                 }
-            }            
-            var findResult = DocumentUI.SearchDocument(bookmark,
-                findOptions, displaySettings);
+            }
+
+            FindResult findResult = null;
+            var document = DocumentUI;
+            using (var longWaitDlg = new LongWaitDlg())
+            {
+                longWaitDlg.PerformWork(this, 1000, progressMonitor =>
+                {
+                    findResult = document.SearchDocument(bookmark,
+                        findOptions, displaySettings, progressMonitor);
+                });
+                if (longWaitDlg.IsCanceled)
+                {
+                    return;
+                }
+            }
 
             if (findResult == null)
             {
@@ -1388,9 +1401,9 @@ namespace pwiz.Skyline
                 DisplayFindResult(null, findResult);
         }
 
-        private IEnumerable<FindResult> FindAll(ILongWaitBroker longWaitBroker, FindPredicate findPredicate)
+        private IEnumerable<FindResult> FindAll(IProgressMonitor progressMonitor, FindPredicate findPredicate)
         {
-            return findPredicate.FindAll(longWaitBroker, Document);
+            return findPredicate.FindAll(progressMonitor, Document);
         }
 
         public void FindAll(Control parent, FindOptions findOptions = null)
@@ -1398,10 +1411,13 @@ namespace pwiz.Skyline
             if (findOptions == null)
                 findOptions = FindOptions.ReadFromSettings(Settings.Default);
             var findPredicate = new FindPredicate(findOptions, SequenceTree.GetDisplaySettings(null));
-            IList<FindResult> results = null;
+            List<FindResult> results = new List<FindResult>();
             using (var longWaitDlg = new LongWaitDlg(this))
             {
-                longWaitDlg.PerformWork(parent, 2000, lwb => results = FindAll(lwb, findPredicate).ToArray());
+                longWaitDlg.PerformWork(parent, 2000, progressMonitor =>
+                {
+                    results.AddRange(FindAll(progressMonitor, findPredicate));
+                });
                 if (results.Count == 0)
                 {
                     if (!longWaitDlg.IsCanceled)
@@ -4436,7 +4452,7 @@ namespace pwiz.Skyline
 
         public bool HasProteomicMenuItems
         {
-            get { return GetModeUIHelper().MenuItemHasOriginalText(peptideSettingsMenuItem.Text); }
+            get { return GetModeUIHelper().MenuItemHasOriginalText(peptideSettingsMenuItem); }
         }
         #endregion
         /// <summary>

@@ -489,6 +489,7 @@ namespace pwiz.Skyline.Model.Serialization
                 }
                 double? ionMobilityWindow = reader.GetNullableDoubleAttribute(ATTR.drift_time_window) ??
                                             reader.GetNullableDoubleAttribute(ATTR.ion_mobility_window);
+                double? ccs = reader.GetNullableDoubleAttribute(ATTR.ccs);
                 var annotations = Annotations.EMPTY;
                 bool forcedIntegration = reader.GetBoolAttribute(ATTR.forced_integration, false);
                 if (!reader.IsEmptyElement)
@@ -513,7 +514,7 @@ namespace pwiz.Skyline.Model.Serialization
                     retentionTime,
                     startRetentionTime,
                     endRetentionTime,
-                    IonMobilityFilter.GetIonMobilityFilter(ionMobility, ionMobilityUnits, ionMobilityWindow, null), 
+                    IonMobilityFilter.GetIonMobilityFilter(ionMobility, ionMobilityUnits, ionMobilityWindow, ccs), 
                     area,
                     backgroundArea,
                     height,
@@ -1012,6 +1013,7 @@ namespace pwiz.Skyline.Model.Serialization
             TransitionGroupDocNode[] children = null;
             Adduct adduct = Adduct.EMPTY;
             var customMolecule = isCustomMolecule ? CustomMolecule.Deserialize(reader, out adduct) : null; // This Deserialize only reads attributes, doesn't advance the reader
+            Target chromatogramTarget = null;
             if (customMolecule != null)
             {
                 if (DocumentMayContainMoleculesWithEmbeddedIons && customMolecule.ParsedMolecule.IsMassOnly && customMolecule.MonoisotopicMass.IsMassH())
@@ -1022,10 +1024,16 @@ namespace pwiz.Skyline.Model.Serialization
                         customMolecule.AverageMass.ChangeIsMassH(false),
                         customMolecule.Name);
                 }
+                // If user changed any molecule details (other than formula or mass) after chromatogram extraction, this info continues the target->chromatogram association
+                var encodedChromatogramTarget = reader.GetAttribute(ATTR.chromatogram_target);
+                if (!string.IsNullOrEmpty(encodedChromatogramTarget))
+                {
+                    chromatogramTarget = Target.FromSerializableString(encodedChromatogramTarget);
+                }
             }
             Assume.IsTrue(DocumentMayContainMoleculesWithEmbeddedIons || adduct.IsEmpty); // Shouldn't be any charge info at the peptide/molecule level
             var peptide = isCustomMolecule ?
-                new Peptide(customMolecule) :
+                new Peptide(customMolecule, chromatogramTarget) :
                 new Peptide(group as FastaSequence, sequence, start, end, missedCleavages, isDecoy);
             if (reader.IsEmptyElement)
                 reader.Read();

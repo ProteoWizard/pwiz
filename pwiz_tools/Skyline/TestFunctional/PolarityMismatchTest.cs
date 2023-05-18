@@ -156,6 +156,7 @@ namespace pwiz.SkylineTestFunctional
                     Resources.PasteDlg_UpdateMoleculeType_Explicit_Collision_Energy);
             });
             OkDialog(col4Dlg, col4Dlg.OkDialog);
+            DismissAutoManageDialog(docEmpty); // If asked about automanage, decline it
             
             var document = WaitForDocumentChangeLoaded(docEmpty);
             AssertEx.IsDocumentState(document, null, 1, 236, 236, 236);

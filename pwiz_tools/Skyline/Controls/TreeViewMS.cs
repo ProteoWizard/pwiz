@@ -67,7 +67,7 @@ namespace pwiz.Skyline.Controls
             SetStyle(ControlStyles.UserPaint, true);
             ItemHeight = DEFAULT_ITEM_HEIGHT;
 
-            TreeStateRestorer = new TreeViewStateRestorer(this);
+            TreeStateRestorer = new TreeViewMSStateRestorer(this);
             AutoExpandSingleNodes = true;
         }
 
@@ -193,7 +193,7 @@ namespace pwiz.Skyline.Controls
         protected abstract int EnsureChildren(TreeNode node);
 
         public bool RestoredFromPersistentString { get; set; }
-        private TreeViewStateRestorer TreeStateRestorer { get; set; }
+        private TreeViewMSStateRestorer TreeStateRestorer { get; set; }
 
         public string GetPersistentString()
         {
