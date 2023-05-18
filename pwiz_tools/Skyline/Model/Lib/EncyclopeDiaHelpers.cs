@@ -25,7 +25,6 @@ using System.Text;
 using JetBrains.Annotations;
 using pwiz.Common.Collections;
 using pwiz.Common.SystemUtil;
-using pwiz.Skyline.Model.DocSettings;
 using pwiz.Skyline.Model.Results;
 using pwiz.Skyline.Model.Tools;
 using pwiz.Skyline.Properties;
@@ -36,7 +35,7 @@ namespace pwiz.Skyline.Model.Lib
 {
     public static class EncyclopeDiaHelpers
     {
-        public static string ENCYCLOPEDIA_VERSION = @"1.12.34";
+        public static string ENCYCLOPEDIA_VERSION = @"2.12.30";
         public static string ENCYCLOPEDIA_FILENAME = $@"encyclopedia-{ENCYCLOPEDIA_VERSION}-executable.jar";
         static Uri ENCYCLOPEDIA_URL = new Uri($@"https://bitbucket.org/searleb/encyclopedia/downloads/{ENCYCLOPEDIA_FILENAME}");
         public static string EncyclopeDiaDirectory => ToolDescriptionHelpers.GetToolsDirectory();
@@ -129,6 +128,7 @@ namespace pwiz.Skyline.Model.Lib
                 if (MaxMissedCleavage.HasValue) sb.AppendFormat(" -maxMissedCleavage {0}", MaxMissedCleavage);
                 if (MinMz.HasValue) sb.AppendFormat(" -minMz {0}", MinMz);
                 if (MaxMz.HasValue) sb.AppendFormat(" -maxMz {0}", MaxMz);
+                sb.Append(" -percolatorVersion v3-01 -enableAdvancedOptions -v2scoring");
                 return sb.ToString();
                 // ReSharper restore LocalizableElement
             }
@@ -208,17 +208,18 @@ namespace pwiz.Skyline.Model.Lib
             GenerateLibrary(encyclopeDiaElibInputFilepath, encyclopeDiaQuantLibOutputFilepath, fastaFilepath, diaDataFiles, progressMonitor, ref status, config, true);
         }
 
+        private const string DEMUX_SUBDIRECTORY = "demux";
         private static string GetConvertedDiaDataFile(MsDataFileUri diaDataFile, string outputPath, IProgressMonitor progressMonitor, ref IProgressStatus status)
         {
             string outputFilepath = Path.Combine(outputPath, diaDataFile.GetFileNameWithoutExtension() + DataSourceUtil.EXT_MZML);
 
-            var reader = new IsolationSchemeReader(new [] { diaDataFile });
+            /*var reader = new IsolationSchemeReader(new [] { diaDataFile });
             string isolationSchemeName = Path.GetFileNameWithoutExtension(diaDataFile.GetFileNameWithoutExtension());
             var isolationScheme = reader.Import(isolationSchemeName, progressMonitor);
             bool needsDemultiplexing = isolationScheme.SpecialHandling == IsolationScheme.SpecialHandlingType.OVERLAP ||
-                                       isolationScheme.SpecialHandling == IsolationScheme.SpecialHandlingType.OVERLAP_MULTIPLEXED;
-
-            if (!needsDemultiplexing && diaDataFile.GetExtension().ToLowerInvariant() == DataSourceUtil.EXT_MZML)
+                                       isolationScheme.SpecialHandling == IsolationScheme.SpecialHandlingType.OVERLAP_MULTIPLEXED;*/
+            
+            if (diaDataFile.GetExtension().ToLowerInvariant() == DataSourceUtil.EXT_MZML)
             {
                 outputFilepath = Path.Combine(outputPath, diaDataFile.GetFileName());
                 if (!File.Exists(outputFilepath))
@@ -242,7 +243,7 @@ namespace pwiz.Skyline.Model.Lib
                     $"--outfile {Path.GetFileName(outputFilepath).Quote()} " +
                     " --acceptZeroLengthSpectra --simAsSpectra --combineIonMobilitySpectra" +
                     " --filter \"peakPicking true 1-\" " +
-                    (needsDemultiplexing ? @" --filter ""demultiplex""" : "") +
+                    //(needsDemultiplexing ? @" --filter ""demultiplex""" : "") +
                     " --runIndex " + Math.Max(0, diaDataFile.GetSampleIndex()) + " " +
                     diaDataFile.GetFilePath().Quote()
             };
@@ -256,7 +257,7 @@ namespace pwiz.Skyline.Model.Lib
                 progressMonitor.UpdateProgress(status.ChangeMessage(e.Message));
             }
 
-            if (progressMonitor?.IsCanceled == true)
+            if (progressMonitor.IsCanceled)
             {
                 FileEx.SafeDelete(outputFilepath, true);
                 return null;

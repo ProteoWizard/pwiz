@@ -455,10 +455,8 @@ namespace TestRunner
                 .Where(n => n.NetworkInterfaceType != NetworkInterfaceType.Loopback)
                 .SelectMany(n => n.GetIPProperties()?.GatewayAddresses)
                 .Select(g => g?.Address)
-                .Where(a => a != null)
-                .Where(a => a.AddressFamily != System.Net.Sockets.AddressFamily.InterNetworkV6)
+                .FirstOrDefault(a => a?.AddressFamily != System.Net.Sockets.AddressFamily.InterNetworkV6);
                 // .Where(a => Array.FindIndex(a.GetAddressBytes(), b => b != 0) >= 0)
-                .FirstOrDefault();
         }
 
         private static int ListenToTestQueue(StreamWriter log, CommandLineArgs commandLineArgs)
@@ -642,7 +640,24 @@ namespace TestRunner
             //RunCommand("netsh", $"advfirewall firewall add rule name=\"TestRunner\" dir=in action=allow protocol=tcp program=\"{Assembly.GetExecutingAssembly().Location}\"", string.Empty, true, true);
 
             var dockerImagesOutput = RunTests.RunCommand("docker", $"images {RunTests.DOCKER_IMAGE_NAME}", RunTests.IS_DOCKER_RUNNING_MESSAGE);
-            if (!dockerImagesOutput.Contains(RunTests.DOCKER_IMAGE_NAME))
+            bool hasImage = dockerImagesOutput.Contains(RunTests.DOCKER_IMAGE_NAME);
+            if (hasImage)
+            {
+                // check that it can run (for some reason the images get stale and stop working after a period of time)
+                var pwizRoot = Path.GetDirectoryName(Path.GetDirectoryName(GetSkylineDirectory().FullName));
+                string workerName = $"docker_check{GetTestRunTimeStamp()}";
+                string testRunnerExe = GetTestRunnerExe();
+                string dockerArgs = $"run --name {workerName} -it --rm -v \"{pwizRoot}\":c:\\pwiz {RunTests.DOCKER_IMAGE_NAME} \"{testRunnerExe} help\"";
+                string checkOutput = RunTests.RunCommand("docker", dockerArgs, "Error checking whether always_up_runner can start");
+                if (checkOutput.Contains("StartService FAILED"))
+                {
+                    // rebuild image
+                    RunTests.RunCommand("docker", $"rmi {RunTests.DOCKER_IMAGE_NAME}", "Error deleting always_up_runner");
+                    hasImage = false;
+                }
+            }
+
+            if (!hasImage)
             {
                 Console.WriteLine($"'{RunTests.DOCKER_IMAGE_NAME}' is missing; building it now.");
                 var buildPath = RunTests.ALWAYS_UP_RUNNER_REPO;
@@ -680,13 +695,7 @@ namespace TestRunner
 
 
             // paths in testRunnerCmd are in container-space (c:\pwiz is mounted from pwizRoot, c:\downloads is mounted from GetDownloadsPath(), c:\AlwaysUpCLT is not copied to the host)
-            var testRunnerExe = Assembly.GetExecutingAssembly().Location;
-            int iRelative = testRunnerExe.IndexOf(@"pwiz_tools\Skyline\bin", StringComparison.CurrentCultureIgnoreCase);
-            testRunnerExe = iRelative != -1
-                ? Path.Combine(@"c:\pwiz", testRunnerExe.Substring(iRelative))
-                : @"c:\pwiz\pwiz_tools\Skyline\bin\x64\Release\TestRunner.exe";
-            // N.B. TestResults_<n> could technically just be TestResults since each VM has its own drive, but it makes for a more readable log and
-            // is also used in pwiz_tools\Skyline\TestRunnerLib\RunTests.cs to determine the test client ID
+            var testRunnerExe = GetTestRunnerExe();
             var testRunnerCmd = $@"{testRunnerExe} parallelmode=client showheader=0 results=c:\AlwaysUpCLT\TestResults_{i} log={testRunnerLog}";
             testRunnerCmd = AddPassThroughArguments(commandLineArgs, testRunnerCmd);
             testRunnerCmd += $" workerport={workerPort}";
@@ -722,6 +731,19 @@ namespace TestRunner
             foreach (string p in new[] { "perftests", "teamcitytestdecoration", "buildcheck", "runsmallmoleculeversions", "recordauditlogs" })
                 testRunnerCmd += $" {p}={commandLineArgs.ArgAsString(p)}";
             return testRunnerCmd;
+        }
+
+        private static string GetTestRunnerExe()
+        {
+            // paths in testRunnerCmd are in container-space (c:\pwiz is mounted from pwizRoot, c:\downloads is mounted from GetDownloadsPath(), c:\AlwaysUpCLT is not copied to the host)
+            var testRunnerExe = Assembly.GetExecutingAssembly().Location;
+            int iRelative = testRunnerExe.IndexOf(@"pwiz_tools\Skyline\bin", StringComparison.CurrentCultureIgnoreCase);
+            testRunnerExe = iRelative != -1
+                ? Path.Combine(@"c:\pwiz", testRunnerExe.Substring(iRelative))
+                : @"c:\pwiz\pwiz_tools\Skyline\bin\x64\Release\TestRunner.exe";
+            // N.B. TestResults_<n> could technically just be TestResults since each VM has its own drive, but it makes for a more readable log and
+            // is also used in pwiz_tools\Skyline\TestRunnerLib\RunTests.cs to determine the test client ID
+            return testRunnerExe;
         }
 
         private static void LaunchAndWaitForDockerWorker(int i, CommandLineArgs commandLineArgs, ref string workerNames, bool bigWorker, long workerBytes, int workerPort, ConcurrentDictionary<string, bool> workerIsAlive, StreamWriter log)
@@ -978,6 +1000,7 @@ namespace TestRunner
                             Console.Error.WriteLine($"No workers connected to the server in {workerTimeout} seconds.");
                             Console.Error.WriteLine("Be sure to check BOTH public and private options if prompted to \"Allow TestRunner to communicate on these networks\".");
                             Console.Error.WriteLine("See https://skyline.ms/wiki/home/development/page.view?name=Troubleshooting_parallel_mode for troubleshooting tips.\r\n");
+
                             Environment.Exit(1);
                         }
                         continue;

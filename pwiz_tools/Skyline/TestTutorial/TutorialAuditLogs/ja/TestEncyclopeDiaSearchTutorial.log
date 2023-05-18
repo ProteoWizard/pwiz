@@ -1,7 +1,7 @@
-Undo Redo : スペクトルライブラリ「C:\dev\pwiz\pwiz_tools\Skyline\TestResults\TestRunner results\EncyclopeDiaSearchTutorial\20230123-abundant-proteins-z3_nce33.elib, C:\dev\pwiz\pwiz_tools\Skyline\TestResults\TestRunner results\EncyclopeDiaSearchTutorial\20230123-abundant-proteins-z3_nce33-quant.elib」が追加されました
-Summary   : スペクトルライブラリ「C:\dev\pwiz\pwiz_tools\Skyline\TestResults\TestRunner results\EncyclopeDiaSearchTutorial\20230123-abundant-proteins-z3_nce33.elib, C:\dev\pwiz\pwiz_tools\Skyline\TestResults\TestRunner results\EncyclopeDiaSearchTutorial\20230123-abundant-proteins-z3_nce33-quant.elib」が追加されました
+Undo Redo : スペクトルライブラリ「C:\dev\pwiz\pwiz_tools\Skyline\TestResults\TestRunner results\EncyclopeDiaSearchTutorialDemux\20230123-abundant-proteins-z3_nce33.elib, C:\dev\pwiz\pwiz_tools\Skyline\TestResults\TestRunner results\EncyclopeDiaSearchTutorialDemux\20230123-abundant-proteins-z3_nce33-quant.elib」が追加されました
+Summary   : スペクトルライブラリ「C:\dev\pwiz\pwiz_tools\Skyline\TestResults\TestRunner results\EncyclopeDiaSearchTutorialDemux\20230123-abundant-proteins-z3_nce33.elib, C:\dev\pwiz\pwiz_tools\Skyline\TestResults\TestRunner results\EncyclopeDiaSearchTutorialDemux\20230123-abundant-proteins-z3_nce33-quant.elib」が追加されました
 All Info  :
-スペクトルライブラリ「C:\dev\pwiz\pwiz_tools\Skyline\TestResults\TestRunner results\EncyclopeDiaSearchTutorial\20230123-abundant-proteins-z3_nce33.elib, C:\dev\pwiz\pwiz_tools\Skyline\TestResults\TestRunner results\EncyclopeDiaSearchTutorial\20230123-abundant-proteins-z3_nce33-quant.elib」が追加されました
+スペクトルライブラリ「C:\dev\pwiz\pwiz_tools\Skyline\TestResults\TestRunner results\EncyclopeDiaSearchTutorialDemux\20230123-abundant-proteins-z3_nce33.elib, C:\dev\pwiz\pwiz_tools\Skyline\TestResults\TestRunner results\EncyclopeDiaSearchTutorialDemux\20230123-abundant-proteins-z3_nce33-quant.elib」が追加されました
 EncyclopeDIA Search>FASTA settings>最大未切断数は"2"です
 EncyclopeDIA Search>FASTA settings>FASTAファイルは"20230123-abundant-proteins.fasta"です
 EncyclopeDIA Search>Prosit settings>Default NCEは"33"です
@@ -13,8 +13,8 @@ EncyclopeDIA Search>Narrow window results："23aug2017_hela_serum_timecourse_4mz
 EncyclopeDIA Search>Wide window results："23aug2017_hela_serum_timecourse_wide_1a.mzML"が含まれています
 EncyclopeDIA Search>Wide window results："23aug2017_hela_serum_timecourse_wide_1b.mzML"が含まれています
 EncyclopeDIA Search>EncyclopeDIA settingsは{ Enzyme = "Trypsin", Frag = "CID", Ptol = "10", PtolUnits = "PPM", Ftol = "10", FtolUnits = "PPM", Lftol = "10", LftolUnits = "PPM", Poffset = "0", Foffset = "0", PercolatorThreshold = "0.01", PercolatorTrainingSetSize = "500000", PercolatorTrainingFDR = "0", Acquisition = "DIA", NumberOfThreadsUsed = "32", ExpectedPeakWidth = "25", PrecursorWindowSize = "-1", NumberOfQuantitativePeaks = "5", MinNumOfQuantitativePeaks = "3", TopNTargetsUsed = "-1", QuantifyAcrossSamples = "False", NumberOfExtraDecoyLibrariesSearched = "0", VerifyModificationIons = "True", MinIntensity = "-1", RtWindowInMin = "-1", FilterPeaklists = "False" }です
-EncyclopeDIA Search>Chromatogram libraryは"C:\dev\pwiz\pwiz_tools\Skyline\TestResults\TestRunner results\EncyclopeDiaSearchTutorial\20230123-abundant-proteins-z3_nce33.elib"です
-EncyclopeDIA Search>Quantification libraryは"C:\dev\pwiz\pwiz_tools\Skyline\TestResults\TestRunner results\EncyclopeDiaSearchTutorial\20230123-abundant-proteins-z3_nce33-quant.elib"です
+EncyclopeDIA Search>Chromatogram libraryは"C:\dev\pwiz\pwiz_tools\Skyline\TestResults\TestRunner results\EncyclopeDiaSearchTutorialDemux\20230123-abundant-proteins-z3_nce33.elib"です
+EncyclopeDIA Search>Quantification libraryは"C:\dev\pwiz\pwiz_tools\Skyline\TestResults\TestRunner results\EncyclopeDiaSearchTutorialDemux\20230123-abundant-proteins-z3_nce33-quant.elib"です
 Extra Info: FASTA settings = 
 {
     最大未切断数 = "2",
@@ -65,8 +65,8 @@ MinIntensity = "-1",
 RtWindowInMin = "-1",
 FilterPeaklists = "False"
 },
-Chromatogram library = "C:\dev\pwiz\pwiz_tools\Skyline\TestResults\TestRunner results\EncyclopeDiaSearchTutorial\20230123-abundant-proteins-z3_nce33.elib",
-Quantification library = "C:\dev\pwiz\pwiz_tools\Skyline\TestResults\TestRunner results\EncyclopeDiaSearchTutorial\20230123-abundant-proteins-z3_nce33-quant.elib"
+Chromatogram library = "C:\dev\pwiz\pwiz_tools\Skyline\TestResults\TestRunner results\EncyclopeDiaSearchTutorialDemux\20230123-abundant-proteins-z3_nce33.elib",
+Quantification library = "C:\dev\pwiz\pwiz_tools\Skyline\TestResults\TestRunner results\EncyclopeDiaSearchTutorialDemux\20230123-abundant-proteins-z3_nce33-quant.elib"
 
 Undo Redo : ペプチド検索がインポートされました
 Summary   : ペプチド検索がインポートされました
@@ -104,11 +104,11 @@ All Info  :
 ペプチド検索のインポート>タンパク質の関連付け>サブセットのタンパク質を削除は偽です
 ペプチド検索のインポート>タンパク質の関連付け>共有ペプチドオプションは"タンパク質間で重複"です
 ペプチド検索のインポート>タンパク質の関連付け>タンパク質あたりの最小ペプチドは"1"です
-ペプチド検索のインポート>タンパク質の関連付け>マップ済みタンパク質は"554"です
-ペプチド検索のインポート>タンパク質の関連付け>マップ済みペプチドは"4586"です
-ペプチド検索のインポート>タンパク質の関連付け>マップ解除されたタンパク質は"4"です
-ペプチド検索のインポート>タンパク質の関連付け>タンパク質のターゲットは"554"です
-ペプチド検索のインポート>タンパク質の関連付け>ペプチドのターゲットは"4886"です
+ペプチド検索のインポート>タンパク質の関連付け>マップ済みタンパク質は"555"です
+ペプチド検索のインポート>タンパク質の関連付け>マップ済みペプチドは"4838"です
+ペプチド検索のインポート>タンパク質の関連付け>マップ解除されたタンパク質は"3"です
+ペプチド検索のインポート>タンパク質の関連付け>タンパク質のターゲットは"555"です
+ペプチド検索のインポート>タンパク質の関連付け>ペプチドのターゲットは"5133"です
 Extra Info: クロマトグラムを抽出 = 
 {
     結果ファイルが見つかりました = 
@@ -160,10 +160,10 @@ FASTAをインポート =
     サブセットのタンパク質を削除 = 偽,
     共有ペプチドオプション = "タンパク質間で重複",
     タンパク質あたりの最小ペプチド = "1",
-    マップ済みタンパク質 = "554",
-    マップ済みペプチド = "4586",
-    マップ解除されたタンパク質 = "4",
-    タンパク質のターゲット = "554",
-    ペプチドのターゲット = "4886"
+    マップ済みタンパク質 = "555",
+    マップ済みペプチド = "4838",
+    マップ解除されたタンパク質 = "3",
+    タンパク質のターゲット = "555",
+    ペプチドのターゲット = "5133"
 }
 

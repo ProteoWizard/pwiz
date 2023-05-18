@@ -69,14 +69,14 @@ namespace TestPerf
                     //"23aug2017_hela_serum_timecourse_wide_1f.mzML",
                 },
 
-                FinalTargetCounts = new[] { 554, 4886, 4886, 37834 },
+                FinalTargetCounts = new[] { 555, 5133, 5133, 37722 },
                 MassErrorStats = new[]
                 {
                     new[] {0.0, 2.1},
                     new[] {0.0, 2.1},
-                    new[] {-0.1, 2.2},
+                    new[] {0.0, 2.1},
                 },
-                ChromatogramClickPoint = new PointF(19.1f, 24f)
+                ChromatogramClickPoint = new PointF(19.1f, 23f)
             };
 
             RunTest();
@@ -85,6 +85,9 @@ namespace TestPerf
         [TestMethod, NoParallelTesting(TestExclusionReason.RESOURCE_INTENSIVE), NoNightlyTesting(TestExclusionReason.EXCESSIVE_TIME), Timeout(36000000)] // 10 hours
         public void TestEncyclopeDiaSearchTutorialFullFileset()
         {
+            if (!RunPerfTests)
+                return;
+
             _analysisValues = new AnalysisValues
             {
                 //IsWholeProteome = true,
@@ -132,7 +135,8 @@ namespace TestPerf
 
         private void RunTest()
         {
-            TestFilesZip = @"https://skyline.ms/tutorials/EncyclopeDiaSearchTutorial.zip";
+            //TestFilesZip = @"https://skyline.ms/tutorials/EncyclopeDiaSearchTutorial.zip";
+            TestFilesZip = @"https://skyline.ms/tutorials/EncyclopeDiaSearchTutorialDemux.zip";
             TestFilesPersistent = new[] { "23aug2017_hela_serum_timecourse", "z3_nce33-prosit" };
 
             RunFunctionalTest();

@@ -1,7 +1,7 @@
-Undo Redo : Added spectral library "C:\dev\pwiz\pwiz_tools\Skyline\TestResults\TestRunner results\EncyclopeDiaSearchTutorial\20230123-abundant-proteins-z3_nce33.elib, C:\dev\pwiz\pwiz_tools\Skyline\TestResults\TestRunner results\EncyclopeDiaSearchTutorial\20230123-abundant-proteins-z3_nce33-quant.elib"
-Summary   : Added spectral library "C:\dev\pwiz\pwiz_tools\Skyline\TestResults\TestRunner results\EncyclopeDiaSearchTutorial\20230123-abundant-proteins-z3_nce33.elib, C:\dev\pwiz\pwiz_tools\Skyline\TestResults\TestRunner results\EncyclopeDiaSearchTutorial\20230123-abundant-proteins-z3_nce33-quant.elib"
+Undo Redo : Added spectral library "C:\dev\pwiz\pwiz_tools\Skyline\TestResults\TestRunner results\EncyclopeDiaSearchTutorialDemux\20230123-abundant-proteins-z3_nce33.elib, C:\dev\pwiz\pwiz_tools\Skyline\TestResults\TestRunner results\EncyclopeDiaSearchTutorialDemux\20230123-abundant-proteins-z3_nce33-quant.elib"
+Summary   : Added spectral library "C:\dev\pwiz\pwiz_tools\Skyline\TestResults\TestRunner results\EncyclopeDiaSearchTutorialDemux\20230123-abundant-proteins-z3_nce33.elib, C:\dev\pwiz\pwiz_tools\Skyline\TestResults\TestRunner results\EncyclopeDiaSearchTutorialDemux\20230123-abundant-proteins-z3_nce33-quant.elib"
 All Info  :
-Added spectral library "C:\dev\pwiz\pwiz_tools\Skyline\TestResults\TestRunner results\EncyclopeDiaSearchTutorial\20230123-abundant-proteins-z3_nce33.elib, C:\dev\pwiz\pwiz_tools\Skyline\TestResults\TestRunner results\EncyclopeDiaSearchTutorial\20230123-abundant-proteins-z3_nce33-quant.elib"
+Added spectral library "C:\dev\pwiz\pwiz_tools\Skyline\TestResults\TestRunner results\EncyclopeDiaSearchTutorialDemux\20230123-abundant-proteins-z3_nce33.elib, C:\dev\pwiz\pwiz_tools\Skyline\TestResults\TestRunner results\EncyclopeDiaSearchTutorialDemux\20230123-abundant-proteins-z3_nce33-quant.elib"
 EncyclopeDIA Search > FASTA settings > Max missed cleavages is "2"
 EncyclopeDIA Search > FASTA settings > FASTA file is "20230123-abundant-proteins.fasta"
 EncyclopeDIA Search > Prosit settings > Default NCE is "33"
@@ -13,8 +13,8 @@ EncyclopeDIA Search > Narrow window results : contains "23aug2017_hela_serum_tim
 EncyclopeDIA Search > Wide window results : contains "23aug2017_hela_serum_timecourse_wide_1a.mzML"
 EncyclopeDIA Search > Wide window results : contains "23aug2017_hela_serum_timecourse_wide_1b.mzML"
 EncyclopeDIA Search > EncyclopeDIA settings is { Enzyme = "Trypsin", Frag = "CID", Ptol = "10", PtolUnits = "PPM", Ftol = "10", FtolUnits = "PPM", Lftol = "10", LftolUnits = "PPM", Poffset = "0", Foffset = "0", PercolatorThreshold = "0,01", PercolatorTrainingSetSize = "500000", PercolatorTrainingFDR = "0", Acquisition = "DIA", NumberOfThreadsUsed = "32", ExpectedPeakWidth = "25", PrecursorWindowSize = "-1", NumberOfQuantitativePeaks = "5", MinNumOfQuantitativePeaks = "3", TopNTargetsUsed = "-1", QuantifyAcrossSamples = "False", NumberOfExtraDecoyLibrariesSearched = "0", VerifyModificationIons = "True", MinIntensity = "-1", RtWindowInMin = "-1", FilterPeaklists = "False" }
-EncyclopeDIA Search > Chromatogram library is "C:\dev\pwiz\pwiz_tools\Skyline\TestResults\TestRunner results\EncyclopeDiaSearchTutorial\20230123-abundant-proteins-z3_nce33.elib"
-EncyclopeDIA Search > Quantification library is "C:\dev\pwiz\pwiz_tools\Skyline\TestResults\TestRunner results\EncyclopeDiaSearchTutorial\20230123-abundant-proteins-z3_nce33-quant.elib"
+EncyclopeDIA Search > Chromatogram library is "C:\dev\pwiz\pwiz_tools\Skyline\TestResults\TestRunner results\EncyclopeDiaSearchTutorialDemux\20230123-abundant-proteins-z3_nce33.elib"
+EncyclopeDIA Search > Quantification library is "C:\dev\pwiz\pwiz_tools\Skyline\TestResults\TestRunner results\EncyclopeDiaSearchTutorialDemux\20230123-abundant-proteins-z3_nce33-quant.elib"
 Extra Info: FASTA settings = 
 {
     Max missed cleavages = "2",
@@ -65,8 +65,8 @@ MinIntensity = "-1",
 RtWindowInMin = "-1",
 FilterPeaklists = "False"
 },
-Chromatogram library = "C:\dev\pwiz\pwiz_tools\Skyline\TestResults\TestRunner results\EncyclopeDiaSearchTutorial\20230123-abundant-proteins-z3_nce33.elib",
-Quantification library = "C:\dev\pwiz\pwiz_tools\Skyline\TestResults\TestRunner results\EncyclopeDiaSearchTutorial\20230123-abundant-proteins-z3_nce33-quant.elib"
+Chromatogram library = "C:\dev\pwiz\pwiz_tools\Skyline\TestResults\TestRunner results\EncyclopeDiaSearchTutorialDemux\20230123-abundant-proteins-z3_nce33.elib",
+Quantification library = "C:\dev\pwiz\pwiz_tools\Skyline\TestResults\TestRunner results\EncyclopeDiaSearchTutorialDemux\20230123-abundant-proteins-z3_nce33-quant.elib"
 
 Undo Redo : Imported a peptide search
 Summary   : Imported a peptide search
@@ -104,11 +104,11 @@ Import Peptide Search > Associate Proteins > Find minimal protein list is False
 Import Peptide Search > Associate Proteins > Remove subset proteins is False
 Import Peptide Search > Associate Proteins > Shared peptides option is "Duplicated between proteins"
 Import Peptide Search > Associate Proteins > Min peptides per protein is "1"
-Import Peptide Search > Associate Proteins > Proteins mapped is "554"
-Import Peptide Search > Associate Proteins > Peptides mapped is "4586"
-Import Peptide Search > Associate Proteins > Proteins unmapped is "4"
-Import Peptide Search > Associate Proteins > Protein targets is "554"
-Import Peptide Search > Associate Proteins > Peptide targets is "4886"
+Import Peptide Search > Associate Proteins > Proteins mapped is "555"
+Import Peptide Search > Associate Proteins > Peptides mapped is "4838"
+Import Peptide Search > Associate Proteins > Proteins unmapped is "3"
+Import Peptide Search > Associate Proteins > Protein targets is "555"
+Import Peptide Search > Associate Proteins > Peptide targets is "5133"
 Extra Info: Extract Chromatograms = 
 {
     Found results files = 
@@ -160,10 +160,10 @@ Associate Proteins =
     Remove subset proteins = False,
     Shared peptides option = "Duplicated between proteins",
     Min peptides per protein = "1",
-    Proteins mapped = "554",
-    Peptides mapped = "4586",
-    Proteins unmapped = "4",
-    Protein targets = "554",
-    Peptide targets = "4886"
+    Proteins mapped = "555",
+    Peptides mapped = "4838",
+    Proteins unmapped = "3",
+    Protein targets = "555",
+    Peptide targets = "5133"
 }
 
