@@ -141,6 +141,7 @@ namespace pwiz.Skyline.Controls.Graphs
 
         private SpectrumDisplayInfo _mirrorSpectrum;
         private SpectrumDisplayInfo _spectrum;
+                
 
         private bool _inToolbarUpdate;
         // TODO
@@ -1278,6 +1279,8 @@ namespace pwiz.Skyline.Controls.Graphs
 
                     var spectrumChanged = !Equals(_spectrum?.SpectrumInfo, spectrum?.SpectrumInfo);
                     _spectrum = spectrum;
+                    if(spectrumChanged)
+                        HasChromatogramData = _spectrum?.LoadChromatogramData() != null;
 
                     ClearGraphPane();
 
@@ -1504,7 +1507,8 @@ namespace pwiz.Skyline.Controls.Graphs
 
         public bool HasChromatogramData
         {
-            get { return _spectrum?.LoadChromatogramData() != null; }
+            get;
+            private set;
         }
 
         public Scale IntensityScale
