@@ -58,6 +58,9 @@
       <SpecificVersion>False</SpecificVersion>
       <HintPath>..\Lib\Newtonsoft.Json.dll</HintPath>
     </Reference>
+    <Reference Include="SharedBatch">
+      <HintPath>..\..\Skyline\Executables\SharedBatch\SharedBatch\bin\Release\SharedBatch.dll</HintPath>
+    </Reference>
     <Reference Include="System" />
     <Reference Include="System.Core" />
     <Reference Include="System.Xml.Linq" />
@@ -77,11 +80,11 @@
     <Compile Include="PanoramaDirectoryPicker.Designer.cs">
       <DependentUpon>PanoramaDirectoryPicker.cs</DependentUpon>
     </Compile>
-    <Compile Include="FolderBrowser.cs">
+    <Compile Include="PanoramaFolderBrowser.cs">
       <SubType>UserControl</SubType>
     </Compile>
-    <Compile Include="FolderBrowser.Designer.cs">
-      <DependentUpon>FolderBrowser.cs</DependentUpon>
+    <Compile Include="PanoramaFolderBrowser.Designer.cs">
+      <DependentUpon>PanoramaFolderBrowser.cs</DependentUpon>
     </Compile>
     <Compile Include="PanoramaFormUtil.cs" />
     <Compile Include="PanoramaUtil.cs" />
@@ -97,8 +100,8 @@
     <EmbeddedResource Include="PanoramaDirectoryPicker.resx">
       <DependentUpon>PanoramaDirectoryPicker.cs</DependentUpon>
     </EmbeddedResource>
-    <EmbeddedResource Include="FolderBrowser.resx">
-      <DependentUpon>FolderBrowser.cs</DependentUpon>
+    <EmbeddedResource Include="PanoramaFolderBrowser.resx">
+      <DependentUpon>PanoramaFolderBrowser.cs</DependentUpon>
     </EmbeddedResource>
     <EmbeddedResource Include="Properties\Resources.resx">
       <Generator>PublicResXFileCodeGenerator</Generator>

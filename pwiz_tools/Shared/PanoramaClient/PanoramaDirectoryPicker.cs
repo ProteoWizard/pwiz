@@ -26,7 +26,7 @@ namespace pwiz.PanoramaClient
     public partial class PanoramaDirectoryPicker : Form
     {
 
-        private FolderBrowser folders;
+        private PanoramaFolderBrowser folders;
         public string State;
         public string Selected;
         public List<PanoramaServer> Servers { get; private set; }
@@ -35,7 +35,7 @@ namespace pwiz.PanoramaClient
         {
             InitializeComponent();
             Servers = servers;
-            folders = new FolderBrowser( false, showSkyFolders, state, Servers);
+            folders = new PanoramaFolderBrowser( false, showSkyFolders, state, Servers);
             folders.Dock = DockStyle.Fill;
             folderPanel.Controls.Add(folders);
             folders.NodeClick += DirectoryPicker_MouseClick;

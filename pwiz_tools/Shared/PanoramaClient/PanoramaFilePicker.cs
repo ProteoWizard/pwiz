@@ -4,6 +4,7 @@ using System.Drawing;
 using Newtonsoft.Json.Linq;
 using System.Windows.Forms;
 using pwiz.Common.Controls;
+using SharedBatch;
 
 
 namespace pwiz.PanoramaClient
@@ -50,12 +51,10 @@ namespace pwiz.PanoramaClient
         public string OkButtonText { get; set; }
         public string TreeState { get; set; }
         public bool IsLoaded { get; set; }
-        public FolderBrowser FolderBrowser { get; private set; }
-        public List<TreeView> Tree = new List<TreeView>();
-        public List<PanoramaServer> Servers { get; private set; }
+        public PanoramaFolderBrowser FolderBrowser { get; private set; }
+        public List<PanoramaServer> Servers { get; }
         public string FileUrl { get; private set; }
         public string FileName { get; private set; }
-        public string Folder { get; private set; }
         public string DownloadName { get; private set; }
         public bool ShowingSky { get; private set; }
         public PanoramaServer ActiveServer { get; private set; }
@@ -84,7 +83,7 @@ namespace pwiz.PanoramaClient
         /// </summary>
         public void InitializeDialog()
         {
-            FolderBrowser = new FolderBrowser(false, ShowingSky, TreeState, Servers);
+            FolderBrowser = new PanoramaFolderBrowser(false, ShowingSky, TreeState, Servers);
             if (string.IsNullOrEmpty(TreeState))
             {
                 up.Enabled = false;
@@ -106,7 +105,7 @@ namespace pwiz.PanoramaClient
         {
             _fileJson = fileJson;
             var server = new PanoramaServer(serverUri, user, pass);
-            FolderBrowser = new FolderBrowser(server, folderJson);
+            FolderBrowser = new PanoramaFolderBrowser(server, folderJson);
             FolderBrowser.Dock = DockStyle.Fill;
             splitContainer1.Panel1.Controls.Add(FolderBrowser);
             FolderBrowser.NodeClick += FilePicker_MouseClick;
@@ -147,7 +146,6 @@ namespace pwiz.PanoramaClient
         /// <returns></returns>
         private JToken GetJson(Uri queryUri)
         {
-            //var queryUri = new Uri(query);
             var webClient = new WebClientWithCredentials(queryUri, ActiveServer.Username, ActiveServer.Password);
             JToken json = webClient.Get(queryUri);
             return json;
@@ -273,6 +271,7 @@ namespace pwiz.PanoramaClient
                         listView.Items.Add(fileNode);
                     }
                 }
+                listView.Columns[4].Width = -2;
             }
             else
             {
@@ -490,17 +489,7 @@ namespace pwiz.PanoramaClient
                     _restoring = false;
                     if (!string.IsNullOrEmpty(path))
                     {
-                        if (FolderBrowser.ShowSky)
-                        {
-                            TestAddQueryFiles(path, versionLabel, versionOptions, _fileJson);
-                        }
-                        else
-                        {
-                            var uriString = string.Concat(ActiveServer.URI.ToString(), @"_webdav/",
-                                path + @"/@files?method=json");
-                            var uri = new Uri(uriString);
-                            AddChildFiles(uri);
-                        }
+                        TestAddQueryFiles(path, versionLabel, versionOptions, _fileJson);
                     }
                 }
                 else
@@ -515,7 +504,7 @@ namespace pwiz.PanoramaClient
                     _restoring = false;
                     if (!string.IsNullOrEmpty(path))
                     {
-                        if (FolderBrowser.ContainsMS.Equals("True"))
+                        if (FolderBrowser.CurNodeIsTargetedMS.Equals("True"))
                         {
                             
                             if (FolderBrowser.ShowSky)
@@ -544,7 +533,6 @@ namespace pwiz.PanoramaClient
                                     versionOptions.Visible = false;
                                 }
                                 GetLatestVersion();
-                                //AddQueryFiles(path, versionLabel, versionOptions);
                             }
                             else
                             {
@@ -564,7 +552,7 @@ namespace pwiz.PanoramaClient
             }
             catch (Exception ex)
             {
-                throw new Exception(ex.Message);
+                AlertDlg.ShowError(this, string.Empty, ex.Message);
             }
         }
 
@@ -762,6 +750,11 @@ namespace pwiz.PanoramaClient
             return versionOptions.Visible;
         }
 
+        public int FileNumber()
+        {
+            return listView.Items.Count;
+        }
+
         public string VersionsOption()
         {
             return versionOptions.Text;
@@ -776,6 +769,26 @@ namespace pwiz.PanoramaClient
         {
             noFiles.Location = new Point((listView.Location.Y + listView.Width - noFiles.Width) / 2,
                 noFiles.Location.Y);
+        }
+
+        private void listView_ColumnClick(object sender, ColumnClickEventArgs e)
+        {
+           
+        }
+
+        public void ClickFile(string name)
+        {
+            foreach (ListViewItem item in listView.Items)
+            {
+                var itemName = item.Text;
+                if (name.Equals(itemName))
+                {
+                    item.Selected = true;
+                    listView.Select();
+                    DialogResult = DialogResult.Yes;
+                    open.PerformClick();
+                }
+            }
         }
     }
 

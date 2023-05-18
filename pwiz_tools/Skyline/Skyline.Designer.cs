@@ -1687,6 +1687,13 @@ namespace pwiz.Skyline
             this.openMenuItem.Name = "openMenuItem";
             this.openMenuItem.Click += new System.EventHandler(this.openMenuItem_Click);
             // 
+            // openPanoramaMenuItem
+            // 
+            this.openPanoramaMenuItem.Image = global::pwiz.Skyline.Properties.Resources.PanoramaDownload;
+            resources.ApplyResources(this.openPanoramaMenuItem, "openPanoramaMenuItem");
+            this.openPanoramaMenuItem.Name = "openPanoramaMenuItem";
+            this.openPanoramaMenuItem.Click += new System.EventHandler(this.openPanorama_Click);
+            // 
             // openContainingFolderMenuItem
             // 
             this.openContainingFolderMenuItem.Name = "openContainingFolderMenuItem";

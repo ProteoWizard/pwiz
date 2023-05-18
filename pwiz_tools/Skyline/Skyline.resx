@@ -1329,6 +1329,9 @@
   <data name="openMenuItem.Text" xml:space="preserve">
     <value>&amp;Open...</value>
   </data>
+  <data name="openPanoramaMenuItem.ImageTransparentColor" type="System.Drawing.Color, System.Drawing">
+    <value>Magenta</value>
+  </data>
   <data name="openPanoramaMenuItem.Size" type="System.Drawing.Size, System.Drawing">
     <value>198, 22</value>
   </data>

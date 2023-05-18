@@ -28,7 +28,7 @@ using pwiz.Common.Controls;
 
 namespace pwiz.PanoramaClient
 {
-    public partial class FolderBrowser : UserControl
+    public partial class PanoramaFolderBrowser : UserControl
     {
         private bool _uploadPerms;
         private PanoramaFormUtil _formUtil;
@@ -42,7 +42,7 @@ namespace pwiz.PanoramaClient
         private JToken _folderJson;
         private List<KeyValuePair<PanoramaServer, JToken>> _listServerFolders = new List<KeyValuePair<PanoramaServer, JToken>>();
 
-        public FolderBrowser(bool uploadPerms, bool showSkyFolders, string state, List<PanoramaServer> servers)
+        public PanoramaFolderBrowser(bool uploadPerms, bool showSkyFolders, string state, List<PanoramaServer> servers)
         {
             InitializeComponent();
             treeView.ImageList = imageList1;
@@ -60,13 +60,14 @@ namespace pwiz.PanoramaClient
         /// </summary>
         /// <param name="server"></param>
         /// <param name="folderJson"></param>
-        public FolderBrowser(PanoramaServer server, JToken folderJson)
+        public PanoramaFolderBrowser(PanoramaServer server, JToken folderJson)
         {
             InitializeComponent();
             treeView.ImageList = imageList1;
             _restorer = new TreeViewStateRestorer(treeView);
             _server = server;
             _folderJson = folderJson;
+            Testing = true;
         }
 
         public event EventHandler NodeClick;
@@ -76,7 +77,7 @@ namespace pwiz.PanoramaClient
         public bool ShowSky { get; private set; }
         public string Path { get; private set; }
 
-        public string ContainsMS { get; private set; }
+        public string CurNodeIsTargetedMS { get; private set; }
         public string State { get; private set; }
         public PanoramaServer ActiveServer { get; private set; }
         public bool Testing { get; private set; }
@@ -174,9 +175,10 @@ namespace pwiz.PanoramaClient
                     var hit = e.Node.TreeView.HitTest(e.Location);
                     if (hit.Location != TreeViewHitTestLocations.PlusMinus)
                     {
-                        //ClearTreeRecursive(treeView.Nodes);
+                        treeView.SelectedNode = e.Node;
+                        treeView.Focus();
                         ActiveServer = CheckServer(e.Node);
-                        ContainsMS = e.Node.Name;
+                        CurNodeIsTargetedMS = e.Node.Name;
                         Path = e.Node.Tag != null ? e.Node.Tag.ToString() : string.Empty;
                         //If there's a file browser observer, add corresponding files
                         AddFiles?.Invoke(this, e);
@@ -204,13 +206,21 @@ namespace pwiz.PanoramaClient
             {
                 if (node.Parent == null)
                 {
-                    foreach (var pServer in _serverList)
+                    if (_serverList != null)
                     {
-                        if (pServer.URI.ToString().Equals(node.Text))
+                        foreach (var pServer in _serverList)
                         {
-                            return pServer;
+                            if (pServer.URI.ToString().Equals(node.Text))
+                            {
+                                return pServer;
+                            }
                         }
                     }
+                    else
+                    {
+                        return _server;
+                    }
+                    
                 }
                 else
                 {
@@ -257,7 +267,7 @@ namespace pwiz.PanoramaClient
                 treeView.SelectedNode = parent;
                 _lastSelected = parent;
                 Clicked = parent;
-                ContainsMS = Clicked.Name;
+                CurNodeIsTargetedMS = Clicked.Name;
                 Path = Clicked.Tag != null ? Clicked.Tag.ToString() : string.Empty;
                 treeView.Focus();
                 AddFiles?.Invoke(this, EventArgs.Empty);
@@ -288,7 +298,7 @@ namespace pwiz.PanoramaClient
             treeView.Focus();
             _priorNode = prior;
             Clicked = prior;
-            ContainsMS = Clicked.Name;
+            CurNodeIsTargetedMS = Clicked.Name;
             Path = prior.Tag != null ? prior.Tag.ToString() : string.Empty;
             AddFiles?.Invoke(this, EventArgs.Empty);
         }
@@ -319,7 +329,7 @@ namespace pwiz.PanoramaClient
             _lastSelected = nextNode;
             Clicked = nextNode;
             treeView.Focus();
-            ContainsMS = Clicked.Name;
+            CurNodeIsTargetedMS = Clicked.Name;
             Path = nextNode.Tag != null ? nextNode.Tag.ToString() : string.Empty;
             AddFiles?.Invoke(this, EventArgs.Empty);
         }
@@ -354,7 +364,7 @@ namespace pwiz.PanoramaClient
                     treeView.Focus();
                     _lastSelected = node;
                     Clicked = node;
-                    ContainsMS = node.Name;
+                    CurNodeIsTargetedMS = node.Name;
                     Path = (string)node.Tag;
                     treeView.Focus();
                     AddFiles?.Invoke(this, e);
@@ -374,13 +384,12 @@ namespace pwiz.PanoramaClient
         public void SelectNode(string nodeName)
         {
             NodeCount = treeView.GetNodeCount(true);
-            Testing = true;
             var node = SearchTree(treeView.Nodes, nodeName);
             if (node != null)
             {
-                ActiveServer = _server;
+                ActiveServer = CheckServer(node);
                 treeView.SelectedNode = node;
-                ContainsMS = node.Name;
+                CurNodeIsTargetedMS = node.Name;
                 Path = node.Tag != null ? node.Tag.ToString() : string.Empty;
                 AddFiles?.Invoke(this, EventArgs.Empty);
                 //If there's a file browser observer, add corresponding files
@@ -422,5 +431,15 @@ namespace pwiz.PanoramaClient
             }
             return null;
         }
+
+        private void treeView_KeyPress(object sender, KeyPressEventArgs e)
+        {
+            if (e.KeyChar == Convert.ToChar(Keys.Return) && treeView.SelectedNode != null)
+            {
+                treeView.SelectedNode.Expand();
+            }
+
+        }
+
     }
 }

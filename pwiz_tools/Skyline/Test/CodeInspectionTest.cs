@@ -196,7 +196,7 @@ namespace pwiz.SkylineTest
                 }
             }
 
-            var panoramaHint = typeof(PanoramaClient.FolderBrowser); // Bit of a hack to get the test to look in that namespace
+            var panoramaHint = typeof(PanoramaClient.PanoramaFolderBrowser); // Bit of a hack to get the test to look in that namespace
 
             // Collect forms that should be exercised in tutorials
             var foundForms = FindForms(new[]

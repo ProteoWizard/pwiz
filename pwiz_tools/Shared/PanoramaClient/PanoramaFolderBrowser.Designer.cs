@@ -1,6 +1,6 @@
 ﻿namespace pwiz.PanoramaClient
 {
-    partial class FolderBrowser
+    partial class PanoramaFolderBrowser
     {
         /// <summary> 
         /// Required designer variable.
@@ -29,7 +29,7 @@
         private void InitializeComponent()
         {
             this.components = new System.ComponentModel.Container();
-            System.ComponentModel.ComponentResourceManager resources = new System.ComponentModel.ComponentResourceManager(typeof(FolderBrowser));
+            System.ComponentModel.ComponentResourceManager resources = new System.ComponentModel.ComponentResourceManager(typeof(PanoramaFolderBrowser));
             this.imageList1 = new System.Windows.Forms.ImageList(this.components);
             this.treeView = new System.Windows.Forms.TreeView();
             this.SuspendLayout();
@@ -53,13 +53,14 @@
             this.treeView.TabIndex = 0;
             this.treeView.AfterSelect += new System.Windows.Forms.TreeViewEventHandler(this.TreeView_AfterSelect);
             this.treeView.NodeMouseClick += new System.Windows.Forms.TreeNodeMouseClickEventHandler(this.TreeView_NodeMouseClick);
+            this.treeView.KeyPress += new System.Windows.Forms.KeyPressEventHandler(this.treeView_KeyPress);
             // 
-            // FolderBrowser
+            // PanoramaFolderBrowser
             // 
             this.AutoScaleDimensions = new System.Drawing.SizeF(6F, 13F);
             this.AutoScaleMode = System.Windows.Forms.AutoScaleMode.Font;
             this.Controls.Add(this.treeView);
-            this.Name = "FolderBrowser";
+            this.Name = "PanoramaFolderBrowser";
             this.Size = new System.Drawing.Size(425, 203);
             this.Load += new System.EventHandler(this.FolderBrowser_Load);
             this.ResumeLayout(false);

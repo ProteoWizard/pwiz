@@ -1020,6 +1020,12 @@ namespace pwiz.Skyline
                                     if (progressStatus.IsCanceled || progressStatus.IsError)
                                     {
                                         FileEx.SafeDelete(downloadPath, true);
+                                        if (progressStatus.IsError)
+                                        {
+                                            var msg = progressStatus.ErrorException.Message;
+                                            var alertDlg = new AlertDlg(msg, MessageBoxButtons.OK) { Exception = progressStatus.ErrorException };
+                                            alertDlg.ShowAndDispose(this);
+                                        }
                                         return;
                                     }
                                     if (longWaitDlg.IsCanceled)
