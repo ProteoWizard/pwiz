@@ -79,13 +79,18 @@ namespace pwiz.Skyline.Model.Find
             {
                 return string.Format(Resources.FindOptions_GetNotFoundMessage_The_text__0__could_not_be_found, Text);
             }
-            if (CustomFinders.Count == 1)
+            int criteriaCount = CustomFinders.Count;
+            if (!string.IsNullOrEmpty(Text))
+            {
+                criteriaCount++;
+            }
+            if (criteriaCount == 1)
             {
                 return string.Format(Resources.FindOptions_GetNotFoundMessage_Could_not_find__0__,
-                                     CustomFinders[0].DisplayName);
+                    CustomFinders[0].DisplayName);
             }
-            return string.Format(Resources.FindOptions_GetNotFoundMessage_Could_not_find_any_of__0__items,
-                                 CustomFinders.Count);
+
+            return string.Format(Resources.FindOptions_GetNotFoundMessage_Nothing_could_be_found_matching_any_of_the__0__criteria, criteriaCount);
         }
 
         public IList<IFinder> CustomFinders
