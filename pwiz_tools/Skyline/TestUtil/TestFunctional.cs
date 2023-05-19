@@ -1475,16 +1475,7 @@ namespace pwiz.SkylineTestUtil
             Program.TestExceptions = new List<Exception>();
             LocalizationHelper.InitThread();
 
-            // Unzip test files.
-            if (TestFilesZipPaths != null)
-            {
-                TestFilesDirs = new TestFilesDir[TestFilesZipPaths.Length];
-                for (int i = 0; i < TestFilesZipPaths.Length; i++)
-                {
-                    TestFilesDirs[i] = new TestFilesDir(TestContext, TestFilesZipPaths[i], TestDirectoryName,
-                        TestFilesPersistent, IsExtractHere(i));
-                }
-            }
+            UnzipTestFiles();
 
             _shotManager = new ScreenshotManager(TestContext, SkylineWindow);
 

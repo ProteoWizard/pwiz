@@ -42,11 +42,16 @@ namespace pwiz.Skyline.Model.DdaSearch
 
         private bool _keepIntermediateFiles;
         // Temp files we'll need to clean up at the end the end if !_keepIntermediateFiles
-        private Dictionary<MsDataFileUri, string> _inputsAndOutputs;
+        private SortedDictionary<MsDataFileUri, string> _inputsAndOutputs; // .hk.bs.kro results files
         private string _isotopesFilename;
         private string _paramsFilename;
         public static int MaxCharge = 7; // Look for charge states up to and including this
-
+        public override void SetSpectrumFiles(MsDataFileUri[] searchFilenames)
+        {
+            SpectrumFileNames = searchFilenames;
+            _paramsFilename = null;
+            _searchSettings.RemainingStepsInSearch = searchFilenames.Length + 1; // One step for Hardklor, and one Bullseye per file
+        }
         public HardklorSearchEngine(ImportPeptideSearch searchSettings)
         {
             _searchSettings = searchSettings;
@@ -71,7 +76,6 @@ namespace pwiz.Skyline.Model.DdaSearch
             _progressStatus = status.ChangePercentComplete(0);
             _success = true;
             _isotopesFilename = null;
-            _paramsFilename = null;
 
             var skylineWorkingDirectory = Settings.Default.ActiveDirectory;
             _keepIntermediateFiles = !string.IsNullOrEmpty(skylineWorkingDirectory);
@@ -81,14 +85,36 @@ namespace pwiz.Skyline.Model.DdaSearch
                 // Hardklor is not L10N ready, so take care to run its process under InvariantCulture
                 Func<string> RunHardklor = () =>
                 {
-                    var paramsFileText = GenerateHardklorConfigFile(skylineWorkingDirectory);
+                    string exeName;
+                    string args;
+                    if (string.IsNullOrEmpty(_paramsFilename))
+                    {
+                        // First pass - run Hardklor
+                        var paramsFileText = GenerateHardklorConfigFile(skylineWorkingDirectory);
 
-                    _paramsFilename = string.IsNullOrEmpty(skylineWorkingDirectory)
-                        ? Path.GetTempFileName()
-                        : Path.Combine(skylineWorkingDirectory, @"Hardklor.conf");
-                    File.WriteAllText(_paramsFilename, paramsFileText.ToString());
+                        _paramsFilename = string.IsNullOrEmpty(skylineWorkingDirectory)
+                            ? Path.GetTempFileName()
+                            : Path.Combine(skylineWorkingDirectory, @"Hardklor.conf");
+                        File.WriteAllText(_paramsFilename, paramsFileText.ToString());
+                        exeName = @"Hardklor";
+                        args = $@"""{_paramsFilename}""";
+                    }
+                    else
+                    {
+                        // Refine the Hardklor results with Bullseye
+                        _searchSettings.RemainingStepsInSearch--; // More to do after this?
+                        var pair = _inputsAndOutputs.ElementAt(_searchSettings.RemainingStepsInSearch-1);
+                        var mzFile = pair.Key;
+                        var hkFile = pair.Value;
+                        var matchFile = GetBullseyeMatchFilename(hkFile);
+                        var noMatchFile = GetBullseyeNoMatchFilename(hkFile);
+                        exeName = @"BullseyeSharp";
+                        args = $@"-c 0 " + // Don't eliminate long elutions
+                               $@"""{hkFile}"" ""{mzFile}"" ""{matchFile}"" ""{noMatchFile}""";
+                    }
+                    _progressStatus = status.ChangePercentComplete(0);
                     var pr = new ProcessRunner();
-                    var psi = new ProcessStartInfo(@"Hardklor", $@"""{_paramsFilename}""")
+                    var psi = new ProcessStartInfo(exeName, args)
                     {
                         CreateNoWindow = true,
                         UseShellExecute = false,
@@ -133,6 +159,21 @@ namespace pwiz.Skyline.Model.DdaSearch
             return _success;
         }
 
+        private static string GetBullseyeKronikFilename(string hkFile)
+        {
+            return hkFile + @".bs.kro";
+        }
+
+        private static string GetBullseyeNoMatchFilename(string hkFile)
+        {
+            return Path.ChangeExtension(hkFile, @".nomatch.ms2");
+        }
+
+        private static string GetBullseyeMatchFilename(string hkFile)
+        {
+            return Path.ChangeExtension(hkFile, @".match.ms2");
+        }
+
 
         public override void SetEnzyme(Enzyme enz, int mmc)
         {
@@ -161,7 +202,7 @@ namespace pwiz.Skyline.Model.DdaSearch
 
         public override string GetSearchResultFilepath(MsDataFileUri searchFilepath)
         {
-            return _inputsAndOutputs[searchFilepath];
+            return GetBullseyeKronikFilename(_inputsAndOutputs[searchFilepath]);
         }
 
         private string[] SupportedExtensions = { @".mzml", @".mzxml" }; // TODO - build Hardklor+MSToolkit to use pwiz so we don't have to convert to mzML
@@ -195,9 +236,12 @@ namespace pwiz.Skyline.Model.DdaSearch
                 FileEx.SafeDelete(_isotopesFilename, true);
                 if (_inputsAndOutputs != null)
                 {
-                    foreach (var output in _inputsAndOutputs.Values)
+                    foreach (var hkFile in _inputsAndOutputs.Values)
                     {
-                        FileEx.SafeDelete(output, true);
+                        FileEx.SafeDelete(hkFile, true); // The hardklor .hk file
+                        FileEx.SafeDelete(GetBullseyeKronikFilename(hkFile), true); // The Bullseye result file
+                        FileEx.SafeDelete(GetBullseyeMatchFilename(hkFile), true);
+                        FileEx.SafeDelete(GetBullseyeNoMatchFilename(hkFile), true);
                     }
                 }
             }
@@ -238,7 +282,7 @@ namespace pwiz.Skyline.Model.DdaSearch
 
         private string GenerateHardklorConfigFile(string skylineWorkingDirectory)
         {
-            _inputsAndOutputs = new Dictionary<MsDataFileUri, string>();
+            _inputsAndOutputs = new SortedDictionary<MsDataFileUri, string>();
             var workingDirectory = string.IsNullOrEmpty(skylineWorkingDirectory) ? Path.GetTempPath() : skylineWorkingDirectory;
             int? isCentroided = null;
 
@@ -294,7 +338,7 @@ namespace pwiz.Skyline.Model.DdaSearch
                 $@"# Parameters used to described the data being input to Hardklor",
                 $@"instrument	=	{TransitionFullScan.MassAnalyzerToString(instrument).Replace(@"-", string.Empty)}	#Values are: FTICR, Orbitrap, TOF, QIT #NEED UI",
                 $@"resolution	=	{resolution}		#Resolution at 400 m/z #NEED UI",
-                $@"centroided	=	{isCentroided}			#0=no, 1=yes",
+                $@"centroided	=	{isCentroided??1}			#0=no, 1=yes",
                 $@"",
                 $@"# Parameters used in preprocessing spectra prior to analysis",
                 $@"ms_level			=	1		#1=MS1, 2=MS2, 3=MS3, 0=all",
@@ -337,7 +381,6 @@ namespace pwiz.Skyline.Model.DdaSearch
                 $@"molecule_max_mz 	= 	5000		#Maximum m/z of molecules to detect. Set this higher than largest expected molecule.",
                 $@"",
                 $@"# Parameters used by Skyline",
-                $@"isotope_peaks_min	= 	3		# Don't report features identified with fewer isotopic peaks than this",
                 $@"report_averagine		=	1		# include feature's averagine formula and mass shift in report e.g. C12H5[+1.23]",
                 $@"",
                 $@"# Parameters used to customize the Hardklor output",

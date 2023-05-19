@@ -173,7 +173,7 @@ namespace pwiz.Skyline.Model
 
         public abstract bool Run(CancellationTokenSource cancelToken, IProgressStatus status);
 
-        public void SetSpectrumFiles(MsDataFileUri[] searchFilenames)
+        public virtual void SetSpectrumFiles(MsDataFileUri[] searchFilenames)
         {
             SpectrumFileNames = searchFilenames;
         }

@@ -85,7 +85,7 @@ static vector<string> supportedTypes = {
     "final_fragment.csv",
     ".proxl.xml",
     ".ssl",
-    ".hk", // Hardklor result file
+    ".hk.bs.kro", // Hardklor result file postprocessed by BullseyeSharp
     ".mlb",
     ".speclib",
     ".tsv",

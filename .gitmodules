@@ -4,3 +4,6 @@
 [submodule "pwiz_tools/Skyline/Executables/Hardklor/MSToolkit"]
 	path = pwiz_tools/Skyline/Executables/Hardklor/MSToolkit
 	url = https://github.com/proteowizard/MSToolkit
+[submodule "pwiz_tools/Skyline/Executables/BullseyeSharp"]
+	path = pwiz_tools/Skyline/Executables/BullseyeSharp
+	url = https://github.com/ProteoWizard/BullseyeSharp

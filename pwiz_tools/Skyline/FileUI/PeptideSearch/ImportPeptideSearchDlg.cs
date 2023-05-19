@@ -928,7 +928,16 @@ namespace pwiz.Skyline.FileUI.PeptideSearch
             ImportPeptideSearch.SearchEngine.SetSpectrumFiles(BuildPepSearchLibControl.DdaSearchDataSources);
             ImportPeptideSearch.DdaConverter?.SetSpectrumFiles(BuildPepSearchLibControl.DdaSearchDataSources);
             ImportPeptideSearch.SearchEngine.SetFastaFiles(ImportFastaControl.FastaFile);
-            SearchControl.OnSearchFinished += SearchControl_OnSearchFinished;
+            SearchControl.OnSearchFinished -= SearchControl_OnSearchFinished;
+            SearchControl.OnSearchFinished -= SearchControl_OnSearchStepFinished;
+            if (ImportPeptideSearch.RemainingStepsInSearch > 1)
+            {
+                SearchControl.OnSearchFinished += SearchControl_OnSearchStepFinished; // Two step search, e.g. Hardklor then Bullseye
+            }
+            else
+            {
+                SearchControl.OnSearchFinished += SearchControl_OnSearchFinished;
+            }
             btnNext.Enabled = false;
             btnCancel.Enabled = false;
             btnBack.Enabled = false;
@@ -993,6 +1002,24 @@ namespace pwiz.Skyline.FileUI.PeptideSearch
                             string.IsNullOrEmpty(suffix) ? null : suffix;
                     }
                 }
+            }
+        }
+
+        private void SearchControl_OnSearchStepFinished(bool success)
+        {
+            if (success)
+            {
+                if (ImportPeptideSearch.RemainingStepsInSearch <= 1)
+                {
+                    SearchControl.OnSearchFinished -= SearchControl_OnSearchStepFinished;
+                    SearchControl.OnSearchFinished += SearchControl_OnSearchFinished;
+                    SearchControl_OnSearchFinished(true);
+                }
+            }
+            else
+            {
+                SearchControl.OnSearchFinished -= SearchControl_OnSearchStepFinished;
+                SearchControl_OnSearchFinished(false);
             }
         }
 

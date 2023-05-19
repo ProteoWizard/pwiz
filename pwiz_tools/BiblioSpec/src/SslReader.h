@@ -39,16 +39,11 @@ class sslPSM : public PSM {
   public:
     std::string filename; 
     PSM_SCORE_TYPE scoreType;
-    double precursorMz; // Useful for unknowns (where there's no peptide sequence or chemical formula)
     RTINFO rtInfo; // RT, startT, endT in minutes
-    bool _currentLineIsSpectrumInfo; // Used by Hardklor reader, which has to juggle two sets of columns
-    double precursorIntensity; // Used by Hardklor reader, which has to do some chromatogram processing
 
-    sslPSM() : PSM(), scoreType(UNKNOWN_SCORE_TYPE), precursorMz(0)
+    sslPSM() : PSM(), scoreType(UNKNOWN_SCORE_TYPE)
     {
         rtInfo.retentionTime = rtInfo.startTime = rtInfo.endTime = 0;
-        _currentLineIsSpectrumInfo = false;
-        precursorIntensity = 0;
     };
 
     static void setFile(sslPSM& psm, const std::string& value){
@@ -119,17 +114,6 @@ class sslPSM : public PSM {
             } catch (bad_lexical_cast) {
                 throw BlibException(false, "Non-numeric retention time: %s",
                                     value.c_str());
-            }
-        }
-    }
-    static void setPrecursorIntensity(sslPSM& psm, const std::string& value) {
-        if (!value.empty()) {
-            try {
-                psm.precursorIntensity = boost::lexical_cast<double>(value);
-            }
-            catch (bad_lexical_cast) {
-                throw BlibException(false, "Non-numeric precursor intensity: %s",
-                    value.c_str());
             }
         }
     }

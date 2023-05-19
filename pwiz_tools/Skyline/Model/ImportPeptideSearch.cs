@@ -51,7 +51,7 @@ namespace pwiz.Skyline.Model
             none, fullscan_settings, hardklor_settings
         }
 
-        public string[] SearchFilenames { get; set; }
+        public string[] SearchFilenames { get;  set; }
         public double CutoffScore { get; set; }
         public Library DocLib { get; private set; }
         public Dictionary<string, FoundResultsFilePossibilities> SpectrumSourceFiles { get; set; }
@@ -62,6 +62,7 @@ namespace pwiz.Skyline.Model
         public IrtStandard IrtStandard { get; set; }
         public bool IsDDASearch { get; set; }
         public bool IsFeatureDetection { get; set; }
+        public int RemainingStepsInSearch { get; set; } // In the case of Hardklor+Bullseye there may be several steps
         public HardklorSettings SettingsHardklor { get; set; }
         private readonly LibKeyModificationMatcher _matcher;
         private IsotopeLabelType DefaultHeavyLabelType { get; set; }

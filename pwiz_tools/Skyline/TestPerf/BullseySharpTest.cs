@@ -1,7 +1,7 @@
 ﻿/*
  * Original author: Brian Pratt <bspratt .at. proteinms.net >
  *
- * Copyright 2022 University of Washington - Seattle, WA
+ * Copyright 2023 University of Washington - Seattle, WA
  * 
  * Licensed under the Apache License, Version 2.0 (the "License");
  * you may not use this file except in compliance with the License.
@@ -30,12 +30,12 @@ using pwiz.Skyline.Model.Results;
 using pwiz.SkylineTestUtil;
 
 //
-// Test for Hardklor integration
+// Test to make sure our BullseyeSharp fork tracks with official release
 // 
 namespace TestPerf
 {
     [TestClass]
-    public class FeatureDetectionTest : AbstractFunctionalTest
+    public class BullseyeSharpTest : AbstractFunctionalTest
     {
         public struct ExpectedResults
         {
@@ -79,16 +79,16 @@ namespace TestPerf
         public bool UseWiff => false; // ExtensionTestContext.CanImportAbWiff; // Wiff reader fails in msconvert step due to brittle embedded DLL load order when run in RunProcess
 
         [TestMethod, NoUnicodeTesting(TestExclusionReason.HARDKLOR_UNICODE_ISSUES)]
-        public void TestHardklorFeatureDetection()
+        public void TestHardklorBullseyeSharp()
         {
             TestFilesZipPaths = new[]
             {
                 UseWiff
                     ? @"https://skyline.ms/tutorials/MS1Filtering_2.zip" 
                     : @"https://skyline.ms/tutorials/MS1FilteringMzml_2.zip", 
-                @"TestPerf\FeatureDetectionTest.zip"
+                @"TestPerf\BullseyeSharpTest.zip"
             };
-            TestDirectoryName = "HardklorFeatureDetectionTest";
+            TestDirectoryName = "HardklorBullseyeSharpTest";
 
             RunFunctionalTest();
         }
@@ -151,7 +151,7 @@ namespace TestPerf
 
             PauseForScreenShot("Ready to start Wizard (File > Import > Feature Detection...)");
             // Launch the wizard
-            var importPeptideSearchDlg = ShowDialog<ImportPeptideSearchDlg>(SkylineWindow.ShowFeatureDetectionDlg);
+            var importPeptideSearchDlg = ShowDialog<ImportPeptideSearchDlg>(SkylineWindow.ShowBullseyeSharpDlg);
             importPeptideSearchDlg.Testing = true; // Prevents form-called-by-form blockage TODO(bspratt) there must be a cleaner way
 
             // We're on the "Select Files to Search" page of the wizard.
@@ -322,7 +322,8 @@ namespace TestPerf
 
             WaitForDocumentLoaded();
             RunUI(() => SkylineWindow.SaveDocument());
-            AssertEx.IsDocumentState(SkylineWindow.Document, null, 12, 368,  369, 1115);
+            AssertEx.IsDocumentState(SkylineWindow.Document, null, 12, 665, 666, 2006);
+
             PauseForScreenShot("complete");
         }
 

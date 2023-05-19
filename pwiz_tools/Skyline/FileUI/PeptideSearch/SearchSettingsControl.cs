@@ -300,6 +300,7 @@ namespace pwiz.Skyline.FileUI.PeptideSearch
             LoadComboboxEntries();
             pBLogo.Image = ImportPeptideSearch.SearchEngine.SearchEngineLogo;
             btnAdditionalSettings.Enabled = ImportPeptideSearch.SearchEngine.AdditionalSettings != null;
+            ImportPeptideSearch.RemainingStepsInSearch = ImportPeptideSearch.IsFeatureDetection ? 2 : 1; // Hardklor is followed by one or more BullseyeSharp calls
         }
 
         private void LoadComboboxEntries()

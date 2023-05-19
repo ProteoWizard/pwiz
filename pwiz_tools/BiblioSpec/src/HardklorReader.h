@@ -27,31 +27,12 @@ namespace BiblioSpec {
 
 
 /**
- * The HardklorReader class to parse .hk files.
+ * The HardklorReader class to parse .hk.bs.kro files - the output of BullseyeSharp
+ * postprocessing Hardklor files.
  *
- * Similar to SSL reader, but has a bit of extra code to deal with the fact
- * that Hardklor files contain two kinds of lines:
- * (From https ://proteome.gs.washington.edu/software/hardklor/docs/hardklorresults.html)
-
-    Spectrum Line Columns (starts with an "S")
-    Scan Number	The number of the mass spectrum in the data file.
-    Retention Time	Time(in minutes) of the scan event.
-    File Name	File name for the scan event.
-    Precursor Mass	If analyzing tandem mass spectra, the mass of the precursor ion(if known).
-    Precursor Charge	If analyzing tandem mass spectra, the charge of the precursor ion(if known).
-    Selected Precursor m/z	If analyzing tandem mass spectra, the m/z of the precursor ion.
-
-    Peptide Line Columns (starts with a "P")
-    Monoisotopic Mass	The zero charge, monoisotopic mass of the feature.  (BSP note: Not the theortical mass - it should be close though, depending on tolerances)
-    Charge	The charge state of the feature.
-    Intensity	The intensity value of the feature.The reported values are influenced by the parameters in the configuration file.
-    Base Isotope Peak	The base isotope peak(tallest peak) of the feature's isotope distribution based on the theoretical model.
-    Analysis Window	The m/z window that the feature was extracted from.
-    (Deprecated)Formerly an indicator of localized signal - to - noise threshold.
-    Modifications	Modifications on the peptide, if searched for.
-    Correlation Score	The dot - product score of this feature to the theoretical model.
-    NONSTANDARD ADDITION:
-    Molecular Formula     Skyline's version of Hardklor adds this column for use in BiblioSpec
+ * It assumes the use of the special Skyline versions
+ * of Hardklor and BullseyeSharp which add some extra information about averagine formulas.
+ *
  */
 
 class HardklorReader : public SslReader {
@@ -62,57 +43,10 @@ class HardklorReader : public SslReader {
     ~HardklorReader();
 
     virtual void setColumnsAndSeparators(DelimitedFileReader<sslPSM> &fileReader);
-    virtual void addDataLine(sslPSM& newPSM);
-    virtual void removeDuplicates(); // Special case for Hardklor - no peptide sequences, but lots of redundant IDs in sequential scans
     virtual bool getSpectrum(PSM* psm, SPEC_ID_TYPE findBy, SpecData& returnData, bool getPeaks);
-    virtual bool keepAmbiguous();
+    virtual void addDataLine(sslPSM& data); // from DelimitedFileConsumer
 
 private:
-
-    map<string, RTINFO> _rtRanges; // Set of RT values after removeDuplicates()
-
-    static void setIsSpectrumLine(sslPSM& psm, const std::string& value)
-    {
-        psm._currentLineIsSpectrumInfo = (value == "S");
-    }
-
-    static void setScanNumberOrMeasuredMass(sslPSM& psm, const std::string& value)
-    {
-        if (psm._currentLineIsSpectrumInfo)
-        {
-            sslPSM::setScanNumber(psm, value);
-        }
-        else
-        {
-            sslPSM::setMoleculeName(psm, std::string("mass") + value);
-        }
-    }
-
-    static void setRetentionTimeOrCharge(sslPSM& psm, const std::string& value)
-    {
-        if (psm._currentLineIsSpectrumInfo)
-        {
-            sslPSM::setRetentionTime(psm, value);
-        }
-        else
-        {
-            sslPSM::setCharge(psm, value);
-            sslPSM::setPrecursorAdduct(psm, std::string("[M+") + value + "H]");
-        }
-    }
-
-
-    static void setFileOrPrecursorIntensity(sslPSM& psm, const std::string& value)
-    {
-        if (psm._currentLineIsSpectrumInfo)
-        {
-            sslPSM::setFile(psm, value);
-        }
-        else
-        {
-            sslPSM::setPrecursorIntensity(psm, value);
-        }
-    }
 
     static void setChemicalFormulaAndMassShift(sslPSM& psm, const std::string& value) {
         // Skyline's modified version of Hardklor supplies formula for isotope envelope, and
@@ -123,13 +57,17 @@ private:
         psm.smallMolMetadata.chemicalFormula = value;
     }
 
-    // Things we read from "S" lines that need to be combined with "P" line info
-    string _currentFilename;
-    RTINFO _currentRTINFO;
-    int _currentSpecKey;
-    int _currentSpecIndex;
-    string _currentSpecName;
-  };
+    static void setChargeAndAdduct(sslPSM& psm, const std::string& value) {
+        char buf[20];
+        sslPSM::setCharge(psm, value);
+        snprintf(buf, 20, "[M%+dH]", psm.charge);
+        psm.smallMolMetadata.precursorAdduct = buf;
+    }
+
+    static void setNameAsMass(sslPSM& psm, const std::string& value) {
+        psm.smallMolMetadata.moleculeName = "mass"+value;
+    }
+};
 
 } // namespace
 

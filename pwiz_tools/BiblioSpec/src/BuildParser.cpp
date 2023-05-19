@@ -360,11 +360,25 @@ void BuildParser::buildTables(PSM_SCORE_TYPE scoreType, string specFilename, boo
             Verbosity::status("No matches left after removing ambiguous spectra in %s.", curSpecFileName_.c_str());
     }
 
+    bool needsSpectra = false;
+    for (unsigned int i = 0; i < psms_.size(); i++) {
+        PSM* psm = psms_.at(i);
+        if (psm != NULL && !psm->isPrecursorOnly())
+        {
+            needsSpectra = true;
+            break;
+        }
+    }
+
+
     // for reading spectrum file
     if( specReader_ ) {
-        Verbosity::status("Loading %s.", curSpecFileName_.c_str());
-        specReader_->openFile(curSpecFileName_.c_str());
-        Verbosity::status("Reading spectra from %s.", curSpecFileName_.c_str());
+        if (needsSpectra)
+        {
+            Verbosity::status("Loading %s.", curSpecFileName_.c_str());
+            specReader_->openFile(curSpecFileName_.c_str());
+            Verbosity::status("Reading spectra from %s.", curSpecFileName_.c_str());
+        }
     } else {
         throw BlibException(true, "Cannot read spectrum file '%s' with NULL "
                             "reader.", curSpecFileName_.c_str());
@@ -393,22 +407,25 @@ void BuildParser::buildTables(PSM_SCORE_TYPE scoreType, string specFilename, boo
         SpecData curSpectrum;
 
         // get spectrum information
-        bool success = specReader_->getSpectrum(psm, lookUpBy_,
-                                                curSpectrum, !psm->isPrecursorOnly()); //getpeaks
+        bool success = needsSpectra ? specReader_->getSpectrum(psm, lookUpBy_,
+                                                curSpectrum, !psm->isPrecursorOnly()) : true;
         if( ! success ){
             string idStr = psm->idAsString();
             Verbosity::warn("Did not find spectrum '%s' in '%s'.",
                                idStr.c_str(), curSpecFileName_.c_str());
             continue;
         }
-        if (psm->isPrecursorOnly())
+
+        curSpectrum.totalIonCurrent = 0;
+        if (!psm->isPrecursorOnly())
+        {
+            for (int j = 0; j < curSpectrum.numPeaks; ++j)
+                curSpectrum.totalIonCurrent += curSpectrum.intensities[j];
+        }
+        else
         {
             curSpectrum.numPeaks = 0;
         }
-
-        curSpectrum.totalIonCurrent = 0;
-        for (int j = 0; j < curSpectrum.numPeaks; ++j)
-            curSpectrum.totalIonCurrent += curSpectrum.intensities[j];
 
         Verbosity::comment(V_DETAIL, "Adding spectrum %d (%s), charge %d.", 
                            psm->specKey, psm->specName.c_str(), psm->charge);

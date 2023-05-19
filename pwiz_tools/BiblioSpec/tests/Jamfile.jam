@@ -214,7 +214,7 @@ blib-test-build ssl-invalid-sequence : -o -e@Only_uppercase_letters : output/ssl
 blib-test-build ssl-crosslink : -o -K : output/ssl-crosslink.blib : ssl-crosslink.check : $(TEST_INPUTS_PATH)/ssl-crosslink.ssl ;
 
 # Test with the tab-delimited Hardklor format
-blib-test-build hardklor : -o : output/hardklor.blib : hardklor.check : $(TEST_INPUTS_PATH)/hardklor.hk ;
+blib-test-build hardklor : -o : output/hardklor.blib : hardklor.check : $(TEST_INPUTS_PATH)/hardklor.hk.bs.kro ;
 
 # Test building with percolator XML files
 

@@ -985,17 +985,17 @@ namespace pwiz.SkylineTestUtil
                 name, count, lineEqualLast, lineNext, linesRemaining);
         }
 
-        public static void FileEquals(string path1, string path2, Dictionary<int, double> columnTolerances = null, bool ignorePathDifferences = false )
+        public static void FileEquals(string pathExpectedFile, string pathActualFile, Dictionary<int, double> columnTolerances = null, bool ignorePathDifferences = false )
         {
-            string file1 = File.ReadAllText(path1);
-            string file2 = File.ReadAllText(path2);
+            string file1 = File.ReadAllText(pathExpectedFile);
+            string file2 = File.ReadAllText(pathActualFile);
             NoDiff(file1, file2, null, columnTolerances, ignorePathDifferences);
         }
 
         /// <summary>
         /// Compare two DSV files, accounting for possible L10N differences
         /// </summary>
-        public static void AreEquivalentDsvFiles(string path1, string path2, bool hasHeaders)
+        public static void AreEquivalentDsvFiles(string path1, string path2, bool hasHeaders, int[] ignoredColumns = null)
         {
             var lines1 = File.ReadAllLines(path1);
             var lines2 = File.ReadAllLines(path2);
@@ -1005,19 +1005,38 @@ namespace pwiz.SkylineTestUtil
                 return;
             }
 
+            ignoredColumns ??= new int[] { };
+
             var sep1 = DetermineDsvDelimiter(lines1, out var colCount1);
             var sep2 = DetermineDsvDelimiter(lines2, out var colCount2);
             for (var lineNum = 0; lineNum < lines1.Length; lineNum++)
             {
                 var cols1 = lines1[lineNum].ParseDsvFields(sep1);
                 var cols2 = lines2[lineNum].ParseDsvFields(sep2);
-                AreEqual(cols1.Length, cols2.Length, $"Expected same column count at line {lineNum}");
+                colCount1 = cols1.Length;
+                colCount2 = cols2.Length;
+
+                // If a rightmost column is missing don't worry if it's been declared as ignorable
+                while (ignoredColumns.Contains(colCount1 - 1))
+                {
+                    colCount1--;
+                }
+                while (ignoredColumns.Contains(colCount2 - 1))
+                {
+                    colCount2--;
+                }
+
+                AreEqual(colCount1, colCount2, $"Expected same column count at line {lineNum}");
                 if (hasHeaders && Equals(lineNum, 0) && !Equals(CultureInfo.CurrentCulture.TwoLetterISOLanguageName, @"en"))
                 {
                     continue; // Don't expect localized headers to match 
                 }
-                for (var colNum = 0; colNum < cols1.Length; colNum++)
+                for (var colNum = 0; colNum < colCount1; colNum++)
                 {
+                    if (ignoredColumns.Contains(colNum))
+                    {
+                        continue;
+                    }
                     var same = Equals(cols1[colNum], cols2[colNum]);
 
                     if (!same)

@@ -239,6 +239,20 @@ namespace pwiz.SkylineTestUtil
             }
         }
 
+        public void UnzipTestFiles()
+        {
+            // Unzip test files.
+            if (TestFilesZipPaths != null)
+            {
+                TestFilesDirs = new TestFilesDir[TestFilesZipPaths.Length];
+                for (int i = 0; i < TestFilesZipPaths.Length; i++)
+                {
+                    TestFilesDirs[i] = new TestFilesDir(TestContext, TestFilesZipPaths[i], TestDirectoryName,
+                        TestFilesPersistent, IsExtractHere(i));
+                }
+            }
+        }
+
         private static string DownloadZipFile(string targetFolder, string zipPath, string zipFilePath)
         {
             if (!Directory.Exists(targetFolder))
