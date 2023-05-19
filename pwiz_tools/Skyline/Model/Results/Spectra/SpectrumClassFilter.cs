@@ -31,6 +31,11 @@ namespace pwiz.Skyline.Model.Results.Spectra
         {
         }
 
+        public static SpectrumClassFilter FromFilterPages(FilterPages filterPages)
+        {
+            return new SpectrumClassFilter(filterPages.Clauses.Select(clause => new SpectrumClassFilterClause(clause)));
+        }
+
         public ImmutableList<SpectrumClassFilterClause> Clauses
         {
             get

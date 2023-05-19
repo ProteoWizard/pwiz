@@ -16,6 +16,8 @@
  * See the License for the specific language governing permissions and
  * limitations under the License.
  */
+
+using System.Globalization;
 using System.Linq;
 using Microsoft.VisualStudio.TestTools.UnitTesting;
 using pwiz.Common.DataBinding;
@@ -53,7 +55,7 @@ namespace pwiz.SkylineTestFunctional
                 dlg.CreateCopy = true;
                 var row = dlg.RowBindingList.AddNew();
                 Assert.IsNotNull(row);
-                row.Column = dlg.MakeColumn(SpectrumClassColumn.PresetScanConfiguration.PropertyPath);
+                row.Property = SpectrumClassColumn.PresetScanConfiguration.GetLocalizedColumnName(CultureInfo.CurrentCulture);
                 row.SetOperation(FilterOperations.OP_EQUALS);
                 row.SetValue(3);
                 dlg.OkDialog();

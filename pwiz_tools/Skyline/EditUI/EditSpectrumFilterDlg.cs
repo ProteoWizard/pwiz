@@ -36,6 +36,7 @@ namespace pwiz.Skyline.EditUI
         private FilterPages _originalFilterPages;
         private List<RadioButton> _pageRadioButtons = new List<RadioButton>();
         private ColumnDescriptor _rootColumn;
+        private Dictionary<string, ColumnDescriptor> _propertyColumns = new Dictionary<string, ColumnDescriptor>();
 
         public EditSpectrumFilterDlg(ColumnDescriptor rootColumn, FilterPages filterPages)
         {
@@ -61,7 +62,6 @@ namespace pwiz.Skyline.EditUI
         public FilterPages FilterPages { get; private set; }
         public int CurrentPageIndex { get; private set; }
         public IEnumerable<ImmutableList<FilterSpec>> Filters { get; private set; }
-        public SpectrumClassFilter SpectrumClassFilter { get; private set; }
         public SpectrumFilterAutoComplete AutoComplete { get; set; }
 
         public string Description
@@ -79,7 +79,7 @@ namespace pwiz.Skyline.EditUI
 
         public class Row
         {
-            public Column Property { get; set; }
+            public string Property { get; set; }
             public string Operation { get; set; }
             public string Value { get; set; }
 
@@ -106,17 +106,16 @@ namespace pwiz.Skyline.EditUI
             foreach (var filterSpec in filterSpecs)
             {
                 var propertyPath = filterSpec.ColumnId;
-                var spectrumClassColumn = propertyColumn.Items.OfType<Column>()
-                    .FirstOrDefault(col => Equals(col.PropertyPath, propertyPath));
-                if (spectrumClassColumn == null)
+                var entry = _propertyColumns.FirstOrDefault(kvp => Equals(kvp.Value.PropertyPath, propertyPath));
+                if (entry.Value == null)
                 {
                     continue;
                 }
                 rows.Add(new Row
                 {
-                    Property = spectrumClassColumn,
+                    Property = entry.Key,
                     Operation = filterSpec.Operation.DisplayName,
-                    Value = filterSpec.Predicate.GetOperandDisplayText(dataSchema, spectrumClassColumn.ValueType)
+                    Value = filterSpec.Predicate.GetOperandDisplayText(dataSchema, entry.Value.PropertyType)
                 });
             }
 
@@ -197,10 +196,10 @@ namespace pwiz.Skyline.EditUI
             AutoCompleteStringCollection autoCompleteStringCollection = null;
             if (AutoComplete != null && columnIndex == valueColumn.Index && rowIndex >= 0 && rowIndex < _rowBindingList.Count)
             {
-                var property = _rowBindingList[rowIndex].Property.PropertyPath;
-                if (property != null)
+                _propertyColumns.TryGetValue(_rowBindingList[rowIndex].Property, out var propertyColumnDescriptor);
+                if (propertyColumnDescriptor != null)
                 {
-                    autoCompleteStringCollection = AutoComplete.GetAutoCompleteValues(property);
+                    autoCompleteStringCollection = AutoComplete.GetAutoCompleteValues(propertyColumnDescriptor.PropertyPath);
                 }
             }
             TextBox textBox = e.Control as TextBox;
@@ -249,7 +248,17 @@ namespace pwiz.Skyline.EditUI
         {
             var currentPage = FilterPages.Pages[CurrentPageIndex];
             propertyColumn.Items.Clear();
-            propertyColumn.Items.AddRange(currentPage.AvailableColumns.Select(MakeColumn).ToArray());
+            _propertyColumns.Clear();
+            foreach (var column in currentPage.AvailableColumns)
+            {
+                var columnDescriptor = GetColumnDescriptor(column);
+                string caption = columnDescriptor.GetColumnCaption(ColumnCaptionType.localized);
+                if (!_propertyColumns.ContainsKey(caption))
+                {
+                    _propertyColumns.Add(caption, columnDescriptor);
+                    propertyColumn.Items.Add(caption);
+                }
+            }
             _pageRadioButtons[CurrentPageIndex].Checked = true;
             _rowList.Clear();
             _rowList.AddRange(GetRows(FilterPages.Clauses[CurrentPageIndex]));
@@ -270,7 +279,6 @@ namespace pwiz.Skyline.EditUI
 
         public ImmutableList<FilterSpec> GetFilterForCurrentPage()
         {
-            var page = FilterPages.Pages[CurrentPageIndex];
             var filterSpecs = new List<FilterSpec>();
             for (int iRow = 0; iRow < _rowList.Count; iRow++)
             {
@@ -281,35 +289,29 @@ namespace pwiz.Skyline.EditUI
                 {
                     continue;
                 }
+
+                if (!_propertyColumns.TryGetValue(row.Property, out var propertyColumnDescriptor))
+                {
+                    continue;
+                }
                 FilterPredicate filterPredicate;
                 try
                 {
                     filterPredicate =
-                        FilterPredicate.CreateFilterPredicate(_rootColumn.DataSchema, row.Property.ValueType, filterOperation,
+                        FilterPredicate.CreateFilterPredicate(_rootColumn.DataSchema, propertyColumnDescriptor.PropertyType, filterOperation,
                             row.Value);
                 }
                 catch (Exception ex)
                 {
                     MessageDlg.ShowWithException(this, ex.Message, ex);
-                    dataGridViewEx1.CurrentCell = dataGridViewEx1.Rows[iRow].Cells[valueDataGridViewTextBoxColumn.Index];
+                    dataGridViewEx1.CurrentCell = dataGridViewEx1.Rows[iRow].Cells[valueColumn.Index];
                     return null;
                 }
 
-                var filterSpec = new FilterSpec(row.Property.PropertyPath, filterPredicate);
+                var filterSpec = new FilterSpec(propertyColumnDescriptor.PropertyPath, filterPredicate);
                 filterSpecs.Add(filterSpec);
             }
             return ImmutableList.ValueOf(filterSpecs);
-        }
-
-        public Column MakeColumn(PropertyPath propertyPath)
-        {
-            var columnDescriptor = GetColumnDescriptor(propertyPath);
-            if (columnDescriptor == null)
-            {
-                return null;
-            }
-
-            return new Column(columnDescriptor);
         }
 
         private ColumnDescriptor GetColumnDescriptor(PropertyPath propertyPath)
@@ -331,48 +333,6 @@ namespace pwiz.Skyline.EditUI
             }
 
             throw new ArgumentException(@"Invalid property path " + propertyPath);
-        }
-
-        public class Column : IComparable<Column>
-        {
-            public Column(ColumnDescriptor columnDescriptor)
-            {
-                PropertyPath = columnDescriptor.PropertyPath;
-                ValueType = columnDescriptor.PropertyType;
-                Caption = columnDescriptor.GetColumnCaption(ColumnCaptionType.localized);
-            }
-
-            public PropertyPath PropertyPath { get; }
-            public Type ValueType { get; }
-            public string Caption { get; }
-
-            protected bool Equals(Column other)
-            {
-                return Equals(PropertyPath, other.PropertyPath);
-            }
-
-            public override bool Equals(object obj)
-            {
-                if (ReferenceEquals(null, obj)) return false;
-                if (ReferenceEquals(this, obj)) return true;
-                if (obj.GetType() != this.GetType()) return false;
-                return Equals((Column)obj);
-            }
-
-            public override int GetHashCode()
-            {
-                return (PropertyPath != null ? PropertyPath.GetHashCode() : 0);
-            }
-
-            public int CompareTo(Column other)
-            {
-                return string.Compare(Caption, other?.Caption, StringComparison.CurrentCultureIgnoreCase);
-            }
-
-            public override string ToString()
-            {
-                return Caption;
-            }
         }
     }
 }

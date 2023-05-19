@@ -72,12 +72,12 @@ namespace pwiz.Skyline.Model.Results.Spectra
                 return new[] { _ms1FilterPage, _ms2FilterPage };
             }
 
-            return Array.Empty<FilterPage>();
+            return ImmutableList.Singleton(MakeGenericFilterPage(0));
         }
 
         public FilterPage MakeGenericFilterPage(int pageNumber)
         {
-            return new FilterPage("Case " + pageNumber, ImmutableList<FilterSpec>.EMPTY,
+            return new FilterPage("Case " + (pageNumber + 1), ImmutableList<FilterSpec>.EMPTY,
                 SpectrumClassColumn.ALL.Select(col => col.PropertyPath));
         }
 

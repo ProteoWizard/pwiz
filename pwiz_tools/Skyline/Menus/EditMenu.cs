@@ -1737,8 +1737,7 @@ namespace pwiz.Skyline.Menus
             {
                 return;
             }
-
-            ChangeSpectrumFilter(transitionGroupPaths, dlg.SpectrumClassFilter, dlg.CreateCopy);
+            ChangeSpectrumFilter(transitionGroupPaths, SpectrumClassFilter.FromFilterPages(dlg.FilterPages), dlg.CreateCopy);
         }
 
         public void ChangeSpectrumFilter(ICollection<IdentityPath> precursorIdentityPaths,
@@ -1776,16 +1775,29 @@ namespace pwiz.Skyline.Menus
                         continue;
                     }
 
-                    var transitionGroupToAdd = precursorGroup.First();
+                    TransitionGroupDocNode transitionGroupToAdd;
                     if (copy)
                     {
                         newTransitionGroups.AddRange(precursorGroup);
-                        transitionGroupToAdd = transitionGroupToAdd.CloneTransitionGroupId();
+                        transitionGroupToAdd = precursorGroup.First().CloneTransitionGroupId();
                     }
                     else
                     {
-                        newTransitionGroups.AddRange(precursorGroup.Where(tg =>
-                            !idPathSet.Contains(new IdentityPath(peptidePathGroup.Key, tg.Id))));
+                        transitionGroupToAdd = null;
+                        foreach (var transitionGroup in precursorGroup)
+                        {
+                            var idPath = new IdentityPath(peptidePathGroup.Key, transitionGroup.TransitionGroup);
+                            if (idPathSet.Contains(idPath))
+                            {
+                                transitionGroupToAdd = transitionGroup;
+                            }
+                            else
+                            {
+                                newTransitionGroups.Add(transitionGroup);
+                            }
+                        }
+
+                        transitionGroupToAdd ??= precursorGroup.First().CloneTransitionGroupId();
                     }
 
                     transitionGroupToAdd = transitionGroupToAdd.ChangeSpectrumClassFilter(spectrumClassFilter);

@@ -40,7 +40,6 @@
             this.btnReset = new System.Windows.Forms.Button();
             this.btnCancel = new System.Windows.Forms.Button();
             this.btnOk = new System.Windows.Forms.Button();
-            this.valueDataGridViewTextBoxColumn = new System.Windows.Forms.DataGridViewTextBoxColumn();
             this.panelClauses = new System.Windows.Forms.Panel();
             this.toolStripFilter = new System.Windows.Forms.ToolStrip();
             this.btnDeleteFilter = new System.Windows.Forms.ToolStripButton();
@@ -170,12 +169,6 @@
             this.btnOk.UseVisualStyleBackColor = true;
             this.btnOk.Click += new System.EventHandler(this.btnOk_Click);
             // 
-            // valueDataGridViewTextBoxColumn
-            // 
-            this.valueDataGridViewTextBoxColumn.DataPropertyName = "Value";
-            this.valueDataGridViewTextBoxColumn.HeaderText = "Value";
-            this.valueDataGridViewTextBoxColumn.Name = "valueDataGridViewTextBoxColumn";
-            // 
             // panelClauses
             // 
             this.panelClauses.Controls.Add(this.dataGridViewEx1);
@@ -271,7 +264,6 @@
         private System.Windows.Forms.Button btnReset;
         private System.Windows.Forms.Button btnCancel;
         private System.Windows.Forms.Button btnOk;
-        private System.Windows.Forms.DataGridViewTextBoxColumn valueDataGridViewTextBoxColumn;
         private System.Windows.Forms.Panel panelClauses;
         private System.Windows.Forms.ToolStrip toolStripFilter;
         private System.Windows.Forms.ToolStripButton btnDeleteFilter;
