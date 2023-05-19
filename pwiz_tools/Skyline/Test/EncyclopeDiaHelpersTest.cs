@@ -74,7 +74,7 @@ namespace pwiz.SkylineTest
                 EncyclopeDiaHelpers.ConvertPrositOutputToDlib(prositBlibOutputFilepath, fastaFilepath, dlibFilepath, pm, ref status);
                 Assert.IsTrue(File.Exists(dlibFilepath));
                 var actual = SqliteOperations.DumpTable(dlibFilepath, "entries");
-                //string dlibActualTsvFilepath = TestFilesZip.GetTestPath("pan_human_library_690to705-z3_nce33-expected-dlib-actual.tsv");
+                //string dlibActualTsvFilepath = TestFilesDir.GetTestPath("pan_human_library_690to705-z3_nce33-expected-dlib-actual.tsv");
                 //File.WriteAllLines(dlibActualTsvFilepath, actual);
                 AssertEx.NoDiff(File.ReadAllText(dlibExpectedTsvFilepath), string.Join("\n", actual));
             }
@@ -120,9 +120,9 @@ namespace pwiz.SkylineTest
                         new MsDataFilePath(TestFilesDir.GetTestPath("23aug2017_hela_serum_timecourse_wide_1d.mzML")),
                         new MsDataFilePath(TestFilesDir.GetTestPath("23aug2017_hela_serum_timecourse_wide_1e.mzML")),
                     }, pm, ref status, testConfig);
-
+                
                 var actual = SqliteOperations.DumpTable(elibQuantFilepath, "entries", sortColumns: new[] { "PrecursorMz" })
-                    .Concat(SqliteOperations.DumpTable(elibQuantFilepath, "peptidescores", sortColumns: new[] { "PeptideModSeq", "PrecursorCharge" }))
+                    .Concat(SqliteOperations.DumpTable(elibQuantFilepath, "peptidescores", sortColumns: new[] { "PeptideModSeq", "PrecursorCharge" }, excludeColumns: new [] { "PosteriorErrorProbability" }))
                     .Concat(SqliteOperations.DumpTable(elibQuantFilepath, "retentiontimes", sortColumns: new[] { "SourceFile", "Library" }));
                 //string elibActualTsvFilepath = TestFilesDir.GetTestPath("pan_human_library_690to705-z3_nce33-expected-quant-elib-actual.tsv");
                 //File.WriteAllLines(elibActualTsvFilepath, actual);

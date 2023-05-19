@@ -597,11 +597,11 @@ namespace pwiz.Skyline.Model.Lib
                 return;
             ++step;
 
-            string aParam = quantLibrary ? @"true" : @"false";
+            string aParam = quantLibrary ? @"-a" : @"";
 
             var prMerge = new ProcessRunner();
             var psiMerge = new ProcessStartInfo(Java8DownloadInfo.JavaBinary,
-                $" -Xmx{javaMaxHeapMB}M -jar {EncyclopeDiaBinary.Quote()} {LOCALIZATION_PARAMS} {JAVA_TMPDIR} {extraParams} -i {diaDataPath.Quote()} -libexport -a {aParam} -o {encyclopeDiaElibOutputFilepath.Quote()} -f {fastaFilepath.Quote()} -l {encyclopeDiaLibInputFilepath.Quote()}")
+                $" -Xmx{javaMaxHeapMB}M -jar {EncyclopeDiaBinary.Quote()} {LOCALIZATION_PARAMS} {JAVA_TMPDIR} {extraParams} -i {diaDataPath.Quote()} -libexport {aParam} -o {encyclopeDiaElibOutputFilepath.Quote()} -f {fastaFilepath.Quote()} -l {encyclopeDiaLibInputFilepath.Quote()}")
             {
                 CreateNoWindow = true,
                 UseShellExecute = false
