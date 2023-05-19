@@ -71,6 +71,11 @@ namespace pwiz.Skyline.Model.Results.Spectra
             PresetScanConfiguration, MsLevel, Analyzer
         });
 
+        public static readonly ImmutableList<SpectrumClassColumn> MS1 = ImmutableList.ValueOf(new[]
+        {
+            ScanDescription, ScanWindowWidth, CompensationVoltage, PresetScanConfiguration, Analyzer
+        });
+
         /// <summary>
         /// This method gets used by System.Windows.Forms.Formatter.InvokeStringParseMethod
         /// </summary>

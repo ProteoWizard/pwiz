@@ -53,7 +53,7 @@ namespace pwiz.SkylineTestFunctional
                 dlg.CreateCopy = true;
                 var row = dlg.RowBindingList.AddNew();
                 Assert.IsNotNull(row);
-                row.Property = SpectrumClassColumn.PresetScanConfiguration;
+                row.Column = dlg.MakeColumn(SpectrumClassColumn.PresetScanConfiguration.PropertyPath);
                 row.SetOperation(FilterOperations.OP_EQUALS);
                 row.SetValue(3);
                 dlg.OkDialog();

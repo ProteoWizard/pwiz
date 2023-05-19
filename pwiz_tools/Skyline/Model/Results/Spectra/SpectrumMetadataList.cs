@@ -20,6 +20,7 @@ using System;
 using System.Collections.Generic;
 using System.Linq;
 using pwiz.Common.Collections;
+using pwiz.Common.DataBinding;
 using pwiz.Common.Spectra;
 using pwiz.Common.SystemUtil;
 
@@ -57,6 +58,20 @@ namespace pwiz.Skyline.Model.Results.Spectra
         public int IndexOfColumn(SpectrumClassColumn column)
         {
             if (_columnIndices.TryGetValue(column.ColumnName, out int index))
+            {
+                return index;
+            }
+
+            return -1;
+        }
+
+        public int IndexOfColumn(PropertyPath propertyPath)
+        {
+            if (!propertyPath.IsProperty || true != propertyPath.Parent?.IsRoot)
+            {
+                return -1;
+            }
+            if (_columnIndices.TryGetValue(propertyPath.Name, out int index))
             {
                 return index;
             }

@@ -21,13 +21,14 @@ using System.Collections.Generic;
 using System.Linq;
 using System.Threading;
 using System.Windows.Forms;
+using pwiz.Common.DataBinding;
 using pwiz.Skyline.Util.Extensions;
 
 namespace pwiz.Skyline.Model.Results.Spectra
 {
     public class SpectrumFilterAutoComplete : IDisposable
     {
-        private Dictionary<string, AutoCompleteStringCollection> _autoCompleteValues;
+        private Dictionary<PropertyPath, AutoCompleteStringCollection> _autoCompleteValues;
         private CancellationTokenSource _cancellationTokenSource;
         private IDocumentContainer _documentContainer;
         private bool _disposed;
@@ -54,12 +55,12 @@ namespace pwiz.Skyline.Model.Results.Spectra
             ActionUtil.RunAsync(() => PopulateUniqueValuesDict(cancellationToken, document));
         }
 
-        public AutoCompleteStringCollection GetAutoCompleteValues(SpectrumClassColumn column)
+        public AutoCompleteStringCollection GetAutoCompleteValues(PropertyPath propertyPath)
         {
             lock (this)
             {
                 AutoCompleteStringCollection result = null;
-                _autoCompleteValues?.TryGetValue(column.ColumnName, out result);
+                _autoCompleteValues?.TryGetValue(propertyPath, out result);
                 return result;
             }
         }
@@ -84,7 +85,7 @@ namespace pwiz.Skyline.Model.Results.Spectra
         private void SetUniqueValues(CancellationToken cancellationToken, SrmDocument document,
             SpectrumMetadataList spectrumMetadataList)
         {
-            var dictionary = new Dictionary<string, AutoCompleteStringCollection>();
+            var dictionary = new Dictionary<PropertyPath, AutoCompleteStringCollection>();
             if (spectrumMetadataList != null)
             {
                 for (int iColumn = 0; iColumn < spectrumMetadataList.Columns.Count; iColumn++)
@@ -92,7 +93,7 @@ namespace pwiz.Skyline.Model.Results.Spectra
                     var autoCompleteStringCollection = new AutoCompleteStringCollection();
                     autoCompleteStringCollection.AddRange(spectrumMetadataList.GetColumnValues(iColumn, spectrumMetadataList.AllRows)
                         .Distinct().Select(v => v?.ToString() ?? string.Empty).ToArray());
-                    dictionary.Add(spectrumMetadataList.Columns[iColumn].ColumnName, autoCompleteStringCollection);
+                    dictionary.Add(spectrumMetadataList.Columns[iColumn].PropertyPath, autoCompleteStringCollection);
                 }
             }
             lock (this)

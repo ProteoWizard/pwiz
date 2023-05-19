@@ -26,6 +26,7 @@ using System.Windows.Forms;
 using System.Xml;
 using System.Xml.Serialization;
 using pwiz.Common.Collections;
+using pwiz.Common.DataBinding;
 using pwiz.Skyline.Alerts;
 using pwiz.Skyline.Controls;
 using pwiz.Skyline.Controls.Graphs;
@@ -34,6 +35,7 @@ using pwiz.Skyline.EditUI;
 using pwiz.Skyline.FileUI;
 using pwiz.Skyline.Model;
 using pwiz.Skyline.Model.AuditLog;
+using pwiz.Skyline.Model.Databinding;
 using pwiz.Skyline.Model.DocSettings;
 using pwiz.Skyline.Model.DocSettings.Extensions;
 using pwiz.Skyline.Model.Find;
@@ -1703,14 +1705,30 @@ namespace pwiz.Skyline.Menus
                 return;
             }
 
-            var spectrumClassFilters = transitionGroupPaths.Select(path =>
-                ((TransitionGroupDocNode) SkylineWindow.DocumentUI.FindNode(path)).SpectrumClassFilter).ToHashSet();
+            var spectrumClassFilters = new SpectrumClassFilters(SkylineWindow.DocumentUI);
+            var transitionGroupDocNodes = transitionGroupPaths
+                .Select(path => (TransitionGroupDocNode)SkylineWindow.DocumentUI.FindNode(path)).ToList();
+            var filterPagesSet = transitionGroupDocNodes.Select(docNode=>spectrumClassFilters.GetFilterPages(docNode)).ToHashSet();
+            FilterPages filterPages;
+            if (filterPagesSet.Count == 1)
+            {
+                filterPages = filterPagesSet.First();
+            }
+            else
+            {
+                var standardPages = spectrumClassFilters.GetStandardFilterPages(transitionGroupDocNodes).ToList();
+                filterPages = new FilterPages(standardPages,
+                    Enumerable.Repeat(ImmutableList<FilterSpec>.EMPTY, standardPages.Count));
+            }
+
+            var skylineDataSchema = new SkylineDataSchema(SkylineWindow, SkylineDataSchema.GetLocalizedSchemaLocalizer());
+            var rootColumn = ColumnDescriptor.RootColumn(skylineDataSchema, typeof(SpectrumClass));
             using var autoComplete = new SpectrumFilterAutoComplete(SkylineWindow, transitionGroupPaths);
-            using var dlg = new EditSpectrumFilterDlg(spectrumClassFilters.Count == 1 ? spectrumClassFilters.First() : default)
+            using var dlg = new EditSpectrumFilterDlg(rootColumn, filterPages)
             {
                 AutoComplete = autoComplete
             };
-            if (spectrumClassFilters.Count != 1)
+            if (filterPagesSet.Count != 1)
             {
                 dlg.CreateCopy = true;
                 dlg.CreateCopyEnabled = false;

@@ -44,17 +44,12 @@
             this.panelClauses = new System.Windows.Forms.Panel();
             this.toolStripFilter = new System.Windows.Forms.ToolStrip();
             this.btnDeleteFilter = new System.Windows.Forms.ToolStripButton();
-            this.panelMsLevel = new System.Windows.Forms.Panel();
-            this.groupBoxMSLevel = new System.Windows.Forms.GroupBox();
-            this.radioMS2 = new System.Windows.Forms.RadioButton();
-            this.radioMs1 = new System.Windows.Forms.RadioButton();
             this.lblDescription = new System.Windows.Forms.Label();
             this.panelEditor = new System.Windows.Forms.Panel();
+            this.panelPages = new System.Windows.Forms.FlowLayoutPanel();
             ((System.ComponentModel.ISupportInitialize)(this.dataGridViewEx1)).BeginInit();
             this.panelClauses.SuspendLayout();
             this.toolStripFilter.SuspendLayout();
-            this.panelMsLevel.SuspendLayout();
-            this.groupBoxMSLevel.SuspendLayout();
             this.panelEditor.SuspendLayout();
             this.SuspendLayout();
             // 
@@ -95,7 +90,7 @@
             dataGridViewCellStyle3.SelectionForeColor = System.Drawing.SystemColors.HighlightText;
             dataGridViewCellStyle3.WrapMode = System.Windows.Forms.DataGridViewTriState.True;
             this.dataGridViewEx1.RowHeadersDefaultCellStyle = dataGridViewCellStyle3;
-            this.dataGridViewEx1.Size = new System.Drawing.Size(682, 174);
+            this.dataGridViewEx1.Size = new System.Drawing.Size(682, 181);
             this.dataGridViewEx1.TabIndex = 0;
             this.dataGridViewEx1.DataError += new System.Windows.Forms.DataGridViewDataErrorEventHandler(this.dataGridViewEx1_DataError);
             this.dataGridViewEx1.EditingControlShowing += new System.Windows.Forms.DataGridViewEditingControlShowingEventHandler(this.dataGridViewEx1_EditingControlShowing);
@@ -186,9 +181,9 @@
             this.panelClauses.Controls.Add(this.dataGridViewEx1);
             this.panelClauses.Controls.Add(this.toolStripFilter);
             this.panelClauses.Dock = System.Windows.Forms.DockStyle.Fill;
-            this.panelClauses.Location = new System.Drawing.Point(0, 62);
+            this.panelClauses.Location = new System.Drawing.Point(0, 55);
             this.panelClauses.Name = "panelClauses";
-            this.panelClauses.Size = new System.Drawing.Size(706, 174);
+            this.panelClauses.Size = new System.Drawing.Size(706, 181);
             this.panelClauses.TabIndex = 10;
             // 
             // toolStripFilter
@@ -198,7 +193,7 @@
             this.btnDeleteFilter});
             this.toolStripFilter.Location = new System.Drawing.Point(682, 0);
             this.toolStripFilter.Name = "toolStripFilter";
-            this.toolStripFilter.Size = new System.Drawing.Size(24, 174);
+            this.toolStripFilter.Size = new System.Drawing.Size(24, 181);
             this.toolStripFilter.TabIndex = 2;
             this.toolStripFilter.Text = "toolStrip1";
             // 
@@ -212,48 +207,6 @@
             this.btnDeleteFilter.Text = "Delete";
             this.btnDeleteFilter.Click += new System.EventHandler(this.btnDeleteFilter_Click);
             // 
-            // panelMsLevel
-            // 
-            this.panelMsLevel.Controls.Add(this.groupBoxMSLevel);
-            this.panelMsLevel.Dock = System.Windows.Forms.DockStyle.Top;
-            this.panelMsLevel.Location = new System.Drawing.Point(0, 19);
-            this.panelMsLevel.Name = "panelMsLevel";
-            this.panelMsLevel.Size = new System.Drawing.Size(706, 43);
-            this.panelMsLevel.TabIndex = 11;
-            // 
-            // groupBoxMSLevel
-            // 
-            this.groupBoxMSLevel.Controls.Add(this.radioMS2);
-            this.groupBoxMSLevel.Controls.Add(this.radioMs1);
-            this.groupBoxMSLevel.Location = new System.Drawing.Point(0, 0);
-            this.groupBoxMSLevel.Name = "groupBoxMSLevel";
-            this.groupBoxMSLevel.Size = new System.Drawing.Size(391, 40);
-            this.groupBoxMSLevel.TabIndex = 0;
-            this.groupBoxMSLevel.TabStop = false;
-            this.groupBoxMSLevel.Text = "MS Level";
-            // 
-            // radioMS2
-            // 
-            this.radioMS2.AutoSize = true;
-            this.radioMS2.Location = new System.Drawing.Point(132, 17);
-            this.radioMS2.Name = "radioMS2";
-            this.radioMS2.Size = new System.Drawing.Size(85, 17);
-            this.radioMS2.TabIndex = 1;
-            this.radioMS2.TabStop = true;
-            this.radioMS2.Text = "MS2 or more";
-            this.radioMS2.UseVisualStyleBackColor = true;
-            // 
-            // radioMs1
-            // 
-            this.radioMs1.AutoSize = true;
-            this.radioMs1.Location = new System.Drawing.Point(6, 17);
-            this.radioMs1.Name = "radioMs1";
-            this.radioMs1.Size = new System.Drawing.Size(47, 17);
-            this.radioMs1.TabIndex = 0;
-            this.radioMs1.TabStop = true;
-            this.radioMs1.Text = "MS1";
-            this.radioMs1.UseVisualStyleBackColor = true;
-            // 
             // lblDescription
             // 
             this.lblDescription.AutoSize = true;
@@ -264,16 +217,25 @@
             this.lblDescription.Size = new System.Drawing.Size(66, 19);
             this.lblDescription.TabIndex = 12;
             this.lblDescription.Text = "Description";
+            this.lblDescription.Visible = false;
             // 
             // panelEditor
             // 
             this.panelEditor.Controls.Add(this.panelClauses);
-            this.panelEditor.Controls.Add(this.panelMsLevel);
+            this.panelEditor.Controls.Add(this.panelPages);
             this.panelEditor.Controls.Add(this.lblDescription);
             this.panelEditor.Location = new System.Drawing.Point(1, -1);
             this.panelEditor.Name = "panelEditor";
             this.panelEditor.Size = new System.Drawing.Size(706, 236);
             this.panelEditor.TabIndex = 13;
+            // 
+            // panelPages
+            // 
+            this.panelPages.Dock = System.Windows.Forms.DockStyle.Top;
+            this.panelPages.Location = new System.Drawing.Point(0, 19);
+            this.panelPages.Name = "panelPages";
+            this.panelPages.Size = new System.Drawing.Size(706, 36);
+            this.panelPages.TabIndex = 13;
             // 
             // EditSpectrumFilterDlg
             // 
@@ -295,9 +257,6 @@
             this.panelClauses.PerformLayout();
             this.toolStripFilter.ResumeLayout(false);
             this.toolStripFilter.PerformLayout();
-            this.panelMsLevel.ResumeLayout(false);
-            this.groupBoxMSLevel.ResumeLayout(false);
-            this.groupBoxMSLevel.PerformLayout();
             this.panelEditor.ResumeLayout(false);
             this.panelEditor.PerformLayout();
             this.ResumeLayout(false);
@@ -319,11 +278,8 @@
         private System.Windows.Forms.DataGridViewComboBoxColumn propertyColumn;
         private System.Windows.Forms.DataGridViewComboBoxColumn operationColumn;
         private System.Windows.Forms.DataGridViewTextBoxColumn valueColumn;
-        private System.Windows.Forms.Panel panelMsLevel;
-        private System.Windows.Forms.GroupBox groupBoxMSLevel;
-        private System.Windows.Forms.RadioButton radioMS2;
-        private System.Windows.Forms.RadioButton radioMs1;
         private System.Windows.Forms.Label lblDescription;
         private System.Windows.Forms.Panel panelEditor;
+        private System.Windows.Forms.FlowLayoutPanel panelPages;
     }
 }

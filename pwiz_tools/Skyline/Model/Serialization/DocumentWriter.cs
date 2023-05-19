@@ -610,7 +610,7 @@ namespace pwiz.Skyline.Model.Serialization
             }
             // Write child elements
             WriteAnnotations(writer, node.Annotations);
-            foreach (var clause in node.SpectrumClassFilter)
+            foreach (var clause in node.SpectrumClassFilter.Clauses)
             {
                 writer.WriteStartElement(SpectrumClassFilterClause.XML_ROOT);
                 clause.WriteXml(writer);

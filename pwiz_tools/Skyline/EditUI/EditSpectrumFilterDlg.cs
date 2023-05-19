@@ -21,9 +21,9 @@ using System.Collections.Generic;
 using System.ComponentModel;
 using System.Linq;
 using System.Windows.Forms;
+using pwiz.Common.Collections;
 using pwiz.Common.DataBinding;
 using pwiz.Skyline.Alerts;
-using pwiz.Skyline.Model.Databinding;
 using pwiz.Skyline.Model.Results.Spectra;
 using pwiz.Skyline.Util;
 
@@ -33,30 +33,53 @@ namespace pwiz.Skyline.EditUI
     {
         private List<Row> _rowList;
         private BindingList<Row> _rowBindingList;
-        private SpectrumClassFilter _originalSpectrumClassFilter;
-        private DataSchema _dataSchema;
+        private FilterPages _originalFilterPages;
+        private List<RadioButton> _pageRadioButtons = new List<RadioButton>();
+        private ColumnDescriptor _rootColumn;
 
-        public EditSpectrumFilterDlg(SpectrumClassFilter spectrumClassFilter)
+        public EditSpectrumFilterDlg(ColumnDescriptor rootColumn, FilterPages filterPages)
         {
             InitializeComponent();
-            _dataSchema = new DataSchema(SkylineDataSchema.GetLocalizedSchemaLocalizer());
-            _originalSpectrumClassFilter = spectrumClassFilter;
+            _rootColumn = rootColumn;
+            _originalFilterPages = FilterPages = filterPages;
+            for (int iPage = 0; iPage < FilterPages.Pages.Count; iPage++)
+            {
+                _pageRadioButtons.Add(MakePageButton(iPage, FilterPages.Pages[iPage].Caption));
+            }
+            panelPages.Controls.AddRange(_pageRadioButtons.ToArray());
+
+            if (FilterPages.Pages.Count == 1)
+            {
+                panelPages.Visible = false;
+            }
             _rowList = new List<Row>();
-            _rowList.AddRange(GetRows(spectrumClassFilter));
             _rowBindingList = new BindingList<Row>(_rowList);
             dataGridViewEx1.DataSource = _rowBindingList;
-            SpectrumClassFilter = spectrumClassFilter;
-            propertyColumn.Items.AddRange(SpectrumClassColumn.ALL
-                .OrderBy(c=>c.ToString(), StringComparer.OrdinalIgnoreCase).Cast<object>().ToArray());
             operationColumn.Items.AddRange(FilterOperations.ListOperations().Select(op=>(object) op.DisplayName).ToArray());
+            DisplayCurrentPage();
         }
-
+        public FilterPages FilterPages { get; private set; }
+        public int CurrentPageIndex { get; private set; }
+        public IEnumerable<ImmutableList<FilterSpec>> Filters { get; private set; }
         public SpectrumClassFilter SpectrumClassFilter { get; private set; }
         public SpectrumFilterAutoComplete AutoComplete { get; set; }
 
+        public string Description
+        {
+            get
+            {
+                return lblDescription.Text;
+            }
+            set
+            {
+                lblDescription.Text = value ?? string.Empty;
+                lblDescription.Visible = !string.IsNullOrEmpty(lblDescription.Text);
+            }
+        }
+
         public class Row
         {
-            public SpectrumClassColumn Property { get; set; }
+            public Column Property { get; set; }
             public string Operation { get; set; }
             public string Value { get; set; }
 
@@ -76,56 +99,37 @@ namespace pwiz.Skyline.EditUI
             OkDialog();
         }
 
-        public IEnumerable<Row> GetRows(SpectrumClassFilter spectrumClassFilter)
+        private IEnumerable<Row> GetRows(IEnumerable<FilterSpec> filterSpecs)
         {
-            foreach (var filterSpec in spectrumClassFilter.FilterSpecs)
+            var rows = new List<Row>();
+            var dataSchema = _rootColumn.DataSchema;
+            foreach (var filterSpec in filterSpecs)
             {
-                var spectrumClassColumn = SpectrumClassColumn.FindColumn(filterSpec.ColumnId);
+                var propertyPath = filterSpec.ColumnId;
+                var spectrumClassColumn = propertyColumn.Items.OfType<Column>()
+                    .FirstOrDefault(col => Equals(col.PropertyPath, propertyPath));
                 if (spectrumClassColumn == null)
                 {
                     continue;
                 }
-                yield return new Row
+                rows.Add(new Row
                 {
                     Property = spectrumClassColumn,
                     Operation = filterSpec.Operation.DisplayName,
-                    Value = filterSpec.Predicate.GetOperandDisplayText(_dataSchema, spectrumClassColumn.ValueType)
-                };
+                    Value = filterSpec.Predicate.GetOperandDisplayText(dataSchema, spectrumClassColumn.ValueType)
+                });
             }
+
+            return rows;
         }
 
         public void OkDialog()
         {
-            var filterSpecs = new List<FilterSpec>();
-            for (int iRow = 0; iRow < _rowList.Count; iRow++)
+            if (!RememberFilterForCurrentPage())
             {
-                var row = _rowList[iRow];
-                var filterOperation = FilterOperations.ListOperations()
-                    .FirstOrDefault(op => op.DisplayName == row.Operation);
-                if (filterOperation == null || filterOperation == FilterOperations.OP_HAS_ANY_VALUE)
-                {
-                    continue;
-                }
-                var column = row.Property;
-                FilterPredicate filterPredicate;
-                try
-                {
-                    filterPredicate =
-                        FilterPredicate.CreateFilterPredicate(_dataSchema, column.ValueType, filterOperation,
-                            row.Value);
-                }
-                catch (Exception ex)
-                {
-                    MessageDlg.ShowWithException(this, ex.Message, ex);
-                    dataGridViewEx1.CurrentCell = dataGridViewEx1.Rows[iRow].Cells[valueDataGridViewTextBoxColumn.Index];
-                    return;
-                }
-
-                var filterSpec = new FilterSpec(row.Property.PropertyPath, filterPredicate);
-                filterSpecs.Add(filterSpec);
+                return;
             }
 
-            SpectrumClassFilter = new SpectrumClassFilter(new SpectrumClassFilterClause(filterSpecs));
             DialogResult = DialogResult.OK;
         }
 
@@ -166,11 +170,18 @@ namespace pwiz.Skyline.EditUI
             Reset();
         }
 
-        public void Reset()
+        private void ReplaceRows(IEnumerable<Row> rows)
         {
             _rowList.Clear();
-            _rowList.AddRange(GetRows(_originalSpectrumClassFilter));
+            _rowList.AddRange(rows);
             _rowBindingList.ResetBindings();
+        }
+
+        public void Reset()
+        {
+            FilterPages = _originalFilterPages;
+            DisplayCurrentPage();
+
         }
 
         public BindingList<Row> RowBindingList
@@ -186,7 +197,7 @@ namespace pwiz.Skyline.EditUI
             AutoCompleteStringCollection autoCompleteStringCollection = null;
             if (AutoComplete != null && columnIndex == valueColumn.Index && rowIndex >= 0 && rowIndex < _rowBindingList.Count)
             {
-                var property = _rowBindingList[rowIndex].Property;
+                var property = _rowBindingList[rowIndex].Property.PropertyPath;
                 if (property != null)
                 {
                     autoCompleteStringCollection = AutoComplete.GetAutoCompleteValues(property);
@@ -207,6 +218,160 @@ namespace pwiz.Skyline.EditUI
                     textBox.AutoCompleteCustomSource = autoCompleteStringCollection;
                     textBox.AutoCompleteSource = AutoCompleteSource.CustomSource;
                 }
+            }
+        }
+
+        private RadioButton MakePageButton(int index, string caption)
+        {
+            var radioButton = new RadioButton()
+            {
+                Text = caption,
+                AutoCheck = false
+                
+            };
+            radioButton.Click += (sender, args)=>SelectPage(index);
+            return radioButton;
+        }
+
+        public bool SelectPage(int pageIndex)
+        {
+            if (!RememberFilterForCurrentPage())
+            {
+                return false;
+            }
+
+            CurrentPageIndex = pageIndex;
+            DisplayCurrentPage();
+            return true;
+        }
+
+        private void DisplayCurrentPage()
+        {
+            var currentPage = FilterPages.Pages[CurrentPageIndex];
+            propertyColumn.Items.Clear();
+            propertyColumn.Items.AddRange(currentPage.AvailableColumns.Select(MakeColumn).ToArray());
+            _pageRadioButtons[CurrentPageIndex].Checked = true;
+            _rowList.Clear();
+            _rowList.AddRange(GetRows(FilterPages.Clauses[CurrentPageIndex]));
+            _rowBindingList.ResetBindings();
+        }
+
+        private bool RememberFilterForCurrentPage()
+        {
+            var currentFilter = GetFilterForCurrentPage();
+            if (currentFilter == null)
+            {
+                return false;
+            }
+
+            FilterPages = FilterPages.ReplaceClause(CurrentPageIndex, currentFilter);
+            return true;
+        }
+
+        public ImmutableList<FilterSpec> GetFilterForCurrentPage()
+        {
+            var page = FilterPages.Pages[CurrentPageIndex];
+            var filterSpecs = new List<FilterSpec>();
+            for (int iRow = 0; iRow < _rowList.Count; iRow++)
+            {
+                var row = _rowList[iRow];
+                var filterOperation = FilterOperations.ListOperations()
+                    .FirstOrDefault(op => op.DisplayName == row.Operation);
+                if (filterOperation == null || filterOperation == FilterOperations.OP_HAS_ANY_VALUE)
+                {
+                    continue;
+                }
+                FilterPredicate filterPredicate;
+                try
+                {
+                    filterPredicate =
+                        FilterPredicate.CreateFilterPredicate(_rootColumn.DataSchema, row.Property.ValueType, filterOperation,
+                            row.Value);
+                }
+                catch (Exception ex)
+                {
+                    MessageDlg.ShowWithException(this, ex.Message, ex);
+                    dataGridViewEx1.CurrentCell = dataGridViewEx1.Rows[iRow].Cells[valueDataGridViewTextBoxColumn.Index];
+                    return null;
+                }
+
+                var filterSpec = new FilterSpec(row.Property.PropertyPath, filterPredicate);
+                filterSpecs.Add(filterSpec);
+            }
+            return ImmutableList.ValueOf(filterSpecs);
+        }
+
+        public Column MakeColumn(PropertyPath propertyPath)
+        {
+            var columnDescriptor = GetColumnDescriptor(propertyPath);
+            if (columnDescriptor == null)
+            {
+                return null;
+            }
+
+            return new Column(columnDescriptor);
+        }
+
+        private ColumnDescriptor GetColumnDescriptor(PropertyPath propertyPath)
+        {
+            if (propertyPath.IsRoot)
+            {
+                return _rootColumn;
+            }
+
+            var parent = GetColumnDescriptor(propertyPath.Parent);
+            if (parent == null)
+            {
+                return null;
+            }
+
+            if (propertyPath.IsProperty)
+            {
+                return parent.ResolveChild(propertyPath.Name);
+            }
+
+            throw new ArgumentException(@"Invalid property path " + propertyPath);
+        }
+
+        public class Column : IComparable<Column>
+        {
+            public Column(ColumnDescriptor columnDescriptor)
+            {
+                PropertyPath = columnDescriptor.PropertyPath;
+                ValueType = columnDescriptor.PropertyType;
+                Caption = columnDescriptor.GetColumnCaption(ColumnCaptionType.localized);
+            }
+
+            public PropertyPath PropertyPath { get; }
+            public Type ValueType { get; }
+            public string Caption { get; }
+
+            protected bool Equals(Column other)
+            {
+                return Equals(PropertyPath, other.PropertyPath);
+            }
+
+            public override bool Equals(object obj)
+            {
+                if (ReferenceEquals(null, obj)) return false;
+                if (ReferenceEquals(this, obj)) return true;
+                if (obj.GetType() != this.GetType()) return false;
+                return Equals((Column)obj);
+            }
+
+            public override int GetHashCode()
+            {
+                return (PropertyPath != null ? PropertyPath.GetHashCode() : 0);
+            }
+
+            public int CompareTo(Column other)
+            {
+                return string.Compare(Caption, other?.Caption, StringComparison.CurrentCultureIgnoreCase);
+            }
+
+            public override string ToString()
+            {
+                return Caption;
             }
         }
     }

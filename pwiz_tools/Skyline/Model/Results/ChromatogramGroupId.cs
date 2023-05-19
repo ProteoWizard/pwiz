@@ -318,7 +318,7 @@ namespace pwiz.Skyline.Model.Results
                 {
                     TargetIndex = targets.Add(id.Target),
                 };
-                foreach (var filter in id.SpectrumClassFilter)
+                foreach (var filter in id.SpectrumClassFilter.Clauses)
                 {
                     chromGroupIdProto.FilterIndexes.Add(allFilters.Add(filter));
                 }
