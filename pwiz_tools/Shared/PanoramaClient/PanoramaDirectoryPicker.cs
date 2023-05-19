@@ -29,9 +29,9 @@ namespace pwiz.PanoramaClient
         private PanoramaFolderBrowser folders;
         public string State;
         public string Selected;
-        public List<PanoramaServer> Servers { get; private set; }
+        public List<PanoramaServer> Servers { get; }
 
-        public PanoramaDirectoryPicker(List<PanoramaServer> servers, bool showCheckBox, string state, bool showSkyFolders = false)
+        public PanoramaDirectoryPicker(List<PanoramaServer> servers, string state, bool showSkyFolders = false)
         {
             InitializeComponent();
             Servers = servers;
@@ -42,7 +42,6 @@ namespace pwiz.PanoramaClient
             up.Enabled = false;
             back.Enabled = false;
             forward.Enabled = false;
-            checkBox1.Visible = showCheckBox;
         }
 
         public string Folder { get; set; }
@@ -60,15 +59,6 @@ namespace pwiz.PanoramaClient
             Folder = folders.FolderPath;
             DialogResult = DialogResult.Yes;
             Close();
-        }
-
-        private void checkBox1_CheckedChanged_1(object sender, EventArgs e)
-        {
-            var type = checkBox1.Checked;
-            folders.SwitchFolderType(type);
-            up.Enabled = folders.UpEnabled();
-            back.Enabled = folders.BackEnabled();
-            forward.Enabled = folders.ForwardEnabled();
         }
 
 
@@ -99,13 +89,6 @@ namespace pwiz.PanoramaClient
             checkEnabled();
         }
 
-        private void up_Click(object sender, EventArgs e)
-        {
-            up.Enabled = folders.UpEnabled();
-            folders.UpClick();
-            checkEnabled();
-            forward.Enabled = false;
-        }
 
         public void DirectoryPicker_MouseClick(object sender, EventArgs e)
         {
@@ -125,6 +108,14 @@ namespace pwiz.PanoramaClient
             up.Enabled = folders.UpEnabled();
             forward.Enabled = folders.ForwardEnabled();
             back.Enabled = folders.BackEnabled();
+        }
+
+        private void up_Click(object sender, EventArgs e)
+        {
+            up.Enabled = folders.UpEnabled();
+            folders.UpClick();
+            checkEnabled();
+            forward.Enabled = false;
         }
     }
 }

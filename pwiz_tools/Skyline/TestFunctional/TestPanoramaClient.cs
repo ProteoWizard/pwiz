@@ -60,6 +60,7 @@ namespace pwiz.SkylineTestFunctional
             TestVersions();
 
             //Test checkbox switching
+            TestCheckBox();
 
             //Test cancel and close
             TestCancel();
@@ -102,7 +103,6 @@ namespace pwiz.SkylineTestFunctional
         private void TestVersions()
         {
             var testJson = CreateFile();
-            var rows = testJson[@"rows"];
 
             var json = GetInfoForFolders(new PanoramaServer(new Uri(VALID_SERVER), VALID_USER_NAME, VALID_PASSWORD),
                 NO_WRITE_NO_TARGETED);
@@ -139,6 +139,26 @@ namespace pwiz.SkylineTestFunctional
             {
                 remoteDlg.FolderBrowser.SelectNode(string.Concat(VALID_SERVER, "/"));
                 Assert.AreEqual(1, remoteDlg.FolderBrowser.NodeCount);
+                remoteDlg.Close();
+            });
+            WaitForClosedForm(remoteDlg);
+        }
+
+        private void TestCheckBox()
+        {
+            var testJson = CreateFile();
+
+            var json = GetInfoForFolders(new PanoramaServer(new Uri(VALID_SERVER), VALID_USER_NAME, VALID_PASSWORD),
+                NO_WRITE_NO_TARGETED);
+            var remoteDlg = ShowDialog<PanoramaFilePicker>(() =>
+                SkylineWindow.OpenFromPanorama(VALID_SERVER, string.Empty, string.Empty, json, testJson));
+
+            WaitForCondition(9000, () => remoteDlg.IsLoaded);
+
+            RunUI(() =>
+            {
+                remoteDlg.FolderBrowser.SelectNode(WRITE_TARGETED);
+                remoteDlg.ClickCheckBox();
                 remoteDlg.Close();
             });
             WaitForClosedForm(remoteDlg);

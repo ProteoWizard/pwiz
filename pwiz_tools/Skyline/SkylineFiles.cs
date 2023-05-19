@@ -987,7 +987,7 @@ namespace pwiz.Skyline
                                    SupportMultiDottedExtensions = true, 
                                    Filter = TextUtil.FileDialogFiltersAll(SrmDocument.FILTER_DOC_AND_SKY_ZIP, SrmDocumentSharing.FILTER_SHARING, SkypFile.FILTER_SKYP), 
                                    InitialDirectory = folderPath, 
-                                   OverwritePrompt = false,
+                                   OverwritePrompt = true,
                                })
                         {
                             if (saveAsDlg.ShowDialog(this) != DialogResult.OK)
@@ -997,10 +997,9 @@ namespace pwiz.Skyline
 
                             Settings.Default.LastFolderPath = Path.GetDirectoryName(saveAsDlg.FileName);
                             var folder = Path.GetDirectoryName(saveAsDlg.FileName);
-                            var formattedName = GetDownloadName(Path.GetFullPath(saveAsDlg.FileName));
                             if (!string.IsNullOrEmpty(folder))
                             {
-                                downloadPath = Path.Combine(folder, formattedName);
+                                downloadPath = saveAsDlg.FileName; 
                             }
                         }
                         if (!string.IsNullOrEmpty(downloadPath))

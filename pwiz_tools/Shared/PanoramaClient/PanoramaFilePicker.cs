@@ -186,6 +186,11 @@ namespace pwiz.PanoramaClient
                     }
                 }
             }
+            else
+            {
+                listView.HeaderStyle = ColumnHeaderStyle.None;
+                noFiles.Visible = true;
+            }
         }
 
         private Dictionary<long, long> GetSizeDict()
@@ -489,7 +494,10 @@ namespace pwiz.PanoramaClient
                     _restoring = false;
                     if (!string.IsNullOrEmpty(path))
                     {
-                        TestAddQueryFiles(path, versionLabel, versionOptions, _fileJson);
+                        if (FolderBrowser.ShowSky)
+                        {
+                            TestAddQueryFiles(path, versionLabel, versionOptions, _fileJson);
+                        }
                     }
                 }
                 else
@@ -500,6 +508,8 @@ namespace pwiz.PanoramaClient
                     versionOptions.Text = RECENT_VER;
                     var path = FolderBrowser.Path;
                     listView.Items.Clear();
+                    listView.HeaderStyle = ColumnHeaderStyle.Clickable;
+                    noFiles.Visible = false;
                     ActiveServer = FolderBrowser.ActiveServer;
                     _restoring = false;
                     if (!string.IsNullOrEmpty(path))
@@ -573,7 +583,6 @@ namespace pwiz.PanoramaClient
                 up.Enabled = false;
                 back.Enabled = false;
                 forward.Enabled = false;
-
             }
         }
 
@@ -758,6 +767,11 @@ namespace pwiz.PanoramaClient
         public string VersionsOption()
         {
             return versionOptions.Text;
+        }
+
+        public void ClickCheckBox()
+        {
+            showSkyCheckBox.Checked = !showSkyCheckBox.Checked;
         }
 
         public bool CheckBoxVisible()

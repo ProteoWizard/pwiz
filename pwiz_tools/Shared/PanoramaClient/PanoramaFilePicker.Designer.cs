@@ -296,7 +296,7 @@ namespace pwiz.PanoramaClient
             this.MaximizeBox = false;
             this.MinimizeBox = false;
             this.Name = "PanoramaFilePicker";
-            this.StartPosition = System.Windows.Forms.FormStartPosition.CenterScreen;
+            this.StartPosition = System.Windows.Forms.FormStartPosition.CenterParent;
             this.Text = "Panorama Folders";
             this.FormClosing += new System.Windows.Forms.FormClosingEventHandler(this.Form1_FormClosing);
             this.Load += new System.EventHandler(this.FilePicker_Load);

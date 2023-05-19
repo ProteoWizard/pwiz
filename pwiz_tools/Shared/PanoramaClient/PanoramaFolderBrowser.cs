@@ -137,17 +137,13 @@ namespace pwiz.PanoramaClient
 
         public void SwitchFolderType(bool type)
         {
-            treeView.Nodes.Clear();
             ShowSky = type;
-            foreach (var server in _serverList)
-            {
-                _formUtil.InitializeTreeView(server, _listServerFolders);
-            }
             _next.Clear();
             _previous.Clear();
             Clicked = null;
             _lastSelected = null;
             _priorNode = null;
+            AddSelectedFiles(treeView.Nodes, EventArgs.Empty);
         }
 
         private void TreeView_AfterSelect(object sender, TreeViewEventArgs e)

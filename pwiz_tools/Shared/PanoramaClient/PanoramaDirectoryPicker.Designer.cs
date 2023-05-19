@@ -32,7 +32,6 @@
             this.folderPanel = new System.Windows.Forms.Panel();
             this.cancel = new System.Windows.Forms.Button();
             this.open = new System.Windows.Forms.Button();
-            this.checkBox1 = new System.Windows.Forms.CheckBox();
             this.toolStrip = new System.Windows.Forms.ToolStrip();
             this.back = new System.Windows.Forms.ToolStripButton();
             this.forward = new System.Windows.Forms.ToolStripButton();
@@ -72,18 +71,6 @@
             this.open.UseVisualStyleBackColor = true;
             this.open.Click += new System.EventHandler(this.open_Click);
             // 
-            // checkBox1
-            // 
-            this.checkBox1.Anchor = ((System.Windows.Forms.AnchorStyles)((System.Windows.Forms.AnchorStyles.Top | System.Windows.Forms.AnchorStyles.Right)));
-            this.checkBox1.AutoSize = true;
-            this.checkBox1.Location = new System.Drawing.Point(271, 21);
-            this.checkBox1.Name = "checkBox1";
-            this.checkBox1.Size = new System.Drawing.Size(163, 17);
-            this.checkBox1.TabIndex = 15;
-            this.checkBox1.Text = "View folders with Skyline files";
-            this.checkBox1.UseVisualStyleBackColor = true;
-            this.checkBox1.CheckedChanged += new System.EventHandler(this.checkBox1_CheckedChanged_1);
-            // 
             // toolStrip
             // 
             this.toolStrip.Dock = System.Windows.Forms.DockStyle.None;
@@ -118,21 +105,27 @@
             this.forward.Text = "Forward";
             this.forward.Click += new System.EventHandler(this.forward_Click);
             // 
-            // DirectoryPicker
+            // up
+            // 
+            this.up.Image = global::pwiz.PanoramaClient.Properties.Resources.Icojam_Blueberry_Basic_Arrow_up;
+            this.up.Name = "up";
+            this.up.Size = new System.Drawing.Size(28, 28);
+            this.up.Click += new System.EventHandler(this.up_Click);
+            // 
+            // PanoramaDirectoryPicker
             // 
             this.AutoScaleDimensions = new System.Drawing.SizeF(6F, 13F);
             this.AutoScaleMode = System.Windows.Forms.AutoScaleMode.Font;
             this.ClientSize = new System.Drawing.Size(445, 316);
             this.Controls.Add(this.toolStrip);
-            this.Controls.Add(this.checkBox1);
             this.Controls.Add(this.cancel);
             this.Controls.Add(this.open);
             this.Controls.Add(this.folderPanel);
             this.Icon = ((System.Drawing.Icon)(resources.GetObject("$this.Icon")));
             this.MaximizeBox = false;
             this.MinimizeBox = false;
-            this.Name = "DirectoryPicker";
-            this.StartPosition = System.Windows.Forms.FormStartPosition.CenterScreen;
+            this.Name = "PanoramaDirectoryPicker";
+            this.StartPosition = System.Windows.Forms.FormStartPosition.CenterParent;
             this.Text = "Panorama Folders";
             this.FormClosing += new System.Windows.Forms.FormClosingEventHandler(this.DirectoryPicker_FormClosing);
             this.Load += new System.EventHandler(this.DirectoryPicker_Load);
@@ -148,7 +141,6 @@
         private System.Windows.Forms.Panel folderPanel;
         private System.Windows.Forms.Button cancel;
         private System.Windows.Forms.Button open;
-        private System.Windows.Forms.CheckBox checkBox1;
         private System.Windows.Forms.ToolStrip toolStrip;
         private System.Windows.Forms.ToolStripButton back;
         private System.Windows.Forms.ToolStripButton forward;
