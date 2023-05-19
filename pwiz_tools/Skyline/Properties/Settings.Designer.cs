@@ -3428,5 +3428,17 @@ namespace pwiz.Skyline.Properties {
                 this["LastFolderPath"] = value;
             }
         }
+        
+        [global::System.Configuration.UserScopedSettingAttribute()]
+        [global::System.Diagnostics.DebuggerNonUserCodeAttribute()]
+        [global::System.Configuration.DefaultSettingValueAttribute("False")]
+        public bool FullScanPropertySheetVisible {
+            get {
+                return ((bool)(this["FullScanPropertySheetVisible"]));
+            }
+            set {
+                this["FullScanPropertySheetVisible"] = value;
+            }
+        }
     }
 }
