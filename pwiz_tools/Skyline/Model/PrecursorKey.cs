@@ -25,10 +25,10 @@ namespace pwiz.Skyline.Model
     public class PrecursorKey : Immutable
     {
         public static readonly PrecursorKey EMPTY = new PrecursorKey(Adduct.EMPTY);
-        public PrecursorKey(Adduct adduct) : this(adduct, null)
+        public PrecursorKey(Adduct adduct) : this(adduct, default)
         {
         }
-        public PrecursorKey(Adduct adduct, SpectrumClassFilterClause spectrumClassFilter)
+        public PrecursorKey(Adduct adduct, SpectrumClassFilter spectrumClassFilter)
         {
             Adduct = adduct.Unlabeled;
             SpectrumClassFilter = spectrumClassFilter;
@@ -36,9 +36,9 @@ namespace pwiz.Skyline.Model
 
         public Adduct Adduct { get; private set; }
 
-        public SpectrumClassFilterClause SpectrumClassFilter { get; private set; }
+        public SpectrumClassFilter SpectrumClassFilter { get; private set; }
 
-        public PrecursorKey ChangeSpectrumClassFilter(SpectrumClassFilterClause spectrumClassFilter)
+        public PrecursorKey ChangeSpectrumClassFilter(SpectrumClassFilter spectrumClassFilter)
         {
             return ChangeProp(ImClone(this), im => im.SpectrumClassFilter = spectrumClassFilter);
         }
@@ -60,8 +60,7 @@ namespace pwiz.Skyline.Model
         {
             unchecked
             {
-                return (Adduct.GetHashCode() * 397) ^
-                       (SpectrumClassFilter != null ? SpectrumClassFilter.GetHashCode() : 0);
+                return (Adduct.GetHashCode() * 397) ^ SpectrumClassFilter.GetHashCode();
             }
         }
 

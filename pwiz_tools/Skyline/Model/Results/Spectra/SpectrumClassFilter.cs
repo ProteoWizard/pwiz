@@ -5,10 +5,11 @@ using System.Linq;
 using pwiz.Common.Collections;
 using pwiz.Common.DataBinding;
 using pwiz.Common.Spectra;
+using pwiz.Skyline.Util.Extensions;
 
 namespace pwiz.Skyline.Model.Results.Spectra
 {
-    public struct SpectrumClassFilter : IEnumerable<SpectrumClassFilterClause>
+    public struct SpectrumClassFilter : IEnumerable<SpectrumClassFilterClause>, IEquatable<SpectrumClassFilter>
     {
         private ImmutableList<SpectrumClassFilterClause> _clauses;
 
@@ -79,6 +80,26 @@ namespace pwiz.Skyline.Model.Results.Spectra
             {
                 return this.SelectMany(clause => clause.FilterSpecs);
             }
+        }
+
+        public string GetAbbreviatedText()
+        {
+            return TextUtil.SpaceSeparate(this.Select(clause => clause.GetAbbreviatedText()));
+        }
+
+        public bool Equals(SpectrumClassFilter other)
+        {
+            return Equals(_clauses, other._clauses);
+        }
+
+        public override bool Equals(object obj)
+        {
+            return obj is SpectrumClassFilter other && Equals(other);
+        }
+
+        public override int GetHashCode()
+        {
+            return (_clauses != null ? _clauses.GetHashCode() : 0);
         }
     }
 }

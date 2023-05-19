@@ -83,7 +83,7 @@ namespace pwiz.Skyline.Model.Results
         public bool HighAccQ1 { get; private set; }
         public bool HighAccQ3 { get; private set; }
         public ChromatogramGroupId ChromatogramGroupId { get; }
-        public SpectrumClassFilterClause SpectrumClassFilter => ChromatogramGroupId?.SpectrumClassFilter;
+        public SpectrumClassFilter SpectrumClassFilter => ChromatogramGroupId?.SpectrumClassFilter ?? default;
         public Color PeptideColor { get; private set; }
         public SignedMz Q1 { get; private set; }
         public double? MinTime

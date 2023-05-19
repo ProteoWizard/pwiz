@@ -1857,7 +1857,7 @@ namespace pwiz.Skyline.Model.Results
             ChromExtractor extractor) : this(
             textIdIndex != -1
                 ? new ChromatogramGroupId(
-                    Target.FromSerializableString(Encoding.UTF8.GetString(textIdBytes, textIdIndex, textIdLen)), null)
+                    Target.FromSerializableString(Encoding.UTF8.GetString(textIdBytes, textIdIndex, textIdLen)), default)
                 : null,
             precursor,
             ionMobility,

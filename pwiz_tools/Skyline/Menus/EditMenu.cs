@@ -1724,7 +1724,7 @@ namespace pwiz.Skyline.Menus
         }
 
         public void ChangeSpectrumFilter(ICollection<IdentityPath> precursorIdentityPaths,
-            SpectrumClassFilterClause spectrumClassFilter, bool copy)
+            SpectrumClassFilter spectrumClassFilter, bool copy)
         {
             SkylineWindow.ModifyDocument(Resources.EditMenu_ChangeSpectrumFilter_Change_spectrum_filter, doc => ChangeSpectrumFilter(doc, precursorIdentityPaths, spectrumClassFilter, copy, out _),
                 docPair => AuditLogEntry.CreateSimpleEntry(MessageType.added_spectrum_filter, docPair.NewDocumentType));
@@ -1746,7 +1746,7 @@ namespace pwiz.Skyline.Menus
                 bool changed = false;
                 var idPathSet = peptidePathGroup.ToHashSet();
                 var precursorGroups = peptideDocNode.TransitionGroups.GroupBy(tg =>
-                    tg.PrecursorKey.ChangeSpectrumClassFilter(null)).ToList();
+                    tg.PrecursorKey.ChangeSpectrumClassFilter(default)).ToList();
                 var newTransitionGroups = new List<DocNode>();
                 foreach (var precursorGroup in precursorGroups)
                 {

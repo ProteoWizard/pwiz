@@ -260,7 +260,7 @@ namespace pwiz.Skyline.Model.Results
                 explicitRT = nodePep.ExplicitRetentionTime.RetentionTime;
             }
 
-            return GetHeaderInfos(nodePep, nodeGroup?.SpectrumClassFilter, precursorMz, explicitRT, tolerance, chromatograms);
+            return GetHeaderInfos(nodePep, nodeGroup?.SpectrumClassFilter ?? default, precursorMz, explicitRT, tolerance, chromatograms);
         }
 
         public bool HasAllIonsChromatograms
@@ -317,7 +317,7 @@ namespace pwiz.Skyline.Model.Results
             ReadStream.CloseStream();
         }
 
-        private IEnumerable<ChromatogramGroupInfo> GetHeaderInfos(PeptideDocNode nodePep, SpectrumClassFilterClause spectrumClassFilter, SignedMz precursorMz, double? explicitRT, float tolerance,
+        private IEnumerable<ChromatogramGroupInfo> GetHeaderInfos(PeptideDocNode nodePep, SpectrumClassFilter spectrumClassFilter, SignedMz precursorMz, double? explicitRT, float tolerance,
             ChromatogramSet chromatograms)
         {
             foreach (int i in ChromatogramIndexesMatching(nodePep, spectrumClassFilter, precursorMz, tolerance, chromatograms))
@@ -334,10 +334,9 @@ namespace pwiz.Skyline.Model.Results
             }
         }
 
-        public IEnumerable<int> ChromatogramIndexesMatching(PeptideDocNode nodePep, SpectrumClassFilterClause spectrumClassFilter, SignedMz precursorMz,
+        public IEnumerable<int> ChromatogramIndexesMatching(PeptideDocNode nodePep, SpectrumClassFilter spectrumClassFilter, SignedMz precursorMz,
             float tolerance, ChromatogramSet chromatograms)
         {
-            spectrumClassFilter = SpectrumClassFilterClause.EmptyToNull(spectrumClassFilter);
             var fileIndexesFound = new HashSet<int>();
             if (nodePep != null && nodePep.IsProteomic && _chromEntryIndex != null)
             {
@@ -1400,7 +1399,7 @@ namespace pwiz.Skyline.Model.Results
                 foreach (var nodeTranGroup in nodePep.TransitionGroups)
                 {
                     var transitions = nodeTranGroup.Transitions.OrderBy(nodeTran => nodeTran.Mz).ToArray();
-                    foreach (var chromIdx in ChromatogramIndexesMatching(nodePep, null, nodeTranGroup.PrecursorMz, tolerance, null))
+                    foreach (var chromIdx in ChromatogramIndexesMatching(nodePep, default, nodeTranGroup.PrecursorMz, tolerance, null))
                     {
                         var info = ChromGroupHeaderInfos[chromIdx];
                         var optimizableRegression = optimizationFunctions[info.FileIndex];

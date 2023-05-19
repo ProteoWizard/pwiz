@@ -1401,7 +1401,11 @@ namespace pwiz.Skyline.Model.Serialization
             {
                 reader.ReadStartElement();
                 var annotations = ReadTargetAnnotations(reader, AnnotationDef.AnnotationTarget.precursor);
-                var spectrumClassFilter = reader.DeserializeElement<SpectrumClassFilterClause>();
+                var spectrumClassFilterClauses = new List<SpectrumClassFilterClause>();
+                while (reader.IsStartElement(SpectrumClassFilterClause.XML_ROOT))
+                {
+                    spectrumClassFilterClauses.Add(reader.DeserializeElement<SpectrumClassFilterClause>());
+                }
                 var libInfo = ReadTransitionGroupLibInfo(reader);
                 var results = ReadTransitionGroupResults(reader);
 
@@ -1414,9 +1418,9 @@ namespace pwiz.Skyline.Model.Serialization
                                                   results,
                                                   children,
                                                   autoManageChildren);
-                if (spectrumClassFilter != null)
+                if (spectrumClassFilterClauses.Any())
                 {
-                    nodeGroup = nodeGroup.ChangeSpectrumClassFilter(spectrumClassFilter);
+                    nodeGroup = nodeGroup.ChangeSpectrumClassFilter(new SpectrumClassFilter(spectrumClassFilterClauses));
                 }
                 children = ReadTransitionListXml(reader, nodeGroup, mods, pre422ExplicitValues);
 

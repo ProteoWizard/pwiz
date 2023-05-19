@@ -842,7 +842,7 @@ namespace pwiz.Skyline.Model.Results
                 if (!filterPair.ContainsRetentionTime(retentionTime.Value))
                     continue;
                 var matchingSpectra = spectra;
-                if (false == filterPair.SpectrumClassFilter?.IsEmpty)
+                if (false == filterPair.SpectrumClassFilter.IsEmpty)
                 {
                     matchingSpectra = spectra.Where(spectrum => filterPair.MatchesSpectrum(spectrum.Metadata))
                         .ToArray();
@@ -893,7 +893,7 @@ namespace pwiz.Skyline.Model.Results
                     }
 
                     var matchingSpectra = spectra;
-                    if (filterPair.SpectrumClassFilter != null)
+                    if (!filterPair.SpectrumClassFilter.IsEmpty)
                     {
                         matchingSpectra = spectra.Where(spectrum => filterPair.MatchesSpectrum(spectrum.Metadata))
                             .ToArray();

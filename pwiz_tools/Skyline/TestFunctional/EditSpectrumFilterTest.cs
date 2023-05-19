@@ -70,9 +70,9 @@ namespace pwiz.SkylineTestFunctional
                 var transitionGroupDocNode = ((TransitionGroupTreeNode) selectedTreeNode).DocNode;
                 Assert.IsNotNull(transitionGroupDocNode.SpectrumClassFilter);
                 Assert.IsFalse(transitionGroupDocNode.SpectrumClassFilter.IsEmpty);
-                Assert.AreEqual(1, transitionGroupDocNode.SpectrumClassFilter.FilterSpecs.Count);
+                Assert.AreEqual(1, transitionGroupDocNode.SpectrumClassFilter.FilterSpecs.Count());
                 Assert.AreEqual(3.0,
-                    transitionGroupDocNode.SpectrumClassFilter.FilterSpecs[0].Predicate
+                    transitionGroupDocNode.SpectrumClassFilter.FilterSpecs.First().Predicate
                         .GetOperandValue(new DataSchema(), typeof(double)));
             });
             RunDlg<EditSpectrumFilterDlg>(SkylineWindow.EditMenu.EditSpectrumFilter, dlg =>
@@ -91,7 +91,7 @@ namespace pwiz.SkylineTestFunctional
             var peptideDocNode = document.Molecules.First();
             Assert.AreEqual(3, peptideDocNode.TransitionGroupCount);
             var unfilteredTransitionGroup = peptideDocNode.TransitionGroups.First();
-            Assert.IsNull(unfilteredTransitionGroup.SpectrumClassFilter?.FilterSpecs.FirstOrDefault());
+            Assert.IsNull(unfilteredTransitionGroup.SpectrumClassFilter.FilterSpecs.FirstOrDefault());
             var unfilteredChromatogramGroup = LoadChromatogram(document, peptideDocNode, unfilteredTransitionGroup);
             var unfilteredMs2Chromatogram =
                 unfilteredChromatogramGroup.TransitionPointSets.FirstOrDefault(c => c.Source == ChromSource.fragment);

@@ -3159,7 +3159,7 @@ namespace pwiz.Skyline.Model
                 result = (result*397) ^ ExplicitValues.GetHashCode();
                 result = (result*397) ^ (CustomMolecule != null ? CustomMolecule.GetHashCode() : 0);
                 result = (result*397) ^ PrecursorConcentration.GetHashCode();
-                result = (result*397) ^ SpectrumClassFilter?.GetHashCode() ?? 0;
+                result = (result*397) ^ SpectrumClassFilter.GetHashCode();
                 return result;
             }
         }

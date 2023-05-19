@@ -82,7 +82,7 @@ namespace pwiz.SkylineTest
             
         }
 
-        private SpectrumClassFilterClause CreateTestSpectrumClassFilter()
+        private SpectrumClassFilter CreateTestSpectrumClassFilter()
         {
             var spectrumPrecursors = new SpectrumPrecursors(new[]
             {
@@ -96,7 +96,7 @@ namespace pwiz.SkylineTest
                 new FilterSpec(SpectrumClassColumn.ScanDescription.PropertyPath,
                     FilterPredicate.CreateFilterPredicate(FilterOperations.OP_CONTAINS, "SCAN"))
             };
-            return new SpectrumClassFilterClause(filterSpecs);
+            return new SpectrumClassFilter(new SpectrumClassFilterClause(filterSpecs));
         }
     }
 }

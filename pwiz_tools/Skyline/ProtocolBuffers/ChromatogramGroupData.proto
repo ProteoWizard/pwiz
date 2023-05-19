@@ -94,7 +94,7 @@ message ChromatogramGroupIdsProto {
 
 	message ChromatogramGroupId {
 		int32 targetIndex = 1; // one-based index into "targets"
-		int32 filterIndex = 2; // one-based index into "filter"
+		repeated int32 filterIndexes = 2; // zero-based indexes into "filter"
 		string qcTraceName = 3;
 	}
 
