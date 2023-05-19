@@ -405,9 +405,9 @@ namespace pwiz.Skyline.Model.Databinding.Entities {
         /// <summary>
         ///   Looks up a localized string similar to Chromatogram End Time.
         /// </summary>
-        public static string Chromatogram_End_Time {
+        public static string ChromatogramEndTime {
             get {
-                return ResourceManager.GetString("Chromatogram End Time", resourceCulture);
+                return ResourceManager.GetString("ChromatogramEndTime", resourceCulture);
             }
         }
         

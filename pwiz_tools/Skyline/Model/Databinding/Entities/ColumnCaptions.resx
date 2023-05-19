@@ -228,11 +228,11 @@
   <data name="Chosen">
     <value>Chosen</value>
   </data>
-  <data name="Chromatogram End Time">
-    <value>Chromatogram End Time</value>
-  </data>
   <data name="Chromatogram">
     <value>Chromatogram</value>
+  </data>
+  <data name="ChromatogramEndTime">
+    <value>Chromatogram End Time</value>
   </data>
   <data name="ChromatogramExtractionWidth">
     <value>Chromatogram Extraction Width</value>
