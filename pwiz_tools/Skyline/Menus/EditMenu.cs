@@ -1724,7 +1724,7 @@ namespace pwiz.Skyline.Menus
 
             var skylineDataSchema = new SkylineDataSchema(SkylineWindow, SkylineDataSchema.GetLocalizedSchemaLocalizer());
             var rootColumn = ColumnDescriptor.RootColumn(skylineDataSchema, typeof(SpectrumClass));
-            using var autoComplete = new SpectrumFilterAutoComplete(SkylineWindow, transitionGroupPaths);
+            using var autoComplete = new SpectrumFilterAutoComplete(SkylineWindow);
             using var dlg = new EditSpectrumFilterDlg(rootColumn, filterPages)
             {
                 AutoComplete = autoComplete
