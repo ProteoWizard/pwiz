@@ -61,6 +61,7 @@ namespace pwiz.Skyline.EditUI
         }
         public FilterPages FilterPages { get; private set; }
         public int CurrentPageIndex { get; private set; }
+
         public IEnumerable<ImmutableList<FilterSpec>> Filters { get; private set; }
         public SpectrumFilterAutoComplete AutoComplete { get; set; }
 
@@ -259,7 +260,11 @@ namespace pwiz.Skyline.EditUI
                     propertyColumn.Items.Add(caption);
                 }
             }
-            _pageRadioButtons[CurrentPageIndex].Checked = true;
+
+            for (int i = 0; i < _pageRadioButtons.Count; i++)
+            {
+                _pageRadioButtons[i].Checked = i == CurrentPageIndex;
+            }
             _rowList.Clear();
             _rowList.AddRange(GetRows(FilterPages.Clauses[CurrentPageIndex]));
             _rowBindingList.ResetBindings();

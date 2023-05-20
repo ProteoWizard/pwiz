@@ -1145,7 +1145,19 @@
     <xs:complexContent>
       <xs:extension base = "doc_parent_node_type">
         <xs:sequence>
-          <xs:element name="spectrum_filter" minOccurs="0" maxOccurs="1" type="spectrum_filter_type" />
+          <xs:element name="spectrum_filter" minOccurs="0" maxOccurs="unbounded">
+            <xs:complexType>
+              <xs:sequence>
+                <xs:element name="filter" minOccurs="0" maxOccurs="unbounded">
+                  <xs:complexType>
+                    <xs:attribute name="column" type="xs:string"/>
+                    <xs:attribute name="opname" type="xs:string"/>
+                    <xs:attribute name="operand" type="xs:string"/>
+                  </xs:complexType>
+                </xs:element>
+              </xs:sequence>
+            </xs:complexType>
+          </xs:element>
           <xs:element name="bibliospec_spectrum_info" minOccurs="0" maxOccurs="unbounded">
             <xs:complexType>
               <xs:complexContent>
@@ -1968,16 +1980,4 @@
       <xs:enumeration value="aligned" />
     </xs:restriction>
   </xs:simpleType>
-  <xs:complexType name="spectrum_filter_type">
-    <xs:sequence>
-      <xs:element name="filter" minOccurs="0" maxOccurs="unbounded">
-        <xs:complexType>
-          <xs:attribute name="column" type="xs:string"/>
-          <xs:attribute name="opname" type="xs:string"/>
-          <xs:attribute name="operand" type="xs:string"/>
-        </xs:complexType>
-      </xs:element>
-      <xs:element name="spectrum_filter" minOccurs="0" maxOccurs="1" type="spectrum_filter_type"/>
-    </xs:sequence>
-  </xs:complexType>
 </xs:schema>

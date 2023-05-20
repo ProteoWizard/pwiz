@@ -134,8 +134,8 @@ namespace pwiz.Skyline.Model.Results.Spectra
                     if (reader.IsStartElement(EL.filter))
                     {
                         filterSpecs.Add(FilterSpec.ReadXml(reader));
-                    }
-                    if (reader.NodeType == XmlNodeType.EndElement)
+                    } 
+                    else if (reader.NodeType == XmlNodeType.EndElement)
                     {
                         reader.ReadEndElement();
                         break;

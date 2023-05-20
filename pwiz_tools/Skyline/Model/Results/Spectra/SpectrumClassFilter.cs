@@ -9,7 +9,7 @@ using pwiz.Skyline.Util.Extensions;
 
 namespace pwiz.Skyline.Model.Results.Spectra
 {
-    public struct SpectrumClassFilter : IEquatable<SpectrumClassFilter>, IComparable<SpectrumClassFilter>
+    public struct SpectrumClassFilter : IEquatable<SpectrumClassFilter>, IComparable, IComparable<SpectrumClassFilter>
     {
         private ImmutableList<SpectrumClassFilterClause> _clauses;
 
@@ -33,7 +33,14 @@ namespace pwiz.Skyline.Model.Results.Spectra
 
         public static SpectrumClassFilter FromFilterPages(FilterPages filterPages)
         {
-            return new SpectrumClassFilter(filterPages.Clauses.Select(clause => new SpectrumClassFilterClause(clause)));
+            var clauses = new List<SpectrumClassFilterClause>();
+            for (int iPage = 0; iPage < filterPages.Pages.Count; iPage++)
+            {
+                clauses.Add(new SpectrumClassFilterClause(filterPages.Pages[iPage].Discriminant
+                    .Concat(filterPages.Clauses[iPage])));
+            }
+
+            return new SpectrumClassFilter(clauses);
         }
 
         public ImmutableList<SpectrumClassFilterClause> Clauses
@@ -79,14 +86,6 @@ namespace pwiz.Skyline.Model.Results.Spectra
             };
         }
 
-        public IEnumerable<FilterSpec> FilterSpecs
-        {
-            get
-            {
-                return Clauses.SelectMany(clause => clause.FilterSpecs);
-            }
-        }
-
         public string GetAbbreviatedText()
         {
             return TextUtil.SpaceSeparate(Clauses.Select(clause => clause.GetAbbreviatedText()));
@@ -119,6 +118,16 @@ namespace pwiz.Skyline.Model.Results.Spectra
             }
 
             return Clauses.Count.CompareTo(other.Clauses.Count);
+        }
+
+        int IComparable.CompareTo(object obj)
+        {
+            if (obj == null)
+            {
+                return 1;
+            }
+
+            return CompareTo((SpectrumClassFilter)obj);
         }
     }
 }

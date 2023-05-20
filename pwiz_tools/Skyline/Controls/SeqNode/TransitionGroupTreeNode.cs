@@ -642,20 +642,23 @@ namespace pwiz.Skyline.Controls.SeqNode
                 return;
             }
             var dataSchema = new DataSchema(SkylineDataSchema.GetLocalizedSchemaLocalizer());
-            foreach (var filterSpec in spectrumClassFilter.FilterSpecs)
+            foreach (var clause in spectrumClassFilter.Clauses)
             {
-                string column = ColumnCaptions.ResourceManager.GetString(filterSpec.ColumnId.Name) ??
-                                filterSpec.ColumnId.Name;
-                var row = new RowDesc
+                foreach (var filterSpec in clause.FilterSpecs)
                 {
-                    CreateRowLabel(TextUtil.SpaceSeparate(column, filterSpec.Operation.DisplayName), rt),
-                };
-                var operand = SpectrumClassFilterClause.GetOperandDisplayText(dataSchema, filterSpec);
-                if (operand != null)
-                {
-                    row.Add(CreateData(operand, rt));
+                    string column = ColumnCaptions.ResourceManager.GetString(filterSpec.ColumnId.Name) ??
+                                    filterSpec.ColumnId.Name;
+                    var row = new RowDesc
+                    {
+                        CreateRowLabel(TextUtil.SpaceSeparate(column, filterSpec.Operation.DisplayName), rt),
+                    };
+                    var operand = SpectrumClassFilterClause.GetOperandDisplayText(dataSchema, filterSpec);
+                    if (operand != null)
+                    {
+                        row.Add(CreateData(operand, rt));
+                    }
+                    table.Add(row);
                 }
-                table.Add(row);
             }
         }
 

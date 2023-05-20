@@ -53,6 +53,7 @@ namespace pwiz.SkylineTestFunctional
             RunDlg<EditSpectrumFilterDlg>(SkylineWindow.EditMenu.EditSpectrumFilter, dlg =>
             {
                 dlg.CreateCopy = true;
+                Assert.IsTrue(dlg.SelectPage(1));
                 var row = dlg.RowBindingList.AddNew();
                 Assert.IsNotNull(row);
                 row.Property = SpectrumClassColumn.PresetScanConfiguration.GetLocalizedColumnName(CultureInfo.CurrentCulture);
@@ -62,7 +63,6 @@ namespace pwiz.SkylineTestFunctional
             });
             Assert.AreEqual(1, SkylineWindow.Document.MoleculeCount);
             Assert.AreEqual(2, SkylineWindow.Document.MoleculeTransitionGroupCount);
-            
             RunUI(() =>
             {
                 SkylineWindow.SelectedPath =
@@ -72,14 +72,16 @@ namespace pwiz.SkylineTestFunctional
                 var transitionGroupDocNode = ((TransitionGroupTreeNode) selectedTreeNode).DocNode;
                 Assert.IsNotNull(transitionGroupDocNode.SpectrumClassFilter);
                 Assert.IsFalse(transitionGroupDocNode.SpectrumClassFilter.IsEmpty);
-                Assert.AreEqual(1, transitionGroupDocNode.SpectrumClassFilter.FilterSpecs.Count());
+                Assert.AreEqual(2, transitionGroupDocNode.SpectrumClassFilter.Clauses.Count);
+                var ms2Clause = transitionGroupDocNode.SpectrumClassFilter.Clauses[1];
+                Assert.AreEqual(2, ms2Clause.FilterSpecs.Count);
                 Assert.AreEqual(3.0,
-                    transitionGroupDocNode.SpectrumClassFilter.FilterSpecs.First().Predicate
-                        .GetOperandValue(new DataSchema(), typeof(double)));
+                    ms2Clause.FilterSpecs[1].Predicate.GetOperandValue(new DataSchema(), typeof(double)));
             });
             RunDlg<EditSpectrumFilterDlg>(SkylineWindow.EditMenu.EditSpectrumFilter, dlg =>
             {
                 dlg.CreateCopy = true;
+                dlg.SelectPage(1);
                 Assert.AreEqual(1, dlg.RowBindingList.Count);
                 dlg.RowBindingList[0].SetValue(2);
                 dlg.OkDialog();
@@ -93,7 +95,7 @@ namespace pwiz.SkylineTestFunctional
             var peptideDocNode = document.Molecules.First();
             Assert.AreEqual(3, peptideDocNode.TransitionGroupCount);
             var unfilteredTransitionGroup = peptideDocNode.TransitionGroups.First();
-            Assert.IsNull(unfilteredTransitionGroup.SpectrumClassFilter.FilterSpecs.FirstOrDefault());
+            Assert.IsNull(unfilteredTransitionGroup.SpectrumClassFilter.Clauses.FirstOrDefault());
             var unfilteredChromatogramGroup = LoadChromatogram(document, peptideDocNode, unfilteredTransitionGroup);
             var unfilteredMs2Chromatogram =
                 unfilteredChromatogramGroup.TransitionPointSets.FirstOrDefault(c => c.Source == ChromSource.fragment);
