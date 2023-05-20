@@ -57,6 +57,7 @@ namespace pwiz.Skyline.EditUI
             _rowBindingList = new BindingList<Row>(_rowList);
             dataGridViewEx1.DataSource = _rowBindingList;
             operationColumn.Items.AddRange(FilterOperations.ListOperations().Select(op=>(object) op.DisplayName).ToArray());
+            CurrentPageIndex = filterPages.DefaultPageIndex;
             DisplayCurrentPage();
         }
         public FilterPages FilterPages { get; private set; }
@@ -218,7 +219,7 @@ namespace pwiz.Skyline.EditUI
         {
             var radioButton = new RadioButton()
             {
-                Text = caption,
+                Text = caption ?? string.Format("Case {0}", index + 1),
                 AutoCheck = false
                 
             };

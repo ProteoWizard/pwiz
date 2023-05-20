@@ -1,5 +1,4 @@
-﻿using System;
-using System.Collections.Generic;
+﻿using System.Collections.Generic;
 using System.Linq;
 using pwiz.Common.Collections;
 using pwiz.Common.DataBinding;
@@ -9,25 +8,21 @@ namespace pwiz.Skyline.Model.Results.Spectra
 {
     public class SpectrumClassFilters
     {
-        private FilterPage _ms1FilterPage = new FilterPage("MS1", new FilterSpec[]
-            {
-                new FilterSpec(PropertyPath.Root.Property(nameof(SpectrumClassColumn.MsLevel)),
-                    FilterPredicate.CreateFilterPredicate(FilterOperations.OP_EQUALS, 1))
-            },
+        private static FilterPage _ms1FilterPage = new FilterPage(() => "MS1",
+            new FilterSpec(PropertyPath.Root.Property(nameof(SpectrumClassColumn.MsLevel)),
+                FilterPredicate.CreateFilterPredicate(FilterOperations.OP_EQUALS, 1))
+            ,
             SpectrumClassColumn.MS1.Select(col => col.PropertyPath));
 
-        private FilterPage _ms2FilterPage = new FilterPage("MS2+", new[]
-        {
+        private static FilterPage _ms2FilterPage = new FilterPage(() => "MS2+",
             new FilterSpec(PropertyPath.Root.Property(nameof(SpectrumClassColumn.MsLevel)),
-                FilterPredicate.CreateFilterPredicate(FilterOperations.OP_IS_GREATER_THAN, 1))
-        }, SpectrumClassColumn.ALL.Select(col => col.PropertyPath));
+                FilterPredicate.CreateFilterPredicate(FilterOperations.OP_IS_GREATER_THAN, 1)),
+            SpectrumClassColumn.ALL.Select(col => col.PropertyPath));
 
-        public SpectrumClassFilters(SrmDocument document)
-        {
-            Document = document;
-        }
+        private static FilterPage _generic = new FilterPage(SpectrumClassColumn.ALL.Select(col => col.PropertyPath));
 
-        public SrmDocument Document { get; }
+        private static ImmutableList<FilterPage> _all =
+            ImmutableList.ValueOf(new[] { _ms1FilterPage, _ms2FilterPage, _generic });
 
         public FilterPages GetFilterPages(TransitionGroupDocNode transitionGroupDocNode)
         {
@@ -51,8 +46,29 @@ namespace pwiz.Skyline.Model.Results.Spectra
             var clauses = new List<FilterClause>();
             for (int i = 0; i < transitionGroupDocNode.SpectrumClassFilter.Clauses.Count; i++)
             {
-                pages.Add(MakeGenericFilterPage(i));
+                pages.Add(_generic);
                 clauses.Add(transitionGroupDocNode.SpectrumClassFilter[i]);
+            }
+
+            return new FilterPages(pages, clauses);
+        }
+
+        public FilterPages GetFilterPages(SpectrumClassFilter spectrumClassFilter)
+        {
+            var pages = new List<FilterPage>();
+            var clauses = new List<FilterClause>();
+            foreach (var clause in spectrumClassFilter.Clauses)
+            {
+                foreach (var page in _all)
+                {
+                    var remainder = page.MatchDiscriminant(clause.FilterSpecs);
+                    if (remainder != null)
+                    {
+                        pages.Add(page);
+                        clauses.Add(remainder);
+                        break;
+                    }
+                }
             }
 
             return new FilterPages(pages, clauses);
@@ -73,13 +89,7 @@ namespace pwiz.Skyline.Model.Results.Spectra
                 return new[] { _ms1FilterPage, _ms2FilterPage };
             }
 
-            return ImmutableList.Singleton(MakeGenericFilterPage(0));
-        }
-
-        public FilterPage MakeGenericFilterPage(int pageNumber)
-        {
-            return new FilterPage("Case " + (pageNumber + 1), ImmutableList<FilterSpec>.EMPTY,
-                SpectrumClassColumn.ALL.Select(col => col.PropertyPath));
+            return ImmutableList.Singleton(_generic);
         }
 
         public FilterPages MatchFilterPages(IList<FilterPage> filterPages, SpectrumClassFilter filter)

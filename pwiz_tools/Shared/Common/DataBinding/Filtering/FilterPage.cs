@@ -1,4 +1,5 @@
-﻿using System.Collections.Generic;
+﻿using System;
+using System.Collections.Generic;
 using System.Linq;
 using pwiz.Common.Collections;
 
@@ -6,15 +7,30 @@ namespace pwiz.Common.DataBinding.Filtering
 {
     public class FilterPage
     {
-        public FilterPage(string caption, IEnumerable<FilterSpec> discriminant,
+        private readonly Func<string> _getCaptionFunc;
+        public FilterPage(Func<string> getCaptionFunc, FilterClause discriminant,
             IEnumerable<PropertyPath> availableColumns)
         {
-            Caption = caption;
-            Discriminant = new FilterClause(discriminant);
+            _getCaptionFunc = getCaptionFunc;
+            Discriminant = discriminant;
             AvailableColumns = ImmutableList.ValueOf(availableColumns);
         }
 
-        public string Caption { get; }
+        public FilterPage(Func<string> getCaptionFunc, FilterSpec discriminant,
+            IEnumerable<PropertyPath> availableColumns) : this(getCaptionFunc, new FilterClause(ImmutableList.Singleton(discriminant)), availableColumns)
+        {
+        }
+
+
+        public FilterPage(IEnumerable<PropertyPath> availableColumns) 
+            : this(null, FilterClause.EMPTY, availableColumns)
+        {
+        }
+
+        public string Caption
+        {
+            get { return _getCaptionFunc?.Invoke(); }
+        }
         public virtual FilterClause Discriminant { get; }
         public virtual IEnumerable<PropertyPath> AvailableColumns { get; }
 
@@ -40,7 +56,7 @@ namespace pwiz.Common.DataBinding.Filtering
 
         protected bool Equals(FilterPage other)
         {
-            return Caption == other.Caption && Discriminant.Equals(other.Discriminant) &&
+            return Discriminant.Equals(other.Discriminant) &&
                    AvailableColumns.Equals(other.AvailableColumns);
         }
 
@@ -56,8 +72,7 @@ namespace pwiz.Common.DataBinding.Filtering
         {
             unchecked
             {
-                var hashCode = Caption.GetHashCode();
-                hashCode = (hashCode * 397) ^ Discriminant.GetHashCode();
+                var hashCode = Discriminant.GetHashCode();
                 hashCode = (hashCode * 397) ^ AvailableColumns.GetHashCode();
                 return hashCode;
             }

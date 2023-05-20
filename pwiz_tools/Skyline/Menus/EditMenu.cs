@@ -1706,7 +1706,7 @@ namespace pwiz.Skyline.Menus
                 return;
             }
 
-            var spectrumClassFilters = new SpectrumClassFilters(SkylineWindow.DocumentUI);
+            var spectrumClassFilters = new SpectrumClassFilters();
             var transitionGroupDocNodes = transitionGroupPaths
                 .Select(path => (TransitionGroupDocNode)SkylineWindow.DocumentUI.FindNode(path)).ToList();
             var filterPagesSet = transitionGroupDocNodes.Select(docNode=>spectrumClassFilters.GetFilterPages(docNode)).ToHashSet();

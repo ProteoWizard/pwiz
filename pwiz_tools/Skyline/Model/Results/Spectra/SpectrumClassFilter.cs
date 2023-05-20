@@ -94,9 +94,49 @@ namespace pwiz.Skyline.Model.Results.Spectra
             };
         }
 
+        public override string ToString()
+        {
+            return GetAbbreviatedText();
+        }
+
         public string GetAbbreviatedText()
         {
-            return TextUtil.SpaceSeparate(Clauses.Select(GetAbbreviatedText));
+            if (IsEmpty)
+            {
+                return string.Empty;
+            }
+            var filterPages = new SpectrumClassFilters().GetFilterPages(this);
+            var parts = new List<string>();
+            for (int iPage = 0; iPage < filterPages.Pages.Count; iPage++)
+            {
+                var page = filterPages.Pages[iPage];
+                var clause = filterPages.Clauses[iPage];
+                if (clause.IsEmpty)
+                {
+                    if (page.Discriminant.IsEmpty)
+                    {
+                        return string.Empty;
+                    }
+                    continue;
+                }
+                string caption = filterPages.Pages[iPage].Caption;
+                var clauseText = GetAbbreviatedText(filterPages.Clauses[iPage]);
+                if (caption != null)
+                {
+                    parts.Add(TextUtil.ColonSeparate(caption, clauseText));
+                }
+                else
+                {
+                    string part = clauseText;
+                    if (iPage != 0)
+                    {
+                        part = TextUtil.SpaceSeparate("OR", part);
+                    }
+                    parts.Add(part);
+                }
+            }
+
+            return TextUtil.SpaceSeparate(parts);
         }
 
         public bool Equals(SpectrumClassFilter other)
@@ -167,7 +207,7 @@ namespace pwiz.Skyline.Model.Results.Spectra
             }
         }
 
-        public string GetAbbreviatedText(FilterClause filterClause)
+        public static string GetAbbreviatedText(FilterClause filterClause)
         {
             var dataSchema = new DataSchema(SkylineDataSchema.GetLocalizedSchemaLocalizer());
             var clauses = new List<string>();

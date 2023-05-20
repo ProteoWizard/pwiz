@@ -195,5 +195,13 @@ namespace pwiz.Common.DataBinding.Filtering
             ((IXmlSerializable) filterClause).ReadXml(reader);
             return filterClause;
         }
+
+        public bool IsEmpty
+        {
+            get
+            {
+                return FilterSpecs.Count == 0;
+            }
+        }
     }
 }

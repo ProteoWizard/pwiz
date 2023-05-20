@@ -589,6 +589,14 @@ namespace pwiz.Skyline.Model.Databinding.Entities
                 return owner.MakeChromInfoResultsMap(owner.DocNode.Results, file => new PrecursorResult(owner, file));
             }
         }
+
+        public string SpectrumFilter
+        {
+            get
+            {
+                return DocNode.SpectrumClassFilter.ToString();
+            }
+        }
     }
 
     public class PrecursorResultSummary : SkylineObject

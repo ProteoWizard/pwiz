@@ -1,5 +1,6 @@
 ﻿using System;
 using System.Collections.Generic;
+using System.Security.Policy;
 using pwiz.Common.Collections;
 using pwiz.Common.SystemUtil;
 
@@ -15,10 +16,19 @@ namespace pwiz.Common.DataBinding.Filtering
             {
                 throw new ArgumentException();
             }
+
+            for (int i = 0; i < Clauses.Count; i++)
+            {
+                if (!Clauses[i].IsEmpty)
+                {
+                    DefaultPageIndex = i;
+                }
+            }
         }
 
         public ImmutableList<FilterPage> Pages { get; }
         public ImmutableList<FilterClause> Clauses { get; private set; }
+        public int DefaultPageIndex { get; private set; }
 
         public FilterPages ReplaceClause(int pageIndex, FilterClause clause)
         {
