@@ -22,17 +22,18 @@ using System.Linq;
 using System.Threading;
 using System.Windows.Forms;
 using pwiz.Common.DataBinding;
+using pwiz.Common.DataBinding.Filtering;
 using pwiz.Skyline.Util.Extensions;
 
 namespace pwiz.Skyline.Model.Results.Spectra
 {
-    public class SpectrumFilterAutoComplete : IDisposable
+    public class SpectrumFilterAutoComplete : IDisposable, IFilterAutoComplete
     {
         private Dictionary<PropertyPath, AutoCompleteStringCollection> _autoCompleteValues;
         private CancellationTokenSource _cancellationTokenSource;
         private IDocumentContainer _documentContainer;
         private bool _disposed;
-        public SpectrumFilterAutoComplete(IDocumentContainer documentContainer, IEnumerable<IdentityPath> transitionGroupIdentityPaths)
+        public SpectrumFilterAutoComplete(IDocumentContainer documentContainer)
         {
             _documentContainer = documentContainer;
             RestartQuery(_documentContainer.Document);

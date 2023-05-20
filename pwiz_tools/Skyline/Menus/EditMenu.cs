@@ -27,6 +27,7 @@ using System.Xml;
 using System.Xml.Serialization;
 using pwiz.Common.Collections;
 using pwiz.Common.DataBinding;
+using pwiz.Common.DataBinding.Filtering;
 using pwiz.Skyline.Alerts;
 using pwiz.Skyline.Controls;
 using pwiz.Skyline.Controls.Graphs;
@@ -1718,7 +1719,7 @@ namespace pwiz.Skyline.Menus
             {
                 var standardPages = spectrumClassFilters.GetStandardFilterPages(transitionGroupDocNodes).ToList();
                 filterPages = new FilterPages(standardPages,
-                    Enumerable.Repeat(ImmutableList<FilterSpec>.EMPTY, standardPages.Count));
+                    Enumerable.Repeat(FilterClause.EMPTY, standardPages.Count));
             }
 
             var skylineDataSchema = new SkylineDataSchema(SkylineWindow, SkylineDataSchema.GetLocalizedSchemaLocalizer());

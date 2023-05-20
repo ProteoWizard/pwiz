@@ -22,6 +22,7 @@ using System.Collections.Generic;
 using System.Linq;
 using System.Text;
 using pwiz.Common.DataBinding;
+using pwiz.Common.DataBinding.Filtering;
 using pwiz.Common.SystemUtil;
 using pwiz.Skyline.Model.Results.Legacy;
 using pwiz.Skyline.Model.Results.ProtoBuf;
@@ -106,7 +107,7 @@ namespace pwiz.Skyline.Model.Results
         public static IEnumerable<ChromatogramGroupId> FromProto(ChromatogramGroupIdsProto proto)
         {
             var targets = new List<Target> {null};
-            var allFilters = new List<SpectrumClassFilterClause>();
+            var allFilters = new List<FilterClause>();
             foreach (var targetProto in proto.Targets)
             {
                 if (!string.IsNullOrEmpty(targetProto.ModifiedPeptideSequence))
@@ -132,7 +133,7 @@ namespace pwiz.Skyline.Model.Results
                             ChromatogramGroupIds.GetFilterOperation(filterPredicate.Operation),
                             filterPredicate.Operand)));
                 }
-                allFilters.Add(new SpectrumClassFilterClause(filterSpecs));
+                allFilters.Add(new FilterClause(filterSpecs));
             }
 
             foreach (var id in proto.ChromatogramGroupIds)
@@ -310,7 +311,7 @@ namespace pwiz.Skyline.Model.Results
         public ChromatogramGroupIdsProto ToProtoMessage()
         {
             var targets = new DistinctList<Target> {null};
-            var allFilters = new DistinctList<SpectrumClassFilterClause>();
+            var allFilters = new DistinctList<FilterClause>();
             var idsProto = new ChromatogramGroupIdsProto();
             foreach (var id in this)
             {
@@ -361,7 +362,7 @@ namespace pwiz.Skyline.Model.Results
                 var filterProto = new ChromatogramGroupIdsProto.Types.SpectrumFilter();
                 foreach (var filterSpec in filter.FilterSpecs)
                 {
-                    filterProto.Predicates.Add(new ChromatogramGroupIdsProto.Types.SpectrumFilter.Types.Predicate()
+                    filterProto.Predicates.Add(new ChromatogramGroupIdsProto.Types.SpectrumFilter.Types.Predicate
                     {
                         PropertyPath = filterSpec.Column,
                         Operation = _filterOperationReverseMap[filterSpec.Operation],

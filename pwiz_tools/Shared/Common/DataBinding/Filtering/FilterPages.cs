@@ -1,14 +1,13 @@
 ﻿using System;
 using System.Collections.Generic;
 using pwiz.Common.Collections;
-using pwiz.Common.DataBinding;
 using pwiz.Common.SystemUtil;
 
-namespace pwiz.Skyline.Model.Results.Spectra
+namespace pwiz.Common.DataBinding.Filtering
 {
     public class FilterPages : Immutable, IEquatable<FilterPages>
     {
-        public FilterPages(IEnumerable<FilterPage> pages, IEnumerable<ImmutableList<FilterSpec>> clauses)
+        public FilterPages(IEnumerable<FilterPage> pages, IEnumerable<FilterClause> clauses)
         {
             Pages = ImmutableList.ValueOf(pages);
             Clauses= ImmutableList.ValueOf(clauses);
@@ -19,12 +18,12 @@ namespace pwiz.Skyline.Model.Results.Spectra
         }
 
         public ImmutableList<FilterPage> Pages { get; }
-        public ImmutableList<ImmutableList<FilterSpec>> Clauses { get; private set; }
+        public ImmutableList<FilterClause> Clauses { get; private set; }
 
-        public FilterPages ReplaceClause(int pageIndex, IEnumerable<FilterSpec> clause)
+        public FilterPages ReplaceClause(int pageIndex, FilterClause clause)
         {
             return ChangeProp(ImClone(this), im =>
-                im.Clauses = im.Clauses.ReplaceAt(pageIndex, ImmutableList.ValueOf(clause))
+                im.Clauses = im.Clauses.ReplaceAt(pageIndex, clause)
             );
         }
 

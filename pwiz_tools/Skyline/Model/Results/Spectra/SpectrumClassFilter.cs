@@ -1,19 +1,26 @@
 ﻿using System;
 using System.Collections.Generic;
 using System.Linq;
-using NHibernate.Criterion;
+using System.Text;
+using System.Xml;
+using System.Xml.Linq;
 using pwiz.Common.Collections;
 using pwiz.Common.DataBinding;
+using pwiz.Common.DataBinding.Filtering;
 using pwiz.Common.Spectra;
+using pwiz.Skyline.Model.Databinding;
+using pwiz.Skyline.Properties;
+using pwiz.Skyline.Util;
 using pwiz.Skyline.Util.Extensions;
 
 namespace pwiz.Skyline.Model.Results.Spectra
 {
     public struct SpectrumClassFilter : IEquatable<SpectrumClassFilter>, IComparable, IComparable<SpectrumClassFilter>
     {
-        private ImmutableList<SpectrumClassFilterClause> _clauses;
+        public const string XML_ROOT = "spectrum_filter";
+        private ImmutableList<FilterClause> _clauses;
 
-        public SpectrumClassFilter(IEnumerable<SpectrumClassFilterClause> alternatives)
+        public SpectrumClassFilter(IEnumerable<FilterClause> alternatives)
         {
             var list = ImmutableList.ValueOf(alternatives);
             if (list?.Count > 0)
@@ -26,32 +33,32 @@ namespace pwiz.Skyline.Model.Results.Spectra
             }
         }
 
-        public SpectrumClassFilter(params SpectrumClassFilterClause[] alternatives) : this(
-            (IEnumerable<SpectrumClassFilterClause>)alternatives)
+        public SpectrumClassFilter(params FilterClause[] alternatives) : this(
+            (IEnumerable<FilterClause>)alternatives)
         {
         }
 
         public static SpectrumClassFilter FromFilterPages(FilterPages filterPages)
         {
-            var clauses = new List<SpectrumClassFilterClause>();
+            var clauses = new List<FilterClause>();
             for (int iPage = 0; iPage < filterPages.Pages.Count; iPage++)
             {
-                clauses.Add(new SpectrumClassFilterClause(filterPages.Pages[iPage].Discriminant
-                    .Concat(filterPages.Clauses[iPage])));
+                clauses.Add(new FilterClause(filterPages.Pages[iPage].Discriminant.FilterSpecs
+                    .Concat(filterPages.Clauses[iPage].FilterSpecs)));
             }
 
             return new SpectrumClassFilter(clauses);
         }
 
-        public ImmutableList<SpectrumClassFilterClause> Clauses
+        public ImmutableList<FilterClause> Clauses
         {
             get
             {
-                return _clauses ?? ImmutableList<SpectrumClassFilterClause>.EMPTY;
+                return _clauses ?? ImmutableList<FilterClause>.EMPTY;
             }
         }
 
-        public SpectrumClassFilterClause this[int index]
+        public FilterClause this[int index]
         {
             get
             {
@@ -71,7 +78,8 @@ namespace pwiz.Skyline.Model.Results.Spectra
                 return x => true;
             }
 
-            var predicates = Clauses.Select(x => x.MakePredicate()).ToList();
+            var dataSchema = new DataSchema();
+            var predicates = Clauses.Select(x => x.MakePredicate<SpectrumMetadata>(dataSchema)).ToList();
             return x =>
             {
                 foreach (var predicate in predicates)
@@ -88,7 +96,7 @@ namespace pwiz.Skyline.Model.Results.Spectra
 
         public string GetAbbreviatedText()
         {
-            return TextUtil.SpaceSeparate(Clauses.Select(clause => clause.GetAbbreviatedText()));
+            return TextUtil.SpaceSeparate(Clauses.Select(GetAbbreviatedText));
         }
 
         public bool Equals(SpectrumClassFilter other)
@@ -128,6 +136,90 @@ namespace pwiz.Skyline.Model.Results.Spectra
             }
 
             return CompareTo((SpectrumClassFilter)obj);
+        }
+        public static string GetOperandDisplayText(DataSchema dataSchema, FilterSpec filterSpec)
+        {
+            var column = SpectrumClassColumn.FindColumn(filterSpec.ColumnId);
+            if (column == null)
+            {
+                return filterSpec.Predicate.InvariantOperandText;
+            }
+
+            var operandType = filterSpec.Operation.GetOperandType(dataSchema, column.ValueType);
+            if (operandType == null)
+            {
+                return null;
+            }
+
+            try
+            {
+                var value = filterSpec.Predicate.GetOperandValue(dataSchema, column.ValueType);
+                if (value == null)
+                {
+                    return string.Empty;
+                }
+
+                return column.FormatAbbreviatedValue(value);
+            }
+            catch
+            {
+                return filterSpec.Predicate.GetOperandDisplayText(dataSchema, column.ValueType);
+            }
+        }
+
+        public string GetAbbreviatedText(FilterClause filterClause)
+        {
+            var dataSchema = new DataSchema(SkylineDataSchema.GetLocalizedSchemaLocalizer());
+            var clauses = new List<string>();
+            foreach (var filterSpec in filterClause.FilterSpecs)
+            {
+                var spectrumClassColumn = SpectrumClassColumn.FindColumn(filterSpec.ColumnId);
+                if (spectrumClassColumn == null)
+                {
+                    clauses.Add(TextUtil.SpaceSeparate(filterSpec.Column, filterSpec.Operation?.DisplayName, filterSpec.Predicate.InvariantOperandText));
+                }
+                else
+                {
+                    var clauseText = new StringBuilder(spectrumClassColumn.GetAbbreviatedColumnName());
+                    var opText = filterSpec.Operation.ShortDisplayName;
+                    if (char.IsLetterOrDigit(opText[0]) || char.IsLetterOrDigit(opText[opText.Length - 1]))
+                    {
+                        clauseText.Append(@" ");
+                        clauseText.Append(opText);
+                        clauseText.Append(@" ");
+                    }
+                    else
+                    {
+                        clauseText.Append(opText);
+                    }
+
+                    clauseText.Append(GetOperandDisplayText(dataSchema, filterSpec));
+                    clauses.Add(clauseText.ToString().Trim());
+                }
+            }
+
+            return string.Join(Resources.SpectrumClassFilter_GetAbbreviatedText__AND_, clauses);
+        }
+
+        public static SpectrumClassFilter ReadXml(XmlReader reader)
+        {
+            var clauses = new List<FilterClause>();
+            while (reader.IsStartElement(XML_ROOT))
+            {
+                clauses.Add(new XmlElementHelper<FilterClause>(XML_ROOT).Deserialize(reader));
+            }
+
+            return new SpectrumClassFilter(clauses);
+        }
+
+        public void WriteXml(XmlWriter writer)
+        {
+            foreach (var clause in Clauses)
+            {
+                writer.WriteStartElement(XML_ROOT);
+                clause.WriteXml(writer);
+                writer.WriteEndElement();
+            }
         }
     }
 }

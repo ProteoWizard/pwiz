@@ -652,7 +652,7 @@ namespace pwiz.Skyline.Controls.SeqNode
                     {
                         CreateRowLabel(TextUtil.SpaceSeparate(column, filterSpec.Operation.DisplayName), rt),
                     };
-                    var operand = SpectrumClassFilterClause.GetOperandDisplayText(dataSchema, filterSpec);
+                    var operand = SpectrumClassFilter.GetOperandDisplayText(dataSchema, filterSpec);
                     if (operand != null)
                     {
                         row.Add(CreateData(operand, rt));

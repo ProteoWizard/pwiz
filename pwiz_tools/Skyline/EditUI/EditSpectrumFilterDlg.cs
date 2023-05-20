@@ -22,14 +22,14 @@ using System.ComponentModel;
 using System.Linq;
 using System.Windows.Forms;
 using pwiz.Common.Collections;
+using pwiz.Common.Controls;
 using pwiz.Common.DataBinding;
+using pwiz.Common.DataBinding.Filtering;
 using pwiz.Skyline.Alerts;
-using pwiz.Skyline.Model.Results.Spectra;
-using pwiz.Skyline.Util;
 
 namespace pwiz.Skyline.EditUI
 {
-    public partial class EditSpectrumFilterDlg : FormEx
+    public partial class EditSpectrumFilterDlg : CommonFormEx
     {
         private List<Row> _rowList;
         private BindingList<Row> _rowBindingList;
@@ -63,7 +63,7 @@ namespace pwiz.Skyline.EditUI
         public int CurrentPageIndex { get; private set; }
 
         public IEnumerable<ImmutableList<FilterSpec>> Filters { get; private set; }
-        public SpectrumFilterAutoComplete AutoComplete { get; set; }
+        public IFilterAutoComplete AutoComplete { get; set; }
 
         public string Description
         {
@@ -100,11 +100,11 @@ namespace pwiz.Skyline.EditUI
             OkDialog();
         }
 
-        private IEnumerable<Row> GetRows(IEnumerable<FilterSpec> filterSpecs)
+        private IEnumerable<Row> GetRows(FilterClause clause)
         {
             var rows = new List<Row>();
             var dataSchema = _rootColumn.DataSchema;
-            foreach (var filterSpec in filterSpecs)
+            foreach (var filterSpec in clause.FilterSpecs)
             {
                 var propertyPath = filterSpec.ColumnId;
                 var entry = _propertyColumns.FirstOrDefault(kvp => Equals(kvp.Value.PropertyPath, propertyPath));
@@ -168,13 +168,6 @@ namespace pwiz.Skyline.EditUI
         private void btnReset_Click(object sender, EventArgs e)
         {
             Reset();
-        }
-
-        private void ReplaceRows(IEnumerable<Row> rows)
-        {
-            _rowList.Clear();
-            _rowList.AddRange(rows);
-            _rowBindingList.ResetBindings();
         }
 
         public void Reset()
@@ -282,7 +275,7 @@ namespace pwiz.Skyline.EditUI
             return true;
         }
 
-        public ImmutableList<FilterSpec> GetFilterForCurrentPage()
+        public FilterClause GetFilterForCurrentPage()
         {
             var filterSpecs = new List<FilterSpec>();
             for (int iRow = 0; iRow < _rowList.Count; iRow++)
@@ -316,7 +309,7 @@ namespace pwiz.Skyline.EditUI
                 var filterSpec = new FilterSpec(propertyColumnDescriptor.PropertyPath, filterPredicate);
                 filterSpecs.Add(filterSpec);
             }
-            return ImmutableList.ValueOf(filterSpecs);
+            return new FilterClause(filterSpecs);
         }
 
         private ColumnDescriptor GetColumnDescriptor(PropertyPath propertyPath)

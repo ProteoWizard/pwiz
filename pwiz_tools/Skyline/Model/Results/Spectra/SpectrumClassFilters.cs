@@ -3,6 +3,7 @@ using System.Collections.Generic;
 using System.Linq;
 using pwiz.Common.Collections;
 using pwiz.Common.DataBinding;
+using pwiz.Common.DataBinding.Filtering;
 
 namespace pwiz.Skyline.Model.Results.Spectra
 {
@@ -34,7 +35,7 @@ namespace pwiz.Skyline.Model.Results.Spectra
             if (transitionGroupDocNode.SpectrumClassFilter.IsEmpty)
             {
                 return new FilterPages(standardPages,
-                    Enumerable.Repeat(ImmutableList<FilterSpec>.EMPTY, standardPages.Count));
+                    Enumerable.Repeat(FilterClause.EMPTY, standardPages.Count));
             }
 
             if (transitionGroupDocNode.SpectrumClassFilter.Clauses.Count == standardPages.Count)
@@ -47,11 +48,11 @@ namespace pwiz.Skyline.Model.Results.Spectra
             }
 
             var pages = new List<FilterPage>();
-            var clauses = new List<ImmutableList<FilterSpec>>();
+            var clauses = new List<FilterClause>();
             for (int i = 0; i < transitionGroupDocNode.SpectrumClassFilter.Clauses.Count; i++)
             {
                 pages.Add(MakeGenericFilterPage(i));
-                clauses.Add(transitionGroupDocNode.SpectrumClassFilter[i].FilterSpecs);
+                clauses.Add(transitionGroupDocNode.SpectrumClassFilter[i]);
             }
 
             return new FilterPages(pages, clauses);
@@ -88,7 +89,7 @@ namespace pwiz.Skyline.Model.Results.Spectra
                 return null;
             }
 
-            var pageFilters = new List<ImmutableList<FilterSpec>>();
+            var pageFilters = new List<FilterClause>();
             for (int iPage = 0; iPage < filterPages.Count; iPage++)
             {
                 var remainder = filterPages[iPage].MatchDiscriminant(filter[iPage].FilterSpecs);

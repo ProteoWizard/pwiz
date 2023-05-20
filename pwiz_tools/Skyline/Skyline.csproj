@@ -502,11 +502,9 @@
       <SubType>UserControl</SubType>
     </Compile>
     <Compile Include="Model\FullScanProperties.cs" />
-    <Compile Include="Model\Results\Spectra\FilterPage.cs" />
     <Compile Include="Model\Results\Spectra\SpectrumClassFilter.cs" />
     <Compile Include="Model\Results\Spectra\SpectrumClassFilters.cs" />
     <Compile Include="Model\Results\Spectra\SpectrumFilterAutoComplete.cs" />
-    <Compile Include="Model\Results\Spectra\FilterPages.cs" />
     <Compile Include="Model\SpectrumPropertiesResx.Designer.cs">
       <AutoGen>True</AutoGen>
       <DesignTime>True</DesignTime>
@@ -696,7 +694,6 @@
     <Compile Include="Model\Results\Spectra\ResultFileMetaData.cs" />
     <Compile Include="Model\Results\Spectra\SpectrumClass.cs" />
     <Compile Include="Model\Results\Spectra\SpectrumClassColumn.cs" />
-    <Compile Include="Model\Results\Spectra\SpectrumClassFilterClause.cs" />
     <Compile Include="Model\Results\Spectra\SpectrumClassKey.cs" />
     <Compile Include="Model\Results\Spectra\SpectrumMetadataList.cs" />
     <Compile Include="Model\Results\Spectra\SpectrumPrecursors.cs" />

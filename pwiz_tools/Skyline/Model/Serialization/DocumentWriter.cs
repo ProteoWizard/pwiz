@@ -30,7 +30,6 @@ using pwiz.Skyline.Model.Crosslinking;
 using pwiz.Skyline.Model.DocSettings;
 using pwiz.Skyline.Model.Lib;
 using pwiz.Skyline.Model.Results;
-using pwiz.Skyline.Model.Results.Spectra;
 using pwiz.Skyline.Properties;
 using pwiz.Skyline.Util;
 
@@ -610,12 +609,7 @@ namespace pwiz.Skyline.Model.Serialization
             }
             // Write child elements
             WriteAnnotations(writer, node.Annotations);
-            foreach (var clause in node.SpectrumClassFilter.Clauses)
-            {
-                writer.WriteStartElement(SpectrumClassFilterClause.XML_ROOT);
-                clause.WriteXml(writer);
-                writer.WriteEndElement();
-            }
+            node.SpectrumClassFilter.WriteXml(writer);
             if (node.HasLibInfo)
             {
                 var helpers = PeptideLibraries.SpectrumHeaderXmlHelpers;

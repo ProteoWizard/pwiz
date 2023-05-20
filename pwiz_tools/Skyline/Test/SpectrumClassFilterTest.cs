@@ -24,6 +24,7 @@ using Microsoft.VisualStudio.TestTools.UnitTesting;
 using pwiz.Common.Chemistry;
 using pwiz.Common.Collections;
 using pwiz.Common.DataBinding;
+using pwiz.Common.DataBinding.Filtering;
 using pwiz.Common.Spectra;
 using pwiz.Skyline.Model;
 using pwiz.Skyline.Model.DocSettings;
@@ -56,12 +57,12 @@ namespace pwiz.SkylineTest
         public void TestSpectrumClassFilterSerialization()
         {
             var spectrumClassFilter = CreateTestSpectrumClassFilter();
-            var xmlSerializer = new XmlSerializer(typeof(SpectrumClassFilterClause));
+            var xmlSerializer = new XmlSerializer(typeof(FilterClause));
             var stream = new MemoryStream();
-            xmlSerializer.Serialize(stream, spectrumClassFilter);
+            xmlSerializer.Serialize(stream, spectrumClassFilter.Clauses[0]);
             stream.Seek(0, SeekOrigin.Begin);
             var roundTrip = xmlSerializer.Deserialize(stream);
-            Assert.AreEqual(spectrumClassFilter, roundTrip);
+            Assert.AreEqual(spectrumClassFilter.Clauses[0], roundTrip);
         }
 
         [TestMethod]
@@ -96,7 +97,7 @@ namespace pwiz.SkylineTest
                 new FilterSpec(SpectrumClassColumn.ScanDescription.PropertyPath,
                     FilterPredicate.CreateFilterPredicate(FilterOperations.OP_CONTAINS, "SCAN"))
             };
-            return new SpectrumClassFilter(new SpectrumClassFilterClause(filterSpecs));
+            return new SpectrumClassFilter(new FilterClause(filterSpecs));
         }
     }
 }

@@ -25,6 +25,7 @@ using System.Xml;
 using Google.Protobuf;
 using pwiz.Common.Chemistry;
 using pwiz.Common.Collections;
+using pwiz.Common.DataBinding.Filtering;
 using pwiz.Common.SystemUtil;
 using pwiz.ProteomeDatabase.API;
 using pwiz.Skyline.Model.AuditLog;
@@ -1401,11 +1402,7 @@ namespace pwiz.Skyline.Model.Serialization
             {
                 reader.ReadStartElement();
                 var annotations = ReadTargetAnnotations(reader, AnnotationDef.AnnotationTarget.precursor);
-                var spectrumClassFilterClauses = new List<SpectrumClassFilterClause>();
-                while (reader.IsStartElement(SpectrumClassFilterClause.XML_ROOT))
-                {
-                    spectrumClassFilterClauses.Add(reader.DeserializeElement<SpectrumClassFilterClause>());
-                }
+                var spectrumClassFilter = SpectrumClassFilter.ReadXml(reader);
                 var libInfo = ReadTransitionGroupLibInfo(reader);
                 var results = ReadTransitionGroupResults(reader);
 
@@ -1418,9 +1415,9 @@ namespace pwiz.Skyline.Model.Serialization
                                                   results,
                                                   children,
                                                   autoManageChildren);
-                if (spectrumClassFilterClauses.Any())
+                if (!spectrumClassFilter.IsEmpty)
                 {
-                    nodeGroup = nodeGroup.ChangeSpectrumClassFilter(new SpectrumClassFilter(spectrumClassFilterClauses));
+                    nodeGroup = nodeGroup.ChangeSpectrumClassFilter(spectrumClassFilter);
                 }
                 children = ReadTransitionListXml(reader, nodeGroup, mods, pre422ExplicitValues);
 
