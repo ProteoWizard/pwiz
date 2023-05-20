@@ -57,7 +57,15 @@ namespace pwiz.Skyline.EditUI
             _rowBindingList = new BindingList<Row>(_rowList);
             dataGridViewEx1.DataSource = _rowBindingList;
             operationColumn.Items.AddRange(FilterOperations.ListOperations().Select(op=>(object) op.DisplayName).ToArray());
-            CurrentPageIndex = filterPages.DefaultPageIndex;
+            // Select the first non-empty page
+            for (int i = 0; i < FilterPages.Clauses.Count; i++)
+            {
+                if (!FilterPages.Clauses[i].IsEmpty)
+                {
+                    CurrentPageIndex = i;
+                    break;
+                }
+            }
             DisplayCurrentPage();
         }
         public FilterPages FilterPages { get; private set; }

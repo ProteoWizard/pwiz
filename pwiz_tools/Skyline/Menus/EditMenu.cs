@@ -1706,10 +1706,9 @@ namespace pwiz.Skyline.Menus
                 return;
             }
 
-            var spectrumClassFilters = new SpectrumClassFilters();
             var transitionGroupDocNodes = transitionGroupPaths
                 .Select(path => (TransitionGroupDocNode)SkylineWindow.DocumentUI.FindNode(path)).ToList();
-            var filterPagesSet = transitionGroupDocNodes.Select(docNode=>spectrumClassFilters.GetFilterPages(docNode)).ToHashSet();
+            var filterPagesSet = transitionGroupDocNodes.Select(SpectrumClassFilter.GetFilterPages).ToHashSet();
             FilterPages filterPages;
             if (filterPagesSet.Count == 1)
             {
@@ -1717,9 +1716,7 @@ namespace pwiz.Skyline.Menus
             }
             else
             {
-                var standardPages = spectrumClassFilters.GetStandardFilterPages(transitionGroupDocNodes).ToList();
-                filterPages = new FilterPages(standardPages,
-                    Enumerable.Repeat(FilterClause.EMPTY, standardPages.Count));
+                filterPages = SpectrumClassFilter.GetBlankFilterPages(transitionGroupDocNodes);
             }
 
             var skylineDataSchema = new SkylineDataSchema(SkylineWindow, SkylineDataSchema.GetLocalizedSchemaLocalizer());
@@ -1733,6 +1730,11 @@ namespace pwiz.Skyline.Menus
             {
                 dlg.CreateCopy = true;
                 dlg.CreateCopyEnabled = false;
+            }
+            if (filterPages.Pages.Count == 2 && filterPages.Clauses[0].IsEmpty)
+            {
+                // When editing a blank filter with two pages, start with the "MS2" page selected 
+                dlg.SelectPage(1);
             }
             if (dlg.ShowDialog(this) != DialogResult.OK)
             {

@@ -1,5 +1,6 @@
 ﻿using System;
 using System.Collections.Generic;
+using System.Linq;
 using System.Security.Policy;
 using pwiz.Common.Collections;
 using pwiz.Common.SystemUtil;
@@ -16,19 +17,36 @@ namespace pwiz.Common.DataBinding.Filtering
             {
                 throw new ArgumentException();
             }
+        }
 
-            for (int i = 0; i < Clauses.Count; i++)
+        public static FilterPages FromClauses(IList<FilterPage> availablePages, IEnumerable<FilterClause> clauses)
+        {
+            var pages = new List<FilterPage>();
+            var remainders = new List<FilterClause>();
+            foreach (var clause in clauses)
             {
-                if (!Clauses[i].IsEmpty)
+                foreach (var page in availablePages)
                 {
-                    DefaultPageIndex = i;
+                    var remainder = page.MatchDiscriminant(clause.FilterSpecs);
+                    if (remainder != null)
+                    {
+                        pages.Add(page);
+                        remainders.Add(remainder);
+                        break;
+                    }
                 }
             }
+
+            return new FilterPages(pages, remainders);
+        }
+
+        public static FilterPages Blank(params FilterPage[] pages)
+        {
+            return new FilterPages(pages, Enumerable.Repeat<FilterClause>(FilterClause.EMPTY, pages.Length));
         }
 
         public ImmutableList<FilterPage> Pages { get; }
         public ImmutableList<FilterClause> Clauses { get; private set; }
-        public int DefaultPageIndex { get; private set; }
 
         public FilterPages ReplaceClause(int pageIndex, FilterClause clause)
         {

@@ -3,7 +3,6 @@ using System.Collections.Generic;
 using System.Linq;
 using System.Text;
 using System.Xml;
-using System.Xml.Linq;
 using pwiz.Common.Collections;
 using pwiz.Common.DataBinding;
 using pwiz.Common.DataBinding.Filtering;
@@ -17,13 +16,28 @@ namespace pwiz.Skyline.Model.Results.Spectra
 {
     public struct SpectrumClassFilter : IEquatable<SpectrumClassFilter>, IComparable, IComparable<SpectrumClassFilter>
     {
+        public static readonly FilterPage Ms1FilterPage = new FilterPage(() => "MS1",
+            new FilterSpec(PropertyPath.Root.Property(nameof(SpectrumClassColumn.MsLevel)),
+                FilterPredicate.CreateFilterPredicate(FilterOperations.OP_EQUALS, 1))
+            ,
+            SpectrumClassColumn.MS1.Select(col => col.PropertyPath));
+
+        public static readonly FilterPage Ms2FilterPage = new FilterPage(() => "MS2+",
+            new FilterSpec(PropertyPath.Root.Property(nameof(SpectrumClassColumn.MsLevel)),
+                FilterPredicate.CreateFilterPredicate(FilterOperations.OP_IS_GREATER_THAN, 1)),
+            SpectrumClassColumn.ALL.Select(col => col.PropertyPath));
+
+        public static readonly FilterPage GenericFilterPage = new FilterPage(SpectrumClassColumn.ALL.Select(col => col.PropertyPath));
+
+        private static ImmutableList<FilterPage> _allPages =
+            ImmutableList.ValueOf(new[] { Ms1FilterPage, Ms2FilterPage, GenericFilterPage });
         public const string XML_ROOT = "spectrum_filter";
         private ImmutableList<FilterClause> _clauses;
 
         public SpectrumClassFilter(IEnumerable<FilterClause> alternatives)
         {
             var list = ImmutableList.ValueOf(alternatives);
-            if (list?.Count > 0)
+            if (list?.Count > 0 && !list.Any(clause=>clause.IsEmpty))
             {
                 _clauses = list;
             }
@@ -40,6 +54,10 @@ namespace pwiz.Skyline.Model.Results.Spectra
 
         public static SpectrumClassFilter FromFilterPages(FilterPages filterPages)
         {
+            if (filterPages.Clauses.All(clause => clause.IsEmpty))
+            {
+                return default;
+            }
             var clauses = new List<FilterClause>();
             for (int iPage = 0; iPage < filterPages.Pages.Count; iPage++)
             {
@@ -105,7 +123,7 @@ namespace pwiz.Skyline.Model.Results.Spectra
             {
                 return string.Empty;
             }
-            var filterPages = new SpectrumClassFilters().GetFilterPages(this);
+            var filterPages = GetFilterPages();
             var parts = new List<string>();
             for (int iPage = 0; iPage < filterPages.Pages.Count; iPage++)
             {
@@ -260,6 +278,43 @@ namespace pwiz.Skyline.Model.Results.Spectra
                 clause.WriteXml(writer);
                 writer.WriteEndElement();
             }
+        }
+
+        public static FilterPages GetFilterPages(TransitionGroupDocNode transitionGroupDocNode)
+        {
+            if (!transitionGroupDocNode.SpectrumClassFilter.IsEmpty)
+            {
+                return transitionGroupDocNode.SpectrumClassFilter.GetFilterPages();
+            }
+
+            if (transitionGroupDocNode.Transitions.Any(t => t.IsMs1) &&
+                transitionGroupDocNode.Transitions.Any(t => !t.IsMs1))
+            {
+                return FilterPages.Blank(Ms1FilterPage, Ms2FilterPage);
+            }
+
+            return FilterPages.Blank(GenericFilterPage);
+        }
+
+        private FilterPages GetFilterPages()
+        {
+            return FilterPages.FromClauses(_allPages, Clauses);
+        }
+
+        public static FilterPages GetBlankFilterPages(IEnumerable<TransitionGroupDocNode> transitionGroupDocNodes)
+        {
+            bool anyMs1 = false;
+            bool anyMs2 = false;
+            foreach (var transition in transitionGroupDocNodes.SelectMany(tg => tg.Transitions))
+            {
+                anyMs1 = anyMs1 || transition.IsMs1;
+                anyMs2 = anyMs2 || !transition.IsMs1;
+                if (anyMs1 && anyMs2)
+                {
+                    return FilterPages.Blank(Ms1FilterPage, Ms2FilterPage);
+                }
+            }
+            return FilterPages.Blank(GenericFilterPage);
         }
     }
 }

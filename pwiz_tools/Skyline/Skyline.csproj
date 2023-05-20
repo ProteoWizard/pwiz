@@ -503,7 +503,6 @@
     </Compile>
     <Compile Include="Model\FullScanProperties.cs" />
     <Compile Include="Model\Results\Spectra\SpectrumClassFilter.cs" />
-    <Compile Include="Model\Results\Spectra\SpectrumClassFilters.cs" />
     <Compile Include="Model\Results\Spectra\SpectrumFilterAutoComplete.cs" />
     <Compile Include="Model\SpectrumPropertiesResx.Designer.cs">
       <AutoGen>True</AutoGen>
