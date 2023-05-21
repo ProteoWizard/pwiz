@@ -32,6 +32,7 @@ using pwiz.Skyline.Util;
 using pwiz.Skyline.Util.Extensions;
 using pwiz.SkylineTestUtil;
 using System.Collections.Generic;
+using System.Globalization;
 using pwiz.Skyline.Model;
 using pwiz.Skyline.SettingsUI;
 
@@ -351,11 +352,11 @@ namespace pwiz.SkylineTestFunctional
             var expectedPropertiesDict = new Dictionary<string, object> {
                 {"FileName","ID12692_01_UCA168_3727_040714.mzML"},
                 {"ReplicateName","ID12692_01_UCA168_3727_040714"},
-                {"RetentionTime","33.05"},
-                {"IonMobility","3.477 msec"},
+                {"RetentionTime",33.05.ToString(CultureInfo.CurrentCulture)},
+                {"IonMobility",3.477.ToString(CultureInfo.CurrentCulture) + " msec"},
                 {"IsolationWindow","50:2000 (-975:+975)"},
-                {"IonMobilityRange","0.069:13.8"},
-                {"IonMobilityFilterRange","3.152:3.651"},
+                {"IonMobilityRange",0.069.ToString(CultureInfo.CurrentCulture) + ":" + 13.8.ToString(CultureInfo.CurrentCulture)},
+                {"IonMobilityFilterRange",3.152.ToString(CultureInfo.CurrentCulture) + ":"+ 3.651.ToString(CultureInfo.CurrentCulture)},
                 {"ScanId","1.0.309201 - 1.0.309400"},
                 {"MSLevel","1"},
                 {"Instrument",new Dictionary<string, object> {
@@ -363,8 +364,8 @@ namespace pwiz.SkylineTestFunctional
                         {"InstrumentManufacturer","Waters"}
                     }
                 },
-                {"DataPoints","105,373"},
-                {"MzCount","45,751"},
+                {"DataPoints",105373.ToString(@"N0", CultureInfo.CurrentCulture)},
+                {"MzCount",45751.ToString(@"N0", CultureInfo.CurrentCulture)},
                 {"IsCentroided","False"}
             };
             var expectedProperties = new FullScanProperties();
