@@ -12096,4 +12096,30 @@ If you choose Disable, you can enable Auto-select later with the "Refine &gt; Ad
     <value>Nothing could be found matching any of the {0} criteria</value>
     <comment>{0} is an integer greater than 1</comment>
   </data>
+  <data name="EditMenu_GetEditSpectrumFilterDescription_Editing_spectrum_filter_on__0_" xml:space="preserve">
+    <value>Editing spectrum filter on {0}</value>
+  </data>
+  <data name="EditMenu_GetEditSpectrumFilterDescription_Adding_spectrum_filter_to__0_" xml:space="preserve">
+    <value>Adding spectrum filter to {0}</value>
+  </data>
+  <data name="EditMenu_GetEditSpectrumFilterDescription_Editing_spectrum_filter_on__0__precursors" xml:space="preserve">
+    <value>Editing spectrum filter on {0} precursors</value>
+  </data>
+  <data name="EditMenu_GetEditSpectrumFilterDescription_Adding_spectrum_filter_to__0__precursors" xml:space="preserve">
+    <value>Adding spectrum filter to {0} precursors</value>
+  </data>
+  <data name="EditSpectrumFilterDlg_MakePageButton_Case__0_" xml:space="preserve">
+    <value>Case {0}</value>
+    <comment>"Case" means "possibility" or "branch"</comment>
+  </data>
+  <data name="SpectrumClassFilter_Ms1FilterPage_MS1" xml:space="preserve">
+    <value>MS1</value>
+  </data>
+  <data name="SpectrumClassFilter_Ms2FilterPage_MS2_" xml:space="preserve">
+    <value>MS2+</value>
+  </data>
+  <data name="SpectrumClassFilter_GetAbbreviatedText_OR" xml:space="preserve">
+    <value>OR</value>
+    <comment>"OR" is the logical operator</comment>
+  </data>
 </root>

@@ -21,11 +21,11 @@ using System.Collections.Generic;
 using System.ComponentModel;
 using System.Linq;
 using System.Windows.Forms;
-using pwiz.Common.Collections;
 using pwiz.Common.Controls;
 using pwiz.Common.DataBinding;
 using pwiz.Common.DataBinding.Filtering;
 using pwiz.Skyline.Alerts;
+using pwiz.Skyline.Properties;
 
 namespace pwiz.Skyline.EditUI
 {
@@ -70,8 +70,6 @@ namespace pwiz.Skyline.EditUI
         }
         public FilterPages FilterPages { get; private set; }
         public int CurrentPageIndex { get; private set; }
-
-        public IEnumerable<ImmutableList<FilterSpec>> Filters { get; private set; }
         public IFilterAutoComplete AutoComplete { get; set; }
 
         public string Description
@@ -225,9 +223,9 @@ namespace pwiz.Skyline.EditUI
 
         private RadioButton MakePageButton(int index, string caption)
         {
-            var radioButton = new RadioButton()
+            var radioButton = new RadioButton
             {
-                Text = caption ?? string.Format("Case {0}", index + 1),
+                Text = caption ?? string.Format(Resources.EditSpectrumFilterDlg_MakePageButton_Case__0_, index + 1),
                 AutoCheck = false
                 
             };

@@ -11535,6 +11535,44 @@ namespace pwiz.Skyline.Properties {
         }
         
         /// <summary>
+        ///   Looks up a localized string similar to Adding spectrum filter to {0}.
+        /// </summary>
+        public static string EditMenu_GetEditSpectrumFilterDescription_Adding_spectrum_filter_to__0_ {
+            get {
+                return ResourceManager.GetString("EditMenu_GetEditSpectrumFilterDescription_Adding_spectrum_filter_to__0_", resourceCulture);
+            }
+        }
+        
+        /// <summary>
+        ///   Looks up a localized string similar to Adding spectrum filter to {0} precursors.
+        /// </summary>
+        public static string EditMenu_GetEditSpectrumFilterDescription_Adding_spectrum_filter_to__0__precursors {
+            get {
+                return ResourceManager.GetString("EditMenu_GetEditSpectrumFilterDescription_Adding_spectrum_filter_to__0__precursor" +
+                        "s", resourceCulture);
+            }
+        }
+        
+        /// <summary>
+        ///   Looks up a localized string similar to Editing spectrum filter on {0}.
+        /// </summary>
+        public static string EditMenu_GetEditSpectrumFilterDescription_Editing_spectrum_filter_on__0_ {
+            get {
+                return ResourceManager.GetString("EditMenu_GetEditSpectrumFilterDescription_Editing_spectrum_filter_on__0_", resourceCulture);
+            }
+        }
+        
+        /// <summary>
+        ///   Looks up a localized string similar to Editing spectrum filter on {0} precursors.
+        /// </summary>
+        public static string EditMenu_GetEditSpectrumFilterDescription_Editing_spectrum_filter_on__0__precursors {
+            get {
+                return ResourceManager.GetString("EditMenu_GetEditSpectrumFilterDescription_Editing_spectrum_filter_on__0__precurso" +
+                        "rs", resourceCulture);
+            }
+        }
+        
+        /// <summary>
         ///   Looks up a localized string similar to Change synchronized integration to {0}.
         /// </summary>
         public static string EditMenu_SetSynchronizedIntegration_Change_synchronized_integration_to__0_ {
@@ -12364,6 +12402,15 @@ namespace pwiz.Skyline.Properties {
         public static string EditServerDlg_VerifyServerInformation_The_server__0__does_not_exist {
             get {
                 return ResourceManager.GetString("EditServerDlg_VerifyServerInformation_The_server__0__does_not_exist", resourceCulture);
+            }
+        }
+        
+        /// <summary>
+        ///   Looks up a localized string similar to Case {0}.
+        /// </summary>
+        public static string EditSpectrumFilterDlg_MakePageButton_Case__0_ {
+            get {
+                return ResourceManager.GetString("EditSpectrumFilterDlg_MakePageButton_Case__0_", resourceCulture);
             }
         }
         
@@ -31881,11 +31928,38 @@ namespace pwiz.Skyline.Properties {
         }
         
         /// <summary>
+        ///   Looks up a localized string similar to OR.
+        /// </summary>
+        public static string SpectrumClassFilter_GetAbbreviatedText_OR {
+            get {
+                return ResourceManager.GetString("SpectrumClassFilter_GetAbbreviatedText_OR", resourceCulture);
+            }
+        }
+        
+        /// <summary>
         ///   Looks up a localized string similar to No spectrum column {0}.
         /// </summary>
         public static string SpectrumClassFilter_MakePredicate_No_spectrum_column__0_ {
             get {
                 return ResourceManager.GetString("SpectrumClassFilter_MakePredicate_No_spectrum_column__0_", resourceCulture);
+            }
+        }
+        
+        /// <summary>
+        ///   Looks up a localized string similar to MS1.
+        /// </summary>
+        public static string SpectrumClassFilter_Ms1FilterPage_MS1 {
+            get {
+                return ResourceManager.GetString("SpectrumClassFilter_Ms1FilterPage_MS1", resourceCulture);
+            }
+        }
+        
+        /// <summary>
+        ///   Looks up a localized string similar to MS2+.
+        /// </summary>
+        public static string SpectrumClassFilter_Ms2FilterPage_MS2_ {
+            get {
+                return ResourceManager.GetString("SpectrumClassFilter_Ms2FilterPage_MS2_", resourceCulture);
             }
         }
         

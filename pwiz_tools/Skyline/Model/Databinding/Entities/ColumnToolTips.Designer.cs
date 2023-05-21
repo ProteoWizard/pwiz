@@ -3539,6 +3539,15 @@ namespace pwiz.Skyline.Model.Databinding.Entities {
         }
         
         /// <summary>
+        ///   Looks up a localized string similar to Extra criteria that spectra must pass to be included in the extracted ion chromatogram.
+        /// </summary>
+        public static string SpectrumFilter {
+            get {
+                return ResourceManager.GetString("SpectrumFilter", resourceCulture);
+            }
+        }
+        
+        /// <summary>
         ///   Looks up a localized string similar to Identifiers of the spectra that contributed to the chromatogram..
         /// </summary>
         public static string SpectrumIds {

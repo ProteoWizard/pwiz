@@ -1239,6 +1239,9 @@
   <data name="SMILES">
     <value>SMILES</value>
   </data>
+  <data name="SpectrumFilter">
+    <value>Spectrum Filter</value>
+  </data>
   <data name="SpectrumIds">
     <value>Spectrum Ids</value>
   </data>
