@@ -40,7 +40,6 @@ using pwiz.Skyline.Model.Themes;
 using pwiz.Skyline.Properties;
 using pwiz.Skyline.Util;
 using ZedGraph;
-using PeptideDocNode = pwiz.Skyline.Model.PeptideDocNode;
 
 namespace pwiz.Skyline.Controls.Graphs
 {

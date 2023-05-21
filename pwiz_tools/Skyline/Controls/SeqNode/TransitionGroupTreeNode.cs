@@ -642,8 +642,34 @@ namespace pwiz.Skyline.Controls.SeqNode
                 return;
             }
             var dataSchema = new DataSchema(SkylineDataSchema.GetLocalizedSchemaLocalizer());
-            foreach (var clause in spectrumClassFilter.Clauses)
+            var filterPages = spectrumClassFilter.GetFilterPages();
+            for (int iPage = 0; iPage < filterPages.Pages.Count; iPage++)
             {
+                var filterPage = filterPages.Pages[iPage];
+                var clause = filterPages.Clauses[iPage];
+                if (clause.IsEmpty)
+                {
+                    continue;
+                }
+                List<string> pageHeaderParts = new List<string>();
+                if (string.IsNullOrEmpty(filterPage.Caption))
+                {
+                    if (iPage != 0)
+                    {
+                        pageHeaderParts.Add(Resources.SpectrumClassFilter_GetAbbreviatedText_OR);
+                    }
+                }
+                pageHeaderParts.Add(Resources.TransitionGroupTreeNode_RenderSpectrumClassFilterTip_Spectrum_Filter);
+                if (!string.IsNullOrEmpty(filterPage.Caption))
+                {
+                    pageHeaderParts.Add(filterPage.Caption);
+                }
+
+                if (pageHeaderParts.Any())
+                {
+                    table.Add(new RowDesc
+                        { CreateHead(TextUtil.AppendColon(TextUtil.SpaceSeparate(pageHeaderParts)), rt) });
+                }
                 foreach (var filterSpec in clause.FilterSpecs)
                 {
                     string column = ColumnCaptions.ResourceManager.GetString(filterSpec.ColumnId.Name) ??

@@ -702,7 +702,7 @@ namespace pwiz.Skyline.Controls.Graphs
                 return false;
             }
 
-            if (null != SpectrumClassFilter && !Equals(SpectrumClassFilter, transitionGroupDocNode.SpectrumClassFilter))
+            if (SpectrumClassFilter.HasValue && !Equals(SpectrumClassFilter, transitionGroupDocNode.SpectrumClassFilter))
             {
                 return false;
             }

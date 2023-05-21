@@ -314,7 +314,7 @@ namespace pwiz.Skyline.Model.Results.Spectra
             return FilterPages.Blank(GenericFilterPage);
         }
 
-        private FilterPages GetFilterPages()
+        public FilterPages GetFilterPages()
         {
             return FilterPages.FromClauses(_allPages, Clauses);
         }

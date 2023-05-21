@@ -23,7 +23,6 @@ using System.Linq;
 using pwiz.Common.SystemUtil;
 using pwiz.Skyline.Model.DocSettings;
 using pwiz.Skyline.Model.Lib;
-using pwiz.Skyline.Model.Results.Spectra;
 using pwiz.Skyline.Properties;
 using pwiz.Skyline.Util;
 using pwiz.Skyline.Util.Extensions;
@@ -132,8 +131,7 @@ namespace pwiz.Skyline.Model
             int result = CompareGroups(node1.TransitionGroup, node2.TransitionGroup);
             if (result == 0)
             {
-                result = Comparer<SpectrumClassFilter>.Default.Compare(node1.SpectrumClassFilter,
-                    node2.SpectrumClassFilter);
+                result = node1.SpectrumClassFilter.CompareTo(node2.SpectrumClassFilter);
             }
 
             return result;

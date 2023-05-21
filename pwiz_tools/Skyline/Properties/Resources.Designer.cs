@@ -34594,6 +34594,15 @@ namespace pwiz.Skyline.Properties {
         }
         
         /// <summary>
+        ///   Looks up a localized string similar to Spectrum Filter.
+        /// </summary>
+        public static string TransitionGroupTreeNode_RenderSpectrumClassFilterTip_Spectrum_Filter {
+            get {
+                return ResourceManager.GetString("TransitionGroupTreeNode_RenderSpectrumClassFilterTip_Spectrum_Filter", resourceCulture);
+            }
+        }
+        
+        /// <summary>
         ///   Looks up a localized string similar to Decoy Mass Shift.
         /// </summary>
         public static string TransitionGroupTreeNode_RenderTip_Decoy_Mass_Shift {

@@ -617,7 +617,6 @@ namespace pwiz.Skyline.Model.Results
         }
 
         public FullScanAcquisitionMethod AcquisitionMethod { get; }
-
         /// <summary>
         /// True if this set of peaks was created to satisfy forced integration
         /// rules.

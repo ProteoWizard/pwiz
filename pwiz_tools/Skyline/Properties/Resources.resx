@@ -12122,4 +12122,7 @@ If you choose Disable, you can enable Auto-select later with the "Refine &gt; Ad
     <value>OR</value>
     <comment>"OR" is the logical operator</comment>
   </data>
+  <data name="TransitionGroupTreeNode_RenderSpectrumClassFilterTip_Spectrum_Filter" xml:space="preserve">
+    <value>Spectrum Filter</value>
+  </data>
 </root>
