@@ -24,6 +24,9 @@ using pwiz.Common.SystemUtil;
 
 namespace pwiz.Common.DataBinding.Filtering
 {
+    /// <summary>
+    /// A list of FilterClauses that have been split up into separate pages for editing.
+    /// </summary>
     public class FilterPages : Immutable, IEquatable<FilterPages>
     {
         public FilterPages(IEnumerable<FilterPage> pages, IEnumerable<FilterClause> clauses)
@@ -36,6 +39,9 @@ namespace pwiz.Common.DataBinding.Filtering
             }
         }
 
+        /// <summary>
+        /// Returns a FilterPages consisting of the pages which match the passed in clauses.
+        /// </summary>
         public static FilterPages FromClauses(IList<FilterPage> availablePages, IEnumerable<FilterClause> clauses)
         {
             var pages = new List<FilterPage>();
@@ -44,7 +50,7 @@ namespace pwiz.Common.DataBinding.Filtering
             {
                 foreach (var page in availablePages)
                 {
-                    var remainder = page.MatchDiscriminant(clause.FilterSpecs);
+                    var remainder = page.MatchDiscriminant(clause);
                     if (remainder != null)
                     {
                         pages.Add(page);
@@ -57,6 +63,9 @@ namespace pwiz.Common.DataBinding.Filtering
             return new FilterPages(pages, remainders);
         }
 
+        /// <summary>
+        /// Returns a FilterPages representing a blank filter with the given pages.
+        /// </summary>
         public static FilterPages Blank(params FilterPage[] pages)
         {
             return new FilterPages(pages, Enumerable.Repeat(FilterClause.EMPTY, pages.Length));

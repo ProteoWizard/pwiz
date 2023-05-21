@@ -520,6 +520,7 @@
     <None Include="DuplicateTransitionGroupTest.zip" />
     <None Include="EADZIonsTest.zip" />
     <None Include="EditNoteTest.zip" />
+    <None Include="EditSpectrumFilterTest.zip" />
     <None Include="EncyclopeDiaLibraryMatchTest.zip" />
     <None Include="EncyclopeDiaPeptidesWithNoSignalTest.zip" />
     <None Include="EncyclopeDiaScoreTest.zip" />

@@ -70,6 +70,9 @@ namespace pwiz.Skyline.EditUI
         }
         public FilterPages FilterPages { get; private set; }
         public int CurrentPageIndex { get; private set; }
+
+        public FilterPage CurrentPage { get { return FilterPages.Pages[CurrentPageIndex]; } }
+
         public IFilterAutoComplete AutoComplete { get; set; }
 
         public string Description

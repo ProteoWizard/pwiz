@@ -417,6 +417,8 @@ namespace pwiz.Skyline.Model.Databinding.Entities
             }
         }
 
+        public string SpectrumFilter { get { return DocNode.SpectrumClassFilter.ToString(); } }
+
         [InvariantDisplayName("PrecursorNote")]
         [Importable]
         public string Note
@@ -587,14 +589,6 @@ namespace pwiz.Skyline.Model.Databinding.Entities
             protected override IDictionary<ResultKey, PrecursorResult> CalculateValue1(Precursor owner)
             {
                 return owner.MakeChromInfoResultsMap(owner.DocNode.Results, file => new PrecursorResult(owner, file));
-            }
-        }
-
-        public string SpectrumFilter
-        {
-            get
-            {
-                return DocNode.SpectrumClassFilter.ToString();
             }
         }
     }

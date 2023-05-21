@@ -23,6 +23,12 @@ using pwiz.Common.Collections;
 
 namespace pwiz.Common.DataBinding.Filtering
 {
+    /// <summary>
+    /// Represents a particular page to be displayed in the filter editor.
+    /// The filter page has an implied filter (the <see cref="Discriminant"/>)
+    /// which gets AND'd with the <see cref="FilterSpec"/> lines the user
+    /// adds in the filter editor.
+    /// </summary>
     public class FilterPage
     {
         private readonly Func<string> _getCaptionFunc;
@@ -39,7 +45,10 @@ namespace pwiz.Common.DataBinding.Filtering
         {
         }
 
-
+        /// <summary>
+        /// Constructs a FilterPage for a clause which does not match any pre-defined filter pages.
+        /// </summary>
+        /// <param name="availableColumns"></param>
         public FilterPage(IEnumerable<PropertyPath> availableColumns) 
             : this(null, FilterClause.EMPTY, availableColumns)
         {
@@ -49,14 +58,22 @@ namespace pwiz.Common.DataBinding.Filtering
         {
             get { return _getCaptionFunc?.Invoke(); }
         }
+        /// <summary>
+        /// The filter which is AND'd with the user's filter.
+        /// </summary>
         public virtual FilterClause Discriminant { get; }
         public virtual IEnumerable<PropertyPath> AvailableColumns { get; }
 
-        public FilterClause MatchDiscriminant(IEnumerable<FilterSpec> filterSpecs)
+        /// <summary>
+        /// If the filter clause does not include all of the filter specs in the discriminant,
+        /// returns null.
+        /// Otherwise, returns the filter clause with the discriminant removed.
+        /// </summary>
+        public FilterClause MatchDiscriminant(FilterClause filterClause)
         {
             var discriminant = Discriminant.FilterSpecs.ToHashSet();
             var remainder = new List<FilterSpec>();
-            foreach (var filterSpec in filterSpecs)
+            foreach (var filterSpec in filterClause.FilterSpecs)
             {
                 if (!discriminant.Remove(filterSpec))
                 {

@@ -232,14 +232,18 @@
             // 
             // EditSpectrumFilterDlg
             // 
+            this.AcceptButton = this.btnOk;
             this.AutoScaleDimensions = new System.Drawing.SizeF(6F, 13F);
             this.AutoScaleMode = System.Windows.Forms.AutoScaleMode.Font;
+            this.CancelButton = this.btnCancel;
             this.ClientSize = new System.Drawing.Size(800, 235);
             this.Controls.Add(this.cbCreateCopy);
             this.Controls.Add(this.btnReset);
             this.Controls.Add(this.btnCancel);
             this.Controls.Add(this.btnOk);
             this.Controls.Add(this.panelEditor);
+            this.MaximizeBox = false;
+            this.MinimizeBox = false;
             this.Name = "EditSpectrumFilterDlg";
             this.ShowIcon = false;
             this.ShowInTaskbar = false;

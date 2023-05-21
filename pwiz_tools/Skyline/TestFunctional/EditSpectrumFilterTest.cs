@@ -53,7 +53,7 @@ namespace pwiz.SkylineTestFunctional
             RunDlg<EditSpectrumFilterDlg>(SkylineWindow.EditMenu.EditSpectrumFilter, dlg =>
             {
                 dlg.CreateCopy = true;
-                Assert.IsTrue(dlg.SelectPage(1));
+                Assert.AreEqual(SpectrumClassFilter.Ms2FilterPage, dlg.CurrentPage);
                 var row = dlg.RowBindingList.AddNew();
                 Assert.IsNotNull(row);
                 row.Property = SpectrumClassColumn.PresetScanConfiguration.GetLocalizedColumnName(CultureInfo.CurrentCulture);
