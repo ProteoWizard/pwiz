@@ -23,6 +23,7 @@ using System.Diagnostics;
 using System.IO;
 using System.Text;
 using System.Threading;
+using pwiz.Common.Properties;
 
 namespace pwiz.Common.SystemUtil
 {
@@ -43,6 +44,7 @@ namespace pwiz.Common.SystemUtil
         public Encoding OutputEncoding { get; set; }
 
         public string MessagePrefix { get; set; }
+        public bool ShowCommandAndArgs { get; set; }
         private readonly List<string> _messageLog = new List<string>();
         private string _tmpDirForCleanup;
 
@@ -71,23 +73,24 @@ namespace pwiz.Common.SystemUtil
                 psi.StandardOutputEncoding = psi.StandardErrorEncoding = OutputEncoding;
 
             _messageLog.Clear();
+            var cmd = $"{psi.FileName} {psi.Arguments}";
 
             // Optionally create a subdir in the current TMP directory, run the new process with TMP set to that so we can clean it out afterward
             _tmpDirForCleanup = forceTempfilesCleanup ? SetTmpDirForCleanup(psi) : null;
 
             Process proc = null;
-            var msgFailureStartingCommand = @"Failure starting command ""{0} {1}"".";
+            var msgFailureStartingCommand = @"Failure starting command ""{cmd}"".";
             try
             {
                 proc = Process.Start(psi);
                 if (proc == null)
                 {
-                    throw new IOException(string.Format(msgFailureStartingCommand, psi.FileName, psi.Arguments));
+                    throw new IOException(msgFailureStartingCommand);
                 }
             }
             catch (Exception x)
             {
-                throw new IOException(string.Format(msgFailureStartingCommand, psi.FileName, psi.Arguments), x);
+                throw new IOException(msgFailureStartingCommand, x);
             }
 
             try
@@ -107,6 +110,19 @@ namespace pwiz.Common.SystemUtil
                 finally
                 {
                     proc.StandardInput.Close();
+                }
+            }
+
+            if (ShowCommandAndArgs)
+            {
+                foreach (var msg in new[]{string.Empty, Resources.ProcessRunner_Run_Run_command_, cmd, string.Empty, string.Empty})
+                {
+                    if (!string.IsNullOrEmpty(msg))
+                    {
+                        _messageLog.Add(msg);
+                    }
+                    status = status.ChangeMessage(msg); // Each message will be displayed in a separate line
+                    progress.UpdateProgress(status);
                 }
             }
 

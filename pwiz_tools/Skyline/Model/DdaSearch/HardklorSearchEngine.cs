@@ -124,6 +124,7 @@ namespace pwiz.Skyline.Model.DdaSearch
                         StandardOutputEncoding = Encoding.UTF8,
                         StandardErrorEncoding = Encoding.UTF8
                     };
+                    pr.ShowCommandAndArgs = true; // Show the commandline
                     pr.Run(psi, string.Empty, this, ref _progressStatus, ProcessPriorityClass.BelowNormal);
                     return _paramsFilename;
                 };

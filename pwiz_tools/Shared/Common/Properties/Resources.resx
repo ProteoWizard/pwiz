@@ -554,4 +554,7 @@
   <data name="StreamEx_ReadOrThrow_Failed_reading__0__bytes__Source_may_be_corrupted_" xml:space="preserve">
       <value>Failed reading {0} bytes. Source may be corrupted.</value>
   </data>
+  <data name="ProcessRunner_Run_Run_command_" xml:space="preserve">
+      <value>Run command:</value>
+  </data>
 </root>
