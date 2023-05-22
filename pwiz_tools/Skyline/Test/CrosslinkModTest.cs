@@ -513,5 +513,60 @@ namespace pwiz.SkylineTest
                 explicitModsPlus100, null, null, null, Array.Empty<TransitionDocNode>(), false);
             Assert.AreEqual(transitionGroupDocNode.PrecursorMz + 100 / 3.0, transitionGroupDocNodePlus100.PrecursorMz, .00001);
         }
+
+        [TestMethod]
+        public void TestCrosslinkWithHeavyLabeledAtoms()
+        {
+            var mainPeptide = new Peptide("ADVNVLTK");
+            var linkedPeptide = new Peptide("ADKADVNVLTKAKSQ");
+            var crosslinker =
+                new StaticMod("DSBU (XL)", "K, S, T, Y", null, "C9O3N2H12").ChangeCrosslinkerSettings(
+                    CrosslinkerSettings.EMPTY);
+            var heavyMod = UniMod.GetModification("Label:13C(6)15N(2) (C-term K)", false);
+            var settings = SrmSettingsList.GetDefault();
+            var peptideModifications = settings.PeptideSettings.Modifications;
+            peptideModifications =
+                peptideModifications.ChangeStaticModifications(peptideModifications.StaticModifications
+                    .Append(crosslinker).ToList());
+            peptideModifications = peptideModifications.ChangeModifications(IsotopeLabelType.heavy, new[] { heavyMod });
+            settings = settings.ChangePeptideSettings(settings.PeptideSettings.ChangeModifications(peptideModifications));
+            settings = settings.ChangeTransitionSettings(settings.TransitionSettings.ChangeFullScan(
+                    settings.TransitionSettings.FullScan.ChangePrecursorIsotopes(FullScanPrecursorIsotopes.Count, 3,
+                        IsotopeEnrichmentsList.GetDefault()))
+                .ChangeFilter(settings.TransitionSettings.Filter.ChangePeptideIonTypes(new[] { IonType.precursor })));
+            var explicitMods =
+                new ExplicitMods(mainPeptide, ImmutableList.Empty<ExplicitMod>(),
+                    new[]
+                    {
+                        new TypedExplicitModifications(mainPeptide, IsotopeLabelType.heavy,
+                            new[] { new ExplicitMod(7, heavyMod) })
+                    }).ChangeCrosslinkStructure(new CrosslinkStructure(new[] { linkedPeptide }, new[]
+                {
+                    new Crosslink(crosslinker, new[] { new CrosslinkSite(0, 0), new CrosslinkSite(1, 2) })
+                }));
+            var transitionGroup = new TransitionGroup(mainPeptide, Adduct.DOUBLY_PROTONATED, IsotopeLabelType.heavy);
+            var transitionGroupDocNode = new TransitionGroupDocNode(transitionGroup, Annotations.EMPTY, settings,
+                explicitMods, null, null, null, Array.Empty<TransitionDocNode>(), false);
+            var allTransitions = transitionGroupDocNode.GetPrecursorChoices(settings, explicitMods, true).Cast<TransitionDocNode>().ToList();
+            var precursorTransitions = allTransitions.Where(transition => transition.IsMs1).ToList();
+            Assert.AreEqual(3, precursorTransitions.Count);
+            var monoPrecursorTransition = precursorTransitions[0];
+            Assert.AreEqual(0, monoPrecursorTransition.Transition.MassIndex);
+            var explicitModsWith4DaMod = explicitMods.ChangeHeavyModifications(new[]
+            {
+                new ExplicitMod(7, new StaticMod("MassOnly", "K", null, null, LabelAtoms.None, 4, 4.5))
+            });
+            var transitionGroupDocNodeWith4DaMod = new TransitionGroupDocNode(transitionGroup, Annotations.EMPTY,
+                settings, explicitModsWith4DaMod,
+                null, null, null, Array.Empty<TransitionDocNode>(), false);
+            var allTransitionsWith4DaMod =
+                transitionGroupDocNodeWith4DaMod.GetPrecursorChoices(settings, explicitModsWith4DaMod, true)
+                    .Cast<TransitionDocNode>().ToList();
+            var precursorTransitionsWith4DaMod = allTransitionsWith4DaMod.Where(transition => transition.IsMs1).ToList();
+            Assert.AreEqual(3, precursorTransitionsWith4DaMod.Count);
+            var monoTransitionWith4DaMod = precursorTransitionsWith4DaMod[0];
+            Assert.AreEqual(0, monoTransitionWith4DaMod.Transition.MassIndex);
+            Assert.AreEqual(monoPrecursorTransition.Mz + (4 - heavyMod.MonoisotopicMass) / 2, monoTransitionWith4DaMod.Mz);
+        }
     }
 }
