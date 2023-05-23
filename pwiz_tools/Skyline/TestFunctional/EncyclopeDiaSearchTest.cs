@@ -29,6 +29,8 @@ using pwiz.Skyline.Model.Prosit.Config;
 using pwiz.Skyline.Model.Prosit.Models;
 using pwiz.Skyline.Properties;
 using pwiz.SkylineTestUtil;
+using pwiz.Skyline.Util;
+using System;
 
 namespace pwiz.SkylineTestFunctional
 {
@@ -46,6 +48,9 @@ namespace pwiz.SkylineTestFunctional
         {
             return !string.IsNullOrEmpty(PrositConfig.GetPrositConfig().RootCertificate);
         }
+
+        private bool IsRecordMode => false;
+        private int[] FinalTargetCounts = { 15, 15, 15, 60 };
 
         protected override void DoTest()
         {
@@ -76,9 +81,8 @@ namespace pwiz.SkylineTestFunctional
                 searchDlg.MinMz = 690;
                 searchDlg.MaxMz = 705;
                 searchDlg.ImportFastaControl.MaxMissedCleavages = 2;
-
-                searchDlg.SetAdditionalSetting("PercolatorTrainingFDR", "0.2");
-                searchDlg.SetAdditionalSetting("PercolatorThreshold", "0.2");
+                searchDlg.SetAdditionalSetting("PercolatorTrainingFDR", "0.15");
+                searchDlg.SetAdditionalSetting("PercolatorThreshold", "0.15");
                 searchDlg.SetAdditionalSetting("MinNumOfQuantitativePeaks", "0");
                 searchDlg.SetAdditionalSetting("NumberOfQuantitativePeaks", "0");
             });
@@ -127,7 +131,6 @@ namespace pwiz.SkylineTestFunctional
             // now on Import Peptide Search wizard
             var importPeptideSearchDlg = ShowDialog<ImportPeptideSearchDlg>(searchDlg.NextPage);
             WaitForDocumentLoaded();
-            //PauseTest();
 
             // starts on chromatogram page because we're using existing library
             RunUI(() =>
@@ -163,10 +166,7 @@ namespace pwiz.SkylineTestFunctional
             {
                 int proteinCount, peptideCount, precursorCount, transitionCount;
                 emptyProteinsDlg.NewTargetsFinalSync(out proteinCount, out peptideCount, out precursorCount, out transitionCount);
-                Assert.AreEqual(4, proteinCount);
-                Assert.AreEqual(4, peptideCount);
-                Assert.AreEqual(4, precursorCount);
-                Assert.AreEqual(36, transitionCount);
+                ValidateTargets(ref FinalTargetCounts, proteinCount, peptideCount, precursorCount, transitionCount, @"FinalTargetCounts");
             });
 
             using (new WaitDocumentChange(null, true))
@@ -177,10 +177,35 @@ namespace pwiz.SkylineTestFunctional
             RunUI(() => SkylineWindow.SaveDocument());
         }
 
+        private void ValidateTargets(ref int[] targetCounts, int proteinCount, int peptideCount, int precursorCount, int transitionCount, string propName)
+        {
+            if (IsRecordMode)
+            {
+                targetCounts[0] = proteinCount;
+                targetCounts[1] = peptideCount;
+                targetCounts[2] = precursorCount;
+                targetCounts[3] = transitionCount;
+                Console.WriteLine(@"{0} = new[] {{ {1}, {2}, {3}, {4} }},", propName, proteinCount, peptideCount, precursorCount, transitionCount);
+                return;
+            }
+
+            var targetCountsActual = new[] { proteinCount, peptideCount, precursorCount, transitionCount };
+            if (!ArrayUtil.EqualsDeep(targetCounts, targetCountsActual))
+            {
+                Assert.Fail("Expected target counts <{0}> do not match actual <{1}>.",
+                    string.Join(", ", targetCounts),
+                    string.Join(", ", targetCountsActual));
+            }
+        }
+
         private void PrepareDocument(string documentFile)
         {
             RunUI(SkylineWindow.NewDocument);
             RunUI(() => SkylineWindow.ModifyDocument("Set default settings", doc => doc.ChangeSettings(SrmSettingsList.GetDefault())));
+            RunUI(() => SkylineWindow.ModifyDocument("Set min ions",
+                doc => doc.ChangeSettings(doc.Settings.ChangeTransitionSettings(
+                    doc.Settings.TransitionSettings.ChangeLibraries(doc.Settings.TransitionSettings.Libraries
+                        .ChangeMinIonCount(1))))));
             RunUI(() => SkylineWindow.SaveDocument(TestFilesDir.GetTestPath(documentFile)));
         }
     }
