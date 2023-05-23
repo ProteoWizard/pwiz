@@ -552,9 +552,11 @@ namespace pwiz.SkylineTest
             Assert.AreEqual(3, precursorTransitions.Count);
             var monoPrecursorTransition = precursorTransitions[0];
             Assert.AreEqual(0, monoPrecursorTransition.Transition.MassIndex);
+
+            // Make a different transition with a mass-only modification which is exactly 3 Daltons
             var explicitModsWith4DaMod = explicitMods.ChangeHeavyModifications(new[]
             {
-                new ExplicitMod(7, new StaticMod("MassOnly", "K", null, null, LabelAtoms.None, 4, 4.5))
+                new ExplicitMod(7, new StaticMod("MassOnly", "K", null, null, LabelAtoms.None, 3, 3.5))
             });
             var transitionGroupDocNodeWith4DaMod = new TransitionGroupDocNode(transitionGroup, Annotations.EMPTY,
                 settings, explicitModsWith4DaMod,
@@ -566,7 +568,10 @@ namespace pwiz.SkylineTest
             Assert.AreEqual(3, precursorTransitionsWith4DaMod.Count);
             var monoTransitionWith4DaMod = precursorTransitionsWith4DaMod[0];
             Assert.AreEqual(0, monoTransitionWith4DaMod.Transition.MassIndex);
-            Assert.AreEqual(monoPrecursorTransition.Mz + (4 - heavyMod.MonoisotopicMass) / 2, monoTransitionWith4DaMod.Mz);
+
+            Assert.AreEqual(2, monoPrecursorTransition.Transition.Charge);
+            // The 3 Dalton modification is 5 Daltons less than the heavy modification, so the charge 2 m/z should be 2.5 less
+            Assert.AreEqual(monoPrecursorTransition.Mz - 2.5, monoTransitionWith4DaMod.Mz, .01);
         }
     }
 }
