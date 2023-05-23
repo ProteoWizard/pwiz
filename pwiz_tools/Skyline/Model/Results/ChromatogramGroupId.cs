@@ -124,7 +124,6 @@ namespace pwiz.Skyline.Model.Results
             
             foreach (var filterProto in proto.Filters)
             {
-                var filters = new List<SpectrumClassFilter>();
                 var filterSpecs = new List<FilterSpec>();
                 foreach (var filterPredicate in filterProto.Predicates)
                 {
@@ -357,7 +356,7 @@ namespace pwiz.Skyline.Model.Results
 
                 idsProto.Targets.Add(targetProto);
             }
-            foreach (var filter in allFilters.Skip(1))
+            foreach (var filter in allFilters)
             {
                 var filterProto = new ChromatogramGroupIdsProto.Types.SpectrumFilter();
                 foreach (var filterSpec in filter.FilterSpecs)

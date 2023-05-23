@@ -190,11 +190,11 @@ namespace pwiz.Skyline.Controls.Graphs
                             isSelected = true;
                         }
                     }
-                    else if (parentNode is PeptideDocNode)
+                    else if (parentNode is PeptideDocNode peptideDocNode)
                     {
                         // Resharper code inspection v9.0 on TC gets this one wrong
                         // ReSharper disable ExpressionIsAlwaysNull
-                        int iColorGroup = GetColorIndex(nodeGroup, countLabelTypes, ref charge, ref iCharge);
+                        int iColorGroup = GetColorIndex(peptideDocNode, nodeGroup, countLabelTypes);
                         // ReSharper restore ExpressionIsAlwaysNull
                         color = COLORS_GROUPS[iColorGroup % COLORS_GROUPS.Count];
                     }

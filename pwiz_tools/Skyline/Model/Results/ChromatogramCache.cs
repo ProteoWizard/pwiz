@@ -381,6 +381,11 @@ namespace pwiz.Skyline.Model.Results
                     }
                 }
             }
+
+            if (!spectrumClassFilter.IsEmpty)
+            {
+                yield break;
+            }
             // Look for matching chromatograms which do not have a text id.
             int i = FindEntry(precursorMz, tolerance);
             if (i < 0)

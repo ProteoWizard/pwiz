@@ -125,6 +125,14 @@ namespace pwiz.SkylineTestFunctional
                 SkylineWindow.ShowProductTransitions();
                 SkylineWindow.SetTransformChrom(TransformChrom.raw);
             });
+            
+            // Make sure that no error happens when we reopen the document
+            RunUI(()=>
+            {
+                SkylineWindow.SaveDocument();
+                SkylineWindow.OpenFile(SkylineWindow.DocumentFilePath);
+            });
+            WaitForDocumentLoaded();
         }
 
         private ChromatogramGroupInfo LoadChromatogram(SrmDocument document, PeptideDocNode peptideDocNode,

@@ -29,6 +29,7 @@ using pwiz.Skyline.Model.Results;
 using pwiz.Skyline.Model.Themes;
 using pwiz.Skyline.Properties;
 using pwiz.Skyline.Util;
+using pwiz.Skyline.Util.Extensions;
 using ZedGraph;
 
 namespace pwiz.Skyline.Controls.Graphs
@@ -269,10 +270,15 @@ namespace pwiz.Skyline.Controls.Graphs
             string prefix = string.Empty;
             if (seq != null)
                 prefix = seq + @" - ";
-            
-            return string.Format(@"{0}{1:F04}{2}{3}", prefix, nodeGroup.PrecursorMz,
-                                 Transition.GetChargeIndicator(nodeGroup.TransitionGroup.PrecursorAdduct),
-                                 nodeGroup.TransitionGroup.LabelTypeText);            
+
+            string title = string.Format(@"{0}{1:F04}{2}{3}", prefix, nodeGroup.PrecursorMz,
+                Transition.GetChargeIndicator(nodeGroup.TransitionGroup.PrecursorAdduct),
+                nodeGroup.TransitionGroup.LabelTypeText);
+            if (!nodeGroup.SpectrumClassFilter.IsEmpty)
+            {
+                title = TextUtil.SpaceSeparate(title, nodeGroup.SpectrumClassFilter.GetAbbreviatedText());
+            }
+            return title;
         }
 
         public static string GetTitle(PeptideDocNode nodePep)

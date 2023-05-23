@@ -2053,15 +2053,8 @@ namespace pwiz.Skyline.Controls.Graphs
                     // Apply any transform the user has chosen
                     infoPrimary.Transform(Transform);
 
-                    int iColor = GetColorIndex(nodeGroup, countLabelTypes, ref charge, ref iCharge);
-                    if (!nodeGroup.SpectrumClassFilter.IsEmpty)
-                    {
-                        var peptideDocNode = DocumentUI.FindNode(_groupPaths[i].Parent) as PeptideDocNode;
-                        if (peptideDocNode != null)
-                        {
-                            iColor += peptideDocNode.FindNodeIndex(nodeGroup.TransitionGroup);
-                        }
-                    }
+                    var peptideDocNode = (PeptideDocNode) DocumentUI.FindNode(_groupPaths[i].Parent);
+                    int iColor = GetColorIndex(peptideDocNode, nodeGroup, countLabelTypes);
                     Color color = COLORS_GROUPS[iColor % COLORS_GROUPS.Count];
 
                     bool[] annotateAll = new bool[infoPrimary.NumPeaks];
@@ -3539,19 +3532,15 @@ namespace pwiz.Skyline.Controls.Graphs
 
         public static IList<Color> COLORS_LIBRARY { get { return ColorScheme.CurrentColorScheme.TransitionColors; }}
 
-        public static int GetColorIndex(TransitionGroupDocNode nodeGroup, int countLabelTypes, ref Adduct charge,
-                                        ref int iCharge)
+        public static int GetColorIndex(PeptideDocNode peptideDocNode, TransitionGroupDocNode nodeGroup, int countLabelTypes)
         {
-            // Make sure colors stay somewhat consistent among charge states.
-            // The same label type should always have the same color, with the
-            // first charge state in the peptide matching the peptide label type
-            // modification font colors.
-            if (!Equals(charge, nodeGroup.TransitionGroup.PrecursorAdduct))
-            {
-                charge = nodeGroup.TransitionGroup.PrecursorAdduct;
-                iCharge++;
-            }
-            return iCharge * countLabelTypes + nodeGroup.TransitionGroup.LabelType.SortOrder;
+            var adducts = peptideDocNode.TransitionGroups.Select(tg => tg.PrecursorAdduct).Distinct()
+                .ToList();
+            var spectrumFilters = peptideDocNode.TransitionGroups.Select(tg => tg.SpectrumClassFilter).Distinct()
+                .ToList();
+            int iCharge = adducts.IndexOf(nodeGroup.TransitionGroup.PrecursorAdduct);
+            int iSpectrumFilter = spectrumFilters.IndexOf(nodeGroup.SpectrumClassFilter);
+            return iCharge * countLabelTypes * spectrumFilters.Count  + iSpectrumFilter * countLabelTypes + nodeGroup.TransitionGroup.LabelType.SortOrder;
         }
 
         #region Test support

@@ -539,9 +539,9 @@ namespace pwiz.Skyline.Controls.Graphs
                             color = ColorScheme.ChromGraphItemSelected;
                         }
                     }
-                    else if (parentNode is PeptideDocNode)
+                    else if (parentNode is PeptideDocNode peptideDocNode)
                     {
-                        int iColorGroup = GetColorIndex(nodeGroup, countLabelTypes, ref charge, ref iCharge);
+                        int iColorGroup = GetColorIndex(peptideDocNode, nodeGroup, countLabelTypes);
                         color = COLORS_GROUPS[iColorGroup % COLORS_GROUPS.Count];
                     }
                     else if (displayType == DisplayTypeChrom.total)
