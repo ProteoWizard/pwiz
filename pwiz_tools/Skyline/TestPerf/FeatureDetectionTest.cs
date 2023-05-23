@@ -78,7 +78,7 @@ namespace TestPerf
 
         public bool UseWiff => false; // ExtensionTestContext.CanImportAbWiff; // Wiff reader fails in msconvert step due to brittle embedded DLL load order when run in RunProcess
 
-        [TestMethod, NoUnicodeTesting(TestExclusionReason.HARDKLOR_UNICODE_ISSUES)]
+        [TestMethod, NoUnicodeTesting(TestExclusionReason.HARDKLOR_UNICODE_ISSUES), NoParallelTesting(TestExclusionReason.RESOURCE_INTENSIVE)]
         public void TestHardklorFeatureDetection()
         {
             TestFilesZipPaths = new[]
