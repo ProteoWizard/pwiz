@@ -38,6 +38,7 @@ using pwiz.Skyline.FileUI;
 using pwiz.Skyline.FileUI.PeptideSearch;
 using pwiz.Skyline.Model;
 using pwiz.Skyline.Model.DocSettings;
+using pwiz.Skyline.Model.Hibernate;
 using pwiz.Skyline.Model.Lib;
 using pwiz.Skyline.Model.Results;
 using pwiz.Skyline.Properties;
@@ -1119,25 +1120,25 @@ namespace pwiz.SkylineTestTutorial
                     {
                         { "FileName", "klc_20100329v_Protea_Peptide_Curve_80fmol_uL_tech1.ms2" },
                         { "LibraryName", "BSA_Protea_label_free_meth3.converted_to_small_molecules" },
-                        { "PrecursorMz", 523.7745 },
+                        { "PrecursorMz", 523.7745.ToString( CultureInfo.CurrentCulture) },
                         { "Charge", 2 },
                         { "Label", IsotopeLabelType.LIGHT_NAME },
-                        { "RetentionTime", 44.29 },
-                        { "Score", 0.0 },
+                        { "RetentionTime", 44.29.ToString( Formats.RETENTION_TIME, CultureInfo.CurrentCulture) },
+                        { "Score", 0.0.ToString( @"N1", CultureInfo.CurrentCulture) },
                         { "ScoreType", BiblioSpec.Properties.Resources.BiblioSpecScoreType_DisplayName_Percolator_q_value },
-                        { "SpectrumCount", 24 }
+                        { "SpectrumCount", 24.ToString( CultureInfo.CurrentCulture) }
                     }
                     : new Dictionary<string, object>
                     {
                         { "IdFileName", "klc_20100329v_Protea_Peptide_Curve_20fmol_uL_tech1.perc.xml" },
                         { "FileName", "klc_20100329v_Protea_Peptide_Curve_20fmol_uL_tech1.ms2" },
                         { "LibraryName", "BSA_Protea_label_free_meth3" },
-                        { "PrecursorMz", 417.7271 },
-                        { "Charge", 2 },
+                        { "PrecursorMz", 417.7271.ToString( Formats.Mz, CultureInfo.CurrentCulture) },
+                        { "Charge", "2" },
                         { "Label", IsotopeLabelType.LIGHT_NAME },
-                        { "RetentionTime", 17 },
+                        { "RetentionTime", 17.ToString( Formats.RETENTION_TIME, CultureInfo.CurrentCulture) },
                         { "SpecIdInFile", 488 },
-                        { "Score", 0.0 },
+                        { "Score", 0.0.ToString( @"N1", CultureInfo.CurrentCulture) },
                         { "ScoreType", BiblioSpec.Properties.Resources.BiblioSpecScoreType_DisplayName_Percolator_q_value },
                         { "SpectrumCount", 4 }
                     }
@@ -1171,7 +1172,7 @@ namespace pwiz.SkylineTestTutorial
 
             // To write new json string for the expected property values into the output stream uncomment the next line
             //Trace.Write(currentProperties.Serialize());
-            Assert.IsTrue(expectedProperties.Equals(currentProperties));
+            Assert.IsTrue(expectedProperties.IsSameAs(currentProperties));
 
             // Checks the number of properties displayed is the expected number
             // Checks that the property sheet updates upon switching peptides
@@ -1270,7 +1271,7 @@ namespace pwiz.SkylineTestTutorial
             Assert.IsNotNull(currentProperties);
             // To write new json string for the expected property values into the output stream uncomment the next line
             //Trace.Write(currentProperties.Serialize());
-            Assert.IsTrue(expectedProperties.Equals(currentProperties));
+            Assert.IsTrue(expectedProperties.IsSameAs(currentProperties));
             Assert.IsTrue(propertiesButton.Checked);
             // make sure properties are updated when spectrum combo selection changes
             RunUI(() =>
