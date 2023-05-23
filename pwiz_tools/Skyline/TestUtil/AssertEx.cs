@@ -49,14 +49,14 @@ namespace pwiz.SkylineTestUtil
     /// </summary>
     public static class AssertEx
     {
-        public static void AreEqualDeep<TItem>(IList<TItem> l1, IList<TItem> l2)
+        public static void AreEqualDeep<TItem>(IList<TItem> l1, IList<TItem> l2, string message = null)
         {
             AreEqual(l1.Count, l2.Count);
             for (int i = 0; i < l1.Count; i++)
             {
                 if (!Equals(l1[i], l2[i]))
                 {
-                    AreEqual(l1[i], l2[i]);  // For setting breakpoint
+                    AreEqual(l1[i], l2[i], message);  // For setting breakpoint
                 }
             }
         }
@@ -1118,34 +1118,38 @@ namespace pwiz.SkylineTestUtil
             FieldsEqual(target, actual, countFields, null, allowForNumericPrecisionDifferences);
         }
 
-        public static void FieldsEqual(string target, string actual, double tolerance, int? countFields=null)
+        public static void FieldsEqual(string target, string actual, double tolerance, int? expectedFieldCount=null)
         {
             using (StringReader readerTarget = new StringReader(target))
             using (StringReader readerActual = new StringReader(actual))
             {
-                FieldsEqual(readerTarget, readerActual, countFields, null, false, 0, tolerance);
+                FieldsEqual(readerTarget, readerActual, expectedFieldCount, null, false, 0, tolerance);
             }
         }
 
-        public static void FieldsEqual(string target, string actual, int countFields, int? exceptIndex, bool allowForTinyNumericDifferences = false)
+        public static void FieldsEqual(string target, string actual, int? expectedFieldCount, int? exceptIndex, bool allowForTinyNumericDifferences = false, string message = null)
         {
             using (StringReader readerTarget = new StringReader(target))
             using (StringReader readerActual = new StringReader(actual))
             {
-                FieldsEqual(readerTarget, readerActual, countFields, exceptIndex, allowForTinyNumericDifferences);
+                FieldsEqual(readerTarget, readerActual, expectedFieldCount, exceptIndex, allowForTinyNumericDifferences, 0, null, 0, message);
             }
         }
 
-        public static void FieldsEqual(TextReader readerTarget, TextReader readerActual, int? countFields, int? exceptIndex, bool allowForTinyNumericDifferences = false, int allowedExtraLinesInActual = 0, double? tolerance=null)
+        public static void FieldsEqual(TextReader readerTarget, TextReader readerActual, int? expectedFieldCount, int? exceptIndex, bool allowForTinyNumericDifferences = false, int allowedExtraLinesInActual = 0, double? tolerance=null, int skipLines = 0, string message = null)
         {
-
-            int count = 1;
+            message = message == null ? string.Empty : message + " ";
+            var count = 0;
             while (true)
             {
                 string lineTarget = readerTarget.ReadLine();
                 string lineActual = readerActual.ReadLine();
                 if (lineTarget == null && lineActual == null)
                     return;
+                if (count++ < skipLines)
+                {
+                    continue; // OK to ignore this line
+                }
                 if (lineTarget == null)
                 {
                     while ((lineActual != null) && (allowedExtraLinesInActual > 0))  // As in test mode where we add a special non-proteomic molecule node to every document
@@ -1154,51 +1158,63 @@ namespace pwiz.SkylineTestUtil
                         allowedExtraLinesInActual--;
                     }
                     if (lineActual != null)
-                        Fail("Target stops at line {0}.", count);
+                        Fail($"{message}Target stops at line {count}.");
                 }
                 else if (lineActual == null)
                 {
-                    Fail("Actual stops at line {0}.", count);
+                    Fail($"{message}Actual stops at line {count}.");
                 }
                 else if (lineTarget != lineActual)
                 {
                     var culture = CultureInfo.InvariantCulture;
-                        // for the moment at least, we are hardcoded for commas in CSV
-                    string[] fieldsTarget = lineTarget.Split(new[] {','});
-                    string[] fieldsActual = lineActual.Split(new[] {','});
-                    if (!countFields.HasValue)
-                    {
-                        countFields = Math.Max(fieldsTarget.Length, fieldsActual.Length);
-                    }
+                    char sep;
+                    if (lineTarget.Contains("\t"))
+                        sep = '\t';
+                    else if (lineTarget.Contains(","))
+                        sep = ',';
+                    else
+                        sep = ' ';
+                    string[] fieldsTarget = lineTarget.Split(new[] {sep});
+                    string[] fieldsActual = lineActual.Split(new[] {sep});
+                    var countFields = expectedFieldCount ?? Math.Max(fieldsTarget.Length, fieldsActual.Length);
                     if (fieldsTarget.Length < countFields || fieldsActual.Length < countFields)
-                        Fail("Diff found at line {0}:\r\n{1}\r\n>\r\n{2}", count, lineTarget, lineActual);
+                    {
+                        Fail($"{message}Diff found at line {count}:\r\n{lineTarget}\r\n>\r\n{lineActual}");
+                    }
                     for (int i = 0; i < countFields; i++)
                     {
                         if (exceptIndex.HasValue && exceptIndex.Value == i)
-                            continue;
+                            continue; // Just ignore this column
 
                         if (!Equals(fieldsTarget[i], fieldsActual[i]))
                         {
                             // test numerics with the precision presented in the output text
                             double dTarget, dActual;
-                            if ((allowForTinyNumericDifferences || tolerance.HasValue) &&
-                                Double.TryParse(fieldsTarget[i], NumberStyles.Float, culture, out dTarget) &&
+                            if (Double.TryParse(fieldsTarget[i], NumberStyles.Float, culture, out dTarget) &&
                                 Double.TryParse(fieldsActual[i], NumberStyles.Float, culture, out dActual))
                             {
-                                // how much of that was decimal places?
-                                var precTarget = fieldsTarget[i].Length - String.Format("{0}.", (int) dTarget).Length;
-                                var precActual = fieldsActual[i].Length - String.Format("{0}.", (int) dActual).Length;
-                                var prec = Math.Max(Math.Min(precTarget, precActual), 0);
-                                double toler = tolerance ?? .5*((prec == 0) ? 0 : Math.Pow(10, -prec));
-                                    // so .001 is seen as close enough to .0009
-                                if (Math.Abs(dTarget - dActual) <= toler)
-                                    continue;
+                                if (tolerance.HasValue)
+                                {
+                                    if (Math.Abs(dTarget - dActual) <= tolerance)
+                                        continue;
+                                }
+                                if (allowForTinyNumericDifferences)
+                                {
+                                    // how much of that was decimal places?
+                                    var precTarget = fieldsTarget[i].Length - String.Format("{0}.", (int)dTarget).Length;
+                                    var precActual = fieldsActual[i].Length - String.Format("{0}.", (int)dActual).Length;
+                                    var prec = Math.Max(Math.Min(precTarget, precActual), 0);
+                                    var mult = (precActual == precTarget) ? 1.0 : 0.5;
+                                    double toler = mult * ((prec == 0) ? 0 : Math.Pow(10, -prec));
+                                    // so .001 is seen as close enough to .0009, or 12.3 same as 12.4 (could be serializations of very similar numbers that rounded differently)
+                                    if (Math.Abs(dTarget - dActual) <= toler)
+                                        continue;
+                                }
                             }
-                            Fail("Diff found at line {0}:\r\n{1}\r\n>\r\n{2}", count, lineTarget, lineActual);
+                            Fail($"{message}Diff found at line {count}:\r\n{lineTarget}\r\n>\r\n{lineActual}");
                         }
                     }
                 }
-                count++;
             }
         }
 

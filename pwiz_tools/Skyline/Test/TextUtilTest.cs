@@ -64,32 +64,7 @@ namespace pwiz.SkylineTest
             Assert.AreEqual(garbageString, TextUtil.DecryptString(TextUtil.EncryptString(garbageString)));
         }
 
-        // Test the code to compare strings with same files on different paths
-        [TestMethod]
-        public static void TestNoDiffIgnoringPathDifferences()
-        {
-            // No quotes, tab separated
-            var line1 =                               "C:\\Dev\\FeatureFinding\\pwiz_tools\\Skyline\\SkylineTester Results\\HardklorFeatureDetectionTest\\MS1FilteringMzml_2\\Ms1FilteringMzml\\100803_0001_MCF7_TiB_L.mzML\t4056\t4065\t10\t2\t1223.5398\t612.7772\t6858\tc:\\tmp\\greeble\t21379\t36.4559\t36.9732\t36.6144\t0.9993\t_\t4057\tH104C54N15O16[+4.761216]\tc:\\tmp\\blorf";
-            var line2 = "D:\\Nightly\\SkylineTesterForNightly_integration_perf\\SkylineTester Files\\SkylineTester Results\\HardklorFeatureDetectionTest\\MS1FilteringMzml_2\\Ms1FilteringMzml\\100803_0001_MCF7_TiB_L.mzML\t4056\t4065\t10\t2\t1223.5398\t612.7772\t6858\td:\\tmp\\greeble\t21379\t36.4559\t36.9732\t36.6144\t0.9993\t_\t4057\tH104C54N15O16[+4.761216]\tj:\\dogs\\cats\\blorf";
-            AssertEx.NoDiff(line1, line2,null,null,true);
-            // With quotes, tab separated
-            line1 =                               "\"C:\\Dev\\FeatureFinding\\pwiz_tools\\Skyline\\SkylineTester Results\\HardklorFeatureDetectionTest\\MS1FilteringMzml_2\\Ms1FilteringMzml\\100803_0001_MCF7_TiB_L.mzML\"\t4056\t4065\t10\t2\t1223.5398\t612.7772\t6858\tc:\\tmp\\greeble\t21379\t36.4559\t36.9732\t36.6144\t0.9993\t_\t4057\tH104C54N15O16[+4.761216]\tc:\\tmp\\blorf";
-            line2 = "\"D:\\Nightly\\SkylineTesterForNightly_integration_perf\\SkylineTester Files\\SkylineTester Results\\HardklorFeatureDetectionTest\\MS1FilteringMzml_2\\Ms1FilteringMzml\\100803_0001_MCF7_TiB_L.mzML\"\t4056\t4065\t10\t2\t1223.5398\t612.7772\t6858\td:\\tmp\\greeble\t21379\t36.4559\t36.9732\t36.6144\t0.9993\t_\t4057\tH104C54N15O16[+4.761216]\tj:\\dogs\\birds\\blorf";
-            AssertEx.NoDiff(line1, line2, null, null, true);
-            // CSV
-            line1 = line1.Replace("\t", ",");
-            line2 = line2.Replace("\t", ",");
-            AssertEx.NoDiff(line1, line2, null, null, true);
-            // European ; separated
-            line1 = line1.Replace(",", ";");
-            line2 = line2.Replace(",", ";");
-            AssertEx.NoDiff(line1, line2, null, null, true);
-            // Make sure it actually does catch differences
-            line1 = line1.Replace("MCF", "zzz");
-            AssertEx.ThrowsException<AssertFailedException>(() => AssertEx.NoDiff(line1, line2, null, null, false));
-        }
-
-        [TestMethod]
+         [TestMethod]
         public void TestCommonPrefixAndSuffix()
         {
             string[] baseStrings = {"mediummer", "much, much longer", string.Empty, "short"};

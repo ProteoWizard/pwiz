@@ -20,7 +20,6 @@ using System;
 using System.Diagnostics;
 using System.Globalization;
 using System.IO;
-using System.Linq;
 using System.Text;
 using Microsoft.VisualStudio.TestTools.UnitTesting;
 using pwiz.Common.SystemUtil;
@@ -69,10 +68,24 @@ namespace TestPerf
                 GetDataPath("2021_0810_Eclipse_LiPExp_05_SS3_MS1_3sn.hk.bs.kro"), 
                 true, // Has headers
                 new []{0}); // Ignore differences in column 0 (file path)
-            AssertEx.AreEqualDeep(File.ReadAllLines(GetDataPath("expected\\Matches.ms2")).Skip(1).ToList(), // Skip first line timestamp
-                File.ReadAllLines(GetDataPath("testMatch.ms2")).Skip(1).ToList());
-            AssertEx.AreEqualDeep(File.ReadAllLines(GetDataPath("expected\\NoMatch.ms2")).Skip(1).ToList(), // Skip first line timestamp
-                File.ReadAllLines(GetDataPath("testNoMatch.ms2")).Skip(1).ToList());
+
+            void CompareMS2Files(string expected, string actual)
+            {
+                using var readerExpected = new StreamReader(GetDataPath(expected));
+                using var readerActual = new StreamReader(GetDataPath(actual));
+                AssertEx.FieldsEqual(readerExpected,
+                    readerActual, 
+                    null, // Variable field count
+                    null, // Ignore no columns
+                    true, // Allow for rounding errors - the TIC line in particular is an issue here
+                    0, // Allow no extra lines
+                    null, // No overall tolerance
+                    1, // Skip first line with its timestamp
+                    $"comparing {expected} vs {actual}");
+            }
+
+            CompareMS2Files("expected\\Matches.ms2", "testMatch.ms2");
+            CompareMS2Files("expected\\NoMatch.ms2", "testNoMatch.ms2");
         }
     }
 }
