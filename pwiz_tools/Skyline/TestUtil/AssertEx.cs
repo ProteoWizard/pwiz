@@ -836,7 +836,7 @@ namespace pwiz.SkylineTestUtil
         public static void NoDiff(string target, string actual, string helpMsg=null, Dictionary<int, double> columnTolerances = null, bool ignorePathDiferences = false)
         {
             if (helpMsg == null)
-                helpMsg = $@"Comparing files ""{target}"" and ""{actual}"" ";
+                helpMsg = String.Empty;
             else
                 helpMsg += " ";
             using (StringReader readerTarget = new StringReader(target))
@@ -861,6 +861,10 @@ namespace pwiz.SkylineTestUtil
                         Fail(GetEarlyEndingMessage(helpMsg, "Actual", count-1, lineEqualLast, lineTarget, readerTarget));
                     }
 
+                    // Save original lines for report
+                    var expectedLine = lineTarget;
+                    var actualLine = lineActual;
+
                     if (ignorePathDiferences)
                     {
                         RemovePathDifferences(ref lineTarget, ref lineActual);
@@ -868,9 +872,11 @@ namespace pwiz.SkylineTestUtil
                     // If only difference appears to be generated GUIDs or timestamps, let it pass
                     if (!LinesEquivalentIgnoringTimeStampsAndGUIDs(lineTarget, lineActual, columnTolerances))
                     {
-                        Fail(helpMsg + string.Format(@"Diff found at line {0}:\r\n{1}\r\n>\r\n{2}", count, lineTarget, lineActual));
+                        int pos;
+                        for (pos = 0; pos < expectedLine?.Length && pos < actualLine?.Length && expectedLine[pos] == actualLine[pos];) {pos++;}
+                        Fail(helpMsg + $@" Diff found at line {count} position {pos}: expected\r\n{expectedLine}\r\nactual\r\n{actualLine}");
                     }
-                    lineEqualLast = lineTarget;
+                    lineEqualLast = expectedLine;
                     count++;
                 }
 
@@ -884,7 +890,7 @@ namespace pwiz.SkylineTestUtil
             {
                 return; // Identical
             }
-            var pattern = "\"([^\"]+)\"";
+            var pattern = @"(?:[^,;\t""]*\\+[^,;\t""]*)";
             for (var matching = true; matching;)
             {
                 matching = false;
@@ -894,8 +900,8 @@ namespace pwiz.SkylineTestUtil
                     var matchA = Regex.Match(lineActual, pattern);
                     if (matchA.Success)
                     {
-                        var pathE = matchE.Groups[1].Value;
-                        var pathA = matchA.Groups[1].Value;
+                        var pathE = matchE.Groups[0].Value;
+                        var pathA = matchA.Groups[0].Value;
                         var fileE = Path.GetFileName(pathE);
                         var fileA = Path.GetFileName(pathA);
                         if (string.Equals(fileE, fileA) || 
