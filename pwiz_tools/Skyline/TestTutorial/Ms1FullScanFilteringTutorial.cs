@@ -970,13 +970,13 @@ namespace pwiz.SkylineTestTutorial
         private void TestFullScanProperties()
         {
             var expectedPropertiesDict = new Dictionary<string, object> {
-                {"FileName","100803_0005b_MCF7_TiTip3.wiff"},
+                {"FileName",PreferWiff ? "100803_0005b_MCF7_TiTip3.wiff" : "100803_0005b_MCF7_TiTip3.mzML"},
                 {"ReplicateName","5b_MCF7_TiTip3"},
                 {"RetentionTime",33.19.ToString(CultureInfo.CurrentCulture)},
                 {"IsolationWindow","350:1600 (-625:+625)"},
                 {"ScanId","1.4067-1.1"},
                 {"MSLevel","1"},
-                {"Instrument",new Dictionary<string, object> {
+                {"Instrument",PreferWiff ? new Dictionary<string, object> {
                         {"InstrumentSerialNumber","AP11280707"},
                         {"InstrumentModel","QSTAR Elite"},
                         {"InstrumentManufacturer","Sciex"},
@@ -986,6 +986,11 @@ namespace pwiz.SkylineTestTutorial
                                 {"Detector","electron multiplier"}
                             }
                         }
+                    } : 
+                    new Dictionary<string, object>
+                    {
+                        {"InstrumentManufacturer", "Sciex"},
+                        {"InstrumentModel", "Applied Biosystems instrument model"}
                     }
                 },
                 {"MzCount",37828.ToString(@"N0", CultureInfo.CurrentCulture)},
