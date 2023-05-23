@@ -345,6 +345,7 @@ blib-test-build mascot-15N : -o : output/mascot-15N.blib : mascot-15N.check : $(
 blib-test-build mascot-distiller-and-title : -o : output/mascot-distiller-1.blib : mascot-distiller-1.check : $(TEST_INPUTS_PATH)/F007401.dat : <conditional>@mascot-installed <toolset>gcc:<build>no ;
 blib-test-build mascot-distiller-from-file : --unicode -o : output/mascot-distiller-2.blib : mascot-distiller-2.check : $(TEST_INPUTS_PATH)/F007401b.dat : <conditional>@mascot-installed <toolset>gcc:<build>no ;
 blib-test-build mascot_tims : -o : output/mascot_tims.blib : mascot_tims.check : $(TEST_INPUTS_PATH)/mascot_tims.dat : <conditional>@mascot-installed <toolset>gcc:<build>no ;
+blib-test-build mascot_v2_8 : -o -c@0 : output/mascot_v2_8 : mascot_v2_8.check : $(TEST_INPUTS_PATH)/mascot_v2_8.dat : <conditional>@mascot-installed <toolset>gcc:<build>no ;
 
 # Test OpenSWATH files
 
