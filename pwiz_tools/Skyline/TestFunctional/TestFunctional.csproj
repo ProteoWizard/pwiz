@@ -198,6 +198,7 @@
     <Compile Include="EADZIonsTest.cs" />
     <Compile Include="MixedSrmPrmTest.cs" />
     <Compile Include="MultiInjectionReplicatesTest.cs" />
+    <Compile Include="NewMascotDatFileTest.cs" />
     <Compile Include="OpenDocWithBackgroundProteomeTest.cs" />
     <Compile Include="RemoveHeavyModificationTest.cs" />
     <Compile Include="RemoveNeutralLossModificationTest.cs" />

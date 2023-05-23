@@ -1,9 +1,9 @@
 <?xml version="1.0" encoding="UTF-8"?>
-<!-- edited with XMLSpy v2007 (http://www.altova.com) by John S Cottrell (Matrix Science Ltd) -->
+<!-- edited with XMLSpy v2007 sp2 (http://www.altova.com) by John S Cottrell (Matrix Science Ltd) -->
 <!--
-  @(#)$Source: /vol/cvsroot/parser/xml/schema/unimod_2.xsd,v $
-  @(#)$Revision: 1.7 $
-  @(#)$Name: MSPARSER_RELBRN_2_4_0 $
+  @(#)$Source: parser/xml/schema/unimod_2.xsd $
+  @(#)$Revision: 1b450440f9c97e1e41d0fc6016a27d68951d4532 | MSPARSER_REL_2_8_1-0-gea32989045 $
+  @(#)$Name$
 -->
 <xs:schema xmlns:xs="http://www.w3.org/2001/XMLSchema" xmlns:umod="http://www.unimod.org/xmlns/schema/unimod_2" targetNamespace="http://www.unimod.org/xmlns/schema/unimod_2" elementFormDefault="qualified" attributeFormDefault="unqualified">
 	<xs:annotation>
@@ -80,7 +80,7 @@
 			<xs:documentation>Schema minor version number</xs:documentation>
 		</xs:annotation>
 		<xs:restriction base="xs:unsignedShort">
-			<xs:maxInclusive value="0"/>
+			<xs:maxInclusive value="1"/>
 		</xs:restriction>
 	</xs:simpleType>
 	<xs:complexType name="elements_t">
@@ -220,6 +220,21 @@ Neutral losses can be potentially a scoring series (false) or non-scoring satell
                     </xs:documentation>
 					</xs:annotation>
 				</xs:attribute>
+				<xs:attribute name="description" type="xs:string" use="optional">
+					<xs:annotation>
+						<xs:documentation>Optional description for this neutral loss</xs:documentation>
+					</xs:annotation>
+				</xs:attribute>
+				<xs:attribute name="code" type="xs:string" use="optional">
+					<xs:annotation>
+						<xs:documentation>Optional single letter identifier for this neutral loss referenced in the pairs_with attribute of other neutral losses to record how fragments from a cleavable cross-link can be paired.</xs:documentation>
+					</xs:annotation>
+				</xs:attribute>
+				<xs:attribute name="pairs_with" type="xs:string" use="optional">
+					<xs:annotation>
+						<xs:documentation>Optional list of codes for other neutral losses that could be paired with this one when a cross-link is cleaved.</xs:documentation>
+					</xs:annotation>
+				</xs:attribute>
 			</xs:extension>
 		</xs:complexContent>
 	</xs:complexType>
@@ -302,6 +317,10 @@ Neutral losses can be potentially a scoring series (false) or non-scoring satell
 			<xs:enumeration value="Multiple"/>
 			<xs:enumeration value="Other"/>
 			<xs:enumeration value="AA substitution"/>
+			<xs:enumeration value="Cross-link"/>
+			<xs:enumeration value="CID cleavable cross-link"/>
+			<xs:enumeration value="Photo cleavable cross-link"/>
+			<xs:enumeration value="Other cleavable cross-link"/>
 		</xs:restriction>
 	</xs:simpleType>
 </xs:schema>

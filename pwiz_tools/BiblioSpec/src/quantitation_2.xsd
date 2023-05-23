@@ -1,5 +1,7 @@
-<?xml version="1.0" encoding="UTF-8"?>
-<xs:schema xmlns:mqm="http://www.matrixscience.com/xmlns/schema/quantitation_2" xmlns:xs="http://www.w3.org/2001/XMLSchema" targetNamespace="http://www.matrixscience.com/xmlns/schema/quantitation_2" elementFormDefault="qualified" attributeFormDefault="unqualified">
+<?xml version="1.0" encoding="UTF-8" ?>
+<xs:schema xmlns:mqm="http://www.matrixscience.com/xmlns/schema/quantitation_2" xmlns:xs="http://www.w3.org/2001/XMLSchema"
+	 targetNamespace="http://www.matrixscience.com/xmlns/schema/quantitation_2" elementFormDefault="qualified"
+	 attributeFormDefault="unqualified">
 	<xs:element name="quantitation" type="mqm:quantitationType">
 		<xs:annotation>
 			<xs:documentation>Configuration file for Mascot quantitation methods</xs:documentation>
@@ -26,7 +28,7 @@
 			</xs:enumeration>
 			<xs:enumeration value="weighted">
 				<xs:annotation>
-					<xs:documentation>Protein ratio is the weighted average of the peptide ratios</xs:documentation>
+					<xs:documentation>For each component, the intensity values are summed over the set of peptides and the protein ratio is calculated from the summed values</xs:documentation>
 				</xs:annotation>
 			</xs:enumeration>
 		</xs:restriction>
@@ -225,7 +227,7 @@
 			<xs:documentation>Schema minor version number</xs:documentation>
 		</xs:annotation>
 		<xs:restriction base="xs:unsignedShort">
-			<xs:maxInclusive value="2"/>
+			<xs:maxInclusive value="4"/>
 		</xs:restriction>
 	</xs:simpleType>
 	<xs:simpleType name="modeType">
@@ -630,6 +632,11 @@
 				<xs:attribute name="reference_accession" type="xs:string" use="optional">
 					<xs:annotation>
 						<xs:documentation>Database accession for reference protein.</xs:documentation>
+					</xs:annotation>
+				</xs:attribute>
+				<xs:attribute name="reference_database" type="xs:string" use="optional">
+					<xs:annotation>
+						<xs:documentation>Name of database of reference protein.</xs:documentation>
 					</xs:annotation>
 				</xs:attribute>
 				<xs:attribute name="reference_amount" type="xs:double" use="optional" default="1.0">
@@ -1299,6 +1306,16 @@
 				<xs:attribute name="isolated_precursor_threshold" type="xs:double" use="optional" default="0.5">
 					<xs:annotation>
 						<xs:documentation>Threshold on the fraction of the peak area in the precursor region accounted for by the components.</xs:documentation>
+					</xs:annotation>
+				</xs:attribute>
+				<xs:attribute name="total_intensity" type="xs:boolean" use="optional" default="false">
+					<xs:annotation>
+						<xs:documentation>Determines whether to perform test for total intensity of fitted peaks across the XIC peak.</xs:documentation>
+					</xs:annotation>
+				</xs:attribute>
+				<xs:attribute name="total_intensity_threshold" type="xs:double" use="optional" default="0">
+					<xs:annotation>
+						<xs:documentation>Threshold on the total intensity of fitted peaks across the XIC peak.</xs:documentation>
 					</xs:annotation>
 				</xs:attribute>
 			</xs:extension>
