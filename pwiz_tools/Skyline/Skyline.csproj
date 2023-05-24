@@ -51,8 +51,8 @@
     <PublisherName>MacCoss Lab, UW</PublisherName>
     <CreateWebPageOnPublish>true</CreateWebPageOnPublish>
     <WebPage>index.html</WebPage>
-    <ApplicationRevision>425</ApplicationRevision>
-    <ApplicationVersion>22.2.1.425</ApplicationVersion>
+    <ApplicationRevision>501</ApplicationRevision>
+    <ApplicationVersion>22.2.1.501</ApplicationVersion>
     <UseApplicationTrust>false</UseApplicationTrust>
     <PublishWizardCompleted>true</PublishWizardCompleted>
     <BootstrapperEnabled>true</BootstrapperEnabled>
@@ -413,6 +413,7 @@
       <DependentUpon>TutorialTextResources.resx</DependentUpon>
     </Compile>
     <Compile Include="Controls\TargetColumn.cs" />
+    <Compile Include="Controls\TreeViewMSStateRestorer.cs" />
     <Compile Include="EditUI\EditLinkedPeptidesDlg.cs">
       <SubType>Form</SubType>
     </Compile>
@@ -452,6 +453,7 @@
     <Compile Include="FileUI\InsertTransitionListDlg.Designer.cs">
       <DependentUpon>InsertTransitionListDlg.cs</DependentUpon>
     </Compile>
+    <Compile Include="FileUI\PeakBoundaryImporterUI.cs" />
     <Compile Include="FileUI\PeptideSearch\BuildLibraryGridView.cs">
       <SubType>Component</SubType>
     </Compile>
@@ -472,9 +474,16 @@
       <DesignTime>True</DesignTime>
       <DependentUpon>ColumnCaptions.resx</DependentUpon>
     </Compile>
+    <Compile Include="Model\FullScanPropertiesRes.Designer.cs">
+      <AutoGen>True</AutoGen>
+      <DesignTime>True</DesignTime>
+      <DependentUpon>FullScanPropertiesRes.resx</DependentUpon>
+    </Compile>
+    <Compile Include="Model\Find\BookmarkStartPosition.cs" />
     <Compile Include="Model\GlobalizedObject.cs">
       <SubType>UserControl</SubType>
     </Compile>
+    <Compile Include="Model\FullScanProperties.cs" />
     <Compile Include="Model\SpectrumPropertiesResx.Designer.cs">
       <AutoGen>True</AutoGen>
       <DesignTime>True</DesignTime>
@@ -819,6 +828,8 @@
     <Compile Include="FileUI\PeptideSearch\DDASearchControl.Designer.cs">
       <DependentUpon>DDASearchControl.cs</DependentUpon>
     </Compile>
+    <Compile Include="ToolsUI\ToolDescriptionRunUI.cs" />
+    <Compile Include="ToolsUI\ToolService.cs" />
     <Compile Include="Util\DocumentCancellationToken.cs" />
     <Compile Include="Util\Extensions\MassTypeLocalizationExtension.cs" />
     <Compile Include="Util\FormGroup.cs" />
@@ -1139,7 +1150,6 @@
     <Compile Include="Controls\TreeViewMS.cs">
       <SubType>Component</SubType>
     </Compile>
-    <Compile Include="Controls\TreeViewStateRestorer.cs" />
     <Compile Include="Controls\WizardPages.cs">
       <SubType>Component</SubType>
     </Compile>
@@ -3250,6 +3260,11 @@
       <DependentUpon>ColumnToolTips.resx</DependentUpon>
       <SubType>Designer</SubType>
     </EmbeddedResource>
+    <EmbeddedResource Include="Model\FullScanPropertiesRes.resx">
+      <Generator>ResXFileCodeGenerator</Generator>
+      <LastGenOutput>FullScanPropertiesRes.Designer.cs</LastGenOutput>
+      <SubType>Designer</SubType>
+    </EmbeddedResource>
     <EmbeddedResource Include="Model\SpectrumPropertiesResx.resx">
       <Generator>ResXFileCodeGenerator</Generator>
       <LastGenOutput>SpectrumPropertiesResx.Designer.cs</LastGenOutput>
@@ -4383,7 +4398,6 @@
     <Compile Include="SkylineGraphs.cs">
       <SubType>Form</SubType>
     </Compile>
-    <Compile Include="Model\ToolService.cs" />
     <Compile Include="Controls\ToolStripNumericUpDown.cs">
       <SubType>Component</SubType>
     </Compile>
@@ -5487,6 +5501,14 @@
     <Content Include="SkylineCmd.exe.config">
       <CopyToOutputDirectory>PreserveNewest</CopyToOutputDirectory>
     </Content>
+    <Content Condition="'$(Platform)' == 'x86'" Include="bin\x86\$(Configuration)\SkylineCmd.exe">
+      <Link>SkylineCmd.exe</Link>
+      <CopyToOutputDirectory>PreserveNewest</CopyToOutputDirectory>
+    </Content>
+    <Content Condition="'$(Platform)' == 'x64'" Include="bin\x64\$(Configuration)\SkylineCmd.exe">
+      <Link>SkylineCmd.exe</Link>
+      <CopyToOutputDirectory>PreserveNewest</CopyToOutputDirectory>
+    </Content>
     <None Include="SkylineLog4Net.config">
       <CopyToOutputDirectory>PreserveNewest</CopyToOutputDirectory>
     </None>
@@ -5547,10 +5569,6 @@
     <ProjectReference Include="..\Shared\zedgraph\ZedGraph.csproj">
       <Project>{b99650ee-af46-47b4-a4a9-212ade7809b7}</Project>
       <Name>ZedGraph</Name>
-    </ProjectReference>
-    <ProjectReference Include="SkylineCmd\SkylineCmd.csproj">
-      <Project>{fa16a0ef-edf7-4515-bd93-44badd7ab98a}</Project>
-      <Name>SkylineCmd</Name>
     </ProjectReference>
     <ProjectReference Include="SkylineTool\SkylineTool.csproj">
       <Project>{3FD4E167-8F9C-4116-8122-67C7AD143490}</Project>

@@ -414,7 +414,7 @@ namespace pwiz.Skyline.Controls.Graphs
                 PrecursorMz = fullScanInfo.ChromInfo.PrecursorMz,
                 ProductMz = fullScanInfo.ChromInfo.ProductMz,
                 ExtractionWidth = fullScanInfo.ChromInfo.ExtractionWidth,
-                _ionMobilityInfo = fullScanInfo.ChromInfo.GetIonMobilityFilter(),
+                IonMobilityInfo = fullScanInfo.ChromInfo.GetIonMobilityFilter(),
                 Id = transitionId
             };
         }
@@ -2379,7 +2379,7 @@ namespace pwiz.Skyline.Controls.Graphs
 
                         if (nodePep != null && nodeTranGroup != null)
                         {
-                            var libKey = new LibKey(nodePep.ModifiedTarget, nodeTranGroup.PrecursorAdduct);
+                            var libKey = new LibKey(nodePep.ChromatogramTarget, nodeTranGroup.PrecursorAdduct);
                             chromGraphPrimary.MidasRetentionMsMs = settings.PeptideSettings.Libraries.MidasLibraries
                                 .SelectMany(lib => lib.GetSpectraByPeptide(chromGraphPrimary.Chromatogram.FilePath, libKey))
                                 .Select(s => s.RetentionTime).ToArray();

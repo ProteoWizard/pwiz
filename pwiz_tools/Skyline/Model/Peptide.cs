@@ -56,11 +56,16 @@ namespace pwiz.Skyline.Model
             Validate();
         }
 
-        public Peptide(CustomMolecule customMolecule)
+        public Peptide(CustomMolecule customMolecule, Target originalMoleculeDescription = null)
         {
             Target = new Target(customMolecule);
 
             Validate();
+            if (originalMoleculeDescription != null)
+            {
+                // As when user changes molecule name, CAS etc, but not mass or formula, so we still want to associate chromatograms
+                OriginalMoleculeTarget = originalMoleculeDescription;
+            }
         }
 
         public Peptide(Target pepOrMol)
@@ -83,6 +88,9 @@ namespace pwiz.Skyline.Model
         public bool IsCustomMolecule { get { return !Target.IsProteomic; }}
         public int Length { get { return Target.IsProteomic ? Target.Sequence.Length : 0; }}
         public string TextId { get { return IsCustomMolecule ? Target.Molecule.InvariantName : Target.Sequence; } }
+
+        // For robust chromatogram association in the event of user tweaking molecule details like name, CAS etc (but not mass!)
+        public Target OriginalMoleculeTarget;
 
         public SmallMoleculeLibraryAttributes GetSmallMoleculeLibraryAttributes()
         {
@@ -340,6 +348,7 @@ namespace pwiz.Skyline.Model
                 Assume.IsNull(_fastaSequence);
                 Assume.IsNull(Sequence);
                 CustomMolecule.Validate();
+                OriginalMoleculeTarget = Target;
             }
             else if (_fastaSequence == null)
             {
@@ -380,6 +389,7 @@ namespace pwiz.Skyline.Model
             if (ReferenceEquals(this, obj)) return true;
             var equal = Equals(obj._fastaSequence, _fastaSequence) &&
                 Equals(obj.Target, Target) &&
+                Equals(obj.OriginalMoleculeTarget, OriginalMoleculeTarget) &&
                 obj.Begin.Equals(Begin) &&
                 obj.End.Equals(End) &&
                 obj.MissedCleavages == MissedCleavages &&
@@ -401,6 +411,7 @@ namespace pwiz.Skyline.Model
             {
                 int result = (_fastaSequence != null ? _fastaSequence.GetHashCode() : 0);
                 result = (result*397) ^ (Target != null ? Target.GetHashCode() : 0);
+                result = (result*397) ^ (OriginalMoleculeTarget != null ? OriginalMoleculeTarget.GetHashCode() : 0);
                 result = (result*397) ^ (Begin.HasValue ? Begin.Value : 0);
                 result = (result*397) ^ (End.HasValue ? End.Value : 0);
                 result = (result*397) ^ MissedCleavages;
