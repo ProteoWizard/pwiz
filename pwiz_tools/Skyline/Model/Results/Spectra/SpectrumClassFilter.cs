@@ -124,12 +124,13 @@ namespace pwiz.Skyline.Model.Results.Spectra
             }
 
             var dataSchema = new DataSchema();
-            var predicates = Clauses.Select(x => x.MakePredicate<SpectrumMetadata>(dataSchema)).ToList();
+            var predicates = Clauses.Select(x => x.MakePredicate<SpectrumClass>(dataSchema)).ToList();
             return x =>
             {
+                var spectrumClass = new SpectrumClass(new SpectrumClassKey(SpectrumClassColumn.ALL, x));
                 foreach (var predicate in predicates)
                 {
-                    if (predicate(x))
+                    if (predicate(spectrumClass))
                     {
                         return true;
                     }
