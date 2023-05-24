@@ -1000,7 +1000,7 @@ namespace SkylineNightly
                     }
                     catch (Exception e)
                     {
-                        Xml.ShowXmlExceptionDetails(e, log);
+                        Xml.ShowXmlExceptionDetailsAndDie(e, log);
                     }
                 }
             }
