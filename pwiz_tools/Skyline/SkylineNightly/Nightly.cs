@@ -993,8 +993,15 @@ namespace SkylineNightly
                 XDocument doc = XDocument.Parse(xml);
                 if (doc.Root != null)
                 {
-                    doc.Root.Add(new XElement("Log", log));
-                    xml = doc.ToString();
+                    try
+                    {
+                        doc.Root.Add(new XElement("Log", log));
+                        xml = doc.ToString();
+                    }
+                    catch (Exception e)
+                    {
+                        Xml.ShowXmlExceptionDetails(e, log);
+                    }
                 }
             }
 

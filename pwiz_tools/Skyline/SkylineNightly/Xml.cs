@@ -38,11 +38,29 @@ namespace SkylineNightly
             return _rootNode;
         }
 
+        public static void ShowXmlExceptionDetails(Exception e, string hint)
+        {
+            var message = $@"XML exception ""{e.Message}"" \nat\n{e.StackTrace}\n while handling this text:\n{hint}";
+            if (e.InnerException != null)
+            {
+                message += $@"\nInner Exception:\n{e.InnerException.Message}";
+            }
+
+            throw new Exception(message);
+        }
+
         // Load from XML string.
         public static Xml FromString(string xmlString)
         {
             var doc = new XmlDocument();
-            doc.LoadXml(xmlString);
+            try
+            {
+                doc.LoadXml(xmlString);
+            }
+            catch (Exception e)
+            {
+                ShowXmlExceptionDetails(e, xmlString);
+            }
             return new Xml(doc.FirstChild);
         }
 
@@ -50,7 +68,14 @@ namespace SkylineNightly
         public Xml(string root)
         {
             var doc = new XmlDocument();
-            _rootNode = doc.CreateElement(root);
+            try
+            {
+                _rootNode = doc.CreateElement(root);
+            }
+            catch (Exception e)
+            {
+                ShowXmlExceptionDetails(e, root);
+            }
             doc.AppendChild(GetRoot());
         }
 
