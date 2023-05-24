@@ -406,7 +406,7 @@ namespace BuildSciexMethod
                 export += string.Format("{0}\t{1}\t{2}\t{3}\t{4}\t{5}\t{6}\t{7}",
                     transition.IsHeavy ? "TRUE": "FALSE",
                     groupName,
-                    transition.Label,
+                    transition.IsMs2Precursor ? transition.Label.Replace("precursor", "p") : transition.Label,
                     transition.PrecursorMz,
                     transition.IsMs2Precursor ? -1 : transition.ProductMz,
                     xic,
@@ -465,16 +465,12 @@ namespace BuildSciexMethod
             }
 
             public static IEnumerable<PropertyData> GetAll(InstrumentType instrument, bool standardMethod, PropertiesTable table)
-            {
-                var timeProp = typeof(RetentionTimeProperty);
-                if (standardMethod)
-                {
-                    timeProp = Equals(instrument, InstrumentType.QQQ)
+            { 
+                var timeProp = Equals(instrument, InstrumentType.QQQ)
                         ? typeof(DwellTimeProperty)
                         : typeof(AccumulationTimeProperty);
-                }
 
-                return new[]
+                var props = new[]
                 {
                     new PropertyData(typeof(GroupIdProperty), t => t.Group),
                     new PropertyData(typeof(CompoundIdProperty), t => t.Label),
@@ -482,14 +478,16 @@ namespace BuildSciexMethod
                     new PropertyData(typeof(Q3MassProperty), t => t.ProductMz),
                     new PropertyData(typeof(PrecursorIonProperty), t => t.PrecursorMz),
                     new PropertyData(typeof(FragmentIonProperty), t => t.ProductMz),
+                    new PropertyData(typeof(RetentionTimeProperty), t => t.Rt),
                     new PropertyData(timeProp, t => t.DwellOrRt),
                     new PropertyData(typeof(RetentionTimeToleranceProperty), !standardMethod ? t => t.RTWindow : (Func<MethodTransition, object>)null),
                     new PropertyData(typeof(DeclusteringPotentialProperty), t => t.DP),
                     new PropertyData(typeof(EntrancePotentialProperty)),
                     new PropertyData(typeof(CollisionEnergyProperty), t => t.CE),
                     new PropertyData(typeof(CollisionCellExitPotentialProperty)),
-                    new PropertyData(typeof(ElectronKeProperty)),
-                }.Where(prop => prop.GetValueForTransition != null && prop.GetPropertiesRowObj(table.Rows[0]) != null);
+                    new PropertyData(typeof(ElectronKeProperty))
+                };
+                return props.Where(prop => prop.GetValueForTransition != null && prop.GetPropertiesRowObj(table.Rows[0]) != null);
             }
 
             public override string ToString() => Property.Name;

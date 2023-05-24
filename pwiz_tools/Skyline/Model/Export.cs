@@ -611,6 +611,8 @@ namespace pwiz.Skyline.Model
                         break;
                 }
             }
+            else if(MethodType == ExportMethodType.Scheduled || instrumentType == ExportInstrumentType.ABI_7600)
+                exporter.AccumulationTime = AccumulationTime;
 
 
             PerformLongExport(m => exporter.ExportMethod(fileName, templateName, m));
@@ -2439,23 +2441,16 @@ namespace pwiz.Skyline.Model
             var prediction = Document.Settings.PeptideSettings.Prediction;
             predictedRT = prediction.PredictRetentionTime(Document, nodePep, nodeTranGroup,
                 SchedulingReplicateIndex, SchedulingAlgorithm, Document.Settings.HasResults, out var rtWindow);
+            RTWindow = rtWindow; // Store for later use
 
             xic = XICWidth.HasValue
                 ? Math.Round(XICWidth.Value, 4).ToString(CultureInfo)
                 : 0.02.ToString(CultureInfo);
             rt = predictedRT.HasValue ? Math.Round(predictedRT.Value, 2).ToString(CultureInfo) : @"0";
 
-            if (MethodType == ExportMethodType.Standard)
-            {
-                //predictedRT = new PeptidePrediction.WindowRT(0, false);
-                dwellOrRt = AccumulationTime.HasValue
-                    ? Math.Round(AccumulationTime.Value, 4).ToString(CultureInfo)
-                    : Math.Round(DwellTime.GetValueOrDefault(), 2).ToString(CultureInfo);
-                return;
-            }
-
-            dwellOrRt = (RetentionTimeRegression.GetRetentionTimeDisplay(predictedRT) ?? 0).ToString(CultureInfo);
-            RTWindow = rtWindow; // Store for later use
+            dwellOrRt = AccumulationTime.HasValue
+                ? Math.Round(AccumulationTime.Value, 4).ToString(CultureInfo)
+                : Math.Round(DwellTime.GetValueOrDefault(), 2).ToString(CultureInfo);
         }
 
         private void GetValuesFromResults(TransitionDocNode nodeTran, double? predictedRT, out float? averagePeakArea,
