@@ -19,7 +19,7 @@ namespace pwiz.Skyline.Controls.Startup {
     // class via a tool like ResGen or Visual Studio.
     // To add or remove a member, edit your .ResX file then rerun ResGen
     // with the /str option, or rebuild your VS project.
-    [global::System.CodeDom.Compiler.GeneratedCodeAttribute("System.Resources.Tools.StronglyTypedResourceBuilder", "15.0.0.0")]
+    [global::System.CodeDom.Compiler.GeneratedCodeAttribute("System.Resources.Tools.StronglyTypedResourceBuilder", "17.0.0.0")]
     [global::System.Diagnostics.DebuggerNonUserCodeAttribute()]
     [global::System.Runtime.CompilerServices.CompilerGeneratedAttribute()]
     internal class TutorialTextResources {
@@ -88,7 +88,7 @@ namespace pwiz.Skyline.Controls.Startup {
         }
         
         /// <summary>
-        ///   Looks up a localized string similar to Get hands-on experience working with audit logging in Skyline. Learn how to produce fully audit logged Skyline documents to help others reproduce your research, and you to remember what you did, helpting with the writing of your methods sections for publication. Learn how to work with the Audit Log grid view, an extension of the Document Grid to explore logged changes and provide reasons for the changes you make. This example uses a calibration experiment to show logging of settings changes, data import, in [rest of string was truncated]&quot;;.
+        ///   Looks up a localized string similar to Get hands-on experience working with audit logging in Skyline. Learn how to produce fully audit logged Skyline documents to help others reproduce your research, and you to remember what you did, helping with the writing of your methods sections for publication. Learn how to work with the Audit Log grid view, an extension of the Document Grid to explore logged changes and provide reasons for the changes you make. This example uses a calibration experiment to show logging of settings changes, data import, int [rest of string was truncated]&quot;;.
         /// </summary>
         internal static string AuditLog_Description {
             get {
@@ -124,7 +124,7 @@ namespace pwiz.Skyline.Controls.Startup {
         }
         
         /// <summary>
-        ///   Looks up a localized string similar to Get hands-on experience starting DDA mass spectometer files, running a peptide search with MS Amanda, building a spectral library from the search results and finally extracting chromatograms for quantitative analysis from the MS1 spectra in the DDA files. In this tutorial, you will use the Skyline Peptide Search wizard to search 3 DDA data files acquired from a human whole cell lysate with the Sigma Alrich UPS1 standard mix of stable isotope labeled proteins spiked in. You will set up Skyline to extract the [rest of string was truncated]&quot;;.
+        ///   Looks up a localized string similar to Get hands-on experience starting DDA mass spectrometer files, running a peptide search with MS Amanda, building a spectral library from the search results and finally extracting chromatograms for quantitative analysis from the MS1 spectra in the DDA files. In this tutorial, you will use the Skyline Peptide Search wizard to search 3 DDA data files acquired from a human whole cell lysate with the Sigma Alrich UPS1 standard mix of stable isotope labeled proteins spiked in. You will set up Skyline to extract th [rest of string was truncated]&quot;;.
         /// </summary>
         internal static string DDSearch_Description {
             get {
@@ -178,7 +178,7 @@ namespace pwiz.Skyline.Controls.Startup {
         }
         
         /// <summary>
-        ///   Looks up a localized string similar to Get hands-on experience working with a data independent acquisition (DIA) data, from either a Q Exactive or a TripleTOF instrument, using a 3-organism mix data set created for instruction, based on the Navarro, Nature Biotech 2016 benchmarking paper. Use the Import Peptide Search wizard for DIA to build a spectral library from DDA data with automatic iRT calibration for retention time calibration and an mProphet learned model for peptide peak detection. Assess the data quality using a rich collectoin of Sky [rest of string was truncated]&quot;;.
+        ///   Looks up a localized string similar to Get hands-on experience working with a data independent acquisition (DIA) data, from either a Q Exactive or a TripleTOF instrument, using a 3-organism mix data set created for instruction, based on the Navarro, Nature Biotech 2016 benchmarking paper. Use the Import Peptide Search wizard for DIA to build a spectral library from DDA data with automatic iRT calibration for retention time calibration and an mProphet learned model for peptide peak detection. Assess the data quality using a rich collection of Sky [rest of string was truncated]&quot;;.
         /// </summary>
         internal static string DIA_SWATH_Description {
             get {
@@ -250,7 +250,7 @@ namespace pwiz.Skyline.Controls.Startup {
         }
         
         /// <summary>
-        ///   Looks up a localized string similar to Get hands-on experience using Skyline to work IMS-TOF data. Train a drift-time predictor for BSA spiked into yeast, and see how ion mobility separation improves the selectivity of chromagram extraction in complex data. Learn how to work with ion mobility data in Skyline and explore the 3D (m/z, IMS, intensity) spectra produced by IMS-enabled mass spectrometers..
+        ///   Looks up a localized string similar to Get hands-on experience using Skyline to work IMS-TOF data. Train a drift-time predictor for BSA spiked into yeast, and see how ion mobility separation improves the selectivity of chromatogram extraction in complex data. Learn how to work with ion mobility data in Skyline and explore the 3D (m/z, IMS, intensity) spectra produced by IMS-enabled mass spectrometers..
         /// </summary>
         internal static string IMSFiltering_Description {
             get {
@@ -493,7 +493,7 @@ namespace pwiz.Skyline.Controls.Startup {
         }
         
         /// <summary>
-        ///   Looks up a localized string similar to Targeted MS/MS (PRM).
+        ///   Looks up a localized string similar to Parallel Reaction Monitoring (PRM).
         /// </summary>
         internal static string TargetedMSMS_Caption {
             get {
@@ -502,7 +502,7 @@ namespace pwiz.Skyline.Controls.Startup {
         }
         
         /// <summary>
-        ///   Looks up a localized string similar to Get hands-on experience working with targeted MS/MS (also referred to as parallel reaction monitoring - PRM) data acquired on a low resolution Thermo LTQ and a high resolution Agilent 6520 Q-TOF. Gain new understanding of the selectivity and sensitivity differences between peptide quantification using precursor and fragment ions measured on low and high resolution instruments. Discover new ways to work with and understand your own mass spectrometry data using the rich feature set provided by Skyline for wor [rest of string was truncated]&quot;;.
+        ///   Looks up a localized string similar to Get hands-on experience working with parallel reaction monitoring (PRM) data acquired on a low resolution Thermo LTQ and a high resolution Agilent 6520 Q-TOF. Gain new understanding of the selectivity and sensitivity differences between peptide quantification using precursor and fragment ions measured on low and high resolution instruments. Discover new ways to work with and understand your own mass spectrometry data using the rich feature set provided by Skyline for working with chromatography-based quanti [rest of string was truncated]&quot;;.
         /// </summary>
         internal static string TargetedMSMS_Description {
             get {
