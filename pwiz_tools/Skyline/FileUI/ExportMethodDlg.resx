@@ -1739,11 +1739,11 @@ If unchecked, zeros will be written in their place.</value>
     <value>0</value>
   </data>
   <data name="cbExportSciexOSQuantMethod.Text" xml:space="preserve">
-    <value>Create Sciex &amp;OS 
+    <value>Create SCIEX &amp;OS 
     Quant method</value>
   </data>
   <data name="cbExportSciexOSQuantMethod.ToolTip" xml:space="preserve">
-    <value>Exports a Sciex OS Quant compatible analysis method to the same directory and base name as the Analyst acquisition method.</value>
+    <value>Exports a SCIEX OS Quant compatible analysis method to the same directory and base name as the Analyst acquisition method.</value>
   </data>
   <data name="&gt;&gt;cbExportSciexOSQuantMethod.Name" xml:space="preserve">
     <value>cbExportSciexOSQuantMethod</value>
