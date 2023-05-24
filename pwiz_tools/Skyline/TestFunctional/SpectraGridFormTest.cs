@@ -35,7 +35,7 @@ namespace pwiz.SkylineTestFunctional
 
         protected override void DoTest()
         {
-            var spectraGridForm = ShowDialog<SpectraGridForm>(SkylineWindow.ViewMenu.ShowSpectraGridForm);
+            var spectraGridForm = ShowDialog<SpectrumGridForm>(SkylineWindow.ViewMenu.ShowSpectraGridForm);
             RunUI(() =>
             {
                 spectraGridForm.AddFile(new MsDataFilePath(TestFilesDir.GetTestPath("SpectrumClassFilterTest.mzML")));

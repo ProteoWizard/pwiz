@@ -1992,8 +1992,6 @@ namespace pwiz.Skyline.Controls.Graphs
             // Construct and add graph items for all relevant transition groups.
             float fontSize = FontSize;
             int lineWidth = LineWidth;
-            int iCharge = -1;
-            var charge = Adduct.EMPTY;
             var chromGroupInfos = ChromGroupInfos;
             for (int i = 0; i < _nodeGroups.Length; i++)
             {

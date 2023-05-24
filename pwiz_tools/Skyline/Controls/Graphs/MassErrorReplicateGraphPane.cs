@@ -130,8 +130,7 @@ namespace pwiz.Skyline.Controls.Graphs
            double minRetentionTime = double.MaxValue;
            double maxRetentionTime = double.MinValue;
            
-           int iColor = 0, iCharge = -1;
-           var charge = Adduct.EMPTY;
+           int iColor = 0;
            int countLabelTypes = document.Settings.PeptideSettings.Modifications.CountLabelTypes;
            int colorOffset = 0;
            var transitionGroupDocNode = parentNode as TransitionGroupDocNode;

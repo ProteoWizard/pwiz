@@ -53,6 +53,11 @@ namespace pwiz.Skyline.Model.Results.Spectra
             _spectrumIndicesByPrecursor = ImmutableSortedList.FromValues(spectraByPrecursor);
         }
 
+        public static SpectrumMetadataList Ms2Only(IEnumerable<SpectrumMetadata> spectrumMetadatas, IEnumerable<SpectrumClassColumn> columns)
+        {
+            return new SpectrumMetadataList(spectrumMetadatas.Where(s => s.MsLevel > 1), columns);
+        }
+
         public ImmutableList<SpectrumClassColumn> Columns { get; }
 
         public int IndexOfColumn(SpectrumClassColumn column)

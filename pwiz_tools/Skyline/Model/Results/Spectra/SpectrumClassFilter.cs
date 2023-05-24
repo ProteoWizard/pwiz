@@ -86,6 +86,15 @@ namespace pwiz.Skyline.Model.Results.Spectra
             return new SpectrumClassFilter(clauses);
         }
 
+        /// <summary>
+        /// Returns a filter which matches all MS1 spectra plus the MS2 spectra which match the given filter.
+        /// </summary>
+        public static SpectrumClassFilter Ms2Filter(FilterClause ms2FilterClause)
+        {
+            return new SpectrumClassFilter(Ms1FilterPage.Discriminant,
+                new FilterClause(Ms2FilterPage.Discriminant.FilterSpecs.Concat(ms2FilterClause.FilterSpecs)));
+        }
+
         public ImmutableList<FilterClause> Clauses
         {
             get

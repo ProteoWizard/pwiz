@@ -1057,7 +1057,7 @@ namespace pwiz.Skyline.Menus
 
         public void ShowSpectraGridForm()
         {
-            var spectrumGridForm = new SpectraGridForm(SkylineWindow);
+            var spectrumGridForm = new SpectrumGridForm(SkylineWindow);
             spectrumGridForm.Show(SkylineWindow);
         }
     }

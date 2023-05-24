@@ -1,6 +1,6 @@
 ﻿namespace pwiz.Skyline.Controls.Spectra
 {
-    partial class SpectraGridForm
+    partial class SpectrumGridForm
     {
         /// <summary>
         /// Required designer variable.
@@ -29,7 +29,7 @@
         private void InitializeComponent()
         {
             this.components = new System.ComponentModel.Container();
-            System.ComponentModel.ComponentResourceManager resources = new System.ComponentModel.ComponentResourceManager(typeof(SpectraGridForm));
+            System.ComponentModel.ComponentResourceManager resources = new System.ComponentModel.ComponentResourceManager(typeof(SpectrumGridForm));
             this.statusPanel = new System.Windows.Forms.Panel();
             this.btnCancelReadingFile = new System.Windows.Forms.Button();
             this.imageList1 = new System.Windows.Forms.ImageList(this.components);

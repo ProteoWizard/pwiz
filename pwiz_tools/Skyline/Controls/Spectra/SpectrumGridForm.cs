@@ -43,7 +43,7 @@ using pwiz.Skyline.Util.Extensions;
 
 namespace pwiz.Skyline.Controls.Spectra
 {
-    public partial class SpectraGridForm : DataboundGridForm
+    public partial class SpectrumGridForm : DataboundGridForm
     {
         private SkylineDataSchema _dataSchema;
         private SequenceTree _sequenceTree;
@@ -62,7 +62,7 @@ namespace pwiz.Skyline.Controls.Spectra
         private bool _updatePending;
         private MsDataFileUri _fileBeingLoaded;
 
-        public SpectraGridForm(SkylineWindow skylineWindow)
+        public SpectrumGridForm(SkylineWindow skylineWindow)
         {
             InitializeComponent();
             SkylineWindow = skylineWindow;
@@ -341,7 +341,7 @@ namespace pwiz.Skyline.Controls.Spectra
                         continue;
                     }
 
-                    _spectrumLists.Add(key, new SpectrumMetadataList(resultFileMetadata.SpectrumMetadatas, _allSpectrumClassColumns));
+                    _spectrumLists.Add(key, SpectrumMetadataList.Ms2Only(resultFileMetadata.SpectrumMetadatas, _allSpectrumClassColumns));
                     _dataFileList.Add(key);
                     listBoxFiles.Items.Add(key);
                 }
@@ -446,7 +446,7 @@ namespace pwiz.Skyline.Controls.Spectra
 
         public void SetSpectra(MsDataFileUri dataFile, IList<SpectrumMetadata> spectra)
         {
-            _spectrumLists[new DataFileItem(null, dataFile)] = new SpectrumMetadataList(spectra, _allSpectrumClassColumns);
+            _spectrumLists[new DataFileItem(null, dataFile)] = SpectrumMetadataList.Ms2Only(spectra, _allSpectrumClassColumns);
             QueueUpdateSpectrumRows();
             statusPanel.Visible = false;
             _fileBeingLoaded = null;
@@ -474,11 +474,11 @@ namespace pwiz.Skyline.Controls.Spectra
 
         class SpectrumReader
         {
-            private SpectraGridForm _form;
+            private SpectrumGridForm _form;
             private List<MsDataFileUri> _files;
             private bool _isRunning;
 
-            public SpectrumReader(SpectraGridForm form)
+            public SpectrumReader(SpectrumGridForm form)
             {
                 _form = form;
                 _files = new List<MsDataFileUri>();
@@ -673,7 +673,7 @@ namespace pwiz.Skyline.Controls.Spectra
         public void AddSpectrumFilters(IList<SpectrumClassRow> spectrumClassRows)
         {
             var filters = new List<FilterClause>();
-            var transitionIdentityPathLists = new List<ICollection<IdentityPath>>();
+            var transitionGroupIdentityPathLists = new List<ICollection<IdentityPath>>();
             var activeClassColumns = GetActiveClassColumns().ToList();
             using (var longWaitDlg = new LongWaitDlg
                    {
@@ -711,7 +711,7 @@ namespace pwiz.Skyline.Controls.Spectra
                         }
 
                         filters.Add(filter);
-                        transitionIdentityPathLists.Add(precursorPaths);
+                        transitionGroupIdentityPathLists.Add(precursorPaths);
                     }
                 });
             }
@@ -730,7 +730,7 @@ namespace pwiz.Skyline.Controls.Spectra
                 return;
             }
 
-            if (transitionIdentityPathLists.All(list => list.Count == 0))
+            if (transitionGroupIdentityPathLists.All(list => list.Count == 0))
             {
                 MessageDlg.Show(this, Resources.SpectraGridForm_AddSpectrumFilters_There_were_no_matching_precursors_to_add_any_filters_to_);
                 return;
@@ -742,7 +742,7 @@ namespace pwiz.Skyline.Controls.Spectra
                 SkylineWindow.ModifyDocument(Resources.SpectraGridForm_AddSpectrumFilters_Change_spectrum_filter,
                     doc =>
                     {
-                        var newDoc = AddFilters(doc, filters, transitionIdentityPathLists, out addedFilterCount);
+                        var newDoc = AddFilters(doc, filters, transitionGroupIdentityPathLists, out addedFilterCount);
                         if (newDoc == null)
                         {
                             // cancelled
@@ -787,8 +787,25 @@ namespace pwiz.Skyline.Controls.Spectra
                     {
                         broker.CancellationToken.ThrowIfCancellationRequested();
                         broker.ProgressValue = i * 100 / filters.Count;
-                        doc = SkylineWindow.EditMenu.ChangeSpectrumFilter(doc, transitionGroupIdentityPaths[i],
-                            new SpectrumClassFilter(filters[i]), true, out int changeCount);
+                        var identityPaths = transitionGroupIdentityPaths[i];
+                        bool anyMs1 = false;
+                        foreach (var identityPath in identityPaths)
+                        {
+                            var node = doc.FindNode(identityPath) as TransitionGroupDocNode;
+                            if (node != null)
+                            {
+                                if (node.Transitions.Any(t => t.IsMs1))
+                                {
+                                    anyMs1 = true;
+                                    break;
+                                }
+                            }
+                        }
+
+                        SpectrumClassFilter spectrumClassFilter = anyMs1 ? SpectrumClassFilter.Ms2Filter(filters[i]) : new SpectrumClassFilter(filters[i]);
+
+                        doc = SkylineWindow.EditMenu.ChangeSpectrumFilter(doc, identityPaths, spectrumClassFilter, true,
+                            out int changeCount);
                         totalChangeCount += changeCount;
                     }
 
