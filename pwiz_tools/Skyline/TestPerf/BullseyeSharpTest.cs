@@ -16,7 +16,6 @@
  * limitations under the License.
  */
 
-using System;
 using System.Diagnostics;
 using System.Globalization;
 using System.IO;
@@ -54,12 +53,13 @@ namespace TestPerf
             var processRunner = new ProcessRunner { OutputEncoding = Encoding.UTF8 };
             IProgressStatus status = new ProgressStatus(string.Empty);
 
-            Console.WriteLine($@"{processStartInfo.FileName} {processStartInfo.Arguments}");
+            var textSink = new StringWriter();
+            textSink.WriteLine($@"{processStartInfo.FileName} {processStartInfo.Arguments}");
 
             // Bullseye doesn't handle L10N, so invoke with invariant culture
             LocalizationHelper.CallWithCulture(CultureInfo.InvariantCulture, () =>
             {
-                processRunner.Run(processStartInfo, null, null, ref status, Console.Out);
+                processRunner.Run(processStartInfo, null, null, ref status, textSink);
                 return true;
             });
 
