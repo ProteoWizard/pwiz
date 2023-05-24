@@ -19,6 +19,7 @@
 using System;
 using System.Collections.Generic;
 using System.Diagnostics;
+using System.Globalization;
 using System.IO;
 using System.Linq;
 using System.Text;
@@ -126,8 +127,8 @@ namespace pwiz.Skyline.Model.Lib
                 if (MinCharge.HasValue) sb.AppendFormat(" -minCharge {0}", MinCharge);
                 if (MaxCharge.HasValue) sb.AppendFormat(" -maxCharge {0}", MaxCharge);
                 if (MaxMissedCleavage.HasValue) sb.AppendFormat(" -maxMissedCleavage {0}", MaxMissedCleavage);
-                if (MinMz.HasValue) sb.AppendFormat(" -minMz {0}", MinMz);
-                if (MaxMz.HasValue) sb.AppendFormat(" -maxMz {0}", MaxMz);
+                if (MinMz.HasValue) sb.AppendFormat(CultureInfo.InvariantCulture, " -minMz {0}", MinMz);
+                if (MaxMz.HasValue) sb.AppendFormat(CultureInfo.InvariantCulture, " -maxMz {0}", MaxMz);
                 sb.Append(" -percolatorVersion v3-01 -enableAdvancedOptions -v2scoring");
                 return sb.ToString();
                 // ReSharper restore LocalizableElement
@@ -519,7 +520,7 @@ namespace pwiz.Skyline.Model.Lib
                 {
                     if (DefaultParameters[param.Key].Value.Equals(param.Value.Value))
                         continue;
-                    sb.AppendFormat(@" -{0}{1} ""{2}""", char.ToLowerInvariant(param.Key[0]), param.Key.Substring(1), param.Value.Value);
+                    sb.AppendFormat(CultureInfo.InvariantCulture, @" -{0}{1} ""{2}""", char.ToLowerInvariant(param.Key[0]), param.Key.Substring(1), param.Value.Value);
                 }
                 return sb.ToString();
             }

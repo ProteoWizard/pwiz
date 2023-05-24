@@ -188,8 +188,17 @@ namespace TestRunnerLib
             // during test clean-up
             if (teamcityTestDecoration)
             {
-                _cleanupLevelAll = true;
-                TestContext.Properties["DesiredCleanupLevel"] = "all";  // Must match DesiredCleanupLevel value
+                var isTeamCity = !string.IsNullOrEmpty(Environment.GetEnvironmentVariable(@"TEAMCITY_VERSION"));
+                if (isTeamCity)
+                {
+                    _cleanupLevelAll = true;
+                    TestContext.Properties["DesiredCleanupLevel"] = "all"; // Must match DesiredCleanupLevel value
+                }
+                else
+                {
+                    // if TC test decoration has been set on a dev computer for testing, don't delete downloaded zips
+                    TestContext.Properties["DesiredCleanupLevel"] = "persistent_files"; // Must match DesiredCleanupLevel value
+                }
             }
 
             if (isParallelClient)

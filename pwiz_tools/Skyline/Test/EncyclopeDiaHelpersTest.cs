@@ -108,8 +108,8 @@ namespace pwiz.SkylineTest
                 string elibExpectedTsvFilepath = TestFilesDir.GetTestPath("pan_human_library_690to705-z3_nce33-expected-quant-elib.tsv");
                 var testConfig = new EncyclopeDiaHelpers.EncyclopeDiaConfig
                 {
-                    PercolatorTrainingFDR = 0.1,
-                    PercolatorThreshold = 0.1,
+                    PercolatorTrainingFDR = 0.15,
+                    PercolatorThreshold = 0.15,
                     MinNumOfQuantitativePeaks = 0,
                     NumberOfQuantitativePeaks = 0,
                 };

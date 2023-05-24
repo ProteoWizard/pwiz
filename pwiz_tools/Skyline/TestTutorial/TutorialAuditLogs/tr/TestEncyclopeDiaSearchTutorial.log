@@ -104,11 +104,11 @@ Import Peptide Search > Associate Proteins > Find minimal protein list is False
 Import Peptide Search > Associate Proteins > Remove subset proteins is False
 Import Peptide Search > Associate Proteins > Shared peptides option is "Duplicated between proteins"
 Import Peptide Search > Associate Proteins > Min peptides per protein is "1"
-Import Peptide Search > Associate Proteins > Proteins mapped is "555"
-Import Peptide Search > Associate Proteins > Peptides mapped is "4838"
-Import Peptide Search > Associate Proteins > Proteins unmapped is "3"
-Import Peptide Search > Associate Proteins > Protein targets is "555"
-Import Peptide Search > Associate Proteins > Peptide targets is "5133"
+Import Peptide Search > Associate Proteins > Proteins mapped is "556"
+Import Peptide Search > Associate Proteins > Peptides mapped is "4835"
+Import Peptide Search > Associate Proteins > Proteins unmapped is "2"
+Import Peptide Search > Associate Proteins > Protein targets is "556"
+Import Peptide Search > Associate Proteins > Peptide targets is "5121"
 Extra Info: Extract Chromatograms = 
 {
     Found results files = 
@@ -160,10 +160,10 @@ Associate Proteins =
     Remove subset proteins = False,
     Shared peptides option = "Duplicated between proteins",
     Min peptides per protein = "1",
-    Proteins mapped = "555",
-    Peptides mapped = "4838",
-    Proteins unmapped = "3",
-    Protein targets = "555",
-    Peptide targets = "5133"
+    Proteins mapped = "556",
+    Peptides mapped = "4835",
+    Proteins unmapped = "2",
+    Protein targets = "556",
+    Peptide targets = "5121"
 }
 
