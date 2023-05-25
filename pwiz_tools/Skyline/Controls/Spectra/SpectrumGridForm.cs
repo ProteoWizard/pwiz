@@ -924,7 +924,16 @@ namespace pwiz.Skyline.Controls.Spectra
             {
                 throw new ArgumentException(@"No such column " + column);
             }
-            checkedListBoxSpectrumClassColumns.SetItemCheckState(index, checkState);
+
+            checkedListBoxSpectrumClassColumns.ItemCheck -= checkedListBoxSpectrumClassColumns_ItemCheck;
+            try
+            {
+                checkedListBoxSpectrumClassColumns.SetItemCheckState(index, checkState);
+            }
+            finally
+            {
+                checkedListBoxSpectrumClassColumns.ItemCheck += checkedListBoxSpectrumClassColumns_ItemCheck;
+            }
         }
     }
 }
