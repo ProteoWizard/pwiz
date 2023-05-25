@@ -412,6 +412,15 @@ namespace pwiz.Skyline.Model.Databinding.Entities {
         }
         
         /// <summary>
+        ///   Looks up a localized string similar to Chromatogram End Time.
+        /// </summary>
+        public static string ChromatogramEndTime {
+            get {
+                return ResourceManager.GetString("ChromatogramEndTime", resourceCulture);
+            }
+        }
+        
+        /// <summary>
         ///   Looks up a localized string similar to Chromatogram Extraction Width.
         /// </summary>
         public static string ChromatogramExtractionWidth {
@@ -471,6 +480,15 @@ namespace pwiz.Skyline.Model.Databinding.Entities {
         public static string ChromatogramSource {
             get {
                 return ResourceManager.GetString("ChromatogramSource", resourceCulture);
+            }
+        }
+        
+        /// <summary>
+        ///   Looks up a localized string similar to Chromatogram Start Time.
+        /// </summary>
+        public static string ChromatogramStartTime {
+            get {
+                return ResourceManager.GetString("ChromatogramStartTime", resourceCulture);
             }
         }
         

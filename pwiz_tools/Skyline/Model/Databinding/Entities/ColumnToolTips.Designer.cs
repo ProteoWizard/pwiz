@@ -424,6 +424,15 @@ namespace pwiz.Skyline.Model.Databinding.Entities {
         }
         
         /// <summary>
+        ///   Looks up a localized string similar to Last retention time in the chromatogram.
+        /// </summary>
+        public static string ChromatogramEndTime {
+            get {
+                return ResourceManager.GetString("ChromatogramEndTime", resourceCulture);
+            }
+        }
+        
+        /// <summary>
         ///   Looks up a localized string similar to Full width of the channel over which the spectrum intensities were summed.
         /// </summary>
         public static string ChromatogramExtractionWidth {
@@ -483,6 +492,15 @@ namespace pwiz.Skyline.Model.Databinding.Entities {
         public static string ChromatogramSource {
             get {
                 return ResourceManager.GetString("ChromatogramSource", resourceCulture);
+            }
+        }
+        
+        /// <summary>
+        ///   Looks up a localized string similar to First retention time in the chromatogram.
+        /// </summary>
+        public static string ChromatogramStartTime {
+            get {
+                return ResourceManager.GetString("ChromatogramStartTime", resourceCulture);
             }
         }
         
