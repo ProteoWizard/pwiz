@@ -3403,6 +3403,8 @@ namespace pwiz.Skyline.Properties {
             set {
                 this["ExportMethodXICWidth"] = value;
             }
+        }
+        
         [global::System.Configuration.DefaultSettingValueAttribute("False")]
         public bool FullScanPropertySheetVisible {
             get {
