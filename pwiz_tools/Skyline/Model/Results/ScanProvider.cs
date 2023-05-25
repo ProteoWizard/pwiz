@@ -39,7 +39,7 @@ namespace pwiz.Skyline.Model.Results
         public SignedMz PrecursorMz;
         public SignedMz ProductMz;
         public double? ExtractionWidth;
-        public IonMobilityFilter _ionMobilityInfo;
+        public IonMobilityFilter IonMobilityInfo;
         public Identity Id;  // ID of the associated TransitionDocNode
         public bool MatchMz(double mz)
         {
@@ -49,7 +49,7 @@ namespace pwiz.Skyline.Model.Results
 
         public override string ToString() // Not user facing, for debug convenience only
         {
-            return $@"name={Name} src={Source} Q1={PrecursorMz} Q2={ProductMz} w={ExtractionWidth} im={_ionMobilityInfo} Id={Id}";
+            return $@"name={Name} src={Source} Q1={PrecursorMz} Q2={ProductMz} w={ExtractionWidth} im={IonMobilityInfo} Id={Id}";
         }
     }
 

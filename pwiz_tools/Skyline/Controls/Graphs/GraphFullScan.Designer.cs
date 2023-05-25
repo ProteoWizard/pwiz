@@ -33,7 +33,7 @@
             this.toolStripLabel1 = new System.Windows.Forms.ToolStripLabel();
             this.comboSpectrum = new System.Windows.Forms.ToolStripComboBox();
             this.GraphPanel = new System.Windows.Forms.Panel();
-            this.graphControl = new pwiz.MSGraph.MSGraphControl();
+            this.graphControlExtension = new MsGraphExtension();
             this.toolBar = new System.Windows.Forms.ToolStrip();
             this.toolStripLabel2 = new System.Windows.Forms.ToolStripLabel();
             this.comboBoxScanType = new System.Windows.Forms.ToolStripComboBox();
@@ -42,6 +42,7 @@
             this.magnifyBtn = new System.Windows.Forms.ToolStripButton();
             this.spectrumBtn = new System.Windows.Forms.ToolStripButton();
             this.filterBtn = new System.Windows.Forms.ToolStripButton();
+            this.propertiesBtn = new System.Windows.Forms.ToolStripButton();
             this.lblScanId = new System.Windows.Forms.ToolStripLabel();
             this.btnIsolationWindow = new System.Windows.Forms.ToolStripButton();
             this.toolStripButtonShowAnnotations = new System.Windows.Forms.ToolStripButton();
@@ -69,32 +70,16 @@
             // 
             // GraphPanel
             // 
-            this.GraphPanel.Controls.Add(this.graphControl);
+            this.GraphPanel.Controls.Add(this.graphControlExtension);
             this.GraphPanel.Controls.Add(this.toolBar);
             resources.ApplyResources(this.GraphPanel, "GraphPanel");
             this.GraphPanel.Name = "GraphPanel";
             // 
             // graphControl
             // 
-            resources.ApplyResources(this.graphControl, "graphControl");
-            this.graphControl.EditButtons = System.Windows.Forms.MouseButtons.Left;
-            this.graphControl.EditModifierKeys = System.Windows.Forms.Keys.None;
-            this.graphControl.IsEnableVPan = false;
-            this.graphControl.IsEnableVZoom = false;
-            this.graphControl.IsShowCopyMessage = false;
-            this.graphControl.IsZoomOnMouseCenter = true;
-            this.graphControl.Name = "graphControl";
-            this.graphControl.ScrollGrace = 0D;
-            this.graphControl.ScrollMaxX = 0D;
-            this.graphControl.ScrollMaxY = 0D;
-            this.graphControl.ScrollMaxY2 = 0D;
-            this.graphControl.ScrollMinX = 0D;
-            this.graphControl.ScrollMinY = 0D;
-            this.graphControl.ScrollMinY2 = 0D;
-            this.graphControl.ContextMenuBuilder += new ZedGraph.ZedGraphControl.ContextMenuBuilderEventHandler(this.graphControl_ContextMenuBuilder);
-            this.graphControl.ZoomEvent += new ZedGraph.ZedGraphControl.ZoomEventHandler(this.graphControl_ZoomEvent);
-            this.graphControl.MouseMoveEvent += new ZedGraph.ZedGraphControl.ZedMouseEventHandler(this.graphControl_MouseMove);
-            this.graphControl.MouseClick += new System.Windows.Forms.MouseEventHandler(this.graphControl_MouseClick);
+            resources.ApplyResources(this.graphControlExtension, "graphControlExtension");
+            this.graphControlExtension.Name = "graphControlExtension";
+            this.graphControlExtension.PropertySheetVisibilityPropName = "FullScanPropertySheetVisible";
             // 
             // toolBar
             // 
@@ -102,6 +87,7 @@
             this.toolBar.Items.AddRange(new System.Windows.Forms.ToolStripItem[] {
             this.toolStripLabel2,
             this.comboBoxScanType,
+            this.propertiesBtn,
             this.rightButton,
             this.leftButton,
             this.magnifyBtn,
@@ -182,6 +168,19 @@
             resources.ApplyResources(this.filterBtn, "filterBtn");
             this.filterBtn.Margin = new System.Windows.Forms.Padding(10, 1, 0, 2);
             this.filterBtn.Name = "filterBtn";
+            // 
+            // propertiesBtn
+            // 
+            resources.ApplyResources(this.propertiesBtn, "propertiesBtn");
+            this.propertiesBtn.Name = "propertiesBtn";
+            this.propertiesBtn.Alignment = System.Windows.Forms.ToolStripItemAlignment.Right;
+            this.propertiesBtn.CheckOnClick = true;
+            this.propertiesBtn.ImageTransparentColor = System.Drawing.Color.Magenta;
+            this.propertiesBtn.DisplayStyle = System.Windows.Forms.ToolStripItemDisplayStyle.Image;
+            this.propertiesBtn.Image = global::pwiz.Skyline.Properties.Resources.Properties_Button;
+            this.propertiesBtn.Margin = new System.Windows.Forms.Padding(10, 1, 0, 2);
+            this.propertiesBtn.Click += new System.EventHandler(this.propertiesBtn_Click);
+
             // 
             // lblScanId
             // 
@@ -278,7 +277,7 @@
         private System.Windows.Forms.ToolStripLabel toolStripLabel1;
         private System.Windows.Forms.ToolStripComboBox comboSpectrum;
         private System.Windows.Forms.Panel GraphPanel;
-        private pwiz.MSGraph.MSGraphControl graphControl;
+        private MsGraphExtension graphControlExtension;
         private System.Windows.Forms.ToolStrip toolBar;
         private System.Windows.Forms.ToolStripLabel toolStripLabel2;
         private System.Windows.Forms.ToolStripComboBox comboBoxScanType;
@@ -289,6 +288,7 @@
         private System.Windows.Forms.ToolStripButton btnIsolationWindow;
         private System.Windows.Forms.ToolStripButton spectrumBtn;
         private System.Windows.Forms.ToolStripButton filterBtn;
+        private System.Windows.Forms.ToolStripButton propertiesBtn;
         private System.Windows.Forms.ContextMenuStrip contextMenuStrip1;
         private System.Windows.Forms.ToolStripMenuItem showScanNumberContextMenuItem;
         private System.Windows.Forms.ToolStripButton toolStripButtonShowAnnotations;

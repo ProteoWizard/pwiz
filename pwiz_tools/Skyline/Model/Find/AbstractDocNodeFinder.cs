@@ -32,14 +32,14 @@ namespace pwiz.Skyline.Model.Find
                 var nodePep = bookmarkEnumerator.CurrentDocNode as PeptideDocNode;
                 if (nodePep != null)
                 {
-                    return IsMatch(nodePep) ? new FindMatch(DisplayName) : null;
+                    return IsMatch(nodePep) ? new FindMatch(bookmarkEnumerator.Current, DisplayName) : null;
                 }
                 var nodeGroup = bookmarkEnumerator.CurrentDocNode as TransitionGroupDocNode;
                 if (nodeGroup != null)
                 {
                     var nodeParent = bookmarkEnumerator.Document.FindNode(bookmarkEnumerator.IdentityPath.Parent)
                                      as PeptideDocNode;
-                    return !IsMatch(nodeParent) && IsMatch(nodeGroup) ? new FindMatch(DisplayName) : null;
+                    return !IsMatch(nodeParent) && IsMatch(nodeGroup) ? new FindMatch(bookmarkEnumerator.Current, DisplayName) : null;
                 }
                 var nodeTran = bookmarkEnumerator.CurrentDocNode as TransitionDocNode;
                 if (nodeTran != null)
@@ -48,7 +48,7 @@ namespace pwiz.Skyline.Model.Find
                                      as PeptideDocNode;
                     var nodeParent = bookmarkEnumerator.Document.FindNode(bookmarkEnumerator.IdentityPath.Parent)
                                      as TransitionGroupDocNode;
-                    return !IsMatch(nodeGrandParent) && !IsMatch(nodeParent) && IsMatch(nodeParent, nodeTran) ? new FindMatch(DisplayName) : null;
+                    return !IsMatch(nodeGrandParent) && !IsMatch(nodeParent) && IsMatch(nodeParent, nodeTran) ? new FindMatch(bookmarkEnumerator.Current, DisplayName) : null;
                 }
             }
             return null;            

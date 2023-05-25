@@ -1115,10 +1115,15 @@ namespace pwiz.Skyline
             ToggleObservedMzValues();
         }
 
-        private void showSpectrumPropertiesContextMenuItem_Click(object sender, EventArgs e)
+        private void showLibSpectrumPropertiesContextMenuItem_Click(object sender, EventArgs e)
         {
             if (_graphSpectrum != null && _graphSpectrum.Visible)
-                _graphSpectrum.ShowPropertiesSheet = !showSpectrumPropertiesContextMenuItem.Checked;
+                _graphSpectrum.ShowPropertiesSheet = !showLibSpectrumPropertiesContextMenuItem.Checked;
+        }
+        private void showFullScanSpectrumPropertiesContextMenuItem_Click(object sender, EventArgs e)
+        {
+            if (_graphFullScan != null && _graphFullScan.Visible)
+                _graphFullScan.ShowPropertiesSheet = !showFullScanSpectrumPropertiesContextMenuItem.Checked;
         }
 
         public void ToggleObservedMzValues()
@@ -1202,10 +1207,18 @@ namespace pwiz.Skyline
             if (control != null)
             {
                 menuStrip.Items.Insert(iInsert++, spectrumGraphPropsContextMenuItem);
-                showSpectrumPropertiesContextMenuItem.Checked = control.ShowPropertiesSheet;
+                if (control.ControlType == SpectrumControlType.LibraryMatch)
+                {
+                    showLibSpectrumPropertiesContextMenuItem.Checked = control.ShowPropertiesSheet;
+                    menuStrip.Items.Insert(iInsert++, showLibSpectrumPropertiesContextMenuItem);
+                }
+                else if (control.ControlType == SpectrumControlType.FullScanViewer)
+                {
+                    showFullScanSpectrumPropertiesContextMenuItem.Checked = control.ShowPropertiesSheet;
+                    menuStrip.Items.Insert(iInsert++, showFullScanSpectrumPropertiesContextMenuItem);
+                }
             }
 
-            menuStrip.Items.Insert(iInsert++, showSpectrumPropertiesContextMenuItem);
 
             if (_listGraphChrom.Any(c => c.Visible)) // Don't offer to show chromatograms when there are none
             {
@@ -1219,7 +1232,7 @@ namespace pwiz.Skyline
                 synchMzScaleToolStripMenuItem.Checked = Settings.Default.SyncMZScale;
             }
             */
-            menuStrip.Items.Insert(iInsert, toolStripSeparator15);
+            //menuStrip.Items.Insert(iInsert, toolStripSeparator15);
 
             // Remove some ZedGraph menu items not of interest
             foreach (var item in items)
