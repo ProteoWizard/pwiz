@@ -193,7 +193,7 @@ ShareListDlg`2,TestShareSettings
 ShareTypeDlg,TestDocumentSharing
 ShareResultsFilesDlg,TestDocumentSharing
 SkylineWindow,*
-SpectraGridForm,TestSpectraGridForm
+SpectrumGridForm,TestSpectrumGrid
 SpectrumChartPropertyDlg,TestMs1Tutorial
 SpectrumLibraryInfoDlg,TestManageLibraryRuns
 StartPage.WizardTab,TestStartPageOpenRecent

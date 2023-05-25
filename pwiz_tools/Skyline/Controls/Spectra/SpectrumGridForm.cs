@@ -469,7 +469,7 @@ namespace pwiz.Skyline.Controls.Spectra
 
         public new bool IsComplete()
         {
-            return _spectrumReader.IsComplete() && DataboundGridControl.BindingListSource.IsComplete;
+            return base.IsComplete && _spectrumReader.IsComplete() && !_updatePending;
         }
 
         class SpectrumReader
@@ -639,6 +639,11 @@ namespace pwiz.Skyline.Controls.Spectra
 
         private void btnAddSpectrumFilter_Click(object sender, EventArgs e)
         {
+            AddSpectrumFiltersForSelectedRows();
+        }
+
+        public void AddSpectrumFiltersForSelectedRows()
+        {
             IList<SpectrumClassRow> spectrumClassRows = new List<SpectrumClassRow>();
             if (DataboundGridControl.DataGridView.SelectedRows.Count == 0)
             {
@@ -668,6 +673,7 @@ namespace pwiz.Skyline.Controls.Spectra
             {
                 AddSpectrumFilters(spectrumClassRows);
             }
+
         }
 
         public void AddSpectrumFilters(IList<SpectrumClassRow> spectrumClassRows)
@@ -755,8 +761,8 @@ namespace pwiz.Skyline.Controls.Spectra
                             return doc;
                         }
                         string message = addedFilterCount == 1
-                            ? Resources.SpectraGridForm_AddSpectrumFilters_One_precursor_filter_will_be_added_to_the_document_
-                            : string.Format(Resources.SpectraGridForm_AddSpectrumFilters__0__precursor_filters_will_be_added_to_the_document_, addedFilterCount);
+                            ? Resources.SpectraGridForm_AddSpectrumFilters_One_spectrum_filter_will_be_added_to_the_document_
+                            : string.Format(Resources.SpectraGridForm_AddSpectrumFilters__0__spectrum_filters_will_be_added_to_the_document_, addedFilterCount);
                         if (MultiButtonMsgDlg.Show(this, message, MessageBoxButtons.OKCancel) == DialogResult.Cancel)
                         {
                             return doc;
@@ -770,7 +776,7 @@ namespace pwiz.Skyline.Controls.Spectra
 
             if (addedFilterCount == 0)
             {
-                MessageDlg.Show(this, Resources.SpectraGridForm_AddSpectrumFilters_No_precursor_filters_were_added_to_the_document_);
+                MessageDlg.Show(this, Resources.SpectraGridForm_AddSpectrumFilters_No_spectrum_filters_were_added_to_the_document_);
             }
         }
 
@@ -909,6 +915,16 @@ namespace pwiz.Skyline.Controls.Spectra
                     precursorMzs[0].RawValue.ToString(Formats.Mz), precursorMzs[1].RawValue.ToString(Formats.Mz));
             }
             return string.Format(Resources.SpectraGridForm_GetSummaryMessage_Showing_spectra_near__0__precursors_between__1__and__2_, precursorMzs.Count, precursorMzs[0].RawValue.ToString(Formats.Mz), precursorMzs.Last().RawValue.ToString(Formats.Mz));
+        }
+
+        public void SetSpectrumClassColumnCheckState(SpectrumClassColumn column, CheckState checkState)
+        {
+            int index = _allSpectrumClassColumns.IndexOf(column);
+            if (index < 0)
+            {
+                throw new ArgumentException(@"No such column " + column);
+            }
+            checkedListBoxSpectrumClassColumns.SetItemCheckState(index, checkState);
         }
     }
 }

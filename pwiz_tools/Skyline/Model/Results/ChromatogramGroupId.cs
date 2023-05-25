@@ -365,7 +365,7 @@ namespace pwiz.Skyline.Model.Results
                     {
                         PropertyPath = filterSpec.Column,
                         Operation = _filterOperationReverseMap[filterSpec.Operation],
-                        Operand = filterSpec.Predicate.InvariantOperandText
+                        Operand = filterSpec.Predicate.InvariantOperandText ?? string.Empty
                     });
                 }
                 idsProto.Filters.Add(filterProto);

@@ -1052,10 +1052,10 @@ namespace pwiz.Skyline.Menus
 
         private void spectrumGridMenuItem_Click(object sender, EventArgs e)
         {
-            ShowSpectraGridForm();
+            ShowSpectrumGridForm();
         }
 
-        public void ShowSpectraGridForm()
+        public void ShowSpectrumGridForm()
         {
             var spectrumGridForm = new SpectrumGridForm(SkylineWindow);
             spectrumGridForm.Show(SkylineWindow);

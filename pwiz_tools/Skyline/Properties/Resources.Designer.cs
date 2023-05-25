@@ -31743,12 +31743,12 @@ namespace pwiz.Skyline.Properties {
         }
         
         /// <summary>
-        ///   Looks up a localized string similar to {0} precursor filters will be added to the document..
+        ///   Looks up a localized string similar to {0} spectrum filters will be added to the document..
         /// </summary>
-        public static string SpectraGridForm_AddSpectrumFilters__0__precursor_filters_will_be_added_to_the_document_ {
+        public static string SpectraGridForm_AddSpectrumFilters__0__spectrum_filters_will_be_added_to_the_document_ {
             get {
-                return ResourceManager.GetString("SpectraGridForm_AddSpectrumFilters__0__precursor_filters_will_be_added_to_the_doc" +
-                        "ument_", resourceCulture);
+                return ResourceManager.GetString("SpectraGridForm_AddSpectrumFilters__0__spectrum_filters_will_be_added_to_the_docu" +
+                        "ment_", resourceCulture);
             }
         }
         
@@ -31771,22 +31771,22 @@ namespace pwiz.Skyline.Properties {
         }
         
         /// <summary>
-        ///   Looks up a localized string similar to No precursor filters were added to the document..
+        ///   Looks up a localized string similar to No spectrum filters were added to the document..
         /// </summary>
-        public static string SpectraGridForm_AddSpectrumFilters_No_precursor_filters_were_added_to_the_document_ {
+        public static string SpectraGridForm_AddSpectrumFilters_No_spectrum_filters_were_added_to_the_document_ {
             get {
-                return ResourceManager.GetString("SpectraGridForm_AddSpectrumFilters_No_precursor_filters_were_added_to_the_documen" +
-                        "t_", resourceCulture);
+                return ResourceManager.GetString("SpectraGridForm_AddSpectrumFilters_No_spectrum_filters_were_added_to_the_document" +
+                        "_", resourceCulture);
             }
         }
         
         /// <summary>
-        ///   Looks up a localized string similar to One precursor filter will be added to the document..
+        ///   Looks up a localized string similar to One spectrum filter will be added to the document..
         /// </summary>
-        public static string SpectraGridForm_AddSpectrumFilters_One_precursor_filter_will_be_added_to_the_document_ {
+        public static string SpectraGridForm_AddSpectrumFilters_One_spectrum_filter_will_be_added_to_the_document_ {
             get {
-                return ResourceManager.GetString("SpectraGridForm_AddSpectrumFilters_One_precursor_filter_will_be_added_to_the_docu" +
-                        "ment_", resourceCulture);
+                return ResourceManager.GetString("SpectraGridForm_AddSpectrumFilters_One_spectrum_filter_will_be_added_to_the_docum" +
+                        "ent_", resourceCulture);
             }
         }
         
