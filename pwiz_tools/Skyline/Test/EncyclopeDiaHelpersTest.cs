@@ -60,6 +60,10 @@ namespace pwiz.SkylineTest
         [TestMethod]
         public void TestPrositOutputToEncyclopediaLibraries()
         {
+            // Wine has mysterious issues running EncylopeDia, but SkylineCmd currently can't run EncyclopeDia anyway, so skip these tests
+            if (ProcessEx.IsRunningOnWine)
+                return;
+
             TestFilesDir = new TestFilesDir(TestContext, TEST_ZIP_PATH);
             string fastaFilepath = TestFilesDir.GetTestPath("pan_human_library_690to705.fasta");
             string dlibFilepath = TestFilesDir.GetTestPath("pan_human_library_690to705-z3_nce33.dlib");
