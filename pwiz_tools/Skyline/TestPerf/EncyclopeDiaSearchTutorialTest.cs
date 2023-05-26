@@ -135,6 +135,9 @@ namespace TestPerf
 
         private void RunTest()
         {
+            if (Program.UseOriginalURLs && !HasPrositServer())
+                return;
+
             //TestFilesZip = @"https://skyline.ms/tutorials/EncyclopeDiaSearchTutorial.zip";
             TestFilesZip = @"https://skyline.ms/tutorials/EncyclopeDiaSearchTutorialDemux.zip";
             TestFilesPersistent = new[] { "23aug2017_hela_serum_timecourse", "z3_nce33-prosit" };
@@ -182,9 +185,6 @@ namespace TestPerf
 
         protected override void DoTest()
         {
-            if (!HasPrositServer())
-                return;
-
             PrepareDocument("EncyclopeDiaSearchTutorialTest.sky");
             string fastaFilepath = TestFilesDir.GetTestPath(_analysisValues.FastaPath);
 
