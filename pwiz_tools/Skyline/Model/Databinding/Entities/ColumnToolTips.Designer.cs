@@ -1672,6 +1672,15 @@ namespace pwiz.Skyline.Model.Databinding.Entities {
         }
         
         /// <summary>
+        ///   Looks up a localized string similar to The subset of the selected precursors whose precursor m/z matches any of the spectra represented by the row in the Spectrum Grid..
+        /// </summary>
+        public static string MatchingPrecursors {
+            get {
+                return ResourceManager.GetString("MatchingPrecursors", resourceCulture);
+            }
+        }
+        
+        /// <summary>
         ///   Looks up a localized string similar to Max.
         /// </summary>
         public static string Max {

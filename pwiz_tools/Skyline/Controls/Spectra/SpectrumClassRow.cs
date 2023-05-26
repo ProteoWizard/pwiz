@@ -18,19 +18,24 @@
  */
 
 using System.Collections.Generic;
+using pwiz.Common.DataBinding.Attributes;
 using pwiz.Skyline.Model.Results.Spectra;
 
 namespace pwiz.Skyline.Controls.Spectra
 {
     public class SpectrumClassRow
     {
-        public SpectrumClassRow(SpectrumClass spectrumClass)
+        public SpectrumClassRow(MatchingPrecursors matchingPrecursors, SpectrumClass spectrumClass)
         {
+            MatchingPrecursors = matchingPrecursors;
             Properties = spectrumClass;
             Files = new Dictionary<string, FileSpectrumInfo>();
         }
 
+        public MatchingPrecursors MatchingPrecursors { get; }
+
         public SpectrumClass Properties { get; }
+        [OneToMany(ItemDisplayName = "Info")]
         public Dictionary<string, FileSpectrumInfo> Files { get; }
     }
 }

@@ -671,6 +671,9 @@ The options for determining this value can be specified on the Quantification ta
   <data name="MassErrors">
     <value>The mass errors of the chromatogram.</value>
   </data>
+  <data name="MatchingPrecursors">
+    <value>The subset of the selected precursors whose precursor m/z matches any of the spectra represented by the row in the Spectrum Grid.</value>
+  </data>
   <data name="Max">
     <value>Max</value>
   </data>

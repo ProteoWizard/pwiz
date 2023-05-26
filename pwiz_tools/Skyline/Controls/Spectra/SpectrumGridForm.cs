@@ -137,6 +137,10 @@ namespace pwiz.Skyline.Controls.Spectra
         private ViewSpec GetDefaultViewSpec()
         {
             var columns = new List<ColumnSpec>();
+            if (_selectedPrecursorPaths.Any())
+            {
+                columns.Add(new ColumnSpec(PropertyPath.Root.Property(nameof(SpectrumClassRow.MatchingPrecursors))));
+            }
             var tolerance = SkylineWindow.Document.Settings.TransitionSettings.Instrument.MzMatchTolerance;
             var ppSpectrumClass = PropertyPath.Root.Property(nameof(SpectrumClassRow.Properties));
             for (int i = 0; i < _allSpectrumClassColumns.Count; i++)
@@ -268,10 +272,12 @@ namespace pwiz.Skyline.Controls.Spectra
             var spectrumClasses = new Dictionary<SpectrumClassKey, SpectrumClassRow>();
             var classColumns = ImmutableList.ValueOf(GetEnabledClassColumns());
             IList<TransitionGroupDocNode> transitionGroupDocNodes = null;
+            IList<PrecursorClass> precursorClasses = null;
             if (_selectedPrecursorPaths.Count > 0)
             {
                 transitionGroupDocNodes = _selectedPrecursorPaths.Select(path => document.FindNode(path))
                     .OfType<TransitionGroupDocNode>().ToList();
+                precursorClasses = GetPrecursorClasses(_selectedPrecursorPaths).ToList();
             }
 
             foreach (var dataFileItem in _dataFileList)
@@ -294,7 +300,13 @@ namespace pwiz.Skyline.Controls.Spectra
                 {
                     if (!spectrumClasses.TryGetValue(spectrumGroup.Key, out var spectrumClass))
                     {
-                        spectrumClass = new SpectrumClassRow(new SpectrumClass(spectrumGroup.Key));
+                        MatchingPrecursors matchingPrecursors = null;
+                        if (precursorClasses != null)
+                        {
+                            matchingPrecursors = MatchingPrecursors.FromPrecursors(GetMatchingPrecursorClasses(document,
+                                precursorClasses, spectrumGroup.Select(row => row.SpectrumMetadata)));
+                        }
+                        spectrumClass = new SpectrumClassRow(matchingPrecursors, new SpectrumClass(spectrumGroup.Key));
                         spectrumClasses.Add(spectrumGroup.Key, spectrumClass);
                     }
                     spectrumClass.Files.Add(dataFileItem.ToString(), new FileSpectrumInfo(_dataSchema, dataFileItem.MsDataFileUri, spectrumGroup.Select(row=>row.SpectrumMetadata)));
@@ -307,6 +319,21 @@ namespace pwiz.Skyline.Controls.Spectra
             UpdateViewContext();
             lblSummary.Text = GetSummaryMessage(transitionGroupDocNodes);
             btnAddSpectrumFilter.Enabled = transitionGroupDocNodes?.Count > 0;
+        }
+
+        private IEnumerable<PrecursorClass> GetPrecursorClasses(IEnumerable<IdentityPath> transitionGroupIdentityPaths)
+        {
+            foreach (var peptideGroup in transitionGroupIdentityPaths.GroupBy(path =>
+                         path.GetPathTo((int)SrmDocument.Level.Molecules)))
+            {
+                var peptide = new Model.Databinding.Entities.Peptide(_dataSchema, peptideGroup.Key);
+                foreach (var precursorGroup in peptideGroup.Select(path => peptide.DocNode.FindNode(path.Child))
+                             .OfType<TransitionGroupDocNode>()
+                             .GroupBy(tg => Tuple.Create(tg.PrecursorAdduct, tg.LabelType)))
+                {
+                    yield return new PrecursorClass(peptide, precursorGroup.First());
+                }
+            }
         }
 
         private void AddReplicatesWithMetadata(SrmDocument document)
@@ -370,32 +397,50 @@ namespace pwiz.Skyline.Controls.Spectra
 
         private IEnumerable<TransitionGroupDocNode> FindMatchingTransitionGroups(TransitionSettings transitionSettings, SpectrumMetadata spectrumMetadata, IList<TransitionGroupDocNode> transitionGroups)
         {
+            return transitionGroups.Where(transitionGroup =>
+                SpectrumMatchesTransitionGroup(transitionSettings, spectrumMetadata, transitionGroup));
+        }
+
+        private bool SpectrumMatchesTransitionGroup(TransitionSettings transitionSettings, SpectrumMetadata spectrumMetadata, TransitionGroupDocNode transitionGroup)
+        {
             if (1 == spectrumMetadata.MsLevel)
             {
                 if (!transitionSettings.FullScan.IsEnabledMs)
                 {
-                    yield break;
+                    return false;
                 }
 
-                foreach (var transitionGroup in transitionGroups)
+                if (transitionGroup.Transitions.Any(t => t.IsMs1))
                 {
-                    if (transitionGroup.Transitions.Any(t => t.IsMs1))
-                    {
-                        yield return transitionGroup;
-                    }
+                    return true;
                 }
 
-                yield break;
+                return false;
             }
             var tolerance = transitionSettings.Instrument.MzMatchTolerance;
             foreach (var spectrumPrecursor in spectrumMetadata.GetPrecursors(1))
             {
-                foreach (var transitionGroup in transitionGroups)
+                if (0 == transitionGroup.PrecursorMz.CompareTolerant(spectrumPrecursor.PrecursorMz, tolerance))
                 {
-                    if (0 == transitionGroup.PrecursorMz.CompareTolerant(spectrumPrecursor.PrecursorMz, tolerance))
-                    {
-                        yield return transitionGroup;
-                    }
+                    return true;
+                }
+            }
+            return false;
+        }
+
+        private IEnumerable<PrecursorClass> GetMatchingPrecursorClasses(SrmDocument document,
+            IEnumerable<PrecursorClass> precursorClasses, IEnumerable<SpectrumMetadata> spectrumMetadatas)
+        {
+            var metadataGroups =
+                spectrumMetadatas.GroupBy(metadata => Tuple.Create(metadata.MsLevel, metadata.GetPrecursors(1)))
+                    .ToList();
+            foreach (var precursorClass in precursorClasses)
+            {
+                var transitionGroupDocNode = precursorClass.GetExampleTransitionGroupDocNode();
+                if (metadataGroups.Any(group => SpectrumMatchesTransitionGroup(document.Settings.TransitionSettings,
+                        group.First(), transitionGroupDocNode)))
+                {
+                    yield return precursorClass;
                 }
             }
         }

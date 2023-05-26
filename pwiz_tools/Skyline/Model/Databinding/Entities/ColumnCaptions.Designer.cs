@@ -1618,6 +1618,15 @@ namespace pwiz.Skyline.Model.Databinding.Entities {
         }
         
         /// <summary>
+        ///   Looks up a localized string similar to Matching Precursors.
+        /// </summary>
+        public static string MatchingPrecursors {
+            get {
+                return ResourceManager.GetString("MatchingPrecursors", resourceCulture);
+            }
+        }
+        
+        /// <summary>
         ///   Looks up a localized string similar to Max.
         /// </summary>
         public static string Max {

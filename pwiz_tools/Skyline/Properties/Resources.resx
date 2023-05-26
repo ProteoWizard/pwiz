@@ -12125,4 +12125,7 @@ If you choose Disable, you can enable Auto-select later with the "Refine &gt; Ad
   <data name="TransitionGroupTreeNode_RenderSpectrumClassFilterTip_Spectrum_Filter" xml:space="preserve">
     <value>Spectrum Filter</value>
   </data>
+  <data name="MatchingPrecursors_ToString__0__precursors" xml:space="preserve">
+    <value>{0} precursors</value>
+  </data>
 </root>

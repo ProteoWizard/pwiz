@@ -19615,6 +19615,15 @@ namespace pwiz.Skyline.Properties {
         }
         
         /// <summary>
+        ///   Looks up a localized string similar to {0} precursors.
+        /// </summary>
+        public static string MatchingPrecursors_ToString__0__precursors {
+            get {
+                return ResourceManager.GetString("MatchingPrecursors_ToString__0__precursors", resourceCulture);
+            }
+        }
+        
+        /// <summary>
         ///   Looks up a localized string similar to Add checked modifications.
         /// </summary>
         public static string MatchModificationsControl_AddCheckedModifications_Add_checked_modifications {

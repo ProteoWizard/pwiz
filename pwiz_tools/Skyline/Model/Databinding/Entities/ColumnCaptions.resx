@@ -636,6 +636,9 @@
   <data name="MassErrors">
     <value>Mass Errors</value>
   </data>
+  <data name="MatchingPrecursors">
+    <value>Matching Precursors</value>
+  </data>
   <data name="Max">
     <value>Max</value>
   </data>
