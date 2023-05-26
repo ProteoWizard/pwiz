@@ -52,26 +52,26 @@ namespace pwiz.SkylineTestFunctional
 
         protected override void DoTest()
         {
-            //CreateDummyRTRegression();
+            CreateDummyRTRegression();
 
-            //ThermoTsqTest();
+            ThermoTsqTest();
 
-            //ThermoLtqTest();
+            ThermoLtqTest();
 
-            //AbiQtrapTest();
+            AbiQtrapTest();
 
-            //AbiTofTest();
+            AbiTofTest();
 
             // Avoid "The current document contains peptides without enough information to rank transitions for triggered acquisition."
             AgilentThermoABSciexTriggeredTest();
 
             Assert.IsFalse(IsTriggeredRecordMode);  // Make sure no commits with this set to true
 
-            //BrukerTOFMethodTest();
+            BrukerTOFMethodTest();
 
-            //ABSciexShortNameTest();
+            ABSciexShortNameTest();
 
-            //SortByMzTest();
+            SortByMzTest();
         }
 
         private static void ThermoTsqTest()
