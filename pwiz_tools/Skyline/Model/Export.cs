@@ -2850,8 +2850,6 @@ namespace pwiz.Skyline.Model
                 _exportQuantMethod = value;
                 if (_exportQuantMethod)
                     IsolationList = IsolationStrategy.all;
-                else
-                    IsolationList = IsolationStrategy.precursor;
             }
         }
 

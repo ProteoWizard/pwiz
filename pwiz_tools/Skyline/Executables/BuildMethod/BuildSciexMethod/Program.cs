@@ -331,14 +331,17 @@ namespace BuildSciexMethod
             var method = loadResponse.MsMethod;
 
             // Edit method
-            // We need to write only precursors to the acquisition template. Fragments are used for the quant method only
-            var precursors = transitions.Transitions.Where(t => t.IsMs1Precursor).ToList();
-            var massTable = InitMethod(method, precursors.Count);
+            var writeTransitions = transitions.Transitions;
+            if(WriteSciexOsQuantMethod)
+                // We need to write only precursors to the acquisition template. Fragments are used for the quant method only
+                writeTransitions = transitions.Transitions.Where(t => t.IsMs1Precursor).ToArray();
+
+            var massTable = InitMethod(method, writeTransitions.Length);
             var props = PropertyData.GetAll(Instrument, StandardMethod, massTable).ToArray();
-            for (var i = 0; i < precursors.Count; i++)
+            for (var i = 0; i < writeTransitions.Length; i++)
             {
                 foreach (var prop in props)
-                    prop.UpdateRow(massTable.Rows[i], precursors[i]);
+                    prop.UpdateRow(massTable.Rows[i], writeTransitions[i]);
             }
 
             // Validate and save method
@@ -595,7 +598,7 @@ namespace BuildSciexMethod
         static Regex _ms2PrecursorRegEx = new Regex(@"^([^\.]+\.){2}[^\.]+precursor");
         static Regex _heavyRegEx = new Regex(@"^([^\.]+\.)+heavy$");
 
-        public bool IsMs1Precursor => _ms1PrecursorRegEx.IsMatch(Label);
+        public bool IsMs1Precursor => !ProductMz.HasValue;
         public bool IsMs2Precursor => _ms2PrecursorRegEx.IsMatch(Label);
         public bool IsHeavy => _heavyRegEx.IsMatch(Label);
 
