@@ -587,6 +587,25 @@ if [ modules.peek : NT ]
     #SHELL "@copy /Y $(PWIZ_LIBRARIES_PATH)\\boost_aux\\boost\\interprocess\\detail\\os_file_functions.hpp $(BOOST_SOURCE)\\boost\\interprocess\\detail" ;
     #SHELL "@copy /Y $(PWIZ_LIBRARIES_PATH)\\boost_aux\\boost\\interprocess\\detail\\win32_api.hpp $(BOOST_SOURCE)\\boost\\interprocess\\detail" ;
 }
+else
+{
+    import path ;
+
+    if ( ! --incremental in $(args) ) && ! [ without-binary-msdata ]
+    {
+        # extract the vendor APIs if the user agrees to the licenses
+        if --i-agree-to-the-vendor-licenses in $(args)
+        {
+            echo "Extracting vendor APIs..." ;
+            if ! --without-mascot in $(args) { SHELL "$(PWIZ_LIBRARIES_PATH)/7zz x -aoa -pi-agree-to-the-vendor-licenses -o$(PWIZ_LIBRARIES_PATH) $(PWIZ_LIBRARIES_PATH)/msparser_2_8_1_x86_linux64.7z" ; }
+            RESCAN ;
+        }
+        else
+        {
+            echo "NOTICE: not extracting vendor APIs; use --i-agree-to-the-vendor-licenses to extract and use them." ;
+        }
+     }
+}
 
 
 rule project-exists ( project-path )
