@@ -475,9 +475,9 @@ namespace pwiz.Skyline.FileUI.PeptideSearch
             [Track]
             public EncyclopeDiaHelpers.EncyclopeDiaConfig EncyclopeDiaConfig { get; }
             [Track]
-            public string EncyclopeDiaChromLibrary { get; }
+            public AuditLogPath EncyclopeDiaChromLibrary { get; }
             [Track]
-            public string EncyclopeDiaQuantLibrary { get; }
+            public AuditLogPath EncyclopeDiaQuantLibrary { get; }
 
             public EncyclopeDiaSettings(ImportFastaControl.ImportFastaSettings fastaSettings,
                 EncyclopeDiaHelpers.FastaToPrositInputCsvConfig prositSettings,
@@ -494,8 +494,8 @@ namespace pwiz.Skyline.FileUI.PeptideSearch
                 NarrowWindowResults = NarrowWindowResultUris?.Select(r => AuditLogPath.Create(r.GetFilePath())).ToList();
                 WideWindowResults = WideWindowResultUris?.Select(r => AuditLogPath.Create(r.GetFilePath())).ToList();
                 EncyclopeDiaConfig = encyclopeDiaConfig;
-                EncyclopeDiaChromLibrary = encyclopeDiaChromLibrary;
-                EncyclopeDiaQuantLibrary = encyclopeDiaQuantLibrary;
+                EncyclopeDiaChromLibrary = AuditLogPath.Create(encyclopeDiaChromLibrary);
+                EncyclopeDiaQuantLibrary = AuditLogPath.Create(encyclopeDiaQuantLibrary);
             }
 
             public IEnumerable<MsDataFileUri> NarrowWindowResultUris { get; }

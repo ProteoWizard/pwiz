@@ -1,7 +1,7 @@
-Undo Redo : Added spectral library "C:\dev\pwiz\pwiz_tools\Skyline\TestResults\TestRunner results\EncyclopeDiaSearchTutorialDemux\20230123-abundant-proteins-z3_nce33.elib, C:\dev\pwiz\pwiz_tools\Skyline\TestResults\TestRunner results\EncyclopeDiaSearchTutorialDemux\20230123-abundant-proteins-z3_nce33-quant.elib"
-Summary   : Added spectral library "C:\dev\pwiz\pwiz_tools\Skyline\TestResults\TestRunner results\EncyclopeDiaSearchTutorialDemux\20230123-abundant-proteins-z3_nce33.elib, C:\dev\pwiz\pwiz_tools\Skyline\TestResults\TestRunner results\EncyclopeDiaSearchTutorialDemux\20230123-abundant-proteins-z3_nce33-quant.elib"
+Undo Redo : Added spectral library "20230123-abundant-proteins-z3_nce33.elib, 20230123-abundant-proteins-z3_nce33-quant.elib"
+Summary   : Added spectral library "20230123-abundant-proteins-z3_nce33.elib, 20230123-abundant-proteins-z3_nce33-quant.elib"
 All Info  :
-Added spectral library "C:\dev\pwiz\pwiz_tools\Skyline\TestResults\TestRunner results\EncyclopeDiaSearchTutorialDemux\20230123-abundant-proteins-z3_nce33.elib, C:\dev\pwiz\pwiz_tools\Skyline\TestResults\TestRunner results\EncyclopeDiaSearchTutorialDemux\20230123-abundant-proteins-z3_nce33-quant.elib"
+Added spectral library "20230123-abundant-proteins-z3_nce33.elib, 20230123-abundant-proteins-z3_nce33-quant.elib"
 EncyclopeDIA Search > FASTA settings > Max missed cleavages is "2"
 EncyclopeDIA Search > FASTA settings > FASTA file is "20230123-abundant-proteins.fasta"
 EncyclopeDIA Search > Prosit settings > Default NCE is "33"
@@ -13,8 +13,8 @@ EncyclopeDIA Search > Narrow window results : contains "23aug2017_hela_serum_tim
 EncyclopeDIA Search > Wide window results : contains "23aug2017_hela_serum_timecourse_wide_1a.mzML"
 EncyclopeDIA Search > Wide window results : contains "23aug2017_hela_serum_timecourse_wide_1b.mzML"
 EncyclopeDIA Search > EncyclopeDIA settings is { Enzyme = "Trypsin", Frag = "CID", Ptol = "10", PtolUnits = "PPM", Ftol = "10", FtolUnits = "PPM", Lftol = "10", LftolUnits = "PPM", Poffset = "0", Foffset = "0", PercolatorThreshold = "0,01", PercolatorTrainingSetSize = "500000", PercolatorTrainingFDR = "0", Acquisition = "DIA", NumberOfThreadsUsed = "32", ExpectedPeakWidth = "25", PrecursorWindowSize = "-1", NumberOfQuantitativePeaks = "5", MinNumOfQuantitativePeaks = "3", TopNTargetsUsed = "-1", QuantifyAcrossSamples = "False", NumberOfExtraDecoyLibrariesSearched = "0", VerifyModificationIons = "True", MinIntensity = "-1", RtWindowInMin = "-1", FilterPeaklists = "False" }
-EncyclopeDIA Search > Chromatogram library is "C:\dev\pwiz\pwiz_tools\Skyline\TestResults\TestRunner results\EncyclopeDiaSearchTutorialDemux\20230123-abundant-proteins-z3_nce33.elib"
-EncyclopeDIA Search > Quantification library is "C:\dev\pwiz\pwiz_tools\Skyline\TestResults\TestRunner results\EncyclopeDiaSearchTutorialDemux\20230123-abundant-proteins-z3_nce33-quant.elib"
+EncyclopeDIA Search > Chromatogram library is "20230123-abundant-proteins-z3_nce33.elib"
+EncyclopeDIA Search > Quantification library is "20230123-abundant-proteins-z3_nce33-quant.elib"
 Extra Info: FASTA settings = 
 {
     Max missed cleavages = "2",
@@ -65,8 +65,8 @@ MinIntensity = "-1",
 RtWindowInMin = "-1",
 FilterPeaklists = "False"
 },
-Chromatogram library = "C:\dev\pwiz\pwiz_tools\Skyline\TestResults\TestRunner results\EncyclopeDiaSearchTutorialDemux\20230123-abundant-proteins-z3_nce33.elib",
-Quantification library = "C:\dev\pwiz\pwiz_tools\Skyline\TestResults\TestRunner results\EncyclopeDiaSearchTutorialDemux\20230123-abundant-proteins-z3_nce33-quant.elib"
+Chromatogram library = "20230123-abundant-proteins-z3_nce33.elib",
+Quantification library = "20230123-abundant-proteins-z3_nce33-quant.elib"
 
 Undo Redo : Imported a peptide search
 Summary   : Imported a peptide search

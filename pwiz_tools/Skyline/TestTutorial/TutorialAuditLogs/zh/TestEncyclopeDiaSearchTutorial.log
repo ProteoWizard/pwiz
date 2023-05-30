@@ -1,7 +1,7 @@
-Undo Redo : 已添加谱图库“C:\dev\pwiz\pwiz_tools\Skyline\TestResults\TestRunner results\EncyclopeDiaSearchTutorialDemux\20230123-abundant-proteins-z3_nce33.elib, C:\dev\pwiz\pwiz_tools\Skyline\TestResults\TestRunner results\EncyclopeDiaSearchTutorialDemux\20230123-abundant-proteins-z3_nce33-quant.elib”
-Summary   : 已添加谱图库“C:\dev\pwiz\pwiz_tools\Skyline\TestResults\TestRunner results\EncyclopeDiaSearchTutorialDemux\20230123-abundant-proteins-z3_nce33.elib, C:\dev\pwiz\pwiz_tools\Skyline\TestResults\TestRunner results\EncyclopeDiaSearchTutorialDemux\20230123-abundant-proteins-z3_nce33-quant.elib”
+Undo Redo : 已添加谱图库“20230123-abundant-proteins-z3_nce33.elib, 20230123-abundant-proteins-z3_nce33-quant.elib”
+Summary   : 已添加谱图库“20230123-abundant-proteins-z3_nce33.elib, 20230123-abundant-proteins-z3_nce33-quant.elib”
 All Info  :
-已添加谱图库“C:\dev\pwiz\pwiz_tools\Skyline\TestResults\TestRunner results\EncyclopeDiaSearchTutorialDemux\20230123-abundant-proteins-z3_nce33.elib, C:\dev\pwiz\pwiz_tools\Skyline\TestResults\TestRunner results\EncyclopeDiaSearchTutorialDemux\20230123-abundant-proteins-z3_nce33-quant.elib”
+已添加谱图库“20230123-abundant-proteins-z3_nce33.elib, 20230123-abundant-proteins-z3_nce33-quant.elib”
 EncyclopeDIA Search > FASTA settings > 最大的漏切酶解位点数 是 "2"
 EncyclopeDIA Search > FASTA settings > FASTA 文件 是 "20230123-abundant-proteins.fasta"
 EncyclopeDIA Search > Prosit settings > Default NCE 是 "33"
@@ -13,8 +13,8 @@ EncyclopeDIA Search > Narrow window results : 包含 "23aug2017_hela_serum_timec
 EncyclopeDIA Search > Wide window results : 包含 "23aug2017_hela_serum_timecourse_wide_1a.mzML"
 EncyclopeDIA Search > Wide window results : 包含 "23aug2017_hela_serum_timecourse_wide_1b.mzML"
 EncyclopeDIA Search > EncyclopeDIA settings 是 { Enzyme = "Trypsin", Frag = "CID", Ptol = "10", PtolUnits = "PPM", Ftol = "10", FtolUnits = "PPM", Lftol = "10", LftolUnits = "PPM", Poffset = "0", Foffset = "0", PercolatorThreshold = "0.01", PercolatorTrainingSetSize = "500000", PercolatorTrainingFDR = "0", Acquisition = "DIA", NumberOfThreadsUsed = "32", ExpectedPeakWidth = "25", PrecursorWindowSize = "-1", NumberOfQuantitativePeaks = "5", MinNumOfQuantitativePeaks = "3", TopNTargetsUsed = "-1", QuantifyAcrossSamples = "False", NumberOfExtraDecoyLibrariesSearched = "0", VerifyModificationIons = "True", MinIntensity = "-1", RtWindowInMin = "-1", FilterPeaklists = "False" }
-EncyclopeDIA Search > Chromatogram library 是 "C:\dev\pwiz\pwiz_tools\Skyline\TestResults\TestRunner results\EncyclopeDiaSearchTutorialDemux\20230123-abundant-proteins-z3_nce33.elib"
-EncyclopeDIA Search > Quantification library 是 "C:\dev\pwiz\pwiz_tools\Skyline\TestResults\TestRunner results\EncyclopeDiaSearchTutorialDemux\20230123-abundant-proteins-z3_nce33-quant.elib"
+EncyclopeDIA Search > Chromatogram library 是 "20230123-abundant-proteins-z3_nce33.elib"
+EncyclopeDIA Search > Quantification library 是 "20230123-abundant-proteins-z3_nce33-quant.elib"
 Extra Info: FASTA settings = 
 {
     最大的漏切酶解位点数 = "2",
@@ -65,8 +65,8 @@ MinIntensity = "-1",
 RtWindowInMin = "-1",
 FilterPeaklists = "False"
 },
-Chromatogram library = "C:\dev\pwiz\pwiz_tools\Skyline\TestResults\TestRunner results\EncyclopeDiaSearchTutorialDemux\20230123-abundant-proteins-z3_nce33.elib",
-Quantification library = "C:\dev\pwiz\pwiz_tools\Skyline\TestResults\TestRunner results\EncyclopeDiaSearchTutorialDemux\20230123-abundant-proteins-z3_nce33-quant.elib"
+Chromatogram library = "20230123-abundant-proteins-z3_nce33.elib",
+Quantification library = "20230123-abundant-proteins-z3_nce33-quant.elib"
 
 Undo Redo : 已导入肽段搜索
 Summary   : 已导入肽段搜索
