@@ -67,9 +67,6 @@ rule mascot-api-usage-requirements ( properties * )
     if $(msparser_path)
     {
         result += <library>$(PWIZ_ROOT_PATH)//msparser ;
-        result += <dependency>unimod_2.xsd ;
-        result += <dependency>quantitation_1.xsd ;
-        result += <dependency>quantitation_2.xsd ;
     }
 
     return $(result) ;
@@ -167,14 +164,12 @@ lib blibbuild
     <library>$(PWIZ_ROOT_PATH)/libraries/SQLite//sqlite3
     $(pwiz-boost-libraries)
     <dependency>modifications.xml # required file for running BlibBuild with MaxQuant support
-    <dependency>unimod.xml # required file for running BlibBuild with OpenSWATH support
   : # default-build
   : # usage-requirements
     <conditional>@mascot-api-usage-requirements
     <conditional>@waters-api-usage-requirements
     <library>$(PWIZ_ROOT_PATH)/libraries/SQLite//sqlite3
     $(pwiz-boost-libraries)
-    <dependency>unimod.xml
     <dependency>modifications.xml
  ;
 
@@ -286,16 +281,10 @@ exe LibToSqlite3
 
 alias all-relevant : : <relevant>cxxstd <relevant>cxxstd-dialect <relevant>target-os <relevant>toolset <relevant>variant <relevant>debug-symbols <relevant>runtime-link <relevant>link <relevant>address-model <relevant>architecture <relevant>asynch-exceptions <relevant>threading <relevant>debug-store <relevant>embed-manifest <relevant>exception-handling <relevant>extern-c-nothrow <relevant>inlining <relevant>instruction-set <relevant>optimization <relevant>pch <relevant>rtti <relevant>runtime-debugging <relevant>threading <relevant>warnings <relevant>warnings-as-errors <relevant>windows-api ;
 
-# required files for running BlibBuild with Mascot support
-make unimod_2.xsd : ./unimod_2.xsd : @common.copy : <use>all-relevant ;
-make quantitation_1.xsd : ./quantitation_1.xsd : @common.copy : <use>all-relevant ;
-make quantitation_2.xsd : ./quantitation_2.xsd : @common.copy : <use>all-relevant ;
 
 # required file for running BlibBuild with MaxQuant support
 make modifications.xml : ./modifications.xml : @common.copy : <use>all-relevant ;
 
-# required file for running BlibBuild with OpenSWATH support
-make unimod.xml : ./unimod.xml : @common.copy : <use>all-relevant ;
 
 install install
     : BlibBuild BlibFilter BlibSearch BlibToMs2
@@ -311,11 +300,7 @@ rule install-msparser-requirements ( properties * )
     local msparser_path = [ msparser-path $(properties) ] ;
     if $(msparser_path)
     {
-        local result = <source>./unimod_2.xsd
-            <source>./quantitation_1.xsd
-            <source>./quantitation_2.xsd
-            <source>./modifications.xml
-            <source>./unimod.xml ;
+        local result = <source>./modifications.xml ;
 
         if <toolset>msvc in $(properties)
         {

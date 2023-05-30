@@ -569,6 +569,7 @@ if [ modules.peek : NT ]
             if ! --without-thermo in $(args) { SHELL "$(PWIZ_LIBRARIES_PATH)\\7za.exe x -aoa -pi-agree-to-the-vendor-licenses -o$(PWIZ_ROOT_PATH)\\pwiz_aux\\msrc\\utility $(PWIZ_ROOT_PATH)\\pwiz_aux\\msrc\\utility\\vendor_api_Thermo.7z" ; }
             #if ! --without-unifi in $(args) { SHELL "$(PWIZ_LIBRARIES_PATH)\\7za.exe x -aoa -pi-agree-to-the-vendor-licenses -o$(PWIZ_ROOT_PATH)\\pwiz_aux\\msrc\\utility $(PWIZ_ROOT_PATH)\\pwiz_aux\\msrc\\utility\\vendor_api_UNIFI.7z" ; }
             if ! --without-waters in $(args) { SHELL "$(PWIZ_LIBRARIES_PATH)\\7za.exe x -aoa -pi-agree-to-the-vendor-licenses -o$(PWIZ_ROOT_PATH)\\pwiz_aux\\msrc\\utility $(PWIZ_ROOT_PATH)\\pwiz_aux\\msrc\\utility\\vendor_api_Waters.7z" ; }
+            if ! --without-mascot in $(args) { SHELL "$(PWIZ_LIBRARIES_PATH)\\7za.exe x -aoa -pi-agree-to-the-vendor-licenses -o$(PWIZ_LIBRARIES_PATH) $(PWIZ_LIBRARIES_PATH)\\msparser_2_8_1_x86_win64" ; }
             RESCAN ;
         }
         else
@@ -1164,25 +1165,9 @@ rule msparser-path ( properties * )
     }
     else if <toolset>msvc in $(properties)
     {
-        if [ feature.get-values <toolset-msvc:version> : $(properties) ] in "9.0" "9.0express"
+        if [ feature.get-values <toolset-msvc:version> : $(properties) ] in "14.0" "14.1" "14.2" "14.3"
         {
-            lib-location = "$(ProgramFilesLibs)\\Matrix Science\\Mascot Parser\\vs2008" ;
-        }
-        else if [ feature.get-values <toolset-msvc:version> : $(properties) ] in "10.0" "10.0express"
-        {
-            lib-location = "$(ProgramFilesLibs)\\Matrix Science\\Mascot Parser\\vs2010" ;
-        }
-        else if [ feature.get-values <toolset-msvc:version> : $(properties) ] in "11.0" "11.0express"
-        {
-            lib-location = "$(ProgramFilesLibs)\\Matrix Science\\Mascot Parser\\vs2012" ;
-        }
-        else if [ feature.get-values <toolset-msvc:version> : $(properties) ] in "12.0" "12.0express"
-        {
-            lib-location = "$(ProgramFilesLibs)\\Matrix Science\\Mascot Parser\\vs2013" ;
-        }
-        else if [ feature.get-values <toolset-msvc:version> : $(properties) ] in "14.0" "14.1" "14.2" "14.3"
-        {
-            lib-location = "$(ProgramFilesLibs)\\Matrix Science\\Mascot Parser\\vs2015" ;
+            lib-location = "$(PWIZ_LIBRARIES_PATH)\\msparser_2_8_1_x86_win64\\vs2017" ;
         }
         else
         {
@@ -1271,7 +1256,8 @@ rule msparser-usage-requirements ( properties * )
     local result = <include>$(msparser_path)/include ;
     if <toolset>msvc in $(properties)
     {
-        result += <assembly-dependency>$(msparser_path)/../config/unimod_2.xsd <assembly-dependency>$(msparser_path)/../config/quantitation_1.xsd <assembly-dependency>$(msparser_path)/../config/quantitation_2.xsd ;
+        result += <assembly-dependency>$(msparser_path)/../config/unimod_2.xsd <assembly-dependency>$(msparser_path)/../config/quantitation_1.xsd <assembly-dependency>$(msparser_path)/../config/quantitation_2.xsd <assembly-dependency>$(msparser_path)/../config/unimod.xml ;
+        result += <dependency>$(msparser_path)/../config/unimod_2.xsd <dependency>$(msparser_path)/../config/quantitation_1.xsd <dependency>$(msparser_path)/../config/quantitation_2.xsd <dependency>$(msparser_path)/../config/unimod.xml ;
         if <runtime-debugging>on in $(properties)
         {
             result += <assembly-dependency>$(msparser_path)/lib/msparserD.dll ;
@@ -1706,7 +1692,7 @@ constant .common-sources :
     $(PWIZ_LIBRARIES_PATH)/SQLite
     $(PWIZ_LIBRARIES_PATH)/Eigen
     $(PWIZ_LIBRARIES_PATH)/CSpline
-    [ path.glob $(PWIZ_LIBRARIES_PATH) : *.bat *.sh *.h *.jam *.dll *.lib *.exe *.cpp libgd*.tar.bz2 libpng*.tar.bz2 freetype*.tar.bz2 zlib*.tar.bz2 hdf5*.tar.bz2 ]
+    [ path.glob $(PWIZ_LIBRARIES_PATH) : *.bat *.sh *.h *.jam *.dll *.lib *.exe *.cpp libgd*.tar.bz2 libpng*.tar.bz2 freetype*.tar.bz2 zlib*.tar.bz2 hdf5*.tar.bz2 msparser*.7z ]
 
     # include the bcp'd boost tarball as if it was really located at "libraries/boost_*.tar.bz2"
     "path-anchor:$(BOOST_SUBSET_PATH)"
@@ -1732,6 +1718,7 @@ constant .common-sources :
     "exclude:vendor_api/UIMF"
     "exclude:vendor_api/Waters"
     "exclude:vendor_api_*.7z"
+    "exclude:msparser*.7z"
 ;
 
 .common-requirements = <location>$(.common-location) <dependency>boost_$(BOOST_VERSION:J=_).tar.bz2 <dependency>SUBSET <dependency>VERSION ;
