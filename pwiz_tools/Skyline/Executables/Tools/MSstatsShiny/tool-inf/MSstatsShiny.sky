@@ -1,5 +1,5 @@
 ﻿<?xml version="1.0" encoding="utf-8"?>
-<srm_settings format_version="22.24" software_version="Skyline (64-bit : developer build) 22.2.1.508 (e597efdc0)">
+<srm_settings format_version="22.2" software_version="Skyline 22.2">
   <settings_summary name="Default">
     <peptide_settings>
       <enzyme name="Trypsin" cut="KR" no_cut="P" sense="C" />
@@ -25,7 +25,7 @@
       <transition_integration />
       <transition_instrument min_mz="50" max_mz="1500" mz_match_tolerance="0.055" />
     </transition_settings>
-    <data_settings document_guid="7aaee1bf-3dd7-4183-b939-33138a222f43" audit_logging="true">
+    <data_settings document_guid="7aaee1bf-3dd7-4183-b939-33138a222f43">
       <annotation name="BioReplicate" targets="replicate" type="text" />
       <annotation name="Condition" targets="replicate" type="value_list">
         <value>Healthy</value>
