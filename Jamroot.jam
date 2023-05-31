@@ -1200,7 +1200,7 @@ rule msparser-path ( properties * )
     } 
     else if <toolset>gcc in $(properties)
     {
-        lib-location = "/usr/local/msparser/gnu" ;
+        lib-location = "$(PWIZ_LIBRARIES_PATH)/msparser_2_8_1_x86_linux64/gnu" ;
     }
     else
     {

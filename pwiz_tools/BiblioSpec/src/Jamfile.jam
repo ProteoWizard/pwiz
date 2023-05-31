@@ -161,6 +161,10 @@ lib blibbuild
     <link>static
     <conditional>@mascot-api-requirements
     <conditional>@waters-define
+    <dependency>unimod_2.xsd
+    <dependency>quantitation_1.xsd
+    <dependency>quantitation_2.xsd
+    <dependency>unimod.xml
     <library>$(PWIZ_ROOT_PATH)/libraries/SQLite//sqlite3
     $(pwiz-boost-libraries)
     <dependency>modifications.xml # required file for running BlibBuild with MaxQuant support
@@ -285,6 +289,25 @@ alias all-relevant : : <relevant>cxxstd <relevant>cxxstd-dialect <relevant>targe
 # required file for running BlibBuild with MaxQuant support
 make modifications.xml : ./modifications.xml : @common.copy : <use>all-relevant ;
 
+rule msparser-dependency ( name : properties * )
+{
+    local msparser_path_gcc = [ msparser-path <toolset>gcc ] ;
+    local msparser_path_msvc = [ msparser-path <toolset>msvc-14 ] ;
+    if $(msparser_path_gcc)
+    {
+        make $(name) : $(msparser_path_gcc)/../config/$(name) : @common.copy : <use>all-relevant ;
+    }
+    else if $(msparser_path_msvc)
+    {
+        make $(name) : $(msparser_path_msvc)/../config/$(name) : @common.copy : <use>all-relevant ;
+    }
+}
+
+msparser-dependency unimod_2.xsd ;
+msparser-dependency quantitation_1.xsd ;
+msparser-dependency quantitation_2.xsd ;
+msparser-dependency unimod.xml ;
+explicit unimod_2.xsd quantitation_1.xsd quantitation_2.xsd unimod.xml ;
 
 install install
     : BlibBuild BlibFilter BlibSearch BlibToMs2
@@ -300,8 +323,10 @@ rule install-msparser-requirements ( properties * )
     local msparser_path = [ msparser-path $(properties) ] ;
     if $(msparser_path)
     {
-        local result = <source>./modifications.xml ;
-
+        local result = <source>$(msparser_path)/../config/unimod_2.xsd ; 
+        result += <source>$(msparser_path)/../config/quantitation_1.xsd ;
+        result += <source>$(msparser_path)/../config/quantitation_2.xsd ;
+        result += <source>$(msparser_path)/../config/unimod.xml ;
         if <toolset>msvc in $(properties)
         {
             if <runtime-debugging>on in $(properties)
