@@ -12636,6 +12636,15 @@ namespace pwiz.Skyline.Properties {
         }
         
         /// <summary>
+        ///   Looks up a localized string similar to Running command: {0} {1}.
+        /// </summary>
+        public static string EncyclopeDiaHelpers_GenerateLibrary_Running_command___0___1_ {
+            get {
+                return ResourceManager.GetString("EncyclopeDiaHelpers_GenerateLibrary_Running_command___0___1_", resourceCulture);
+            }
+        }
+        
+        /// <summary>
         ///   Looks up a localized string similar to Converting DIA data to mzML.
         /// </summary>
         public static string EncyclopeDiaHelpers_GetConvertedDiaDataFile_Converting_DIA_data_to_mzML {
@@ -12659,6 +12668,24 @@ namespace pwiz.Skyline.Properties {
         public static string EncyclopeDiaSearchControl_Search_Reusing_Prosit_predictions_from___0_ {
             get {
                 return ResourceManager.GetString("EncyclopeDiaSearchControl_Search_Reusing_Prosit_predictions_from___0_", resourceCulture);
+            }
+        }
+        
+        /// <summary>
+        ///   Looks up a localized string similar to Browse for Narrow Window Results Files.
+        /// </summary>
+        public static string EncyclopeDiaSearchDlg_Browse_for_Narrow_Window_Results_Files {
+            get {
+                return ResourceManager.GetString("EncyclopeDiaSearchDlg_Browse_for_Narrow_Window_Results_Files", resourceCulture);
+            }
+        }
+        
+        /// <summary>
+        ///   Looks up a localized string similar to Browse for Wide Window Results Files.
+        /// </summary>
+        public static string EncyclopeDiaSearchDlg_Browse_For_Wide_Window_Results_Files {
+            get {
+                return ResourceManager.GetString("EncyclopeDiaSearchDlg_Browse_For_Wide_Window_Results_Files", resourceCulture);
             }
         }
         

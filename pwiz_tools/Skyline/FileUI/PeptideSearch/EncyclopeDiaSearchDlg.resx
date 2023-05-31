@@ -859,7 +859,7 @@
     <value>0</value>
   </data>
   <data name="lblEncyclopeDiaSettings.Text" xml:space="preserve">
-    <value>EncyclopeDia Settings</value>
+    <value>EncyclopeDIA Settings</value>
   </data>
   <data name="&gt;&gt;lblEncyclopeDiaSettings.Name" xml:space="preserve">
     <value>lblEncyclopeDiaSettings</value>
@@ -1144,7 +1144,7 @@
     <value>5</value>
   </data>
   <data name="encyclopediaPage.Text" xml:space="preserve">
-    <value>EncyclopeDia Settings</value>
+    <value>EncyclopeDIA Settings</value>
   </data>
   <data name="&gt;&gt;encyclopediaPage.Name" xml:space="preserve">
     <value>encyclopediaPage</value>
@@ -1198,7 +1198,7 @@
     <value>wizardPages</value>
   </data>
   <data name="&gt;&gt;wizardPages.Type" xml:space="preserve">
-    <value>pwiz.Skyline.Controls.WizardPages, Skyline-daily, Version=22.2.1.447, Culture=neutral, PublicKeyToken=null</value>
+    <value>pwiz.Skyline.Controls.WizardPages, Skyline-daily, Version=22.2.1.516, Culture=neutral, PublicKeyToken=null</value>
   </data>
   <data name="&gt;&gt;wizardPages.Parent" xml:space="preserve">
     <value>$this</value>
@@ -1324,7 +1324,7 @@
     <value>modeUIHandler</value>
   </data>
   <data name="&gt;&gt;modeUIHandler.Type" xml:space="preserve">
-    <value>pwiz.Skyline.Util.Helpers+ModeUIExtender, Skyline-daily, Version=22.2.1.447, Culture=neutral, PublicKeyToken=null</value>
+    <value>pwiz.Skyline.Util.Helpers+ModeUIExtender, Skyline-daily, Version=22.2.1.516, Culture=neutral, PublicKeyToken=null</value>
   </data>
   <data name="&gt;&gt;backgroundWorker1.Name" xml:space="preserve">
     <value>backgroundWorker1</value>
@@ -1336,6 +1336,6 @@
     <value>EncyclopeDiaSearchDlg</value>
   </data>
   <data name="&gt;&gt;$this.Type" xml:space="preserve">
-    <value>pwiz.Skyline.Util.FormEx, Skyline-daily, Version=22.2.1.447, Culture=neutral, PublicKeyToken=null</value>
+    <value>pwiz.Skyline.Util.FormEx, Skyline-daily, Version=22.2.1.516, Culture=neutral, PublicKeyToken=null</value>
   </data>
 </root>

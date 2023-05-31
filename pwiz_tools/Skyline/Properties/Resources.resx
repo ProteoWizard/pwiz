@@ -12084,4 +12084,7 @@ If you choose Disable, you can enable Auto-select later with the "Refine &gt; Ad
     <value>Nothing could be found matching any of the {0} criteria</value>
     <comment>{0} is an integer greater than 1</comment>
   </data>
+  <data name="EncyclopeDiaHelpers_GenerateLibrary_Running_command___0___1_" xml:space="preserve">
+    <value>Running command: {0} {1}</value>
+  </data>
 </root>

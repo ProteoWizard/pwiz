@@ -129,7 +129,6 @@ namespace pwiz.Skyline.Model.Lib
                 if (MaxMissedCleavage.HasValue) sb.AppendFormat(" -maxMissedCleavage {0}", MaxMissedCleavage);
                 if (MinMz.HasValue) sb.AppendFormat(CultureInfo.InvariantCulture, " -minMz {0}", MinMz);
                 if (MaxMz.HasValue) sb.AppendFormat(CultureInfo.InvariantCulture, " -maxMz {0}", MaxMz);
-                sb.Append(" -percolatorVersion v3-01 -enableAdvancedOptions -v2scoring");
                 return sb.ToString();
                 // ReSharper restore LocalizableElement
             }
@@ -166,6 +165,9 @@ namespace pwiz.Skyline.Model.Lib
             if (progressMonitor.UpdateProgress(status) == UpdateProgressResponse.cancel)
                 return;
 
+            status = status.ChangeMessage(String.Format(Resources.EncyclopeDiaHelpers_GenerateLibrary_Running_command___0___1_,
+                psi.FileName, psi.Arguments));
+            progressMonitor.UpdateProgress(status);
             pr.Run(psi, null, progressMonitor, ref status, null, ProcessPriorityClass.BelowNormal, true, IsGoodEncyclopeDiaOutput, false);
         }
 
@@ -192,6 +194,9 @@ namespace pwiz.Skyline.Model.Lib
             if (progressMonitor.UpdateProgress(status) == UpdateProgressResponse.cancel)
                 return;
 
+            status = status.ChangeMessage(String.Format(Resources.EncyclopeDiaHelpers_GenerateLibrary_Running_command___0___1_,
+                psi.FileName, psi.Arguments));
+            progressMonitor.UpdateProgress(status);
             pr.Run(psi, null, progressMonitor, ref status, null, ProcessPriorityClass.BelowNormal, true, IsGoodEncyclopeDiaOutput, false);
         }
 
@@ -251,6 +256,9 @@ namespace pwiz.Skyline.Model.Lib
 
             try
             {
+                status = status.ChangeMessage(String.Format(Resources.EncyclopeDiaHelpers_GenerateLibrary_Running_command___0___1_,
+                    psi.FileName, psi.Arguments));
+                progressMonitor.UpdateProgress(status);
                 pr.Run(psi, null, progressMonitor, ref status, null, ProcessPriorityClass.BelowNormal, false, IsGoodEncyclopeDiaOutput, false);
             }
             catch (IOException e)
@@ -522,6 +530,7 @@ namespace pwiz.Skyline.Model.Lib
                         continue;
                     sb.AppendFormat(CultureInfo.InvariantCulture, @" -{0}{1} ""{2}""", char.ToLowerInvariant(param.Key[0]), param.Key.Substring(1), param.Value.Value);
                 }
+                sb.Append(@" -percolatorVersion v3-01 -enableAdvancedOptions -v2scoring");
                 return sb.ToString();
             }
         }
@@ -575,6 +584,9 @@ namespace pwiz.Skyline.Model.Lib
                     CreateNoWindow = true,
                     UseShellExecute = false
                 };
+                status = status.ChangeMessage(String.Format(Resources.EncyclopeDiaHelpers_GenerateLibrary_Running_command___0___1_,
+                    psi.FileName, psi.Arguments));
+                progressMonitor.UpdateProgress(status);
                 pr.Run(psi, null, progressMonitor, ref status, null, ProcessPriorityClass.BelowNormal, true, IsGoodEncyclopeDiaOutput, false);
             }
 
@@ -607,6 +619,9 @@ namespace pwiz.Skyline.Model.Lib
                 CreateNoWindow = true,
                 UseShellExecute = false
             };
+            status = status.ChangeMessage(String.Format(Resources.EncyclopeDiaHelpers_GenerateLibrary_Running_command___0___1_,
+                psiMerge.FileName, psiMerge.Arguments));
+            progressMonitor.UpdateProgress(status);
             prMerge.Run(psiMerge, null, progressMonitor, ref status, null, ProcessPriorityClass.BelowNormal, true, IsGoodEncyclopeDiaOutput, false);
 
             status = status.ChangePercentComplete(100);
