@@ -14,6 +14,7 @@ using pwiz.Skyline.ToolsUI;
 using pwiz.Skyline.Util;
 using pwiz.Skyline.Util.Extensions;
 using pwiz.SkylineTestUtil;
+using AlertDlg = pwiz.Skyline.Alerts.AlertDlg;
 
 namespace pwiz.SkylineTestFunctional
 {
@@ -567,6 +568,11 @@ namespace pwiz.SkylineTestFunctional
         }
 
         public JToken GetInfoForFolders(PanoramaServer server, string folder)
+        {
+            throw new NotImplementedException();
+        }
+
+        public void DownloadFile(string fileUrl, string fileName, long fileSize, string realName, PanoramaServer server, IProgressMonitor pm, IProgressStatus progressStatus, bool cancel = false)
         {
             throw new NotImplementedException();
         }

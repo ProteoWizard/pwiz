@@ -67,6 +67,7 @@ namespace pwiz.PanoramaClient
             _restorer = new TreeViewStateRestorer(treeView);
             _server = server;
             _folderJson = folderJson;
+            ShowSky = true;
             Testing = true;
         }
 
@@ -173,19 +174,7 @@ namespace pwiz.PanoramaClient
                     {
                         treeView.SelectedNode = e.Node;
                         treeView.Focus();
-                        ActiveServer = CheckServer(e.Node);
-                        CurNodeIsTargetedMS = e.Node.Name;
-                        Path = e.Node.Tag != null ? e.Node.Tag.ToString() : string.Empty;
-                        //If there's a file browser observer, add corresponding files
-                        AddFiles?.Invoke(this, e);
-                        if (_priorNode != null && _priorNode != e.Node)
-                        {
-                            _previous.Push(_priorNode);
-                        }
-                        _priorNode = e.Node;
-                        Clicked = e.Node;
-                        _next.Clear();
-                        NodeClick?.Invoke(this, e);
+                        UpdateNavButtons(e.Node);
                     }
                 }
             }
@@ -355,8 +344,6 @@ namespace pwiz.PanoramaClient
                     //Highlight the selected node
                     ActiveServer = CheckServer(node);
                     _priorNode = node;
-                    /*node.BackColor = SystemColors.MenuHighlight;
-                    node.ForeColor = Color.White;*/
                     treeView.Focus();
                     _lastSelected = node;
                     Clicked = node;
@@ -383,21 +370,40 @@ namespace pwiz.PanoramaClient
             var node = SearchTree(treeView.Nodes, nodeName);
             if (node != null)
             {
-                ActiveServer = CheckServer(node);
-                treeView.SelectedNode = node;
-                CurNodeIsTargetedMS = node.Name;
-                Path = node.Tag != null ? node.Tag.ToString() : string.Empty;
-                AddFiles?.Invoke(this, EventArgs.Empty);
-                //If there's a file browser observer, add corresponding files
-                if (_priorNode != null && _priorNode != node)
-                {
-                    _previous.Push(_priorNode);
-                }
-                _priorNode = node;
-                Clicked = node;
-                _next.Clear();
-                NodeClick?.Invoke(this, EventArgs.Empty);
+                UpdateNavButtons(node);
             }
+        }
+
+        /// <summary>
+        /// 
+        /// </summary>
+        /// <param name="nodeName"></param>
+        /// <returns></returns>
+        public bool IsSelected(string nodeName)
+        {
+            var node = SearchTree(treeView.Nodes, nodeName);
+            return node != null && node.IsSelected;
+        }
+
+        /// <summary>
+        /// 
+        /// </summary>
+        /// <param name="nodeName"></param>
+        /// <returns></returns>
+        public bool IsExpanded(string nodeName)
+        {
+            var node = SearchTree(treeView.Nodes, nodeName);
+            return node != null && node.IsExpanded;
+        }
+
+        public void ClickEnter()
+        {
+            treeView_KeyPress(this, new KeyPressEventArgs((char)13));
+        }
+
+        public int GetIcon()
+        {
+            return treeView.SelectedNode.ImageIndex;
         }
 
         /// <summary>
@@ -433,9 +439,38 @@ namespace pwiz.PanoramaClient
             if (e.KeyChar == Convert.ToChar(Keys.Return) && treeView.SelectedNode != null)
             {
                 treeView.SelectedNode.Expand();
-            }
+            } 
 
         }
 
+        private void treeView_KeyUp(object sender, KeyEventArgs e)
+        {
+            if (treeView.SelectedNode != null && _lastSelected != null)
+            {
+                if (e.KeyValue == Convert.ToChar(Keys.Up) || e.KeyValue == Convert.ToChar(Keys.Down) || e.KeyValue == Convert.ToChar(Keys.Right) || e.KeyValue == Convert.ToChar(Keys.Left))
+                {
+                    var node = treeView.SelectedNode;
+                    UpdateNavButtons(node);
+                }
+            }
+        }
+
+        private void UpdateNavButtons(TreeNode node)
+        {
+            ActiveServer = CheckServer(node);
+            treeView.SelectedNode = node;
+            CurNodeIsTargetedMS = node.Name;
+            Path = node.Tag != null ? node.Tag.ToString() : string.Empty;
+            AddFiles?.Invoke(this, EventArgs.Empty);
+            //If there's a file browser observer, add corresponding files
+            if (_priorNode != null && _priorNode != node)
+            {
+                _previous.Push(_priorNode);
+            }
+            _priorNode = node;
+            Clicked = node;
+            _next.Clear();
+            NodeClick?.Invoke(this, EventArgs.Empty);
+        }
     }
 }

@@ -491,7 +491,9 @@ namespace pwiz.PanoramaClient
         FolderOperationStatus DeleteFolder(string folderPath, string username, string password);
     
         JToken GetInfoForFolders(PanoramaServer server, string folder);
-    
+
+        void DownloadFile(string fileUrl, string fileName, long fileSize, string realName, PanoramaServer server, IProgressMonitor pm, IProgressStatus progressStatus, bool cancel = false);
+
     }
     
     public class WebPanoramaClient : IPanoramaClient
@@ -718,7 +720,7 @@ namespace pwiz.PanoramaClient
         /// Downloads a given file to a given folder path and shows the progress
         /// of the download during downloading
         /// </summary>
-        public void DownloadFile(string fileUrl, string fileName, long fileSize, string realName, PanoramaServer server,  IProgressMonitor pm, IProgressStatus progressStatus)
+        public void DownloadFile(string fileUrl, string fileName, long fileSize, string realName, PanoramaServer server,  IProgressMonitor pm, IProgressStatus progressStatus, bool cancel = false)
         {
             using var wc = new WebClientWithCredentials(server.URI, server.Username, server.Password);
             wc.DownloadProgressChanged += (s, e) =>
@@ -752,6 +754,12 @@ namespace pwiz.PanoramaClient
                 // Param2 = Path to save
                 fileName
             );
+
+            if (cancel)
+            {
+                wc.CancelAsync();
+            }
+
             while (!downloadComplete)
             {
                 if (pm.IsCanceled)

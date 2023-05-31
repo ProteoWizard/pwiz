@@ -1,10 +1,11 @@
 using System;
+using System.Collections;
 using System.Collections.Generic;
 using System.Drawing;
+using System.Globalization;
 using Newtonsoft.Json.Linq;
 using System.Windows.Forms;
 using pwiz.Common.Controls;
-using SharedBatch;
 
 
 namespace pwiz.PanoramaClient
@@ -16,6 +17,8 @@ namespace pwiz.PanoramaClient
         private static Dictionary<long, long> _sizeDictionary = new Dictionary<long, long>();
         private bool _restoring;
         private JToken _fileJson;
+        private JToken _sizeJson;
+        private int _sortColumn = -1;
         private const string EXT = ".sky";
         private const string RECENT_VER = "Most recent";
         private const string ALL_VER = "All";
@@ -44,8 +47,9 @@ namespace pwiz.PanoramaClient
             _restoring = true;
             IsLoaded = false;
             versionOptions.Text = RECENT_VER;
+            ShowingSky = true;
+            showSkyCheckBox.Checked = ShowingSky;
             _restoring = false;
-            //InitializeTestDialog(serverUri, user, pass, folderJson);
         }
 
         public string OkButtonText { get; set; }
@@ -101,9 +105,11 @@ namespace pwiz.PanoramaClient
         /// <param name="pass"></param>
         /// <param name="folderJson"></param>
         /// <param name="fileJson"></param>
-        public void InitializeTestDialog(Uri serverUri, string user, string pass, JToken folderJson, JToken fileJson)
+        /// <param name="sizeJson"></param>
+        public void InitializeTestDialog(Uri serverUri, string user, string pass, JToken folderJson, JToken fileJson, JToken sizeJson)
         {
             _fileJson = fileJson;
+            _sizeJson = sizeJson;
             var server = new PanoramaServer(serverUri, user, pass);
             FolderBrowser = new PanoramaFolderBrowser(server, folderJson);
             FolderBrowser.Dock = DockStyle.Fill;
@@ -241,9 +247,9 @@ namespace pwiz.PanoramaClient
                         try
                         {
                             var id = (long)row[@"File/Id"];
-                            if (sizeDict.ContainsKey(id))
+                            if (sizeDict.TryGetValue(id, out var value))
                             {
-                                size = sizeDict[id];
+                                size = value;
                             }
 
                             if (size > 0)
@@ -265,7 +271,8 @@ namespace pwiz.PanoramaClient
                         fileInfos[2] = (string)row[@"File/Precursors"];
                         fileInfos[3] = (string)row[@"File/Transitions"];
                         fileInfos[4] = (string)row[@"File/Replicates"];
-                        result[4] = (string)row[@"Created"];
+                        var date = (string)row[@"Created"];
+                        result[4] = DateTime.Parse(date, CultureInfo.InvariantCulture).ToString();
                         var fileNode = new ListViewItem(result, 1)
                         {
                             ToolTipText =
@@ -360,9 +367,9 @@ namespace pwiz.PanoramaClient
                         listItem[0] = fileName;
                         long size = 0;
                         var id = (long)row[@"File/Id"];
-                        if (_sizeDictionary.ContainsKey(id))
+                        if (_sizeDictionary.TryGetValue(id, out var value))
                         {
-                            size = _sizeDictionary[id];
+                            size = value;
                         }
                         if (size > 0)
                         {
@@ -402,77 +409,6 @@ namespace pwiz.PanoramaClient
         }
 
         /// <summary>
-        /// Used for testing 
-        /// </summary>
-        /// <param name="nodePath"></param>
-        /// <param name="l"></param>
-        /// <param name="options"></param>
-        /// <param name="json"></param>
-        public void TestAddQueryFiles(string nodePath, Control l, Control options, JToken json)
-        {
-            var rows = json[@"rows"];
-            var rowCount = json[@"rowCount"];
-            if ((int)rowCount > 0)
-            {
-                var versions = HasVersions(json);
-                foreach (var row in rows)
-                {
-                    var fileName = (string)row[@"Name"];
-                    var filePath = (string)row[@"Container/Path"];
-                    if (filePath.Equals(nodePath))
-                    {
-                        var listItem = new string[5];
-                        var numVersions = new string[2];
-                        var replacedBy = row[@"ReplacedByRun"].ToString();
-                        if (versions)
-                        {
-                            listView.Columns[3].Width = 100;
-                            listView.Columns[2].Width = 52;
-                            l.Visible = true;
-                            options.Visible = true;
-                            numVersions = GetVersionInfo(json, replacedBy);
-                        }
-                        else
-                        {
-                            listView.Columns[3].Width = 0;
-                            listView.Columns[2].Width = 0;
-                            l.Visible = false;
-                            options.Visible = false;
-                        }
-                        listItem[0] = fileName;
-
-
-                        if (numVersions[0] != null)
-                        {
-                            listItem[2] = row[@"File/Versions"].ToString();
-                        }
-                        else
-                        {
-                            listItem[2] = 1.ToString();
-                        }
-
-                        if (numVersions[1] != null)
-                        {
-                            listItem[3] = numVersions[1];
-                        }
-
-                        listItem[4] = (string)row[@"Created"];
-                        var fileNode = new ListViewItem(listItem, 1)
-                        {
-                            Name = (string)row[@"_labkeyurl_FileName"],
-                            ToolTipText = $"Proteins: {row[@"File/Proteins"]}, Peptides: {row[@"File/Peptides"]}, Precursors: {row[@"File/Precursors"]}, Transitions: {row[@"File/Transitions"]}, Replicates: {row[@"File/Replicates"]}"
-                        };
-                        listView.Items.Add(fileNode);
-                    }
-                }
-            }
-            else
-            {
-                //Show a message saying there are no Skyline files in this folder
-            }
-        }
-
-        /// <summary>
         /// Check if a given node has any skyline files on the server
         /// </summary>
         /// <param name="sender"></param>
@@ -487,7 +423,7 @@ namespace pwiz.PanoramaClient
                     _restoring = true;
                     versionOptions.Visible = false;
                     versionLabel.Visible = false;
-                    versionOptions.Text = ALL_VER;
+                    versionOptions.Text = RECENT_VER;
                     var path = FolderBrowser.Path;
                     listView.Items.Clear();
                     ActiveServer = FolderBrowser.ActiveServer;
@@ -496,7 +432,28 @@ namespace pwiz.PanoramaClient
                     {
                         if (FolderBrowser.ShowSky)
                         {
-                            TestAddQueryFiles(path, versionLabel, versionOptions, _fileJson);
+                            if (FolderBrowser.CurNodeIsTargetedMS.Equals(@"True"))
+                            {
+                                _runsInfoJson = _fileJson;
+                                _sizeInfoJson = _sizeJson;
+                                var versions = HasVersions(_runsInfoJson);
+                                if (versions)
+                                {
+
+                                    listView.Columns[3].Width = 100;
+                                    listView.Columns[2].Width = 60;
+                                    versionLabel.Visible = true;
+                                    versionOptions.Visible = true;
+                                }
+                                else
+                                {
+                                    listView.Columns[3].Width = 0;
+                                    listView.Columns[2].Width = 0;
+                                    versionLabel.Visible = false;
+                                    versionOptions.Visible = false;
+                                }
+                                GetLatestVersion();
+                            }
                         }
                     }
                 }
@@ -514,7 +471,7 @@ namespace pwiz.PanoramaClient
                     _restoring = false;
                     if (!string.IsNullOrEmpty(path))
                     {
-                        if (FolderBrowser.CurNodeIsTargetedMS.Equals("True"))
+                        if (FolderBrowser.CurNodeIsTargetedMS.Equals(@"True"))
                         {
                             
                             if (FolderBrowser.ShowSky)
@@ -562,7 +519,8 @@ namespace pwiz.PanoramaClient
             }
             catch (Exception ex)
             {
-                AlertDlg.ShowError(this, string.Empty, ex.Message);
+                var alert = new AlertDlg(ex.Message, MessageBoxButtons.OK);
+                alert.ShowDialog();
             }
         }
 
@@ -652,7 +610,8 @@ namespace pwiz.PanoramaClient
             }
             else
             {
-                MessageBox.Show(@"You must select a file first!");
+                var alert = new AlertDlg(@"You must select a file first!", MessageBoxButtons.OK);
+                alert.ShowDialog();
             }
         }
 
@@ -724,6 +683,11 @@ namespace pwiz.PanoramaClient
             CheckEnabled();
         }
 
+        public void ClickOpen()
+        {
+            Open_Click(this, EventArgs.Empty);
+        }
+
 
         public void FilePicker_MouseClick(object sender, EventArgs e)
         {
@@ -759,6 +723,28 @@ namespace pwiz.PanoramaClient
             return versionOptions.Visible;
         }
 
+        public string GetItemValue(int index)
+        {
+            return listView.SelectedItems[0].SubItems[index].Text;
+        }
+
+        public void ClickVersions()
+        {
+            if (versionOptions.Text.Equals(RECENT_VER))
+            {
+                versionOptions.Text = ALL_VER;
+            }
+            else
+            {
+                versionOptions.Text = RECENT_VER;
+            }
+        }
+
+        public bool ColumnVisible(int index)
+        {
+            return listView.Columns[index].Width > 0;
+        }
+
         public int FileNumber()
         {
             return listView.Items.Count;
@@ -772,6 +758,7 @@ namespace pwiz.PanoramaClient
         public void ClickCheckBox()
         {
             showSkyCheckBox.Checked = !showSkyCheckBox.Checked;
+            ShowingSky = showSkyCheckBox.Checked;
         }
 
         public bool CheckBoxVisible()
@@ -779,15 +766,31 @@ namespace pwiz.PanoramaClient
             return showSkyCheckBox.Visible;
         }
 
-        private void PanoramaFilePicker_SizeChanged(object sender, EventArgs e)
-        {
-            noFiles.Location = new Point((listView.Location.Y + listView.Width - noFiles.Width) / 2,
-                noFiles.Location.Y);
-        }
-
         private void listView_ColumnClick(object sender, ColumnClickEventArgs e)
         {
-           
+            // Determine whether the column is the same as the last column clicked.
+            if (e.Column != _sortColumn)
+            {
+                // Set the sort column to the new column.
+                _sortColumn = e.Column;
+                // Set the sort order to ascending by default.
+                listView.Sorting = SortOrder.Ascending;
+            }
+            else
+            {
+                // Determine what the last sort order was and change it.
+                if (listView.Sorting == SortOrder.Ascending)
+                    listView.Sorting = SortOrder.Descending;
+                else
+                    listView.Sorting = SortOrder.Ascending;
+            }
+
+            // Call the sort method to manually sort.
+            listView.Sort();
+            // Set the ListViewItemSorter property to a new ListViewItemComparer
+            // object.
+            this.listView.ListViewItemSorter = new ListViewItemComparer(e.Column,
+                listView.Sorting);
         }
 
         public void ClickFile(string name)
@@ -802,6 +805,41 @@ namespace pwiz.PanoramaClient
                     DialogResult = DialogResult.Yes;
                     open.PerformClick();
                 }
+            }
+        }
+
+        private void PanoramaFilePicker_SizeChanged(object sender, EventArgs e)
+        {
+            noFiles.Location = new Point((listView.Location.Y + listView.Width - noFiles.Width) / 2,
+                noFiles.Location.Y);
+        }
+
+
+        private void listView_SizeChanged(object sender, EventArgs e)
+        {
+            noFiles.Location = new Point((listView.Location.Y + listView.Width - noFiles.Width) / 2,
+                noFiles.Location.Y);
+        }
+
+        class ListViewItemComparer : IComparer
+        {
+            private int col;
+            private SortOrder order;
+            public ListViewItemComparer(int column, SortOrder order)
+            {
+                col = column;
+                this.order = order;
+            }
+            public int Compare(object x, object y)
+            {
+                int returnVal = -1;
+                returnVal = String.CompareOrdinal(((ListViewItem)x)?.SubItems[col].Text,
+                    ((ListViewItem)y)?.SubItems[col].Text);
+                // Determine whether the sort order is descending.
+                if (order == SortOrder.Descending)
+                    // Invert the value returned by String.Compare.
+                    returnVal *= -1;
+                return returnVal;
             }
         }
     }
@@ -867,7 +905,7 @@ namespace pwiz.PanoramaClient
 
             string precision = format.Substring(2);
             if (String.IsNullOrEmpty(precision))
-                precision = @"2";
+                precision = @"1";
             string formatString = @"{0:N" + precision + @"}{1}";  // Avoid ReSharper analysis
             return String.Format(formatString, size, suffix);
         }

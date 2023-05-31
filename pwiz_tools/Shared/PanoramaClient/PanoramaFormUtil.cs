@@ -46,6 +46,7 @@ namespace pwiz.PanoramaClient
         {
             var treeNode = new TreeNode(server.URI.ToString());
             treeViewFolders.Invoke(new Action(() => treeViewFolders.Nodes.Add(treeNode)));
+            treeViewFolders.Invoke(new Action(() => treeViewFolders.SelectedImageIndex = (int)ImageId.panorama));
             treeViewFolders.Invoke(new Action(() => AddChildContainers(treeNode, folder, requireUploadPerms, showFiles)));
         }
 
@@ -53,6 +54,7 @@ namespace pwiz.PanoramaClient
         {
             var treeNode = new TreeNode(server.URI.ToString());
             treeView.Invoke(new Action(() => treeView.Nodes.Add(treeNode)));
+            treeView.Invoke(new Action(() => treeView.SelectedImageIndex = (int)ImageId.panorama));
             treeView.Invoke(new Action(() => AddChildContainers(treeNode, folderJson, false, true)));
         }
 

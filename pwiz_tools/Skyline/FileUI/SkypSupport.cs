@@ -10,6 +10,7 @@ using pwiz.Skyline.Model;
 using pwiz.Skyline.Properties;
 using pwiz.Skyline.Util;
 using pwiz.Skyline.Util.Extensions;
+using AlertDlg = pwiz.Skyline.Alerts.AlertDlg;
 using Thread = System.Threading.Thread;
 
 namespace pwiz.Skyline.FileUI

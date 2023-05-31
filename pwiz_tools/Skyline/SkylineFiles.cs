@@ -61,6 +61,7 @@ using pwiz.Skyline.Model.Serialization;
 using pwiz.Skyline.Properties;
 using pwiz.Skyline.Util;
 using pwiz.Skyline.Util.Extensions;
+using AlertDlg = pwiz.Skyline.Alerts.AlertDlg;
 using DatabaseOpeningException = pwiz.Skyline.Model.Irt.DatabaseOpeningException;
 
 namespace pwiz.Skyline
@@ -908,10 +909,11 @@ namespace pwiz.Skyline
         /// <param name="pass"></param>
         /// <param name="folderJson"></param>
         /// <param name="fileJson"></param>
-        public void OpenFromPanorama(string server, string user, string pass, JToken folderJson, JToken fileJson = null)
+        /// <param name="sizeJson"></param>
+        public void OpenFromPanorama(string server, string user, string pass, JToken folderJson, JToken fileJson = null, JToken sizeJson = null)
         {
             using var dlg = new PanoramaFilePicker();
-            dlg.InitializeTestDialog(new Uri(server), user, pass, folderJson, fileJson);
+            dlg.InitializeTestDialog(new Uri(server), user, pass, folderJson, fileJson, sizeJson);
             if (dlg.ShowDialog() != DialogResult.Cancel)
             {
 
@@ -976,7 +978,6 @@ namespace pwiz.Skyline
                             folderPath = Settings.Default.LastFolderPath;
                         }
                         var curServer = dlg.ActiveServer;
-                        var panoramaClient = new WebPanoramaClient(curServer.URI);
 
                         var downloadPath = string.Empty;
                         var extension = dlg.FileName.EndsWith(SrmDocumentSharing.EXT) ? SrmDocumentSharing.EXT : SrmDocument.EXT;
@@ -994,6 +995,7 @@ namespace pwiz.Skyline
                             {
                                 return;
                             }
+                          
 
                             Settings.Default.LastFolderPath = Path.GetDirectoryName(saveAsDlg.FileName);
                             var folder = Path.GetDirectoryName(saveAsDlg.FileName);
@@ -1002,42 +1004,16 @@ namespace pwiz.Skyline
                                 downloadPath = saveAsDlg.FileName; 
                             }
                         }
+
                         if (!string.IsNullOrEmpty(downloadPath))
                         {
                             var size = dlg.FileSize;
-                            using (var fileSaver = new FileSaver(downloadPath))
-                            {
-                                using (var longWaitDlg = new LongWaitDlg 
-                                       {
-                                           Text = string.Format(Resources.SkylineWindow_OpenFromPanorama_Downloading_file__0_, dlg.FileName),
-                                       })
-                                {
-
-                                    var progressStatus = longWaitDlg.PerformWork(this, 800,
-                                        progressMonitor => panoramaClient.DownloadFile(dlg.FileUrl, fileSaver.SafeName, size, dlg.FileName, curServer,
-                                            progressMonitor, new ProgressStatus()));
-                                    if (progressStatus.IsCanceled || progressStatus.IsError)
-                                    {
-                                        FileEx.SafeDelete(downloadPath, true);
-                                        if (progressStatus.IsError)
-                                        {
-                                            var msg = progressStatus.ErrorException.Message;
-                                            var alertDlg = new AlertDlg(msg, MessageBoxButtons.OK) { Exception = progressStatus.ErrorException };
-                                            alertDlg.ShowAndDispose(this);
-                                        }
-                                        return;
-                                    }
-                                    if (longWaitDlg.IsCanceled)
-                                        return;
-                                }
-                                fileSaver.Commit();
-
-                            }
-                            if (dlg.FileName.EndsWith(SrmDocumentSharing.EXT) && !string.IsNullOrEmpty(downloadPath))
+                            var success = DownloadPanoramaFile(downloadPath, dlg.FileName, dlg.FileUrl, curServer, size);
+                            if (dlg.FileName.EndsWith(SrmDocumentSharing.EXT) && success)
                             {
                                 OpenSharedFile(downloadPath);
                             }
-                            else if (dlg.FileName.EndsWith(SrmDocument.EXT) && !string.IsNullOrEmpty(downloadPath))
+                            else if (dlg.FileName.EndsWith(SrmDocument.EXT) && success)
                             {
                                 OpenFile(downloadPath);
                             }
@@ -1052,6 +1028,50 @@ namespace pwiz.Skyline
                 MessageDlg.ShowException(this, e);
             }
             Settings.Default.Save();
+        }
+
+        public bool DownloadPanoramaFile(string downloadPath, string fileName, string fileUrl, PanoramaServer curServer, long size, bool cancel = false)
+        {
+            var panoramaClient = new WebPanoramaClient(curServer.URI);
+            using (var fileSaver = new FileSaver(downloadPath))
+            {
+                using (var longWaitDlg = new LongWaitDlg
+                {
+                    Text = string.Format(Resources.SkylineWindow_OpenFromPanorama_Downloading_file__0_, fileName),
+                })
+                {
+
+                    var progressStatus = longWaitDlg.PerformWork(this, 800,
+                        progressMonitor => panoramaClient.DownloadFile(fileUrl, fileSaver.SafeName, size, fileName, curServer,
+                            progressMonitor, new ProgressStatus(), cancel));
+  
+                    if (progressStatus.IsCanceled || progressStatus.IsError)
+                    {
+                        FileEx.SafeDelete(downloadPath, true);
+                        if (progressStatus.IsError && !cancel)
+                        {
+                            var message = progressStatus.ErrorException.Message;
+                            if (message.Contains(@"404"))
+                            {
+                                message = "File does not exist. It may have been deleted on the server.";
+                            }
+                            var alertDlg = new AlertDlg(message, MessageBoxButtons.OK) { Exception = progressStatus.ErrorException };
+                            alertDlg.ShowAndDispose(this);
+                            return false;
+                        }
+                        
+                    }
+                    else
+                    {
+                        fileSaver.Commit();
+                    }
+                    if (longWaitDlg.IsCanceled)
+                        return false;
+                }
+
+            }
+
+            return true;
         }
 
         private string GetDownloadName(string fullPath)

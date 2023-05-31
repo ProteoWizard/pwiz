@@ -194,11 +194,11 @@ namespace pwiz.PanoramaClient
             this.listView.ShowItemToolTips = true;
             this.listView.Size = new System.Drawing.Size(461, 483);
             this.listView.SmallImageList = this.imageList2;
-            this.listView.Sorting = System.Windows.Forms.SortOrder.Ascending;
             this.listView.TabIndex = 8;
             this.listView.UseCompatibleStateImageBehavior = false;
             this.listView.View = System.Windows.Forms.View.Details;
             this.listView.ColumnClick += new System.Windows.Forms.ColumnClickEventHandler(this.listView_ColumnClick);
+            this.listView.SizeChanged += new System.EventHandler(this.listView_SizeChanged);
             // 
             // colName
             // 
