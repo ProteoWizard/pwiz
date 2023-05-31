@@ -296,6 +296,11 @@ namespace pwiz.Skyline.Model.DocSettings.AbsoluteQuantification
             {
                 return _linearCalibrationCurve + string.Format(@"; x > {0}", TurningPoint);
             }
+
+            public Linear GetLinearCalibrationCurve()
+            {
+                return _linearCalibrationCurve;
+            }
         }
 
         public class Simple : CalibrationCurve

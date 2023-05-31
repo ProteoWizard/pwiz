@@ -1,6 +1,5 @@
 ﻿using System;
 using System.Collections.Generic;
-using System.Diagnostics.CodeAnalysis;
 using System.Linq;
 using System.Threading;
 using pwiz.Common.Collections;
@@ -60,111 +59,10 @@ namespace pwiz.Skyline.Model.DocSettings.AbsoluteQuantification
             return ComputeQuantLimits(combinedWeightedPoints);
         }
 
-        public IList<int> OptimizeTransitions(OptimizeTransitionSettings settings, IList<IList<WeightedPoint>> areas, out QuantLimit finalQuantLimit)
-        {
-            var quantLimits = new List<Tuple<int, QuantLimit>>();
-
-            var optimizeType = settings.OptimizeType;
-            OptimizeType otherOptimizeType;
-            if (optimizeType == OptimizeType.LOD)
-            {
-                otherOptimizeType = OptimizeType.LOQ;
-            }
-            else
-            {
-                otherOptimizeType = OptimizeType.LOD;
-            }
-
-            for (int iTransition = 0; iTransition < areas.Count; iTransition++)
-            {
-                quantLimits.Add(Tuple.Create(iTransition, ComputeQuantLimits(areas[iTransition])));
-            }
-
-            var maxConcentration = areas.SelectMany(list => list).Max(point => point.X);
-            var lowestLimits = new Dictionary<OptimizeType, double>()
-            {
-                {OptimizeType.LOD, quantLimits.Min(q=>q.Item2.Lod)},
-                {OptimizeType.LOQ, quantLimits.Min(q=>q.Item2.Loq)}
-            };
-            if (lowestLimits[optimizeType] == maxConcentration && lowestLimits[otherOptimizeType] < maxConcentration)
-            {
-                quantLimits = quantLimits.OrderBy(q => q.Item2.GetQuantLimit(otherOptimizeType)).ToList();
-            }
-            else
-            {
-                quantLimits = quantLimits.OrderBy(q => q.Item2.GetQuantLimit(optimizeType)).ToList();
-            }
-
-            IList<int> acceptedFragmentIndices = new List<int>();
-            var acceptedAreas = areas.First().Select(pt => new WeightedPoint(pt.X, 0, pt.Weight)).ToList();
-            foreach (var quantLimit in quantLimits.Take(settings.MinimumNumberOfTransitions))
-            {
-                if (acceptedFragmentIndices.Count > 0 && quantLimit.Item2.GetQuantLimit(optimizeType) >= maxConcentration)
-                {
-                    break;
-                }
-                acceptedFragmentIndices.Add(quantLimit.Item1);
-                acceptedAreas = acceptedAreas.Zip(areas[quantLimit.Item1],
-                    (pt1, pt2) => new WeightedPoint(pt1.X, pt1.Y + pt2.Y, pt1.Weight)).ToList();
-            }
-
-            var optimizedQuantLimit = ComputeQuantLimits(acceptedAreas);
-            int startIndex = Math.Min(acceptedFragmentIndices.Count, settings.MinimumNumberOfTransitions);
-            var rejectedItems = new List<Tuple<int, QuantLimit>>();
-            foreach (var quantLimitAndIndex in quantLimits.Skip(startIndex))
-            {
-                var fragmentIndex = quantLimitAndIndex.Item1;
-                var possibleNewAreas = acceptedAreas.Zip(areas[fragmentIndex],
-                    (pt1, pt2) => new WeightedPoint(pt1.X, pt1.Y + pt2.Y, pt1.Weight)).ToList();
-                var prospectiveQuantLimit = ComputeQuantLimits(possibleNewAreas);
-                // accept this transition if it helped the result
-                if (prospectiveQuantLimit.GetQuantLimit(optimizeType) < optimizedQuantLimit.GetQuantLimit(optimizeType))
-                {
-                    optimizedQuantLimit = prospectiveQuantLimit;
-                    acceptedAreas = possibleNewAreas;
-                    acceptedFragmentIndices.Add(fragmentIndex);
-                }
-                else
-                {
-                    // save the limits in case we don't have enough limits at the end of this
-                    rejectedItems.Add(Tuple.Create(fragmentIndex, prospectiveQuantLimit));
-                    lowestLimits[OptimizeType.LOD] = Math.Min(lowestLimits[OptimizeType.LOD],
-                        prospectiveQuantLimit.GetQuantLimit(OptimizeType.LOD));
-                    lowestLimits[OptimizeType.LOQ] = Math.Min(lowestLimits[OptimizeType.LOQ],
-                        prospectiveQuantLimit.GetQuantLimit(OptimizeType.LOQ));
-                }
-            }
-            // if we still don't have enough transitions, for the case where there were transitions at the maximum limit
-            if (acceptedFragmentIndices.Count < settings.MinimumNumberOfTransitions && rejectedItems.Any())
-            {
-                if (lowestLimits[optimizeType] == maxConcentration &&
-                    lowestLimits[otherOptimizeType] < maxConcentration)
-                {
-                    rejectedItems = rejectedItems.OrderBy(item => item.Item2.GetQuantLimit(otherOptimizeType)).ToList();
-                }
-                else
-                {
-                    rejectedItems = rejectedItems.OrderBy(item => item.Item2.GetQuantLimit(optimizeType)).ToList();
-                }
-
-                int numTransitionsNeeded = settings.MinimumNumberOfTransitions - acceptedFragmentIndices.Count;
-                foreach (var item in rejectedItems.Take(numTransitionsNeeded))
-                {
-                    acceptedFragmentIndices.Add(item.Item1);
-                    acceptedAreas = acceptedAreas.Zip(areas[item.Item1],
-                        (pt1, pt2) => new WeightedPoint(pt1.X, pt1.Y + pt2.Y, pt1.Weight)).ToList();
-                }
-
-                optimizedQuantLimit = ComputeQuantLimits(acceptedAreas);
-            }
-
-            finalQuantLimit = optimizedQuantLimit;
-            return acceptedFragmentIndices;
-        }
-        
-        [SuppressMessage("ReSharper", "PossibleMultipleEnumeration")]
         public PeptideDocNode OptimizeTransitions(CalibrationCurveFitter calibrationCurveFitter, OptimizeTransitionDetails details)
         {
+            int? msLevel = calibrationCurveFitter.QuantificationSettings.MsLevel;
+
             var standardConcentrations = calibrationCurveFitter.GetStandardConcentrations();
             if (standardConcentrations.Count == 0)
             {
@@ -190,6 +88,11 @@ namespace pwiz.Skyline.Model.DocSettings.AbsoluteQuantification
                 foreach (var transitionDocNode in transitionGroupDocNode.Transitions)
                 {
                     if (OptimizeTransitionSettings.PreserveNonQuantitative && !transitionDocNode.ExplicitQuantitative)
+                    {
+                        continue;
+                    }
+
+                    if (msLevel == 1 && !transitionDocNode.IsMs1 || msLevel == 2 && transitionDocNode.IsMs1)
                     {
                         continue;
                     }
