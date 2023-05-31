@@ -1,0 +1,221 @@
+﻿<?xml version="1.0" encoding="utf-8"?>
+<audit_log_root format_version="22.24">
+  <document_hash>yYB/yefrJMRx6LQAxHH9A5x/XS4=</document_hash>
+  <root_hash>V45RutsjbWPaTMVKF4KvC37aeak=</root_hash>
+  <audit_log>
+    <audit_log_entry skyline_version="22.2.1.508-e597efdc0 (64-Bit)" time_stamp="2023-05-31T09:44:23-07:00" user="GS\nathmg4">
+      <undo_redo>
+        <type>added_to</type>
+        <name>{1:ViewSpecList_Views}</name>
+        <name>"MSstatsShiny"</name>
+        <en_expanded>Report : "MSstatsShiny" was added</en_expanded>
+      </undo_redo>
+      <summary>
+        <type>added_to</type>
+        <name>{0:Settings}{2:PropertySeparator}{0:SrmSettings_DataSettings}{2:PropertySeparator}{0:ViewSpecList_Views}</name>
+        <name>"MSstatsShiny"</name>
+        <en_expanded>Settings &gt; Document Settings &gt; Reports : "MSstatsShiny" was added</en_expanded>
+      </summary>
+      <all_info>
+        <type>added_to</type>
+        <name>{0:Settings}{2:PropertySeparator}{0:SrmSettings_DataSettings}{2:PropertySeparator}{0:ViewSpecList_Views}</name>
+        <name>"MSstatsShiny"</name>
+        <en_expanded>Settings &gt; Document Settings &gt; Reports : "MSstatsShiny" was added</en_expanded>
+      </all_info>
+      <all_info>
+        <type>contains</type>
+        <name>{0:Settings}{2:PropertySeparator}{0:SrmSettings_DataSettings}{2:PropertySeparator}{0:ViewSpecList_Views}{2:PropertySeparator}"MSstatsShiny"{2:PropertySeparator}{0:ViewSpec_Columns}</name>
+        <name>"{5:Name}"</name>
+        <en_expanded>Settings &gt; Document Settings &gt; Reports &gt; "MSstatsShiny" &gt; Columns : contains "Name"</en_expanded>
+      </all_info>
+      <all_info>
+        <type>contains</type>
+        <name>{0:Settings}{2:PropertySeparator}{0:SrmSettings_DataSettings}{2:PropertySeparator}{0:ViewSpecList_Views}{2:PropertySeparator}"MSstatsShiny"{2:PropertySeparator}{0:ViewSpec_Columns}</name>
+        <name>"{5:ModifiedSequence}"</name>
+        <en_expanded>Settings &gt; Document Settings &gt; Reports &gt; "MSstatsShiny" &gt; Columns : contains "Modified Sequence"</en_expanded>
+      </all_info>
+      <all_info>
+        <type>contains</type>
+        <name>{0:Settings}{2:PropertySeparator}{0:SrmSettings_DataSettings}{2:PropertySeparator}{0:ViewSpecList_Views}{2:PropertySeparator}"MSstatsShiny"{2:PropertySeparator}{0:ViewSpec_Columns}</name>
+        <name>"{5:Charge}"</name>
+        <en_expanded>Settings &gt; Document Settings &gt; Reports &gt; "MSstatsShiny" &gt; Columns : contains "Charge"</en_expanded>
+      </all_info>
+      <all_info>
+        <type>contains</type>
+        <name>{0:Settings}{2:PropertySeparator}{0:SrmSettings_DataSettings}{2:PropertySeparator}{0:ViewSpecList_Views}{2:PropertySeparator}"MSstatsShiny"{2:PropertySeparator}{0:ViewSpec_Columns}</name>
+        <name>"{5:FragmentIon}"</name>
+        <en_expanded>Settings &gt; Document Settings &gt; Reports &gt; "MSstatsShiny" &gt; Columns : contains "Fragment Ion"</en_expanded>
+      </all_info>
+      <all_info>
+        <type>contains</type>
+        <name>{0:Settings}{2:PropertySeparator}{0:SrmSettings_DataSettings}{2:PropertySeparator}{0:ViewSpecList_Views}{2:PropertySeparator}"MSstatsShiny"{2:PropertySeparator}{0:ViewSpec_Columns}</name>
+        <name>"{5:ProductCharge}"</name>
+        <en_expanded>Settings &gt; Document Settings &gt; Reports &gt; "MSstatsShiny" &gt; Columns : contains "Product Charge"</en_expanded>
+      </all_info>
+      <all_info>
+        <type>contains</type>
+        <name>{0:Settings}{2:PropertySeparator}{0:SrmSettings_DataSettings}{2:PropertySeparator}{0:ViewSpecList_Views}{2:PropertySeparator}"MSstatsShiny"{2:PropertySeparator}{0:ViewSpec_Columns}</name>
+        <name>"{5:IsotopeLabelType}"</name>
+        <en_expanded>Settings &gt; Document Settings &gt; Reports &gt; "MSstatsShiny" &gt; Columns : contains "Isotope Label Type"</en_expanded>
+      </all_info>
+      <all_info>
+        <type>contains</type>
+        <name>{0:Settings}{2:PropertySeparator}{0:SrmSettings_DataSettings}{2:PropertySeparator}{0:ViewSpecList_Views}{2:PropertySeparator}"MSstatsShiny"{2:PropertySeparator}{0:ViewSpec_Columns}</name>
+        <name>"{5:annotation_Condition}"</name>
+        <en_expanded>Settings &gt; Document Settings &gt; Reports &gt; "MSstatsShiny" &gt; Columns : contains "annotation_Condition"</en_expanded>
+      </all_info>
+      <all_info>
+        <type>contains</type>
+        <name>{0:Settings}{2:PropertySeparator}{0:SrmSettings_DataSettings}{2:PropertySeparator}{0:ViewSpecList_Views}{2:PropertySeparator}"MSstatsShiny"{2:PropertySeparator}{0:ViewSpec_Columns}</name>
+        <name>"{5:annotation_BioReplicate}"</name>
+        <en_expanded>Settings &gt; Document Settings &gt; Reports &gt; "MSstatsShiny" &gt; Columns : contains "annotation_BioReplicate"</en_expanded>
+      </all_info>
+      <all_info>
+        <type>contains</type>
+        <name>{0:Settings}{2:PropertySeparator}{0:SrmSettings_DataSettings}{2:PropertySeparator}{0:ViewSpecList_Views}{2:PropertySeparator}"MSstatsShiny"{2:PropertySeparator}{0:ViewSpec_Columns}</name>
+        <name>"{5:FileName}"</name>
+        <en_expanded>Settings &gt; Document Settings &gt; Reports &gt; "MSstatsShiny" &gt; Columns : contains "File Name"</en_expanded>
+      </all_info>
+      <all_info>
+        <type>contains</type>
+        <name>{0:Settings}{2:PropertySeparator}{0:SrmSettings_DataSettings}{2:PropertySeparator}{0:ViewSpecList_Views}{2:PropertySeparator}"MSstatsShiny"{2:PropertySeparator}{0:ViewSpec_Columns}</name>
+        <name>"{5:Area}"</name>
+        <en_expanded>Settings &gt; Document Settings &gt; Reports &gt; "MSstatsShiny" &gt; Columns : contains "Area"</en_expanded>
+      </all_info>
+      <all_info>
+        <type>contains</type>
+        <name>{0:Settings}{2:PropertySeparator}{0:SrmSettings_DataSettings}{2:PropertySeparator}{0:ViewSpecList_Views}{2:PropertySeparator}"MSstatsShiny"{2:PropertySeparator}{0:ViewSpec_Columns}</name>
+        <name>"{5:StandardType}"</name>
+        <en_expanded>Settings &gt; Document Settings &gt; Reports &gt; "MSstatsShiny" &gt; Columns : contains "Standard Type"</en_expanded>
+      </all_info>
+      <all_info>
+        <type>contains</type>
+        <name>{0:Settings}{2:PropertySeparator}{0:SrmSettings_DataSettings}{2:PropertySeparator}{0:ViewSpecList_Views}{2:PropertySeparator}"MSstatsShiny"{2:PropertySeparator}{0:ViewSpec_Columns}</name>
+        <name>"{5:Truncated}"</name>
+        <en_expanded>Settings &gt; Document Settings &gt; Reports &gt; "MSstatsShiny" &gt; Columns : contains "Truncated"</en_expanded>
+      </all_info>
+      <all_info>
+        <type>contains</type>
+        <name>{0:Settings}{2:PropertySeparator}{0:SrmSettings_DataSettings}{2:PropertySeparator}{0:ViewSpecList_Views}{2:PropertySeparator}"MSstatsShiny"{2:PropertySeparator}{0:ViewSpec_Columns}</name>
+        <name>"{5:DetectionQValue}"</name>
+        <en_expanded>Settings &gt; Document Settings &gt; Reports &gt; "MSstatsShiny" &gt; Columns : contains "Detection Q Value"</en_expanded>
+      </all_info>
+      <all_info>
+        <type>contains</type>
+        <name>{0:Settings}{2:PropertySeparator}{0:SrmSettings_DataSettings}{2:PropertySeparator}{0:ViewSpecList_Views}{2:PropertySeparator}"MSstatsShiny"{2:PropertySeparator}{0:ViewSpec_Filters}</name>
+        <name>{ {0:FilterSpec_AuditLogColumn} = "{5:Value}", {0:IFilterOperation_DisplayName} = "Is Not Blank", {0:FilterPredicate_InvariantOperandText} = {2:Missing} }</name>
+        <en_expanded>Settings &gt; Document Settings &gt; Reports &gt; "MSstatsShiny" &gt; Filters : contains { Column = "Value", Operation = "Is Not Blank", Value = Missing }</en_expanded>
+      </all_info>
+      <all_info>
+        <type>contains</type>
+        <name>{0:Settings}{2:PropertySeparator}{0:SrmSettings_DataSettings}{2:PropertySeparator}{0:ViewSpecList_Views}{2:PropertySeparator}"MSstatsShiny"{2:PropertySeparator}{0:ViewSpec_Filters}</name>
+        <name>{ {0:FilterSpec_AuditLogColumn} = "{5:IsDecoy}", {0:IFilterOperation_DisplayName} = "Does Not Equal", {0:FilterPredicate_InvariantOperandText} = "True" }</name>
+        <en_expanded>Settings &gt; Document Settings &gt; Reports &gt; "MSstatsShiny" &gt; Filters : contains { Column = "Is Decoy", Operation = "Does Not Equal", Value = "True" }</en_expanded>
+      </all_info>
+      <all_info>
+        <type>is_</type>
+        <name>{0:Settings}{2:PropertySeparator}{0:SrmSettings_DataSettings}{2:PropertySeparator}{0:ViewSpecList_Views}{2:PropertySeparator}"MSstatsShiny"{2:PropertySeparator}{0:ViewSpecLayout_DefaultLayoutName}</name>
+        <name>{2:Missing}</name>
+        <en_expanded>Settings &gt; Document Settings &gt; Reports &gt; "MSstatsShiny" &gt; Default Layout Name is Missing</en_expanded>
+      </all_info>
+      <hash>dLTzvAZAYgOYvQtnJ8mR8BbX2p8=</hash>
+    </audit_log_entry>
+    <audit_log_entry skyline_version="22.2.1.508-e597efdc0 (64-Bit)" time_stamp="2023-05-31T09:43:35-07:00" user="GS\nathmg4">
+      <undo_redo>
+        <type>changed</type>
+        <name>{0:DataSettings_AnnotationDefs}</name>
+        <en_expanded>Annotations changed</en_expanded>
+      </undo_redo>
+      <summary>
+        <type>changed</type>
+        <name>{0:Settings}{2:PropertySeparator}{0:SrmSettings_DataSettings}{2:TabSeparator}{0:DataSettings_AnnotationDefs}</name>
+        <en_expanded>Settings &gt; Document Settings -- Annotations changed</en_expanded>
+      </summary>
+      <all_info>
+        <type>added_to</type>
+        <name>{0:Settings}{2:PropertySeparator}{0:SrmSettings_DataSettings}{2:TabSeparator}{0:DataSettings_AnnotationDefs}</name>
+        <name>"BioReplicate"</name>
+        <en_expanded>Settings &gt; Document Settings -- Annotations : "BioReplicate" was added</en_expanded>
+      </all_info>
+      <all_info>
+        <type>is_</type>
+        <name>{0:Settings}{2:PropertySeparator}{0:SrmSettings_DataSettings}{2:TabSeparator}{0:DataSettings_AnnotationDefs}{2:PropertySeparator}"BioReplicate"{2:PropertySeparator}{0:AnnotationDef_AnnotationTargets}</name>
+        <name>"replicate"</name>
+        <en_expanded>Settings &gt; Document Settings -- Annotations &gt; "BioReplicate" &gt; Applies to is "replicate"</en_expanded>
+      </all_info>
+      <all_info>
+        <type>is_</type>
+        <name>{0:Settings}{2:PropertySeparator}{0:SrmSettings_DataSettings}{2:TabSeparator}{0:DataSettings_AnnotationDefs}{2:PropertySeparator}"BioReplicate"{2:PropertySeparator}{0:AnnotationDef_Type}</name>
+        <name>"{6:AnnotationType_text}"</name>
+        <en_expanded>Settings &gt; Document Settings -- Annotations &gt; "BioReplicate" &gt; Type is "Text"</en_expanded>
+      </all_info>
+      <all_info>
+        <type>added_to</type>
+        <name>{0:Settings}{2:PropertySeparator}{0:SrmSettings_DataSettings}{2:TabSeparator}{0:DataSettings_AnnotationDefs}</name>
+        <name>"Condition"</name>
+        <en_expanded>Settings &gt; Document Settings -- Annotations : "Condition" was added</en_expanded>
+      </all_info>
+      <all_info>
+        <type>is_</type>
+        <name>{0:Settings}{2:PropertySeparator}{0:SrmSettings_DataSettings}{2:TabSeparator}{0:DataSettings_AnnotationDefs}{2:PropertySeparator}"Condition"{2:PropertySeparator}{0:AnnotationDef_AnnotationTargets}</name>
+        <name>"replicate"</name>
+        <en_expanded>Settings &gt; Document Settings -- Annotations &gt; "Condition" &gt; Applies to is "replicate"</en_expanded>
+      </all_info>
+      <all_info>
+        <type>is_</type>
+        <name>{0:Settings}{2:PropertySeparator}{0:SrmSettings_DataSettings}{2:TabSeparator}{0:DataSettings_AnnotationDefs}{2:PropertySeparator}"Condition"{2:PropertySeparator}{0:AnnotationDef_Type}</name>
+        <name>"{6:AnnotationType_value_list}"</name>
+        <en_expanded>Settings &gt; Document Settings -- Annotations &gt; "Condition" &gt; Type is "Value List"</en_expanded>
+      </all_info>
+      <all_info>
+        <type>contains</type>
+        <name>{0:Settings}{2:PropertySeparator}{0:SrmSettings_DataSettings}{2:TabSeparator}{0:DataSettings_AnnotationDefs}{2:PropertySeparator}"Condition"{2:PropertySeparator}{0:AnnotationDef_Items}</name>
+        <name>"Healthy"</name>
+        <en_expanded>Settings &gt; Document Settings -- Annotations &gt; "Condition" &gt; Values : contains "Healthy"</en_expanded>
+      </all_info>
+      <all_info>
+        <type>contains</type>
+        <name>{0:Settings}{2:PropertySeparator}{0:SrmSettings_DataSettings}{2:TabSeparator}{0:DataSettings_AnnotationDefs}{2:PropertySeparator}"Condition"{2:PropertySeparator}{0:AnnotationDef_Items}</name>
+        <name>"Diseased"</name>
+        <en_expanded>Settings &gt; Document Settings -- Annotations &gt; "Condition" &gt; Values : contains "Diseased"</en_expanded>
+      </all_info>
+      <all_info>
+        <type>added_to</type>
+        <name>{0:Settings}{2:PropertySeparator}{0:SrmSettings_DataSettings}{2:TabSeparator}{0:DataSettings_AnnotationDefs}</name>
+        <name>"Run"</name>
+        <en_expanded>Settings &gt; Document Settings -- Annotations : "Run" was added</en_expanded>
+      </all_info>
+      <all_info>
+        <type>is_</type>
+        <name>{0:Settings}{2:PropertySeparator}{0:SrmSettings_DataSettings}{2:TabSeparator}{0:DataSettings_AnnotationDefs}{2:PropertySeparator}"Run"{2:PropertySeparator}{0:AnnotationDef_AnnotationTargets}</name>
+        <name>"replicate"</name>
+        <en_expanded>Settings &gt; Document Settings -- Annotations &gt; "Run" &gt; Applies to is "replicate"</en_expanded>
+      </all_info>
+      <all_info>
+        <type>is_</type>
+        <name>{0:Settings}{2:PropertySeparator}{0:SrmSettings_DataSettings}{2:TabSeparator}{0:DataSettings_AnnotationDefs}{2:PropertySeparator}"Run"{2:PropertySeparator}{0:AnnotationDef_Type}</name>
+        <name>"{6:AnnotationType_number}"</name>
+        <en_expanded>Settings &gt; Document Settings -- Annotations &gt; "Run" &gt; Type is "Number"</en_expanded>
+      </all_info>
+      <all_info>
+        <type>added_to</type>
+        <name>{0:Settings}{2:PropertySeparator}{0:SrmSettings_DataSettings}{2:TabSeparator}{0:DataSettings_AnnotationDefs}</name>
+        <name>"Intensity"</name>
+        <en_expanded>Settings &gt; Document Settings -- Annotations : "Intensity" was added</en_expanded>
+      </all_info>
+      <all_info>
+        <type>is_</type>
+        <name>{0:Settings}{2:PropertySeparator}{0:SrmSettings_DataSettings}{2:TabSeparator}{0:DataSettings_AnnotationDefs}{2:PropertySeparator}"Intensity"{2:PropertySeparator}{0:AnnotationDef_AnnotationTargets}</name>
+        <name>"transition_result"</name>
+        <en_expanded>Settings &gt; Document Settings -- Annotations &gt; "Intensity" &gt; Applies to is "transition_result"</en_expanded>
+      </all_info>
+      <all_info>
+        <type>is_</type>
+        <name>{0:Settings}{2:PropertySeparator}{0:SrmSettings_DataSettings}{2:TabSeparator}{0:DataSettings_AnnotationDefs}{2:PropertySeparator}"Intensity"{2:PropertySeparator}{0:AnnotationDef_Type}</name>
+        <name>"{6:AnnotationType_number}"</name>
+        <en_expanded>Settings &gt; Document Settings -- Annotations &gt; "Intensity" &gt; Type is "Number"</en_expanded>
+      </all_info>
+      <hash>DMcGndO5ZI6i13tMB5jElxWHg20=</hash>
+    </audit_log_entry>
+  </audit_log>
+</audit_log_root>
