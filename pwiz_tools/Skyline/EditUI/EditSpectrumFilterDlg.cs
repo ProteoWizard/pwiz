@@ -45,7 +45,7 @@ namespace pwiz.Skyline.EditUI
             _originalFilterPages = FilterPages = filterPages;
             for (int iPage = 0; iPage < FilterPages.Pages.Count; iPage++)
             {
-                _pageRadioButtons.Add(MakePageButton(iPage, FilterPages.Pages[iPage].Caption));
+                _pageRadioButtons.Add(MakePageButton(iPage, FilterPages.Pages[iPage]));
             }
             panelPages.Controls.AddRange(_pageRadioButtons.ToArray());
 
@@ -224,15 +224,18 @@ namespace pwiz.Skyline.EditUI
             }
         }
 
-        private RadioButton MakePageButton(int index, string caption)
+        private RadioButton MakePageButton(int index, FilterPage page)
         {
             var radioButton = new RadioButton
             {
-                Text = caption ?? string.Format(Resources.EditSpectrumFilterDlg_MakePageButton_Case__0_, index + 1),
+                Text = page.Caption ?? string.Format(Resources.EditSpectrumFilterDlg_MakePageButton_Case__0_, index + 1),
                 AutoCheck = false
-                
             };
             radioButton.Click += (sender, args)=>SelectPage(index);
+            if (page.Description != null)
+            {
+                toolTip1.SetToolTip(radioButton, page.Description);
+            }
             return radioButton;
         }
 

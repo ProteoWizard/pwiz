@@ -32,16 +32,18 @@ namespace pwiz.Common.DataBinding.Filtering
     public class FilterPage
     {
         private readonly Func<string> _getCaptionFunc;
-        public FilterPage(Func<string> getCaptionFunc, FilterClause discriminant,
+        private readonly Func<string> _getDescriptionFunc;
+        public FilterPage(Func<string> getCaptionFunc, Func<string> getDescriptionFunc, FilterClause discriminant,
             IEnumerable<PropertyPath> availableColumns)
         {
             _getCaptionFunc = getCaptionFunc;
+            _getDescriptionFunc = getDescriptionFunc;
             Discriminant = discriminant;
             AvailableColumns = ImmutableList.ValueOf(availableColumns);
         }
 
-        public FilterPage(Func<string> getCaptionFunc, FilterSpec discriminant,
-            IEnumerable<PropertyPath> availableColumns) : this(getCaptionFunc, new FilterClause(ImmutableList.Singleton(discriminant)), availableColumns)
+        public FilterPage(Func<string> getCaptionFunc, Func<string> getDescriptionFunc, FilterSpec discriminant,
+            IEnumerable<PropertyPath> availableColumns) : this(getCaptionFunc, getDescriptionFunc, new FilterClause(ImmutableList.Singleton(discriminant)), availableColumns)
         {
         }
 
@@ -50,13 +52,18 @@ namespace pwiz.Common.DataBinding.Filtering
         /// </summary>
         /// <param name="availableColumns"></param>
         public FilterPage(IEnumerable<PropertyPath> availableColumns) 
-            : this(null, FilterClause.EMPTY, availableColumns)
+            : this(null, null, FilterClause.EMPTY, availableColumns)
         {
         }
 
         public string Caption
         {
             get { return _getCaptionFunc?.Invoke(); }
+        }
+
+        public string Description
+        {
+            get { return _getDescriptionFunc?.Invoke(); }
         }
         /// <summary>
         /// The filter which is AND'd with the user's filter.

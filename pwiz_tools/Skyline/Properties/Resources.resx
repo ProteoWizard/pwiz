@@ -12128,4 +12128,10 @@ If you choose Disable, you can enable Auto-select later with the "Refine &gt; Ad
   <data name="MatchingPrecursors_ToString__0__precursors" xml:space="preserve">
     <value>{0} precursors</value>
   </data>
+  <data name="SpectrumClassFilter_Ms1FilterPage_Criteria_which_MS1_spectra_must_satisfy_to_be_included_in_extracted_chromatogram" xml:space="preserve">
+    <value>Criteria which MS1 spectra must satisfy to be included in extracted chromatogram</value>
+  </data>
+  <data name="SpectrumClassFilter_Ms2FilterPage_Criteria_which_spectra_with_MS_level_2_or_higher_must_satisfy_to_be_included_in_extracted_chromatogram" xml:space="preserve">
+    <value>Criteria which spectra with MS level 2 or higher must satisfy to be included in extracted chromatogram</value>
+  </data>
 </root>
