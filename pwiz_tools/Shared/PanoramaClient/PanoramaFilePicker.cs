@@ -186,7 +186,7 @@ namespace pwiz.PanoramaClient
                         listItem[1] = sizeObj.ToString();
                         listItem[4] = (string)file[@"creationdate"];
                         var fileNode = fileName.EndsWith(EXT) ? new ListViewItem(listItem, 1) : new ListViewItem(listItem, 0);
-                        fileNode.Tag = (string)file[@"id"];
+                        fileNode.Tag = size;
                         fileNode.Name = (string)file[@"href"];
                         listView.Items.Add(fileNode);
                     }
