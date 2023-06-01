@@ -288,6 +288,7 @@ alias all-relevant : : <relevant>cxxstd <relevant>cxxstd-dialect <relevant>targe
 
 # required file for running BlibBuild with MaxQuant support
 make modifications.xml : ./modifications.xml : @common.copy : <use>all-relevant ;
+make unimod.xml : $(PWIZ_ROOT_PATH)/pwiz/data/common/unimod.xml : @common.copy : <use>all-relevant ;
 
 rule msparser-dependency ( name : properties * )
 {
@@ -310,8 +311,7 @@ rule msparser-dependency ( name : properties * )
 msparser-dependency unimod_2.xsd ;
 msparser-dependency quantitation_1.xsd ;
 msparser-dependency quantitation_2.xsd ;
-msparser-dependency unimod.xml ;
-explicit unimod_2.xsd quantitation_1.xsd quantitation_2.xsd unimod.xml ;
+explicit unimod_2.xsd quantitation_1.xsd quantitation_2.xsd ;
 
 install install
     : BlibBuild BlibFilter BlibSearch BlibToMs2
@@ -330,7 +330,7 @@ rule install-msparser-requirements ( properties * )
         local result = <source>$(msparser_path)/../config/unimod_2.xsd ; 
         result += <source>$(msparser_path)/../config/quantitation_1.xsd ;
         result += <source>$(msparser_path)/../config/quantitation_2.xsd ;
-        result += <source>$(msparser_path)/../config/unimod.xml ;
+        result += <source>unimod.xml ;
         if <toolset>msvc in $(properties)
         {
             if <runtime-debugging>on in $(properties)
