@@ -12,7 +12,7 @@ EncyclopeDIA Search>Prosit settings>Max missed cleavagesは"2"です
 EncyclopeDIA Search>Narrow window results："23aug2017_hela_serum_timecourse_4mz_narrow_1.mzML"が含まれています
 EncyclopeDIA Search>Wide window results："23aug2017_hela_serum_timecourse_wide_1a.mzML"が含まれています
 EncyclopeDIA Search>Wide window results："23aug2017_hela_serum_timecourse_wide_1b.mzML"が含まれています
-EncyclopeDIA Search>EncyclopeDIA settingsは{ Enzyme = "Trypsin", Frag = "CID", Ptol = "10", PtolUnits = "PPM", Ftol = "10", FtolUnits = "PPM", Lftol = "10", LftolUnits = "PPM", Poffset = "0", Foffset = "0", PercolatorThreshold = "0.01", PercolatorTrainingSetSize = "500000", PercolatorTrainingFDR = "0", Acquisition = "DIA", NumberOfThreadsUsed = "32", ExpectedPeakWidth = "25", PrecursorWindowSize = "-1", NumberOfQuantitativePeaks = "5", MinNumOfQuantitativePeaks = "3", TopNTargetsUsed = "-1", QuantifyAcrossSamples = "False", NumberOfExtraDecoyLibrariesSearched = "0", VerifyModificationIons = "True", MinIntensity = "-1", RtWindowInMin = "-1", FilterPeaklists = "False" }です
+EncyclopeDIA Search>EncyclopeDIA settingsは{ Enzyme = "Trypsin", Frag = "CID", Ptol = "10", PtolUnits = "PPM", Ftol = "10", FtolUnits = "PPM", Lftol = "10", LftolUnits = "PPM", Poffset = "0", Foffset = "0", PercolatorThreshold = "0.01", PercolatorTrainingSetSize = "500000", PercolatorTrainingFDR = "0", Acquisition = "DIA", NumberOfThreadsUsed = "32", ExpectedPeakWidth = "25", PrecursorWindowSize = "-1", NumberOfQuantitativePeaks = "5", MinNumOfQuantitativePeaks = "3", TopNTargetsUsed = "-1", QuantifyAcrossSamples = "False", NumberOfExtraDecoyLibrariesSearched = "0", VerifyModificationIons = "True", MinIntensity = "-1", RtWindowInMin = "-1", FilterPeaklists = "False", V2scoring = "True" }です
 EncyclopeDIA Search>Chromatogram libraryは"20230123-abundant-proteins-z3_nce33.elib"です
 EncyclopeDIA Search>Quantification libraryは"20230123-abundant-proteins-z3_nce33-quant.elib"です
 Extra Info: FASTA settings = 
@@ -63,7 +63,8 @@ NumberOfExtraDecoyLibrariesSearched = "0",
 VerifyModificationIons = "True",
 MinIntensity = "-1",
 RtWindowInMin = "-1",
-FilterPeaklists = "False"
+FilterPeaklists = "False",
+V2scoring = "True"
 },
 Chromatogram library = "20230123-abundant-proteins-z3_nce33.elib",
 Quantification library = "20230123-abundant-proteins-z3_nce33-quant.elib"

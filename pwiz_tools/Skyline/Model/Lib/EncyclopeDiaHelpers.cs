@@ -282,6 +282,7 @@ namespace pwiz.Skyline.Model.Lib
                 Parameters = new Dictionary<string, AbstractDdaSearchEngine.Setting>();
                 foreach(var kvp in DefaultParameters)
                     Parameters[kvp.Key] = new AbstractDdaSearchEngine.Setting(kvp.Value);
+                V2scoring = true; // EncyclopeDIA defaults to V1 but we want to default to V2
             }
 
             public IDictionary<string, AbstractDdaSearchEngine.Setting> Parameters { get; }
@@ -317,7 +318,8 @@ namespace pwiz.Skyline.Model.Lib
                     { "VerifyModificationIons", new AbstractDdaSearchEngine.Setting("VerifyModificationIons", true) },
                     { "MinIntensity", new AbstractDdaSearchEngine.Setting("MinIntensity", -1.0) },
                     { "RtWindowInMin", new AbstractDdaSearchEngine.Setting("RtWindowInMin", -1.0) },
-                    { "FilterPeaklists", new AbstractDdaSearchEngine.Setting("FilterPeaklists", false) }
+                    { "FilterPeaklists", new AbstractDdaSearchEngine.Setting("FilterPeaklists", false) },
+                    { "V2scoring", new AbstractDdaSearchEngine.Setting("V2scoring", false) }
                 });
             // ReSharper restore LocalizableElement
 
@@ -361,6 +363,7 @@ namespace pwiz.Skyline.Model.Lib
                 }
             }
 
+            #region Get/Set utility functions
             private T GetValue<T>(string name)
             {
                 return (T) Parameters[name].Value;
@@ -377,7 +380,9 @@ namespace pwiz.Skyline.Model.Lib
             {
                 Parameters[name].Value = value == null ? DefaultParameters[name].Value : Enum.GetName(typeof(T), value);
             }
+            #endregion
 
+            #region Properties
             [CanBeNull]
             public string Enzyme
             {
@@ -516,10 +521,17 @@ namespace pwiz.Skyline.Model.Lib
                 set => SetValue(nameof(FilterPeaklists), value);
             }
 
+            public bool? V2scoring
+            {
+                get => GetValue<bool>(nameof(V2scoring));
+                set => SetValue(nameof(V2scoring), value);
+            }
+
             // scoringBreadthType recal
             // localizationModification none
             // precursorIsolationRangeFile none
             // percolatorModelFile none
+            #endregion
 
             public override string ToString()
             {
@@ -530,7 +542,6 @@ namespace pwiz.Skyline.Model.Lib
                         continue;
                     sb.AppendFormat(CultureInfo.InvariantCulture, @" -{0}{1} ""{2}""", char.ToLowerInvariant(param.Key[0]), param.Key.Substring(1), param.Value.Value);
                 }
-                sb.Append(@" -percolatorVersion v3-01 -enableAdvancedOptions -v2scoring");
                 return sb.ToString();
             }
         }

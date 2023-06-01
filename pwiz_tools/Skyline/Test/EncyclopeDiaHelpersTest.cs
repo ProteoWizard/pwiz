@@ -112,10 +112,11 @@ namespace pwiz.SkylineTest
                 string elibExpectedTsvFilepath = TestFilesDir.GetTestPath("pan_human_library_690to705-z3_nce33-expected-quant-elib.tsv");
                 var testConfig = new EncyclopeDiaHelpers.EncyclopeDiaConfig
                 {
-                    PercolatorTrainingFDR = 0.15,
-                    PercolatorThreshold = 0.15,
+                    PercolatorTrainingFDR = 0.2,
+                    PercolatorThreshold = 0.2,
                     MinNumOfQuantitativePeaks = 0,
                     NumberOfQuantitativePeaks = 0,
+                    V2scoring = false
                 };
                 var pm = new CommandProgressMonitor(Console.Out, new ProgressStatus());
                 EncyclopeDiaHelpers.GenerateQuantLibrary(elibFilepath, elibQuantFilepath, fastaFilepath,
@@ -126,10 +127,10 @@ namespace pwiz.SkylineTest
                     }, pm, ref status, testConfig);
                 
                 var actual = SqliteOperations.DumpTable(elibQuantFilepath, "entries", sortColumns: new[] { "PrecursorMz" })
-                    .Concat(SqliteOperations.DumpTable(elibQuantFilepath, "peptidescores", sortColumns: new[] { "PeptideModSeq", "PrecursorCharge" }, excludeColumns: new [] { "PosteriorErrorProbability" }))
+                    .Concat(SqliteOperations.DumpTable(elibQuantFilepath, "peptidescores", sortColumns: new[] { "PeptideModSeq", "PrecursorCharge" }, excludeColumns: new [] { "SourceFile", "PosteriorErrorProbability" }))
                     .Concat(SqliteOperations.DumpTable(elibQuantFilepath, "retentiontimes", sortColumns: new[] { "SourceFile", "Library" }));
-                //string elibActualTsvFilepath = TestFilesDir.GetTestPath("pan_human_library_690to705-z3_nce33-expected-quant-elib-actual.tsv");
-                //File.WriteAllLines(elibActualTsvFilepath, actual);
+                string elibActualTsvFilepath = TestFilesDir.GetTestPath("pan_human_library_690to705-z3_nce33-expected-quant-elib-actual.tsv");
+                File.WriteAllLines(elibActualTsvFilepath, actual);
                 AssertEx.NoDiff(File.ReadAllText(elibExpectedTsvFilepath), string.Join("\n", actual));
             }
 
