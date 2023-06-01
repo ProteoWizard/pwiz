@@ -1839,6 +1839,8 @@ namespace pwiz.Skyline.Menus
                     }
 
                     transitionGroupToAdd = transitionGroupToAdd.ChangeSpectrumClassFilter(spectrumClassFilter);
+                    transitionGroupToAdd = transitionGroupToAdd.ChangeSettings(document.Settings, peptideDocNode,
+                        peptideDocNode.ExplicitMods, SrmSettingsDiff.ALL);
                     newTransitionGroups.Add(transitionGroupToAdd);
                     changed = true;
                     changeCount++;

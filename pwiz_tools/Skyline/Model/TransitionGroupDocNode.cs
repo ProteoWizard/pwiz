@@ -254,7 +254,10 @@ namespace pwiz.Skyline.Model
             {
                 return this;
             }
-            return ChangeProp(ImClone(this), im => im.SpectrumClassFilter = spectrumClassFilter);
+            return ChangeProp(ImClone(this), im =>
+            {
+                im.SpectrumClassFilter = spectrumClassFilter;
+            });
         }
 
         public PrecursorKey PrecursorKey
