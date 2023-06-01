@@ -301,6 +301,10 @@ rule msparser-dependency ( name : properties * )
     {
         make $(name) : $(msparser_path_msvc)/../config/$(name) : @common.copy : <use>all-relevant ;
     }
+    else
+    {
+        alias $(name) ;
+    }
 }
 
 msparser-dependency unimod_2.xsd ;
