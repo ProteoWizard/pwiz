@@ -126,7 +126,7 @@ rule install-requirements ( properties * )
         local result = <source>$(msparser_path)/../config/unimod_2.xsd ; 
         result += <source>$(msparser_path)/../config/quantitation_1.xsd ;
         result += <source>$(msparser_path)/../config/quantitation_2.xsd ;
-        result += <source>../common/unimod.xml ;
+        result += <source>$(PWIZ_ROOT_PATH)/pwiz/data/common/unimod.xml ;
 
         if <toolset>msvc in $(properties)
         {

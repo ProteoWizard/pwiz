@@ -1275,8 +1275,8 @@ rule msparser-usage-requirements ( properties * )
     local result = <include>$(msparser_path)/include ;
     if <toolset>msvc in $(properties)
     {
-        result += <assembly-dependency>$(msparser_path)/../config/unimod_2.xsd <assembly-dependency>$(msparser_path)/../config/quantitation_1.xsd <assembly-dependency>$(msparser_path)/../config/quantitation_2.xsd <assembly-dependency>pwiz/data/common/unimod.xml ;
-        result += <dependency>$(msparser_path)/../config/unimod_2.xsd <dependency>$(msparser_path)/../config/quantitation_1.xsd <dependency>$(msparser_path)/../config/quantitation_2.xsd <dependency>pwiz/data/common/unimod.xml ;
+        result += <assembly-dependency>$(msparser_path)/../config/unimod_2.xsd <assembly-dependency>$(msparser_path)/../config/quantitation_1.xsd <assembly-dependency>$(msparser_path)/../config/quantitation_2.xsd <assembly-dependency>$(PWIZ_ROOT_PATH)/pwiz/data/common/unimod.xml ;
+        result += <dependency>$(msparser_path)/../config/unimod_2.xsd <dependency>$(msparser_path)/../config/quantitation_1.xsd <dependency>$(msparser_path)/../config/quantitation_2.xsd <dependency>$(PWIZ_ROOT_PATH)/pwiz/data/common/unimod.xml ;
         if <runtime-debugging>on in $(properties)
         {
             result += <assembly-dependency>$(msparser_path)/lib/msparserD.dll ;
