@@ -949,9 +949,9 @@ namespace pwiz.Skyline
             var panoramaServers = servers.Cast<PanoramaServer>().ToList();
 
             var state = string.Empty;
-            if (!string.IsNullOrEmpty(Settings.Default.FileExpansion))
+            if (!string.IsNullOrEmpty(Settings.Default.PanoramaTreeState))
             {
-                state = Settings.Default.FileExpansion;
+                state = Settings.Default.PanoramaTreeState;
             }
 
             try
@@ -970,12 +970,11 @@ namespace pwiz.Skyline
                     }
                     if (dlg.ShowDialog() != DialogResult.Cancel)
                     {
-                        Settings.Default.FileExpansion = dlg.TreeState;
-                        Settings.Default.PanoramaSkyFiles = dlg.ShowingSky;
+                        Settings.Default.PanoramaTreeState = dlg.TreeState;
                         var folderPath = string.Empty;
-                        if (!string.IsNullOrEmpty(Settings.Default.LastFolderPath))
+                        if (!string.IsNullOrEmpty(Settings.Default.PanoramaLocalSavePath))
                         {
-                            folderPath = Settings.Default.LastFolderPath;
+                            folderPath = Settings.Default.PanoramaLocalSavePath;
                         }
                         var curServer = dlg.ActiveServer;
 
@@ -995,9 +994,8 @@ namespace pwiz.Skyline
                             {
                                 return;
                             }
-                          
-
-                            Settings.Default.LastFolderPath = Path.GetDirectoryName(saveAsDlg.FileName);
+                            
+                            Settings.Default.PanoramaLocalSavePath = Path.GetDirectoryName(saveAsDlg.FileName);
                             var folder = Path.GetDirectoryName(saveAsDlg.FileName);
                             if (!string.IsNullOrEmpty(folder))
                             {
@@ -1019,8 +1017,7 @@ namespace pwiz.Skyline
                             }
                         }
                     }
-                    Settings.Default.FileExpansion = dlg.TreeState;
-                    Settings.Default.PanoramaSkyFiles = dlg.ShowingSky;
+                    Settings.Default.PanoramaTreeState = dlg.TreeState;
                 }
             }
             catch (Exception e)
@@ -1030,48 +1027,61 @@ namespace pwiz.Skyline
             Settings.Default.Save();
         }
 
+        //TODO: Pass in client as last parameter set to null
         public bool DownloadPanoramaFile(string downloadPath, string fileName, string fileUrl, PanoramaServer curServer, long size, bool cancel = false)
         {
-            var panoramaClient = new WebPanoramaClient(curServer.URI);
-            using (var fileSaver = new FileSaver(downloadPath))
+            try
             {
-                using (var longWaitDlg = new LongWaitDlg
+                var panoramaClient = new WebPanoramaClient(curServer.URI);
+                using (var fileSaver = new FileSaver(downloadPath))
                 {
-                    Text = string.Format(Resources.SkylineWindow_OpenFromPanorama_Downloading_file__0_, fileName),
-                })
-                {
+                    using (var longWaitDlg = new LongWaitDlg
+                           {
+                               Text = string.Format(Resources.SkylineWindow_OpenFromPanorama_Downloading_file__0_, fileName),
+                           })
+                    {
+                        //TODO: Test client using DownloadFile that throws an exception
+                        //TODO: Look at tests that cancel a longWaitDlg
+                        var progressStatus = longWaitDlg.PerformWork(this, 800,
+                            progressMonitor => panoramaClient.DownloadFile(fileUrl, fileSaver.SafeName, size, fileName, curServer,
+                                progressMonitor, new ProgressStatus(), cancel));
 
-                    var progressStatus = longWaitDlg.PerformWork(this, 800,
-                        progressMonitor => panoramaClient.DownloadFile(fileUrl, fileSaver.SafeName, size, fileName, curServer,
-                            progressMonitor, new ProgressStatus(), cancel));
-  
-                    if (progressStatus.IsCanceled || progressStatus.IsError)
-                    {
-                        FileEx.SafeDelete(downloadPath, true);
-                        if (progressStatus.IsError && !cancel)
+                        if (progressStatus.IsCanceled || progressStatus.IsError)
                         {
-                            var message = progressStatus.ErrorException.Message;
-                            if (message.Contains(@"404"))
+                            FileEx.SafeDelete(downloadPath, true);
+                            if (progressStatus.IsError && !cancel)
                             {
-                                message = "File does not exist. It may have been deleted on the server.";
+                                var message = progressStatus.ErrorException.Message;
+                                if (message.Contains(@"404"))
+                                {
+                                    message = "File does not exist. It may have been deleted on the server.";
+                                }
+                                var alertDlg = new AlertDlg(message, MessageBoxButtons.OK) { Exception = progressStatus.ErrorException };
+                                alertDlg.ShowAndDispose(this);
                             }
-                            var alertDlg = new AlertDlg(message, MessageBoxButtons.OK) { Exception = progressStatus.ErrorException };
-                            alertDlg.ShowAndDispose(this);
                             return false;
+
                         }
-                        
+                        else
+                        {
+                            fileSaver.Commit();
+                        }
+                        if (longWaitDlg.IsCanceled)
+                            return false;
                     }
-                    else
-                    {
-                        fileSaver.Commit();
-                    }
-                    if (longWaitDlg.IsCanceled)
-                        return false;
+
                 }
 
+                return true;
             }
-
-            return true;
+            catch (Exception e)
+            {
+                if (cancel)
+                {
+                    MessageDlg.ShowException(this, e);
+                }
+                return false;
+            }
         }
 
         private string GetDownloadName(string fullPath)

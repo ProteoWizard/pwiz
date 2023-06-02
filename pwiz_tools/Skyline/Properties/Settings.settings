@@ -848,13 +848,10 @@
     <Setting Name="ViewLibraryMatchPropsVisible" Type="System.Boolean" Scope="User">
       <Value Profile="(Default)">False</Value>
     </Setting>
-    <Setting Name="PanoramaSkyFiles" Type="System.Boolean" Scope="User">
-      <Value Profile="(Default)">False</Value>
-    </Setting>
-    <Setting Name="FileExpansion" Type="System.String" Scope="User">
+    <Setting Name="PanoramaTreeState" Type="System.String" Scope="User">
       <Value Profile="(Default)" />
     </Setting>
-    <Setting Name="LastFolderPath" Type="System.String" Scope="User">
+    <Setting Name="PanoramaLocalSavePath" Type="System.String" Scope="User">
       <Value Profile="(Default)" />
     </Setting>
     <Setting Name="FullScanPropertySheetVisible" Type="System.Boolean" Scope="User">

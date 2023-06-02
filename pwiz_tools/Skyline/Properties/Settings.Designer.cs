@@ -3395,37 +3395,25 @@ namespace pwiz.Skyline.Properties {
         
         [global::System.Configuration.UserScopedSettingAttribute()]
         [global::System.Diagnostics.DebuggerNonUserCodeAttribute()]
-        [global::System.Configuration.DefaultSettingValueAttribute("False")]
-        public bool PanoramaSkyFiles {
+        [global::System.Configuration.DefaultSettingValueAttribute("")]
+        public string PanoramaTreeState {
             get {
-                return ((bool)(this["PanoramaSkyFiles"]));
+                return ((string)(this["PanoramaTreeState"]));
             }
             set {
-                this["PanoramaSkyFiles"] = value;
+                this["PanoramaTreeState"] = value;
             }
         }
         
         [global::System.Configuration.UserScopedSettingAttribute()]
         [global::System.Diagnostics.DebuggerNonUserCodeAttribute()]
         [global::System.Configuration.DefaultSettingValueAttribute("")]
-        public string FileExpansion {
+        public string PanoramaLocalSavePath {
             get {
-                return ((string)(this["FileExpansion"]));
+                return ((string)(this["PanoramaLocalSavePath"]));
             }
             set {
-                this["FileExpansion"] = value;
-            }
-        }
-        
-        [global::System.Configuration.UserScopedSettingAttribute()]
-        [global::System.Diagnostics.DebuggerNonUserCodeAttribute()]
-        [global::System.Configuration.DefaultSettingValueAttribute("")]
-        public string LastFolderPath {
-            get {
-                return ((string)(this["LastFolderPath"]));
-            }
-            set {
-                this["LastFolderPath"] = value;
+                this["PanoramaLocalSavePath"] = value;
             }
         }
         

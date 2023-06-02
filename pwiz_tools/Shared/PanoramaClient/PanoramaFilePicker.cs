@@ -6,6 +6,7 @@ using System.Globalization;
 using Newtonsoft.Json.Linq;
 using System.Windows.Forms;
 using pwiz.Common.Controls;
+using pwiz.PanoramaClient.Properties;
 
 
 namespace pwiz.PanoramaClient
@@ -15,9 +16,8 @@ namespace pwiz.PanoramaClient
         private static JToken _runsInfoJson;
         private static JToken _sizeInfoJson;
         private static Dictionary<long, long> _sizeDictionary = new Dictionary<long, long>();
+        private static Dictionary<long, string> _nameDictionary = new Dictionary<long, string>();
         private bool _restoring;
-        private JToken _fileJson;
-        private JToken _sizeJson;
         private int _sortColumn = -1;
         private const string EXT = ".sky";
         private const string RECENT_VER = "Most recent";
@@ -64,6 +64,8 @@ namespace pwiz.PanoramaClient
         public PanoramaServer ActiveServer { get; private set; }
         public bool FormHasClosed { get; private set; }
         public long FileSize { get; private set; }
+        public JToken FileJson;
+        public JToken SizeJson;
 
         /// <summary>
         /// Sets a username and password and changes the 'Open' button text if a custom string is passed in
@@ -94,7 +96,6 @@ namespace pwiz.PanoramaClient
                 back.Enabled = false;
                 forward.Enabled = false;
             }
-            //IsLoaded = true;
         }
 
         /// <summary>
@@ -108,8 +109,8 @@ namespace pwiz.PanoramaClient
         /// <param name="sizeJson"></param>
         public void InitializeTestDialog(Uri serverUri, string user, string pass, JToken folderJson, JToken fileJson, JToken sizeJson)
         {
-            _fileJson = fileJson;
-            _sizeJson = sizeJson;
+            FileJson = fileJson;
+            SizeJson = sizeJson;
             var server = new PanoramaServer(serverUri, user, pass);
             FolderBrowser = new PanoramaFolderBrowser(server, folderJson);
             FolderBrowser.Dock = DockStyle.Fill;
@@ -199,21 +200,23 @@ namespace pwiz.PanoramaClient
             }
         }
 
-        private Dictionary<long, long> GetSizeDict()
+        private void GetRunsDict()
         {
+            _nameDictionary.Clear();
             _sizeDictionary.Clear();
             var rowSize = _sizeInfoJson[@"rows"];
             foreach (var curRow in rowSize)
             {
+                var runName = (string)curRow[@"FileName"];
                 var curId = (long)curRow[@"Id"];
                 var size = curRow[@"DocumentSize"];
+                _nameDictionary.Add(curId, runName);
                 if (size.Type != JTokenType.Null)
                 {
                     var lSize = size.ToObject<long>();
                     _sizeDictionary.Add(curId, lSize);
                 }
             }
-            return _sizeDictionary;
         }
 
         /// <summary>
@@ -233,21 +236,22 @@ namespace pwiz.PanoramaClient
                 var result = new string[5];
                 var fileInfos = new string[5];
                 var rows = _runsInfoJson[@"rows"];
-                var sizeDict = GetSizeDict();
+                GetRunsDict();
 
                 foreach (var row in rows)
                 {
                     var versions = row[@"File/Versions"].ToString();
                     var rowReplaced = (string)row[@"ReplacedByRun"];
                     var replaces = (string)row[@"ReplacesRun"];
+                    var id = (long)row[@"File/Id"];
+                    _nameDictionary.TryGetValue(id, out var serverName);
                     if ((!string.IsNullOrEmpty(replaces) && string.IsNullOrEmpty(rowReplaced)) ||
                         versions.Equals(1.ToString()))
                     {
                         long size = 0;
                         try
                         {
-                            var id = (long)row[@"File/Id"];
-                            if (sizeDict.TryGetValue(id, out var value))
+                            if (_sizeDictionary.TryGetValue(id, out var value))
                             {
                                 size = value;
                             }
@@ -271,13 +275,13 @@ namespace pwiz.PanoramaClient
                         fileInfos[2] = (string)row[@"File/Precursors"];
                         fileInfos[3] = (string)row[@"File/Transitions"];
                         fileInfos[4] = (string)row[@"File/Replicates"];
-                        var date = (string)row[@"Created"];
-                        result[4] = DateTime.Parse(date, CultureInfo.InvariantCulture).ToString();
+                        DateTime.TryParse((string)row[@"Created"], CultureInfo.CurrentCulture, DateTimeStyles.None, out var formattedDate);
+                        result[4] = formattedDate.ToString(CultureInfo.CurrentCulture);
                         var fileNode = new ListViewItem(result, 1)
                         {
                             ToolTipText =
                                 $"Proteins: {fileInfos[0]}, Peptides: {fileInfos[1]}, Precursors: {fileInfos[2]}, Transitions: {fileInfos[3]}, Replicates: {fileInfos[4]}",
-                            Name = (string)row[@"_labkeyurl_FileName"],
+                            Name = serverName,
                             Tag = size
                         };
                         listView.Items.Add(fileNode);
@@ -354,6 +358,8 @@ namespace pwiz.PanoramaClient
                 {
                     var fileName = (string)row[@"Name"];
                     var filePath = (string)row[@"Container/Path"];
+                    var id = (long)row[@"File/Id"];
+                    _nameDictionary.TryGetValue(id, out var serverName);
                     if (filePath.Equals(nodePath))
                     {
                         var listItem = new string[5];
@@ -366,7 +372,6 @@ namespace pwiz.PanoramaClient
                         var numVersions = GetVersionInfo(_runsInfoJson, replacedBy);
                         listItem[0] = fileName;
                         long size = 0;
-                        var id = (long)row[@"File/Id"];
                         if (_sizeDictionary.TryGetValue(id, out var value))
                         {
                             size = value;
@@ -390,11 +395,11 @@ namespace pwiz.PanoramaClient
                         {
                             listItem[3] = numVersions[1];
                         }
-
-                        listItem[4] = (string)row[@"Created"];
+                        DateTime.TryParse((string)row[@"Created"], CultureInfo.CurrentCulture, DateTimeStyles.None, out var formattedDate);
+                        listItem[4] = formattedDate.ToString(CultureInfo.CurrentCulture);
                         var fileNode = new ListViewItem(listItem, 1)
                         {
-                            Name = (string)row[@"_labkeyurl_FileName"],
+                            Name = serverName,
                             ToolTipText = $"Proteins: {row[@"File/Proteins"]}, Peptides: {row[@"File/Peptides"]}, Precursors: {row[@"File/Precursors"]}, Transitions: {row[@"File/Transitions"]}, Replicates: {row[@"File/Replicates"]}", Tag = size
                         };
                         listView.Items.Add(fileNode);
@@ -434,8 +439,8 @@ namespace pwiz.PanoramaClient
                         {
                             if (FolderBrowser.CurNodeIsTargetedMS.Equals(@"True"))
                             {
-                                _runsInfoJson = _fileJson;
-                                _sizeInfoJson = _sizeJson;
+                                _runsInfoJson = FileJson;
+                                _sizeInfoJson = SizeJson;
                                 var versions = HasVersions(_runsInfoJson);
                                 if (versions)
                                 {
@@ -480,7 +485,7 @@ namespace pwiz.PanoramaClient
                                 var query = BuildQuery(ActiveServer.URI.ToString(), path, @"TargetedMSRuns", @"Current",
                                     new[] { @"Name", @"Deleted", @"Container/Path", @"File/Proteins", @"File/Peptides", @"File/Precursors", @"File/Transitions", @"File/Replicates", @"Created", @"File/Versions", @"Replaced", @"ReplacedByRun", @"ReplacesRun", @"File/Id", @"RowId" }, string.Empty);
                                 var sizeQuery = BuildQuery(ActiveServer.URI.ToString(), path, "Runs", "Current",
-                                    new[] { "DocumentSize", "Id" }, string.Empty);
+                                    new[] { "DocumentSize", "Id", "FileName" }, string.Empty);
                                 _sizeInfoJson = GetJson(sizeQuery);
                                 _runsInfoJson = GetJson(query);
                                 var versions = HasVersions(_runsInfoJson);
@@ -600,7 +605,7 @@ namespace pwiz.PanoramaClient
                 {
                     downloadName =
                         string.Concat(@"/_webdav", FolderBrowser.Clicked.Tag, @"/@files/", listView.SelectedItems[0]
-                            .Text); 
+                            .Name); 
                 }
                 DownloadName = downloadName;
                 FileUrl = ActiveServer.URI + downloadName;
@@ -610,7 +615,7 @@ namespace pwiz.PanoramaClient
             }
             else
             {
-                var alert = new AlertDlg(@"You must select a file first!", MessageBoxButtons.OK);
+                var alert = new AlertDlg(Resources.PanoramaFilePicker_Open_Click_You_must_select_a_file_first_, MessageBoxButtons.OK);
                 alert.ShowDialog();
             }
         }
@@ -728,6 +733,11 @@ namespace pwiz.PanoramaClient
             return listView.SelectedItems[0].SubItems[index].Text;
         }
 
+        public string GetItemName(int index)
+        {
+            return listView.SelectedItems[0].SubItems[index].Name;
+        }
+
         public void ClickVersions()
         {
             if (versionOptions.Text.Equals(RECENT_VER))
@@ -795,6 +805,7 @@ namespace pwiz.PanoramaClient
 
         public void ClickFile(string name)
         {
+            listView.SelectedItems.Clear();
             foreach (ListViewItem item in listView.Items)
             {
                 var itemName = item.Text;

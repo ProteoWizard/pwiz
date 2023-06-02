@@ -129,6 +129,15 @@ namespace pwiz.PanoramaClient.Properties {
         }
         
         /// <summary>
+        ///   Looks up a localized string similar to You must select a file first!.
+        /// </summary>
+        public static string PanoramaFilePicker_Open_Click_You_must_select_a_file_first_ {
+            get {
+                return ResourceManager.GetString("PanoramaFilePicker_Open_Click_You_must_select_a_file_first_", resourceCulture);
+            }
+        }
+        
+        /// <summary>
         ///   Looks up a localized string similar to Could not authenticate user. Response received from server: {0} {1}.
         /// </summary>
         public static string PanoramaUtil_EnsureLogin_Could_not_authenticate_user__Response_received_from_server___0___1_ {
