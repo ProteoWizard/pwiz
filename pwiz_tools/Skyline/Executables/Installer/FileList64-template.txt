@@ -211,8 +211,6 @@ pwiz.CommonUtil.pdb
 pwiz_data_cli.dll
 QTFLDebugLog.dll (included automatically from ProteoWizard; DO NOT ADD TO THE WXS TEMPLATE!)
 QTFLProtoCS.dll (included automatically from ProteoWizard; DO NOT ADD TO THE WXS TEMPLATE!)
-quantitation_1.xsd (included automatically from ProteoWizard; DO NOT ADD TO THE WXS TEMPLATE!)
-quantitation_2.xsd (included automatically from ProteoWizard; DO NOT ADD TO THE WXS TEMPLATE!)
 Remotion.Linq.dll
 Remotion.Linq.EagerFetching.dll
 ru\ZedGraph.resources.dll
@@ -250,8 +248,6 @@ tr\ZedGraph.resources.dll
 ucrtbase.dll (included automatically from ProteoWizard; DO NOT ADD TO THE WXS TEMPLATE!)
 UIMFLibrary.dll (included automatically from ProteoWizard; DO NOT ADD TO THE WXS TEMPLATE!)
 unimod.obo (included automatically from ProteoWizard; DO NOT ADD TO THE WXS TEMPLATE!)
-unimod.xml
-unimod_2.xsd (included automatically from ProteoWizard; DO NOT ADD TO THE WXS TEMPLATE!)
 vcomp110.dll (included automatically from ProteoWizard; DO NOT ADD TO THE WXS TEMPLATE!)
 vcomp140.dll (included automatically from ProteoWizard; DO NOT ADD TO THE WXS TEMPLATE!)
 vcruntime140.dll (included automatically from ProteoWizard; DO NOT ADD TO THE WXS TEMPLATE!)
