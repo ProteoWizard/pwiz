@@ -138,28 +138,6 @@ namespace pwiz.SkylineTestFunctional
 
         }
 
-        //Not a realistic test
-        /// <summary>
-        /// Tests loading a treeView with no read permissions
-        /// </summary>
-        private void TestPermissions()
-        {
-            var testClient = new TestClientJson();
-            var folderJson = testClient.CreateFolder(TARGETED, true, true);
-            folderJson["children"] = new JArray(testClient.CreatePrivateFolder("Private"));
-            var remoteDlg = ShowDialog<PanoramaFilePicker>(() =>
-                SkylineWindow.OpenFromPanorama(VALID_SERVER, string.Empty, string.Empty, folderJson));
-
-            WaitForCondition(9000, () => remoteDlg.IsLoaded);
-
-            RunUI(() =>
-            {
-                remoteDlg.FolderBrowser.SelectNode(string.Concat(VALID_SERVER, "/"));
-                Assert.AreEqual(1, remoteDlg.FolderBrowser.NodeCount);
-                remoteDlg.Close();
-            });
-            WaitForClosedForm(remoteDlg);
-        }
 
         private void TestShowSkyCheckBox()
         {
