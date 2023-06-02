@@ -51,7 +51,10 @@ namespace BuildSciexMethod
                 using (var builder = new Builder())
                 {
                     builder.ParseCommandArgs(args);
-                    builder.BuildMethod();
+                    if (builder.ExtractDeviceName)
+                        Console.Out.WriteLine(builder.ExtractInstrumentName());
+                    else 
+                        builder.BuildMethod();
                 }
                 Environment.ExitCode = 0;
             }
@@ -77,6 +80,7 @@ namespace BuildSciexMethod
                 "   Takes template method file and a Skyline generated \n" +
                 "   transition list as inputs, to generate a new method file\n" +
                 "   as output.\n" +
+                "   -n               Extract device name from the template" + 
                 "   -d               Standard (unscheduled) method\n" +
                 "   -t               SCIEX ZenoTOF 7600\n" +
                 "   -o <output file> New method is written to the specified output file\n" +
@@ -95,7 +99,7 @@ namespace BuildSciexMethod
         }
     }
 
-    public class Builder : IDisposable
+        public class Builder : IDisposable
     {
         private const string ServiceUri = "net.tcp://localhost:63333/SciexControlApiService";
         private readonly ISciexControlApi _api = SciexControlApiFactory.Create();
@@ -111,6 +115,8 @@ namespace BuildSciexMethod
         private bool IsConnected { get; set; }
         private bool IsLoggedIn { get; set; }
         private bool WriteSciexOsQuantMethod { get; set; }
+
+        public bool ExtractDeviceName { get; private set; }
 
         public Builder()
         {
@@ -148,6 +154,9 @@ namespace BuildSciexMethod
                         break;
                     case 'q':
                         WriteSciexOsQuantMethod = true;
+                        break;
+                    case 'n':
+                        ExtractDeviceName = true;
                         break;
                     default:
                         throw new Program.UsageException();
@@ -283,6 +292,20 @@ namespace BuildSciexMethod
             throw new Exception(string.Join(Environment.NewLine, msgs));
         }
 
+        public string ExtractInstrumentName()
+        {
+            // Connect and login
+            Check(_api.Connect(new ConnectByUriRequest(ServiceUri)));
+            IsConnected = true;
+            Check(_api.Login(new LoginCurrentUserRequest()));
+            IsLoggedIn = true;
+            // Load template
+            var loadResponse = ExecuteAndCheck(new MsMethodLoadRequest(TemplateMethod));
+            var deviceName = loadResponse.MsMethod.DeviceModelName;
+            _api.Logout(new LogoutRequest());
+            return deviceName;
+        }
+
         public void BuildMethod()
         {
             if (Instrument == InstrumentType.QQQ &&
@@ -371,13 +394,20 @@ namespace BuildSciexMethod
                 var part = experiment.ExperimentParts[1];
                 props = part.Properties;
                 massTable = part.PropertiesTable;
+                // Set the method's IsScanScheduleAppliedProperty.
+                var scheduleApplied = props.TryGet<IsScanScheduleAppliedProperty>();
+                if (scheduleApplied == null)
+                    throw new Exception("Experiment does not have IsScanScheduleAppliedProperty.");
+                scheduleApplied.Value = ScheduledMethod;
             }
-
-            // Set the method's IsScanScheduleAppliedProperty.
-            var scheduledProp = props.TryGet<IsScanScheduleAppliedProperty>();
-            if (scheduledProp == null)
-                throw new Exception("Experiment does not have IsScanScheduleAppliedProperty.");
-            scheduledProp.Value = ScheduledMethod;
+            else
+            {
+                // Set the method's MRMModeProperty.
+                var scheduledProp = props.TryGet<MRMModeProperty>();
+                if (scheduledProp == null)
+                    throw new Exception("Experiment does not have MRMModeProperty.");
+                scheduledProp.Value = ScheduledMethod ? MRMMode.ScheduledMRM : MRMMode.MRM;
+            }
 
             // Check that there is at least one row in the mass table.
             if (massTable.Rows.Count == 0)
