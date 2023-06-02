@@ -102,6 +102,7 @@
     </Content>
     <None Include="Resources\Panorama.png" />
     <None Include="Resources\PanoramaSelected.png" />
+    <None Include="Resources\Panorama.bmp" />
     <Content Include="SkylineBatch.ico" />
     <Content Include="SkylineDailyRunner.exe">
       <CopyToOutputDirectory>Always</CopyToOutputDirectory>
