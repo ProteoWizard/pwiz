@@ -135,8 +135,18 @@ namespace pwiz.PanoramaClient
 
                 if (showFiles)
                 {
+                    var modules = subFolder[@"activeModules"];
+                    var containsTargetedMs = false;
+                    foreach (var module in modules)
+                    {
+                        if (string.Equals(module.ToString(), @"TargetedMS"))
+                        {
+                            containsTargetedMs = true;
+                        }
+                            
+                    }
                     folderNode.Tag = (string)subFolder[@"path"];
-                    folderNode.Name = PanoramaUtil.CheckFolderType(subFolder).ToString();
+                    folderNode.Name = containsTargetedMs.ToString();
                 }
                 else
                 {

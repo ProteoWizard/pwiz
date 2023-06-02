@@ -18,11 +18,8 @@
  */
 
 using System;
-using System.Diagnostics;
 using System.IO;
 using Microsoft.VisualStudio.TestTools.UnitTesting;
-using Newtonsoft.Json.Linq;
-using pwiz.Common.SystemUtil;
 using pwiz.PanoramaClient;
 using pwiz.Skyline.Properties;
 using pwiz.Skyline.Util;
@@ -37,9 +34,9 @@ namespace pwiz.SkylineTestConnected
     [TestClass]
     public class PanoramaClientDownloadTest : AbstractFunctionalTest
     {
-        private const string VALID_USER_NAME = "skyline_tester@proteinms.net";
-        private const string VALID_PASSWORD = "lclcmsms";
-        private const string VALID_SERVER = "https://panoramaweb.org";
+        private const string TEST_USER = "skyline_tester@proteinms.net";
+        private const string TEST_PASSWORD = "lclcmsms";
+        private const string PANORAMA_WEB = "https://panoramaweb.org";
 
         [TestMethod]
         public void TestPanoramaDownloadFile()
@@ -50,30 +47,40 @@ namespace pwiz.SkylineTestConnected
         protected override void DoTest()
         {
             //Test successful download
-            TestDownloadFile();
-
-            //Test unsuccessful download with corrupted file
-            //TODO: Import file to test folder then delete it and make sure the error is thrown when downloading
-            //TestUnsuccessfulDownload();
+            //TestDownloadFile();
 
             //Test canceling a download during longWaitDlg
-            TestCancelDownload();
+            //TestCancelDownload();
 
             //Test various download errors
             //TestDownloadErrors();
 
             //Make sure PanoramaFilePicker states are being preserved between runs
-            TestPreserveStates();
+            //TestPreserveStates();
+
+            //Test downloading from test server
+            //TestMissingFile();
+
+            //Test downloading a file that has been renamed on Panorama
+            //TestRenamedFile();
+
+            //Test adding a new server to Panorama - Test with and without username and password
+            //TestAddServer();
+        }
+
+        private void AddSkylineServer()
+        {
+            var server = new Server(new Uri(PANORAMA_WEB), TEST_USER, TEST_PASSWORD);
+            var servers = Settings.Default.ServerList;
+            servers.Add(server);
+            Settings.Default.ServerList = servers;
+            Settings.Default.Save();
         }
 
         //Downloads and opens a file successfully 
         private void TestDownloadFile()
         {
-            var server = new Server(new Uri(VALID_SERVER), VALID_USER_NAME, VALID_PASSWORD);
-            var servers = Settings.Default.ServerList;
-            servers.Add(server);
-            Settings.Default.ServerList = servers;
-            Settings.Default.Save();
+            AddSkylineServer();
             var remoteDlg = ShowDialog<PanoramaFilePicker>(() => SkylineWindow.OpenFromPanorama());
             WaitForCondition(9000, () => remoteDlg.IsLoaded);
             
@@ -85,7 +92,8 @@ namespace pwiz.SkylineTestConnected
                 remoteDlg.FolderBrowser.SelectNode("ForPanoramaClientTest");
                 remoteDlg.ClickFile("Study9S_Site52_v1.sky.zip");
                 remoteDlg.ClickOpen();
-                SkylineWindow.DownloadPanoramaFile(path, "Study9S_Site52_v1.sky.zip", remoteDlg.FileUrl, remoteDlg.ActiveServer, remoteDlg.FileSize);
+                var result = SkylineWindow.DownloadPanoramaFile(path, "Study9S_Site52_v1.sky.zip", remoteDlg.FileUrl, remoteDlg.ActiveServer, remoteDlg.FileSize);
+                Assert.IsTrue(result);
                 Assert.IsTrue(File.Exists(path));
                 FileEx.SafeDelete(path, true);
                 Assert.IsFalse(File.Exists(path));
@@ -94,20 +102,11 @@ namespace pwiz.SkylineTestConnected
             WaitForClosedForm(remoteDlg);
         }
 
-        //TODO: Upload corrupted file to test folder and ensure that corrupted files are being caught in error checking while attempting to download
-        private void TestUnsuccessfulDownload()
-        {
-            
-        }
 
         //Test canceling a download: Does is get deleted? Does the download actually get canceled?
         private void TestCancelDownload()
         {
-            var server = new Server(new Uri(VALID_SERVER), VALID_USER_NAME, VALID_PASSWORD);
-            var servers = Settings.Default.ServerList;
-            servers.Add(server);
-            Settings.Default.ServerList = servers;
-            Settings.Default.Save();
+            AddSkylineServer();
             var remoteDlg = ShowDialog<PanoramaFilePicker>(() => SkylineWindow.OpenFromPanorama());
             WaitForCondition(9000, () => remoteDlg.IsLoaded);
 
@@ -119,7 +118,8 @@ namespace pwiz.SkylineTestConnected
                 remoteDlg.FolderBrowser.SelectNode("ForPanoramaClientTest");
                 remoteDlg.ClickFile("Study9S_Site52_v1.sky.zip");
                 remoteDlg.ClickOpen();
-                SkylineWindow.DownloadPanoramaFile(path, "Study9S_Site52_v1.sky.zip", remoteDlg.FileUrl, remoteDlg.ActiveServer, remoteDlg.FileSize, true);
+                var result = SkylineWindow.DownloadPanoramaFile(path, "Study9S_Site52_v1.sky.zip", remoteDlg.FileUrl, remoteDlg.ActiveServer, remoteDlg.FileSize, true);
+                Assert.IsFalse(result);
                 Assert.IsFalse(File.Exists(path));
 
             });
@@ -128,28 +128,41 @@ namespace pwiz.SkylineTestConnected
 
         private void TestDownloadErrors()
         {
-            var state = string.Empty;
-            var server = new Server(new Uri(VALID_SERVER), VALID_USER_NAME, VALID_PASSWORD);
-            var servers = Settings.Default.ServerList;
-            servers.Add(server);
-            Settings.Default.ServerList = servers;
-            Settings.Default.Save();
+            AddSkylineServer();
             var remoteDlg = ShowDialog<PanoramaFilePicker>(() =>
                 SkylineWindow.OpenFromPanorama());
-            var testClient = new TestPanoramaClient(VALID_SERVER, VALID_USER_NAME, VALID_PASSWORD);
             WaitForCondition(9000, () => remoteDlg.IsLoaded);
 
             RunUI(() =>
             {
+                //TODO: Test that a specific error is thrown and the message is shown, change the scenarios that I'm testing to be more realistic, not having a server or url wouldn't likely happen, downloading to somewhere where a user does not have permissions for example
                 var selectedPath = string.Empty;
                 remoteDlg.FolderBrowser.SelectNode("SkylineTest");
                 remoteDlg.FolderBrowser.SelectNode("ForPanoramaClientTest");
                 remoteDlg.ClickFile("Study9S_Site52_v1.sky.zip");
-                Debug.WriteLine(Directory.GetCurrentDirectory());
                 var path = Path.Combine(Directory.GetCurrentDirectory(),
                     "Study9S_Site52_v1.sky.zip");
                 remoteDlg.ClickOpen();
-                remoteDlg.Close();
+                var result = SkylineWindow.DownloadPanoramaFile(path, "Study9S_Site52_v1.sky.zip", string.Empty,
+                    remoteDlg.ActiveServer, remoteDlg.FileSize);
+                Assert.IsFalse(result);
+                Assert.IsFalse(File.Exists(path));
+
+                result = SkylineWindow.DownloadPanoramaFile(null, "Study9S_Site52_v1.sky.zip", remoteDlg.FileUrl,
+                    remoteDlg.ActiveServer, remoteDlg.FileSize);
+                Assert.IsFalse(result);
+                Assert.IsFalse(File.Exists(path));
+
+                result = SkylineWindow.DownloadPanoramaFile(path, "Study9S_Site52_v1.sky.zip", remoteDlg.FileUrl,
+                    null, remoteDlg.FileSize);
+                Assert.IsFalse(result);
+                Assert.IsFalse(File.Exists(path));
+
+                result = SkylineWindow.DownloadPanoramaFile(null, "Study9S_Site52_v1.sky.zip", remoteDlg.FileUrl,
+                    remoteDlg.ActiveServer, -1);
+                Assert.IsFalse(result);
+                Assert.IsFalse(File.Exists(path));
+
             });
             WaitForClosedForm(remoteDlg);
         }
@@ -158,14 +171,9 @@ namespace pwiz.SkylineTestConnected
         private void TestPreserveStates()
         {
             var state = string.Empty;
-            var server = new Server(new Uri(VALID_SERVER), VALID_USER_NAME, VALID_PASSWORD);
-            var servers = Settings.Default.ServerList;
-            servers.Add(server);
-            Settings.Default.ServerList = servers;
-            Settings.Default.Save();
+            AddSkylineServer();
             var remoteDlg = ShowDialog<PanoramaFilePicker>(() =>
                 SkylineWindow.OpenFromPanorama());
-            var panoramaWebClient = new WebPanoramaClient(server.URI);
 
             WaitForCondition(9000, () => remoteDlg.IsLoaded);
 
@@ -191,65 +199,62 @@ namespace pwiz.SkylineTestConnected
             WaitForClosedForm(remoteDlg);
 
         }
-
-        public class TestPanoramaClient : IPanoramaClient
+        
+        //Test downloading a file that has been deleted on the server
+        private void TestMissingFile()
         {
-            public Uri ServerUri { get; set; }
+            AddSkylineServer();
+            var remoteDlg = ShowDialog<PanoramaFilePicker>(() => SkylineWindow.OpenFromPanorama());
+            WaitForCondition(9000, () => remoteDlg.IsLoaded);
 
-            public string Server { get; }
-            public string Username { get; }
-            public string Password { get; }
-
-            public TestPanoramaClient(string server, string username, string password)
+            RunUI(() =>
             {
-                Server = server;
-                Username = username;
-                Password = password;
-                try
-                {
-                    ServerUri = new Uri(server);
-                }
-                catch (Exception)
-                {
-                    // ignored
-                }
-            }
+                var path = Path.Combine(Directory.GetCurrentDirectory(), "FileDeletedFromServer.sky.zip");
+                Assert.IsFalse(File.Exists(path));
+                remoteDlg.FolderBrowser.SelectNode("SkylineTest");
+                remoteDlg.FolderBrowser.SelectNode("ForPanoramaClientTest");
+                remoteDlg.ClickFile("FileDeletedFromServer.sky.zip");
+                remoteDlg.ClickOpen();
+                var result = SkylineWindow.DownloadPanoramaFile(path, "FileDeletedFromServer.sky.zip", remoteDlg.FileUrl, remoteDlg.ActiveServer, remoteDlg.FileSize);
+                Assert.IsFalse(result);
+                Assert.IsFalse(File.Exists(path));
 
-            public ServerState GetServerState()
-            {
-                throw new NotImplementedException();
-            }
+            });
+            WaitForClosedForm(remoteDlg);
+        }
 
-            public UserState IsValidUser(string username, string password)
-            {
-                throw new NotImplementedException();
-            }
+        //Test downloading a file that has been renamed on Panorama
+        private void TestRenamedFile()
+        {
+            AddSkylineServer();
+            var remoteDlg = ShowDialog<PanoramaFilePicker>(() => SkylineWindow.OpenFromPanorama());
+            WaitForCondition(9000, () => remoteDlg.IsLoaded);
 
-            public FolderState IsValidFolder(string folderPath, string username, string password)
+            RunUI(() =>
             {
-                return FolderState.valid;
-            }
+                var path = Path.Combine(Directory.GetCurrentDirectory(), "TestFileRename.sky.zip");
+                Assert.IsFalse(File.Exists(path));
+                remoteDlg.FolderBrowser.SelectNode("SkylineTest");
+                remoteDlg.FolderBrowser.SelectNode("ForPanoramaClientTest");
+                remoteDlg.ClickFile("TestFileRename.sky.zip");
+                remoteDlg.ClickOpen();
+                Assert.AreNotEqual("TestFileRename.sky.zip", remoteDlg.GetItemName(0));
+                var result = SkylineWindow.DownloadPanoramaFile(path, "TestFileRename.sky.zip", remoteDlg.FileUrl, remoteDlg.ActiveServer, remoteDlg.FileSize);
+                Assert.IsTrue(result);
+                Assert.IsTrue(File.Exists(path));
 
-            public FolderOperationStatus CreateFolder(string parentPath, string folderName, string username, string password)
-            {
-                throw new NotImplementedException();
-            }
+                FileEx.SafeDelete(path, true);
+                Assert.IsFalse(File.Exists(path));
 
-            public FolderOperationStatus DeleteFolder(string folderPath, string username, string password)
-            {
-                throw new NotImplementedException();
-            }
+            });
+            WaitForClosedForm(remoteDlg);
+        }
 
-            public JToken GetInfoForFolders(PanoramaServer server, string folder)
-            {
-                throw new NotImplementedException();
-            }
-
-            //Use this method to throw specific errors and make sure they are caught correctly 
-            public void DownloadFile(string warning, string fileName, long fileSize, string realName, PanoramaServer server, IProgressMonitor pm, IProgressStatus progressStatus, bool cancel = false)
-            {
-                throw new ArgumentNullException(warning);
-            }
+        //TODO: Test adding a new server to Panorama - Test with and without username and password 
+        private void TestAddServer()
+        {
+            var remoteDlg = ShowDialog<PanoramaFilePicker>(() => SkylineWindow.OpenFromPanorama());
+            WaitForCondition(9000, () => remoteDlg.IsLoaded);
         }
     }
 }

@@ -63,12 +63,8 @@ namespace pwiz.PanoramaClient
             // 
             // label3
             // 
-            this.label3.AutoSize = true;
-            this.label3.Location = new System.Drawing.Point(7, 36);
+            resources.ApplyResources(this.label3, "label3");
             this.label3.Name = "label3";
-            this.label3.Size = new System.Drawing.Size(81, 13);
-            this.label3.TabIndex = 6;
-            this.label3.Text = "Remote folders:";
             // 
             // imageList1
             // 
@@ -88,94 +84,55 @@ namespace pwiz.PanoramaClient
             // 
             // showSkyCheckBox
             // 
-            this.showSkyCheckBox.Anchor = ((System.Windows.Forms.AnchorStyles)((System.Windows.Forms.AnchorStyles.Top | System.Windows.Forms.AnchorStyles.Right)));
-            this.showSkyCheckBox.AutoSize = true;
-            this.showSkyCheckBox.Location = new System.Drawing.Point(250, 25);
+            resources.ApplyResources(this.showSkyCheckBox, "showSkyCheckBox");
             this.showSkyCheckBox.Name = "showSkyCheckBox";
-            this.showSkyCheckBox.Size = new System.Drawing.Size(163, 17);
-            this.showSkyCheckBox.TabIndex = 8;
-            this.showSkyCheckBox.Text = "View folders with Skyline files";
             this.showSkyCheckBox.UseVisualStyleBackColor = true;
             this.showSkyCheckBox.CheckedChanged += new System.EventHandler(this.ShowSkyCheckBox_CheckedChanged);
             // 
             // versionOptions
             // 
-            this.versionOptions.Anchor = ((System.Windows.Forms.AnchorStyles)((System.Windows.Forms.AnchorStyles.Top | System.Windows.Forms.AnchorStyles.Right)));
+            resources.ApplyResources(this.versionOptions, "versionOptions");
             this.versionOptions.DropDownStyle = System.Windows.Forms.ComboBoxStyle.DropDownList;
             this.versionOptions.FormattingEnabled = true;
             this.versionOptions.Items.AddRange(new object[] {
-            "All",
-            "Most recent"});
-            this.versionOptions.Location = new System.Drawing.Point(573, 26);
+            resources.GetString("versionOptions.Items"),
+            resources.GetString("versionOptions.Items1")});
             this.versionOptions.Name = "versionOptions";
-            this.versionOptions.Size = new System.Drawing.Size(138, 21);
-            this.versionOptions.TabIndex = 10;
-            this.versionOptions.Visible = false;
             this.versionOptions.SelectedIndexChanged += new System.EventHandler(this.VersionOptions_SelectedIndexChanged);
             // 
             // open
             // 
-            this.open.Anchor = ((System.Windows.Forms.AnchorStyles)((System.Windows.Forms.AnchorStyles.Bottom | System.Windows.Forms.AnchorStyles.Right)));
-            this.open.Location = new System.Drawing.Point(577, 540);
+            resources.ApplyResources(this.open, "open");
             this.open.Name = "open";
-            this.open.Size = new System.Drawing.Size(64, 20);
-            this.open.TabIndex = 11;
-            this.open.Text = "Open";
             this.open.UseVisualStyleBackColor = true;
             this.open.Click += new System.EventHandler(this.Open_Click);
             // 
             // cancel
             // 
-            this.cancel.Anchor = ((System.Windows.Forms.AnchorStyles)((System.Windows.Forms.AnchorStyles.Bottom | System.Windows.Forms.AnchorStyles.Right)));
-            this.cancel.Location = new System.Drawing.Point(647, 540);
+            resources.ApplyResources(this.cancel, "cancel");
             this.cancel.Name = "cancel";
-            this.cancel.Size = new System.Drawing.Size(64, 20);
-            this.cancel.TabIndex = 12;
-            this.cancel.Text = "Cancel";
             this.cancel.UseVisualStyleBackColor = true;
             this.cancel.Click += new System.EventHandler(this.Cancel_Click);
             // 
             // versionLabel
             // 
-            this.versionLabel.Anchor = ((System.Windows.Forms.AnchorStyles)((System.Windows.Forms.AnchorStyles.Top | System.Windows.Forms.AnchorStyles.Right)));
-            this.versionLabel.AutoSize = true;
-            this.versionLabel.Location = new System.Drawing.Point(570, 10);
-            this.versionLabel.Margin = new System.Windows.Forms.Padding(2, 0, 2, 0);
+            resources.ApplyResources(this.versionLabel, "versionLabel");
             this.versionLabel.Name = "versionLabel";
-            this.versionLabel.Size = new System.Drawing.Size(50, 13);
-            this.versionLabel.TabIndex = 13;
-            this.versionLabel.Text = "Versions:";
-            this.versionLabel.Visible = false;
             // 
             // splitContainer1
             // 
-            this.splitContainer1.Dock = System.Windows.Forms.DockStyle.Fill;
-            this.splitContainer1.Location = new System.Drawing.Point(0, 0);
-            this.splitContainer1.Margin = new System.Windows.Forms.Padding(2);
+            resources.ApplyResources(this.splitContainer1, "splitContainer1");
             this.splitContainer1.Name = "splitContainer1";
             // 
             // splitContainer1.Panel2
             // 
             this.splitContainer1.Panel2.Controls.Add(this.noFiles);
             this.splitContainer1.Panel2.Controls.Add(this.listView);
-            this.splitContainer1.Size = new System.Drawing.Size(701, 483);
-            this.splitContainer1.SplitterDistance = 237;
-            this.splitContainer1.SplitterWidth = 3;
-            this.splitContainer1.TabIndex = 7;
             // 
             // noFiles
             // 
-            this.noFiles.Anchor = ((System.Windows.Forms.AnchorStyles)((((System.Windows.Forms.AnchorStyles.Top | System.Windows.Forms.AnchorStyles.Bottom) 
-            | System.Windows.Forms.AnchorStyles.Left) 
-            | System.Windows.Forms.AnchorStyles.Right)));
-            this.noFiles.AutoSize = true;
-            this.noFiles.Font = new System.Drawing.Font("Microsoft Sans Serif", 9.75F, System.Drawing.FontStyle.Regular, System.Drawing.GraphicsUnit.Point, ((byte)(0)));
-            this.noFiles.Location = new System.Drawing.Point(115, 209);
+            resources.ApplyResources(this.noFiles, "noFiles");
             this.noFiles.Name = "noFiles";
-            this.noFiles.Size = new System.Drawing.Size(231, 16);
-            this.noFiles.TabIndex = 9;
-            this.noFiles.Text = "There are no Skyline files in this folder";
-            this.noFiles.TextAlign = System.Drawing.ContentAlignment.MiddleCenter;
             // 
             // listView
             // 
@@ -185,16 +142,12 @@ namespace pwiz.PanoramaClient
             this.colVersions,
             this.colReplacedBy,
             this.colCreated});
-            this.listView.Dock = System.Windows.Forms.DockStyle.Fill;
+            resources.ApplyResources(this.listView, "listView");
             this.listView.FullRowSelect = true;
             this.listView.HideSelection = false;
-            this.listView.Location = new System.Drawing.Point(0, 0);
-            this.listView.Margin = new System.Windows.Forms.Padding(2);
             this.listView.Name = "listView";
             this.listView.ShowItemToolTips = true;
-            this.listView.Size = new System.Drawing.Size(461, 483);
             this.listView.SmallImageList = this.imageList2;
-            this.listView.TabIndex = 8;
             this.listView.UseCompatibleStateImageBehavior = false;
             this.listView.View = System.Windows.Forms.View.Details;
             this.listView.ColumnClick += new System.Windows.Forms.ColumnClickEventHandler(this.listView_ColumnClick);
@@ -202,87 +155,65 @@ namespace pwiz.PanoramaClient
             // 
             // colName
             // 
-            this.colName.Text = "Name";
-            this.colName.Width = 175;
+            resources.ApplyResources(this.colName, "colName");
             // 
             // colSize
             // 
-            this.colSize.Text = "Size";
-            this.colSize.Width = 75;
+            resources.ApplyResources(this.colSize, "colSize");
             // 
             // colVersions
             // 
-            this.colVersions.Text = "Versions";
-            this.colVersions.Width = 52;
+            resources.ApplyResources(this.colVersions, "colVersions");
             // 
             // colReplacedBy
             // 
-            this.colReplacedBy.Text = "Replaced By";
-            this.colReplacedBy.Width = 100;
+            resources.ApplyResources(this.colReplacedBy, "colReplacedBy");
             // 
             // colCreated
             // 
-            this.colCreated.Text = "Created";
+            resources.ApplyResources(this.colCreated, "colCreated");
             // 
             // panel1
             // 
-            this.panel1.Anchor = ((System.Windows.Forms.AnchorStyles)((((System.Windows.Forms.AnchorStyles.Top | System.Windows.Forms.AnchorStyles.Bottom) 
-            | System.Windows.Forms.AnchorStyles.Left) 
-            | System.Windows.Forms.AnchorStyles.Right)));
+            resources.ApplyResources(this.panel1, "panel1");
             this.panel1.Controls.Add(this.splitContainer1);
-            this.panel1.Location = new System.Drawing.Point(10, 52);
             this.panel1.Name = "panel1";
-            this.panel1.Size = new System.Drawing.Size(701, 483);
-            this.panel1.TabIndex = 14;
             // 
             // toolStrip
             // 
             this.toolStrip.BackColor = System.Drawing.Color.Transparent;
-            this.toolStrip.Dock = System.Windows.Forms.DockStyle.None;
+            resources.ApplyResources(this.toolStrip, "toolStrip");
             this.toolStrip.ImageScalingSize = new System.Drawing.Size(24, 24);
             this.toolStrip.Items.AddRange(new System.Windows.Forms.ToolStripItem[] {
             this.back,
             this.forward,
             this.up});
-            this.toolStrip.Location = new System.Drawing.Point(9, 2);
             this.toolStrip.Name = "toolStrip";
-            this.toolStrip.Size = new System.Drawing.Size(96, 31);
-            this.toolStrip.TabIndex = 18;
-            this.toolStrip.Text = "toolStrip1";
             // 
             // back
             // 
             this.back.DisplayStyle = System.Windows.Forms.ToolStripItemDisplayStyle.Image;
-            this.back.Image = ((System.Drawing.Image)(resources.GetObject("back.Image")));
-            this.back.ImageTransparentColor = System.Drawing.Color.Magenta;
+            resources.ApplyResources(this.back, "back");
             this.back.Name = "back";
-            this.back.Size = new System.Drawing.Size(28, 28);
-            this.back.Text = "Back";
             this.back.Click += new System.EventHandler(this.Back_Click);
             // 
             // forward
             // 
             this.forward.DisplayStyle = System.Windows.Forms.ToolStripItemDisplayStyle.Image;
-            this.forward.Image = ((System.Drawing.Image)(resources.GetObject("forward.Image")));
-            this.forward.ImageTransparentColor = System.Drawing.Color.Magenta;
+            resources.ApplyResources(this.forward, "forward");
             this.forward.Name = "forward";
-            this.forward.Size = new System.Drawing.Size(28, 28);
-            this.forward.Text = "Forward";
             this.forward.Click += new System.EventHandler(this.Forward_Click);
             // 
             // up
             // 
-            this.up.Image = ((System.Drawing.Image)(resources.GetObject("up.Image")));
-            this.up.ImageTransparentColor = System.Drawing.Color.Magenta;
+            resources.ApplyResources(this.up, "up");
             this.up.Name = "up";
-            this.up.Size = new System.Drawing.Size(28, 28);
             this.up.Click += new System.EventHandler(this.UpButton_Click);
             // 
             // PanoramaFilePicker
             // 
-            this.AutoScaleDimensions = new System.Drawing.SizeF(6F, 13F);
+            resources.ApplyResources(this, "$this");
             this.AutoScaleMode = System.Windows.Forms.AutoScaleMode.Font;
-            this.ClientSize = new System.Drawing.Size(723, 564);
             this.Controls.Add(this.toolStrip);
             this.Controls.Add(this.panel1);
             this.Controls.Add(this.versionLabel);
@@ -291,13 +222,9 @@ namespace pwiz.PanoramaClient
             this.Controls.Add(this.versionOptions);
             this.Controls.Add(this.showSkyCheckBox);
             this.Controls.Add(this.label3);
-            this.Icon = ((System.Drawing.Icon)(resources.GetObject("$this.Icon")));
-            this.Margin = new System.Windows.Forms.Padding(2);
             this.MaximizeBox = false;
             this.MinimizeBox = false;
             this.Name = "PanoramaFilePicker";
-            this.StartPosition = System.Windows.Forms.FormStartPosition.CenterParent;
-            this.Text = "Panorama Folders";
             this.FormClosing += new System.Windows.Forms.FormClosingEventHandler(this.Form1_FormClosing);
             this.Load += new System.EventHandler(this.FilePicker_Load);
             this.SizeChanged += new System.EventHandler(this.PanoramaFilePicker_SizeChanged);

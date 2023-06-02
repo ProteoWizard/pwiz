@@ -492,8 +492,6 @@ namespace pwiz.PanoramaClient
     
         JToken GetInfoForFolders(PanoramaServer server, string folder);
 
-        void DownloadFile(string fileUrl, string fileName, long fileSize, string realName, PanoramaServer server, IProgressMonitor pm, IProgressStatus progressStatus, bool cancel = false);
-
     }
     
     public class WebPanoramaClient : IPanoramaClient
