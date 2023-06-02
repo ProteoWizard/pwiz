@@ -1,9 +1,13 @@
 ﻿using System;
+using System.Collections.Generic;
 using System.Collections.Immutable;
 using System.Threading;
 using System.Windows.Forms;
 using SharedBatch;
 using SkylineBatch.Properties;
+using pwiz.PanoramaClient;
+using PanoramaServer = pwiz.PanoramaClient.PanoramaServer;
+using AlertDlg = SharedBatch.AlertDlg;
 
 namespace SkylineBatch
 {
@@ -18,7 +22,8 @@ namespace SkylineBatch
         private readonly SkylineBatchConfigManagerState _initialState;
         private readonly bool _preferPanoramaSource;
 
-        public RemoteSourceForm(RemoteFileSource editingRemoteSource, IMainUiControl mainControl, SkylineBatchConfigManagerState state, bool preferPanoramaSource)
+        public RemoteSourceForm(RemoteFileSource editingRemoteSource, IMainUiControl mainControl,
+            SkylineBatchConfigManagerState state, bool preferPanoramaSource)
         {
             InitializeComponent();
             _remoteFileSources = state.FileSources;
@@ -64,7 +69,11 @@ namespace SkylineBatch
 
             if (_remoteFileSources.ContainsKey(textName.Text) && !textName.Text.Equals(_editingSourceName))
             {
-                AlertDlg.ShowError(this, Program.AppName(), string.Format(Resources.RemoteSourceForm_btnSave_Click_Another_remote_file_location_with_the_name__0__already_exists__Please_choose_a_unique_name_, textName.Text));
+                AlertDlg.ShowError(this, Program.AppName(),
+                    string.Format(
+                        Resources
+                            .RemoteSourceForm_btnSave_Click_Another_remote_file_location_with_the_name__0__already_exists__Please_choose_a_unique_name_,
+                        textName.Text));
                 return;
             }
 
@@ -78,6 +87,7 @@ namespace SkylineBatch
                 {
                     State.ReplaceRemoteFileSource(_initialRemoteSource, RemoteFileSource, _mainControl);
                 }
+
                 DialogResult = DialogResult.OK;
             }
             catch (ArgumentException ex)
@@ -101,5 +111,46 @@ namespace SkylineBatch
         {
             State = _initialState;
         }
+
+        public void OpenFromPanorama(object sender, EventArgs args)
+        {
+            var server = new pwiz.PanoramaClient.PanoramaServer(new Uri(pwiz.PanoramaClient.PanoramaUtil.PANORAMA_WEB));
+
+            var panoramaServers = new List<PanoramaServer>() { server };
+
+            var state = string.Empty;
+            if (!string.IsNullOrEmpty(Settings.Default.PanoramaTreeState))
+            {
+                state = Settings.Default.PanoramaTreeState;
+            }
+
+            try
+            {
+                using (PanoramaFilePicker dlg = new PanoramaFilePicker(panoramaServers, true, state, false))
+                {
+                    
+                    dlg.InitializeDialog();
+                    if (dlg.ShowDialog() != DialogResult.Cancel)
+                    {
+                        Settings.Default.PanoramaTreeState = dlg.TreeState;
+                        Settings.Default.ShowPanormaSkyFiles = dlg.ShowingSky;
+                        var curServer = dlg.ActiveServer;
+                        textFolderUrl.Text = dlg.FileUrl;
+                        // textFolderUrl.Text = dlg.DownloadName;
+
+                    }
+                    Settings.Default.PanoramaTreeState = dlg.TreeState;
+                    Settings.Default.ShowPanormaSkyFiles = dlg.ShowingSky;
+                    
+                }
+            }
+            catch (Exception e)
+            {
+                AlertDlg.ShowError(this, Program.AppName(), e.Message);
+            }
+
+            Settings.Default.Save();
+        }
+
     }
 }
