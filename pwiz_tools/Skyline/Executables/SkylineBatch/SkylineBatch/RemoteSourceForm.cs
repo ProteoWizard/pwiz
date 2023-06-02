@@ -114,7 +114,7 @@ namespace SkylineBatch
 
         public void OpenFromPanorama(object sender, EventArgs args)
         {
-            var server = new pwiz.PanoramaClient.PanoramaServer(new Uri(pwiz.PanoramaClient.PanoramaUtil.PANORAMA_WEB));
+            var server = new pwiz.PanoramaClient.PanoramaServer(new Uri(textServerName.Text));
 
             var panoramaServers = new List<PanoramaServer>() { server };
 
