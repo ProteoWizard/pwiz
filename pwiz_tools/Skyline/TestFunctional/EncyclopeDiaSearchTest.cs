@@ -85,6 +85,7 @@ namespace pwiz.SkylineTestFunctional
                 searchDlg.SetAdditionalSetting("PercolatorThreshold", "0.15");
                 searchDlg.SetAdditionalSetting("MinNumOfQuantitativePeaks", "0");
                 searchDlg.SetAdditionalSetting("NumberOfQuantitativePeaks", "0");
+                searchDlg.SetAdditionalSetting("V2scoring", "false");
             });
 
             RunUI(searchDlg.NextPage); // now on narrow fractions
