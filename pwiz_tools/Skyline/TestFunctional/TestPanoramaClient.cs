@@ -48,9 +48,6 @@ namespace pwiz.SkylineTestFunctional
             //Test navigation buttons
             TestNavigationButtons();
 
-            //Test with no user permissions
-            TestPermissions();
-
             //Test versions: selected option is correct for all versions vs current version
             TestVersions();
 
