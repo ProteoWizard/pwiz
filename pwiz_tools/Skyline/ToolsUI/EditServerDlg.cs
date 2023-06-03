@@ -22,9 +22,11 @@ using System.Collections.Generic;
 using System.Net.Mail;
 using System.Windows.Forms;
 using pwiz.PanoramaClient;
+using pwiz.Skyline.Alerts;
 using pwiz.Skyline.Controls;
 using pwiz.Skyline.Properties;
 using pwiz.Skyline.Util;
+using pwiz.Skyline.Util.Extensions;
 
 namespace pwiz.Skyline.ToolsUI
 {
@@ -45,6 +47,13 @@ namespace pwiz.Skyline.ToolsUI
         public void ShowInstructions()
         {
             InstructionPanel.Visible = true;
+            instructionLabel.Visible = true;
+        }
+
+        public void ShowAnonymousServerInfo()
+        {
+            InstructionPanel.Visible = true;
+            anonymousServerLabel.Visible = true;
         }
 
         public Server Server
@@ -89,26 +98,44 @@ namespace pwiz.Skyline.ToolsUI
                 return;
             }
 
-            if (!(helper.ValidateNotEmptyTextBox(textUsername, out _) && helper.ValidateNotEmptyTextBox(textPassword, out _)))
-                return;
-
-            try
+           if (Username.Length > 0 || Password.Length > 0)
             {
-                var unused = new MailAddress(textUsername.Text);
+                if (!helper.ValidateNotEmptyTextBox(textPassword, out _))
+                    return;
+                if (!helper.ValidateNotEmptyTextBox(textUsername, out _))
+                    return;
+
+                try
+                {
+                    var unused = new MailAddress(textUsername.Text);
+                }
+                catch (Exception)
+                {
+                    helper.ShowTextBoxError(textServerURL,
+                        Resources.EditServerDlg_OkDialog__0__is_not_a_valid_email_address_, textUsername.Text);
+                    return;
+                }
             }
-            catch (Exception)
+            else
             {
-                helper.ShowTextBoxError(textServerURL, Resources.EditServerDlg_OkDialog__0__is_not_a_valid_email_address_, textUsername.Text);
-                return;
+                // Make the user confirm that they want anonymous, read-only access to the server.
+                var alertDlg = new AlertDlg(TextUtil.LineSeparate(
+                    "You have not entered an email and password. Without login credentials you will have read-only access to the server. " +
+                    "In read-only mode you can browse, download and open documents on the server but you cannot upload documents to the server.",
+                    string.Empty,
+                    string.Format("Do you want read-only access to {0}?", uriServer.Host)), MessageBoxButtons.YesNo);
+                if (alertDlg.ShowAndDispose(this) == DialogResult.No)
+                    return;
             }
 
-            var panoramaClient = PanoramaClient ?? new WebPanoramaClient(uriServer);
+            var panoramaClient = PanoramaClient ?? new WebPanoramaClient(uriServer, Username, Password);
 
+            PanoramaServer pServer = null;
             using (var waitDlg = new LongWaitDlg { Text = Resources.EditServerDlg_OkDialog_Verifying_server_information })
             {
                 try
                 {
-                    waitDlg.PerformWork(this, 1000, () => PanoramaUtil.VerifyServerInformation( panoramaClient, Username, Password));
+                    waitDlg.PerformWork(this, 1000, () => pServer = panoramaClient.ValidateServer());
                 }
                 catch (Exception x)
                 {
@@ -117,15 +144,13 @@ namespace pwiz.Skyline.ToolsUI
                 }
             }
 
-            Uri updatedUri = panoramaClient.ServerUri ?? uriServer;
-
-            if (_existing.Contains(server => !ReferenceEquals(_server, server) && Equals(updatedUri, server.URI)))
+            if (_existing.Contains(server => !ReferenceEquals(_server, server) && Equals(pServer.URI, server.URI)))
             {
                 helper.ShowTextBoxError(textServerURL, Resources.EditServerDlg_OkDialog_The_server__0__already_exists_, uriServer.AbsoluteUri);
                 return;
             }
 
-            _server = new Server(updatedUri, Username, Password);
+            _server = new Server(pServer.URI, Username, Password);
             DialogResult = DialogResult.OK;
         }
 

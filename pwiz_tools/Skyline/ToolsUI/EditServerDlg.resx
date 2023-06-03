@@ -191,6 +191,9 @@
 user account, please enter the email and password for your
 user account below.</value>
   </data>
+  <data name="instructionLabel.Visible" type="System.Boolean, mscorlib">
+    <value>False</value>
+  </data>
   <data name="&gt;&gt;instructionLabel.Name" xml:space="preserve">
     <value>instructionLabel</value>
   </data>
@@ -357,7 +360,7 @@ user account below.</value>
     <value>7</value>
   </data>
   <data name="InputPanel.Location" type="System.Drawing.Point, System.Drawing">
-    <value>3, 65</value>
+    <value>3, 69</value>
   </data>
   <data name="InputPanel.Size" type="System.Drawing.Size, System.Drawing">
     <value>337, 220</value>
@@ -380,6 +383,33 @@ user account below.</value>
   <data name="InstructionPanel.AutoSize" type="System.Boolean, mscorlib">
     <value>True</value>
   </data>
+  <data name="anonymousServerLabel.Location" type="System.Drawing.Point, System.Drawing">
+    <value>10, 4</value>
+  </data>
+  <data name="anonymousServerLabel.Size" type="System.Drawing.Size, System.Drawing">
+    <value>327, 55</value>
+  </data>
+  <data name="anonymousServerLabel.TabIndex" type="System.Int32, mscorlib">
+    <value>1</value>
+  </data>
+  <data name="anonymousServerLabel.Text" xml:space="preserve">
+    <value>This is a read-only server.  You can browse, download and open documents from the server but you cannot upload documents to the server.  Enter the email and password for your user account on the server to upload documents.</value>
+  </data>
+  <data name="anonymousServerLabel.Visible" type="System.Boolean, mscorlib">
+    <value>False</value>
+  </data>
+  <data name="&gt;&gt;anonymousServerLabel.Name" xml:space="preserve">
+    <value>anonymousServerLabel</value>
+  </data>
+  <data name="&gt;&gt;anonymousServerLabel.Type" xml:space="preserve">
+    <value>System.Windows.Forms.Label, System.Windows.Forms, Version=4.0.0.0, Culture=neutral, PublicKeyToken=b77a5c561934e089</value>
+  </data>
+  <data name="&gt;&gt;anonymousServerLabel.Parent" xml:space="preserve">
+    <value>InstructionPanel</value>
+  </data>
+  <data name="&gt;&gt;anonymousServerLabel.ZOrder" xml:space="preserve">
+    <value>1</value>
+  </data>
   <data name="InstructionPanel.Dock" type="System.Windows.Forms.DockStyle, System.Windows.Forms">
     <value>Fill</value>
   </data>
@@ -387,7 +417,7 @@ user account below.</value>
     <value>3, 3</value>
   </data>
   <data name="InstructionPanel.Size" type="System.Drawing.Size, System.Drawing">
-    <value>337, 56</value>
+    <value>337, 60</value>
   </data>
   <data name="InstructionPanel.TabIndex" type="System.Int32, mscorlib">
     <value>10</value>
@@ -426,7 +456,7 @@ user account below.</value>
     <value>2</value>
   </data>
   <data name="ComponentOrganizer.Size" type="System.Drawing.Size, System.Drawing">
-    <value>343, 288</value>
+    <value>343, 292</value>
   </data>
   <data name="ComponentOrganizer.TabIndex" type="System.Int32, mscorlib">
     <value>12</value>
@@ -459,7 +489,7 @@ user account below.</value>
     <value>GrowAndShrink</value>
   </data>
   <data name="$this.ClientSize" type="System.Drawing.Size, System.Drawing">
-    <value>343, 288</value>
+    <value>343, 292</value>
   </data>
   <data name="$this.StartPosition" type="System.Windows.Forms.FormStartPosition, System.Windows.Forms">
     <value>CenterParent</value>

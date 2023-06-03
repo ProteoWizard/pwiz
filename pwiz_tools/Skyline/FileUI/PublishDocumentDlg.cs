@@ -120,6 +120,13 @@ namespace pwiz.Skyline.FileUI
             var listErrorServers = new List<Tuple<Server, string>>();
             foreach (var server in _panoramaServers)
             {
+                if (!server.HasUserAccount())
+                {
+                    // User has to be logged in to be able to upload a document to the server.
+                    listErrorServers.Add(new Tuple<Server, string>(server, "Server is configured as read-only. Documents cannot be uploaded to the server."));
+                    continue;
+                }
+
                 JToken folders = null;
                 try
                 {

@@ -3273,8 +3273,8 @@ namespace pwiz.SkylineTestData
 
             // Error: Unknown server
             var serverUri = PanoramaUtil.ServerNameToUri("unknown.server-state.com");
-            var client = new TestPanoramaClient() { MyServerState = new ServerState(ServerStateEnum.unknown, null, null), ServerUri = serverUri };
-            helper.ValidateServer(client, null, null);
+            var client = new TestPanoramaClient() { MyServerState = ServerStateEnum.unknown, ServerUri = serverUri };
+            helper.ValidateServer(client);
             Assert.IsTrue(
                 buffer.ToString()
                     .Contains(
@@ -3286,8 +3286,8 @@ namespace pwiz.SkylineTestData
 
             // Error: Not a Panorama Server
             serverUri = PanoramaUtil.ServerNameToUri("www.google.com");
-            client = new TestPanoramaClient() {MyUserState = new UserState(UserStateEnum.unknown, null, null), ServerUri = serverUri};
-            helper.ValidateServer(client, null, null);
+            client = new TestPanoramaClient() {MyUserState = UserStateEnum.unknown, ServerUri = serverUri};
+            helper.ValidateServer(client);
             Assert.IsTrue(
                 buffer.ToString()
                     .Contains(
@@ -3299,8 +3299,8 @@ namespace pwiz.SkylineTestData
 
             // Error: Invalid user
             serverUri = PanoramaUtil.ServerNameToUri(PanoramaUtil.PANORAMA_WEB);
-            client = new TestPanoramaClient() { MyUserState = new UserState(UserStateEnum.nonvalid, null, null), ServerUri = serverUri };
-            helper.ValidateServer(client, "invalid", "user");
+            client = new TestPanoramaClient() { MyUserState = UserStateEnum.nonvalid, ServerUri = serverUri, Username = "invalid", Password = "user"};
+            helper.ValidateServer(client);
             Assert.IsTrue(
                 buffer.ToString()
                     .Contains(
@@ -3312,7 +3312,7 @@ namespace pwiz.SkylineTestData
 
             // Error: unknown exception
             client = new TestPanoramaClientThrowsException();
-            helper.ValidateServer(client, null, null);
+            helper.ValidateServer(client);
             Assert.IsTrue(
                 buffer.ToString()
                     .Contains(
@@ -3322,8 +3322,8 @@ namespace pwiz.SkylineTestData
 
             
             // Error: folder does not exist
-            client = new TestPanoramaClient() { MyFolderState = FolderState.notfound, ServerUri = serverUri };
-            var server = helper.ValidateServer(client, "user", "password");
+            client = new TestPanoramaClient() { MyFolderState = FolderState.notfound, ServerUri = serverUri, Username = "user", Password = "password"};
+            var server = helper.ValidateServer(client);
             var folder = "folder/not/found";
             helper.ValidateFolder(client, server, folder);
             Assert.IsTrue(
@@ -3466,53 +3466,62 @@ namespace pwiz.SkylineTestData
         private class TestPanoramaClient : IPanoramaClient
         {
             public Uri ServerUri { get; set; }
+            public string Username { get; set; }
+            public string Password { get; set; }
 
-            public ServerState MyServerState { get; set; }
-            public UserState MyUserState { get; set; }
+            public ServerStateEnum MyServerState { get; set; }
+            public UserStateEnum MyUserState { get; set; }
             public FolderState MyFolderState { get; set; }
 
             public TestPanoramaClient()
             {
-                MyServerState = ServerState.VALID;
-                MyUserState = UserState.VALID;
+                MyServerState = ServerStateEnum.available;
+                MyUserState = UserStateEnum.valid;
                 MyFolderState = FolderState.valid;
+
+                ServerUri = new Uri("https://panoramaweb.org");
+                Username = "myuser";
+                Password = "mypassword";
             }
 
-            public virtual ServerState GetServerState()
+            public virtual PanoramaServer ValidateServer()
             {
-                return MyServerState;
+                if (ServerStateEnum.available != MyServerState)
+                {
+                    throw new PanoramaServerException(MyServerState, "Invalid server state", ServerUri);
+                }
+                if (UserStateEnum.valid != MyUserState)
+                {
+                    throw new PanoramaServerException(MyUserState, "Invalid user state", ServerUri);
+                }
+
+                return new PanoramaServer(ServerUri, Username, Password);
             }
 
-            public UserState IsValidUser(string username, string password)
-            {
-                return MyUserState;
-            }
-
-            public FolderState IsValidFolder(string folderPath, string username, string password)
+            public FolderState IsValidFolder(string folderPath)
             {
                 return MyFolderState;
             }
 
-            public FolderOperationStatus CreateFolder(string parentPath, string folderName, string username, string password)
+            public FolderOperationStatus CreateFolder(string parentPath, string folderName)
             {
                 return FolderOperationStatus.OK;
             }
 
-            public FolderOperationStatus DeleteFolder(string folderPath, string username, string password)
+            public FolderOperationStatus DeleteFolder(string folderPath)
             {
                 return FolderOperationStatus.OK;
             }
 
-            public JToken GetInfoForFolders(PanoramaServer server, string folder)
+            public JToken GetInfoForFolders(string folder, bool ensureLogin = true)
             {
                 throw new NotImplementedException();
             }
-
         }
 
         private class TestPanoramaClientThrowsException : TestPanoramaClient
         {
-            public override ServerState GetServerState()
+            public override PanoramaServer ValidateServer()
             {
                 throw new Exception("GetServerState threw an exception");
             }    

@@ -240,7 +240,8 @@ namespace pwiz.SkylineTestFunctional
             Assert.IsTrue(errDlg.Message.Contains(expectedErr));
             Assert.IsTrue(errDlg.Message.Contains(TestDownloadClient.ERROR401));
 
-            IPanoramaClient testClient = new AllValidPanoramaClient();
+            // Create a client that will return a server with the same URI as a server that already exists
+            IPanoramaClient testClient = new AllValidPanoramaClient(_anotherServerUrl);
 
             var editServerDlg = ShowDialog<EditServerDlg>(errDlg.ClickOk);
             RunUI(() =>
@@ -540,34 +541,33 @@ namespace pwiz.SkylineTestFunctional
 
     class AllValidPanoramaClient : IPanoramaClient
     {
-        public Uri ServerUri { get { return null; } }
+        public Uri ServerUri { get; set; }
 
-        public ServerState GetServerState()
+        public AllValidPanoramaClient(string serverUri)
         {
-           return ServerState.VALID;
+            ServerUri = new Uri(serverUri);
+        }
+        public PanoramaServer ValidateServer()
+        {
+            return new PanoramaServer(ServerUri, null, null);
         }
 
-        public UserState IsValidUser(string username, string password)
-        {
-            return UserState.VALID;
-        }
-
-        public FolderState IsValidFolder(string folderPath, string username, string password)
-        {
-            throw new NotImplementedException();
-        }
-
-        public FolderOperationStatus CreateFolder(string parentPath, string folderName, string username, string password)
+        public FolderState IsValidFolder(string folderPath)
         {
             throw new NotImplementedException();
         }
 
-        public FolderOperationStatus DeleteFolder(string folderPath, string username, string password)
+        public FolderOperationStatus CreateFolder(string parentPath, string folderName)
         {
             throw new NotImplementedException();
         }
 
-        public JToken GetInfoForFolders(PanoramaServer server, string folder)
+        public FolderOperationStatus DeleteFolder(string folderPath)
+        {
+            throw new NotImplementedException();
+        }
+
+        public JToken GetInfoForFolders(string folder, bool ensureLogin = true)
         {
             throw new NotImplementedException();
         }

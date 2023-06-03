@@ -36,10 +36,10 @@ namespace pwiz.PanoramaClient
     internal class PanoramaFormUtil
     {
 
-        public void InitializeTreeView(PanoramaServer server, List<KeyValuePair<PanoramaServer, JToken>> listServers)
+        public void InitializeTreeView(PanoramaServer server, List<KeyValuePair<PanoramaServer, JToken>> listServers, bool ensureLogin)
         {
-            IPanoramaClient panoramaClient = new WebPanoramaClient(server.URI);
-            listServers.Add(new KeyValuePair<PanoramaServer, JToken>(server, panoramaClient.GetInfoForFolders(server, null)));
+            IPanoramaClient panoramaClient = new WebPanoramaClient(server.URI, server.Username, server.Password);
+            listServers.Add(new KeyValuePair<PanoramaServer, JToken>(server, panoramaClient.GetInfoForFolders(null, ensureLogin)));
         }
 
         public void InitializeFolder(TreeView treeViewFolders, bool requireUploadPerms, bool showFiles, JToken folder, PanoramaServer server)

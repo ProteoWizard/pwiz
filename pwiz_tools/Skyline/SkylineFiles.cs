@@ -1032,7 +1032,7 @@ namespace pwiz.Skyline
         {
             try
             {
-                var panoramaClient = new WebPanoramaClient(curServer.URI);
+                var panoramaClient = new WebPanoramaClient(curServer.URI, curServer.Username, curServer.Password);
                 using (var fileSaver = new FileSaver(downloadPath))
                 {
                     using (var longWaitDlg = new LongWaitDlg
@@ -3505,10 +3505,54 @@ namespace pwiz.Skyline
 
                 servers.Add(newServer);
             }
+            else if (!servers.Any(s => s.HasUserCredentials()))
+            {
+                DialogResult buttonPress = MultiButtonMsgDlg.Show(
+                    this,
+                    TextUtil.LineSeparate(
+                        Resources.SkylineWindow_ShowPublishDlg_There_are_no_Panorama_servers_to_upload_to,
+                        "Press Edit Existing to add user account credentials for an existing server.",
+                        "Press Add to add a new server."),
+                    "Edit Existing", "Add",
+                    true);
+                if (buttonPress == DialogResult.Cancel)
+                    return;
+
+                if (buttonPress == DialogResult.Yes)
+                {
+                    // person intends to edit an existing server
+                    if (servers.Count == 1)
+                    {
+                        var anonymousServer = servers[0];
+                        var editedServer = servers.EditCredentials(this, anonymousServer, servers,
+                            anonymousServer.Username, anonymousServer.Password);
+                        if (editedServer == null)
+                            return;
+                        servers[0] = editedServer; // Replace with edited server
+                    }
+                    else
+                    {
+                        // Take them to the list of servers they can edit
+                        ShowToolOptionsUI();
+                        return;
+                    }
+                }
+                else
+                {
+                    // Adding a new server
+                    // var serverPanoramaWeb = new Server(PanoramaUtil.PANORAMA_WEB, string.Empty, string.Empty);
+                    var newServer = servers.EditItem(this, null, servers, null);
+                    if (newServer == null)
+                        return;
+
+                    servers.Add(newServer);
+                }
+            }
+
             var panoramaSavedUri = document.Settings.DataSettings.PanoramaPublishUri;
             var showPublishDocDlg = true;
 
-            // if the document has a saved uri prompt user for acton, check servers, and permissions, then publish
+            // if the document has a saved uri prompt user for action, check servers, and permissions, then publish
             // if something fails in the attempt to publish to the saved uri will bring up the usual PublishDocumentDlg
             if (panoramaSavedUri != null && !string.IsNullOrEmpty(panoramaSavedUri.ToString()))
             {
@@ -3596,7 +3640,7 @@ namespace pwiz.Skyline
             }
 
             // must escape uri string as panorama api does not and strings are escaped in schema
-            if (folders == null || !folderPath.Contains(Uri.EscapeUriString(folders[@"path"].ToString()))) 
+            if (folders?[@"path"] == null || !folderPath.Contains(Uri.EscapeUriString(folders[@"path"].ToString())))
                 return false;
 
             if (!PanoramaUtil.CheckFolderPermissions(folders) || !PanoramaUtil.CheckFolderType(folders))

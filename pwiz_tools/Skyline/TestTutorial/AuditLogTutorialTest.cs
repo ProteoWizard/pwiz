@@ -627,14 +627,13 @@ namespace pwiz.SkylineTestTutorial
         {
             Uri serverUri = new Uri(SERVER_URL);
 
-            IPanoramaClient panoramaClient = PanoramaUtil.CreatePanoramaClient(serverUri);
+            IPanoramaClient panoramaClient = PanoramaUtil.CreatePanoramaClient(serverUri, PANORAMA_USER_NAME, PANORAMA_PASSWORD);
 
-            var deleteResult = panoramaClient.DeleteFolder($@"{PANORAMA_FOLDER}/{testFolderName}", PANORAMA_USER_NAME,
-                PANORAMA_PASSWORD);
+            var deleteResult = panoramaClient.DeleteFolder($@"{PANORAMA_FOLDER}/{testFolderName}");
             if(deleteResult != FolderOperationStatus.OK && deleteResult != FolderOperationStatus.notfound)
                 Assert.Fail($@"Cannot delete existing test folder. Returns {deleteResult}");
-            Assert.AreEqual(FolderOperationStatus.OK, panoramaClient.CreateFolder(PANORAMA_FOLDER, testFolderName,
-                PANORAMA_USER_NAME, PANORAMA_PASSWORD), "Error when creating panorama test folder.");
+            Assert.AreEqual(FolderOperationStatus.OK, panoramaClient.CreateFolder(PANORAMA_FOLDER, testFolderName),
+                "Error when creating panorama test folder.");
         }
     }
 }

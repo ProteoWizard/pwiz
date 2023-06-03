@@ -40,6 +40,7 @@ namespace pwiz.Skyline.ToolsUI
             this.lblUsername = new System.Windows.Forms.Label();
             this.textUsername = new System.Windows.Forms.TextBox();
             this.InstructionPanel = new System.Windows.Forms.Panel();
+            this.anonymousServerLabel = new System.Windows.Forms.Label();
             this.ComponentOrganizer = new System.Windows.Forms.TableLayoutPanel();
             this.InputPanel.SuspendLayout();
             this.InstructionPanel.SuspendLayout();
@@ -113,7 +114,13 @@ namespace pwiz.Skyline.ToolsUI
             // 
             resources.ApplyResources(this.InstructionPanel, "InstructionPanel");
             this.InstructionPanel.Controls.Add(this.instructionLabel);
+            this.InstructionPanel.Controls.Add(this.anonymousServerLabel);
             this.InstructionPanel.Name = "InstructionPanel";
+            // 
+            // readOnlyServerLabel
+            // 
+            resources.ApplyResources(this.anonymousServerLabel, "anonymousServerLabel");
+            this.anonymousServerLabel.Name = "anonymousServerLabel";
             // 
             // ComponentOrganizer
             // 
@@ -159,5 +166,6 @@ namespace pwiz.Skyline.ToolsUI
         private System.Windows.Forms.Label instructionLabel;
         private System.Windows.Forms.Panel InstructionPanel;
         private System.Windows.Forms.TableLayoutPanel ComponentOrganizer;
+        private System.Windows.Forms.Label anonymousServerLabel;
     }
 }

@@ -317,26 +317,38 @@ namespace pwiz.SkylineTestFunctional
             var serverUri = PanoramaUtil.ServerNameToUri(PWEB);
             var pServer = new PanoramaServer(serverUri, string.Empty, string.Empty);
             Assert.AreEqual(pServer.URI.AbsoluteUri, PWEB_FULL);
-            Assert.IsFalse(pServer.RemoveContextPath());
-            Assert.IsTrue(pServer.AddLabKeyContextPath());
-            Assert.AreEqual(pServer.URI.AbsoluteUri, PWEB_LK_FULL);
+            PanoramaServer tempServer = null;
+            Assert.IsFalse(pServer.RemoveContextPath(ref tempServer));
+            Assert.IsNull(tempServer);
+            Assert.IsTrue(pServer.AddLabKeyContextPath(ref tempServer));
+            Assert.IsNotNull(tempServer);
+            Assert.AreNotEqual(pServer.URI.AbsoluteUri, PWEB_LK_FULL);
+            Assert.AreEqual(tempServer.URI.AbsoluteUri, PWEB_LK_FULL);
 
             serverUri = PanoramaUtil.ServerNameToUri(PWEB_LK);
             pServer = new PanoramaServer(serverUri, string.Empty, string.Empty);
             Assert.AreEqual(pServer.URI.AbsoluteUri, PWEB_LK_FULL);
-            Assert.IsFalse(pServer.AddLabKeyContextPath());
-            Assert.IsTrue(pServer.RemoveContextPath());
-            Assert.AreEqual(pServer.URI.AbsoluteUri, PWEB_FULL);
+            tempServer = null;
+            Assert.IsFalse(pServer.AddLabKeyContextPath(ref tempServer));
+            Assert.IsNull(tempServer);
+            Assert.IsTrue(pServer.RemoveContextPath(ref tempServer));
+            Assert.IsNotNull(tempServer);
+            Assert.AreNotEqual(pServer.URI.AbsoluteUri, PWEB_FULL);
+            Assert.AreEqual(tempServer.URI.AbsoluteUri, PWEB_FULL);
 
             serverUri = PanoramaUtil.ServerNameToUri(PWEB_LK);
             pServer = new PanoramaServer(serverUri, string.Empty, string.Empty);
             Assert.AreEqual(pServer.URI, PWEB_LK_FULL);
+            tempServer = null;
             Assert.IsTrue(pServer.Redirect(PWEB_FULL + PanoramaUtil.ENSURE_LOGIN_PATH,
-                PanoramaUtil.ENSURE_LOGIN_PATH));
-            Assert.AreEqual(pServer.URI, PWEB_FULL);
+                PanoramaUtil.ENSURE_LOGIN_PATH, ref tempServer));
+            Assert.AreNotEqual(pServer.URI, PWEB_FULL);
+            Assert.AreEqual(tempServer.URI, PWEB_FULL);
 
-            Assert.IsFalse(pServer.Redirect("/labkey/" + PanoramaUtil.ENSURE_LOGIN_PATH, PanoramaUtil.ENSURE_LOGIN_PATH)); // Need full URL
-            Assert.IsFalse(pServer.Redirect("http:/another.server/" + PanoramaUtil.ENSURE_LOGIN_PATH, PanoramaUtil.ENSURE_LOGIN_PATH)); // Not the same host
+            tempServer = null;
+            Assert.IsFalse(pServer.Redirect("/labkey/" + PanoramaUtil.ENSURE_LOGIN_PATH, PanoramaUtil.ENSURE_LOGIN_PATH, ref tempServer)); // Need full URL
+            Assert.IsFalse(pServer.Redirect("http:/another.server/" + PanoramaUtil.ENSURE_LOGIN_PATH, PanoramaUtil.ENSURE_LOGIN_PATH, ref tempServer)); // Not well formed URL.
+            Assert.IsTrue(pServer.Redirect("http://another.server/" + PanoramaUtil.ENSURE_LOGIN_PATH, PanoramaUtil.ENSURE_LOGIN_PATH, ref tempServer)); // Redirect to different host
         }
 
         public class TestPanoramaClient : IPanoramaClient
@@ -361,48 +373,47 @@ namespace pwiz.SkylineTestFunctional
                 }
             }
 
-            public ServerState GetServerState()
+            public PanoramaServer ValidateServer()
             {
-                if (Server.Contains(VALID_PANORAMA_SERVER) ||
-                    string.Equals(Server, VALID_NON_PANORAMA_SERVER))
-                    return ServerState.VALID;
-
-                else if (string.Equals(Server, NON_EXISTENT_SERVER))
-                    return new ServerState(ServerStateEnum.missing, "Test WebException - NameResolutionFailure", ServerUri);
-
-                return new ServerState(ServerStateEnum.unknown, "Test WebException - unknown failure", ServerUri);
-            }
-
-            public UserState IsValidUser(string username, string password)
-            {
-                if (Server.Contains(VALID_PANORAMA_SERVER))
+                if (string.Equals(Server, VALID_NON_PANORAMA_SERVER))
                 {
-                    if (string.Equals(username, VALID_USER_NAME) &&
-                        string.Equals(password, VALID_PASSWORD))
-                    {
-                        return UserState.VALID;
-                    }
+                    throw new PanoramaServerException(UserStateEnum.nonvalid, "Test WebException", ServerUri);
                 }
 
-                return new UserState(UserStateEnum.nonvalid, "Test WebException", ServerUri);
+                else if (string.Equals(Server, NON_EXISTENT_SERVER))
+                    throw new PanoramaServerException(ServerStateEnum.missing, "Test WebException - NameResolutionFailure", ServerUri);
+
+                else if (Server.Contains(VALID_PANORAMA_SERVER))
+                {
+                    if (string.Equals(Username, VALID_USER_NAME) &&
+                        string.Equals(Password, VALID_PASSWORD))
+                    {
+                        return new PanoramaServer(ServerUri, Username, Password);
+                    }
+                    else
+                    {
+                        throw new PanoramaServerException(UserStateEnum.nonvalid, "Test WebException", ServerUri);
+                    }
+                }
+                throw new PanoramaServerException(ServerStateEnum.unknown, "Test WebException - unknown failure", ServerUri);
             }
 
-            public FolderState IsValidFolder(string folderPath, string username, string password)
+            public FolderState IsValidFolder(string folderPath)
             {
                 return FolderState.valid;
             }
 
-            public FolderOperationStatus CreateFolder(string parentPath, string folderName, string username, string password)
+            public FolderOperationStatus CreateFolder(string parentPath, string folderName)
             {
                 throw new NotImplementedException();
             }
 
-            public FolderOperationStatus DeleteFolder(string folderPath, string username, string password)
+            public FolderOperationStatus DeleteFolder(string folderPath)
             {
                 throw new NotImplementedException();
             }
 
-            public JToken GetInfoForFolders(PanoramaServer server, string folder)
+            public JToken GetInfoForFolders(string folder, bool ensureLogin = true)
             {
                 throw new NotImplementedException();
             }

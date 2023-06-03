@@ -23,7 +23,6 @@ using System.Linq;
 using System.Runtime.InteropServices;
 using System.Windows.Forms;
 using pwiz.Common.Controls;
-using pwiz.Common.SystemUtil;
 
 namespace pwiz.PanoramaClient
 {
@@ -31,7 +30,7 @@ namespace pwiz.PanoramaClient
     /// Use for a <see cref="MessageBox"/> substitute that can be
     /// detected and closed by automated functional tests.
     /// </summary>
-    public partial class AlertDlg : CommonFormEx
+    partial class AlertDlg : CommonFormEx
     {
         private const int MAX_HEIGHT = 500;
         private readonly int _originalFormHeight;
