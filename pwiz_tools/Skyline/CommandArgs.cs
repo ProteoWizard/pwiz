@@ -1074,13 +1074,12 @@ namespace pwiz.Skyline
                     return false;
                 }
 
-                var panoramaClient = new WebPanoramaClient(serverUri);
+                var panoramaClient = new WebPanoramaClient(serverUri, PanoramaUserName, PanoramaPassword);
                 var panoramaHelper = new PanoramaHelper(_out); // Helper writes messages for failures below
-                PanoramaServer = panoramaHelper.ValidateServer(panoramaClient, PanoramaUserName, PanoramaPassword);
-                if (PanoramaServer == null)
+                if (!panoramaHelper.ValidateServer(panoramaClient))
                     return false;
 
-                if (!panoramaHelper.ValidateFolder(panoramaClient, PanoramaServer, PanoramaFolder))
+                if (!panoramaHelper.ValidateFolder(panoramaClient, PanoramaFolder))
                     return false;
 
                 PublishingToPanorama = true;
@@ -1130,12 +1129,12 @@ namespace pwiz.Skyline
                 _statusWriter = statusWriter;
             }
 
-            public PanoramaServer ValidateServer(IPanoramaClient panoramaClient, string panoramaUsername, string panoramaPassword)
+            public bool ValidateServer(IPanoramaClient panoramaClient)
             {
                 try
                 {
-                    PanoramaUtil.VerifyServerInformation(panoramaClient, panoramaUsername, panoramaPassword);
-                    return new PanoramaServer(panoramaClient.ServerUri, panoramaUsername, panoramaPassword);
+                    panoramaClient.ValidateServer();
+                    return true;
                 }
                 catch (PanoramaServerException x)
                 {
@@ -1146,14 +1145,14 @@ namespace pwiz.Skyline
                     _statusWriter.WriteLine(Resources.PanoramaHelper_ValidateServer_Exception_, x.Message);
                 }
 
-                return null;
+                return false;
             }
 
-            public bool ValidateFolder(IPanoramaClient panoramaClient, PanoramaServer server, string panoramaFolder)
+            public bool ValidateFolder(IPanoramaClient panoramaClient, string panoramaFolder)
             {
                 try
                 {
-                    PanoramaUtil.VerifyFolder(panoramaClient, server, panoramaFolder);
+                    panoramaClient.ValidateFolder(panoramaFolder, FolderPermission.insert);
                     return true;
                 }
                 catch (PanoramaServerException x)

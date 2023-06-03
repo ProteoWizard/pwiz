@@ -70,123 +70,7 @@ namespace pwiz.PanoramaClient
             return serverName;
         }
 
-        public static void VerifyServerInformation(IPanoramaClient panoramaClient, string username, string password)
-        {
-            var uriServer = panoramaClient.ServerUri;
-
-            var serverState = panoramaClient.GetServerState();
-            if (!serverState.IsValid())
-            {
-                throw new PanoramaServerException(serverState.GetErrorMessage(uriServer));
-            }
-
-            var userState = panoramaClient.IsValidUser(username, password);
-            if (!userState.IsValid())
-            {
-                throw new PanoramaServerException(userState.GetErrorMessage(uriServer));
-            }
-        }
-
-        public static UserState ValidateServerAndUser(ref Uri serverUri, string username, string password)
-        {
-            var pServer = new PanoramaServer(serverUri, username, password);
-
-            try
-            {
-                var userState = EnsureLogin(pServer);
-                serverUri = pServer.URI;
-                return userState;
-            }
-            catch (WebException ex)
-            {
-                var response = ex.Response as HttpWebResponse;
-
-                if (response != null && response.StatusCode == HttpStatusCode.NotFound) // 404
-                {
-                    if (pServer.AddLabKeyContextPath())
-                    {
-                        // e.g. Given server URL is https://panoramaweb.org but LabKey Server is not deployed as the root webapp.
-                        // Try again with '/labkey' context path
-                        return TryEnsureLogin(pServer, ref serverUri);
-                    }
-                    else if (pServer.RemoveContextPath())
-                    {
-                        // e.g. User entered the home page of the LabKey Server, running as the root webapp: 
-                        // https://panoramaweb.org/project/home/begin.view OR https://panoramaweb.org/home/project-begin.view
-                        // We will first try https://panoramaweb.org/project/ OR https://panoramaweb.org/home/ as the server URL. 
-                        // And that will fail.  Remove the assumed context path and try again.
-                        return TryEnsureLogin(pServer, ref serverUri);
-                    }
-                }
-
-                return new UserState(UserStateEnum.unknown, ex.Message, GetEnsureLoginUri(pServer));
-            }
-        }
-
-        private static UserState EnsureLogin(PanoramaServer pServer)
-        {
-            var requestUri = GetEnsureLoginUri(pServer);
-            var request = (HttpWebRequest) WebRequest.Create(requestUri);
-            request.Headers.Add(HttpRequestHeader.Authorization,
-                PanoramaServer.GetBasicAuthHeader(pServer.Username, pServer.Password));
-            try
-            {
-                using (var response = (HttpWebResponse) request.GetResponse())
-                {
-                    if (response.StatusCode != HttpStatusCode.OK)
-                    {
-                        return new UserState(UserStateEnum.nonvalid,
-                            string.Format(Resources.PanoramaUtil_EnsureLogin_Could_not_authenticate_user__Response_received_from_server___0___1_,
-                                response.StatusCode, response.StatusDescription),
-                            requestUri);
-                    }
-
-                    JObject jsonResponse = null;
-                    if (TryGetJsonResponse(response, ref jsonResponse) && IsValidEnsureLoginResponse(jsonResponse, pServer.Username))
-                    {
-                        return UserState.VALID;
-                    }
-                    else if (jsonResponse == null)
-                    {
-                        return new UserState(UserStateEnum.unknown,
-                            string.Format(Resources.PanoramaUtil_EnsureLogin_Server_did_not_return_a_valid_JSON_response___0__is_not_a_Panorama_server_, pServer.URI),
-                            requestUri);
-                    }
-                    else
-                    {
-                        var jsonText = jsonResponse.ToString(Formatting.None);
-                        jsonText = jsonText.Replace(@"{", @"{{"); // escape curly braces
-                        return new UserState(UserStateEnum.unknown,
-                            string.Format(Resources.PanoramaUtil_EnsureLogin_Unexpected_JSON_response_from_the_server___0_, jsonText),
-                            requestUri);
-                    }
-                }
-            }
-            catch (WebException ex)
-            {
-                var response = ex.Response as HttpWebResponse;
-
-                if (response != null && response.StatusCode == HttpStatusCode.Unauthorized) // 401
-                {
-                    var responseUri = response.ResponseUri;
-                    if (!requestUri.Equals(responseUri))
-                    {
-                        // This means we were redirected.  Authorization headers are not persisted across redirects. Try again
-                        // with the responseUri.
-                        if (pServer.Redirect(responseUri.AbsoluteUri, ENSURE_LOGIN_PATH))
-                        {
-                            return EnsureLogin(pServer);
-                        }
-                    }
-
-                    return new UserState(UserStateEnum.nonvalid, ex.Message, requestUri); // User cannot be authenticated
-                }
-
-                throw;
-            }
-        }
-
-        private static bool TryGetJsonResponse(HttpWebResponse response, ref JObject jsonResponse)
+        public static bool TryGetJsonResponse(HttpWebResponse response, ref JObject jsonResponse)
         {
             using (var stream = response.GetResponseStream())
             {
@@ -208,7 +92,7 @@ namespace pwiz.PanoramaClient
             return false;
         }
 
-        private static bool IsValidEnsureLoginResponse(JObject jsonResponse, string expectedEmail)
+        public static bool IsValidEnsureLoginResponse(JObject jsonResponse, string expectedEmail)
         {
             // Example JSON response:
             /*
@@ -236,88 +120,69 @@ namespace pwiz.PanoramaClient
             return false;
         }
 
-        private static Uri GetEnsureLoginUri(PanoramaServer pServer)
+        public static Uri GetEnsureLoginUri(PanoramaServer pServer)
         {
             return new Uri(pServer.URI, ENSURE_LOGIN_PATH);
         }
 
-        private static UserState TryEnsureLogin(PanoramaServer pServer, ref Uri serverUri)
-        {
-            try
-            {
-                var userState = EnsureLogin(pServer);
-                serverUri = pServer.URI;
-                return userState;
-            }
-            catch (WebException e)
-            {
-                // Due to anything other than 401 (Unauthorized), which is handled in EnsureLogin.
-                return new UserState(UserStateEnum.unknown, e.Message, GetEnsureLoginUri(pServer));
-            }
-        }
-
-        public static void VerifyFolder(IPanoramaClient panoramaClient, PanoramaServer server, string panoramaFolder)
-        {
-            switch (panoramaClient.IsValidFolder(panoramaFolder, server.Username, server.Password))
-            {
-                case FolderState.notfound:
-                    throw new PanoramaServerException(
-                        string.Format(
-                            Resources.PanoramaUtil_VerifyFolder_Folder__0__does_not_exist_on_the_Panorama_server__1_,
-                            panoramaFolder, panoramaClient.ServerUri));
-                case FolderState.nopermission:
-                    throw new PanoramaServerException(string.Format(
-                        Resources
-                            .PanoramaUtil_VerifyFolder_User__0__does_not_have_permissions_to_upload_to_the_Panorama_folder__1_,
-                        server.Username, panoramaFolder));
-                case FolderState.notpanorama:
-                    throw new PanoramaServerException(string.Format(
-                        Resources.PanoramaUtil_VerifyFolder__0__is_not_a_Panorama_folder,
-                        panoramaFolder));
-            }
-        }
-
         /// <summary>
-        /// Parses the JSON returned from the getContainers LabKey API to look for the folder type and active modules in a container.
+        /// Parses the JSON returned from the getContainers LabKey API to look for the folder type for a container.
         /// </summary>
         /// <param name="folderJson"></param>
-        /// <returns>True if the folder is a Targeted MS folder.</returns>
-        public static bool CheckFolderType(JToken folderJson)
+        /// <returns>True if the folder type is "Targeted MS".</returns>
+        public static bool IsTargetedMsFolder(JToken folderJson)
         {
             if (folderJson != null)
             {
-
                 var folderType = (string)folderJson[@"folderType"];
-                var modules = folderJson[@"activeModules"];
-                return modules != null && ContainsTargetedMSModule(modules) &&
-                       Equals(@"Targeted MS", folderType);
+                return Equals(@"Targeted MS", folderType); // A "Targeted MS" type folder will always have the "TargetedMS" module enabled.
             }
 
             return false;
         }
 
+        public static bool HasTargetedMsModule(JToken folderJson)
+        {
+            if (folderJson != null)
+            {
+                var modules = folderJson[@"activeModules"];
+                if (modules != null)
+                {
+                    foreach (var module in modules)
+                    {
+                        if (string.Equals(module.ToString(), @"TargetedMS"))
+                            return true;
+                    }
+                }
+
+                return false;
+            }
+
+            return false;
+        }
+
+        public static bool CheckReadPermissions(JToken folderJson)
+        {
+            return CheckFolderPermissions(folderJson, FolderPermission.read);
+        }
+
+        public static bool CheckInsertPermissions(JToken folderJson)
+        {
+            return CheckFolderPermissions(folderJson, FolderPermission.insert);
+        }
+
         /// <summary>
-        /// Parses the JSON returned from the getContainers LabKey API to look user permissions in the container.
+        /// Parses the JSON returned from the getContainers LabKey API to look for user permissions in the container.
         /// </summary>
         /// <param name="folderJson"></param>
-        /// <returns>True if the user has insert permissions.</returns>
-        public static bool CheckFolderPermissions(JToken folderJson)
+        /// <param name="permissionType"></param>
+        /// <returns>True if the user has the given permission type.</returns>
+        public static bool CheckFolderPermissions(JToken folderJson, FolderPermission permissionType)
         {
             if (folderJson != null)
             {
                 var userPermissions = folderJson.Value<int?>(@"userPermissions");
-                return userPermissions != null && Equals(userPermissions & 2, 2);
-            }
-
-            return false;
-        }
-
-        private static bool ContainsTargetedMSModule(IEnumerable<JToken> modules)
-        {
-            foreach (var module in modules)
-            {
-                if (string.Equals(module.ToString(), @"TargetedMS"))
-                    return true;
+                return userPermissions != null && Equals(userPermissions & (int)permissionType, (int)permissionType);
             }
 
             return false;
@@ -360,242 +225,259 @@ namespace pwiz.PanoramaClient
             return Call(serverUri, @"project", folder, @"getContainers", queryString);
         }
 
-        public static IPanoramaClient CreatePanoramaClient(Uri serverUri)
-        { return new WebPanoramaClient(serverUri);}
-
-    }
-
-    public abstract class GenericState<T>
-    {
-        public T State { get; }
-        public string Error { get; }
-        public Uri Uri { get; }
-
-        public abstract bool IsValid();
-
-        protected string AppendErrorAndUri(string stateErrorMessage)
+        public static IPanoramaClient CreatePanoramaClient(Uri serverUri, string userName, string password)
         {
-            var message = stateErrorMessage;
-
-            if (Error != null || Uri != null)
-            {
-                var sb = new StringBuilder();
-
-                if (Error != null)
-                {
-                    sb.AppendLine(string.Format(Resources.GenericState_AppendErrorAndUri_Error___0_, Error));
-                }
-
-                if (Uri != null)
-                {
-                    sb.AppendLine(string.Format(Resources.GenericState_AppendErrorAndUri_URL___0_, Uri));
-                }
-
-                message = TextUtil.LineSeparate(message, string.Empty, sb.ToString());
-            }
-
-
-            return message;
-        }
-
-        public GenericState(T state, string error, Uri uri)
-        {
-            State = state;
-            Error = error;
-            Uri = uri;
+            return new WebPanoramaClient(serverUri, userName, password);
         }
     }
 
-    public class ServerState : GenericState<ServerStateEnum>
-    {
-        public static readonly ServerState VALID = new ServerState(ServerStateEnum.available, null, null);
-
-        public ServerState(ServerStateEnum state, string error, Uri uri) : base(state, error, uri)
-        {
-        }
-
-        public override bool IsValid()
-        {
-            return State == ServerStateEnum.available;
-        }
-
-        public string GetErrorMessage(Uri serverUri)
-        {
-            var stateError = string.Empty;
-            switch (State)
-            {
-                case ServerStateEnum.missing:
-                    stateError = string.Format(
-                        Resources.ServerState_GetErrorMessage_The_server__0__does_not_exist_,
-                        serverUri.AbsoluteUri);
-                    break;
-                case ServerStateEnum.unknown:
-                    stateError = string.Format(
-                        Resources.ServerState_GetErrorMessage_Unable_to_connect_to_the_server__0__,
-                        serverUri.AbsoluteUri);
-                    break;
-            }
-
-            return AppendErrorAndUri(stateError);
-        }
-    }
-
-    public class UserState : GenericState<UserStateEnum>
-    {
-        public static readonly UserState VALID = new UserState(UserStateEnum.valid, null, null);
-
-        public UserState(UserStateEnum state, string error, Uri uri) : base(state, error, uri)
-        {
-        }
-
-        public override bool IsValid()
-        {
-            return State == UserStateEnum.valid;
-        }
-
-        public string GetErrorMessage(Uri serverUri)
-        {
-            var stateError = string.Empty;
-            switch (State)
-            {
-                case UserStateEnum.nonvalid:
-                    stateError = Resources.UserState_GetErrorMessage_The_username_and_password_could_not_be_authenticated_with_the_panorama_server_;
-                    break;
-                case UserStateEnum.unknown:
-                    stateError = string.Format(
-                        Resources.UserState_GetErrorMessage_There_was_an_error_authenticating_user_credentials_on_the_server__0__,
-                        serverUri.AbsoluteUri);
-                    break;
-            }
-
-            return AppendErrorAndUri(stateError);
-        }
-    }
-
-    public enum ServerStateEnum { unknown, missing, available }
+    public enum ServerStateEnum { unknown, missing, notpanorama, available }
     public enum UserStateEnum { valid, nonvalid, unknown }
-    public enum FolderState { valid, notpanorama, nopermission, notfound }
+    public enum FolderState { valid, notpanorama, nopermission, notfound, unknown }
     public enum FolderOperationStatus { OK, notpanorama, nopermission, notfound, alreadyexists, error }
+
+    public enum FolderPermission
+    {
+        read = 1,   // Defined in org.labkey.api.security.ACL.java: public static final int PERM_READ = 0x00000001;
+        insert = 2, // Defined in org.labkey.api.security.ACL.java: public static final int PERM_INSERT = 0x00000002;
+        delete = 8  // Defined in org.labkey.api.security.ACL.java: public static final int PERM_DELETE = 0x00000008;
+    }
 
     public interface IPanoramaClient
     {
         Uri ServerUri { get; }
-        ServerState GetServerState();
-        UserState IsValidUser(string username, string password);
-        FolderState IsValidFolder(string folderPath, string username, string password);
-    
+
+        string Username { get; }
+
+        PanoramaServer ValidateServer();
+
+        void ValidateFolder(string folderPath, FolderPermission? permission);
+
         /**
          * Returns FolderOperationStatus.OK if created successfully, otherwise returns the reason
          * why the folder was not created.
          */
-        FolderOperationStatus CreateFolder(string parentPath, string folderName, string username, string password);
+        FolderOperationStatus CreateFolder(string parentPath, string folderName);
         /**
          * Returns FolderOperationStatus.OK if the folder was successfully deleted, otherwise returns the reason
          * why the folder was not deleted.
          */
-        FolderOperationStatus DeleteFolder(string folderPath, string username, string password);
-    
-        JToken GetInfoForFolders(PanoramaServer server, string folder);
+        FolderOperationStatus DeleteFolder(string folderPath);
+
+        JToken GetInfoForFolders(string folder);
 
         void DownloadFile(string fileUrl, string fileName, long fileSize, string realName, PanoramaServer server,
             IProgressMonitor pm, IProgressStatus progressStatus);
-
     }
-    
+
     public class WebPanoramaClient : IPanoramaClient
     {
         public Uri ServerUri { get; private set; }
-        
-        public WebPanoramaClient(Uri server)
+        public string Username { get; }
+        private string Password { get; }
+
+        public WebPanoramaClient(Uri serverUri, string username, string password)
         {
-            ServerUri = server;
+            ServerUri = serverUri;
+            Username = username;
+            Password = password;
         }
-    
-        public ServerState GetServerState()
+
+        public PanoramaServer ValidateServer()
         {
-            return TryGetServerState();
+            var validatedUri = ValidateUri(ServerUri);
+            var validatedServer = ValidateServerAndUser(validatedUri, Username, Password);
+            ServerUri = validatedServer.URI;
+            return validatedServer;
         }
-    
-        private ServerState TryGetServerState(bool tryNewProtocol = true)
+
+        private Uri ValidateUri(Uri uri, bool tryNewProtocol = true)
         {
             try
             {
                 using (var webClient = new WebClient())
                 {
-                    webClient.DownloadString(ServerUri);
-                    return ServerState.VALID;
+                    webClient.DownloadString(uri);
+                    return uri;
                 }
             }
             catch (WebException ex)
             {
+                var response = ex.Response as HttpWebResponse;
                 // Invalid URL
                 if (ex.Status == WebExceptionStatus.NameResolutionFailure)
                 {
-                    return new ServerState(ServerStateEnum.missing, ex.Message, ServerUri);
+                    var responseUri = response?.ResponseUri;
+                    throw new PanoramaServerException(ServerStateEnum.missing, ex.Message, uri, 
+                        (responseUri != null && !uri.Equals(responseUri) ? responseUri : null));
                 }
                 else if (tryNewProtocol)
                 {
-                    if (TryNewProtocol(() => TryGetServerState(false).IsValid()))
-                        return ServerState.VALID;
-    
-                    return new ServerState(ServerStateEnum.unknown, ex.Message, ServerUri);
+                    // try again using https
+                    if (uri.Scheme.Equals(@"http"))
+                    {
+                        var httpsUri = new Uri(uri.AbsoluteUri.Replace(@"http", @"https"));
+                        return ValidateUri(httpsUri, false);
+                    }
+                    // We assume "https" (PanoramaUtil.ServerNameToUrl) if there is no scheme in the user provided URL.
+                    // Try http. LabKey Server may not be running under SSL. 
+                    else if (uri.Scheme.Equals(@"https"))
+                    {
+                        var httpUri = new Uri(uri.AbsoluteUri.Replace(@"https", @"http"));
+                        return ValidateUri(httpUri, false);
+                    }
                 }
+
+                throw new PanoramaServerException(ServerStateEnum.unknown, ex.Message, ServerUri, uri);
             }
-            return new ServerState(ServerStateEnum.unknown, null, ServerUri);
         }
-    
-        // This function must be true/false returning; no exceptions can be thrown
-        private bool TryNewProtocol(Func<bool> testFunc)
+
+        private PanoramaServer ValidateServerAndUser(Uri serverUri, string username, string password)
         {
-            Uri currentUri = ServerUri;
-    
-            // try again using https
-            if (ServerUri.Scheme.Equals(@"http"))
-            {
-                ServerUri = new Uri(currentUri.AbsoluteUri.Replace(@"http", @"https"));
-                return testFunc();
-            }
-            // We assume "https" (PanoramaUtil.ServerNameToUrl) if there is no scheme in the user provided URL.
-            // Try http. LabKey Server may not be running under SSL. 
-            else if (ServerUri.Scheme.Equals(@"https"))
-            {
-                ServerUri = new Uri(currentUri.AbsoluteUri.Replace(@"https", @"http"));
-                return testFunc();
-            }
-    
-            ServerUri = currentUri;
-            return false;
-        }
-    
-        public UserState IsValidUser(string username, string password)
-        {
-            var refServerUri = ServerUri;
-            var userState = PanoramaUtil.ValidateServerAndUser(ref refServerUri, username, password);
-            if (userState.IsValid())
-            {
-                ServerUri = refServerUri;
-            }
-            return userState;
-        }
-    
-        public FolderState IsValidFolder(string folderPath, string username, string password)
-        {
+            var pServer = new PanoramaServer(serverUri, username, password);
+
             try
             {
-                var uri = PanoramaUtil.GetContainersUri(ServerUri, folderPath, false);
-    
-                using (var webClient = new WebClientWithCredentials(ServerUri, username, password))
+                return EnsureLogin(pServer);
+            }
+            catch (WebException ex)
+            {
+                var response = ex.Response as HttpWebResponse;
+
+                if (response != null && response.StatusCode == HttpStatusCode.NotFound) // 404
                 {
-                    JToken response = webClient.Get(uri);
-    
-                    // User needs write permissions to publish to the folder
-                    if (!PanoramaUtil.CheckFolderPermissions(response))
+                    if (pServer.AddLabKeyContextPath(out var newServer))
+                    {
+                        // e.g. Given server URL is https://panoramaweb.org but LabKey Server is not deployed as the root webapp.
+                        // Try again with '/labkey' context path
+                        return EnsureLogin(newServer);
+                    }
+                    else if (pServer.RemoveContextPath(out newServer))
+                    {
+                        // e.g. User entered the home page of the LabKey Server, running as the root webapp: 
+                        // https://panoramaweb.org/project/home/begin.view OR https://panoramaweb.org/home/project-begin.view
+                        // We will first try https://panoramaweb.org/project/ OR https://panoramaweb.org/home/ as the server URL. 
+                        // And that will fail.  Remove the assumed context path and try again.
+                        return EnsureLogin(newServer);
+                    }
+                }
+
+                throw new PanoramaServerException(UserStateEnum.unknown, ex.Message, ServerUri, PanoramaUtil.GetEnsureLoginUri(pServer));
+            }
+        }
+
+        private PanoramaServer EnsureLogin(PanoramaServer pServer)
+        {
+            var requestUri = PanoramaUtil.GetEnsureLoginUri(pServer);
+            var request = (HttpWebRequest)WebRequest.Create(requestUri);
+            if (pServer.HasUserAccount())
+            {
+                request.Headers.Add(HttpRequestHeader.Authorization,
+                    PanoramaServer.GetBasicAuthHeader(pServer.Username, pServer.Password));
+            }
+
+            try
+            {
+                using (var response = (HttpWebResponse)request.GetResponse())
+                {
+                    if (response.StatusCode != HttpStatusCode.OK)
+                    {
+                        throw new PanoramaServerException(UserStateEnum.nonvalid,
+                            string.Format(
+                                Resources
+                                    .PanoramaUtil_EnsureLogin_Could_not_authenticate_user__Response_received_from_server___0___1_,
+                                response.StatusCode, response.StatusDescription),
+                            ServerUri, requestUri);
+                    }
+
+                    JObject jsonResponse = null;
+
+                    if (!(PanoramaUtil.TryGetJsonResponse(response, ref jsonResponse) 
+                        && PanoramaUtil.IsValidEnsureLoginResponse(jsonResponse, pServer.Username)))
+                    {
+                        if (jsonResponse == null)
+                        {
+                            throw new PanoramaServerException(UserStateEnum.unknown,
+                                string.Format(
+                                    Resources
+                                        .PanoramaUtil_EnsureLogin_Server_did_not_return_a_valid_JSON_response___0__is_not_a_Panorama_server_,
+                                    ServerUri),
+                                ServerUri, requestUri);
+                        }
+                        else
+                        {
+                            var jsonText = jsonResponse.ToString(Formatting.None);
+                            jsonText = jsonText.Replace(@"{", @"{{"); // escape curly braces
+                            throw new PanoramaServerException(UserStateEnum.unknown,
+                                string.Format(Resources.PanoramaUtil_EnsureLogin_Unexpected_JSON_response_from_the_server___0_, jsonText),
+                                ServerUri, requestUri);
+                        }
+                    }
+
+                    return pServer;
+                }
+            }
+            catch (WebException ex)
+            {
+                var response = ex.Response as HttpWebResponse;
+
+                if (response != null && response.StatusCode == HttpStatusCode.Unauthorized) // 401
+                {
+                    var responseUri = response.ResponseUri;
+                    if (!requestUri.Equals(responseUri))
+                    {
+                        // This means we were redirected.  Authorization headers are not persisted across redirects. Try again
+                        // with the responseUri.
+                        if (pServer.Redirect(responseUri.AbsoluteUri, PanoramaUtil.ENSURE_LOGIN_PATH, out var redirectedServer))
+                        {
+                            return EnsureLogin(redirectedServer);
+                        }
+                        else
+                        {
+                            throw new PanoramaServerException(UserStateEnum.nonvalid, ex.Message, ServerUri, requestUri); // User cannot be authenticated
+                        }
+                    }
+
+                    if (!pServer.HasUserAccount())
+                    {
+                        // We were not given a username / password. This means that the user wants anonymous access
+                        // to the server. Since we got a 401 (Unauthorized) error, not a 404 (Not found), this means
+                        // that the server is a Panorama server.
+                        return pServer;
+                    }
+
+                    throw new PanoramaServerException(UserStateEnum.nonvalid, ex.Message, ServerUri, requestUri); // User cannot be authenticated
+                }
+
+                throw;
+            }
+        }
+
+        public void ValidateFolder(string folderPath, FolderPermission? permission)
+        {
+            var folderState = GetFolderState(folderPath, permission);
+            if (folderState != FolderState.valid)
+            {
+                throw new PanoramaServerException(folderState, folderPath, null, ServerUri, null, Username);
+            }
+        }
+
+        private FolderState GetFolderState(string folderPath, FolderPermission? permission, bool checkTargetedMs = true)
+        {
+            var requestUri = PanoramaUtil.GetContainersUri(ServerUri, folderPath, false);
+
+            try
+            {
+                using (var webClient = new WebClientWithCredentials(ServerUri, Username, Password))
+                {
+                    JToken response = webClient.Get(requestUri);
+
+                    if (permission != null && !PanoramaUtil.CheckFolderPermissions(response, (FolderPermission)permission))
                     {
                         return FolderState.nopermission;
                     }
-    
-                    // User can only upload to a TargetedMS folder type.
-                    if (!PanoramaUtil.CheckFolderType(response))
+
+                    if (checkTargetedMs && !PanoramaUtil.IsTargetedMsFolder(response))
                     {
                         return FolderState.notpanorama;
                     }
@@ -608,17 +490,21 @@ namespace pwiz.PanoramaClient
                 {
                     return FolderState.notfound;
                 }
-                else throw;
+                else
+                {
+                    throw new PanoramaServerException(FolderState.unknown, folderPath, ex.Message, ServerUri,
+                        requestUri, Username);
+                }
             }
             return FolderState.valid;
         }
-    
-        public FolderOperationStatus CreateFolder(string folderPath, string folderName, string username, string password)
+
+        public FolderOperationStatus CreateFolder(string folderPath, string folderName)
         {
-    
-            if (IsValidFolder($@"{folderPath}/{folderName}", username, password) == FolderState.valid)
+
+            if (GetFolderState($@"{folderPath}/{folderName}", null, false) == FolderState.valid)
                 return FolderOperationStatus.alreadyexists;        //cannot create a folder with the same name
-            var parentFolderStatus = IsValidFolder(folderPath, username, password);
+            var parentFolderStatus = GetFolderState(folderPath, FolderPermission.insert, false);
             switch (parentFolderStatus)
             {
                 case FolderState.nopermission:
@@ -640,7 +526,7 @@ namespace pwiz.PanoramaClient
     
             try
             {
-                using (var webClient = new WebClientWithCredentials(ServerUri, username, password))
+                using (var webClient = new WebClientWithCredentials(ServerUri, Username, Password))
                 {
                     Uri requestUri = PanoramaUtil.CallNewInterface(ServerUri, @"core", folderPath, @"createContainer", "", true);
                     JObject result = webClient.Post(requestUri, createRequest);
@@ -658,9 +544,9 @@ namespace pwiz.PanoramaClient
             }
         }
     
-        public FolderOperationStatus DeleteFolder(string folderPath, string username, string password)
+        public FolderOperationStatus DeleteFolder(string folderPath)
         {
-            var parentFolderStatus = IsValidFolder(folderPath, username, password);
+            var parentFolderStatus = GetFolderState(folderPath, FolderPermission.delete, false);
             switch (parentFolderStatus)
             {
                 case FolderState.nopermission:
@@ -673,7 +559,7 @@ namespace pwiz.PanoramaClient
     
             try
             {
-                using (var webClient = new WebClientWithCredentials(ServerUri, username, password))
+                using (var webClient = new WebClientWithCredentials(ServerUri, Username, Password))
                 {
                     Uri requestUri = PanoramaUtil.CallNewInterface(ServerUri, @"core", folderPath, @"deleteContainer", "", true);
                     JObject result = webClient.Post(requestUri, "");
@@ -690,33 +576,21 @@ namespace pwiz.PanoramaClient
                 else throw;
             }
         }
-    
-        public PanoramaServer EnsureLogin(PanoramaServer server)
+
+        public JToken GetInfoForFolders(string folder)
         {
-            var refServerUri = server.URI;
-            UserState userState = PanoramaUtil.ValidateServerAndUser(ref refServerUri, server.Username, server.Password);
-            if (userState.IsValid())
+            var server = new PanoramaServer(ServerUri, Username, Password);
+            if (server.HasUserAccount())
             {
-                return server.ChangeUri(refServerUri);
-            }
-            else
-            {
-                throw new PanoramaServerException(userState.GetErrorMessage(refServerUri));
-            }
-        }
-    
-        public JToken GetInfoForFolders(PanoramaServer server, string folder)
-        {
-            if (server.HasUserCredentials())
-            { 
                 server = EnsureLogin(server);
+                ServerUri = server.URI;
             }
-           
-    
+
+
             // Retrieve folders from server.
-            Uri uri = PanoramaUtil.GetContainersUri(server.URI, folder, true);
-    
-            using (var webClient = new WebClientWithCredentials(server.URI, server.Username, server.Password))
+            Uri uri = PanoramaUtil.GetContainersUri(ServerUri, folder, true);
+
+            using (var webClient = new WebClientWithCredentials(ServerUri, Username, Password))
             {
                 return webClient.Get(uri);
             }
@@ -793,10 +667,162 @@ namespace pwiz.PanoramaClient
 
     }
 
+    /// <summary>
+    /// Base class for panorama clients used in tests.
+    /// </summary>
+    public class BaseTestPanoramaClient : IPanoramaClient
+    {
+        public Uri ServerUri { get; set; }
+        public string Username { get; set; }
+
+        public virtual PanoramaServer ValidateServer()
+        {
+            throw new NotImplementedException();
+        }
+
+        public virtual void ValidateFolder(string folderPath, FolderPermission? permission)
+        {
+            throw new NotImplementedException();
+        }
+
+        public virtual FolderOperationStatus CreateFolder(string parentPath, string folderName)
+        {
+            throw new NotImplementedException();
+        }
+
+        public virtual FolderOperationStatus DeleteFolder(string folderPath)
+        {
+            throw new NotImplementedException();
+        }
+
+        public virtual JToken GetInfoForFolders(string folder)
+        {
+            throw new NotImplementedException();
+        }
+
+        public virtual void DownloadFile(string fileUrl, string fileName, long fileSize, string realName, PanoramaServer server,
+            IProgressMonitor pm, IProgressStatus progressStatus)
+        {
+            throw new NotImplementedException();
+        }
+    }
+
     public class PanoramaServerException : Exception
     {
         public PanoramaServerException(string message) : base(message)
         {
+        }
+
+        public PanoramaServerException(ServerStateEnum state, string error, Uri uri) : this(state, error, uri, null)
+        {
+        }
+
+        public PanoramaServerException(ServerStateEnum state, string error, Uri uri, Uri requestUri) : base(GetErrorMessage(state, error, uri, requestUri))
+        {
+        }
+
+        public PanoramaServerException(UserStateEnum state, string error, Uri uri) : this(state, error, uri, null)
+        {
+        }
+
+        public PanoramaServerException(UserStateEnum state, string error, Uri uri,Uri requestUri) : base(GetErrorMessage(state, error, uri, requestUri))
+        {
+        }
+
+        public PanoramaServerException(FolderState state, string folderPath, string error, Uri uri, Uri requestUri, string username) 
+            : base(GetErrorMessage(state, folderPath, error, uri, requestUri, username))
+        {
+        }
+
+        private static string GetErrorMessage(ServerStateEnum state, string error, Uri serverUri, Uri requestUri)
+        {
+            var stateError = string.Empty;
+            switch (state)
+            {
+                case ServerStateEnum.missing:
+                    stateError = string.Format(
+                        Resources.ServerState_GetErrorMessage_The_server__0__does_not_exist_,
+                        serverUri.AbsoluteUri);
+                    break;
+                case ServerStateEnum.notpanorama:
+                    stateError = string.Format("The server {0} is not a Panorama server", serverUri.AbsoluteUri);
+                    break;
+                case ServerStateEnum.unknown:
+                    stateError = string.Format(
+                        Resources.ServerState_GetErrorMessage_Unable_to_connect_to_the_server__0__,
+                        serverUri.AbsoluteUri);
+                    break;
+            }
+
+            return AppendErrorAndUri(stateError, error, requestUri);
+        }
+
+        private static string GetErrorMessage(UserStateEnum state, string error, Uri serverUri, Uri requestUri)
+        {
+            var stateError = string.Empty;
+            switch (state)
+            {
+                case UserStateEnum.nonvalid:
+                    stateError = Resources.UserState_GetErrorMessage_The_username_and_password_could_not_be_authenticated_with_the_panorama_server_;
+                    break;
+                case UserStateEnum.unknown:
+                    stateError = string.Format(
+                        Resources.UserState_GetErrorMessage_There_was_an_error_authenticating_user_credentials_on_the_server__0__,
+                        serverUri.AbsoluteUri);
+                    break;
+            }
+
+            return AppendErrorAndUri(stateError, error, requestUri);
+        }
+
+        private static string GetErrorMessage(FolderState state, string folderPath, string error, Uri serverUri, Uri requestUri, string username)
+        {
+            var stateError = string.Empty;
+            switch (state)
+            {
+                case FolderState.notfound:
+                    stateError = string.Format(
+                        Resources.PanoramaUtil_VerifyFolder_Folder__0__does_not_exist_on_the_Panorama_server__1_,
+                        folderPath, serverUri);
+                    break;
+                case FolderState.nopermission:
+                    stateError = string.Format(Resources
+                            .PanoramaUtil_VerifyFolder_User__0__does_not_have_permissions_to_upload_to_the_Panorama_folder__1_,
+                        username, folderPath);
+                    break;
+                case FolderState.notpanorama:
+                    stateError = string.Format(Resources.PanoramaUtil_VerifyFolder__0__is_not_a_Panorama_folder, folderPath);
+                    break;
+                case FolderState.unknown:
+                    stateError = string.Format("Unrecognized error trying to get status for folder {0}.", folderPath);
+                    break;
+            }
+
+            return AppendErrorAndUri(stateError, error, requestUri);
+        }
+
+        private static string AppendErrorAndUri(string mainMessage, string error, Uri uri)
+        {
+            var message = mainMessage;
+
+            if (error != null || uri != null)
+            {
+                var sb = new StringBuilder();
+
+                if (error != null)
+                {
+                    sb.AppendLine(string.Format(Resources.GenericState_AppendErrorAndUri_Error___0_, error));
+                }
+
+                if (uri != null)
+                {
+                    sb.AppendLine(string.Format(Resources.GenericState_AppendErrorAndUri_URL___0_, uri));
+                }
+
+                message = TextUtil.LineSeparate(message, string.Empty, sb.ToString());
+            }
+
+            return message;
         }
     }
 
@@ -994,33 +1020,40 @@ namespace pwiz.PanoramaClient
             return ChangeProp(ImClone(this), im => im.URI = uri);
         }
 
-        public bool HasUserCredentials()
+        public bool HasUserAccount()
         {
-            return Username != null;
+            return Username?.Trim().Length > 0 && Password?.Trim().Length > 0;
         }
 
-        public bool RemoveContextPath()
+        public bool RemoveContextPath(out PanoramaServer panoramaServer)
         {
             if (!URI.AbsolutePath.Equals(@"/"))
             {
-                URI = new UriBuilder(URI) { Path = @"/" }.Uri;
+                var newUri = new UriBuilder(URI) { Path = @"/" }.Uri;
+                panoramaServer = new PanoramaServer(newUri, Username, Password);
                 return true;
             }
+
+            panoramaServer = null;
             return false;
         }
 
-        public bool AddLabKeyContextPath()
+        public bool AddLabKeyContextPath(out PanoramaServer panoramaServer)
         {
             if (URI.AbsolutePath.Equals(@"/"))
             {
-                URI = new UriBuilder(URI) { Path = PanoramaUtil.LABKEY_CTX }.Uri;
+                var newUri = new UriBuilder(URI) { Path = PanoramaUtil.LABKEY_CTX }.Uri;
+                panoramaServer = new PanoramaServer(newUri, Username, Password);
                 return true;
             }
+
+            panoramaServer = null;
             return false;
         }
 
-        public bool Redirect(string redirectUri, string panoramaActionPath)
+        public bool Redirect(string redirectUri, string panoramaActionPath, out PanoramaServer redirectedServer)
         {
+            redirectedServer = null;
             if (!Uri.IsWellFormedUriString(redirectUri, UriKind.Absolute))
             {
                 return false;
@@ -1035,7 +1068,7 @@ namespace pwiz.PanoramaClient
                     return false;
                 }
 
-                URI = newUri;
+                redirectedServer = new PanoramaServer(newUri, Username, Password);
                 return true;
             }
             return false;

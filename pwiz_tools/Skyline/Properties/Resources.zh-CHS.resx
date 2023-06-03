@@ -9102,6 +9102,9 @@ Invalid peptide sequence at position 18
   <data name="SkylineWindow_acceptPeptidesMenuItem_Click_Accept_peptides" xml:space="preserve">
     <value>接受肽段</value>
   </data>
+  <data name="SkylineWindow_Add" xml:space="preserve">
+    <value>添加</value>
+  </data>
   <data name="SkylineWindow_AddGroupByMenuItems_All_Replicates" xml:space="preserve">
     <value>所有重复测定</value>
   </data>
@@ -9406,9 +9409,6 @@ Invalid peptide sequence at position 18
   </data>
   <data name="SkylineWindow_ImportMassList__Skip" xml:space="preserve">
     <value>跳过(&amp;S)</value>
-  </data>
-  <data name="SkylineWindow_ImportMassList_Add" xml:space="preserve">
-    <value>添加</value>
   </data>
   <data name="SkylineWindow_ImportMassList_Adding_iRT_values_" xml:space="preserve">
     <value>添加 iRT 值</value>

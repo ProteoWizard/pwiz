@@ -41,6 +41,7 @@ namespace pwiz.Skyline.FileUI
         private readonly IDocumentUIContainer _docContainer;
         private readonly SettingsList<Server> _panoramaServers;
         private readonly DocumentFormat? _fileFormatOnDisk;
+        private readonly List<Server> _anonymousServers;
         public IPanoramaPublishClient PanoramaPublishClient { get; set; }
         public bool IsLoaded { get; set; }
 
@@ -74,10 +75,16 @@ namespace pwiz.Skyline.FileUI
             treeViewFolders.ImageList.Images.Add(Resources.Folder);
 
             ServerTreeStateRestorer = new TreeViewStateRestorer(treeViewFolders);
+
+            _anonymousServers = new List<Server>(servers.Where(server => !server.HasUserAccount()));
+            cbAnonymousServers.Visible = _anonymousServers.Count > 0;
         }
 
         public string FileName { get { return tbFilePath.Text; } }
         public ShareType ShareType { get; set; }
+
+        public bool ShowAnonymousServers { get { return cbAnonymousServers.Checked; } set { cbAnonymousServers.Checked = value; } }
+
 
         private void PublishDocumentDlg_Load(object sender, EventArgs e)
         {
@@ -99,7 +106,7 @@ namespace pwiz.Skyline.FileUI
             foreach (var serverFolder in listServerFolders)
             {
                 var server = serverFolder.Key;
-                var treeNode = new TreeNode(server.URI.ToString()) { Tag = new FolderInformation(server, false) };
+                var treeNode = new TreeNode(server.GetKey()) { Tag = new FolderInformation(server, false) };
                 treeViewFolders.Nodes.Add(treeNode);
                 if (serverFolder.Value != null)
                     AddSubFolders(server, treeNode, serverFolder.Value);
@@ -118,6 +125,12 @@ namespace pwiz.Skyline.FileUI
             var listErrorServers = new List<Tuple<Server, string>>();
             foreach (var server in _panoramaServers)
             {
+                if (!server.HasUserAccount())
+                {
+                    // User has to be logged in to be able to upload a document to the server.
+                    continue;
+                }
+
                 JToken folders = null;
                 try
                 {
@@ -190,7 +203,7 @@ namespace pwiz.Skyline.FileUI
                 AddChildContainers(server, folderNode, subFolder);
 
                 // User can only upload to folders where TargetedMS is an active module.
-                var canUpload = PanoramaUtil.CheckFolderPermissions(subFolder) && PanoramaUtil.CheckFolderType(subFolder);
+                var canUpload = PanoramaUtil.CheckInsertPermissions(subFolder) && PanoramaUtil.IsTargetedMsFolder(subFolder);
 
                 // If the user does not have write permissions in this folder or any
                 // of its subfolders, do not add it to the tree.
@@ -360,6 +373,39 @@ namespace pwiz.Skyline.FileUI
         private void PublishDocumentDlg_FormClosing(object sender, FormClosingEventArgs e)
         {
             SaveServerTreeExpansion();
+        }
+
+        private void cbAnonymousServers_CheckedChanged(object sender, EventArgs e)
+        {
+            if (ShowAnonymousServers)
+            {
+                foreach (var server in _anonymousServers)
+                {
+                    var treeNode = new TreeNode(server.GetKey())
+                    {
+                        Tag = new FolderInformation(server, false),
+                        ForeColor = Color.Gray
+                    };
+                    treeViewFolders.Nodes.Add(treeNode);
+                }
+            }
+            else
+            {
+                var anonymousServerCount = _anonymousServers.Count;
+                for (var iNode = treeViewFolders.Nodes.Count - 1;
+                     iNode >= 0 && anonymousServerCount > 0;
+                     iNode--, anonymousServerCount--)
+                {
+                    treeViewFolders.Nodes.RemoveAt(iNode);
+                }
+            }
+        }
+
+        public bool CbAnonymousServersVisible => cbAnonymousServers.Visible;
+
+        public List<string> GetServers()
+        {
+            return new List<string>(treeViewFolders.Nodes.Cast<TreeNode>().Select(node => node.Text));
         }
     }
 }

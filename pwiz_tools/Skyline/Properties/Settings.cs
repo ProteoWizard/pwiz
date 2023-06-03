@@ -1477,6 +1477,7 @@ namespace pwiz.Skyline.Properties
                 editServerDlg.Username = username;
                 editServerDlg.Password = password;
                 editServerDlg.textServerURL.Enabled = false;
+                editServerDlg.AnonymousServer = false;
                 return editServerDlg.ShowDialog(owner) == DialogResult.OK ? editServerDlg.Server : null;
             }
         }

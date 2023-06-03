@@ -65,7 +65,7 @@ namespace pwiz.SkylineTestTutorial
     {
         public const string SERVER_URL = "https://panoramaweb.org/";
         public const string PANORAMA_FOLDER = "SkylineTest";
-        public const string PANORAMA_USER_NAME = "ritach@uw.edu";
+        public const string PANORAMA_USER_NAME = "skyline_tester@proteinms.net";
         public const string PANORAMA_PASSWORD = "lclcmsms";
 
         public string testFolderName = "AuditLogUpload";
@@ -627,14 +627,13 @@ namespace pwiz.SkylineTestTutorial
         {
             Uri serverUri = new Uri(SERVER_URL);
 
-            IPanoramaClient panoramaClient = PanoramaUtil.CreatePanoramaClient(serverUri);
+            IPanoramaClient panoramaClient = PanoramaUtil.CreatePanoramaClient(serverUri, PANORAMA_USER_NAME, PANORAMA_PASSWORD);
 
-            var deleteResult = panoramaClient.DeleteFolder($@"{PANORAMA_FOLDER}/{testFolderName}", PANORAMA_USER_NAME,
-                PANORAMA_PASSWORD);
+            var deleteResult = panoramaClient.DeleteFolder($@"{PANORAMA_FOLDER}/{testFolderName}");
             if(deleteResult != FolderOperationStatus.OK && deleteResult != FolderOperationStatus.notfound)
                 Assert.Fail($@"Cannot delete existing test folder. Returns {deleteResult}");
-            Assert.AreEqual(FolderOperationStatus.OK, panoramaClient.CreateFolder(PANORAMA_FOLDER, testFolderName,
-                PANORAMA_USER_NAME, PANORAMA_PASSWORD), "Error when creating panorama test folder.");
+            Assert.AreEqual(FolderOperationStatus.OK, panoramaClient.CreateFolder(PANORAMA_FOLDER, testFolderName),
+                "Error when creating panorama test folder.");
         }
     }
 }
