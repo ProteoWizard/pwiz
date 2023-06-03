@@ -123,7 +123,7 @@ namespace pwiz.Skyline.FileUI
                 if (!server.HasUserAccount())
                 {
                     // User has to be logged in to be able to upload a document to the server.
-                    listErrorServers.Add(new Tuple<Server, string>(server, "Server is configured as read-only. Documents cannot be uploaded to the server."));
+                    listErrorServers.Add(new Tuple<Server, string>(server, "Server is not associated with user account. Documents cannot be uploaded to the server."));
                     continue;
                 }
 

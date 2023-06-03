@@ -145,7 +145,7 @@
     <value>InputPanel</value>
   </data>
   <data name="&gt;&gt;btnOK.ZOrder" xml:space="preserve">
-    <value>2</value>
+    <value>4</value>
   </data>
   <data name="btnCancel.Anchor" type="System.Windows.Forms.AnchorStyles, System.Windows.Forms">
     <value>Bottom, Right</value>
@@ -172,7 +172,7 @@
     <value>InputPanel</value>
   </data>
   <data name="&gt;&gt;btnCancel.ZOrder" xml:space="preserve">
-    <value>1</value>
+    <value>3</value>
   </data>
   <data name="instructionLabel.AutoSize" type="System.Boolean, mscorlib">
     <value>True</value>
@@ -209,6 +209,63 @@ user account below.</value>
   <data name="InputPanel.Anchor" type="System.Windows.Forms.AnchorStyles, System.Windows.Forms">
     <value>Top, Bottom, Left, Right</value>
   </data>
+  <data name="optionalLabel2.AutoSize" type="System.Boolean, mscorlib">
+    <value>True</value>
+  </data>
+  <data name="optionalLabel2.ImeMode" type="System.Windows.Forms.ImeMode, System.Windows.Forms">
+    <value>NoControl</value>
+  </data>
+  <data name="optionalLabel2.Location" type="System.Drawing.Point, System.Drawing">
+    <value>227, 151</value>
+  </data>
+  <data name="optionalLabel2.Size" type="System.Drawing.Size, System.Drawing">
+    <value>50, 13</value>
+  </data>
+  <data name="optionalLabel2.TabIndex" type="System.Int32, mscorlib">
+    <value>11</value>
+  </data>
+  <data name="optionalLabel2.Text" xml:space="preserve">
+    <value>(optional)</value>
+  </data>
+  <data name="&gt;&gt;optionalLabel2.Name" xml:space="preserve">
+    <value>optionalLabel2</value>
+  </data>
+  <data name="&gt;&gt;optionalLabel2.Type" xml:space="preserve">
+    <value>System.Windows.Forms.Label, System.Windows.Forms, Version=4.0.0.0, Culture=neutral, PublicKeyToken=b77a5c561934e089</value>
+  </data>
+  <data name="&gt;&gt;optionalLabel2.Parent" xml:space="preserve">
+    <value>InputPanel</value>
+  </data>
+  <data name="&gt;&gt;optionalLabel2.ZOrder" xml:space="preserve">
+    <value>0</value>
+  </data>
+  <data name="optionalLabel1.AutoSize" type="System.Boolean, mscorlib">
+    <value>True</value>
+  </data>
+  <data name="optionalLabel1.Location" type="System.Drawing.Point, System.Drawing">
+    <value>227, 90</value>
+  </data>
+  <data name="optionalLabel1.Size" type="System.Drawing.Size, System.Drawing">
+    <value>50, 13</value>
+  </data>
+  <data name="optionalLabel1.TabIndex" type="System.Int32, mscorlib">
+    <value>10</value>
+  </data>
+  <data name="optionalLabel1.Text" xml:space="preserve">
+    <value>(optional)</value>
+  </data>
+  <data name="&gt;&gt;optionalLabel1.Name" xml:space="preserve">
+    <value>optionalLabel1</value>
+  </data>
+  <data name="&gt;&gt;optionalLabel1.Type" xml:space="preserve">
+    <value>System.Windows.Forms.Label, System.Windows.Forms, Version=4.0.0.0, Culture=neutral, PublicKeyToken=b77a5c561934e089</value>
+  </data>
+  <data name="&gt;&gt;optionalLabel1.Parent" xml:space="preserve">
+    <value>InputPanel</value>
+  </data>
+  <data name="&gt;&gt;optionalLabel1.ZOrder" xml:space="preserve">
+    <value>1</value>
+  </data>
   <data name="lblProjectInfo.AutoSize" type="System.Boolean, mscorlib">
     <value>True</value>
   </data>
@@ -234,7 +291,7 @@ user account below.</value>
     <value>InputPanel</value>
   </data>
   <data name="&gt;&gt;lblProjectInfo.ZOrder" xml:space="preserve">
-    <value>0</value>
+    <value>2</value>
   </data>
   <data name="textServerURL.Location" type="System.Drawing.Point, System.Drawing">
     <value>16, 26</value>
@@ -258,7 +315,7 @@ user account below.</value>
     <value>InputPanel</value>
   </data>
   <data name="&gt;&gt;textServerURL.ZOrder" xml:space="preserve">
-    <value>3</value>
+    <value>5</value>
   </data>
   <data name="textPassword.Location" type="System.Drawing.Point, System.Drawing">
     <value>16, 148</value>
@@ -282,7 +339,7 @@ user account below.</value>
     <value>InputPanel</value>
   </data>
   <data name="&gt;&gt;textPassword.ZOrder" xml:space="preserve">
-    <value>4</value>
+    <value>6</value>
   </data>
   <data name="lblPassword.AutoSize" type="System.Boolean, mscorlib">
     <value>True</value>
@@ -309,7 +366,7 @@ user account below.</value>
     <value>InputPanel</value>
   </data>
   <data name="&gt;&gt;lblPassword.ZOrder" xml:space="preserve">
-    <value>5</value>
+    <value>7</value>
   </data>
   <data name="lblUsername.AutoSize" type="System.Boolean, mscorlib">
     <value>True</value>
@@ -336,7 +393,7 @@ user account below.</value>
     <value>InputPanel</value>
   </data>
   <data name="&gt;&gt;lblUsername.ZOrder" xml:space="preserve">
-    <value>6</value>
+    <value>8</value>
   </data>
   <data name="textUsername.Location" type="System.Drawing.Point, System.Drawing">
     <value>16, 87</value>
@@ -357,7 +414,7 @@ user account below.</value>
     <value>InputPanel</value>
   </data>
   <data name="&gt;&gt;textUsername.ZOrder" xml:space="preserve">
-    <value>7</value>
+    <value>9</value>
   </data>
   <data name="InputPanel.Location" type="System.Drawing.Point, System.Drawing">
     <value>3, 69</value>
@@ -393,7 +450,7 @@ user account below.</value>
     <value>1</value>
   </data>
   <data name="anonymousServerLabel.Text" xml:space="preserve">
-    <value>This is a read-only server.  You can browse, download and open documents from the server but you cannot upload documents to the server.  Enter the email and password for your user account on the server to upload documents.</value>
+    <value>This server does not have user account information. You can access the server anonymously to browse, download and open publicly available documents on the server. To upload documents to the server, a user account is required.</value>
   </data>
   <data name="anonymousServerLabel.Visible" type="System.Boolean, mscorlib">
     <value>False</value>

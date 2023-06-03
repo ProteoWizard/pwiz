@@ -3505,13 +3505,17 @@ namespace pwiz.Skyline
 
                 servers.Add(newServer);
             }
-            else if (!servers.Any(s => s.HasUserCredentials()))
+            else if (!servers.Any(s => s.HasUserAccount())) // None of the servers have a user account
             {
                 DialogResult buttonPress = MultiButtonMsgDlg.Show(
                     this,
                     TextUtil.LineSeparate(
                         Resources.SkylineWindow_ShowPublishDlg_There_are_no_Panorama_servers_to_upload_to,
-                        "Press Edit Existing to add user account credentials for an existing server.",
+                        servers.Count > 1
+                            ? string.Format("There are {0} servers without a user account.", servers.Count)
+                            : "There is one server without a user account.",
+                        "To upload documents to a server, a user account is required. ",
+                        "Press Edit Existing to add user account information for an existing server.",
                         "Press Add to add a new server."),
                     "Edit Existing", "Add",
                     true);
@@ -3540,7 +3544,6 @@ namespace pwiz.Skyline
                 else
                 {
                     // Adding a new server
-                    // var serverPanoramaWeb = new Server(PanoramaUtil.PANORAMA_WEB, string.Empty, string.Empty);
                     var newServer = servers.EditItem(this, null, servers, null);
                     if (newServer == null)
                         return;

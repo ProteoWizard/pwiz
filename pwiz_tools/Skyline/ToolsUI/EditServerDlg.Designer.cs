@@ -33,6 +33,8 @@ namespace pwiz.Skyline.ToolsUI
             this.btnCancel = new System.Windows.Forms.Button();
             this.instructionLabel = new System.Windows.Forms.Label();
             this.InputPanel = new System.Windows.Forms.Panel();
+            this.optionalLabel2 = new System.Windows.Forms.Label();
+            this.optionalLabel1 = new System.Windows.Forms.Label();
             this.lblProjectInfo = new System.Windows.Forms.Label();
             this.textServerURL = new System.Windows.Forms.TextBox();
             this.textPassword = new System.Windows.Forms.TextBox();
@@ -69,6 +71,8 @@ namespace pwiz.Skyline.ToolsUI
             // InputPanel
             // 
             resources.ApplyResources(this.InputPanel, "InputPanel");
+            this.InputPanel.Controls.Add(this.optionalLabel2);
+            this.InputPanel.Controls.Add(this.optionalLabel1);
             this.InputPanel.Controls.Add(this.lblProjectInfo);
             this.InputPanel.Controls.Add(this.btnCancel);
             this.InputPanel.Controls.Add(this.btnOK);
@@ -78,6 +82,16 @@ namespace pwiz.Skyline.ToolsUI
             this.InputPanel.Controls.Add(this.lblUsername);
             this.InputPanel.Controls.Add(this.textUsername);
             this.InputPanel.Name = "InputPanel";
+            // 
+            // optionalLabel2
+            // 
+            resources.ApplyResources(this.optionalLabel2, "optionalLabel2");
+            this.optionalLabel2.Name = "optionalLabel2";
+            // 
+            // optionalLabel1
+            // 
+            resources.ApplyResources(this.optionalLabel1, "optionalLabel1");
+            this.optionalLabel1.Name = "optionalLabel1";
             // 
             // lblProjectInfo
             // 
@@ -117,7 +131,7 @@ namespace pwiz.Skyline.ToolsUI
             this.InstructionPanel.Controls.Add(this.anonymousServerLabel);
             this.InstructionPanel.Name = "InstructionPanel";
             // 
-            // readOnlyServerLabel
+            // anonymousServerLabel
             // 
             resources.ApplyResources(this.anonymousServerLabel, "anonymousServerLabel");
             this.anonymousServerLabel.Name = "anonymousServerLabel";
@@ -167,5 +181,7 @@ namespace pwiz.Skyline.ToolsUI
         private System.Windows.Forms.Panel InstructionPanel;
         private System.Windows.Forms.TableLayoutPanel ComponentOrganizer;
         private System.Windows.Forms.Label anonymousServerLabel;
+        private System.Windows.Forms.Label optionalLabel2;
+        private System.Windows.Forms.Label optionalLabel1;
     }
 }

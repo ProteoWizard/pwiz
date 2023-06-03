@@ -118,12 +118,12 @@ namespace pwiz.Skyline.ToolsUI
             }
             else
             {
-                // Make the user confirm that they want anonymous, read-only access to the server.
+                // Make the user confirm that they want anonymous access to the server.
                 var alertDlg = new AlertDlg(TextUtil.LineSeparate(
-                    "You have not entered an email and password. Without login credentials you will have read-only access to the server. " +
-                    "In read-only mode you can browse, download and open documents on the server but you cannot upload documents to the server.",
+                    "You have not entered an email and password. Without a user account you will be able to anonymously " +
+                    "browse, download and open publicly available documents on the server, but you will not be able to upload documents to the server.",
                     string.Empty,
-                    string.Format("Do you want read-only access to {0}?", uriServer.Host)), MessageBoxButtons.YesNo);
+                    string.Format("Do you want anonymous access to {0}?", uriServer.Host)), MessageBoxButtons.YesNo);
                 if (alertDlg.ShowAndDispose(this) == DialogResult.No)
                     return;
             }
