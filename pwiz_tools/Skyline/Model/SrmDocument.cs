@@ -2676,6 +2676,36 @@ namespace pwiz.Skyline.Model
             return @"Expected document does not match actual, but the difference does not appear in the XML representation. Difference may be in a library instead.";
         }
 
+        /// <summary>
+        /// If the passed in IdentityPath is below the specified Level, then return the ancestor IdentityPath
+        /// at the specified level.
+        /// If the passed in IdentityPath is above the specified level, then return all descendent IdentityPaths
+        /// at the specified level.
+        /// </summary>
+        public IEnumerable<IdentityPath> EnumeratePathsAtLevel(IdentityPath identityPath, Level level)
+        {
+            if ((int) level < identityPath.Depth)
+            {
+                identityPath = identityPath.GetPathTo((int) level);
+            }
+
+            var docNode = FindNode(identityPath);
+            if (docNode == null)
+            {
+                return Enumerable.Empty<IdentityPath>();
+            }
+
+            IEnumerable<Tuple<IdentityPath, DocNode>> docNodeTuples = new[] {Tuple.Create(identityPath, docNode)};
+            for (int depth = identityPath.Depth; depth < (int) level; depth++)
+            {
+                docNodeTuples = docNodeTuples.SelectMany(tuple =>
+                    ((DocNodeParent) tuple.Item2).Children.Select(child =>
+                        Tuple.Create(new IdentityPath(tuple.Item1, child.Id), child)));
+            }
+
+            return docNodeTuples.Select(tuple => tuple.Item1);
+        }
+
         #region object overrides
 
         public bool Equals(SrmDocument obj)

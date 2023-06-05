@@ -403,6 +403,15 @@
     <Compile Include="Controls\Lists\ListViewContext.cs" />
     <Compile Include="Controls\SeqNode\PeptideFormatter.cs" />
     <Compile Include="Controls\PrositUIHelpers.cs" />
+    <Compile Include="Controls\Spectra\PrecursorClass.cs" />
+    <Compile Include="Controls\Spectra\MatchingPrecursors.cs" />
+    <Compile Include="Controls\Spectra\SpectrumGridForm.cs">
+      <SubType>Form</SubType>
+    </Compile>
+    <Compile Include="Controls\Spectra\SpectrumGridForm.Designer.cs">
+      <DependentUpon>SpectrumGridForm.cs</DependentUpon>
+    </Compile>
+    <Compile Include="Controls\Spectra\SpectrumClassRow.cs" />
     <Compile Include="Controls\Startup\TutorialImageResources.Designer.cs">
       <AutoGen>True</AutoGen>
       <DesignTime>True</DesignTime>
@@ -420,6 +429,12 @@
     </Compile>
     <Compile Include="EditUI\EditLinkedPeptidesDlg.Designer.cs">
       <DependentUpon>EditLinkedPeptidesDlg.cs</DependentUpon>
+    </Compile>
+    <Compile Include="EditUI\EditSpectrumFilterDlg.cs">
+      <SubType>Form</SubType>
+    </Compile>
+    <Compile Include="EditUI\EditSpectrumFilterDlg.Designer.cs">
+      <DependentUpon>EditSpectrumFilterDlg.cs</DependentUpon>
     </Compile>
     <Compile Include="EditUI\PermuteIsotopeModificationsDlg.designer.cs">
       <DependentUpon>PermuteIsotopeModificationsDlg.cs</DependentUpon>
@@ -463,6 +478,11 @@
       <DesignTime>True</DesignTime>
       <DependentUpon>EnumNames.resx</DependentUpon>
     </Compile>
+    <Compile Include="Model\AuditLog\AuditLogStrings.Designer.cs">
+      <AutoGen>True</AutoGen>
+      <DesignTime>True</DesignTime>
+      <DependentUpon>AuditLogStrings.resx</DependentUpon>
+    </Compile>
     <Compile Include="Model\AuditLog\PropertyNames.Designer.cs">
       <DesignTime>True</DesignTime>
       <AutoGen>True</AutoGen>
@@ -485,6 +505,8 @@
       <SubType>UserControl</SubType>
     </Compile>
     <Compile Include="Model\FullScanProperties.cs" />
+    <Compile Include="Model\Results\Spectra\SpectrumClassFilter.cs" />
+    <Compile Include="Model\Results\Spectra\SpectrumFilterAutoComplete.cs" />
     <Compile Include="Model\SpectrumPropertiesResx.Designer.cs">
       <AutoGen>True</AutoGen>
       <DesignTime>True</DesignTime>
@@ -534,11 +556,6 @@
     </Compile>
     <Compile Include="Model\AbstractDdaConverter.cs" />
     <Compile Include="Model\AuditLog\AuditLogObject.cs" />
-    <Compile Include="Model\AuditLog\AuditLogStrings.Designer.cs">
-      <AutoGen>True</AutoGen>
-      <DesignTime>True</DesignTime>
-      <DependentUpon>AuditLogStrings.resx</DependentUpon>
-    </Compile>
     <Compile Include="Model\AuditLog\AuditLogToStringHelper.cs" />
     <Compile Include="Model\AuditLog\BlockHash.cs" />
     <Compile Include="Model\AuditLog\Databinding\AuditLogColumn.cs" />
@@ -649,10 +666,13 @@
     <Compile Include="Model\Lib\ViewLibraryPepInfo.cs" />
     <Compile Include="Model\MinimizeResults.cs" />
     <Compile Include="Model\MoleculeNameAndAccessions.cs" />
+    <Compile Include="Model\PrecursorKey.cs" />
     <Compile Include="Model\Proteome\ProteinAssociation.cs" />
     <Compile Include="Model\Proteome\ProteinGroupMetadata.cs" />
     <Compile Include="Model\ProteomicSequence.cs" />
     <Compile Include="Model\Results\CandidatePeakGroupData.cs" />
+    <Compile Include="Model\Results\ChromatogramGroupId.cs" />
+    <Compile Include="Model\Results\Legacy\ChromGroupHeaderInfo16.cs" />
     <Compile Include="Model\Results\OnDemandFeatureCalculator.cs" />
     <Compile Include="Model\Results\PeakGroupIntegrator.cs" />
     <Compile Include="Model\Results\PeakShapeStatistics.cs" />
@@ -672,6 +692,13 @@
     <Compile Include="Model\Results\Scoring\ScoreQValueMap.cs" />
     <Compile Include="Properties\MetadataRuleSetList.cs" />
     <Compile Include="Properties\RemoteAccountList.cs" />
+    <Compile Include="Model\Results\Spectra\FileSpectrumInfo.cs" />
+    <Compile Include="Model\Results\Spectra\ResultFileMetaData.cs" />
+    <Compile Include="Model\Results\Spectra\SpectrumClass.cs" />
+    <Compile Include="Model\Results\Spectra\SpectrumClassColumn.cs" />
+    <Compile Include="Model\Results\Spectra\SpectrumClassKey.cs" />
+    <Compile Include="Model\Results\Spectra\SpectrumMetadataList.cs" />
+    <Compile Include="Model\Results\Spectra\SpectrumPrecursors.cs" />
     <Compile Include="Properties\Resources.Designer.cs">
       <AutoGen>True</AutoGen>
       <DesignTime>True</DesignTime>
@@ -2516,6 +2543,9 @@
     <EmbeddedResource Include="Controls\Lists\ListDesigner.zh-CHS.resx">
       <DependentUpon>ListDesigner.cs</DependentUpon>
     </EmbeddedResource>
+    <EmbeddedResource Include="Controls\Spectra\SpectrumGridForm.resx">
+      <DependentUpon>SpectrumGridForm.cs</DependentUpon>
+    </EmbeddedResource>
     <EmbeddedResource Include="Controls\Startup\ActionBoxControl.ja.resx">
       <DependentUpon>ActionBoxControl.cs</DependentUpon>
     </EmbeddedResource>
@@ -2613,6 +2643,9 @@
     </EmbeddedResource>
     <EmbeddedResource Include="EditUI\EditLinkedPeptidesDlg.zh-CHS.resx">
       <DependentUpon>EditLinkedPeptidesDlg.cs</DependentUpon>
+    </EmbeddedResource>
+    <EmbeddedResource Include="EditUI\EditSpectrumFilterDlg.resx">
+      <DependentUpon>EditSpectrumFilterDlg.cs</DependentUpon>
     </EmbeddedResource>
     <EmbeddedResource Include="EditUI\MassErrorChartPropertyDlg.ja.resx">
       <DependentUpon>MassErrorChartPropertyDlg.cs</DependentUpon>
@@ -4510,6 +4543,7 @@
     <Compile Include="Util\UtilUI.cs">
       <SubType>Component</SubType>
     </Compile>
+    <Compile Include="Util\ValueChecking.cs" />
     <Compile Include="Util\Xml.cs" />
     <Compile Include="Model\DocSettings\XmlNamedElement.cs" />
     <Compile Include="Util\ClipboardEx.cs" />
