@@ -21,9 +21,10 @@ namespace SkylineBatch
         private readonly RemoteFileSource _initialRemoteSource;
         private readonly SkylineBatchConfigManagerState _initialState;
         private readonly bool _preferPanoramaSource;
+        private readonly bool _fileRequired;
 
         public RemoteSourceForm(RemoteFileSource editingRemoteSource, IMainUiControl mainControl,
-            SkylineBatchConfigManagerState state, bool preferPanoramaSource)
+            SkylineBatchConfigManagerState state, bool preferPanoramaSource, bool fileRequired = false)
         {
             InitializeComponent();
             _remoteFileSources = state.FileSources;
@@ -34,6 +35,7 @@ namespace SkylineBatch
             _initialRemoteSource = editingRemoteSource;
             _adding = editingRemoteSource == null;
             _preferPanoramaSource = preferPanoramaSource;
+            _fileRequired = fileRequired;
 
             if (editingRemoteSource != null)
             {
@@ -126,23 +128,41 @@ namespace SkylineBatch
 
             try
             {
-                using (PanoramaFilePicker dlg = new PanoramaFilePicker(panoramaServers, true, state, false))
+                if (_fileRequired) // If file is required use PanoramaFilePicker
                 {
-                    
-                    dlg.InitializeDialog();
-                    if (dlg.ShowDialog() != DialogResult.Cancel)
+                    using (PanoramaFilePicker dlg = new PanoramaFilePicker(panoramaServers, true, state, false))
                     {
+
+                        dlg.InitializeDialog();
+                        if (dlg.ShowDialog() != DialogResult.Cancel)
+                        {
+                            Settings.Default.PanoramaTreeState = dlg.TreeState;
+                            Settings.Default.ShowPanormaSkyFiles = dlg.ShowingSky;
+                            var curServer = dlg.ActiveServer;
+                            textFolderUrl.Text = dlg.FileUrl;
+
+                        }
                         Settings.Default.PanoramaTreeState = dlg.TreeState;
                         Settings.Default.ShowPanormaSkyFiles = dlg.ShowingSky;
-                        var curServer = dlg.ActiveServer;
-                        textFolderUrl.Text = dlg.FileUrl;
-                        // textFolderUrl.Text = dlg.DownloadName;
-
                     }
-                    Settings.Default.PanoramaTreeState = dlg.TreeState;
-                    Settings.Default.ShowPanormaSkyFiles = dlg.ShowingSky;
-                    
                 }
+                else // if file not required use PanoramaDirectoryPicker
+                {
+                    using (PanoramaDirectoryPicker dlg = new PanoramaDirectoryPicker(panoramaServers, state, false))
+                    {
+
+                        // dlg.InitializeDialog();
+                        if (dlg.ShowDialog() != DialogResult.Cancel)
+                        {
+                            //Find better way to do this. Will all URL's have /_webdav/?
+                            string url = $"{textServerName.Text}/_webdav{dlg.Folder}";
+                            textFolderUrl.Text = url;
+
+                        }
+                    }
+                }
+                // using (PanoramaFilePicker dlg = new PanoramaFilePicker(panoramaServers, true, state, false))
+               
             }
             catch (Exception e)
             {

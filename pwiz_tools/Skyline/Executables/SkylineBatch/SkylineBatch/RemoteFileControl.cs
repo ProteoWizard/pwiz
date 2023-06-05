@@ -133,7 +133,7 @@ namespace SkylineBatch
                         editingFileSource =
                             State.FileSources[(string) comboRemoteFileSource.Items[_lastStelectedIndex]];
                     }
-                    var remoteSourceForm = new RemoteSourceForm(editingFileSource, _mainControl, State, _preferPanoramaSource);
+                    var remoteSourceForm = new RemoteSourceForm(editingFileSource, _mainControl, State, _preferPanoramaSource, _fileRequired);
                     var dialogResult = remoteSourceForm.ShowDialog(this);
                     State = remoteSourceForm.State;
                     UpdateRemoteSourceList();

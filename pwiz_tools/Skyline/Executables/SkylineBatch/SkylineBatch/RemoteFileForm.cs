@@ -19,7 +19,8 @@ namespace SkylineBatch
             path = path ?? string.Empty;
             _mainControl = mainControl;
             
-            remoteFileControl = new RemoteFileControl(_mainControl, state, editingServer, FileUtil.GetPathDirectory(path), false, true);
+            // fileRequired was originally false here, check if changing to true broke anything
+            remoteFileControl = new RemoteFileControl(_mainControl, state, editingServer, FileUtil.GetPathDirectory(path), true, true);
             remoteFileControl.Dock = DockStyle.Fill;
             remoteFileControl.Show();
             panelRemoteFile.Controls.Add(remoteFileControl);
