@@ -34,6 +34,7 @@
     <MSBuildAssemblyName />
     <AssemblyName Condition=" '$(MSBuildAssemblyName)' == '' ">Skyline-daily</AssemblyName>
     <AssemblyName Condition=" '$(MSBuildAssemblyName)' != '' ">$(MSBuildAssemblyName)</AssemblyName>
+    <MascotParserPath>..\..\libraries\msparser_2_8_1_x86_win64</MascotParserPath>
     <PublishUrl>T:\www\site\skyline.ms\html\software\Skyline-daily13-64\</PublishUrl>
     <Install>true</Install>
     <InstallFrom>Web</InstallFrom>
@@ -3412,7 +3413,7 @@
       <Link>QTFLDebugLog.dll</Link>
       <CopyToOutputDirectory>PreserveNewest</CopyToOutputDirectory>
     </Content>
-    <Content Include="..\BiblioSpec\src\unimod.xml">
+    <Content Include="..\..\pwiz\data\common\unimod.xml">
       <Link>unimod.xml</Link>
       <CopyToOutputDirectory>PreserveNewest</CopyToOutputDirectory>
     </Content>
@@ -4357,12 +4358,12 @@
       <Link>modifications.xml</Link>
       <CopyToOutputDirectory>PreserveNewest</CopyToOutputDirectory>
     </Content>
-    <Content Include="..\BiblioSpec\src\quantitation_1.xsd">
+    <Content Include="$(MascotParserPath)\config\quantitation_1.xsd">
       <Link>quantitation_1.xsd</Link>
       <SubType>Designer</SubType>
       <CopyToOutputDirectory>PreserveNewest</CopyToOutputDirectory>
     </Content>
-    <Content Include="..\BiblioSpec\src\quantitation_2.xsd">
+    <Content Include="$(MascotParserPath)\config\quantitation_2.xsd">
       <Link>quantitation_2.xsd</Link>
       <SubType>Designer</SubType>
       <CopyToOutputDirectory>PreserveNewest</CopyToOutputDirectory>
@@ -5527,7 +5528,7 @@
     <EmbeddedResource Include="Resources\Ions_Z.bmp" />
     <EmbeddedResource Include="Resources\Print.bmp" />
     <EmbeddedResource Include="Resources\ProteoWizard.bmp" />
-    <Content Include="..\BiblioSpec\src\unimod_2.xsd">
+    <Content Include="$(MascotParserPath)\config\unimod_2.xsd">
       <Link>unimod_2.xsd</Link>
       <CopyToOutputDirectory>PreserveNewest</CopyToOutputDirectory>
     </Content>
