@@ -29,6 +29,7 @@ using pwiz.CLI.analysis;
 using pwiz.CLI.util;
 using pwiz.Common.Chemistry;
 using pwiz.Common.Collections;
+using pwiz.Common.Spectra;
 using pwiz.Common.SystemUtil;
 using ComponentType = pwiz.CLI.msdata.ComponentType;
 using Version = pwiz.CLI.msdata.Version;
@@ -674,6 +675,11 @@ namespace pwiz.ProteowizardWrapper
             }
         }
 
+        public SpectrumMetadata GetSpectrumMetadata(int spectrumIndex)
+        {
+            return GetSpectrumMetadata(_msDataFile.run.spectrumList.spectrum(spectrumIndex, DetailLevel.FullMetadata));
+        }
+
         public double? GetMaxIonMobility()
         {
             return GetMaxIonMobilityInList();
@@ -1066,7 +1072,8 @@ namespace pwiz.ProteowizardWrapper
                 PrecursorsByMsLevel = GetPrecursorsByMsLevel(spectrum),
                 Centroided = IsCentroided(spectrum),
                 NegativeCharge = NegativePolarity(spectrum),
-                ScanDescription = GetScanDescription(spectrum)
+                ScanDescription = GetScanDescription(spectrum),
+                Metadata = GetSpectrumMetadata(spectrum)
             };
             using var spectrumScanList = spectrum.scanList;
             using var scans = spectrumScanList.scans;
@@ -1141,6 +1148,55 @@ namespace pwiz.ProteowizardWrapper
                 }
             }
             return msDataSpectrum;
+        }
+
+        private SpectrumMetadata GetSpectrumMetadata(Spectrum spectrum)
+        {
+            if (spectrum == null)
+            {
+                return null;
+            }
+
+            var retentionTime = GetStartTime(spectrum);
+            if (!retentionTime.HasValue)
+            {
+                return null;
+            }
+            var metadata = new SpectrumMetadata(id.abbreviate(spectrum.id), retentionTime.Value);
+            var precursorsByMsLevel = new List<IEnumerable<SpectrumPrecursor>>();
+            foreach (var level in GetPrecursorsByMsLevel(spectrum))
+            {
+                List<SpectrumPrecursor> spectrumPrecursors = new List<SpectrumPrecursor>();
+                foreach (var msPrecursor in level)
+                {
+                    if (msPrecursor.IsolationMz.HasValue)
+                    {
+                        spectrumPrecursors.Add(new SpectrumPrecursor(msPrecursor.IsolationMz.Value).ChangeCollisionEnergy(msPrecursor.PrecursorCollisionEnergy));
+                    }
+                }
+                precursorsByMsLevel.Add(spectrumPrecursors);
+            }
+            metadata = metadata.ChangePrecursors(precursorsByMsLevel);
+            metadata = metadata.ChangeScanDescription(GetScanDescription(spectrum));
+            metadata = metadata.ChangePresetScanConfiguration(GetPresetScanConfiguration(spectrum));
+            var instrumentConfig = spectrum.scanList.scans.FirstOrDefault()?.instrumentConfiguration;
+            if (instrumentConfig != null)
+            {
+                GetInstrumentConfig(instrumentConfig, out string ionSource, out string analyzer, out string detector);
+                if (analyzer != null)
+                {
+                    metadata = metadata.ChangeAnalyzer(analyzer);
+                }
+            }
+            IonMobilityValue ionMobilityValue = GetIonMobility(spectrum);
+            if (ionMobilityValue != null)
+            {
+                if (ionMobilityValue.Units == eIonMobilityUnits.compensation_V)
+                {
+                    metadata = metadata.ChangeCompensationVoltage(ionMobilityValue.Mobility);
+                }
+            }
+            return metadata;
         }
 
         public bool HasSrmSpectra
@@ -1372,6 +1428,29 @@ namespace pwiz.ProteowizardWrapper
             if (param.empty())
                 return null;
             return param.value.ToString().Trim();
+        }
+
+        private static int GetPresetScanConfiguration(Spectrum spectrum)
+        {
+            try
+            {
+                if (spectrum.scanList.empty())
+                {
+                    return 0;
+                }
+
+                CVParam param = spectrum.scanList.scans[0].cvParam(CVID.MS_preset_scan_configuration);
+                if (param.empty())
+                {
+                    return 0;
+                }
+
+                return (int) param.value;
+            }
+            catch (InvalidCastException)
+            {
+                return 0;
+            }
         }
 
         public IonMobilityValue GetIonMobility(int scanIndex) // for non-combined-mode IMS
@@ -1767,6 +1846,7 @@ namespace pwiz.ProteowizardWrapper
     {
 
         private IonMobilityValue _ionMobility;
+        public SpectrumMetadata Metadata { get; set; }
         public string SourceFilePath { get; set; }
         public string Id { get; set; }
         public int Level { get; set; }

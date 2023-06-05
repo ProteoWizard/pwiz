@@ -66,7 +66,7 @@ namespace pwiz.SkylineTestData
                 Level = 2,
             };
             var extractedSpectra = spectrumFilter.Extract(0, new[] {msDataSpectrum}).ToList();
-            var matchedTargets = extractedSpectra.Select(spectrum => spectrum.Target.ToString()).ToList();
+            var matchedTargets = extractedSpectra.Select(spectrum => spectrum.ChromatogramGroupId.Target.ToString()).ToList();
             CollectionAssert.AreEquivalent(expectedTargets, matchedTargets);
         }
 

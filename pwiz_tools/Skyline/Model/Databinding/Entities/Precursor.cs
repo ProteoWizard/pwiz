@@ -417,6 +417,8 @@ namespace pwiz.Skyline.Model.Databinding.Entities
             }
         }
 
+        public string SpectrumFilter { get { return DocNode.SpectrumClassFilter.ToString(); } }
+
         [InvariantDisplayName("PrecursorNote")]
         [Importable]
         public string Note

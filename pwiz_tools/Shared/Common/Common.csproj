@@ -161,6 +161,7 @@
     <Compile Include="DataBinding\AggregateOperation.cs" />
     <Compile Include="DataBinding\Attributes\ColumnCaptionAttribute.cs" />
     <Compile Include="DataBinding\Attributes\ExpensiveAttribute.cs" />
+    <Compile Include="DataBinding\Attributes\FilterableAttribute.cs" />
     <Compile Include="DataBinding\Attributes\InvariantDisplayNameAttribute.cs" />
     <Compile Include="DataBinding\Attributes\HideWhenAttribute.cs" />
     <Compile Include="DataBinding\Attributes\ChildDisplayNameAttribute.cs" />
@@ -291,6 +292,10 @@
     <Compile Include="DataBinding\Controls\NavBar.Designer.cs">
       <DependentUpon>NavBar.cs</DependentUpon>
     </Compile>
+    <Compile Include="DataBinding\Filtering\FilterClause.cs" />
+    <Compile Include="DataBinding\Filtering\FilterPage.cs" />
+    <Compile Include="DataBinding\Filtering\FilterPages.cs" />
+    <Compile Include="DataBinding\Filtering\IFilterAutoComplete.cs" />
     <Compile Include="DataBinding\TabularFileFormat.cs" />
     <Compile Include="DataBinding\DataSchema.cs" />
     <Compile Include="DataBinding\DisplayColumn.cs" />
