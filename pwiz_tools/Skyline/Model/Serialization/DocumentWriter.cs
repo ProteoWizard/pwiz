@@ -609,6 +609,7 @@ namespace pwiz.Skyline.Model.Serialization
             }
             // Write child elements
             WriteAnnotations(writer, node.Annotations);
+            node.SpectrumClassFilter.WriteXml(writer);
             if (node.HasLibInfo)
             {
                 var helpers = PeptideLibraries.SpectrumHeaderXmlHelpers;

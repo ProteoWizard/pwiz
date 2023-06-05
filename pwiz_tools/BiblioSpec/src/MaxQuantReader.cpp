@@ -529,10 +529,13 @@ bool MaxQuantReader::openFile()
  */
 void MaxQuantReader::parseHeader(string& line)
 {
+    // remove UTF-8 byte order mark
+    bal::replace_first(line, "\xEF\xBB\xBF", "");
+
     LineParser lineParser(line, separator_);
     int colNumber = 0;
     size_t numColumns = targetColumns_.size();
-    
+
     // for each token in the line
     for (LineParser::iterator token = lineParser.begin();
          token != lineParser.end();
