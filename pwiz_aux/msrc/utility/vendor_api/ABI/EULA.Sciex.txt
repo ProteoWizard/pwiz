@@ -1,0 +1,109 @@
+AB Sciex LLC
+END USER BETA SOFTWARE LICENSE AGREEMENT
+and
+LIMITED DEVELOPER LICENSE
+WIFF Reader Distributable Beta SDK
+
+
+NOTICE TO USER: PLEASE READ THIS DOCUMENT CAREFULLY. THIS IS THE CONTRACT BETWEEN YOU AND AB SCIEX REGARDING THIS SOFTWARE PRODUCT. THIS AGREEMENT INCLUDES LICENSE TERMS AND RESTRICTIONS, WARRANTY AND LIABILITY DISCLAIMERS, AND LIMITATIONS.
+
+YOUR INSTALLATION AND USE OF THIS AB SCIEX SDK IS SUBJECT TO THE TERMS AND CONDITIONS CONTAINED IN THIS END USER SOFTWARE LICENSE AGREEMENT.
+
+This AB Sciex End User Software License Agreement (EULA) and Limited Developer & Redistribution License accompanies this AB Sciex WIFF Reader Distributable Beta SDK product ("Software") and related explanatory materials ("Documentation"). The term "SDK" also includes any upgrades, modified versions, updates, additions and copies of the SDK licensed to you by AB Sciex. The term “AB Sciex,” as used in this License, means AB Sciex LLC and its subsidiaries and affiliates. The term “License” or “Agreement” means this EULA and Limited Developer & Redistribution License including any and all Appendices. The term “you” or “Licensee” means the purchaser of this License to the Software.
+
+
+Third Party Products
+This Software may include software products licensed by third party provider(s). In addition, the Software may enable you to run multiple instances of third-party software and application programs. You are responsible for reviewing and complying with any licenses necessary to use any such third-party software. Such licenses may be included in your AB Sciex installation package.
+
+TITLE
+Title, ownership rights and intellectual property rights in and to the Software and Documentation shall at all times remain with AB Sciex and its subsidiaries, and their suppliers. All rights not specifically granted by this License, including Federal and international copyrights, are reserved by AB Sciex or their respective owners.
+
+COPYRIGHT
+The Software, including its structure, organization, code, user interface and associated Documentation, is a proprietary product of AB Sciex or its suppliers, and is protected by international laws of copyright. The law provides for civil and criminal penalties for anyone in violation of the laws of copyright.
+
+LICENSE
+Use of the Software
+As a Developer License, AB Sciex grants to you one (1) personal, nontransferable, nonexclusive, license to use copies of the Software and install such Software on your machine(s) for your single concurrent internal use.
+2. You may make one copy of the Software in machine-readable form solely for backup or archival purposes. You must reproduce on any such copy all copyright notices and any other proprietary legends found on the original. You may not make any other copies of the Software.
+3. From time to time, AB Sciex may change the terms of this Agreement. AB Sciex will notify you of such change. Your continued use of the Software will indicate your agreement to the change.
+
+Use Restrictions
+1. You may not use the Software, Documentation, or any associated documentation, in whole or in part, except as expressly permitted in this Agreement.
+2. You may not sublicense, copy, merge, modify, sell, resell, rent, lease, assign, transfer (except temporarily in the event of a computer malfunction or as expressly permitted under the Section “Use of the Software”), or distribute this license or the Software, or create derivative works based on the Software (except as outlined in the Distribution Rights below), or any part thereof or any interest therein.
+3. You may not reverse assemble, decompile, modify, create any derivative works, or otherwise attempt, cause, or permit any reverse engineering of the Software or any part thereof.
+4. You acknowledge that the Software in human-readable (source code) form, including its structure, sequence, and organization, is and remains the confidential trade secret of AB Sciex. You agree that you shall not attempt, cause or permit the reverse engineering, modification, decompiliation, disassembly of the Software to any human readable or perceivable form, or creation of any derivative works based on the Software or any part thereof except as expressly permitted under the Section “Use of the Software”.
+5. You may not remove any proprietary, copyright, trade secret or warning legend from the Software or any Documentation and you acknowledge that the Software in human-readable (source code) form, including its structure, sequence, and organization, is and remains the confidential trade secret of AB Sciex.
+6. You agree to comply fully with all export laws and restrictions and regulations of the United States or applicable foreign agencies or authorities. You agree that you will not export or reexport, directly or indirectly, the Software into any country prohibited by the United States Export Administration Act and the regulations thereunder or other applicable United States law.
+
+Distribution of the Distributable Components (DCs)
+1. Distributable Components. The Software contains Distributable Components that you are permitted
+to distribute for non-commercial purposes provided that: (a) the Distributable Components are bundled as part of, and for the sole purpose of running programs developed by you and supplied by you; and (b) you comply with all other terms in this EULA. As used herein commercial purposes include, but are not limited to, charging a purchase price, license fee, maintenance fee, subscription fee, or providing software incorporating Distributable Components for use with a product sold by you or an affiliate.
+
+2. Right to Use and Distribute. The code and text files listed in Appendix A are “Distributable
+Components”. All other code and text files of the Software are not distributable.
+
+3. Third Party Distribution. You may not permit distributors of your programs or end users of your
+programs to copy and distribute the Distributable Components as part of those or their programs.
+
+4. Distribution Requirements, General. For any Distributable Component you distribute, you must:
+(a) embed the license key in your program such that it is obscured from end users seeing it. In the event that your program is open source, this license key must not be part of the open source;
+(b) add significant primary functionality to it in your programs;
+(c) for any Distributable Component having a filename extension of .lib, distribute only the results of running such Distributable Component through a linker with your program;
+(d) distribute Distributable Components included in a setup program only as part of that setup program without modification;
+(e) require distributors and external end users to agree to terms that protect it at least as much as this EULA; and
+(f) display your valid copyright notice on your programs.
+
+5. Distribution Requirement, Indemnification. For any Distributable Component you distribute, you must and you hereby agree to: indemnify, defend, and hold harmless AB Sciex from any and all claims and costs, including attorneys’ fees, related to the distribution or use of your programs.
+
+6. Distribution Restrictions. You may not:
+(a) alter any copyright, trademark or patent notice in the Distributable Component;
+(b) use AB Sciex or AB Sciex’s trademarks in your programs’ names or in a way that suggests your programs come from or are endorsed by AB Sciex;
+(c) include Distributable Components in malicious, deceptive or unlawful programs; or
+(d) modify or distribute the source code of any Distributable Component so that any part of it becomes subject to an Excluded License. An Excluded License is one that requires, as a condition of use, modification or distribution, that (i) the code be disclosed or distributed in source code form; and/or (ii) others have the right to modify it.
+
+Trial
+If this license is granted on a trial basis, you are hereby notified that license management software may be included to automatically cause the Software to cease functioning at the end of the trial period.
+
+Termination
+You may terminate this Agreement by discontinuing use of the Software, removing all copies from your computers and storage media, and returning the Software and Documentation, and all copies thereof, to AB Sciex. AB Sciex may terminate this Agreement if you fail to comply with all of its terms, in which case you agree to discontinue using the Software, remove all copies from your computers and storage media, and return the Software and Documentation, and all copies thereof, to AB Sciex.
+
+U.S. Government End Users
+The Software is a "commercial item," as that term is defined in 48 C.F.R. 2.101 (Oct. 1995), consisting of "commercial computer software" and "commercial computer software documentation," as such terms are used in 48 C.F.R. 12.212 (Sept. 1995). Consistent with 48 C.F.R. 12.212 and 48 C.F.R. 227.7202-1 through 227.7202-4 (June 1995), all U.S. Government End Users acquire the Software with only those rights set forth herein.
+
+European Community End Users
+If this Software is used within a country of the European Community, nothing in this Agreement shall be construed as restricting any rights available under the European Community Software Directive, O.J. Eur. Comm. (No. L. 122) 42 (1991).
+
+Regulated Uses
+You acknowledge that the Software has not been cleared, approved, registered or otherwise qualified (collectively, “Approval”) by AB Sciex with any regulatory agency, including without limitation for use in diagnostic or therapeutic procedures or any other use requiring compliance with any federal or state law regulating diagnostic or therapeutic products, blood products, medical devices or any similar product (hereafter collectively referred to as "federal or state drug laws"). The Software may not be used for any purpose that would require any such Approval unless proper Approval is obtained. You agree that if you elect to use the Software for a purpose that would subject you or the Software to the jurisdiction of any federal or state drug laws, you will be solely responsible for obtaining any required Approvals and otherwise ensuring that your use of the Software complies with such laws.
+
+NO WARRANTY and LIMITATION OF REMEDIES
+AB SCIEX MAKES NO WARRANTIES OF ANY KIND WHATSOEVER, EXPRESS OR IMPLIED, WITH RESPECT TO THE SOFTWARE OR DOCUMENTATION, INCLUDING BUT NOT LIMITED TO WARRANTIES OF FITNESS FOR A PARTICULAR PURPOSE OR MERCHANTABILITY OR THAT THE SOFTWARE OR DOCUMENTATION IS NON-INFRINGING. ALL OTHER WARRANTIES ARE EXPRESSLY DISCLAIMED. WITHOUT LIMITING THE GENERALITY OF THE FOREGOING, AB SCIEX MAKES NO WARRANTIES THAT THE SOFTWARE WILL MEET YOUR REQUIREMENTS, THAT OPERATION OF THE LICENSED SOFTWARE WILL BE UNINTERRUPTED OR ERROR FREE OR WILL CONFORM EXACTLY TO THE DOCUMENTATION, OR THAT AB SCIEX WILL CORRECT ALL PROGRAM ERRORS. AB SCIEX’S SOLE LIABILITY AND RESPONSIBILITY FOR BREACH OF WARRANTY RELATING TO THE SOFTWARE OR DOCUMENTATION SHALL BE LIMITED, AT AB SCIEX’S SOLE OPTION, TO (1) correctION of any error identified to ab sciex in A writing from you in a subsequent release of the Software, which shall be supplied to you free of charge, (2) acceptING a return of the PRODUCT and refundING THE purchase price UPON RETURN OF THE PRODUCT AND REMOVAL OF ALL COPIES OF THE SOFTWARE FROM YOUR COMPUTERS AND STORAGE DEVICES, (3) REPLACEMENT OF THE DEFECTIVE SOFTWARE WITH A FUNCTIONALLY EQUIVALENT PROGRAM AT NO CHARGE TO YOU, OR (4) PROVIDING A REASONABLE WORK AROUND WITHIN A REASONABLE TIME. AB SCIEX SOLE LIABILITY AND RESPONSIBILITY UNDER THIS AGREEMENT FOR BREACH OF WARRANTY RELATING TO MEDIA IS THE REPLACEMENT OF DEFECTIVE MEDIA RETURNED WITHIN 90 DAYS OF THE DELIVERY DATE. THESE ARE YOUR SOLE AND EXCLUSIVE REMEDIES FOR ANY BREACH OF WARRANTY. warranty claims must be made within the applicable warranty period.
+
+Limitation of Liability
+IN NO EVENT SHALL AB SCIEX OR ITS AGENTS, CONSULTANTS, CONTRACTORS OR SUPPLIERS BE RESPONSIBLE OR LIABLE, WHETHER IN CONTRACT, TORT, WARRANTY OR UNDER ANY STATUTE (INCLUDING WITHOUT LIMITATION ANY TRADE PRACTICE, UNFAIR COMPETITION OR OTHER STATUTE OF SIMILAR IMPORT) OR ON ANY OTHER BASIS FOR SPECIAL, INDIRECT, INCIDENTAL, MULTIPLE, PUNITIVE, OR CONSEQUENTIAL DAMAGES ARISING OUT OF THE POSSESSION OR USE OF, OR THE INABILITY TO USE, THE SOFTWARE OR DOCUMENTATION, EVEN IF AB SCIEX IS ADVISED IN ADVANCE OF THE POSSIBILITY OF SUCH DAMAGES, INCLUDING WITHOUT LIMITATION DAMAGES ARISING FROM OR RELATED TO LOSS OF USE, LOSS OF DATA, DOWNTIME, OR FOR LOSS OF REVENUE, PROFITS, GOODWILL OR BUSINESS OR OTHER FINANCIAL LOSS. IN ANY CASE, THE ENTIRE LIABILITY OF AB SCIEX AND ITS AGENTS, CONSULTANTS, CONTRACTORS AND SUPPLIERS UNDER THIS LICENSE, OR ARISING OUT OF THE USE OF THE SOFTWARE, SHALL NOT EXCEED IN THE AGGREGATE THE PURCHASE PRICE OF THE LICENSE OR LICENSES TO THE SOFTWARE.
+
+Some states, countries or jurisdictions limit the scope of or preclude limitations or exclusion of remedies or damages, or of liability, such as liability for gross negligence or willful misconduct, as or to the extent set forth above, OR do not allow implied warranties TO BE EXCLUDED. In such states, countries or jurisdictions, the limitation or exclusion of warranties, remedies, damages or liability set forth above may not apply to you. however, although they shall not apply to the extent prohibited by law, they shall apply to the fullest extent permitted by law. YOU MAY ALSO HAVE OTHER RIGHTS THAT VARY BY STATE, COUNTRY OR OTHER JURISDICTION.
+
+GENERAL
+This Agreement shall be governed by laws of the Commonwealth of Massachusetts, U.S.A., exclusive of its conflict of laws provisions. This Agreement shall not be governed by the United Nations Convention on Contracts for the International Sale of Goods. This Agreement contains the complete agreement between the parties with respect to the subject matter hereof, and supersedes all prior or contemporaneous agreements or understandings, whether oral or written. If any provision of this Agreement is held by a court of competent jurisdiction to be contrary to law, that provision will be enforced to the maximum extent permissible, and the remaining provisions of this Agreement will remain in full force and effect. The controlling language of this Agreement, and any proceedings relating to this Agreement, shall be English. You agree to bear any and all costs of translation, if necessary. The headings to the sections of this Agreement are used for convenience only and shall have no substantive meaning. All questions concerning this Agreement shall be directed to: AB Sciex, 500 Old Connecticut Path, Framingham MA U.S.A., Attention: Legal Department.
+
+
+Unpublished rights reserved under the copyright laws of the United States.
+AB Sciex LLC, 500 Old Connecticut Path, Framingham, MA 01701 U.S.A.
+
+For Research Use Only. Not for use in diagnostic procedures. The trademarks mentioned herein are the property of AB Sciex Pte. Ltd. or their respective owners. AB SCIEX™ is being used under license.
+© 2012 AB SCIEX
+APPENDIX A
+DISTRIBUTABLE COMPONENTS OF THE SOFTWARE
+
+Clearcore2.Compression.dll
+Clearcore2.Data.AnalystDataProvider.dll
+Clearcore2.Data.CommonInterfaces.dll
+Clearcore2.Data.dll
+Clearcore2.Data.WiffReader.dll
+Clearcore2.InternalRawXYProcessing.dll
+Clearcore2.Muni.dll
+Clearcore2.ProjectUtilities.dll
+Clearcore2.RawXYProcessing.dll
+Clearcore2.StructuredStorage.dll
+Clearcore2.Utility.dll

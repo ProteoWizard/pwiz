@@ -1,0 +1,47 @@
+SHIMADZU SOFTWARE LICENSE AGREEMENT
+
+PLEASE READ THIS AGREEMENT CAREFULLY BEFORE USING THE SOFTWARE.
+
+Shimadzu Corporation ("Shimadzu") is willing to license the Shimadzu software provided herein, together with accompanying documentation to you only upon the condition that you accept all of the terms and condition contained in this Agreement. By using the Shimadzu software, you agree to be bound by the terms of this Agreement. If you do not agree to all these terms of this Agreement, promptly return the unused Shimadzu software to the party (either Shimadzu or its distributor).
+
+1. SOFTWARE.
+"SOFTWARE" means Shimadzu's file converter software ("SFCS") provided by Shimadzu.
+(Comprised of one DataReader.dll containing the class Shimadzu.LabSolutions.DataReader)
+
+2. LICENSE.
+Shimadzu grants you a non-exclusive and non-transferable license to use the SOFTWARE subject to the following terms and conditions. You may install and use the SOFTWARE on any of your computing devices.
+
+3. LIMITATION OF USE.
+You may: i) use the SOFTWARE for your own internal use; and ii) conduct developments to incorporate the SOFTWARE into your own derivative work that incorporates software under the brand name "ProteoWizard" provided by ProteoWizard Software Foundation ("PW Software") and is distributed without commercially exploiting the SOFTWARE.  Commercial exploitation includes but is not limited to, charging a purchase price, license fee, maintenance fee, or subscription fee.  If you distribute without commercially exploiting the SOFTWARE only as permitted by this license, you must ensure that a copy of this license is distributed with your derivative work, and that the recipient of your derivative work agrees to the terms of this license as a condition of executing your program.
+Except as specifically authorized by Shimadzu, you may NOT:
+a. modify, adapt, translate, reverse-engineer, decompile, disassemble, or otherwise reduce the SOFTWARE to a human-perceivable form, or create derivative works of the SOFTWARE, or any part thereof .
+b. distribute, rent, lease, sub-license or grant any rights in or to the SOFTWARE in any form to anyone else.
+
+4. TITLE AND OWNERSHIP.
+The license granted hereunder is not for sale and it may not be assigned or sublicensed to anyone else. Title and all associated intellectual property rights to the SOFTWARE shall remain in Shimadzu.
+
+5. COPYRIGHT NOTICE
+When you conduct developments to incorporate the SOFTWARE into the PW Software for your own internal use, you shall include Shimadzu copyright notices on any copies of the SOFTWARE to display the following text in your software's "About" box: "Shimadzu's file converter software. Copyright ©2014 by Shimadzu Corporation. All rights reserved".
+You shall not use Shimadzu's trademarks in a way to suggest that your software, components, and-or programs are provided by or are endorsed by Shimadzu.
+
+6. UPGRADES.
+The Shimadzu has no obligation to upgrade the SOFTWARE. An upgrade means certain supplemental program modules and/or information for bug fixing and/or updates to the defects and/or failures of the SOFTWARE that are acknowledged or confirmed by Shimadzu.
+
+7. LIMITED WARRANTY.
+The SOFTWARE will be made available to you in "as-is" condition and Shimadzu will not make any warranty whatsoever with respect to the SOFTWARE. EXCEPT AS EXPRESSLY SET FORTH IN THIS ARTICLE, SHIMADZU DISCLAIMS ALL OTHER WARRANTIES, EITHER EXPRESS OR IMPLIED, WHETHER BY STATUTE OR OTHERWISE, INCLUDING BUT NOT LIMITED TO, ANY IMPLIED WARRANTIES OF ACCURACY, COMPLETENESS, PERFORMANCE, MERCHANTABILITY, NON-INFRINGEMENT OR FITNESS FOR A PARTICULAR PURPOSE WITH REGARD TO THE SFCS.
+
+8. LIMITATION OF LIABILITY.
+IN NO EVENT WILL SHIMADZU BE LIABLE FOR ANY LOST REVENUE, PROFIT OR DATA, OR FOR SPECIAL, INDIRECT, CONSEQUENTIAL, INCIDENTAL OR PUNITIVE DAMAGES, HOWEVER CAUSED REGARDLESS OF THE THEORY OF LIABILITY, ARISING OUT OF OR RELATED TO THE USE OF OR INABILITY TO USE SOFTWARE, EVEN IF SHIMADZU HAS BEEN ADVISED OF THE POSSIBILITY OF SUCH DAMAGE.  IN NO EVENT WILL SHIMADZU'S LIABILITY TO YOU, WHETHER IN CONTRACT, TORT (INCLUDING NEGLIGENCE), OR OTHERWISE, EXCEED THE AMOUNT YOU PAID FOR SOFTWARE. THIS LIMITATION APPLIES TO ANYTHING RELATED TO THE SOFTWARE, SERVICES, CONTENT (INCLUDING CODE) ON THIRD PARTY INTERNET SITES, OR THIRD PARTY PROGRAMS, AND CLAIMS FOR BREACH OF CONTRACT, BREACH OF WARRANTY, GUARANTEE OR CONDITION, STRICT LIABILITY, NEGLIGENCE, OR OTHER TORT TO THE EXTENT PERMITTED BY APPLICABLE LAW.
+
+9. TERMINATION.
+This Agreement is effective until terminated. You may terminate this Agreement at any time by destroying all copies of the SOFTWARE including any documentation. This Agreement will terminate immediately without notice from Shimadzu if you fail to comply with any provision of this License. Upon termination, you must destroy all copies of the SOFTWARE.
+
+10. GENERAL
+a. This Agreement is the entire agreement. If any provision of this agreement is held invalid, the remainder of this agreement shall continue in full force and effect.
+b. This Agreement shall be construed and governed in accordance with the laws of Japan, excluding its conflict of law rules.
+c. The exclusive jurisdiction for any disputes arising out of or in connection with this Agreement shall be Kyoto District Court of Japan.
+d. The invalidity or unenforceability of any provision of this Agreement shall not affect the validity or enforceability of any other provision.
+e. The SOFTWARE is licensed, not sold. This License only gives you some rights to use the SOFTWARE; the Shimadzu reserves all other rights. Unless applicable law gives you more rights despite this limitation, you may use the SOFTWARE only as expressly permitted in this License.
+
+Analytical & Measuring Instruments Division, Shimadzu Corporation
+1 Nishinokyo-Kuwabaracho, Nakagyo-ku, Kyoto 604-8511, Japan
