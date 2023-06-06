@@ -116,8 +116,7 @@ namespace SkylineBatch
 
         public void OpenFromPanorama(object sender, EventArgs args)
         {
-            var server = new pwiz.PanoramaClient.PanoramaServer(new Uri(textServerName.Text));
-
+            var server = new PanoramaServer(new Uri(textServerName.Text));
             var panoramaServers = new List<PanoramaServer>() { server };
 
             var state = string.Empty;
@@ -138,7 +137,6 @@ namespace SkylineBatch
                         {
                             Settings.Default.PanoramaTreeState = dlg.TreeState;
                             Settings.Default.ShowPanormaSkyFiles = dlg.ShowingSky;
-                            var curServer = dlg.ActiveServer;
                             textFolderUrl.Text = dlg.FileUrl;
 
                         }
@@ -148,7 +146,7 @@ namespace SkylineBatch
                 }
                 else // if file not required use PanoramaDirectoryPicker
                 {
-                    using (PanoramaDirectoryPicker dlg = new PanoramaDirectoryPicker(panoramaServers, state, false))
+                    using (PanoramaDirectoryPicker dlg = new PanoramaDirectoryPicker(panoramaServers, state))
                     {
 
                         // dlg.InitializeDialog();
