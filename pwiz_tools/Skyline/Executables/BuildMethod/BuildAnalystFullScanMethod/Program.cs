@@ -381,7 +381,7 @@ namespace BuildAnalystFullScanMethod
                 // If the ScheduledMethod flag was set assume that the Dwell time column in the 
                 // transition list file has retention time.
                 if (ScheduledMethod)
-                    retentionTime = transition.Dwell;
+                    retentionTime = transition.Rt ?? 0;
 
                 string entryKey = transition.PrecursorMz + retentionTime.ToString(CultureInfo.InvariantCulture);
                 if (addedEntries.Contains(entryKey)

@@ -171,7 +171,7 @@ namespace BuildQTRAPMethod
 
         internal static IAcqMethod GetAcqMethod(string methodFilePath, out MassSpecMethod templateMsMethod)
         {
-            ApplicationClass analyst = new ApplicationClass();
+            var analyst = new ApplicationClass();
 
             // Make sure that Analyst is fully started
             IAcqMethodDirConfig acqMethodDir =  (IAcqMethodDirConfig)analyst.Acquire();
