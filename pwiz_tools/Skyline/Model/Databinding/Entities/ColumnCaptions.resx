@@ -231,6 +231,9 @@
   <data name="Chromatogram">
     <value>Chromatogram</value>
   </data>
+  <data name="ChromatogramEndTime">
+    <value>Chromatogram End Time</value>
+  </data>
   <data name="ChromatogramExtractionWidth">
     <value>Chromatogram Extraction Width</value>
   </data>
@@ -251,6 +254,9 @@
   </data>
   <data name="ChromatogramSource">
     <value>Chromatogram Source</value>
+  </data>
+  <data name="ChromatogramStartTime">
+    <value>Chromatogram Start Time</value>
   </data>
   <data name="CleavageAa">
     <value>Cleavage Aa</value>
