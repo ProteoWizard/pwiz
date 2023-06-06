@@ -153,7 +153,7 @@ namespace SkylineBatch
                         if (dlg.ShowDialog() != DialogResult.Cancel)
                         {
                             //Find better way to do this. Will all URL's have /_webdav/?
-                            string url = $"{textServerName.Text}/_webdav{dlg.Folder}";
+                            string url = dlg.Selected;
                             textFolderUrl.Text = url;
 
                         }
