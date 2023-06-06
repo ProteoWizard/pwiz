@@ -326,8 +326,9 @@
       <HintPath>..\..\..\..\Shared\Lib\Newtonsoft.Json.dll</HintPath>
       <EmbedInteropTypes>False</EmbedInteropTypes>
     </Reference>
-    <Reference Include="PanoramaClient">
-      <HintPath>..\..\..\..\Shared\PanoramaClient\bin\x64\Release\PanoramaClient.dll</HintPath>
+    <Reference Include="PanoramaClient, Version=1.0.0.0, Culture=neutral, processorArchitecture=MSIL">
+      <SpecificVersion>False</SpecificVersion>
+      <HintPath>..\..\..\..\Shared\PanoramaClient\bin\x64\Debug\PanoramaClient.dll</HintPath>
     </Reference>
     <Reference Include="pwiz.Common">
       <HintPath>..\..\..\..\Shared\Common\bin\x64\Release\pwiz.Common.dll</HintPath>

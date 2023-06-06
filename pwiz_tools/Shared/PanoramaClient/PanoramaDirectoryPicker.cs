@@ -100,7 +100,7 @@ namespace pwiz.PanoramaClient
         private void DirectoryPicker_FormClosing(object sender, FormClosingEventArgs e)
         {
             State = folders.ClosingState();
-            Selected = folders.FolderPath;
+            Selected = string.Concat(folders.ActiveServer.URI, "_webdav", folders.FolderPath);
         }
 
         private void checkEnabled()
