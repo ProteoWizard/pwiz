@@ -579,6 +579,7 @@ namespace pwiz.PanoramaClient
         /// </summary>
         public void TestCancel()
         {
+            DialogResult = DialogResult.Cancel;
             Close();
         }
 
@@ -604,7 +605,7 @@ namespace pwiz.PanoramaClient
                 if (FolderBrowser.ShowSky)
                 {
                     downloadName =
-                        string.Concat(@"/_webdav", FolderBrowser.Clicked.Tag, @"/@files/", listView.SelectedItems[0]
+                        string.Concat(@"_webdav", FolderBrowser.Clicked.Tag, @"/@files/", listView.SelectedItems[0]
                             .Name); 
                 }
                 DownloadName = downloadName;

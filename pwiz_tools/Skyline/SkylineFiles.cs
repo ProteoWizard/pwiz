@@ -1028,11 +1028,13 @@ namespace pwiz.Skyline
         }
 
         //TODO: Pass in client as last parameter set to null
-        public bool DownloadPanoramaFile(string downloadPath, string fileName, string fileUrl, PanoramaServer curServer, long size, bool cancel = false)
+        public bool DownloadPanoramaFile(string downloadPath, string fileName, string fileUrl, PanoramaServer curServer, long size, IPanoramaClient panoramaClient = null)
         {
             try
             {
-                var panoramaClient = new WebPanoramaClient(curServer.URI, curServer.Username, curServer.Password);
+
+                panoramaClient ??= new WebPanoramaClient(curServer.URI, curServer.Username, curServer.Password);
+
                 using (var fileSaver = new FileSaver(downloadPath))
                 {
                     using (var longWaitDlg = new LongWaitDlg
@@ -1044,12 +1046,12 @@ namespace pwiz.Skyline
                         //TODO: Look at tests that cancel a longWaitDlg
                         var progressStatus = longWaitDlg.PerformWork(this, 800,
                             progressMonitor => panoramaClient.DownloadFile(fileUrl, fileSaver.SafeName, size, fileName, curServer,
-                                progressMonitor, new ProgressStatus(), cancel));
+                                progressMonitor, new ProgressStatus()));
 
                         if (progressStatus.IsCanceled || progressStatus.IsError)
                         {
                             FileEx.SafeDelete(downloadPath, true);
-                            if (progressStatus.IsError && !cancel)
+                            if (progressStatus.IsError)
                             {
                                 var message = progressStatus.ErrorException.Message;
                                 if (message.Contains(@"404"))
@@ -1076,10 +1078,7 @@ namespace pwiz.Skyline
             }
             catch (Exception e)
             {
-                if (cancel)
-                {
-                    MessageDlg.ShowException(this, e);
-                }
+                MessageDlg.ShowException(this, e);
                 return false;
             }
         }
