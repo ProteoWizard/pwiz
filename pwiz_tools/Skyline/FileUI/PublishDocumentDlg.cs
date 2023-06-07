@@ -199,7 +199,7 @@ namespace pwiz.Skyline.FileUI
                 AddChildContainers(server, folderNode, subFolder);
 
                 // User can only upload to folders where TargetedMS is an active module.
-                var canUpload = PanoramaUtil.CheckFolderPermissions(subFolder) && PanoramaUtil.CheckFolderType(subFolder);
+                var canUpload = PanoramaUtil.CheckInsertPermissions(subFolder) && PanoramaUtil.IsTargetedMsFolder(subFolder);
 
                 // If the user does not have write permissions in this folder or any
                 // of its subfolders, do not add it to the tree.

@@ -3648,7 +3648,7 @@ namespace pwiz.Skyline
             if (folders?[@"path"] == null || !folderPath.Contains(Uri.EscapeUriString(folders[@"path"].ToString())))
                 return false;
 
-            if (!PanoramaUtil.CheckFolderPermissions(folders) || !PanoramaUtil.CheckFolderType(folders))
+            if (!PanoramaUtil.CheckInsertPermissions(folders) || !PanoramaUtil.IsTargetedMsFolder(folders))
                 return false;
 
             var fileInfo = new FolderInformation(server, true);

@@ -553,7 +553,7 @@ namespace pwiz.SkylineTestFunctional
             return new PanoramaServer(ServerUri, null, null);
         }
 
-        public FolderState IsValidFolder(string folderPath)
+        public void ValidateFolder(string folderPath, FolderPermission? permission, bool checkTargetedMs = true)
         {
             throw new NotImplementedException();
         }

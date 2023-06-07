@@ -3498,9 +3498,12 @@ namespace pwiz.SkylineTestData
                 return new PanoramaServer(ServerUri, Username, Password);
             }
 
-            public FolderState IsValidFolder(string folderPath)
+            public void ValidateFolder(string folderPath, FolderPermission? permission, bool checkTargetedMs = true)
             {
-                return MyFolderState;
+                if (MyFolderState != FolderState.valid)
+                {
+                    throw new PanoramaServerException(MyFolderState, folderPath, null, ServerUri, null, Username);
+                }
             }
 
             public FolderOperationStatus CreateFolder(string parentPath, string folderName)

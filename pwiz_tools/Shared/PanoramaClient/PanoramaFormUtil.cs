@@ -63,54 +63,40 @@ namespace pwiz.PanoramaClient
             JEnumerable<JToken> subFolders = folder[@"children"].Children();
             foreach (var subFolder in subFolders)
             {
+                if (!PanoramaUtil.CheckReadPermissions(subFolder))
+                {
+                    // Do not add the folder if user does not have read permissions in the folder. 
+                    // Any subfolders, even if they have read permissions, will also not be added.
+                    continue;
+                }
+
                 var folderName = (string)subFolder[@"name"];
 
                 var folderNode = new TreeNode(folderName);
                 AddChildContainers(folderNode, subFolder, requireUploadPerms, showFiles);
 
+                var isTargetedMsFolder = PanoramaUtil.IsTargetedMsFolder(subFolder);
                 // User can only upload to folders where TargetedMS is an active module.
-                bool canUpload;
+                var canUpload = PanoramaUtil.CheckInsertPermissions(subFolder) && isTargetedMsFolder;
 
-                if (requireUploadPerms)
+                if (requireUploadPerms && folderNode.Nodes.Count == 0 && !canUpload)
                 {
-                    canUpload = PanoramaUtil.CheckFolderPermissions(subFolder) &&
-                                PanoramaUtil.CheckFolderType(subFolder);
+                    // If the user does not have write permissions in this folder or any
+                    // of its subfolders, do not add it to the tree.
+                    continue;
                 }
-                else
-                {
-                    var userPermissions = subFolder.Value<int?>(@"userPermissions");
-                    canUpload = userPermissions != null && Equals(userPermissions & 1, 1);
-                }
-                // If the user does not have write permissions in this folder or any
-                // of its subfolders, do not add it to the tree.
-                if (requireUploadPerms)
-                {
-                    if (folderNode.Nodes.Count == 0 && !canUpload)
-                    {
-                        continue;
-                    }
-                }
-                else
-                {
-                    if (!canUpload)
-                    {
-                        continue;
-                    }
-                }
-
-
-
+                
                 node.Nodes.Add(folderNode);
 
-                // User cannot upload files to folder
-                if (!canUpload)
+                if (requireUploadPerms && !(isTargetedMsFolder && canUpload))
                 {
+                    // User cannot upload files to folder
                     folderNode.ForeColor = Color.Gray;
                     folderNode.ImageIndex = folderNode.SelectedImageIndex = (int)ImageId.folder;
                 }
                 else
                 {
-                    if ((PanoramaUtil.CheckFolderType(subFolder) && !requireUploadPerms) || requireUploadPerms)
+                    if (isTargetedMsFolder)
                     {
                         JToken moduleProperties = subFolder[@"moduleProperties"];
                         if (moduleProperties == null)
@@ -124,10 +110,9 @@ namespace pwiz.PanoramaClient
                                     (effectiveValue.Equals(@"Library") || effectiveValue.Equals(@"LibraryProtein"))
                                         ? (int)ImageId.chrom_lib
                                         : (int)ImageId.labkey;
-
-
                         }
-                    } else
+                    }
+                    else
                     {
                         folderNode.ImageIndex = folderNode.SelectedImageIndex = (int)ImageId.folder;
                     }
@@ -135,16 +120,7 @@ namespace pwiz.PanoramaClient
 
                 if (showFiles)
                 {
-                    var modules = subFolder[@"activeModules"];
-                    var containsTargetedMs = false;
-                    foreach (var module in modules)
-                    {
-                        if (string.Equals(module.ToString(), @"TargetedMS"))
-                        {
-                            containsTargetedMs = true;
-                        }
-                            
-                    }
+                    var containsTargetedMs = PanoramaUtil.HasTargetedMsModule(subFolder);
                     folderNode.Tag = (string)subFolder[@"path"];
                     folderNode.Name = containsTargetedMs.ToString();
                 }
@@ -152,7 +128,6 @@ namespace pwiz.PanoramaClient
                 {
                     //folderNode.Tag = new FolderInformation(server, canUpload);
                 }
-
             }
         }
 

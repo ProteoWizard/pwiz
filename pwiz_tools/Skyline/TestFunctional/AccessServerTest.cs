@@ -395,9 +395,8 @@ namespace pwiz.SkylineTestFunctional
                 throw new PanoramaServerException(ServerStateEnum.unknown, "Test WebException - unknown failure", ServerUri, ServerUri);
             }
 
-            public FolderState IsValidFolder(string folderPath)
+            public void ValidateFolder(string folderPath, FolderPermission? permission, bool checkTargetedMs = true)
             {
-                return FolderState.valid;
             }
 
             public FolderOperationStatus CreateFolder(string parentPath, string folderName)

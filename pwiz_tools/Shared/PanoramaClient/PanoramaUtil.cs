@@ -121,68 +121,64 @@ namespace pwiz.PanoramaClient
             return new Uri(pServer.URI, ENSURE_LOGIN_PATH);
         }
 
-        public static void VerifyFolder(IPanoramaClient panoramaClient, string panoramaFolder)
-        {
-            switch (panoramaClient.IsValidFolder(panoramaFolder))
-            {
-                case FolderState.notfound:
-                    throw new PanoramaServerException(
-                        string.Format(
-                            Resources.PanoramaUtil_VerifyFolder_Folder__0__does_not_exist_on_the_Panorama_server__1_,
-                            panoramaFolder, panoramaClient.ServerUri));
-                case FolderState.nopermission:
-                    throw new PanoramaServerException(string.Format(
-                        Resources
-                            .PanoramaUtil_VerifyFolder_User__0__does_not_have_permissions_to_upload_to_the_Panorama_folder__1_,
-                        panoramaClient.Username, panoramaFolder));
-                case FolderState.notpanorama:
-                    throw new PanoramaServerException(string.Format(
-                        Resources.PanoramaUtil_VerifyFolder__0__is_not_a_Panorama_folder,
-                        panoramaFolder));
-            }
-        }
-
         /// <summary>
         /// Parses the JSON returned from the getContainers LabKey API to look for the folder type and active modules in a container.
         /// </summary>
         /// <param name="folderJson"></param>
         /// <returns>True if the folder is a Targeted MS folder.</returns>
-        public static bool CheckFolderType(JToken folderJson)
+        public static bool IsTargetedMsFolder(JToken folderJson)
         {
             if (folderJson != null)
             {
-
                 var folderType = (string)folderJson[@"folderType"];
-                var modules = folderJson[@"activeModules"];
-                return modules != null && ContainsTargetedMSModule(modules) &&
-                       Equals(@"Targeted MS", folderType);
+                return Equals(@"Targeted MS", folderType) && HasTargetedMsModule(folderJson);
             }
 
             return false;
+        }
+
+        public static bool HasTargetedMsModule(JToken folderJson)
+        {
+            if (folderJson != null)
+            {
+                var modules = folderJson[@"activeModules"];
+                if (modules != null)
+                {
+                    foreach (var module in modules)
+                    {
+                        if (string.Equals(module.ToString(), @"TargetedMS"))
+                            return true;
+                    }
+                }
+
+                return false;
+            }
+
+            return false;
+        }
+
+        public static bool CheckReadPermissions(JToken folderJson)
+        {
+            return CheckFolderPermissions(folderJson, FolderPermission.read);
+        }
+
+        public static bool CheckInsertPermissions(JToken folderJson)
+        {
+            return CheckFolderPermissions(folderJson, FolderPermission.insert);
         }
 
         /// <summary>
         /// Parses the JSON returned from the getContainers LabKey API to look user permissions in the container.
         /// </summary>
         /// <param name="folderJson"></param>
-        /// <returns>True if the user has insert permissions.</returns>
-        public static bool CheckFolderPermissions(JToken folderJson)
+        /// <param name="permissionType"></param>
+        /// <returns>True if the user has the given permission type.</returns>
+        public static bool CheckFolderPermissions(JToken folderJson, FolderPermission permissionType)
         {
             if (folderJson != null)
             {
                 var userPermissions = folderJson.Value<int?>(@"userPermissions");
-                return userPermissions != null && Equals(userPermissions & 2, 2);
-            }
-            
-            return false;
-        }
-
-        private static bool ContainsTargetedMSModule(IEnumerable<JToken> modules)
-        {
-            foreach (var module in modules)
-            {
-                if (string.Equals(module.ToString(), @"TargetedMS"))
-                    return true;
+                return userPermissions != null && Equals(userPermissions & (int)permissionType, (int)permissionType);
             }
 
             return false;
@@ -246,8 +242,15 @@ namespace pwiz.PanoramaClient
 
     public enum ServerStateEnum { unknown, missing, notpanorama, available }
     public enum UserStateEnum { valid, nonvalid, unknown }
-    public enum FolderState { valid, notpanorama, nopermission, notfound }
+    public enum FolderState { valid, notpanorama, nopermission, notfound, unknown }
     public enum FolderOperationStatus { OK, notpanorama, nopermission, notfound, alreadyexists, error }
+
+    public enum FolderPermission
+    {
+        read = 1,   // Defined in org.labkey.api.security.ACL.java: public static final int PERM_READ = 0x00000001;
+        insert = 2, // Defined in org.labkey.api.security.ACL.java: public static final int PERM_INSERT = 0x00000002;
+        delete = 8  // Defined in org.labkey.api.security.ACL.java: public static final int PERM_DELETE = 0x00000008;
+    }
 
     public interface IPanoramaClient
     {
@@ -257,7 +260,7 @@ namespace pwiz.PanoramaClient
 
         PanoramaServer ValidateServer();
 
-        FolderState IsValidFolder(string folderPath);
+        void ValidateFolder(string folderPath, FolderPermission? permission, bool checkTargetedMs = true);
 
         /**
          * Returns FolderOperationStatus.OK if created successfully, otherwise returns the reason
@@ -463,24 +466,31 @@ namespace pwiz.PanoramaClient
             }
         }
 
-        public FolderState IsValidFolder(string folderPath)
+        public void ValidateFolder(string folderPath, FolderPermission? permission, bool checkTargetedMs = true)
         {
+            var folderState = GetFolderState(folderPath, permission, checkTargetedMs);
+            if (folderState != FolderState.valid)
+            {
+                throw new PanoramaServerException(folderState, folderPath, null, ServerUri, null, Username);
+            }
+        }
+
+        private FolderState GetFolderState(string folderPath, FolderPermission? permission, bool checkTargetedMs = true)
+        {
+            var requestUri = PanoramaUtil.GetContainersUri(ServerUri, folderPath, false);
+
             try
             {
-                var uri = PanoramaUtil.GetContainersUri(ServerUri, folderPath, false);
-    
                 using (var webClient = new WebClientWithCredentials(ServerUri, Username, Password))
                 {
-                    JToken response = webClient.Get(uri);
-    
-                    // User needs write permissions to publish to the folder
-                    if (!PanoramaUtil.CheckFolderPermissions(response))
+                    JToken response = webClient.Get(requestUri);
+
+                    if (permission != null && !PanoramaUtil.CheckFolderPermissions(response, (FolderPermission)permission))
                     {
                         return FolderState.nopermission;
                     }
-    
-                    // User can only upload to a TargetedMS folder type.
-                    if (!PanoramaUtil.CheckFolderType(response))
+
+                    if (checkTargetedMs && !PanoramaUtil.IsTargetedMsFolder(response))
                     {
                         return FolderState.notpanorama;
                     }
@@ -493,17 +503,20 @@ namespace pwiz.PanoramaClient
                 {
                     return FolderState.notfound;
                 }
-                else throw;
+                else
+                {
+                    throw new PanoramaServerException(FolderState.notfound, folderPath, ex.Message, ServerUri, requestUri, Username);
+                }
             }
             return FolderState.valid;
         }
 
         public FolderOperationStatus CreateFolder(string folderPath, string folderName)
         {
-    
-            if (IsValidFolder($@"{folderPath}/{folderName}") == FolderState.valid)
+
+            if (GetFolderState($@"{folderPath}/{folderName}", null, false) == FolderState.valid)
                 return FolderOperationStatus.alreadyexists;        //cannot create a folder with the same name
-            var parentFolderStatus = IsValidFolder(folderPath);
+            var parentFolderStatus = GetFolderState(folderPath, FolderPermission.insert, false);
             switch (parentFolderStatus)
             {
                 case FolderState.nopermission:
@@ -545,7 +558,7 @@ namespace pwiz.PanoramaClient
     
         public FolderOperationStatus DeleteFolder(string folderPath)
         {
-            var parentFolderStatus = IsValidFolder(folderPath);
+            var parentFolderStatus = GetFolderState(folderPath, FolderPermission.delete, false);
             switch (parentFolderStatus)
             {
                 case FolderState.nopermission:
@@ -696,6 +709,11 @@ namespace pwiz.PanoramaClient
         {
         }
 
+        public PanoramaServerException(FolderState state, string folderPath, string error, Uri uri, Uri requestUri, string username) 
+            : base(GetErrorMessage(state, folderPath, error, uri, requestUri, username))
+        {
+        }
+
         private static string GetErrorMessage(ServerStateEnum state, string error, Uri serverUri, Uri requestUri)
         {
             var stateError = string.Empty;
@@ -731,6 +749,32 @@ namespace pwiz.PanoramaClient
                     stateError = string.Format(
                         Resources.UserState_GetErrorMessage_There_was_an_error_authenticating_user_credentials_on_the_server__0__,
                         serverUri.AbsoluteUri);
+                    break;
+            }
+
+            return AppendErrorAndUri(stateError, error, requestUri);
+        }
+
+        private static string GetErrorMessage(FolderState state, string folderPath, string error, Uri serverUri, Uri requestUri, string username)
+        {
+            var stateError = string.Empty;
+            switch (state)
+            {
+                case FolderState.notfound:
+                    stateError = string.Format(
+                        Resources.PanoramaUtil_VerifyFolder_Folder__0__does_not_exist_on_the_Panorama_server__1_,
+                        folderPath, serverUri);
+                    break;
+                case FolderState.nopermission:
+                    stateError = string.Format(Resources
+                            .PanoramaUtil_VerifyFolder_User__0__does_not_have_permissions_to_upload_to_the_Panorama_folder__1_,
+                        username, folderPath);
+                    break;
+                case FolderState.notpanorama:
+                    stateError = string.Format(Resources.PanoramaUtil_VerifyFolder__0__is_not_a_Panorama_folder, folderPath);
+                    break;
+                case FolderState.unknown:
+                    stateError = string.Format("Unrecognized error trying to get status for folder {0}.", folderPath);
                     break;
             }
 
