@@ -1,8 +1,8 @@
-SOFTWARE LICENSE AGREEMENT (ìLicenseî) FOR RawFileReader
+SOFTWARE LICENSE AGREEMENT (‚ÄúLicense‚Äù) FOR RawFileReader
 
 These License terms are an agreement between you and Thermo Finnigan LLC
-("Licensor"). They apply to Licensorís RawFileReader software program
-(ìSoftwareî), which includes documentation and any media on which you received
+("Licensor"). They apply to Licensor‚Äôs RawFileReader software program
+(‚ÄúSoftware‚Äù), which includes documentation and any media on which you received
 it. These terms also apply to any updates or supplements for this Software,
 unless other terms accompany those items, in which case those terms apply. If
 you use this Software, you accept this License. If you do not accept this
@@ -27,18 +27,18 @@ modify this Software.
 If you distribute this Software to others, you agree to:
 
 3.1. Indemnify, defend and hold harmless the Licensor from any claims, including
-attorneysí fees, related to the distribution or use of this Software;
+attorneys‚Äô fees, related to the distribution or use of this Software;
 
-3.2. Display the following text in your softwareís ìAboutî box: ìRawFileReader
-reading tool. Copyright © 2016 by Thermo Fisher Scientific, Inc. All rights
-reserved.î;
+3.2. Display the following text in your software‚Äôs ‚ÄúAbout‚Äù box: ‚ÄúRawFileReader
+reading tool. Copyright ¬© 2016 by Thermo Fisher Scientific, Inc. All rights
+reserved.‚Äù;
 
 3.3. Require your end users to agree to a license agreement that prohibits them
 from redistributing this Software to others.
 
 4.  Distribution Restrictions:
 
-4.1. You may not use the Licensorís trademarks in a way that suggests your
+4.1. You may not use the Licensor‚Äôs trademarks in a way that suggests your
 software components and/or programs are provided by or are endorsed by the
 Licensor; and
 
@@ -73,7 +73,7 @@ Software.
 5.3. This Software is not designed, manufactured or intended for any use
 requiring fail-safe performance in which the failure of this Software could lead
 to death, serious personal injury or severe physical and environmental damage
-(ìHigh Risk Activitiesî), such as the operation of aircraft, medical or nuclear
+(‚ÄúHigh Risk Activities‚Äù), such as the operation of aircraft, medical or nuclear
 facilities. You agree not to use, or license the use of, this Software in
 connection with any High Risk Activities.
 
@@ -105,7 +105,7 @@ THIS LICENSE CANNOT CHANGE. TO THE EXTENT PERMITTED UNDER YOUR LOCAL LAWS,
 LICENSOR EXCLUDES THE IMPLIED WARRANTIES OF MERCHANTABILITY, FITNESS FOR A
 PARTICULAR PURPOSE AND NON-INFRINGEMENT.
 
-5.8. LICENSORíS TOTAL LIABILITY TO YOU FOR DIRECT DAMAGES ARISING UNDER THIS
+5.8. LICENSOR‚ÄôS TOTAL LIABILITY TO YOU FOR DIRECT DAMAGES ARISING UNDER THIS
 LICENSE IS LIMITED TO U.S. $1.00. YOU CANNOT RECOVER ANY OTHER DAMAGES,
 INCLUDING CONSEQUENTIAL, LOST PROFITS, SPECIAL, INDIRECT OR INCIDENTAL DAMAGES,
 EVEN IF LICENSOR IS EXPRESSLY MADE AWARE OF THE POSSIBILITY THEREOF OR IS

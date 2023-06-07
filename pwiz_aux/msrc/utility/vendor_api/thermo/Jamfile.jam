@@ -163,7 +163,7 @@ rule vendor-api-usage-requirements ( properties * )
                 result += <assembly>$(API_PATH)/ThermoFisher.CommonCore.RawFileReader.dll ;
                 #result += <assembly>$(API_PATH)/ThermoFisher.CommonCore.MassPrecisionEstimator.dll ;
                 #result += <assembly>$(API_PATH)/ThermoFisher.CommonCore.BackgroundSubtraction.dll ;
-                result += <assembly-dependency>$(API_PATH)/EULA.RawFileReader ;
+                result += <assembly-dependency>$(API_PATH)/EULA.Thermo.txt ;
                 result += <cxxflags>/wd4564 ; # warning C4564: method 'x' defines unsupported default parameter 'y'
             }
         }
@@ -223,7 +223,7 @@ if $(.hasDLLs)
              $(API_PATH)/ThermoFisher.CommonCore.RawFileReader.dll
              #$(API_PATH)/ThermoFisher.CommonCore.MassPrecisionEstimator.dll
              #$(API_PATH)/ThermoFisher.CommonCore.BackgroundSubtraction.dll
-             $(API_PATH)/EULA.RawFileReader
+             $(API_PATH)/EULA.Thermo.txt
            ;
     }
 }
@@ -237,7 +237,7 @@ explicit install_pwiz_vendor_api_thermo ;
 if x64 in $(PLATFORM)
 {
     install install_pwiz_vendor_api_thermo_eula
-       : $(API_PATH)/EULA.RawFileReader
+       : $(API_PATH)/EULA.Thermo.txt
        ;
 }
 else

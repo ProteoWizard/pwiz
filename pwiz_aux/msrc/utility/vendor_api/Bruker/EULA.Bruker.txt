@@ -4,11 +4,37 @@ END USER BETA SOFTWARE LICENSE AGREEMENTS
 
 SOFTWARE LICENSE AGREEMENT for CompassXtract and CompassXtract Libraries
 
-Bruker Daltonik GmbH (hereinafter referred to as "Licensor") has developed the CompassXtract software program (hereinafter referred to as "CompassXtract"), which consists of documentation and individual CompassXtract libraries (hereinafter referred to as "CompassXtract Libraries"). These license terms constitute an agreement (hereinafter referred to as "Agreement") between you and Licensor and shall be the legal basis for any non-commercial usage of Licensor's CompassXtract. These license terms also apply to any updates or supplements for CompassXtract or separable parts of CompassXtract such as CompassXtract Libraries, unless other terms accompany those items, in which case those terms apply. You may only use CompassXtract as a whole, if you have downloaded it from Licensor's Webserver at http://www.bdal.de/compassxtract and accepted this Agreement as binding between Licensor and you. However, certain individual CompassXtract Libraries might be conveyed to you by others. In both cases, you may only legally use CompassXtract or any of the CompassXtract Libraries conveyed to you after having accepted this Agreement as binding between Licensor and you.
+Bruker Daltonik GmbH (hereinafter referred to as "Licensor") has developed the
+CompassXtract software program (hereinafter referred to as "CompassXtract"),
+which consists of documentation and individual CompassXtract libraries
+(hereinafter referred to as "CompassXtract Libraries"). These license terms
+constitute an agreement (hereinafter referred to as "Agreement") between you and
+Licensor and shall be the legal basis for any non-commercial usage of Licensor's
+CompassXtract. These license terms also apply to any updates or supplements for
+CompassXtract or separable parts of CompassXtract such as CompassXtract
+Libraries, unless other terms accompany those items, in which case those terms
+apply. You may only use CompassXtract as a whole, if you have downloaded it from
+Licensor's Webserver at http://www.bdal.de/compassxtract and accepted this
+Agreement as binding between Licensor and you. However, certain individual
+CompassXtract Libraries might be conveyed to you by others. In both cases, you
+may only legally use CompassXtract or any of the CompassXtract Libraries
+conveyed to you after having accepted this Agreement as binding between Licensor
+and you.
 
 1. Purpose of CompassXtract and License
 
-CompassXtract is provided as it is, in a trial and development stage, not yet marketable and without any warranties regarding fitness for any purpose whatsoever. It may contain errors and defects. The aim and purpose of providing it free of charge and under the terms of this Agreement is to discover such errors and defects. It is, inter alia but not limited to, not designed, manufactured or intended for any use requiring fail-safe performance in which the failure of CompassXtract could lead to death, personal injury or physical and environmental damage, such as the operation of medical facilities. Nor is it, inter alia but not limited to, designed to perform any queries or operations which might require reliable results and/or which might be the basis for business and/or medical decisions. You agree not to use CompassXtract in connection with any such activities.
+CompassXtract is provided as it is, in a trial and development stage, not yet
+marketable and without any warranties regarding fitness for any purpose
+whatsoever. It may contain errors and defects. The aim and purpose of providing
+it free of charge and under the terms of this Agreement is to discover such
+errors and defects. It is, inter alia but not limited to, not designed,
+manufactured or intended for any use requiring fail-safe performance in which
+the failure of CompassXtract could lead to death, personal injury or physical
+and environmental damage, such as the operation of medical facilities. Nor is
+it, inter alia but not limited to, designed to perform any queries or operations
+which might require reliable results and/or which might be the basis for
+business and/or medical decisions. You agree not to use CompassXtract in
+connection with any such activities.
 
 2. Rights Granted
 
@@ -16,131 +42,358 @@ You may install and use CompassXtract on any of your computing devices.
 
 3. Use Restrictions
 
-3.1 You may not decompile, disassemble, reverse engineer or modify CompassXtract.
+3.1 You may not decompile, disassemble, reverse engineer or modify
+CompassXtract.
 
-3.2 You may not distribute CompassXtract to others, breach of which terminates the rights granted under this agreement. This also applies to any integration or implementation of CompassXtract to software developed by you or by others on your behalf (hereinafter referred to as "Own Software") or any distribution of which CompassXtract is part of. However, you may distribute Own Software which requires the usage of or links to CompassXtract Libraries if you comply with the requirements set down in Section 4 of this Agreement.
+3.2 You may not distribute CompassXtract to others, breach of which terminates
+the rights granted under this agreement. This also applies to any integration or
+implementation of CompassXtract to software developed by you or by others on
+your behalf (hereinafter referred to as "Own Software") or any distribution of
+which CompassXtract is part of. However, you may distribute Own Software which
+requires the usage of or links to CompassXtract Libraries if you comply with the
+requirements set down in Section 4 of this Agreement.
 
-4. Requirements for Distribution of your own Software using CompassXtract Libraries
+4. Requirements for Distribution of your own Software using CompassXtract
+Libraries
 
-You may only distribute CompassXtract Libraries to others if all of the following conditions are met: 4.1 You distribute CompassXtract Libraries as part of Own Software which you license to third parties
+You may only distribute CompassXtract Libraries to others if all of the
+following conditions are met:
+4.1 You distribute CompassXtract Libraries as part of Own Software which you
+license to third parties (hereinafter "Your Licensees");
+4.2 Your Own Software requires all the CompassXtract Libraries distributed by
+you in order to function properly when used by Your Licensees;
 
-(hereinafter "Your Licensees"); 4.2 Your Own Software requires all the CompassXtract Libraries distributed by you in order to function
+4.3 You provide to Your Licensee a URL to Licensor's Webserver at
+http://www.bdal.de/compassxtract and require Your Licensees, as condition for
+being granted the right to use your Own Software, to acquire the usage rights
+for CompassXtract directly from Licensor by agreeing to the terms of this
+Agreement, which you distribute in unmodified form with your Own Software.
 
-properly when used by Your Licensees;
-
-4.3 You provide to Your Licensee a URL to Licensor's Webserver at http://www.bdal.de/compassxtract and require Your Licensees, as condition for being granted the right to use your Own Software, to acquire the usage rights for CompassXtract directly from Licensor by agreeing to the terms of this Agreement, which you distribute in unmodified form with your Own Software.
-
-4.4 In your Own Software's "About" box the following text is displayed: "This software uses CompassXtract software. Copyright � 2011 by Bruker Daltonik GmbH. All rights reserved."
+4.4 In your Own Software's "About" box the following text is displayed: "This
+software uses CompassXtract software. Copyright © 2011 by Bruker Daltonik GmbH.
+All rights reserved."
 
 5. Restrictions for Distribution of your own Products
 
-5.1 You may not use the Licensor's trademarks in a way that suggests your software components and/or programs are provided by or are endorsed by the Licensor.
+5.1 You may not use the Licensor's trademarks in a way that suggests your
+software components and/or programs are provided by or are endorsed by the
+Licensor.
 
-5.2 You may not commercially exploit CompassXtract, CompassXtract Libraries or products that require the usage of or link to CompassXtract or CompassXtract Libraries. Commercial exploitation includes, but is not limited to, charging a purchase price, license fee, maintenance fee, or subscription fee.
+5.2 You may not commercially exploit CompassXtract, CompassXtract Libraries or
+products that require the usage of or link to CompassXtract or CompassXtract
+Libraries. Commercial exploitation includes, but is not limited to, charging a
+purchase price, license fee, maintenance fee, or subscription fee.
 
-5.3 Your rights to CompassXtract do not include any license, right, power or authority to subject CompassXtract in whole or in part to any of the terms of an Excluded License. "Excluded License" means any license that requires as a condition of use, modification and/or distribution of software that such software or other software combined and/or distributed with such software shall be (a) disclosed or distributed in source code form; or (b) licensed for the purpose of making derivative works. Without limiting the foregoing obligation, you are specifically prohibited from distributing CompassXtract or CompassXtract Libraries with any software that is subject to the General Public License (GPL) or similar license in a manner that would create a combined work.
+5.3 Your rights to CompassXtract do not include any license, right, power or
+authority to subject CompassXtract in whole or in part to any of the terms of an
+Excluded License. "Excluded License" means any license that requires as a
+condition of use, modification and/or distribution of software that such
+software or other software combined and/or distributed with such software shall
+be (a) disclosed or distributed in source code form; or (b) licensed for the
+purpose of making derivative works. Without limiting the foregoing obligation,
+you are specifically prohibited from distributing CompassXtract or CompassXtract
+Libraries with any software that is subject to the General Public License (GPL)
+or similar license in a manner that would create a combined work.
 
 6. Liability
 
-6.1 As Licensor delivers the software for free, Licensor is not liable for any kind of damage, direct or indirect, which may arise due to simple negligence (Section 521 German Civil Code). In the event, that there should be – for whatever reason – a statutory liability of Licensor for simple negliegence, the aforementioned exclusion of liability applies nevertheless, but with the exception of damages to life, body or health.
+6.1 As Licensor delivers the software for free, Licensor is not liable for any
+kind of damage, direct or indirect, which may arise due to simple negligence
+(Section 521 German Civil Code). In the event, that there should be – for
+whatever reason – a statutory liability of Licensor for simple negliegence, the
+aforementioned exclusion of liability applies nevertheless, but with the
+exception of damages to life, body or health.
 
-6.2 You indemnify, defend and hold harmless the Licensor from any liability claims, including attorney fees, of third parties in connection with your usage of CompassXtract as well as the distribution of your Own Software which requires usage of or links to CompassXtract Libraries and other circumstances for which you are responsible.
+6.2 You indemnify, defend and hold harmless the Licensor from any liability
+claims, including attorney fees, of third parties in connection with your usage
+of CompassXtract as well as the distribution of your Own Software which requires
+usage of or links to CompassXtract Libraries and other circumstances for which
+you are responsible.
 
 7. Additional Terms Applicable to CompassXtract
 
-7.1 CompassXtract is licensed, not sold. This License only gives you some rights to use CompassXtract and the CompassXtract Libraries; the Licensor reserves all other rights. Unless applicable law gives you more rights despite this limitation, you may use CompassXtract and the CompassXtract Libraries only as expressly permitted in this License.
+7.1 CompassXtract is licensed, not sold. This License only gives you some rights
+to use CompassXtract and the CompassXtract Libraries; the Licensor reserves all
+other rights. Unless applicable law gives you more rights despite this
+limitation, you may use CompassXtract and the CompassXtract Libraries only as
+expressly permitted in this License.
 
-7.2 Licensor has no obligation to fix, update, supplement or support CompassXtract and/or the CompassXtract Libraries.
+7.2 Licensor has no obligation to fix, update, supplement or support
+CompassXtract and/or the CompassXtract Libraries.
 
-7.3 Your rights under this License terminate automatically if you breach this License in any way. Termination of this License will not affect any of your obligations or liabilities arising prior to termination. The following sections of this License shall survive termination: 3.1, 3.2, 5.1, 5.2, 5.3, 6.1., 6.2.
+7.3 Your rights under this License terminate automatically if you breach this
+License in any way. Termination of this License will not affect any of your
+obligations or liabilities arising prior to termination. The following sections
+of this License shall survive termination: 3.1, 3.2, 5.1, 5.2, 5.3, 6.1., 6.2.
 
-7.4 No subsidiary agreements of this Agreement have been made. Supplements and amendments to this Agreement must be made in writing as prescribed by law in order to be valid. The requirement of written form under this Agreement may be waived in writing only.
+7.4 No subsidiary agreements of this Agreement have been made. Supplements and
+amendments to this Agreement must be made in writing as prescribed by law in
+order to be valid. The requirement of written form under this Agreement may be
+waived in writing only.
 
-7.5 This Agreement is governed by German law to the exclusion of the UN Convention on Contracts for the International Sale of Goods. If you are a consumer, this does not apply if legal provisions, in particular consumer protection legislation, conflict with this choice. The courts of Bremen shall have exclusive jurisdiction. If you are not a merchant, a legal entity under public law or a public-law special fund in the sense Section 38 of the German Code of Civil Procedure (ZPO), the agreement on the place of jurisdiction is replaced by the legal provisions.
+7.5 This Agreement is governed by German law to the exclusion of the UN
+Convention on Contracts for the International Sale of Goods. If you are a
+consumer, this does not apply if legal provisions, in particular consumer
+protection legislation, conflict with this choice. The courts of Bremen shall
+have exclusive jurisdiction. If you are not a merchant, a legal entity under
+public law or a public-law special fund in the sense Section 38 of the German
+Code of Civil Procedure (ZPO), the agreement on the place of jurisdiction is
+replaced by the legal provisions.
 
-7.6 If individual provisions of this Agreement are or become invalid or contain a gap which needs to be filled, the validity of the remaining provisions of the Agreement will not be affected thereby. The Parties hereby undertake to substitute the invalid or lacking provision with a valid provision which comes closest to the documented intentions of the Parties.
+7.6 If individual provisions of this Agreement are or become invalid or contain
+a gap which needs to be filled, the validity of the remaining provisions of the
+Agreement will not be affected thereby. The Parties hereby undertake to
+substitute the invalid or lacking provision with a valid provision which comes
+closest to the documented intentions of the Parties.
 
 ======================================
 
 SOFTWARE LICENSE AGREEMENT for TDF Software Development Kit:
-Bruker Daltonics GmbH & Co. KG (hereinafter referred to as "Licensor") has developed the software program TDF Software Development Kit (hereinafter referred to as “Software”), which consists of software libraries (hereinafter referred to as “Software Libraries”), as well as documentation, header files and example programs. These license terms constitute an agreement (hereinafter referred to as the "Agreement") between you and Licensor and shall be the legal basis for any noncommercial or commercial usage of Licensor’s Software. These license terms also apply to any updates or supplements for the Software or separable parts of the Software such as Software Libraries, unless other terms accompany those items, in which case those terms apply. You may only use the Software as a whole, if you have downloaded it from Licensor’s Webserver at https://www.bruker.com/service/support-upgrades/software-downloads/mass-spectrometry.html and accepted this Agreement as binding between Licensor and you. However, certain individual Software Libraries might be conveyed to you by others. In both cases, you may only legally use Software or any of the Software Libraries conveyed to you after having accepted this Agreement as binding between Licensor and you.
+Bruker Daltonics GmbH & Co. KG (hereinafter referred to as "Licensor") has
+developed the software program TDF Software Development Kit (hereinafter
+referred to as “Software”), which consists of software libraries (hereinafter
+referred to as “Software Libraries”), as well as documentation, header files and
+example programs. These license terms constitute an agreement (hereinafter
+referred to as the "Agreement") between you and Licensor and shall be the legal
+basis for any noncommercial or commercial usage of Licensor’s Software. These
+license terms also apply to any updates or supplements for the Software or
+separable parts of the Software such as Software Libraries, unless other terms
+accompany those items, in which case those terms apply. You may only use the
+Software as a whole, if you have downloaded it from Licensor’s Webserver at
+https://www.bruker.com/service/support-upgrades/software-downloads/mass-spectrom
+etry.html and accepted this Agreement as binding between Licensor and you.
+However, certain individual Software Libraries might be conveyed to you by
+others. In both cases, you may only legally use Software or any of the Software
+Libraries conveyed to you after having accepted this Agreement as binding
+between Licensor and you.
 
 1. Purpose of Software and License
-The Software is provided as it is, without any warranties regarding fitness for any purpose whatsoever. It may contain errors and defects. It is, inter alia but not limited to, not designed, manufactured or intended for any use requiring fail-safe performance in which the failure of the Software could lead to death, personal injury or physical and environmental damage, such as the operation of medical facilities. Nor is it, inter alia but not limited to, designed to perform any queries or operations which might require reliable results and/or which might be the basis for business and/or medical decisions. You agree not to use the Software in connection with any such activities.
+The Software is provided as it is, without any warranties regarding fitness for
+any purpose whatsoever. It may contain errors and defects. It is, inter alia but
+not limited to, not designed, manufactured or intended for any use requiring
+fail-safe performance in which the failure of the Software could lead to death,
+personal injury or physical and environmental damage, such as the operation of
+medical facilities. Nor is it, inter alia but not limited to, designed to
+perform any queries or operations which might require reliable results and/or
+which might be the basis for business and/or medical decisions. You agree not to
+use the Software in connection with any such activities.
 
 2. Rights Granted
 2.1 You may install and use the Software on any of your computing devices.
-2.2 You may commercially exploit products that require the usage of or link to the Software Libraries and files as defined in section 4.3. Commercial exploitation includes, but is not limited to, charging a purchase price, license fee, maintenance fee, or subscription fee.
+2.2 You may commercially exploit products that require the usage of or link to
+the Software Libraries and files as defined in section 4.3. Commercial
+exploitation includes, but is not limited to, charging a purchase price, license
+fee, maintenance fee, or subscription fee.
 
 3. Use Restrictions
 3.1 You may not decompile, disassemble, reverse engineer or modify the Software.
-3.2 You may not distribute the Software to others, breach of which terminates the rights granted under this Agreement. This also applies to any integration or implementation of the Software to software developed by you or by others on your behalf (hereinafter referred to as “Own Software”) or any distribution of which the Software is part. However, you may distribute Own Software which requires the usage of or links to Software Libraries if you comply with the requirements set down in Section 4 of this Agreement.
+3.2 You may not distribute the Software to others, breach of which terminates
+the rights granted under this Agreement. This also applies to any integration or
+implementation of the Software to software developed by you or by others on your
+behalf (hereinafter referred to as “Own Software”) or any distribution of which
+the Software is part. However, you may distribute Own Software which requires
+the usage of or links to Software Libraries if you comply with the requirements
+set down in Section 4 of this Agreement.
 
 4. Requirements for Distribution of your own Software using Software Libraries
-You may only distribute Software Libraries to others if all of the following conditions are met:
-4.1 You distribute Software Libraries as part of Own Software which you license to third parties (hereinafter "Your Licensees");
-4.2 Your Own Software requires all the Software Libraries distributed by you in order to function properly when used by Your Licensees;
-4.3 You may distribute only those Software Libraries and files specifically listed in the redist.txt file inside the Software distribution archive; furthermore, there are several files that you must distribute, also listed in the redist.txt file.
+You may only distribute Software Libraries to others if all of the following
+conditions are met:
+4.1 You distribute Software Libraries as part of Own Software which you license
+to third parties (hereinafter "Your Licensees");
+4.2 Your Own Software requires all the Software Libraries distributed by you in
+order to function properly when used by Your Licensees;
+4.3 You may distribute only those Software Libraries and files specifically
+listed in the redist.txt file inside the Software distribution archive;
+furthermore, there are several files that you must distribute, also listed in
+the redist.txt file.
 4.4 In your Own Software’s “About” box the following text is displayed:
 “Included software components:
 Copyright © 2022 by Bruker Daltonics GmbH & Co. KG. All rights reserved.”
 
 5. Restrictions for Distribution of your own Products
-5.1 You may not use the Licensor’s trademarks in a way that suggests your software components and/or programs are provided by or are endorsed by the Licensor.
-5.2 Your rights to the Software do not include any license, right, power or authority to subject the Software in whole or in part to any of the terms of an Excluded License. "Excluded License" means any license that requires as a condition of use, modification and/or distribution of software that such software or other software combined and/or distributed with such software shall be (a) disclosed or distributed in source code form; or (b) licensed for the purpose of making derivative works. Without limiting the foregoing obligation, you are specifically prohibited from distributing the Software or Software Libraries with any software that is subject to the GNU General Public License (GPL) or similar license in a manner that would create a combined work.
+5.1 You may not use the Licensor’s trademarks in a way that suggests your
+software components and/or programs are provided by or are endorsed by the
+Licensor.
+5.2 Your rights to the Software do not include any license, right, power or
+authority to subject the Software in whole or in part to any of the terms of an
+Excluded License. "Excluded License" means any license that requires as a
+condition of use, modification and/or distribution of software that such
+software or other software combined and/or distributed with such software shall
+be (a) disclosed or distributed in source code form; or (b) licensed for the
+purpose of making derivative works. Without limiting the foregoing obligation,
+you are specifically prohibited from distributing the Software or Software
+Libraries with any software that is subject to the GNU General Public License
+(GPL) or similar license in a manner that would create a combined work.
 
 6. Liability
-6.1 As Licensor delivers the software for free, Licensor is not liable for any kind of damage, direct or indirect, which may arise due to simple negligence (Section 521 German Civil Code). In the event, that there should be – for whatever reason – a statutory liability of Licensor for simple negligence, the aforementioned exclusion of liability applies nevertheless, but with the exception of damages to life, body or health.
-6.2 You indemnify, defend and hold harmless the Licensor from any liability claims, including attorney fees, of third parties in connection with any usage of the Software as well as the distribution of your Own Software which requires usage of or links to Software Libraries and other circumstances for which you are responsible.
+6.1 As Licensor delivers the software for free, Licensor is not liable for any
+kind of damage, direct or indirect, which may arise due to simple negligence
+(Section 521 German Civil Code). In the event, that there should be – for
+whatever reason – a statutory liability of Licensor for simple negligence, the
+aforementioned exclusion of liability applies nevertheless, but with the
+exception of damages to life, body or health.
+6.2 You indemnify, defend and hold harmless the Licensor from any liability
+claims, including attorney fees, of third parties in connection with any usage
+of the Software as well as the distribution of your Own Software which requires
+usage of or links to Software Libraries and other circumstances for which you
+are responsible.
 
 7. Additional Terms Applicable to the Software
-7.1 The Software is licensed, not sold. This License only gives you some rights to use the Software and the Software Libraries; the Licensor reserves all other rights. Unless applicable law gives you more rights despitethis limitation, you may use the Software and the Software Libraries only as expressly permitted in this License.
-7.2 Licensor has no obligation to fix, update, supplement or support the Software and/or the Software Libraries.
-7.3 Your rights under this License terminate automatically if you breach this License in any way. Termination of this License will not affect any of your obligations or liabilities arising prior to termination. The following sections of this License shall survive termination: 2.1, 3.1, 3.2, 5.1, 5.2, 6.1, and 6.2.
-7.4 No subsidiary agreements of this Agreement have been made. Supplements and amendments to this Agreement must be made in writing as prescribed by law in order to be valid. The requirement of written form under this Agreement may be waived in writing only.
-7.5 This Agreement is governed by German law to the exclusion of the UN Convention on Contracts for the International Sale of Goods. If you are a consumer, this does not apply if legal provisions, in particular consumer protection legislation, conflict with this choice. The courts of Bremen shall have exclusive jurisdiction. If you are not a merchant, a legal entity under public law or a public-law special fund in the sense Section 38 of the German Code of Civil Procedure (ZPO), the agreement on the place of jurisdiction is replaced by the legal provisions.
-7.6 If individual provisions of this Agreement are or become invalid or contain a gap which needs to be filled, the validity of the remaining provisions of the Agreement will not be affected thereby. The Parties hereby undertake to substitute the invalid or lacking provision with a valid provision which comes closest to the documented intentions of the Parties.
+7.1 The Software is licensed, not sold. This License only gives you some rights
+to use the Software and the Software Libraries; the Licensor reserves all other
+rights. Unless applicable law gives you more rights despitethis limitation, you
+may use the Software and the Software Libraries only as expressly permitted in
+this License.
+7.2 Licensor has no obligation to fix, update, supplement or support the
+Software and/or the Software Libraries.
+7.3 Your rights under this License terminate automatically if you breach this
+License in any way. Termination of this License will not affect any of your
+obligations or liabilities arising prior to termination. The following sections
+of this License shall survive termination: 2.1, 3.1, 3.2, 5.1, 5.2, 6.1, and
+6.2.
+7.4 No subsidiary agreements of this Agreement have been made. Supplements and
+amendments to this Agreement must be made in writing as prescribed by law in
+order to be valid. The requirement of written form under this Agreement may be
+waived in writing only.
+7.5 This Agreement is governed by German law to the exclusion of the UN
+Convention on Contracts for the International Sale of Goods. If you are a
+consumer, this does not apply if legal provisions, in particular consumer
+protection legislation, conflict with this choice. The courts of Bremen shall
+have exclusive jurisdiction. If you are not a merchant, a legal entity under
+public law or a public-law special fund in the sense Section 38 of the German
+Code of Civil Procedure (ZPO), the agreement on the place of jurisdiction is
+replaced by the legal provisions.
+7.6 If individual provisions of this Agreement are or become invalid or contain
+a gap which needs to be filled, the validity of the remaining provisions of the
+Agreement will not be affected thereby. The Parties hereby undertake to
+substitute the invalid or lacking provision with a valid provision which comes
+closest to the documented intentions of the Parties.
 
 ======================================
 
 SOFTWARE LICENSE AGREEMENT for the Baf2Sql and Baf2Sql Libraries
-Bruker Daltonik GmbH (hereinafter referred to as "Licensor") has developed the Baf2Sql software program (hereinafter referred to as “Baf2Sql”), which consists of Baf2Sql libraries (hereinafter referred to as “Baf2Sql Libraries”), as well as documentation, header files and example programs. These license terms constitute an agreement (hereinafter referred to as "Agreement") between you and Licensor and shall be the legal basis for any non-commercial or commercial usage of Licensor’s Baf2Sql. These license terms also apply to any updates or supplements for the Baf2Sql or separable parts of the Baf2Sql such as Baf2Sql Libraries, unless other terms accompany those items, in which case those terms apply.
-You may only use the Baf2Sql as a whole, if you have downloaded it from Licensor’s Webserver at https://www.bruker.com and accepted this Agreement as binding between Licensor and you. However, certain individual Baf2Sql Libraries might be conveyed to you by others. In both cases, you may only legally use Baf2Sql or any of the Baf2Sql Libraries conveyed to you after having accepted this Agreement as binding between Licensor and you.
+Bruker Daltonik GmbH (hereinafter referred to as "Licensor") has developed the
+Baf2Sql software program (hereinafter referred to as “Baf2Sql”), which consists
+of Baf2Sql libraries (hereinafter referred to as “Baf2Sql Libraries”), as well
+as documentation, header files and example programs. These license terms
+constitute an agreement (hereinafter referred to as "Agreement") between you and
+Licensor and shall be the legal basis for any non-commercial or commercial usage
+of Licensor’s Baf2Sql. These license terms also apply to any updates or
+supplements for the Baf2Sql or separable parts of the Baf2Sql such as Baf2Sql
+Libraries, unless other terms accompany those items, in which case those terms
+apply.
+
+You may only use the Baf2Sql as a whole, if you have downloaded it from
+Licensor’s Webserver at https://www.bruker.com and accepted this Agreement as
+binding between Licensor and you. However, certain individual Baf2Sql Libraries
+might be conveyed to you by others. In both cases, you may only legally use
+Baf2Sql or any of the Baf2Sql Libraries conveyed to you after having accepted
+this Agreement as binding between Licensor and you.
 
 1. Purpose of Baf2Sql and License
-The Baf2Sql is provided as it is, in a trial and development stage, not yet marketable and without any warranties regarding fitness for any purpose whatsoever. It may contain errors and defects. The aim and purpose of providing it free of charge and under the terms of this Agreement is to discover such errors and defects. It is, inter alia but not limited to, not designed, manufactured or intended for any use requiring fail-safe performance in which the failure of the Baf2Sql could lead to death, personal injury or physical and environmental damage, such as the operation of medical facilities. Nor is it, inter alia but not limited to, designed to perform any queries or operations which might require reliable results and/or which might be the basis for business and/or medical decisions. You agree not to use the Baf2Sql in connection with any such activities.
+The Baf2Sql is provided as it is, in a trial and development stage, not yet
+marketable and without any warranties regarding fitness for any purpose
+whatsoever. It may contain errors and defects. The aim and purpose of providing
+it free of charge and under the terms of this Agreement is to discover such
+errors and defects. It is, inter alia but not limited to, not designed,
+manufactured or intended for any use requiring fail-safe performance in which
+the failure of the Baf2Sql could lead to death, personal injury or physical and
+environmental damage, such as the operation of medical facilities. Nor is it,
+inter alia but not limited to, designed to perform any queries or operations
+which might require reliable results and/or which might be the basis for
+business and/or medical decisions. You agree not to use the Baf2Sql in
+connection with any such activities.
 
 2. Rights Granted
 You may install and use the Baf2Sql on any of your computing devices.
 
 3. Use Restrictions
 3.1 You may not decompile, disassemble, reverse engineer or modify the Baf2Sql.
-3.2 You may not distribute the Baf2Sql to others, breach of which terminates the rights granted under this agreement. This also applies to any integration or implementation of the Baf2Sql to software developed by you or by others on your behalf (hereinafter referred to as “Own Software”) or any distribution of which the Baf2Sql is part of. However, you may distribute Own Software which requires the usage of or links to Baf2Sql Libraries if you comply with the requirements set down in Section 4 of this Agreement.
+3.2 You may not distribute the Baf2Sql to others, breach of which terminates the
+rights granted under this agreement. This also applies to any integration or
+implementation of the Baf2Sql to software developed by you or by others on your
+behalf (hereinafter referred to as “Own Software”) or any distribution of which
+the Baf2Sql is part of. However, you may distribute Own Software which requires
+the usage of or links to Baf2Sql Libraries if you comply with the requirements
+set down in Section 4 of this Agreement.
 
 4. Requirements for Distribution of your own Software using Baf2Sql Libraries
-You may only distribute Baf2Sql Libraries to others if all of the following conditions are met:
-4.1 You distribute Baf2Sql Libraries as part of Own Software which you license to third parties (hereinafter "Your Licensees");
-4.2 Your Own Software requires all the Baf2Sql Libraries distributed by you in order to functionproperly when used by Your Licensees;
-4.3 You may distribute only those Baf2Sql Libraries and files specifically listed in the redist.txt file inside the Baf2Sql distribution archive; furthermore, there are several files that you must distribute, also listed in the redist.txt file.
-4.4 In your Own Software’s “About” box the following text is displayed: “This software uses Baf2Sql
-software. Copyright © 2016 by Bruker Daltonik GmbH. All rights reserved.”
+You may only distribute Baf2Sql Libraries to others if all of the following
+conditions are met:
+4.1 You distribute Baf2Sql Libraries as part of Own Software which you license
+to third parties (hereinafter "Your Licensees");
+4.2 Your Own Software requires all the Baf2Sql Libraries distributed by you in
+order to functionproperly when used by Your Licensees;
+4.3 You may distribute only those Baf2Sql Libraries and files specifically
+listed in the redist.txt file inside the Baf2Sql distribution archive;
+furthermore, there are several files that you must distribute, also listed in
+the redist.txt file.
+4.4 In your Own Software’s “About” box the following text is displayed:
+“This software uses Baf2Sql software. Copyright © 2016 by Bruker Daltonik GmbH.
+All rights reserved.”
 
 5. Restrictions for Distribution of your own Products
-5.1 You may not use the Licensor’s trademarks in a way that suggests your software components and/or programs are provided by or are endorsed by the Licensor.
-5.2 You may commercially exploit products that require the usage of or link to the Baf2Sql Libraries and files as defined in section 4.3. Commercial exploitation includes, but is not limited to, charging a purchase price, license fee, maintenance fee, or subscription fee.
-5.3 Your rights to the Baf2Sql do not include any license, right, power or authority to subject the Baf2Sql in whole or in part to any of the terms of an Excluded License. "Excluded License" means any license that requires as a condition of use, modification and/or distribution of software that such software or other software combined and/or distributed with such software shall be (a) disclosed or distributed in source code form; or (b) licensed for the purpose of making derivative works. Without limiting the foregoing obligation, you are specifically prohibited from distributing the Baf2Sql or Baf2Sql Libraries with any software that is subject to the GNU General Public License (GPL) or similar license in a manner that would create a combined work.
+5.1 You may not use the Licensor’s trademarks in a way that suggests your
+software components and/or programs are provided by or are endorsed by the
+Licensor.
+5.2 You may commercially exploit products that require the usage of or link to
+the Baf2Sql Libraries and files as defined in section 4.3. Commercial
+exploitation includes, but is not limited to, charging a purchase price, license
+fee, maintenance fee, or subscription fee.
+5.3 Your rights to the Baf2Sql do not include any license, right, power or
+authority to subject the Baf2Sql in whole or in part to any of the terms of an
+Excluded License. "Excluded License" means any license that requires as a
+condition of use, modification and/or distribution of software that such
+software or other software combined and/or distributed with such software shall
+be (a) disclosed or distributed in source code form; or (b) licensed for the
+purpose of making derivative works. Without limiting the foregoing obligation,
+you are specifically prohibited from distributing the Baf2Sql or Baf2Sql
+Libraries with any software that is subject to the GNU General Public License
+(GPL) or similar license in a manner that would create a combined work.
 
 6. Liability
-6.1 As Licensor delivers the software for free, Licensor is not liable for any kind of damage, direct or indirect, which may arise due to simple negligence (Section 521 German Civil Code). In the event, that there should be – for whatever reason – a statutory liability of Licensor for simple negligence, the aforementioned exclusion of liability applies nevertheless, but with the exception of damages to life, body or health.
-6.2 You indemnify, defend and hold harmless the Licensor from any liability claims, including attorney fees, of third parties in connection with your usage of the Baf2Sql as well as the distribution of your Own Software which requires usage of or links to Baf2Sql Libraries and other circumstances for which you are responsible. 
+6.1 As Licensor delivers the software for free, Licensor is not liable for any
+kind of damage, direct or indirect, which may arise due to simple negligence
+(Section 521 German Civil Code). In the event, that there should be – for
+whatever reason – a statutory liability of Licensor for simple negligence, the
+aforementioned exclusion of liability applies nevertheless, but with the
+exception of damages to life, body or health.
+6.2 You indemnify, defend and hold harmless the Licensor from any liability
+claims, including attorney fees, of third parties in connection with your usage
+of the Baf2Sql as well as the distribution of your Own Software which requires
+usage of or links to Baf2Sql Libraries and other circumstances for which you are
+responsible. 
 
 7. Additional Terms Applicable to the Baf2Sql
-7.1 The Baf2Sql is licensed, not sold. This License only gives you some rights to use the Baf2Sql and the Baf2Sql Libraries; the Licensor reserves all other rights. Unless applicable law gives you more rights despite this limitation, you may use the Baf2Sql and the Baf2Sql Libraries only as expressly permitted in this License.
-7.2 Licensor has no obligation to fix, update, supplement or support the Baf2Sql and/or the Baf2Sql Libraries.
-7.3 Your rights under this License terminate automatically if you breach this License in any way. Termination of this License will not affect any of your obligations or liabilities arising prior to termination. The following sections of this License shall survive termination: 3.1, 3.2, 5.1, 5.2, 5.3, 6.1, and 6.2.
-7.4 No subsidiary agreements of this Agreement have been made. Supplements and amendments to this Agreement must be made in writing as prescribed by law in order to be valid. The requirement of written form under this Agreement may be waived in writing only.
-7.5 This Agreement is governed by German law to the exclusion of the UN Convention on Contracts for the International Sale of Goods. If you are a consumer, this does not apply if legal provisions, in particular consumer protection legislation, conflict with this choice. The courts of Bremen shall have exclusive jurisdiction. If you are not a merchant, a legal entity under public law or a public-law special fund in the sense Section 38 of the German Code of Civil Procedure (ZPO), the agreement on the place of jurisdiction is replaced by the legal provisions.
-7.6 If individual provisions of this Agreement are or become invalid or contain a gap which needs to be filled, the validity of the remaining provisions of the Agreement will not be affected thereby. The Parties hereby undertake to substitute the invalid or lacking provision with a valid provision which comes closest to the documented intentions of the Parties.
+7.1 The Baf2Sql is licensed, not sold. This License only gives you some rights
+to use the Baf2Sql and the Baf2Sql Libraries; the Licensor reserves all other
+rights. Unless applicable law gives you more rights despite this limitation, you
+may use the Baf2Sql and the Baf2Sql Libraries only as expressly permitted in
+this License.
+7.2 Licensor has no obligation to fix, update, supplement or support the Baf2Sql
+and/or the Baf2Sql Libraries.
+7.3 Your rights under this License terminate automatically if you breach this
+License in any way. Termination of this License will not affect any of your
+obligations or liabilities arising prior to termination. The following sections
+of this License shall survive termination: 3.1, 3.2, 5.1, 5.2, 5.3, 6.1, and
+6.2.
+7.4 No subsidiary agreements of this Agreement have been made. Supplements and
+amendments to this Agreement must be made in writing as prescribed by law in
+order to be valid. The requirement of written form under this Agreement may be
+waived in writing only.
+7.5 This Agreement is governed by German law to the exclusion of the UN
+Convention on Contracts for the International Sale of Goods. If you are a
+consumer, this does not apply if legal provisions, in particular consumer
+protection legislation, conflict with this choice. The courts of Bremen shall
+have exclusive jurisdiction. If you are not a merchant, a legal entity under
+public law or a public-law special fund in the sense Section 38 of the German
+Code of Civil Procedure (ZPO), the agreement on the place of jurisdiction is
+replaced by the legal provisions.
+7.6 If individual provisions of this Agreement are or become invalid or contain
+a gap which needs to be filled, the validity of the remaining provisions of the
+Agreement will not be affected thereby. The Parties hereby undertake to
+substitute the invalid or lacking provision with a valid provision which comes
+closest to the documented intentions of the Parties.
 
 =====================================
 
@@ -699,9 +952,11 @@ licensed code from other projects.
 
 ======================================
 
-CppSQLite V3.2, http://www.codeproject.com/Articles/6343/CppSQLite-C-Wrapper-for-SQLite
+CppSQLite V3.2,
+http://www.codeproject.com/Articles/6343/CppSQLite-C-Wrapper-for-SQLite
 
-Copyright (c) 2004..2007 Rob Groves. All Rights Reserved. rob.groves@btinternet.com
+Copyright (c) 2004..2007 Rob Groves. All Rights Reserved.
+rob.groves@btinternet.com
 
 Permission to use, copy, modify, and distribute this software and its
 documentation for any purpose, without fee, and without a written

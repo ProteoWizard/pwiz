@@ -71,7 +71,7 @@ rule vendor-api-usage-requirements ( properties * )
         {
             result += <assembly-dependency>$(dll_location)/BaseDataAccess.dll.config ;
         }
-        result += <assembly-dependency>$(API_PATH)/EULA.MHDAC ;
+        result += <assembly-dependency>$(API_PATH)/EULA.Agilent.txt ;
     }
     return $(result) ;
 }
@@ -135,7 +135,7 @@ rule install-requirements ( properties * )
         result += <source>$(dll_location)\\BaseTof.dll ;
         result += <source>$(dll_location)\\MassSpecDataReader.dll ;
         result += <source>$(dll_location)\\MIDAC.dll ;
-        result += <source>$(API_PATH)\\EULA.MHDAC ;
+        result += <source>$(API_PATH)\\EULA.Agilent.txt ;
     }
     return $(result) ;
 }
@@ -147,7 +147,7 @@ install install_pwiz_vendor_api_agilent
 explicit install_pwiz_vendor_api_agilent ;
 
 install install_pwiz_vendor_api_agilent_eula
-    : $(API_PATH)/EULA.MHDAC
+    : $(API_PATH)/EULA.Agilent.txt
     ;
 
 explicit install_pwiz_vendor_api_agilent_eula ;
