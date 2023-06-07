@@ -65,7 +65,7 @@ namespace pwiz.SkylineTestTutorial
     {
         public const string SERVER_URL = "https://panoramaweb.org/";
         public const string PANORAMA_FOLDER = "SkylineTest";
-        public const string PANORAMA_USER_NAME = "ritach@uw.edu";
+        public const string PANORAMA_USER_NAME = "skyline_tester@proteinms.net";
         public const string PANORAMA_PASSWORD = "lclcmsms";
 
         public string testFolderName = "AuditLogUpload";

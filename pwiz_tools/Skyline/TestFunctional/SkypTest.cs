@@ -6,7 +6,6 @@ using Microsoft.VisualStudio.TestTools.UnitTesting;
 using Newtonsoft.Json.Linq;
 using pwiz.PanoramaClient;
 using pwiz.Common.SystemUtil;
-using pwiz.Skyline.Alerts;
 using pwiz.Skyline.FileUI;
 using pwiz.Skyline.Model;
 using pwiz.Skyline.Properties;
@@ -542,10 +541,12 @@ namespace pwiz.SkylineTestFunctional
     class AllValidPanoramaClient : IPanoramaClient
     {
         public Uri ServerUri { get; set; }
+        public string Username { get; }
 
         public AllValidPanoramaClient(string serverUri)
         {
             ServerUri = new Uri(serverUri);
+            Username = null;
         }
         public PanoramaServer ValidateServer()
         {

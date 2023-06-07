@@ -3323,9 +3323,9 @@ namespace pwiz.SkylineTestData
             
             // Error: folder does not exist
             client = new TestPanoramaClient() { MyFolderState = FolderState.notfound, ServerUri = serverUri, Username = "user", Password = "password"};
-            var server = helper.ValidateServer(client);
+            helper.ValidateServer(client);
             var folder = "folder/not/found";
-            helper.ValidateFolder(client, server, folder);
+            helper.ValidateFolder(client, folder);
             Assert.IsTrue(
                 buffer.ToString()
                     .Contains(
@@ -3339,13 +3339,13 @@ namespace pwiz.SkylineTestData
             // Error: no permissions on folder
             client = new TestPanoramaClient() { MyFolderState = FolderState.nopermission, ServerUri = serverUri };
             folder = "no/permissions";
-            helper.ValidateFolder(client, server, folder);
+            helper.ValidateFolder(client, folder);
             Assert.IsTrue(
                 buffer.ToString()
                     .Contains(
                         string.Format(
                             PanoramaClient.Properties.Resources.PanoramaUtil_VerifyFolder_User__0__does_not_have_permissions_to_upload_to_the_Panorama_folder__1_,
-                            "user", folder)));
+                            client.Username, folder)));
             TestOutputHasErrorLine(buffer.ToString());
             buffer.Clear();
 
@@ -3353,7 +3353,7 @@ namespace pwiz.SkylineTestData
             // Error: not a Panorama folder
             client = new TestPanoramaClient() { MyFolderState = FolderState.notpanorama, ServerUri = serverUri };
             folder = "not/panorama";
-            helper.ValidateFolder(client, server, folder);
+            helper.ValidateFolder(client, folder);
             Assert.IsTrue(
                 buffer.ToString()
                     .Contains(string.Format(PanoramaClient.Properties.Resources.PanoramaUtil_VerifyFolder__0__is_not_a_Panorama_folder,

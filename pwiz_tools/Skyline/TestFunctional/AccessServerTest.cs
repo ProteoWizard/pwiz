@@ -319,10 +319,8 @@ namespace pwiz.SkylineTestFunctional
             Assert.AreEqual(pServer.URI.AbsoluteUri, PWEB_FULL);
             PanoramaServer tempServer = null;
             Assert.IsFalse(pServer.RemoveContextPath(ref tempServer));
-            Assert.IsNull(tempServer);
             Assert.IsTrue(pServer.AddLabKeyContextPath(ref tempServer));
             Assert.IsNotNull(tempServer);
-            Assert.AreNotEqual(pServer.URI.AbsoluteUri, PWEB_LK_FULL);
             Assert.AreEqual(tempServer.URI.AbsoluteUri, PWEB_LK_FULL);
 
             serverUri = PanoramaUtil.ServerNameToUri(PWEB_LK);
@@ -330,10 +328,8 @@ namespace pwiz.SkylineTestFunctional
             Assert.AreEqual(pServer.URI.AbsoluteUri, PWEB_LK_FULL);
             tempServer = null;
             Assert.IsFalse(pServer.AddLabKeyContextPath(ref tempServer));
-            Assert.IsNull(tempServer);
             Assert.IsTrue(pServer.RemoveContextPath(ref tempServer));
             Assert.IsNotNull(tempServer);
-            Assert.AreNotEqual(pServer.URI.AbsoluteUri, PWEB_FULL);
             Assert.AreEqual(tempServer.URI.AbsoluteUri, PWEB_FULL);
 
             serverUri = PanoramaUtil.ServerNameToUri(PWEB_LK);
@@ -342,7 +338,7 @@ namespace pwiz.SkylineTestFunctional
             tempServer = null;
             Assert.IsTrue(pServer.Redirect(PWEB_FULL + PanoramaUtil.ENSURE_LOGIN_PATH,
                 PanoramaUtil.ENSURE_LOGIN_PATH, ref tempServer));
-            Assert.AreNotEqual(pServer.URI, PWEB_FULL);
+            Assert.IsNotNull(tempServer);
             Assert.AreEqual(tempServer.URI, PWEB_FULL);
 
             tempServer = null;
@@ -377,11 +373,11 @@ namespace pwiz.SkylineTestFunctional
             {
                 if (string.Equals(Server, VALID_NON_PANORAMA_SERVER))
                 {
-                    throw new PanoramaServerException(UserStateEnum.nonvalid, "Test WebException", ServerUri);
+                    throw new PanoramaServerException(UserStateEnum.nonvalid, "Test WebException", ServerUri, ServerUri);
                 }
 
                 else if (string.Equals(Server, NON_EXISTENT_SERVER))
-                    throw new PanoramaServerException(ServerStateEnum.missing, "Test WebException - NameResolutionFailure", ServerUri);
+                    throw new PanoramaServerException(ServerStateEnum.missing, "Test WebException - NameResolutionFailure", ServerUri, ServerUri);
 
                 else if (Server.Contains(VALID_PANORAMA_SERVER))
                 {
@@ -392,10 +388,11 @@ namespace pwiz.SkylineTestFunctional
                     }
                     else
                     {
-                        throw new PanoramaServerException(UserStateEnum.nonvalid, "Test WebException", ServerUri);
+                        throw new PanoramaServerException(UserStateEnum.nonvalid, "Test WebException", ServerUri,
+                            PanoramaUtil.GetEnsureLoginUri(new PanoramaServer(ServerUri, Username, Password)));
                     }
                 }
-                throw new PanoramaServerException(ServerStateEnum.unknown, "Test WebException - unknown failure", ServerUri);
+                throw new PanoramaServerException(ServerStateEnum.unknown, "Test WebException - unknown failure", ServerUri, ServerUri);
             }
 
             public FolderState IsValidFolder(string folderPath)

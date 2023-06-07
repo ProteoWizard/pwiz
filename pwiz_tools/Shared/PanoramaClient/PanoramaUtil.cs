@@ -121,7 +121,7 @@ namespace pwiz.PanoramaClient
             return new Uri(pServer.URI, ENSURE_LOGIN_PATH);
         }
 
-        public static void VerifyFolder(IPanoramaClient panoramaClient, PanoramaServer server, string panoramaFolder)
+        public static void VerifyFolder(IPanoramaClient panoramaClient, string panoramaFolder)
         {
             switch (panoramaClient.IsValidFolder(panoramaFolder))
             {
@@ -134,7 +134,7 @@ namespace pwiz.PanoramaClient
                     throw new PanoramaServerException(string.Format(
                         Resources
                             .PanoramaUtil_VerifyFolder_User__0__does_not_have_permissions_to_upload_to_the_Panorama_folder__1_,
-                        server.Username, panoramaFolder));
+                        panoramaClient.Username, panoramaFolder));
                 case FolderState.notpanorama:
                     throw new PanoramaServerException(string.Format(
                         Resources.PanoramaUtil_VerifyFolder__0__is_not_a_Panorama_folder,
@@ -252,7 +252,9 @@ namespace pwiz.PanoramaClient
     public interface IPanoramaClient
     {
         Uri ServerUri { get; }
-       
+
+        string Username { get; }
+
         PanoramaServer ValidateServer();
 
         FolderState IsValidFolder(string folderPath);
@@ -274,7 +276,7 @@ namespace pwiz.PanoramaClient
     public class WebPanoramaClient : IPanoramaClient
     {
         public Uri ServerUri { get; private set; }
-        private string Username { get; }
+        public string Username { get; }
         private string Password { get; }
 
         public WebPanoramaClient(Uri serverUri, string username, string password)
@@ -682,7 +684,7 @@ namespace pwiz.PanoramaClient
         {
         }
 
-        public PanoramaServerException(ServerStateEnum state, string error, Uri uri, Uri redirectUri) : base(GetErrorMessage(state, error, uri, redirectUri))
+        public PanoramaServerException(ServerStateEnum state, string error, Uri uri, Uri requestUri) : base(GetErrorMessage(state, error, uri, requestUri))
         {
         }
 
@@ -690,11 +692,11 @@ namespace pwiz.PanoramaClient
         {
         }
 
-        public PanoramaServerException(UserStateEnum state, string error, Uri uri,Uri redirectUri) : base(GetErrorMessage(state, error, uri, redirectUri))
+        public PanoramaServerException(UserStateEnum state, string error, Uri uri,Uri requestUri) : base(GetErrorMessage(state, error, uri, requestUri))
         {
         }
 
-        private static string GetErrorMessage(ServerStateEnum state, string error, Uri serverUri, Uri redirectUri)
+        private static string GetErrorMessage(ServerStateEnum state, string error, Uri serverUri, Uri requestUri)
         {
             var stateError = string.Empty;
             switch (state)
@@ -705,7 +707,7 @@ namespace pwiz.PanoramaClient
                         serverUri.AbsoluteUri);
                     break;
                 case ServerStateEnum.notpanorama:
-                    stateError = string.Format("The server {0} is not a Panorama server", serverUri);
+                    stateError = string.Format("The server {0} is not a Panorama server", serverUri.AbsoluteUri);
                     break;
                 case ServerStateEnum.unknown:
                     stateError = string.Format(
@@ -714,10 +716,10 @@ namespace pwiz.PanoramaClient
                     break;
             }
 
-            return AppendErrorAndUri(stateError, error, serverUri, redirectUri);
+            return AppendErrorAndUri(stateError, error, requestUri);
         }
 
-        private static string GetErrorMessage(UserStateEnum state, string error, Uri serverUri, Uri redirectUri)
+        private static string GetErrorMessage(UserStateEnum state, string error, Uri serverUri, Uri requestUri)
         {
             var stateError = string.Empty;
             switch (state)
@@ -732,10 +734,10 @@ namespace pwiz.PanoramaClient
                     break;
             }
 
-            return AppendErrorAndUri(stateError, error, serverUri, redirectUri);
+            return AppendErrorAndUri(stateError, error, requestUri);
         }
 
-        private static string AppendErrorAndUri(string stateErrorMessage, string error, Uri uri, Uri redirectUri)
+        private static string AppendErrorAndUri(string stateErrorMessage, string error, Uri uri)
         {
             var message = stateErrorMessage;
 
@@ -751,11 +753,6 @@ namespace pwiz.PanoramaClient
                 if (uri != null)
                 {
                     sb.AppendLine(string.Format(Resources.GenericState_AppendErrorAndUri_URL___0_, uri));
-                }
-
-                if (redirectUri != null)
-                {
-                    sb.AppendLine(string.Format("Redirect URL: {0}", redirectUri));
                 }
 
                 message = TextUtil.LineSeparate(message, string.Empty, sb.ToString());

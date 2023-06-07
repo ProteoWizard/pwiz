@@ -3511,20 +3511,22 @@ namespace pwiz.Skyline
                     this,
                     TextUtil.LineSeparate(
                         Resources.SkylineWindow_ShowPublishDlg_There_are_no_Panorama_servers_to_upload_to,
+                        string.Empty,
                         servers.Count > 1
                             ? string.Format("There are {0} servers without a user account.", servers.Count)
-                            : "There is one server without a user account.",
+                            : string.Format("{0} does not have user account information.", servers[0].URI.AbsoluteUri),
                         "To upload documents to a server, a user account is required. ",
-                        "Press Edit Existing to add user account information for an existing server.",
+                        string.Empty,
+                        "Press Edit existing to add user account information for an existing server.",
                         "Press Add to add a new server."),
-                    "Edit Existing", "Add",
+                    "Edit existing", "Add",
                     true);
                 if (buttonPress == DialogResult.Cancel)
                     return;
 
                 if (buttonPress == DialogResult.Yes)
                 {
-                    // person intends to edit an existing server
+                    // user intends to edit an existing server
                     if (servers.Count == 1)
                     {
                         var anonymousServer = servers[0];
