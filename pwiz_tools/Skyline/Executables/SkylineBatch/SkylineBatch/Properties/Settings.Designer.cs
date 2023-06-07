@@ -43,27 +43,21 @@ namespace SkylineBatch.Properties {
             }
         }
         
-        [global::System.Configuration.UserScopedSettingAttribute()]
+        [global::System.Configuration.ApplicationScopedSettingAttribute()]
         [global::System.Diagnostics.DebuggerNonUserCodeAttribute()]
         [global::System.Configuration.DefaultSettingValueAttribute("")]
         public string PanoramaTreeState {
             get {
                 return ((string)(this["PanoramaTreeState"]));
             }
-            set {
-                this["PanoramaTreeState"] = value;
-            }
         }
         
-        [global::System.Configuration.UserScopedSettingAttribute()]
+        [global::System.Configuration.ApplicationScopedSettingAttribute()]
         [global::System.Diagnostics.DebuggerNonUserCodeAttribute()]
         [global::System.Configuration.DefaultSettingValueAttribute("False")]
         public bool ShowPanormaSkyFiles {
             get {
                 return ((bool)(this["ShowPanormaSkyFiles"]));
-            }
-            set {
-                this["ShowPanormaSkyFiles"] = value;
             }
         }
     }
