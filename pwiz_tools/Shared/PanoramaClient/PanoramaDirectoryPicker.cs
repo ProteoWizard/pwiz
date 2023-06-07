@@ -31,7 +31,7 @@ namespace pwiz.PanoramaClient
         public string Selected;
         public List<PanoramaServer> Servers { get; }
 
-        public PanoramaDirectoryPicker(List<PanoramaServer> servers, string state, bool showSkyFolders = false)
+        public PanoramaDirectoryPicker(List<PanoramaServer> servers, string state, bool showSkyFolders = false, bool showWebDavFolders = false)
         {
             InitializeComponent();
             Servers = servers;
@@ -42,6 +42,10 @@ namespace pwiz.PanoramaClient
             up.Enabled = false;
             back.Enabled = false;
             forward.Enabled = false;
+            if (showWebDavFolders)
+            {
+                folders.ShowWebDav = true;
+            }
         }
 
         public string Folder { get; set; }
@@ -100,7 +104,7 @@ namespace pwiz.PanoramaClient
         private void DirectoryPicker_FormClosing(object sender, FormClosingEventArgs e)
         {
             State = folders.ClosingState();
-            Selected = folders.FolderPath;
+            Selected = string.Concat(folders.ActiveServer.URI, "_webdav", folders.FolderPath);
         }
 
         private void checkEnabled()

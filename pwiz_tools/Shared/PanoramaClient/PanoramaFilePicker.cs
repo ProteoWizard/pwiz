@@ -579,6 +579,7 @@ namespace pwiz.PanoramaClient
         /// </summary>
         public void TestCancel()
         {
+            DialogResult = DialogResult.Cancel;
             Close();
         }
 
