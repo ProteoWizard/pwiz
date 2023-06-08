@@ -146,7 +146,7 @@ namespace SkylineBatch
                 }
                 else // if file not required use PanoramaDirectoryPicker
                 {
-                    using (PanoramaDirectoryPicker dlg = new PanoramaDirectoryPicker(panoramaServers, state))
+                    using (PanoramaDirectoryPicker dlg = new PanoramaDirectoryPicker(panoramaServers, state, showWebDavFolders:true))
                     {
 
                         // dlg.InitializeDialog();
