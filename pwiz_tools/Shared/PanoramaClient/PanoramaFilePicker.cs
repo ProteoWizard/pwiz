@@ -845,8 +845,25 @@ namespace pwiz.PanoramaClient
             public int Compare(object x, object y)
             {
                 int returnVal = -1;
-                returnVal = String.CompareOrdinal(((ListViewItem)x)?.SubItems[col].Text,
-                    ((ListViewItem)y)?.SubItems[col].Text);
+                if (col == 1)
+                {
+                    var xTag = ((ListViewItem)x)?.Tag;
+                    var yTag = ((ListViewItem)y)?.Tag;
+                    if (xTag != null && yTag != null)
+                    {
+                        var xBytes = (long) xTag;
+                        var yBytes = (long) yTag;
+                        var xFS = new FileSize(xBytes);
+                        var yFS = new FileSize(yBytes);
+                        returnVal = xFS.CompareTo(yFS);
+                    }
+                }
+                else
+                {
+                    returnVal = String.CompareOrdinal(((ListViewItem)x)?.SubItems[col].Text,
+                        ((ListViewItem)y)?.SubItems[col].Text);
+                }
+                
                 // Determine whether the sort order is descending.
                 if (order == SortOrder.Descending)
                     // Invert the value returned by String.Compare.
