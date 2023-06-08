@@ -898,6 +898,10 @@ namespace pwiz.Skyline
 
         private void openPanorama_Click(object sender, EventArgs e)
         {
+            if (!CheckSaveDocument())
+            {
+                return;
+            }
             OpenFromPanorama();
         }
 

@@ -1336,7 +1336,7 @@
     <value>200, 22</value>
   </data>
   <data name="openPanoramaMenuItem.Text" xml:space="preserve">
-    <value>Open From Panorama...</value>
+    <value>Open from &amp;Panorama...</value>
   </data>
   <data name="openContainingFolderMenuItem.Size" type="System.Drawing.Size, System.Drawing">
     <value>200, 22</value>
@@ -3883,6 +3883,6 @@
     <value>SkylineWindow</value>
   </data>
   <data name="&gt;&gt;$this.Type" xml:space="preserve">
-    <value>pwiz.Skyline.Util.FormEx, Skyline-daily, Version=22.2.1.437, Culture=neutral, PublicKeyToken=null</value>
+    <value>pwiz.Skyline.Util.FormEx, Skyline-daily, Version=22.2.1.497, Culture=neutral, PublicKeyToken=null</value>
   </data>
 </root>

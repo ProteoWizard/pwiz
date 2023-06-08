@@ -361,8 +361,6 @@ namespace pwiz.PanoramaClient
                         // e.g. Given server URL is https://panoramaweb.org but LabKey Server is not deployed as the root webapp.
                         // Try again with '/labkey' context path
                         return EnsureLogin(newServer);
-                        // TryEnsureLogin(pServer, ref serverUri);
-                        // return;
                     }
                     else if (pServer.RemoveContextPath(ref newServer))
                     {
@@ -371,8 +369,6 @@ namespace pwiz.PanoramaClient
                         // We will first try https://panoramaweb.org/project/ OR https://panoramaweb.org/home/ as the server URL. 
                         // And that will fail.  Remove the assumed context path and try again.
                         return EnsureLogin(newServer);
-                        // TryEnsureLogin(pServer, ref serverUri);
-                        // return;
                     }
                 }
 
@@ -1057,10 +1053,6 @@ namespace pwiz.PanoramaClient
             if (idx != -1)
             {
                 var newUri = new Uri(redirectUri.Remove(idx));
-                // if (!URI.Host.Equals(newUri.Host))
-                // {
-                //     return false;
-                // }
 
                 redirectedServer = new PanoramaServer(newUri, Username, Password);
                 return true;
