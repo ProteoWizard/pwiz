@@ -685,6 +685,46 @@ namespace pwiz.PanoramaClient
 
     }
 
+    /// <summary>
+    /// Base class for panorama clients used in tests.
+    /// </summary>
+    public class BaseTestPanoramaClient : IPanoramaClient
+    {
+        public Uri ServerUri { get; set; }
+        public string Username { get; set; }
+
+        public virtual PanoramaServer ValidateServer()
+        {
+            throw new NotImplementedException();
+        }
+
+        public virtual void ValidateFolder(string folderPath, FolderPermission? permission, bool checkTargetedMs = true)
+        {
+            throw new NotImplementedException();
+        }
+
+        public virtual FolderOperationStatus CreateFolder(string parentPath, string folderName)
+        {
+            throw new NotImplementedException();
+        }
+
+        public virtual FolderOperationStatus DeleteFolder(string folderPath)
+        {
+            throw new NotImplementedException();
+        }
+
+        public virtual JToken GetInfoForFolders(string folder, bool ensureLogin = true)
+        {
+            throw new NotImplementedException();
+        }
+
+        public virtual void DownloadFile(string fileUrl, string fileName, long fileSize, string realName, PanoramaServer server,
+            IProgressMonitor pm, IProgressStatus progressStatus)
+        {
+            throw new NotImplementedException();
+        }
+    }
+
     public class PanoramaServerException : Exception
     {
         public PanoramaServerException(string message) : base(message)

@@ -26,7 +26,6 @@ using System.Text;
 using System.Text.RegularExpressions;
 using System.Threading;
 using Microsoft.VisualStudio.TestTools.UnitTesting;
-using Newtonsoft.Json.Linq;
 using pwiz.PanoramaClient;
 using pwiz.Common.Chemistry;
 using pwiz.Common.Collections;
@@ -3463,10 +3462,8 @@ namespace pwiz.SkylineTestData
                 string.Format("Expected RunCommand result message containing \n\"{0}\",\ngot\n\"{1}\"\ninstead.", expectedMessage, actualMessage));
         }
 
-        private class TestPanoramaClient : IPanoramaClient
+        private class TestPanoramaClient : BaseTestPanoramaClient
         {
-            public Uri ServerUri { get; set; }
-            public string Username { get; set; }
             public string Password { get; set; }
 
             public ServerStateEnum MyServerState { get; set; }
@@ -3484,7 +3481,7 @@ namespace pwiz.SkylineTestData
                 Password = "mypassword";
             }
 
-            public virtual PanoramaServer ValidateServer()
+            public override PanoramaServer ValidateServer()
             {
                 if (ServerStateEnum.available != MyServerState)
                 {
@@ -3498,32 +3495,12 @@ namespace pwiz.SkylineTestData
                 return new PanoramaServer(ServerUri, Username, Password);
             }
 
-            public void ValidateFolder(string folderPath, FolderPermission? permission, bool checkTargetedMs = true)
+            public override void ValidateFolder(string folderPath, FolderPermission? permission, bool checkTargetedMs = true)
             {
                 if (MyFolderState != FolderState.valid)
                 {
                     throw new PanoramaServerException(MyFolderState, folderPath, null, ServerUri, null, Username);
                 }
-            }
-
-            public FolderOperationStatus CreateFolder(string parentPath, string folderName)
-            {
-                return FolderOperationStatus.OK;
-            }
-
-            public FolderOperationStatus DeleteFolder(string folderPath)
-            {
-                return FolderOperationStatus.OK;
-            }
-
-            public JToken GetInfoForFolders(string folder, bool ensureLogin = true)
-            {
-                throw new NotImplementedException();
-            }
-            public void DownloadFile(string fileUrl, string fileName, long fileSize, string realName,
-                PanoramaServer server, IProgressMonitor pm, IProgressStatus progressStatus)
-            {
-                throw new NotImplementedException();
             }
         }
 

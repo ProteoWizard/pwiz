@@ -3,7 +3,6 @@ using System.Collections.Generic;
 using System.IO;
 using System.Net;
 using Microsoft.VisualStudio.TestTools.UnitTesting;
-using Newtonsoft.Json.Linq;
 using pwiz.PanoramaClient;
 using pwiz.Common.SystemUtil;
 using pwiz.Skyline.FileUI;
@@ -538,46 +537,16 @@ namespace pwiz.SkylineTestFunctional
         }
     }
 
-    class AllValidPanoramaClient : IPanoramaClient
+    public class AllValidPanoramaClient : BaseTestPanoramaClient
     {
-        public Uri ServerUri { get; set; }
-        public string Username { get; }
-
         public AllValidPanoramaClient(string serverUri)
         {
             ServerUri = new Uri(serverUri);
             Username = null;
         }
-        public PanoramaServer ValidateServer()
+        public override PanoramaServer ValidateServer()
         {
             return new PanoramaServer(ServerUri, null, null);
         }
-
-        public void ValidateFolder(string folderPath, FolderPermission? permission, bool checkTargetedMs = true)
-        {
-            throw new NotImplementedException();
-        }
-
-        public FolderOperationStatus CreateFolder(string parentPath, string folderName)
-        {
-            throw new NotImplementedException();
-        }
-
-        public FolderOperationStatus DeleteFolder(string folderPath)
-        {
-            throw new NotImplementedException();
-        }
-
-        public JToken GetInfoForFolders(string folder, bool ensureLogin = true)
-        {
-            throw new NotImplementedException();
-        }
-
-        public void DownloadFile(string fileUrl, string fileName, long fileSize, string realName,
-            PanoramaServer server, IProgressMonitor pm, IProgressStatus progressStatus)
-        {
-            throw new NotImplementedException();
-        }
-
     }
 }

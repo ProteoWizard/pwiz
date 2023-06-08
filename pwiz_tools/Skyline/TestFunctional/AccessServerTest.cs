@@ -347,12 +347,9 @@ namespace pwiz.SkylineTestFunctional
             Assert.IsTrue(pServer.Redirect("http://another.server/" + PanoramaUtil.ENSURE_LOGIN_PATH, PanoramaUtil.ENSURE_LOGIN_PATH, ref tempServer)); // Redirect to different host
         }
 
-        public class TestPanoramaClient : IPanoramaClient
+        public class TestPanoramaClient : BaseTestPanoramaClient
         {
-            public Uri ServerUri { get; set; }
-
-            public string Server { get; }
-            public string Username { get; }
+            public string Server { get; } 
             public string Password { get; }
             public TestPanoramaClient(string server, string username, string password)
             {
@@ -369,7 +366,7 @@ namespace pwiz.SkylineTestFunctional
                 }
             }
 
-            public PanoramaServer ValidateServer()
+            public override PanoramaServer ValidateServer()
             {
                 if (string.Equals(Server, VALID_NON_PANORAMA_SERVER))
                 {
@@ -395,31 +392,9 @@ namespace pwiz.SkylineTestFunctional
                 throw new PanoramaServerException(ServerStateEnum.unknown, "Test WebException - unknown failure", ServerUri, ServerUri);
             }
 
-            public void ValidateFolder(string folderPath, FolderPermission? permission, bool checkTargetedMs = true)
+            public override void ValidateFolder(string folderPath, FolderPermission? permission, bool checkTargetedMs = true)
             {
             }
-
-            public FolderOperationStatus CreateFolder(string parentPath, string folderName)
-            {
-                throw new NotImplementedException();
-            }
-
-            public FolderOperationStatus DeleteFolder(string folderPath)
-            {
-                throw new NotImplementedException();
-            }
-
-            public JToken GetInfoForFolders(string folder, bool ensureLogin = true)
-            {
-                throw new NotImplementedException();
-            }
-
-            public void DownloadFile(string fileUrl, string fileName, long fileSize, string realName,
-                PanoramaServer server, IProgressMonitor pm, IProgressStatus progressStatus)
-            {
-                throw new NotImplementedException();
-            }
-
         }
 
         private class TestPanoramaPublishClient : AbstractPanoramaPublishClient
