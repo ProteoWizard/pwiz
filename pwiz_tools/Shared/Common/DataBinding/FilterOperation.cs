@@ -18,8 +18,8 @@
  */
 using System;
 using System.Collections.Generic;
-using System.Globalization;
 using System.Linq;
+using pwiz.Common.DataBinding.Attributes;
 using pwiz.Common.Properties;
 using pwiz.Common.SystemUtil;
 
@@ -30,6 +30,7 @@ namespace pwiz.Common.DataBinding
         string OpName { get; }
         [Track]
         string DisplayName { get; }
+        string ShortDisplayName { get; }
         bool IsValidFor(ColumnDescriptor columnDescriptor);
         bool IsValidFor(DataSchema dataSchema, Type columnType);
         Type GetOperandType(ColumnDescriptor columnDescriptor);
@@ -118,21 +119,6 @@ namespace pwiz.Common.DataBinding
             return LstFilterOperations;
         }
 
-        public static bool MatchEquals(object columnValue, object operandValue)
-        {
-            return Equals(columnValue, operandValue);
-        }
-
-        public static bool MatchNotEquals(object columnValue, object operandValue)
-        {
-            return !Equals(columnValue, operandValue);
-        }
-
-        public static Type GetTypeToConvertOperandTo(ColumnDescriptor columnDescriptor)
-        {
-            return GetTypeToConvertOperandTo(columnDescriptor.DataSchema, columnDescriptor.PropertyType);
-        }
-
         public static Type GetTypeToConvertOperandTo(DataSchema dataSchema, Type columnType)
         {
             if (null == columnType)
@@ -141,54 +127,18 @@ namespace pwiz.Common.DataBinding
             }
             columnType = dataSchema.GetWrappedValueType(columnType);
             columnType = Nullable.GetUnderlyingType(columnType) ?? columnType;
-            Type typeToConvertTo;
-            if (convertibleTypes.TryGetValue(columnType, out typeToConvertTo))
+            var filterableAttribute = columnType.GetCustomAttributes(typeof(FilterableAttribute), false)
+                .Cast<FilterableAttribute>().FirstOrDefault();
+            if (filterableAttribute != null)
+            {
+                return columnType;
+            }
+            if (convertibleTypes.TryGetValue(columnType, out Type typeToConvertTo))
             {
                 return typeToConvertTo;
             }
-            return typeof (string);
-        }
 
-        public static object ConvertOperand(DataSchema dataSchema, Type columnType, string operand, CultureInfo cultureInfo)
-        {
-            var type = GetTypeToConvertOperandTo(dataSchema, columnType);
-            if (null == type)
-            {
-                return operand;
-            }
-            if (typeof (char) == type)
-            {
-                if (operand.Length != 1)
-                {
-                    return null;
-                }
-                return operand[0];
-            }
-            if (type.IsEnum)
-            {
-                if (string.IsNullOrEmpty(operand))
-                {
-                    return null;
-                }
-                try
-                {
-                    return Enum.Parse(type, operand);
-                }
-                catch
-                {
-                    return Enum.Parse(type, operand, true);
-                }
-            }
-            if (string.IsNullOrEmpty(operand))
-            {
-                return null;
-            }
-            return Convert.ChangeType(operand, type);
-        }
-
-        public static object ConvertValue(ColumnDescriptor columnDescriptor, object value)
-        {
-            return ConvertValue(columnDescriptor.DataSchema, columnDescriptor.PropertyType, value);
+            return typeof(string);
         }
 
         public static object ConvertValue(DataSchema dataSchema, Type columnType, object value)
@@ -213,6 +163,11 @@ namespace pwiz.Common.DataBinding
             }
             public string OpName { get; private set; }
             public abstract string DisplayName { get; }
+            public virtual string ShortDisplayName
+            {
+                get { return DisplayName; }
+            }
+
             public bool IsValidFor(ColumnDescriptor columnDescriptor)
             {
                 return IsValidFor(columnDescriptor.DataSchema, columnDescriptor.PropertyType);
@@ -374,6 +329,11 @@ namespace pwiz.Common.DataBinding
                 get { return Resources.FilterOperations_Equals; }
             }
 
+            public override string ShortDisplayName
+            {
+                get { return @"="; }
+            }
+
             public override bool Matches(DataSchema dataSchema, Type columnType, object columnValue, object operandValue)
             {
                 return Equals(
@@ -467,7 +427,6 @@ namespace pwiz.Common.DataBinding
                 get { return Resources.FilterOperations_Is_Greater_Than_Or_Equal_To; }
             }
 
-
             protected override bool ComparisonMatches(int comparisonResult)
             {
                 return comparisonResult >= 0;
@@ -514,6 +473,11 @@ namespace pwiz.Common.DataBinding
             protected ComparisonFilterOperation(string opName)
                 : base(opName)
             {
+            }
+
+            public sealed override string ShortDisplayName
+            {
+                get { return OpName; }
             }
 
             public override bool IsValidFor(DataSchema dataSchema, Type propertyType)

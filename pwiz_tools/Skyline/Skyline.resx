@@ -239,6 +239,12 @@
   <data name="modifyPeptideContextMenuItem.Visible" type="System.Boolean, mscorlib">
     <value>False</value>
   </data>
+  <data name="editSpectrumFilterContextMenuItem.Size" type="System.Drawing.Size, System.Drawing">
+    <value>228, 22</value>
+  </data>
+  <data name="editSpectrumFilterContextMenuItem.Text" xml:space="preserve">
+    <value>Edit Spectrum Filter...</value>
+  </data>
   <data name="toggleQuantitativeContextMenuItem.Size" type="System.Drawing.Size, System.Drawing">
     <value>228, 22</value>
   </data>
@@ -308,11 +314,23 @@
   <metadata name="contextMenuSpectrum.TrayLocation" type="System.Drawing.Point, System.Drawing, Version=4.0.0.0, Culture=neutral, PublicKeyToken=b03f5f7f11d50a3a">
     <value>197, 56</value>
   </metadata>
-  <data name="ionTypesContextMenuItem.Size" type="System.Drawing.Size, System.Drawing">
-    <value>193, 22</value>
+  <data name="replicatesTreeContextMenuItem.Size" type="System.Drawing.Size, System.Drawing">
+    <value>228, 22</value>
   </data>
   <data name="ionTypesContextMenuItem.Text" xml:space="preserve">
     <value>Ion Types</value>
+  </data>
+  <data name="replicatesTreeContextMenuItem.Text" xml:space="preserve">
+    <value>Replicates</value>
+  </data>
+  <data name="contextMenuTreeNode.Size" type="System.Drawing.Size, System.Drawing">
+    <value>229, 396</value>
+  </data>
+  <data name="&gt;&gt;contextMenuTreeNode.Name" xml:space="preserve">
+    <value>contextMenuTreeNode</value>
+  </data>
+  <data name="&gt;&gt;contextMenuTreeNode.Type" xml:space="preserve">
+    <value>System.Windows.Forms.ContextMenuStrip, System.Windows.Forms, Version=4.0.0.0, Culture=neutral, PublicKeyToken=b77a5c561934e089</value>
   </data>
   <data name="fragmentionsContextMenuItem.Size" type="System.Drawing.Size, System.Drawing">
     <value>193, 22</value>
@@ -362,6 +380,12 @@
   <data name="massErrorToolStripMenuItem.Text" xml:space="preserve">
     <value>Mass Error</value>
   </data>
+  <data name="massErrorToolStripMenuItem.Size" type="System.Drawing.Size, System.Drawing">
+    <value>193, 22</value>
+  </data>
+  <data name="massErrorToolStripMenuItem.Text" xml:space="preserve">
+    <value>Show Mass Error</value>
+  </data>
   <data name="ionMzValuesContextMenuItem.Size" type="System.Drawing.Size, System.Drawing">
     <value>193, 22</value>
   </data>
@@ -407,11 +431,17 @@
   <data name="toolStripSeparator61.Size" type="System.Drawing.Size, System.Drawing">
     <value>190, 6</value>
   </data>
-  <data name="spectrumPropsContextMenuItem.Size" type="System.Drawing.Size, System.Drawing">
+  <data name="spectrumGraphPropsContextMenuItem.Size" type="System.Drawing.Size, System.Drawing">
     <value>193, 22</value>
   </data>
-  <data name="spectrumPropsContextMenuItem.Text" xml:space="preserve">
-    <value>Properties...</value>
+  <data name="spectrumGraphPropsContextMenuItem.Text" xml:space="preserve">
+    <value>Graph Properties...</value>
+  </data>
+  <data name="showSpectrumPropertiesContextMenuItem.Size" type="System.Drawing.Size, System.Drawing">
+    <value>193, 22</value>
+  </data>
+  <data name="showSpectrumPropertiesContextMenuItem.Text" xml:space="preserve">
+    <value>Spectrum Properties</value>
   </data>
   <data name="toolStripSeparator15.Size" type="System.Drawing.Size, System.Drawing">
     <value>190, 6</value>
@@ -436,9 +466,6 @@
   </data>
   <data name="synchMzScaleToolStripMenuItem.Text" xml:space="preserve">
     <value>Synchronize m/z Scale</value>
-  </data>
-  <data name="contextMenuSpectrum.Size" type="System.Drawing.Size, System.Drawing">
-    <value>194, 442</value>
   </data>
   <data name="&gt;&gt;contextMenuSpectrum.Name" xml:space="preserve">
     <value>contextMenuSpectrum</value>
@@ -2364,10 +2391,16 @@
   <data name="&gt;&gt;toolStripSeparator61.Type" xml:space="preserve">
     <value>System.Windows.Forms.ToolStripSeparator, System.Windows.Forms, Version=4.0.0.0, Culture=neutral, PublicKeyToken=b77a5c561934e089</value>
   </data>
-  <data name="&gt;&gt;spectrumPropsContextMenuItem.Name" xml:space="preserve">
-    <value>spectrumPropsContextMenuItem</value>
+  <data name="&gt;&gt;spectrumGraphPropsContextMenuItem.Name" xml:space="preserve">
+    <value>spectrumGraphPropsContextMenuItem</value>
   </data>
-  <data name="&gt;&gt;spectrumPropsContextMenuItem.Type" xml:space="preserve">
+  <data name="&gt;&gt;spectrumGraphPropsContextMenuItem.Type" xml:space="preserve">
+    <value>System.Windows.Forms.ToolStripMenuItem, System.Windows.Forms, Version=4.0.0.0, Culture=neutral, PublicKeyToken=b77a5c561934e089</value>
+  </data>
+  <data name="&gt;&gt;showSpectrumPropertiesContextMenuItem.Name" xml:space="preserve">
+    <value>showSpectrumPropertiesContextMenuItem</value>
+  </data>
+  <data name="&gt;&gt;showSpectrumPropertiesContextMenuItem.Type" xml:space="preserve">
     <value>System.Windows.Forms.ToolStripMenuItem, System.Windows.Forms, Version=4.0.0.0, Culture=neutral, PublicKeyToken=b77a5c561934e089</value>
   </data>
   <data name="&gt;&gt;toolStripSeparator15.Name" xml:space="preserve">
@@ -3859,3 +3892,4 @@
     <value>pwiz.Skyline.Util.FormEx, Skyline-daily, Version=22.2.1.341, Culture=neutral, PublicKeyToken=null</value>
   </data>
 </root>
+

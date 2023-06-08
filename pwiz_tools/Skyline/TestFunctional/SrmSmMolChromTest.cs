@@ -17,8 +17,8 @@
  * limitations under the License.
  */
 using Microsoft.VisualStudio.TestTools.UnitTesting;
-using pwiz.Skyline.Model;
 using pwiz.Skyline.Model.Results;
+using pwiz.Skyline.SettingsUI;
 using pwiz.SkylineTestUtil;
 
 namespace pwiz.SkylineTestFunctional
@@ -39,36 +39,30 @@ namespace pwiz.SkylineTestFunctional
 
         protected override void DoTest()
         {
-            RunUI(() => SkylineWindow.OpenFile(TestFilesDir.GetTestPath("SrmSmMolChromTest.sky")));
+            var testPath = TestFilesDir.GetTestPath("SrmSmMolChromTest.sky");
+            RunUI(() => SkylineWindow.OpenFile(testPath));
             ImportResultsFiles(new[]
             {
                 new MsDataFilePath(TestFilesDir.GetTestPath("ID36310_01_WAA263_3771_030118" + ExtensionTestContext.ExtMz5)),
                 new MsDataFilePath(TestFilesDir.GetTestPath("ID36311_01_WAA263_3771_030118" + ExtensionTestContext.ExtMz5))
             });
-            VerifyAllTransitionsHaveChromatograms(SkylineWindow.Document);
+            VerifyAllTransitionsHaveChromatograms();
+
+            // Now tinker with molecule details that don't change the molecule mass - should still be able to associate chromatograms
+            RunUI(() => { SkylineWindow.SequenceTree.SelectedNode = SkylineWindow.SequenceTree.Nodes[0].FirstNode; });
+            var doc = SkylineWindow.Document;
+            var editMoleculeDlg = ShowDialog<EditCustomMoleculeDlg>(SkylineWindow.ModifyPeptide);
+            RunUI(() => { editMoleculeDlg.NameText = editMoleculeDlg.NameText + "_renamed"; }); // Change the name
+            OkDialog(editMoleculeDlg, editMoleculeDlg.OkDialog);
+            WaitForDocumentChangeLoaded(doc);
+            VerifyAllTransitionsHaveChromatograms();
+
+            // That info should survive serialization round trip
+            RunUI(() => SkylineWindow.SaveDocument(testPath));
+            RunUI(() => SkylineWindow.NewDocument());
+            RunUI(() => SkylineWindow.OpenFile(testPath));
+            VerifyAllTransitionsHaveChromatograms();
         }
 
-        private void VerifyAllTransitionsHaveChromatograms(SrmDocument doc)
-        {
-            var tolerance = (float) doc.Settings.TransitionSettings.Instrument.MzMatchTolerance;
-            foreach (var molecule in doc.Molecules)
-            {
-                foreach (var precursor in molecule.TransitionGroups)
-                {
-                    foreach (var chromatogramSet in doc.MeasuredResults.Chromatograms)
-                    {
-                        ChromatogramGroupInfo[] chromatogramGroups;
-                        Assert.IsTrue(doc.MeasuredResults.TryLoadChromatogram(chromatogramSet, molecule, precursor, tolerance, out chromatogramGroups));
-                        Assert.AreEqual(1, chromatogramGroups.Length);
-                        foreach (var transition in precursor.Transitions)
-                        {
-                            var chromatogram = chromatogramGroups[0].GetTransitionInfo(transition, tolerance, chromatogramSet.OptimizationFunction);
-                            Assert.IsNotNull(chromatogram);
-                        }
-                    }
-                }
-            }
-            
-        }
     }
 }

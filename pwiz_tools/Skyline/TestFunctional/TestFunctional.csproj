@@ -169,6 +169,7 @@
     <Compile Include="AreaNormalizeOptionTest.cs" />
     <Compile Include="AssociateProteinVariantTest.cs" />
     <Compile Include="AutoTrainModelTest.cs" />
+    <Compile Include="BatchCalibrationGroupComparisonTest.cs" />
     <Compile Include="BlibMoleculeListsTest.cs" />
     <Compile Include="CandidatePeakTest.cs" />
     <Compile Include="CantReadSkydTest.cs" />
@@ -179,12 +180,15 @@
     <Compile Include="DdaScoringTest.cs" />
     <Compile Include="DocumentGridExportTest.cs" />
     <Compile Include="DocumentGridUndoTest.cs" />
+    <Compile Include="EditNeutralLossesTest.cs" />
     <Compile Include="EncyclopeDiaLibraryMatchTest.cs" />
     <Compile Include="EncyclopeDiaPeptidesWithNoSignalTest.cs" />
     <Compile Include="ExplicitMissingPeakBoundsTest.cs" />
     <Compile Include="ExportPropertiesTest.cs" />
+    <Compile Include="FindNodeCancelTest.cs" />
     <Compile Include="IgnoreSimScansTest.cs" />
     <Compile Include="InteractiveCommandLineToolTest.cs" />
+    <Compile Include="LegacyOptimizationStepTest.cs" />
     <Compile Include="LegacyScoringModelTest.cs" />
     <Compile Include="LibraryMatchViewTest.cs" />
     <Compile Include="LiteDropdownListTest.cs" />
@@ -199,6 +203,9 @@
     <Compile Include="RemoveNeutralLossModificationTest.cs" />
     <Compile Include="SaveAfterProteinAssociationTest.cs" />
     <Compile Include="SequenceTreeRatioTest.cs" />
+    <Compile Include="SpectrumGridTest.cs" />
+    <Compile Include="ToolServiceTestSharedClasses.cs" />
+    <Compile Include="EditSpectrumFilterTest.cs" />
     <Compile Include="UnreadableBlibTest.cs" />
     <Compile Include="RemoveSmallMoleculeLabelTypeTest.cs" />
     <Compile Include="StartPageInsertTransitionListTest.cs" />
@@ -513,6 +520,7 @@
     <None Include="DuplicateTransitionGroupTest.zip" />
     <None Include="EADZIonsTest.zip" />
     <None Include="EditNoteTest.zip" />
+    <None Include="EditSpectrumFilterTest.zip" />
     <None Include="EncyclopeDiaLibraryMatchTest.zip" />
     <None Include="EncyclopeDiaPeptidesWithNoSignalTest.zip" />
     <None Include="EncyclopeDiaScoreTest.zip" />
@@ -552,6 +560,7 @@
     <None Include="IrtTest.zip" />
     <None Include="LabelPeakPickingTest.zip" />
     <None Include="LegacyCrosslinkTest.zip" />
+    <None Include="LegacyOptimizationStepTest.zip" />
     <None Include="LegacyScoringModelTest.zip" />
     <None Include="LibraryBuildShareTest.zip" />
     <None Include="LibraryBuildTest.zip" />

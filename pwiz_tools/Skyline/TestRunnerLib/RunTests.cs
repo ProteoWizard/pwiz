@@ -135,7 +135,6 @@ namespace TestRunnerLib
         public bool RetryDataDownloads { get; set; }
         public bool RecordAuditLogs { get; set; }
         public bool RunsSmallMoleculeVersions { get; set; }
-        public bool LiveReports { get; set; }
         public bool TeamCityTestDecoration { get; set; }
         public bool Verbose { get; set; }
         public bool IsParallelClient { get; private set; }
@@ -215,7 +214,6 @@ namespace TestRunnerLib
             RetryDataDownloads = retrydatadownloads; // When true, try re-downloading data files on test failure, in case the failure is due to stale data
             RunsSmallMoleculeVersions = runsmallmoleculeversions;  // Run the small molecule version of various tests?
             RecordAuditLogs = recordauditlogs; // Replace or create audit logs for tutorial tests
-            LiveReports = true;
             TeamCityTestDecoration = teamcityTestDecoration;
             Verbose = verbose;
 
@@ -318,7 +316,9 @@ namespace TestRunnerLib
                     Log("[WARNING] Exception thrown when creating memory dump: {0}\r\n{1}\r\n", ex.InnerException?.Message ?? ex.Message, ex.InnerException?.StackTrace ?? ex.StackTrace);
                 }
             }
-                
+
+            string tmpTestDir = null; // If non-null, we've put temp files in an elaborately named temp directory, so delete it when done
+
             try
             {
                 // Create test class.
@@ -330,17 +330,12 @@ namespace TestRunnerLib
                 TestContext.Properties["RunPerfTests"] = RunPerfTests.ToString();
                 TestContext.Properties["RetryDataDownloads"] = RetryDataDownloads.ToString();
                 TestContext.Properties["RunSmallMoleculeTestVersions"] = RunsSmallMoleculeVersions.ToString(); // Run the AsSmallMolecule version of tests when available?
-                TestContext.Properties["LiveReports"] = LiveReports.ToString();
                 TestContext.Properties["TestName"] = test.TestMethod.Name;
                 TestContext.Properties["RecordAuditLogs"] = RecordAuditLogs.ToString();
                 if (IsParallelClient)
                 {
                     Environment.SetEnvironmentVariable(@"SKYLINE_TESTER_PARALLEL_CLIENT_ID", ParallelClientId); // Accessed in pwiz_tools\Skyline\Util\Util.cs
                 }
-
-                // Set the TMP file path to something peculiar - helps guarantee support for
-                // unusual user names since temp file path is usually in the user directory
-                var tmpTestDir = SetTMP(test);
 
                 if (test.SetTestContext != null)
                 {
@@ -352,15 +347,25 @@ namespace TestRunnerLib
                 LocalizationHelper.CurrentCulture = LocalizationHelper.CurrentUICulture = Language;
                 LocalizationHelper.InitThread();
 
+                // Tests in Test.DLL normally don't create files in TMP, so don't mess around with temp dir creation for those
+                var assemblyName = test.TestClassType?.Assembly.ManifestModule.Name;
+                if (!Equals(assemblyName, "Test.dll"))
+                {
+                    // Set the TMP file path to something peculiar - helps guarantee support for
+                    // unusual user names since temp file path is usually in the user directory
+                    // Also helps detect 3rd party tools that leave temp files behind
+                    tmpTestDir = SetTMP(test);
+                    CleanUpTestDir(tmpTestDir, false);   // Attempt to cleanup first, in case something was left behind by a failing test
+                }
+
                 // Run the test and time it.
-                CleanUpTestDir(tmpTestDir, false);   // Attempt to cleanup first, in case something was left behind by a failing test
                 if (test.TestInitialize != null)
                     test.TestInitialize.Invoke(testObject, null);
 
                 if (CheckCrtLeaks > 0)
                 {
                     // TODO: CrtDebugHeap class used to be provided by Crawdad.dll
-                    // If we ever want to enable this funcationality again, we need to find another .dll
+                    // If we ever want to enable this functionality again, we need to find another .dll
                     // to put this in.
                     //CrtDebugHeap.Checkpoint();
                 }
@@ -375,11 +380,11 @@ namespace TestRunnerLib
                 if (test.TestCleanup != null)
                     test.TestCleanup.Invoke(testObject, null);
 
-                // If everything is supposed to be cleaned up, then check for any left over files
+                // Check for any left over files
                 var allEntries = CleanUpTestDir(tmpTestDir, true);
                 if (allEntries.Count > 0)
                 {
-                    allEntries.Insert(0, string.Format("The test {0} left these files behind:", test.TestMethod.Name));
+                    allEntries.Insert(0, string.Format("The test {0} left these temp files behind:", test.TestMethod.Name));
                     throw new IOException(string.Join("\r\n", allEntries));
                 }
             }
@@ -389,15 +394,44 @@ namespace TestRunnerLib
             }
             stopwatch.Stop();
             LastTestDuration = (int) stopwatch.ElapsedMilliseconds;
-            // Allow as much to be garbage collected as possible
 
-            // Restore TMP
-            Environment.SetEnvironmentVariable(@"TMP", saveTmp);
+            if (tmpTestDir != null)
+            {
+                // Get rid of the temp directory we created as testdir/"~&TMP ^"/testname (should be done already, double checking here)
+                try
+                {
+                    if (Directory.Exists(tmpTestDir))
+                    {
+                        Directory.Delete(tmpTestDir, true);
+                    }
+                }
+                catch (Exception)
+                {
+                    throw new IOException($"Unable to remove temp directory \"{tmpTestDir}\"");
+                }
+                // Get rid of the parent directory we created as testdir/"~&TMP ^"
+                try
+                {
+                    var tmpParent = Path.Combine(tmpTestDir, "..");
+                    if (Directory.Exists(tmpParent))
+                    {
+                        Directory.Delete(tmpParent, true);
+                    }
+                }
+                catch
+                {
+                    // ignored - if it's not empty we've already complained about that
+                }
+
+                // Restore TMP
+                Environment.SetEnvironmentVariable(@"TMP", saveTmp);
+            }
 
             // Restore culture.
             Thread.CurrentThread.CurrentCulture = saveCulture;
             Thread.CurrentThread.CurrentUICulture = saveUICulture;
 
+            // Allow as much to be garbage collected as possible
             MemoryManagement.FlushMemory();
             _process.Refresh();
             var heapCounts = ReportSystemHeaps
@@ -539,17 +573,22 @@ namespace TestRunnerLib
             // (e.g. msFragger), causes trouble with mz5 reader, etc, so watch for custom test
             // attribute that turns that off per test
             var testDir = TestContext.Properties["TestDir"].ToString();
+            var testTmp = @"~&TMP ^";
+            if (TeamCityTestDecoration)
+            {
+                testTmp = Path.Combine(@"..", testTmp); // TeamCity path length concerns, don't worry as much about tidy nesting
+            }
             var unicode = test.DoNotUseUnicode ? string.Empty : @"试验";
             var tmpTestDir =
-                Path.GetFullPath(Path.Combine(testDir, @"..", @"SkylineTester temp&di^rs", test.TestMethod.Name + unicode));
+                Path.GetFullPath(Path.Combine(testDir, testTmp, test.TestMethod.Name + unicode));
             if (tmpTestDir.Length > 100)
             {
                 // Avoid pushing the 260 character limit for windows paths - remember that there will be subdirs below this
                 // e.g. in case of a long root path, use
-                //      c:\crazy long username\massive subdir name\wacky installation dirnamne\pwiz_tools\Skyline\~t&mp ^\TMMENF910 试验"
+                //      c:\crazy long username\massive subdir name\wacky installation dirnamne\pwiz_tools\Skyline\~test &tmp^\TMMENF910 试验"
                 // instead of
-                //      c:\crazy long username\massive subdir name\wacky installation dirnamne\pwiz_tools\Skyline\SkylineTester temp&di^rs\TestMyMostExcellentNebulousFunction 试验"
-                tmpTestDir = Path.GetFullPath(Path.Combine(testDir, @"..", @"~t&mp ^",
+                //      c:\crazy long username\massive subdir name\wacky installation dirnamne\pwiz_tools\Skyline\~test &tmp^\TestMyMostExcellentNebulousFunction 试验"
+                tmpTestDir = Path.GetFullPath(Path.Combine(testDir, testTmp,
                     $"{string.Concat(test.TestMethod.Name.Where(char.IsUpper))}{test.TestMethod.Name.Sum(c => c)}{unicode}"));
             }
 
@@ -573,7 +612,10 @@ namespace TestRunnerLib
             var msAmandaTmpDir = Path.Combine(Path.GetTempPath(), @"~SK_MSAmanda" /* must match MSAmandaSearchWrapper.MS_AMANDA_TMP */);
             try
             {
-                Directory.Delete(msAmandaTmpDir, true);
+                if (Directory.Exists(msAmandaTmpDir))
+                {
+                    Directory.Delete(msAmandaTmpDir, true);
+                }
             }
             catch
             {
@@ -592,7 +634,7 @@ namespace TestRunnerLib
             // If everything is supposed to be cleaned up, then check for any left over files
             if (_cleanupLevelAll)
             {
-                CleanupAbandonedFiles(TestContext.TestDir, true, abandonedFilesList);
+                CleanupAbandonedFiles(TestContext.TestDir, !final, abandonedFilesList);
             }
             CleanupAbandonedFiles(tmpTestDir, !final, abandonedFilesList); // It's always an error to leave any tempfiles behind
 
@@ -601,7 +643,7 @@ namespace TestRunnerLib
 
         private void CleanupAbandonedFiles(string dir, bool recreateDirAfterClean, List<string> abandonedFilesList)
         {
-            if (Directory.Exists(dir))
+            if (!string.IsNullOrEmpty(dir) && Directory.Exists(dir))
             {
                 var oldCount = abandonedFilesList.Count; // List may have entries from a previous call
                 abandonedFilesList.AddRange(Directory.EnumerateFileSystemEntries(dir).Select(f => Path.Combine(dir, f)));
@@ -1113,7 +1155,7 @@ namespace TestRunnerLib
 
             p?.WaitForExit();
             if (p == null || p.ExitCode != 0)
-                throw new InvalidOperationException($"{message}\r\n\r\nDetails:\r\n'{command} {args}' returned an error ({output.ToString().Trim()});");
+                throw new InvalidOperationException($"{message}\r\n\r\nDetails:\r\n'\"{command}\" {args}' returned an error ({output.ToString().Trim()});");
              
             return output.ToString();
         }
@@ -1142,6 +1184,7 @@ namespace TestRunnerLib
             workerNames ??= string.Join(" ", GetDockerWorkerNames());
 
             Console.WriteLine(@"Sending docker kill command to all workers.");
+            Console.WriteLine(@$"docker kill {workerNames}");
             var psi = new ProcessStartInfo("docker", $@"kill {workerNames}");
             psi.CreateNoWindow = true;
             psi.UseShellExecute = false;

@@ -47,7 +47,7 @@ namespace TestPerf // Tests in this namespace are skipped unless the RunPerfTest
     [TestClass]
     public class PerfThermoNegativeFAIMSTest : AbstractFunctionalTestEx
     {
-        [TestMethod]
+        [TestMethod, NoParallelTesting(TestExclusionReason.RESOURCE_INTENSIVE)]
         public void TestThermoNegativeFAIMS()
         {
             TestFilesZip = GetPerfTestDataURL(@"PerfThermoNegativeFAIMS.zip");

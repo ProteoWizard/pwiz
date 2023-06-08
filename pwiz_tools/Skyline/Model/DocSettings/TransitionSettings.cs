@@ -742,7 +742,7 @@ namespace pwiz.Skyline.Model.DocSettings
 
         public static ImmutableList<Adduct> MakeChargeCollection(IList<Adduct> charges)
         {
-            var arrayCharges = charges.ToArrayStd();
+            var arrayCharges = charges.Select(adduct => adduct.Unlabeled).Distinct().ToArray(); // Ignore any isotope labeling in small mol adducts
             Array.Sort(arrayCharges);
             return MakeReadOnly(arrayCharges);
         }
@@ -2730,6 +2730,11 @@ namespace pwiz.Skyline.Model.DocSettings
         public TransitionFullScan ChangeUseSelectiveExtraction(bool prop)
         {
             return ChangeProp(ImClone(this), im => im.UseSelectiveExtraction = prop);
+        }
+
+        public TransitionFullScan ChangeIgnoreSimScans(bool prop)
+        {
+            return ChangeProp(ImClone(this), im => im.IgnoreSimScans = prop);
         }
 
         public TransitionFullScan ChangeRetentionTimeFilter(RetentionTimeFilterType retentionTimeFilterType,

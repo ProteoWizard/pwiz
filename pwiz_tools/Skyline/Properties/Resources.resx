@@ -767,9 +767,6 @@
   <data name="LibraryGridViewDriver_AddResults_The_active_document_must_contain_results_in_order_to_add_optimized_values_" xml:space="preserve">
     <value>The active document must contain results in order to add optimized values.</value>
   </data>
-  <data name="FindOptions_GetNotFoundMessage_Could_not_find_any_of__0__items" xml:space="preserve">
-    <value>Could not find any of {0} items.</value>
-  </data>
   <data name="ShareListDlg_ImportFile_The_following_names_already_exist" xml:space="preserve">
     <value>The following names already exist:</value>
   </data>
@@ -1340,9 +1337,6 @@
   </data>
   <data name="FindNodeDlg_AdvancedVisible_Hide_Advanced" xml:space="preserve">
     <value>&lt;&lt; Hide Ad&amp;vanced</value>
-  </data>
-  <data name="OneOrManyList_ValidateIndex_The_index__0__must_be_between_0_and__1__" xml:space="preserve">
-    <value>The index {0} must be between 0 and {1}.</value>
   </data>
   <data name="OptimizationDb_GetOptimizationDb_The_file__0__could_not_be_opened___1_" xml:space="preserve">
     <value>The file {0} could not be opened. {1}</value>
@@ -3435,9 +3429,6 @@ Are you sure you want to continue?</value>
   <data name="DefineAnnotationDlg_OkDialog_Choose_at_least_one_type_for_this_annotation_to_apply_to" xml:space="preserve">
     <value>Choose at least one type for this annotation to apply to.</value>
   </data>
-  <data name="OneOrManyList_Add_Attempted_modification_of_a_read_only_collection" xml:space="preserve">
-    <value>Attempted modification of a read-only collection.</value>
-  </data>
   <data name="PeptideGridViewDriver_ValidateRow_Missing_value_on_line__0_" xml:space="preserve">
     <value>Missing value on line {0}</value>
   </data>
@@ -4771,9 +4762,6 @@ If you prefer you can choose to report anonymously.</value>
   </data>
   <data name="FastaImporter_ToFasta_Too_few_columns_found" xml:space="preserve">
     <value>Too few columns found</value>
-  </data>
-  <data name="ChromDataSet_MarkOptimizationData_Incorrectly_sorted_chromatograms__0__1__" xml:space="preserve">
-    <value>Incorrectly sorted chromatograms {0} &gt; {1}</value>
   </data>
   <data name="IrtDb_GetIrtDb_The_file__0__could_not_be_opened" xml:space="preserve">
     <value>The file {0} could not be opened.</value>
@@ -7894,9 +7882,6 @@ Please contact the Panorama server administrator to upgrade the server.</value>
   </data>
   <data name="ShareListDlg_ImportFile_Failure_loading__0__" xml:space="preserve">
     <value>Failure loading {0}.</value>
-  </data>
-  <data name="ConfigureToolsDlg_unpackZipTool_There_is_a_naming_conflict_in_unpacking_the_zip__Tool_importing_canceled_" xml:space="preserve">
-    <value>There is a naming conflict in unpacking the zip. Tool importing canceled!</value>
   </data>
   <data name="RCalcIrt_RequireUsable_Unexpected_use_of_iRT_calculator_before_successful_initialization_" xml:space="preserve">
     <value>Unexpected use of iRT calculator before successful initialization.</value>
@@ -11958,5 +11943,195 @@ If you do not have the original file, you may build the library with embedded sp
   </data>
   <data name="ShareTypeDlg_OkDialog_Including_data_folders_is_not_supported_by_the_currently_selected_version_" xml:space="preserve">
     <value>Including data folders is not supported by the currently selected version.</value>
+  </data>
+  <data name="SpectraGridForm_SpectraGridForm_Spectrum_Grid" xml:space="preserve">
+    <value>Spectrum Grid</value>
+  </data>
+  <data name="SpectraGridForm_GetDefaultViewSpec_Default" xml:space="preserve">
+    <value>Default</value>
+  </data>
+  <data name="SpectrumReader_ReadSpectraFromFile_Reading_spectra_from__0_" xml:space="preserve">
+    <value>Reading spectra from {0}</value>
+  </data>
+  <data name="SpectraGridForm_AddSpectrumFilters_Examining_filters" xml:space="preserve">
+    <value>Examining filters</value>
+  </data>
+  <data name="SpectraGridForm_AddSpectrumFilters_The_selected_row_does_not_have_any_filters" xml:space="preserve">
+    <value>The selected row does not have any filters</value>
+  </data>
+  <data name="SpectraGridForm_AddSpectrumFilters_The_selected_rows_do_not_have_any_filters" xml:space="preserve">
+    <value>The selected rows do not have any filters</value>
+  </data>
+  <data name="SpectraGridForm_AddSpectrumFilters_There_were_no_matching_precursors_to_add_any_filters_to_" xml:space="preserve">
+    <value>There were no matching precursors to add any filters to.</value>
+  </data>
+  <data name="SpectraGridForm_AddSpectrumFilters_Change_spectrum_filter" xml:space="preserve">
+    <value>Change spectrum filter</value>
+  </data>
+  <data name="EditMenu_ChangeSpectrumFilter_Change_spectrum_filter" xml:space="preserve">
+    <value>Change spectrum filter</value>
+  </data>
+  <data name="FileSpectrumInfo_ToString__0__Spectra" xml:space="preserve">
+    <value>{0} Spectra</value>
+    <comment>Example: 20 Spectra</comment>
+  </data>
+  <data name="SpectrumClassColumn_Ms1Precursors_MS1" xml:space="preserve">
+    <value>MS1</value>
+  </data>
+  <data name="SpectrumClassColumn_Ms2Precursors_MS2" xml:space="preserve">
+    <value>MS2</value>
+  </data>
+  <data name="SpectrumClassFilter_MakePredicate_No_spectrum_column__0_" xml:space="preserve">
+    <value>No spectrum column {0}</value>
+  </data>
+  <data name="SpectrumClassFilter_GetAbbreviatedText__AND_" xml:space="preserve">
+    <value> AND </value>
+    <comment>This will be displayed in the tooltip for expressions like:
+      x + y = 7 AND x * y &lt; 20</comment>
+  </data>
+  <data name="Close" type="System.Resources.ResXFileRef, System.Windows.Forms">
+    <value>..\Resources\Close.bmp;System.Drawing.Bitmap, System.Drawing, Version=4.0.0.0, Culture=neutral, PublicKeyToken=b03f5f7f11d50a3a</value>
+  </data>
+  <data name="ToolService_ImportPeakBoundaries_Import_peak_boundaries_from_external_tool" xml:space="preserve">
+    <value>Import peak boundaries from external tool</value>
+  </data>
+  <data name="ToolInstaller_UnpackZipTool_The_selected_zip_file_did_not_specify_any_items_to_add_to_the_Tools_menu_" xml:space="preserve">
+    <value>The selected zip file did not specify any items to add to the Tools menu.</value>
+  </data>
+  <data name="SpectraGridForm_GetSummaryMessage_Showing_all_spectra" xml:space="preserve">
+    <value>Showing all spectra</value>
+  </data>
+  <data name="SpectraGridForm_GetSummaryMessage_Showing_spectra_near_precursor_m_z__0_" xml:space="preserve">
+    <value>Showing spectra near precursor m/z {0}</value>
+  </data>
+  <data name="SpectraGridForm_GetSummaryMessage_Showing_spectra_near_precursor_m_z__0__and__1_" xml:space="preserve">
+    <value>Showing spectra near precursor m/z {0} and {1}</value>
+  </data>
+  <data name="SpectraGridForm_GetSummaryMessage_Showing_spectra_near__0__precursors_between__1__and__2_" xml:space="preserve">
+    <value>Showing spectra near {0} precursors between {1} and {2}</value>
+  </data>
+  <data name="SpectraGridForm_AddSpectrumFilters_One_spectrum_filter_will_be_added_to_the_document_" xml:space="preserve">
+    <value>One spectrum filter will be added to the document.</value>
+  </data>
+  <data name="SpectraGridForm_AddSpectrumFilters__0__spectrum_filters_will_be_added_to_the_document_" xml:space="preserve">
+    <value>{0} spectrum filters will be added to the document.</value>
+  </data>
+  <data name="SpectraGridForm_AddSpectrumFilters_No_spectrum_filters_were_added_to_the_document_" xml:space="preserve">
+    <value>No spectrum filters were added to the document.</value>
+  </data>
+  <data name="FindPredicate_FindNext_Searching_for_next_result" xml:space="preserve">
+    <value>Searching for next result</value>
+  </data>
+  <data name="CommandLine_NewSkyFile_FileAlreadyExists" xml:space="preserve">
+    <value>File '{0}' already exists; add --overwrite to allow Skyline to overwrite it.</value>
+  </data>
+  <data name="CommandLine_SetInstrumentSettings_Error__Failed_attempting_to_change_the_transition_instrument_settings_" xml:space="preserve">
+    <value>Error: Failed attempting to change the transition instrument settings.</value>
+  </data>
+  <data name="CommandLine_SetLibrarySettings_Error__Failed_attempting_to_change_the_transition_library_settings_" xml:space="preserve">
+    <value>Error: Failed attempting to change the transition library settings.</value>
+  </data>
+  <data name="CommandLine_SetFullScanSettings_Changing_full_scan_precursor_isotope_peaks_to__0_" xml:space="preserve">
+    <value>Changing full scan precursor isotope peaks to {0}</value>
+  </data>
+  <data name="CommandLine_SetFullScanSettings_Changing_full_scan_precursor_isotope_peaks_count_to__0_" xml:space="preserve">
+    <value>Changing full scan precursor isotope peaks count to {0}</value>
+  </data>
+  <data name="CommandLine_SetFullScanSettings_Changing_full_scan_precursor_isotope_peak_percentage_to__0_" xml:space="preserve">
+    <value>Changing full scan precursor isotope peak percentage to {0}</value>
+  </data>
+  <data name="CommandLine_SetFullScanSettings_Changing_full_scan_precursor_isotope_enrichment_to__0_" xml:space="preserve">
+    <value>Changing full scan precursor isotope enrichment to {0}</value>
+  </data>
+  <data name="CommandLine_SetFullScanSettings_Changing_full_scan_ignore_SIM_scans_to__0_" xml:space="preserve">
+    <value>Changing full scan ignore SIM scans to {0}</value>
+  </data>
+  <data name="CommandLine_SetFullScanSettings_Changing_full_scan_acquisition_method_to__0__with_isolation_scheme___1__" xml:space="preserve">
+    <value>Changing full scan acquisition method to {0} with isolation scheme '{1}'</value>
+  </data>
+  <data name="CommandLine_SetFullScanSettings_Changing_full_scan_acquisition_method_to__0_" xml:space="preserve">
+    <value>Changing full scan acquisition method to {0}</value>
+  </data>
+  <data name="CommandLine_SetFullScanSettings_Changing_full_scan_precursor_mass_analyzer_to__0_" xml:space="preserve">
+    <value>Changing full scan precursor mass analyzer to {0}</value>
+  </data>
+  <data name="CommandLine_SetFullScanSettings_Changing_full_scan_product_mass_analyzer_to__0_" xml:space="preserve">
+    <value>Changing full scan product mass analyzer to {0}</value>
+  </data>
+  <data name="CommandLine_NewSkyFile_Deleting_existing_file___0__" xml:space="preserve">
+    <value>Deleting existing file '{0}'</value>
+  </data>
+  <data name="CommandLine_AssociateProteins_Associating_peptides_with_proteins" xml:space="preserve">
+    <value>Associating peptides with proteins</value>
+  </data>
+  <data name="CommandLine_AssociateProteins_Failed_to_associate_proteins" xml:space="preserve">
+    <value>Failed to associate proteins</value>
+  </data>
+  <data name="ValueInvalidMzToleranceException_ValueInvalidMzToleranceException_The_value__0__is_not_valid_for_the_argument__1__which_requires_a_value_and_a_unit__For_example___2__" xml:space="preserve">
+    <value>The value {0} is not valid for the argument {1} which requires a value and a unit. For example: {2}.</value>
+  </data>
+  <data name="CommandLine_ProcessDocument_Error_saving_file" xml:space="preserve">
+    <value>Error: saving file</value>
+  </data>
+  <data name="SkylineWindow_ImportMassList_Do_you_want_to_use_the_document_settings_to_automanage_these_new_transitions" xml:space="preserve">
+    <value>Do you want to enable Auto-select and use the document settings to manage these new transitions?
+
+Enable Auto-select: {0} precursor and {1} fragment transitions will be added to the current document.
+
+Disable Auto-select: {2} precursor and {3} fragment transitions will be added to the current document.
+
+If you choose Disable, you can enable Auto-select later with the "Refine &gt; Advanced" menu item.
+</value>
+  </data>
+  <data name="SkylineWindow_ImportMassList_Enable" xml:space="preserve">
+    <value>&amp;Enable</value>
+  </data>
+  <data name="SkylineWindow_ImportMassList_Disable" xml:space="preserve">
+    <value>&amp;Disable</value>
+  </data>
+  <data name="CommandLine_AssociateProteins_a_FASTA_file_must_be_imported_before_associating_proteins" xml:space="preserve">
+    <value>Error: a FASTA file must be imported before associating proteins</value>
+  </data>
+  <data name="FindOptions_GetNotFoundMessage_Nothing_could_be_found_matching_any_of_the__0__criteria" xml:space="preserve">
+    <value>Nothing could be found matching any of the {0} criteria</value>
+    <comment>{0} is an integer greater than 1</comment>
+  </data>
+  <data name="EditMenu_GetEditSpectrumFilterDescription_Editing_spectrum_filter_on__0_" xml:space="preserve">
+    <value>Editing spectrum filter on {0}</value>
+  </data>
+  <data name="EditMenu_GetEditSpectrumFilterDescription_Adding_spectrum_filter_to__0_" xml:space="preserve">
+    <value>Adding spectrum filter to {0}</value>
+  </data>
+  <data name="EditMenu_GetEditSpectrumFilterDescription_Editing_spectrum_filter_on__0__precursors" xml:space="preserve">
+    <value>Editing spectrum filter on {0} precursors</value>
+  </data>
+  <data name="EditMenu_GetEditSpectrumFilterDescription_Adding_spectrum_filter_to__0__precursors" xml:space="preserve">
+    <value>Adding spectrum filter to {0} precursors</value>
+  </data>
+  <data name="EditSpectrumFilterDlg_MakePageButton_Case__0_" xml:space="preserve">
+    <value>Case {0}</value>
+    <comment>"Case" means "possibility" or "branch"</comment>
+  </data>
+  <data name="SpectrumClassFilter_Ms1FilterPage_MS1" xml:space="preserve">
+    <value>MS1</value>
+  </data>
+  <data name="SpectrumClassFilter_Ms2FilterPage_MS2_" xml:space="preserve">
+    <value>MS2+</value>
+  </data>
+  <data name="SpectrumClassFilter_GetAbbreviatedText_OR" xml:space="preserve">
+    <value>OR</value>
+    <comment>"OR" is the logical operator</comment>
+  </data>
+  <data name="TransitionGroupTreeNode_RenderSpectrumClassFilterTip_Spectrum_Filter" xml:space="preserve">
+    <value>Spectrum Filter</value>
+  </data>
+  <data name="MatchingPrecursors_ToString__0__precursors" xml:space="preserve">
+    <value>{0} precursors</value>
+  </data>
+  <data name="SpectrumClassFilter_Ms1FilterPage_Criteria_which_MS1_spectra_must_satisfy_to_be_included_in_extracted_chromatogram" xml:space="preserve">
+    <value>Criteria which MS1 spectra must satisfy to be included in extracted chromatogram</value>
+  </data>
+  <data name="SpectrumClassFilter_Ms2FilterPage_Criteria_which_spectra_with_MS_level_2_or_higher_must_satisfy_to_be_included_in_extracted_chromatogram" xml:space="preserve">
+    <value>Criteria which spectra with MS level 2 or higher must satisfy to be included in extracted chromatogram</value>
   </data>
 </root>
