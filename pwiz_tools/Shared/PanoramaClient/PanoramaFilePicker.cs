@@ -182,13 +182,16 @@ namespace pwiz.PanoramaClient
                         {
                             continue;
                         }
+
+                        var link = (string)file[@"href"];
+                        link = link.Substring(1);
                         var size = (long)file[@"size"];
                         var sizeObj = new FileSize(size);
                         listItem[1] = sizeObj.ToString();
                         listItem[4] = (string)file[@"creationdate"];
                         var fileNode = fileName.EndsWith(EXT) ? new ListViewItem(listItem, 1) : new ListViewItem(listItem, 0);
                         fileNode.Tag = size;
-                        fileNode.Name = (string)file[@"href"];
+                        fileNode.Name = link;
                         listView.Items.Add(fileNode);
                     }
                 }
