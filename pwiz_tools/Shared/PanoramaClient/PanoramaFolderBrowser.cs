@@ -83,6 +83,7 @@ namespace pwiz.PanoramaClient
         public PanoramaServer ActiveServer { get; private set; }
         public bool Testing { get; private set; }
         public int NodeCount { get; private set; }
+        public bool ShowWebDav { get; set; }
 
         /// <summary>
         /// Builds the TreeView of folders and restores any
@@ -175,6 +176,22 @@ namespace pwiz.PanoramaClient
                         treeView.SelectedNode = e.Node;
                         treeView.Focus();
                         UpdateNavButtons(e.Node);
+                        if (ShowWebDav)
+                        {
+                            var fileNode = SearchTree(e.Node.Nodes, "@files");
+                            var result = SearchParents(e.Node, "@files");
+                            if (fileNode == null && !e.Node.Text.Equals("@files") && !result)
+                            {
+                                fileNode = new TreeNode("@files");
+                                fileNode.Tag = string.Concat(e.Node.Tag, "/@files");
+                                fileNode.Name = false.ToString();
+                                fileNode.ImageIndex = 3;
+                                fileNode.SelectedImageIndex = 3;
+                                e.Node.Nodes.Add(fileNode);
+                                AddWebDavFolders(fileNode);
+                            }
+                        }
+
                     }
                 }
             }
@@ -434,6 +451,28 @@ namespace pwiz.PanoramaClient
             return null;
         }
 
+        private bool SearchParents(TreeNode node, string nodeName)
+        {
+            if (node != null)
+            {
+                if (node.Parent != null)
+                {
+
+                    if (node.Parent.Text.Equals(nodeName))
+                    {
+                        return true;
+                    }
+                    else
+                    {
+                        var result = SearchParents(node.Parent, nodeName);
+                        return result;
+                    }
+                }
+                
+            }
+            return false;
+        }
+
         private void treeView_KeyPress(object sender, KeyPressEventArgs e)
         {
             if (e.KeyChar == Convert.ToChar(Keys.Return) && treeView.SelectedNode != null)
@@ -471,6 +510,49 @@ namespace pwiz.PanoramaClient
             Clicked = node;
             _next.Clear();
             NodeClick?.Invoke(this, EventArgs.Empty);
+        }
+
+        private void AddWebDavFolders(TreeNode node)
+        {
+            try
+            {
+                var query = new Uri(string.Concat(ActiveServer.URI, "_webdav", node.Tag, "?method=json"));
+                var webClient = new WebClientWithCredentials(query, ActiveServer.Username, ActiveServer.Password);
+                JToken json = webClient.Get(query);
+                if ((int)json[@"fileCount"] != 0)
+                {
+                    var files = json[@"files"];
+                    foreach (dynamic file in files)
+                    {
+                        var listItem = new string[5];
+                        var fileName = (string)file[@"text"];
+                        listItem[0] = fileName;
+                        var isFile = (bool)file[@"leaf"];
+                        if (!isFile)
+                        {
+                            var canRead = (bool)file[@"canRead"];
+                            if (!canRead)
+                            {
+                                continue;
+                            }
+
+                            var newNode = new TreeNode(fileName);
+                            newNode.Tag = string.Concat(node.Tag, "/", fileName);
+                            newNode.Name = false.ToString();
+                            newNode.ImageIndex = 3;
+                            newNode.SelectedImageIndex = 3;
+                            node.Nodes.Add(newNode);
+                            AddWebDavFolders(newNode);
+
+                        }
+                    }
+                }
+            }
+            catch
+            {
+                //ignored
+            }
+            
         }
     }
 }

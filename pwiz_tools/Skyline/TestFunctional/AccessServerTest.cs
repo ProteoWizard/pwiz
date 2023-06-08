@@ -407,6 +407,12 @@ namespace pwiz.SkylineTestFunctional
                 throw new NotImplementedException();
             }
 
+            public void DownloadFile(string fileUrl, string fileName, long fileSize, string realName,
+                PanoramaServer server, IProgressMonitor pm, IProgressStatus progressStatus)
+            {
+                throw new NotImplementedException();
+            }
+
         }
 
         private class TestPanoramaPublishClient : AbstractPanoramaPublishClient
