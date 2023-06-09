@@ -19,20 +19,15 @@
 
 using System;
 using System.Collections.Generic;
-using System.ComponentModel;
-using System.Diagnostics;
 using System.IO;
 using System.Linq;
 using System.Reflection;
-using System.Text;
 using System.Threading;
-using System.Windows.Forms;
 using System.Xml;
 using System.Xml.Schema;
 using System.Xml.Serialization;
 using pwiz.Common.DataBinding;
 using pwiz.Common.SystemUtil;
-using pwiz.Skyline.Controls;
 using pwiz.Skyline.Controls.Databinding;
 using pwiz.Skyline.Model.Databinding;
 using pwiz.Skyline.Model.DocSettings;
@@ -64,6 +59,18 @@ namespace pwiz.Skyline.Model.Tools
         public static bool IsWebPageCommand(string command)
         {
             return command.StartsWith(@"http:") || command.StartsWith(@"https:");
+        }
+
+        /// <summary>
+        /// Supported extensions
+        /// <para>Changes to this array require corresponding changes to the FileDialogFiltersAll call below</para>
+        /// </summary>
+        public static readonly string[] EXTENSIONS = { @".exe", @".com", @".pif", @".cmd", @".bat", @".py", @".pl" };
+
+        public static bool CheckExtension(string path)
+        {
+            // Avoid Path.GetExtension() because it throws an exception for an invalid path
+            return EXTENSIONS.Any(extension => PathEx.HasExtension(path, extension));
         }
 
         public ToolDescription(ToolDescription t)
@@ -181,7 +188,7 @@ namespace pwiz.Skyline.Model.Tools
         }
 
         /// <summary>
-        ///  Return a string that is the InitialDirectoy string with the macros replaced.
+        ///  Return a string that is the InitialDirectory string with the macros replaced.
         /// </summary>
         /// <param name="doc"> Document for report data. </param>
         /// <param name="toolMacroProvider"> Interface to use to get the current macro values </param>
@@ -193,61 +200,11 @@ namespace pwiz.Skyline.Model.Tools
             return ToolMacros.ReplaceMacrosInitialDirectory(doc, toolMacroProvider, this, progressMonitor);
         }
 
-        private string GetCommand(SrmDocument doc, IToolMacroProvider toolMacroProvider, IProgressMonitor progressMonitor)
+        public string GetCommand(SrmDocument doc, IToolMacroProvider toolMacroProvider, IProgressMonitor progressMonitor)
         {
             return ToolMacros.ReplaceMacrosCommand(doc, toolMacroProvider, this, progressMonitor);            
         }
         
-        /// <summary>
-        /// Run the tool. When you call run tool. call it on a different thread. 
-        /// </summary>       
-        /// <param name="document"> The document to base reports off of. </param>
-        /// <param name="toolMacroProvider"> Interface for replacing Tool Macros with the correct strings. </param>
-        /// <param name="textWriter"> A textWriter to write to when the tool redirects stdout. (eg. Outputs to an Immediate Window) </param>
-        /// <param name="progressMonitor"> Progress monitor. </param>
-        /// <param name="parent">A parent control to invoke to display args collectors in, if necessary. Can be null. </param>
-        public void RunTool(SrmDocument document, IToolMacroProvider toolMacroProvider, TextWriter textWriter, IProgressMonitor progressMonitor, Control parent) 
-        {
-            if (Annotations != null && Annotations.Count != 0)
-            {
-                VerifyAnnotations(document);
-            }
-
-            if (IsWebPage)
-            {
-                if (Equals(Title, ToolList.DEPRECATED_QUASAR.Title) && Equals(Command, ToolList.DEPRECATED_QUASAR.Command))
-                {
-                    throw new ToolDeprecatedException(TextUtil.LineSeparate(
-                        Resources.ToolDescription_RunTool_Support_for_the_GenePattern_version_of_QuaSAR_has_been_discontinued_,
-                        Resources.ToolDescription_RunTool_Please_check_the_External_Tools_Store_on_the_Skyline_web_site_for_the_most_recent_version_of_the_QuaSAR_external_tool_));
-                }
-                var webHelpers = WebHelpers ?? new WebHelpers();
-
-                string url = GetUrl(document, toolMacroProvider, progressMonitor);
-                if (string.IsNullOrEmpty(url))
-                    return;
-
-                if (string.IsNullOrEmpty(ReportTitle))
-                {
-                    webHelpers.OpenLink(url);
-                }
-                else // It has a selected report that must be posted. 
-                {
-                    PostToLink(url, document, progressMonitor, webHelpers);
-                }
-            }
-            else // Not a website. Needs its own thread.
-            {
-                if (Arguments.Contains(@"$(SkylineConnection)"))
-                {
-                    Program.StartToolService();
-                }
-
-                // To eliminate a cross thread error make a copy of the IToolMacroProvider.
-                IToolMacroProvider newToolMacroProvider = new CopyToolMacroProvider(toolMacroProvider);
-                RunExecutable(document, newToolMacroProvider, textWriter, progressMonitor, parent);                
-            }           
-        }
 
         public static bool EquivalentAnnotations(AnnotationDef existingAnnotation, AnnotationDef annotationDef)
         {
@@ -260,391 +217,6 @@ namespace pwiz.Skyline.Model.Tools
             }
 
             return existingAnnotation.Equals(annotationDef);
-        }
-
-        private void VerifyAnnotations(SrmDocument document)
-        {
-            var missingAnnotations = new List<string>();
-            var uncheckedAnnotations = new List<string>();
-            foreach (AnnotationDef annotationDef in Annotations)
-            {
-                AnnotationDef existingAnnotation;
-                if (!Settings.Default.AnnotationDefList.TryGetValue(annotationDef.GetKey(), out existingAnnotation))
-                {
-                    missingAnnotations.Add(annotationDef.GetKey());
-                }
-                else
-                {
-                    existingAnnotation = document.Settings.DataSettings.AnnotationDefs.FirstOrDefault(
-                        a => Equals(a.GetKey(), annotationDef.GetKey()));
-                    // Assume annotations are equivalent, if they exist in the document, based on the
-                    // test above in the if () clause
-                    if (existingAnnotation == null)
-                        uncheckedAnnotations.Add(annotationDef.GetKey());
-                }
-            }
-
-            if (missingAnnotations.Count != 0)
-            {
-                throw new ToolExecutionException(TextUtil.LineSeparate(Resources.ToolDescription_VerifyAnnotations_This_tool_requires_the_use_of_the_following_annotations_which_are_missing_or_improperly_formatted, 
-                                                                  string.Empty, 
-                                                                  TextUtil.LineSeparate(missingAnnotations), 
-                                                                  string.Empty, 
-                                                                  Resources.ToolDescription_VerifyAnnotations_Please_re_install_the_tool_and_try_again_));
-
-            }
-
-            if (uncheckedAnnotations.Count != 0)
-            {
-                throw new ToolExecutionException(TextUtil.LineSeparate(Resources.ToolDescription_VerifyAnnotations_This_tool_requires_the_use_of_the_following_annotations_which_are_not_enabled_for_this_document,
-                                                                 string.Empty, 
-                                                                 TextUtil.LineSeparate(uncheckedAnnotations), 
-                                                                 string.Empty,
-                                                                 Resources.ToolDescription_VerifyAnnotations_Please_enable_these_annotations_and_fill_in_the_appropriate_data_in_order_to_use_the_tool_));
-            }
-        }
-
-        private void PostToLink(string url, SrmDocument doc, IProgressMonitor progressMonitor, IWebHelpers webHelpers)
-        {
-            ActionUtil.RunAsync(() =>
-            {
-                try
-                {
-                    PostToLinkBackground(url, doc, progressMonitor, webHelpers);
-                }
-                catch (Exception exception)
-                {
-                    progressMonitor.UpdateProgress(new ProgressStatus(string.Empty).ChangeErrorException(exception));
-                }
-            }, @"Post To Link");
-        }
-
-        private void PostToLinkBackground(string url, SrmDocument doc, IProgressMonitor progressMonitor, IWebHelpers webHelpers)
-        {
-            StringWriter report = new StringWriter();
-            ToolDescriptionHelpers.GetReport(doc, ReportTitle, Title, progressMonitor, report);
-            webHelpers.PostToLink(url, report.ToString());
-        }
-
-        private void RunExecutable(SrmDocument document, IToolMacroProvider toolMacroProvider, TextWriter textWriter, IProgressMonitor progressMonitor, Control parent)
-        {
-            ActionUtil.RunAsync(() =>
-            {
-                try
-                {
-                    RunExecutableBackground(document, toolMacroProvider, textWriter, progressMonitor, parent);
-                }
-                catch (Exception e)
-                {
-                    progressMonitor.UpdateProgress(new ProgressStatus(string.Empty).ChangeErrorException(e));
-                }
-            }, @"Run Executable");
-        }
-
-        /// <summary>
-        ///  Method used to encapsulate the running of a executable for threading.
-        /// </summary>
-        /// <param name="document"> Contains the document to base reports off of, as well as to serve as the parent for args collector forms. </param>
-        /// <param name="toolMacroProvider"> Interface for determining what to replace macros with. </param>
-        /// <param name="textWriter"> A textWriter to write to if outputting to the immediate window. </param>
-        /// <param name="progressMonitor"> Progress monitor. </param>
-        /// <param name="parent">If there is an Args Collector form, it will be showed on this control. Can be null. </param>
-        private void RunExecutableBackground(SrmDocument document, IToolMacroProvider toolMacroProvider, TextWriter textWriter, IProgressMonitor progressMonitor, Control parent)
-        {                                                
-            // Need to know if $(InputReportTempPath) is an argument to determine if a report should be piped to stdin or not.
-            bool containsInputReportTempPath = Arguments.Contains(ToolMacros.INPUT_REPORT_TEMP_PATH);
-            string command = GetCommand(document, toolMacroProvider, progressMonitor);
-            if (command == null) // Has already thrown the error.
-                return;
-            string args = GetArguments(document, toolMacroProvider, progressMonitor);
-            string initDir = GetInitialDirectory(document, toolMacroProvider, progressMonitor); // If either of these fails an Exception is thrown.
-                                    
-            if (args != null && initDir != null)
-            {
-                ProcessStartInfo startInfo = new ProcessStartInfo(command, args) {WorkingDirectory = initDir};
-                if (OutputToImmediateWindow)
-                {
-                    startInfo.RedirectStandardOutput = true;
-                    startInfo.RedirectStandardError = true;
-                    startInfo.CreateNoWindow = true;
-                    startInfo.UseShellExecute = false;
-                    startInfo.StandardOutputEncoding = Encoding.UTF8;
-                    startInfo.StandardErrorEncoding = Encoding.UTF8;
-                }
-
-                // if it has a selected report title and its doesn't have a InputReportTempPath macro then the report needs to be piped to stdin.
-                TextReader reportReader;
-                string reportCsvPath = null;
-                if (string.IsNullOrEmpty(ReportTitle))
-                {
-                    reportReader = null;
-                }
-                else
-                {
-                    if (containsInputReportTempPath)
-                    {
-                        reportCsvPath = ToolMacros.GetReportTempPath(ReportTitle, Title);
-                        reportReader = new StreamReader(reportCsvPath);
-                    }
-                    else
-                    {
-                        var stringWriter = new StringWriter();
-                        ToolDescriptionHelpers.GetReport(document, ReportTitle, Title, progressMonitor, stringWriter);
-                        startInfo.RedirectStandardInput = true;
-                        reportReader = new StringReader(stringWriter.ToString());
-                    }
-                }
-                using (reportReader)
-                {
-                    //If there is an IToolArgsCollector run it!
-                    if (!string.IsNullOrEmpty(ArgsCollectorDllPath) && !string.IsNullOrEmpty(ArgsCollectorClassName))
-                    {
-                        if (!CallArgsCollector(parent, args, reportReader, startInfo))
-                            return;
-                    }
-
-
-                    Process p = new Process {StartInfo = startInfo};
-                    if (OutputToImmediateWindow)
-                    {
-                        p.EnableRaisingEvents = true;
-                        TextBoxStreamWriterHelper boxStreamWriterHelper = textWriter as TextBoxStreamWriterHelper;
-                        if (boxStreamWriterHelper == null)
-                        {
-                            p.OutputDataReceived += (sender, dataReceivedEventArgs)
-                                => textWriter.WriteLine(p.Id + @">" + dataReceivedEventArgs.Data);
-                            p.ErrorDataReceived += (sender, dataReceivedEventArgs)
-                                => textWriter.WriteLine(p.Id + @">" + dataReceivedEventArgs.Data);
-                        }
-                        else
-                        {
-                            p.OutputDataReceived += (sender, dataReceivedEventArgs) =>
-                                boxStreamWriterHelper.WriteLineWithIdentifier(p.Id, dataReceivedEventArgs.Data);
-                            p.ErrorDataReceived += (sender, dataReceivedEventArgs) =>
-                                boxStreamWriterHelper.WriteLineWithIdentifier(p.Id, dataReceivedEventArgs.Data);
-                            //p.Refresh();
-                            p.Exited += (sender, processExitedEventArgs) =>
-                                boxStreamWriterHelper.HandleProcessExit(p.Id);
-                        }
-                        // ReSharper disable LocalizableElement
-                        textWriter.WriteLine("\"" + p.StartInfo.FileName + "\" " + p.StartInfo.Arguments);
-                        // ReSharper restore LocalizableElement
-                    }
-                    try
-                    {
-                        p.StartInfo.UseShellExecute = false;
-                        p.Start();
-                        if (OutputToImmediateWindow)
-                        {
-                            p.BeginOutputReadLine();
-                            p.BeginErrorReadLine();
-                        }
-
-                        // write the reportCsv string to stdin.
-                        // need to only check one of these conditions.
-                        if (startInfo.RedirectStandardInput && reportReader != null)
-                        {
-                            StreamWriter streamWriter = p.StandardInput;
-                            if (reportCsvPath != null)
-                            {
-                                using (var newReader = new StreamReader(reportCsvPath))
-                                {
-                                    streamWriter.Write(newReader.ReadToEnd());
-                                }
-                            }
-                            else
-                            {
-                                streamWriter.Write(reportReader.ReadToEnd());
-                            }
-                            streamWriter.Flush();
-                            streamWriter.Close();
-                        }
-                    }
-                    catch (Exception ex)
-                    {
-                        if (ex is Win32Exception)
-                        {
-                            throw new ToolExecutionException(
-                                TextUtil.LineSeparate(
-                                    Resources.ToolDescription_RunTool_File_not_found_,
-                                    command,
-                                    Resources
-                                        .ToolDescription_RunTool_Please_check_the_command_location_is_correct_for_this_tool_),
-                                ex);
-                        }
-                        else
-                        {
-                            throw new ToolExecutionException(
-                                TextUtil.LineSeparate(
-                                    Resources.ToolDescription_RunTool_Please_reconfigure_that_tool__it_failed_to_execute__,
-                                    ex.Message),
-                                ex);
-                        }
-                    }
-                }
-                // CONSIDER: We don't delete the temp path here, because the file may be open
-                //           in a long running application like Excel.
-//                if (ReportTempPath_toDelete != null)
-//                {
-//                    FileEx.SafeDelete(ReportTempPath_toDelete, true);
-//                    ReportTempPath_toDelete = null;
-//                }  
-            }      
-        }
-
-        private bool CallArgsCollector(Control parent, string args, TextReader reportReader, ProcessStartInfo startInfo)
-        {
-            string oldArgs = PreviousCommandLineArgs;
-            Assembly assembly;
-            try
-            {
-                assembly = Assembly.LoadFrom(ArgsCollectorDllPath);
-            }
-            catch (Exception x)
-            {
-                throw new ToolExecutionException(
-                    string.Format(
-                        Resources.ToolDescription_RunExecutableBackground_Error_running_the_installed_tool_0_It_seems_to_be_missing_a_file__Please_reinstall_the_tool_and_try_again_,
-                        Title),
-                    x);
-            }
-
-            Type type = assembly.GetType(ArgsCollectorClassName);
-            if (type == null)
-            {
-                throw new ToolExecutionException(
-                    string.Format(Resources.ToolDescription_RunExecutableBackground_Error_running_the_installed_tool__0___It_seems_to_have_an_error_in_one_of_its_files__Please_reinstall_the_tool_and_try_again,
-                        Title));
-            }
-
-
-            var methodInfo = FindArgsCollectorMethod(type);
-            var parameterInfos = methodInfo.GetParameters();
-            if (parameterInfos.Length != 3)
-            {
-                throw new ToolExecutionException(
-                    string.Format(Resources.ToolDescription_CallArgsCollector_Error_running_the_installed_tool__0___The_method___1___has_the_wrong_signature_,
-                    Title, methodInfo.Name));
-            }
-            object reportArgument;
-            if (parameterInfos[1].ParameterType == typeof(string))
-            {
-                reportArgument = reportReader == null ? null : reportReader.ReadToEnd();
-            }
-            else
-            {
-                reportArgument = reportReader;
-            }
-            object[] collectorArgs =
-            {
-                parent,
-                reportArgument,
-                oldArgs != null ? CommandLine.ParseArgs(oldArgs) : null
-            };
-            object answer;
-
-            try
-            {
-                if (parent == null)
-                {
-                    answer = methodInfo.Invoke(null, collectorArgs);
-                }
-                else
-                {
-                    // if there is a control given, use it to invoke the args collector form with that control as its parent. 
-                    // Otherwise just invoke the form by itself
-                    answer = parent.Invoke(new Func<string[]>(() => (string[]) methodInfo.Invoke(null, collectorArgs)));
-                }
-            }
-            catch (Exception x)
-            {
-                string message = x.Message;
-                if (string.IsNullOrEmpty(message))
-                {
-                    throw new ToolExecutionException(
-                        string.Format(Resources.ToolDescription_RunExecutableBackground_The_tool__0__had_an_error_, Title),
-                        x);
-                }
-                else
-                {
-                    throw new ToolExecutionException(
-                        TextUtil.LineSeparate(
-                            string.Format(Resources.ToolDescription_RunExecutableBackground_The_tool__0__had_an_error__it_returned_the_message_, Title),
-                            message),
-                        x);
-                }
-            }
-            string[] commandLineArguments = answer as string[];
-            if (commandLineArguments != null)
-            {
-                // Parse
-                string argString = PreviousCommandLineArgs = CommandLine.JoinArgs(commandLineArguments);
-                // Append to end of argument string
-                if (args.Contains(ToolMacros.COLLECTED_ARGS))
-                {
-                    startInfo.Arguments = args.Replace(ToolMacros.COLLECTED_ARGS, argString);
-                }
-                else
-                {
-                    startInfo.Arguments = args + @" " + argString;
-                }
-            }
-            else
-            {
-                /*Establish an expectation that if an args collector returns null then there was some error
-                         * and the args collector displayed the relevant error and our job is to just terminate tool execution
-                         * If they would like the tool to run with no extra args they could return String.Empty
-                         */
-                return false;
-            }
-            return true;
-        }
-
-        public MethodInfo FindArgsCollectorMethod(Type type)
-        {
-            // ReSharper disable LocalizableElement
-            var textReaderArgs = new[] { typeof(IWin32Window), typeof(TextReader), typeof(string[]) };
-            var stringArgs = new[] {typeof(IWin32Window), typeof(string), typeof(string[])};
-            MethodInfo methodInfo = SafeGetMethod(type, "CollectArgs", textReaderArgs)
-                   ?? SafeGetMethod(type, "CollectArgsReader", textReaderArgs)
-                   ?? SafeGetMethod(type, "CollectArgs", stringArgs);
-            if (methodInfo != null)
-            {
-                return methodInfo;
-            }
-            Exception innerException = null;
-            try
-            {
-                methodInfo = type.GetMethod("CollectArgs");
-            }
-            catch (Exception e)
-            {
-                innerException = e;
-            }
-            // ReSharper restore LocalizableElement
-            if (methodInfo != null)
-            {
-                return methodInfo;
-            }
-
-            throw new ToolExecutionException(
-                TextUtil.LineSeparate(
-                    string.Format(Resources.ToolDescription_RunExecutableBackground_The_tool__0__had_an_error__it_returned_the_message_,
-                        Title),
-                    Resources
-                        .ToolDescription_FindArgsCollectorMethod_Unable_to_find_any_CollectArgs_method_to_call_on_class___0___), innerException);
-        }
-
-        private static MethodInfo SafeGetMethod(Type type, string methodName, Type[] args)
-        {
-            try
-            {
-                return type.GetMethod(methodName, args);
-            }
-            catch
-            {
-                return null;
-            }
         }
 
         public IWebHelpers WebHelpers { get; set; }

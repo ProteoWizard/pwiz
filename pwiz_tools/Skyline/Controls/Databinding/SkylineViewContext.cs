@@ -552,6 +552,7 @@ namespace pwiz.Skyline.Controls.Databinding
                     columnsToRemove.Add(PropertyPath.Root.Property(nameof(Precursor.AutoSelectTransitions)));
                     columnsToRemove.Add(PropertyPath.Root.Property(nameof(Precursor.TargetQualitativeIonRatio)));
                     columnsToRemove.Add(PropertyPath.Root.Property(nameof(Precursor.LibraryIonMobility)));
+                    columnsToRemove.Add(PropertyPath.Root.Property(nameof(Precursor.SpectrumFilter)));
                     addRoot = true;
                 }
                 else if (columnDescriptor.PropertyType == typeof(Model.Databinding.Entities.Transition))

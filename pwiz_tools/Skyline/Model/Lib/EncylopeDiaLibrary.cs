@@ -407,7 +407,7 @@ namespace pwiz.Skyline.Model.Lib
                     {
                         int byteCount = PrimitiveArrays.ReadOneValue<int>(stream);
                         byte[] bytes = new byte[byteCount];
-                        stream.Read(bytes, 0, bytes.Length);
+                        stream.ReadOrThrow(bytes, 0, bytes.Length);
                         sourceFiles.Add(Encoding.UTF8.GetString(bytes));
                     }
                     int spectrumInfoCount = PrimitiveArrays.ReadOneValue<int>(stream);
@@ -837,7 +837,7 @@ namespace pwiz.Skyline.Model.Lib
             public static ElibSpectrumInfo Read(ValueCache valueCache, Stream stream)
             {
                 byte[] peptideModSeqBytes = new byte[PrimitiveArrays.ReadOneValue<int>(stream)];
-                stream.Read(peptideModSeqBytes, 0, peptideModSeqBytes.Length);
+                stream.ReadOrThrow(peptideModSeqBytes, 0, peptideModSeqBytes.Length);
                 var peptideModSeq = valueCache.CacheValue(Encoding.UTF8.GetString(peptideModSeqBytes));
                 int charge = PrimitiveArrays.ReadOneValue<int>(stream);
                 int bestFileId = PrimitiveArrays.ReadOneValue<int>(stream);

@@ -143,6 +143,11 @@ namespace pwiz.Skyline.SettingsUI
             return _gridView.Columns[col].Visible;
         }
 
+        public string GetCellFormattedValue(int col, int row)
+        {
+            return _gridView[col, row]?.FormattedValue?.ToString();
+        }
+
         public string GetCellValue(int col, int row)
         {
             var cellValue = _gridView[col, row].Value;
@@ -212,7 +217,8 @@ namespace pwiz.Skyline.SettingsUI
             }
             catch
             {
-                return obj;
+                // If object is empty string, convert to null.
+                return string.Empty.Equals(obj) ? null : obj;
             }
         }
 

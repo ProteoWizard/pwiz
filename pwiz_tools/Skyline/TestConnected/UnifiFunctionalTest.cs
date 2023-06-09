@@ -54,8 +54,8 @@ namespace pwiz.SkylineTestConnected
             OkDialog(editAccountDlg, editAccountDlg.OkDialog);
             OpenFile(openDataSourceDialog, "Company");
             OpenFile(openDataSourceDialog, "Demo Department");
-            OpenFile(openDataSourceDialog, "HDMSe");
-            OpenFile(openDataSourceDialog, "250 fmol Hi3 E coli peptides 3-6 min");
+            OpenFile(openDataSourceDialog, "Peptides");
+            OpenFile(openDataSourceDialog, "Hi3_ClpB_MSe_01");
             var lockMassDlg = WaitForOpenForm<ImportResultsLockMassDlg>();
             OkDialog(lockMassDlg, lockMassDlg.OkDialog);
             WaitForDocumentLoaded();

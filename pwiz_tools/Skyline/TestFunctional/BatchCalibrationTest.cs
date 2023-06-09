@@ -148,14 +148,17 @@ namespace pwiz.SkylineTestFunctional
                     replicateCalibrationCurve =
                         (LinkValue<CalibrationCurveMetrics>)row.Cells[colReplicateCalibrationCurve.Index].Value;
                 });
+                string message = string.Format(
+                    "Row number: {0} Peptide: {1} Replicate: {2} Calibration Curve: {3} Replicate Calibration Curve: {4}",
+                    iRow, peptide, replicate, calibrationCurve, replicateCalibrationCurve);
                 if (hasBatchNames)
                 {
-                    Assert.AreNotEqual(calibrationCurve.Value.PointCount, replicateCalibrationCurve.Value.PointCount);
+                    Assert.AreNotEqual(calibrationCurve.Value.PointCount, replicateCalibrationCurve.Value.PointCount, message);
                 }
                 else
                 {
-                    Assert.AreEqual(calibrationCurve.Value.PointCount, replicateCalibrationCurve.Value.PointCount);
-                    Assert.AreEqual(calibrationCurve.Value.Slope, replicateCalibrationCurve.Value.Slope);
+                    Assert.AreEqual(calibrationCurve.Value.PointCount, replicateCalibrationCurve.Value.PointCount, message);
+                    Assert.AreEqual(calibrationCurve.Value.Slope, replicateCalibrationCurve.Value.Slope, message);
                 }
 
                 int selectedResultsIndexOld = SkylineWindow.SelectedResultsIndex;

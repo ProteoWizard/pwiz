@@ -83,7 +83,7 @@ namespace SkylineTester
                 try
                 {
                     AttachConsole(ATTACH_PARENT_PROCESS);
-                    CreateZipInstallerWindow.CreateZipFile(args[0]);
+                    CreateZipInstallerWindow.CreateZipFile(args[0], args[0].ToLower().EndsWith("withtestdata.zip"));
                     Thread.Sleep(2000);
                 }
                 catch (Exception e)

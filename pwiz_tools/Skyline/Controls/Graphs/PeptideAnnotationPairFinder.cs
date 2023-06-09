@@ -52,7 +52,7 @@ namespace pwiz.Skyline.Controls.Graphs
                 if (pair != null)
                 {
                     var displayText = GetDisplayText(_displayCV, pair.Annotation);
-                    return new FindMatch(displayText);
+                    return new FindMatch(bookmarkEnumerator.Current, displayText);
                 }  
             }
 

@@ -957,12 +957,13 @@ namespace pwiz.Skyline.Model.Results
                 .MSDataFileInfos[transitionPeak.FileIndexInReplicate];
             var fileId = msDataFileInfo.FileId;
             var ionMobilityValue = transitionPeak.IonMobility;
+            var ccs = transitionPeak.IonMobilityCollisionCrossSection;
             IonMobilityFilter ionMobility;
             if (ionMobilityValue.HasValue)
             {
                 var ionMobilityWidth = transitionPeak.IonMobilityWindow;
                 var ionMobilityUnits = msDataFileInfo.IonMobilityUnits;
-                ionMobility = IonMobilityFilter.GetIonMobilityFilter(ionMobilityValue.Value, ionMobilityUnits, ionMobilityWidth, null);
+                ionMobility = IonMobilityFilter.GetIonMobilityFilter(ionMobilityValue.Value, ionMobilityUnits, ionMobilityWidth, ccs);
             }
             else
             {

@@ -281,7 +281,8 @@ namespace pwiz.Skyline.Model.Results
                             var ce = step.HasValue
                                 ? document.GetCollisionEnergy(nodePep, nodeGroup, null, step.Value)
                                 : (double?)null;
-                            var key = new PrecursorTextId(mz, step, ce, ionMobilityFilter, nodePep.ModifiedTarget, ChromExtractor.summed);
+                            var key = new PrecursorTextId(mz, step, ce, ionMobilityFilter,
+                                ChromatogramGroupId.ForPeptide(nodePep, nodeGroup), ChromExtractor.summed);
 
                             if (!dictPrecursorMzToFilter.TryGetValue(key, out var filter))
                             {
@@ -544,6 +545,11 @@ namespace pwiz.Skyline.Model.Results
             get { return _isWatersMse; }
         }
 
+        public bool IsElectronIonizationMse
+        {
+            get { return _isElectronIonizationMse; }
+        }
+
         public bool IsAgilentFile
         {
             get { return _isAgilentMse; }
@@ -745,7 +751,12 @@ namespace pwiz.Skyline.Model.Results
                 // Agilent MSe is a series of MS1 scans with ramped CE (SpectrumList_Agilent returns these as MS1,MS2,MS2,...) 
                 //    but with ion mobility, as of June 2014, it's just a series of MS2 scans with a single nonzero CE, or MS1 scans with 0 CE
                 // Electron Ionization "MSe" is all MS1 data, but contains only fragments
-                if (_isAgilentMse)
+                if (_isElectronIonizationMse)
+                {
+                    _mseLevel = 2; // EI data is all fragments
+                    returnval = 2; // Report as MS2 even though its recorded as MS1
+                }
+                else if (_isAgilentMse)
                 {
                     if (1 == dataSpectrum.Level)
                     {
@@ -762,11 +773,6 @@ namespace pwiz.Skyline.Model.Results
                     {
                         returnval = 0; // Not useful - probably the file started off mid-cycle, with MS2 CE>0
                     }
-                }
-                else if (_isElectronIonizationMse)
-                {
-                    _mseLevel = 2; // EI data is all fragments
-                    returnval = 2; // Report as MS2 even though its recorded as MS1
                 }
                 else if (!_isWatersMse)
                 {
@@ -835,8 +841,18 @@ namespace pwiz.Skyline.Model.Results
             {
                 if (!filterPair.ContainsRetentionTime(retentionTime.Value))
                     continue;
+                var matchingSpectra = spectra;
+                if (false == filterPair.SpectrumClassFilter.IsEmpty)
+                {
+                    matchingSpectra = spectra.Where(spectrum => filterPair.MatchesSpectrum(spectrum.Metadata))
+                        .ToArray();
+                    if (matchingSpectra.Length == 0)
+                    {
+                        continue;
+                    }
+                }
 
-                var filteredSrmSpectrum = filterPair.FilterQ1SpectrumList(spectra, isSimSpectra);
+                var filteredSrmSpectrum = filterPair.FilterQ1SpectrumList(matchingSpectra, isSimSpectra);
                 if (filteredSrmSpectrum != null)
                     yield return filteredSrmSpectrum;
             }
@@ -876,8 +892,17 @@ namespace pwiz.Skyline.Model.Results
                         }
                     }
 
+                    var matchingSpectra = spectra;
+                    if (!filterPair.SpectrumClassFilter.IsEmpty)
+                    {
+                        matchingSpectra = spectra.Where(spectrum => filterPair.MatchesSpectrum(spectrum.Metadata))
+                            .ToArray();
+                        if (matchingSpectra.Length == 0)
+                            continue;
+                    }
+
                     // This line does the bulk of the work of pulling chromatogram points from spectra
-                    var filteredSrmSpectrum = filterPair.FilterQ3SpectrumList(spectra, UseDriftTimeHighEnergyOffset());
+                    var filteredSrmSpectrum = filterPair.FilterQ3SpectrumList(matchingSpectra, UseDriftTimeHighEnergyOffset());
 
                     filteredSrmSpectrum = pasefAwareFilter.Filter(filteredSrmSpectrum, filterPair, isoWin);
                     if (filteredSrmSpectrum != null)

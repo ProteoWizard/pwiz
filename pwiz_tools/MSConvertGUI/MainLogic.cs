@@ -107,7 +107,7 @@ namespace MSConvertGUI
 
         public bool Canceled => _canceled;
 
-        private readonly ProgressForm.JobInfo _info;
+        public ProgressForm.JobInfo JobInfo { get; }
         private string _errorMessage;
         bool _canceled;
         private Map<string, int> _usedOutputFilenames;
@@ -115,9 +115,9 @@ namespace MSConvertGUI
 
         static Queue<KeyValuePair<MainLogic, Config>> _workQueue = new Queue<KeyValuePair<MainLogic, Config>>();
 
-        public MainLogic(ProgressForm.JobInfo info, Map<string, int> usedOutputFilenames, object calculateSHA1Mutex)
+        public MainLogic(ProgressForm.JobInfo jobInfo, Map<string, int> usedOutputFilenames, object calculateSHA1Mutex)
         {
-            _info = info;
+            JobInfo = jobInfo;
             _canceled = false;
             _usedOutputFilenames = usedOutputFilenames;
             _calculateSHA1Mutex = calculateSHA1Mutex;
@@ -236,6 +236,9 @@ namespace MSConvertGUI
                         break;
                     case "--srmAsSpectra":
                         config.ReaderConfig.srmAsSpectra = true;
+                        break;
+                    case "--ddaProcessing":
+                        config.ReaderConfig.ddaProcessing = true;
                         break;
                     default:
                         config.Filenames.Add(commandList[x]);
@@ -456,10 +459,10 @@ namespace MSConvertGUI
                                                 updateMessage.iterationIndex + 1,
                                                 updateMessage.iterationCount), _info);*/
                     if (updateMessage.message.Any())
-                        StatusUpdate?.Invoke(String.Format("{0}: {1}/{2}", updateMessage.message, updateMessage.iterationIndex + 1, updateMessage.iterationCount), ProgressBarStyle.Continuous, _info);
+                        StatusUpdate?.Invoke(String.Format("{0}: {1}/{2}", updateMessage.message, updateMessage.iterationIndex + 1, updateMessage.iterationCount), ProgressBarStyle.Continuous, JobInfo);
                     else
-                        StatusUpdate?.Invoke(String.Format("{1}/{2}", updateMessage.message, updateMessage.iterationIndex + 1, updateMessage.iterationCount), ProgressBarStyle.Continuous, _info);
-                    PercentageUpdate?.Invoke(updateMessage.iterationIndex + 1, updateMessage.iterationCount, _info);
+                        StatusUpdate?.Invoke(String.Format("{1}/{2}", updateMessage.message, updateMessage.iterationIndex + 1, updateMessage.iterationCount), ProgressBarStyle.Continuous, JobInfo);
+                    PercentageUpdate?.Invoke(updateMessage.iterationIndex + 1, updateMessage.iterationCount, JobInfo);
                 }
                 return Status.Ok;
             }
@@ -479,8 +482,8 @@ namespace MSConvertGUI
                 if (stripCredentialsMatch.Success)
                     msg = msg.Replace(stripCredentialsMatch.Groups[1].Value, "");
 
-                LogUpdate?.Invoke(msg, _info);
-                StatusUpdate?.Invoke(msg, ProgressBarStyle.Marquee, _info);
+                LogUpdate?.Invoke(msg, JobInfo);
+                StatusUpdate?.Invoke(msg, ProgressBarStyle.Marquee, JobInfo);
                 readers.read(filename, msdList, config.ReaderConfig);
 
                 foreach (var msd in msdList)
@@ -490,7 +493,7 @@ namespace MSConvertGUI
                         var outputFilename = config.outputFilename(filename, msd);
                         string deduplicatedFilename = outputFilename;
 
-                        StatusUpdate?.Invoke("Waiting...", ProgressBarStyle.Marquee, _info);
+                        StatusUpdate?.Invoke("Waiting...", ProgressBarStyle.Marquee, JobInfo);
 
                         // only one thread 
                         lock (_calculateSHA1Mutex)
@@ -503,16 +506,16 @@ namespace MSConvertGUI
                                 deduplicatedFilename = deduplicatedFilename.Replace(Path.GetExtension(outputFilename), String.Format(" ({0}).{1}",  usedOutputFilenames[outputFilename] + 1, Path.GetExtension(outputFilename)));
                             ++usedOutputFilenames[outputFilename];
 
-                            LogUpdate?.Invoke("Calculating SHA1 checksum...", _info);
-                            StatusUpdate?.Invoke("Calculating SHA1 checksum...", ProgressBarStyle.Marquee, _info);
+                            LogUpdate?.Invoke("Calculating SHA1 checksum...", JobInfo);
+                            StatusUpdate?.Invoke("Calculating SHA1 checksum...", ProgressBarStyle.Marquee, JobInfo);
                             MSDataFile.calculateSHA1Checksums(msd);
                         }
 
                         var ilr = new IterationListenerRegistry();
                         ilr.addListenerWithTimer(this, 1);
 
-                        LogUpdate?.Invoke("Processing...", _info);
-                        StatusUpdate?.Invoke("Processing...", ProgressBarStyle.Marquee, _info);
+                        LogUpdate?.Invoke("Processing...", JobInfo);
+                        StatusUpdate?.Invoke("Processing...", ProgressBarStyle.Marquee, JobInfo);
 
                         SpectrumListFactory.wrap(msd, config.Filters, ilr);
 
@@ -535,26 +538,26 @@ namespace MSConvertGUI
                             }
                             else
                                 msg = "Note: input contains no spectra or chromatogram data.";
-                            LogUpdate?.Invoke(msg, _info);
-                            StatusUpdate?.Invoke(msg, ProgressBarStyle.Continuous, _info);
+                            LogUpdate?.Invoke(msg, JobInfo);
+                            StatusUpdate?.Invoke(msg, ProgressBarStyle.Continuous, JobInfo);
                         }
 
                         if (StatusUpdate != null && msd.run.spectrumList != null)
                             StatusUpdate(String.Format("Processing ({0} of {1})", 
                                                        DataGridViewProgressCell.MessageSpecialValue.CurrentValue,
                                                        DataGridViewProgressCell.MessageSpecialValue.Maximum),
-                                         ProgressBarStyle.Continuous, _info);
+                                         ProgressBarStyle.Continuous, JobInfo);
 
                         // write out the new data file
                         msg = String.Format("Writing \"{0}\"...", deduplicatedFilename);
-                        LogUpdate?.Invoke(msg, _info);
-                        StatusUpdate?.Invoke(msg, ProgressBarStyle.Continuous, _info);
+                        LogUpdate?.Invoke(msg, JobInfo);
+                        StatusUpdate?.Invoke(msg, ProgressBarStyle.Continuous, JobInfo);
                         MSDataFile.write(msd, deduplicatedFilename, config.WriteConfig, ilr);
                         ilr.removeListener(this);
                     }
                     finally
                     {
-                    msd.Dispose();
+                        msd.Dispose();
                     }
                 }
             }
@@ -601,7 +604,7 @@ namespace MSConvertGUI
 
         public void QueueWork(Config config)
         {
-            if (StatusUpdate != null) StatusUpdate("Waiting...", ProgressBarStyle.Continuous, _info);
+            if (StatusUpdate != null) StatusUpdate("Waiting...", ProgressBarStyle.Continuous, JobInfo);
 
             _canceled = false;
 
@@ -646,7 +649,8 @@ namespace MSConvertGUI
                 var LogUpdate = logic.LogUpdate;
                 var StatusUpdate = logic.StatusUpdate;
                 var PercentageUpdate = logic.PercentageUpdate;
-                var _info = logic._info;
+                var _info = logic.JobInfo;
+                _info.Started = true;
 
                 try
                 {
@@ -678,6 +682,8 @@ namespace MSConvertGUI
                         //probably nothing left to report to
                     }
                 }
+
+                _info.Finished = true;
             }
         }
     }

@@ -154,7 +154,7 @@ namespace pwiz.Skyline.Controls
         private void DrawWithHighlighting(String description, String textToHighlight, Graphics graphics,
             Rectangle descriptionBounds, Color textColor, Color backColor)
         {
-            var findMatch = new FindMatch(description);
+            var findMatch = new FindMatch(Bookmark.ROOT, description);
             int ichHighlightBegin = description.ToLower().IndexOf(textToHighlight.ToLower(), StringComparison.Ordinal);
             // A very short search only matches at the front of a word
             if ((textToHighlight.Length < ProteinMatchQuery.MIN_FREE_SEARCH_LENGTH) && (ichHighlightBegin > 0))

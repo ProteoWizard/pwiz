@@ -279,6 +279,7 @@ PWIZ_API_DECL CVID translateAsChromatogramType(const Signal & signal)
         case DeviceType_NitrogenPhosphorousDetector:
         case DeviceType_FlamePhotometricDetector:
         case DeviceType_GCDetector:
+        case DeviceType_UIB2:
             return signal.isInstrumentCurve ? CVID_Unknown : MS_absorption_chromatogram;
 
         default:
@@ -304,7 +305,6 @@ PWIZ_API_DECL CVID translateAsChromatogramType(const Signal & signal)
         case DeviceType_ThermostattedColumnCompartment:
         case DeviceType_ChipCube:
         case DeviceType_CE:
-        case DeviceType_UIB2:
         case DeviceType_FlexCube:
         case DeviceType_SFC:
         case DeviceType_ColumnCompCluster:

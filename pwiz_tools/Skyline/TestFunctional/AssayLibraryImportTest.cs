@@ -546,7 +546,7 @@ namespace pwiz.SkylineTestFunctional
             var libraryDlgOverwriteYes = WaitForOpenForm<MultiButtonMsgDlg>();
             RunUI(() => AssertEx.AreComparableStrings(Resources.SkylineWindow_ImportMassList_There_is_an_existing_library_with_the_same_name__0__as_the_document_library_to_be_created___Overwrite_this_library_or_skip_import_of_library_intensities_, libraryDlgOverwriteYes.Message));
             OkDialog(libraryDlgOverwriteYes, libraryDlgOverwriteYes.Btn0Click);
-            WaitForDocumentLoaded();
+            WaitForDocumentChangeLoaded(docReload);
             calculator = ValidateDocAndIrt(345, 355, 10);
             RunUI(() =>
             {
@@ -848,8 +848,7 @@ namespace pwiz.SkylineTestFunctional
                     SkylineWindow.Document.Settings.PeptideSettings.Prediction.RetentionTime.Name, out rtRegression));
             Assert.IsNull(rtRegression.Conversion);
                 // Probably not what was expected when this test was written, but no regression is created, because document lacks standard peptide targets
-            Assert.AreEqual(SkylineWindow.Document.Settings.PeptideSettings.Prediction.RetentionTime,
-                rtRegression.ClearEquations());
+            WaitForCondition(() => rtRegression.ClearEquations().Equals(SkylineWindow.Document.Settings.PeptideSettings.Prediction.RetentionTime));
         }
 
         private static void RemoveColumn(string textIrtGroupConflict, int columnIndex)

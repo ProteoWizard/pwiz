@@ -55,7 +55,7 @@ class Serializer_mzXML::Impl
 
     void write(ostream& os, const MSData& msd,
                const pwiz::util::IterationListenerRegistry* iterationListenerRegistry,
-               bool useWorkerThreads) const;
+               bool useWorkerThreads, bool continueOnError) const;
 
     void read(shared_ptr<istream> is, MSData& msd) const;
 
@@ -94,7 +94,7 @@ string getRetentionTime(const Scan& scan)
 }
 
 
-void start_msRun(XMLWriter& xmlWriter, const MSData& msd)
+void start_msRun(XMLWriter& xmlWriter, const MSData& msd, bool continueOnError)
 {
     string scanCount, startTime, endTime;
 
@@ -105,20 +105,41 @@ void start_msRun(XMLWriter& xmlWriter, const MSData& msd)
 
         if (sl.size() > 0)
         {
-            SpectrumPtr spectrum = sl.spectrum(0);
-            if (!spectrum->scanList.scans.empty())
-                startTime = getRetentionTime(spectrum->scanList.scans[0]);
+            try
+            {
+                SpectrumPtr spectrum = sl.spectrum(0);
+                if (!spectrum->scanList.scans.empty())
+                    startTime = getRetentionTime(spectrum->scanList.scans[0]);
+            }
+            catch(exception& e)
+            {
+                if (!continueOnError)
+                    throw;
+                sl.warn_once((string("error getting run start time: ") + e.what()).c_str());
+            }
+            if (startTime.empty())
+                startTime = "PT0";
 
-            spectrum = sl.spectrum(sl.size()-1);
-            if (!spectrum->scanList.scans.empty())
-                endTime = getRetentionTime(spectrum->scanList.scans[0]);
+            try
+            {
+                SpectrumPtr spectrum = sl.spectrum(sl.size()-1);
+                if (!spectrum->scanList.scans.empty())
+                    endTime = getRetentionTime(spectrum->scanList.scans[0]);
+            }
+            catch (exception& e)
+            {
+                if (!continueOnError)
+                    throw;
+                sl.warn_once((string("error getting run end time: ") + e.what()).c_str());
+            }
         }
     }
 
     XMLWriter::Attributes attributes; 
     attributes.add("scanCount", scanCount);
     attributes.add("startTime", startTime);
-    attributes.add("endTime", endTime);
+    if (!endTime.empty())
+        attributes.add("endTime", endTime);
     xmlWriter.startElement("msRun", attributes);
 }
 
@@ -702,13 +723,13 @@ void write_scans(XMLWriter& xmlWriter, const MSData& msd,
                  const Serializer_mzXML::Config& config, vector<IndexEntry>& index,
                  const pwiz::util::IterationListenerRegistry* iterationListenerRegistry,
                  map<InstrumentConfigurationPtr, int>& instrumentIndexByPtr,
-                 bool useWorkerThreads)
+                 bool useWorkerThreads, bool continueOnError)
 {
     SpectrumListPtr sl = msd.run.spectrumListPtr;
     if (!sl.get()) return;
 
     CVID defaultNativeIdFormat = id::getDefaultNativeIDFormat(msd);
-    SpectrumWorkerThreads spectrumWorkers(*sl, useWorkerThreads);
+    SpectrumWorkerThreads spectrumWorkers(*sl, useWorkerThreads, continueOnError);
 
     for (size_t i=0; i<sl->size(); i++)
     {
@@ -723,8 +744,22 @@ void write_scans(XMLWriter& xmlWriter, const MSData& msd,
         if (status == IterationListener::Status_Cancel)
             break;
 
-        //SpectrumPtr spectrum = sl->spectrum(i, true);
-        SpectrumPtr spectrum = spectrumWorkers.processBatch(i);
+        SpectrumPtr spectrum;
+        try
+        {
+            // spectrum = sl->spectrum(i, true);
+            spectrum = spectrumWorkers.processBatch(i);
+        }
+        catch (std::exception& e)
+        {
+            if (continueOnError)
+            {
+                cerr << "Skipping spectrum " << i << " \"" << (spectrum ? spectrum->id : sl->spectrumIdentity(i).id) << "\": " << e.what() << endl;
+                continue;
+            }
+            else
+                throw;
+        }
 
         // Thermo spectra not from "controllerType=0 controllerNumber=1" are ignored
         if (defaultNativeIdFormat == MS_Thermo_nativeID_format &&
@@ -740,7 +775,6 @@ void write_scans(XMLWriter& xmlWriter, const MSData& msd,
 
         // write the spectrum
         index.push_back(write_scan(xmlWriter, defaultNativeIdFormat, *spectrum, msd.run.spectrumListPtr, config, instrumentIndexByPtr));
-
     }
 }
 
@@ -771,7 +805,7 @@ void write_index(XMLWriter& xmlWriter, const vector<IndexEntry>& index)
 
 void Serializer_mzXML::Impl::write(ostream& os, const MSData& msd,
     const pwiz::util::IterationListenerRegistry* iterationListenerRegistry,
-    bool useWorkerThreads) const
+    bool useWorkerThreads, bool continueOnError) const
 {
     SHA1OutputObserver sha1OutputObserver;
     XMLWriter::Config config;
@@ -785,12 +819,12 @@ void Serializer_mzXML::Impl::write(ostream& os, const MSData& msd,
 
     map<InstrumentConfigurationPtr, int> instrumentIndexByPtr;
 
-    start_msRun(xmlWriter, msd);
+    start_msRun(xmlWriter, msd, continueOnError);
     write_parentFile(xmlWriter, msd);  
     write_msInstruments(xmlWriter, msd, cvTranslator_, instrumentIndexByPtr);
     write_dataProcessing(xmlWriter, msd, cvTranslator_);
     vector<IndexEntry> index;
-    write_scans(xmlWriter, msd, config_, index, iterationListenerRegistry, instrumentIndexByPtr, useWorkerThreads);
+    write_scans(xmlWriter, msd, config_, index, iterationListenerRegistry, instrumentIndexByPtr, useWorkerThreads, continueOnError);
     xmlWriter.endElement(); // msRun 
 
     stream_offset indexOffset = xmlWriter.positionNext();
@@ -1400,9 +1434,9 @@ PWIZ_API_DECL Serializer_mzXML::Serializer_mzXML(const Config& config)
 
 PWIZ_API_DECL void Serializer_mzXML::write(ostream& os, const MSData& msd,
     const pwiz::util::IterationListenerRegistry* iterationListenerRegistry,
-    bool useWorkerThreads) const
+    bool useWorkerThreads, bool continueOnError) const
 {
-    return impl_->write(os, msd, iterationListenerRegistry, useWorkerThreads);
+    return impl_->write(os, msd, iterationListenerRegistry, useWorkerThreads, continueOnError);
 }
 
 

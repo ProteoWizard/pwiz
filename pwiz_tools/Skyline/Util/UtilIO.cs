@@ -1040,35 +1040,6 @@ namespace pwiz.Skyline.Util
         }
     }
 
-    public static class StreamEx
-    {
-        public static void TransferBytes(this Stream inStream, Stream outStream, long bytesToTransfer)
-        {
-            int bufferSize = (int)Math.Min(bytesToTransfer, 0x40000); // 256K;
-            inStream.TransferBytes(outStream, bytesToTransfer, new byte[bufferSize]);
-        }
-
-        public static void TransferBytes(this Stream inStream, Stream outStream, long bytesToTransfer, byte[] buffer)
-        {
-            long bytesTransferred = 0;
-            long bytesRemaining = bytesToTransfer;
-            int len;
-            while (bytesToTransfer > 0 && (len = inStream.Read(buffer, 0, (int)Math.Min(bytesRemaining, buffer.Length))) != 0)
-            {
-                outStream.Write(buffer, 0, len);
-                bytesRemaining -= len;
-                bytesTransferred += len;
-            }
-
-            if (bytesTransferred != bytesToTransfer)
-            {
-                throw new InvalidDataException(string.Format(
-                    @"Tried to transfer {0} bytes, but actual byte count transferred was {1}", bytesToTransfer,
-                    bytesTransferred));
-            }
-        }
-    }
-
     /// <summary>
     /// Utility class to update progress while reading a large file line by line.
     /// </summary>
@@ -1352,7 +1323,7 @@ namespace pwiz.Skyline.Util
         public TemporaryDirectory(string dirPath = null, string tempPrefix = TEMP_PREFIX)
         {
             if (string.IsNullOrEmpty(dirPath))
-                DirPath = Path.Combine(Path.GetTempPath(), tempPrefix + Path.GetRandomFileName());
+                DirPath = Path.Combine(Path.GetTempPath(), tempPrefix + PathEx.GetRandomFileName()); // N.B. FileEx.GetRandomFileName adds unusual characters in test mode
             else
                 DirPath = dirPath;
             Helpers.TryTwice(() => Directory.CreateDirectory(DirPath));

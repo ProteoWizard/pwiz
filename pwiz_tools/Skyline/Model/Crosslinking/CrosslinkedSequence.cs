@@ -131,6 +131,7 @@ namespace pwiz.Skyline.Model.Crosslinking
                 stringBuilder.Append(@"[");
                 var staticMod = crosslink.Crosslinker;
                 var modification = new ModifiedSequence.Modification(new ExplicitMod(-1, staticMod),
+                    staticMod.ParsedMolecule,
                     staticMod.MonoisotopicMass ?? 0, staticMod.AverageMass ?? 0);
                 stringBuilder.Append(modificationFormatter(modification));
                 stringBuilder.Append(@"@");

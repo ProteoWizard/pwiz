@@ -52,7 +52,7 @@ namespace pwiz.Skyline.Model.Results
 
         public ChromData(ChromKey key, int providerId)
         {
-            Key = PrimaryKey = key;
+            Key = key;
             ProviderId = providerId;
             Peaks = new List<ChromPeak>();
             MaxPeakIndex = -1;
@@ -77,12 +77,12 @@ namespace pwiz.Skyline.Model.Results
             return clone;
         }
 
-        public bool Load(ChromDataProvider provider, Target modifiedSequence, Color peptideColor)
+        public bool Load(ChromDataProvider provider, ChromatogramGroupId chromatogramGroupId, Color peptideColor)
         {
             ChromExtra extra;
             TimeIntensities timeIntensities;
             bool result = provider.GetChromatogram(
-                ProviderId, modifiedSequence, peptideColor,
+                ProviderId, chromatogramGroupId, peptideColor,
                 out extra, out timeIntensities);
             Extra = extra;
             TimeIntensities = RawTimeIntensities = timeIntensities;
@@ -299,8 +299,18 @@ namespace pwiz.Skyline.Model.Results
 
         public IList<ChromPeak> Peaks { get; private set; }
         public int MaxPeakIndex { get; set; }
-        public int OptimizationStep { get; set; }
-        public ChromKey PrimaryKey { get; set; }
+        public int OptimizationStep => Key.OptimizationStep;
+        public ChromKey PrimaryKey
+        {
+            get
+            {
+                if (Key.OptimizationStep == 0)
+                {
+                    return Key;
+                }
+                return Key.ChangeOptimizationStep(0, null);
+            }
+        }
 
         public void FixChromatogram(float[] timesNew, float[] intensitiesNew, int[] scanIndexesNew)
         {
@@ -393,7 +403,8 @@ namespace pwiz.Skyline.Model.Results
                 Key.ExtractionWidth,
                 (float) (Key.IonMobilityFilter.IonMobility.Mobility ?? 0),
                 (float) (Key.IonMobilityFilter.IonMobilityExtractionWindowWidth ?? 0),
-                Key.Source);
+                Key.Source,
+                (short) OptimizationStep);
         }
     }
 

@@ -422,6 +422,8 @@ namespace pwiz.SkylineTestUtil
 
         }
 
+        public bool IsParallelClient => TestContext.Properties.Contains("ParallelClientId");
+
         private void CleanupFiles()
         {
             // If test passed, dispose the working directories to make sure file handles are not still open.

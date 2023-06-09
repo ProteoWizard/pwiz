@@ -20,6 +20,7 @@ using System;
 using System.Collections.Generic;
 using System.Linq;
 using Microsoft.VisualStudio.TestTools.UnitTesting;
+using pwiz.Common.SystemUtil;
 using pwiz.Skyline.Controls.SeqNode;
 using pwiz.Skyline.Model;
 using pwiz.Skyline.Model.Find;
@@ -57,12 +58,12 @@ namespace pwiz.SkylineTest
             int i;
             for (i = 0; i < doc.MoleculeTransitionCount; i += 2)
             {
-                pathFound = doc.SearchDocumentForString(pathFound, String.Format("{0:F04}", listTransitions[i].Mz), displaySettings, false, false);
+                pathFound = doc.SearchDocumentForString(pathFound, String.Format("{0:F04}", listTransitions[i].Mz), displaySettings, false, false, new SilentProgressMonitor());
                 Assert.AreEqual(doc.GetPathTo((int)SrmDocument.Level.Transitions, i), pathFound);
             }
             
             // Test wrapping in search down.
-            pathFound = doc.SearchDocumentForString(pathFound, String.Format("{0:F04}", listTransitions[0].Mz), displaySettings, false, false);
+            pathFound = doc.SearchDocumentForString(pathFound, String.Format("{0:F04}", listTransitions[0].Mz), displaySettings, false, false, new SilentProgressMonitor());
             Assert.AreEqual(doc.GetPathTo((int)SrmDocument.Level.Transitions, 0), pathFound);
 
             // Find every other peptide searching up while for each finding one of its children searching down.
@@ -74,24 +75,24 @@ namespace pwiz.SkylineTest
             for (int x = doc.MoleculeCount; x > 0; x -= 2)
             {
                 // Test case insensitivity.
-                pathFound = doc.SearchDocumentForString(pathFound, listPeptides[x-1].ToString().ToLower(), displaySettings, true, false);
+                pathFound = doc.SearchDocumentForString(pathFound, listPeptides[x-1].ToString().ToLower(), displaySettings, true, false, new SilentProgressMonitor());
                 Assert.AreEqual(doc.GetPathTo((int)SrmDocument.Level.Molecules, x-1), pathFound);
                 // Test parents can find children.
                 pathFound = doc.SearchDocumentForString(pathFound, String.Format("{0:F04}", listTransitionGroups[x * 2 - 1].PrecursorMz.Value), displaySettings, 
-                    false, true);
+                    false, true, new SilentProgressMonitor());
                 Assert.AreEqual(doc.GetPathTo((int)SrmDocument.Level.TransitionGroups, x * 2 - 1), pathFound);
                 // Test Children can find parents.
-                pathFound = doc.SearchDocumentForString(pathFound, listPeptides[x - 1].ToString().ToLower(), displaySettings, true, false);
+                pathFound = doc.SearchDocumentForString(pathFound, listPeptides[x - 1].ToString().ToLower(), displaySettings, true, false, new SilentProgressMonitor());
                 Assert.AreEqual(doc.GetPathTo((int)SrmDocument.Level.Molecules, x - 1), pathFound);
             }
 
             // Test wrapping in search up.
             pathFound = doc.SearchDocumentForString(pathFound, String.Format("{0:F04}", listTransitionGroups[listTransitionGroups.Count - 1].PrecursorMz.Value), 
-                displaySettings, false, true);
+                displaySettings, false, true, new SilentProgressMonitor());
             Assert.AreEqual(doc.GetPathTo((int)SrmDocument.Level.TransitionGroups, listTransitionGroups.Count - 1), pathFound);
             
             // Test children can find other parents.
-            pathFound = doc.SearchDocumentForString(pathFound, listPeptides[0].ToString().ToLowerInvariant(), displaySettings, true, false);
+            pathFound = doc.SearchDocumentForString(pathFound, listPeptides[0].ToString().ToLowerInvariant(), displaySettings, true, false, new SilentProgressMonitor());
             Assert.AreEqual(doc.GetPathTo((int)SrmDocument.Level.Molecules, 0), pathFound);
 
             // Test forward and backward searching in succession
@@ -133,7 +134,7 @@ namespace pwiz.SkylineTest
             DisplaySettings displaySettings, bool reverse, bool caseSensitive)
         {
             IdentityPath pathFound = doc.SearchDocumentForString(IdentityPath.ROOT,
-                searchText, displaySettings, reverse, caseSensitive);
+                searchText, displaySettings, reverse, caseSensitive, new SilentProgressMonitor());
             if (pathFound == null)
                 return 0;
 
@@ -143,7 +144,7 @@ namespace pwiz.SkylineTest
             do
             {
                 pathFoundNext = doc.SearchDocumentForString(pathFoundNext, searchText,
-                    displaySettings, reverse, caseSensitive);
+                    displaySettings, reverse, caseSensitive, new SilentProgressMonitor());
                 i++;
             }
             while (!Equals(pathFound, pathFoundNext));
@@ -154,7 +155,7 @@ namespace pwiz.SkylineTest
             DisplaySettings displaySettings)
         {
             var results = doc.SearchDocument(new Bookmark(IdentityPath.ROOT),
-                findOptions, displaySettings);
+                findOptions, displaySettings, new SilentProgressMonitor());
             if (results == null)
                 return 0;
 
@@ -164,7 +165,7 @@ namespace pwiz.SkylineTest
             do
             {
                 resultsNext = doc.SearchDocument(resultsNext.Bookmark, findOptions,
-                    displaySettings);
+                    displaySettings, new SilentProgressMonitor());
                 i++;
             }
             while (!Equals(resultsNext.Bookmark, results.Bookmark));

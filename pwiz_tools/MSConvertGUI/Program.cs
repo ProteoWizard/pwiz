@@ -20,8 +20,8 @@
 //
 
 using System;
-using System.Collections.Generic;
 using System.Linq;
+using System.Runtime.InteropServices;
 using System.Windows.Forms;
 
 namespace MSConvertGUI
@@ -30,12 +30,34 @@ namespace MSConvertGUI
     {
         public static MainForm MainWindow { get; private set; }
 
+        public static event EventHandler<string> StderrCaptured;
+        private static void OnStderrCaptured(string e) => StderrCaptured?.Invoke(null, e);
+
+        public static class LogCallbackWrapper
+        {
+            [UnmanagedFunctionPointer(CallingConvention.StdCall)]
+            private delegate void LogCallback([MarshalAs(UnmanagedType.LPWStr)] string info);
+
+            [DllImport("pwiz_bindings_cli.dll", CharSet = CharSet.Unicode, CallingConvention = CallingConvention.Cdecl)]
+            private static extern void SetCerrCallback([MarshalAs(UnmanagedType.FunctionPtr)] LogCallback callbackPointer);
+
+            private static LogCallback logCallback;
+
+            internal static void Init()
+            {
+                logCallback = OnStderrCaptured;
+                SetCerrCallback(logCallback);
+            }
+        }
+
         /// <summary>
         /// The main entry point for the application.
         /// </summary>
         [STAThread]
         static void Main(string[] args)
         {
+            LogCallbackWrapper.Init();
+
             // single instance code taken from
             // http://forge.fenchurch.mc.vanderbilt.edu/scm/viewvc.php/branches/IDPicker-3/Program.cs?revision=431&root=idpicker&view=markup
 
