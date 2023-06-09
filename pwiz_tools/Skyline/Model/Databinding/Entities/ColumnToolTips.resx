@@ -613,6 +613,9 @@ spectrum is associated with the precursor ion.</value>
     <value>The rank based on LibraryIntensity of this transition among all transitions
 allowed by the transition Filter settings, shown in the user interface as “(rank #)”.</value>
   </data>
+  <data name="LibraryRetentionTimes">
+    <value>Comma separated list of the retention times for the peptide or molecule found in any spectral library.</value>
+  </data>
   <data name="LibraryScore1">
     <value>Raw peptide library score that may or may not be used to rank among
 precursors of a protein.</value>
@@ -682,6 +685,9 @@ precursor.</value>
   <data name="MaxHeight">
     <value>Max Height</value>
   </data>
+  <data name="MaxLibraryRetentionTime">
+    <value>Maximum retention time for the peptide or molecule found in any spectral library</value>
+  </data>
   <data name="MaxRetentionTime">
     <value>Maximum of the transition RetentionTime values.</value>
   </data>
@@ -702,6 +708,9 @@ precursor.</value>
   </data>
   <data name="MeanFwhm">
     <value>Mean of the transition Fwhm (peak width) values.</value>
+  </data>
+  <data name="MeanLibraryRetentionTime">
+    <value>Average of the retention times for the peptide or molecule found in any spectral library</value>
   </data>
   <data name="MeanMaxFwhm">
     <value>Mean of the precursor MaxFwhm (peak width) values.</value>
@@ -744,6 +753,9 @@ If there are no internal standard peak areas, then the median transition peak ar
   </data>
   <data name="MinFoldChange">
     <value>The lower bound of the confidence interval of the fold change.</value>
+  </data>
+  <data name="MinLibraryRetentionTime">
+    <value>Minimum retention time for the peptide or molecule found in any spectral library</value>
   </data>
   <data name="MinRetentionTime">
     <value>Minimum of the transition RetentionTime values.</value>

@@ -585,6 +585,9 @@
   <data name="LibraryRank">
     <value>Library Rank</value>
   </data>
+  <data name="LibraryRetentionTimes">
+    <value>Library Retention Times</value>
+  </data>
   <data name="LibraryScore1">
     <value>Library Score1</value>
   </data>
@@ -645,6 +648,9 @@
   <data name="MaxHeight">
     <value>Max Height</value>
   </data>
+  <data name="MaxLibraryRetentionTime">
+    <value>Max Library Retention Time</value>
+  </data>
   <data name="MaxRetentionTime">
     <value>Max Retention Time</value>
   </data>
@@ -665,6 +671,9 @@
   </data>
   <data name="MeanFwhm">
     <value>Mean Fwhm</value>
+  </data>
+  <data name="MeanLibraryRetentionTime">
+    <value>Mean Library Retention Time</value>
   </data>
   <data name="MeanMaxFwhm">
     <value>Mean Max Fwhm</value>
@@ -704,6 +713,9 @@
   </data>
   <data name="MinFoldChange">
     <value>Min Fold Change</value>
+  </data>
+  <data name="MinLibraryRetentionTime">
+    <value>Min Library Retention Time</value>
   </data>
   <data name="MinRetentionTime">
     <value>Min Retention Time</value>
