@@ -63,6 +63,32 @@ namespace pwiz.Skyline.Controls.Databinding
             return DataboundGridControl;
         }
 
+        protected static bool ColumnsEqual(ViewInfo viewInfo1, ViewInfo viewInfo2)
+        {
+            if (!Equals(viewInfo1.ViewSpec, viewInfo2.ViewSpec))
+            {
+                return false;
+            }
+
+            if (viewInfo1.DisplayColumns.Count != viewInfo2.DisplayColumns.Count)
+            {
+                return false;
+            }
+
+            for (int icol = 0; icol < viewInfo1.DisplayColumns.Count; icol++)
+            {
+                if (!viewInfo1.DisplayColumns[icol].ColumnDescriptor.GetAttributes()
+                        .SequenceEqual(viewInfo2.DisplayColumns[icol].ColumnDescriptor.GetAttributes()))
+                {
+                    return false;
+                }
+            }
+
+            return true;
+        }
+
+
+
         protected override bool ProcessCmdKey(ref Message msg, Keys keyData)
         {
             var skylineWindow = (BindingListSource.ViewInfo.DataSchema as SkylineDataSchema)?.SkylineWindow;
