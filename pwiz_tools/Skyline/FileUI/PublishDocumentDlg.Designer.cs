@@ -28,6 +28,7 @@ namespace pwiz.Skyline.FileUI
         /// </summary>
         private void InitializeComponent()
         {
+            this.components = new System.ComponentModel.Container();
             System.ComponentModel.ComponentResourceManager resources = new System.ComponentModel.ComponentResourceManager(typeof(PublishDocumentDlg));
             this.lblPanoramaFolders = new System.Windows.Forms.Label();
             this.treeViewFolders = new System.Windows.Forms.TreeView();
@@ -36,6 +37,8 @@ namespace pwiz.Skyline.FileUI
             this.lblFile = new System.Windows.Forms.Label();
             this.tbFilePath = new System.Windows.Forms.TextBox();
             this.btnBrowse = new System.Windows.Forms.Button();
+            this.cbAnonymousServers = new System.Windows.Forms.CheckBox();
+            this.toolTipShowAnonymous = new System.Windows.Forms.ToolTip(this.components);
             this.SuspendLayout();
             // 
             // lblPanoramaFolders
@@ -81,12 +84,21 @@ namespace pwiz.Skyline.FileUI
             this.btnBrowse.UseVisualStyleBackColor = true;
             this.btnBrowse.Click += new System.EventHandler(this.btnBrowse_Click);
             // 
+            // cbAnonymousServers
+            // 
+            resources.ApplyResources(this.cbAnonymousServers, "cbAnonymousServers");
+            this.cbAnonymousServers.Name = "cbAnonymousServers";
+            this.toolTipShowAnonymous.SetToolTip(this.cbAnonymousServers, resources.GetString("cbAnonymousServers.ToolTip"));
+            this.cbAnonymousServers.UseVisualStyleBackColor = true;
+            this.cbAnonymousServers.CheckedChanged += new System.EventHandler(this.cbAnonymousServers_CheckedChanged);
+            // 
             // PublishDocumentDlg
             // 
             this.AcceptButton = this.btnOK;
             resources.ApplyResources(this, "$this");
             this.AutoScaleMode = System.Windows.Forms.AutoScaleMode.Font;
             this.CancelButton = this.btnCancel;
+            this.Controls.Add(this.cbAnonymousServers);
             this.Controls.Add(this.btnBrowse);
             this.Controls.Add(this.tbFilePath);
             this.Controls.Add(this.lblFile);
@@ -114,5 +126,7 @@ namespace pwiz.Skyline.FileUI
         private System.Windows.Forms.Label lblFile;
         private System.Windows.Forms.TextBox tbFilePath;
         private System.Windows.Forms.Button btnBrowse;
+        private System.Windows.Forms.CheckBox cbAnonymousServers;
+        private System.Windows.Forms.ToolTip toolTipShowAnonymous;
     }
 }

@@ -22,11 +22,9 @@ using System.Collections.Generic;
 using System.Net.Mail;
 using System.Windows.Forms;
 using pwiz.PanoramaClient;
-using pwiz.Skyline.Alerts;
 using pwiz.Skyline.Controls;
 using pwiz.Skyline.Properties;
 using pwiz.Skyline.Util;
-using pwiz.Skyline.Util.Extensions;
 
 namespace pwiz.Skyline.ToolsUI
 {
@@ -47,13 +45,6 @@ namespace pwiz.Skyline.ToolsUI
         public void ShowInstructions()
         {
             InstructionPanel.Visible = true;
-            instructionLabel.Visible = true;
-        }
-
-        public void ShowAnonymousServerInfo()
-        {
-            InstructionPanel.Visible = true;
-            anonymousServerLabel.Visible = true;
         }
 
         public Server Server
@@ -71,11 +62,22 @@ namespace pwiz.Skyline.ToolsUI
                 else
                 {
                     textServerURL.Text = _server.URI.ToString();
-                    textPassword.Text = _server.Password;
-                    textUsername.Text = _server.Username;
                     string labelText = lblProjectInfo.Text;
                     if (labelText.Contains(textServerURL.Text))
                         lblProjectInfo.Text = labelText.Substring(0, labelText.IndexOf(' ')) + ':';
+                    if (!_server.HasUserAccount() && _existing.Contains(server => server.Equals(_server)))
+                    {
+                        cbAnonymous.Checked = true;
+                        textPassword.Text = string.Empty;
+                        textPassword.Enabled = false;
+                        textUsername.Text = string.Empty;
+                        textUsername.Enabled = false;
+                    }
+                    else
+                    {
+                        textPassword.Text = _server.Password;
+                        textUsername.Text = _server.Username;
+                    }
                 }
             }
         }
@@ -83,6 +85,8 @@ namespace pwiz.Skyline.ToolsUI
         public string URL { get { return textServerURL.Text; } set { textServerURL.Text = value; } }
         public string Username { get { return textUsername.Text; } set { textUsername.Text = value; } }
         public string Password { get { return textPassword.Text; } set { textPassword.Text = value; } }
+
+        public bool AnonymousServer { get { return cbAnonymous.Checked; } set { cbAnonymous.Checked = value; } }
 
         public void OkDialog()
         {
@@ -98,11 +102,16 @@ namespace pwiz.Skyline.ToolsUI
                 return;
             }
 
-           if (Username.Length > 0 || Password.Length > 0)
+            if (AnonymousServer)
             {
-                if (!helper.ValidateNotEmptyTextBox(textPassword, out _))
-                    return;
+                Username = string.Empty;
+                Password = string.Empty;
+            }
+            else
+            {
                 if (!helper.ValidateNotEmptyTextBox(textUsername, out _))
+                    return;
+                if (!helper.ValidateNotEmptyTextBox(textPassword, out _))
                     return;
 
                 try
@@ -115,17 +124,6 @@ namespace pwiz.Skyline.ToolsUI
                         Resources.EditServerDlg_OkDialog__0__is_not_a_valid_email_address_, textUsername.Text);
                     return;
                 }
-            }
-            else
-            {
-                // Make the user confirm that they want anonymous access to the server.
-                var alertDlg = new AlertDlg(TextUtil.LineSeparate(
-                    "You have not entered an email and password. Without a user account you will be able to anonymously " +
-                    "browse, download and open publicly available documents on the server, but you will not be able to upload documents to the server.",
-                    string.Empty,
-                    string.Format("Do you want anonymous access to {0}?", uriServer.Host)), MessageBoxButtons.YesNo);
-                if (alertDlg.ShowAndDispose(this) == DialogResult.No)
-                    return;
             }
 
             var panoramaClient = PanoramaClient ?? new WebPanoramaClient(uriServer, Username, Password);
@@ -159,9 +157,21 @@ namespace pwiz.Skyline.ToolsUI
             OkDialog();
         }
 
+        private void cbAnonymous_CheckedChanged(object sender, EventArgs e)
+        {
+            var anonymousServer = cbAnonymous.Checked;
+            textPassword.Enabled = !anonymousServer;
+            textUsername.Enabled = !anonymousServer;
+        }
+
         public string GetTextServerUrlControlLabel()
         {
             return new MessageBoxHelper(this).GetControlMessage(textServerURL);
+        }
+
+        public string GetTextUsernameControlLabel()
+        {
+            return new MessageBoxHelper(this).GetControlMessage(textUsername);
         }
     }
 }

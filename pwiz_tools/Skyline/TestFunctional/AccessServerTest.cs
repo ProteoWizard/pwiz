@@ -186,6 +186,8 @@ namespace pwiz.SkylineTestFunctional
             CheckPublishSuccess(WRITE_TARGETED, false, supportedVersions);
 
             TestPanoramaServerUrls();
+
+            TestAnonymousServers();
         }
 
         public void CheckPublishSuccess(string nodeSelection, bool expectingSavedUri)
@@ -347,6 +349,131 @@ namespace pwiz.SkylineTestFunctional
             Assert.IsTrue(pServer.Redirect("http://another.server/" + PanoramaUtil.ENSURE_LOGIN_PATH, PanoramaUtil.ENSURE_LOGIN_PATH, ref tempServer)); // Redirect to different host
         }
 
+        private void TestAnonymousServers()
+        {
+            // Remove all saved Panorama servers
+            ToolOptionsDlg = ShowDialog<ToolOptionsUI>(() => SkylineWindow.ShowToolOptionsUI(ToolOptionsUI.TABS.Panorama));
+            var editServerListDlg = ShowDialog<EditListDlg<SettingsListBase<Server>, Server>>(ToolOptionsDlg.EditServers);
+            RunUI(editServerListDlg.ResetList);
+            OkDialog(editServerListDlg, editServerListDlg.OkDialog);
+            OkDialog(ToolOptionsDlg, ToolOptionsDlg.OkDialog);
+
+            // Open a Skyline document
+            RunUI(() =>
+            {
+                SkylineWindow.NewDocument(true);
+                SkylineWindow.SaveDocument(TestContext.GetTestResultsPath("test_anonymous_servers.sky"));
+            });
+            WaitForDocumentLoaded();
+
+            // Try to "Upload to Panorama"
+            IPanoramaPublishClient publishClient = new TestPanoramaPublishClient();
+            var noServersDlg = ShowDialog<MultiButtonMsgDlg>(() => SkylineWindow.ShowPublishDlg(publishClient));
+            var text = noServersDlg.Message;
+            RunUI(() => Assert.IsTrue(noServersDlg.Message.Contains(Resources.SkylineWindow_ShowPublishDlg_Press_Register_to_register_for_a_project_on_PanoramaWeb_)));
+            OkDialog(noServersDlg, noServersDlg.CancelDialog);
+            
+
+            // Add an anonymous server
+            AddAnonymousServer(VALID_PANORAMA_SERVER, 1);
+
+
+            // Try "Upload to Panorama" again
+            // 1. Click "Edit existing" but save a anonymous again
+            // 2. Edit existing and add account information
+            // 3. PublishDocumentDlg should NOT display the "Show anonymous servers" checkbox
+            noServersDlg = ShowDialog<MultiButtonMsgDlg>(() => SkylineWindow.ShowPublishDlg(publishClient));
+            RunUI(() => Assert.IsTrue(noServersDlg.Message.Contains(Resources
+                .SkylineWindow_ShowPublishDlg_There_are_no_Panorama_servers_with_a_user_account__To_upload_documents_to_a_server_a_user_account_is_required_)));
+
+            // 1. Click "Edit existing" but save a anonymous again
+            var editServerDlg = ShowDialog<EditServerDlg>(noServersDlg.ClickYes);
+            RunUI(() =>
+            {
+                Assert.AreEqual(VALID_PANORAMA_SERVER, editServerDlg.URL);
+                editServerDlg.PanoramaClient = new TestAnonymousPanoramaClient(VALID_PANORAMA_SERVER);
+                editServerDlg.AnonymousServer = true;
+            });
+            var alertDlg = ShowDialog<AlertDlg>(editServerDlg.OkDialog);
+            RunUI(() => Assert.AreEqual(Resources.SkylineWindow_ShowPublishDlg_Document_cannot_be_uploaded_to_a_Panorama_server_without_a_user_account_, alertDlg.Message));
+            OkDialog(alertDlg, alertDlg.OkDialog);
+
+            // 2. Edit existing and add account information
+            noServersDlg = ShowDialog<MultiButtonMsgDlg>(() => SkylineWindow.ShowPublishDlg(publishClient));
+            editServerDlg = ShowDialog<EditServerDlg>(noServersDlg.ClickYes);
+            var testClient = new TestPanoramaClient(VALID_PANORAMA_SERVER, VALID_USER_NAME, VALID_PASSWORD);
+            RunUI(() =>
+            {
+                Assert.AreEqual(VALID_PANORAMA_SERVER, editServerDlg.URL);
+                editServerDlg.PanoramaClient = testClient;
+                editServerDlg.Username = testClient.Username;
+                editServerDlg.Password = testClient.Password;
+            });
+
+            // 3. PublishDocumentDlg should NOT display the "Show anonymous servers" checkbox
+            var publishDocDlg = ShowDialog<PublishDocumentDlg>(editServerDlg.OkDialog);
+            // WaitForCondition(60 * 1000, () => publishDocumentDlg.IsLoaded);
+            RunUI( () => Assert.IsFalse(publishDocDlg.CbAnonymousServersVisible));
+            OkDialog(publishDocDlg, publishDocDlg.CancelDialog);
+
+
+
+            // Add another anonymous server
+            // 1. PublishDocumentDlg should display the "Show anonymous servers" checkbox
+            // 2. View anonymous servers
+            const string pweb = "https://panoramaweb.org/";
+            AddAnonymousServer(pweb, 2);
+            publishDocDlg = ShowDialog<PublishDocumentDlg>(() => SkylineWindow.ShowPublishDlg(publishClient));
+            RunUI(() =>
+            {
+                // 1. PublishDocumentDlg should display the "Show anonymous servers" checkbox
+                Assert.IsTrue(publishDocDlg.CbAnonymousServersVisible);
+
+                var servers = publishDocDlg.GetServers();
+                Assert.AreEqual(1, servers.Count);
+                Assert.AreEqual(VALID_PANORAMA_SERVER, servers[0]);
+
+                // 2. View anonymous servers
+                publishDocDlg.ShowAnonymousServers = true;
+                servers = publishDocDlg.GetServers();
+                Assert.AreEqual(2, servers.Count);
+                Assert.AreEqual(pweb + @" (anonymous)", servers[1]);
+
+                publishDocDlg.ShowAnonymousServers = false;
+                servers = publishDocDlg.GetServers();
+                Assert.AreEqual(1, servers.Count);
+                Assert.AreEqual(VALID_PANORAMA_SERVER, servers[0]);
+            });
+            OkDialog(publishDocDlg, publishDocDlg.CancelDialog);
+        }
+
+        private void AddAnonymousServer(string server, int expectedServerCount)
+        {
+            ToolOptionsDlg = ShowDialog<ToolOptionsUI>(() => SkylineWindow.ShowToolOptionsUI(ToolOptionsUI.TABS.Panorama));
+            var editServerListDlg = ShowDialog<EditListDlg<SettingsListBase<Server>, Server>>(ToolOptionsDlg.EditServers);
+            var testClient = new TestAnonymousPanoramaClient(server);
+            var editServerDlg = ShowDialog<EditServerDlg>(editServerListDlg.AddItem);
+            RunUI(() =>
+            {
+                editServerDlg.PanoramaClient = testClient;
+                editServerDlg.URL = testClient.Server;
+            });
+            var messageDlg = ShowDialog<MessageDlg>(editServerDlg.OkDialog);
+            RunUI(() => Assert.AreEqual(string.Format(Resources.MessageBoxHelper_ValidateNameTextBox__0__cannot_be_empty, editServerDlg.GetTextUsernameControlLabel()), messageDlg.Message));
+
+            OkDialog(messageDlg, messageDlg.OkDialog);
+            RunUI(() =>
+            {
+                editServerDlg.AnonymousServer = true;
+            });
+
+            OkDialog(editServerDlg, editServerDlg.OkDialog);
+            OkDialog(editServerListDlg, editServerListDlg.OkDialog);
+            TryWaitForConditionUI(() => expectedServerCount == Settings.Default.ServerList.Count);
+            RunUI(() => Assert.AreEqual(expectedServerCount, Settings.Default.ServerList.Count));
+            OkDialog(ToolOptionsDlg, ToolOptionsDlg.OkDialog);
+        }
+
         public class TestPanoramaClient : BaseTestPanoramaClient
         {
             public string Server { get; } 
@@ -394,6 +521,18 @@ namespace pwiz.SkylineTestFunctional
 
             public override void ValidateFolder(string folderPath, FolderPermission? permission, bool checkTargetedMs = true)
             {
+            }
+        }
+
+        public class TestAnonymousPanoramaClient : TestPanoramaClient
+        {
+            public TestAnonymousPanoramaClient(string server) : base(server, string.Empty, string.Empty)
+            {
+            }
+
+            public override PanoramaServer ValidateServer()
+            {
+                return new PanoramaServer(ServerUri, string.Empty, string.Empty);
             }
         }
 

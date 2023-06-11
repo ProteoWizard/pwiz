@@ -145,7 +145,7 @@
     <value>InputPanel</value>
   </data>
   <data name="&gt;&gt;btnOK.ZOrder" xml:space="preserve">
-    <value>4</value>
+    <value>3</value>
   </data>
   <data name="btnCancel.Anchor" type="System.Windows.Forms.AnchorStyles, System.Windows.Forms">
     <value>Bottom, Right</value>
@@ -172,7 +172,7 @@
     <value>InputPanel</value>
   </data>
   <data name="&gt;&gt;btnCancel.ZOrder" xml:space="preserve">
-    <value>3</value>
+    <value>2</value>
   </data>
   <data name="instructionLabel.AutoSize" type="System.Boolean, mscorlib">
     <value>True</value>
@@ -191,9 +191,6 @@
 user account, please enter the email and password for your
 user account below.</value>
   </data>
-  <data name="instructionLabel.Visible" type="System.Boolean, mscorlib">
-    <value>False</value>
-  </data>
   <data name="&gt;&gt;instructionLabel.Name" xml:space="preserve">
     <value>instructionLabel</value>
   </data>
@@ -209,62 +206,38 @@ user account below.</value>
   <data name="InputPanel.Anchor" type="System.Windows.Forms.AnchorStyles, System.Windows.Forms">
     <value>Top, Bottom, Left, Right</value>
   </data>
-  <data name="optionalLabel2.AutoSize" type="System.Boolean, mscorlib">
+  <data name="cbAnonymous.AutoSize" type="System.Boolean, mscorlib">
     <value>True</value>
   </data>
-  <data name="optionalLabel2.ImeMode" type="System.Windows.Forms.ImeMode, System.Windows.Forms">
-    <value>NoControl</value>
+  <data name="cbAnonymous.Location" type="System.Drawing.Point, System.Drawing">
+    <value>16, 51</value>
   </data>
-  <data name="optionalLabel2.Location" type="System.Drawing.Point, System.Drawing">
-    <value>227, 151</value>
+  <data name="cbAnonymous.Size" type="System.Drawing.Size, System.Drawing">
+    <value>118, 17</value>
   </data>
-  <data name="optionalLabel2.Size" type="System.Drawing.Size, System.Drawing">
-    <value>50, 13</value>
-  </data>
-  <data name="optionalLabel2.TabIndex" type="System.Int32, mscorlib">
-    <value>11</value>
-  </data>
-  <data name="optionalLabel2.Text" xml:space="preserve">
-    <value>(optional)</value>
-  </data>
-  <data name="&gt;&gt;optionalLabel2.Name" xml:space="preserve">
-    <value>optionalLabel2</value>
-  </data>
-  <data name="&gt;&gt;optionalLabel2.Type" xml:space="preserve">
-    <value>System.Windows.Forms.Label, System.Windows.Forms, Version=4.0.0.0, Culture=neutral, PublicKeyToken=b77a5c561934e089</value>
-  </data>
-  <data name="&gt;&gt;optionalLabel2.Parent" xml:space="preserve">
-    <value>InputPanel</value>
-  </data>
-  <data name="&gt;&gt;optionalLabel2.ZOrder" xml:space="preserve">
-    <value>0</value>
-  </data>
-  <data name="optionalLabel1.AutoSize" type="System.Boolean, mscorlib">
-    <value>True</value>
-  </data>
-  <data name="optionalLabel1.Location" type="System.Drawing.Point, System.Drawing">
-    <value>227, 90</value>
-  </data>
-  <data name="optionalLabel1.Size" type="System.Drawing.Size, System.Drawing">
-    <value>50, 13</value>
-  </data>
-  <data name="optionalLabel1.TabIndex" type="System.Int32, mscorlib">
+  <data name="cbAnonymous.TabIndex" type="System.Int32, mscorlib">
     <value>10</value>
   </data>
-  <data name="optionalLabel1.Text" xml:space="preserve">
-    <value>(optional)</value>
+  <data name="cbAnonymous.Text" xml:space="preserve">
+    <value>Anonymous access</value>
   </data>
-  <data name="&gt;&gt;optionalLabel1.Name" xml:space="preserve">
-    <value>optionalLabel1</value>
+  <metadata name="toolTipAnonymous.TrayLocation" type="System.Drawing.Point, System.Drawing, Version=4.0.0.0, Culture=neutral, PublicKeyToken=b03f5f7f11d50a3a">
+    <value>155, 17</value>
+  </metadata>
+  <data name="cbAnonymous.ToolTip" xml:space="preserve">
+    <value>Check this box if you do not have an account on the server.  Without a user account you can anonymously browse, download and open publicly available documents on the server, but you cannot upload documents to the server.</value>
   </data>
-  <data name="&gt;&gt;optionalLabel1.Type" xml:space="preserve">
-    <value>System.Windows.Forms.Label, System.Windows.Forms, Version=4.0.0.0, Culture=neutral, PublicKeyToken=b77a5c561934e089</value>
+  <data name="&gt;&gt;cbAnonymous.Name" xml:space="preserve">
+    <value>cbAnonymous</value>
   </data>
-  <data name="&gt;&gt;optionalLabel1.Parent" xml:space="preserve">
+  <data name="&gt;&gt;cbAnonymous.Type" xml:space="preserve">
+    <value>System.Windows.Forms.CheckBox, System.Windows.Forms, Version=4.0.0.0, Culture=neutral, PublicKeyToken=b77a5c561934e089</value>
+  </data>
+  <data name="&gt;&gt;cbAnonymous.Parent" xml:space="preserve">
     <value>InputPanel</value>
   </data>
-  <data name="&gt;&gt;optionalLabel1.ZOrder" xml:space="preserve">
-    <value>1</value>
+  <data name="&gt;&gt;cbAnonymous.ZOrder" xml:space="preserve">
+    <value>0</value>
   </data>
   <data name="lblProjectInfo.AutoSize" type="System.Boolean, mscorlib">
     <value>True</value>
@@ -291,7 +264,7 @@ user account below.</value>
     <value>InputPanel</value>
   </data>
   <data name="&gt;&gt;lblProjectInfo.ZOrder" xml:space="preserve">
-    <value>2</value>
+    <value>1</value>
   </data>
   <data name="textServerURL.Location" type="System.Drawing.Point, System.Drawing">
     <value>16, 26</value>
@@ -315,10 +288,10 @@ user account below.</value>
     <value>InputPanel</value>
   </data>
   <data name="&gt;&gt;textServerURL.ZOrder" xml:space="preserve">
-    <value>5</value>
+    <value>4</value>
   </data>
   <data name="textPassword.Location" type="System.Drawing.Point, System.Drawing">
-    <value>16, 148</value>
+    <value>16, 152</value>
   </data>
   <data name="textPassword.PasswordChar" type="System.Char, mscorlib" xml:space="preserve">
     <value>*</value>
@@ -339,13 +312,13 @@ user account below.</value>
     <value>InputPanel</value>
   </data>
   <data name="&gt;&gt;textPassword.ZOrder" xml:space="preserve">
-    <value>6</value>
+    <value>5</value>
   </data>
   <data name="lblPassword.AutoSize" type="System.Boolean, mscorlib">
     <value>True</value>
   </data>
   <data name="lblPassword.Location" type="System.Drawing.Point, System.Drawing">
-    <value>13, 128</value>
+    <value>13, 132</value>
   </data>
   <data name="lblPassword.Size" type="System.Drawing.Size, System.Drawing">
     <value>56, 13</value>
@@ -366,13 +339,13 @@ user account below.</value>
     <value>InputPanel</value>
   </data>
   <data name="&gt;&gt;lblPassword.ZOrder" xml:space="preserve">
-    <value>7</value>
+    <value>6</value>
   </data>
   <data name="lblUsername.AutoSize" type="System.Boolean, mscorlib">
     <value>True</value>
   </data>
   <data name="lblUsername.Location" type="System.Drawing.Point, System.Drawing">
-    <value>13, 69</value>
+    <value>13, 81</value>
   </data>
   <data name="lblUsername.Size" type="System.Drawing.Size, System.Drawing">
     <value>35, 13</value>
@@ -393,10 +366,10 @@ user account below.</value>
     <value>InputPanel</value>
   </data>
   <data name="&gt;&gt;lblUsername.ZOrder" xml:space="preserve">
-    <value>8</value>
+    <value>7</value>
   </data>
   <data name="textUsername.Location" type="System.Drawing.Point, System.Drawing">
-    <value>16, 87</value>
+    <value>16, 99</value>
   </data>
   <data name="textUsername.Size" type="System.Drawing.Size, System.Drawing">
     <value>207, 20</value>
@@ -414,10 +387,10 @@ user account below.</value>
     <value>InputPanel</value>
   </data>
   <data name="&gt;&gt;textUsername.ZOrder" xml:space="preserve">
-    <value>9</value>
+    <value>8</value>
   </data>
   <data name="InputPanel.Location" type="System.Drawing.Point, System.Drawing">
-    <value>3, 69</value>
+    <value>3, 61</value>
   </data>
   <data name="InputPanel.Size" type="System.Drawing.Size, System.Drawing">
     <value>337, 220</value>
@@ -440,33 +413,6 @@ user account below.</value>
   <data name="InstructionPanel.AutoSize" type="System.Boolean, mscorlib">
     <value>True</value>
   </data>
-  <data name="anonymousServerLabel.Location" type="System.Drawing.Point, System.Drawing">
-    <value>10, 4</value>
-  </data>
-  <data name="anonymousServerLabel.Size" type="System.Drawing.Size, System.Drawing">
-    <value>327, 55</value>
-  </data>
-  <data name="anonymousServerLabel.TabIndex" type="System.Int32, mscorlib">
-    <value>1</value>
-  </data>
-  <data name="anonymousServerLabel.Text" xml:space="preserve">
-    <value>This server does not have user account information. You can access the server anonymously to browse, download and open publicly available documents on the server. To upload documents to the server, a user account is required.</value>
-  </data>
-  <data name="anonymousServerLabel.Visible" type="System.Boolean, mscorlib">
-    <value>False</value>
-  </data>
-  <data name="&gt;&gt;anonymousServerLabel.Name" xml:space="preserve">
-    <value>anonymousServerLabel</value>
-  </data>
-  <data name="&gt;&gt;anonymousServerLabel.Type" xml:space="preserve">
-    <value>System.Windows.Forms.Label, System.Windows.Forms, Version=4.0.0.0, Culture=neutral, PublicKeyToken=b77a5c561934e089</value>
-  </data>
-  <data name="&gt;&gt;anonymousServerLabel.Parent" xml:space="preserve">
-    <value>InstructionPanel</value>
-  </data>
-  <data name="&gt;&gt;anonymousServerLabel.ZOrder" xml:space="preserve">
-    <value>1</value>
-  </data>
   <data name="InstructionPanel.Dock" type="System.Windows.Forms.DockStyle, System.Windows.Forms">
     <value>Fill</value>
   </data>
@@ -474,7 +420,7 @@ user account below.</value>
     <value>3, 3</value>
   </data>
   <data name="InstructionPanel.Size" type="System.Drawing.Size, System.Drawing">
-    <value>337, 60</value>
+    <value>337, 52</value>
   </data>
   <data name="InstructionPanel.TabIndex" type="System.Int32, mscorlib">
     <value>10</value>
@@ -513,7 +459,7 @@ user account below.</value>
     <value>2</value>
   </data>
   <data name="ComponentOrganizer.Size" type="System.Drawing.Size, System.Drawing">
-    <value>343, 292</value>
+    <value>343, 284</value>
   </data>
   <data name="ComponentOrganizer.TabIndex" type="System.Int32, mscorlib">
     <value>12</value>
@@ -546,13 +492,19 @@ user account below.</value>
     <value>GrowAndShrink</value>
   </data>
   <data name="$this.ClientSize" type="System.Drawing.Size, System.Drawing">
-    <value>343, 292</value>
+    <value>343, 284</value>
   </data>
   <data name="$this.StartPosition" type="System.Windows.Forms.FormStartPosition, System.Windows.Forms">
     <value>CenterParent</value>
   </data>
   <data name="$this.Text" xml:space="preserve">
-    <value>Edit Server</value>
+    <value>Edit Panorama Server</value>
+  </data>
+  <data name="&gt;&gt;toolTipAnonymous.Name" xml:space="preserve">
+    <value>toolTipAnonymous</value>
+  </data>
+  <data name="&gt;&gt;toolTipAnonymous.Type" xml:space="preserve">
+    <value>System.Windows.Forms.ToolTip, System.Windows.Forms, Version=4.0.0.0, Culture=neutral, PublicKeyToken=b77a5c561934e089</value>
   </data>
   <data name="&gt;&gt;$this.Name" xml:space="preserve">
     <value>EditServerDlg</value>

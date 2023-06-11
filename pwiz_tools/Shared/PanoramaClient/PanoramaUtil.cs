@@ -412,7 +412,7 @@ namespace pwiz.PanoramaClient
                                     Resources
                                         .PanoramaUtil_EnsureLogin_Server_did_not_return_a_valid_JSON_response___0__is_not_a_Panorama_server_,
                                     ServerUri),
-                                requestUri);
+                                ServerUri, requestUri);
                         }
                         else
                         {

@@ -9095,6 +9095,9 @@ Skylineでの列の順序は、列のヘッダーを左右にドラッグする�
   <data name="SkylineWindow_acceptPeptidesMenuItem_Click_Accept_peptides" xml:space="preserve">
     <value>ペプチドの受け入れ</value>
   </data>
+  <data name="SkylineWindow_Add" xml:space="preserve">
+    <value>追加</value>
+  </data>
   <data name="SkylineWindow_AddGroupByMenuItems_All_Replicates" xml:space="preserve">
     <value>すべての繰り返し測定</value>
   </data>
@@ -9399,9 +9402,6 @@ Skylineでの列の順序は、列のヘッダーを左右にドラッグする�
   </data>
   <data name="SkylineWindow_ImportMassList__Skip" xml:space="preserve">
     <value>スキップ(&amp;S)</value>
-  </data>
-  <data name="SkylineWindow_ImportMassList_Add" xml:space="preserve">
-    <value>追加</value>
   </data>
   <data name="SkylineWindow_ImportMassList_Adding_iRT_values_" xml:space="preserve">
     <value>iRT値の計算中</value>

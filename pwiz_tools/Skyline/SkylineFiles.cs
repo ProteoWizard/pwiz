@@ -59,6 +59,7 @@ using pwiz.Skyline.Model.Proteome;
 using pwiz.Skyline.Model.Results;
 using pwiz.Skyline.Model.Serialization;
 using pwiz.Skyline.Properties;
+using pwiz.Skyline.ToolsUI;
 using pwiz.Skyline.Util;
 using pwiz.Skyline.Util.Extensions;
 using AlertDlg = pwiz.Skyline.Alerts.AlertDlg;
@@ -934,7 +935,7 @@ namespace pwiz.Skyline
                     TextUtil.LineSeparate(
                         Resources.SkylineWindow_OpenFromPanorama_No_Panorama_servers_were_found_,
                         Resources.SkylineWindow_OpenFromPanorama_Press__Add__to_add_a_new_server_),
-                    Resources.SkylineWindow_OpenFromPanorama_Add);
+                    Resources.SkylineWindow_Add);
                 if (buttonPress == DialogResult.Cancel)
                     return;
 
@@ -2484,7 +2485,7 @@ namespace pwiz.Skyline
                     : Resources.SkylineWindow_ImportMassList_The_transition_list_appears_to_contain_iRT_library_values___Add_these_iRT_values_to_the_iRT_calculator_;
                 var yesButton = calcIrt == null
                     ? Resources.SkylineWindow_ImportMassList__Create___
-                    : Resources.SkylineWindow_ImportMassList_Add;
+                    : Resources.SkylineWindow_Add;
                 switch (MultiButtonMsgDlg.Show(this, useIrtMessage, yesButton, Resources.SkylineWindow_ImportMassList__Skip, true))
                 {
                     case DialogResult.No:
@@ -3508,52 +3509,58 @@ namespace pwiz.Skyline
 
                 servers.Add(newServer);
             }
-            else if (!servers.Any(s => s.HasUserAccount())) // None of the servers have a user account
+            if (!servers.Any(server => server.HasUserAccount())) // None of the servers have a user account
             {
                 DialogResult buttonPress = MultiButtonMsgDlg.Show(
                     this,
                     TextUtil.LineSeparate(
-                        Resources.SkylineWindow_ShowPublishDlg_There_are_no_Panorama_servers_to_upload_to,
+                        Resources.SkylineWindow_ShowPublishDlg_There_are_no_Panorama_servers_with_a_user_account__To_upload_documents_to_a_server_a_user_account_is_required_,
                         string.Empty,
-                        servers.Count > 1
-                            ? string.Format("There are {0} servers without a user account.", servers.Count)
-                            : string.Format("{0} does not have user account information.", servers[0].URI.AbsoluteUri),
-                        "To upload documents to a server, a user account is required. ",
-                        string.Empty,
-                        "Press Edit existing to add user account information for an existing server.",
-                        "Press Add to add a new server."),
-                    "Edit existing", "Add",
+                        Resources.SkylineWindow_ShowPublishDlg_Press_Edit_existing_to_add_user_account_information_for_an_existing_server_,
+                        Resources.SkylineWindow_OpenFromPanorama_Press__Add__to_add_a_new_server_),
+                    Resources.SkylineWindow_ShowPublishDlg_Edit_existing, Resources.SkylineWindow_Add,
                     true);
                 if (buttonPress == DialogResult.Cancel)
                     return;
 
                 if (buttonPress == DialogResult.Yes)
                 {
-                    // user intends to edit an existing server
+                    // User intends to edit an existing server
                     if (servers.Count == 1)
                     {
                         var anonymousServer = servers[0];
-                        var editedServer = servers.EditCredentials(this, anonymousServer, servers,
-                            anonymousServer.Username, anonymousServer.Password);
+                        var editedServer = servers.EditCredentials(this, anonymousServer, servers, string.Empty, string.Empty);
                         if (editedServer == null)
                             return;
                         servers[0] = editedServer; // Replace with edited server
+
+                        if (!editedServer.HasUserAccount())
+                        {
+                            var alertDlg = new AlertDlg(Resources.SkylineWindow_ShowPublishDlg_Document_cannot_be_uploaded_to_a_Panorama_server_without_a_user_account_, MessageBoxButtons.OK);
+                            alertDlg.ShowAndDispose(this);
+                            return;
+                        }
                     }
                     else
                     {
-                        // Take them to the list of servers they can edit
-                        ShowToolOptionsUI();
+                        ShowToolOptionsUI(ToolOptionsUI.TABS.Panorama);
                         return;
                     }
                 }
                 else
                 {
-                    // Adding a new server
+                    // User wants to add a new server
                     var newServer = servers.EditItem(this, null, servers, null);
                     if (newServer == null)
                         return;
 
                     servers.Add(newServer);
+                    if (!newServer.HasUserAccount())
+                    {
+                        var alertDlg = new AlertDlg(Resources.SkylineWindow_ShowPublishDlg_Document_cannot_be_uploaded_to_a_Panorama_server_without_a_user_account_, MessageBoxButtons.OK);
+                        alertDlg.ShowAndDispose(this);
+                        return;
+                    }
                 }
             }
 

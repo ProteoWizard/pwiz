@@ -1459,11 +1459,6 @@ namespace pwiz.Skyline.Properties
                      instructionsRequired = (bool) tag;
                 if (instructionsRequired)
                     editServer.ShowInstructions();
-                else if (existing != null && item != null && existing.Contains(item) && !item.HasUserAccount())
-                {
-                    // If we are editing an existing server without a user account, show the text about anonymous server
-                    editServer.ShowAnonymousServerInfo();
-                }
                 if (editServer.ShowDialog(owner) == DialogResult.OK)
                     return editServer.Server;
 
@@ -1478,6 +1473,7 @@ namespace pwiz.Skyline.Properties
                 editServerDlg.Username = username;
                 editServerDlg.Password = password;
                 editServerDlg.textServerURL.Enabled = false;
+                editServerDlg.AnonymousServer = false;
                 return editServerDlg.ShowDialog(owner) == DialogResult.OK ? editServerDlg.Server : null;
             }
         }

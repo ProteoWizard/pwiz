@@ -28,13 +28,13 @@ namespace pwiz.Skyline.ToolsUI
         /// </summary>
         private void InitializeComponent()
         {
+            this.components = new System.ComponentModel.Container();
             System.ComponentModel.ComponentResourceManager resources = new System.ComponentModel.ComponentResourceManager(typeof(EditServerDlg));
             this.btnOK = new System.Windows.Forms.Button();
             this.btnCancel = new System.Windows.Forms.Button();
             this.instructionLabel = new System.Windows.Forms.Label();
             this.InputPanel = new System.Windows.Forms.Panel();
-            this.optionalLabel2 = new System.Windows.Forms.Label();
-            this.optionalLabel1 = new System.Windows.Forms.Label();
+            this.cbAnonymous = new System.Windows.Forms.CheckBox();
             this.lblProjectInfo = new System.Windows.Forms.Label();
             this.textServerURL = new System.Windows.Forms.TextBox();
             this.textPassword = new System.Windows.Forms.TextBox();
@@ -42,8 +42,8 @@ namespace pwiz.Skyline.ToolsUI
             this.lblUsername = new System.Windows.Forms.Label();
             this.textUsername = new System.Windows.Forms.TextBox();
             this.InstructionPanel = new System.Windows.Forms.Panel();
-            this.anonymousServerLabel = new System.Windows.Forms.Label();
             this.ComponentOrganizer = new System.Windows.Forms.TableLayoutPanel();
+            this.toolTipAnonymous = new System.Windows.Forms.ToolTip(this.components);
             this.InputPanel.SuspendLayout();
             this.InstructionPanel.SuspendLayout();
             this.ComponentOrganizer.SuspendLayout();
@@ -71,8 +71,7 @@ namespace pwiz.Skyline.ToolsUI
             // InputPanel
             // 
             resources.ApplyResources(this.InputPanel, "InputPanel");
-            this.InputPanel.Controls.Add(this.optionalLabel2);
-            this.InputPanel.Controls.Add(this.optionalLabel1);
+            this.InputPanel.Controls.Add(this.cbAnonymous);
             this.InputPanel.Controls.Add(this.lblProjectInfo);
             this.InputPanel.Controls.Add(this.btnCancel);
             this.InputPanel.Controls.Add(this.btnOK);
@@ -83,15 +82,13 @@ namespace pwiz.Skyline.ToolsUI
             this.InputPanel.Controls.Add(this.textUsername);
             this.InputPanel.Name = "InputPanel";
             // 
-            // optionalLabel2
+            // cbAnonymous
             // 
-            resources.ApplyResources(this.optionalLabel2, "optionalLabel2");
-            this.optionalLabel2.Name = "optionalLabel2";
-            // 
-            // optionalLabel1
-            // 
-            resources.ApplyResources(this.optionalLabel1, "optionalLabel1");
-            this.optionalLabel1.Name = "optionalLabel1";
+            resources.ApplyResources(this.cbAnonymous, "cbAnonymous");
+            this.cbAnonymous.Name = "cbAnonymous";
+            this.toolTipAnonymous.SetToolTip(this.cbAnonymous, resources.GetString("cbAnonymous.ToolTip"));
+            this.cbAnonymous.UseVisualStyleBackColor = true;
+            this.cbAnonymous.CheckedChanged += new System.EventHandler(this.cbAnonymous_CheckedChanged);
             // 
             // lblProjectInfo
             // 
@@ -128,13 +125,7 @@ namespace pwiz.Skyline.ToolsUI
             // 
             resources.ApplyResources(this.InstructionPanel, "InstructionPanel");
             this.InstructionPanel.Controls.Add(this.instructionLabel);
-            this.InstructionPanel.Controls.Add(this.anonymousServerLabel);
             this.InstructionPanel.Name = "InstructionPanel";
-            // 
-            // anonymousServerLabel
-            // 
-            resources.ApplyResources(this.anonymousServerLabel, "anonymousServerLabel");
-            this.anonymousServerLabel.Name = "anonymousServerLabel";
             // 
             // ComponentOrganizer
             // 
@@ -180,8 +171,7 @@ namespace pwiz.Skyline.ToolsUI
         private System.Windows.Forms.Label instructionLabel;
         private System.Windows.Forms.Panel InstructionPanel;
         private System.Windows.Forms.TableLayoutPanel ComponentOrganizer;
-        private System.Windows.Forms.Label anonymousServerLabel;
-        private System.Windows.Forms.Label optionalLabel2;
-        private System.Windows.Forms.Label optionalLabel1;
+        private System.Windows.Forms.CheckBox cbAnonymous;
+        private System.Windows.Forms.ToolTip toolTipAnonymous;
     }
 }
