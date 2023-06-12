@@ -956,7 +956,7 @@ namespace pwiz.Skyline
 
             try
             { 
-                using (var dlg = new PanoramaFilePicker(panoramaServers, false, state, true))
+                using (var dlg = new PanoramaFilePicker(panoramaServers, state, true))
                 {
                     using (var longWaitDlg = new LongWaitDlg 
                            { 
@@ -1027,7 +1027,6 @@ namespace pwiz.Skyline
             Settings.Default.Save();
         }
 
-        //TODO: Pass in client as last parameter set to null
         public bool DownloadPanoramaFile(string downloadPath, string fileName, string fileUrl, PanoramaServer curServer, long size, IPanoramaClient panoramaClient = null)
         {
             try
@@ -1040,8 +1039,6 @@ namespace pwiz.Skyline
                                Text = string.Format(Resources.SkylineWindow_OpenFromPanorama_Downloading_file__0_, fileName),
                            })
                     {
-                        //TODO: Test client using DownloadFile that throws an exception
-                        //TODO: Look at tests that cancel a longWaitDlg
                         var progressStatus = longWaitDlg.PerformWork(this, 800,
                             progressMonitor => panoramaClient.DownloadFile(fileUrl, fileSaver.SafeName, size, fileName, curServer,
                                 progressMonitor, new ProgressStatus()));
@@ -1054,7 +1051,7 @@ namespace pwiz.Skyline
                                 var message = progressStatus.ErrorException.Message;
                                 if (message.Contains(@"404"))
                                 {
-                                    message = "File does not exist. It may have been deleted on the server.";
+                                    message = "@File does not exist. It may have been deleted on the server.";
                                 }
                                 var alertDlg = new AlertDlg(message, MessageBoxButtons.OK) { Exception = progressStatus.ErrorException };
                                 alertDlg.ShowAndDispose(this);

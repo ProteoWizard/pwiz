@@ -23,7 +23,7 @@ namespace pwiz.PanoramaClient
         private const string RECENT_VER = "Most recent";
         private const string ALL_VER = "All";
 
-        public PanoramaFilePicker(List<PanoramaServer> servers, bool showCheckbox, string stateString, bool showingSky)
+        public PanoramaFilePicker(List<PanoramaServer> servers, string stateString, bool showingSky, bool showWebDav = false, string selectedPath = null)
         {
             InitializeComponent();
             Servers = servers;
@@ -31,9 +31,9 @@ namespace pwiz.PanoramaClient
             TreeState = stateString;
             _restoring = true;
             ShowingSky = showingSky;
-            showSkyCheckBox.Checked = ShowingSky;
+            ShowWebDav = showWebDav;
             versionOptions.Text = RECENT_VER;
-            showSkyCheckBox.Visible = showCheckbox;
+            SelectedPath = selectedPath;
             noFiles.Visible = false;
             _restoring = false;
         }
@@ -48,7 +48,6 @@ namespace pwiz.PanoramaClient
             IsLoaded = false;
             versionOptions.Text = RECENT_VER;
             ShowingSky = true;
-            showSkyCheckBox.Checked = ShowingSky;
             _restoring = false;
         }
 
@@ -66,6 +65,8 @@ namespace pwiz.PanoramaClient
         public long FileSize { get; private set; }
         public JToken FileJson;
         public JToken SizeJson;
+        public string SelectedPath { get; set; }
+        public bool ShowWebDav { get; set; }
 
         /// <summary>
         /// Sets a username and password and changes the 'Open' button text if a custom string is passed in
@@ -80,6 +81,7 @@ namespace pwiz.PanoramaClient
             FolderBrowser.Dock = DockStyle.Fill;
             splitContainer1.Panel1.Controls.Add(FolderBrowser);
             FolderBrowser.NodeClick += FilePicker_MouseClick;
+            FolderBrowser.ShowWebDav = true;
             IsLoaded = true;
             CheckEnabled();
         }
@@ -89,7 +91,20 @@ namespace pwiz.PanoramaClient
         /// </summary>
         public void InitializeDialog()
         {
-            FolderBrowser = new PanoramaFolderBrowser(false, ShowingSky, TreeState, Servers);
+            if (SelectedPath != null)
+            {
+                FolderBrowser = new PanoramaFolderBrowser(false, ShowingSky, TreeState, Servers, SelectedPath);
+
+                if (ShowWebDav)
+                {
+                    FolderBrowser.ShowWebDav = true;
+                }
+                
+            }
+            else
+            {
+                FolderBrowser = new PanoramaFolderBrowser(false, ShowingSky, TreeState, Servers);
+            }
             if (string.IsNullOrEmpty(TreeState))
             {
                 up.Enabled = false;
@@ -116,6 +131,7 @@ namespace pwiz.PanoramaClient
             FolderBrowser.Dock = DockStyle.Fill;
             splitContainer1.Panel1.Controls.Add(FolderBrowser);
             FolderBrowser.NodeClick += FilePicker_MouseClick;
+            ActiveServer = server;
             if (string.IsNullOrEmpty(TreeState))
             {
                 up.Enabled = false;
@@ -517,6 +533,13 @@ namespace pwiz.PanoramaClient
                                 AddChildFiles(uri);
                             }
                         }
+                        else if (ShowWebDav)
+                        {
+                            var uriString = string.Concat(ActiveServer.URI.ToString(), @"_webdav/",
+                                path + @"?method=json");
+                            var uri = new Uri(uriString);
+                            AddChildFiles(uri);
+                        }
                         else
                         {
                             listView.HeaderStyle = ColumnHeaderStyle.None;
@@ -532,25 +555,6 @@ namespace pwiz.PanoramaClient
             }
         }
 
-        /// <summary>
-        /// Resets the TreeView to display either all Panorama folders, or only Panorama folders containing .sky files
-        /// </summary>
-        /// <param name="sender"></param>
-        /// <param name="e"></param>
-        private void ShowSkyCheckBox_CheckedChanged(object sender, EventArgs e)
-        {
-            if (!_restoring)
-            {
-                listView.Items.Clear();
-                versionOptions.Visible = false;
-                versionLabel.Visible = false;
-                var type = showSkyCheckBox.Checked;
-                FolderBrowser.SwitchFolderType(type);
-                up.Enabled = false;
-                back.Enabled = false;
-                forward.Enabled = false;
-            }
-        }
 
 
         /// <summary>
@@ -613,6 +617,7 @@ namespace pwiz.PanoramaClient
                 }
                 DownloadName = downloadName;
                 FileUrl = ActiveServer.URI + downloadName;
+                SelectedPath = string.Concat(ActiveServer.URI, @"_webdav", FolderBrowser.Clicked.Tag);
 
                 DialogResult = DialogResult.Yes;
                 Close();
@@ -630,7 +635,6 @@ namespace pwiz.PanoramaClient
         {
             FormHasClosed = true;
             FileName = listView.SelectedItems.Count != 0 ? listView.SelectedItems[0].Text : string.Empty;
-            ShowingSky = showSkyCheckBox.Checked;
             TreeState = FolderBrowser.ClosingState();
         }
 
@@ -769,17 +773,6 @@ namespace pwiz.PanoramaClient
             return versionOptions.Text;
         }
 
-        public void ClickCheckBox()
-        {
-            showSkyCheckBox.Checked = !showSkyCheckBox.Checked;
-            ShowingSky = showSkyCheckBox.Checked;
-        }
-
-        public bool CheckBoxVisible()
-        {
-            return showSkyCheckBox.Visible;
-        }
-
         private void listView_ColumnClick(object sender, ColumnClickEventArgs e)
         {
             // Determine whether the column is the same as the last column clicked.
@@ -821,6 +814,11 @@ namespace pwiz.PanoramaClient
                     open.PerformClick();
                 }
             }
+        }
+
+        private void listView_DoubleClick(object sender, EventArgs e)
+        {
+            Open_Click(this, e);
         }
 
         private void PanoramaFilePicker_SizeChanged(object sender, EventArgs e)

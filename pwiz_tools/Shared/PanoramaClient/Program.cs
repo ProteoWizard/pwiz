@@ -14,7 +14,7 @@ namespace pwiz.PanoramaClient
         {
             Application.EnableVisualStyles();
             Application.SetCompatibleTextRenderingDefault(false);
-            Application.Run(new PanoramaFilePicker(new List<PanoramaServer>(), true, "", false));
+            Application.Run(new PanoramaFilePicker(new List<PanoramaServer>(), "", false));
         }
     }
 }

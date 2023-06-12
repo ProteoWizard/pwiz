@@ -29,17 +29,19 @@ namespace pwiz.PanoramaClient
         private PanoramaFolderBrowser folders;
         public string State;
         public string Selected;
+        public string SelectedPath;
         public List<PanoramaServer> Servers { get; }
 
-        public PanoramaDirectoryPicker(List<PanoramaServer> servers, string state, bool showSkyFolders = false, bool showWebDavFolders = false)
+        public PanoramaDirectoryPicker(List<PanoramaServer> servers, string state, bool showSkyFolders = false, bool showWebDavFolders = false, string selectedPath = null)
         {
             InitializeComponent();
             Servers = servers;
-            folders = new PanoramaFolderBrowser( false, showSkyFolders, state, Servers);
+            folders = new PanoramaFolderBrowser( false, showSkyFolders, state, Servers, selectedPath);
             folders.Dock = DockStyle.Fill;
             folderPanel.Controls.Add(folders);
             folders.NodeClick += DirectoryPicker_MouseClick;
             up.Enabled = false;
+            SelectedPath = selectedPath;
             back.Enabled = false;
             forward.Enabled = false;
             if (showWebDavFolders)
@@ -52,10 +54,6 @@ namespace pwiz.PanoramaClient
         public string OKButtonText { get; set; }
 
 
-        private void cancel_Click_1(object sender, EventArgs e)
-        {
-            Close();
-        }
 
         private void open_Click(object sender, EventArgs e)
         {
@@ -120,6 +118,11 @@ namespace pwiz.PanoramaClient
             folders.UpClick();
             checkEnabled();
             forward.Enabled = false;
+        }
+
+        private void cancel_Click(object sender, EventArgs e)
+        {
+            Close();
         }
     }
 }
