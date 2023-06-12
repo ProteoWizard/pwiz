@@ -110,6 +110,15 @@ namespace SkylineTester
                 // CONSIDER: Should we add a checkbox for this?
                 // args.Append(" keepworkerlogs=1"); // For debugging startup issues. Look for TestRunner-docker-worker_#-docker.log files in pwiz root
                 args.AppendFormat(" parallelmode=server workercount={0}", MainWindow.RunParallelWorkerCount.Value);
+                if (!string.IsNullOrEmpty(MainWindow.WorkerPort.Text))
+                {
+                    args.AppendFormat(" workerport={0}", MainWindow.WorkerPort.Text);
+                }
+
+                if (!string.IsNullOrEmpty(MainWindow.WorkerTimeout.Text))
+                {
+                    args.AppendFormat(" workertimeout={0}", MainWindow.WorkerTimeout.Text);
+                }
                 try
                 {
                     var dockerImagesOutput = RunTests.RunCommand("docker", $"images {RunTests.DOCKER_IMAGE_NAME}", RunTests.IS_DOCKER_RUNNING_MESSAGE);

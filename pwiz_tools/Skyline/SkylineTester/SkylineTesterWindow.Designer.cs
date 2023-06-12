@@ -92,10 +92,6 @@ namespace SkylineTester
             this.labelSelectedFormsCount = new System.Windows.Forms.ToolStripLabel();
             this.clearSeenButton = new System.Windows.Forms.ToolStripButton();
             this.labelFormsSeenPercent = new System.Windows.Forms.ToolStripLabel();
-            this.formsGrid = new SkylineTester.SafeDataGridView();
-            this.FormColumn = new System.Windows.Forms.DataGridViewLinkColumn();
-            this.TestColumn = new System.Windows.Forms.DataGridViewLinkColumn();
-            this.SeenColumn = new System.Windows.Forms.DataGridViewTextBoxColumn();
             this.tabTutorials = new System.Windows.Forms.TabPage();
             this.groupBox21 = new System.Windows.Forms.GroupBox();
             this.showMatchingPagesTutorial = new System.Windows.Forms.CheckBox();
@@ -104,7 +100,6 @@ namespace SkylineTester
             this.groupBox14 = new System.Windows.Forms.GroupBox();
             this.tutorialsLanguage = new System.Windows.Forms.ComboBox();
             this.groupBox3 = new System.Windows.Forms.GroupBox();
-            this.tutorialsTree = new SkylineTester.MyTreeView();
             this.groupBox4 = new System.Windows.Forms.GroupBox();
             this.pauseStartingPage = new System.Windows.Forms.TextBox();
             this.labelPauseStartingPage = new System.Windows.Forms.Label();
@@ -116,6 +111,13 @@ namespace SkylineTester
             this.pauseTutorialsScreenShots = new System.Windows.Forms.RadioButton();
             this.runTutorials = new System.Windows.Forms.Button();
             this.tabTests = new System.Windows.Forms.TabPage();
+            this.parallelGroup = new System.Windows.Forms.GroupBox();
+            this.workerPort = new System.Windows.Forms.TextBox();
+            this.lblWorkerPort = new System.Windows.Forms.Label();
+            this.parallelWorkerCount = new System.Windows.Forms.NumericUpDown();
+            this.runParallel = new System.Windows.Forms.RadioButton();
+            this.label22 = new System.Windows.Forms.Label();
+            this.runSerial = new System.Windows.Forms.RadioButton();
             this.runTests = new System.Windows.Forms.Button();
             this.buttonSelectFailedTestsTab = new System.Windows.Forms.Button();
             this.label17 = new System.Windows.Forms.Label();
@@ -126,6 +128,7 @@ namespace SkylineTester
             this.testsChinese = new System.Windows.Forms.CheckBox();
             this.testsEnglish = new System.Windows.Forms.CheckBox();
             this.windowsGroup = new System.Windows.Forms.GroupBox();
+            this.labelParallelOffscreenHint = new System.Windows.Forms.Label();
             this.offscreen = new System.Windows.Forms.CheckBox();
             this.iterationsGroup = new System.Windows.Forms.GroupBox();
             this.recordAuditLogs = new System.Windows.Forms.CheckBox();
@@ -142,7 +145,6 @@ namespace SkylineTester
             this.testSet = new System.Windows.Forms.ComboBox();
             this.runMode = new System.Windows.Forms.ComboBox();
             this.label21 = new System.Windows.Forms.Label();
-            this.testsTree = new SkylineTester.MyTreeView();
             this.skipCheckedTests = new System.Windows.Forms.RadioButton();
             this.runCheckedTests = new System.Windows.Forms.RadioButton();
             this.tabBuild = new System.Windows.Forms.TabPage();
@@ -175,7 +177,6 @@ namespace SkylineTester
             this.panel1 = new System.Windows.Forms.Panel();
             this.groupBox7 = new System.Windows.Forms.GroupBox();
             this.qualityTestName = new System.Windows.Forms.Label();
-            this.qualityThumbnail = new SkylineTester.WindowThumbnail();
             this.groupBox11 = new System.Windows.Forms.GroupBox();
             this.buttonViewLog = new System.Windows.Forms.Button();
             this.labelLeaks = new System.Windows.Forms.Label();
@@ -220,7 +221,6 @@ namespace SkylineTester
             this.radioNightlyHandles = new System.Windows.Forms.RadioButton();
             this.radioNightlyMemory = new System.Windows.Forms.RadioButton();
             this.nightlyTestName = new System.Windows.Forms.Label();
-            this.nightlyThumbnail = new SkylineTester.WindowThumbnail();
             this.nightlyGraphPanel = new System.Windows.Forms.Panel();
             this.nightlyDeleteRun = new System.Windows.Forms.Button();
             this.nightlyViewLog = new System.Windows.Forms.Button();
@@ -255,7 +255,6 @@ namespace SkylineTester
             this.buttonSelectFailedOutputTab = new System.Windows.Forms.Button();
             this.outputJumpTo = new System.Windows.Forms.ComboBox();
             this.outputSplitContainer = new System.Windows.Forms.SplitContainer();
-            this.commandShell = new SkylineTester.CommandShell();
             this.errorConsole = new System.Windows.Forms.RichTextBox();
             this.buttonOpenLog = new System.Windows.Forms.Button();
             this.comboBoxOutput = new System.Windows.Forms.ComboBox();
@@ -267,13 +266,6 @@ namespace SkylineTester
             this.comboBoxRunStatsCompare = new System.Windows.Forms.ComboBox();
             this.comboBoxRunStats = new System.Windows.Forms.ComboBox();
             this.label1 = new System.Windows.Forms.Label();
-            this.dataGridRunStats = new SkylineTester.SafeDataGridView();
-            this.TestName = new System.Windows.Forms.DataGridViewTextBoxColumn();
-            this.Iterations = new System.Windows.Forms.DataGridViewTextBoxColumn();
-            this.Duration = new System.Windows.Forms.DataGridViewTextBoxColumn();
-            this.AverageDuration = new System.Windows.Forms.DataGridViewTextBoxColumn();
-            this.RelDuration = new System.Windows.Forms.DataGridViewTextBoxColumn();
-            this.DeltaTotalDuration = new System.Windows.Forms.DataGridViewTextBoxColumn();
             this.menuStrip1 = new System.Windows.Forms.MenuStrip();
             this.fileToolStripMenuItem = new System.Windows.Forms.ToolStripMenuItem();
             this.openToolStripMenuItem = new System.Windows.Forms.ToolStripMenuItem();
@@ -305,13 +297,25 @@ namespace SkylineTester
             this.label4 = new System.Windows.Forms.Label();
             this.radioButton5 = new System.Windows.Forms.RadioButton();
             this.toolTip1 = new System.Windows.Forms.ToolTip(this.components);
+            this.formsGrid = new SkylineTester.SafeDataGridView();
+            this.FormColumn = new System.Windows.Forms.DataGridViewLinkColumn();
+            this.TestColumn = new System.Windows.Forms.DataGridViewLinkColumn();
+            this.SeenColumn = new System.Windows.Forms.DataGridViewTextBoxColumn();
+            this.tutorialsTree = new SkylineTester.MyTreeView();
+            this.testsTree = new SkylineTester.MyTreeView();
+            this.qualityThumbnail = new SkylineTester.WindowThumbnail();
+            this.nightlyThumbnail = new SkylineTester.WindowThumbnail();
+            this.commandShell = new SkylineTester.CommandShell();
+            this.dataGridRunStats = new SkylineTester.SafeDataGridView();
+            this.TestName = new System.Windows.Forms.DataGridViewTextBoxColumn();
+            this.Iterations = new System.Windows.Forms.DataGridViewTextBoxColumn();
+            this.Duration = new System.Windows.Forms.DataGridViewTextBoxColumn();
+            this.AverageDuration = new System.Windows.Forms.DataGridViewTextBoxColumn();
+            this.RelDuration = new System.Windows.Forms.DataGridViewTextBoxColumn();
+            this.DeltaTotalDuration = new System.Windows.Forms.DataGridViewTextBoxColumn();
             this.myTreeView1 = new SkylineTester.MyTreeView();
-            this.labelParallelOffscreenHint = new System.Windows.Forms.Label();
-            this.parallelWorkerCount = new System.Windows.Forms.NumericUpDown();
-            this.label22 = new System.Windows.Forms.Label();
-            this.runParallel = new System.Windows.Forms.RadioButton();
-            this.runSerial = new System.Windows.Forms.RadioButton();
-            this.parallelGroup = new System.Windows.Forms.GroupBox();
+            this.lblWorkerTimeout = new System.Windows.Forms.Label();
+            this.workerTimeout = new System.Windows.Forms.TextBox();
             this.mainPanel.SuspendLayout();
             this.statusStrip1.SuspendLayout();
             this.tabs.SuspendLayout();
@@ -320,7 +324,6 @@ namespace SkylineTester
             this.groupBox13.SuspendLayout();
             this.groupBox1.SuspendLayout();
             this.toolStrip1.SuspendLayout();
-            ((System.ComponentModel.ISupportInitialize)(this.formsGrid)).BeginInit();
             this.tabTutorials.SuspendLayout();
             this.groupBox21.SuspendLayout();
             this.groupBox14.SuspendLayout();
@@ -328,6 +331,8 @@ namespace SkylineTester
             this.groupBox4.SuspendLayout();
             ((System.ComponentModel.ISupportInitialize)(this.pauseTutorialsSeconds)).BeginInit();
             this.tabTests.SuspendLayout();
+            this.parallelGroup.SuspendLayout();
+            ((System.ComponentModel.ISupportInitialize)(this.parallelWorkerCount)).BeginInit();
             this.groupBox15.SuspendLayout();
             this.windowsGroup.SuspendLayout();
             this.iterationsGroup.SuspendLayout();
@@ -364,10 +369,9 @@ namespace SkylineTester
             this.outputSplitContainer.Panel2.SuspendLayout();
             this.outputSplitContainer.SuspendLayout();
             this.tabRunStats.SuspendLayout();
-            ((System.ComponentModel.ISupportInitialize)(this.dataGridRunStats)).BeginInit();
             this.menuStrip1.SuspendLayout();
-            ((System.ComponentModel.ISupportInitialize)(this.parallelWorkerCount)).BeginInit();
-            this.parallelGroup.SuspendLayout();
+            ((System.ComponentModel.ISupportInitialize)(this.formsGrid)).BeginInit();
+            ((System.ComponentModel.ISupportInitialize)(this.dataGridRunStats)).BeginInit();
             this.SuspendLayout();
             // 
             // mainPanel
@@ -648,57 +652,6 @@ namespace SkylineTester
             this.labelFormsSeenPercent.Text = "0% of 0 forms seen";
             this.labelFormsSeenPercent.TextAlign = System.Drawing.ContentAlignment.MiddleLeft;
             // 
-            // formsGrid
-            // 
-            this.formsGrid.AllowUserToAddRows = false;
-            this.formsGrid.AllowUserToDeleteRows = false;
-            this.formsGrid.Anchor = ((System.Windows.Forms.AnchorStyles)((((System.Windows.Forms.AnchorStyles.Top | System.Windows.Forms.AnchorStyles.Bottom) 
-            | System.Windows.Forms.AnchorStyles.Left) 
-            | System.Windows.Forms.AnchorStyles.Right)));
-            this.formsGrid.ColumnHeadersHeightSizeMode = System.Windows.Forms.DataGridViewColumnHeadersHeightSizeMode.AutoSize;
-            this.formsGrid.Columns.AddRange(new System.Windows.Forms.DataGridViewColumn[] {
-            this.FormColumn,
-            this.TestColumn,
-            this.SeenColumn});
-            this.formsGrid.Location = new System.Drawing.Point(8, 49);
-            this.formsGrid.Name = "formsGrid";
-            this.formsGrid.SelectionMode = System.Windows.Forms.DataGridViewSelectionMode.FullRowSelect;
-            this.formsGrid.Size = new System.Drawing.Size(387, 535);
-            this.formsGrid.TabIndex = 1;
-            this.formsGrid.CellContentClick += new System.Windows.Forms.DataGridViewCellEventHandler(this.formsGrid_CellContentClick);
-            this.formsGrid.CellEndEdit += new System.Windows.Forms.DataGridViewCellEventHandler(this.formsGrid_CellEndEdit);
-            this.formsGrid.SelectionChanged += new System.EventHandler(this.formsGrid_SelectionChanged);
-            // 
-            // FormColumn
-            // 
-            this.FormColumn.AutoSizeMode = System.Windows.Forms.DataGridViewAutoSizeColumnMode.Fill;
-            this.FormColumn.HeaderText = "Form";
-            this.FormColumn.Name = "FormColumn";
-            this.FormColumn.ReadOnly = true;
-            this.FormColumn.SortMode = System.Windows.Forms.DataGridViewColumnSortMode.Automatic;
-            // 
-            // TestColumn
-            // 
-            this.TestColumn.AutoSizeMode = System.Windows.Forms.DataGridViewAutoSizeColumnMode.Fill;
-            this.TestColumn.HeaderText = "Test";
-            this.TestColumn.Name = "TestColumn";
-            this.TestColumn.ReadOnly = true;
-            this.TestColumn.Resizable = System.Windows.Forms.DataGridViewTriState.True;
-            this.TestColumn.SortMode = System.Windows.Forms.DataGridViewColumnSortMode.Automatic;
-            // 
-            // SeenColumn
-            // 
-            this.SeenColumn.AutoSizeMode = System.Windows.Forms.DataGridViewAutoSizeColumnMode.ColumnHeader;
-            dataGridViewCellStyle1.Alignment = System.Windows.Forms.DataGridViewContentAlignment.MiddleRight;
-            dataGridViewCellStyle1.Format = "N0";
-            dataGridViewCellStyle1.NullValue = null;
-            dataGridViewCellStyle1.Padding = new System.Windows.Forms.Padding(0, 0, 4, 0);
-            this.SeenColumn.DefaultCellStyle = dataGridViewCellStyle1;
-            this.SeenColumn.HeaderText = "Seen";
-            this.SeenColumn.MinimumWidth = 40;
-            this.SeenColumn.Name = "SeenColumn";
-            this.SeenColumn.Width = 57;
-            // 
             // tabTutorials
             // 
             this.tabTutorials.BackColor = System.Drawing.Color.FromArgb(((int)(((byte)(230)))), ((int)(((byte)(222)))), ((int)(((byte)(228)))));
@@ -803,19 +756,6 @@ namespace SkylineTester
             this.groupBox3.TabIndex = 0;
             this.groupBox3.TabStop = false;
             this.groupBox3.Text = "Tutorials";
-            // 
-            // tutorialsTree
-            // 
-            this.tutorialsTree.Anchor = ((System.Windows.Forms.AnchorStyles)((((System.Windows.Forms.AnchorStyles.Top | System.Windows.Forms.AnchorStyles.Bottom) 
-            | System.Windows.Forms.AnchorStyles.Left) 
-            | System.Windows.Forms.AnchorStyles.Right)));
-            this.tutorialsTree.CheckBoxes = true;
-            this.tutorialsTree.Location = new System.Drawing.Point(8, 23);
-            this.tutorialsTree.Margin = new System.Windows.Forms.Padding(4);
-            this.tutorialsTree.Name = "tutorialsTree";
-            this.tutorialsTree.Size = new System.Drawing.Size(384, 559);
-            this.tutorialsTree.TabIndex = 0;
-            this.tutorialsTree.AfterCheck += new System.Windows.Forms.TreeViewEventHandler(this.node_AfterCheck);
             // 
             // groupBox4
             // 
@@ -952,6 +892,92 @@ namespace SkylineTester
             this.tabTests.TabIndex = 0;
             this.tabTests.Text = "Tests";
             // 
+            // parallelGroup
+            // 
+            this.parallelGroup.Controls.Add(this.workerTimeout);
+            this.parallelGroup.Controls.Add(this.lblWorkerTimeout);
+            this.parallelGroup.Controls.Add(this.workerPort);
+            this.parallelGroup.Controls.Add(this.lblWorkerPort);
+            this.parallelGroup.Controls.Add(this.parallelWorkerCount);
+            this.parallelGroup.Controls.Add(this.runParallel);
+            this.parallelGroup.Controls.Add(this.label22);
+            this.parallelGroup.Controls.Add(this.runSerial);
+            this.parallelGroup.Location = new System.Drawing.Point(11, 476);
+            this.parallelGroup.Name = "parallelGroup";
+            this.parallelGroup.Size = new System.Drawing.Size(280, 135);
+            this.parallelGroup.TabIndex = 37;
+            this.parallelGroup.TabStop = false;
+            this.parallelGroup.Text = "Parallelism";
+            // 
+            // workerPort
+            // 
+            this.workerPort.Location = new System.Drawing.Point(150, 47);
+            this.workerPort.Name = "workerPort";
+            this.workerPort.Size = new System.Drawing.Size(100, 20);
+            this.workerPort.TabIndex = 16;
+            this.toolTip1.SetToolTip(this.workerPort, "Enter number between 9810 and 9820 on macs2");
+            // 
+            // lblWorkerPort
+            // 
+            this.lblWorkerPort.AutoSize = true;
+            this.lblWorkerPort.Location = new System.Drawing.Point(80, 50);
+            this.lblWorkerPort.Name = "lblWorkerPort";
+            this.lblWorkerPort.Size = new System.Drawing.Size(63, 13);
+            this.lblWorkerPort.TabIndex = 15;
+            this.lblWorkerPort.Text = "Worker port";
+            // 
+            // parallelWorkerCount
+            // 
+            this.parallelWorkerCount.Location = new System.Drawing.Point(150, 20);
+            this.parallelWorkerCount.Minimum = new decimal(new int[] {
+            1,
+            0,
+            0,
+            0});
+            this.parallelWorkerCount.Name = "parallelWorkerCount";
+            this.parallelWorkerCount.Size = new System.Drawing.Size(41, 20);
+            this.parallelWorkerCount.TabIndex = 12;
+            this.parallelWorkerCount.Value = new decimal(new int[] {
+            2,
+            0,
+            0,
+            0});
+            // 
+            // runParallel
+            // 
+            this.runParallel.AutoSize = true;
+            this.runParallel.Checked = true;
+            this.runParallel.Location = new System.Drawing.Point(26, 20);
+            this.runParallel.Margin = new System.Windows.Forms.Padding(4);
+            this.runParallel.Name = "runParallel";
+            this.runParallel.Size = new System.Drawing.Size(117, 17);
+            this.runParallel.TabIndex = 11;
+            this.runParallel.TabStop = true;
+            this.runParallel.Text = "Run tests in parallel";
+            this.runParallel.UseVisualStyleBackColor = true;
+            // 
+            // label22
+            // 
+            this.label22.AutoSize = true;
+            this.label22.Location = new System.Drawing.Point(198, 24);
+            this.label22.Margin = new System.Windows.Forms.Padding(4, 0, 4, 0);
+            this.label22.Name = "label22";
+            this.label22.Size = new System.Drawing.Size(44, 13);
+            this.label22.TabIndex = 13;
+            this.label22.Text = "workers";
+            // 
+            // runSerial
+            // 
+            this.runSerial.AutoSize = true;
+            this.runSerial.Location = new System.Drawing.Point(26, 106);
+            this.runSerial.Margin = new System.Windows.Forms.Padding(4);
+            this.runSerial.Name = "runSerial";
+            this.runSerial.Size = new System.Drawing.Size(104, 17);
+            this.runSerial.TabIndex = 14;
+            this.runSerial.Text = "Run tests serially";
+            this.runSerial.UseVisualStyleBackColor = true;
+            this.runSerial.CheckedChanged += new System.EventHandler(this.runSerial_CheckedChanged);
+            // 
             // runTests
             // 
             this.runTests.Anchor = ((System.Windows.Forms.AnchorStyles)((System.Windows.Forms.AnchorStyles.Bottom | System.Windows.Forms.AnchorStyles.Right)));
@@ -1076,6 +1102,15 @@ namespace SkylineTester
             this.windowsGroup.TabIndex = 2;
             this.windowsGroup.TabStop = false;
             this.windowsGroup.Text = "Windows";
+            // 
+            // labelParallelOffscreenHint
+            // 
+            this.labelParallelOffscreenHint.AutoSize = true;
+            this.labelParallelOffscreenHint.Location = new System.Drawing.Point(9, 44);
+            this.labelParallelOffscreenHint.Name = "labelParallelOffscreenHint";
+            this.labelParallelOffscreenHint.Size = new System.Drawing.Size(174, 13);
+            this.labelParallelOffscreenHint.TabIndex = 1;
+            this.labelParallelOffscreenHint.Text = "Tests run offscreen in parallel mode";
             // 
             // offscreen
             // 
@@ -1289,19 +1324,6 @@ namespace SkylineTester
             this.label21.Size = new System.Drawing.Size(37, 13);
             this.label21.TabIndex = 35;
             this.label21.Text = "Mode:";
-            // 
-            // testsTree
-            // 
-            this.testsTree.Anchor = ((System.Windows.Forms.AnchorStyles)((((System.Windows.Forms.AnchorStyles.Top | System.Windows.Forms.AnchorStyles.Bottom) 
-            | System.Windows.Forms.AnchorStyles.Left) 
-            | System.Windows.Forms.AnchorStyles.Right)));
-            this.testsTree.CheckBoxes = true;
-            this.testsTree.Location = new System.Drawing.Point(8, 23);
-            this.testsTree.Margin = new System.Windows.Forms.Padding(4);
-            this.testsTree.Name = "testsTree";
-            this.testsTree.Size = new System.Drawing.Size(387, 503);
-            this.testsTree.TabIndex = 15;
-            this.testsTree.AfterCheck += new System.Windows.Forms.TreeViewEventHandler(this.node_AfterCheck);
             // 
             // skipCheckedTests
             // 
@@ -1720,17 +1742,6 @@ namespace SkylineTester
             this.qualityTestName.Size = new System.Drawing.Size(303, 20);
             this.qualityTestName.TabIndex = 35;
             this.qualityTestName.Text = "test name";
-            // 
-            // qualityThumbnail
-            // 
-            this.qualityThumbnail.Anchor = ((System.Windows.Forms.AnchorStyles)((((System.Windows.Forms.AnchorStyles.Top | System.Windows.Forms.AnchorStyles.Bottom) 
-            | System.Windows.Forms.AnchorStyles.Left) 
-            | System.Windows.Forms.AnchorStyles.Right)));
-            this.qualityThumbnail.Location = new System.Drawing.Point(8, 19);
-            this.qualityThumbnail.Name = "qualityThumbnail";
-            this.qualityThumbnail.ProcessId = 0;
-            this.qualityThumbnail.Size = new System.Drawing.Size(301, 229);
-            this.qualityThumbnail.TabIndex = 34;
             // 
             // groupBox11
             // 
@@ -2302,16 +2313,6 @@ namespace SkylineTester
             this.nightlyTestName.TabIndex = 35;
             this.nightlyTestName.Text = "test name";
             // 
-            // nightlyThumbnail
-            // 
-            this.nightlyThumbnail.Anchor = ((System.Windows.Forms.AnchorStyles)(((System.Windows.Forms.AnchorStyles.Top | System.Windows.Forms.AnchorStyles.Left) 
-            | System.Windows.Forms.AnchorStyles.Right)));
-            this.nightlyThumbnail.Location = new System.Drawing.Point(294, 21);
-            this.nightlyThumbnail.Name = "nightlyThumbnail";
-            this.nightlyThumbnail.ProcessId = 0;
-            this.nightlyThumbnail.Size = new System.Drawing.Size(138, 79);
-            this.nightlyThumbnail.TabIndex = 34;
-            // 
             // nightlyGraphPanel
             // 
             this.nightlyGraphPanel.Anchor = ((System.Windows.Forms.AnchorStyles)((((System.Windows.Forms.AnchorStyles.Top | System.Windows.Forms.AnchorStyles.Bottom) 
@@ -2717,35 +2718,9 @@ namespace SkylineTester
             // 
             this.outputSplitContainer.Panel2.Controls.Add(this.errorConsole);
             this.outputSplitContainer.Size = new System.Drawing.Size(671, 562);
-            this.outputSplitContainer.SplitterDistance = 356;
+            this.outputSplitContainer.SplitterDistance = 344;
             this.outputSplitContainer.SplitterWidth = 10;
             this.outputSplitContainer.TabIndex = 35;
-            // 
-            // commandShell
-            // 
-            this.commandShell.ColorLine = null;
-            this.commandShell.DefaultDirectory = null;
-            this.commandShell.Dock = System.Windows.Forms.DockStyle.Fill;
-            this.commandShell.FilterFunc = null;
-            this.commandShell.FinishedOneCommand = null;
-            this.commandShell.Font = new System.Drawing.Font("Courier New", 9F, System.Drawing.FontStyle.Regular, System.Drawing.GraphicsUnit.Point, ((byte)(0)));
-            this.commandShell.IgnorePaint = 0;
-            this.commandShell.IsUnattended = false;
-            this.commandShell.IsWaiting = false;
-            this.commandShell.Location = new System.Drawing.Point(0, 0);
-            this.commandShell.LogFile = null;
-            this.commandShell.Margin = new System.Windows.Forms.Padding(0, 0, 0, 14);
-            this.commandShell.Name = "commandShell";
-            this.commandShell.NextCommand = 0;
-            this.commandShell.RestartCount = 0;
-            this.commandShell.RunStartTime = new System.DateTime(((long)(0)));
-            this.commandShell.Size = new System.Drawing.Size(671, 356);
-            this.commandShell.StopButton = null;
-            this.commandShell.TabIndex = 2;
-            this.commandShell.Text = "";
-            this.commandShell.VisibleLogFile = null;
-            this.commandShell.WordWrap = false;
-            this.commandShell.MouseClick += new System.Windows.Forms.MouseEventHandler(this.commandShell_MouseClick);
             // 
             // errorConsole
             // 
@@ -2757,7 +2732,7 @@ namespace SkylineTester
             this.errorConsole.Margin = new System.Windows.Forms.Padding(0);
             this.errorConsole.Name = "errorConsole";
             this.errorConsole.ReadOnly = true;
-            this.errorConsole.Size = new System.Drawing.Size(671, 196);
+            this.errorConsole.Size = new System.Drawing.Size(671, 208);
             this.errorConsole.TabIndex = 3;
             this.errorConsole.Text = "";
             this.errorConsole.SelectionChanged += new System.EventHandler(this.errorConsole_SelectionChanged);
@@ -2881,67 +2856,6 @@ namespace SkylineTester
             this.label1.TabIndex = 32;
             this.label1.Text = "Skyline run stats";
             this.label1.TextAlign = System.Drawing.ContentAlignment.MiddleCenter;
-            // 
-            // dataGridRunStats
-            // 
-            this.dataGridRunStats.AllowUserToAddRows = false;
-            this.dataGridRunStats.AllowUserToDeleteRows = false;
-            this.dataGridRunStats.Anchor = ((System.Windows.Forms.AnchorStyles)((((System.Windows.Forms.AnchorStyles.Top | System.Windows.Forms.AnchorStyles.Bottom) 
-            | System.Windows.Forms.AnchorStyles.Left) 
-            | System.Windows.Forms.AnchorStyles.Right)));
-            this.dataGridRunStats.AutoSizeColumnsMode = System.Windows.Forms.DataGridViewAutoSizeColumnsMode.Fill;
-            this.dataGridRunStats.ColumnHeadersHeightSizeMode = System.Windows.Forms.DataGridViewColumnHeadersHeightSizeMode.AutoSize;
-            this.dataGridRunStats.Columns.AddRange(new System.Windows.Forms.DataGridViewColumn[] {
-            this.TestName,
-            this.Iterations,
-            this.Duration,
-            this.AverageDuration,
-            this.RelDuration,
-            this.DeltaTotalDuration});
-            this.dataGridRunStats.Location = new System.Drawing.Point(12, 76);
-            this.dataGridRunStats.Name = "dataGridRunStats";
-            this.dataGridRunStats.ReadOnly = true;
-            this.dataGridRunStats.RowHeadersVisible = false;
-            this.dataGridRunStats.SelectionMode = System.Windows.Forms.DataGridViewSelectionMode.FullRowSelect;
-            this.dataGridRunStats.Size = new System.Drawing.Size(685, 595);
-            this.dataGridRunStats.TabIndex = 0;
-            this.dataGridRunStats.SortCompare += new System.Windows.Forms.DataGridViewSortCompareEventHandler(this.dataGridRunStats_SortCompare);
-            // 
-            // TestName
-            // 
-            this.TestName.HeaderText = "Test";
-            this.TestName.Name = "TestName";
-            this.TestName.ReadOnly = true;
-            // 
-            // Iterations
-            // 
-            this.Iterations.HeaderText = "Iterations";
-            this.Iterations.Name = "Iterations";
-            this.Iterations.ReadOnly = true;
-            // 
-            // Duration
-            // 
-            this.Duration.HeaderText = "Total duration";
-            this.Duration.Name = "Duration";
-            this.Duration.ReadOnly = true;
-            // 
-            // AverageDuration
-            // 
-            this.AverageDuration.HeaderText = "Average duration";
-            this.AverageDuration.Name = "AverageDuration";
-            this.AverageDuration.ReadOnly = true;
-            // 
-            // RelDuration
-            // 
-            this.RelDuration.HeaderText = "Relative duration";
-            this.RelDuration.Name = "RelDuration";
-            this.RelDuration.ReadOnly = true;
-            // 
-            // DeltaTotalDuration
-            // 
-            this.DeltaTotalDuration.HeaderText = "Delta total duration";
-            this.DeltaTotalDuration.Name = "DeltaTotalDuration";
-            this.DeltaTotalDuration.ReadOnly = true;
             // 
             // menuStrip1
             // 
@@ -3201,6 +3115,191 @@ namespace SkylineTester
             this.radioButton5.Text = "Pause for screenshot";
             this.radioButton5.UseVisualStyleBackColor = true;
             // 
+            // formsGrid
+            // 
+            this.formsGrid.AllowUserToAddRows = false;
+            this.formsGrid.AllowUserToDeleteRows = false;
+            this.formsGrid.Anchor = ((System.Windows.Forms.AnchorStyles)((((System.Windows.Forms.AnchorStyles.Top | System.Windows.Forms.AnchorStyles.Bottom) 
+            | System.Windows.Forms.AnchorStyles.Left) 
+            | System.Windows.Forms.AnchorStyles.Right)));
+            this.formsGrid.ColumnHeadersHeightSizeMode = System.Windows.Forms.DataGridViewColumnHeadersHeightSizeMode.AutoSize;
+            this.formsGrid.Columns.AddRange(new System.Windows.Forms.DataGridViewColumn[] {
+            this.FormColumn,
+            this.TestColumn,
+            this.SeenColumn});
+            this.formsGrid.Location = new System.Drawing.Point(8, 49);
+            this.formsGrid.Name = "formsGrid";
+            this.formsGrid.SelectionMode = System.Windows.Forms.DataGridViewSelectionMode.FullRowSelect;
+            this.formsGrid.Size = new System.Drawing.Size(387, 535);
+            this.formsGrid.TabIndex = 1;
+            this.formsGrid.CellContentClick += new System.Windows.Forms.DataGridViewCellEventHandler(this.formsGrid_CellContentClick);
+            this.formsGrid.CellEndEdit += new System.Windows.Forms.DataGridViewCellEventHandler(this.formsGrid_CellEndEdit);
+            this.formsGrid.SelectionChanged += new System.EventHandler(this.formsGrid_SelectionChanged);
+            // 
+            // FormColumn
+            // 
+            this.FormColumn.AutoSizeMode = System.Windows.Forms.DataGridViewAutoSizeColumnMode.Fill;
+            this.FormColumn.HeaderText = "Form";
+            this.FormColumn.Name = "FormColumn";
+            this.FormColumn.ReadOnly = true;
+            this.FormColumn.SortMode = System.Windows.Forms.DataGridViewColumnSortMode.Automatic;
+            // 
+            // TestColumn
+            // 
+            this.TestColumn.AutoSizeMode = System.Windows.Forms.DataGridViewAutoSizeColumnMode.Fill;
+            this.TestColumn.HeaderText = "Test";
+            this.TestColumn.Name = "TestColumn";
+            this.TestColumn.ReadOnly = true;
+            this.TestColumn.Resizable = System.Windows.Forms.DataGridViewTriState.True;
+            this.TestColumn.SortMode = System.Windows.Forms.DataGridViewColumnSortMode.Automatic;
+            // 
+            // SeenColumn
+            // 
+            this.SeenColumn.AutoSizeMode = System.Windows.Forms.DataGridViewAutoSizeColumnMode.ColumnHeader;
+            dataGridViewCellStyle1.Alignment = System.Windows.Forms.DataGridViewContentAlignment.MiddleRight;
+            dataGridViewCellStyle1.Format = "N0";
+            dataGridViewCellStyle1.NullValue = null;
+            dataGridViewCellStyle1.Padding = new System.Windows.Forms.Padding(0, 0, 4, 0);
+            this.SeenColumn.DefaultCellStyle = dataGridViewCellStyle1;
+            this.SeenColumn.HeaderText = "Seen";
+            this.SeenColumn.MinimumWidth = 40;
+            this.SeenColumn.Name = "SeenColumn";
+            this.SeenColumn.Width = 57;
+            // 
+            // tutorialsTree
+            // 
+            this.tutorialsTree.Anchor = ((System.Windows.Forms.AnchorStyles)((((System.Windows.Forms.AnchorStyles.Top | System.Windows.Forms.AnchorStyles.Bottom) 
+            | System.Windows.Forms.AnchorStyles.Left) 
+            | System.Windows.Forms.AnchorStyles.Right)));
+            this.tutorialsTree.CheckBoxes = true;
+            this.tutorialsTree.Location = new System.Drawing.Point(8, 23);
+            this.tutorialsTree.Margin = new System.Windows.Forms.Padding(4);
+            this.tutorialsTree.Name = "tutorialsTree";
+            this.tutorialsTree.Size = new System.Drawing.Size(384, 559);
+            this.tutorialsTree.TabIndex = 0;
+            this.tutorialsTree.AfterCheck += new System.Windows.Forms.TreeViewEventHandler(this.node_AfterCheck);
+            // 
+            // testsTree
+            // 
+            this.testsTree.Anchor = ((System.Windows.Forms.AnchorStyles)((((System.Windows.Forms.AnchorStyles.Top | System.Windows.Forms.AnchorStyles.Bottom) 
+            | System.Windows.Forms.AnchorStyles.Left) 
+            | System.Windows.Forms.AnchorStyles.Right)));
+            this.testsTree.CheckBoxes = true;
+            this.testsTree.Location = new System.Drawing.Point(8, 23);
+            this.testsTree.Margin = new System.Windows.Forms.Padding(4);
+            this.testsTree.Name = "testsTree";
+            this.testsTree.Size = new System.Drawing.Size(387, 503);
+            this.testsTree.TabIndex = 15;
+            this.testsTree.AfterCheck += new System.Windows.Forms.TreeViewEventHandler(this.node_AfterCheck);
+            // 
+            // qualityThumbnail
+            // 
+            this.qualityThumbnail.Anchor = ((System.Windows.Forms.AnchorStyles)((((System.Windows.Forms.AnchorStyles.Top | System.Windows.Forms.AnchorStyles.Bottom) 
+            | System.Windows.Forms.AnchorStyles.Left) 
+            | System.Windows.Forms.AnchorStyles.Right)));
+            this.qualityThumbnail.Location = new System.Drawing.Point(8, 19);
+            this.qualityThumbnail.Name = "qualityThumbnail";
+            this.qualityThumbnail.ProcessId = 0;
+            this.qualityThumbnail.Size = new System.Drawing.Size(301, 229);
+            this.qualityThumbnail.TabIndex = 34;
+            // 
+            // nightlyThumbnail
+            // 
+            this.nightlyThumbnail.Anchor = ((System.Windows.Forms.AnchorStyles)(((System.Windows.Forms.AnchorStyles.Top | System.Windows.Forms.AnchorStyles.Left) 
+            | System.Windows.Forms.AnchorStyles.Right)));
+            this.nightlyThumbnail.Location = new System.Drawing.Point(294, 21);
+            this.nightlyThumbnail.Name = "nightlyThumbnail";
+            this.nightlyThumbnail.ProcessId = 0;
+            this.nightlyThumbnail.Size = new System.Drawing.Size(138, 79);
+            this.nightlyThumbnail.TabIndex = 34;
+            // 
+            // commandShell
+            // 
+            this.commandShell.ColorLine = null;
+            this.commandShell.DefaultDirectory = null;
+            this.commandShell.Dock = System.Windows.Forms.DockStyle.Fill;
+            this.commandShell.FilterFunc = null;
+            this.commandShell.FinishedOneCommand = null;
+            this.commandShell.Font = new System.Drawing.Font("Courier New", 9F, System.Drawing.FontStyle.Regular, System.Drawing.GraphicsUnit.Point, ((byte)(0)));
+            this.commandShell.IgnorePaint = 0;
+            this.commandShell.IsUnattended = false;
+            this.commandShell.IsWaiting = false;
+            this.commandShell.Location = new System.Drawing.Point(0, 0);
+            this.commandShell.LogFile = null;
+            this.commandShell.Margin = new System.Windows.Forms.Padding(0, 0, 0, 14);
+            this.commandShell.Name = "commandShell";
+            this.commandShell.NextCommand = 0;
+            this.commandShell.RestartCount = 0;
+            this.commandShell.RunStartTime = new System.DateTime(((long)(0)));
+            this.commandShell.Size = new System.Drawing.Size(671, 344);
+            this.commandShell.StopButton = null;
+            this.commandShell.TabIndex = 2;
+            this.commandShell.Text = "";
+            this.commandShell.VisibleLogFile = null;
+            this.commandShell.WordWrap = false;
+            this.commandShell.MouseClick += new System.Windows.Forms.MouseEventHandler(this.commandShell_MouseClick);
+            // 
+            // dataGridRunStats
+            // 
+            this.dataGridRunStats.AllowUserToAddRows = false;
+            this.dataGridRunStats.AllowUserToDeleteRows = false;
+            this.dataGridRunStats.Anchor = ((System.Windows.Forms.AnchorStyles)((((System.Windows.Forms.AnchorStyles.Top | System.Windows.Forms.AnchorStyles.Bottom) 
+            | System.Windows.Forms.AnchorStyles.Left) 
+            | System.Windows.Forms.AnchorStyles.Right)));
+            this.dataGridRunStats.AutoSizeColumnsMode = System.Windows.Forms.DataGridViewAutoSizeColumnsMode.Fill;
+            this.dataGridRunStats.ColumnHeadersHeightSizeMode = System.Windows.Forms.DataGridViewColumnHeadersHeightSizeMode.AutoSize;
+            this.dataGridRunStats.Columns.AddRange(new System.Windows.Forms.DataGridViewColumn[] {
+            this.TestName,
+            this.Iterations,
+            this.Duration,
+            this.AverageDuration,
+            this.RelDuration,
+            this.DeltaTotalDuration});
+            this.dataGridRunStats.Location = new System.Drawing.Point(12, 76);
+            this.dataGridRunStats.Name = "dataGridRunStats";
+            this.dataGridRunStats.ReadOnly = true;
+            this.dataGridRunStats.RowHeadersVisible = false;
+            this.dataGridRunStats.SelectionMode = System.Windows.Forms.DataGridViewSelectionMode.FullRowSelect;
+            this.dataGridRunStats.Size = new System.Drawing.Size(685, 595);
+            this.dataGridRunStats.TabIndex = 0;
+            this.dataGridRunStats.SortCompare += new System.Windows.Forms.DataGridViewSortCompareEventHandler(this.dataGridRunStats_SortCompare);
+            // 
+            // TestName
+            // 
+            this.TestName.HeaderText = "Test";
+            this.TestName.Name = "TestName";
+            this.TestName.ReadOnly = true;
+            // 
+            // Iterations
+            // 
+            this.Iterations.HeaderText = "Iterations";
+            this.Iterations.Name = "Iterations";
+            this.Iterations.ReadOnly = true;
+            // 
+            // Duration
+            // 
+            this.Duration.HeaderText = "Total duration";
+            this.Duration.Name = "Duration";
+            this.Duration.ReadOnly = true;
+            // 
+            // AverageDuration
+            // 
+            this.AverageDuration.HeaderText = "Average duration";
+            this.AverageDuration.Name = "AverageDuration";
+            this.AverageDuration.ReadOnly = true;
+            // 
+            // RelDuration
+            // 
+            this.RelDuration.HeaderText = "Relative duration";
+            this.RelDuration.Name = "RelDuration";
+            this.RelDuration.ReadOnly = true;
+            // 
+            // DeltaTotalDuration
+            // 
+            this.DeltaTotalDuration.HeaderText = "Delta total duration";
+            this.DeltaTotalDuration.Name = "DeltaTotalDuration";
+            this.DeltaTotalDuration.ReadOnly = true;
+            // 
             // myTreeView1
             // 
             this.myTreeView1.Anchor = ((System.Windows.Forms.AnchorStyles)((((System.Windows.Forms.AnchorStyles.Top | System.Windows.Forms.AnchorStyles.Bottom) 
@@ -3213,78 +3312,22 @@ namespace SkylineTester
             this.myTreeView1.Size = new System.Drawing.Size(309, 350);
             this.myTreeView1.TabIndex = 15;
             // 
-            // labelParallelOffscreenHint
+            // lblWorkerTimeout
             // 
-            this.labelParallelOffscreenHint.AutoSize = true;
-            this.labelParallelOffscreenHint.Location = new System.Drawing.Point(9, 44);
-            this.labelParallelOffscreenHint.Name = "labelParallelOffscreenHint";
-            this.labelParallelOffscreenHint.Size = new System.Drawing.Size(174, 13);
-            this.labelParallelOffscreenHint.TabIndex = 1;
-            this.labelParallelOffscreenHint.Text = "Tests run offscreen in parallel mode";
-            // parallelWorkerCount
+            this.lblWorkerTimeout.AutoSize = true;
+            this.lblWorkerTimeout.Location = new System.Drawing.Point(64, 75);
+            this.lblWorkerTimeout.Name = "lblWorkerTimeout";
+            this.lblWorkerTimeout.Size = new System.Drawing.Size(79, 13);
+            this.lblWorkerTimeout.TabIndex = 17;
+            this.lblWorkerTimeout.Text = "Worker timeout";
             // 
-            this.parallelWorkerCount.Location = new System.Drawing.Point(150, 20);
-            this.parallelWorkerCount.Minimum = new decimal(new int[] {
-            1,
-            0,
-            0,
-            0});
-            this.parallelWorkerCount.Name = "parallelWorkerCount";
-            this.parallelWorkerCount.Size = new System.Drawing.Size(41, 20);
-            this.parallelWorkerCount.TabIndex = 12;
-            this.parallelWorkerCount.Value = new decimal(new int[] {
-            2,
-            0,
-            0,
-            0});
+            // workerTimeout
             // 
-            // label22
-            // 
-            this.label22.AutoSize = true;
-            this.label22.Location = new System.Drawing.Point(198, 24);
-            this.label22.Margin = new System.Windows.Forms.Padding(4, 0, 4, 0);
-            this.label22.Name = "label22";
-            this.label22.Size = new System.Drawing.Size(44, 13);
-            this.label22.TabIndex = 13;
-            this.label22.Text = "workers";
-            // 
-            // runParallel
-            // 
-            this.runParallel.AutoSize = true;
-            this.runParallel.Checked = true;
-            this.runParallel.Location = new System.Drawing.Point(26, 20);
-            this.runParallel.Margin = new System.Windows.Forms.Padding(4);
-            this.runParallel.Name = "runParallel";
-            this.runParallel.Size = new System.Drawing.Size(117, 17);
-            this.runParallel.TabIndex = 11;
-            this.runParallel.TabStop = true;
-            this.runParallel.Text = "Run tests in parallel";
-            this.runParallel.UseVisualStyleBackColor = true;
-            // 
-            // runSerial
-            // 
-            this.runSerial.AutoSize = true;
-            this.runSerial.Location = new System.Drawing.Point(26, 45);
-            this.runSerial.Margin = new System.Windows.Forms.Padding(4);
-            this.runSerial.Name = "runSerial";
-            this.runSerial.Size = new System.Drawing.Size(104, 17);
-            this.runSerial.TabIndex = 14;
-            this.runSerial.Text = "Run tests serially";
-            this.runSerial.UseVisualStyleBackColor = true;
-            this.runSerial.CheckedChanged += new System.EventHandler(this.runSerial_CheckedChanged);
-            // 
-            // parallelGroup
-            // 
-            this.parallelGroup.Controls.Add(this.parallelWorkerCount);
-            this.parallelGroup.Controls.Add(this.runParallel);
-            this.parallelGroup.Controls.Add(this.label22);
-            this.parallelGroup.Controls.Add(this.runSerial);
-            this.parallelGroup.Location = new System.Drawing.Point(11, 476);
-            this.parallelGroup.Name = "parallelGroup";
-            this.parallelGroup.Size = new System.Drawing.Size(280, 70);
-            this.parallelGroup.TabIndex = 37;
-            this.parallelGroup.TabStop = false;
-            this.parallelGroup.Text = "Parallelism";
+            this.workerTimeout.Location = new System.Drawing.Point(149, 72);
+            this.workerTimeout.Name = "workerTimeout";
+            this.workerTimeout.Size = new System.Drawing.Size(100, 20);
+            this.workerTimeout.TabIndex = 18;
+            this.toolTip1.SetToolTip(this.workerTimeout, "Enter number between 9810 and 9820 on macs2");
             // 
             // SkylineTesterWindow
             // 
@@ -3315,7 +3358,6 @@ namespace SkylineTester
             this.groupBox1.ResumeLayout(false);
             this.toolStrip1.ResumeLayout(false);
             this.toolStrip1.PerformLayout();
-            ((System.ComponentModel.ISupportInitialize)(this.formsGrid)).EndInit();
             this.tabTutorials.ResumeLayout(false);
             this.groupBox21.ResumeLayout(false);
             this.groupBox21.PerformLayout();
@@ -3325,6 +3367,9 @@ namespace SkylineTester
             this.groupBox4.PerformLayout();
             ((System.ComponentModel.ISupportInitialize)(this.pauseTutorialsSeconds)).EndInit();
             this.tabTests.ResumeLayout(false);
+            this.parallelGroup.ResumeLayout(false);
+            this.parallelGroup.PerformLayout();
+            ((System.ComponentModel.ISupportInitialize)(this.parallelWorkerCount)).EndInit();
             this.groupBox15.ResumeLayout(false);
             this.groupBox15.PerformLayout();
             this.windowsGroup.ResumeLayout(false);
@@ -3380,12 +3425,10 @@ namespace SkylineTester
             this.outputSplitContainer.ResumeLayout(false);
             this.tabRunStats.ResumeLayout(false);
             this.tabRunStats.PerformLayout();
-            ((System.ComponentModel.ISupportInitialize)(this.dataGridRunStats)).EndInit();
             this.menuStrip1.ResumeLayout(false);
             this.menuStrip1.PerformLayout();
-            ((System.ComponentModel.ISupportInitialize)(this.parallelWorkerCount)).EndInit();
-            this.parallelGroup.ResumeLayout(false);
-            this.parallelGroup.PerformLayout();
+            ((System.ComponentModel.ISupportInitialize)(this.formsGrid)).EndInit();
+            ((System.ComponentModel.ISupportInitialize)(this.dataGridRunStats)).EndInit();
             this.ResumeLayout(false);
 
         }
@@ -3634,5 +3677,9 @@ namespace SkylineTester
         private ComboBox testSet;
         private Button buttonRunStatsExportCSV;
         private Label labelParallelOffscreenHint;
+        private TextBox workerPort;
+        private Label lblWorkerPort;
+        private TextBox workerTimeout;
+        private Label lblWorkerTimeout;
     }
 }

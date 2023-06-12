@@ -1088,6 +1088,8 @@ namespace SkylineTester
                 runParallel,
                 runSerial,
                 parallelWorkerCount,
+                workerPort,
+                workerTimeout,
 
                 // Build
                 buildTrunk,
@@ -1518,6 +1520,8 @@ namespace SkylineTester
         public Button           RunNightly                  { get { return runNightly; } }
         public RadioButton      RunParallel                 { get { return runParallel; } }
         public NumericUpDown    RunParallelWorkerCount      { get { return parallelWorkerCount; } }
+        public TextBox          WorkerPort                  { get { return workerPort; } }
+        public TextBox          WorkerTimeout               { get { return workerTimeout; } }
         public Button           RunQuality                  { get { return runQuality; } }
         public Button           RunTests                    { get { return runTests; } }
         public Button           RunTutorials                { get { return runTutorials; } }
