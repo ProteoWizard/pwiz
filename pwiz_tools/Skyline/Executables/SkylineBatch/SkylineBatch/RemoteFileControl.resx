@@ -151,19 +151,19 @@
     <value>$this</value>
   </data>
   <data name="&gt;&gt;label2.ZOrder" xml:space="preserve">
-    <value>0</value>
+    <value>1</value>
   </data>
   <data name="textRelativePath.Anchor" type="System.Windows.Forms.AnchorStyles, System.Windows.Forms">
     <value>Top, Left, Right</value>
   </data>
   <data name="textRelativePath.Location" type="System.Drawing.Point, System.Drawing">
-    <value>0, 63</value>
+    <value>0, 6</value>
   </data>
   <data name="textRelativePath.Margin" type="System.Windows.Forms.Padding, System.Windows.Forms">
-    <value>6, 6, 6, 6</value>
+    <value>0, 6, 6, 6</value>
   </data>
   <data name="textRelativePath.Size" type="System.Drawing.Size, System.Drawing">
-    <value>348, 20</value>
+    <value>319, 20</value>
   </data>
   <data name="textRelativePath.TabIndex" type="System.Int32, mscorlib">
     <value>3</value>
@@ -175,10 +175,10 @@
     <value>System.Windows.Forms.TextBox, System.Windows.Forms, Version=4.0.0.0, Culture=neutral, PublicKeyToken=b77a5c561934e089</value>
   </data>
   <data name="&gt;&gt;textRelativePath.Parent" xml:space="preserve">
-    <value>$this</value>
+    <value>flowRelativePath</value>
   </data>
   <data name="&gt;&gt;textRelativePath.ZOrder" xml:space="preserve">
-    <value>1</value>
+    <value>0</value>
   </data>
   <data name="comboRemoteFileSource.Anchor" type="System.Windows.Forms.AnchorStyles, System.Windows.Forms">
     <value>Top, Left, Right</value>
@@ -239,6 +239,57 @@
   </data>
   <data name="&gt;&gt;label1.ZOrder" xml:space="preserve">
     <value>3</value>
+  </data>
+  <data name="btnOpenFromPanorama.ImeMode" type="System.Windows.Forms.ImeMode, System.Windows.Forms">
+    <value>NoControl</value>
+  </data>
+  <data name="btnOpenFromPanorama.Location" type="System.Drawing.Point, System.Drawing">
+    <value>325, 3</value>
+  </data>
+  <data name="btnOpenFromPanorama.Margin" type="System.Windows.Forms.Padding, System.Windows.Forms">
+    <value>0, 3, 3, 3</value>
+  </data>
+  <data name="btnOpenFromPanorama.Size" type="System.Drawing.Size, System.Drawing">
+    <value>26, 23</value>
+  </data>
+  <data name="btnOpenFromPanorama.TabIndex" type="System.Int32, mscorlib">
+    <value>13</value>
+  </data>
+  <data name="&gt;&gt;btnOpenFromPanorama.Name" xml:space="preserve">
+    <value>btnOpenFromPanorama</value>
+  </data>
+  <data name="&gt;&gt;btnOpenFromPanorama.Type" xml:space="preserve">
+    <value>System.Windows.Forms.Button, System.Windows.Forms, Version=4.0.0.0, Culture=neutral, PublicKeyToken=b77a5c561934e089</value>
+  </data>
+  <data name="&gt;&gt;btnOpenFromPanorama.Parent" xml:space="preserve">
+    <value>flowRelativePath</value>
+  </data>
+  <data name="&gt;&gt;btnOpenFromPanorama.ZOrder" xml:space="preserve">
+    <value>1</value>
+  </data>
+  <data name="flowRelativePath.AutoSize" type="System.Boolean, mscorlib">
+    <value>True</value>
+  </data>
+  <data name="flowRelativePath.Location" type="System.Drawing.Point, System.Drawing">
+    <value>0, 60</value>
+  </data>
+  <data name="flowRelativePath.Size" type="System.Drawing.Size, System.Drawing">
+    <value>354, 32</value>
+  </data>
+  <data name="flowRelativePath.TabIndex" type="System.Int32, mscorlib">
+    <value>14</value>
+  </data>
+  <data name="&gt;&gt;flowRelativePath.Name" xml:space="preserve">
+    <value>flowRelativePath</value>
+  </data>
+  <data name="&gt;&gt;flowRelativePath.Type" xml:space="preserve">
+    <value>System.Windows.Forms.FlowLayoutPanel, System.Windows.Forms, Version=4.0.0.0, Culture=neutral, PublicKeyToken=b77a5c561934e089</value>
+  </data>
+  <data name="&gt;&gt;flowRelativePath.Parent" xml:space="preserve">
+    <value>$this</value>
+  </data>
+  <data name="&gt;&gt;flowRelativePath.ZOrder" xml:space="preserve">
+    <value>0</value>
   </data>
   <metadata name="$this.Localizable" type="System.Boolean, mscorlib, Version=4.0.0.0, Culture=neutral, PublicKeyToken=b77a5c561934e089">
     <value>True</value>

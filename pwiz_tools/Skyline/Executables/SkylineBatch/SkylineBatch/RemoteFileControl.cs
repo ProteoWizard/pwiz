@@ -1,8 +1,15 @@
 ﻿using SharedBatch;
 using System;
+using System.Collections.Generic;
+using System.Drawing;
 using System.Threading;
+using System.Web.Caching;
 using System.Windows.Forms;
+using pwiz.PanoramaClient;
 using SkylineBatch.Properties;
+using AlertDlg = SharedBatch.AlertDlg;
+using PanoramaServer = SharedBatch.PanoramaServer;
+using PanoramaClientServer = pwiz.PanoramaClient.PanoramaServer;
 
 namespace SkylineBatch
 {
@@ -34,6 +41,24 @@ namespace SkylineBatch
         }
 
         public SkylineBatchConfigManagerState State { get; private set; }
+        public bool PanoramaSource { get; private set; } = false;
+
+        private RemoteFileSource getRemoteFileSource(){
+
+            RemoteFileSource remoteFileSource;
+            try
+            {
+                remoteFileSource = RemoteFileSourceFromUI();
+            }
+            catch (Exception ex)
+            {
+                return null;
+            }
+
+            return remoteFileSource;
+
+        }
+
 
         private void UpdateRemoteSourceList()
         {
@@ -62,16 +87,7 @@ namespace SkylineBatch
 
         public void CheckPanoramaServer(CancellationToken cancelToken, Action<PanoramaFile, Exception> callback)
         {
-            RemoteFileSource remoteFileSource;
-            try
-            {
-                remoteFileSource = RemoteFileSourceFromUI();
-            }
-            catch (Exception ex)
-            {
-                callback(null, ex);
-                return;
-            }
+            RemoteFileSource remoteFileSource = getRemoteFileSource();
             new Thread(() =>
             {
                 try
@@ -133,7 +149,7 @@ namespace SkylineBatch
                         editingFileSource =
                             State.FileSources[(string) comboRemoteFileSource.Items[_lastStelectedIndex]];
                     }
-                    var remoteSourceForm = new RemoteSourceForm(editingFileSource, _mainControl, State, _preferPanoramaSource, _fileRequired);
+                    var remoteSourceForm = new RemoteSourceForm(editingFileSource, _mainControl, State, _preferPanoramaSource); 
                     var dialogResult = remoteSourceForm.ShowDialog(this);
                     State = remoteSourceForm.State;
                     UpdateRemoteSourceList();
@@ -143,8 +159,11 @@ namespace SkylineBatch
                         comboRemoteFileSource.SelectedIndex = _lastStelectedIndex;
                 }
             }
+            
             _lastStelectedIndex = comboRemoteFileSource.SelectedIndex;
         }
+
+        
 
         public void AddRemoteFileChangedEventHandler(EventHandler eventHandler)
         {
@@ -168,6 +187,73 @@ namespace SkylineBatch
             catch (InvalidOperationException)
             {
             }
+        }
+
+
+        public void OpenFromPanorama()
+        {
+            RemoteFileSource remoteFileSource = getRemoteFileSource();
+            Uri uri = remoteFileSource.URI; // Need to get server URI
+            // string userName= remoteFileSource.Username;
+            // string textPassword = remoteFileSource.Password;
+
+            string host = $"https://{uri.Host}";
+
+            PanoramaClientServer server = new PanoramaClientServer(new Uri(host));
+
+            var panoramaServers = new List<PanoramaClientServer>() { server };
+
+            var state = string.Empty;
+            if (!string.IsNullOrEmpty(Settings.Default.PanoramaTreeState))
+            {
+                state = Settings.Default.PanoramaTreeState;
+            }
+
+            try
+            {
+
+                if (_fileRequired) // If file is required use PanoramaFilePicker
+                {
+                    using (PanoramaFilePicker dlg = new PanoramaFilePicker(panoramaServers, true, state, false))
+                    {
+
+                        dlg.InitializeDialog();
+                        if (dlg.ShowDialog() != DialogResult.Cancel)
+                        {
+                            Settings.Default.PanoramaTreeState = dlg.TreeState;
+                            Settings.Default.ShowPanormaSkyFiles = dlg.ShowingSky;
+                            textRelativePath.Text = dlg.FileUrl.Replace(uri.AbsoluteUri, "");
+                            PanoramaSource = true; // if you select a folder then manually change the folder, PanoramaSource will still be true
+                        }
+                        Settings.Default.PanoramaTreeState = dlg.TreeState;
+                        Settings.Default.ShowPanormaSkyFiles = dlg.ShowingSky;
+                    }
+                }
+                else // if file not required use PanoramaDirectoryPicker
+                {
+                    using (PanoramaDirectoryPicker dlg = new PanoramaDirectoryPicker(panoramaServers, state, showWebDavFolders: true))
+                    {
+
+                        // dlg.InitializeDialog();
+                        if (dlg.ShowDialog() != DialogResult.Cancel)
+                        {
+                            string url = dlg.Selected;
+                            textRelativePath.Text = $"{url.Replace(uri.ToString(), "")}/";
+                        }
+                    }
+                }
+            }
+            catch (Exception e)
+            {
+                AlertDlg.ShowError(this, Program.AppName(), e.Message);
+            }
+
+            Settings.Default.Save();
+        }
+
+        private void btnOpenFromPanorama_Click(object sender, EventArgs e)
+        {
+            OpenFromPanorama();
         }
     }
 }

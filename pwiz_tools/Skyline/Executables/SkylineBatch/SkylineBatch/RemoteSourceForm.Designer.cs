@@ -191,7 +191,7 @@
         public System.Windows.Forms.TextBox textFolderUrl;
         public System.Windows.Forms.Button btnSave;
         private System.Windows.Forms.Button btnCancel;
-        private System.Windows.Forms.Button btnOpenFromPanorama;
+        public System.Windows.Forms.Button btnOpenFromPanorama;
         private System.Windows.Forms.Label label5;
         public System.Windows.Forms.TextBox textServerName;
     }
