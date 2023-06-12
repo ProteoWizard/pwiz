@@ -225,7 +225,7 @@ namespace pwiz.Skyline.Model.Results
 
             if (resultFileData != null)
             {
-                return resultFileData.ToMsDataFileScanIds();
+                return resultFileData;
             }
             return MsDataFileScanIds.FromBytes(LoadMSDataFileScanIdBytes(fileIndex));
         }
