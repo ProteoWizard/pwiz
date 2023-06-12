@@ -201,6 +201,7 @@
     <Compile Include="OpenDocWithBackgroundProteomeTest.cs" />
     <Compile Include="RemoveHeavyModificationTest.cs" />
     <Compile Include="RemoveNeutralLossModificationTest.cs" />
+    <Compile Include="ResultFileMetadataBackCompatTest.cs" />
     <Compile Include="SaveAfterProteinAssociationTest.cs" />
     <Compile Include="SequenceTreeRatioTest.cs" />
     <Compile Include="SpectrumGridTest.cs" />
@@ -613,6 +614,7 @@
     <None Include="ReportSummaryTest.zip" />
     <None Include="RescoreImportDocumentTest.zip" />
     <None Include="RescoreRawChromatogramsTest.zip" />
+    <None Include="ResultFileMetadataBackCompatTest.zip" />
     <None Include="RetentionTimeAlignmentTest.zip" />
     <None Include="RetentionTimeFilterTest.zip" />
     <None Include="RowActionsTest.zip" />
