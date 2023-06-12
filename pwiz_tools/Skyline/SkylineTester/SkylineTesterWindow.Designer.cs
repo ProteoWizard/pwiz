@@ -116,13 +116,6 @@ namespace SkylineTester
             this.pauseTutorialsScreenShots = new System.Windows.Forms.RadioButton();
             this.runTutorials = new System.Windows.Forms.Button();
             this.tabTests = new System.Windows.Forms.TabPage();
-            this.parallelGroup = new System.Windows.Forms.GroupBox();
-            this.workerPort = new System.Windows.Forms.TextBox();
-            this.lblWorkerPort = new System.Windows.Forms.Label();
-            this.parallelWorkerCount = new System.Windows.Forms.NumericUpDown();
-            this.runParallel = new System.Windows.Forms.RadioButton();
-            this.label22 = new System.Windows.Forms.Label();
-            this.runSerial = new System.Windows.Forms.RadioButton();
             this.runTests = new System.Windows.Forms.Button();
             this.buttonSelectFailedTestsTab = new System.Windows.Forms.Button();
             this.label17 = new System.Windows.Forms.Label();
@@ -133,7 +126,6 @@ namespace SkylineTester
             this.testsChinese = new System.Windows.Forms.CheckBox();
             this.testsEnglish = new System.Windows.Forms.CheckBox();
             this.windowsGroup = new System.Windows.Forms.GroupBox();
-            this.labelParallelOffscreenHint = new System.Windows.Forms.Label();
             this.offscreen = new System.Windows.Forms.CheckBox();
             this.iterationsGroup = new System.Windows.Forms.GroupBox();
             this.recordAuditLogs = new System.Windows.Forms.CheckBox();
@@ -314,6 +306,14 @@ namespace SkylineTester
             this.radioButton5 = new System.Windows.Forms.RadioButton();
             this.toolTip1 = new System.Windows.Forms.ToolTip(this.components);
             this.myTreeView1 = new SkylineTester.MyTreeView();
+            this.labelParallelOffscreenHint = new System.Windows.Forms.Label();
+            this.parallelWorkerCount = new System.Windows.Forms.NumericUpDown();
+            this.label22 = new System.Windows.Forms.Label();
+            this.runParallel = new System.Windows.Forms.RadioButton();
+            this.runSerial = new System.Windows.Forms.RadioButton();
+            this.parallelGroup = new System.Windows.Forms.GroupBox();
+            this.workerPort = new System.Windows.Forms.TextBox();
+            this.lblWorkerPort = new System.Windows.Forms.Label();
             this.mainPanel.SuspendLayout();
             this.statusStrip1.SuspendLayout();
             this.tabs.SuspendLayout();
@@ -330,8 +330,6 @@ namespace SkylineTester
             this.groupBox4.SuspendLayout();
             ((System.ComponentModel.ISupportInitialize)(this.pauseTutorialsSeconds)).BeginInit();
             this.tabTests.SuspendLayout();
-            this.parallelGroup.SuspendLayout();
-            ((System.ComponentModel.ISupportInitialize)(this.parallelWorkerCount)).BeginInit();
             this.groupBox15.SuspendLayout();
             this.windowsGroup.SuspendLayout();
             this.iterationsGroup.SuspendLayout();
@@ -370,6 +368,8 @@ namespace SkylineTester
             this.tabRunStats.SuspendLayout();
             ((System.ComponentModel.ISupportInitialize)(this.dataGridRunStats)).BeginInit();
             this.menuStrip1.SuspendLayout();
+            ((System.ComponentModel.ISupportInitialize)(this.parallelWorkerCount)).BeginInit();
+            this.parallelGroup.SuspendLayout();
             this.SuspendLayout();
             // 
             // mainPanel
@@ -954,90 +954,6 @@ namespace SkylineTester
             this.tabTests.TabIndex = 0;
             this.tabTests.Text = "Tests";
             // 
-            // parallelGroup
-            // 
-            this.parallelGroup.Controls.Add(this.workerPort);
-            this.parallelGroup.Controls.Add(this.lblWorkerPort);
-            this.parallelGroup.Controls.Add(this.parallelWorkerCount);
-            this.parallelGroup.Controls.Add(this.runParallel);
-            this.parallelGroup.Controls.Add(this.label22);
-            this.parallelGroup.Controls.Add(this.runSerial);
-            this.parallelGroup.Location = new System.Drawing.Point(11, 476);
-            this.parallelGroup.Name = "parallelGroup";
-            this.parallelGroup.Size = new System.Drawing.Size(280, 100);
-            this.parallelGroup.TabIndex = 37;
-            this.parallelGroup.TabStop = false;
-            this.parallelGroup.Text = "Parallelism";
-            // 
-            // workerPort
-            // 
-            this.workerPort.Location = new System.Drawing.Point(150, 43);
-            this.workerPort.Name = "workerPort";
-            this.workerPort.Size = new System.Drawing.Size(100, 20);
-            this.workerPort.TabIndex = 16;
-            this.toolTip1.SetToolTip(this.workerPort, "Enter number between 9810 and 9820 on macs2");
-            // 
-            // lblWorkerPort
-            // 
-            this.lblWorkerPort.AutoSize = true;
-            this.lblWorkerPort.Location = new System.Drawing.Point(80, 46);
-            this.lblWorkerPort.Name = "lblWorkerPort";
-            this.lblWorkerPort.Size = new System.Drawing.Size(63, 13);
-            this.lblWorkerPort.TabIndex = 15;
-            this.lblWorkerPort.Text = "Worker port";
-            // 
-            // parallelWorkerCount
-            // 
-            this.parallelWorkerCount.Location = new System.Drawing.Point(150, 20);
-            this.parallelWorkerCount.Minimum = new decimal(new int[] {
-            1,
-            0,
-            0,
-            0});
-            this.parallelWorkerCount.Name = "parallelWorkerCount";
-            this.parallelWorkerCount.Size = new System.Drawing.Size(41, 20);
-            this.parallelWorkerCount.TabIndex = 12;
-            this.parallelWorkerCount.Value = new decimal(new int[] {
-            2,
-            0,
-            0,
-            0});
-            // 
-            // runParallel
-            // 
-            this.runParallel.AutoSize = true;
-            this.runParallel.Checked = true;
-            this.runParallel.Location = new System.Drawing.Point(26, 20);
-            this.runParallel.Margin = new System.Windows.Forms.Padding(4);
-            this.runParallel.Name = "runParallel";
-            this.runParallel.Size = new System.Drawing.Size(117, 17);
-            this.runParallel.TabIndex = 11;
-            this.runParallel.TabStop = true;
-            this.runParallel.Text = "Run tests in parallel";
-            this.runParallel.UseVisualStyleBackColor = true;
-            // 
-            // label22
-            // 
-            this.label22.AutoSize = true;
-            this.label22.Location = new System.Drawing.Point(198, 24);
-            this.label22.Margin = new System.Windows.Forms.Padding(4, 0, 4, 0);
-            this.label22.Name = "label22";
-            this.label22.Size = new System.Drawing.Size(44, 13);
-            this.label22.TabIndex = 13;
-            this.label22.Text = "workers";
-            // 
-            // runSerial
-            // 
-            this.runSerial.AutoSize = true;
-            this.runSerial.Location = new System.Drawing.Point(26, 67);
-            this.runSerial.Margin = new System.Windows.Forms.Padding(4);
-            this.runSerial.Name = "runSerial";
-            this.runSerial.Size = new System.Drawing.Size(104, 17);
-            this.runSerial.TabIndex = 14;
-            this.runSerial.Text = "Run tests serially";
-            this.runSerial.UseVisualStyleBackColor = true;
-            this.runSerial.CheckedChanged += new System.EventHandler(this.runSerial_CheckedChanged);
-            // 
             // runTests
             // 
             this.runTests.Anchor = ((System.Windows.Forms.AnchorStyles)((System.Windows.Forms.AnchorStyles.Bottom | System.Windows.Forms.AnchorStyles.Right)));
@@ -1162,15 +1078,6 @@ namespace SkylineTester
             this.windowsGroup.TabIndex = 2;
             this.windowsGroup.TabStop = false;
             this.windowsGroup.Text = "Windows";
-            // 
-            // labelParallelOffscreenHint
-            // 
-            this.labelParallelOffscreenHint.AutoSize = true;
-            this.labelParallelOffscreenHint.Location = new System.Drawing.Point(9, 44);
-            this.labelParallelOffscreenHint.Name = "labelParallelOffscreenHint";
-            this.labelParallelOffscreenHint.Size = new System.Drawing.Size(174, 13);
-            this.labelParallelOffscreenHint.TabIndex = 1;
-            this.labelParallelOffscreenHint.Text = "Tests run offscreen in parallel mode";
             // 
             // offscreen
             // 
@@ -2812,7 +2719,7 @@ namespace SkylineTester
             // 
             this.outputSplitContainer.Panel2.Controls.Add(this.errorConsole);
             this.outputSplitContainer.Size = new System.Drawing.Size(671, 562);
-            this.outputSplitContainer.SplitterDistance = 332;
+            this.outputSplitContainer.SplitterDistance = 356;
             this.outputSplitContainer.SplitterWidth = 10;
             this.outputSplitContainer.TabIndex = 35;
             // 
@@ -2834,7 +2741,7 @@ namespace SkylineTester
             this.commandShell.NextCommand = 0;
             this.commandShell.RestartCount = 0;
             this.commandShell.RunStartTime = new System.DateTime(((long)(0)));
-            this.commandShell.Size = new System.Drawing.Size(671, 332);
+            this.commandShell.Size = new System.Drawing.Size(671, 356);
             this.commandShell.StopButton = null;
             this.commandShell.TabIndex = 2;
             this.commandShell.Text = "";
@@ -2852,7 +2759,7 @@ namespace SkylineTester
             this.errorConsole.Margin = new System.Windows.Forms.Padding(0);
             this.errorConsole.Name = "errorConsole";
             this.errorConsole.ReadOnly = true;
-            this.errorConsole.Size = new System.Drawing.Size(671, 220);
+            this.errorConsole.Size = new System.Drawing.Size(671, 196);
             this.errorConsole.TabIndex = 3;
             this.errorConsole.Text = "";
             this.errorConsole.SelectionChanged += new System.EventHandler(this.errorConsole_SelectionChanged);
@@ -3308,6 +3215,98 @@ namespace SkylineTester
             this.myTreeView1.Size = new System.Drawing.Size(309, 350);
             this.myTreeView1.TabIndex = 15;
             // 
+            // labelParallelOffscreenHint
+            // 
+            this.labelParallelOffscreenHint.AutoSize = true;
+            this.labelParallelOffscreenHint.Location = new System.Drawing.Point(9, 44);
+            this.labelParallelOffscreenHint.Name = "labelParallelOffscreenHint";
+            this.labelParallelOffscreenHint.Size = new System.Drawing.Size(174, 13);
+            this.labelParallelOffscreenHint.TabIndex = 1;
+            this.labelParallelOffscreenHint.Text = "Tests run offscreen in parallel mode";
+            // parallelWorkerCount
+            // 
+            this.parallelWorkerCount.Location = new System.Drawing.Point(150, 20);
+            this.parallelWorkerCount.Minimum = new decimal(new int[] {
+            1,
+            0,
+            0,
+            0});
+            this.parallelWorkerCount.Name = "parallelWorkerCount";
+            this.parallelWorkerCount.Size = new System.Drawing.Size(41, 20);
+            this.parallelWorkerCount.TabIndex = 12;
+            this.parallelWorkerCount.Value = new decimal(new int[] {
+            2,
+            0,
+            0,
+            0});
+            // 
+            // workerPort
+            // 
+            this.workerPort.Location = new System.Drawing.Point(150, 43);
+            this.workerPort.Name = "workerPort";
+            this.workerPort.Size = new System.Drawing.Size(100, 20);
+            this.workerPort.TabIndex = 16;
+            this.toolTip1.SetToolTip(this.workerPort, "Enter number between 9810 and 9820 on macs2");
+            // 
+            // lblWorkerPort
+            // 
+            this.lblWorkerPort.AutoSize = true;
+            this.lblWorkerPort.Location = new System.Drawing.Point(80, 46);
+            this.lblWorkerPort.Name = "lblWorkerPort";
+            this.lblWorkerPort.Size = new System.Drawing.Size(63, 13);
+            this.lblWorkerPort.TabIndex = 15;
+            this.lblWorkerPort.Text = "Worker port";
+            // 
+            // label22
+            // 
+            this.label22.AutoSize = true;
+            this.label22.Location = new System.Drawing.Point(198, 24);
+            this.label22.Margin = new System.Windows.Forms.Padding(4, 0, 4, 0);
+            this.label22.Name = "label22";
+            this.label22.Size = new System.Drawing.Size(44, 13);
+            this.label22.TabIndex = 13;
+            this.label22.Text = "workers";
+            // 
+            // runParallel
+            // 
+            this.runParallel.AutoSize = true;
+            this.runParallel.Checked = true;
+            this.runParallel.Location = new System.Drawing.Point(26, 20);
+            this.runParallel.Margin = new System.Windows.Forms.Padding(4);
+            this.runParallel.Name = "runParallel";
+            this.runParallel.Size = new System.Drawing.Size(117, 17);
+            this.runParallel.TabIndex = 11;
+            this.runParallel.TabStop = true;
+            this.runParallel.Text = "Run tests in parallel";
+            this.runParallel.UseVisualStyleBackColor = true;
+            // 
+            // runSerial
+            // 
+            this.runSerial.AutoSize = true;
+            this.runSerial.Location = new System.Drawing.Point(26, 67);
+            this.runSerial.Margin = new System.Windows.Forms.Padding(4);
+            this.runSerial.Name = "runSerial";
+            this.runSerial.Size = new System.Drawing.Size(104, 17);
+            this.runSerial.TabIndex = 14;
+            this.runSerial.Text = "Run tests serially";
+            this.runSerial.UseVisualStyleBackColor = true;
+            this.runSerial.CheckedChanged += new System.EventHandler(this.runSerial_CheckedChanged);
+            // 
+            // parallelGroup
+            // 
+            this.parallelGroup.Controls.Add(this.workerPort);
+            this.parallelGroup.Controls.Add(this.lblWorkerPort);
+            this.parallelGroup.Controls.Add(this.parallelWorkerCount);
+            this.parallelGroup.Controls.Add(this.runParallel);
+            this.parallelGroup.Controls.Add(this.label22);
+            this.parallelGroup.Controls.Add(this.runSerial);
+            this.parallelGroup.Location = new System.Drawing.Point(11, 476);
+            this.parallelGroup.Name = "parallelGroup";
+            this.parallelGroup.Size = new System.Drawing.Size(280, 100);
+            this.parallelGroup.TabIndex = 37;
+            this.parallelGroup.TabStop = false;
+            this.parallelGroup.Text = "Parallelism";
+            // 
             // SkylineTesterWindow
             // 
             this.BackgroundImageLayout = System.Windows.Forms.ImageLayout.Stretch;
@@ -3347,9 +3346,6 @@ namespace SkylineTester
             this.groupBox4.PerformLayout();
             ((System.ComponentModel.ISupportInitialize)(this.pauseTutorialsSeconds)).EndInit();
             this.tabTests.ResumeLayout(false);
-            this.parallelGroup.ResumeLayout(false);
-            this.parallelGroup.PerformLayout();
-            ((System.ComponentModel.ISupportInitialize)(this.parallelWorkerCount)).EndInit();
             this.groupBox15.ResumeLayout(false);
             this.groupBox15.PerformLayout();
             this.windowsGroup.ResumeLayout(false);
@@ -3408,6 +3404,9 @@ namespace SkylineTester
             ((System.ComponentModel.ISupportInitialize)(this.dataGridRunStats)).EndInit();
             this.menuStrip1.ResumeLayout(false);
             this.menuStrip1.PerformLayout();
+            ((System.ComponentModel.ISupportInitialize)(this.parallelWorkerCount)).EndInit();
+            this.parallelGroup.ResumeLayout(false);
+            this.parallelGroup.PerformLayout();
             this.ResumeLayout(false);
 
         }
