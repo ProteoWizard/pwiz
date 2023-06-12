@@ -24,6 +24,7 @@ using pwiz.Common.Chemistry;
 using pwiz.Common.Collections;
 using pwiz.Common.SystemUtil;
 using pwiz.Skyline.Model.Results.Scoring;
+using pwiz.Skyline.Model.Results.Spectra;
 using pwiz.Skyline.Util;
 using pwiz.Skyline.Util.Extensions;
 
@@ -735,8 +736,9 @@ namespace pwiz.Skyline.Model.Results
                     }
                     else
                     {
-                        scanIdBytes = scanIds.ToByteArray();
+                        Assume.AreEqual(chromCachedFile.HasResultFileData, scanIds is ResultFileMetaData);
                         newHasResultFileData = chromCachedFile.HasResultFileData;
+                        scanIdBytes = scanIds.ToByteArray();
                     }
 
                     long newLocation = _outputStreamScans.Position;
