@@ -114,11 +114,6 @@ namespace SkylineTester
                 {
                     args.AppendFormat(" workerport={0}", MainWindow.WorkerPort.Text);
                 }
-
-                if (!string.IsNullOrEmpty(MainWindow.WorkerTimeout.Text))
-                {
-                    args.AppendFormat(" workertimeout={0}", MainWindow.WorkerTimeout.Text);
-                }
                 try
                 {
                     var dockerImagesOutput = RunTests.RunCommand("docker", $"images {RunTests.DOCKER_IMAGE_NAME}", RunTests.IS_DOCKER_RUNNING_MESSAGE);
