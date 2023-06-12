@@ -1479,10 +1479,10 @@ namespace pwiz.Skyline.Model.Results
             ILongWaitBroker progress)
         {
             string cachePathOpt = FinalPathForName(documentPath, null);
-            return OptimizeToPath(null, cachePathOpt, msDataFilePaths, streamManager, progress);
+            return OptimizeToPath(cachePathOpt, msDataFilePaths, streamManager, progress);
         }
 
-        public ChromatogramCache OptimizeToPath(CacheFormatVersion? formatVersion, string cachePathOpt,
+        public ChromatogramCache OptimizeToPath(string cachePathOpt,
             IEnumerable<MsDataFileUri> msDataFilePaths, IStreamManager streamManager, ILongWaitBroker progress)
         {
             var keepFilePaths = new HashSet<MsDataFileUri>(msDataFilePaths);
@@ -1496,7 +1496,7 @@ namespace pwiz.Skyline.Model.Results
 
             // If the cache contains only the files in the document, then no
             // further optimization is necessary.
-            if (keepFilePaths.Count == CachedFiles.Count && !formatVersion.HasValue || formatVersion == Version)
+            if (keepFilePaths.Count == CachedFiles.Count)
             {
                 if (Equals(cachePathOpt, CachePath))
                     return this;
@@ -1510,7 +1510,7 @@ namespace pwiz.Skyline.Model.Results
                 return ChangeCachePath(cachePathOpt, streamManager);
             }
 
-            CacheFormat cacheFormat = CacheFormat.FromVersion(formatVersion ?? CacheFormatVersion.CURRENT);
+            CacheFormat cacheFormat = CacheFormat.FromVersion(CacheFormatVersion.CURRENT);
             Assume.IsTrue(keepFilePaths.Count > 0);
 
             // Sort by file, points location into new array

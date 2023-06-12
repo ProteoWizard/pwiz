@@ -713,7 +713,36 @@ namespace pwiz.Skyline.Model.Results
 
             public void WriteEndOfFile()
             {
-                _originalCache.WriteScanIds(_outputStreamScans);
+                var chromCachedFiles = new List<ChromCachedFile>();
+                for (int fileIndex = 0; fileIndex < _originalCache.CachedFiles.Count; fileIndex++)
+                {
+                    var chromCachedFile = _originalCache.CachedFiles[fileIndex];
+                    var scanIds = _originalCache.GetOrLoadResultFileMetadata(fileIndex);
+                    if (scanIds == null)
+                    {
+                        chromCachedFiles.Add(chromCachedFile);
+                        continue;
+                    }
+
+                    
+                    byte[] scanIdBytes;
+                    bool newHasResultFileData;
+
+                    if (chromCachedFile.HasResultFileData && _cacheFormat.FormatVersion < ChromatogramCache.FORMAT_VERSION_RESULT_FILE_DATA)
+                    {
+                        scanIdBytes = scanIds.ToMsDataFileScanIds().ToByteArray();
+                        newHasResultFileData = false;
+                    }
+                    else
+                    {
+                        scanIdBytes = scanIds.ToByteArray();
+                        newHasResultFileData = chromCachedFile.HasResultFileData;
+                    }
+
+                    long newLocation = _outputStreamScans.Position;
+                    _outputStreamScans.Write(scanIdBytes, 0, scanIdBytes.Length);
+                    chromCachedFiles.Add(chromCachedFile.ResizeScanIds(newLocation, scanIdBytes.Length, newHasResultFileData));
+                }
 
                 _chromGroupHeaderInfos.Sort();
                 ChromatogramCache.WriteStructs(_cacheFormat,
@@ -721,7 +750,7 @@ namespace pwiz.Skyline.Model.Results
                     _outputStreamScans,
                     _outputStreamPeaks,
                     _outputStreamScores,
-                    _originalCache.CachedFiles,
+                    chromCachedFiles,
                     _chromGroupHeaderInfos,
                     _transitions,
                     _chromatogramGroupIds,
