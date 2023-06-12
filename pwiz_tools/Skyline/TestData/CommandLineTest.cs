@@ -3495,7 +3495,7 @@ namespace pwiz.SkylineTestData
                 return new PanoramaServer(ServerUri, Username, Password);
             }
 
-            public override void ValidateFolder(string folderPath, FolderPermission? permission, bool checkTargetedMs = true)
+            public override void ValidateFolder(string folderPath, FolderPermission? permission)
             {
                 if (MyFolderState != FolderState.valid)
                 {

@@ -3532,7 +3532,6 @@ namespace pwiz.Skyline
                         var editedServer = servers.EditCredentials(this, anonymousServer, servers, string.Empty, string.Empty);
                         if (editedServer == null)
                             return;
-                        servers[0] = editedServer; // Replace with edited server
 
                         if (!editedServer.HasUserAccount())
                         {
@@ -3540,6 +3539,7 @@ namespace pwiz.Skyline
                             alertDlg.ShowAndDispose(this);
                             return;
                         }
+                        servers[0] = editedServer; // Replace with edited server
                     }
                     else
                     {
@@ -3554,13 +3554,13 @@ namespace pwiz.Skyline
                     if (newServer == null)
                         return;
 
-                    servers.Add(newServer);
                     if (!newServer.HasUserAccount())
                     {
                         var alertDlg = new AlertDlg(Resources.SkylineWindow_ShowPublishDlg_Document_cannot_be_uploaded_to_a_Panorama_server_without_a_user_account_, MessageBoxButtons.OK);
                         alertDlg.ShowAndDispose(this);
                         return;
                     }
+                    servers.Add(newServer);
                 }
             }
 
@@ -3658,7 +3658,7 @@ namespace pwiz.Skyline
             if (folders?[@"path"] == null || !folderPath.Contains(Uri.EscapeUriString(folders[@"path"].ToString())))
                 return false;
 
-            if (!PanoramaUtil.CheckInsertPermissions(folders) || !PanoramaUtil.IsTargetedMsFolder(folders))
+            if (!(PanoramaUtil.CheckInsertPermissions(folders) && PanoramaUtil.IsTargetedMsFolder(folders)))
                 return false;
 
             var fileInfo = new FolderInformation(server, true);

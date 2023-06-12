@@ -457,7 +457,7 @@ namespace pwiz.SkylineTestFunctional
                 testFolders["children"] = new JArray(
                     CreateFolder(TARGETED_LIBRARY, true, true, false, true),
                     CreateFolder(TARGETED, true, true),
-                    CreateFolder(NO_TARGETED, true, false),
+                    CreateFolder(NO_TARGETED, true, false, true),
                     CreateFolder(TARGETED_COLLABORATION, true, true, true));
                 return testFolders;
             }

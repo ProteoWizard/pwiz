@@ -131,7 +131,7 @@ namespace pwiz.PanoramaClient
                 _formUtil = new PanoramaFormUtil();
                 foreach (var server in _serverList)
                 {
-                    _formUtil.InitializeTreeView(server, _listServerFolders, server.HasUserAccount()); // Ensure login if there are saved user credentials
+                    _formUtil.InitializeTreeView(server, _listServerFolders);
                 }
             }
         }

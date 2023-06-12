@@ -36,10 +36,10 @@ namespace pwiz.PanoramaClient
     internal class PanoramaFormUtil
     {
 
-        public void InitializeTreeView(PanoramaServer server, List<KeyValuePair<PanoramaServer, JToken>> listServers, bool ensureLogin)
+        public void InitializeTreeView(PanoramaServer server, List<KeyValuePair<PanoramaServer, JToken>> listServers)
         {
             IPanoramaClient panoramaClient = new WebPanoramaClient(server.URI, server.Username, server.Password);
-            listServers.Add(new KeyValuePair<PanoramaServer, JToken>(server, panoramaClient.GetInfoForFolders(null, ensureLogin)));
+            listServers.Add(new KeyValuePair<PanoramaServer, JToken>(server, panoramaClient.GetInfoForFolders(null)));
         }
 
         public void InitializeFolder(TreeView treeViewFolders, bool requireUploadPerms, bool showFiles, JToken folder, PanoramaServer server)
@@ -65,8 +65,8 @@ namespace pwiz.PanoramaClient
             {
                 if (!PanoramaUtil.CheckReadPermissions(subFolder))
                 {
-                    // Do not add the folder if user does not have read permissions in the folder. 
-                    // Any subfolders, even if they have read permissions, will also not be added.
+                    // Do not add a node for the folder if user does not have read permissions in the folder. 
+                    // Any subfolders, even if they have read permissions, will be ignored.
                     continue;
                 }
 
@@ -76,7 +76,7 @@ namespace pwiz.PanoramaClient
                 AddChildContainers(folderNode, subFolder, requireUploadPerms, showFiles);
 
                 var isTargetedMsFolder = PanoramaUtil.IsTargetedMsFolder(subFolder);
-                // User can only upload to folders where TargetedMS is an active module.
+                // User can only upload to folders that are of the type "TargetedMS", and where where they have at least insert permissions.
                 var canUpload = PanoramaUtil.CheckInsertPermissions(subFolder) && isTargetedMsFolder;
 
                 if (requireUploadPerms && folderNode.Nodes.Count == 0 && !canUpload)
@@ -120,9 +120,8 @@ namespace pwiz.PanoramaClient
 
                 if (showFiles)
                 {
-                    var containsTargetedMs = PanoramaUtil.HasTargetedMsModule(subFolder);
                     folderNode.Tag = (string)subFolder[@"path"];
-                    folderNode.Name = containsTargetedMs.ToString();
+                    folderNode.Name = PanoramaUtil.HasTargetedMsModule(subFolder).ToString();
                 }
                 else
                 {

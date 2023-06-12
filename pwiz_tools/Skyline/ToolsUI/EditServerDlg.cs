@@ -65,7 +65,7 @@ namespace pwiz.Skyline.ToolsUI
                     string labelText = lblProjectInfo.Text;
                     if (labelText.Contains(textServerURL.Text))
                         lblProjectInfo.Text = labelText.Substring(0, labelText.IndexOf(' ')) + ':';
-                    if (!_server.HasUserAccount() && _existing.Contains(server => server.Equals(_server)))
+                    if (!_server.HasUserAccount() && _existing.Contains(server => ReferenceEquals(server, _server)))
                     {
                         cbAnonymous.Checked = true;
                         textPassword.Text = string.Empty;
@@ -109,9 +109,7 @@ namespace pwiz.Skyline.ToolsUI
             }
             else
             {
-                if (!helper.ValidateNotEmptyTextBox(textUsername, out _))
-                    return;
-                if (!helper.ValidateNotEmptyTextBox(textPassword, out _))
+                if (!(helper.ValidateNotEmptyTextBox(textUsername, out _) && helper.ValidateNotEmptyTextBox(textPassword, out _)))
                     return;
 
                 try
@@ -128,12 +126,12 @@ namespace pwiz.Skyline.ToolsUI
 
             var panoramaClient = PanoramaClient ?? new WebPanoramaClient(uriServer, Username, Password);
 
-            PanoramaServer pServer = null;
+            PanoramaServer validatedServer = null;
             using (var waitDlg = new LongWaitDlg { Text = Resources.EditServerDlg_OkDialog_Verifying_server_information })
             {
                 try
                 {
-                    waitDlg.PerformWork(this, 1000, () => pServer = panoramaClient.ValidateServer());
+                    waitDlg.PerformWork(this, 1000, () => validatedServer = panoramaClient.ValidateServer());
                 }
                 catch (Exception x)
                 {
@@ -142,13 +140,13 @@ namespace pwiz.Skyline.ToolsUI
                 }
             }
 
-            if (_existing.Contains(server => !ReferenceEquals(_server, server) && Equals(pServer.URI, server.URI)))
+            if (_existing.Contains(server => !ReferenceEquals(_server, server) && Equals(validatedServer.URI, server.URI)))
             {
-                helper.ShowTextBoxError(textServerURL, Resources.EditServerDlg_OkDialog_The_server__0__already_exists_, uriServer.AbsoluteUri);
+                helper.ShowTextBoxError(textServerURL, Resources.EditServerDlg_OkDialog_The_server__0__already_exists_, validatedServer.URI);
                 return;
             }
 
-            _server = new Server(pServer.URI, Username, Password);
+            _server = new Server(validatedServer.URI, Username, Password);
             DialogResult = DialogResult.OK;
         }
 

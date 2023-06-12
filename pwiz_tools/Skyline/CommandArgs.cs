@@ -1152,7 +1152,7 @@ namespace pwiz.Skyline
             {
                 try
                 {
-                    panoramaClient.ValidateFolder(panoramaFolder, FolderPermission.insert, true);
+                    panoramaClient.ValidateFolder(panoramaFolder, FolderPermission.insert);
                     return true;
                 }
                 catch (PanoramaServerException x)
