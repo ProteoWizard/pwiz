@@ -1735,12 +1735,19 @@ namespace pwiz.Skyline.Model.Lib
 
     public abstract class SpectrumHeaderInfo : Immutable, IXmlSerializable
     {
-        protected SpectrumHeaderInfo(string libraryName)
+        protected SpectrumHeaderInfo(string libraryName, double? score = null, string scoreType = null)
         {
             LibraryName = libraryName;
+            Score = score;
+            ScoreType = scoreType;
         }
 
+        public abstract string LibraryTypeName { get; }
+
         public string LibraryName { get; private set; }
+
+        public double? Score { get; private set; }
+        public string ScoreType { get; private set; }
 
         public SpectrumHeaderInfo ChangeLibraryName(string prop)
         {
@@ -1750,7 +1757,7 @@ namespace pwiz.Skyline.Model.Lib
         /// <summary>
         /// Value used in ranking peptides.
         /// </summary>
-        /// <param name="rankId">Indentifier of the value to return</param>
+        /// <param name="rankId">Identifier of the value to return</param>
         /// <returns>The value to use in ranking</returns>
         public virtual float GetRankValue(PeptideRankId rankId)
         {
@@ -1760,7 +1767,14 @@ namespace pwiz.Skyline.Model.Lib
             return float.MinValue;
         }
 
-        public abstract IEnumerable<KeyValuePair<PeptideRankId, string>> RankValues { get; }
+        public abstract IEnumerable<KeyValuePair<PeptideRankId, string>> RankValues
+        {
+            get
+            {
+                yield break;
+            }
+        }
+
         public string Protein { get; protected set; } // Some .blib and .clib files provide a protein accession (or Molecule List Name for small molecules)
 
         #region Implementation of IXmlSerializable
@@ -1775,7 +1789,9 @@ namespace pwiz.Skyline.Model.Lib
         private enum ATTR
         {
             library_name,
-            protein
+            protein,
+            score,
+            score_type
         }
 
         public XmlSchema GetSchema()
@@ -1788,6 +1804,8 @@ namespace pwiz.Skyline.Model.Lib
             // Read tag attributes
             LibraryName = reader.GetAttribute(ATTR.library_name);
             Protein = reader.GetAttribute(ATTR.protein);
+            Score = reader.GetNullableDoubleAttribute(ATTR.score);
+            ScoreType = reader.GetAttribute(ATTR.score_type);
         }
 
         public virtual void WriteXml(XmlWriter writer)
@@ -1795,6 +1813,11 @@ namespace pwiz.Skyline.Model.Lib
             // Write tag attributes
             writer.WriteAttributeString(ATTR.library_name, LibraryName);
             writer.WriteAttributeIfString(ATTR.protein, Protein);
+            if (Score.HasValue)
+            {
+                writer.WriteAttribute(ATTR.score, Score.Value);
+                writer.WriteAttribute(ATTR.score_type, ScoreType);
+            }
         }
 
         #endregion
@@ -2030,6 +2053,11 @@ namespace pwiz.Skyline.Model.Lib
                     hashCode = (hashCode * 397) ^ Intensity.GetHashCode();
                     return hashCode;
                 }
+            }
+
+            public override string ToString()
+            {
+                return string.Format(@"Mz = {0:F06}, Intensity = {1}{2}", Mz, Intensity, _notQuantitative ? string.Empty : @" quant"); // For debugging
             }
         }
     }
@@ -2549,7 +2577,7 @@ namespace pwiz.Skyline.Model.Lib
             {
                 LibraryName = Name,
                 PrecursorMz = precursorInfo.PrecursorMz.Value.ToString(Formats.Mz),
-                Score = (SpectrumHeaderInfo as BiblioSpecSpectrumHeaderInfo)?.Score,
+                Score = SpectrumHeaderInfo?.Score,
                 Charge = pepInfo.Charge,
                 RetentionTime = baseRT,
                 CCS = baseCCS,

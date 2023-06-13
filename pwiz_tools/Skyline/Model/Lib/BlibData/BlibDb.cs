@@ -947,9 +947,10 @@ namespace pwiz.Skyline.Model.Lib.BlibData
             refSpectra.RetentionTime = spectrum.RetentionTime.GetValueOrDefault();
             refSpectra.FileId = spectrum.FilePath != null ? (long?)GetSpectrumSourceId(session, spectrum.FilePath, dictFiles) : null;
             refSpectra.SpecIdInFile = null;
-            var blibInfo = spectrum.SpectrumHeaderInfo as BiblioSpecSpectrumHeaderInfo;
-            refSpectra.Score = blibInfo?.Score ?? 0.0;
-            refSpectra.ScoreType = !string.IsNullOrEmpty(blibInfo?.ScoreType) ? GetScoreTypeId(session, blibInfo.ScoreType, dictScoreTypes) : (ushort)0;
+            refSpectra.Score = spectrum.SpectrumHeaderInfo?.Score ?? 0.0;
+            refSpectra.ScoreType = !string.IsNullOrEmpty(spectrum.SpectrumHeaderInfo?.ScoreType)
+                ? GetScoreTypeId(session, spectrum.SpectrumHeaderInfo.ScoreType, dictScoreTypes)
+                : (ushort) 0;
             if (convertingToSmallMolecules || !string.IsNullOrEmpty(refSpectra.MoleculeName))
             {
                 refSpectra.PeptideSeq = string.Empty;

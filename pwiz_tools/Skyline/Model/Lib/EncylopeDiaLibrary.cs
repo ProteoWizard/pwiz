@@ -27,11 +27,10 @@ using System.Linq;
 using System.Text;
 using System.Xml;
 using System.Xml.Serialization;
+using pwiz.BiblioSpec;
 using pwiz.Common.Collections;
-using pwiz.Common.Database;
 using pwiz.Common.SystemUtil;
 using pwiz.Skyline.Model.DocSettings;
-using pwiz.Skyline.Model.Lib.ChromLib;
 using pwiz.Skyline.Model.Results;
 using pwiz.Skyline.Model.RetentionTimes;
 using pwiz.Skyline.Properties;
@@ -159,9 +158,61 @@ namespace pwiz.Skyline.Model.Lib
         {
             get
             {
+                var detailsByFileName = new Dictionary<string, SpectrumSourceFileDetails>();
+
+                try
+                {
+                    lock (_pooledSqliteConnection)
+                    {
+                        using (var select = new SQLiteCommand(_pooledSqliteConnection.Connection))
+                        {
+                            // ReSharper disable LocalizableElement
+
+                            // Query for the source files detail information.
+                            select.CommandText = @"select one.SourceFile, BestSpectra, MatchedSpectra
+from (
+  select SourceFile, count(*) as MatchedSpectra
+  from entries as s
+  group by SourceFile) as one
+inner join (
+  select SourceFile, count(*) as BestSpectra
+  from entries as e
+  where Score = (select min(Score) from entries where e.PeptideModSeq = PeptideModSeq)
+  group by SourceFile) as two
+on one.SourceFile = two.SourceFile";
+
+                            // ReSharper restore LocalizableElement
+                            using (SQLiteDataReader reader = select.ExecuteReader())
+                            {
+                                while (reader.Read())
+                                {
+                                    string filename = reader.GetString(0);
+                                    var fileDetails = new SpectrumSourceFileDetails(filename);
+                                    fileDetails.ScoreThresholds.Add(ScoreType.GenericQValue, null);
+                                    fileDetails.BestSpectrum = Convert.ToInt32(reader.GetValue(1));
+                                    fileDetails.MatchedSpectrum = Convert.ToInt32(reader.GetValue(2));
+                                    detailsByFileName.Add(filename, fileDetails);
+                                }
+                            }
+                        }
+                    }
+                }
+                catch (Exception)
+                {
+                    // Do nothing more. Simply return any details collected or minimum information.
+                }
+
                 return new LibraryDetails
                 {
-                    DataFiles = _sourceFiles.Select(file => new SpectrumSourceFileDetails(file))
+                    DataFiles = _sourceFiles.Select(file =>
+                    {
+                        if (!detailsByFileName.TryGetValue(file, out var fileDetails))
+                        {
+                            fileDetails = new SpectrumSourceFileDetails(file);
+                            fileDetails.ScoreThresholds.Add(ScoreType.GenericQValue, null);
+                        }
+                        return fileDetails;
+                    })
                 };
             }
         }
@@ -228,10 +279,8 @@ namespace pwiz.Skyline.Model.Lib
             try
             {
                 loader.UpdateProgress(status);
-                var libKeySourceFileDatas = new Dictionary<PeptideLibraryKey, Dictionary<string, ScoredFileData>>();
+                var libKeySourceFileDatas = new Dictionary<PeptideLibraryKey, Dictionary<string, FileData>>();
 
-                var scores = new EncyclopeDiaScores();
-                scores.ReadScores(_pooledSqliteConnection.Connection);
                 HashSet<LibraryKey> quantPeptides = new HashSet<LibraryKey>();
                 using (var cmd = new SQLiteCommand(_pooledSqliteConnection.Connection))
                 {
@@ -249,11 +298,11 @@ namespace pwiz.Skyline.Model.Lib
 
                             var libKey = new PeptideLibraryKey(reader.GetString(0), Convert.ToInt32(reader.GetValue(1)));
                             // Tuple of filename, score, FileData
-                            Dictionary<string, ScoredFileData> dataByFilename;
+                            Dictionary<string, FileData> dataByFilename;
                             
                             if (!libKeySourceFileDatas.TryGetValue(libKey, out dataByFilename))
                             {
-                                dataByFilename = new Dictionary<string, ScoredFileData>();
+                                dataByFilename = new Dictionary<string, FileData>();
                                 libKeySourceFileDatas.Add(libKey, dataByFilename);
                             }
                             string fileName = reader.GetString(2);
@@ -262,8 +311,6 @@ namespace pwiz.Skyline.Model.Lib
                                 continue;
                             }
                             double score = reader.GetDouble(3);
-                            var qValue = scores.GetQValue(libKey, fileName) ??
-                                         ExplicitPeakBounds.UNKNOWN_SCORE;
                             double? rtInMinutes = null;
                             if (!reader.IsDBNull(4))
                             {
@@ -274,10 +321,9 @@ namespace pwiz.Skyline.Model.Lib
                                     rtInMinutes = rtInSeconds / 60;
                                 }
                             }
-                            dataByFilename.Add(fileName, new ScoredFileData(score,
-                                new FileData(rtInMinutes,
+                            dataByFilename.Add(fileName, new FileData(rtInMinutes,
                                     new ExplicitPeakBounds(reader.GetDouble(5) / 60, reader.GetDouble(6) / 60,
-                                        qValue))));
+                                        score)));
                         }
                     }
 
@@ -292,10 +338,10 @@ namespace pwiz.Skyline.Model.Lib
                             var libKey = new PeptideLibraryKey(reader.GetString(0), Convert.ToInt32(reader.GetValue(1)));
                             quantPeptides.Add(libKey);
                             // Tuple of filename, score, FileData
-                            Dictionary<string, ScoredFileData> dataByFilename;
+                            Dictionary<string, FileData> dataByFilename;
                             if (!libKeySourceFileDatas.TryGetValue(libKey, out dataByFilename))
                             {
-                                dataByFilename = new Dictionary<string, ScoredFileData>();
+                                dataByFilename = new Dictionary<string, FileData>();
                                 libKeySourceFileDatas.Add(libKey, dataByFilename);
                             }
                             string fileName = reader.GetString(2);
@@ -303,13 +349,10 @@ namespace pwiz.Skyline.Model.Lib
                             {
                                 continue;
                             }
-                            double qValue = scores.GetQValue(libKey, fileName) ??
-                                            ExplicitPeakBounds.UNKNOWN_SCORE;
                             dataByFilename.Add(fileName,
-                                new ScoredFileData(null,
-                                    new FileData(null,
-                                        new ExplicitPeakBounds(reader.GetDouble(3) / 60, reader.GetDouble(4) / 60,
-                                            qValue))));
+                                new FileData(null,
+                                    new ExplicitPeakBounds(reader.GetDouble(3) / 60, reader.GetDouble(4) / 60,
+                                        ExplicitPeakBounds.UNKNOWN_SCORE)));
                         }
                     }
                 }
@@ -571,7 +614,15 @@ namespace pwiz.Skyline.Model.Lib
 
         protected override SpectrumHeaderInfo CreateSpectrumHeaderInfo(ElibSpectrumInfo info)
         {
-            return new ChromLibSpectrumHeaderInfo(Name, 0, null);
+            return CreateSpectrumHeaderInfo(info, null);
+        }
+
+        private SpectrumHeaderInfo CreateSpectrumHeaderInfo(ElibSpectrumInfo info, FileData fileData)
+        {
+            double? score = fileData?.PeakBounds.Score;
+            if (score.HasValue && double.IsNaN(score.Value))
+                score = null;
+            return new ElibSpectrumHeaderInfo(Name, score);
         }
 
         public override LibraryFiles LibraryFiles
@@ -638,7 +689,7 @@ namespace pwiz.Skyline.Model.Lib
                 yield return new SpectrumInfoLibrary(this, labelType, _sourceFiles[fileIndex], fileData.ApexTime, null, null,
                     fileIndex == entry.BestFileId, new ElibSpectrumKey(iEntry, fileIndex))
                 {
-                    SpectrumHeaderInfo = CreateSpectrumHeaderInfo(entry)
+                    SpectrumHeaderInfo = CreateSpectrumHeaderInfo(entry, fileData)
                 };
             }
         }
@@ -769,27 +820,67 @@ namespace pwiz.Skyline.Model.Lib
         }
 
         private static ElibSpectrumInfo MakeSpectrumInfo(PeptideLibraryKey libraryKey,
-            IDictionary<string, ScoredFileData> fileDatas, IDictionary<string, int> sourceFileIds)
+            IDictionary<string, FileData> fileDatas, IDictionary<string, int> sourceFileIds)
         {
             double bestScore = double.MaxValue;
             string bestFileName = null;
 
             foreach (var entry in fileDatas)
             {
-                if (!entry.Value.Score.HasValue || !entry.Value.FileData.ApexTime.HasValue)
+                if (!double.IsNaN(entry.Value.PeakBounds.Score) || !entry.Value.ApexTime.HasValue)
                 {
                     continue;
                 }
-                if (bestFileName == null || entry.Value.Score < bestScore)
+                if (bestFileName == null || entry.Value.PeakBounds.Score < bestScore)
                 {
                     bestFileName = entry.Key;
-                    bestScore = entry.Value.Score.Value;
+                    bestScore = entry.Value.PeakBounds.Score;
                 }
             }
             return new ElibSpectrumInfo(libraryKey, bestFileName == null ? -1 : sourceFileIds[bestFileName],
                 fileDatas.Select(
-                    entry => new KeyValuePair<int, FileData>(sourceFileIds[entry.Key], entry.Value.FileData)));
+                    entry => new KeyValuePair<int, FileData>(sourceFileIds[entry.Key], entry.Value)));
 
+        }
+
+        [XmlRoot("encyclopedia_spectrum_info")]
+        public sealed class ElibSpectrumHeaderInfo : SpectrumHeaderInfo
+        {
+            public ElibSpectrumHeaderInfo(string libraryName, double? score)
+                : base(libraryName, score, BiblioSpec.ScoreType.GenericQValue.NameInvariant)
+            {
+            }
+
+            public override string LibraryTypeName => @"EncyclopeDIA";
+
+            public override IEnumerable<KeyValuePair<PeptideRankId, string>> RankValues
+            {
+                get { yield break; }
+            }
+
+            #region Implementation of IXmlSerializable
+
+            /// <summary>
+            /// For serialization
+            /// </summary>
+            private ElibSpectrumHeaderInfo()
+            {
+            }
+
+            // ReSharper disable once MemberHidesStaticFromOuterClass
+            public static ElibSpectrumHeaderInfo Deserialize(XmlReader reader)
+            {
+                return reader.Deserialize(new ElibSpectrumHeaderInfo());
+            }
+
+            public override void ReadXml(XmlReader reader)
+            {
+                // Consume tag
+                base.ReadXml(reader);
+                reader.Read();
+            }
+
+            #endregion
         }
 
         public class ElibSpectrumInfo : ICachedSpectrumInfo
@@ -806,6 +897,17 @@ namespace pwiz.Skyline.Model.Lib
                 get { return Key.Sequence; }
             }
             public LibKey Key { get; private set; }
+
+            public double? BestScore
+            {
+                get
+                {
+                    if (FileDatas.TryGetValue(BestFileId, out var fileData))
+                        return fileData.PeakBounds.Score;
+                    return null;
+                }
+            }
+
             public int BestFileId { get; private set;}
             public ImmutableSortedList<int, FileData> FileDatas { get; private set; }
 
@@ -895,67 +997,6 @@ namespace pwiz.Skyline.Model.Lib
 
             public int EntryIndex { get; private set; }
             public int FileId { get; private set; }
-        }
-
-        private class EncyclopeDiaScores
-        {
-            /// <summary>
-            /// Mapping from (peptideModSeq,precursorCharge) to Map of filename to (qValue, posteriorErrorProbability).
-            /// Only one file should have a qValue, but just in case there are multiple files, we store it in a dictionary.
-            /// </summary>
-            private Dictionary<LibraryKey, IDictionary<string, ScoreValue>> _dictionary
-                = new Dictionary<LibraryKey, IDictionary<string, ScoreValue>>();
-
-            public double? GetQValue(LibraryKey libraryKey, string file)
-            {
-                IDictionary<string, ScoreValue> values;
-                if (!_dictionary.TryGetValue(libraryKey, out values))
-                {
-                    return null;
-                }
-                ScoreValue result;
-                if (values.TryGetValue(file, out result))
-                {
-                    return result.QValue;
-                }
-                // If there is not an exact match of the file, just use the first qValue for that peptide&charge
-                if (values.Count != 0)
-                {
-                    return values.Values.First().QValue;
-                }
-                return null;
-            }
-
-            public void ReadScores(SQLiteConnection connection)
-            {
-                if (!SqliteOperations.TableExists(connection, @"peptidescores"))
-                {
-                    return;
-                }
-                using (var cmd = new SQLiteCommand(connection))
-                {
-                    cmd.CommandText =
-                        @"select PeptideModSeq, PrecursorCharge, SourceFile, QValue, PosteriorErrorProbability from peptidescores";
-                    using (var reader = cmd.ExecuteReader())
-                    {
-                        while (reader.Read())
-                        {
-                            string sequence = reader.GetString(0);
-                            int charge = Convert.ToInt32(reader.GetValue(1));
-                            var key = new LibKey(sequence, charge).LibraryKey;
-                            var value = new ScoreValue(reader.GetDouble(3), reader.GetDouble(4));
-                            string filename = reader.GetString(2);
-                            IDictionary<string, ScoreValue> values;
-                            if (!_dictionary.TryGetValue(key, out values))
-                            {
-                                values = new Dictionary<string, ScoreValue>();
-                                _dictionary.Add(key, values);
-                            }
-                            values[filename] = value;
-                        }
-                    }
-                }
-            }
         }
 
         private struct ScoreValue

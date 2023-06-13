@@ -439,28 +439,13 @@ namespace pwiz.Skyline.Model.Databinding.Entities
 
         public string LibraryType
         {
-            get
-            {
-                if (DocNode.LibInfo is NistSpectrumHeaderInfo)
-                {
-                    return @"NIST";
-                }
-                if (DocNode.LibInfo is XHunterSpectrumHeaderInfo)
-                {
-                    return @"GPM";
-                }
-                if (DocNode.LibInfo is BiblioSpecSpectrumHeaderInfo)
-                {
-                    return @"BiblioSpec";
-                }
-                return null;
-            }
+            get { return DocNode.LibInfo?.LibraryTypeName; }
         }
 
         [Format(NullValue = TextUtil.EXCEL_NA)]
         public double? LibraryProbabilityScore
         {
-            get { return (DocNode.LibInfo as BiblioSpecSpectrumHeaderInfo)?.Score; }
+            get { return DocNode.LibInfo?.Score; }
         }
 
         [Format(NullValue = TextUtil.EXCEL_NA)]
