@@ -59,9 +59,16 @@ namespace pwiz.PanoramaClient
             var uriFolderTokens = uriFolders.Split('/');
             var folder = uriFolderTokens.LastOrDefault();
             var treeNode = new TreeNode(server.URI.ToString());
+            var fileNode = new TreeNode("@files");
+            TreeNode selectedFolder = null;
             treeViewFolders.Invoke(new Action(() => treeViewFolders.Nodes.Add(treeNode)));
             treeViewFolders.Invoke(new Action(() => treeViewFolders.SelectedImageIndex = (int)ImageId.panorama));
-            treeViewFolders.Invoke(new Action(() => treeViewFolders.SelectedNode = LoadFromPath(uriFolderTokens, treeNode)));
+            treeViewFolders.Invoke(new Action(() => selectedFolder = LoadFromPath(uriFolderTokens, treeNode)));
+            treeViewFolders.Invoke(new Action(() => selectedFolder.Nodes.Add(fileNode)));
+            treeViewFolders.Invoke(new Action(() => treeViewFolders.SelectedImageIndex = treeViewFolders.ImageIndex = (int)ImageId.folder));
+            fileNode.Tag = string.Concat(selectedFolder.Tag, "/@files");
+            treeViewFolders.Invoke(new Action(() => selectedFolder.Expand()));
+            treeViewFolders.Invoke(new Action(() => treeViewFolders.SelectedNode = fileNode));
         }
 
         public void InitializeTreeViewTest(PanoramaServer server, TreeView treeView, JToken folderJson)

@@ -103,7 +103,7 @@ namespace pwiz.PanoramaClient
             {
                 ActiveServer = _serverList.FirstOrDefault();
                 _formUtil.InitializeTreeFromPath(treeView, SelectedPath, ActiveServer);
-                AddWebDavFolders(treeView.SelectedNode, true);
+                AddWebDavFolders(treeView.SelectedNode);
 
             } else if (_serverList != null)
             {
@@ -127,6 +127,10 @@ namespace pwiz.PanoramaClient
 
                 if (SelectedPath != null)
                 {
+                    if (SelectedPath.EndsWith("/"))
+                    {
+                        SelectedPath = SelectedPath.Remove(SelectedPath.Length - 1);
+                    }
                     var uriFolderTokens = SelectedPath.Split('/');
                     SelectNode(uriFolderTokens.LastOrDefault());
                 }
@@ -534,7 +538,7 @@ namespace pwiz.PanoramaClient
             NodeClick?.Invoke(this, EventArgs.Empty);
         }
 
-        private void AddWebDavFolders(TreeNode node, bool recurse = false)
+        private void AddWebDavFolders(TreeNode node)
         {
             try
             {
@@ -565,9 +569,9 @@ namespace pwiz.PanoramaClient
                             newNode.ImageIndex = 3;
                             newNode.SelectedImageIndex = 3;
                             node.Nodes.Add(newNode);
-                            if (recurse)
+                            if (newNode.Text.Equals("RawFiles"))
                             {
-                                AddWebDavFolders(newNode, true);
+                                AddWebDavFolders(newNode);
                             }
 
                         }
