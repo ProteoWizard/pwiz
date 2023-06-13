@@ -10,6 +10,8 @@ using SkylineBatch.Properties;
 using AlertDlg = SharedBatch.AlertDlg;
 using PanoramaServer = SharedBatch.PanoramaServer;
 using PanoramaClientServer = pwiz.PanoramaClient.PanoramaServer;
+using PanoramaUtil = pwiz.PanoramaClient.PanoramaUtil;
+using UserState = pwiz.PanoramaClient.UserState;
 
 namespace SkylineBatch
 {
@@ -20,6 +22,7 @@ namespace SkylineBatch
         private readonly string _downloadFolder;
         private readonly bool _fileRequired;
         private readonly bool _preferPanoramaSource;
+
 
         public RemoteFileControl(IMainUiControl mainControl, SkylineBatchConfigManagerState state, Server editingServer, string downloadFolder, bool fileRequired, bool preferPanoramaSource)
         {
@@ -32,12 +35,13 @@ namespace SkylineBatch
             _fileRequired = fileRequired;
             _preferPanoramaSource = preferPanoramaSource;
             UpdateRemoteSourceList();
-
             if (editingServer != null)
             {
                 textRelativePath.Text = editingServer.RelativePath;
                 comboRemoteFileSource.SelectedItem = editingServer.FileSource.Name;
             }
+            CheckIfPanoramaSource();
+
         }
 
         public SkylineBatchConfigManagerState State { get; private set; }
@@ -56,6 +60,25 @@ namespace SkylineBatch
             }
 
             return remoteFileSource;
+
+        }
+
+        private void CheckIfPanoramaSource()
+        {
+            RemoteFileSource source = getRemoteFileSource();
+            Uri uri = source.URI;
+            UserState state = PanoramaUtil.ValidateServerAndUser(ref uri,source.Username,source.Password);
+            if (state.IsValid())
+            {
+                
+                btnOpenFromPanorama.Visible = true;
+                textRelativePath.Width = comboRemoteFileSource.Width - btnOpenFromPanorama.Width;
+            }
+            else
+            {
+                btnOpenFromPanorama.Visible = false;
+                textRelativePath.Width = comboRemoteFileSource.Width;
+            }
 
         }
 
@@ -159,7 +182,8 @@ namespace SkylineBatch
                         comboRemoteFileSource.SelectedIndex = _lastStelectedIndex;
                 }
             }
-            
+            CheckIfPanoramaSource();
+
             _lastStelectedIndex = comboRemoteFileSource.SelectedIndex;
         }
 
@@ -238,7 +262,9 @@ namespace SkylineBatch
                         if (dlg.ShowDialog() != DialogResult.Cancel)
                         {
                             string url = dlg.Selected;
-                            textRelativePath.Text = $"{url.Replace(uri.ToString(), "")}/";
+                            string uriString = uri.ToString();
+                            string output = $"{url.Replace(uri.ToString(), "")}/";
+                            textRelativePath.Text = output;
                         }
                     }
                 }

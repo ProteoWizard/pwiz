@@ -114,12 +114,12 @@ namespace SkylineBatch
             State = _initialState;
         }
 
-        // public void ConfigurePanoramaServer(string serverURL, string userName, string password)
-        // {
-        //     textServerName.Text = serverURL;
-        //     textUserName.Text = userName;
-        //     textPassword.Text = password;
-        // }
+        public void ConfigurePanoramaServer(string serverURL, string userName, string password)
+        {
+            textServerName.Text = serverURL;
+            textUserName.Text = userName;
+            textPassword.Text = password;
+        }
 
         public void OpenFromPanorama(object sender, EventArgs args)
         {
