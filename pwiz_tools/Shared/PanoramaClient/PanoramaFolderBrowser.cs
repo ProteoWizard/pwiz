@@ -104,6 +104,7 @@ namespace pwiz.PanoramaClient
                 ActiveServer = _serverList.FirstOrDefault();
                 _formUtil.InitializeTreeFromPath(treeView, SelectedPath, ActiveServer);
                 AddWebDavFolders(treeView.SelectedNode);
+                AddSelectedFiles(treeView.Nodes, EventArgs.Empty);
 
             } else if (_serverList != null)
             {

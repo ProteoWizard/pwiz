@@ -29,7 +29,6 @@ namespace pwiz.PanoramaClient
         private PanoramaFolderBrowser folders;
         public string State;
         public string Selected;
-        public string SelectedPath;
         public List<PanoramaServer> Servers { get; }
 
         public PanoramaDirectoryPicker(List<PanoramaServer> servers, string state, bool showSkyFolders = false, bool showWebDavFolders = false, string selectedPath = null)
@@ -41,7 +40,7 @@ namespace pwiz.PanoramaClient
             folderPanel.Controls.Add(folders);
             folders.NodeClick += DirectoryPicker_MouseClick;
             up.Enabled = false;
-            SelectedPath = selectedPath;
+            Selected = selectedPath;
             back.Enabled = false;
             forward.Enabled = false;
             if (showWebDavFolders)
