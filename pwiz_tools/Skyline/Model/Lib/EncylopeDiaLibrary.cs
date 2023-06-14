@@ -827,7 +827,7 @@ on one.SourceFile = two.SourceFile";
 
             foreach (var entry in fileDatas)
             {
-                if (!double.IsNaN(entry.Value.PeakBounds.Score) || !entry.Value.ApexTime.HasValue)
+                if (double.IsNaN(entry.Value.PeakBounds.Score) || !entry.Value.ApexTime.HasValue)
                 {
                     continue;
                 }
