@@ -368,6 +368,7 @@ ASALocalRun/
 /libraries/freetype*
 /libraries/libgd*
 /libraries/libpng*
+/libraries/msparser_2_8_1_x86_win64
 /libraries/zlib*
 Version.cpp
 /pwiz_tools/BiblioSpec/tests/inputs

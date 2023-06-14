@@ -199,8 +199,10 @@
     <Compile Include="MixedSrmPrmTest.cs" />
     <Compile Include="MultiInjectionReplicatesTest.cs" />
     <Compile Include="OpenDocWithBackgroundProteomeTest.cs" />
+    <Compile Include="PeakAreaPeptideGraphTest.cs" />
     <Compile Include="RemoveHeavyModificationTest.cs" />
     <Compile Include="RemoveNeutralLossModificationTest.cs" />
+    <Compile Include="ResultFileMetadataBackCompatTest.cs" />
     <Compile Include="SaveAfterProteinAssociationTest.cs" />
     <Compile Include="SequenceTreeRatioTest.cs" />
     <Compile Include="SpectrumGridTest.cs" />
@@ -593,6 +595,7 @@
     <None Include="PasteMoleculeTest.zip" />
     <None Include="PasteTransitionListTest.zip" />
     <None Include="PeakAreaDotpGraphTest.zip" />
+    <None Include="PeakAreaPeptideGraphTest.zip" />
     <None Include="PeakBoundaryCompareTest.zip" />
     <None Include="PeakScoringModelTest.zip" />
     <None Include="PermuteIsotopeModificationsTest.zip" />
@@ -614,6 +617,7 @@
     <None Include="ReportSummaryTest.zip" />
     <None Include="RescoreImportDocumentTest.zip" />
     <None Include="RescoreRawChromatogramsTest.zip" />
+    <None Include="ResultFileMetadataBackCompatTest.zip" />
     <None Include="RetentionTimeAlignmentTest.zip" />
     <None Include="RetentionTimeFilterTest.zip" />
     <None Include="RowActionsTest.zip" />
