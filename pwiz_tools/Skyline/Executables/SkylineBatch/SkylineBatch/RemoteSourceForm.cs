@@ -1,6 +1,7 @@
 ﻿using System;
 using System.Collections.Generic;
 using System.Collections.Immutable;
+using System.Drawing;
 using System.Runtime.CompilerServices;
 using System.Threading;
 using System.Windows.Forms;
@@ -28,6 +29,10 @@ namespace SkylineBatch
             SkylineBatchConfigManagerState state, bool preferPanoramaSource)
         {
             InitializeComponent();
+            Bitmap bmp = (Bitmap)this.btnOpenFromPanorama.Image;
+            bmp.MakeTransparent(bmp.GetPixel(0,0));
+
+
             _remoteFileSources = state.FileSources;
             _editingSourceName = null;
             _mainControl = mainControl;
@@ -130,16 +135,16 @@ namespace SkylineBatch
         }
 
 
-        public void OpenFromPanorama(string serverString, string user, string pass)
+        public void OpenFromPanorama(string server, string user, string pass, JToken folderJson)
         {
-            PanoramaServer server = new PanoramaServer(new Uri(serverString), user, pass);
-            var panoramaServers = new List<PanoramaServer>() { server };
-            using var dlg = new PanoramaDirectoryPicker(panoramaServers, String.Empty);
+            using var dlg = new PanoramaDirectoryPicker();
+            dlg.InitializeTestDialog(new Uri(server), user, pass, folderJson);
             if (dlg.ShowDialog() != DialogResult.Cancel)
             {
 
             }
         }
+
         public void OpenFromPanorama()
         {
             PanoramaServer server = null;

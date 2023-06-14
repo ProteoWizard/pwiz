@@ -411,8 +411,11 @@
   <data name="textFolderUrl.Location" type="System.Drawing.Point, System.Drawing">
     <value>12, 68</value>
   </data>
+  <data name="textFolderUrl.Margin" type="System.Windows.Forms.Padding, System.Windows.Forms">
+    <value>3, 3, 0, 3</value>
+  </data>
   <data name="textFolderUrl.Size" type="System.Drawing.Size, System.Drawing">
-    <value>403, 20</value>
+    <value>409, 20</value>
   </data>
   <data name="textFolderUrl.TabIndex" type="System.Int32, mscorlib">
     <value>3</value>
@@ -492,27 +495,6 @@
   <data name="&gt;&gt;btnCancel.ZOrder" xml:space="preserve">
     <value>4</value>
   </data>
-  <data name="btnOpenFromPanorama.Location" type="System.Drawing.Point, System.Drawing">
-    <value>421, 65</value>
-  </data>
-  <data name="btnOpenFromPanorama.Size" type="System.Drawing.Size, System.Drawing">
-    <value>26, 23</value>
-  </data>
-  <data name="btnOpenFromPanorama.TabIndex" type="System.Int32, mscorlib">
-    <value>12</value>
-  </data>
-  <data name="&gt;&gt;btnOpenFromPanorama.Name" xml:space="preserve">
-    <value>btnOpenFromPanorama</value>
-  </data>
-  <data name="&gt;&gt;btnOpenFromPanorama.Type" xml:space="preserve">
-    <value>System.Windows.Forms.Button, System.Windows.Forms, Version=4.0.0.0, Culture=neutral, PublicKeyToken=b77a5c561934e089</value>
-  </data>
-  <data name="&gt;&gt;btnOpenFromPanorama.Parent" xml:space="preserve">
-    <value>$this</value>
-  </data>
-  <data name="&gt;&gt;btnOpenFromPanorama.ZOrder" xml:space="preserve">
-    <value>2</value>
-  </data>
   <data name="label5.AutoSize" type="System.Boolean, mscorlib">
     <value>True</value>
   </data>
@@ -572,6 +554,33 @@
   </data>
   <data name="&gt;&gt;textServerName.ZOrder" xml:space="preserve">
     <value>1</value>
+  </data>
+  <data name="btnOpenFromPanorama.ImeMode" type="System.Windows.Forms.ImeMode, System.Windows.Forms">
+    <value>NoControl</value>
+  </data>
+  <data name="btnOpenFromPanorama.Location" type="System.Drawing.Point, System.Drawing">
+    <value>421, 66</value>
+  </data>
+  <data name="btnOpenFromPanorama.Margin" type="System.Windows.Forms.Padding, System.Windows.Forms">
+    <value>0, 3, 3, 3</value>
+  </data>
+  <data name="btnOpenFromPanorama.Size" type="System.Drawing.Size, System.Drawing">
+    <value>26, 23</value>
+  </data>
+  <data name="btnOpenFromPanorama.TabIndex" type="System.Int32, mscorlib">
+    <value>12</value>
+  </data>
+  <data name="&gt;&gt;btnOpenFromPanorama.Name" xml:space="preserve">
+    <value>btnOpenFromPanorama</value>
+  </data>
+  <data name="&gt;&gt;btnOpenFromPanorama.Type" xml:space="preserve">
+    <value>System.Windows.Forms.Button, System.Windows.Forms, Version=4.0.0.0, Culture=neutral, PublicKeyToken=b77a5c561934e089</value>
+  </data>
+  <data name="&gt;&gt;btnOpenFromPanorama.Parent" xml:space="preserve">
+    <value>$this</value>
+  </data>
+  <data name="&gt;&gt;btnOpenFromPanorama.ZOrder" xml:space="preserve">
+    <value>2</value>
   </data>
   <metadata name="$this.Localizable" type="System.Boolean, mscorlib, Version=4.0.0.0, Culture=neutral, PublicKeyToken=b77a5c561934e089">
     <value>True</value>

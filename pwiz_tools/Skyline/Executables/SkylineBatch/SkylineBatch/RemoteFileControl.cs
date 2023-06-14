@@ -27,6 +27,8 @@ namespace SkylineBatch
         public RemoteFileControl(IMainUiControl mainControl, SkylineBatchConfigManagerState state, Server editingServer, string downloadFolder, bool fileRequired, bool preferPanoramaSource)
         {
             InitializeComponent();
+            Bitmap bmp = (Bitmap)this.btnOpenFromPanorama.Image;
+            bmp.MakeTransparent(bmp.GetPixel(0, 0));
 
             State = state;
             _mainControl = mainControl;

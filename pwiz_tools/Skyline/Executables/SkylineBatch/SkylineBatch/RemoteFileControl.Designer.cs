@@ -62,9 +62,10 @@
             // btnOpenFromPanorama
             // 
             resources.ApplyResources(this.btnOpenFromPanorama, "btnOpenFromPanorama");
+            this.btnOpenFromPanorama.BackColor = System.Drawing.Color.Transparent;
             this.btnOpenFromPanorama.Image = global::SkylineBatch.Properties.Resources.Panorama;
             this.btnOpenFromPanorama.Name = "btnOpenFromPanorama";
-            this.btnOpenFromPanorama.UseVisualStyleBackColor = true;
+            this.btnOpenFromPanorama.UseVisualStyleBackColor = false;
             this.btnOpenFromPanorama.Click += new System.EventHandler(this.btnOpenFromPanorama_Click);
             // 
             // RemoteFileControl
