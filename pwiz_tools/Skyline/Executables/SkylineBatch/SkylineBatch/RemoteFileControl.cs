@@ -66,11 +66,23 @@ namespace SkylineBatch
         private void CheckIfPanoramaSource()
         {
             RemoteFileSource source = getRemoteFileSource();
+            if (source == null)
+            {
+                ShowPanoramaBtn(false);
+                return;
+            }
+
             Uri uri = source.URI;
             UserState state = PanoramaUtil.ValidateServerAndUser(ref uri,source.Username,source.Password);
-            if (state.IsValid())
+            ShowPanoramaBtn(state.IsValid());
+
+        }
+
+        private void ShowPanoramaBtn(bool show)
+        {
+            if (show)
             {
-                
+
                 btnOpenFromPanorama.Visible = true;
                 textRelativePath.Width = comboRemoteFileSource.Width - btnOpenFromPanorama.Width;
             }
@@ -79,7 +91,6 @@ namespace SkylineBatch
                 btnOpenFromPanorama.Visible = false;
                 textRelativePath.Width = comboRemoteFileSource.Width;
             }
-
         }
 
 
