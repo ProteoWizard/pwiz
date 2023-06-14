@@ -139,6 +139,8 @@
     <Compile Include="Collections\RangeList.cs" />
     <Compile Include="Collections\ReadOnlyList.cs" />
     <Compile Include="Collections\StructSerializer.cs" />
+    <Compile Include="SystemUtil\FileSize.cs" />
+    <Compile Include="SystemUtil\FileSizeFormatProvider.cs" />
     <Compile Include="SystemUtil\ItemDescription.cs" />
     <Compile Include="SystemUtil\ProcessEx.cs" />
     <Compile Include="SystemUtil\StreamEx.cs" />
