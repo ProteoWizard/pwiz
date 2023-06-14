@@ -139,7 +139,7 @@ namespace pwiz.Skyline.Model.Lib
 
         private static bool IsGoodEncyclopeDiaOutput(string stdOut, int exitCode)
         {
-            return !stdOut.Contains(@"Fatal Error");
+            return !stdOut.Contains(@"Fatal Error") && exitCode == 0;
         }
 
         public static void ConvertFastaToPrositInputCsv(string fastaFilepath, string prositCsvFilepath,
@@ -600,16 +600,6 @@ namespace pwiz.Skyline.Model.Lib
                 progressMonitor.UpdateProgress(status);
                 pr.Run(psi, null, progressMonitor, ref status, null, ProcessPriorityClass.BelowNormal, true, IsGoodEncyclopeDiaOutput, false);
             }
-
-            // move the .mzML.*.txt files to .dia.*.txt because it won't merge with them named as mzML?
-            foreach (var txtFile in Directory.EnumerateFiles(diaDataPath!))
-                if (txtFile.EndsWith(@".mzML"))
-                    File.Delete(txtFile);
-                else if (txtFile.Contains(@".mzML."))
-                {
-                    if (!File.Exists(txtFile.Replace(@".mzML.", @".dia.")))
-                        File.Move(txtFile, txtFile.Replace(@".mzML.", @".dia."));
-                }
 
             status = status.ChangePercentComplete(100 * step / stepCount);
             status = status.ChangeMessage(String.Format(quantLibrary
