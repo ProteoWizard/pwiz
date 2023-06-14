@@ -535,6 +535,10 @@ namespace pwiz.PanoramaClient
                         }
                         else if (ShowWebDav)
                         {
+                            listView.Columns[3].Width = 0;
+                            listView.Columns[2].Width = 0;
+                            versionLabel.Visible = false;
+                            versionOptions.Visible = false;
                             var uriString = string.Concat(ActiveServer.URI.ToString(), @"_webdav/",
                                 path + @"?method=json");
                             var uri = new Uri(uriString);
