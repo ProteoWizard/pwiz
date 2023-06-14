@@ -1767,11 +1767,11 @@ namespace pwiz.Skyline.Model.Lib
             return float.MinValue;
         }
 
-        public abstract IEnumerable<KeyValuePair<PeptideRankId, string>> RankValues
+        public virtual IEnumerable<KeyValuePair<PeptideRankId, string>> RankValues
         {
             get
             {
-                yield break;
+                return Array.Empty<KeyValuePair<PeptideRankId, string>>();
             }
         }
 

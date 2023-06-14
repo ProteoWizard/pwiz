@@ -177,7 +177,7 @@ from (
 inner join (
   select SourceFile, count(*) as BestSpectra
   from entries as e
-  where Score = (select min(Score) from entries where e.PeptideModSeq = PeptideModSeq)
+  where Score = (select min(Score) from entries where e.PeptideModSeq = PeptideModSeq AND e.Charge = Charge)
   group by SourceFile) as two
 on one.SourceFile = two.SourceFile";
 
@@ -875,8 +875,8 @@ on one.SourceFile = two.SourceFile";
 
             public override void ReadXml(XmlReader reader)
             {
-                // Consume tag
                 base.ReadXml(reader);
+                // Consume tag
                 reader.Read();
             }
 
