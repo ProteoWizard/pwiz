@@ -58,7 +58,7 @@
             this.cancel.TabIndex = 14;
             this.cancel.Text = "Cancel";
             this.cancel.UseVisualStyleBackColor = true;
-            this.cancel.Click += new System.EventHandler(this.cancel_Click_1);
+            this.cancel.Click += new System.EventHandler(this.cancel_Click);
             // 
             // open
             // 
