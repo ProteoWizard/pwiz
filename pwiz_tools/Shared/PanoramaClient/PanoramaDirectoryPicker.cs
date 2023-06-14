@@ -20,44 +20,83 @@
 using System;
 using System.Collections.Generic;
 using System.Windows.Forms;
+using Newtonsoft.Json.Linq;
 
 namespace pwiz.PanoramaClient
 {
     public partial class PanoramaDirectoryPicker : Form
     {
 
-        private PanoramaFolderBrowser folders;
-        public string State;
-        public string Selected;
-        public List<PanoramaServer> Servers { get; }
 
         public PanoramaDirectoryPicker(List<PanoramaServer> servers, string state, bool showSkyFolders = false, bool showWebDavFolders = false, string selectedPath = null)
         {
             InitializeComponent();
             Servers = servers;
-            folders = new PanoramaFolderBrowser( false, showSkyFolders, state, Servers, selectedPath);
-            folders.Dock = DockStyle.Fill;
-            folderPanel.Controls.Add(folders);
-            folders.NodeClick += DirectoryPicker_MouseClick;
+            FolderBrowser = new PanoramaFolderBrowser( false, showSkyFolders, state, Servers, selectedPath);
+            FolderBrowser.Dock = DockStyle.Fill;
+            folderPanel.Controls.Add(FolderBrowser);
+            FolderBrowser.NodeClick += DirectoryPicker_MouseClick;
             up.Enabled = false;
             Selected = selectedPath;
             back.Enabled = false;
             forward.Enabled = false;
             if (showWebDavFolders)
             {
-                folders.ShowWebDav = true;
+                FolderBrowser.ShowWebDav = true;
             }
+        }
+
+        /// <summary>
+        /// This constructor is used for testing purposes
+        /// </summary>
+        public PanoramaDirectoryPicker()
+        {
+            InitializeComponent();
+            IsLoaded = false;
+        }
+
+        /// <summary>
+        /// This method is used for testing purposes
+        /// </summary>
+        public void InitializeTestDialog(Uri serverUri, string user, string pass, JToken folderJson)
+        {
+            var server = new PanoramaServer(serverUri, user, pass);
+            FolderBrowser = new PanoramaFolderBrowser(server, folderJson);
+            FolderBrowser.Dock = DockStyle.Fill;
+            folderPanel.Controls.Add(FolderBrowser);
+            FolderBrowser.NodeClick += DirectoryPicker_MouseClick;
+            ActiveServer = server;
+            if (string.IsNullOrEmpty(TreeState))
+            {
+                up.Enabled = false;
+                back.Enabled = false;
+                forward.Enabled = false;
+            }
+            else
+            {
+                up.Enabled = FolderBrowser.UpEnabled();
+                back.Enabled = FolderBrowser.BackEnabled();
+                forward.Enabled = FolderBrowser.ForwardEnabled();
+            }
+            IsLoaded = true;
         }
 
         public string Folder { get; set; }
         public string OKButtonText { get; set; }
+        public PanoramaFolderBrowser FolderBrowser;
+        public string State;
+        public string Selected;
+        public bool IsLoaded { get; set; }
+        public List<PanoramaServer> Servers { get; }
+        public PanoramaServer ActiveServer { get; private set; }
+        public string TreeState { get; set; }
 
 
 
         private void open_Click(object sender, EventArgs e)
         {
             //Return the selected folder path
-            Folder = folders.FolderPath;
+            Folder = FolderBrowser.FolderPath;
             DialogResult = DialogResult.Yes;
             Close();
         }
@@ -78,50 +117,117 @@ namespace pwiz.PanoramaClient
 
         private void back_Click(object sender, EventArgs e)
         {
-            back.Enabled = folders.BackEnabled();
-            folders.BackClick();
-            checkEnabled();
+            back.Enabled = FolderBrowser.BackEnabled();
+            FolderBrowser.BackClick();
+            CheckEnabled();
         }
 
         private void forward_Click(object sender, EventArgs e)
         {
-            forward.Enabled = folders.ForwardEnabled();
-            folders.ForwardClick();
-            checkEnabled();
+            forward.Enabled = FolderBrowser.ForwardEnabled();
+            FolderBrowser.ForwardClick();
+            CheckEnabled();
         }
 
 
         public void DirectoryPicker_MouseClick(object sender, EventArgs e)
         {
-            up.Enabled = folders.UpEnabled();
+            up.Enabled = FolderBrowser.UpEnabled();
             forward.Enabled = false;
-            back.Enabled = folders.BackEnabled();
+            back.Enabled = FolderBrowser.BackEnabled();
         }
 
         private void DirectoryPicker_FormClosing(object sender, FormClosingEventArgs e)
         {
-            State = folders.ClosingState();
-            Selected = string.Concat(folders.ActiveServer.URI, "_webdav", folders.FolderPath);
+            State = FolderBrowser.ClosingState();
+            Selected = string.Concat(FolderBrowser.ActiveServer.URI, "_webdav", FolderBrowser.FolderPath);
         }
 
-        private void checkEnabled()
+        private void CheckEnabled()
         {
-            up.Enabled = folders.UpEnabled();
-            forward.Enabled = folders.ForwardEnabled();
-            back.Enabled = folders.BackEnabled();
+            up.Enabled = FolderBrowser.UpEnabled();
+            forward.Enabled = FolderBrowser.ForwardEnabled();
+            back.Enabled = FolderBrowser.BackEnabled();
         }
 
         private void up_Click(object sender, EventArgs e)
         {
-            up.Enabled = folders.UpEnabled();
-            folders.UpClick();
-            checkEnabled();
+            up.Enabled = FolderBrowser.UpEnabled();
+            FolderBrowser.UpClick();
+            CheckEnabled();
             forward.Enabled = false;
         }
 
         private void cancel_Click(object sender, EventArgs e)
         {
             Close();
+        }
+
+        /// <summary>
+        /// This method is used for testing purposes
+        /// </summary>
+        public void ClickBack()
+        {
+            FolderBrowser.BackClick();
+            CheckEnabled();
+        }
+
+        /// <summary>
+        /// This method is used for testing purposes
+        /// </summary>
+        public void ClickForward()
+        {
+            FolderBrowser.ForwardClick();
+            CheckEnabled();
+        }
+
+        /// <summary>
+        /// This method is used for testing purposes
+        /// </summary>
+        public void ClickUp()
+        {
+            FolderBrowser.UpClick();
+            CheckEnabled();
+        }
+
+        /// <summary>
+        /// This method is used for testing purposes
+        /// </summary>
+        public void ClickOpen()
+        {
+            open_Click(this, EventArgs.Empty);
+        }
+
+        /// <summary>
+        /// This method is used for testing purposes
+        /// </summary>
+        public void ClickCancel()
+        { 
+            cancel_Click(this, EventArgs.Empty);
+        }
+
+        /// <summary>
+        /// This method is used for testing purposes
+        /// </summary>
+        public bool UpEnabled()
+        {
+            return up.Enabled;
+        }
+
+        /// <summary>
+        /// This method is used for testing purposes
+        /// </summary>
+        public bool BackEnabled()
+        {
+            return back.Enabled;
+        }
+
+        /// <summary>
+        /// This method is used for testing purposes
+        /// </summary>
+        public bool ForwardEnabled()
+        {
+            return FolderBrowser.ForwardEnabled();
         }
     }
 }

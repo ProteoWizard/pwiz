@@ -69,6 +69,7 @@ namespace pwiz.PanoramaClient
             treeView.ImageList = imageList1;
             _restorer = new TreeViewStateRestorer(treeView);
             _server = server;
+            ActiveServer = server;
             _folderJson = folderJson;
             ShowSky = true;
             Testing = true;
