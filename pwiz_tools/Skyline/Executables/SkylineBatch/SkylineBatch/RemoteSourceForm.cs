@@ -9,6 +9,7 @@ using SkylineBatch.Properties;
 using pwiz.PanoramaClient;
 using PanoramaServer = pwiz.PanoramaClient.PanoramaServer;
 using AlertDlg = SharedBatch.AlertDlg;
+using Newtonsoft.Json.Linq;
 
 namespace SkylineBatch
 {
@@ -52,6 +53,8 @@ namespace SkylineBatch
         public RemoteFileSource RemoteFileSource { get; private set; }
         public SkylineBatchConfigManagerState State { get; private set; }
         public bool PanoramaSource { get; private set; } = false;
+        public string SelectedPath { get; private set; } = null;
+
 
         private void textPassword_TextChanged(object sender, EventArgs e)
         {
@@ -82,7 +85,7 @@ namespace SkylineBatch
             try
             {
                 RemoteFileSource = RemoteFileSource.RemoteSourceFromUi(textName.Text, textFolderUrl.Text,
-                    textUserName.Text, textPassword.Text, !checkBoxNoEncryption.Checked, PanoramaSource);
+                    textUserName.Text, textPassword.Text, !checkBoxNoEncryption.Checked, PanoramaSource, SelectedPath);
                 if (_adding)
                     State.UserAddRemoteFileSource(RemoteFileSource, _preferPanoramaSource, _mainControl);
                 else
@@ -121,7 +124,23 @@ namespace SkylineBatch
             textPassword.Text = password;
         }
 
-        public void OpenFromPanorama(object sender, EventArgs args)
+        public void btn_OpenFromPanorama(object sender, EventArgs args)
+        {
+            OpenFromPanorama();
+        }
+
+
+        public void OpenFromPanorama(string serverString, string user, string pass)
+        {
+            PanoramaServer server = new PanoramaServer(new Uri(serverString), user, pass);
+            var panoramaServers = new List<PanoramaServer>() { server };
+            using var dlg = new PanoramaDirectoryPicker(panoramaServers, String.Empty);
+            if (dlg.ShowDialog() != DialogResult.Cancel)
+            {
+
+            }
+        }
+        public void OpenFromPanorama()
         {
             PanoramaServer server = null;
             if (textUserName.Text != "" && textPassword.Text != "")
@@ -144,15 +163,17 @@ namespace SkylineBatch
             try
             {
                 
-                using (PanoramaDirectoryPicker dlg = new PanoramaDirectoryPicker(panoramaServers, state, showWebDavFolders:true))
+                using (PanoramaDirectoryPicker dlg = new PanoramaDirectoryPicker(panoramaServers, state, showWebDavFolders:false, selectedPath:textFolderUrl.Text))
                 {
                     if (dlg.ShowDialog() != DialogResult.Cancel)
                     {
                         string url = dlg.Selected;
                         textFolderUrl.Text = url;
                         PanoramaSource = true; // if you select a folder then manually change the folder, PanoramaSource will still be true
-
+                        SelectedPath = dlg.Selected;
                     }
+
+                    Settings.Default.PanoramaTreeState = dlg.State;
                 }
                
             }

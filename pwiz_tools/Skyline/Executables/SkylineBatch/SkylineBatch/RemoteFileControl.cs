@@ -45,7 +45,6 @@ namespace SkylineBatch
         }
 
         public SkylineBatchConfigManagerState State { get; private set; }
-        public bool PanoramaSource { get; private set; } = false;
 
         private RemoteFileSource getRemoteFileSource(){
 
@@ -233,7 +232,7 @@ namespace SkylineBatch
             // string textPassword = remoteFileSource.Password;
 
             string host = $"https://{uri.Host}";
-
+            string path = uri.ToString();
             PanoramaClientServer server = new PanoramaClientServer(new Uri(host));
 
             var panoramaServers = new List<PanoramaClientServer>() { server };
@@ -249,7 +248,7 @@ namespace SkylineBatch
 
                 if (_fileRequired) // If file is required use PanoramaFilePicker
                 {
-                    using (PanoramaFilePicker dlg = new PanoramaFilePicker(panoramaServers, true, state, false))
+                    using (PanoramaFilePicker dlg = new PanoramaFilePicker(panoramaServers,state, true, true,path))
                     {
 
                         dlg.InitializeDialog();
@@ -258,7 +257,7 @@ namespace SkylineBatch
                             Settings.Default.PanoramaTreeState = dlg.TreeState;
                             Settings.Default.ShowPanormaSkyFiles = dlg.ShowingSky;
                             textRelativePath.Text = dlg.FileUrl.Replace(uri.AbsoluteUri, "");
-                            PanoramaSource = true; // if you select a folder then manually change the folder, PanoramaSource will still be true
+                            var test = dlg.SelectedPath;
                         }
                         Settings.Default.PanoramaTreeState = dlg.TreeState;
                         Settings.Default.ShowPanormaSkyFiles = dlg.ShowingSky;
@@ -266,7 +265,7 @@ namespace SkylineBatch
                 }
                 else // if file not required use PanoramaDirectoryPicker
                 {
-                    using (PanoramaDirectoryPicker dlg = new PanoramaDirectoryPicker(panoramaServers, state, showWebDavFolders: true))
+                    using (PanoramaDirectoryPicker dlg = new PanoramaDirectoryPicker(panoramaServers, state, showWebDavFolders:true,selectedPath:path))
                     {
 
                         // dlg.InitializeDialog();
