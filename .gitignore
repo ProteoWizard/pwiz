@@ -371,6 +371,7 @@ ASALocalRun/
 /libraries/freetype*
 /libraries/libgd*
 /libraries/libpng*
+/libraries/msparser_2_8_1_x86_win64
 /libraries/zlib*
 Version.cpp
 /pwiz_tools/BiblioSpec/tests/inputs
@@ -457,3 +458,4 @@ SkylineTester Results
 /pwiz_tools/Skyline/Test/ProtocolBuffers/GeneratedCode/*.cs
 /pwiz_tools/Skyline/Test/ProtocolBuffers/tmp/*.cs
 /pwiz_tools/Skyline/Test/ProtocolBuffers/tmp
+/pwiz_aux/msrc/utility/vendor_api/ABI/SCIEX.Apis.Data.v1.xml

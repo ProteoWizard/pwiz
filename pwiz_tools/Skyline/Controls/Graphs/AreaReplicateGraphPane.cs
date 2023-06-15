@@ -511,8 +511,7 @@ namespace pwiz.Skyline.Controls.Graphs
                 }   
             }
             
-            int iColor = 0, iCharge = -1;
-            var charge = Adduct.EMPTY;
+            int iColor = 0;
             int countLabelTypes = document.Settings.PeptideSettings.Modifications.CountLabelTypes;
             for (int i = 0; i < countNodes; i++)
             {
@@ -539,9 +538,9 @@ namespace pwiz.Skyline.Controls.Graphs
                             color = ColorScheme.ChromGraphItemSelected;
                         }
                     }
-                    else if (parentNode is PeptideDocNode)
+                    else if (parentNode is PeptideDocNode peptideDocNode)
                     {
-                        int iColorGroup = GetColorIndex(nodeGroup, countLabelTypes, ref charge, ref iCharge);
+                        int iColorGroup = GetColorIndex(peptideDocNode, nodeGroup, countLabelTypes);
                         color = COLORS_GROUPS[iColorGroup % COLORS_GROUPS.Count];
                     }
                     else if (displayType == DisplayTypeChrom.total)
@@ -918,7 +917,7 @@ namespace pwiz.Skyline.Controls.Graphs
 
         private GraphObjList _dotpLabels;
 
-        private IEnumerable<string> DotProductStrings
+        public IEnumerable<string> DotProductStrings
         {
             get
             {

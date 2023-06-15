@@ -5,8 +5,8 @@ targets['Skyline'] = \
 {
     'master':
     {
-        "bt210": "Skyline master and PRs (Windows x86_64 debug, with code coverage)"
-        ,"ProteoWizard_SkylinePrPerfAndTutorialTestsWindowsX8664": "Skyline PR Perf and Tutorial tests (Windows x86_64)"
+        #"bt210": "Skyline master and PRs (Windows x86_64 debug, with code coverage)",
+        "ProteoWizard_SkylinePrPerfAndTutorialTestsWindowsX8664": "Skyline PR Perf and Tutorial tests (Windows x86_64)"
     },
     'release':
     {
@@ -31,7 +31,6 @@ matchPaths = [
     ("pwiz_tools/BiblioSpec/.*", merge(targets['Core'], targets['Skyline'], targets['Container'])),
     ("pwiz_tools/Bumbershoot/.*", targets['Bumbershoot']),
     ("pwiz_tools/Skyline/.*", merge(targets['Skyline'], targets['Container'])),
-    ("pwiz_tools/Topograph/.*", targets['Skyline']),
     ("pwiz_tools/Shared/.*", merge(targets['Skyline'], targets['Bumbershoot'], targets['Container'])),
     ("pwiz_tools/.*", targets['All']),
     ("Jamroot.jam", targets['All'])

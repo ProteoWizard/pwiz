@@ -64,7 +64,7 @@ namespace pwiz.SkylineTestUtil
 
         public static string GetTestPath(this TestContext testContext, string relativePath)
         {
-            return Path.GetFullPath(Path.Combine(GetProjectDirectory(), testContext.GetTestDir(), relativePath));
+            return Path.GetFullPath(Path.Combine(GetProjectDirectory(), testContext.GetTestDir(), relativePath ?? string.Empty));
         }
 
         public static string GetTestResultsPath(this TestContext testContext, string relativePath = null)
@@ -100,9 +100,18 @@ namespace pwiz.SkylineTestUtil
                     return directory;
             }
 
-            // as last resort, check if current directory is the pwiz repository root (e.g. when running TestRunner in Docker container)
-            if (File.Exists(Path.Combine("pwiz_tools", "Skyline", "Skyline.sln")))
-                return Path.Combine("pwiz_tools", "Skyline");
+            // As last resort, hunt around the current working directory and its subdirectories to find the pwiz repository root
+            // (e.g. when running TestRunner in Docker container or from SkylineTester.zip)
+            var up = string.Empty;
+            var relPath = @".";
+            for (var depth = 0; depth < 10; depth++)
+            {
+                foreach(var subdir in Directory.GetDirectories(relPath).Append(relPath))
+                    if (File.Exists(Path.Combine(subdir, "pwiz_tools", "Skyline", "Skyline.sln")))
+                        return Path.GetFullPath(Path.Combine(subdir, "pwiz_tools", "Skyline"));
+                up = Path.Combine(up, @"..");
+                relPath = Path.Combine(Directory.GetCurrentDirectory(), up);
+            }
 
             return null;
         }
@@ -131,6 +140,14 @@ namespace pwiz.SkylineTestUtil
                     {
                         foreach (ZipEntry zipEntry in zipFile)
                         {
+                            if (zipEntry.IsDirectory && !IsPersistentDir(persistentFiles, zipEntry.FileName))
+                            {
+                                // Directory creation is implicitly handled by Extract of files
+                                // so skip that and avoid occasional "file in use" exceptions on directory creation.
+                                // N.B. some tests expect the persisted directory structure to be duplicated locally,
+                                // even if the files are not, so for those do the directory creation.
+                                continue; 
+                            }
                             if (IsPersistent(persistentFiles, zipEntry.FileName))
                                 zipEntry.Extract(persistentFilesDir, ExtractExistingFileAction.DoNotOverwrite);  // leave persistent files alone                        
                             else
@@ -148,6 +165,11 @@ namespace pwiz.SkylineTestUtil
         private static bool IsPersistent(string[] persistentFiles, string zipEntryFileName)
         {
             return persistentFiles != null && persistentFiles.Any(f => zipEntryFileName.Replace('\\', '/').Contains(f.Replace('\\', '/')));
+        }
+
+        private static bool IsPersistentDir(string[] persistentFiles, string zipEntryDirName)
+        {
+            return persistentFiles != null && persistentFiles.Any(f => f.Replace('\\', '/').Contains(zipEntryDirName.Replace('\\', '/')));
         }
 
         public static string ExtMzml

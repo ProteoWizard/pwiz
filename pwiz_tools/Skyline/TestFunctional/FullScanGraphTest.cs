@@ -17,6 +17,7 @@
  * limitations under the License.
  */
 
+using System;
 using System.Linq;
 using System.Text;
 using Microsoft.VisualStudio.TestTools.UnitTesting;
@@ -31,6 +32,9 @@ using pwiz.Skyline.Util;
 using pwiz.Skyline.Util.Extensions;
 using pwiz.SkylineTestUtil;
 using System.Collections.Generic;
+using System.Globalization;
+using pwiz.Skyline.Model;
+using pwiz.Skyline.SettingsUI;
 
 namespace pwiz.SkylineTestFunctional
 {
@@ -151,7 +155,6 @@ namespace pwiz.SkylineTestFunctional
                 SkylineWindow.GraphFullScan.SetPeakTypeSelection(MsDataFileScanHelper.PeakType.centroided));
             OkDialog(noVendorCentroidedMessage, noVendorCentroidedMessage.OkDialog);
 
-            //Check the annotation functionality if we run in onscreen mode
             SetShowAnnotations(true);
             TestAnnotations(new []{ y4Annotated });
             RunUI(() => SkylineWindow.SetShowMassError(true));
@@ -174,6 +177,7 @@ namespace pwiz.SkylineTestFunctional
             TestScale(529, 533, 0, 50);
             ClickChromatogram(33.06, 68.8, PaneKey.PRECURSORS);
             TestScale(452, 456, 0, 300);
+            TestPropertySheet();
 
             //test sync m/z scale
             RunUI(() => SkylineWindow.ShowGraphSpectrum(true));
@@ -191,6 +195,7 @@ namespace pwiz.SkylineTestFunctional
             RunUI(() => SkylineWindow.SynchMzScale(SkylineWindow.GraphSpectrum, false)); // Sync from the library match to the full scan viewer
             //annotations are not shown in the offscreen mode
             TestSpecialIonsAnnotations();
+            TestIonMatchToleranceUnitSetting();
         }
 
         private static void ClickFullScan(double x, double y)
@@ -298,6 +303,118 @@ namespace pwiz.SkylineTestFunctional
             //check that the special ion annotation shows in both library and full scan viewers
             TestAnnotations(new [] {"Reporter_Test+"});
             TestLibraryMatchAnnotations(new[] { "Reporter_Test+" });
+            Settings.Default.ShowSpecialIons = false;
+        }
+
+        private void TestIonMatchToleranceUnitSetting()
+        {
+            RunUI(() => {
+                SkylineWindow.ShowBIons(true);
+                SkylineWindow.ShowCIons(true);
+            });
+
+            SetZoom(false);
+            ClickChromatogram(33.11, 15.055, PaneKey.PRODUCTS);
+            WaitForGraphs();
+            //Labels are not created in offscreen mode, so we just validate total number of ions matching the show settings
+            Assert.AreEqual(Skyline.Program.SkylineOffscreen? 70 : 20, SkylineWindow.GraphFullScan.IonLabels.Count());
+
+            var transitionSettingsUI = ShowDialog<TransitionSettingsUI>(SkylineWindow.ShowTransitionSettingsUI);
+            RunUI(() => transitionSettingsUI.SelectedTab = TransitionSettingsUI.TABS.Library);
+
+            RunUI(() =>
+            {
+                var oldTolerance = transitionSettingsUI.IonMatchTolerance;
+                transitionSettingsUI.IonMatchToleranceUnits = MzTolerance.Units.ppm;
+                Assert.IsTrue(Math.Abs(transitionSettingsUI.IonMatchTolerance/oldTolerance - 1000.0d) < 0.001d);
+                transitionSettingsUI.IonMatchTolerance = 10.0;
+            });
+            OkDialog(transitionSettingsUI, transitionSettingsUI.OkDialog);
+            WaitForDocumentLoaded();
+            RunUI(() =>
+            {
+                Assert.AreEqual(new MzTolerance(10, MzTolerance.Units.ppm),
+                    SkylineWindow.DocumentUI.Settings.TransitionSettings.Libraries.IonMatchMzTolerance);
+            });
+            ClickChromatogram(33.11, 15.055, PaneKey.PRODUCTS);
+            RunUI(() =>
+            {
+                SkylineWindow.GraphFullScan.SetMzScale(new MzRange(100, 600));
+                SkylineWindow.GraphFullScan.SetIntensityScale(400);
+            });
+            WaitForGraphs();
+            var graphLabels = SkylineWindow.GraphFullScan.IonLabels;
+            Assert.AreEqual(Skyline.Program.SkylineOffscreen ? 48 : 1, graphLabels.Count());
+        }
+
+        private void TestPropertySheet()
+        {
+            var expectedPropertiesDict = new Dictionary<string, object> {
+                {"FileName","ID12692_01_UCA168_3727_040714.mzML"},
+                {"ReplicateName","ID12692_01_UCA168_3727_040714"},
+                {"RetentionTime",33.05.ToString(CultureInfo.CurrentCulture)},
+                {"IonMobility",3.477.ToString(CultureInfo.CurrentCulture) + " msec"},
+                {"IsolationWindow","50:2000 (-975:+975)"},
+                {"IonMobilityRange",0.069.ToString(CultureInfo.CurrentCulture) + ":" + 13.8.ToString(CultureInfo.CurrentCulture)},
+                {"IonMobilityFilterRange",3.152.ToString(CultureInfo.CurrentCulture) + ":"+ 3.651.ToString(CultureInfo.CurrentCulture)},
+                {"ScanId","1.0.309201 - 1.0.309400"},
+                {"MSLevel","1"},
+                {"Instrument",new Dictionary<string, object> {
+                        {"InstrumentModel","Waters instrument model"},
+                        {"InstrumentManufacturer","Waters"}
+                    }
+                },
+                {"DataPoints",105373.ToString(@"N0", CultureInfo.CurrentCulture)},
+                {"MzCount",45751.ToString(@"N0", CultureInfo.CurrentCulture)},
+                {"IsCentroided","False"}
+            };
+            var expectedProperties = new FullScanProperties();
+            expectedProperties.Deserialize(expectedPropertiesDict);
+
+            Assert.IsTrue(SkylineWindow.GraphFullScan != null && SkylineWindow.GraphFullScan.Visible);
+            var msGraph = SkylineWindow.GraphFullScan.MsGraphExtension;
+
+            var propertiesButton = SkylineWindow.GraphFullScan.PropertyButton;
+            Assert.IsFalse(propertiesButton.Checked);
+            RunUI(() =>
+            {
+                propertiesButton.PerformClick();
+
+            });
+            WaitForConditionUI(() => msGraph.PropertiesVisible);
+            WaitForGraphs();
+            FullScanProperties currentProperties = null;
+            RunUI(() =>
+            {
+                currentProperties = msGraph.PropertiesSheet.SelectedObject as FullScanProperties;
+            });
+            Assert.IsNotNull(currentProperties);
+            // To write new json string for the expected property values into the output stream uncomment the next line
+            //Trace.Write(currentProperties.Serialize());
+            Assert.IsTrue(expectedProperties.IsSameAs(currentProperties));
+            Assert.IsTrue(propertiesButton.Checked);
+
+            // make sure the properties are updated when the spectrum changes
+            RunUI(() =>
+            {
+                SkylineWindow.GraphFullScan.LeftButton?.PerformClick();
+            });
+            WaitForGraphs();
+            WaitForConditionUI(() => SkylineWindow.GraphFullScan.IsLoaded);
+            RunUI(() =>
+            {
+                currentProperties = msGraph.PropertiesSheet.SelectedObject as FullScanProperties;
+            });
+            
+            Assert.IsFalse(currentProperties.IsSameAs(expectedProperties));
+            RunUI(() =>
+            {
+                propertiesButton.PerformClick();
+
+            });
+            WaitForConditionUI(() => !msGraph.PropertiesVisible);
+            WaitForGraphs();
+            Assert.IsFalse(propertiesButton.Checked);
         }
     }
 }

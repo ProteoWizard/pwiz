@@ -356,7 +356,7 @@ namespace pwiz.SkylineTestFunctional
             {
                 exportMethodDlg1.InstrumentType = ExportInstrumentType.ABI_TOF;
                 Assert.AreEqual(ExportMethodDlg.PREC_PER_SAMPLE_INJ_TXT, exportMethodDlg1.GetMaxLabelText);
-                Assert.IsFalse(exportMethodDlg1.IsOptimizeTypeEnabled);
+                Assert.IsTrue(exportMethodDlg1.IsOptimizeTypeEnabled);
                 Assert.IsTrue(exportMethodDlg1.IsTargetTypeEnabled);
 
                 // The dwell time field should not be visible.
@@ -382,7 +382,7 @@ namespace pwiz.SkylineTestFunctional
                 {
                     exportMethodDlg.InstrumentType = ExportInstrumentType.ABI_TOF;
 
-                    Assert.IsFalse(exportMethodDlg.IsOptimizeTypeEnabled);
+                    Assert.IsTrue(exportMethodDlg.IsOptimizeTypeEnabled);
                     Assert.IsTrue(exportMethodDlg.IsTargetTypeEnabled);
 
                     // change Method type to "Scheduled"
@@ -837,8 +837,7 @@ namespace pwiz.SkylineTestFunctional
                     exportMethodDlg.OptimizeType = ExportOptimize.CE;
                     exportMethodDlg.MethodType = ExportMethodType.Standard;
                 });
-                RunUI(() => exportMethodDlg.OkDialog(pathList));
-                WaitForClosedForm(exportMethodDlg);
+                OkDialog(exportMethodDlg,() => exportMethodDlg.OkDialog(pathList));
                 var actual = File.ReadAllLines(pathList);
                 if (loop == 1)
                 {
@@ -908,13 +907,10 @@ namespace pwiz.SkylineTestFunctional
                 editRTDlg.SetSlope(slope.ToString(LocalizationHelper.CurrentCulture));
                 editRTDlg.SetIntercept("0");
                 editRTDlg.SetTimeWindow(10);
-
-                editRTDlg.OkDialog();
             });
-            WaitForClosedForm(editRTDlg);
 
-            RunUI(peptideSettingsDlg.OkDialog);
-            WaitForClosedForm(peptideSettingsDlg);
+            OkDialog(editRTDlg, editRTDlg.OkDialog);
+            OkDialog(peptideSettingsDlg, peptideSettingsDlg.OkDialog);
         }
 
         private static void SetDocument(Func<SrmDocument, SrmDocument> changeDoc)

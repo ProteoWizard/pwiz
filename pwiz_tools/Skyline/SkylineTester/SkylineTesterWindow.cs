@@ -29,6 +29,7 @@ using System.Reflection;
 using System.Runtime.InteropServices;
 using System.Text;
 using System.Text.RegularExpressions;
+using System.Threading;
 using System.Windows.Forms;
 using System.Xml;
 using System.Xml.Linq;
@@ -491,6 +492,8 @@ namespace SkylineTester
             return isNightly;
         }
 
+        private Thread _waitForClose;
+
         protected override void OnClosing(CancelEventArgs e)
         {
             // If child process is attached to debugger, don't shut down without asking
@@ -507,6 +510,30 @@ namespace SkylineTester
             // If there are tests running, check with user before actually shutting down.
             if (_runningTab != null && !ShiftKeyPressed)
             {
+                // Wait a little longer for the active tab to finish if it was killed,
+                // since it is relatively easy to click the Stop button and then close
+                // the window and end up here.
+                if (_waitForClose == null && commandShell.IsKilled)
+                {
+                    _waitForClose = new Thread(() =>
+                    {
+                        // Wait 1 second more at most
+                        for (int i = 0; i < 10; i++)
+                        {
+                            if (_runningTab == null)
+                                break;
+                            Thread.Sleep(100);
+                        }
+
+                        RunUI(Close);
+                    });
+                    _waitForClose.Start();
+                    e.Cancel = true;
+                    return;
+                }
+
+                _waitForClose = null;
+
                 // Skip that check if we closed programatically.
                 var isNightly = IsNightlyRun();
 
@@ -583,8 +610,8 @@ namespace SkylineTester
             {
                 Path.GetFullPath(Path.Combine(ExeDir, @"..\..\x86\Release")),
                 Path.GetFullPath(Path.Combine(ExeDir, @"..\..\x64\Release")),
-                Path.Combine(GetBuildRoot(), @"pwiz\pwiz_tools\Skyline\bin\x86\Release"),
-                Path.Combine(GetBuildRoot(), @"pwiz\pwiz_tools\Skyline\bin\x64\Release"),
+                Path.Combine(GetBuildRoot(), @"pwiz_tools\Skyline\bin\x86\Release"),
+                Path.Combine(GetBuildRoot(), @"pwiz_tools\Skyline\bin\x64\Release"),
                 Path.Combine(GetNightlyBuildRoot(), @"pwiz\pwiz_tools\Skyline\bin\x86\Release"),
                 Path.Combine(GetNightlyBuildRoot(), @"pwiz\pwiz_tools\Skyline\bin\x64\Release"),
                 GetZipPath(32),
@@ -1905,6 +1932,23 @@ namespace SkylineTester
         private void comboTestSet_SelectedValueChanged(object sender, EventArgs e)
         {
             StartBackgroundLoadTestSet();
+        }
+
+        private void buttonRunStatsExportCSV_Click(object sender, EventArgs e)
+        {
+            _tabRunStats.ExportCSV();
+        }
+
+        public void UpdateTestTabControls()
+        {
+            runSerial_CheckedChanged(null, null);
+        }
+
+        private void runSerial_CheckedChanged(object sender, EventArgs e)
+        {
+            labelParallelOffscreenHint.Location = Offscreen.Location;
+            Offscreen.Visible = runSerial.Checked; // Everything happens offscreen in parallel tests, so don't offer the option if we're not serial mode
+            labelParallelOffscreenHint.Visible = !Offscreen.Visible;
         }
 
         #endregion Control events

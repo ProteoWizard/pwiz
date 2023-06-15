@@ -35,6 +35,7 @@ using pwiz.Skyline.Model.Lib;
 using pwiz.Skyline.Model.Proteome;
 using pwiz.Skyline.Model.Results;
 using pwiz.Skyline.Model.Results.Scoring;
+using pwiz.Skyline.Model.Results.Spectra;
 using pwiz.Skyline.Properties;
 using pwiz.Skyline.Util;
 
@@ -489,6 +490,7 @@ namespace pwiz.Skyline.Model.Serialization
                 }
                 double? ionMobilityWindow = reader.GetNullableDoubleAttribute(ATTR.drift_time_window) ??
                                             reader.GetNullableDoubleAttribute(ATTR.ion_mobility_window);
+                double? ccs = reader.GetNullableDoubleAttribute(ATTR.ccs);
                 var annotations = Annotations.EMPTY;
                 bool forcedIntegration = reader.GetBoolAttribute(ATTR.forced_integration, false);
                 if (!reader.IsEmptyElement)
@@ -496,13 +498,24 @@ namespace pwiz.Skyline.Model.Serialization
                     reader.ReadStartElement();
                     annotations = _documentReader.ReadTargetAnnotations(reader, AnnotationDef.AnnotationTarget.transition_result);
                 }
+
+                float? stdDev = reader.GetNullableFloatAttribute(ATTR.std_dev);
+                float? skewness = reader.GetNullableFloatAttribute(ATTR.skewness);
+                float? kurtosis = reader.GetNullableFloatAttribute(ATTR.kurtosis);
+                float? shapeCorrelation = reader.GetNullableFloatAttribute(ATTR.shape_correlation);
+                PeakShapeValues? peakShapeValues = null;
+                if (stdDev.HasValue && skewness.HasValue && kurtosis.HasValue)
+                {
+                    peakShapeValues = new PeakShapeValues(stdDev.Value, skewness.Value, kurtosis.Value, shapeCorrelation??1);
+                }
+
                 return new TransitionChromInfo(fileInfo.FileId,
                     optimizationStep,
                     massError,
                     retentionTime,
                     startRetentionTime,
                     endRetentionTime,
-                    IonMobilityFilter.GetIonMobilityFilter(ionMobility, ionMobilityUnits, ionMobilityWindow, null), 
+                    IonMobilityFilter.GetIonMobilityFilter(ionMobility, ionMobilityUnits, ionMobilityWindow, ccs), 
                     area,
                     backgroundArea,
                     height,
@@ -515,7 +528,8 @@ namespace pwiz.Skyline.Model.Serialization
                     rankByLevel,
                     annotations,
                     userSet,
-                    forcedIntegration);
+                    forcedIntegration,
+                    peakShapeValues);
             }
         }
 
@@ -999,10 +1013,11 @@ namespace pwiz.Skyline.Model.Serialization
             Results<PeptideChromInfo> results = null;
             TransitionGroupDocNode[] children = null;
             Adduct adduct = Adduct.EMPTY;
-            var customMolecule = isCustomMolecule ? CustomMolecule.Deserialize(reader, out adduct) : null; // This Deserialize only reads attribures, doesn't advance the reader
+            var customMolecule = isCustomMolecule ? CustomMolecule.Deserialize(reader, out adduct) : null; // This Deserialize only reads attributes, doesn't advance the reader
+            Target chromatogramTarget = null;
             if (customMolecule != null)
             {
-                if (DocumentMayContainMoleculesWithEmbeddedIons && string.IsNullOrEmpty(customMolecule.Formula) && customMolecule.MonoisotopicMass.IsMassH())
+                if (DocumentMayContainMoleculesWithEmbeddedIons && customMolecule.ParsedMolecule.IsMassOnly && customMolecule.MonoisotopicMass.IsMassH())
                 {
                     // Defined by mass only, assume it's not massH despite how it may have been written
                     customMolecule = new CustomMolecule(
@@ -1010,10 +1025,16 @@ namespace pwiz.Skyline.Model.Serialization
                         customMolecule.AverageMass.ChangeIsMassH(false),
                         customMolecule.Name);
                 }
+                // If user changed any molecule details (other than formula or mass) after chromatogram extraction, this info continues the target->chromatogram association
+                var encodedChromatogramTarget = reader.GetAttribute(ATTR.chromatogram_target);
+                if (!string.IsNullOrEmpty(encodedChromatogramTarget))
+                {
+                    chromatogramTarget = Target.FromSerializableString(encodedChromatogramTarget);
+                }
             }
             Assume.IsTrue(DocumentMayContainMoleculesWithEmbeddedIons || adduct.IsEmpty); // Shouldn't be any charge info at the peptide/molecule level
             var peptide = isCustomMolecule ?
-                new Peptide(customMolecule) :
+                new Peptide(customMolecule, chromatogramTarget) :
                 new Peptide(group as FastaSequence, sequence, start, end, missedCleavages, isDecoy);
             if (reader.IsEmptyElement)
                 reader.Read();
@@ -1338,10 +1359,9 @@ namespace pwiz.Skyline.Model.Serialization
                 {
                     ionFormula = ionFormula.Trim(); // We've seen trailing spaces in the wild
                 }
-                Molecule mol;
                 string neutralFormula;
                 Adduct adduct;
-                var isFormulaWithAdduct = IonInfo.IsFormulaWithAdduct(ionFormula, out mol, out adduct, out neutralFormula);
+                var isFormulaWithAdduct = IonInfo.IsFormulaWithAdduct(ionFormula, out var _, out adduct, out neutralFormula);
                 if (isFormulaWithAdduct)
                 {
                     precursorAdduct = adduct;
@@ -1352,9 +1372,9 @@ namespace pwiz.Skyline.Model.Serialization
                 }
                 if (!string.IsNullOrEmpty(neutralFormula))
                 {
-                    var ionString = precursorAdduct.ApplyToFormula(neutralFormula);
-                    var moleculeWithAdduct = precursorAdduct.ApplyToFormula(peptide.CustomMolecule.Formula);
-                    Assume.IsTrue(Equals(ionString, moleculeWithAdduct), @"Expected precursor ion formula to match parent molecule with adduct applied");
+                    var ion = precursorAdduct.ApplyToFormula(neutralFormula);
+                    var moleculeWithAdduct = precursorAdduct.ApplyToMolecule(peptide.CustomMolecule.ParsedMolecule);
+                    Assume.IsTrue(ion.CompareTolerant(moleculeWithAdduct, BioMassCalc.MassTolerance) == 0, @"Expected precursor ion formula to match parent molecule with adduct applied");
                 }
             }
             var group = new TransitionGroup(peptide, precursorAdduct, typedMods.LabelType, false, decoyMassShift);
@@ -1381,6 +1401,7 @@ namespace pwiz.Skyline.Model.Serialization
             {
                 reader.ReadStartElement();
                 var annotations = ReadTargetAnnotations(reader, AnnotationDef.AnnotationTarget.precursor);
+                var spectrumClassFilter = SpectrumClassFilter.ReadXml(reader);
                 var libInfo = ReadTransitionGroupLibInfo(reader);
                 var results = ReadTransitionGroupResults(reader);
 
@@ -1393,6 +1414,10 @@ namespace pwiz.Skyline.Model.Serialization
                                                   results,
                                                   children,
                                                   autoManageChildren);
+                if (!spectrumClassFilter.IsEmpty)
+                {
+                    nodeGroup = nodeGroup.ChangeSpectrumClassFilter(spectrumClassFilter);
+                }
                 children = ReadTransitionListXml(reader, nodeGroup, mods, pre422ExplicitValues);
 
                 reader.ReadEndElement();
@@ -1560,7 +1585,7 @@ namespace pwiz.Skyline.Model.Serialization
                 else
                 {
                     customMolecule = CustomMolecule.Deserialize(reader, out adduct);
-                    if (DocumentMayContainMoleculesWithEmbeddedIons && string.IsNullOrEmpty(customMolecule.Formula) && customMolecule.MonoisotopicMass.IsMassH())
+                    if (DocumentMayContainMoleculesWithEmbeddedIons && customMolecule.ParsedMolecule.IsMassOnly && customMolecule.MonoisotopicMass.IsMassH())
                     {
                         // Defined by mass only, assume it's not massH despite how it may have been written
                         customMolecule = new CustomMolecule(customMolecule.MonoisotopicMass.ChangeIsMassH(false), customMolecule.AverageMass.ChangeIsMassH(false),
@@ -1584,16 +1609,16 @@ namespace pwiz.Skyline.Model.Serialization
                 if (!isPrecursor && isPre362NonReporterCustom &&
                     Math.Abs(declaredProductMz.Value - customMolecule.MonoisotopicMass / Math.Abs(adduct.AdductCharge)) < .001)
                 {
-                    string newFormula = null;
-                    if (!string.IsNullOrEmpty(customMolecule.Formula) &&
+                    CustomMolecule newFormula = null;
+                    if (!customMolecule.ParsedMolecule.IsMassOnly &&
                         Math.Abs(customMolecule.MonoisotopicMass - Math.Abs(adduct.AdductCharge) * declaredProductMz.Value) < .01)
                     {
                         // Adjust hydrogen count to get a molecular mass that makes sense for charge and mz
-                        newFormula = Molecule.AdjustElementCount(customMolecule.Formula, @"H", -adduct.AdductCharge);
+                        newFormula = customMolecule.AdjustElementCount(@"H", -adduct.AdductCharge);
                     }
-                    if (!string.IsNullOrEmpty(newFormula))
+                    if (!CustomMolecule.IsNullOrEmpty(newFormula))
                     {
-                        customMolecule = new CustomMolecule(newFormula, customMolecule.Name);
+                        customMolecule = newFormula;
                     }
                     else
                     {
@@ -1672,6 +1697,11 @@ namespace pwiz.Skyline.Model.Serialization
         /// </summary>
         private void ValidateSerializedVsCalculatedProductMz(double? declaredProductMz, TransitionDocNode node)
         {
+            if (node.ComplexFragmentIon.IsCrosslinked && FormatVersion <= DocumentFormat.VERSION_22_23)
+            {
+                // Recent bugfixes for crosslinked peptides might result in different m/z's
+                return;
+            }
             if (declaredProductMz.HasValue && Math.Abs(declaredProductMz.Value - node.Mz.Value) >= .001)
             {
                 var toler = node.Transition.IsPrecursor() ? .5 : // We do see mz-only transition lists where precursor mz is given as double and product mz as int

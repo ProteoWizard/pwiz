@@ -71,6 +71,10 @@ namespace pwiz.Skyline.Model.Results
 
         public static MsDataFileUri Parse(string url)
         {
+            if (string.IsNullOrEmpty(url))
+            {
+                return null;
+            }
             if (url.StartsWith(UnifiUrl.UrlPrefix))
             {
                 return new UnifiUrl(url);

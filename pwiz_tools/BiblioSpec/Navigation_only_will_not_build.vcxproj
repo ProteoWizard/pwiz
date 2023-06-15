@@ -14,7 +14,7 @@
   <PropertyGroup Condition="'$(Configuration)|$(Platform)'=='BrowseOnly|x64'" Label="Configuration">
     <ConfigurationType>Application</ConfigurationType>
     <UseDebugLibraries>false</UseDebugLibraries>
-    <PlatformToolset>v141</PlatformToolset>
+    <PlatformToolset>v143</PlatformToolset>
   </PropertyGroup>
   <Import Project="$(VCTargetsPath)\Microsoft.Cpp.props" />
   <ImportGroup Label="ExtensionSettings">
@@ -27,7 +27,7 @@
     <NMakeBuildCommandLine>b64_all .</NMakeBuildCommandLine>
     <NMakeCleanCommandLine>CleanBiblioSpec.bat</NMakeCleanCommandLine>
     <NMakePreprocessorDefinitions>WIN32;NDEBUG;$(NMakePreprocessorDefinitions)</NMakePreprocessorDefinitions>
-    <IncludePath>$(ProjectDir)..\..;$(ProjectDir)..\..\libraries\zlib-1.2.3;$(ProjectDir)..\..\libraries\boost_1_67_0;$(ProjectDir)..\..\libraries\boost_aux;$(ProjectDir)..\..\libraries\SQLite;$(IncludePath)</IncludePath>
+    <IncludePath>$(ProjectDir)..\..;$(ProjectDir)..\..\libraries\zlib-1.2.3;$(ProjectDir)..\..\libraries\boost_1_76_0;$(ProjectDir)..\..\libraries\boost_aux;$(ProjectDir)..\..\libraries\SQLite;$(ProjectDir)..\..\libraries\expat-2.0.1;$(IncludePath)</IncludePath>
   </PropertyGroup>
   <ItemDefinitionGroup>
   </ItemDefinitionGroup>

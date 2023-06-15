@@ -40,7 +40,7 @@ namespace pwiz.SkylineTest
         private const string STATIC_LIST_FILE = "UniModStaticList.xml";
         private const string HEAVY_LIST_FILE = "UniModHeavyList.xml";
 
-        [TestMethod]
+        [TestMethod, NoParallelTesting(TestExclusionReason.SHARED_DIRECTORY_WRITE)] // Writes XML to the project
         public void TestUniMod()
         {
             // UpdateTestXML is used to update the test files if the modifications in UniMod.cs
@@ -52,7 +52,7 @@ namespace pwiz.SkylineTest
             foreach (StaticMod mod in UniMod.DictUniModIds.Values)
             {
                 // UniModCompiler should not set the masses.
-                if (mod.Formula == null)
+                if (ParsedMolecule.IsNullOrEmpty(mod.ParsedMolecule))
                 {
                     Assert.IsNull(mod.MonoisotopicMass);
                     Assert.IsNull(mod.AverageMass);
@@ -60,9 +60,9 @@ namespace pwiz.SkylineTest
                 else
                 {
                     Assert.AreEqual(mod.MonoisotopicMass,
-                                    SequenceMassCalc.FormulaMass(BioMassCalc.MONOISOTOPIC, mod.Formula, SequenceMassCalc.MassPrecision));
+                                    SequenceMassCalc.FormulaMass(BioMassCalc.MONOISOTOPIC, mod.ParsedMolecule, SequenceMassCalc.MassPrecision));
                     Assert.AreEqual(mod.AverageMass,
-                                    SequenceMassCalc.FormulaMass(BioMassCalc.AVERAGE, mod.Formula, SequenceMassCalc.MassPrecision));
+                                    SequenceMassCalc.FormulaMass(BioMassCalc.AVERAGE, mod.ParsedMolecule, SequenceMassCalc.MassPrecision));
                 }
                 // Everything amino acid/terminus that is part of the modification should be present in   
                 // the name of the modification.

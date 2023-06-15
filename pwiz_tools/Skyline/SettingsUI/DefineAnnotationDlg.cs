@@ -67,6 +67,7 @@ namespace pwiz.Skyline.SettingsUI
             _existing = existing;
             _dataSchema = BrowsingDataSchema.GetBrowsingDataSchema();
             availableFieldsTree1.RootColumn = NullRootColumn;
+            comboAggregateOperation.Items.AddRange(AggregateOperation.ALL.ToArray());
         }
 
         private ColumnDescriptor NullRootColumn { get { return ColumnDescriptor.RootColumn(_dataSchema, typeof(object));} }
@@ -93,9 +94,9 @@ namespace pwiz.Skyline.SettingsUI
                     tabControl1.SelectedTab = tabPageCalculated;
                     availableFieldsTree1.SelectColumn(expression.Column);
                     if (null != expression.AggregateOperation 
-                        && comboAppliesTo.Items.Contains(expression.AggregateOperation))
+                        && comboAggregateOperation.Items.Contains(expression.AggregateOperation))
                     {
-                        comboAppliesTo.SelectedItem = expression.AggregateOperation;
+                        comboAggregateOperation.SelectedItem = expression.AggregateOperation;
                     }
                 }
                 else

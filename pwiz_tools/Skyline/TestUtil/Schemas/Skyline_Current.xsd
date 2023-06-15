@@ -411,6 +411,7 @@
       <xs:element name="transition_libraries">
         <xs:complexType>
           <xs:attribute name="ion_match_tolerance" type="xs:double" use="required"/>
+          <xs:attribute name="ion_match_tolerance_unit" type="ion_match_tolerance_unit_type"/>
           <xs:attribute name="min_ion_count" type="xs:nonNegativeInteger"/>
           <xs:attribute name="ion_count" type="xs:positiveInteger" use="required"/>
           <xs:attribute name="pick_from" type="transition_library_pick_type"
@@ -611,6 +612,7 @@
           <xs:attribute name="per_protein" type="xs:boolean"/>
           <xs:attribute name="use_zero_for_missing_peaks" type="xs:boolean"/>
           <xs:attribute name="q_value_cutoff" type="xs:double"/>
+          <xs:attribute name="ms_level" type="xs:string"/>
         </xs:complexType>
       </xs:element>
       <xs:element name="list_data" minOccurs="0" maxOccurs="unbounded">
@@ -919,6 +921,8 @@
         <xs:attribute name="custom_ion_name" type="xs:string" use="optional"/>
         <!--Any or all of InChiKey, CAS, HMDB etc tab separated -->
         <xs:attribute name="id" type="xs:string" use="optional"/>
+        <!-- Encodes the molecule description used in chromatogram extraction if user changed the name etc afterwards -->
+        <xs:attribute name="chromatogram_target" type="xs:string" use="optional"/>
       </xs:extension>
     </xs:complexContent>
   </xs:complexType>
@@ -1141,6 +1145,19 @@
     <xs:complexContent>
       <xs:extension base = "doc_parent_node_type">
         <xs:sequence>
+          <xs:element name="spectrum_filter" minOccurs="0" maxOccurs="unbounded">
+            <xs:complexType>
+              <xs:sequence>
+                <xs:element name="filter" minOccurs="0" maxOccurs="unbounded">
+                  <xs:complexType>
+                    <xs:attribute name="column" type="xs:string"/>
+                    <xs:attribute name="opname" type="xs:string"/>
+                    <xs:attribute name="operand" type="xs:string"/>
+                  </xs:complexType>
+                </xs:element>
+              </xs:sequence>
+            </xs:complexType>
+          </xs:element>
           <xs:element name="bibliospec_spectrum_info" minOccurs="0" maxOccurs="unbounded">
             <xs:complexType>
               <xs:complexContent>
@@ -1595,6 +1612,13 @@
       <xs:enumeration value="all_plus"/>
     </xs:restriction>
   </xs:simpleType>
+  <xs:simpleType name="ion_match_tolerance_unit_type">
+    <xs:restriction base="xs:string">
+      <xs:enumeration value="mz"/>
+      <xs:enumeration value="ppm"/>
+    </xs:restriction>
+  </xs:simpleType>
+  
   <xs:simpleType name="terminus_type">
     <xs:restriction base="xs:string">
       <xs:enumeration value="N"/>
@@ -1929,6 +1953,10 @@
         <xs:attribute name="user_set" type="user_set" use="optional"/>
         <xs:attribute name="points_across" type="xs:integer"/>
         <xs:attribute name="forced_integration" type="xs:boolean"/>
+        <xs:attribute name="skewness" type="xs:double" />
+        <xs:attribute name="kurtosis" type="xs:double" />
+        <xs:attribute name="std_dev" type="xs:double" />
+        <xs:attribute name="shape_correlation" type="xs:double" />
       </xs:extension>
     </xs:complexContent>
   </xs:complexType>

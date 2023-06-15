@@ -26,6 +26,7 @@ using System.Text;
 using System.Text.RegularExpressions;
 using System.Threading;
 using Microsoft.VisualStudio.TestTools.UnitTesting;
+using pwiz.Common.Chemistry;
 using pwiz.Common.Collections;
 using pwiz.Common.DataBinding;
 using pwiz.Common.SystemUtil;
@@ -35,6 +36,7 @@ using pwiz.Skyline.Model;
 using pwiz.Skyline.Model.Databinding;
 using pwiz.Skyline.Model.DocSettings;
 using pwiz.Skyline.Model.DocSettings.Extensions;
+using pwiz.Skyline.Model.Proteome;
 using pwiz.Skyline.Model.Results;
 using pwiz.Skyline.Model.Tools;
 using pwiz.Skyline.Properties;
@@ -63,6 +65,13 @@ namespace pwiz.SkylineTestData
 
         private const string ZIP_FILE = @"TestData\Results\FullScan.zip";
         private const string COMMAND_FILE = @"TestData\CommandLineTest.zip";
+
+        private new static string RunCommand(params string[] args)
+        {
+            if (args.Contains(a => a.StartsWith("--out=")))
+                args = args.Append("--overwrite").ToArray();
+            return AbstractUnitTestEx.RunCommand(args);
+        }
 
         [TestMethod]
         public void ConsoleReplicateOutTest()
@@ -271,8 +280,8 @@ namespace pwiz.SkylineTestData
                                        "--out=" + outPath);
 
             SrmDocument doc = ResultsUtil.DeserializeDocument(outPath);
-            Assert.IsFalse(output.Contains(Resources.CommandLineTest_ConsoleAddFastaTest_Error));
-            Assert.IsFalse(output.Contains(Resources.CommandLineTest_ConsoleAddFastaTest_Warning));
+            AssertEx.DoesNotContain(output, Resources.CommandLineTest_ConsoleAddFastaTest_Error);
+            AssertEx.DoesNotContain(output, Resources.CommandLineTest_ConsoleAddFastaTest_Warning);
 
             // Before import, there are 2 peptides. 3 peptides after
             AssertEx.IsDocumentState(doc, 0, 3, 7, 7, 49);
@@ -283,10 +292,240 @@ namespace pwiz.SkylineTestData
                                 "--out=" + outPath);
 
             doc = ResultsUtil.DeserializeDocument(outPath);
-            Assert.IsFalse(output.Contains(Resources.CommandLineTest_ConsoleAddFastaTest_Error));
-            Assert.IsFalse(output.Contains(Resources.CommandLineTest_ConsoleAddFastaTest_Warning));
+            AssertEx.DoesNotContain(output, Resources.CommandLineTest_ConsoleAddFastaTest_Error);
+            AssertEx.DoesNotContain(output, Resources.CommandLineTest_ConsoleAddFastaTest_Warning);
 
             AssertEx.IsDocumentState(doc, 0, 2, 7, 7, 49);
+        }
+
+        [TestMethod]
+        public void ConsoleNewDocumentTest()
+        {
+            TestFilesDir = new TestFilesDir(TestContext, ZIP_FILE);
+            string docPath = TestFilesDir.GetTestPath("BSA_Protea_label_free_20100323_meth3_multi.sky");
+            string fastaPath = TestFilesDir.GetTestPath("sample.fasta");
+
+            // arguments that would normally be quoted on the command-line shouldn't be quoted here
+            var settings = new[]
+            {
+                "--new=" + docPath,
+                "--overwrite",
+                "--full-scan-precursor-isotopes=Count",
+                "--full-scan-precursor-analyzer=centroided",
+                "--full-scan-precursor-res=5",
+                "--full-scan-acquisition-method=DIA",
+                "--full-scan-isolation-scheme=All Ions",
+                "--full-scan-product-analyzer=centroided",
+                "--full-scan-product-res=5",
+                "--full-scan-rt-filter=scheduling_windows",
+                "--full-scan-rt-filter-tolerance=5",
+                "--tran-precursor-ion-charges=2,3,4",
+                "--tran-product-ion-charges=1,2",
+                "--tran-product-start-ion=" + TransitionFilter.StartFragmentFinder.ION_1.Label,
+                "--tran-product-end-ion=" + TransitionFilter.EndFragmentFinder.LAST_ION_MINUS_1.Label,
+                "--tran-product-clear-special-ions",
+                "--tran-use-dia-window-exclusion",
+                "--library-product-ions=6",
+                "--library-min-product-ions=6",
+                "--library-match-tolerance=" + 0.05 + "mz",
+                "--library-pick-product-ions=filter",
+                "--instrument-min-mz=42",
+                "--instrument-max-mz=2000",
+                "--instrument-min-time=" + 0.42,
+                "--instrument-max-time=" + 4.2,
+                "--instrument-dynamic-min-mz",
+                "--instrument-method-mz-tolerance=" + 0.42,
+                "--instrument-triggered-chromatograms",
+            };
+
+            string output = RunCommand(settings);
+            StringAssert.Contains(output, string.Format(Resources.CommandLine_NewSkyFile_Deleting_existing_file___0__, docPath));
+            AssertEx.DoesNotContain(output, Resources.CommandLineTest_ConsoleAddFastaTest_Error);
+            AssertEx.DoesNotContain(output, Resources.CommandLineTest_ConsoleAddFastaTest_Warning);
+
+            SrmDocument doc = ResultsUtil.DeserializeDocument(docPath);
+            Assert.AreEqual(FullScanPrecursorIsotopes.Count, doc.Settings.TransitionSettings.FullScan.PrecursorIsotopes);
+            Assert.AreEqual(FullScanAcquisitionMethod.DIA, doc.Settings.TransitionSettings.FullScan.AcquisitionMethod);
+            Assert.AreEqual("All Ions", doc.Settings.TransitionSettings.FullScan.IsolationScheme.Name);
+            Assert.AreEqual(FullScanMassAnalyzerType.centroided, doc.Settings.TransitionSettings.FullScan.ProductMassAnalyzer);
+            Assert.AreEqual(FullScanMassAnalyzerType.centroided, doc.Settings.TransitionSettings.FullScan.PrecursorMassAnalyzer);
+            Assert.AreEqual(5, doc.Settings.TransitionSettings.FullScan.PrecursorRes);
+            Assert.AreEqual(5, doc.Settings.TransitionSettings.FullScan.ProductRes);
+            Assert.AreEqual(RetentionTimeFilterType.scheduling_windows, doc.Settings.TransitionSettings.FullScan.RetentionTimeFilterType);
+            Assert.AreEqual(5, doc.Settings.TransitionSettings.FullScan.RetentionTimeFilterLength);
+            Assert.AreEqual("2, 3, 4", doc.Settings.TransitionSettings.Filter.PeptidePrecursorChargesString);
+            Assert.AreEqual(TransitionFilter.StartFragmentFinder.ION_1.Label, doc.Settings.TransitionSettings.Filter.StartFragmentFinderLabel.Label);
+            Assert.AreEqual(TransitionFilter.EndFragmentFinder.LAST_ION_MINUS_1.Label, doc.Settings.TransitionSettings.Filter.EndFragmentFinderLabel.Label);
+            Assert.AreEqual(0, doc.Settings.TransitionSettings.Filter.MeasuredIons.Count);
+            Assert.AreEqual(true, doc.Settings.TransitionSettings.Filter.ExclusionUseDIAWindow);
+            Assert.AreEqual(6, doc.Settings.TransitionSettings.Libraries.IonCount);
+            Assert.AreEqual(6, doc.Settings.TransitionSettings.Libraries.MinIonCount);
+            Assert.AreEqual(new MzTolerance(0.05), doc.Settings.TransitionSettings.Libraries.IonMatchMzTolerance);
+            Assert.AreEqual(TransitionLibraryPick.filter, doc.Settings.TransitionSettings.Libraries.Pick);
+            Assert.AreEqual(42, doc.Settings.TransitionSettings.Instrument.MinMz);
+            Assert.AreEqual(2000, doc.Settings.TransitionSettings.Instrument.MaxMz);
+            Assert.AreEqual(0, doc.Settings.TransitionSettings.Instrument.MinTime);
+            Assert.AreEqual(5, doc.Settings.TransitionSettings.Instrument.MaxTime);
+            Assert.AreEqual(true, doc.Settings.TransitionSettings.Instrument.IsDynamicMin);
+            Assert.AreEqual(0.42, doc.Settings.TransitionSettings.Instrument.MzMatchTolerance);
+            Assert.AreEqual(true, doc.Settings.TransitionSettings.Instrument.TriggeredAcquisition);
+
+            // test trying to associate proteins without a FASTA set
+            Settings.Default.LastProteinAssociationFastaFilepath = null;
+            settings = new[]
+            {
+                "--in=" + docPath,
+                "--associate-proteins-group-proteins",
+            };
+            output = RunCommand(settings);
+            StringAssert.Contains(output, Resources.CommandLine_AssociateProteins_Failed_to_associate_proteins);
+            StringAssert.Contains(output, Resources.CommandLine_AssociateProteins_a_FASTA_file_must_be_imported_before_associating_proteins);
+
+            // test importing FASTA and associating proteins
+            settings = new[]
+            {
+                "--in=" + docPath,
+                "--save",
+                "--import-fasta=" + fastaPath,
+                "--associate-proteins-group-proteins",
+                "--associate-proteins-shared-peptides=AssignedToBestProtein",
+                "--associate-proteins-minimal-protein-list",
+                "--associate-proteins-remove-subsets",
+                "--associate-proteins-min-peptides=2",
+            };
+            output = RunCommand(settings);
+            doc = ResultsUtil.DeserializeDocument(docPath);
+            StringAssert.Contains(output, Resources.CommandLine_AssociateProteins_Associating_peptides_with_proteins);
+            Assert.AreEqual(true, doc.Settings.PeptideSettings.ProteinAssociationSettings.GroupProteins);
+            Assert.AreEqual(ProteinAssociation.SharedPeptides.AssignedToBestProtein, doc.Settings.PeptideSettings.ProteinAssociationSettings.SharedPeptides);
+            Assert.AreEqual(true, doc.Settings.PeptideSettings.ProteinAssociationSettings.FindMinimalProteinList);
+            Assert.AreEqual(true, doc.Settings.PeptideSettings.ProteinAssociationSettings.RemoveSubsetProteins);
+            Assert.AreEqual(2, doc.Settings.PeptideSettings.ProteinAssociationSettings.MinPeptidesPerProtein);
+
+            // test associating proteins in a file with a previously imported FASTA
+            settings = new[]
+            {
+                "--in=" + docPath,
+                "--save",
+                "--associate-proteins-shared-peptides=Removed",
+                "--associate-proteins-remove-subsets",
+                "--associate-proteins-min-peptides=1",
+            };
+
+            output = RunCommand(settings);
+            doc = ResultsUtil.DeserializeDocument(docPath);
+            StringAssert.Contains(output, Resources.CommandLine_AssociateProteins_Associating_peptides_with_proteins);
+            Assert.AreEqual(false, doc.Settings.PeptideSettings.ProteinAssociationSettings.GroupProteins);
+            Assert.AreEqual(ProteinAssociation.SharedPeptides.Removed, doc.Settings.PeptideSettings.ProteinAssociationSettings.SharedPeptides);
+            Assert.AreEqual(false, doc.Settings.PeptideSettings.ProteinAssociationSettings.FindMinimalProteinList);
+            Assert.AreEqual(true, doc.Settings.PeptideSettings.ProteinAssociationSettings.RemoveSubsetProteins);
+            Assert.AreEqual(1, doc.Settings.PeptideSettings.ProteinAssociationSettings.MinPeptidesPerProtein);
+
+            // test changing parameter order
+            settings = new[]
+            {
+                "--new=" + docPath,
+                "--overwrite",
+                "--full-scan-precursor-res=5",
+                "--full-scan-precursor-analyzer=centroided",
+                "--full-scan-precursor-isotopes=Count",
+            };
+
+            output = RunCommand(settings);
+            StringAssert.Contains(output, string.Format(Resources.CommandLine_NewSkyFile_Deleting_existing_file___0__, docPath));
+            doc = ResultsUtil.DeserializeDocument(docPath);
+            Assert.AreEqual(FullScanPrecursorIsotopes.Count, doc.Settings.TransitionSettings.FullScan.PrecursorIsotopes);
+            Assert.AreEqual(FullScanMassAnalyzerType.centroided, doc.Settings.TransitionSettings.FullScan.PrecursorMassAnalyzer);
+            Assert.AreEqual(5, doc.Settings.TransitionSettings.FullScan.PrecursorRes);
+
+            File.Delete(docPath);
+
+            // test parameter validation: analyzer specified with isotopes=none
+            settings = new[]
+            {
+                "--new=" + docPath,
+                "--full-scan-precursor-isotopes=None",
+                "--full-scan-precursor-analyzer=centroided",
+            };
+
+            output = RunCommand(settings);
+            StringAssert.Contains(output, string.Format(
+                Resources.CommandArgs_WarnArgRequirment_Warning__Use_of_the_argument__0__requires_the_argument__1_,
+                CommandArgs.ARG_FULL_SCAN_PRECURSOR_ANALYZER.ArgumentText,
+                CommandArgs.ARG_FULL_SCAN_PRECURSOR_RES.ArgumentText));
+
+            // test parameter validation: DDA method with isolation scheme
+            settings = new[]
+            {
+                "--new=" + docPath,
+                "--full-scan-acquisition-method=DDA",
+                "--full-scan-isolation-scheme=All Ions",
+            };
+
+            output = RunCommand(settings);
+            StringAssert.Contains(output, string.Format(
+                Resources.TransitionFullScan_DoValidate_An_isolation_window_width_value_is_not_allowed_in__0___mode,
+                FullScanAcquisitionMethod.DDA.Label));
+
+            // test parameter validation: DIA method without isolation scheme
+            settings = new[]
+            {
+                "--new=" + docPath,
+                "--full-scan-acquisition-method=DIA",
+            };
+
+            output = RunCommand(settings);
+            StringAssert.Contains(output,
+                Resources.TransitionFullScan_DoValidate_An_isolation_window_width_value_is_required_in_DIA_mode);
+        }
+
+        [TestMethod]
+        public void ConsoleOverwriteDocumentTest()
+        {
+            TestFilesDir = new TestFilesDir(TestContext, ZIP_FILE);
+            string docPath = TestFilesDir.GetTestPath("BSA_Protea_label_free_20100323_meth3_multi.sky");
+
+            // test --new
+            {
+                var settings = new[]
+                {
+                    "--new=" + docPath,
+                    "--full-scan-precursor-isotopes=Count",
+                };
+
+                string output = AbstractUnitTestEx.RunCommand(settings);
+                StringAssert.Contains(output, string.Format(Resources.CommandLine_NewSkyFile_FileAlreadyExists, docPath));
+
+                output = AbstractUnitTestEx.RunCommand(settings.Append("--overwrite").ToArray());
+                StringAssert.Contains(output, string.Format(Resources.CommandLine_NewSkyFile_Deleting_existing_file___0__, docPath));
+                AssertEx.DoesNotContain(output, Resources.CommandLineTest_ConsoleAddFastaTest_Error);
+                AssertEx.DoesNotContain(output, Resources.CommandLineTest_ConsoleAddFastaTest_Warning);
+
+                SrmDocument doc = ResultsUtil.DeserializeDocument(docPath);
+                Assert.AreEqual(FullScanPrecursorIsotopes.Count, doc.Settings.TransitionSettings.FullScan.PrecursorIsotopes);
+            }
+
+            // test --in/--out
+            {
+                string docPath2 = Path.ChangeExtension(docPath, ".2.sky");
+                File.Copy(docPath, docPath2);
+
+                var settings = new[]
+                {
+                    "--in=" + docPath,
+                    "--out=" + docPath2,
+                    "--full-scan-precursor-isotopes=Percent",
+                };
+                string output = AbstractUnitTestEx.RunCommand(settings);
+                StringAssert.Contains(output, string.Format(Resources.CommandLine_NewSkyFile_FileAlreadyExists, docPath2));
+
+                output = AbstractUnitTestEx.RunCommand(settings.Append("--overwrite").ToArray());
+                AssertEx.DoesNotContain(output, Resources.CommandLineTest_ConsoleAddFastaTest_Error);
+                AssertEx.DoesNotContain(output, Resources.CommandLineTest_ConsoleAddFastaTest_Warning);
+
+                SrmDocument doc = ResultsUtil.DeserializeDocument(docPath2);
+                Assert.AreEqual(FullScanPrecursorIsotopes.Percent, doc.Settings.TransitionSettings.FullScan.PrecursorIsotopes);
+            }
         }
 
         [TestMethod]
@@ -1321,18 +1560,22 @@ namespace pwiz.SkylineTestData
             Assert.IsFalse(doc.Settings.MeasuredResults.ContainsChromatogram("FullScan_folder"));
         }
 
-        [TestMethod]
-        public void ConsoleMultiReplicateImportTest()
+        private static string GetTestZipPath(out string extRaw)
         {
             bool useRaw = ExtensionTestContext.CanImportThermoRaw && ExtensionTestContext.CanImportWatersRaw;
             string testZipPath = useRaw
-                                     ? @"TestData\ImportAllCmdLineTest.zip"
-                                     : @"TestData\ImportAllCmdLineTestMzml.zip";
-            string extRaw = useRaw
-                                ? ".raw"
-                                : ".mzML";
+                ? @"TestData\ImportAllCmdLineTest.zip"
+                : @"TestData\ImportAllCmdLineTestMzml.zip";
+            extRaw = useRaw
+                ? ".raw"
+                : ".mzML";
+            return testZipPath;
+        }
 
-            TestFilesDir = new TestFilesDir(TestContext, testZipPath);
+        [TestMethod]
+        public void ConsoleMultiReplicateImportTest()
+        {
+            TestFilesDir = new TestFilesDir(TestContext, GetTestZipPath(out var extRaw), "ConsoleMultiReplicateImportTest");
 
 
             // Contents:
@@ -1361,8 +1604,6 @@ namespace pwiz.SkylineTestData
             FileEx.SafeDelete(outPath0);
             var outPath1 = TestFilesDir.GetTestPath("Imported_multiple1.sky");
             FileEx.SafeDelete(outPath1);
-            var outPath2 = TestFilesDir.GetTestPath("Imported_multiple2.sky");
-            FileEx.SafeDelete(outPath2);
             var outPath4 = TestFilesDir.GetTestPath("Imported_multiple4.sky");
             FileEx.SafeDelete(outPath4);
 
@@ -1457,17 +1698,52 @@ namespace pwiz.SkylineTestData
 
 
 
+            // Test: Import non-recursive
+            // Make sure only files directly in the folder get imported
+            string badFilePath = TestFilesDir.GetTestPath("bad_file" + extRaw);
+            string badFileMoved = badFilePath + ".save";
+            if (File.Exists(badFilePath))
+                File.Move(badFilePath, badFileMoved);
+            string fullScanPath = TestFilesDir.GetTestPath("FullScan" + extRaw);
+            string fullScanMoved = fullScanPath + ".save";
+            File.Move(fullScanPath, fullScanMoved);
+
+            msg = RunCommand("--in=" + docPath,
+                "--import-all-files=" + TestFilesDir.FullPath,
+                "--out=" + outPath4);
+
+            AssertEx.FileExists(outPath4, msg);
+            doc = ResultsUtil.DeserializeDocument(outPath4);
+            Assert.IsTrue(doc.Settings.HasResults);
+            Assert.AreEqual(4, doc.Settings.MeasuredResults.Chromatograms.Count,
+                string.Format("Expected 4 replicates from files, found: {0}",
+                    string.Join(", ", doc.Settings.MeasuredResults.Chromatograms.Select(chromSet => chromSet.Name).ToArray())));
+            if (File.Exists(badFileMoved))
+                File.Move(badFileMoved, badFilePath);
+            File.Move(fullScanMoved, fullScanPath);
+        }
+
+        [TestMethod, NoParallelTesting(TestExclusionReason.RESOURCE_INTENSIVE)] // Just a really tricky race condition using --warn-on-failure under parallel testing pressure
+        public void ConsoleMultiWarnOnFailureImportTest()
+        {
+            TestFilesDir = new TestFilesDir(TestContext, GetTestZipPath(out var extRaw), "ConsoleMultiWarnOnFailureImportTest");
+
+            var docPath = TestFilesDir.GetTestPath("test.sky");
+            var outPath2 = TestFilesDir.GetTestPath("Imported_multiple2.sky");
+            FileEx.SafeDelete(outPath2);
+            var rawPath = new MsDataFilePath(TestFilesDir.GetTestPath(@"REP01\CE_Vantage_15mTorr_0001_REP1_01" + extRaw));
+
             AssertEx.FileNotExists(outPath2);
 
             // Test: Import a single file
             // Import REP01\CE_Vantage_15mTorr_0001_REP1_01.raw;
             // Use replicate name "REP01"
-            msg = RunCommand("--in=" + docPath,
-                       "--import-file=" + rawPath.FilePath,
-                       "--import-replicate-name=REP01",
-                       "--out=" + outPath2);
+            var msg = RunCommand("--in=" + docPath,
+                "--import-file=" + rawPath.FilePath,
+                "--import-replicate-name=REP01",
+                "--out=" + outPath2);
             AssertEx.FileExists(outPath2, msg);
-            doc = ResultsUtil.DeserializeDocument(outPath2);
+            var doc = ResultsUtil.DeserializeDocument(outPath2);
             Assert.AreEqual(1, doc.Settings.MeasuredResults.Chromatograms.Count);
             int initialFileCount = 0;
             foreach (var chromatogram in doc.Settings.MeasuredResults.Chromatograms)
@@ -1478,9 +1754,9 @@ namespace pwiz.SkylineTestData
             // Import another single file. 
             var rawPath2 = MsDataFileUri.Parse(TestFilesDir.GetTestPath("160109_Mix1_calcurve_070.mzML"));
             msg = RunCommand("--in=" + outPath2,
-                       "--import-file=" + rawPath2.GetFilePath(),
-                       "--import-replicate-name=160109_Mix1_calcurve_070",
-                       "--save");
+                "--import-file=" + rawPath2.GetFilePath(),
+                "--import-replicate-name=160109_Mix1_calcurve_070",
+                "--save");
             doc = ResultsUtil.DeserializeDocument(outPath2);
             Assert.AreEqual(2, doc.Settings.MeasuredResults.Chromatograms.Count, msg);
             ChromatogramSet chromatSet;
@@ -1488,7 +1764,6 @@ namespace pwiz.SkylineTestData
             doc.Settings.MeasuredResults.TryGetChromatogramSet("160109_Mix1_calcurve_070", out chromatSet, out idx);
             Assert.IsNotNull(chromatSet, msg);
             Assert.IsTrue(chromatSet.MSDataFilePaths.Contains(rawPath2));
-
 
             // Test: Import all files and sub-folders in test directory
             // The document should already contain a replicate named "REP01".
@@ -1499,6 +1774,9 @@ namespace pwiz.SkylineTestData
                              "--import-all=" + TestFilesDir.FullPath,
                              "--import-warn-on-failure",
                              "--save");
+
+            Assert.IsFalse(msg.Contains(string.Format(Resources.Error___0_, string.Empty)), msg);
+
             // ExtensionTestContext.ExtThermo raw uses different case from file on disk
             // which happens to make a good test case.
             MsDataFilePath rawPathDisk = GetThermoDiskPath(rawPath);
@@ -1506,7 +1784,7 @@ namespace pwiz.SkylineTestData
             // These messages are due to files that were already in the document.
             Assert.IsTrue(msg.Contains(string.Format(Resources.CommandLine_RemoveImportedFiles__0______1___Note__The_file_has_already_been_imported__Ignoring___, "REP01", rawPathDisk)), msg);
             Assert.IsTrue(msg.Contains(string.Format(Resources.CommandLine_RemoveImportedFiles__0______1___Note__The_file_has_already_been_imported__Ignoring___, "160109_Mix1_calcurve_070", rawPath2)), msg);
-//            Assert.IsTrue(msg.Contains(string.Format("160109_Mix1_calcurve_070 -> {0}",rawPath2)), msg); 
+            //            Assert.IsTrue(msg.Contains(string.Format("160109_Mix1_calcurve_070 -> {0}",rawPath2)), msg); 
 
             doc = ResultsUtil.DeserializeDocument(outPath2);
             Assert.IsTrue(doc.Settings.HasResults);
@@ -1534,33 +1812,8 @@ namespace pwiz.SkylineTestData
             doc.Settings.MeasuredResults.TryGetChromatogramSet("REP012", out chromatogramSet, out index);
             Assert.IsNotNull(chromatogramSet);
             Assert.IsTrue(chromatogramSet.MSDataFilePaths.Count() == 1);
-            Assert.IsTrue(!useRaw || chromatogramSet.MSDataFilePaths.Contains(
+            Assert.IsTrue(chromatogramSet.MSDataFilePaths.Contains(
                 GetThermoDiskPath(new MsDataFilePath(TestFilesDir.GetTestPath(@"REP01\CE_Vantage_15mTorr_0001_REP1_02" + extRaw)))));
- 
-
-            // Test: Import non-recursive
-            // Make sure only files directly in the folder get imported
-            string badFilePath = TestFilesDir.GetTestPath("bad_file" + extRaw);
-            string badFileMoved = badFilePath + ".save";
-            if (File.Exists(badFilePath))
-                File.Move(badFilePath, badFileMoved);
-            string fullScanPath = TestFilesDir.GetTestPath("FullScan" + extRaw);
-            string fullScanMoved = fullScanPath + ".save";
-            File.Move(fullScanPath, fullScanMoved);
-
-            msg = RunCommand("--in=" + docPath,
-                "--import-all-files=" + TestFilesDir.FullPath,
-                "--out=" + outPath4);
-
-            AssertEx.FileExists(outPath4, msg);
-            doc = ResultsUtil.DeserializeDocument(outPath4);
-            Assert.IsTrue(doc.Settings.HasResults);
-            Assert.AreEqual(4, doc.Settings.MeasuredResults.Chromatograms.Count,
-                string.Format("Expected 4 replicates from files, found: {0}",
-                    string.Join(", ", doc.Settings.MeasuredResults.Chromatograms.Select(chromSet => chromSet.Name).ToArray())));
-            if (File.Exists(badFileMoved))
-                File.Move(badFileMoved, badFilePath);
-            File.Move(fullScanMoved, fullScanPath);
         }
 
         [TestMethod]
@@ -3018,12 +3271,12 @@ namespace pwiz.SkylineTestData
 
             // Error: Unknown server
             var serverUri = PanoramaUtil.ServerNameToUri("unknown.server-state.com");
-            var client = new TestPanoramaClient() { MyServerState = ServerState.unknown, ServerUri = serverUri };
+            var client = new TestPanoramaClient() { MyServerState = new ServerState(ServerStateEnum.unknown, null, null), ServerUri = serverUri };
             helper.ValidateServer(client, null, null);
             Assert.IsTrue(
                 buffer.ToString()
                     .Contains(
-                        string.Format(Resources.EditServerDlg_OkDialog_Unknown_error_connecting_to_the_server__0__,
+                        string.Format(Resources.ServerState_GetErrorMessage_Unable_to_connect_to_the_server__0__,
                             serverUri.AbsoluteUri)));
             TestOutputHasErrorLine(buffer.ToString());
             buffer.Clear();
@@ -3031,12 +3284,12 @@ namespace pwiz.SkylineTestData
 
             // Error: Not a Panorama Server
             serverUri = PanoramaUtil.ServerNameToUri("www.google.com");
-            client = new TestPanoramaClient() {MyPanoramaState = PanoramaState.other, ServerUri = serverUri};
+            client = new TestPanoramaClient() {MyUserState = new UserState(UserStateEnum.unknown, null, null), ServerUri = serverUri};
             helper.ValidateServer(client, null, null);
             Assert.IsTrue(
                 buffer.ToString()
                     .Contains(
-                        string.Format(Resources.EditServerDlg_OkDialog_The_server__0__is_not_a_Panorama_server,
+                        string.Format(Resources.UserState_getErrorMessage_There_was_an_error_authenticating_user_credentials_on_the_server__0__,
                             serverUri.AbsoluteUri)));
             TestOutputHasErrorLine(buffer.ToString());
             buffer.Clear();
@@ -3044,7 +3297,7 @@ namespace pwiz.SkylineTestData
 
             // Error: Invalid user
             serverUri = PanoramaUtil.ServerNameToUri(PanoramaUtil.PANORAMA_WEB);
-            client = new TestPanoramaClient() { MyUserState = UserState.nonvalid, ServerUri = serverUri };
+            client = new TestPanoramaClient() { MyUserState = new UserState(UserStateEnum.nonvalid, null, null), ServerUri = serverUri };
             helper.ValidateServer(client, "invalid", "user");
             Assert.IsTrue(
                 buffer.ToString()
@@ -3213,26 +3466,19 @@ namespace pwiz.SkylineTestData
             public Uri ServerUri { get; set; }
 
             public ServerState MyServerState { get; set; }
-            public PanoramaState MyPanoramaState { get; set; }
             public UserState MyUserState { get; set; }
             public FolderState MyFolderState { get; set; }
 
             public TestPanoramaClient()
             {
-                MyServerState = ServerState.available;
-                MyPanoramaState = PanoramaState.panorama;
-                MyUserState = UserState.valid;
+                MyServerState = ServerState.VALID;
+                MyUserState = UserState.VALID;
                 MyFolderState = FolderState.valid;
             }
 
             public virtual ServerState GetServerState()
             {
                 return MyServerState;
-            }
-
-            public PanoramaState IsPanorama()
-            {
-                return MyPanoramaState;
             }
 
             public UserState IsValidUser(string username, string password)

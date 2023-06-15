@@ -78,6 +78,7 @@ struct Config : public Reader::Config
         unknownInstrumentIsError = true;
         stripLocationFromSourceFiles = false;
         stripVersionFromSoftware = false;
+        ddaProcessing = false;
     }
 
     string outputFilename(const string& inputFilename, const MSData& inputMSData) const;
@@ -337,6 +338,9 @@ Config parseCommandLine(int argc, char** argv)
         ("combineIonMobilitySpectra",
             po::value<bool>(&config.combineIonMobilitySpectra)->zero_tokens(),
             ": write all ion mobility or Waters SONAR bins/scans in a frame/block as one spectrum instead of individual spectra")
+        ("ddaProcessing",
+            po::value<bool>(&config.ddaProcessing)->zero_tokens(),
+            ": if supported by vendor; combine MS2 spectra referring to the same precursor and survey scan, and calculate accurate precursor masses.")
         ("ignoreCalibrationScans",
             po::value<bool>(&config.ignoreCalibrationScans)->zero_tokens(),
             ": do not process calibration scans (currently only applies to Waters lockmass function)")
@@ -358,6 +362,9 @@ Config parseCommandLine(int argc, char** argv)
         ("singleThreaded",
             po::value<boost::tribool>(&config.singleThreaded)->implicit_value(true)->default_value(boost::indeterminate),
             ": if true, reading and writing spectra will be done on a single thread")
+        ("continueOnError",
+            po::value<bool>(&config.writeConfig.continueOnError)->zero_tokens()->default_value(config.writeConfig.continueOnError),
+            ": if true, if an error is seen when enumerating a spectrum or chromatogram, it is skipped and enumeration will attempt to continue (but keep in mind a crash may follow, or the remaining data might be obviously or subtly incorrect)")
         ("help",
             po::value<bool>(&detailedHelp)->zero_tokens(),
             ": show this message, with extra detail on filter options")

@@ -178,6 +178,7 @@ namespace pwiz.Skyline.Model.Serialization
             public const string precursor_concentration = "precursor_concentration";
             public const string attribute_group_id = "attribute_group_id";
             public const string peptide_index = "peptide_index";
+            public const string chromatogram_target = "chromatogram_target";
 
             // Results
             public const string replicate = "replicate";
@@ -205,6 +206,10 @@ namespace pwiz.Skyline.Model.Serialization
             public const string points_across = "points_across";
             public const string forced_integration = "forced_integration";
             public const string orphaned_crosslink_ion = "orphaned_crosslink_ion";
+            public const string std_dev = "std_dev";
+            public const string skewness = "skewness";
+            public const string kurtosis = "kurtosis";
+            public const string shape_correlation = "shape_correlation";
             // ReSharper restore LocalizableElement
         }
     }

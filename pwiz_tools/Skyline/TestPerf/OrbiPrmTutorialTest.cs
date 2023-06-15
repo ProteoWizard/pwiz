@@ -69,14 +69,14 @@ namespace TestPerf
         private static string SAMPLES_DIR = Path.Combine(DATA_DIR, "Samples");
         private static string STANDARDS_DIR = Path.Combine(DATA_DIR, "Standards");
 
-        [TestMethod]
+        [TestMethod, NoParallelTesting(TestExclusionReason.RESOURCE_INTENSIVE)]
         public void TestOrbiPrmTutorial()
         {
 //            IsPauseForScreenShots = true;
 //            RunPerfTests = true;
 //            IsCoverShotMode = true;
 //            IsRecordMode = true;
-            CoverShotName = "PRM-Obitrap";
+            CoverShotName = "PRM-Orbitrap";
 
             LinkPdf = "https://skyline.ms/_webdav/home/software/Skyline/%40files/tutorials/PRM-Orbitrap-21_2.pdf";
 
@@ -801,18 +801,18 @@ namespace TestPerf
 
         private double[] _g2mVsG1ExpectedValues =
         {
-            1.4126022125838762, 4.8741132982321638, 5.0424478103497181, 4.8293170158752208, 15.126911528599191,
-            9.1791839486239279, 6.2296345732635485, 3.1161290456155295, 1.8189607341782479, 2.0644594385791533,
-            3.7649084396237988, 6.9299904926539737, 6.4036330881755932, 4.2893196515692162, 1.6064068091869139,
-            1.6281040373632159, 6.5174735762673706, 3.01571908714535, 1.8383738370494354
+            1.5286469630745583, 4.8741132982321638, 5.1286240708373816, 222.57571290469059, 15.126911528599191,
+            9.9395636452638971, 6.7226217812200444, 3.1161290456155295, 1.8189607341782479, 2.0644594385791533,
+            3.7649084396237988, double.NaN, 6.4036330881755932, 4.2893196515692162, 1.6064068091869139, 
+            1.6279242168512782, 6.9216032397063252, 3.0280590759043315, double.NaN
         };
 
         private double[] _sVsG1ExpectedValues =
         {
-            1.1159764030783934, 1.6314748321839396, 2.3311870386518727, 1.6841367995234979, 4.8909495278818422,
-            3.2275682167523314, 2.3757882463140065, 1.5713835038262798, 1.017217922772327, 1.4498342648347344,
-            1.6399900918403256, 2.9023950735841626, 2.9069057246796444, 1.5243589451007142, 0.71120569210287388,
-            0.96378822722653923, 1.9613259766370852, 1.7862686219978938, 1.0616604140485391
+            1.1419407670991968, 1.6314748321839396, 2.3479516230598838, 73.797435137111023, 4.8909495278818422,
+            3.481615683066742, 2.5340983622413926, 1.5713835038262798, 1.017217922772327, 1.4498342648347344,
+            1.6399900918403256, double.NaN, 2.9069057246796444, 1.5243589451007142, 0.71120569210287388, 
+            0.97698625825824836, 2.0368203476787818, 1.7926980750326083, 1.0616604140485391
         };
 
         private void GroupComparison()
@@ -909,8 +909,8 @@ namespace TestPerf
                 Assert.IsTrue(editGroupComparisonDlg.ComboCaseValue.Items.Contains(caseValue));
                 editGroupComparisonDlg.ComboIdentityAnnotation.SelectedItem = identityAnnotation;
                 Assert.IsTrue(editGroupComparisonDlg.ComboIdentityAnnotation.Items.Contains(identityAnnotation));
-                editGroupComparisonDlg.ComboNormalizationMethod.SelectedItem =
-                    NormalizationMethod.FromIsotopeLabelTypeName("heavy");
+                editGroupComparisonDlg.NormalizeOption =
+                    NormalizeOption.FromNormalizationMethod(NormalizationMethod.FromIsotopeLabelTypeName("heavy"));
                 editGroupComparisonDlg.TextBoxConfidenceLevel.Text = 95.ToString(CultureInfo.CurrentCulture);
                 editGroupComparisonDlg.RadioScopePerProtein.Checked = true;
                 editGroupComparisonDlg.ShowAdvanced(true);
@@ -984,8 +984,7 @@ namespace TestPerf
                 double[] actualValues = foldChangeRows.Select(foldChangeResult => foldChangeResult.FoldChangeResult.FoldChange).ToArray();
                 if (IsRecordMode)
                 {
-                    var commaSeparatedValues = string.Join(",",
-                        actualValues.Select(value => value.ToString("R", CultureInfo.InvariantCulture)));
+                    var commaSeparatedValues = string.Join(",", actualValues.Select(DoubleToString));
                     Console.Out.WriteLine("private double[] {0} = {{ {1} }};", variableName, commaSeparatedValues);
                 }
                 else
@@ -993,6 +992,26 @@ namespace TestPerf
                     CollectionAssert.AreEqual(expectedValues, actualValues);
                 }
             });
+        }
+
+        private static string DoubleToString(double value)
+        {
+            if (Equals(value, double.NaN))
+            {
+                return "double.NaN";
+            }
+
+            if (Equals(value, double.PositiveInfinity))
+            {
+                return "double.PositiveInfinity";
+            }
+
+            if (Equals(value, double.NegativeInfinity))
+            {
+                return "double.NegativeInfinity";
+            }
+
+            return value.ToString("R", CultureInfo.InvariantCulture);
         }
     }
 }

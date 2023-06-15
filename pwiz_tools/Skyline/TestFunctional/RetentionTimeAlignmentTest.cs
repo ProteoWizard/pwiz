@@ -176,8 +176,7 @@ namespace pwiz.SkylineTestFunctional
                 pathTextBox.Text = TestFilesDir.GetTestPath("RetentionTimeAlignmentTest.blib");
                 addLibUI.OkDialog();
             });
-            RunUI(editListUI.OkDialog);
-            WaitForClosedForm(editListUI);
+            OkDialog(editListUI, editListUI.OkDialog);
             WaitForConditionUI(() => peptideSettingsUI.AvailableLibraries.Contains(libName));
             RunUI(() => peptideSettingsUI.PickedLibraries = new[] { libName });
             OkDialog(peptideSettingsUI, peptideSettingsUI.OkDialog);

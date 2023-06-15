@@ -66,7 +66,11 @@ namespace pwiz.SkylineTestFunctional
             var importResultsNameDlg = ShowDialog<ImportResultsNameDlg>(importResults.OkDialog);
             OkDialog(importResultsNameDlg, importResultsNameDlg.NoDialog);
             
-            WaitForCondition(() => SkylineWindow.Document.Settings.PeptideSettings.Libraries.HasMidasLibrary);
+            WaitForConditionUI(() => {
+                var document = SkylineWindow.DocumentUI;
+                return document.Settings.HasResults && document.Settings.MeasuredResults.IsLoaded && 
+                       document.Settings.PeptideSettings.Libraries.HasMidasLibrary;
+            });
             doc = SkylineWindow.Document;
 
             Assert.AreEqual(3, doc.Settings.MeasuredResults.Chromatograms.Count);
@@ -147,7 +151,11 @@ namespace pwiz.SkylineTestFunctional
             OkDialog(peptideSettings, peptideSettings.OkDialog);
 
             var libExplorerDlg = ShowDialog<ViewLibraryDlg>(SkylineWindow.ViewSpectralLibraries);
-            Assert.AreEqual(218, libExplorerDlg.PeptidesCount);
+            const int expectedPeptides = 218;
+            if (!TryWaitForCondition(() => expectedPeptides == libExplorerDlg.PeptidesCount))
+            {
+                Assert.AreEqual(expectedPeptides, libExplorerDlg.PeptidesCount);    // Expecting a failure message
+            }
             OkDialog(libExplorerDlg, libExplorerDlg.Close);
 
             // Get transition rankings

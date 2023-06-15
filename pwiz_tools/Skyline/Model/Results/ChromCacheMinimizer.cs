@@ -20,12 +20,11 @@ using System;
 using System.Collections.Generic;
 using System.IO;
 using System.Linq;
-using System.Text;
 using pwiz.Common.Chemistry;
 using pwiz.Common.Collections;
 using pwiz.Common.SystemUtil;
-using pwiz.Skyline.Model.Lib;
 using pwiz.Skyline.Model.Results.Scoring;
+using pwiz.Skyline.Model.Results.Spectra;
 using pwiz.Skyline.Util;
 using pwiz.Skyline.Util.Extensions;
 
@@ -596,16 +595,19 @@ namespace pwiz.Skyline.Model.Results
             private readonly FileStream _outputStreamScores;
             private int _peakCount;
             private int _scoreCount;
+
             private readonly BlockedArrayList<ChromGroupHeaderInfo> _chromGroupHeaderInfos =
-                new BlockedArrayList<ChromGroupHeaderInfo>(ChromGroupHeaderInfo.SizeOf, ChromGroupHeaderInfo.DEFAULT_BLOCK_SIZE);
+                new BlockedArrayList<ChromGroupHeaderInfo>(ChromGroupHeaderInfo.SizeOf,
+                    ChromGroupHeaderInfo.DEFAULT_BLOCK_SIZE);
+
             private readonly BlockedArrayList<ChromTransition> _transitions =
                 new BlockedArrayList<ChromTransition>(ChromTransition.SizeOf, ChromTransition.DEFAULT_BLOCK_SIZE);
-            private readonly FeatureNames _scoreTypes;
-            private readonly List<byte> _textIdBytes = new List<byte>();
-            private readonly IDictionary<ImmutableList<byte>, int> _textIdIndexes 
-                = new Dictionary<ImmutableList<byte>, int>();
 
-            public Writer(ChromatogramCache chromatogramCache, CacheFormat cacheFormat, Stream outputStream, FileStream outputStreamScans, FileStream outputStreamPeaks, FileStream outputStreamScores)
+            private readonly FeatureNames _scoreTypes;
+            private readonly ChromatogramGroupIds _chromatogramGroupIds = new ChromatogramGroupIds();
+
+            public Writer(ChromatogramCache chromatogramCache, CacheFormat cacheFormat, Stream outputStream,
+                FileStream outputStreamScans, FileStream outputStreamPeaks, FileStream outputStreamScores)
             {
                 _originalCache = chromatogramCache;
                 _cacheFormat = cacheFormat;
@@ -616,13 +618,14 @@ namespace pwiz.Skyline.Model.Results
                 _scoreTypes = chromatogramCache.ScoreTypes;
             }
 
-            public void WriteChromGroup(ChromatogramGroupInfo originalChromGroup, MinimizedChromGroup minimizedChromGroup)
+            public void WriteChromGroup(ChromatogramGroupInfo originalChromGroup,
+                MinimizedChromGroup minimizedChromGroup)
             {
                 if (minimizedChromGroup.RetainedTransitionIndexes.Count == 0)
                 {
                     return;
                 }
-           
+
                 var originalHeader = originalChromGroup.Header;
                 int fileIndex = originalHeader.FileIndex;
                 int startTransitionIndex = _transitions.Count;
@@ -639,11 +642,13 @@ namespace pwiz.Skyline.Model.Results
                 MemoryStream pointsStream = new MemoryStream();
                 var transitionChromSources = minimizedChromGroup.Transitions.Select(tran => tran.Source).ToArray();
                 var timeIntensitiesGroup = minimizedChromGroup.MinimizedTimeIntensitiesGroup;
-                if (timeIntensitiesGroup is RawTimeIntensities && _cacheFormat.FormatVersion < CacheFormatVersion.Twelve)
+                if (timeIntensitiesGroup is RawTimeIntensities &&
+                    _cacheFormat.FormatVersion < CacheFormatVersion.Twelve)
                 {
                     timeIntensitiesGroup = ((RawTimeIntensities) minimizedChromGroup.MinimizedTimeIntensitiesGroup)
-                            .Interpolate(transitionChromSources);
+                        .Interpolate(transitionChromSources);
                 }
+
                 timeIntensitiesGroup.WriteToStream(pointsStream);
                 if (timeIntensitiesGroup is RawTimeIntensities)
                 {
@@ -664,10 +669,12 @@ namespace pwiz.Skyline.Model.Results
                         {
                             flags |= ChromGroupHeaderInfo.FlagValues.has_frag_scan_ids;
                         }
+
                         if (scanIdsByChromSource.ContainsKey(ChromSource.ms1))
                         {
                             flags |= ChromGroupHeaderInfo.FlagValues.has_ms1_scan_ids;
                         }
+
                         if (scanIdsByChromSource.ContainsKey(ChromSource.sim))
                         {
                             flags |= ChromGroupHeaderInfo.FlagValues.has_sim_scan_ids;
@@ -685,103 +692,74 @@ namespace pwiz.Skyline.Model.Results
                 byte[] pointsCompressed = pointsStream.ToArray().Compress(3);
                 int lenCompressed = pointsCompressed.Length;
                 _outputStream.Write(pointsCompressed, 0, lenCompressed);
-                int textIdIndex;
-                int textIdLen;
-                var newTextId = GetNewTextId(originalHeader);
-                if (newTextId == null)
-                {
-                    textIdIndex = -1;
-                    textIdLen = 0;
-                }
-                else
-                {
-                    textIdIndex = CalcTextIdOffset(newTextId);
-                    textIdLen = newTextId.Count;
-                }
-                
                 var header = new ChromGroupHeaderInfo(originalHeader.Precursor,
-                                                      textIdIndex,
-                                                      textIdLen,
-                                                      fileIndex,
-                                                      _transitions.Count - startTransitionIndex,
-                                                      startTransitionIndex,
-                                                      numPeaks,
-                                                      startPeakIndex,
-                                                      startScoreIndex,
-                                                      maxPeakIndex,
-                                                      timeIntensitiesGroup.NumInterpolatedPoints,
-                                                      lenCompressed,
-                                                      lenUncompressed,
-                                                      location,
-                                                      flags,
-                                                      originalHeader.StatusId,
-                                                      originalHeader.StatusRank,
-                                                      originalHeader.StartTime, originalHeader.EndTime,
-                                                      originalHeader.CollisionalCrossSection, 
-                                                      originalHeader.IonMobilityUnits);
-                _chromGroupHeaderInfos.Add(header);
+                    fileIndex,
+                    _transitions.Count - startTransitionIndex,
+                    startTransitionIndex,
+                    numPeaks,
+                    startPeakIndex,
+                    startScoreIndex,
+                    maxPeakIndex,
+                    timeIntensitiesGroup.NumInterpolatedPoints,
+                    lenCompressed,
+                    lenUncompressed,
+                    location,
+                    flags,
+                    originalHeader.StartTime, originalHeader.EndTime,
+                    originalHeader.CollisionalCrossSection,
+                    originalHeader.IonMobilityUnits);
+                _chromGroupHeaderInfos.Add(_chromatogramGroupIds.SetId(header,
+                    _originalCache.GetChromatogramGroupId(originalHeader)));
             }
 
             public void WriteEndOfFile()
             {
-                _originalCache.WriteScanIds(_outputStreamScans);
-
-                _chromGroupHeaderInfos.Sort();
-                ChromatogramCache.WriteStructs(_cacheFormat,
-                                               _outputStream,
-                                               _outputStreamScans,
-                                               _outputStreamPeaks,
-                                               _outputStreamScores,
-                                               _originalCache.CachedFiles,
-                                               _chromGroupHeaderInfos,
-                                               _transitions,
-                                               _textIdBytes,
-                                               _scoreTypes,
-                                               _scoreCount,
-                                               _peakCount,
-                                               out _);
-            }
-
-            public ImmutableList<byte> GetNewTextId(ChromGroupHeaderInfo chromGroupHeaderInfo)
-            {
-                byte[] textIdBytes = _originalCache.GetTextIdBytes(chromGroupHeaderInfo.TextIdIndex, chromGroupHeaderInfo.TextIdLen);
-                if (textIdBytes == null)
+                var chromCachedFiles = new List<ChromCachedFile>();
+                for (int fileIndex = 0; fileIndex < _originalCache.CachedFiles.Count; fileIndex++)
                 {
-                    return null;
-                }
-                const CacheFormatVersion versionNewTextId = CacheFormatVersion.Thirteen;
-                ImmutableList<byte> newTextId;
-                if (_originalCache.Version < versionNewTextId ||
-                    _cacheFormat.FormatVersion >= versionNewTextId)
-                {
-                    newTextId = ImmutableList.ValueOf(textIdBytes);
-                }
-                else
-                {
-                    if (textIdBytes[0] == '#')
+                    var chromCachedFile = _originalCache.CachedFiles[fileIndex];
+                    var scanIds = _originalCache.GetOrLoadResultFileMetadata(fileIndex);
+                    if (scanIds == null)
                     {
-                        newTextId = ImmutableList.ValueOf(textIdBytes);
+                        chromCachedFiles.Add(chromCachedFile);
+                        continue;
+                    }
+
+                    
+                    byte[] scanIdBytes;
+                    bool newHasResultFileData;
+
+                    if (chromCachedFile.HasResultFileData && _cacheFormat.FormatVersion < ChromatogramCache.FORMAT_VERSION_RESULT_FILE_DATA)
+                    {
+                        scanIdBytes = scanIds.ToMsDataFileScanIds().ToByteArray();
+                        newHasResultFileData = false;
                     }
                     else
                     {
-                        var oldKey = new PeptideLibraryKey(Encoding.UTF8.GetString(textIdBytes), 0);
-                        var newKey = oldKey.FormatToOneDecimal();
-                        newTextId = ImmutableList.ValueOf(Encoding.UTF8.GetBytes(newKey.ModifiedSequence));
+                        Assume.AreEqual(chromCachedFile.HasResultFileData, scanIds is ResultFileMetaData);
+                        newHasResultFileData = chromCachedFile.HasResultFileData;
+                        scanIdBytes = scanIds.ToByteArray();
                     }
-                }
-                return newTextId;
-            }
 
-            public int CalcTextIdOffset(ImmutableList<byte> textId)
-            {
-                int offset;
-                if (!_textIdIndexes.TryGetValue(textId, out offset))
-                {
-                    offset = _textIdBytes.Count;
-                    _textIdBytes.AddRange(textId);
-                    _textIdIndexes.Add(textId, offset);
+                    long newLocation = _outputStreamScans.Position;
+                    _outputStreamScans.Write(scanIdBytes, 0, scanIdBytes.Length);
+                    chromCachedFiles.Add(chromCachedFile.ResizeScanIds(newLocation, scanIdBytes.Length, newHasResultFileData));
                 }
-                return offset;
+
+                _chromGroupHeaderInfos.Sort();
+                ChromatogramCache.WriteStructs(_cacheFormat,
+                    _outputStream,
+                    _outputStreamScans,
+                    _outputStreamPeaks,
+                    _outputStreamScores,
+                    chromCachedFiles,
+                    _chromGroupHeaderInfos,
+                    _transitions,
+                    _chromatogramGroupIds,
+                    _scoreTypes,
+                    _scoreCount,
+                    _peakCount,
+                    out _);
             }
         }
     }

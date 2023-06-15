@@ -25,8 +25,10 @@ using System.Linq;
 using System.Runtime.CompilerServices;
 using pwiz.Common.Chemistry;
 using pwiz.Common.Collections;
+using pwiz.Common.Spectra;
 using pwiz.ProteowizardWrapper;
 using pwiz.Skyline.Model.DocSettings;
+using pwiz.Skyline.Model.Results.Spectra;
 using pwiz.Skyline.Util;
 
 namespace pwiz.Skyline.Model.Results
@@ -42,7 +44,7 @@ namespace pwiz.Skyline.Model.Results
             bool highAccQ1, bool highAccQ3)
         {
             Id = id;
-            ModifiedSequence = precursorTextId.Target;
+            ChromatogramGroupId = precursorTextId.ChromatogramGroupId;
             PeptideColor = peptideColor;
             Q1 = precursorTextId.PrecursorMz;
             Extractor = precursorTextId.Extractor;
@@ -59,6 +61,8 @@ namespace pwiz.Skyline.Model.Results
                 _maxTime = maxTime.Value;
             }
 
+            OptStep = precursorTextId.OptStep;
+            CollisionEnergy = precursorTextId.CollisionEnergy;
             IonMobilityInfo = precursorTextId.IonMobility;
             MinIonMobilityValue = IonMobilityInfo.IsEmpty ? null : IonMobilityInfo.IonMobility.Mobility - (IonMobilityInfo.IonMobilityExtractionWindowWidth??0)/2;
             MaxIonMobilityValue = IonMobilityInfo.IsEmpty ? null : MinIonMobilityValue + (IonMobilityInfo.IonMobilityExtractionWindowWidth ?? 0);
@@ -78,7 +82,8 @@ namespace pwiz.Skyline.Model.Results
         public ChromExtractor Extractor { get; private set; }
         public bool HighAccQ1 { get; private set; }
         public bool HighAccQ3 { get; private set; }
-        public Target ModifiedSequence { get; private set; }
+        public ChromatogramGroupId ChromatogramGroupId { get; }
+        public SpectrumClassFilter SpectrumClassFilter => ChromatogramGroupId?.SpectrumClassFilter ?? default;
         public Color PeptideColor { get; private set; }
         public SignedMz Q1 { get; private set; }
         public double? MinTime
@@ -94,6 +99,8 @@ namespace pwiz.Skyline.Model.Results
         public int? BestWindowGroup { get; private set; }
         public double? BestWindowGroupDistance { get; private set; }
         public IList<int> OtherWindowGroups { get; private set; }
+        public int? OptStep { get; }
+        private double? CollisionEnergy { get; }
         private IonMobilityFilter IonMobilityInfo { get; set; }
         private bool HasCombinedIonMobility { get; set; } // When true, data was read in 3-array format, which affects spectrum ID format
         private SpectrumProductFilter[] Ms1ProductFilters { get; set; }
@@ -170,6 +177,13 @@ namespace pwiz.Skyline.Model.Results
             if (HasIonMobilityFAIMS() && spectra.All(s => !Equals(IonMobilityInfo.IonMobility, s.IonMobility)))
             {
                 return null; // No compensation voltage match
+            }
+
+            if (CollisionEnergy.HasValue &&
+                spectra.SelectMany(s => s.Precursors).Select(p => p.PrecursorCollisionEnergy)
+                    .Any(ce => !ce.HasValue || Math.Abs(ce.Value - CollisionEnergy.Value) > 0.05))
+            {
+                return null;
             }
 
             int targetCount = 1;
@@ -319,7 +333,7 @@ namespace pwiz.Skyline.Model.Results
                     extractedIntensities[i] *= scale;
             }
             var dtFilter = GetIonMobilityWindow();
-            return new ExtractedSpectrum(ModifiedSequence,
+            return new ExtractedSpectrum(ChromatogramGroupId,
                 PeptideColor,
                 Q1,
                 dtFilter, 
@@ -371,16 +385,16 @@ namespace pwiz.Skyline.Model.Results
                 foreach (var spectrumProductFilter in productFilters)
                 {
                     spectrumProductFilter.FilterId = listChromKeys.Count;
-                    var key = new ChromKey(ModifiedSequence,
+                    var key = new ChromKey(ChromatogramGroupId,
                         Q1,
-                        ionMobilityFilter.ApplyOffset(highEnergy ? spectrumProductFilter.HighEnergyIonMobilityValueOffset : 0),
+                        ionMobilityFilter.ApplyOffset(highEnergy 
+                            ? spectrumProductFilter.HighEnergyIonMobilityValueOffset : 0),
                         spectrumProductFilter.TargetMz,
+                        OptStep ?? 0,
                         0,  // CE value (Shimadzu SRM only)
                         spectrumProductFilter.FilterWidth,
                         source,
-                        Extractor,
-                        true,
-                        true);
+                        Extractor);
                     if (_hasMinTime && _hasMaxTime)
                     {
                         key = key.ChangeOptionalTimes(_minTime, _maxTime);
@@ -480,6 +494,15 @@ namespace pwiz.Skyline.Model.Results
                         s.IonMobilityMeasurementRangeHigh < minIonMobilityValue));
         }
 
+        public bool MatchesSpectrum(SpectrumMetadata spectrumMetadata)
+        {
+            if (SpectrumClassFilter.IsEmpty)
+            {
+                return true;
+            }
+
+            return SpectrumClassFilter.MakePredicate()(spectrumMetadata);
+        }
     }
 
     internal class IonMobilityRangeHelper

@@ -16,6 +16,8 @@
  * See the License for the specific language governing permissions and
  * limitations under the License.
  */
+
+using System;
 using System.Collections.Generic;
 using pwiz.Common.Chemistry;
 using pwiz.Skyline.Model.DocSettings;
@@ -24,17 +26,22 @@ namespace pwiz.Skyline.Model.Results
 {
     public struct PrecursorTextId
     {
-        public PrecursorTextId(SignedMz precursorMz, IonMobilityFilter ionMobilityFilter, Target target, ChromExtractor extractor) : this()
+        public PrecursorTextId(SignedMz precursorMz, int? optStep, double? collisionEnergy,
+            IonMobilityFilter ionMobilityFilter, ChromatogramGroupId chromatogramGroupId, ChromExtractor extractor) : this()
         {
             PrecursorMz = precursorMz;
+            OptStep = optStep;
+            CollisionEnergy = collisionEnergy;
             IonMobility = ionMobilityFilter ?? IonMobilityFilter.EMPTY;
-            Target = target;
+            ChromatogramGroupId = chromatogramGroupId;
             Extractor = extractor;
         }
 
         public SignedMz PrecursorMz { get; private set; }
+        public int? OptStep { get; }
+        public double? CollisionEnergy { get; }
         public IonMobilityFilter IonMobility { get; private set; }
-        public Target Target { get; private set; }  // Peptide Modifed Sequence or custom ion ID
+        public ChromatogramGroupId ChromatogramGroupId { get; }
         public ChromExtractor Extractor { get; private set; }
 
         #region object overrides
@@ -42,9 +49,11 @@ namespace pwiz.Skyline.Model.Results
         public bool Equals(PrecursorTextId other)
         {
             return PrecursorMz.Equals(other.PrecursorMz) &&
-                Equals(IonMobility, other.IonMobility) &&
-                Equals(Target, other.Target) &&
-                Extractor == other.Extractor;
+                   Equals(OptStep, other.OptStep) &&
+                   Equals(CollisionEnergy, other.CollisionEnergy) &&
+                   Equals(IonMobility, other.IonMobility) &&
+                   Equals(ChromatogramGroupId, other.ChromatogramGroupId) &&
+                   Extractor == other.Extractor;
         }
 
         public override bool Equals(object obj)
@@ -58,8 +67,10 @@ namespace pwiz.Skyline.Model.Results
             unchecked
             {
                 int hashCode = PrecursorMz.GetHashCode();
+                hashCode = (hashCode * 397) ^ OptStep.GetHashCode();
+                hashCode = (hashCode * 397) ^ CollisionEnergy.GetHashCode();
                 hashCode = (hashCode * 397) ^ IonMobility.GetHashCode();
-                hashCode = (hashCode * 397) ^ (Target != null ? Target.GetHashCode() : 0);
+                hashCode = (hashCode * 397) ^ (ChromatogramGroupId != null ? ChromatogramGroupId.GetHashCode() : 0);
                 hashCode = (hashCode * 397) ^ (int)Extractor;
                 return hashCode;
             }
@@ -67,7 +78,7 @@ namespace pwiz.Skyline.Model.Results
 
         public override string ToString()
         {
-            return string.Format(@"{0} - {1}{2} ({3})", Target, PrecursorMz, IonMobility, Extractor);    // For debugging
+            return string.Format(@"{0} - {1}{2} ({3})", ChromatogramGroupId, PrecursorMz, IonMobility, Extractor);    // For debugging
         }
 
         private sealed class PrecursorMzTextIdComparer : IComparer<PrecursorTextId>
@@ -77,10 +88,16 @@ namespace pwiz.Skyline.Model.Results
                 int c = x.PrecursorMz.CompareTo(y.PrecursorMz);
                 if (c != 0)
                     return c;
+                c = Nullable.Compare(x.OptStep, y.OptStep);
+                if (c != 0)
+                    return c;
+                c = Nullable.Compare(x.CollisionEnergy, y.CollisionEnergy);
+                if (c != 0)
+                    return c;
                 c = x.IonMobility.CompareTo(y.IonMobility);
                 if (c != 0)
                     return c;
-                c = Target.CompareOrdinal(x.Target, y.Target);
+                c = ValueTuple.Create(x.ChromatogramGroupId).CompareTo(ValueTuple.Create(y.ChromatogramGroupId));
                 if (c != 0)
                     return c;
                 return x.Extractor - y.Extractor;

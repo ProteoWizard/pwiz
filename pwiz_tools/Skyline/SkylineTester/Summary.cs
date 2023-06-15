@@ -20,7 +20,9 @@ using System;
 using System.Collections.Generic;
 using System.Globalization;
 using System.IO;
+using System.Linq;
 using System.Text.RegularExpressions;
+using System.Xml;
 using System.Xml.Linq;
 
 namespace SkylineTester
@@ -107,11 +109,41 @@ namespace SkylineTester
 
         public string GetLogFile(Run run)
         {
-            var logFile = "{0}_{1}-{2:D2}-{3:D2}_{4:D2}-{5:D2}-{6:D2}.log".With(
+            var logNameFormat = "{0}_{1}-{2:D2}-{3:D2}_{4:D2}-{5:D2}-{6:D2}.log";
+            var logFile = logNameFormat.With(
                 Environment.MachineName,
                 run.Date.Year, run.Date.Month, run.Date.Day, 
                 run.Date.Hour, run.Date.Minute, run.Date.Second);
-            return Path.Combine(Path.GetDirectoryName(SummaryFile) ?? "", logFile);
+            var directoryName = Path.GetDirectoryName(SummaryFile) ?? "";
+            var path = Path.Combine(directoryName, logFile);
+            if (!File.Exists(path))
+            {
+                // Don't insist on files with names matching this machine, we may be doing performance comparisons
+                var template = logNameFormat.With(
+                    string.Empty,
+                    run.Date.Year, run.Date.Month, run.Date.Day,
+                    run.Date.Hour, run.Date.Minute, run.Date.Second);
+                var match = Directory.GetFiles(directoryName).FirstOrDefault(f => f.EndsWith(template));
+                if (!string.IsNullOrEmpty(match))
+                {
+                    path = Path.Combine(directoryName, match);
+                }
+            }
+            if (!File.Exists(path))
+            {
+                // Reconstructed summaries may be accurate to minute only
+                var template = logNameFormat.With(
+                    string.Empty,
+                    run.Date.Year, run.Date.Month, run.Date.Day,
+                    run.Date.Hour, run.Date.Minute, 0).Replace(@"-00.log", @"-"); 
+                var match = Directory.GetFiles(directoryName).FirstOrDefault(f => 
+                    f.Contains(template) && f.EndsWith(@".log"));
+                if (!string.IsNullOrEmpty(match))
+                {
+                    path = Path.Combine(directoryName, match);
+                }
+            }
+            return path;
         }
 
         public void Save()
@@ -137,11 +169,15 @@ namespace SkylineTester
             summary.Save(SummaryFile);
         }
 
+        public const int MAX_STORED_SUMMARIES = 90;
+        
         public void Load()
         {
             Runs = new List<Run>();
-            if (!File.Exists(SummaryFile))
-                return;
+            if (Directory.Exists(Path.GetDirectoryName(SummaryFile)) && !File.Exists(SummaryFile))
+            {
+                RegenerateSummaryFile();
+            }
 
             XElement summary;
             try
@@ -211,7 +247,6 @@ namespace SkylineTester
             }
 
             // Show max of 90 runs (3 months or so, or 45 days for double duty machines).
-            var MAX_STORED_SUMMARIES = 90;
             if (Runs.Count > MAX_STORED_SUMMARIES)
             {
                 Runs.RemoveRange(0, Runs.Count - MAX_STORED_SUMMARIES);
@@ -220,6 +255,41 @@ namespace SkylineTester
 
             if (runsRemoved)
                 Save();
+        }
+
+        private void RegenerateSummaryFile()
+        {
+            var logpath = Path.GetDirectoryName(SummaryFile);
+            if (logpath == null || !Directory.Exists(logpath))
+                return;
+            // Get list of logs in logpath, inspect the newest ones
+            var logs = Directory.GetFiles(logpath, "*.xml").
+                Select(f => new FileInfo(f)).OrderByDescending(f => f.LastWriteTime).Take(MAX_STORED_SUMMARIES).ToList();
+            logs.Reverse(); // Process oldest to newest
+            foreach (var log in logs)
+            {
+                var xml = new XmlDocument();
+                xml.LoadXml(File.ReadAllText(log.FullName));
+                var elementNightlyRoot = xml.SelectSingleNode("/nightly");
+                // Pull summary info as
+                // <nightly id="BSPRATT-UW3" os="Microsoft Windows NT 10.0.19044.0" revision="23098" git_hash="c43c584ea" start="4/7/2023 9:01:00 PM" duration="540" testsrun="9731" failures="0" leaks="0">
+                var attributes = elementNightlyRoot?.Attributes;
+                if (attributes != null)
+                {
+                    var run = new Run()
+                    {
+                        Date = DateTime.Parse(attributes.GetNamedItem("start").Value),
+                        Revision = attributes.GetNamedItem("git_hash").Value,
+                        RunMinutes = int.Parse(attributes.GetNamedItem("duration").Value),
+                        TestsRun = int.Parse(attributes.GetNamedItem("testsrun").Value),
+                        Failures = int.Parse(attributes.GetNamedItem("failures").Value),
+                        Leaks = int.Parse(attributes.GetNamedItem("leaks").Value),
+                    };
+                    Runs.Add(run);
+                }
+            }
+            Save();
+            Runs = new List<Run>(); // Reset
         }
     }
 }

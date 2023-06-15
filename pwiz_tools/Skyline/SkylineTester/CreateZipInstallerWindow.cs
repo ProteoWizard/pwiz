@@ -72,7 +72,7 @@ namespace SkylineTester
             Close();
         }
 
-        public static void CreateZipFile(string zipPath)
+        public static void CreateZipFile(string zipPath, bool addTestZipFiles = false)
         {
             zipPath = zipPath ?? string.Empty; // For quiet ReSharper code inspection
 
@@ -186,37 +186,45 @@ namespace SkylineTester
                             AddFile(file, zipFile);
                     }
 
-                    // Add test zip files.
-                    var zipFilesList = new List<string>();
-                    FindZipFiles(solutionDirectory, zipFilesList);
-                    var zipFilesDirectory = Path.Combine(SkylineTesterWindow.SkylineTesterFiles, "TestZipFiles");
-                    foreach (var testZipFile in zipFilesList)
-                    {
-                        var testZipDirectory = Path.GetDirectoryName(testZipFile);
-                        if (string.IsNullOrEmpty(testZipDirectory))
-                            continue;
-                        testZipDirectory = Path.Combine(zipFilesDirectory,
-                            testZipDirectory.Substring(solutionDirectory.Length + 1));
-                        AddFile(testZipFile, zipFile, testZipDirectory);
-                    }
+                    // MCC 2/14/2023: disabled adding test zips after discussion with Brendan that if we need
+                    // to test Skyline outside a source tree, we can find a way to get the zip files on the fly or
+                    // have a separate artifact for that. This will cut SkylineTester.zip from ~600MB to ~100MB.
 
-                    // Add tutorial audit logs
-                    zipFile.AddDirectory(Path.Combine(solutionDirectory, @"TestTutorial\TutorialAuditLogs"),
-                        @"SkylineTester Files\TestZipFiles\TestTutorial\TutorialAuditLogs");
-
-                    // Add pwiz vendor reader test data
-                    var vendorTestData = new List<string>();
-                    foreach (TestFilesDir.VendorDir vendorDir in Enum.GetValues(typeof(TestFilesDir.VendorDir)))
-                        FindVendorReaderTestData(TestFilesDir.GetVendorTestData(vendorDir), vendorTestData);
-                    foreach (var file in vendorTestData)
+                    if (addTestZipFiles)
                     {
-                        var parentDirectory = Path.GetDirectoryName(file);
-                        if (string.IsNullOrEmpty(parentDirectory))
-                            continue;
-                        int relativePathStart = parentDirectory.LastIndexOf('\\',
-                            parentDirectory.IndexOf(@"Test.data", StringComparison.InvariantCulture));
-                        parentDirectory = parentDirectory.Substring(relativePathStart + 1);
-                        AddFile(file, zipFile, Path.Combine(SkylineTesterWindow.SkylineTesterFiles, parentDirectory));
+                        // Add test zip files.
+                        var zipFilesList = new List<string>();
+                        FindZipFiles(solutionDirectory, zipFilesList);
+                        var zipFilesDirectory = Path.Combine(SkylineTesterWindow.SkylineTesterFiles, "TestZipFiles");
+                        foreach (var testZipFile in zipFilesList)
+                        {
+                            var testZipDirectory = Path.GetDirectoryName(testZipFile);
+                            if (string.IsNullOrEmpty(testZipDirectory))
+                                continue;
+                            testZipDirectory = Path.Combine(zipFilesDirectory,
+                                testZipDirectory.Substring(solutionDirectory.Length + 1));
+                            AddFile(testZipFile, zipFile, testZipDirectory);
+                        }
+
+                        // Add tutorial audit logs
+                        zipFile.AddDirectory(Path.Combine(solutionDirectory, @"TestTutorial\TutorialAuditLogs"),
+                            @"SkylineTester Files\TestZipFiles\TestTutorial\TutorialAuditLogs");
+
+                        // Add pwiz vendor reader test data
+                        var vendorTestData = new List<string>();
+                        foreach (TestFilesDir.VendorDir vendorDir in Enum.GetValues(typeof(TestFilesDir.VendorDir)))
+                            FindVendorReaderTestData(TestFilesDir.GetVendorTestData(vendorDir), vendorTestData);
+                        foreach (var file in vendorTestData)
+                        {
+                            var parentDirectory = Path.GetDirectoryName(file);
+                            if (string.IsNullOrEmpty(parentDirectory))
+                                continue;
+                            int relativePathStart = parentDirectory.LastIndexOf('\\',
+                                parentDirectory.IndexOf(@"Test.data", StringComparison.InvariantCulture));
+                            parentDirectory = parentDirectory.Substring(relativePathStart + 1);
+                            AddFile(file, zipFile,
+                                Path.Combine(SkylineTesterWindow.SkylineTesterFiles, parentDirectory));
+                        }
                     }
 
                     // Add the file that we use to determine which branch this is from

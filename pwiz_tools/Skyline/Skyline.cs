@@ -1101,23 +1101,8 @@ namespace pwiz.Skyline
             DestroyAllChromatogramsGraph();
             base.OnClosing(e);
 
-            if (_graphFullScan != null)
-            {
-                var chargeSelector = _graphFullScan.GetHostedControl<ChargeSelectionPanel>();
-                if(chargeSelector != null)
-                {
-                    chargeSelector.HostedControl.OnCharge1Changed -= ShowCharge1;
-                    chargeSelector.HostedControl.OnCharge2Changed -= ShowCharge2;
-                    chargeSelector.HostedControl.OnCharge3Changed -= ShowCharge3;
-                    chargeSelector.HostedControl.OnCharge4Changed -= ShowCharge4;
-                }
-                var ionTypeSelector = _graphFullScan.GetHostedControl<IonTypeSelectionPanel>();
-                if (ionTypeSelector != null)
-                {
-                    ionTypeSelector.HostedControl.IonTypeChanged -= IonTypeSelector_IonTypeChanges;
-                    ionTypeSelector.HostedControl.LossChanged -= IonTypeSelector_LossChanged;
-                }
-            }
+            foreach (var control in new IMenuControlImplementer[] { _graphFullScan, _graphSpectrum, ViewMenu })
+                control?.DisconnectHandlers();
         }
 
         protected override void OnClosed(EventArgs e)
@@ -1391,9 +1376,22 @@ namespace pwiz.Skyline
                     }
                     
                 }
-            }            
-            var findResult = DocumentUI.SearchDocument(bookmark,
-                findOptions, displaySettings);
+            }
+
+            FindResult findResult = null;
+            var document = DocumentUI;
+            using (var longWaitDlg = new LongWaitDlg())
+            {
+                longWaitDlg.PerformWork(this, 1000, progressMonitor =>
+                {
+                    findResult = document.SearchDocument(bookmark,
+                        findOptions, displaySettings, progressMonitor);
+                });
+                if (longWaitDlg.IsCanceled)
+                {
+                    return;
+                }
+            }
 
             if (findResult == null)
             {
@@ -1403,9 +1401,9 @@ namespace pwiz.Skyline
                 DisplayFindResult(null, findResult);
         }
 
-        private IEnumerable<FindResult> FindAll(ILongWaitBroker longWaitBroker, FindPredicate findPredicate)
+        private IEnumerable<FindResult> FindAll(IProgressMonitor progressMonitor, FindPredicate findPredicate)
         {
-            return findPredicate.FindAll(longWaitBroker, Document);
+            return findPredicate.FindAll(progressMonitor, Document);
         }
 
         public void FindAll(Control parent, FindOptions findOptions = null)
@@ -1413,10 +1411,13 @@ namespace pwiz.Skyline
             if (findOptions == null)
                 findOptions = FindOptions.ReadFromSettings(Settings.Default);
             var findPredicate = new FindPredicate(findOptions, SequenceTree.GetDisplaySettings(null));
-            IList<FindResult> results = null;
+            List<FindResult> results = new List<FindResult>();
             using (var longWaitDlg = new LongWaitDlg(this))
             {
-                longWaitDlg.PerformWork(parent, 2000, lwb => results = FindAll(lwb, findPredicate).ToArray());
+                longWaitDlg.PerformWork(parent, 2000, progressMonitor =>
+                {
+                    results.AddRange(FindAll(progressMonitor, findPredicate));
+                });
                 if (results.Count == 0)
                 {
                     if (!longWaitDlg.IsCanceled)
@@ -1661,6 +1662,11 @@ namespace pwiz.Skyline
                 });
         }
 
+        private void editSpectrumFilterContextMenuItem_Click(object sender, EventArgs args)
+        {
+            EditMenu.EditSpectrumFilter();
+        }
+
         public void ShowUniquePeptidesDlg()
         {
             EditMenu.ShowUniquePeptidesDlg();
@@ -1766,7 +1772,8 @@ namespace pwiz.Skyline
             var nodeTranGroupTree = SequenceTree.SelectedNode as TransitionGroupTreeNode;
             addTransitionMoleculeContextMenuItem.Visible = enabled && nodeTranGroupTree != null &&
                 nodeTranGroupTree.PepNode.Peptide.IsCustomMolecule;
-
+            editSpectrumFilterContextMenuItem.Visible = SequenceTree.SelectedPaths
+                .SelectMany(path => DocumentUI.EnumeratePathsAtLevel(path, SrmDocument.Level.TransitionGroups)).Any();
             var selectedQuantitativeValues = SelectedQuantitativeValues();
             if (selectedQuantitativeValues.Length == 0)
             {
@@ -2882,7 +2889,7 @@ namespace pwiz.Skyline
                     if (_tool.OutputToImmediateWindow)
                     {
                         _parent.ShowImmediateWindow();
-                        _tool.RunTool(_parent.Document, _parent, _skylineTextBoxStreamWriterHelper, _parent, _parent);
+                        _tool.RunTool(_parent.Document, _parent, _parent._skylineTextBoxStreamWriterHelper, _parent, _parent);
                     }
                     else
                     {
@@ -2925,7 +2932,7 @@ namespace pwiz.Skyline
             }
         }
 
-        public static TextBoxStreamWriterHelper _skylineTextBoxStreamWriterHelper;
+        private TextBoxStreamWriterHelper _skylineTextBoxStreamWriterHelper;
 
         private ImmediateWindow CreateImmediateWindow()
         {
@@ -4451,7 +4458,7 @@ namespace pwiz.Skyline
 
         public bool HasProteomicMenuItems
         {
-            get { return GetModeUIHelper().MenuItemHasOriginalText(peptideSettingsMenuItem.Text); }
+            get { return GetModeUIHelper().MenuItemHasOriginalText(peptideSettingsMenuItem); }
         }
         #endregion
         /// <summary>
@@ -4681,11 +4688,28 @@ namespace pwiz.Skyline
         {
             // The "Submit Error Report" menu item should only be shown if the user was holding down the Shift key when they dropped the Help menu
             submitErrorReportMenuItem.Visible = 0 != (ModifierKeys & Keys.Shift);
+            // The "Crash Skyline" menu item only appears if they hold down both Ctrl and Shift
+            crashSkylineMenuItem.Visible = (Keys.Shift | Keys.Control) == (ModifierKeys & (Keys.Shift | Keys.Control));
         }
 
         private void submitErrorReportMenuItem_Click(object sender, EventArgs e)
         {
             Program.ReportException(new ApplicationException(Resources.SkylineWindow_submitErrorReportMenuItem_Click_Submitting_an_unhandled_error_report));
+        }
+
+        private void crashSkylineMenuItem_Click(object sender, EventArgs e)
+        {
+            if (DialogResult.OK !=
+                new AlertDlg(Resources.SkylineWindow_crashSkylineMenuItem_Click_Are_you_sure_you_want_to_abruptly_terminate_Skyline__You_will_lose_all_unsaved_work_,
+                    MessageBoxButtons.OKCancel, DialogResult.Cancel).ShowAndDispose(this))
+            {
+                return;
+            }
+
+            new Thread(() =>
+            {
+                throw new ApplicationException(@"Crash Skyline Menu Item Clicked");
+            }).Start();
         }
     }
 }

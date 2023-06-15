@@ -33,9 +33,11 @@ using pwiz.Common.SystemUtil;
 using pwiz.ProteowizardWrapper;
 using pwiz.Skyline.Model.DocSettings;
 using pwiz.Skyline.Model.Results.Crawdad;
+using pwiz.Skyline.Model.Results.Legacy;
 using pwiz.Skyline.Model.Results.Scoring;
 using pwiz.Skyline.Properties;
 using pwiz.Skyline.Util;
+using static pwiz.Skyline.Util.ValueChecking;
 
 namespace pwiz.Skyline.Model.Results
 {
@@ -43,18 +45,18 @@ namespace pwiz.Skyline.Model.Results
     [StructLayout(LayoutKind.Sequential, Pack=4)]
     public struct ChromGroupHeaderInfo4
     {
-        public ChromGroupHeaderInfo4(ChromGroupHeaderInfo header) : this()
+        public ChromGroupHeaderInfo4(ChromGroupHeaderInfo16 header) : this()
         {
-            Precursor = (float) header.Precursor;
-            FileIndex = header.FileIndex;
-            NumTransitions = header.NumTransitions;
-            StartTransitionIndex = header.StartTransitionIndex;
-            NumPeaks = header.NumPeaks;
-            StartPeakIndex = header.StartPeakIndex;
-            MaxPeakIndex = header.MaxPeakIndex;
-            NumPoints = header.NumPoints;
-            CompressedSize = header.CompressedSize;
-            LocationPoints = header.LocationPoints;
+            Precursor = (float) header._precursor;
+            FileIndex = header._fileIndex;
+            NumTransitions = header._numTransitions;
+            StartTransitionIndex = header._startTransitionIndex;
+            NumPeaks = header._numPeaks;
+            StartPeakIndex = header._startPeakIndex;
+            MaxPeakIndex = header._maxPeakIndex;
+            NumPoints = header._numPoints;
+            CompressedSize = header._compressedSize;
+            LocationPoints = header._locationPoints;
         }
 
         public float Precursor { get; set; }
@@ -126,7 +128,8 @@ namespace pwiz.Skyline.Model.Results
         #endregion
     }
 
-    [StructLayout(LayoutKind.Sequential, Pack = 1)]
+
+    [StructLayout(LayoutKind.Sequential, Pack = 4)]
     public struct ChromGroupHeaderInfo : IComparable<ChromGroupHeaderInfo>
     {
         /////////////////////////////////////////////////////////////////////
@@ -134,47 +137,37 @@ namespace pwiz.Skyline.Model.Results
         //          disk from which it gets loaded directly into memory.
         //          The order and size of each element has been very carefully
         //          considered to avoid wasted space due to alignment.
-        // ALSO:    With any additions you need to tweak the writer code in 
-        //          ChromatogramCache.WriteStructs since we write element by element.
-        private int _textIdIndex;
+        private SignedMz _precursor;
+        private long _locationPoints;
+        private int _uncompressedSize;
         private int _startTransitionIndex;
+        private int _textIdIndex;
         private int _startPeakIndex;
         private int _startScoreIndex;
         private int _numPoints;
         private int _compressedSize;
-        private ushort _flagBits;
-        private ushort _fileIndex;
-        private ushort _textIdLen;
-        private ushort _numTransitions;
-        private byte _numPeaks;
-        private byte _maxPeakIndex;
-        private byte _isProcessedScans;
-        private byte _align1;
-        private ushort _statusId;
-        private ushort _statusRank;
-        private double _precursor;
-        private long _locationPoints;
-        // V11 fields
-        private int _uncompressedSize;
         private float _startTime;
         private float _endTime;
         private float _collisionalCrossSection;
+        private ushort _numTransitions;
+        private FlagValues _flagBits;
+        private ushort _fileIndex;
+        private eIonMobilityUnits _ionMobilityUnits;
+        private byte _numPeaks;
+        private byte _maxPeakIndex;
         /////////////////////////////////////////////////////////////////////
 
         [Flags]
-        public enum FlagValues
+        public enum FlagValues : ushort
         {
             has_mass_errors = 0x01,
-            has_calculated_mzs = 0x02,
-            extracted_base_peak = 0x04,
-            has_ms1_scan_ids = 0x08,
-            has_sim_scan_ids = 0x10,
-            has_frag_scan_ids = 0x20,
-            polarity_negative = 0x40, // When set, only use negative scans.
-            raw_chromatograms = 0x80,
-            ion_mobility_type_bitmask = 0x700, // 3 bits for ion mobility type none, drift, inverse_mobility, spares
-            dda_acquisition_method = 0x800,
-            extracted_qc_trace = 0x1000
+            extracted_base_peak = 0x02,
+            has_ms1_scan_ids = 0x04,
+            has_sim_scan_ids = 0x08,
+            has_frag_scan_ids = 0x10,
+            raw_chromatograms = 0x20,
+            dda_acquisition_method = 0x40,
+            extracted_qc_trace = 0x80
         }
 
         /// <summary>
@@ -186,56 +179,29 @@ namespace pwiz.Skyline.Model.Results
 
         public ChromGroupHeaderInfo(SignedMz precursor, int numTransitions, int numPeaks, int maxPeakIndex,
             int compressedSize, int uncompressedSize,
-            int numPoints, FlagValues flags, int statusId, int statusRank, float? startTime, float? endTime,
+            int numPoints, FlagValues flags, float? startTime, float? endTime,
             double? collisionalCrossSection, eIonMobilityUnits ionMobilityUnits)
-            : this(precursor, 0, numTransitions, 0, numPeaks, 0, 0, maxPeakIndex, numPoints, compressedSize, uncompressedSize, 0, flags, statusId,
-                statusRank, startTime, endTime, collisionalCrossSection, ionMobilityUnits)
+            : this(precursor, 0, numTransitions, 0, numPeaks, 0, 0, maxPeakIndex, numPoints, compressedSize, uncompressedSize, 0, flags,
+                startTime, endTime, collisionalCrossSection, ionMobilityUnits)
         {
         }
 
         /// <summary>
-        /// Constructs header struct with TextIdIndex and TextIdCount left to be initialized
-        /// in a subsequent call to <see cref="CalcTextIdIndex"/>.
+        /// Constructs header struct with all values populated
         /// </summary>
         public ChromGroupHeaderInfo(SignedMz precursor, int fileIndex,
                                      int numTransitions, int startTransitionIndex,
                                      int numPeaks, int startPeakIndex, int startScoreIndex, int maxPeakIndex,
                                      int numPoints, int compressedSize, int uncompressedSize, long location, FlagValues flags,
-                                     int statusId, int statusRank,
                                      float? startTime, float? endTime,
                                      double? collisionalCrossSection, 
-                                     eIonMobilityUnits ionMobilityUnits)
-            : this(precursor, -1, 0, fileIndex, numTransitions, startTransitionIndex,
-                   numPeaks, startPeakIndex, startScoreIndex, maxPeakIndex, numPoints,
-                   compressedSize, uncompressedSize, location, flags, statusId, statusRank,
-                   startTime, endTime, collisionalCrossSection, ionMobilityUnits)
+                                     eIonMobilityUnits ionMobilityUnits) : this()
         {
-        }
-
-        /// <summary>
-        /// Cunstructs header struct with all values populated.
-        /// </summary>
-        public ChromGroupHeaderInfo(SignedMz precursor, int textIdIndex, int textIdLen, int fileIndex,
-                                     int numTransitions, int startTransitionIndex,
-                                     int numPeaks, int startPeakIndex, int startScoreIndex, int maxPeakIndex,
-                                     int numPoints, int compressedSize, int uncompressedSize, long location, FlagValues flags,
-                                     int statusId, int statusRank,
-                                     float? startTime, float? endTime,
-                                     double? collisionalCrossSection, eIonMobilityUnits ionMobilityUnits)
-            : this()
-        {
-            _precursor = precursor.Value;
-            if (precursor.IsNegative)
+            if (0 != (flags & FlagValues.raw_chromatograms) && compressedSize != -1)
             {
-                flags |= FlagValues.polarity_negative;
+                Assume.AreNotEqual(-1, uncompressedSize);
             }
-            else
-            {
-                flags &= ~FlagValues.polarity_negative;
-            }
-            flags = (flags & ~FlagValues.ion_mobility_type_bitmask) | (FlagValues.ion_mobility_type_bitmask & (FlagValues) ((int) ionMobilityUnits << 8));
-            _textIdIndex = textIdIndex;
-            _textIdLen = CheckUShort(textIdLen);
+            _precursor = precursor;
             _fileIndex = CheckUShort(fileIndex);
             _numTransitions = CheckUShort(numTransitions);
             _startTransitionIndex = startTransitionIndex;
@@ -247,9 +213,7 @@ namespace pwiz.Skyline.Model.Results
             _compressedSize = compressedSize;
             _uncompressedSize = uncompressedSize;
             _locationPoints = location;
-            _flagBits = (ushort)flags;
-            _statusId = CheckUShort(statusId, true);
-            _statusRank = CheckUShort(statusRank, true);
+            _flagBits = flags;
             _startTime = startTime ?? -1;
             _endTime = endTime ?? -1;
             _collisionalCrossSection = (float)(collisionalCrossSection ?? 0);
@@ -265,52 +229,63 @@ namespace pwiz.Skyline.Model.Results
             {
                 _startTime = _endTime = -1; // Unknown
             }
-        }
 
-        public ChromGroupHeaderInfo(ChromGroupHeaderInfo4 headerInfo)
-            : this(new SignedMz(headerInfo.Precursor),
-            headerInfo.FileIndex,
-            headerInfo.NumTransitions,
-            headerInfo.StartTransitionIndex,
-            headerInfo.NumPeaks,
-            headerInfo.StartPeakIndex,
-            -1,
-            headerInfo.MaxPeakIndex,
-            headerInfo.NumPoints,
-            headerInfo.CompressedSize,
-            -1,
-            headerInfo.LocationPoints,
-            0, -1, -1,
-            null, null, null, eIonMobilityUnits.none)
-        {
+            _textIdIndex = -1;
+            _ionMobilityUnits = ionMobilityUnits;
         }
-
-        public ChromGroupHeaderInfo ChangeChargeToNegative()
+        
+        public ChromGroupHeaderInfo(ChromGroupHeaderInfo16 headerInfo16, int textIdIndex) : this()
         {
-            // For dealing with pre-V11 caches where we didn't record chromatogram polarity
-            var chromGroupHeaderInfo = this;
-            chromGroupHeaderInfo._flagBits |= (ushort)FlagValues.polarity_negative;
-            return chromGroupHeaderInfo;
-        }
-
-        private static ushort CheckUShort(int value, bool allowNegativeOne = false)
-        {
-            return (ushort)CheckValue(value, ushort.MinValue, ushort.MaxValue, allowNegativeOne);
-        }
-
-        private static byte CheckByte(int value, int maxValue = byte.MaxValue)
-        {
-            return (byte)CheckValue(value, byte.MinValue, maxValue);
-        }
-
-        private static int CheckValue(int value, int min, int max, bool allowNegativeOne = false)
-        {
-            if (min > value || value > max)
+            _textIdIndex = textIdIndex;
+            _startTransitionIndex = headerInfo16._startTransitionIndex;
+            _startPeakIndex = headerInfo16._startPeakIndex;
+            _startScoreIndex = headerInfo16._startScoreIndex;
+            _numPoints = headerInfo16._numPoints;
+            _compressedSize = headerInfo16._compressedSize;
+            _ionMobilityUnits = headerInfo16.IonMobilityUnits;
+            if (headerInfo16.HasMassErrors)
             {
-                if (!allowNegativeOne || value != -1)
-                    throw new ArgumentOutOfRangeException(string.Format(@"The value {0} must be between {1} and {2}.", value, min, max)); // CONSIDER: localize?  Does user see this?
+                _flagBits |= FlagValues.has_mass_errors;
             }
-            return value;
+            if (headerInfo16.HasMs1ScanIds)
+            {
+                _flagBits |= FlagValues.has_ms1_scan_ids;
+            }
+            if (headerInfo16.HasSimScanIds)
+            {
+                _flagBits |= FlagValues.has_sim_scan_ids;
+            }
+            if (headerInfo16.HasFragScanIds)
+            {
+                _flagBits |= FlagValues.has_frag_scan_ids;
+            }
+            if (headerInfo16.RawChromatograms)
+            {
+                _flagBits |= FlagValues.raw_chromatograms;
+                Assume.AreNotEqual(-1, headerInfo16._uncompressedSize);
+            }
+            if (headerInfo16.IsDda)
+            {
+                _flagBits |= FlagValues.dda_acquisition_method;
+            }
+            if (headerInfo16.ExtractedBasePeak)
+            {
+                _flagBits |= FlagValues.extracted_base_peak;
+            }
+            if (headerInfo16.ExtractedQcTrace)
+            {
+                _flagBits |= FlagValues.extracted_qc_trace;
+            }
+            _fileIndex = headerInfo16._fileIndex;
+            _numTransitions = headerInfo16._numTransitions;
+            _numPeaks = headerInfo16._numPeaks;
+            _maxPeakIndex = headerInfo16._maxPeakIndex;
+            _precursor = headerInfo16.Precursor;
+            _locationPoints = headerInfo16._locationPoints;
+            _uncompressedSize = headerInfo16._uncompressedSize;
+            _startTime = headerInfo16._startTime;
+            _endTime = headerInfo16._endTime;
+            _collisionalCrossSection = headerInfo16._collisionalCrossSection;
         }
 
         public int TextIdIndex { get { return _textIdIndex; } }
@@ -319,16 +294,11 @@ namespace pwiz.Skyline.Model.Results
         public int StartScoreIndex { get { return _startScoreIndex; } }
         public int NumPoints { get { return _numPoints; } }
         public int CompressedSize { get { return _compressedSize; } }
-        public ushort FlagBits { get { return _flagBits; } }
         public ushort FileIndex { get {return _fileIndex;} }
-        public ushort TextIdLen { get { return _textIdLen; } }
         public ushort NumTransitions { get { return _numTransitions; } }
         public byte NumPeaks { get { return _numPeaks; } }        // The number of peaks stored per chrom should be well under 128
-        public ushort StatusId { get { return _statusId; } }
-        public ushort StatusRank { get { return _statusRank; } }
         public long LocationPoints { get{return _locationPoints;} }
         public int UncompressedSize { get{return _uncompressedSize;} }
-        public bool IsProcessedScans { get { return _isProcessedScans != 0; } }
 
         public override string ToString()
         {
@@ -345,9 +315,8 @@ namespace pwiz.Skyline.Model.Results
             }
         }
 
-        public FlagValues Flags { get { return (FlagValues)FlagBits; } }
+        public FlagValues Flags { get { return _flagBits; } }
 
-        public bool HasCalculatedMzs { get { return (Flags & FlagValues.has_calculated_mzs) != 0; } }
         public bool HasMassErrors { get { return (Flags & FlagValues.has_mass_errors) != 0; } }
         public bool HasMs1ScanIds { get { return (Flags & FlagValues.has_ms1_scan_ids) != 0; } }
         public bool HasFragmentScanIds { get { return (Flags & FlagValues.has_frag_scan_ids) != 0; } }
@@ -372,12 +341,12 @@ namespace pwiz.Skyline.Model.Results
 
         public bool NegativeCharge
         {
-            get { return (Flags & FlagValues.polarity_negative) != 0; }
+            get { return _precursor.IsNegative; }
         }
 
         public SignedMz Precursor
         {
-            get { return new SignedMz(_precursor, NegativeCharge); }
+            get { return _precursor; }
         }
 
         public float? CollisionalCrossSection
@@ -394,17 +363,9 @@ namespace pwiz.Skyline.Model.Results
         {
             get
             {
-                var ionMobilityBits = Flags & FlagValues.ion_mobility_type_bitmask;
-                if (ionMobilityBits == FlagValues.ion_mobility_type_bitmask)
-                {
-                    return (eIonMobilityUnits)(-1);
-                }
-                return (eIonMobilityUnits)((int)ionMobilityBits >> 8);
+                return _ionMobilityUnits;
             }
         }
-
-        public bool HasStatusId { get { return ((short)StatusId) != -1; } }
-        public bool HasStatusRank { get { return ((short)StatusRank) != -1; } }
 
         public ChromExtractor Extractor
         {
@@ -428,34 +389,21 @@ namespace pwiz.Skyline.Model.Results
             _locationPoints += offsetPoints;
         }
 
-        public void ClearScores()
+        public ChromGroupHeaderInfo ChangeTextIdIndex(int index)
         {
-            _startScoreIndex = -1;
+            var headerInfo = this;
+            headerInfo._textIdIndex = index;
+            return headerInfo;
         }
 
-        public void CalcTextIdIndex(Target target,
-            Dictionary<Target, int> dictTextIdToByteIndex,
-            List<byte> listTextIdBytes)
+        public ChromGroupHeaderInfo ChangeChargeToNegative()
         {
-            if (target == null)
-            {
-                _textIdIndex = -1;
-                _textIdLen = 0;
-            }
-            else
-            {
-                int textIdIndex;
-                var textIdBytes = Encoding.UTF8.GetBytes(target.ToSerializableString());
-                if (!dictTextIdToByteIndex.TryGetValue(target, out textIdIndex))
-                {
-                    textIdIndex = listTextIdBytes.Count;
-                    listTextIdBytes.AddRange(textIdBytes);
-                    dictTextIdToByteIndex.Add(target, textIdIndex);
-                }
-                _textIdIndex = textIdIndex;
-                _textIdLen = (ushort)textIdBytes.Length;
-            }
+            // For dealing with pre-V11 caches where we didn't record chromatogram polarity
+            var chromGroupHeaderInfo = this;
+            chromGroupHeaderInfo._precursor = new SignedMz(_precursor, true);
+            return chromGroupHeaderInfo;
         }
+
 
         public int CompareTo(ChromGroupHeaderInfo info)
         {
@@ -475,14 +423,6 @@ namespace pwiz.Skyline.Model.Results
                 ItemSizeOnDisk = itemSizeOnDisk,
                 DirectSerializer = DirectSerializer.Create(ReadArray, WriteArray)
             };
-            if (itemSizeOnDisk < GetStructSize(CacheFormatVersion.Eleven))
-            {
-                return ConvertedItemSerializer.Create(structSerializer, chromGroupHeaderInfo =>
-                {
-                    chromGroupHeaderInfo._uncompressedSize = -1;
-                    return chromGroupHeaderInfo;
-                }, chromGroupHeaderInfo=>chromGroupHeaderInfo);
-            }
             return structSerializer;
         }
         /// <summary>
@@ -533,16 +473,6 @@ namespace pwiz.Skyline.Model.Results
             get { return sizeof(ChromGroupHeaderInfo); }
         }
 
-        // For test purposes
-        public static int DeltaSize11
-        {
-            get
-            {
-                return Marshal.SizeOf<ChromGroupHeaderInfo>() -
-                       (int) Marshal.OffsetOf<ChromGroupHeaderInfo>(@"_uncompressedSize");
-            }
-        }
-
         public static int GetStructSize(CacheFormatVersion cacheFormatVersion)
         {
             if (cacheFormatVersion <= CacheFormatVersion.Four)
@@ -553,7 +483,12 @@ namespace pwiz.Skyline.Model.Results
             {
                 return 56;
             }
-            return 72;
+
+            if (cacheFormatVersion < CacheFormatVersion.Seventeen)
+            {
+                return 72;
+            }
+            return 68;
         }
     }
 
@@ -810,7 +745,7 @@ namespace pwiz.Skyline.Model.Results
         private float _ionMobilityValue;
         private float _ionMobilityExtractionWidth;
         private ushort _flagBits;
-        private ushort _align1;
+        private short _optimizationStep;
         [Flags]
         public enum FlagValues
         {
@@ -824,13 +759,15 @@ namespace pwiz.Skyline.Model.Results
 
         const FlagValues MASK_SOURCE = (FlagValues) 0x03;
 
-        public ChromTransition(double product, float extractionWidth, float ionMobilityValue, float ionMobilityExtractionWidth, ChromSource source) : this()
+        public ChromTransition(double product, float extractionWidth, float ionMobilityValue,
+            float ionMobilityExtractionWidth, ChromSource source, short optimizationStep) : this()
         {
             _product = product;
             _extractionWidth = extractionWidth;
             _ionMobilityValue = ionMobilityValue;
             _ionMobilityExtractionWidth = ionMobilityExtractionWidth;
             Source = source;
+            _optimizationStep = optimizationStep;
         }
 
         public ChromTransition(ChromTransition5 chromTransition5) : this(chromTransition5.Product,
@@ -839,12 +776,12 @@ namespace pwiz.Skyline.Model.Results
             // the next version of this struct in the May, 2014. So considering the source unknown
             // for these older files seems safest, since we are moving to paying attention to the
             // source for chromatogram to transition matching.
-            chromTransition5.ExtractionWidth, 0, 0, ChromSource.unknown)
+            chromTransition5.ExtractionWidth, 0, 0, ChromSource.unknown, 0)
         {            
         }
 
         public ChromTransition(ChromTransition4 chromTransition4)
-            : this(chromTransition4.Product, 0, 0, 0, ChromSource.unknown)
+            : this(chromTransition4.Product, 0, 0, 0, ChromSource.unknown, 0)
         {
         }
 
@@ -852,6 +789,7 @@ namespace pwiz.Skyline.Model.Results
         public float ExtractionWidth { get { return _extractionWidth; }}  // In m/z
         public float IonMobilityValue { get { return _ionMobilityValue; } } // Units depend on ion mobility type
         public float IonMobilityExtractionWidth { get { return _ionMobilityExtractionWidth; } } // Units depend on ion mobility type
+        public short OptimizationStep { get { return _optimizationStep; } }
 
         public FlagValues Flags
         {
@@ -972,6 +910,21 @@ namespace pwiz.Skyline.Model.Results
 
         #region object overrides
 
+        public ChromTransition ChangeProduct(double product)
+        {
+            var chromTransition = this;
+            chromTransition._product = product;
+            return chromTransition;
+        }
+
+        public ChromTransition ChangeOptimizationStep(short step, double productMz)
+        {
+            var chromTransition = this;
+            chromTransition._optimizationStep = step;
+            chromTransition._product = productMz;
+            return chromTransition;
+        }
+
         /// <summary>
         /// For debugging only
         /// </summary>
@@ -999,6 +952,10 @@ namespace pwiz.Skyline.Model.Results
         private FlagValues _flagValues;
         private short _massError;
         private readonly short _pointsAcross;
+        private readonly float _stdDev;
+        private readonly float _skewness;
+        private readonly float _kurtosis;
+        private readonly float _shapeCorrelation;
 
         [Flags]
         public enum FlagValues : ushort
@@ -1010,6 +967,7 @@ namespace pwiz.Skyline.Model.Results
             peak_truncated =        0x0010,
             contains_id =           0x0020,
             used_id_alignment =     0x0040,
+            has_peak_shape = 0x0080,
 
             // This is the last available flag
             mass_error_known =      0x8000,
@@ -1036,7 +994,7 @@ namespace pwiz.Skyline.Model.Results
         }
 
         public ChromPeak(float retentionTime, float startTime, float endTime, float area, float backgroundArea,
-            float height, float fwhm, FlagValues flagValues, double? massError, int? pointsAcross)
+            float height, float fwhm, FlagValues flagValues, double? massError, int? pointsAcross, PeakShapeValues? peakShapeValues)
         {
             _retentionTime = retentionTime;
             _startTime = startTime;
@@ -1057,6 +1015,19 @@ namespace pwiz.Skyline.Model.Results
             }
 
             _pointsAcross = (short) Math.Min(pointsAcross.GetValueOrDefault(), ushort.MaxValue);
+            if (peakShapeValues.HasValue)
+            {
+                flagValues |= FlagValues.has_peak_shape;
+                _skewness = peakShapeValues.Value.Skewness;
+                _kurtosis = peakShapeValues.Value.Kurtosis;
+                _stdDev = peakShapeValues.Value.StdDev;
+                _shapeCorrelation = peakShapeValues.Value.ShapeCorrelation;
+            }
+            else
+            {
+                flagValues &= ~FlagValues.has_peak_shape;
+                _shapeCorrelation = _stdDev = _skewness = _kurtosis = 0;
+            }
             _flagValues = flagValues;
         }
 
@@ -1064,7 +1035,8 @@ namespace pwiz.Skyline.Model.Results
                          IFoundPeak peak,
                          FlagValues flags,
                          TimeIntensities timeIntensities,
-                         IList<float> rawTimes)
+                         IList<float> rawTimes,
+                         MedianPeakShape medianPeakShape)
             : this()
         {
             var times = timeIntensities.Times;
@@ -1168,6 +1140,23 @@ namespace pwiz.Skyline.Model.Results
                     _pointsAcross = (short) Math.Min(pointsAcross, ushort.MaxValue);
                 }
             }
+
+            var backgroundLevel = Math.Min(timeIntensities.Intensities[peak.StartIndex],
+                timeIntensities.Intensities[peak.EndIndex]);
+            var peakShapeStatistics = PeakShapeStatistics.CalculateFromTimeIntensities(timeIntensities, peak.StartIndex,
+                peak.EndIndex, backgroundLevel);
+            if (peakShapeStatistics != null)
+            {
+                _flagValues |= FlagValues.has_peak_shape;
+                _stdDev = (float) peakShapeStatistics.StdDevTime;
+                _skewness = (float) peakShapeStatistics.Skewness;
+                _kurtosis = (float) peakShapeStatistics.Kurtosis;
+                _shapeCorrelation = (float?) medianPeakShape?.GetCorrelation(timeIntensities) ?? 1f;
+            }
+            else
+            {
+                _flagValues &= ~FlagValues.has_peak_shape;
+            }
         }
 
         public float RetentionTime { get { return _retentionTime; } }
@@ -1242,6 +1231,18 @@ namespace pwiz.Skyline.Model.Results
             }
         }
 
+        public PeakShapeValues? PeakShapeValues
+        {
+            get
+            {
+                if ((_flagValues & FlagValues.has_peak_shape) == 0)
+                {
+                    return null;
+                }
+
+                return new PeakShapeValues(_stdDev, _skewness, _kurtosis, _shapeCorrelation);
+            }
+        }
         /// <summary>
         /// Removes the mass error bits from the upper 16 in order to keep
         /// from writing mass errors into older cache file formats until
@@ -1271,7 +1272,11 @@ namespace pwiz.Skyline.Model.Results
             {
                 return 32;
             }
-            return 36;
+            if (formatVersion < CacheFormatVersion.Sixteen)
+            {
+                return 36;
+            }
+            return 52;
         }
 
         public static StructSerializer<ChromPeak> StructSerializer(int chromPeakSize)
@@ -1284,7 +1289,7 @@ namespace pwiz.Skyline.Model.Results
         }
 
         public static ChromPeak IntegrateWithoutBackground(TimeIntensities timeIntensities, float startTime,
-            float endTime, FlagValues flags)
+            float endTime, FlagValues flags, MedianPeakShape medianPeakShape)
         {
             int pointsAcrossPeak = 0;
             int startIndex = CollectionUtil.BinarySearch(timeIntensities.Times, startTime);
@@ -1304,6 +1309,9 @@ namespace pwiz.Skyline.Model.Results
                 Assume.AreEqual(endTime, timeIntensities.Times[endIndex]);
                 pointsAcrossPeak--;
             }
+
+            var peakShapeStatistics =
+                PeakShapeStatistics.CalculateFromTimeIntensities(timeIntensities, startIndex, endIndex, 0);
             pointsAcrossPeak += endIndex - startIndex + 1;
             double totalArea = 0;
             double totalMassError = 0;
@@ -1427,8 +1435,25 @@ namespace pwiz.Skyline.Model.Results
                 massError = totalMassError / totalArea;
             }
 
+            float correlation;
+            if (medianPeakShape == null)
+            {
+                correlation = 1;
+            }
+            else
+            {
+                correlation = (float) medianPeakShape.GetCorrelation(timeIntensities);
+            }
+
+            PeakShapeValues? peakShapeValues = null;
+            if (peakShapeStatistics != null)
+            {
+                peakShapeValues = new PeakShapeValues((float)peakShapeStatistics.StdDevTime, (float)peakShapeStatistics.Skewness,
+                    (float)peakShapeStatistics.Kurtosis, correlation);
+            }
+
             return new ChromPeak((float) apexTime, startTime, endTime, (float) totalArea, 0, (float) apexHeight, fwhm, flags, massError,
-                pointsAcrossPeak);
+                pointsAcrossPeak, peakShapeValues);
         }
 
         #region Fast file I/O
@@ -1503,6 +1528,7 @@ namespace pwiz.Skyline.Model.Results
             is_srm = 0x80,
             used_ms1_centroids = 0x100,
             used_ms2_centroids = 0x200,
+            result_file_data = 0x400,
         }
 
         public static DateTime GetLastWriteTime(MsDataFileUri filePath)
@@ -1626,9 +1652,32 @@ namespace pwiz.Skyline.Model.Results
             get { return (Flags & FlagValues.is_srm) != 0; }
         }
 
+        public bool HasResultFileData
+        {
+            get { return 0 != (Flags & FlagValues.result_file_data); }
+        }
+
         public ChromCachedFile RelocateScanIds(long locationScanIds)
         {
-            return ChangeProp(ImClone(this), im => im.LocationScanIds = locationScanIds);
+            return ResizeScanIds(locationScanIds, SizeScanIds, HasResultFileData);
+        }
+
+        /// <summary>
+        /// Returns a new ChromCachedFile where the scan ids have been relocated to the given location.
+        /// Also, sets the result_file_data flag to indicate whether the scan ids are in the new ResultFileMetaData
+        /// format or in the old MsDataFileScanIds format.
+        /// </summary>
+        public ChromCachedFile ResizeScanIds(long locationScanIds, int sizeScanIds, bool resultFileData)
+        {
+            return ChangeProp(ImClone(this), im =>
+            {
+                im.LocationScanIds = locationScanIds;
+                im.SizeScanIds = sizeScanIds;
+                if (resultFileData)
+                    im.Flags |= FlagValues.result_file_data;
+                else
+                    im.Flags &= ~FlagValues.result_file_data;
+            });
         }
 
         public ChromCachedFile ChangeTicArea(float? ticArea)
@@ -1808,74 +1857,77 @@ namespace pwiz.Skyline.Model.Results
     public class ChromKey : Immutable, IComparable<ChromKey>
     {
         public static readonly ChromKey EMPTY = new ChromKey(null, SignedMz.ZERO, null,
-            SignedMz.ZERO, 0, 0, ChromSource.unknown, ChromExtractor.summed, false, false);
+            SignedMz.ZERO, 0, 0, 0, ChromSource.unknown, ChromExtractor.summed);
 
         private double _optionalMinTime;
         private double _optionalMaxTime;
         private bool _hasOptionalTimes;
 
         public ChromKey(byte[] textIdBytes,
-                        int textIdIndex,
-                        int textIdLen,
-                        SignedMz precursor,
-                        SignedMz product,
-                        double extractionWidth,
-                        IonMobilityFilter ionMobility,
-                        ChromSource source,
-                        ChromExtractor extractor,
-                        bool calculatedMzs,
-                        bool hasScanIds)
-            : this(textIdIndex != -1 ? Target.FromSerializableString(Encoding.UTF8.GetString(textIdBytes, textIdIndex, textIdLen)) : null,
-                   precursor,
-                   ionMobility,
-                   product,
-                   0,
-                   extractionWidth,
-                   source,
-                   extractor,
-                   calculatedMzs,
-                   hasScanIds)
+            int textIdIndex,
+            int textIdLen,
+            SignedMz precursor,
+            SignedMz product,
+                        int optimizationStep,
+            double extractionWidth,
+            IonMobilityFilter ionMobility,
+            ChromSource source,
+            ChromExtractor extractor) : this(
+            textIdIndex != -1
+                ? new ChromatogramGroupId(
+                    Target.FromSerializableString(Encoding.UTF8.GetString(textIdBytes, textIdIndex, textIdLen)), default)
+                : null,
+            precursor,
+            ionMobility,
+            product,
+                   optimizationStep,
+            0,
+            extractionWidth,
+            source,
+            extractor)
         {
         }
 
-        public ChromKey(Target target,
+        public ChromKey(ChromatogramGroupId chromatogramGroupId,
                         SignedMz precursor,
                         IonMobilityFilter ionMobilityFilter,
                         SignedMz product,
+                        int optimizationStep,
                         double ceValue,
                         double extractionWidth,
                         ChromSource source,
-                        ChromExtractor extractor,
-                        bool calculatedMzs,
-                        bool hasScanIds)
+                        ChromExtractor extractor)
         {
-            Target = target;
+            ChromatogramGroupId = chromatogramGroupId;
             Precursor = precursor;
             IonMobilityFilter = ionMobilityFilter ?? IonMobilityFilter.EMPTY;
             Product = product;
+            OptimizationStep = optimizationStep;
             CollisionEnergy = (float) ceValue;
             ExtractionWidth = (float) extractionWidth;
             Source = source;
             Extractor = extractor;
-            HasCalculatedMzs = calculatedMzs;
-            HasScanIds = hasScanIds;
             // Calculating these values on the fly shows up in a profiler in the CompareTo function
             // So, probably not worth the space saved in this class
             IsEmpty = Precursor == 0 && Product == 0 && source == ChromSource.unknown;
         }
 
-        public Target Target { get; private set; }  // Modified sequence or custom ion id
+        public ChromatogramGroupId ChromatogramGroupId { get; }
+        public Target Target
+        {
+            get { return ChromatogramGroupId?.Target; }
+        }  // Modified sequence or custom ion id
         public SignedMz Precursor { get; private set; }
         public double? CollisionalCrossSectionSqA { get { return IonMobilityFilter.CollisionalCrossSectionSqA; }  }
         public eIonMobilityUnits IonMobilityUnits { get { return IonMobilityFilter.IonMobilityUnits; } }
         public IonMobilityFilter IonMobilityFilter { get; private set; }
         public SignedMz Product { get; private set; }
+        public int OptimizationStep { get; private set; }
         public float CollisionEnergy { get; private set; }
         public float ExtractionWidth { get; private set; }
         public ChromSource Source { get; private set; }
         public ChromExtractor Extractor { get; private set; }
         public bool HasCalculatedMzs { get; private set; }
-        public bool HasScanIds { get; private set; }
         public bool IsEmpty { get; private set; }
 
         public double? OptionalMinTime
@@ -1888,18 +1940,12 @@ namespace pwiz.Skyline.Model.Results
             get { return _hasOptionalTimes ? (double?) _optionalMaxTime : null; }
         }
 
-        /// <summary>
-        /// Adjust the product m/z to look like it does for vendors that allow
-        /// product m/z shifting for parameter optimization.
-        /// </summary>
-        /// <param name="step">The step from the central predicted parameter value</param>
-        /// <returns>A new ChromKey with adjusted product m/z and cleared CE value</returns>
-        public ChromKey ChangeOptimizationStep(int step)
+        public ChromKey ChangeOptimizationStep(int step, SignedMz? newProductMz)
         {
             return ChangeProp(ImClone(this), im =>
             {
-                im.Product = Product + step * ChromatogramInfo.OPTIMIZE_SHIFT_SIZE;
-                im.CollisionEnergy = 0;
+                im.OptimizationStep = step;
+                im.Product = newProductMz ?? im.Product;
             });
         }
 
@@ -1918,8 +1964,8 @@ namespace pwiz.Skyline.Model.Results
         /// </summary>
         public override string ToString()
         {
-            if (Target != null)
-                return string.Format(@"{0:F04}, {1:F04} {4} - {2} - {3}", Precursor.RawValue, Product.RawValue, Source, Target, IonMobilityFilter);
+            if (ChromatogramGroupId != null)
+                return string.Format(@"{0:F04}, {1:F04} {4} - {2} - {3}", Precursor.RawValue, Product.RawValue, Source, ChromatogramGroupId, IonMobilityFilter);
             return string.Format(@"{0:F04}, {1:F04} {3} - {2}", Precursor.RawValue, Product.RawValue, Source, IonMobilityFilter);
         }
 
@@ -1943,6 +1989,9 @@ namespace pwiz.Skyline.Model.Results
             c = Product.CompareTo(key.Product);
             if (c != 0)
                 return c;
+            c = OptimizationStep.CompareTo(key.OptimizationStep);
+            if (c != 0)
+                return c;
             c = CollisionEnergy.CompareTo(key.CollisionEnergy);
             if (c != 0)
                 return c;
@@ -1958,25 +2007,10 @@ namespace pwiz.Skyline.Model.Results
             int c = Precursor.CompareTo(key.Precursor);
             if (c != 0)
                 return c;
-            c = CompareTarget(key);
+            c = ValueTuple.Create(ChromatogramGroupId).CompareTo(ValueTuple.Create(key.ChromatogramGroupId));
             if (c != 0)
                 return c;
             return Extractor.CompareTo(key.Extractor);
-        }
-
-        private int CompareTarget(ChromKey key)
-        {
-            if (Target != null && key.Target != null)
-            {
-                int c = Target.CompareTo(key.Target);
-                if (c != 0)
-                    return c;
-            }
-            else if (Target != null)
-                return 1;
-            else if (key.Target != null)
-                return -1;
-            return 0;   // both null
         }
 
         public int CompareSource(ChromKey key)
@@ -2080,7 +2114,7 @@ namespace pwiz.Skyline.Model.Results
                         ceValue = Math.Abs(ceParsed);
                     }
                 }
-                return new ChromKey(null, new SignedMz(precursor, isNegativeCharge), null, new SignedMz(product, isNegativeCharge), ceValue, 0, source, extractor, false, true);
+                return new ChromKey(null, new SignedMz(precursor, isNegativeCharge), null, new SignedMz(product, isNegativeCharge), 0, ceValue, 0, source, extractor);
             }
             catch (FormatException)
             {
@@ -2091,14 +2125,14 @@ namespace pwiz.Skyline.Model.Results
         public static ChromKey FromQcTrace(MsDataFileImpl.QcTrace qcTrace)
         {
             var qcTextBytes = Encoding.UTF8.GetBytes(qcTrace.Name);
-            return new ChromKey(qcTextBytes, 0, qcTextBytes.Length, SignedMz.ZERO, SignedMz.ZERO, 0, null, ChromSource.unknown, ChromExtractor.qc, false, false);
+            return new ChromKey(qcTextBytes, 0, qcTextBytes.Length, SignedMz.ZERO, SignedMz.ZERO, 0, 0, null, ChromSource.unknown, ChromExtractor.qc);
         }
 
         #region object overrides
 
         public bool Equals(ChromKey other)
         {
-            return Equals(Target, other.Target) &&
+            return Equals(ChromatogramGroupId, other.ChromatogramGroupId) &&
                 Precursor.Equals(other.Precursor) &&
                 IonMobilityFilter.Equals(other.IonMobilityFilter) &&
                 Product.Equals(other.Product) &&
@@ -2107,7 +2141,6 @@ namespace pwiz.Skyline.Model.Results
                 Source == other.Source &&
                 Extractor == other.Extractor &&
                 HasCalculatedMzs.Equals(other.HasCalculatedMzs) &&
-                HasScanIds.Equals(other.HasScanIds) &&
                 OptionalMinTime.Equals(other.OptionalMinTime) &&
                 OptionalMaxTime.Equals(other.OptionalMaxTime);
         }
@@ -2122,7 +2155,7 @@ namespace pwiz.Skyline.Model.Results
         {
             unchecked
             {
-                var hashCode = (Target != null ? Target.GetHashCode() : 0);
+                var hashCode = (ChromatogramGroupId != null ? ChromatogramGroupId.GetHashCode() : 0);
                 hashCode = (hashCode*397) ^ Precursor.GetHashCode();
                 hashCode = (hashCode*397) ^ IonMobilityFilter.GetHashCode();
                 hashCode = (hashCode*397) ^ Product.GetHashCode();
@@ -2131,7 +2164,6 @@ namespace pwiz.Skyline.Model.Results
                 hashCode = (hashCode*397) ^ (int) Source;
                 hashCode = (hashCode*397) ^ (int) Extractor;
                 hashCode = (hashCode*397) ^ HasCalculatedMzs.GetHashCode();
-                hashCode = (hashCode*397) ^ HasScanIds.GetHashCode();
                 hashCode = (hashCode*397) ^ OptionalMinTime.GetHashCode();
                 hashCode = (hashCode*397) ^ OptionalMaxTime.GetHashCode();
                 return hashCode;
@@ -2191,7 +2223,6 @@ namespace pwiz.Skyline.Model.Results
     {
         protected readonly ChromGroupHeaderInfo _groupHeaderInfo;
         protected readonly FeatureNames _scoreTypeIndices;
-        protected readonly byte[] _textIdBytes;
         protected readonly IList<ChromCachedFile> _allFiles;
         protected readonly IReadOnlyList<ChromTransition> _allTransitions;
         [CanBeNull]
@@ -2202,33 +2233,34 @@ namespace pwiz.Skyline.Model.Results
 
         public ChromatogramGroupInfo(ChromGroupHeaderInfo groupHeaderInfo,
                                      FeatureNames scoreTypeIndices,
-                                     byte[] textIdBytes,
+                                     ChromatogramGroupId chromatogramGroupId,
                                      IList<ChromCachedFile> allFiles,
                                      IReadOnlyList<ChromTransition> allTransitions,
                                      ChromatogramCache chromatogramCache)
         {
             _groupHeaderInfo = groupHeaderInfo;
             _scoreTypeIndices = scoreTypeIndices;
-            _textIdBytes = textIdBytes;
+            ChromatogramGroupId = chromatogramGroupId;
             _allFiles = allFiles;
             _allTransitions = allTransitions;
             _chromatogramCache = chromatogramCache;
         }
 
         public ChromatogramGroupInfo(ChromGroupHeaderInfo groupHeaderInfo,
+            ChromCachedFile chromCachedFile,
             IReadOnlyList<ChromTransition> allTransitions, IList<ChromPeak> peaks, 
             TimeIntensitiesGroup timeIntensitiesGroup) 
-            : this(groupHeaderInfo, allTransitions, peaks, timeIntensitiesGroup, FeatureNames.EMPTY, Array.Empty<float>())
+            : this(groupHeaderInfo, chromCachedFile, allTransitions, peaks, timeIntensitiesGroup, FeatureNames.EMPTY, Array.Empty<float>())
         {
         }
 
         public ChromatogramGroupInfo(ChromGroupHeaderInfo groupHeaderInfo,
+            ChromCachedFile chromCachedFile,
             IReadOnlyList<ChromTransition> allTransitions, IList<ChromPeak> peaks,
             TimeIntensitiesGroup timeIntensitiesGroup, FeatureNames scoreTypeIndices, float[] scores)
         {
             _groupHeaderInfo = groupHeaderInfo;
-            _textIdBytes = Array.Empty<byte>();
-            _allFiles = Array.Empty<ChromCachedFile>();
+            _allFiles = new[]{chromCachedFile};
             _allTransitions = allTransitions;
             _chromPeaks = peaks;
             _timeIntensitiesGroup = timeIntensitiesGroup;
@@ -2239,13 +2271,16 @@ namespace pwiz.Skyline.Model.Results
 
         internal ChromGroupHeaderInfo Header { get { return _groupHeaderInfo; } }
         public SignedMz PrecursorMz { get { return new SignedMz(_groupHeaderInfo.Precursor, _groupHeaderInfo.NegativeCharge); } }
+        public ChromatogramGroupId ChromatogramGroupId
+        {
+            get; private set;
+        }
+
         public string TextId
         {
             get
             {
-                return _groupHeaderInfo.TextIdIndex != -1
-                    ? Encoding.UTF8.GetString(_textIdBytes, _groupHeaderInfo.TextIdIndex, _groupHeaderInfo.TextIdLen)
-                    : null;
+                return ChromatogramGroupId?.Target.Sequence;
             }
         }
         public double? PrecursorCollisionalCrossSection { get { return _groupHeaderInfo.CollisionalCrossSection; } }
@@ -2380,48 +2415,16 @@ namespace pwiz.Skyline.Model.Results
             return _allTransitions[_groupHeaderInfo.StartTransitionIndex + transitionIndex];
         }
 
-        public ChromatogramInfo GetTransitionInfo(TransitionDocNode nodeTran, float tolerance, OptimizableRegression regression)
+        public ChromatogramInfo GetTransitionInfo(TransitionDocNode nodeTran, float tolerance)
         {
-            return GetTransitionInfo(nodeTran, tolerance, TransformChrom.interpolated, regression);
+            return GetTransitionInfo(nodeTran, tolerance, TransformChrom.interpolated);
         }
 
-        public virtual ChromatogramInfo GetTransitionInfo(TransitionDocNode nodeTran, float tolerance, TransformChrom transform, OptimizableRegression regression)
+        public virtual ChromatogramInfo GetTransitionInfo(TransitionDocNode nodeTran, float tolerance, TransformChrom transform)
         {
-            var productMz = nodeTran != null ? nodeTran.Mz : SignedMz.ZERO;
-            int startTran = _groupHeaderInfo.StartTransitionIndex;
-            int endTran = startTran + _groupHeaderInfo.NumTransitions;
-            int? iNearest = null;
-            double deltaNearestMz = double.MaxValue;
-            for (int i = startTran; i < endTran; i++)
-            {
-                if (IsProductGlobalMatch(i, nodeTran, tolerance))
-                {
-                    int iMiddle;
-                    if (regression == null)
-                    {
-                        iMiddle = i;
-                    }
-                    else
-                    {
-                        // If there is optimization data, return only the middle value, which
-                        // was the regression value.
-                        int startOptTran, endOptTran;
-                        GetOptimizationBounds(productMz, i, startTran, endTran, out startOptTran, out endOptTran);
-                        var chromatogramMzs = Enumerable.Range(startOptTran, endOptTran - startOptTran + 1)
-                            .Select(GetProductGlobal);
-                        iMiddle = startOptTran + OptStepChromatograms.IndexOfCenter(productMz, chromatogramMzs, regression.StepCount);
-                    }
-
-                    double deltaMz = Math.Abs(productMz - GetProductGlobal(iMiddle));
-                    if (deltaMz < deltaNearestMz)
-                    {
-                        iNearest = iMiddle;
-                        deltaNearestMz = deltaMz;
-                    }
-                }
-            }
-            return iNearest.HasValue
-                       ? GetTransitionInfo(iNearest.Value - startTran, transform)
+            var iBest = GetBestProductIndex(nodeTran, tolerance);
+            return iBest.HasValue
+                ? GetTransitionInfo(iBest.Value - _groupHeaderInfo.StartTransitionIndex, transform)
                        : null;
         }
 
@@ -2429,55 +2432,58 @@ namespace pwiz.Skyline.Model.Results
         {
             if (regression == null)
             {
-                // ReSharper disable ExpressionIsAlwaysNull
-                var info = GetTransitionInfo(nodeTran, tolerance, transform, regression);
-                // ReSharper restore ExpressionIsAlwaysNull
-                if (info != null)
-                {
-                    return OptStepChromatograms.FromChromatogram(info);
+                var info = GetTransitionInfo(nodeTran, tolerance, transform);
+                return info != null ? OptStepChromatograms.FromChromatogram(info) : OptStepChromatograms.EMPTY;
                 }
-                return OptStepChromatograms.EMPTY;
-            }
 
-            var productMz = nodeTran != null ? nodeTran.Mz : SignedMz.ZERO;
-            int startTran = _groupHeaderInfo.StartTransitionIndex;
-            int endTran = startTran + _groupHeaderInfo.NumTransitions;
             var listChromInfo = new List<ChromatogramInfo>();
-            for (int i = startTran; i < endTran; i++)
+            var iBest = GetBestProductIndex(nodeTran, tolerance);
+            if (iBest.HasValue)
             {
-                if (IsProductGlobalMatch(i, nodeTran, tolerance))
+                var startTran = _groupHeaderInfo.StartTransitionIndex;
+                var endTran = startTran + _groupHeaderInfo.NumTransitions;
+
+                // First back up to find the beginning
+                var i = iBest.Value;
+                while (i - 1 >= startTran &&
+                       _allTransitions[i - 1].OptimizationStep == _allTransitions[i].OptimizationStep - 1)
                 {
-                    int startOptTran, endOptTran;
-                    GetOptimizationBounds(productMz, i, startTran, endTran, out startOptTran, out endOptTran);
-                    for (int j = startOptTran; j <= endOptTran; j++)
-                        listChromInfo.Add(GetTransitionInfo(j - startTran, transform));
-                    i = Math.Max(i, endOptTran);
+                    i--;
                 }
+
+                // Walk forward until the end
+                do
+                {
+                    listChromInfo.Add(GetTransitionInfo(i - startTran, transform));
+                    i++;
+                } while (i < endTran && _allTransitions[i].OptimizationStep == _allTransitions[i - 1].OptimizationStep + 1);
             }
 
-            return new OptStepChromatograms(nodeTran?.Mz ?? SignedMz.ZERO, listChromInfo, regression.StepCount);
+            return new OptStepChromatograms(listChromInfo, regression.StepCount);
         }
 
-        private void GetOptimizationBounds(SignedMz productMz, int i, int startTran, int endTran, out int startOptTran, out int endOptTran)
+        private int? GetBestProductIndex(TransitionDocNode nodeTran, float tolerance)
         {
-            // CONSIDER: Tried to make this a little more fault tolerant, but that just caused
-            //           more problems. So, decided to leave this close to the original implementation.
-            var productMzCurrent = GetProductGlobal(i);
+            var productMz = nodeTran?.Mz ?? SignedMz.ZERO;
+            var startTran = _groupHeaderInfo.StartTransitionIndex;
+            var endTran = startTran + _groupHeaderInfo.NumTransitions;
 
-            // First back up to find the beginning
-            while (i > startTran &&
-                   ChromatogramInfo.IsOptimizationSpacing(GetProductGlobal(i - 1), productMzCurrent))
+            int? iNearest = null;
+            var deltaNearestMz = double.MaxValue;
+            for (var i = startTran; i < endTran; i++)
             {
-                productMzCurrent = GetProductGlobal(--i);
-            }
-            startOptTran = i;
-            // Walk forward until the end
-            while (i < endTran - 1 &&
-                ChromatogramInfo.IsOptimizationSpacing(productMzCurrent, GetProductGlobal(i + 1)))
+                if (!IsProductGlobalMatch(i, nodeTran, tolerance) || _allTransitions[i].OptimizationStep != 0)
+                    continue;
+
+                var deltaMz = Math.Abs(productMz - GetProductGlobal(i));
+                if (deltaMz < deltaNearestMz)
             {
-                productMzCurrent = GetProductGlobal(++i);
+                    iNearest = i;
+                    deltaNearestMz = deltaMz;
             }
-            endOptTran = i;
+        }
+
+            return iNearest;
         }
 
         public ChromPeak GetTransitionPeak(int transitionIndex, int peakIndex)
@@ -2592,6 +2598,14 @@ namespace pwiz.Skyline.Model.Results
 
 // ReSharper disable InconsistentNaming
     public enum TransformChrom { raw, interpolated, craw2d, craw1d, savitzky_golay }
+
+    public static class TransformChromExtension
+    {
+        public static bool IsDerivative(this TransformChrom transformChrom)
+        {
+            return transformChrom == TransformChrom.craw1d || transformChrom == TransformChrom.craw2d;
+        }
+    }
 // ReSharper restore InconsistentNaming
 
     public class ChromatogramInfo
@@ -2626,9 +2640,12 @@ namespace pwiz.Skyline.Model.Results
             _transitionIndex = transitionIndex;
         }
 
-        public ChromatogramInfo(float[] times, float[] intensities)
+        public ChromatogramInfo(float[] times, float[] intensities) : this(new TimeIntensities(times, intensities, null, null))
         {
-            _timeIntensities = new TimeIntensities(times, intensities, null, null);
+        }
+        public ChromatogramInfo(TimeIntensities timeIntensities)
+        {
+            _timeIntensities = timeIntensities;
         }
 
         public ChromatogramGroupInfo GroupInfo { get { return _groupInfo; } }
@@ -2649,6 +2666,14 @@ namespace pwiz.Skyline.Model.Results
         public SignedMz ProductMz
         {
             get { return _groupInfo.GetProductLocal(_transitionIndex); }
+        }
+
+        public int OptimizationStep
+        {
+            get
+            {
+                return ChromTransition.OptimizationStep;
+            }
         }
 
         public ChromSource Source
@@ -2733,7 +2758,7 @@ namespace pwiz.Skyline.Model.Results
             }
         }
 
-        private TimeIntensities GetTransformedTimeIntensities(TransformChrom transformChrom)
+        public TimeIntensities GetTransformedTimeIntensities(TransformChrom transformChrom)
         {
             var timeIntensitiesGroup = _groupInfo?.TimeIntensitiesGroup;
             if (timeIntensitiesGroup == null)
@@ -2822,11 +2847,18 @@ namespace pwiz.Skyline.Model.Results
             return _groupInfo.GetTransitionPeak(_transitionIndex, peakIndex);
         }
 
-        public ChromPeak CalcPeak(FullScanAcquisitionMethod acquisitionMethod, float startTime, float endTime, ChromPeak.FlagValues flags)
+        public ChromPeak CalcPeak(PeakGroupIntegrator peakGroupIntegrator, float startTime, float endTime, ChromPeak.FlagValues flags)
         {
-            var peakIntegrator = new PeakIntegrator(acquisitionMethod, TimeIntervals, Source, RawTimeIntensities,
-                TimeIntensities, null);
+            var peakIntegrator = MakePeakIntegrator(peakGroupIntegrator);
             return peakIntegrator.IntegratePeak(startTime, endTime, flags);
+        }
+
+        public PeakIntegrator MakePeakIntegrator(PeakGroupIntegrator peakGroupIntegrator)
+        {
+            var rawTimeIntensities = RawTimeIntensities;
+            var interpolatedTimeIntensities = GetTransformedTimeIntensities(TransformChrom.interpolated);
+            return new PeakIntegrator(peakGroupIntegrator, ChromTransition.Source, rawTimeIntensities,
+                interpolatedTimeIntensities, null);
         }
 
         public int IndexOfPeak(double retentionTime)
@@ -2908,6 +2940,14 @@ namespace pwiz.Skyline.Model.Results
             }
         }
 
+        public TransformChrom TransformChrom
+        {
+            get
+            {
+                return _transformChrom;
+            }
+        }
+
         public void Transform(TransformChrom transformChrom)
         {
             if (_transformChrom == transformChrom)
@@ -2972,6 +3012,18 @@ namespace pwiz.Skyline.Model.Results
         }
 
         public int TransitionIndex { get { return _transitionIndex; } }
+
+        public float? GetBackgroundLevel(float peakStart, float peakEnd)
+        {
+            TimeIntensities interpolatedTimeIntensities = GetTransformedTimeIntensities(TransformChrom.interpolated);
+            // Make sure that the TimeIntensities has an entry for both the start and end time
+            interpolatedTimeIntensities =
+                interpolatedTimeIntensities.InterpolateTime(peakStart).InterpolateTime(peakEnd);
+            float startIntensity = interpolatedTimeIntensities.Intensities[interpolatedTimeIntensities.IndexOfNearestTime(peakStart)];
+            float endIntensity =
+                interpolatedTimeIntensities.Intensities[interpolatedTimeIntensities.IndexOfNearestTime(peakEnd)];
+            return Math.Min(startIntensity, endIntensity);
+        }
     }
 
     public class BulkReadException : IOException

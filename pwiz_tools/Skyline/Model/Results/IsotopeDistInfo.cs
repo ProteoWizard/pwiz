@@ -29,7 +29,7 @@ using pwiz.Skyline.Util;
 
 namespace pwiz.Skyline.Model.Results
 {
-    public sealed class IsotopeDistInfo : Immutable
+    public sealed class IsotopeDistInfo : Immutable, IEquatable<IsotopeDistInfo>
     {
         private readonly TypedMass _monoisotopicMass;
         private readonly Adduct _adduct;
@@ -87,7 +87,7 @@ namespace pwiz.Skyline.Model.Results
             // expected proportions of the mass distribution that will end up filtered into
             // peaks
             // CONSIDER: Mass accuracy information is not calculated here
-            var key = new PrecursorTextId(signedQ1FilterValues[monoMassIndex], null, null, ChromExtractor.summed);
+            var key = new PrecursorTextId(signedQ1FilterValues[monoMassIndex], null, null, null, null, ChromExtractor.summed);
             var filter = new SpectrumFilterPair(key, PeptideDocNode.UNKNOWN_COLOR, 0, null, null, false, false);
             filter.AddQ1FilterValues(signedQ1FilterValues, calcFilterWindow);
 
@@ -269,7 +269,7 @@ namespace pwiz.Skyline.Model.Results
 
         #endregion
 
-        private struct MzRankProportion
+        private struct MzRankProportion : IEquatable<MzRankProportion>
         {
             public MzRankProportion(double mz, int rank, float proportion) : this()
             {
@@ -285,6 +285,13 @@ namespace pwiz.Skyline.Model.Results
             public override string ToString() // For ease in debugging
             {
                 return String.Format(@"mz {0} rank {1} proportion {2}", Mz, Rank, Proportion);
+            }
+
+            public bool Equals(MzRankProportion other)
+            {
+                return Mz == other.Mz && 
+                       Rank == other.Rank && 
+                       Proportion.Equals(other.Proportion);
             }
         }
     }

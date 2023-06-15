@@ -516,7 +516,7 @@ namespace pwiz.Skyline.Controls.Graphs
                                 var transitionGroup = transitionGroups[0];
                                 bool hasPrecursors = transitionGroup.Transitions.Any(transition => transition.IsMs1);
                                 bool hasProducts = transitionGroup.Transitions.Any(transition => !transition.IsMs1);
-                                if (hasPrecursors && hasProducts)
+                                if (hasPrecursors && hasProducts && !IsOptimization(transitionGroup))
                                 {
                                     paneKeys = new[] { PaneKey.PRECURSORS, PaneKey.PRODUCTS };
                                 }
@@ -531,13 +531,44 @@ namespace pwiz.Skyline.Controls.Graphs
                 }
                 else
                 {
-                    paneKeys = StateProvider.SelectionDocument.MoleculeTransitionGroups.Select(
-                        group => new PaneKey(@group.TransitionGroup.LabelType)).Distinct().ToArray();
+                    IEnumerable<PeptideGroupDocNode> moleculeGroups = StateProvider.SelectionDocument.MoleculeGroups;
+                    if (AreaGraphController.AreaScope == AreaScope.protein)
+                    {
+                        var peptideGroupDocNode = (StateProvider.SelectedNode as SrmTreeNode)
+                            ?.GetNodeOfType<PeptideGroupTreeNode>()?.DocNode;
+                        if (peptideGroupDocNode != null)
+                        {  
+                            moleculeGroups = new[] { peptideGroupDocNode };
+                        }
+                    }
+
+                    paneKeys = moleculeGroups
+                        .SelectMany(group => group.Peptides.SelectMany(peptide => peptide.TransitionGroups
+                            .Select(tg => tg.LabelType)))
+                        .Distinct().Select(labelType => new PaneKey(labelType)).ToArray();
                 }
             }
             paneKeys = paneKeys ?? new[] { PaneKey.DEFAULT };
             Array.Sort(paneKeys);
             return paneKeys;
+        }
+
+        private static bool IsOptimization(TransitionGroupDocNode nodeTranGroup)
+        {
+            if (nodeTranGroup.Transitions.Any(nodeTran => nodeTran.IsMs1 && nodeTran.ChromInfos.Any()))
+                return false;
+
+            var steps = nodeTranGroup.ChromInfos.Select(info => info.OptimizationStep).OrderBy(step => step).ToArray();
+            if (steps.Length <= 1)
+                return false;
+
+            for (var i = 0; i < steps.Length - 1; i++)
+            {
+                if (steps[i] != steps[i + 1] - 1)
+                    return false;
+            }
+
+            return true;
         }
     }
 

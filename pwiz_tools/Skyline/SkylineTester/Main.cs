@@ -66,7 +66,7 @@ namespace SkylineTester
                 return;
 
             foreach (var runButton in _runButtons)
-                runButton.Text = "Stop";
+                runButton.Text = "&Stop";
             buttonStop.Enabled = true;
             EnableButtonSelectFailedTests(false); // Until we have failures to select
             AcceptButton = null;
@@ -170,7 +170,7 @@ namespace SkylineTester
             _runningTab = null;
 
             foreach (var runButton in _runButtons)
-                runButton.Text = "Run";
+                runButton.Text = "&Run";
             buttonStop.Enabled = false;
             AcceptButton = DefaultButton;
 
@@ -241,6 +241,7 @@ namespace SkylineTester
             TestsRun = 0;
             if (Directory.Exists(_resultsDir))
                 Try.Multi<Exception>(() => Directory.Delete(_resultsDir, true), 4, false);
+            DeleteTestRunnerConfigFiles();
 
             var testRunner = Path.Combine(GetSelectedBuildDir(), "TestRunner.exe");
             _testRunnerIndex = new List<int>();
@@ -280,6 +281,20 @@ namespace SkylineTester
                     _resultsDir.Quote(),
                     AccessInternet.Checked ? "internet=on " : "",
                     args));
+            }
+        }
+
+        /// <summary>
+        /// Deletes all TestRunner.exe config folders to avoid user.config corruption
+        /// that can cause tests to fail indefinitely until it is cleaned up.
+        /// </summary>
+        private void DeleteTestRunnerConfigFiles()
+        {
+            var configsRoot = Path.Combine(Environment.GetFolderPath(Environment.SpecialFolder.UserProfile),
+                "AppData/Local/University_of_Washington");
+            foreach (var configDir in Directory.EnumerateDirectories(configsRoot, "TestRunner.exe*"))
+            {
+                Try.Multi<Exception>(() => Directory.Delete(configDir, true), 4, false);
             }
         }
 

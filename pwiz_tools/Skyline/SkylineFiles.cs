@@ -201,7 +201,7 @@ namespace pwiz.Skyline
                     }
                     else if (dlg.FileName.EndsWith(SkypFile.EXT))
                     {
-                        OpenSkypFile(dlg.FileName);
+                        OpenSkypFile(dlg.FileName, this);
                     }
                     else
                     {
@@ -1216,35 +1216,42 @@ namespace pwiz.Skyline
             string fileName = DocumentFilePath;
             ShareType shareType;
             DocumentFormat? fileFormatOnDisk = GetFileFormatOnDisk();
-            using (var dlgType = new ShareTypeDlg(document, fileFormatOnDisk))
+            using (var dlgType = new ShareTypeDlg(document, fileName, fileFormatOnDisk))
             {
                 if (dlgType.ShowDialog(this) == DialogResult.Cancel)
                     return;
                 shareType = dlgType.ShareType;
             }
 
-            if (skyZipFileName == null)
+            skyZipFileName ??= GetShareFileName();
+            if (skyZipFileName != null)
+                ShareDocument(skyZipFileName, shareType);
+        }
+
+        /// <summary>
+        /// Gets a share file path from the users.
+        /// This cannot be tested because it uses a CommonDialog form.
+        /// </summary>
+        private string GetShareFileName()
+        {
+            using var dlg = new SaveFileDialog
             {
-                using (var dlg = new SaveFileDialog
-                {
-                    Title = Resources.SkylineWindow_shareDocumentMenuItem_Click_Share_Document,
-                    OverwritePrompt = true,
-                    DefaultExt = SrmDocumentSharing.EXT_SKY_ZIP,
-                    SupportMultiDottedExtensions = true,
-                    Filter = TextUtil.FileDialogFilterAll(Resources.SkylineWindow_shareDocumentMenuItem_Click_Skyline_Shared_Documents, SrmDocumentSharing.EXT),
-                })
-                {
-                    if (fileName != null)
-                    {
-                        dlg.InitialDirectory = Path.GetDirectoryName(fileName);
-                        dlg.FileName = Path.GetFileNameWithoutExtension(fileName) + SrmDocumentSharing.EXT_SKY_ZIP;
-                    }
-                    if (dlg.ShowDialog(this) == DialogResult.Cancel)
-                        return;
-                    skyZipFileName = dlg.FileName;
-                }
+                Title = Resources.SkylineWindow_shareDocumentMenuItem_Click_Share_Document,
+                OverwritePrompt = true,
+                DefaultExt = SrmDocumentSharing.EXT_SKY_ZIP,
+                SupportMultiDottedExtensions = true,
+                Filter = TextUtil.FileDialogFilterAll(
+                    Resources.SkylineWindow_shareDocumentMenuItem_Click_Skyline_Shared_Documents,
+                    SrmDocumentSharing.EXT),
+            };
+            string fileName = DocumentFilePath;
+            if (fileName != null)
+            {
+                dlg.InitialDirectory = Path.GetDirectoryName(fileName);
+                dlg.FileName = Path.GetFileNameWithoutExtension(fileName) + SrmDocumentSharing.EXT_SKY_ZIP;
             }
-            ShareDocument(skyZipFileName, shareType);
+
+            return dlg.ShowDialog(this) == DialogResult.OK ? dlg.FileName : null;
         }
 
         private DocumentFormat? GetFileFormatOnDisk()
@@ -2127,6 +2134,39 @@ namespace pwiz.Skyline
                     }
                     if (!ReferenceEquals(doc.Settings, newSettings))
                         doc = doc.ChangeSettings(newSettings);
+
+                    if (importer.InputType == SrmDocument.DOCUMENT_TYPE.small_molecules)
+                    {
+                        // We create new nodes with automanage turned off, but it might be interesting to user to have that on for isotopes etc
+                        // Try applying auto-pick refinement to see if that changes anything 
+                        var refine = new RefinementSettings { AutoPickChildrenAll = PickLevel.precursors | PickLevel.transitions, AutoPickChildrenOff = false };
+                        var docManaged = refine.Refine(doc);
+                        if (docManaged.MoleculeTransitionCount != 0 && // Automanage would turn everything off, not interesting
+                            !Equals(docManaged.MoleculeTransitionCount, doc.MoleculeTransitionCount))
+                        {
+                            var existingPrecursorCount = docCurrent.MoleculeTransitions?.Where(t => t.IsMs1).Count();
+                            var existingFragmentCount = docCurrent.MoleculeTransitions?.Where(t => !t.IsMs1).Count();
+                            var managedPrecursorCount = docManaged.MoleculeTransitions?.Where(t => t.IsMs1).Count();
+                            var managedFragmentCount = docManaged.MoleculeTransitions?.Where(t => !t.IsMs1).Count();
+                            var docPrecursorCount = doc.MoleculeTransitions?.Where(t => t.IsMs1).Count();
+                            var docFragmentCount = doc.MoleculeTransitions?.Where(t => !t.IsMs1).Count();
+                            var prompt = string.Format(
+                                Resources.SkylineWindow_ImportMassList_Do_you_want_to_use_the_document_settings_to_automanage_these_new_transitions,
+                                managedPrecursorCount - existingPrecursorCount,
+                                managedFragmentCount - existingFragmentCount,
+                                docPrecursorCount - existingPrecursorCount,
+                                docFragmentCount - existingFragmentCount);
+                            var result = MultiButtonMsgDlg.Show(this, prompt, Resources.SkylineWindow_ImportMassList_Enable, Resources.SkylineWindow_ImportMassList_Disable, true);
+                            if (result == DialogResult.Cancel)
+                            {
+                                doc = docCurrent;
+                            }
+                            else if (result != DialogResult.No)
+                            {
+                                doc = docManaged;
+                            }
+                        }
+                    }
                 }
                 catch (Exception x)
                 {
@@ -3322,11 +3362,11 @@ namespace pwiz.Skyline
                     return false;
                 }
 
-                folderPathNoCtx = folderPath.Remove(0, @"/labkey".Length); 
+                folderPathNoCtx = folderPath.Remove(0, @"/labkey".Length);
                 try
                 {
                     folders =
-                        publishClient.GetInfoForFolders(server, folderPathNoCtx.TrimEnd('/').TrimStart('/')); 
+                        publishClient.GetInfoForFolders(server, folderPathNoCtx.TrimEnd('/').TrimStart('/'));
                 }
                 catch (Exception)
                 {
@@ -3335,6 +3375,11 @@ namespace pwiz.Skyline
             }
             catch (PanoramaServerException)
             {
+                return false;
+            }
+            catch (Exception e)
+            {
+                MessageDlg.ShowWithException(this, TextUtil.LineSeparate(Resources.RemoteSession_FetchContents_There_was_an_error_communicating_with_the_server__, e.Message), e);
                 return false;
             }
 
@@ -3350,7 +3395,7 @@ namespace pwiz.Skyline
             try
             {
                 var cancelled = false;
-                shareType = publishClient.GetShareType(fileInfo, DocumentUI, GetFileFormatOnDisk(), this, ref cancelled);
+                shareType = publishClient.GetShareType(fileInfo, DocumentUI, DocumentFilePath, GetFileFormatOnDisk(), this, ref cancelled);
                 if (cancelled)
                 {
                     return true;

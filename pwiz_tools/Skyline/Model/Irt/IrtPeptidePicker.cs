@@ -55,7 +55,7 @@ namespace pwiz.Skyline.Model.Irt
                 return Resources.MeasuredPeptide_ValidateSequence_A_modified_peptide_sequence_is_required_for_each_entry;
             if (sequence.IsProteomic)
             {
-                if (!FastaSequence.IsExSequence(sequence.Sequence))
+                if (!FastaSequence.IsValidPeptideSequence(sequence.Sequence))
                     return string.Format(Resources.MeasuredPeptide_ValidateSequence_The_sequence__0__is_not_a_valid_modified_peptide_sequence, sequence);
             }
             return null;

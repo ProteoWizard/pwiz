@@ -41,8 +41,8 @@ namespace pwiz.Skyline.Model
         {
         }
         
-        public PeptideGroupDocNode(PeptideGroup id, ProteinMetadata proteinMetadata, PeptideDocNode[] children)
-            : this(id, Annotations.EMPTY, proteinMetadata, children, true)
+        public PeptideGroupDocNode(PeptideGroup id, ProteinMetadata proteinMetadata, PeptideDocNode[] children, bool autoManageChildren = true)
+            : this(id, Annotations.EMPTY, proteinMetadata, children, autoManageChildren)
         {
         }
 
@@ -158,6 +158,11 @@ namespace pwiz.Skyline.Model
                 newMetadata = newMetadata.ChangeName(null); // no actual override
             if (Equals(PeptideGroup.Description, newMetadata.Description))
                 newMetadata = newMetadata.ChangeDescription(null); // no actual override
+            var group = PeptideGroup as FastaSequenceGroup;
+            if (group != null)
+            {
+                Assume.AreEqual(group.FastaSequenceList.Count, proteinMetadata.ProteinMetadataList.Count);
+            }
             return ChangeProp(ImClone(this), im => im._proteinMetadata = newMetadata);
         }
 

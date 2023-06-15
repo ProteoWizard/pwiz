@@ -20,7 +20,6 @@ using System;
 using System.Collections.Generic;
 using System.Diagnostics;
 using System.Drawing;
-using System.IO;
 using System.Linq;
 using pwiz.Common.Chemistry;
 using pwiz.Common.Collections;
@@ -186,19 +185,15 @@ namespace pwiz.Skyline.Model.Results
         /// </summary>
         public bool OverrideTextId { get; }
 
-        public Target ModifiedSequence
+        public ChromatogramGroupId ChromatogramGroupId
         {
             get
             {
                 if (OverrideTextId)
                 {
-                    var peptideDocNode = NodeGroups.FirstOrDefault()?.Item1;
-                    if (peptideDocNode != null)
-                    {
-                        return peptideDocNode.ModifiedTarget;
-                    }
+                    return ChromatogramGroupId.ForPeptide(NodeGroups.FirstOrDefault()?.Item1, NodeGroups.FirstOrDefault()?.Item2);
                 }
-                return _listChromData.Count > 0 ? BestChromatogram.Key.Target : null;
+                return _listChromData.Count > 0 ? BestChromatogram.Key.ChromatogramGroupId : null;
             }
         }
 
@@ -230,11 +225,6 @@ namespace pwiz.Skyline.Model.Results
         public float ExtractionWidth
         {
             get { return _listChromData.Count > 0 ? BestChromatogram.Key.ExtractionWidth : 0; }
-        }
-
-        public bool HasCalculatedMzs
-        {
-            get { return _listChromData.Count > 0 && BestChromatogram.Key.HasCalculatedMzs; }
         }
 
         public int StatusId
@@ -290,11 +280,11 @@ namespace pwiz.Skyline.Model.Results
             }
         }
 
-        public bool Load(ChromDataProvider provider, Target modifiedSequence, Color peptideColor)
+        public bool Load(ChromDataProvider provider, ChromatogramGroupId chromatogramGroupId, Color peptideColor)
         {
             foreach (var chromData in _listChromData.ToArray())
             {
-                if (!chromData.Load(provider, modifiedSequence, peptideColor))
+                if (!chromData.Load(provider, chromatogramGroupId, peptideColor))
                 {
                     Remove(chromData);
                 }
@@ -514,9 +504,6 @@ namespace pwiz.Skyline.Model.Results
             // Make sure chromatograms are in sorted order
             _listChromData.Sort();
 
-            // Mark all optimization chromatograms
-            MarkOptimizationData();
-
 //            if (Math.Round(_listChromData[0].Key.Precursor) == 585)
 //                Console.WriteLine("Issue");
 
@@ -545,7 +532,7 @@ namespace pwiz.Skyline.Model.Results
                         doFindPeaks = true;
                     }
                 }
-                if (doFindPeaks)
+                if (doFindPeaks && chromData.OptimizationStep == 0)
                 {
                     chromData.FindPeaks(retentionTimes, TimeIntervals, explicitRT);
                 }
@@ -714,6 +701,16 @@ namespace pwiz.Skyline.Model.Results
         /// </summary>
         public void GeneratePeakData(TimeIntervals intersectedTimeIntervals)
         {
+            var peakGroupIntegrator = new PeakGroupIntegrator(FullScanAcquisitionMethod, intersectedTimeIntervals);
+            foreach (var chromData in _listChromData)
+            {
+                if (chromData.OptimizationStep != 0)
+                {
+                    continue;
+                }
+                var peakIntegrator = chromData.MakePeakIntegrator(peakGroupIntegrator);
+                peakGroupIntegrator.AddPeakIntegrator(peakIntegrator);
+            }
             // Set the processed peaks back to the chromatogram data
             HashSet<ChromKey> primaryPeakKeys = new HashSet<ChromKey>();
             for (int i = 0, len = _listPeakSets.Count; i < len; i++)
@@ -761,7 +758,7 @@ namespace pwiz.Skyline.Model.Results
                         }
                     }
 
-                    peak.CalcChromPeak(peakMax, flags, FullScanAcquisitionMethod, intersectedTimeIntervals);
+                    peak.CalcChromPeak(peakGroupIntegrator, peakMax, flags);
 
                     if (intersectedTimeIntervals != null && peakMax != null)
                     {
@@ -771,10 +768,10 @@ namespace pwiz.Skyline.Model.Results
                         if (intervalIndex >= 0 && intervalIndex < intersectedTimeIntervals.Count)
                         {
                             startTime = Math.Max(startTime, intersectedTimeIntervals.Starts[intervalIndex]);
-                            endTime = Math.Min(endTime, intersectedTimeIntervals.Ends[intervalIndex]);
+                            endTime = Math.Max(startTime, Math.Min(endTime, intersectedTimeIntervals.Ends[intervalIndex]));
                         }
 
-                        var chromPeak = ChromPeak.IntegrateWithoutBackground(peak.Data.RawTimeIntensities, startTime, endTime, flags);
+                        var chromPeak = ChromPeak.IntegrateWithoutBackground(peak.Data.RawTimeIntensities, startTime, endTime, flags, peakGroupIntegrator.GetMedianChromatogram(startTime, endTime));
                         peak.SetChromPeak(chromPeak);
                     }
                 }
@@ -913,43 +910,6 @@ namespace pwiz.Skyline.Model.Results
                     return true;
             }
             return false;
-        }
-
-        private void MarkOptimizationData()
-        {
-            int iFirst = 0;
-            for (int i = 0; i < _listChromData.Count; i++)
-            {
-                if (i < _listChromData.Count - 1 &&
-                    ChromatogramInfo.IsOptimizationSpacing(_listChromData[i].Key.Product, _listChromData[i + 1].Key.Product))
-                {
-                    // CONSIDER: This is no longer possible, since IsOptimizationSpacing checked for order
-                    //           optimization spacing could happen at a boundary changing between ion types
-                    if (_listChromData[i + 1].Key.Product < _listChromData[i].Key.Product)
-                    {
-                        throw new InvalidDataException(string.Format(Resources.ChromDataSet_MarkOptimizationData_Incorrectly_sorted_chromatograms__0__1__,
-                                                                     _listChromData[i + 1].Key.Product, _listChromData[i].Key.Product));
-                    }
-                }
-                else
-                {
-                    if (iFirst != i)
-                    {
-                        // The middle element in the run is the regression value.
-                        // Mark it as not optimization data.
-                        int middleIndex = (i - iFirst)/2 + iFirst;
-                        var primaryData = _listChromData[middleIndex];
-                        // Set the primary key for all members of this group.
-                        for (int j = iFirst; j <= i; j++)
-                        {
-                            _listChromData[j].OptimizationStep = middleIndex - j;
-                            _listChromData[j].PrimaryKey = primaryData.Key;
-                        }
-                    }
-                    // Start a new run with the next value
-                    iFirst = i + 1;
-                }
-            }
         }
 
         // Moved to ProteoWizard
@@ -1176,7 +1136,7 @@ namespace pwiz.Skyline.Model.Results
                     _listPeakSets.Insert(indexSet, peakSet);
                 }
                 // If there is a different best peptide peak, and it should have
-                // the same retention time charachteristics, then reset the integration
+                // the same retention time characteristics, then reset the integration
                 // boundaries of this peak set
                 if (matchBounds)
                 {
@@ -1199,7 +1159,7 @@ namespace pwiz.Skyline.Model.Results
                     {
                         peak.ResetBoundaries(startIndex, endIndex);
                     }
-                    // In a peak set with mutiple charge states and light-heavy pairs, it is
+                    // In a peak set with multiple charge states and light-heavy pairs, it is
                     // possible that a peak may not overlap with the best peak in its
                     // charge group.  If this is the case, and the best peak is completely
                     // outside the bounds of the current chromatogram, then insert an
@@ -1438,8 +1398,6 @@ namespace pwiz.Skyline.Model.Results
             ChromGroupHeaderInfo.FlagValues flags = 0;
             if (groupOfTimeIntensities.HasMassErrors)
                 flags |= ChromGroupHeaderInfo.FlagValues.has_mass_errors;
-            if (HasCalculatedMzs)
-                flags |= ChromGroupHeaderInfo.FlagValues.has_calculated_mzs;
             if (Extractor == ChromExtractor.base_peak)
                 flags |= ChromGroupHeaderInfo.FlagValues.extracted_base_peak;
             else if (Extractor == ChromExtractor.qc)
@@ -1470,8 +1428,6 @@ namespace pwiz.Skyline.Model.Results
                 uncompressedSize,
                 groupOfTimeIntensities.NumInterpolatedPoints,
                 GetFlagValues(groupOfTimeIntensities),
-                StatusId,
-                StatusRank,
                 MinRawTime,
                 MaxRawTime,
                 CollisionalCrossSectionSqA,
@@ -1485,7 +1441,7 @@ namespace pwiz.Skyline.Model.Results
             var chromTransitions = Chromatograms.Select(chromData => chromData.MakeChromTransition()).ToList();
             var chromPeaks = Chromatograms.SelectMany(chromData => chromData.Peaks).ToList();
             var scores = _listPeakSets.SelectMany(peakSet => peakSet.DetailScores).ToArray();
-            var chromatogramGroupInfo = new ChromatogramGroupInfo(groupHeaderInfo, chromTransitions,
+            var chromatogramGroupInfo = new ChromatogramGroupInfo(groupHeaderInfo, chromCachedFile, chromTransitions,
                 chromPeaks, timeIntensitiesGroup, featureNames, scores);
             return chromatogramGroupInfo;
         }

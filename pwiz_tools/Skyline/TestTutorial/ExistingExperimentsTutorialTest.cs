@@ -453,7 +453,6 @@ namespace pwiz.SkylineTestTutorial
             }
 
             PauseForScreenShot<GraphSummary.RTGraphView>("Main window with peaks and retention times showing", 27);
-            CheckReportCompatibility.CheckAll(SkylineWindow.Document);
             RunUI(SkylineWindow.EditDelete);
             FindNode("IVGGWECEK"); // Not L10N
 
@@ -695,7 +694,7 @@ namespace pwiz.SkylineTestTutorial
                 PauseForScreenShot<EditPepModsDlg>("Edit Modifications form", 23);
             }
             var doc = SkylineWindow.Document;
-            RunUI(editPepModsDlg.OkDialog);
+            OkDialog(editPepModsDlg, editPepModsDlg.OkDialog);
             WaitForDocumentChange(doc);
             RunUI(() =>
             {

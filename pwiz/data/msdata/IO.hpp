@@ -201,7 +201,7 @@ void write(minimxml::XMLWriter& writer, const SpectrumList& spectrumList, const 
            const BinaryDataEncoder::Config& config = BinaryDataEncoder::Config(),
            std::vector<boost::iostreams::stream_offset>* spectrumPositions = 0,
            const pwiz::util::IterationListenerRegistry* iterationListenerRegistry = 0,
-           bool useWorkerThreads = true);
+           bool useWorkerThreads = true, bool continueOnError = false);
 PWIZ_API_DECL void read(std::istream& is, SpectrumListSimple& spectrumListSimple);
 
 
@@ -209,7 +209,8 @@ PWIZ_API_DECL
 void write(minimxml::XMLWriter& writer, const ChromatogramList& chromatogramList, 
            const BinaryDataEncoder::Config& config = BinaryDataEncoder::Config(),
            std::vector<boost::iostreams::stream_offset>* chromatogramPositions = 0,
-           const pwiz::util::IterationListenerRegistry* iterationListenerRegistry = 0);
+           const pwiz::util::IterationListenerRegistry* iterationListenerRegistry = 0,
+           bool continueOnError = false);
 PWIZ_API_DECL void read(std::istream& is, ChromatogramListSimple& chromatogramListSimple);
 
 
@@ -222,7 +223,7 @@ void write(minimxml::XMLWriter& writer, const Run& run, const MSData& msd,
            std::vector<boost::iostreams::stream_offset>* spectrumPositions = 0,
            std::vector<boost::iostreams::stream_offset>* chromatogramPositions = 0,
            const pwiz::util::IterationListenerRegistry* iterationListenerRegistry = 0,
-           bool useWorkerThreads = true);
+           bool useWorkerThreads = true, bool continueOnError = false);
 PWIZ_API_DECL
 void read(std::istream& is, Run& run,
           SpectrumListFlag spectrumListFlag = IgnoreSpectrumList);
@@ -234,7 +235,7 @@ void write(minimxml::XMLWriter& writer, const MSData& msd,
            std::vector<boost::iostreams::stream_offset>* spectrumPositions = 0,
            std::vector<boost::iostreams::stream_offset>* chromatogramPositions = 0,
            const pwiz::util::IterationListenerRegistry* iterationListenerRegistry = 0,
-           bool useWorkerThreads = true);
+           bool useWorkerThreads = true, bool continueOnError = false);
 PWIZ_API_DECL
 void read(std::istream& is, MSData& msd,
           SpectrumListFlag spectrumListFlag = IgnoreSpectrumList);

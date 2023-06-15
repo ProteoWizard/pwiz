@@ -399,9 +399,9 @@ namespace pwiz.SkylineTestTutorial
                     });
                     PauseForScreenShot<EditCEDlg>("Edit Collision Energy Equation form", 26);
 
+                    OkDialog(editCurrentCE, editCurrentCE.OkDialog);
                     RunUI(() =>
                     {
-                        editCurrentCE.OkDialog();
                         transitionSettingsUI.UseOptimized = true;
                         transitionSettingsUI.OptimizeType = OptimizedMethodType.Transition.GetLocalizedString();
                     });

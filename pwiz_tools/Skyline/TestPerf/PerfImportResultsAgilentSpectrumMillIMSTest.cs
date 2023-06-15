@@ -42,7 +42,7 @@ namespace TestPerf // Note: tests in the "TestPerf" namespace only run when the 
     public class ImportAgilentSpectrumMillIMSTest : AbstractFunctionalTest
     {
 
-        [TestMethod]
+        [TestMethod, NoParallelTesting(TestExclusionReason.VENDOR_FILE_LOCKING)] // No parallel testing as Agilent reader locks the files it reads
         public void AgilentSpectrumMillIMSImportTest()
         {
             // RunPerfTests = true;  // Uncomment to force this to run in UI
