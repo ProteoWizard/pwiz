@@ -177,7 +177,7 @@ namespace SkylineBatchTest
 
             Assert.IsTrue(remoteFileControl.btnOpenFromPanorama.Visible);
             CloseFormsInOrder(false, remoteFileForm, configForm);
-
+            mainForm.ClearRemoteFileSources();
         }
 
         private void CheckRemoteFileSource(RemoteSourceForm remoteSourceForm, string name, string url,
