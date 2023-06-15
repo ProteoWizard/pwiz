@@ -613,7 +613,7 @@ namespace pwiz.PanoramaClient
                 {
                     FileSize =(long) listView.SelectedItems[0].Tag;
                 }
-                if (FolderBrowser.ShowSky)
+                if (FolderBrowser.ShowSky && !ShowWebDav)
                 {
                     downloadName =
                         string.Concat(@"_webdav", FolderBrowser.Clicked.Tag, @"/@files/", listView.SelectedItems[0]
