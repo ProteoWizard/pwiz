@@ -2,7 +2,6 @@
 using System.Collections.Generic;
 using System.Collections.Immutable;
 using System.Drawing;
-using System.Runtime.CompilerServices;
 using System.Threading;
 using System.Windows.Forms;
 using SharedBatch;
@@ -57,8 +56,8 @@ namespace SkylineBatch
 
         public RemoteFileSource RemoteFileSource { get; private set; }
         public SkylineBatchConfigManagerState State { get; private set; }
-        public bool PanoramaSource { get; private set; } = false;
-        public string SelectedPath { get; private set; } = null;
+        private bool PanoramaSource { get; set; }
+        private string SelectedPath { get; set; }
 
 
         private void textPassword_TextChanged(object sender, EventArgs e)
@@ -122,9 +121,9 @@ namespace SkylineBatch
             State = _initialState;
         }
 
-        public void ConfigurePanoramaServer(string serverURL, string userName, string password)
+        public void ConfigurePanoramaServer(string serverUrl, string userName, string password)
         {
-            textServerName.Text = serverURL;
+            textServerName.Text = serverUrl;
             textUserName.Text = userName;
             textPassword.Text = password;
         }
@@ -147,7 +146,7 @@ namespace SkylineBatch
 
         public void OpenFromPanorama()
         {
-            PanoramaServer server = null;
+            PanoramaServer server;
             if (textUserName.Text != "" && textPassword.Text != "")
             {
                 server = new PanoramaServer(new Uri(textServerName.Text), textUserName.Text,textPassword.Text);

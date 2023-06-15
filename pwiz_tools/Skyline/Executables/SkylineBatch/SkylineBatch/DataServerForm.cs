@@ -156,7 +156,7 @@ namespace SkylineBatch
             Server server;
             try
             {
-                server = remoteFileControl.ServerFromUI();
+                server = remoteFileControl.ServerFromUi();
             }
             catch (ArgumentException e)
             {
@@ -241,7 +241,7 @@ namespace SkylineBatch
         {
             try
             {
-                _updated = remoteFileControl.RemoteFileSourceFromUI() == null;
+                _updated = remoteFileControl.RemoteFileSourceFromUi() == null;
             } catch (ArgumentException)
             {
                 _updated = false;

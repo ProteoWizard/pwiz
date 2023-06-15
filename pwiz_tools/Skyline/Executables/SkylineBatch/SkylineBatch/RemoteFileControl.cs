@@ -3,12 +3,10 @@ using System;
 using System.Collections.Generic;
 using System.Drawing;
 using System.Threading;
-using System.Web.Caching;
 using System.Windows.Forms;
 using pwiz.PanoramaClient;
 using SkylineBatch.Properties;
 using AlertDlg = SharedBatch.AlertDlg;
-using PanoramaServer = SharedBatch.PanoramaServer;
 using PanoramaClientServer = pwiz.PanoramaClient.PanoramaServer;
 using PanoramaUtil = pwiz.PanoramaClient.PanoramaUtil;
 using UserState = pwiz.PanoramaClient.UserState;
@@ -48,14 +46,14 @@ namespace SkylineBatch
 
         public SkylineBatchConfigManagerState State { get; private set; }
 
-        private RemoteFileSource getRemoteFileSource(){
+        private RemoteFileSource GetRemoteFileSource(){
 
             RemoteFileSource remoteFileSource;
             try
             {
-                remoteFileSource = RemoteFileSourceFromUI();
+                remoteFileSource = RemoteFileSourceFromUi();
             }
-            catch (Exception ex)
+            catch
             {
                 return null;
             }
@@ -66,7 +64,7 @@ namespace SkylineBatch
 
         private void CheckIfPanoramaSource()
         {
-            RemoteFileSource source = getRemoteFileSource();
+            RemoteFileSource source = GetRemoteFileSource();
             if (source == null)
             {
                 ShowPanoramaBtn(false);
@@ -114,15 +112,15 @@ namespace SkylineBatch
             });
         }
 
-        public Server ServerFromUI()
+        public Server ServerFromUi()
         {
-            var remoteFileSource = RemoteFileSourceFromUI();
+            var remoteFileSource = RemoteFileSourceFromUi();
             return remoteFileSource != null ? new Server(remoteFileSource, textRelativePath.Text) : null;
         }
 
         public void CheckPanoramaServer(CancellationToken cancelToken, Action<PanoramaFile, Exception> callback)
         {
-            RemoteFileSource remoteFileSource = getRemoteFileSource();
+            RemoteFileSource remoteFileSource = GetRemoteFileSource();
             new Thread(() =>
             {
                 try
@@ -139,7 +137,7 @@ namespace SkylineBatch
             }).Start();
         }
 
-        public RemoteFileSource RemoteFileSourceFromUI()
+        public RemoteFileSource RemoteFileSourceFromUi()
         {
             if (comboRemoteFileSource.SelectedIndex == -1 && string.IsNullOrEmpty(textRelativePath.Text) && !_fileRequired)
                 return null;
@@ -228,7 +226,7 @@ namespace SkylineBatch
 
         public void OpenFromPanorama()
         {
-            RemoteFileSource remoteFileSource = getRemoteFileSource();
+            RemoteFileSource remoteFileSource = GetRemoteFileSource();
             Uri uri = remoteFileSource.URI; // Need to get server URI
             // string userName= remoteFileSource.Username;
             // string textPassword = remoteFileSource.Password;
@@ -259,7 +257,6 @@ namespace SkylineBatch
                             Settings.Default.PanoramaTreeState = dlg.TreeState;
                             Settings.Default.ShowPanormaSkyFiles = dlg.ShowingSky;
                             textRelativePath.Text = dlg.FileUrl.Replace(uri.AbsoluteUri, "");
-                            var test = dlg.SelectedPath;
                         }
                         Settings.Default.PanoramaTreeState = dlg.TreeState;
                         Settings.Default.ShowPanormaSkyFiles = dlg.ShowingSky;
@@ -274,7 +271,6 @@ namespace SkylineBatch
                         if (dlg.ShowDialog() != DialogResult.Cancel)
                         {
                             string url = dlg.Selected;
-                            string uriString = uri.ToString();
                             string output = $"{url.Replace(uri.ToString(), "")}/";
                             textRelativePath.Text = output;
                         }
