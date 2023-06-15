@@ -2,6 +2,7 @@
 using System.Collections.Generic;
 using System.IO;
 using System.Runtime.CompilerServices;
+using System.Windows.Forms;
 using Microsoft.VisualStudio.TestTools.UnitTesting;
 using Newtonsoft.Json.Linq;
 using pwiz.PanoramaClient;
@@ -29,7 +30,7 @@ namespace SkylineBatchTest
             @"https://panoramaweb.org/_webdav/MacCoss/brendan/Instruction/2021-DIA-PUBS/2015-Selevsek/%40files/";
 
         public static string TARGETED_SOURCE_NAME = "TargetedMS Panorama Folder";
-        public static string TARGETED_FOLDER_LINK = "https://panoramaweb.org/_webdav/TargetedMS%20folder/";
+        public static string TARGETED_FOLDER_LINK = "https://panoramaweb.org/_webdav/TargetedMS_folder/";
 
 
         private const string VALID_USER_NAME = "skyline_tester@proteinms.net";
@@ -37,7 +38,7 @@ namespace SkylineBatchTest
         private const string VALID_SERVER = "https://panoramaweb.org";
 
         private const string TARGETED_LIBRARY = "TargetedMS folder/Library module property";
-        private const string TARGETED = "TargetedMS folder";
+        private const string TARGETED = "TargetedMS_folder";
         private const string NO_TARGETED = "Not a TargetedMS folder";
         private const string TARGETED_COLLABORATION = "Collaboration folder/TargetedMS module property";
 
@@ -61,6 +62,8 @@ namespace SkylineBatchTest
             Assert.AreEqual(0, mainForm.ConfigCount());
 
             TestAddRemoteFileSource(mainForm);
+            
+            TestPanoramaButtonVisibility(mainForm);
 
             TestEditRemoteFileSource(mainForm);
 
@@ -136,7 +139,6 @@ namespace SkylineBatchTest
             RunUI(() =>
             {
                 remoteSourceForm.textName.Text = name;
-                remoteSourceForm.ConfigurePanoramaServer(VALID_SERVER, VALID_USER_NAME, VALID_PASSWORD);
             });
             var testClient = new TestClientJson();
             var folderJson = testClient.GetInfoForFolders(new PanoramaServer(new Uri(VALID_SERVER), VALID_USER_NAME, VALID_PASSWORD),
@@ -147,12 +149,35 @@ namespace SkylineBatchTest
             {
                 remoteDlg.FolderBrowser.SelectNode(VALID_SERVER);
                 remoteDlg.FolderBrowser.SelectNode(TARGETED);
-                remoteDlg.Close();
-                remoteSourceForm.textFolderUrl.Text = remoteDlg.Selected;
-
+                remoteDlg.ClickOpen();
             });
-            Assert.AreEqual(remoteSourceForm.textFolderUrl.Text, remoteDlg.Selected);
+            WaitForClosedForm(remoteDlg);
+            RunUI(() =>
+            {
+                remoteSourceForm.textFolderUrl.Text = remoteDlg.Selected;
+                Assert.AreEqual(remoteSourceForm.textFolderUrl.Text, TARGETED_FOLDER_LINK);
+            });
             if (closeForm) CloseFormsInOrder(true,remoteSourceForm);
+            WaitForClosedForm(remoteSourceForm);
+
+        }
+
+        public void TestPanoramaButtonVisibility(MainForm mainForm)
+        {
+            var configForm = ShowDialog<SkylineBatchConfigForm>(() => mainForm.ClickAdd());
+            var remoteFileForm =
+                ShowDialog<RemoteFileForm>(() => configForm.templateControl.btnDownload.PerformClick());
+            var remoteFileControl = remoteFileForm.RemoteFileControl;
+
+            Assert.IsFalse(remoteFileControl.btnOpenFromPanorama.Visible);
+
+            var remoteSourceForm =
+                ShowDialog<RemoteSourceForm>(() => remoteFileControl.comboRemoteFileSource.SelectedItem = "<Add...>");
+            ChangeRemoteFileSource(remoteSourceForm, BRUDERER_SOURCE_NAME, BRUDERER_FOLDER_LINK, VALID_USER_NAME, VALID_PASSWORD);
+
+            Assert.IsTrue(remoteFileControl.btnOpenFromPanorama.Visible);
+            CloseFormsInOrder(false, remoteFileForm, configForm);
+
         }
 
         private void CheckRemoteFileSource(RemoteSourceForm remoteSourceForm, string name, string url,

@@ -248,7 +248,7 @@ namespace SkylineBatch
 
                 if (_fileRequired) // If file is required use PanoramaFilePicker
                 {
-                    using (PanoramaFilePicker dlg = new PanoramaFilePicker(panoramaServers,state, true, true,path))
+                    using (PanoramaFilePicker dlg = new PanoramaFilePicker(panoramaServers,state, false, true,path))
                     {
 
                         dlg.InitializeDialog();

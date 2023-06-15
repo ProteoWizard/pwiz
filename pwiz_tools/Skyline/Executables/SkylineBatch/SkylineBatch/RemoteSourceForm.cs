@@ -164,6 +164,7 @@ namespace SkylineBatch
                 state = Settings.Default.PanoramaTreeState;
             }
 
+
             try
             {
                 
