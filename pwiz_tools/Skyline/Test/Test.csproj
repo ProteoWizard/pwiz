@@ -145,6 +145,8 @@
     <Compile Include="BilinearCurveFitTest.cs" />
     <Compile Include="BookmarkEnumeratorTest.cs" />
     <Compile Include="ChromatogramExporterTest.cs" />
+    <Compile Include="ChromatogramGroupIdsTest.cs" />
+    <Compile Include="ElibQuantifiableTransitionTest.cs" />
     <Compile Include="FastaSequenceTest.cs" />
     <Compile Include="OnDemandFeatureCalculatorTest.cs" />
     <Compile Include="FeatureTooltipTest.cs" />
@@ -156,6 +158,7 @@
     <Compile Include="MeasuredIonTest.cs" />
     <Compile Include="SchemaDocumentsTest.cs" />
     <Compile Include="PeakShapeStatisticsTest.cs" />
+    <Compile Include="SpectrumClassFilterTest.cs" />
     <Compile Include="StripePainterTest.cs" />
     <Compile Include="ComplexFragmentIonTest.cs" />
     <Compile Include="ObjectSizeTest.cs" />
@@ -281,6 +284,7 @@
   </ItemGroup>
   <ItemGroup>
     <EmbeddedResource Include="BookmarkEnumeratorTest.sky" />
+    <EmbeddedResource Include="BookmarkEnumeratorTest2.sky" />
     <None Include="ChromatogramExporterTest.zip" />
     <None Include="CommandLineAssayImportTest.zip" />
     <None Include="CommandLineImportAnnotationsTest.zip" />
@@ -289,6 +293,7 @@
     <None Include="DocLoadLibraryTest.zip" />
     <EmbeddedResource Include="explicit-losses.sky" />
     <EmbeddedResource Include="DocumentSerializerTest.sky" />
+    <None Include="ElibQuantifiableTransitionTest.zip" />
     <None Include="FullScanPrecursor.zip" />
     <None Include="LibraryRankedSpectrumInfoSpeedTest.zip" />
     <None Include="modmatch.sky" />

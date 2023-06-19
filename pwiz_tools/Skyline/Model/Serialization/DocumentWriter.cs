@@ -264,6 +264,11 @@ namespace pwiz.Skyline.Model.Serialization
             if (isCustomIon)
             {
                 peptide.CustomMolecule.WriteXml(writer, Adduct.EMPTY);
+                // If user changed any molecule details (other than formula or mass) after chromatogram extraction, this info continues the target->chromatogram association
+                if (!Equals(peptide.Target, peptide.OriginalMoleculeTarget))
+                {
+                    writer.WriteAttributeString(ATTR.chromatogram_target, peptide.OriginalMoleculeTarget.ToSerializableString());
+                }
             }
             else
             {
@@ -604,6 +609,7 @@ namespace pwiz.Skyline.Model.Serialization
             }
             // Write child elements
             WriteAnnotations(writer, node.Annotations);
+            node.SpectrumClassFilter.WriteXml(writer);
             if (node.HasLibInfo)
             {
                 var helpers = PeptideLibraries.SpectrumHeaderXmlHelpers;
@@ -878,6 +884,7 @@ namespace pwiz.Skyline.Model.Serialization
                 writer.WriteAttribute(ATTR.retention_time, chromInfo.RetentionTime);
                 writer.WriteAttribute(ATTR.start_time, chromInfo.StartRetentionTime);
                 writer.WriteAttribute(ATTR.end_time, chromInfo.EndRetentionTime);
+                writer.WriteAttributeNullable(ATTR.ccs, chromInfo.IonMobility.CollisionalCrossSectionSqA);
                 writer.WriteAttributeNullable(ATTR.ion_mobility, chromInfo.IonMobility.IonMobility.Mobility);
                 writer.WriteAttributeNullable(ATTR.ion_mobility_window, chromInfo.IonMobility.IonMobilityExtractionWindowWidth);
                 writer.WriteAttribute(ATTR.area, chromInfo.Area);

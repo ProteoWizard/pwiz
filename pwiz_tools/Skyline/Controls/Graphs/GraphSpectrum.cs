@@ -1358,7 +1358,7 @@ namespace pwiz.Skyline.Controls.Graphs
 
                         _graphHelper.ZoomSpectrumToSettings(DocumentUI, selection.NodeTranGroup);
 
-                        if (GraphItem.PeptideDocNode != null && GraphItem.TransitionGroupNode != null && spectrum?.SpectrumInfo is SpectrumInfoLibrary libInfo)
+                        if (GraphItem != null && GraphItem.PeptideDocNode != null && GraphItem.TransitionGroupNode != null && spectrum?.SpectrumInfo is SpectrumInfoLibrary libInfo)
                         {
                             var pepInfo = new ViewLibraryPepInfo(
                                 GraphItem.PeptideDocNode.ModifiedTarget.GetLibKey(GraphItem.TransitionGroupNode.PrecursorAdduct), 
@@ -1672,8 +1672,8 @@ namespace pwiz.Skyline.Controls.Graphs
                 0, // compressedSize
                 0, // uncompressedsize
                 0,  //location
-                0, -1, -1, null, null, chromGroup.CCS, ionMobilityFilter.IonMobilityUnits);
-            var groupInfo = new ChromatogramGroupInfo(header,
+                0, null, null, chromGroup.CCS, ionMobilityFilter.IonMobilityUnits);
+            var groupInfo = new ChromatogramGroupInfo(header,null,
                 new[]
                 {
                     new ChromTransition(chromData.Mz, 0,

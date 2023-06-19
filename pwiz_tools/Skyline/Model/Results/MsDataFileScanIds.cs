@@ -18,9 +18,11 @@
  */
 using System;
 using System.Collections.Generic;
+using System.Linq;
 using System.Text;
 using pwiz.Common.Collections;
 using pwiz.ProteowizardWrapper;
+using pwiz.Skyline.Model.Results.Spectra;
 using pwiz.Skyline.Util;
 using pwiz.Skyline.Util.Extensions;
 
@@ -29,7 +31,7 @@ namespace pwiz.Skyline.Model.Results
     /// <summary>
     /// Handles storing and retrieving abbreviated scan ids from a <see cref="MsDataFileImpl"/>
     /// </summary>
-    public class MsDataFileScanIds
+    public class MsDataFileScanIds : IResultFileMetadata
     {
         private readonly int[] _startBytes;
         private readonly int[] _lengths;
@@ -48,6 +50,11 @@ namespace pwiz.Skyline.Model.Results
         public string GetMsDataFileSpectrumId(int index)
         {
             return Encoding.UTF8.GetString(_idBytes, _startBytes[index], _lengths[index]);
+        }
+
+        public byte[] ToByteArray()
+        {
+            return ToBytes(Enumerable.Range(0, _startBytes.Length).Select(GetMsDataFileSpectrumId));
         }
 
         public static byte[] ToBytes(IEnumerable<string> scanIds)
@@ -85,9 +92,14 @@ namespace pwiz.Skyline.Model.Results
             return listResultBytes.ToArray();
         }
 
+        public MsDataFileScanIds ToMsDataFileScanIds()
+        {
+            return this;
+        }
+
         public static MsDataFileScanIds FromBytes(byte[] byteArray)
         {
-            if (byteArray.Length == 0)
+            if (byteArray == null || byteArray.Length == 0)
                 return null;
 
             int i = 0;

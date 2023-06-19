@@ -29,6 +29,7 @@ using pwiz.Skyline.Model.DocSettings;
 using pwiz.Skyline.Model.Lib;
 using pwiz.Skyline.Model.Results;
 using pwiz.Skyline.Model.Results.Scoring;
+using pwiz.Skyline.Model.Results.Spectra;
 using pwiz.Skyline.Model.RetentionTimes;
 using pwiz.Skyline.Properties;
 using pwiz.Skyline.Util;
@@ -111,6 +112,17 @@ namespace pwiz.Skyline.Model
         }
 
         public TransitionGroup TransitionGroup { get { return (TransitionGroup) Id; }}
+
+        public TransitionGroupDocNode CloneTransitionGroupId()
+        {
+            var newTransitionGroup = new TransitionGroup(TransitionGroup.Peptide,
+                TransitionGroup.PrecursorAdduct,
+                TransitionGroup.LabelType, true,
+                TransitionGroup.DecoyMassShift);
+            var newTransitions = Transitions.Select(t => t.ChangeTransitionGroup(newTransitionGroup)).ToList();
+            return ChangeTransitionGroupId(newTransitionGroup, newTransitions);
+
+        }
 
         [TrackChildren(ignoreName:true, defaultValues:typeof(DefaultValuesNullOrEmpty))]
         public IEnumerable<TransitionDocNode> Transitions { get { return Children.Cast<TransitionDocNode>(); } }
@@ -234,6 +246,27 @@ namespace pwiz.Skyline.Model
         public MassType PrecursorMzMassType { get; private set; } // What kind of mass was used to calculate Mz?
         public SignedMz PrecursorMz { get; private set; }
 
+        public SpectrumClassFilter SpectrumClassFilter { get; private set; }
+
+        public TransitionGroupDocNode ChangeSpectrumClassFilter(SpectrumClassFilter spectrumClassFilter)
+        {
+            if (Equals(SpectrumClassFilter, spectrumClassFilter))
+            {
+                return this;
+            }
+            return ChangeProp(ImClone(this), im =>
+            {
+                im.SpectrumClassFilter = spectrumClassFilter;
+            });
+        }
+
+        public PrecursorKey PrecursorKey
+        {
+            get
+            {
+                return new PrecursorKey(PrecursorAdduct, SpectrumClassFilter);
+            }
+        }
         public int PrecursorCharge { get { return TransitionGroup.PrecursorAdduct.AdductCharge; } }
 
         private class SmallMoleculeOnly : DefaultValues
@@ -1003,11 +1036,13 @@ namespace pwiz.Skyline.Model
                 }
 
                 if (!ArrayUtil.ReferencesEqual(childrenNew, Children))
-                    nodeResult = new TransitionGroupDocNode(this, precursorMz, isotopeDist, relativeRT, childrenNew);
+                    nodeResult = new TransitionGroupDocNode(this, precursorMz, isotopeDist, relativeRT, childrenNew)
+                        .ChangeSpectrumClassFilter(SpectrumClassFilter);
                 else
                 {
                     if (precursorMz != PrecursorMz || !Equals(isotopeDist, IsotopeDist) || relativeRT != RelativeRT)
-                        nodeResult = new TransitionGroupDocNode(this, precursorMz, isotopeDist, relativeRT, Children);
+                        nodeResult = new TransitionGroupDocNode(this, precursorMz, isotopeDist, relativeRT, Children)
+                            .ChangeSpectrumClassFilter(SpectrumClassFilter);
                     else
                     {
                         // If nothing changed, use this node.
@@ -1091,13 +1126,16 @@ namespace pwiz.Skyline.Model
 
                     // Change as little as possible
                     if (!ArrayUtil.ReferencesEqual(childrenNew, Children))
-                        nodeResult = new TransitionGroupDocNode(nodeResult, precursorMz, isotopeDist, relativeRT, childrenNew);
+                        nodeResult = new TransitionGroupDocNode(nodeResult, precursorMz, isotopeDist, relativeRT, childrenNew)
+                            .ChangeSpectrumClassFilter(SpectrumClassFilter);
                     else if (precursorMz != PrecursorMz || !Equals(isotopeDist, IsotopeDist) || relativeRT != RelativeRT)
-                        nodeResult = new TransitionGroupDocNode(nodeResult, precursorMz, isotopeDist, relativeRT, Children);
+                        nodeResult = new TransitionGroupDocNode(nodeResult, precursorMz, isotopeDist, relativeRT, Children)
+                            .ChangeSpectrumClassFilter(SpectrumClassFilter);
                 }
                 else if (diff.DiffTransitionGroupProps)
                 {
-                    nodeResult = new TransitionGroupDocNode(nodeResult, precursorMz, isotopeDist, relativeRT, Children);
+                    nodeResult = new TransitionGroupDocNode(nodeResult, precursorMz, isotopeDist, relativeRT, Children)
+                        .ChangeSpectrumClassFilter(SpectrumClassFilter);
                 }
             }
 
@@ -3107,7 +3145,8 @@ namespace pwiz.Skyline.Model
                         Equals(obj.Results, Results) &&
                         Equals(obj.CustomMolecule, CustomMolecule) &&
                         Equals(obj.ExplicitValues, ExplicitValues) &&
-                        Equals(obj.PrecursorConcentration, PrecursorConcentration);
+                        Equals(obj.PrecursorConcentration, PrecursorConcentration) &&
+                        Equals(obj.SpectrumClassFilter, SpectrumClassFilter);
             return equal;
         }
 
@@ -3130,6 +3169,7 @@ namespace pwiz.Skyline.Model
                 result = (result*397) ^ ExplicitValues.GetHashCode();
                 result = (result*397) ^ (CustomMolecule != null ? CustomMolecule.GetHashCode() : 0);
                 result = (result*397) ^ PrecursorConcentration.GetHashCode();
+                result = (result*397) ^ SpectrumClassFilter.GetHashCode();
                 return result;
             }
         }

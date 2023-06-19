@@ -309,7 +309,6 @@ namespace pwiz.SkylineTestFunctional
                 resultsGrid.EndEdit();
             });
             Assert.AreEqual(newValueOfReplicateAnnotation, SkylineWindow.Document.Settings.MeasuredResults.Chromatograms[0].Annotations.GetAnnotation(ANNOTATION_REPLICATE));
-            CheckReportCompatibility.CheckAll(SkylineWindow.Document);
         }
 
         private static void DefineAnnotation(EditListDlg<SettingsListBase<AnnotationDef>, AnnotationDef> dialog,

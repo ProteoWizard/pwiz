@@ -923,6 +923,8 @@
         <xs:attribute name="custom_ion_name" type="xs:string" use="optional"/>
         <!--Any or all of InChiKey, CAS, HMDB etc tab separated -->
         <xs:attribute name="id" type="xs:string" use="optional"/>
+        <!-- Encodes the molecule description used in chromatogram extraction if user changed the name etc afterwards -->
+        <xs:attribute name="chromatogram_target" type="xs:string" use="optional"/>
       </xs:extension>
     </xs:complexContent>
   </xs:complexType>
@@ -1145,6 +1147,19 @@
     <xs:complexContent>
       <xs:extension base = "doc_parent_node_type">
         <xs:sequence>
+          <xs:element name="spectrum_filter" minOccurs="0" maxOccurs="unbounded">
+            <xs:complexType>
+              <xs:sequence>
+                <xs:element name="filter" minOccurs="0" maxOccurs="unbounded">
+                  <xs:complexType>
+                    <xs:attribute name="column" type="xs:string"/>
+                    <xs:attribute name="opname" type="xs:string"/>
+                    <xs:attribute name="operand" type="xs:string"/>
+                  </xs:complexType>
+                </xs:element>
+              </xs:sequence>
+            </xs:complexType>
+          </xs:element>
           <xs:element name="bibliospec_spectrum_info" minOccurs="0" maxOccurs="unbounded">
             <xs:complexType>
               <xs:complexContent>

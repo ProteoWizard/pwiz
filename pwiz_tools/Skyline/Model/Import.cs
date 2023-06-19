@@ -1077,7 +1077,15 @@ namespace pwiz.Skyline.Model
                 if (PeptideColumn == -1)
                     return new TransitionImportErrorInfo(Resources.MassListRowReader_NextRow_No_peptide_sequence_column_specified, null, lineNum, line);
 
-                ExTransitionInfo info = CalcTransitionInfo(lineNum);
+                ExTransitionInfo info;
+                try
+                {
+                    info = CalcTransitionInfo(lineNum);
+                }
+                catch (LineColNumberedIoException e)
+                {
+                    return new TransitionImportErrorInfo(e);
+                }
 
                 var imError = TryGetIonMobility(out var explicitIonMobility, out var imUnits, out var errColumn); // Handles the several different flavors of ion mobility
                 if (!string.IsNullOrEmpty(imError))
@@ -3369,6 +3377,14 @@ namespace pwiz.Skyline.Model
         public int? Column { get; private set; }
         public string ErrorMessage { get; private set; }
         public string LineText { get; private set; }
+
+        public TransitionImportErrorInfo(LineColNumberedIoException e)
+        {
+            ErrorMessage = e.PlainMessage;
+            LineText = string.Empty;
+            Column = e.ColumnIndex;
+            LineNum = e.LineNumber;
+        }
 
         public TransitionImportErrorInfo(string errorMessage, int? columnIndex, long? lineNum, string lineText)
         {
