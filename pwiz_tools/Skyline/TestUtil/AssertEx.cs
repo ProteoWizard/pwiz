@@ -415,7 +415,43 @@ namespace pwiz.SkylineTestUtil
 
         private static void UnloadedDocumentCloned(SrmDocument originalDocument, SrmDocument roundTripDocument)
         {
+            var expected = originalDocument.UnloadDocument();
+            SettingsCloned(expected.Settings, roundTripDocument.Settings);
+            EnumerableCloned(originalDocument.MoleculeTransitions, roundTripDocument.MoleculeTransitions);
+            EnumerableCloned(originalDocument.MoleculeTransitionGroups, roundTripDocument.MoleculeTransitionGroups);
+            EnumerableCloned(originalDocument.Molecules, roundTripDocument.Molecules);
+            EnumerableCloned(originalDocument.MoleculeGroups, roundTripDocument.MoleculeGroups);
             DocumentCloned(originalDocument.UnloadDocument(), roundTripDocument);
+        }
+
+        private static void EnumerableCloned<T>(IEnumerable<T> expected, IEnumerable<T> actual)
+        {
+            int i = 0;
+            using var expectedEnumerator = expected.GetEnumerator();
+            using var actualEnumerator = actual.GetEnumerator();
+            while (true)
+            {
+                if (!expectedEnumerator.MoveNext())
+                {
+                    if (actualEnumerator.MoveNext())
+                    {
+                        Assert.Fail("Actual has more than {0} elements", i);
+                    }
+                    return;
+                }
+
+                i++;
+                if (!actualEnumerator.MoveNext())
+                {
+                    Assert.Fail("Actual has fewer than {0} elements", i);
+                }
+
+                if (!Equals(expectedEnumerator.Current, actualEnumerator.Current))
+                {
+                    string message = string.Format("Elements at position {0} differ", i);
+                    AreEqual(expectedEnumerator.Current, actualEnumerator.Current, message);
+                }
+            }
         }
 
         public static void Serializable<TObj>(TObj target, Action<TObj, TObj> validate, bool checkAgainstSkylineSchema = true, string expectedTypeInSkylineSchema = null)

@@ -935,7 +935,7 @@
             <xs:complexType>
               <xs:sequence>
                 <xs:element name="variable_modification" type="modification_type"
-                    minOccurs="1" maxOccurs="unbounded"/>
+                    minOccurs="0" maxOccurs="unbounded"/>
               </xs:sequence>
             </xs:complexType>
           </xs:element>

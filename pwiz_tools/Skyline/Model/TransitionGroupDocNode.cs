@@ -1531,6 +1531,14 @@ namespace pwiz.Skyline.Model
                                         peak = info.GetPeak(bestIndex);
                                 }
                                 ionMobility = info.GetIonMobilityFilter();
+                                if (ionMobility?.CollisionalCrossSectionSqA != null)
+                                {
+                                    // The TransitionChromInfo never remembers the Collisional Cross Section when
+                                    // serializing to XML, so if it's set here, then remove it
+                                    ionMobility = IonMobilityFilter.GetIonMobilityFilter(
+                                        ionMobility.IonMobilityAndCCS.ChangeCollisionalCrossSection(null),
+                                        ionMobility.IonMobilityExtractionWindowWidth);
+                                }
                             }
 
                             // Avoid creating new info objects that represent the same data
