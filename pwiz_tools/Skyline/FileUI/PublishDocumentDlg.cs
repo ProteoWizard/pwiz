@@ -24,7 +24,6 @@ using System.Linq;
 using System.Net;
 using System.Windows.Forms;
 using Newtonsoft.Json.Linq;
-using pwiz.Common.Controls;
 using pwiz.Common.SystemUtil;
 using pwiz.Skyline.Alerts;
 using pwiz.Skyline.Controls;
@@ -44,16 +43,16 @@ namespace pwiz.Skyline.FileUI
         public IPanoramaPublishClient PanoramaPublishClient { get; set; }
         public bool IsLoaded { get; set; }
 
-         /// <summary>
+        /// <summary>
         /// Enum of images used in the server tree, in index order.
         /// </summary>
         public enum ImageId
-         {
+        {
             panorama,
             labkey,
             chrom_lib,
             folder
-         }
+        }
 
         public PublishDocumentDlg(IDocumentUIContainer docContainer, SettingsList<Server> servers, string fileName, DocumentFormat? fileFormatOnDisk)
         {
