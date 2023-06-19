@@ -25,21 +25,19 @@ using pwiz.Skyline.Util.Extensions;
 namespace pwiz.SkylineTestUtil
 {
     /// <summary>
-    /// Task which runs in the background and keeps calling <see cref="AssertEx.Serializable(pwiz.Skyline.Model.SrmDocument)"/>
-    /// on <see cref="pwiz.Skyline.SkylineWindow.Document"/> to make sure the document in memory would always
-    /// be able to round-trip to XML
+    /// Listens to the <see cref="Skyline.SkylineWindow.DocumentChangedEvent"/> and calls
+    /// <see cref="AssertEx.Serializable(pwiz.Skyline.Model.SrmDocument)"/>
+    /// to make sure the document in memory would always be able to round-trip to XML
     /// </summary>
     public class DocumentSerializabilityVerifier : IDisposable
     {
-        private static bool RUN_SYNCHRONOUSLY = true;
         private readonly CancellationTokenSource _cancellationTokenSource = new CancellationTokenSource();
         private SkylineWindow _skylineWindow;
         
         public void Start()
         {
-            var thread = ActionUtil.RunAsync(RunOnThisThread);
+            var thread = ActionUtil.RunAsync(WatchForSkylineWindow);
             thread.Name = "Document Serializability Verifier";
-            thread.Priority = ThreadPriority.Lowest;
         }
 
         public SkylineWindow SkylineWindow
@@ -57,21 +55,14 @@ namespace pwiz.SkylineTestUtil
                         return;
                     }
 
-                    if (RUN_SYNCHRONOUSLY)
+                    if (SkylineWindow != null)
                     {
-                        if (SkylineWindow != null)
-                        {
-                            SkylineWindow.DocumentChangedEvent -= SkylineWindow_DocumentChangedEvent;
-                        }
+                        SkylineWindow.DocumentChangedEvent -= SkylineWindow_DocumentChangedEvent;
                     }
-
                     _skylineWindow = value;
-                    if (RUN_SYNCHRONOUSLY)
+                    if (SkylineWindow != null)
                     {
-                        if (SkylineWindow != null)
-                        {
-                            SkylineWindow.DocumentChangedEvent += SkylineWindow_DocumentChangedEvent;
-                        }
+                        SkylineWindow.DocumentChangedEvent += SkylineWindow_DocumentChangedEvent;
                     }
                 }
             }
@@ -86,13 +77,11 @@ namespace pwiz.SkylineTestUtil
             }
         }
 
-        private void RunOnThisThread()
+        private void WatchForSkylineWindow()
         {
             var cancellationToken = _cancellationTokenSource.Token;
-            SrmDocument lastDocument = null;
             while (true)
             {
-                SrmDocument document;
                 lock (this) 
                 {
                     if (cancellationToken.IsCancellationRequested)
@@ -100,22 +89,13 @@ namespace pwiz.SkylineTestUtil
                         return;
                     }
 
-                    SkylineWindow = Program.MainWindow;
-                    document = SkylineWindow?.Document;
+                    var skylineWindow = Program.MainWindow;
+                    if (skylineWindow != null)
+                    {
+                        SkylineWindow = skylineWindow;
+                        return;
+                    }
                 }
-
-                if (document == null || ReferenceEquals(document, lastDocument))
-                {
-                    // No work to do: Wait for 1 millisecond or until cancelled
-                    cancellationToken.WaitHandle.WaitOne(1);
-                    continue;
-                }
-
-                if (!RUN_SYNCHRONOUSLY)
-                {
-                    AssertEx.Serializable(document);
-                }
-                lastDocument = document;
             }
         }
 

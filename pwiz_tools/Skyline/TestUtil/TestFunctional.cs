@@ -1498,9 +1498,14 @@ namespace pwiz.SkylineTestUtil
             var threadTest = new Thread(WaitForSkyline) { Name = @"Functional test thread" };
             LocalizationHelper.InitThread(threadTest);
             threadTest.Start();
-            using (var documentSerializabilityVerifier = new DocumentSerializabilityVerifier())
+            DocumentSerializabilityVerifier documentSerializabilityVerifier = null;
+            if (VerifyDocumentSerializabilityContinuously)
             {
+                documentSerializabilityVerifier = new DocumentSerializabilityVerifier();
                 documentSerializabilityVerifier.Start();
+            }
+            using (documentSerializabilityVerifier)
+            {
                 Program.Main();
             }
             threadTest.Join();
@@ -1866,6 +1871,10 @@ namespace pwiz.SkylineTestUtil
             DoTest();
             if (null != SkylineWindow)
             {
+                if (VerifyDocumentSerializabilityAtEndOfTest)
+                {
+                    AssertEx.Serializable(SkylineWindow.Document);
+                }
                 AssertEx.ValidatesAgainstSchema(SkylineWindow.Document);
             }
 
@@ -2299,6 +2308,16 @@ namespace pwiz.SkylineTestUtil
             string slope = match.Groups["slope"].Value, intercept = match.Groups["intercept"].Value, sign = match.Groups["sign"].Value;
             if (sign == "+") sign = string.Empty;
             return $"IrtSlope = {slope},\r\nIrtIntercept = {sign}{intercept},\r\n";
+        }
+
+        protected virtual bool VerifyDocumentSerializabilityContinuously
+        {
+            get { return false; }
+        }
+
+        protected virtual bool VerifyDocumentSerializabilityAtEndOfTest
+        {
+            get { return true; }
         }
 
         #region Modification helpers
