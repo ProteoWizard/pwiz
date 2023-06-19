@@ -498,10 +498,16 @@ on one.SourceFile = two.SourceFile";
                         }
                     }
                 }
+
+                var quantifiableMzs = mzs.OrderBy(mz => mz).ToList();
                 // Then read the spectrum for the specific file
                 var entriesSpectrum = ReadSpectrumFromEntriesTable(connection, info, sourceFileId);
                 foreach (var mi in entriesSpectrum)
                 {
+                    if (HasVeryCloseMatch(quantifiableMzs, mi.Mz))
+                    {
+                        continue;
+                    } 
                     if (mzs.Add(mi.Mz))
                     {
                         var miToAdd = mi;
@@ -522,6 +528,35 @@ on one.SourceFile = two.SourceFile";
                 }
                 return spectrum.ToArray();
             });
+        }
+
+        /// <summary>
+        /// Some versions of EncyclopeDIA including 2.12.30 have tiny mismatches between
+        /// the m/z values found in the PeptideQuants and entries tables.
+        /// Therefore, when reading m/z's from the entries table, we ignore values from
+        /// the entries table that are really close to what was found in the PeptideQuants table.
+        /// </summary>
+        private bool HasVeryCloseMatch(IList<double> sortedMzs, double target)
+        {
+            int index = CollectionUtil.BinarySearch(sortedMzs, target);
+            if (index >= 0)
+            {
+                return true;
+            }
+
+            double minDistance = target / 1e-5;
+            index = ~index;
+            if (index < sortedMzs.Count && Math.Abs(sortedMzs[index] - target) < minDistance)
+            {
+                return true;
+            }
+
+            if (index > 0 && Math.Abs(sortedMzs[index - 1] - target) < minDistance)
+            {
+                return true;
+            }
+
+            return false;
         }
 
         private IEnumerable<SpectrumPeaksInfo.MI> ReadSpectrumFromPeptideQuants(SQLiteConnection connection, ElibSpectrumInfo info, int sourceFileId)
