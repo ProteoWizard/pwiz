@@ -4529,7 +4529,6 @@
     </Compile>
     <Compile Include="Util\DotTraceProfile.cs" />
     <Compile Include="Util\Extensions\ActionUtil.cs" />
-    <Compile Include="Util\FileSize.cs" />
     <Compile Include="Util\Install.cs" />
     <Compile Include="Util\Extensions\Text.cs" />
     <Compile Include="Util\Extensions\UtilProcess.cs" />
