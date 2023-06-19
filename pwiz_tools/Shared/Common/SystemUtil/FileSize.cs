@@ -16,9 +16,10 @@
  * See the License for the specific language governing permissions and
  * limitations under the License.
  */
+
 using System;
 
-namespace pwiz.Skyline.Util
+namespace pwiz.Common.SystemUtil
 {
     /// <summary>
     /// Holds a byte count value and overrides ToString so that the
