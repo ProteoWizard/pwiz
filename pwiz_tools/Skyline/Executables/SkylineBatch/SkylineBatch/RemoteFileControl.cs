@@ -233,7 +233,8 @@ namespace SkylineBatch
             // string textPassword = remoteFileSource.Password;
 
             string host = $"https://{uri.Host}";
-            var path = new Uri(remoteFileSource.SelectedPath);
+            // var path = new Uri(remoteFileSource.SelectedPath);
+            var path = remoteFileSource.SelectedPath;
             PanoramaClientServer server = new PanoramaClientServer(new Uri(host));
 
             var panoramaServers = new List<PanoramaClientServer>() { server };
@@ -259,7 +260,9 @@ namespace SkylineBatch
                         {
                             Settings.Default.PanoramaTreeState = dlg.TreeState;
                             Settings.Default.ShowPanormaSkyFiles = dlg.ShowingSky;
-                            textRelativePath.Text = dlg.FileUrl.Replace($"{path.AbsoluteUri}/%40files/", "");
+                            var decodedUrl = Uri.UnescapeDataString(dlg.FileUrl);
+                            var relativePath = decodedUrl.Replace($"{path}/@files/", "");
+                            textRelativePath.Text = relativePath;
                         }
                         Settings.Default.PanoramaTreeState = dlg.TreeState;
                         Settings.Default.ShowPanormaSkyFiles = dlg.ShowingSky;
@@ -272,9 +275,10 @@ namespace SkylineBatch
 
                         // dlg.InitializeDialog();
                         if (dlg.ShowDialog() != DialogResult.Cancel)
+
                         {
                             string url = dlg.Selected;
-                            string output = $"{url.Replace($"{remoteFileSource.SelectedPath}/@files/", "")}/";
+                            string output = $"{url.Replace($"{path}/@files/", "")}/";
                             textRelativePath.Text = output;
                         }
                     }
