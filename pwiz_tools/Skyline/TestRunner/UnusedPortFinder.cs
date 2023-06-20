@@ -148,7 +148,7 @@ namespace TestRunner
             {
                 get
                 {
-                    return BitConverter.ToUInt16(new byte[2] { localPort[1], localPort[0] }, 0);
+                    return BitConverter.ToUInt16(new[] { localPort[1], localPort[0] }, 0);
                 }
             }
 
@@ -161,7 +161,7 @@ namespace TestRunner
             {
                 get
                 {
-                    return BitConverter.ToUInt16(new byte[2] { remotePort[1], remotePort[0] }, 0);
+                    return BitConverter.ToUInt16(new[] { remotePort[1], remotePort[0] }, 0);
                 }
             }
 
