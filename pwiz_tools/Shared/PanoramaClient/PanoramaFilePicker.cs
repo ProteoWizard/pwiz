@@ -1,6 +1,7 @@
 using System;
 using System.Collections;
 using System.Collections.Generic;
+using System.Diagnostics;
 using System.Drawing;
 using System.Globalization;
 using Newtonsoft.Json.Linq;
@@ -84,6 +85,7 @@ namespace pwiz.PanoramaClient
             FolderBrowser.NodeClick += FilePicker_MouseClick;
             FolderBrowser.ShowWebDav = true;
             IsLoaded = true;
+            urlLink.Text = FolderBrowser.SelectedUrl;
             CheckEnabled();
         }
 
@@ -493,6 +495,7 @@ namespace pwiz.PanoramaClient
                 else
                 {
                     _restoring = true;
+                    urlLink.Text = FolderBrowser.SelectedUrl;
                     versionOptions.Visible = false;
                     versionLabel.Visible = false;
                     versionOptions.Text = RECENT_VER;
@@ -890,6 +893,11 @@ namespace pwiz.PanoramaClient
                     returnVal *= -1;
                 return returnVal;
             }
+        }
+
+        private void urlLink_LinkClicked(object sender, LinkLabelLinkClickedEventArgs e)
+        {
+            Process.Start(urlLink.Text);
         }
     }
 
