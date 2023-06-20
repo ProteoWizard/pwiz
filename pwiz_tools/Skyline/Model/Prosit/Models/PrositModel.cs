@@ -19,6 +19,7 @@
 
 using System;
 using System.Collections.Generic;
+using System.Globalization;
 using System.IO;
 using System.Linq;
 using System.Text;
@@ -396,8 +397,8 @@ namespace pwiz.Skyline.Model.Prosit.Models
             {
                 var values = row.Split(',');
                 string sequence = values[0];
-                var ce = Convert.ToSingle(values[1]);
-                var charge = Convert.ToInt32(values[2]);
+                var ce = Convert.ToSingle(values[1], CultureInfo.InvariantCulture);
+                var charge = Convert.ToInt32(values[2], CultureInfo.InvariantCulture);
                 inputRows.Add(PrositIntensityModel.CreatePrositInputRow(sequence, charge, ce, out _));
                 peptides.Add(new PrositIntensityModel.PeptidePrecursorNCE(sequence, charge, new SignedMz(calc.GetPrecursorMass(sequence) / charge),
                     ExplicitMods.EMPTY, IsotopeLabelType.light, (int)ce));
