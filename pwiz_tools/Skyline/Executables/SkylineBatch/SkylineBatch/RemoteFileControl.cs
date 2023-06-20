@@ -274,7 +274,7 @@ namespace SkylineBatch
                         if (dlg.ShowDialog() != DialogResult.Cancel)
                         {
                             string url = dlg.Selected;
-                            string output = $"{url.Replace($"{uri.AbsoluteUri}/@files/", "")}/";
+                            string output = $"{url.Replace($"{remoteFileSource.SelectedPath}/@files/", "")}/";
                             textRelativePath.Text = output;
                         }
                     }
