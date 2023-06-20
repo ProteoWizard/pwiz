@@ -193,7 +193,6 @@
     <Compile Include="TabTests.cs" />
     <Compile Include="TabTutorials.cs" />
     <Compile Include="Try.cs" />
-    <Compile Include="UnusedPortFinder.cs" />
     <Compile Include="WakeupTimer.cs" />
     <Compile Include="WindowThumbnail.cs">
       <SubType>UserControl</SubType>

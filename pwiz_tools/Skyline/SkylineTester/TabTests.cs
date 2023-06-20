@@ -110,10 +110,6 @@ namespace SkylineTester
                 // CONSIDER: Should we add a checkbox for this?
                 // args.Append(" keepworkerlogs=1"); // For debugging startup issues. Look for TestRunner-docker-worker_#-docker.log files in pwiz root
                 args.AppendFormat(" parallelmode=server workercount={0}", MainWindow.RunParallelWorkerCount.Value);
-
-                // Select the first unused port above 9810 to communicate with the worker.
-                // The Windows server "macs2.gs.washington.edu" is configured to be able to use any port between 9810 and 9820
-                args.AppendFormat(" workerport={0}", UnusedPortFinder.FindUnusedPort(9810, 65535));
                 try
                 {
                     var dockerImagesOutput = RunTests.RunCommand("docker", $"images {RunTests.DOCKER_IMAGE_NAME}", RunTests.IS_DOCKER_RUNNING_MESSAGE);

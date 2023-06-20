@@ -23,7 +23,7 @@ using System.Linq;
 using System.Net;
 using System.Runtime.InteropServices;
 
-namespace SkylineTester
+namespace TestRunner
 {
     public static class UnusedPortFinder
     {
