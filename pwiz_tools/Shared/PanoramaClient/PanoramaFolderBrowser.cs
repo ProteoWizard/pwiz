@@ -146,7 +146,7 @@ namespace pwiz.PanoramaClient
             {
                 if (ActiveServer != null)
                     SelectedUrl =
-                        Uri.UnescapeDataString(string.Concat(ActiveServer.URI, @"_webdav", treeView.SelectedNode.Tag));
+                        Uri.UnescapeDataString(string.Concat(ActiveServer.URI, @"_webdav", treeView.SelectedNode.Tag, "/@files"));
             }
         }
 
@@ -536,7 +536,7 @@ namespace pwiz.PanoramaClient
             CurNodeIsTargetedMS = node.Name;
             Path = node.Tag != null ? node.Tag.ToString() : string.Empty;
             Clicked = node;
-            SelectedUrl = Uri.UnescapeDataString(string.Concat(ActiveServer.URI, @"_webdav", Clicked.Tag));
+            SelectedUrl = Uri.UnescapeDataString(string.Concat(ActiveServer.URI, @"_webdav", Clicked.Tag, "/@files"));
             AddFiles?.Invoke(this, EventArgs.Empty);
             //If there's a file browser observer, add corresponding files
             if (_priorNode != null && _priorNode != node)
