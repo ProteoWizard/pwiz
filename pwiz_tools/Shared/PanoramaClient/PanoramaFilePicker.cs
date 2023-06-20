@@ -22,6 +22,7 @@ namespace pwiz.PanoramaClient
         private const string EXT = ".sky";
         private const string RECENT_VER = "Most recent";
         private const string ALL_VER = "All";
+        public const string ZIP_EXT = ".sky.zip";
 
         public PanoramaFilePicker(List<PanoramaServer> servers, string stateString, bool showingSky, bool showWebDav = false, string selectedPath = null)
         {
@@ -197,6 +198,14 @@ namespace pwiz.PanoramaClient
                         if (!canRead)
                         {
                             continue;
+                        }
+
+                        if (ShowingSky)
+                        {
+                            if (!fileName.EndsWith(EXT) && !fileName.EndsWith(ZIP_EXT))
+                            {
+                                continue;
+                            }
                         }
 
                         var link = (string)file[@"href"];
@@ -545,6 +554,12 @@ namespace pwiz.PanoramaClient
                             AddChildFiles(uri);
                         }
                         else
+                        {
+                            listView.HeaderStyle = ColumnHeaderStyle.None;
+                            noFiles.Visible = true;
+                        }
+
+                        if (listView.Items.Count < 1)
                         {
                             listView.HeaderStyle = ColumnHeaderStyle.None;
                             noFiles.Visible = true;
