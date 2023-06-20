@@ -25,7 +25,7 @@ using pwiz.Skyline.Model;
 namespace pwiz.SkylineTestUtil
 {
     /// <summary>
-    /// Listens to the <see cref="SkylineWindow.DocumentChangedEvent"/> and calls
+    /// Listens to the <see cref="pwiz.Skyline.SkylineWindow.DocumentChangedEvent"/> and calls
     /// <see cref="AssertEx.Serializable(SrmDocument)"/>
     /// to make sure the document in memory would always be able to round-trip to XML
     /// </summary>
