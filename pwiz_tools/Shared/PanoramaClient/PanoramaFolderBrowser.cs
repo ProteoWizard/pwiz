@@ -90,7 +90,7 @@ namespace pwiz.PanoramaClient
         public bool ShowWebDav { get; set; }
         public bool HasWebDavParent { get; private set; }
         public string SelectedPath { get; set; }
-
+        public string SelectedUrl { get; set; }
         /// <summary>
         /// Builds the TreeView of folders and restores any
         /// previous state of the TreeView
@@ -140,6 +140,13 @@ namespace pwiz.PanoramaClient
             else
             {
                 _formUtil.InitializeTreeViewTest(_server, treeView, _folderJson);
+            }
+
+            if (treeView.SelectedNode != null)
+            {
+                if (ActiveServer != null)
+                    SelectedUrl =
+                        Uri.UnescapeDataString(string.Concat(ActiveServer.URI, @"_webdav", treeView.SelectedNode.Tag));
             }
         }
 
@@ -528,6 +535,8 @@ namespace pwiz.PanoramaClient
             treeView.SelectedNode = node;
             CurNodeIsTargetedMS = node.Name;
             Path = node.Tag != null ? node.Tag.ToString() : string.Empty;
+            Clicked = node;
+            SelectedUrl = Uri.UnescapeDataString(string.Concat(ActiveServer.URI, @"_webdav", Clicked.Tag));
             AddFiles?.Invoke(this, EventArgs.Empty);
             //If there's a file browser observer, add corresponding files
             if (_priorNode != null && _priorNode != node)
@@ -535,7 +544,6 @@ namespace pwiz.PanoramaClient
                 _previous.Push(_priorNode);
             }
             _priorNode = node;
-            Clicked = node;
             _next.Clear();
             NodeClick?.Invoke(this, EventArgs.Empty);
         }
