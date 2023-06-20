@@ -1218,6 +1218,7 @@
               </xs:complexContent>
             </xs:complexType>
           </xs:element>
+          <xs:element name="encyclopedia_spectrum_info" minOccurs="0" maxOccurs="unbounded" type="spectrum_header_info_type" />
           <xs:element name="precursor_results" minOccurs="0" maxOccurs="1">
             <xs:complexType>
               <xs:sequence>
