@@ -172,10 +172,10 @@ namespace SkylineBatch
                 {
                     if (dlg.ShowDialog() != DialogResult.Cancel)
                     {
-                        string url = dlg.Selected;
+                        string url = $"{dlg.Selected}/@files/";
                         textFolderUrl.Text = url;
                         PanoramaSource = true; // if you select a folder then manually change the folder, PanoramaSource will still be true
-                        SelectedPath = dlg.Selected;
+                        SelectedPath = $"{dlg.Selected}";
                     }
 
                     Settings.Default.PanoramaTreeState = dlg.State;

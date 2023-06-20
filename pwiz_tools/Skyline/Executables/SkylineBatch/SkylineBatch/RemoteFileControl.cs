@@ -20,9 +20,9 @@ namespace SkylineBatch
         private readonly string _downloadFolder;
         private readonly bool _fileRequired;
         private readonly bool _preferPanoramaSource;
+        private readonly bool _templateFile;
 
-
-        public RemoteFileControl(IMainUiControl mainControl, SkylineBatchConfigManagerState state, Server editingServer, string downloadFolder, bool fileRequired, bool preferPanoramaSource)
+        public RemoteFileControl(IMainUiControl mainControl, SkylineBatchConfigManagerState state, Server editingServer, string downloadFolder, bool fileRequired, bool preferPanoramaSource, bool templateFile = false)
         {
             InitializeComponent();
             Bitmap bmp = (Bitmap)this.btnOpenFromPanorama.Image;
@@ -34,6 +34,7 @@ namespace SkylineBatch
             _downloadFolder = downloadFolder;
             _fileRequired = fileRequired;
             _preferPanoramaSource = preferPanoramaSource;
+            _templateFile = templateFile;  
             UpdateRemoteSourceList();
             if (editingServer != null)
             {
@@ -232,10 +233,12 @@ namespace SkylineBatch
             // string textPassword = remoteFileSource.Password;
 
             string host = $"https://{uri.Host}";
-            string path = uri.ToString();
+            var path = new Uri(remoteFileSource.SelectedPath);
             PanoramaClientServer server = new PanoramaClientServer(new Uri(host));
 
             var panoramaServers = new List<PanoramaClientServer>() { server };
+            
+
 
             var state = string.Empty;
             if (!string.IsNullOrEmpty(Settings.Default.PanoramaTreeState))
@@ -248,7 +251,7 @@ namespace SkylineBatch
 
                 if (_fileRequired) // If file is required use PanoramaFilePicker
                 {
-                    using (PanoramaFilePicker dlg = new PanoramaFilePicker(panoramaServers,state, false, true,path))
+                    using (PanoramaFilePicker dlg = new PanoramaFilePicker(panoramaServers,state, _templateFile, true,remoteFileSource.SelectedPath))
                     {
 
                         dlg.InitializeDialog();
@@ -256,7 +259,7 @@ namespace SkylineBatch
                         {
                             Settings.Default.PanoramaTreeState = dlg.TreeState;
                             Settings.Default.ShowPanormaSkyFiles = dlg.ShowingSky;
-                            textRelativePath.Text = dlg.FileUrl.Replace(uri.AbsoluteUri, "");
+                            textRelativePath.Text = dlg.FileUrl.Replace($"{path.AbsoluteUri}/%40files/", "");
                         }
                         Settings.Default.PanoramaTreeState = dlg.TreeState;
                         Settings.Default.ShowPanormaSkyFiles = dlg.ShowingSky;
@@ -264,14 +267,14 @@ namespace SkylineBatch
                 }
                 else // if file not required use PanoramaDirectoryPicker
                 {
-                    using (PanoramaDirectoryPicker dlg = new PanoramaDirectoryPicker(panoramaServers, state, showWebDavFolders:true,selectedPath:path))
+                    using (PanoramaDirectoryPicker dlg = new PanoramaDirectoryPicker(panoramaServers, state, showWebDavFolders:true,selectedPath: remoteFileSource.SelectedPath))
                     {
 
                         // dlg.InitializeDialog();
                         if (dlg.ShowDialog() != DialogResult.Cancel)
                         {
                             string url = dlg.Selected;
-                            string output = $"{url.Replace(uri.ToString(), "")}/";
+                            string output = $"{url.Replace($"{uri.AbsoluteUri}/@files/", "")}/";
                             textRelativePath.Text = output;
                         }
                     }

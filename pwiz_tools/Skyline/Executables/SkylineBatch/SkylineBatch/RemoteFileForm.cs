@@ -11,16 +11,15 @@ namespace SkylineBatch
         private CancellationTokenSource _cancelSource;
         private IMainUiControl _mainControl;
 
-        public RemoteFileForm(Server editingServer, string path, string title, IMainUiControl mainControl, SkylineBatchConfigManagerState state)
+        public RemoteFileForm(Server editingServer, string path, string title, IMainUiControl mainControl, SkylineBatchConfigManagerState state, bool templateFile = false)
         {
             InitializeComponent();
             Icon = Program.Icon();
 
             path = path ?? string.Empty;
             _mainControl = mainControl;
-            
             // fileRequired was originally false here, check if changing to true broke anything
-            RemoteFileControl = new RemoteFileControl(_mainControl, state, editingServer, FileUtil.GetPathDirectory(path), true, true);
+            RemoteFileControl = new RemoteFileControl(_mainControl, state, editingServer, FileUtil.GetPathDirectory(path), true, true, templateFile);
             RemoteFileControl.Dock = DockStyle.Fill;
             RemoteFileControl.Show();
             panelRemoteFile.Controls.Add(RemoteFileControl);
