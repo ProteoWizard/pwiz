@@ -173,7 +173,7 @@
     <Compile Include="TestFunctional.cs" />
     <Compile Include="TypeInspector.cs" />
     <Compile Include="UnifiTestUtil.cs" />
-    <Compile Include="DocumentSerializabilityVerifier.cs" />
+    <Compile Include="DocumentSerializableVerifier.cs" />
   </ItemGroup>
   <ItemGroup>
     <ProjectReference Include="..\..\Shared\Common\Common.csproj">

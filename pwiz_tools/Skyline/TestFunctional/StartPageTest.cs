@@ -213,6 +213,11 @@ namespace pwiz.SkylineTestFunctional
             get { return true; }
         }
 
+        protected override bool ContinuouslyVerifyDocumentSerialization
+        {
+            get { return true; }
+        }
+
         protected override void DoTest()
         {
             var startPage = WaitForOpenForm<StartPage>();

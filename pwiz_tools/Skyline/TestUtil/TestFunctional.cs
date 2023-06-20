@@ -1498,16 +1498,7 @@ namespace pwiz.SkylineTestUtil
             var threadTest = new Thread(WaitForSkyline) { Name = @"Functional test thread" };
             LocalizationHelper.InitThread(threadTest);
             threadTest.Start();
-            DocumentSerializabilityVerifier documentSerializabilityVerifier = null;
-            if (VerifyDocumentSerializabilityContinuously)
-            {
-                documentSerializabilityVerifier = new DocumentSerializabilityVerifier();
-                documentSerializabilityVerifier.Start();
-            }
-            using (documentSerializabilityVerifier)
-            {
-                Program.Main();
-            }
+        Program.Main();
             threadTest.Join();
 
             // Were all windows disposed?
@@ -1811,7 +1802,7 @@ namespace pwiz.SkylineTestUtil
                     Assert.IsTrue(Program.MainWindow != null && Program.MainWindow.IsHandleCreated,
                         @"Timeout {0} seconds exceeded in WaitForSkyline", waitCycles * SLEEP_INTERVAL / 1000);
                 }
-                BeginAuditLogging();
+                BeginAuditLogging(); 
                 RunTest();
                 EndAuditLogging();
             }
@@ -1868,7 +1859,15 @@ namespace pwiz.SkylineTestUtil
                 RunUI(() => Clipboard.SetText(clipboardCheckText));
             }
 
-            DoTest();
+            DocumentSerializableVerifier documentSerializableVerifier = null;
+            if (ContinuouslyVerifyDocumentSerialization)
+            {
+                documentSerializableVerifier = new DocumentSerializableVerifier();
+            }
+            using (documentSerializableVerifier)
+            {
+                DoTest();
+            }
             if (null != SkylineWindow)
             {
                 if (VerifyDocumentSerializabilityAtEndOfTest)
@@ -2310,7 +2309,7 @@ namespace pwiz.SkylineTestUtil
             return $"IrtSlope = {slope},\r\nIrtIntercept = {sign}{intercept},\r\n";
         }
 
-        protected virtual bool VerifyDocumentSerializabilityContinuously
+        protected virtual bool ContinuouslyVerifyDocumentSerialization
         {
             get { return false; }
         }

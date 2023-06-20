@@ -50,6 +50,11 @@ namespace pwiz.SkylineTestTutorial
             get { return !IsPauseForScreenShots; }  // So we can point out the UI mode control
         }
 
+        protected override bool ContinuouslyVerifyDocumentSerialization
+        {
+            get { return true; }
+        }
+
         [TestMethod]
         public void TestSmallMoleculesTutorial()
         {
