@@ -2,6 +2,7 @@
 using System.Collections.Generic;
 using System.Collections.Immutable;
 using System.Drawing;
+using System.Net.Configuration;
 using System.Threading;
 using System.Windows.Forms;
 using SharedBatch;
@@ -159,16 +160,16 @@ namespace SkylineBatch
             var panoramaServers = new List<PanoramaServer>() { server };
 
             var state = string.Empty;
-            if (!string.IsNullOrEmpty(Settings.Default.PanoramaTreeState))
-            {
-                state = Settings.Default.PanoramaTreeState;
-            }
+            // if (!string.IsNullOrEmpty(Settings.Default.PanoramaTreeState))
+            // {
+            //     state = Settings.Default.PanoramaTreeState;
+            // }
 
-
+            var decodedUrl = Uri.UnescapeDataString(textFolderUrl.Text).Replace("@files/", "");
             try
             {
                 
-                using (PanoramaDirectoryPicker dlg = new PanoramaDirectoryPicker(panoramaServers, state, showWebDavFolders:false, selectedPath:textFolderUrl.Text))
+                using (PanoramaDirectoryPicker dlg = new PanoramaDirectoryPicker(panoramaServers, state, showWebDavFolders:false, selectedPath:decodedUrl))
                 {
                     if (dlg.ShowDialog() != DialogResult.Cancel)
                     {
