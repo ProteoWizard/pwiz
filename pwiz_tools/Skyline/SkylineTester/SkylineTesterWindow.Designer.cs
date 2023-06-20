@@ -312,8 +312,6 @@ namespace SkylineTester
             this.runParallel = new System.Windows.Forms.RadioButton();
             this.runSerial = new System.Windows.Forms.RadioButton();
             this.parallelGroup = new System.Windows.Forms.GroupBox();
-            this.workerPort = new System.Windows.Forms.TextBox();
-            this.lblWorkerPort = new System.Windows.Forms.Label();
             this.mainPanel.SuspendLayout();
             this.statusStrip1.SuspendLayout();
             this.tabs.SuspendLayout();
@@ -3240,23 +3238,6 @@ namespace SkylineTester
             0,
             0});
             // 
-            // workerPort
-            // 
-            this.workerPort.Location = new System.Drawing.Point(150, 43);
-            this.workerPort.Name = "workerPort";
-            this.workerPort.Size = new System.Drawing.Size(100, 20);
-            this.workerPort.TabIndex = 16;
-            this.toolTip1.SetToolTip(this.workerPort, "Enter number between 9810 and 9820 on macs2");
-            // 
-            // lblWorkerPort
-            // 
-            this.lblWorkerPort.AutoSize = true;
-            this.lblWorkerPort.Location = new System.Drawing.Point(80, 46);
-            this.lblWorkerPort.Name = "lblWorkerPort";
-            this.lblWorkerPort.Size = new System.Drawing.Size(63, 13);
-            this.lblWorkerPort.TabIndex = 15;
-            this.lblWorkerPort.Text = "Worker port";
-            // 
             // label22
             // 
             this.label22.AutoSize = true;
@@ -3283,7 +3264,7 @@ namespace SkylineTester
             // runSerial
             // 
             this.runSerial.AutoSize = true;
-            this.runSerial.Location = new System.Drawing.Point(26, 67);
+            this.runSerial.Location = new System.Drawing.Point(26, 45);
             this.runSerial.Margin = new System.Windows.Forms.Padding(4);
             this.runSerial.Name = "runSerial";
             this.runSerial.Size = new System.Drawing.Size(104, 17);
@@ -3294,15 +3275,13 @@ namespace SkylineTester
             // 
             // parallelGroup
             // 
-            this.parallelGroup.Controls.Add(this.workerPort);
-            this.parallelGroup.Controls.Add(this.lblWorkerPort);
             this.parallelGroup.Controls.Add(this.parallelWorkerCount);
             this.parallelGroup.Controls.Add(this.runParallel);
             this.parallelGroup.Controls.Add(this.label22);
             this.parallelGroup.Controls.Add(this.runSerial);
             this.parallelGroup.Location = new System.Drawing.Point(11, 476);
             this.parallelGroup.Name = "parallelGroup";
-            this.parallelGroup.Size = new System.Drawing.Size(280, 100);
+            this.parallelGroup.Size = new System.Drawing.Size(280, 70);
             this.parallelGroup.TabIndex = 37;
             this.parallelGroup.TabStop = false;
             this.parallelGroup.Text = "Parallelism";
@@ -3655,7 +3634,5 @@ namespace SkylineTester
         private ComboBox testSet;
         private Button buttonRunStatsExportCSV;
         private Label labelParallelOffscreenHint;
-        private TextBox workerPort;
-        private Label lblWorkerPort;
     }
 }

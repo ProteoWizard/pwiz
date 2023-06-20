@@ -1088,7 +1088,6 @@ namespace SkylineTester
                 runParallel,
                 runSerial,
                 parallelWorkerCount,
-                workerPort,
 
                 // Build
                 buildTrunk,
@@ -1519,7 +1518,6 @@ namespace SkylineTester
         public Button           RunNightly                  { get { return runNightly; } }
         public RadioButton      RunParallel                 { get { return runParallel; } }
         public NumericUpDown    RunParallelWorkerCount      { get { return parallelWorkerCount; } }
-        public TextBox          WorkerPort                  { get { return workerPort; } }
         public Button           RunQuality                  { get { return runQuality; } }
         public Button           RunTests                    { get { return runTests; } }
         public Button           RunTutorials                { get { return runTutorials; } }
@@ -1951,7 +1949,6 @@ namespace SkylineTester
             labelParallelOffscreenHint.Location = Offscreen.Location;
             Offscreen.Visible = runSerial.Checked; // Everything happens offscreen in parallel tests, so don't offer the option if we're not serial mode
             labelParallelOffscreenHint.Visible = !Offscreen.Visible;
-            WorkerPort.Enabled = RunParallelWorkerCount.Enabled = !runSerial.Checked;
         }
 
         #endregion Control events
