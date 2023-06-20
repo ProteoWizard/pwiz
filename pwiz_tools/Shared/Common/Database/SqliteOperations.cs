@@ -21,8 +21,10 @@ using System;
 using System.Collections.Generic;
 using System.Data;
 using System.Data.SQLite;
+using System.Globalization;
 using System.Linq;
 using System.Security.Cryptography;
+using pwiz.Common.SystemUtil;
 
 namespace pwiz.Common.Database
 {
@@ -110,7 +112,8 @@ namespace pwiz.Common.Database
                     if (row[i] is byte[] bytes)
                         row[i] = Convert.ToBase64String(sha1.ComputeHash(bytes));
 
-                yield return string.Join(columnSeparator, row);
+                yield return LocalizationHelper.CallWithCulture(CultureInfo.InvariantCulture,
+                    () => string.Join(columnSeparator, row));
             }
         }
     }
