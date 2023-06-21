@@ -84,7 +84,7 @@ namespace pwiz.Skyline.Model.Prosit
             // First get predictions for iRT standards specified by the user which may or may not be in the document
             if (IrtStandard != null && !IrtStandard.IsEmpty && !IrtStandard.IsAuto)
             {
-                var standardPeptidesToAdd = ReadStandardPeptides(IrtStandard);
+                var standardPeptidesToAdd = ReadStandardPeptides(IrtStandard, _nce);
                 if (standardPeptidesToAdd != null && standardPeptidesToAdd.Count > 0)
                 {
                     // Get iRTs
@@ -94,7 +94,7 @@ namespace pwiz.Skyline.Model.Prosit
 
                     // Get spectra
                     var standardMS = _intensityModel.PredictBatches(_prositClient, progress, ref progressStatus, _document.Settings,
-                        standardPeptidesToAdd.Select(p => p.WithNCE(_nce)).ToArray(),
+                        standardPeptidesToAdd.ToArray(),
                         CancellationToken.None);
 
                     // Merge iRT and MS2 into SpecMzInfos
@@ -171,7 +171,7 @@ namespace pwiz.Skyline.Model.Prosit
             return true;
         }
 
-        public static List<PrositIntensityModel.PeptidePrecursorNCE> ReadStandardPeptides(IrtStandard standard)
+        public static List<PrositIntensityModel.PeptidePrecursorNCE> ReadStandardPeptides(IrtStandard standard, int? nce)
         {
             var peps = standard.GetDocument().Peptides.ToList();
             var precs = peps.Select(p => p.TransitionGroups.First());
@@ -183,7 +183,7 @@ namespace pwiz.Skyline.Model.Prosit
                     new TypedExplicitModifications[0]));
             }*/
             return Enumerable.Zip(peps, precs,
-                (pep, prec) => new PrositIntensityModel.PeptidePrecursorNCE(pep, prec)).ToList();
+                (pep, prec) => new PrositIntensityModel.PeptidePrecursorNCE(pep, prec, null, nce)).ToList();
         }
 
         public LibrarySpec LibrarySpec { get; private set; }

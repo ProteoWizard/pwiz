@@ -181,7 +181,7 @@ namespace pwiz.Skyline.Model.Prosit.Models
 
             public PeptidePrecursorNCE WithNCE(int nce)
             {
-                return new PeptidePrecursorNCE(Sequence, PrecursorCharge, PrecursorMz, ExplicitMods, LabelType, NCE);
+                return new PeptidePrecursorNCE(Sequence, PrecursorCharge, PrecursorMz, ExplicitMods, LabelType, nce);
             }
 
             public override bool Equals(SkylineInputRow other)

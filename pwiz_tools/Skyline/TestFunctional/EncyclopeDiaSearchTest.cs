@@ -31,6 +31,7 @@ using pwiz.Skyline.Properties;
 using pwiz.SkylineTestUtil;
 using pwiz.Skyline.Util;
 using System;
+using System.Globalization;
 
 namespace pwiz.SkylineTestFunctional
 {
@@ -81,8 +82,9 @@ namespace pwiz.SkylineTestFunctional
                 searchDlg.MinMz = 690;
                 searchDlg.MaxMz = 705;
                 searchDlg.ImportFastaControl.MaxMissedCleavages = 2;
-                searchDlg.SetAdditionalSetting("PercolatorTrainingFDR", "0.15");
-                searchDlg.SetAdditionalSetting("PercolatorThreshold", "0.15");
+                // use CurrentCulture to simulate user entering value in additional settings dialog
+                searchDlg.SetAdditionalSetting("PercolatorTrainingFDR", Convert.ToString(0.15, CultureInfo.CurrentCulture));
+                searchDlg.SetAdditionalSetting("PercolatorThreshold", Convert.ToString(0.15, CultureInfo.CurrentCulture));
                 searchDlg.SetAdditionalSetting("MinNumOfQuantitativePeaks", "0");
                 searchDlg.SetAdditionalSetting("NumberOfQuantitativePeaks", "0");
                 searchDlg.SetAdditionalSetting("V2scoring", "false");
