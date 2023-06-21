@@ -444,7 +444,7 @@ namespace BuildSciexMethod
                     transition.IsMs2Precursor ? -1 : transition.ProductMz,
                     xic,
                     rt,
-                    transition.IsHeavy? "" : transition.Label.Replace("light", "heavy"));
+                    transition.IsHeavy? "" : transition.Label.Replace("light", "heavy")).Replace("precursor", "p");
                 export += Environment.NewLine;
             }
             using (var file = new StreamWriter(filePath))

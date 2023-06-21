@@ -209,7 +209,7 @@ namespace BuildAnalystFullScanMethod
             IAcqMethodDirConfig acqMethodDir;
             try
             {
-                ApplicationClass analyst = new ApplicationClass();
+                IScriptAnalyst analyst = new ApplicationClass();
 
                 // Make sure that Analyst is fully started
                 acqMethodDir = (IAcqMethodDirConfig)analyst.Acquire();

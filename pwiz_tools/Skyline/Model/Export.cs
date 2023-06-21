@@ -168,10 +168,10 @@ namespace pwiz.Skyline.Model
     public static class ExportInstrumentType
     {
         public const string ABI = "SCIEX";
-        public const string ABI_QTRAP = "SCIEX QTRAP";
-        public const string ABI_TOF = "SCIEX QTOF";
-        public const string ABI_7500 = "SCIEX OS 7500";
-        public const string ABI_7600 = "SCIEX OS 7600";
+        public const string ABI_QTRAP = "SCIEX QQQ/QTRAP - Analyst";
+        public const string ABI_TOF = "SCIEX QTOF - Analyst";
+        public const string ABI_7500 = "SCIEX QQQ/QTRAP - SCIEX OS";
+        public const string ABI_7600 = "SCIEX QTOF - SCIEX OS";
         public const string AGILENT = "Agilent";
         public const string AGILENT_TOF = "Agilent QTOF";
         public const string AGILENT6400 = "Agilent 6400 Series";
@@ -2441,7 +2441,8 @@ namespace pwiz.Skyline.Model
             var prediction = Document.Settings.PeptideSettings.Prediction;
             predictedRT = prediction.PredictRetentionTime(Document, nodePep, nodeTranGroup,
                 SchedulingReplicateIndex, SchedulingAlgorithm, Document.Settings.HasResults, out var rtWindow);
-            RTWindow = rtWindow; // Store for later use
+            if(MethodType != ExportMethodType.Standard)
+                RTWindow = rtWindow; // Store for later use
 
             xic = XICWidth.HasValue
                 ? Math.Round(XICWidth.Value, 4).ToString(CultureInfo)
@@ -2684,7 +2685,7 @@ namespace pwiz.Skyline.Model
                                                      string primaryOrSecondary, string xic, string rt)
         {
             // Provide all columns for method export
-            return string.Format(@",{0},{1},{2},{3},{4},{5},{6},{7},{8}",
+            return string.Format(@",{0},{1},{2},{3},{4},{5},{6},{7},{8},{9},{10}",
                                  dp,
                                  ce,
                                  precursorWindow,
@@ -2693,7 +2694,9 @@ namespace pwiz.Skyline.Model
                                  averagePeakAreaText,
                                  variableRtWindowText,
                                  string.Empty,  // Threshold for triggering secondary
-                                 primaryOrSecondary);
+                                 primaryOrSecondary,
+                                 xic,
+                                 rt);
         }
     }
     public class AbiQtrapMethodExporter : AbiMethodExporter
