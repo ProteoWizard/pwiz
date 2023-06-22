@@ -1,5 +1,6 @@
 ﻿syntax = "proto3";
 option csharp_namespace = "pwiz.Skyline.Model.Results.ProtoBuf";
+option java_package = "org.labkey.targetedms.parser.proto";
 message ChromatogramGroupData {
 	message TimeList {
 		repeated float times = 1;
