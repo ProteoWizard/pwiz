@@ -69,7 +69,7 @@ namespace TestPerf
                     //"23aug2017_hela_serum_timecourse_wide_1f.mzML",
                 },
 
-                FinalTargetCounts = new[] { 557, 5734, 5734, 40799 },
+                FinalTargetCounts = new[] { 557, 5733, 5733, 40777 },
                 MassErrorStats = new[]
                 {
                     new[] {0.0, 2.2},
@@ -109,16 +109,12 @@ namespace TestPerf
                     "23aug2017_hela_serum_timecourse_wide_1e.mzML",
                     "23aug2017_hela_serum_timecourse_wide_1f.mzML",
                 },
-                FinalTargetCounts = new[] { 559, 36128, 36128, 325152 },
+                FinalTargetCounts = new[] { 558, 13631, 13631, 98734 },
                 MassErrorStats = new[]
                 {
-                    new[] {0.3, 2.2},
-                    new[] {0.3, 2.2},
-                    new[] {0.3, 2.2},
-                    new[] {0.3, 2.2},
-                    new[] {0.4, 2.2},
-                    new[] {0.3, 2.2},
-                    new[] {0.3, 2.2},
+                    new[] {0.1, 2.3},
+                    new[] {0.1, 2.2},
+                    new[] {0.1, 2.3},
                 },
                 ChromatogramClickPoint = new PointF(19.1f, 24f)
             };
