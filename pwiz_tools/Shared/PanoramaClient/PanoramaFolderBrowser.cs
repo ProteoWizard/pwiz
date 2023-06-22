@@ -20,7 +20,6 @@
 using System;
 using System.Collections;
 using System.Collections.Generic;
-using System.Diagnostics;
 using System.Drawing;
 using System.Linq;
 using System.Net;
@@ -145,8 +144,16 @@ namespace pwiz.PanoramaClient
             if (treeView.SelectedNode != null)
             {
                 if (ActiveServer != null)
-                    SelectedUrl =
-                        Uri.UnescapeDataString(string.Concat(ActiveServer.URI, @"_webdav", treeView.SelectedNode.Tag, "/@files"));
+                    if (treeView.SelectedNode.Tag.ToString().Contains(@"@files"))
+                    {
+                        SelectedUrl =
+                            Uri.UnescapeDataString(string.Concat(ActiveServer.URI, @"_webdav", treeView.SelectedNode.Tag));
+                    }
+                    else
+                    {
+                        SelectedUrl =
+                            Uri.UnescapeDataString(string.Concat(ActiveServer.URI, @"_webdav", treeView.SelectedNode.Tag, "/@files"));
+                    }
             }
         }
 
@@ -470,7 +477,6 @@ namespace pwiz.PanoramaClient
         {
             foreach (TreeNode node in nodes)
             {
-                Debug.WriteLine(node.Text);
                 if (node.Text.Equals(nodeName))
                 {
                     return node;
@@ -536,7 +542,16 @@ namespace pwiz.PanoramaClient
             CurNodeIsTargetedMS = node.Name;
             Path = node.Tag != null ? node.Tag.ToString() : string.Empty;
             Clicked = node;
-            SelectedUrl = Uri.UnescapeDataString(string.Concat(ActiveServer.URI, @"_webdav", Clicked.Tag, "/@files"));
+            if (treeView.SelectedNode.Tag.ToString().Contains(@"@files"))
+            {
+                SelectedUrl =
+                    Uri.UnescapeDataString(string.Concat(ActiveServer.URI, @"_webdav", node.Tag));
+            }
+            else
+            {
+                SelectedUrl =
+                    Uri.UnescapeDataString(string.Concat(ActiveServer.URI, @"_webdav", node.Tag, "/@files"));
+            }
             AddFiles?.Invoke(this, EventArgs.Empty);
             //If there's a file browser observer, add corresponding files
             if (_priorNode != null && _priorNode != node)
