@@ -174,7 +174,7 @@ namespace pwiz.BiblioSpec
                     case IDPICKER_FDR:
                         return new RangeValues(0, 0);
                     case WATERS_MSE_PEPTIDE_SCORE:
-                        return new RangeValues(6, 6);
+                        return new RangeValues(0, 10);
                     default:
                         return new RangeValues(0, 1);
                 }
