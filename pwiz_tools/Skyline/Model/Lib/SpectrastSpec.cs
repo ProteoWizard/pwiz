@@ -101,6 +101,8 @@ namespace pwiz.Skyline.Model.Lib
         {
         }
 
+        public override string LibraryTypeName => @"SpectraST";
+
         #region Implementation of IXmlSerializable
 
         /// <summary>

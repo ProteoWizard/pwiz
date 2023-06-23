@@ -208,6 +208,7 @@
     <Compile Include="SpectrumGridTest.cs" />
     <Compile Include="ToolServiceTestSharedClasses.cs" />
     <Compile Include="EditSpectrumFilterTest.cs" />
+    <Compile Include="EncyclopeDiaSearchTest.cs" />
     <Compile Include="UnreadableBlibTest.cs" />
     <Compile Include="RemoveSmallMoleculeLabelTypeTest.cs" />
     <Compile Include="StartPageInsertTransitionListTest.cs" />

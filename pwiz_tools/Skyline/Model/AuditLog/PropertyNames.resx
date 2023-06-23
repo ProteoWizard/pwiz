@@ -1715,4 +1715,52 @@
   <data name="GroupComparisonDef_MsLevel" xml:space="preserve">
     <value>MS level</value>
   </data>
+  <data name="EncyclopeDiaSettings" xml:space="preserve">
+    <value>EncyclopeDIA Search</value>
+  </data>
+  <data name="EncyclopeDiaSettings_EncyclopeDiaChromLibrary" xml:space="preserve">
+    <value>Chromatogram library</value>
+  </data>
+  <data name="EncyclopeDiaSettings_EncyclopeDiaConfig" xml:space="preserve">
+    <value>EncyclopeDIA settings</value>
+  </data>
+  <data name="EncyclopeDiaSettings_EncyclopeDiaQuantLibrary" xml:space="preserve">
+    <value>Quantification library</value>
+  </data>
+  <data name="EncyclopeDiaSettings_FastaSettings" xml:space="preserve">
+    <value>FASTA settings</value>
+  </data>
+  <data name="EncyclopeDiaSettings_NarrowWindowResults" xml:space="preserve">
+    <value>Narrow window results</value>
+  </data>
+  <data name="EncyclopeDiaSettings_PrositSettings" xml:space="preserve">
+    <value>Prosit settings</value>
+  </data>
+  <data name="EncyclopeDiaSettings_WideWindowResults" xml:space="preserve">
+    <value>Wide window results</value>
+  </data>
+  <data name="FastaToPrositInputCsvConfig_DefaultCharge" xml:space="preserve">
+    <value>Default charge</value>
+  </data>
+  <data name="FastaToPrositInputCsvConfig_DefaultNCE" xml:space="preserve">
+    <value>Default NCE</value>
+  </data>
+  <data name="FastaToPrositInputCsvConfig_MaxCharge" xml:space="preserve">
+    <value>Max charge</value>
+  </data>
+  <data name="FastaToPrositInputCsvConfig_MaxMissedCleavage" xml:space="preserve">
+    <value>Max missed cleavages</value>
+  </data>
+  <data name="FastaToPrositInputCsvConfig_MinCharge" xml:space="preserve">
+    <value>Min charge</value>
+  </data>
+  <data name="FastaToPrositInputCsvConfig_Enzyme" xml:space="preserve">
+    <value>Enzyme</value>
+  </data>
+  <data name="FastaToPrositInputCsvConfig_MaxMz" xml:space="preserve">
+    <value>Max m/z</value>
+  </data>
+  <data name="FastaToPrositInputCsvConfig_MinMz" xml:space="preserve">
+    <value>Min m/z</value>
+  </data>
 </root>
