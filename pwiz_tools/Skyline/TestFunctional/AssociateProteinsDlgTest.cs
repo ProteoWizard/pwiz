@@ -77,7 +77,7 @@ namespace pwiz.SkylineTestFunctional
                 ">BAZ|Another header. Where did it g\x02 wrong?",
                 "PEPTIDEK"
             });
-            // ReSharper enable LocalizableElement
+            // ReSharper restore LocalizableElement
             var errorDlg = ShowDialog<MessageDlg>(() => associateProteinsDlg.FastaFileName = invalidFastaFilepath);
             AssertEx.Contains(errorDlg.Message, Resources.AssociateProteinsDlg_UseFastaFile_An_error_occurred_during_protein_association_, "\x02");
             OkDialog(errorDlg, errorDlg.OkDialog);

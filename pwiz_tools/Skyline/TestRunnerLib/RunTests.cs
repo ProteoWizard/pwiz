@@ -51,6 +51,7 @@ namespace TestRunnerLib
         public readonly bool DoNotRunInParallel;
         public readonly bool DoNotRunInNightly;
         public readonly bool DoNotUseUnicode; // If true, test is known to have trouble with unicode (3rd party tool, mz5, etc)
+        public readonly bool DoNotTestOddTmpPath; // If true, test is known to have trouble with odd characters in TMP path (Java)
 
         public TestInfo(Type testClass, MethodInfo testMethod, MethodInfo testInitializeMethod, MethodInfo testCleanupMethod)
         {
@@ -63,6 +64,9 @@ namespace TestRunnerLib
 
             var noUnicodeTestAttr = RunTests.GetAttribute(testMethod, "NoUnicodeTestingAttribute");
             DoNotUseUnicode = ProcessEx.IsRunningOnWine || noUnicodeTestAttr != null; // If true, don't add unicode to TMP environment variable
+
+            var noOddTmpPathTestAttr = RunTests.GetAttribute(testMethod, "NoOddTmpPathTestingAttribute");
+            DoNotTestOddTmpPath = ProcessEx.IsRunningOnWine || noOddTmpPathTestAttr != null; // If true, don't add odd characters to TMP environment variable
 
             var noParallelTestAttr = RunTests.GetAttribute(testMethod, "NoParallelTestingAttribute");
             DoNotRunInParallel = noParallelTestAttr != null;
@@ -184,8 +188,17 @@ namespace TestRunnerLib
             // during test clean-up
             if (teamcityTestDecoration)
             {
-                _cleanupLevelAll = true;
-                TestContext.Properties["DesiredCleanupLevel"] = "all";  // Must match DesiredCleanupLevel value
+                var isTeamCity = !string.IsNullOrEmpty(Environment.GetEnvironmentVariable(@"TEAMCITY_VERSION"));
+                if (isTeamCity)
+                {
+                    _cleanupLevelAll = true;
+                    TestContext.Properties["DesiredCleanupLevel"] = "all"; // Must match DesiredCleanupLevel value
+                }
+                else
+                {
+                    // if TC test decoration has been set on a dev computer for testing, don't delete downloaded zips
+                    TestContext.Properties["DesiredCleanupLevel"] = "persistent_files"; // Must match DesiredCleanupLevel value
+                }
             }
 
             if (isParallelClient)
@@ -573,7 +586,7 @@ namespace TestRunnerLib
             // (e.g. msFragger), causes trouble with mz5 reader, etc, so watch for custom test
             // attribute that turns that off per test
             var testDir = TestContext.Properties["TestDir"].ToString();
-            var testTmp = @"~&TMP ^";
+            var testTmp = test.DoNotTestOddTmpPath ? @"T M P" : @"~&TMP ^";
             if (TeamCityTestDecoration)
             {
                 testTmp = Path.Combine(@"..", testTmp); // TeamCity path length concerns, don't worry as much about tidy nesting
@@ -585,9 +598,9 @@ namespace TestRunnerLib
             {
                 // Avoid pushing the 260 character limit for windows paths - remember that there will be subdirs below this
                 // e.g. in case of a long root path, use
-                //      c:\crazy long username\massive subdir name\wacky installation dirnamne\pwiz_tools\Skyline\~test &tmp^\TMMENF910 试验"
+                //      c:\crazy long username\massive subdir name\wacky installation dirname\pwiz_tools\Skyline\~test &tmp^\TMMENF910 试验"
                 // instead of
-                //      c:\crazy long username\massive subdir name\wacky installation dirnamne\pwiz_tools\Skyline\~test &tmp^\TestMyMostExcellentNebulousFunction 试验"
+                //      c:\crazy long username\massive subdir name\wacky installation dirname\pwiz_tools\Skyline\~test &tmp^\TestMyMostExcellentNebulousFunction 试验"
                 tmpTestDir = Path.GetFullPath(Path.Combine(testDir, testTmp,
                     $"{string.Concat(test.TestMethod.Name.Where(char.IsUpper))}{test.TestMethod.Name.Sum(c => c)}{unicode}"));
             }
@@ -600,7 +613,7 @@ namespace TestRunnerLib
             Environment.SetEnvironmentVariable(@"TMP", tmpTestDir);
 
             // Decorate tempfile names with peculiar characters
-            PathEx.RandomFileNameDecoration = @$"t^m&p{unicode} ";
+            PathEx.RandomFileNameDecoration = test.DoNotTestOddTmpPath ? @$"t m p{unicode}" : @$"t^m&p{unicode} ";
             return tmpTestDir;
         }
 

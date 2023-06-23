@@ -483,6 +483,21 @@
       <DesignTime>True</DesignTime>
       <DependentUpon>AuditLogStrings.resx</DependentUpon>
     </Compile>
+    <Compile Include="FileUI\PeptideSearch\DDASearchControl.cs">
+      <SubType>UserControl</SubType>
+    </Compile>
+    <Compile Include="FileUI\PeptideSearch\EncyclopeDiaSearchDlg.cs">
+      <SubType>Form</SubType>
+    </Compile>
+    <Compile Include="FileUI\PeptideSearch\EncyclopeDiaSearchDlg.Designer.cs">
+      <DependentUpon>EncyclopeDiaSearchDlg.cs</DependentUpon>
+    </Compile>
+    <Compile Include="FileUI\PeptideSearch\SearchControl.cs">
+      <SubType>UserControl</SubType>
+    </Compile>
+    <Compile Include="FileUI\PeptideSearch\SearchControl.Designer.cs">
+      <DependentUpon>SearchControl.cs</DependentUpon>
+    </Compile>
     <Compile Include="Model\AuditLog\PropertyNames.Designer.cs">
       <DesignTime>True</DesignTime>
       <AutoGen>True</AutoGen>
@@ -658,6 +673,7 @@
     <Compile Include="Model\Irt\Regression.cs" />
     <Compile Include="Model\LegacyCrosslinkConverter.cs" />
     <Compile Include="Model\Lib\BlibData\DbRefSpectraPeakAnnotations.cs" />
+    <Compile Include="Model\Lib\EncyclopeDiaHelpers.cs" />
     <Compile Include="Model\Lib\ExplicitPeakBounds.cs" />
     <Compile Include="Model\Lib\LibKeyIndex.cs" />
     <Compile Include="Model\Lib\SpectralLibraryExporter.cs" />
@@ -849,12 +865,6 @@
     </Compile>
     <Compile Include="FileUI\PeptideSearch\SearchSettingsControl.Designer.cs">
       <DependentUpon>SearchSettingsControl.cs</DependentUpon>
-    </Compile>
-    <Compile Include="FileUI\PeptideSearch\DDASearchControl.cs">
-      <SubType>UserControl</SubType>
-    </Compile>
-    <Compile Include="FileUI\PeptideSearch\DDASearchControl.Designer.cs">
-      <DependentUpon>DDASearchControl.cs</DependentUpon>
     </Compile>
     <Compile Include="ToolsUI\ToolDescriptionRunUI.cs" />
     <Compile Include="ToolsUI\ToolService.cs" />
@@ -2752,15 +2762,8 @@
     <EmbeddedResource Include="FileUI\PeptideSearch\ConverterSettingsControl.zh-CHS.resx">
       <DependentUpon>ConverterSettingsControl.cs</DependentUpon>
     </EmbeddedResource>
-    <EmbeddedResource Include="FileUI\PeptideSearch\DDASearchControl.ja.resx">
-      <DependentUpon>DDASearchControl.cs</DependentUpon>
-    </EmbeddedResource>
-    <EmbeddedResource Include="FileUI\PeptideSearch\DDASearchControl.resx">
-      <DependentUpon>DDASearchControl.cs</DependentUpon>
-    </EmbeddedResource>
-    <EmbeddedResource Include="FileUI\PeptideSearch\DDASearchControl.zh-CHS.resx">
-      <DependentUpon>DDASearchControl.cs</DependentUpon>
-      <SubType>Designer</SubType>
+    <EmbeddedResource Include="FileUI\PeptideSearch\EncyclopeDiaSearchDlg.resx">
+      <DependentUpon>EncyclopeDiaSearchDlg.cs</DependentUpon>
     </EmbeddedResource>
     <EmbeddedResource Include="FileUI\PeptideSearch\ImportResultsDIAControl.ja.resx">
       <DependentUpon>ImportResultsDIAControl.cs</DependentUpon>
@@ -2773,6 +2776,15 @@
     </EmbeddedResource>
     <EmbeddedResource Include="FileUI\PeptideSearch\ConverterSettingsControl.resx">
       <DependentUpon>ConverterSettingsControl.cs</DependentUpon>
+    </EmbeddedResource>
+    <EmbeddedResource Include="FileUI\PeptideSearch\SearchControl.ja.resx">
+      <DependentUpon>SearchControl.cs</DependentUpon>
+    </EmbeddedResource>
+    <EmbeddedResource Include="FileUI\PeptideSearch\SearchControl.resx">
+      <DependentUpon>SearchControl.cs</DependentUpon>
+    </EmbeddedResource>
+    <EmbeddedResource Include="FileUI\PeptideSearch\SearchControl.zh-CHS.resx">
+      <DependentUpon>SearchControl.cs</DependentUpon>
     </EmbeddedResource>
     <EmbeddedResource Include="FileUI\PeptideSearch\SearchSettingsControl.ja.resx">
       <DependentUpon>SearchSettingsControl.cs</DependentUpon>

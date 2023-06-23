@@ -12089,6 +12089,60 @@ If you choose Disable, you can enable Auto-select later with the "Refine &gt; Ad
   <data name="SkylineWindow_ImportMassList_Disable" xml:space="preserve">
     <value>&amp;Disable</value>
   </data>
+  <data name="FastaToProsit_Enzyme_unsupported_enzyme___0____allowed_values_are___1_" xml:space="preserve">
+    <value>unsupported enzyme '{0}'; allowed values are: {1}</value>
+  </data>
+  <data name="EncyclopeDiaSearchDlg_NextPage_A_FASTA_file_is_required_for_an_EncyclopeDia_Prosit_search_" xml:space="preserve">
+    <value>A FASTA file is required for an EncyclopeDIA Prosit search.</value>
+  </data>
+  <data name="EncyclopeDiaSearchDlg_NextPage_Run" xml:space="preserve">
+    <value>Run</value>
+  </data>
+  <data name="PrositHelpers_PredictBatchesFromPrositCsv_Reading_Prosit_CSV_input" xml:space="preserve">
+    <value>Reading Prosit CSV input</value>
+  </data>
+  <data name="PrositHelpers_ExportPrositSpectraToBlib_Exporting_Prosit_spectra_to_BiblioSpec_library" xml:space="preserve">
+    <value>Exporting Prosit spectra to BiblioSpec library</value>
+  </data>
+  <data name="PrositHelpers_ExportPrositSpectraToBlib_failed_to_write_Prosit_output_to_blib" xml:space="preserve">
+    <value>failed to write Prosit output to blib</value>
+  </data>
+  <data name="EncyclopeDiaHelpers_ConvertFastaToPrositInputCsv_could_not_find_EncyclopeDia" xml:space="preserve">
+    <value>could not find EncyclopeDIA</value>
+  </data>
+  <data name="EncyclopeDiaSearchControl_Search_Reusing_Prosit_predictions_from___0_" xml:space="preserve">
+    <value>Reusing Prosit predictions from: {0}</value>
+  </data>
+  <data name="EncyclopeDiaHelpers_ConvertFastaToPrositInputCsv_Converting_FASTA_to_Prosit_input" xml:space="preserve">
+    <value>Converting FASTA to Prosit input</value>
+  </data>
+  <data name="EncyclopeDiaHelpers_ConvertPrositOutputToDlib_Converting_Prosit_output_to_EncyclopeDia_library" xml:space="preserve">
+    <value>Converting Prosit output to EncyclopeDIA library</value>
+  </data>
+  <data name="EncyclopeDiaHelpers_GetConvertedDiaDataFile_Converting_DIA_data_to_mzML" xml:space="preserve">
+    <value>Converting DIA data to mzML</value>
+  </data>
+  <data name="EncyclopeDiaHelpers_GenerateLibrary_Generating_quantification_library_0_of_1_2" xml:space="preserve">
+    <value>Generating quantification library ({0} of {1}): {2}</value>
+  </data>
+  <data name="EncyclopeDiaHelpers_GenerateLibrary_Generating_chromatogram_library_0_of_1_2" xml:space="preserve">
+    <value>Generating chromatogram library ({0} of {1}): {2}</value>
+  </data>
+  <data name="EncyclopeDiaSearchDlg_ImportEncyclopediaLibrary_Ran_EncyclopeDIA_Search" xml:space="preserve">
+    <value>Ran EncyclopeDIA Search</value>
+  </data>
+  <data name="EncyclopeDiaHelpers_GenerateLibrary_Combining_quantification_libraries" xml:space="preserve">
+    <value>Combining quantification libraries</value>
+  </data>
+  <data name="EncyclopeDiaHelpers_GenerateLibrary_Combining_chromatogram_libraries" xml:space="preserve">
+    <value>Combining chromatogram libraries</value>
+  </data>
+  <data name="EncyclopeDiaSearchDlg_Browse_for_Narrow_Window_Results_Files" xml:space="preserve">
+    <value>Browse for Narrow Window Results Files</value>
+  </data>
+  <data name="EncyclopeDiaSearchDlg_Browse_For_Wide_Window_Results_Files" xml:space="preserve">
+    <value>Browse for Wide Window Results Files</value>
+  </data>
   <data name="CommandLine_AssociateProteins_a_FASTA_file_must_be_imported_before_associating_proteins" xml:space="preserve">
     <value>Error: a FASTA file must be imported before associating proteins</value>
   </data>
@@ -12133,5 +12187,8 @@ If you choose Disable, you can enable Auto-select later with the "Refine &gt; Ad
   </data>
   <data name="SpectrumClassFilter_Ms2FilterPage_Criteria_which_spectra_with_MS_level_2_or_higher_must_satisfy_to_be_included_in_extracted_chromatogram" xml:space="preserve">
     <value>Criteria which spectra with MS level 2 or higher must satisfy to be included in extracted chromatogram</value>
+  </data>
+  <data name="EncyclopeDiaHelpers_GenerateLibrary_Running_command___0___1_" xml:space="preserve">
+    <value>Running command: {0} {1}</value>
   </data>
 </root>
