@@ -41,6 +41,10 @@ namespace pwiz.SkylineTestFunctional
         {
             OpenDocument("Rat_plasma.sky");
 
+            var blockHash = new BlockHash(new SHA1CryptoServiceProvider());
+            var fileHashBytes = blockHash.HashFile(TestFilesDir.GetTestPath("Rat_plasma.sky"));
+            var fileHashB64 = BlockHash.SafeToBase64(fileHashBytes);
+
             RunUI(SkylineWindow.ShowAuditLog);
             var auditLogForm = WaitForOpenForm<AuditLogForm>();
             Assert.IsFalse(SkylineWindow.Document.Settings.DataSettings.AuditLogging);
@@ -57,6 +61,7 @@ namespace pwiz.SkylineTestFunctional
             });
             var actualHash = GetDocumentHash();
             Assert.AreEqual(expectedHash, actualHash);
+            Assert.AreEqual(expectedHash, fileHashB64);
 
             // Test that the hash is the same as if the document was simply read and hashed
             // The document is really small (<20KB) so it's fine to read it all into memory

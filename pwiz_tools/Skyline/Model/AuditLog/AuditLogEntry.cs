@@ -1150,7 +1150,7 @@ namespace pwiz.Skyline.Model.AuditLog
                 return entry.AppendAllInfo(ImmutableList.Singleton(new MessageInfo(MessageType.log_error_old_msg, SrmDocument.DOCUMENT_TYPE.none,
                     ex.InnerException.GetType().Name, ex.OldUndoRedoMessage)));
             }
-            // ReSharper enable PossibleNullReferenceException
+            // ReSharper restore PossibleNullReferenceException
         }
 
         #endregion Functions to create log entries
