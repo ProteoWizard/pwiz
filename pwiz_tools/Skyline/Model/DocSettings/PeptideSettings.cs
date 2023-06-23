@@ -2564,6 +2564,7 @@ namespace pwiz.Skyline.Model.DocSettings
             new XmlElementHelperSuper<XHunterSpectrumHeaderInfo, SpectrumHeaderInfo>(),
             new XmlElementHelperSuper<NistSpectrumHeaderInfo, SpectrumHeaderInfo>(),
             new XmlElementHelperSuper<SpectrastSpectrumHeaderInfo, SpectrumHeaderInfo>(),
+            new XmlElementHelperSuper<EncyclopeDiaLibrary.ElibSpectrumHeaderInfo, SpectrumHeaderInfo>(),
         };
 
         public static IXmlElementHelper<SpectrumHeaderInfo>[] SpectrumHeaderXmlHelpers
