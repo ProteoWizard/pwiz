@@ -33,7 +33,10 @@ namespace pwiz.Common.SystemUtil
         void Run(ProcessStartInfo psi, string stdin, IProgressMonitor progress, ref IProgressStatus status,
             ProcessPriorityClass priorityClass = ProcessPriorityClass.Normal, bool forceTempfilesCleanup = false);
         void Run(ProcessStartInfo psi, string stdin, IProgressMonitor progress, ref IProgressStatus status,
-                 TextWriter writer, ProcessPriorityClass priorityClass = ProcessPriorityClass.Normal, bool forceTempfilesCleanup = false);
+                 TextWriter writer, ProcessPriorityClass priorityClass = ProcessPriorityClass.Normal,
+                 bool forceTempfilesCleanup = false,
+                 Func<string, int, bool> outputAndExitCodeAreGoodFunc = null,
+                 bool updateProgressPercentage = true);
     }
 
     public class ProcessRunner : IProcessRunner
@@ -54,6 +57,11 @@ namespace pwiz.Common.SystemUtil
         /// </summary>
         public string HideLinePrefix { get; set; }
 
+        public static bool GoodIfExitCodeIsZero(string stderr, int exitCode)
+        {
+            return exitCode == 0;
+        }
+
         public void Run(ProcessStartInfo psi, string stdin, IProgressMonitor progress, ref IProgressStatus status,
             ProcessPriorityClass priorityClass = ProcessPriorityClass.Normal, bool forceTempfilesCleanup = false)
         {
@@ -61,7 +69,10 @@ namespace pwiz.Common.SystemUtil
         }
 
         public void Run(ProcessStartInfo psi, string stdin, IProgressMonitor progress, ref IProgressStatus status, TextWriter writer,
-            ProcessPriorityClass priorityClass = ProcessPriorityClass.Normal, bool forceTempfilesCleanup = false)
+            ProcessPriorityClass priorityClass = ProcessPriorityClass.Normal,
+            bool forceTempfilesCleanup = false,
+            Func<string, int, bool> outputAndExitCodeAreGoodFunc = null,
+            bool updateProgressPercentage = true)
         {
             // Make sure required streams are redirected.
             psi.RedirectStandardOutput = true;
@@ -69,6 +80,8 @@ namespace pwiz.Common.SystemUtil
             psi.RedirectStandardInput = stdin != null;
             if (OutputEncoding != null)
                 psi.StandardOutputEncoding = psi.StandardErrorEncoding = OutputEncoding;
+
+            outputAndExitCodeAreGoodFunc ??= GoodIfExitCodeIsZero;
 
             _messageLog.Clear();
 
@@ -139,7 +152,7 @@ namespace pwiz.Common.SystemUtil
                         {
                             _messageLog.Add(line.Substring(MessagePrefix.Length));
                         }
-                        else if (line.EndsWith(@"%"))
+                        else if (updateProgressPercentage && line.EndsWith(@"%"))
                         {
                             double percent;
                             string[] parts = line.Split(' ');
@@ -166,7 +179,8 @@ namespace pwiz.Common.SystemUtil
                 }
                 proc.WaitForExit();
                 int exit = proc.ExitCode;
-                if (exit != 0)
+
+                if (!outputAndExitCodeAreGoodFunc(reader.GetErrorLines(), exit))
                 {
                     line = proc.StandardError.ReadLine();
                     if (line != null)
@@ -176,6 +190,7 @@ namespace pwiz.Common.SystemUtil
                         sbError.AppendLine(@"Error occurred running process.");
                         sbError.Append(reader.GetErrorLines());
                     }
+
                     string processPath = Path.GetDirectoryName(psi.FileName)?.Length == 0
                         ? Path.Combine(Environment.CurrentDirectory, psi.FileName)
                         : psi.FileName;
@@ -189,7 +204,7 @@ namespace pwiz.Common.SystemUtil
 
                 // Make to complete the status, if the process succeeded, but never
                 // printed 100% to the console
-                if (percentLast < 100)
+                if (updateProgressPercentage && percentLast < 100)
                 {
                     status = status.ChangePercentComplete(100);
                     if (status.SegmentCount > 0)
@@ -234,7 +249,7 @@ namespace pwiz.Common.SystemUtil
         private string SetTmpDirForCleanup(ProcessStartInfo psi)
         {
             string tmpDirForCleanup = null;
-            
+
             if (psi.UseShellExecute)
             {
                 _messageLog.Add(@"warning: UseShellExecute is set, cannot change environment for tempfile cleanup");

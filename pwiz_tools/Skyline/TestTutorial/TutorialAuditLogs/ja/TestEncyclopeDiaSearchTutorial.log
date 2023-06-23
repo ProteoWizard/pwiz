@@ -1,0 +1,170 @@
+Undo Redo : スペクトルライブラリ「20230123-abundant-proteins-z3_nce33.elib, 20230123-abundant-proteins-z3_nce33-quant.elib」が追加されました
+Summary   : スペクトルライブラリ「20230123-abundant-proteins-z3_nce33.elib, 20230123-abundant-proteins-z3_nce33-quant.elib」が追加されました
+All Info  :
+スペクトルライブラリ「20230123-abundant-proteins-z3_nce33.elib, 20230123-abundant-proteins-z3_nce33-quant.elib」が追加されました
+EncyclopeDIA Search>FASTA settings>最大未切断数は"2"です
+EncyclopeDIA Search>FASTA settings>FASTAファイルは"20230123-abundant-proteins.fasta"です
+EncyclopeDIA Search>Prosit settings>Default NCEは"33"です
+EncyclopeDIA Search>Prosit settings>Default chargeは"3"です
+EncyclopeDIA Search>Prosit settings>Min chargeは"2"です
+EncyclopeDIA Search>Prosit settings>Max chargeは"3"です
+EncyclopeDIA Search>Prosit settings>Max missed cleavagesは"2"です
+EncyclopeDIA Search>Narrow window results："23aug2017_hela_serum_timecourse_4mz_narrow_1.mzML"が含まれています
+EncyclopeDIA Search>Wide window results："23aug2017_hela_serum_timecourse_wide_1a.mzML"が含まれています
+EncyclopeDIA Search>Wide window results："23aug2017_hela_serum_timecourse_wide_1b.mzML"が含まれています
+EncyclopeDIA Search>EncyclopeDIA settingsは{ Enzyme = "Trypsin", Frag = "CID", Ptol = "10", PtolUnits = "PPM", Ftol = "10", FtolUnits = "PPM", Lftol = "10", LftolUnits = "PPM", Poffset = "0", Foffset = "0", PercolatorThreshold = "0.01", PercolatorTrainingSetSize = "500000", PercolatorTrainingFDR = "0", Acquisition = "DIA", NumberOfThreadsUsed = "32", ExpectedPeakWidth = "25", PrecursorWindowSize = "-1", NumberOfQuantitativePeaks = "5", MinNumOfQuantitativePeaks = "3", TopNTargetsUsed = "-1", QuantifyAcrossSamples = "False", NumberOfExtraDecoyLibrariesSearched = "0", VerifyModificationIons = "True", MinIntensity = "-1", RtWindowInMin = "-1", FilterPeaklists = "False", V2scoring = "True" }です
+EncyclopeDIA Search>Chromatogram libraryは"20230123-abundant-proteins-z3_nce33.elib"です
+EncyclopeDIA Search>Quantification libraryは"20230123-abundant-proteins-z3_nce33-quant.elib"です
+Extra Info: FASTA settings = 
+{
+    最大未切断数 = "2",
+    FASTAファイル = "20230123-abundant-proteins.fasta"
+},
+Prosit settings = 
+{
+    Default NCE = "33",
+    Default charge = "3",
+    Min charge = "2",
+    Max charge = "3",
+    Max missed cleavages = "2"
+},
+Narrow window results = 
+[
+    "23aug2017_hela_serum_timecourse_4mz_narrow_1.mzML"
+],
+Wide window results = 
+[
+    "23aug2017_hela_serum_timecourse_wide_1a.mzML",
+    "23aug2017_hela_serum_timecourse_wide_1b.mzML"
+],
+EncyclopeDIA settings = {
+Enzyme = "Trypsin",
+Frag = "CID",
+Ptol = "10",
+PtolUnits = "PPM",
+Ftol = "10",
+FtolUnits = "PPM",
+Lftol = "10",
+LftolUnits = "PPM",
+Poffset = "0",
+Foffset = "0",
+PercolatorThreshold = "0.01",
+PercolatorTrainingSetSize = "500000",
+PercolatorTrainingFDR = "0",
+Acquisition = "DIA",
+NumberOfThreadsUsed = "32",
+ExpectedPeakWidth = "25",
+PrecursorWindowSize = "-1",
+NumberOfQuantitativePeaks = "5",
+MinNumOfQuantitativePeaks = "3",
+TopNTargetsUsed = "-1",
+QuantifyAcrossSamples = "False",
+NumberOfExtraDecoyLibrariesSearched = "0",
+VerifyModificationIons = "True",
+MinIntensity = "-1",
+RtWindowInMin = "-1",
+FilterPeaklists = "False",
+V2scoring = "True"
+},
+Chromatogram library = "20230123-abundant-proteins-z3_nce33.elib",
+Quantification library = "20230123-abundant-proteins-z3_nce33-quant.elib"
+
+Undo Redo : ペプチド検索がインポートされました
+Summary   : ペプチド検索がインポートされました
+All Info  :
+ペプチド検索がインポートされました
+ペプチド検索のインポート>クロマトグラムを抽出>結果ファイルが見つかりました："23aug2017_hela_serum_timecourse_wide_1a.mzML"が含まれています
+ペプチド検索のインポート>クロマトグラムを抽出>結果ファイルが見つかりました："23aug2017_hela_serum_timecourse_wide_1b.mzML"が含まれています
+ペプチド検索のインポート>クロマトグラムを抽出>同時にインポートするファイルは"多く"です
+ペプチド検索のインポート>クロマトグラムを抽出>削除したプリフィックスは"23aug2017_hela_serum_timecourse_wide_1"です
+ペプチド検索のインポート>トランジション設定を行う>プリカーサー電荷は"2, 3"です
+ペプチド検索のインポート>トランジション設定を行う>イオン電荷は"1, 2"です
+ペプチド検索のインポート>トランジション設定を行う>イオンタイプは"y, b, p"です
+ペプチド検索のインポート>トランジション設定を行う>イオン許容誤差は"0.005" m/zです
+ペプチド検索のインポート>トランジション設定を行う>最小プロダクトイオンを選択は"3"です
+ペプチド検索のインポート>トランジション設定を行う>プロダクトイオンを選択は"5"です
+ペプチド検索のインポート>トランジション設定を行う>プロダクトイオンの選択開始は"イオン3"です
+ペプチド検索のインポート>トランジション設定を行う>プロダクトイオンの選択終了は"最後のイオン"です
+ペプチド検索のインポート>トランジション設定を行う>最大イオンm/zは"2000"です
+ペプチド検索のインポート>フルスキャン設定を行う>取得メソッドは"DIA"です
+ペプチド検索のインポート>フルスキャン設定を行う>単離スキームは"結果のみ"です
+ペプチド検索のインポート>フルスキャン設定を行う>単離スキーム>単離幅は"結果"です
+ペプチド検索のインポート>フルスキャン設定を行う>単離スキーム>事前に指定した単離ウィンドウは空です
+ペプチド検索のインポート>フルスキャン設定を行う>プロダクト質量アナライザーは"セントロイド化"です
+ペプチド検索のインポート>フルスキャン設定を行う>質量精度は"10"です
+ペプチド検索のインポート>フルスキャン設定を行う>含まれる同位体ピークは"数"です
+ペプチド検索のインポート>フルスキャン設定を行う>ピークは"3"です
+ペプチド検索のインポート>フルスキャン設定を行う>プリカーサー質量アナライザーは"セントロイド化"です
+ペプチド検索のインポート>フルスキャン設定を行う>質量精度は"10"です
+ペプチド検索のインポート>フルスキャン設定を行う>同位体標識濃縮は"デフォルト"です
+ペプチド検索のインポート>フルスキャン設定を行う>保持時間フィルタ長は"2"です
+ペプチド検索のインポート>FASTAをインポート>最大未切断数は"2"です
+ペプチド検索のインポート>FASTAをインポート>FASTAファイルは"20230123-abundant-proteins.fasta"です
+ペプチド検索のインポート>タンパク質の関連付け>タンパク質をグループ化は偽です
+ペプチド検索のインポート>タンパク質の関連付け>最小タンパク質リストを検索は偽です
+ペプチド検索のインポート>タンパク質の関連付け>サブセットのタンパク質を削除は偽です
+ペプチド検索のインポート>タンパク質の関連付け>共有ペプチドオプションは"タンパク質間で重複"です
+ペプチド検索のインポート>タンパク質の関連付け>タンパク質あたりの最小ペプチドは"1"です
+ペプチド検索のインポート>タンパク質の関連付け>マップ済みタンパク質は"557"です
+ペプチド検索のインポート>タンパク質の関連付け>マップ済みペプチドは"5423"です
+ペプチド検索のインポート>タンパク質の関連付け>マップ解除されたタンパク質は"1"です
+ペプチド検索のインポート>タンパク質の関連付け>タンパク質のターゲットは"557"です
+ペプチド検索のインポート>タンパク質の関連付け>ペプチドのターゲットは"5733"です
+Extra Info: クロマトグラムを抽出 = 
+{
+    結果ファイルが見つかりました = 
+    [
+        "23aug2017_hela_serum_timecourse_wide_1a.mzML",
+        "23aug2017_hela_serum_timecourse_wide_1b.mzML"
+    ],
+    同時にインポートするファイル = "多く",
+    削除したプリフィックス = "23aug2017_hela_serum_timecourse_wide_1"
+},
+トランジション設定を行う = 
+{
+    プリカーサー電荷 = "2, 3",
+    イオン電荷 = "1, 2",
+    イオンタイプ = "y, b, p",
+    イオン許容誤差 = "0.005" m/z,
+    最小プロダクトイオンを選択 = "3",
+    プロダクトイオンを選択 = "5",
+    プロダクトイオンの選択開始 = "イオン3",
+    プロダクトイオンの選択終了 = "最後のイオン",
+    最大イオンm/z = "2000"
+},
+フルスキャン設定を行う = 
+{
+    取得メソッド = "DIA",
+    単離スキーム = "結果のみ": 
+{
+        単離幅 = "結果",
+        事前に指定した単離ウィンドウ = 空
+    },
+    プロダクト質量アナライザー = "セントロイド化",
+    質量精度 = "10",
+    含まれる同位体ピーク = "数",
+    ピーク = "3",
+    プリカーサー質量アナライザー = "セントロイド化",
+    質量精度 = "10",
+    同位体標識濃縮 = "デフォルト",
+    保持時間フィルタ長 = "2"
+},
+FASTAをインポート = 
+{
+    最大未切断数 = "2",
+    FASTAファイル = "20230123-abundant-proteins.fasta"
+},
+タンパク質の関連付け = 
+{
+    タンパク質をグループ化 = 偽,
+    最小タンパク質リストを検索 = 偽,
+    サブセットのタンパク質を削除 = 偽,
+    共有ペプチドオプション = "タンパク質間で重複",
+    タンパク質あたりの最小ペプチド = "1",
+    マップ済みタンパク質 = "557",
+    マップ済みペプチド = "5423",
+    マップ解除されたタンパク質 = "1",
+    タンパク質のターゲット = "557",
+    ペプチドのターゲット = "5733"
+}
+
