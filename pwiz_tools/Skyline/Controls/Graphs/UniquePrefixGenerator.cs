@@ -93,7 +93,9 @@ namespace pwiz.Skyline.Controls.Graphs
 
             // Get sequences that match this prefix, and ones that match both prefix and suffix.
             var prefix = GetPrefix(identifier);
-            var matchingPrefixes = isPeptideSeq ? _peptidePrefixDictionary[prefix] : _customIonPrefixDictionary[prefix];
+            var prefixDict = isPeptideSeq ? _peptidePrefixDictionary : _customIonPrefixDictionary;
+            if (!prefixDict.TryGetValue(prefix, out var matchingPrefixes))
+                return null;
             var suffix = GetSuffix(identifier);
             var matchingPrefixAndSuffix = matchingPrefixes[suffix];
 

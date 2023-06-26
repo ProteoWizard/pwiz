@@ -108,7 +108,8 @@ namespace pwiz.SkylineTestFunctional
             RunFunctionalTest();
         }
 
-        [TestMethod, NoParallelTesting(TestExclusionReason.RESOURCE_INTENSIVE)]
+        [TestMethod, NoParallelTesting(TestExclusionReason.RESOURCE_INTENSIVE), 
+         NoUnicodeTesting(TestExclusionReason.MSGFPLUS_UNICODE_ISSUES)]
         public void TestDdaSearchMsgfPlus()
         {
             TestFilesZip = @"TestFunctional\DdaSearchTest.zip";
@@ -135,7 +136,7 @@ namespace pwiz.SkylineTestFunctional
             RunFunctionalTest();
         }
 
-        [TestMethod, NoParallelTesting(TestExclusionReason.RESOURCE_INTENSIVE)]
+        [TestMethod, NoParallelTesting(TestExclusionReason.RESOURCE_INTENSIVE), NoUnicodeTesting(TestExclusionReason.MSFRAGGER_UNICODE_ISSUES)]
         public void TestDdaSearchMsFragger()
         {
             TestFilesZip = @"TestFunctional\DdaSearchTest.zip";
@@ -257,13 +258,26 @@ namespace pwiz.SkylineTestFunctional
                 editModDlg.OkDialog();
             });
 
-            // Test a terminal mod with no AA
+            // Test a N terminal mod with no AA
             RunDlg<EditStaticModDlg>(editListUI.AddItem, editModDlg =>
             {
                 editModDlg.Modification = new StaticMod("NotUniModMod (N-term)", null, ModTerminus.N, "C42", LabelAtoms.None, null, null);
                 editModDlg.Modification = editModDlg.Modification.ChangeVariable(true);
                 editModDlg.OkDialog();
             });
+
+            // Test a C terminal mod with no AA and one with AA - commented out because it changes results a bit to include it
+            /*RunDlg<EditStaticModDlg>(editListUI.AddItem, editModDlg =>
+            {
+                editModDlg.Modification = new StaticMod("NotUniModMod (C-term)", null, ModTerminus.C, null, LabelAtoms.None, 0.01, 0.01);
+                editModDlg.Modification = editModDlg.Modification.ChangeVariable(true);
+                editModDlg.OkDialog();
+            }); 
+            RunDlg<EditStaticModDlg>(editListUI.AddItem, editModDlg =>
+            {
+                editModDlg.Modification = new StaticMod("NotUniModMod4 (C-term)", "K,R", null, null, LabelAtoms.None, -1.01, -1.01);
+                editModDlg.OkDialog();
+            });*/
             OkDialog(editListUI, editListUI.OkDialog);
 
             // Test back/next buttons
@@ -343,7 +357,7 @@ namespace pwiz.SkylineTestFunctional
             TryWaitForOpenForm(typeof(ImportPeptideSearchDlg.DDASearchPage));   // Stop to show this form during form testing
             RunUI(() =>
             {
-                importPeptideSearchDlg.SearchControl.OnSearchFinished += (success) => searchSucceeded = success;
+                importPeptideSearchDlg.SearchControl.SearchFinished += (success) => searchSucceeded = success;
                 importPeptideSearchDlg.BuildPepSearchLibControl.IncludeAmbiguousMatches = true;
 
                 // Cancel search
@@ -395,9 +409,8 @@ namespace pwiz.SkylineTestFunctional
                 // We're on the "Match Modifications" page again.
                 Assert.IsTrue(importPeptideSearchDlg.CurrentPage == ImportPeptideSearchDlg.Pages.match_modifications_page);
                 importPeptideSearchDlg.MatchModificationsControl.ChangeItem(0, false); // uncheck C+57
-                importPeptideSearchDlg.MatchModificationsControl.ChangeItem(1, true); // check M+16
-                importPeptideSearchDlg.MatchModificationsControl.ChangeItem(2, true); // check U+C3P0
-                importPeptideSearchDlg.MatchModificationsControl.ChangeItem(3, true); // check H+1
+                for (int i = 1; i < importPeptideSearchDlg.MatchModificationsControl.MatchedModifications.Count(); ++i)
+                    importPeptideSearchDlg.MatchModificationsControl.ChangeItem(i, true); // check everything else
                 Assert.IsTrue(importPeptideSearchDlg.ClickNextButton());
                 Assert.IsTrue(importPeptideSearchDlg.ClickNextButton());
                 Assert.IsTrue(importPeptideSearchDlg.ClickNextButton());

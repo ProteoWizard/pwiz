@@ -120,6 +120,11 @@ rule blib-test-build ( name : args * : output-name : reference-names + : inputs 
     build-tests += $(name) ;
 }
 
+rule blib-test-build-basic ( name : args * : inputs * )
+{
+    blib-test-build $(name) : $(args) : output/$(name).blib : $(name).check : $(inputs) ;
+}
+
 rule blib-test-filter ( name : args * : output-name : reference-names + : inputs * : requirements * )
 {
     local this_path = [ path.make $(THIS_PATH) ] ;
@@ -206,6 +211,7 @@ blib-test-build ssl-index-rt : -o : output/ssl-index-rt.blib : ssl-index-rt.chec
 blib-test-build ssl-name-rt : -o : output/ssl-name-rt.blib : ssl-name-rt.check : $(TEST_INPUTS_PATH)/ssl-name-with-rt.ssl ;
 blib-test-build ssl-small-mol : -o : output/ssl-small-mol.blib : ssl-small-mol.check : $(TEST_INPUTS_PATH)/ssl-small-mol.ssl ;
 blib-test-build ssl-invalid-sequence : -o -e@Only_uppercase_letters : output/ssl-invalid-sequence.blib : ssl-invalid-sequence.check : $(TEST_INPUTS_PATH)/ssl-invalid-sequence.ssl ;
+blib-test-build ssl-crosslink : -o -K : output/ssl-crosslink.blib : ssl-crosslink.check : $(TEST_INPUTS_PATH)/ssl-crosslink.ssl ;
 
 # Test building with percolator XML files
 
@@ -312,6 +318,13 @@ blib-test-build metamorpheus-mzid : --unicode -o : output/metamorpheus.blib : me
 # Test DiaNN specLib format
 blib-test-build diann-speclib : -o : output/diann-speclib.blib : diann-speclib.check : $(TEST_INPUTS_PATH)/diann-swath.speclib ;
 blib-test-build diann-speclib-diapasef : -o : output/diann-hela-diapasef.blib : diann-hela-diapasef.check : $(TEST_INPUTS_PATH)/diann-hela-diapasef-lib.speclib ;
+blib-test-build-basic msfragger-diann : -o : $(TEST_INPUTS_PATH)/library.tsv.speclib ;
+
+# Test Bruker Paser TSV format
+blib-test-build-basic paser-hela-dia : -o : $(TEST_INPUTS_PATH)/paser/hela_dia_normalizationOFF_results.tsv ;
+blib-test-build-basic paser-hela-dia-libonly : -o : $(TEST_INPUTS_PATH)/paser/_ip2_ip2_data_paser_spectral_library_BrukerHuman.tsv ;
+blib-test-build-basic paser-hela-dia-resultonly : -o -e@~missing_required~ : $(TEST_INPUTS_PATH)/paser/no-library-error/hela_dia_normalizationOFF_results.tsv ;
+blib-test-build-basic paser-hela-dia-multiple-libraries-error : -o -e@~found_more_than_one~ : $(TEST_INPUTS_PATH)/paser/multiple-libraries-error/hela_dia_normalizationOFF_results.tsv ;
 
 # Test waters csv format
 blib-test-build mse : --unicode -o : output/mse.blib : mse.check : $(TEST_INPUTS_PATH)/tiny_final_fragment.csv ;

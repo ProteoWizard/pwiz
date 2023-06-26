@@ -83,7 +83,7 @@ namespace pwiz.Skyline.FileUI.PeptideSearch
         {
             private SrmDocument.DOCUMENT_TYPE _docType;
 
-            public static BuildPeptideSearchLibrarySettings DEFAULT = new BuildPeptideSearchLibrarySettings(0.0, null, null, false,
+            public static BuildPeptideSearchLibrarySettings DEFAULT = new BuildPeptideSearchLibrarySettings(null, null, null, false,
                 false, ImportPeptideSearchDlg.Workflow.dda, ImportPeptideSearchDlg.InputFile.search_result, SrmDocument.DOCUMENT_TYPE.proteomic);
 
             public override MessageInfo MessageInfo
@@ -101,7 +101,7 @@ namespace pwiz.Skyline.FileUI.PeptideSearch
             {
             }
 
-            public BuildPeptideSearchLibrarySettings(double cutoffScore, IEnumerable<BuildLibraryGridView.File> files, IrtStandard standard,
+            public BuildPeptideSearchLibrarySettings(double? cutoffScore, IEnumerable<BuildLibraryGridView.File> files, IrtStandard standard,
                 bool includeAmbiguousMatches, bool filterForDocumentPeptides,
                 ImportPeptideSearchDlg.Workflow workFlow, ImportPeptideSearchDlg.InputFile inputFileType, SrmDocument.DOCUMENT_TYPE docType)
             {
@@ -115,8 +115,8 @@ namespace pwiz.Skyline.FileUI.PeptideSearch
                 _docType = docType;
             }
 
-            [Track(ignoreDefaultParent: true)]
-            public double CutoffScore { get; private set; }
+            [Track(defaultValues: typeof(DefaultValuesNull))]
+            public double? CutoffScore { get; private set; }
             [Track]
             public BuildLibraryGridView.File[] SearchFileNames { get; private set; }
             [Track]
@@ -283,10 +283,11 @@ namespace pwiz.Skyline.FileUI.PeptideSearch
             SearchFilenames = BuildLibraryDlg.AddInputFiles(WizardForm, SearchFilenames, fileNames, PerformDDASearch);
         }
 
-        public double CutOffScore
+        public double? CutOffScore
         {
-            get { return double.Parse(textCutoff.Text); }
-            set { textCutoff.Text = value.ToString(CultureInfo.CurrentCulture); }
+            // Only valid when Skyline performs the search
+            get { return comboInputFileType.SelectedIndex > 0 ? double.Parse(textCutoff.Text) : (double?) null; }
+            set { textCutoff.Text = value.HasValue ? value.Value.ToString(CultureInfo.CurrentCulture) : string.Empty; }
         }
 
         public bool IncludeAmbiguousMatches
@@ -445,6 +446,9 @@ namespace pwiz.Skyline.FileUI.PeptideSearch
 
             var docNew = ImportPeptideSearch.AddDocumentSpectralLibrary(DocumentContainer.Document, docLibSpec);
             if (docNew == null)
+                return false;
+            if (docNew.Settings.PeptideSettings.Libraries.LibrarySpecs.Count ==
+                DocumentContainer.Document.Settings.PeptideSettings.Libraries.LibrarySpecs.Count)
                 return false;
 
             var blib = ImportPeptideSearch.DocLib as BiblioSpecLiteLibrary;

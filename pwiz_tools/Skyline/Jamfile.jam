@@ -144,6 +144,7 @@ if [ modules.peek : NT ] && --i-agree-to-the-vendor-licenses in [ modules.peek :
         $(MSVC_CURRENT_SETUP_SCRIPT)
 
         echo Building Skyline in $(CONFIGURATION:L) configuration...
+        msbuild $(SKYLINE_PATH)/Skyline.sln /p:Configuration=$(CONFIGURATION);Platform=$(PLATFORM);OutDir=$(OUTPUT_PATH);MSBuildAssemblyName=$(TARGET_NAME) /t:SkylineCmd /nologo /verbosity:minimal
         msbuild $(SKYLINE_PATH)/Skyline.sln /p:Configuration=$(CONFIGURATION);Platform=$(PLATFORM);OutDir=$(OUTPUT_PATH);MSBuildAssemblyName=$(TARGET_NAME) /t:Skyline /t:TestRunner /nologo /verbosity:minimal
         IF ERRORLEVEL 1 exit %ERRORLEVEL%
     }
@@ -316,6 +317,22 @@ if [ modules.peek : NT ] && --i-agree-to-the-vendor-licenses in [ modules.peek :
         $(OUTPUT_PATH)SkylineTester.exe $(OUTPUT_PATH)BiblioSpec.zip
     }
     
+    rule create_skylinetester_zip_with_testdata ( targets + : sources * : properties * )
+    {
+        return [ build-properties $(targets) : $(sources) : $(properties) ] ;
+    }
+
+    actions create_skylinetester_zip_with_testdata
+    {
+        $(MSVC_CURRENT_SETUP_SCRIPT)
+        echo SkylineTesterWithTestData in $(CONFIGURATION:L) configuration...
+        msbuild $(SKYLINE_PATH)/Skyline.sln /p:Configuration=$(CONFIGURATION);Platform=$(PLATFORM);OutDir=$(OUTPUT_PATH);MSBuildAssemblyName=$(TARGET_NAME) /t:SkylineTester /t:SkylineNightly /t:SkylineNightlyShim /nologo /verbosity:minimal
+        IF ERRORLEVEL 1 exit %ERRORLEVEL%
+
+        echo Creating SkylineTester.zip
+        $(OUTPUT_PATH)SkylineTester.exe $(OUTPUT_PATH)SkylineTesterWithTestData.zip
+    }
+    
     make msparser.dll : : @make_fake_msparser_dll : <location>$(PWIZ_WRAPPER_PATH)/obj/$(PLATFORM) ;
     make msparserD.dll : : @make_fake_msparser_dll : <location>$(PWIZ_WRAPPER_PATH)/obj/$(PLATFORM) ;
     explicit msparser.dll msparserD.dll ;
@@ -325,6 +342,22 @@ if [ modules.peek : NT ] && --i-agree-to-the-vendor-licenses in [ modules.peek :
         This is a fake file so Skyline can point at both msparser.dll and msparserD.dll unconditionally.
         ) > "$(<)"
     }
+    
+    
+    rule make_fake_SkylineCmd ( targets + : sources * : properties * )
+    {
+        return [ build-properties $(targets) : $(sources) : $(properties) ] ;
+    }
+
+    actions make_fake_SkylineCmd
+    {
+        @($(STDOUT):E=
+        This is a fake SkylineCmd so Skyline can point at it without a circular dependency.
+        ) > "$(<)"
+    }
+
+    make SkylineCmd.exe : : @make_fake_SkylineCmd : <conditional>@build-location ;
+    explicit SkylineCmd.exe ;
     
     if --official in [ modules.peek : ARGV ]
     {
@@ -393,6 +426,7 @@ if [ modules.peek : NT ] && --i-agree-to-the-vendor-licenses in [ modules.peek :
             <conditional>@build-location
             <conditional>@install-vendor-api-dependencies
             <dependency>NugetRestore
+            <dependency>SkylineCmd.exe
             <dependency>../../pwiz/utility/bindings/CLI//pwiz_data_cli/<location>$(PWIZ_WRAPPER_PATH)/obj/$(PLATFORM)
             <dependency>../../pwiz/utility/bindings/CLI//pwiz_data_cli.xml/<location>$(PWIZ_WRAPPER_PATH)/obj/$(PLATFORM)
             <dependency>../../pwiz/utility/bindings/CLI/timstof_prm_scheduler//PrmPasefScheduler/<location>$(PWIZ_WRAPPER_PATH)/obj/$(PLATFORM)
@@ -557,6 +591,19 @@ if [ modules.peek : NT ] && --i-agree-to-the-vendor-licenses in [ modules.peek :
             <conditional>@build-location
             <dependency>Skyline.exe
         ;
+
+    make SkylineTesterWithTestData.zip
+        : # sources
+        : # actions
+            @create_skylinetester_zip_with_testdata
+        : # requirements
+            <link>shared:<build>no
+            <conditional>@no-express-requirement
+            <conditional>@msvc-dotnet-requirement
+            <conditional>@build-location
+            <dependency>Skyline.exe
+        ;
+    explicit SkylineTesterWithTestData.zip ;
 
     explicit InspectCode ;
 }

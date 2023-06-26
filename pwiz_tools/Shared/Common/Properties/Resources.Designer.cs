@@ -693,6 +693,15 @@ namespace pwiz.Common.Properties {
         }
         
         /// <summary>
+        ///   Looks up a localized string similar to Invalid filter column &apos;{0}&apos;.
+        /// </summary>
+        internal static string FilterClause_MakePredicate_Invalid_filter_column___0__ {
+            get {
+                return ResourceManager.GetString("FilterClause_MakePredicate_Invalid_filter_column___0__", resourceCulture);
+            }
+        }
+        
+        /// <summary>
         ///   Looks up a localized string similar to Contains.
         /// </summary>
         internal static string FilterOperations_Contains {
@@ -1324,6 +1333,24 @@ namespace pwiz.Common.Properties {
             get {
                 object obj = ResourceManager.GetObject("TextColumn", resourceCulture);
                 return ((System.Drawing.Bitmap)(obj));
+            }
+        }
+        
+        /// <summary>
+        ///   Looks up a localized string similar to m/z.
+        /// </summary>
+        internal static string Units_mz {
+            get {
+                return ResourceManager.GetString("Units_mz", resourceCulture);
+            }
+        }
+        
+        /// <summary>
+        ///   Looks up a localized string similar to ppm.
+        /// </summary>
+        internal static string Units_ppm {
+            get {
+                return ResourceManager.GetString("Units_ppm", resourceCulture);
             }
         }
         

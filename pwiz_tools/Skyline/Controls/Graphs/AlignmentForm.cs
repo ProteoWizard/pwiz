@@ -135,10 +135,10 @@ namespace pwiz.Skyline.Controls.Graphs
             for (int i = 0; i < peptideTimes.Count; i++)
             {
                 var peptideTime = peptideTimes[i];
-                var xTime = alignedFile.OriginalTimes[peptideTime.PeptideSequence];
+                var xTime = alignedFile.OriginalTimes[peptideTime.PeptideSequence].RetentionTime;
                 var yTime = peptideTime.RetentionTime;
                 if (PlotType == PlotTypeRT.residuals)
-                    yTime = (double) (alignedFile.Regression.GetRetentionTime(xTime, true) - yTime);
+                    yTime = (double) (alignedFile.Regression.GetRetentionTime(xTime) - yTime);
                 var point = new PointPair(xTime, yTime, peptideTime.PeptideSequence.Sequence);
                 if (alignedFile.OutlierIndexes.Contains(i))
                 {

@@ -223,6 +223,15 @@ namespace pwiz.Skyline.Model.AuditLog {
         }
         
         /// <summary>
+        ///   Looks up a localized string similar to Added spectrum filter.
+        /// </summary>
+        public static string added_spectrum_filter {
+            get {
+                return ResourceManager.GetString("added_spectrum_filter", resourceCulture);
+            }
+        }
+        
+        /// <summary>
         ///   Looks up a localized string similar to {0} : {1} was added.
         /// </summary>
         public static string added_to {

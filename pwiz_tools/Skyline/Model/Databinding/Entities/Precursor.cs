@@ -29,7 +29,6 @@ using pwiz.Skyline.Model.Databinding.Collections;
 using pwiz.Skyline.Model.DocSettings;
 using pwiz.Skyline.Model.ElementLocators;
 using pwiz.Skyline.Model.Hibernate;
-using pwiz.Skyline.Model.Lib;
 using pwiz.Skyline.Properties;
 using pwiz.Skyline.Util;
 using pwiz.Skyline.Util.Extensions;
@@ -137,11 +136,11 @@ namespace pwiz.Skyline.Model.Databinding.Entities
         }
 
         // Helper function for PrecursorIonFormula and PrecursorNeutralFormula
-        private void GetPrecursorFormulaAndAdduct(out Adduct adduct, out string formula)
+        private void GetPrecursorFormulaAndAdduct(out Adduct adduct, out ParsedMolecule formula)
         {
             if (IsSmallMolecule())
             {
-                formula = (DocNode.CustomMolecule.Formula ?? string.Empty);
+                formula = DocNode.CustomMolecule.ParsedMolecule;
                 adduct = DocNode.PrecursorAdduct;
             }
             else
@@ -149,7 +148,7 @@ namespace pwiz.Skyline.Model.Databinding.Entities
                 var crosslinkBuilder = new CrosslinkBuilder(SrmDocument.Settings, DocNode.TransitionGroup.Peptide,
                     Peptide.DocNode.ExplicitMods, DocNode.LabelType);
                 adduct = Util.Adduct.FromChargeProtonated(Charge);
-                formula = crosslinkBuilder.GetPrecursorFormula().Molecule.ToString();
+                formula = ParsedMolecule.Create(crosslinkBuilder.GetPrecursorFormula());
             }
         }
 
@@ -159,10 +158,8 @@ namespace pwiz.Skyline.Model.Databinding.Entities
             get
             {
                 // Given formula C12H8O3 and adduct M3H2+H, apply label 3H2 and ionization +H to return C12H'3H6
-                Adduct adduct;
-                string formula;
-                GetPrecursorFormulaAndAdduct(out adduct, out formula);
-                return string.IsNullOrEmpty(formula) ? string.Empty : adduct.ApplyToFormula(formula);
+                GetPrecursorFormulaAndAdduct(out var adduct, out var formula);
+                return ParsedMolecule.IsNullOrEmpty(formula) ? string.Empty : adduct.ApplyToMolecule(formula).ToString();
             }
         }
 
@@ -172,10 +169,9 @@ namespace pwiz.Skyline.Model.Databinding.Entities
             get
             {
                 // Given formula C12H8O3 and adduct M3H2+H, apply label 3H2 but not ionization +H to return C12H'3H5
-                Adduct adduct;
-                string formula;
-                GetPrecursorFormulaAndAdduct(out adduct, out formula);
-                return string.IsNullOrEmpty(formula) ? string.Empty : adduct.ApplyIsotopeLabelsToFormula(formula);
+                // Given formula C12H8O3 and adduct M(-0.234)+H, apply mass-only label (-0.234) but not ionization +H to return C12H8O3[-0.234]
+                GetPrecursorFormulaAndAdduct(out var adduct, out var formula);
+                return ParsedMolecule.IsNullOrEmpty(formula) ? string.Empty : adduct.ApplyIsotopeLabelsToMolecule(formula).ToString();
             }
         }
 
@@ -420,6 +416,8 @@ namespace pwiz.Skyline.Model.Databinding.Entities
             }
         }
 
+        public string SpectrumFilter { get { return DocNode.SpectrumClassFilter.ToString(); } }
+
         [InvariantDisplayName("PrecursorNote")]
         [Importable]
         public string Note
@@ -440,28 +438,13 @@ namespace pwiz.Skyline.Model.Databinding.Entities
 
         public string LibraryType
         {
-            get
-            {
-                if (DocNode.LibInfo is NistSpectrumHeaderInfo)
-                {
-                    return @"NIST";
-                }
-                if (DocNode.LibInfo is XHunterSpectrumHeaderInfo)
-                {
-                    return @"GPM";
-                }
-                if (DocNode.LibInfo is BiblioSpecSpectrumHeaderInfo)
-                {
-                    return @"BiblioSpec";
-                }
-                return null;
-            }
+            get { return DocNode.LibInfo?.LibraryTypeName; }
         }
 
         [Format(NullValue = TextUtil.EXCEL_NA)]
         public double? LibraryProbabilityScore
         {
-            get { return (DocNode.LibInfo as BiblioSpecSpectrumHeaderInfo)?.Score; }
+            get { return DocNode.LibInfo?.Score; }
         }
 
         [Format(NullValue = TextUtil.EXCEL_NA)]

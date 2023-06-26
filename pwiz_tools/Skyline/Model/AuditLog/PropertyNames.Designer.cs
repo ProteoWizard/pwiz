@@ -925,6 +925,78 @@ namespace pwiz.Skyline.Model.AuditLog {
         }
         
         /// <summary>
+        ///   Looks up a localized string similar to EncyclopeDIA Search.
+        /// </summary>
+        public static string EncyclopeDiaSettings {
+            get {
+                return ResourceManager.GetString("EncyclopeDiaSettings", resourceCulture);
+            }
+        }
+        
+        /// <summary>
+        ///   Looks up a localized string similar to Chromatogram library.
+        /// </summary>
+        public static string EncyclopeDiaSettings_EncyclopeDiaChromLibrary {
+            get {
+                return ResourceManager.GetString("EncyclopeDiaSettings_EncyclopeDiaChromLibrary", resourceCulture);
+            }
+        }
+        
+        /// <summary>
+        ///   Looks up a localized string similar to EncyclopeDIA settings.
+        /// </summary>
+        public static string EncyclopeDiaSettings_EncyclopeDiaConfig {
+            get {
+                return ResourceManager.GetString("EncyclopeDiaSettings_EncyclopeDiaConfig", resourceCulture);
+            }
+        }
+        
+        /// <summary>
+        ///   Looks up a localized string similar to Quantification library.
+        /// </summary>
+        public static string EncyclopeDiaSettings_EncyclopeDiaQuantLibrary {
+            get {
+                return ResourceManager.GetString("EncyclopeDiaSettings_EncyclopeDiaQuantLibrary", resourceCulture);
+            }
+        }
+        
+        /// <summary>
+        ///   Looks up a localized string similar to FASTA settings.
+        /// </summary>
+        public static string EncyclopeDiaSettings_FastaSettings {
+            get {
+                return ResourceManager.GetString("EncyclopeDiaSettings_FastaSettings", resourceCulture);
+            }
+        }
+        
+        /// <summary>
+        ///   Looks up a localized string similar to Narrow window results.
+        /// </summary>
+        public static string EncyclopeDiaSettings_NarrowWindowResults {
+            get {
+                return ResourceManager.GetString("EncyclopeDiaSettings_NarrowWindowResults", resourceCulture);
+            }
+        }
+        
+        /// <summary>
+        ///   Looks up a localized string similar to Prosit settings.
+        /// </summary>
+        public static string EncyclopeDiaSettings_PrositSettings {
+            get {
+                return ResourceManager.GetString("EncyclopeDiaSettings_PrositSettings", resourceCulture);
+            }
+        }
+        
+        /// <summary>
+        ///   Looks up a localized string similar to Wide window results.
+        /// </summary>
+        public static string EncyclopeDiaSettings_WideWindowResults {
+            get {
+                return ResourceManager.GetString("EncyclopeDiaSettings_WideWindowResults", resourceCulture);
+            }
+        }
+        
+        /// <summary>
         ///   Looks up a localized string similar to Cleave C-terminal to.
         /// </summary>
         public static string Enzyme_CleavageC {
@@ -1150,6 +1222,78 @@ namespace pwiz.Skyline.Model.AuditLog {
         }
         
         /// <summary>
+        ///   Looks up a localized string similar to Default charge.
+        /// </summary>
+        public static string FastaToPrositInputCsvConfig_DefaultCharge {
+            get {
+                return ResourceManager.GetString("FastaToPrositInputCsvConfig_DefaultCharge", resourceCulture);
+            }
+        }
+        
+        /// <summary>
+        ///   Looks up a localized string similar to Default NCE.
+        /// </summary>
+        public static string FastaToPrositInputCsvConfig_DefaultNCE {
+            get {
+                return ResourceManager.GetString("FastaToPrositInputCsvConfig_DefaultNCE", resourceCulture);
+            }
+        }
+        
+        /// <summary>
+        ///   Looks up a localized string similar to Enzyme.
+        /// </summary>
+        public static string FastaToPrositInputCsvConfig_Enzyme {
+            get {
+                return ResourceManager.GetString("FastaToPrositInputCsvConfig_Enzyme", resourceCulture);
+            }
+        }
+        
+        /// <summary>
+        ///   Looks up a localized string similar to Max charge.
+        /// </summary>
+        public static string FastaToPrositInputCsvConfig_MaxCharge {
+            get {
+                return ResourceManager.GetString("FastaToPrositInputCsvConfig_MaxCharge", resourceCulture);
+            }
+        }
+        
+        /// <summary>
+        ///   Looks up a localized string similar to Max missed cleavages.
+        /// </summary>
+        public static string FastaToPrositInputCsvConfig_MaxMissedCleavage {
+            get {
+                return ResourceManager.GetString("FastaToPrositInputCsvConfig_MaxMissedCleavage", resourceCulture);
+            }
+        }
+        
+        /// <summary>
+        ///   Looks up a localized string similar to Max m/z.
+        /// </summary>
+        public static string FastaToPrositInputCsvConfig_MaxMz {
+            get {
+                return ResourceManager.GetString("FastaToPrositInputCsvConfig_MaxMz", resourceCulture);
+            }
+        }
+        
+        /// <summary>
+        ///   Looks up a localized string similar to Min charge.
+        /// </summary>
+        public static string FastaToPrositInputCsvConfig_MinCharge {
+            get {
+                return ResourceManager.GetString("FastaToPrositInputCsvConfig_MinCharge", resourceCulture);
+            }
+        }
+        
+        /// <summary>
+        ///   Looks up a localized string similar to Min m/z.
+        /// </summary>
+        public static string FastaToPrositInputCsvConfig_MinMz {
+            get {
+                return ResourceManager.GetString("FastaToPrositInputCsvConfig_MinMz", resourceCulture);
+            }
+        }
+        
+        /// <summary>
         ///   Looks up a localized string similar to File.
         /// </summary>
         public static string File_FileName {
@@ -1362,6 +1506,15 @@ namespace pwiz.Skyline.Model.AuditLog {
         public static string GroupComparisonDef_IdentityAnnotation {
             get {
                 return ResourceManager.GetString("GroupComparisonDef_IdentityAnnotation", resourceCulture);
+            }
+        }
+        
+        /// <summary>
+        ///   Looks up a localized string similar to MS level.
+        /// </summary>
+        public static string GroupComparisonDef_MsLevel {
+            get {
+                return ResourceManager.GetString("GroupComparisonDef_MsLevel", resourceCulture);
             }
         }
         
@@ -4140,9 +4293,9 @@ namespace pwiz.Skyline.Model.AuditLog {
         /// <summary>
         ///   Looks up a localized string similar to Ion match tolerance.
         /// </summary>
-        public static string TransitionFilterAndLibrariesSettings_IonMatchTolerance {
+        public static string TransitionFilterAndLibrariesSettings_IonMatchMzTolerance {
             get {
-                return ResourceManager.GetString("TransitionFilterAndLibrariesSettings_IonMatchTolerance", resourceCulture);
+                return ResourceManager.GetString("TransitionFilterAndLibrariesSettings_IonMatchMzTolerance", resourceCulture);
             }
         }
         
@@ -4545,9 +4698,9 @@ namespace pwiz.Skyline.Model.AuditLog {
         /// <summary>
         ///   Looks up a localized string similar to Ion match tolerance.
         /// </summary>
-        public static string TransitionLibraries_IonMatchTolerance {
+        public static string TransitionLibraries_IonMatchMzTolerance {
             get {
-                return ResourceManager.GetString("TransitionLibraries_IonMatchTolerance", resourceCulture);
+                return ResourceManager.GetString("TransitionLibraries_IonMatchMzTolerance", resourceCulture);
             }
         }
         

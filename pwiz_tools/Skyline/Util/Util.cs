@@ -27,11 +27,9 @@ using System.Text;
 using System.Collections.ObjectModel;
 using System.Net;
 using System.Reflection;
-using System.Runtime.InteropServices;
 using System.Text.RegularExpressions;
 using System.Threading;
 using System.Windows.Forms;
-using pwiz.Common.Collections;
 using pwiz.Common.SystemUtil;
 using pwiz.Skyline.FileUI;
 using pwiz.Skyline.Properties;
@@ -408,69 +406,6 @@ namespace pwiz.Skyline.Util
                 map.Add(keySelector(value), value);
             return map;
         }
-    }
-
-    /// <summary>
-    /// A read-only list class for the case when a list most commonly contains a
-    /// single entry, but must also support multiple entries.  This list may not
-    /// be empty, thought it may contain a single null element.
-    /// </summary>
-    /// <typeparam name="TItem">Type of the elements in the list</typeparam>
-    public class OneOrManyList<TItem> : AbstractReadOnlyList<TItem>
-    {
-        private ImmutableList<TItem> _list;
-
-        public OneOrManyList(params TItem[] elements)
-        {
-            _list = ImmutableList.ValueOf(elements);
-        }
-
-        public OneOrManyList(IList<TItem> elements)
-        {
-            _list = ImmutableList.ValueOf(elements);
-        }
-
-        public override int Count
-        {
-            get { return _list.Count; }
-        }
-
-        public override TItem this[int index]
-        {
-            get
-            {
-                return _list[index];
-            }
-        }
-
-        public OneOrManyList<TItem> ChangeAt(int index, TItem item)
-        {
-            return new OneOrManyList<TItem>(_list.ReplaceAt(index, item));
-        }
-
-        #region object overrides
-
-        public bool Equals(OneOrManyList<TItem> obj)
-        {
-            if (ReferenceEquals(null, obj)) return false;
-            if (ReferenceEquals(this, obj)) return true;
-            return _list.Equals(obj._list);
-        }
-
-        public override bool Equals(object obj)
-        {
-            if (ReferenceEquals(null, obj)) return false;
-            if (ReferenceEquals(this, obj)) return true;
-            if (obj.GetType() != GetType()) return false;
-            return Equals((OneOrManyList<TItem>) obj);
-        }
-
-        public override int GetHashCode()
-        {
-            return _list.GetHashCode();
-        }
-
-        #endregion
     }
 
     /// <summary>
@@ -1040,6 +975,25 @@ namespace pwiz.Skyline.Util
             }
         }
 
+        public static BlockedArray<TItem> FromEnumerable(IEnumerable<TItem> enumerable, int itemCount, int itemSize,
+            int bytesPerBlock, IProgressMonitor progressMonitor, IProgressStatus status)
+        {
+            using (var enumerator = enumerable.GetEnumerator())
+            {
+                return new BlockedArray<TItem>(count =>
+                {
+                    var array = new TItem[count];
+                    for (int i = 0; i < count; i++)
+                    {
+                        Assume.IsTrue(enumerator.MoveNext());
+                        array[i] = enumerator.Current;
+                    }
+
+                    return array;
+                }, itemCount, itemSize, bytesPerBlock, progressMonitor, status);
+            }
+        }
+
         /// <summary>
         /// Copy a list into blocks.
         /// </summary>
@@ -1508,7 +1462,7 @@ namespace pwiz.Skyline.Util
 
         public static TEnum EnumFromLocalizedString<TEnum>(string value, string[] localizedStrings, TEnum defaultValue)
         {
-            int i = localizedStrings.IndexOf(v => Equals(v, value));
+            int i = localizedStrings.IndexOf(v => Equals(v, value??string.Empty));
             return (i == -1 ? defaultValue : (TEnum) (object) i);
         }
 
@@ -1922,17 +1876,6 @@ namespace pwiz.Skyline.Util
         public static bool RunningResharperAnalysis => !string.IsNullOrEmpty(Environment.GetEnvironmentVariable(@"JETBRAINS_DPA_AGENT_ENABLE"));
 
         public static bool IsParallelClient => !string.IsNullOrEmpty(Environment.GetEnvironmentVariable(@"SKYLINE_TESTER_PARALLEL_CLIENT_ID"));
-
-        [DllImport("kernel32.dll", CharSet = CharSet.Unicode, SetLastError = true)]
-        static extern IntPtr GetModuleHandle([MarshalAs(UnmanagedType.LPWStr)] string lpModuleName);
-
-        [DllImport("kernel32", CharSet = CharSet.Ansi, ExactSpelling = true, SetLastError = true)]
-        static extern IntPtr GetProcAddress(IntPtr hModule, string procName);
-
-        /// <summary>
-        /// Returns true iff the process is running under Wine (the "wine_get_version" function is exported by ntdll.dll)
-        /// </summary>
-        public static bool IsRunningOnWine => GetProcAddress(GetModuleHandle(@"ntdll.dll"), @"wine_get_version") != IntPtr.Zero;
 
         /// <summary>
         /// Try an action that might throw an exception.  If it does, sleep for a little while and

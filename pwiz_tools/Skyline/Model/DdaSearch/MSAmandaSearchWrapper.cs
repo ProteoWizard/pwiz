@@ -25,6 +25,7 @@ using System.Linq;
 using System.Reflection;
 using System.Threading;
 using System.Threading.Tasks;
+using JetBrains.Annotations;
 using MSAmanda.Core;
 using MSAmanda.Utils;
 using MSAmanda.InOutput;
@@ -67,10 +68,13 @@ namespace pwiz.Skyline.Model.DdaSearch
         private const string MAX_LOADED_SPECTRA_AT_ONCE = "MaxLoadedSpectraAtOnce";
         private const string CONSIDERED_CHARGES = "ConsideredCharges";
 
-        private readonly TemporaryDirectory _baseDir = new TemporaryDirectory(tempPrefix: @"~SK_MSAmanda/");
+        public const string MS_AMANDA_TMP = @"~SK_MSAmanda";
+        private readonly TemporaryDirectory _baseDir; // Created as %TMP%/~SK_MSAmanda/<random dirname>
+        // TODO(MattC): tidy up MSAmanda implementation so that we can distinguish intentional uses of tmp dir (caching potentially re-used files) from accidental directory creation and/or not-reused files within
 
         public MSAmandaSearchWrapper()
         {
+            _baseDir = new TemporaryDirectory(tempPrefix: MS_AMANDA_TMP + @"/"); // Creates %TMP%/~SK_MSAmanda/<random dirname>
             Settings = new MSAmandaSettings();
             helper = new MSHelper();
             helper.InitLogWriter(_baseDir.DirPath);
@@ -197,6 +201,7 @@ namespace pwiz.Skyline.Model.DdaSearch
             return files;
         }
 
+        [NotNull]
         private MSAmandaSearch InitializeEngine(CancellationTokenSource token, string spectrumFileName)
         {
             _outputParameters = new OutputParameters();
@@ -218,11 +223,11 @@ namespace pwiz.Skyline.Model.DdaSearch
             //Console.WriteLine("\nReportBothBestHitsForTD CombineConsideredCharges WriteResultsTwice ForceTargetDecoyMode");
             //Console.WriteLine($@"{Settings.ReportBothBestHitsForTD}       {Settings.CombineConsideredCharges}        {Settings.WriteResultsTwice}       {Settings.ForceTargetDecoyMode}");
             mzID.Settings = Settings;
-            SearchEngine = new MSAmandaSearch(helper, _baseDir.DirPath, _outputParameters, Settings, token);
-            SearchEngine.InitializeOutputMZ(mzID);
+            var searchEngine = new MSAmandaSearch(helper, _baseDir.DirPath, _outputParameters, Settings, token);
+            searchEngine.InitializeOutputMZ(mzID);
             Settings.LoadedProteinsAtOnce = (int) AdditionalSettings[MAX_LOADED_PROTEINS_AT_ONCE].Value;
             Settings.LoadedSpectraAtOnce = (int) AdditionalSettings[MAX_LOADED_SPECTRA_AT_ONCE].Value;
-            return SearchEngine;
+            return searchEngine;
         }
     
         public override bool Run(CancellationTokenSource tokenSource, IProgressStatus status)
@@ -258,7 +263,7 @@ namespace pwiz.Skyline.Model.DdaSearch
                                 FileEx.SafeDelete(outputFilepath);
                             }
 
-                            SearchEngine = InitializeEngine(tokenSource, rawFileName.GetSampleLocator());   // Assignment for ReSharper
+                            SearchEngine = InitializeEngine(tokenSource, rawFileName.GetSampleLocator());
                             amandaInputParser = new MSAmandaSpectrumParser(rawFileName.GetSampleLocator(), Settings.ConsideredCharges, true);
                             SearchEngine.SetInputParser(amandaInputParser);
                             SearchEngine.PerformSearch(_outputParameters.DBFile);
