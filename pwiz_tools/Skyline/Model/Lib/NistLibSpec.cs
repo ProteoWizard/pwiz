@@ -142,8 +142,10 @@ namespace pwiz.Skyline.Model.Lib
         {
         }
 
+        public override string LibraryTypeName => @"NIST";
+
         #region Implementation of IXmlSerializable
-        
+
         /// <summary>
         /// For serialization
         /// </summary>
@@ -159,7 +161,7 @@ namespace pwiz.Skyline.Model.Lib
         #endregion
     }
 
-    public class NistSpectrumHeaderInfoBase : SpectrumHeaderInfo
+    public abstract class NistSpectrumHeaderInfoBase : SpectrumHeaderInfo
     {
         public NistSpectrumHeaderInfoBase(string libraryName, float tfRatio, double? rt, double? irt, float totalIntensity, int spectrumCount)
             : base(libraryName)

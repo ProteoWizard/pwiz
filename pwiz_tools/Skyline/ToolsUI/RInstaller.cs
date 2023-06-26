@@ -26,6 +26,7 @@ using System.Reflection;
 using System.Text;
 using System.Windows.Forms;
 using Microsoft.Win32;
+using pwiz.Common.SystemUtil;
 using pwiz.Skyline.Alerts;
 using pwiz.Skyline.Controls;
 using pwiz.Skyline.Model.Tools;
@@ -156,7 +157,7 @@ namespace pwiz.Skyline.ToolsUI
 
         private string DownloadPath { get; set; }
 
-        private void DownloadR(ILongWaitBroker longWaitBroker)
+        private void DownloadR(IProgressMonitor longWaitBroker)
         {
             // the repository containing the downloadable R exes
             const string baseUri = "http://cran.r-project.org/bin/windows/base/";
