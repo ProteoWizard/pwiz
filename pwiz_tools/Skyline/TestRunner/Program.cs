@@ -843,8 +843,11 @@ namespace TestRunner
                     receiver.Bind($"tcp://*:{workerPort}");
                 }
                 else
-                    workerPort = receiver.BindRandomPort("tcp://*");
-
+                {
+                    // // Select the first unused port above 9810 to communicate with the worker.
+                    // // The Windows server "macs2.gs.washington.edu" is configured to be able to use any port between 9810 and 9820
+                    workerPort = UnusedPortFinder.FindUnusedPort(9810, 65535);
+                }
                 string workerNames = null;
 
                 // try to kill docker workers if process is terminated externally (e.g. SkylineTester)
