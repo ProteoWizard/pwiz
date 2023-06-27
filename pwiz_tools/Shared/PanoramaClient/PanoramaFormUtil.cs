@@ -20,6 +20,7 @@
 using System;
 using System.Collections.Generic;
 using System.Drawing;
+using System.Linq;
 using System.Windows.Forms;
 using Newtonsoft.Json.Linq;
 
@@ -48,6 +49,26 @@ namespace pwiz.PanoramaClient
             treeViewFolders.Invoke(new Action(() => treeViewFolders.Nodes.Add(treeNode)));
             treeViewFolders.Invoke(new Action(() => treeViewFolders.SelectedImageIndex = (int)ImageId.panorama));
             treeViewFolders.Invoke(new Action(() => AddChildContainers(treeNode, folder, requireUploadPerms, showFiles)));
+        }
+
+        public void InitializeTreeFromPath(TreeView treeViewFolders, string folderPath, PanoramaServer server)
+        {
+            var uriPath = new Uri(folderPath);
+            var serverText = uriPath.GetLeftPart(UriPartial.Authority);
+            var uriFolders = folderPath.Substring(string.Concat(serverText, "/_webdav").Length);
+            var uriFolderTokens = uriFolders.Split('/');
+            var folder = uriFolderTokens.LastOrDefault();
+            var treeNode = new TreeNode(server.URI.ToString());
+            var fileNode = new TreeNode("@files");
+            TreeNode selectedFolder = null;
+            treeViewFolders.Invoke(new Action(() => treeViewFolders.Nodes.Add(treeNode)));
+            treeViewFolders.Invoke(new Action(() => treeViewFolders.SelectedImageIndex = (int)ImageId.panorama));
+            treeViewFolders.Invoke(new Action(() => selectedFolder = LoadFromPath(uriFolderTokens, treeNode)));
+            treeViewFolders.Invoke(new Action(() => selectedFolder.Nodes.Add(fileNode)));
+            treeViewFolders.Invoke(new Action(() => treeViewFolders.SelectedImageIndex = treeViewFolders.ImageIndex = (int)ImageId.folder));
+            fileNode.Tag = string.Concat(selectedFolder.Tag, "/@files");
+            treeViewFolders.Invoke(new Action(() => selectedFolder.Expand()));
+            treeViewFolders.Invoke(new Action(() => treeViewFolders.SelectedNode = fileNode));
         }
 
         public void InitializeTreeViewTest(PanoramaServer server, TreeView treeView, JToken folderJson)
@@ -130,60 +151,21 @@ namespace pwiz.PanoramaClient
             }
         }
 
-        private void LoadSkyFolders(JToken folders, TreeNode node, HashSet<string> prevFolders)
+        private TreeNode LoadFromPath(string[] folderTokens, TreeNode node)
         {
-            JToken rows = folders[@"rows"];
-            foreach (var row in rows)
+            foreach (var folder in folderTokens)
             {
-                //get the path
-                var fullPath = (string)row[@"Container/Path"];
-
-                if (!prevFolders.Contains(fullPath))
+                if (!string.IsNullOrEmpty(folder))
                 {
-                    prevFolders.Add(fullPath);
-                    AddFolderPath(fullPath, fullPath, node);
+                    var subfolder = new TreeNode(folder);
+                    subfolder.Tag = string.Concat(node.Tag, "/", folder);
+                    subfolder.ImageIndex = subfolder.SelectedImageIndex = (int)ImageId.folder;
+                    node.Nodes.Add(subfolder);
+                    node = subfolder;
+                    
                 }
             }
-        }
-
-        public const char SLASH = '/';
-
-        private void AddFolderPath(string full, string path, TreeNode node)
-        {
-            if (!string.IsNullOrEmpty(path))
-            {
-                var folders = path.Split(SLASH);
-                if (folders.Length > 1)
-                {
-                    var nextFolder = folders[1];
-                    var replaced = string.Concat(SLASH.ToString(), nextFolder); //"/" + nextFolder;
-                    var replaceTest = path.Substring(replaced.Length);
-                    if (!node.Nodes.ContainsKey(nextFolder))
-                    {
-                        var newNode = new TreeNode(nextFolder);
-                        newNode.Name = nextFolder;
-                        if (node.Tag == null)
-                        {
-                            newNode.Tag =
-                                replaced; //string.Concat(Path.DirectorySeparatorChar, nextFolder); //string.Concat(SLASH.ToString(), nextFolder); //"/" + nextFolder;
-                        }
-                        else
-                        {
-                            newNode.Tag = string.Concat(node.Tag.ToString(), SLASH.ToString(), nextFolder); //node.Tag + "/" + nextFolder;
-                        }
-
-                        node.Nodes.Add(newNode);
-
-                        AddFolderPath(full, replaceTest, newNode);
-                    }
-                    else
-                    {
-                        var getKey = node.Nodes.IndexOfKey(nextFolder);
-
-                        AddFolderPath(full, replaceTest, node.Nodes[getKey]);
-                    }
-                }
-            }
+            return node;
         }
     }
 

@@ -51,9 +51,6 @@ namespace pwiz.SkylineTestFunctional
             //Test versions: selected option is correct for all versions vs current version
             TestVersions();
 
-            //Test checkbox switching
-            TestShowSkyCheckBox();
-
             //Test TreeView icons
             TestTreeViewIcons();
 
@@ -133,31 +130,6 @@ namespace pwiz.SkylineTestFunctional
             });
             WaitForClosedForm(remoteDlg);
 
-        }
-
-
-        private void TestShowSkyCheckBox()
-        {
-            var testClient = new TestClientJson();
-            var fileJson = testClient.CreateFiles();
-            var sizeJson = testClient.CreateSizesJson();
-            var json = testClient.GetInfoForFolders(new PanoramaServer(new Uri(VALID_SERVER), VALID_USER_NAME, VALID_PASSWORD),
-                TARGETED);
-            var remoteDlg = ShowDialog<PanoramaFilePicker>(() =>
-                SkylineWindow.OpenFromPanorama(VALID_SERVER, string.Empty, string.Empty, json, fileJson, sizeJson));
-
-            WaitForCondition(9000, () => remoteDlg.IsLoaded);
-
-            RunUI(() =>
-            {
-                Assert.IsTrue(remoteDlg.CheckBoxVisible());
-                Assert.IsTrue(remoteDlg.ShowingSky);
-                remoteDlg.FolderBrowser.SelectNode(TARGETED);
-                remoteDlg.ClickCheckBox();
-                Assert.IsFalse(remoteDlg.ShowingSky);
-                remoteDlg.Close();
-            });
-            WaitForClosedForm(remoteDlg);
         }
 
 
@@ -449,7 +421,6 @@ namespace pwiz.SkylineTestFunctional
                 return obj;
             }
 
-            //Only generating 3 nodes in the tree
             public JToken GetInfoForFolders(PanoramaServer server, string folder)
             {
                 JObject testFolders = new JObject();

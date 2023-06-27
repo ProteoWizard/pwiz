@@ -36,6 +36,7 @@
             this.back = new System.Windows.Forms.ToolStripButton();
             this.forward = new System.Windows.Forms.ToolStripButton();
             this.up = new System.Windows.Forms.ToolStripButton();
+            this.urlLink = new System.Windows.Forms.LinkLabel();
             this.toolStrip.SuspendLayout();
             this.SuspendLayout();
             // 
@@ -58,7 +59,7 @@
             this.cancel.TabIndex = 14;
             this.cancel.Text = "Cancel";
             this.cancel.UseVisualStyleBackColor = true;
-            this.cancel.Click += new System.EventHandler(this.cancel_Click_1);
+            this.cancel.Click += new System.EventHandler(this.cancel_Click);
             // 
             // open
             // 
@@ -112,11 +113,23 @@
             this.up.Size = new System.Drawing.Size(28, 28);
             this.up.Click += new System.EventHandler(this.up_Click);
             // 
+            // urlLink
+            // 
+            this.urlLink.Anchor = ((System.Windows.Forms.AnchorStyles)(((System.Windows.Forms.AnchorStyles.Bottom | System.Windows.Forms.AnchorStyles.Left) 
+            | System.Windows.Forms.AnchorStyles.Right)));
+            this.urlLink.AutoEllipsis = true;
+            this.urlLink.Location = new System.Drawing.Point(12, 284);
+            this.urlLink.Name = "urlLink";
+            this.urlLink.Size = new System.Drawing.Size(282, 23);
+            this.urlLink.TabIndex = 20;
+            this.urlLink.LinkClicked += new System.Windows.Forms.LinkLabelLinkClickedEventHandler(this.urlLink_LinkClicked);
+            // 
             // PanoramaDirectoryPicker
             // 
             this.AutoScaleDimensions = new System.Drawing.SizeF(6F, 13F);
             this.AutoScaleMode = System.Windows.Forms.AutoScaleMode.Font;
             this.ClientSize = new System.Drawing.Size(445, 316);
+            this.Controls.Add(this.urlLink);
             this.Controls.Add(this.toolStrip);
             this.Controls.Add(this.cancel);
             this.Controls.Add(this.open);
@@ -145,5 +158,6 @@
         private System.Windows.Forms.ToolStripButton back;
         private System.Windows.Forms.ToolStripButton forward;
         private System.Windows.Forms.ToolStripButton up;
+        private System.Windows.Forms.LinkLabel urlLink;
     }
 }

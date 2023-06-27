@@ -36,7 +36,6 @@ namespace pwiz.PanoramaClient
             this.label3 = new System.Windows.Forms.Label();
             this.imageList1 = new System.Windows.Forms.ImageList(this.components);
             this.imageList2 = new System.Windows.Forms.ImageList(this.components);
-            this.showSkyCheckBox = new System.Windows.Forms.CheckBox();
             this.versionOptions = new System.Windows.Forms.ComboBox();
             this.open = new System.Windows.Forms.Button();
             this.cancel = new System.Windows.Forms.Button();
@@ -54,6 +53,7 @@ namespace pwiz.PanoramaClient
             this.back = new System.Windows.Forms.ToolStripButton();
             this.forward = new System.Windows.Forms.ToolStripButton();
             this.up = new System.Windows.Forms.ToolStripButton();
+            this.urlLink = new System.Windows.Forms.LinkLabel();
             ((System.ComponentModel.ISupportInitialize)(this.splitContainer1)).BeginInit();
             this.splitContainer1.Panel2.SuspendLayout();
             this.splitContainer1.SuspendLayout();
@@ -81,13 +81,6 @@ namespace pwiz.PanoramaClient
             this.imageList2.TransparentColor = System.Drawing.Color.Transparent;
             this.imageList2.Images.SetKeyName(0, "File.png");
             this.imageList2.Images.SetKeyName(1, "SkylineDoc.ico");
-            // 
-            // showSkyCheckBox
-            // 
-            resources.ApplyResources(this.showSkyCheckBox, "showSkyCheckBox");
-            this.showSkyCheckBox.Name = "showSkyCheckBox";
-            this.showSkyCheckBox.UseVisualStyleBackColor = true;
-            this.showSkyCheckBox.CheckedChanged += new System.EventHandler(this.ShowSkyCheckBox_CheckedChanged);
             // 
             // versionOptions
             // 
@@ -152,6 +145,7 @@ namespace pwiz.PanoramaClient
             this.listView.View = System.Windows.Forms.View.Details;
             this.listView.ColumnClick += new System.Windows.Forms.ColumnClickEventHandler(this.listView_ColumnClick);
             this.listView.SizeChanged += new System.EventHandler(this.listView_SizeChanged);
+            this.listView.DoubleClick += new System.EventHandler(this.listView_DoubleClick);
             // 
             // colName
             // 
@@ -210,17 +204,24 @@ namespace pwiz.PanoramaClient
             this.up.Name = "up";
             this.up.Click += new System.EventHandler(this.UpButton_Click);
             // 
+            // urlLink
+            // 
+            resources.ApplyResources(this.urlLink, "urlLink");
+            this.urlLink.AutoEllipsis = true;
+            this.urlLink.Name = "urlLink";
+            this.urlLink.LinkClicked += new System.Windows.Forms.LinkLabelLinkClickedEventHandler(this.urlLink_LinkClicked);
+            // 
             // PanoramaFilePicker
             // 
             resources.ApplyResources(this, "$this");
             this.AutoScaleMode = System.Windows.Forms.AutoScaleMode.Font;
+            this.Controls.Add(this.urlLink);
             this.Controls.Add(this.toolStrip);
             this.Controls.Add(this.panel1);
             this.Controls.Add(this.versionLabel);
             this.Controls.Add(this.cancel);
             this.Controls.Add(this.open);
             this.Controls.Add(this.versionOptions);
-            this.Controls.Add(this.showSkyCheckBox);
             this.Controls.Add(this.label3);
             this.MaximizeBox = false;
             this.MinimizeBox = false;
@@ -244,7 +245,6 @@ namespace pwiz.PanoramaClient
         private Label label3;
         private ImageList imageList1;
         private ImageList imageList2;
-        private CheckBox showSkyCheckBox;
         private ComboBox versionOptions;
         private Button open;
         private Button cancel;
@@ -262,5 +262,6 @@ namespace pwiz.PanoramaClient
         private ColumnHeader colReplacedBy;
         private ColumnHeader colCreated;
         private Label noFiles;
+        private LinkLabel urlLink;
     }
 }
