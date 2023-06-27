@@ -21,6 +21,7 @@ using System;
 using System.Collections.Generic;
 using System.Drawing;
 using System.IO;
+using System.Linq;
 using System.Threading;
 using pwiz.Common.Chemistry;
 using pwiz.Common.SystemUtil;
@@ -69,16 +70,28 @@ namespace pwiz.Skyline.Model
                 MaxValue = true;
             }
 
-            public Setting(string name, string defaultValue = null)
+            public Setting(string name, string defaultValue = null, IEnumerable<string> validValues = null)
             {
                 Name = name;
                 MinValue = string.Empty;
                 _value = defaultValue ?? string.Empty;
+                ValidValues = validValues;
             }
 
+            public Setting(Setting other)
+            {
+                Name = other.Name;
+                MinValue = other.MinValue;
+                MaxValue = other.MaxValue;
+                _value = other.Value;
+                ValidValues = other.ValidValues;
+            }
+            
             public string Name { get; }
             public object MinValue { get; }
             public object MaxValue { get; }
+
+            public IEnumerable<string> ValidValues { get; }
 
             private object _value;
             public object Value
@@ -99,6 +112,10 @@ namespace pwiz.Skyline.Model
                 switch (MinValue)
                 {
                     case string s:
+                        if (ValidValues?.Any(o => o.Equals(value)) == false)
+                            throw new ArgumentOutOfRangeException(string.Format(
+                                "The value {0} is not valid for the argument {1} which must one of: {2}",
+                                s, Name, string.Join(@", ", ValidValues)));
                         return value;
 
                     case bool b:

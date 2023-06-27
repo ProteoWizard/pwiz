@@ -11956,6 +11956,51 @@ If you do not have the original file, you may build the library with embedded sp
   <data name="ShareTypeDlg_OkDialog_Including_data_folders_is_not_supported_by_the_currently_selected_version_" xml:space="preserve">
     <value>Including data folders is not supported by the currently selected version.</value>
   </data>
+  <data name="SpectraGridForm_SpectraGridForm_Spectrum_Grid" xml:space="preserve">
+    <value>Spectrum Grid</value>
+  </data>
+  <data name="SpectraGridForm_GetDefaultViewSpec_Default" xml:space="preserve">
+    <value>Default</value>
+  </data>
+  <data name="SpectrumReader_ReadSpectraFromFile_Reading_spectra_from__0_" xml:space="preserve">
+    <value>Reading spectra from {0}</value>
+  </data>
+  <data name="SpectraGridForm_AddSpectrumFilters_Examining_filters" xml:space="preserve">
+    <value>Examining filters</value>
+  </data>
+  <data name="SpectraGridForm_AddSpectrumFilters_The_selected_row_does_not_have_any_filters" xml:space="preserve">
+    <value>The selected row does not have any filters</value>
+  </data>
+  <data name="SpectraGridForm_AddSpectrumFilters_The_selected_rows_do_not_have_any_filters" xml:space="preserve">
+    <value>The selected rows do not have any filters</value>
+  </data>
+  <data name="SpectraGridForm_AddSpectrumFilters_There_were_no_matching_precursors_to_add_any_filters_to_" xml:space="preserve">
+    <value>There were no matching precursors to add any filters to.</value>
+  </data>
+  <data name="SpectraGridForm_AddSpectrumFilters_Change_spectrum_filter" xml:space="preserve">
+    <value>Change spectrum filter</value>
+  </data>
+  <data name="EditMenu_ChangeSpectrumFilter_Change_spectrum_filter" xml:space="preserve">
+    <value>Change spectrum filter</value>
+  </data>
+  <data name="FileSpectrumInfo_ToString__0__Spectra" xml:space="preserve">
+    <value>{0} Spectra</value>
+    <comment>Example: 20 Spectra</comment>
+  </data>
+  <data name="SpectrumClassColumn_Ms1Precursors_MS1" xml:space="preserve">
+    <value>MS1</value>
+  </data>
+  <data name="SpectrumClassColumn_Ms2Precursors_MS2" xml:space="preserve">
+    <value>MS2</value>
+  </data>
+  <data name="SpectrumClassFilter_MakePredicate_No_spectrum_column__0_" xml:space="preserve">
+    <value>No spectrum column {0}</value>
+  </data>
+  <data name="SpectrumClassFilter_GetAbbreviatedText__AND_" xml:space="preserve">
+    <value> AND </value>
+    <comment>This will be displayed in the tooltip for expressions like:
+      x + y = 7 AND x * y &lt; 20</comment>
+  </data>
   <data name="Close" type="System.Resources.ResXFileRef, System.Windows.Forms">
     <value>..\Resources\Close.bmp;System.Drawing.Bitmap, System.Drawing, Version=4.0.0.0, Culture=neutral, PublicKeyToken=b03f5f7f11d50a3a</value>
   </data>
@@ -11965,11 +12010,32 @@ If you do not have the original file, you may build the library with embedded sp
   <data name="ToolInstaller_UnpackZipTool_The_selected_zip_file_did_not_specify_any_items_to_add_to_the_Tools_menu_" xml:space="preserve">
     <value>The selected zip file did not specify any items to add to the Tools menu.</value>
   </data>
+  <data name="SpectraGridForm_GetSummaryMessage_Showing_all_spectra" xml:space="preserve">
+    <value>Showing all spectra</value>
+  </data>
+  <data name="SpectraGridForm_GetSummaryMessage_Showing_spectra_near_precursor_m_z__0_" xml:space="preserve">
+    <value>Showing spectra near precursor m/z {0}</value>
+  </data>
+  <data name="SpectraGridForm_GetSummaryMessage_Showing_spectra_near_precursor_m_z__0__and__1_" xml:space="preserve">
+    <value>Showing spectra near precursor m/z {0} and {1}</value>
+  </data>
+  <data name="SpectraGridForm_GetSummaryMessage_Showing_spectra_near__0__precursors_between__1__and__2_" xml:space="preserve">
+    <value>Showing spectra near {0} precursors between {1} and {2}</value>
+  </data>
+  <data name="SpectraGridForm_AddSpectrumFilters_One_spectrum_filter_will_be_added_to_the_document_" xml:space="preserve">
+    <value>One spectrum filter will be added to the document.</value>
+  </data>
+  <data name="SpectraGridForm_AddSpectrumFilters__0__spectrum_filters_will_be_added_to_the_document_" xml:space="preserve">
+    <value>{0} spectrum filters will be added to the document.</value>
+  </data>
+  <data name="SpectraGridForm_AddSpectrumFilters_No_spectrum_filters_were_added_to_the_document_" xml:space="preserve">
+    <value>No spectrum filters were added to the document.</value>
+  </data>
   <data name="ImportPeptideSearchDlg_ImportPeptideSearchDlg_Feature_Detection" xml:space="preserve">
     <value>Feature Detection</value>
   </data>
   <data name="FullScanSettingsControl_InitializeMs1FilterUI_Sets_the_MS_type_for_Hardklor_s_FWHM_calculation" xml:space="preserve">
-    <value>Sets the MS type for Hardklör's FWHM calculation</value>
+    <value>Sets the MS type for Hardklor's FWHM calculation</value>
   </data>
   <data name="FullScanSettingsControl_Initialize_minutes_of_detected_features" xml:space="preserve">
     <value>minutes of detected features</value>
@@ -12050,11 +12116,65 @@ If you choose Disable, you can enable Auto-select later with the "Refine &gt; Ad
   <data name="SkylineWindow_ImportMassList_Disable" xml:space="preserve">
     <value>&amp;Disable</value>
   </data>
-  <data name="FullScanSettingsControl_InitializeFeatureDetectionUI_Hardklör_looks_for_isotope_envelopes_representing_charges_1__0___The_library_will_contain_only_ions_with_the_charges_listed_here_" xml:space="preserve">
-    <value>Hardklör looks for isotope envelopes representing charges 1-{0}. The resulting library will contain only ions with the charges listed here.</value>
+  <data name="FastaToProsit_Enzyme_unsupported_enzyme___0____allowed_values_are___1_" xml:space="preserve">
+    <value>unsupported enzyme '{0}'; allowed values are: {1}</value>
   </data>
-  <data name="FullScanSettingsControl_InitializeFeatureDetectionUI_This_is_the_value_assumed_by_Hardklör__it_cannot_be_adjusted_" xml:space="preserve">
-    <value>This is the value assumed by Hardklör, it cannot be adjusted.</value>
+  <data name="EncyclopeDiaSearchDlg_NextPage_A_FASTA_file_is_required_for_an_EncyclopeDia_Prosit_search_" xml:space="preserve">
+    <value>A FASTA file is required for an EncyclopeDIA Prosit search.</value>
+  </data>
+  <data name="EncyclopeDiaSearchDlg_NextPage_Run" xml:space="preserve">
+    <value>Run</value>
+  </data>
+  <data name="PrositHelpers_PredictBatchesFromPrositCsv_Reading_Prosit_CSV_input" xml:space="preserve">
+    <value>Reading Prosit CSV input</value>
+  </data>
+  <data name="PrositHelpers_ExportPrositSpectraToBlib_Exporting_Prosit_spectra_to_BiblioSpec_library" xml:space="preserve">
+    <value>Exporting Prosit spectra to BiblioSpec library</value>
+  </data>
+  <data name="PrositHelpers_ExportPrositSpectraToBlib_failed_to_write_Prosit_output_to_blib" xml:space="preserve">
+    <value>failed to write Prosit output to blib</value>
+  </data>
+  <data name="EncyclopeDiaHelpers_ConvertFastaToPrositInputCsv_could_not_find_EncyclopeDia" xml:space="preserve">
+    <value>could not find EncyclopeDIA</value>
+  </data>
+  <data name="EncyclopeDiaSearchControl_Search_Reusing_Prosit_predictions_from___0_" xml:space="preserve">
+    <value>Reusing Prosit predictions from: {0}</value>
+  </data>
+  <data name="EncyclopeDiaHelpers_ConvertFastaToPrositInputCsv_Converting_FASTA_to_Prosit_input" xml:space="preserve">
+    <value>Converting FASTA to Prosit input</value>
+  </data>
+  <data name="EncyclopeDiaHelpers_ConvertPrositOutputToDlib_Converting_Prosit_output_to_EncyclopeDia_library" xml:space="preserve">
+    <value>Converting Prosit output to EncyclopeDIA library</value>
+  </data>
+  <data name="EncyclopeDiaHelpers_GetConvertedDiaDataFile_Converting_DIA_data_to_mzML" xml:space="preserve">
+    <value>Converting DIA data to mzML</value>
+  </data>
+  <data name="EncyclopeDiaHelpers_GenerateLibrary_Generating_quantification_library_0_of_1_2" xml:space="preserve">
+    <value>Generating quantification library ({0} of {1}): {2}</value>
+  </data>
+  <data name="EncyclopeDiaHelpers_GenerateLibrary_Generating_chromatogram_library_0_of_1_2" xml:space="preserve">
+    <value>Generating chromatogram library ({0} of {1}): {2}</value>
+  </data>
+  <data name="EncyclopeDiaSearchDlg_ImportEncyclopediaLibrary_Ran_EncyclopeDIA_Search" xml:space="preserve">
+    <value>Ran EncyclopeDIA Search</value>
+  </data>
+  <data name="EncyclopeDiaHelpers_GenerateLibrary_Combining_quantification_libraries" xml:space="preserve">
+    <value>Combining quantification libraries</value>
+  </data>
+  <data name="EncyclopeDiaHelpers_GenerateLibrary_Combining_chromatogram_libraries" xml:space="preserve">
+    <value>Combining chromatogram libraries</value>
+  </data>
+  <data name="EncyclopeDiaSearchDlg_Browse_for_Narrow_Window_Results_Files" xml:space="preserve">
+    <value>Browse for Narrow Window Results Files</value>
+  </data>
+  <data name="EncyclopeDiaSearchDlg_Browse_For_Wide_Window_Results_Files" xml:space="preserve">
+    <value>Browse for Wide Window Results Files</value>
+  </data>
+  <data name="FullScanSettingsControl_InitializeFeatureDetectionUI_Hardklor_looks_for_isotope_envelopes_representing_charges_1__0___The_library_will_contain_only_ions_with_the_charges_listed_here_" xml:space="preserve">
+    <value>Hardklor looks for isotope envelopes representing charges 1-{0}. The resulting library will contain only ions with the charges listed here.</value>
+  </data>
+  <data name="FullScanSettingsControl_InitializeFeatureDetectionUI_This_is_the_value_assumed_by_Hardklor__it_cannot_be_adjusted_" xml:space="preserve">
+    <value>This is the value assumed by Hardklor, it cannot be adjusted.</value>
   </data>
   <data name="CommandLine_AssociateProteins_a_FASTA_file_must_be_imported_before_associating_proteins" xml:space="preserve">
     <value>Error: a FASTA file must be imported before associating proteins</value>
@@ -12074,5 +12194,46 @@ If you choose Disable, you can enable Auto-select later with the "Refine &gt; Ad
   <data name="FindOptions_GetNotFoundMessage_Nothing_could_be_found_matching_any_of_the__0__criteria" xml:space="preserve">
     <value>Nothing could be found matching any of the {0} criteria</value>
     <comment>{0} is an integer greater than 1</comment>
+  </data>
+  <data name="EditMenu_GetEditSpectrumFilterDescription_Editing_spectrum_filter_on__0_" xml:space="preserve">
+    <value>Editing spectrum filter on {0}</value>
+  </data>
+  <data name="EditMenu_GetEditSpectrumFilterDescription_Adding_spectrum_filter_to__0_" xml:space="preserve">
+    <value>Adding spectrum filter to {0}</value>
+  </data>
+  <data name="EditMenu_GetEditSpectrumFilterDescription_Editing_spectrum_filter_on__0__precursors" xml:space="preserve">
+    <value>Editing spectrum filter on {0} precursors</value>
+  </data>
+  <data name="EditMenu_GetEditSpectrumFilterDescription_Adding_spectrum_filter_to__0__precursors" xml:space="preserve">
+    <value>Adding spectrum filter to {0} precursors</value>
+  </data>
+  <data name="EditSpectrumFilterDlg_MakePageButton_Case__0_" xml:space="preserve">
+    <value>Case {0}</value>
+    <comment>"Case" means "possibility" or "branch"</comment>
+  </data>
+  <data name="SpectrumClassFilter_Ms1FilterPage_MS1" xml:space="preserve">
+    <value>MS1</value>
+  </data>
+  <data name="SpectrumClassFilter_Ms2FilterPage_MS2_" xml:space="preserve">
+    <value>MS2+</value>
+  </data>
+  <data name="SpectrumClassFilter_GetAbbreviatedText_OR" xml:space="preserve">
+    <value>OR</value>
+    <comment>"OR" is the logical operator</comment>
+  </data>
+  <data name="TransitionGroupTreeNode_RenderSpectrumClassFilterTip_Spectrum_Filter" xml:space="preserve">
+    <value>Spectrum Filter</value>
+  </data>
+  <data name="MatchingPrecursors_ToString__0__precursors" xml:space="preserve">
+    <value>{0} precursors</value>
+  </data>
+  <data name="SpectrumClassFilter_Ms1FilterPage_Criteria_which_MS1_spectra_must_satisfy_to_be_included_in_extracted_chromatogram" xml:space="preserve">
+    <value>Criteria which MS1 spectra must satisfy to be included in extracted chromatogram</value>
+  </data>
+  <data name="SpectrumClassFilter_Ms2FilterPage_Criteria_which_spectra_with_MS_level_2_or_higher_must_satisfy_to_be_included_in_extracted_chromatogram" xml:space="preserve">
+    <value>Criteria which spectra with MS level 2 or higher must satisfy to be included in extracted chromatogram</value>
+  </data>
+  <data name="EncyclopeDiaHelpers_GenerateLibrary_Running_command___0___1_" xml:space="preserve">
+    <value>Running command: {0} {1}</value>
   </data>
 </root>

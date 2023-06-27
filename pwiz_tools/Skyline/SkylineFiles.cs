@@ -3184,6 +3184,11 @@ namespace pwiz.Skyline
             ShowImportPeptideSearchDlg();
         }
 
+        private void encyclopeDiaSearchMenuItem_Click(object sender, EventArgs e)
+        {
+            ShowEncyclopeDiaSearchDlg();
+        }
+
         private void importFeatureDetectionMenuItem_Click(object sender, EventArgs e)
         {
             ShowImportPeptideSearchDlg(ImportPeptideSearchDlg.Workflow.feature_detection);
@@ -3218,6 +3223,28 @@ namespace pwiz.Skyline
         public void ShowImportPeptideSearchDlg()
         {
             ShowImportPeptideSearchDlg(null);
+        }
+
+        public void ShowEncyclopeDiaSearchDlg()
+        {
+
+            if (!CheckDocumentExists(Resources.SkylineWindow_ShowImportPeptideSearchDlg_You_must_save_this_document_before_importing_a_peptide_search_))
+            {
+                return;
+            }
+            else if (!Document.IsLoaded)
+            {
+                MessageDlg.Show(this, Resources.SkylineWindow_ShowImportPeptideSearchDlg_The_document_must_be_fully_loaded_before_importing_a_peptide_search_);
+                return;
+            }
+
+            using (var dlg = new EncyclopeDiaSearchDlg(this, _libraryManager))
+            {
+                if (dlg.ShowDialog(this) == DialogResult.OK)
+                {
+                    // Nothing to do; the dialog does all the work.
+                }
+            }
         }
 
         public void ShowFeatureDetectionDlg()

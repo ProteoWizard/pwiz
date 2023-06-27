@@ -178,7 +178,9 @@ namespace pwiz.BiblioSpec
                     case IDPICKER_FDR:
                         return new RangeValues(0, 0);
                     case WATERS_MSE_PEPTIDE_SCORE:
-                        return new RangeValues(6, 6);
+                        // "peptide.score" values in "final_fragment.csv" files seem to 
+                        // always be less than 10.
+                        return new RangeValues(0, 10);
                     default:
                         return new RangeValues(0, 1);
                 }

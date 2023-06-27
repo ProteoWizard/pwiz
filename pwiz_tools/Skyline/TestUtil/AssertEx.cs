@@ -874,7 +874,7 @@ namespace pwiz.SkylineTestUtil
                     {
                         int pos;
                         for (pos = 0; pos < expectedLine?.Length && pos < actualLine?.Length && expectedLine[pos] == actualLine[pos];) {pos++;}
-                        Fail(helpMsg + $@" Diff found at line {count} position {pos}: expected\r\n{expectedLine}\r\nactual\r\n{actualLine}");
+                        Fail(helpMsg + $@" Diff found at line {count} position {pos}: expected{Environment.NewLine}{expectedLine}{Environment.NewLine}actual{Environment.NewLine}{actualLine}");
                     }
                     lineEqualLast = expectedLine;
                     count++;

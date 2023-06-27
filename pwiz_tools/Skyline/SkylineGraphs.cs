@@ -1453,7 +1453,7 @@ namespace pwiz.Skyline
                 _graphFullScan.Hide();
         }
 
-        private void ShowGraphFullScan(IScanProvider scanProvider, int transitionIndex, int scanIndex, int? optStep)
+        internal void ShowGraphFullScan(IScanProvider scanProvider, int transitionIndex, int scanIndex, int? optStep)
         {
             if (_graphFullScan != null)
             {
@@ -4102,13 +4102,13 @@ namespace pwiz.Skyline
 
         private int AddReplicateOrderAndGroupByMenuItems(ToolStrip menuStrip, int iInsert)
         {
-            string currentGroupBy = SummaryReplicateGraphPane.GroupByReplicateAnnotation;
+            ReplicateValue currentGroupBy = ReplicateValue.FromPersistedString(DocumentUI.Settings, SummaryReplicateGraphPane.GroupByReplicateAnnotation);
             var groupByValues = ReplicateValue.GetGroupableReplicateValues(DocumentUI).ToArray();
             if (groupByValues.Length == 0)
                 currentGroupBy = null;
 
             // If not grouped by an annotation, show the order-by menuitem
-            if (string.IsNullOrEmpty(currentGroupBy))
+            if (currentGroupBy == null)
             {
                 var orderByReplicateAnnotationDef = groupByValues.FirstOrDefault(
                     value => SummaryReplicateGraphPane.OrderByReplicateAnnotation == value.ToPersistedString());
@@ -4137,11 +4137,11 @@ namespace pwiz.Skyline
                 menuStrip.Items.Insert(iInsert++, groupReplicatesByContextMenuItem);
                 groupReplicatesByContextMenuItem.DropDownItems.Clear();
                 groupReplicatesByContextMenuItem.DropDownItems.Add(groupByReplicateContextMenuItem);
-                groupByReplicateContextMenuItem.Checked = string.IsNullOrEmpty(currentGroupBy);
+                groupByReplicateContextMenuItem.Checked = currentGroupBy == null;
                 foreach (var replicateValue in groupByValues)
                 {
                     groupReplicatesByContextMenuItem.DropDownItems
-                        .Add(GroupByReplicateAnnotationMenuItem(replicateValue, currentGroupBy));
+                        .Add(GroupByReplicateAnnotationMenuItem(replicateValue, Equals(replicateValue, currentGroupBy)));
                 }
             }
             return iInsert;
@@ -4155,12 +4155,18 @@ namespace pwiz.Skyline
             }
         }
 
-        private ToolStripMenuItem GroupByReplicateAnnotationMenuItem(ReplicateValue replicateValue, string groupBy)
+        public ToolStripMenuItem ReplicateGroupByContextMenuItem
         {
-            return new ToolStripMenuItem(replicateValue.Title, null, (sender, eventArgs)=>GroupByReplicateValue(replicateValue))
-                       {
-                           Checked = replicateValue.ToPersistedString() == groupBy
-                       };
+            get { return groupReplicatesByContextMenuItem; }
+        }
+
+        private ToolStripMenuItem GroupByReplicateAnnotationMenuItem(ReplicateValue replicateValue, bool isChecked)
+        {
+            return new ToolStripMenuItem(replicateValue.Title, null,
+                (sender, eventArgs) => GroupByReplicateValue(replicateValue))
+            {
+                Checked = isChecked
+            };
         }
 
         private ToolStripMenuItem OrderByReplicateAnnotationMenuItem(ReplicateValue replicateValue, string currentOrderBy)

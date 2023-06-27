@@ -103,6 +103,22 @@ namespace pwiz.SkylineTestUtil
     }
 
     /// <summary>
+    /// Test method attribute which specifies a test is not suitable for use with odd characters in the TMP path (e.g. ^ and &amp;)
+    /// Note that the constructor expects a string explaining why a test is unsuitable for use with odd TMP paths
+    /// </summary>
+    [AttributeUsage(AttributeTargets.Method, AllowMultiple = false)]
+    public sealed class NoOddTmpPathTestingAttribute : Attribute
+    {
+        public string Reason { get; private set; } // Reason for declaring test as unsuitable for unicode
+
+        public NoOddTmpPathTestingAttribute(string reason)
+        {
+            Reason = reason; // e.g. "uses Java"[
+        }
+
+    }
+
+    /// <summary>
     /// Test method attribute which specifies a test is not suitable for parallel testing
     /// (e.g. memory hungry or writes to the filesystem outside of the test's working directory)
     /// Note that the constructor expects a string explaining why a test is unsuitable for parallel use 
@@ -134,6 +150,7 @@ namespace pwiz.SkylineTestUtil
         public const string MZ5_UNICODE_ISSUES = "mz5 doesn't handle unicode paths";
         public const string MSGFPLUS_UNICODE_ISSUES = "MsgfPlus doesn't handle unicode paths";
         public const string MSFRAGGER_UNICODE_ISSUES = "MsFragger doesn't handle unicode paths";
+        public const string JAVA_UNICODE_ISSUES = "Running Java processes with wild unicode temp paths is problematic";
         public const string HARDKLOR_UNICODE_ISSUES = "Hardklor doesn't handle unicode paths";
     }
 

@@ -16,8 +16,15 @@
  * See the License for the specific language governing permissions and
  * limitations under the License.
  */
+
+using System;
+using System.Collections.Generic;
 using System.Data;
 using System.Data.SQLite;
+using System.Globalization;
+using System.Linq;
+using System.Security.Cryptography;
+using pwiz.Common.SystemUtil;
 
 namespace pwiz.Common.Database
 {
@@ -60,6 +67,53 @@ namespace pwiz.Common.Database
                 // Newly created IrtDbs start without IrtHistory table
                 cmd.CommandText = @"DROP TABLE IF EXISTS " + tableName;
                 cmd.ExecuteNonQuery();
+            }
+        }
+
+        public static IEnumerable<string> DumpTable(string dbFilepath, string tableName, string columnSeparator = "\t", string[] sortColumns = null, string[] excludeColumns = null)
+        {
+            using var connection = new SQLiteConnection(new SQLiteConnectionStringBuilder { DataSource = dbFilepath }.ConnectionString);
+            connection.Open();
+            foreach(string s in DumpTable(connection, tableName, columnSeparator, sortColumns, excludeColumns))
+                yield return s;
+        }
+        private static List<string> GetColumnNamesFromTable(IDbConnection connection, string tableName)
+        {
+            using var cmd = connection.CreateCommand();
+            cmd.CommandText = "SELECT * FROM " + tableName + " LIMIT 0";
+            using var reader = cmd.ExecuteReader();
+            var schemaTable = reader.GetSchemaTable();
+            var columnNames = new List<string>();
+            if (schemaTable != null)
+                columnNames.AddRange(from DataRow row in schemaTable.Rows select row["ColumnName"].ToString());
+            return columnNames;
+        }
+
+        public static IEnumerable<string> DumpTable(IDbConnection connection, string tableName, string columnSeparator = "\t", string[] sortColumns = null, string[] excludeColumns = null)
+        {
+            var columns = new HashSet<string>(GetColumnNamesFromTable(connection, tableName));
+            if (excludeColumns != null)
+                columns.ExceptWith(excludeColumns);
+
+            using var cmd = connection.CreateCommand();
+            cmd.CommandText = @"SELECT " + string.Join(@", ", columns) + " FROM " + tableName;
+            if (sortColumns != null)
+                cmd.CommandText += @" ORDER BY " + string.Join(@",", sortColumns);
+            using var reader = cmd.ExecuteReader();
+            using var sha1 = SHA1.Create();
+            excludeColumns ??= Array.Empty<string>();
+            yield return string.Join(columnSeparator,
+                Enumerable.Range(0, reader.FieldCount).Select(i => reader.GetName(i)));
+            object[] row = new object[reader.FieldCount];
+            while (reader.Read())
+            {
+                reader.GetValues(row);
+                for (var i = 0; i < row.Length; i++)
+                    if (row[i] is byte[] bytes)
+                        row[i] = Convert.ToBase64String(sha1.ComputeHash(bytes));
+
+                yield return LocalizationHelper.CallWithCulture(CultureInfo.InvariantCulture,
+                    () => string.Join(columnSeparator, row));
             }
         }
     }

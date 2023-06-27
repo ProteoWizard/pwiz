@@ -152,7 +152,7 @@ namespace TestPerf
             PauseForScreenShot("Ready to start Wizard (File > Import > Feature Detection...)");
             // Launch the wizard
             var importPeptideSearchDlg = ShowDialog<ImportPeptideSearchDlg>(SkylineWindow.ShowFeatureDetectionDlg);
-            importPeptideSearchDlg.Testing = true; // Prevents form-called-by-form blockage TODO(bspratt) there must be a cleaner way
+            importPeptideSearchDlg.IsAutomatedTest = true; // Prevents form-called-by-form blockage TODO(bspratt) there must be a cleaner way
 
             // We're on the "Select Files to Search" page of the wizard.
 
@@ -222,7 +222,7 @@ namespace TestPerf
 
             RunUI(() =>
             {
-                importPeptideSearchDlg.SearchControl.OnSearchFinished += (success) => searchSucceeded = success;
+                importPeptideSearchDlg.SearchControl.SearchFinished += (success) => searchSucceeded = success;
                 importPeptideSearchDlg.BuildPepSearchLibControl.IncludeAmbiguousMatches = true;
 
                 // Cancel search
