@@ -840,7 +840,6 @@ namespace TestRunner
                 if (commandLineArgs.HasArg("workerport"))
                 {
                     workerPort = (int)commandLineArgs.ArgAsLong("workerport");
-                    receiver.Bind($"tcp://*:{workerPort}");
                 }
                 else
                 {
@@ -848,6 +847,7 @@ namespace TestRunner
                     // // The Windows server "macs2.gs.washington.edu" is configured to be able to use any port between 9810 and 9820
                     workerPort = UnusedPortFinder.FindUnusedPort(9810, 65535);
                 }
+                receiver.Bind($"tcp://*:{workerPort}");
                 string workerNames = null;
 
                 // try to kill docker workers if process is terminated externally (e.g. SkylineTester)
