@@ -447,6 +447,9 @@ namespace pwiz.Skyline.FileUI.PeptideSearch
             var docNew = ImportPeptideSearch.AddDocumentSpectralLibrary(DocumentContainer.Document, docLibSpec);
             if (docNew == null)
                 return false;
+            if (docNew.Settings.PeptideSettings.Libraries.LibrarySpecs.Count ==
+                DocumentContainer.Document.Settings.PeptideSettings.Libraries.LibrarySpecs.Count)
+                return false;
 
             var blib = ImportPeptideSearch.DocLib as BiblioSpecLiteLibrary;
             if (blib?.ReadStream is ConnectionId<SQLiteConnection> connection && SqliteOperations.TableExists(connection.Connection, @"IrtLibrary"))

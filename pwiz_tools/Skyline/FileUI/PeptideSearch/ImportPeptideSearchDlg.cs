@@ -346,6 +346,27 @@ namespace pwiz.Skyline.FileUI.PeptideSearch
             BuildPepSearchLibControl.ForceWorkflow(workflowType);
         }
 
+        public ImportPeptideSearchDlg(SkylineWindow skylineWindow, LibraryManager libraryManager, Workflow workflowType,
+            IList<ImportPeptideSearch.FoundResultsFile> resultFiles, ImportFastaControl.ImportFastaSettings fastaSettings,
+            IEnumerable<string> existingLibraryFilepaths)
+            : this(skylineWindow, libraryManager)
+        {
+            BuildPepSearchLibControl.ForceWorkflow(workflowType);
+
+            BuildPepSearchLibControl.UseExistingLibrary = true;
+            BuildPepSearchLibControl.ExistingLibraryPath = existingLibraryFilepaths.First();
+
+            ImportFastaControl.SetFastaContent(fastaSettings.FastaFile.Path, true);
+            ImportFastaControl.Enzyme = fastaSettings.Enzyme;
+            ImportFastaControl.MaxMissedCleavages = fastaSettings.MaxMissedCleavages;
+
+            NextPage(); // skip use existing library page
+
+            ImportResultsControl.FoundResultsFiles = resultFiles;
+
+            _pagesToSkip.Add(Pages.match_modifications_page);
+        }
+
         public void AdjustHeightForFullScanSettings()
         {
             if (WorkflowType == Workflow.dda)
@@ -716,7 +737,7 @@ namespace pwiz.Skyline.FileUI.PeptideSearch
                     ImportPeptideSearch.SearchEngine.SetSpectrumFiles(BuildPepSearchLibControl.DdaSearchDataSources);
                     ImportPeptideSearch.DdaConverter?.SetSpectrumFiles(BuildPepSearchLibControl.DdaSearchDataSources);
                     ImportPeptideSearch.SearchEngine.SetFastaFiles(ImportFastaControl.FastaFile);
-                    SearchControl.OnSearchFinished += SearchControl_OnSearchFinished;
+                    SearchControl.SearchFinished += SearchControlSearchFinished;
                     btnNext.Enabled = false;
                     btnCancel.Enabled = false;
                     btnBack.Enabled = false;
@@ -815,7 +836,7 @@ namespace pwiz.Skyline.FileUI.PeptideSearch
             }
         }
 
-        private void SearchControl_OnSearchFinished(bool success)
+        private void SearchControlSearchFinished(bool success)
         {
             btnCancel.Enabled = true;
             btnBack.Enabled = true;
@@ -874,7 +895,7 @@ namespace pwiz.Skyline.FileUI.PeptideSearch
                     btnNext.Enabled = true;
                     break;
                 case Pages.dda_search_page:
-                    SearchControl.OnSearchFinished -= SearchControl_OnSearchFinished;
+                    SearchControl.SearchFinished -= SearchControlSearchFinished;
                     break;
       }
         }

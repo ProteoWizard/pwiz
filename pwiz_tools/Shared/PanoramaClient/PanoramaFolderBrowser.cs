@@ -26,6 +26,7 @@ using System.Net;
 using System.Windows.Forms;
 using Newtonsoft.Json.Linq;
 using pwiz.Common.Controls;
+using pwiz.Common.SystemUtil;
 
 namespace pwiz.PanoramaClient
 {
@@ -144,7 +145,7 @@ namespace pwiz.PanoramaClient
             if (treeView.SelectedNode != null)
             {
                 if (ActiveServer != null)
-                    if (treeView.SelectedNode.Tag.ToString().Contains(@"@files"))
+                    if (treeView.SelectedNode.Tag != null && treeView.SelectedNode.Tag.ToString().Contains(@"@files"))
                     {
                         SelectedUrl =
                             Uri.UnescapeDataString(string.Concat(ActiveServer.URI, @"_webdav", treeView.SelectedNode.Tag));
@@ -542,7 +543,7 @@ namespace pwiz.PanoramaClient
             CurNodeIsTargetedMS = node.Name;
             Path = node.Tag != null ? node.Tag.ToString() : string.Empty;
             Clicked = node;
-            if (treeView.SelectedNode.Tag.ToString().Contains(@"@files"))
+            if (treeView.SelectedNode.Tag != null && treeView.SelectedNode.Tag.ToString().Contains(@"@files"))
             {
                 SelectedUrl =
                     Uri.UnescapeDataString(string.Concat(ActiveServer.URI, @"_webdav", node.Tag));
