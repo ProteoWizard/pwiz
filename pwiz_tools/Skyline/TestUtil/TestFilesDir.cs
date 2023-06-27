@@ -250,6 +250,10 @@ namespace pwiz.SkylineTestUtil
 
         public static void CheckForFileLocks(string path, bool useDeletion = false)
         {
+            // It's conceivable that calling GC.Collect prevents a file locking issue by causing some stream's
+            // finalizer to run
+            GC.Collect();
+            GC.Collect();
             string GetProcessNamesLockingFile(string lockedDirectory, Exception exceptionShowingLockedFileName)
             {
                 var output = string.Empty;

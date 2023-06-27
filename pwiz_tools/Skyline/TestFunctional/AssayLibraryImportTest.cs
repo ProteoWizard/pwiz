@@ -58,7 +58,9 @@ namespace pwiz.SkylineTestFunctional
             TestModificationMatcher();
             TestBlankDocScenario();
             TestEmbeddedIrts();
-
+            // It's conceivable that calling GC.Collect here prevents a file locking issue in TestAssayImport2
+            GC.Collect();
+            GC.Collect();
             TestAssayImport2();
             TestPaser();
         }
