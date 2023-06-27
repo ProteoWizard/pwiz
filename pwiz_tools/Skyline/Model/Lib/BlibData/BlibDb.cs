@@ -21,6 +21,7 @@ using System.Collections.Generic;
 using System.Data.SQLite;
 using System.IO;
 using System.Linq;
+using System.Reflection;
 using System.Text.RegularExpressions;
 using System.Threading;
 using NHibernate;
@@ -244,6 +245,155 @@ namespace pwiz.Skyline.Model.Lib.BlibData
             return CreateLibraryFromSpectra(librarySpec, listSpectra, libraryName, progressMonitor, ref status);
         }
 
+
+        private class SpectrumInserter : IDisposable
+        {
+            private SQLiteCommand _insertSpectraCmd;
+            private long _lastSpectraId, _lastAnnotationId, _lastRetentionTimesId, _lastModificationId;
+
+            private SQLiteCommand _insertAnnotationsCmd;
+            private SQLiteCommand _insertPeaksCmd;
+            private SQLiteCommand _insertRetentionTimesCmd;
+            private SQLiteCommand _insertModificationsCmd;
+
+            private List<PropertyInfo> _dbRefSpectraProperties;
+            private List<PropertyInfo> _dbRefSpectraPeaksProperties;
+            private List<PropertyInfo> _dbRefSpectraPeakAnnotationsProperties;
+            private List<PropertyInfo> _dbModificationProperties;
+            private List<PropertyInfo> _dbRetentionTimeProperties;
+
+            private static SQLiteCommand GenerateInsertCommand(SQLiteConnection connection, string table, IList<PropertyInfo> properties)
+            {
+                string PropertySqlName(PropertyInfo p)
+                {
+                    return p.PropertyType.BaseType == typeof(DbEntity) ? p.Name + @"Id" : p.Name;
+                }
+
+                // ReSharper disable LocalizableElement
+                string sql = "INSERT INTO " + table + " (" +
+                             string.Join(",", properties.Select(PropertySqlName)) + ") VALUES (" +
+                             string.Join(",", Enumerable.Repeat("?", properties.Count)) + ")";
+                // ReSharper restore LocalizableElement
+
+                var cmd = new SQLiteCommand(sql, connection);
+                for (int i = 0; i < properties.Count; ++i)
+                    cmd.Parameters.Add(new SQLiteParameter());
+                return cmd;
+            }
+
+            private static IEnumerable<PropertyInfo> GetProperties(Type dbType)
+            {
+                foreach (var property in dbType.GetProperties())
+                {
+                    if (property.Name == "EntityClass")
+                        continue;
+                    yield return property;
+                }
+            }
+
+            private static object GetPropertyValue(object obj, PropertyInfo property)
+            {
+                if (property.PropertyType.BaseType == typeof(DbEntity))
+                    return ((DbEntity)property.GetValue(obj)).Id;
+                return property.GetValue(obj);
+            }
+
+            public SpectrumInserter(ISession session)
+            {
+                var connection = session.Connection as SQLiteConnection;
+
+                _lastSpectraId = (long) new SQLiteCommand(@"SELECT IFNULL(MAX(id), 0) FROM RefSpectra", connection).ExecuteScalar();
+                _lastAnnotationId = (long) new SQLiteCommand(@"SELECT IFNULL(MAX(id), 0) FROM RefSpectraPeakAnnotations", connection).ExecuteScalar();
+                _lastRetentionTimesId = (long) new SQLiteCommand(@"SELECT IFNULL(MAX(id), 0) FROM RetentionTimes", connection).ExecuteScalar();
+                _lastModificationId = (long) new SQLiteCommand(@"SELECT IFNULL(MAX(id), 0) FROM Modifications", connection).ExecuteScalar();
+
+                _dbRefSpectraProperties = new List<PropertyInfo>();
+                foreach (var property in typeof(DbRefSpectra).GetProperties())
+                {
+                    if (property.Name == "EntityClass")
+                        continue;
+                    if (property.PropertyType.IsValueType || property.PropertyType == typeof(string))
+                        _dbRefSpectraProperties.Add(property);
+                }
+
+                _dbRefSpectraPeaksProperties = new List<PropertyInfo>();
+                foreach (var property in typeof(DbRefSpectraPeaks).GetProperties())
+                {
+                    if (property.Name == "EntityClass" || property.Name == "Id")
+                        continue;
+                    _dbRefSpectraPeaksProperties.Add(property);
+                }
+
+                _dbRefSpectraPeakAnnotationsProperties = GetProperties(typeof(DbRefSpectraPeakAnnotations)).ToList();
+                _dbModificationProperties = GetProperties(typeof(DbModification)).ToList();
+                _dbRetentionTimeProperties = GetProperties(typeof(DbRetentionTimes)).ToList();
+
+                _insertSpectraCmd = GenerateInsertCommand(connection, @"RefSpectra", _dbRefSpectraProperties);
+                _insertPeaksCmd = GenerateInsertCommand(connection, @"RefSpectraPeaks", _dbRefSpectraPeaksProperties);
+                _insertAnnotationsCmd = GenerateInsertCommand(connection, @"RefSpectraPeakAnnotations", _dbRefSpectraPeakAnnotationsProperties);
+                _insertModificationsCmd = GenerateInsertCommand(connection, @"Modifications", _dbModificationProperties);
+                _insertRetentionTimesCmd = GenerateInsertCommand(connection, @"RetentionTimes", _dbRetentionTimeProperties);
+            }
+
+            public void InsertSpectrum(DbRefSpectra dbRefSpectrum)
+            {
+                {
+                    int i = 0;
+                    dbRefSpectrum.Id = ++_lastSpectraId;
+                    foreach (var property in _dbRefSpectraProperties)
+                        _insertSpectraCmd.Parameters[i++].Value = GetPropertyValue(dbRefSpectrum, property);
+                    _insertSpectraCmd.ExecuteNonQuery();
+
+                    i = 0;
+                    dbRefSpectrum.Peaks.RefSpectra ??= dbRefSpectrum;
+                    foreach (var property in _dbRefSpectraPeaksProperties)
+                        _insertPeaksCmd.Parameters[i++].Value = GetPropertyValue(dbRefSpectrum.Peaks, property);
+                    _insertPeaksCmd.ExecuteNonQuery();
+                }
+
+                if (dbRefSpectrum.PeakAnnotations != null)
+                    foreach (var annotation in dbRefSpectrum.PeakAnnotations)
+                    {
+                        int i = 0;
+                        annotation.Id = ++_lastAnnotationId;
+                        annotation.RefSpectra = dbRefSpectrum;
+                        foreach (var property in _dbRefSpectraPeakAnnotationsProperties)
+                            _insertAnnotationsCmd.Parameters[i++].Value = GetPropertyValue(annotation, property);
+                        _insertAnnotationsCmd.ExecuteNonQuery();
+                    }
+
+                foreach (var retentionTime in dbRefSpectrum.RetentionTimes)
+                {
+                    int i = 0;
+                    retentionTime.Id = ++_lastRetentionTimesId;
+                    retentionTime.RefSpectra = dbRefSpectrum;
+                    foreach (var property in _dbRetentionTimeProperties)
+                        _insertRetentionTimesCmd.Parameters[i++].Value = GetPropertyValue(retentionTime, property);
+                    _insertRetentionTimesCmd.ExecuteNonQuery();
+                }
+
+                if (dbRefSpectrum.Modifications != null)
+                    foreach (var modification in dbRefSpectrum.Modifications)
+                    {
+                        int i = 0;
+                        modification.Id = ++_lastModificationId;
+                        modification.RefSpectra = dbRefSpectrum;
+                        foreach (var property in _dbModificationProperties)
+                            _insertModificationsCmd.Parameters[i++].Value = GetPropertyValue(modification, property);
+                        _insertModificationsCmd.ExecuteNonQuery();
+                    }
+            }
+
+            public void Dispose()
+            {
+                _insertSpectraCmd?.Dispose();
+                _insertAnnotationsCmd?.Dispose();
+                _insertPeaksCmd?.Dispose();
+                _insertRetentionTimesCmd?.Dispose();
+                _insertModificationsCmd?.Dispose();
+            }
+        }
+
         public BiblioSpecLiteLibrary CreateLibraryFromSpectra(BiblioSpecLiteSpec librarySpec,
             IList<SpectrumMzInfo> listSpectra,
             string libraryName,
@@ -267,11 +417,11 @@ namespace pwiz.Skyline.Model.Lib.BlibData
                 int i = 0;
                 var sourceFiles = new Dictionary<string, long>();
                 var proteinTablesBuilder = new ProteinTablesBuilder(session);
-
+                using var spectrumInserter = new SpectrumInserter(session);
                 foreach (var spectrum in listSpectra)
                 {
                     var dbRefSpectrum = RefSpectrumFromPeaks(session, spectrum, sourceFiles);
-                    session.Save(dbRefSpectrum);
+                    spectrumInserter.InsertSpectrum(dbRefSpectrum);
                     var ionMobilitiesByFileId = new IndexedIonMobilities(
                         dbRefSpectrum.RetentionTimes.Where(rt => !Equals(rt.IonMobilityType, 0)).
                             Select(rt =>
@@ -947,9 +1097,10 @@ namespace pwiz.Skyline.Model.Lib.BlibData
             refSpectra.RetentionTime = spectrum.RetentionTime.GetValueOrDefault();
             refSpectra.FileId = spectrum.FilePath != null ? (long?)GetSpectrumSourceId(session, spectrum.FilePath, dictFiles) : null;
             refSpectra.SpecIdInFile = null;
-            var blibInfo = spectrum.SpectrumHeaderInfo as BiblioSpecSpectrumHeaderInfo;
-            refSpectra.Score = blibInfo?.Score ?? 0.0;
-            refSpectra.ScoreType = !string.IsNullOrEmpty(blibInfo?.ScoreType) ? GetScoreTypeId(session, blibInfo.ScoreType, dictScoreTypes) : (ushort)0;
+            refSpectra.Score = spectrum.SpectrumHeaderInfo?.Score ?? 0.0;
+            refSpectra.ScoreType = !string.IsNullOrEmpty(spectrum.SpectrumHeaderInfo?.ScoreType)
+                ? GetScoreTypeId(session, spectrum.SpectrumHeaderInfo.ScoreType, dictScoreTypes)
+                : (ushort) 0;
             if (convertingToSmallMolecules || !string.IsNullOrEmpty(refSpectra.MoleculeName))
             {
                 refSpectra.PeptideSeq = string.Empty;

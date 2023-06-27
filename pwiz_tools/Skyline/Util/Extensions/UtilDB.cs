@@ -111,6 +111,33 @@ namespace pwiz.Skyline.Util.Extensions
             return uncompressed.Compress(6);  // The default compression level, with a good balance of speed and compression efficiency.
         }
 
+        [ThreadStatic]
+        private static ZlibCodec _zDeflate;
+        
+        private static ZlibCodec GetZlibCodec(int level, bool decompress = false)
+        {
+            if (decompress)
+            {
+                throw new NotImplementedException();
+            }
+            else
+            {
+                if (_zDeflate == null || _zDeflate.CompressLevel != CompressionLevel.Level0 + level)
+                {
+                    _zDeflate = new ZlibCodec();
+                    _zDeflate.Strategy = CompressionStrategy.Default;
+                    _zDeflate.InitializeDeflate(CompressionLevel.Level0 + level, true);
+                }
+
+                return _zDeflate;
+            }
+        }
+        private const int _bufferSize = 16384;
+
+        [ThreadStatic]
+        private static byte[] _workingBuffer;
+        private static byte[] WorkingBuffer => _workingBuffer ??= new byte[_bufferSize];
+
         public static byte[] Compress(this byte[] uncompressed, int level)
         {
             if (level == 0)
@@ -119,9 +146,46 @@ namespace pwiz.Skyline.Util.Extensions
             byte[] result;
             using (var ms = new MemoryStream())
             {
-                using (var compressor =
-                        new ZlibStream(ms, CompressionMode.Compress, CompressionLevel.Level0+level))
-                    compressor.Write(uncompressed, 0, uncompressed.Length);
+                var Z = GetZlibCodec(level);
+                Z.InputBuffer = uncompressed;
+                Z.NextIn = 0;
+                Z.AvailableBytesIn = uncompressed.Length;
+                Z.OutputBuffer = WorkingBuffer;
+
+                do
+                {
+                    Z.NextOut = 0;
+                    Z.AvailableBytesOut = _workingBuffer.Length;
+                    switch (Z.Deflate(FlushType.None))
+                    {
+                        case 0:
+                        case 1:
+                            ms.Write(_workingBuffer, 0, _workingBuffer.Length - Z.AvailableBytesOut);
+                            continue;
+                        default:
+                            throw new ZlibException(@"deflating: " + Z.Message);
+                    }
+                }
+                while (Z.AvailableBytesIn > 0 || Z.AvailableBytesOut == 0);
+
+                do
+                {
+                    Z.NextOut = 0;
+                    Z.AvailableBytesOut = _workingBuffer.Length;
+                    switch (Z.Deflate(FlushType.Finish))
+                    {
+                        case 0:
+                        case 1:
+                            if (_workingBuffer.Length - Z.AvailableBytesOut > 0)
+                                ms.Write(_workingBuffer, 0, _workingBuffer.Length - Z.AvailableBytesOut);
+                            continue;
+                        default:
+                            throw new ZlibException(@"deflating: " + Z.Message);
+                    }
+                }
+                while (Z.AvailableBytesIn > 0 || Z.AvailableBytesOut == 0);
+                Z.ResetDeflate();
+
                 result =  ms.ToArray();
             }
 
