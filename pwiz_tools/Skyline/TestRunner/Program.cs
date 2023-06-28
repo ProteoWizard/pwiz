@@ -679,7 +679,7 @@ namespace TestRunner
                 var dockerBaseImage = Environment.OSVersion.Version.Build >= 22000
                     ? string.Empty
                     : "--build-arg BASE_WINDOWS_IMAGE=mcr.microsoft.com/windows:1809-amd64";
-                RunTests.RunCommand("docker", $"build {buildPath} -t {RunTests.DOCKER_IMAGE_NAME} {dockerBaseImage}", RunTests.IS_DOCKER_RUNNING_MESSAGE, true);
+                RunTests.RunCommand("docker", $"build \"{buildPath}\" -t \"{RunTests.DOCKER_IMAGE_NAME}\" {dockerBaseImage}", RunTests.IS_DOCKER_RUNNING_MESSAGE, true);
             }
         }
 
