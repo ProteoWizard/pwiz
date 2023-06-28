@@ -975,6 +975,25 @@ namespace pwiz.Skyline.Util
             }
         }
 
+        public static BlockedArray<TItem> FromEnumerable(IEnumerable<TItem> enumerable, int itemCount, int itemSize,
+            int bytesPerBlock, IProgressMonitor progressMonitor, IProgressStatus status)
+        {
+            using (var enumerator = enumerable.GetEnumerator())
+            {
+                return new BlockedArray<TItem>(count =>
+                {
+                    var array = new TItem[count];
+                    for (int i = 0; i < count; i++)
+                    {
+                        Assume.IsTrue(enumerator.MoveNext());
+                        array[i] = enumerator.Current;
+                    }
+
+                    return array;
+                }, itemCount, itemSize, bytesPerBlock, progressMonitor, status);
+            }
+        }
+
         /// <summary>
         /// Copy a list into blocks.
         /// </summary>

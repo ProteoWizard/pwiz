@@ -182,6 +182,7 @@
     <Compile Include="Results\NumericsLsSolverTest.cs" />
     <Compile Include="Results\PeptideQuantifierTest.cs" />
     <Compile Include="Results\RestultNameMapTest.cs" />
+    <Compile Include="Results\ResultFileMetaDataTest.cs" />
     <Compile Include="Results\ResultsUtilTest.cs" />
     <Compile Include="Results\DocumentRetentionTimesTest.cs" />
     <Compile Include="Results\ShimadzuSrmTest.cs" />

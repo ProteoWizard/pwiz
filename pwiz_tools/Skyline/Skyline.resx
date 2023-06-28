@@ -239,6 +239,12 @@
   <data name="modifyPeptideContextMenuItem.Visible" type="System.Boolean, mscorlib">
     <value>False</value>
   </data>
+  <data name="editSpectrumFilterContextMenuItem.Size" type="System.Drawing.Size, System.Drawing">
+    <value>228, 22</value>
+  </data>
+  <data name="editSpectrumFilterContextMenuItem.Text" xml:space="preserve">
+    <value>Edit Spectrum Filter...</value>
+  </data>
   <data name="toggleQuantitativeContextMenuItem.Size" type="System.Drawing.Size, System.Drawing">
     <value>228, 22</value>
   </data>
@@ -308,11 +314,23 @@
   <metadata name="contextMenuSpectrum.TrayLocation" type="System.Drawing.Point, System.Drawing, Version=4.0.0.0, Culture=neutral, PublicKeyToken=b03f5f7f11d50a3a">
     <value>197, 56</value>
   </metadata>
-  <data name="ionTypesContextMenuItem.Size" type="System.Drawing.Size, System.Drawing">
-    <value>193, 22</value>
+  <data name="replicatesTreeContextMenuItem.Size" type="System.Drawing.Size, System.Drawing">
+    <value>228, 22</value>
   </data>
   <data name="ionTypesContextMenuItem.Text" xml:space="preserve">
     <value>Ion Types</value>
+  </data>
+  <data name="replicatesTreeContextMenuItem.Text" xml:space="preserve">
+    <value>Replicates</value>
+  </data>
+  <data name="contextMenuTreeNode.Size" type="System.Drawing.Size, System.Drawing">
+    <value>229, 396</value>
+  </data>
+  <data name="&gt;&gt;contextMenuTreeNode.Name" xml:space="preserve">
+    <value>contextMenuTreeNode</value>
+  </data>
+  <data name="&gt;&gt;contextMenuTreeNode.Type" xml:space="preserve">
+    <value>System.Windows.Forms.ContextMenuStrip, System.Windows.Forms, Version=4.0.0.0, Culture=neutral, PublicKeyToken=b77a5c561934e089</value>
   </data>
   <data name="fragmentionsContextMenuItem.Size" type="System.Drawing.Size, System.Drawing">
     <value>193, 22</value>
@@ -361,6 +379,12 @@
   </data>
   <data name="massErrorToolStripMenuItem.Text" xml:space="preserve">
     <value>Mass Error</value>
+  </data>
+  <data name="massErrorToolStripMenuItem.Size" type="System.Drawing.Size, System.Drawing">
+    <value>193, 22</value>
+  </data>
+  <data name="massErrorToolStripMenuItem.Text" xml:space="preserve">
+    <value>Show Mass Error</value>
   </data>
   <data name="ionMzValuesContextMenuItem.Size" type="System.Drawing.Size, System.Drawing">
     <value>193, 22</value>
@@ -1403,6 +1427,12 @@
   </data>
   <data name="importPeptideSearchMenuItem.Text" xml:space="preserve">
     <value>&amp;Peptide Search...</value>
+  </data>
+  <data name="encyclopeDiaSearchMenuItem.Size" type="System.Drawing.Size, System.Drawing">
+    <value>194, 22</value>
+  </data>
+  <data name="encyclopeDiaSearchMenuItem.Text" xml:space="preserve">
+    <value>EncyclopeDIA Search...</value>
   </data>
   <data name="toolStripSeparator52.Size" type="System.Drawing.Size, System.Drawing">
     <value>167, 6</value>
@@ -3231,6 +3261,12 @@
   <data name="&gt;&gt;importPeptideSearchMenuItem.Type" xml:space="preserve">
     <value>System.Windows.Forms.ToolStripMenuItem, System.Windows.Forms, Version=4.0.0.0, Culture=neutral, PublicKeyToken=b77a5c561934e089</value>
   </data>
+  <data name="&gt;&gt;encyclopeDiaSearchMenuItem.Name" xml:space="preserve">
+    <value>encyclopeDiaSearchMenuItem</value>
+  </data>
+  <data name="&gt;&gt;encyclopeDiaSearchMenuItem.Type" xml:space="preserve">
+    <value>System.Windows.Forms.ToolStripMenuItem, System.Windows.Forms, Version=4.0.0.0, Culture=neutral, PublicKeyToken=b77a5c561934e089</value>
+  </data>
   <data name="&gt;&gt;toolStripSeparator52.Name" xml:space="preserve">
     <value>toolStripSeparator52</value>
   </data>
@@ -3886,3 +3922,4 @@
     <value>pwiz.Skyline.Util.FormEx, Skyline-daily, Version=22.2.1.497, Culture=neutral, PublicKeyToken=null</value>
   </data>
 </root>
+
