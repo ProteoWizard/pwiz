@@ -833,7 +833,8 @@ namespace pwiz.SkylineTestUtil
             return sb.ToString();
         }
 
-        public static void NoDiff(string target, string actual, string helpMsg=null, Dictionary<int, double> columnTolerances = null)
+        public static void NoDiff(string target, string actual, string helpMsg=null, 
+            Dictionary<int, double> columnTolerances = null) // Per-column numerical tolerances if strings can be read as TSV, "-1" means any column
         {
             if (helpMsg == null)
                 helpMsg = String.Empty;
@@ -873,7 +874,7 @@ namespace pwiz.SkylineTestUtil
         }
 
         private static bool LinesEquivalentIgnoringTimeStampsAndGUIDs(string lineExpected, string lineActual,
-            Dictionary<int, double> columnTolerances = null)
+            Dictionary<int, double> columnTolerances = null) // Per-column numerical tolerances if strings can be read as TSV, "-1" means any column
         {
             if (string.Equals(lineExpected, lineActual))
             {
@@ -918,12 +919,11 @@ namespace pwiz.SkylineTestUtil
                     {
                         if (colsActual[c] != colsExpected[c])
                         {
-                            double valActual, valExpected;
-                            if (!columnTolerances.ContainsKey(c) || // No tolerance given
-                                !(double.TryParse(colsActual[c], out valActual) &&
-                                  double.TryParse(colsExpected[c], out valExpected)) || // One or both don't parse as doubles
-                                (Math.Abs(valActual - valExpected) >
-                                 columnTolerances[c] + columnTolerances[c] / 1000)) // Allow for rounding cruft
+                            // See if there's a tolerance for this column, or a default tolerance (column "-1" in the dictionary)
+                            if ((!columnTolerances.TryGetValue(c, out var tolerance) && !columnTolerances.TryGetValue(-1, out tolerance)) || // No tolerance given for this column
+                                !(TextUtil.TryParseDoubleUncertainCulture(colsActual[c], out var valActual) &&
+                                  TextUtil.TryParseDoubleUncertainCulture(colsExpected[c], out var valExpected)) || // One or both don't parse as doubles
+                                (Math.Abs(valActual - valExpected) > tolerance + tolerance / 1000)) // Allow for rounding cruft
                             {
                                 return false; // Can't account for difference
                             }
