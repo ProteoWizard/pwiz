@@ -122,7 +122,7 @@ namespace pwiz.Skyline.Alerts
 
             using (var dlg = new LongWaitDlg { Message = Resources.SimpleFileDownloaderDlg_Show_Downloading_required_files___, ProgressValue = 0 })
             {
-                dlg.PerformWork(parent, 50, () => SimpleFileDownloader.DownloadRequiredFiles(requiredFilesList, dlg));
+                dlg.PerformWork(parent, 50, pm => SimpleFileDownloader.DownloadRequiredFiles(requiredFilesList, pm));
             }
             return DialogResult.Yes;
         }

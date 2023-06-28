@@ -53,6 +53,7 @@ namespace pwiz.PanoramaClient
             this.back = new System.Windows.Forms.ToolStripButton();
             this.forward = new System.Windows.Forms.ToolStripButton();
             this.up = new System.Windows.Forms.ToolStripButton();
+            this.urlLink = new System.Windows.Forms.LinkLabel();
             ((System.ComponentModel.ISupportInitialize)(this.splitContainer1)).BeginInit();
             this.splitContainer1.Panel2.SuspendLayout();
             this.splitContainer1.SuspendLayout();
@@ -203,10 +204,18 @@ namespace pwiz.PanoramaClient
             this.up.Name = "up";
             this.up.Click += new System.EventHandler(this.UpButton_Click);
             // 
+            // urlLink
+            // 
+            resources.ApplyResources(this.urlLink, "urlLink");
+            this.urlLink.AutoEllipsis = true;
+            this.urlLink.Name = "urlLink";
+            this.urlLink.LinkClicked += new System.Windows.Forms.LinkLabelLinkClickedEventHandler(this.urlLink_LinkClicked);
+            // 
             // PanoramaFilePicker
             // 
             resources.ApplyResources(this, "$this");
             this.AutoScaleMode = System.Windows.Forms.AutoScaleMode.Font;
+            this.Controls.Add(this.urlLink);
             this.Controls.Add(this.toolStrip);
             this.Controls.Add(this.panel1);
             this.Controls.Add(this.versionLabel);
@@ -253,5 +262,6 @@ namespace pwiz.PanoramaClient
         private ColumnHeader colReplacedBy;
         private ColumnHeader colCreated;
         private Label noFiles;
+        private LinkLabel urlLink;
     }
 }

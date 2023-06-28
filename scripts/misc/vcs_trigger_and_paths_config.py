@@ -5,7 +5,7 @@ targets['CoreWindowsRelease'] = \
     'master':
     {
         "bt83": "Core Windows x86_64"
-        ,"bt36": "Core Windows x86"
+        #,"bt36": "Core Windows x86"
         ,"bt143": "Core Windows x86_64 (no vendor DLLs)"
     },
     'release':
@@ -63,7 +63,7 @@ targets['BumbershootRelease'] = \
     'master':
     {
         "Bumbershoot_Windows_X86_64": "Bumbershoot Windows x86_64"
-        ,"ProteoWizard_Bumbershoot_Windows_X86": "Bumbershoot Windows x86"
+        #,"ProteoWizard_Bumbershoot_Windows_X86": "Bumbershoot Windows x86"
     }
 }
 targets['BumbershootLinux'] = {'master': {"ProteoWizard_Bumbershoot_Linux_x86_64": "Bumbershoot Linux x86_64"}}

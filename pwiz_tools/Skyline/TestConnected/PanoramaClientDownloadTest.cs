@@ -118,7 +118,7 @@ namespace pwiz.SkylineTestConnected
                 remoteDlg.FolderBrowser.SelectNode("ForPanoramaClientTest");
                 remoteDlg.ClickFile("Study9S_Site52_v1.sky.zip");
                 remoteDlg.ClickOpen();
-                var result = SkylineWindow.DownloadPanoramaFile(path, "Study9S_Site52_v1.sky.zip", remoteDlg.FileUrl, remoteDlg.ActiveServer, remoteDlg.FileSize, true);
+                var result = SkylineWindow.DownloadPanoramaFile(path, "Study9S_Site52_v1.sky.zip", remoteDlg.FileUrl, remoteDlg.ActiveServer, remoteDlg.FileSize);
                 Assert.IsFalse(result);
                 Assert.IsFalse(File.Exists(path));
 

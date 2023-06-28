@@ -40,13 +40,14 @@ namespace pwiz.Skyline.Model.AuditLog
         public byte[] HashBytes { get; private set; }
 
         // Adds the given bytes to the hash
-        public void ProcessBytes(byte[] bytes)
+        public void ProcessBytes(byte[] bytes, int length = 0)
         {
             if (bytes == null)
                 return;
 
             var inputIndex = 0;
-            var newIndex = _bufferIndex + bytes.Length;
+            var bytesLength = length > 0 ? length : bytes.Length;
+            var newIndex = _bufferIndex + bytesLength;
 
             while (newIndex > _buffer.Length)
             {
@@ -63,7 +64,7 @@ namespace pwiz.Skyline.Model.AuditLog
             }
 
             // Copy remaining bytes into _buffer
-            Array.Copy(bytes, inputIndex, _buffer, _bufferIndex, bytes.Length - inputIndex);
+            Array.Copy(bytes, inputIndex, _buffer, _bufferIndex, bytesLength - inputIndex);
             _bufferIndex = newIndex;
         }
 
@@ -84,6 +85,25 @@ namespace pwiz.Skyline.Model.AuditLog
         public static string SafeToBase64(byte[] hash)
         {
             return hash != null ? Convert.ToBase64String(hash) : null;
+        }
+
+        public byte[] HashFile(string path)
+        {
+
+            using var fileStream = new FileStream(path, FileMode.Open, FileAccess.Read, FileShare.Read, 4096,
+                FileOptions.SequentialScan);
+
+            var fileBuffer = new byte[4096];
+            while (true)
+            {
+                var bytesRead = fileStream.Read(fileBuffer, 0, 4096);
+                if (bytesRead <= 0)
+                    break;
+                ProcessBytes(fileBuffer, bytesRead);
+            }
+
+            FinalizeHashBytes();
+            return HashBytes;
         }
     }
 
@@ -117,10 +137,7 @@ namespace pwiz.Skyline.Model.AuditLog
             var bytesRead = _inner.Read(buffer, offset, count);
             if (bytesRead <= 0)
                 return bytesRead;
-
-            var copy = new byte[bytesRead];
-            Array.Copy(buffer, offset, copy, 0, bytesRead);
-            _blockHash.ProcessBytes(copy);
+            _blockHash.ProcessBytes(buffer, bytesRead);
 
             return bytesRead;
         }
@@ -129,9 +146,7 @@ namespace pwiz.Skyline.Model.AuditLog
         {
             _inner.Write(buffer, offset, count);
 
-            var copy = new byte[count];
-            Array.Copy(buffer, offset, copy, 0, count);
-            _blockHash.ProcessBytes(copy);
+            _blockHash.ProcessBytes(buffer, count);
         }
 
 

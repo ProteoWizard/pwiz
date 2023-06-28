@@ -19,6 +19,7 @@
 
 using System;
 using System.Collections.Generic;
+using System.Diagnostics;
 using System.Windows.Forms;
 using Newtonsoft.Json.Linq;
 
@@ -112,6 +113,7 @@ namespace pwiz.PanoramaClient
             {
                 open.Text = OKButtonText;
             }
+            urlLink.Text = FolderBrowser.SelectedUrl;
 
         }
 
@@ -132,6 +134,7 @@ namespace pwiz.PanoramaClient
 
         public void DirectoryPicker_MouseClick(object sender, EventArgs e)
         {
+            urlLink.Text = FolderBrowser.SelectedUrl;
             up.Enabled = FolderBrowser.UpEnabled();
             forward.Enabled = false;
             back.Enabled = FolderBrowser.BackEnabled();
@@ -228,6 +231,11 @@ namespace pwiz.PanoramaClient
         public bool ForwardEnabled()
         {
             return FolderBrowser.ForwardEnabled();
+        }
+
+        private void urlLink_LinkClicked(object sender, LinkLabelLinkClickedEventArgs e)
+        {
+            Process.Start(urlLink.Text);
         }
     }
 }

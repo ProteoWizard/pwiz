@@ -65,6 +65,7 @@
     <Reference Include="MathNet.Numerics">
       <HintPath>..\Lib\MathNet.Numerics.dll</HintPath>
     </Reference>
+    <Reference Include="Microsoft.CSharp" />
     <Reference Include="NHibernate">
       <HintPath>..\Lib\NHibernate\NHibernate.dll</HintPath>
     </Reference>
@@ -93,13 +94,18 @@
     <Compile Include="Colors\ColorScheme.cs" />
     <Compile Include="Colors\DiscreteColorScheme.cs" />
     <Compile Include="Colors\NumericColorScheme.cs" />
+    <Compile Include="Controls\AutoScrollTextBox.cs">
+      <SubType>Component</SubType>
+    </Compile>
     <Compile Include="Controls\Clustering\DendrogramControl.cs">
       <SubType>UserControl</SubType>
+    </Compile>
+    <Compile Include="Controls\CustomTextProgressBar.cs">
+      <SubType>Component</SubType>
     </Compile>
     <Compile Include="Controls\LiteDropDownList.cs">
       <SubType>Component</SubType>
     </Compile>
-    <Compile Include="Controls\TreeViewStateRestorer.cs" />
     <Compile Include="DataAnalysis\Clustering\ClusterResults.cs" />
     <Compile Include="DataAnalysis\Clustering\DendrogramData.cs" />
     <Compile Include="Controls\Clustering\DendrogramFormat.cs" />
@@ -154,6 +160,7 @@
     <Compile Include="DataBinding\AggregateOperation.cs" />
     <Compile Include="DataBinding\Attributes\ColumnCaptionAttribute.cs" />
     <Compile Include="DataBinding\Attributes\ExpensiveAttribute.cs" />
+    <Compile Include="DataBinding\Attributes\FilterableAttribute.cs" />
     <Compile Include="DataBinding\Attributes\InvariantDisplayNameAttribute.cs" />
     <Compile Include="DataBinding\Attributes\HideWhenAttribute.cs" />
     <Compile Include="DataBinding\Attributes\ChildDisplayNameAttribute.cs" />
@@ -284,6 +291,10 @@
     <Compile Include="DataBinding\Controls\NavBar.Designer.cs">
       <DependentUpon>NavBar.cs</DependentUpon>
     </Compile>
+    <Compile Include="DataBinding\Filtering\FilterClause.cs" />
+    <Compile Include="DataBinding\Filtering\FilterPage.cs" />
+    <Compile Include="DataBinding\Filtering\FilterPages.cs" />
+    <Compile Include="DataBinding\Filtering\IFilterAutoComplete.cs" />
     <Compile Include="DataBinding\TabularFileFormat.cs" />
     <Compile Include="DataBinding\DataSchema.cs" />
     <Compile Include="DataBinding\DisplayColumn.cs" />

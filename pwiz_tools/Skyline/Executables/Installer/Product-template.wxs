@@ -365,9 +365,6 @@
       <Component Id="unimod.obo">
         <File Source="$(var.Skyline.TargetDir)/unimod.obo" KeyPath="yes"/>
       </Component>
-      <Component Id="unimod.xml">
-        <File Source="$(var.Skyline.TargetDir)/unimod.xml" KeyPath="yes"/>
-      </Component>
       <Component Id="ZedGraph.dll">
         <File Source="$(var.Skyline.TargetDir)/ZedGraph.dll" KeyPath="yes"/>
       </Component>
