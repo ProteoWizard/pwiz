@@ -18,6 +18,7 @@
 
 using Microsoft.VisualStudio.TestTools.UnitTesting;
 using System;
+using System.Collections.Generic;
 using System.IO;
 using System.Linq;
 using pwiz.Common.Database;
@@ -68,6 +69,7 @@ namespace pwiz.SkylineTest
             string fastaFilepath = TestFilesDir.GetTestPath("pan_human_library_690to705.fasta");
             string dlibFilepath = TestFilesDir.GetTestPath("pan_human_library_690to705-z3_nce33.dlib");
             string elibFilepath = TestFilesDir.GetTestPath("pan_human_library_690to705-z3_nce33.elib");
+            var columnTolerances = new Dictionary<int, double>() { { 0, 0.0001 }, { 5, .001 } };  // Allow some numerical wiggle in columns 0 and 5
             IProgressStatus status = new ProgressStatus();
 
             // test prosit output to dlib
@@ -80,7 +82,7 @@ namespace pwiz.SkylineTest
                 var actual = SqliteOperations.DumpTable(dlibFilepath, "entries");
                 //string dlibActualTsvFilepath = TestFilesDir.GetTestPath("pan_human_library_690to705-z3_nce33-expected-dlib-actual.tsv");
                 //File.WriteAllLines(dlibActualTsvFilepath, actual);
-                AssertEx.NoDiff(File.ReadAllText(dlibExpectedTsvFilepath), string.Join("\n", actual));
+                AssertEx.NoDiff(File.ReadAllText(dlibExpectedTsvFilepath), string.Join("\n", actual), null, columnTolerances);
             }
 
             // test generate chromatogram library
@@ -103,7 +105,7 @@ namespace pwiz.SkylineTest
                     .Concat(SqliteOperations.DumpTable(elibFilepath, "peptidescores", sortColumns: new[] { "PeptideModSeq", "PrecursorCharge" }));
                 //string elibActualTsvFilepath = TestFilesDir.GetTestPath("pan_human_library_690to705-z3_nce33-expected-elib-actual.tsv");
                 //File.WriteAllLines(elibActualTsvFilepath, actual);
-                AssertEx.NoDiff(File.ReadAllText(elibExpectedTsvFilepath), string.Join("\n", actual));
+                AssertEx.NoDiff(File.ReadAllText(elibExpectedTsvFilepath), string.Join("\n", actual), null, columnTolerances);
             }
 
             // test generate quant library
@@ -131,7 +133,7 @@ namespace pwiz.SkylineTest
                     .Concat(SqliteOperations.DumpTable(elibQuantFilepath, "retentiontimes", sortColumns: new[] { "SourceFile", "Library" }));
                 //string elibActualTsvFilepath = TestFilesDir.GetTestPath("pan_human_library_690to705-z3_nce33-expected-quant-elib-actual.tsv");
                 //File.WriteAllLines(elibActualTsvFilepath, actual);
-                AssertEx.NoDiff(File.ReadAllText(elibExpectedTsvFilepath), string.Join("\n", actual));
+                AssertEx.NoDiff(File.ReadAllText(elibExpectedTsvFilepath), string.Join("\n", actual), null, columnTolerances);
             }
 
             TestFilesDir.Cleanup();

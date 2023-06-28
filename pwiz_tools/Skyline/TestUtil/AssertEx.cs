@@ -918,10 +918,9 @@ namespace pwiz.SkylineTestUtil
                     {
                         if (colsActual[c] != colsExpected[c])
                         {
-                            double valActual, valExpected;
-                            if (!columnTolerances.ContainsKey(c) || // No tolerance given
-                                !(double.TryParse(colsActual[c], out valActual) &&
-                                  double.TryParse(colsExpected[c], out valExpected)) || // One or both don't parse as doubles
+                            if (!columnTolerances.ContainsKey(c) || // No tolerance given for this column
+                                !(TextUtil.TryParseDoubleUncertainCulture(colsActual[c], out var valActual) &&
+                                  TextUtil.TryParseDoubleUncertainCulture(colsExpected[c], out var valExpected)) || // One or both don't parse as doubles
                                 (Math.Abs(valActual - valExpected) >
                                  columnTolerances[c] + columnTolerances[c] / 1000)) // Allow for rounding cruft
                             {
