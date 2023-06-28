@@ -69,7 +69,7 @@ namespace pwiz.SkylineTest
             string fastaFilepath = TestFilesDir.GetTestPath("pan_human_library_690to705.fasta");
             string dlibFilepath = TestFilesDir.GetTestPath("pan_human_library_690to705-z3_nce33.dlib");
             string elibFilepath = TestFilesDir.GetTestPath("pan_human_library_690to705-z3_nce33.elib");
-            var columnTolerances = new Dictionary<int, double>() { { 0, 0.0001 }, { 5, .001 } };  // Allow some numerical wiggle in columns 0 and 5
+            var columnTolerances = new Dictionary<int, double>() { { 0, 0.0000000001 }, { 5, .000000001 } };  // Allow some numerical wiggle in columns 0 and 5
             IProgressStatus status = new ProgressStatus();
 
             // test prosit output to dlib
