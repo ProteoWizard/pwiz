@@ -24,7 +24,6 @@ using System.Linq;
 using System.Net;
 using System.Windows.Forms;
 using Newtonsoft.Json.Linq;
-using pwiz.Common.Controls;
 using pwiz.PanoramaClient;
 using pwiz.Common.SystemUtil;
 using pwiz.Skyline.Alerts;
