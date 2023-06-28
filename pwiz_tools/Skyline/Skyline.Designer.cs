@@ -2889,8 +2889,8 @@ namespace pwiz.Skyline
         private System.Windows.Forms.ToolStripMenuItem editSpectrumFilterContextMenuItem;
         private System.Windows.Forms.ToolStripMenuItem submitErrorReportMenuItem;
         private System.Windows.Forms.ToolStripMenuItem crashSkylineMenuItem;
-        private System.Windows.Forms.ToolStripMenuItem openPanoramaMenuItem;
         private System.Windows.Forms.ToolStripMenuItem encyclopeDiaSearchMenuItem;
+        private System.Windows.Forms.ToolStripMenuItem openPanoramaMenuItem;
     }
 }
 
