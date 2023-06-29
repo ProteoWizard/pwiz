@@ -223,7 +223,7 @@ namespace pwiz.SkylineTestConnected
                     remoteDlg.ActiveServer, remoteDlg.FileSize);
             }));
             Assert.IsFalse(File.Exists(path));
-            Assert.AreEqual("@File does not exist. It may have been deleted on the server.", errorDlg.Message);
+            Assert.AreEqual(@"File does not exist. It may have been deleted on the server.", errorDlg.Message);
             OkDialog(errorDlg, errorDlg.OkDialog);
             WaitForClosedForm(remoteDlg);
         }
