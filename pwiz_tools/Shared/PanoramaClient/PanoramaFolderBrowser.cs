@@ -25,7 +25,6 @@ using System.Linq;
 using System.Net;
 using System.Windows.Forms;
 using Newtonsoft.Json.Linq;
-using pwiz.Common.Controls;
 using pwiz.Common.SystemUtil;
 
 namespace pwiz.PanoramaClient

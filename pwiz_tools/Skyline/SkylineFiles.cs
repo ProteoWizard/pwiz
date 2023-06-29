@@ -1051,10 +1051,10 @@ namespace pwiz.Skyline
                                 var message = progressStatus.ErrorException.Message;
                                 if (message.Contains(@"404"))
                                 {
-                                    message = "@File does not exist. It may have been deleted on the server.";
+                                    message = @"File does not exist. It may have been deleted on the server.";
                                 }
-                                var alertDlg = new AlertDlg(message, MessageBoxButtons.OK) { Exception = progressStatus.ErrorException };
-                                alertDlg.ShowAndDispose(this);
+                                MessageDlg.ShowWithException(this, message, progressStatus.ErrorException);
+                                return false;
                             }
                             return false;
 

@@ -103,6 +103,7 @@
     <None Include="Resources\Panorama.png" />
     <None Include="Resources\PanoramaSelected.png" />
     <None Include="Resources\Panorama.bmp" />
+    <None Include="Resources\OpenRemoteFolder.png" />
     <Content Include="SkylineBatch.ico" />
     <Content Include="SkylineDailyRunner.exe">
       <CopyToOutputDirectory>Always</CopyToOutputDirectory>
@@ -116,6 +117,9 @@
     <Content Include="SkylineBatch_configs.ico">
       <CopyToOutputDirectory>Always</CopyToOutputDirectory>
     </Content>
+    <EmbeddedResource Include="DownloadDlg.resx">
+      <DependentUpon>DownloadDlg.cs</DependentUpon>
+    </EmbeddedResource>
     <EmbeddedResource Include="DownloadingFileControl.resx">
       <DependentUpon>DownloadingFileControl.cs</DependentUpon>
     </EmbeddedResource>
@@ -124,6 +128,7 @@
     </EmbeddedResource>
     <EmbeddedResource Include="RemoteFileControl.resx">
       <DependentUpon>RemoteFileControl.cs</DependentUpon>
+      <SubType>Designer</SubType>
     </EmbeddedResource>
     <EmbeddedResource Include="RemoteFileForm.resx">
       <DependentUpon>RemoteFileForm.cs</DependentUpon>
@@ -185,6 +190,12 @@
     </None>
   </ItemGroup>
   <ItemGroup>
+    <Compile Include="DownloadDlg.cs">
+      <SubType>Form</SubType>
+    </Compile>
+    <Compile Include="DownloadDlg.Designer.cs">
+      <DependentUpon>DownloadDlg.cs</DependentUpon>
+    </Compile>
     <Compile Include="DownloadingFileControl.cs">
       <SubType>UserControl</SubType>
     </Compile>
@@ -196,6 +207,11 @@
     </Compile>
     <Compile Include="EditRemoteFileSourcesForm.Designer.cs">
       <DependentUpon>EditRemoteFileSourcesForm.cs</DependentUpon>
+    </Compile>
+    <Compile Include="Properties\Resources.Designer.cs">
+      <AutoGen>True</AutoGen>
+      <DesignTime>True</DesignTime>
+      <DependentUpon>Resources.resx</DependentUpon>
     </Compile>
     <Compile Include="RemoteFileControl.cs">
       <SubType>UserControl</SubType>
@@ -222,11 +238,6 @@
       <DependentUpon>ConnectionErrorForm.cs</DependentUpon>
     </Compile>
     <Compile Include="DataServerInfo.cs" />
-    <Compile Include="Properties\Resources.Designer.cs">
-      <AutoGen>True</AutoGen>
-      <DesignTime>True</DesignTime>
-      <DependentUpon>Resources.resx</DependentUpon>
-    </Compile>
     <Compile Include="RDirectorySelector.cs" />
     <Compile Include="CommandArgNames.Designer.cs">
       <AutoGen>True</AutoGen>

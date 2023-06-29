@@ -568,6 +568,9 @@
   <data name="InvalidConfigSetupForm_FixInvalidMainSettings_analysis_folder" xml:space="preserve">
     <value>analysis folder</value>
   </data>
+  <data name="MainForm_btnOpenTemplate_Click_The_template_file_for___0___has_not_been_downloaded__Would_you_like_to_download_it_" xml:space="preserve">
+    <value>The template file for "{0}" has not been downloaded. Would you like to download it?</value>
+  </data>
   <data name="AddServerForm_btnAdd_Click_Verifying" xml:space="preserve">
     <value>Verifying</value>
   </data>
@@ -888,5 +891,13 @@
   </data>
   <data name="Panorama" type="System.Resources.ResXFileRef, System.Windows.Forms">
     <value>..\Resources\Panorama.bmp;System.Drawing.Bitmap, System.Drawing, Version=4.0.0.0, Culture=neutral, PublicKeyToken=b03f5f7f11d50a3a</value>
+  <data name="OpenRemoteFolder" type="System.Resources.ResXFileRef, System.Windows.Forms">
+    <value>..\Resources\OpenRemoteFolder.png;System.Drawing.Bitmap, System.Drawing, Version=4.0.0.0, Culture=neutral, PublicKeyToken=b03f5f7f11d50a3a</value>
+  </data>
+  <data name="MainForm_btnOpenRemoteFolder_Click_Open_Remote_Folder" xml:space="preserve">
+    <value>Open Remote Folder</value>
+  </data>
+  <data name="MainForm_btnOpenTemplate_Click_The_template_file_for__0__has_not_been_downloaded__Please_run__0__and_try_again" xml:space="preserve">
+    <value>The template file for {0} has not been downloaded. Please run {0} and try again.</value>
   </data>
 </root>
