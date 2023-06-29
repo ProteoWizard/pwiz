@@ -250,10 +250,6 @@ namespace pwiz.SkylineTestUtil
 
         public static void CheckForFileLocks(string path, bool useDeletion = false)
         {
-            // Do a garbage collection in case any finalizer is supposed to release a file handle
-            GC.Collect();
-            GC.WaitForPendingFinalizers();
-            GC.Collect();
             string GetProcessNamesLockingFile(string lockedDirectory, Exception exceptionShowingLockedFileName)
             {
                 var output = string.Empty;
