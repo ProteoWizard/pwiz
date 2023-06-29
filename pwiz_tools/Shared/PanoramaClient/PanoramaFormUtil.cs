@@ -20,7 +20,6 @@
 using System;
 using System.Collections.Generic;
 using System.Drawing;
-using System.Linq;
 using System.Windows.Forms;
 using Newtonsoft.Json.Linq;
 
@@ -37,7 +36,7 @@ namespace pwiz.PanoramaClient
     internal class PanoramaFormUtil
     {
 
-        public void InitializeTreeView(PanoramaServer server, List<KeyValuePair<PanoramaServer, JToken>> listServers)
+        public void InitializeTreeServers(PanoramaServer server, List<KeyValuePair<PanoramaServer, JToken>> listServers)
         {
             IPanoramaClient panoramaClient = new WebPanoramaClient(server.URI);
             listServers.Add(new KeyValuePair<PanoramaServer, JToken>(server, panoramaClient.GetInfoForFolders(server, null)));
@@ -55,18 +54,17 @@ namespace pwiz.PanoramaClient
         {
             var uriPath = new Uri(folderPath);
             var serverText = uriPath.GetLeftPart(UriPartial.Authority);
-            var uriFolders = folderPath.Substring(string.Concat(serverText, "/_webdav").Length);
+            var uriFolders = folderPath.Substring(string.Concat(serverText, @"/_webdav").Length);
             var uriFolderTokens = uriFolders.Split('/');
-            var folder = uriFolderTokens.LastOrDefault();
             var treeNode = new TreeNode(server.URI.ToString());
-            var fileNode = new TreeNode("@files");
+            var fileNode = new TreeNode(@"@files");
             TreeNode selectedFolder = null;
             treeViewFolders.Invoke(new Action(() => treeViewFolders.Nodes.Add(treeNode)));
             treeViewFolders.Invoke(new Action(() => treeViewFolders.SelectedImageIndex = (int)ImageId.panorama));
             treeViewFolders.Invoke(new Action(() => selectedFolder = LoadFromPath(uriFolderTokens, treeNode)));
             treeViewFolders.Invoke(new Action(() => selectedFolder.Nodes.Add(fileNode)));
             treeViewFolders.Invoke(new Action(() => treeViewFolders.SelectedImageIndex = treeViewFolders.ImageIndex = (int)ImageId.folder));
-            fileNode.Tag = string.Concat(selectedFolder.Tag, "/@files");
+            fileNode.Tag = string.Concat(selectedFolder.Tag, @"/@files");
             treeViewFolders.Invoke(new Action(() => selectedFolder.Expand()));
             treeViewFolders.Invoke(new Action(() => treeViewFolders.SelectedNode = fileNode));
         }
@@ -184,7 +182,7 @@ namespace pwiz.PanoramaClient
                 if (!string.IsNullOrEmpty(folder))
                 {
                     var subfolder = new TreeNode(folder);
-                    subfolder.Tag = string.Concat(node.Tag, "/", folder);
+                    subfolder.Tag = string.Concat(node.Tag, @"/", folder);
                     subfolder.ImageIndex = subfolder.SelectedImageIndex = (int)ImageId.folder;
                     node.Nodes.Add(subfolder);
                     node = subfolder;
