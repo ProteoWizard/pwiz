@@ -388,7 +388,17 @@ namespace pwiz.Skyline
             // ReSharper restore LocalizableElement
         }
 
-        internal static int SendGa4AnalyticsHit(bool useDebugUrl = false)
+        /// <summary>
+        /// Sends a page_view to the Skyline Google Analytics 4 property.
+        /// </summary>
+        /// <param name="responseStr">The body of the HTTP response, usually expected to be empty.</param>
+        /// <param name="useDebugUrl">If true, sets _dbg=true, which sends the hit to the debug view instead of the real one.</param>
+        /// <returns>The HTTP status code of the response to the analytics hit.</returns>
+        /// <remarks>
+        /// The browser-style collect endpoint is used because GA4's Measurement Protocol does not support automatic resolution of the geographic location of the client.
+        /// The parameters are mostly gleaned from observing a browser's HTTP request to GA4 when browsing a Skyline website page.
+        /// </remarks>
+        internal static int SendGa4AnalyticsHit(out string responseStr, bool useDebugUrl = false)
         {
             // ReSharper disable LocalizableElement
             var clientId = Settings.Default.InstallationId;
@@ -424,11 +434,19 @@ namespace pwiz.Skyline
             var responseStream = response.GetResponseStream();
             if (null != responseStream)
             {
-                new StreamReader(responseStream).ReadToEnd();
+                var responseReader = new StreamReader(responseStream);
+                responseStr = responseReader.ReadToEnd();
             }
+            else
+                responseStr = string.Empty;
 
             return (int) response.StatusCode;
             // ReSharper restore LocalizableElement
+        }
+
+        internal static int SendGa4AnalyticsHit(bool useDebugUrl = false)
+        {
+            return SendGa4AnalyticsHit(out _, useDebugUrl);
         }
 
         public static void StartToolService()
