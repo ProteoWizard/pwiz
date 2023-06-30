@@ -80,6 +80,8 @@ namespace SkylineBatch
 
         private void ShowPanoramaBtn(bool show)
         {
+            if (show == btnOpenFromPanorama.Visible)
+                return;
             if (show)
             {
 
