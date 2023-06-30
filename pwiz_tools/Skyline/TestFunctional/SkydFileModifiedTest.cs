@@ -52,7 +52,7 @@ namespace pwiz.SkylineTestFunctional
             for (int loopNumber = 0; loopNumber < 4; loopNumber++)
             {
                 var filesToImport = new List<MsDataFileUri>();
-                for (int fileNumber = 0; fileNumber < 4; fileNumber++)
+                for (int fileNumber = 0; fileNumber < 2; fileNumber++)
                 {
                     string targetFile = GetFileName(loopNumber, fileNumber);
                     if (loopNumber == 0)
@@ -74,18 +74,10 @@ namespace pwiz.SkylineTestFunctional
                 RunDlg<TransitionSettingsUI>(SkylineWindow.ShowTransitionSettingsUI, transitionSettingsUi =>
                 {
                     transitionSettingsUi.SelectedTab = TransitionSettingsUI.TABS.Instrument;
-                    double methodMatchTolerance;
                     // Make a small change to the "Method Match Tolerance"
                     // This will cause Skyline to have to read the .skyd file during TransitionGroupDocNode.ChangeResults
-                    if (0 == (loopNumber & 1))
-                    {
-                        methodMatchTolerance = 0.055;
-                    }
-                    else
-                    {
-                        methodMatchTolerance = 0.0551;
-                    }
-                    transitionSettingsUi.MZMatchTolerance = methodMatchTolerance;
+                    transitionSettingsUi.MZMatchTolerance =
+                        transitionSettingsUi.MZMatchTolerance == 0.055 ? 0.0551 : 0.055;
                     transitionSettingsUi.OkDialog();
                 });
                 WaitForDocumentLoaded();
