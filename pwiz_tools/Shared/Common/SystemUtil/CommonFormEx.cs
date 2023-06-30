@@ -16,12 +16,13 @@
  * See the License for the specific language governing permissions and
  * limitations under the License.
  */
+
 using System;
 using System.Collections.Generic;
 using System.Drawing;
 using System.Windows.Forms;
 
-namespace pwiz.Common.Controls
+namespace pwiz.Common.SystemUtil
 {
     public class CommonFormEx : Form, IFormView
     {
