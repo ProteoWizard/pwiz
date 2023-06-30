@@ -852,6 +852,15 @@ namespace SkylineBatch.Properties {
         }
         
         /// <summary>
+        ///   Looks up a localized string similar to Open Remote Folder.
+        /// </summary>
+        public static string MainForm_btnOpenRemoteFolder_Click_Open_Remote_Folder {
+            get {
+                return ResourceManager.GetString("MainForm_btnOpenRemoteFolder_Click_Open_Remote_Folder", resourceCulture);
+            }
+        }
+        
+        /// <summary>
         ///   Looks up a localized string similar to Please run &quot;{0}&quot; from step 1 and try again..
         /// </summary>
         public static string MainForm_btnOpenResults_Click_Please_run___0___from_step_one_and_try_again_ {
@@ -889,12 +898,22 @@ namespace SkylineBatch.Properties {
         }
         
         /// <summary>
-        ///   Looks up a localized string similar to The template file for &quot;{0}&quot; has not been downloaded. Please run &quot;{0}&quot; and try again..
+        ///   Looks up a localized string similar to The template file for &quot;{0}&quot; has not been downloaded. Would you like to download it?.
         /// </summary>
-        public static string MainForm_btnOpenTemplate_Click_The_template_file_for___0___has_not_been_downloaded__Please_run___0___and_try_again_ {
+        public static string MainForm_btnOpenTemplate_Click_The_template_file_for___0___has_not_been_downloaded__Would_you_like_to_download_it_ {
             get {
                 return ResourceManager.GetString("MainForm_btnOpenTemplate_Click_The_template_file_for___0___has_not_been_downloade" +
-                        "d__Please_run___0___and_try_again_", resourceCulture);
+                        "d__Would_you_like_to_download_it_", resourceCulture);
+            }
+        }
+        
+        /// <summary>
+        ///   Looks up a localized string similar to The template file for {0} has not been downloaded. Please run {0} and try again..
+        /// </summary>
+        public static string MainForm_btnOpenTemplate_Click_The_template_file_for__0__has_not_been_downloaded__Please_run__0__and_try_again {
+            get {
+                return ResourceManager.GetString("MainForm_btnOpenTemplate_Click_The_template_file_for__0__has_not_been_downloaded_" +
+                        "_Please_run__0__and_try_again", resourceCulture);
             }
         }
         
@@ -1239,6 +1258,9 @@ namespace SkylineBatch.Properties {
         public static System.Drawing.Bitmap Panorama {
             get {
                 object obj = ResourceManager.GetObject("Panorama", resourceCulture);
+        public static System.Drawing.Bitmap OpenRemoteFolder {
+            get {
+                object obj = ResourceManager.GetObject("OpenRemoteFolder", resourceCulture);
                 return ((System.Drawing.Bitmap)(obj));
             }
         }

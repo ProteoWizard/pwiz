@@ -450,4 +450,13 @@ with:
   <data name="ConfigManagerState_SelectLog_No_log_at_index__" xml:space="preserve">
     <value>No log at index: </value>
   </data>
+  <data name="FileSaver_GetTempFileName_Access_Denied__unable_to_create_a_file_in_the_folder___0____Adjust_the_folder_write_permissions_or_retry_the_operation_after_moving_or_copying_files_to_a_different_folder_" xml:space="preserve">
+    <value>Access denied. Unable to create a file in the folder {0}. Adjust the folder write permissions or retry the operation after moving or copying files to a different folder.</value>
+  </data>
+  <data name="FileSaver_GetTempFileName_Failed_attempting_to_create_a_temporary_file_in_the_folder__0__with_the_following_error_" xml:space="preserve">
+    <value>Failed attempting to create a temporary file in the folder {0} with the following error </value>
+  </data>
+  <data name="FileSaver_GetTempFileName_Win32_Error__0__" xml:space="preserve">
+    <value>Win32 Error {0}</value>
+  </data>
 </root>

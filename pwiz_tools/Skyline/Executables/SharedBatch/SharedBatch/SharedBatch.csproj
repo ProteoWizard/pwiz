@@ -82,6 +82,7 @@
     <Compile Include="FilePathControl.Designer.cs">
       <DependentUpon>FilePathControl.cs</DependentUpon>
     </Compile>
+    <Compile Include="FileSaver.cs" />
     <Compile Include="FileUtil.cs" />
     <Compile Include="FindSkylineForm.cs">
       <SubType>Form</SubType>
@@ -152,6 +153,7 @@
     <EmbeddedResource Include="Properties\Resources.resx">
       <Generator>PublicResXFileCodeGenerator</Generator>
       <LastGenOutput>Resources.Designer.cs</LastGenOutput>
+      <SubType>Designer</SubType>
     </EmbeddedResource>
     <EmbeddedResource Include="ShareConfigsForm.resx">
       <DependentUpon>ShareConfigsForm.cs</DependentUpon>

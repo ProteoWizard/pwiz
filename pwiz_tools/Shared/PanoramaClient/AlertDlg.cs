@@ -23,7 +23,6 @@ using System.Linq;
 using System.Runtime.InteropServices;
 using System.Windows.Forms;
 using pwiz.Common.Controls;
-using pwiz.Common.SystemUtil;
 
 namespace pwiz.PanoramaClient
 {
@@ -52,7 +51,7 @@ namespace pwiz.PanoramaClient
             _labelPadding = messageScrollPanel.Width - labelMessage.MaximumSize.Width;
             Message = message;
             btnMoreInfo.Parent.Controls.Remove(btnMoreInfo);
-            Text = "Skyline";
+            Text = @"Skyline";
             toolStrip1.Renderer = new NoBorderSystemRenderer();
         }
 
