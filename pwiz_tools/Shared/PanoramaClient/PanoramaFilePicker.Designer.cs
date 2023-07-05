@@ -54,11 +54,14 @@ namespace pwiz.PanoramaClient
             this.forward = new System.Windows.Forms.ToolStripButton();
             this.up = new System.Windows.Forms.ToolStripButton();
             this.urlLink = new System.Windows.Forms.LinkLabel();
+            this.contextMenuStrip = new System.Windows.Forms.ContextMenuStrip(this.components);
+            this.copyLinkAddressToolStripMenuItem = new System.Windows.Forms.ToolStripMenuItem();
             ((System.ComponentModel.ISupportInitialize)(this.splitContainer1)).BeginInit();
             this.splitContainer1.Panel2.SuspendLayout();
             this.splitContainer1.SuspendLayout();
             this.panel1.SuspendLayout();
             this.toolStrip.SuspendLayout();
+            this.contextMenuStrip.SuspendLayout();
             this.SuspendLayout();
             // 
             // label3
@@ -208,8 +211,22 @@ namespace pwiz.PanoramaClient
             // 
             resources.ApplyResources(this.urlLink, "urlLink");
             this.urlLink.AutoEllipsis = true;
+            this.urlLink.ContextMenuStrip = this.contextMenuStrip;
             this.urlLink.Name = "urlLink";
             this.urlLink.LinkClicked += new System.Windows.Forms.LinkLabelLinkClickedEventHandler(this.urlLink_LinkClicked);
+            // 
+            // contextMenuStrip
+            // 
+            this.contextMenuStrip.Items.AddRange(new System.Windows.Forms.ToolStripItem[] {
+            this.copyLinkAddressToolStripMenuItem});
+            this.contextMenuStrip.Name = "contextMenuStrip";
+            resources.ApplyResources(this.contextMenuStrip, "contextMenuStrip");
+            // 
+            // copyLinkAddressToolStripMenuItem
+            // 
+            this.copyLinkAddressToolStripMenuItem.Name = "copyLinkAddressToolStripMenuItem";
+            resources.ApplyResources(this.copyLinkAddressToolStripMenuItem, "copyLinkAddressToolStripMenuItem");
+            this.copyLinkAddressToolStripMenuItem.Click += new System.EventHandler(this.copyLinkAddressToolStripMenuItem_Click);
             // 
             // PanoramaFilePicker
             // 
@@ -236,6 +253,7 @@ namespace pwiz.PanoramaClient
             this.panel1.ResumeLayout(false);
             this.toolStrip.ResumeLayout(false);
             this.toolStrip.PerformLayout();
+            this.contextMenuStrip.ResumeLayout(false);
             this.ResumeLayout(false);
             this.PerformLayout();
 
@@ -263,5 +281,7 @@ namespace pwiz.PanoramaClient
         private ColumnHeader colCreated;
         private Label noFiles;
         private LinkLabel urlLink;
+        private ContextMenuStrip contextMenuStrip;
+        private ToolStripMenuItem copyLinkAddressToolStripMenuItem;
     }
 }

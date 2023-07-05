@@ -16,8 +16,8 @@ namespace pwiz.PanoramaClient
     {
         private static JToken _runsInfoJson;
         private static JToken _sizeInfoJson;
-        private static Dictionary<long, long> _sizeDictionary = new Dictionary<long, long>();
-        private static Dictionary<long, string> _nameDictionary = new Dictionary<long, string>();
+        private static Dictionary<long, long> _sizeDictionary = new Dictionary<long, long>(); //Stores the Id of a mass spec run and its size in a dictionary
+        private static Dictionary<long, string> _nameDictionary = new Dictionary<long, string>(); //Stores the Id of a mass spec run and its name in a dictionary
         private bool _restoring;
         private int _sortColumn = -1;
         private const string EXT = ".sky";
@@ -37,19 +37,6 @@ namespace pwiz.PanoramaClient
             versionOptions.Text = RECENT_VER;
             SelectedPath = selectedPath;
             noFiles.Visible = false;
-            _restoring = false;
-        }
-
-        /// <summary>
-        /// Used for testing purposes
-        /// </summary>
-        public PanoramaFilePicker()
-        {
-            InitializeComponent();
-            _restoring = true;
-            IsLoaded = false;
-            versionOptions.Text = RECENT_VER;
-            ShowingSky = true;
             _restoring = false;
         }
 
@@ -86,7 +73,7 @@ namespace pwiz.PanoramaClient
             FolderBrowser.ShowWebDav = true;
             IsLoaded = true;
             urlLink.Text = FolderBrowser.SelectedUrl;
-            CheckEnabled();
+            UpdateButtonState();
         }
 
         /// <summary>
@@ -102,7 +89,6 @@ namespace pwiz.PanoramaClient
                 {
                     FolderBrowser.ShowWebDav = true;
                 }
-                
             }
             else
             {
@@ -117,47 +103,11 @@ namespace pwiz.PanoramaClient
         }
 
         /// <summary>
-        /// Used for testing purposes
-        /// </summary>
-        /// <param name="serverUri"></param>
-        /// <param name="user"></param>
-        /// <param name="pass"></param>
-        /// <param name="folderJson"></param>
-        /// <param name="fileJson"></param>
-        /// <param name="sizeJson"></param>
-        public void InitializeTestDialog(Uri serverUri, string user, string pass, JToken folderJson, JToken fileJson, JToken sizeJson)
-        {
-            FileJson = fileJson;
-            SizeJson = sizeJson;
-            var server = new PanoramaServer(serverUri, user, pass);
-            FolderBrowser = new PanoramaFolderBrowser(server, folderJson);
-            FolderBrowser.Dock = DockStyle.Fill;
-            splitContainer1.Panel1.Controls.Add(FolderBrowser);
-            FolderBrowser.NodeClick += FilePicker_MouseClick;
-            ActiveServer = server;
-            if (string.IsNullOrEmpty(TreeState))
-            {
-                up.Enabled = false;
-                back.Enabled = false;
-                forward.Enabled = false;
-            }
-            else
-            {
-                up.Enabled = FolderBrowser.UpEnabled();
-                back.Enabled = FolderBrowser.BackEnabled();
-                forward.Enabled = FolderBrowser.ForwardEnabled();
-            }
-            IsLoaded = true;
-        }
-
-
-        /// <summary>
         /// Builds a string that will be used as a URI to find all .sky folders
         /// </summary>
         /// <returns></returns>
         private static Uri BuildQuery(string server, string folderPath, string queryName, string folderFilter, string[] columns, string sortParam)
         {
-
             var columnsQueryParam = columns != null ? "&query.columns=" + string.Join(",", columns) : string.Empty;
             var sortQueryParam = !string.IsNullOrEmpty(sortParam) ? "&query.sort={sortParam}" : string.Empty;
             var allQueryParams = $"schemaName=targetedms&query.queryName={queryName}&query.containerFilterName={folderFilter}{columnsQueryParam}{sortQueryParam}";
@@ -176,7 +126,6 @@ namespace pwiz.PanoramaClient
             JToken json = webClient.Get(queryUri);
             return json;
         }
-
 
         /// <summary>
         /// Adds all files in a particular folder 
@@ -368,7 +317,6 @@ namespace pwiz.PanoramaClient
             }
             return result;
         }
-
 
         /// <summary>
         /// Given a folder path, try and add all .sky files inside that folder to this ListView
@@ -572,8 +520,6 @@ namespace pwiz.PanoramaClient
             }
         }
 
-
-
         /// <summary>
         /// Displays either all versions of a Skyline file, or only the most recent version
         /// </summary>
@@ -593,18 +539,7 @@ namespace pwiz.PanoramaClient
                     ActiveServer = FolderBrowser.ActiveServer;
                     AddQueryFiles((string)FolderBrowser.Clicked.Tag, versionLabel, versionOptions);
                 }
-
             }
-            
-        }
-
-        /// <summary>
-        /// Used for testing purposes
-        /// </summary>
-        public void TestCancel()
-        {
-            DialogResult = DialogResult.Cancel;
-            Close();
         }
 
         private void Cancel_Click(object sender, EventArgs e)
@@ -646,15 +581,12 @@ namespace pwiz.PanoramaClient
             }
         }
 
-
-
         private void Form1_FormClosing(object sender, FormClosingEventArgs e)
         {
             FormHasClosed = true;
             FileName = listView.SelectedItems.Count != 0 ? listView.SelectedItems[0].Text : string.Empty;
             TreeState = FolderBrowser.ClosingState();
         }
-
 
         /// <summary>
         /// Navigates to the parent folder of the currently selected folder
@@ -665,7 +597,7 @@ namespace pwiz.PanoramaClient
         private void UpButton_Click(object sender, EventArgs e)
         {
             FolderBrowser.UpClick();
-            CheckEnabled();
+            UpdateButtonState();
             forward.Enabled = false;
         }
 
@@ -679,7 +611,7 @@ namespace pwiz.PanoramaClient
         {
             back.Enabled = FolderBrowser.BackEnabled();
             FolderBrowser.BackClick();
-            CheckEnabled();
+            UpdateButtonState();
         }
 
         /// <summary>
@@ -692,45 +624,187 @@ namespace pwiz.PanoramaClient
         {
             forward.Enabled = FolderBrowser.ForwardEnabled();
             FolderBrowser.ForwardClick();
-            CheckEnabled();
+            UpdateButtonState();
         }
 
-        public void ClickBack()
-        {
-            FolderBrowser.BackClick();
-            CheckEnabled();
-        }
-
-        public void ClickForward()
-        {
-            FolderBrowser.ForwardClick();
-            CheckEnabled();
-        }
-
-        public void ClickUp()
-        {
-            FolderBrowser.UpClick();
-            CheckEnabled();
-        }
-
-        public void ClickOpen()
-        {
-            Open_Click(this, EventArgs.Empty);
-        }
-
-
-        public void FilePicker_MouseClick(object sender, EventArgs e)
+        private void FilePicker_MouseClick(object sender, EventArgs e)
         {
             up.Enabled = FolderBrowser.UpEnabled();
             forward.Enabled = false;
             back.Enabled = FolderBrowser.BackEnabled();
         }
 
-        private void CheckEnabled()
+        private void UpdateButtonState()
         {
             up.Enabled = FolderBrowser.UpEnabled();
             forward.Enabled = FolderBrowser.ForwardEnabled();
             back.Enabled = FolderBrowser.BackEnabled();
+        }
+
+        private void listView_ColumnClick(object sender, ColumnClickEventArgs e)
+        {
+            // Determine whether the column is the same as the last column clicked.
+            if (e.Column != _sortColumn)
+            {
+                // Set the sort column to the new column.
+                _sortColumn = e.Column;
+                // Set the sort order to ascending by default.
+                listView.Sorting = SortOrder.Ascending;
+            }
+            else
+            {
+                // Determine what the last sort order was and change it.
+                if (listView.Sorting == SortOrder.Ascending)
+                    listView.Sorting = SortOrder.Descending;
+                else
+                    listView.Sorting = SortOrder.Ascending;
+            }
+
+            // Call the sort method to manually sort.
+            listView.Sort();
+            // Set the ListViewItemSorter property to a new ListViewItemComparer
+            // object.
+            listView.ListViewItemSorter = new ListViewItemComparer(e.Column,
+                listView.Sorting);
+        }
+
+        private void listView_DoubleClick(object sender, EventArgs e)
+        {
+            Open_Click(this, e);
+        }
+
+        private void PanoramaFilePicker_SizeChanged(object sender, EventArgs e)
+        {
+            noFiles.Location = new Point((listView.Location.Y + listView.Width - noFiles.Width) / 2,
+                noFiles.Location.Y);
+        }
+
+        private void listView_SizeChanged(object sender, EventArgs e)
+        {
+            noFiles.Location = new Point((listView.Location.Y + listView.Width - noFiles.Width) / 2,
+                noFiles.Location.Y);
+        }
+
+        private void urlLink_LinkClicked(object sender, LinkLabelLinkClickedEventArgs e)
+        {
+            if (e.Button == MouseButtons.Right)
+            {
+                contextMenuStrip.Show();
+            }
+            else if (e.Button == MouseButtons.Left)
+            {
+                Process.Start(urlLink.Text);
+
+            }
+        }
+
+        private void copyLinkAddressToolStripMenuItem_Click(object sender, EventArgs e)
+        {
+            Clipboard.SetText(urlLink.Text);
+        }
+
+        class ListViewItemComparer : IComparer
+        {
+            private int col;
+            private SortOrder order;
+            public ListViewItemComparer(int column, SortOrder order)
+            {
+                col = column;
+                this.order = order;
+            }
+            public int Compare(object x, object y)
+            {
+                int returnVal = -1;
+                if (col == 1)
+                {
+                    var xTag = ((ListViewItem)x)?.Tag;
+                    var yTag = ((ListViewItem)y)?.Tag;
+                    if (xTag != null && yTag != null)
+                    {
+                        var xBytes = (long) xTag;
+                        var yBytes = (long) yTag;
+                        var xFS = new FileSize(xBytes);
+                        var yFS = new FileSize(yBytes);
+                        returnVal = xFS.CompareTo(yFS);
+                    }
+                }
+                else
+                {
+                    returnVal = String.CompareOrdinal(((ListViewItem)x)?.SubItems[col].Text,
+                        ((ListViewItem)y)?.SubItems[col].Text);
+                }
+                
+                // Determine whether the sort order is descending.
+                if (order == SortOrder.Descending)
+                    // Invert the value returned by String.Compare.
+                    returnVal *= -1;
+                return returnVal;
+            }
+        }
+
+        #region MethodsForTests
+        public PanoramaFilePicker()
+        {
+            InitializeComponent();
+            _restoring = true;
+            IsLoaded = false;
+            versionOptions.Text = RECENT_VER;
+            ShowingSky = true;
+            _restoring = false;
+        }
+
+        public void InitializeTestDialog(Uri serverUri, string user, string pass, JToken folderJson, JToken fileJson, JToken sizeJson)
+        {
+            FileJson = fileJson;
+            SizeJson = sizeJson;
+            var server = new PanoramaServer(serverUri, user, pass);
+            FolderBrowser = new PanoramaFolderBrowser(server, folderJson);
+            FolderBrowser.Dock = DockStyle.Fill;
+            splitContainer1.Panel1.Controls.Add(FolderBrowser);
+            FolderBrowser.NodeClick += FilePicker_MouseClick;
+            ActiveServer = server;
+            if (string.IsNullOrEmpty(TreeState))
+            {
+                up.Enabled = false;
+                back.Enabled = false;
+                forward.Enabled = false;
+            }
+            else
+            {
+                up.Enabled = FolderBrowser.UpEnabled();
+                back.Enabled = FolderBrowser.BackEnabled();
+                forward.Enabled = FolderBrowser.ForwardEnabled();
+            }
+            IsLoaded = true;
+        }
+
+        public void TestCancel()
+        {
+            DialogResult = DialogResult.Cancel;
+            Close();
+        }
+
+        public void ClickBack()
+        {
+            FolderBrowser.BackClick();
+            UpdateButtonState();
+        }
+
+        public void ClickForward()
+        {
+            FolderBrowser.ForwardClick();
+            UpdateButtonState();
+        }
+
+        public void ClickUp()
+        {
+            FolderBrowser.UpClick();
+            UpdateButtonState();
+        }
+
+        public void ClickOpen()
+        {
+            Open_Click(this, EventArgs.Empty);
         }
 
         public bool UpEnabled()
@@ -790,33 +864,6 @@ namespace pwiz.PanoramaClient
             return versionOptions.Text;
         }
 
-        private void listView_ColumnClick(object sender, ColumnClickEventArgs e)
-        {
-            // Determine whether the column is the same as the last column clicked.
-            if (e.Column != _sortColumn)
-            {
-                // Set the sort column to the new column.
-                _sortColumn = e.Column;
-                // Set the sort order to ascending by default.
-                listView.Sorting = SortOrder.Ascending;
-            }
-            else
-            {
-                // Determine what the last sort order was and change it.
-                if (listView.Sorting == SortOrder.Ascending)
-                    listView.Sorting = SortOrder.Descending;
-                else
-                    listView.Sorting = SortOrder.Ascending;
-            }
-
-            // Call the sort method to manually sort.
-            listView.Sort();
-            // Set the ListViewItemSorter property to a new ListViewItemComparer
-            // object.
-            listView.ListViewItemSorter = new ListViewItemComparer(e.Column,
-                listView.Sorting);
-        }
-
         public void ClickFile(string name)
         {
             listView.SelectedItems.Clear();
@@ -833,66 +880,6 @@ namespace pwiz.PanoramaClient
             }
         }
 
-        private void listView_DoubleClick(object sender, EventArgs e)
-        {
-            Open_Click(this, e);
-        }
-
-        private void PanoramaFilePicker_SizeChanged(object sender, EventArgs e)
-        {
-            noFiles.Location = new Point((listView.Location.Y + listView.Width - noFiles.Width) / 2,
-                noFiles.Location.Y);
-        }
-
-
-        private void listView_SizeChanged(object sender, EventArgs e)
-        {
-            noFiles.Location = new Point((listView.Location.Y + listView.Width - noFiles.Width) / 2,
-                noFiles.Location.Y);
-        }
-
-        class ListViewItemComparer : IComparer
-        {
-            private int col;
-            private SortOrder order;
-            public ListViewItemComparer(int column, SortOrder order)
-            {
-                col = column;
-                this.order = order;
-            }
-            public int Compare(object x, object y)
-            {
-                int returnVal = -1;
-                if (col == 1)
-                {
-                    var xTag = ((ListViewItem)x)?.Tag;
-                    var yTag = ((ListViewItem)y)?.Tag;
-                    if (xTag != null && yTag != null)
-                    {
-                        var xBytes = (long) xTag;
-                        var yBytes = (long) yTag;
-                        var xFS = new FileSize(xBytes);
-                        var yFS = new FileSize(yBytes);
-                        returnVal = xFS.CompareTo(yFS);
-                    }
-                }
-                else
-                {
-                    returnVal = String.CompareOrdinal(((ListViewItem)x)?.SubItems[col].Text,
-                        ((ListViewItem)y)?.SubItems[col].Text);
-                }
-                
-                // Determine whether the sort order is descending.
-                if (order == SortOrder.Descending)
-                    // Invert the value returned by String.Compare.
-                    returnVal *= -1;
-                return returnVal;
-            }
-        }
-
-        private void urlLink_LinkClicked(object sender, LinkLabelLinkClickedEventArgs e)
-        {
-            Process.Start(urlLink.Text);
-        }
+        #endregion
     }
 }

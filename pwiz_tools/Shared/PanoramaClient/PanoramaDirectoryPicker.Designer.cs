@@ -28,6 +28,7 @@
         /// </summary>
         private void InitializeComponent()
         {
+            this.components = new System.ComponentModel.Container();
             System.ComponentModel.ComponentResourceManager resources = new System.ComponentModel.ComponentResourceManager(typeof(PanoramaDirectoryPicker));
             this.folderPanel = new System.Windows.Forms.Panel();
             this.cancel = new System.Windows.Forms.Button();
@@ -37,7 +38,10 @@
             this.forward = new System.Windows.Forms.ToolStripButton();
             this.up = new System.Windows.Forms.ToolStripButton();
             this.urlLink = new System.Windows.Forms.LinkLabel();
+            this.contextMenuStrip = new System.Windows.Forms.ContextMenuStrip(this.components);
+            this.copyLinkAddressToolStripMenuItem = new System.Windows.Forms.ToolStripMenuItem();
             this.toolStrip.SuspendLayout();
+            this.contextMenuStrip.SuspendLayout();
             this.SuspendLayout();
             // 
             // folderPanel
@@ -124,6 +128,20 @@
             this.urlLink.TabIndex = 20;
             this.urlLink.LinkClicked += new System.Windows.Forms.LinkLabelLinkClickedEventHandler(this.urlLink_LinkClicked);
             // 
+            // contextMenuStrip
+            // 
+            this.contextMenuStrip.Items.AddRange(new System.Windows.Forms.ToolStripItem[] {
+            this.copyLinkAddressToolStripMenuItem});
+            this.contextMenuStrip.Name = "contextMenuStrip";
+            this.contextMenuStrip.Size = new System.Drawing.Size(181, 48);
+            // 
+            // copyLinkAddressToolStripMenuItem
+            // 
+            this.copyLinkAddressToolStripMenuItem.Name = "copyLinkAddressToolStripMenuItem";
+            this.copyLinkAddressToolStripMenuItem.Size = new System.Drawing.Size(180, 22);
+            this.copyLinkAddressToolStripMenuItem.Text = "Copy link address";
+            this.copyLinkAddressToolStripMenuItem.Click += new System.EventHandler(this.copyLinkAddressToolStripMenuItem_Click);
+            // 
             // PanoramaDirectoryPicker
             // 
             this.AutoScaleDimensions = new System.Drawing.SizeF(6F, 13F);
@@ -144,6 +162,7 @@
             this.Load += new System.EventHandler(this.DirectoryPicker_Load);
             this.toolStrip.ResumeLayout(false);
             this.toolStrip.PerformLayout();
+            this.contextMenuStrip.ResumeLayout(false);
             this.ResumeLayout(false);
             this.PerformLayout();
 
@@ -159,5 +178,7 @@
         private System.Windows.Forms.ToolStripButton forward;
         private System.Windows.Forms.ToolStripButton up;
         private System.Windows.Forms.LinkLabel urlLink;
+        private System.Windows.Forms.ContextMenuStrip contextMenuStrip;
+        private System.Windows.Forms.ToolStripMenuItem copyLinkAddressToolStripMenuItem;
     }
 }
