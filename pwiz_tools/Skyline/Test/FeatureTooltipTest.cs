@@ -41,8 +41,8 @@ namespace pwiz.SkylineTest
                 var tooltip = calculator.Tooltip;
                 if (string.IsNullOrEmpty(tooltip))
                 {
-                    Console.Out.WriteLine("<data name=\"{0}\" xml:space=\"preserve\"><value></value></data>",
-                        calculator.FullyQualifiedName);
+                    // Console.Out.WriteLine("<data name=\"{0}\" xml:space=\"preserve\"><value></value></data>",
+                    //     calculator.FullyQualifiedName);
                     missingTooltips.Add(calculator.HeaderName);
                 }
             }
