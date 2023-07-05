@@ -7,6 +7,7 @@ using System.Globalization;
 using Newtonsoft.Json.Linq;
 using System.Windows.Forms;
 using pwiz.Common.Controls;
+using pwiz.Common.SystemUtil;
 using pwiz.PanoramaClient.Properties;
 
 
@@ -556,11 +557,6 @@ namespace pwiz.PanoramaClient
                             var uri = new Uri(uriString);
                             AddChildFiles(uri);
                         }
-                        else
-                        {
-                            listView.HeaderStyle = ColumnHeaderStyle.None;
-                            noFiles.Visible = true;
-                        }
 
                         if (listView.Items.Count < 1)
                         {
@@ -818,7 +814,7 @@ namespace pwiz.PanoramaClient
             listView.Sort();
             // Set the ListViewItemSorter property to a new ListViewItemComparer
             // object.
-            this.listView.ListViewItemSorter = new ListViewItemComparer(e.Column,
+            listView.ListViewItemSorter = new ListViewItemComparer(e.Column,
                 listView.Sorting);
         }
 
@@ -900,115 +896,4 @@ namespace pwiz.PanoramaClient
             Process.Start(urlLink.Text);
         }
     }
-
-
-    class FileSizeFormatProvider : IFormatProvider, ICustomFormatter
-    {
-        public object GetFormat(Type formatType)
-        {
-            if (formatType == typeof(ICustomFormatter)) return this;
-            return null;
-        }
-
-        private const string FILE_SIZE_FORMAT = "fs";
-        private const Decimal ONE_KILO_BYTE = 1024M;
-        private const Decimal ONE_MEGA_BYTE = ONE_KILO_BYTE * 1024M;
-        private const Decimal ONE_GIGA_BYTE = ONE_MEGA_BYTE * 1024M;
-
-        public string Format(string format, object arg, IFormatProvider formatProvider)
-        {
-            if (format == null || !format.StartsWith(FILE_SIZE_FORMAT))
-            {
-                return DefaultFormat(format, arg, formatProvider);
-            }
-
-            if (arg is string)
-            {
-                return DefaultFormat(format, arg, formatProvider);
-            }
-
-            Decimal size;
-
-            try
-            {
-                size = Convert.ToDecimal(arg);
-            }
-            catch (InvalidCastException)
-            {
-                return DefaultFormat(format, arg, formatProvider);
-            }
-
-            string suffix;
-
-            if (size > ONE_GIGA_BYTE)
-            {
-                size /= ONE_GIGA_BYTE;
-                suffix = @" GB";
-            }
-            else if (size > ONE_MEGA_BYTE)
-            {
-                size /= ONE_MEGA_BYTE;
-                suffix = @" MB";
-            }
-            else if (size > ONE_KILO_BYTE)
-            {
-                size /= ONE_KILO_BYTE;
-                suffix = @" KB";
-            }
-            else
-            {
-                suffix = @" B";
-            }
-
-            string precision = format.Substring(2);
-            if (String.IsNullOrEmpty(precision))
-                precision = @"1";
-            string formatString = @"{0:N" + precision + @"}{1}";  // Avoid ReSharper analysis
-            return String.Format(formatString, size, suffix);
-        }
-
-        private static string DefaultFormat(string format, object arg, IFormatProvider formatProvider)
-        {
-            IFormattable formattableArg = arg as IFormattable;
-            if (formattableArg != null)
-            {
-                return formattableArg.ToString(format, formatProvider);
-            }
-            return arg.ToString();
-        }
-    }
-
-    struct FileSize : IComparable
-    {
-        private static readonly FileSizeFormatProvider FORMAT_PROVIDER = new FileSizeFormatProvider();
-        public static FileSizeFormatProvider FormatProvider
-        {
-            get { return FORMAT_PROVIDER; }
-        }
-        public FileSize(long byteCount) : this()
-        {
-            ByteCount = byteCount;
-        }
-
-        public long ByteCount { get; private set; }
-        public override string ToString()
-        {
-            return String.Format(FORMAT_PROVIDER, @"{0:fs}", ByteCount);
-        }
-
-        public int CompareTo(object obj)
-        {
-            if (null == obj)
-            {
-                return 1;
-            }
-            if (!(obj is FileSize))
-            {
-                throw new ArgumentException(@"Must be FileSize");
-            }
-            return ByteCount.CompareTo(((FileSize)obj).ByteCount);
-        }
-    }
-
-
 }

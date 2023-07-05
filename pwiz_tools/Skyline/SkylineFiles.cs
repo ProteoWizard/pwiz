@@ -1078,28 +1078,6 @@ namespace pwiz.Skyline
             }
         }
 
-        private string GetDownloadName(string fullPath)
-        {
-            var count = 1;
-            var fileName = fullPath;
-            var extension = Path.GetExtension(fullPath);
-            if (fullPath.EndsWith(SrmDocumentSharing.EXT_SKY_ZIP))
-            {
-                extension = SrmDocumentSharing.EXT_SKY_ZIP;
-                fileName = fileName.Replace(SrmDocumentSharing.EXT_SKY_ZIP, string.Empty);
-            }
-            fileName = Path.GetFileNameWithoutExtension(fileName);
-
-            var newName = fullPath;
-            var path = Path.GetDirectoryName(fullPath);
-            while (File.Exists(newName))
-            {
-                var formattedName = string.Format(Resources.SkylineWindow_GetDownloadName__0___1__, fileName, count++);
-                if (path != null) newName = Path.Combine(path, formattedName + extension);
-            }
-            return newName;
-        }
-
         private void saveMenuItem_Click(object sender, EventArgs e)
         {
             SaveDocument();

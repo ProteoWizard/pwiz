@@ -105,11 +105,7 @@ namespace pwiz.PanoramaClient
 
         private void DirectoryPicker_Load(object sender, EventArgs e)
         {
-            if (string.IsNullOrEmpty(OKButtonText))
-            {
-                open.Text = @"Open";
-            }
-            else
+            if (!string.IsNullOrEmpty(OKButtonText))
             {
                 open.Text = OKButtonText;
             }

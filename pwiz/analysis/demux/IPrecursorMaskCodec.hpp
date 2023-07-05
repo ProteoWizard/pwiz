@@ -169,6 +169,9 @@ namespace analysis{
         /// Returns the total number of demux'd precursor windows. This is the number of possible indices returned by SpectrumToIndices().
         virtual size_t GetNumDemuxWindows() const = 0;
 
+        /// Returns the indices of the non-overlapping edge windows removed.
+        virtual const std::vector<size_t>& GetDemuxWindowEdgesRemoved() const = 0;
+
         /// Returns the number of spectra required to cover all precursor isolation windows
         virtual int GetSpectraPerCycle() const = 0;
 

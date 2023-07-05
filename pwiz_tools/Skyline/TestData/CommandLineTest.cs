@@ -1039,7 +1039,7 @@ namespace pwiz.SkylineTestData
             doc = doc.ChangeSettings(doc.Settings.ChangeTransitionPrediction(
                 p => p.ChangeCollisionEnergy(ceRegression)));
             doc = (SrmDocument) doc.RemoveChild(doc.Children[1]);
-            new CommandLine().SaveDocument(doc, triggerPath, Console.Out);
+            new CommandLine().SaveDocument(doc, triggerPath, new StringWriter());
 
             output = RunCommand("--in=" + triggerPath,
                                 "--exp-translist-instrument=" + ExportInstrumentType.AGILENT,
@@ -1193,7 +1193,7 @@ namespace pwiz.SkylineTestData
             string schedulePath = testFilesDir.GetTestPath("BSA_Protea_label_free_20100323_meth3_multi_scheduled.sky");
             var doc = ResultsUtil.DeserializeDocument(docPath);
             doc = (SrmDocument)doc.RemoveChild(doc.Children[1]);
-            new CommandLine().SaveDocument(doc, schedulePath, Console.Out);
+            new CommandLine().SaveDocument(doc, schedulePath, new StringWriter());
             docPath = schedulePath;
 
             output = RunCommand("--in=" + docPath,
