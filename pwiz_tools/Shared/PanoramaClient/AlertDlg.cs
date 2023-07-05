@@ -22,7 +22,7 @@ using System.Drawing;
 using System.Linq;
 using System.Runtime.InteropServices;
 using System.Windows.Forms;
-using pwiz.Common.Controls;
+using pwiz.Common.SystemUtil;
 
 namespace pwiz.PanoramaClient
 {

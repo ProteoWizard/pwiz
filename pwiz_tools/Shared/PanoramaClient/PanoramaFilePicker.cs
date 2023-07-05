@@ -6,7 +6,6 @@ using System.Drawing;
 using System.Globalization;
 using Newtonsoft.Json.Linq;
 using System.Windows.Forms;
-using pwiz.Common.Controls;
 using pwiz.Common.SystemUtil;
 using pwiz.PanoramaClient.Properties;
 
