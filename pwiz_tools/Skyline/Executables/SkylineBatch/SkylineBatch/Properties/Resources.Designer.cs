@@ -898,6 +898,16 @@ namespace SkylineBatch.Properties {
         }
         
         /// <summary>
+        ///   Looks up a localized string similar to The template file for &quot;{0}&quot; has not been downloaded. Please run &quot;{0}&quot; and try again..
+        /// </summary>
+        public static string MainForm_btnOpenTemplate_Click_The_template_file_for___0___has_not_been_downloaded__Please_run___0___and_try_again_ {
+            get {
+                return ResourceManager.GetString("MainForm_btnOpenTemplate_Click_The_template_file_for___0___has_not_been_downloade" +
+                        "d__Please_run___0___and_try_again_", resourceCulture);
+            }
+        }
+        
+        /// <summary>
         ///   Looks up a localized string similar to The template file for &quot;{0}&quot; has not been downloaded. Would you like to download it?.
         /// </summary>
         public static string MainForm_btnOpenTemplate_Click_The_template_file_for___0___has_not_been_downloaded__Would_you_like_to_download_it_ {
@@ -1255,12 +1265,19 @@ namespace SkylineBatch.Properties {
         /// <summary>
         ///   Looks up a localized resource of type System.Drawing.Bitmap.
         /// </summary>
-        public static System.Drawing.Bitmap Panorama {
-            get {
-                object obj = ResourceManager.GetObject("Panorama", resourceCulture);
         public static System.Drawing.Bitmap OpenRemoteFolder {
             get {
                 object obj = ResourceManager.GetObject("OpenRemoteFolder", resourceCulture);
+                return ((System.Drawing.Bitmap)(obj));
+            }
+        }
+        
+        /// <summary>
+        ///   Looks up a localized resource of type System.Drawing.Bitmap.
+        /// </summary>
+        public static System.Drawing.Bitmap Panorama {
+            get {
+                object obj = ResourceManager.GetObject("Panorama", resourceCulture);
                 return ((System.Drawing.Bitmap)(obj));
             }
         }

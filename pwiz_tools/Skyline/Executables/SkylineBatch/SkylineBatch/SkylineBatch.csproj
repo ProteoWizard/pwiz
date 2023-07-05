@@ -337,10 +337,6 @@
       <HintPath>..\..\..\..\Shared\Lib\Newtonsoft.Json.dll</HintPath>
       <EmbedInteropTypes>False</EmbedInteropTypes>
     </Reference>
-    <Reference Include="PanoramaClient, Version=1.0.0.0, Culture=neutral, processorArchitecture=MSIL">
-      <SpecificVersion>False</SpecificVersion>
-      <HintPath>..\..\..\..\Shared\PanoramaClient\bin\x64\Debug\PanoramaClient.dll</HintPath>
-    </Reference>
     <Reference Include="pwiz.Common">
       <HintPath>..\..\..\..\Shared\Common\bin\x64\Release\pwiz.Common.dll</HintPath>
     </Reference>
@@ -414,6 +410,14 @@
     </COMReference>
   </ItemGroup>
   <ItemGroup>
+    <ProjectReference Include="..\..\..\..\Shared\Common\CommonUtil.csproj">
+      <Project>{13BF2FFB-50A1-4AB1-83A4-5733E36905CE}</Project>
+      <Name>CommonUtil</Name>
+    </ProjectReference>
+    <ProjectReference Include="..\..\..\..\Shared\PanoramaClient\PanoramaClient.csproj">
+      <Project>{bf849cf8-25d7-4619-b001-9ed8e3771c44}</Project>
+      <Name>PanoramaClient</Name>
+    </ProjectReference>
     <ProjectReference Include="..\..\SharedBatch\SharedBatch\SharedBatch.csproj">
       <Project>{9660e7b1-a0ad-4c2b-a395-350d4055640a}</Project>
       <Name>SharedBatch</Name>
