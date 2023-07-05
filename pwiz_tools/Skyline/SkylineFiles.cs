@@ -955,70 +955,68 @@ namespace pwiz.Skyline
             }
 
             try
-            { 
-                using (var dlg = new PanoramaFilePicker(panoramaServers, state, true))
+            {
+                using var dlg = new PanoramaFilePicker(panoramaServers, state, true);
+                using (var longWaitDlg = new LongWaitDlg
+                       {
+                           Text = Resources.SkylineWindow_OpenFromPanorama_Loading_remote_server_folders,
+                       })
                 {
-                    using (var longWaitDlg = new LongWaitDlg 
-                           { 
-                               Text = Resources.SkylineWindow_OpenFromPanorama_Loading_remote_server_folders,
+                    longWaitDlg.PerformWork(this, 0,
+                        () => dlg.InitializeDialog());
+                    if (longWaitDlg.IsCanceled)
+                        return;
+                }
+                if (dlg.ShowDialog() != DialogResult.Cancel)
+                {
+                    Settings.Default.PanoramaTreeState = dlg.TreeState;
+                    var folderPath = string.Empty;
+                    if (!string.IsNullOrEmpty(Settings.Default.PanoramaLocalSavePath))
+                    {
+                        folderPath = Settings.Default.PanoramaLocalSavePath;
+                    }
+                    var curServer = dlg.ActiveServer;
+
+                    var downloadPath = string.Empty;
+                    var extension = dlg.FileName.EndsWith(SrmDocumentSharing.EXT) ? SrmDocumentSharing.EXT : SrmDocument.EXT;
+                    using (var saveAsDlg = new SaveFileDialog
+                           {
+                               FileName = dlg.FileName,
+                               DefaultExt = extension,
+                               SupportMultiDottedExtensions = true,
+                               Filter = TextUtil.FileDialogFiltersAll(SrmDocument.FILTER_DOC_AND_SKY_ZIP, SrmDocumentSharing.FILTER_SHARING, SkypFile.FILTER_SKYP),
+                               InitialDirectory = folderPath,
+                               OverwritePrompt = true,
                            })
                     {
-                        longWaitDlg.PerformWork(this, 0,
-                            () => dlg.InitializeDialog());
-                        if (longWaitDlg.IsCanceled)
+                        if (saveAsDlg.ShowDialog(this) != DialogResult.OK)
+                        {
                             return;
+                        }
+
+                        Settings.Default.PanoramaLocalSavePath = Path.GetDirectoryName(saveAsDlg.FileName);
+                        var folder = Path.GetDirectoryName(saveAsDlg.FileName);
+                        if (!string.IsNullOrEmpty(folder))
+                        {
+                            downloadPath = saveAsDlg.FileName;
+                        }
                     }
-                    if (dlg.ShowDialog() != DialogResult.Cancel)
+
+                    if (!string.IsNullOrEmpty(downloadPath))
                     {
-                        Settings.Default.PanoramaTreeState = dlg.TreeState;
-                        var folderPath = string.Empty;
-                        if (!string.IsNullOrEmpty(Settings.Default.PanoramaLocalSavePath))
+                        var size = dlg.FileSize;
+                        var success = DownloadPanoramaFile(downloadPath, dlg.FileName, dlg.FileUrl, curServer, size);
+                        if (dlg.FileName.EndsWith(SrmDocumentSharing.EXT) && success)
                         {
-                            folderPath = Settings.Default.PanoramaLocalSavePath;
+                            OpenSharedFile(downloadPath);
                         }
-                        var curServer = dlg.ActiveServer;
-
-                        var downloadPath = string.Empty;
-                        var extension = dlg.FileName.EndsWith(SrmDocumentSharing.EXT) ? SrmDocumentSharing.EXT : SrmDocument.EXT;
-                        using (var saveAsDlg = new SaveFileDialog 
-                               { 
-                                   FileName = dlg.FileName, 
-                                   DefaultExt = extension, 
-                                   SupportMultiDottedExtensions = true, 
-                                   Filter = TextUtil.FileDialogFiltersAll(SrmDocument.FILTER_DOC_AND_SKY_ZIP, SrmDocumentSharing.FILTER_SHARING, SkypFile.FILTER_SKYP), 
-                                   InitialDirectory = folderPath, 
-                                   OverwritePrompt = true,
-                               })
+                        else if (dlg.FileName.EndsWith(SrmDocument.EXT) && success)
                         {
-                            if (saveAsDlg.ShowDialog(this) != DialogResult.OK)
-                            {
-                                return;
-                            }
-                            
-                            Settings.Default.PanoramaLocalSavePath = Path.GetDirectoryName(saveAsDlg.FileName);
-                            var folder = Path.GetDirectoryName(saveAsDlg.FileName);
-                            if (!string.IsNullOrEmpty(folder))
-                            {
-                                downloadPath = saveAsDlg.FileName; 
-                            }
-                        }
-
-                        if (!string.IsNullOrEmpty(downloadPath))
-                        {
-                            var size = dlg.FileSize;
-                            var success = DownloadPanoramaFile(downloadPath, dlg.FileName, dlg.FileUrl, curServer, size);
-                            if (dlg.FileName.EndsWith(SrmDocumentSharing.EXT) && success)
-                            {
-                                OpenSharedFile(downloadPath);
-                            }
-                            else if (dlg.FileName.EndsWith(SrmDocument.EXT) && success)
-                            {
-                                OpenFile(downloadPath);
-                            }
+                            OpenFile(downloadPath);
                         }
                     }
-                    Settings.Default.PanoramaTreeState = dlg.TreeState;
                 }
+                Settings.Default.PanoramaTreeState = dlg.TreeState;
             }
             catch (Exception e)
             {

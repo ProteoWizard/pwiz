@@ -799,11 +799,19 @@ namespace pwiz.PanoramaClient
     {
         private readonly PanoramaServer _server;
         private readonly bool _hasWritePermission;
+        private readonly bool _isTargetedMS;
+        private readonly string _folderPath;
 
         public FolderInformation(PanoramaServer server, bool hasWritePermission)
         {
             _server = server;
             _hasWritePermission = hasWritePermission;
+        }
+
+        public FolderInformation(string folderPath, bool isTargetedMS)
+        {
+            _folderPath = folderPath;
+            _isTargetedMS = isTargetedMS;
         }
 
         public PanoramaServer Server
@@ -814,6 +822,16 @@ namespace pwiz.PanoramaClient
         public bool HasWritePermission
         {
             get { return _hasWritePermission; }
+        }
+
+        public string FolderPath
+        {
+            get { return _folderPath; }
+        }
+
+        public bool IsTargetedMS
+        {
+            get { return _isTargetedMS; }
         }
     }
 

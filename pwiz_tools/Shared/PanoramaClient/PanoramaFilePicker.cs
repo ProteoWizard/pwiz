@@ -415,7 +415,7 @@ namespace pwiz.PanoramaClient
                     {
                         if (FolderBrowser.ShowSky)
                         {
-                            if (FolderBrowser.CurNodeIsTargetedMS.Equals(@"True"))
+                            if (FolderBrowser.CurNodeIsTargetedMS)
                             {
                                 _runsInfoJson = FileJson;
                                 _sizeInfoJson = SizeJson;
@@ -455,7 +455,7 @@ namespace pwiz.PanoramaClient
                     _restoring = false;
                     if (!string.IsNullOrEmpty(path))
                     {
-                        if (FolderBrowser.CurNodeIsTargetedMS.Equals(@"True"))
+                        if (FolderBrowser.CurNodeIsTargetedMS)
                         {
                             
                             if (FolderBrowser.ShowSky)
@@ -537,7 +537,8 @@ namespace pwiz.PanoramaClient
                 else
                 {
                     ActiveServer = FolderBrowser.ActiveServer;
-                    AddQueryFiles((string)FolderBrowser.Clicked.Tag, versionLabel, versionOptions);
+                    var folderInfo = FolderBrowser.Clicked.Tag as FolderInformation;
+                    if (folderInfo != null) AddQueryFiles(folderInfo.FolderPath, versionLabel, versionOptions);
                 }
             }
         }
@@ -563,9 +564,11 @@ namespace pwiz.PanoramaClient
                 }
                 if (FolderBrowser.ShowSky && !ShowWebDav)
                 {
-                    downloadName =
-                        string.Concat(@"_webdav", FolderBrowser.Clicked.Tag, @"/@files/", listView.SelectedItems[0]
-                            .Name); 
+                    var folderInfo = FolderBrowser.Clicked.Tag as FolderInformation;
+                    if (folderInfo != null)
+                        downloadName =
+                            string.Concat(@"_webdav", folderInfo.FolderPath, @"/@files/", listView.SelectedItems[0]
+                                .Name);
                 }
                 DownloadName = downloadName;
                 FileUrl = ActiveServer.URI + downloadName;
