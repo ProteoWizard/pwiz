@@ -56,6 +56,8 @@ namespace pwiz.Skyline.FileUI
         private readonly MassListInputs _inputs;
         private readonly IdentityPath _insertPath;
 
+        private List<TransitionImportErrorInfo> errorList = new List<TransitionImportErrorInfo>();
+
         // For associating proteins
         private string[] _originalLines;
         private readonly NodeTip _proteinTip;
@@ -1064,11 +1066,9 @@ namespace pwiz.Skyline.FileUI
             Assume.IsTrue(isAssociated || !isAssociateProteins, @"expected a complete associate proteins preview");
 
             // Check for errors is expensive with associate proteins, if a known good check exists
-            if (IsCheckForErrorsNecessary(isAssociateProteins)) // Something changed in headers selection since last association
-            {
-                if (CheckForErrors(true)) // Look for errors, be silent on success
-                    return;
-            }
+            var needsCheck = IsCheckForErrorsNecessary(isAssociateProteins); // Only recheck if something changed in headers selection since last association
+            if (CheckForErrors(true, needsCheck)) // Look for errors, be silent on success
+                return;
 
             if (InsertionParams == null && isAssociateProteins && !checkBoxAssociateProteins.Checked)
             {
@@ -1102,7 +1102,7 @@ namespace pwiz.Skyline.FileUI
 
         public void CheckForErrors()
         {
-            CheckForErrors(false);
+            CheckForErrors(false, true); // Look for errors, update cached errors
         }
 
         private List<string> MissingEssentialColumns { get; set; }
@@ -1276,71 +1276,82 @@ namespace pwiz.Skyline.FileUI
         /// Return false if no errors found.
         /// </summary>
         /// <param name="silentSuccess">If true, don't show the confirmation dialog when there are no errors</param>
+        /// <param name="needsCheck">If true, always repopulate errorList</param>
         /// <returns>True if list contains any errors and user does not elect to ignore them</returns>
-        private bool CheckForErrors(bool silentSuccess)
+        private bool CheckForErrors(bool silentSuccess, bool needsCheck)
         {
-            var insertionParams = new DocumentChecked();
-            bool hasHeaders = Importer.RowReader.Indices.Headers != null;
-            List<TransitionImportErrorInfo> testErrorList = null;
-            var errorCheckCanceled = true;
-            insertionParams.ColSelections = CurrentColSelections();
-
-            if (checkBoxAssociateProteins.Checked)
+            var errorCheckCanceled = needsCheck; // If we're checking, assume the worst until proven otherwise
+            var insertionParams = needsCheck? new DocumentChecked() : InsertionParams;
+            if (needsCheck)
             {
-                if (!UpdateProteinAssociationState(AssociateProteinsMode.all_interactive))
-                {
-                    // User canceled
-                    _associateProteinsMode = AssociateProteinsMode.preview; // Restore context for further user column interactions
-                    return false;
-                }
-            }
+                bool hasHeaders = Importer.RowReader.Indices.Headers != null;
+                insertionParams.ColSelections = CurrentColSelections();
 
-            try
-            {
-                using var longWaitDlg = new LongWaitDlg
-                    {Text = Resources.ImportTransitionListColumnSelectDlg_CheckForErrors_Checking_for_errors___};
-                longWaitDlg.PerformWork(this, 1000, progressMonitor =>
+                if (checkBoxAssociateProteins.Checked)
                 {
-
-                    var columns = Importer.RowReader.Indices;
-                    MissingEssentialColumns = new List<string>();
-                    if (radioPeptide.Checked)
+                    if (!UpdateProteinAssociationState(AssociateProteinsMode.all_interactive))
                     {
-                        CheckEssentialColumn(new Tuple<int, string>(columns.PeptideColumn,
-                            Resources.ImportTransitionListColumnSelectDlg_PopulateComboBoxes_Peptide_Modified_Sequence));
-                        CheckEssentialColumn(new Tuple<int, string>(columns.PrecursorColumn,
-                            Resources.ImportTransitionListColumnSelectDlg_PopulateComboBoxes_Precursor_m_z));
-                        CheckEssentialColumn(new Tuple<int, string>(columns.ProductColumn,
-                            Resources.ImportTransitionListColumnSelectDlg_PopulateComboBoxes_Product_m_z));
+                        // User canceled
+                        _associateProteinsMode = AssociateProteinsMode.preview; // Restore context for further user column interactions
+                        return false;
+                    }
+                }
+
+                try
+                {
+                    errorList?.Clear(); // Looking for a new set of errors
+
+                    using var longWaitDlg = new LongWaitDlg
+                        {Text = Resources.ImportTransitionListColumnSelectDlg_CheckForErrors_Checking_for_errors___};
+                    longWaitDlg.PerformWork(this, 1000, progressMonitor =>
+                    {
+
+                        var columns = Importer.RowReader.Indices;
+                        MissingEssentialColumns = new List<string>();
+                        if (radioPeptide.Checked)
+                        {
+                            CheckEssentialColumn(new Tuple<int, string>(columns.PeptideColumn,
+                                Resources.ImportTransitionListColumnSelectDlg_PopulateComboBoxes_Peptide_Modified_Sequence));
+                            CheckEssentialColumn(new Tuple<int, string>(columns.PrecursorColumn,
+                                Resources.ImportTransitionListColumnSelectDlg_PopulateComboBoxes_Precursor_m_z));
+                            CheckEssentialColumn(new Tuple<int, string>(columns.ProductColumn,
+                                Resources.ImportTransitionListColumnSelectDlg_PopulateComboBoxes_Product_m_z));
+                        }
+                        else
+                        {
+                            CheckMoleculeColumns();
+                        }
+
+                        insertionParams.ProteinAssociations = checkBoxAssociateProteins.Checked && Importer.RowReader.Indices.ProteinColumn == 0
+                            ? _dictNameSeq
+                            : new Dictionary<string, FastaSequence>();
+                        insertionParams.Document = _docCurrent.ImportMassList(_inputs, Importer, progressMonitor,
+                            _insertPath, out insertionParams.SelectPath, out insertionParams.IrtPeptides,
+                            out insertionParams.LibrarySpectra, out var testErrorList, out insertionParams.PeptideGroups, insertionParams.ColSelections, GetRadioType(), hasHeaders, 
+                            insertionParams.ProteinAssociations);
+                        errorCheckCanceled = progressMonitor.IsCanceled;
+                        if (!errorCheckCanceled)
+                        {
+                            if (testErrorList != null && testErrorList.Any())
+                            {
+                                errorList?.AddRange(testErrorList);
+                            }
+                        }
+                    });
+                }
+                catch (Exception exception)
+                {
+                    if (ExceptionUtil.IsProgrammingDefect(exception))
+                    {
+                        Program.ReportException(exception);
                     }
                     else
                     {
-                        CheckMoleculeColumns();
+                        MessageDlg.ShowWithException(this, exception.Message, exception);
                     }
-
-                    insertionParams.ProteinAssociations = checkBoxAssociateProteins.Checked && Importer.RowReader.Indices.ProteinColumn == 0
-                        ? _dictNameSeq
-                        : new Dictionary<string, FastaSequence>();
-                    insertionParams.Document = _docCurrent.ImportMassList(_inputs, Importer, progressMonitor,
-                        _insertPath, out insertionParams.SelectPath, out insertionParams.IrtPeptides,
-                        out insertionParams.LibrarySpectra, out testErrorList, out insertionParams.PeptideGroups, insertionParams.ColSelections, GetRadioType(), hasHeaders, 
-                        insertionParams.ProteinAssociations);
-                    errorCheckCanceled = progressMonitor.IsCanceled;
-                });
-            }
-            catch (Exception exception)
-            {
-                if (ExceptionUtil.IsProgrammingDefect(exception))
-                {
-                    Program.ReportException(exception);
+                    Assume.IsTrue(errorCheckCanceled);
                 }
-                else
-                {
-                    MessageDlg.ShowWithException(this, exception.Message, exception);
-                }
-                Assume.IsTrue(errorCheckCanceled);
             }
-
             var isErrorAll = ReferenceEquals(insertionParams.Document, _docCurrent);
 
             // If there is at least one valid transition, the document is being imported, and a combo box has been changed,
@@ -1357,7 +1368,7 @@ namespace pwiz.Skyline.FileUI
                 return true; // User cancelled, we can't say that there are no errors
             }
 
-            if (testErrorList != null && testErrorList.Any())
+            if (errorList != null && errorList.Any())
             {
                 _associateProteinsMode = AssociateProteinsMode.preview; // Restore context for further user column interactions
                 // There are errors, show them to user
@@ -1372,7 +1383,7 @@ namespace pwiz.Skyline.FileUI
                 }
                 else
                 {
-                    using (var dlg = new ImportTransitionListErrorDlg(testErrorList, isErrorAll, silentSuccess))
+                    using (var dlg = new ImportTransitionListErrorDlg(errorList, isErrorAll, silentSuccess))
                     {
                         if (dlg.ShowDialog(this) != DialogResult.OK)
                             return true; // There are errors, and user does not want to ignore them
