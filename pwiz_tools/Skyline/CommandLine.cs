@@ -21,6 +21,7 @@ using System.Collections.Generic;
 using System.Diagnostics;
 using System.IO;
 using System.Linq;
+using System.Runtime.CompilerServices;
 using System.Text;
 using System.Text.RegularExpressions;
 using System.Threading;
@@ -971,6 +972,9 @@ namespace pwiz.Skyline
             parts.Add(string.Format("Name={0}", optimizationLibrary.Name == null ? "(null)" : "\"" + optimizationLibrary.Name + "\""));
             parts.Add(string.Format("DatabasePath={0}", optimizationLibrary.DatabasePath == null ? "(null)" : "\"" + optimizationLibrary.DatabasePath + "\""));
             parts.Add(string.Format("_database.HashCode={0}", optimizationLibrary._database?.GetHashCode()));
+            parts.Add(string.Format("RuntimeHelpers.GetHashCode={0}", RuntimeHelpers.GetHashCode(optimizationLibrary)));
+            parts.Add(string.Format("ReferenceEqualsNone={0}", ReferenceEquals(optimizationLibrary, OptimizationLibrary.NONE)));
+            parts.Add(string.Format("EqualsNone={0}", Equals(optimizationLibrary, OptimizationLibrary.NONE)));
             return TextUtil.SpaceSeparate(parts);
         }
 
