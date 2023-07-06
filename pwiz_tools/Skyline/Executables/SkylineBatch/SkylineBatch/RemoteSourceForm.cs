@@ -1,9 +1,16 @@
 ﻿using System;
+using System.Collections.Generic;
 using System.Collections.Immutable;
+using System.Drawing;
+using System.Net.Configuration;
 using System.Threading;
 using System.Windows.Forms;
 using SharedBatch;
 using SkylineBatch.Properties;
+using pwiz.PanoramaClient;
+using PanoramaServer = pwiz.PanoramaClient.PanoramaServer;
+using AlertDlg = SharedBatch.AlertDlg;
+using Newtonsoft.Json.Linq;
 
 namespace SkylineBatch
 {
@@ -18,9 +25,14 @@ namespace SkylineBatch
         private readonly SkylineBatchConfigManagerState _initialState;
         private readonly bool _preferPanoramaSource;
 
-        public RemoteSourceForm(RemoteFileSource editingRemoteSource, IMainUiControl mainControl, SkylineBatchConfigManagerState state, bool preferPanoramaSource)
+        public RemoteSourceForm(RemoteFileSource editingRemoteSource, IMainUiControl mainControl,
+            SkylineBatchConfigManagerState state, bool preferPanoramaSource)
         {
             InitializeComponent();
+            Bitmap bmp = (Bitmap)this.btnOpenFromPanorama.Image;
+            bmp.MakeTransparent(bmp.GetPixel(0,0));
+
+
             _remoteFileSources = state.FileSources;
             _editingSourceName = null;
             _mainControl = mainControl;
@@ -45,6 +57,9 @@ namespace SkylineBatch
 
         public RemoteFileSource RemoteFileSource { get; private set; }
         public SkylineBatchConfigManagerState State { get; private set; }
+        private bool PanoramaSource { get; set; }
+        private string SelectedPath { get; set; }
+
 
         private void textPassword_TextChanged(object sender, EventArgs e)
         {
@@ -64,20 +79,25 @@ namespace SkylineBatch
 
             if (_remoteFileSources.ContainsKey(textName.Text) && !textName.Text.Equals(_editingSourceName))
             {
-                AlertDlg.ShowError(this, Program.AppName(), string.Format(Resources.RemoteSourceForm_btnSave_Click_Another_remote_file_location_with_the_name__0__already_exists__Please_choose_a_unique_name_, textName.Text));
+                AlertDlg.ShowError(this, Program.AppName(),
+                    string.Format(
+                        Resources
+                            .RemoteSourceForm_btnSave_Click_Another_remote_file_location_with_the_name__0__already_exists__Please_choose_a_unique_name_,
+                        textName.Text));
                 return;
             }
 
             try
             {
                 RemoteFileSource = RemoteFileSource.RemoteSourceFromUi(textName.Text, textFolderUrl.Text,
-                    textUserName.Text, textPassword.Text, !checkBoxNoEncryption.Checked);
+                    textUserName.Text, textPassword.Text, !checkBoxNoEncryption.Checked, PanoramaSource, SelectedPath);
                 if (_adding)
                     State.UserAddRemoteFileSource(RemoteFileSource, _preferPanoramaSource, _mainControl);
                 else
                 {
                     State.ReplaceRemoteFileSource(_initialRemoteSource, RemoteFileSource, _mainControl);
                 }
+
                 DialogResult = DialogResult.OK;
             }
             catch (ArgumentException ex)
@@ -101,5 +121,75 @@ namespace SkylineBatch
         {
             State = _initialState;
         }
+
+        public void ConfigurePanoramaServer(string serverUrl, string userName, string password)
+        {
+            textServerName.Text = serverUrl;
+            textUserName.Text = userName;
+            textPassword.Text = password;
+        }
+
+        public void btn_OpenFromPanorama(object sender, EventArgs args)
+        {
+            OpenFromPanorama();
+        }
+
+
+        public void OpenFromPanorama(string server, string user, string pass, JToken folderJson)
+        {
+            using var dlg = new PanoramaDirectoryPicker();
+            dlg.InitializeTestDialog(new Uri(server), user, pass, folderJson);
+            if (dlg.ShowDialog() != DialogResult.Cancel)
+            {
+
+            }
+        }
+
+        public void OpenFromPanorama()
+        {
+            PanoramaServer server;
+            if (textUserName.Text != "" && textPassword.Text != "")
+            {
+                server = new PanoramaServer(new Uri(textServerName.Text), textUserName.Text,textPassword.Text);
+
+            }
+            else
+            {
+                server = new PanoramaServer(new Uri(textServerName.Text));
+            }
+            var panoramaServers = new List<PanoramaServer>() { server };
+
+            var state = string.Empty;
+            // if (!string.IsNullOrEmpty(Settings.Default.PanoramaTreeState))
+            // {
+            //     state = Settings.Default.PanoramaTreeState;
+            // }
+
+            var decodedUrl = Uri.UnescapeDataString(textFolderUrl.Text).Replace("@files/", "");
+            try
+            {
+                
+                using (PanoramaDirectoryPicker dlg = new PanoramaDirectoryPicker(panoramaServers, state, showWebDavFolders:false, selectedPath:decodedUrl))
+                {
+                    if (dlg.ShowDialog() != DialogResult.Cancel)
+                    {
+                        string url = $"{dlg.Selected}/@files/";
+                        textFolderUrl.Text = url;
+                        PanoramaSource = true; // if you select a folder then manually change the folder, PanoramaSource will still be true
+                        SelectedPath = $"{dlg.Selected}";
+                    }
+
+                    Settings.Default.PanoramaTreeState = dlg.State;
+                }
+               
+            }
+            catch (Exception e)
+            {
+                AlertDlg.ShowError(this, Program.AppName(), e.Message);
+            }
+
+            Settings.Default.Save();
+        }
+
     }
 }

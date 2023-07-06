@@ -17,12 +17,12 @@ namespace SkylineBatch
         private readonly string _filter;
         private EventHandler _addedPathChangedHandler;
         private IMainUiControl _mainControl;
-
+        private bool _templateFile;
         private Action<SkylineBatchConfigManagerState> _setMainState;
         private Func<SkylineBatchConfigManagerState> _getMainState;
 
         public DownloadingFileControl(string label, string variableDescription, string initialPath, string filter, Server server, bool isDataServer, string toolTip, IMainUiControl mainControl, 
-            Action<SkylineBatchConfigManagerState> setMainState, Func<SkylineBatchConfigManagerState> getMainState)
+            Action<SkylineBatchConfigManagerState> setMainState, Func<SkylineBatchConfigManagerState> getMainState, bool templateFile = false)
         {
             InitializeComponent();
 
@@ -35,7 +35,7 @@ namespace SkylineBatch
             _mainControl = mainControl;
             _setMainState = setMainState;
             _getMainState = getMainState;
-
+            _templateFile = templateFile;
             labelPath.Text = string.Format(Resources.DownloadingFileControl_DownloadingFileControl__0__, label);
             ToggleDownload(Server != null);
             textPath.Text = Path;
@@ -187,7 +187,7 @@ namespace SkylineBatch
             }
             else
             {
-                var addPanoramaTemplate = new RemoteFileForm(Server, textPath.Text, string.Format("Download {0} From Panorama", _variableDescription), _mainControl, _getMainState());
+                var addPanoramaTemplate = new RemoteFileForm(Server, textPath.Text, string.Format("Download {0} From Panorama", _variableDescription), _mainControl, _getMainState(), _templateFile);
                 if (DialogResult.OK == addPanoramaTemplate.ShowDialog(this))
                 {
                     _setMainState(addPanoramaTemplate.State);

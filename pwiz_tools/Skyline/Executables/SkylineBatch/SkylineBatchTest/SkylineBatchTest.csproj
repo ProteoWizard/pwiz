@@ -36,6 +36,11 @@
     <WarningLevel>4</WarningLevel>
   </PropertyGroup>
   <ItemGroup>
+    <Reference Include="Newtonsoft.Json, Version=11.0.0.0, Culture=neutral, PublicKeyToken=30ad4fe6b2a6aeed, processorArchitecture=MSIL">
+      <SpecificVersion>False</SpecificVersion>
+      <HintPath>..\..\..\..\Shared\Lib\Newtonsoft.Json.dll</HintPath>
+    </Reference>
+    <Reference Include="pwiz.Common, Version=1.0.0.0, Culture=neutral, PublicKeyToken=null" />
     <Reference Include="System" />
     <Reference Include="System.Collections.Immutable, Version=1.2.3.0, Culture=neutral, PublicKeyToken=b03f5f7f11d50a3a, processorArchitecture=MSIL">
       <SpecificVersion>False</SpecificVersion>
@@ -80,6 +85,10 @@
     <Compile Include="ConfigManagerThreadingTest.cs" />
   </ItemGroup>
   <ItemGroup>
+    <ProjectReference Include="..\..\..\..\Shared\PanoramaClient\PanoramaClient.csproj">
+      <Project>{bf849cf8-25d7-4619-b001-9ed8e3771c44}</Project>
+      <Name>PanoramaClient</Name>
+    </ProjectReference>
     <ProjectReference Include="..\..\SharedBatch\SharedBatchTest\SharedBatchTest.csproj">
       <Project>{4955f974-381e-4902-8bad-bac7174cfc9f}</Project>
       <Name>SharedBatchTest</Name>
