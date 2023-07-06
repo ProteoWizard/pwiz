@@ -17,7 +17,6 @@
  */
 
 using Microsoft.VisualStudio.TestTools.UnitTesting;
-using System;
 using System.Collections.Generic;
 using System.IO;
 using System.Linq;
@@ -35,7 +34,7 @@ namespace pwiz.SkylineTest
     {
         const string TEST_ZIP_PATH = @"Test\EncyclopeDiaHelpersTest.zip";
 
-        [TestMethod]
+        [TestMethod, NoParallelTesting(TestExclusionReason.SHARED_DIRECTORY_WRITE)]
         public void TestConvertFastaToPrositInputCsv()
         {
             TestFilesDir = new TestFilesDir(TestContext, TEST_ZIP_PATH);
@@ -51,7 +50,7 @@ namespace pwiz.SkylineTest
                 MinMz = 690,
                 MaxMz = 705
             };
-            var pm = new CommandProgressMonitor(Console.Out, new ProgressStatus());
+            var pm = new CommandProgressMonitor(new StringWriter(), new ProgressStatus());
             IProgressStatus status = new ProgressStatus();
             EncyclopeDiaHelpers.ConvertFastaToPrositInputCsv(fastaFilepath, prositCsvOutputFilepath, pm, ref status, testConfig);
             Assert.IsTrue(File.Exists(prositCsvOutputFilepath));
@@ -76,7 +75,7 @@ namespace pwiz.SkylineTest
             {
                 string prositBlibOutputFilepath = TestFilesDir.GetTestPath("pan_human_library_690to705-z3_nce33-output.blib");
                 string dlibExpectedTsvFilepath = TestFilesDir.GetTestPath("pan_human_library_690to705-z3_nce33-expected-dlib.tsv");
-                var pm = new CommandProgressMonitor(Console.Out, new ProgressStatus());
+                var pm = new CommandProgressMonitor(new StringWriter(), new ProgressStatus());
                 EncyclopeDiaHelpers.ConvertPrositOutputToDlib(prositBlibOutputFilepath, fastaFilepath, dlibFilepath, pm, ref status);
                 Assert.IsTrue(File.Exists(dlibFilepath));
                 var actual = SqliteOperations.DumpTable(dlibFilepath, "entries");
@@ -93,7 +92,7 @@ namespace pwiz.SkylineTest
                     PercolatorTrainingFDR = 0.1,
                     PercolatorThreshold = 0.1,
                 };
-                var pm = new CommandProgressMonitor(Console.Out, new ProgressStatus());
+                var pm = new CommandProgressMonitor(new StringWriter(), new ProgressStatus());
                 EncyclopeDiaHelpers.GenerateChromatogramLibrary(dlibFilepath, elibFilepath, fastaFilepath,
                     new MsDataFileUri[]
                     {
@@ -120,7 +119,7 @@ namespace pwiz.SkylineTest
                     NumberOfQuantitativePeaks = 0,
                     V2scoring = false
                 };
-                var pm = new CommandProgressMonitor(Console.Out, new ProgressStatus());
+                var pm = new CommandProgressMonitor(new StringWriter(), new ProgressStatus());
                 EncyclopeDiaHelpers.GenerateQuantLibrary(elibFilepath, elibQuantFilepath, fastaFilepath,
                     new MsDataFileUri[]
                     {

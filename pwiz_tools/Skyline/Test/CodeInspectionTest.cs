@@ -35,7 +35,8 @@ using System.Text.RegularExpressions;
 using System.Threading;
 using System.Windows.Forms;
 using Microsoft.VisualStudio.TestTools.UnitTesting;
-using pwiz.Common.Controls;
+using pwiz.Common.DataBinding.Controls.Editor;
+using pwiz.Common.SystemUtil;
 using pwiz.Skyline;
 using pwiz.Skyline.Controls;
 using pwiz.Skyline.Controls.Databinding;
@@ -420,7 +421,20 @@ namespace pwiz.SkylineTest
                 foreach (var formType in formTypes)
                 {
                     // Now find all forms that inherit from formType
-                    var assembly = formType == typeof(Form) ? Assembly.GetAssembly(typeof(FormEx)) : Assembly.GetAssembly(formType);
+                    // Search for forms in the same assembly as the base class with a few exceptions
+                    Assembly assembly;
+                    if (formType == typeof(Form))
+                    {
+                        assembly = typeof(SkylineWindow).Assembly;
+                    }
+                    else if (formType == typeof(CommonFormEx))
+                    {
+                        assembly = typeof(ViewEditor).Assembly;
+                    }
+                    else
+                    {
+                        assembly = formType.Assembly;
+                    }
                     foreach (var form in assembly.GetTypes()
                         .Where(t => (t.IsClass && !t.IsAbstract && t.IsSubclassOf(formType)) || // Form type match
                                     formType.IsAssignableFrom(t))) // Interface type match

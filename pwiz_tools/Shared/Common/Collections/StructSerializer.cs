@@ -172,7 +172,17 @@ namespace pwiz.Common.Collections
             {
                 return null;
             }
-            return DirectSerializer.ReadArray(fileStream, count);
+
+            try
+            {
+                return DirectSerializer.ReadArray(fileStream, count);
+            }
+            catch (ObjectDisposedException objectDisposedException)
+            {
+                // If "ObjectDisposedException" is thrown, change it to IOException so that
+                // ExceptionUtil.IsProgrammingDefect accepts it.
+                throw new IOException(objectDisposedException.Message, objectDisposedException);
+            }
         }
 
         protected bool TryFastWrite(Stream stream, TItem[] items)
