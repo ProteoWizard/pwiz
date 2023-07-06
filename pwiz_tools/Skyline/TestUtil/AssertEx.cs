@@ -834,7 +834,8 @@ namespace pwiz.SkylineTestUtil
         }
 
         public static void NoDiff(string target, string actual, string helpMsg=null, 
-            Dictionary<int, double> columnTolerances = null) // Per-column numerical tolerances if strings can be read as TSV, "-1" means any column
+            Dictionary<int, double> columnTolerances = null, // Per-column numerical tolerances if strings can be read as TSV, "-1" means any column
+            bool ignorePathDifferences = false)
         {
             if (helpMsg == null)
                 helpMsg = String.Empty;
@@ -866,7 +867,7 @@ namespace pwiz.SkylineTestUtil
                     var expectedLine = lineTarget;
                     var actualLine = lineActual;
 
-                    if (ignorePathDiferences)
+                    if (ignorePathDifferences)
                     {
                         RemovePathDifferences(ref lineTarget, ref lineActual);
                     }
