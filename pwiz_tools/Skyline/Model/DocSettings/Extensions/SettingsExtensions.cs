@@ -17,7 +17,9 @@
  * limitations under the License.
  */
 
+using System;
 using System.Collections.Generic;
+using pwiz.Common.SystemUtil;
 
 namespace pwiz.Skyline.Model.DocSettings.Extensions
 {
@@ -74,7 +76,13 @@ namespace pwiz.Skyline.Model.DocSettings.Extensions
         public static SrmSettings ChangeTransitionPrediction(this SrmSettings settings,
             ChangeFunc<TransitionPrediction> change)
         {
-            return settings.ChangeTransitionSettings(setT => setT.ChangePrediction(change(setT.Prediction)));
+            return settings.ChangeTransitionSettings(setT =>
+            {
+                Console.Out.WriteLine("Old Prediction: {0}", DebugUtil.ObjectToString(setT.Prediction));
+                var result = setT.ChangePrediction(change(setT.Prediction));
+                Console.Out.WriteLine("New Prediction: {0}", result.Prediction);
+                return result;
+            });
         }
 
         public static SrmSettings ChangeTransitionFilter(this SrmSettings settings,
