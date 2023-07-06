@@ -19,9 +19,12 @@
 
 using Microsoft.VisualStudio.TestTools.UnitTesting;
 using pwiz.ProteowizardWrapper;
+using pwiz.Skyline;
 using pwiz.Skyline.Model;
 using pwiz.Skyline.Model.Results;
 using pwiz.SkylineTestUtil;
+using System;
+using pwiz.Skyline.Properties;
 
 namespace pwiz.SkylineTestData.Results
 {
@@ -36,6 +39,13 @@ namespace pwiz.SkylineTestData.Results
         [TestMethod]
         public void AgilentFileTypeTest()
         {
+            Console.Out.WriteLine("AgilentFileTypeTest Settings.Default.OptimizationLibraryList = [");
+            foreach (var optimizationLibrary in Settings.Default.OptimizationLibraryList)
+            {
+                Console.Out.WriteLine("{0},", CommandLine.OptimizationLibraryToString(optimizationLibrary));
+            }
+            Console.Out.WriteLine("];");
+
             TestFilesDir = new TestFilesDir(TestContext, ZIP_FILE);
 
             string extRaw = ExtensionTestContext.ExtAgilentRaw;

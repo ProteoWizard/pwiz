@@ -961,7 +961,7 @@ namespace pwiz.Skyline
             }
         }
 
-        private string OptimizationLibraryToString(OptimizationLibrary optimizationLibrary)
+        public static string OptimizationLibraryToString(OptimizationLibrary optimizationLibrary)
         {
             if (optimizationLibrary == null)
             {
