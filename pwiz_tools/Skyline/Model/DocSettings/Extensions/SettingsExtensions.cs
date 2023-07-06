@@ -80,7 +80,7 @@ namespace pwiz.Skyline.Model.DocSettings.Extensions
             {
                 Console.Out.WriteLine("Old Prediction: {0}", DebugUtil.ObjectToString(setT.Prediction));
                 var result = setT.ChangePrediction(change(setT.Prediction));
-                Console.Out.WriteLine("New Prediction: {0}", result.Prediction);
+                Console.Out.WriteLine("New Prediction: {0}", DebugUtil.ObjectToString(result.Prediction));
                 return result;
             });
         }
