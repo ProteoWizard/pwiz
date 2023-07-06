@@ -35,7 +35,7 @@ namespace pwiz.Skyline.Model.Optimization
     {
         public static readonly OptimizationLibrary NONE = new OptimizationLibrary(@"None", string.Empty);
 
-        private OptimizationDb _database;
+        public OptimizationDb _database;
 
         public OptimizationLibrary(string name, string databasePath)
             : base(name)

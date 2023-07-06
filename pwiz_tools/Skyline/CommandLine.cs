@@ -943,7 +943,11 @@ namespace pwiz.Skyline
                     if (commandArgs.PredictCoVName != null)
                         p = p.ChangeCompensationVoltage(Settings.Default.GetCompensationVoltageByName(commandArgs.PredictCoVName));
                     if (commandArgs.PredictOpimizationLibraryName != null)
+                    {
+                        Console.Out.WriteLine("Old library: {0}", OptimizationLibraryToString(p.OptimizedLibrary));
                         p = p.ChangeOptimizationLibrary(Settings.Default.GetOptimizationLibraryByName(commandArgs.PredictOpimizationLibraryName));
+                        Console.Out.WriteLine("New library: {0}", OptimizationLibraryToString(p.OptimizedLibrary));
+                    }
                     return p;
                 })), AuditLogEntry.SettingsLogFunction);
                 return true;
@@ -954,6 +958,20 @@ namespace pwiz.Skyline
                 _out.WriteLine(x.Message);
                 return false;
             }
+        }
+
+        private string OptimizationLibraryToString(OptimizationLibrary optimizationLibrary)
+        {
+            if (optimizationLibrary == null)
+            {
+                return "{null}";
+            }
+
+            var parts = new List<string>();
+            parts.Add(string.Format("Name={0}", optimizationLibrary.Name == null ? "(null)" : "\"" + optimizationLibrary.Name + "\""));
+            parts.Add(string.Format("DatabasePath={0}", optimizationLibrary.DatabasePath == null ? "(null)" : "\"" + optimizationLibrary.DatabasePath + "\""));
+            parts.Add(string.Format("_database.HashCode={0}", optimizationLibrary._database?.GetHashCode()));
+            return TextUtil.SpaceSeparate(parts);
         }
 
         private bool SetLibrarySettings(CommandArgs commandArgs)
