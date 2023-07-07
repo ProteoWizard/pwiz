@@ -162,8 +162,9 @@ namespace pwiz.PanoramaClient
                         var link = (string)file[@"href"];
                         link = link.Substring(1);
                         var size = (long)file[@"size"];
-                        var sizeObj = new FileSize(size);
-                        listItem[1] = sizeObj.ToString();
+                        var sizeObj = new FileSizeFormatProvider();
+                        var sizeString = sizeObj.Format(@"fs1", size, sizeObj);
+                        listItem[1] = sizeString;
                         listItem[4] = (string)file[@"creationdate"];
                         var fileNode = fileName.EndsWith(EXT) ? new ListViewItem(listItem, 1) : new ListViewItem(listItem, 0);
                         fileNode.Tag = size;
@@ -237,8 +238,9 @@ namespace pwiz.PanoramaClient
 
                             if (size > 0)
                             {
-                                var sizeObj = new FileSize(size);
-                                result[1] = sizeObj.ToString();
+                                var sizeObj = new FileSizeFormatProvider();
+                                var sizeString = sizeObj.Format(@"fs1", size, sizeObj);
+                                result[1] = sizeString;
                             }
                         }
                         catch (Exception e)
@@ -321,10 +323,7 @@ namespace pwiz.PanoramaClient
         /// <summary>
         /// Given a folder path, try and add all .sky files inside that folder to this ListView
         /// </summary>
-        /// <param name="nodePath"></param>
-        /// <param name="l"></param>
-        /// <param name="options"></param>
-        private void AddQueryFiles(string nodePath, Control l, Control options)
+        private void AddQueryFiles(string nodePath)
         {
             var rows = _runsInfoJson[@"rows"];
             var rowCount = _runsInfoJson[@"rowCount"];
@@ -345,8 +344,8 @@ namespace pwiz.PanoramaClient
 
                         listView.Columns[3].Width = 100;
                         listView.Columns[2].Width = 60;
-                        l.Visible = true;
-                        options.Visible = true;
+                        versionLabel.Visible = true;
+                        versionOptions.Visible = true;
                         var numVersions = GetVersionInfo(_runsInfoJson, replacedBy);
                         listItem[0] = fileName;
                         long size = 0;
@@ -356,8 +355,9 @@ namespace pwiz.PanoramaClient
                         }
                         if (size > 0)
                         {
-                            var sizeObj = new FileSize(size);
-                            listItem[1] = sizeObj.ToString();
+                            var sizeObj = new FileSizeFormatProvider();
+                            var sizeString = sizeObj.Format(@"fs1", size, sizeObj);
+                            listItem[1] = sizeString;
                         }
 
                         if (numVersions[0] != null)
@@ -538,7 +538,7 @@ namespace pwiz.PanoramaClient
                 {
                     ActiveServer = FolderBrowser.ActiveServer;
                     var folderInfo = FolderBrowser.Clicked.Tag as FolderInformation;
-                    if (folderInfo != null) AddQueryFiles(folderInfo.FolderPath, versionLabel, versionOptions);
+                    if (folderInfo != null) AddQueryFiles(folderInfo.FolderPath);
                 }
             }
         }
@@ -642,6 +642,7 @@ namespace pwiz.PanoramaClient
             up.Enabled = FolderBrowser.UpEnabled();
             forward.Enabled = FolderBrowser.ForwardEnabled();
             back.Enabled = FolderBrowser.BackEnabled();
+            urlLink.Text = FolderBrowser.SelectedUrl;
         }
 
         private void listView_ColumnClick(object sender, ColumnClickEventArgs e)

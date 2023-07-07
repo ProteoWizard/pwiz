@@ -110,6 +110,7 @@ namespace pwiz.PanoramaClient
             up.Enabled = FolderBrowser.UpEnabled();
             forward.Enabled = FolderBrowser.ForwardEnabled();
             back.Enabled = FolderBrowser.BackEnabled();
+            urlLink.Text = FolderBrowser.SelectedUrl;
         }
 
         private void up_Click(object sender, EventArgs e)
