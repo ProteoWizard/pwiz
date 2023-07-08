@@ -35,13 +35,13 @@ namespace pwiz.Skyline.Alerts
             this.linkProteome = new System.Windows.Forms.LinkLabel();
             this.btnOk = new System.Windows.Forms.Button();
             this.pictureSkylineIcon = new System.Windows.Forms.PictureBox();
-            this.labelSoftwareVersion = new System.Windows.Forms.Label();
             this.textBox1 = new System.Windows.Forms.TextBox();
             this.label2 = new System.Windows.Forms.Label();
             this.pictureProteoWizardIcon = new System.Windows.Forms.PictureBox();
             this.linkProteoWizard = new System.Windows.Forms.LinkLabel();
             this.label3 = new System.Windows.Forms.Label();
             this.linkLabel1 = new System.Windows.Forms.LinkLabel();
+            this.textSoftwareVersion = new System.Windows.Forms.TextBox();
             ((System.ComponentModel.ISupportInitialize)(this.pictureSkylineIcon)).BeginInit();
             ((System.ComponentModel.ISupportInitialize)(this.pictureProteoWizardIcon)).BeginInit();
             this.SuspendLayout();
@@ -65,11 +65,6 @@ namespace pwiz.Skyline.Alerts
             resources.ApplyResources(this.pictureSkylineIcon, "pictureSkylineIcon");
             this.pictureSkylineIcon.Name = "pictureSkylineIcon";
             this.pictureSkylineIcon.TabStop = false;
-            // 
-            // labelSoftwareVersion
-            // 
-            resources.ApplyResources(this.labelSoftwareVersion, "labelSoftwareVersion");
-            this.labelSoftwareVersion.Name = "labelSoftwareVersion";
             // 
             // textBox1
             // 
@@ -108,18 +103,26 @@ namespace pwiz.Skyline.Alerts
             this.linkLabel1.UseCompatibleTextRendering = true;
             this.linkLabel1.LinkClicked += new System.Windows.Forms.LinkLabelLinkClickedEventHandler(this.linkLabel1_LinkClicked);
             // 
+            // textSoftwareVersion
+            // 
+            this.textSoftwareVersion.BackColor = System.Drawing.SystemColors.Control;
+            this.textSoftwareVersion.BorderStyle = System.Windows.Forms.BorderStyle.None;
+            resources.ApplyResources(this.textSoftwareVersion, "textSoftwareVersion");
+            this.textSoftwareVersion.Name = "textSoftwareVersion";
+            this.textSoftwareVersion.ReadOnly = true;
+            // 
             // AboutDlg
             // 
             this.AcceptButton = this.btnOk;
             resources.ApplyResources(this, "$this");
             this.AutoScaleMode = System.Windows.Forms.AutoScaleMode.Font;
             this.CancelButton = this.btnOk;
+            this.Controls.Add(this.textSoftwareVersion);
             this.Controls.Add(this.label3);
             this.Controls.Add(this.linkProteoWizard);
             this.Controls.Add(this.pictureProteoWizardIcon);
             this.Controls.Add(this.label2);
             this.Controls.Add(this.textBox1);
-            this.Controls.Add(this.labelSoftwareVersion);
             this.Controls.Add(this.pictureSkylineIcon);
             this.Controls.Add(this.btnOk);
             this.Controls.Add(this.linkProteome);
@@ -141,12 +144,12 @@ namespace pwiz.Skyline.Alerts
         private System.Windows.Forms.LinkLabel linkProteome;
         private System.Windows.Forms.Button btnOk;
         private System.Windows.Forms.PictureBox pictureSkylineIcon;
-        private System.Windows.Forms.Label labelSoftwareVersion;
         private System.Windows.Forms.TextBox textBox1;
         private System.Windows.Forms.Label label2;
         private System.Windows.Forms.PictureBox pictureProteoWizardIcon;
         private System.Windows.Forms.LinkLabel linkProteoWizard;
         private System.Windows.Forms.Label label3;
         private System.Windows.Forms.LinkLabel linkLabel1;
+        private System.Windows.Forms.TextBox textSoftwareVersion;
     }
 }

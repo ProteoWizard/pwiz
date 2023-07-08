@@ -173,7 +173,8 @@ namespace pwiz.Skyline.Controls.Startup
             // tooStripModeUI
             // 
             resources.ApplyResources(this.tooStripModeUI, "tooStripModeUI");
-            this.tooStripModeUI.Items.Add(this.toolStripButtonModeUI);
+            this.tooStripModeUI.Items.AddRange(new System.Windows.Forms.ToolStripItem[] {
+            this.toolStripButtonModeUI});
             this.tooStripModeUI.Name = "tooStripModeUI";
             // 
             // toolStripButtonModeUI

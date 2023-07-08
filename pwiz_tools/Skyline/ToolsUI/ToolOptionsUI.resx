@@ -750,8 +750,59 @@ well as iRT prediction.</value>
   <data name="&gt;&gt;tabLanguage.ZOrder" xml:space="preserve">
     <value>3</value>
   </data>
+  <data name="tbxSettingsFilePath.Anchor" type="System.Windows.Forms.AnchorStyles, System.Windows.Forms">
+    <value>Top, Left, Right</value>
+  </data>
+  <data name="tbxSettingsFilePath.Location" type="System.Drawing.Point, System.Drawing">
+    <value>17, 174</value>
+  </data>
+  <data name="tbxSettingsFilePath.Size" type="System.Drawing.Size, System.Drawing">
+    <value>357, 20</value>
+  </data>
+  <data name="tbxSettingsFilePath.TabIndex" type="System.Int32, mscorlib">
+    <value>6</value>
+  </data>
+  <data name="&gt;&gt;tbxSettingsFilePath.Name" xml:space="preserve">
+    <value>tbxSettingsFilePath</value>
+  </data>
+  <data name="&gt;&gt;tbxSettingsFilePath.Type" xml:space="preserve">
+    <value>System.Windows.Forms.TextBox, System.Windows.Forms, Version=4.0.0.0, Culture=neutral, PublicKeyToken=b77a5c561934e089</value>
+  </data>
+  <data name="&gt;&gt;tbxSettingsFilePath.Parent" xml:space="preserve">
+    <value>tabMisc</value>
+  </data>
+  <data name="&gt;&gt;tbxSettingsFilePath.ZOrder" xml:space="preserve">
+    <value>0</value>
+  </data>
+  <data name="lblSettingsPath.AutoSize" type="System.Boolean, mscorlib">
+    <value>True</value>
+  </data>
+  <data name="lblSettingsPath.Location" type="System.Drawing.Point, System.Drawing">
+    <value>15, 158</value>
+  </data>
+  <data name="lblSettingsPath.Size" type="System.Drawing.Size, System.Drawing">
+    <value>109, 13</value>
+  </data>
+  <data name="lblSettingsPath.TabIndex" type="System.Int32, mscorlib">
+    <value>5</value>
+  </data>
+  <data name="lblSettingsPath.Text" xml:space="preserve">
+    <value>Settings are stored in:</value>
+  </data>
+  <data name="&gt;&gt;lblSettingsPath.Name" xml:space="preserve">
+    <value>lblSettingsPath</value>
+  </data>
+  <data name="&gt;&gt;lblSettingsPath.Type" xml:space="preserve">
+    <value>System.Windows.Forms.Label, System.Windows.Forms, Version=4.0.0.0, Culture=neutral, PublicKeyToken=b77a5c561934e089</value>
+  </data>
+  <data name="&gt;&gt;lblSettingsPath.Parent" xml:space="preserve">
+    <value>tabMisc</value>
+  </data>
+  <data name="&gt;&gt;lblSettingsPath.ZOrder" xml:space="preserve">
+    <value>1</value>
+  </data>
   <data name="btnResetSettings.Location" type="System.Drawing.Point, System.Drawing">
-    <value>134, 165</value>
+    <value>17, 200</value>
   </data>
   <data name="btnResetSettings.Size" type="System.Drawing.Size, System.Drawing">
     <value>115, 37</value>
@@ -772,7 +823,7 @@ well as iRT prediction.</value>
     <value>tabMisc</value>
   </data>
   <data name="&gt;&gt;btnResetSettings.ZOrder" xml:space="preserve">
-    <value>0</value>
+    <value>2</value>
   </data>
   <data name="comboCompactFormatOption.Location" type="System.Drawing.Point, System.Drawing">
     <value>17, 32</value>
@@ -793,7 +844,7 @@ well as iRT prediction.</value>
     <value>tabMisc</value>
   </data>
   <data name="&gt;&gt;comboCompactFormatOption.ZOrder" xml:space="preserve">
-    <value>1</value>
+    <value>3</value>
   </data>
   <data name="lblCompactDocumentFormat.AutoSize" type="System.Boolean, mscorlib">
     <value>True</value>
@@ -820,7 +871,7 @@ well as iRT prediction.</value>
     <value>tabMisc</value>
   </data>
   <data name="&gt;&gt;lblCompactDocumentFormat.ZOrder" xml:space="preserve">
-    <value>2</value>
+    <value>4</value>
   </data>
   <data name="checkBoxShowWizard.AutoSize" type="System.Boolean, mscorlib">
     <value>True</value>
@@ -850,7 +901,7 @@ well as iRT prediction.</value>
     <value>tabMisc</value>
   </data>
   <data name="&gt;&gt;checkBoxShowWizard.ZOrder" xml:space="preserve">
-    <value>3</value>
+    <value>5</value>
   </data>
   <data name="tabMisc.Location" type="System.Drawing.Point, System.Drawing">
     <value>4, 22</value>
@@ -1075,12 +1126,12 @@ well as iRT prediction.</value>
     <value>modeUIHandler</value>
   </data>
   <data name="&gt;&gt;modeUIHandler.Type" xml:space="preserve">
-    <value>pwiz.Skyline.Util.Helpers+ModeUIExtender, Skyline, Version=19.1.1.298, Culture=neutral, PublicKeyToken=null</value>
+    <value>pwiz.Skyline.Util.Helpers+ModeUIExtender, Skyline-daily, Version=23.0.9.186, Culture=neutral, PublicKeyToken=null</value>
   </data>
   <data name="&gt;&gt;$this.Name" xml:space="preserve">
     <value>ToolOptionsUI</value>
   </data>
   <data name="&gt;&gt;$this.Type" xml:space="preserve">
-    <value>pwiz.Skyline.Util.FormEx, Skyline, Version=19.1.1.298, Culture=neutral, PublicKeyToken=null</value>
+    <value>pwiz.Skyline.Util.FormEx, Skyline-daily, Version=23.0.9.186, Culture=neutral, PublicKeyToken=null</value>
   </data>
 </root>
