@@ -39,7 +39,6 @@
 #include "pwiz/utility/misc/Filesystem.hpp"
 #include "pwiz/utility/misc/Std.hpp"
 #include <boost/filesystem/detail/utf8_codecvt_facet.hpp>
-#include <boost/range/algorithm/find_if.hpp>
 
 using namespace pwiz::cv;
 using namespace pwiz::data;
@@ -901,7 +900,7 @@ int mergeFiles(const vector<string>& filenames, const Config& config, const Read
 
 /// Handles the reading of a single input file. Called once for each
 /// input file when the --merge arguement is absent.
-void processFile(const string& filename, const Config& config, const ReaderList& readers, const string& args)
+void processFile(const string& filename, const Config& config, const ReaderList& readers)
 {
     // read in data file
 
@@ -951,8 +950,6 @@ void processFile(const string& filename, const Config& config, const ReaderList&
 
             *os_ << "calculating source file checksums" << endl;
             calculateSHA1Checksums(msd);
-            if (!msd.dataProcessingPtrs.empty() && !msd.dataProcessingPtrs[0]->processingMethods.empty())
-                msd.dataProcessingPtrs[0]->processingMethods[0].set(MS_command_line_parameters, args);
 
             // if config.singleThreaded is not explicitly set, determine whether to use worker threads by querying SpectrumListWrappers
             Config configCopy(config);
@@ -1003,7 +1000,7 @@ void processFile(const string& filename, const Config& config, const ReaderList&
 /// Handles the high level logic of msconvert. Constructs the output
 /// directory, reads files into memory and writes them out consistent
 /// with the options in the supplied Config.
-int go(const Config& config, const string& args)
+int go(const Config& config)
 {
     *os_ << config;
 
@@ -1026,7 +1023,7 @@ int go(const Config& config, const string& args)
         {
             try
             {
-                processFile(*it, config, readers, args);
+                processFile(*it, config, readers);
             }
             catch (user_error&)
             {
@@ -1047,7 +1044,7 @@ int go(const Config& config, const string& args)
 
 int main(int argc, char* argv[])
 {
-    bnw::args _(argc, argv);
+    bnw::args args(argc, argv);
 
     std::locale global_loc = std::locale();
     std::locale loc(global_loc, new bfs::detail::utf8_codecvt_facet);
@@ -1063,14 +1060,7 @@ int main(int argc, char* argv[])
         if (config.outputPath == "-")
             os_ = &cerr;
 
-        // rebuild the command-line parameters to include in the output files
-        list<string> arglist(argv, argv + argc);
-        arglist.pop_front();
-        for (auto& arg : arglist)
-            if (boost::range::find_if(arg, bal::is_any_of(" \t,;=&")) != arg.end())
-                arg = '"' + arg + '"';
-
-        return go(config, bal::join(arglist, " "));
+        return go(config);
     }
     catch (usage_exception& e)
     {
