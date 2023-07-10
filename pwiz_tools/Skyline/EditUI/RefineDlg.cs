@@ -223,6 +223,12 @@ namespace pwiz.Skyline.EditUI
             set { textCVCutoff.Text = value.ToString(LocalizationHelper.CurrentCulture); }
         }
 
+        public int ShapeCorrelation
+        {
+            get { return Convert.ToInt32(textShapeCorrelation.Text); }
+            set { textShapeCorrelation.Text = value.ToString(LocalizationHelper.CurrentCulture); }
+        }
+
         public AreaCVTransitions Transition
         {
             get { return GetTransitionFromIdx(comboTransitions.SelectedIndex); }
@@ -480,6 +486,15 @@ namespace pwiz.Skyline.EditUI
                 if (!helper.ValidateDecimalTextBox(textCVCutoff, 0, null, out cutoffVal))
                     return;
                 cvCutoff = cutoffVal;
+            }
+
+            double? shapeCorrelation = null;
+            if (!string.IsNullOrEmpty(textShapeCorrelation.Text))
+            {
+                double shapeCorrelationVal;
+                if (!helper.ValidateDecimalTextBox(textShapeCorrelation, -1, 1, out shapeCorrelationVal))// check if -1 is correct minimum
+                    return;
+                shapeCorrelation = shapeCorrelationVal;
             }
 
             double? qvalueCutoff = null;
