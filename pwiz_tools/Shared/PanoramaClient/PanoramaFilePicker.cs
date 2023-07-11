@@ -165,7 +165,11 @@ namespace pwiz.PanoramaClient
                         var sizeObj = new FileSizeFormatProvider();
                         var sizeString = sizeObj.Format(@"fs1", size, sizeObj);
                         listItem[1] = sizeString;
-                        listItem[4] = (string)file[@"creationdate"];
+                        var date = (string)file[@"creationdate"];
+                        date = date.Remove(20, 4);
+                        var format = "ddd MMM dd HH:mm:ss yyyy";
+                        var formattedDate = DateTime.ParseExact(date, format, CultureInfo.InvariantCulture);
+                        listItem[4] = formattedDate.ToString(CultureInfo.InvariantCulture);
                         var fileNode = fileName.EndsWith(EXT) ? new ListViewItem(listItem, 1) : new ListViewItem(listItem, 0);
                         fileNode.Tag = size;
                         fileNode.Name = link;
@@ -256,8 +260,8 @@ namespace pwiz.PanoramaClient
                         fileInfos[2] = (string)row[@"File/Precursors"];
                         fileInfos[3] = (string)row[@"File/Transitions"];
                         fileInfos[4] = (string)row[@"File/Replicates"];
-                        DateTime.TryParse((string)row[@"Created"], CultureInfo.CurrentCulture, DateTimeStyles.None, out var formattedDate);
-                        result[4] = formattedDate.ToString(CultureInfo.CurrentCulture);
+                        DateTime.TryParse((string)row[@"Created"], CultureInfo.InvariantCulture, DateTimeStyles.None, out var formattedDate);
+                        result[4] = formattedDate.ToString(CultureInfo.InvariantCulture);
                         var fileNode = new ListViewItem(result, 1)
                         {
                             ToolTipText =
@@ -373,8 +377,8 @@ namespace pwiz.PanoramaClient
                         {
                             listItem[3] = numVersions[1];
                         }
-                        DateTime.TryParse((string)row[@"Created"], CultureInfo.CurrentCulture, DateTimeStyles.None, out var formattedDate);
-                        listItem[4] = formattedDate.ToString(CultureInfo.CurrentCulture);
+                        DateTime.TryParse((string)row[@"Created"], CultureInfo.InvariantCulture, DateTimeStyles.None, out var formattedDate);
+                        listItem[4] = formattedDate.ToString(CultureInfo.InvariantCulture);
                         var fileNode = new ListViewItem(listItem, 1)
                         {
                             Name = serverName,
@@ -487,6 +491,11 @@ namespace pwiz.PanoramaClient
                             }
                             else
                             {
+                                listView.Columns[2].Width = 0;
+                                listView.Columns[3].Width = 0;
+                                listView.Columns[4].Width = -2;
+                                versionLabel.Visible = false;
+                                versionOptions.Visible = false;
                                 var uriString = string.Concat(ActiveServer.URI.ToString(), @"_webdav/",
                                     path + @"/@files?method=json");
                                 var uri = new Uri(uriString);
