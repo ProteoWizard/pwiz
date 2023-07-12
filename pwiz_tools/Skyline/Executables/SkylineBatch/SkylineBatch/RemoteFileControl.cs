@@ -237,7 +237,7 @@ namespace SkylineBatch
             string host = $"https://{uri.Host}";
             // var path = new Uri(remoteFileSource.SelectedPath);
             var path = remoteFileSource.SelectedPath;
-            PanoramaClientServer server = new PanoramaClientServer(new Uri(host));
+            PanoramaClientServer server = new PanoramaClientServer(new Uri(host), remoteFileSource.Username, remoteFileSource.Password);
 
             var panoramaServers = new List<PanoramaClientServer>() { server };
             
