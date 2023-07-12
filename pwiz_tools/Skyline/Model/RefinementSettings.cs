@@ -23,6 +23,7 @@ using System.Diagnostics;
 using System.IO;
 using System.Linq;
 using System.Threading;
+using Microsoft.Win32.SafeHandles;
 using pwiz.Common.DataBinding;
 using pwiz.Common.SystemUtil;
 using pwiz.Skyline.Controls.Graphs;
@@ -225,6 +226,10 @@ namespace pwiz.Skyline.Model
         public double? AdjustedPValueCutoff { get; set; }
         [Track]
         public int? MSLevelGroupComparison { get; set; }
+        [Track]
+        public double? SCIncludedCutoff { get; set; }
+        [Track]
+        public double? SCQuantizationCutoff { get; set; }
         [Track]
         public List<GroupComparisonDef> GroupComparisonDefs { get; set; }
         public List<string> GroupComparisonNames { get; set; }
@@ -768,8 +773,33 @@ namespace pwiz.Skyline.Model
                         if (peakFoundRatio > MaxPeakFoundRatio.Value)
                             continue;
                     }
+
+
                 }
 
+                var chromInfos = nodeTran.ChromInfos;
+                if (SCIncludedCutoff.HasValue)
+                {
+                    if (checkIfShapeCorrelationBelowCutoff(chromInfos, SCIncludedCutoff))
+                    {
+                        continue;
+                    }
+                }
+
+                TransitionDocNode nonQuantitativeNodeTran = null;
+                if (SCQuantizationCutoff.HasValue)
+                {
+                    if (checkIfShapeCorrelationBelowCutoff(chromInfos, SCQuantizationCutoff))
+                    {
+                        nonQuantitativeNodeTran = nodeTran.ChangeQuantitative(false);
+                    }
+                }
+
+                if (nonQuantitativeNodeTran != null)
+                {
+                    listTrans.Add(nonQuantitativeNodeTran);
+                    continue;
+                }
                 listTrans.Add(nodeTran);
             }
 
@@ -1243,6 +1273,20 @@ namespace pwiz.Skyline.Model
             newdoc = ForceReloadChromatograms(newdoc);
             CloseLibraryStreams(newdoc);
             return newdoc;
+        }
+
+
+        private bool checkIfShapeCorrelationBelowCutoff(IEnumerable<TransitionChromInfo> chromInfos, double? cutoff)
+        {
+            foreach (var chromInfo in chromInfos)
+            {
+                if (chromInfo.PeakShapeValues?.ShapeCorrelation < cutoff)
+                {
+                    return true;
+                }
+            }
+
+            return false;
         }
 
         /// <summary>
