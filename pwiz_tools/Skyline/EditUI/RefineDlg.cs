@@ -148,6 +148,15 @@ namespace pwiz.Skyline.EditUI
                 labelMinIdotProduct.Enabled = textMinIdotProduct.Enabled = groupLibCorr.Enabled = true;
             }
 
+            if (_document.MoleculeTransitions.Any(t =>
+                    t.ChromInfos.Any(c => c.PeakShapeValues?.ShapeCorrelation != null)))
+            {
+                textIncludedCutoff.Enabled = true;
+                textQuantizationCutoff.Enabled = true;
+            }
+
+
+
             // Group Comparisons
             _groupComparisonsListBoxDriver = new SettingsListBoxDriver<GroupComparisonDef>(
                 checkedListBoxGroupComparisons, Settings.Default.GroupComparisonDefList);
@@ -223,10 +232,16 @@ namespace pwiz.Skyline.EditUI
             set { textCVCutoff.Text = value.ToString(LocalizationHelper.CurrentCulture); }
         }
 
-        public int ShapeCorrelation
+        public int SCIncludedCutoff
         {
-            get { return Convert.ToInt32(textShapeCorrelation.Text); }
-            set { textShapeCorrelation.Text = value.ToString(LocalizationHelper.CurrentCulture); }
+            get { return Convert.ToInt32(textIncludedCutoff.Text); }
+            set { textIncludedCutoff.Text = value.ToString(LocalizationHelper.CurrentCulture); }
+        }
+
+        public int SCQuantizationCutoff
+        {
+            get { return Convert.ToInt32(textQuantizationCutoff.Text); }
+            set { textQuantizationCutoff.Text = value.ToString(LocalizationHelper.CurrentCulture); }
         }
 
         public AreaCVTransitions Transition
@@ -488,15 +503,6 @@ namespace pwiz.Skyline.EditUI
                 cvCutoff = cutoffVal;
             }
 
-            double? shapeCorrelation = null;
-            if (!string.IsNullOrEmpty(textShapeCorrelation.Text))
-            {
-                double shapeCorrelationVal;
-                if (!helper.ValidateDecimalTextBox(textShapeCorrelation, -1, 1, out shapeCorrelationVal))// check if -1 is correct minimum
-                    return;
-                shapeCorrelation = shapeCorrelationVal;
-            }
-
             double? qvalueCutoff = null;
             if (!string.IsNullOrWhiteSpace(textQVal.Text))
             {
@@ -558,6 +564,25 @@ namespace pwiz.Skyline.EditUI
                 msLevelGroupComparison = int.Parse(comboMSGroupComparisons.SelectedItem.ToString());
             }
 
+
+            double? scIncludedCutoff = null;
+            if (!string.IsNullOrEmpty(textIncludedCutoff.Text))
+            {
+                double includeVal;
+                if (!helper.ValidateDecimalTextBox(textIncludedCutoff, -1, 1, out includeVal))// check if -1 is correct minimum
+                    return;
+                scIncludedCutoff = includeVal;
+            }
+
+            double? scQuantizationCutoff = null;
+            if (!string.IsNullOrEmpty(textQuantizationCutoff.Text))
+            {
+                double quantizationCutoffVal;
+                if (!helper.ValidateDecimalTextBox(textQuantizationCutoff, -1, 1, out quantizationCutoffVal))// check if -1 is correct minimum
+                    return;
+                scQuantizationCutoff = quantizationCutoffVal;
+            }
+
             RefinementSettings = new RefinementSettings
                                      {
                                          MinPeptidesPerProtein = minPeptidesPerProtein,
@@ -591,7 +616,9 @@ namespace pwiz.Skyline.EditUI
                                          AdjustedPValueCutoff = adjustedPValueCutoff,
                                          FoldChangeCutoff = foldChangeCutoff,
                                          MSLevelGroupComparison = msLevelGroupComparison,
-                                         GroupComparisonDefs = groupComparisonDefs
+                                         GroupComparisonDefs = groupComparisonDefs,
+                                         SCIncludedCutoff = scIncludedCutoff,
+                                         SCQuantizationCutoff = scQuantizationCutoff
                                      };
 
             DialogResult = DialogResult.OK;

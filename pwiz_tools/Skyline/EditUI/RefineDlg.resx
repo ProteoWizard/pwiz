@@ -1336,6 +1336,66 @@ exceed this threshold.</value>
   <data name="&gt;&gt;tabResults.ZOrder" xml:space="preserve">
     <value>1</value>
   </data>
+  <data name="label10.AutoSize" type="System.Boolean, mscorlib">
+    <value>True</value>
+  </data>
+  <data name="label10.ImeMode" type="System.Windows.Forms.ImeMode, System.Windows.Forms">
+    <value>NoControl</value>
+  </data>
+  <data name="label10.Location" type="System.Drawing.Point, System.Drawing">
+    <value>178, 20</value>
+  </data>
+  <data name="label10.Margin" type="System.Windows.Forms.Padding, System.Windows.Forms">
+    <value>2, 0, 2, 0</value>
+  </data>
+  <data name="label10.Size" type="System.Drawing.Size, System.Drawing">
+    <value>97, 13</value>
+  </data>
+  <data name="label10.TabIndex" type="System.Int32, mscorlib">
+    <value>4</value>
+  </data>
+  <data name="label10.Text" xml:space="preserve">
+    <value>Quantization Cutoff</value>
+  </data>
+  <data name="&gt;&gt;label10.Name" xml:space="preserve">
+    <value>label10</value>
+  </data>
+  <data name="&gt;&gt;label10.Type" xml:space="preserve">
+    <value>System.Windows.Forms.Label, System.Windows.Forms, Version=4.0.0.0, Culture=neutral, PublicKeyToken=b77a5c561934e089</value>
+  </data>
+  <data name="&gt;&gt;label10.Parent" xml:space="preserve">
+    <value>groupBox2</value>
+  </data>
+  <data name="&gt;&gt;label10.ZOrder" xml:space="preserve">
+    <value>0</value>
+  </data>
+  <data name="textQuantizationCutoff.Enabled" type="System.Boolean, mscorlib">
+    <value>False</value>
+  </data>
+  <data name="textQuantizationCutoff.Location" type="System.Drawing.Point, System.Drawing">
+    <value>181, 36</value>
+  </data>
+  <data name="textQuantizationCutoff.Margin" type="System.Windows.Forms.Padding, System.Windows.Forms">
+    <value>2, 2, 2, 2</value>
+  </data>
+  <data name="textQuantizationCutoff.Size" type="System.Drawing.Size, System.Drawing">
+    <value>65, 20</value>
+  </data>
+  <data name="textQuantizationCutoff.TabIndex" type="System.Int32, mscorlib">
+    <value>5</value>
+  </data>
+  <data name="&gt;&gt;textQuantizationCutoff.Name" xml:space="preserve">
+    <value>textQuantizationCutoff</value>
+  </data>
+  <data name="&gt;&gt;textQuantizationCutoff.Type" xml:space="preserve">
+    <value>System.Windows.Forms.TextBox, System.Windows.Forms, Version=4.0.0.0, Culture=neutral, PublicKeyToken=b77a5c561934e089</value>
+  </data>
+  <data name="&gt;&gt;textQuantizationCutoff.Parent" xml:space="preserve">
+    <value>groupBox2</value>
+  </data>
+  <data name="&gt;&gt;textQuantizationCutoff.ZOrder" xml:space="preserve">
+    <value>1</value>
+  </data>
   <data name="label9.AutoSize" type="System.Boolean, mscorlib">
     <value>True</value>
   </data>
@@ -1349,13 +1409,13 @@ exceed this threshold.</value>
     <value>2, 0, 2, 0</value>
   </data>
   <data name="label9.Size" type="System.Drawing.Size, System.Drawing">
-    <value>94, 13</value>
+    <value>79, 13</value>
   </data>
   <data name="label9.TabIndex" type="System.Int32, mscorlib">
     <value>2</value>
   </data>
   <data name="label9.Text" xml:space="preserve">
-    <value>Shape Correlation:</value>
+    <value>Included Cutoff</value>
   </data>
   <data name="&gt;&gt;label9.Name" xml:space="preserve">
     <value>label9</value>
@@ -1367,40 +1427,40 @@ exceed this threshold.</value>
     <value>groupBox2</value>
   </data>
   <data name="&gt;&gt;label9.ZOrder" xml:space="preserve">
-    <value>0</value>
+    <value>2</value>
   </data>
-  <data name="textShapeCorrelation.Enabled" type="System.Boolean, mscorlib">
+  <data name="textIncludedCutoff.Enabled" type="System.Boolean, mscorlib">
     <value>False</value>
   </data>
-  <data name="textShapeCorrelation.Location" type="System.Drawing.Point, System.Drawing">
+  <data name="textIncludedCutoff.Location" type="System.Drawing.Point, System.Drawing">
     <value>33, 36</value>
   </data>
-  <data name="textShapeCorrelation.Margin" type="System.Windows.Forms.Padding, System.Windows.Forms">
+  <data name="textIncludedCutoff.Margin" type="System.Windows.Forms.Padding, System.Windows.Forms">
     <value>2, 2, 2, 2</value>
   </data>
-  <data name="textShapeCorrelation.Size" type="System.Drawing.Size, System.Drawing">
+  <data name="textIncludedCutoff.Size" type="System.Drawing.Size, System.Drawing">
     <value>65, 20</value>
   </data>
-  <data name="textShapeCorrelation.TabIndex" type="System.Int32, mscorlib">
+  <data name="textIncludedCutoff.TabIndex" type="System.Int32, mscorlib">
     <value>3</value>
   </data>
-  <data name="&gt;&gt;textShapeCorrelation.Name" xml:space="preserve">
-    <value>textShapeCorrelation</value>
+  <data name="&gt;&gt;textIncludedCutoff.Name" xml:space="preserve">
+    <value>textIncludedCutoff</value>
   </data>
-  <data name="&gt;&gt;textShapeCorrelation.Type" xml:space="preserve">
+  <data name="&gt;&gt;textIncludedCutoff.Type" xml:space="preserve">
     <value>System.Windows.Forms.TextBox, System.Windows.Forms, Version=4.0.0.0, Culture=neutral, PublicKeyToken=b77a5c561934e089</value>
   </data>
-  <data name="&gt;&gt;textShapeCorrelation.Parent" xml:space="preserve">
+  <data name="&gt;&gt;textIncludedCutoff.Parent" xml:space="preserve">
     <value>groupBox2</value>
   </data>
-  <data name="&gt;&gt;textShapeCorrelation.ZOrder" xml:space="preserve">
-    <value>1</value>
+  <data name="&gt;&gt;textIncludedCutoff.ZOrder" xml:space="preserve">
+    <value>3</value>
   </data>
   <data name="groupBox2.Location" type="System.Drawing.Point, System.Drawing">
     <value>25, 266</value>
   </data>
   <data name="groupBox2.Size" type="System.Drawing.Size, System.Drawing">
-    <value>332, 73</value>
+    <value>332, 68</value>
   </data>
   <data name="groupBox2.TabIndex" type="System.Int32, mscorlib">
     <value>1</value>
