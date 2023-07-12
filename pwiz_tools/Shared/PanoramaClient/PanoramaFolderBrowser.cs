@@ -146,37 +146,39 @@ namespace pwiz.PanoramaClient
         /// </summary>
         private void InitializeServers()
         {
-            if (_serverList != null)
+            if (_serverList == null)
             {
-                var listErrorServers = new List<Tuple<PanoramaServer, string>>();
-                foreach (var server in _serverList)
+                return;
+            }
+
+            var listErrorServers = new List<Tuple<PanoramaServer, string>>();
+            foreach (var server in _serverList)
+            {
+                try
                 {
-                    try
+                    InitializeTreeServers(server, _listServerFolders);
+                }
+                catch (Exception ex)
+                {
+                    if (ex is WebException || ex is PanoramaServerException)
                     {
-                        InitializeTreeServers(server, _listServerFolders);
-                    }
-                    catch (Exception ex)
-                    {
-                        if (ex is WebException || ex is PanoramaServerException)
+                        var error = ex.Message;
+                        if (error != null && error.Contains(Resources
+                                .UserState_GetErrorMessage_The_username_and_password_could_not_be_authenticated_with_the_panorama_server_))
                         {
-                            var error = ex.Message;
-                            if (error != null && error.Contains(Resources
-                                    .UserState_GetErrorMessage_The_username_and_password_could_not_be_authenticated_with_the_panorama_server_))
-                            {
-                                error = TextUtil.LineSeparate(error, Resources.PanoramaFolderBrowser_InitializeServers_Go_to_Tools___Options___Panorama_tab_to_update_the_username_and_password);
+                            error = TextUtil.LineSeparate(error, Resources.PanoramaFolderBrowser_InitializeServers_Go_to_Tools___Options___Panorama_tab_to_update_the_username_and_password);
 
-                            }
-
-                            listErrorServers.Add(new Tuple<PanoramaServer, string>(server, error ?? string.Empty));
                         }
+
+                        listErrorServers.Add(new Tuple<PanoramaServer, string>(server, error ?? string.Empty));
                     }
                 }
-                if (listErrorServers.Count > 0)
-                {
-                    throw new Exception(TextUtil.LineSeparate(Resources.PanoramaFolderBrowser_InitializeServers_Failed_attempting_to_retrieve_information_from_the_following_servers,
-                        string.Empty,
-                        ServersToString(listErrorServers)));
-                }
+            }
+            if (listErrorServers.Count > 0)
+            {
+                throw new Exception(TextUtil.LineSeparate(Resources.PanoramaFolderBrowser_InitializeServers_Failed_attempting_to_retrieve_information_from_the_following_servers,
+                    string.Empty,
+                    ServersToString(listErrorServers)));
             }
         }
 

@@ -602,7 +602,7 @@ namespace pwiz.PanoramaClient
 
         /// <summary>
         /// Navigates to the parent folder of the currently selected folder
-        /// and displays it's files 
+        /// and displays its files 
         /// </summary>
         /// <param name="sender"></param>
         /// <param name="e"></param>
@@ -615,7 +615,7 @@ namespace pwiz.PanoramaClient
 
         /// <summary>
         /// Navigates to the previous folder a user was looking at
-        /// and displays it's files
+        /// and displays its files
         /// </summary>
         /// <param name="sender"></param>
         /// <param name="e"></param>
@@ -628,7 +628,7 @@ namespace pwiz.PanoramaClient
 
         /// <summary>
         /// Navigates to the next folder a user was looking at
-        /// and displays it's files
+        /// and displays its files
         /// </summary>
         /// <param name="sender"></param>
         /// <param name="e"></param>
@@ -727,19 +727,11 @@ namespace pwiz.PanoramaClient
             }
             public int Compare(object x, object y)
             {
-                int returnVal = -1;
+                int returnVal = 0;
                 if (col == 1)
                 {
-                    var xTag = ((ListViewItem)x)?.Tag;
-                    var yTag = ((ListViewItem)y)?.Tag;
-                    if (xTag != null && yTag != null)
-                    {
-                        var xBytes = (long) xTag;
-                        var yBytes = (long) yTag;
-                        var xFS = new FileSize(xBytes);
-                        var yFS = new FileSize(yBytes);
-                        returnVal = xFS.CompareTo(yFS);
-                    }
+                    returnVal = Comparer<long?>.Default.Compare(((ListViewItem)x)?.Tag as long?,
+                        ((ListViewItem)y)?.Tag as long?);
                 }
                 else
                 {

@@ -241,7 +241,7 @@ namespace pwiz.SkylineTestFunctional
                 Assert.AreEqual("3.0 B", remoteDlg.GetItemValue(1));
                 Assert.AreEqual(4.ToString(), remoteDlg.GetItemValue(2));
                 Assert.AreEqual(string.Empty, remoteDlg.GetItemValue(3));
-                Assert.AreEqual("5/11/2023 12:00:00 AM", remoteDlg.GetItemValue(4));
+                Assert.AreEqual("11/17/2021 09:09:07", remoteDlg.GetItemValue(4));
 
                 remoteDlg.ClickVersions();
 
@@ -250,14 +250,14 @@ namespace pwiz.SkylineTestFunctional
                 Assert.AreEqual("200.0 B", remoteDlg.GetItemValue(1));
                 Assert.AreEqual(4.ToString(), remoteDlg.GetItemValue(2));
                 Assert.AreEqual("File1", remoteDlg.GetItemValue(3));
-                Assert.AreEqual("5/11/2023 12:00:00 AM", remoteDlg.GetItemValue(4));
+                Assert.AreEqual("11/17/2021 09:09:07", remoteDlg.GetItemValue(4));
 
                 remoteDlg.ClickFile("File3");
                 Assert.AreEqual("File3", remoteDlg.GetItemValue(0));
                 Assert.AreEqual("5.9 KB", remoteDlg.GetItemValue(1));
                 Assert.AreEqual(4.ToString(), remoteDlg.GetItemValue(2));
                 Assert.AreEqual("File2", remoteDlg.GetItemValue(3));
-                Assert.AreEqual("5/11/2023 12:00:00 AM", remoteDlg.GetItemValue(4));
+                Assert.AreEqual("11/17/2021 09:09:07", remoteDlg.GetItemValue(4));
 
                 remoteDlg.Close();
             });
@@ -370,7 +370,7 @@ namespace pwiz.SkylineTestFunctional
                 obj["ReplacesRun"] = replaces;
                 obj["File/Id"] = id;
                 obj["RowId"] = rowId;
-                obj["Created"] = "5/11/23";
+                obj["Created"] = "2021-11-17 09:09:07.934";
                 obj["File/Versions"] = versions;
                 return obj;
             }
