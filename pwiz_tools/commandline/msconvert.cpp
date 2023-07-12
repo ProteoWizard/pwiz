@@ -951,8 +951,8 @@ void processFile(const string& filename, const Config& config, const ReaderList&
 
             *os_ << "calculating source file checksums" << endl;
             calculateSHA1Checksums(msd);
-            //if (!msd.dataProcessingPtrs.empty() && !msd.dataProcessingPtrs[0]->processingMethods.empty())
-            //    msd.dataProcessingPtrs[0]->processingMethods[0].set(MS_command_line_parameters, args);
+            if (!msd.dataProcessingPtrs.empty() && !msd.dataProcessingPtrs[0]->processingMethods.empty())
+                msd.dataProcessingPtrs[0]->processingMethods[0].set(MS_command_line_parameters, args);
 
             // if config.singleThreaded is not explicitly set, determine whether to use worker threads by querying SpectrumListWrappers
             Config configCopy(config);
