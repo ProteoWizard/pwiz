@@ -1,0 +1,902 @@
+﻿<?xml version="1.0" encoding="utf-8"?>
+<srm_settings format_version="19.1" software_version="Skyline-daily (64-bit) 19.0.9.190">
+  <settings_summary name="Default">
+    <peptide_settings>
+      <enzyme name="Trypsin" cut="KR" no_cut="P" sense="C" />
+      <digest_settings max_missed_cleavages="5" />
+      <peptide_prediction use_measured_rts="true" measured_rt_window="2" use_spectral_library_drift_times="false" spectral_library_drift_times_peak_width_calc_type="resolving_power" spectral_library_drift_times_resolving_power="0" spectral_library_drift_times_width_at_dt_zero="0" spectral_library_drift_times_width_at_dt_max="0" />
+      <peptide_filter start="0" min_length="6" max_length="40" auto_select="true">
+        <peptide_exclusions />
+      </peptide_filter>
+      <peptide_libraries pick="library">
+        <bibliospec_lite_library name="sprg2019" file_name_hint="sprg2019_std_only.blib" lsid="urn:lsid:proteome.gs.washington.edu:spectral_libary:bibliospec:nr:minimal:exported:b26d71fb-434a-4a45-9be3-85b328b90b00:1.7" revision="1" />
+      </peptide_libraries>
+      <peptide_modifications max_variable_mods="3" max_neutral_losses="1">
+        <static_modifications>
+          <static_modification name="Carbamidomethyl (C)" aminoacid="C" formula="H3C2NO" unimod_id="4" short_name="CAM" />
+          <static_modification name="Phospho (ST)" aminoacid="S, T" formula="HO3P" explicit_decl="true" unimod_id="21" short_name="Pho">
+            <potential_loss formula="H3O4P" massdiff_monoisotopic="97.976896" massdiff_average="97.995181" />
+          </static_modification>
+          <static_modification name="Phospho (Y)" aminoacid="Y" formula="HO3P" explicit_decl="true" unimod_id="21" short_name="Pho" />
+          <static_modification name="Oxidation (M)" aminoacid="M" formula="O" explicit_decl="true" unimod_id="35" short_name="Oxi">
+            <potential_loss formula="H4COS" massdiff_monoisotopic="63.998285" massdiff_average="64.10701" />
+          </static_modification>
+          <static_modification name="Acetyl (N-term)" terminus="N" formula="C2H2O" explicit_decl="true" unimod_id="1" short_name="1Ac" />
+        </static_modifications>
+        <heavy_modifications>
+          <static_modification name="Label:13C(6)15N(2) (C-term K)" aminoacid="K" terminus="C" label_13C="true" label_15N="true" explicit_decl="true" />
+          <static_modification name="Label:13C(6)15N(4) (C-term R)" aminoacid="R" terminus="C" label_13C="true" label_15N="true" explicit_decl="true" />
+          <static_modification name="Label: 13C(4) (C-term A)" aminoacid="A" terminus="C" formula="C'4 - C4" explicit_decl="true" />
+          <static_modification name="Label: 13C(5) 14N(1) (C-term E)" aminoacid="E" terminus="C" formula="C'5N'1 - C5N1" explicit_decl="true" />
+          <static_modification name="Label: 13C(5) 15N(1) (C-term V)" aminoacid="V" terminus="C" formula="C'5N'1 - C5N1" explicit_decl="true" />
+          <static_modification name="Label: 13C(5) 15N(1) (C-term P)" aminoacid="P" terminus="C" formula="C'5N'1 - C5N1" explicit_decl="true" />
+        </heavy_modifications>
+      </peptide_modifications>
+    </peptide_settings>
+    <transition_settings>
+      <transition_prediction precursor_mass_type="Monoisotopic" fragment_mass_type="Monoisotopic" optimize_by="None" />
+      <transition_filter precursor_charges="2,3,4,5,6" product_charges="1,2" precursor_adducts="[M+H]" product_adducts="[M+]" fragment_types="p,b,y" small_molecule_fragment_types="f" fragment_range_first="ion 3" fragment_range_last="last ion" precursor_mz_window="0" auto_select="true">
+        <measured_ion name="N-terminal to Proline" cut="P" sense="N" min_length="3" />
+      </transition_filter>
+      <transition_libraries ion_match_tolerance="0.5" min_ion_count="0" ion_count="3" pick_from="none" />
+      <transition_integration />
+      <transition_instrument min_mz="50" max_mz="1500" mz_match_tolerance="0.055" />
+      <transition_full_scan acquisition_method="DIA" product_mass_analyzer="centroided" product_res="10" precursor_isotopes="Count" precursor_isotope_filter="3" precursor_mass_analyzer="centroided" precursor_res="10">
+        <isotope_enrichments name="Default">
+          <atom_percent_enrichment symbol="H'">0.98</atom_percent_enrichment>
+          <atom_percent_enrichment symbol="C'">0.995</atom_percent_enrichment>
+          <atom_percent_enrichment symbol="N'">0.995</atom_percent_enrichment>
+          <atom_percent_enrichment symbol="O&quot;">0.99</atom_percent_enrichment>
+          <atom_percent_enrichment symbol="O'">0.99</atom_percent_enrichment>
+        </isotope_enrichments>
+        <isolation_scheme name="Results only" />
+      </transition_full_scan>
+    </transition_settings>
+    <data_settings document_guid="8587f339-f9ff-4f8b-8c2b-113565204d57" audit_logging="true" />
+    <measured_results time_normal_area="true">
+      <replicate name="1000_to_1100">
+        <sample_file id="_1000_to_1100_f0" file_path="C:\Users\brian\Documents\sprg2019\dia_on_std_only\121416_sprg_5x500fmol_1000_to_1100_dia01.mzML?centroid_ms1=true&amp;centroid_ms2=true" sample_name="121416_sprg_5x500fmol_1000_to_1100_dia01" acquired_time="2016-12-18T12:06:24" modified_time="2019-03-01T15:51:43" tic_area="11405939712">
+          <instrument_info_list>
+            <instrument_info>
+              <model>Q Exactive</model>
+              <ionsource>nanoelectrospray</ionsource>
+              <analyzer>quadrupole/orbitrap</analyzer>
+              <detector>inductive detector</detector>
+            </instrument_info>
+          </instrument_info_list>
+        </sample_file>
+      </replicate>
+      <replicate name="1100_to_1200">
+        <sample_file id="_1100_to_1200_f0" file_path="C:\Users\brian\Documents\sprg2019\dia_on_std_only\121416_sprg_5x500fmol_1100_to_1200_dia01.mzML?centroid_ms1=true&amp;centroid_ms2=true" sample_name="121416_sprg_5x500fmol_1100_to_1200_dia01" acquired_time="2016-12-18T14:24:49" modified_time="2019-03-01T15:50:28" tic_area="11382006784">
+          <instrument_info_list>
+            <instrument_info>
+              <model>Q Exactive</model>
+              <ionsource>nanoelectrospray</ionsource>
+              <analyzer>quadrupole/orbitrap</analyzer>
+              <detector>inductive detector</detector>
+            </instrument_info>
+          </instrument_info_list>
+        </sample_file>
+      </replicate>
+      <replicate name="400_to_500">
+        <sample_file id="_400_to_500_f0" file_path="C:\Users\brian\Documents\sprg2019\dia_on_std_only\121416_sprg_5x500fmol_400_to_500_dia01.mzML?centroid_ms1=true&amp;centroid_ms2=true" sample_name="121416_sprg_5x500fmol_400_to_500_dia01" acquired_time="2016-12-17T22:15:51" modified_time="2019-03-01T15:58:44" tic_area="11650469888">
+          <instrument_info_list>
+            <instrument_info>
+              <model>Q Exactive</model>
+              <ionsource>nanoelectrospray</ionsource>
+              <analyzer>quadrupole/orbitrap</analyzer>
+              <detector>inductive detector</detector>
+            </instrument_info>
+          </instrument_info_list>
+        </sample_file>
+      </replicate>
+      <replicate name="500_to_600">
+        <sample_file id="_500_to_600_f0" file_path="C:\Users\brian\Documents\sprg2019\dia_on_std_only\121416_sprg_5x500fmol_500_to_600_dia01.mzML?centroid_ms1=true&amp;centroid_ms2=true" sample_name="121416_sprg_5x500fmol_500_to_600_dia01" acquired_time="2016-12-18T00:34:14" modified_time="2019-03-01T16:04:10" tic_area="11299079168">
+          <instrument_info_list>
+            <instrument_info>
+              <model>Q Exactive</model>
+              <ionsource>nanoelectrospray</ionsource>
+              <analyzer>quadrupole/orbitrap</analyzer>
+              <detector>inductive detector</detector>
+            </instrument_info>
+          </instrument_info_list>
+        </sample_file>
+      </replicate>
+      <replicate name="600_to_700">
+        <sample_file id="_600_to_700_f0" file_path="C:\Users\brian\Documents\sprg2019\dia_on_std_only\121416_sprg_5x500fmol_600_to_700_dia01.mzML?centroid_ms1=true&amp;centroid_ms2=true" sample_name="121416_sprg_5x500fmol_600_to_700_dia01" acquired_time="2016-12-18T02:52:41" modified_time="2019-03-01T16:12:45" tic_area="10592790528">
+          <instrument_info_list>
+            <instrument_info>
+              <model>Q Exactive</model>
+              <ionsource>nanoelectrospray</ionsource>
+              <analyzer>quadrupole/orbitrap</analyzer>
+              <detector>inductive detector</detector>
+            </instrument_info>
+          </instrument_info_list>
+        </sample_file>
+      </replicate>
+      <replicate name="700_to_800">
+        <sample_file id="_700_to_800_f0" file_path="C:\Users\brian\Documents\sprg2019\dia_on_std_only\121416_sprg_5x500fmol_700_to_800_dia01.mzML?centroid_ms1=true&amp;centroid_ms2=true" sample_name="121416_sprg_5x500fmol_700_to_800_dia01" acquired_time="2016-12-18T05:11:06" modified_time="2019-03-01T16:17:21" tic_area="10684569600">
+          <instrument_info_list>
+            <instrument_info>
+              <model>Q Exactive</model>
+              <ionsource>nanoelectrospray</ionsource>
+              <analyzer>quadrupole/orbitrap</analyzer>
+              <detector>inductive detector</detector>
+            </instrument_info>
+          </instrument_info_list>
+        </sample_file>
+      </replicate>
+      <replicate name="800_to_900">
+        <sample_file id="_800_to_900_f0" file_path="C:\Users\brian\Documents\sprg2019\dia_on_std_only\121416_sprg_5x500fmol_800_to_900_dia01.mzML?centroid_ms1=true&amp;centroid_ms2=true" sample_name="121416_sprg_5x500fmol_800_to_900_dia01" acquired_time="2016-12-18T07:29:31" modified_time="2019-03-01T16:24:23" tic_area="11136068608">
+          <instrument_info_list>
+            <instrument_info>
+              <model>Q Exactive</model>
+              <ionsource>nanoelectrospray</ionsource>
+              <analyzer>quadrupole/orbitrap</analyzer>
+              <detector>inductive detector</detector>
+            </instrument_info>
+          </instrument_info_list>
+        </sample_file>
+      </replicate>
+      <replicate name="900_to_1000">
+        <sample_file id="_900_to_1000_f0" file_path="C:\Users\brian\Documents\sprg2019\dia_on_std_only\121416_sprg_5x500fmol_900_to_1000_dia01.mzML?centroid_ms1=true&amp;centroid_ms2=true" sample_name="121416_sprg_5x500fmol_900_to_1000_dia01" acquired_time="2016-12-18T09:47:57" modified_time="2019-03-01T16:24:56" tic_area="11309798400">
+          <instrument_info_list>
+            <instrument_info>
+              <model>Q Exactive</model>
+              <ionsource>nanoelectrospray</ionsource>
+              <analyzer>quadrupole/orbitrap</analyzer>
+              <detector>inductive detector</detector>
+            </instrument_info>
+          </instrument_info_list>
+        </sample_file>
+      </replicate>
+    </measured_results>
+  </settings_summary>
+  <peptide_list label_name="peptides2" websearch_status="X#Upeptides2" auto_manage_children="false">
+    <peptide auto_manage_children="false" sequence="STSLNERPK" modified_sequence="STS[+79.966331]LNERPK" calc_neutral_pep_mass="1110.507054" num_missed_cleavages="0" avg_measured_retention_time="28.5896549">
+      <explicit_modifications>
+        <explicit_static_modifications>
+          <explicit_modification index_aa="2" modification_name="Phospho (ST)" mass_diff="+80" />
+        </explicit_static_modifications>
+        <explicit_heavy_modifications>
+          <explicit_modification index_aa="8" modification_name="Label:13C(6)15N(2) (C-term K)" mass_diff="+8" />
+        </explicit_heavy_modifications>
+      </explicit_modifications>
+      <peptide_results>
+        <peptide_result replicate="1000_to_1100" peak_count_ratio="0.333333343" retention_time="28.1293221" />
+        <peptide_result replicate="1100_to_1200" peak_count_ratio="0.333333343" retention_time="28.5204182" />
+        <peptide_result replicate="400_to_500" peak_count_ratio="0.333333343" retention_time="28.8245125" />
+        <peptide_result replicate="500_to_600" peak_count_ratio="1" retention_time="28.5820255" />
+        <peptide_result replicate="600_to_700" peak_count_ratio="0.333333343" retention_time="28.9394188" />
+        <peptide_result replicate="700_to_800" peak_count_ratio="0.333333343" retention_time="29.0887165" />
+        <peptide_result replicate="800_to_900" peak_count_ratio="0.333333343" retention_time="28.4387131" />
+        <peptide_result replicate="900_to_1000" peak_count_ratio="0.333333343" retention_time="28.1941147" />
+      </peptide_results>
+      <precursor charge="2" isotope_label="heavy" calc_neutral_mass="1118.521253" precursor_mz="560.267902" auto_manage_children="false" collision_energy="0" modified_sequence="STS[+80.0]LNERPK[+8.0]">
+        <bibliospec_spectrum_info library_name="sprg2019" count_measured="1" />
+        <precursor_results>
+          <precursor_peak replicate="1000_to_1100" peak_count_ratio="0.333333343" retention_time="28.1293221" start_time="27.7729225" end_time="28.7125225" fwhm="0.246198684" area="1.93693312E+09" background="6.184159E+07" height="7.874973E+07" mass_error_ppm="-0.127225384" truncated="0" identified="false" library_dotp="0" isotope_dotp="0.9961498" user_set="FALSE" />
+          <precursor_peak replicate="1100_to_1200" peak_count_ratio="0.333333343" retention_time="28.5204182" start_time="28.2074184" end_time="29.02122" fwhm="0.243870884" area="1.93104486E+09" background="6.681688E+07" height="7.583077E+07" mass_error_ppm="-0.0682226047" truncated="0" identified="false" library_dotp="0" isotope_dotp="0.9947301" user_set="FALSE" />
+          <precursor_peak replicate="400_to_500" peak_count_ratio="0.333333343" retention_time="28.8245125" start_time="28.4985123" end_time="29.3787117" fwhm="0.236641437" area="1.9582921E+09" background="61148596" height="8.104384E+07" mass_error_ppm="-0.6059887" truncated="0" identified="false" library_dotp="0" isotope_dotp="0.994489551" user_set="FALSE" />
+          <precursor_peak replicate="500_to_600" peak_count_ratio="1" retention_time="28.5820255" start_time="27.8824253" end_time="29.5996246" fwhm="0.2497015" area="2.679804E+09" background="10165296" height="9.642884E+07" mass_error_ppm="4.7083497" truncated="0" identified="false" library_dotp="1" isotope_dotp="0.99438864" user_set="TRUE" />
+          <precursor_peak replicate="600_to_700" peak_count_ratio="0.333333343" retention_time="28.9394188" start_time="28.6204185" end_time="29.4817181" fwhm="0.2246541" area="2.00070592E+09" background="71413816" height="84845464" mass_error_ppm="0.117394283" truncated="0" identified="false" library_dotp="0" isotope_dotp="0.995152354" user_set="FALSE" />
+          <precursor_peak replicate="700_to_800" peak_count_ratio="0.333333343" retention_time="29.0887165" start_time="28.7998161" end_time="29.6665173" fwhm="0.195562556" area="2.1083392E+09" background="8.241367E+07" height="9.804515E+07" mass_error_ppm="-0.6417725" truncated="0" identified="false" library_dotp="0" isotope_dotp="0.995598555" user_set="FALSE" />
+          <precursor_peak replicate="800_to_900" peak_count_ratio="0.333333343" retention_time="28.4387131" start_time="28.1489124" end_time="29.0183125" fwhm="0.218506634" area="2.02776307E+09" background="75578824" height="8.749605E+07" mass_error_ppm="-0.191662326" truncated="0" identified="false" library_dotp="0" isotope_dotp="0.9942113" user_set="FALSE" />
+          <precursor_peak replicate="900_to_1000" peak_count_ratio="0.333333343" retention_time="28.1941147" start_time="27.9025135" end_time="28.8097134" fwhm="0.24573791" area="1.89892E+09" background="6.442415E+07" height="72588024" mass_error_ppm="0.429630816" truncated="0" identified="false" library_dotp="0" isotope_dotp="0.996595263" user_set="FALSE" />
+        </precursor_results>
+        <transition fragment_type="precursor" isotope_dist_rank="1" isotope_dist_proportion="0.59758085">
+          <precursor_mz>560.267902</precursor_mz>
+          <product_mz>560.267902</product_mz>
+          <collision_energy>0</collision_energy>
+          <transition_results>
+            <transition_peak replicate="1000_to_1100" mass_error_ppm="-0.5" retention_time="28.1293221" start_time="27.7729225" end_time="28.7125225" area="1.22046387E+09" background="39931024" height="7.874973E+07" fwhm="0.240422264" truncated="false" identified="false" rank="1" points_across="30" user_set="FALSE" />
+            <transition_peak replicate="1100_to_1200" mass_error_ppm="-0.5" retention_time="28.5204182" start_time="28.2074184" end_time="29.02122" area="1.21845338E+09" background="4.301842E+07" height="7.583077E+07" fwhm="0.243870884" truncated="false" identified="false" rank="1" points_across="26" user_set="FALSE" />
+            <transition_peak replicate="400_to_500" mass_error_ppm="-1.1" retention_time="28.8245125" start_time="28.4985123" end_time="29.3787117" area="1.23129421E+09" background="3.764591E+07" height="8.104384E+07" fwhm="0.233995035" truncated="false" identified="false" rank="1" points_across="28" user_set="FALSE" />
+            <transition_peak replicate="500_to_600" mass_error_ppm="6.3" retention_time="28.5820255" start_time="27.8824253" end_time="29.5996246" area="1.59770867E+09" background="6025619.5" height="9.642884E+07" fwhm="0.247630581" truncated="false" identified="false" rank="1" points_across="56" user_set="TRUE" />
+            <transition_peak replicate="600_to_700" mass_error_ppm="-0.3" retention_time="28.9394188" start_time="28.6204185" end_time="29.4817181" area="1.26662272E+09" background="44353564" height="84845464" fwhm="0.2224364" truncated="false" identified="false" rank="1" points_across="28" user_set="FALSE" />
+            <transition_peak replicate="700_to_800" mass_error_ppm="-0.9" retention_time="29.0887165" start_time="28.7998161" end_time="29.6665173" area="1.31585907E+09" background="5.194639E+07" height="9.804515E+07" fwhm="0.191935956" truncated="false" identified="false" rank="1" points_across="28" user_set="FALSE" />
+            <transition_peak replicate="800_to_900" mass_error_ppm="-0.6" retention_time="28.4387131" start_time="28.1489124" end_time="29.0183125" area="1.27396826E+09" background="4.837006E+07" height="8.749605E+07" fwhm="0.218506634" truncated="false" identified="false" rank="1" points_across="28" user_set="FALSE" />
+            <transition_peak replicate="900_to_1000" mass_error_ppm="0" retention_time="28.1941147" start_time="27.9025135" end_time="28.8097134" area="1.19566157E+09" background="4.135895E+07" height="72588024" fwhm="0.24573791" truncated="false" identified="false" rank="1" points_across="29" user_set="FALSE" />
+          </transition_results>
+        </transition>
+        <transition fragment_type="precursor" mass_index="1" isotope_dist_rank="2" isotope_dist_proportion="0.271290183">
+          <precursor_mz>560.267902</precursor_mz>
+          <product_mz>560.76932</product_mz>
+          <collision_energy>0</collision_energy>
+          <transition_results>
+            <transition_peak replicate="1000_to_1100" mass_error_ppm="1.1" retention_time="28.1293221" start_time="27.7729225" end_time="28.7125225" area="553272640" background="17688234" height="3.457826E+07" fwhm="0.246198684" truncated="false" identified="false" rank="2" points_across="30" user_set="FALSE" />
+            <transition_peak replicate="1100_to_1200" mass_error_ppm="1.3" retention_time="28.5517178" start_time="28.2074184" end_time="29.02122" area="552276032" background="19143276" height="3.445793E+07" fwhm="0.24324429" truncated="false" identified="false" rank="2" points_across="26" user_set="FALSE" />
+            <transition_peak replicate="400_to_500" mass_error_ppm="0.7" retention_time="28.8245125" start_time="28.4985123" end_time="29.3787117" area="564532352" background="18440832" height="3.702397E+07" fwhm="0.236641437" truncated="false" identified="false" rank="2" points_across="28" user_set="FALSE" />
+            <transition_peak replicate="500_to_600" mass_error_ppm="1.8" retention_time="28.5820255" start_time="27.8824253" end_time="29.5996246" area="7.21142E+08" background="2644745.25" height="4.315005E+07" fwhm="0.2497015" truncated="false" identified="false" rank="2" points_across="56" user_set="TRUE" />
+            <transition_peak replicate="600_to_700" mass_error_ppm="1.5" retention_time="28.9394188" start_time="28.6204185" end_time="29.4817181" area="5.664051E+08" background="21397876" height="3.812219E+07" fwhm="0.2246541" truncated="false" identified="false" rank="2" points_across="28" user_set="FALSE" />
+            <transition_peak replicate="700_to_800" mass_error_ppm="0.4" retention_time="29.0887165" start_time="28.7998161" end_time="29.6665173" area="6.125568E+08" background="2.345141E+07" height="4.528969E+07" fwhm="0.19535096" truncated="false" identified="false" rank="2" points_across="28" user_set="FALSE" />
+            <transition_peak replicate="800_to_900" mass_error_ppm="1.1" retention_time="28.4387131" start_time="28.1489124" end_time="29.0183125" area="5.858544E+08" background="20971012" height="40310108" fwhm="0.218013331" truncated="false" identified="false" rank="2" points_across="28" user_set="FALSE" />
+            <transition_peak replicate="900_to_1000" mass_error_ppm="1.8" retention_time="28.1941147" start_time="27.9025135" end_time="28.8097134" area="5.425332E+08" background="18664816" height="33182648" fwhm="0.242915943" truncated="false" identified="false" rank="2" points_across="29" user_set="FALSE" />
+          </transition_results>
+        </transition>
+        <transition fragment_type="precursor" mass_index="2" isotope_dist_rank="3" isotope_dist_proportion="0.0834632">
+          <precursor_mz>560.267902</precursor_mz>
+          <product_mz>561.270533</product_mz>
+          <collision_energy>0</collision_energy>
+          <transition_results>
+            <transition_peak replicate="1000_to_1100" mass_error_ppm="-1.5" retention_time="28.1293221" start_time="27.7729225" end_time="28.7125225" area="163196720" background="4222334.5" height="10493711" fwhm="0.237825736" truncated="false" identified="false" rank="3" points_across="30" user_set="FALSE" />
+            <transition_peak replicate="1100_to_1200" mass_error_ppm="-1.5" retention_time="28.5517178" start_time="28.2074184" end_time="29.02122" area="160315344" background="4655186" height="10050632" fwhm="0.242376968" truncated="false" identified="false" rank="3" points_across="26" user_set="FALSE" />
+            <transition_peak replicate="400_to_500" mass_error_ppm="-1.4" retention_time="28.8245125" start_time="28.4985123" end_time="29.3787117" area="162465584" background="5061852" height="10968143" fwhm="0.233155355" truncated="false" identified="false" rank="3" points_across="28" user_set="FALSE" />
+            <transition_peak replicate="500_to_600" mass_error_ppm="2.6" retention_time="28.5820255" start_time="27.8824253" end_time="29.5996246" area="209255856" background="1332763.38" height="12781658" fwhm="0.247087136" truncated="false" identified="false" rank="3" points_across="56" user_set="TRUE" />
+            <transition_peak replicate="600_to_700" mass_error_ppm="-1.4" retention_time="28.9394188" start_time="28.6204185" end_time="29.4817181" area="167678128" background="5662375" height="1.147008E+07" fwhm="0.222592175" truncated="false" identified="false" rank="3" points_across="28" user_set="FALSE" />
+            <transition_peak replicate="700_to_800" mass_error_ppm="-2.3" retention_time="29.0887165" start_time="28.7998161" end_time="29.6665173" area="179923360" background="7015873.5" height="1.330528E+07" fwhm="0.195562556" truncated="false" identified="false" rank="3" points_across="28" user_set="FALSE" />
+            <transition_peak replicate="800_to_900" mass_error_ppm="-1.6" retention_time="28.4387131" start_time="28.1489124" end_time="29.0183125" area="167940432" background="6237755.5" height="11645103" fwhm="0.218188241" truncated="false" identified="false" rank="3" points_across="28" user_set="FALSE" />
+            <transition_peak replicate="900_to_1000" mass_error_ppm="-1" retention_time="28.2589149" start_time="27.9025135" end_time="28.8097134" area="160725216" background="4400384" height="9784358" fwhm="0.244126216" truncated="false" identified="false" rank="3" points_across="29" user_set="FALSE" />
+          </transition_results>
+        </transition>
+        <transition fragment_type="b" fragment_ordinal="2" calc_neutral_mass="188.079707" product_charge="1" cleavage_aa="T" loss_neutral_mass="0">
+          <precursor_mz>560.267902</precursor_mz>
+          <product_mz>189.086983</product_mz>
+          <collision_energy>0</collision_energy>
+          <transition_lib_info rank="6" intensity="9717981" />
+          <transition_results>
+            <transition_peak replicate="500_to_600" mass_error_ppm="3.4" retention_time="28.6138248" start_time="27.8824253" end_time="29.5996246" area="9717981" background="0" height="627261.5" fwhm="0.227988914" truncated="false" identified="false" rank="9" points_across="56" rank_by_level="6" user_set="TRUE" />
+          </transition_results>
+        </transition>
+        <transition fragment_type="y" fragment_ordinal="6" calc_neutral_mass="763.443186" product_charge="1" cleavage_aa="L" loss_neutral_mass="0">
+          <precursor_mz>560.267902</precursor_mz>
+          <product_mz>764.450462</product_mz>
+          <collision_energy>0</collision_energy>
+          <transition_lib_info rank="2" intensity="46115984" />
+          <transition_results>
+            <transition_peak replicate="500_to_600" mass_error_ppm="6.1" retention_time="28.6138248" start_time="27.8824253" end_time="29.5996246" area="46115984" background="33577.1" height="2992453" fwhm="0.2201827" truncated="false" identified="false" rank="5" points_across="56" rank_by_level="2" user_set="TRUE" />
+          </transition_results>
+        </transition>
+        <transition fragment_type="y" fragment_ordinal="5" calc_neutral_mass="650.359122" product_charge="1" cleavage_aa="N" loss_neutral_mass="0">
+          <precursor_mz>560.267902</precursor_mz>
+          <product_mz>651.366398</product_mz>
+          <collision_energy>0</collision_energy>
+          <transition_lib_info rank="1" intensity="4.622244E+07" />
+          <transition_results>
+            <transition_peak replicate="500_to_600" mass_error_ppm="7.3" retention_time="28.6138248" start_time="27.8824253" end_time="29.5996246" area="4.622244E+07" background="29444.2773" height="3119199.25" fwhm="0.21134007" truncated="false" identified="false" rank="4" points_across="56" rank_by_level="1" user_set="TRUE" />
+          </transition_results>
+        </transition>
+        <transition fragment_type="y" fragment_ordinal="4" calc_neutral_mass="536.316195" product_charge="1" cleavage_aa="E" loss_neutral_mass="0">
+          <precursor_mz>560.267902</precursor_mz>
+          <product_mz>537.323471</product_mz>
+          <collision_energy>0</collision_energy>
+          <transition_lib_info rank="3" intensity="20535728" />
+          <transition_results>
+            <transition_peak replicate="500_to_600" mass_error_ppm="-0.7" retention_time="28.6138248" start_time="27.8824253" end_time="29.5996246" area="20535728" background="0" height="1327186.38" fwhm="0.228788555" truncated="false" identified="false" rank="6" points_across="56" rank_by_level="3" user_set="TRUE" />
+          </transition_results>
+        </transition>
+        <transition fragment_type="y" fragment_ordinal="3" calc_neutral_mass="407.273602" product_charge="1" cleavage_aa="R" loss_neutral_mass="0">
+          <precursor_mz>560.267902</precursor_mz>
+          <product_mz>408.280878</product_mz>
+          <collision_energy>0</collision_energy>
+          <transition_lib_info rank="4" intensity="17901864" />
+          <transition_results>
+            <transition_peak replicate="500_to_600" mass_error_ppm="0.1" retention_time="28.5820255" start_time="27.8824253" end_time="29.5996246" area="17901864" background="23745.2734" height="1150520.75" fwhm="0.227441579" truncated="false" identified="false" rank="7" points_across="56" rank_by_level="4" user_set="TRUE" />
+          </transition_results>
+        </transition>
+        <transition fragment_type="y" fragment_ordinal="2" calc_neutral_mass="251.172491" product_charge="1" cleavage_aa="P" loss_neutral_mass="0">
+          <precursor_mz>560.267902</precursor_mz>
+          <product_mz>252.179767</product_mz>
+          <collision_energy>0</collision_energy>
+          <transition_lib_info rank="5" intensity="11203374" />
+          <transition_results>
+            <transition_peak replicate="500_to_600" mass_error_ppm="6.3" retention_time="28.6138248" start_time="27.8824253" end_time="29.5996246" area="11203374" background="75401.53" height="760980.063" fwhm="0.213341117" truncated="false" identified="false" rank="8" points_across="56" rank_by_level="5" user_set="TRUE" />
+          </transition_results>
+        </transition>
+      </precursor>
+    </peptide>
+    <peptide auto_manage_children="false" sequence="QETVDCLKK" modified_sequence="QET[+79.966331]VDC[+57.021464]LKK" calc_neutral_pep_mass="1199.525741" num_missed_cleavages="1" avg_measured_retention_time="37.60185">
+      <explicit_modifications>
+        <explicit_static_modifications>
+          <explicit_modification index_aa="2" modification_name="Phospho (ST)" mass_diff="+80" />
+          <explicit_modification index_aa="5" modification_name="Carbamidomethyl (C)" mass_diff="+57" />
+        </explicit_static_modifications>
+        <explicit_heavy_modifications>
+          <explicit_modification index_aa="8" modification_name="Label:13C(6)15N(2) (C-term K)" mass_diff="+8" />
+        </explicit_heavy_modifications>
+      </explicit_modifications>
+      <peptide_results>
+        <peptide_result replicate="1000_to_1100" peak_count_ratio="0.333333343" retention_time="37.1689224" />
+        <peptide_result replicate="1100_to_1200" peak_count_ratio="0.333333343" retention_time="37.56612" />
+        <peptide_result replicate="400_to_500" peak_count_ratio="0.6666667" retention_time="37.94661" />
+        <peptide_result replicate="500_to_600" peak_count_ratio="0.6666667" retention_time="37.7208748" />
+        <peptide_result replicate="600_to_700" peak_count_ratio="0.6666667" retention_time="37.8076172" />
+        <peptide_result replicate="700_to_800" peak_count_ratio="0.333333343" retention_time="37.9804153" />
+        <peptide_result replicate="800_to_900" peak_count_ratio="0.333333343" retention_time="37.3581123" />
+        <peptide_result replicate="900_to_1000" peak_count_ratio="0.333333343" retention_time="37.2661133" />
+      </peptide_results>
+      <precursor charge="2" isotope_label="heavy" calc_neutral_mass="1207.53994" precursor_mz="604.777246" auto_manage_children="false" collision_energy="0" modified_sequence="QET[+80.0]VDC[+57.0]LKK[+8.0]">
+        <bibliospec_spectrum_info library_name="sprg2019" count_measured="1" />
+        <precursor_results>
+          <precursor_peak replicate="1000_to_1100" peak_count_ratio="0.333333343" retention_time="37.1689224" start_time="36.8773232" end_time="37.88172" fwhm="0.226356491" area="125619616" background="1368865.25" height="4749609" mass_error_ppm="1.10351908" truncated="0" identified="false" library_dotp="0" isotope_dotp="0.991283238" user_set="FALSE" />
+          <precursor_peak replicate="1100_to_1200" peak_count_ratio="0.333333343" retention_time="37.56612" start_time="37.28442" end_time="37.97302" fwhm="0.237035558" area="115386624" background="791987.9" height="4279063" mass_error_ppm="1.68356943" truncated="0" identified="false" library_dotp="0" isotope_dotp="0.996015549" user_set="FALSE" />
+          <precursor_peak replicate="400_to_500" peak_count_ratio="0.333333343" retention_time="37.9635124" start_time="37.55791" end_time="38.70711" fwhm="0.218549609" area="112498928" background="312311.344" height="4272131.5" mass_error_ppm="1.06916773" truncated="0" identified="false" library_dotp="0" isotope_dotp="0.9883618" user_set="TRUE" />
+          <precursor_peak replicate="500_to_600" peak_count_ratio="1" retention_time="37.7208748" start_time="37.2756767" end_time="38.5158768" fwhm="0.249771357" area="1.55592E+08" background="574691.75" height="5388424" mass_error_ppm="1.83037078" truncated="0" identified="false" library_dotp="1" isotope_dotp="0.9921585" user_set="TRUE" />
+          <precursor_peak replicate="600_to_700" peak_count_ratio="1" retention_time="37.8076172" start_time="37.3929176" end_time="38.6051178" fwhm="0.220461652" area="173034928" background="506839.125" height="6176332" mass_error_ppm="2.93482447" truncated="0" identified="false" library_dotp="0.97578454" isotope_dotp="0.9949734" user_set="TRUE" />
+          <precursor_peak replicate="700_to_800" peak_count_ratio="0.333333343" retention_time="37.9804153" start_time="37.6594162" end_time="38.5903168" fwhm="0.221902981" area="130957416" background="1535962.75" height="4930359" mass_error_ppm="0.6566744" truncated="0" identified="false" library_dotp="0" isotope_dotp="0.991465867" user_set="FALSE" />
+          <precursor_peak replicate="800_to_900" peak_count_ratio="0.333333343" retention_time="37.3581123" start_time="37.0683136" end_time="37.9055138" fwhm="0.209990889" area="115628448" background="4437342" height="4624860" mass_error_ppm="1.188052" truncated="0" identified="false" library_dotp="0" isotope_dotp="0.994547367" user_set="FALSE" />
+          <precursor_peak replicate="900_to_1000" peak_count_ratio="0.333333343" retention_time="37.2661133" start_time="36.9097137" end_time="37.5253143" fwhm="0.233957589" area="112622648" background="542135.438" height="4345467" mass_error_ppm="1.46352124" truncated="0" identified="false" library_dotp="0" isotope_dotp="0.992577553" user_set="FALSE" />
+        </precursor_results>
+        <transition fragment_type="precursor" isotope_dist_rank="1" isotope_dist_proportion="0.544859231">
+          <precursor_mz>604.777246</precursor_mz>
+          <product_mz>604.777246</product_mz>
+          <collision_energy>0</collision_energy>
+          <transition_results>
+            <transition_peak replicate="1000_to_1100" mass_error_ppm="2.3" retention_time="37.1689224" start_time="36.8773232" end_time="37.88172" area="7.428248E+07" background="1105473" height="4749609" fwhm="0.218577281" truncated="false" identified="false" rank="1" points_across="31" user_set="FALSE" />
+            <transition_peak replicate="1100_to_1200" mass_error_ppm="3" retention_time="37.56612" start_time="37.28442" end_time="37.97302" area="6.749248E+07" background="548129.938" height="4279063" fwhm="0.237035558" truncated="false" identified="false" rank="1" points_across="22" user_set="FALSE" />
+            <transition_peak replicate="400_to_500" mass_error_ppm="2.3" retention_time="37.9635124" start_time="37.55791" end_time="38.70711" area="6.742414E+07" background="284949.1" height="4272131.5" fwhm="0.218549609" truncated="false" identified="false" rank="1" points_across="36" user_set="TRUE" />
+            <transition_peak replicate="500_to_600" mass_error_ppm="3.1" retention_time="37.7208748" start_time="37.2756767" end_time="38.5158768" area="9.047017E+07" background="510984.375" height="5388424" fwhm="0.235758245" truncated="false" identified="false" rank="1" points_across="40" user_set="TRUE" />
+            <transition_peak replicate="600_to_700" mass_error_ppm="4.2" retention_time="37.8076172" start_time="37.3929176" end_time="38.6051178" area="9.992997E+07" background="443768.844" height="6176332" fwhm="0.21993202" truncated="false" identified="false" rank="1" points_across="39" user_set="TRUE" />
+            <transition_peak replicate="700_to_800" mass_error_ppm="1.8" retention_time="37.9804153" start_time="37.6594162" end_time="38.5903168" area="7.80238E+07" background="971317.6" height="4930359" fwhm="0.221902981" truncated="false" identified="false" rank="1" points_across="30" user_set="FALSE" />
+            <transition_peak replicate="800_to_900" mass_error_ppm="2.4" retention_time="37.3581123" start_time="37.0683136" end_time="37.9055138" area="6.845344E+07" background="2822405" height="4624860" fwhm="0.202491209" truncated="false" identified="false" rank="1" points_across="27" user_set="FALSE" />
+            <transition_peak replicate="900_to_1000" mass_error_ppm="2.7" retention_time="37.2661133" start_time="36.9097137" end_time="37.5253143" area="6.620414E+07" background="400557.781" height="4345467" fwhm="0.228570431" truncated="false" identified="false" rank="1" points_across="19" user_set="FALSE" />
+          </transition_results>
+        </transition>
+        <transition fragment_type="precursor" mass_index="1" isotope_dist_rank="2" isotope_dist_proportion="0.27475825">
+          <precursor_mz>604.777246</precursor_mz>
+          <product_mz>605.27867</product_mz>
+          <collision_energy>0</collision_energy>
+          <transition_results>
+            <transition_peak replicate="1000_to_1100" mass_error_ppm="-0.6" retention_time="37.1689224" start_time="36.8773232" end_time="37.88172" area="37099492" background="0" height="2314443" fwhm="0.226356491" truncated="false" identified="false" rank="2" points_across="31" user_set="FALSE" />
+            <transition_peak replicate="1100_to_1200" mass_error_ppm="-0.2" retention_time="37.56612" start_time="37.28442" end_time="37.97302" area="34266396" background="243857.953" height="2209303" fwhm="0.229886934" truncated="false" identified="false" rank="2" points_across="22" user_set="FALSE" />
+            <transition_peak replicate="400_to_500" mass_error_ppm="-0.8" retention_time="37.9635124" start_time="37.55791" end_time="38.70711" area="32429316" background="27362.2422" height="2113139" fwhm="0.2111678" truncated="false" identified="false" rank="2" points_across="36" user_set="TRUE" />
+            <transition_peak replicate="500_to_600" mass_error_ppm="0" retention_time="37.7208748" start_time="37.2756767" end_time="38.5158768" area="44604348" background="63707.3672" height="2636664.25" fwhm="0.23874718" truncated="false" identified="false" rank="2" points_across="40" user_set="TRUE" />
+            <transition_peak replicate="600_to_700" mass_error_ppm="1.2" retention_time="37.8076172" start_time="37.3929176" end_time="38.6051178" area="4.942002E+07" background="0" height="3067766.25" fwhm="0.220099479" truncated="false" identified="false" rank="2" points_across="39" user_set="TRUE" />
+            <transition_peak replicate="700_to_800" mass_error_ppm="-1" retention_time="37.9804153" start_time="37.6594162" end_time="38.5903168" area="3.780514E+07" background="564645.1" height="2413969.5" fwhm="0.220261112" truncated="false" identified="false" rank="2" points_across="30" user_set="FALSE" />
+            <transition_peak replicate="800_to_900" mass_error_ppm="-0.6" retention_time="37.3581123" start_time="37.0683136" end_time="37.9055138" area="33281468" background="1614936.75" height="2291067" fwhm="0.205832258" truncated="false" identified="false" rank="2" points_across="27" user_set="FALSE" />
+            <transition_peak replicate="900_to_1000" mass_error_ppm="-0.3" retention_time="37.2661133" start_time="36.9097137" end_time="37.5253143" area="3.351801E+07" background="141577.672" height="2176278.75" fwhm="0.233957589" truncated="false" identified="false" rank="2" points_across="19" user_set="FALSE" />
+          </transition_results>
+        </transition>
+        <transition fragment_type="precursor" mass_index="2" isotope_dist_rank="3" isotope_dist_proportion="0.113945782">
+          <precursor_mz>604.777246</precursor_mz>
+          <product_mz>605.778916</product_mz>
+          <collision_energy>0</collision_energy>
+          <transition_results>
+            <transition_peak replicate="1000_to_1100" mass_error_ppm="-0.7" retention_time="37.1689224" start_time="36.8773232" end_time="37.88172" area="14237647" background="263392.219" height="902153.8" fwhm="0.222077325" truncated="false" identified="false" rank="3" points_across="31" user_set="FALSE" />
+            <transition_peak replicate="1100_to_1200" mass_error_ppm="-0.1" retention_time="37.56612" start_time="37.28442" end_time="37.97302" area="13627742" background="0" height="881283.2" fwhm="0.2302843" truncated="false" identified="false" rank="3" points_across="22" user_set="FALSE" />
+            <transition_peak replicate="400_to_500" mass_error_ppm="-0.7" retention_time="37.9635124" start_time="37.55791" end_time="38.70711" area="12645476" background="0" height="841423.438" fwhm="0.2114979" truncated="false" identified="false" rank="3" points_across="36" user_set="TRUE" />
+            <transition_peak replicate="500_to_600" mass_error_ppm="0.1" retention_time="37.7208748" start_time="37.2756767" end_time="38.5158768" area="17513788" background="0" height="1063301.75" fwhm="0.235311836" truncated="false" identified="false" rank="3" points_across="40" user_set="TRUE" />
+            <transition_peak replicate="600_to_700" mass_error_ppm="1.2" retention_time="37.8076172" start_time="37.3929176" end_time="38.6051178" area="19934056" background="63070.27" height="1239771.75" fwhm="0.220461652" truncated="false" identified="false" rank="3" points_across="39" user_set="TRUE" />
+            <transition_peak replicate="700_to_800" mass_error_ppm="-1.1" retention_time="37.94832" start_time="37.6594162" end_time="38.5903168" area="15128474" background="0" height="978994.8" fwhm="0.220899835" truncated="false" identified="false" rank="3" points_across="30" user_set="FALSE" />
+            <transition_peak replicate="800_to_900" mass_error_ppm="-0.5" retention_time="37.3581123" start_time="37.0683136" end_time="37.9055138" area="13893539" background="0" height="920376.6" fwhm="0.209990889" truncated="false" identified="false" rank="3" points_across="27" user_set="FALSE" />
+            <transition_peak replicate="900_to_1000" mass_error_ppm="-0.3" retention_time="37.2661133" start_time="36.9097137" end_time="37.5253143" area="12900493" background="0" height="841547.938" fwhm="0.2277675" truncated="false" identified="false" rank="3" points_across="19" user_set="FALSE" />
+          </transition_results>
+        </transition>
+        <transition fragment_type="b" fragment_ordinal="3" calc_neutral_mass="438.11518" product_charge="1" cleavage_aa="T" loss_neutral_mass="0">
+          <precursor_mz>604.777246</precursor_mz>
+          <product_mz>439.122456</product_mz>
+          <collision_energy>0</collision_energy>
+          <transition_lib_info rank="5" intensity="29530.79" />
+          <transition_results>
+            <transition_peak replicate="500_to_600" mass_error_ppm="3.5" retention_time="37.7844772" start_time="37.2756767" end_time="38.5158768" area="29530.79" background="0" height="2367.94434" fwhm="0.221368581" truncated="false" identified="false" rank="8" points_across="20" rank_by_level="5" user_set="TRUE" />
+            <transition_peak replicate="600_to_700" mass_error_ppm="4.3" retention_time="37.77572" start_time="37.3929176" end_time="38.6051178" area="38378.88" background="0" height="3372.54761" fwhm="0.153440312" truncated="false" identified="false" rank="8" points_across="39" rank_by_level="5" user_set="TRUE" />
+          </transition_results>
+        </transition>
+        <transition fragment_type="y" fragment_ordinal="6" calc_neutral_mass="769.424759" product_charge="1" cleavage_aa="V" loss_neutral_mass="0">
+          <precursor_mz>604.777246</precursor_mz>
+          <product_mz>770.432035</product_mz>
+          <collision_energy>0</collision_energy>
+          <transition_lib_info rank="3" intensity="368006.3" />
+          <transition_results>
+            <transition_peak replicate="500_to_600" mass_error_ppm="5.7" retention_time="37.7208748" start_time="37.2756767" end_time="38.5158768" area="368006.3" background="0" height="28500.4473" fwhm="0.194122553" truncated="false" identified="false" rank="6" points_across="20" rank_by_level="3" user_set="TRUE" />
+            <transition_peak replicate="600_to_700" mass_error_ppm="6.1" retention_time="37.83952" start_time="37.3929176" end_time="38.6051178" area="501872.2" background="0" height="36656.46" fwhm="0.212509438" truncated="false" identified="false" rank="6" points_across="39" rank_by_level="3" user_set="TRUE" />
+          </transition_results>
+        </transition>
+        <transition fragment_type="y" fragment_ordinal="5" calc_neutral_mass="670.356345" product_charge="1" cleavage_aa="D" loss_neutral_mass="0">
+          <precursor_mz>604.777246</precursor_mz>
+          <product_mz>671.363621</product_mz>
+          <collision_energy>0</collision_energy>
+          <transition_lib_info rank="1" intensity="1581755.5" />
+          <transition_results>
+            <transition_peak replicate="500_to_600" mass_error_ppm="-2.9" retention_time="37.7208748" start_time="37.2756767" end_time="38.5158768" area="1581755.5" background="0" height="93927.72" fwhm="0.249771357" truncated="false" identified="false" rank="4" points_across="20" rank_by_level="1" user_set="TRUE" />
+            <transition_peak replicate="600_to_700" mass_error_ppm="-2.8" retention_time="37.8076172" start_time="37.3929176" end_time="38.6051178" area="1875823.63" background="0" height="129510.109" fwhm="0.205998123" truncated="false" identified="false" rank="4" points_across="39" rank_by_level="1" user_set="TRUE" />
+          </transition_results>
+        </transition>
+        <transition fragment_type="y" fragment_ordinal="4" calc_neutral_mass="555.329402" product_charge="1" cleavage_aa="C" loss_neutral_mass="0">
+          <precursor_mz>604.777246</precursor_mz>
+          <product_mz>556.336678</product_mz>
+          <collision_energy>0</collision_energy>
+          <transition_lib_info rank="2" intensity="901587.438" />
+          <transition_results>
+            <transition_peak replicate="500_to_600" mass_error_ppm="5.3" retention_time="37.7208748" start_time="37.2756767" end_time="38.5158768" area="901587.438" background="0" height="65104.918" fwhm="0.186203778" truncated="false" identified="false" rank="5" points_across="20" rank_by_level="2" user_set="TRUE" />
+            <transition_peak replicate="600_to_700" mass_error_ppm="6" retention_time="37.83952" start_time="37.3929176" end_time="38.6051178" area="1173505.75" background="0" height="79109.17" fwhm="0.208058223" truncated="false" identified="false" rank="5" points_across="39" rank_by_level="2" user_set="TRUE" />
+          </transition_results>
+        </transition>
+        <transition fragment_type="y" fragment_ordinal="3" calc_neutral_mass="395.298754" product_charge="1" cleavage_aa="L" loss_neutral_mass="0">
+          <precursor_mz>604.777246</precursor_mz>
+          <product_mz>396.30603</product_mz>
+          <collision_energy>0</collision_energy>
+          <transition_lib_info rank="4" intensity="116648.828" />
+          <transition_results>
+            <transition_peak replicate="500_to_600" mass_error_ppm="1.3" retention_time="37.7208748" start_time="37.2756767" end_time="38.5158768" area="116648.828" background="0" height="11751.2295" fwhm="0.08568192" truncated="false" identified="false" rank="7" points_across="20" rank_by_level="4" user_set="TRUE" />
+            <transition_peak replicate="600_to_700" mass_error_ppm="-0.7" retention_time="37.83952" start_time="37.3929176" end_time="38.6051178" area="141870.078" background="0" height="13515.0967" fwhm="0.149760172" truncated="false" identified="false" rank="7" points_across="39" rank_by_level="4" user_set="TRUE" />
+          </transition_results>
+        </transition>
+        <transition fragment_type="y" fragment_ordinal="6" calc_neutral_mass="769.424759" product_charge="2" cleavage_aa="V" loss_neutral_mass="0">
+          <precursor_mz>604.777246</precursor_mz>
+          <product_mz>385.719656</product_mz>
+          <collision_energy>0</collision_energy>
+          <transition_lib_info rank="6" intensity="6159.896" />
+          <transition_results>
+            <transition_peak replicate="500_to_600" mass_error_ppm="6.2" retention_time="37.6572762" start_time="37.2756767" end_time="38.5158768" area="6159.896" background="0" height="1544.1416" fwhm="0.0662654" truncated="false" identified="false" rank="9" points_across="20" rank_by_level="6" user_set="TRUE" />
+            <transition_peak replicate="600_to_700" mass_error_ppm="-1" retention_time="37.83952" start_time="37.3929176" end_time="38.6051178" area="19446.42" background="0" height="2185.954" fwhm="0.1622999" truncated="false" identified="false" rank="9" points_across="39" rank_by_level="6" user_set="TRUE" />
+          </transition_results>
+        </transition>
+      </precursor>
+      <precursor charge="3" isotope_label="heavy" calc_neutral_mass="1207.53994" precursor_mz="403.520589" auto_manage_children="false" collision_energy="0" modified_sequence="QET[+80.0]VDC[+57.0]LKK[+8.0]">
+        <bibliospec_spectrum_info library_name="sprg2019" count_measured="1" />
+        <precursor_results>
+          <precursor_peak replicate="1000_to_1100" peak_count_ratio="0.333333343" retention_time="37.1689224" start_time="36.8773232" end_time="37.88172" fwhm="0.210469812" area="190791120" background="1609683" height="7605058.5" mass_error_ppm="0.301340282" truncated="0" identified="false" library_dotp="0" isotope_dotp="0.990721047" user_set="FALSE" />
+          <precursor_peak replicate="1100_to_1200" peak_count_ratio="0.333333343" retention_time="37.56612" start_time="37.28442" end_time="37.97302" fwhm="0.251669049" area="173937392" background="1639344.25" height="6253787.5" mass_error_ppm="0.79794395" truncated="0" identified="false" library_dotp="0" isotope_dotp="0.9892232" user_set="FALSE" />
+          <precursor_peak replicate="400_to_500" peak_count_ratio="1" retention_time="37.92971" start_time="37.55791" end_time="38.70711" fwhm="0.2576745" area="224848112" background="1639777.75" height="8217478.5" mass_error_ppm="-0.469769537" truncated="0" identified="false" library_dotp="1" isotope_dotp="0.992008448" user_set="TRUE" />
+          <precursor_peak replicate="500_to_600" peak_count_ratio="0.333333343" retention_time="37.7208748" start_time="37.2756767" end_time="38.5158768" fwhm="0.234551013" area="183069744" background="477891.125" height="6533975" mass_error_ppm="0.310965747" truncated="0" identified="false" library_dotp="0" isotope_dotp="0.98938" user_set="TRUE" />
+          <precursor_peak replicate="600_to_700" peak_count_ratio="0.333333343" retention_time="37.8076172" start_time="37.3929176" end_time="38.6051178" fwhm="0.210468814" area="196192480" background="492357.25" height="7647480" mass_error_ppm="0.6379848" truncated="0" identified="false" library_dotp="0" isotope_dotp="0.990933657" user_set="TRUE" />
+          <precursor_peak replicate="700_to_800" peak_count_ratio="0.333333343" retention_time="37.9804153" start_time="37.6594162" end_time="38.5903168" fwhm="0.220265031" area="193672736" background="2496015.5" height="7366053.5" mass_error_ppm="-0.117359012" truncated="0" identified="false" library_dotp="0" isotope_dotp="0.992777765" user_set="FALSE" />
+          <precursor_peak replicate="800_to_900" peak_count_ratio="0.333333343" retention_time="37.3581123" start_time="37.0683136" end_time="37.9055138" fwhm="0.208949253" area="176673344" background="7257970" height="7402603" mass_error_ppm="0.40656352" truncated="0" identified="false" library_dotp="0" isotope_dotp="0.9930775" user_set="FALSE" />
+          <precursor_peak replicate="900_to_1000" peak_count_ratio="0.333333343" retention_time="37.2661133" start_time="36.9097137" end_time="37.5253143" fwhm="0.233174443" area="176795184" background="831492" height="6858520" mass_error_ppm="0.698616445" truncated="0" identified="false" library_dotp="0" isotope_dotp="0.9894643" user_set="FALSE" />
+        </precursor_results>
+        <transition fragment_type="precursor" isotope_dist_rank="1" isotope_dist_proportion="0.544859231">
+          <precursor_mz>403.520589</precursor_mz>
+          <product_mz>403.520589</product_mz>
+          <collision_energy>0</collision_energy>
+          <transition_results>
+            <transition_peak replicate="1000_to_1100" mass_error_ppm="1.3" retention_time="37.1689224" start_time="36.8773232" end_time="37.88172" area="113351624" background="1255832.75" height="7605058.5" fwhm="0.204130173" truncated="false" identified="false" rank="1" points_across="31" user_set="FALSE" />
+            <transition_peak replicate="1100_to_1200" mass_error_ppm="1.8" retention_time="37.56612" start_time="37.28442" end_time="37.97302" area="1.024344E+08" background="816012.1" height="6253787.5" fwhm="0.245578766" truncated="false" identified="false" rank="1" points_across="22" user_set="FALSE" />
+            <transition_peak replicate="400_to_500" mass_error_ppm="0.4" retention_time="37.92971" start_time="37.55791" end_time="38.70711" area="1.325622E+08" background="949739.7" height="8217478.5" fwhm="0.230387747" truncated="false" identified="false" rank="1" points_across="37" user_set="TRUE" />
+            <transition_peak replicate="500_to_600" mass_error_ppm="1.3" retention_time="37.7208748" start_time="37.2756767" end_time="38.5158768" area="108715592" background="188499.438" height="6533975" fwhm="0.233891115" truncated="false" identified="false" rank="1" points_across="40" user_set="TRUE" />
+            <transition_peak replicate="600_to_700" mass_error_ppm="1.6" retention_time="37.8076172" start_time="37.3929176" end_time="38.6051178" area="116256856" background="255045.75" height="7647480" fwhm="0.204880461" truncated="false" identified="false" rank="1" points_across="39" user_set="TRUE" />
+            <transition_peak replicate="700_to_800" mass_error_ppm="0.8" retention_time="37.9804153" start_time="37.6594162" end_time="38.5903168" area="114957576" background="1545737" height="7366053.5" fwhm="0.220265031" truncated="false" identified="false" rank="1" points_across="30" user_set="FALSE" />
+            <transition_peak replicate="800_to_900" mass_error_ppm="1.4" retention_time="37.3581123" start_time="37.0683136" end_time="37.9055138" area="104462072" background="4413772.5" height="7402603" fwhm="0.201709" truncated="false" identified="false" rank="1" points_across="27" user_set="FALSE" />
+            <transition_peak replicate="900_to_1000" mass_error_ppm="1.7" retention_time="37.2661133" start_time="36.9097137" end_time="37.5253143" area="104154480" background="544969.9" height="6858520" fwhm="0.233174443" truncated="false" identified="false" rank="1" points_across="19" user_set="FALSE" />
+          </transition_results>
+        </transition>
+        <transition fragment_type="precursor" mass_index="1" isotope_dist_rank="2" isotope_dist_proportion="0.27475825">
+          <precursor_mz>403.520589</precursor_mz>
+          <product_mz>403.854872</product_mz>
+          <collision_energy>0</collision_energy>
+          <transition_results>
+            <transition_peak replicate="1000_to_1100" mass_error_ppm="-1.3" retention_time="37.1689224" start_time="36.8773232" end_time="37.88172" area="55824976" background="353850.2" height="3678048" fwhm="0.209856808" truncated="false" identified="false" rank="2" points_across="31" user_set="FALSE" />
+            <transition_peak replicate="1100_to_1200" mass_error_ppm="-0.8" retention_time="37.56612" start_time="37.28442" end_time="37.97302" area="52148356" background="680830.6" height="3216837.25" fwhm="0.242610037" truncated="false" identified="false" rank="2" points_across="22" user_set="FALSE" />
+            <transition_peak replicate="400_to_500" mass_error_ppm="-1.9" retention_time="37.92971" start_time="37.55791" end_time="38.70711" area="63724976" background="690038.1" height="3976699" fwhm="0.230701342" truncated="false" identified="false" rank="2" points_across="37" user_set="TRUE" />
+            <transition_peak replicate="500_to_600" mass_error_ppm="-1.3" retention_time="37.7208748" start_time="37.2756767" end_time="38.5158768" area="53923236" background="98307.4844" height="3298747.75" fwhm="0.234551013" truncated="false" identified="false" rank="2" points_across="40" user_set="TRUE" />
+            <transition_peak replicate="600_to_700" mass_error_ppm="-0.9" retention_time="37.77572" start_time="37.3929176" end_time="38.6051178" area="57737856" background="145233.75" height="3716213.25" fwhm="0.20488435" truncated="false" identified="false" rank="2" points_across="39" user_set="TRUE" />
+            <transition_peak replicate="700_to_800" mass_error_ppm="-1.6" retention_time="37.9804153" start_time="37.6594162" end_time="38.5903168" area="56217216" background="820030.063" height="3579362" fwhm="0.2193677" truncated="false" identified="false" rank="2" points_across="30" user_set="FALSE" />
+            <transition_peak replicate="800_to_900" mass_error_ppm="-1.2" retention_time="37.3259125" start_time="37.0683136" end_time="37.9055138" area="5.181864E+07" background="2157921.75" height="3599560.5" fwhm="0.208949253" truncated="false" identified="false" rank="2" points_across="27" user_set="FALSE" />
+            <transition_peak replicate="900_to_1000" mass_error_ppm="-0.9" retention_time="37.2661133" start_time="36.9097137" end_time="37.5253143" area="52930664" background="286522.1" height="3503894.75" fwhm="0.228198633" truncated="false" identified="false" rank="2" points_across="19" user_set="FALSE" />
+          </transition_results>
+        </transition>
+        <transition fragment_type="precursor" mass_index="2" isotope_dist_rank="3" isotope_dist_proportion="0.113945782">
+          <precursor_mz>403.520589</precursor_mz>
+          <product_mz>404.18837</product_mz>
+          <collision_energy>0</collision_energy>
+          <transition_results>
+            <transition_peak replicate="1000_to_1100" mass_error_ppm="-0.8" retention_time="37.1689224" start_time="36.8773232" end_time="37.88172" area="21614506" background="0" height="1412439.88" fwhm="0.210469812" truncated="false" identified="false" rank="3" points_across="31" user_set="FALSE" />
+            <transition_peak replicate="1100_to_1200" mass_error_ppm="-0.2" retention_time="37.56612" start_time="37.28442" end_time="37.97302" area="19354642" background="142501.5" height="1142686.25" fwhm="0.251669049" truncated="false" identified="false" rank="3" points_across="22" user_set="FALSE" />
+            <transition_peak replicate="400_to_500" mass_error_ppm="-1.5" retention_time="37.92971" start_time="37.55791" end_time="38.70711" area="26169118" background="0" height="1620891.5" fwhm="0.231617376" truncated="false" identified="false" rank="3" points_across="37" user_set="TRUE" />
+            <transition_peak replicate="500_to_600" mass_error_ppm="-0.7" retention_time="37.7208748" start_time="37.2756767" end_time="38.5158768" area="20430918" background="191084.172" height="1255860.38" fwhm="0.2335961" truncated="false" identified="false" rank="3" points_across="40" user_set="TRUE" />
+            <transition_peak replicate="600_to_700" mass_error_ppm="-0.4" retention_time="37.77572" start_time="37.3929176" end_time="38.6051178" area="22197756" background="92077.7656" height="1446354.88" fwhm="0.210468814" truncated="false" identified="false" rank="3" points_across="39" user_set="TRUE" />
+            <transition_peak replicate="700_to_800" mass_error_ppm="-1.1" retention_time="37.9804153" start_time="37.6594162" end_time="38.5903168" area="22497954" background="130248.375" height="1510656.88" fwhm="0.211820588" truncated="false" identified="false" rank="3" points_across="30" user_set="FALSE" />
+            <transition_peak replicate="800_to_900" mass_error_ppm="-0.6" retention_time="37.3581123" start_time="37.0683136" end_time="37.9055138" area="20392632" background="686276.2" height="1455555.25" fwhm="0.204259992" truncated="false" identified="false" rank="3" points_across="27" user_set="FALSE" />
+            <transition_peak replicate="900_to_1000" mass_error_ppm="-0.3" retention_time="37.2661133" start_time="36.9097137" end_time="37.5253143" area="19710034" background="0" height="1336617.75" fwhm="0.2182945" truncated="false" identified="false" rank="3" points_across="19" user_set="FALSE" />
+          </transition_results>
+        </transition>
+        <transition fragment_type="y" fragment_ordinal="4" calc_neutral_mass="555.329402" product_charge="1" cleavage_aa="C" loss_neutral_mass="0">
+          <precursor_mz>403.520589</precursor_mz>
+          <product_mz>556.336678</product_mz>
+          <collision_energy>0</collision_energy>
+          <transition_lib_info rank="6" intensity="115796.016" />
+          <transition_results>
+            <transition_peak replicate="400_to_500" mass_error_ppm="3.8" retention_time="37.92971" start_time="37.55791" end_time="38.70711" area="115796.016" background="0" height="9353.373" fwhm="0.197736934" truncated="false" identified="false" rank="9" points_across="37" rank_by_level="6" user_set="TRUE" />
+          </transition_results>
+        </transition>
+        <transition fragment_type="y" fragment_ordinal="3" calc_neutral_mass="395.298754" product_charge="1" cleavage_aa="L" loss_neutral_mass="0">
+          <precursor_mz>403.520589</precursor_mz>
+          <product_mz>396.30603</product_mz>
+          <collision_energy>0</collision_energy>
+          <transition_lib_info rank="4" intensity="311891.781" />
+          <transition_results>
+            <transition_peak replicate="400_to_500" mass_error_ppm="-2" retention_time="37.92971" start_time="37.55791" end_time="38.70711" area="311891.781" background="0" height="19675.7422" fwhm="0.2576745" truncated="false" identified="false" rank="7" points_across="37" rank_by_level="4" user_set="TRUE" />
+          </transition_results>
+        </transition>
+        <transition fragment_type="y" fragment_ordinal="2" calc_neutral_mass="282.21469" product_charge="1" cleavage_aa="K" loss_neutral_mass="0">
+          <precursor_mz>403.520589</precursor_mz>
+          <product_mz>283.221966</product_mz>
+          <collision_energy>0</collision_energy>
+          <transition_lib_info rank="3" intensity="361711.8" />
+          <transition_results>
+            <transition_peak replicate="400_to_500" mass_error_ppm="-0.6" retention_time="37.92971" start_time="37.55791" end_time="38.70711" area="361711.8" background="0" height="22765.7" fwhm="0.25271064" truncated="false" identified="false" rank="6" points_across="37" rank_by_level="3" user_set="TRUE" />
+          </transition_results>
+        </transition>
+        <transition fragment_type="y" fragment_ordinal="6" calc_neutral_mass="769.424759" product_charge="2" cleavage_aa="V" loss_neutral_mass="0">
+          <precursor_mz>403.520589</precursor_mz>
+          <product_mz>385.719656</product_mz>
+          <collision_energy>0</collision_energy>
+          <transition_lib_info rank="5" intensity="200676.766" />
+          <transition_results>
+            <transition_peak replicate="400_to_500" mass_error_ppm="0.3" retention_time="37.9635124" start_time="37.55791" end_time="38.70711" area="200676.766" background="0" height="16642.0547" fwhm="0.185341761" truncated="false" identified="false" rank="8" points_across="37" rank_by_level="5" user_set="TRUE" />
+          </transition_results>
+        </transition>
+        <transition fragment_type="y" fragment_ordinal="5" calc_neutral_mass="670.356345" product_charge="2" cleavage_aa="D" loss_neutral_mass="0">
+          <precursor_mz>403.520589</precursor_mz>
+          <product_mz>336.185449</product_mz>
+          <collision_energy>0</collision_energy>
+          <transition_lib_info rank="1" intensity="709228.1" />
+          <transition_results>
+            <transition_peak replicate="400_to_500" mass_error_ppm="0.7" retention_time="37.92971" start_time="37.55791" end_time="38.70711" area="709228.1" background="0" height="48045.9063" fwhm="0.231485337" truncated="false" identified="false" rank="4" points_across="37" rank_by_level="1" user_set="TRUE" />
+          </transition_results>
+        </transition>
+        <transition fragment_type="y" fragment_ordinal="4" calc_neutral_mass="555.329402" product_charge="2" cleavage_aa="C" loss_neutral_mass="0">
+          <precursor_mz>403.520589</precursor_mz>
+          <product_mz>278.671977</product_mz>
+          <collision_energy>0</collision_energy>
+          <transition_lib_info rank="2" intensity="692534.938" />
+          <transition_results>
+            <transition_peak replicate="400_to_500" mass_error_ppm="2.2" retention_time="37.9635124" start_time="37.55791" end_time="38.70711" area="692534.938" background="0" height="47899.6172" fwhm="0.206030652" truncated="false" identified="false" rank="5" points_across="37" rank_by_level="2" user_set="TRUE" />
+          </transition_results>
+        </transition>
+      </precursor>
+    </peptide>
+    <peptide auto_manage_children="false" sequence="RDGPGLERSPGEPGGAAPER" modified_sequence="RDGPGLERS[+79.966331]PGEPGGAAPER" calc_neutral_pep_mass="2083.943646" num_missed_cleavages="2" avg_measured_retention_time="45.37375">
+      <explicit_modifications>
+        <explicit_static_modifications>
+          <explicit_modification index_aa="8" modification_name="Phospho (ST)" mass_diff="+80" />
+        </explicit_static_modifications>
+        <explicit_heavy_modifications>
+          <explicit_modification index_aa="19" modification_name="Label:13C(6)15N(4) (C-term R)" mass_diff="+10" />
+        </explicit_heavy_modifications>
+      </explicit_modifications>
+      <peptide_results>
+        <peptide_result replicate="1000_to_1100" peak_count_ratio="0.5555556" retention_time="44.9644547" />
+        <peptide_result replicate="1100_to_1200" peak_count_ratio="0.333333343" retention_time="45.3911171" />
+        <peptide_result replicate="400_to_500" peak_count_ratio="0.333333343" retention_time="45.87171" />
+        <peptide_result replicate="500_to_600" peak_count_ratio="0.5555556" retention_time="45.575676" />
+        <peptide_result replicate="600_to_700" peak_count_ratio="0.5555556" retention_time="45.481617" />
+        <peptide_result replicate="700_to_800" peak_count_ratio="0.5555556" retention_time="45.652317" />
+        <peptide_result replicate="800_to_900" peak_count_ratio="0.333333343" retention_time="45.01098" />
+        <peptide_result replicate="900_to_1000" peak_count_ratio="0.333333343" retention_time="45.0421143" />
+      </peptide_results>
+      <precursor charge="2" isotope_label="heavy" calc_neutral_mass="2093.951915" precursor_mz="1047.983233" auto_manage_children="false" collision_energy="0" modified_sequence="RDGPGLERS[+80.0]PGEPGGAAPER[+10.0]">
+        <bibliospec_spectrum_info library_name="sprg2019" count_measured="1" />
+        <precursor_results>
+          <precursor_peak replicate="1000_to_1100" peak_count_ratio="1" retention_time="44.9861221" start_time="44.6936226" end_time="45.37612" fwhm="0.207639068" area="1.478115E+07" background="465730.125" height="508932.6" mass_error_ppm="3.96767473" truncated="0" identified="false" library_dotp="1" isotope_dotp="0.995075941" user_set="TRUE" />
+          <precursor_peak replicate="1100_to_1200" peak_count_ratio="0.333333343" retention_time="45.3911171" start_time="45.0781174" end_time="45.79802" fwhm="0.161117241" area="6927420" background="0" height="281963.4" mass_error_ppm="1.37652493" truncated="0" identified="false" library_dotp="0" isotope_dotp="0.984613955" user_set="FALSE" />
+          <precursor_peak replicate="400_to_500" peak_count_ratio="0.333333343" retention_time="45.87171" start_time="45.4845123" end_time="46.18851" fwhm="0.205543458" area="6382998.5" background="0" height="214836.656" mass_error_ppm="0.9897752" truncated="0" identified="false" library_dotp="0" isotope_dotp="0.989506066" user_set="TRUE" />
+          <precursor_peak replicate="500_to_600" peak_count_ratio="0.333333343" retention_time="45.575676" start_time="45.2412758" end_time="46.0012779" fwhm="0.198612377" area="6560052" background="0" height="240924.7" mass_error_ppm="1.16120815" truncated="0" identified="false" library_dotp="0" isotope_dotp="0.994028747" user_set="TRUE" />
+          <precursor_peak replicate="600_to_700" peak_count_ratio="0.333333343" retention_time="45.481617" start_time="45.0851173" end_time="45.84762" fwhm="0.167327121" area="6696612" background="0" height="270612.656" mass_error_ppm="1.89598608" truncated="0" identified="false" library_dotp="0" isotope_dotp="0.985668957" user_set="TRUE" />
+          <precursor_peak replicate="700_to_800" peak_count_ratio="0.333333343" retention_time="45.652317" start_time="45.2671165" end_time="46.0375175" fwhm="0.165448591" area="7833839" background="0" height="310806.3" mass_error_ppm="1.75696361" truncated="0" identified="false" library_dotp="0" isotope_dotp="0.984962344" user_set="TRUE" />
+          <precursor_peak replicate="800_to_900" peak_count_ratio="0.333333343" retention_time="44.9895134" start_time="44.69971" end_time="45.40811" fwhm="0.1703621" area="8286179" background="0" height="297574.438" mass_error_ppm="1.54154408" truncated="0" identified="false" library_dotp="0" isotope_dotp="0.994588852" user_set="FALSE" />
+          <precursor_peak replicate="900_to_1000" peak_count_ratio="0.333333343" retention_time="45.0421143" start_time="44.7181129" end_time="45.4309158" fwhm="0.190686315" area="7824944" background="0" height="276252.5" mass_error_ppm="1.59559989" truncated="0" identified="false" library_dotp="0" isotope_dotp="0.986561656" user_set="FALSE" />
+        </precursor_results>
+        <transition fragment_type="precursor" isotope_dist_rank="1" isotope_dist_proportion="0.360002">
+          <precursor_mz>1047.983233</precursor_mz>
+          <product_mz>1047.983233</product_mz>
+          <collision_energy>0</collision_energy>
+          <transition_results>
+            <transition_peak replicate="1000_to_1100" mass_error_ppm="4.3" retention_time="44.9861221" start_time="44.6936226" end_time="45.37612" area="5783804" background="191718.438" height="508932.6" fwhm="0.1615548" truncated="false" identified="false" rank="1" points_across="22" user_set="TRUE" />
+            <transition_peak replicate="1100_to_1200" mass_error_ppm="1.3" retention_time="45.3911171" start_time="45.0781174" end_time="45.79802" area="2805151.75" background="0" height="270645.844" fwhm="0.161117241" truncated="false" identified="false" rank="1" points_across="22" user_set="FALSE" />
+            <transition_peak replicate="400_to_500" mass_error_ppm="0.8" retention_time="45.87171" start_time="45.4845123" end_time="46.18851" area="2715310.75" background="0" height="214836.656" fwhm="0.205543458" truncated="false" identified="false" rank="1" points_across="22" user_set="TRUE" />
+            <transition_peak replicate="500_to_600" mass_error_ppm="1" retention_time="45.575676" start_time="45.2412758" end_time="46.0012779" area="2678584.5" background="0" height="240924.7" fwhm="0.183472082" truncated="false" identified="false" rank="1" points_across="25" user_set="TRUE" />
+            <transition_peak replicate="600_to_700" mass_error_ppm="1.9" retention_time="45.481617" start_time="45.0851173" end_time="45.84762" area="2674947.25" background="0" height="230775.781" fwhm="0.167327121" truncated="false" identified="false" rank="2" points_across="25" user_set="TRUE" />
+            <transition_peak replicate="700_to_800" mass_error_ppm="1.7" retention_time="45.652317" start_time="45.2671165" end_time="46.0375175" area="3126127.5" background="0" height="310806.3" fwhm="0.1435361" truncated="false" identified="false" rank="2" points_across="25" user_set="TRUE" />
+            <transition_peak replicate="800_to_900" mass_error_ppm="1.5" retention_time="44.9895134" start_time="44.69971" end_time="45.40811" area="3427399.5" background="0" height="297574.438" fwhm="0.1703621" truncated="false" identified="false" rank="1" points_across="23" user_set="FALSE" />
+            <transition_peak replicate="900_to_1000" mass_error_ppm="1.6" retention_time="45.009716" start_time="44.7181129" end_time="45.4309158" area="3174194.5" background="0" height="275363.2" fwhm="0.190686315" truncated="false" identified="false" rank="1" points_across="22" user_set="FALSE" />
+          </transition_results>
+        </transition>
+        <transition fragment_type="precursor" mass_index="1" isotope_dist_rank="2" isotope_dist_proportion="0.337480515">
+          <precursor_mz>1047.983233</precursor_mz>
+          <product_mz>1048.484667</product_mz>
+          <collision_energy>0</collision_energy>
+          <transition_results>
+            <transition_peak replicate="1000_to_1100" mass_error_ppm="4.1" retention_time="44.9861221" start_time="44.6936226" end_time="45.37612" area="5418026.5" background="128206.148" height="463782.063" fwhm="0.167247385" truncated="false" identified="false" rank="2" points_across="22" user_set="TRUE" />
+            <transition_peak replicate="1100_to_1200" mass_error_ppm="1.3" retention_time="45.3911171" start_time="45.0781174" end_time="45.79802" area="2796967.75" background="0" height="281963.4" fwhm="0.128041" truncated="false" identified="false" rank="2" points_across="22" user_set="FALSE" />
+            <transition_peak replicate="400_to_500" mass_error_ppm="1.2" retention_time="45.87171" start_time="45.4845123" end_time="46.18851" area="2388984.25" background="0" height="209926.5" fwhm="0.19246015" truncated="false" identified="false" rank="2" points_across="22" user_set="TRUE" />
+            <transition_peak replicate="500_to_600" mass_error_ppm="1.2" retention_time="45.575676" start_time="45.2412758" end_time="46.0012779" area="2475265.25" background="0" height="211449.719" fwhm="0.198612377" truncated="false" identified="false" rank="2" points_across="25" user_set="TRUE" />
+            <transition_peak replicate="600_to_700" mass_error_ppm="1.6" retention_time="45.481617" start_time="45.0851173" end_time="45.84762" area="2710975.75" background="0" height="270612.656" fwhm="0.151662648" truncated="false" identified="false" rank="1" points_across="25" user_set="TRUE" />
+            <transition_peak replicate="700_to_800" mass_error_ppm="1.6" retention_time="45.652317" start_time="45.2671165" end_time="46.0375175" area="3179354.5" background="0" height="295190.156" fwhm="0.165448591" truncated="false" identified="false" rank="1" points_across="25" user_set="TRUE" />
+            <transition_peak replicate="800_to_900" mass_error_ppm="1.4" retention_time="44.9895134" start_time="44.69971" end_time="45.40811" area="3198540" background="0" height="281515.625" fwhm="0.163271219" truncated="false" identified="false" rank="2" points_across="23" user_set="FALSE" />
+            <transition_peak replicate="900_to_1000" mass_error_ppm="1.3" retention_time="45.0421143" start_time="44.7181129" end_time="45.4309158" area="3138755.75" background="0" height="276252.5" fwhm="0.184100688" truncated="false" identified="false" rank="2" points_across="22" user_set="FALSE" />
+          </transition_results>
+        </transition>
+        <transition fragment_type="precursor" mass_index="2" isotope_dist_rank="3" isotope_dist_proportion="0.182246014">
+          <precursor_mz>1047.983233</precursor_mz>
+          <product_mz>1048.985975</product_mz>
+          <collision_energy>0</collision_energy>
+          <transition_results>
+            <transition_peak replicate="1000_to_1100" mass_error_ppm="2.5" retention_time="44.95362" start_time="44.6936226" end_time="45.37612" area="2816737" background="145805.531" height="259284.641" fwhm="0.158956423" truncated="false" identified="false" rank="3" points_across="22" user_set="TRUE" />
+            <transition_peak replicate="1100_to_1200" mass_error_ppm="1.7" retention_time="45.4224167" start_time="45.0781174" end_time="45.79802" area="1325300.38" background="0" height="140795.719" fwhm="0.134937465" truncated="false" identified="false" rank="3" points_across="22" user_set="FALSE" />
+            <transition_peak replicate="400_to_500" mass_error_ppm="1" retention_time="45.9069138" start_time="45.4845123" end_time="46.18851" area="1278703.63" background="0" height="107097.234" fwhm="0.1769578" truncated="false" identified="false" rank="3" points_across="22" user_set="TRUE" />
+            <transition_peak replicate="500_to_600" mass_error_ppm="1.4" retention_time="45.575676" start_time="45.2412758" end_time="46.0012779" area="1406202.25" background="0" height="151117.125" fwhm="0.16504769" truncated="false" identified="false" rank="3" points_across="25" user_set="TRUE" />
+            <transition_peak replicate="600_to_700" mass_error_ppm="2.5" retention_time="45.481617" start_time="45.0851173" end_time="45.84762" area="1310688.88" background="0" height="133425.031" fwhm="0.1581712" truncated="false" identified="false" rank="3" points_across="25" user_set="TRUE" />
+            <transition_peak replicate="700_to_800" mass_error_ppm="2.2" retention_time="45.652317" start_time="45.2671165" end_time="46.0375175" area="1528357.25" background="0" height="162979.344" fwhm="0.134629264" truncated="false" identified="false" rank="3" points_across="25" user_set="TRUE" />
+            <transition_peak replicate="800_to_900" mass_error_ppm="1.9" retention_time="45.0217133" start_time="44.69971" end_time="45.40811" area="1660239.25" background="0" height="180907.328" fwhm="0.120729819" truncated="false" identified="false" rank="3" points_across="23" user_set="FALSE" />
+            <transition_peak replicate="900_to_1000" mass_error_ppm="2.2" retention_time="45.0421143" start_time="44.7181129" end_time="45.4309158" area="1511994.25" background="0" height="138275.641" fwhm="0.167361751" truncated="false" identified="false" rank="3" points_across="22" user_set="FALSE" />
+          </transition_results>
+        </transition>
+        <transition fragment_type="b" fragment_ordinal="6" calc_neutral_mass="595.307809" product_charge="1" cleavage_aa="L" loss_neutral_mass="0">
+          <precursor_mz>1047.983233</precursor_mz>
+          <product_mz>596.315085</product_mz>
+          <collision_energy>0</collision_energy>
+          <transition_lib_info rank="6" intensity="15016.2051" />
+          <transition_results>
+            <transition_peak replicate="1000_to_1100" mass_error_ppm="-3.2" retention_time="44.95362" start_time="44.6936226" end_time="45.37612" area="15016.2051" background="0" height="2191.99854" fwhm="0.0880548" truncated="false" identified="false" rank="9" points_across="22" rank_by_level="6" user_set="TRUE" />
+          </transition_results>
+        </transition>
+        <transition fragment_type="b" fragment_ordinal="7" calc_neutral_mass="724.350403" product_charge="1" cleavage_aa="E" loss_neutral_mass="0">
+          <precursor_mz>1047.983233</precursor_mz>
+          <product_mz>725.357679</product_mz>
+          <collision_energy>0</collision_energy>
+          <transition_lib_info rank="3" intensity="114401.711" />
+          <transition_results>
+            <transition_peak replicate="1000_to_1100" mass_error_ppm="4.4" retention_time="45.0186234" start_time="44.6936226" end_time="45.37612" area="114401.711" background="0" height="10287.5293" fwhm="0.207639068" truncated="false" identified="false" rank="6" points_across="22" rank_by_level="3" user_set="TRUE" />
+          </transition_results>
+        </transition>
+        <transition fragment_type="y" fragment_ordinal="11" calc_neutral_mass="1046.502041" product_charge="1" cleavage_aa="P" loss_neutral_mass="0">
+          <precursor_mz>1047.983233</precursor_mz>
+          <product_mz>1047.509317</product_mz>
+          <collision_energy>0</collision_energy>
+          <transition_lib_info rank="2" intensity="183988.391" />
+          <transition_results>
+            <transition_peak replicate="1000_to_1100" mass_error_ppm="7.4" retention_time="44.95362" start_time="44.6936226" end_time="45.37612" area="183988.391" background="0" height="18843.8379" fwhm="0.18475759" truncated="false" identified="false" rank="5" points_across="22" rank_by_level="2" user_set="TRUE" />
+          </transition_results>
+        </transition>
+        <transition fragment_type="y" fragment_ordinal="9" calc_neutral_mass="892.427814" product_charge="1" cleavage_aa="E" loss_neutral_mass="0">
+          <precursor_mz>1047.983233</precursor_mz>
+          <product_mz>893.43509</product_mz>
+          <collision_energy>0</collision_energy>
+          <transition_lib_info rank="5" intensity="16580.332" />
+          <transition_results>
+            <transition_peak replicate="1000_to_1100" mass_error_ppm="0.8" retention_time="44.95362" start_time="44.6936226" end_time="45.37612" area="16580.332" background="0" height="3422.44385" fwhm="0.08955432" truncated="false" identified="false" rank="8" points_across="22" rank_by_level="5" user_set="TRUE" />
+          </transition_results>
+        </transition>
+        <transition fragment_type="y" fragment_ordinal="8" calc_neutral_mass="763.385221" product_charge="1" cleavage_aa="P" loss_neutral_mass="0">
+          <precursor_mz>1047.983233</precursor_mz>
+          <product_mz>764.392497</product_mz>
+          <collision_energy>0</collision_energy>
+          <transition_lib_info rank="1" intensity="410871.281" />
+          <transition_results>
+            <transition_peak replicate="1000_to_1100" mass_error_ppm="6.3" retention_time="44.95362" start_time="44.6936226" end_time="45.37612" area="410871.281" background="0" height="41430.24" fwhm="0.14999108" truncated="false" identified="false" rank="4" points_across="22" rank_by_level="1" user_set="TRUE" />
+          </transition_results>
+        </transition>
+        <transition fragment_type="y" fragment_ordinal="3" calc_neutral_mass="410.215302" product_charge="1" cleavage_aa="P" loss_neutral_mass="0">
+          <precursor_mz>1047.983233</precursor_mz>
+          <product_mz>411.222578</product_mz>
+          <collision_energy>0</collision_energy>
+          <transition_lib_info rank="4" intensity="21725.9414" />
+          <transition_results>
+            <transition_peak replicate="1000_to_1100" mass_error_ppm="4.7" retention_time="44.9861221" start_time="44.6936226" end_time="45.37612" area="21725.9414" background="0" height="3842.816" fwhm="0.0814259946" truncated="false" identified="false" rank="7" points_across="22" rank_by_level="4" user_set="TRUE" />
+          </transition_results>
+        </transition>
+      </precursor>
+      <precursor charge="3" isotope_label="heavy" calc_neutral_mass="2093.951915" precursor_mz="698.991248" auto_manage_children="false" collision_energy="0" modified_sequence="RDGPGLERS[+80.0]PGEPGGAAPER[+10.0]">
+        <bibliospec_spectrum_info library_name="sprg2019" count_measured="1" />
+        <precursor_results>
+          <precursor_peak replicate="1000_to_1100" peak_count_ratio="0.333333343" retention_time="44.95362" start_time="44.6936226" end_time="45.37612" fwhm="0.213974312" area="9.624621E+08" background="37758604" height="2.810525E+07" mass_error_ppm="1.70115066" truncated="0" identified="false" library_dotp="0" isotope_dotp="0.997568846" user_set="TRUE" />
+          <precursor_peak replicate="1100_to_1200" peak_count_ratio="0.333333343" retention_time="45.3911171" start_time="45.0781174" end_time="45.79802" fwhm="0.212578937" area="998485056" background="2.258963E+07" height="29308334" mass_error_ppm="1.69347429" truncated="0" identified="false" library_dotp="0" isotope_dotp="0.995160758" user_set="FALSE" />
+          <precursor_peak replicate="400_to_500" peak_count_ratio="0.333333343" retention_time="45.87171" start_time="45.4845123" end_time="46.18851" fwhm="0.223980412" area="877179264" background="22622022" height="25572292" mass_error_ppm="1.009" truncated="0" identified="false" library_dotp="0" isotope_dotp="0.995918751" user_set="TRUE" />
+          <precursor_peak replicate="500_to_600" peak_count_ratio="0.333333343" retention_time="45.575676" start_time="45.2412758" end_time="46.0012779" fwhm="0.23348327" area="9.222337E+08" background="35441756" height="25321652" mass_error_ppm="1.09122932" truncated="0" identified="false" library_dotp="0" isotope_dotp="0.995516837" user_set="TRUE" />
+          <precursor_peak replicate="600_to_700" peak_count_ratio="1" retention_time="45.481617" start_time="45.0851173" end_time="45.84762" fwhm="0.230636552" area="1.24312563E+09" background="4.208664E+07" height="29061058" mass_error_ppm="1.0187211" truncated="0" identified="false" library_dotp="1" isotope_dotp="0.994218767" user_set="TRUE" />
+          <precursor_peak replicate="700_to_800" peak_count_ratio="1" retention_time="45.652317" start_time="45.2671165" end_time="46.0375175" fwhm="0.2189053" area="1.149389E+09" background="25126276" height="26586926" mass_error_ppm="1.72622538" truncated="0" identified="false" library_dotp="0.977465451" isotope_dotp="0.9945224" user_set="TRUE" />
+          <precursor_peak replicate="800_to_900" peak_count_ratio="0.333333343" retention_time="45.0217133" start_time="44.69971" end_time="45.40811" fwhm="0.205596417" area="1.03358118E+09" background="19692154" height="30732096" mass_error_ppm="1.149602" truncated="0" identified="false" library_dotp="0" isotope_dotp="0.996235" user_set="FALSE" />
+          <precursor_peak replicate="900_to_1000" peak_count_ratio="0.333333343" retention_time="45.0421143" start_time="44.7181129" end_time="45.4309158" fwhm="0.217301711" area="1.04225037E+09" background="22669984" height="30769088" mass_error_ppm="1.55094647" truncated="0" identified="false" library_dotp="0" isotope_dotp="0.995950043" user_set="FALSE" />
+        </precursor_results>
+        <transition fragment_type="precursor" isotope_dist_rank="1" isotope_dist_proportion="0.360002">
+          <precursor_mz>698.991248</precursor_mz>
+          <product_mz>698.991248</product_mz>
+          <collision_energy>0</collision_energy>
+          <transition_results>
+            <transition_peak replicate="1000_to_1100" mass_error_ppm="3.5" retention_time="44.95362" start_time="44.6936226" end_time="45.37612" area="397265440" background="15245937" height="2.810525E+07" fwhm="0.2132801" truncated="false" identified="false" rank="1" points_across="21" user_set="TRUE" />
+            <transition_peak replicate="1100_to_1200" mass_error_ppm="3.5" retention_time="45.3911171" start_time="45.0781174" end_time="45.79802" area="415502176" background="8640395" height="29308334" fwhm="0.212578937" truncated="false" identified="false" rank="1" points_across="22" user_set="FALSE" />
+            <transition_peak replicate="400_to_500" mass_error_ppm="2.8" retention_time="45.87171" start_time="45.4845123" end_time="46.18851" area="3.644299E+08" background="10262021" height="25572292" fwhm="0.219146684" truncated="false" identified="false" rank="1" points_across="22" user_set="TRUE" />
+            <transition_peak replicate="500_to_600" mass_error_ppm="2.9" retention_time="45.575676" start_time="45.2412758" end_time="46.0012779" area="382580160" background="14641604" height="25321652" fwhm="0.23348327" truncated="false" identified="false" rank="1" points_across="25" user_set="TRUE" />
+            <transition_peak replicate="600_to_700" mass_error_ppm="2.7" retention_time="45.481617" start_time="45.0851173" end_time="45.84762" area="4.406341E+08" background="14899897" height="29061058" fwhm="0.21338591" truncated="false" identified="false" rank="1" points_across="25" user_set="TRUE" />
+            <transition_peak replicate="700_to_800" mass_error_ppm="3.7" retention_time="45.652317" start_time="45.2671165" end_time="46.0375175" area="3.896251E+08" background="8655592" height="26586926" fwhm="0.217757165" truncated="false" identified="false" rank="1" points_across="25" user_set="TRUE" />
+            <transition_peak replicate="800_to_900" mass_error_ppm="3" retention_time="45.0217133" start_time="44.69971" end_time="45.40811" area="428409152" background="8680214" height="30732096" fwhm="0.2013749" truncated="false" identified="false" rank="1" points_across="23" user_set="FALSE" />
+            <transition_peak replicate="900_to_1000" mass_error_ppm="3.4" retention_time="45.0421143" start_time="44.7181129" end_time="45.4309158" area="4.320797E+08" background="9076664" height="30769088" fwhm="0.2109099" truncated="false" identified="false" rank="1" points_across="22" user_set="FALSE" />
+          </transition_results>
+        </transition>
+        <transition fragment_type="precursor" mass_index="1" isotope_dist_rank="2" isotope_dist_proportion="0.337480515">
+          <precursor_mz>698.991248</precursor_mz>
+          <product_mz>699.325536</product_mz>
+          <collision_energy>0</collision_energy>
+          <transition_results>
+            <transition_peak replicate="1000_to_1100" mass_error_ppm="1.1" retention_time="44.95362" start_time="44.6936226" end_time="45.37612" area="367906048" background="14864375" height="26097376" fwhm="0.212078109" truncated="false" identified="false" rank="2" points_across="21" user_set="TRUE" />
+            <transition_peak replicate="1100_to_1200" mass_error_ppm="1.1" retention_time="45.3911171" start_time="45.0781174" end_time="45.79802" area="380667776" background="9168068" height="27169816" fwhm="0.211398318" truncated="false" identified="false" rank="2" points_across="22" user_set="FALSE" />
+            <transition_peak replicate="400_to_500" mass_error_ppm="0.4" retention_time="45.87171" start_time="45.4845123" end_time="46.18851" area="333575872" background="8511797" height="2.311224E+07" fwhm="0.22218442" truncated="false" identified="false" rank="2" points_across="22" user_set="TRUE" />
+            <transition_peak replicate="500_to_600" mass_error_ppm="0.5" retention_time="45.575676" start_time="45.2412758" end_time="46.0012779" area="353183168" background="14106905" height="23518782" fwhm="0.233171567" truncated="false" identified="false" rank="2" points_across="25" user_set="TRUE" />
+            <transition_peak replicate="600_to_700" mass_error_ppm="0" retention_time="45.45112" start_time="45.0851173" end_time="45.84762" area="4.030729E+08" background="14544131" height="26517146" fwhm="0.213840172" truncated="false" identified="false" rank="2" points_across="25" user_set="TRUE" />
+            <transition_peak replicate="700_to_800" mass_error_ppm="0.7" retention_time="45.652317" start_time="45.2671165" end_time="46.0375175" area="359137920" background="7987945.5" height="24160144" fwhm="0.2189053" truncated="false" identified="false" rank="2" points_across="25" user_set="TRUE" />
+            <transition_peak replicate="800_to_900" mass_error_ppm="0.5" retention_time="45.0217133" start_time="44.69971" end_time="45.40811" area="394852960" background="7071369" height="2.806013E+07" fwhm="0.203379527" truncated="false" identified="false" rank="2" points_across="23" user_set="FALSE" />
+            <transition_peak replicate="900_to_1000" mass_error_ppm="0.9" retention_time="45.0421143" start_time="44.7181129" end_time="45.4309158" area="3.987233E+08" background="9988677" height="27818364" fwhm="0.216609523" truncated="false" identified="false" rank="2" points_across="22" user_set="FALSE" />
+          </transition_results>
+        </transition>
+        <transition fragment_type="precursor" mass_index="2" isotope_dist_rank="3" isotope_dist_proportion="0.182246014">
+          <precursor_mz>698.991248</precursor_mz>
+          <product_mz>699.659742</product_mz>
+          <collision_energy>0</collision_energy>
+          <transition_results>
+            <transition_peak replicate="1000_to_1100" mass_error_ppm="-0.8" retention_time="44.95362" start_time="44.6936226" end_time="45.37612" area="197290640" background="7648292" height="13885843" fwhm="0.213974312" truncated="false" identified="false" rank="3" points_across="21" user_set="TRUE" />
+            <transition_peak replicate="1100_to_1200" mass_error_ppm="-0.9" retention_time="45.3911171" start_time="45.0781174" end_time="45.79802" area="202315056" background="4781166.5" height="14601206" fwhm="0.209835634" truncated="false" identified="false" rank="3" points_across="22" user_set="FALSE" />
+            <transition_peak replicate="400_to_500" mass_error_ppm="-1.5" retention_time="45.87171" start_time="45.4845123" end_time="46.18851" area="179173488" background="3848204" height="12172483" fwhm="0.223980412" truncated="false" identified="false" rank="3" points_across="22" user_set="TRUE" />
+            <transition_peak replicate="500_to_600" mass_error_ppm="-1.5" retention_time="45.575676" start_time="45.2412758" end_time="46.0012779" area="186470384" background="6693248" height="12443195" fwhm="0.229293719" truncated="false" identified="false" rank="3" points_across="25" user_set="TRUE" />
+            <transition_peak replicate="600_to_700" mass_error_ppm="-2" retention_time="45.45112" start_time="45.0851173" end_time="45.84762" area="212656928" background="7720808" height="14028742" fwhm="0.213311449" truncated="false" identified="false" rank="3" points_across="25" user_set="TRUE" />
+            <transition_peak replicate="700_to_800" mass_error_ppm="-1.4" retention_time="45.652317" start_time="45.2671165" end_time="46.0375175" area="1.882738E+08" background="4637533.5" height="12902033" fwhm="0.214724228" truncated="false" identified="false" rank="3" points_across="25" user_set="TRUE" />
+            <transition_peak replicate="800_to_900" mass_error_ppm="-1.4" retention_time="45.0217133" start_time="44.69971" end_time="45.40811" area="210319120" background="3940570.5" height="15020772" fwhm="0.205596417" truncated="false" identified="false" rank="3" points_across="23" user_set="FALSE" />
+            <transition_peak replicate="900_to_1000" mass_error_ppm="-1" retention_time="45.0421143" start_time="44.7181129" end_time="45.4309158" area="211447360" background="3604644.5" height="14670126" fwhm="0.217301711" truncated="false" identified="false" rank="3" points_across="22" user_set="FALSE" />
+          </transition_results>
+        </transition>
+        <transition fragment_type="b" fragment_ordinal="2" calc_neutral_mass="271.128054" product_charge="1" cleavage_aa="D" loss_neutral_mass="0">
+          <precursor_mz>698.991248</precursor_mz>
+          <product_mz>272.13533</product_mz>
+          <collision_energy>0</collision_energy>
+          <transition_lib_info rank="2" intensity="4.012021E+07" />
+          <transition_results>
+            <transition_peak replicate="600_to_700" mass_error_ppm="-1.5" retention_time="45.45112" start_time="45.0851173" end_time="45.84762" area="4.012021E+07" background="1009125.94" height="2664222.75" fwhm="0.224500343" truncated="false" identified="false" rank="5" points_across="25" rank_by_level="2" user_set="TRUE" />
+            <transition_peak replicate="700_to_800" mass_error_ppm="-1.5" retention_time="45.6844177" start_time="45.2671165" end_time="46.0375175" area="46048484" background="815045.1" height="3539329.75" fwhm="0.1958055" truncated="false" identified="false" rank="5" points_across="25" rank_by_level="2" user_set="TRUE" />
+          </transition_results>
+        </transition>
+        <transition fragment_type="b" fragment_ordinal="7" calc_neutral_mass="724.350403" product_charge="1" cleavage_aa="E" loss_neutral_mass="0">
+          <precursor_mz>698.991248</precursor_mz>
+          <product_mz>725.357679</product_mz>
+          <collision_energy>0</collision_energy>
+          <transition_lib_info rank="4" intensity="17869298" />
+          <transition_results>
+            <transition_peak replicate="600_to_700" mass_error_ppm="4.8" retention_time="45.45112" start_time="45.0851173" end_time="45.84762" area="17869298" background="527976.1" height="1198500.25" fwhm="0.216502428" truncated="false" identified="false" rank="7" points_across="25" rank_by_level="4" user_set="TRUE" />
+            <transition_peak replicate="700_to_800" mass_error_ppm="4.7" retention_time="45.6844177" start_time="45.2671165" end_time="46.0375175" area="20043012" background="365579.844" height="1460896.25" fwhm="0.207341686" truncated="false" identified="false" rank="7" points_across="25" rank_by_level="4" user_set="TRUE" />
+          </transition_results>
+        </transition>
+        <transition fragment_type="b" fragment_ordinal="8" calc_neutral_mass="880.451514" product_charge="2" cleavage_aa="R" loss_neutral_mass="0">
+          <precursor_mz>698.991248</precursor_mz>
+          <product_mz>441.233033</product_mz>
+          <collision_energy>0</collision_energy>
+          <transition_lib_info rank="6" intensity="11891742" />
+          <transition_results>
+            <transition_peak replicate="600_to_700" mass_error_ppm="4.5" retention_time="45.45112" start_time="45.0851173" end_time="45.84762" area="11891742" background="218688.484" height="777425.938" fwhm="0.221752465" truncated="false" identified="false" rank="9" points_across="25" rank_by_level="6" user_set="TRUE" />
+            <transition_peak replicate="700_to_800" mass_error_ppm="4.9" retention_time="45.6844177" start_time="45.2671165" end_time="46.0375175" area="12998781" background="80903.35" height="999734.1" fwhm="0.192298412" truncated="false" identified="false" rank="9" points_across="25" rank_by_level="6" user_set="TRUE" />
+          </transition_results>
+        </transition>
+        <transition fragment_type="y" fragment_ordinal="11" calc_neutral_mass="1046.502041" product_charge="1" cleavage_aa="P" loss_neutral_mass="0">
+          <precursor_mz>698.991248</precursor_mz>
+          <product_mz>1047.509317</product_mz>
+          <collision_energy>0</collision_energy>
+          <transition_lib_info rank="3" intensity="28820044" />
+          <transition_results>
+            <transition_peak replicate="600_to_700" mass_error_ppm="3" retention_time="45.481617" start_time="45.0851173" end_time="45.84762" area="28820044" background="854420.938" height="1784964.75" fwhm="0.230636552" truncated="false" identified="false" rank="6" points_across="25" rank_by_level="3" user_set="TRUE" />
+            <transition_peak replicate="700_to_800" mass_error_ppm="2.7" retention_time="45.6844177" start_time="45.2671165" end_time="46.0375175" area="31203208" background="778458" height="2171697.75" fwhm="0.210613668" truncated="false" identified="false" rank="6" points_across="25" rank_by_level="3" user_set="TRUE" />
+          </transition_results>
+        </transition>
+        <transition fragment_type="y" fragment_ordinal="8" calc_neutral_mass="763.385221" product_charge="1" cleavage_aa="P" loss_neutral_mass="0">
+          <precursor_mz>698.991248</precursor_mz>
+          <product_mz>764.392497</product_mz>
+          <collision_energy>0</collision_energy>
+          <transition_lib_info rank="1" intensity="7.405881E+07" />
+          <transition_results>
+            <transition_peak replicate="600_to_700" mass_error_ppm="3.9" retention_time="45.45112" start_time="45.0851173" end_time="45.84762" area="7.405881E+07" background="1612126.13" height="4952755.5" fwhm="0.217954561" truncated="false" identified="false" rank="4" points_across="25" rank_by_level="1" user_set="TRUE" />
+            <transition_peak replicate="700_to_800" mass_error_ppm="3.7" retention_time="45.6844177" start_time="45.2671165" end_time="46.0375175" area="8.211323E+07" background="1527332" height="6088218" fwhm="0.200472489" truncated="false" identified="false" rank="4" points_across="25" rank_by_level="1" user_set="TRUE" />
+          </transition_results>
+        </transition>
+        <transition fragment_type="y" fragment_ordinal="7" calc_neutral_mass="666.332457" product_charge="1" cleavage_aa="G" loss_neutral_mass="0">
+          <precursor_mz>698.991248</precursor_mz>
+          <product_mz>667.339733</product_mz>
+          <collision_energy>0</collision_energy>
+          <transition_lib_info rank="5" intensity="14001604" />
+          <transition_results>
+            <transition_peak replicate="600_to_700" mass_error_ppm="3.4" retention_time="45.481617" start_time="45.0851173" end_time="45.84762" area="14001604" background="699467" height="1010587.06" fwhm="0.195148572" truncated="false" identified="false" rank="8" points_across="25" rank_by_level="5" user_set="TRUE" />
+            <transition_peak replicate="700_to_800" mass_error_ppm="3.9" retention_time="45.6844177" start_time="45.2671165" end_time="46.0375175" area="19945502" background="277884.938" height="1479252" fwhm="0.204293072" truncated="false" identified="false" rank="8" points_across="25" rank_by_level="5" user_set="TRUE" />
+          </transition_results>
+        </transition>
+      </precursor>
+      <precursor charge="4" isotope_label="heavy" calc_neutral_mass="2093.951915" precursor_mz="524.495255" auto_manage_children="false" collision_energy="0" modified_sequence="RDGPGLERS[+80.0]PGEPGGAAPER[+10.0]">
+        <bibliospec_spectrum_info library_name="sprg2019" count_measured="1" />
+        <precursor_results>
+          <precursor_peak replicate="1000_to_1100" peak_count_ratio="0.333333343" retention_time="44.95362" start_time="44.6936226" end_time="45.37612" fwhm="0.2108047" area="389920064" background="15754644" height="11790332" mass_error_ppm="-0.108743645" truncated="0" identified="false" library_dotp="0" isotope_dotp="0.9978577" user_set="TRUE" />
+          <precursor_peak replicate="1100_to_1200" peak_count_ratio="0.333333343" retention_time="45.3911171" start_time="45.0781174" end_time="45.79802" fwhm="0.220224261" area="3.758059E+08" background="7175168" height="11129761" mass_error_ppm="-0.3426441" truncated="0" identified="false" library_dotp="0" isotope_dotp="0.9982961" user_set="FALSE" />
+          <precursor_peak replicate="400_to_500" peak_count_ratio="0.333333343" retention_time="45.87171" start_time="45.4845123" end_time="46.18851" fwhm="0.235095873" area="330633760" background="8470345" height="8824483" mass_error_ppm="0.1963355" truncated="0" identified="false" library_dotp="0" isotope_dotp="0.997902632" user_set="TRUE" />
+          <precursor_peak replicate="500_to_600" peak_count_ratio="1" retention_time="45.575676" start_time="45.2412758" end_time="46.0012779" fwhm="0.248879611" area="359989856" background="15744613" height="9176646" mass_error_ppm="1.950518" truncated="0" identified="false" library_dotp="1" isotope_dotp="0.9957443" user_set="TRUE" />
+          <precursor_peak replicate="600_to_700" peak_count_ratio="0.333333343" retention_time="45.481617" start_time="45.0851173" end_time="45.84762" fwhm="0.212492287" area="347541984" background="10643738" height="9845320" mass_error_ppm="0.5201821" truncated="0" identified="false" library_dotp="0" isotope_dotp="0.995135367" user_set="TRUE" />
+          <precursor_peak replicate="700_to_800" peak_count_ratio="0.333333343" retention_time="45.652317" start_time="45.2671165" end_time="46.0375175" fwhm="0.173030958" area="401893376" background="6276501.5" height="14126397" mass_error_ppm="0.260786831" truncated="0" identified="false" library_dotp="0" isotope_dotp="0.997748" user_set="TRUE" />
+          <precursor_peak replicate="800_to_900" peak_count_ratio="0.333333343" retention_time="45.0217133" start_time="44.69971" end_time="45.40811" fwhm="0.2038748" area="415167840" background="8161053.5" height="12688592" mass_error_ppm="-0.0323627777" truncated="0" identified="false" library_dotp="0" isotope_dotp="0.9971087" user_set="FALSE" />
+          <precursor_peak replicate="900_to_1000" peak_count_ratio="0.333333343" retention_time="45.0421143" start_time="44.7181129" end_time="45.4309158" fwhm="0.218132332" area="377429056" background="10454897" height="11477332" mass_error_ppm="0.00143878278" truncated="0" identified="false" library_dotp="0" isotope_dotp="0.992293954" user_set="FALSE" />
+        </precursor_results>
+        <transition fragment_type="precursor" isotope_dist_rank="1" isotope_dist_proportion="0.360002">
+          <precursor_mz>524.495255</precursor_mz>
+          <product_mz>524.495255</product_mz>
+          <collision_energy>0</collision_energy>
+          <transition_results>
+            <transition_peak replicate="1000_to_1100" mass_error_ppm="0.8" retention_time="44.95362" start_time="44.6936226" end_time="45.37612" area="160283312" background="7438978.5" height="11790332" fwhm="0.2108047" truncated="false" identified="false" rank="1" points_across="21" user_set="TRUE" />
+            <transition_peak replicate="1100_to_1200" mass_error_ppm="0.2" retention_time="45.3911171" start_time="45.0781174" end_time="45.79802" area="1.538028E+08" background="3735305.25" height="11129761" fwhm="0.210997149" truncated="false" identified="false" rank="1" points_across="22" user_set="FALSE" />
+            <transition_peak replicate="400_to_500" mass_error_ppm="0.4" retention_time="45.87171" start_time="45.4845123" end_time="46.18851" area="134240624" background="3683403.5" height="8824483" fwhm="0.233020589" truncated="false" identified="false" rank="1" points_across="22" user_set="TRUE" />
+            <transition_peak replicate="500_to_600" mass_error_ppm="3" retention_time="45.575676" start_time="45.2412758" end_time="46.0012779" area="140331088" background="6255020.5" height="9176646" fwhm="0.24415569" truncated="false" identified="false" rank="1" points_across="25" user_set="TRUE" />
+            <transition_peak replicate="600_to_700" mass_error_ppm="0.7" retention_time="45.481617" start_time="45.0851173" end_time="45.84762" area="144810512" background="4694763" height="9845320" fwhm="0.212492287" truncated="false" identified="false" rank="1" points_across="25" user_set="TRUE" />
+            <transition_peak replicate="700_to_800" mass_error_ppm="0.6" retention_time="45.652317" start_time="45.2671165" end_time="46.0375175" area="165611440" background="2902135.5" height="14126397" fwhm="0.173030958" truncated="false" identified="false" rank="1" points_across="25" user_set="TRUE" />
+            <transition_peak replicate="800_to_900" mass_error_ppm="0.2" retention_time="45.0217133" start_time="44.69971" end_time="45.40811" area="170099072" background="4087302" height="12688592" fwhm="0.19876495" truncated="false" identified="false" rank="1" points_across="23" user_set="FALSE" />
+            <transition_peak replicate="900_to_1000" mass_error_ppm="0.5" retention_time="45.0421143" start_time="44.7181129" end_time="45.4309158" area="158953392" background="4952548.5" height="11477332" fwhm="0.208382443" truncated="false" identified="false" rank="1" points_across="22" user_set="FALSE" />
+          </transition_results>
+        </transition>
+        <transition fragment_type="precursor" mass_index="1" isotope_dist_rank="2" isotope_dist_proportion="0.337480515">
+          <precursor_mz>524.495255</precursor_mz>
+          <product_mz>524.745971</product_mz>
+          <collision_energy>0</collision_energy>
+          <transition_results>
+            <transition_peak replicate="1000_to_1100" mass_error_ppm="-0.5" retention_time="44.95362" start_time="44.6936226" end_time="45.37612" area="149908736" background="4767394.5" height="11175022" fwhm="0.205984846" truncated="false" identified="false" rank="2" points_across="21" user_set="TRUE" />
+            <transition_peak replicate="1100_to_1200" mass_error_ppm="-0.4" retention_time="45.3911171" start_time="45.0781174" end_time="45.79802" area="143417568" background="2142827" height="10173339" fwhm="0.220224261" truncated="false" identified="false" rank="2" points_across="22" user_set="FALSE" />
+            <transition_peak replicate="400_to_500" mass_error_ppm="0.9" retention_time="45.87171" start_time="45.4845123" end_time="46.18851" area="127420240" background="2857989.75" height="8431599" fwhm="0.234782219" truncated="false" identified="false" rank="2" points_across="22" user_set="TRUE" />
+            <transition_peak replicate="500_to_600" mass_error_ppm="1.6" retention_time="45.575676" start_time="45.2412758" end_time="46.0012779" area="130898848" background="5364622.5" height="8521504" fwhm="0.244437709" truncated="false" identified="false" rank="2" points_across="25" user_set="TRUE" />
+            <transition_peak replicate="600_to_700" mass_error_ppm="1.3" retention_time="45.481617" start_time="45.0851173" end_time="45.84762" area="131911032" background="4157511.5" height="9091255" fwhm="0.206572041" truncated="false" identified="false" rank="2" points_across="25" user_set="TRUE" />
+            <transition_peak replicate="700_to_800" mass_error_ppm="0.8" retention_time="45.652317" start_time="45.2671165" end_time="46.0375175" area="152834720" background="2078837.75" height="12818701" fwhm="0.172462776" truncated="false" identified="false" rank="2" points_across="25" user_set="TRUE" />
+            <transition_peak replicate="800_to_900" mass_error_ppm="0.6" retention_time="45.0217133" start_time="44.69971" end_time="45.40811" area="160504848" background="2008710.38" height="11834116" fwhm="0.196901828" truncated="false" identified="false" rank="2" points_across="23" user_set="FALSE" />
+            <transition_peak replicate="900_to_1000" mass_error_ppm="0.2" retention_time="45.0421143" start_time="44.7181129" end_time="45.4309158" area="141832688" background="3106786.5" height="10098932" fwhm="0.2136984" truncated="false" identified="false" rank="2" points_across="22" user_set="FALSE" />
+          </transition_results>
+        </transition>
+        <transition fragment_type="precursor" mass_index="2" isotope_dist_rank="3" isotope_dist_proportion="0.182246014">
+          <precursor_mz>524.495255</precursor_mz>
+          <product_mz>524.996626</product_mz>
+          <collision_energy>0</collision_energy>
+          <transition_results>
+            <transition_peak replicate="1000_to_1100" mass_error_ppm="-1.2" retention_time="44.95362" start_time="44.6936226" end_time="45.37612" area="7.972802E+07" background="3548270.75" height="5784417.5" fwhm="0.20736137" truncated="false" identified="false" rank="3" points_across="21" user_set="TRUE" />
+            <transition_peak replicate="1100_to_1200" mass_error_ppm="-1.3" retention_time="45.3911171" start_time="45.0781174" end_time="45.79802" area="78585544" background="1297035.75" height="5712537" fwhm="0.212636247" truncated="false" identified="false" rank="3" points_across="22" user_set="FALSE" />
+            <transition_peak replicate="400_to_500" mass_error_ppm="-1.5" retention_time="45.87171" start_time="45.4845123" end_time="46.18851" area="6.897289E+07" background="1928952.13" height="4422418" fwhm="0.235095873" truncated="false" identified="false" rank="3" points_across="22" user_set="TRUE" />
+            <transition_peak replicate="500_to_600" mass_error_ppm="-0.1" retention_time="45.6060753" start_time="45.2412758" end_time="46.0012779" area="6.859076E+07" background="3505541" height="4386254" fwhm="0.248879611" truncated="false" identified="false" rank="3" points_across="25" user_set="TRUE" />
+            <transition_peak replicate="600_to_700" mass_error_ppm="-1.3" retention_time="45.481617" start_time="45.0851173" end_time="45.84762" area="7.082045E+07" background="1791464.13" height="5102339" fwhm="0.196656555" truncated="false" identified="false" rank="3" points_across="25" user_set="TRUE" />
+            <transition_peak replicate="700_to_800" mass_error_ppm="-1.4" retention_time="45.652317" start_time="45.2671165" end_time="46.0375175" area="8.344724E+07" background="1295528.63" height="6989317.5" fwhm="0.171608523" truncated="false" identified="false" rank="3" points_across="25" user_set="TRUE" />
+            <transition_peak replicate="800_to_900" mass_error_ppm="-1.7" retention_time="45.0217133" start_time="44.69971" end_time="45.40811" area="84563944" background="2065041.13" height="6187553" fwhm="0.2038748" truncated="false" identified="false" rank="3" points_across="23" user_set="FALSE" />
+            <transition_peak replicate="900_to_1000" mass_error_ppm="-1.4" retention_time="45.0421143" start_time="44.7181129" end_time="45.4309158" area="7.664299E+07" background="2395562" height="5409739" fwhm="0.218132332" truncated="false" identified="false" rank="3" points_across="22" user_set="FALSE" />
+          </transition_results>
+        </transition>
+        <transition fragment_type="y" fragment_ordinal="7" calc_neutral_mass="666.332457" product_charge="1" cleavage_aa="G" loss_neutral_mass="0">
+          <precursor_mz>524.495255</precursor_mz>
+          <product_mz>667.339733</product_mz>
+          <collision_energy>0</collision_energy>
+          <transition_lib_info rank="2" intensity="4383871.5" />
+          <transition_results>
+            <transition_peak replicate="500_to_600" mass_error_ppm="5.8" retention_time="45.575676" start_time="45.2412758" end_time="46.0012779" area="4383871.5" background="184262.6" height="292117.9" fwhm="0.232982308" truncated="false" identified="false" rank="5" points_across="25" rank_by_level="2" user_set="TRUE" />
+          </transition_results>
+        </transition>
+        <transition fragment_type="y" fragment_ordinal="6" calc_neutral_mass="609.310993" product_charge="1" cleavage_aa="G" loss_neutral_mass="0">
+          <precursor_mz>524.495255</precursor_mz>
+          <product_mz>610.318269</product_mz>
+          <collision_energy>0</collision_energy>
+          <transition_lib_info rank="3" intensity="2747482.25" />
+          <transition_results>
+            <transition_peak replicate="500_to_600" mass_error_ppm="-0.6" retention_time="45.575676" start_time="45.2412758" end_time="46.0012779" area="2747482.25" background="48245.15" height="176416.672" fwhm="0.237750754" truncated="false" identified="false" rank="6" points_across="25" rank_by_level="3" user_set="TRUE" />
+          </transition_results>
+        </transition>
+        <transition fragment_type="y" fragment_ordinal="4" calc_neutral_mass="481.252416" product_charge="1" cleavage_aa="A" loss_neutral_mass="0">
+          <precursor_mz>524.495255</precursor_mz>
+          <product_mz>482.259692</product_mz>
+          <collision_energy>0</collision_energy>
+          <transition_lib_info rank="4" intensity="2681901" />
+          <transition_results>
+            <transition_peak replicate="500_to_600" mass_error_ppm="4.7" retention_time="45.5452766" start_time="45.2412758" end_time="46.0012779" area="2681901" background="74780.8047" height="170395.656" fwhm="0.242600843" truncated="false" identified="false" rank="7" points_across="25" rank_by_level="4" user_set="TRUE" />
+          </transition_results>
+        </transition>
+        <transition fragment_type="y" fragment_ordinal="3" calc_neutral_mass="410.215302" product_charge="1" cleavage_aa="P" loss_neutral_mass="0">
+          <precursor_mz>524.495255</precursor_mz>
+          <product_mz>411.222578</product_mz>
+          <collision_energy>0</collision_energy>
+          <transition_lib_info rank="1" intensity="5364297" />
+          <transition_results>
+            <transition_peak replicate="500_to_600" mass_error_ppm="4.3" retention_time="45.575676" start_time="45.2412758" end_time="46.0012779" area="5364297" background="215390.1" height="356515.375" fwhm="0.227300987" truncated="false" identified="false" rank="4" points_across="25" rank_by_level="1" user_set="TRUE" />
+          </transition_results>
+        </transition>
+        <transition fragment_type="y" fragment_ordinal="8" calc_neutral_mass="763.385221" product_charge="2" cleavage_aa="P" loss_neutral_mass="0">
+          <precursor_mz>524.495255</precursor_mz>
+          <product_mz>382.699886</product_mz>
+          <collision_energy>0</collision_energy>
+          <transition_lib_info rank="6" intensity="2415005.75" />
+          <transition_results>
+            <transition_peak replicate="500_to_600" mass_error_ppm="4.3" retention_time="45.575676" start_time="45.2412758" end_time="46.0012779" area="2415005.75" background="51550.3164" height="157299.5" fwhm="0.230470061" truncated="false" identified="false" rank="9" points_across="25" rank_by_level="6" user_set="TRUE" />
+          </transition_results>
+        </transition>
+        <transition fragment_type="y" fragment_ordinal="3" calc_neutral_mass="410.215302" product_charge="2" cleavage_aa="P" loss_neutral_mass="0">
+          <precursor_mz>524.495255</precursor_mz>
+          <product_mz>206.114927</product_mz>
+          <collision_energy>0</collision_energy>
+          <transition_lib_info rank="5" intensity="2576614.25" />
+          <transition_results>
+            <transition_peak replicate="500_to_600" mass_error_ppm="3.4" retention_time="45.5452766" start_time="45.2412758" end_time="46.0012779" area="2576614.25" background="45200.2031" height="165467.484" fwhm="0.235642985" truncated="false" identified="false" rank="8" points_across="25" rank_by_level="5" user_set="TRUE" />
+          </transition_results>
+        </transition>
+      </precursor>
+    </peptide>
+  </peptide_list>
+</srm_settings>
