@@ -19,6 +19,7 @@
 using System.Collections.Generic;
 using System.Linq;
 using Microsoft.VisualStudio.TestTools.UnitTesting;
+using NHibernate.Mapping;
 using pwiz.Skyline.Model;
 using pwiz.Skyline.Model.DocSettings;
 using pwiz.Skyline.Model.DocSettings.Extensions;
@@ -214,18 +215,18 @@ namespace pwiz.SkylineTestData
 
 
             // remove all transitions below the includedCutoff
-            double includedCutoff = .5;
-            double quantativeCutoff = .6;
+            double includedCutoff = .99;
+            double quantativeCutoff = .994;
             document = InitRefineDocumentIprg();
-            // Assert.IsTrue(document.MoleculeTransitions.Any(t => t.ChromInfos.Any(c => c.PeakShapeValues?.ShapeCorrelation != null)));
-            refineSettings = new RefinementSettings { SCIncludedCutoff = includedCutoff };
+            Assert.IsFalse(document.MoleculeTransitions.Any(t => t.ChromInfos.Any(c => c.PeakShapeValues?.ShapeCorrelation == null)));
+            refineSettings = new RefinementSettings { SCIncludedCutoff = includedCutoff, SCQuantizationCutoff = quantativeCutoff};
             var docRefineShapeCorrelation = refineSettings.Refine(document);
             foreach (var tranNode in docRefineShapeCorrelation.MoleculeTransitions)
             {
-                foreach (var chromInfo in tranNode.ChromInfos)
+                Assert.IsFalse(tranNode.ChromInfos.Any(c => c.PeakShapeValues?.ShapeCorrelation < includedCutoff));
+                if (tranNode.ChromInfos.Any(c => c.PeakShapeValues?.ShapeCorrelation < quantativeCutoff))
                 {
-                    Assert.IsNotNull(chromInfo.PeakShapeValues?.ShapeCorrelation);
-                    Assert.IsFalse(chromInfo.PeakShapeValues?.ShapeCorrelation < includedCutoff);
+                    Assert.IsFalse(tranNode.ExplicitQuantitative);
                 }
             }
 

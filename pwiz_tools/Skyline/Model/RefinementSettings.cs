@@ -798,9 +798,11 @@ namespace pwiz.Skyline.Model
                 if (nonQuantitativeNodeTran != null)
                 {
                     listTrans.Add(nonQuantitativeNodeTran);
-                    continue;
                 }
-                listTrans.Add(nodeTran);
+                else
+                {
+                    listTrans.Add(nodeTran);
+                }
             }
 
             TransitionGroupDocNode nodeGroupRefined = (TransitionGroupDocNode)
