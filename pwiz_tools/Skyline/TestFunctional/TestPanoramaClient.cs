@@ -196,8 +196,8 @@ namespace pwiz.SkylineTestFunctional
                 Assert.AreEqual("Most recent", remoteDlg.VersionsOption());
                 Assert.AreEqual(1, remoteDlg.FileNumber());
 
-                remoteDlg.FileJson = fileJson;
-                remoteDlg.SizeJson = sizeJson;
+                remoteDlg.TestFileJson = fileJson;
+                remoteDlg.TestSizeJson = sizeJson;
 
                 remoteDlg.FolderBrowser.SelectNode(TARGETED_LIBRARY);
                 remoteDlg.FolderBrowser.ClickEnter();
@@ -206,8 +206,8 @@ namespace pwiz.SkylineTestFunctional
                 Assert.AreEqual("Most recent", remoteDlg.VersionsOption());
                 Assert.AreEqual(1, remoteDlg.FileNumber());
 
-                remoteDlg.FileJson = filesJson;
-                remoteDlg.SizeJson = sizesJson;
+                remoteDlg.TestFileJson = filesJson;
+                remoteDlg.TestSizeJson = sizesJson;
 
                 remoteDlg.FolderBrowser.SelectNode(TARGETED_COLLABORATION);
                 Assert.IsTrue(remoteDlg.VersionsVisible());
@@ -292,8 +292,8 @@ namespace pwiz.SkylineTestFunctional
                 Assert.IsFalse(remoteDlg.ColumnVisible(2));
                 Assert.IsFalse(remoteDlg.ColumnVisible(3));
 
-                remoteDlg.FileJson = filesJson;
-                remoteDlg.SizeJson = sizesJson;
+                remoteDlg.TestFileJson = filesJson;
+                remoteDlg.TestSizeJson = sizesJson;
 
                 remoteDlg.FolderBrowser.SelectNode(TARGETED);
                 Assert.IsTrue(remoteDlg.ColumnVisible(2));

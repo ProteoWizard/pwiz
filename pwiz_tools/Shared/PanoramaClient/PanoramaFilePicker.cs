@@ -52,13 +52,14 @@ namespace pwiz.PanoramaClient
         public PanoramaServer ActiveServer { get; private set; }
         public bool FormHasClosed { get; private set; }
         public long FileSize { get; private set; }
-        public JToken FileJson;
-        public JToken SizeJson;
+        public JToken TestFileJson;
+        public JToken TestSizeJson;
         public string SelectedPath { get; set; }
         public bool ShowWebDav { get; set; }
 
         /// <summary>
-        /// Sets a username and password and changes the 'Open' button text if a custom string is passed in
+        /// Changes the 'Open' button text if a custom string is passed in
+        /// and docks the PanoramaFolderBrowser user control in a panel
         /// </summary>
         private void FilePicker_Load(object sender, EventArgs e)
         {
@@ -71,23 +72,25 @@ namespace pwiz.PanoramaClient
             splitContainer1.Panel1.Controls.Add(FolderBrowser);
             FolderBrowser.NodeClick += FilePicker_MouseClick;
             FolderBrowser.ShowWebDav = true;
-            IsLoaded = true;
             urlLink.Text = FolderBrowser.SelectedUrl;
+            IsLoaded = true;
             UpdateButtonState();
         }
 
         /// <summary>
-        /// Loads FolderBrowser and sets the state of navigation arrows
+        /// Loads PanoramaFolderBrowser and sets the state of navigation arrows
         /// </summary>
         public void InitializeDialog()
         {
             if (SelectedPath != null)
             {
-                FolderBrowser = new PanoramaFolderBrowser(false, ShowingSky, TreeState, Servers, SelectedPath);
-
                 if (ShowWebDav)
                 {
-                    FolderBrowser.ShowWebDav = true;
+                    FolderBrowser = new PanoramaFolderBrowser(false, ShowingSky, TreeState, Servers, SelectedPath, true);
+                }
+                else
+                {
+                    FolderBrowser = new PanoramaFolderBrowser(false, ShowingSky, TreeState, Servers, SelectedPath);
                 }
             }
             else
@@ -128,7 +131,8 @@ namespace pwiz.PanoramaClient
         }
 
         /// <summary>
-        /// Adds all files in a particular folder 
+        /// Adds all files in a particular folder to
+        /// a ListView
         /// </summary>
         /// <param name="newUri"></param>
         public void AddChildFiles(Uri newUri)
@@ -165,6 +169,9 @@ namespace pwiz.PanoramaClient
                         var sizeObj = new FileSizeFormatProvider();
                         var sizeString = sizeObj.Format(@"fs1", size, sizeObj);
                         listItem[1] = sizeString;
+                        //The date format for webDav files is: Thu Jul 13 12:00:00 PDT 2023
+                        //We need to use a custom date format and remove the time zone characters
+                        //in order to apply an InvariantCulture
                         var date = (string)file[@"creationdate"];
                         date = date.Remove(20, 4);
                         var format = "ddd MMM dd HH:mm:ss yyyy";
@@ -184,6 +191,11 @@ namespace pwiz.PanoramaClient
             }
         }
 
+        /// <summary>
+        /// Populates one dictionary with the ID of a mass spec run and its
+        /// name on the server, and populates another dictionary with the ID of
+        /// a mass spec run and its size
+        /// </summary>
         private void GetRunsDict()
         {
             _nameDictionary.Clear();
@@ -204,8 +216,8 @@ namespace pwiz.PanoramaClient
         }
 
         /// <summary>
-        /// Gets the latest versions of all files in a folder and adds
-        /// them to ListView
+        /// Gets the latest versions of all files in a particular folder
+        /// and adds them to ListView
         /// </summary>
         /// <exception cref="Exception"></exception>
         private void GetLatestVersion()
@@ -301,7 +313,8 @@ namespace pwiz.PanoramaClient
         }
 
         /// <summary>
-        /// Find number of rows which gives version, and latest version is the only version where replaced is false
+        /// Given the ID of the mass spec run, find that run and
+        /// return the number of versions associated with the run and its name
         /// </summary>
         /// <param name="json"></param>
         /// <param name="replacedBy"></param>
@@ -325,7 +338,7 @@ namespace pwiz.PanoramaClient
         }
 
         /// <summary>
-        /// Given a folder path, try and add all .sky files inside that folder to this ListView
+        /// Given a folder path, add all .sky files inside that folder to a ListView
         /// </summary>
         private void AddQueryFiles(string nodePath)
         {
@@ -396,7 +409,9 @@ namespace pwiz.PanoramaClient
         }
 
         /// <summary>
-        /// Check if a given node has any skyline files on the server
+        /// Checks if a given node has any skyline files on the server
+        /// and if it does, updates the ListView accordingly, otherwise, show a message
+        /// saying there are no files
         /// </summary>
         /// <param name="sender"></param>
         /// <param name="e"></param>
@@ -405,64 +420,31 @@ namespace pwiz.PanoramaClient
         {
             try
             {
-                if (FolderBrowser.Testing)
+                _restoring = true;
+                urlLink.Text = FolderBrowser.SelectedUrl;
+                versionOptions.Visible = false;
+                versionLabel.Visible = false;
+                versionOptions.Text = RECENT_VER;
+                var path = FolderBrowser.Path;
+                listView.Items.Clear();
+                listView.HeaderStyle = ColumnHeaderStyle.Clickable;
+                noFiles.Visible = false;
+                ActiveServer = FolderBrowser.ActiveServer;
+                _restoring = false;
+                if (!string.IsNullOrEmpty(path))
                 {
-                    _restoring = true;
-                    versionOptions.Visible = false;
-                    versionLabel.Visible = false;
-                    versionOptions.Text = RECENT_VER;
-                    var path = FolderBrowser.Path;
-                    listView.Items.Clear();
-                    ActiveServer = FolderBrowser.ActiveServer;
-                    _restoring = false;
-                    if (!string.IsNullOrEmpty(path))
+                    if (FolderBrowser.CurNodeIsTargetedMS)
                     {
+
                         if (FolderBrowser.ShowSky)
                         {
-                            if (FolderBrowser.CurNodeIsTargetedMS)
+                            //This means we're running a test
+                            if (TestFileJson != null)
                             {
-                                _runsInfoJson = FileJson;
-                                _sizeInfoJson = SizeJson;
-                                var versions = HasVersions(_runsInfoJson);
-                                if (versions)
-                                {
-
-                                    listView.Columns[3].Width = 100;
-                                    listView.Columns[2].Width = 60;
-                                    versionLabel.Visible = true;
-                                    versionOptions.Visible = true;
-                                }
-                                else
-                                {
-                                    listView.Columns[3].Width = 0;
-                                    listView.Columns[2].Width = 0;
-                                    versionLabel.Visible = false;
-                                    versionOptions.Visible = false;
-                                }
-                                GetLatestVersion();
-                            }
-                        }
-                    }
-                }
-                else
-                {
-                    _restoring = true;
-                    urlLink.Text = FolderBrowser.SelectedUrl;
-                    versionOptions.Visible = false;
-                    versionLabel.Visible = false;
-                    versionOptions.Text = RECENT_VER;
-                    var path = FolderBrowser.Path;
-                    listView.Items.Clear();
-                    listView.HeaderStyle = ColumnHeaderStyle.Clickable;
-                    noFiles.Visible = false;
-                    ActiveServer = FolderBrowser.ActiveServer;
-                    _restoring = false;
-                    if (!string.IsNullOrEmpty(path))
-                    {
-                        if (FolderBrowser.CurNodeIsTargetedMS)
-                        {
-                            
-                            if (FolderBrowser.ShowSky)
+                                _sizeInfoJson = TestSizeJson;
+                                _runsInfoJson = TestFileJson;
+                            } 
+                            else
                             {
                                 //Add File/DocumentSize column when it is linked up
                                 var query = BuildQuery(ActiveServer.URI.ToString(), path, @"TargetedMSRuns", @"Current",
@@ -471,54 +453,55 @@ namespace pwiz.PanoramaClient
                                     new[] { "DocumentSize", "Id", "FileName" }, string.Empty);
                                 _sizeInfoJson = GetJson(sizeQuery);
                                 _runsInfoJson = GetJson(query);
-                                var versions = HasVersions(_runsInfoJson);
-                                if (versions)
-                                {
+                            }
 
-                                    listView.Columns[3].Width = 100;
-                                    listView.Columns[2].Width = 60;
-                                    versionLabel.Visible = true;
-                                    versionOptions.Visible = true;
-                                }
-                                else
-                                {
-                                    listView.Columns[3].Width = 0;
-                                    listView.Columns[2].Width = 0;
-                                    versionLabel.Visible = false;
-                                    versionOptions.Visible = false;
-                                }
-                                GetLatestVersion();
+                            var versions = HasVersions(_runsInfoJson);
+                            if (versions)
+                            {
+
+                                listView.Columns[3].Width = 100;
+                                listView.Columns[2].Width = 60;
+                                versionLabel.Visible = true;
+                                versionOptions.Visible = true;
                             }
                             else
                             {
-                                listView.Columns[2].Width = 0;
                                 listView.Columns[3].Width = 0;
-                                listView.Columns[4].Width = -2;
+                                listView.Columns[2].Width = 0;
                                 versionLabel.Visible = false;
                                 versionOptions.Visible = false;
-                                var uriString = string.Concat(ActiveServer.URI.ToString(), @"_webdav/",
-                                    path + @"/@files?method=json");
-                                var uri = new Uri(uriString);
-                                AddChildFiles(uri);
                             }
+                            GetLatestVersion();
                         }
-                        else if (ShowWebDav)
+                        else
                         {
-                            listView.Columns[3].Width = 0;
                             listView.Columns[2].Width = 0;
+                            listView.Columns[3].Width = 0;
+                            listView.Columns[4].Width = -2;
                             versionLabel.Visible = false;
                             versionOptions.Visible = false;
                             var uriString = string.Concat(ActiveServer.URI.ToString(), @"_webdav/",
-                                path + @"?method=json");
+                                path + @"/@files?method=json");
                             var uri = new Uri(uriString);
                             AddChildFiles(uri);
                         }
+                    }
+                    else if (ShowWebDav)
+                    {
+                        listView.Columns[3].Width = 0;
+                        listView.Columns[2].Width = 0;
+                        versionLabel.Visible = false;
+                        versionOptions.Visible = false;
+                        var uriString = string.Concat(ActiveServer.URI.ToString(), @"_webdav/",
+                            path + @"?method=json");
+                        var uri = new Uri(uriString);
+                        AddChildFiles(uri);
+                    }
 
-                        if (listView.Items.Count < 1)
-                        {
-                            listView.HeaderStyle = ColumnHeaderStyle.None;
-                            noFiles.Visible = true;
-                        }
+                    if (listView.Items.Count < 1)
+                    {
+                        listView.HeaderStyle = ColumnHeaderStyle.None;
+                        noFiles.Visible = true;
                     }
                 }
             }
@@ -530,7 +513,8 @@ namespace pwiz.PanoramaClient
         }
 
         /// <summary>
-        /// Displays either all versions of a Skyline file, or only the most recent version
+        /// Displays either all versions of the files in a particular folder,
+        /// or only the most recent versions
         /// </summary>
         /// <param name="sender"></param>
         /// <param name="e"></param>
@@ -559,6 +543,7 @@ namespace pwiz.PanoramaClient
 
         /// <summary>
         /// When a user clicks 'Open', information is stored about the selected file
+        /// if there is one, otherwise the user is prompted to select a file
         /// </summary>
         /// <param name="sender"></param>
         /// <param name="e"></param>
@@ -571,9 +556,9 @@ namespace pwiz.PanoramaClient
                 {
                     FileSize =(long) listView.SelectedItems[0].Tag;
                 }
+                var folderInfo = FolderBrowser.Clicked.Tag as FolderInformation;
                 if (FolderBrowser.ShowSky && !ShowWebDav)
                 {
-                    var folderInfo = FolderBrowser.Clicked.Tag as FolderInformation;
                     if (folderInfo != null)
                         downloadName =
                             string.Concat(@"_webdav", folderInfo.FolderPath, @"/@files/", listView.SelectedItems[0]
@@ -581,7 +566,8 @@ namespace pwiz.PanoramaClient
                 }
                 DownloadName = downloadName;
                 FileUrl = ActiveServer.URI + downloadName;
-                SelectedPath = string.Concat(ActiveServer.URI, @"_webdav", FolderBrowser.Clicked.Tag);
+                if (folderInfo != null)
+                    SelectedPath = string.Concat(ActiveServer.URI, @"_webdav", folderInfo.FolderPath);
 
                 DialogResult = DialogResult.Yes;
                 Close();
@@ -727,7 +713,7 @@ namespace pwiz.PanoramaClient
             }
             public int Compare(object x, object y)
             {
-                int returnVal = 0;
+                int returnVal;
                 if (col == 1)
                 {
                     returnVal = Comparer<long?>.Default.Compare(((ListViewItem)x)?.Tag as long?,
@@ -760,10 +746,10 @@ namespace pwiz.PanoramaClient
 
         public void InitializeTestDialog(Uri serverUri, string user, string pass, JToken folderJson, JToken fileJson, JToken sizeJson)
         {
-            FileJson = fileJson;
-            SizeJson = sizeJson;
+            TestFileJson = fileJson;
+            TestSizeJson = sizeJson;
             var server = new PanoramaServer(serverUri, user, pass);
-            FolderBrowser = new PanoramaFolderBrowser(server, folderJson);
+            FolderBrowser = new TestPanoramaFolderBrowser(server, folderJson);
             FolderBrowser.Dock = DockStyle.Fill;
             splitContainer1.Panel1.Controls.Add(FolderBrowser);
             FolderBrowser.NodeClick += FilePicker_MouseClick;

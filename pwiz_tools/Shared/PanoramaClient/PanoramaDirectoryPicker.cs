@@ -31,7 +31,7 @@ namespace pwiz.PanoramaClient
         {
             InitializeComponent();
             Servers = servers;
-            FolderBrowser = new PanoramaFolderBrowser( false, showSkyFolders, state, Servers, selectedPath);
+            FolderBrowser = new PanoramaFolderBrowser( false, showSkyFolders, state, Servers, selectedPath, showWebDavFolders);
             FolderBrowser.Dock = DockStyle.Fill;
             folderPanel.Controls.Add(FolderBrowser);
             FolderBrowser.NodeClick += DirectoryPicker_MouseClick;
@@ -155,7 +155,7 @@ namespace pwiz.PanoramaClient
         public void InitializeTestDialog(Uri serverUri, string user, string pass, JToken folderJson)
         {
             var server = new PanoramaServer(serverUri, user, pass);
-            FolderBrowser = new PanoramaFolderBrowser(server, folderJson);
+            FolderBrowser = new TestPanoramaFolderBrowser(server, folderJson);
             FolderBrowser.Dock = DockStyle.Fill;
             folderPanel.Controls.Add(FolderBrowser);
             FolderBrowser.NodeClick += DirectoryPicker_MouseClick;

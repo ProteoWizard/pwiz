@@ -914,10 +914,7 @@ namespace pwiz.Skyline
         {
             using var dlg = new PanoramaFilePicker();
             dlg.InitializeTestDialog(new Uri(server), user, pass, folderJson, fileJson, sizeJson);
-            if (dlg.ShowDialog() != DialogResult.Cancel)
-            {
-
-            }
+            dlg.ShowDialog();
         }
 
         public void OpenFromPanorama()
