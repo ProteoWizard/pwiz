@@ -315,9 +315,12 @@ namespace pwiz.Skyline.Model.DdaSearch
 
         // Fix bugs in Crux pepXML output:
         // - base_name attributes not populated (BiblioSpec needs that to associate with spectrum source file)
+        // - wrong search engine (assumes Crux)
         // - search database not set
         private void FixPercolatorPepXml(string cruxOutputFilepath, string finalOutputFilepath, MsDataFileUri spectrumFilename, Dictionary<int, string> nativeIdByScanNumber)
         {
+            bool isBrukerSource = DataSourceUtil.GetSourceType(spectrumFilename.GetFilePath()) == DataSourceUtil.TYPE_BRUKER;
+
             using (var pepXmlFile = new StreamReader(cruxOutputFilepath))
             using (var fixedPepXmlFile = new StreamWriter(finalOutputFilepath))
             {
@@ -326,14 +329,22 @@ namespace pwiz.Skyline.Model.DdaSearch
                 {
                     if (line.Contains(@"base_name"))
                         line = Regex.Replace(line, "base_name=\"NA\"", $"base_name=\"{PathEx.EscapePathForXML(spectrumFilename.GetFileNameWithoutExtension())}\"");
+                    if (line.Contains(@"search_engine="))
+                        line = Regex.Replace(line, "search_engine=\"Crux\"", $"search_engine=\"X!Tandem\" search_engine_version=\"MSFragger-{MSFRAGGER_VERSION}\"");
                     if (line.Contains(@"search_database"))
                         line = Regex.Replace(line, "search_database local_path=\"\\(null\\)\"", $"search_database local_path=\"{PathEx.EscapePathForXML(_fastaFilepath)}\"");
 
                     if (line.Contains(@"<spectrum_query") &&
-                        int.TryParse(Regex.Replace(line, ".* start_scan=\"(\\d+)\" .*", "$1"), out int scanNumber) &&
-                        nativeIdByScanNumber.TryGetValue(scanNumber, out string nativeId))
+                        int.TryParse(Regex.Replace(line, ".* start_scan=\"(\\d+)\" .*", "$1"), out int scanNumber))
                     {
-                        line = line.Replace(@"start_scan=", $@"spectrumNativeID=""{nativeId}"" start_scan=");
+                        if (isBrukerSource)
+                        {
+                            line = line.Replace(@"start_scan=", $@"spectrumNativeID=""scan={scanNumber}"" start_scan=");
+                        }
+                        else if (nativeIdByScanNumber.TryGetValue(scanNumber, out string nativeId))
+                        {
+                            line = line.Replace(@"start_scan=", $@"spectrumNativeID=""{nativeId}"" start_scan=");
+                        }
                     }
 
                     else if (line.Contains(@"output-dir") || line.Contains(@"temp-dir") || line.Contains(@"parameter-file") || line.Contains(@"output-file"))

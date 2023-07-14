@@ -269,7 +269,7 @@ int main(int argc, char* argv[])
             if (builder.is_empty()) {
                 builder.abort_current_library();
                 if (success) {
-                    Verbosity::error("No spectra were found for the new library.");
+                    Verbosity::error("No spectra were found for the new library. Check detailed output to troubleshoot.");
                 }
             } else {
                 builder.collapseSources();
