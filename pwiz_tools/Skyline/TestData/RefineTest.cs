@@ -211,6 +211,24 @@ namespace pwiz.SkylineTestData
                     Assert.AreEqual(lightTran.Transition.FragmentIonName, heavyTran.Transition.FragmentIonName);
                 }
             }
+
+
+            // remove all transitions below the includedCutoff
+            double includedCutoff = .5;
+            double quantativeCutoff = .6;
+            document = InitRefineDocumentIprg();
+            // Assert.IsTrue(document.MoleculeTransitions.Any(t => t.ChromInfos.Any(c => c.PeakShapeValues?.ShapeCorrelation != null)));
+            refineSettings = new RefinementSettings { SCIncludedCutoff = includedCutoff };
+            var docRefineShapeCorrelation = refineSettings.Refine(document);
+            foreach (var tranNode in docRefineShapeCorrelation.MoleculeTransitions)
+            {
+                foreach (var chromInfo in tranNode.ChromInfos)
+                {
+                    Assert.IsNotNull(chromInfo.PeakShapeValues?.ShapeCorrelation);
+                    Assert.IsFalse(chromInfo.PeakShapeValues?.ShapeCorrelation < includedCutoff);
+                }
+            }
+
             // Pick only the precursors with the max peak area
             document = InitRefineDocumentIprg();
             refineSettings = new RefinementSettings { MaxPrecursorPeakOnly = true };
