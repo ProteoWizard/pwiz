@@ -902,6 +902,10 @@ namespace pwiz.Skyline
             (c, p) => c.Refinement.QValueCutoff = p.ValueDouble);
         public static readonly Argument ARG_REFINE_MINIMUM_DETECTIONS = new RefineArgument(@"refine-minimum-detections", INT_VALUE,
             (c, p) => c.Refinement.MinimumDetections = p.ValueInt);
+        public static readonly Argument ARG_REFINE_SC_INCLUDED_CUTOFF = new RefineArgument(@"refine-shape-correlation-included-cutoff", NUM_VALUE,
+            (c, p) => c.Refinement.SCIncludedCutoff = p.ValueDouble);
+        public static readonly Argument ARG_REFINE_SC_QUANTIZATION_CUTOFF = new RefineArgument(@"refine-shape-correlation-quantization-cutoff", NUM_VALUE,
+            (c, p) => c.Refinement.SCQuantizationCutoff = p.ValueDouble);
         // Refinement Group Comparison Tab
         public static readonly Argument ARG_REFINE_GC_P_VALUE_CUTOFF = new RefineArgument(
             @"refine-gc-p-value-cutoff", NUM_VALUE,
@@ -917,7 +921,7 @@ namespace pwiz.Skyline
         private static readonly ArgumentGroup GROUP_REFINEMENT = new ArgumentGroup(
             () => CommandArgUsage.CommandArgs_GROUP_REFINEMENT, false,
             ARG_REFINE_MIN_PEPTIDES, ARG_REFINE_REMOVE_REPEATS, ARG_REFINE_REMOVE_DUPLICATES,
-            ARG_REFINE_MISSING_LIBRARY, ARG_REFINE_MIN_TRANSITIONS, ARG_REFINE_LABEL_TYPE,
+            ARG_REFINE_MISSING_LIBRARY, ARG_REFINE_MIN_TRANSITIONS, ARG_REFINE_LABEL_TYPE, 
             ARG_REFINE_ADD_LABEL_TYPE, ARG_REFINE_AUTOSEL_PEPTIDES, ARG_REFINE_AUTOSEL_PRECURSORS,
             ARG_REFINE_AUTOSEL_TRANSITIONS);
 
@@ -931,6 +935,7 @@ namespace pwiz.Skyline
             ARG_REFINE_CV_REMOVE_ABOVE_CUTOFF, ARG_REFINE_CV_GLOBAL_NORMALIZE, ARG_REFINE_CV_REFERENCE_NORMALIZE,
             ARG_REFINE_CV_TRANSITIONS, ARG_REFINE_CV_TRANSITIONS_COUNT, ARG_REFINE_CV_MS_LEVEL,
             ARG_REFINE_QVALUE_CUTOFF, ARG_REFINE_MINIMUM_DETECTIONS,
+            ARG_REFINE_SC_INCLUDED_CUTOFF, ARG_REFINE_SC_QUANTIZATION_CUTOFF,
             ARG_REFINE_GC_P_VALUE_CUTOFF, ARG_REFINE_GC_FOLD_CHANGE_CUTOFF, ARG_REFINE_GC_MS_LEVEL, ARG_REFINE_GROUP_NAME);
         
 
