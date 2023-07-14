@@ -1433,6 +1433,24 @@ namespace pwiz.Skyline {
         }
         
         /// <summary>
+        ///   Looks up a localized string similar to all transitions with shape correlation below the cutoff will be removed.
+        /// </summary>
+        internal static string _refine_shape_correlation_included_cutoff {
+            get {
+                return ResourceManager.GetString("_refine_shape_correlation_included_cutoff", resourceCulture);
+            }
+        }
+        
+        /// <summary>
+        ///   Looks up a localized string similar to all transitions with shape correlation below the cutoff will be marked non-quantatative.
+        /// </summary>
+        internal static string _refine_shape_correlation_quantization_cutoff {
+            get {
+                return ResourceManager.GetString("_refine-shape-correlation-quantization-cutoff", resourceCulture);
+            }
+        }
+        
+        /// <summary>
         ///   Looks up a localized string similar to Use only the best replicate for each peptide in refinement value calculations. (use for fractionation).
         /// </summary>
         internal static string _refine_use_best_result {

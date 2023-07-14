@@ -928,4 +928,10 @@ greater peak area.</value>
   <data name="CommandArgs_ARG_FULL_SCAN_PRODUCT_ISOLATION_SCHEME_path_to_result_file_to_import_the_isolation_scheme" xml:space="preserve">
     <value>path/to/result-file to import the isolation scheme from</value>
   </data>
+  <data name="_refine-shape-correlation-quantization-cutoff" xml:space="preserve">
+    <value>all transitions with shape correlation below the cutoff will be marked non-quantatative</value>
+  </data>
+  <data name="_refine_shape_correlation_included_cutoff" xml:space="preserve">
+    <value>all transitions with shape correlation below the cutoff will be removed</value>
+  </data>
 </root>
