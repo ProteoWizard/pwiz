@@ -27,6 +27,7 @@ namespace pwiz.PanoramaClient
 {
     public partial class PanoramaDirectoryPicker : Form
     {
+
         public PanoramaDirectoryPicker(List<PanoramaServer> servers, string state, bool showSkyFolders = false, bool showWebDavFolders = false, string selectedPath = null)
         {
             InitializeComponent();
@@ -102,7 +103,7 @@ namespace pwiz.PanoramaClient
         private void DirectoryPicker_FormClosing(object sender, FormClosingEventArgs e)
         {
             State = FolderBrowser.ClosingState();
-            Selected = string.Concat(FolderBrowser.ActiveServer.URI, "_webdav", FolderBrowser.FolderPath);
+            Selected = string.Concat(FolderBrowser.ActiveServer.URI, PanoramaUtil.WEBDAV, FolderBrowser.FolderPath);
         }
 
         private void UpdateButtonState()

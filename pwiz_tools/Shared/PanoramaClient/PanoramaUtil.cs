@@ -37,6 +37,7 @@ namespace pwiz.PanoramaClient
         public const string FORM_POST = "POST";
         public const string LABKEY_CTX = "/labkey/";
         public const string ENSURE_LOGIN_PATH = "security/home/ensureLogin.view";
+        public const string WEBDAV = @"_webdav";
 
         public static Uri ServerNameToUri(string serverName)
         {
@@ -358,6 +359,7 @@ namespace pwiz.PanoramaClient
 
         public static IPanoramaClient CreatePanoramaClient(Uri serverUri)
         { return new WebPanoramaClient(serverUri);}
+
     }
 
     public abstract class GenericState<T>
@@ -801,15 +803,16 @@ namespace pwiz.PanoramaClient
         private readonly bool _hasWritePermission;
         private readonly bool _isTargetedMS;
         private readonly string _folderPath;
-
+        //TODO: Combine these constructors and remove method in PanoramaFolderBrowser to find the ActiveServer
         public FolderInformation(PanoramaServer server, bool hasWritePermission)
         {
             _server = server;
             _hasWritePermission = hasWritePermission;
         }
 
-        public FolderInformation(string folderPath, bool isTargetedMS)
+        public FolderInformation(PanoramaServer server, string folderPath, bool isTargetedMS)
         {
+            _server = server;
             _folderPath = folderPath;
             _isTargetedMS = isTargetedMS;
         }

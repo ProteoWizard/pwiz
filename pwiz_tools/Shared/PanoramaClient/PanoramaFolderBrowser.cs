@@ -92,7 +92,7 @@ namespace pwiz.PanoramaClient
                 ActiveServer = _serverList.FirstOrDefault();
                 InitializeTreeFromPath(treeView, SelectedPath, ActiveServer);
                 AddWebDavFolders(treeView.SelectedNode);
-                AddSelectedFiles(treeView.Nodes, EventArgs.Empty);
+                AddSelectedFiles(treeView.SelectedNode, EventArgs.Empty);
 
             }
             InitializeTreeView(treeView);
@@ -118,7 +118,7 @@ namespace pwiz.PanoramaClient
             {
                 _restorer.RestoreExpansionAndSelection(State);
                 _restorer.UpdateTopNode();
-                AddSelectedFiles(tree.Nodes, EventArgs.Empty);
+                AddSelectedFiles(treeView.SelectedNode, EventArgs.Empty);
             }
             else
             {
@@ -127,7 +127,7 @@ namespace pwiz.PanoramaClient
                 tree.TopNode.Expand();
             }
 
-            if (SelectedPath != null)
+            if (!string.IsNullOrEmpty(SelectedPath))
             {
                 if (SelectedPath.EndsWith("/"))
                 {
@@ -212,41 +212,18 @@ namespace pwiz.PanoramaClient
                     var hit = e.Node.TreeView.HitTest(e.Location);
                     if (hit.Location != TreeViewHitTestLocations.PlusMinus)
                     {
-                        treeView.SelectedNode = e.Node;
-                        treeView.Focus();
-                        ActiveServer = GetServerForNode(e.Node);
-                        UpdateLinkLabel(e.Node);
-                        UpdateNavButtons(e.Node);
-                    }
-                }
-            }
-        }
-
-        /// <summary>
-        /// Returns the server that corresponds with a given node
-        /// </summary>
-        /// <param name="node"></param>
-        /// <returns></returns>
-        protected virtual PanoramaServer GetServerForNode(TreeNode node)
-        {
-            if (node != null)
-            {
-                if (node.Parent == null)
-                {
-                    foreach (var pServer in _serverList)
-                    {
-                        if (pServer.URI.ToString().Equals(node.Text))
+                        var fileInfo = e.Node.Tag as FolderInformation;
+                        if (fileInfo != null)
                         {
-                            return pServer;
+                            treeView.SelectedNode = e.Node;
+                            treeView.Focus();
+                            ActiveServer = fileInfo.Server;
+                            UpdateLinkLabel(e.Node);
+                            UpdateNavButtons(e.Node);
                         }
                     }
                 }
-                else
-                {
-                    return GetServerForNode(node.Parent);
-                }
             }
-            return null;
         }
 
         public void UpClick()
@@ -343,33 +320,22 @@ namespace pwiz.PanoramaClient
         /// If there was a previous selection made in FilePicker, reload the files in the
         /// selected folder
         /// </summary>
-        /// <param name="nodes"></param>
+        /// <param name="node"></param>
         /// <param name="e"></param>
-        private void AddSelectedFiles(IEnumerable nodes, EventArgs e)
+        private void AddSelectedFiles(TreeNode node, EventArgs e)
         {
-            foreach (TreeNode node in nodes)
+            var folderInfo = node.Tag as FolderInformation;
+            if (folderInfo != null)
             {
-                if (node.IsSelected)
-                {
-                    var folderInfo = node.Tag as FolderInformation;
-                    ActiveServer = GetServerForNode(node);
-                    _priorNode = node;
-                    treeView.Focus();
-                    _lastSelected = node;
-                    Clicked = node;
-                    if (folderInfo != null)
-                    {
-                        CurNodeIsTargetedMS = folderInfo.IsTargetedMS;
-                        Path = folderInfo.FolderPath;
-                    }
-                    treeView.Focus();
-                    AddFiles?.Invoke(this, e);
-                }
-                else
-                {
-                    AddSelectedFiles(node.Nodes, e);
-                }
-
+                ActiveServer = folderInfo.Server; 
+                _priorNode = node;
+                treeView.Focus();
+                _lastSelected = node;
+                Clicked = node;
+                CurNodeIsTargetedMS = folderInfo.IsTargetedMS;
+                Path = folderInfo.FolderPath;
+                treeView.Focus();
+                AddFiles?.Invoke(this, e);
             }
         }
 
@@ -434,7 +400,7 @@ namespace pwiz.PanoramaClient
             }
 
             AddFiles?.Invoke(this, EventArgs.Empty);
-            //If there's a file browser observer, add corresponding files
+            // If there's a file browser observer, add corresponding files
             if (_priorNode != null && _priorNode != node)
             {
                 _previous.Push(_priorNode);
@@ -452,13 +418,13 @@ namespace pwiz.PanoramaClient
                 if (folderInfo.FolderPath.Contains(@"@files"))
                 {
                     SelectedUrl =
-                        Uri.UnescapeDataString(string.Concat(ActiveServer.URI, @"_webdav",
+                        Uri.UnescapeDataString(string.Concat(ActiveServer.URI, PanoramaUtil.WEBDAV,
                             folderInfo.FolderPath));
                 }
                 else
                 {
                     SelectedUrl =
-                        Uri.UnescapeDataString(string.Concat(ActiveServer.URI, @"_webdav",
+                        Uri.UnescapeDataString(string.Concat(ActiveServer.URI, PanoramaUtil.WEBDAV,
                             folderInfo.FolderPath, "/@files"));
                 }
             }
@@ -471,13 +437,13 @@ namespace pwiz.PanoramaClient
                 var folderInfo = node.Tag as FolderInformation;
                 if (folderInfo != null)
                 {
-                    var query = new Uri(string.Concat(ActiveServer.URI, "_webdav", folderInfo.FolderPath, "?method=json"));
+                    var query = new Uri(string.Concat(ActiveServer.URI, PanoramaUtil.WEBDAV, folderInfo.FolderPath, "?method=json"));
                     var webClient = new WebClientWithCredentials(query, ActiveServer.Username, ActiveServer.Password);
                     JToken json = webClient.Get(query);
                     if ((int)json[@"fileCount"] != 0)
                     {
                         var files = json[@"files"];
-                        foreach (dynamic file in files)
+                        foreach (var file in files)
                         {
                             var listItem = new string[5];
                             var fileName = (string)file[@"text"];
@@ -492,7 +458,7 @@ namespace pwiz.PanoramaClient
                                 }
 
                                 var newNode = new TreeNode(fileName);
-                                newNode.Tag = new FolderInformation(string.Concat(folderInfo.FolderPath, @"/", fileName), false);
+                                newNode.Tag = new FolderInformation(ActiveServer, string.Concat(folderInfo.FolderPath, @"/", fileName), false);
                                 newNode.ImageIndex = 3;
                                 newNode.SelectedImageIndex = 3;
                                 node.Nodes.Add(newNode);
@@ -507,7 +473,9 @@ namespace pwiz.PanoramaClient
             }
             catch
             {
-                //ignored
+                // ignored
+                //TODO: Do we really need a try catch block? If we do, document why we ignore this exception
+                
             }
         }
 
@@ -533,7 +501,7 @@ namespace pwiz.PanoramaClient
         public void InitializeFolder(TreeView treeViewFolders, bool requireUploadPerms, bool showFiles, JToken folder, PanoramaServer server)
         {
             var treeNode = new TreeNode(server.URI.ToString());
-            treeNode.Tag = new FolderInformation(string.Empty, false);
+            treeNode.Tag = new FolderInformation(server, string.Empty, false);
             treeViewFolders.Invoke(new Action(() => treeViewFolders.Nodes.Add(treeNode)));
             treeViewFolders.Invoke(new Action(() => treeViewFolders.SelectedImageIndex = (int)ImageId.panorama));
             treeViewFolders.Invoke(new Action(() => AddChildContainers(treeNode, folder, requireUploadPerms, showFiles, server)));
@@ -550,20 +518,20 @@ namespace pwiz.PanoramaClient
         {
             var uriPath = new Uri(folderPath);
             var serverText = uriPath.GetLeftPart(UriPartial.Authority);
-            var uriFolders = folderPath.Substring(string.Concat(serverText, @"/_webdav").Length);
+            var uriFolders = folderPath.Substring(string.Concat(serverText, @"/", PanoramaUtil.WEBDAV).Length);
             var uriFolderTokens = uriFolders.Split('/');
             var treeNode = new TreeNode(server.URI.ToString());
-            treeNode.Tag = new FolderInformation(string.Empty, false);
+            treeNode.Tag = new FolderInformation(server, string.Empty, false);
             var fileNode = new TreeNode(@"@files");
             TreeNode selectedFolder = null;
             treeViewFolders.Invoke(new Action(() => treeViewFolders.Nodes.Add(treeNode)));
             treeViewFolders.Invoke(new Action(() => treeViewFolders.SelectedImageIndex = (int)ImageId.panorama));
-            treeViewFolders.Invoke(new Action(() => selectedFolder = LoadFromPath(uriFolderTokens, treeNode)));
+            treeViewFolders.Invoke(new Action(() => selectedFolder = LoadFromPath(uriFolderTokens, treeNode, server)));
             treeViewFolders.Invoke(new Action(() => selectedFolder.Nodes.Add(fileNode)));
             treeViewFolders.Invoke(new Action(() => treeViewFolders.SelectedImageIndex = treeViewFolders.ImageIndex = (int)ImageId.folder));
             var folderInfo = selectedFolder.Tag as FolderInformation;
             if (folderInfo != null)
-                fileNode.Tag = new FolderInformation(string.Concat(folderInfo.FolderPath, @"/@files"), false);
+                fileNode.Tag = new FolderInformation(server, string.Concat(folderInfo.FolderPath, @"/@files"), false);
             treeViewFolders.Invoke(new Action(() => selectedFolder.Expand()));
             treeViewFolders.Invoke(new Action(() => treeViewFolders.SelectedNode = fileNode));
         }
@@ -664,7 +632,7 @@ namespace pwiz.PanoramaClient
                         }
 
                     }
-                    folderNode.Tag = new FolderInformation((string)subFolder[@"path"], containsTargetedMs);
+                    folderNode.Tag = new FolderInformation(server, (string)subFolder[@"path"], containsTargetedMs);
                 }
                 else
                 {
@@ -680,8 +648,9 @@ namespace pwiz.PanoramaClient
         /// </summary>
         /// <param name="folderTokens"></param>
         /// <param name="node"></param>
+        /// <param name="server"></param>
         /// <returns></returns>
-        private TreeNode LoadFromPath(string[] folderTokens, TreeNode node)
+        private TreeNode LoadFromPath(string[] folderTokens, TreeNode node, PanoramaServer server)
         {
             foreach (var folder in folderTokens)
             {
@@ -691,7 +660,7 @@ namespace pwiz.PanoramaClient
                     var subfolder = new TreeNode(folder);
                     if (folderInfo != null)
                         subfolder.Tag =
-                            new FolderInformation(string.Concat(folderInfo.FolderPath, @"/", folder), false);
+                            new FolderInformation(server, string.Concat(folderInfo.FolderPath, @"/", folder), false);
                     subfolder.ImageIndex = subfolder.SelectedImageIndex = (int)ImageId.folder;
                     node.Nodes.Add(subfolder);
                     node = subfolder;
@@ -727,9 +696,10 @@ namespace pwiz.PanoramaClient
         {
             NodeCount = treeView.GetNodeCount(true);
             var node = SearchTree(treeView.Nodes, nodeName);
-            if (node != null)
+            var fileInfo = node.Tag as FolderInformation;
+            if (fileInfo != null)
             {
-                ActiveServer = GetServerForNode(node);
+                ActiveServer = fileInfo.Server; 
                 UpdateNavButtons(node);
             }
         }
@@ -757,15 +727,15 @@ public class TestPanoramaFolderBrowser : PanoramaFolderBrowser
     protected override void InitializeTreeView(TreeView treeViewFolders)
     {
         var treeNode = new TreeNode(_server.URI.ToString());
-        treeNode.Tag = new FolderInformation(string.Empty, false);
-        treeViewFolders.Invoke(new Action(() => treeViewFolders.Nodes.Add(treeNode)));
-        treeViewFolders.Invoke(new Action(() => treeViewFolders.SelectedImageIndex = (int)ImageId.panorama));
-        treeViewFolders.Invoke(new Action(() => AddChildContainers(treeNode, _folderJson, false, true, _server)));
-    }
+        treeNode.Tag = new FolderInformation(_server, string.Empty, false);
+        // Remove Invoke? 
+        treeViewFolders.Invoke(new Action(() =>
+        {
+            treeViewFolders.Nodes.Add(treeNode);
+            treeViewFolders.SelectedImageIndex = (int)ImageId.panorama;
+            AddChildContainers(treeNode, _folderJson, false, true, _server);
 
-    protected override PanoramaServer GetServerForNode(TreeNode node)
-    {
-        return _server;
+        }));
     }
 
     public override void InitializeTreeServers(PanoramaServer server,

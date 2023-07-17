@@ -45,22 +45,22 @@ namespace pwiz.SkylineTestFunctional
 
         protected override void DoTest()
         {
-            //Test navigation buttons
+            // Test navigation buttons
             TestNavigationButtons();
 
-            //Test versions: selected option is correct for all versions vs current version
+            // Test versions: selected option is correct for all versions vs current version
             TestVersions();
 
-            //Test TreeView icons
+            // Test TreeView icons
             TestTreeViewIcons();
 
-            //Test enter key - ensure node is expanded
+            // Test enter key - ensure node is expanded
             TestKeyStrokeResponse();
 
-            //Verify JSON is as expected 
+            // Verify JSON is as expected 
             TestVerifyJson();
 
-            //Test which columns are being displayed(versions shouldn't be displayed if there are no versions etc.)
+            // Test which columns are being displayed(versions shouldn't be displayed if there are no versions etc.)
             TestColumns();
 
 
@@ -68,9 +68,9 @@ namespace pwiz.SkylineTestFunctional
 
 
 
-        //Identify edge cases for each test
-        //Up is disabled at the top?
-        //Are buttons enabled-disabled when they should be ?
+        // Identify edge cases for each test
+        // Up is disabled at the top?
+        // Are buttons enabled-disabled when they should be ?
         public void TestNavigationButtons()
         {
             var testClient = new TestClientJson();
@@ -241,7 +241,7 @@ namespace pwiz.SkylineTestFunctional
                 Assert.AreEqual("3.0 B", remoteDlg.GetItemValue(1));
                 Assert.AreEqual(4.ToString(), remoteDlg.GetItemValue(2));
                 Assert.AreEqual(string.Empty, remoteDlg.GetItemValue(3));
-                Assert.AreEqual("11/17/2021 09:09:07", remoteDlg.GetItemValue(4));
+                Assert.AreEqual("11/17/2021 9:09:07 AM", remoteDlg.GetItemValue(4));
 
                 remoteDlg.ClickVersions();
 
@@ -250,14 +250,14 @@ namespace pwiz.SkylineTestFunctional
                 Assert.AreEqual("200.0 B", remoteDlg.GetItemValue(1));
                 Assert.AreEqual(4.ToString(), remoteDlg.GetItemValue(2));
                 Assert.AreEqual("File1", remoteDlg.GetItemValue(3));
-                Assert.AreEqual("11/17/2021 09:09:07", remoteDlg.GetItemValue(4));
+                Assert.AreEqual("11/17/2021 9:09:07 AM", remoteDlg.GetItemValue(4));
 
                 remoteDlg.ClickFile("File3");
                 Assert.AreEqual("File3", remoteDlg.GetItemValue(0));
                 Assert.AreEqual("5.9 KB", remoteDlg.GetItemValue(1));
                 Assert.AreEqual(4.ToString(), remoteDlg.GetItemValue(2));
                 Assert.AreEqual("File2", remoteDlg.GetItemValue(3));
-                Assert.AreEqual("11/17/2021 09:09:07", remoteDlg.GetItemValue(4));
+                Assert.AreEqual("11/17/2021 9:09:07 AM", remoteDlg.GetItemValue(4));
 
                 remoteDlg.Close();
             });
