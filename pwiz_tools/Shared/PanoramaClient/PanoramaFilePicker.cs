@@ -4,6 +4,7 @@ using System.Collections.Generic;
 using System.Diagnostics;
 using System.Drawing;
 using System.Globalization;
+using System.Linq;
 using Newtonsoft.Json.Linq;
 using System.Windows.Forms;
 using pwiz.Common.SystemUtil;
@@ -125,6 +126,7 @@ namespace pwiz.PanoramaClient
         public void AddAllFiles(Uri newUri)
         {
             var json = GetJson(newUri);
+            ShowFiles((int)json[@"fileCount"] != 0);
             if ((int)json[@"fileCount"] != 0)
             {
                 var files = json[@"files"];
@@ -142,14 +144,6 @@ namespace pwiz.PanoramaClient
                             continue;
                         }
 
-                        // TODO: Check with Brendan.
-                        if (ShowingSky)
-                        {
-                            if (!fileName.EndsWith(EXT) && !fileName.EndsWith(ZIP_EXT))
-                            {
-                                continue;
-                            }
-                        }
 
                         var link = (string)file[@"href"];
                         link = link.Substring(1);
@@ -165,17 +159,12 @@ namespace pwiz.PanoramaClient
                         var format = "ddd MMM dd HH:mm:ss yyyy";
                         DateTime.TryParseExact(date, format, CultureInfo.InvariantCulture, DateTimeStyles.None, out var formattedDate);
                         listItem[4] = formattedDate.ToString(CultureInfo.CurrentCulture);
-                        var fileNode = fileName.EndsWith(EXT) ? new ListViewItem(listItem, 1) : new ListViewItem(listItem, 0);
+                        var fileNode = fileName.EndsWith(EXT) || fileName.EndsWith(ZIP_EXT) ? new ListViewItem(listItem, 1) : new ListViewItem(listItem, 0);
                         fileNode.Tag = size;
                         fileNode.Name = link;
                         listView.Items.Add(fileNode);
                     }
                 }
-            }
-            else
-            {
-                listView.HeaderStyle = ColumnHeaderStyle.None;
-                noFiles.Visible = true;
             }
         }
 
@@ -204,77 +193,6 @@ namespace pwiz.PanoramaClient
         }
 
         /// <summary>
-        /// Gets the latest versions of all files in a particular folder
-        /// and adds them to ListView
-        /// </summary>
-        /// <exception cref="Exception"></exception>
-        private void AddLatestSkyFiles()
-        {
-            var rowCount = _runsInfoJson[@"rowCount"];
-            if ((int)rowCount > 0)
-            {
-                listView.HeaderStyle = ColumnHeaderStyle.Clickable;
-                noFiles.Visible = false;
-                listView.Columns[3].Width = 0;
-                listView.Items.Clear();
-                var result = new string[5];
-                var fileInfos = new string[5];
-                var rows = _runsInfoJson[@"rows"];
-
-                foreach (var row in rows)
-                {
-                    var versions = row[@"File/Versions"].ToString();
-                    var rowReplaced = (string)row[@"ReplacedByRun"];
-                    var replaces = (string)row[@"ReplacesRun"];
-                    var id = (long)row[@"File/Id"];
-                    _nameDictionary.TryGetValue(id, out var serverName);
-                    if ((!string.IsNullOrEmpty(replaces) && string.IsNullOrEmpty(rowReplaced)) ||
-                        versions.Equals(1.ToString()))
-                    {
-                        long size = 0;
-                        if (_sizeDictionary.TryGetValue(id, out var value))
-                        {
-                            size = value;
-                        }
-
-                        if (size > 0)
-                        {
-                            var sizeObj = new FileSizeFormatProvider();
-                            var sizeString = sizeObj.Format(@"fs1", size, sizeObj);
-                            result[1] = sizeString;
-                        }
-
-
-                        result[2] = versions;
-                        var name = row[@"Name"].ToString();
-                        result[0] = name;
-                        fileInfos[0] = (string)row[@"File/Proteins"];
-                        fileInfos[1] = (string)row[@"File/Peptides"];
-                        fileInfos[2] = (string)row[@"File/Precursors"];
-                        fileInfos[3] = (string)row[@"File/Transitions"];
-                        fileInfos[4] = (string)row[@"File/Replicates"];
-                        DateTime.TryParse((string)row[@"Created"], CultureInfo.InvariantCulture, DateTimeStyles.None, out var formattedDate);
-                        result[4] = formattedDate.ToString(CultureInfo.CurrentCulture);
-                        var fileNode = new ListViewItem(result, 1)
-                        {
-                            ToolTipText =
-                                $"Proteins: {fileInfos[0]}, Peptides: {fileInfos[1]}, Precursors: {fileInfos[2]}, Transitions: {fileInfos[3]}, Replicates: {fileInfos[4]}",
-                            Name = serverName,
-                            Tag = size
-                        };
-                        listView.Items.Add(fileNode);
-                    }
-                }
-                listView.Columns[4].Width = -2;
-            }
-            else
-            {
-                listView.HeaderStyle = ColumnHeaderStyle.None;
-                noFiles.Visible = true;
-            }
-        }
-
-        /// <summary>
         /// Returns true if a file has multiple versions, and false if not
         /// </summary>
         /// <param name="json"></param>
@@ -282,15 +200,7 @@ namespace pwiz.PanoramaClient
         private bool HasVersions(JToken json)
         {
             var rows = json[@"rows"];
-            foreach (var row in rows)
-            {
-                var replaced = row[@"Replaced"].ToString();
-                if (replaced.Equals("True"))
-                {
-                    return true;
-                }
-            }
-            return false;
+            return rows.Select(row => row[@"Replaced"].ToString()).Any(replaced => replaced.Equals("True"));
         }
 
         /// <summary>
@@ -303,7 +213,6 @@ namespace pwiz.PanoramaClient
         private string[] GetVersionInfo(JToken json, string replacedBy)
         {
             var result = new string[2];
-
             var rows = json[@"rows"];
             foreach (var row in rows)
             {
@@ -319,36 +228,24 @@ namespace pwiz.PanoramaClient
         }
 
         /// <summary>
-        /// Given a folder path, add all .sky files inside that folder to a ListView
+        /// 
         /// </summary>
-        private void AddAllSkyFiles()
+        /// <param name="hasVersions"></param>
+        /// <param name="showLatestVersion"></param>
+        private void AddSkyFiles(bool hasVersions, bool showLatestVersion)
         {
+            ModifyListViewCols(hasVersions, showLatestVersion);
             var rows = _runsInfoJson[@"rows"];
-            var rowCount = _runsInfoJson[@"rowCount"];
-            if ((int)rowCount == 0)
-            {
-                listView.HeaderStyle = ColumnHeaderStyle.None;
-                noFiles.Visible = true;
-                return;
-            }
 
-            listView.HeaderStyle = ColumnHeaderStyle.Clickable;
-            noFiles.Visible = false;
             foreach (var row in rows)
             {
                 var fileName = (string)row[@"Name"];
-                var filePath = (string)row[@"Container/Path"];
                 var id = (long)row[@"File/Id"];
-                _nameDictionary.TryGetValue(id, out var serverName);
-
+                var versions = row[@"File/Versions"].ToString();
+                var rowReplaced = (string)row[@"ReplacedByRun"];
+                var replaces = (string)row[@"ReplacesRun"];
                 var listItem = new string[5];
-                var replacedBy = row[@"ReplacedByRun"].ToString();
-
-                listView.Columns[3].Width = 100;
-                listView.Columns[2].Width = 60;
-                versionLabel.Visible = true;
-                versionOptions.Visible = true;
-                var numVersions = GetVersionInfo(_runsInfoJson, replacedBy);
+                _nameDictionary.TryGetValue(id, out var serverName);
                 listItem[0] = fileName;
                 long size = 0;
                 if (_sizeDictionary.TryGetValue(id, out var value))
@@ -363,18 +260,26 @@ namespace pwiz.PanoramaClient
                     listItem[1] = sizeString;
                 }
 
-                if (numVersions[0] != null)
+                if (showLatestVersion)
                 {
-                    listItem[2] = row[@"File/Versions"].ToString();
+                    listItem[2] = versions;
                 }
                 else
                 {
-                    listItem[2] = 1.ToString();
-                }
+                    var numVersions = GetVersionInfo(_runsInfoJson, rowReplaced);
+                    if (numVersions[0] != null)
+                    {
+                        listItem[2] = versions;
+                    }
+                    else
+                    {
+                        listItem[2] = 1.ToString();
+                    }
 
-                if (numVersions[1] != null)
-                {
-                    listItem[3] = numVersions[1];
+                    if (numVersions[1] != null)
+                    {
+                        listItem[3] = numVersions[1];
+                    }
                 }
 
                 DateTime.TryParse((string)row[@"Created"], CultureInfo.InvariantCulture, DateTimeStyles.None,
@@ -387,8 +292,18 @@ namespace pwiz.PanoramaClient
                         $"Proteins: {row[@"File/Proteins"]}, Peptides: {row[@"File/Peptides"]}, Precursors: {row[@"File/Precursors"]}, Transitions: {row[@"File/Transitions"]}, Replicates: {row[@"File/Replicates"]}",
                     Tag = size
                 };
-                listView.Items.Add(fileNode);
-                
+                if (showLatestVersion)
+                {
+                    if ((!string.IsNullOrEmpty(replaces) && string.IsNullOrEmpty(rowReplaced)) ||
+                        versions.Equals(1.ToString()))
+                    {
+                        listView.Items.Add(fileNode);
+                    }
+                }
+                else
+                {
+                    listView.Items.Add(fileNode);
+                }
             }
         }
 
@@ -406,13 +321,10 @@ namespace pwiz.PanoramaClient
             {
                 _restoring = true;
                 urlLink.Text = FolderBrowser.SelectedUrl;
-                versionOptions.Visible = false;
-                versionLabel.Visible = false;
+                ShowFiles(true);
                 versionOptions.Text = RECENT_VER;
                 var path = FolderBrowser.Path;
                 listView.Items.Clear();
-                listView.HeaderStyle = ColumnHeaderStyle.Clickable;
-                noFiles.Visible = false;
                 ActiveServer = FolderBrowser.ActiveServer;
                 _restoring = false;
                 if (!string.IsNullOrEmpty(path))
@@ -439,34 +351,15 @@ namespace pwiz.PanoramaClient
                             }
 
                             var versions = HasVersions(_runsInfoJson);
-                            if (versions)
-                            {
-
-                                listView.Columns[3].Width = 100;
-                                listView.Columns[2].Width = 60;
-                                versionLabel.Visible = true;
-                                versionOptions.Visible = true;
-                            }
-                            else
-                            {
-                                listView.Columns[3].Width = 0;
-                                listView.Columns[2].Width = 0;
-                                versionLabel.Visible = false;
-                                versionOptions.Visible = false;
-                            }
+                            ModifyListViewCols(versions, true);
                             GetRunsDict();
-                            AddLatestSkyFiles();
+                            AddSkyFiles(versions, true);
                         }
-                        
                     }
                     else
                     {
                         // For the WebDAV browser
-                        listView.Columns[2].Width = 0;
-                        listView.Columns[3].Width = 0;
-                        listView.Columns[4].Width = -2;
-                        versionLabel.Visible = false;
-                        versionOptions.Visible = false;
+                        ModifyListViewCols(false);
                         string uriString;
                         if (ShowWebDav)
                         {
@@ -482,11 +375,7 @@ namespace pwiz.PanoramaClient
                         AddAllFiles(uri);
                     }
 
-                    if (listView.Items.Count < 1)
-                    {
-                        listView.HeaderStyle = ColumnHeaderStyle.None;
-                        noFiles.Visible = true;
-                    }
+                    ShowFiles(listView.Items.Count >= 1);
                 }
             }
             catch (Exception ex)
@@ -507,14 +396,7 @@ namespace pwiz.PanoramaClient
             if (!_restoring)
             {
                 listView.Items.Clear();
-                if (versionOptions.Text.Equals(RECENT_VER))
-                {
-                    AddLatestSkyFiles();
-                }
-                else
-                {
-                    AddAllSkyFiles();
-                }
+                AddSkyFiles(true, versionOptions.Text.Equals(RECENT_VER));
             }
         }
 
@@ -561,11 +443,69 @@ namespace pwiz.PanoramaClient
             }
         }
 
-        private void Form1_FormClosing(object sender, FormClosingEventArgs e) // Rename
+        private void PanoramaFilePicker_FormClosing(object sender, FormClosingEventArgs e) 
         {
             FormHasClosed = true;
             FileName = listView.SelectedItems.Count != 0 ? listView.SelectedItems[0].Text : string.Empty;
             TreeState = FolderBrowser.ClosingState();
+        }
+
+        /// <summary>
+        /// Given a boolean, display columns 2 and 3 if there are multiple
+        /// versions of a file, otherwise hide columns 2 and 3 if there
+        /// are not multiple versions of a file
+        /// The optional second parameter is used in cases where we are viewing
+        /// a folder with multiple versions, but we only want the latest versions
+        /// </summary>
+        /// <param name="versions"></param>
+        /// <param name="latestVersion"></param>
+        private void ModifyListViewCols(bool versions, bool latestVersion = false)
+        {
+            versionLabel.Visible = versions;
+            versionOptions.Visible = versions;
+            // We extend the date column if there are no versions or if we are viewing the latest versions only
+            // If there are no versions, or we are showing latest versions, we don't need the Replaced By column
+            if (!versions || latestVersion)
+            {
+                listView.Columns[3].Width = 0;
+                listView.Columns[4].Width = -2;
+                if (!versions)
+                {
+                    listView.Columns[2].Width = 0;
+                }
+                else
+                {
+                    listView.Columns[2].Width = 60;
+                }
+            }
+            else 
+            {
+                // TODO: don't use these specific numbers for the column widths
+                listView.Columns[3].Width = 100;
+                listView.Columns[2].Width = 60;
+            }
+        }
+
+        /// <summary>
+        /// Given a boolean value representing if there
+        /// are files in a particular folder, display
+        /// a message saying there are no files if the boolean
+        /// is false, otherwise do not display this message if the
+        /// boolean is true
+        /// </summary>
+        /// <param name="files"></param>
+        private void ShowFiles(bool files)
+        {
+            if (files)
+            {
+                listView.HeaderStyle = ColumnHeaderStyle.Clickable;
+                noFiles.Visible = false;
+            }
+            else
+            {
+                listView.HeaderStyle = ColumnHeaderStyle.None;
+                noFiles.Visible = true;
+            }
         }
 
         /// <summary>
@@ -661,12 +601,15 @@ namespace pwiz.PanoramaClient
 
         private void PanoramaFilePicker_SizeChanged(object sender, EventArgs e)
         {
-            // Make a single method called here and listView_SizeChanged
-            noFiles.Location = new Point((listView.Location.Y + listView.Width - noFiles.Width) / 2,
-                noFiles.Location.Y);
+            ResizeLabel(e);
         }
 
         private void listView_SizeChanged(object sender, EventArgs e)
+        {
+            ResizeLabel(e);
+        }
+
+        private void ResizeLabel(EventArgs e)
         {
             noFiles.Location = new Point((listView.Location.Y + listView.Width - noFiles.Width) / 2,
                 noFiles.Location.Y);

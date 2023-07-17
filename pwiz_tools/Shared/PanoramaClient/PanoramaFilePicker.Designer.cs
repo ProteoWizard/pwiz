@@ -243,7 +243,7 @@ namespace pwiz.PanoramaClient
             this.MaximizeBox = false;
             this.MinimizeBox = false;
             this.Name = "PanoramaFilePicker";
-            this.FormClosing += new System.Windows.Forms.FormClosingEventHandler(this.Form1_FormClosing);
+            this.FormClosing += new System.Windows.Forms.FormClosingEventHandler(this.PanoramaFilePicker_FormClosing);
             this.Load += new System.EventHandler(this.FilePicker_Load);
             this.SizeChanged += new System.EventHandler(this.PanoramaFilePicker_SizeChanged);
             this.splitContainer1.Panel2.ResumeLayout(false);
