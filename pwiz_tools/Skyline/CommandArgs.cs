@@ -902,10 +902,10 @@ namespace pwiz.Skyline
             (c, p) => c.Refinement.QValueCutoff = p.ValueDouble);
         public static readonly Argument ARG_REFINE_MINIMUM_DETECTIONS = new RefineArgument(@"refine-minimum-detections", INT_VALUE,
             (c, p) => c.Refinement.MinimumDetections = p.ValueInt);
-        public static readonly Argument ARG_REFINE_SC_INCLUDED_CUTOFF = new RefineArgument(@"refine-shape-correlation-included-cutoff", NUM_VALUE,
+        public static readonly Argument ARG_REFINE_SC_INCLUDED_CUTOFF = new RefineArgument(@"refine-shape-r-include-cutoff", NUM_VALUE,
             (c, p) => c.Refinement.SCIncludedCutoff = p.ValueDouble);
-        public static readonly Argument ARG_REFINE_SC_QUANTIZATION_CUTOFF = new RefineArgument(@"refine-shape-correlation-quantization-cutoff", NUM_VALUE,
-            (c, p) => c.Refinement.SCQuantizationCutoff = p.ValueDouble);
+        public static readonly Argument ARG_REFINE_SC_QUANTIZATION_CUTOFF = new RefineArgument(@"refine-shape-r-quant-cutoff", NUM_VALUE,
+            (c, p) => c.Refinement.SCQuantitativeCutoff = p.ValueDouble);
         // Refinement Group Comparison Tab
         public static readonly Argument ARG_REFINE_GC_P_VALUE_CUTOFF = new RefineArgument(
             @"refine-gc-p-value-cutoff", NUM_VALUE,
