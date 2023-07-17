@@ -452,8 +452,11 @@ namespace pwiz.BiblioSpec
                 {
                     // If something happened (error or cancel) to end processing, then
                     // get rid of the possibly partial library.
-                    File.Delete(OutputPath);
-                    File.Delete(OutputPath + EXT_SQLITE_JOURNAL);
+                    if (OutputPath != null)
+                    {
+                        File.Delete(OutputPath);
+                        File.Delete(OutputPath + EXT_SQLITE_JOURNAL);
+                    }
                 }
                 else
                 {
