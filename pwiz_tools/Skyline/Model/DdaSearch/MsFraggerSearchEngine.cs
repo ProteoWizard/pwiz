@@ -788,11 +788,11 @@ add_Nterm_protein = 0.000000
             return false;
         }
 
-        public bool IsCanceled => _cancelToken.IsCancellationRequested;
+        public bool IsCanceled => _cancelToken?.IsCancellationRequested ?? false;
         public UpdateProgressResponse UpdateProgress(IProgressStatus status)
         {
             SearchProgressChanged?.Invoke(this, status);
-            return _cancelToken.IsCancellationRequested ? UpdateProgressResponse.cancel : UpdateProgressResponse.normal;
+            return IsCanceled ? UpdateProgressResponse.cancel : UpdateProgressResponse.normal;
         }
 
         public bool HasUI => false;
