@@ -144,6 +144,8 @@ namespace pwiz.SkylineTestFunctional
             BuildLibraryError("truncated.pep.XML", null);
             BuildLibraryError("missing_mzxml.pep.XML", null, null, "could not find matches for the following");
             BuildLibraryError("..\\mascot\\F027319.dat", null, 1e-12, "No matches passed score filter");
+            BuildLibraryError(TestFilesDir.GetVendorTestData(TestFilesDir.VendorDir.BiblioSpec, "mismatched-scan-numbers.pepXML"), null, null, "WARNING: Could not find native id");
+            BuildLibraryError(TestFilesDir.GetVendorTestData(TestFilesDir.VendorDir.BiblioSpec, "mismatched-nativeid-format.mzid"), null, null, "WARNING: Mismatch between spectrum");
 
             // Test trying to build using an existing library (e.g. msp/sptxt)
             EnsurePeptideSettings();

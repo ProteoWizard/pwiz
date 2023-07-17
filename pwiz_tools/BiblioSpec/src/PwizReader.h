@@ -115,6 +115,7 @@ class PwizReader : public BiblioSpec::SpecFileReader {
     size_t curPositionInIndexMzPairs_;
     vector< pair<int,double> > indexMzPairs_; // scan/pre-mz pairs, may besorted byeither
     BiblioSpec::SPEC_ID_TYPE idType_;
+    BiblioSpec::V_LEVEL idNotFoundWarnLevel_;
 
 
     /**
