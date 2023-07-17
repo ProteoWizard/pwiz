@@ -152,7 +152,7 @@ namespace pwiz.Skyline.EditUI
                     t.ChromInfos.Any(c => c.PeakShapeValues?.ShapeCorrelation != null)))
             {
                 textIncludedCutoff.Enabled = true;
-                textQuantizationCutoff.Enabled = true;
+                textQuantitativeCutoff.Enabled = true;
             }
 
 
@@ -238,10 +238,10 @@ namespace pwiz.Skyline.EditUI
             set { textIncludedCutoff.Text = value.ToString(LocalizationHelper.CurrentCulture); }
         }
 
-        public int SCQuantizationCutoff
+        public int SCQuantitativeCutoff
         {
-            get { return Convert.ToInt32(textQuantizationCutoff.Text); }
-            set { textQuantizationCutoff.Text = value.ToString(LocalizationHelper.CurrentCulture); }
+            get { return Convert.ToInt32(textQuantitativeCutoff.Text); }
+            set { textQuantitativeCutoff.Text = value.ToString(LocalizationHelper.CurrentCulture); }
         }
 
         public AreaCVTransitions Transition
@@ -574,13 +574,13 @@ namespace pwiz.Skyline.EditUI
                 scIncludedCutoff = includeVal;
             }
 
-            double? scQuantizationCutoff = null;
-            if (!string.IsNullOrEmpty(textQuantizationCutoff.Text))
+            double? scQuantitativeCutoff = null;
+            if (!string.IsNullOrEmpty(textQuantitativeCutoff.Text))
             {
-                double quantizationCutoffVal;
-                if (!helper.ValidateDecimalTextBox(textQuantizationCutoff, -1, 1, out quantizationCutoffVal))// check if -1 is correct minimum
+                double quantitativeCutoffVal;
+                if (!helper.ValidateDecimalTextBox(textQuantitativeCutoff, 0, 1, out quantitativeCutoffVal))// check if -1 is correct minimum
                     return;
-                scQuantizationCutoff = quantizationCutoffVal;
+                scQuantitativeCutoff = quantitativeCutoffVal;
             }
 
             RefinementSettings = new RefinementSettings
@@ -618,8 +618,8 @@ namespace pwiz.Skyline.EditUI
                                          MSLevelGroupComparison = msLevelGroupComparison,
                                          GroupComparisonDefs = groupComparisonDefs,
                                          SCIncludedCutoff = scIncludedCutoff,
-                                         SCQuantizationCutoff = scQuantizationCutoff
-                                     };
+                                         SCQuantitativeCutoff = scQuantitativeCutoff
+            };
 
             DialogResult = DialogResult.OK;
             Close();

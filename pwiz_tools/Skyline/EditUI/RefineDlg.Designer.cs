@@ -74,6 +74,8 @@
             this.label3 = new System.Windows.Forms.Label();
             this.tabConsistency = new System.Windows.Forms.TabPage();
             this.groupBox2 = new System.Windows.Forms.GroupBox();
+            this.label10 = new System.Windows.Forms.Label();
+            this.textQuantitativeCutoff = new System.Windows.Forms.TextBox();
             this.label9 = new System.Windows.Forms.Label();
             this.textIncludedCutoff = new System.Windows.Forms.TextBox();
             this.groupPeakArea = new System.Windows.Forms.GroupBox();
@@ -105,8 +107,6 @@
             this.labelGroupComparison = new System.Windows.Forms.Label();
             this.btnEditGroupComparisons = new System.Windows.Forms.Button();
             this.checkedListBoxGroupComparisons = new System.Windows.Forms.CheckedListBox();
-            this.label10 = new System.Windows.Forms.Label();
-            this.textQuantizationCutoff = new System.Windows.Forms.TextBox();
             this.tabControl1.SuspendLayout();
             this.tabDocument.SuspendLayout();
             this.tabResults.SuspendLayout();
@@ -436,12 +436,22 @@
             // groupBox2
             // 
             this.groupBox2.Controls.Add(this.label10);
-            this.groupBox2.Controls.Add(this.textQuantizationCutoff);
+            this.groupBox2.Controls.Add(this.textQuantitativeCutoff);
             this.groupBox2.Controls.Add(this.label9);
             this.groupBox2.Controls.Add(this.textIncludedCutoff);
             resources.ApplyResources(this.groupBox2, "groupBox2");
             this.groupBox2.Name = "groupBox2";
             this.groupBox2.TabStop = false;
+            // 
+            // label10
+            // 
+            resources.ApplyResources(this.label10, "label10");
+            this.label10.Name = "label10";
+            // 
+            // textQuantitativeCutoff
+            // 
+            resources.ApplyResources(this.textQuantitativeCutoff, "textQuantitativeCutoff");
+            this.textQuantitativeCutoff.Name = "textQuantitativeCutoff";
             // 
             // label9
             // 
@@ -642,16 +652,6 @@
             resources.ApplyResources(this.checkedListBoxGroupComparisons, "checkedListBoxGroupComparisons");
             this.checkedListBoxGroupComparisons.Name = "checkedListBoxGroupComparisons";
             // 
-            // label10
-            // 
-            resources.ApplyResources(this.label10, "label10");
-            this.label10.Name = "label10";
-            // 
-            // textQuantizationCutoff
-            // 
-            resources.ApplyResources(this.textQuantizationCutoff, "textQuantizationCutoff");
-            this.textQuantizationCutoff.Name = "textQuantizationCutoff";
-            // 
             // RefineDlg
             // 
             this.AcceptButton = this.btnOK;
@@ -767,6 +767,6 @@
         private System.Windows.Forms.Label label9;
         private System.Windows.Forms.TextBox textIncludedCutoff;
         private System.Windows.Forms.Label label10;
-        private System.Windows.Forms.TextBox textQuantizationCutoff;
+        private System.Windows.Forms.TextBox textQuantitativeCutoff;
     }
 }

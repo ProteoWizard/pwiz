@@ -219,7 +219,7 @@ namespace pwiz.SkylineTestData
             double quantativeCutoff = .994;
             document = InitRefineDocumentIprg();
             Assert.IsFalse(document.MoleculeTransitions.Any(t => t.ChromInfos.Any(c => c.PeakShapeValues?.ShapeCorrelation == null)));
-            refineSettings = new RefinementSettings { SCIncludedCutoff = includedCutoff, SCQuantizationCutoff = quantativeCutoff};
+            refineSettings = new RefinementSettings { SCIncludedCutoff = includedCutoff, SCQuantitativeCutoff = quantativeCutoff};
             var docRefineShapeCorrelation = refineSettings.Refine(document);
             foreach (var tranNode in docRefineShapeCorrelation.MoleculeTransitions)
             {

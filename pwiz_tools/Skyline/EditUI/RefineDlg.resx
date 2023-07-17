@@ -1349,13 +1349,13 @@ exceed this threshold.</value>
     <value>2, 0, 2, 0</value>
   </data>
   <data name="label10.Size" type="System.Drawing.Size, System.Drawing">
-    <value>97, 13</value>
+    <value>95, 13</value>
   </data>
   <data name="label10.TabIndex" type="System.Int32, mscorlib">
     <value>4</value>
   </data>
   <data name="label10.Text" xml:space="preserve">
-    <value>Quantization Cutoff</value>
+    <value>Quantitative Cutoff</value>
   </data>
   <data name="&gt;&gt;label10.Name" xml:space="preserve">
     <value>label10</value>
@@ -1369,31 +1369,31 @@ exceed this threshold.</value>
   <data name="&gt;&gt;label10.ZOrder" xml:space="preserve">
     <value>0</value>
   </data>
-  <data name="textQuantizationCutoff.Enabled" type="System.Boolean, mscorlib">
+  <data name="textQuantitativeCutoff.Enabled" type="System.Boolean, mscorlib">
     <value>False</value>
   </data>
-  <data name="textQuantizationCutoff.Location" type="System.Drawing.Point, System.Drawing">
+  <data name="textQuantitativeCutoff.Location" type="System.Drawing.Point, System.Drawing">
     <value>181, 36</value>
   </data>
-  <data name="textQuantizationCutoff.Margin" type="System.Windows.Forms.Padding, System.Windows.Forms">
+  <data name="textQuantitativeCutoff.Margin" type="System.Windows.Forms.Padding, System.Windows.Forms">
     <value>2, 2, 2, 2</value>
   </data>
-  <data name="textQuantizationCutoff.Size" type="System.Drawing.Size, System.Drawing">
+  <data name="textQuantitativeCutoff.Size" type="System.Drawing.Size, System.Drawing">
     <value>65, 20</value>
   </data>
-  <data name="textQuantizationCutoff.TabIndex" type="System.Int32, mscorlib">
+  <data name="textQuantitativeCutoff.TabIndex" type="System.Int32, mscorlib">
     <value>5</value>
   </data>
-  <data name="&gt;&gt;textQuantizationCutoff.Name" xml:space="preserve">
-    <value>textQuantizationCutoff</value>
+  <data name="&gt;&gt;textQuantitativeCutoff.Name" xml:space="preserve">
+    <value>textQuantitativeCutoff</value>
   </data>
-  <data name="&gt;&gt;textQuantizationCutoff.Type" xml:space="preserve">
+  <data name="&gt;&gt;textQuantitativeCutoff.Type" xml:space="preserve">
     <value>System.Windows.Forms.TextBox, System.Windows.Forms, Version=4.0.0.0, Culture=neutral, PublicKeyToken=b77a5c561934e089</value>
   </data>
-  <data name="&gt;&gt;textQuantizationCutoff.Parent" xml:space="preserve">
+  <data name="&gt;&gt;textQuantitativeCutoff.Parent" xml:space="preserve">
     <value>groupBox2</value>
   </data>
-  <data name="&gt;&gt;textQuantizationCutoff.ZOrder" xml:space="preserve">
+  <data name="&gt;&gt;textQuantitativeCutoff.ZOrder" xml:space="preserve">
     <value>1</value>
   </data>
   <data name="label9.AutoSize" type="System.Boolean, mscorlib">

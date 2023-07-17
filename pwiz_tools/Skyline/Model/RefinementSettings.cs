@@ -229,7 +229,7 @@ namespace pwiz.Skyline.Model
         [Track]
         public double? SCIncludedCutoff { get; set; }
         [Track]
-        public double? SCQuantizationCutoff { get; set; }
+        public double? SCQuantitativeCutoff { get; set; }
         [Track]
         public List<GroupComparisonDef> GroupComparisonDefs { get; set; }
         public List<string> GroupComparisonNames { get; set; }
@@ -787,9 +787,9 @@ namespace pwiz.Skyline.Model
                 }
 
                 TransitionDocNode nonQuantitativeNodeTran = null;
-                if (SCQuantizationCutoff.HasValue)
+                if (SCQuantitativeCutoff.HasValue)
                 {
-                    if (checkIfShapeCorrelationBelowCutoff(chromInfos, SCQuantizationCutoff))
+                    if (checkIfShapeCorrelationBelowCutoff(chromInfos, SCQuantitativeCutoff))
                     {
                         nonQuantitativeNodeTran = nodeTran.ChangeQuantitative(false);
                     }
