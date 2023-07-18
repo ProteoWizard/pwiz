@@ -1,0 +1,5 @@
+# Don't change line endings on vendor data
+**/Reader*Test.data/** binary
+
+# Do show diffs on reference mzMLs
+*.mzML diff

@@ -180,7 +180,8 @@ namespace pwiz.SkylineTestUtil
             UIMF,
             UNIFI,
             Waters,
-            DiaUmpire
+            DiaUmpire,
+            BiblioSpec
         }
 
         /// <summary>
@@ -201,6 +202,10 @@ namespace pwiz.SkylineTestUtil
                 {
                     return Path.Combine(projectDir, @"..\..\pwiz\analysis\spectrum_processing\SpectrumList_DiaUmpireTest.data");
                 }
+                else if (vendorDir == VendorDir.BiblioSpec)
+                {
+                    return Path.Combine(projectDir, @"..\..\pwiz_tools\BiblioSpec\tests\inputs");
+                }
                 else
                 {
                     vendorReaderPath = Path.Combine(projectDir, @"..\..\pwiz\data\vendor_readers");
@@ -212,6 +217,8 @@ namespace pwiz.SkylineTestUtil
                 vendorReaderPath = Path.Combine(projectDir, @".."); // one up from TestZipFiles, and no vendorStr intermediate directory
                 if (vendorDir == VendorDir.DiaUmpire)
                     return Path.Combine(vendorReaderPath, "SpectrumList_DiaUmpireTest.data");
+                else if (vendorDir == VendorDir.BiblioSpec)
+                    return Path.Combine(vendorReaderPath, "BiblioSpecTestData");
                 else
                     return Path.Combine(vendorReaderPath, $"Reader_{vendorStr}_Test.data");
             }

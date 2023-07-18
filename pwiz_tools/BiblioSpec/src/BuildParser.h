@@ -96,6 +96,7 @@ class BuildParser : protected SAXHandler{
   ProgressIndicator* readAddProgress_;  ///< 2 steps: read file, add spec
   PSM* curPSM_;           ///< temp holding space for psm being parsed
   vector<PSM*> psms_;     ///< collected list of psms parsed from file
+  int filteredOutPsmCount_; ///< number of psms that did not pass threshold
   SpecFileReader* specReader_; ///< for getting peak lists
   SPEC_ID_TYPE lookUpBy_; ///< default is by scan number
   bool preferEmbeddedSpectra_; ///< default is true except for MaxQuant
