@@ -18,6 +18,7 @@
  */
 
 using System;
+using System.Collections.Generic;
 using System.IO;
 using System.Net;
 using Microsoft.VisualStudio.TestTools.UnitTesting;
@@ -51,23 +52,26 @@ namespace pwiz.SkylineTestConnected
 
         protected override void DoTest()
         {
-            //Test successful download
+            // Test successful download
             TestDownloadFile();
 
-            //Test various download errors
+            // Test various download errors
             TestDownloadErrors();
 
-            //Make sure PanoramaFilePicker states are being preserved between runs
+            // Make sure PanoramaFilePicker states are being preserved between runs
             TestPreserveStates();
-
-            //Test downloading from test server
+            
+            // Test downloading from test server
             TestMissingFile();
 
-            //Test downloading a file that has been renamed on Panorama
+            // Test downloading a file that has been renamed on Panorama
             TestRenamedFile();
 
-            //Test adding a new server to Panorama - Test with and without username and password
+            // Test adding a new server to Panorama - Test with and without username and password
             //TestAddServer();
+
+            // Test viewing webDav browser
+            TestWebDav();
         }
 
         private void AddSkylineServer()
@@ -271,6 +275,29 @@ namespace pwiz.SkylineTestConnected
             });
             OkDialog(editItem, editItem.OkDialog);
             //TODO: Assert something here
+        }
+
+        // Test viewing webDav browser
+        private void TestWebDav()
+        {
+            var selectedPath = "https://panoramaweb.org/_webdav/SkylineTest/ForPanoramaClientTest/";
+            var server = new PanoramaServer(new Uri(PANORAMA_WEB), TEST_USER, TEST_PASSWORD);
+            var serverList = new List<PanoramaServer>();
+            serverList.Add(server);
+
+            RunUI(() =>
+            {
+                var remoteDlg = new PanoramaFilePicker(serverList, string.Empty, false, true, selectedPath);
+                remoteDlg.InitializeDialog();
+                remoteDlg.Show();
+                WaitForCondition(9000, () => remoteDlg.IsLoaded);
+                remoteDlg.FolderBrowser.SelectNode("@files");
+                Assert.AreEqual(remoteDlg.FileNumber(), 13);
+                remoteDlg.FolderBrowser.SelectNode("FileRenamedOnServer");
+                Assert.AreEqual(remoteDlg.FileNumber(), 6);
+                remoteDlg.Close();
+                WaitForClosedForm(remoteDlg);
+            });
         }
 
         public class TestPanoramaClient : IPanoramaClient

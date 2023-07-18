@@ -727,7 +727,7 @@ public class TestPanoramaFolderBrowser : PanoramaFolderBrowser
     private JToken _folderJson;
 
     public TestPanoramaFolderBrowser(PanoramaServer server, JToken folderJson) :
-        base(false, true, null, new List<PanoramaServer> {server})
+        base(false, true, null, new List<PanoramaServer>())
     {
         _server = server;
         _folderJson = folderJson;

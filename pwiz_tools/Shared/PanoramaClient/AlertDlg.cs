@@ -55,6 +55,12 @@ namespace pwiz.PanoramaClient
             toolStrip1.Renderer = new NoBorderSystemRenderer();
         }
 
+        public sealed override string Text
+        {
+            get { return base.Text; }
+            set { base.Text = value; }
+        }
+
         public AlertDlg(string message, MessageBoxButtons messageBoxButtons) : this(message, messageBoxButtons, DialogResult.None)
         {
         }

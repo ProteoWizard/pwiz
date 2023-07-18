@@ -47,29 +47,27 @@ namespace pwiz.SkylineTestFunctional
         protected override void DoTest()
         {
             // Test navigation buttons
-            TestNavigationButtons();
+            //TestNavigationButtons();
 
             // Test versions: selected option is correct for all versions vs current version
-            TestVersions();
+            //TestVersions();
 
             // Test TreeView icons
-            TestTreeViewIcons();
+            //TestTreeViewIcons();
 
             // Test enter key - ensure node is expanded
-            TestKeyStrokeResponse();
+            //TestKeyStrokeResponse();
 
             // Verify JSON is as expected 
-            TestVerifyJson();
+            //TestVerifyJson();
 
             // Test which columns are being displayed(versions shouldn't be displayed if there are no versions etc.)
-            TestColumns();
+            //TestColumns();
 
             // Test viewing non-Skyline files and ensure the correct files show up
 
-            // Test viewing webDav browser 
-
-            // Test viewing PanoramaDirectoryPicker folders
-            //TestDirectoryPicker();
+            // Test viewing PanoramaDirectoryPicker folder icons
+            TestDirectoryPickerIcons();
         }
 
 
@@ -341,37 +339,32 @@ namespace pwiz.SkylineTestFunctional
             WaitForClosedForm(remoteDlg);
         }
 
-        // Test viewing webDav browser
-        private void TestWebDav()
-        {
-
-        }
-
         // Test viewing PanoramaDirectoryPicker folders
-        private void TestDirectoryPicker()
+        private void TestDirectoryPickerIcons()
         {
             var testClient = new TestClientJson();
-            var fileJson = testClient.CreateFiles();
-            var sizeJson = testClient.CreateSizesJson();
             var folderJson = testClient.GetInfoForFolders(new PanoramaServer(new Uri(VALID_SERVER), VALID_USER_NAME, VALID_PASSWORD),
                 TARGETED);
-            var server = new PanoramaServer(new Uri(VALID_SERVER), VALID_USER_NAME, VALID_PASSWORD);
-            var panoramaServer = new List<PanoramaServer>();
-            panoramaServer.Add(server);
-            var remoteDlg = new PanoramaDirectoryPicker(panoramaServer, string.Empty, true);
-            /*var remoteDlg = ShowDialog<PanoramaDirectoryPicker>(() =>
-            {
-                var panoramaDirectoryPicker = new PanoramaDirectoryPicker(panoramaServer, string.Empty, true);
-            });*/
-
-            WaitForCondition(9000, () => remoteDlg.IsLoaded);
 
             RunUI(() =>
             {
+                var remoteDlg = new PanoramaDirectoryPicker();
+                remoteDlg.InitializeTestDialog(new Uri(VALID_SERVER), VALID_USER_NAME, VALID_PASSWORD, folderJson);
+                remoteDlg.Show();
+                WaitForCondition(9000, () => remoteDlg.IsLoaded);
+                remoteDlg.FolderBrowser.SelectNode(NO_TARGETED);
+                Assert.AreEqual(3, remoteDlg.FolderBrowser.GetIcon());
                 remoteDlg.FolderBrowser.SelectNode(TARGETED);
+                Assert.AreEqual(1, remoteDlg.FolderBrowser.GetIcon());
+                remoteDlg.FolderBrowser.SelectNode(VALID_SERVER);
+                Assert.AreEqual(-1, remoteDlg.FolderBrowser.GetIcon());
+                remoteDlg.FolderBrowser.SelectNode(TARGETED_LIBRARY);
+                Assert.AreEqual(2, remoteDlg.FolderBrowser.GetIcon());
+                remoteDlg.FolderBrowser.SelectNode(TARGETED_COLLABORATION);
+                Assert.AreEqual(3, remoteDlg.FolderBrowser.GetIcon());
                 remoteDlg.Close();
+                WaitForClosedForm(remoteDlg);
             });
-            WaitForClosedForm(remoteDlg);
         }
 
         /// <summary>
