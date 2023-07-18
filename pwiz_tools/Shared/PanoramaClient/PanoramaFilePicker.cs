@@ -228,7 +228,9 @@ namespace pwiz.PanoramaClient
         }
 
         /// <summary>
-        /// 
+        /// Adds Skyline files in a particular folder to the ListView
+        /// If showLatestVersion is true, only the most recent version
+        /// of all files will be shown, otherwise all versions will be shown
         /// </summary>
         /// <param name="hasVersions"></param>
         /// <param name="showLatestVersion"></param>
@@ -308,7 +310,7 @@ namespace pwiz.PanoramaClient
         }
 
         /// <summary>
-        /// Checks if a given node has any skyline files on the server
+        /// Checks if a given node has any Skyline files on the server
         /// and if it does, updates the ListView accordingly, otherwise, show a message
         /// saying there are no files
         /// </summary>
@@ -418,7 +420,7 @@ namespace pwiz.PanoramaClient
                 var downloadName = listView.SelectedItems[0].Name;
                 if (listView.SelectedItems[0].SubItems[1] != null)
                 {
-                    FileSize =(long) listView.SelectedItems[0].Tag;
+                    FileSize = (long)listView.SelectedItems[0].Tag;
                 }
                 var folderInfo = FolderBrowser.Clicked.Tag as FolderInformation;
                 if (FolderBrowser.ShowSky && !ShowWebDav)
@@ -563,7 +565,7 @@ namespace pwiz.PanoramaClient
         }
 
         /// <summary>
-        /// Adapted from  https://learn.microsoft.com/en-us/dotnet/api/system.windows.forms.listview.listviewitemsorter?view=windowsdesktop-7.0#system-windows-forms-listview-listviewitemsorter
+        /// Adapted from https://learn.microsoft.com/en-us/previous-versions/dotnet/articles/ms996467(v=msdn.10)?redirectedfrom=MSDN
         /// </summary>
         /// <param name="sender"></param>
         /// <param name="e"></param>
@@ -633,9 +635,8 @@ namespace pwiz.PanoramaClient
             Clipboard.SetText(urlLink.Text);
         }
 
-        // TODO: Add link to MSDN page
         /// <summary>
-        /// Adapted from  https://learn.microsoft.com/en-us/dotnet/api/system.windows.forms.listview.listviewitemsorter?view=windowsdesktop-7.0#system-windows-forms-listview-listviewitemsorter
+        /// Adapted from https://learn.microsoft.com/en-us/previous-versions/dotnet/articles/ms996467(v=msdn.10)?redirectedfrom=MSDN
         /// </summary>
         class ListViewItemComparer : IComparer
         {

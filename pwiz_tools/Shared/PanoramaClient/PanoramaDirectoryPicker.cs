@@ -40,10 +40,7 @@ namespace pwiz.PanoramaClient
             Selected = selectedPath;
             back.Enabled = false;
             forward.Enabled = false;
-            if (showWebDavFolders)
-            {
-                FolderBrowser.ShowWebDav = true;
-            }
+            FolderBrowser.ShowWebDav = showWebDavFolders;
         }
 
         public string Folder { get; set; }

@@ -415,17 +415,25 @@ namespace pwiz.PanoramaClient
             var folderInfo = (FolderInformation)node.Tag;
             if (folderInfo != null)
             {
-                if (folderInfo.FolderPath.Contains(@"@files"))
+                if (ShowSky)
                 {
                     SelectedUrl =
-                        Uri.UnescapeDataString(string.Concat(ActiveServer.URI, PanoramaUtil.WEBDAV,
-                            folderInfo.FolderPath));
+                        Uri.UnescapeDataString(string.Concat(ActiveServer.URI, folderInfo.FolderPath.Substring(1), @"/project-begin.view"));
                 }
                 else
                 {
-                    SelectedUrl =
-                        Uri.UnescapeDataString(string.Concat(ActiveServer.URI, PanoramaUtil.WEBDAV,
-                            folderInfo.FolderPath, "/@files"));
+                    if (folderInfo.FolderPath.Contains(@"@files"))
+                    {
+                        SelectedUrl =
+                            Uri.UnescapeDataString(string.Concat(ActiveServer.URI, PanoramaUtil.WEBDAV,
+                                folderInfo.FolderPath));
+                    }
+                    else
+                    {
+                        SelectedUrl =
+                            Uri.UnescapeDataString(string.Concat(ActiveServer.URI, PanoramaUtil.WEBDAV,
+                                folderInfo.FolderPath, "/@files"));
+                    }
                 }
             }
         }
