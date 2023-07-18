@@ -1435,9 +1435,9 @@ namespace pwiz.Skyline {
         /// <summary>
         ///   Looks up a localized string similar to all transitions with shape correlation below the cutoff will be removed.
         /// </summary>
-        internal static string _refine_shape_r_included_cutoff {
+        internal static string _refine_shape_r_include_cutoff {
             get {
-                return ResourceManager.GetString("_refine_shape_r_included_cutoff", resourceCulture);
+                return ResourceManager.GetString("_refine_shape_r_include_cutoff", resourceCulture);
             }
         }
         

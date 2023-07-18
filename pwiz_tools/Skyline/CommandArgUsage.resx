@@ -931,7 +931,7 @@ greater peak area.</value>
   <data name="_refine-shape-r-quant-cutoff" xml:space="preserve">
     <value>all transitions with shape correlation below the cutoff will be marked non-quantatative</value>
   </data>
-  <data name="_refine_shape_r_included_cutoff" xml:space="preserve">
+  <data name="_refine_shape_r_include_cutoff" xml:space="preserve">
     <value>all transitions with shape correlation below the cutoff will be removed</value>
   </data>
 </root>
