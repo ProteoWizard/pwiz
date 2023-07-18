@@ -387,9 +387,9 @@ void PercolatorXmlReader::addCurPSM(){
     if(curPSM_ == NULL)
         throw BlibException(false, "No PSM was read for this 'psm' tag.");
 
+    string filename = curPSM_->specName;
     if(curPSM_->score < qvalueThreshold_){ // add the psm to the map
         // retrieve and remove the filename from the psm
-        string filename = curPSM_->specName;
         curPSM_->specName.clear();
 
         Verbosity::comment(V_DETAIL, "For file %s adding PSM: "
@@ -406,6 +406,11 @@ void PercolatorXmlReader::addCurPSM(){
             (mapAccess->second).push_back(curPSM_);
         }
         curPSM_ = NULL;
+    }
+    else
+    {
+        ++filteredOutPsmCount_;
+        fileMap_.insert(make_pair(filename, vector<PSM*>()));
     }
 }
 

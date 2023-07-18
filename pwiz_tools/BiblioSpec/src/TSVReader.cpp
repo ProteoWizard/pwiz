@@ -135,6 +135,8 @@ namespace {
             }
             else if (line.score > scoreThreshold_) {
                 Verbosity::comment(V_DETAIL, "Not saving PSM with score %f (line %d)", line.score, lineNum_);
+                ++filteredOutPsmCount_;
+                fileMap_.insert(make_pair(line.filename, vector<TSVPSM*>()));
                 return;
             }
 
