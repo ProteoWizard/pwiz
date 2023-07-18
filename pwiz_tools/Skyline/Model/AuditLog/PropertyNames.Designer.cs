@@ -3661,6 +3661,24 @@ namespace pwiz.Skyline.Model.AuditLog {
         }
         
         /// <summary>
+        ///   Looks up a localized string similar to Remove transitions with shape correlation below cutoff.
+        /// </summary>
+        public static string RefinementSettings_SCIncludedCutoff {
+            get {
+                return ResourceManager.GetString("RefinementSettings_SCIncludedCutoff", resourceCulture);
+            }
+        }
+        
+        /// <summary>
+        ///   Looks up a localized string similar to Remove transitions with shape correlation below cutoff.
+        /// </summary>
+        public static string RefinementSettings_SCQuantitativeCutoff {
+            get {
+                return ResourceManager.GetString("RefinementSettings_SCQuantitativeCutoff", resourceCulture);
+            }
+        }
+        
+        /// <summary>
         ///   Looks up a localized string similar to Transitions.
         /// </summary>
         public static string RefinementSettings_Transitions {
