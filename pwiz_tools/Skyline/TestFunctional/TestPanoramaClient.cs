@@ -63,6 +63,11 @@ namespace pwiz.SkylineTestFunctional
             // Test which columns are being displayed(versions shouldn't be displayed if there are no versions etc.)
             TestColumns();
 
+            // Test viewing non-Skyline files and ensure the correct files show up
+
+            // Test viewing webDav browser 
+
+            // Test viewing PanoramaDirectoryPicker folders
 
         }
 

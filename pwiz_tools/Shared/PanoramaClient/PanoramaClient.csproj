@@ -90,7 +90,6 @@
       <DependentUpon>PanoramaFolderBrowser.cs</DependentUpon>
     </Compile>
     <Compile Include="PanoramaUtil.cs" />
-    <Compile Include="Program.cs" />
     <Compile Include="Properties\AssemblyInfo.cs" />
     <Compile Include="PanoramaFilePicker.cs">
       <SubType>Form</SubType>
