@@ -404,6 +404,9 @@ namespace pwiz.Skyline.FileUI.PeptideSearch
 
             if (importPeptideSearchDlg.ShowDialog(this) == DialogResult.OK)
                 DialogResult = DialogResult.OK;
+            else
+                foreach (var stream in libraries.SelectMany(library => library.ReadStreams))
+                    stream.CloseStream();
         }
 
         public void PreviousPage()
@@ -627,14 +630,17 @@ namespace pwiz.Skyline.FileUI.PeptideSearch
                 EncyclopeDiaHelpers.ConvertPrositOutputToDlib(blibFilepath, fastaFilepath, dlibFilepath, this, ref status);
                 status = status.NextSegment();
 
+                var parallelConverter = new EncyclopeDiaHelpers.ParallelDiaDataFileConverter(settings.NarrowWindowResultUris, settings.WideWindowResultUris, this);
+                parallelConverter.ConvertDiaDataFiles(out var narrowWindowDiaMzMlFiles, out var wideWindowDiaMzMlFiles);
+
                 EncyclopeDiaChromLibraryPath = prositBasename + @".elib";
                 EncyclopeDiaHelpers.GenerateChromatogramLibrary(dlibFilepath, EncyclopeDiaChromLibraryPath, fastaFilepath,
-                    Settings.NarrowWindowResultUris, this, ref status, settings.EncyclopeDiaConfig);
+                    narrowWindowDiaMzMlFiles, this, ref status, settings.EncyclopeDiaConfig);
                 status = status.NextSegment();
 
                 EncyclopeDiaQuantLibraryPath = prositBasename + @"-quant.elib";
                 EncyclopeDiaHelpers.GenerateQuantLibrary(EncyclopeDiaChromLibraryPath, EncyclopeDiaQuantLibraryPath, fastaFilepath,
-                    Settings.WideWindowResultUris, this, ref status, settings.EncyclopeDiaConfig);
+                    wideWindowDiaMzMlFiles, this, ref status, settings.EncyclopeDiaConfig);
             }
             catch (Exception e)
             {

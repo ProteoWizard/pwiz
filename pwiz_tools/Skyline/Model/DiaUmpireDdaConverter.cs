@@ -141,7 +141,7 @@ namespace pwiz.Skyline.Model
                         FileEx.SafeDelete(outputFilepath);
 
                     string tmpFilepath = Path.Combine(Path.GetTempPath(), PathEx.GetRandomFileName() + MsConvertOutputExtension); // N.B. FileEx.GetRandomFileName adds unusual characters in test mode
-                    string tmpParams = Path.Combine(Path.GetTempPath(), PathEx.GetRandomFileName() + @".params");
+                    string tmpParams = Path.Combine(Path.GetDirectoryName(outputFilepath) ?? string.Empty, @$"diaumpire-{DateTime.Now.ToString(@"yyyyMMddhhmm")}.params");
                     //_diaUmpireConfig.Parameters["Thread"] = 1; // needed to compare DIAUMPIRE_DEBUG output
                     _diaUmpireConfig.WriteConfigToFile(tmpParams);
 
@@ -162,6 +162,8 @@ namespace pwiz.Skyline.Model
 
                     try
                     {
+                        status = status.ChangeMessage(String.Format(Resources.EncyclopeDiaHelpers_GenerateLibrary_Running_command___0___1_,
+                            psi.FileName, psi.Arguments));
                         pr.Run(psi, null, this, ref _progressStatus, ProcessPriorityClass.BelowNormal);
                     }
                     catch (IOException e)
