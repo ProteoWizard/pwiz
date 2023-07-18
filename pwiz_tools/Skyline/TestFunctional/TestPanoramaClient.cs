@@ -18,6 +18,7 @@
  */
 
 using System;
+using System.Collections.Generic;
 using Microsoft.VisualStudio.TestTools.UnitTesting;
 using Newtonsoft.Json.Linq;
 using pwiz.PanoramaClient;
@@ -68,7 +69,7 @@ namespace pwiz.SkylineTestFunctional
             // Test viewing webDav browser 
 
             // Test viewing PanoramaDirectoryPicker folders
-
+            //TestDirectoryPicker();
         }
 
 
@@ -313,6 +314,65 @@ namespace pwiz.SkylineTestFunctional
 
         }
 
+        // Test viewing non-Skyline files and ensure the correct files show up
+        private void TestNonSky()
+        {
+            var testClient = new TestClientJson();
+            var fileJson = testClient.CreateFiles();
+            var sizeJson = testClient.CreateSizesJson();
+            var folderJson = testClient.GetInfoForFolders(new PanoramaServer(new Uri(VALID_SERVER), VALID_USER_NAME, VALID_PASSWORD),
+                TARGETED);
+            var remoteDlg = ShowDialog<PanoramaFilePicker>(() =>
+                SkylineWindow.OpenFromPanorama(VALID_SERVER, string.Empty, string.Empty, folderJson, fileJson, sizeJson));
+
+            WaitForCondition(9000, () => remoteDlg.IsLoaded);
+
+            RunUI(() =>
+            {
+                remoteDlg.FolderBrowser.SelectNode(TARGETED);
+                Assert.IsTrue(remoteDlg.VersionsVisible());
+                Assert.AreEqual("Most recent", remoteDlg.VersionsOption());
+                Assert.AreEqual(1, remoteDlg.FileNumber());
+                remoteDlg.ClickVersions();
+                Assert.AreEqual(4, remoteDlg.FileNumber());
+                Assert.AreEqual("All", remoteDlg.VersionsOption());
+                remoteDlg.Close();
+            });
+            WaitForClosedForm(remoteDlg);
+        }
+
+        // Test viewing webDav browser
+        private void TestWebDav()
+        {
+
+        }
+
+        // Test viewing PanoramaDirectoryPicker folders
+        private void TestDirectoryPicker()
+        {
+            var testClient = new TestClientJson();
+            var fileJson = testClient.CreateFiles();
+            var sizeJson = testClient.CreateSizesJson();
+            var folderJson = testClient.GetInfoForFolders(new PanoramaServer(new Uri(VALID_SERVER), VALID_USER_NAME, VALID_PASSWORD),
+                TARGETED);
+            var server = new PanoramaServer(new Uri(VALID_SERVER), VALID_USER_NAME, VALID_PASSWORD);
+            var panoramaServer = new List<PanoramaServer>();
+            panoramaServer.Add(server);
+            var remoteDlg = new PanoramaDirectoryPicker(panoramaServer, string.Empty, true);
+            /*var remoteDlg = ShowDialog<PanoramaDirectoryPicker>(() =>
+            {
+                var panoramaDirectoryPicker = new PanoramaDirectoryPicker(panoramaServer, string.Empty, true);
+            });*/
+
+            WaitForCondition(9000, () => remoteDlg.IsLoaded);
+
+            RunUI(() =>
+            {
+                remoteDlg.FolderBrowser.SelectNode(TARGETED);
+                remoteDlg.Close();
+            });
+            WaitForClosedForm(remoteDlg);
+        }
 
         /// <summary>
         /// This class contains methods used to generate JSON data in order to test PanoramaClient

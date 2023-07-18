@@ -415,10 +415,11 @@ namespace pwiz.PanoramaClient
             var folderInfo = (FolderInformation)node.Tag;
             if (folderInfo != null)
             {
+                var folderPath = folderInfo.FolderPath.StartsWith(@"/") ? folderInfo.FolderPath.Substring(1) : folderInfo.FolderPath;
                 if (ShowSky)
                 {
                     SelectedUrl =
-                        Uri.UnescapeDataString(string.Concat(ActiveServer.URI, folderInfo.FolderPath.Substring(1), @"/project-begin.view"));
+                        Uri.UnescapeDataString(string.Concat(ActiveServer.URI, folderPath, @"/project-begin.view"));
                 }
                 else
                 {
