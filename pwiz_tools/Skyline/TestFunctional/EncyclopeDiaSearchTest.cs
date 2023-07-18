@@ -92,20 +92,12 @@ namespace pwiz.SkylineTestFunctional
 
             RunUI(searchDlg.NextPage); // now on narrow fractions
             var browseNarrowDlg = ShowDialog<OpenDataSourceDialog>(() => searchDlg.NarrowWindowResults.Browse());
-            RunUI(() =>
-            {
-                browseNarrowDlg.SelectFile("23aug2017_hela_serum_timecourse_4mz_narrow_3.mzML");
-                browseNarrowDlg.SelectFile("23aug2017_hela_serum_timecourse_4mz_narrow_4.mzML");
-            });
+            RunUI(() => browseNarrowDlg.SelectFile("23aug2017_hela_serum_timecourse_4mz_narrow_3.mzML"));
             OkDialog(browseNarrowDlg, browseNarrowDlg.Open);
 
             RunUI(searchDlg.NextPage); // now on wide fractions
             var browseWideDlg = ShowDialog<OpenDataSourceDialog>(() => searchDlg.WideWindowResults.Browse());
-            RunUI(() =>
-            {
-                browseWideDlg.SelectFile("23aug2017_hela_serum_timecourse_wide_1d.mzML");
-                browseWideDlg.SelectFile("23aug2017_hela_serum_timecourse_wide_1e.mzML");
-            });
+            RunUI(() => browseWideDlg.SelectFile("23aug2017_hela_serum_timecourse_wide_1d.mzML"));
             OkDialog(browseWideDlg, browseWideDlg.Open);
 
             RunUI(searchDlg.NextPage); // now on EncyclopeDia settings
@@ -131,8 +123,45 @@ namespace pwiz.SkylineTestFunctional
                 File.WriteAllText("SearchControlLog.txt", searchDlg.SearchControl.LogText);
             }
 
-            // now on Import Peptide Search wizard
+            // test that even after opening import search wizard, we can redo the search by pressing back/next without file lock issues
             var importPeptideSearchDlg = ShowDialog<ImportPeptideSearchDlg>(searchDlg.NextPage);
+            WaitForDocumentLoaded();
+            RunUI(() =>
+            {
+                Assert.IsTrue(importPeptideSearchDlg.CurrentPage == ImportPeptideSearchDlg.Pages.chromatograms_page);
+                importPeptideSearchDlg.ClickNextButton();
+                importPeptideSearchDlg.ClickCancelButton();
+            });
+            RunUI(searchDlg.PreviousPage); // now on EncyclopeDia settings
+            RunUI(searchDlg.PreviousPage); // now on wide fractions
+
+            RunUI(searchDlg.PreviousPage); // now on narrow fractions
+            browseNarrowDlg = ShowDialog<OpenDataSourceDialog>(() => searchDlg.NarrowWindowResults.Browse());
+            RunUI(() => browseNarrowDlg.SelectFile("23aug2017_hela_serum_timecourse_4mz_narrow_4.mzML"));
+            OkDialog(browseNarrowDlg, browseNarrowDlg.Open);
+
+            RunUI(searchDlg.NextPage); // now on wide fractions
+            browseWideDlg = ShowDialog<OpenDataSourceDialog>(() => searchDlg.WideWindowResults.Browse());
+            RunUI(() => browseWideDlg.SelectFile("23aug2017_hela_serum_timecourse_wide_1e.mzML"));
+            OkDialog(browseWideDlg, browseWideDlg.Open);
+
+            RunUI(searchDlg.NextPage); // now on EncyclopeDia settings
+            RunUI(searchDlg.NextPage); // restart search
+
+            try
+            {
+                bool? searchSucceeded = null;
+                searchDlg.SearchControl.SearchFinished += (success) => searchSucceeded = success;
+                WaitForConditionUI(60000, () => searchSucceeded.HasValue);
+                RunUI(() => Assert.IsTrue(searchSucceeded.Value, searchDlg.SearchControl.LogText));
+            }
+            finally
+            {
+                File.WriteAllText("SearchControlLog.txt", searchDlg.SearchControl.LogText);
+            }
+
+            // now on Import Peptide Search wizard
+            importPeptideSearchDlg = ShowDialog<ImportPeptideSearchDlg>(searchDlg.NextPage);
             WaitForDocumentLoaded();
 
             // starts on chromatogram page because we're using existing library

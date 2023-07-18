@@ -17,15 +17,18 @@
  */
 
 using System;
+using System.Collections.Concurrent;
 using System.Collections.Generic;
 using System.Diagnostics;
 using System.Globalization;
 using System.IO;
 using System.Linq;
 using System.Text;
+using System.Threading;
 using JetBrains.Annotations;
 using pwiz.Common.Collections;
 using pwiz.Common.SystemUtil;
+using pwiz.Skyline.Model.DocSettings;
 using pwiz.Skyline.Model.Results;
 using pwiz.Skyline.Model.Tools;
 using pwiz.Skyline.Properties;
@@ -140,7 +143,7 @@ namespace pwiz.Skyline.Model.Lib
 
         private static bool IsGoodEncyclopeDiaOutput(string stdOut, int exitCode)
         {
-            return !stdOut.Contains(@"Fatal Error") && exitCode == 0;
+            return exitCode == 0 && !stdOut.Contains(@"Fatal Error") && !stdOut.Contains(@"FileSystemException");
         }
 
         public static void ConvertFastaToPrositInputCsv(string fastaFilepath, string prositCsvFilepath,
@@ -215,66 +218,125 @@ namespace pwiz.Skyline.Model.Lib
             GenerateLibrary(encyclopeDiaElibInputFilepath, encyclopeDiaQuantLibOutputFilepath, fastaFilepath, diaDataFiles, progressMonitor, ref status, config, true);
         }
 
-        private const string DEMUX_SUBDIRECTORY = "demux";
+        public class ParallelDiaDataFileConverter
+        {
+            private CancellationTokenSource _cancelTokenSource;
+            private IProgressMonitor _progressMonitor { get; }
+            private SilentProgressMonitor _childProgressMonitor;
+
+            public IEnumerable<MsDataFileUri> NarrowWindowDiaDataFiles { get; }
+            public IEnumerable<MsDataFileUri> WideWindowDiaDataFiles { get; }
+
+            public ParallelDiaDataFileConverter(IEnumerable<MsDataFileUri> narrowWindowDiaDataFiles,
+                IEnumerable<MsDataFileUri> wideWindowDiaDataFiles,
+                IProgressMonitor progressMonitor)
+            {
+                NarrowWindowDiaDataFiles = narrowWindowDiaDataFiles;
+                WideWindowDiaDataFiles = wideWindowDiaDataFiles;
+                _progressMonitor = progressMonitor;
+                _cancelTokenSource = new CancellationTokenSource();
+                _childProgressMonitor = new SilentProgressMonitor(_cancelTokenSource.Token);
+            }
+
+            public void ConvertDiaDataFiles(out IEnumerable<MsDataFileUri> NarrowWindowDiaMzMlFiles, out IEnumerable<MsDataFileUri> WideWindowDiaMzMlFiles)
+            {
+                try
+                {
+                    var narrowWindowDiaMzMlFiles = new ConcurrentBag<MsDataFileUri>();
+                    var wideWindowDiaMzMlFiles = new ConcurrentBag<MsDataFileUri>();
+                    var allDiaDataFiles = NarrowWindowDiaDataFiles.Select(f => new object[] { f, true })
+                        .Union(WideWindowDiaDataFiles.Select(f => new object[] { f, false }));
+                    ParallelEx.ForEach(allDiaDataFiles, f =>
+                    {
+                        if ((bool) f[1])
+                            narrowWindowDiaMzMlFiles.Add(ConvertDiaDataFileAsync((MsDataFileUri) f[0], true));
+                        else
+                            wideWindowDiaMzMlFiles.Add(ConvertDiaDataFileAsync((MsDataFileUri) f[0]));
+                    });
+
+                    NarrowWindowDiaMzMlFiles = narrowWindowDiaMzMlFiles.ToList();
+                    WideWindowDiaMzMlFiles = wideWindowDiaMzMlFiles.ToList();
+                }
+                finally
+                {
+                    _cancelTokenSource.Cancel();
+                }
+            }
+
+            private static string GetConvertedFileOutputPath(MsDataFileUri diaDataFile, bool demultiplex)
+            {
+                const string DEMUX_SUFFIX = "-demuxed";
+                string suffix = demultiplex ? DEMUX_SUFFIX : string.Empty;
+                return Path.Combine(Path.GetDirectoryName(diaDataFile.GetFilePath()) ?? string.Empty,
+                    diaDataFile.GetFileNameWithoutExtension() + suffix + DataSourceUtil.EXT_MZML);
+            }
+
+            private MsDataFileUri ConvertDiaDataFileAsync(MsDataFileUri diaDataFile, bool removeNonOverlappingEdges = false)
+            {
+                var reader = new IsolationSchemeReader(new[] { diaDataFile });
+                string isolationSchemeName = Path.GetFileNameWithoutExtension(diaDataFile.GetFileNameWithoutExtension());
+                var isolationScheme = reader.Import(isolationSchemeName, _progressMonitor);
+                bool needsDemultiplexing = isolationScheme.SpecialHandling == IsolationScheme.SpecialHandlingType.OVERLAP ||
+                                           isolationScheme.SpecialHandling == IsolationScheme.SpecialHandlingType.OVERLAP_MULTIPLEXED;
+                string removeNonOverlappingEdgesOption = removeNonOverlappingEdges ? @"removeNonOverlappingEdges=true" : string.Empty;
+                string outputFilepath = GetConvertedFileOutputPath(diaDataFile, needsDemultiplexing);
+
+                const string MSCONVERT_EXE = "msconvert";
+
+                IProgressStatus status = new ProgressStatus(Resources.EncyclopeDiaHelpers_GetConvertedDiaDataFile_Converting_DIA_data_to_mzML);
+                _childProgressMonitor.UpdateProgress(status);
+
+                var pr = new ProcessRunner();
+                var psi = new ProcessStartInfo(MSCONVERT_EXE)
+                {
+                    CreateNoWindow = true,
+                    UseShellExecute = false,
+                    Arguments =
+                        "-v -z --mzML " +
+                        $"-o {Path.GetDirectoryName(outputFilepath).Quote()} " +
+                        $"--outfile {Path.GetFileName(outputFilepath).Quote()} " +
+                        " --acceptZeroLengthSpectra --simAsSpectra --combineIonMobilitySpectra" +
+                        " --filter \"peakPicking true 1-\" " +
+                        (needsDemultiplexing ? @$" --filter ""demultiplex {removeNonOverlappingEdgesOption}""" : "") +
+                        " --runIndex " + Math.Max(0, diaDataFile.GetSampleIndex()) + " " +
+                        diaDataFile.GetFilePath().Quote()
+                };
+
+                //try
+                //{
+                    status = status.ChangeMessage(String.Format(Resources.EncyclopeDiaHelpers_GenerateLibrary_Running_command___0___1_,
+                        psi.FileName, psi.Arguments));
+                    _childProgressMonitor.UpdateProgress(status);
+                    pr.Run(psi, null, _childProgressMonitor, ref status, null, ProcessPriorityClass.BelowNormal, false, IsGoodEncyclopeDiaOutput, false);
+                //}
+                //catch (IOException e)
+                //{
+                //    _progressMonitor.UpdateProgress(status.ChangeMessage(e.Message));
+                //}
+
+                if (_childProgressMonitor.IsCanceled)
+                {
+                    FileEx.SafeDelete(outputFilepath, true);
+                    return null;
+                }
+
+                return new MsDataFilePath(outputFilepath);
+            }
+
+            public void Cancel()
+            {
+                _cancelTokenSource.Cancel();
+            }
+        }
+
         private static string GetConvertedDiaDataFile(MsDataFileUri diaDataFile, string outputPath, IProgressMonitor progressMonitor, ref IProgressStatus status)
         {
-            string outputFilepath = Path.Combine(outputPath, diaDataFile.GetFileNameWithoutExtension() + DataSourceUtil.EXT_MZML);
-
-            /*var reader = new IsolationSchemeReader(new [] { diaDataFile });
-            string isolationSchemeName = Path.GetFileNameWithoutExtension(diaDataFile.GetFileNameWithoutExtension());
-            var isolationScheme = reader.Import(isolationSchemeName, progressMonitor);
-            bool needsDemultiplexing = isolationScheme.SpecialHandling == IsolationScheme.SpecialHandlingType.OVERLAP ||
-                                       isolationScheme.SpecialHandling == IsolationScheme.SpecialHandlingType.OVERLAP_MULTIPLEXED;*/
-            
-            if (diaDataFile.GetExtension().ToLowerInvariant() == DataSourceUtil.EXT_MZML)
-            {
-                outputFilepath = Path.Combine(outputPath, diaDataFile.GetFileName());
-                if (!File.Exists(outputFilepath))
-                    FileEx.HardLinkOrCopyFile(diaDataFile.GetFilePath(), outputFilepath);
-                return outputFilepath;
-            }
-
-            const string MSCONVERT_EXE = "msconvert";
-            
-            status = status.ChangeMessage(Resources.EncyclopeDiaHelpers_GetConvertedDiaDataFile_Converting_DIA_data_to_mzML);
-            progressMonitor.UpdateProgress(status);
-
-            var pr = new ProcessRunner();
-            var psi = new ProcessStartInfo(MSCONVERT_EXE)
-            {
-                CreateNoWindow = true,
-                UseShellExecute = false,
-                Arguments =
-                    "-v -z --mzML " +
-                    $"-o {outputPath.Quote()} " +
-                    $"--outfile {Path.GetFileName(outputFilepath).Quote()} " +
-                    " --acceptZeroLengthSpectra --simAsSpectra --combineIonMobilitySpectra" +
-                    " --filter \"peakPicking true 1-\" " +
-                    //(needsDemultiplexing ? @" --filter ""demultiplex""" : "") +
-                    " --runIndex " + Math.Max(0, diaDataFile.GetSampleIndex()) + " " +
-                    diaDataFile.GetFilePath().Quote()
-            };
-
-            try
-            {
-                status = status.ChangeMessage(String.Format(Resources.EncyclopeDiaHelpers_GenerateLibrary_Running_command___0___1_,
-                    psi.FileName, psi.Arguments));
-                progressMonitor.UpdateProgress(status);
-                pr.Run(psi, null, progressMonitor, ref status, null, ProcessPriorityClass.BelowNormal, false, IsGoodEncyclopeDiaOutput, false);
-            }
-            catch (IOException e)
-            {
-                progressMonitor.UpdateProgress(status.ChangeMessage(e.Message));
-            }
-
-            if (progressMonitor.IsCanceled)
-            {
-                FileEx.SafeDelete(outputFilepath, true);
-                return null;
-            }
-
+            string outputFilepath = Path.Combine(outputPath, diaDataFile.GetFileName());
+            if (!File.Exists(outputFilepath))
+                FileEx.HardLinkOrCopyFile(diaDataFile.GetFilePath(), outputFilepath);
             return outputFilepath;
         }
+
 
         public class EncyclopeDiaConfig
         {
