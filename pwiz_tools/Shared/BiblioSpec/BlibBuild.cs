@@ -344,11 +344,14 @@ namespace pwiz.BiblioSpec
             // Arguments for BlibBuild
             // ReSharper disable LocalizableElement
             List<string> argv = new List<string> { "-s", "-A", "-H" };  // Read from stdin, get ambiguous match messages, high precision modifications
+
+            argv.Add("-v");
+            // Verbose for debugging
             if (DebugMode)
-            {
-                argv.Add("-v"); // Verbose for debugging
                 argv.Add("debug");
-            }
+            else
+                argv.Add("warn");
+
             if (libraryBuildAction == LibraryBuildAction.Create)
                 argv.Add("-o");
             if (CutOffScore.HasValue)
@@ -381,7 +384,7 @@ namespace pwiz.BiblioSpec
             }
             string dirCommon = PathEx.GetCommonRoot(InputFiles);
 
-            string stdinFilename = Path.GetTempFileName();
+            string stdinFilename = Path.Combine(Path.GetDirectoryName(OutputPath) ?? string.Empty, Path.GetFileNameWithoutExtension(OutputPath) + $"{DateTime.Now.ToString("yyyyMMddhhmm")}.stdin.txt");
             argv.Add($"-S \"{stdinFilename}\"");
             using (var stdinFile = new StreamWriter(stdinFilename, false, new UTF8Encoding(false)))
             {
@@ -445,13 +448,20 @@ namespace pwiz.BiblioSpec
                 // Keep a copy of what got sent to BlibBuild for debugging purposes
                 commandArgs = psiBlibBuilder.Arguments + Environment.NewLine + string.Join(Environment.NewLine, File.ReadAllLines(stdinFilename));
 
-                File.Delete(stdinFilename);
                 if (!isComplete)
                 {
                     // If something happened (error or cancel) to end processing, then
                     // get rid of the possibly partial library.
-                    File.Delete(OutputPath);
-                    File.Delete(OutputPath + EXT_SQLITE_JOURNAL);
+                    if (OutputPath != null)
+                    {
+                        File.Delete(OutputPath);
+                        File.Delete(OutputPath + EXT_SQLITE_JOURNAL);
+                    }
+                }
+                else
+                {
+                    // keep the stdin file if an error occurred
+                    File.Delete(stdinFilename);
                 }
             }
             return isComplete;

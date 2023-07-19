@@ -708,6 +708,9 @@ class PWIZ_API_DECL SpectrumList
     /// find all spectrum indexes with spotID (returns empty vector on failure)
     virtual IndexList findSpotID(const std::string& spotID) const;
 
+    /// if find() fails to find a spectrum id, can use this to check whether the id fields of the input id and the spectrum list are matching
+    virtual bool checkNativeIdMatch(const std::string& firstIdInList, const std::string& searchedId) const;
+
     /// retrieve a spectrum by index
     /// - binary data arrays will be provided if (getBinaryData == true);
     /// - client may assume the underlying Spectrum* is valid 
