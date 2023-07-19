@@ -18,7 +18,6 @@
  */
 
 using System;
-using System.Collections.Generic;
 using Microsoft.VisualStudio.TestTools.UnitTesting;
 using Newtonsoft.Json.Linq;
 using pwiz.PanoramaClient;
@@ -47,22 +46,22 @@ namespace pwiz.SkylineTestFunctional
         protected override void DoTest()
         {
             // Test navigation buttons
-            //TestNavigationButtons();
+            TestNavigationButtons();
 
             // Test versions: selected option is correct for all versions vs current version
-            //TestVersions();
+            TestVersions();
 
             // Test TreeView icons
-            //TestTreeViewIcons();
+            TestTreeViewIcons();
 
             // Test enter key - ensure node is expanded
-            //TestKeyStrokeResponse();
+            TestKeyStrokeResponse();
 
             // Verify JSON is as expected 
-            //TestVerifyJson();
+            TestVerifyJson();
 
             // Test which columns are being displayed(versions shouldn't be displayed if there are no versions etc.)
-            //TestColumns();
+            TestColumns();
 
             // Test viewing non-Skyline files and ensure the correct files show up
 
