@@ -28,26 +28,25 @@ namespace pwiz.PanoramaClient
     public partial class PanoramaDirectoryPicker : Form
     {
 
-        public PanoramaDirectoryPicker(List<PanoramaServer> servers, string state, bool showSkyFolders = false, bool showWebDavFolders = false, string selectedPath = null)
+        public PanoramaDirectoryPicker(List<PanoramaServer> servers, string state, bool showWebDavFolders = false, string selectedPath = null)
         {
             InitializeComponent();
             Servers = servers;
-            FolderBrowser = new PanoramaFolderBrowser( false, showSkyFolders, state, Servers, selectedPath, showWebDavFolders);
+            FolderBrowser = new PanoramaFolderBrowser( false,  state, Servers, selectedPath, showWebDavFolders);
             FolderBrowser.Dock = DockStyle.Fill;
             folderPanel.Controls.Add(FolderBrowser);
             FolderBrowser.NodeClick += DirectoryPicker_MouseClick;
             up.Enabled = false;
-            Selected = selectedPath;
+            SelectedPath = selectedPath;
             back.Enabled = false;
             forward.Enabled = false;
             FolderBrowser.ShowWebDav = showWebDavFolders;
         }
 
-        public string Folder { get; set; }
-        public string OKButtonText { get; set; }
+        public string FolderPath { get; set; }
+        public string OkButtonText { get; set; }
         public PanoramaFolderBrowser FolderBrowser;
-        public string State;
-        public string Selected;
+        public string SelectedPath;
         public bool IsLoaded { get; set; }
         public List<PanoramaServer> Servers { get; }
         public PanoramaServer ActiveServer { get; private set; }
@@ -58,7 +57,7 @@ namespace pwiz.PanoramaClient
         private void open_Click(object sender, EventArgs e)
         {
             //Return the selected folder path
-            Folder = FolderBrowser.FolderPath;
+            FolderPath = FolderBrowser.FolderPath;
             DialogResult = DialogResult.Yes;
             Close();
         }
@@ -66,9 +65,9 @@ namespace pwiz.PanoramaClient
 
         private void DirectoryPicker_Load(object sender, EventArgs e)
         {
-            if (!string.IsNullOrEmpty(OKButtonText))
+            if (!string.IsNullOrEmpty(OkButtonText))
             {
-                open.Text = OKButtonText;
+                open.Text = OkButtonText;
             }
             urlLink.Text = FolderBrowser.SelectedUrl;
 
@@ -99,8 +98,9 @@ namespace pwiz.PanoramaClient
 
         private void DirectoryPicker_FormClosing(object sender, FormClosingEventArgs e)
         {
-            State = FolderBrowser.ClosingState();
-            Selected = string.Concat(FolderBrowser.ActiveServer.URI, PanoramaUtil.WEBDAV, FolderBrowser.FolderPath);
+            TreeState = FolderBrowser.ClosingState();
+            FolderPath = FolderBrowser.FolderPath;
+            SelectedPath = string.Concat(FolderBrowser.ActiveServer.URI, PanoramaUtil.WEBDAV, FolderBrowser.FolderPath);
         }
 
         private void UpdateButtonState()

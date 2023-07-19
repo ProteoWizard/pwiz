@@ -213,6 +213,7 @@ namespace pwiz.PanoramaClient
             this.urlLink.AutoEllipsis = true;
             this.urlLink.ContextMenuStrip = this.contextMenuStrip;
             this.urlLink.Name = "urlLink";
+            this.urlLink.TabStop = true;
             this.urlLink.LinkClicked += new System.Windows.Forms.LinkLabelLinkClickedEventHandler(this.urlLink_LinkClicked);
             // 
             // contextMenuStrip
@@ -230,8 +231,10 @@ namespace pwiz.PanoramaClient
             // 
             // PanoramaFilePicker
             // 
+            this.AcceptButton = this.open;
             resources.ApplyResources(this, "$this");
             this.AutoScaleMode = System.Windows.Forms.AutoScaleMode.Font;
+            this.CancelButton = this.cancel;
             this.Controls.Add(this.urlLink);
             this.Controls.Add(this.toolStrip);
             this.Controls.Add(this.panel1);
@@ -243,6 +246,7 @@ namespace pwiz.PanoramaClient
             this.MaximizeBox = false;
             this.MinimizeBox = false;
             this.Name = "PanoramaFilePicker";
+            this.ShowInTaskbar = false;
             this.FormClosing += new System.Windows.Forms.FormClosingEventHandler(this.PanoramaFilePicker_FormClosing);
             this.Load += new System.EventHandler(this.FilePicker_Load);
             this.SizeChanged += new System.EventHandler(this.PanoramaFilePicker_SizeChanged);

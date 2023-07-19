@@ -40,6 +40,7 @@
             this.urlLink = new System.Windows.Forms.LinkLabel();
             this.contextMenuStrip = new System.Windows.Forms.ContextMenuStrip(this.components);
             this.copyLinkAddressToolStripMenuItem = new System.Windows.Forms.ToolStripMenuItem();
+            this.label3 = new System.Windows.Forms.Label();
             this.toolStrip.SuspendLayout();
             this.contextMenuStrip.SuspendLayout();
             this.SuspendLayout();
@@ -49,18 +50,19 @@
             this.folderPanel.Anchor = ((System.Windows.Forms.AnchorStyles)((((System.Windows.Forms.AnchorStyles.Top | System.Windows.Forms.AnchorStyles.Bottom) 
             | System.Windows.Forms.AnchorStyles.Left) 
             | System.Windows.Forms.AnchorStyles.Right)));
-            this.folderPanel.Location = new System.Drawing.Point(12, 44);
+            this.folderPanel.Location = new System.Drawing.Point(12, 54);
             this.folderPanel.Name = "folderPanel";
-            this.folderPanel.Size = new System.Drawing.Size(421, 231);
-            this.folderPanel.TabIndex = 0;
+            this.folderPanel.Size = new System.Drawing.Size(423, 241);
+            this.folderPanel.TabIndex = 1;
             // 
             // cancel
             // 
             this.cancel.Anchor = ((System.Windows.Forms.AnchorStyles)((System.Windows.Forms.AnchorStyles.Bottom | System.Windows.Forms.AnchorStyles.Right)));
-            this.cancel.Location = new System.Drawing.Point(370, 284);
+            this.cancel.DialogResult = System.Windows.Forms.DialogResult.Cancel;
+            this.cancel.Location = new System.Drawing.Point(360, 304);
             this.cancel.Name = "cancel";
-            this.cancel.Size = new System.Drawing.Size(64, 20);
-            this.cancel.TabIndex = 14;
+            this.cancel.Size = new System.Drawing.Size(75, 23);
+            this.cancel.TabIndex = 4;
             this.cancel.Text = "Cancel";
             this.cancel.UseVisualStyleBackColor = true;
             this.cancel.Click += new System.EventHandler(this.cancel_Click);
@@ -68,10 +70,10 @@
             // open
             // 
             this.open.Anchor = ((System.Windows.Forms.AnchorStyles)((System.Windows.Forms.AnchorStyles.Bottom | System.Windows.Forms.AnchorStyles.Right)));
-            this.open.Location = new System.Drawing.Point(300, 284);
+            this.open.Location = new System.Drawing.Point(279, 304);
             this.open.Name = "open";
-            this.open.Size = new System.Drawing.Size(64, 20);
-            this.open.TabIndex = 13;
+            this.open.Size = new System.Drawing.Size(75, 23);
+            this.open.TabIndex = 3;
             this.open.Text = "Open";
             this.open.UseVisualStyleBackColor = true;
             this.open.Click += new System.EventHandler(this.open_Click);
@@ -86,8 +88,8 @@
             this.up});
             this.toolStrip.Location = new System.Drawing.Point(12, 7);
             this.toolStrip.Name = "toolStrip";
-            this.toolStrip.Size = new System.Drawing.Size(96, 31);
-            this.toolStrip.TabIndex = 19;
+            this.toolStrip.Size = new System.Drawing.Size(127, 31);
+            this.toolStrip.TabIndex = 5;
             this.toolStrip.Text = "toolStrip1";
             // 
             // back
@@ -122,10 +124,12 @@
             this.urlLink.Anchor = ((System.Windows.Forms.AnchorStyles)(((System.Windows.Forms.AnchorStyles.Bottom | System.Windows.Forms.AnchorStyles.Left) 
             | System.Windows.Forms.AnchorStyles.Right)));
             this.urlLink.AutoEllipsis = true;
-            this.urlLink.Location = new System.Drawing.Point(12, 284);
+            this.urlLink.Location = new System.Drawing.Point(12, 309);
             this.urlLink.Name = "urlLink";
-            this.urlLink.Size = new System.Drawing.Size(282, 23);
-            this.urlLink.TabIndex = 20;
+            this.urlLink.Size = new System.Drawing.Size(261, 13);
+            this.urlLink.TabIndex = 2;
+            this.urlLink.TabStop = true;
+            this.urlLink.Text = "<placeholder>";
             this.urlLink.LinkClicked += new System.Windows.Forms.LinkLabelLinkClickedEventHandler(this.urlLink_LinkClicked);
             // 
             // contextMenuStrip
@@ -133,20 +137,33 @@
             this.contextMenuStrip.Items.AddRange(new System.Windows.Forms.ToolStripItem[] {
             this.copyLinkAddressToolStripMenuItem});
             this.contextMenuStrip.Name = "contextMenuStrip";
-            this.contextMenuStrip.Size = new System.Drawing.Size(181, 48);
+            this.contextMenuStrip.Size = new System.Drawing.Size(168, 26);
             // 
             // copyLinkAddressToolStripMenuItem
             // 
             this.copyLinkAddressToolStripMenuItem.Name = "copyLinkAddressToolStripMenuItem";
-            this.copyLinkAddressToolStripMenuItem.Size = new System.Drawing.Size(180, 22);
+            this.copyLinkAddressToolStripMenuItem.Size = new System.Drawing.Size(167, 22);
             this.copyLinkAddressToolStripMenuItem.Text = "Copy link address";
             this.copyLinkAddressToolStripMenuItem.Click += new System.EventHandler(this.copyLinkAddressToolStripMenuItem_Click);
             // 
+            // label3
+            // 
+            this.label3.AutoSize = true;
+            this.label3.ImeMode = System.Windows.Forms.ImeMode.NoControl;
+            this.label3.Location = new System.Drawing.Point(9, 38);
+            this.label3.Name = "label3";
+            this.label3.Size = new System.Drawing.Size(81, 13);
+            this.label3.TabIndex = 0;
+            this.label3.Text = "&Remote folders:";
+            // 
             // PanoramaDirectoryPicker
             // 
+            this.AcceptButton = this.open;
             this.AutoScaleDimensions = new System.Drawing.SizeF(6F, 13F);
             this.AutoScaleMode = System.Windows.Forms.AutoScaleMode.Font;
-            this.ClientSize = new System.Drawing.Size(445, 316);
+            this.CancelButton = this.cancel;
+            this.ClientSize = new System.Drawing.Size(447, 336);
+            this.Controls.Add(this.label3);
             this.Controls.Add(this.urlLink);
             this.Controls.Add(this.toolStrip);
             this.Controls.Add(this.cancel);
@@ -156,6 +173,7 @@
             this.MaximizeBox = false;
             this.MinimizeBox = false;
             this.Name = "PanoramaDirectoryPicker";
+            this.ShowInTaskbar = false;
             this.StartPosition = System.Windows.Forms.FormStartPosition.CenterParent;
             this.Text = "Panorama Folders";
             this.FormClosing += new System.Windows.Forms.FormClosingEventHandler(this.DirectoryPicker_FormClosing);
@@ -180,5 +198,6 @@
         private System.Windows.Forms.LinkLabel urlLink;
         private System.Windows.Forms.ContextMenuStrip contextMenuStrip;
         private System.Windows.Forms.ToolStripMenuItem copyLinkAddressToolStripMenuItem;
+        private System.Windows.Forms.Label label3;
     }
 }

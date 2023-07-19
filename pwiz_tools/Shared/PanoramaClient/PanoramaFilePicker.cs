@@ -34,7 +34,6 @@ namespace pwiz.PanoramaClient
         public string FileUrl { get; private set; } 
         public string FileName { get; private set; } // Skyline documents can be renamed in Panorama and may have a different name than what is stored on the server
         public string DownloadName { get; private set; }
-        public bool ShowingSky { get; private set; }
         public PanoramaServer ActiveServer { get; private set; }
         public bool FormHasClosed { get; private set; }
         public long FileSize { get; private set; }
@@ -43,14 +42,13 @@ namespace pwiz.PanoramaClient
         public string SelectedPath { get; set; }
         public bool ShowWebDav { get; set; }
 
-        public PanoramaFilePicker(List<PanoramaServer> servers, string stateString, bool showingSky, bool showWebDav = false, string selectedPath = null)
+        public PanoramaFilePicker(List<PanoramaServer> servers, string stateString, bool showWebDav = false, string selectedPath = null)
         {
             InitializeComponent();
             Servers = servers;
             IsLoaded = false;
             TreeState = stateString;
             _restoring = true;
-            ShowingSky = showingSky;
             ShowWebDav = showWebDav;
             versionOptions.Text = RECENT_VER;
             SelectedPath = selectedPath;
@@ -72,7 +70,7 @@ namespace pwiz.PanoramaClient
             FolderBrowser.Dock = DockStyle.Fill;
             splitContainer1.Panel1.Controls.Add(FolderBrowser);
             FolderBrowser.NodeClick += FilePicker_MouseClick;
-            FolderBrowser.ShowWebDav = true;
+            FolderBrowser.ShowWebDav = ShowWebDav;
             urlLink.Text = FolderBrowser.SelectedUrl;
             IsLoaded = true;
             UpdateButtonState();
@@ -83,7 +81,7 @@ namespace pwiz.PanoramaClient
         /// </summary>
         public void InitializeDialog()
         {
-            FolderBrowser = new PanoramaFolderBrowser(false, ShowingSky, TreeState, Servers, SelectedPath, ShowWebDav);
+            FolderBrowser = new PanoramaFolderBrowser(false, TreeState, Servers, SelectedPath, ShowWebDav);
 
             if (string.IsNullOrEmpty(TreeState))
             {
@@ -331,7 +329,7 @@ namespace pwiz.PanoramaClient
                 _restoring = false;
                 if (!string.IsNullOrEmpty(path))
                 {
-                    if (FolderBrowser.ShowSky)
+                    if (!FolderBrowser.ShowWebDav)
                     {
                         if (FolderBrowser.CurNodeIsTargetedMS)
                         {
@@ -423,7 +421,7 @@ namespace pwiz.PanoramaClient
                     FileSize = (long)listView.SelectedItems[0].Tag;
                 }
                 var folderInfo = FolderBrowser.Clicked.Tag as FolderInformation;
-                if (FolderBrowser.ShowSky && !ShowWebDav)
+                if (!ShowWebDav)
                 {
                     if (folderInfo != null)
                         downloadName =
@@ -676,7 +674,6 @@ namespace pwiz.PanoramaClient
             _restoring = true;
             IsLoaded = false;
             versionOptions.Text = RECENT_VER;
-            ShowingSky = true;
             _restoring = false;
         }
 

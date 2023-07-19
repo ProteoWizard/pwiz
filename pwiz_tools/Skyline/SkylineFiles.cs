@@ -953,7 +953,7 @@ namespace pwiz.Skyline
 
             try
             {
-                using var dlg = new PanoramaFilePicker(panoramaServers, state, true);
+                using var dlg = new PanoramaFilePicker(panoramaServers, state);
                 using (var longWaitDlg = new LongWaitDlg
                        {
                            Text = Resources.SkylineWindow_OpenFromPanorama_Loading_remote_server_folders,
