@@ -150,7 +150,8 @@ namespace pwiz.Common.SystemUtil
                     if (writer != null && (HideLinePrefix == null || !line.StartsWith(HideLinePrefix)))
                         writer.WriteLine(line);
 
-                    if (progress == null || line.ToLowerInvariant().StartsWith(@"error"))
+                    string lineLower = line.ToLowerInvariant();
+                    if (progress == null || lineLower.StartsWith(@"error") || lineLower.StartsWith(@"warning"))
                     {
                         sbError.AppendLine(line);
                     }
