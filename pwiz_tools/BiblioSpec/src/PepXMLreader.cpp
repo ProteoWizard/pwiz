@@ -619,6 +619,7 @@ bool PepXMLreader::scorePasses(double score){
     default:
         throw std::runtime_error("analysis type " + lexical_cast<string>(analysisType_) + " is not handled by PepXMLreader::scorePasses (bug)");
     }
+    ++filteredOutPsmCount_;
     return false;
 }
 
