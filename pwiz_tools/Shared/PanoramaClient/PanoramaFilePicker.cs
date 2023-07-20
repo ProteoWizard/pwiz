@@ -33,7 +33,6 @@ namespace pwiz.PanoramaClient
         public List<PanoramaServer> Servers { get; }
         public string FileUrl { get; private set; } 
         public string FileName { get; private set; } // Skyline documents can be renamed in Panorama and may have a different name than what is stored on the server
-        public string DownloadName { get; private set; }
         public PanoramaServer ActiveServer { get; private set; }
         public bool FormHasClosed { get; private set; }
         public long FileSize { get; private set; }
@@ -420,19 +419,22 @@ namespace pwiz.PanoramaClient
                 {
                     FileSize = (long)listView.SelectedItems[0].Tag;
                 }
-                var folderInfo = FolderBrowser.Clicked.Tag as FolderInformation;
-                if (!ShowWebDav)
-                {
-                    if (folderInfo != null)
-                        downloadName =
-                            string.Concat(PanoramaUtil.WEBDAV, folderInfo.FolderPath, @"/@files/", listView.SelectedItems[0]
-                                .Name);
-                }
-                DownloadName = downloadName;
-                FileUrl = ActiveServer.URI + downloadName;
-                if (folderInfo != null)
-                    SelectedPath = string.Concat(ActiveServer.URI, PanoramaUtil.WEBDAV, folderInfo.FolderPath);
 
+
+                var folderPath = FolderBrowser.GetSelectedFolderPath();
+                if (folderPath != null)
+                {
+                    if (!ShowWebDav)
+                    {
+                        downloadName =
+                            string.Concat(PanoramaUtil.WEBDAV, folderPath, @"/@files/",
+                                listView.SelectedItems[0].Name);
+                    }
+
+                    SelectedPath = string.Concat(ActiveServer.URI, PanoramaUtil.WEBDAV, folderPath);
+                }
+
+                FileUrl = ActiveServer.URI + downloadName;
                 DialogResult = DialogResult.Yes;
                 Close();
             }

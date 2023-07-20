@@ -43,7 +43,6 @@ namespace pwiz.PanoramaClient
             FolderBrowser.ShowWebDav = showWebDavFolders;
         }
 
-        public string FolderPath { get; set; }
         public string OkButtonText { get; set; }
         public PanoramaFolderBrowser FolderBrowser;
         public string SelectedPath;
@@ -57,7 +56,6 @@ namespace pwiz.PanoramaClient
         private void open_Click(object sender, EventArgs e)
         {
             //Return the selected folder path
-            FolderPath = FolderBrowser.FolderPath;
             DialogResult = DialogResult.Yes;
             Close();
         }
@@ -96,10 +94,10 @@ namespace pwiz.PanoramaClient
             back.Enabled = FolderBrowser.BackEnabled();
         }
 
+        //TODO: What's the difference between SelectedPath and SelectedUrl
         private void DirectoryPicker_FormClosing(object sender, FormClosingEventArgs e)
         {
             TreeState = FolderBrowser.ClosingState();
-            FolderPath = FolderBrowser.FolderPath;
             SelectedPath = string.Concat(FolderBrowser.ActiveServer.URI, PanoramaUtil.WEBDAV, FolderBrowser.FolderPath);
         }
 

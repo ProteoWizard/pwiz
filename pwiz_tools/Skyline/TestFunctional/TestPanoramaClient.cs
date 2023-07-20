@@ -93,13 +93,13 @@ namespace pwiz.SkylineTestFunctional
                 remoteDlg.FolderBrowser.SelectNode(TARGETED_LIBRARY);
                 Assert.IsTrue(remoteDlg.BackEnabled());
                 remoteDlg.ClickBack();
-                Assert.AreEqual(TARGETED, remoteDlg.FolderBrowser.Clicked.Text);
+                Assert.AreEqual(TARGETED, remoteDlg.FolderBrowser.GetSelectedNodeText());
                 remoteDlg.ClickBack();
                 Assert.IsTrue(remoteDlg.ForwardEnabled());
-                Assert.AreEqual(NO_TARGETED, remoteDlg.FolderBrowser.Clicked.Text);
+                Assert.AreEqual(NO_TARGETED, remoteDlg.FolderBrowser.GetSelectedNodeText());
                 Assert.IsFalse(remoteDlg.BackEnabled());
                 remoteDlg.ClickForward();
-                Assert.AreEqual(TARGETED, remoteDlg.FolderBrowser.Clicked.Text);
+                Assert.AreEqual(TARGETED, remoteDlg.FolderBrowser.GetSelectedNodeText());
                 remoteDlg.ClickUp();
                 remoteDlg.FolderBrowser.SelectNode(VALID_SERVER);
                 Assert.IsFalse(remoteDlg.UpEnabled());
