@@ -202,12 +202,18 @@ void mzTabReader::parseLine(const string& line) {
         vector< pair<string, string> > spectra;
         parseSpectrum(fields, spectra);        
         double score;
-        if (!parseScore(fields, score)) {
-            return;
-        }
+        bool passedThreshold = parseScore(fields, score);
+        if (!passedThreshold)
+            ++filteredOutPsmCount_;
+
         const string scanPrefix = "scan=";
         const string indexPrefix = "index=";
         for (vector< pair<string, string> >::const_iterator i = spectra.begin(); i != spectra.end(); i++) {
+            if (!passedThreshold)
+            {
+                fileMap_.insert(make_pair(i->first, vector<PSM*>()));
+                continue;
+            }
             curPSM_ = new PSM();
             curPSM_->charge = charge;
             curPSM_->unmodSeq = seq;
