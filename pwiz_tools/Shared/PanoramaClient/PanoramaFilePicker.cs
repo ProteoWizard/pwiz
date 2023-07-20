@@ -34,7 +34,6 @@ namespace pwiz.PanoramaClient
         public string FileUrl { get; private set; } 
         public string FileName { get; private set; } // Skyline documents can be renamed in Panorama and may have a different name than what is stored on the server
         public PanoramaServer ActiveServer { get; private set; }
-        public bool FormHasClosed { get; private set; }
         public long FileSize { get; private set; }
         public JToken TestFileJson;
         public JToken TestSizeJson;
@@ -80,7 +79,7 @@ namespace pwiz.PanoramaClient
         /// </summary>
         public void InitializeDialog()
         {
-            FolderBrowser = new PanoramaFolderBrowser(false, TreeState, Servers, SelectedPath, ShowWebDav);
+            FolderBrowser = new PanoramaFolderBrowser(Servers, TreeState, false, SelectedPath, ShowWebDav);
 
             if (string.IsNullOrEmpty(TreeState))
             {
@@ -322,7 +321,7 @@ namespace pwiz.PanoramaClient
                 urlLink.Text = FolderBrowser.SelectedUrl;
                 ShowFiles(true);
                 versionOptions.Text = RECENT_VER;
-                var path = FolderBrowser.Path;
+                var path = FolderBrowser.FolderPath;
                 listView.Items.Clear();
                 ActiveServer = FolderBrowser.ActiveServer;
                 _restoring = false;
@@ -447,7 +446,6 @@ namespace pwiz.PanoramaClient
 
         private void PanoramaFilePicker_FormClosing(object sender, FormClosingEventArgs e) 
         {
-            FormHasClosed = true;
             FileName = listView.SelectedItems.Count != 0 ? listView.SelectedItems[0].Text : string.Empty;
             TreeState = FolderBrowser.ClosingState();
         }

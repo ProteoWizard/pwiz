@@ -65,7 +65,7 @@
             this.cancel.TabIndex = 4;
             this.cancel.Text = "Cancel";
             this.cancel.UseVisualStyleBackColor = true;
-            this.cancel.Click += new System.EventHandler(this.cancel_Click);
+            this.cancel.Click += new System.EventHandler(this.Cancel_Click);
             // 
             // open
             // 
@@ -100,7 +100,7 @@
             this.back.Name = "back";
             this.back.Size = new System.Drawing.Size(28, 28);
             this.back.Text = "Back";
-            this.back.Click += new System.EventHandler(this.back_Click);
+            this.back.Click += new System.EventHandler(this.Back_Click);
             // 
             // forward
             // 
@@ -110,14 +110,14 @@
             this.forward.Name = "forward";
             this.forward.Size = new System.Drawing.Size(28, 28);
             this.forward.Text = "Forward";
-            this.forward.Click += new System.EventHandler(this.forward_Click);
+            this.forward.Click += new System.EventHandler(this.Forward_Click);
             // 
             // up
             // 
             this.up.Image = global::pwiz.PanoramaClient.Properties.Resources.Icojam_Blueberry_Basic_Arrow_up;
             this.up.Name = "up";
             this.up.Size = new System.Drawing.Size(28, 28);
-            this.up.Click += new System.EventHandler(this.up_Click);
+            this.up.Click += new System.EventHandler(this.Up_Click);
             // 
             // urlLink
             // 
@@ -130,7 +130,7 @@
             this.urlLink.TabIndex = 2;
             this.urlLink.TabStop = true;
             this.urlLink.Text = "<placeholder>";
-            this.urlLink.LinkClicked += new System.Windows.Forms.LinkLabelLinkClickedEventHandler(this.urlLink_LinkClicked);
+            this.urlLink.LinkClicked += new System.Windows.Forms.LinkLabelLinkClickedEventHandler(this.UrlLink_LinkClicked);
             // 
             // contextMenuStrip
             // 
@@ -144,7 +144,7 @@
             this.copyLinkAddressToolStripMenuItem.Name = "copyLinkAddressToolStripMenuItem";
             this.copyLinkAddressToolStripMenuItem.Size = new System.Drawing.Size(167, 22);
             this.copyLinkAddressToolStripMenuItem.Text = "Copy link address";
-            this.copyLinkAddressToolStripMenuItem.Click += new System.EventHandler(this.copyLinkAddressToolStripMenuItem_Click);
+            this.copyLinkAddressToolStripMenuItem.Click += new System.EventHandler(this.CopyLinkAddressToolStripMenuItem_Click);
             // 
             // label3
             // 

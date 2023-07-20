@@ -27,22 +27,6 @@ namespace pwiz.PanoramaClient
 {
     public partial class PanoramaDirectoryPicker : Form
     {
-
-        public PanoramaDirectoryPicker(List<PanoramaServer> servers, string state, bool showWebDavFolders = false, string selectedPath = null)
-        {
-            InitializeComponent();
-            Servers = servers;
-            FolderBrowser = new PanoramaFolderBrowser( false,  state, Servers, selectedPath, showWebDavFolders);
-            FolderBrowser.Dock = DockStyle.Fill;
-            folderPanel.Controls.Add(FolderBrowser);
-            FolderBrowser.NodeClick += DirectoryPicker_MouseClick;
-            up.Enabled = false;
-            SelectedPath = selectedPath;
-            back.Enabled = false;
-            forward.Enabled = false;
-            FolderBrowser.ShowWebDav = showWebDavFolders;
-        }
-
         public string OkButtonText { get; set; }
         public PanoramaFolderBrowser FolderBrowser;
         public string SelectedPath;
@@ -51,7 +35,22 @@ namespace pwiz.PanoramaClient
         public PanoramaServer ActiveServer { get; private set; }
         public string TreeState { get; set; }
 
-
+        public PanoramaDirectoryPicker(List<PanoramaServer> servers, string state, bool showWebDavFolders = false, string selectedPath = null)
+        {
+            InitializeComponent();
+            Servers = servers;
+            FolderBrowser = new PanoramaFolderBrowser(Servers, state, false, selectedPath, showWebDavFolders)
+            {
+                Dock = DockStyle.Fill
+            };
+            FolderBrowser.NodeClick += DirectoryPicker_MouseClick;
+            folderPanel.Controls.Add(FolderBrowser);
+            up.Enabled = false;
+            SelectedPath = selectedPath;
+            back.Enabled = false;
+            forward.Enabled = false;
+            FolderBrowser.ShowWebDav = showWebDavFolders;
+        }
 
         private void open_Click(object sender, EventArgs e)
         {
@@ -71,14 +70,14 @@ namespace pwiz.PanoramaClient
 
         }
 
-        private void back_Click(object sender, EventArgs e)
+        private void Back_Click(object sender, EventArgs e)
         {
             back.Enabled = FolderBrowser.BackEnabled();
             FolderBrowser.BackClick();
             UpdateButtonState();
         }
 
-        private void forward_Click(object sender, EventArgs e)
+        private void Forward_Click(object sender, EventArgs e)
         {
             forward.Enabled = FolderBrowser.ForwardEnabled();
             FolderBrowser.ForwardClick();
@@ -94,11 +93,11 @@ namespace pwiz.PanoramaClient
             back.Enabled = FolderBrowser.BackEnabled();
         }
 
-        //TODO: What's the difference between SelectedPath and SelectedUrl
+        //TODO: What's the difference between SelectedPath and SelectedUrl -- they are the same
         private void DirectoryPicker_FormClosing(object sender, FormClosingEventArgs e)
         {
             TreeState = FolderBrowser.ClosingState();
-            SelectedPath = string.Concat(FolderBrowser.ActiveServer.URI, PanoramaUtil.WEBDAV, FolderBrowser.FolderPath);
+            SelectedPath = FolderBrowser.SelectedUrl;
         }
 
         private void UpdateButtonState()
@@ -109,7 +108,7 @@ namespace pwiz.PanoramaClient
             urlLink.Text = FolderBrowser.SelectedUrl;
         }
 
-        private void up_Click(object sender, EventArgs e)
+        private void Up_Click(object sender, EventArgs e)
         {
             up.Enabled = FolderBrowser.UpEnabled();
             FolderBrowser.UpClick();
@@ -117,25 +116,25 @@ namespace pwiz.PanoramaClient
             forward.Enabled = false;
         }
 
-        private void cancel_Click(object sender, EventArgs e)
+        private void Cancel_Click(object sender, EventArgs e)
         {
             Close();
         }
 
-        private void urlLink_LinkClicked(object sender, LinkLabelLinkClickedEventArgs e)
+        private void UrlLink_LinkClicked(object sender, LinkLabelLinkClickedEventArgs e)
         {
-            if (e.Button == MouseButtons.Right)
+            switch (e.Button)
             {
-                contextMenuStrip.Show(Cursor.Position);
-            }
-            else if (e.Button == MouseButtons.Left)
-            {
-                Process.Start(urlLink.Text);
-
+                case MouseButtons.Right:
+                    contextMenuStrip.Show(Cursor.Position);
+                    break;
+                case MouseButtons.Left:
+                    Process.Start(urlLink.Text);
+                    break;
             }
         }
 
-        private void copyLinkAddressToolStripMenuItem_Click(object sender, EventArgs e)
+        private void CopyLinkAddressToolStripMenuItem_Click(object sender, EventArgs e)
         {
             Clipboard.SetText(urlLink.Text);
         }
@@ -196,7 +195,7 @@ namespace pwiz.PanoramaClient
 
         public void ClickCancel()
         { 
-            cancel_Click(this, EventArgs.Empty);
+            Cancel_Click(this, EventArgs.Empty);
         }
 
         public bool UpEnabled()
