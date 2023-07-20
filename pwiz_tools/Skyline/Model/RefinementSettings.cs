@@ -17,6 +17,7 @@
  * limitations under the License.
  */
 using System;
+using System.CodeDom;
 using System.Collections;
 using System.Collections.Generic;
 using System.Diagnostics;
@@ -230,6 +231,12 @@ namespace pwiz.Skyline.Model
         public double? SCIncludedCutoff { get; set; }
         [Track]
         public double? SCQuantitativeCutoff { get; set; }
+
+        public enum ComparisonType {min, max};
+        [Track]
+        public ComparisonType? SCIncludedComparisonType {get; set;}
+        [Track]
+        public ComparisonType? SCQuantitativeComparisonType { get; set; }
         [Track]
         public List<GroupComparisonDef> GroupComparisonDefs { get; set; }
         public List<string> GroupComparisonNames { get; set; }
@@ -778,18 +785,20 @@ namespace pwiz.Skyline.Model
                 }
 
                 var chromInfos = nodeTran.ChromInfos;
+                ComparisonType? includedComparisonType = SCIncludedComparisonType.HasValue ? SCIncludedComparisonType : ComparisonType.min;
                 if (SCIncludedCutoff.HasValue)
                 {
-                    if (checkIfShapeCorrelationBelowCutoff(chromInfos, SCIncludedCutoff))
+                    if (checkIfShapeCorrelationBelowCutoff(chromInfos, SCIncludedCutoff, includedComparisonType))
                     {
                         continue;
                     }
                 }
 
                 TransitionDocNode nonQuantitativeNodeTran = null;
+                ComparisonType? quantitativeComparisonType = SCQuantitativeComparisonType.HasValue ? SCQuantitativeComparisonType : ComparisonType.min;
                 if (SCQuantitativeCutoff.HasValue)
                 {
-                    if (checkIfShapeCorrelationBelowCutoff(chromInfos, SCQuantitativeCutoff))
+                    if (checkIfShapeCorrelationBelowCutoff(chromInfos, SCQuantitativeCutoff, quantitativeComparisonType))
                     {
                         nonQuantitativeNodeTran = nodeTran.ChangeQuantitative(false);
                     }
@@ -1278,17 +1287,28 @@ namespace pwiz.Skyline.Model
         }
 
 
-        private bool checkIfShapeCorrelationBelowCutoff(IEnumerable<TransitionChromInfo> chromInfos, double? cutoff)
+        private bool checkIfShapeCorrelationBelowCutoff(IEnumerable<TransitionChromInfo> chromInfos, double? cutoff, ComparisonType? type = ComparisonType.min)
         {
-            foreach (var chromInfo in chromInfos)
+            float? comparisonValue = 0;
+            if (chromInfos.Any())
             {
-                if (chromInfo.PeakShapeValues?.ShapeCorrelation < cutoff)
+                if (type == ComparisonType.min)
                 {
-                    return true;
+                    comparisonValue = chromInfos.Min(c => c.PeakShapeValues?.ShapeCorrelation);
+                }
+                else if (type == ComparisonType.max)
+                {
+                    comparisonValue = chromInfos.Max(c => c.PeakShapeValues?.ShapeCorrelation);
+
                 }
             }
 
-            return false;
+            if (comparisonValue >= cutoff)
+            {
+                return false;
+            }
+            return comparisonValue < cutoff;
+
         }
 
         /// <summary>

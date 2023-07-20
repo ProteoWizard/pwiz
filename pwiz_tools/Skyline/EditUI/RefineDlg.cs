@@ -27,9 +27,11 @@ using pwiz.Skyline.SettingsUI;
 using pwiz.Skyline.Util;
 using System;
 using System.Collections.Generic;
+using System.Drawing;
 using System.Globalization;
 using System.Linq;
 using System.Windows.Forms;
+using System.Windows.Forms.Layout;
 using pwiz.Skyline.Controls.Graphs;
 using pwiz.Skyline.Controls.GroupComparison;
 using pwiz.Skyline.Model.GroupComparison;
@@ -153,6 +155,14 @@ namespace pwiz.Skyline.EditUI
             {
                 textIncludedCutoff.Enabled = true;
                 textQuantitativeCutoff.Enabled = true;
+                comboIncludedComparisonType.Items.Add("Min");
+                comboIncludedComparisonType.Items.Add("Max");
+                comboIncludedComparisonType.SelectedIndex = 0;
+
+                comboQuantitativeComparisonType.Items.Add("Min");
+                comboQuantitativeComparisonType.Items.Add("Max");
+                comboQuantitativeComparisonType.SelectedIndex = 0;
+
             }
 
 
@@ -244,6 +254,16 @@ namespace pwiz.Skyline.EditUI
             set { textQuantitativeCutoff.Text = value.ToString(LocalizationHelper.CurrentCulture); }
         }
 
+        public RefinementSettings.ComparisonType SCIncludedComparisonType
+        {
+            get { return (RefinementSettings.ComparisonType) comboIncludedComparisonType.SelectedIndex;}
+            set { comboIncludedComparisonType.SelectedIndex = (int) value; }
+        }
+        public RefinementSettings.ComparisonType SCQuantitativeComparisonType
+        {
+            get { return (RefinementSettings.ComparisonType) comboQuantitativeComparisonType.SelectedIndex; }
+            set { comboQuantitativeComparisonType.SelectedIndex = (int)value; }
+        }
         public AreaCVTransitions Transition
         {
             get { return GetTransitionFromIdx(comboTransitions.SelectedIndex); }
@@ -583,6 +603,9 @@ namespace pwiz.Skyline.EditUI
                 scQuantitativeCutoff = quantitativeCutoffVal;
             }
 
+            RefinementSettings.ComparisonType scIncludedComparisonType = SCIncludedComparisonType;
+            RefinementSettings.ComparisonType scQuantitativeComparisonType = SCQuantitativeComparisonType;
+
             RefinementSettings = new RefinementSettings
                                      {
                                          MinPeptidesPerProtein = minPeptidesPerProtein,
@@ -618,7 +641,9 @@ namespace pwiz.Skyline.EditUI
                                          MSLevelGroupComparison = msLevelGroupComparison,
                                          GroupComparisonDefs = groupComparisonDefs,
                                          SCIncludedCutoff = scIncludedCutoff,
-                                         SCQuantitativeCutoff = scQuantitativeCutoff
+                                         SCQuantitativeCutoff = scQuantitativeCutoff,
+                                         SCIncludedComparisonType = scIncludedComparisonType,
+                                         SCQuantitativeComparisonType = scQuantitativeComparisonType
             };
 
             DialogResult = DialogResult.OK;
@@ -738,6 +763,17 @@ namespace pwiz.Skyline.EditUI
             var log = checkBoxLog.Checked;
             VolcanoPlotPropertiesDlg.UpdateTextBoxAndLabel(textFoldChange, labelFoldChangeUnit, log, 2);
             VolcanoPlotPropertiesDlg.UpdateTextBoxAndLabel(textPValue, labelPValueUnit, log, 10, true);
+        }
+
+        private void AdjustWidthComboBox(object sender, EventArgs e)
+        {
+            var senderComboBox = (ComboBox)sender;
+            Graphics g = senderComboBox.CreateGraphics();
+            Font font = senderComboBox.Font;
+            var currentItem = senderComboBox.SelectedItem.ToString();
+            var width = (int)g.MeasureString(currentItem, font).Width;
+            var buffer = 20;
+            senderComboBox.Width = width + buffer;
         }
     }
 }
