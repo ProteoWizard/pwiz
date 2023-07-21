@@ -911,8 +911,7 @@ namespace pwiz.Skyline.Model
             }
 
             // Determine the molecular formula of the charged/labeled peptide
-            var crosslinkBuilder = new CrosslinkBuilder(document.Settings, nodePep.Peptide, nodePep.ExplicitMods, IsotopeLabelType.light);
-            var moleculeFormula = crosslinkBuilder.GetPrecursorFormula(); // Get molecular formula, possibly with isotopes in it (as with iTraq)
+            var moleculeFormula = masscalc.GetMolecularFormula(peptideTarget.Sequence); // Get molecular formula, possibly with isotopes in it (as with iTraq)
             adduct = 
                 Adduct.NonProteomicProtonatedFromCharge(precursorCharge, BioMassCalc.FindIsotopeLabelsInFormula(moleculeFormula.Molecule));
             if (BioMassCalc.ContainsIsotopicElement(moleculeFormula.Molecule))
