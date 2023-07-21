@@ -1430,6 +1430,7 @@ namespace pwiz.Skyline.Model
             MassListImporter importer, 
             IdentityPath to, 
             out IdentityPath firstAdded,
+            bool tolerateErrors = false,
             List<string> columnPositions = null,
             bool hasHeaders = true)
         {
@@ -1437,7 +1438,7 @@ namespace pwiz.Skyline.Model
             List<SpectrumMzInfo> librarySpectra;
             List<TransitionImportErrorInfo> errorList;
             List<PeptideGroupDocNode> peptideGroups;
-            return ImportMassList(inputs, importer, null, to, out firstAdded, out irtPeptides, out librarySpectra, out errorList, out peptideGroups, columnPositions, DOCUMENT_TYPE.none, hasHeaders);
+            return ImportMassList(inputs, importer, null, to, out firstAdded, out irtPeptides, out librarySpectra, out errorList, out peptideGroups, tolerateErrors, columnPositions, DOCUMENT_TYPE.none, hasHeaders);
         }
 
         public SrmDocument ImportMassList(MassListInputs inputs,
@@ -1446,13 +1447,14 @@ namespace pwiz.Skyline.Model
                                           out List<MeasuredRetentionTime> irtPeptides,
                                           out List<SpectrumMzInfo> librarySpectra,
                                           out List<TransitionImportErrorInfo> errorList,
+                                          bool tolerateErrors = false,
                                           List<string> columnPositions = null)
         {
             List<PeptideGroupDocNode> peptideGroups;
-            return ImportMassList(inputs, null, null, to, out firstAdded, out irtPeptides, out librarySpectra, out errorList, out peptideGroups, columnPositions);
+            return ImportMassList(inputs, null, null, to, out firstAdded, out irtPeptides, out librarySpectra, out errorList, out peptideGroups, tolerateErrors, columnPositions);
         }
 
-        public SrmDocument ImportMassList(MassListInputs inputs, 
+        public SrmDocument ImportMassList(MassListInputs inputs,
                                           MassListImporter importer,
                                           IProgressMonitor progressMonitor,
                                           IdentityPath to,
@@ -1461,6 +1463,7 @@ namespace pwiz.Skyline.Model
                                           out List<SpectrumMzInfo> librarySpectra,
                                           out List<TransitionImportErrorInfo> errorList,
                                           out List<PeptideGroupDocNode> peptideGroups,
+                                          bool tolerateErrors = false,
                                           List<string> columnPositions = null,
                                           DOCUMENT_TYPE forceDocType = DOCUMENT_TYPE.none,
                                           bool hasHeaders = true,
@@ -1474,6 +1477,11 @@ namespace pwiz.Skyline.Model
             var docNew = this;
             firstAdded = null;
 
+            if (forceDocType == DOCUMENT_TYPE.none && importer == null)
+            {
+                importer = PreImportMassList(inputs, progressMonitor, false); // Try to determine peptide vs small mol format
+            }
+
             // Is this a small molecule transition list, or trying to be?
             if (forceDocType == DOCUMENT_TYPE.small_molecules || 
                 (forceDocType == DOCUMENT_TYPE.none && importer != null && importer.InputType == DOCUMENT_TYPE.small_molecules))
@@ -1483,7 +1491,7 @@ namespace pwiz.Skyline.Model
                 {
                     lines = inputs.ReadLines(progressMonitor);
                     var reader = new SmallMoleculeTransitionListCSVReader(lines, columnPositions, hasHeaders);
-                    docNew = reader.CreateTargets(this, to, out firstAdded);
+                    docNew = reader.CreateTargets(this, to, out firstAdded, tolerateErrors, peptideGroups, irtPeptides, librarySpectra, inputs.InputFilename );
                     foreach (var error in reader.ErrorList)
                     {
                         var lineIndex  = error.Line + (hasHeaders ? 1 : 0); // Account for parser not including header in its line count

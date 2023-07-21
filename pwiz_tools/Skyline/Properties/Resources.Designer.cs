@@ -3805,6 +3805,16 @@ namespace pwiz.Skyline.Properties {
         }
         
         /// <summary>
+        ///   Looks up a localized string similar to Unavailable: no matching iRT standards found.
+        /// </summary>
+        public static string ChooseIrtStandardPeptidesDlg_ChooseIrtStandardPeptidesDlg_Unavailable__no_matching_iRT_standards_found {
+            get {
+                return ResourceManager.GetString("ChooseIrtStandardPeptidesDlg_ChooseIrtStandardPeptidesDlg_Unavailable__no_matchin" +
+                        "g_iRT_standards_found", resourceCulture);
+            }
+        }
+        
+        /// <summary>
         ///   Looks up a localized string similar to Known iRTs.
         /// </summary>
         public static string ChooseIrtStandardPeptidesDlg_OkDialog_Known_iRTs {
@@ -31592,6 +31602,16 @@ namespace pwiz.Skyline.Properties {
             get {
                 return ResourceManager.GetString("SmallMoleculeLibraryAttributes_Validate_A_small_molecule_is_defined_by_a_chemical" +
                         "_formula_and_at_least_one_of_Name__InChiKey__or_other_keys__HMDB_etc_", resourceCulture);
+            }
+        }
+        
+        /// <summary>
+        ///   Looks up a localized string similar to Chemical Formula.
+        /// </summary>
+        public static string SmallMoleculeTransitionListColumnHeaders_SmallMoleculeTransitionListColumnHeaders_Chemical_Formula {
+            get {
+                return ResourceManager.GetString("SmallMoleculeTransitionListColumnHeaders_SmallMoleculeTransitionListColumnHeaders" +
+                        "_Chemical_Formula", resourceCulture);
             }
         }
         

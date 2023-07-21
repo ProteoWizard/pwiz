@@ -310,7 +310,15 @@ namespace pwiz.Skyline.Model
 
         private IList<string> _lines;
 
-        public IList<string> Lines { get { return _lines; } }
+        public IList<string> Lines
+        {
+            get
+            {
+                return LineCountLimit.HasValue && _lines != null && _lines.Count > LineCountLimit.Value ? 
+                    new List<string>(_lines.Take(LineCountLimit.Value)) : 
+                    _lines;
+            }
+        }
 
         public MassListInputs(string initText, bool fullText = false)
         {
@@ -336,7 +344,7 @@ namespace pwiz.Skyline.Model
 
         public IList<string> ReadLines(IProgressMonitor progressMonitor, IProgressStatus status = null)
         {
-            return _lines ?? (_lines = _inputFilename != null ? ReadLinesFromFile(progressMonitor, status) : ReadLinesFromText());
+            return Lines ?? (_lines = _inputFilename != null ? ReadLinesFromFile(progressMonitor, status) : ReadLinesFromText());
         }
 
         private IList<string> ReadLinesFromFile(IProgressMonitor progressMonitor, IProgressStatus status)
@@ -411,6 +419,8 @@ namespace pwiz.Skyline.Model
             return MassListImporter.IsColumnar(inputLines, out provider, out sep, out var columnTypes);
         }
 
+        public int? LineCountLimit { get; set; } // Process no more than LineCountLimit lines when set
+
         public IFormatProvider FormatProvider { get; set; }
         public char Separator { get; set; }
     }
@@ -429,11 +439,11 @@ namespace pwiz.Skyline.Model
 
         // This constructor is only suitable for investigating the peptide-vs-small molecule nature of inputs
         // CONSIDER(henryS) Arguably that code should be split out into its own class
-        public MassListImporter(SrmSettings settings, MassListInputs inputs)
+        public MassListImporter(SrmSettings settings, MassListInputs inputs, SrmDocument.DOCUMENT_TYPE inputType = SrmDocument.DOCUMENT_TYPE.none)
         {
             Settings = settings;
             Inputs = inputs;
-            InputType = SrmDocument.DOCUMENT_TYPE.none;
+            InputType = inputType;
         }
 
         // This constructor is suitable for investigating the peptide-vs-small molecule nature of inputs as well as actually doing an import
@@ -2525,6 +2535,8 @@ namespace pwiz.Skyline.Model
                 FindValueMatch(SmallMoleculeTransitionListColumnHeaders.idHMDB, header, nameof(HMDBColumn));
                 FindValueMatch(SmallMoleculeTransitionListColumnHeaders.idKEGG, header, nameof(KEGGColumn));
                 FindValueMatch(SmallMoleculeTransitionListColumnHeaders.idSMILES, header, nameof(SMILESColumn));
+                FindValueMatch(SmallMoleculeTransitionListColumnHeaders.iRT, header, nameof(IrtColumn)); // For Assay Library use
+                FindValueMatch(SmallMoleculeTransitionListColumnHeaders.libraryIntensity, header, nameof(LibraryColumn)); // For Assay Library use
                 index++;
             }
 
@@ -2586,7 +2598,7 @@ namespace pwiz.Skyline.Model
         public static IEnumerable<string> IrtColumnNames { get { return new[] { @"irt", @"normalizedretentiontime", @"tr_recalibrated" }; } }
         public static IEnumerable<string> LibraryColumnNames { get { return new[] { @"libraryintensity", @"relativeintensity", @"relative_intensity", @"relativefragmentintensity", @"library_intensity" }; } }
         public static IEnumerable<string> DecoyNames { get { return new[] { @"decoy" }; } }
-        public static IEnumerable<string> FragmentNameNames { get { return new[] { @"fragmentname" }; } }
+        public static IEnumerable<string> FragmentNameNames { get { return new[] { @"fragmentname", @"fragment_name" }; } }
         public static IEnumerable<string> LabelTypeNames { get { return new[] { @"labeltype" }; } }
         public static IEnumerable<string> ExplicitRetentionTimeNames { get { return new[] { @"explicitretentiontime", @"precursorrt" }; } }
         public static IEnumerable<string> ExplicitRetentionTimeWindowNames { get { return new[] { @"explicitretentiontimewindow", @"precursorrtwindow" }; } }
@@ -2605,7 +2617,7 @@ namespace pwiz.Skyline.Model
         public static IEnumerable<string> PrecursorNames { get { return new[] { @"precursormz", @"precursorm/z" }; } }
         public static IEnumerable<string> ProductFormulaNames { get { return new[] { @"productformula" }; } }
         public static IEnumerable<string> ProductAdductNames { get { return new[] { @"productadduct" }; } }
-        public static IEnumerable<string> ProductNameNames { get { return new[] { @"productname" }; } }
+        public static IEnumerable<string> ProductNameNames { get { return new[] { @"productname", @"fragmenttype", @"transitionname" }; } }
         public static IEnumerable<string> ProductNeutralLossNames { get { return new[] { @"productneutralloss" }; } }
         public static IEnumerable<string> MoleculeNameNames { get { return new[] { @"moleculename", @"precursorname" }; } }
         // ReSharper restore StringLiteralTypo

@@ -105,7 +105,7 @@ namespace pwiz.SkylineTestUtil
 
             var docOriginal = doc;
             var refine = new RefinementSettings();
-            docPath = docPath.Replace(".sky", "_converted_to_small_molecules.sky");
+            docPath = DocPathConvertedToSmallMolecules(docPath);
             var docSmallMol =
                 refine.ConvertToSmallMolecules(doc, Path.GetDirectoryName(docPath), mode);
             if (docSmallMol.MeasuredResults != null)
@@ -152,6 +152,12 @@ namespace pwiz.SkylineTestUtil
             }
             AssertEx.ConvertedSmallMoleculeDocumentIsSimilar(docOriginal, doc, Path.GetDirectoryName(docPath), mode);
             return doc;
+        }
+
+        public static string SMALL_MOL_CONVERSION_TAG = @"_converted_to_small_molecules";
+        public static string DocPathConvertedToSmallMolecules(string docPath)
+        {
+            return docPath.Replace(".sky", SMALL_MOL_CONVERSION_TAG+".sky");
         }
     }
 }

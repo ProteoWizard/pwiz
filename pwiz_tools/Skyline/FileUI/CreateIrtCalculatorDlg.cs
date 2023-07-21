@@ -57,9 +57,9 @@ namespace pwiz.Skyline.FileUI
         {
             var standardProteinsList = new List<PeptideGroupDocNode>();
             var nonStandardProteinsList = new List<PeptideGroupDocNode>();
-            foreach (var protein in proteins.Where(protein => protein.PeptideCount >= CalibrateIrtDlg.MIN_STANDARD_PEPTIDES))
+            foreach (var protein in proteins.Where(protein => protein.MoleculeCount >= CalibrateIrtDlg.MIN_STANDARD_PEPTIDES))
             {
-                if (protein.Peptides.Select(pep => pep.ModifiedTarget).Count(IrtStandard.AnyContains) >= CalibrateIrtDlg.MIN_STANDARD_PEPTIDES)
+                if (protein.Molecules.Select(pep => pep.ModifiedTarget).Count(IrtStandard.AnyContains) >= CalibrateIrtDlg.MIN_STANDARD_PEPTIDES)
                     standardProteinsList.Add(protein);
                 else
                     nonStandardProteinsList.Add(protein);
@@ -189,7 +189,23 @@ namespace pwiz.Skyline.FileUI
                     docNew = docNew.ImportMassList(inputs, null, out selectPath, out irtPeptides, out _librarySpectra, out errorList);
                     if (errorList.Any())
                     {
-                        throw new InvalidDataException(errorList[0].ErrorMessage);
+                        // Allow the user to assign column types
+                        var importer = docNew.PreImportMassList(inputs, null, true, SrmDocument.DOCUMENT_TYPE.none, true, ModeUI);
+                        using (var columnDlg = new ImportTransitionListColumnSelectDlg(importer, docNew, inputs, selectPath, false))
+                        {
+                            if (columnDlg.ShowDialog(this) == DialogResult.OK)
+                            {
+                                var insParams = columnDlg.InsertionParams;
+                                docNew = insParams.Document;
+                                selectPath = insParams.SelectPath;
+                                irtPeptides = insParams.IrtPeptides;
+                                _librarySpectra = insParams.LibrarySpectra;
+                            }
+                            else
+                            {
+                                throw new InvalidDataException(errorList[0].ErrorMessage);
+                            }
+                        }
                     }
                     _dbIrtPeptides = irtPeptides.Select(rt => new DbIrtPeptide(rt.PeptideSequence, rt.RetentionTime, true, TimeSource.scan)).ToList();
                     IrtFile = textImportText.Text;
@@ -204,7 +220,7 @@ namespace pwiz.Skyline.FileUI
             {
                 PeptideGroupDocNode selectedGroup = comboBoxProteins.SelectedItem as PeptideGroupDocNode;
 // ReSharper disable PossibleNullReferenceException
-                _irtPeptideSequences = new HashSet<Target>(selectedGroup.Peptides.Select(pep => pep.ModifiedTarget));
+                _irtPeptideSequences = new HashSet<Target>(selectedGroup.Molecules.Select(pep => pep.ModifiedTarget));
 // ReSharper restore PossibleNullReferenceException
             }
             Document = docNew;

@@ -28,6 +28,7 @@
         /// </summary>
         private void InitializeComponent()
         {
+            this.components = new System.ComponentModel.Container();
             System.ComponentModel.ComponentResourceManager resources = new System.ComponentModel.ComponentResourceManager(typeof(ChooseIrtStandardPeptidesDlg));
             this.btnOk = new System.Windows.Forms.Button();
             this.btnCancel = new System.Windows.Forms.Button();
@@ -38,6 +39,7 @@
             this.btnBrowseTransitionList = new System.Windows.Forms.Button();
             this.radioExisting = new System.Windows.Forms.RadioButton();
             this.comboExisting = new System.Windows.Forms.ComboBox();
+            this.toolTip1 = new System.Windows.Forms.ToolTip(this.components);
             this.SuspendLayout();
             // 
             // btnOk
@@ -139,5 +141,6 @@
         private System.Windows.Forms.Button btnBrowseTransitionList;
         private System.Windows.Forms.RadioButton radioExisting;
         private System.Windows.Forms.ComboBox comboExisting;
+        private System.Windows.Forms.ToolTip toolTip1;
     }
 }

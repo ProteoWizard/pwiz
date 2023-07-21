@@ -12191,4 +12191,10 @@ If you choose Disable, you can enable Auto-select later with the "Refine &gt; Ad
   <data name="EncyclopeDiaHelpers_GenerateLibrary_Running_command___0___1_" xml:space="preserve">
     <value>Running command: {0} {1}</value>
   </data>
+  <data name="SmallMoleculeTransitionListColumnHeaders_SmallMoleculeTransitionListColumnHeaders_Chemical_Formula" xml:space="preserve">
+    <value>Chemical Formula</value>
+  </data>
+  <data name="ChooseIrtStandardPeptidesDlg_ChooseIrtStandardPeptidesDlg_Unavailable__no_matching_iRT_standards_found" xml:space="preserve">
+    <value>Unavailable: no matching iRT standards found</value>
+  </data>
 </root>
