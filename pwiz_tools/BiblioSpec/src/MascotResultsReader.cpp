@@ -211,10 +211,6 @@ bool MascotResultsReader::parseFile(){
         double expectationValue = 
             ms_results_->getPeptideExpectationValue(ionScore, specId);
 
-        if( expectationValue > scoreThreshold_ ) {
-            continue;
-        }
-
         // look for the filename in the title
         ms_inputquery spec(*ms_file_, specId);
         string file = getFilename(spec);
@@ -225,6 +221,11 @@ bool MascotResultsReader::parseFile(){
             vector<PSM*> tmpPsms;
             fileMap_[file] = tmpPsms;
             mapAccess = fileMap_.find(file);
+        }
+
+        if (expectationValue > scoreThreshold_) {
+            ++filteredOutPsmCount_;
+            continue;
         }
 
         // add all PSMs that are rank 1, remove duplicates later

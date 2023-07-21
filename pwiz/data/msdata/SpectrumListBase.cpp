@@ -27,6 +27,7 @@
 #include "pwiz/utility/misc/Stream.hpp"
 #include <boost/thread/lock_guard.hpp>
 #include <boost/thread/mutex.hpp>
+#include <boost/functional/hash.hpp>
 
 
 namespace {
@@ -70,20 +71,7 @@ PWIZ_API_DECL size_t pwiz::msdata::SpectrumListBase::checkNativeIdFindResult(siz
                 return size();
         }
 
-        auto actualId = pwiz::msdata::id::parse(firstId);
-        auto actualIdKeys = actualId | boost::adaptors::map_keys;
-        auto actualIdKeySet = std::set<std::string>(actualIdKeys.begin(), actualIdKeys.end());
-
-        auto expectedId = pwiz::msdata::id::parse(id);
-        auto expectedIdKeys = expectedId | boost::adaptors::map_keys;
-        auto expectedIdKeySet = std::set<std::string>(expectedIdKeys.begin(), expectedIdKeys.end());
-
-        std::vector<std::string> missingIdKeys;
-        std::set_symmetric_difference(expectedIdKeySet.begin(), expectedIdKeySet.end(),
-            actualIdKeySet.begin(), actualIdKeySet.end(),
-            std::back_inserter(missingIdKeys));
-
-        if (!missingIdKeys.empty())
+        if (!checkNativeIdMatch(firstId, id))
             warn_once(("[SpectrumList::find] mismatch between spectrum id format of the file (" + firstId + ") and the looked-up id (" + id + ")").c_str());
         return size();
     }
