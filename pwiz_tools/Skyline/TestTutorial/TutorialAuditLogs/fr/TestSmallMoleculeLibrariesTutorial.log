@@ -2,7 +2,7 @@ Undo Redo : Transition Settings changed
 Summary   : Settings > Transition Settings changed
 All Info  :
 Transition Settings changed
-Settings > Transition Settings -- Filter > Molecule Precursor adducts changed from "[M+H]" to "[M+CH3COO], [M+HCOO], [M-H]"
+Settings > Transition Settings -- Filter > Molecule Precursor adducts changed from "[M+H]" to "[M-H], [M+HCOO], [M+CH3COO]"
 Settings > Transition Settings -- Filter > Molecule Fragment adducts changed from "[M+]" to "[M-]"
 Settings > Transition Settings -- Filter > Ion types changed from "y" to "y, p"
 Settings > Transition Settings -- Filter > Molecule Ion types changed from "f" to "f, p"
