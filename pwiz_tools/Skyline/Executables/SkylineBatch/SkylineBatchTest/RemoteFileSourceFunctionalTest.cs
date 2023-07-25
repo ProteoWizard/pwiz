@@ -154,7 +154,7 @@ namespace SkylineBatchTest
             WaitForClosedForm(remoteDlg);
             RunUI(() =>
             {
-                remoteSourceForm.textFolderUrl.Text = remoteDlg.Selected;
+                remoteSourceForm.textFolderUrl.Text = remoteDlg.SelectedPath;
                 Assert.AreEqual(remoteSourceForm.textFolderUrl.Text, TARGETED_FOLDER_LINK);
             });
             if (closeForm) CloseFormsInOrder(true,remoteSourceForm);

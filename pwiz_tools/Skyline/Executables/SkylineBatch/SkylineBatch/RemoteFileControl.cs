@@ -254,20 +254,18 @@ namespace SkylineBatch
 
                 if (_fileRequired) // If file is required use PanoramaFilePicker
                 {
-                    using (PanoramaFilePicker dlg = new PanoramaFilePicker(panoramaServers,state, _templateFile, true,remoteFileSource.SelectedPath))
+                    using (PanoramaFilePicker dlg = new PanoramaFilePicker(panoramaServers, state, true,remoteFileSource.SelectedPath))
                     {
 
                         dlg.InitializeDialog();
                         if (dlg.ShowDialog() != DialogResult.Cancel)
                         {
-                            Settings.Default.PanoramaTreeState = dlg.TreeState;
-                            Settings.Default.ShowPanormaSkyFiles = dlg.ShowingSky;
+                            Settings.Default.PanoramaTreeState = dlg.FolderBrowser.TreeState;
                             var decodedUrl = Uri.UnescapeDataString(dlg.FileUrl);
                             var relativePath = decodedUrl.Replace($"{path}/@files/", "");
                             textRelativePath.Text = relativePath;
                         }
-                        Settings.Default.PanoramaTreeState = dlg.TreeState;
-                        Settings.Default.ShowPanormaSkyFiles = dlg.ShowingSky;
+                        Settings.Default.PanoramaTreeState = dlg.FolderBrowser.TreeState;
                     }
                 }
                 else // if file not required use PanoramaDirectoryPicker
@@ -279,7 +277,7 @@ namespace SkylineBatch
                         if (dlg.ShowDialog() != DialogResult.Cancel)
 
                         {
-                            string url = dlg.Selected;
+                            string url = dlg.SelectedPath;
                             string output = $"{url.Replace($"{path}/@files/", "")}/";
                             textRelativePath.Text = output;
                         }
