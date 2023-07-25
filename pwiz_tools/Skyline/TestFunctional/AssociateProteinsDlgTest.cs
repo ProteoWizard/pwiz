@@ -152,27 +152,33 @@ namespace pwiz.SkylineTestFunctional
                 RunUI(associateProteinsDlg.UseBackgroundProteome);
             }
 
+            RunUI(() => associateProteinsDlg.KeepUnmappedPeptides = true);
+
             //PauseTest();
             OkAssociateProteinsDialog(associateProteinsDlg);
 
             //IsPauseForAuditLog = true;
             //PauseForAuditLog();
 
+            List<PeptideGroupDocNode> proteins = new List<PeptideGroupDocNode>();
+            List<PeptideGroupDocNode> peptideLists = new List<PeptideGroupDocNode>();
+            List<PeptideGroupDocNode> nonProteins = new List<PeptideGroupDocNode>();
             RunUI(() => {
-                List<PeptideGroupDocNode> proteins = new List<PeptideGroupDocNode>();
-                List<PeptideGroupDocNode> nonProteins = new List<PeptideGroupDocNode>();
                 foreach (var docNode in SkylineWindow.Document.MoleculeGroups)
                 {
                     if (docNode.IsProtein)
                         proteins.Add(docNode);
+                    else if (docNode.IsProteomic && docNode.IsPeptideList)
+                        peptideLists.Add(docNode);
                     else
                         nonProteins.Add(docNode);
                 }
-                Assert.AreEqual(5, proteins.Count);
-                Assert.AreEqual(1, nonProteins.Count);
-                // +4 because peptides that associate with two proteins get duplicated and there are 4 in this test data file
-                Assert.AreEqual(initialPeptideCount + 4, SkylineWindow.Document.PeptideCount);
             });
+            Assert.AreEqual(5, proteins.Count);
+            Assert.AreEqual(2, peptideLists.Count);
+            Assert.AreEqual(1, nonProteins.Count);
+            // +4 because peptides that associate with two proteins get duplicated and there are 4 in this test data file
+            Assert.AreEqual(initialPeptideCount + 4, SkylineWindow.Document.PeptideCount);
         }
 
         /// <summary>

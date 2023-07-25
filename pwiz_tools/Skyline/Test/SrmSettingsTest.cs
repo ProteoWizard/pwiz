@@ -1152,11 +1152,12 @@ namespace pwiz.SkylineTest
                                                         "group_proteins=\"true\" " +
                                                         "find_minimal_protein_list=\"true\" " +
                                                         "remove_subset_proteins=\"true\" " +
+                                                        "keep_unmapped_peptides=\"true\" " +
                                                         "shared_peptides=\"AssignedToBestProtein\" />\n" +
                                                         "    </peptide_settings>\n" +
                                                         "  </settings_summary>\n" +
                                                         "</srm_settings>";
-            AssertEx.DeserializeNoError<SrmDocument>(proteinAssociationSerialized, DocumentFormat.PROTEIN_GROUPS);
+            AssertEx.DeserializeNoError<SrmDocument>(proteinAssociationSerialized, DocumentFormat.KEEP_UNMAPPED_PEPTIDES);
 
             var doc = AssertEx.Deserialize<SrmDocument>(proteinAssociationSerialized);
             var parsimonySettings = doc.Settings.PeptideSettings.ProteinAssociationSettings;
@@ -1164,6 +1165,7 @@ namespace pwiz.SkylineTest
             Assert.AreEqual(true, parsimonySettings.GroupProteins);
             Assert.AreEqual(true, parsimonySettings.FindMinimalProteinList);
             Assert.AreEqual(true, parsimonySettings.RemoveSubsetProteins);
+            Assert.AreEqual(true, parsimonySettings.KeepUnmappedPeptides);
             Assert.AreEqual(ProteinAssociation.SharedPeptides.AssignedToBestProtein, parsimonySettings.SharedPeptides);
 
             // test ProteinAssociationSettings removed from formats before 22_13

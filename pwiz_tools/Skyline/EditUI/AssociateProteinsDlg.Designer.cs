@@ -50,8 +50,12 @@
             this.cbRemoveSubsetProteins = new System.Windows.Forms.CheckBox();
             this.lblRemoveSubsetProteins = new System.Windows.Forms.Label();
             this.lnkHelpRemoveSubsetProteins = new System.Windows.Forms.LinkLabel();
+            this.cbKeepUnmappedPeptides = new System.Windows.Forms.CheckBox();
+            this.lblKeepUnmappedPeptides = new System.Windows.Forms.Label();
+            this.lblDroppingDecoyPeptidesWarning = new System.Windows.Forms.Label();
             this.lblMinPeptides = new System.Windows.Forms.Label();
             this.numMinPeptides = new System.Windows.Forms.NumericUpDown();
+            this.lblDroppingPeptidesWarning = new System.Windows.Forms.Label();
             this.rbFASTA = new System.Windows.Forms.RadioButton();
             this.rbBackgroundProteome = new System.Windows.Forms.RadioButton();
             this.comboBackgroundProteome = new System.Windows.Forms.ComboBox();
@@ -135,8 +139,12 @@
             this.flowLayoutPanel.Controls.Add(this.cbRemoveSubsetProteins);
             this.flowLayoutPanel.Controls.Add(this.lblRemoveSubsetProteins);
             this.flowLayoutPanel.Controls.Add(this.lnkHelpRemoveSubsetProteins);
+            this.flowLayoutPanel.Controls.Add(this.cbKeepUnmappedPeptides);
+            this.flowLayoutPanel.Controls.Add(this.lblKeepUnmappedPeptides);
+            this.flowLayoutPanel.Controls.Add(this.lblDroppingDecoyPeptidesWarning);
             this.flowLayoutPanel.Controls.Add(this.lblMinPeptides);
             this.flowLayoutPanel.Controls.Add(this.numMinPeptides);
+            this.flowLayoutPanel.Controls.Add(this.lblDroppingPeptidesWarning);
             resources.ApplyResources(this.flowLayoutPanel, "flowLayoutPanel");
             this.flowLayoutPanel.Name = "flowLayoutPanel";
             // 
@@ -214,6 +222,27 @@
             this.lnkHelpRemoveSubsetProteins.TabStop = true;
             this.lnkHelpRemoveSubsetProteins.LinkClicked += new System.Windows.Forms.LinkLabelLinkClickedEventHandler(this.lnkHelp_LinkClicked);
             // 
+            // cbKeepUnmappedPeptides
+            // 
+            resources.ApplyResources(this.cbKeepUnmappedPeptides, "cbKeepUnmappedPeptides");
+            this.cbKeepUnmappedPeptides.Name = "cbKeepUnmappedPeptides";
+            this.cbKeepUnmappedPeptides.UseVisualStyleBackColor = true;
+            this.cbKeepUnmappedPeptides.CheckedChanged += new System.EventHandler(this.checkBoxParsimony_CheckedChanged);
+            // 
+            // lblKeepUnmappedPeptides
+            // 
+            resources.ApplyResources(this.lblKeepUnmappedPeptides, "lblKeepUnmappedPeptides");
+            this.lblKeepUnmappedPeptides.Name = "lblKeepUnmappedPeptides";
+            this.helpTip.SetToolTip(this.lblKeepUnmappedPeptides, resources.GetString("lblKeepUnmappedPeptides.ToolTip"));
+            this.lblKeepUnmappedPeptides.Click += new System.EventHandler(this.lblKeepUnmappedPeptides_Click);
+            // 
+            // lblDroppingDecoyPeptidesWarning
+            // 
+            resources.ApplyResources(this.lblDroppingDecoyPeptidesWarning, "lblDroppingDecoyPeptidesWarning");
+            this.flowLayoutPanel.SetFlowBreak(this.lblDroppingDecoyPeptidesWarning, true);
+            this.lblDroppingDecoyPeptidesWarning.ForeColor = System.Drawing.Color.Red;
+            this.lblDroppingDecoyPeptidesWarning.Name = "lblDroppingDecoyPeptidesWarning";
+            // 
             // lblMinPeptides
             // 
             resources.ApplyResources(this.lblMinPeptides, "lblMinPeptides");
@@ -224,7 +253,6 @@
             // 
             // numMinPeptides
             // 
-            this.flowLayoutPanel.SetFlowBreak(this.numMinPeptides, true);
             resources.ApplyResources(this.numMinPeptides, "numMinPeptides");
             this.numMinPeptides.Maximum = new decimal(new int[] {
             10000,
@@ -245,6 +273,13 @@
             this.numMinPeptides.ValueChanged += new System.EventHandler(this.numMinPeptides_ValueChanged);
             this.numMinPeptides.Enter += new System.EventHandler(this.numMinPeptides_Enter);
             this.numMinPeptides.Leave += new System.EventHandler(this.numMinPeptides_Leave);
+            // 
+            // lblDroppingPeptidesWarning
+            // 
+            resources.ApplyResources(this.lblDroppingPeptidesWarning, "lblDroppingPeptidesWarning");
+            this.flowLayoutPanel.SetFlowBreak(this.lblDroppingPeptidesWarning, true);
+            this.lblDroppingPeptidesWarning.ForeColor = System.Drawing.Color.Red;
+            this.lblDroppingPeptidesWarning.Name = "lblDroppingPeptidesWarning";
             // 
             // rbFASTA
             // 
@@ -474,5 +509,9 @@
         private System.Windows.Forms.Label lblRemoveSubsetProteins;
         private System.Windows.Forms.ToolTip helpTip;
         private System.Windows.Forms.Panel proteinSourcePanel;
+        private System.Windows.Forms.CheckBox cbKeepUnmappedPeptides;
+        private System.Windows.Forms.Label lblKeepUnmappedPeptides;
+        private System.Windows.Forms.Label lblDroppingDecoyPeptidesWarning;
+        private System.Windows.Forms.Label lblDroppingPeptidesWarning;
     }
 }

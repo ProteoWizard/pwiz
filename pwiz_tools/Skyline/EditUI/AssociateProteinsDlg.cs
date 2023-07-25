@@ -95,6 +95,7 @@ namespace pwiz.Skyline.EditUI
             GroupProteins = peptideSettings.ProteinAssociationSettings?.GroupProteins ?? false;
             FindMinimalProteinList = peptideSettings.ProteinAssociationSettings?.FindMinimalProteinList ?? false;
             RemoveSubsetProteins = peptideSettings.ProteinAssociationSettings?.RemoveSubsetProteins ?? false;
+            KeepUnmappedPeptides = peptideSettings.ProteinAssociationSettings?.KeepUnmappedPeptides ?? false;
             SelectedSharedPeptides = peptideSettings.ProteinAssociationSettings?.SharedPeptides ?? ProteinAssociation.SharedPeptides.DuplicatedBetweenProteins;
             MinPeptidesPerProtein = peptideSettings.ProteinAssociationSettings?.MinPeptidesPerProtein ?? 1;
             comboSharedPeptides.SelectedIndexChanged += comboParsimony_SelectedIndexChanged;
@@ -218,6 +219,11 @@ namespace pwiz.Skyline.EditUI
             get => cbRemoveSubsetProteins.Checked;
             set => cbRemoveSubsetProteins.Checked = value;
         }
+        public bool KeepUnmappedPeptides
+        {
+            get => cbKeepUnmappedPeptides.Checked;
+            set => cbKeepUnmappedPeptides.Checked = value;
+        }
 
         public ProteinAssociation.SharedPeptides SelectedSharedPeptides
         {
@@ -251,11 +257,14 @@ namespace pwiz.Skyline.EditUI
             var removeSubsetProteins = RemoveSubsetProteins;
             var selectedSharedPeptides = SelectedSharedPeptides;
             var minPeptidesPerProtein = MinPeptidesPerProtein;
+            var keepUnmappedPeptides = KeepUnmappedPeptides;
 
             using (var longWaitDlg = new LongWaitDlg())
             {
                 longWaitDlg.PerformWork(this, 1000,
-                    broker => _proteinAssociation.ApplyParsimonyOptions(groupProteins, findMinimalProteinList, removeSubsetProteins, selectedSharedPeptides, minPeptidesPerProtein, broker));
+                    broker => _proteinAssociation.ApplyParsimonyOptions(groupProteins, findMinimalProteinList,
+                        removeSubsetProteins, selectedSharedPeptides, minPeptidesPerProtein, keepUnmappedPeptides,
+                        broker));
                 if (longWaitDlg.IsCanceled)
                     return;
             }
@@ -457,6 +466,17 @@ namespace pwiz.Skyline.EditUI
                 });
                 if (longWaitDlg.IsCanceled)
                     return null;
+
+                lblDroppingDecoyPeptidesWarning.Text = string.Empty; // Visible = false would cancel the FlowBreak
+                lblDroppingPeptidesWarning.Text = string.Empty; // Visible = false would cancel the FlowBreak
+                if (result.MeasuredResults != null)
+                {
+                    bool dropDecoysPeptides = !cbKeepUnmappedPeptides.Checked && result.PeptideGroups.Any(pg => pg.IsDecoy);
+                    if (dropDecoysPeptides)
+                        lblDroppingDecoyPeptidesWarning.Text = " (dropping decoy peptides may lose information about trained models)";
+                    if (MinPeptidesPerProtein > 1)
+                        lblDroppingPeptidesWarning.Text = " (dropping peptides may lose information about trained models)";
+                }
             }
             return result;
         }
@@ -625,6 +645,11 @@ namespace pwiz.Skyline.EditUI
         private void lblRemoveSubsetProtein_Click(object sender, EventArgs e)
         {
             cbRemoveSubsetProteins.Checked = !cbRemoveSubsetProteins.Checked;
+        }
+
+        private void lblKeepUnmappedPeptides_Click(object sender, EventArgs e)
+        {
+            cbKeepUnmappedPeptides.Checked = !cbKeepUnmappedPeptides.Checked;
         }
 
         private void AssociateProteinsDlg_HelpButtonClicked(object sender, EventArgs e)

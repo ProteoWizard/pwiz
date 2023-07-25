@@ -213,6 +213,9 @@ namespace pwiz.Skyline.Model.Proteome
             [Track(ignoreDefaultParent: true)]
             public int MinPeptidesPerProtein { get; private set; }
 
+            [Track(ignoreDefaultParent: true)]
+            public bool KeepUnmappedPeptides { get; private set; }
+
             #region object overrides
             public bool Equals(ParsimonySettings obj)
             {
@@ -222,7 +225,8 @@ namespace pwiz.Skyline.Model.Proteome
                        obj.FindMinimalProteinList == FindMinimalProteinList &&
                        obj.RemoveSubsetProteins == RemoveSubsetProteins &&
                        obj.SharedPeptides == SharedPeptides &&
-                       obj.MinPeptidesPerProtein == MinPeptidesPerProtein;
+                       obj.MinPeptidesPerProtein == MinPeptidesPerProtein &&
+                       obj.KeepUnmappedPeptides == KeepUnmappedPeptides;
             }
 
             public override bool Equals(object obj)
@@ -242,6 +246,7 @@ namespace pwiz.Skyline.Model.Proteome
                     result = (result * 397) ^ FindMinimalProteinList.GetHashCode();
                     result = (result * 397) ^ RemoveSubsetProteins.GetHashCode();
                     result = (result * 397) ^ SharedPeptides.GetHashCode();
+                    result = (result * 397) ^ KeepUnmappedPeptides.GetHashCode();
                     return result;
                 }
             }
@@ -263,7 +268,8 @@ namespace pwiz.Skyline.Model.Proteome
                 group_proteins,
                 find_minimal_protein_list,
                 remove_subset_proteins,
-                shared_peptides
+                shared_peptides,
+                keep_unmapped_peptides
             }
 
             public XmlSchema GetSchema()
@@ -278,6 +284,7 @@ namespace pwiz.Skyline.Model.Proteome
                 FindMinimalProteinList = reader.GetBoolAttribute(Attr.find_minimal_protein_list);
                 RemoveSubsetProteins = reader.GetBoolAttribute(Attr.remove_subset_proteins);
                 SharedPeptides = reader.GetEnumAttribute(Attr.shared_peptides, SharedPeptides.DuplicatedBetweenProteins);
+                KeepUnmappedPeptides = reader.GetBoolAttribute(Attr.keep_unmapped_peptides);
 
                 bool empty = reader.IsEmptyElement;
                 reader.Read();
@@ -296,6 +303,7 @@ namespace pwiz.Skyline.Model.Proteome
                 writer.WriteAttribute(Attr.find_minimal_protein_list, FindMinimalProteinList, false);
                 writer.WriteAttribute(Attr.remove_subset_proteins, RemoveSubsetProteins, false);
                 writer.WriteAttribute(Attr.shared_peptides, SharedPeptides, SharedPeptides.DuplicatedBetweenProteins);
+                writer.WriteAttribute(Attr.keep_unmapped_peptides, KeepUnmappedPeptides, false);
             }
             private ParsimonySettings()
             {
@@ -320,6 +328,7 @@ namespace pwiz.Skyline.Model.Proteome
             bool RemoveSubsetProteins { get; }
             SharedPeptides SharedPeptides { get; }
             int MinPeptidesPerProtein { get; }
+            bool KeepUnmappedPeptides { get; }
             ParsimonySettings ParsimonySettings { get; }
 
             int FinalProteinCount { get; }
@@ -347,7 +356,8 @@ namespace pwiz.Skyline.Model.Proteome
                     RemoveSubsetProteins = RemoveSubsetProteins,
                     SharedPeptides = SharedPeptides,
                     GroupProteins = GroupProteins,
-                    MinPeptidesPerProtein = MinPeptidesPerProtein
+                    MinPeptidesPerProtein = MinPeptidesPerProtein,
+                    KeepUnmappedPeptides = KeepUnmappedPeptides
                 };
             }
 
@@ -361,6 +371,7 @@ namespace pwiz.Skyline.Model.Proteome
             public bool RemoveSubsetProteins { get; set; }
             public SharedPeptides SharedPeptides { get; set; }
             public int MinPeptidesPerProtein { get; set; }
+            public bool KeepUnmappedPeptides { get; set; }
 
             public ParsimonySettings ParsimonySettings => new ParsimonySettings(GroupProteins, FindMinimalProteinList,
                 RemoveSubsetProteins, SharedPeptides, MinPeptidesPerProtein);
@@ -402,7 +413,8 @@ namespace pwiz.Skyline.Model.Proteome
             }
         }
 
-        public void ApplyParsimonyOptions(bool groupProteins, bool findMinimalProteinList, bool removeSubsetProteins, SharedPeptides sharedPeptides, int minPeptidesPerProtein, ILongWaitBroker broker)
+        public void ApplyParsimonyOptions(bool groupProteins, bool findMinimalProteinList, bool removeSubsetProteins,
+            SharedPeptides sharedPeptides, int minPeptidesPerProtein, bool keepUnmappedPeptides, ILongWaitBroker broker)
         {
             Dictionary<PeptideDocNode, List<IProteinRecord>> peptideToProteinGroups = _peptideToProteins;
 
@@ -429,6 +441,8 @@ namespace pwiz.Skyline.Model.Proteome
                 _finalResults = _results;
                 ParsimoniousProteins = AssociatedProteins;
             }
+
+            _finalResults.KeepUnmappedPeptides = keepUnmappedPeptides;
 
             if (broker.IsCanceled)
                 return;
@@ -805,24 +819,58 @@ namespace pwiz.Skyline.Model.Proteome
             var proteinAssociationsList = ParsimoniousProteins.OrderBy(kvp => kvp.Key.RecordIndex).ToList();
 
             var newPeptideGroups = new List<PeptideGroupDocNode>(); // all groups that will be added in the new document
-            //var assignedPeptides = proteinAssocationsList.SelectMany(kvp => kvp.Value).ToHashSet();
+
+            var unmappedPeptideNodes = _peptideToPath.SelectMany(kvp => kvp.Value).Where(p => !p.IsDecoy).ToHashSet();
+            unmappedPeptideNodes.ExceptWith(ParsimoniousProteins.Values.SelectMany(pag => pag.Peptides));
 
             // Modifies and adds old groups that still contain unmatched peptides to newPeptideGroups
             foreach (var nodePepGroup in current.MoleculeGroups)
             {
+                var peptideDocNodes = nodePepGroup.Children.Where(node => node is PeptideDocNode).Cast<PeptideDocNode>().ToList();
+
+                //if (nodePepGroup.Name == "Unmapped Peptides")
+                //    continue;
+
+                //bool isDecoyList = nodePepGroup.IsDecoy;
+
+                // If asked to keep unmapped peptides:
+                // - Move unmapped peptides from a FastaSequence node to "Unmapped Peptides"
+                // - Keep peptide lists that contain unmapped peptides
+                if (FinalResults.KeepUnmappedPeptides || _document.MeasuredResults != null)
+                {
+                    /*if (nodePepGroup.IsProtein)
+                    {
+                        var unmappedPeptides = peptideDocNodes.Where(node => !_peptideToProteins.Contains(kvp => kvp.Key.Target == node.Target));
+                        unmappedPeptideNodes.AddRange(unmappedPeptides);
+                        continue;
+                    }
+                    else */if (nodePepGroup.IsDecoy || (nodePepGroup.IsProteomic && nodePepGroup.IsPeptideList))
+                    {
+                        var unmappedPeptideIndexes = peptideDocNodes
+                            .Where(node => !_peptideToProteins.Contains(kvp => kvp.Key.Target == node.Target))
+                            .Select(node => node.Peptide.GlobalIndex);
+                        var newPeptideList = nodePepGroup.RemoveAllBut(unmappedPeptideIndexes.ToList()) as PeptideGroupDocNode;
+                        newPeptideGroups.Add(newPeptideList);
+                        continue;
+                    }
+                }
+                else if (nodePepGroup.IsDecoy && _document.MeasuredResults == null)
+                {
+                    // drop decoy peptides whose source peptides were dropped
+                    var unmappedPeptideIndexes = peptideDocNodes
+                        .Where(node => !_peptideToProteins.Contains(kvp => kvp.Key.SourceModifiedTarget == node.Target))
+                        .Select(node => node.Peptide.GlobalIndex);
+                    var newPeptideList = nodePepGroup.RemoveAllBut(unmappedPeptideIndexes.ToList()) as PeptideGroupDocNode;
+                    newPeptideGroups.Add(newPeptideList);
+                    continue;
+                }
+
                 // Get non-peptide children
                 var nonPeptideNodes = nodePepGroup.Children.Where(node => (node as PeptideDocNode)?.Peptide.Target.IsProteomic == false).ToList();
 
                 // Ignore old groups with no non-peptide children
                 if (nonPeptideNodes.Count == 0)
                     continue;
-
-                // Adds all pre-existing proteins to list of groups that will be added in the new document
-                /*if (nodePepGroup.PeptideGroup is FastaSequence) 
-                {
-                    newPeptideGroups.Add(nodePepGroup);
-                    continue;
-                }*/
 
                 // Not a protein
                 var newNodePepGroup = nonPeptideNodes;
@@ -838,6 +886,12 @@ namespace pwiz.Skyline.Model.Proteome
                 {
                     newPeptideGroups.Add((PeptideGroupDocNode)nodePepGroup.ChangeChildren(newNodePepGroup.ToArray()));
                 }
+            }
+
+            if (unmappedPeptideNodes.Count > 0)
+            {
+                var unmappedPeptideList = new PeptideGroupDocNode(new PeptideGroup(), Annotations.EMPTY, "Unmapped Peptides", string.Empty, unmappedPeptideNodes.ToArray());
+                newPeptideGroups.Add(unmappedPeptideList);
             }
 
             int totalPeptideGroups = newPeptideGroups.Count + proteinAssociationsList.Count;

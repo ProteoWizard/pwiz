@@ -2157,7 +2157,7 @@ namespace pwiz.Skyline
                     commandArgs.AssociateProteinsRemoveSubsetProteins.GetValueOrDefault(),
                     commandArgs.AssociateProteinsSharedPeptides.GetValueOrDefault(),
                     commandArgs.AssociateProteinsMinPeptidesPerProtein.GetValueOrDefault(),
-                    progressMonitor);
+                    commandArgs.AssociateProteinsKeepUnmappedPeptides.GetValueOrDefault(), progressMonitor);
                 Settings.Default.LastProteinAssociationFastaFilepath = fastaPath;
                 Settings.Default.Save();
                 ModifyDocument(doc => proteinAssociation.CreateDocTree(doc, progressMonitor), AuditLogEntry.SettingsLogFunction);
