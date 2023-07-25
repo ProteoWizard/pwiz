@@ -33,14 +33,14 @@ namespace pwiz.PanoramaClient
         {
             this.components = new System.ComponentModel.Container();
             System.ComponentModel.ComponentResourceManager resources = new System.ComponentModel.ComponentResourceManager(typeof(PanoramaFilePicker));
-            this.label3 = new System.Windows.Forms.Label();
-            this.imageList1 = new System.Windows.Forms.ImageList(this.components);
-            this.imageList2 = new System.Windows.Forms.ImageList(this.components);
+            this.folderLabel = new System.Windows.Forms.Label();
+            this.treeViewIcons = new System.Windows.Forms.ImageList(this.components);
+            this.fileIcons = new System.Windows.Forms.ImageList(this.components);
             this.versionOptions = new System.Windows.Forms.ComboBox();
             this.open = new System.Windows.Forms.Button();
             this.cancel = new System.Windows.Forms.Button();
             this.versionLabel = new System.Windows.Forms.Label();
-            this.splitContainer1 = new System.Windows.Forms.SplitContainer();
+            this.browserSplitContainer = new System.Windows.Forms.SplitContainer();
             this.noFiles = new System.Windows.Forms.Label();
             this.listView = new System.Windows.Forms.ListView();
             this.colName = ((System.Windows.Forms.ColumnHeader)(new System.Windows.Forms.ColumnHeader()));
@@ -48,42 +48,42 @@ namespace pwiz.PanoramaClient
             this.colVersions = ((System.Windows.Forms.ColumnHeader)(new System.Windows.Forms.ColumnHeader()));
             this.colReplacedBy = ((System.Windows.Forms.ColumnHeader)(new System.Windows.Forms.ColumnHeader()));
             this.colCreated = ((System.Windows.Forms.ColumnHeader)(new System.Windows.Forms.ColumnHeader()));
-            this.panel1 = new System.Windows.Forms.Panel();
-            this.toolStrip = new System.Windows.Forms.ToolStrip();
+            this.browserPanel = new System.Windows.Forms.Panel();
+            this.navToolStrip = new System.Windows.Forms.ToolStrip();
             this.back = new System.Windows.Forms.ToolStripButton();
             this.forward = new System.Windows.Forms.ToolStripButton();
             this.up = new System.Windows.Forms.ToolStripButton();
             this.urlLink = new System.Windows.Forms.LinkLabel();
             this.contextMenuStrip = new System.Windows.Forms.ContextMenuStrip(this.components);
             this.copyLinkAddressToolStripMenuItem = new System.Windows.Forms.ToolStripMenuItem();
-            ((System.ComponentModel.ISupportInitialize)(this.splitContainer1)).BeginInit();
-            this.splitContainer1.Panel2.SuspendLayout();
-            this.splitContainer1.SuspendLayout();
-            this.panel1.SuspendLayout();
-            this.toolStrip.SuspendLayout();
+            ((System.ComponentModel.ISupportInitialize)(this.browserSplitContainer)).BeginInit();
+            this.browserSplitContainer.Panel2.SuspendLayout();
+            this.browserSplitContainer.SuspendLayout();
+            this.browserPanel.SuspendLayout();
+            this.navToolStrip.SuspendLayout();
             this.contextMenuStrip.SuspendLayout();
             this.SuspendLayout();
             // 
-            // label3
+            // folderLabel
             // 
-            resources.ApplyResources(this.label3, "label3");
-            this.label3.Name = "label3";
+            resources.ApplyResources(this.folderLabel, "folderLabel");
+            this.folderLabel.Name = "folderLabel";
             // 
-            // imageList1
+            // treeViewIcons
             // 
-            this.imageList1.ImageStream = ((System.Windows.Forms.ImageListStreamer)(resources.GetObject("imageList1.ImageStream")));
-            this.imageList1.TransparentColor = System.Drawing.Color.Transparent;
-            this.imageList1.Images.SetKeyName(0, "Panorama.bmp");
-            this.imageList1.Images.SetKeyName(1, "LabKey.bmp");
-            this.imageList1.Images.SetKeyName(2, "ChromLib.bmp");
-            this.imageList1.Images.SetKeyName(3, "Folder.png");
+            this.treeViewIcons.ImageStream = ((System.Windows.Forms.ImageListStreamer)(resources.GetObject("treeViewIcons.ImageStream")));
+            this.treeViewIcons.TransparentColor = System.Drawing.Color.Transparent;
+            this.treeViewIcons.Images.SetKeyName(0, "Panorama.bmp");
+            this.treeViewIcons.Images.SetKeyName(1, "LabKey.bmp");
+            this.treeViewIcons.Images.SetKeyName(2, "ChromLib.bmp");
+            this.treeViewIcons.Images.SetKeyName(3, "Folder.png");
             // 
-            // imageList2
+            // fileIcons
             // 
-            this.imageList2.ImageStream = ((System.Windows.Forms.ImageListStreamer)(resources.GetObject("imageList2.ImageStream")));
-            this.imageList2.TransparentColor = System.Drawing.Color.Transparent;
-            this.imageList2.Images.SetKeyName(0, "File.png");
-            this.imageList2.Images.SetKeyName(1, "SkylineDoc.ico");
+            this.fileIcons.ImageStream = ((System.Windows.Forms.ImageListStreamer)(resources.GetObject("fileIcons.ImageStream")));
+            this.fileIcons.TransparentColor = System.Drawing.Color.Transparent;
+            this.fileIcons.Images.SetKeyName(0, "File.png");
+            this.fileIcons.Images.SetKeyName(1, "SkylineDoc.ico");
             // 
             // versionOptions
             // 
@@ -106,6 +106,7 @@ namespace pwiz.PanoramaClient
             // cancel
             // 
             resources.ApplyResources(this.cancel, "cancel");
+            this.cancel.DialogResult = System.Windows.Forms.DialogResult.Cancel;
             this.cancel.Name = "cancel";
             this.cancel.UseVisualStyleBackColor = true;
             this.cancel.Click += new System.EventHandler(this.Cancel_Click);
@@ -115,15 +116,15 @@ namespace pwiz.PanoramaClient
             resources.ApplyResources(this.versionLabel, "versionLabel");
             this.versionLabel.Name = "versionLabel";
             // 
-            // splitContainer1
+            // browserSplitContainer
             // 
-            resources.ApplyResources(this.splitContainer1, "splitContainer1");
-            this.splitContainer1.Name = "splitContainer1";
+            resources.ApplyResources(this.browserSplitContainer, "browserSplitContainer");
+            this.browserSplitContainer.Name = "browserSplitContainer";
             // 
-            // splitContainer1.Panel2
+            // browserSplitContainer.Panel2
             // 
-            this.splitContainer1.Panel2.Controls.Add(this.noFiles);
-            this.splitContainer1.Panel2.Controls.Add(this.listView);
+            this.browserSplitContainer.Panel2.Controls.Add(this.noFiles);
+            this.browserSplitContainer.Panel2.Controls.Add(this.listView);
             // 
             // noFiles
             // 
@@ -143,12 +144,12 @@ namespace pwiz.PanoramaClient
             this.listView.HideSelection = false;
             this.listView.Name = "listView";
             this.listView.ShowItemToolTips = true;
-            this.listView.SmallImageList = this.imageList2;
+            this.listView.SmallImageList = this.fileIcons;
             this.listView.UseCompatibleStateImageBehavior = false;
             this.listView.View = System.Windows.Forms.View.Details;
-            this.listView.ColumnClick += new System.Windows.Forms.ColumnClickEventHandler(this.listView_ColumnClick);
-            this.listView.SizeChanged += new System.EventHandler(this.listView_SizeChanged);
-            this.listView.DoubleClick += new System.EventHandler(this.listView_DoubleClick);
+            this.listView.ColumnClick += new System.Windows.Forms.ColumnClickEventHandler(this.ListView_ColumnClick);
+            this.listView.SizeChanged += new System.EventHandler(this.ListView_SizeChanged);
+            this.listView.DoubleClick += new System.EventHandler(this.ListView_DoubleClick);
             // 
             // colName
             // 
@@ -170,22 +171,22 @@ namespace pwiz.PanoramaClient
             // 
             resources.ApplyResources(this.colCreated, "colCreated");
             // 
-            // panel1
+            // browserPanel
             // 
-            resources.ApplyResources(this.panel1, "panel1");
-            this.panel1.Controls.Add(this.splitContainer1);
-            this.panel1.Name = "panel1";
+            resources.ApplyResources(this.browserPanel, "browserPanel");
+            this.browserPanel.Controls.Add(this.browserSplitContainer);
+            this.browserPanel.Name = "browserPanel";
             // 
-            // toolStrip
+            // navToolStrip
             // 
-            this.toolStrip.BackColor = System.Drawing.Color.Transparent;
-            resources.ApplyResources(this.toolStrip, "toolStrip");
-            this.toolStrip.ImageScalingSize = new System.Drawing.Size(24, 24);
-            this.toolStrip.Items.AddRange(new System.Windows.Forms.ToolStripItem[] {
+            this.navToolStrip.BackColor = System.Drawing.Color.Transparent;
+            resources.ApplyResources(this.navToolStrip, "navToolStrip");
+            this.navToolStrip.ImageScalingSize = new System.Drawing.Size(24, 24);
+            this.navToolStrip.Items.AddRange(new System.Windows.Forms.ToolStripItem[] {
             this.back,
             this.forward,
             this.up});
-            this.toolStrip.Name = "toolStrip";
+            this.navToolStrip.Name = "navToolStrip";
             // 
             // back
             // 
@@ -214,7 +215,7 @@ namespace pwiz.PanoramaClient
             this.urlLink.ContextMenuStrip = this.contextMenuStrip;
             this.urlLink.Name = "urlLink";
             this.urlLink.TabStop = true;
-            this.urlLink.LinkClicked += new System.Windows.Forms.LinkLabelLinkClickedEventHandler(this.urlLink_LinkClicked);
+            this.urlLink.LinkClicked += new System.Windows.Forms.LinkLabelLinkClickedEventHandler(this.UrlLink_LinkClicked);
             // 
             // contextMenuStrip
             // 
@@ -227,7 +228,7 @@ namespace pwiz.PanoramaClient
             // 
             this.copyLinkAddressToolStripMenuItem.Name = "copyLinkAddressToolStripMenuItem";
             resources.ApplyResources(this.copyLinkAddressToolStripMenuItem, "copyLinkAddressToolStripMenuItem");
-            this.copyLinkAddressToolStripMenuItem.Click += new System.EventHandler(this.copyLinkAddressToolStripMenuItem_Click);
+            this.copyLinkAddressToolStripMenuItem.Click += new System.EventHandler(this.CopyLinkAddressToolStripMenuItem_Click);
             // 
             // PanoramaFilePicker
             // 
@@ -236,13 +237,13 @@ namespace pwiz.PanoramaClient
             this.AutoScaleMode = System.Windows.Forms.AutoScaleMode.Font;
             this.CancelButton = this.cancel;
             this.Controls.Add(this.urlLink);
-            this.Controls.Add(this.toolStrip);
-            this.Controls.Add(this.panel1);
+            this.Controls.Add(this.navToolStrip);
+            this.Controls.Add(this.browserPanel);
             this.Controls.Add(this.versionLabel);
             this.Controls.Add(this.cancel);
             this.Controls.Add(this.open);
             this.Controls.Add(this.versionOptions);
-            this.Controls.Add(this.label3);
+            this.Controls.Add(this.folderLabel);
             this.MaximizeBox = false;
             this.MinimizeBox = false;
             this.Name = "PanoramaFilePicker";
@@ -250,13 +251,13 @@ namespace pwiz.PanoramaClient
             this.FormClosing += new System.Windows.Forms.FormClosingEventHandler(this.PanoramaFilePicker_FormClosing);
             this.Load += new System.EventHandler(this.FilePicker_Load);
             this.SizeChanged += new System.EventHandler(this.PanoramaFilePicker_SizeChanged);
-            this.splitContainer1.Panel2.ResumeLayout(false);
-            this.splitContainer1.Panel2.PerformLayout();
-            ((System.ComponentModel.ISupportInitialize)(this.splitContainer1)).EndInit();
-            this.splitContainer1.ResumeLayout(false);
-            this.panel1.ResumeLayout(false);
-            this.toolStrip.ResumeLayout(false);
-            this.toolStrip.PerformLayout();
+            this.browserSplitContainer.Panel2.ResumeLayout(false);
+            this.browserSplitContainer.Panel2.PerformLayout();
+            ((System.ComponentModel.ISupportInitialize)(this.browserSplitContainer)).EndInit();
+            this.browserSplitContainer.ResumeLayout(false);
+            this.browserPanel.ResumeLayout(false);
+            this.navToolStrip.ResumeLayout(false);
+            this.navToolStrip.PerformLayout();
             this.contextMenuStrip.ResumeLayout(false);
             this.ResumeLayout(false);
             this.PerformLayout();
@@ -264,17 +265,17 @@ namespace pwiz.PanoramaClient
         }
 
         #endregion
-        private Label label3;
-        private ImageList imageList1;
-        private ImageList imageList2;
+        private Label folderLabel;
+        private ImageList treeViewIcons;
+        private ImageList fileIcons;
         private ComboBox versionOptions;
         private Button open;
         private Button cancel;
         private Label versionLabel;
-        private SplitContainer splitContainer1;
+        private SplitContainer browserSplitContainer;
         private ListView listView;
-        private Panel panel1;
-        private ToolStrip toolStrip;
+        private Panel browserPanel;
+        private ToolStrip navToolStrip;
         private ToolStripButton back;
         private ToolStripButton forward;
         private ToolStripButton up;

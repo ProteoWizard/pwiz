@@ -951,6 +951,12 @@ namespace pwiz.Skyline
                 state = Settings.Default.PanoramaTreeState;
             }
 
+            // var dp = new PanoramaDirectoryPicker(panoramaServers, string.Empty);
+            // dp.ShowDialog();
+            // var selected = dp.SelectedPath;
+            // var fp = new PanoramaFilePicker(panoramaServers, string.Empty, true, selected);
+            // fp.InitializeDialog();
+            // fp.ShowDialog();
             try
             {
                 using var dlg = new PanoramaFilePicker(panoramaServers, state);
@@ -966,13 +972,13 @@ namespace pwiz.Skyline
                 }
                 if (dlg.ShowDialog() != DialogResult.Cancel)
                 {
-                    Settings.Default.PanoramaTreeState = dlg.TreeState;
+                    Settings.Default.PanoramaTreeState = dlg.FolderBrowser.TreeState;
                     var folderPath = string.Empty;
                     if (!string.IsNullOrEmpty(Settings.Default.PanoramaLocalSavePath))
                     {
                         folderPath = Settings.Default.PanoramaLocalSavePath;
                     }
-                    var curServer = dlg.ActiveServer;
+                    var curServer = dlg.FolderBrowser.ActiveServer;
 
                     var downloadPath = string.Empty;
                     var extension = dlg.FileName.EndsWith(SrmDocumentSharing.EXT) ? SrmDocumentSharing.EXT : SrmDocument.EXT;
@@ -1013,7 +1019,7 @@ namespace pwiz.Skyline
                         }
                     }
                 }
-                Settings.Default.PanoramaTreeState = dlg.TreeState;
+                Settings.Default.PanoramaTreeState = dlg.FolderBrowser.TreeState;
             }
             catch (Exception e)
             {

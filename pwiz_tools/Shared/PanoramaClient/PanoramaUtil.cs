@@ -38,6 +38,7 @@ namespace pwiz.PanoramaClient
         public const string LABKEY_CTX = "/labkey/";
         public const string ENSURE_LOGIN_PATH = "security/home/ensureLogin.view";
         public const string WEBDAV = @"_webdav";
+        public const string WEBDAV_W_SLASH = WEBDAV + @"/";
 
         public static Uri ServerNameToUri(string serverName)
         {

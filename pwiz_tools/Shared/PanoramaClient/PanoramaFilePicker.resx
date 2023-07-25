@@ -118,100 +118,100 @@
     <value>System.Resources.ResXResourceWriter, System.Windows.Forms, Version=4.0.0.0, Culture=neutral, PublicKeyToken=b77a5c561934e089</value>
   </resheader>
   <assembly alias="mscorlib" name="mscorlib, Version=4.0.0.0, Culture=neutral, PublicKeyToken=b77a5c561934e089" />
-  <data name="label3.AutoSize" type="System.Boolean, mscorlib">
+  <data name="folderLabel.AutoSize" type="System.Boolean, mscorlib">
     <value>True</value>
   </data>
   <assembly alias="System.Drawing" name="System.Drawing, Version=4.0.0.0, Culture=neutral, PublicKeyToken=b03f5f7f11d50a3a" />
-  <data name="label3.Location" type="System.Drawing.Point, System.Drawing">
+  <data name="folderLabel.Location" type="System.Drawing.Point, System.Drawing">
     <value>7, 36</value>
   </data>
-  <data name="label3.Size" type="System.Drawing.Size, System.Drawing">
+  <data name="folderLabel.Size" type="System.Drawing.Size, System.Drawing">
     <value>81, 13</value>
   </data>
-  <data name="label3.TabIndex" type="System.Int32, mscorlib">
+  <data name="folderLabel.TabIndex" type="System.Int32, mscorlib">
     <value>0</value>
   </data>
-  <data name="label3.Text" xml:space="preserve">
+  <data name="folderLabel.Text" xml:space="preserve">
     <value>&amp;Remote folders:</value>
   </data>
-  <data name="&gt;&gt;label3.Name" xml:space="preserve">
-    <value>label3</value>
+  <data name="&gt;&gt;folderLabel.Name" xml:space="preserve">
+    <value>folderLabel</value>
   </data>
-  <data name="&gt;&gt;label3.Type" xml:space="preserve">
+  <data name="&gt;&gt;folderLabel.Type" xml:space="preserve">
     <value>System.Windows.Forms.Label, System.Windows.Forms, Version=4.0.0.0, Culture=neutral, PublicKeyToken=b77a5c561934e089</value>
   </data>
-  <data name="&gt;&gt;label3.Parent" xml:space="preserve">
+  <data name="&gt;&gt;folderLabel.Parent" xml:space="preserve">
     <value>$this</value>
   </data>
-  <data name="&gt;&gt;label3.ZOrder" xml:space="preserve">
+  <data name="&gt;&gt;folderLabel.ZOrder" xml:space="preserve">
     <value>8</value>
   </data>
-  <metadata name="imageList1.TrayLocation" type="System.Drawing.Point, System.Drawing, Version=4.0.0.0, Culture=neutral, PublicKeyToken=b03f5f7f11d50a3a">
+  <metadata name="treeViewIcons.TrayLocation" type="System.Drawing.Point, System.Drawing, Version=4.0.0.0, Culture=neutral, PublicKeyToken=b03f5f7f11d50a3a">
     <value>17, 17</value>
   </metadata>
-  <data name="imageList1.ImageStream" mimetype="application/x-microsoft.net.object.binary.base64">
+  <data name="treeViewIcons.ImageStream" mimetype="application/x-microsoft.net.object.binary.base64">
     <value>
         AAEAAAD/////AQAAAAAAAAAMAgAAAFdTeXN0ZW0uV2luZG93cy5Gb3JtcywgVmVyc2lvbj00LjAuMC4w
         LCBDdWx0dXJlPW5ldXRyYWwsIFB1YmxpY0tleVRva2VuPWI3N2E1YzU2MTkzNGUwODkFAQAAACZTeXN0
-        ZW0uV2luZG93cy5Gb3Jtcy5JbWFnZUxpc3RTdHJlYW1lcgEAAAAERGF0YQcCAgAAAAkDAAAADwMAAADw
-        CgAAAk1TRnQBSQFMAgEBBAIAAQUBAAEFARABAAEQAQAE/wEJAQAI/wFCAU0BNgEEBgABNgEEAgABKAMA
-        AUADAAEgAwABAQEAAQgGAAEIGAABgAIAAYADAAKAAQABgAMAAYABAAGAAQACgAIAA8ABAAHAAdwBwAEA
-        AfABygGmAQABMwUAATMBAAEzAQABMwEAAjMCAAMWAQADHAEAAyIBAAMpAQADVQEAA00BAANCAQADOQEA
-        AYABfAH/AQACUAH/AQABkwEAAdYBAAH/AewBzAEAAcYB1gHvAQAB1gLnAQABkAGpAa0CAAH/ATMDAAFm
-        AwABmQMAAcwCAAEzAwACMwIAATMBZgIAATMBmQIAATMBzAIAATMB/wIAAWYDAAFmATMCAAJmAgABZgGZ
-        AgABZgHMAgABZgH/AgABmQMAAZkBMwIAAZkBZgIAApkCAAGZAcwCAAGZAf8CAAHMAwABzAEzAgABzAFm
-        AgABzAGZAgACzAIAAcwB/wIAAf8BZgIAAf8BmQIAAf8BzAEAATMB/wIAAf8BAAEzAQABMwEAAWYBAAEz
-        AQABmQEAATMBAAHMAQABMwEAAf8BAAH/ATMCAAMzAQACMwFmAQACMwGZAQACMwHMAQACMwH/AQABMwFm
-        AgABMwFmATMBAAEzAmYBAAEzAWYBmQEAATMBZgHMAQABMwFmAf8BAAEzAZkCAAEzAZkBMwEAATMBmQFm
-        AQABMwKZAQABMwGZAcwBAAEzAZkB/wEAATMBzAIAATMBzAEzAQABMwHMAWYBAAEzAcwBmQEAATMCzAEA
-        ATMBzAH/AQABMwH/ATMBAAEzAf8BZgEAATMB/wGZAQABMwH/AcwBAAEzAv8BAAFmAwABZgEAATMBAAFm
-        AQABZgEAAWYBAAGZAQABZgEAAcwBAAFmAQAB/wEAAWYBMwIAAWYCMwEAAWYBMwFmAQABZgEzAZkBAAFm
-        ATMBzAEAAWYBMwH/AQACZgIAAmYBMwEAA2YBAAJmAZkBAAJmAcwBAAFmAZkCAAFmAZkBMwEAAWYBmQFm
-        AQABZgKZAQABZgGZAcwBAAFmAZkB/wEAAWYBzAIAAWYBzAEzAQABZgHMAZkBAAFmAswBAAFmAcwB/wEA
-        AWYB/wIAAWYB/wEzAQABZgH/AZkBAAFmAf8BzAEAAcwBAAH/AQAB/wEAAcwBAAKZAgABmQEzAZkBAAGZ
-        AQABmQEAAZkBAAHMAQABmQMAAZkCMwEAAZkBAAFmAQABmQEzAcwBAAGZAQAB/wEAAZkBZgIAAZkBZgEz
-        AQABmQEzAWYBAAGZAWYBmQEAAZkBZgHMAQABmQEzAf8BAAKZATMBAAKZAWYBAAOZAQACmQHMAQACmQH/
-        AQABmQHMAgABmQHMATMBAAFmAcwBZgEAAZkBzAGZAQABmQLMAQABmQHMAf8BAAGZAf8CAAGZAf8BMwEA
-        AZkBzAFmAQABmQH/AZkBAAGZAf8BzAEAAZkC/wEAAcwDAAGZAQABMwEAAcwBAAFmAQABzAEAAZkBAAHM
-        AQABzAEAAZkBMwIAAcwCMwEAAcwBMwFmAQABzAEzAZkBAAHMATMBzAEAAcwBMwH/AQABzAFmAgABzAFm
-        ATMBAAGZAmYBAAHMAWYBmQEAAcwBZgHMAQABmQFmAf8BAAHMAZkCAAHMAZkBMwEAAcwBmQFmAQABzAKZ
-        AQABzAGZAcwBAAHMAZkB/wEAAswCAALMATMBAALMAWYBAALMAZkBAAPMAQACzAH/AQABzAH/AgABzAH/
-        ATMBAAGZAf8BZgEAAcwB/wGZAQABzAH/AcwBAAHMAv8BAAHMAQABMwEAAf8BAAFmAQAB/wEAAZkBAAHM
-        ATMCAAH/AjMBAAH/ATMBZgEAAf8BMwGZAQAB/wEzAcwBAAH/ATMB/wEAAf8BZgIAAf8BZgEzAQABzAJm
-        AQAB/wFmAZkBAAH/AWYBzAEAAcwBZgH/AQAB/wGZAgAB/wGZATMBAAH/AZkBZgEAAf8CmQEAAf8BmQHM
-        AQAB/wGZAf8BAAH/AcwCAAH/AcwBMwEAAf8BzAFmAQAB/wHMAZkBAAH/AswBAAH/AcwB/wEAAv8BMwEA
-        AcwB/wFmAQAC/wGZAQAC/wHMAQACZgH/AQABZgH/AWYBAAFmAv8BAAH/AmYBAAH/AWYB/wEAAv8BZgEA
-        ASEBAAGlAQADXwEAA3cBAAOGAQADlgEAA8sBAAOyAQAD1wEAA90BAAPjAQAD6gEAA/EBAAP4AQAB8AH7
-        Af8BAAGkAqABAAOAAwAB/wIAAf8DAAL/AQAB/wMAAf8BAAH/AQAC/wIAA///AP8A/wD/AAUAD9UB3AL/
-        Ae0K7AEcAf8B9ARGAZQE/wEXBUYBbwEAAv8M9AH/BtUDtAGzAa0BswPVAdwB/wH3AbwK8AGSAesB/wIo
-        AYYBtgGUARcBFgH0ARcBJQEpBCgBUAEAAfQB8wrxAvIB8wG0A7MDtAOzAbQBswGtArQB3AH/AW0C8AEJ
-        AQcB9wG1Au8BBwEJAfIBBwHrAf8CmAG1AeYBrgFLAZQB4wElAZQBTwGXBJgBAAHxBuwH6wG8AbQJrQGz
-        AbQCiwEJAfQB/wHrAfABCQG0Aa4BiwGGAq4BkQG0AfAB7wHrBP8B1gGtAYsBHAEWASUBcwGYAQgE/wEA
-        AlIBTAoqARIB6wG7AQkBiwEJA7QB/wKLAa0CtAGZARoC/wLvAQcBtQGuBIYBrgH3AbwB9wHsBf8B1gGt
-        AYsB8wFiAQIBCAX/AVIBegFSAaAIegFSAaABKgESAcMB/wGLARkBtAGzAbQB/wKKAa0B8QH/AcMBegH2
-        Av8B6wEHAfABkQSGAa4BvAHvAfcH/wHWAcgBGQH8AUgBCAX/AVIBegFSAaAIegFSAaABKgESAaAB/wGL
-        ARkBtAGtAbQB/wKmAYsBGQL/AZoBGgL/AfcBBwG8AbQBrgKGAesBtQHwAZIB7Af/AdYByAHdAfwBSAEI
-        Bf8BUgF6AVIJoAFYAaABKgESAaABwwGLAfEBtAGtAfEB/wG1AosD/wGaARoD/wHtAe8B8AG0AusBtAHy
-        Ae8BBwj/AdYD/AFIAQgF/wFSAXoBUgmgAXoBoAEqAeoB9gGZAYsBCQG0Aa0B8QH/AbUCpgL/AfYBegEa
-        A/8B9wEHAfADtAG1AfIB7AH3Cf8B1gL8AUgBCAX/AVIBegFSCaABegGgASoB6gH/AbwBiwK1AbQBGQL/
-        AbQB8QL/ARoBegHDA/8B8wLvBPIB7wEHAfIJ/wHdAcgB3QFPAQgF/wFSAXoBUgn/AZoB/wEqAW0B8gGu
-        AYsBrgGZAcMB9gT/AfYBmgF6ARoF/wHvAfcE/wHsAQcK/wG8AWwB/wFPAQgF/wFSAaABmgxSAewFiwGa
-        AXoEmgF6AZoBGgb/AfAB7wEHAv8B7wH3AfEK/wEIAQICmAHyBf8BUgagBf8BKgHqAQcC/wGLAaYBiwH/
-        AfYCwwKaARoBwwH2CP8BBwHsAv8B6gG8C/8B8QFyAQIB8gb/AVIB/wSgAf8FUgFMAwAC/wGLEf8B8wHv
-        Ae0C/wHrAQcB9Av/AfIBAgHyBv8BAAFSBP8BUgH/AQAB/wYAAv8B8RH/Ae8BbQGSAvMB7AHrAbwL/wHz
-        AU8B8wb/AgAEUgH/CQAU/wEHAa4C6wNKAQcU/xAAAUIBTQE+BwABPgMAASgDAAFAAwABIAMAAQEBAAEB
-        BgABARYAA/+HAAGABwABgAcAAYAHAAGASAABBwYAAYABvwYAAcEB/wYAAv8L
+        ZW0uV2luZG93cy5Gb3Jtcy5JbWFnZUxpc3RTdHJlYW1lcgEAAAAERGF0YQcCAgAAAAkDAAAADwMAAADy
+        CgAAAk1TRnQBSQFMAgEBBAEAAQgBBQEIAQUBEAEAARABAAT/AQkBAAj/AUIBTQE2AQQGAAE2AQQCAAEo
+        AwABQAMAASADAAEBAQABCAYAAQgYAAGAAgABgAMAAoABAAGAAwABgAEAAYABAAKAAgADwAEAAcAB3AHA
+        AQAB8AHKAaYBAAEzBQABMwEAATMBAAEzAQACMwIAAxYBAAMcAQADIgEAAykBAANVAQADTQEAA0IBAAM5
+        AQABgAF8Af8BAAJQAf8BAAGTAQAB1gEAAf8B7AHMAQABxgHWAe8BAAHWAucBAAGQAakBrQIAAf8BMwMA
+        AWYDAAGZAwABzAIAATMDAAIzAgABMwFmAgABMwGZAgABMwHMAgABMwH/AgABZgMAAWYBMwIAAmYCAAFm
+        AZkCAAFmAcwCAAFmAf8CAAGZAwABmQEzAgABmQFmAgACmQIAAZkBzAIAAZkB/wIAAcwDAAHMATMCAAHM
+        AWYCAAHMAZkCAALMAgABzAH/AgAB/wFmAgAB/wGZAgAB/wHMAQABMwH/AgAB/wEAATMBAAEzAQABZgEA
+        ATMBAAGZAQABMwEAAcwBAAEzAQAB/wEAAf8BMwIAAzMBAAIzAWYBAAIzAZkBAAIzAcwBAAIzAf8BAAEz
+        AWYCAAEzAWYBMwEAATMCZgEAATMBZgGZAQABMwFmAcwBAAEzAWYB/wEAATMBmQIAATMBmQEzAQABMwGZ
+        AWYBAAEzApkBAAEzAZkBzAEAATMBmQH/AQABMwHMAgABMwHMATMBAAEzAcwBZgEAATMBzAGZAQABMwLM
+        AQABMwHMAf8BAAEzAf8BMwEAATMB/wFmAQABMwH/AZkBAAEzAf8BzAEAATMC/wEAAWYDAAFmAQABMwEA
+        AWYBAAFmAQABZgEAAZkBAAFmAQABzAEAAWYBAAH/AQABZgEzAgABZgIzAQABZgEzAWYBAAFmATMBmQEA
+        AWYBMwHMAQABZgEzAf8BAAJmAgACZgEzAQADZgEAAmYBmQEAAmYBzAEAAWYBmQIAAWYBmQEzAQABZgGZ
+        AWYBAAFmApkBAAFmAZkBzAEAAWYBmQH/AQABZgHMAgABZgHMATMBAAFmAcwBmQEAAWYCzAEAAWYBzAH/
+        AQABZgH/AgABZgH/ATMBAAFmAf8BmQEAAWYB/wHMAQABzAEAAf8BAAH/AQABzAEAApkCAAGZATMBmQEA
+        AZkBAAGZAQABmQEAAcwBAAGZAwABmQIzAQABmQEAAWYBAAGZATMBzAEAAZkBAAH/AQABmQFmAgABmQFm
+        ATMBAAGZATMBZgEAAZkBZgGZAQABmQFmAcwBAAGZATMB/wEAApkBMwEAApkBZgEAA5kBAAKZAcwBAAKZ
+        Af8BAAGZAcwCAAGZAcwBMwEAAWYBzAFmAQABmQHMAZkBAAGZAswBAAGZAcwB/wEAAZkB/wIAAZkB/wEz
+        AQABmQHMAWYBAAGZAf8BmQEAAZkB/wHMAQABmQL/AQABzAMAAZkBAAEzAQABzAEAAWYBAAHMAQABmQEA
+        AcwBAAHMAQABmQEzAgABzAIzAQABzAEzAWYBAAHMATMBmQEAAcwBMwHMAQABzAEzAf8BAAHMAWYCAAHM
+        AWYBMwEAAZkCZgEAAcwBZgGZAQABzAFmAcwBAAGZAWYB/wEAAcwBmQIAAcwBmQEzAQABzAGZAWYBAAHM
+        ApkBAAHMAZkBzAEAAcwBmQH/AQACzAIAAswBMwEAAswBZgEAAswBmQEAA8wBAALMAf8BAAHMAf8CAAHM
+        Af8BMwEAAZkB/wFmAQABzAH/AZkBAAHMAf8BzAEAAcwC/wEAAcwBAAEzAQAB/wEAAWYBAAH/AQABmQEA
+        AcwBMwIAAf8CMwEAAf8BMwFmAQAB/wEzAZkBAAH/ATMBzAEAAf8BMwH/AQAB/wFmAgAB/wFmATMBAAHM
+        AmYBAAH/AWYBmQEAAf8BZgHMAQABzAFmAf8BAAH/AZkCAAH/AZkBMwEAAf8BmQFmAQAB/wKZAQAB/wGZ
+        AcwBAAH/AZkB/wEAAf8BzAIAAf8BzAEzAQAB/wHMAWYBAAH/AcwBmQEAAf8CzAEAAf8BzAH/AQAC/wEz
+        AQABzAH/AWYBAAL/AZkBAAL/AcwBAAJmAf8BAAFmAf8BZgEAAWYC/wEAAf8CZgEAAf8BZgH/AQAC/wFm
+        AQABIQEAAaUBAANfAQADdwEAA4YBAAOWAQADywEAA7IBAAPXAQAD3QEAA+MBAAPqAQAD8QEAA/gBAAHw
+        AfsB/wEAAaQCoAEAA4ADAAH/AgAB/wMAAv8BAAH/AwAB/wEAAf8BAAL/AgAD//8A/wD/AP8ABQAP1QHc
+        Av8B7QrsARwB/wH0BEYBlAT/ARcFRgFvAQAC/wz0Af8G1QO0AbMBrQGzA9UB3AH/AfcBvArwAZIB6wH/
+        AigBhgG2AZQBFwEWAfQBFwElASkEKAFQAQAB9AHzCvEC8gHzAbQDswO0A7MBtAGzAa0CtAHcAf8BbQLw
+        AQkBBwH3AbUC7wEHAQkB8gEHAesB/wKYAbUB5gGuAUsBlAHjASUBlAFPAZcEmAEAAfEG7AfrAbwBtAmt
+        AbMBtAKLAQkB9AH/AesB8AEJAbQBrgGLAYYCrgGRAbQB8AHvAesE/wHWAa0BiwEcARYBJQFzAZgBCAT/
+        AQACUgFMCioBEgHrAbsBCQGLAQkDtAH/AosBrQK0AZkBGgL/Au8BBwG1Aa4EhgGuAfcBvAH3AewF/wHW
+        Aa0BiwHzAWIBAgEIBf8BUgF6AVIBoAh6AVIBoAEqARIBwwH/AYsBGQG0AbMBtAH/AooBrQHxAf8BwwF6
+        AfYC/wHrAQcB8AGRBIYBrgG8Ae8B9wf/AdYByAEZAfwBSAEIBf8BUgF6AVIBoAh6AVIBoAEqARIBoAH/
+        AYsBGQG0Aa0BtAH/AqYBiwEZAv8BmgEaAv8B9wEHAbwBtAGuAoYB6wG1AfABkgHsB/8B1gHIAd0B/AFI
+        AQgF/wFSAXoBUgmgAVgBoAEqARIBoAHDAYsB8QG0Aa0B8QH/AbUCiwP/AZoBGgP/Ae0B7wHwAbQC6wG0
+        AfIB7wEHCP8B1gP8AUgBCAX/AVIBegFSCaABegGgASoB6gH2AZkBiwEJAbQBrQHxAf8BtQKmAv8B9gF6
+        ARoD/wH3AQcB8AO0AbUB8gHsAfcJ/wHWAvwBSAEIBf8BUgF6AVIJoAF6AaABKgHqAf8BvAGLArUBtAEZ
+        Av8BtAHxAv8BGgF6AcMD/wHzAu8E8gHvAQcB8gn/Ad0ByAHdAU8BCAX/AVIBegFSCf8BmgH/ASoBbQHy
+        Aa4BiwGuAZkBwwH2BP8B9gGaAXoBGgX/Ae8B9wT/AewBBwr/AbwBbAH/AU8BCAX/AVIBoAGaDFIB7AWL
+        AZoBegSaAXoBmgEaBv8B8AHvAQcC/wHvAfcB8Qr/AQgBAgKYAfIF/wFSBqAF/wEqAeoBBwL/AYsBpgGL
+        Af8B9gLDApoBGgHDAfYI/wEHAewC/wHqAbwL/wHxAXIBAgHyBv8BUgH/BKAB/wVSAUwDAAL/AYsR/wHz
+        Ae8B7QL/AesBBwH0C/8B8gECAfIG/wEAAVIE/wFSAf8BAAH/BgAC/wHxEf8B7wFtAZIC8wHsAesBvAv/
+        AfMBTwHzBv8CAARSAf8JABT/AQcBrgLrA0oBBxT/EAABQgFNAT4HAAE+AwABKAMAAUADAAEgAwABAQEA
+        AQEGAAEBFgAD/4cAAYAHAAGABwABgAcAAYBIAAEHBgABgAG/BgABwQH/BgAC/ws=
 </value>
   </data>
-  <metadata name="imageList2.TrayLocation" type="System.Drawing.Point, System.Drawing, Version=4.0.0.0, Culture=neutral, PublicKeyToken=b03f5f7f11d50a3a">
+  <metadata name="fileIcons.TrayLocation" type="System.Drawing.Point, System.Drawing, Version=4.0.0.0, Culture=neutral, PublicKeyToken=b03f5f7f11d50a3a">
     <value>127, 17</value>
   </metadata>
-  <data name="imageList2.ImageStream" mimetype="application/x-microsoft.net.object.binary.base64">
+  <data name="fileIcons.ImageStream" mimetype="application/x-microsoft.net.object.binary.base64">
     <value>
         AAEAAAD/////AQAAAAAAAAAMAgAAAFdTeXN0ZW0uV2luZG93cy5Gb3JtcywgVmVyc2lvbj00LjAuMC4w
         LCBDdWx0dXJlPW5ldXRyYWwsIFB1YmxpY0tleVRva2VuPWI3N2E1YzU2MTkzNGUwODkFAQAAACZTeXN0
         ZW0uV2luZG93cy5Gb3Jtcy5JbWFnZUxpc3RTdHJlYW1lcgEAAAAERGF0YQcCAgAAAAkDAAAADwMAAAA0
-        CQAAAk1TRnQBSQFMAgEBAgEAAeABBAHgAQQBEAEAARABAAT/AQkBAAj/AUIBTQE2AQQGAAE2AQQCAAEo
+        CQAAAk1TRnQBSQFMAgEBAgEAAegBBAHoAQQBEAEAARABAAT/AQkBAAj/AUIBTQE2AQQGAAE2AQQCAAEo
         AwABQAMAARADAAEBAQABCAYAAQQYAAGAAgABgAMAAoABAAGAAwABgAEAAYABAAKAAgADwAEAAcAB3AHA
         AQAB8AHKAaYBAAEzBQABMwEAATMBAAEzAQACMwIAAxYBAAMcAQADIgEAAykBAANVAQADTQEAA0IBAAM5
         AQABgAF8Af8BAAJQAf8BAAGTAQAB1gEAAf8B7AHMAQABxgHWAe8BAAHWAucBAAGQAakBrQIAAf8BMwMA
@@ -377,25 +377,25 @@
   <data name="&gt;&gt;versionLabel.ZOrder" xml:space="preserve">
     <value>4</value>
   </data>
-  <data name="splitContainer1.Dock" type="System.Windows.Forms.DockStyle, System.Windows.Forms">
+  <data name="browserSplitContainer.Dock" type="System.Windows.Forms.DockStyle, System.Windows.Forms">
     <value>Fill</value>
   </data>
-  <data name="splitContainer1.Location" type="System.Drawing.Point, System.Drawing">
+  <data name="browserSplitContainer.Location" type="System.Drawing.Point, System.Drawing">
     <value>0, 0</value>
   </data>
-  <data name="splitContainer1.Margin" type="System.Windows.Forms.Padding, System.Windows.Forms">
+  <data name="browserSplitContainer.Margin" type="System.Windows.Forms.Padding, System.Windows.Forms">
     <value>2, 2, 2, 2</value>
   </data>
-  <data name="&gt;&gt;splitContainer1.Panel1.Name" xml:space="preserve">
-    <value>splitContainer1.Panel1</value>
+  <data name="&gt;&gt;browserSplitContainer.Panel1.Name" xml:space="preserve">
+    <value>browserSplitContainer.Panel1</value>
   </data>
-  <data name="&gt;&gt;splitContainer1.Panel1.Type" xml:space="preserve">
+  <data name="&gt;&gt;browserSplitContainer.Panel1.Type" xml:space="preserve">
     <value>System.Windows.Forms.SplitterPanel, System.Windows.Forms, Version=4.0.0.0, Culture=neutral, PublicKeyToken=b77a5c561934e089</value>
   </data>
-  <data name="&gt;&gt;splitContainer1.Panel1.Parent" xml:space="preserve">
-    <value>splitContainer1</value>
+  <data name="&gt;&gt;browserSplitContainer.Panel1.Parent" xml:space="preserve">
+    <value>browserSplitContainer</value>
   </data>
-  <data name="&gt;&gt;splitContainer1.Panel1.ZOrder" xml:space="preserve">
+  <data name="&gt;&gt;browserSplitContainer.Panel1.ZOrder" xml:space="preserve">
     <value>0</value>
   </data>
   <data name="noFiles.Anchor" type="System.Windows.Forms.AnchorStyles, System.Windows.Forms">
@@ -429,7 +429,7 @@
     <value>System.Windows.Forms.Label, System.Windows.Forms, Version=4.0.0.0, Culture=neutral, PublicKeyToken=b77a5c561934e089</value>
   </data>
   <data name="&gt;&gt;noFiles.Parent" xml:space="preserve">
-    <value>splitContainer1.Panel2</value>
+    <value>browserSplitContainer.Panel2</value>
   </data>
   <data name="&gt;&gt;noFiles.ZOrder" xml:space="preserve">
     <value>0</value>
@@ -483,100 +483,76 @@
     <value>System.Windows.Forms.ListView, System.Windows.Forms, Version=4.0.0.0, Culture=neutral, PublicKeyToken=b77a5c561934e089</value>
   </data>
   <data name="&gt;&gt;listView.Parent" xml:space="preserve">
-    <value>splitContainer1.Panel2</value>
+    <value>browserSplitContainer.Panel2</value>
   </data>
   <data name="&gt;&gt;listView.ZOrder" xml:space="preserve">
     <value>1</value>
   </data>
-  <data name="&gt;&gt;splitContainer1.Panel2.Name" xml:space="preserve">
-    <value>splitContainer1.Panel2</value>
+  <data name="&gt;&gt;browserSplitContainer.Panel2.Name" xml:space="preserve">
+    <value>browserSplitContainer.Panel2</value>
   </data>
-  <data name="&gt;&gt;splitContainer1.Panel2.Type" xml:space="preserve">
+  <data name="&gt;&gt;browserSplitContainer.Panel2.Type" xml:space="preserve">
     <value>System.Windows.Forms.SplitterPanel, System.Windows.Forms, Version=4.0.0.0, Culture=neutral, PublicKeyToken=b77a5c561934e089</value>
   </data>
-  <data name="&gt;&gt;splitContainer1.Panel2.Parent" xml:space="preserve">
-    <value>splitContainer1</value>
+  <data name="&gt;&gt;browserSplitContainer.Panel2.Parent" xml:space="preserve">
+    <value>browserSplitContainer</value>
   </data>
-  <data name="&gt;&gt;splitContainer1.Panel2.ZOrder" xml:space="preserve">
+  <data name="&gt;&gt;browserSplitContainer.Panel2.ZOrder" xml:space="preserve">
     <value>1</value>
   </data>
-  <data name="splitContainer1.Size" type="System.Drawing.Size, System.Drawing">
+  <data name="browserSplitContainer.Size" type="System.Drawing.Size, System.Drawing">
     <value>702, 472</value>
   </data>
-  <data name="splitContainer1.SplitterDistance" type="System.Int32, mscorlib">
+  <data name="browserSplitContainer.SplitterDistance" type="System.Int32, mscorlib">
     <value>237</value>
   </data>
-  <data name="splitContainer1.SplitterWidth" type="System.Int32, mscorlib">
+  <data name="browserSplitContainer.SplitterWidth" type="System.Int32, mscorlib">
     <value>3</value>
   </data>
-  <data name="splitContainer1.TabIndex" type="System.Int32, mscorlib">
+  <data name="browserSplitContainer.TabIndex" type="System.Int32, mscorlib">
     <value>0</value>
   </data>
-  <data name="&gt;&gt;splitContainer1.Name" xml:space="preserve">
-    <value>splitContainer1</value>
+  <data name="&gt;&gt;browserSplitContainer.Name" xml:space="preserve">
+    <value>browserSplitContainer</value>
   </data>
-  <data name="&gt;&gt;splitContainer1.Type" xml:space="preserve">
+  <data name="&gt;&gt;browserSplitContainer.Type" xml:space="preserve">
     <value>System.Windows.Forms.SplitContainer, System.Windows.Forms, Version=4.0.0.0, Culture=neutral, PublicKeyToken=b77a5c561934e089</value>
   </data>
-  <data name="&gt;&gt;splitContainer1.Parent" xml:space="preserve">
-    <value>panel1</value>
+  <data name="&gt;&gt;browserSplitContainer.Parent" xml:space="preserve">
+    <value>browserPanel</value>
   </data>
-  <data name="&gt;&gt;splitContainer1.ZOrder" xml:space="preserve">
+  <data name="&gt;&gt;browserSplitContainer.ZOrder" xml:space="preserve">
     <value>0</value>
   </data>
-  <data name="panel1.Anchor" type="System.Windows.Forms.AnchorStyles, System.Windows.Forms">
+  <data name="browserPanel.Anchor" type="System.Windows.Forms.AnchorStyles, System.Windows.Forms">
     <value>Top, Bottom, Left, Right</value>
   </data>
-  <data name="panel1.Location" type="System.Drawing.Point, System.Drawing">
+  <data name="browserPanel.Location" type="System.Drawing.Point, System.Drawing">
     <value>10, 52</value>
   </data>
-  <data name="panel1.Size" type="System.Drawing.Size, System.Drawing">
+  <data name="browserPanel.Size" type="System.Drawing.Size, System.Drawing">
     <value>702, 472</value>
   </data>
-  <data name="panel1.TabIndex" type="System.Int32, mscorlib">
+  <data name="browserPanel.TabIndex" type="System.Int32, mscorlib">
     <value>1</value>
   </data>
-  <data name="&gt;&gt;panel1.Name" xml:space="preserve">
-    <value>panel1</value>
+  <data name="&gt;&gt;browserPanel.Name" xml:space="preserve">
+    <value>browserPanel</value>
   </data>
-  <data name="&gt;&gt;panel1.Type" xml:space="preserve">
+  <data name="&gt;&gt;browserPanel.Type" xml:space="preserve">
     <value>System.Windows.Forms.Panel, System.Windows.Forms, Version=4.0.0.0, Culture=neutral, PublicKeyToken=b77a5c561934e089</value>
   </data>
-  <data name="&gt;&gt;panel1.Parent" xml:space="preserve">
+  <data name="&gt;&gt;browserPanel.Parent" xml:space="preserve">
     <value>$this</value>
   </data>
-  <data name="&gt;&gt;panel1.ZOrder" xml:space="preserve">
+  <data name="&gt;&gt;browserPanel.ZOrder" xml:space="preserve">
     <value>3</value>
   </data>
-  <metadata name="toolStrip.TrayLocation" type="System.Drawing.Point, System.Drawing, Version=4.0.0.0, Culture=neutral, PublicKeyToken=b03f5f7f11d50a3a">
+  <metadata name="navToolStrip.TrayLocation" type="System.Drawing.Point, System.Drawing, Version=4.0.0.0, Culture=neutral, PublicKeyToken=b03f5f7f11d50a3a">
     <value>237, 17</value>
   </metadata>
-  <data name="toolStrip.Dock" type="System.Windows.Forms.DockStyle, System.Windows.Forms">
+  <data name="navToolStrip.Dock" type="System.Windows.Forms.DockStyle, System.Windows.Forms">
     <value>None</value>
-  </data>
-  <data name="toolStrip.Location" type="System.Drawing.Point, System.Drawing">
-    <value>9, 2</value>
-  </data>
-  <data name="toolStrip.Size" type="System.Drawing.Size, System.Drawing">
-    <value>96, 31</value>
-  </data>
-  <data name="toolStrip.TabIndex" type="System.Int32, mscorlib">
-    <value>7</value>
-  </data>
-  <data name="toolStrip.Text" xml:space="preserve">
-    <value>toolStrip1</value>
-  </data>
-  <data name="&gt;&gt;toolStrip.Name" xml:space="preserve">
-    <value>toolStrip</value>
-  </data>
-  <data name="&gt;&gt;toolStrip.Type" xml:space="preserve">
-    <value>System.Windows.Forms.ToolStrip, System.Windows.Forms, Version=4.0.0.0, Culture=neutral, PublicKeyToken=b77a5c561934e089</value>
-  </data>
-  <data name="&gt;&gt;toolStrip.Parent" xml:space="preserve">
-    <value>$this</value>
-  </data>
-  <data name="&gt;&gt;toolStrip.ZOrder" xml:space="preserve">
-    <value>2</value>
   </data>
   <data name="back.Image" type="System.Drawing.Bitmap, System.Drawing" mimetype="application/x-microsoft.net.object.bytearray.base64">
     <value>
@@ -634,12 +610,42 @@
   <data name="up.Size" type="System.Drawing.Size, System.Drawing">
     <value>28, 28</value>
   </data>
+  <data name="navToolStrip.Location" type="System.Drawing.Point, System.Drawing">
+    <value>9, 2</value>
+  </data>
+  <data name="navToolStrip.Size" type="System.Drawing.Size, System.Drawing">
+    <value>96, 31</value>
+  </data>
+  <data name="navToolStrip.TabIndex" type="System.Int32, mscorlib">
+    <value>7</value>
+  </data>
+  <data name="navToolStrip.Text" xml:space="preserve">
+    <value>toolStrip1</value>
+  </data>
+  <data name="&gt;&gt;navToolStrip.Name" xml:space="preserve">
+    <value>navToolStrip</value>
+  </data>
+  <data name="&gt;&gt;navToolStrip.Type" xml:space="preserve">
+    <value>System.Windows.Forms.ToolStrip, System.Windows.Forms, Version=4.0.0.0, Culture=neutral, PublicKeyToken=b77a5c561934e089</value>
+  </data>
+  <data name="&gt;&gt;navToolStrip.Parent" xml:space="preserve">
+    <value>$this</value>
+  </data>
+  <data name="&gt;&gt;navToolStrip.ZOrder" xml:space="preserve">
+    <value>2</value>
+  </data>
   <data name="urlLink.Anchor" type="System.Windows.Forms.AnchorStyles, System.Windows.Forms">
     <value>Bottom, Left, Right</value>
   </data>
   <metadata name="contextMenuStrip.TrayLocation" type="System.Drawing.Point, System.Drawing, Version=4.0.0.0, Culture=neutral, PublicKeyToken=b03f5f7f11d50a3a">
     <value>335, 17</value>
   </metadata>
+  <data name="copyLinkAddressToolStripMenuItem.Size" type="System.Drawing.Size, System.Drawing">
+    <value>167, 22</value>
+  </data>
+  <data name="copyLinkAddressToolStripMenuItem.Text" xml:space="preserve">
+    <value>Copy link address</value>
+  </data>
   <data name="contextMenuStrip.Size" type="System.Drawing.Size, System.Drawing">
     <value>168, 26</value>
   </data>
@@ -672,12 +678,6 @@
   </data>
   <data name="&gt;&gt;urlLink.ZOrder" xml:space="preserve">
     <value>1</value>
-  </data>
-  <data name="copyLinkAddressToolStripMenuItem.Size" type="System.Drawing.Size, System.Drawing">
-    <value>167, 22</value>
-  </data>
-  <data name="copyLinkAddressToolStripMenuItem.Text" xml:space="preserve">
-    <value>Copy link address</value>
   </data>
   <metadata name="$this.Localizable" type="System.Boolean, mscorlib, Version=4.0.0.0, Culture=neutral, PublicKeyToken=b77a5c561934e089">
     <value>True</value>
@@ -724,16 +724,16 @@
   <data name="$this.Text" xml:space="preserve">
     <value>Panorama Folders</value>
   </data>
-  <data name="&gt;&gt;imageList1.Name" xml:space="preserve">
-    <value>imageList1</value>
+  <data name="&gt;&gt;treeViewIcons.Name" xml:space="preserve">
+    <value>treeViewIcons</value>
   </data>
-  <data name="&gt;&gt;imageList1.Type" xml:space="preserve">
+  <data name="&gt;&gt;treeViewIcons.Type" xml:space="preserve">
     <value>System.Windows.Forms.ImageList, System.Windows.Forms, Version=4.0.0.0, Culture=neutral, PublicKeyToken=b77a5c561934e089</value>
   </data>
-  <data name="&gt;&gt;imageList2.Name" xml:space="preserve">
-    <value>imageList2</value>
+  <data name="&gt;&gt;fileIcons.Name" xml:space="preserve">
+    <value>fileIcons</value>
   </data>
-  <data name="&gt;&gt;imageList2.Type" xml:space="preserve">
+  <data name="&gt;&gt;fileIcons.Type" xml:space="preserve">
     <value>System.Windows.Forms.ImageList, System.Windows.Forms, Version=4.0.0.0, Culture=neutral, PublicKeyToken=b77a5c561934e089</value>
   </data>
   <data name="&gt;&gt;colName.Name" xml:space="preserve">

@@ -40,7 +40,7 @@
             this.urlLink = new System.Windows.Forms.LinkLabel();
             this.contextMenuStrip = new System.Windows.Forms.ContextMenuStrip(this.components);
             this.copyLinkAddressToolStripMenuItem = new System.Windows.Forms.ToolStripMenuItem();
-            this.label3 = new System.Windows.Forms.Label();
+            this.folderLabel = new System.Windows.Forms.Label();
             this.toolStrip.SuspendLayout();
             this.contextMenuStrip.SuspendLayout();
             this.SuspendLayout();
@@ -76,7 +76,7 @@
             this.open.TabIndex = 3;
             this.open.Text = "Open";
             this.open.UseVisualStyleBackColor = true;
-            this.open.Click += new System.EventHandler(this.open_Click);
+            this.open.Click += new System.EventHandler(this.Open_Click);
             // 
             // toolStrip
             // 
@@ -88,7 +88,7 @@
             this.up});
             this.toolStrip.Location = new System.Drawing.Point(12, 7);
             this.toolStrip.Name = "toolStrip";
-            this.toolStrip.Size = new System.Drawing.Size(127, 31);
+            this.toolStrip.Size = new System.Drawing.Size(96, 31);
             this.toolStrip.TabIndex = 5;
             this.toolStrip.Text = "toolStrip1";
             // 
@@ -146,15 +146,15 @@
             this.copyLinkAddressToolStripMenuItem.Text = "Copy link address";
             this.copyLinkAddressToolStripMenuItem.Click += new System.EventHandler(this.CopyLinkAddressToolStripMenuItem_Click);
             // 
-            // label3
+            // folderLabel
             // 
-            this.label3.AutoSize = true;
-            this.label3.ImeMode = System.Windows.Forms.ImeMode.NoControl;
-            this.label3.Location = new System.Drawing.Point(9, 38);
-            this.label3.Name = "label3";
-            this.label3.Size = new System.Drawing.Size(81, 13);
-            this.label3.TabIndex = 0;
-            this.label3.Text = "&Remote folders:";
+            this.folderLabel.AutoSize = true;
+            this.folderLabel.ImeMode = System.Windows.Forms.ImeMode.NoControl;
+            this.folderLabel.Location = new System.Drawing.Point(9, 38);
+            this.folderLabel.Name = "folderLabel";
+            this.folderLabel.Size = new System.Drawing.Size(81, 13);
+            this.folderLabel.TabIndex = 0;
+            this.folderLabel.Text = "&Remote folders:";
             // 
             // PanoramaDirectoryPicker
             // 
@@ -163,7 +163,7 @@
             this.AutoScaleMode = System.Windows.Forms.AutoScaleMode.Font;
             this.CancelButton = this.cancel;
             this.ClientSize = new System.Drawing.Size(447, 336);
-            this.Controls.Add(this.label3);
+            this.Controls.Add(this.folderLabel);
             this.Controls.Add(this.urlLink);
             this.Controls.Add(this.toolStrip);
             this.Controls.Add(this.cancel);
@@ -198,6 +198,6 @@
         private System.Windows.Forms.LinkLabel urlLink;
         private System.Windows.Forms.ContextMenuStrip contextMenuStrip;
         private System.Windows.Forms.ToolStripMenuItem copyLinkAddressToolStripMenuItem;
-        private System.Windows.Forms.Label label3;
+        private System.Windows.Forms.Label folderLabel;
     }
 }

@@ -27,19 +27,18 @@ namespace pwiz.PanoramaClient
 {
     public partial class PanoramaDirectoryPicker : Form
     {
+        // The OkButtonText setter will be used in SkylineBatch
         public string OkButtonText { get; set; }
-        public PanoramaFolderBrowser FolderBrowser;
-        public string SelectedPath;
-        public bool IsLoaded { get; set; }
-        public List<PanoramaServer> Servers { get; }
-        public PanoramaServer ActiveServer { get; private set; }
-        public string TreeState { get; set; }
+        public PanoramaFolderBrowser FolderBrowser { get; private set; }
+        public string SelectedPath { get; private set; }
+        public bool IsLoaded { get; private set; }
+
+        private string _treeState;
 
         public PanoramaDirectoryPicker(List<PanoramaServer> servers, string state, bool showWebDavFolders = false, string selectedPath = null)
         {
             InitializeComponent();
-            Servers = servers;
-            FolderBrowser = new PanoramaFolderBrowser(Servers, state, false, selectedPath, showWebDavFolders)
+            FolderBrowser = new PanoramaFolderBrowser(servers, state, false, selectedPath, showWebDavFolders)
             {
                 Dock = DockStyle.Fill
             };
@@ -49,12 +48,10 @@ namespace pwiz.PanoramaClient
             SelectedPath = selectedPath;
             back.Enabled = false;
             forward.Enabled = false;
-            FolderBrowser.ShowWebDav = showWebDavFolders;
         }
 
-        private void open_Click(object sender, EventArgs e)
+        private void Open_Click(object sender, EventArgs e)
         {
-            //Return the selected folder path
             DialogResult = DialogResult.Yes;
             Close();
         }
@@ -85,7 +82,7 @@ namespace pwiz.PanoramaClient
         }
 
 
-        public void DirectoryPicker_MouseClick(object sender, EventArgs e)
+        private void DirectoryPicker_MouseClick(object sender, EventArgs e)
         {
             urlLink.Text = FolderBrowser.SelectedUrl;
             up.Enabled = FolderBrowser.UpEnabled();
@@ -93,11 +90,11 @@ namespace pwiz.PanoramaClient
             back.Enabled = FolderBrowser.BackEnabled();
         }
 
-        //TODO: What's the difference between SelectedPath and SelectedUrl -- they are the same
         private void DirectoryPicker_FormClosing(object sender, FormClosingEventArgs e)
         {
-            TreeState = FolderBrowser.ClosingState();
-            SelectedPath = FolderBrowser.SelectedUrl;
+            _treeState = FolderBrowser.ClosingState();
+            SelectedPath = FolderBrowser.GetSelectedFolderPath();
+            
         }
 
         private void UpdateButtonState()
@@ -105,7 +102,7 @@ namespace pwiz.PanoramaClient
             up.Enabled = FolderBrowser.UpEnabled();
             forward.Enabled = FolderBrowser.ForwardEnabled();
             back.Enabled = FolderBrowser.BackEnabled();
-            urlLink.Text = FolderBrowser.SelectedUrl;
+            urlLink.Text = FolderBrowser.GetSelectedUri();
         }
 
         private void Up_Click(object sender, EventArgs e)
@@ -154,8 +151,7 @@ namespace pwiz.PanoramaClient
             FolderBrowser.Dock = DockStyle.Fill;
             folderPanel.Controls.Add(FolderBrowser);
             FolderBrowser.NodeClick += DirectoryPicker_MouseClick;
-            ActiveServer = server;
-            if (string.IsNullOrEmpty(TreeState))
+            if (string.IsNullOrEmpty(_treeState))
             {
                 up.Enabled = false;
                 back.Enabled = false;
@@ -190,7 +186,7 @@ namespace pwiz.PanoramaClient
 
         public void ClickOpen()
         {
-            open_Click(this, EventArgs.Empty);
+            Open_Click(this, EventArgs.Empty);
         }
 
         public void ClickCancel()
