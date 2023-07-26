@@ -906,6 +906,11 @@ namespace pwiz.Skyline
             (c, p) => c.Refinement.SCIncludedCutoff = p.ValueDouble);
         public static readonly Argument ARG_REFINE_SC_QUANTIZATION_CUTOFF = new RefineArgument(@"refine-shape-r-quant-cutoff", NUM_VALUE,
             (c, p) => c.Refinement.SCQuantitativeCutoff = p.ValueDouble);
+        public static readonly Argument ARG_REFINE_SC_INCLUDED_COMPARISON_TYPE = new RefineArgument(@"refine-shape-r-include-comparison-type", INT_VALUE,
+            (c, p) => c.Refinement.SCIncludedComparisonType =
+                (RefinementSettings.ComparisonType) p.ValueInt);
+        public static readonly Argument ARG_REFINE_SC_QUANTIZATION_COMPARISON_TYPE = new RefineArgument(@"refine-shape-r-quant-comparison-type", INT_VALUE,
+            (c, p) => c.Refinement.SCQuantitativeComparisonType = (RefinementSettings.ComparisonType) p.ValueInt);
         // Refinement Group Comparison Tab
         public static readonly Argument ARG_REFINE_GC_P_VALUE_CUTOFF = new RefineArgument(
             @"refine-gc-p-value-cutoff", NUM_VALUE,
@@ -935,7 +940,7 @@ namespace pwiz.Skyline
             ARG_REFINE_CV_REMOVE_ABOVE_CUTOFF, ARG_REFINE_CV_GLOBAL_NORMALIZE, ARG_REFINE_CV_REFERENCE_NORMALIZE,
             ARG_REFINE_CV_TRANSITIONS, ARG_REFINE_CV_TRANSITIONS_COUNT, ARG_REFINE_CV_MS_LEVEL,
             ARG_REFINE_QVALUE_CUTOFF, ARG_REFINE_MINIMUM_DETECTIONS,
-            ARG_REFINE_SC_INCLUDED_CUTOFF, ARG_REFINE_SC_QUANTIZATION_CUTOFF,
+            ARG_REFINE_SC_INCLUDED_CUTOFF, ARG_REFINE_SC_QUANTIZATION_CUTOFF, ARG_REFINE_SC_INCLUDED_COMPARISON_TYPE, ARG_REFINE_SC_QUANTIZATION_COMPARISON_TYPE,
             ARG_REFINE_GC_P_VALUE_CUTOFF, ARG_REFINE_GC_FOLD_CHANGE_CUTOFF, ARG_REFINE_GC_MS_LEVEL, ARG_REFINE_GROUP_NAME);
         
 

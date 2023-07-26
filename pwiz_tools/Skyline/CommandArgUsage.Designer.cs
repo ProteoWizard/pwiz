@@ -1433,6 +1433,15 @@ namespace pwiz.Skyline {
         }
         
         /// <summary>
+        ///   Looks up a localized string similar to The distribution of shape correlation values to be compared against the included cutoff.
+        /// </summary>
+        internal static string _refine_shape_r_include_comparison_type {
+            get {
+                return ResourceManager.GetString("_refine_shape_r_include_comparison_type", resourceCulture);
+            }
+        }
+        
+        /// <summary>
         ///   Looks up a localized string similar to all transitions with shape correlation below the cutoff will be removed.
         /// </summary>
         internal static string _refine_shape_r_include_cutoff {
@@ -1442,11 +1451,20 @@ namespace pwiz.Skyline {
         }
         
         /// <summary>
+        ///   Looks up a localized string similar to The distribution of shape correlation values to be compared against the quantitative cutoff.
+        /// </summary>
+        internal static string _refine_shape_r_quant_comparison_type {
+            get {
+                return ResourceManager.GetString("_refine_shape_r_quant_comparison_type", resourceCulture);
+            }
+        }
+        
+        /// <summary>
         ///   Looks up a localized string similar to all transitions with shape correlation below the cutoff will be marked non-quantatative.
         /// </summary>
         internal static string _refine_shape_r_quant_cutoff {
             get {
-                return ResourceManager.GetString("_refine_shape_r_quant_cutoff", resourceCulture);
+                return ResourceManager.GetString("_refine-shape-r-quant-cutoff", resourceCulture);
             }
         }
         
