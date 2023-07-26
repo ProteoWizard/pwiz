@@ -1205,7 +1205,7 @@ namespace pwiz.SkylineTestUtil
                                     var precTarget = fieldsTarget[i].Length - String.Format("{0}.", (int)dTarget).Length;
                                     var precActual = fieldsActual[i].Length - String.Format("{0}.", (int)dActual).Length;
                                     var prec = Math.Max(Math.Min(precTarget, precActual), 0);
-                                    var mult = (precActual == precTarget) ? 1.0 : 0.5;
+                                    var mult = (precActual == precTarget) ? 1.01 : 0.501; // Allow for double precision calculation cruft e.g 34995.22-34995.21 = 0.010000000002037268
                                     double toler = mult * ((prec == 0) ? 0 : Math.Pow(10, -prec));
                                     // so .001 is seen as close enough to .0009, or 12.3 same as 12.4 (could be serializations of very similar numbers that rounded differently)
                                     if (Math.Abs(dTarget - dActual) <= toler)

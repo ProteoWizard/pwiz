@@ -242,6 +242,8 @@ namespace pwiz.SkylineTest
                 "1582.427 10726.89\n";
 
             var txtB = txtA.Replace("247701.8", "247701.7"). // Could be serializations of 247701.751 and 247701.749
+                Replace("36354.39", "36354.40").
+                Replace("34995.21", "34995.22").
                 Replace("10726.89", "10726.9");
             AssertEx.FieldsEqual(new StringReader(txtA),
                 new StringReader(txtB),
