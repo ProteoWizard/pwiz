@@ -1460,11 +1460,11 @@ namespace pwiz.Skyline {
         }
         
         /// <summary>
-        ///   Looks up a localized string similar to all transitions with shape correlation below the cutoff will be marked non-quantatative.
+        ///   Looks up a localized string similar to all transitions with shape correlation below the cutoff will be removed.
         /// </summary>
         internal static string _refine_shape_r_quant_cutoff {
             get {
-                return ResourceManager.GetString("_refine-shape-r-quant-cutoff", resourceCulture);
+                return ResourceManager.GetString("_refine_shape_r_quant_cutoff", resourceCulture);
             }
         }
         
