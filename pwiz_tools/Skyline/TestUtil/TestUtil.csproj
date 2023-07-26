@@ -151,6 +151,7 @@
     <Compile Include="FileLockingProcessFinder.cs" />
     <Compile Include="FormSeen.cs" />
     <Compile Include="GridTester.cs" />
+    <Compile Include="LongWaitDialogCanceler.cs" />
     <Compile Include="MemoryStreamManager.cs" />
     <Compile Include="MovedDirectory.cs" />
     <Compile Include="PauseAndContinueForm.cs">

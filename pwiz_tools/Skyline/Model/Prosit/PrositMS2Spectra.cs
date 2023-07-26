@@ -51,10 +51,11 @@ namespace pwiz.Skyline.Model.Prosit
         {
             PeptidePrecursorNCE = peptidePrecursorNCE;
             Settings = settings;
-            var peptide = peptidePrecursorNCE.NodePep;
+            var explicitMods = peptidePrecursorNCE.NodePep?.ExplicitMods ?? peptidePrecursorNCE.ExplicitMods;
+            var target = peptidePrecursorNCE.NodePep?.Target ?? new Target(peptidePrecursorNCE.Sequence);
 
-            var calc = settings.GetFragmentCalc(peptidePrecursorNCE.LabelType, peptide.ExplicitMods);
-            var ionTable = calc.GetFragmentIonMasses(peptide.Target); // TODO: get mods and pass them as explicit mods above?
+            var calc = settings.GetFragmentCalc(peptidePrecursorNCE.LabelType, explicitMods);
+            var ionTable = calc.GetFragmentIonMasses(target); // TODO: get mods and pass them as explicit mods above?
             var ions = ionTable.GetLength(1);
 
             var mis = new List<SpectrumPeaksInfo.MI>(ions * PrositConstants.IONS_PER_RESIDUE);
@@ -95,7 +96,7 @@ namespace pwiz.Skyline.Model.Prosit
             for (var c = 0; c < PrositConstants.IONS_PER_RESIDUE / 2; ++c)
             {
                 // Not a possible charge
-                if (PeptidePrecursorNCE.NodeGroup.PrecursorCharge <= c)
+                if (PeptidePrecursorNCE.PrecursorCharge <= c)
                     break;
 
                 result.Add(new SpectrumPeaksInfo.MI
@@ -113,17 +114,21 @@ namespace pwiz.Skyline.Model.Prosit
 
         private SrmSettings Settings { get; }
 
+        public SpectrumMzInfo _specMzInfo;
         public SpectrumMzInfo SpecMzInfo
         {
             get
             {
-                var peptide = PeptidePrecursorNCE.NodePep;
-                var precursor = PeptidePrecursorNCE.NodeGroup;
-                SpectrumMzInfo info = new SpectrumMzInfo();
+                if (_specMzInfo != null)
+                    return _specMzInfo;
+
+                var peptide = PeptidePrecursorNCE.Sequence;
+                var precursor = PeptidePrecursorNCE;
+                var info = _specMzInfo = new SpectrumMzInfo();
                 info.SpectrumPeaks = SpectrumPeaks;
                 info.IonMobility = IonMobilityAndCCS.EMPTY;
                 info.Key = new LibKey(
-                    Settings.GetModifiedSequence(peptide.Target, PeptidePrecursorNCE.LabelType, peptide.ExplicitMods, SequenceModFormatType.lib_precision),
+                    Settings.GetModifiedSequence(new Target(peptide), PeptidePrecursorNCE.LabelType, PeptidePrecursorNCE.ExplicitMods, SequenceModFormatType.lib_precision),
                     precursor.PrecursorCharge);
                 info.Label = precursor.LabelType;
                 info.PrecursorMz = precursor.PrecursorMz;

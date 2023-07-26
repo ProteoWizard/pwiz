@@ -71,7 +71,7 @@ namespace pwiz.Common.SystemUtil
             int lastSep = -1;
             for (int i = 0; i < len; i++)
             {
-                if (path1[i] != path2[i])
+                if (char.ToLowerInvariant(path1[i]) != char.ToLowerInvariant(path2[i]))
                     return path1.Substring(0, lastSep + 1);
 
                 if (path1[i] == Path.DirectorySeparatorChar)
@@ -189,7 +189,7 @@ namespace pwiz.Common.SystemUtil
         /// </summary>
         public static string RemovePrefix(string path, string prefix)
         {
-            if (path.StartsWith(prefix))
+            if (path.ToLowerInvariant().StartsWith(prefix.ToLowerInvariant()))
             {
                 return path.Substring(prefix.Length);
             }
@@ -256,6 +256,23 @@ namespace pwiz.Common.SystemUtil
 
         // Test framework can set this to something like  @""t^m&p 试验" to help check our handling of unusual filename characters
         public static string RandomFileNameDecoration { get; set; }
+
+        // Like Path.GetTempFileName(), but allows you to set the extension of the created tempfile
+        public static string GetTempFileNameWithExtension(string ext)
+        {
+            var fileName = Path.GetTempFileName();
+            if (!string.IsNullOrWhiteSpace(ext))
+            {
+                var fileNameNew = Path.ChangeExtension(fileName, ext);
+                if (!fileName.Equals(fileNameNew))
+                {
+                    File.Move(fileName, fileNameNew);
+                    return fileNameNew;
+                }
+            }
+            return fileName;
+        }
+
     }
 
     /// <summary>

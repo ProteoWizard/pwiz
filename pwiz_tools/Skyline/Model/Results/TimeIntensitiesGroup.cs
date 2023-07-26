@@ -317,42 +317,20 @@ namespace pwiz.Skyline.Model.Results
 
         public ChromatogramGroupData ToChromatogramGroupData()
         {
-            var timeLists = new Dictionary<ImmutableList<float>, int>();
-            var scanIdLists = new Dictionary<ImmutableList<int>, int>();
+            var timeLists = new DistinctList<ImmutableList<float>>{null};
+            var scanIdLists = new DistinctList<ImmutableList<int>>{null};
             var chromatogramGroupData = new ChromatogramGroupData();
             for (int i = 0; i < TransitionTimeIntensities.Count; i++)
             {
                 var timeIntensities = TransitionTimeIntensities[i];
                 var chromatogram = new ChromatogramGroupData.Types.Chromatogram();
-                int timeListIndex;
-                if (!timeLists.TryGetValue(timeIntensities.Times, out timeListIndex))
-                {
-                    timeListIndex = timeLists.Count + 1;
-                    timeLists.Add(timeIntensities.Times, timeListIndex);
-                    var timeList = new ChromatogramGroupData.Types.TimeList();
-                    timeList.Times.AddRange(timeIntensities.Times);
-                    chromatogramGroupData.TimeLists.Add(timeList);
-                }
-                chromatogram.TimeListIndex = timeListIndex;
+                chromatogram.TimeListIndex = timeLists.Add(timeIntensities.Times);
                 chromatogram.Intensities.AddRange(timeIntensities.Intensities);
                 if (null != timeIntensities.MassErrors)
                 {
                     chromatogram.MassErrors100X.AddRange(timeIntensities.MassErrors.Select(error=>(int) Math.Round(error * 100)));
                 }
-
-                if (null != timeIntensities.ScanIds)
-                {
-                    int scanIdListIndex;
-                    if (!scanIdLists.TryGetValue(timeIntensities.ScanIds, out scanIdListIndex))
-                    {
-                        scanIdListIndex = scanIdLists.Count + 1;
-                        scanIdLists.Add(timeIntensities.ScanIds, scanIdListIndex);
-                        var scanIdList = new ChromatogramGroupData.Types.ScanIdList();
-                        scanIdList.ScanIds.AddRange(timeIntensities.ScanIds);
-                        chromatogramGroupData.ScanIdLists.Add(scanIdList);
-                    }
-                    chromatogram.ScanIdListIndex = scanIdListIndex;
-                }
+                chromatogram.ScanIdListIndex = scanIdLists.Add(timeIntensities.ScanIds);
                 chromatogramGroupData.Chromatograms.Add(chromatogram);
             }
             if (InterpolationParams != null)
@@ -369,6 +347,20 @@ namespace pwiz.Skyline.Model.Results
                 chromatogramGroupData.TimeIntervals = new ChromatogramGroupData.Types.TimeIntervals();
                 chromatogramGroupData.TimeIntervals.StartTimes.AddRange(TimeIntervals.Starts);
                 chromatogramGroupData.TimeIntervals.EndTimes.AddRange(TimeIntervals.Ends);
+            }
+
+            foreach (var times in timeLists.Skip(1))
+            {
+                var timeList = new ChromatogramGroupData.Types.TimeList();
+                timeList.Times.AddRange(times);
+                chromatogramGroupData.TimeLists.Add(timeList);
+            }
+
+            foreach (var scanIds in scanIdLists.Skip(1))
+            {
+                var scanIdList = new ChromatogramGroupData.Types.ScanIdList();
+                scanIdList.ScanIds.AddRange(scanIds);
+                chromatogramGroupData.ScanIdLists.Add(scanIdList);
             }
             return chromatogramGroupData;
         }

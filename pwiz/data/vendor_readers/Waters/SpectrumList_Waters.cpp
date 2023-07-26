@@ -341,14 +341,11 @@ PWIZ_API_DECL SpectrumPtr SpectrumList_Waters::spectrum(size_t index, DetailLeve
     if (detailLevel < DetailLevel_FullMetadata)
         return result;
 
-    if (config_.ignoreCalibrationScans && isLockMassFunction(ie.function))
-        return result;
-
     if (detailLevel == DetailLevel_FullData || detailLevel == DetailLevel_FullMetadata)
     {
         BinaryData<double> mzArray, intensityArray;
 
-        if (ie.block >= 0 && config_.combineIonMobilitySpectra && !isLockMassFunction(ie.function)) // Lockmass won't have IMS
+        if (ie.block >= 0 && config_.combineIonMobilitySpectra)
         {
             if (detailLevel == DetailLevel_FullMetadata)
                 return result;

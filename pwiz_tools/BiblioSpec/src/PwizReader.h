@@ -40,6 +40,8 @@ using std::unique_ptr;
 //        if it is of benefit.  It did not benefit BlibBuild, and so was made conditional.
 #ifdef VENDOR_READERS
 #include "pwiz_tools/common/FullReaderList.hpp"
+#else
+#include "pwiz/data/msdata/DefaultReaderList.hpp"
 #endif
 using namespace pwiz::msdata;
 
@@ -103,14 +105,17 @@ class PwizReader : public BiblioSpec::SpecFileReader {
  private:
     string fileName_;
 #ifdef VENDOR_READERS
-    FullReaderList allReaders_;
+    FullReaderList readers_;
+#else
+    DefaultReaderList readers_;
 #endif
-    MSDataFile* fileReader_;
+    MSData* fileReader_;
     CVID nativeIdFormat_;
     SpectrumListPtr allSpectra_;
     size_t curPositionInIndexMzPairs_;
     vector< pair<int,double> > indexMzPairs_; // scan/pre-mz pairs, may besorted byeither
     BiblioSpec::SPEC_ID_TYPE idType_;
+    BiblioSpec::V_LEVEL idNotFoundWarnLevel_;
 
 
     /**

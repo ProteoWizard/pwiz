@@ -1598,7 +1598,7 @@ namespace pwiz.SkylineTestFunctional
                         spectrumDisplayInfos[idx] = new SpectrumDisplayInfo(spectra[0], precursors[j], spectra[0].RetentionTime);
                     }
 
-                    peptidesRepeat[idx++] = new PrositIntensityModel.PeptidePrecursorNCE(peptides[i], precursors[j], IsotopeLabelType.light, null);
+                    peptidesRepeat[idx++] = new PrositIntensityModel.PeptidePrecursorNCE(peptides[i], precursors[j], IsotopeLabelType.light);
                 }
             }
 

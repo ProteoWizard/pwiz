@@ -139,10 +139,18 @@
     <Compile Include="Collections\RangeList.cs" />
     <Compile Include="Collections\ReadOnlyList.cs" />
     <Compile Include="Collections\StructSerializer.cs" />
+    <Compile Include="SystemUtil\CommonFormEx.cs">
+      <SubType>Form</SubType>
+    </Compile>
+    <Compile Include="SystemUtil\FileSize.cs" />
+    <Compile Include="SystemUtil\FileSizeFormatProvider.cs" />
+    <Compile Include="SystemUtil\IFormView.cs" />
     <Compile Include="SystemUtil\ItemDescription.cs" />
     <Compile Include="SystemUtil\ProcessEx.cs" />
     <Compile Include="SystemUtil\StreamEx.cs" />
     <Compile Include="SystemUtil\StringSearch.cs" />
+    <Compile Include="Spectra\SpectrumMetadata.cs" />
+    <Compile Include="Spectra\SpectrumPrecursor.cs" />
     <Compile Include="SystemUtil\SubstringFinder.cs" />
     <Compile Include="Collections\UniqueList.cs" />
     <Compile Include="SystemUtil\CenterWinDialog.cs" />
@@ -154,6 +162,7 @@
     <Compile Include="SystemUtil\TempDir.cs" />
     <Compile Include="SystemUtil\TrackAttribute.cs" />
     <Compile Include="SystemUtil\CommonActionUtil.cs" />
+    <Compile Include="SystemUtil\TreeViewStateRestorer.cs" />
     <Compile Include="SystemUtil\ValueCache.cs" />
     <Compile Include="Collections\ValueSet.cs" />
     <Compile Include="Properties\AssemblyInfo.cs" />
@@ -178,6 +187,7 @@
     <Compile Include="SystemUtil\StringPool.cs" />
     <Compile Include="SystemUtil\TaskbarProgress.cs" />
     <Compile Include="SystemUtil\TypeSafeEnum.cs" />
+    <Compile Include="SystemUtil\DistinctList.cs" />
   </ItemGroup>
   <ItemGroup>
     <BootstrapperPackage Include="Microsoft.Net.Client.3.5">

@@ -1,5 +1,6 @@
 ﻿syntax = "proto3";
 option csharp_namespace = "pwiz.Skyline.Model.Results.ProtoBuf";
+option java_package = "org.labkey.targetedms.parser.proto";
 message ChromatogramGroupData {
 	message TimeList {
 		repeated float times = 1;
@@ -30,4 +31,80 @@ message ChromatogramGroupData {
 	bool inferZeroes = 9;
 	TimeIntervals timeIntervals = 10;
 }
+message ResultFileMetaDataProto {
+	message SpectrumMetadata {
+		double retentionTime = 1;
+		repeated int32 scanIdParts = 2;
+		string scanIdText = 3;
+		repeated int32 precursorIndex = 4;
+		int32 scanDescriptionIndex = 5;
+		int32 presetScanConfiguration = 6;
+		int32 analyzerIndex = 7;
+	}
 
+	message Precursor {
+		double targetMz = 1;
+		double isolationWindowLower = 2;
+		double isolationWindowUpper = 3;
+		double collisionEnergy = 4;
+		int32 msLevel = 5;
+	}
+
+	repeated SpectrumMetadata spectra = 1;
+	repeated Precursor precursors = 2;
+	repeated string scanDescriptions = 3;
+	repeated string analyzers = 4;
+}
+message ChromatogramGroupIdsProto {
+	enum FilterOperation {
+		FILTER_OP_HAS_ANY_VALUE = 0;
+		FILTER_OP_EQUALS = 1;
+		FILTER_OP_NOT_EQUALS = 2;
+		FILTER_OP_IS_BLANK = 3;
+		FILTER_OP_IS_NOT_BLANK = 4;
+		FILTER_OP_IS_GREATER_THAN = 5;
+		FILTER_OP_IS_LESS_THAN = 6;
+		FILTER_OP_IS_GREATER_THAN_OR_EQUAL_TO = 7;
+		FILTER_OP_IS_LESS_THAN_OR_EQUAL_TO = 8;
+		FILTER_OP_CONTAINS = 9;
+		FILTER_OP_NOT_CONTAINS = 10;
+		FITLER_OP_STARTS_WITH = 11;
+		FILTER_OP_NOT_STARTS_WITH = 12;
+	}
+	message AccessionNumber {
+		int32 typeName = 1;
+		string value = 2;;
+	}
+
+	message Target {
+		string modifiedPeptideSequence = 1;
+		string formula = 2;
+		string name = 3;
+		double monoMass = 4;
+		double averageMass = 5;
+		string inChiKey = 6;
+		string cas = 7;
+		string hmdb = 8;
+		string inChi = 9;
+		string smiles = 10;
+		string kegg = 11;
+	}
+	repeated Target targets = 1;
+	repeated SpectrumFilter filters = 2;
+	repeated ChromatogramGroupId chromatogramGroupIds = 3;
+
+	message ChromatogramGroupId {
+		int32 targetIndex = 1; // one-based index into "targets"
+		repeated int32 filterIndexes = 2; // zero-based indexes into "filter"
+		string qcTraceName = 3;
+	}
+
+	message SpectrumFilter {
+		message Predicate {
+			string propertyPath = 1;
+			FilterOperation operation = 2;
+			string operand = 3;
+		}
+		repeated Predicate predicates = 1;
+	}
+}

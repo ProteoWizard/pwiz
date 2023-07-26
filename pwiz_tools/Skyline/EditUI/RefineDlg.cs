@@ -30,7 +30,6 @@ using System.Collections.Generic;
 using System.Globalization;
 using System.Linq;
 using System.Windows.Forms;
-using pwiz.Common.Controls;
 using pwiz.Skyline.Controls.Graphs;
 using pwiz.Skyline.Controls.GroupComparison;
 using pwiz.Skyline.Model.GroupComparison;
@@ -345,6 +344,25 @@ namespace pwiz.Skyline.EditUI
             get { return Convert.ToDouble(textFoldChange.Text); }
             set { textFoldChange.Text = value.ToString(CultureInfo.CurrentCulture); }
         }
+
+        public bool AutoPeptides
+        {
+            get => cbAutoPeptides.Checked;
+            set => cbAutoPeptides.Checked = value;
+        }
+
+        public bool AutoPrecursors
+        {
+            get => cbAutoPrecursors.Checked;
+            set => cbAutoPrecursors.Checked = value;
+        }
+
+        public bool AutoTransitions
+        {
+            get => cbAutoTransitions.Checked;
+            set => cbAutoTransitions.Checked = value;
+        }
+
 
         public void OkDialog()
         {

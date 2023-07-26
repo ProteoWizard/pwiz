@@ -67,6 +67,8 @@ namespace pwiz.Skyline.Model.Results
         {
             if (timesNew.Count == 0)
                 return this;
+            if (NumPoints == 0)
+                return new TimeIntensities(timesNew, Enumerable.Repeat(0.0f, timesNew.Count));
             double intervalDelta = 0;
             if (timesNew.Count > 1)
             {
@@ -333,6 +335,10 @@ namespace pwiz.Skyline.Model.Results
         /// </summary>
         public TimeIntensities InterpolateTime(float newTime)
         {
+            if (Times.Count == 0)
+            {
+                return new TimeIntensities(new[] { newTime }, new[] { 0f }, null, null);
+            }
             int index = CollectionUtil.BinarySearch(Times, newTime);
             if (index >= 0)
             {

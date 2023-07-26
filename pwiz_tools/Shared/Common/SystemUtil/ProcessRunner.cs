@@ -22,6 +22,7 @@ using System.Collections.Generic;
 using System.Diagnostics;
 using System.IO;
 using System.Text;
+using System.Threading;
 
 namespace pwiz.Common.SystemUtil
 {
@@ -32,7 +33,10 @@ namespace pwiz.Common.SystemUtil
         void Run(ProcessStartInfo psi, string stdin, IProgressMonitor progress, ref IProgressStatus status,
             ProcessPriorityClass priorityClass = ProcessPriorityClass.Normal, bool forceTempfilesCleanup = false);
         void Run(ProcessStartInfo psi, string stdin, IProgressMonitor progress, ref IProgressStatus status,
-                 TextWriter writer, ProcessPriorityClass priorityClass = ProcessPriorityClass.Normal, bool forceTempfilesCleanup = false);
+                 TextWriter writer, ProcessPriorityClass priorityClass = ProcessPriorityClass.Normal,
+                 bool forceTempfilesCleanup = false,
+                 Func<string, int, bool> outputAndExitCodeAreGoodFunc = null,
+                 bool updateProgressPercentage = true);
     }
 
     public class ProcessRunner : IProcessRunner
@@ -43,6 +47,7 @@ namespace pwiz.Common.SystemUtil
 
         public string MessagePrefix { get; set; }
         private readonly List<string> _messageLog = new List<string>();
+        private string _tmpDirForCleanup;
 
         /// <summary>
         /// Used in R package installation. We print progress % for processRunner progress
@@ -52,6 +57,11 @@ namespace pwiz.Common.SystemUtil
         /// </summary>
         public string HideLinePrefix { get; set; }
 
+        public static bool GoodIfExitCodeIsZero(string stderr, int exitCode)
+        {
+            return exitCode == 0;
+        }
+
         public void Run(ProcessStartInfo psi, string stdin, IProgressMonitor progress, ref IProgressStatus status,
             ProcessPriorityClass priorityClass = ProcessPriorityClass.Normal, bool forceTempfilesCleanup = false)
         {
@@ -59,7 +69,10 @@ namespace pwiz.Common.SystemUtil
         }
 
         public void Run(ProcessStartInfo psi, string stdin, IProgressMonitor progress, ref IProgressStatus status, TextWriter writer,
-            ProcessPriorityClass priorityClass = ProcessPriorityClass.Normal, bool forceTempfilesCleanup = false)
+            ProcessPriorityClass priorityClass = ProcessPriorityClass.Normal,
+            bool forceTempfilesCleanup = false,
+            Func<string, int, bool> outputAndExitCodeAreGoodFunc = null,
+            bool updateProgressPercentage = true)
         {
             // Make sure required streams are redirected.
             psi.RedirectStandardOutput = true;
@@ -68,10 +81,12 @@ namespace pwiz.Common.SystemUtil
             if (OutputEncoding != null)
                 psi.StandardOutputEncoding = psi.StandardErrorEncoding = OutputEncoding;
 
+            outputAndExitCodeAreGoodFunc ??= GoodIfExitCodeIsZero;
+
             _messageLog.Clear();
 
             // Optionally create a subdir in the current TMP directory, run the new process with TMP set to that so we can clean it out afterward
-            var tmpDirForCleanup = forceTempfilesCleanup ? SetTmpDirForCleanup(psi) : null;
+            _tmpDirForCleanup = forceTempfilesCleanup ? SetTmpDirForCleanup(psi) : null;
 
             Process proc = null;
             var msgFailureStartingCommand = @"Failure starting command ""{0} {1}"".";
@@ -119,7 +134,8 @@ namespace pwiz.Common.SystemUtil
                     if (writer != null && (HideLinePrefix == null || !line.StartsWith(HideLinePrefix)))
                         writer.WriteLine(line);
 
-                    if (progress == null || line.ToLowerInvariant().StartsWith(@"error"))
+                    string lineLower = line.ToLowerInvariant();
+                    if (progress == null || lineLower.StartsWith(@"error") || lineLower.StartsWith(@"warning"))
                     {
                         sbError.AppendLine(line);
                     }
@@ -129,6 +145,7 @@ namespace pwiz.Common.SystemUtil
                         {
                             proc.Kill();
                             progress.UpdateProgress(status = status.Cancel());
+                            CleanupTmpDir(); // Clean out any tempfiles left behind, if forceTempfilesCleanup was set
                             return;
                         }
 
@@ -136,7 +153,7 @@ namespace pwiz.Common.SystemUtil
                         {
                             _messageLog.Add(line.Substring(MessagePrefix.Length));
                         }
-                        else if (line.EndsWith(@"%"))
+                        else if (updateProgressPercentage && line.EndsWith(@"%"))
                         {
                             double percent;
                             string[] parts = line.Split(' ');
@@ -163,7 +180,8 @@ namespace pwiz.Common.SystemUtil
                 }
                 proc.WaitForExit();
                 int exit = proc.ExitCode;
-                if (exit != 0)
+
+                if (!outputAndExitCodeAreGoodFunc(reader.GetErrorLines(), exit))
                 {
                     line = proc.StandardError.ReadLine();
                     if (line != null)
@@ -173,6 +191,7 @@ namespace pwiz.Common.SystemUtil
                         sbError.AppendLine(@"Error occurred running process.");
                         sbError.Append(reader.GetErrorLines());
                     }
+
                     string processPath = Path.GetDirectoryName(psi.FileName)?.Length == 0
                         ? Path.Combine(Environment.CurrentDirectory, psi.FileName)
                         : psi.FileName;
@@ -186,7 +205,7 @@ namespace pwiz.Common.SystemUtil
 
                 // Make to complete the status, if the process succeeded, but never
                 // printed 100% to the console
-                if (percentLast < 100)
+                if (updateProgressPercentage && percentLast < 100)
                 {
                     status = status.ChangePercentComplete(100);
                     if (status.SegmentCount > 0)
@@ -198,20 +217,32 @@ namespace pwiz.Common.SystemUtil
             }
             finally
             {
-                if (!string.IsNullOrEmpty(tmpDirForCleanup))
+                if (!proc.HasExited)
+                    try { proc.Kill(); } catch (InvalidOperationException) { }
+
+                CleanupTmpDir(); // Clean out any tempfiles left behind, if forceTempfilesCleanup was set
+            }
+        }
+
+        // Clean out any tempfiles left behind, if forceTempfilesCleanup was set
+        private void CleanupTmpDir()
+        {
+            if (!string.IsNullOrEmpty(_tmpDirForCleanup))
+            {
+                var maxRetry = 4;
+                for (var retryCount = 0; retryCount++ < maxRetry;)
                 {
-                    // Clean out any tempfiles left behind
                     try
                     {
-                        Directory.Delete(tmpDirForCleanup, true);
+                        Directory.Delete(_tmpDirForCleanup, true);
+                        return;
                     }
                     catch (Exception e)
                     {
-                        _messageLog.Add($@"warning: cleanup of temporary directory {tmpDirForCleanup} failed: {e.Message}");
+                        _messageLog.Add($@"warning: failed attempt {retryCount}/{maxRetry} for cleanup of temporary directory ""{_tmpDirForCleanup}"": {e.Message}");
+                        Thread.Sleep(500);
                     }
                 }
-                if (!proc.HasExited)
-                    try { proc.Kill(); } catch (InvalidOperationException) { }
             }
         }
 
@@ -219,7 +250,7 @@ namespace pwiz.Common.SystemUtil
         private string SetTmpDirForCleanup(ProcessStartInfo psi)
         {
             string tmpDirForCleanup = null;
-            
+
             if (psi.UseShellExecute)
             {
                 _messageLog.Add(@"warning: UseShellExecute is set, cannot change environment for tempfile cleanup");
@@ -230,14 +261,20 @@ namespace pwiz.Common.SystemUtil
                 {
                     tmpDirForCleanup = Path.GetTempFileName(); // Creates a file
                     File.Delete(tmpDirForCleanup); // But we want a directory
+                    var exeName = string.Empty;
                     if (!string.IsNullOrEmpty(psi.FileName))
                     {
                         // Name the directory so as to be more obviously associated with the process
-                        var exeName = Path.GetFileNameWithoutExtension(psi.FileName);
+                        exeName = Path.GetFileNameWithoutExtension(psi.FileName);
                         if (!string.IsNullOrEmpty(exeName))
                         {
                             tmpDirForCleanup = Path.ChangeExtension(tmpDirForCleanup, exeName);
                         }
+                    }
+
+                    if (Directory.Exists(tmpDirForCleanup) || File.Exists(tmpDirForCleanup))
+                    {
+                        _messageLog.Add($@"Could not create unique TMP dir ""{tmpDirForCleanup}"" for process {exeName}, it already exists");
                     }
                     Directory.CreateDirectory(tmpDirForCleanup);
                     psi.Environment[@"TMP"] = tmpDirForCleanup; // Process will create its tempfiles here

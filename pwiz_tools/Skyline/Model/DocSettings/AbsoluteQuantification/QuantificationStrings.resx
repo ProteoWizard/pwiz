@@ -330,4 +330,10 @@
     <value>Default ({0})</value>
     <comment>Example: Default (Global Standards)</comment>
   </data>
+  <data name="MsLevelOption_ALL_All" xml:space="preserve">
+    <value>All</value>
+  </data>
+  <data name="MsLevelOption_DEFAULT_Default" xml:space="preserve">
+    <value>Default</value>
+  </data>
 </root>

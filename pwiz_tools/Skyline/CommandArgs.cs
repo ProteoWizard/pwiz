@@ -27,10 +27,10 @@ using System.Text.RegularExpressions;
 using System.Threading;
 using System.Web;
 using System.Xml.Serialization;
+using pwiz.Common.Chemistry;
 using pwiz.Common.DataBinding.Documentation;
 using pwiz.Common.SystemUtil;
 using pwiz.ProteowizardWrapper;
-using pwiz.Skyline.Controls.Graphs;
 using pwiz.Skyline.Model;
 using pwiz.Skyline.Model.DocSettings;
 using pwiz.Skyline.Model.GroupComparison;
@@ -42,6 +42,7 @@ using pwiz.Skyline.Model.Tools;
 using pwiz.Skyline.Properties;
 using pwiz.Skyline.Util;
 using pwiz.Skyline.Util.Extensions;
+using static pwiz.Skyline.Model.Proteome.ProteinAssociation;
 
 namespace pwiz.Skyline
 {
@@ -55,31 +56,40 @@ namespace pwiz.Skyline
             return PATH_TO_FILE() + ext;
         }
 
-        private static readonly Func<string> PATH_TO_DOCUMENT = () => GetPathToFile(SrmDocument.EXT);
-        private static readonly Func<string> PATH_TO_FOLDER = () => CommandArgUsage.CommandArgs_PATH_TO_FOLDER;
-        private static readonly Func<string> DATE_VALUE = () => CommandArgUsage.CommandArgs_DATE_VALUE;
-        private static readonly Func<string> INT_VALUE = () => CommandArgUsage.CommandArgs_INT_VALUE;
-        private static readonly Func<string> NUM_VALUE = () => CommandArgUsage.CommandArgs_NUM_VALUE;
-        private static readonly Func<string> NUM_LIST_VALUE = () => CommandArgUsage.CommandArgs_NUM_LIST_VALUE;
-        private static readonly Func<string> NAME_VALUE = () => CommandArgUsage.CommandArgs_NAME_VALUE;
-        private static readonly Func<string> FEATURE_NAME_VALUE = () => CommandArgUsage.CommandArgs_FEATURE_NAME_VALUE;
-        private static readonly Func<string> REPORT_NAME_VALUE = () => CommandArgUsage.CommandArgs_REPORT_NAME_VALUE;
-        private static readonly Func<string> PIPE_NAME_VALUE = () => CommandArgUsage.CommandArgs_PIPE_NAME_VALUE;
-        private static readonly Func<string> REGEX_VALUE = () => CommandArgUsage.CommandArgs_REGEX_VALUE;
-        private static readonly Func<string> RP_VALUE = () => CommandArgUsage.CommandArgs_RP_VALUE;
-        private static readonly Func<string> MZ_VALUE = () => CommandArgUsage.CommandArgs_MZ_VALUE;
-        private static readonly Func<string> MINUTES_VALUE = () => CommandArgUsage.CommandArgs_MINUTES_VALUE;
-        private static readonly Func<string> MILLIS_VALE = () => CommandArgUsage.CommandArgs_MILLIS_VALE;
-        private static readonly Func<string> SERVER_URL_VALUE = () => CommandArgUsage.CommandArgs_SERVER_URL_VALUE;
-        private static readonly Func<string> USERNAME_VALUE = () => CommandArgUsage.CommandArgs_USERNAME_VALUE;
-        private static readonly Func<string> PASSWORD_VALUE = () => CommandArgUsage.CommandArgs_PASSWORD_VALUE;
-        private static readonly Func<string> COMMAND_VALUE = () => CommandArgUsage.CommandArgs_COMMAND_VALUE;
-        private static readonly Func<string> COMMAND_ARGUMENTS_VALUE = () => CommandArgUsage.CommandArgs_COMMAND_ARGUMENTS_VALUE;
-        private static readonly Func<string> PROGRAM_MACRO_VALUE = () => CommandArgUsage.CommandArgs_PROGRAM_MACRO_VALUE;
-        private static readonly Func<string> LABEL_VALUE = () => CommandArgUsage.CommandArgs_LABEL_VALUE;
+        public static readonly Func<string> PATH_TO_DOCUMENT = () => GetPathToFile(SrmDocument.EXT);
+        public static readonly Func<string> PATH_TO_FOLDER = () => CommandArgUsage.CommandArgs_PATH_TO_FOLDER;
+        public static readonly Func<string> PATH_TO_ZIP = () => GetPathToFile(SrmDocumentSharing.EXT_SKY_ZIP);
+        public static readonly Func<string> PATH_TO_CSV = () => GetPathToFile(TextUtil.EXT_CSV);
+        public static readonly Func<string> PATH_TO_TSV = () => GetPathToFile(TextUtil.EXT_TSV);
+        public static readonly Func<string> PATH_TO_IRTDB = () => GetPathToFile(IrtDb.EXT);
+        public static readonly Func<string> PATH_TO_IMSDB = () => GetPathToFile(IonMobilityDb.EXT);
+        public static readonly Func<string> PATH_TO_REPORT = () => GetPathToFile(ReportSpecList.EXT_REPORTS);
+        public static readonly Func<string> PATH_TO_INSTALL = () => GetPathToFile(ToolDescription.EXT_INSTALL);
+        public static readonly Func<string> DATE_VALUE = () => CommandArgUsage.CommandArgs_DATE_VALUE;
+        public static readonly Func<string> INT_VALUE = () => CommandArgUsage.CommandArgs_INT_VALUE;
+        public static readonly Func<string> NUM_VALUE = () => CommandArgUsage.CommandArgs_NUM_VALUE;
+        public static readonly Func<string> NUM_LIST_VALUE = () => CommandArgUsage.CommandArgs_NUM_LIST_VALUE;
+        public static readonly Func<string> NAME_VALUE = () => CommandArgUsage.CommandArgs_NAME_VALUE;
+        public static readonly Func<string> FEATURE_NAME_VALUE = () => CommandArgUsage.CommandArgs_FEATURE_NAME_VALUE;
+        public static readonly Func<string> REPORT_NAME_VALUE = () => CommandArgUsage.CommandArgs_REPORT_NAME_VALUE;
+        public static readonly Func<string> PIPE_NAME_VALUE = () => CommandArgUsage.CommandArgs_PIPE_NAME_VALUE;
+        public static readonly Func<string> REGEX_VALUE = () => CommandArgUsage.CommandArgs_REGEX_VALUE;
+        public static readonly Func<string> RP_VALUE = () => CommandArgUsage.CommandArgs_RP_VALUE;
+        public static readonly Func<string> MZ_VALUE = () => CommandArgUsage.CommandArgs_MZ_VALUE;
+        public static readonly Func<string> MINUTES_VALUE = () => CommandArgUsage.CommandArgs_MINUTES_VALUE;
+        public static readonly Func<string> MILLIS_VALE = () => CommandArgUsage.CommandArgs_MILLIS_VALE;
+        public static readonly Func<string> SERVER_URL_VALUE = () => CommandArgUsage.CommandArgs_SERVER_URL_VALUE;
+        public static readonly Func<string> USERNAME_VALUE = () => CommandArgUsage.CommandArgs_USERNAME_VALUE;
+        public static readonly Func<string> PASSWORD_VALUE = () => CommandArgUsage.CommandArgs_PASSWORD_VALUE;
+        public static readonly Func<string> COMMAND_VALUE = () => CommandArgUsage.CommandArgs_COMMAND_VALUE;
+        public static readonly Func<string> COMMAND_ARGUMENTS_VALUE = () => CommandArgUsage.CommandArgs_COMMAND_ARGUMENTS_VALUE;
+        public static readonly Func<string> PROGRAM_MACRO_VALUE = () => CommandArgUsage.CommandArgs_PROGRAM_MACRO_VALUE;
+        public static readonly Func<string> LABEL_VALUE = () => CommandArgUsage.CommandArgs_LABEL_VALUE;
         // ReSharper disable LocalizableElement
-        private static readonly Func<string> INT_LIST_VALUE = () => "\"1, 2, 3...\"";  // Not L10N
-        private static readonly Func<string> ION_TYPE_LIST_VALUE = () => "\"a, b, c, x, y, z, p\"";    // Not L10N
+        public static readonly Func<string> INT_LIST_VALUE = () => "\"1, 2, 3...\"";  // Not L10N
+        public static readonly Func<string> ION_TYPE_LIST_VALUE = () => "\"a, b, c, x, y, z, p\"";    // Not L10N
+
+        public static readonly Func<string> MZTOLERANCE_VALUE = () => "\"" + 0.5 + "mz or 15ppm\"";
         // ReSharper restore LocalizableElement
 
         // Internal use arguments
@@ -87,6 +97,18 @@ namespace pwiz.Skyline
             (c, p) => c._usageWidth = p.ValueInt) {InternalUse = true};
         public static readonly Argument ARG_INTERNAL_CULTURE = new Argument(@"culture", () => @"en|fr|ja|zh-CHS...",
             (c, p) => SetCulture(p.Value)) { InternalUse = true };
+
+        public static readonly HashSet<Func<string>> PATH_TYPE_VALUES = new HashSet<Func<string>>
+        {
+            PATH_TO_DOCUMENT, PATH_TO_FILE, PATH_TO_FOLDER, PATH_TO_ZIP, PATH_TO_REPORT, PATH_TO_TSV, PATH_TO_IMSDB,
+            PATH_TO_INSTALL, PATH_TO_CSV, PATH_TO_IRTDB
+        };
+
+        public static readonly HashSet<Func<string>> STRING_TYPE_VALUES = new HashSet<Func<string>>(new[]
+        {
+            FEATURE_NAME_VALUE, REPORT_NAME_VALUE, PIPE_NAME_VALUE, REGEX_VALUE, SERVER_URL_VALUE, USERNAME_VALUE,
+            PASSWORD_VALUE, COMMAND_VALUE, COMMAND_ARGUMENTS_VALUE, PROGRAM_MACRO_VALUE, LABEL_VALUE, NAME_VALUE
+        }.Concat(PATH_TYPE_VALUES));
 
         private static void SetCulture(string cultureName)
         {
@@ -123,7 +145,17 @@ namespace pwiz.Skyline
         public static readonly Argument ARG_SAVE_SETTINGS = new DocArgument(@"save-settings", (c, p) => c.SaveSettings = true);
         public static readonly Argument ARG_OUT = new DocArgument(@"out", PATH_TO_DOCUMENT,
             (c, p) => { c.SaveFile = p.ValueFullPath; });
-        public static readonly Argument ARG_SHARE_ZIP = new DocArgument(@"share-zip", () => GetPathToFile(SrmDocumentSharing.EXT_SKY_ZIP),
+        public static readonly Argument ARG_NEW = new DocArgument(@"new", PATH_TO_DOCUMENT, (c, p) =>
+        {
+            c.CreateNewFile = true;
+            c.SaveFile = p.ValueFullPath;
+            c.SkylineFile = p.ValueFullPath;
+        });
+        public static readonly Argument ARG_OVERWRITE = new DocArgument(@"overwrite", (c, p) =>
+        {
+            c.OverwriteExisting = p.IsNameOnly || bool.Parse(p.Value);
+        });
+        public static readonly Argument ARG_SHARE_ZIP = new DocArgument(@"share-zip", PATH_TO_ZIP,
             (c, p) =>
             {
                 c.SharingZipFile = true;
@@ -164,7 +196,7 @@ namespace pwiz.Skyline
         public static readonly Argument ARG_VERSION = new Argument(@"version", (c, p) => c.Version());
 
         private static readonly ArgumentGroup GROUP_GENERAL_IO = new ArgumentGroup(() => CommandArgUsage.CommandArgs_GROUP_GENERAL_IO_General_input_output, true,
-            ARG_IN, ARG_SAVE, ARG_SAVE_SETTINGS, ARG_OUT, ARG_SHARE_ZIP, ARG_SHARE_TYPE, ARG_BATCH, ARG_DIR, ARG_TIMESTAMP, ARG_MEMSTAMP,
+            ARG_IN, ARG_SAVE, ARG_SAVE_SETTINGS, ARG_OUT, ARG_NEW, ARG_OVERWRITE, ARG_SHARE_ZIP, ARG_SHARE_TYPE, ARG_BATCH, ARG_DIR, ARG_TIMESTAMP, ARG_MEMSTAMP,
             ARG_LOG_FILE, ARG_HELP, ARG_VERSION)
         {
             Validate = c => c.ValidateGeneralArgs()
@@ -202,6 +234,8 @@ namespace pwiz.Skyline
 
         public string LogFile { get; private set; }
         public string SkylineFile { get; private set; }
+        public bool CreateNewFile { get; private set; }
+        public bool OverwriteExisting { get; private set; }
         public string SaveFile { get; private set; }
         private bool _saving;
         public bool Saving
@@ -217,7 +251,7 @@ namespace pwiz.Skyline
         public ShareType SharedFileType { get; private set; }
 
         // For creating a .imsdb ion mobility library
-        public static readonly Argument ARG_IMSDB_CREATE = new DocArgument(@"ionmobility-library-create", () => GetPathToFile(IonMobilityDb.EXT),
+        public static readonly Argument ARG_IMSDB_CREATE = new DocArgument(@"ionmobility-library-create", PATH_TO_IMSDB,
             (c, p) => c.ImsDbFile = p.ValueFullPath);
 
         // For creating a .imsdb ion mobility library
@@ -265,12 +299,19 @@ namespace pwiz.Skyline
         public static readonly Argument ARG_IMPORT_PROCESS_COUNT = new Argument(@"import-process-count", INT_VALUE,
             (c, p) =>
             {
+                if (p.ValueInt < 0)
+                    throw new ValueInvalidIntException(ARG_IMPORT_PROCESS_COUNT, p.Value);
                 c.ImportThreads = p.ValueInt;
                 if (c.ImportThreads > 0)
                     Program.MultiProcImport = true;
             });
         public static readonly Argument ARG_IMPORT_THREADS = new Argument(@"import-threads", INT_VALUE,
-            (c, p) => c.ImportThreads = p.ValueInt);
+            (c, p) =>
+            {
+                if (p.ValueInt < 0)
+                    throw new ValueInvalidIntException(ARG_IMPORT_THREADS, p.Value);
+                c.ImportThreads = p.ValueInt;
+            });
         public static readonly Argument ARG_IMPORT_LOCKMASS_POSITIVE = new DocArgument(@"import-lockmass-positive", NUM_VALUE,
             (c, p) => c.LockmassPositive = p.ValueDouble);
         public static readonly Argument ARG_IMPORT_LOCKMASS_NEGATIVE = new DocArgument(@"import-lockmass-negative", NUM_VALUE,
@@ -494,7 +535,7 @@ namespace pwiz.Skyline
             (c, p) => c.IrtGroupName = p.Value);
         public static readonly Argument ARG_IRT_STANDARDS_FILE = new DocArgument(@"irt-standards-file", PATH_TO_FILE,
             (c, p) => c.IrtStandardsPath = p.ValueFullPath);
-        public static readonly Argument ARG_IRT_DATABASE_PATH = new DocArgument(@"irt-database-path", () => GetPathToFile(IrtDb.EXT),
+        public static readonly Argument ARG_IRT_DATABASE_PATH = new DocArgument(@"irt-database-path", PATH_TO_IRTDB,
             (c, p) => c.IrtDatabasePath = p.ValueFullPath);
         public static readonly Argument ARG_IRT_CALC_NAME = new DocArgument(@"irt-calc-name", NAME_VALUE,
             (c, p) => c.IrtCalcName = p.Value);
@@ -609,7 +650,7 @@ namespace pwiz.Skyline
         }
 
         // Annotations
-        private static readonly Argument ARG_IMPORT_ANNOTATIONS = new DocArgument(@"import-annotations", () => GetPathToFile(TextUtil.EXT_CSV),
+        private static readonly Argument ARG_IMPORT_ANNOTATIONS = new DocArgument(@"import-annotations", PATH_TO_CSV,
             (c, p) => c.ImportAnnotations = p.ValueFullPath);
 
         private static readonly ArgumentGroup GROUP_ANNOTATIONS = new ArgumentGroup(() => CommandArgUsage.CommandArgs_GROUP_ANNOTATIONS_Importing_annotations, false,
@@ -902,7 +943,7 @@ namespace pwiz.Skyline
         // Adding reports does not require a document
         public static readonly Argument ARG_REPORT_NAME = new Argument(@"report-name", NAME_VALUE,
             (c, p) => c.ReportName = p.Value);
-        public static readonly Argument ARG_REPORT_ADD = new Argument(@"report-add", () => GetPathToFile(ReportSpecList.EXT_REPORTS),
+        public static readonly Argument ARG_REPORT_ADD = new Argument(@"report-add", PATH_TO_REPORT,
             (c, p) =>
             {
                 c.ImportingSkyr = true;
@@ -912,7 +953,7 @@ namespace pwiz.Skyline
             new []{ARG_VALUE_OVERWRITE, ARG_VALUE_SKIP},
             (c, p) => c.ResolveSkyrConflictsBySkipping = p.IsValue(ARG_VALUE_SKIP)) { WrapValue = true };
         // Exporting reports does require a document
-        public static readonly Argument ARG_REPORT_FILE = new DocArgument(@"report-file", () => GetPathToFile(TextUtil.EXT_CSV),
+        public static readonly Argument ARG_REPORT_FILE = new DocArgument(@"report-file", PATH_TO_CSV,
             (c, p) => c.ReportFile = p.ValueFullPath);
         public static readonly Argument ARG_REPORT_FORMAT = new DocArgument(@"report-format",
             new []{ARG_VALUE_CSV, ARG_VALUE_TSV},
@@ -948,7 +989,7 @@ namespace pwiz.Skyline
         public bool? ResolveSkyrConflictsBySkipping { get; private set; }
 
         // For exporting chromatograms
-        private static readonly Argument ARG_CHROMATOGRAM_FILE = new DocArgument(@"chromatogram-file", () => GetPathToFile(TextUtil.EXT_TSV),
+        private static readonly Argument ARG_CHROMATOGRAM_FILE = new DocArgument(@"chromatogram-file", PATH_TO_TSV,
             (c, p) => c.ChromatogramsFile = p.ValueFullPath);
         private static readonly Argument ARG_CHROMATOGRAM_PRECURSORS = new DocArgument(@"chromatogram-precursors",
             (c, p) => c.ChromatogramsPrecursors = true);
@@ -993,13 +1034,13 @@ namespace pwiz.Skyline
 
 
         // For publishing the document to Panorama
-        private static readonly Argument ARG_PANORAMA_SERVER = new DocArgument(@"panorama-server", SERVER_URL_VALUE,
+        public static readonly Argument ARG_PANORAMA_SERVER = new DocArgument(@"panorama-server", SERVER_URL_VALUE,
             (c, p) => c.PanoramaServerUri = p.Value);
-        private static readonly Argument ARG_PANORAMA_USERNAME = new DocArgument(@"panorama-username", USERNAME_VALUE,
+        public static readonly Argument ARG_PANORAMA_USERNAME = new DocArgument(@"panorama-username", USERNAME_VALUE,
             (c, p) => c.PanoramaUserName = p.Value);
-        private static readonly Argument ARG_PANORAMA_PASSWORD = new DocArgument(@"panorama-password", PASSWORD_VALUE,
+        public static readonly Argument ARG_PANORAMA_PASSWORD = new DocArgument(@"panorama-password", PASSWORD_VALUE,
             (c, p) => c.PanoramaPassword = p.Value);
-        private static readonly Argument ARG_PANORAMA_FOLDER = new DocArgument(@"panorama-folder", PATH_TO_FOLDER,
+        public static readonly Argument ARG_PANORAMA_FOLDER = new DocArgument(@"panorama-folder", PATH_TO_FOLDER,
             (c, p) => c.PanoramaFolder = p.Value);
 
         private static readonly ArgumentGroup GROUP_PANORAMA = new ArgumentGroup(() => CommandArgUsage.CommandArgs_GROUP_PANORAMA_Publishing_to_Panorama, false,
@@ -1149,10 +1190,7 @@ namespace pwiz.Skyline
             (c, p) =>
             {
                 c.SearchResultsFiles.Add(p.ValueFullPath);
-                c.CutoffScore = c.CutoffScore ?? Settings.Default.LibraryResultCutOff;
-                c.IrtStandardName = null;
-                c.NumCirts = null;
-                c.RecalibrateIrts = false;
+                c.CutoffScore ??= Settings.Default.LibraryResultCutOff;
             });
         public static readonly Argument ARG_IMPORT_PEPTIDE_SEARCH_CUTOFF = new Argument(@"import-search-cutoff-score", NUM_VALUE,
             (c, p) => c.CutoffScore = p.GetValueDouble(0, 1));
@@ -1166,12 +1204,15 @@ namespace pwiz.Skyline
             (c, p) => c.AcceptAllModifications = true);
         public static readonly Argument ARG_IMPORT_PEPTIDE_SEARCH_AMBIGUOUS = new Argument(@"import-search-include-ambiguous",
             (c, p) => c.IncludeAmbiguousMatches = true);
+        public static readonly Argument ARG_IMPORT_PEPTIDE_SEARCH_EXCLUDE_SOURCES = new Argument(@"import-search-exclude-library-sources",
+            (c, p) => c.ExcludeLibrarySources = true);
         public static readonly Argument ARG_IMPORT_PEPTIDE_SEARCH_PREFER_EMBEDDED = new Argument(@"import-search-prefer-embedded-spectra",
             (c, p) => c.PreferEmbeddedSpectra = true);
 
         private static readonly ArgumentGroup GROUP_IMPORT_SEARCH = new ArgumentGroup(() => CommandArgUsage.CommandArgs_GROUP_IMPORT_SEARCH_Importing_peptide_searches, false, 
             ARG_IMPORT_PEPTIDE_SEARCH_FILE, ARG_IMPORT_PEPTIDE_SEARCH_CUTOFF, ARG_IMPORT_PEPTIDE_SEARCH_IRTS, ARG_IMPORT_PEPTIDE_SEARCH_NUM_CIRTS,
-            ARG_IMPORT_PEPTIDE_SEARCH_RECALIBRATE_IRTS, ARG_IMPORT_PEPTIDE_SEARCH_MODS, ARG_IMPORT_PEPTIDE_SEARCH_AMBIGUOUS, ARG_IMPORT_PEPTIDE_SEARCH_PREFER_EMBEDDED)
+            ARG_IMPORT_PEPTIDE_SEARCH_RECALIBRATE_IRTS, ARG_IMPORT_PEPTIDE_SEARCH_MODS, ARG_IMPORT_PEPTIDE_SEARCH_AMBIGUOUS, ARG_IMPORT_PEPTIDE_SEARCH_EXCLUDE_SOURCES,
+            ARG_IMPORT_PEPTIDE_SEARCH_PREFER_EMBEDDED)
         {
             Dependencies =
             {
@@ -1192,11 +1233,39 @@ namespace pwiz.Skyline
         public bool RecalibrateIrts { get; private set; }
         public bool AcceptAllModifications { get; private set; }
         public bool IncludeAmbiguousMatches { get; private set; }
+        public bool ExcludeLibrarySources { get; private set; }
         public bool? PreferEmbeddedSpectra { get; private set; }
         public bool ImportingSearch
         {
             get { return SearchResultsFiles.Count > 0; }
         }
+
+
+        public static readonly Argument ARG_AP_GROUP_PROTEINS = new Argument(@"associate-proteins-group-proteins",
+            (c, p) => c.AssociateProteinsGroupProteins = p.IsNameOnly || bool.Parse(p.Value));
+        public static readonly Argument ARG_AP_SHARED_PEPTIDES = DocArgument.FromEnumType<SharedPeptides>(@"associate-proteins-shared-peptides",
+            (c, p) => c.AssociateProteinsSharedPeptides = p);
+        public static readonly Argument ARG_AP_MINIMAL_LIST = new Argument(@"associate-proteins-minimal-protein-list",
+            (c, p) => c.AssociateProteinsFindMinimalProteinList = p.IsNameOnly || bool.Parse(p.Value));
+        public static readonly Argument ARG_AP_REMOVE_SUBSETS = new Argument(@"associate-proteins-remove-subsets",
+            (c, p) => c.AssociateProteinsRemoveSubsetProteins = p.IsNameOnly || bool.Parse(p.Value));
+        public static readonly Argument ARG_AP_MIN_PEPTIDES = new Argument(@"associate-proteins-min-peptides", INT_VALUE,
+            (c, p) => c.AssociateProteinsMinPeptidesPerProtein = p.ValueInt) { WrapValue = true };
+
+        private static readonly ArgumentGroup GROUP_ASSOCIATE_PROTEINS = new ArgumentGroup(() => Resources.CommandLine_AssociateProteins_Associating_peptides_with_proteins, false,
+            ARG_AP_GROUP_PROTEINS, ARG_AP_SHARED_PEPTIDES, ARG_AP_MINIMAL_LIST, ARG_AP_MIN_PEPTIDES, ARG_AP_REMOVE_SUBSETS)
+            { LeftColumnWidth = 45 };
+
+        public bool? AssociateProteinsGroupProteins { get; private set; }
+        public bool? AssociateProteinsFindMinimalProteinList { get; private set; }
+        public bool? AssociateProteinsRemoveSubsetProteins { get; private set; }
+        public SharedPeptides? AssociateProteinsSharedPeptides { get; private set; }
+        public int? AssociateProteinsMinPeptidesPerProtein { get; private set; }
+        public bool AssociatingProteins => AssociateProteinsFindMinimalProteinList.HasValue ||
+                                           AssociateProteinsGroupProteins.HasValue ||
+                                           AssociateProteinsMinPeptidesPerProtein.HasValue ||
+                                           AssociateProteinsRemoveSubsetProteins.HasValue ||
+                                           AssociateProteinsSharedPeptides.HasValue;
 
         // For adjusting transition filter and full-scan settings
         public static readonly Argument ARG_TRAN_PRECURSOR_ION_CHARGES = new DocArgument(@"tran-precursor-ion-charges", INT_LIST_VALUE,
@@ -1207,6 +1276,32 @@ namespace pwiz.Skyline
             { WrapValue = true };
         public static readonly Argument ARG_TRAN_FRAGMENT_ION_TYPES = new DocArgument(@"tran-product-ion-types", ION_TYPE_LIST_VALUE,
             (c, p) => c.FilterProductTypes = ParseIonTypes(p)) { WrapValue = true };
+        public static readonly Argument ARG_TRAN_PRODUCT_START_ION = new DocArgument(@"tran-product-start-ion",
+            () => TransitionFilter.GetStartFragmentFinderLabels().ToArray(),
+            (c, p) => c.FilterStartProductIon = TransitionFilter.GetStartFragmentFinder(TransitionFilter.GetStartFragmentNameFromLabel(p.Value))) { WrapValue = true };
+        public static readonly Argument ARG_TRAN_PRODUCT_END_ION = new DocArgument(@"tran-product-end-ion",
+            () => TransitionFilter.GetEndFragmentFinderLabels().ToArray(),
+            (c, p) => c.FilterEndProductIon = TransitionFilter.GetEndFragmentFinder(TransitionFilter.GetEndFragmentNameFromLabel(p.Value))) { WrapValue = true };
+        public static readonly Argument ARG_TRAN_PRODUCT_SPECIAL_IONS_CLEAR = new DocArgument(@"tran-product-clear-special-ions",
+                (c, p) => c.FilterSpecialIons = Array.Empty<string>())
+            { OptionalValue = true };
+        public static readonly Argument ARG_TRAN_PRODUCT_SPECIAL_IONS_ADD = new DocArgument(@"tran-product-add-special-ion",
+                () => GetDisplayNames(Settings.Default.MeasuredIonList),
+                (c, p) => c.FilterSpecialIons = c.FilterSpecialIons == null ? new[] { p.Value } : c.FilterSpecialIons.Append(p.Value))
+            { WrapValue = true };
+        public static readonly Argument ARG_TRAN_DIA_WINDOW_EXCLUSION = new DocArgument(@"tran-use-dia-window-exclusion",
+                (c, p) => c.FilterUseDIAWindowExclusion = p.IsNameOnly || bool.Parse(p.Value))
+            { OptionalValue = true };
+
+        public static readonly Argument ARG_TRAN_LIBRARY_ION_MATCH_TOLERANCE = new DocArgument(@"library-match-tolerance", MZTOLERANCE_VALUE,
+            (c, p) => c.LibraryIonMatchTolerance = ParseMzTolerance(p)) { WrapValue = true };
+        public static readonly Argument ARG_TRAN_LIBRARY_PRODUCT_IONS = new DocArgument(@"library-product-ions", INT_VALUE,
+            (c, p) => c.LibraryProductIons = p.GetValueInt(1, Int32.MaxValue)) { WrapValue = true };
+        public static readonly Argument ARG_TRAN_LIBRARY_MIN_PRODUCT_IONS = new DocArgument(@"library-min-product-ions", INT_VALUE,
+            (c, p) => c.LibraryMinProductIons = p.GetValueInt(0, Int32.MaxValue)) { WrapValue = true };
+        public static readonly Argument ARG_TRAN_LIBRARY_PICK_PRODUCT_IONS = DocArgument.FromEnumType<TransitionLibraryPick>(@"library-pick-product-ions",
+            (c, p) => c.LibraryPickIons = p);
+
         public static readonly Argument ARG_TRAN_PREDICT_CE = new DocArgument(@"tran-predict-ce", () => GetDisplayNames(Settings.Default.CollisionEnergyList),
             (c, p) => c.PredictCEName = p.Value) { WrapValue = true };
         public static readonly Argument ARG_TRAN_PREDICT_DP = new DocArgument(@"tran-predict-dp", () => GetDisplayNames(Settings.Default.DeclusterPotentialList),
@@ -1215,32 +1310,102 @@ namespace pwiz.Skyline
             (c, p) => c.PredictCoVName = p.Value) { WrapValue = true };
         public static readonly Argument ARG_TRAN_PREDICT_OPTDB = new DocArgument(@"tran-predict-optdb", () => GetDisplayNames(Settings.Default.OptimizationLibraryList),
             (c, p) => c.PredictOpimizationLibraryName = p.Value) { WrapValue = true };
+
+        public static readonly Argument ARG_FULL_SCAN_PRECURSOR_ISOTOPES = DocArgument.FromEnumType<FullScanPrecursorIsotopes>(@"full-scan-precursor-isotopes",
+            (c, p) => c.FullScanPrecursorIsotopes = p);
+        public static readonly Argument ARG_FULL_SCAN_PRECURSOR_ANALYZER = DocArgument.FromEnumType<FullScanMassAnalyzerType>(@"full-scan-precursor-analyzer",
+            (c, p) => c.FullScanPrecursorMassAnalyzerType = p);
+        public static readonly Argument ARG_FULL_SCAN_PRECURSOR_THRESHOLD = new DocArgument(@"full-scan-precursor-threshold", NUM_VALUE,
+            (c, p) => c.FullScanPrecursorThreshold = p.GetValueDouble(0, 100)) { WrapValue = true };
+        public static readonly Argument ARG_FULL_SCAN_PRECURSOR_ISOTOPE_ENRICHMENT = new DocArgument(@"full-scan-precursor-isotope-enrichment",
+                () => GetDisplayNames(Settings.Default.IsotopeEnrichmentsList),
+                (c, p) => c.FullScanPrecursorIsotopeEnrichment = p.Value)
+            { WrapValue = true };
+        public static readonly Argument ARG_FULL_SCAN_PRECURSOR_IGNORE_SIM = new DocArgument(@"full-scan-precursor-ignore-sim",
+                (c, p) => c.FullScanPrecursorIgnoreSimScans = p.IsNameOnly || bool.Parse(p.Value))
+            { WrapValue = true, OptionalValue = true };
+
+        public static readonly Argument ARG_FULL_SCAN_ACQUISITION_METHOD = new DocArgument(@"full-scan-acquisition-method",
+                () => FullScanAcquisitionMethod.AVAILABLE.Select(m => m.Name).ToArray(),
+                (c, p) => c.FullScanAcquisitionMethod = FullScanAcquisitionMethod.FromName(p.Value))
+            { WrapValue = true };
+        public static readonly Argument ARG_FULL_SCAN_PRODUCT_ANALYZER = DocArgument.FromEnumType<FullScanMassAnalyzerType>(@"full-scan-product-analyzer",
+            (c, p) => c.FullScanProductMassAnalyzerType = p);
+        public static readonly Argument ARG_FULL_SCAN_PRODUCT_ISOLATION_SCHEME = new DocArgument(
+                @"full-scan-isolation-scheme",
+                () => Argument.ValuesToExample(GetDisplayNames(Settings.Default.IsolationSchemeList)
+                    .Append(CommandArgUsage.CommandArgs_ARG_FULL_SCAN_PRODUCT_ISOLATION_SCHEME_path_to_result_file_to_import_the_isolation_scheme)),
+                (c, p) => c.FullScanProductIsolationScheme = p.Value)
+            { WrapValue = true };
+
         public static readonly Argument ARG_FULL_SCAN_PRECURSOR_RES = new DocArgument(@"full-scan-precursor-res", RP_VALUE,
-            (c, p) => c.FullScanPrecursorRes = p.ValueDouble) { WrapValue = true };
+            (c, p) => c.FullScanPrecursorRes = p.ValueDouble);
         public static readonly Argument ARG_FULL_SCAN_PRECURSOR_RES_MZ = new DocArgument(@"full-scan-precursor-res-mz", MZ_VALUE,
-            (c, p) => c.FullScanPrecursorResMz = p.ValueDouble) { WrapValue = true };
+            (c, p) => c.FullScanPrecursorResMz = p.ValueDouble);
         public static readonly Argument ARG_FULL_SCAN_PRODUCT_RES = new DocArgument(@"full-scan-product-res", RP_VALUE,
-            (c, p) => c.FullScanProductRes = p.ValueDouble) { WrapValue = true };
+            (c, p) => c.FullScanProductRes = p.ValueDouble);
         public static readonly Argument ARG_FULL_SCAN_PRODUCT_RES_MZ = new DocArgument(@"full-scan-product-res-mz", MZ_VALUE,
-            (c, p) => c.FullScanProductResMz = p.ValueDouble) { WrapValue = true };
+            (c, p) => c.FullScanProductResMz = p.ValueDouble);
+        public static readonly Argument ARG_FULL_SCAN_RT_FILTER = DocArgument.FromEnumType<RetentionTimeFilterType>(@"full-scan-rt-filter",
+            (c, p) => c.FullScanRetentionTimeFilter = p);
         public static readonly Argument ARG_FULL_SCAN_RT_FILTER_TOLERANCE = new DocArgument(@"full-scan-rt-filter-tolerance", MINUTES_VALUE,
             (c, p) => c.FullScanRetentionTimeFilterLength = p.ValueDouble) { WrapValue = true };
         public static readonly Argument ARG_IMS_LIBRARY_RES = new DocArgument(@"ims-library-res", RP_VALUE,
-                (c, p) => c.IonMobilityLibraryRes = p.ValueDouble)
-            { WrapValue = true };
+                (c, p) => c.IonMobilityLibraryRes = p.ValueDouble);
+
+        public static readonly Argument ARG_INST_MIN_MZ = new DocArgument(@"instrument-min-mz", MZ_VALUE,
+                (c, p) => c.InstrumentMinMz = p.ValueDouble);
+        public static readonly Argument ARG_INST_MAX_MZ = new DocArgument(@"instrument-max-mz", MZ_VALUE,
+            (c, p) => c.InstrumentMaxMz = p.ValueDouble);
+        public static readonly Argument ARG_INST_DYNAMIC_MIN_MZ = new DocArgument(@"instrument-dynamic-min-mz",
+                (c, p) => c.InstrumentIsDynamicMinMz = p.IsNameOnly || bool.Parse(p.Value))
+            { OptionalValue = true };
+        public static readonly Argument ARG_INST_METHOD_TOLERANCE = new DocArgument(@"instrument-method-mz-tolerance", MZ_VALUE,
+            (c, p) => c.InstrumentMethodMatchTolerance = p.ValueDouble);
+        public static readonly Argument ARG_INST_MIN_TIME = new DocArgument(@"instrument-min-time", MINUTES_VALUE,
+            (c, p) => c.InstrumentMinTimeMinutes = p.ValueDouble);
+        public static readonly Argument ARG_INST_MAX_TIME = new DocArgument(@"instrument-max-time", MINUTES_VALUE,
+            (c, p) => c.InstrumentMaxTimeMinutes = p.ValueDouble);
+        public static readonly Argument ARG_INST_TRIGGERED_CHROMATOGRAMS = new DocArgument(@"instrument-triggered-chromatograms",
+                (c, p) => c.InstrumentIsTriggeredChromatogramAcquisition = p.IsNameOnly || bool.Parse(p.Value))
+            { OptionalValue = true };
 
         private static readonly ArgumentGroup GROUP_SETTINGS = new ArgumentGroup(() => CommandArgUsage.CommandArgs_GROUP_SETTINGS_Document_Settings, false,
             ARG_TRAN_PRECURSOR_ION_CHARGES, ARG_TRAN_FRAGMENT_ION_CHARGES, ARG_TRAN_FRAGMENT_ION_TYPES,
+            ARG_TRAN_PRODUCT_START_ION, ARG_TRAN_PRODUCT_END_ION, ARG_TRAN_PRODUCT_SPECIAL_IONS_CLEAR, ARG_TRAN_PRODUCT_SPECIAL_IONS_ADD,
             ARG_TRAN_PREDICT_CE, ARG_TRAN_PREDICT_DP, ARG_TRAN_PREDICT_COV, ARG_TRAN_PREDICT_OPTDB,
-            ARG_FULL_SCAN_PRECURSOR_RES, ARG_FULL_SCAN_PRECURSOR_RES_MZ,
-            ARG_FULL_SCAN_PRODUCT_RES, ARG_FULL_SCAN_PRODUCT_RES_MZ,
-            ARG_FULL_SCAN_RT_FILTER_TOLERANCE, ARG_IMS_LIBRARY_RES)
+            ARG_TRAN_DIA_WINDOW_EXCLUSION, ARG_TRAN_LIBRARY_ION_MATCH_TOLERANCE,
+            ARG_TRAN_LIBRARY_PICK_PRODUCT_IONS, ARG_TRAN_LIBRARY_PRODUCT_IONS, ARG_TRAN_LIBRARY_MIN_PRODUCT_IONS,
+            ARG_FULL_SCAN_PRECURSOR_ISOTOPES, ARG_FULL_SCAN_PRECURSOR_THRESHOLD,
+            ARG_FULL_SCAN_PRECURSOR_IGNORE_SIM, ARG_FULL_SCAN_PRECURSOR_ISOTOPE_ENRICHMENT,
+            ARG_FULL_SCAN_PRECURSOR_ANALYZER, ARG_FULL_SCAN_PRECURSOR_RES, ARG_FULL_SCAN_PRECURSOR_RES_MZ,
+            ARG_FULL_SCAN_ACQUISITION_METHOD, ARG_FULL_SCAN_PRODUCT_ISOLATION_SCHEME,
+            ARG_FULL_SCAN_PRODUCT_ANALYZER, ARG_FULL_SCAN_PRODUCT_RES, ARG_FULL_SCAN_PRODUCT_RES_MZ,
+            ARG_FULL_SCAN_RT_FILTER, ARG_FULL_SCAN_RT_FILTER_TOLERANCE, ARG_IMS_LIBRARY_RES,
+            ARG_INST_MIN_MZ, ARG_INST_MAX_MZ, ARG_INST_DYNAMIC_MIN_MZ,
+            ARG_INST_METHOD_TOLERANCE, ARG_INST_MIN_TIME, ARG_INST_MAX_TIME,
+            ARG_INST_TRIGGERED_CHROMATOGRAMS)
         {            
-            LeftColumnWidth = 34,
+            LeftColumnWidth = 40,
             Dependencies =
             {
                 {ARG_FULL_SCAN_PRECURSOR_RES_MZ, ARG_FULL_SCAN_PRECURSOR_RES},
                 {ARG_FULL_SCAN_PRODUCT_RES_MZ, ARG_FULL_SCAN_PRODUCT_RES},
+                {ARG_FULL_SCAN_PRECURSOR_ANALYZER, ARG_FULL_SCAN_PRECURSOR_RES},
+                {ARG_FULL_SCAN_PRODUCT_ANALYZER, ARG_FULL_SCAN_PRODUCT_RES},
+            },
+            Validate = c =>
+            {
+                if (c.FullScanProductIsolationScheme != null &&
+                    !Settings.Default.IsolationSchemeList.Contains(s => s.Name == c.FullScanProductIsolationScheme) &&
+                    !MsDataFileImpl.IsValidFile(c.FullScanProductIsolationScheme))
+                {
+                    c.WriteLine(Resources.CommandArgs_ParseArgsInternal_Error____0___is_not_a_valid_value_for__1___It_must_be_one_of_the_following___2_,
+                        c.FullScanProductIsolationScheme, ARG_FULL_SCAN_PRODUCT_ISOLATION_SCHEME.ArgumentText, ARG_FULL_SCAN_PRODUCT_ISOLATION_SCHEME.ValueExample());
+                    return false;
+                }
+
+                return true;
             }
         };
 
@@ -1273,19 +1438,67 @@ namespace pwiz.Skyline
             return types;
         }
 
+        private static MzTolerance ParseMzTolerance(NameValuePair p)
+        {
+            Assume.IsNotNull(p.Match); // Must be matched before accessing this
+
+            var ds = LocalizationHelper.CurrentCulture.NumberFormat.NumberDecimalSeparator;
+            var match = Regex.Match(p.Value, @$"([+-]?(?:\d+\{ds}?\d*)|(?:\{ds}\d+))\s*(ppm|mz|m/z|da|daltons|th)", RegexOptions.IgnoreCase);
+            if (!match.Success)
+                throw new ValueInvalidMzToleranceException(p.Match, p.Value);
+            if (!double.TryParse(match.Groups[1].Value, out double value))
+                throw new ValueInvalidMzToleranceException(p.Match, p.Value);
+            var units = match.Groups[2].Value.ToLowerInvariant() switch
+            {
+                "ppm" => MzTolerance.Units.ppm,
+                "mz" => MzTolerance.Units.mz,
+                "m/z" => MzTolerance.Units.mz,
+                "da" => MzTolerance.Units.mz,
+                "daltons" => MzTolerance.Units.mz,
+                "th" => MzTolerance.Units.mz,
+                _ => throw new ValueInvalidMzToleranceException(p.Match, p.Value)
+            };
+            return new MzTolerance(value, units);
+        }
+
         public Adduct[] FilterPrecursorCharges { get; private set; }
         public Adduct[] FilterProductCharges { get; private set; }
         public IonType[] FilterProductTypes { get; private set; }
+        public IStartFragmentFinder FilterStartProductIon { get; private set; }
+        public IEndFragmentFinder FilterEndProductIon { get; private set; }
+        public IEnumerable<string> FilterSpecialIons { get; private set; }
+        public bool? FilterUseDIAWindowExclusion { get; private set; }
 
         public bool FilterSettings
         {
             get
             {
-                return (FilterPrecursorCharges != null ||
-                        FilterProductCharges != null ||
-                        FilterProductTypes != null);
+                return FilterPrecursorCharges != null ||
+                       FilterProductCharges != null ||
+                       FilterProductTypes != null ||
+                       FilterStartProductIon != null ||
+                       FilterEndProductIon != null ||
+                       FilterUseDIAWindowExclusion != null;
             }
         }
+
+        public MzTolerance LibraryIonMatchTolerance { get; private set; }
+        public int? LibraryProductIons { get; private set; }
+        public int? LibraryMinProductIons { get; private set; }
+        public TransitionLibraryPick? LibraryPickIons {get; private set; }
+
+
+        public bool LibrarySettings
+        {
+            get
+            {
+                return LibraryIonMatchTolerance != null ||
+                       LibraryProductIons != null ||
+                       LibraryMinProductIons != null ||
+                       LibraryPickIons != null;
+            }
+        }
+
         public string PredictCEName { get; private set; }
         public string PredictDPName { get; private set; }
         public string PredictCoVName { get; private set; }
@@ -1301,21 +1514,37 @@ namespace pwiz.Skyline
                         PredictOpimizationLibraryName != null);
             }
         }
+        public FullScanPrecursorIsotopes? FullScanPrecursorIsotopes { get; private set; }
+        public FullScanMassAnalyzerType? FullScanPrecursorMassAnalyzerType { get; private set; }
+        public double? FullScanPrecursorThreshold { get; private set; }
+        public string FullScanPrecursorIsotopeEnrichment { get; private set; }
+        public bool? FullScanPrecursorIgnoreSimScans { get; private set; }
         public double? FullScanPrecursorRes { get; private set; }
         public double? FullScanPrecursorResMz { get; private set; }
+        public FullScanAcquisitionMethod FullScanAcquisitionMethod { get; private set; }
+        public FullScanMassAnalyzerType? FullScanProductMassAnalyzerType { get; private set; }
+        public string FullScanProductIsolationScheme { get; private set; }
         public double? FullScanProductRes { get; private set; }
         public double? FullScanProductResMz { get; private set; }
+        public RetentionTimeFilterType? FullScanRetentionTimeFilter { get; private set; }
         public double? FullScanRetentionTimeFilterLength { get; private set; }
 
         public bool FullScanSettings
         {
             get
             {
-                return (FullScanPrecursorRes
-                        ?? FullScanPrecursorResMz
-                        ?? FullScanProductRes
-                        ?? FullScanProductResMz
-                        ?? FullScanRetentionTimeFilterLength).HasValue;
+                return FullScanPrecursorIsotopes.HasValue
+                       || FullScanPrecursorMassAnalyzerType.HasValue
+                       || FullScanProductMassAnalyzerType.HasValue
+                       || FullScanPrecursorIgnoreSimScans.HasValue
+                       || FullScanAcquisitionMethod != FullScanAcquisitionMethod.None
+                       || FullScanRetentionTimeFilter != null
+                       || (FullScanPrecursorRes
+                           ?? FullScanPrecursorResMz
+                           ?? FullScanProductRes
+                           ?? FullScanProductResMz
+                           ?? FullScanPrecursorThreshold
+                           ?? FullScanRetentionTimeFilterLength).HasValue;
             }
         }
 
@@ -1325,6 +1554,22 @@ namespace pwiz.Skyline
         {
             get { return IonMobilityLibraryRes.HasValue; }
         }
+
+        public double? InstrumentMinMz { get; private set; }
+        public double? InstrumentMaxMz { get; private set; }
+        public bool? InstrumentIsDynamicMinMz { get; private set; }
+        public double? InstrumentMethodMatchTolerance { get; private set; }
+        public double? InstrumentMinTimeMinutes { get; private set; }
+        public double? InstrumentMaxTimeMinutes { get; private set; }
+        public bool? InstrumentIsTriggeredChromatogramAcquisition {get; private set; }
+
+        public bool InstrumentSettings => InstrumentMinMz.HasValue
+                                          || InstrumentMaxMz.HasValue
+                                          || InstrumentIsDynamicMinMz.HasValue
+                                          || InstrumentMethodMatchTolerance.HasValue
+                                          || InstrumentMinTimeMinutes.HasValue
+                                          || InstrumentMaxTimeMinutes.HasValue
+                                          || InstrumentIsTriggeredChromatogramAcquisition.HasValue;
 
         // For importing a tool from a zip file.
         public static readonly Argument ARG_TOOL_ADD = new ToolArgument(@"tool-add", NAME_VALUE,
@@ -1342,7 +1587,7 @@ namespace pwiz.Skyline
             (c, p) => c.ToolReportTitle = p.Value);
         public static readonly Argument ARG_TOOL_OUTPUT_TO_IMMEDIATE_WINDOW = new ToolArgument(@"tool-output-to-immediate-window",
             (c, p) => c.ToolOutputToImmediateWindow = true);
-        public static readonly Argument ARG_TOOL_ADD_ZIP = new Argument(@"tool-add-zip", () => GetPathToFile(ToolDescription.EXT_INSTALL),
+        public static readonly Argument ARG_TOOL_ADD_ZIP = new Argument(@"tool-add-zip", PATH_TO_INSTALL,
             (c, p) =>
             {
                 c.InstallingToolsFromZip = true;
@@ -1806,6 +2051,7 @@ namespace pwiz.Skyline
                     GROUP_ANNOTATIONS,
                     GROUP_FASTA,
                     GROUP_IMPORT_SEARCH,
+                    GROUP_ASSOCIATE_PROTEINS,
                     GROUP_IMPORT_LIST,
                     GROUP_ADD_LIBRARY,
                     GROUP_CREATE_IMSDB,
@@ -2118,7 +2364,7 @@ namespace pwiz.Skyline
             public string GetArgumentTextWithValue(string value)
             {
                 if (ValueExample == null)
-                    throw new ArgumentException(@"The argument {0} is valueless.");
+                    throw new ValueUnexpectedException(this);
                 else if (Values != null && !Values.Any(v => v.Equals(value, StringComparison.CurrentCultureIgnoreCase)))
                     throw new ValueInvalidException(this, value, Values);
 
@@ -2146,7 +2392,7 @@ namespace pwiz.Skyline
                 return ArgumentDescription;
             }
 
-            public static string ValuesToExample(params string[] options)
+            public static string ValuesToExample(IEnumerable<string> options)
             {
                 var sb = new StringBuilder();
                 sb.Append('<');
@@ -2158,6 +2404,11 @@ namespace pwiz.Skyline
                 }
                 sb.Append('>');
                 return sb.ToString();
+            }
+
+            public static string ValuesToExample(params string[] options)
+            {
+                return ValuesToExample((IEnumerable<string>) options);
             }
 
             public static NameValuePair Parse(string arg)
@@ -2221,6 +2472,14 @@ namespace pwiz.Skyline
             public DocArgument(string name, Func<string[]> values, Action<CommandArgs, NameValuePair> processValue)
                 : base(name, values, (c, p) => ProcessValueOverride(c, p, processValue))
             {
+            }
+
+            public static DocArgument FromEnumType<TEnum>(string name, Action<CommandArgs, TEnum> processValue)
+            {
+                var enumType = typeof(TEnum);
+                return new DocArgument(name, () => Enum.GetNames(enumType),
+                        (c, p) => processValue(c, (TEnum) Enum.Parse(enumType, p.Value)))
+                    { WrapValue = true };
             }
 
             private static bool ProcessValueOverride(CommandArgs c, NameValuePair p, Func<CommandArgs, NameValuePair, bool> processValue)
@@ -2691,6 +2950,14 @@ namespace pwiz.Skyline
         {
             public ValueInvalidIonTypeListException(Argument arg, string value)
                 : base(string.Format(Resources.ValueInvalidIonTypeListException_ValueInvalidIonTypeListException_The_value___0___is_not_valid_for_the_argument__1__which_requires_an_comma_separated_list_of_fragment_ion_types__a__b__c__x__y__z__p__, value, arg.ArgumentText))
+            {
+            }
+        }
+
+        public class ValueInvalidMzToleranceException : UsageException
+        {
+            public ValueInvalidMzToleranceException(Argument arg, string value)
+                : base(string.Format(Resources.ValueInvalidMzToleranceException_ValueInvalidMzToleranceException_The_value__0__is_not_valid_for_the_argument__1__which_requires_a_value_and_a_unit__For_example___2__, value, arg.ArgumentText, arg.ValueExample()))
             {
             }
         }

@@ -162,7 +162,7 @@ namespace TestPerf
 
                 TargetCounts = new[] { 6945, 41874, 46365, 278190 },
                 FinalTargetCounts = new[] { 2642, 27840, 31188, 187128 },
-                ScoringModelCoefficients = "0.1950|-0.6249|4.0515|0.1456|-0.1799|0.5898|0.1468|-0.0444",
+                ScoringModelCoefficients = "0.1951|-0.6248|4.0530|0.1456|-0.1801|0.5896|0.1466|-0.0445",
                 MassErrorStats = new[]
                 {
                     new[] {2.7, 5.1},
@@ -253,7 +253,7 @@ namespace TestPerf
 
                 TargetCounts = new[] { 4424, 25010, 27129, 162774 },
                 FinalTargetCounts = new[] { 1529, 15328, 16793, 100758 },
-                ScoringModelCoefficients = "0.2747|-0.8326|2.9655|1.2696|-0.0727|0.7013|0.0816|-0.0658",
+                ScoringModelCoefficients = "0.2747|-0.8328|2.9651|1.2701|-0.0728|0.7011|0.0815|-0.0658",
                 MassErrorStats = new[]
                 {
                     new[] {1.6, 4.6},
@@ -573,7 +573,7 @@ namespace TestPerf
                 // Run the search
                 Assert.IsTrue(importPeptideSearchDlg.ClickNextButton());
 
-                importPeptideSearchDlg.SearchControl.OnSearchFinished += (success) => searchSucceeded = success;
+                importPeptideSearchDlg.SearchControl.SearchFinished += (success) => searchSucceeded = success;
                 importPeptideSearchDlg.BuildPepSearchLibControl.IncludeAmbiguousMatches = true;
             });
 

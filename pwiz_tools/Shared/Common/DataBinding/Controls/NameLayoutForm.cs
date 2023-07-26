@@ -19,8 +19,8 @@
 using System;
 using System.Collections.Generic;
 using System.Windows.Forms;
-using pwiz.Common.Controls;
 using pwiz.Common.Properties;
+using pwiz.Common.SystemUtil;
 
 namespace pwiz.Common.DataBinding.Controls
 {

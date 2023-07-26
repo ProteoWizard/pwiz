@@ -21,7 +21,7 @@ using System;
 using System.Linq;
 using System.Windows.Forms;
 using pwiz.Common.Collections;
-using pwiz.Common.Controls;
+using pwiz.Common.SystemUtil;
 using pwiz.Skyline.Model;
 using pwiz.Skyline.Model.Results;
 using pwiz.Skyline.Properties;
@@ -32,10 +32,6 @@ namespace pwiz.Skyline.Controls.Graphs
     public enum AreaScope{ document, protein }
 
     public enum PointsTypePeakArea { targets, decoys }
-
-    public enum AreaCVTransitions { all, best, count }
-
-    public enum AreaCVMsLevel { precursors, products }
 
     public static class AreCVMsLevelExtension
     {

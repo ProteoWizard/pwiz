@@ -22,7 +22,6 @@
 
 namespace pwiz{
 namespace analysis{
-    using namespace std;
     using namespace msdata;
     using namespace Eigen;
 
@@ -256,12 +255,36 @@ namespace analysis{
         size_t maxCount = 0;
         // Record the windows that were used
         vector<IsolationWindow> returnIsolationWindows;
-        for (auto it = usedWindows.begin(); it != usedWindows.end(); )
+        if (params_.removeNonOverlappingEdges)
         {
-            auto count = usedWindows.count(*it);
-            maxCount = max(maxCount, count);
-            returnIsolationWindows.push_back(*it);
-            std::advance(it, count);
+            for (auto it = usedWindows.begin(); it != usedWindows.end(); )
+            {
+                auto count = usedWindows.count(*it);
+                maxCount = max(maxCount, count);
+                std::advance(it, count);
+            }
+
+            for (auto it = usedWindows.begin(); it != usedWindows.end(); )
+            {
+                auto count = usedWindows.count(*it);
+                if (count != maxCount)
+                {
+                    cerr << "Dropping non-overlapping edge isolation window: " << it->lowMz << ", " << it->highMz << endl;
+                    edgeWindowsToRemove_.push_back(returnIsolationWindows.size());
+                }
+                returnIsolationWindows.push_back(*it);
+                std::advance(it, count);
+            }
+        }
+        else
+        {
+            for (auto it = usedWindows.begin(); it != usedWindows.end(); )
+            {
+                auto count = usedWindows.count(*it);
+                maxCount = max(maxCount, count);
+                returnIsolationWindows.push_back(*it);
+                std::advance(it, count);
+            }
         }
         overlapsPerSpectrum_ = maxCount;
 
@@ -331,6 +354,11 @@ namespace analysis{
     size_t PrecursorMaskCodec::GetNumDemuxWindows() const
     {
         return isolationWindows_.size();
+    }
+
+    const std::vector<size_t>& PrecursorMaskCodec::GetDemuxWindowEdgesRemoved() const
+    {
+        return edgeWindowsToRemove_;
     }
 
     int PrecursorMaskCodec::GetSpectraPerCycle() const

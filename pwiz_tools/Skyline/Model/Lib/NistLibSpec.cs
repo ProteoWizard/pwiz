@@ -26,6 +26,7 @@ using System.Text;
 using System.Text.RegularExpressions;
 using System.Xml;
 using System.Xml.Serialization;
+using pwiz.Common.Chemistry;
 using pwiz.Common.Collections;
 using pwiz.Common.SystemUtil;
 using pwiz.Skyline.Model.DocSettings;
@@ -141,8 +142,10 @@ namespace pwiz.Skyline.Model.Lib
         {
         }
 
+        public override string LibraryTypeName => @"NIST";
+
         #region Implementation of IXmlSerializable
-        
+
         /// <summary>
         /// For serialization
         /// </summary>
@@ -158,7 +161,7 @@ namespace pwiz.Skyline.Model.Lib
         #endregion
     }
 
-    public class NistSpectrumHeaderInfoBase : SpectrumHeaderInfo
+    public abstract class NistSpectrumHeaderInfoBase : SpectrumHeaderInfo
     {
         public NistSpectrumHeaderInfoBase(string libraryName, float tfRatio, double? rt, double? irt, float totalIntensity, int spectrumCount)
             : base(libraryName)
@@ -375,6 +378,8 @@ namespace pwiz.Skyline.Model.Lib
 
     public abstract class NistLibraryBase : CachedLibrary<NistSpectrumInfo>
     {
+        public const double DUMMY_GC_ESI_MASS = 1000; // Some GC libraries only offer fragment info (as there's no intact mass to measure after 100% fragmentation) so use a dummy mass
+
         // Version 6 adds peak annotations
         private const int FORMAT_VERSION_CACHE = 6; 
 
@@ -769,34 +774,35 @@ namespace pwiz.Skyline.Model.Lib
 // ReSharper disable LocalizableElement
         private static readonly string NAME = "Name:";
         private static readonly RegexOptions NOCASE = RegexOptions.IgnoreCase | RegexOptions.CultureInvariant | RegexOptions.Compiled;
-        private static readonly Regex REGEX_NAME = new Regex(@"^(?i:Name): ([A-Z()\[\]0-9]+)/(\d)", RegexOptions.CultureInvariant | RegexOptions.Compiled); // NIST libraries can contain M(O) and SpectraST M[16] TODO: Spectrast also has c- and n-term mods but we reject such entries for now - see example in TestLibraryExplorer
-        private static readonly Regex REGEX_NUM_PEAKS = new Regex(@"^(?:Num ?Peaks|number of peaks): (\d+)", NOCASE);  // NIST uses "Num peaks" and SpectraST "NumPeaks" and mzVault does its own thing
-        private static readonly string COMMENT = "Comment: ";
+        private static readonly Regex REGEX_NAME = new Regex(@"^(?i:Name):\s*([A-Z()\[\]0-9]+)/(\d)", RegexOptions.CultureInvariant | RegexOptions.Compiled); // NIST libraries can contain M(O) and SpectraST M[16] TODO: Spectrast also has c- and n-term mods but we reject such entries for now - see example in TestLibraryExplorer
+        private static readonly Regex REGEX_NUM_PEAKS = new Regex(@"^(?:Num ?Peaks|number of peaks):\s*(\d+)", NOCASE);  // NIST uses "Num peaks" and SpectraST "NumPeaks" and mzVault does its own thing
+        private static readonly string COMMENT = "Comment:";
         private static readonly Regex REGEX_MODS = new Regex(@" Mods=([^ ]+) ", NOCASE);
         private static readonly Regex REGEX_TF_RATIO = new Regex(@" Tfratio=([^ ]+) ", NOCASE);
         private static readonly Regex REGEX_RT = new Regex(@" RetentionTime=([^ ,]+)", NOCASE); // In a comment
         private static readonly Regex REGEX_RTINSECONDS = new Regex(@" RTINSECONDS=([^ ,]+)", NOCASE); // In a comment
-        private static readonly Regex REGEX_RT_LINE = new Regex(@"^RetentionTime(Mins)*: ([^ ]+)", NOCASE); // On its own line
+        private static readonly Regex REGEX_RT_LINE = new Regex(@"^RetentionTime(Mins)*:\s*([^ ]+)", NOCASE); // On its own line
         private static readonly Regex REGEX_IRT = new Regex(@" iRT=([^ ,]+)", NOCASE);
-        private static readonly Regex REGEX_RI = new Regex(@"^Retention_index: ([^ ]+)", NOCASE); // Retention Index for GC
-        private static readonly Regex REGEX_RI_LINE = new Regex(@"^(?:Synon:.* )?RI: ([^ ]+)", NOCASE); // Retention Index for GC
+        private static readonly Regex REGEX_RI = new Regex(@"^Retention_index:\s*([^ ]+)", NOCASE); // Retention Index for GC
+        private static readonly Regex REGEX_RI_LINE = new Regex(@"^(?:Synon:.* )?RI:\s*([^ ]+)", NOCASE); // Retention Index for GC
         private static readonly Regex REGEX_SAMPLE = new Regex(@" Nreps=\d+/(\d+)", NOCASE);  // Observer spectrum count
         private static readonly char[] MAJOR_SEP = {'/'};
         private static readonly char[] MINOR_SEP = {','};
         // Small molecule items
-        private static readonly Regex REGEX_NAME_SMALLMOL = new Regex(@"^Name: (.*)", NOCASE); // small molecule names can be anything
-        private static readonly string SYNON = "Synon: ";
-        private static readonly Regex REGEX_INCHIKEY = new Regex(@"^(?:Synon:.* )?InChIKey: (.*)", NOCASE);
-        private static readonly Regex REGEX_INCHI = new Regex(@"^(?:Synon:.* )?InChI: (?:InChI\=)?(.*)", NOCASE);
-        private static readonly Regex REGEX_FORMULA = new Regex(@"^Formula: (.*)", NOCASE);
-        private static readonly Regex REGEX_CAS = new Regex(@"^(?:Synon:.* )?CAS(?:#?|No): (\d+-\d+-\d)", NOCASE); // CONSIDER(bspratt): capture NIST# as well?
-        private static readonly Regex REGEX_KEGG = new Regex(@"^(?:Synon:.* )?KEGG: (.*)", NOCASE);
-        private static readonly Regex REGEX_SMILES = new Regex(@"^(?:Synon:.* )?SMILES: (.*)", NOCASE);
-        private static readonly Regex REGEX_ADDUCT = new Regex(@"^Precursor_type: (.*)", NOCASE);
+        private static readonly Regex REGEX_NAME_SMALLMOL = new Regex(@"^Name:\s*(.*)", NOCASE); // small molecule names can be anything
+        private static readonly string SYNON = "Synon:";
+        private static readonly Regex REGEX_INCHIKEY = new Regex(@"^(?:Synon:.* )?InChIKey:\s*(.*)", NOCASE);
+        private static readonly Regex REGEX_INCHI = new Regex(@"^(?:Synon:.* )?InChI:\s*(?:InChI\=)?(.*)", NOCASE);
+        private static readonly Regex REGEX_FORMULA = new Regex(@"^(Formula|Form):\s*(.*)", NOCASE);
+        private static readonly Regex REGEX_CAS = new Regex(@"^(?:Synon:.* )?CAS(?:#?|No|Nbr):\s*(\d+-\d+-\d)", NOCASE); // CONSIDER(bspratt): capture NIST# as well?
+        private static readonly Regex REGEX_KEGG = new Regex(@"^(?:Synon:.* )?KEGG:\s*(.*)", NOCASE);
+        private static readonly Regex REGEX_SMILES = new Regex(@"^(?:Synon:.* )?SMILES:\s*(.*)", NOCASE);
+        private static readonly Regex REGEX_ADDUCT = new Regex(@"^Precursor_type:\s*(.*)", NOCASE);
         // N.B this was formerly "^PrecursorMz: ([^ ]+)" - no comma - I don't understand how double.Parse worked with existing
         // test inputs like "PrecursorMZ: 124.0757, 109.1" but somehow adding NOCASE suddenly made it necessary
-        private static readonly Regex REGEX_PRECURSORMZ = new Regex(@"^(?:PrecursorMz|Selected Ion m/z): ([^ ,]+)", NOCASE); 
-        private static readonly Regex REGEX_IONMODE = new Regex(@"^IonMode: (.*)", NOCASE);
+        private static readonly Regex REGEX_PRECURSORMZ = new Regex(@"^(?:PrecursorMz|Selected Ion m/z):\s*([^ ,]+)", NOCASE);
+        private static readonly Regex REGEX_MOLWEIGHT = new Regex(@"^MW:\s*(.*)", NOCASE);
+        private static readonly Regex REGEX_IONMODE = new Regex(@" ^ IonMode:\s*(.*)", NOCASE);
         private const double DEFAULT_MZ_MATCH_TOLERANCE = 0.01; // Most .MSP formats we see present precursor m/z values that match at about this tolerance
         private const string MZVAULT_POSITIVE_SCAN_INIDCATOR = @"Positive scan";
         private const string MZVAULT_NEGATIVE_SCAN_INIDCATOR = @"Negative scan";
@@ -821,6 +827,7 @@ namespace pwiz.Skyline.Model.Lib
 
                 long lineCount = 0;
                 string line;
+                long nMasslessEntries = 0;
                 while ((line = reader.ReadLine()) != null)
                 {
                     lineCount++;
@@ -845,22 +852,14 @@ namespace pwiz.Skyline.Model.Lib
                     line = HandleMzVaultLineVariant(line, out _);
 
                     // Read until name line
-                    if (!line.StartsWith(NAME, StringComparison.InvariantCultureIgnoreCase)) // Accept Name:, NAME:, nAmE: etc
-                        continue;
-                    Match match = REGEX_NAME.Match(line);
-                    var isPeptide = true;
-                    var mzMatchTolerance = DEFAULT_MZ_MATCH_TOLERANCE;  
-                    var isGC = false;
-                    if (!match.Success)
+                    if (!ParseName(line, out var isPeptide, out var sequence, out var charge))
                     {
-                        isPeptide = false;
-                        match = REGEX_NAME_SMALLMOL.Match(line);
-                    }
-                    if (!match.Success)
                         continue;
+                    }
 
-                    string sequence = match.Groups[1].Value; // Peptide sequence or molecule name
-                    var charge = isPeptide ? int.Parse(match.Groups[2].Value, CultureInfo.InvariantCulture) : 0;
+                    var mzMatchTolerance = DEFAULT_MZ_MATCH_TOLERANCE;
+                    var isGC = false;
+
                     var adduct = Adduct.EMPTY;
                     string formula = null;
                     var otherKeys = new Dictionary<string, string>();
@@ -875,6 +874,7 @@ namespace pwiz.Skyline.Model.Lib
                     double? rt = null, irt = null;
                     int? copies = null;
                     double? precursorMz = null;
+                    double? molWeight = null;
                     bool? isPositive = null;
 
                     // Process until the start of the peaks
@@ -883,208 +883,50 @@ namespace pwiz.Skyline.Model.Lib
                         lineCount++;
 
                         readChars += line.Length;
+
+                        // Handle quirky line construction by mzVault msp export before proceeding with parsing
                         line = HandleMzVaultLineVariant(line, out var isMzVault);
 
-                        if (isPeptide && line.StartsWith(SYNON, StringComparison.InvariantCultureIgnoreCase)) // Case insensitive
+                        // "SYNON" is a clue that this isn't actually peptide data
+                        isPeptide &= !line.StartsWith(SYNON, StringComparison.InvariantCultureIgnoreCase);
+
+                        //
+                        // Note the following parsing steps are ordered in descending likelihood of matching, for efficiency
+                        //
+                        if (ParseRT(line, isMzVault, ref rt, ref isGC))
                         {
-                            isPeptide = false;
+                            continue; // Line is fully consumed
                         }
 
-                        if (!rt.HasValue)
+                        if (!isPeptide && ParseMolecule(line, otherKeys, lineCount, ref formula, ref inChiKey, ref inChi, ref CAS, 
+                                ref KEGG, ref SMILES, ref adduct, ref precursorMz, ref molWeight, ref isPositive))
                         {
-                            match = REGEX_RT_LINE.Match(line); // RT may also be found in comments (originally only in comments)
-                            if (match.Success)
-                            {
-                                rt = GetRetentionTime(match.Groups[2].Value, isMzVault || !string.IsNullOrEmpty(match.Groups[1].Value)); // RetentionTime: vs RetentionTimeMins:
-                                continue;
-                            }
-
-                            match = REGEX_RI_LINE.Match(line);
-                            if (!match.Success)
-                                match = REGEX_RI.Match(line);
-                            if (match.Success)
-                            {
-                                // Note using RT as stand-in for RI (retention Time vs retention Index, LC vs GC)
-                                // CONSIDER: track RT and RI simultaneously so lib is useful for GC and LC?
-                                rt = GetRetentionTime(match.Groups[1].Value, true); 
-                                isGC = true;
-                                continue;
-                            }
-                        }
-
-                        if (!isPeptide)
-                        {
-                            if (formula == null)
-                            {
-                                match = REGEX_FORMULA.Match(line);
-                                if (match.Success)
-                                {
-                                    formula = match.Groups[1].Value;
-                                    if (string.Equals(MZVAULT_FORMULA_UNKNOWN, formula, StringComparison.OrdinalIgnoreCase)) // As in mzVault output
-                                    {
-                                        formula = null;
-                                    }
-                                    continue;
-                                }
-                            }
-                            if (inChiKey == null)
-                            {
-                                match = REGEX_INCHIKEY.Match(line);
-                                if (match.Success)
-                                {
-                                    inChiKey = match.Groups[1].Value;
-                                    continue;
-                                }
-                            }
-                            if (inChi == null)
-                            {
-                                match = REGEX_INCHI.Match(line);
-                                if (match.Success)
-                                {
-                                    otherKeys.Add(MoleculeAccessionNumbers.TagInChI, inChi = match.Groups[1].Value);
-                                    continue;
-                                }
-                            }
-                            if (CAS == null)
-                            {
-                                match = REGEX_CAS.Match(line);
-                                if (match.Success)
-                                {
-                                    otherKeys.Add(MoleculeAccessionNumbers.TagCAS, CAS = match.Groups[1].Value);
-                                    continue;
-                                }
-                            }
-                            if (KEGG == null)
-                            {
-                                match = REGEX_KEGG.Match(line);
-                                if (match.Success)
-                                {
-                                    otherKeys.Add(MoleculeAccessionNumbers.TagKEGG, KEGG = match.Groups[1].Value);
-                                    continue;
-                                }
-                            }
-                            if (SMILES == null)
-                            {
-                                match = REGEX_SMILES.Match(line);
-                                if (match.Success)
-                                {
-                                    otherKeys.Add(MoleculeAccessionNumbers.TagSMILES, SMILES = match.Groups[1].Value);
-                                    continue;
-                                }
-                            }
-                            if (adduct.IsEmpty)
-                            {
-                                match = REGEX_ADDUCT.Match(line);
-                                if (match.Success)
-                                {
-                                    // We've seen strange adducts for MS3 data like "[109.1]+" - just pass over these
-                                    if (!Adduct.TryParse(match.Groups[1].Value, out adduct))
-                                        adduct = Adduct.EMPTY;
-                                    continue;
-                                }
-                            }
-                            if (!precursorMz.HasValue)
-                            {
-                                match = REGEX_PRECURSORMZ.Match(line);
-                                if (match.Success)
-                                {
-                                    try
-                                    {
-                                        precursorMz = double.Parse(match.Groups[1].Value, CultureInfo.InvariantCulture);
-                                    }
-                                    catch
-                                    {
-                                        ThrowIOException(lineCount, string.Format(Resources.NistLibraryBase_CreateCache_Could_not_read_the_precursor_m_z_value___0__ , line) );
-                                    }
-                                    continue;
-                                }
-                            }
-                            if (!isPositive.HasValue)
-                            {
-                                match = REGEX_IONMODE.Match(line);
-                                if (match.Success)
-                                {
-                                    if (string.Equals(@"positive", match.Groups[1].Value))
-                                        isPositive = true;
-                                    else if (string.Equals(@"negative", match.Groups[1].Value))
-                                        isPositive = false;
-                                    continue;
-                                }
-                            }
+                            continue;  // Line is fully consumed
                         }
 
                         // For peptides (and some molecules), a lot of useful info is jammed into the COMMENT line and must be further picked apart
-                        if (line.StartsWith(COMMENT, StringComparison.InvariantCultureIgnoreCase)) // Case insensitive
+                        if (ParseComment(line, isPeptide, ref sequence, ref copies, ref tfRatio, ref rt, ref irt))
                         {
-                            if (isPeptide)
-                            {
-                                match = REGEX_MODS.Match(line);
-                                if (match.Success)
-                                    sequence = Modify(sequence, match.Groups[1].Value);
-
-                                if (!copies.HasValue)
-                                {
-                                    match = REGEX_SAMPLE.Match(line);
-                                    if (match.Success)
-                                        copies = int.Parse(match.Groups[1].Value, CultureInfo.InvariantCulture);
-                                }
-                            }
-
-                            if (!tfRatio.HasValue)
-                            {
-                                match = REGEX_TF_RATIO.Match(line);
-                                if (match.Success)
-                                    tfRatio = float.Parse(match.Groups[1].Value, CultureInfo.InvariantCulture);
-                            }
-
-                            if (!rt.HasValue)
-                            {
-                                match = REGEX_RT.Match(line);
-                                if (match.Success)
-                                    rt = GetRetentionTime(match.Groups[1].Value, false);
-                                else
-                                {
-                                    match = REGEX_RTINSECONDS.Match(line);
-                                    if (match.Success)
-                                        rt = GetRetentionTime(match.Groups[1].Value, false);
-                                }
-                            }
-
-                            if (!irt.HasValue)
-                            {
-                                match = REGEX_IRT.Match(line);
-                                if (match.Success)
-                                    irt = GetRetentionTime(match.Groups[1].Value, false);
-                            }
+                            continue;  // Line is fully consumed
                         }
 
-                        match = REGEX_NUM_PEAKS.Match(line);
-                        if (match.Success)
+                        // The peaks count line marks the end of the data header
+                        if (ParseNumPeaks(line, ref numPeaksDeclared))
                         {
-                            numPeaksDeclared = int.Parse(match.Groups[1].Value, CultureInfo.InvariantCulture);
-                            break; // This marks the end of an entry
+                            break; // Proceed on to parse the peaks
                         }
 
-                        if (line.StartsWith(@"_EOF_", StringComparison.InvariantCultureIgnoreCase)) // Case insensitive
+                        // MzVault has its own peculiarities, including scan polarity declarations, but rare so try this last
+                        if (ParseMzVaultPolarity(line, ref isPositive, ref mzMatchTolerance))
+                        {
+                            continue;  // Line is fully consumed
+                        }
+
+                        if (line.StartsWith(@"_EOF_", StringComparison.InvariantCultureIgnoreCase))
                             ThrowIOException(lineCount, Resources.NistLibraryBase_CreateCache_Unexpected_end_of_file);
-                        else if (line.StartsWith(NAME, StringComparison.InvariantCultureIgnoreCase)) // Case insensitive
-                            break;
+                        else if (line.StartsWith(NAME, StringComparison.InvariantCultureIgnoreCase))
+                            break; // Start of next section - no peaks declared for this one, apparently, but not necessarily an error
 
-                        if (line.StartsWith(MZVAULT_POSITIVE_SCAN_INIDCATOR))
-                        {
-                            isPositive = true;
-                            isMzVault = true;
-                        }
-                        else if (line.StartsWith(MZVAULT_NEGATIVE_SCAN_INIDCATOR))
-                        {
-                            isPositive = false;
-                            isMzVault = true;
-                        }
-                        if (isMzVault)
-                        {
-                            // mzVault uses a wider tolerance than most in m/z matching for precursor identification
-                            mzMatchTolerance = 10.0 * DEFAULT_MZ_MATCH_TOLERANCE;
-                        }
                     } // End parser loop
 
                     if (formula != null)
@@ -1102,24 +944,51 @@ namespace pwiz.Skyline.Model.Lib
                         }
                     }
 
+                    // Use molecular weight (if any) as mass cue if no precursor mz given
+                    precursorMz ??= molWeight;
+
                     // Try to infer adduct if none given
-                    if (charge == 0 && adduct.IsEmpty && precursorMz.HasValue && ! string.IsNullOrEmpty(formula))
+                    if (charge == 0 && adduct.IsEmpty && !string.IsNullOrEmpty(formula))
                     {
-                        var formulaIn = formula;
-                        charge = SmallMoleculeTransitionListReader.ValidateFormulaWithMzAndAdduct(mzMatchTolerance, true,
-                            ref formulaIn, ref adduct, new TypedMass(precursorMz.Value, MassType.Monoisotopic), null, isPositive, true, out _, out _, out _) ?? 0;
-                        if (!Equals(formula, formulaIn))
+                        if (precursorMz.HasValue)
                         {
-                            // We would not expect to adjust the formula in a library import
-                            charge = 0;
-                            adduct = Adduct.EMPTY;
+                            var formulaIn = formula;
+                            if (ParsedMolecule.TryParseFormula(formula, out var _, out var errMessage))
+                            {
+                                charge = SmallMoleculeTransitionListReader.ValidateFormulaWithMzAndAdduct(mzMatchTolerance, true,
+                                    ref formulaIn, ref adduct, new TypedMass(precursorMz.Value, MassType.Monoisotopic), null, isPositive, true, out _, out _, out _) ?? 0;
+                            }
+                            else
+                            {
+                                formulaIn = null;
+                            }
+                            if (!Equals(formula, formulaIn))
+                            {
+                                // We would not expect to adjust the formula in a library import
+                                charge = 0;
+                                adduct = Adduct.EMPTY;
+                            }
+                        }
+                        else
+                        {
+                            // No charge information, but we do have a formula - most likely GCMS data
+                            isGC = true;
                         }
                     }
 
-                    if (isGC && adduct.IsEmpty)
+                    if (isGC)
                     {
-                        // GCMS is generally EI 
-                        adduct = Adduct.M_PLUS;
+                        if (adduct.IsEmpty)
+                        {
+                            // GCMS is generally EI fragmented
+                            adduct = Adduct.M_PLUS;
+                        }
+                        if (string.IsNullOrEmpty(formula))
+                        {
+                            // Encode mass as string for library use. If none found, use a dummy value
+                            var mass = precursorMz ?? (DUMMY_GC_ESI_MASS + (nMasslessEntries++ % DUMMY_GC_ESI_MASS)); // Limit to twice the initial dummy mass
+                            formula = MoleculeMassOffset.FormatMassModification(mass, mass, BioMassCalc.MassPrecision);
+                        }
                     }
 
                     if (charge == 0 && adduct.IsEmpty)
@@ -1151,15 +1020,39 @@ namespace pwiz.Skyline.Model.Lib
                         int iSeperator1 = linePeaks.IndexOf(sep); 
                         if (iSeperator1 == -1) // Using space instead of tab, maybe?
                         {
-                            sep = ' '; 
-                            iSeperator1 = linePeaks.IndexOf(sep); 
-                            var iColon = linePeaks.IndexOf(':');
+                            sep = ' ';
+                            var trimmed = linePeaks.Trim(sep);
+                            iSeperator1 = trimmed.IndexOf(sep); 
+                            var iColon = trimmed.IndexOf(':');
                             if (iColon > -1 && iColon < iSeperator1)
                             {
                                 // Looks like a Golm GMD file e.g. "70:10 76:35 77:1000 78:110 79:42 \n80:4 81:7 86:6 87:5 88:21 " etc
                                 sep = ':';
-                                lines = linePeaks.Split(' ');
-                                iSeperator1 = linePeaks.IndexOf(sep);
+                                lines = trimmed.Split(' ');
+                                iSeperator1 = trimmed.IndexOf(sep);
+                            }
+                            else
+                            {
+                                var iParen = trimmed.IndexOf('('); 
+                                if (iParen > -1 && iParen < iSeperator1)
+                                {
+                                    // Looks like form "( 26 19) (  27 164) ( 29 131 ) ( 31 14  ) ( 38 21)" etc
+                                    for (linePeaks = trimmed; ;)
+                                    {
+                                        // Reduce to "(26 19)(27 164)(29 131)(31 14)(38 21)"
+                                        trimmed = trimmed.Replace(@"( ", @"(").Replace(@" )", @")").Replace(@") ", @")").Replace(@"  ", @" ");
+                                        if (linePeaks.Equals(trimmed))
+                                        {
+                                            break;
+                                        }
+                                        linePeaks = trimmed;
+                                    }
+
+                                    // Reduce to "26 19)27 164)29 131)31 14)38 21"
+                                    linePeaks = linePeaks.Replace(@"(", string.Empty).Trim(')');
+                                    lines = linePeaks.Split(')');
+                                    iSeperator1 = linePeaks.IndexOf(sep);
+                                }
                             }
                         }
 
@@ -1193,11 +1086,11 @@ namespace pwiz.Skyline.Model.Lib
                             string mzField = linePeak.Substring(0, iSeperator1++);
                             string intensityField = linePeak.Substring(iSeperator1, iSeperator2 - iSeperator1);
 
-                            if (!TryParseFloatUncertainCulture(mzField, out var mz))
+                            if (!TextUtil.TryParseFloatUncertainCulture(mzField, out var mz))
                             {
                                 ThrowIoExceptionInvalidPeakFormat(lineCount, i, sequence);
                             }
-                            if (!TryParseFloatUncertainCulture(intensityField, out var intensity))
+                            if (!TextUtil.TryParseFloatUncertainCulture(intensityField, out var intensity))
                             {
                                 ThrowIoExceptionInvalidPeakFormat(lineCount, i, sequence);
                             }
@@ -1245,16 +1138,27 @@ namespace pwiz.Skyline.Model.Lib
                         lenAnnotations = annotationsTSV.Length;
                         outStream.Write(annotationsTSV, 0, lenAnnotations);
                     }
-                    var key = isPeptide ? new LibKey(sequence, charge) : new LibKey(SmallMoleculeLibraryAttributes.Create(sequence, formula, inChiKey, otherKeys), adduct);
-                    var info = new NistSpectrumInfo(key, tfRatio ?? 1000, rt, irt, Convert.ToSingle(totalIntensity),
-                        (ushort) (copies ?? 1), (ushort) numNonZeroPeaks, lenCompressed, lenAnnotations, location);
-                    if (!isPeptide)
+
+                    NistSpectrumInfo info;
+                    try
                     {
-                        // Keep an eye out for ambiguous keys, probably due to library containing multiple machine types etc
-                        if (!knownKeys.Add(key))
+                        var key = isPeptide ? new LibKey(sequence, charge) : new LibKey(SmallMoleculeLibraryAttributes.Create(sequence, formula, inChiKey, otherKeys), adduct);
+                        info = new NistSpectrumInfo(key, tfRatio ?? 1000, rt, irt, Convert.ToSingle(totalIntensity),
+                            (ushort)(copies ?? 1), (ushort)numNonZeroPeaks, lenCompressed, lenAnnotations, location);
+                        if (!isPeptide)
                         {
-                            ambiguousKeys.Add(key); // Already in knownKeys, note ambiguity
+                            // Keep an eye out for ambiguous keys, probably due to library containing multiple machine types etc
+                            if (!knownKeys.Add(key))
+                            {
+                                ambiguousKeys.Add(key); // Already in knownKeys, note ambiguity
+                            }
                         }
+                    }
+                    catch (InvalidDataException)
+                    {
+                        // If the key is invalid, build a representation of the key that can be used to note failures
+                        var key = new LibKey(sequence ?? @"???", 0);
+                        info = new NistSpectrumInfo(key, 0, null, null, 0, 0, 0, 0, 0, location);
                     }
                     libraryEntries.Add(info);
                 }
@@ -1320,6 +1224,299 @@ namespace pwiz.Skyline.Model.Lib
             }
 
             return true;
+        }
+
+        private static bool ParseNumPeaks(string line, ref int numPeaksDeclared)
+        {
+            var match = REGEX_NUM_PEAKS.Match(line);
+            if (match.Success)
+            {
+                numPeaksDeclared = int.Parse(match.Groups[1].Value, CultureInfo.InvariantCulture);
+                return true;
+            }
+
+            return false;
+        }
+
+        private static bool ParseName(string line, out bool isPeptide, out string sequence, out int charge)
+        {
+            isPeptide = true;
+            charge = 0;
+            sequence = null;
+            if (!line.StartsWith(NAME, StringComparison.InvariantCultureIgnoreCase)) // Accept Name:, NAME:, nAmE: etc
+            {
+                return false;
+            }
+            Match match = REGEX_NAME.Match(line);
+            if (!match.Success)
+            {
+                isPeptide = false;
+                match = REGEX_NAME_SMALLMOL.Match(line);
+            }
+
+            if (!match.Success)
+            {
+                return false;
+            }
+
+            sequence = match.Groups[1].Value;
+            if (isPeptide)
+            {
+                charge = int.Parse(match.Groups[2].Value, CultureInfo.InvariantCulture);
+            }
+            return true;
+        }
+
+        // MzVault has its own peculiarities, including scan polarity declarations
+        private static bool ParseMzVaultPolarity(string line, ref bool? isPositive, ref double mzMatchTolerance)
+        {
+            var isMzVault = false;
+            if (line.StartsWith(MZVAULT_POSITIVE_SCAN_INIDCATOR))
+            {
+                isPositive = true;
+                isMzVault = true;
+            }
+            else if (line.StartsWith(MZVAULT_NEGATIVE_SCAN_INIDCATOR))
+            {
+                isPositive = false;
+                isMzVault = true;
+            }
+
+            if (isMzVault)
+            {
+                // mzVault uses a wider tolerance than most in m/z matching for precursor identification
+                mzMatchTolerance = 10.0 * DEFAULT_MZ_MATCH_TOLERANCE;
+            }
+
+            return isMzVault; // Line was consumed
+        }
+
+        /// <summary>
+        /// For peptides (and some molecules), a lot of useful info is jammed into the COMMENT line and must be further picked apart
+        /// </summary>
+        /// <returns>true if line was shown to be comment info, and parser can advance to next line</returns>
+        private static bool ParseComment(string line, bool isPeptide, ref string sequence, ref int? copies, ref float? tfRatio,
+            ref double? rt, ref double? irt)
+        {
+            if (line.StartsWith(COMMENT, StringComparison.InvariantCultureIgnoreCase)) // Case insensitive
+            {
+                Match match;
+                if (isPeptide)
+                {
+                    match = REGEX_MODS.Match(line);
+                    if (match.Success)
+                        sequence = Modify(sequence, match.Groups[1].Value);
+
+                    if (!copies.HasValue)
+                    {
+                        match = REGEX_SAMPLE.Match(line);
+                        if (match.Success)
+                            copies = int.Parse(match.Groups[1].Value, CultureInfo.InvariantCulture);
+                    }
+                }
+
+                if (!tfRatio.HasValue)
+                {
+                    match = REGEX_TF_RATIO.Match(line);
+                    if (match.Success)
+                        tfRatio = float.Parse(match.Groups[1].Value, CultureInfo.InvariantCulture);
+                }
+
+                if (!rt.HasValue)
+                {
+                    match = REGEX_RT.Match(line);
+                    if (match.Success)
+                        rt = GetRetentionTime(match.Groups[1].Value, false);
+                    else
+                    {
+                        match = REGEX_RTINSECONDS.Match(line);
+                        if (match.Success)
+                            rt = GetRetentionTime(match.Groups[1].Value, false);
+                    }
+                }
+
+                if (!irt.HasValue)
+                {
+                    match = REGEX_IRT.Match(line);
+                    if (match.Success)
+                        irt = GetRetentionTime(match.Groups[1].Value, false);
+                }
+
+                return true;
+            }
+
+            return false;
+        }
+
+        /// <summary>
+        /// Parse line for molecule information
+        /// </summary>
+        /// <returns>true if line was shown to be molecule info, and parser can advance to next line</returns>
+        private bool ParseMolecule(string line, Dictionary<string, string> otherKeys, long lineCount, ref string formula, ref string inChiKey,
+            ref string inChi, ref string CAS, ref string KEGG, ref string SMILES, ref Adduct adduct, ref double? precursorMz,
+            ref double? molWeight, ref bool? isPositive)
+        {
+            Match match;
+            if (formula == null)
+            {
+                match = REGEX_FORMULA.Match(line);
+                if (match.Success)
+                {
+                    formula = match.Groups[2].Value;
+                    if (string.Equals(MZVAULT_FORMULA_UNKNOWN, formula,
+                            StringComparison.OrdinalIgnoreCase)) // As in mzVault output
+                    {
+                        formula = null;
+                    }
+
+                    return true;  // Line is fully consumed
+                }
+            }
+
+            if (inChiKey == null)
+            {
+                match = REGEX_INCHIKEY.Match(line);
+                if (match.Success)
+                {
+                    inChiKey = match.Groups[1].Value;
+                    return true;  // Line is fully consumed
+                }
+            }
+
+            if (inChi == null)
+            {
+                match = REGEX_INCHI.Match(line);
+                if (match.Success)
+                {
+                    otherKeys.Add(MoleculeAccessionNumbers.TagInChI, inChi = match.Groups[1].Value);
+                    return true;  // Line is fully consumed
+                }
+            }
+
+            if (CAS == null)
+            {
+                match = REGEX_CAS.Match(line);
+                if (match.Success)
+                {
+                    otherKeys.Add(MoleculeAccessionNumbers.TagCAS, CAS = match.Groups[1].Value);
+                    return true;  // Line is fully consumed
+                }
+            }
+
+            if (KEGG == null)
+            {
+                match = REGEX_KEGG.Match(line);
+                if (match.Success)
+                {
+                    otherKeys.Add(MoleculeAccessionNumbers.TagKEGG, KEGG = match.Groups[1].Value);
+                    return true;  // Line is fully consumed
+                }
+            }
+
+            if (SMILES == null)
+            {
+                match = REGEX_SMILES.Match(line);
+                if (match.Success)
+                {
+                    otherKeys.Add(MoleculeAccessionNumbers.TagSMILES, SMILES = match.Groups[1].Value);
+                    return true;  // Line is fully consumed
+                }
+            }
+
+            if (adduct.IsEmpty)
+            {
+                match = REGEX_ADDUCT.Match(line);
+                if (match.Success)
+                {
+                    // We've seen strange adducts for MS3 data like "[109.1]+" - just pass over these
+                    if (!Adduct.TryParse(match.Groups[1].Value, out adduct))
+                        adduct = Adduct.EMPTY;
+                    return true;  // Line is fully consumed
+                }
+            }
+
+            if (!precursorMz.HasValue)
+            {
+                match = REGEX_PRECURSORMZ.Match(line);
+                if (match.Success)
+                {
+                    try
+                    {
+                        precursorMz = double.Parse(match.Groups[1].Value, CultureInfo.InvariantCulture);
+                    }
+                    catch
+                    {
+                        ThrowIOException(lineCount,
+                            string.Format(Resources.NistLibraryBase_CreateCache_Could_not_read_the_precursor_m_z_value___0__,
+                                line));
+                    }
+
+                    return true;  // Line is fully consumed
+                }
+            }
+
+            if (!molWeight.HasValue)
+            {
+                match = REGEX_MOLWEIGHT.Match(line);
+                if (match.Success)
+                {
+                    if (!TextUtil.TryParseDoubleUncertainCulture(match.Groups[1].Value, out var mw))
+                    {
+                        ThrowIOException(lineCount,
+                            string.Format(Resources.NistLibraryBase_CreateCache_Could_not_read_the_precursor_m_z_value___0__,
+                                line));
+                    }
+                    molWeight = mw;
+                    return true;  // Line is fully consumed
+                }
+            }
+
+            if (!isPositive.HasValue)
+            {
+                match = REGEX_IONMODE.Match(line);
+                if (match.Success)
+                {
+                    if (string.Equals(@"positive", match.Groups[1].Value))
+                        isPositive = true;
+                    else if (string.Equals(@"negative", match.Groups[1].Value))
+                        isPositive = false;
+                    return true;  // Line is fully consumed
+                }
+            }
+
+            return false;
+        }
+
+        /// <summary>
+        /// Parse line for RT information
+        /// </summary>
+        /// <returns>true if line was shown to be RT info, and parser can advance to next line</returns>
+        private static bool ParseRT(string line, bool isMzVault, ref double? rt, ref bool isGC)
+        {
+            if (!rt.HasValue)
+            {
+                var match = REGEX_RT_LINE.Match(line); // RT may also be found in comments (originally only in comments)
+                if (match.Success)
+                {
+                    rt = GetRetentionTime(match.Groups[2].Value,
+                        isMzVault || !string.IsNullOrEmpty(match.Groups[1].Value)); // RetentionTime: vs RetentionTimeMins:
+                    return true;  // Line is fully consumed
+                }
+
+                match = REGEX_RI_LINE.Match(line);
+                if (!match.Success)
+                    match = REGEX_RI.Match(line);
+                if (match.Success)
+                {
+                    // Note using RT as stand-in for RI (retention Time vs retention Index, LC vs GC)
+                    // CONSIDER: track RT and RI simultaneously so lib is useful for GC and LC?
+                    rt = GetRetentionTime(match.Groups[1].Value, true);
+                    isGC = true;
+                    return true;  // Line is fully consumed
+                }
+            }
+
+            return false;
         }
 
         // Deal with mzVault MSP export which tends to emit things like ""MS:1009003|Name = Epirizole"
@@ -1466,31 +1663,9 @@ namespace pwiz.Skyline.Model.Lib
         {
             double rt;
             var valString = rtString.Split(MINOR_SEP).First();
-            if (!TryParseDoubleUncertainCulture(valString, out rt))
+            if (!TextUtil.TryParseDoubleUncertainCulture(valString, out rt))
                 return null;
             return isMinutes ? rt : rt / 60;
-        }
-
-        private static bool TryParseDoubleUncertainCulture(string valString, out double dval)
-        {
-            // .MSP from Golm GMD may have European decimals
-            if (!double.TryParse(valString, NumberStyles.Float, CultureInfo.InvariantCulture, out dval) &&
-                !double.TryParse(valString.Replace(',', '.'), NumberStyles.Float, CultureInfo.InvariantCulture, out dval))
-            {
-                return false;
-            }
-            return true;
-        }
-
-        private static bool TryParseFloatUncertainCulture(string valString, out float fval)
-        {
-            // .MSP from Golm GMD may have European decimals
-            if (!float.TryParse(valString, NumberStyles.Float, CultureInfo.InvariantCulture, out fval) &&
-                !float.TryParse(valString.Replace(',', '.'), NumberStyles.Float, CultureInfo.InvariantCulture, out fval))
-            {
-                return false;
-            }
-            return true;
         }
 
         protected override void SetLibraryEntries(IEnumerable<NistSpectrumInfo> entries)
