@@ -67,7 +67,7 @@ namespace pwiz.PanoramaClient
             FolderBrowser.Dock = DockStyle.Fill;
             browserSplitContainer.Panel1.Controls.Add(FolderBrowser);
             FolderBrowser.NodeClick += FilePicker_MouseClick;
-            urlLink.Text = FolderBrowser.SelectedUrl;
+            urlLink.Text = FolderBrowser.GetSelectedUri();
             IsLoaded = true;
             UpdateButtonState();
         }
@@ -316,7 +316,7 @@ namespace pwiz.PanoramaClient
             try
             {
                 _restoring = true;
-                urlLink.Text = FolderBrowser.SelectedUrl;
+                urlLink.Text = FolderBrowser.GetSelectedUri();
                 ShowFiles(true);
                 versionOptions.Text = RECENT_VER;
                 var path = FolderBrowser.FolderPath;
@@ -549,7 +549,7 @@ namespace pwiz.PanoramaClient
             up.Enabled = FolderBrowser.UpEnabled();
             forward.Enabled = FolderBrowser.ForwardEnabled();
             back.Enabled = FolderBrowser.BackEnabled();
-            urlLink.Text = FolderBrowser.SelectedUrl;
+            urlLink.Text = FolderBrowser.GetSelectedUri();
         }
 
         /// <summary>

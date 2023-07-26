@@ -59,7 +59,6 @@ namespace pwiz.PanoramaClient
         public string TreeState { get; private set; }
         public bool CurNodeIsTargetedMS { get; private set; }
         public PanoramaServer ActiveServer { get; protected set; }
-        public string SelectedUrl { get; private set; }
 
         public PanoramaFolderBrowser(List<PanoramaServer> servers, string state, bool uploadPerms, string selectedPath = null, bool showWebDav = false)
         {
@@ -91,14 +90,6 @@ namespace pwiz.PanoramaClient
             }
             InitializeTreeView(treeView);
             
-
-            if (treeView.SelectedNode != null)
-            {
-                if (ActiveServer != null)
-                {
-                    UpdateLinkLabel(treeView.SelectedNode);
-                }
-            }
         }
 
         protected virtual void InitializeTreeView(TreeView tree)
@@ -207,7 +198,6 @@ namespace pwiz.PanoramaClient
                             treeView.SelectedNode = e.Node;
                             treeView.Focus();
                             ActiveServer = fileInfo.Server;
-                            UpdateLinkLabel(e.Node);
                             UpdateNavButtons(e.Node);
                         }
                     }
@@ -307,7 +297,6 @@ namespace pwiz.PanoramaClient
             FolderPath = folderInfo.FolderPath ?? string.Empty;
             treeView.Focus();
             if (AddFiles != null) AddFiles(this, EventArgs.Empty);
-            UpdateLinkLabel(_clicked);
         }
 
         public bool ForwardEnabled()
@@ -386,7 +375,6 @@ namespace pwiz.PanoramaClient
                 if (e.KeyValue == Convert.ToChar(Keys.Up) || e.KeyValue == Convert.ToChar(Keys.Down) || e.KeyValue == Convert.ToChar(Keys.Right) || e.KeyValue == Convert.ToChar(Keys.Left))
                 {
                     var node = treeView.SelectedNode;
-                    UpdateLinkLabel(node);
                     UpdateNavButtons(node);
                 }
             }
@@ -412,16 +400,6 @@ namespace pwiz.PanoramaClient
             _priorNode = node;
             _next.Clear();
             if (NodeClick != null) NodeClick(this, EventArgs.Empty);
-        }
-
-        private void UpdateLinkLabel(TreeNode node)
-        {
-            var folderInfo = GetFolderInformation(node);
-            if (folderInfo != null)
-            {
-                var folderPath = folderInfo.FolderPath.TrimStart('/');
-                SelectedUrl = Uri.UnescapeDataString(GetSelectedUri(folderPath, _showWebDav));
-            }
         }
 
         private void AddWebDavFolders(TreeNode node)

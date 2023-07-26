@@ -63,7 +63,7 @@ namespace pwiz.PanoramaClient
             {
                 open.Text = OkButtonText;
             }
-            urlLink.Text = FolderBrowser.SelectedUrl;
+            urlLink.Text = FolderBrowser.GetSelectedUri();
 
         }
 
@@ -84,7 +84,7 @@ namespace pwiz.PanoramaClient
 
         private void DirectoryPicker_MouseClick(object sender, EventArgs e)
         {
-            urlLink.Text = FolderBrowser.SelectedUrl;
+            urlLink.Text = FolderBrowser.GetSelectedUri();
             up.Enabled = FolderBrowser.UpEnabled();
             forward.Enabled = false;
             back.Enabled = FolderBrowser.BackEnabled();
