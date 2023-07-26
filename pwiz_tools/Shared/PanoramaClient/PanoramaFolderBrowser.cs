@@ -217,8 +217,9 @@ namespace pwiz.PanoramaClient
 
         private string GetSelectedUri(string folderPath, bool webdav)
         {
-            return string.Concat(ActiveServer.URI, webdav ? PanoramaUtil.WEBDAV_W_SLASH : string.Empty,
-                folderPath.TrimStart('/'));
+            return ActiveServer != null && folderPath != null
+                ? string.Concat(ActiveServer.URI, webdav ? PanoramaUtil.WEBDAV_W_SLASH : string.Empty, folderPath.TrimStart('/'))
+                : string.Empty;
         }
         public void UpClick()
         {
