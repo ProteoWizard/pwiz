@@ -204,9 +204,9 @@ namespace pwiz.SkylineTest
                 "I\tNativeID\tcontrollerType=0 controllerNumber=1 scan=3\n" +
                 "I\tRTime\t0.01054074\n" +
                 "I\tBPI\t34995.21\n" +
-                "I\tBPM\t358.0672\n" +
+                "I\tBPM\t7754\n" +
                 "I\tTIC\t247701.8\n" +
-                "Z\t1\t612.1838\n" +
+                "Z\t1\t5432\n" +
                 "181.6542 21635.59\n" +
                 "203.9089 9885.277\n" +
                 "221.082 10638.83\n" +
@@ -244,6 +244,8 @@ namespace pwiz.SkylineTest
             var txtB = txtA.Replace("247701.8", "247701.7"). // Could be serializations of 247701.751 and 247701.749
                 Replace("36354.39", "36354.40").
                 Replace("34995.21", "34995.22").
+                Replace("7754", "7754.0").
+                Replace("5432", "5433").
                 Replace("10726.89", "10726.9");
             AssertEx.FieldsEqual(new StringReader(txtA),
                 new StringReader(txtB),

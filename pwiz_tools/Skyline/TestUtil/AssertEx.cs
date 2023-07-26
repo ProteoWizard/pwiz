@@ -1189,7 +1189,7 @@ namespace pwiz.SkylineTestUtil
 
                         if (!Equals(fieldsTarget[i], fieldsActual[i]))
                         {
-                            // test numerics with the precision presented in the output text
+                            // Test numerics with the precision presented in the output text
                             double dTarget, dActual;
                             if (Double.TryParse(fieldsTarget[i], NumberStyles.Float, culture, out dTarget) &&
                                 Double.TryParse(fieldsActual[i], NumberStyles.Float, culture, out dActual))
@@ -1204,12 +1204,29 @@ namespace pwiz.SkylineTestUtil
                                     // how much of that was decimal places?
                                     var precTarget = fieldsTarget[i].Length - String.Format("{0}.", (int)dTarget).Length;
                                     var precActual = fieldsActual[i].Length - String.Format("{0}.", (int)dActual).Length;
-                                    var prec = Math.Max(Math.Min(precTarget, precActual), 0);
-                                    var mult = (precActual == precTarget) ? 1.01 : 0.501; // Allow for double precision calculation cruft e.g 34995.22-34995.21 = 0.010000000002037268
-                                    double toler = mult * ((prec == 0) ? 0 : Math.Pow(10, -prec));
-                                    // so .001 is seen as close enough to .0009, or 12.3 same as 12.4 (could be serializations of very similar numbers that rounded differently)
-                                    if (Math.Abs(dTarget - dActual) <= toler)
-                                        continue;
+                                    if (precTarget == -1 && precActual == -1)
+                                    {
+                                        // Integers - allow for rounding errors on larger values
+                                        var diff = Math.Abs(dTarget - dActual);
+                                        var max = Math.Max(Math.Abs(dTarget), Math.Abs(dActual));
+                                        if (max != 0 && diff <= 1)
+                                        {
+                                            var ratio = diff / max;
+                                            if (ratio <= .001)
+                                            {
+                                                continue; // e.g. 5432 vs 5433 but not 1 vs 2
+                                            }
+                                        }
+                                    }
+                                    else
+                                    {
+                                        var prec = Math.Max(Math.Min(precTarget, precActual), 0);
+                                        var mult = (precActual == precTarget) ? 1.01 : 0.501; // Allow for double precision calculation cruft e.g 34995.22-34995.21 = 0.010000000002037268
+                                        double toler = mult * ((prec == 0) ? 0 : Math.Pow(10, -prec));
+                                        // so .001 is seen as close enough to .0009, or 12.3 same as 12.4 (could be serializations of very similar numbers that rounded differently)
+                                        if (Math.Abs(dTarget - dActual) <= toler)
+                                            continue;
+                                    }
                                 }
                             }
                             Fail($"{message}Diff found at line {count}:\r\n{lineTarget}\r\n>\r\n{lineActual}");
