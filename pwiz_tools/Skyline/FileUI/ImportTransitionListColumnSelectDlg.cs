@@ -1282,12 +1282,14 @@ namespace pwiz.Skyline.FileUI
         {
             var errorCheckCanceled = needsCheck; // If we're checking, assume the worst until proven otherwise
             var insertionParams = needsCheck? new DocumentChecked() : InsertionParams;
+            var isPeptideList = radioPeptide.Checked;
             if (needsCheck)
             {
                 bool hasHeaders = Importer.RowReader.Indices.Headers != null;
                 insertionParams.ColSelections = CurrentColSelections();
 
-                if (checkBoxAssociateProteins.Checked)
+                var isAssociateProteins = checkBoxAssociateProteins.Checked;
+                if (isAssociateProteins)
                 {
                     if (!UpdateProteinAssociationState(AssociateProteinsMode.all_interactive))
                     {
@@ -1300,6 +1302,7 @@ namespace pwiz.Skyline.FileUI
                 try
                 {
                     errorList?.Clear(); // Looking for a new set of errors
+                    var readerType = GetRadioType();
 
                     using var longWaitDlg = new LongWaitDlg
                         {Text = Resources.ImportTransitionListColumnSelectDlg_CheckForErrors_Checking_for_errors___};
@@ -1308,7 +1311,7 @@ namespace pwiz.Skyline.FileUI
 
                         var columns = Importer.RowReader.Indices;
                         MissingEssentialColumns = new List<string>();
-                        if (radioPeptide.Checked)
+                        if (isPeptideList)
                         {
                             CheckEssentialColumn(new Tuple<int, string>(columns.PeptideColumn,
                                 Resources.ImportTransitionListColumnSelectDlg_PopulateComboBoxes_Peptide_Modified_Sequence));
@@ -1322,12 +1325,12 @@ namespace pwiz.Skyline.FileUI
                             CheckMoleculeColumns();
                         }
 
-                        insertionParams.ProteinAssociations = checkBoxAssociateProteins.Checked && Importer.RowReader.Indices.ProteinColumn == 0
+                        insertionParams.ProteinAssociations = isAssociateProteins && Importer.RowReader.Indices.ProteinColumn == 0
                             ? _dictNameSeq
                             : new Dictionary<string, FastaSequence>();
                         insertionParams.Document = _docCurrent.ImportMassList(_inputs, Importer, progressMonitor,
                             _insertPath, out insertionParams.SelectPath, out insertionParams.IrtPeptides,
-                            out insertionParams.LibrarySpectra, out var testErrorList, out insertionParams.PeptideGroups, insertionParams.ColSelections, GetRadioType(), hasHeaders, 
+                            out insertionParams.LibrarySpectra, out var testErrorList, out insertionParams.PeptideGroups, insertionParams.ColSelections, readerType, hasHeaders, 
                             insertionParams.ProteinAssociations);
                         errorCheckCanceled = progressMonitor.IsCanceled;
                         if (!errorCheckCanceled)
@@ -1397,7 +1400,7 @@ namespace pwiz.Skyline.FileUI
             }
             
             insertionParams.ColSelections = CurrentColSelections();
-            insertionParams.IsSmallMoleculeList = !radioPeptide.Checked;
+            insertionParams.IsSmallMoleculeList = !isPeptideList;
             InsertionParams = insertionParams;
             return false; // No errors
         }
