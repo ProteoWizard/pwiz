@@ -73,7 +73,6 @@
             this.groupBox1 = new System.Windows.Forms.GroupBox();
             this.label3 = new System.Windows.Forms.Label();
             this.tabConsistency = new System.Windows.Forms.TabPage();
-            this.comboBox1 = new System.Windows.Forms.ComboBox();
             this.groupBox2 = new System.Windows.Forms.GroupBox();
             this.comboQuantitativeComparisonType = new System.Windows.Forms.ComboBox();
             this.comboIncludedComparisonType = new System.Windows.Forms.ComboBox();
@@ -429,19 +428,12 @@
             // 
             // tabConsistency
             // 
-            this.tabConsistency.Controls.Add(this.comboBox1);
             this.tabConsistency.Controls.Add(this.groupBox2);
             this.tabConsistency.Controls.Add(this.groupPeakArea);
             this.tabConsistency.Controls.Add(this.groupDetection);
             resources.ApplyResources(this.tabConsistency, "tabConsistency");
             this.tabConsistency.Name = "tabConsistency";
             this.tabConsistency.UseVisualStyleBackColor = true;
-            // 
-            // comboBox1
-            // 
-            this.comboBox1.FormattingEnabled = true;
-            resources.ApplyResources(this.comboBox1, "comboBox1");
-            this.comboBox1.Name = "comboBox1";
             // 
             // groupBox2
             // 
@@ -795,7 +787,6 @@
         private System.Windows.Forms.TextBox textIncludedCutoff;
         private System.Windows.Forms.Label label10;
         private System.Windows.Forms.TextBox textQuantitativeCutoff;
-        private System.Windows.Forms.ComboBox comboBox1;
         private System.Windows.Forms.ComboBox comboIncludedComparisonType;
         private System.Windows.Forms.ComboBox comboQuantitativeComparisonType;
     }

@@ -214,7 +214,7 @@ namespace pwiz.SkylineTestData
             }
 
 
-            // remove all transitions below the includedCutoff
+            // remove all transitions with shape correlation values below the cutoffs
             double includedCutoff = .99;
             double quantativeCutoff = .994;
             document = InitRefineDocumentIprg();
@@ -229,6 +229,20 @@ namespace pwiz.SkylineTestData
                     Assert.IsFalse(tranNode.ExplicitQuantitative);
                 }
             }
+
+            document = InitRefineDocumentIprg();
+            refineSettings = new RefinementSettings { SCIncludedCutoff = includedCutoff, SCQuantitativeCutoff = quantativeCutoff, 
+                SCIncludedComparisonType = RefinementSettings.ComparisonType.max, SCQuantitativeComparisonType = RefinementSettings.ComparisonType.max};
+            var docRefineShapeCorrelationMax = refineSettings.Refine(document);
+            foreach (var tranNode in docRefineShapeCorrelationMax.MoleculeTransitions)
+            {
+                Assert.IsFalse(tranNode.ChromInfos.Max(c => c.PeakShapeValues?.ShapeCorrelation) < includedCutoff);
+                if (tranNode.ChromInfos.Max(c => c.PeakShapeValues?.ShapeCorrelation) < quantativeCutoff)
+                {
+                    Assert.IsFalse(tranNode.ExplicitQuantitative);
+                }
+            }
+
 
             // Pick only the precursors with the max peak area
             document = InitRefineDocumentIprg();

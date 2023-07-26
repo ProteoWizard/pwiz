@@ -3661,11 +3661,29 @@ namespace pwiz.Skyline.Model.AuditLog {
         }
         
         /// <summary>
+        ///   Looks up a localized string similar to Which values are compared against included cutoff.
+        /// </summary>
+        public static string RefinementSettings_SCIncludedComparisonType {
+            get {
+                return ResourceManager.GetString("RefinementSettings_SCIncludedComparisonType", resourceCulture);
+            }
+        }
+        
+        /// <summary>
         ///   Looks up a localized string similar to Remove transitions with shape correlation below cutoff.
         /// </summary>
         public static string RefinementSettings_SCIncludedCutoff {
             get {
                 return ResourceManager.GetString("RefinementSettings_SCIncludedCutoff", resourceCulture);
+            }
+        }
+        
+        /// <summary>
+        ///   Looks up a localized string similar to Which values are compared against quantitative cutoff.
+        /// </summary>
+        public static string RefinementSettings_SCQuantitativeComparisonType {
+            get {
+                return ResourceManager.GetString("RefinementSettings_SCQuantitativeComparisonType", resourceCulture);
             }
         }
         

@@ -1763,8 +1763,14 @@
   <data name="FastaToPrositInputCsvConfig_MinMz" xml:space="preserve">
     <value>Min m/z</value>
   </data>
+  <data name="RefinementSettings_SCIncludedComparisonType" xml:space="preserve">
+    <value>Which values are compared against included cutoff</value>
+  </data>
   <data name="RefinementSettings_SCIncludedCutoff" xml:space="preserve">
     <value>Remove transitions with shape correlation below cutoff</value>
+  </data>
+  <data name="RefinementSettings_SCQuantitativeComparisonType" xml:space="preserve">
+    <value>Which values are compared against quantitative cutoff</value>
   </data>
   <data name="RefinementSettings_SCQuantitativeCutoff" xml:space="preserve">
     <value>Remove transitions with shape correlation below cutoff</value>
