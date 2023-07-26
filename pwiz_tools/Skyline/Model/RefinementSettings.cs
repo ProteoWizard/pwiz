@@ -231,9 +231,8 @@ namespace pwiz.Skyline.Model
         public double? SCIncludedCutoff { get; set; }
         [Track]
         public double? SCQuantitativeCutoff { get; set; }
-
         public enum ComparisonType {min, max};
-        [Track]
+        [Track] 
         public ComparisonType? SCIncludedComparisonType {get; set;}
         [Track]
         public ComparisonType? SCQuantitativeComparisonType { get; set; }
@@ -785,7 +784,8 @@ namespace pwiz.Skyline.Model
                 }
 
                 var chromInfos = nodeTran.ChromInfos;
-                ComparisonType? includedComparisonType = SCIncludedComparisonType.HasValue ? SCIncludedComparisonType : ComparisonType.min;
+                var numComparisonTypes = Enum.GetNames(typeof(ComparisonType)).Length - 1;
+                ComparisonType? includedComparisonType = SCIncludedComparisonType.HasValue && 0 <= (int?)SCIncludedComparisonType && (int?)SCIncludedComparisonType <= numComparisonTypes ? SCIncludedComparisonType : ComparisonType.min;
                 if (SCIncludedCutoff.HasValue)
                 {
                     if (checkIfShapeCorrelationBelowCutoff(chromInfos, SCIncludedCutoff, includedComparisonType))
@@ -795,7 +795,7 @@ namespace pwiz.Skyline.Model
                 }
 
                 TransitionDocNode nonQuantitativeNodeTran = null;
-                ComparisonType? quantitativeComparisonType = SCQuantitativeComparisonType.HasValue ? SCQuantitativeComparisonType : ComparisonType.min;
+                ComparisonType? quantitativeComparisonType = SCQuantitativeComparisonType.HasValue && 0 <= (int?)SCQuantitativeComparisonType && (int?)SCQuantitativeComparisonType <= numComparisonTypes ? SCQuantitativeComparisonType : ComparisonType.min;
                 if (SCQuantitativeCutoff.HasValue)
                 {
                     if (checkIfShapeCorrelationBelowCutoff(chromInfos, SCQuantitativeCutoff, quantitativeComparisonType))
@@ -1303,10 +1303,6 @@ namespace pwiz.Skyline.Model
                 }
             }
 
-            if (comparisonValue >= cutoff)
-            {
-                return false;
-            }
             return comparisonValue < cutoff;
 
         }
