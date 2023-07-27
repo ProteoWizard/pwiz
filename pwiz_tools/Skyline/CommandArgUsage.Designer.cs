@@ -1433,7 +1433,7 @@ namespace pwiz.Skyline {
         }
         
         /// <summary>
-        ///   Looks up a localized string similar to The distribution of shape correlation values to be compared against the included cutoff.
+        ///   Looks up a localized string similar to &quot;min&quot; or &quot;max&quot; indicating whether the minimum or maximum shape correlation score is compared to the cutoff. Default: min.
         /// </summary>
         internal static string _refine_shape_r_include_comparison_type {
             get {
@@ -1451,7 +1451,7 @@ namespace pwiz.Skyline {
         }
         
         /// <summary>
-        ///   Looks up a localized string similar to The distribution of shape correlation values to be compared against the quantitative cutoff.
+        ///   Looks up a localized string similar to &quot;min&quot; or &quot;max&quot; indicating whether the minimum or maximum shape correlation score is compared to the cutoff. Default: min.
         /// </summary>
         internal static string _refine_shape_r_quant_comparison_type {
             get {

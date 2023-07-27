@@ -929,13 +929,13 @@ greater peak area.</value>
     <value>path/to/result-file to import the isolation scheme from</value>
   </data>
   <data name="_refine_shape_r_include_comparison_type" xml:space="preserve">
-    <value>The distribution of shape correlation values to be compared against the included cutoff</value>
+    <value>"min" or "max" indicating whether the minimum or maximum shape correlation score is compared to the cutoff. Default: min</value>
   </data>
   <data name="_refine_shape_r_include_cutoff" xml:space="preserve">
     <value>all transitions with shape correlation below the cutoff will be removed</value>
   </data>
   <data name="_refine_shape_r_quant_comparison_type" xml:space="preserve">
-    <value>The distribution of shape correlation values to be compared against the quantitative cutoff</value>
+    <value>"min" or "max" indicating whether the minimum or maximum shape correlation score is compared to the cutoff. Default: min</value>
   </data>
   <data name="_refine_shape_r_quant_cutoff" xml:space="preserve">
     <value>all transitions with shape correlation below the cutoff will be removed</value>
