@@ -10,6 +10,9 @@ Project("{2150E333-8FDC-42A3-9474-1A3956D46DE8}") = "Solution Items", "Solution 
 	EndProjectSection
 EndProject
 Project("{FAE04EC0-301F-11D3-BF4B-00C04F79EFBC}") = "Skyline", "Skyline.csproj", "{DDA2EA4C-B632-4FDF-94BA-F71E4C152056}"
+	ProjectSection(ProjectDependencies) = postProject
+		{FA16A0EF-EDF7-4515-BD93-44BADD7AB98A} = {FA16A0EF-EDF7-4515-BD93-44BADD7AB98A}
+	EndProjectSection
 EndProject
 Project("{FAE04EC0-301F-11D3-BF4B-00C04F79EFBC}") = "Test", "Test\Test.csproj", "{E0FA262A-744E-4D98-A43F-4723A4D95827}"
 EndProject
@@ -66,9 +69,6 @@ EndProject
 Project("{FAE04EC0-301F-11D3-BF4B-00C04F79EFBC}") = "TestConnected", "TestConnected\TestConnected.csproj", "{5D4E9180-FD66-4C11-8C16-11921865EDBD}"
 EndProject
 Project("{FAE04EC0-301F-11D3-BF4B-00C04F79EFBC}") = "SkylineCmd", "SkylineCmd\SkylineCmd.csproj", "{FA16A0EF-EDF7-4515-BD93-44BADD7AB98A}"
-	ProjectSection(ProjectDependencies) = postProject
-		{DDA2EA4C-B632-4FDF-94BA-F71E4C152056} = {DDA2EA4C-B632-4FDF-94BA-F71E4C152056}
-	EndProjectSection
 EndProject
 Project("{FAE04EC0-301F-11D3-BF4B-00C04F79EFBC}") = "SkylineNightlyShim", "SkylineNightlyShim\SkylineNightlyShim.csproj", "{3C7F5209-6507-42C5-80CE-472AE6A51CD1}"
 EndProject
