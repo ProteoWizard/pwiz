@@ -2,7 +2,6 @@
 using System.Collections.Generic;
 using System.Collections.Immutable;
 using System.Drawing;
-using System.Net.Configuration;
 using System.Threading;
 using System.Windows.Forms;
 using SharedBatch;
@@ -11,6 +10,7 @@ using pwiz.PanoramaClient;
 using PanoramaServer = pwiz.PanoramaClient.PanoramaServer;
 using AlertDlg = SharedBatch.AlertDlg;
 using Newtonsoft.Json.Linq;
+using PanoramaUtil = pwiz.PanoramaClient.PanoramaUtil;
 
 namespace SkylineBatch
 {
@@ -160,12 +160,12 @@ namespace SkylineBatch
             var panoramaServers = new List<PanoramaServer>() { server };
 
             var state = string.Empty;
-            // if (!string.IsNullOrEmpty(Settings.Default.PanoramaTreeState))
-            // {
-            //     state = Settings.Default.PanoramaTreeState;
-            // }
+            /*if (!string.IsNullOrEmpty(Settings.Default.PanoramaTreeState))
+            {
+                state = Settings.Default.PanoramaTreeState;
+            }*/
 
-            var decodedUrl = Uri.UnescapeDataString(textFolderUrl.Text).Replace("@files/", "");
+            var decodedUrl = Uri.UnescapeDataString(textFolderUrl.Text).Replace(PanoramaUtil.FILES, "");
             try
             {
                 
@@ -173,10 +173,10 @@ namespace SkylineBatch
                 {
                     if (dlg.ShowDialog() != DialogResult.Cancel)
                     {
-                        string url = $"{dlg.SelectedPath}/@files/";
+                        var url = PanoramaFolderBrowser.GetSelectedUri(dlg.FolderBrowser, true) + PanoramaUtil.FILES_W_SLASH + @"/"; 
                         textFolderUrl.Text = url;
                         PanoramaSource = true; // if you select a folder then manually change the folder, PanoramaSource will still be true
-                        SelectedPath = $"{dlg.SelectedPath}";
+                        SelectedPath = dlg.SelectedPath;
                     }
 
                     Settings.Default.PanoramaTreeState = dlg.FolderBrowser.TreeState;

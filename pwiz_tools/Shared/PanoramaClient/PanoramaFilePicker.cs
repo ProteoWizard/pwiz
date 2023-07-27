@@ -77,7 +77,14 @@ namespace pwiz.PanoramaClient
         /// </summary>
         public void InitializeDialog()
         {
-            FolderBrowser = new PanoramaFolderBrowser(_servers, _treeState, false, SelectedPath, _showWebDav);
+            if (_showWebDav)
+            {
+                FolderBrowser = new WebDavBrowser(_servers.FirstOrDefault(), _treeState, SelectedPath);
+            }
+            else
+            {
+                FolderBrowser = new LKContainerBrowser(_servers, _treeState, false, SelectedPath);
+            }
 
             if (string.IsNullOrEmpty(_treeState))
             {
@@ -364,7 +371,7 @@ namespace pwiz.PanoramaClient
                         else
                         {
                             uriString = string.Concat(FolderBrowser.ActiveServer.URI.ToString(), PanoramaUtil.WEBDAV, @"/",
-                                path + @"/@files?method=json");
+                                path + PanoramaUtil.FILES_W_SLASH, "?method=json");
                         }
                         var uri = new Uri(uriString);
                         AddAllFiles(uri);
@@ -423,11 +430,11 @@ namespace pwiz.PanoramaClient
                     if (!_showWebDav)
                     {
                         downloadName =
-                            string.Concat(PanoramaUtil.WEBDAV, folderPath, @"/@files/",
+                            string.Concat(PanoramaUtil.WEBDAV, folderPath, PanoramaUtil.FILES_W_SLASH, @"/",
                                 listView.SelectedItems[0].Name);
                     }
 
-                    SelectedPath = string.Concat(FolderBrowser.ActiveServer.URI, PanoramaUtil.WEBDAV, folderPath);
+                    SelectedPath = folderPath;
                 }
 
                 FileUrl = FolderBrowser.ActiveServer.URI + downloadName;
@@ -506,7 +513,7 @@ namespace pwiz.PanoramaClient
         /// <param name="e"></param>
         private void UpButton_Click(object sender, EventArgs e)
         {
-            FolderBrowser.UpClick();
+            FolderBrowser.UpButtonClick();
             UpdateButtonState();
             forward.Enabled = false;
         }
@@ -520,7 +527,7 @@ namespace pwiz.PanoramaClient
         private void Back_Click(object sender, EventArgs e)
         {
             back.Enabled = FolderBrowser.BackEnabled();
-            FolderBrowser.BackClick();
+            FolderBrowser.BackButtonClick();
             UpdateButtonState();
         }
 
@@ -533,7 +540,7 @@ namespace pwiz.PanoramaClient
         private void Forward_Click(object sender, EventArgs e)
         {
             forward.Enabled = FolderBrowser.ForwardEnabled();
-            FolderBrowser.ForwardClick();
+            FolderBrowser.ForwardButtonClick();
             UpdateButtonState();
         }
 
@@ -697,19 +704,19 @@ namespace pwiz.PanoramaClient
 
         public void ClickBack()
         {
-            FolderBrowser.BackClick();
+            FolderBrowser.BackButtonClick();
             UpdateButtonState();
         }
 
         public void ClickForward()
         {
-            FolderBrowser.ForwardClick();
+            FolderBrowser.ForwardButtonClick();
             UpdateButtonState();
         }
 
         public void ClickUp()
         {
-            FolderBrowser.UpClick();
+            FolderBrowser.UpButtonClick();
             UpdateButtonState();
         }
 

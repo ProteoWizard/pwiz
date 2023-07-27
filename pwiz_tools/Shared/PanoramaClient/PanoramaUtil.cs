@@ -39,6 +39,8 @@ namespace pwiz.PanoramaClient
         public const string ENSURE_LOGIN_PATH = "security/home/ensureLogin.view";
         public const string WEBDAV = @"_webdav";
         public const string WEBDAV_W_SLASH = WEBDAV + @"/";
+        public const string FILES = @"@files";
+        public const string FILES_W_SLASH = @"/" + FILES;
 
         public static Uri ServerNameToUri(string serverName)
         {

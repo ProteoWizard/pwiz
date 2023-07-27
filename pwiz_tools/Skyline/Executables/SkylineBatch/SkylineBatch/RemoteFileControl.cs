@@ -261,9 +261,7 @@ namespace SkylineBatch
                         if (dlg.ShowDialog() != DialogResult.Cancel)
                         {
                             Settings.Default.PanoramaTreeState = dlg.FolderBrowser.TreeState;
-                            var decodedUrl = Uri.UnescapeDataString(dlg.FileUrl);
-                            var relativePath = decodedUrl.Replace($"{path}/@files/", "");
-                            textRelativePath.Text = relativePath;
+                            textRelativePath.Text = string.Concat(@"/", dlg.FileName);
                         }
                         Settings.Default.PanoramaTreeState = dlg.FolderBrowser.TreeState;
                     }
@@ -277,8 +275,10 @@ namespace SkylineBatch
                         if (dlg.ShowDialog() != DialogResult.Cancel)
 
                         {
-                            string url = dlg.SelectedPath;
-                            string output = $"{url.Replace($"{path}/@files/", "")}/";
+                            var url = dlg.SelectedPath;
+                            var output = (url.EndsWith(PanoramaUtil.FILES) || !url.Contains(PanoramaUtil.FILES))
+                                ? "/"
+                                : $"/{url.Replace($"{path}/@files/", "")}/";
                             textRelativePath.Text = output;
                         }
                     }

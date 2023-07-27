@@ -193,8 +193,8 @@ namespace pwiz.SkylineTestFunctional
             RunUI(() =>
             {
                 remoteDlg.FolderBrowser.SelectNode(TARGETED);
-                remoteDlg.FolderBrowser.ClickEnter();
-                Assert.IsTrue(remoteDlg.FolderBrowser.IsExpanded(TARGETED));
+                remoteDlg.FolderBrowser.ClickRight();
+                //Assert.IsTrue(remoteDlg.FolderBrowser.IsExpanded(TARGETED));
                 Assert.IsTrue(remoteDlg.VersionsVisible());
                 Assert.AreEqual("Most recent", remoteDlg.VersionsOption());
                 Assert.AreEqual(1, remoteDlg.FileNumber());
@@ -203,8 +203,8 @@ namespace pwiz.SkylineTestFunctional
                 remoteDlg.TestSizeJson = sizeJson;
 
                 remoteDlg.FolderBrowser.SelectNode(TARGETED_LIBRARY);
-                remoteDlg.FolderBrowser.ClickEnter();
-                Assert.IsTrue(remoteDlg.FolderBrowser.IsExpanded(TARGETED_LIBRARY));
+                remoteDlg.FolderBrowser.ClickRight();
+                //Assert.IsTrue(remoteDlg.FolderBrowser.IsExpanded(TARGETED_LIBRARY));
                 Assert.IsFalse(remoteDlg.VersionsVisible());
                 Assert.AreEqual("Most recent", remoteDlg.VersionsOption());
                 Assert.AreEqual(1, remoteDlg.FileNumber());

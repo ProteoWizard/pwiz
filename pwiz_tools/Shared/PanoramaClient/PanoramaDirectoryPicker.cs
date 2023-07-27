@@ -20,6 +20,7 @@
 using System;
 using System.Collections.Generic;
 using System.Diagnostics;
+using System.Linq;
 using System.Windows.Forms;
 using Newtonsoft.Json.Linq;
 
@@ -38,10 +39,15 @@ namespace pwiz.PanoramaClient
         public PanoramaDirectoryPicker(List<PanoramaServer> servers, string state, bool showWebDavFolders = false, string selectedPath = null)
         {
             InitializeComponent();
-            FolderBrowser = new PanoramaFolderBrowser(servers, state, false, selectedPath, showWebDavFolders)
+            if (showWebDavFolders)
             {
-                Dock = DockStyle.Fill
-            };
+                FolderBrowser = new WebDavBrowser(servers.FirstOrDefault(), state, selectedPath);
+            }
+            else
+            {
+                FolderBrowser = new LKContainerBrowser(servers, state, false, selectedPath);
+            }
+            FolderBrowser.Dock = DockStyle.Fill;
             FolderBrowser.NodeClick += DirectoryPicker_MouseClick;
             folderPanel.Controls.Add(FolderBrowser);
             up.Enabled = false;
@@ -70,14 +76,14 @@ namespace pwiz.PanoramaClient
         private void Back_Click(object sender, EventArgs e)
         {
             back.Enabled = FolderBrowser.BackEnabled();
-            FolderBrowser.BackClick();
+            FolderBrowser.BackButtonClick();
             UpdateButtonState();
         }
 
         private void Forward_Click(object sender, EventArgs e)
         {
             forward.Enabled = FolderBrowser.ForwardEnabled();
-            FolderBrowser.ForwardClick();
+            FolderBrowser.ForwardButtonClick();
             UpdateButtonState();
         }
 
@@ -108,7 +114,7 @@ namespace pwiz.PanoramaClient
         private void Up_Click(object sender, EventArgs e)
         {
             up.Enabled = FolderBrowser.UpEnabled();
-            FolderBrowser.UpClick();
+            FolderBrowser.UpButtonClick();
             UpdateButtonState();
             forward.Enabled = false;
         }
@@ -168,19 +174,19 @@ namespace pwiz.PanoramaClient
 
         public void ClickBack()
         {
-            FolderBrowser.BackClick();
+            FolderBrowser.BackButtonClick();
             UpdateButtonState();
         }
 
         public void ClickForward()
         {
-            FolderBrowser.ForwardClick();
+            FolderBrowser.ForwardButtonClick();
             UpdateButtonState();
         }
 
         public void ClickUp()
         {
-            FolderBrowser.UpClick();
+            FolderBrowser.UpButtonClick();
             UpdateButtonState();
         }
 
