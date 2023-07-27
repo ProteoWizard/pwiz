@@ -155,10 +155,13 @@ namespace pwiz.Skyline.EditUI
             {
                 textIncludedCutoff.Enabled = true;
                 textQuantitativeCutoff.Enabled = true;
+
+                comboIncludedComparisonType.Enabled = true;
                 comboIncludedComparisonType.Items.Add("Min");
                 comboIncludedComparisonType.Items.Add("Max");
                 comboIncludedComparisonType.SelectedIndex = 0;
 
+                comboQuantitativeComparisonType.Enabled = true;
                 comboQuantitativeComparisonType.Items.Add("Min");
                 comboQuantitativeComparisonType.Items.Add("Max");
                 comboQuantitativeComparisonType.SelectedIndex = 0;
@@ -167,7 +170,7 @@ namespace pwiz.Skyline.EditUI
 
 
 
-            // Group Comparisons
+            // Group Comprisons
             _groupComparisonsListBoxDriver = new SettingsListBoxDriver<GroupComparisonDef>(
                 checkedListBoxGroupComparisons, Settings.Default.GroupComparisonDefList);
             _groupComparisonsListBoxDriver.LoadList(
@@ -603,8 +606,17 @@ namespace pwiz.Skyline.EditUI
                 scQuantitativeCutoff = quantitativeCutoffVal;
             }
 
-            RefinementSettings.ComparisonType scIncludedComparisonType = SCIncludedComparisonType;
-            RefinementSettings.ComparisonType scQuantitativeComparisonType = SCQuantitativeComparisonType;
+            RefinementSettings.ComparisonType? scIncludedComparisonType = null;
+            if (SCIncludedComparisonType >= 0)
+            {
+                scIncludedComparisonType = SCIncludedComparisonType;
+            }
+
+            RefinementSettings.ComparisonType? scQuantitativeComparisonType = null;
+            if (SCQuantitativeComparisonType >= 0)
+            {
+                scQuantitativeComparisonType = SCQuantitativeComparisonType;
+            }
 
             RefinementSettings = new RefinementSettings
                                      {
