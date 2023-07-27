@@ -60,6 +60,11 @@ namespace pwiz.Skyline.Controls.Graphs
         private bool _zoomYAxis;
         private readonly MsDataFileScanHelper _msDataFileScanHelper;
         private LibraryRankedSpectrumInfo _rmis;
+
+        // status info to calculate point dot products
+        private SpectrumPeaksInfo.MI[] _peaks;
+        private GraphSpectrum.Precursor _precursor;
+
         private int[] _transitionIndex;
         private MzRange _requestedRange;
 
@@ -359,6 +364,7 @@ namespace pwiz.Skyline.Controls.Graphs
                 }
             }
 
+            GetRankedSpectrum();
             double[] massErrors = null;
             if (useHeatMap)
             {
@@ -598,13 +604,125 @@ namespace pwiz.Skyline.Controls.Graphs
                     var chromSet = stateProvider.DocumentUI.Settings.MeasuredResults.Chromatograms.FirstOrDefault(
                         chrom => chrom.ContainsFile(_msDataFileScanHelper.ScanProvider.DataFilePath));
                     spectrumProperties.ReplicateName = chromSet?.Name;
+                    if (_peaks != null && _peaks.Length > 0)
+                    {
+                        var nodePath = DocNodePath.GetNodePath(_msDataFileScanHelper.CurrentTransition?.Id,
+                            _documentContainer.DocumentUI);
+
+                        if (!nodePath.Precursor.Id.Equals(_precursor?.DocNode?.Id))
+                            _precursor = new GraphSpectrum.Precursor(_documentContainer.DocumentUI.Settings, null,
+                                nodePath.Peptide, nodePath.Precursor);
+
+                        if (_msDataFileScanHelper.Source == ChromSource.fragment) // Calculate library dotp
+                        {
+                            if (_precursor.Spectra != null && _precursor.Spectra.Count > 0)
+                            {
+                                var libSpectrum = _precursor.Spectra[0].SpectrumPeaksInfo;
+
+                                // Rank the library spectrum with the most generic options. We need it to identify ion types
+                                var matchedSpectrum = LibraryRankedSpectrumInfo.NewLibraryRankedSpectrumInfo(
+                                        libSpectrum,
+                                        _precursor.DocNode.LabelType,
+                                        nodePath.Precursor, stateProvider.DocumentUI.Settings,
+                                        nodePath.Peptide.SourceUnmodifiedTarget, nodePath.Peptide.SourceExplicitMods,
+                                        Adduct.COMMON_PROTONATED_ADDUCTS,
+                                        Enum.GetValues(typeof(IonType)).OfType<IonType>(),
+                                        Adduct.COMMON_PROTONATED_ADDUCTS,
+                                        Enum.GetValues(typeof(IonType)).OfType<IonType>(),
+                                        null)
+                                    .PeaksMatched;
+
+                                var docTransitions = (from t in _msDataFileScanHelper.ScanProvider.Transitions
+                                    where (t.Id as Transition)?.IonType != IonType.precursor
+                                    select t).ToList();
+
+                                if (docTransitions.Count > 1)
+                                {
+                                    var thisSpectrum = GetPeakIntensities(docTransitions);
+                                    var matchedSpectrumTransitions = docTransitions.Select(t => t.Id as Transition)
+                                        .Select(t =>
+                                            new
+                                            {
+                                                t, m = matchedSpectrum.FirstOrDefault(rmi => rmi.MatchedIons.Any(i =>
+                                                    i.IonType == t.IonType && i.Ordinal == t.Ordinal &&
+                                                    i.Charge.AdductCharge == t.Charge))
+                                            }).Where(d => d.m != null).ToDictionary(d => d.t, d => d.m);
+
+                                    var dotpList = thisSpectrum
+                                        .Where(peak => peak.Key.Id is Transition t && matchedSpectrumTransitions.ContainsKey(t))
+                                        .Select(peak => new
+                                    {
+                                        im = matchedSpectrumTransitions[(peak.Key.Id as Transition)!].Intensity,
+                                        it = peak.Value
+                                    }).ToList();
+
+                                    if (dotpList.Count > 1)
+                                        spectrumProperties.dotp = new Statistics(dotpList.Select(d => (double)d.im))
+                                            .NormalizedContrastAngleSqrt(new Statistics(
+                                                dotpList.Select(d => (double)d.it))).ToString(Formats.PEAK_FOUND_RATIO);
+                                }
+                            }
+                        }
+
+                        if (_msDataFileScanHelper.Source == ChromSource.ms1)    // calculate isotope dotp
+                        {
+                            var docPrecursors = _msDataFileScanHelper.ScanProvider.Transitions.Where(t =>
+                                (t.Id as Transition)?.IonType == IonType.precursor).ToList();
+                            if (docPrecursors.Count > 2)
+                            {
+                                var transitionIntensities = GetPeakIntensities(docPrecursors);
+
+                                var isotopeDist = nodePath.Precursor.Children
+                                    .Where(t => (t.Id as Transition)?.IonType == IonType.precursor)
+                                    .Select(t => new
+                                    {
+                                        im = (t.Id as Transition)?.MassIndex,
+                                        isotope = (t as TransitionDocNode)?.IsotopeDistInfo
+                                    }).ToList().OrderBy(id => id.im);
+
+                                spectrumProperties.idotp =
+                                    new Statistics(isotopeDist.Select(d => (double)d.isotope.Proportion))
+                                        .NormalizedContrastAngleSqrt(
+                                            new Statistics(transitionIntensities.Values))
+                                        .ToString(Formats.PEAK_FOUND_RATIO);
+                            }
+                        }
+                    }
                 }
             }
 
-            //avoid control refresh if there are no changes
+            // avoid control refresh if there are no changes
             if (graphControlExtension.PropertiesSheet.SelectedObject == null || graphControlExtension.PropertiesSheet.SelectedObject is FullScanProperties currentProps && !currentProps.IsSameAs(spectrumProperties))
                 graphControlExtension.PropertiesSheet.SelectedObject = spectrumProperties;
         }
+
+        private Dictionary<TransitionFullScanInfo, double> GetPeakIntensities(
+            IEnumerable<TransitionFullScanInfo> transitions)
+        {
+            // aggregate the peak intensities a in single pass through the spectrum
+            var spectrumIndex = 0;
+            var transitionIntensities = new Dictionary<TransitionFullScanInfo, double>();
+            foreach (var docTransition in transitions.OrderBy(t => t.ProductMz))
+            {
+                while (_peaks[spectrumIndex].Mz <
+                       docTransition.ProductMz - docTransition.ExtractionWidth / 2)
+                    spectrumIndex++;
+
+                while (_peaks[spectrumIndex].Mz >=
+                       docTransition.ProductMz - docTransition.ExtractionWidth / 2 &&
+                       _peaks[spectrumIndex].Mz <=
+                       docTransition.ProductMz + docTransition.ExtractionWidth / 2)
+                {
+                    if (transitionIntensities.ContainsKey(docTransition))
+                        transitionIntensities[docTransition] += _peaks[spectrumIndex].Intensity;
+                    else
+                        transitionIntensities.Add(docTransition, _peaks[spectrumIndex].Intensity);
+                    spectrumIndex++;
+                }
+            }
+            return transitionIntensities;
+        }
+
         private class RankingContext
         {
             public int scanIndex;
@@ -756,6 +874,53 @@ namespace pwiz.Skyline.Controls.Graphs
                 return graphItem;
             }
             return null;
+        }
+
+        private void GetRankedSpectrum()
+        {
+            var spectra = _msDataFileScanHelper.MsDataSpectra;
+
+            IList<double> mzs;
+            IList<double> intensities;
+
+            if (spectra.Length == 1 && spectra[0].IonMobilities == null)
+            {
+                mzs = spectra[0].Mzs;
+                intensities = spectra[0].Intensities;
+            }
+            else
+            {
+                // Ion mobility being shown as 2-D spectrum
+                mzs = new List<double>();
+                intensities = new List<double>();
+
+                var fullScans = _msDataFileScanHelper.GetFilteredScans(out var ionMobilityFilterMin, out var ionMobilityFilterMax);
+
+                double minMz;
+                var indices = new int[fullScans.Length];
+                while ((minMz = FindMinMz(fullScans, indices)) < double.MaxValue)
+                {
+                    mzs.Add(minMz);
+                    intensities.Add(SumIntensities(fullScans, minMz, indices, ionMobilityFilterMin, ionMobilityFilterMax));
+                }
+            }
+
+            // Save the full spectrum for later use in dotp calculation
+            _peaks = new SpectrumPeaksInfo.MI[mzs.Count];
+            for (int i = 0; i < _peaks.Length; i++)
+                _peaks[i] = new SpectrumPeaksInfo.MI() { Mz = mzs[i], Intensity = (float)intensities[i] };
+
+            if (_msDataFileScanHelper.Source == ChromSource.fragment)
+            {
+                var nodePath = DocNodePath.GetNodePath(_msDataFileScanHelper.CurrentTransition?.Id,
+                    _documentContainer.DocumentUI);
+
+                if (nodePath != null) // Make sure user hasn't removed node since last update
+                {
+                    var graphItem = RankScan(mzs, intensities, _documentContainer.DocumentUI.Settings,
+                        nodePath.Precursor, nodePath.Transition);
+                }
+            }
         }
 
         /// <summary>
@@ -1444,8 +1609,7 @@ namespace pwiz.Skyline.Controls.Graphs
             using (Graphics g = CreateGraphics())
             {
                 object nearestObject;
-                int index;
-                if (GraphPane.FindNearestObject(mousePoint, g, out nearestObject, out index))
+                if (GraphPane.FindNearestObject(mousePoint, g, out nearestObject, out var index))
                 {
                     var textObj = nearestObject as TextObj;
                     if (textObj != null)

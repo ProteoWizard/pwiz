@@ -830,9 +830,7 @@ namespace pwiz.SkylineTestTutorial
                 {
                     var graph = GetGraphChromatogram(i);
                     var approxRT = ((i == 1) ? rt1 : rt0);
-                    TransitionGroupDocNode nodeGroupGraph;
-                    TransitionDocNode nodeTranGraph;
-                    var scaledRT = graph.FindAnnotatedPeakRetentionTime(approxRT, out nodeGroupGraph, out nodeTranGraph);
+                    var scaledRT = graph.FindAnnotatedPeakRetentionTime(approxRT, out var nodeGroupGraph, out var nodeTranGraph);
                     graph.FirePickedPeak(nodeGroup, nodeTran, scaledRT);
                 }
             });
@@ -994,7 +992,8 @@ namespace pwiz.SkylineTestTutorial
                     }
                 },
                 {"MzCount",37828.ToString(@"N0", CultureInfo.CurrentCulture)},
-                {"IsCentroided","False"}
+                {"IsCentroided","False"},
+                {"idotp",0.73.ToString(CultureInfo.CurrentCulture)}
             };
             var expectedProperties = new FullScanProperties();
             expectedProperties.Deserialize(expectedPropertiesDict);
