@@ -131,6 +131,7 @@ ImportTransitionListErrorDlg,TestExistingExperimentsTutorial
 ListDesigner,TestListDesigner
 ListGridForm,TestListDesigner
 LiveResultsGrid,TestAnnotations
+LKContainerBrowser,TestPanoramaClient
 LocateFileDlg,TestInstallTools
 LongWaitDlg,TestLongWait
 ManageLayoutsForm,TestPivotEditor
@@ -230,5 +231,6 @@ ViewEditor.FilterView,TestLiveReportsFilter
 ViewLibraryDlg,TestFullScanId
 VolcanoPlotPropertiesDlg,TestGroupComparisonVolcanoPlot
 VolcanoPlotFormattingDlg,TestVolcanoPlotFormatting
+WebDavBrowser,TestPanoramaClient
 DetectionToolbarProperties, TestDetectionsPlot
 ImportTransitionListColumnSelectDlg,TestExistingExperimentsTutorial

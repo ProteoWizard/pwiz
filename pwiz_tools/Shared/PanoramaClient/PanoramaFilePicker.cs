@@ -114,7 +114,7 @@ namespace pwiz.PanoramaClient
         /// <returns></returns>
         private JToken GetJson(Uri queryUri)
         {
-            var webClient = new WebClientWithCredentials(queryUri, FolderBrowser.ActiveServer.Username, FolderBrowser.ActiveServer.Password);
+            var webClient = new WebClientWithCredentials(queryUri, FolderBrowser.GetActiveServer().Username, FolderBrowser.GetActiveServer().Password);
             JToken json = webClient.Get(queryUri);
             return json;
         }
@@ -326,14 +326,14 @@ namespace pwiz.PanoramaClient
                 urlLink.Text = FolderBrowser.GetSelectedUri();
                 ShowFiles(true);
                 versionOptions.Text = RECENT_VER;
-                var path = FolderBrowser.FolderPath;
+                var path = FolderBrowser.GetFolderPath();
                 listView.Items.Clear();
                 _restoring = false;
                 if (!string.IsNullOrEmpty(path))
                 {
                     if (!_showWebDav)
                     {
-                        if (FolderBrowser.CurNodeIsTargetedMS)
+                        if (FolderBrowser.GetNodeIsTargetedMS())
                         {
                             // This means we're running a test
                             if (TestFileJson != null)
@@ -344,9 +344,9 @@ namespace pwiz.PanoramaClient
                             else
                             {
                                 // Add File/DocumentSize column when it is linked up
-                                var query = BuildQuery(FolderBrowser.ActiveServer.URI.ToString(), path, @"TargetedMSRuns", @"Current",
+                                var query = BuildQuery(FolderBrowser.GetActiveServer().URI.ToString(), path, @"TargetedMSRuns", @"Current",
                                     new[] { @"Name", @"Deleted", @"Container/Path", @"File/Proteins", @"File/Peptides", @"File/Precursors", @"File/Transitions", @"File/Replicates", @"Created", @"File/Versions", @"Replaced", @"ReplacedByRun", @"ReplacesRun", @"File/Id", @"RowId" }, string.Empty);
-                                var sizeQuery = BuildQuery(FolderBrowser.ActiveServer.URI.ToString(), path, "Runs", "Current",
+                                var sizeQuery = BuildQuery(FolderBrowser.GetActiveServer().URI.ToString(), path, "Runs", "Current",
                                     new[] { "DocumentSize", "Id", "FileName" }, string.Empty);
                                 _sizeInfoJson = GetJson(sizeQuery);
                                 _runsInfoJson = GetJson(query);
@@ -365,12 +365,12 @@ namespace pwiz.PanoramaClient
                         string uriString;
                         if (_showWebDav)
                         {
-                            uriString = string.Concat(FolderBrowser.ActiveServer.URI.ToString(), PanoramaUtil.WEBDAV,
+                            uriString = string.Concat(FolderBrowser.GetActiveServer().URI.ToString(), PanoramaUtil.WEBDAV,
                                 path + @"/?method=json");
                         }
                         else
                         {
-                            uriString = string.Concat(FolderBrowser.ActiveServer.URI.ToString(), PanoramaUtil.WEBDAV, @"/",
+                            uriString = string.Concat(FolderBrowser.GetActiveServer().URI.ToString(), PanoramaUtil.WEBDAV, @"/",
                                 path + PanoramaUtil.FILES_W_SLASH, "?method=json");
                         }
                         var uri = new Uri(uriString);
@@ -437,7 +437,7 @@ namespace pwiz.PanoramaClient
                     SelectedPath = folderPath;
                 }
 
-                FileUrl = FolderBrowser.ActiveServer.URI + downloadName;
+                FileUrl = FolderBrowser.GetActiveServer().URI + downloadName;
                 DialogResult = DialogResult.Yes;
                 Close();
             }

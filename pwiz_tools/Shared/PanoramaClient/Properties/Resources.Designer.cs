@@ -272,6 +272,16 @@ namespace pwiz.PanoramaClient.Properties {
         }
         
         /// <summary>
+        ///   Looks up a localized string similar to Failed attempting to retrieve information from the following folders:.
+        /// </summary>
+        public static string WebDavBrowser_AddWebDavFolders_Failed_attempting_to_retrieve_information_from_the_following_folders_ {
+            get {
+                return ResourceManager.GetString("WebDavBrowser_AddWebDavFolders_Failed_attempting_to_retrieve_information_from_the" +
+                        "_following_folders_", resourceCulture);
+            }
+        }
+        
+        /// <summary>
         ///   Looks up a localized string similar to Downloading {0}.
         /// </summary>
         public static string WebPanoramaClient_DownloadFile_Downloading__0_ {

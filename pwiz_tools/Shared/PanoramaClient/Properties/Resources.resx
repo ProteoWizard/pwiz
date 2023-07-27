@@ -202,4 +202,7 @@
   <data name="PanoramaDirectoryPicker_DirectoryPicker_Load_Open" xml:space="preserve">
 	  <value>Open</value>
   </data>
+  <data name="WebDavBrowser_AddWebDavFolders_Failed_attempting_to_retrieve_information_from_the_following_folders_" xml:space="preserve">
+	  <value>Failed attempting to retrieve information from the following folders:</value>
+  </data>
 </root>
