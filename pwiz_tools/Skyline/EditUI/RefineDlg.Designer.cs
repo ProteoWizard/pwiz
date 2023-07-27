@@ -460,7 +460,6 @@
             this.comboIncludedComparisonType.FormattingEnabled = true;
             resources.ApplyResources(this.comboIncludedComparisonType, "comboIncludedComparisonType");
             this.comboIncludedComparisonType.Name = "comboIncludedComparisonType";
-            this.comboIncludedComparisonType.SelectedIndexChanged += new System.EventHandler(this.AdjustWidthComboBox);
             // 
             // label10
             // 

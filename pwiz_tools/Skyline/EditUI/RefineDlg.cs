@@ -156,15 +156,18 @@ namespace pwiz.Skyline.EditUI
                 textIncludedCutoff.Enabled = true;
                 textQuantitativeCutoff.Enabled = true;
 
+
                 comboIncludedComparisonType.Enabled = true;
                 comboIncludedComparisonType.Items.Add("Min");
                 comboIncludedComparisonType.Items.Add("Max");
                 comboIncludedComparisonType.SelectedIndex = 0;
+                ComboHelper.AutoSizeDropDown(comboIncludedComparisonType);
 
                 comboQuantitativeComparisonType.Enabled = true;
                 comboQuantitativeComparisonType.Items.Add("Min");
                 comboQuantitativeComparisonType.Items.Add("Max");
                 comboQuantitativeComparisonType.SelectedIndex = 0;
+                ComboHelper.AutoSizeDropDown(comboQuantitativeComparisonType);
 
             }
 
@@ -775,17 +778,6 @@ namespace pwiz.Skyline.EditUI
             var log = checkBoxLog.Checked;
             VolcanoPlotPropertiesDlg.UpdateTextBoxAndLabel(textFoldChange, labelFoldChangeUnit, log, 2);
             VolcanoPlotPropertiesDlg.UpdateTextBoxAndLabel(textPValue, labelPValueUnit, log, 10, true);
-        }
-
-        private void AdjustWidthComboBox(object sender, EventArgs e)
-        {
-            var senderComboBox = (ComboBox)sender;
-            Graphics g = senderComboBox.CreateGraphics();
-            Font font = senderComboBox.Font;
-            var currentItem = senderComboBox.SelectedItem.ToString();
-            var width = (int)g.MeasureString(currentItem, font).Width;
-            var buffer = 20;
-            senderComboBox.Width = width + buffer;
         }
     }
 }
