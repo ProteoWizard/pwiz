@@ -659,7 +659,7 @@ namespace pwiz.Skyline.Controls.Graphs
                                     if (dotpList.Count > 1)
                                         spectrumProperties.dotp = new Statistics(dotpList.Select(d => (double)d.im))
                                             .NormalizedContrastAngleSqrt(new Statistics(
-                                                dotpList.Select(d => (double)d.it))).ToString(Formats.PEAK_FOUND_RATIO);
+                                                dotpList.Select(d => d.it))).ToString(Formats.PEAK_FOUND_RATIO);
                                 }
                             }
                         }
