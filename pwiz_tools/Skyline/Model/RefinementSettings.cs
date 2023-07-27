@@ -788,7 +788,7 @@ namespace pwiz.Skyline.Model
                 ComparisonType? includedComparisonType = SCIncludedComparisonType.HasValue && 0 <= (int?)SCIncludedComparisonType && (int?)SCIncludedComparisonType <= numComparisonTypes ? SCIncludedComparisonType : ComparisonType.min;
                 if (SCIncludedCutoff.HasValue)
                 {
-                    if (checkIfShapeCorrelationBelowCutoff(chromInfos, SCIncludedCutoff, includedComparisonType))
+                    if (!checkIfShapeCorrelationAboveCutoff(chromInfos, SCIncludedCutoff, includedComparisonType))
                     {
                         continue;
                     }
@@ -798,7 +798,7 @@ namespace pwiz.Skyline.Model
                 ComparisonType? quantitativeComparisonType = SCQuantitativeComparisonType.HasValue && 0 <= (int?)SCQuantitativeComparisonType && (int?)SCQuantitativeComparisonType <= numComparisonTypes ? SCQuantitativeComparisonType : ComparisonType.min;
                 if (SCQuantitativeCutoff.HasValue)
                 {
-                    if (checkIfShapeCorrelationBelowCutoff(chromInfos, SCQuantitativeCutoff, quantitativeComparisonType))
+                    if (!checkIfShapeCorrelationAboveCutoff(chromInfos, SCQuantitativeCutoff, quantitativeComparisonType))
                     {
                         nonQuantitativeNodeTran = nodeTran.ChangeQuantitative(false);
                     }
@@ -1287,7 +1287,7 @@ namespace pwiz.Skyline.Model
         }
 
 
-        private bool checkIfShapeCorrelationBelowCutoff(IEnumerable<TransitionChromInfo> chromInfos, double? cutoff, ComparisonType? type = ComparisonType.min)
+        private bool checkIfShapeCorrelationAboveCutoff(IEnumerable<TransitionChromInfo> chromInfos, double? cutoff, ComparisonType? type = ComparisonType.min)
         {
             float? comparisonValue = 0;
             if (chromInfos.Any())
@@ -1303,7 +1303,7 @@ namespace pwiz.Skyline.Model
                 }
             }
 
-            return comparisonValue < cutoff;
+            return comparisonValue >= cutoff;
 
         }
 
