@@ -103,10 +103,12 @@ lib pwiz_data_msdata
     : # requirements
         <library>pwiz_data_msdata_core
         [ mz5-build <library>mz5//pwiz_data_msdata_mz5 ]
+        [ mzmlb-build <library>mzmlb//pwiz_data_msdata_mzmlb ]
     : # default-build
     : # usage-requirements
         <library>pwiz_data_msdata_core
         [ mz5-build <library>mz5//pwiz_data_msdata_mz5 ]
+        [ mzmlb-build <library>mzmlb//pwiz_data_msdata_mzmlb ]
     ;
 
 

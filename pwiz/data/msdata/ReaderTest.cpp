@@ -261,7 +261,7 @@ void testIdentifyFileFormat()
     {
         auto readerTypes = readerList.getTypes();
         set<string> readerTypeSet(readerTypes.begin(), readerTypes.end());
-        set<string> expectedTypeSet{ "mzML", "mzXML", "MS1", "MS2", "Mascot Generic", "Bruker Data Exchange", "MZ5",
+        set<string> expectedTypeSet{ "mzML", "mzMLb", "mzXML", "MS1", "MS2", "Mascot Generic", "Bruker Data Exchange", "MZ5",
                                      "Sciex WIFF/WIFF2", "AB/Sciex T2D", "Agilent MassHunter", "Bruker FID", "Bruker YEP", "Bruker BAF", "Bruker U2", "Bruker TDF",
 #if defined(PWIZ_READER_MOBILION)
                                      "Mobilion MBI",
