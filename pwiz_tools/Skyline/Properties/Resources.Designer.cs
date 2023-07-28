@@ -12981,7 +12981,7 @@ namespace pwiz.Skyline.Properties {
         }
         
         /// <summary>
-        ///   Looks up a localized string similar to The chosen folder does not appear to contain an Agilent QQQ method template. The folder is expected to have a .m extension, and contain the file qqqacqmethod.xsd..
+        ///   Looks up a localized string similar to Agilent 6400 series instrument type methods are expected to have a .m extension, and contain the file qqqacqmethod.xsd. If this is an Agilent TQ method, please choose ‘Agilent MassHunter 12 or higher’ as your instrument type..
         /// </summary>
         public static string ExportMethodDlg_btnBrowseTemplate_Click_The_chosen_folder_does_not_appear_to_contain_an_Agilent_QQQ_method_template_The_folder_is_expected_to_have_a_m_extension_and_contain_the_file_qqqacqmethod_xsd {
             get {

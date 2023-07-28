@@ -175,7 +175,7 @@ namespace pwiz.Skyline.Model
         public const string AGILENT = "Agilent";
         public const string AGILENT_TOF = "Agilent QTOF";
         public const string AGILENT6400 = "Agilent 6400 Series";
-        public const string AGILENT_MASSHUNTER_12 = "Agilent MassHunter 12";
+        public const string AGILENT_MASSHUNTER_12 = "Agilent MassHunter 12 and higher";
         public const string BRUKER = "Bruker";
         public const string BRUKER_TOF = "Bruker QTOF";
         public const string BRUKER_TIMSTOF = "Bruker timsTOF";
