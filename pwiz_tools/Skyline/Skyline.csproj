@@ -430,7 +430,9 @@
     <Compile Include="EditUI\EditLinkedPeptidesDlg.Designer.cs">
       <DependentUpon>EditLinkedPeptidesDlg.cs</DependentUpon>
     </Compile>
-    <Compile Include="EditUI\EditSpectrumFilterDlg.cs" />
+    <Compile Include="EditUI\EditSpectrumFilterDlg.cs">
+      <SubType>Form</SubType>
+    </Compile>
     <Compile Include="EditUI\EditSpectrumFilterDlg.Designer.cs">
       <DependentUpon>EditSpectrumFilterDlg.cs</DependentUpon>
     </Compile>

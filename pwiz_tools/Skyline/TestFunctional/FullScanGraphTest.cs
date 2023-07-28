@@ -459,7 +459,9 @@ namespace pwiz.SkylineTestFunctional
             Assert.IsNotNull(currentProperties);
             // To write new json string for the expected property values into the output stream uncomment the next line
             //Trace.Write(currentProperties.Serialize());
-            Assert.IsTrue(expectedProperties.IsSameAs(currentProperties));
+
+            var diff = expectedProperties.GetDifference(currentProperties);
+            Assert.IsFalse(diff.Any(), @"Different values:" + string.Join(",", diff) );
             Assert.IsTrue(propertiesButton.Checked);
 
             // make sure the properties are updated when the spectrum changes
