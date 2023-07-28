@@ -32,6 +32,7 @@
       <Package Description="ProteoWizard {version} $(var.AddressModel)-bit Installer" Manufacturer="ProteoWizard" InstallerVersion="500" Compressed="yes" />
       <Media Id="1" Cabinet="ProteoWizard.cab" EmbedCab="yes" />
       <Icon Id="seems_Icon.exe" SourceFile="msvc-release\seems.exe" />
+      <Icon Id="MSConvertGUI_Icon.exe" SourceFile="msvc-release\MSConvertGUI.exe" />
       <Property Id="ARPPRODUCTICON" Value="seems_Icon.exe" />
       <Property Id="ApplicationFolderName" Value="ProteoWizard {version}" />
       <Property Id="WixAppFolder" Value="WixPerUserFolder" />
@@ -100,7 +101,7 @@
                   </Component>
                     <Component Feature="MainFeature">
                         <File Source="msvc-release\MSConvertGUI.exe" KeyPath="yes"/>
-                        <Shortcut Id="MSConvertShortcut" Directory="ProteoWizardStartMenuFolder" Name="MSConvert" WorkingDirectory="APPLICATIONFOLDER" Icon="seems_Icon.exe" IconIndex="0" Advertise="yes" />
+                        <Shortcut Id="MSConvertShortcut" Directory="ProteoWizardStartMenuFolder" Name="MSConvert" WorkingDirectory="APPLICATIONFOLDER" Icon="MSConvertGUI_Icon.exe" IconIndex="0" Advertise="yes" />
                     </Component>
                     __CONTEXTMENU_REGISTRY__
 

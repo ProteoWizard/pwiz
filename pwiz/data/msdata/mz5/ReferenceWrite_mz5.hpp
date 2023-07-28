@@ -136,7 +136,7 @@ public:
      */
     void writeTo(Connection_mz5& connection,
                  const pwiz::util::IterationListenerRegistry* iterationListenerRegistry,
-                 bool useWorkerThreads);
+                 bool useWorkerThreads, bool continueOnError);
 
 private:
     /**
@@ -151,7 +151,8 @@ private:
                     std::vector<BinaryDataMZ5>& bdl,
                     std::vector<SpectrumMZ5>& spl,
                     const pwiz::util::IterationListenerRegistry* iterationListenerRegistry,
-                    bool useWorkerThreads);
+                    bool useWorkerThreads,
+                    bool continueOnError);
 
     /**
      * Reads and writes all chromtograms using an existing mz5 connection.
@@ -164,7 +165,8 @@ private:
                     Connection_mz5& connection,
                     std::vector<BinaryDataMZ5>& bdl,
                     std::vector<ChromatogramMZ5>& cpl,
-                    const pwiz::util::IterationListenerRegistry* iterationListenerRegistry);
+                    const pwiz::util::IterationListenerRegistry* iterationListenerRegistry,
+                    bool continueOnError);
 
     /**
      * Internal reference to the MSData object.

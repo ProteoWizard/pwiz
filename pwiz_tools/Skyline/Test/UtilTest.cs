@@ -19,7 +19,9 @@
 
 using System;
 using System.Collections.Generic;
+using System.Diagnostics;
 using System.IO;
+using System.Linq;
 using System.Text;
 using pwiz.Skyline.Util;
 using pwiz.Skyline.Util.Extensions;
@@ -297,6 +299,16 @@ namespace pwiz.SkylineTest
         }
 
         [TestMethod]
+        public void TestEscapePathForXML()
+        {
+            Assert.AreEqual("&amp;oops", PathEx.EscapePathForXML("&oops")); // Unescaped ampersand in filename
+            Assert.AreEqual("&amp;oops &amp;oops", PathEx.EscapePathForXML("&oops &oops")); // More than one
+            Assert.AreEqual("&amp;oops", PathEx.EscapePathForXML("&amp;oops")); // Already escaped
+            Assert.AreEqual("&amp;oops &amp;oops &amp;oops", PathEx.EscapePathForXML("&oops &oops &amp;oops")); // Mix of escaped and unescaped
+            Assert.AreEqual("&amp;oops &amp;oops &apos;oops", PathEx.EscapePathForXML("&oops &oops &apos;oops")); // Use of & to escape apostrophe
+        }
+
+        [TestMethod]
         public void FilesDirTest()
         {
             var cleanupLevel = DesiredCleanupLevel;
@@ -307,9 +319,21 @@ namespace pwiz.SkylineTest
                 // NOTE: This takes seconds because the cleanup code uses TryTwice()
                 const string fileName = "DocWithLibrary.sky";
                 string filePath = testFilesDir.GetTestPath(fileName);
-                if (!Install.IsRunningOnWine)
+                using (new StreamReader(filePath))
                 {
-                    using (new StreamReader(filePath))
+                    // Test the code that names the process locking a file
+                    try
+                    {
+                        var names = string.Join(@", ", FileLockingProcessFinder.GetProcessesUsingFile(filePath).Select(p => p.ProcessName));
+                        AssertEx.Contains(names, Process.GetCurrentProcess().ProcessName);
+                    }
+                    catch
+                    {
+                        // ignored - the mechanism behind FileLockingProcessFinder may not be supported, probably due to insufficient permissions
+                    }
+
+                    // Test our post-test cleanup code's handling of a locked file
+                    if (!Install.IsRunningOnWine)
                     {
                         DesiredCleanupLevel = DesiredCleanupLevel.none; // Folders renamed
                         AssertEx.ThrowsException<IOException>(testFilesDir.Cleanup, x => AssertEx.Contains(x.Message, fileName));

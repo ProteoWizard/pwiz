@@ -1,7 +1,7 @@
 ﻿<StaticModList>
   <static_modification name="Acetyl (K)" aminoacid="K" formula="C2H2O" unimod_id="1" short_name="1Ac" />
   <static_modification name="Acetyl (N-term)" terminus="N" formula="C2H2O" unimod_id="1" short_name="1Ac" />
-  <static_modification name="Amidated (C-term)" terminus="C" formula="HN - O" unimod_id="2" short_name="Ami" />
+  <static_modification name="Amidated (C-term)" terminus="C" formula="HN-O" unimod_id="2" short_name="Ami" />
   <static_modification name="Ammonia-loss (N-term C)" aminoacid="C" terminus="N" formula="-H3N" unimod_id="385" short_name="dAm" />
   <static_modification name="Biotin (K)" aminoacid="K" formula="C10H14N2O2S" unimod_id="3" short_name="Btn" />
   <static_modification name="Biotin (N-term)" terminus="N" formula="C10H14N2O2S" unimod_id="3" short_name="Btn" />
@@ -9,10 +9,10 @@
   <static_modification name="Carbamyl (K)" aminoacid="K" formula="HCNO" unimod_id="5" short_name="CRM" />
   <static_modification name="Carbamyl (N-term)" terminus="N" formula="HCNO" unimod_id="5" short_name="CRM" />
   <static_modification name="Carboxymethyl (C)" aminoacid="C" formula="C2H2O2" unimod_id="6" short_name="Cmc" />
-  <static_modification name="Cation:Na (C-term)" terminus="C" formula="Na - H" unimod_id="30" short_name="NaX" />
-  <static_modification name="Cation:Na (DE)" aminoacid="D, E" formula="Na - H" unimod_id="30" short_name="NaX" />
+  <static_modification name="Cation:Na (C-term)" terminus="C" formula="Na-H" unimod_id="30" short_name="NaX" />
+  <static_modification name="Cation:Na (DE)" aminoacid="D, E" formula="Na-H" unimod_id="30" short_name="NaX" />
   <static_modification name="cysTMT6plex (C)" aminoacid="C" formula="H25C10C'4N2N'O2S" unimod_id="985" />
-  <static_modification name="Deamidated (NQ)" aminoacid="N, Q" formula="O - HN" unimod_id="7" short_name="Dea" />
+  <static_modification name="Deamidated (NQ)" aminoacid="N, Q" formula="O-HN" unimod_id="7" short_name="Dea" />
   <static_modification name="Dehydrated (N-term C)" aminoacid="C" terminus="N" formula="-H2O" unimod_id="23" short_name="Dhy" />
   <static_modification name="Dehydro (C)" aminoacid="C" formula="-H" unimod_id="374" short_name="-1H" />
   <static_modification name="DiLeu4plex (K)" aminoacid="K" formula="H13H'2C8NO'" unimod_id="1322" />
@@ -35,7 +35,7 @@
   <static_modification name="iTRAQ8plex (K)" aminoacid="K" formula="C'7N'C7H24N3O3" unimod_id="730" short_name="IT8" />
   <static_modification name="iTRAQ8plex (N-term)" terminus="N" formula="C'7N'C7H24N3O3" unimod_id="730" short_name="IT8" />
   <static_modification name="iTRAQ8plex (Y)" aminoacid="Y" formula="C'7N'C7H24N3O3" unimod_id="730" short_name="IT8" />
-  <static_modification name="Met-&gt;Hse (C-term M)" aminoacid="M" terminus="C" formula="O - H2CS" unimod_id="10" short_name="Hse" />
+  <static_modification name="Met-&gt;Hse (C-term M)" aminoacid="M" terminus="C" formula="O-H2CS" unimod_id="10" short_name="Hse" />
   <static_modification name="Met-&gt;Hsl (C-term M)" aminoacid="M" terminus="C" formula="-H4CS" unimod_id="11" short_name="Hsl" />
   <static_modification name="Methyl (C-term)" terminus="C" formula="CH2" unimod_id="34" short_name="1Me" />
   <static_modification name="Methyl (DE)" aminoacid="D, E" formula="CH2" unimod_id="34" short_name="1Me" />
@@ -103,10 +103,10 @@
   <static_modification name="AEBS (K)" aminoacid="K" formula="H9C8NO2S" unimod_id="276" />
   <static_modification name="AEBS (S)" aminoacid="S" formula="H9C8NO2S" unimod_id="276" />
   <static_modification name="AEBS (Y)" aminoacid="Y" formula="H9C8NO2S" unimod_id="276" />
-  <static_modification name="AEC-MAEC (S)" aminoacid="S" formula="C2H5NS - O" unimod_id="472" short_name="Aec" />
-  <static_modification name="AEC-MAEC (T)" aminoacid="T" formula="C2H5NS - O" unimod_id="472" short_name="Aec" />
-  <static_modification name="AHA-Alkyne (M)" aminoacid="M" formula="H5C4N5O - S" unimod_id="1000" />
-  <static_modification name="AHA-Alkyne-KDDDD (M)" aminoacid="M" formula="H37C26N11O14 - S" unimod_id="1001" />
+  <static_modification name="AEC-MAEC (S)" aminoacid="S" formula="C2H5NS-O" unimod_id="472" short_name="Aec" />
+  <static_modification name="AEC-MAEC (T)" aminoacid="T" formula="C2H5NS-O" unimod_id="472" short_name="Aec" />
+  <static_modification name="AHA-Alkyne (M)" aminoacid="M" formula="H5C4N5O-S" unimod_id="1000" />
+  <static_modification name="AHA-Alkyne-KDDDD (M)" aminoacid="M" formula="H37C26N11O14-S" unimod_id="1001" />
   <static_modification name="AHA-SS (M)" aminoacid="M" formula="H9C7N5O2" unimod_id="1249" />
   <static_modification name="AHA-SS_CAM (M)" aminoacid="M" formula="H12C9N6O3" unimod_id="1250" />
   <static_modification name="Ahx2+Hsl (C-term)" terminus="C" formula="H27C16N3O3" unimod_id="1015" />
@@ -124,8 +124,8 @@
   <static_modification name="AMTzHexNAc2 (T)" aminoacid="T" formula="H30C19N6O10" unimod_id="934" />
   <static_modification name="Archaeol (C)" aminoacid="C" formula="H86C43O2" unimod_id="410" short_name="Ach" />
   <static_modification name="Arg (N-term)" terminus="N" formula="H12C6N4O" unimod_id="1288" />
-  <static_modification name="Arg-&gt;GluSA (R)" aminoacid="R" formula="O - H5CN3" unimod_id="344" short_name="AGA" />
-  <static_modification name="Arg-&gt;Npo (R)" aminoacid="R" formula="C3NO2 - H" unimod_id="837" />
+  <static_modification name="Arg-&gt;GluSA (R)" aminoacid="R" formula="O-H5CN3" unimod_id="344" short_name="AGA" />
+  <static_modification name="Arg-&gt;Npo (R)" aminoacid="R" formula="C3NO2-H" unimod_id="837" />
   <static_modification name="Arg-&gt;Orn (R)" aminoacid="R" formula="-H2CN2" unimod_id="372" short_name="Orn" />
   <static_modification name="Arg-loss (C-term R)" aminoacid="R" terminus="C" formula="-H12C6N4O" unimod_id="1287" short_name="-1R" />
   <static_modification name="Arg2PG (R)" aminoacid="R" formula="H10C16O4" unimod_id="848" />
@@ -186,10 +186,10 @@
   <static_modification name="BMP-piperidinol (C)" aminoacid="C" formula="H17C18NO" unimod_id="1281" />
   <static_modification name="BMP-piperidinol (M)" aminoacid="M" formula="H17C18NO" unimod_id="1281" />
   <static_modification name="Bodipy (C)" aminoacid="C" formula="H21C20N4O3F2B" unimod_id="878" />
-  <static_modification name="Bromo (F)" aminoacid="F" formula="Br - H" unimod_id="340" short_name="1Br" />
-  <static_modification name="Bromo (H)" aminoacid="H" formula="Br - H" unimod_id="340" short_name="1Br" />
-  <static_modification name="Bromo (W)" aminoacid="W" formula="Br - H" unimod_id="340" short_name="1Br" />
-  <static_modification name="Bromo (Y)" aminoacid="Y" formula="Br - H" unimod_id="340" short_name="1Br" />
+  <static_modification name="Bromo (F)" aminoacid="F" formula="Br-H" unimod_id="340" short_name="1Br" />
+  <static_modification name="Bromo (H)" aminoacid="H" formula="Br-H" unimod_id="340" short_name="1Br" />
+  <static_modification name="Bromo (W)" aminoacid="W" formula="Br-H" unimod_id="340" short_name="1Br" />
+  <static_modification name="Bromo (Y)" aminoacid="Y" formula="Br-H" unimod_id="340" short_name="1Br" />
   <static_modification name="Bromobimane (C)" aminoacid="C" formula="H10C10N2O2" unimod_id="301" />
   <static_modification name="Butyryl (K)" aminoacid="K" formula="H6C4O" unimod_id="1289" short_name="Byr" />
   <static_modification name="C8-QAT (K)" aminoacid="K" formula="H29C14NO" unimod_id="513" />
@@ -220,7 +220,7 @@
   <static_modification name="Carboxy (K)" aminoacid="K" formula="CO2" unimod_id="299" short_name="Cox" />
   <static_modification name="Carboxy (Protein N-term M)" aminoacid="M" terminus="N" formula="CO2" unimod_id="299" short_name="Cox" />
   <static_modification name="Carboxy (W)" aminoacid="W" formula="CO2" unimod_id="299" short_name="Cox" />
-  <static_modification name="Carboxy-&gt;Thiocarboxy (Protein C-term G)" aminoacid="G" terminus="C" formula="S - O" unimod_id="420" short_name="Scx" />
+  <static_modification name="Carboxy-&gt;Thiocarboxy (Protein C-term G)" aminoacid="G" terminus="C" formula="S-O" unimod_id="420" short_name="Scx" />
   <static_modification name="Carboxyethyl (H)" aminoacid="H" formula="H4C3O2" unimod_id="378" short_name="CEt" />
   <static_modification name="Carboxyethyl (K)" aminoacid="K" formula="H4C3O2" unimod_id="378" short_name="CEt" />
   <static_modification name="Carboxymethyl (K)" aminoacid="K" formula="C2H2O2" unimod_id="6" short_name="Cmc" />
@@ -228,24 +228,24 @@
   <static_modification name="Carboxymethyl (W)" aminoacid="W" formula="C2H2O2" unimod_id="6" short_name="Cmc" />
   <static_modification name="CarboxymethylDMAP (N-term)" terminus="N" formula="H10C9N2O" unimod_id="1350" />
   <static_modification name="CarboxymethylDTT (C)" aminoacid="C" formula="H10C6O4S2" unimod_id="894" />
-  <static_modification name="Cation:Ag (C-term)" terminus="C" formula="Ag - H" unimod_id="955" />
-  <static_modification name="Cation:Ag (DE)" aminoacid="D, E" formula="Ag - H" unimod_id="955" />
-  <static_modification name="Cation:Ca[II] (C-term)" terminus="C" formula="Ca - H2" unimod_id="951" />
-  <static_modification name="Cation:Ca[II] (DE)" aminoacid="D, E" formula="Ca - H2" unimod_id="951" />
-  <static_modification name="Cation:Cu[I] (C-term)" terminus="C" formula="Cu - H" unimod_id="531" short_name="CuX" />
-  <static_modification name="Cation:Cu[I] (DE)" aminoacid="D, E" formula="Cu - H" unimod_id="531" short_name="CuX" />
-  <static_modification name="Cation:Fe[II] (C-term)" terminus="C" formula="Fe - H2" unimod_id="952" />
-  <static_modification name="Cation:Fe[II] (DE)" aminoacid="D, E" formula="Fe - H2" unimod_id="952" />
-  <static_modification name="Cation:K (C-term)" terminus="C" formula="K - H" unimod_id="530" short_name="KXX" />
-  <static_modification name="Cation:K (DE)" aminoacid="D, E" formula="K - H" unimod_id="530" short_name="KXX" />
-  <static_modification name="Cation:Li (C-term)" terminus="C" formula="Li - H" unimod_id="950" />
-  <static_modification name="Cation:Li (DE)" aminoacid="D, E" formula="Li - H" unimod_id="950" />
-  <static_modification name="Cation:Mg[II] (C-term)" terminus="C" formula="Mg - H2" unimod_id="956" />
-  <static_modification name="Cation:Mg[II] (DE)" aminoacid="D, E" formula="Mg - H2" unimod_id="956" />
-  <static_modification name="Cation:Ni[II] (C-term)" terminus="C" formula="Ni - H2" unimod_id="953" />
-  <static_modification name="Cation:Ni[II] (DE)" aminoacid="D, E" formula="Ni - H2" unimod_id="953" />
-  <static_modification name="Cation:Zn[II] (C-term)" terminus="C" formula="Zn - H2" unimod_id="954" />
-  <static_modification name="Cation:Zn[II] (DE)" aminoacid="D, E" formula="Zn - H2" unimod_id="954" />
+  <static_modification name="Cation:Ag (C-term)" terminus="C" formula="Ag-H" unimod_id="955" />
+  <static_modification name="Cation:Ag (DE)" aminoacid="D, E" formula="Ag-H" unimod_id="955" />
+  <static_modification name="Cation:Ca[II] (C-term)" terminus="C" formula="Ca-H2" unimod_id="951" />
+  <static_modification name="Cation:Ca[II] (DE)" aminoacid="D, E" formula="Ca-H2" unimod_id="951" />
+  <static_modification name="Cation:Cu[I] (C-term)" terminus="C" formula="Cu-H" unimod_id="531" short_name="CuX" />
+  <static_modification name="Cation:Cu[I] (DE)" aminoacid="D, E" formula="Cu-H" unimod_id="531" short_name="CuX" />
+  <static_modification name="Cation:Fe[II] (C-term)" terminus="C" formula="Fe-H2" unimod_id="952" />
+  <static_modification name="Cation:Fe[II] (DE)" aminoacid="D, E" formula="Fe-H2" unimod_id="952" />
+  <static_modification name="Cation:K (C-term)" terminus="C" formula="K-H" unimod_id="530" short_name="KXX" />
+  <static_modification name="Cation:K (DE)" aminoacid="D, E" formula="K-H" unimod_id="530" short_name="KXX" />
+  <static_modification name="Cation:Li (C-term)" terminus="C" formula="Li-H" unimod_id="950" />
+  <static_modification name="Cation:Li (DE)" aminoacid="D, E" formula="Li-H" unimod_id="950" />
+  <static_modification name="Cation:Mg[II] (C-term)" terminus="C" formula="Mg-H2" unimod_id="956" />
+  <static_modification name="Cation:Mg[II] (DE)" aminoacid="D, E" formula="Mg-H2" unimod_id="956" />
+  <static_modification name="Cation:Ni[II] (C-term)" terminus="C" formula="Ni-H2" unimod_id="953" />
+  <static_modification name="Cation:Ni[II] (DE)" aminoacid="D, E" formula="Ni-H2" unimod_id="953" />
+  <static_modification name="Cation:Zn[II] (C-term)" terminus="C" formula="Zn-H2" unimod_id="954" />
+  <static_modification name="Cation:Zn[II] (DE)" aminoacid="D, E" formula="Zn-H2" unimod_id="954" />
   <static_modification name="cGMP (C)" aminoacid="C" formula="H11C10N5O7P" unimod_id="849" />
   <static_modification name="cGMP (S)" aminoacid="S" formula="H11C10N5O7P" unimod_id="849" />
   <static_modification name="cGMP+RMP-loss (C)" aminoacid="C" formula="H4C5N5O" unimod_id="851" />
@@ -283,14 +283,14 @@
   <static_modification name="CuSMo (C)" aminoacid="C" formula="H24C19N8O15P2S3MoCu" unimod_id="444" short_name="CSM" />
   <static_modification name="Cy3-maleimide (C)" aminoacid="C" formula="H45C37N4O9S2" unimod_id="1348" />
   <static_modification name="Cy3b-maleimide (C)" aminoacid="C" formula="H38C37N4O7S" unimod_id="821" />
-  <static_modification name="Cyano (C)" aminoacid="C" formula="CN - H" unimod_id="438" short_name="1CN" />
+  <static_modification name="Cyano (C)" aminoacid="C" formula="CN-H" unimod_id="438" short_name="1CN" />
   <static_modification name="CyDye-Cy3 (C)" aminoacid="C" formula="H44C37N4O6S" unimod_id="494" />
   <static_modification name="CyDye-Cy5 (C)" aminoacid="C" formula="H44C38N4O6S" unimod_id="495" />
   <static_modification name="Cys-&gt;Dha (C)" aminoacid="C" formula="-H2S" unimod_id="368" short_name="DHA" />
-  <static_modification name="Cys-&gt;ethylaminoAla (C)" aminoacid="C" formula="H5C2N - S" unimod_id="940" />
-  <static_modification name="Cys-&gt;methylaminoAla (C)" aminoacid="C" formula="H3CN - S" unimod_id="939" />
-  <static_modification name="Cys-&gt;Oxoalanine (C)" aminoacid="C" formula="O - H2S" unimod_id="402" short_name="COa" />
-  <static_modification name="Cys-&gt;PyruvicAcid (Protein N-term C)" aminoacid="C" terminus="N" formula="O - H3NS" unimod_id="382" short_name="CPA" />
+  <static_modification name="Cys-&gt;ethylaminoAla (C)" aminoacid="C" formula="H5C2N-S" unimod_id="940" />
+  <static_modification name="Cys-&gt;methylaminoAla (C)" aminoacid="C" formula="H3CN-S" unimod_id="939" />
+  <static_modification name="Cys-&gt;Oxoalanine (C)" aminoacid="C" formula="O-H2S" unimod_id="402" short_name="COa" />
+  <static_modification name="Cys-&gt;PyruvicAcid (Protein N-term C)" aminoacid="C" terminus="N" formula="O-H3NS" unimod_id="382" short_name="CPA" />
   <static_modification name="Cysteinyl (C)" aminoacid="C" formula="H5C3NO2S" unimod_id="312" short_name="SCC" />
   <static_modification name="cysTMT (C)" aminoacid="C" formula="H25C14N3O2S" unimod_id="984" />
   <static_modification name="Cytopiloyne (C)" aminoacid="C" formula="H22C19O7" unimod_id="270" />
@@ -307,13 +307,13 @@
   <static_modification name="Cytopiloyne+water (S)" aminoacid="S" formula="H24C19O8" unimod_id="271" />
   <static_modification name="Cytopiloyne+water (T)" aminoacid="T" formula="H24C19O8" unimod_id="271" />
   <static_modification name="Cytopiloyne+water (Y)" aminoacid="Y" formula="H24C19O8" unimod_id="271" />
-  <static_modification name="DAET (S)" aminoacid="S" formula="H9C4NS - O" unimod_id="178" />
-  <static_modification name="DAET (T)" aminoacid="T" formula="H9C4NS - O" unimod_id="178" />
+  <static_modification name="DAET (S)" aminoacid="S" formula="H9C4NS-O" unimod_id="178" />
+  <static_modification name="DAET (T)" aminoacid="T" formula="H9C4NS-O" unimod_id="178" />
   <static_modification name="Dansyl (K)" aminoacid="K" formula="H11C12NO2S" unimod_id="139" />
   <static_modification name="Dansyl (N-term)" terminus="N" formula="H11C12NO2S" unimod_id="139" />
-  <static_modification name="Deamidated (Protein N-term F)" aminoacid="F" terminus="N" formula="O - HN" unimod_id="7" short_name="Dea" />
-  <static_modification name="Deamidated (R)" aminoacid="R" formula="O - HN" unimod_id="7" short_name="Dea" />
-  <static_modification name="Deamidated:18O(1) (NQ)" aminoacid="N, Q" formula="O' - HN" unimod_id="366" short_name="DeO" />
+  <static_modification name="Deamidated (Protein N-term F)" aminoacid="F" terminus="N" formula="O-HN" unimod_id="7" short_name="Dea" />
+  <static_modification name="Deamidated (R)" aminoacid="R" formula="O-HN" unimod_id="7" short_name="Dea" />
+  <static_modification name="Deamidated:18O(1) (NQ)" aminoacid="N, Q" formula="O'-HN" unimod_id="366" short_name="DeO" />
   <static_modification name="Decanoyl (S)" aminoacid="S" formula="H18C10O" unimod_id="449" short_name="Dec" />
   <static_modification name="Decanoyl (T)" aminoacid="T" formula="H18C10O" unimod_id="449" short_name="Dec" />
   <static_modification name="DEDGFLYMVYASQETFG (K)" aminoacid="K" formula="H122C89N18O31S" unimod_id="1010">
@@ -325,7 +325,7 @@
   <static_modification name="Dehydrated (S)" aminoacid="S" formula="-H2O" unimod_id="23" short_name="Dhy" />
   <static_modification name="Dehydrated (T)" aminoacid="T" formula="-H2O" unimod_id="23" short_name="Dhy" />
   <static_modification name="Dehydrated (Y)" aminoacid="Y" formula="-H2O" unimod_id="23" short_name="Dhy" />
-  <static_modification name="Delta:H(1)O(-1)18O(1) (N)" aminoacid="N" formula="O' - HN" unimod_id="170" short_name="DeW" />
+  <static_modification name="Delta:H(1)O(-1)18O(1) (N)" aminoacid="N" formula="O'-HN" unimod_id="170" short_name="DeW" />
   <static_modification name="Delta:H(2)C(2) (H)" aminoacid="H" formula="H2C2" unimod_id="254" short_name="AAS" />
   <static_modification name="Delta:H(2)C(2) (K)" aminoacid="K" formula="H2C2" unimod_id="254" short_name="AAS" />
   <static_modification name="Delta:H(2)C(2) (N-term)" terminus="N" formula="H2C2" unimod_id="254" short_name="AAS" />
@@ -336,7 +336,7 @@
   <static_modification name="Delta:H(4)C(2) (H)" aminoacid="H" formula="H4C2" unimod_id="255" short_name="AAR" />
   <static_modification name="Delta:H(4)C(2) (K)" aminoacid="K" formula="H4C2" unimod_id="255" short_name="AAR" />
   <static_modification name="Delta:H(4)C(2) (N-term)" terminus="N" formula="H4C2" unimod_id="255" short_name="AAR" />
-  <static_modification name="Delta:H(4)C(2)O(-1)S(1) (S)" aminoacid="S" formula="H4C2S - O" unimod_id="327" />
+  <static_modification name="Delta:H(4)C(2)O(-1)S(1) (S)" aminoacid="S" formula="H4C2S-O" unimod_id="327" />
   <static_modification name="Delta:H(4)C(3) (H)" aminoacid="H" formula="H4C3" unimod_id="256" />
   <static_modification name="Delta:H(4)C(3) (K)" aminoacid="K" formula="H4C3" unimod_id="256" />
   <static_modification name="Delta:H(4)C(3)O(1) (C)" aminoacid="C" formula="H4C3O" unimod_id="206" />
@@ -351,8 +351,8 @@
   <static_modification name="Delta:H(8)C(6)O(1) (L)" aminoacid="L" formula="H8C6O" unimod_id="1313" />
   <static_modification name="Delta:H(8)C(6)O(2) (K)" aminoacid="K" formula="H8C6O2" unimod_id="209" />
   <static_modification name="Delta:Hg(1) (C)" aminoacid="C" formula="Hg" unimod_id="291" />
-  <static_modification name="Delta:S(-1)Se(1) (C)" aminoacid="C" formula="Se - S" unimod_id="162" short_name="SSe" />
-  <static_modification name="Delta:S(-1)Se(1) (M)" aminoacid="M" formula="Se - S" unimod_id="162" short_name="SSe" />
+  <static_modification name="Delta:S(-1)Se(1) (C)" aminoacid="C" formula="Se-S" unimod_id="162" short_name="SSe" />
+  <static_modification name="Delta:S(-1)Se(1) (M)" aminoacid="M" formula="Se-S" unimod_id="162" short_name="SSe" />
   <static_modification name="Delta:Se(1) (C)" aminoacid="C" formula="Se" unimod_id="423" short_name="1Se" />
   <static_modification name="Deoxy (D)" aminoacid="D" formula="-O" unimod_id="447" short_name="dOx" />
   <static_modification name="Deoxy (S)" aminoacid="S" formula="-O" unimod_id="447" short_name="dOx" />
@@ -372,7 +372,7 @@
   <static_modification name="dHex(1)Hex(5)HexNAc(4) (N)" aminoacid="N" formula="H112C68N4O49" unimod_id="308" />
   <static_modification name="DHP (C)" aminoacid="C" formula="H8C8N" unimod_id="488" />
   <static_modification name="Diacylglycerol (C)" aminoacid="C" formula="H68C37O4" unimod_id="377" short_name="DiG" />
-  <static_modification name="Dibromo (Y)" aminoacid="Y" formula="Br2 - H2" unimod_id="534" short_name="2Br" />
+  <static_modification name="Dibromo (Y)" aminoacid="Y" formula="Br2-H2" unimod_id="534" short_name="2Br" />
   <static_modification name="Dicarbamidomethyl (D)" aminoacid="D" formula="H6C4N2O2" unimod_id="1290" short_name="2CM" />
   <static_modification name="dichlorination (C)" aminoacid="C" formula="Cl2" unimod_id="937" short_name="2Cl" />
   <static_modification name="dichlorination (Y)" aminoacid="Y" formula="Cl2" unimod_id="937" short_name="2Cl" />
@@ -392,9 +392,9 @@
   <static_modification name="Diethylphosphate (Y)" aminoacid="Y" formula="H9C4O3P" unimod_id="725" />
   <static_modification name="Difuran (Y)" aminoacid="Y" formula="H4C8O2" unimod_id="1279" />
   <static_modification name="Dihydroxyimidazolidine (R)" aminoacid="R" formula="H4C3O2" unimod_id="830" />
-  <static_modification name="Diiodo (H)" aminoacid="H" formula="I2 - H2" unimod_id="130" short_name="2Io" />
-  <static_modification name="Diiodo (Y)" aminoacid="Y" formula="I2 - H2" unimod_id="130" short_name="2Io" />
-  <static_modification name="Diironsubcluster (C)" aminoacid="C" formula="C5N2O5S2Fe2 - H" unimod_id="439" short_name="dFe" />
+  <static_modification name="Diiodo (H)" aminoacid="H" formula="I2-H2" unimod_id="130" short_name="2Io" />
+  <static_modification name="Diiodo (Y)" aminoacid="Y" formula="I2-H2" unimod_id="130" short_name="2Io" />
+  <static_modification name="Diironsubcluster (C)" aminoacid="C" formula="C5N2O5S2Fe2-H" unimod_id="439" short_name="dFe" />
   <static_modification name="Diisopropylphosphate (K)" aminoacid="K" formula="H13C6O3P" unimod_id="362" />
   <static_modification name="Diisopropylphosphate (N-term)" terminus="N" formula="H13C6O3P" unimod_id="362" />
   <static_modification name="Diisopropylphosphate (S)" aminoacid="S" formula="H13C6O3P" unimod_id="362" />
@@ -461,8 +461,8 @@
   <static_modification name="EQIGG (K)" aminoacid="K" formula="H32C20N6O8" unimod_id="846" />
   <static_modification name="ESP (K)" aminoacid="K" formula="C16H26N4O2S" unimod_id="90" />
   <static_modification name="ESP (N-term)" terminus="N" formula="C16H26N4O2S" unimod_id="90" />
-  <static_modification name="Ethanedithiol (S)" aminoacid="S" formula="H4C2S2 - O" unimod_id="200" />
-  <static_modification name="Ethanedithiol (T)" aminoacid="T" formula="H4C2S2 - O" unimod_id="200" />
+  <static_modification name="Ethanedithiol (S)" aminoacid="S" formula="H4C2S2-O" unimod_id="200" />
+  <static_modification name="Ethanedithiol (T)" aminoacid="T" formula="H4C2S2-O" unimod_id="200" />
   <static_modification name="Ethanolamine (C-term)" terminus="C" formula="H5C2N" unimod_id="734" />
   <static_modification name="Ethanolamine (D)" aminoacid="D" formula="H5C2N" unimod_id="734" />
   <static_modification name="Ethanolamine (E)" aminoacid="E" formula="H5C2N" unimod_id="734" />
@@ -474,10 +474,10 @@
   <static_modification name="Ethyl (E)" aminoacid="E" formula="H4C2" unimod_id="280" />
   <static_modification name="Ethyl (K)" aminoacid="K" formula="H4C2" unimod_id="280" />
   <static_modification name="Ethyl (N-term)" terminus="N" formula="H4C2" unimod_id="280" />
-  <static_modification name="Ethyl+Deamidated (N)" aminoacid="N" formula="H3C2O - N" unimod_id="931" />
-  <static_modification name="Ethyl+Deamidated (Q)" aminoacid="Q" formula="H3C2O - N" unimod_id="931" />
-  <static_modification name="ethylamino (S)" aminoacid="S" formula="H5C2N - O" unimod_id="926" />
-  <static_modification name="ethylamino (T)" aminoacid="T" formula="H5C2N - O" unimod_id="926" />
+  <static_modification name="Ethyl+Deamidated (N)" aminoacid="N" formula="H3C2O-N" unimod_id="931" />
+  <static_modification name="Ethyl+Deamidated (Q)" aminoacid="Q" formula="H3C2O-N" unimod_id="931" />
+  <static_modification name="ethylamino (S)" aminoacid="S" formula="H5C2N-O" unimod_id="926" />
+  <static_modification name="ethylamino (T)" aminoacid="T" formula="H5C2N-O" unimod_id="926" />
   <static_modification name="Ethylphosphate (K)" aminoacid="K" formula="H5C2O3P" unimod_id="726" />
   <static_modification name="Ethylphosphate (N-term)" terminus="N" formula="H5C2O3P" unimod_id="726" />
   <static_modification name="Ethylphosphate (S)" aminoacid="S" formula="H5C2O3P" unimod_id="726" />
@@ -488,9 +488,9 @@
   <static_modification name="FAD (Y)" aminoacid="Y" formula="H31C27N9O15P2" unimod_id="50" short_name="FAD" />
   <static_modification name="Farnesyl (C)" aminoacid="C" formula="H24C15" unimod_id="44" short_name="Far" />
   <static_modification name="Fluorescein (C)" aminoacid="C" formula="H14C22NO6" unimod_id="128" />
-  <static_modification name="Fluoro (F)" aminoacid="F" formula="F - H" unimod_id="127" />
-  <static_modification name="Fluoro (W)" aminoacid="W" formula="F - H" unimod_id="127" />
-  <static_modification name="Fluoro (Y)" aminoacid="Y" formula="F - H" unimod_id="127" />
+  <static_modification name="Fluoro (F)" aminoacid="F" formula="F-H" unimod_id="127" />
+  <static_modification name="Fluoro (W)" aminoacid="W" formula="F-H" unimod_id="127" />
+  <static_modification name="Fluoro (Y)" aminoacid="Y" formula="F-H" unimod_id="127" />
   <static_modification name="FMN (S)" aminoacid="S" formula="H19C17N4O8P" unimod_id="442" short_name="FMN" />
   <static_modification name="FMN (T)" aminoacid="T" formula="H19C17N4O8P" unimod_id="442" short_name="FMN" />
   <static_modification name="FMNC (C)" aminoacid="C" formula="H21C17N4O9P" unimod_id="443" short_name="FNC" />
@@ -646,8 +646,8 @@
   <static_modification name="IMID (K)" aminoacid="K" formula="C3H4N2" unimod_id="94" />
   <static_modification name="Iminobiotin (K)" aminoacid="K" formula="H15C10N3OS" unimod_id="89" />
   <static_modification name="Iminobiotin (N-term)" terminus="N" formula="H15C10N3OS" unimod_id="89" />
-  <static_modification name="Iodo (H)" aminoacid="H" formula="I - H" unimod_id="129" short_name="Iod" />
-  <static_modification name="Iodo (Y)" aminoacid="Y" formula="I - H" unimod_id="129" short_name="Iod" />
+  <static_modification name="Iodo (H)" aminoacid="H" formula="I-H" unimod_id="129" short_name="Iod" />
+  <static_modification name="Iodo (Y)" aminoacid="Y" formula="I-H" unimod_id="129" short_name="Iod" />
   <static_modification name="iodoTMT (C)" aminoacid="C" formula="H28C16N4O3" unimod_id="1341" />
   <static_modification name="iodoTMT (D)" aminoacid="D" formula="H28C16N4O3" unimod_id="1341" />
   <static_modification name="iodoTMT (E)" aminoacid="E" formula="H28C16N4O3" unimod_id="1341" />
@@ -680,41 +680,41 @@
   <static_modification name="iTRAQ8plex:13C(6)15N(2) (K)" aminoacid="K" formula="C'6N'2C8H24N2O3" unimod_id="731" />
   <static_modification name="iTRAQ8plex:13C(6)15N(2) (N-term)" terminus="N" formula="C'6N'2C8H24N2O3" unimod_id="731" />
   <static_modification name="iTRAQ8plex:13C(6)15N(2) (Y)" aminoacid="Y" formula="C'6N'2C8H24N2O3" unimod_id="731" />
-  <static_modification name="Label:13C(1)2H(3)+Oxidation (M)" aminoacid="M" formula="H'3C'O - H3C" unimod_id="885" />
-  <static_modification name="Label:13C(4)+Oxidation (M)" aminoacid="M" formula="C'4O - C4" unimod_id="1267" />
+  <static_modification name="Label:13C(1)2H(3)+Oxidation (M)" aminoacid="M" formula="H'3C'O-H3C" unimod_id="885" />
+  <static_modification name="Label:13C(4)+Oxidation (M)" aminoacid="M" formula="C'4O-C4" unimod_id="1267" />
   <static_modification name="Label:13C(4)15N(2)+GlyGly (K)" aminoacid="K" formula="H6C'4N'2O2" unimod_id="923" />
-  <static_modification name="Label:13C(6)+Acetyl (K)" aminoacid="K" formula="H2C'6O - C4" unimod_id="835" />
-  <static_modification name="Label:13C(6)+Dimethyl (K)" aminoacid="K" formula="H4C'6 - C4" unimod_id="986" />
-  <static_modification name="Label:13C(6)+GlyGly (K)" aminoacid="K" formula="H6C'6N2O2 - C2" unimod_id="799" />
-  <static_modification name="Label:13C(6)15N(2)+Acetyl (K)" aminoacid="K" formula="H2C'6N'2O - C4N2" unimod_id="836" />
-  <static_modification name="Label:13C(6)15N(2)+Dimethyl (K)" aminoacid="K" formula="H4C'6N'2 - C4N2" unimod_id="987" />
-  <static_modification name="Label:13C(6)15N(2)+GlyGly (K)" aminoacid="K" formula="H6C'6N'2O2 - C2" unimod_id="864" />
-  <static_modification name="Label:13C(6)15N(4)+Dimethyl (R)" aminoacid="R" formula="H4C'6N'4 - C4N4" unimod_id="1005" />
-  <static_modification name="Label:13C(6)15N(4)+Dimethyl:2H(6)13C(2) (R)" aminoacid="R" formula="H'6C'8N'4 - H2C6N4" unimod_id="1007" />
-  <static_modification name="Label:13C(6)15N(4)+Methyl (R)" aminoacid="R" formula="H2C'6N'4 - C5N4" unimod_id="1004" />
-  <static_modification name="Label:13C(6)15N(4)+Methyl:2H(3)13C(1) (R)" aminoacid="R" formula="H'3C'7N'4 - HC6N4" unimod_id="1006" />
-  <static_modification name="Label:13C(9)+Phospho (Y)" aminoacid="Y" formula="HC'9O3P - C9" unimod_id="185" />
-  <static_modification name="Label:2H(4)+Acetyl (K)" aminoacid="K" formula="H'4C2O - H2" unimod_id="834" />
+  <static_modification name="Label:13C(6)+Acetyl (K)" aminoacid="K" formula="H2C'6O-C4" unimod_id="835" />
+  <static_modification name="Label:13C(6)+Dimethyl (K)" aminoacid="K" formula="H4C'6-C4" unimod_id="986" />
+  <static_modification name="Label:13C(6)+GlyGly (K)" aminoacid="K" formula="H6C'6N2O2-C2" unimod_id="799" />
+  <static_modification name="Label:13C(6)15N(2)+Acetyl (K)" aminoacid="K" formula="H2C'6N'2O-C4N2" unimod_id="836" />
+  <static_modification name="Label:13C(6)15N(2)+Dimethyl (K)" aminoacid="K" formula="H4C'6N'2-C4N2" unimod_id="987" />
+  <static_modification name="Label:13C(6)15N(2)+GlyGly (K)" aminoacid="K" formula="H6C'6N'2O2-C2" unimod_id="864" />
+  <static_modification name="Label:13C(6)15N(4)+Dimethyl (R)" aminoacid="R" formula="H4C'6N'4-C4N4" unimod_id="1005" />
+  <static_modification name="Label:13C(6)15N(4)+Dimethyl:2H(6)13C(2) (R)" aminoacid="R" formula="H'6C'8N'4-H2C6N4" unimod_id="1007" />
+  <static_modification name="Label:13C(6)15N(4)+Methyl (R)" aminoacid="R" formula="H2C'6N'4-C5N4" unimod_id="1004" />
+  <static_modification name="Label:13C(6)15N(4)+Methyl:2H(3)13C(1) (R)" aminoacid="R" formula="H'3C'7N'4-HC6N4" unimod_id="1006" />
+  <static_modification name="Label:13C(9)+Phospho (Y)" aminoacid="Y" formula="HC'9O3P-C9" unimod_id="185" />
+  <static_modification name="Label:2H(4)+Acetyl (K)" aminoacid="K" formula="H'4C2O-H2" unimod_id="834" />
   <static_modification name="Label:2H(4)+GlyGly (K)" aminoacid="K" formula="H2H'4C4N2O2" unimod_id="853" />
   <static_modification name="lapachenole (C)" aminoacid="C" formula="H16C16O2" unimod_id="771" />
-  <static_modification name="Leu-&gt;MetOx (L)" aminoacid="L" formula="OS - H2C" unimod_id="905" />
+  <static_modification name="Leu-&gt;MetOx (L)" aminoacid="L" formula="OS-H2C" unimod_id="905" />
   <static_modification name="LeuArgGlyGly (K)" aminoacid="K" formula="H29C16N7O4" unimod_id="535" short_name="Umc" />
   <static_modification name="LG-anhydrolactam (K)" aminoacid="K" formula="H26C20O3" unimod_id="946" />
   <static_modification name="LG-anhydrolactam (N-term)" terminus="N" formula="H26C20O3" unimod_id="946" />
   <static_modification name="LG-anhyropyrrole (K)" aminoacid="K" formula="H26C20O2" unimod_id="948" />
   <static_modification name="LG-anhyropyrrole (N-term)" terminus="N" formula="H26C20O2" unimod_id="948" />
   <static_modification name="LG-Hlactam-K (K)" aminoacid="K" formula="H28C20O5" unimod_id="504" />
-  <static_modification name="LG-Hlactam-R (R)" aminoacid="R" formula="H26C19O5 - N2" unimod_id="506" />
+  <static_modification name="LG-Hlactam-R (R)" aminoacid="R" formula="H26C19O5-N2" unimod_id="506" />
   <static_modification name="LG-lactam-K (K)" aminoacid="K" formula="H28C20O4" unimod_id="503" />
-  <static_modification name="LG-lactam-R (R)" aminoacid="R" formula="H26C19O4 - N2" unimod_id="505" />
+  <static_modification name="LG-lactam-R (R)" aminoacid="R" formula="H26C19O4-N2" unimod_id="505" />
   <static_modification name="LG-pyrrole (K)" aminoacid="K" formula="H28C20O3" unimod_id="947" />
   <static_modification name="LG-pyrrole (N-term)" terminus="N" formula="H28C20O3" unimod_id="947" />
   <static_modification name="Lipoyl (K)" aminoacid="K" formula="H12C8OS2" unimod_id="42" short_name="Lip" />
   <static_modification name="Lys (N-term)" terminus="N" formula="H12C6N2O" unimod_id="1301" />
-  <static_modification name="Lys-&gt;Allysine (K)" aminoacid="K" formula="O - H3N" unimod_id="352" short_name="LAA" />
-  <static_modification name="Lys-&gt;AminoadipicAcid (K)" aminoacid="K" formula="O2 - H3N" unimod_id="381" short_name="AAA" />
-  <static_modification name="Lys-&gt;CamCys (K)" aminoacid="K" formula="OS - H4C" unimod_id="903" />
-  <static_modification name="Lys-&gt;MetOx (K)" aminoacid="K" formula="OS - H3CN" unimod_id="906" />
+  <static_modification name="Lys-&gt;Allysine (K)" aminoacid="K" formula="O-H3N" unimod_id="352" short_name="LAA" />
+  <static_modification name="Lys-&gt;AminoadipicAcid (K)" aminoacid="K" formula="O2-H3N" unimod_id="381" short_name="AAA" />
+  <static_modification name="Lys-&gt;CamCys (K)" aminoacid="K" formula="OS-H4C" unimod_id="903" />
+  <static_modification name="Lys-&gt;MetOx (K)" aminoacid="K" formula="OS-H3CN" unimod_id="906" />
   <static_modification name="Lys-loss (Protein C-term K)" aminoacid="K" terminus="C" formula="-H12C6N2O" unimod_id="313" short_name="-1K" />
   <static_modification name="Lysbiotinhydrazide (K)" aminoacid="K" formula="H15C10N3O2S" unimod_id="353" />
   <static_modification name="maleimide (C)" aminoacid="C" formula="H3C4NO2" unimod_id="773" />
@@ -733,8 +733,8 @@
   <static_modification name="Menadione-HQ (K)" aminoacid="K" formula="H8C11O2" unimod_id="767" />
   <static_modification name="MercaptoEthanol (S)" aminoacid="S" formula="H4C2S" unimod_id="928" />
   <static_modification name="MercaptoEthanol (T)" aminoacid="T" formula="H4C2S" unimod_id="928" />
-  <static_modification name="Met-&gt;Aha (M)" aminoacid="M" formula="N3 - H3CS" unimod_id="896" short_name="MAH" />
-  <static_modification name="Met-&gt;Hpg (M)" aminoacid="M" formula="C - H2S" unimod_id="899" />
+  <static_modification name="Met-&gt;Aha (M)" aminoacid="M" formula="N3-H3CS" unimod_id="896" short_name="MAH" />
+  <static_modification name="Met-&gt;Hpg (M)" aminoacid="M" formula="C-H2S" unimod_id="899" />
   <static_modification name="Met-loss (Protein N-term M)" aminoacid="M" terminus="N" formula="-H9C5NOS" unimod_id="765" />
   <static_modification name="Met-loss+Acetyl (Protein N-term M)" aminoacid="M" terminus="N" formula="-H7C3NS" unimod_id="766" />
   <static_modification name="Methyl (C)" aminoacid="C" formula="CH2" unimod_id="34" short_name="1Me" />
@@ -749,12 +749,12 @@
   <static_modification name="Methyl (S)" aminoacid="S" formula="CH2" unimod_id="34" short_name="1Me" />
   <static_modification name="Methyl (T)" aminoacid="T" formula="CH2" unimod_id="34" short_name="1Me" />
   <static_modification name="Methyl+Acetyl:2H(3) (K)" aminoacid="K" formula="HH'3C3O" unimod_id="768" />
-  <static_modification name="Methyl+Deamidated (N)" aminoacid="N" formula="HCO - N" unimod_id="528" short_name="MDe" />
-  <static_modification name="Methyl+Deamidated (Q)" aminoacid="Q" formula="HCO - N" unimod_id="528" short_name="MDe" />
+  <static_modification name="Methyl+Deamidated (N)" aminoacid="N" formula="HCO-N" unimod_id="528" short_name="MDe" />
+  <static_modification name="Methyl+Deamidated (Q)" aminoacid="Q" formula="HCO-N" unimod_id="528" short_name="MDe" />
   <static_modification name="Methyl-PEO12-Maleimide (C)" aminoacid="C" formula="H58C32N2O15" unimod_id="891" />
   <static_modification name="Methyl:2H(2) (K)" aminoacid="K" formula="H'2C" unimod_id="284" />
-  <static_modification name="Methylamine (S)" aminoacid="S" formula="H3CN - O" unimod_id="337" />
-  <static_modification name="Methylamine (T)" aminoacid="T" formula="H3CN - O" unimod_id="337" />
+  <static_modification name="Methylamine (S)" aminoacid="S" formula="H3CN-O" unimod_id="337" />
+  <static_modification name="Methylamine (T)" aminoacid="T" formula="H3CN-O" unimod_id="337" />
   <static_modification name="Methylmalonylation (S)" aminoacid="S" formula="H4C4O3" unimod_id="914" />
   <static_modification name="Methylphosphonate (S)" aminoacid="S" formula="H3CO2P" unimod_id="728" />
   <static_modification name="Methylphosphonate (T)" aminoacid="T" formula="H3CO2P" unimod_id="728" />
@@ -807,9 +807,9 @@
   <static_modification name="NHS-LC-Biotin (K)" aminoacid="K" formula="H25C16N3O3S" unimod_id="92" />
   <static_modification name="NHS-LC-Biotin (N-term)" terminus="N" formula="H25C16N3O3S" unimod_id="92" />
   <static_modification name="NIC (N-term)" terminus="N" formula="H3C6NO" unimod_id="697" />
-  <static_modification name="Nitro (W)" aminoacid="W" formula="NO2 - H" unimod_id="354" short_name="Ntr" />
-  <static_modification name="Nitro (Y)" aminoacid="Y" formula="NO2 - H" unimod_id="354" short_name="Ntr" />
-  <static_modification name="Nitrosyl (C)" aminoacid="C" formula="NO - H" unimod_id="275" />
+  <static_modification name="Nitro (W)" aminoacid="W" formula="NO2-H" unimod_id="354" short_name="Ntr" />
+  <static_modification name="Nitro (Y)" aminoacid="Y" formula="NO2-H" unimod_id="354" short_name="Ntr" />
+  <static_modification name="Nitrosyl (C)" aminoacid="C" formula="NO-H" unimod_id="275" />
   <static_modification name="Nmethylmaleimide (C)" aminoacid="C" formula="H5C5NO2" unimod_id="314" />
   <static_modification name="Nmethylmaleimide (K)" aminoacid="K" formula="H5C5NO2" unimod_id="314" />
   <static_modification name="Nmethylmaleimide+water (C)" aminoacid="C" formula="H7C5NO3" unimod_id="500" />
@@ -859,9 +859,9 @@
   <static_modification name="PEITC (N-term)" terminus="N" formula="H9C9NS" unimod_id="979" />
   <static_modification name="Pentylamine (Q)" aminoacid="Q" formula="H11C5N" unimod_id="801" />
   <static_modification name="PEO-Iodoacetyl-LC-Biotin (C)" aminoacid="C" formula="H30C18N4O5S" unimod_id="20" short_name="PEO" />
-  <static_modification name="PET (S)" aminoacid="S" formula="H7C7NS - O" unimod_id="264" />
-  <static_modification name="PET (T)" aminoacid="T" formula="H7C7NS - O" unimod_id="264" />
-  <static_modification name="Phe-&gt;CamCys (F)" aminoacid="F" formula="NOS - HC4" unimod_id="904" />
+  <static_modification name="PET (S)" aminoacid="S" formula="H7C7NS-O" unimod_id="264" />
+  <static_modification name="PET (T)" aminoacid="T" formula="H7C7NS-O" unimod_id="264" />
+  <static_modification name="Phe-&gt;CamCys (F)" aminoacid="F" formula="NOS-HC4" unimod_id="904" />
   <static_modification name="Phenylisocyanate (N-term)" terminus="N" formula="C7H5NO" unimod_id="411" />
   <static_modification name="Phospho (C)" aminoacid="C" formula="HO3P" unimod_id="21" short_name="Pho" />
   <static_modification name="Phospho (D)" aminoacid="D" formula="HO3P" unimod_id="21" short_name="Pho" />
@@ -894,13 +894,13 @@
   <static_modification name="Phytochromobilin (C)" aminoacid="C" formula="H36C33N4O6" unimod_id="389" short_name="pcm" />
   <static_modification name="Piperidine (K)" aminoacid="K" formula="H8C5" unimod_id="520" />
   <static_modification name="Piperidine (N-term)" terminus="N" formula="H8C5" unimod_id="520" />
-  <static_modification name="Pro-&gt;pyro-Glu (P)" aminoacid="P" formula="O - H2" unimod_id="359" short_name="PGP" />
+  <static_modification name="Pro-&gt;pyro-Glu (P)" aminoacid="P" formula="O-H2" unimod_id="359" short_name="PGP" />
   <static_modification name="Pro-&gt;Pyrrolidinone (P)" aminoacid="P" formula="-H2CO" unimod_id="360" short_name="PYD" />
   <static_modification name="Pro-&gt;Pyrrolidone (P)" aminoacid="P" formula="-CO" unimod_id="369" />
   <static_modification name="probiotinhydrazide (P)" aminoacid="P" formula="H18C10N4O2S" unimod_id="357" />
-  <static_modification name="Propargylamine (C-term)" terminus="C" formula="H3C3N - O" unimod_id="958" />
-  <static_modification name="Propargylamine (D)" aminoacid="D" formula="H3C3N - O" unimod_id="958" />
-  <static_modification name="Propargylamine (E)" aminoacid="E" formula="H3C3N - O" unimod_id="958" />
+  <static_modification name="Propargylamine (C-term)" terminus="C" formula="H3C3N-O" unimod_id="958" />
+  <static_modification name="Propargylamine (D)" aminoacid="D" formula="H3C3N-O" unimod_id="958" />
+  <static_modification name="Propargylamine (E)" aminoacid="E" formula="H3C3N-O" unimod_id="958" />
   <static_modification name="Propionamide (K)" aminoacid="K" formula="C3H5NO" unimod_id="24" short_name="PPa" />
   <static_modification name="Propionamide (N-term)" terminus="N" formula="C3H5NO" unimod_id="24" short_name="PPa" />
   <static_modification name="Propionyl (K)" aminoacid="K" formula="C3H4O" unimod_id="58" short_name="Poy" />
@@ -941,13 +941,13 @@
   <static_modification name="QEQTGG (K)" aminoacid="K" formula="H36C23N8O11" unimod_id="876" />
   <static_modification name="QQQTGG (K)" aminoacid="K" formula="H37C23N9O10" unimod_id="877" short_name="SU2" />
   <static_modification name="QTGG (K)" aminoacid="K" formula="H21C13N5O6" unimod_id="1293" short_name="SU1" />
-  <static_modification name="Quinone (W)" aminoacid="W" formula="O2 - H2" unimod_id="392" short_name="Qin" />
-  <static_modification name="Quinone (Y)" aminoacid="Y" formula="O2 - H2" unimod_id="392" short_name="Qin" />
+  <static_modification name="Quinone (W)" aminoacid="W" formula="O2-H2" unimod_id="392" short_name="Qin" />
+  <static_modification name="Quinone (Y)" aminoacid="Y" formula="O2-H2" unimod_id="392" short_name="Qin" />
   <static_modification name="Retinylidene (K)" aminoacid="K" formula="H26C20" unimod_id="380" short_name="Ret" />
   <static_modification name="Saligenin (H)" aminoacid="H" formula="H6C7O" unimod_id="1254" />
   <static_modification name="Saligenin (K)" aminoacid="K" formula="H6C7O" unimod_id="1254" />
-  <static_modification name="SecCarbamidomethyl (C)" aminoacid="C" formula="H3C2NOSe - S" unimod_id="1008" />
-  <static_modification name="SecNEM (C)" aminoacid="C" formula="C6H7NO2Se - S" unimod_id="1033" />
+  <static_modification name="SecCarbamidomethyl (C)" aminoacid="C" formula="H3C2NOSe-S" unimod_id="1008" />
+  <static_modification name="SecNEM (C)" aminoacid="C" formula="C6H7NO2Se-S" unimod_id="1033" />
   <static_modification name="Ser-&gt;LacticAcid (Protein N-term S)" aminoacid="S" terminus="N" formula="-HN" unimod_id="403" short_name="SLA" />
   <static_modification name="SMA (K)" aminoacid="K" formula="H9C6NO2" unimod_id="29" />
   <static_modification name="SMA (N-term)" terminus="N" formula="H9C6NO2" unimod_id="29" />
@@ -1016,8 +1016,8 @@
   <static_modification name="TMT6plex (T)" aminoacid="T" formula="H20C8C'4NN'O2" unimod_id="737" short_name="TM6" />
   <static_modification name="TNBS (K)" aminoacid="K" formula="HC6N3O6" unimod_id="751" />
   <static_modification name="TNBS (N-term)" terminus="N" formula="HC6N3O6" unimod_id="751" />
-  <static_modification name="trifluoro (L)" aminoacid="L" formula="F3 - H3" unimod_id="750" />
-  <static_modification name="Triiodo (Y)" aminoacid="Y" formula="I3 - H3" unimod_id="131" short_name="3Io" />
+  <static_modification name="trifluoro (L)" aminoacid="L" formula="F3-H3" unimod_id="750" />
+  <static_modification name="Triiodo (Y)" aminoacid="Y" formula="I3-H3" unimod_id="131" short_name="3Io" />
   <static_modification name="Triiodothyronine (Y)" aminoacid="Y" formula="HC6OI3" unimod_id="397" short_name="3IT" />
   <static_modification name="Trimethyl (K)" aminoacid="K" formula="H6C3" unimod_id="37" short_name="3Me">
     <potential_loss formula="H9C3N" massdiff_monoisotopic="59.073499" massdiff_average="59.11071" />
@@ -1028,9 +1028,9 @@
   <static_modification name="Trioxidation (W)" aminoacid="W" formula="O3" unimod_id="345" short_name="3Ox" />
   <static_modification name="Trioxidation (Y)" aminoacid="Y" formula="O3" unimod_id="345" short_name="3Ox" />
   <static_modification name="Tripalmitate (Protein N-term C)" aminoacid="C" terminus="N" formula="H96C51O5" unimod_id="51" short_name="3Pa" />
-  <static_modification name="Trp-&gt;Hydroxykynurenin (W)" aminoacid="W" formula="O2 - C" unimod_id="350" short_name="HKy" />
-  <static_modification name="Trp-&gt;Kynurenin (W)" aminoacid="W" formula="O - C" unimod_id="351" short_name="Kyn" />
-  <static_modification name="Trp-&gt;Oxolactone (W)" aminoacid="W" formula="O - H2" unimod_id="288" />
+  <static_modification name="Trp-&gt;Hydroxykynurenin (W)" aminoacid="W" formula="O2-C" unimod_id="350" short_name="HKy" />
+  <static_modification name="Trp-&gt;Kynurenin (W)" aminoacid="W" formula="O-C" unimod_id="351" short_name="Kyn" />
+  <static_modification name="Trp-&gt;Oxolactone (W)" aminoacid="W" formula="O-H2" unimod_id="288" />
   <static_modification name="Tyr-&gt;Dha (Y)" aminoacid="Y" formula="-H6C6O" unimod_id="400" short_name="YDA" />
   <static_modification name="Ub-amide (C)" aminoacid="C" formula="H14C9N3O2" unimod_id="1260" />
   <static_modification name="Ub-Br2 (C)" aminoacid="C" formula="H8C4N2O" unimod_id="1257" />

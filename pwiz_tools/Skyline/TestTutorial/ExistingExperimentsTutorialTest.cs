@@ -453,7 +453,6 @@ namespace pwiz.SkylineTestTutorial
             }
 
             PauseForScreenShot<GraphSummary.RTGraphView>("Main window with peaks and retention times showing", 27);
-            CheckReportCompatibility.CheckAll(SkylineWindow.Document);
             RunUI(SkylineWindow.EditDelete);
             FindNode("IVGGWECEK"); // Not L10N
 

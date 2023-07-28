@@ -82,7 +82,7 @@ namespace pwiz.SkylineTestConnected.Results.RemoteApi
             var account = GetAccount();
             var folders = account.GetFolders().ToArray();
             Assert.AreNotEqual(0, folders.Length);
-            var files = account.GetFiles(folders[0]).ToArray();
+            var files = account.GetFiles(folders.Last()).ToArray();
             Assert.AreNotEqual(0, files.Length);
         }
 

@@ -17,13 +17,14 @@
  */
 
 using System;
+using pwiz.Common.Properties;
 using pwiz.Common.SystemUtil;
 
 namespace pwiz.Common.Chemistry
 {
     public class MzTolerance : IAuditLogObject
     {
-        public enum Units { mz, ppm };
+        public enum Units { mz, ppm }
 
         public double Value { get; private set; }
         public Units Unit { get; private set; }
@@ -34,6 +35,10 @@ namespace pwiz.Common.Chemistry
             Unit = units;
         }
 
+        public static implicit operator MzTolerance(double tolerance)
+        {
+            return new MzTolerance(tolerance);
+        }
         public static double operator +(double d, MzTolerance tolerance)
         {
             switch (tolerance.Unit)
@@ -60,24 +65,62 @@ namespace pwiz.Common.Chemistry
             return 0;
         }
 
-        /// <summary>returns true iff a is in (b-tolerance, b+tolerance)</summary>
-        public static bool IsWithinTolerance(double a, double b, MzTolerance tolerance)
+        public double GetMzTolerance(double mz)
         {
-            return (a > b - tolerance) && (a < b + tolerance);
+            switch (Unit)
+            {
+                case Units.mz:
+                    return Value;
+                case Units.ppm:
+                    return Math.Abs(mz) * Value * 1e-6;
+            }
+
+            return 0;
+
+        }
+
+        /// <summary>returns true iff a is in (b-tolerance, b+tolerance)</summary>
+        public bool IsWithinTolerance(double a, double b)
+        {
+            return (a >= b - this) && (a <= b + this);
         }
 
         /// <summary>returns true iff b - a is greater than the value in tolerance (useful for matching sorted mass lists)</summary>
-        public static bool LessThanTolerance(double a, double b, MzTolerance tolerance)
+        public bool LessThanTolerance(double a, double b)
         {
-            return (a < b - tolerance);
+            return (a < b - this);
         }
+
+        public string UnitName => Enum.GetName(typeof(Units), Unit);
+        public string UnitText => Resources.ResourceManager.GetString(nameof(Units) + "_" + UnitName);
 
         public override string ToString()
         {
-            return $@"{Value}{Enum.GetName(typeof(Units), Unit)}";
+            return $"{Value} {UnitText}";
         }
 
-        public string AuditLogText => ToString();
+        public string AuditLogText => $"\"{Value}\" {UnitText}";
         public bool IsName => false;
-    };
+
+        protected bool Equals(MzTolerance other)
+        {
+            return Value.Equals(other.Value) && Unit == other.Unit;
+        }
+
+        public override bool Equals(object obj)
+        {
+            if (ReferenceEquals(null, obj)) return false;
+            if (ReferenceEquals(this, obj)) return true;
+            if (obj.GetType() != this.GetType()) return false;
+            return Equals((MzTolerance)obj);
+        }
+
+        public override int GetHashCode()
+        {
+            unchecked
+            {
+                return (Value.GetHashCode() * 397) ^ (int)Unit;
+            }
+        }
+    }
 }

@@ -36,6 +36,8 @@
 #include <iostream>
 #include <fstream>
 
+#pragma warning (push)
+#pragma warning (disable: 4189)
 //#include "MassLynxRawDataFile.h"
 #include "MassLynxRawBase.hpp"
 #include "MassLynxRawScanReader.hpp"
@@ -48,6 +50,7 @@
 #include "MassLynxParameters.hpp"
 //#include "cdtdefs.h"
 //#include "compresseddatacluster.h"
+#pragma warning (pop)
 
 namespace pwiz {
 namespace vendor_api {
@@ -425,8 +428,56 @@ struct PWIZ_API_DECL RawData
         }
     }
 
+    void EnableDDAProcessing()
+    {
+        DDAProcessor.SetRawReader(Reader);
+    }
+
+    unsigned int GetDDAScanCount()
+    {
+        return DDAProcessor.GetScanCount();
+    }
+
+    bool GetDDAScan(const int& nWhichIndex, float& RT, int& function, int& startScan, int& endScan, bool& isMS1, float& setMass, float& precursorMass, vector<float>& masses, vector<float>& intensities)
+    {
+        MassLynxParameters parameters;
+        bool success = DDAProcessor.GetScan(nWhichIndex, masses, intensities, parameters);
+
+        if (success)
+        {
+            RT = lexical_cast<float>(parameters.Get(MassLynxDDAIndexDetail::RT));
+            function = lexical_cast<int>(parameters.Get(MassLynxDDAIndexDetail::FUNCTION));
+            startScan = lexical_cast<int>(parameters.Get(MassLynxDDAIndexDetail::START_SCAN));
+            endScan = lexical_cast<int>(parameters.Get(MassLynxDDAIndexDetail::END_SCAN));
+            isMS1 = lexical_cast<int>(parameters.Get(MassLynxDDAIndexDetail::SCAN_TYPE)) == (int)MassLynxScanType::MS1;
+
+            if (!isMS1)
+            {
+                setMass = lexical_cast<float>(parameters.Get(MassLynxDDAIndexDetail::SET_MASS));
+                precursorMass = lexical_cast<float>(parameters.Get(MassLynxDDAIndexDetail::PRECURSOR_MASS));
+            }
+        }
+        return success;
+    }
+
+    bool GetIsolationWindow(float& lowerOffset, float& upperOffset)
+    {
+        MassLynxParameters parameters = DDAProcessor.GetParameters();
+        float lowerOffsetParam = lexical_cast<float>(parameters.Get(DDAParameter::LOWEROFFSET));
+        float upperOffsetParam = lexical_cast<float>(parameters.Get(DDAParameter::UPPEROFFSET));
+
+        if (lowerOffsetParam == 0 && upperOffsetParam == 0)
+            return false;
+
+        lowerOffset = lowerOffsetParam;
+        upperOffset = upperOffsetParam;
+
+        return true;
+    }
+
     private:
     MassLynxLockMassProcessor LockMass;
+    MassLynxDDAProcessor DDAProcessor;
     mutable MassLynxRawProcessorWithProgress PeakPicker;
     mutable boost::shared_ptr<RawData> centroidRaw_;
     mutable int workingDriftTimeFunctionIndex_;

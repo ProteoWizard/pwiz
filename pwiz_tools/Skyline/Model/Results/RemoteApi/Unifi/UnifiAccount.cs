@@ -33,9 +33,9 @@ namespace pwiz.Skyline.Model.Results.RemoteApi.Unifi
     public class UnifiAccount : RemoteAccount
     {
         public static readonly UnifiAccount DEFAULT
-            = new UnifiAccount(@"https://demo.unifiapi.com:50034", string.Empty, string.Empty)
+            = new UnifiAccount(@"https://democonnect.waters.com:48505", string.Empty, string.Empty)
             {
-                IdentityServer = @"https://demo.unifiapi.com:50333"
+                IdentityServer = @"https://democonnect.waters.com:48333"
             };
         public UnifiAccount(string serverUrl, string username, string password)
         {
@@ -44,7 +44,7 @@ namespace pwiz.Skyline.Model.Results.RemoteApi.Unifi
             Password = password;
             ApiVersion = ServerUrl.Contains(@":50034") ? 3 : 4;
 
-            string strPort = @":50333";
+            string strPort = @":48333";
             int ichLastColon = ServerUrl.LastIndexOf(':');
             if (ichLastColon == ServerUrl.IndexOf(':'))
             {

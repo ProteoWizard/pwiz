@@ -310,6 +310,12 @@ namespace pwiz.SkylineTestTutorial
                     concentrationsFileName = "Concentrations.xlsx";
                 }
                 SetExcelFileClipboardText(GetTestPath(concentrationsFileName), "Sheet1", 3, false);
+                // Wait for the grid to be ready and populated with replicates
+                WaitForConditionUI(() => documentGrid.IsComplete);
+                WaitForConditionUI(() => documentGrid.DataGridView.Rows.Cast<DataGridViewRow>()
+                    .Select(row => row.Cells[documentGrid.FindColumn(PropertyPath.Root).Index])
+                    .Count(cell => cell.Value is Replicate) > 0);
+
                 RunUI(() =>
                 {
                     // Find and select Blank_01 cell

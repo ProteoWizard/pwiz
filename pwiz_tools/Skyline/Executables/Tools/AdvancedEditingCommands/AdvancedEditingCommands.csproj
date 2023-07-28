@@ -1,0 +1,33 @@
+﻿<Project Sdk="Microsoft.NET.Sdk">
+
+  <PropertyGroup>
+    <OutputType>Exe</OutputType>
+    <TargetFramework>net7.0-windows</TargetFramework>
+    <Nullable>enable</Nullable>
+    <UseWindowsForms>true</UseWindowsForms>
+    <ImplicitUsings>enable</ImplicitUsings>
+    <LangVersion>latest</LangVersion>
+  </PropertyGroup>
+
+  <ItemGroup>
+    <None Remove="TruncatedTransitions.skyr" />
+  </ItemGroup>
+
+  <ItemGroup>
+    <EmbeddedResource Include="TruncatedTransitions.skyr" />
+  </ItemGroup>
+
+  <ItemGroup>
+    <ProjectReference Include="..\..\..\SkylineTool\SkylineTool.csproj" />
+  </ItemGroup>
+
+  <ItemGroup>
+    <Reference Include="System.CommandLine">
+      <HintPath>lib\System.CommandLine.dll</HintPath>
+    </Reference>
+  </ItemGroup>
+  <Target Name="PostBuild" AfterTargets="PostBuildEvent">
+    <Exec Command="pushd $(TargetDir)&#xD;&#xA;&quot;$(SolutionDir)..\..\..\..\..\libraries\7za.exe&quot; a $(SolutionDir)\AdvancedEditingCommands.zip *&#xD;&#xA;popd&#xD;&#xA;pushd &quot;$(SolutionDir)&quot;&#xD;&#xA;&quot;$(SolutionDir)..\..\..\..\..\libraries\7za.exe&quot; a AdvancedEditingCommands.zip tool-inf&#xD;&#xA;popd" />
+  </Target>
+
+</Project>

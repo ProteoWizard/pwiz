@@ -537,6 +537,7 @@ namespace pwiz.SkylineTestTutorial
             // ShowDialog causes problems debugging
             RunUI(SkylineWindow.ShowAuditLog);
             var auditLogForm = WaitForOpenForm<AuditLogForm>();
+            WaitForCondition(() => auditLogForm.IsComplete);
             if (Program.SkylineOffscreen)
                 return;
 

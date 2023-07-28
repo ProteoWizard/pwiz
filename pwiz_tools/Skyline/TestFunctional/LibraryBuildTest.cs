@@ -287,11 +287,8 @@ namespace pwiz.SkylineTestFunctional
             Assert.AreEqual(heavyRPeptide, nodePepTree.DocNode.Peptide.Sequence);
             // Set the Heavy R modification explicitly
             var editPepModsDlg = ShowDialog<EditPepModsDlg>(SkylineWindow.ModifyPeptide);
-            RunUI(() =>
-            {
-                editPepModsDlg.SetModification(heavyRPeptide.Length - 1, IsotopeLabelType.heavy, heavyR);
-                editPepModsDlg.OkDialog();
-            });
+            RunUI(() => editPepModsDlg.SetModification(heavyRPeptide.Length - 1, IsotopeLabelType.heavy, heavyR));
+            OkDialog(editPepModsDlg, editPepModsDlg.OkDialog);
             WaitForCondition(() => (SkylineWindow.Document.Molecules.First().TransitionGroupCount == 2));
 
             // The peptide should now match the spectrum in the library, and have
@@ -344,11 +341,8 @@ namespace pwiz.SkylineTestFunctional
             // Try filtering for only charge 3 spectra
             var transitionSettingsUI = ShowDialog<TransitionSettingsUI>(
                 SkylineWindow.ShowTransitionSettingsUI);
-            RunUI(() =>
-                {
-                    transitionSettingsUI.PrecursorCharges = "3";
-                    transitionSettingsUI.OkDialog();
-                });
+            RunUI(() => transitionSettingsUI.PrecursorCharges = "3");
+            OkDialog(transitionSettingsUI, transitionSettingsUI.OkDialog);
 
             PastePeptideList(idpList, false, idpCount - idpCount3 + 1 /* missing cleavage*/, 0);
 
@@ -378,8 +372,8 @@ namespace pwiz.SkylineTestFunctional
                 transitionSettingsCpas.ProductCharges = "1,2,3";
                 transitionSettingsCpas.FragmentTypes = "y,b";
                 transitionSettingsCpas.InstrumentMaxMz = 2000;
-                transitionSettingsCpas.OkDialog();
             });
+            OkDialog(transitionSettingsCpas, transitionSettingsCpas.OkDialog);
 
             EnsurePeptideSettings();
 
@@ -387,8 +381,8 @@ namespace pwiz.SkylineTestFunctional
                 {
                     // Turn off carbamidomethyl cys, since not in these searches
                     PeptideSettingsUI.PickedStaticMods = new string[0];
-                    PeptideSettingsUI.OkDialog();
                 });
+            OkDialog(PeptideSettingsUI, PeptideSettingsUI.OkDialog);
 
             // Get the set of peptides to paste from the library, since there
             // are a lot.

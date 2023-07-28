@@ -236,28 +236,26 @@ namespace pwiz.Skyline.Model.DocSettings
         {
             double? score = Calculator.ScoreSequence(seq);
             if (score.HasValue)
-                return GetRetentionTime(score.Value, conversion, false);
+                return GetRetentionTime(score.Value, conversion);
             return null;
         }
 
-        public double? GetRetentionTime(double score, bool fullPrecision = false)
+        public double? GetRetentionTime(double score)
         {
-            return GetRetentionTime(score, Conversion, fullPrecision);
+            return GetRetentionTime(score, Conversion);
         }
 
-        public double? GetRetentionTime(double score, ChromFileInfoId fileId, bool fullPrecision = false)
+        public double? GetRetentionTime(double score, ChromFileInfoId fileId)
         {
-            return GetRetentionTime(score, GetConversion(fileId), fullPrecision);
+            return GetRetentionTime(score, GetConversion(fileId));
         }
 
-        private static double? GetRetentionTime(double score, IRegressionFunction conversion, bool fullPrecision)
+        private static double? GetRetentionTime(double score, IRegressionFunction conversion)
         {
             if (conversion != null)
             {
                 // CONSIDER: Return the full value in more cases?
                 double time = conversion.GetY(score);
-                if (!fullPrecision)
-                    time = GetRetentionTimeDisplay(time).Value;
                 return time;
             }
 
@@ -387,8 +385,8 @@ namespace pwiz.Skyline.Model.DocSettings
                 listPeptides.Add(seq);
                 listHydroScores.Add(score);
                 var predictedRT = fileId != null
-                    ? GetRetentionTime(score, fileId, true)
-                    : GetRetentionTime(score, true);
+                    ? GetRetentionTime(score, fileId)
+                    : GetRetentionTime(score);
                 listPredictions.Add(predictedRT ?? 0);
                 listRetentionTimes.Add(peptideTime.RetentionTime);
             }

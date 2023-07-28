@@ -93,6 +93,12 @@ public ref class MSDataFile : public MSData
         property bool gzipped;
         property bool useWorkerThreads;
 
+        /// <summary>
+        /// when true, if an error is seen when enumerating a spectrum or chromatogram, it will be skipped and enumeration will continue;
+        /// when false an error will immediately stop enumeration
+        /// </summary>
+        property bool continueOnError;
+
         WriteConfig()
         {
             format = Format::Format_mzML;
@@ -104,6 +110,7 @@ public ref class MSDataFile : public MSData
 			numpressLinearAbsMassAcc = -1.0;
 			indexed = true;
             useWorkerThreads = true;
+            continueOnError = false;
         }
     };
 

@@ -16,6 +16,8 @@
  * See the License for the specific language governing permissions and
  * limitations under the License.
  */
+
+using System.Collections;
 using System.Collections.Generic;
 using System.Linq;
 using pwiz.Common.Collections;
@@ -34,6 +36,14 @@ namespace pwiz.Skyline.Model.Databinding.Collections
         }
 
         public IList<TDocNode> DocNodes { get; private set; }
+
+        public override IEnumerable GetItems()
+        {
+            return ListKeys().Select(ConstructItem);
+        }
+
+        protected abstract IEnumerable<ResultFileKey> ListKeys();
+        protected abstract TMultiResult ConstructItem(ResultFileKey key);
     }
     public class MultiTransitionResultList : MultiResultList<MultiTransitionResult, Entities.Transition, TransitionResult>
     {

@@ -675,7 +675,7 @@ namespace pwiz.Skyline.FileUI.PeptideSearch
                 case Pages.import_fasta_page: // This is the last page (if there is no dda search)
                     if (ImportPeptideSearch.IsDDASearch)
                     {
-                        ImportPeptideSearch.CutoffScore = BuildPepSearchLibControl.CutOffScore;
+                        ImportPeptideSearch.CutoffScore = BuildPepSearchLibControl.CutOffScore ?? 0;
 
                         if (!File.Exists(ImportFastaControl.FastaFile)) 
                         {
@@ -750,7 +750,7 @@ namespace pwiz.Skyline.FileUI.PeptideSearch
                     var eCancel2 = new CancelEventArgs();
                     //change search files to result files
                     BuildPepSearchLibControl.Grid.IsFileOnly = false;
-                    var qValue = (double?)(1 - BuildPepSearchLibControl.CutOffScore);
+                    var qValue = (double?)(1 - BuildPepSearchLibControl.CutOffScore ?? 0);
                     BuildPepSearchLibControl.Grid.Files = ImportPeptideSearch.SearchEngine.SpectrumFileNames.Select(f =>
                         new BuildLibraryGridView.File(ImportPeptideSearch.SearchEngine.GetSearchResultFilepath(f), ScoreType.GenericQValue, qValue));
                     BuildPepSearchLibControl.ImportPeptideSearch.SearchFilenames = BuildPepSearchLibControl.Grid.FilePaths.ToArray();
@@ -985,7 +985,7 @@ namespace pwiz.Skyline.FileUI.PeptideSearch
                 filter = filter.ChangeAutoSelect(true);
             Helpers.AssignIfEquals(ref filter, TransitionSettings.Filter);
 
-            if (FullScanSettingsControl.IsDIA() && filter.ExclusionUseDIAWindow)
+            if (FullScanSettingsControl.IsDIA() && filter.ExclusionUseDIAWindow && FullScanSettingsControl.IsolationScheme != null)
             {
                 if (FullScanSettingsControl.IsolationScheme.IsAllIons)
                 {

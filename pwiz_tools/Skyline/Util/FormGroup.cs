@@ -52,6 +52,8 @@ namespace pwiz.Skyline.Util
                 var dockPanel = DockPanel;
                 if (dockPanel != null)
                 {
+                    // ReSharper disable once SuspiciousTypeConversion.Global
+                    // The object implementing IDockableForm is always a Form
                     return dockPanel.Contents.OfType<Form>();
                 }
 
@@ -64,8 +66,8 @@ namespace pwiz.Skyline.Util
             var dockPanel = DockPanel;
             if (dockPanel != null && form is DockableForm dockableForm)
             {
-                form.Bounds = GetFloatingRectangleForNewWindow(dockPanel);
-                dockableForm.Show(dockPanel, DockState.Floating);
+                var rectFloat = GetFloatingRectangleForNewWindow(dockPanel);
+                dockableForm.Show(dockPanel, rectFloat);
                 return;
             }
             form.Show(FormUtil.FindTopLevelOwner(PrimaryForm));

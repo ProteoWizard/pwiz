@@ -293,6 +293,7 @@ namespace pwiz.Skyline.Controls.Clustering
         protected void AttachToOwner()
         {
             var formGroup = new FormGroup(this);
+            // ReSharper disable once SuspiciousTypeConversion.Global
             var ownerForm = formGroup.SiblingForms.OfType<IDataboundGridForm>()
                 .FirstOrDefault(form => Equals(_dataGridId, form.DataGridId));
             if (ownerForm == null)

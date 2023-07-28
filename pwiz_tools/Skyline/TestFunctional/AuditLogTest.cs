@@ -583,6 +583,7 @@ namespace pwiz.SkylineTestFunctional
                     return;
 
                 ++_expectedAuditLogEntryCount;
+                TryWaitForCondition(() => _expectedAuditLogEntryCount == GetAuditLogEntryCount()); // UI may be slow
                 Assert.AreEqual(_expectedAuditLogEntryCount, GetAuditLogEntryCount());
                 Assert.IsNotNull(newestEntry);
 

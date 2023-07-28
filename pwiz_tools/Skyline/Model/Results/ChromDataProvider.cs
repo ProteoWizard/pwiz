@@ -19,9 +19,11 @@
 using System;
 using System.Collections.Generic;
 using System.Drawing;
+using System.Linq;
 using pwiz.Common.Chemistry;
 using pwiz.Common.SystemUtil;
 using pwiz.ProteowizardWrapper;
+using pwiz.Skyline.Model.DocSettings;
 
 namespace pwiz.Skyline.Model.Results
 {
@@ -221,6 +223,7 @@ namespace pwiz.Skyline.Model.Results
         private readonly bool _sourceHasNegativePolarityData;
         private readonly bool _sourceHasPositivePolarityData;
         private readonly eIonMobilityUnits _ionMobilityUnits;
+        private readonly OptimizableRegression _optimizableRegression;
 
         /// <summary>
         /// The number of chromatograms read so far.
@@ -229,6 +232,7 @@ namespace pwiz.Skyline.Model.Results
 
         public ChromatogramDataProvider(MsDataFileImpl dataFile,
                                         ChromFileInfo fileInfo,
+                                        SrmDocument document,
                                         IProgressStatus status,
                                         int startPercent,
                                         int endPercent,
@@ -237,7 +241,10 @@ namespace pwiz.Skyline.Model.Results
         {
             _dataFile = dataFile;
             _globalChromatogramExtractor = new GlobalChromatogramExtractor(dataFile);
-
+            _optimizableRegression = document.Settings.MeasuredResults?.Chromatograms
+                .FirstOrDefault(c => null != c.OptimizationFunction && c.ContainsFile(fileInfo.FilePath))
+                ?.OptimizationFunction;
+            
             int len = dataFile.ChromatogramCount;
             _chromIndices = new int[len];
 
@@ -271,11 +278,14 @@ namespace pwiz.Skyline.Model.Results
                 _chromIds.Add(ki);
             }
 
-            // Shimadzu can't do the necessary product m/z stepping for itself.
-            // So, they provide the CE values in their IDs and we need to adjust
-            // product m/z values for them to support CE optimization.
             if (fixCEOptForShimadzu)
-                FixCEOptForShimadzu();
+            {
+                SetOptStepsFromCeValues();
+            }
+            else if (_optimizableRegression != null)
+            {
+                SetOptStepsFromProductMz(document);
+            }
 
             if (_chromIds.Count == 0)
                 throw new NoSrmDataException(FileInfo.FilePath);
@@ -304,8 +314,41 @@ namespace pwiz.Skyline.Model.Results
             SetPercentComplete(50);
         }
 
-        private void FixCEOptForShimadzu()
+        private void SetOptStepsFromProductMz(SrmDocument doc)
         {
+            var idToIndex = new Dictionary<int, int>();
+            for (var i = 0; i < _chromIds.Count; i++)
+                idToIndex[_chromIds[i].ProviderId] = i;
+
+            foreach (var matchingGroup in ChromCacheBuilder.GetMatchingGroups(doc, this))
+            {
+                SignedMz? lastProduct = null;
+                var curGroup = new List<ChromData>();
+                foreach (var chromData in matchingGroup.Value.Chromatograms.OrderBy(chromData =>
+                             chromData.Key.Product))
+                {
+                    if (lastProduct.HasValue)
+                    {
+                        if (!ChromatogramInfo.IsOptimizationSpacing(lastProduct.Value, chromData.Key.Product))
+                            SetOptStepsForGroup(idToIndex, matchingGroup.Key?.NodeGroup, curGroup);
+                    }
+
+                    curGroup.Add(chromData);
+                    lastProduct = chromData.Key.Product;
+                }
+
+                if (lastProduct.HasValue)
+                {
+                    SetOptStepsForGroup(idToIndex, matchingGroup.Key?.NodeGroup, curGroup);
+                }
+            }
+        }
+        private void SetOptStepsFromCeValues()
+        {
+            // Shimadzu can't do the necessary product m/z stepping for itself.
+            // So, they provide the CE values in their IDs and we need to adjust
+            // product m/z values for them to support CE optimization.
+
             // Need to sort by keys to ensure everything is in the right order.
             _chromIds.Sort();
 
@@ -320,7 +363,7 @@ namespace pwiz.Skyline.Model.Results
                     int count = i - indexLast;
                     if (HasConstantCEInterval(indexLast, count))
                     {
-                        AddCEMzSteps(indexLast, count);
+                        AddCESteps(indexLast, count);
                     }
                     lastPrecursor = chromKey.Precursor;
                     lastProduct = chromKey.Product;
@@ -330,8 +373,36 @@ namespace pwiz.Skyline.Model.Results
             int finalCount = _chromIds.Count - indexLast;
             if (HasConstantCEInterval(indexLast, finalCount))
             {
-                AddCEMzSteps(indexLast, finalCount);
+                AddCESteps(indexLast, finalCount);
             }
+        }
+
+        private void SetOptStepsForGroup(IReadOnlyDictionary<int, int> idToIndex, TransitionGroupDocNode transitionGroupDocNode, IList<ChromData> chromDatas)
+        {
+            if (chromDatas.Count <= 1)
+            {
+                chromDatas.Clear();
+                return;
+            }
+
+            int centerIdx = (chromDatas.Count + 1) / 2 - 1;
+            if (transitionGroupDocNode != null)
+            {
+                var centerMz = chromDatas[centerIdx].Key.Product;
+                var closestTransition = transitionGroupDocNode.Transitions.OrderBy(t => Math.Abs(t.Mz - centerMz))
+                    .FirstOrDefault();
+                if (closestTransition != null)
+                {
+                    centerIdx = OptStepChromatograms.IndexOfCenter(closestTransition.Mz, chromDatas.Select(c => c.Key.Product),
+                        _optimizableRegression.StepCount);
+                }
+            }
+            for (var i = 0; i < chromDatas.Count; i++)
+            {
+                SetOptimizationStep(idToIndex[chromDatas[i].ProviderId], i - centerIdx, chromDatas[centerIdx].Key.Product);
+            }
+
+            chromDatas.Clear();
         }
 
         private float GetCE(int i)
@@ -360,16 +431,20 @@ namespace pwiz.Skyline.Model.Results
             return true;
         }
 
-        private void AddCEMzSteps(int start, int count)
+        private void AddCESteps(int start, int count)
         {
             int step = count / 2;
             for (int i = count - 1; i >= 0; i--)
             {
-                var chromId = _chromIds[start + i];
-                var chromKeyNew = chromId.Key.ChangeOptimizationStep(step);
-                _chromIds[start + i] = new ChromKeyProviderIdPair(chromKeyNew, chromId.ProviderId);
-                step--;
+                SetOptimizationStep(start + i, step--, null);
             }
+        }
+
+        private void SetOptimizationStep(int i, int step, SignedMz? newProductMz)
+        {
+            var chromId = _chromIds[i];
+            var chromKeyNew = chromId.Key.ChangeOptimizationStep(step, newProductMz);
+            _chromIds[i] = new ChromKeyProviderIdPair(chromKeyNew, chromId.ProviderId);
         }
 
         public override IEnumerable<ChromKeyProviderIdPair> ChromIds

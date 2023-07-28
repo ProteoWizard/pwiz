@@ -458,6 +458,24 @@ namespace pwiz.Skyline.Model.DocSettings.AbsoluteQuantification {
         }
         
         /// <summary>
+        ///   Looks up a localized string similar to All.
+        /// </summary>
+        public static string MsLevelOption_ALL_All {
+            get {
+                return ResourceManager.GetString("MsLevelOption_ALL_All", resourceCulture);
+            }
+        }
+        
+        /// <summary>
+        ///   Looks up a localized string similar to Default.
+        /// </summary>
+        public static string MsLevelOption_DEFAULT_Default {
+            get {
+                return ResourceManager.GetString("MsLevelOption_DEFAULT_Default", resourceCulture);
+            }
+        }
+        
+        /// <summary>
         ///   Looks up a localized string similar to Normalized Intensity.
         /// </summary>
         public static string Normalized_Intensity {

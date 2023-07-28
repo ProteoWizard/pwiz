@@ -39,6 +39,7 @@ using pwiz.Skyline.Controls.Startup;
 using pwiz.Skyline.Model;
 using pwiz.Skyline.Model.Tools;
 using pwiz.Skyline.Properties;
+using pwiz.Skyline.ToolsUI;
 using pwiz.Skyline.Util;
 using pwiz.Skyline.Util.Extensions;
 
@@ -248,9 +249,6 @@ namespace pwiz.Skyline
                 {
                     
                 }
-
-                // Force live reports (though tests may reset this)
-                //Settings.Default.EnableLiveReports = true;
 
                 if (ReportShutdownDlg.HadUnexpectedShutdown())
                 {

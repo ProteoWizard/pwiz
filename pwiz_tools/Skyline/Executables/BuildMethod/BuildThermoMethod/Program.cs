@@ -939,11 +939,8 @@ namespace BuildThermoMethod
                         {
                             ExperimentIndex = experimentIndex,
                             ExperimentIndexSpecified = true,
-                            MassListFilter = new XmlCalcium.MassListFilter
+                            TargetedInclusionMassListFilter = new XmlCalcium.TargetedInclusionMassListFilter
                             {
-                                MassListType = XmlCalcium.MassListType.TargetedMassInclusion,
-                                Above = true,
-                                SourceNodePosition = new [] {recordIndex},
                                 MassList = new XmlCalcium.MassList {IntensityThreshold = true, MassListRecord = mass.ToArray()}
                             }
                         }

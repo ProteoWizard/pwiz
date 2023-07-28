@@ -39,7 +39,7 @@ namespace TestPerf // Note: tests in the "TestPerf" namespace only run when the 
     {
         static string DATA_FILE = "internal_05Aug_0CE[stitch]30CE.d";
 
-        [TestMethod] 
+        [TestMethod, NoParallelTesting(TestExclusionReason.VENDOR_FILE_LOCKING)] // No parallel testing as Agilent reader locks the files it reads 
         public void AgilentIMSImportFringeValuesTest()
         {
             Log.AddMemoryAppender();

@@ -446,7 +446,7 @@ namespace pwiz.Skyline.Controls
             return i;
         }
 
-        private ReplicateDisplay? _showReplicate;
+        private ReplicateDisplay _showReplicate = ReplicateDisplay.single;
 
         [Browsable(false)]
         [DesignerSerializationVisibility(DesignerSerializationVisibility.Hidden)]
@@ -454,9 +454,7 @@ namespace pwiz.Skyline.Controls
         {
             get
             {
-                if (_showReplicate == null)
-                    _showReplicate = Helpers.ParseEnum(Settings.Default.ShowTreeReplicateEnum, ReplicateDisplay.single);
-                return _showReplicate.Value;
+                return _showReplicate;
             }
 
             set
@@ -464,7 +462,6 @@ namespace pwiz.Skyline.Controls
                 if (ShowReplicate != value)
                 {
                     _showReplicate = value;
-                    Settings.Default.ShowTreeReplicateEnum = value.ToString();
                     UpdateNodeStates();
                 }
             }

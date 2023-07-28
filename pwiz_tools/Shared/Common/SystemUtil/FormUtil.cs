@@ -132,6 +132,13 @@ namespace pwiz.Common.SystemUtil
             return null;
         }
 
+        public static T FindParentOfType<T>(Control control) where T : class
+        {
+            while (control != null && !(control is T))
+                control = control.Parent;
+            return control as T;
+        }
+
         /// <summary>
         /// Returns all open forms in the application.
         /// Thread-safe version of <see cref="Application.OpenForms"/>.

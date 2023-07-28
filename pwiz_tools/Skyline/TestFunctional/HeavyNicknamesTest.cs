@@ -70,7 +70,8 @@ namespace pwiz.SkylineTestFunctional
             // Insert a molecule group with one molecule in it.
             RunUI(()=>SkylineWindow.SetUIMode(SrmDocument.DOCUMENT_TYPE.mixed));
             const string moleculeGroupName = "MyMoleculeGroup";
-            
+            var docCurrent = SkylineWindow.Document;
+
             var importDialog3 = ShowDialog<InsertTransitionListDlg>(SkylineWindow.ShowPasteTransitionListDlg);
             
             var colDlg = ShowDialog<ImportTransitionListColumnSelectDlg>(() => importDialog3.TransitionListText = moleculeGroupName + @",MyMolecule,MyTransition,H10O10,H10O10,1,1");
@@ -88,6 +89,7 @@ namespace pwiz.SkylineTestFunctional
             });
 
             OkDialog(colDlg, colDlg.OkDialog);
+            DismissAutoManageDialog(docCurrent); // If we're asked about automanage, decline it
 
             var myMoleculeGroup =
                 SkylineWindow.Document.MoleculeGroups.FirstOrDefault(group => group.Name == moleculeGroupName);

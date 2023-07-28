@@ -289,9 +289,9 @@ namespace pwiz.Skyline.Model.Tools
                     {
                         zipFile.ExtractAll(tempToolPath, ExtractExistingFileAction.OverwriteSilently);
                     }
-                    catch (Exception)
+                    catch (Exception ex)
                     {
-                        throw new ToolExecutionException(Resources.ConfigureToolsDlg_unpackZipTool_There_is_a_naming_conflict_in_unpacking_the_zip__Tool_importing_canceled_);
+                        throw new ToolExecutionException(Resources.ConfigureToolsDlg_unpackZipTool_Error_unpacking_zipped_tools, ex);
                     }
                 }
 
@@ -427,6 +427,10 @@ namespace pwiz.Skyline.Model.Tools
                 {
                     Helpers.TryTwice(() => Directory.Move(tempToolPath, permToolPath),
                         $@"Directory.Move({tempToolPath}, {permToolPath})");
+                }
+                else if (retval.MessagesThrown.Count == 0)
+                {
+                    retval.MessagesThrown.Add(Resources.ToolInstaller_UnpackZipTool_The_selected_zip_file_did_not_specify_any_items_to_add_to_the_Tools_menu_);
                 }
             }
             return retval;

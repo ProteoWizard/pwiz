@@ -17,6 +17,7 @@ using System.Text;
 using System.Windows.Forms;
 using System.Windows.Forms.VisualStyles;
 using System.Collections;
+using System.Linq;
 using System.Reflection;
 
 namespace DataGridViewAutoFilter
@@ -41,7 +42,7 @@ namespace DataGridViewAutoFilter
         /// <summary>
         /// The drop-down list filter value currently in effect for the owning column. 
         /// </summary>
-        private String selectedFilterValue = String.Empty;
+        private List<string> selectedFilterValues;
 
         /// <summary>
         /// The complete filter string currently in effect for the owning column. 
@@ -52,6 +53,10 @@ namespace DataGridViewAutoFilter
         /// Indicates whether the DataGridView is currently filtered by the owning column.  
         /// </summary>
         private Boolean filtered;
+
+        private const string ALL_TEXT = "(All)";
+        private const string BLANKS_TEXT = "(Blanks)";
+        private const string NON_BLANKS_TEXT = "(NonBlanks)";
 
         /// <summary>
         /// Initializes a new instance of the DataGridViewColumnHeaderCell 
@@ -312,7 +317,7 @@ namespace DataGridViewAutoFilter
             if (source == null || String.IsNullOrEmpty(source.Filter))
             {
                 filtered = false;
-                selectedFilterValue = "(All)";
+                selectedFilterValues = new List<string> { ALL_TEXT };
                 currentColumnFilter = String.Empty;
             }
         }
@@ -594,7 +599,11 @@ namespace DataGridViewAutoFilter
             filters.Keys.CopyTo(filterArray, 0);
             dropDownListBox.Items.Clear();
             dropDownListBox.Items.AddRange(filterArray);
-            dropDownListBox.SelectedItem = selectedFilterValue;
+
+            updatingSelection = true;
+            foreach(var selectedItem in selectedFilterValues)
+                dropDownListBox.SelectedItems.Add(selectedItem);
+            updatingSelection = false;
 
             // Add handlers to dropDownListBox events. 
             HandleDropDownListBoxEvents();
@@ -800,9 +809,11 @@ namespace DataGridViewAutoFilter
         /// </summary>
         private void HandleDropDownListBoxEvents()
         {
-            dropDownListBox.MouseClick += new MouseEventHandler(DropDownListBox_MouseClick);
+            //dropDownListBox.MouseClick += new MouseEventHandler(DropDownListBox_MouseClick);
             dropDownListBox.LostFocus += new EventHandler(DropDownListBox_LostFocus);
             dropDownListBox.KeyDown += new KeyEventHandler(DropDownListBox_KeyDown);
+            dropDownListBox.KeyUp += new KeyEventHandler(DropDownListBox_KeyUp);
+            dropDownListBox.SelectedIndexChanged += DropDownListBox_SelectedIndexChanged;
         }
 
         /// <summary>
@@ -810,9 +821,11 @@ namespace DataGridViewAutoFilter
         /// </summary>
         private void UnhandleDropDownListBoxEvents()
         {
-            dropDownListBox.MouseClick -= new MouseEventHandler(DropDownListBox_MouseClick);
+            //dropDownListBox.MouseClick -= new MouseEventHandler(DropDownListBox_MouseClick);
             dropDownListBox.LostFocus -= new EventHandler(DropDownListBox_LostFocus);
             dropDownListBox.KeyDown -= new KeyEventHandler(DropDownListBox_KeyDown);
+            dropDownListBox.KeyUp -= new KeyEventHandler(DropDownListBox_KeyUp);
+            dropDownListBox.SelectedIndexChanged -= DropDownListBox_SelectedIndexChanged;
         }
 
         /// <summary>
@@ -831,6 +844,10 @@ namespace DataGridViewAutoFilter
                 return;
             }
 
+            // if user is multi-selecting, don't update or hide yet
+            if (controlButtonDown || shiftButtonDown)
+                return;
+
             UpdateFilter();
             HideDropDownList();
         }
@@ -840,6 +857,9 @@ namespace DataGridViewAutoFilter
         /// user clicked the drop-down button. 
         /// </summary>
         private Boolean lostFocusOnDropDownButtonClick;
+
+        private Boolean controlButtonDown;
+        private Boolean shiftButtonDown;
 
         /// <summary>
         /// Hides the drop-down list when it loses focus. 
@@ -876,7 +896,55 @@ namespace DataGridViewAutoFilter
                 case Keys.Escape:
                     HideDropDownList();
                     break;
+                default:
+                    controlButtonDown = e.Control;
+                    shiftButtonDown = e.Shift;
+                    break;
             }
+        }
+
+        void DropDownListBox_KeyUp(object sender, KeyEventArgs e)
+        {
+            if (e.Control || e.Shift)
+                return;
+
+            controlButtonDown = e.Control;
+            shiftButtonDown = e.Shift;
+
+            UpdateFilter();
+            HideDropDownList();
+        }
+
+        private bool updatingSelection;
+        private void DropDownListBox_SelectedIndexChanged(object sender, EventArgs e)
+        {
+            if (updatingSelection)
+                return;
+
+            updatingSelection = true;
+            if (!filtered || selectedFilterValues.Contains(ALL_TEXT))
+            {
+                selectedFilterValues.Remove(ALL_TEXT);
+                dropDownListBox.SelectedItems.Remove(ALL_TEXT);
+            }
+            else if (dropDownListBox.SelectedItem == null)
+            {
+            }
+            else if (dropDownListBox.SelectedItem.ToString() == ALL_TEXT)
+            {
+                //selectedFilterValues.Clear();
+                //selectedFilterValues.Add(ALL_TEXT);
+                dropDownListBox.SelectedItems.Clear();
+                dropDownListBox.SelectedItem = ALL_TEXT;
+            }
+            updatingSelection = false;
+
+            // if user is multi-selecting, don't update or hide yet
+            if (controlButtonDown || shiftButtonDown)
+                return;
+
+            UpdateFilter();
+            HideDropDownList();
         }
 
         #endregion ListBox events
@@ -1028,11 +1096,11 @@ namespace DataGridViewAutoFilter
             // Add special filter options to the filters dictionary
             // along with null values, since unformatted representations
             // are not needed. 
-            filters.Insert(0, "(All)", null);
+            filters.Insert(0, ALL_TEXT, null);
             if (containsBlanks && containsNonBlanks)
             {
-                filters.Add("(Blanks)", null);
-                filters.Add("(NonBlanks)", null);
+                filters.Add(BLANKS_TEXT, null);
+                filters.Add(NON_BLANKS_TEXT, null);
             }
         }
 
@@ -1089,13 +1157,13 @@ namespace DataGridViewAutoFilter
         private void UpdateFilter()
         {
             // Continue only if the selection has changed.
-            if (dropDownListBox.SelectedItem.ToString().Equals(selectedFilterValue))
+            if (dropDownListBox.SelectedItems.Cast<string>().SequenceEqual(selectedFilterValues))
             {
                 return;
             }
 
             // Store the new selection value. 
-            selectedFilterValue = dropDownListBox.SelectedItem.ToString();
+            selectedFilterValues = dropDownListBox.SelectedItems.Cast<string>().ToList();
 
             // Cast the data source to an IBindingListView.
             IBindingListView data = 
@@ -1106,7 +1174,7 @@ namespace DataGridViewAutoFilter
 
             // If the user selection is (All), remove any filter currently 
             // in effect for the column. 
-            if (selectedFilterValue.Equals("(All)"))
+            if (selectedFilterValues.Contains(ALL_TEXT))
             {
                 data.Filter = FilterWithoutCurrentColumn(data.Filter);
                 filtered = false;
@@ -1126,24 +1194,35 @@ namespace DataGridViewAutoFilter
             // For (Blanks) and (NonBlanks), the filter string determines whether
             // the column value is null or an empty string. Otherwise, the filter
             // string determines whether the column value is the selected value. 
-            switch (selectedFilterValue)
+            if (selectedFilterValues.Count == 1)
             {
-                case "(Blanks)":
-                    newColumnFilter = String.Format(
-                        "LEN(ISNULL(CONVERT([{0}],'System.String'),''))=0",
-                        columnProperty);
-                    break;
-                case "(NonBlanks)":
-                    newColumnFilter = String.Format(
-                        "LEN(ISNULL(CONVERT([{0}],'System.String'),''))>0",
-                        columnProperty);
-                    break;
-                default:
-                    newColumnFilter = String.Format("[{0}]='{1}'",
-                        columnProperty,
-                        ((String)filters[selectedFilterValue])
-                        .Replace("'", "''"));  
-                    break;
+                switch (selectedFilterValues[0])
+                {
+                    case BLANKS_TEXT:
+                        newColumnFilter = String.Format(
+                            "LEN(ISNULL(CONVERT([{0}],'System.String'),''))=0",
+                            columnProperty);
+                        break;
+                    case NON_BLANKS_TEXT:
+                        newColumnFilter = String.Format(
+                            "LEN(ISNULL(CONVERT([{0}],'System.String'),''))>0",
+                            columnProperty);
+                        break;
+                    default:
+                        newColumnFilter = String.Format("[{0}]='{1}'",
+                            columnProperty,
+                            ((String)filters[selectedFilterValues[0]])
+                            .Replace("'", "''"));
+                        break;
+                }
+            }
+            else
+            {
+                newColumnFilter = "(" + String.Join(" OR ", selectedFilterValues.Select(v =>
+                    String.Format("[{0}]='{1}'",
+                    columnProperty,
+                    ((String)filters[v])
+                    .Replace("'", "''")))) + ")";
             }
 
             // Determine the new filter string by removing the previous column 
@@ -1528,7 +1607,10 @@ namespace DataGridViewAutoFilter
                 IntegralHeight = true;
                 BorderStyle = BorderStyle.FixedSingle;
                 TabStop = false;
+                base.SelectionMode = SelectionMode.MultiSimple;
             }
+
+            public override SelectionMode SelectionMode => SelectionMode.MultiSimple;
 
             /// <summary>
             /// Indicates that the FilterListBox will handle (or ignore) all 

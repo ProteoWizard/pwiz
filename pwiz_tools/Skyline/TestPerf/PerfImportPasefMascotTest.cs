@@ -45,7 +45,7 @@ namespace TestPerf // Note: tests in the "TestPerf" namespace only run when the 
     [TestClass]
     public class PerfImportBrukerPasefMascotTest : AbstractFunctionalTestEx
     {
-        [TestMethod]
+        [TestMethod, NoParallelTesting(TestExclusionReason.VENDOR_FILE_LOCKING)] // No parallel testing as Bruker reader locks the files it reads
         public void BrukerPasefMascotImportTest()
         {
             // RunPerfTests = true; // Uncomment this to force test to run in IDE

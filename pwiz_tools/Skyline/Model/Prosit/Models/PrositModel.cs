@@ -24,6 +24,7 @@ using System.Text;
 using System.Threading;
 using Google.Protobuf.Collections;
 using Grpc.Core;
+using pwiz.Common.Chemistry;
 using pwiz.Common.SystemUtil;
 using pwiz.Skyline.Controls.Graphs;
 using pwiz.Skyline.Model.DocSettings;
@@ -461,7 +462,7 @@ namespace pwiz.Skyline.Model.Prosit.Models
         /// <param name="spectrum1">First spectrum</param>
         /// <param name="spectrum2">Second spectrum</param>
         /// <param name="mzTolerance">Tolerance for considering two mzs the same</param>
-        public static double CalculateSpectrumDotpMzMatch(LibraryRankedSpectrumInfo spectrum1, LibraryRankedSpectrumInfo spectrum2, double mzTolerance)
+        public static double CalculateSpectrumDotpMzMatch(LibraryRankedSpectrumInfo spectrum1, LibraryRankedSpectrumInfo spectrum2, MzTolerance mzTolerance)
         {
             var matched1 = spectrum1.PeaksMatched.ToArray();
             var matched2 = spectrum2.PeaksMatched.ToArray();
@@ -473,8 +474,7 @@ namespace pwiz.Skyline.Model.Prosit.Models
             {
                 var mz1 = matched1[matchIndex1].ObservedMz;
                 var mz2 = matched2[matchIndex2].ObservedMz;
-                if (Math.Abs(mz1 - mz2) <
-                    mzTolerance)
+                if (mzTolerance.IsWithinTolerance(mz1, mz2))
                 {
                     intensities1All.Add(matched1[matchIndex1].Intensity);
                     intensities2All.Add(matched2[matchIndex2].Intensity);

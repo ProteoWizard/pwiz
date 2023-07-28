@@ -44,6 +44,7 @@ using pwiz.Skyline.SettingsUI.Irt;
 using pwiz.Skyline.ToolsUI;
 using pwiz.Skyline.Util;
 using System.Windows.Forms;
+using pwiz.Common.Chemistry;
 using pwiz.Common.Collections;
 using pwiz.ProteowizardWrapper;
 using pwiz.Skyline.Controls.Graphs;
@@ -3008,7 +3009,7 @@ namespace pwiz.Skyline.Properties
                     ), 
                     new TransitionLibraries
                     (
-                        0.5,    // IonMatchTolerance
+                        new MzTolerance(0.5),    // IonMatchTolerance
                         0,      // MinIonCount
                         3,      // IonCount
                         TransitionLibraryPick.all  // Pick

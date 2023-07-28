@@ -35,7 +35,7 @@ using namespace pwiz::analysis;
 
 ostream* os_ = 0;
 
-const int EXPECTED_TEST_COUNT = 4;
+const int EXPECTED_TEST_COUNT = 2;
 
 void test(const string& filepath, const ReaderList& readerList, int& testCount)
 {

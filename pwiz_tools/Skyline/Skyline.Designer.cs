@@ -79,11 +79,13 @@ namespace pwiz.Skyline
             this.duplicatesContextMenuItem = new System.Windows.Forms.ToolStripMenuItem();
             this.toolStripSeparator13 = new System.Windows.Forms.ToolStripSeparator();
             this.lockYaxisContextMenuItem = new System.Windows.Forms.ToolStripMenuItem();
+            this.showLibSpectrumPropertiesContextMenuItem = new System.Windows.Forms.ToolStripMenuItem();
+            this.showFullScanSpectrumPropertiesContextMenuItem = new System.Windows.Forms.ToolStripMenuItem();
             this.toolStripSeparator14 = new System.Windows.Forms.ToolStripSeparator();
             this.prositLibMatchItem = new System.Windows.Forms.ToolStripMenuItem();
             this.mirrorMenuItem = new System.Windows.Forms.ToolStripMenuItem();
             this.toolStripSeparator61 = new System.Windows.Forms.ToolStripSeparator();
-            this.spectrumPropsContextMenuItem = new System.Windows.Forms.ToolStripMenuItem();
+            this.spectrumGraphPropsContextMenuItem = new System.Windows.Forms.ToolStripMenuItem();
             this.toolStripSeparator15 = new System.Windows.Forms.ToolStripSeparator();
             this.zoomSpectrumContextMenuItem = new System.Windows.Forms.ToolStripMenuItem();
             this.toolStripSeparator27 = new System.Windows.Forms.ToolStripSeparator();
@@ -574,7 +576,9 @@ namespace pwiz.Skyline
             this.prositLibMatchItem,
             this.mirrorMenuItem,
             this.toolStripSeparator61,
-            this.spectrumPropsContextMenuItem,
+            this.spectrumGraphPropsContextMenuItem,
+            this.showLibSpectrumPropertiesContextMenuItem,
+            this.showFullScanSpectrumPropertiesContextMenuItem,
             this.toolStripSeparator15,
             this.zoomSpectrumContextMenuItem,
             this.toolStripSeparator27,
@@ -703,9 +707,21 @@ namespace pwiz.Skyline
             // 
             // spectrumPropsContextMenuItem
             // 
-            this.spectrumPropsContextMenuItem.Name = "spectrumPropsContextMenuItem";
-            resources.ApplyResources(this.spectrumPropsContextMenuItem, "spectrumPropsContextMenuItem");
-            this.spectrumPropsContextMenuItem.Click += new System.EventHandler(this.spectrumPropsContextMenuItem_Click);
+            this.spectrumGraphPropsContextMenuItem.Name = "spectrumGraphPropsContextMenuItem";
+            resources.ApplyResources(this.spectrumGraphPropsContextMenuItem, "spectrumGraphPropsContextMenuItem");
+            this.spectrumGraphPropsContextMenuItem.Click += new System.EventHandler(this.spectrumGraphPropsContextMenuItem_Click);
+            // 
+            // showLibSpectrumPropertiesContextMenuItem
+            // 
+            this.showLibSpectrumPropertiesContextMenuItem.Name = "showLibSpectrumPropertiesContextMenuItem";
+            resources.ApplyResources(this.showLibSpectrumPropertiesContextMenuItem, "showSpectrumPropertiesContextMenuItem");
+            this.showLibSpectrumPropertiesContextMenuItem.Click += new System.EventHandler(this.showLibSpectrumPropertiesContextMenuItem_Click);
+            // 
+            // showFullScanSpectrumPropertiesContextMenuItem
+            // 
+            this.showFullScanSpectrumPropertiesContextMenuItem.Name = "showFullScanSpectrumPropertiesContextMenuItem";
+            resources.ApplyResources(this.showFullScanSpectrumPropertiesContextMenuItem, "showSpectrumPropertiesContextMenuItem");
+            this.showFullScanSpectrumPropertiesContextMenuItem.Click += new System.EventHandler(this.showFullScanSpectrumPropertiesContextMenuItem_Click);
             // 
             // toolStripSeparator15
             // 
@@ -2591,6 +2607,8 @@ namespace pwiz.Skyline
         private System.Windows.Forms.ToolStripSeparator toolStripSeparator14;
         private System.Windows.Forms.ToolStripMenuItem duplicatesContextMenuItem;
         private System.Windows.Forms.ToolStripMenuItem lockYaxisContextMenuItem;
+        private System.Windows.Forms.ToolStripMenuItem showLibSpectrumPropertiesContextMenuItem;
+        private System.Windows.Forms.ToolStripMenuItem showFullScanSpectrumPropertiesContextMenuItem;
         private System.Windows.Forms.ToolStripSeparator toolStripSeparator15;
         private System.Windows.Forms.ToolStripMenuItem importMassListMenuItem;
         private DigitalRune.Windows.Docking.DockPanel dockPanel;
@@ -2622,7 +2640,7 @@ namespace pwiz.Skyline
         private System.Windows.Forms.ToolStripMenuItem timeGraphContextMenuItem;
         private System.Windows.Forms.ToolStripMenuItem regressionContextMenuItem;
         private System.Windows.Forms.ToolStripMenuItem replicateComparisonContextMenuItem;
-        private System.Windows.Forms.ToolStripMenuItem spectrumPropsContextMenuItem;
+        private System.Windows.Forms.ToolStripMenuItem spectrumGraphPropsContextMenuItem;
         private System.Windows.Forms.ToolStripSeparator toolStripSeparator27;
         private System.Windows.Forms.ToolStripMenuItem schedulingContextMenuItem;
         private System.Windows.Forms.ToolStripMenuItem supportMenuItem;

@@ -34,7 +34,7 @@ namespace TestPerf
         private enum ImportType { FASTA, BGPROTEOME }
         private String _fastaFile;
 
-        [TestMethod]
+        [TestMethod, NoParallelTesting(TestExclusionReason.RESOURCE_INTENSIVE)] // Doesn't do well on slower VMs
         public void TestHugeAssociateProteins()
         {
             TestFilesZip = GetPerfTestDataURL(@"PerfAssociateProteinsHugeTest.zip");

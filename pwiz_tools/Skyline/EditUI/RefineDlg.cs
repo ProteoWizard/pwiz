@@ -346,6 +346,25 @@ namespace pwiz.Skyline.EditUI
             set { textFoldChange.Text = value.ToString(CultureInfo.CurrentCulture); }
         }
 
+        public bool AutoPeptides
+        {
+            get => cbAutoPeptides.Checked;
+            set => cbAutoPeptides.Checked = value;
+        }
+
+        public bool AutoPrecursors
+        {
+            get => cbAutoPrecursors.Checked;
+            set => cbAutoPrecursors.Checked = value;
+        }
+
+        public bool AutoTransitions
+        {
+            get => cbAutoTransitions.Checked;
+            set => cbAutoTransitions.Checked = value;
+        }
+
+
         public void OkDialog()
         {
             var helper = new MessageBoxHelper(this);

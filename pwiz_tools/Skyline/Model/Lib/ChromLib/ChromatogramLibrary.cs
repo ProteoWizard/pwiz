@@ -872,7 +872,7 @@ namespace pwiz.Skyline.Model.Lib.ChromLib
             {
                 int byteLength = PrimitiveArrays.ReadOneValue<int>(stream);
                 var bytes = new byte[byteLength];
-                stream.Read(bytes, 0, bytes.Length);
+                stream.ReadOrThrow(bytes, 0, bytes.Length);
                 return Encoding.UTF8.GetString(bytes);
             }
         }
@@ -917,7 +917,7 @@ namespace pwiz.Skyline.Model.Lib.ChromLib
             {
                 int byteLength = PrimitiveArrays.ReadOneValue<int>(stream);
                 var bytes = new byte[byteLength];
-                stream.Read(bytes, 0, bytes.Length);
+                stream.ReadOrThrow(bytes, 0, bytes.Length);
                 return Encoding.UTF8.GetString(bytes);
             }
         }
@@ -1035,7 +1035,7 @@ namespace pwiz.Skyline.Model.Lib.ChromLib
             {
                 int byteLength = PrimitiveArrays.ReadOneValue<int>(stream);
                 var bytes = new byte[byteLength];
-                stream.Read(bytes, 0, bytes.Length);
+                stream.ReadOrThrow(bytes, 0, bytes.Length);
                 return Encoding.UTF8.GetString(bytes);
             }
         }

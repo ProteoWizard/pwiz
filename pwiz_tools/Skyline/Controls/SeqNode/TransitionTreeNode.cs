@@ -181,10 +181,10 @@ namespace pwiz.Skyline.Controls.SeqNode
             {
                 if (!string.IsNullOrEmpty(tran.CustomIon.Name))
                     labelPrefix = tran.CustomIon.Name + labelPrefixSpacer;
-                else if (!string.IsNullOrEmpty(tran.CustomIon.Formula))
-                    labelPrefix = tran.CustomIon.Formula + labelPrefixSpacer;
+                else if (tran.CustomIon.HasChemicalFormula)
+                    labelPrefix = tran.CustomIon.Formula + labelPrefixSpacer; // Show formula (e.g. C12H5 or maybe C12H5[-1.2/1.21]
                 else
-                    labelPrefix = string.Empty;
+                    labelPrefix = string.Empty; // Just show the mass
             }
             else
             {
@@ -269,7 +269,7 @@ namespace pwiz.Skyline.Controls.SeqNode
                     table.AddDetailRow(Resources.TransitionTreeNode_RenderTip_Library_intensity, MathEx.RoundAboveZero(intensity,
                         (intensity < 10 ? 1 : 0), 4).ToString(LocalizationHelper.CurrentCulture), rt);
                 }
-                if (nodeTran.Transition.IsCustom() && !string.IsNullOrEmpty(nodeTran.Transition.CustomIon.Formula))
+                if (nodeTran.Transition.IsCustom() && nodeTran.Transition.CustomIon.ParsedMolecule.HasChemicalFormula)
                 {
                     table.AddDetailRow(Resources.TransitionTreeNode_RenderTip_Formula, nodeTran.Transition.CustomIon.Formula + nodeTran.Transition.Adduct.AdductFormula.ToString(LocalizationHelper.CurrentCulture), rt);
                 }

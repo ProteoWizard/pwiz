@@ -284,11 +284,8 @@ namespace pwiz.SkylineTestFunctional
         public void RemoveHeavyPeptides()
         {
             var refineDlg = ShowDialog<RefineDlg>(SkylineWindow.ShowRefineDlg);
-            RunUI(() =>
-            {
-                refineDlg.RefineLabelType = IsotopeLabelType.heavy;
-                refineDlg.OkDialog();
-            });
+            RunUI(() => refineDlg.RefineLabelType = IsotopeLabelType.heavy);
+            OkDialog(refineDlg, refineDlg.OkDialog);
             WaitForDocumentLoaded();
         }
 

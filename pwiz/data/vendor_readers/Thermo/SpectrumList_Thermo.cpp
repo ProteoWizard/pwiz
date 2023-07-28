@@ -112,15 +112,11 @@ PWIZ_API_DECL size_t SpectrumList_Thermo::find(const string& id) const
     size_t scanNumber = lexical_cast<size_t>(id, success);
     if (success && scanNumber>=1 && scanNumber<=size())
         return scanNumber-1;
-    else
-    {
-        map<string, size_t>::const_iterator scanItr = idToIndexMap_.find(id);
-        if (scanItr == idToIndexMap_.end())
-            return checkNativeIdFindResult(size_, id);
-        return scanItr->second;
-    }
 
-    return checkNativeIdFindResult(size_, id);
+    map<string, size_t>::const_iterator scanItr = idToIndexMap_.find(id);
+    if (scanItr == idToIndexMap_.end())
+        return checkNativeIdFindResult(size_, id);
+    return scanItr->second;
 }
 
 
@@ -144,7 +140,10 @@ InstrumentConfigurationPtr SpectrumList_Thermo::findInstrumentConfiguration(cons
         }
     }
 
-    warn_once(("no matching instrument configuration for analyzer type " + cvTermInfo(massAnalyzerType).shortName()).c_str());
+    string msg = "no matching instrument configuration for analyzer type " + cvTermInfo(massAnalyzerType).shortName();
+    if (config_.unknownInstrumentIsError)
+        throw runtime_error(msg);
+    warn_once(msg.c_str());
     return InstrumentConfigurationPtr();
 }
 
@@ -274,14 +273,7 @@ PWIZ_API_DECL SpectrumPtr SpectrumList_Thermo::spectrum(size_t index, DetailLeve
         scanInfo = raw->getScanInfo(ie.scan);
         if (!scanInfo.get())
             throw runtime_error("[SpectrumList_Thermo::spectrum()] Error retrieving ScanInfo.");
-    }
-    catch (RawEgg& e)
-    {
-        throw runtime_error(string("[SpectrumList_Thermo::spectrum()] Error retrieving ScanInfo: ") + e.what());
-    }
 
-    try
-    {
         if (scanInfo->isConstantNeutralLoss())
         {
             scan.set(MS_analyzer_scan_offset, scanInfo->analyzerScanOffset(), MS_m_z);

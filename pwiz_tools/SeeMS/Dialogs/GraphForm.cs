@@ -317,22 +317,23 @@ namespace seems
                 }
             }
 
-            for( int i = 0; i < paneList.Count; ++i )
+            bool needSourceNamePrefix = paneList.SelectMany(p => p.Select(o => o.Source)).Distinct().Count() > 1;
+
+            for ( int i = 0; i < paneList.Count; ++i )
             {
                 Pane logicalPane = paneList[i];
                 MSGraphPane pane = mp.PaneList[i] as MSGraphPane;
                 pane.IsFontsScaled = false;
                 pane.Border.IsVisible = false;
 
-                bool needSourceNamePrefix = logicalPane.Select(o => o.Source).Distinct().Count() > 1;
                 int maxAutoLegendItems = needSourceNamePrefix ? 5 : 10;
 
                 foreach( GraphItem item in logicalPane.Take(logicalPane.Count-1) )
                 {
-                    //item.AddSourceToId = needSourceNamePrefix;
+                    item.AddSourceToId = needSourceNamePrefix;
                     msGraphControl.AddGraphItem( pane, item, false );
                 }
-                //logicalPane.Last().AddSourceToId = needSourceNamePrefix;
+                logicalPane.Last().AddSourceToId = needSourceNamePrefix;
                 msGraphControl.AddGraphItem(pane, logicalPane.Last(), true);
 
                 if( mp.PaneList.Count > 1 )
@@ -351,7 +352,8 @@ namespace seems
                     }
                     pane.YAxis.Title.IsVisible = true;
                     pane.YAxis.Scale.IsVisible = true;
-                    pane.YAxis.Title.Text = String.Join(", ", logicalPane.Select(o => o.Title)) + "\n" + pane.YAxis.Title.Text.Split('\n').Last();
+                    pane.YAxis.Title.Text = String.Join(", ", logicalPane.Select(o => o.Title.Replace("/", "\n"))) + "\n" +
+                                            pane.YAxis.Title.Text.Split('\n').Last();
                     pane.YAxis.Scale.SetupScaleData( pane, pane.YAxis );
                 } else
                 {
@@ -375,15 +377,6 @@ namespace seems
                     {
                         item.Color = rotator.NextColor;
                     }
-                }
-
-                if (paneList.Count > 0 && paneList[0].Count > 0)
-                {
-                    this.Text = paneList[0][0].Id;
-                    if (paneList[0][0].IsMassSpectrum)
-                        this.TabText = (paneList[0][0] as MassSpectrum).AbbreviatedId;
-                    else
-                        this.TabText = this.Text;
                 }
 
                 if (pane.XAxis.Scale.MaxAuto)
@@ -417,6 +410,8 @@ namespace seems
                 else
                     pane.AxisChange();
             }
+
+            SetPaneNames();
 
             mp.SetLayout( msGraphControl.CreateGraphics(), paneLayout );
 
@@ -460,6 +455,17 @@ namespace seems
                 setFocusedItem( mp.PaneList[0].CurveList[0] );
 
             msGraphControl.Refresh();
+        }
+
+        public void SetPaneNames()
+        {
+            if (paneList.Count > 0 && paneList[0].Count > 0)
+            {
+                Text = paneList[0][0].AbbreviatedId;
+                if (manager.DataSourceMap.Count > 1)
+                    Text = $"{paneList[0][0].Source.Source.Name}/{Text}";
+                TabText = Text;
+            }
         }
 
         private string YAxis_ScaleFormatEvent(GraphPane pane, Axis axis, double val, int index)

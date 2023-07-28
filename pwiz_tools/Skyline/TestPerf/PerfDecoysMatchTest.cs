@@ -48,7 +48,7 @@ namespace TestPerf
             "napedro_L120417_010_SW.wiff.scan"
         };
 
-        [TestMethod] 
+        [TestMethod, NoParallelTesting(TestExclusionReason.RESOURCE_INTENSIVE)] 
         public void DecoysMatchTest()
         {
             TestFilesZip = "https://panoramaweb.org/_webdav/MacCoss/software/%40files/perftests/DecoyMatch.zip";

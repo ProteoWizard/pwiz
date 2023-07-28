@@ -311,12 +311,10 @@ namespace pwiz.SkylineTestTutorial
                 PauseForScreenShot<DocumentGridForm>("Adjust the scrollbar so that the first displayed column is \"light Height\" and the last displayed column is \"heavy Product Mz\"", 17);
                 OkDialog(previewReportDlg, previewReportDlg.Close);
             }
-            RunUI(() =>
-            {
-                viewEditor.ChooseColumnsTab.RemoveColumn(PropertyPath.Parse("IsotopeLabelType")); // Not L10N
-                viewEditor.OkDialog();
-                editReportListDlg1.OkDialog();
-            });
+            RunUI(() => viewEditor.ChooseColumnsTab.RemoveColumn(PropertyPath.Parse("IsotopeLabelType")));
+            OkDialog(viewEditor, viewEditor.OkDialog);
+            OkDialog(editReportListDlg1, editReportListDlg1.OkDialog);
+
             PauseForScreenShot<ExportLiveReportDlg>("Export Report form", 18);
 
             OkDialog(exportReportDlg1, exportReportDlg1.CancelClick);

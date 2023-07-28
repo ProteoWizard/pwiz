@@ -27,6 +27,7 @@ using pwiz.Common.Chemistry;
 using pwiz.Skyline.Util;
 using System.IO;
 using System.Linq;
+using System.Text;
 using pwiz.Common.Collections;
 using pwiz.Common.SystemUtil;
 using pwiz.Skyline.Model.Results;
@@ -122,7 +123,7 @@ namespace pwiz.Skyline.Model.DdaSearch
         //private int minPeptideLength, maxPeptideLength, minCharge, maxCharge;
         //private double chargeCarrierMass;
         private int maxVariableMods = 2;
-        private string modsFile = Path.GetTempFileName();
+        private StringBuilder modsText;
         private CancellationTokenSource _cancelToken;
         private IProgressStatus _progressStatus;
         private bool _success;
@@ -141,15 +142,18 @@ namespace pwiz.Skyline.Model.DdaSearch
 
             foreach (var spectrumFilename in SpectrumFileNames)
             {
+                string modsFile = PathEx.GetTempFileNameWithExtension(@"mods");
+                File.WriteAllText(modsFile, modsText.ToString());
+
                 try
                 {
                     long javaMaxHeapMB = Math.Min(16 * 1024L * 1024 * 1024, MemoryInfo.TotalBytes / 2) / 1024 / 1024;
 
                     var pr = new ProcessRunner();
                     var psi = new ProcessStartInfo(JavaDownloadInfo.JavaBinary,
-                        $@"-Xmx{javaMaxHeapMB}M -jar """ + MsgfPlusBinary + @""" -tasks -2 " +
+                        $@"-Xmx{javaMaxHeapMB}M -XX:-UsePerfData -jar """ + MsgfPlusBinary + @""" -tasks -2 " +
                         $@"-s ""{spectrumFilename}"" -d ""{FastaFileNames[0]}"" -tda 1 " +
-                        $@"-t {precursorMzTolerance} -ti {isotopeErrorRange.Item1},{isotopeErrorRange.Item2} " +
+                        $@"-t {precursorMzTolerance.Value}{precursorMzTolerance.UnitName} -ti {isotopeErrorRange.Item1},{isotopeErrorRange.Item2} " +
                         $@"-m {fragmentationMethod} -inst {instrumentType} -e {enzyme} -ntt {ntt} -maxMissedCleavages {maxMissedCleavages} " +
                         $@"-mod ""{modsFile}""")
                     {
@@ -160,13 +164,17 @@ namespace pwiz.Skyline.Model.DdaSearch
                         RedirectStandardInput = false
                     };
 
-                    pr.Run(psi, string.Empty, this, ref _progressStatus, ProcessPriorityClass.BelowNormal);
+                    pr.Run(psi, string.Empty, this, ref _progressStatus, ProcessPriorityClass.BelowNormal, true);
                     _progressStatus = _progressStatus.NextSegment();
                 }
                 catch (Exception ex)
                 {
                     _progressStatus = _progressStatus.ChangeErrorException(ex).ChangeMessage(string.Format(Resources.DdaSearch_Search_failed__0, ex.Message));
                     _success = false;
+                }
+                finally
+                {
+                    FileEx.SafeDelete(modsFile);
                 }
 
                 if (IsCanceled && !_progressStatus.IsCanceled)
@@ -186,7 +194,6 @@ namespace pwiz.Skyline.Model.DdaSearch
                 _progressStatus = _progressStatus.Complete().ChangeMessage(Resources.DDASearchControl_SearchProgress_Search_done);
             UpdateProgress(_progressStatus);
 
-            FileEx.SafeDelete(modsFile);
             return _success;
         }
 
@@ -216,7 +223,8 @@ namespace pwiz.Skyline.Model.DdaSearch
                 #   - E.g. Phospho, Acetyl
                 #   - Visit http://www.unimod.org to get PSI-MS names.
              */
-            using (var modsFileStream = new StreamWriter(modsFile, false))
+            modsText = new StringBuilder();
+            using (var modsFileStream = new StringWriter(modsText))
             {
                 int modCounter = 0;
                 modsFileStream.WriteLine($@"NumMods={maxVariableMods}");
@@ -230,7 +238,7 @@ namespace pwiz.Skyline.Model.DdaSearch
                         continue;
 
                     // can't use mod with no formula or mass; CONSIDER throwing exception
-                    if (mod.LabelAtoms == LabelAtoms.None && mod.Formula == null && mod.MonoisotopicMass == null ||
+                    if (mod.LabelAtoms == LabelAtoms.None && ParsedMolecule.IsNullOrEmpty(mod.ParsedMolecule) && mod.MonoisotopicMass == null ||
                         mod.LabelAtoms != LabelAtoms.None && mod.AAs.IsNullOrEmpty())
                         continue;
 
@@ -265,7 +273,11 @@ namespace pwiz.Skyline.Model.DdaSearch
                         }
                     }
                     else
-                        addMod(mod.Formula ?? mod.MonoisotopicMass.ToString(), mod.AAs ?? @"*");
+                    {
+                        // ReSharper disable once PossibleNullReferenceException
+                        var modString = ParsedMolecule.IsNullOrEmpty(mod.ParsedMolecule) ? null : mod.ParsedMolecule.ToString();
+                        addMod(modString ?? mod.MonoisotopicMass.ToString(), mod.AAs ?? @"*");
+                    }
                 }
             }
         }

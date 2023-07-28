@@ -37,7 +37,7 @@ using pwiz.Common.Collections;
 
 namespace MSConvertGUI
 {
-    public partial class MainForm : Form
+    public partial class MainForm : BaseForm
     {
         IList<string> cmdline_args;
         string SetDefaultsDataType = ""; // watch last-added filetype, offer to set defaults for that type
@@ -684,6 +684,9 @@ namespace MSConvertGUI
                 case "Scan Summing":
                     FilterDGV.Rows.Add(new[] { "scanSumming", $"precursorTol={ScanSummingPrecursorToleranceTextBox.Text} scanTimeTol={ScanSummingScanTimeToleranceTextBox.Text} ionMobilityTol={ScanSummingIonMobilityToleranceTextBox.Text} sumMs1={(ScanSummingSumMs1Checkbox.Checked ? 1 : 0)}" });
                     break;
+                case "Waters DDA Processing":
+                    FilterDGV.Rows.Add("ddaProcessing");
+                    break;
             }
         }
 
@@ -801,7 +804,10 @@ namespace MSConvertGUI
                 commandLine.Append("--srmAsSpectra|");
 
             foreach (DataGridViewRow row in FilterDGV.Rows)
-                commandLine.AppendFormat("--filter|{0} {1}|", row.Cells[0].Value, row.Cells[1].Value);
+                if (row.Cells[0].Value.Equals("ddaProcessing"))
+                    commandLine.Append("--ddaProcessing|");
+                else
+                    commandLine.AppendFormat("--filter|{0} {1}|", row.Cells[0].Value, row.Cells[1].Value);
             
             if (MakeTPPCompatibleOutputButton.Checked)
             {

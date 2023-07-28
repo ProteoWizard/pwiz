@@ -25,7 +25,7 @@ using pwiz.Skyline.Model.Databinding.Entities;
 
 namespace pwiz.Skyline.Model.Databinding.Collections
 {
-    public abstract class NodeList<TNode> : SkylineObjectList<IdentityPath, TNode> where TNode : SkylineDocNode
+    public abstract class NodeList<TNode> : SkylineObjectList<TNode> where TNode : SkylineDocNode
     {
         private IList<IdentityPath> _ancestorIdentityPaths = ImmutableList.Empty<IdentityPath>();
 
@@ -64,7 +64,7 @@ namespace pwiz.Skyline.Model.Databinding.Collections
         }
 
 
-        protected override IEnumerable<IdentityPath> ListKeys()
+        protected IEnumerable<IdentityPath> ListKeys()
         {
             return RecurseListingKeys(IdentityPath.ROOT, SrmDocument);
         }
@@ -118,6 +118,8 @@ namespace pwiz.Skyline.Model.Databinding.Collections
             }
             return true;
         }
+
+        protected abstract TNode ConstructItem(IdentityPath key);
 
         public override IEnumerable GetItems()
         {

@@ -164,6 +164,8 @@ namespace seems
         protected string id;
         public string Id { get { return id; } }
 
+        public string AbbreviatedId { get; protected set; }
+
         protected int index;
         public int Index { get { return index; } }
 
@@ -289,7 +291,7 @@ namespace seems
             this.chromatogramList = chromatogramList;
             this.index = index;
 			//element = chromatogram;
-			id = Element.id;
+			AbbreviatedId = id = Element.id;
             //index = element.index;
 		}
 
@@ -301,7 +303,7 @@ namespace seems
             Tag = metaChromatogram.Tag;
             AnnotationSettings = metaChromatogram.AnnotationSettings;
             //element = chromatogram;
-            id = Element.id;
+            AbbreviatedId = id = Element.id;
         }
 
         private ChromatogramList chromatogramList;
@@ -394,7 +396,6 @@ namespace seems
             AbbreviatedId = metaSpectrum.AbbreviatedId;
         }
 
-	    public string AbbreviatedId { get; private set; }
         public override string Title { get { return AddSourceToId ? ToString() : AbbreviatedId; } }
         public override string ToString() { return String.Format("{0}/{1}", source.Source.Name, AbbreviatedId); }
 

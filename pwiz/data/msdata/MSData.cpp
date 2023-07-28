@@ -1162,11 +1162,6 @@ PWIZ_API_DECL SpectrumPtr SpectrumList::spectrum(size_t index, DetailLevel detai
     return spectrum(index, detailLevel == DetailLevel_FullData);
 }
 
-
-PWIZ_API_DECL void SpectrumList::warn_once(const char *msg) const
-{
-}
-
 PWIZ_API_DECL DetailLevel SpectrumList::min_level_accepted(std::function<boost::tribool(const Spectrum&)> predicate) const
 {
     DetailLevel result = DetailLevel_InstantMetadata;

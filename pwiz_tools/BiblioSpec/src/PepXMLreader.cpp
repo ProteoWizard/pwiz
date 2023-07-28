@@ -342,8 +342,8 @@ void PepXMLreader::startElement(const XML_Char* name, const XML_Char** attr)
        charge = getIntRequiredAttrValue("assumed_charge",attr, minCharge, 20);
        ionMobility = getDoubleAttrValueOr("ion_mobility", attr, 0.0);
        if (analysisType_ == MSFRAGGER_ANALYSIS || parentAnalysisType_ == MSFRAGGER_ANALYSIS) {
-           if (ionMobility > 0 && !bal::iends_with(getSpecFileName(), "calibrated.mgf"))
-               throw BlibException(false, "To import an MSFragger search of timsTOF data (with ion_mobility attribute), the corresponding *_uncalibrated.mgf or *_calibrated.mgf file is required. The *_uncalibrated.mgf file is preferred because the peaks have not been deisotoped.");
+           if (ionMobility > 0 && !bal::iends_with(bfs::change_extension(getSpecFileName(), "").string(), "calibrated"))
+               throw BlibException(false, "To import an MSFragger search of timsTOF data (with ion_mobility attribute), the corresponding *_uncalibrated or *_calibrated MGF or mzML file is required. The *_uncalibrated file is preferred because the peaks have not been deisotoped.");
        }
    } else if(isElement("search_hit", name)) {
        // Only use this search hit, if rank is 1 or missing (zero)

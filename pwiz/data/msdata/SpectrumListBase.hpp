@@ -29,6 +29,7 @@
 #include "pwiz/utility/misc/IntegerSet.hpp"
 #include <boost/functional/hash.hpp>
 #include <boost/range/adaptor/map.hpp>
+#include <boost/make_shared.hpp>
 #include <stdexcept>
 #include <iostream>
 
@@ -36,38 +37,51 @@
 namespace pwiz {
 namespace msdata {
 
+/// common functionality for base ChromatogramList and SpectrumList implementations
+class PWIZ_API_DECL ListBase
+{
+    public:
+
+    /// issues a warning once per list instance (based on string hash)
+    void warn_once(const char* msg) const;
+
+    size_t hash(const char*) const;
+
+    std::set<size_t>& warn_msg_hashes() const { return warn_msg_hashes_; }
+
+    protected:
+    mutable std::set<size_t> warn_msg_hashes_; // for warn_once use
+};
+
 
 /// common functionality for base SpectrumList implementations
 class PWIZ_API_DECL SpectrumListBase : public SpectrumList
 {
     public:
-    SpectrumListBase() : MSLevelsNone(), /*hash_(),*/ spectrum_id_mismatch_hash_(hash("spectrum id mismatch")) {};
+    SpectrumListBase() : MSLevelsNone(), spectrum_id_mismatch_hash_(impl_.hash("spectrum id mismatch")) {};
 
-    /// implementation of SpectrumList
-    virtual const boost::shared_ptr<const DataProcessing> dataProcessingPtr() const {return dp_;}
+    /// issues a warning once per list instance (based on string hash)
+    void warn_once(const char* msg) const { impl_.warn_once(msg); }
+
+    /// implementation of ChromatogramList/SpectrumList
+    const boost::shared_ptr<const DataProcessing> dataProcessingPtr() const { return dp_; }
 
     /// set DataProcessing
-    virtual void setDataProcessingPtr(DataProcessingPtr dp) { dp_ = dp; }
-
-    /// issues a warning once per SpectrumList instance (based on string hash)
-    virtual void warn_once(const char* msg) const;
+    void setDataProcessingPtr(DataProcessingPtr dp) { dp_ = dp; }
 
     protected:
 
     // when find() fails to find a spectrum id, check whether the id fields of the input id and the spectrum list are matching
     size_t checkNativeIdFindResult(size_t result, const std::string& id) const;
 
-    DataProcessingPtr dp_;
-
     // Useful for avoiding repeated ctor when you just want an empty set
     const pwiz::util::IntegerSet MSLevelsNone;
 
-    private:
+    DataProcessingPtr dp_;
 
-    size_t hash(const char*) const;
-    mutable std::set<size_t> warn_msg_hashes_; // for warn_once use
-    //boost::hash<const char*> hash_;
+    private:
     size_t spectrum_id_mismatch_hash_;
+    ListBase impl_;
 };
 
 

@@ -550,7 +550,7 @@ namespace pwiz.Skyline.SettingsUI.Irt
             {
                 var seqModified = peptide.ModifiedTarget;
                 // CONSIDER: Select the peptide row
-                if (seqModified.IsProteomic && !FastaSequence.IsExSequence(seqModified.Sequence))
+                if (seqModified.IsProteomic && !FastaSequence.IsValidPeptideSequence(seqModified.Sequence))
                 {
                     MessageDlg.Show(this, ModeUIAwareStringFormat(Resources.EditIrtCalcDlg_ValidatePeptideList_The_value__0__is_not_a_valid_modified_peptide_sequence,
                         seqModified));

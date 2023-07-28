@@ -19,15 +19,19 @@
 using System;
 using System.Collections.Generic;
 using System.ComponentModel;
+using System.Drawing;
 using System.Globalization;
 using System.Linq;
 using System.Windows.Forms;
 using pwiz.Skyline.Model;
 using pwiz.Skyline.Model.AuditLog;
 using pwiz.Skyline.Model.DocSettings;
+using pwiz.Skyline.Model.DocSettings.AbsoluteQuantification;
 using pwiz.Skyline.Model.GroupComparison;
+using pwiz.Skyline.Model.Results;
 using pwiz.Skyline.Properties;
 using pwiz.Skyline.Util;
+using pwiz.Skyline.Util.Extensions;
 
 namespace pwiz.Skyline.Controls.GroupComparison
 {
@@ -50,13 +54,15 @@ namespace pwiz.Skyline.Controls.GroupComparison
             }
             _pushChangesToDocument = false;
             tbxName.Text = groupComparisonDef.Name ?? string.Empty;
+            comboMsLevel.Items.Clear();
+            comboMsLevel.Items.AddRange(MsLevelOption.AllOptions.ToArray());
         }
 
         public EditGroupComparisonDlg(FoldChangeBindingSource foldChangeBindingSource)
             : this(foldChangeBindingSource.GroupComparisonModel)
         {
             // ReSharper disable VirtualMemberCallInConstructor
-            Text = string.Format(Text, foldChangeBindingSource.GroupComparisonModel.GroupComparisonName);
+            Text = TextUtil.ColonSeparate(Text, foldChangeBindingSource.GroupComparisonModel.GroupComparisonName);
             // ReSharper restore VirtualMemberCallInConstructor
             panelName.Visible = false;
             panelButtons.Visible = false;
@@ -108,9 +114,10 @@ namespace pwiz.Skyline.Controls.GroupComparison
             ReplaceComboItems(comboCaseValue, sortedCaseValues, groupComparisonDef.CaseValue ?? string.Empty);
             ReplaceComboItems(comboIdentityAnnotation, new[] { string.Empty }.Concat(ListReplicateAnnotations()),
                 groupComparisonDef.IdentityAnnotation);
-            ReplaceComboItems(comboNormalizationMethod, NormalizationMethod.ListNormalizationMethods(GroupComparisonModel.Document), groupComparisonDef.NormalizationMethod);
+            ReplaceComboItems(comboNormalizationMethod, ListNormalizeOptions(), MakeNormalizationItem(groupComparisonDef.NormalizationMethod));
             ReplaceComboItems(comboSummaryMethod, SummarizationMethod.ListSummarizationMethods(), groupComparisonDef.SummarizationMethod);
             tbxConfidenceLevel.Text = groupComparisonDef.ConfidenceLevelTimes100.ToString(CultureInfo.CurrentCulture);
+            ReplaceComboItems(comboMsLevel, MsLevelOption.AllOptions, groupComparisonDef.MsLevel);
             radioScopeProtein.Checked = groupComparisonDef.PerProtein;
             radioScopePeptide.Checked = !groupComparisonDef.PerProtein;
             cbxUseZeroForMissingPeaks.Checked = groupComparisonDef.UseZeroForMissingPeaks;
@@ -128,6 +135,20 @@ namespace pwiz.Skyline.Controls.GroupComparison
             {
                 ShowAdvanced(true);
             }
+        }
+
+        private IEnumerable<NormalizationItem> ListNormalizeOptions()
+        {
+            var options = NormalizationMethod.ListNormalizationMethods(GroupComparisonModel.Document)
+                .Select(NormalizeOption.FromNormalizationMethod);
+            if (null != GroupComparisonModel.Document.Settings.PeptideSettings.Quantification.RegressionFit 
+                && CalibrationCurveFitter.AnyBatchNames(GroupComparisonModel.Document.Settings))
+            {
+                options = options.Prepend(NormalizeOption.CALIBRATED);
+            }
+
+            options = options.Prepend(NormalizeOption.DEFAULT);
+            return options.Select(MakeNormalizationItem);
         }
 
         private bool RequiresAdvanced(GroupComparisonDef groupComparisonDef)
@@ -156,11 +177,18 @@ namespace pwiz.Skyline.Controls.GroupComparison
             get { return tbxName.Text; }
         }
 
-        public ComboBox ComboNormalizationMethod
+        public NormalizeOption NormalizeOption
         {
-            get { return comboNormalizationMethod; }
+            get
+            {
+                return (comboNormalizationMethod.SelectedItem as NormalizationItem)?.NormalizeOption ??
+                       NormalizeOption.NONE;
+            }
+            set
+            {
+                comboNormalizationMethod.SelectedItem = MakeNormalizationItem(value);
+            }
         }
-
         public ComboBox ComboIdentityAnnotation
         {
             get { return comboIdentityAnnotation; }
@@ -237,6 +265,18 @@ namespace pwiz.Skyline.Controls.GroupComparison
                 if(!_pushChangesToDocument)
                     def = value.ChangeName(tbxName.Text);
                 ChangeGroupComparisonDef(_pushChangesToDocument, GroupComparisonModel, def);
+
+                if (def.PerProtein && Equals(NormalizeOption.CALIBRATED, def.NormalizationMethod))
+                {
+                    radioScopeProtein.ForeColor = Color.Red;
+                    toolTip1.SetToolTip(radioScopeProtein, GroupComparisonStrings
+                        .EditGroupComparisonDlg_GroupComparisonDef_Group_comparisons_at_the_protein_level_using_calibrated_values_is_not_yet_supported_in_Skyline_);
+                }
+                else
+                {
+                    radioScopeProtein.ForeColor = radioScopePeptide.ForeColor;
+                    toolTip1.SetToolTip(radioScopeProtein, null);
+                }
             }
         }
 
@@ -307,10 +347,7 @@ namespace pwiz.Skyline.Controls.GroupComparison
             {
                 return;
             }
-            var normalizationMethod = comboNormalizationMethod.SelectedItem as NormalizationMethod ??
-                                      NormalizationMethod.NONE;
-            GroupComparisonDef = GroupComparisonDef
-                .ChangeNormalizationMethod(normalizationMethod);
+            GroupComparisonDef = GroupComparisonDef.ChangeNormalizeOption(NormalizeOption);
         }
 
         protected void comboCaseValue_SelectedIndexChanged(object sender, EventArgs e)
@@ -475,6 +512,89 @@ namespace pwiz.Skyline.Controls.GroupComparison
         private void btnAdvanced_Click(object sender, EventArgs e)
         {
             ShowAdvanced(true);
+        }
+
+        private void comboMsLevel_SelectedIndexChanged(object sender, EventArgs e)
+        {
+            if (_inChangeSettings)
+            {
+                return;
+            }
+
+            var newMsLevelOption = comboMsLevel.SelectedItem as MsLevelOption;
+            if (newMsLevelOption != null)
+            {
+                GroupComparisonDef = GroupComparisonDef.ChangeMsLevel(newMsLevelOption);
+            }
+        }
+
+        public NormalizationItem MakeNormalizationItem(NormalizeOption normalizeOption)
+        {
+            return new NormalizationItem(normalizeOption, GetNormalizeOptionText(normalizeOption));
+        }
+
+        /// <summary>
+        /// Returns the text to display in the combo box for the specified NormalizeOption.
+        /// </summary>
+        public string GetNormalizeOptionText(NormalizeOption normalizeOption)
+        {
+            var settings = GroupComparisonModel.Document.Settings;
+            if (normalizeOption == NormalizeOption.DEFAULT)
+            {
+                // If the option is "default" then append in parentheses the normalization method from the Quantification Settings.
+                return string.Format(QuantificationStrings.SkylineWindow_MakeNormalizeToMenuItem_Default___0__,
+                    settings.PeptideSettings.Quantification.NormalizationMethod);
+            }
+
+            if (normalizeOption == NormalizeOption.CALIBRATED)
+            {
+                // If any replicates have a Batch Name set, then call this normalization technique "Batch Calibration Curve"
+                if (CalibrationCurveFitter.AnyBatchNames(settings))
+                {
+                    return GroupComparisonStrings.EditGroupComparisonDlg_GetNormalizeOptionText_Batch_Calibration_Curve;
+                }
+                // If there are no batch names on any replicates, then this normalization method ends up being the same as "Default".
+                // It will not be offered as an option this case, but it might appear in the dropdown if that's the option that was already chosen.
+                return QuantificationStrings.Calibration_Curve;
+            }
+
+            return normalizeOption.ToString();
+        }
+
+        public class NormalizationItem
+        {
+            public NormalizationItem(NormalizeOption normalizeOption, string text)
+            {
+                NormalizeOption = normalizeOption;
+                Text = text;
+            }
+
+            public NormalizeOption NormalizeOption {
+                get;
+            }
+            public string Text { get; }
+            public override string ToString()
+            {
+                return Text;
+            }
+
+            protected bool Equals(NormalizationItem other)
+            {
+                return NormalizeOption.Equals(other.NormalizeOption);
+            }
+
+            public override bool Equals(object obj)
+            {
+                if (ReferenceEquals(null, obj)) return false;
+                if (ReferenceEquals(this, obj)) return true;
+                if (obj.GetType() != GetType()) return false;
+                return Equals((NormalizationItem)obj);
+            }
+
+            public override int GetHashCode()
+            {
+                return NormalizeOption.GetHashCode();
+            }
         }
     }
 }

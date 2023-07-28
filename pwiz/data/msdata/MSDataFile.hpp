@@ -57,8 +57,12 @@ struct PWIZ_API_DECL MSDataFile : public MSData
 		bool gzipped; // if true, file is written as .gz
         bool useWorkerThreads;
 
-        WriteConfig(Format _format = Format_mzML,bool _gzipped = false)
-        :   format(_format), indexed(true), gzipped(_gzipped), useWorkerThreads(true)
+        /// when true, if an error is seen when enumerating a spectrum or chromatogram, it will be skipped and enumeration will continue;
+        /// when false an error will immediately stop enumeration
+        bool continueOnError;
+
+        WriteConfig(Format _format = Format_mzML, bool _gzipped = false)
+        :   format(_format), indexed(true), gzipped(_gzipped), useWorkerThreads(true), continueOnError(false)
         {}
     };
 

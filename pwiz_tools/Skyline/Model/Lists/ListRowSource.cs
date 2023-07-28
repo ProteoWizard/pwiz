@@ -16,15 +16,16 @@
  * See the License for the specific language governing permissions and
  * limitations under the License.
  */
+
+using System;
 using System.Collections;
-using System.Collections.Generic;
 using System.Linq;
 using pwiz.Skyline.Model.Databinding;
 using pwiz.Skyline.Model.Databinding.Collections;
 
 namespace pwiz.Skyline.Model.Lists
 {
-    public class ListRowSource<TItem> : SkylineObjectList<ListItemId, TItem> where TItem : ListItem
+    public class ListRowSource<TItem> : SkylineObjectList<TItem> where TItem : ListItem
     {
         public ListRowSource(SkylineDataSchema dataSchema) : base(dataSchema)
         {
@@ -33,33 +34,16 @@ namespace pwiz.Skyline.Model.Lists
 
         public string ListName { get; private set; }
 
-        protected override TItem ConstructItem(ListItemId key)
-        {
-            var listData = DataSchema.Document.Settings.DataSettings.FindList(ListName);
-            return (TItem) ListItem.ExistingRecord(listData, key);
-        }
-
         public override IEnumerable GetItems()
         {
             var listData =
                 DataSchema.Document.Settings.DataSettings.Lists.FirstOrDefault(list => list.ListDef.Name == ListName);
             if (listData == null)
             {
-                return new TItem[0];
+                return Array.Empty<TItem>();
             }
             return Enumerable.Range(0, listData.RowCount)
                 .Select(rowIndex => ListItem.ExistingRecord(typeof(TItem), listData, rowIndex));
-        }
-
-        protected override IEnumerable<ListItemId> ListKeys()
-        {
-            var listData =
-                DataSchema.Document.Settings.DataSettings.Lists.FirstOrDefault(list => list.ListDef.Name == ListName);
-            if (listData == null)
-            {
-                return new ListItemId[0];
-            }
-            return listData.ListItemIds;
         }
     }
 }

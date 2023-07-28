@@ -34,6 +34,13 @@ namespace CLI {
 namespace util {
 
 
+extern "C" {
+typedef char* (__stdcall* LogCallback)(const wchar_t* info);
+__declspec(dllexport) void SetCerrCallback(LogCallback cb);
+__declspec(dllexport) void SetCoutCallback(LogCallback cb);
+}
+
+
 public ref struct IterationListener
 {
     enum class Status {Ok, Cancel};

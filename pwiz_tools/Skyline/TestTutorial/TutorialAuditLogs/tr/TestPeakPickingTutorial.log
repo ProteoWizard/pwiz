@@ -66,18 +66,18 @@ Summary   : Reintegrated peaks using "test1"
 All Info  :
 Reintegrated peaks using "test1"
 Reintegrate > Peak scoring model is "test1"
-Reintegrate > Peak scoring model > Feature scores : contains { Score Name = "Intensity", Weight = "-0,0785986106400007", Percentage Contribution = "-0,022" }
-Reintegrate > Peak scoring model > Feature scores : contains { Score Name = "Retention time difference", Weight = "-0,748964227615651", Percentage Contribution = "0,066" }
-Reintegrate > Peak scoring model > Feature scores : contains { Score Name = "Library intensity dot-product", Weight = "2,23930515452513", Percentage Contribution = "0,081" }
-Reintegrate > Peak scoring model > Feature scores : contains { Score Name = "Shape (weighted)", Weight = "1,20823908678117", Percentage Contribution = "0,081" }
-Reintegrate > Peak scoring model > Feature scores : contains { Score Name = "Co-elution (weighted)", Weight = "0,0329971925245589", Percentage Contribution = "-0,031" }
-Reintegrate > Peak scoring model > Feature scores : contains { Score Name = "Co-elution count", Weight = "0,151653221732281", Percentage Contribution = "0,05" }
-Reintegrate > Peak scoring model > Feature scores : contains { Score Name = "Signal to noise", Weight = "0,176367968079028", Percentage Contribution = "0,042" }
-Reintegrate > Peak scoring model > Feature scores : contains { Score Name = "Reference intensity dot-product", Weight = "0,499280658039641", Percentage Contribution = "0,02" }
-Reintegrate > Peak scoring model > Feature scores : contains { Score Name = "Reference shape (weighted)", Weight = "6,39602432927717", Percentage Contribution = "0,4" }
-Reintegrate > Peak scoring model > Feature scores : contains { Score Name = "Reference co-elution (weighted)", Weight = "-0,0481827279624286", Percentage Contribution = "0,04" }
-Reintegrate > Peak scoring model > Feature scores : contains { Score Name = "Reference co-elution count", Weight = "0,547920455265442", Percentage Contribution = "0,1" }
-Reintegrate > Peak scoring model > Feature scores : contains { Score Name = "Standard Intensity", Weight = "0,629156446901213", Percentage Contribution = "0,172" }
+Reintegrate > Peak scoring model > Feature scores : contains { Score Name = "Intensity", Weight = "-0,078328345434545", Percentage Contribution = "-0,021" }
+Reintegrate > Peak scoring model > Feature scores : contains { Score Name = "Retention time difference", Weight = "-0,74923684676032", Percentage Contribution = "0,066" }
+Reintegrate > Peak scoring model > Feature scores : contains { Score Name = "Library intensity dot-product", Weight = "2,24238344148558", Percentage Contribution = "0,081" }
+Reintegrate > Peak scoring model > Feature scores : contains { Score Name = "Shape (weighted)", Weight = "1,20618462186508", Percentage Contribution = "0,081" }
+Reintegrate > Peak scoring model > Feature scores : contains { Score Name = "Co-elution (weighted)", Weight = "0,0330641179011537", Percentage Contribution = "-0,031" }
+Reintegrate > Peak scoring model > Feature scores : contains { Score Name = "Co-elution count", Weight = "0,151546153152723", Percentage Contribution = "0,05" }
+Reintegrate > Peak scoring model > Feature scores : contains { Score Name = "Signal to noise", Weight = "0,176740916361492", Percentage Contribution = "0,042" }
+Reintegrate > Peak scoring model > Feature scores : contains { Score Name = "Reference intensity dot-product", Weight = "0,498299821042048", Percentage Contribution = "0,02" }
+Reintegrate > Peak scoring model > Feature scores : contains { Score Name = "Reference shape (weighted)", Weight = "6,39974546904101", Percentage Contribution = "0,4" }
+Reintegrate > Peak scoring model > Feature scores : contains { Score Name = "Reference co-elution (weighted)", Weight = "-0,0482245507469112", Percentage Contribution = "0,04" }
+Reintegrate > Peak scoring model > Feature scores : contains { Score Name = "Reference co-elution count", Weight = "0,547648429894388", Percentage Contribution = "0,1" }
+Reintegrate > Peak scoring model > Feature scores : contains { Score Name = "Standard Intensity", Weight = "0,628130085182893", Percentage Contribution = "0,172" }
 Reintegrate > Peak scoring model > Use decoys is True
 Reintegrate > Peak scoring model > Uses second best peaks is False
 Reintegrate > Integrate all peaks is True
@@ -88,62 +88,62 @@ Extra Info: Peak scoring model = "test1":
     [
         {
             Score Name = "Intensity",
-            Weight = "-0,0785986106400007",
-            Percentage Contribution = "-0,022"
+            Weight = "-0,078328345434545",
+            Percentage Contribution = "-0,021"
         },
         {
             Score Name = "Retention time difference",
-            Weight = "-0,748964227615651",
+            Weight = "-0,74923684676032",
             Percentage Contribution = "0,066"
         },
         {
             Score Name = "Library intensity dot-product",
-            Weight = "2,23930515452513",
+            Weight = "2,24238344148558",
             Percentage Contribution = "0,081"
         },
         {
             Score Name = "Shape (weighted)",
-            Weight = "1,20823908678117",
+            Weight = "1,20618462186508",
             Percentage Contribution = "0,081"
         },
         {
             Score Name = "Co-elution (weighted)",
-            Weight = "0,0329971925245589",
+            Weight = "0,0330641179011537",
             Percentage Contribution = "-0,031"
         },
         {
             Score Name = "Co-elution count",
-            Weight = "0,151653221732281",
+            Weight = "0,151546153152723",
             Percentage Contribution = "0,05"
         },
         {
             Score Name = "Signal to noise",
-            Weight = "0,176367968079028",
+            Weight = "0,176740916361492",
             Percentage Contribution = "0,042"
         },
         {
             Score Name = "Reference intensity dot-product",
-            Weight = "0,499280658039641",
+            Weight = "0,498299821042048",
             Percentage Contribution = "0,02"
         },
         {
             Score Name = "Reference shape (weighted)",
-            Weight = "6,39602432927717",
+            Weight = "6,39974546904101",
             Percentage Contribution = "0,4"
         },
         {
             Score Name = "Reference co-elution (weighted)",
-            Weight = "-0,0481827279624286",
+            Weight = "-0,0482245507469112",
             Percentage Contribution = "0,04"
         },
         {
             Score Name = "Reference co-elution count",
-            Weight = "0,547920455265442",
+            Weight = "0,547648429894388",
             Percentage Contribution = "0,1"
         },
         {
             Score Name = "Standard Intensity",
-            Weight = "0,629156446901213",
+            Weight = "0,628130085182893",
             Percentage Contribution = "0,172"
         }
     ],
@@ -158,18 +158,18 @@ Summary   : Reintegrated peaks using "test1"
 All Info  :
 Reintegrated peaks using "test1"
 Reintegrate > Peak scoring model is "test1"
-Reintegrate > Peak scoring model > Feature scores : contains { Score Name = "Intensity", Weight = "-0,0785986106400007", Percentage Contribution = "-0,022" }
-Reintegrate > Peak scoring model > Feature scores : contains { Score Name = "Retention time difference", Weight = "-0,748964227615651", Percentage Contribution = "0,066" }
-Reintegrate > Peak scoring model > Feature scores : contains { Score Name = "Library intensity dot-product", Weight = "2,23930515452513", Percentage Contribution = "0,081" }
-Reintegrate > Peak scoring model > Feature scores : contains { Score Name = "Shape (weighted)", Weight = "1,20823908678117", Percentage Contribution = "0,081" }
-Reintegrate > Peak scoring model > Feature scores : contains { Score Name = "Co-elution (weighted)", Weight = "0,0329971925245589", Percentage Contribution = "-0,031" }
-Reintegrate > Peak scoring model > Feature scores : contains { Score Name = "Co-elution count", Weight = "0,151653221732281", Percentage Contribution = "0,05" }
-Reintegrate > Peak scoring model > Feature scores : contains { Score Name = "Signal to noise", Weight = "0,176367968079028", Percentage Contribution = "0,042" }
-Reintegrate > Peak scoring model > Feature scores : contains { Score Name = "Reference intensity dot-product", Weight = "0,499280658039641", Percentage Contribution = "0,02" }
-Reintegrate > Peak scoring model > Feature scores : contains { Score Name = "Reference shape (weighted)", Weight = "6,39602432927717", Percentage Contribution = "0,4" }
-Reintegrate > Peak scoring model > Feature scores : contains { Score Name = "Reference co-elution (weighted)", Weight = "-0,0481827279624286", Percentage Contribution = "0,04" }
-Reintegrate > Peak scoring model > Feature scores : contains { Score Name = "Reference co-elution count", Weight = "0,547920455265442", Percentage Contribution = "0,1" }
-Reintegrate > Peak scoring model > Feature scores : contains { Score Name = "Standard Intensity", Weight = "0,629156446901213", Percentage Contribution = "0,172" }
+Reintegrate > Peak scoring model > Feature scores : contains { Score Name = "Intensity", Weight = "-0,078328345434545", Percentage Contribution = "-0,021" }
+Reintegrate > Peak scoring model > Feature scores : contains { Score Name = "Retention time difference", Weight = "-0,74923684676032", Percentage Contribution = "0,066" }
+Reintegrate > Peak scoring model > Feature scores : contains { Score Name = "Library intensity dot-product", Weight = "2,24238344148558", Percentage Contribution = "0,081" }
+Reintegrate > Peak scoring model > Feature scores : contains { Score Name = "Shape (weighted)", Weight = "1,20618462186508", Percentage Contribution = "0,081" }
+Reintegrate > Peak scoring model > Feature scores : contains { Score Name = "Co-elution (weighted)", Weight = "0,0330641179011537", Percentage Contribution = "-0,031" }
+Reintegrate > Peak scoring model > Feature scores : contains { Score Name = "Co-elution count", Weight = "0,151546153152723", Percentage Contribution = "0,05" }
+Reintegrate > Peak scoring model > Feature scores : contains { Score Name = "Signal to noise", Weight = "0,176740916361492", Percentage Contribution = "0,042" }
+Reintegrate > Peak scoring model > Feature scores : contains { Score Name = "Reference intensity dot-product", Weight = "0,498299821042048", Percentage Contribution = "0,02" }
+Reintegrate > Peak scoring model > Feature scores : contains { Score Name = "Reference shape (weighted)", Weight = "6,39974546904101", Percentage Contribution = "0,4" }
+Reintegrate > Peak scoring model > Feature scores : contains { Score Name = "Reference co-elution (weighted)", Weight = "-0,0482245507469112", Percentage Contribution = "0,04" }
+Reintegrate > Peak scoring model > Feature scores : contains { Score Name = "Reference co-elution count", Weight = "0,547648429894388", Percentage Contribution = "0,1" }
+Reintegrate > Peak scoring model > Feature scores : contains { Score Name = "Standard Intensity", Weight = "0,628130085182893", Percentage Contribution = "0,172" }
 Reintegrate > Peak scoring model > Use decoys is True
 Reintegrate > Peak scoring model > Uses second best peaks is False
 Reintegrate > Only integrate significant q values is True
@@ -181,62 +181,62 @@ Extra Info: Peak scoring model = "test1":
     [
         {
             Score Name = "Intensity",
-            Weight = "-0,0785986106400007",
-            Percentage Contribution = "-0,022"
+            Weight = "-0,078328345434545",
+            Percentage Contribution = "-0,021"
         },
         {
             Score Name = "Retention time difference",
-            Weight = "-0,748964227615651",
+            Weight = "-0,74923684676032",
             Percentage Contribution = "0,066"
         },
         {
             Score Name = "Library intensity dot-product",
-            Weight = "2,23930515452513",
+            Weight = "2,24238344148558",
             Percentage Contribution = "0,081"
         },
         {
             Score Name = "Shape (weighted)",
-            Weight = "1,20823908678117",
+            Weight = "1,20618462186508",
             Percentage Contribution = "0,081"
         },
         {
             Score Name = "Co-elution (weighted)",
-            Weight = "0,0329971925245589",
+            Weight = "0,0330641179011537",
             Percentage Contribution = "-0,031"
         },
         {
             Score Name = "Co-elution count",
-            Weight = "0,151653221732281",
+            Weight = "0,151546153152723",
             Percentage Contribution = "0,05"
         },
         {
             Score Name = "Signal to noise",
-            Weight = "0,176367968079028",
+            Weight = "0,176740916361492",
             Percentage Contribution = "0,042"
         },
         {
             Score Name = "Reference intensity dot-product",
-            Weight = "0,499280658039641",
+            Weight = "0,498299821042048",
             Percentage Contribution = "0,02"
         },
         {
             Score Name = "Reference shape (weighted)",
-            Weight = "6,39602432927717",
+            Weight = "6,39974546904101",
             Percentage Contribution = "0,4"
         },
         {
             Score Name = "Reference co-elution (weighted)",
-            Weight = "-0,0481827279624286",
+            Weight = "-0,0482245507469112",
             Percentage Contribution = "0,04"
         },
         {
             Score Name = "Reference co-elution count",
-            Weight = "0,547920455265442",
+            Weight = "0,547648429894388",
             Percentage Contribution = "0,1"
         },
         {
             Score Name = "Standard Intensity",
-            Weight = "0,629156446901213",
+            Weight = "0,628130085182893",
             Percentage Contribution = "0,172"
         }
     ],
@@ -252,11 +252,11 @@ Summary   : Reintegrated peaks using "testDIA"
 All Info  :
 Reintegrated peaks using "testDIA"
 Reintegrate > Peak scoring model is "testDIA"
-Reintegrate > Peak scoring model > Feature scores : contains { Score Name = "Intensity", Weight = "0,290264577098656", Percentage Contribution = "0,067" }
-Reintegrate > Peak scoring model > Feature scores : contains { Score Name = "Shape (weighted)", Weight = "5,9905502533732", Percentage Contribution = "0,52" }
-Reintegrate > Peak scoring model > Feature scores : contains { Score Name = "Co-elution (weighted)", Weight = "-0,0621408145755917", Percentage Contribution = "0,102" }
-Reintegrate > Peak scoring model > Feature scores : contains { Score Name = "Co-elution count", Weight = "0,67170248862795", Percentage Contribution = "0,15" }
-Reintegrate > Peak scoring model > Feature scores : contains { Score Name = "Signal to noise", Weight = "0,798169762490202", Percentage Contribution = "0,16" }
+Reintegrate > Peak scoring model > Feature scores : contains { Score Name = "Intensity", Weight = "0,290007866558543", Percentage Contribution = "0,067" }
+Reintegrate > Peak scoring model > Feature scores : contains { Score Name = "Shape (weighted)", Weight = "5,98415992180923", Percentage Contribution = "0,519" }
+Reintegrate > Peak scoring model > Feature scores : contains { Score Name = "Co-elution (weighted)", Weight = "-0,0623797431774991", Percentage Contribution = "0,103" }
+Reintegrate > Peak scoring model > Feature scores : contains { Score Name = "Co-elution count", Weight = "0,668142363914545", Percentage Contribution = "0,15" }
+Reintegrate > Peak scoring model > Feature scores : contains { Score Name = "Signal to noise", Weight = "0,796782054645322", Percentage Contribution = "0,161" }
 Reintegrate > Peak scoring model > Use decoys is False
 Reintegrate > Peak scoring model > Uses second best peaks is True
 Reintegrate > Integrate all peaks is True
@@ -267,28 +267,28 @@ Extra Info: Peak scoring model = "testDIA":
     [
         {
             Score Name = "Intensity",
-            Weight = "0,290264577098656",
+            Weight = "0,290007866558543",
             Percentage Contribution = "0,067"
         },
         {
             Score Name = "Shape (weighted)",
-            Weight = "5,9905502533732",
-            Percentage Contribution = "0,52"
+            Weight = "5,98415992180923",
+            Percentage Contribution = "0,519"
         },
         {
             Score Name = "Co-elution (weighted)",
-            Weight = "-0,0621408145755917",
-            Percentage Contribution = "0,102"
+            Weight = "-0,0623797431774991",
+            Percentage Contribution = "0,103"
         },
         {
             Score Name = "Co-elution count",
-            Weight = "0,67170248862795",
+            Weight = "0,668142363914545",
             Percentage Contribution = "0,15"
         },
         {
             Score Name = "Signal to noise",
-            Weight = "0,798169762490202",
-            Percentage Contribution = "0,16"
+            Weight = "0,796782054645322",
+            Percentage Contribution = "0,161"
         }
     ],
     Use decoys = False,

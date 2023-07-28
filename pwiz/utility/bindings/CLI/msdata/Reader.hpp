@@ -111,6 +111,10 @@ public ref class ReaderConfig
     /// when true, global TIC and BPC chromatograms consist of only MS1 spectra (thus the number of time points cannot be assumed to be equal to the number of spectra)
     bool globalChromatogramsAreMs1Only;
 
+    // When true, vendor-specific DDA processing is enabled. For Waters data, this involves combining MS2 scans which refer
+    // to the same precursor from the same survey scan, and lockmass-correcting the precursor mass (if the lockmass refiner is active).
+    bool ddaProcessing;
+
     ReaderConfig()
     : simAsSpectra(false)
     , srmAsSpectra(false)
@@ -125,6 +129,7 @@ public ref class ReaderConfig
     , allowMsMsWithoutPrecursor(true)
     , sortAndJitter(false)
     , globalChromatogramsAreMs1Only(false)
+    , ddaProcessing(false)
     {
     }
 };

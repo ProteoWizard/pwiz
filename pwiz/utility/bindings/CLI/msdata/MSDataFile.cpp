@@ -111,6 +111,7 @@ static void translateConfig(MSDataFile::WriteConfig^ config, b::MSDataFile::Writ
     config2.gzipped = config->gzipped;
     config2.indexed = config->indexed;
     config2.useWorkerThreads = config->useWorkerThreads;
+    config2.continueOnError = config->continueOnError;
     config2.binaryDataEncoderConfig.precision = (b::BinaryDataEncoder::Precision) config->precision;
     config2.binaryDataEncoderConfig.byteOrder = (b::BinaryDataEncoder::ByteOrder) config->byteOrder;
     config2.binaryDataEncoderConfig.compression = (b::BinaryDataEncoder::Compression) config->compression;

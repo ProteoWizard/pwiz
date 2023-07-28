@@ -78,7 +78,10 @@ void testFloating(floating_type a, floating_type b, floating_type precision)
     BaseDiffConfig config((double) precision);
 
     diff_floating(a, b, a_b, b_a, config);
-    if (fabs(a - b) <= config.precision + std::numeric_limits<floating_type>::epsilon())
+    int sigFigs = std::max(1, (int)abs(log10(config.precision)) - 1); // treat 1e-5 precison as asking for 5 significant figures
+    floating_type aSig = pwiz::math::sigfig(a, sigFigs);
+    floating_type bSig = pwiz::math::sigfig(b, sigFigs);
+    if (fabs(aSig - bSig) <= std::numeric_limits<floating_type>::epsilon())
         unit_assert(a_b == floating_type() && b_a == floating_type());
     else
         unit_assert(a_b == fabs(a - b) && b_a == fabs(a - b));

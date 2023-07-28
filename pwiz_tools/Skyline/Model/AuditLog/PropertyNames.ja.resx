@@ -225,7 +225,7 @@
   <data name="TransitionFilter_EndFragmentFinderLabel" xml:space="preserve">
     <value>プロダクトイオンの選択終了</value>
   </data>
-  <data name="TransitionLibraries_IonMatchTolerance" xml:space="preserve">
+  <data name="TransitionLibraries_IonMatchMzTolerance" xml:space="preserve">
     <value>イオン許容誤差</value>
   </data>
   <data name="TransitionInstrument_IsDynamicMin" xml:space="preserve">
@@ -1205,7 +1205,7 @@
   <data name="TransitionFilterAndLibrariesSettings_IonCount" xml:space="preserve">
     <value>プロダクトイオンを選択</value>
   </data>
-  <data name="TransitionFilterAndLibrariesSettings_IonMatchTolerance" xml:space="preserve">
+  <data name="TransitionFilterAndLibrariesSettings_IonMatchMzTolerance" xml:space="preserve">
     <value>イオン許容誤差</value>
   </data>
   <data name="TransitionFilterAndLibrariesSettings_MinIonCount" xml:space="preserve">

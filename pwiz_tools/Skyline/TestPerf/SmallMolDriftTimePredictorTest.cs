@@ -63,10 +63,11 @@ namespace TestPerf
             RunUI(() => SkylineWindow.OpenFile(
                 TestFilesDirs[0].GetTestPath(@"DriftTimePredictorSmallMoleculesTest.sky")));
 
+            var docCurrent = SkylineWindow.Document;
             var transitionList = TestFilesDirs[0].GetTestPath(@"Skyline Transition List wo CCS.csv");
             // Transition list is suitably formatted with headers to just drop into the targets tree
             SetCsvFileClipboardText(transitionList);
-            RunUI(() => SkylineWindow.Paste());
+            PasteSmallMoleculeListNoAutoManage(); // Paste the clipboard text, dismiss the offer to enable automanage
             var document = WaitForDocumentLoaded();
             AssertEx.IsDocumentState(document, null, 1, 4, 4, 4);
             {
@@ -103,7 +104,10 @@ namespace TestPerf
                 editIonMobilityLibraryDlg.LibraryName = libName;
                 editIonMobilityLibraryDlg.CreateDatabaseFile(databasePath); // Simulate user click on Create button
                 editIonMobilityLibraryDlg.GetIonMobilitiesFromResults();
+                // Make sure we haven't broken this dialog's use of TargetResolver (if we have, we'll probably get the serializable format)
+                AssertEx.AreEqual(@"Sulfamethizole", editIonMobilityLibraryDlg.GetTargetDisplayName(0));
             });
+
             OkDialog(editIonMobilityLibraryDlg, () => editIonMobilityLibraryDlg.OkDialog());
 
             RunUI(() =>

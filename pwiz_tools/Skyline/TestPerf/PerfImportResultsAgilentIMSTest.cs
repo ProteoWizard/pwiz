@@ -41,7 +41,7 @@ namespace TestPerf // Note: tests in the "TestPerf" namespace only run when the 
     public class ImportAgilentIMSTest : AbstractFunctionalTest
     {
 
-        [TestMethod] 
+        [TestMethod, NoParallelTesting(TestExclusionReason.VENDOR_FILE_LOCKING)] // No parallel testing as Agilent reader locks the files it reads
         public void AgilentIMSImportTest()
         {
             Log.AddMemoryAppender();

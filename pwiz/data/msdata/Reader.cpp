@@ -51,6 +51,7 @@ Reader::Config::Config()
     , allowMsMsWithoutPrecursor(true)
     , sortAndJitter(false)
     , globalChromatogramsAreMs1Only(false)
+    , ddaProcessing(false)
 {
 }
 
@@ -63,6 +64,7 @@ Reader::Config::Config(const Config& rhs)
     ignoreZeroIntensityPoints = rhs.ignoreZeroIntensityPoints;
     ignoreCalibrationScans = rhs.ignoreCalibrationScans;
     combineIonMobilitySpectra = rhs.combineIonMobilitySpectra;
+    ddaProcessing = rhs.ddaProcessing;
     reportSonarBins = rhs.reportSonarBins;
     unknownInstrumentIsError = rhs.unknownInstrumentIsError;
     adjustUnknownTimeZonesToHostTimeZone = rhs.adjustUnknownTimeZonesToHostTimeZone;

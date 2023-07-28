@@ -58,12 +58,13 @@ void PwizReader::openFile(const char* filename, bool mzSort){
     try {
         fileName_ = filename;
         delete fileReader_;
+        fileReader_ = new MSData();
+        Reader::Config readerConfig;
+        readerConfig.combineIonMobilitySpectra = true;
+        readers_.read(fileName_, *fileReader_, 0, readerConfig);
         #ifdef VENDOR_READERS
-        fileReader_ = new MSDataFile(fileName_, &allReaders_);
         if (SpectrumList_PeakPicker::supportsVendorPeakPicking(fileName_))
             SpectrumListFactory::wrap(*fileReader_, "peakPicking true 1-");
-        #else
-        fileReader_ = new MSDataFile(fileName_);
         #endif
         allSpectra_ = fileReader_->run.spectrumListPtr;
 

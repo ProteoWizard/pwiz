@@ -140,7 +140,7 @@ namespace pwiz.SkylineTestFunctional
                             documentGridForm.FindColumn(pathData.Property(nameof(Chromatogram.Data.SpectrumIds)));
 
                         var chromatogramInfo =
-                            chromatogramGroup.GetTransitionInfo(transition.DocNode, .0001f, interpolated ? TransformChrom.interpolated : TransformChrom.raw, null);
+                            chromatogramGroup.GetTransitionInfo(transition.DocNode, .0001f, interpolated ? TransformChrom.interpolated : TransformChrom.raw);
                         Assert.IsNotNull(chromatogramInfo);
                         VerifyChromatogramData(cultureInfo, chromatogramInfo, row, colTimes, colIntensities, colMassErrors, colSpectrumIds);
                     }

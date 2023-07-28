@@ -60,11 +60,8 @@ namespace pwiz.Skyline.Model.Results
                                               ILoadMonitor loader)
             : base(fileInfo, status, startPercent, endPercent, loader)
         {
-            // Deal with older cache formats where we did not record chromatogram polarity
-            var assumeNegativeChargesInPreV11Caches = document.MoleculeTransitionGroups.All(p => p.PrecursorMz.IsNegative);
-
             // Need a newly loaded copy to allow for concurrent loading for multiple cached files
-            _cache = ChromatogramCache.Load(cache.CachePath, new ProgressStatus(), loader, assumeNegativeChargesInPreV11Caches);
+            _cache = ChromatogramCache.Load(cache.CachePath, new ProgressStatus(), loader, document);
 
             _fileIndex = cache.CachedFiles.IndexOf(f => Equals(f.FilePath, dataFilePath));
             _chromKeyIndices = cache.GetChromKeys(dataFilePath).OrderBy(v => v.LocationPoints).ToArray();

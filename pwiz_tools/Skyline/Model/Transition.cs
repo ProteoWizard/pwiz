@@ -22,6 +22,7 @@ using System.Drawing;
 using System.Globalization;
 using System.IO;
 using System.Linq;
+using pwiz.Common.Chemistry;
 using pwiz.Common.SystemUtil;
 using pwiz.Skyline.Model.Crosslinking;
 using pwiz.Skyline.Model.DocSettings;
@@ -598,7 +599,7 @@ namespace pwiz.Skyline.Model
             get { return GetFragmentIonName(LocalizationHelper.CurrentCulture); }
         }
 
-        public string GetFragmentIonName(CultureInfo cultureInfo, double? tolerance=null)
+        public string GetFragmentIonName(CultureInfo cultureInfo, MzTolerance tolerance=null)
         {
             if (IsCustom() && !IsPrecursor())
                 return CustomIon.ToString(tolerance);
@@ -859,7 +860,7 @@ namespace pwiz.Skyline.Model
                 var text = CustomIon.ToString();
                 // Was there enough information to generate a string more distinctive that just "Ion"?
                 if (String.IsNullOrEmpty(CustomIon.Name) && 
-                    String.IsNullOrEmpty(CustomIon.NeutralFormula))
+                    CustomIon.ParsedMolecule.IsMassOnly)
                 {
                     // No, add mz and charge to whatever generic text was used to describe it
                     var mz = Adduct.MzFromNeutralMass(CustomIon.MonoisotopicMass);

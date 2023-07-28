@@ -386,6 +386,7 @@ namespace pwiz.Skyline.Model.Results
                         Q1,
                         ionMobilityFilter.ApplyOffset(highEnergy ? spectrumProductFilter.HighEnergyIonMobilityValueOffset : 0),
                         spectrumProductFilter.TargetMz,
+                        OptStep ?? 0,
                         0,  // CE value (Shimadzu SRM only)
                         spectrumProductFilter.FilterWidth,
                         source,
@@ -395,10 +396,6 @@ namespace pwiz.Skyline.Model.Results
                     if (_hasMinTime && _hasMaxTime)
                     {
                         key = key.ChangeOptionalTimes(_minTime, _maxTime);
-                    }
-                    if (OptStep.HasValue)
-                    {
-                        key = key.ChangeOptimizationStep(OptStep.Value);
                     }
                     listChromKeys.Add(key);
                 }

@@ -133,16 +133,25 @@ namespace pwiz.SkylineTest
                 @"nonstandard {0} found instead"); // Explanation for requirement, appears in report
 
             // Looking for Model code depending on UI code
-            AddTextInspection(@"*.cs", // Examine files with this mask
-                Inspection.Forbidden, // This is a test for things that should NOT be in such files
-                Level.Error, // Any failure is treated as an error, and overall test fails
-                null, // There are no parts of the codebase that should skip this check
-                @"namespace pwiz.Skyline.Model", // If the file contains this, then check for forbidden pattern
-                @".*using.*pwiz\.Skyline\.(Alerts|Controls|.*UI);.*", // Forbidden pattern
-                true, // Pattern is a regular expression
-                @"Skyline model code must not depend on UI code", // Explanation for prohibition, appears in report
-                null, // No explicit exceptions to this rule
-                3); // Number of existing known failures that we'll tolerate as warnings instead of errors, so no more get added while we wait to fix the rest
+            void AddForbiddenUIInspection(string fileMask, string cue, int numberToleratedAsWarnings)
+            {
+                AddTextInspection(fileMask, // Examine files with this mask
+                    Inspection.Forbidden, // This is a test for things that should NOT be in such files
+                    Level.Error, // Any failure is treated as an error, and overall test fails
+                    null, // There are no parts of the codebase that should skip this check
+                    cue, // If the file contains this, then check for forbidden pattern
+                    @"using.*pwiz\.Skyline\.(Alerts|Controls|.*UI);", // TODO(brendanx): This does not catch enough and needs to have the semicolon removed and System.Windows.Forms added
+                    true, // Pattern is a regular expression
+                    @"Skyline model code must not depend on UI code", // Explanation for prohibition, appears in report
+                    null, // No explicit exceptions to this rule
+                    numberToleratedAsWarnings); // Number of existing known failures that we'll tolerate as warnings instead of errors, so no more get added while we wait to fix the rest
+            }
+
+            AddForbiddenUIInspection(@"*.cs", @"namespace pwiz.Skyline.Model", 0);
+            // Looking for CommandLine.cs and CommandArgs.cs code depending on UI code
+            AddForbiddenUIInspection(@"CommandLine.cs", @"namespace pwiz.Skyline", 0);
+            AddForbiddenUIInspection(@"CommandArgs.cs", @"namespace pwiz.Skyline", 0);
+
             // Check for using DataGridView.
             AddTextInspection("*.designer.cs", Inspection.Forbidden, Level.Error, NonSkylineDirectories(), null,
                 "new System.Windows.Forms.DataGridView()", false,

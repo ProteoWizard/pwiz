@@ -52,8 +52,8 @@ Import Peptide Search > Associate Proteins > Proteins unmapped is "77469"
 Import Peptide Search > Associate Proteins > Protein targets is "3258"
 Import Peptide Search > Associate Proteins > Peptide targets is "6438"
 Import Peptide Search > DDA search settings > Search Engine is "MSFragger"
-Import Peptide Search > DDA search settings > Precursor tolerance is 5ppm
-Import Peptide Search > DDA search settings > Fragment tolerance is 10ppm
+Import Peptide Search > DDA search settings > Precursor tolerance is "5" ppm
+Import Peptide Search > DDA search settings > Fragment tolerance is "10" ppm
 Import Peptide Search > DDA search settings > Max variable mods per peptide is "3"
 Import Peptide Search > DDA search settings > Fragment ion types is "b,y"
 Extra Info: Extract Chromatograms = 
@@ -94,8 +94,8 @@ Associate Proteins =
 DDA search settings = 
 {
     Search Engine = "MSFragger",
-    Precursor tolerance = 5ppm,
-    Fragment tolerance = 10ppm,
+    Precursor tolerance = "5" ppm,
+    Fragment tolerance = "10" ppm,
     Max variable mods per peptide = "3",
     Fragment ion types = "b,y"
 }

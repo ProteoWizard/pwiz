@@ -1642,7 +1642,6 @@ tar.create boost_$(BOOST_VERSION:J=_).tar.bz2
 .pwiz-src-exclusions = $(.common-src-exclusions)
     "exclude:pwiz_tools/BiblioSpec"
     "exclude:pwiz_tools/Skyline"
-    "exclude:pwiz_tools/Topograph"
     "exclude:pwiz_tools/Bumbershoot"
     "exclude:pwiz_tools/Shared/BiblioSpec"
     "exclude:pwiz_tools/Shared/Crawdad"

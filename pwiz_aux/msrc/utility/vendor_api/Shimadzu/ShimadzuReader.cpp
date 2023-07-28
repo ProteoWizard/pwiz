@@ -53,6 +53,7 @@ namespace Shimadzu {
 
 // constants for converting integer representations of mass and time to double
 static const double MASS_MULTIPLIER = 1.0 / ShimadzuUtil::MASSNUMBER_UNIT;
+static const double PRECURSOR_MZ_MULTIPLIER = 1.0 / 1e9; // determined empirically: no constant provided by Shimadzu AFAIK
 static const double TIME_MULTIPLIER = 0.001;
 
 
@@ -290,7 +291,7 @@ class ShimadzuReaderImpl : public ShimadzuReader
                             case ShimadzuGeneric::Charges::Charge6: charge = 6; break;
                             case ShimadzuGeneric::Charges::Charge7: charge = 7; break;
                         }
-                        precursorInfoByScan_[scan] = make_pair(dependent->PrecursorMass * MASS_MULTIPLIER, charge);
+                        precursorInfoByScan_[scan] = make_pair(dependent->PrecursorMass * PRECURSOR_MZ_MULTIPLIER, charge);
                     }
         }
         CATCH_AND_FORWARD

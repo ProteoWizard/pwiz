@@ -29,6 +29,7 @@
 #include <vector>
 #include <boost/algorithm/string/case_conv.hpp>
 #include <boost/algorithm/string/predicate.hpp>
+#include <boost/algorithm/string/replace.hpp>
 namespace bal = boost::algorithm;
 
 namespace pwiz {
@@ -118,6 +119,7 @@ enum PWIZ_API_DECL InstrumentModelType
     InstrumentModelType_Orbitrap_Fusion,
     InstrumentModelType_Orbitrap_Fusion_Lumos,
     InstrumentModelType_Orbitrap_Fusion_ETD,
+    InstrumentModelType_Orbitrap_Ascend,
     InstrumentModelType_Orbitrap_ID_X,
     InstrumentModelType_TSQ_Quantiva,
     InstrumentModelType_TSQ_Endura,
@@ -142,7 +144,8 @@ enum MatchType
     Exact,
     Contains,
     StartsWith,
-    EndsWith
+    EndsWith,
+    ExactNoSpaces
 };
 
 }
@@ -162,13 +165,12 @@ const InstrumentNameToModelMapping nameToModelMapping[] =
     {"MAT900XP TRAP", InstrumentModelType_MAT900XP_Trap, Exact},
     {"MAT95XP", InstrumentModelType_MAT95XP, Exact},
     {"MAT95XP TRAP", InstrumentModelType_MAT95XP_Trap, Exact},
-    {"SSQ 7000", InstrumentModelType_SSQ_7000, Exact},
-    {"TSQ 7000", InstrumentModelType_TSQ_7000, Exact},
-    {"TSQ 8000 EVO", InstrumentModelType_TSQ_8000_Evo, Exact},
-    {"TSQ 9000", InstrumentModelType_TSQ_9000, Exact},
+    {"SSQ7000", InstrumentModelType_SSQ_7000, ExactNoSpaces},
+    {"TSQ7000", InstrumentModelType_TSQ_7000, ExactNoSpaces},
+    {"TSQ8000EVO", InstrumentModelType_TSQ_8000_Evo, ExactNoSpaces},
+    {"TSQ9000", InstrumentModelType_TSQ_9000, ExactNoSpaces},
     {"TSQ", InstrumentModelType_TSQ, Exact},
-    {"ELEMENT2", InstrumentModelType_Element_2, Exact},
-    {"ELEMENT 2", InstrumentModelType_Element_2, Exact},
+    {"ELEMENT2", InstrumentModelType_Element_2, ExactNoSpaces},
     {"DELTA PLUSADVANTAGE", InstrumentModelType_Delta_Plus_Advantage, Exact},
     {"DELTAPLUSXP", InstrumentModelType_Delta_Plus_XP, Exact},
     {"LCQ ADVANTAGE", InstrumentModelType_LCQ_Advantage, Exact},
@@ -243,6 +245,7 @@ const InstrumentNameToModelMapping nameToModelMapping[] =
     {"FUSION ETD", InstrumentModelType_Orbitrap_Fusion_ETD, Contains},
     {"FUSION LUMOS", InstrumentModelType_Orbitrap_Fusion_Lumos, Contains},
     {"FUSION", InstrumentModelType_Orbitrap_Fusion, Contains},
+    {"ASCEND", InstrumentModelType_Orbitrap_Ascend, Contains},
     {"SURVEYOR PDA", InstrumentModelType_Surveyor_PDA, Exact},
     {"ACCELA PDA", InstrumentModelType_Accela_PDA, Exact},
 };
@@ -250,10 +253,12 @@ const InstrumentNameToModelMapping nameToModelMapping[] =
 inline InstrumentModelType parseInstrumentModelType(const std::string& instrumentModel)
 {
     std::string type = bal::to_upper_copy(instrumentModel);
+    std::string typeNoSpaces = bal::replace_all_copy(type, " ", "");
     for (const auto& mapping : nameToModelMapping)
         switch (mapping.matchType)
         {
             case Exact: if (mapping.name == type) return mapping.modelType; break;
+            case ExactNoSpaces: if (mapping.name == typeNoSpaces) return mapping.modelType; break;
             case Contains: if (bal::contains(type, mapping.name)) return mapping.modelType; break;
             case StartsWith: if (bal::starts_with(type, mapping.name)) return mapping.modelType; break;
             case EndsWith: if (bal::ends_with(type, mapping.name)) return mapping.modelType; break;
@@ -329,6 +334,7 @@ inline std::vector<IonizationType> getIonSourcesForInstrumentModel(InstrumentMod
         case InstrumentModelType_Orbitrap_Fusion:
         case InstrumentModelType_Orbitrap_Fusion_Lumos:
         case InstrumentModelType_Orbitrap_Fusion_ETD:
+        case InstrumentModelType_Orbitrap_Ascend:
         case InstrumentModelType_Orbitrap_ID_X:
         case InstrumentModelType_TSQ:
         case InstrumentModelType_TSQ_Quantum:
@@ -453,6 +459,7 @@ inline MassAnalyzerType convertScanFilterMassAnalyzer(ScanFilterMassAnalyzerType
         case InstrumentModelType_Orbitrap_Fusion:
         case InstrumentModelType_Orbitrap_Fusion_Lumos:
         case InstrumentModelType_Orbitrap_Fusion_ETD:
+        case InstrumentModelType_Orbitrap_Ascend:
         case InstrumentModelType_Orbitrap_ID_X:
         case InstrumentModelType_Orbitrap_Eclipse:
         {
@@ -590,6 +597,7 @@ inline std::vector<MassAnalyzerType> getMassAnalyzersForInstrumentModel(Instrume
         case InstrumentModelType_Orbitrap_Fusion: // has a quadrupole but only for mass filtering, not analysis
         case InstrumentModelType_Orbitrap_Fusion_Lumos: // ditto
         case InstrumentModelType_Orbitrap_Fusion_ETD: // ditto
+        case InstrumentModelType_Orbitrap_Ascend:
         case InstrumentModelType_Orbitrap_ID_X: // ditto
         case InstrumentModelType_Orbitrap_Eclipse:
             massAnalyzers.push_back(MassAnalyzerType_Orbitrap);
@@ -732,6 +740,7 @@ inline std::vector<DetectorType> getDetectorsForInstrumentModel(InstrumentModelT
         case InstrumentModelType_Orbitrap_Fusion:
         case InstrumentModelType_Orbitrap_Fusion_Lumos:
         case InstrumentModelType_Orbitrap_Fusion_ETD:
+        case InstrumentModelType_Orbitrap_Ascend:
         case InstrumentModelType_Orbitrap_ID_X:
         case InstrumentModelType_Orbitrap_Eclipse:
             detectors.push_back(DetectorType_Inductive);
