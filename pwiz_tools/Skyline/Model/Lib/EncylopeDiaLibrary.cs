@@ -177,7 +177,7 @@ from (
 inner join (
   select SourceFile, count(*) as BestSpectra
   from entries as e
-  where Score = (select min(Score) from entries where e.PeptideModSeq = PeptideModSeq AND e.Charge = Charge)
+  where Score = (select min(Score) from entries where e.PeptideModSeq = PeptideModSeq AND e.PrecursorCharge = PrecursorCharge)
   group by SourceFile) as two
 on one.SourceFile = two.SourceFile";
 
