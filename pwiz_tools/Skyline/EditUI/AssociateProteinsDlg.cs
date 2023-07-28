@@ -95,7 +95,6 @@ namespace pwiz.Skyline.EditUI
             GroupProteins = peptideSettings.ProteinAssociationSettings?.GroupProteins ?? false;
             FindMinimalProteinList = peptideSettings.ProteinAssociationSettings?.FindMinimalProteinList ?? false;
             RemoveSubsetProteins = peptideSettings.ProteinAssociationSettings?.RemoveSubsetProteins ?? false;
-            KeepUnmappedPeptides = peptideSettings.ProteinAssociationSettings?.KeepUnmappedPeptides ?? false;
             SelectedSharedPeptides = peptideSettings.ProteinAssociationSettings?.SharedPeptides ?? ProteinAssociation.SharedPeptides.DuplicatedBetweenProteins;
             MinPeptidesPerProtein = peptideSettings.ProteinAssociationSettings?.MinPeptidesPerProtein ?? 1;
             comboSharedPeptides.SelectedIndexChanged += comboParsimony_SelectedIndexChanged;
@@ -144,6 +143,13 @@ namespace pwiz.Skyline.EditUI
                 lblDescription.Text = Resources.AssociateProteinsDlg_OnShown_Organize_all_document_peptides_into_associated_proteins_or_protein_groups;
                 if (_hasExistingProteinAssociations)
                     lblDescription.Text += @" " + Resources.AssociateProteinsDlg_OnShown_Existing_protein_associations_will_be_discarded_;
+            }
+            else
+            {
+                numMinPeptides.Visible = lblMinPeptides.Visible = false;
+                int minPeptidesHeight = numMinPeptides.Height + lblMinPeptides.Height;
+                gbParsimonyOptions.Height -= minPeptidesHeight;
+                Height -= minPeptidesHeight;
             }
 
             if (_document.PeptideCount == 0)
@@ -219,11 +225,6 @@ namespace pwiz.Skyline.EditUI
             get => cbRemoveSubsetProteins.Checked;
             set => cbRemoveSubsetProteins.Checked = value;
         }
-        public bool KeepUnmappedPeptides
-        {
-            get => cbKeepUnmappedPeptides.Checked;
-            set => cbKeepUnmappedPeptides.Checked = value;
-        }
 
         public ProteinAssociation.SharedPeptides SelectedSharedPeptides
         {
@@ -257,14 +258,11 @@ namespace pwiz.Skyline.EditUI
             var removeSubsetProteins = RemoveSubsetProteins;
             var selectedSharedPeptides = SelectedSharedPeptides;
             var minPeptidesPerProtein = MinPeptidesPerProtein;
-            var keepUnmappedPeptides = KeepUnmappedPeptides;
 
             using (var longWaitDlg = new LongWaitDlg())
             {
                 longWaitDlg.PerformWork(this, 1000,
-                    broker => _proteinAssociation.ApplyParsimonyOptions(groupProteins, findMinimalProteinList,
-                        removeSubsetProteins, selectedSharedPeptides, minPeptidesPerProtein, keepUnmappedPeptides,
-                        broker));
+                    broker => _proteinAssociation.ApplyParsimonyOptions(groupProteins, findMinimalProteinList, removeSubsetProteins, selectedSharedPeptides, minPeptidesPerProtein, broker));
                 if (longWaitDlg.IsCanceled)
                     return;
             }
@@ -466,17 +464,6 @@ namespace pwiz.Skyline.EditUI
                 });
                 if (longWaitDlg.IsCanceled)
                     return null;
-
-                lblDroppingDecoyPeptidesWarning.Text = string.Empty; // Visible = false would cancel the FlowBreak
-                lblDroppingPeptidesWarning.Text = string.Empty; // Visible = false would cancel the FlowBreak
-                if (result.MeasuredResults != null)
-                {
-                    bool dropDecoysPeptides = !cbKeepUnmappedPeptides.Checked && result.PeptideGroups.Any(pg => pg.IsDecoy);
-                    if (dropDecoysPeptides)
-                        lblDroppingDecoyPeptidesWarning.Text = " (dropping decoy peptides may lose information about trained models)";
-                    if (MinPeptidesPerProtein > 1)
-                        lblDroppingPeptidesWarning.Text = " (dropping peptides may lose information about trained models)";
-                }
             }
             return result;
         }
@@ -571,8 +558,8 @@ namespace pwiz.Skyline.EditUI
             var culture = LocalizationHelper.CurrentCulture;
             Func<int, string> resultToString = count => count < separatorThreshold ? count.ToString(culture) : count.ToString(@"N0", culture);
 
-            return string.Format(_statusBarResultFormat, resultToString(FinalResults.FinalProteinCount),
-                resultToString(FinalResults.FinalPeptideCount),
+            return string.Format(_statusBarResultFormat, resultToString(DocumentFinal.PeptideGroupCount),
+                resultToString(DocumentFinal.PeptideCount),
                 resultToString(DocumentFinal.PeptideTransitionGroupCount),
                 resultToString(DocumentFinal.PeptideTransitionCount));
         }
@@ -647,11 +634,6 @@ namespace pwiz.Skyline.EditUI
             cbRemoveSubsetProteins.Checked = !cbRemoveSubsetProteins.Checked;
         }
 
-        private void lblKeepUnmappedPeptides_Click(object sender, EventArgs e)
-        {
-            cbKeepUnmappedPeptides.Checked = !cbKeepUnmappedPeptides.Checked;
-        }
-
         private void AssociateProteinsDlg_HelpButtonClicked(object sender, EventArgs e)
         {
             const string proteinAssociationWikiPath = @"/wiki/home/software/Skyline/page.view?name=Skyline%20Protein%20Association%2022.1"; // CONSIDER: get version programatically
@@ -713,14 +695,14 @@ namespace pwiz.Skyline.EditUI
 
         public void NewTargetsFinalSync(out int proteins, out int peptides, out int precursors, out int transitions)
         {
-            int? emptyProteins;
+            int emptyProteins;
             NewTargetsFinalSync(out proteins, out peptides, out precursors, out transitions, out emptyProteins);
         }
 
-        public void NewTargetsFinalSync(out int proteins, out int peptides, out int precursors, out int transitions, out int? emptyProteins)
+        public void NewTargetsFinalSync(out int proteins, out int peptides, out int precursors, out int transitions, out int unmappedOrRemoved)
         {
             var doc = DocumentFinal;
-            emptyProteins = 0;
+            unmappedOrRemoved = doc.PeptideGroups.FirstOrDefault(pg => pg.Name == Resources.ProteinAssociation_CreateDocTree_Unmapped_Peptides)?.PeptideCount ?? 0;
             proteins = doc.PeptideGroupCount;
             peptides = doc.PeptideCount;
             precursors = doc.PeptideTransitionGroupCount;

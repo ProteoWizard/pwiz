@@ -12194,4 +12194,7 @@ If you choose Disable, you can enable Auto-select later with the "Refine &gt; Ad
   <data name="FormulaBox_FormulaBox_Help" xml:space="preserve">
     <value>Help</value>
   </data>
+  <data name="ProteinAssociation_CreateDocTree_Unmapped_Peptides" xml:space="preserve">
+    <value>Unmapped Peptides</value>
+  </data>
 </root>

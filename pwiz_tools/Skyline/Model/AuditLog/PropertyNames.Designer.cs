@@ -2653,15 +2653,6 @@ namespace pwiz.Skyline.Model.AuditLog {
         }
         
         /// <summary>
-        ///   Looks up a localized string similar to Keep unmapped peptides.
-        /// </summary>
-        public static string ParsimonySettings_KeepUnmappedPeptides {
-            get {
-                return ResourceManager.GetString("ParsimonySettings_KeepUnmappedPeptides", resourceCulture);
-            }
-        }
-        
-        /// <summary>
         ///   Looks up a localized string similar to Min peptides per protein.
         /// </summary>
         public static string ParsimonySettings_MinPeptidesPerProtein {

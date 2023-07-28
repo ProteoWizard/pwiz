@@ -152,8 +152,6 @@ namespace pwiz.SkylineTestFunctional
                 RunUI(associateProteinsDlg.UseBackgroundProteome);
             }
 
-            RunUI(() => associateProteinsDlg.KeepUnmappedPeptides = true);
-
             //PauseTest();
             OkAssociateProteinsDialog(associateProteinsDlg);
 
@@ -352,7 +350,7 @@ namespace pwiz.SkylineTestFunctional
             {
                 Proteins = new[] {"AKKAA", "AKAAK", "AKAAKAAAK", "AKAAKAMAK", "ARAMR", "ARAMRAAAR", "ARVK", "AMRVKR", "ELVISWASHERE" },
                 Peptides = new[] {"AK", "KAA", "AAK", "AMAK", "AM[16]AK", "AR", "AM[16]R", "AMR", "VK", "PEPTIDE" },
-                ExpectedPeptidesMapped = 9,
+                ExpectedPeptidesMapped = 7,
                 ExpectedPeptidesUnmapped = 1,
                 ExpectedProteinsMapped = 8,
                 ExpectedProteinsUnmapped = 1,
@@ -540,7 +538,7 @@ namespace pwiz.SkylineTestFunctional
                             Assert.AreEqual(optionsAndResult.ExpectedFinalSharedPeptides, dlg.FinalResults.FinalSharedPeptideCount, $"Test case {i + 1}.{j + 1} FinalSharedPeptideCount");
 
                             Assert.AreEqual(testCase.ExpectedPeptidesMapped, dlg.FinalResults.PeptidesMapped, $"Test case {i + 1}.{j + 1} PeptidesMapped");
-                            Assert.AreEqual(0, dlg.FinalResults.PeptidesUnmapped, $"Test case {i + 1}.{j + 1} PeptidesUnmapped");
+                            Assert.AreEqual(testCase.ExpectedPeptidesUnmapped, dlg.FinalResults.PeptidesUnmapped, $"Test case {i + 1}.{j + 1} PeptidesUnmapped");
                             Assert.AreEqual(testCase.ExpectedProteinsMapped, dlg.FinalResults.ProteinsMapped, $"Test case {i + 1}.{j + 1} ProteinsMapped");
                             Assert.AreEqual(testCase.ExpectedProteinsUnmapped, dlg.FinalResults.ProteinsUnmapped, $"Test case {i + 1}.{j + 1} ProteinsUnmapped");
                         });
@@ -553,8 +551,9 @@ namespace pwiz.SkylineTestFunctional
                         AssertEx.Serializable(SkylineWindow.Document);
                     }
 
+                    int extraUnmappedPeptides = testCase.ExpectedPeptidesUnmapped * 2;
                     var findNodeDlg = ShowDialog<FindNodeDlg>(SkylineWindow.ShowFindNodeDlg);
-                    int expectedItems = testCase.OptionsAndResults.Last().ExpectedFinalSharedPeptides;
+                    int expectedItems = testCase.OptionsAndResults.Last().ExpectedFinalSharedPeptides + extraUnmappedPeptides;
                     RunUI(() =>
                     {
                         findNodeDlg.AdvancedVisible = true;
@@ -585,8 +584,8 @@ namespace pwiz.SkylineTestFunctional
 
                     RunUI(() =>
                     {
-                        Assert.AreEqual(dlg.FinalResults.FinalProteinCount, SkylineWindow.Document.MoleculeGroups.Count(), $"Test case {i + 1} Document.MoleculeGroups.Count");
-                        Assert.AreEqual(dlg.FinalResults.FinalPeptideCount, SkylineWindow.Document.PeptideCount, $"Test case {i + 1} Document.PeptideCount");
+                        Assert.AreEqual(dlg.FinalResults.FinalProteinCount + extraUnmappedPeptides, SkylineWindow.Document.MoleculeGroups.Count(), $"Test case {i + 1} Document.MoleculeGroups.Count");
+                        Assert.AreEqual(dlg.FinalResults.FinalPeptideCount + extraUnmappedPeptides, SkylineWindow.Document.PeptideCount, $"Test case {i + 1} Document.PeptideCount");
                     });
                 }
             }

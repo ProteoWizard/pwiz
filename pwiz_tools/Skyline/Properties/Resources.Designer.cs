@@ -25137,6 +25137,15 @@ namespace pwiz.Skyline.Properties {
         }
         
         /// <summary>
+        ///   Looks up a localized string similar to Unmapped Peptides.
+        /// </summary>
+        public static string ProteinAssociation_CreateDocTree_Unmapped_Peptides {
+            get {
+                return ResourceManager.GetString("ProteinAssociation_CreateDocTree_Unmapped_Peptides", resourceCulture);
+            }
+        }
+        
+        /// <summary>
         ///   Looks up a localized string similar to Finding minimal protein list.
         /// </summary>
         public static string ProteinAssociation_Finding_minimal_protein_list {

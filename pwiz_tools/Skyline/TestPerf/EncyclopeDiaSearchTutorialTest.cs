@@ -53,7 +53,7 @@ namespace TestPerf
                 NarrowWindowDiaFiles = new[]
                 {
                     "23aug2017_hela_serum_timecourse_4mz_narrow_1.mzML",
-                    //"23aug2017_hela_serum_timecourse_4mz_narrow_2.mzML",
+                    "23aug2017_hela_serum_timecourse_4mz_narrow_2.mzML",
                     //"23aug2017_hela_serum_timecourse_4mz_narrow_3.mzML",
                     //"23aug2017_hela_serum_timecourse_4mz_narrow_4.mzML",
                     //"23aug2017_hela_serum_timecourse_4mz_narrow_5.mzML",
@@ -135,7 +135,7 @@ namespace TestPerf
                 return;
 
             //TestFilesZip = @"https://skyline.ms/tutorials/EncyclopeDiaSearchTutorial.zip";
-            TestFilesZip = @"https://skyline.ms/tutorials/EncyclopeDiaSearchTutorialDemux.zip";
+            TestFilesZip = @"https://skyline.ms/tutorials/EncyclopeDiaSearchTutorial.zip";
             TestFilesPersistent = new[] { "23aug2017_hela_serum_timecourse", "z3_nce33-prosit" };
 
             RunFunctionalTest();

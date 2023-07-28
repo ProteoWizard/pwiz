@@ -502,7 +502,7 @@ namespace pwiz.Skyline.Model
             for (var i = 0; i < proteins.Count; i++)
             {
                 var nodePepGroup = proteins[i];
-                if (nodePepGroup.Peptides.All(nodePep => irtPeptides.Contains(new Target(nodePep.ModifiedSequence))))
+                if (!nodePepGroup.IsProtein && nodePepGroup.Peptides.All(nodePep => irtPeptides.Contains(new Target(nodePep.ModifiedSequence))))
                 {
                     //proteinsIrt.Add(nodePepGroup);
                     proteins.RemoveAt(i--);

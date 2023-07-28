@@ -129,7 +129,7 @@
   </data>
   <assembly alias="System.Drawing" name="System.Drawing, Version=4.0.0.0, Culture=neutral, PublicKeyToken=b03f5f7f11d50a3a" />
   <data name="btnCancel.Location" type="System.Drawing.Point, System.Drawing">
-    <value>420, 524</value>
+    <value>420, 507</value>
   </data>
   <data name="btnCancel.Size" type="System.Drawing.Size, System.Drawing">
     <value>75, 23</value>
@@ -190,7 +190,7 @@
     <value>NoControl</value>
   </data>
   <data name="btnOk.Location" type="System.Drawing.Point, System.Drawing">
-    <value>339, 524</value>
+    <value>339, 507</value>
   </data>
   <data name="btnOk.Size" type="System.Drawing.Size, System.Drawing">
     <value>75, 23</value>
@@ -599,105 +599,6 @@
   <data name="&gt;&gt;lnkHelpRemoveSubsetProteins.ZOrder" xml:space="preserve">
     <value>11</value>
   </data>
-  <data name="cbKeepUnmappedPeptides.AutoSize" type="System.Boolean, mscorlib">
-    <value>True</value>
-  </data>
-  <data name="cbKeepUnmappedPeptides.ImeMode" type="System.Windows.Forms.ImeMode, System.Windows.Forms">
-    <value>NoControl</value>
-  </data>
-  <data name="cbKeepUnmappedPeptides.Location" type="System.Drawing.Point, System.Drawing">
-    <value>3, 115</value>
-  </data>
-  <data name="cbKeepUnmappedPeptides.Margin" type="System.Windows.Forms.Padding, System.Windows.Forms">
-    <value>3, 3, 0, 3</value>
-  </data>
-  <data name="cbKeepUnmappedPeptides.Size" type="System.Drawing.Size, System.Drawing">
-    <value>15, 14</value>
-  </data>
-  <data name="cbKeepUnmappedPeptides.TabIndex" type="System.Int32, mscorlib">
-    <value>15</value>
-  </data>
-  <data name="cbKeepUnmappedPeptides.TextAlign" type="System.Drawing.ContentAlignment, System.Drawing">
-    <value>MiddleRight</value>
-  </data>
-  <data name="&gt;&gt;cbKeepUnmappedPeptides.Name" xml:space="preserve">
-    <value>cbKeepUnmappedPeptides</value>
-  </data>
-  <data name="&gt;&gt;cbKeepUnmappedPeptides.Type" xml:space="preserve">
-    <value>System.Windows.Forms.CheckBox, System.Windows.Forms, Version=4.0.0.0, Culture=neutral, PublicKeyToken=b77a5c561934e089</value>
-  </data>
-  <data name="&gt;&gt;cbKeepUnmappedPeptides.Parent" xml:space="preserve">
-    <value>flowLayoutPanel</value>
-  </data>
-  <data name="&gt;&gt;cbKeepUnmappedPeptides.ZOrder" xml:space="preserve">
-    <value>12</value>
-  </data>
-  <data name="lblKeepUnmappedPeptides.AutoSize" type="System.Boolean, mscorlib">
-    <value>True</value>
-  </data>
-  <data name="lblKeepUnmappedPeptides.ImeMode" type="System.Windows.Forms.ImeMode, System.Windows.Forms">
-    <value>NoControl</value>
-  </data>
-  <data name="lblKeepUnmappedPeptides.Location" type="System.Drawing.Point, System.Drawing">
-    <value>18, 115</value>
-  </data>
-  <data name="lblKeepUnmappedPeptides.Margin" type="System.Windows.Forms.Padding, System.Windows.Forms">
-    <value>0, 3, 0, 3</value>
-  </data>
-  <data name="lblKeepUnmappedPeptides.Size" type="System.Drawing.Size, System.Drawing">
-    <value>128, 13</value>
-  </data>
-  <data name="lblKeepUnmappedPeptides.TabIndex" type="System.Int32, mscorlib">
-    <value>14</value>
-  </data>
-  <data name="lblKeepUnmappedPeptides.Text" xml:space="preserve">
-    <value>&amp;Keep unmapped peptides</value>
-  </data>
-  <data name="lblKeepUnmappedPeptides.ToolTip" xml:space="preserve">
-    <value>Keep document peptides that do not map to a protein in the FASTA.</value>
-  </data>
-  <data name="&gt;&gt;lblKeepUnmappedPeptides.Name" xml:space="preserve">
-    <value>lblKeepUnmappedPeptides</value>
-  </data>
-  <data name="&gt;&gt;lblKeepUnmappedPeptides.Type" xml:space="preserve">
-    <value>System.Windows.Forms.Label, System.Windows.Forms, Version=4.0.0.0, Culture=neutral, PublicKeyToken=b77a5c561934e089</value>
-  </data>
-  <data name="&gt;&gt;lblKeepUnmappedPeptides.Parent" xml:space="preserve">
-    <value>flowLayoutPanel</value>
-  </data>
-  <data name="&gt;&gt;lblKeepUnmappedPeptides.ZOrder" xml:space="preserve">
-    <value>13</value>
-  </data>
-  <data name="lblDroppingDecoyPeptidesWarning.AutoSize" type="System.Boolean, mscorlib">
-    <value>True</value>
-  </data>
-  <data name="lblDroppingDecoyPeptidesWarning.Location" type="System.Drawing.Point, System.Drawing">
-    <value>146, 115</value>
-  </data>
-  <data name="lblDroppingDecoyPeptidesWarning.Margin" type="System.Windows.Forms.Padding, System.Windows.Forms">
-    <value>0, 3, 0, 3</value>
-  </data>
-  <data name="lblDroppingDecoyPeptidesWarning.Size" type="System.Drawing.Size, System.Drawing">
-    <value>19, 13</value>
-  </data>
-  <data name="lblDroppingDecoyPeptidesWarning.TabIndex" type="System.Int32, mscorlib">
-    <value>16</value>
-  </data>
-  <data name="lblDroppingDecoyPeptidesWarning.Text" xml:space="preserve">
-    <value>    </value>
-  </data>
-  <data name="&gt;&gt;lblDroppingDecoyPeptidesWarning.Name" xml:space="preserve">
-    <value>lblDroppingDecoyPeptidesWarning</value>
-  </data>
-  <data name="&gt;&gt;lblDroppingDecoyPeptidesWarning.Type" xml:space="preserve">
-    <value>System.Windows.Forms.Label, System.Windows.Forms, Version=4.0.0.0, Culture=neutral, PublicKeyToken=b77a5c561934e089</value>
-  </data>
-  <data name="&gt;&gt;lblDroppingDecoyPeptidesWarning.Parent" xml:space="preserve">
-    <value>flowLayoutPanel</value>
-  </data>
-  <data name="&gt;&gt;lblDroppingDecoyPeptidesWarning.ZOrder" xml:space="preserve">
-    <value>14</value>
-  </data>
   <data name="lblMinPeptides.AutoSize" type="System.Boolean, mscorlib">
     <value>True</value>
   </data>
@@ -705,7 +606,7 @@
     <value>NoControl</value>
   </data>
   <data name="lblMinPeptides.Location" type="System.Drawing.Point, System.Drawing">
-    <value>0, 138</value>
+    <value>0, 118</value>
   </data>
   <data name="lblMinPeptides.Margin" type="System.Windows.Forms.Padding, System.Windows.Forms">
     <value>0, 6, 3, 3</value>
@@ -735,10 +636,10 @@
     <value>flowLayoutPanel</value>
   </data>
   <data name="&gt;&gt;lblMinPeptides.ZOrder" xml:space="preserve">
-    <value>15</value>
+    <value>12</value>
   </data>
   <data name="numMinPeptides.Location" type="System.Drawing.Point, System.Drawing">
-    <value>3, 155</value>
+    <value>3, 135</value>
   </data>
   <data name="numMinPeptides.Margin" type="System.Windows.Forms.Padding, System.Windows.Forms">
     <value>3, 0, 3, 3</value>
@@ -759,40 +660,7 @@
     <value>flowLayoutPanel</value>
   </data>
   <data name="&gt;&gt;numMinPeptides.ZOrder" xml:space="preserve">
-    <value>16</value>
-  </data>
-  <data name="lblDroppingPeptidesWarning.AutoSize" type="System.Boolean, mscorlib">
-    <value>True</value>
-  </data>
-  <data name="lblDroppingPeptidesWarning.ImeMode" type="System.Windows.Forms.ImeMode, System.Windows.Forms">
-    <value>NoControl</value>
-  </data>
-  <data name="lblDroppingPeptidesWarning.Location" type="System.Drawing.Point, System.Drawing">
-    <value>69, 158</value>
-  </data>
-  <data name="lblDroppingPeptidesWarning.Margin" type="System.Windows.Forms.Padding, System.Windows.Forms">
-    <value>0, 3, 0, 3</value>
-  </data>
-  <data name="lblDroppingPeptidesWarning.Size" type="System.Drawing.Size, System.Drawing">
-    <value>19, 13</value>
-  </data>
-  <data name="lblDroppingPeptidesWarning.TabIndex" type="System.Int32, mscorlib">
-    <value>17</value>
-  </data>
-  <data name="lblDroppingPeptidesWarning.Text" xml:space="preserve">
-    <value>    </value>
-  </data>
-  <data name="&gt;&gt;lblDroppingPeptidesWarning.Name" xml:space="preserve">
-    <value>lblDroppingPeptidesWarning</value>
-  </data>
-  <data name="&gt;&gt;lblDroppingPeptidesWarning.Type" xml:space="preserve">
-    <value>System.Windows.Forms.Label, System.Windows.Forms, Version=4.0.0.0, Culture=neutral, PublicKeyToken=b77a5c561934e089</value>
-  </data>
-  <data name="&gt;&gt;lblDroppingPeptidesWarning.Parent" xml:space="preserve">
-    <value>flowLayoutPanel</value>
-  </data>
-  <data name="&gt;&gt;lblDroppingPeptidesWarning.ZOrder" xml:space="preserve">
-    <value>17</value>
+    <value>13</value>
   </data>
   <data name="flowLayoutPanel.Dock" type="System.Windows.Forms.DockStyle, System.Windows.Forms">
     <value>Fill</value>
@@ -801,7 +669,7 @@
     <value>3, 16</value>
   </data>
   <data name="flowLayoutPanel.Size" type="System.Drawing.Size, System.Drawing">
-    <value>477, 183</value>
+    <value>477, 164</value>
   </data>
   <data name="flowLayoutPanel.TabIndex" type="System.Int32, mscorlib">
     <value>0</value>
@@ -846,7 +714,7 @@
     <value>12, 177</value>
   </data>
   <data name="gbParsimonyOptions.Size" type="System.Drawing.Size, System.Drawing">
-    <value>483, 202</value>
+    <value>483, 183</value>
   </data>
   <data name="gbParsimonyOptions.TabIndex" type="System.Int32, mscorlib">
     <value>2</value>
@@ -1038,7 +906,7 @@
     <value>Targets</value>
   </data>
   <data name="dgvAssociateResults.Location" type="System.Drawing.Point, System.Drawing">
-    <value>12, 404</value>
+    <value>12, 387</value>
   </data>
   <data name="dgvAssociateResults.Size" type="System.Drawing.Size, System.Drawing">
     <value>483, 89</value>
@@ -1068,7 +936,7 @@
     <value>NoControl</value>
   </data>
   <data name="lblResults.Location" type="System.Drawing.Point, System.Drawing">
-    <value>12, 386</value>
+    <value>12, 369</value>
   </data>
   <data name="lblResults.Size" type="System.Drawing.Size, System.Drawing">
     <value>132, 13</value>
@@ -1158,7 +1026,7 @@
     <value>RightToLeft</value>
   </data>
   <data name="panelStatusBarResult.Location" type="System.Drawing.Point, System.Drawing">
-    <value>12, 498</value>
+    <value>12, 481</value>
   </data>
   <data name="panelStatusBarResult.Size" type="System.Drawing.Size, System.Drawing">
     <value>483, 20</value>
@@ -1209,10 +1077,10 @@
     <value>6, 13</value>
   </data>
   <data name="$this.ClientSize" type="System.Drawing.Size, System.Drawing">
-    <value>507, 559</value>
+    <value>507, 542</value>
   </data>
   <data name="$this.MinimumSize" type="System.Drawing.Size, System.Drawing">
-    <value>468, 598</value>
+    <value>468, 554</value>
   </data>
   <data name="$this.StartPosition" type="System.Windows.Forms.FormStartPosition, System.Windows.Forms">
     <value>CenterParent</value>
@@ -1224,7 +1092,7 @@
     <value>modeUIHandler</value>
   </data>
   <data name="&gt;&gt;modeUIHandler.Type" xml:space="preserve">
-    <value>pwiz.Skyline.Util.Helpers+ModeUIExtender, Skyline-daily, Version=23.0.9.188, Culture=neutral, PublicKeyToken=null</value>
+    <value>pwiz.Skyline.Util.Helpers+ModeUIExtender, Skyline, Version=1.0.0.0, Culture=neutral, PublicKeyToken=null</value>
   </data>
   <data name="&gt;&gt;headerColumn.Name" xml:space="preserve">
     <value>headerColumn</value>
@@ -1284,6 +1152,6 @@
     <value>AssociateProteinsDlg</value>
   </data>
   <data name="&gt;&gt;$this.Type" xml:space="preserve">
-    <value>pwiz.Skyline.Util.ModeUIInvariantFormEx, Skyline-daily, Version=23.0.9.188, Culture=neutral, PublicKeyToken=null</value>
+    <value>pwiz.Skyline.Util.ModeUIInvariantFormEx, Skyline, Version=1.0.0.0, Culture=neutral, PublicKeyToken=null</value>
   </data>
 </root>

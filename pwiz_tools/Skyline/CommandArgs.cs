@@ -1251,11 +1251,9 @@ namespace pwiz.Skyline
             (c, p) => c.AssociateProteinsRemoveSubsetProteins = p.IsNameOnly || bool.Parse(p.Value));
         public static readonly Argument ARG_AP_MIN_PEPTIDES = new Argument(@"associate-proteins-min-peptides", INT_VALUE,
             (c, p) => c.AssociateProteinsMinPeptidesPerProtein = p.ValueInt) { WrapValue = true };
-        public static readonly Argument ARG_AP_KEEP_UNMAPPED = new Argument(@"associate-proteins-keep-unmapped-peptides",
-            (c, p) => c.AssociateProteinsGroupProteins = p.IsNameOnly || bool.Parse(p.Value));
 
         private static readonly ArgumentGroup GROUP_ASSOCIATE_PROTEINS = new ArgumentGroup(() => Resources.CommandLine_AssociateProteins_Associating_peptides_with_proteins, false,
-            ARG_AP_GROUP_PROTEINS, ARG_AP_SHARED_PEPTIDES, ARG_AP_MINIMAL_LIST, ARG_AP_MIN_PEPTIDES, ARG_AP_REMOVE_SUBSETS, ARG_AP_KEEP_UNMAPPED)
+            ARG_AP_GROUP_PROTEINS, ARG_AP_SHARED_PEPTIDES, ARG_AP_MINIMAL_LIST, ARG_AP_MIN_PEPTIDES, ARG_AP_REMOVE_SUBSETS)
             { LeftColumnWidth = 45 };
 
         public bool? AssociateProteinsGroupProteins { get; private set; }
@@ -1263,13 +1261,11 @@ namespace pwiz.Skyline
         public bool? AssociateProteinsRemoveSubsetProteins { get; private set; }
         public SharedPeptides? AssociateProteinsSharedPeptides { get; private set; }
         public int? AssociateProteinsMinPeptidesPerProtein { get; private set; }
-        public bool? AssociateProteinsKeepUnmappedPeptides { get; private set; }
         public bool AssociatingProteins => AssociateProteinsFindMinimalProteinList.HasValue ||
                                            AssociateProteinsGroupProteins.HasValue ||
                                            AssociateProteinsMinPeptidesPerProtein.HasValue ||
                                            AssociateProteinsRemoveSubsetProteins.HasValue ||
-                                           AssociateProteinsSharedPeptides.HasValue ||
-                                           AssociateProteinsKeepUnmappedPeptides.HasValue;
+                                           AssociateProteinsSharedPeptides.HasValue;
 
         // For adjusting transition filter and full-scan settings
         public static readonly Argument ARG_TRAN_PRECURSOR_ION_CHARGES = new DocArgument(@"tran-precursor-ion-charges", INT_LIST_VALUE,
