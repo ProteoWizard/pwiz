@@ -951,12 +951,6 @@ namespace pwiz.Skyline
                 state = Settings.Default.PanoramaTreeState;
             }
 
-            // var dp = new PanoramaDirectoryPicker(panoramaServers, string.Empty);
-            // dp.ShowDialog();
-            // var selected = dp.SelectedPath;
-            // var fp = new PanoramaFilePicker(panoramaServers, string.Empty, true, selected);
-            // fp.InitializeDialog();
-            // fp.ShowDialog();
             try
             {
                 using var dlg = new PanoramaFilePicker(panoramaServers, state);
@@ -978,7 +972,7 @@ namespace pwiz.Skyline
                     {
                         folderPath = Settings.Default.PanoramaLocalSavePath;
                     }
-                    var curServer = dlg.FolderBrowser.ActiveServer;
+                    var curServer = dlg.FolderBrowser.GetActiveServer();
 
                     var downloadPath = string.Empty;
                     var extension = dlg.FileName.EndsWith(SrmDocumentSharing.EXT) ? SrmDocumentSharing.EXT : SrmDocument.EXT;
@@ -1052,6 +1046,7 @@ namespace pwiz.Skyline
                                 var message = progressStatus.ErrorException.Message;
                                 if (message.Contains(@"404"))
                                 {
+                                    // TODO: Localize this string
                                     message = @"File does not exist. It may have been deleted on the server.";
                                 }
                                 MessageDlg.ShowWithException(this, message, progressStatus.ErrorException);
