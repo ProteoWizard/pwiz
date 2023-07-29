@@ -667,10 +667,6 @@ public class WebDavBrowser : PanoramaFolderBrowser
                             };
                             CreateDummyNode(newNode);
                             node.Nodes.Add(newNode);
-                            if (newNode.Text.Equals(@"RawFiles"))
-                            {
-                                AddWebDavFolders(newNode);
-                            }
                         }
                     }
                 }
