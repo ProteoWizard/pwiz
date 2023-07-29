@@ -91,7 +91,9 @@ namespace SkylineBatch
                 if (_serverMap[server] != null || _serverExceptions[server] != null)
                     continue;
                 var folder = ((DataServerInfo) server).Folder;
-                if (server.URI.Host.Equals("panoramaweb.org"))
+                Uri uri = server.FileSource.URI;
+                UserState state = PanoramaUtil.ValidateServerAndUser(ref uri, server.FileSource.Username, server.FileSource.Password);
+                if (state == UserState.valid)
                 {
                     Uri webdavUri;
                     var panoramaFolder = (Path.GetDirectoryName(server.URI.LocalPath) ?? string.Empty).Replace(@"\", "/");

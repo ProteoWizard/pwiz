@@ -147,6 +147,24 @@ namespace pwiz.PanoramaClient.Properties {
         }
         
         /// <summary>
+        ///   Looks up a localized string similar to There are no files in this folder.
+        /// </summary>
+        public static string PanoramaFilePicker_ShowFiles_There_are_no_files_in_this_folder {
+            get {
+                return ResourceManager.GetString("PanoramaFilePicker_ShowFiles_There_are_no_files_in_this_folder", resourceCulture);
+            }
+        }
+        
+        /// <summary>
+        ///   Looks up a localized string similar to There are no Skyline files in this folder.
+        /// </summary>
+        public static string PanoramaFilePicker_ShowFiles_There_are_no_Skyline_files_in_this_folder {
+            get {
+                return ResourceManager.GetString("PanoramaFilePicker_ShowFiles_There_are_no_Skyline_files_in_this_folder", resourceCulture);
+            }
+        }
+        
+        /// <summary>
         ///   Looks up a localized string similar to Failed attempting to retrieve information from the following servers.
         /// </summary>
         public static string PanoramaFolderBrowser_InitializeServers_Failed_attempting_to_retrieve_information_from_the_following_servers {

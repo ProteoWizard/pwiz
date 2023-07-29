@@ -252,11 +252,14 @@ namespace SkylineBatch
             try
             {
 
+
                 if (_fileRequired) // If file is required use PanoramaFilePicker
                 {
-                    using (PanoramaFilePicker dlg = new PanoramaFilePicker(panoramaServers, state, true,remoteFileSource.SelectedPath))
-                    {
 
+                    bool showWebdav = !_templateFile;
+                    using (PanoramaFilePicker dlg = new PanoramaFilePicker(panoramaServers, state, showWebdav, remoteFileSource.SelectedPath))
+                    {
+                        dlg.OkButtonText = "Select";
                         dlg.InitializeDialog();
                         if (dlg.ShowDialog() != DialogResult.Cancel)
                         {
@@ -271,7 +274,7 @@ namespace SkylineBatch
                     using (PanoramaDirectoryPicker dlg = new PanoramaDirectoryPicker(panoramaServers, state, showWebDavFolders:true,selectedPath: remoteFileSource.SelectedPath))
                     {
 
-                        // dlg.InitializeDialog();
+                        dlg.OkButtonText = "Select";
                         if (dlg.ShowDialog() != DialogResult.Cancel)
 
                         {

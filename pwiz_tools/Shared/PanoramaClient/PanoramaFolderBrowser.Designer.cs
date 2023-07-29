@@ -54,6 +54,7 @@
             this.treeView.SelectedImageIndex = 0;
             this.treeView.Size = new System.Drawing.Size(425, 203);
             this.treeView.TabIndex = 0;
+            this.treeView.BeforeExpand += new System.Windows.Forms.TreeViewCancelEventHandler(this.TreeView_BeforeExpand);
             this.treeView.NodeMouseClick += new System.Windows.Forms.TreeNodeMouseClickEventHandler(this.TreeView_NodeMouseClick);
             this.treeView.KeyUp += new System.Windows.Forms.KeyEventHandler(this.TreeView_KeyUp);
             // 

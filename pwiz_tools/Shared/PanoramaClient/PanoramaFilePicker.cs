@@ -362,17 +362,8 @@ namespace pwiz.PanoramaClient
                     {
                         // For the WebDAV browser
                         ModifyListViewCols(false);
-                        string uriString;
-                        if (_showWebDav)
-                        {
-                            uriString = string.Concat(FolderBrowser.GetActiveServer().URI.ToString(), PanoramaUtil.WEBDAV,
-                                path + @"/?method=json");
-                        }
-                        else
-                        {
-                            uriString = string.Concat(FolderBrowser.GetActiveServer().URI.ToString(), PanoramaUtil.WEBDAV, @"/",
-                                path + PanoramaUtil.FILES_W_SLASH, "?method=json");
-                        }
+                        var uriString = string.Concat(FolderBrowser.GetActiveServer().URI.ToString(), PanoramaUtil.WEBDAV,
+                            path + @"/?method=json");
                         var uri = new Uri(uriString);
                         AddAllFiles(uri);
                     }
@@ -493,6 +484,9 @@ namespace pwiz.PanoramaClient
         /// <param name="files"></param>
         private void ShowFiles(bool files)
         {
+            noFiles.Text = _showWebDav
+                ? Resources.PanoramaFilePicker_ShowFiles_There_are_no_files_in_this_folder
+                : Resources.PanoramaFilePicker_ShowFiles_There_are_no_Skyline_files_in_this_folder;
             if (files)
             {
                 listView.HeaderStyle = ColumnHeaderStyle.Clickable;

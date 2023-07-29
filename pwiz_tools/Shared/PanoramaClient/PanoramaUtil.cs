@@ -806,7 +806,7 @@ namespace pwiz.PanoramaClient
         private readonly bool _hasWritePermission;
         private readonly bool _isTargetedMS;
         private readonly string _folderPath;
-        //TODO: Combine these constructors and remove method in PanoramaFolderBrowser to find the ActiveServer
+        
         public FolderInformation(PanoramaServer server, bool hasWritePermission)
         {
             _server = server;

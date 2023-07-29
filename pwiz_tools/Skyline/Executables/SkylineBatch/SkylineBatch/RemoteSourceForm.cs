@@ -173,6 +173,7 @@ namespace SkylineBatch
                 {
                     if (dlg.ShowDialog() != DialogResult.Cancel)
                     {
+                        dlg.OkButtonText = "Select";
                         var url = PanoramaFolderBrowser.GetSelectedUri(dlg.FolderBrowser, true) + PanoramaUtil.FILES_W_SLASH + @"/"; 
                         textFolderUrl.Text = url;
                         PanoramaSource = true; // if you select a folder then manually change the folder, PanoramaSource will still be true

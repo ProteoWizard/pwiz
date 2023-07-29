@@ -205,4 +205,10 @@
   <data name="WebDavBrowser_AddWebDavFolders_Failed_attempting_to_retrieve_information_from_the_following_folders_" xml:space="preserve">
 	  <value>Failed attempting to retrieve information from the following folders:</value>
   </data>
+  <data name="PanoramaFilePicker_ShowFiles_There_are_no_files_in_this_folder" xml:space="preserve">
+	  <value>There are no files in this folder</value>
+  </data>
+  <data name="PanoramaFilePicker_ShowFiles_There_are_no_Skyline_files_in_this_folder" xml:space="preserve">
+	  <value>There are no Skyline files in this folder</value>
+  </data>
 </root>
