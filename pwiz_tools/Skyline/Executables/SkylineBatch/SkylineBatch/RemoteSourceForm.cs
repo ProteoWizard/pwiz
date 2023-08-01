@@ -45,10 +45,12 @@ namespace SkylineBatch
             if (editingRemoteSource != null)
             {
                 _editingSourceName = editingRemoteSource.Name;
+                SelectedPath = editingRemoteSource.SelectedPath;
                 textName.Text = editingRemoteSource.Name;
-                textFolderUrl.Text = editingRemoteSource.URI.AbsoluteUri;
+                textFolderUrl.Text = Uri.UnescapeDataString(editingRemoteSource.URI.AbsoluteUri);
                 textUserName.Text = editingRemoteSource.Username;
                 textPassword.Text = editingRemoteSource.Password;
+                textServerName.Text = Uri.UnescapeDataString(editingRemoteSource.URI.GetLeftPart(UriPartial.Authority));
                 checkBoxNoEncryption.Checked = !editingRemoteSource.Encrypt;
             }
 
