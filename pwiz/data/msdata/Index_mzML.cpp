@@ -28,6 +28,7 @@
 #include "pwiz/data/msdata/IO.hpp"
 #ifndef WITHOUT_MZMLB
 #include "mzmlb/Connection_mzMLb.hpp"
+using namespace pwiz::msdata::mzmlb;
 #endif
 
 using namespace pwiz::util;

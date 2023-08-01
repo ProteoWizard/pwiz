@@ -31,6 +31,7 @@
 #include "SpectrumWorkerThreads.hpp"
 #ifndef WITHOUT_MZMLB
 #include "mzmlb/Connection_mzMLb.hpp"
+using namespace pwiz::msdata::mzmlb;
 #endif
 
 namespace pwiz {
@@ -1618,50 +1619,16 @@ PWIZ_API_DECL void read(std::istream& is, ScanList& scanList)
 //
 
 template <typename BinaryDataArrayType>
-void writeBinaryDataArray(minimxml::XMLWriter& writer, const BinaryDataArrayType& binaryDataArray, const BinaryDataEncoder::Config& config)
+void writeMzMLbExtra(stream<Connection_mzMLb>* mzMLb_os, string& dataset, size_t& offset, const string& encoded, XMLWriter& writer, const BinaryDataArrayType& binaryDataArray, const BinaryDataEncoder::Config& usedConfig)
 {
-    BinaryDataEncoder::Config usedConfig = config;
-    map<CVID, BinaryDataEncoder::Precision>::const_iterator overrideItr = config.precisionOverrides.find(binaryDataArray.cvParamChild(MS_binary_data_array).cvid);
-    if (overrideItr != config.precisionOverrides.end())
-        usedConfig.precision = overrideItr->second;
-    map<CVID, BinaryDataEncoder::Numpress>::const_iterator n_overrideItr = config.numpressOverrides.find(binaryDataArray.cvParamChild(MS_binary_data_array).cvid);
-    if (n_overrideItr != config.numpressOverrides.end())
-        usedConfig.numpress = n_overrideItr->second;
-    
-    map<CVID, int>::const_iterator t_overrideItr = config.truncationOverrides.find(binaryDataArray.cvParamChild(MS_binary_data_array).cvid);
-    if (t_overrideItr != config.truncationOverrides.end())
-        usedConfig.truncation = t_overrideItr->second;
-    
-    string encoded;	
+}
 
+template <>
+void writeMzMLbExtra<BinaryDataArray>(stream<Connection_mzMLb>* mzMLb_os, string& dataset, size_t& offset, const string& encoded, XMLWriter& writer, const BinaryDataArray& binaryDataArray, const BinaryDataEncoder::Config& usedConfig)
+{
 #ifndef WITHOUT_MZMLB
-    boost::iostreams::stream<Connection_mzMLb>* mzMLb_os = dynamic_cast<boost::iostreams::stream<Connection_mzMLb>*>(&writer.getOutputStream());
-    if (mzMLb_os)
-    {
-        usedConfig.format = BinaryDataEncoder::Format_MzMLb;
 
-        map<CVID, BinaryDataEncoder::Prediction>::const_iterator p_overrideItr = config.predictionOverrides.find(binaryDataArray.cvParamChild(MS_binary_data_array).cvid);
-        if (p_overrideItr != config.predictionOverrides.end())
-            usedConfig.prediction = p_overrideItr->second;
-    }
-
-    // If writing into mzML or using any form of numpress, we still need to encode the data to a byte stream
-    if (!mzMLb_os || usedConfig.numpress != BinaryDataEncoder::Numpress_None)
-#endif
-    {
-    BinaryDataEncoder encoder(usedConfig);
-    encoder.encode(binaryDataArray.data, encoded);
-    usedConfig = encoder.getConfig(); // config may have changed if numpress error was excessive
-    }
-    
-
-    XMLWriter::Attributes attributes;
-    
     size_t encoded_size = encoded.size();
-
-#ifndef WITHOUT_MZMLB
-    string dataset;
-    size_t offset;
 
     // mzMLb, including truncation and prediction, from andrew.dowsey@bristol.ac.uk
     if (mzMLb_os)
@@ -1719,44 +1686,44 @@ void writeBinaryDataArray(minimxml::XMLWriter& writer, const BinaryDataArrayType
                 // prediction
                 switch (usedConfig.prediction)
                 {
-                case BinaryDataEncoder::Prediction_Delta:
-                    if (float_data.size() > 0)
-                    {
-                        float previous = float_data[0];
-                        for (int i = 1; i < float_data.size(); i++)
+                    case BinaryDataEncoder::Prediction_Delta:
+                        if (float_data.size() > 0)
                         {
-                            // encoding
-                            float_data[i] = float_data[0] + float_data[i] - previous;
-
-                            // decoding
-                            previous = float_data[i] + previous - float_data[0];
-                        }
-                    }
-                    break;
-                case BinaryDataEncoder::Prediction_Linear:
-                    if (float_data.size() > 0)
-                    {
-                        float previous2 = float_data[0];
-
-                        if (float_data.size() > 1)
-                        {
-                            float previous1 = float_data[1];
-
-                            for (int i = 2; i < float_data.size(); i++)
+                            float previous = float_data[0];
+                            for (int i = 1; i < float_data.size(); i++)
                             {
                                 // encoding
-                                float_data[i] = float_data[1] + float_data[i] - 2.0 * previous1 + previous2;
+                                float_data[i] = float_data[0] + float_data[i] - previous;
 
                                 // decoding
-                                float t = previous1;
-                                previous1 = float_data[i] + 2.0f * previous1 - previous2 - float_data[1];
-                                previous2 = t;
+                                previous = float_data[i] + previous - float_data[0];
                             }
                         }
-                    }
-                    break;
-                case BinaryDataEncoder::Prediction_None:
-                    break;
+                        break;
+                    case BinaryDataEncoder::Prediction_Linear:
+                        if (float_data.size() > 0)
+                        {
+                            float previous2 = float_data[0];
+
+                            if (float_data.size() > 1)
+                            {
+                                float previous1 = float_data[1];
+
+                                for (int i = 2; i < float_data.size(); i++)
+                                {
+                                    // encoding
+                                    float_data[i] = float_data[1] + float_data[i] - 2.0 * previous1 + previous2;
+
+                                    // decoding
+                                    float t = previous1;
+                                    previous1 = float_data[i] + 2.0f * previous1 - previous2 - float_data[1];
+                                    previous2 = t;
+                                }
+                            }
+                        }
+                        break;
+                    case BinaryDataEncoder::Prediction_None:
+                        break;
                 }
 
             }
@@ -1800,44 +1767,44 @@ void writeBinaryDataArray(minimxml::XMLWriter& writer, const BinaryDataArrayType
             // prediction
             switch (usedConfig.prediction)
             {
-            case BinaryDataEncoder::Prediction_Delta:
-                if (double_data.size() > 0)
-                {
-                    double previous = double_data[0];
-                    for (int i = 1; i < double_data.size(); i++)
+                case BinaryDataEncoder::Prediction_Delta:
+                    if (double_data.size() > 0)
                     {
-                        // encoding
-                        double_data[i] = double_data[0] + double_data[i] - previous;
-
-                        // decoding
-                        previous = double_data[i] + previous - double_data[0];
-                    }
-                }
-                break;
-            case BinaryDataEncoder::Prediction_Linear:
-                if (double_data.size() > 0)
-                {
-                    double previous2 = double_data[0];
-
-                    if (double_data.size() > 1)
-                    {
-                        double previous1 = double_data[1];
-
-                        for (int i = 2; i < double_data.size(); i++)
+                        double previous = double_data[0];
+                        for (int i = 1; i < double_data.size(); i++)
                         {
                             // encoding
-                            double_data[i] = double_data[1] + double_data[i] - 2.0 * previous1 + previous2;
+                            double_data[i] = double_data[0] + double_data[i] - previous;
 
                             // decoding
-                            double t = previous1;
-                            previous1 = double_data[i] + 2.0 * previous1 - previous2 - double_data[1];
-                            previous2 = t;
+                            previous = double_data[i] + previous - double_data[0];
                         }
                     }
-                }
-                break;
-            case BinaryDataEncoder::Prediction_None:
-                break;
+                    break;
+                case BinaryDataEncoder::Prediction_Linear:
+                    if (double_data.size() > 0)
+                    {
+                        double previous2 = double_data[0];
+
+                        if (double_data.size() > 1)
+                        {
+                            double previous1 = double_data[1];
+
+                            for (int i = 2; i < double_data.size(); i++)
+                            {
+                                // encoding
+                                double_data[i] = double_data[1] + double_data[i] - 2.0 * previous1 + previous2;
+
+                                // decoding
+                                double t = previous1;
+                                previous1 = double_data[i] + 2.0 * previous1 - previous2 - double_data[1];
+                                previous2 = t;
+                            }
+                        }
+                    }
+                    break;
+                case BinaryDataEncoder::Prediction_None:
+                    break;
             }
 
             dataset += "_double";
@@ -1847,6 +1814,53 @@ void writeBinaryDataArray(minimxml::XMLWriter& writer, const BinaryDataArrayType
         }
     }
 #endif
+}
+
+
+template <typename BinaryDataArrayType>
+void writeBinaryDataArray(minimxml::XMLWriter& writer, const BinaryDataArrayType& binaryDataArray, const BinaryDataEncoder::Config& config)
+{
+    BinaryDataEncoder::Config usedConfig = config;
+    auto overrideItr = config.precisionOverrides.find(binaryDataArray.cvParamChild(MS_binary_data_array).cvid);
+    if (overrideItr != config.precisionOverrides.end())
+        usedConfig.precision = overrideItr->second;
+    auto n_overrideItr = config.numpressOverrides.find(binaryDataArray.cvParamChild(MS_binary_data_array).cvid);
+    if (n_overrideItr != config.numpressOverrides.end())
+        usedConfig.numpress = n_overrideItr->second;
+    auto t_overrideItr = config.truncationOverrides.find(binaryDataArray.cvParamChild(MS_binary_data_array).cvid);
+    if (t_overrideItr != config.truncationOverrides.end())
+        usedConfig.truncation = t_overrideItr->second;
+    
+    string encoded;	
+
+#ifndef WITHOUT_MZMLB
+    stream<Connection_mzMLb>* mzMLb_os = dynamic_cast<stream<Connection_mzMLb>*>(&writer.getOutputStream());
+    if (mzMLb_os)
+    {
+        usedConfig.format = BinaryDataEncoder::Format_MzMLb;
+
+        auto p_overrideItr = config.predictionOverrides.find(binaryDataArray.cvParamChild(MS_binary_data_array).cvid);
+        if (p_overrideItr != config.predictionOverrides.end())
+            usedConfig.prediction = p_overrideItr->second;
+    }
+
+    // If writing into mzML or using any form of numpress, we still need to encode the data to a byte stream
+    if (!mzMLb_os || usedConfig.numpress != BinaryDataEncoder::Numpress_None)
+#endif
+    {
+        BinaryDataEncoder encoder(usedConfig);
+        encoder.encode(binaryDataArray.data, encoded);
+        usedConfig = encoder.getConfig(); // config may have changed if numpress error was excessive
+    }
+    
+
+    XMLWriter::Attributes attributes;
+    
+    size_t encoded_size = encoded.size();
+
+    string dataset;
+    size_t offset;
+    writeMzMLbExtra(mzMLb_os, dataset, offset, encoded, writer, binaryDataArray, usedConfig);
 
     // primary array types can never override the default array length
     if (!binaryDataArray.hasCVParam(MS_m_z_array) &&
@@ -1861,8 +1875,8 @@ void writeBinaryDataArray(minimxml::XMLWriter& writer, const BinaryDataArrayType
         else
 #endif       
         {
-        attributes.add("arrayLength", binaryDataArray.data.size());
-    }
+            attributes.add("arrayLength", binaryDataArray.data.size());
+        }
     }
 
 #ifndef WITHOUT_MZMLB        
@@ -1937,11 +1951,11 @@ void writeBinaryDataArray(minimxml::XMLWriter& writer, const BinaryDataArrayType
     if (mzMLb_os)
     {
         write(writer, UserParam("external dataset", dataset));
-        write(writer, UserParam("external array length", boost::lexical_cast<std::string>(binaryDataArray.data.size())));
-        write(writer, UserParam("external offset", boost::lexical_cast<std::string>(offset)));
+        write(writer, UserParam("external array length", toString(binaryDataArray.data.size())));
+        write(writer, UserParam("external offset", toString(offset)));
 
         if (usedConfig.numpress != BinaryDataEncoder::Numpress_None)
-            write(writer, UserParam("external encoded length", boost::lexical_cast<std::string>(encoded_size)));
+            write(writer, UserParam("external encoded length", toString(encoded_size)));
     }
 #endif	
 
@@ -1993,7 +2007,7 @@ struct HandlerBinaryDataArray : public HandlerParamContainer
     BinaryDataArray* binaryDataArray;
     IntegerDataArray* integerDataArray;
 
-    HandlerBinaryDataArray(std::vector<BinaryDataArrayPtr>* binaryDataArrayPtrs = 0, std::vector<IntegerDataArrayPtr>* integerDataArrayPtrs = 0, const MSData* _msd = 0, , std::istream* _is = 0, BinaryDataFlag binaryDataFlag = ReadBinaryData)
+    HandlerBinaryDataArray(std::vector<BinaryDataArrayPtr>* binaryDataArrayPtrs = 0, std::vector<IntegerDataArrayPtr>* integerDataArrayPtrs = 0, const MSData* _msd = 0, std::istream* _is = 0, BinaryDataFlag binaryDataFlag = ReadBinaryData)
       : binaryDataArrayPtrs(binaryDataArrayPtrs),
         integerDataArrayPtrs(integerDataArrayPtrs),
         msd(_msd),
@@ -2038,56 +2052,6 @@ struct HandlerBinaryDataArray : public HandlerParamContainer
                 if (msd) References::resolve(paramContainer, *msd);
 
                 config = getConfig();
-#ifndef WITHOUT_MZMLB
-                boost::iostreams::stream<Connection_mzMLb>*mzMLb_is = dynamic_cast<boost::iostreams::stream<Connection_mzMLb>*>(is_);
-                if (mzMLb_is)
-                {
-                    extractUserParam(*binaryDataArray, "external dataset", external_dataset_);
-
-                    string external_array_length;
-                    if(extractUserParam(*binaryDataArray, "external array length", external_array_length))
-                    {
-                        arrayLength_ = lexical_cast<size_t>(external_array_length);
-
-                        // primary array types so set the default array length
-                        if (binaryDataArray->hasCVParam(MS_m_z_array) ||
-                            binaryDataArray->hasCVParam(MS_time_array) ||
-                            binaryDataArray->hasCVParam(MS_intensity_array))
-                        { 
-                            if (defaultArrayLength)
-                                *defaultArrayLength = arrayLength_;
-                        }
-                    }
-
-                    string external_offset;
-                    if(extractUserParam(*binaryDataArray, "external offset", external_offset))
-                        external_offset_ = lexical_cast<size_t>(external_offset);
-
-                    string external_encoded_length;
-                    if(extractUserParam(*binaryDataArray, "external encoded length", external_encoded_length))
-                         encodedLength_ = lexical_cast<size_t>(external_encoded_length);
-
-                    if (!external_dataset_.empty())
-                    {
-                        (*mzMLb_is)->seek(external_dataset_, external_offset_, std::ios_base::beg);
-
-                        if (config.numpress != BinaryDataEncoder::Numpress_None)
-                        {
-                            vector<char> buf(encodedLength_);
-                            (*mzMLb_is)->read_opaque(external_dataset_, &buf[0], encodedLength_);
-                            config.format = BinaryDataEncoder::Format_MzMLb;
-                            BinaryDataEncoder encoder(config);
-                            encoder.decode(&buf[0], buf.size(), binaryDataArray->data);
-                        }
-                        else
-                        {
-                            binaryDataArray->data.resize(arrayLength_);
-                            (*mzMLb_is)->read(external_dataset_, &binaryDataArray->data[0], arrayLength_);
-                        }
-                        predict();
-                    }
-                }
-#endif
 
                 CVID binaryArrayType;
                 if (binaryDataFlag == ReadBinaryDataOnly)
@@ -2117,6 +2081,7 @@ struct HandlerBinaryDataArray : public HandlerParamContainer
                         swap(static_cast<ParamContainer&>(*binaryDataArray), paramContainer);
                         binaryDataArray->dataProcessingPtr = dataProcessingPtr;
                         this->binaryDataArray = &*binaryDataArrayPtrs->back();
+                        readMzMLbBinaryDataArray(this->binaryDataArray);
                     }
                     break;
 
@@ -2142,6 +2107,7 @@ struct HandlerBinaryDataArray : public HandlerParamContainer
                         swap(static_cast<ParamContainer&>(*binaryDataArray), paramContainer);
                         binaryDataArray->dataProcessingPtr = dataProcessingPtr;
                         this->integerDataArray = &*integerDataArrayPtrs->back();
+                        readMzMLbBinaryDataArray(this->integerDataArray);
                     }
                     break;
 
@@ -2149,6 +2115,7 @@ struct HandlerBinaryDataArray : public HandlerParamContainer
                     default:
                         throw runtime_error("[IO::HandlerBinaryDataArray] Unknown binary data type.");
                 }
+
 
                 return Status::Ok;
             }
@@ -2166,7 +2133,6 @@ struct HandlerBinaryDataArray : public HandlerParamContainer
             return Status::Ok;
 
         BinaryDataEncoder encoder(config);
-        predict();
 
         switch (cvidBinaryDataType)
         {
@@ -2174,6 +2140,7 @@ struct HandlerBinaryDataArray : public HandlerParamContainer
             case MS_64_bit_float:
                 {
                     encoder.decode(text.c_str(), text.length(), binaryDataArray->data);
+                    predict();
 
                     if (binaryDataArray->data.size() != arrayLength_)
                         throw runtime_error((format("[IO::HandlerBinaryDataArray] At position %d: expected array of size %d, but decoded array is actually size %d.")
@@ -2293,8 +2260,8 @@ struct HandlerBinaryDataArray : public HandlerParamContainer
         //
 
         // prediction
-        bool prediction_linear = extractUserParam(*binaryDataArray, "linear prediction");
-        bool prediction_delta = extractUserParam(*binaryDataArray, "delta prediction");
+        bool prediction_linear = extractUserParam(paramContainer, "linear prediction");
+        bool prediction_delta = extractUserParam(paramContainer, "delta prediction");
         if (prediction_linear)
             config.prediction = BinaryDataEncoder::Prediction_Linear;
         else if (prediction_delta)
@@ -2380,6 +2347,64 @@ struct HandlerBinaryDataArray : public HandlerParamContainer
         }
 
         return config;
+    }
+
+
+    template <typename BinaryDataArrayType>
+    void readMzMLbBinaryDataArray(BinaryDataArrayType* binaryDataArray)
+    {
+#ifndef WITHOUT_MZMLB
+        auto mzMLb_is = dynamic_cast<stream<Connection_mzMLb>*>(is_);
+        if (!mzMLb_is)
+            return;
+
+        extractUserParam(*binaryDataArray, "external dataset", external_dataset_);
+
+        string external_array_length;
+        if (extractUserParam(*binaryDataArray, "external array length", external_array_length))
+        {
+            arrayLength_ = lexical_cast<size_t>(external_array_length);
+
+            // primary array types so set the default array length
+            if (binaryDataArray->hasCVParam(MS_m_z_array) ||
+                binaryDataArray->hasCVParam(MS_time_array) ||
+                binaryDataArray->hasCVParam(MS_intensity_array) ||
+                binaryDataArray->hasCVParam(MS_wavelength_array))
+            {
+                if (defaultArrayLength)
+                    *defaultArrayLength = arrayLength_;
+            }
+        }
+
+        string external_offset;
+        if (extractUserParam(*binaryDataArray, "external offset", external_offset))
+            external_offset_ = lexical_cast<size_t>(external_offset);
+
+        string external_encoded_length;
+        if (extractUserParam(*binaryDataArray, "external encoded length", external_encoded_length))
+            encodedLength_ = lexical_cast<size_t>(external_encoded_length);
+
+        if (!external_dataset_.empty())
+        {
+            (*mzMLb_is)->seek(external_dataset_, external_offset_, std::ios_base::beg);
+
+            if (config.numpress != BinaryDataEncoder::Numpress_None)
+            {
+                vector<char> buf(encodedLength_);
+                (*mzMLb_is)->read_opaque(external_dataset_, &buf[0], encodedLength_);
+                config.format = BinaryDataEncoder::Format_MzMLb;
+                BinaryDataEncoder encoder(config);
+                encoder.decode(&buf[0], buf.size(), binaryDataArray->data);
+            }
+            else
+            {
+                binaryDataArray->data.resize(arrayLength_);
+                if (arrayLength_ > 0)
+                    (*mzMLb_is)->read(external_dataset_, &binaryDataArray->data[0], arrayLength_);
+            }
+            predict();
+        }
+#endif
     }
 
     void predict()
@@ -2528,7 +2553,7 @@ struct HandlerSpectrum : public HandlerParamContainer
         legacyIdRefToNativeId(legacyIdRefToNativeId),
         msd(_msd),
         handlerPrecursor_(0, legacyIdRefToNativeId),
-        handlerBinaryDataArray_(0, 0, is)
+        handlerBinaryDataArray_(0, 0, 0, is)
     {
     }
 
@@ -2724,7 +2749,7 @@ struct HandlerChromatogram : public HandlerParamContainer
                         std::istream* is = 0)
     :   binaryDataFlag(_binaryDataFlag),
         chromatogram(_chromatogram),
-        handlerBinaryDataArray_(0, 0, is)
+        handlerBinaryDataArray_(0, 0, 0, is)
     {}
 
     virtual Status startElement(const string& name, 

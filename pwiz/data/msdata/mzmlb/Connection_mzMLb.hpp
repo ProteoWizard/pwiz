@@ -32,13 +32,16 @@
 #include <hdf5.h>
 
 
-using namespace boost::iostreams;
+namespace pwiz {
+namespace msdata {
+namespace mzmlb {
 
+using namespace boost::iostreams;
 
 class Connection_mzMLb : public device<seekable> {
 public:   
     Connection_mzMLb(const std::string& filename, int chunk_size, int compression_level); // open for writing
-    Connection_mzMLb(const std::string& filename); // open for reading    
+    Connection_mzMLb(const std::string& filename, bool identifyOnly = false); // open for reading or identify()
     void close(); // close (called by boost stream on final destruction)
 
     // boost device<seekable> methods for reading/writing text to "mzML" dataset
@@ -92,5 +95,8 @@ private:
     std::map<std::string, Stream> binary_; // stream parameters for binary datasets 
 };
 
+} // mzmlb
+} // msdata
+} // pwiz
 
 #endif /* CONNECTION_MZMLB_HPP_ */

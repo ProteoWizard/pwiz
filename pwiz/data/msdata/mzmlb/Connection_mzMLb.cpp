@@ -30,8 +30,11 @@
 //using namespace std;
 using namespace boost::iostreams;
 
+namespace pwiz {
+namespace msdata {
+namespace mzmlb {
 
-Connection_mzMLb::Connection_mzMLb(const std::string& id)
+Connection_mzMLb::Connection_mzMLb(const std::string& id, bool identifyOnly)
 {
     H5Eset_auto(H5E_DEFAULT, NULL, NULL);
 
@@ -107,7 +110,13 @@ Connection_mzMLb::Connection_mzMLb(const std::string& id)
         H5Aclose(aid);        
     }
     H5Pclose(dapl);
-    
+
+    if (identifyOnly)
+    {
+        close();
+        return;
+    }
+
     opaque_id_ = H5Tcreate(H5T_OPAQUE, 1);
  }
 
@@ -180,7 +189,7 @@ Connection_mzMLb::Connection_mzMLb(const std::string& id, int chunk_size, int co
 void Connection_mzMLb::close()
 {
     H5Tclose(opaque_id_);
-    
+
     H5Dclose(mzML_.dataset);
     H5Sclose(mzML_.space);
 
@@ -598,3 +607,6 @@ stream_offset Connection_mzMLb::seek(const std::string& id, stream_offset off, s
     return stream.pos;
 }
 
+} // mzmlb
+} // msdata
+} // pwiz

@@ -43,6 +43,7 @@
 #include "pwiz/data/msdata/Version.hpp"
 #ifndef WITHOUT_MZMLB
 #include "mzmlb/Connection_mzMLb.hpp"
+using namespace pwiz::msdata::mzmlb;
 #endif
 #ifndef WITHOUT_MZ5
 #include "mz5/Connection_mz5.hpp"
@@ -515,7 +516,7 @@ PWIZ_API_DECL std::string Reader_mzMLb::identify(const string& filename, const s
     try
     {
 #ifndef WITHOUT_MZMLB
-        Connection_mzMLb con(filename);
+        Connection_mzMLb con(filename, true);
 #endif
         return getType();
     }

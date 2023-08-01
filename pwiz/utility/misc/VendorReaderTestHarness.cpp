@@ -43,6 +43,7 @@
 #include "boost/thread/thread.hpp"
 #include "boost/thread/barrier.hpp"
 #include "boost/locale/encoding_utf.hpp"
+#include "pwiz/data/msdata/Serializer_mzML.hpp"
 
 
 using namespace pwiz::util;
@@ -381,6 +382,28 @@ void testRead(const Reader& reader, const string& rawpath, const bfs::path& pare
                 unit_assert(!diff_mz5);
             }
             bfs::remove(targetResultFilename_mz5);
+        }
+#endif
+
+#ifndef WITHOUT_MZMLB
+        // mzML <-> mzMLb
+        if (findUnicodeBytes(rawpath) == rawpath.end())
+        {
+            if (os_) (*os_) << "mzMLb serialization test of " << config.resultFilename(msd.run.id + ".mzML") << endl;
+            string targetResultFilename_mzMLb = bfs::change_extension(targetResultFilename, ".mzMLb").string();
+            {
+                MSDataFile::WriteConfig config_mzMLb(MSDataFile::Format_mzMLb);
+                MSDataFile::write(vendorMsd, targetResultFilename_mzMLb, config_mzMLb);
+                MSDataFile msd_mzMLb(targetResultFilename_mzMLb);
+                msd_mzMLb.fileDescription.sourceFilePtrs.erase(msd_mzMLb.fileDescription.sourceFilePtrs.end() - 1);
+
+                DiffConfig diffConfig_mzMLb(diffConfig);
+                diffConfig_mzMLb.ignoreDataProcessing = true;
+                Diff<MSData, DiffConfig> diff_mzMLb(vendorMsd, msd_mzMLb, diffConfig_mzMLb);
+                if (diff_mzMLb) cerr << headDiff(diff_mzMLb, 5000) << endl;
+                unit_assert(!diff_mzMLb);
+            }
+            bfs::remove(targetResultFilename_mzMLb);
         }
 #endif
 

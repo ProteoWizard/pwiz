@@ -33,6 +33,7 @@
 #include "pwiz/utility/misc/Std.hpp"
 #ifndef WITHOUT_MZMLB
 #include "mzmlb/Connection_mzMLb.hpp"
+using namespace pwiz::msdata::mzmlb;
 #endif
 
 namespace pwiz {

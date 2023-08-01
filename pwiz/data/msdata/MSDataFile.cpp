@@ -31,6 +31,7 @@
 #include "Serializer_MSn.hpp"
 #ifndef WITHOUT_MZMLB
 #include "mzmlb/Connection_mzMLb.hpp"
+using namespace pwiz::msdata::mzmlb;
 #endif
 #ifndef WITHOUT_MZ5
 #include "Serializer_mz5.hpp"
