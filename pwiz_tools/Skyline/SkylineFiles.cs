@@ -1046,8 +1046,7 @@ namespace pwiz.Skyline
                                 var message = progressStatus.ErrorException.Message;
                                 if (message.Contains(@"404"))
                                 {
-                                    // TODO: Localize this string
-                                    message = @"File does not exist. It may have been deleted on the server.";
+                                    message = Resources.SkylineWindow_DownloadPanoramaFile_File_does_not_exist__It_may_have_been_deleted_on_the_server_;
                                 }
                                 MessageDlg.ShowWithException(this, message, progressStatus.ErrorException);
                                 return false;

@@ -173,17 +173,7 @@ namespace pwiz.PanoramaClient.Properties {
                         "_from_the_following_servers", resourceCulture);
             }
         }
-        
-        /// <summary>
-        ///   Looks up a localized string similar to Go to Tools - Options - Panorama tab to update the username and password.
-        /// </summary>
-        public static string PanoramaFolderBrowser_InitializeServers_Go_to_Tools___Options___Panorama_tab_to_update_the_username_and_password {
-            get {
-                return ResourceManager.GetString("PanoramaFolderBrowser_InitializeServers_Go_to_Tools___Options___Panorama_tab_to_u" +
-                        "pdate_the_username_and_password", resourceCulture);
-            }
-        }
-        
+
         /// <summary>
         ///   Looks up a localized string similar to Could not authenticate user. Response received from server: {0} {1}.
         /// </summary>

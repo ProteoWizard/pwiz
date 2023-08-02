@@ -467,9 +467,8 @@ namespace pwiz.PanoramaClient
             }
             else 
             {
-                // TODO: don't use these specific numbers for the column widths
-                listView.Columns[3].Width = 100;
-                listView.Columns[2].Width = 60;
+                listView.Columns[3].Width = -2;
+                listView.Columns[2].Width = -2;
             }
         }
 

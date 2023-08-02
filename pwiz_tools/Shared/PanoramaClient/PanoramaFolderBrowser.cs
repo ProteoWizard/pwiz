@@ -121,7 +121,6 @@ namespace pwiz.PanoramaClient
             }
         }
 
-
         /// <summary>
         /// This method gets used in the WebDav folder browser in order to load @files node subfolders before
         /// they get expanded
@@ -247,7 +246,6 @@ namespace pwiz.PanoramaClient
 
         private void TreeView_KeyUp(object sender, KeyEventArgs e)
         {
-            treeView.Focus();
             if (treeView.SelectedNode != null) 
             {
                 if (e.KeyValue == Convert.ToChar(Keys.Up) || e.KeyValue == Convert.ToChar(Keys.Down) || e.KeyValue == Convert.ToChar(Keys.Right) || e.KeyValue == Convert.ToChar(Keys.Left))
@@ -303,12 +301,6 @@ namespace pwiz.PanoramaClient
         }
 
         #region Test Support
-        public bool IsExpanded(string nodeName)
-        {
-            var node = SearchTree(treeView.Nodes, nodeName);
-            return node is { IsExpanded: true };
-        }
-
         public void ClickLeft()
         {
             TreeView_KeyUp(this, new KeyEventArgs(Keys.Left));
@@ -326,8 +318,6 @@ namespace pwiz.PanoramaClient
 
         public void ClickDown()
         {
-            treeView.Focus();
-            SendKeys.Send("{DOWN}");
             TreeView_KeyUp(this, new KeyEventArgs(Keys.Down));
         }
 
@@ -422,15 +412,8 @@ public class LKContainerBrowser : PanoramaFolderBrowser
             {
                 if (ex is WebException || ex is PanoramaServerException)
                 {
-                    var error = ex.Message;
-                    if (error != null && error.Contains(Resources
-                            .UserState_GetErrorMessage_The_username_and_password_could_not_be_authenticated_with_the_panorama_server_))
-                    {
-                        error = TextUtil.LineSeparate(error, Resources.PanoramaFolderBrowser_InitializeServers_Go_to_Tools___Options___Panorama_tab_to_update_the_username_and_password);
 
-                    }
-
-                    listErrorServers.Add(new Tuple<PanoramaServer, string>(server, error ?? string.Empty));
+                    listErrorServers.Add(new Tuple<PanoramaServer, string>(server, ex.Message ?? string.Empty));
                 }
             }
         }
