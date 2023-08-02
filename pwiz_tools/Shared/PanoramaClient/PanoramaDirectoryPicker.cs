@@ -58,6 +58,11 @@ namespace pwiz.PanoramaClient
 
         private void Open_Click(object sender, EventArgs e)
         {
+            ClickOpen();
+        }
+
+        public void ClickOpen()
+        {
             DialogResult = DialogResult.Yes;
             Close();
         }
@@ -98,7 +103,7 @@ namespace pwiz.PanoramaClient
 
         private void DirectoryPicker_FormClosing(object sender, FormClosingEventArgs e)
         {
-            _treeState = FolderBrowser.ClosingState();
+            _treeState = FolderBrowser.GetClosingTreeState();
             SelectedPath = FolderBrowser.GetSelectedFolderPath();
             
         }
@@ -172,48 +177,6 @@ namespace pwiz.PanoramaClient
             IsLoaded = true;
         }
 
-        public void ClickBack()
-        {
-            FolderBrowser.BackButtonClick();
-            UpdateButtonState();
-        }
-
-        public void ClickForward()
-        {
-            FolderBrowser.ForwardButtonClick();
-            UpdateButtonState();
-        }
-
-        public void ClickUp()
-        {
-            FolderBrowser.UpButtonClick();
-            UpdateButtonState();
-        }
-
-        public void ClickOpen()
-        {
-            Open_Click(this, EventArgs.Empty);
-        }
-
-        public void ClickCancel()
-        { 
-            Cancel_Click(this, EventArgs.Empty);
-        }
-
-        public bool UpEnabled()
-        {
-            return up.Enabled;
-        }
-
-        public bool BackEnabled()
-        {
-            return back.Enabled;
-        }
-
-        public bool ForwardEnabled()
-        {
-            return FolderBrowser.ForwardEnabled;
-        }
         #endregion
     }
 }

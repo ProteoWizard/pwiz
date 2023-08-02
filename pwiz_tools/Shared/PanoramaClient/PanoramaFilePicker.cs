@@ -97,7 +97,6 @@ namespace pwiz.PanoramaClient
         /// <summary>
         /// Builds a string that will be used as a URI to find all .sky folders
         /// </summary>
-        /// <returns></returns>
         private static Uri BuildQuery(string server, string folderPath, string queryName, string folderFilter, string[] columns, string sortParam)
         {
             var columnsQueryParam = columns != null ? "&query.columns=" + string.Join(",", columns) : string.Empty;
@@ -110,8 +109,6 @@ namespace pwiz.PanoramaClient
         /// <summary>
         /// Takes in a query string and returns the associated JSON
         /// </summary>
-        /// <param name="queryUri"></param>
-        /// <returns></returns>
         private JToken GetJson(Uri queryUri)
         {
             var webClient = new WebClientWithCredentials(queryUri, FolderBrowser.GetActiveServer().Username, FolderBrowser.GetActiveServer().Password);
@@ -123,7 +120,6 @@ namespace pwiz.PanoramaClient
         /// Adds all files in a particular folder to
         /// a ListView
         /// </summary>
-        /// <param name="newUri"></param>
         private void AddAllFiles(Uri newUri)
         {
             var json = GetJson(newUri);
@@ -196,8 +192,6 @@ namespace pwiz.PanoramaClient
         /// <summary>
         /// Returns true if a file has multiple versions, and false if not
         /// </summary>
-        /// <param name="json"></param>
-        /// <returns></returns>
         private bool HasVersions(JToken json)
         {
             var rows = json[@"rows"];
@@ -208,9 +202,6 @@ namespace pwiz.PanoramaClient
         /// Given the ID of the mass spec run, find that run and
         /// return the number of versions associated with the run and its name
         /// </summary>
-        /// <param name="json"></param>
-        /// <param name="replacedBy"></param>
-        /// <returns></returns>
         private string[] GetVersionInfo(JToken json, string replacedBy)
         {
             var result = new string[2];
@@ -233,8 +224,6 @@ namespace pwiz.PanoramaClient
         /// If showLatestVersion is true, only the most recent version
         /// of all files will be shown, otherwise all versions will be shown
         /// </summary>
-        /// <param name="hasVersions"></param>
-        /// <param name="showLatestVersion"></param>
         private void AddSkyFiles(bool hasVersions, bool showLatestVersion)
         {
             ModifyListViewCols(hasVersions, showLatestVersion);
@@ -315,9 +304,6 @@ namespace pwiz.PanoramaClient
         /// and if it does, updates the ListView accordingly, otherwise, show a message
         /// saying there are no files
         /// </summary>
-        /// <param name="sender"></param>
-        /// <param name="e"></param>
-        /// <exception cref="Exception"></exception>
         public void AddFiles(object sender, EventArgs e)
         {
             try
@@ -443,7 +429,7 @@ namespace pwiz.PanoramaClient
         private void PanoramaFilePicker_FormClosing(object sender, FormClosingEventArgs e) 
         {
             FileName = listView.SelectedItems.Count != 0 ? listView.SelectedItems[0].Text : string.Empty;
-            _treeState = FolderBrowser.ClosingState();
+            _treeState = FolderBrowser.GetClosingTreeState();
         }
 
         /// <summary>
@@ -706,10 +692,7 @@ namespace pwiz.PanoramaClient
 
         public bool ForwardEnabled => FolderBrowser.ForwardEnabled;
 
-        public bool VersionsVisible()
-        {
-            return versionOptions.Visible;
-        }
+        public bool VersionsVisible => versionOptions.Visible;
 
         public string GetItemValue(int index)
         {
@@ -731,15 +714,9 @@ namespace pwiz.PanoramaClient
             return listView.Columns[index].Width > 0;
         }
 
-        public int FileNumber()
-        {
-            return listView.Items.Count;
-        }
+        public int FileNumber => listView.Items.Count;
 
-        public string VersionsOption()
-        {
-            return versionOptions.Text;
-        }
+        public string VersionsOption => versionOptions.Text;
 
         public void ClickFile(string name)
         {
