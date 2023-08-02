@@ -75,14 +75,14 @@ namespace pwiz.PanoramaClient
 
         private void Back_Click(object sender, EventArgs e)
         {
-            back.Enabled = FolderBrowser.BackEnabled();
+            back.Enabled = FolderBrowser.BackEnabled;
             FolderBrowser.BackButtonClick();
             UpdateButtonState();
         }
 
         private void Forward_Click(object sender, EventArgs e)
         {
-            forward.Enabled = FolderBrowser.ForwardEnabled();
+            forward.Enabled = FolderBrowser.ForwardEnabled;
             FolderBrowser.ForwardButtonClick();
             UpdateButtonState();
         }
@@ -91,9 +91,9 @@ namespace pwiz.PanoramaClient
         private void DirectoryPicker_MouseClick(object sender, EventArgs e)
         {
             urlLink.Text = FolderBrowser.GetSelectedUri();
-            up.Enabled = FolderBrowser.UpEnabled();
+            up.Enabled = FolderBrowser.UpEnabled;
             forward.Enabled = false;
-            back.Enabled = FolderBrowser.BackEnabled();
+            back.Enabled = FolderBrowser.BackEnabled;
         }
 
         private void DirectoryPicker_FormClosing(object sender, FormClosingEventArgs e)
@@ -105,15 +105,15 @@ namespace pwiz.PanoramaClient
 
         private void UpdateButtonState()
         {
-            up.Enabled = FolderBrowser.UpEnabled();
-            forward.Enabled = FolderBrowser.ForwardEnabled();
-            back.Enabled = FolderBrowser.BackEnabled();
+            up.Enabled = FolderBrowser.UpEnabled;
+            forward.Enabled = FolderBrowser.ForwardEnabled;
+            back.Enabled = FolderBrowser.BackEnabled;
             urlLink.Text = FolderBrowser.GetSelectedUri();
         }
 
         private void Up_Click(object sender, EventArgs e)
         {
-            up.Enabled = FolderBrowser.UpEnabled();
+            up.Enabled = FolderBrowser.UpEnabled;
             FolderBrowser.UpButtonClick();
             UpdateButtonState();
             forward.Enabled = false;
@@ -143,7 +143,7 @@ namespace pwiz.PanoramaClient
         }
 
 
-        #region MethodsForTesting
+        #region Test Support
         public PanoramaDirectoryPicker()
         {
             InitializeComponent();
@@ -165,9 +165,9 @@ namespace pwiz.PanoramaClient
             }
             else
             {
-                up.Enabled = FolderBrowser.UpEnabled();
-                back.Enabled = FolderBrowser.BackEnabled();
-                forward.Enabled = FolderBrowser.ForwardEnabled();
+                up.Enabled = FolderBrowser.UpEnabled;
+                back.Enabled = FolderBrowser.BackEnabled;
+                forward.Enabled = FolderBrowser.ForwardEnabled;
             }
             IsLoaded = true;
         }
@@ -212,7 +212,7 @@ namespace pwiz.PanoramaClient
 
         public bool ForwardEnabled()
         {
-            return FolderBrowser.ForwardEnabled();
+            return FolderBrowser.ForwardEnabled;
         }
         #endregion
     }

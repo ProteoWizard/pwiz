@@ -382,8 +382,6 @@ namespace pwiz.PanoramaClient
         /// Displays either all versions of the files in a particular folder,
         /// or only the most recent versions
         /// </summary>
-        /// <param name="sender"></param>
-        /// <param name="e"></param>
         private void VersionOptions_SelectedIndexChanged(object sender, EventArgs e)
         {
             if (!_restoring)
@@ -402,9 +400,12 @@ namespace pwiz.PanoramaClient
         /// When a user clicks 'Open', information is stored about the selected file
         /// if there is one, otherwise the user is prompted to select a file
         /// </summary>
-        /// <param name="sender"></param>
-        /// <param name="e"></param>
         private void Open_Click(object sender, EventArgs e)
+        {
+            ClickOpen();
+        }
+
+        public void ClickOpen()
         {
             if (listView.SelectedItems.Count != 0 && listView.SelectedItems[0] != null)
             {
@@ -430,11 +431,11 @@ namespace pwiz.PanoramaClient
 
                 FileUrl = FolderBrowser.GetActiveServer().URI + downloadName;
                 DialogResult = DialogResult.Yes;
-                Close();
             }
             else
             {
-                var alert = new AlertDlg(Resources.PanoramaFilePicker_Open_Click_You_must_select_a_file_first_, MessageBoxButtons.OK);
+                var alert = new AlertDlg(Resources.PanoramaFilePicker_Open_Click_You_must_select_a_file_first_,
+                    MessageBoxButtons.OK);
                 alert.ShowDialog();
             }
         }
@@ -452,8 +453,6 @@ namespace pwiz.PanoramaClient
         /// The optional second parameter is used in cases where we are viewing
         /// a folder with multiple versions, but we only want the latest versions
         /// </summary>
-        /// <param name="versions"></param>
-        /// <param name="latestVersion"></param>
         private void ModifyListViewCols(bool versions, bool latestVersion = false)
         {
             versionLabel.Visible = versions;
@@ -481,7 +480,6 @@ namespace pwiz.PanoramaClient
         /// is false, otherwise do not display this message if the
         /// boolean is true
         /// </summary>
-        /// <param name="files"></param>
         private void ShowFiles(bool files)
         {
             noFiles.Text = _showWebDav
@@ -503,9 +501,12 @@ namespace pwiz.PanoramaClient
         /// Navigates to the parent folder of the currently selected folder
         /// and displays its files 
         /// </summary>
-        /// <param name="sender"></param>
-        /// <param name="e"></param>
         private void UpButton_Click(object sender, EventArgs e)
+        {
+            ClickUp();
+        }
+
+        public void ClickUp()
         {
             FolderBrowser.UpButtonClick();
             UpdateButtonState();
@@ -516,11 +517,14 @@ namespace pwiz.PanoramaClient
         /// Navigates to the previous folder a user was looking at
         /// and displays its files
         /// </summary>
-        /// <param name="sender"></param>
-        /// <param name="e"></param>
         private void Back_Click(object sender, EventArgs e)
         {
-            back.Enabled = FolderBrowser.BackEnabled();
+            ClickBack();
+        }
+
+        public void ClickBack()
+        {
+            back.Enabled = FolderBrowser.BackEnabled;
             FolderBrowser.BackButtonClick();
             UpdateButtonState();
         }
@@ -529,35 +533,36 @@ namespace pwiz.PanoramaClient
         /// Navigates to the next folder a user was looking at
         /// and displays its files
         /// </summary>
-        /// <param name="sender"></param>
-        /// <param name="e"></param>
         private void Forward_Click(object sender, EventArgs e)
         {
-            forward.Enabled = FolderBrowser.ForwardEnabled();
+            ClickForward();
+        }
+
+        public void ClickForward()
+        {
+            forward.Enabled = FolderBrowser.ForwardEnabled;
             FolderBrowser.ForwardButtonClick();
             UpdateButtonState();
         }
 
         private void FilePicker_MouseClick(object sender, EventArgs e)
         {
-            up.Enabled = FolderBrowser.UpEnabled();
+            up.Enabled = FolderBrowser.UpEnabled;
             forward.Enabled = false;
-            back.Enabled = FolderBrowser.BackEnabled();
+            back.Enabled = FolderBrowser.BackEnabled;
         }
 
         private void UpdateButtonState()
         {
-            up.Enabled = FolderBrowser.UpEnabled();
-            forward.Enabled = FolderBrowser.ForwardEnabled();
-            back.Enabled = FolderBrowser.BackEnabled();
+            up.Enabled = FolderBrowser.UpEnabled;
+            forward.Enabled = FolderBrowser.ForwardEnabled;
+            back.Enabled = FolderBrowser.BackEnabled;
             urlLink.Text = FolderBrowser.GetSelectedUri();
         }
 
         /// <summary>
         /// Adapted from https://learn.microsoft.com/en-us/previous-versions/dotnet/articles/ms996467(v=msdn.10)?redirectedfrom=MSDN
         /// </summary>
-        /// <param name="sender"></param>
-        /// <param name="e"></param>
         private void ListView_ColumnClick(object sender, ColumnClickEventArgs e)
         {
             // Determine whether the column is the same as the last column clicked.
@@ -587,7 +592,7 @@ namespace pwiz.PanoramaClient
 
         private void ListView_DoubleClick(object sender, EventArgs e)
         {
-            Open_Click(this, e);
+            ClickOpen();
         }
 
         private void PanoramaFilePicker_SizeChanged(object sender, EventArgs e)
@@ -658,7 +663,7 @@ namespace pwiz.PanoramaClient
             }
         }
 
-        #region MethodsForTests
+        #region Test Support
         public PanoramaFilePicker()
         {
             InitializeComponent();
@@ -688,51 +693,19 @@ namespace pwiz.PanoramaClient
             }
             else
             {
-                up.Enabled = FolderBrowser.UpEnabled();
-                back.Enabled = FolderBrowser.BackEnabled();
-                forward.Enabled = FolderBrowser.ForwardEnabled();
+                up.Enabled = FolderBrowser.UpEnabled;
+                back.Enabled = FolderBrowser.BackEnabled;
+                forward.Enabled = FolderBrowser.ForwardEnabled;
             }
 
             IsLoaded = true;
         }
 
-        public void ClickBack()
-        {
-            FolderBrowser.BackButtonClick();
-            UpdateButtonState();
-        }
+        public bool UpEnabled => up.Enabled;
 
-        public void ClickForward()
-        {
-            FolderBrowser.ForwardButtonClick();
-            UpdateButtonState();
-        }
+        public bool BackEnabled => back.Enabled;
 
-        public void ClickUp()
-        {
-            FolderBrowser.UpButtonClick();
-            UpdateButtonState();
-        }
-
-        public void ClickOpen()
-        {
-            Open_Click(this, EventArgs.Empty);
-        }
-
-        public bool UpEnabled()
-        {
-            return up.Enabled;
-        }
-
-        public bool BackEnabled()
-        {
-            return back.Enabled;
-        }
-
-        public bool ForwardEnabled()
-        {
-            return FolderBrowser.ForwardEnabled();
-        }
+        public bool ForwardEnabled => FolderBrowser.ForwardEnabled;
 
         public bool VersionsVisible()
         {
@@ -779,8 +752,7 @@ namespace pwiz.PanoramaClient
                 {
                     item.Selected = true;
                     listView.Select();
-                    DialogResult = DialogResult.Yes;
-                    open.PerformClick();
+                    ClickOpen();
                 }
             }
         }
