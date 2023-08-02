@@ -43,10 +43,11 @@ using namespace Waters;
 SpectrumList_Waters::SpectrumList_Waters(MSData& msd, RawDataPtr rawdata, const Reader::Config& config)
     : msd_(msd), rawdata_(rawdata), config_(config), lockmassFunction_(LOCKMASS_FUNCTION_UNINIT)
 {
-    if (config_.ddaProcessing)
-    {
-        useDDAProcessor_ = true;
-        rawdata_->EnableDDAProcessing();
+    useDDAProcessor_ = config_.ddaProcessing;
+    rawdata_->EnableProcessing(useDDAProcessor_);
+
+    if (useDDAProcessor_)
+    {       
         createDDAIndex();
     }
     else
@@ -240,14 +241,9 @@ PWIZ_API_DECL SpectrumPtr SpectrumList_Waters::spectrum(size_t index, DetailLeve
         doCentroid = false;
     }
 
-    boost::weak_ptr<RawData> binaryDataSource = rawdata_;
+    boost::weak_ptr<RawData> binaryDataSource = rawdata_; //Is this still needed?
     if (doCentroid)
     {
-        if (detailLevel >= DetailLevel_FullMetadata)
-        {
-            rawdata_->Centroid();
-            binaryDataSource = rawdata_->CentroidRawDataFile();
-        }
         result->set(MS_centroid_spectrum);
     }
     
@@ -387,10 +383,13 @@ PWIZ_API_DECL SpectrumPtr SpectrumList_Waters::spectrum(size_t index, DetailLeve
                 if (detailLevel == DetailLevel_FullMetadata)
                     return result;
             }
-            else // not ion mobility or getting data from centroid.raw: defaultArrayLength set by PEAKS_IN_SCAN
+            else // not ion mobility
             {
                 if (detailLevel != DetailLevel_FullMetadata)
-                    binaryDataSource.lock()->Reader.ReadScan(ie.function, ie.scan, masses, intensities);
+                {
+                    rawdata_->ReadScan(ie.function, ie.scan, doCentroid, masses, intensities);
+                    result->defaultArrayLength = masses.size();
+                }
             }
 
             if (detailLevel == DetailLevel_FullData)
