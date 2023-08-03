@@ -304,9 +304,9 @@ namespace pwiz.SkylineTestConnected
                 remoteDlg.Show();
                 WaitForCondition(9000, () => remoteDlg.IsLoaded);
                 remoteDlg.FolderBrowser.SelectNode("@files");
-                Assert.AreEqual(remoteDlg.FileNumber(), 13);
+                Assert.AreEqual(remoteDlg.FileNumber, 13);
                 remoteDlg.FolderBrowser.SelectNode("FileRenamedOnServer");
-                Assert.AreEqual(remoteDlg.FileNumber(), 6);
+                Assert.AreEqual(remoteDlg.FileNumber, 6);
                 remoteDlg.Close();
                 WaitForClosedForm(remoteDlg);
             });

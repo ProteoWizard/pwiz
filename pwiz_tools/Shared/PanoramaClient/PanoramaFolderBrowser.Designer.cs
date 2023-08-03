@@ -45,26 +45,20 @@
             // 
             // treeView
             // 
-            this.treeView.Dock = System.Windows.Forms.DockStyle.Fill;
+            resources.ApplyResources(this.treeView, "treeView");
             this.treeView.HideSelection = false;
-            this.treeView.ImageIndex = 0;
             this.treeView.ImageList = this.imageList1;
-            this.treeView.Location = new System.Drawing.Point(0, 0);
             this.treeView.Name = "treeView";
-            this.treeView.SelectedImageIndex = 0;
-            this.treeView.Size = new System.Drawing.Size(425, 203);
-            this.treeView.TabIndex = 0;
             this.treeView.BeforeExpand += new System.Windows.Forms.TreeViewCancelEventHandler(this.TreeView_BeforeExpand);
             this.treeView.NodeMouseClick += new System.Windows.Forms.TreeNodeMouseClickEventHandler(this.TreeView_NodeMouseClick);
             this.treeView.KeyUp += new System.Windows.Forms.KeyEventHandler(this.TreeView_KeyUp);
             // 
             // PanoramaFolderBrowser
             // 
-            this.AutoScaleDimensions = new System.Drawing.SizeF(6F, 13F);
+            resources.ApplyResources(this, "$this");
             this.AutoScaleMode = System.Windows.Forms.AutoScaleMode.Font;
             this.Controls.Add(this.treeView);
             this.Name = "PanoramaFolderBrowser";
-            this.Size = new System.Drawing.Size(425, 203);
             this.Load += new System.EventHandler(this.FolderBrowser_Load);
             this.ResumeLayout(false);
 

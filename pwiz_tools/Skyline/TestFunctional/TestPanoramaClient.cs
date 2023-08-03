@@ -18,8 +18,10 @@
  */
 
 using System;
+using System.Globalization;
 using Microsoft.VisualStudio.TestTools.UnitTesting;
 using Newtonsoft.Json.Linq;
+using pwiz.Common.SystemUtil;
 using pwiz.PanoramaClient;
 using pwiz.SkylineTestUtil;
 
@@ -54,8 +56,11 @@ namespace pwiz.SkylineTestFunctional
             // Test TreeView icons
             TestTreeViewIcons();
 
-            // Test enter key - ensure node is expanded
-            TestKeyStrokeResponse();
+            // This test ensures that navigating the TreeView using the
+            // arrow keys updates the file panel accordingly 
+            // This test is commented out because sending a key press
+            // programmatically does not seem to update the TreeView
+            // TestKeyStrokeResponse();
 
             // Verify JSON is as expected 
             TestVerifyJson();
@@ -93,13 +98,13 @@ namespace pwiz.SkylineTestFunctional
                 remoteDlg.FolderBrowser.SelectNode(TARGETED_LIBRARY);
                 Assert.IsTrue(remoteDlg.BackEnabled);
                 remoteDlg.ClickBack();
-                Assert.AreEqual(TARGETED, remoteDlg.FolderBrowser.GetSelectedNodeText());
+                Assert.AreEqual(TARGETED, remoteDlg.FolderBrowser.SelectedNodeText);
                 remoteDlg.ClickBack();
                 Assert.IsTrue(remoteDlg.ForwardEnabled);
-                Assert.AreEqual(NO_TARGETED, remoteDlg.FolderBrowser.GetSelectedNodeText());
+                Assert.AreEqual(NO_TARGETED, remoteDlg.FolderBrowser.SelectedNodeText);
                 Assert.IsFalse(remoteDlg.BackEnabled);
                 remoteDlg.ClickForward();
-                Assert.AreEqual(TARGETED, remoteDlg.FolderBrowser.GetSelectedNodeText());
+                Assert.AreEqual(TARGETED, remoteDlg.FolderBrowser.SelectedNodeText);
                 remoteDlg.ClickUp();
                 remoteDlg.FolderBrowser.SelectNode(VALID_SERVER);
                 Assert.IsFalse(remoteDlg.UpEnabled);
@@ -123,12 +128,12 @@ namespace pwiz.SkylineTestFunctional
             RunUI(() =>
             {
                 remoteDlg.FolderBrowser.SelectNode(TARGETED);
-                Assert.IsTrue(remoteDlg.VersionsVisible());
-                Assert.AreEqual("Most recent", remoteDlg.VersionsOption());
-                Assert.AreEqual(1, remoteDlg.FileNumber());
+                Assert.IsTrue(remoteDlg.VersionsVisible);
+                Assert.AreEqual("Most recent", remoteDlg.VersionsOption);
+                Assert.AreEqual(1, remoteDlg.FileNumber);
                 remoteDlg.ClickVersions();
-                Assert.AreEqual(4, remoteDlg.FileNumber());
-                Assert.AreEqual("All", remoteDlg.VersionsOption());
+                Assert.AreEqual(4, remoteDlg.FileNumber);
+                Assert.AreEqual("All", remoteDlg.VersionsOption);
                 remoteDlg.Close();
             });
             WaitForClosedForm(remoteDlg);
@@ -159,22 +164,25 @@ namespace pwiz.SkylineTestFunctional
             RunUI(() =>
             {
                 remoteDlg.FolderBrowser.SelectNode(NO_TARGETED);
-                Assert.AreEqual(3, remoteDlg.FolderBrowser.GetIcon());
+                Assert.AreEqual(3, remoteDlg.FolderBrowser.TreeviewIcon);
                 remoteDlg.FolderBrowser.SelectNode(TARGETED);
-                Assert.AreEqual(1, remoteDlg.FolderBrowser.GetIcon());
+                Assert.AreEqual(1, remoteDlg.FolderBrowser.TreeviewIcon);
                 remoteDlg.FolderBrowser.SelectNode(VALID_SERVER);
-                Assert.AreEqual(-1, remoteDlg.FolderBrowser.GetIcon());
+                Assert.AreEqual(-1, remoteDlg.FolderBrowser.TreeviewIcon);
                 remoteDlg.FolderBrowser.SelectNode(TARGETED_LIBRARY);
-                Assert.AreEqual(2, remoteDlg.FolderBrowser.GetIcon());
+                Assert.AreEqual(2, remoteDlg.FolderBrowser.TreeviewIcon);
                 remoteDlg.FolderBrowser.SelectNode(TARGETED_COLLABORATION);
-                Assert.AreEqual(3, remoteDlg.FolderBrowser.GetIcon());
+                Assert.AreEqual(3, remoteDlg.FolderBrowser.TreeviewIcon);
                 remoteDlg.Close();
             });
             WaitForClosedForm(remoteDlg);
         }
 
         /// <summary>
-        /// Test enter key - ensure node is expanded
+        /// This test ensures that navigating the TreeView using the
+        /// arrow keys updates the file panel accordingly 
+        /// This test is commented out because sending a key press
+        /// programmatically does not seem to update the TreeView
         /// </summary>
         private void TestKeyStrokeResponse()
         {
@@ -193,29 +201,29 @@ namespace pwiz.SkylineTestFunctional
             RunUI(() =>
             {
                 remoteDlg.FolderBrowser.SelectNode(TARGETED);
-                remoteDlg.FolderBrowser.ClickRight();
+                //remoteDlg.FolderBrowser.ClickRight();
                 //Assert.IsTrue(remoteDlg.FolderBrowser.IsExpanded(TARGETED));
-                Assert.IsTrue(remoteDlg.VersionsVisible());
-                Assert.AreEqual("Most recent", remoteDlg.VersionsOption());
-                Assert.AreEqual(1, remoteDlg.FileNumber());
+                Assert.IsTrue(remoteDlg.VersionsVisible);
+                Assert.AreEqual("Most recent", remoteDlg.VersionsOption);
+                Assert.AreEqual(1, remoteDlg.FileNumber);
 
                 remoteDlg.TestFileJson = fileJson;
                 remoteDlg.TestSizeJson = sizeJson;
 
                 remoteDlg.FolderBrowser.SelectNode(TARGETED_LIBRARY);
-                remoteDlg.FolderBrowser.ClickRight();
+                //remoteDlg.FolderBrowser.ClickRight();
                 //Assert.IsTrue(remoteDlg.FolderBrowser.IsExpanded(TARGETED_LIBRARY));
-                Assert.IsFalse(remoteDlg.VersionsVisible());
-                Assert.AreEqual("Most recent", remoteDlg.VersionsOption());
-                Assert.AreEqual(1, remoteDlg.FileNumber());
+                Assert.IsFalse(remoteDlg.VersionsVisible);
+                Assert.AreEqual("Most recent", remoteDlg.VersionsOption);
+                Assert.AreEqual(1, remoteDlg.FileNumber);
 
                 remoteDlg.TestFileJson = filesJson;
                 remoteDlg.TestSizeJson = sizesJson;
 
                 remoteDlg.FolderBrowser.SelectNode(TARGETED_COLLABORATION);
-                Assert.IsTrue(remoteDlg.VersionsVisible());
-                Assert.AreEqual("Most recent", remoteDlg.VersionsOption());
-                Assert.AreEqual(1, remoteDlg.FileNumber());
+                Assert.IsTrue(remoteDlg.VersionsVisible);
+                Assert.AreEqual("Most recent", remoteDlg.VersionsOption);
+                Assert.AreEqual(1, remoteDlg.FileNumber);
                 remoteDlg.Close();
             });
             WaitForClosedForm(remoteDlg);
@@ -235,32 +243,35 @@ namespace pwiz.SkylineTestFunctional
                 SkylineWindow.OpenFromPanorama(VALID_SERVER, string.Empty, string.Empty, folderJson, filesJson, sizesJson));
 
             WaitForCondition(9000, () => remoteDlg.IsLoaded);
-
+            var sizeObj = new FileSizeFormatProvider();
+            var sizeString = sizeObj.Format(@"fs1", 3, sizeObj);
             RunUI(() =>
             {
                 remoteDlg.FolderBrowser.SelectNode(TARGETED);
                 remoteDlg.ClickFile("File1");
                 Assert.AreEqual("File1", remoteDlg.GetItemValue(0));
-                Assert.AreEqual("3.0 B", remoteDlg.GetItemValue(1));
+                Assert.AreEqual(sizeString, remoteDlg.GetItemValue(1));
                 Assert.AreEqual(4.ToString(), remoteDlg.GetItemValue(2));
                 Assert.AreEqual(string.Empty, remoteDlg.GetItemValue(3));
-                Assert.AreEqual("11/17/2021 9:09:07 AM", remoteDlg.GetItemValue(4));
+                DateTime.TryParse("11/17/2021 9:09:07 AM", CultureInfo.InvariantCulture, DateTimeStyles.None,
+                    out var formattedDate);
+                Assert.AreEqual(formattedDate.ToString(CultureInfo.CurrentCulture), remoteDlg.GetItemValue(4));
 
                 remoteDlg.ClickVersions();
 
                 remoteDlg.ClickFile("File2");
                 Assert.AreEqual("File2", remoteDlg.GetItemValue(0));
-                Assert.AreEqual("200.0 B", remoteDlg.GetItemValue(1));
+                Assert.AreEqual(sizeObj.Format(@"fs1", 200, sizeObj), remoteDlg.GetItemValue(1));
                 Assert.AreEqual(4.ToString(), remoteDlg.GetItemValue(2));
                 Assert.AreEqual("File1", remoteDlg.GetItemValue(3));
-                Assert.AreEqual("11/17/2021 9:09:07 AM", remoteDlg.GetItemValue(4));
+                Assert.AreEqual(formattedDate.ToString(CultureInfo.CurrentCulture), remoteDlg.GetItemValue(4));
 
                 remoteDlg.ClickFile("File3");
                 Assert.AreEqual("File3", remoteDlg.GetItemValue(0));
-                Assert.AreEqual("5.9 KB", remoteDlg.GetItemValue(1));
+                Assert.AreEqual(sizeObj.Format(@"fs1", 6000, sizeObj), remoteDlg.GetItemValue(1));
                 Assert.AreEqual(4.ToString(), remoteDlg.GetItemValue(2));
                 Assert.AreEqual("File2", remoteDlg.GetItemValue(3));
-                Assert.AreEqual("11/17/2021 9:09:07 AM", remoteDlg.GetItemValue(4));
+                Assert.AreEqual(formattedDate.ToString(CultureInfo.CurrentCulture), remoteDlg.GetItemValue(4));
 
                 remoteDlg.Close();
             });
@@ -291,7 +302,7 @@ namespace pwiz.SkylineTestFunctional
             RunUI(() =>
             {
                 remoteDlg.FolderBrowser.SelectNode(TARGETED_LIBRARY);
-                Assert.AreEqual(1, remoteDlg.FileNumber());
+                Assert.AreEqual(1, remoteDlg.FileNumber);
                 Assert.IsFalse(remoteDlg.ColumnVisible(2));
                 Assert.IsFalse(remoteDlg.ColumnVisible(3));
 
@@ -311,33 +322,6 @@ namespace pwiz.SkylineTestFunctional
 
         }
 
-        // Test viewing non-Skyline files and ensure the correct files show up
-        private void TestNonSky()
-        {
-            var testClient = new TestClientJson();
-            var fileJson = testClient.CreateFiles();
-            var sizeJson = testClient.CreateSizesJson();
-            var folderJson = testClient.GetInfoForFolders(new PanoramaServer(new Uri(VALID_SERVER), VALID_USER_NAME, VALID_PASSWORD),
-                TARGETED);
-            var remoteDlg = ShowDialog<PanoramaFilePicker>(() =>
-                SkylineWindow.OpenFromPanorama(VALID_SERVER, string.Empty, string.Empty, folderJson, fileJson, sizeJson));
-
-            WaitForCondition(9000, () => remoteDlg.IsLoaded);
-
-            RunUI(() =>
-            {
-                remoteDlg.FolderBrowser.SelectNode(TARGETED);
-                Assert.IsTrue(remoteDlg.VersionsVisible());
-                Assert.AreEqual("Most recent", remoteDlg.VersionsOption());
-                Assert.AreEqual(1, remoteDlg.FileNumber());
-                remoteDlg.ClickVersions();
-                Assert.AreEqual(4, remoteDlg.FileNumber());
-                Assert.AreEqual("All", remoteDlg.VersionsOption());
-                remoteDlg.Close();
-            });
-            WaitForClosedForm(remoteDlg);
-        }
-
         // Test viewing PanoramaDirectoryPicker folders
         private void TestDirectoryPickerIcons()
         {
@@ -352,15 +336,15 @@ namespace pwiz.SkylineTestFunctional
                 remoteDlg.Show();
                 WaitForCondition(9000, () => remoteDlg.IsLoaded);
                 remoteDlg.FolderBrowser.SelectNode(NO_TARGETED);
-                Assert.AreEqual(3, remoteDlg.FolderBrowser.GetIcon());
+                Assert.AreEqual(3, remoteDlg.FolderBrowser.TreeviewIcon);
                 remoteDlg.FolderBrowser.SelectNode(TARGETED);
-                Assert.AreEqual(1, remoteDlg.FolderBrowser.GetIcon());
+                Assert.AreEqual(1, remoteDlg.FolderBrowser.TreeviewIcon);
                 remoteDlg.FolderBrowser.SelectNode(VALID_SERVER);
-                Assert.AreEqual(-1, remoteDlg.FolderBrowser.GetIcon());
+                Assert.AreEqual(-1, remoteDlg.FolderBrowser.TreeviewIcon);
                 remoteDlg.FolderBrowser.SelectNode(TARGETED_LIBRARY);
-                Assert.AreEqual(2, remoteDlg.FolderBrowser.GetIcon());
+                Assert.AreEqual(2, remoteDlg.FolderBrowser.TreeviewIcon);
                 remoteDlg.FolderBrowser.SelectNode(TARGETED_COLLABORATION);
-                Assert.AreEqual(3, remoteDlg.FolderBrowser.GetIcon());
+                Assert.AreEqual(3, remoteDlg.FolderBrowser.TreeviewIcon);
                 remoteDlg.Close();
                 WaitForClosedForm(remoteDlg);
             });

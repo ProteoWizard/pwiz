@@ -45,8 +45,8 @@ namespace pwiz.PanoramaClient
         private TreeNode _priorNode;
         private readonly Stack<TreeNode> _next = new Stack<TreeNode>();
         private readonly TreeViewStateRestorer _restorer;
+        private TreeNode _selectedNode;
 
-        protected TreeNode SelectedNode { get; set; }
         protected PanoramaServer ActiveServer { get; set; }
 
         protected List<PanoramaServer> ServerList { get; }
@@ -104,7 +104,7 @@ namespace pwiz.PanoramaClient
         /// </summary>
         private void TreeView_NodeMouseClick(object sender, TreeNodeMouseClickEventArgs e)
         {
-            if (SelectedNode == null || !SelectedNode.Equals(e.Node))
+            if (_selectedNode == null || !_selectedNode.Equals(e.Node))
             {
                 var hitTest = treeView.HitTest(e.Location);
                 if (hitTest.Location == TreeViewHitTestLocations.Label || hitTest.Location == TreeViewHitTestLocations.Image)
@@ -142,7 +142,7 @@ namespace pwiz.PanoramaClient
 
         public static string GetSelectedUri(PanoramaFolderBrowser browser, bool webdav)
         {
-            var folderInfo = browser.GetFolderInformation(browser.SelectedNode);
+            var folderInfo = browser.GetFolderInformation(browser._selectedNode);
             return folderInfo != null
                 ? string.Concat(folderInfo.Server.URI,
                     webdav ? PanoramaUtil.WEBDAV_W_SLASH : string.Empty, folderInfo.FolderPath.TrimStart('/'))
@@ -151,7 +151,7 @@ namespace pwiz.PanoramaClient
 
         public void UpButtonClick()
         {
-            if (SelectedNode?.Parent != null)
+            if (_selectedNode?.Parent != null)
             {
                 _next.Clear();
                 if (_previous.Count != 0)
@@ -165,7 +165,7 @@ namespace pwiz.PanoramaClient
                 {
                     _previous.Push(_priorNode);
                 }
-                var parent = SelectedNode.Parent;
+                var parent = _selectedNode.Parent;
                 _priorNode = parent;
                 UpdateNavData(parent);
             }
@@ -173,20 +173,20 @@ namespace pwiz.PanoramaClient
         /// <summary>
         /// Enabled if a root node is not clicked
         /// </summary>
-        public bool UpEnabled => SelectedNode is { Parent: { } };
+        public bool UpEnabled => _selectedNode is { Parent: { } };
 
         public void BackButtonClick()
         {
             if (_next.Count != 0)
             {
-                if (!_next.Peek().Equals(SelectedNode))
+                if (!_next.Peek().Equals(_selectedNode))
                 {
-                    _next.Push(SelectedNode);
+                    _next.Push(_selectedNode);
                 }
             }
             else
             {
-                _next.Push(SelectedNode);
+                _next.Push(_selectedNode);
             }
             var prior = _previous.Pop();
             _priorNode = prior;
@@ -199,14 +199,14 @@ namespace pwiz.PanoramaClient
         {
             if (_previous.Count != 0)
             {
-                if (!_previous.Peek().Equals(SelectedNode))
+                if (!_previous.Peek().Equals(_selectedNode))
                 {
-                    _previous.Push(SelectedNode);
+                    _previous.Push(_selectedNode);
                 }
             }
             else
             {
-                _previous.Push(SelectedNode);
+                _previous.Push(_selectedNode);
             }
             var nextNode = _next.Pop();
             UpdateNavData(nextNode);
@@ -215,14 +215,14 @@ namespace pwiz.PanoramaClient
         private void UpdateNavData(TreeNode node)
         {
             treeView.SelectedNode = node;
-            SelectedNode = node;
+            _selectedNode = node;
             treeView.Focus();
             AddFiles?.Invoke(this, EventArgs.Empty);
         }
 
         public bool ForwardEnabled => _next != null && _next.Count != 0;
 
-        public string ClosingState()
+        public string GetClosingTreeState()
         { 
             return TreeState = _restorer.GetPersistentString();
         }
@@ -237,8 +237,7 @@ namespace pwiz.PanoramaClient
             if (folderInfo != null)
             {
                 _priorNode = node;
-                treeView.Focus();
-                SelectedNode = node;
+                _selectedNode = node;
                 treeView.Focus();
                 AddFiles?.Invoke(this, e);
             }
@@ -262,7 +261,7 @@ namespace pwiz.PanoramaClient
             var folderInfo = GetFolderInformation(node);
             if (folderInfo != null)
             {
-                SelectedNode = node;
+                _selectedNode = node;
             }
 
             // If there's a file browser observer, add corresponding files
@@ -279,52 +278,29 @@ namespace pwiz.PanoramaClient
 
         public string GetSelectedFolderPath()
         {
-            return (SelectedNode?.Tag as FolderInformation)?.FolderPath;
+            return (_selectedNode?.Tag as FolderInformation)?.FolderPath;
         }
 
         public string GetFolderPath()
         {
-            var folderInfo = GetFolderInformation(SelectedNode);
+            var folderInfo = GetFolderInformation(_selectedNode);
             return folderInfo?.FolderPath ?? string.Empty;
         }
 
         public bool GetNodeIsTargetedMS()
         {
-            var folderInfo = GetFolderInformation(SelectedNode);
+            var folderInfo = GetFolderInformation(_selectedNode);
             return folderInfo?.IsTargetedMS ?? false;
         }
 
         public PanoramaServer GetActiveServer()
         {
-            var folderInfo = GetFolderInformation(SelectedNode);
+            var folderInfo = GetFolderInformation(_selectedNode);
             return folderInfo?.Server;
         }
 
         #region Test Support
-        public void ClickLeft()
-        {
-            TreeView_KeyUp(this, new KeyEventArgs(Keys.Left));
-        }
-
-        public void ClickRight()
-        {
-            TreeView_KeyUp(this, new KeyEventArgs(Keys.Right));
-        }
-
-        public void ClickUp()
-        {
-            TreeView_KeyUp(this, new KeyEventArgs(Keys.Up));
-        }
-
-        public void ClickDown()
-        {
-            TreeView_KeyUp(this, new KeyEventArgs(Keys.Down));
-        }
-
-        public int GetIcon()
-        {
-            return treeView.SelectedNode.ImageIndex;
-        }
+        public int TreeviewIcon => treeView.SelectedNode.ImageIndex;
 
         public bool IsSelected(string nodeName)
         {
@@ -341,10 +317,7 @@ namespace pwiz.PanoramaClient
             }
         }
 
-        public string GetSelectedNodeText()
-        {
-            return SelectedNode.Text;
-        }
+        public string SelectedNodeText => _selectedNode.Text;
 
         /// <summary>
         /// Searches for a given TreeNode in a TreeView and
@@ -558,7 +531,6 @@ public class LKContainerBrowser : PanoramaFolderBrowser
             {
                 folderNode.Tag = new FolderInformation(server, canUpload);
             }
-
         }
     }
 }
@@ -670,15 +642,19 @@ public class WebDavBrowser : PanoramaFolderBrowser
         };
         treeViewFolders.SelectedImageIndex = (int)ImageId.panorama;
         treeViewFolders.Nodes.Add(treeNode);
-
-        var fileNode = new TreeNode(PanoramaUtil.FILES);
         var selectedFolder = LoadFromPath(uriFolderTokens, treeNode, server);
-        selectedFolder.Nodes.Add(fileNode);
+        treeViewFolders.SelectedNode = selectedFolder;
+        var lastFolder = uriFolderTokens.LastOrDefault();
+        if (lastFolder != null && !lastFolder.Equals(PanoramaUtil.FILES))
+        {
+            var fileNode = new TreeNode(PanoramaUtil.FILES);
+            selectedFolder.Nodes.Add(fileNode);
+            treeViewFolders.SelectedNode = fileNode;
+            if (selectedFolder.Tag is FolderInformation folderInfo)
+                fileNode.Tag = new FolderInformation(server, string.Concat(folderInfo.FolderPath, PanoramaUtil.FILES_W_SLASH), false);
+        }
         treeViewFolders.SelectedImageIndex = treeViewFolders.ImageIndex = (int)ImageId.folder;
-        if (selectedFolder.Tag is FolderInformation folderInfo)
-            fileNode.Tag = new FolderInformation(server, string.Concat(folderInfo.FolderPath, PanoramaUtil.FILES_W_SLASH), false);
         selectedFolder.Expand();
-        treeViewFolders.SelectedNode = fileNode;
     }
 
     /// <summary>
