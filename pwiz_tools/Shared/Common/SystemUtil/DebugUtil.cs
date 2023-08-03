@@ -1,11 +1,8 @@
 ﻿using System;
 using System.Collections.Generic;
 using System.Globalization;
-using System.Linq;
 using System.Reflection;
 using System.Runtime.CompilerServices;
-using System.Text;
-using System.Threading.Tasks;
 using pwiz.Common.Collections;
 
 namespace pwiz.Common.SystemUtil
@@ -14,10 +11,10 @@ namespace pwiz.Common.SystemUtil
     {
         public static string ObjectToString(object obj)
         {
-            return ObjectTreeToString(obj, new HashSet<object>(new IdentityEqualityComparer<object>()));
+            return ObjectTreeToString(obj, new HashSet<object>(new IdentityEqualityComparer<object>()), 0);
         }
 
-        private static string ObjectTreeToString(object obj, HashSet<object> visited)
+        private static string ObjectTreeToString(object obj, HashSet<object> visited, int indentLevel)
         {
             if (obj == null)
             {
@@ -32,30 +29,42 @@ namespace pwiz.Common.SystemUtil
             {
                 return LocalizationHelper.CallWithCulture(CultureInfo.InvariantCulture, obj.ToString);
             }
-            var parts = new List<string>();
+
+            var lines = new List<string>();
             bool enumerateProperties;
-            parts.Add("Type=" + obj.GetType());
+            string line = "Type=" + obj.GetType();
             if (obj.GetType().IsClass)
             {
-                parts.Add("RuntimeHelpers.GetHashCode()=" + RuntimeHelpers.GetHashCode(obj));
-                parts.Add("GetHashCode()=" + obj.GetHashCode());
+                line += ",RuntimeHelpers.GetHashCode()=" + RuntimeHelpers.GetHashCode(obj);
+                line += ",GetHashCode()=" + obj.GetHashCode();
                 enumerateProperties = visited.Add(obj);
             }
             else
             {
                 enumerateProperties = true;
             }
+            lines.Add(line);
 
             if (enumerateProperties)
             {
-                foreach (var field in obj.GetType().GetFields(BindingFlags.Instance | BindingFlags.Public |
-                                                              BindingFlags.NonPublic | BindingFlags.FlattenHierarchy))
+                for (var type = obj.GetType(); type != null; type = type.BaseType)
                 {
-                    parts.Add(field.Name + "=" + ObjectTreeToString(field.GetValue(obj), visited));
+                    foreach (var field in type.GetFields(BindingFlags.Instance | BindingFlags.Public |
+                                                         BindingFlags.NonPublic | BindingFlags.FlattenHierarchy))
+                    {
+                        string fieldName = field.Name;
+                        if (type != obj.GetType())
+                        {
+                            fieldName = type.Name + "." + fieldName;
+                        }
+                        lines.Add(fieldName + "=" + ObjectTreeToString(field.GetValue(obj), visited, indentLevel + 1));
+                    }
                 }
             }
 
-            return "{" + string.Join(",", parts) + "}";
+            return "{" + Environment.NewLine + new string('\t', indentLevel + 1)
+                   + string.Join("," + Environment.NewLine + new string('\t', indentLevel + 1), lines)
+                   + Environment.NewLine + new string('\t', indentLevel) + "}";
         }
     }
 }
