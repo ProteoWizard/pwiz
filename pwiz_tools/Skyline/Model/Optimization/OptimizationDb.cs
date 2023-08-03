@@ -76,8 +76,9 @@ namespace pwiz.Skyline.Model.Optimization
             {
                 _modifiedTime = File.GetLastWriteTime(_path);
             }
-            catch (Exception)
+            catch (Exception x)
             {
+                Console.Out.WriteLine("Exception in OptimizationDb.Validate: {0}", x);
                 _modifiedTime = new DateTime();
             }
         }
