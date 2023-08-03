@@ -1943,6 +1943,7 @@ namespace pwiz.Skyline
             SrmTreeNode nodePaste = SequenceTree.SelectedNode as SrmTreeNode;
             IdentityPath insertPath = nodePaste != null ? nodePaste.Path : null;
             IdentityPath selectPath = null;
+            bool isSmallMoleculeList = true;
             bool useColSelectDlg = true;
             bool hasHeaders = true;
             bool isAssociateProteins = false;
@@ -2013,6 +2014,7 @@ namespace pwiz.Skyline
                     librarySpectra = insParams.LibrarySpectra;
                     peptideGroups = insParams.PeptideGroups;
                     colSelections = insParams.ColSelections;
+                    isSmallMoleculeList = insParams.IsSmallMoleculeList;
                     isAssociateProteins = columnDlg.checkBoxAssociateProteins.Checked;
 
                     // Store the text for the audit log if it didn't come from a file
@@ -2032,6 +2034,26 @@ namespace pwiz.Skyline
                             sb.AppendLine(line);
                         }
                         gridValues = sb.ToString();
+                    }
+                }
+            }
+
+            if (isSmallMoleculeList && useColSelectDlg || importer.InputType == SrmDocument.DOCUMENT_TYPE.small_molecules && !useColSelectDlg)
+            {
+                // We should have all the column header info we need, proceed with the import
+                docCurrent = docCurrent.ImportMassList(inputs, importer, null,
+                    insertPath, out selectPath, out irtPeptides, out librarySpectra, out errorList,
+                    out peptideGroups, false, colSelections, SrmDocument.DOCUMENT_TYPE.none, hasHeaders);
+            }
+            if (importer.InputType == SrmDocument.DOCUMENT_TYPE.small_molecules)
+            {
+                if (errorList.Any())
+                {
+                    // Currently small molecules show just one error with no ability to continue.
+                    using (var errorDlg = new ImportTransitionListErrorDlg(errorList, true, false))
+                    {
+                        errorDlg.ShowDialog(this);
+                        return;
                     }
                 }
             }

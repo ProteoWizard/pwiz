@@ -146,17 +146,19 @@ namespace pwiz.Skyline.Model
             document = document.BeginDeferSettingsChanges(); // Prevents excessive calls to SetDocumentType etc
             var rowCount = 0;
             var rowSuccessCount = 0;
+            var hasInconsistentPrecursorColumns = false;
+            var hasInconsistentProductColumns = false;
 
             // For each row in the grid, add to or begin MoleculeGroup|Molecule|TransitionList tree
             foreach (var row in Rows)
             {
                 rowCount++;
-                var precursor = ReadPrecursorOrProductColumns(document, row, null); // Get molecule values
+                var precursor = ReadPrecursorOrProductColumns(document, row, null, ref hasInconsistentPrecursorColumns); // Get molecule values
                 if (precursor == null)
                 {
                     continue; // This won't succeed, but keep gathering errors
                 }
-                if (_requireProductInfo && ReadPrecursorOrProductColumns(document, row, precursor) == null)
+                if (_requireProductInfo && ReadPrecursorOrProductColumns(document, row, precursor, ref hasInconsistentProductColumns) == null)
                 {
                     continue; // This won't succeed, but keep gathering errors
                 }
@@ -201,6 +203,7 @@ namespace pwiz.Skyline.Model
             {
                 return null;
             }
+
             document = document.EndDeferSettingsChanges(docStart, null); // Process deferred calls to SetDocumentType etc
 
             firstAdded = _firstAddedPathPepGroup;
@@ -220,7 +223,6 @@ namespace pwiz.Skyline.Model
             }
 
             // If this was an assay library read, return the iRT info
-            // TODO bspratt - reinterpret explicit RT column as iRT?
             if (measuredRetentionTimes != null)
             {
                 foreach (var iRT in IRTs)
@@ -500,6 +502,8 @@ namespace pwiz.Skyline.Model
         private bool GetRequireProductInfo(SrmDocument document)
         {
             var requireProductInfo = false;
+            var hasInconsistentPrecursorColumns = false;
+            var hasInconsistentProductColumns = false;
             foreach (var row in Rows)
             {
                 if ((_hasAnyMoleculeMz && RowHasDistinctProductValue(row, INDEX_PRODUCT_MZ, INDEX_PRECURSOR_MZ)) ||
@@ -515,12 +519,12 @@ namespace pwiz.Skyline.Model
                 }
 
                 // More expensive check to see whether calculated precursor mz matches any declared product mz
-                var precursor = ReadPrecursorOrProductColumns(document, row, null); // Get precursor values
+                var precursor = ReadPrecursorOrProductColumns(document, row, null, ref hasInconsistentPrecursorColumns); // Get precursor values
                 if (precursor != null)
                 {
                     var product =
-                        ReadPrecursorOrProductColumns(document, row, precursor); // Get product values, if available
-                    if ((product != null && precursor.SignedMz.CompareTolerant(product.SignedMz, MzMatchTolerance)!=0))
+                        ReadPrecursorOrProductColumns(document, row, precursor, ref hasInconsistentProductColumns); // Get product values, if available
+                    if ((product != null && precursor.SignedMz.CompareTolerant(product.SignedMz, MzMatchTolerance)!=0) || hasInconsistentProductColumns)
                     {
                         requireProductInfo = true; // Product list is not completely empty, or not just precursors
                         break;
@@ -1151,7 +1155,8 @@ namespace pwiz.Skyline.Model
         //  mz and charge
         private ParsedIonInfo ReadPrecursorOrProductColumns(SrmDocument document,
             Row row,
-            ParsedIonInfo precursorInfo)
+            ParsedIonInfo precursorInfo,
+            ref bool hasInconsistentColumns) // Set true when there are ion columns found but they aren't quite right - missing values etc
         {
             var getPrecursorColumns = precursorInfo == null;
             int indexFormula = getPrecursorColumns ? INDEX_MOLECULE_FORMULA : INDEX_PRODUCT_FORMULA;
@@ -1516,10 +1521,15 @@ namespace pwiz.Skyline.Model
             }
 
             if (!ProcessAdduct(row, indexAdduct, indexFormula, getPrecursorColumns, ref formula, ref adduct, ref charge))
+            {
                 return null;
+            }
 
             if (!ProcessNeutralLoss(row, indexNeutralLoss, ref formula))
+            {
+                hasInconsistentColumns = true; // Neutral loss value is given, but there's an issue. N.B. a blank entry is not an issue.
                 return null;
+            }
 
             int errColumn = indexFormula;
             int countValues = 0;
@@ -1554,9 +1564,13 @@ namespace pwiz.Skyline.Model
                 }
             }
             if (mz > 0)
+            {
                 countValues++;
+            }
             if (NullForEmpty(formula) != null)
+            {
                 countValues++;
+            }
             if (countValues == 0 && !getPrecursorColumns &&
                 // A precursor transition usually has no fragment name, or name is "precursor", or name is repeated molecule name
                 (string.IsNullOrEmpty(name) || Equals(name, precursorInfo.MoleculeID.Name) ||
@@ -1752,6 +1766,7 @@ namespace pwiz.Skyline.Model
                     errMessage = getPrecursorColumns
                             ? Resources.SmallMoleculeTransitionListReader_ReadPrecursorOrProductColumns_Precursor_needs_values_for_any_two_of__Formula__m_z_or_Charge_
                             : Resources.SmallMoleculeTransitionListReader_ReadPrecursorOrProductColumns_Product_needs_values_for_any_two_of__Formula__m_z_or_Charge_;
+                    hasInconsistentColumns = true;
                 }
                 else
                 {
@@ -2000,9 +2015,10 @@ namespace pwiz.Skyline.Model
 
             CustomMolecule molecule;
             ParsedIonInfo parsedIonInfo;
+            bool hasInconsistentPrecursorIonColumns = false;
             try
             {
-                parsedIonInfo = ReadPrecursorOrProductColumns(document, row, null); // Re-read the precursor columns
+                parsedIonInfo = ReadPrecursorOrProductColumns(document, row, null, ref hasInconsistentPrecursorIonColumns); // Re-read the precursor columns
                 if (parsedIonInfo == null)
                     return null; // Some failure, but exception was already handled
                 // Identify items with same formula and different adducts
@@ -2125,12 +2141,15 @@ namespace pwiz.Skyline.Model
 
         private TransitionDocNode GetMoleculeTransition(SrmDocument document, Row row, Peptide pep, TransitionGroup group, ExplicitTransitionGroupValues explicitTransitionGroupValues)
         {
-            var precursorIon = ReadPrecursorOrProductColumns(document, row, null); // Re-read the precursor columns
+            bool hasInconsistentPrecursorIonColumns = false;
+            var precursorIon = ReadPrecursorOrProductColumns(document, row, null, ref hasInconsistentPrecursorIonColumns); // Re-read the precursor columns
             if (precursorIon == null)
             {
                 return null;
             }
-            var ion = _requireProductInfo ? ReadPrecursorOrProductColumns(document, row, precursorIon) : precursorIon; // Re-read the product columns, or copy precursor
+
+            bool hasInconsistentProductIonColumns = false;
+            var ion = _requireProductInfo ? ReadPrecursorOrProductColumns(document, row, precursorIon, ref hasInconsistentProductIonColumns) : precursorIon; // Re-read the product columns, or copy precursor
             if (ion == null)
             {
                 return null;

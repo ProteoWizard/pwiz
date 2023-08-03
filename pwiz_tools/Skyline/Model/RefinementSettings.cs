@@ -27,7 +27,6 @@ using pwiz.Common.DataBinding;
 using pwiz.Common.SystemUtil;
 using pwiz.Skyline.Controls.Graphs;
 using pwiz.Skyline.Model.AuditLog;
-using pwiz.Skyline.Model.Crosslinking;
 using pwiz.Skyline.Model.DocSettings;
 using pwiz.Skyline.Model.DocSettings.Extensions;
 using pwiz.Skyline.Model.GroupComparison;
@@ -909,7 +908,6 @@ namespace pwiz.Skyline.Model
                 // No support in mods for this label type
                 masscalc = new SequenceMassCalc(MassType.Monoisotopic);
             }
-
             // Determine the molecular formula of the charged/labeled peptide
             var moleculeFormula = masscalc.GetMolecularFormula(peptideTarget.Sequence); // Get molecular formula, possibly with isotopes in it (as with iTraq)
             adduct = 
@@ -946,7 +944,7 @@ namespace pwiz.Skyline.Model
 
         public const string TestingConvertedFromProteomic = "zzzTestingConvertedFromProteomic";
         public static string TestingConvertedFromProteomicPeptideNameDecorator = @"pep_"; // Testing aid: use this to make sure name of a converted peptide isn't a valid peptide seq
-
+        
         public static CustomMolecule MoleculeFromPeptideSequence(string sequence)
         {
             var moleculeFormula = SrmSettings.MonoisotopicMassCalc.GetMolecularFormula(sequence);
@@ -981,12 +979,15 @@ namespace pwiz.Skyline.Model
             {
                 var calc = prediction.RetentionTime.Calculator;
                 var newDbFile =  calc.PersistAsSmallMolecules(Path.GetDirectoryName(calc.PersistencePath), newdoc);
-                var irtCalcName = Path.GetFileNameWithoutExtension(newDbFile);
-                var calcIrt = new RCalcIrt(irtCalcName, newDbFile);
-                var retentionTimeRegression = prediction.RetentionTime.ChangeCalculator(calcIrt);
-                retentionTimeRegression = (RetentionTimeRegression)retentionTimeRegression.ChangeName(irtCalcName);
-                newdoc = newdoc.ChangeSettings(newdoc.Settings.ChangePeptidePrediction(p =>
-                    prediction.ChangeRetentionTime(retentionTimeRegression)));
+                if (newDbFile != null)
+                {
+                    var irtCalcName = Path.GetFileNameWithoutExtension(newDbFile);
+                    var calcIrt = new RCalcIrt(irtCalcName, newDbFile);
+                    var retentionTimeRegression = prediction.RetentionTime.ChangeCalculator(calcIrt);
+                    retentionTimeRegression = (RetentionTimeRegression)retentionTimeRegression.ChangeName(irtCalcName);
+                    newdoc = newdoc.ChangeSettings(newdoc.Settings.ChangePeptidePrediction(p =>
+                        prediction.ChangeRetentionTime(retentionTimeRegression)));
+                }
             }
 
             // Make small molecule filter settings look like peptide filter settings
