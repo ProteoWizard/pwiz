@@ -26,6 +26,7 @@
 #include "pwiz/data/msdata/Diff.hpp"
 #include "pwiz/data/vendor_readers/ExtendedReaderList.hpp"
 #include "SpectrumList_LockmassRefiner.hpp"
+#include "SpectrumList_PeakPicker.hpp"
 #include "boost/foreach_field.hpp"
 #include "boost/core/null_deleter.hpp"
 
@@ -35,25 +36,42 @@ using namespace pwiz::msdata;
 using namespace pwiz::analysis;
 
 ostream* os_ = 0;
+bool generateMzML = false;
 
-
-void test(const string& filepath, double lockmassMz, double lockmassTolerance)
+void test(const string& filepath, double lockmassMz, double lockmassTolerance, bool withPeakPicking)
 {
+    if (os_) *os_ << filepath << " " << lockmassMz << " " << lockmassTolerance << " " << withPeakPicking << endl;
+
     ExtendedReaderList readerList;
     MSDataFile msd(filepath, &readerList);
 
-    bfs::path targetResultFilename = bfs::path(__FILE__).parent_path() / "SpectrumList_LockmassRefinerTest.data" / (msd.run.id + ".mzML");
+    string suffix = withPeakPicking ? "-centroid" : "";
+    bfs::path targetResultFilename = bfs::path(__FILE__).parent_path() / "SpectrumList_LockmassRefinerTest.data" / (msd.run.id + suffix + ".mzML");
     if (!bfs::exists(targetResultFilename))
         throw runtime_error("test result file does not exist: " + targetResultFilename.string());
     MSDataFile targetResult(targetResultFilename.string());
 
-    SpectrumList_LockmassRefiner lmr(msd.run.spectrumListPtr, lockmassMz, lockmassMz, lockmassTolerance);
-    SpectrumListPtr sl(&lmr, boost::null_deleter());
-    msd.run.spectrumListPtr = sl;
+    SpectrumListPtr slpp;
+    SpectrumListPtr lmr;
+    if (withPeakPicking)
+    {
+        slpp.reset(new SpectrumList_PeakPicker(msd.run.spectrumListPtr, nullptr, true, IntegerSet::positive));
+        lmr.reset(new SpectrumList_LockmassRefiner(slpp, lockmassMz, lockmassMz, lockmassTolerance));
+    }
+    else
+        lmr.reset(new SpectrumList_LockmassRefiner(msd.run.spectrumListPtr, lockmassMz, lockmassMz, lockmassTolerance));
+
+    msd.run.spectrumListPtr = lmr;
+
+    // remove metadata ptrs appended on read
+    vector<SourceFilePtr>& sfs = targetResult.fileDescription.sourceFilePtrs;
+    if (!sfs.empty()) sfs.erase(sfs.end() - 1);
 
     DiffConfig config;
     config.ignoreExtraBinaryDataArrays = true;
-    config.ignoreMetadata = true;
+    config.ignoreDataProcessing = true;
+    if (lockmassMz == 0)
+        config.ignoreMetadata = true;
 
     Diff<MSData, DiffConfig> diff(msd, targetResult, config);
 
@@ -63,7 +81,19 @@ void test(const string& filepath, double lockmassMz, double lockmassTolerance)
     }
     else
     {
-        if (os_ && diff) *os_ << diff;
+        if (diff)
+        {
+            if (os_) *os_ << diff;
+            if (generateMzML)
+            {
+                if (os_) *os_ << "Writing new reference file: " << targetResultFilename.string() << endl;
+                MSDataFile::WriteConfig writeConfig;
+                writeConfig.indexed = false;
+                writeConfig.binaryDataEncoderConfig.precisionOverrides[MS_intensity_array] = BinaryDataEncoder::Precision_32;
+                writeConfig.binaryDataEncoderConfig.compression = BinaryDataEncoder::Compression_Zlib;
+                MSDataFile::write(msd, targetResultFilename.string(), writeConfig);
+            }
+        }
         unit_assert(!diff);
     }
 }
@@ -74,6 +104,7 @@ void parseArgs(const vector<string>& args, vector<string>& rawpaths)
     for (size_t i = 1; i < args.size(); ++i)
     {
         if (args[i] == "-v") os_ = &cout;
+        else if (args[i] == "--generate-mzML") generateMzML = true;
         else if (bal::starts_with(args[i], "--")) continue;
         else rawpaths.push_back(args[i]);
     }
@@ -96,8 +127,10 @@ int main(int argc, char* argv[])
             if (bal::ends_with(filepath, "ATEHLSTLSEK_profile.raw"))
             {
                 ++tests;
-                test(filepath, 684.3469, 0.1);
-                test(filepath, 0, 0.1);
+                test(filepath, 684.3469, 0.1, false);
+                test(filepath, 0, 0.1, false);
+                test(filepath, 684.3469, 0.1, true);
+                test(filepath, 0, 0.1, true);
             }
         }
 
