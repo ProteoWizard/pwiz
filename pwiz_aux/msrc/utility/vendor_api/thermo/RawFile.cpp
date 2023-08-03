@@ -376,9 +376,9 @@ RawFileImpl::RawFileImpl(const string& filename)
         }
 
         if (instrumentModel_ == InstrumentModelType_Unknown)
-	        instrumentModel_ = parseInstrumentModelType(modelString);
+            instrumentModel_ = parseInstrumentModelType(modelString);
         if (instrumentModel_ == InstrumentModelType_Unknown)
-        	instrumentModel_ = parseInstrumentModelType(nameString);
+            instrumentModel_ = parseInstrumentModelType(nameString);
 
         detectors_ = getDetectorsForInstrumentModel(getInstrumentModel());
         massAnalyzers_ = getMassAnalyzersForInstrumentModel(getInstrumentModel());
@@ -2291,7 +2291,7 @@ vector<string> RawFileImpl::getInstrumentMethods() const
             result.emplace_back(ToStdString(raw_->GetInstrumentMethod(i)));
         auto firstStatusLog = raw_->GetStatusLogForRetentionTime(0);
         for (int i = 0; i < firstStatusLog->Length; ++i)
-	        result.emplace_back(ToStdString(firstStatusLog->Labels[i] + " " + firstStatusLog->Values[i]));
+            result.emplace_back(ToStdString(firstStatusLog->Labels[i] + " " + firstStatusLog->Values[i]));
 #endif
         return result;
     }

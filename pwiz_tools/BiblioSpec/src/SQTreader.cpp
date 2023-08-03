@@ -279,6 +279,7 @@ void SQTreader::extractPSMs()
         if( curPSM_->score > scoreThreshold ) {// good matches score 0 to threshold
             delete curPSM_;
             curPSM_ = NULL;
+            ++filteredOutPsmCount_;
             continue;
         }
         // get the unmodified seq and mods from the file's version of seq
