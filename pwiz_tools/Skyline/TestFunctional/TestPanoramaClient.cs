@@ -18,8 +18,10 @@
  */
 
 using System;
+using System.Globalization;
 using Microsoft.VisualStudio.TestTools.UnitTesting;
 using Newtonsoft.Json.Linq;
+using pwiz.Common.SystemUtil;
 using pwiz.PanoramaClient;
 using pwiz.SkylineTestUtil;
 
@@ -241,32 +243,35 @@ namespace pwiz.SkylineTestFunctional
                 SkylineWindow.OpenFromPanorama(VALID_SERVER, string.Empty, string.Empty, folderJson, filesJson, sizesJson));
 
             WaitForCondition(9000, () => remoteDlg.IsLoaded);
-
+            var sizeObj = new FileSizeFormatProvider();
+            var sizeString = sizeObj.Format(@"fs1", 3, sizeObj);
             RunUI(() =>
             {
                 remoteDlg.FolderBrowser.SelectNode(TARGETED);
                 remoteDlg.ClickFile("File1");
                 Assert.AreEqual("File1", remoteDlg.GetItemValue(0));
-                Assert.AreEqual("3.0 B", remoteDlg.GetItemValue(1));
+                Assert.AreEqual(sizeString, remoteDlg.GetItemValue(1));
                 Assert.AreEqual(4.ToString(), remoteDlg.GetItemValue(2));
                 Assert.AreEqual(string.Empty, remoteDlg.GetItemValue(3));
-                Assert.AreEqual("11/17/2021 9:09:07 AM", remoteDlg.GetItemValue(4));
+                DateTime.TryParse("11/17/2021 9:09:07 AM", CultureInfo.InvariantCulture, DateTimeStyles.None,
+                    out var formattedDate);
+                Assert.AreEqual(formattedDate.ToString(CultureInfo.CurrentCulture), remoteDlg.GetItemValue(4));
 
                 remoteDlg.ClickVersions();
 
                 remoteDlg.ClickFile("File2");
                 Assert.AreEqual("File2", remoteDlg.GetItemValue(0));
-                Assert.AreEqual("200.0 B", remoteDlg.GetItemValue(1));
+                Assert.AreEqual(sizeObj.Format(@"fs1", 200, sizeObj), remoteDlg.GetItemValue(1));
                 Assert.AreEqual(4.ToString(), remoteDlg.GetItemValue(2));
                 Assert.AreEqual("File1", remoteDlg.GetItemValue(3));
-                Assert.AreEqual("11/17/2021 9:09:07 AM", remoteDlg.GetItemValue(4));
+                Assert.AreEqual(formattedDate.ToString(CultureInfo.CurrentCulture), remoteDlg.GetItemValue(4));
 
                 remoteDlg.ClickFile("File3");
                 Assert.AreEqual("File3", remoteDlg.GetItemValue(0));
-                Assert.AreEqual("5.9 KB", remoteDlg.GetItemValue(1));
+                Assert.AreEqual(sizeObj.Format(@"fs1", 6000, sizeObj), remoteDlg.GetItemValue(1));
                 Assert.AreEqual(4.ToString(), remoteDlg.GetItemValue(2));
                 Assert.AreEqual("File2", remoteDlg.GetItemValue(3));
-                Assert.AreEqual("11/17/2021 9:09:07 AM", remoteDlg.GetItemValue(4));
+                Assert.AreEqual(formattedDate.ToString(CultureInfo.CurrentCulture), remoteDlg.GetItemValue(4));
 
                 remoteDlg.Close();
             });

@@ -47,89 +47,61 @@
             // 
             // folderPanel
             // 
-            this.folderPanel.Anchor = ((System.Windows.Forms.AnchorStyles)((((System.Windows.Forms.AnchorStyles.Top | System.Windows.Forms.AnchorStyles.Bottom) 
-            | System.Windows.Forms.AnchorStyles.Left) 
-            | System.Windows.Forms.AnchorStyles.Right)));
-            this.folderPanel.Location = new System.Drawing.Point(12, 54);
+            resources.ApplyResources(this.folderPanel, "folderPanel");
             this.folderPanel.Name = "folderPanel";
-            this.folderPanel.Size = new System.Drawing.Size(423, 241);
-            this.folderPanel.TabIndex = 1;
             // 
             // cancel
             // 
-            this.cancel.Anchor = ((System.Windows.Forms.AnchorStyles)((System.Windows.Forms.AnchorStyles.Bottom | System.Windows.Forms.AnchorStyles.Right)));
+            resources.ApplyResources(this.cancel, "cancel");
             this.cancel.DialogResult = System.Windows.Forms.DialogResult.Cancel;
-            this.cancel.Location = new System.Drawing.Point(360, 304);
             this.cancel.Name = "cancel";
-            this.cancel.Size = new System.Drawing.Size(75, 23);
-            this.cancel.TabIndex = 4;
-            this.cancel.Text = "Cancel";
             this.cancel.UseVisualStyleBackColor = true;
             this.cancel.Click += new System.EventHandler(this.Cancel_Click);
             // 
             // open
             // 
-            this.open.Anchor = ((System.Windows.Forms.AnchorStyles)((System.Windows.Forms.AnchorStyles.Bottom | System.Windows.Forms.AnchorStyles.Right)));
-            this.open.Location = new System.Drawing.Point(279, 304);
+            resources.ApplyResources(this.open, "open");
             this.open.Name = "open";
-            this.open.Size = new System.Drawing.Size(75, 23);
-            this.open.TabIndex = 3;
-            this.open.Text = "Open";
             this.open.UseVisualStyleBackColor = true;
             this.open.Click += new System.EventHandler(this.Open_Click);
             // 
             // toolStrip
             // 
-            this.toolStrip.Dock = System.Windows.Forms.DockStyle.None;
+            resources.ApplyResources(this.toolStrip, "toolStrip");
             this.toolStrip.ImageScalingSize = new System.Drawing.Size(24, 24);
             this.toolStrip.Items.AddRange(new System.Windows.Forms.ToolStripItem[] {
             this.back,
             this.forward,
             this.up});
-            this.toolStrip.Location = new System.Drawing.Point(12, 7);
             this.toolStrip.Name = "toolStrip";
-            this.toolStrip.Size = new System.Drawing.Size(96, 31);
-            this.toolStrip.TabIndex = 5;
-            this.toolStrip.Text = "toolStrip1";
             // 
             // back
             // 
             this.back.DisplayStyle = System.Windows.Forms.ToolStripItemDisplayStyle.Image;
-            this.back.Image = ((System.Drawing.Image)(resources.GetObject("back.Image")));
-            this.back.ImageTransparentColor = System.Drawing.Color.Magenta;
+            resources.ApplyResources(this.back, "back");
             this.back.Name = "back";
-            this.back.Size = new System.Drawing.Size(28, 28);
-            this.back.Text = "Back";
             this.back.Click += new System.EventHandler(this.Back_Click);
             // 
             // forward
             // 
             this.forward.DisplayStyle = System.Windows.Forms.ToolStripItemDisplayStyle.Image;
-            this.forward.Image = ((System.Drawing.Image)(resources.GetObject("forward.Image")));
-            this.forward.ImageTransparentColor = System.Drawing.Color.Magenta;
+            resources.ApplyResources(this.forward, "forward");
             this.forward.Name = "forward";
-            this.forward.Size = new System.Drawing.Size(28, 28);
-            this.forward.Text = "Forward";
             this.forward.Click += new System.EventHandler(this.Forward_Click);
             // 
             // up
             // 
             this.up.Image = global::pwiz.PanoramaClient.Properties.Resources.Icojam_Blueberry_Basic_Arrow_up;
             this.up.Name = "up";
-            this.up.Size = new System.Drawing.Size(28, 28);
+            resources.ApplyResources(this.up, "up");
             this.up.Click += new System.EventHandler(this.Up_Click);
             // 
             // urlLink
             // 
-            this.urlLink.Anchor = ((System.Windows.Forms.AnchorStyles)(((System.Windows.Forms.AnchorStyles.Bottom | System.Windows.Forms.AnchorStyles.Left) 
-            | System.Windows.Forms.AnchorStyles.Right)));
+            resources.ApplyResources(this.urlLink, "urlLink");
             this.urlLink.AutoEllipsis = true;
-            this.urlLink.Location = new System.Drawing.Point(12, 309);
             this.urlLink.Name = "urlLink";
-            this.urlLink.Size = new System.Drawing.Size(261, 13);
-            this.urlLink.TabIndex = 2;
             this.urlLink.TabStop = true;
-            this.urlLink.Text = "<placeholder>";
             this.urlLink.LinkClicked += new System.Windows.Forms.LinkLabelLinkClickedEventHandler(this.UrlLink_LinkClicked);
             // 
             // contextMenuStrip
@@ -137,45 +109,35 @@
             this.contextMenuStrip.Items.AddRange(new System.Windows.Forms.ToolStripItem[] {
             this.copyLinkAddressToolStripMenuItem});
             this.contextMenuStrip.Name = "contextMenuStrip";
-            this.contextMenuStrip.Size = new System.Drawing.Size(168, 26);
+            resources.ApplyResources(this.contextMenuStrip, "contextMenuStrip");
             // 
             // copyLinkAddressToolStripMenuItem
             // 
             this.copyLinkAddressToolStripMenuItem.Name = "copyLinkAddressToolStripMenuItem";
-            this.copyLinkAddressToolStripMenuItem.Size = new System.Drawing.Size(167, 22);
-            this.copyLinkAddressToolStripMenuItem.Text = "Copy link address";
+            resources.ApplyResources(this.copyLinkAddressToolStripMenuItem, "copyLinkAddressToolStripMenuItem");
             this.copyLinkAddressToolStripMenuItem.Click += new System.EventHandler(this.CopyLinkAddressToolStripMenuItem_Click);
             // 
             // folderLabel
             // 
-            this.folderLabel.AutoSize = true;
-            this.folderLabel.ImeMode = System.Windows.Forms.ImeMode.NoControl;
-            this.folderLabel.Location = new System.Drawing.Point(9, 38);
+            resources.ApplyResources(this.folderLabel, "folderLabel");
             this.folderLabel.Name = "folderLabel";
-            this.folderLabel.Size = new System.Drawing.Size(81, 13);
-            this.folderLabel.TabIndex = 0;
-            this.folderLabel.Text = "&Remote folders:";
             // 
             // PanoramaDirectoryPicker
             // 
             this.AcceptButton = this.open;
-            this.AutoScaleDimensions = new System.Drawing.SizeF(6F, 13F);
+            resources.ApplyResources(this, "$this");
             this.AutoScaleMode = System.Windows.Forms.AutoScaleMode.Font;
             this.CancelButton = this.cancel;
-            this.ClientSize = new System.Drawing.Size(447, 336);
             this.Controls.Add(this.folderLabel);
             this.Controls.Add(this.urlLink);
             this.Controls.Add(this.toolStrip);
             this.Controls.Add(this.cancel);
             this.Controls.Add(this.open);
             this.Controls.Add(this.folderPanel);
-            this.Icon = ((System.Drawing.Icon)(resources.GetObject("$this.Icon")));
             this.MaximizeBox = false;
             this.MinimizeBox = false;
             this.Name = "PanoramaDirectoryPicker";
             this.ShowInTaskbar = false;
-            this.StartPosition = System.Windows.Forms.FormStartPosition.CenterParent;
-            this.Text = "Panorama Folders";
             this.FormClosing += new System.Windows.Forms.FormClosingEventHandler(this.DirectoryPicker_FormClosing);
             this.Load += new System.EventHandler(this.DirectoryPicker_Load);
             this.toolStrip.ResumeLayout(false);
