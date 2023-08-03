@@ -642,15 +642,19 @@ public class WebDavBrowser : PanoramaFolderBrowser
         };
         treeViewFolders.SelectedImageIndex = (int)ImageId.panorama;
         treeViewFolders.Nodes.Add(treeNode);
-
-        var fileNode = new TreeNode(PanoramaUtil.FILES);
         var selectedFolder = LoadFromPath(uriFolderTokens, treeNode, server);
-        selectedFolder.Nodes.Add(fileNode);
+        treeViewFolders.SelectedNode = selectedFolder;
+        var lastFolder = uriFolderTokens.LastOrDefault();
+        if (lastFolder != null && !lastFolder.Equals(PanoramaUtil.FILES))
+        {
+            var fileNode = new TreeNode(PanoramaUtil.FILES);
+            selectedFolder.Nodes.Add(fileNode);
+            treeViewFolders.SelectedNode = fileNode;
+            if (selectedFolder.Tag is FolderInformation folderInfo)
+                fileNode.Tag = new FolderInformation(server, string.Concat(folderInfo.FolderPath, PanoramaUtil.FILES_W_SLASH), false);
+        }
         treeViewFolders.SelectedImageIndex = treeViewFolders.ImageIndex = (int)ImageId.folder;
-        if (selectedFolder.Tag is FolderInformation folderInfo)
-            fileNode.Tag = new FolderInformation(server, string.Concat(folderInfo.FolderPath, PanoramaUtil.FILES_W_SLASH), false);
         selectedFolder.Expand();
-        treeViewFolders.SelectedNode = fileNode;
     }
 
     /// <summary>

@@ -54,7 +54,10 @@ namespace pwiz.SkylineTestFunctional
             // Test TreeView icons
             TestTreeViewIcons();
 
-            // Test enter key - ensure node is expanded
+            // This test ensures that navigating the TreeView using the
+            // arrow keys updates the file panel accordingly 
+            // This test is commented out because sending a key press
+            // programmatically does not seem to update the TreeView
             // TestKeyStrokeResponse();
 
             // Verify JSON is as expected 
@@ -174,7 +177,10 @@ namespace pwiz.SkylineTestFunctional
         }
 
         /// <summary>
-        /// Test enter key - ensure node is expanded
+        /// This test ensures that navigating the TreeView using the
+        /// arrow keys updates the file panel accordingly 
+        /// This test is commented out because sending a key press
+        /// programmatically does not seem to update the TreeView
         /// </summary>
         private void TestKeyStrokeResponse()
         {

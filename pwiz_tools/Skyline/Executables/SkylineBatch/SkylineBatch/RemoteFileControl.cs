@@ -236,18 +236,17 @@ namespace SkylineBatch
 
             string host = $"https://{uri.Host}";
             // var path = new Uri(remoteFileSource.SelectedPath);
-            var path = remoteFileSource.SelectedPath;
             PanoramaClientServer server = new PanoramaClientServer(new Uri(host), remoteFileSource.Username, remoteFileSource.Password);
 
             var panoramaServers = new List<PanoramaClientServer>() { server };
-            
-
-
+            var uriString = uri.ToString();
+            var selectedPath = uriString.Contains(PanoramaUtil.WEBDAV) ? uriString.Substring(uriString.LastIndexOf(PanoramaUtil.WEBDAV, StringComparison.Ordinal) + PanoramaUtil.WEBDAV.Length) : uriString.Substring(uriString.LastIndexOf(host, StringComparison.Ordinal) + host.Length);
             var state = string.Empty;
-            if (!string.IsNullOrEmpty(Settings.Default.PanoramaTreeState))
+            selectedPath = selectedPath.Replace(string.Concat(PanoramaUtil.FILES, "/"), string.Empty);
+            /*if (!string.IsNullOrEmpty(Settings.Default.PanoramaTreeState))
             {
                 state = Settings.Default.PanoramaTreeState;
-            }
+            }*/
 
             try
             {
@@ -257,7 +256,7 @@ namespace SkylineBatch
                 {
 
                     bool showWebdav = !_templateFile;
-                    using (PanoramaFilePicker dlg = new PanoramaFilePicker(panoramaServers, state, showWebdav, remoteFileSource.SelectedPath))
+                    using (PanoramaFilePicker dlg = new PanoramaFilePicker(panoramaServers, state, showWebdav, selectedPath))
                     {
                         dlg.OkButtonText = "Select";
                         dlg.InitializeDialog();
@@ -271,7 +270,7 @@ namespace SkylineBatch
                 }
                 else // if file not required use PanoramaDirectoryPicker
                 {
-                    using (PanoramaDirectoryPicker dlg = new PanoramaDirectoryPicker(panoramaServers, state, showWebDavFolders:true,selectedPath: remoteFileSource.SelectedPath))
+                    using (PanoramaDirectoryPicker dlg = new PanoramaDirectoryPicker(panoramaServers, state, showWebDavFolders:true,selectedPath: selectedPath))
                     {
 
                         dlg.OkButtonText = "Select";
@@ -281,7 +280,7 @@ namespace SkylineBatch
                             var url = dlg.SelectedPath;
                             var output = (url.EndsWith(PanoramaUtil.FILES) || !url.Contains(PanoramaUtil.FILES))
                                 ? "/"
-                                : $"/{url.Replace($"{path}/@files/", "")}/";
+                                : $"/{url.Substring(url.LastIndexOf(PanoramaUtil.FILES, StringComparison.Ordinal) + (PanoramaUtil.FILES.Length + 1))}/";
                             textRelativePath.Text = output;
                         }
                     }
