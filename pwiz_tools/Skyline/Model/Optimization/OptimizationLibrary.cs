@@ -196,7 +196,14 @@ namespace pwiz.Skyline.Model.Optimization
 
         public static OptimizationLibrary Deserialize(XmlReader reader)
         {
-            return reader.Deserialize(new OptimizationLibrary());
+            OptimizationLibrary optimizationLibrary = reader.Deserialize(new OptimizationLibrary());
+            if (Equals(optimizationLibrary, NONE))
+            {
+                // If the thing we just deserialized is equal to "NONE", then return NONE itself so that ReflectorEnumerator.ProcessDefaults recognizes it as the default value.
+                return NONE;
+            }
+
+            return optimizationLibrary;
         }
 
         public override void ReadXml(XmlReader reader)
