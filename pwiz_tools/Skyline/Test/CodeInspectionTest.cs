@@ -113,13 +113,23 @@ namespace pwiz.SkylineTest
                 false, // Pattern is not a regular expression
                 @"causes blurry icon issues on HD monitors"); // Explanation for prohibition, appears in report
 
+            // Looking for forms that haven't been declared localizable (those that have won't have direct assignments to Text in designer files)
+            AddTextInspection(@"*.Designer.cs", // Examine files with this mask
+                Inspection.Forbidden, // This is a test for things that should NOT be in such files
+                Level.Error, // Any failure is treated as an error, and overall test fails
+                NonLocalizedFiles(), // Ignore violations in files or directories we don't localize
+                string.Empty, // No file content required for inspection
+                new[] { ".Text = \"", ".HeaderText = \"" }, // Forbidden patterns
+                false, // Patterns are not regular expressions
+                @"form should be declared localizable"); // Explanation for prohibition, appears in report
+
             // Looking for unlocalized dialogs
             AddTextInspection(@"*.Designer.cs", // Examine files with this mask
                 Inspection.Required,  // This is a test for things that MUST be in such files
                 Level.Error, // Any failure is treated as an error, and overall test fails
                 NonLocalizedFiles(), // Ignore violations in files or directories we don't localize
                 string.Empty, // No file content required for inspection
-                @".*(new global::System.Resources.ResourceManager|System.ComponentModel.ComponentResourceManager resources = new System.ComponentModel.ComponentResourceManager).*", // Required pattern
+                @".*(new global::System.Resources.ResourceManager|new System.Resources.ResourceManager|System.ComponentModel.ComponentResourceManager resources = new System.ComponentModel.ComponentResourceManager).*", // Required pattern
                 true, // Pattern is a regular expression
                 @"ensures that every dialog is localizable"); // Explanation for requirement, appears in report
 
@@ -540,8 +550,6 @@ namespace pwiz.SkylineTest
 
             var errorCounts = new Dictionary<PatternDetails, int>();
 
-            var inspected = new HashSet<string>();
-
             foreach (var fileMask in allFileMasks)
             {
                 var filenames = Directory.GetFiles(root, fileMask, SearchOption.AllDirectories).ToList();
@@ -552,11 +560,6 @@ namespace pwiz.SkylineTest
                     if (Equals(filename, thisFile))
                     {
                         continue; // Can't inspect yourself!
-                    }
-
-                    if (!inspected.Add(filename))
-                    {
-                        continue; // Already inspected (matched multiple filemasks)
                     }
 
                     var content = File.ReadAllText(filename);
@@ -800,7 +803,7 @@ namespace pwiz.SkylineTest
         private enum Inspection { Forbidden, Required }
         public enum Level { Warn, Error }
 
-        private HashSet<string> allFileMasks = new HashSet<string>();
+        private HashSet<string> allFileMasks = new HashSet<string>(StringComparer.OrdinalIgnoreCase);
 
         // Return a list of directories that we don't care about from a strictly Skyline point of view
         private string[] NonSkylineDirectories()
@@ -841,16 +844,19 @@ namespace pwiz.SkylineTest
             result.Add("Model\\AuditLog\\PropertyNames.Designer.cs");
             result.Add("AsyncRenderControl.Designer.cs");
             result.Add("AsyncChromatogramsGraph2.designer.cs");
+            result.Add("MsGraphExtension.designer.cs");
             result.Add("QuantificationStrings.Designer.cs");
             result.Add("ColorGrid.Designer.cs");
             result.Add("ColumnCaptions.Designer.cs");
             result.Add("ColumnToolTips.Designer.cs");
-            result.Add("FormulaBox.Designer.cs");
+            result.Add("FormulaBox.Designer.cs"); // Has special handling for L10N in FormulaBox.cs
             result.Add("GroupComparisonStrings.Designer.cs");
             result.Add("RecentFileControl.Designer.cs");
             result.Add("settings.designer.cs");
             result.Add("resources.designer.cs");
             result.Add("Executables\\KeepResxW");
+            result.Add("Executables\\SharedBatch");
+            result.Add("Executables\\SkylineBatch");
             result.Add("Executables\\Tools\\MSstats");
             result.Add("Executables\\Tools\\MS1Probe");
             result.Add("Executables\\Tools\\Skyline Gadget");
@@ -861,6 +867,22 @@ namespace pwiz.SkylineTest
             return result.ToArray();
         }
 
+        void AddTextInspection(string fileMask, // Which files?
+            Inspection inspectionType, // Required, or forbidden?
+            Level failureType, // Is a failure an error, or a warning
+            string[] ignoredDirectories, // Areas to disregard
+            string cue, // If non-empty, only perform the inspection if file contains this cue
+            string[] patterns, // What we're looking out for (may contain \n)
+            bool isRegEx, // Is the pattern a regular expression?
+            string reason, // Explanation on failure
+            string patternException = null, // Optional string which exempts a pattern match if found in matching line
+            int numberToleratedAsWarnings = 0) // Some inspections we won't fix yet, but we don't want to see any new ones either
+        {
+            foreach (var pattern in patterns)
+            {
+                AddTextInspection(fileMask, inspectionType, failureType, ignoredDirectories, cue, pattern, isRegEx, reason, patternException, numberToleratedAsWarnings);
+            }
+        }
 
         void AddTextInspection(string fileMask,  // Which files?
             Inspection inspectionType, // Required, or forbidden?
