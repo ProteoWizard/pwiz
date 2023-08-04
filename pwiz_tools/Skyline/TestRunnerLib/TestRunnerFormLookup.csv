@@ -154,6 +154,7 @@ NameLayoutForm,TestPivotEditor
 NoModeUIDlg,UIModeSettingsTest
 OpenDataSourceDialog,TestRetentionTimeAlignment
 PanoramaFilePicker, TestPanorama
+PanoramaDirectoryPicker, TestPanorama
 PasteDlg.FastaTab,ProteinMetadataFunctionalTests
 PasteDlg.PeptideListTab,TestMethodEditTutorial
 PasteDlg.ProteinListTab,TestMethodEditTutorial

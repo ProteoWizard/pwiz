@@ -87,7 +87,7 @@ namespace pwiz.SkylineTestFunctional
             var folderJson = testClient.GetInfoForFolders(new PanoramaServer(new Uri(VALID_SERVER), VALID_USER_NAME, VALID_PASSWORD),
                 TARGETED);
             var remoteDlg = ShowDialog<PanoramaFilePicker>(() => 
-                SkylineWindow.OpenFromPanorama(VALID_SERVER, string.Empty, string.Empty, folderJson, fileJson, sizeJson));
+                SkylineWindow.ShowPanoramaFilePicker(VALID_SERVER, string.Empty, string.Empty, folderJson, fileJson, sizeJson));
 
             WaitForCondition(9000, () => remoteDlg.IsLoaded);
 
@@ -121,7 +121,7 @@ namespace pwiz.SkylineTestFunctional
             var folderJson = testClient.GetInfoForFolders(new PanoramaServer(new Uri(VALID_SERVER), VALID_USER_NAME, VALID_PASSWORD),
                 TARGETED);
             var remoteDlg = ShowDialog<PanoramaFilePicker>(() =>
-                SkylineWindow.OpenFromPanorama(VALID_SERVER, string.Empty, string.Empty, folderJson, fileJson, sizeJson));
+                SkylineWindow.ShowPanoramaFilePicker(VALID_SERVER, string.Empty, string.Empty, folderJson, fileJson, sizeJson));
 
             WaitForCondition(9000, () => remoteDlg.IsLoaded);
 
@@ -157,7 +157,7 @@ namespace pwiz.SkylineTestFunctional
             var folderJson = testClient.GetInfoForFolders(new PanoramaServer(new Uri(VALID_SERVER), VALID_USER_NAME, VALID_PASSWORD),
                 TARGETED);
             var remoteDlg = ShowDialog<PanoramaFilePicker>(() =>
-                SkylineWindow.OpenFromPanorama(VALID_SERVER, string.Empty, string.Empty, folderJson, fileJson, sizeJson));
+                SkylineWindow.ShowPanoramaFilePicker(VALID_SERVER, string.Empty, string.Empty, folderJson, fileJson, sizeJson));
 
             WaitForCondition(9000, () => remoteDlg.IsLoaded);
 
@@ -194,7 +194,7 @@ namespace pwiz.SkylineTestFunctional
             var folderJson = testClient.GetInfoForFolders(new PanoramaServer(new Uri(VALID_SERVER), VALID_USER_NAME, VALID_PASSWORD),
                 TARGETED);
             var remoteDlg = ShowDialog<PanoramaFilePicker>(() =>
-                SkylineWindow.OpenFromPanorama(VALID_SERVER, string.Empty, string.Empty, folderJson, filesJson, sizesJson));
+                SkylineWindow.ShowPanoramaFilePicker(VALID_SERVER, string.Empty, string.Empty, folderJson, filesJson, sizesJson));
 
             WaitForCondition(9000, () => remoteDlg.IsLoaded);
 
@@ -240,7 +240,7 @@ namespace pwiz.SkylineTestFunctional
             var folderJson = testClient.GetInfoForFolders(new PanoramaServer(new Uri(VALID_SERVER), VALID_USER_NAME, VALID_PASSWORD),
                 TARGETED);
             var remoteDlg = ShowDialog<PanoramaFilePicker>(() =>
-                SkylineWindow.OpenFromPanorama(VALID_SERVER, string.Empty, string.Empty, folderJson, filesJson, sizesJson));
+                SkylineWindow.ShowPanoramaFilePicker(VALID_SERVER, string.Empty, string.Empty, folderJson, filesJson, sizesJson));
 
             WaitForCondition(9000, () => remoteDlg.IsLoaded);
             var sizeObj = new FileSizeFormatProvider();
@@ -295,7 +295,7 @@ namespace pwiz.SkylineTestFunctional
             var folderJson = testClient.GetInfoForFolders(new PanoramaServer(new Uri(VALID_SERVER), VALID_USER_NAME, VALID_PASSWORD),
                 TARGETED);
             var remoteDlg = ShowDialog<PanoramaFilePicker>(() =>
-                SkylineWindow.OpenFromPanorama(VALID_SERVER, string.Empty, string.Empty, folderJson, fileJson, sizeJson));
+                SkylineWindow.ShowPanoramaFilePicker(VALID_SERVER, string.Empty, string.Empty, folderJson, fileJson, sizeJson));
 
             WaitForCondition(9000, () => remoteDlg.IsLoaded);
 
@@ -333,7 +333,7 @@ namespace pwiz.SkylineTestFunctional
             {
                 var remoteDlg = new PanoramaDirectoryPicker();
                 remoteDlg.InitializeTestDialog(new Uri(VALID_SERVER), VALID_USER_NAME, VALID_PASSWORD, folderJson);
-                remoteDlg.Show();
+                remoteDlg.Show(SkylineWindow);
                 WaitForCondition(9000, () => remoteDlg.IsLoaded);
                 remoteDlg.FolderBrowser.SelectNode(NO_TARGETED);
                 Assert.AreEqual(3, remoteDlg.FolderBrowser.TreeviewIcon);

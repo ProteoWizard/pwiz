@@ -902,22 +902,16 @@ namespace pwiz.Skyline
         }
 
         /// <summary>
-        /// Method used for testing server folder browser
+        /// Method used for testing <see cref="PanoramaFilePicker"/>
         /// </summary>
-        /// <param name="server"></param>
-        /// <param name="user"></param>
-        /// <param name="pass"></param>
-        /// <param name="folderJson"></param>
-        /// <param name="fileJson"></param>
-        /// <param name="sizeJson"></param>
-        public void OpenFromPanorama(string server, string user, string pass, JToken folderJson, JToken fileJson = null, JToken sizeJson = null)
+        public void ShowPanoramaFilePicker(string server, string user, string pass, JToken folderJson, JToken fileJson = null, JToken sizeJson = null)
         {
             using var dlg = new PanoramaFilePicker();
             dlg.InitializeTestDialog(new Uri(server), user, pass, folderJson, fileJson, sizeJson);
-            dlg.ShowDialog();
+            dlg.ShowDialog(this);
         }
 
-        public void OpenFromPanorama()
+        public void OpenFromPanorama(string downloadFilePath = null)
         {
             var servers = Settings.Default.ServerList;
             if (servers.Count == 0)
@@ -964,7 +958,7 @@ namespace pwiz.Skyline
                     if (longWaitDlg.IsCanceled)
                         return;
                 }
-                if (dlg.ShowDialog() != DialogResult.Cancel)
+                if (dlg.ShowDialog(this) != DialogResult.Cancel)
                 {
                     Settings.Default.PanoramaTreeState = dlg.FolderBrowser.TreeState;
                     var folderPath = string.Empty;
@@ -976,27 +970,34 @@ namespace pwiz.Skyline
 
                     var downloadPath = string.Empty;
                     var extension = dlg.FileName.EndsWith(SrmDocumentSharing.EXT) ? SrmDocumentSharing.EXT : SrmDocument.EXT;
-                    using (var saveAsDlg = new SaveFileDialog
-                           {
-                               FileName = dlg.FileName,
-                               DefaultExt = extension,
-                               SupportMultiDottedExtensions = true,
-                               Filter = TextUtil.FileDialogFiltersAll(SrmDocument.FILTER_DOC_AND_SKY_ZIP, SrmDocumentSharing.FILTER_SHARING, SkypFile.FILTER_SKYP),
-                               InitialDirectory = folderPath,
-                               OverwritePrompt = true,
-                           })
+                    if (downloadFilePath == null)
                     {
-                        if (saveAsDlg.ShowDialog(this) != DialogResult.OK)
+                        using (var saveAsDlg = new SaveFileDialog
+                               {
+                                   FileName = dlg.FileName,
+                                   DefaultExt = extension,
+                                   SupportMultiDottedExtensions = true,
+                                   Filter = TextUtil.FileDialogFiltersAll(SrmDocument.FILTER_DOC_AND_SKY_ZIP, SrmDocumentSharing.FILTER_SHARING, SkypFile.FILTER_SKYP),
+                                   InitialDirectory = folderPath,
+                                   OverwritePrompt = true,
+                               })
                         {
-                            return;
-                        }
+                            if (saveAsDlg.ShowDialog(this) != DialogResult.OK)
+                            {
+                                return;
+                            }
 
-                        Settings.Default.PanoramaLocalSavePath = Path.GetDirectoryName(saveAsDlg.FileName);
-                        var folder = Path.GetDirectoryName(saveAsDlg.FileName);
-                        if (!string.IsNullOrEmpty(folder))
-                        {
-                            downloadPath = saveAsDlg.FileName;
+                            Settings.Default.PanoramaLocalSavePath = Path.GetDirectoryName(saveAsDlg.FileName);
+                            var folder = Path.GetDirectoryName(saveAsDlg.FileName);
+                            if (!string.IsNullOrEmpty(folder))
+                            {
+                                downloadPath = saveAsDlg.FileName;
+                            }
                         }
+                    }
+                    else
+                    {
+                        downloadPath = downloadFilePath;
                     }
 
                     if (!string.IsNullOrEmpty(downloadPath))
