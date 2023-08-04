@@ -23,6 +23,7 @@ using System.IO;
 using System.Linq;
 using System.Xml;
 using System.Xml.Serialization;
+using EnvDTE;
 using pwiz.Common.SystemUtil;
 using pwiz.Skyline.Model.AuditLog;
 using pwiz.Skyline.Model.DocSettings;
@@ -221,6 +222,11 @@ namespace pwiz.Skyline.Model.Optimization
         {
             base.WriteXml(writer);
             writer.WriteAttribute(ATTR.database_path, DatabasePath ?? string.Empty);
+            if (Equals(NONE))
+            {
+                var stacktrace = new StackTrace(true);
+                Console.Out.WriteLine("WriteXml OptimizationLibrary.NONE: {0}", stacktrace);
+            }
         }
 
         #endregion
