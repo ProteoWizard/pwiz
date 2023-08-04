@@ -23,10 +23,11 @@ using System.Diagnostics;
 using System.Linq;
 using System.Windows.Forms;
 using Newtonsoft.Json.Linq;
+using pwiz.Common.SystemUtil;
 
 namespace pwiz.PanoramaClient
 {
-    public partial class PanoramaDirectoryPicker : Form
+    public partial class PanoramaDirectoryPicker : CommonFormEx
     {
         // The OkButtonText setter will be used in SkylineBatch
         public string OkButtonText { get; set; }
