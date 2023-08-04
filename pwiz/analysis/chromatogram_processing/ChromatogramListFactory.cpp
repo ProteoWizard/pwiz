@@ -298,7 +298,7 @@ string ChromatogramListFactory::usage(bool detailedHelp, const char *morehelp_pr
     else
     {
         oss << endl;
-        oss << "Note: Filters are applied sequentially in the order that you list them, and the sequence order\n";
+        oss << "Note: Filters are applied sequentially in the order that you list them, and the sequence order ";
         oss << "can make a large difference in your output.\n\n";
         oss << "Many filters take 'int_set' arguments.  An \'int_set\' is a list of intervals of the form [a,b] or a[-][b].\n";
         oss << "For example \'[0,3]\' and \'0-3\' both mean \'the set of integers from 0 to 3 inclusive\'.\n";
