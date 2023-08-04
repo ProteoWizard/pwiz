@@ -18,6 +18,7 @@
  */
 using System;
 using System.Collections.Generic;
+using System.Diagnostics;
 using System.IO;
 using System.Linq;
 using System.Xml;
@@ -199,6 +200,8 @@ namespace pwiz.Skyline.Model.Optimization
             OptimizationLibrary optimizationLibrary = reader.Deserialize(new OptimizationLibrary());
             if (Equals(optimizationLibrary, NONE))
             {
+                var stacktrace = new StackTrace(true);
+                Console.Out.WriteLine("Substituting OptimizationLibrary.NONE: {0}", stacktrace);
                 // If the thing we just deserialized is equal to "NONE", then return NONE itself so that ReflectorEnumerator.ProcessDefaults recognizes it as the default value.
                 return NONE;
             }
