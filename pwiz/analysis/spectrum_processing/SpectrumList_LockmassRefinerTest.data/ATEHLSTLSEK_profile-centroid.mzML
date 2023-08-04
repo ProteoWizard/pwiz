@@ -8,49 +8,49 @@
     <fileContent>
     </fileContent>
     <sourceFileList count="14">
-      <sourceFile id="_FUNC001.DAT" name="_FUNC001.DAT" location="file://C:\dev\pwiz\pwiz\data\vendor_readers\Waters\Reader_Waters_Test.data\ATEHLSTLSEK_profile.raw">
+      <sourceFile id="_FUNC001.DAT" name="_FUNC001.DAT" location="file://Z:\dev\pwiz\pwiz\data\vendor_readers\Waters\Reader_Waters_Test.data\ATEHLSTLSEK_profile.raw">
         <cvParam cvRef="MS" accession="MS:1000769" name="Waters nativeID format" value=""/>
         <cvParam cvRef="MS" accession="MS:1000526" name="Waters raw format" value=""/>
       </sourceFile>
-      <sourceFile id="_FUNC002.DAT" name="_FUNC002.DAT" location="file://C:\dev\pwiz\pwiz\data\vendor_readers\Waters\Reader_Waters_Test.data\ATEHLSTLSEK_profile.raw">
+      <sourceFile id="_FUNC002.DAT" name="_FUNC002.DAT" location="file://Z:\dev\pwiz\pwiz\data\vendor_readers\Waters\Reader_Waters_Test.data\ATEHLSTLSEK_profile.raw">
         <cvParam cvRef="MS" accession="MS:1000769" name="Waters nativeID format" value=""/>
         <cvParam cvRef="MS" accession="MS:1000526" name="Waters raw format" value=""/>
       </sourceFile>
-      <sourceFile id="_FUNC003.DAT" name="_FUNC003.DAT" location="file://C:\dev\pwiz\pwiz\data\vendor_readers\Waters\Reader_Waters_Test.data\ATEHLSTLSEK_profile.raw">
+      <sourceFile id="_FUNC003.DAT" name="_FUNC003.DAT" location="file://Z:\dev\pwiz\pwiz\data\vendor_readers\Waters\Reader_Waters_Test.data\ATEHLSTLSEK_profile.raw">
         <cvParam cvRef="MS" accession="MS:1000769" name="Waters nativeID format" value=""/>
         <cvParam cvRef="MS" accession="MS:1000526" name="Waters raw format" value=""/>
       </sourceFile>
-      <sourceFile id="_extern.inf" name="_extern.inf" location="file://C:\dev\pwiz\pwiz\data\vendor_readers\Waters\Reader_Waters_Test.data\ATEHLSTLSEK_profile.raw">
+      <sourceFile id="_extern.inf" name="_extern.inf" location="file://Z:\dev\pwiz\pwiz\data\vendor_readers\Waters\Reader_Waters_Test.data\ATEHLSTLSEK_profile.raw">
         <cvParam cvRef="MS" accession="MS:1000824" name="no nativeID format" value=""/>
       </sourceFile>
-      <sourceFile id="_FUNC001.IDX" name="_FUNC001.IDX" location="file://C:\dev\pwiz\pwiz\data\vendor_readers\Waters\Reader_Waters_Test.data\ATEHLSTLSEK_profile.raw">
+      <sourceFile id="_FUNC001.IDX" name="_FUNC001.IDX" location="file://Z:\dev\pwiz\pwiz\data\vendor_readers\Waters\Reader_Waters_Test.data\ATEHLSTLSEK_profile.raw">
         <cvParam cvRef="MS" accession="MS:1000824" name="no nativeID format" value=""/>
       </sourceFile>
-      <sourceFile id="_FUNC001.STS" name="_FUNC001.STS" location="file://C:\dev\pwiz\pwiz\data\vendor_readers\Waters\Reader_Waters_Test.data\ATEHLSTLSEK_profile.raw">
+      <sourceFile id="_FUNC001.STS" name="_FUNC001.STS" location="file://Z:\dev\pwiz\pwiz\data\vendor_readers\Waters\Reader_Waters_Test.data\ATEHLSTLSEK_profile.raw">
         <cvParam cvRef="MS" accession="MS:1000824" name="no nativeID format" value=""/>
       </sourceFile>
-      <sourceFile id="_FUNC002.IDX" name="_FUNC002.IDX" location="file://C:\dev\pwiz\pwiz\data\vendor_readers\Waters\Reader_Waters_Test.data\ATEHLSTLSEK_profile.raw">
+      <sourceFile id="_FUNC002.IDX" name="_FUNC002.IDX" location="file://Z:\dev\pwiz\pwiz\data\vendor_readers\Waters\Reader_Waters_Test.data\ATEHLSTLSEK_profile.raw">
         <cvParam cvRef="MS" accession="MS:1000824" name="no nativeID format" value=""/>
       </sourceFile>
-      <sourceFile id="_FUNC002.STS" name="_FUNC002.STS" location="file://C:\dev\pwiz\pwiz\data\vendor_readers\Waters\Reader_Waters_Test.data\ATEHLSTLSEK_profile.raw">
+      <sourceFile id="_FUNC002.STS" name="_FUNC002.STS" location="file://Z:\dev\pwiz\pwiz\data\vendor_readers\Waters\Reader_Waters_Test.data\ATEHLSTLSEK_profile.raw">
         <cvParam cvRef="MS" accession="MS:1000824" name="no nativeID format" value=""/>
       </sourceFile>
-      <sourceFile id="_FUNC003.IDX" name="_FUNC003.IDX" location="file://C:\dev\pwiz\pwiz\data\vendor_readers\Waters\Reader_Waters_Test.data\ATEHLSTLSEK_profile.raw">
+      <sourceFile id="_FUNC003.IDX" name="_FUNC003.IDX" location="file://Z:\dev\pwiz\pwiz\data\vendor_readers\Waters\Reader_Waters_Test.data\ATEHLSTLSEK_profile.raw">
         <cvParam cvRef="MS" accession="MS:1000824" name="no nativeID format" value=""/>
       </sourceFile>
-      <sourceFile id="_FUNC003.STS" name="_FUNC003.STS" location="file://C:\dev\pwiz\pwiz\data\vendor_readers\Waters\Reader_Waters_Test.data\ATEHLSTLSEK_profile.raw">
+      <sourceFile id="_FUNC003.STS" name="_FUNC003.STS" location="file://Z:\dev\pwiz\pwiz\data\vendor_readers\Waters\Reader_Waters_Test.data\ATEHLSTLSEK_profile.raw">
         <cvParam cvRef="MS" accession="MS:1000824" name="no nativeID format" value=""/>
       </sourceFile>
-      <sourceFile id="_FUNCTNS.INF" name="_FUNCTNS.INF" location="file://C:\dev\pwiz\pwiz\data\vendor_readers\Waters\Reader_Waters_Test.data\ATEHLSTLSEK_profile.raw">
+      <sourceFile id="_FUNCTNS.INF" name="_FUNCTNS.INF" location="file://Z:\dev\pwiz\pwiz\data\vendor_readers\Waters\Reader_Waters_Test.data\ATEHLSTLSEK_profile.raw">
         <cvParam cvRef="MS" accession="MS:1000824" name="no nativeID format" value=""/>
       </sourceFile>
-      <sourceFile id="_HEADER.TXT" name="_HEADER.TXT" location="file://C:\dev\pwiz\pwiz\data\vendor_readers\Waters\Reader_Waters_Test.data\ATEHLSTLSEK_profile.raw">
+      <sourceFile id="_HEADER.TXT" name="_HEADER.TXT" location="file://Z:\dev\pwiz\pwiz\data\vendor_readers\Waters\Reader_Waters_Test.data\ATEHLSTLSEK_profile.raw">
         <cvParam cvRef="MS" accession="MS:1000824" name="no nativeID format" value=""/>
       </sourceFile>
-      <sourceFile id="_HISTORY.INF" name="_HISTORY.INF" location="file://C:\dev\pwiz\pwiz\data\vendor_readers\Waters\Reader_Waters_Test.data\ATEHLSTLSEK_profile.raw">
+      <sourceFile id="_HISTORY.INF" name="_HISTORY.INF" location="file://Z:\dev\pwiz\pwiz\data\vendor_readers\Waters\Reader_Waters_Test.data\ATEHLSTLSEK_profile.raw">
         <cvParam cvRef="MS" accession="MS:1000824" name="no nativeID format" value=""/>
       </sourceFile>
-      <sourceFile id="_INLET.INF" name="_INLET.INF" location="file://C:\dev\pwiz\pwiz\data\vendor_readers\Waters\Reader_Waters_Test.data\ATEHLSTLSEK_profile.raw">
+      <sourceFile id="_INLET.INF" name="_INLET.INF" location="file://Z:\dev\pwiz\pwiz\data\vendor_readers\Waters\Reader_Waters_Test.data\ATEHLSTLSEK_profile.raw">
         <cvParam cvRef="MS" accession="MS:1000824" name="no nativeID format" value=""/>
       </sourceFile>
     </sourceFileList>

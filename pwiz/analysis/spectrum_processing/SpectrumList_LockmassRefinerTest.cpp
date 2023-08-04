@@ -29,6 +29,7 @@
 #include "SpectrumList_PeakPicker.hpp"
 #include "boost/foreach_field.hpp"
 #include "boost/core/null_deleter.hpp"
+#include "pwiz/data/msdata/Version.hpp"
 
 using namespace pwiz::util;
 using namespace pwiz::cv;
@@ -37,6 +38,69 @@ using namespace pwiz::analysis;
 
 ostream* os_ = 0;
 bool generateMzML = false;
+
+
+void mangleSourceFileLocations(const string& sourceName, vector<SourceFilePtr>& sourceFiles, const string& newSourceName = "")
+{
+    // mangling the absolute paths is necessary for the test to work from any path
+    BOOST_FOREACH(SourceFilePtr & sourceFilePtr, sourceFiles)
+    {
+        // if the sourceName or newSourceName is in the location, preserve it (erase everything preceding it)
+        if (!isHTTP(sourceFilePtr->location))
+        {
+            size_t sourceNameInLocation = newSourceName.empty() ? sourceFilePtr->location.find(sourceName) : min(sourceFilePtr->location.find(sourceName), sourceFilePtr->location.find(newSourceName));
+            if (sourceNameInLocation != string::npos)
+            {
+                sourceFilePtr->location.erase(0, sourceNameInLocation);
+                sourceFilePtr->location = "file:///" + newSourceName.empty() ? sourceName : newSourceName;
+            }
+            else
+                sourceFilePtr->location = "file:///";
+        }
+
+        if (!newSourceName.empty())
+        {
+            if (!bal::contains(sourceFilePtr->id, newSourceName))
+                bal::replace_all(sourceFilePtr->id, sourceName, newSourceName);
+            if (!bal::contains(sourceFilePtr->name, newSourceName))
+                bal::replace_all(sourceFilePtr->name, sourceName, newSourceName);
+        }
+    }
+}
+
+
+void manglePwizSoftware(MSData& msd)
+{
+    // a pwiz version change isn't worth regenerating the test data
+    vector<size_t> oldPwizSoftwarePtrs;
+    SoftwarePtr pwizSoftware;
+    for (size_t i = 0; i < msd.softwarePtrs.size(); ++i)
+        if (msd.softwarePtrs[i]->hasCVParam(MS_pwiz))
+        {
+            if (msd.softwarePtrs[i]->version != pwiz::msdata::Version::str())
+                oldPwizSoftwarePtrs.push_back(i);
+            else
+                pwizSoftware = msd.softwarePtrs[i];
+        }
+
+    pwizSoftware->id = "current pwiz";
+
+    msd.dataProcessingPtrs = msd.allDataProcessingPtrs();
+    msd.dataProcessingPtrs.resize(1);
+
+    SpectrumListBase* sl = dynamic_cast<SpectrumListBase*>(msd.run.spectrumListPtr.get());
+    if (sl && !msd.dataProcessingPtrs.empty()) sl->setDataProcessingPtr(msd.dataProcessingPtrs[0]);
+
+    for (DataProcessingPtr& dp : msd.dataProcessingPtrs)
+        for (ProcessingMethod& pm : dp->processingMethods)
+            pm.softwarePtr = pwizSoftware;
+
+    for (vector<size_t>::reverse_iterator itr = oldPwizSoftwarePtrs.rbegin();
+        itr != oldPwizSoftwarePtrs.rend();
+        ++itr)
+        msd.softwarePtrs.erase(msd.softwarePtrs.begin() + (*itr));
+}
+
 
 void test(const string& filepath, double lockmassMz, double lockmassTolerance, bool withPeakPicking)
 {
@@ -66,6 +130,12 @@ void test(const string& filepath, double lockmassMz, double lockmassTolerance, b
     // remove metadata ptrs appended on read
     vector<SourceFilePtr>& sfs = targetResult.fileDescription.sourceFilePtrs;
     if (!sfs.empty()) sfs.erase(sfs.end() - 1);
+
+    string sourceName = bfs::path(filepath).filename().string();
+    mangleSourceFileLocations(sourceName, sfs);
+    mangleSourceFileLocations(sourceName, msd.fileDescription.sourceFilePtrs);
+    manglePwizSoftware(msd);
+    manglePwizSoftware(targetResult);
 
     DiffConfig config;
     config.ignoreExtraBinaryDataArrays = true;
