@@ -18,12 +18,10 @@
  */
 using System;
 using System.Collections.Generic;
-using System.Diagnostics;
 using System.IO;
 using System.Linq;
 using System.Xml;
 using System.Xml.Serialization;
-using EnvDTE;
 using pwiz.Common.SystemUtil;
 using pwiz.Skyline.Model.AuditLog;
 using pwiz.Skyline.Model.DocSettings;
@@ -37,7 +35,7 @@ namespace pwiz.Skyline.Model.Optimization
     {
         public static readonly OptimizationLibrary NONE = new OptimizationLibrary(@"None", string.Empty);
 
-        public OptimizationDb _database;
+        private OptimizationDb _database;
 
         public OptimizationLibrary(string name, string databasePath)
             : base(name)
@@ -198,16 +196,7 @@ namespace pwiz.Skyline.Model.Optimization
 
         public static OptimizationLibrary Deserialize(XmlReader reader)
         {
-            OptimizationLibrary optimizationLibrary = reader.Deserialize(new OptimizationLibrary());
-            if (Equals(optimizationLibrary, NONE))
-            {
-                var stacktrace = new StackTrace(true);
-                Console.Out.WriteLine("Substituting OptimizationLibrary.NONE: {0}", stacktrace);
-                // If the thing we just deserialized is equal to "NONE", then return NONE itself so that ReflectorEnumerator.ProcessDefaults recognizes it as the default value.
-                return NONE;
-            }
-
-            return optimizationLibrary;
+            return reader.Deserialize(new OptimizationLibrary());
         }
 
         public override void ReadXml(XmlReader reader)
@@ -222,11 +211,6 @@ namespace pwiz.Skyline.Model.Optimization
         {
             base.WriteXml(writer);
             writer.WriteAttribute(ATTR.database_path, DatabasePath ?? string.Empty);
-            if (Equals(NONE))
-            {
-                var stacktrace = new StackTrace(true);
-                Console.Out.WriteLine("WriteXml OptimizationLibrary.NONE: {0}", stacktrace);
-            }
         }
 
         #endregion
