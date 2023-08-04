@@ -19,6 +19,7 @@
 using System;
 using System.Collections.Generic;
 using System.Configuration;
+using System.Diagnostics;
 using System.Drawing;
 using System.IO;
 using System.Linq;
@@ -123,6 +124,16 @@ namespace pwiz.Skyline.Properties
             {
                 // Ignore exceptions
             }
+        }
+
+        public override void Save()
+        {
+            var optimizationLibraryList = this[nameof(OptimizationLibraryList)] as OptimizationLibraryList;
+            if (optimizationLibraryList != null && optimizationLibraryList.Contains(OptimizationLibrary.NONE))
+            {
+                Console.Out.WriteLine("Saving settings with OptimizationLibraryList.NONE: {0}", new StackTrace(true));
+            }
+            base.Save();
         }
 
         /// <summary>
