@@ -397,18 +397,6 @@ namespace pwiz.SkylineTestData
         [TestMethod]
         public void ConsoleChangePredictTranSettingsTest()
         {
-            var configFilePath = System.Configuration.ConfigurationManager
-                .OpenExeConfiguration(System.Configuration.ConfigurationUserLevel.PerUserRoamingAndLocal).FilePath;
-            if (File.Exists(configFilePath))
-            {
-                Console.Out.WriteLine("Contents of {0}: {1}", configFilePath, File.ReadAllText(configFilePath));
-            }
-            else
-            {
-                Console.Out.WriteLine("Config file {0} does not exist", configFilePath);
-            }
-
-
             TestFilesDir = new TestFilesDir(TestContext, @"TestData\CommandLineRefine.zip");
             DocumentPath = InitRefineDocument("SRM_mini_single_replicate.sky");
             OutPath = Path.Combine(Path.GetDirectoryName(DocumentPath) ?? string.Empty, "test.sky");
