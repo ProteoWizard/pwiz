@@ -590,7 +590,7 @@ namespace pwiz.Skyline.Model.AuditLog
                     return true;
             }
 
-            return !property.IgnoreDefaultParent && defaults.Any(d => Equals(d, objectInfo.NewObject));
+            return !property.IgnoreDefaultParent && defaults.Any(d => ReferenceEquals(d, objectInfo.NewObject));
         }
 
         private static List<object> GetPropertyValues(IEnumerable<object> parents, Property property)

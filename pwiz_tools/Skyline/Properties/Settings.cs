@@ -782,9 +782,16 @@ namespace pwiz.Skyline.Properties
 
         public OptimizationLibrary GetOptimizationLibraryByName(string name)
         {
+            var defaultLibrary = OptimizationLibraryList.GetDefault();
+            if (Equals(name, defaultLibrary.Name))
+            {
+                // Return the default library rather than what might be found in OptimizationLibraryList
+                // because the Audit Log code cares about reference equality
+                return defaultLibrary;
+            }
             OptimizationLibrary library;
             if (!OptimizationLibraryList.TryGetValue(name, out library))
-                library = OptimizationLibraryList.GetDefault();
+                library = defaultLibrary;
             return library;
         }
 
