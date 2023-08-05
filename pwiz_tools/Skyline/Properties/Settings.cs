@@ -44,6 +44,7 @@ using pwiz.Skyline.SettingsUI.Irt;
 using pwiz.Skyline.ToolsUI;
 using pwiz.Skyline.Util;
 using System.Windows.Forms;
+using System.Xml;
 using pwiz.Common.Chemistry;
 using pwiz.Common.Collections;
 using pwiz.ProteowizardWrapper;
@@ -782,16 +783,9 @@ namespace pwiz.Skyline.Properties
 
         public OptimizationLibrary GetOptimizationLibraryByName(string name)
         {
-            var defaultLibrary = OptimizationLibraryList.GetDefault();
-            if (Equals(name, defaultLibrary.Name))
-            {
-                // Return the default library rather than what might be found in OptimizationLibraryList
-                // because the Audit Log code cares about reference equality
-                return defaultLibrary;
-            }
             OptimizationLibrary library;
             if (!OptimizationLibraryList.TryGetValue(name, out library))
-                library = defaultLibrary;
+                library = OptimizationLibraryList.GetDefault();
             return library;
         }
 
@@ -1987,6 +1981,21 @@ namespace pwiz.Skyline.Properties
         public override string Label { get { return Resources.OptimizationLibraryList_Label_Optimization_Database; } }
 
         public override int ExcludeDefaults { get { return 1; } }
+
+        public override void ReadXml(XmlReader reader)
+        {
+            base.ReadXml(reader);
+            // If this list contains something which is Equal to OptimizationLibrary.NONE, then 
+            // replace it with the actual OptimizationLibrary.NONE because the Audit Log cares
+            // about reference equality
+            for (int i = 0; i < Count; i++)
+            {
+                if (Equals(OptimizationLibrary.NONE, this[i]))
+                {
+                    this[i] = OptimizationLibrary.NONE;
+                }
+            }
+        }
     }
 
     public sealed class DeclusterPotentialList : SettingsList<DeclusteringPotentialRegression>
