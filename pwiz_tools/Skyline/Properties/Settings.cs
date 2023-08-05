@@ -793,10 +793,10 @@ namespace pwiz.Skyline.Properties
 
         public OptimizationLibrary GetOptimizationLibraryByName(string name)
         {
-            if (Equals(name, OptimizationLibrary.NONE.Name))
-            {
-                return OptimizationLibrary.NONE;
-            }
+            // if (Equals(name, OptimizationLibrary.NONE.Name))
+            // {
+            //     return OptimizationLibrary.NONE;
+            // }
             OptimizationLibrary library;
             if (!OptimizationLibraryList.TryGetValue(name, out library))
                 library = OptimizationLibraryList.GetDefault();
