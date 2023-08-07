@@ -127,7 +127,10 @@ namespace SkylineBatch
                         {
                             var line = streamReader.ReadLine();
                             if (!string.IsNullOrEmpty(line))
+                            {
                                 webdavUri = new Uri(line);
+                                break;
+                            }
                         }
                     }
                 }

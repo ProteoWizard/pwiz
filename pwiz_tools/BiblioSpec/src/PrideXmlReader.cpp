@@ -450,6 +450,8 @@ void PrideXmlReader::endPeptideItem()
     {
         psms_.push_back(curPSM_);
     }
+    else
+        ++filteredOutPsmCount_;
 
     lastState();
 }

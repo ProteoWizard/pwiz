@@ -595,6 +595,7 @@ void WatersMseReader::insertCurPSM(){
         } else if( curMsePSM_->score <= scoreThreshold_ ){
             Verbosity::comment(V_DETAIL, "Not inserting psm %d with score %f",
                                curMsePSM_->specKey, curMsePSM_->score);
+            ++filteredOutPsmCount_;
         }
         curMsePSM_->clear();
     }
