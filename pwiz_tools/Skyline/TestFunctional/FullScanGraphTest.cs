@@ -105,7 +105,7 @@ namespace pwiz.SkylineTestFunctional
             {
                 { "FileName", "ID12692_01_UCA168_3727_040714.mzML" },
                 { "ReplicateName", "ID12692_01_UCA168_3727_040714" },
-                { "RetentionTime", (32.98).ToString(CultureInfo.CurrentCulture) },
+                { "RetentionTime", (32.96).ToString(CultureInfo.CurrentCulture) },
                 { "IonMobility", (5.716).ToString(CultureInfo.CurrentCulture) + " msec" },
                 { "IsolationWindow", "50:2000 (-975:+975)" },
                 {
@@ -117,7 +117,7 @@ namespace pwiz.SkylineTestFunctional
                     (5.423).ToString(CultureInfo.CurrentCulture) + ":" +
                     (6.161).ToString(CultureInfo.CurrentCulture)
                 },
-                { "ScanId", "2.0.308401 - 2.0.308600" },
+                { "ScanId", "2.0.308201 - 2.0.308400" },
                 { "MSLevel", "1" },
                 {
                     "Instrument", new Dictionary<string, object>
@@ -126,10 +126,10 @@ namespace pwiz.SkylineTestFunctional
                         { "InstrumentManufacturer", "Waters" }
                     }
                 },
-                { "DataPoints", 59851.ToString(@"N0", CultureInfo.CurrentCulture) },
-                { "MzCount", 29533.ToString(@"N0", CultureInfo.CurrentCulture) },
+                { "DataPoints", 60587.ToString(@"N0", CultureInfo.CurrentCulture) },
+                { "MzCount", 29876.ToString(@"N0", CultureInfo.CurrentCulture) },
                 { "IsCentroided", "False" },
-                { "dotp", 0.63.ToString(CultureInfo.CurrentCulture) }
+                { "dotp", 0.51.ToString(CultureInfo.CurrentCulture) }
             };
 
             Settings.Default.TransformTypeChromatogram = TransformChrom.interpolated.ToString();
@@ -281,7 +281,7 @@ namespace pwiz.SkylineTestFunctional
             WaitForDocumentLoaded();
             FindNode(679.38.ToString(CultureInfo.CurrentCulture));
             WaitForGraphs();
-            ClickChromatogram(33.0, 22, PaneKey.PRODUCTS);
+            ClickChromatogram(32.98, 17, PaneKey.PRODUCTS);
             TestPropertySheet(expectedPropertiesProduct2);
         }
 
