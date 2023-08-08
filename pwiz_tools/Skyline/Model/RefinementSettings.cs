@@ -1303,6 +1303,11 @@ namespace pwiz.Skyline.Model
                 }
             }
 
+            if (!comparisonValue.HasValue)
+            {
+                return comparisonValue >= cutoff;
+
+            }
             return comparisonValue >= cutoff;
 
         }
