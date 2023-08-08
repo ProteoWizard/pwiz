@@ -3661,7 +3661,7 @@ namespace pwiz.Skyline.Model.AuditLog {
         }
         
         /// <summary>
-        ///   Looks up a localized string similar to Which values are compared against included cutoff.
+        ///   Looks up a localized string similar to Shape r included comparison type (min/max).
         /// </summary>
         public static string RefinementSettings_SCIncludedComparisonType {
             get {
@@ -3670,7 +3670,7 @@ namespace pwiz.Skyline.Model.AuditLog {
         }
         
         /// <summary>
-        ///   Looks up a localized string similar to Remove transitions with shape correlation below cutoff.
+        ///   Looks up a localized string similar to Shape r included cutoff.
         /// </summary>
         public static string RefinementSettings_SCIncludedCutoff {
             get {
@@ -3679,7 +3679,7 @@ namespace pwiz.Skyline.Model.AuditLog {
         }
         
         /// <summary>
-        ///   Looks up a localized string similar to Which values are compared against quantitative cutoff.
+        ///   Looks up a localized string similar to Shape r quantitative comparison type (min/max).
         /// </summary>
         public static string RefinementSettings_SCQuantitativeComparisonType {
             get {
@@ -3688,7 +3688,7 @@ namespace pwiz.Skyline.Model.AuditLog {
         }
         
         /// <summary>
-        ///   Looks up a localized string similar to Remove transitions with shape correlation below cutoff.
+        ///   Looks up a localized string similar to Shape r quantitative cutoff.
         /// </summary>
         public static string RefinementSettings_SCQuantitativeCutoff {
             get {
