@@ -139,6 +139,8 @@
             this.Controls.Add(this.label1);
             this.Controls.Add(this.textName);
             this.Controls.Add(this.splitContainer1);
+            this.MaximizeBox = false;
+            this.MinimizeBox = false;
             this.Name = "RemoteSourceForm";
             this.ShowInTaskbar = false;
             this.FormClosing += new System.Windows.Forms.FormClosingEventHandler(this.RemoteSourceForm_FormClosing);

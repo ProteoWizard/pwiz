@@ -35,7 +35,6 @@ using JetBrains.Annotations;
 // using Microsoft.Diagnostics.Runtime; only needed for stack dump logic, which is currently disabled
 using Microsoft.VisualStudio.TestTools.UnitTesting;
 using pwiz.Common.Collections;
-using pwiz.Common.Controls;
 using pwiz.Common.Database;
 using pwiz.Common.DataBinding;
 using pwiz.Common.SystemUtil;
