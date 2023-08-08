@@ -604,18 +604,20 @@ namespace pwiz.Skyline.Controls.Graphs
                     var chromSet = stateProvider.DocumentUI.Settings.MeasuredResults.Chromatograms.FirstOrDefault(
                         chrom => chrom.ContainsFile(_msDataFileScanHelper.ScanProvider.DataFilePath));
                     spectrumProperties.ReplicateName = chromSet?.Name;
-                    if (_peaks != null && _peaks.Length > 0)
+                    if (_peaks?.Length > 0)
                     {
                         var nodePath = DocNodePath.GetNodePath(_msDataFileScanHelper.CurrentTransition?.Id,
                             _documentContainer.DocumentUI);
 
-                        if (!nodePath.Precursor.Id.Equals(_precursor?.DocNode?.Id))
+                        if (nodePath !=null && !nodePath.Precursor.Id.Equals(_precursor?.DocNode?.Id))
+                        {
                             _precursor = new GraphSpectrum.Precursor(_documentContainer.DocumentUI.Settings, null,
                                 nodePath.Peptide, nodePath.Precursor);
+                        }
 
                         if (_msDataFileScanHelper.Source == ChromSource.fragment) // Calculate library dotp
                         {
-                            if (_precursor.Spectra != null && _precursor.Spectra.Count > 0)
+                            if (_precursor.Spectra?.Count > 0)
                             {
                                 var libSpectrum = _precursor.Spectra[0].SpectrumPeaksInfo;
 
@@ -701,8 +703,8 @@ namespace pwiz.Skyline.Controls.Graphs
         {
             // aggregate the peak intensities a in single pass through the spectrum
             var spectrumIndex = 0;
-            var transitionIntensities = new Dictionary<TransitionFullScanInfo, double>();
-            foreach (var docTransition in transitions.OrderBy(t => t.ProductMz))
+            var transitionIntensities = transitions.ToDictionary(t => t, t => 0.0);
+            foreach (var docTransition in transitionIntensities.Keys.OrderBy(t => t.ProductMz))
             {
                 while (_peaks[spectrumIndex].Mz <
                        docTransition.ProductMz - docTransition.ExtractionWidth / 2)
@@ -713,10 +715,7 @@ namespace pwiz.Skyline.Controls.Graphs
                        _peaks[spectrumIndex].Mz <=
                        docTransition.ProductMz + docTransition.ExtractionWidth / 2)
                 {
-                    if (transitionIntensities.ContainsKey(docTransition))
-                        transitionIntensities[docTransition] += _peaks[spectrumIndex].Intensity;
-                    else
-                        transitionIntensities.Add(docTransition, _peaks[spectrumIndex].Intensity);
+                    transitionIntensities[docTransition] += _peaks[spectrumIndex].Intensity;
                     spectrumIndex++;
                 }
             }
