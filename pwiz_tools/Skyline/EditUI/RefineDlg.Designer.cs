@@ -450,15 +450,15 @@
             // comboQuantitativeComparisonType
             // 
             this.comboQuantitativeComparisonType.DropDownStyle = System.Windows.Forms.ComboBoxStyle.DropDownList;
-            this.comboQuantitativeComparisonType.FormattingEnabled = true;
             resources.ApplyResources(this.comboQuantitativeComparisonType, "comboQuantitativeComparisonType");
+            this.comboQuantitativeComparisonType.FormattingEnabled = true;
             this.comboQuantitativeComparisonType.Name = "comboQuantitativeComparisonType";
             // 
             // comboIncludedComparisonType
             // 
             this.comboIncludedComparisonType.DropDownStyle = System.Windows.Forms.ComboBoxStyle.DropDownList;
-            this.comboIncludedComparisonType.FormattingEnabled = true;
             resources.ApplyResources(this.comboIncludedComparisonType, "comboIncludedComparisonType");
+            this.comboIncludedComparisonType.FormattingEnabled = true;
             this.comboIncludedComparisonType.Name = "comboIncludedComparisonType";
             // 
             // label10

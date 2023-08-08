@@ -610,13 +610,13 @@ namespace pwiz.Skyline.EditUI
             }
 
             RefinementSettings.ComparisonType? scIncludedComparisonType = null;
-            if (SCIncludedComparisonType >= 0)
+            if (SCIncludedComparisonType >= 0 && scIncludedCutoff.HasValue)
             {
                 scIncludedComparisonType = SCIncludedComparisonType;
             }
 
             RefinementSettings.ComparisonType? scQuantitativeComparisonType = null;
-            if (SCQuantitativeComparisonType >= 0)
+            if (SCQuantitativeComparisonType >= 0 && scQuantitativeCutoff.HasValue)
             {
                 scQuantitativeComparisonType = SCQuantitativeComparisonType;
             }

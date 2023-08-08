@@ -1336,6 +1336,9 @@ exceed this threshold.</value>
   <data name="&gt;&gt;tabResults.ZOrder" xml:space="preserve">
     <value>1</value>
   </data>
+  <data name="comboQuantitativeComparisonType.Enabled" type="System.Boolean, mscorlib">
+    <value>False</value>
+  </data>
   <data name="comboQuantitativeComparisonType.Location" type="System.Drawing.Point, System.Drawing">
     <value>251, 35</value>
   </data>
@@ -1356,6 +1359,9 @@ exceed this threshold.</value>
   </data>
   <data name="&gt;&gt;comboQuantitativeComparisonType.ZOrder" xml:space="preserve">
     <value>0</value>
+  </data>
+  <data name="comboIncludedComparisonType.Enabled" type="System.Boolean, mscorlib">
+    <value>False</value>
   </data>
   <data name="comboIncludedComparisonType.Location" type="System.Drawing.Point, System.Drawing">
     <value>103, 35</value>
