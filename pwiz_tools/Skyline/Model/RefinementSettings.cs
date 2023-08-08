@@ -783,7 +783,7 @@ namespace pwiz.Skyline.Model
 
                 }
 
-                var chromInfos = nodeTran.ChromInfos;
+                var chromInfos = nodeTran.ChromInfos.ToList();
                 var numComparisonTypes = Enum.GetNames(typeof(ComparisonType)).Length - 1;
                 ComparisonType? includedComparisonType = SCIncludedComparisonType.HasValue && 0 <= (int?)SCIncludedComparisonType && (int?)SCIncludedComparisonType <= numComparisonTypes ? SCIncludedComparisonType : ComparisonType.min;
                 if (SCIncludedCutoff.HasValue)
@@ -1287,7 +1287,7 @@ namespace pwiz.Skyline.Model
         }
 
 
-        private bool checkIfShapeCorrelationAboveCutoff(IEnumerable<TransitionChromInfo> chromInfos, double? cutoff, ComparisonType? type = ComparisonType.min)
+        private bool checkIfShapeCorrelationAboveCutoff(List<TransitionChromInfo> chromInfos, double? cutoff, ComparisonType? type = ComparisonType.min)
         {
             float? comparisonValue = 0;
             if (chromInfos.Any())
@@ -1301,12 +1301,6 @@ namespace pwiz.Skyline.Model
                     comparisonValue = chromInfos.Max(c => c.PeakShapeValues?.ShapeCorrelation);
 
                 }
-            }
-
-            if (!comparisonValue.HasValue)
-            {
-                return comparisonValue >= cutoff;
-
             }
             return comparisonValue >= cutoff;
 

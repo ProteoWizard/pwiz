@@ -117,7 +117,6 @@
   <resheader name="writer">
     <value>System.Resources.ResXResourceWriter, System.Windows.Forms, Version=4.0.0.0, Culture=neutral, PublicKeyToken=b77a5c561934e089</value>
   </resheader>
-  <assembly alias="System.Windows.Forms" name="System.Windows.Forms, Version=4.0.0.0, Culture=neutral, PublicKeyToken=b77a5c561934e089" />
   <data name="ChromatogramLibrarySpec_PEPTIDE_RANK_PEAK_AREA_Peak_Area" xml:space="preserve">
     <value>Peak Area</value>
   </data>
@@ -148,6 +147,7 @@
   <data name="EditRemoteAccountDlg_ValidateValues_There_is_already_an_account_defined_for_the_user__0__on_the_server__1_" xml:space="preserve">
     <value>There is already an account defined for the user {0} on the server {1}</value>
   </data>
+  <assembly alias="System.Windows.Forms" name="System.Windows.Forms, Version=4.0.0.0, Culture=neutral, PublicKeyToken=b77a5c561934e089" />
   <data name="FragmentLib" type="System.Resources.ResXFileRef, System.Windows.Forms">
     <value>..\resources\fragmentlib.bmp;System.Drawing.Bitmap, System.Drawing, Version=2.0.0.0, Culture=neutral, PublicKeyToken=b03f5f7f11d50a3a</value>
   </data>
@@ -12190,5 +12190,11 @@ If you choose Disable, you can enable Auto-select later with the "Refine &gt; Ad
   </data>
   <data name="EncyclopeDiaHelpers_GenerateLibrary_Running_command___0___1_" xml:space="preserve">
     <value>Running command: {0} {1}</value>
+  </data>
+  <data name="RefineDlg_RefineDlg_Max" xml:space="preserve">
+    <value>Max</value>
+  </data>
+  <data name="RefineDlg_RefineDlg_Min" xml:space="preserve">
+    <value>Min</value>
   </data>
 </root>

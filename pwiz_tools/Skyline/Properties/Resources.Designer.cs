@@ -25768,6 +25768,24 @@ namespace pwiz.Skyline.Properties {
         }
         
         /// <summary>
+        ///   Looks up a localized string similar to Max.
+        /// </summary>
+        public static string RefineDlg_RefineDlg_Max {
+            get {
+                return ResourceManager.GetString("RefineDlg_RefineDlg_Max", resourceCulture);
+            }
+        }
+        
+        /// <summary>
+        ///   Looks up a localized string similar to Min.
+        /// </summary>
+        public static string RefineDlg_RefineDlg_Min {
+            get {
+                return ResourceManager.GetString("RefineDlg_RefineDlg_Min", resourceCulture);
+            }
+        }
+        
+        /// <summary>
         ///   Looks up a localized string similar to Precursors.
         /// </summary>
         public static string RefineDlg_RefineDlg_Precursors {

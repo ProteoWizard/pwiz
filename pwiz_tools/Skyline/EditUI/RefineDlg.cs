@@ -158,14 +158,14 @@ namespace pwiz.Skyline.EditUI
 
 
                 comboIncludedComparisonType.Enabled = true;
-                comboIncludedComparisonType.Items.Add("Min");
-                comboIncludedComparisonType.Items.Add("Max");
+                comboIncludedComparisonType.Items.Add(Resources.RefineDlg_RefineDlg_Min);
+                comboIncludedComparisonType.Items.Add(Resources.RefineDlg_RefineDlg_Max);
                 comboIncludedComparisonType.SelectedIndex = 0;
                 ComboHelper.AutoSizeDropDown(comboIncludedComparisonType);
 
                 comboQuantitativeComparisonType.Enabled = true;
-                comboQuantitativeComparisonType.Items.Add("Min");
-                comboQuantitativeComparisonType.Items.Add("Max");
+                comboQuantitativeComparisonType.Items.Add(Resources.RefineDlg_RefineDlg_Min);
+                comboQuantitativeComparisonType.Items.Add(Resources.RefineDlg_RefineDlg_Max);
                 comboQuantitativeComparisonType.SelectedIndex = 0;
                 ComboHelper.AutoSizeDropDown(comboQuantitativeComparisonType);
 
