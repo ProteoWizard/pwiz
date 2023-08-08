@@ -75,7 +75,7 @@ namespace pwiz.Skyline.Util
             return null;
         }
 
-        public virtual void ReadXml(XmlReader reader)
+        public void ReadXml(XmlReader reader)
         {
             bool isEmpty = reader.IsEmptyElement;
 

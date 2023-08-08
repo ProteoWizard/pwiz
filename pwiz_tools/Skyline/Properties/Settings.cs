@@ -44,7 +44,6 @@ using pwiz.Skyline.SettingsUI.Irt;
 using pwiz.Skyline.ToolsUI;
 using pwiz.Skyline.Util;
 using System.Windows.Forms;
-using System.Xml;
 using pwiz.Common.Chemistry;
 using pwiz.Common.Collections;
 using pwiz.ProteowizardWrapper;
@@ -1982,17 +1981,22 @@ namespace pwiz.Skyline.Properties
 
         public override int ExcludeDefaults { get { return 1; } }
 
-        public override void ReadXml(XmlReader reader)
+        protected override void ValidateLoad()
         {
-            base.ReadXml(reader);
-            // If this list contains something which is Equal to OptimizationLibrary.NONE, then 
-            // replace it with the actual OptimizationLibrary.NONE because the Audit Log cares
+            base.ValidateLoad();
+            // If this list contains something which is Equal to any of the default objects
+            // then replace it with the actual instance because the Audit Log cares
             // about reference equality
+            var defaultInstances = new Dictionary<OptimizationLibrary, OptimizationLibrary>();
+            foreach (var defaultInstance in GetDefaults())
+            {
+                defaultInstances[defaultInstance] = defaultInstance;
+            }
             for (int i = 0; i < Count; i++)
             {
-                if (Equals(OptimizationLibrary.NONE, this[i]))
+                if (defaultInstances.TryGetValue(this[i], out var defaultInstance))
                 {
-                    this[i] = OptimizationLibrary.NONE;
+                    this[i] = defaultInstance;
                 }
             }
         }
