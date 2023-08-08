@@ -144,24 +144,24 @@ namespace pwiz.SkylineTest
                 @"nonstandard {0} found instead"); // Explanation for requirement, appears in report
 
             // Looking for Model code depending on UI code
-            void AddForbiddenUIInspection(string fileMask, string cue, int numberToleratedAsWarnings)
+            void AddForbiddenUIInspection(string fileMask, string cue, string why, int numberToleratedAsWarnings = 0)
             {
                 AddTextInspection(fileMask, // Examine files with this mask
                     Inspection.Forbidden, // This is a test for things that should NOT be in such files
                     Level.Error, // Any failure is treated as an error, and overall test fails
                     null, // There are no parts of the codebase that should skip this check
                     cue, // If the file contains this, then check for forbidden pattern
-                    @"using.*pwiz\.Skyline\.(Alerts|Controls|.*UI);", // TODO(brendanx): This does not catch enough and needs to have the semicolon removed and System.Windows.Forms added
+                    @"using.*(pwiz\.Skyline\.(Alerts|Controls|.*UI)|System\.Windows\.Forms)", 
                     true, // Pattern is a regular expression
-                    @"Skyline model code must not depend on UI code", // Explanation for prohibition, appears in report
+                    why, // Explanation for prohibition, appears in report
                     null, // No explicit exceptions to this rule
                     numberToleratedAsWarnings); // Number of existing known failures that we'll tolerate as warnings instead of errors, so no more get added while we wait to fix the rest
             }
 
-            AddForbiddenUIInspection(@"*.cs", @"namespace pwiz.Skyline.Model", 0);
+            AddForbiddenUIInspection(@"*.cs", @"namespace pwiz.Skyline.Model", @"Skyline model code must not depend on UI code", 38);
             // Looking for CommandLine.cs and CommandArgs.cs code depending on UI code
-            AddForbiddenUIInspection(@"CommandLine.cs", @"namespace pwiz.Skyline", 0);
-            AddForbiddenUIInspection(@"CommandArgs.cs", @"namespace pwiz.Skyline", 0);
+            AddForbiddenUIInspection(@"CommandLine.cs", @"namespace pwiz.Skyline", @"CommandLine code must not depend on UI code", 2);
+            AddForbiddenUIInspection(@"CommandArgs.cs", @"namespace pwiz.Skyline", @"CommandArgs code must not depend on UI code");
 
             // Check for using DataGridView.
             AddTextInspection("*.designer.cs", Inspection.Forbidden, Level.Error, NonSkylineDirectories(), null,
@@ -705,10 +705,14 @@ namespace pwiz.SkylineTest
                     if (warnings.Any())
                     {
                         Console.WriteLine();
-                        Console.Write(@"WARNING: ");
+                        var previousWarning = string.Empty;
                         foreach (var warning in warnings)
                         {
-                            Console.WriteLine(warning);
+                            if (string.IsNullOrEmpty(previousWarning))
+                            {
+                                Console.Write(@"WARNING: ");
+                            }
+                            Console.WriteLine(previousWarning = warning);
                         }
                     }
                 }
@@ -731,10 +735,12 @@ namespace pwiz.SkylineTest
                 var incidents = toleratedError.Value;
                 if (incidents < pattern.NumberOfToleratedIncidents)
                 {
-                    results.Add(string.Format("The inspection \"{0}\" is configured to tolerate {1} existing incidents, but only {2} were encountered. To prevent new incidents, the tolerance count must be reduced to {2} in CodeInspectionTest.cs",
+                    results.Add(string.Format("The inspection \"{0}\" is configured to tolerate exactly {1} existing incidents, but only {2} were encountered. To prevent new incidents, the tolerance count must be set to {2} in CodeInspectionTest.cs",
                         pattern.Reason, pattern.NumberOfToleratedIncidents, incidents));
                 }
+                patternsWithToleranceCounts.Remove(pattern); // This has been noted
             }
+            results.AddRange(patternsWithToleranceCounts.Select(pattern => $"The inspection \"{pattern.Reason}\" is configured to tolerate exactly {pattern.NumberOfToleratedIncidents} existing incidents, but none were encountered. To prevent new incidents, the tolerance count must be removed in CodeInspectionTest.cs"));
 
             if (results.Any())
             {
@@ -799,6 +805,7 @@ namespace pwiz.SkylineTest
         }
         private readonly Dictionary<string, Dictionary<Pattern, PatternDetails>> forbiddenPatternsByFileMask = new Dictionary<string, Dictionary<Pattern, PatternDetails>>();
         private readonly Dictionary<string, Dictionary<Pattern, PatternDetails>> requiredPatternsByFileMask = new Dictionary<string, Dictionary<Pattern, PatternDetails>>();
+        private readonly HashSet<PatternDetails> patternsWithToleranceCounts = new HashSet<PatternDetails>();
 
         private enum Inspection { Forbidden, Required }
         public enum Level { Warn, Error }
@@ -855,8 +862,6 @@ namespace pwiz.SkylineTest
             result.Add("settings.designer.cs");
             result.Add("resources.designer.cs");
             result.Add("Executables\\KeepResxW");
-            result.Add("Executables\\SharedBatch");
-            result.Add("Executables\\SkylineBatch");
             result.Add("Executables\\Tools\\MSstats");
             result.Add("Executables\\Tools\\MS1Probe");
             result.Add("Executables\\Tools\\Skyline Gadget");
@@ -902,7 +907,12 @@ namespace pwiz.SkylineTest
                 rules.Add(fileMask, new Dictionary<Pattern, PatternDetails>());
             }
             var patterns = rules[fileMask];
-            patterns.Add(new Pattern(pattern, isRegEx, patternException), new PatternDetails(cue, reason, ignoredDirectories, failureType, numberToleratedAsWarnings));
+            var patternDetails = new PatternDetails(cue, reason, ignoredDirectories, failureType, numberToleratedAsWarnings);
+            patterns.Add(new Pattern(pattern, isRegEx, patternException), patternDetails);
+            if (numberToleratedAsWarnings > 0)
+            {
+                patternsWithToleranceCounts.Add(patternDetails); // Track these so we know when more are tolerated than necessary
+            }
         }
     }
 }
