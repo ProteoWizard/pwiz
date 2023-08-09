@@ -397,6 +397,14 @@ namespace pwiz.SkylineTestData
         [TestMethod]
         public void ConsoleChangePredictTranSettingsTest()
         {
+            using (var stream = new MemoryStream())
+            {
+                var serializer = new XmlSerializer(typeof(OptimizationLibraryList));
+                serializer.Serialize(stream, Settings.Default.OptimizationLibraryList);
+                stream.Position = 0;
+                Settings.Default.OptimizationLibraryList = (OptimizationLibraryList) serializer.Deserialize(stream);
+            }
+
             TestFilesDir = new TestFilesDir(TestContext, @"TestData\CommandLineRefine.zip");
             DocumentPath = InitRefineDocument("SRM_mini_single_replicate.sky");
             OutPath = Path.Combine(Path.GetDirectoryName(DocumentPath) ?? string.Empty, "test.sky");
