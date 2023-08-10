@@ -459,6 +459,9 @@
       <Component Id="zh_CHS_pwiz.Common.resources.dll">
         <File Source="$(var.Skyline.TargetDir)/zh-CHS\pwiz.Common.resources.dll" Id="zh_CHS_pwiz.Common.resources.dll_file" KeyPath="yes"/>
       </Component>
+      <Component Id="zh_CHS_pwiz.CommonUtil.resources.dll">
+        <File Source="$(var.Skyline.TargetDir)/zh-CHS\pwiz.CommonUtil.resources.dll" Id="zh_CHS_pwiz.CommonUtil.resources.dll_file" KeyPath="yes"/>
+      </Component>
       <Component Id="zh_CHS_Skyline.resources.dll">
         <File Source="$(var.Skyline.TargetDir)/zh-CHS\$(var.Skyline.TargetName).resources.dll" Id="zh_CHS_Skyline.resources.dll_file" KeyPath="yes"/>
       </Component>
