@@ -138,11 +138,29 @@ namespace pwiz.PanoramaClient.Properties {
         }
         
         /// <summary>
+        ///   Looks up a localized string similar to All.
+        /// </summary>
+        public static string PanoramaFilePicker_ALL_VER_All {
+            get {
+                return ResourceManager.GetString("PanoramaFilePicker_ALL_VER_All", resourceCulture);
+            }
+        }
+        
+        /// <summary>
         ///   Looks up a localized string similar to You must select a file first!.
         /// </summary>
         public static string PanoramaFilePicker_Open_Click_You_must_select_a_file_first_ {
             get {
                 return ResourceManager.GetString("PanoramaFilePicker_Open_Click_You_must_select_a_file_first_", resourceCulture);
+            }
+        }
+        
+        /// <summary>
+        ///   Looks up a localized string similar to Most recent.
+        /// </summary>
+        public static string PanoramaFilePicker_RECENT_VER_Most_recent {
+            get {
+                return ResourceManager.GetString("PanoramaFilePicker_RECENT_VER_Most_recent", resourceCulture);
             }
         }
         
@@ -174,6 +192,16 @@ namespace pwiz.PanoramaClient.Properties {
             }
         }
 
+        /// <summary>
+        ///   Looks up a localized string similar to Go to Tools - Options - Panorama tab to update the username and password.
+        /// </summary>
+        public static string PanoramaFolderBrowser_InitializeServers_Go_to_Tools___Options___Panorama_tab_to_update_the_username_and_password {
+            get {
+                return ResourceManager.GetString("PanoramaFolderBrowser_InitializeServers_Go_to_Tools___Options___Panorama_tab_to_u" +
+                        "pdate_the_username_and_password", resourceCulture);
+            }
+        }
+        
         /// <summary>
         ///   Looks up a localized string similar to Could not authenticate user. Response received from server: {0} {1}.
         /// </summary>

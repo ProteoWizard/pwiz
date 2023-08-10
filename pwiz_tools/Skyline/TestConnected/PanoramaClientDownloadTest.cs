@@ -101,15 +101,13 @@ namespace pwiz.SkylineTestConnected
             Assert.IsFalse(File.Exists(path));
             var remoteDlg = ShowDialog<PanoramaFilePicker>(() => SkylineWindow.OpenFromPanorama(path));
             WaitForCondition(9000, () => remoteDlg.IsLoaded);
-            
             RunUI(() =>
             {
                 remoteDlg.FolderBrowser.SelectNode(TEST_FOLDER);
                 remoteDlg.FolderBrowser.SelectNode(PANORAMA_FOLDER);
-                remoteDlg.ClickFile(TEST_FILE);
             });
-            WaitForClosedForm(remoteDlg);
-            Assert.IsTrue(File.Exists(path));
+            OkDialog(remoteDlg, () => remoteDlg.ClickFile(TEST_FILE));
+            WaitForCondition(() => File.Exists(path));
             FileEx.SafeDelete(path, true);
             Assert.IsFalse(File.Exists(path));
         }
@@ -188,10 +186,8 @@ namespace pwiz.SkylineTestConnected
             {
                 Assert.AreEqual(state, remoteDlg.FolderBrowser.TreeState);
                 Assert.IsTrue(remoteDlg.FolderBrowser.IsSelected(PANORAMA_FOLDER));
-                remoteDlg.Close();
             });
-            WaitForClosedForm(remoteDlg);
-
+            OkDialog(remoteDlg, remoteDlg.Close);
         }
         
         //Test downloading a file that has been deleted on the server
@@ -209,10 +205,7 @@ namespace pwiz.SkylineTestConnected
                 remoteDlg.FolderBrowser.SelectNode(PANORAMA_FOLDER);
                 remoteDlg.ClickFile(DELETED_FILE);
             });
-            var errorDlg = ShowDialog<MessageDlg>(() => RunUI(() =>
-            {
-                remoteDlg.ClickOpen();
-            }));
+            var errorDlg = ShowDialog<MessageDlg>(remoteDlg.ClickOpen);
             Assert.IsFalse(File.Exists(path));
             Assert.AreEqual(Resources.SkylineWindow_DownloadPanoramaFile_File_does_not_exist__It_may_have_been_deleted_on_the_server_, errorDlg.Message);
             OkDialog(errorDlg, errorDlg.OkDialog);
@@ -236,7 +229,7 @@ namespace pwiz.SkylineTestConnected
                 Assert.AreNotEqual(RENAMED_FILE, remoteDlg.GetItemName(0));
             });
             WaitForClosedForm(remoteDlg);
-            Assert.IsTrue(File.Exists(path));
+            WaitForCondition(() => File.Exists(path));
             FileEx.SafeDelete(path, true);
             Assert.IsFalse(File.Exists(path));
         }
@@ -258,13 +251,10 @@ namespace pwiz.SkylineTestConnected
                 editItem.Password = TEST_PASSWORD;
             });
             var remoteDlg = ShowDialog<PanoramaFilePicker>(editItem.OkDialog);
-            if (Settings.Default.ServerList != null) Assert.AreEqual(1, Settings.Default.ServerList.Count);
-            RunUI(() =>
-            {
-                Assert.IsTrue(remoteDlg.IsLoaded);
-                remoteDlg.Close();
-            });
-            WaitForClosedForm(remoteDlg);
+            if (Settings.Default.ServerList != null)
+                Assert.AreEqual(1, Settings.Default.ServerList.Count);
+            RunUI(() => Assert.IsTrue(remoteDlg.IsLoaded));
+            OkDialog(remoteDlg, remoteDlg.Close);
         }
 
         // Test viewing webDav browser
@@ -272,22 +262,25 @@ namespace pwiz.SkylineTestConnected
         {
             var selectedPath = "/SkylineTest/ForPanoramaClientTest/";
             var server = new PanoramaServer(new Uri(PANORAMA_WEB), TEST_USER, TEST_PASSWORD);
-            var serverList = new List<PanoramaServer>();
-            serverList.Add(server);
+            var serverList = new List<PanoramaServer> { server };
 
-            RunUI(() =>
-            {
-                var remoteDlg = new PanoramaFilePicker(serverList, string.Empty, true, selectedPath);
-                remoteDlg.InitializeDialog();
-                remoteDlg.Show();
-                WaitForCondition(9000, () => remoteDlg.IsLoaded);
-                remoteDlg.FolderBrowser.SelectNode("@files");
-                Assert.AreEqual(remoteDlg.FileNumber, 13);
-                remoteDlg.FolderBrowser.SelectNode("FileRenamedOnServer");
-                Assert.AreEqual(remoteDlg.FileNumber, 6);
-                remoteDlg.Close();
-                WaitForClosedForm(remoteDlg);
-            });
+            var remoteDlg = ShowDialog<PanoramaFilePicker>(() => ShowPanoramaFilePicker(serverList, selectedPath));
+            WaitForConditionUI(() => remoteDlg.IsLoaded);
+            RunUI(() => remoteDlg.FolderBrowser.SelectNode("@files")); 
+            WaitForConditionUI(() => remoteDlg.FileNumber == 13);
+            RunUI(() => remoteDlg.FolderBrowser.SelectNode("FileRenamedOnServer"));
+            WaitForConditionUI(() => remoteDlg.FileNumber == 6);
+            OkDialog(remoteDlg, remoteDlg.Close);
+        }
+
+        /// <summary>
+        /// Hacky way to quickly create the <see cref="PanoramaFilePicker"/> form for testing.
+        /// </summary>
+        private void ShowPanoramaFilePicker(List<PanoramaServer> serverList, string selectedPath)
+        {
+            using var remoteDlg = new PanoramaFilePicker(serverList, string.Empty, true, selectedPath);
+            remoteDlg.InitializeDialog();   // TODO: Get rid of this test initialization method
+            remoteDlg.ShowDialog();
         }
 
         private class TestPanoramaClient : IPanoramaClient

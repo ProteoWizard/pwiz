@@ -40,6 +40,7 @@ namespace pwiz.PanoramaClient
         public PanoramaDirectoryPicker(List<PanoramaServer> servers, string state, bool showWebDavFolders = false, string selectedPath = null)
         {
             InitializeComponent();
+
             if (showWebDavFolders)
             {
                 FolderBrowser = new WebDavBrowser(servers.FirstOrDefault(), state, selectedPath);
@@ -59,15 +60,13 @@ namespace pwiz.PanoramaClient
 
         private void Open_Click(object sender, EventArgs e)
         {
-            ClickOpen();
+            OkDialog();
         }
 
-        public void ClickOpen()
+        public void OkDialog()
         {
             DialogResult = DialogResult.Yes;
-            Close();
         }
-
 
         private void DirectoryPicker_Load(object sender, EventArgs e)
         {
@@ -76,7 +75,6 @@ namespace pwiz.PanoramaClient
                 open.Text = OkButtonText;
             }
             urlLink.Text = FolderBrowser.GetSelectedUri();
-
         }
 
         private void Back_Click(object sender, EventArgs e)
@@ -93,7 +91,6 @@ namespace pwiz.PanoramaClient
             UpdateButtonState();
         }
 
-
         private void DirectoryPicker_MouseClick(object sender, EventArgs e)
         {
             urlLink.Text = FolderBrowser.GetSelectedUri();
@@ -106,7 +103,6 @@ namespace pwiz.PanoramaClient
         {
             _treeState = FolderBrowser.GetClosingTreeState();
             SelectedPath = FolderBrowser.GetSelectedFolderPath();
-            
         }
 
         private void UpdateButtonState()
@@ -123,11 +119,6 @@ namespace pwiz.PanoramaClient
             FolderBrowser.UpButtonClick();
             UpdateButtonState();
             forward.Enabled = false;
-        }
-
-        private void Cancel_Click(object sender, EventArgs e)
-        {
-            Close();
         }
 
         private void UrlLink_LinkClicked(object sender, LinkLabelLinkClickedEventArgs e)

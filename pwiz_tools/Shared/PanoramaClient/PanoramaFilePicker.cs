@@ -4,6 +4,7 @@ using System.Collections.Generic;
 using System.Diagnostics;
 using System.Drawing;
 using System.Globalization;
+using System.IO;
 using System.Linq;
 using Newtonsoft.Json.Linq;
 using System.Windows.Forms;
@@ -24,10 +25,11 @@ namespace pwiz.PanoramaClient
         private bool _restoring;
         private readonly bool _showWebDav;
         private int _sortColumn = -1;
-        private const string EXT = ".sky";
-        private const string RECENT_VER = "Most recent";
-        private const string ALL_VER = "All";
-        private const string ZIP_EXT = ".sky.zip";
+
+        public static string RECENT_VER => Resources.PanoramaFilePicker_RECENT_VER_Most_recent;
+        public static string ALL_VER => Resources.PanoramaFilePicker_ALL_VER_All;
+        public const string EXT = ".sky";
+        public const string ZIP_EXT = ".sky.zip";
 
         public string OkButtonText { get; set; }
         public bool IsLoaded { get; private set; }
@@ -42,15 +44,14 @@ namespace pwiz.PanoramaClient
         public PanoramaFilePicker(List<PanoramaServer> servers, string stateString, bool showWebDav = false, string selectedPath = null)
         {
             InitializeComponent();
+
             _servers = servers;
-            IsLoaded = false;
             _treeState = stateString;
             _restoring = true;
             _showWebDav = showWebDav;
             versionOptions.Text = RECENT_VER;
             SelectedPath = selectedPath;
             noFiles.Visible = false;
-            _restoring = false;
         }
 
         /// <summary>
@@ -359,8 +360,13 @@ namespace pwiz.PanoramaClient
             }
             catch (Exception ex)
             {
-                var alert = new AlertDlg(ex.Message, MessageBoxButtons.OK);
-                alert.ShowDialog();
+                if (ex is InvalidDataException
+                    || ex is IOException
+                    || ex is UnauthorizedAccessException)
+                {
+                    var alert = new AlertDlg(ex.Message, MessageBoxButtons.OK);
+                    alert.ShowDialog();
+                }
             }
         }
 
@@ -375,11 +381,6 @@ namespace pwiz.PanoramaClient
                 listView.Items.Clear();
                 AddSkyFiles(true, versionOptions.Text.Equals(RECENT_VER));
             }
-        }
-
-        private void Cancel_Click(object sender, EventArgs e)
-        {
-            Close();
         }
 
         /// <summary>
@@ -652,8 +653,8 @@ namespace pwiz.PanoramaClient
         public PanoramaFilePicker()
         {
             InitializeComponent();
+
             _restoring = true;
-            IsLoaded = false;
             versionOptions.Text = RECENT_VER;
             _restoring = false;
         }
@@ -682,8 +683,6 @@ namespace pwiz.PanoramaClient
                 back.Enabled = FolderBrowser.BackEnabled;
                 forward.Enabled = FolderBrowser.ForwardEnabled;
             }
-
-            IsLoaded = true;
         }
 
         public bool UpEnabled => up.Enabled;

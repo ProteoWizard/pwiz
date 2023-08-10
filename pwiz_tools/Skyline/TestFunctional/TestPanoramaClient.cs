@@ -129,11 +129,11 @@ namespace pwiz.SkylineTestFunctional
             {
                 remoteDlg.FolderBrowser.SelectNode(TARGETED);
                 Assert.IsTrue(remoteDlg.VersionsVisible);
-                Assert.AreEqual("Most recent", remoteDlg.VersionsOption);
+                Assert.AreEqual(PanoramaFilePicker.RECENT_VER, remoteDlg.VersionsOption);
                 Assert.AreEqual(1, remoteDlg.FileNumber);
                 remoteDlg.ClickVersions();
                 Assert.AreEqual(4, remoteDlg.FileNumber);
-                Assert.AreEqual("All", remoteDlg.VersionsOption);
+                Assert.AreEqual(PanoramaFilePicker.ALL_VER, remoteDlg.VersionsOption);
                 remoteDlg.Close();
             });
             WaitForClosedForm(remoteDlg);
@@ -204,7 +204,7 @@ namespace pwiz.SkylineTestFunctional
                 //remoteDlg.FolderBrowser.ClickRight();
                 //Assert.IsTrue(remoteDlg.FolderBrowser.IsExpanded(TARGETED));
                 Assert.IsTrue(remoteDlg.VersionsVisible);
-                Assert.AreEqual("Most recent", remoteDlg.VersionsOption);
+                Assert.AreEqual(PanoramaFilePicker.RECENT_VER, remoteDlg.VersionsOption);
                 Assert.AreEqual(1, remoteDlg.FileNumber);
 
                 remoteDlg.TestFileJson = fileJson;
@@ -214,7 +214,7 @@ namespace pwiz.SkylineTestFunctional
                 //remoteDlg.FolderBrowser.ClickRight();
                 //Assert.IsTrue(remoteDlg.FolderBrowser.IsExpanded(TARGETED_LIBRARY));
                 Assert.IsFalse(remoteDlg.VersionsVisible);
-                Assert.AreEqual("Most recent", remoteDlg.VersionsOption);
+                Assert.AreEqual(PanoramaFilePicker.RECENT_VER, remoteDlg.VersionsOption);
                 Assert.AreEqual(1, remoteDlg.FileNumber);
 
                 remoteDlg.TestFileJson = filesJson;
@@ -222,7 +222,7 @@ namespace pwiz.SkylineTestFunctional
 
                 remoteDlg.FolderBrowser.SelectNode(TARGETED_COLLABORATION);
                 Assert.IsTrue(remoteDlg.VersionsVisible);
-                Assert.AreEqual("Most recent", remoteDlg.VersionsOption);
+                Assert.AreEqual(PanoramaFilePicker.RECENT_VER, remoteDlg.VersionsOption);
                 Assert.AreEqual(1, remoteDlg.FileNumber);
                 remoteDlg.Close();
             });
@@ -328,12 +328,9 @@ namespace pwiz.SkylineTestFunctional
             var testClient = new TestClientJson();
             var folderJson = testClient.GetInfoForFolders(new PanoramaServer(new Uri(VALID_SERVER), VALID_USER_NAME, VALID_PASSWORD),
                 TARGETED);
-
+            var remoteDlg = ShowDialog<PanoramaDirectoryPicker>(() => ShowPanoramaDirectoryPicker(folderJson));
             RunUI(() =>
             {
-                var remoteDlg = new PanoramaDirectoryPicker();
-                remoteDlg.InitializeTestDialog(new Uri(VALID_SERVER), VALID_USER_NAME, VALID_PASSWORD, folderJson);
-                remoteDlg.Show(SkylineWindow);
                 WaitForCondition(9000, () => remoteDlg.IsLoaded);
                 remoteDlg.FolderBrowser.SelectNode(NO_TARGETED);
                 Assert.AreEqual(3, remoteDlg.FolderBrowser.TreeviewIcon);
@@ -345,9 +342,15 @@ namespace pwiz.SkylineTestFunctional
                 Assert.AreEqual(2, remoteDlg.FolderBrowser.TreeviewIcon);
                 remoteDlg.FolderBrowser.SelectNode(TARGETED_COLLABORATION);
                 Assert.AreEqual(3, remoteDlg.FolderBrowser.TreeviewIcon);
-                remoteDlg.Close();
-                WaitForClosedForm(remoteDlg);
             });
+            OkDialog(remoteDlg, remoteDlg.OkDialog);
+        }
+
+        private void ShowPanoramaDirectoryPicker(JToken folderJson)
+        {
+            using var remoteDlg = new PanoramaDirectoryPicker();
+            remoteDlg.InitializeTestDialog(new Uri(VALID_SERVER), VALID_USER_NAME, VALID_PASSWORD, folderJson);
+            remoteDlg.ShowDialog(SkylineWindow);
         }
 
         /// <summary>
