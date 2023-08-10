@@ -903,7 +903,7 @@ namespace quameter
                             info.chromatogram.MS1RT.push_back(curRT);
                         } // done with unidentified MS2 scans
                         
-                        double TIC = accumulate(intensV.begin(), intensV.end(), 0);
+                        double TIC = accumulate(intensV.begin(), intensV.end(), 0.0);
                         ms1TICs.push_back(TIC);
                         totalTIC += TIC;
                     }
