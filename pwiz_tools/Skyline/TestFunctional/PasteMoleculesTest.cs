@@ -1652,7 +1652,7 @@ namespace pwiz.SkylineTestFunctional
             // Paste directly into targets area - no interaction expected beyond header confirmation dialog
             var docCurrent = SkylineWindow.Document;
             var confirmHdrsDlg = ShowDialog<ImportTransitionListColumnSelectDlg>(() => SkylineWindow.Paste());
-            RunUI(confirmHdrsDlg.OkDialog);
+            OkDialog(confirmHdrsDlg, confirmHdrsDlg.OkDialog);
             WaitForDocumentChange(docCurrent);
         }
 
@@ -2336,7 +2336,7 @@ namespace pwiz.SkylineTestFunctional
                 SkylineWindow.NewDocument(true);
             });
             var confirmHeadersDlg = ShowDialog<ImportTransitionListColumnSelectDlg>(() => SkylineWindow.ImportMassList(filename));
-            RunUI(confirmHeadersDlg.OkDialog);
+            OkDialog(confirmHeadersDlg, confirmHeadersDlg.OkDialog);
 
             WaitForCondition(() => 0 != SkylineWindow.Document.MoleculeCount);
 
@@ -2408,7 +2408,7 @@ namespace pwiz.SkylineTestFunctional
                 {
                     File.WriteAllText(tempFile, input);
                     var confirmHdrsDlg = ShowDialog<ImportTransitionListColumnSelectDlg>(() => SkylineWindow.ImportMassList(tempFile));
-                    RunUI(confirmHdrsDlg.OkDialog);
+                    OkDialog(confirmHdrsDlg, confirmHdrsDlg.OkDialog);
                 }
                 else
                 {
