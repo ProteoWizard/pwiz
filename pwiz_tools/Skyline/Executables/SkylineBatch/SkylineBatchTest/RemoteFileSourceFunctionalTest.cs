@@ -1,12 +1,9 @@
 ﻿using System;
 using System.Collections.Generic;
 using System.IO;
-using System.Runtime.CompilerServices;
-using System.Windows.Forms;
 using Microsoft.VisualStudio.TestTools.UnitTesting;
 using Newtonsoft.Json.Linq;
 using pwiz.PanoramaClient;
-using SharedBatch;
 using SkylineBatch;
 using SkylineBatch.Properties;
 using AlertDlg = SharedBatch.AlertDlg;
@@ -149,7 +146,7 @@ namespace SkylineBatchTest
             {
                 remoteDlg.FolderBrowser.SelectNode(VALID_SERVER);
                 remoteDlg.FolderBrowser.SelectNode(TARGETED);
-                remoteDlg.ClickOpen();
+                remoteDlg.OkDialog();
             });
             WaitForClosedForm(remoteDlg);
             RunUI(() =>
