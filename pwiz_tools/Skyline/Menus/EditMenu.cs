@@ -1166,7 +1166,7 @@ namespace pwiz.Skyline.Menus
                     try
                     {
                         SkylineWindow.ImportMassList(new MassListInputs(text, formatProvider, separator),
-                            Resources.SkylineWindow_Paste_Paste_transition_list, false, SrmDocument.DOCUMENT_TYPE.none, true);
+                            Resources.SkylineWindow_Paste_Paste_transition_list, false);
                     }
                     catch (Exception exception)
                     {

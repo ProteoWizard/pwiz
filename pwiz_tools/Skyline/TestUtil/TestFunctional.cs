@@ -2198,10 +2198,21 @@ namespace pwiz.SkylineTestUtil
 
         // Importing a small molecule transition list typically provokes a dialog asking whether or not to automatically manage the resulting transitions
         // The majority of our tests were written before this was an option, so we dismiss the dialog by default and the new nodes are automanage OFF
-        public static void PasteSmallMoleculeListNoAutoManage()
+        public static SrmDocument PasteSmallMoleculeListNoAutoManage(string text = null)
         {
-            var wantAutoManageDlg = ShowDialog<MultiButtonMsgDlg>(SkylineWindow.Paste);
-            OkDialog(wantAutoManageDlg, wantAutoManageDlg.ClickNo); // Just use the transitions as given in the list
+            var docOrig = SkylineWindow.Document;
+            if (!string.IsNullOrEmpty(text))
+            {
+                if (!text.Contains(Environment.NewLine) && File.Exists(text))
+                {
+                    text = File.ReadAllText(text); // That was a filename rather than a transition list
+                }
+                SetClipboardText(text);
+            }
+            var confirmColumnsDlg = ShowDialog<ImportTransitionListColumnSelectDlg>(SkylineWindow.Paste);
+            OkDialog(confirmColumnsDlg, confirmColumnsDlg.OkDialog);
+            DismissAutoManageDialog(docOrig);  // Say no to the offer to set new nodes to automanage
+            return WaitForDocumentChangeLoaded(docOrig);
         }
 
         // Importing a small molecule transition list typically provokes a dialog asking whether or not to automatically manage the resulting transitions
