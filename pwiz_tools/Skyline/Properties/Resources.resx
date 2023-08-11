@@ -12197,4 +12197,7 @@ If you choose Disable, you can enable Auto-select later with the "Refine &gt; Ad
   <data name="ChooseIrtStandardPeptidesDlg_ChooseIrtStandardPeptidesDlg_Unavailable__no_matching_iRT_standards_found" xml:space="preserve">
     <value>Unavailable: no matching iRT standards found</value>
   </data>
+  <data name="FormulaBox_FormulaBox_Help" xml:space="preserve">
+    <value>Help</value>
+  </data>
 </root>
