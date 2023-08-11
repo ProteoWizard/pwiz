@@ -187,6 +187,9 @@ namespace TestPerf
             var searchDlg = ShowDialog<EncyclopeDiaSearchDlg>(SkylineWindow.ShowEncyclopeDiaSearchDlg);
             RunUI(() => searchDlg.ImportFastaControl.SetFastaContent(fastaFilepath));
 
+            var screenshotPage = 5;
+            PauseForScreenShot<EncyclopeDiaSearchDlg.FastaPage>("Fasta Settings page", screenshotPage++);
+
             // copy expected blib to actual blib path so it will be re-used and Prosit won't be called
             string persistentBlibFilepath = TestFilesDir.GetTestPath(_analysisValues.BlibPath);
             string tempBlibFilepath = TestFilesDir.GetTestPath(fastaFilepath)
@@ -214,7 +217,7 @@ namespace TestPerf
                 //searchDlg.MaxMz = 551;
                 searchDlg.ImportFastaControl.MaxMissedCleavages = 2;
             });
-            PauseForScreenShot(searchDlg);
+            PauseForScreenShot<EncyclopeDiaSearchDlg.PrositPage>("Prosit Settings page", screenshotPage++);
 
             RunUI(searchDlg.NextPage); // now on narrow fractions
             var browseNarrowDlg = ShowDialog<OpenDataSourceDialog>(() => searchDlg.NarrowWindowResults.Browse());
@@ -223,8 +226,9 @@ namespace TestPerf
                 browseNarrowDlg.CurrentDirectory = new MsDataFilePath(TestFilesDir.PersistentFilesDir);
                 browseNarrowDlg.SelectAllFileType("mzML", s => _analysisValues.NarrowWindowDiaFiles.Contains(s));
             });
-            PauseForScreenShot(searchDlg);
+            PauseForScreenShot<OpenDataSourceDialog>("Narrow Window Results - Browse for Results Files form", screenshotPage++);
             OkDialog(browseNarrowDlg, browseNarrowDlg.Open);
+            PauseForScreenShot<EncyclopeDiaSearchDlg.NarrowWindowPage>("Narrow Window Results page", screenshotPage++);
 
             RunUI(searchDlg.NextPage); // now on wide fractions
             var browseWideDlg = ShowDialog<OpenDataSourceDialog>(() => searchDlg.WideWindowResults.Browse());
@@ -233,8 +237,9 @@ namespace TestPerf
                 browseWideDlg.CurrentDirectory = new MsDataFilePath(TestFilesDir.PersistentFilesDir);
                 browseWideDlg.SelectAllFileType("mzML", s => _analysisValues.WideWindowDiaFiles.Contains(s));
             });
-            PauseForScreenShot(searchDlg);
+            PauseForScreenShot<OpenDataSourceDialog>("Wide Window Results - Browse for Results Files form", screenshotPage++);
             OkDialog(browseWideDlg, browseWideDlg.Open);
+            PauseForScreenShot<EncyclopeDiaSearchDlg.WideWindowPage>("Wide Window Results page", screenshotPage++);
 
             RunUI(searchDlg.NextPage); // now on EncyclopeDia settings
             RunUI(() =>
@@ -248,7 +253,7 @@ namespace TestPerf
                 //searchDlg.SetAdditionalSetting("FilterPeaklists", "true");
                 //searchDlg.SetAdditionalSetting("NumberOfThreadsUsed", "16");
             });
-            PauseForScreenShot(searchDlg);
+            PauseForScreenShot<EncyclopeDiaSearchDlg.SearchSettingsPage>("EncyclopeDIA Settings page", screenshotPage++);
             RunUI(searchDlg.NextPage); // start search
 
             var downloaderDlg = TryWaitForOpenForm<MultiButtonMsgDlg>(2000);
@@ -259,12 +264,15 @@ namespace TestPerf
                 WaitForClosedForm(waitDlg);
             }
 
-            PauseForScreenShot(searchDlg);
+            // Set up success flagging before pausing for screenshot, or the test will hang if
+            // the Continue button is not clicked before the processing completes
+            bool? searchSucceeded = null;
+            searchDlg.SearchControl.SearchFinished += (success) => searchSucceeded = success;
+
+            PauseForScreenShot<EncyclopeDiaSearchDlg.RunPage>("Search Progress page", screenshotPage++);
 
             try
             {
-                bool? searchSucceeded = null;
-                searchDlg.SearchControl.SearchFinished += (success) => searchSucceeded = success;
                 WaitForConditionUI(60000 * 120, () => searchSucceeded.HasValue);
                 RunUI(() => Assert.IsTrue(searchSucceeded.Value, searchDlg.SearchControl.LogText));
             }
@@ -342,7 +350,6 @@ namespace TestPerf
 
             RunUI(() => SkylineWindow.SaveDocument());
 
-            int screenshotPage = 0;
             const string proteinNameToSelect = "sp|P21333|FLNA_HUMAN";
             const string peptideToSelect = "VKVEPSHDASK";
             if (Equals(proteinNameToSelect, SkylineWindow.Document.MoleculeGroups.Skip(1).First().Name))
@@ -379,7 +386,7 @@ namespace TestPerf
 
             RunUI(SkylineWindow.AutoZoomBestPeak);
             WaitForGraphs();
-            PauseForScreenShot("Snip just one chromatogram pane", screenshotPage);
+            PauseForScreenShot("Snip just one chromatogram pane", screenshotPage++);
 
             try
             {
