@@ -12191,4 +12191,7 @@ If you choose Disable, you can enable Auto-select later with the "Refine &gt; Ad
   <data name="EncyclopeDiaHelpers_GenerateLibrary_Running_command___0___1_" xml:space="preserve">
     <value>Running command: {0} {1}</value>
   </data>
+  <data name="FormulaBox_FormulaBox_Help" xml:space="preserve">
+    <value>Help</value>
+  </data>
 </root>
