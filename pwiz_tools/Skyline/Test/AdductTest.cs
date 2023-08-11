@@ -214,6 +214,17 @@ namespace pwiz.SkylineTest
             unsorted.Sort();
             Assert.IsTrue(sorted.SequenceEqual(unsorted));
 
+            var adduct0 = Adduct.FromStringAssumeProtonatedNonProteomic("[M-H]");
+            var adduct1 = Adduct.FromStringAssumeProtonatedNonProteomic("[MC13-H]");
+            var adduct2 = Adduct.FromStringAssumeProtonatedNonProteomic("[M2C13-H]");
+            var adduct3 = Adduct.FromStringAssumeProtonatedNonProteomic("[M3C13-H]");
+            var adduct4 = Adduct.FromStringAssumeProtonatedNonProteomic("[M+Na]");
+            var adduct5 = Adduct.FromStringAssumeProtonatedNonProteomic("[M-2H]");
+            sorted = new List<Adduct> { adduct0, adduct1, adduct2, adduct3, adduct5, adduct4 };
+            unsorted = new List<Adduct> { adduct3, adduct5, adduct4, adduct2, adduct1, adduct0 };
+            unsorted.Sort();
+            Assert.IsTrue(sorted.SequenceEqual(unsorted));
+
             var ints = new AdductMap<int>();
             Assert.AreEqual(0, ints[a]);
             ints[a] = 7;

@@ -293,7 +293,8 @@ namespace pwiz.SkylineTestFunctional
             Assert.AreEqual(1, docC.MoleculeGroupCount);
             Assert.AreEqual(1, docC.MoleculeCount);
             Assert.AreEqual(2, docC.MoleculeTransitionGroupCount);
-            Assert.AreEqual(3, docC.MoleculeTransitionGroups.First().TransitionCount);  
+            Assert.AreEqual(1, docC.MoleculeTransitionGroups.First().TransitionCount); // M+ first (lowest m/z)
+            Assert.AreEqual(3, docC.MoleculeTransitionGroups.Last().TransitionCount);  // Then M+H
 
             // Verify adduct usage - none, or in own column, or as part of formula, when no name hints are given
             columnOrderC = new[]
