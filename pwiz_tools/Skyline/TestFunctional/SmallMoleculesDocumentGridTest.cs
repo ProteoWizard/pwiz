@@ -33,7 +33,7 @@ namespace pwiz.SkylineTestFunctional
         [TestMethod]
         public void TestSmallMoleculesDocumentGrid()
         {
-            TestFilesZip = @"TestFunctional\SmallMoleculesDocumentGrid.zip";
+            TestFilesZipPaths = new [] { @"TestFunctional\SmallMoleculesDocumentGrid.zip", @"TestFunctional\SmallMoleculeIrtTest.zip"} ;
             RunFunctionalTest();
         }
 
@@ -42,6 +42,7 @@ namespace pwiz.SkylineTestFunctional
         /// </summary>
         protected override void DoTest()
         {
+            TestSmallMoleculeResultsDoc();
             TestMixedDoc();
             TestPeptideOnlyDoc();
             TestSmallMoleculeOnlyDoc();
@@ -82,7 +83,21 @@ namespace pwiz.SkylineTestFunctional
             CheckDocumentGridAndColumns(smallMoleculeSky,
                 Resources.SkylineViewContext_GetDocumentGridRowSources_Molecules,
                 1, 10, SrmDocument.DOCUMENT_TYPE.small_molecules);
+        }
 
+        private void TestSmallMoleculeResultsDoc() 
+        {
+            const string smallMoleculeSky = "DextranLadder.sky";
+            CheckDocumentGridAndColumns(smallMoleculeSky,
+                Resources.ReportSpecList_GetDefaults_Molecule_RT_Results,
+                113, 6, SrmDocument.DOCUMENT_TYPE.small_molecules, 
+                null, null, null, null, null, 
+                14.64);
+            CheckDocumentGridAndColumns(smallMoleculeSky,
+                Resources.ReportSpecList_GetDefaults_Molecule_Transition_Results,
+                113, 12, SrmDocument.DOCUMENT_TYPE.small_molecules,
+                null, null, null, null, null,
+                14.64);
         }
 
         private void TestPeptideOnlyDoc()
@@ -111,7 +126,8 @@ namespace pwiz.SkylineTestFunctional
             string expectedFragmentIon = null,
             string expectedMolecularFormula = null,
             string expectedPrecursorNeutralFormula = null,
-            string expectedPrecursorIonFormula = null)
+            string expectedPrecursorIonFormula = null,
+            double? expectedRT = null)
         {
             var oldDoc = SkylineWindow.Document;
             OpenDocument(docName);
@@ -170,6 +186,16 @@ namespace pwiz.SkylineTestFunctional
                 var frag = documentGrid.DataGridView.Rows[0].Cells[colFragmentIon.Index].Value.ToString();
                 Assert.AreEqual(expectedFragmentIon, frag);
             });
+            if (expectedRT.HasValue)
+            {
+                var colRT = documentGrid.FindColumn(PropertyPath.Parse("Results!*.Value.PeptideRetentionTime")) ??
+                            documentGrid.FindColumn(PropertyPath.Parse("Results!*.Value.RetentionTime"));
+                RunUI(() =>
+                {
+                    Assert.AreEqual(expectedRT.Value,
+                        (double)documentGrid.DataGridView.Rows[0].Cells[colRT.Index].Value, .001);
+                });
+            }
             RunUI(() => documentGrid.Close());
         }
 
