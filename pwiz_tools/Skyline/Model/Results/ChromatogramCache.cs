@@ -382,10 +382,6 @@ namespace pwiz.Skyline.Model.Results
                 }
             }
 
-            if (!spectrumClassFilter.IsEmpty)
-            {
-                yield break;
-            }
             // Look for matching chromatograms which do not have a text id.
             int i = FindEntry(precursorMz, tolerance);
             if (i < 0)
@@ -408,15 +404,19 @@ namespace pwiz.Skyline.Model.Results
                     continue;
                 }
 
-                if (nodePep != null && !TextIdEqual(entry, nodePep))
+                if (nodePep != null && !TextIdEqual(entry, nodePep, spectrumClassFilter))
                     continue;
                 yield return i;
             }
         }
 
-        private bool TextIdEqual(ChromGroupHeaderInfo entry, PeptideDocNode nodePep)
+        private bool TextIdEqual(ChromGroupHeaderInfo entry, PeptideDocNode nodePep, SpectrumClassFilter spectrumClassFilter)
         {
             var chromatogramGroupId = GetChromatogramGroupId(entry);
+            if (!Equals(spectrumClassFilter, chromatogramGroupId?.SpectrumClassFilter ?? default(SpectrumClassFilter)))
+            {
+                return false;
+            }
             if (chromatogramGroupId == null)
             {
                 return true;
