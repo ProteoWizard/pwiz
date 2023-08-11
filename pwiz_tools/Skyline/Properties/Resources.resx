@@ -12197,4 +12197,7 @@ If you choose Disable, you can enable Auto-select later with the "Refine &gt; Ad
   <data name="RefineDlg_RefineDlg_Min" xml:space="preserve">
     <value>Min</value>
   </data>
+  <data name="FormulaBox_FormulaBox_Help" xml:space="preserve">
+    <value>Help</value>
+  </data>
 </root>
