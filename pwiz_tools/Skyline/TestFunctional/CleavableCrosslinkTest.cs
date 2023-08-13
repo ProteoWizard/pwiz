@@ -37,6 +37,8 @@ namespace pwiz.SkylineTestFunctional
             RunFunctionalTest();
         }
 
+        protected override bool ContinuouslyVerifyDocumentSerialization => true;
+
         protected override void DoTest()
         {
             const string CROSSLINKER_NAME = "DSSO";

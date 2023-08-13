@@ -1831,25 +1831,31 @@ namespace pwiz.Skyline.Model.Lib
 
         #region object overrides
 
-        public bool Equals(SpectrumHeaderInfo obj)
+        protected bool Equals(SpectrumHeaderInfo other)
         {
-            if (ReferenceEquals(null, obj)) return false;
-            if (ReferenceEquals(this, obj)) return true;
-            return Equals(obj.LibraryName, LibraryName) &&
-                   Equals(obj.Protein, Protein);
+            return _protein == other._protein && 
+                   LibraryName == other.LibraryName && Nullable.Equals(Score, other.Score) &&
+                   ScoreType == other.ScoreType;
         }
 
         public override bool Equals(object obj)
         {
             if (ReferenceEquals(null, obj)) return false;
             if (ReferenceEquals(this, obj)) return true;
-            if (obj.GetType() != typeof (SpectrumHeaderInfo)) return false;
-            return Equals((SpectrumHeaderInfo) obj);
+            if (obj.GetType() != this.GetType()) return false;
+            return Equals((SpectrumHeaderInfo)obj);
         }
 
         public override int GetHashCode()
         {
-            return LibraryName.GetHashCode();
+            unchecked
+            {
+                var hashCode = (_protein != null ? _protein.GetHashCode() : 0);
+                hashCode = (hashCode * 397) ^ (LibraryName != null ? LibraryName.GetHashCode() : 0);
+                hashCode = (hashCode * 397) ^ Score.GetHashCode();
+                hashCode = (hashCode * 397) ^ (ScoreType != null ? ScoreType.GetHashCode() : 0);
+                return hashCode;
+            }
         }
 
         #endregion

@@ -179,8 +179,13 @@ namespace pwiz.Skyline.Model
                 {
                     moleculeMass = nodeTran.GetMoleculeMass();
                 }
+
+                var quantInfo = TransitionDocNode.TransitionQuantInfo
+                    .GetTransitionQuantInfo(ComplexFragmentIon.Simple(tranNew, nodeTran.Losses),
+                        nodeGroupTemp.IsotopeDist, moleculeMass, null)
+                    .UseValuesFrom(nodeTran.QuantInfo);
                 var nodeTranNew = new TransitionDocNode(tranNew, nodeTran.Annotations, nodeTran.Losses,
-                    moleculeMass, nodeTran.QuantInfo, nodeTran.ExplicitValues, nodeTran.Results);
+                    moleculeMass, quantInfo, nodeTran.ExplicitValues, nodeTran.Results);
                 children.Add(nodeTranNew);
             }
             return new TransitionGroupDocNode(groupNew, Annotations, settings, null, LibInfo, ExplicitValues, Results, children.ToArray(), AutoManageChildren);

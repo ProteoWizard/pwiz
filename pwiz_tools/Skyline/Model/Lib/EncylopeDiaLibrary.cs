@@ -882,7 +882,7 @@ on one.SourceFile = two.SourceFile";
         public sealed class ElibSpectrumHeaderInfo : SpectrumHeaderInfo
         {
             public ElibSpectrumHeaderInfo(string libraryName, double? score)
-                : base(libraryName, score, BiblioSpec.ScoreType.GenericQValue.NameInvariant)
+                : base(libraryName, score, score.HasValue ? BiblioSpec.ScoreType.GenericQValue.NameInvariant : null)
             {
             }
 
