@@ -1886,13 +1886,11 @@ namespace pwiz.Skyline
             {
                 return;
             }
-            // Do a garbage collection in case any finalizer is supposed to release a file handle
-            GC.Collect();
-            GC.WaitForPendingFinalizers();
-            GC.Collect();
-
-            FileEx.SafeDelete(AssayLibraryFileName);
-            FileEx.SafeDelete(Path.ChangeExtension(AssayLibraryFileName, BiblioSpecLiteSpec.EXT_REDUNDANT));
+            else
+            {
+                FileEx.SafeDelete(AssayLibraryFileName);
+                FileEx.SafeDelete(Path.ChangeExtension(AssayLibraryFileName, BiblioSpecLiteSpec.EXT_REDUNDANT));
+            }
             ImportMassList(inputs, description, true);
         }
 
