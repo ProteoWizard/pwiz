@@ -89,6 +89,8 @@ namespace pwiz.Skyline.SettingsUI
             labelFormula.Text = labelFormulaText;
             labelAverage.Text = labelAverageText;
             labelMono.Text = labelMonoText;
+            helpToolStripMenuItem.Text = Resources.FormulaBox_FormulaBox_Help;
+
 
             Bitmap bm = Resources.PopupBtn;
             bm.MakeTransparent(Color.Fuchsia);
