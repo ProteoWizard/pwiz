@@ -29,7 +29,7 @@ namespace pwiz.Skyline.Alerts
         {
             InitializeComponent();
 
-            labelSoftwareVersion.Text = Install.ProgramNameAndVersion;
+            textSoftwareVersion.Text = Install.ProgramNameAndVersion;
 
             // Designer has problems getting images from resources
             pictureSkylineIcon.Image = Program.SkylineImage;
