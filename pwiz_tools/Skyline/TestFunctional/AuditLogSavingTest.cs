@@ -41,6 +41,10 @@ namespace pwiz.SkylineTestFunctional
         {
             OpenDocument("Rat_plasma.sky");
 
+            var blockHash = new BlockHash(new SHA1CryptoServiceProvider());
+            var fileHashBytes = blockHash.HashFile(TestFilesDir.GetTestPath("Rat_plasma.sky"));
+            var fileHashB64 = BlockHash.SafeToBase64(fileHashBytes);
+
             RunUI(SkylineWindow.ShowAuditLog);
             var auditLogForm = WaitForOpenForm<AuditLogForm>();
             Assert.IsFalse(SkylineWindow.Document.Settings.DataSettings.AuditLogging);
@@ -57,6 +61,7 @@ namespace pwiz.SkylineTestFunctional
             });
             var actualHash = GetDocumentHash();
             Assert.AreEqual(expectedHash, actualHash);
+            Assert.AreEqual(expectedHash, fileHashB64);
 
             // Test that the hash is the same as if the document was simply read and hashed
             // The document is really small (<20KB) so it's fine to read it all into memory
@@ -327,12 +332,12 @@ IPI:IPI00187596.1|SWISS-PROT:P23978|ENSEMBL:ENSRNOP00000009705|REFSEQ:NP_077347	
                         SrmDocument.DOCUMENT_TYPE.proteomic, string.Empty, false,
                         "{0:Settings}{2:PropertySeparator}{0:SrmSettings_TransitionSettings}{2:TabSeparator}{0:TransitionSettings_Filter}{2:PropertySeparator}{0:TransitionFilter_SmallMoleculePrecursorAdductsString}",
                         "\"[M+H]\"",
-                        "\"[M-3H], [M-2H], [M-H], [M-], [M+H], [M+], [M+2H], [M+3H]\""),
+                        "\"[M-H], [M-], [M-2H], [M-3H], [M+], [M+H], [M+2H], [M+3H]\""),
                     new DetailLogMessage(LogLevel.all_info, MessageType.changed_from_to,
                         SrmDocument.DOCUMENT_TYPE.proteomic, string.Empty, false,
                         "{0:Settings}{2:PropertySeparator}{0:SrmSettings_TransitionSettings}{2:TabSeparator}{0:TransitionSettings_Filter}{2:PropertySeparator}{0:TransitionFilter_SmallMoleculeFragmentAdductsString}",
                         "\"[M+]\"",
-                        "\"[M-3], [M-2], [M-], [M+], [M+2], [M+3]\""),
+                        "\"[M-], [M-2], [M-3], [M+], [M+2], [M+3]\""),
                     new DetailLogMessage(LogLevel.all_info, MessageType.changed_from_to,
                         SrmDocument.DOCUMENT_TYPE.proteomic, string.Empty, false,
                         "{0:Settings}{2:PropertySeparator}{0:SrmSettings_TransitionSettings}{2:TabSeparator}{0:TransitionSettings_Filter}{2:PropertySeparator}{0:TransitionFilter_StartFragmentFinderLabel}",

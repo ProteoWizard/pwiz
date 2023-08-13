@@ -21,6 +21,7 @@ using System;
 using System.Collections.Generic;
 using System.Linq;
 using Google.Protobuf.Collections;
+using pwiz.Common.Chemistry;
 using pwiz.Skyline.Model.DocSettings;
 using pwiz.Skyline.Properties;
 using Tensorflow;
@@ -118,9 +119,20 @@ namespace pwiz.Skyline.Model.Prosit.Models
                 return null;
             }
 
-            var precursorCharge = PrositHelpers.OneHotEncode(skylineInput.NodeGroup.PrecursorCharge - 1, PrositConstants.PRECURSOR_CHARGES);
+            var precursorCharge = PrositHelpers.OneHotEncode(skylineInput.PrecursorCharge - 1, PrositConstants.PRECURSOR_CHARGES);
 
             return new PrositIntensityInput.PrositPrecursorInput(peptideSequence, precursorCharge, skylineInput.NCE.Value / 100.0f);
+        }
+
+        public static PrositIntensityInput.PrositPrecursorInput CreatePrositInputRow(string sequence, int charge, float nce, out PrositException exception)
+        {
+            var peptideSequence = PrositHelpers.EncodeSequence(sequence, out exception);
+            if (peptideSequence == null) // equivalently, exception != null
+                return null;
+
+            var precursorCharge = PrositHelpers.OneHotEncode(charge - 1, PrositConstants.PRECURSOR_CHARGES);
+
+            return new PrositIntensityInput.PrositPrecursorInput(peptideSequence, precursorCharge, nce / 100.0f);
         }
 
         public override PrositIntensityInput CreatePrositInput(IList<PrositIntensityInput.PrositPrecursorInput> prositInputRows)
@@ -140,25 +152,36 @@ namespace pwiz.Skyline.Model.Prosit.Models
 
         public class PeptidePrecursorNCE : SkylineInputRow
         {
-            public PeptidePrecursorNCE(PeptideDocNode nodePep, TransitionGroupDocNode nodeGroup) : this(nodePep, nodeGroup, nodeGroup.LabelType, null)
+
+            public PeptidePrecursorNCE(string sequence, int precursorCharge, SignedMz precursorMz, ExplicitMods explicitMods, IsotopeLabelType isotopeLabelType, int? nce = null)
             {
-            }
-            public PeptidePrecursorNCE(PeptideDocNode nodePep, TransitionGroupDocNode nodeGroup, IsotopeLabelType labelType, int? nce)
-            {
-                NodePep = nodePep;
-                NodeGroup = nodeGroup;
-                LabelType = labelType;
+                Sequence = sequence;
+                PrecursorCharge = precursorCharge;
+                PrecursorMz = precursorMz;
+                ExplicitMods = explicitMods;
+                LabelType = isotopeLabelType;
                 NCE = nce;
             }
 
-            public PeptideDocNode NodePep { get; private set; }
-            public TransitionGroupDocNode NodeGroup { get; private set; }
-            public IsotopeLabelType LabelType { get; private set; }
+            public PeptidePrecursorNCE(PeptideDocNode nodePep, TransitionGroupDocNode nodeGroup, IsotopeLabelType isotopeLabelType = null, int? nce = null)
+                : this(nodePep.Peptide.Sequence, nodeGroup.PrecursorCharge, nodeGroup.PrecursorMz, nodePep.ExplicitMods, isotopeLabelType ?? nodeGroup.LabelType, nce)
+            {
+                NodePep = nodePep;
+                NodeGroup = nodeGroup;
+            }
+
+            public PeptideDocNode NodePep { get; }
+            public TransitionGroupDocNode NodeGroup { get; }
+            public string Sequence { get; }
+            public int PrecursorCharge { get; }
+            public SignedMz PrecursorMz { get; }
+            public ExplicitMods ExplicitMods { get; }
+            public IsotopeLabelType LabelType { get; }
             public int? NCE { get; private set; }
 
             public PeptidePrecursorNCE WithNCE(int nce)
             {
-                return new PeptidePrecursorNCE(NodePep, NodeGroup, LabelType, nce);
+                return new PeptidePrecursorNCE(Sequence, PrecursorCharge, PrecursorMz, ExplicitMods, LabelType, nce);
             }
 
             public override bool Equals(SkylineInputRow other)
@@ -167,8 +190,9 @@ namespace pwiz.Skyline.Model.Prosit.Models
                     return false;
                 if (!(other is PeptidePrecursorNCE peptidePrecursorPair))
                     return false;
-                return ReferenceEquals(NodePep, peptidePrecursorPair.NodePep)
-                       && ReferenceEquals(NodeGroup, peptidePrecursorPair.NodeGroup)
+                return ReferenceEquals(Sequence, peptidePrecursorPair.Sequence)
+                       && PrecursorCharge == peptidePrecursorPair.PrecursorCharge
+                       && ReferenceEquals(ExplicitMods, peptidePrecursorPair.ExplicitMods)
                        && NCE == peptidePrecursorPair.NCE
                        && Equals(LabelType, peptidePrecursorPair.LabelType);
             }

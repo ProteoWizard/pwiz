@@ -29,6 +29,7 @@ using pwiz.ProteomeDatabase.API;
 using pwiz.Skyline.Model.Crosslinking;
 using pwiz.Skyline.Model.DocSettings;
 using pwiz.Skyline.Model.Lib;
+using pwiz.Skyline.Model.Lib.ChromLib;
 using pwiz.Skyline.Model.Results;
 using pwiz.Skyline.Properties;
 using pwiz.Skyline.Util;
@@ -613,7 +614,13 @@ namespace pwiz.Skyline.Model.Serialization
             if (node.HasLibInfo)
             {
                 var helpers = PeptideLibraries.SpectrumHeaderXmlHelpers;
-                writer.WriteElements(new[] { node.LibInfo }, helpers);
+                var libInfo = node.LibInfo;
+                if (libInfo is EncyclopeDiaLibrary.ElibSpectrumHeaderInfo && DocumentFormat < DocumentFormat.VERSION_22_25)
+                {
+                    // Older versions of Skyline used ChromLibSpectrumHeaderInfo instead of ElibSpectrumHeaderInfo
+                    libInfo = new ChromLibSpectrumHeaderInfo(libInfo.LibraryName, 0, null);
+                }
+                writer.WriteElements(new[] { libInfo }, helpers);
             }
 
             if (node.HasResults)

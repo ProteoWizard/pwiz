@@ -138,19 +138,8 @@ SpectrumList_PeakPicker::SpectrumList_PeakPicker(
         method.userParams.emplace_back("ms levels", msLevelsToPeakPickStr);
 
     if (algorithm_)
-        noVendorCentroidingWarningMessage_ = string("[SpectrumList_PeakPicker]: vendor centroiding requested but not available for this data; falling back to ") + algorithm_->name();
+        noVendorCentroidingWarningMessage_ = string("[SpectrumList_PeakPicker]: vendor centroiding requested but not available for non-vendor formats (and UNIFI); falling back to ") + algorithm_->name();
 
-    if (preferVendorPeakPicking && !mode_ && (algorithm_ != NULL)) // VendorOnlyPeakPicker sets algorithm null, we deal with this at get binary data time
-    {
-        cerr << "Warning: vendor peakPicking was requested, but is unavailable";
-#ifdef WIN32
-        cerr << " for this input data. ";
-#else
-        cerr << " as it depends on Windows DLLs.  ";
-#endif
-        cerr << "Using ProteoWizard centroiding algorithm instead." << endl;
-		cerr << "High-quality peak-picking can be enabled using the cwt flag." << endl;
-    }
     dp_->processingMethods.push_back(method);
 }
 

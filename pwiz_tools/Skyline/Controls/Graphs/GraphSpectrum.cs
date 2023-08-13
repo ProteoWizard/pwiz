@@ -933,8 +933,7 @@ namespace pwiz.Skyline.Controls.Graphs
 
             double? score = null;
             if(spectrum.SpectrumInfo is SpectrumInfoLibrary libInfo)
-                if (libInfo.SpectrumHeaderInfo is BiblioSpecSpectrumHeaderInfo biblioSpecInfo)
-                    score = biblioSpecInfo.Score;
+                score = libInfo.SpectrumHeaderInfo?.Score;
             var spectrumInfoR = LibraryRankedSpectrumInfo.NewLibraryRankedSpectrumInfo(spectrumPeaksOverride ?? spectrum.SpectrumPeaksInfo,
                 spectrum.LabelType,
                 precursor,

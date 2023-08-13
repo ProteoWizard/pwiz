@@ -4272,7 +4272,7 @@ namespace pwiz.Skyline
         }
     }
 
-    internal class CommandProgressMonitor : IProgressMonitor, ILongWaitBroker
+    public class CommandProgressMonitor : IProgressMonitor, ILongWaitBroker
     {
         private IProgressStatus _currentProgress;
         private readonly bool _warnOnImportFailure;
