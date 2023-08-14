@@ -46,7 +46,6 @@ namespace DiaUmpire {
 using std::map;
 using std::multimap;
 using std::vector;
-using std::set;
 using std::string;
 using std::runtime_error;
 
@@ -88,7 +87,7 @@ class PeakCluster
 {
     mutable vector<float> SNR;
     XYPointCollection FragmentScan;
-    set<float> MatchScores;
+    std::set<float> MatchScores;
     mutable float conflictCorr = -1;
     mutable float mass = 0;
     const ChiSquareGOF& chiSquaredGof;
