@@ -79,7 +79,9 @@ namespace SkylineBatch
         {
             var downloadingFileName = HttpUtility.ParseQueryString(server.URI.Query)["fileName"];
             Uri webdavUri = null;
-            var panoramaServerUri = new Uri(PanoramaUtil.ServerNameToUrl("https://panoramaweb.org/"));
+            var panoramaServerUri =
+                new Uri(PanoramaUtil.ServerNameToUrl(
+                    Uri.UnescapeDataString(server.URI.GetLeftPart(UriPartial.Authority))));
             var webClient = new WebPanoramaClient(panoramaServerUri);
             var panoramaFolder = (Path.GetDirectoryName(server.URI.LocalPath) ?? string.Empty).Replace(@"\", "/");
             if (downloadingFileName == null) // this is not a zipped Skyline file 

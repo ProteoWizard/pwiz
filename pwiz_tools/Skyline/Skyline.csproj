@@ -3678,6 +3678,7 @@
     <None Include="Resources\AnnotatedSpectum.png" />
     <None Include="Resources\Cluster.ico" />
     <None Include="Resources\Close.bmp" />
+    <None Include="Resources\PanoramaDownload.bmp" />
     <Content Include="SkylineDocPointer.ico" />
     <EmbeddedResource Include="Resources\prosit_logo_dark_blue.png" />
     <Content Include="SkylineProcessRunner.exe">
@@ -4538,7 +4539,7 @@
     <Compile Include="Util\Log.cs" />
     <Compile Include="Util\MemoryInfo.cs" />
     <Compile Include="Util\NameValueParameters.cs" />
-    <Compile Include="Util\PanoramaUtil.cs" />
+    <Compile Include="Util\PanoramaPublishUtil.cs" />
     <Compile Include="Util\PooledSqliteConnection.cs" />
     <Compile Include="Util\SystemMetrics.cs" />
     <Compile Include="Util\TextRendererHelper.cs" />
@@ -5605,6 +5606,10 @@
       <Project>{26CFD1FF-F4F7-4F66-B5B4-E686BDB9B34E}</Project>
       <Name>MSGraph</Name>
     </ProjectReference>
+    <ProjectReference Include="..\Shared\PanoramaClient\PanoramaClient.csproj">
+      <Project>{bf849cf8-25d7-4619-b001-9ed8e3771c44}</Project>
+      <Name>PanoramaClient</Name>
+    </ProjectReference>
     <ProjectReference Include="..\Shared\ProteomeDb\ProteomeDb.csproj">
       <Project>{09FC3CB3-FCCD-4906-A370-160B28725936}</Project>
       <Name>ProteomeDb</Name>
@@ -5782,6 +5787,16 @@
       <PublishState>Include</PublishState>
       <IncludeHash>True</IncludeHash>
       <FileType>Assembly</FileType>
+    </PublishFile>
+    <PublishFile Include="PanoramaClient.pdb">
+      <Visible>False</Visible>
+      <Group>
+      </Group>
+      <TargetPath>
+      </TargetPath>
+      <PublishState>Include</PublishState>
+      <IncludeHash>True</IncludeHash>
+      <FileType>File</FileType>
     </PublishFile>
     <PublishFile Include="ProteomeDb.pdb">
       <Visible>False</Visible>

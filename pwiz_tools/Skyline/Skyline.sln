@@ -72,6 +72,8 @@ Project("{FAE04EC0-301F-11D3-BF4B-00C04F79EFBC}") = "SkylineCmd", "SkylineCmd\Sk
 EndProject
 Project("{FAE04EC0-301F-11D3-BF4B-00C04F79EFBC}") = "SkylineNightlyShim", "SkylineNightlyShim\SkylineNightlyShim.csproj", "{3C7F5209-6507-42C5-80CE-472AE6A51CD1}"
 EndProject
+Project("{FAE04EC0-301F-11D3-BF4B-00C04F79EFBC}") = "PanoramaClient", "..\Shared\PanoramaClient\PanoramaClient.csproj", "{BF849CF8-25D7-4619-B001-9ED8E3771C44}"
+EndProject
 Global
 	GlobalSection(SolutionConfigurationPlatforms) = preSolution
 		Debug|x64 = Debug|x64
@@ -264,6 +266,14 @@ Global
 		{3C7F5209-6507-42C5-80CE-472AE6A51CD1}.Release|x64.Build.0 = Release|x64
 		{3C7F5209-6507-42C5-80CE-472AE6A51CD1}.Release|x86.ActiveCfg = Release|x86
 		{3C7F5209-6507-42C5-80CE-472AE6A51CD1}.Release|x86.Build.0 = Release|x86
+		{BF849CF8-25D7-4619-B001-9ED8E3771C44}.Debug|x64.ActiveCfg = Debug|x64
+		{BF849CF8-25D7-4619-B001-9ED8E3771C44}.Debug|x64.Build.0 = Debug|x64
+		{BF849CF8-25D7-4619-B001-9ED8E3771C44}.Debug|x86.ActiveCfg = Debug|Any CPU
+		{BF849CF8-25D7-4619-B001-9ED8E3771C44}.Debug|x86.Build.0 = Debug|Any CPU
+		{BF849CF8-25D7-4619-B001-9ED8E3771C44}.Release|x64.ActiveCfg = Release|x64
+		{BF849CF8-25D7-4619-B001-9ED8E3771C44}.Release|x64.Build.0 = Release|x64
+		{BF849CF8-25D7-4619-B001-9ED8E3771C44}.Release|x86.ActiveCfg = Release|Any CPU
+		{BF849CF8-25D7-4619-B001-9ED8E3771C44}.Release|x86.Build.0 = Release|Any CPU
 	EndGlobalSection
 	GlobalSection(SolutionProperties) = preSolution
 		HideSolutionNode = FALSE
