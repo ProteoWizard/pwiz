@@ -15180,6 +15180,15 @@ namespace pwiz.Skyline.Properties {
         }
         
         /// <summary>
+        ///   Looks up a localized string similar to Help.
+        /// </summary>
+        public static string FormulaBox_FormulaBox_Help {
+            get {
+                return ResourceManager.GetString("FormulaBox_FormulaBox_Help", resourceCulture);
+            }
+        }
+        
+        /// <summary>
         ///   Looks up a localized string similar to Formulas are written in standard chemical notation, e.g. &quot;C2H6O&quot;.  Heavy isotopes are indicated by a prime (e.g. C&apos; for C13) or double prime for less abundant stable iostopes (e.g. O&quot; for O17, O&apos; for O18)..
         /// </summary>
         public static string FormulaBox_FormulaHelpText_Formulas_are_written_in_standard_chemical_notation__e_g___C2H6O____Heavy_isotopes_are_indicated_by_a_prime__e_g__C__for_C13__or_double_prime_for_less_abundant_stable_iostopes__e_g__O__for_O17__O__for_O18__ {
