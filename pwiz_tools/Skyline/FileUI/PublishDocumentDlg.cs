@@ -24,6 +24,7 @@ using System.Linq;
 using System.Net;
 using System.Windows.Forms;
 using Newtonsoft.Json.Linq;
+using pwiz.PanoramaClient;
 using pwiz.Common.SystemUtil;
 using pwiz.Skyline.Alerts;
 using pwiz.Skyline.Controls;
@@ -129,8 +130,8 @@ namespace pwiz.Skyline.FileUI
                     if (ex is WebException || ex is PanoramaServerException)
                     {
                         var error = ex.Message;
-                        if (error != null && error.Contains(Resources
-                                .EditServerDlg_OkDialog_The_username_and_password_could_not_be_authenticated_with_the_panorama_server))
+                        if (error != null && error.Contains(PanoramaClient.Properties.Resources
+                                .UserState_GetErrorMessage_The_username_and_password_could_not_be_authenticated_with_the_panorama_server_))
                         {
                             error = TextUtil.LineSeparate(error, Resources
                                 .PublishDocumentDlg_PublishDocumentDlgLoad_Go_to_Tools___Options___Panorama_tab_to_update_the_username_and_password_);

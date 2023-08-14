@@ -437,7 +437,10 @@ namespace TestRunner
             //Process.GetCurrentProcess().Kill();
 
             if (commandLineArgs.ArgAsBool("wait"))
-                Console.ReadKey();
+            {
+                Console.Out.WriteLine("Press <enter> to continue");
+                Console.ReadLine();
+            }
 
             // delete per-process tools directory
             if (Path.GetFileName(ToolDescriptionHelpers.GetToolsDirectory()) != "Tools")
