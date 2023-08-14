@@ -17,6 +17,7 @@
  * limitations under the License.
  */
 using System;
+using System.ComponentModel;
 using System.Globalization;
 using System.Xml;
 using pwiz.Common.SystemUtil;
@@ -55,6 +56,11 @@ namespace pwiz.Common.DataBinding
             return new FilterPredicate(filterOperation, invariantOperandText);
         }
 
+        public static FilterPredicate CreateFilterPredicate<T>(IFilterOperation filterOperation, T operand)
+        {
+            return new FilterPredicate(filterOperation, OperandValueToString(CultureInfo.InvariantCulture, operand));
+        }
+
         private FilterPredicate(IFilterOperation filterOperation, String invariantOperandText)
         {
             FilterOperation = filterOperation;
@@ -64,6 +70,12 @@ namespace pwiz.Common.DataBinding
         public IFilterOperation FilterOperation { get; private set; }
         [Track]
         public string InvariantOperandText { get; private set; }
+
+        public static FilterPredicate FromInvariantOperandText(IFilterOperation filterOperation,
+            string invariantOperandText)
+        {
+            return new FilterPredicate(filterOperation, invariantOperandText);
+        }
 
         public object GetOperandValue(ColumnDescriptor columnDescriptor)
         {
@@ -89,8 +101,7 @@ namespace pwiz.Common.DataBinding
             try
             {
                 object operand = GetOperandValue(dataSchema, propertyType);
-                return (string) Convert.ChangeType(operand, typeof(string),
-                    dataSchema.DataSchemaLocalizer.FormatProvider);
+                return OperandValueToString(dataSchema.DataSchemaLocalizer.FormatProvider, operand);
             }
             catch (Exception)
             {
@@ -135,7 +146,11 @@ namespace pwiz.Common.DataBinding
             {
                 return null;
             }
-            return Convert.ChangeType(operandValue, type, cultureInfo);
+
+            var typeConverter = TypeDescriptor.GetConverter(type);
+            // ReSharper disable AssignNullToNotNullAttribute
+            return typeConverter.ConvertFrom(null, cultureInfo, operandValue);
+            // ReSharper restore AssignNullToNotNullAttribute
         }
 
         private static string OperandValueToString(CultureInfo cultureInfo, object operandValue)
@@ -144,7 +159,8 @@ namespace pwiz.Common.DataBinding
             {
                 return null;
             }
-            return (string) Convert.ChangeType(operandValue, typeof (string), cultureInfo);
+
+            return LocalizationHelper.CallWithCulture(cultureInfo, operandValue.ToString);
         }
 
         public Predicate<object> MakePredicate(DataSchema dataSchema, Type columnType)

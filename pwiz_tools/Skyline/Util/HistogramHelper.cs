@@ -30,11 +30,9 @@ namespace pwiz.Skyline.Util
             {
                 var pair = peptideAnnotationPairs[i];
                 var displayText = PeptideAnnotationPairFinder.GetDisplayText(data.CV, pair.Annotation);
-
-                results.Add(new FindResult(pred,
-                    new BookmarkEnumerator(document,
-                        new Bookmark(document.GetPathTo((int)SrmDocument.Level.Molecules,
-                            document.Molecules.ToList().IndexOf(pair.Peptide)))), new FindMatch(displayText)));
+                var bookmark = new Bookmark(document.GetPathTo((int)SrmDocument.Level.Molecules,
+                    document.Molecules.ToList().IndexOf(pair.Peptide)));
+                results.Add(new FindResult(pred, document, new FindMatch(bookmark, displayText)));
             }
 
             var count = peptideAnnotationPairs.Count;

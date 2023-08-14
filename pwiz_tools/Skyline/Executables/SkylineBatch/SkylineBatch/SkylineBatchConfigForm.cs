@@ -145,7 +145,7 @@ namespace SkylineBatch
             templateControl = new DownloadingFileControl(Resources.SkylineBatchConfigForm_InitMainSettingsTab_Skyline_template_file_path, 
                 Resources.SkylineBatchConfigForm_InitMainSettingsTab_Template_File, config?.MainSettings.Template.FilePath, 
                 TextUtil.FILTER_SKY + "|" + TextUtil.FILTER_SKY_ZIP, config?.MainSettings.Template.PanoramaFile, false, "Download template from Panorama", _mainControl,
-                setMainState, getMainState);
+                setMainState, getMainState, true);
             templateControl.AddPathChangedHandler(templateControl_PathChanged);
             templateControl.Dock = DockStyle.Fill;
             templateControl.Show();

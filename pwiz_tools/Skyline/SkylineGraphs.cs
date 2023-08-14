@@ -1109,10 +1109,15 @@ namespace pwiz.Skyline
             ToggleObservedMzValues();
         }
 
-        private void showSpectrumPropertiesContextMenuItem_Click(object sender, EventArgs e)
+        private void showLibSpectrumPropertiesContextMenuItem_Click(object sender, EventArgs e)
         {
             if (_graphSpectrum != null && _graphSpectrum.Visible)
-                _graphSpectrum.ShowPropertiesSheet = !showSpectrumPropertiesContextMenuItem.Checked;
+                _graphSpectrum.ShowPropertiesSheet = !showLibSpectrumPropertiesContextMenuItem.Checked;
+        }
+        private void showFullScanSpectrumPropertiesContextMenuItem_Click(object sender, EventArgs e)
+        {
+            if (_graphFullScan != null && _graphFullScan.Visible)
+                _graphFullScan.ShowPropertiesSheet = !showFullScanSpectrumPropertiesContextMenuItem.Checked;
         }
 
         public void ToggleObservedMzValues()
@@ -1196,10 +1201,18 @@ namespace pwiz.Skyline
             if (control != null)
             {
                 menuStrip.Items.Insert(iInsert++, spectrumGraphPropsContextMenuItem);
-                showSpectrumPropertiesContextMenuItem.Checked = control.ShowPropertiesSheet;
+                if (control.ControlType == SpectrumControlType.LibraryMatch)
+                {
+                    showLibSpectrumPropertiesContextMenuItem.Checked = control.ShowPropertiesSheet;
+                    menuStrip.Items.Insert(iInsert++, showLibSpectrumPropertiesContextMenuItem);
+                }
+                else if (control.ControlType == SpectrumControlType.FullScanViewer)
+                {
+                    showFullScanSpectrumPropertiesContextMenuItem.Checked = control.ShowPropertiesSheet;
+                    menuStrip.Items.Insert(iInsert++, showFullScanSpectrumPropertiesContextMenuItem);
+                }
             }
 
-            menuStrip.Items.Insert(iInsert++, showSpectrumPropertiesContextMenuItem);
 
             if (_listGraphChrom.Any(c => c.Visible)) // Don't offer to show chromatograms when there are none
             {
@@ -1213,7 +1226,7 @@ namespace pwiz.Skyline
                 synchMzScaleToolStripMenuItem.Checked = Settings.Default.SyncMZScale;
             }
             */
-            menuStrip.Items.Insert(iInsert, toolStripSeparator15);
+            //menuStrip.Items.Insert(iInsert, toolStripSeparator15);
 
             // Remove some ZedGraph menu items not of interest
             foreach (var item in items)
@@ -1440,7 +1453,7 @@ namespace pwiz.Skyline
                 _graphFullScan.Hide();
         }
 
-        private void ShowGraphFullScan(IScanProvider scanProvider, int transitionIndex, int scanIndex, int? optStep)
+        internal void ShowGraphFullScan(IScanProvider scanProvider, int transitionIndex, int scanIndex, int? optStep)
         {
             if (_graphFullScan != null)
             {
@@ -4089,13 +4102,13 @@ namespace pwiz.Skyline
 
         private int AddReplicateOrderAndGroupByMenuItems(ToolStrip menuStrip, int iInsert)
         {
-            string currentGroupBy = SummaryReplicateGraphPane.GroupByReplicateAnnotation;
+            ReplicateValue currentGroupBy = ReplicateValue.FromPersistedString(DocumentUI.Settings, SummaryReplicateGraphPane.GroupByReplicateAnnotation);
             var groupByValues = ReplicateValue.GetGroupableReplicateValues(DocumentUI).ToArray();
             if (groupByValues.Length == 0)
                 currentGroupBy = null;
 
             // If not grouped by an annotation, show the order-by menuitem
-            if (string.IsNullOrEmpty(currentGroupBy))
+            if (currentGroupBy == null)
             {
                 var orderByReplicateAnnotationDef = groupByValues.FirstOrDefault(
                     value => SummaryReplicateGraphPane.OrderByReplicateAnnotation == value.ToPersistedString());
@@ -4124,11 +4137,11 @@ namespace pwiz.Skyline
                 menuStrip.Items.Insert(iInsert++, groupReplicatesByContextMenuItem);
                 groupReplicatesByContextMenuItem.DropDownItems.Clear();
                 groupReplicatesByContextMenuItem.DropDownItems.Add(groupByReplicateContextMenuItem);
-                groupByReplicateContextMenuItem.Checked = string.IsNullOrEmpty(currentGroupBy);
+                groupByReplicateContextMenuItem.Checked = currentGroupBy == null;
                 foreach (var replicateValue in groupByValues)
                 {
                     groupReplicatesByContextMenuItem.DropDownItems
-                        .Add(GroupByReplicateAnnotationMenuItem(replicateValue, currentGroupBy));
+                        .Add(GroupByReplicateAnnotationMenuItem(replicateValue, Equals(replicateValue, currentGroupBy)));
                 }
             }
             return iInsert;
@@ -4142,12 +4155,18 @@ namespace pwiz.Skyline
             }
         }
 
-        private ToolStripMenuItem GroupByReplicateAnnotationMenuItem(ReplicateValue replicateValue, string groupBy)
+        public ToolStripMenuItem ReplicateGroupByContextMenuItem
         {
-            return new ToolStripMenuItem(replicateValue.Title, null, (sender, eventArgs)=>GroupByReplicateValue(replicateValue))
-                       {
-                           Checked = replicateValue.ToPersistedString() == groupBy
-                       };
+            get { return groupReplicatesByContextMenuItem; }
+        }
+
+        private ToolStripMenuItem GroupByReplicateAnnotationMenuItem(ReplicateValue replicateValue, bool isChecked)
+        {
+            return new ToolStripMenuItem(replicateValue.Title, null,
+                (sender, eventArgs) => GroupByReplicateValue(replicateValue))
+            {
+                Checked = isChecked
+            };
         }
 
         private ToolStripMenuItem OrderByReplicateAnnotationMenuItem(ReplicateValue replicateValue, string currentOrderBy)

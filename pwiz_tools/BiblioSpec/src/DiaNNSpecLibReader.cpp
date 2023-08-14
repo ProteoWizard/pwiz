@@ -595,12 +595,23 @@ bool DiaNNSpecLibReader::parseFile()
 
     typedef io::CSVReader<9, io::trim_chars<' ', ' '>, io::no_quote_escape<'\t'>> ReportReaderType;
 
-    auto diannReportFilepath = bal::replace_last_copy(string(impl_->specLibFile_), "-lib.tsv.speclib", "-report.tsv");
+    string specLibFile = impl_->specLibFile_;
+    bfs::path specLibFilePath(specLibFile);
+
+    auto diannReportFilepath = bal::replace_last_copy(specLibFile, "-lib.tsv.speclib", "-report.tsv");
+
+    // special case for FragPipe
+    if (specLibFilePath.filename().string() == "library.tsv.speclib" && bfs::exists(specLibFilePath.parent_path() / "diann-output" / "diann-output.tsv"))
+    {
+        Verbosity::debug("Found DIA-NN tsv/speclib from FragPipe.");
+        diannReportFilepath = (specLibFilePath.parent_path() / "diann-output" / "diann-output.tsv").string();
+    }
+
     /*if (diannReportFilepath == impl_->specLibFile_)
         throw BlibException(true, "unable to determine DIA-NN report filename for '%s': speclib must end in -lib.tsv.speclib and report must end in -report.tsv", impl_->specLibFile_);
     if (!bfs::exists(diannReportFilepath))
         throw BlibException(true, "could not find DIA-NN report file '%s' for '%s'", bfs::path(diannReportFilepath).filename().string().c_str(), impl_->specLibFile_);*/
-    if (diannReportFilepath == impl_->specLibFile_ || !bfs::exists(diannReportFilepath))
+    if (diannReportFilepath == specLibFile || !bfs::exists(diannReportFilepath))
     {
         // iterate all TSV files in the same directory as the speclib, check the ones sharing the most leading characters, and look for the report headers in them
         vector<bfs::path> siblingTsvFiles;

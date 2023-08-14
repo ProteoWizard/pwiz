@@ -175,26 +175,8 @@ namespace pwiz.Skyline.Controls.Databinding
                     return false;
                 }
 
-                var skylineWindow = DataSchemaSkylineWindow;
-                if (skylineWindow == null)
-                {
-                    return false;
-                }
-
-                bool complete = false;
-                if (skylineWindow.InvokeRequired)
-                {
-                    skylineWindow.Invoke(new Action(() =>
-                    {
-                        complete = ReferenceEquals(skylineWindow.DocumentUI, skylineWindow.Document);
-                    }));
-                }
-                else
-                {
-                    complete = ReferenceEquals(skylineWindow.DocumentUI, skylineWindow.Document);
-                }
-
-                return complete;
+                var skylineDataSchema = BindingListSource.ViewContext?.DataSchema as SkylineDataSchema;
+                return true == skylineDataSchema?.IsDocumentUpToDate();
             }
         }
 

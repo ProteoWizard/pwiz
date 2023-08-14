@@ -24,7 +24,6 @@ using System.Globalization;
 using System.Linq;
 using System.Windows.Forms;
 using Grpc.Core;
-using pwiz.Common.Controls;
 using pwiz.Common.SystemUtil;
 using pwiz.Skyline.Alerts;
 using pwiz.Skyline.Controls.Graphs;
@@ -119,6 +118,8 @@ namespace pwiz.Skyline.ToolsUI
                 Enumerable.Range(PrositConstants.MIN_NCE, PrositConstants.MAX_NCE - PrositConstants.MIN_NCE + 1).Select(c => (object) c)
                     .ToArray());
             ceCombo.SelectedItem = Settings.Default.PrositNCE;
+            tbxSettingsFilePath.Text = System.Configuration.ConfigurationManager
+                .OpenExeConfiguration(System.Configuration.ConfigurationUserLevel.PerUserRoamingAndLocal).FilePath;
         }
 
         private class PrositPingRequest : PrositHelpers.PrositRequest
@@ -229,9 +230,12 @@ namespace pwiz.Skyline.ToolsUI
                     return;
                 }
 
+                var nodePep = new PeptideDocNode(new Peptide(_pingInput.Sequence), _pingInput.ExplicitMods);
+                var nodeGroup = new TransitionGroupDocNode(new TransitionGroup(nodePep.Peptide,
+                    Adduct.FromChargeProtonated(_pingInput.PrecursorCharge), _pingInput.LabelType), Array.Empty<TransitionDocNode>());
                 var pr = new PrositPingRequest(PrositIntensityModelCombo,
                     PrositRetentionTimeModelCombo,
-                    _settingsNoMod, _pingInput.NodePep, _pingInput.NodeGroup, _pingInput.NCE.Value,
+                    _settingsNoMod, nodePep, nodeGroup, _pingInput.NCE.Value,
                     () => { CommonActionUtil.SafeBeginInvoke(this, UpdateServerStatus); });
                 if (_pingRequest == null || !_pingRequest.Equals(pr))
                 {

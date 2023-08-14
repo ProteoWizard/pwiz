@@ -77,12 +77,12 @@ namespace pwiz.Skyline.Model.Results
             return clone;
         }
 
-        public bool Load(ChromDataProvider provider, Target modifiedSequence, Color peptideColor)
+        public bool Load(ChromDataProvider provider, ChromatogramGroupId chromatogramGroupId, Color peptideColor)
         {
             ChromExtra extra;
             TimeIntensities timeIntensities;
             bool result = provider.GetChromatogram(
-                ProviderId, modifiedSequence, peptideColor,
+                ProviderId, chromatogramGroupId, peptideColor,
                 out extra, out timeIntensities);
             Extra = extra;
             TimeIntensities = RawTimeIntensities = timeIntensities;

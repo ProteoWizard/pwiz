@@ -21,6 +21,7 @@ using System;
 using System.Collections.Generic;
 using System.Net.Mail;
 using System.Windows.Forms;
+using pwiz.PanoramaClient;
 using pwiz.Skyline.Controls;
 using pwiz.Skyline.Properties;
 using pwiz.Skyline.Util;

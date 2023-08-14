@@ -29,8 +29,11 @@ using pwiz.CLI.analysis;
 using pwiz.CLI.util;
 using pwiz.Common.Chemistry;
 using pwiz.Common.Collections;
+using pwiz.Common.Spectra;
 using pwiz.Common.SystemUtil;
+using ComponentType = pwiz.CLI.msdata.ComponentType;
 using Version = pwiz.CLI.msdata.Version;
+
 
 namespace pwiz.ProteowizardWrapper
 {
@@ -393,52 +396,65 @@ namespace pwiz.ProteowizardWrapper
 
                 foreach (InstrumentConfiguration ic in _msDataFile.instrumentConfigurationList)
                 {
-                    string instrumentModel = null;
-                    string ionization;
-                    string analyzer;
-                    string detector;
-
-                    using CVParam param = ic.cvParamChild(CVID.MS_instrument_model);
-                    if (!param.empty() && param.cvid != CVID.MS_instrument_model)
+                    var config = CreateMsInstrumentConfigInfo(ic);
+                    if (config != null)
                     {
-                        instrumentModel = param.name;
-
-                        // if instrument model free string is present, it is probably more specific than CVID model (which may only indicate manufacturer)
-                        using UserParam uParam = ic.userParam(@"instrument model");
-                        if (HasInfo(uParam))
-                        {
-                            instrumentModel = uParam.value;
-                        }
-                    }
-
-                    if (instrumentModel == null)
-                    {
-                        // If we did not find the instrument model in a CVParam it may be in a UserParam
-                        using UserParam uParam = ic.userParam(@"msModel");
-                        if (HasInfo(uParam))
-                        {
-                            instrumentModel = uParam.value;
-                        }
-                        else
-                        {
-                            using UserParam uParam2 = ic.userParam(@"instrument model");
-                            if (HasInfo(uParam2))
-                            {
-                                instrumentModel = uParam2.value;
-                            }
-                        }
-                    }
-
-                    // get the ionization type, analyzer and detector
-                    GetInstrumentConfig(ic, out ionization, out analyzer, out detector);
-
-                    if (instrumentModel != null || ionization != null || analyzer != null || detector != null)
-                    {
-                        configList.Add(new MsInstrumentConfigInfo(instrumentModel, ionization, analyzer, detector));
+                        configList.Add(config);
                     }
                 }
                 return configList;
             }
+        }
+
+        public static MsInstrumentConfigInfo CreateMsInstrumentConfigInfo(InstrumentConfiguration ic)
+        {
+            if (ic == null)
+                return null;
+            string instrumentModel = null;
+            string ionization;
+            string analyzer;
+            string detector;
+
+            using CVParam param = ic.cvParamChild(CVID.MS_instrument_model);
+            if (!param.empty() && param.cvid != CVID.MS_instrument_model)
+            {
+                instrumentModel = param.name;
+
+                // if instrument model free string is present, it is probably more specific than CVID model (which may only indicate manufacturer)
+                using UserParam uParam = ic.userParam(@"instrument model");
+                if (HasInfo(uParam))
+                {
+                    instrumentModel = uParam.value;
+                }
+            }
+
+            if (instrumentModel == null)
+            {
+                // If we did not find the instrument model in a CVParam it may be in a UserParam
+                using UserParam uParam = ic.userParam(@"msModel");
+                if (HasInfo(uParam))
+                {
+                    instrumentModel = uParam.value;
+                }
+                else
+                {
+                    using UserParam uParam2 = ic.userParam(@"instrument model");
+                    if (HasInfo(uParam2))
+                    {
+                        instrumentModel = uParam2.value;
+                    }
+                }
+            }
+
+            // get the ionization type, analyzer and detector
+            GetInstrumentConfig(ic, out ionization, out analyzer, out detector);
+
+            if (instrumentModel != null || ionization != null || analyzer != null || detector != null)
+            {
+                return new MsInstrumentConfigInfo(instrumentModel, ionization, analyzer, detector);
+            }
+            else
+                return null;
         }
 
         public string GetInstrumentSerialNumber()
@@ -522,6 +538,24 @@ namespace pwiz.ProteowizardWrapper
         public bool IsShimadzuFile
         {
             get { return _msDataFile.softwareList.Any(software => software.hasCVParamChild(CVID.MS_Shimadzu_Corporation_software)); }
+        }
+
+        private string InstrumentVendorName
+        {
+            get
+            {
+                if (IsABFile)
+                    return @"Sciex";
+                if (IsAgilentFile)
+                    return @"Agilent";
+                if (IsShimadzuFile)
+                    return @"Shimadzu";
+                if (IsThermoFile)
+                    return @"Thermo";
+                if (IsWatersFile)
+                    return @"Waters";
+                return null;
+            }
         }
 
         public bool ProvidesCollisionalCrossSectionConverter
@@ -639,6 +673,11 @@ namespace pwiz.ProteowizardWrapper
                 }
                 return _spectrumList;
             }
+        }
+
+        public SpectrumMetadata GetSpectrumMetadata(int spectrumIndex)
+        {
+            return GetSpectrumMetadata(_msDataFile.run.spectrumList.spectrum(spectrumIndex, DetailLevel.FullMetadata));
         }
 
         public double? GetMaxIonMobility()
@@ -1022,7 +1061,7 @@ namespace pwiz.ProteowizardWrapper
                 throw new ArgumentException(string.Format(@"Empty spectrum ID (and index = {0}) for scan {1}",
                     spectrum.index, spectrumIndex)); 
             }
-
+            // Start building properties object here.
             bool expectIonMobilityValue = IonMobilityUnits != eIonMobilityUnits.none;
             var msDataSpectrum = new MsDataSpectrum
             {
@@ -1033,7 +1072,8 @@ namespace pwiz.ProteowizardWrapper
                 PrecursorsByMsLevel = GetPrecursorsByMsLevel(spectrum),
                 Centroided = IsCentroided(spectrum),
                 NegativeCharge = NegativePolarity(spectrum),
-                ScanDescription = GetScanDescription(spectrum)
+                ScanDescription = GetScanDescription(spectrum),
+                Metadata = GetSpectrumMetadata(spectrum)
             };
             using var spectrumScanList = spectrum.scanList;
             using var scans = spectrumScanList.scans;
@@ -1095,6 +1135,12 @@ namespace pwiz.ProteowizardWrapper
                         msDataSpectrum.Precursors = ImmutableList.ValueOf(GetMs1Precursors(spectrum));
                     }
 
+                    msDataSpectrum.SourceFilePath = FilePath;
+                    if(spectrum.scanList.scans.Count > 0)
+                        msDataSpectrum.InstrumentInfo = CreateMsInstrumentConfigInfo(spectrum.scanList.scans[0].instrumentConfiguration); 
+                    msDataSpectrum.InstrumentSerialNumber = GetInstrumentSerialNumber();
+                    msDataSpectrum.InstrumentVendor = InstrumentVendorName;
+
                     return msDataSpectrum;
                 }
                 catch (NullReferenceException)
@@ -1102,6 +1148,55 @@ namespace pwiz.ProteowizardWrapper
                 }
             }
             return msDataSpectrum;
+        }
+
+        private SpectrumMetadata GetSpectrumMetadata(Spectrum spectrum)
+        {
+            if (spectrum == null)
+            {
+                return null;
+            }
+
+            var retentionTime = GetStartTime(spectrum);
+            if (!retentionTime.HasValue)
+            {
+                return null;
+            }
+            var metadata = new SpectrumMetadata(id.abbreviate(spectrum.id), retentionTime.Value);
+            var precursorsByMsLevel = new List<IEnumerable<SpectrumPrecursor>>();
+            foreach (var level in GetPrecursorsByMsLevel(spectrum))
+            {
+                List<SpectrumPrecursor> spectrumPrecursors = new List<SpectrumPrecursor>();
+                foreach (var msPrecursor in level)
+                {
+                    if (msPrecursor.IsolationMz.HasValue)
+                    {
+                        spectrumPrecursors.Add(new SpectrumPrecursor(msPrecursor.IsolationMz.Value).ChangeCollisionEnergy(msPrecursor.PrecursorCollisionEnergy));
+                    }
+                }
+                precursorsByMsLevel.Add(spectrumPrecursors);
+            }
+            metadata = metadata.ChangePrecursors(precursorsByMsLevel);
+            metadata = metadata.ChangeScanDescription(GetScanDescription(spectrum));
+            metadata = metadata.ChangePresetScanConfiguration(GetPresetScanConfiguration(spectrum));
+            var instrumentConfig = spectrum.scanList.scans.FirstOrDefault()?.instrumentConfiguration;
+            if (instrumentConfig != null)
+            {
+                GetInstrumentConfig(instrumentConfig, out string ionSource, out string analyzer, out string detector);
+                if (analyzer != null)
+                {
+                    metadata = metadata.ChangeAnalyzer(analyzer);
+                }
+            }
+            IonMobilityValue ionMobilityValue = GetIonMobility(spectrum);
+            if (ionMobilityValue != null)
+            {
+                if (ionMobilityValue.Units == eIonMobilityUnits.compensation_V)
+                {
+                    metadata = metadata.ChangeCompensationVoltage(ionMobilityValue.Mobility);
+                }
+            }
+            return metadata;
         }
 
         public bool HasSrmSpectra
@@ -1333,6 +1428,29 @@ namespace pwiz.ProteowizardWrapper
             if (param.empty())
                 return null;
             return param.value.ToString().Trim();
+        }
+
+        private static int GetPresetScanConfiguration(Spectrum spectrum)
+        {
+            try
+            {
+                if (spectrum.scanList.empty())
+                {
+                    return 0;
+                }
+
+                CVParam param = spectrum.scanList.scans[0].cvParam(CVID.MS_preset_scan_configuration);
+                if (param.empty())
+                {
+                    return 0;
+                }
+
+                return (int) param.value;
+            }
+            catch (InvalidCastException)
+            {
+                return 0;
+            }
         }
 
         public IonMobilityValue GetIonMobility(int scanIndex) // for non-combined-mode IMS
@@ -1576,7 +1694,7 @@ namespace pwiz.ProteowizardWrapper
         /// </summary>
         public static bool IsValidFile(string filepath)
         {
-            if (!File.Exists(filepath))
+            if (!File.Exists(filepath) && !Directory.Exists(filepath))
                 return false;
 
             try
@@ -1726,7 +1844,10 @@ namespace pwiz.ProteowizardWrapper
 
     public sealed class MsDataSpectrum
     {
+
         private IonMobilityValue _ionMobility;
+        public SpectrumMetadata Metadata { get; set; }
+        public string SourceFilePath { get; set; }
         public string Id { get; set; }
         public int Level { get; set; }
         public int Index { get; set; } // index into parent file, if any
@@ -1779,8 +1900,11 @@ namespace pwiz.ProteowizardWrapper
         public double? MinIonMobility { get; set; }
         public double? MaxIonMobility { get; set; }
         public int WindowGroup { get; set; } // For Bruker diaPASEF
-
         public string ScanDescription { get; set; }
+
+        public MsInstrumentConfigInfo InstrumentInfo { get; set; }
+        public string InstrumentSerialNumber { get; set; }
+        public string InstrumentVendor { get; set; }
 
         public static int WatersFunctionNumberFromId(string id, bool isCombinedIonMobility)
         {

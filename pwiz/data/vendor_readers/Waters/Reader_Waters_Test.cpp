@@ -103,6 +103,17 @@ int main(int argc, char* argv[])
             result += pwiz::util::testReader(reader, testArgs, testAcceptOnly, requireUnicodeSupport, pwiz::util::IsNamedRawFile({ "HDDDA_Short_noLM.raw" }), newConfig);
         }
 
+        // test ignoreCalibrationScans
+        {
+            auto newConfig = config;
+
+            // CWT should work with ion mobility
+            newConfig.ignoreCalibrationScans = true;
+            newConfig.combineIonMobilitySpectra = true;
+            newConfig.peakPickingCWT = true;
+            result += pwiz::util::testReader(reader, testArgs, testAcceptOnly, requireUnicodeSupport, pwiz::util::IsNamedRawFile({ "HDDDA_Short_noLM.raw" }), newConfig);
+        }
+
         // test ddaProcessing
         {
             auto newConfig = config;

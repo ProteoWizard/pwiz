@@ -498,6 +498,12 @@
   <data name="manageUniquePeptidesMenuItem.Text" xml:space="preserve">
     <value>Uni&amp;que Peptides...</value>
   </data>
+  <data name="editSpectrumFilterMenuItem.Size" type="System.Drawing.Size, System.Drawing">
+    <value>207, 22</value>
+  </data>
+  <data name="editSpectrumFilterMenuItem.Text" xml:space="preserve">
+    <value>Edit Spectrum Filter...</value>
+  </data>
   <data name="toolStripSeparator30.Size" type="System.Drawing.Size, System.Drawing">
     <value>204, 6</value>
   </data>
@@ -520,7 +526,7 @@
     <value>modeUIHandler</value>
   </data>
   <data name="&gt;&gt;modeUIHandler.Type" xml:space="preserve">
-    <value>pwiz.Skyline.Util.Helpers+ModeUIExtender, Skyline, Version=1.0.0.0, Culture=neutral, PublicKeyToken=null</value>
+    <value>pwiz.Skyline.Util.Helpers+ModeUIExtender, Skyline-daily, Version=21.2.1.506, Culture=neutral, PublicKeyToken=null</value>
   </data>
   <data name="&gt;&gt;editToolStripMenuItem.Name" xml:space="preserve">
     <value>editToolStripMenuItem</value>
@@ -798,6 +804,12 @@
   <data name="&gt;&gt;manageUniquePeptidesMenuItem.Type" xml:space="preserve">
     <value>System.Windows.Forms.ToolStripMenuItem, System.Windows.Forms, Version=4.0.0.0, Culture=neutral, PublicKeyToken=b77a5c561934e089</value>
   </data>
+  <data name="&gt;&gt;editSpectrumFilterMenuItem.Name" xml:space="preserve">
+    <value>editSpectrumFilterMenuItem</value>
+  </data>
+  <data name="&gt;&gt;editSpectrumFilterMenuItem.Type" xml:space="preserve">
+    <value>System.Windows.Forms.ToolStripMenuItem, System.Windows.Forms, Version=4.0.0.0, Culture=neutral, PublicKeyToken=b77a5c561934e089</value>
+  </data>
   <data name="&gt;&gt;toolStripSeparator30.Name" xml:space="preserve">
     <value>toolStripSeparator30</value>
   </data>
@@ -814,6 +826,6 @@
     <value>EditMenu</value>
   </data>
   <data name="&gt;&gt;$this.Type" xml:space="preserve">
-    <value>pwiz.Skyline.Menus.SkylineControl, Skyline, Version=1.0.0.0, Culture=neutral, PublicKeyToken=null</value>
+    <value>pwiz.Skyline.Menus.SkylineControl, Skyline-daily, Version=21.2.1.506, Culture=neutral, PublicKeyToken=null</value>
   </data>
 </root>

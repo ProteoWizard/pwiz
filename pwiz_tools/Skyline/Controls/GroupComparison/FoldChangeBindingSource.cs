@@ -43,6 +43,7 @@ namespace pwiz.Skyline.Controls.GroupComparison
         private EventTaskScheduler _taskScheduler;
         private BindingListSource _bindingListSource;
         private SkylineDataSchema _skylineDataSchema;
+        private int _updatingCount;
         public const string CLUSTERED_VIEW_NAME = "Clustered";
 
 
@@ -75,6 +76,7 @@ namespace pwiz.Skyline.Controls.GroupComparison
         {
             if (null != _bindingListSource && 0 < _referenceCount)
             {
+                Interlocked.Increment(ref _updatingCount);
                 _taskScheduler.Run(() =>
                 {
                     try
@@ -88,6 +90,7 @@ namespace pwiz.Skyline.Controls.GroupComparison
                     {
                         Program.ReportException(e);
                     }
+                    Interlocked.Decrement(ref _updatingCount);
                 });
             }
         }
@@ -290,6 +293,23 @@ namespace pwiz.Skyline.Controls.GroupComparison
                 _container = null;
                 GroupComparisonModel.ModelChanged -= GroupComparisonModelOnModelChanged;
                 _taskScheduler.Dispose();
+            }
+        }
+
+        public bool IsComplete
+        {
+            get
+            {
+                if (_updatingCount > 0)
+                {
+                    return false;
+                }
+                if (GroupComparisonModel.PercentComplete < 100)
+                {
+                    return false;
+                }
+
+                return _skylineDataSchema.IsDocumentUpToDate();
             }
         }
 
