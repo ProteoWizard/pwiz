@@ -1,7 +1,7 @@
 <?xml version="1.0" encoding="utf-8"?>
 <mzML xmlns="http://psi.hupo.org/ms/mzml" xmlns:xsi="http://www.w3.org/2001/XMLSchema-instance" xsi:schemaLocation="http://psi.hupo.org/ms/mzml http://psidev.info/files/ms/mzML/xsd/mzML1.1.0.xsd" id="BSA-FT-ETD" version="1.1.0">
   <cvList count="2">
-    <cv id="MS" fullName="Proteomics Standards Initiative Mass Spectrometry Ontology" version="4.1.30" URI="https://raw.githubusercontent.com/HUPO-PSI/psi-ms-CV/master/psi-ms.obo"/>
+    <cv id="MS" fullName="Proteomics Standards Initiative Mass Spectrometry Ontology" version="4.1.117" URI="https://raw.githubusercontent.com/HUPO-PSI/psi-ms-CV/master/psi-ms.obo"/>
     <cv id="UO" fullName="Unit Ontology" version="09:04:2014" URI="https://raw.githubusercontent.com/bio-ontology-research-group/unit-ontology/master/unit.obo"/>
   </cvList>
   <fileDescription>
@@ -9,7 +9,7 @@
       <cvParam cvRef="MS" accession="MS:1000580" name="MSn spectrum" value=""/>
     </fileContent>
     <sourceFileList count="1">
-      <sourceFile id="RAW1" name="BSA-FT-ETD.raw" location="file:///C:\pwiz.git\pwiz\pwiz\data\vendor_readers\Thermo\Reader_Thermo_Test.data">
+      <sourceFile id="RAW1" name="BSA-FT-ETD.raw" location="file:///C:\dev\pwiz\pwiz\data\vendor_readers\Thermo\Reader_Thermo_Test.data">
         <cvParam cvRef="MS" accession="MS:1000768" name="Thermo nativeID format" value=""/>
         <cvParam cvRef="MS" accession="MS:1000563" name="Thermo RAW format" value=""/>
         <cvParam cvRef="MS" accession="MS:1000569" name="SHA-1" value="a778e19dee487f78697e5445b9a601286f7e63ab"/>
@@ -25,7 +25,7 @@
     <software id="Xcalibur" version="">
       <cvParam cvRef="MS" accession="MS:1000532" name="Xcalibur" value=""/>
     </software>
-    <software id="pwiz" version="3.0.20071">
+    <software id="pwiz" version="3.0.23188">
       <cvParam cvRef="MS" accession="MS:1000615" name="ProteoWizard software" value=""/>
     </software>
   </softwareList>
@@ -70,6 +70,7 @@
           <cvParam cvRef="MS" accession="MS:1000795" name="no combination" value=""/>
           <scan>
             <cvParam cvRef="MS" accession="MS:1000016" name="scan start time" value="16.061954736267" unitCvRef="UO" unitAccession="UO:0000031" unitName="minute"/>
+            <cvParam cvRef="MS" accession="MS:1000800" name="mass resolving power" value="15000"/>
             <cvParam cvRef="MS" accession="MS:1000512" name="filter string" value="FTMS + p NSI d Full ms2 722.32@etd111.39 [120.00-1455.00]"/>
             <cvParam cvRef="MS" accession="MS:1000927" name="ion injection time" value="55.047115325928" unitCvRef="UO" unitAccession="UO:0000028" unitName="millisecond"/>
             <userParam name="[Thermo Trailer Extra]Monoisotopic M/Z:" value="722.32421875" type="xsd:float"/>

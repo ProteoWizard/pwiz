@@ -1659,7 +1659,25 @@ namespace pwiz.Skyline.Model.Results
 
         public ChromCachedFile RelocateScanIds(long locationScanIds)
         {
-            return ChangeProp(ImClone(this), im => im.LocationScanIds = locationScanIds);
+            return ResizeScanIds(locationScanIds, SizeScanIds, HasResultFileData);
+        }
+
+        /// <summary>
+        /// Returns a new ChromCachedFile where the scan ids have been relocated to the given location.
+        /// Also, sets the result_file_data flag to indicate whether the scan ids are in the new ResultFileMetaData
+        /// format or in the old MsDataFileScanIds format.
+        /// </summary>
+        public ChromCachedFile ResizeScanIds(long locationScanIds, int sizeScanIds, bool resultFileData)
+        {
+            return ChangeProp(ImClone(this), im =>
+            {
+                im.LocationScanIds = locationScanIds;
+                im.SizeScanIds = sizeScanIds;
+                if (resultFileData)
+                    im.Flags |= FlagValues.result_file_data;
+                else
+                    im.Flags &= ~FlagValues.result_file_data;
+            });
         }
 
         public ChromCachedFile ChangeTicArea(float? ticArea)

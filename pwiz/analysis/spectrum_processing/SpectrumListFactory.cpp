@@ -851,6 +851,7 @@ SpectrumListPtr filterCreator_demux(const MSData& msd, const string& carg, pwiz:
     string optimization = parseKeyValuePair<string>(arg, "optimization=", "none");
     demuxParams.interpolateRetentionTime = parseKeyValuePair<LocaleBool>(arg, "interpolateRT=", k_defaultDemuxParams.interpolateRetentionTime);
     demuxParams.minimumWindowSize = parseKeyValuePair<double>(arg, "minWindowSize=", k_defaultDemuxParams.minimumWindowSize);
+    demuxParams.removeNonOverlappingEdges = parseKeyValuePair<LocaleBool>(arg, "removeNonOverlappingEdges=", k_defaultDemuxParams.removeNonOverlappingEdges);
     bal::trim(arg);
     if (!arg.empty())
         throw runtime_error("[demultiplex] unhandled text remaining in argument string: \"" + arg + "\"");
@@ -875,7 +876,8 @@ UsageInfo usage_demux = {
     " noSumNormalize=<bool (false)>"
     " optimization=<(none)|overlap_only>"
     " interpolateRT=<bool (true)>"
-    " minWindowSize=<real (0.2)>",
+    " minWindowSize=<real (0.2)>"
+    " removeNonOverlappingEdges=<bool (false)>",
     "Separates overlapping or MSX multiplexed spectra into several demultiplexed spectra by inferring from adjacent multiplexed spectra. Optionally handles variable fill times (for Thermo)." };
 
 SpectrumListPtr filterCreator_diaUmpire(const MSData& msd, const string& carg, pwiz::util::IterationListenerRegistry* ilr)

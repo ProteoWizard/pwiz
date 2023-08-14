@@ -29,6 +29,7 @@ using System.Xml;
 using System.Xml.Serialization;
 using Ionic.Zip;
 using Newtonsoft.Json.Linq;
+using pwiz.PanoramaClient;
 using pwiz.Common.Collections;
 using pwiz.Common.DataBinding;
 using pwiz.Common.SystemUtil;
@@ -60,6 +61,7 @@ using pwiz.Skyline.Model.Serialization;
 using pwiz.Skyline.Properties;
 using pwiz.Skyline.Util;
 using pwiz.Skyline.Util.Extensions;
+using AlertDlg = pwiz.Skyline.Alerts.AlertDlg;
 using DatabaseOpeningException = pwiz.Skyline.Model.Irt.DatabaseOpeningException;
 
 namespace pwiz.Skyline
@@ -183,13 +185,13 @@ namespace pwiz.Skyline
             if (!CheckSaveDocument())
                 return;
             using (OpenFileDialog dlg = new OpenFileDialog
-            {
-                InitialDirectory = Settings.Default.ActiveDirectory,
-                CheckPathExists = true,
-                SupportMultiDottedExtensions = true,
-                DefaultExt = SrmDocument.EXT,
-                Filter = TextUtil.FileDialogFiltersAll(SrmDocument.FILTER_DOC_AND_SKY_ZIP, SrmDocumentSharing.FILTER_SHARING, SkypFile.FILTER_SKYP)
-            })
+                   {
+                       InitialDirectory = Settings.Default.ActiveDirectory,
+                       CheckPathExists = true,
+                       SupportMultiDottedExtensions = true,
+                       DefaultExt = SrmDocument.EXT,
+                       Filter = TextUtil.FileDialogFiltersAll(SrmDocument.FILTER_DOC_AND_SKY_ZIP, SrmDocumentSharing.FILTER_SHARING, SkypFile.FILTER_SKYP)
+                   })
             {
                 if (dlg.ShowDialog(this) == DialogResult.OK)
                 {
@@ -892,6 +894,184 @@ namespace pwiz.Skyline
             }
 
             return true;
+        }
+
+        private void openPanorama_Click(object sender, EventArgs e)
+        {
+            OpenFromPanorama();
+        }
+
+        /// <summary>
+        /// Method used for testing <see cref="PanoramaFilePicker"/>
+        /// </summary>
+        public void ShowPanoramaFilePicker(string server, string user, string pass, JToken folderJson, JToken fileJson = null, JToken sizeJson = null)
+        {
+            using var dlg = new PanoramaFilePicker();
+            dlg.InitializeTestDialog(new Uri(server), user, pass, folderJson, fileJson, sizeJson);
+            dlg.ShowDialog(this);
+        }
+
+        public void OpenFromPanorama(string downloadFilePath = null)
+        {
+            var servers = Settings.Default.ServerList;
+            if (servers.Count == 0)
+            {
+                DialogResult buttonPress = MultiButtonMsgDlg.Show(
+                    this,
+                    TextUtil.LineSeparate(
+                        Resources.SkylineWindow_OpenFromPanorama_No_Panorama_servers_were_found_,
+                        Resources.SkylineWindow_OpenFromPanorama_Press__Add__to_add_a_new_server_),
+                    Resources.SkylineWindow_OpenFromPanorama_Add);
+                if (buttonPress == DialogResult.Cancel)
+                    return;
+
+                if (buttonPress == DialogResult.OK)
+                {
+                    var serverPanoramaWeb = new Server(PanoramaUtil.PANORAMA_WEB, string.Empty, string.Empty);
+                    var newServer = servers.EditItem(this, serverPanoramaWeb, null, null);
+                    if (newServer == null)
+                        return;
+
+                    servers.Add(newServer);
+                }
+
+            }
+
+            var panoramaServers = servers.Cast<PanoramaServer>().ToList();
+
+            var state = string.Empty;
+            if (!string.IsNullOrEmpty(Settings.Default.PanoramaTreeState))
+            {
+                state = Settings.Default.PanoramaTreeState;
+            }
+
+            try
+            {
+                using var dlg = new PanoramaFilePicker(panoramaServers, state);
+                using (var longWaitDlg = new LongWaitDlg
+                       {
+                           Text = Resources.SkylineWindow_OpenFromPanorama_Loading_remote_server_folders,
+                       })
+                {
+                    longWaitDlg.PerformWork(this, 0,
+                        () => dlg.InitializeDialog());
+                    if (longWaitDlg.IsCanceled)
+                        return;
+                }
+                if (dlg.ShowDialog(this) != DialogResult.Cancel)
+                {
+                    Settings.Default.PanoramaTreeState = dlg.FolderBrowser.TreeState;
+                    var folderPath = string.Empty;
+                    if (!string.IsNullOrEmpty(Settings.Default.PanoramaLocalSavePath))
+                    {
+                        folderPath = Settings.Default.PanoramaLocalSavePath;
+                    }
+                    var curServer = dlg.FolderBrowser.GetActiveServer();
+
+                    var downloadPath = string.Empty;
+                    var extension = dlg.FileName.EndsWith(SrmDocumentSharing.EXT) ? SrmDocumentSharing.EXT : SrmDocument.EXT;
+                    if (downloadFilePath == null)
+                    {
+                        using (var saveAsDlg = new SaveFileDialog
+                               {
+                                   FileName = dlg.FileName,
+                                   DefaultExt = extension,
+                                   SupportMultiDottedExtensions = true,
+                                   Filter = TextUtil.FileDialogFiltersAll(SrmDocument.FILTER_DOC_AND_SKY_ZIP, SrmDocumentSharing.FILTER_SHARING, SkypFile.FILTER_SKYP),
+                                   InitialDirectory = folderPath,
+                                   OverwritePrompt = true,
+                               })
+                        {
+                            if (saveAsDlg.ShowDialog(this) != DialogResult.OK)
+                            {
+                                return;
+                            }
+
+                            Settings.Default.PanoramaLocalSavePath = Path.GetDirectoryName(saveAsDlg.FileName);
+                            var folder = Path.GetDirectoryName(saveAsDlg.FileName);
+                            if (!string.IsNullOrEmpty(folder))
+                            {
+                                downloadPath = saveAsDlg.FileName;
+                            }
+                        }
+                    }
+                    else
+                    {
+                        downloadPath = downloadFilePath;
+                    }
+
+                    if (!string.IsNullOrEmpty(downloadPath))
+                    {
+                        var size = dlg.FileSize;
+                        var success = DownloadPanoramaFile(downloadPath, dlg.FileName, dlg.FileUrl, curServer, size);
+                        if (dlg.FileName.EndsWith(SrmDocumentSharing.EXT) && success)
+                        {
+                            OpenSharedFile(downloadPath);
+                        }
+                        else if (dlg.FileName.EndsWith(SrmDocument.EXT) && success)
+                        {
+                            OpenFile(downloadPath);
+                        }
+                    }
+                }
+                Settings.Default.PanoramaTreeState = dlg.FolderBrowser.TreeState;
+            }
+            catch (Exception e)
+            {
+                MessageDlg.ShowException(this, e);
+            }
+            Settings.Default.Save();
+        }
+
+        public bool DownloadPanoramaFile(string downloadPath, string fileName, string fileUrl, PanoramaServer curServer, long size, IPanoramaClient panoramaClient = null)
+        {
+            try
+            {
+                panoramaClient ??= new WebPanoramaClient(curServer.URI);
+                using (var fileSaver = new FileSaver(downloadPath))
+                {
+                    using (var longWaitDlg = new LongWaitDlg
+                           {
+                               Text = string.Format(Resources.SkylineWindow_OpenFromPanorama_Downloading_file__0_, fileName),
+                           })
+                    {
+                        var progressStatus = longWaitDlg.PerformWork(this, 800,
+                            progressMonitor => panoramaClient.DownloadFile(fileUrl, fileSaver.SafeName, size, fileName, curServer,
+                                progressMonitor, new ProgressStatus()));
+
+                        if (progressStatus.IsCanceled || progressStatus.IsError)
+                        {
+                            FileEx.SafeDelete(downloadPath, true);
+                            if (progressStatus.IsError)
+                            {
+                                var message = progressStatus.ErrorException.Message;
+                                if (message.Contains(@"404"))
+                                {
+                                    message = Resources.SkylineWindow_DownloadPanoramaFile_File_does_not_exist__It_may_have_been_deleted_on_the_server_;
+                                }
+                                MessageDlg.ShowWithException(this, message, progressStatus.ErrorException);
+                                return false;
+                            }
+                            return false;
+
+                        }
+                        else
+                        {
+                            fileSaver.Commit();
+                        }
+                        if (longWaitDlg.IsCanceled)
+                            return false;
+                    }
+
+                }
+
+                return true;
+            }
+            catch (Exception e)
+            {
+                MessageDlg.ShowException(this, e);
+                return false;
+            }
         }
 
         private void saveMenuItem_Click(object sender, EventArgs e)
@@ -3184,6 +3364,11 @@ namespace pwiz.Skyline
             ShowImportPeptideSearchDlg();
         }
 
+        private void encyclopeDiaSearchMenuItem_Click(object sender, EventArgs e)
+        {
+            ShowEncyclopeDiaSearchDlg();
+        }
+
         public void ShowImportPeptideSearchDlg(ImportPeptideSearchDlg.Workflow? workflowType)
         {
             if (!CheckDocumentExists(Resources.SkylineWindow_ShowImportPeptideSearchDlg_You_must_save_this_document_before_importing_a_peptide_search_))
@@ -3210,6 +3395,28 @@ namespace pwiz.Skyline
         public void ShowImportPeptideSearchDlg()
         {
             ShowImportPeptideSearchDlg(null);
+        }
+
+        public void ShowEncyclopeDiaSearchDlg()
+        {
+
+            if (!CheckDocumentExists(Resources.SkylineWindow_ShowImportPeptideSearchDlg_You_must_save_this_document_before_importing_a_peptide_search_))
+            {
+                return;
+            }
+            else if (!Document.IsLoaded)
+            {
+                MessageDlg.Show(this, Resources.SkylineWindow_ShowImportPeptideSearchDlg_The_document_must_be_fully_loaded_before_importing_a_peptide_search_);
+                return;
+            }
+
+            using (var dlg = new EncyclopeDiaSearchDlg(this, _libraryManager))
+            {
+                if (dlg.ShowDialog(this) == DialogResult.OK)
+                {
+                    // Nothing to do; the dialog does all the work.
+                }
+            }
         }
 
         private bool CheckDocumentExists(String errorMsg)

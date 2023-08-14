@@ -24,7 +24,8 @@
 
 #include "MSData.hpp"
 #include "pwiz/utility/misc/Std.hpp"
-#include <boost/lexical_cast.hpp>
+#include <boost/range/adaptor/map.hpp>
+#include "pwiz/utility/misc/optimized_lexical_cast.hpp"
 #include "Diff.hpp"
 
 namespace pwiz {
@@ -1140,6 +1141,24 @@ PWIZ_API_DECL IndexList SpectrumList::findSpotID(const string& spotID) const
     return result;
 }
 
+/// returns true iff the id formats match
+PWIZ_API_DECL bool SpectrumList::checkNativeIdMatch(const string& firstIdInFile, const string& searchedId) const
+{
+    auto actualId = pwiz::msdata::id::parse(firstIdInFile);
+    auto actualIdKeys = actualId | boost::adaptors::map_keys;
+    auto actualIdKeySet = std::set<std::string>(actualIdKeys.begin(), actualIdKeys.end());
+
+    auto expectedId = pwiz::msdata::id::parse(searchedId);
+    auto expectedIdKeys = expectedId | boost::adaptors::map_keys;
+    auto expectedIdKeySet = std::set<std::string>(expectedIdKeys.begin(), expectedIdKeys.end());
+
+    std::vector<std::string> missingIdKeys;
+    std::set_symmetric_difference(expectedIdKeySet.begin(), expectedIdKeySet.end(),
+        actualIdKeySet.begin(), actualIdKeySet.end(),
+        std::back_inserter(missingIdKeys));
+
+    return missingIdKeys.empty();
+}
 
 PWIZ_API_DECL const shared_ptr<const DataProcessing> SpectrumList::dataProcessingPtr() const
 {

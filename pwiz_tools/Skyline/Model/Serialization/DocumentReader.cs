@@ -614,7 +614,7 @@ namespace pwiz.Skyline.Model.Serialization
                     throw new VersionNewerException(
                         string.Format(Resources.SrmDocument_ReadXml_The_document_format_version__0__is_newer_than_the_version__1__supported_by__2__,
                             formatVersionNumber, DocumentFormat.CURRENT.AsDouble(), Install.ProgramNameAndVersion));
-// Resharper enable ImpureMethodCallOnReadonlyValueField
+// ReSharper restore ImpureMethodCallOnReadonlyValueField
                 }
             }
 

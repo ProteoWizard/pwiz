@@ -36,6 +36,7 @@
 #include "pwiz/analysis/demux/DemuxHelpers.hpp"
 #include "pwiz/analysis/demux/DemuxTypes.hpp"
 #include "pwiz/data/msdata/SpectrumListCache.hpp"
+#include <boost/range/algorithm/find.hpp>
 #include <boost/make_shared.hpp>
 
 
@@ -110,7 +111,7 @@ namespace analysis {
             /// @param msLevel Number of rounds of tandem MS
             /// @param numPrecursors Number of precursor isolation windows in the spectrum
             /// @param numOverlap Number of overlap windows per precursor
-            void pushSpectrum(const msdata::SpectrumIdentity& spectrumIdentity, int msLevel, int numPrecursors, int numOverlap);
+            void pushSpectrum(const msdata::Spectrum& spectrum, int msLevel, int numPrecursors, int numOverlap, double lowestMz, double highestMz);
 
             /// Parses a list of key-value pairs coded in a string id to replace the old mux index with the new demux index.
             /// This modifes the "scan" key to use the new demux scan index while also reassigning the original scan index to the key "originalScan".
@@ -162,6 +163,7 @@ namespace analysis {
         PrecursorMaskCodec::Params newParams;
         newParams.variableFill = p.variableFill;
         newParams.minimumWindowSize = p.minimumWindowSize;
+        newParams.removeNonOverlappingEdges = p.removeNonOverlappingEdges;
         return newParams;
     }
 
@@ -201,7 +203,19 @@ namespace analysis {
     SpectrumList_Demux::Impl::IndexMapper::IndexMapper(SpectrumListPtr originalIn, const IPrecursorMaskCodec& pmc)
         : original(originalIn), detailLevel(DetailLevel::DetailLevel_InstantMetadata)
     {
-        if (!original.get()) throw runtime_error("[SpectrumlList_Demux] Null pointer");
+        if (!original.get()) throw runtime_error("[SpectrumList_Demux] Null pointer");
+
+        const auto& removedDemuxWindows = pmc.GetDemuxWindowEdgesRemoved();
+        size_t lowestMzWindow = 0;
+        for (; lowestMzWindow < pmc.GetNumDemuxWindows(); ++lowestMzWindow)
+            if (boost::range::find(removedDemuxWindows, lowestMzWindow) == removedDemuxWindows.end())
+                break;
+        size_t highestMzWindow = pmc.GetNumDemuxWindows() - 1;
+        for (; highestMzWindow > 0; --highestMzWindow)
+            if (boost::range::find(removedDemuxWindows, highestMzWindow) == removedDemuxWindows.end())
+                break;
+        double lowestMz = pmc.GetIsolationWindow(lowestMzWindow).lowMz;
+        double highestMz = pmc.GetIsolationWindow(highestMzWindow).highMz;
 
         // iterate through the spectra, building the expanded index
         for (size_t i = 0, end = original->size(); i < end; ++i)
@@ -213,7 +227,7 @@ namespace analysis {
                 int msLevel = 0;
                 if (TryGetMSLevel(*spectrum, msLevel))
                 {
-                    pushSpectrum(spectrumIdentity, msLevel, pmc.GetPrecursorsPerSpectrum(), pmc.GetOverlapsPerCycle());
+                    pushSpectrum(*spectrum, msLevel, pmc.GetPrecursorsPerSpectrum(), pmc.GetOverlapsPerCycle(), lowestMz, highestMz);
                     break;
                 }
                 detailLevel = DetailLevel(int(detailLevel) + 1);
@@ -221,26 +235,33 @@ namespace analysis {
         }
     }
 
-    void SpectrumList_Demux::Impl::IndexMapper::pushSpectrum(const SpectrumIdentity& spectrumIdentity, int msLevel, int numPrecursors, int numOverlap)
+    void SpectrumList_Demux::Impl::IndexMapper::pushSpectrum(const Spectrum& spectrum, int msLevel, int numPrecursors, int numOverlap, double lowestMz, double highestMz)
     {
         DemuxRequestIndex originalIndex;
         originalIndex.msLevel = msLevel;
-        originalIndex.spectrumOriginalIndex = spectrumIdentity.index;
+        originalIndex.spectrumOriginalIndex = spectrum.index;
         int numDemuxIndices = numPrecursors * numOverlap;
-        if (msLevel != 2)
+        if (msLevel != 2 || spectrum.precursors.empty())
         {
             // spectrum will not be demux'd
             numDemuxIndices = 1;
         }
 
-        for (int demuxIndex = 0; demuxIndex < numDemuxIndices; ++demuxIndex)
+        double isolationLowMz = spectrum.precursors.empty() ? lowestMz : precursor_mz_low(spectrum.precursors[0]);
+        double isolationHighMz = spectrum.precursors.empty() ? highestMz : precursor_mz_high(spectrum.precursors[0]);
+
+        int demuxIndex = isolationLowMz < lowestMz ? 1 : 0;
+        if (isolationHighMz > highestMz)
+            --numDemuxIndices;
+
+        for (; demuxIndex < numDemuxIndices; ++demuxIndex)
         {
             // spectrum will be demux'd
             int pIndex = demuxIndex / numOverlap; // Use floored integer division to repeat the precursor index for the number of overlap sections
             originalIndex.precursorIndex = pIndex;
             originalIndex.demuxIndex = demuxIndex;
             indexMap.push_back(originalIndex);
-            spectrumIdentities.push_back(spectrumIdentity);
+            spectrumIdentities.push_back(static_cast<SpectrumIdentity>(spectrum));
             spectrumIdentities.back().index = spectrumIdentities.size() - 1;
             //spectrumIdentities.back().id += " demux=" + to_string(demuxIndex);
             // update scan= and use originalScan=

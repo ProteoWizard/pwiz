@@ -21,7 +21,7 @@ using System.Collections.Generic;
 using System.Linq;
 using System.Text;
 using System.Windows.Forms;
-using pwiz.Common.Controls;
+using pwiz.Common.SystemUtil;
 
 namespace pwiz.Skyline.Controls
 {
