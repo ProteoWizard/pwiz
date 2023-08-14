@@ -45,6 +45,9 @@ class PWIZ_API_DECL SpectrumList_LockmassRefiner : public msdata::SpectrumListWr
     virtual msdata::SpectrumPtr spectrum(size_t index, msdata::DetailLevel detailLevel) const;
     virtual msdata::SpectrumPtr spectrum(size_t index, bool getBinaryData = false) const;
 
+    /// overload used by SpectrumList_PeakPicker
+    virtual msdata::SpectrumPtr spectrum(size_t index, msdata::DetailLevel detailLevel, const pwiz::util::IntegerSet& msLevelsToCentroid) const;
+
     private:
     double mzPositiveScans_, mzNegativeScans_, tolerance_;
 };
