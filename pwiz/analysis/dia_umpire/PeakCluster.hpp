@@ -32,14 +32,14 @@
 #include <limits>
 #include <iostream>
 #include <fstream>
+#include <boost/geometry.hpp> // compile error without top-level header
+#include <boost/geometry/geometries/point.hpp>
+#include <boost/geometry/index/rtree.hpp>
 #include "InstrumentParameter.hpp"
 #include "ScanData.hpp"
 #include "PeakCurve.hpp"
 #include "IsotopePatternMap.hpp"
 #include <boost/container/flat_map.hpp>
-#include <boost/geometry.hpp> // compile error without top-level header
-#include <boost/geometry/geometries/point.hpp>
-#include <boost/geometry/index/rtree.hpp>
 
 namespace DiaUmpire {
 
