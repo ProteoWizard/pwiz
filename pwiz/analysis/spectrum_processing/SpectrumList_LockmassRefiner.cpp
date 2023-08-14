@@ -106,5 +106,30 @@ PWIZ_API_DECL SpectrumPtr SpectrumList_LockmassRefiner::spectrum(size_t index, D
 }
 
 
+PWIZ_API_DECL SpectrumPtr SpectrumList_LockmassRefiner::spectrum(size_t index, DetailLevel detailLevel, const pwiz::util::IntegerSet& msLevelsToCentroid) const
+{
+    SpectrumPtr s;
+
+    detail::SpectrumList_Waters* waters = dynamic_cast<detail::SpectrumList_Waters*>(&*inner_);
+    if (waters)
+    {
+        s = waters->spectrum(index, detailLevel, mzPositiveScans_, mzNegativeScans_, tolerance_, msLevelsToCentroid);
+
+        // the vendor spectrum lists must put "profile spectrum" if they actually performed centroiding
+        if (s->hasCVParam(MS_centroid_spectrum))
+        {
+            auto itr = boost::range::remove_if(s->cvParams, CVParamIs(MS_profile_spectrum));
+            if (itr != s->cvParams.end())
+                s->cvParams.erase(itr);
+        }
+    }
+    else
+        s = inner_->spectrum(index, true);
+
+    s->dataProcessingPtr = dp_;
+    return s;
+}
+
+
 } // namespace analysis 
 } // namespace pwiz
