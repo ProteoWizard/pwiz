@@ -70,7 +70,7 @@ namespace pwiz.Skyline.Controls.Graphs
             YAxis.Scale.Max = TargetData.Histogram.Max() / YScale * 1.15;
         }
 
-        public override void PopulateTooltip(int index)
+        public override void PopulateTooltip(int index, CurveItem targetCurve)
         {
             ToolTip.ClearData();
             DetectionPlotData.DataSet targetData = _detectionData.GetTargetData(Settings.TargetType);

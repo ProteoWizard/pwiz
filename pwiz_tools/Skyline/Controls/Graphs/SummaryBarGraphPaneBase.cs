@@ -46,6 +46,7 @@ namespace pwiz.Skyline.Controls.Graphs
                 }
                 public new void Add(CurveItem curve)
                 {
+                    //TODO: Make current axis info available at drawing time.
                     //all targets must be on the same axis
                     if (Count > 0)
                         Assume.AreEqual(base[0].GetYAxis(_parent), curve.GetYAxis(_parent), @"All target curves for a tooltip must be on the same axis.");
@@ -210,7 +211,7 @@ namespace pwiz.Skyline.Controls.Graphs
             }
         }
 
-        public virtual void PopulateTooltip(int index){}
+        public virtual void PopulateTooltip(int index, CurveItem targetCurve) {}
 
         /// <summary>
         /// Override if you need to implement tooltips in your graph.
@@ -309,7 +310,7 @@ namespace pwiz.Skyline.Controls.Graphs
 
             if (ToolTip != null && ToolTip.TargetCurves.IsTarget(nearestCurve))
             {
-                PopulateTooltip(iNearest);
+                PopulateTooltip(iNearest, nearestCurve);
                 ToolTip.Draw(iNearest, mouseEventArgs.Location);
                 sender.Cursor = Cursors.Hand;
                 return true;

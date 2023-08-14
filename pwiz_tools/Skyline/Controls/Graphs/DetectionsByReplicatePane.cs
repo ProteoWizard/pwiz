@@ -42,7 +42,7 @@ namespace pwiz.Skyline.Controls.Graphs
             XAxis.Title.Text = Resources.DetectionPlotPane_XAxis_Name;
         }
 
-        public override void PopulateTooltip(int index)
+        public override void PopulateTooltip(int index, CurveItem targetCurve)
         {
             ToolTip.ClearData();
             var targetData = _detectionData.GetTargetData(Settings.TargetType);

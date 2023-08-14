@@ -513,6 +513,7 @@ namespace pwiz.Skyline.Controls.Graphs
             
             int iColor = 0;
             int countLabelTypes = document.Settings.PeptideSettings.Modifications.CountLabelTypes;
+            ToolTip.TargetCurves.Clear();
             for (int i = 0; i < countNodes; i++)
             {
                 var docNode = graphData.DocNodes[i];
@@ -589,6 +590,7 @@ namespace pwiz.Skyline.Controls.Graphs
                         else
                         {
                             curveItem = new BarItem(label, pointPairList, color);
+                            ToolTip.TargetCurves.Add(curveItem);
                         }
                     }
                     if (0 <= selectedReplicateIndex && selectedReplicateIndex < pointPairList.Count)
@@ -655,7 +657,7 @@ namespace pwiz.Skyline.Controls.Graphs
                 };
                 dotpLine.Tag = selectedTreeNode.Path;
                 CurveList.Insert(0, dotpLine);                  // Add dotp graph line
-                ToolTip.TargetCurves.ClearAndAdd(dotpLine);
+                ToolTip.TargetCurves.Add(dotpLine);
             }
             else
             {
@@ -711,12 +713,16 @@ namespace pwiz.Skyline.Controls.Graphs
         {
             return _dotpData;
         }
-        public override void PopulateTooltip(int index)
+        public override void PopulateTooltip(int index, CurveItem targetCurve)
         {
-            ToolTip.ClearData();
-            ToolTip.AddLine(Resources.AreaReplicateGraphPane_Tooltip_Replicate, XAxis.Scale.TextLabels[index]);
-            ToolTip.AddLine(string.Format(CultureInfo.CurrentCulture, Resources.AreaReplicateGraphPane_Tooltip_Dotp, DotpLabelText), 
-                string.Format(CultureInfo.CurrentCulture, @"{0:F02}", _dotpData[index]));
+            if(targetCurve is LineItem line)
+            {
+                ToolTip.ClearData();
+                ToolTip.AddLine(Resources.AreaReplicateGraphPane_Tooltip_Replicate, XAxis.Scale.TextLabels[index]);
+                ToolTip.AddLine(
+                    string.Format(CultureInfo.CurrentCulture, Resources.AreaReplicateGraphPane_Tooltip_Dotp, DotpLabelText),
+                    string.Format(CultureInfo.CurrentCulture, @"{0:F02}", _dotpData[index]));
+            }
         }
 
         private void AddSelection(NormalizeOption areaView, int selectedReplicateIndex, double sumArea, double maxArea)
