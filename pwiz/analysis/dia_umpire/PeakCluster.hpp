@@ -48,12 +48,14 @@ using std::multimap;
 using std::vector;
 using std::string;
 using std::runtime_error;
+using std::min;
+using std::max;
 
 namespace bg = boost::geometry;
 namespace bgi = bg::index;
 
 typedef bg::model::point<float, 2, bg::cs::cartesian> ApexRtTargetMzPoint;
-typedef pair<ApexRtTargetMzPoint, PeakCurvePtr> PeakCurveTreeNode;
+typedef std::pair<ApexRtTargetMzPoint, PeakCurvePtr> PeakCurveTreeNode;
 typedef bgi::rtree<PeakCurveTreeNode, bgi::linear<3>> PeakCurveSearchTree;
 typedef bg::model::box<ApexRtTargetMzPoint> PeakCurveSearchBox;
 
