@@ -16840,17 +16840,17 @@ public ref class CVTermInfo
     /// <summary>
     /// returns a list of terms which this term has an IS_A relationship with
     /// </summary>
-    property CVIDList^ parentsIsA { CVIDList^ get() {return gcnew CVIDList(&base_->parentsIsA);} }
+    property CVIDList^ parentsIsA { CVIDList^ get() {return gcnew CVIDList(&base_->parentsIsA, gcnew System::Object());} }
 
     /// <summary>
     /// returns a list of terms which this term has a PART_OF relationship with
     /// </summary>
-    property CVIDList^ parentsPartOf { CVIDList^ get() {return gcnew CVIDList(&base_->parentsPartOf);} }
+    property CVIDList^ parentsPartOf { CVIDList^ get() {return gcnew CVIDList(&base_->parentsPartOf, gcnew System::Object());} }
 
     /// <summary>
     /// returns a list of term names synonymous with this term
     /// </summary>
-    property StringList^ exactSynonyms { StringList^ get() {return gcnew StringList(&base_->exactSynonyms);} }
+    property StringList^ exactSynonyms { StringList^ get() {return gcnew StringList(&base_->exactSynonyms, gcnew System::Object());} }
 
     CVTermInfo() : base_(new pwiz::cv::CVTermInfo()) {}
 

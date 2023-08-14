@@ -136,5 +136,13 @@ namespace pwiz.Skyline.Controls.GroupComparison
         {
             return DataboundGridControl;
         }
+
+        public override bool IsComplete
+        {
+            get
+            {
+                return base.IsComplete && DataboundGridControl.IsComplete;
+            }
+        }
     }
 }

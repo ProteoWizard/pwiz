@@ -87,6 +87,55 @@ namespace pwiz.SkylineTestFunctional
             // Order by TotalIonCurrent calculated annotation
             OrderBy(peakAreaGraph, (index, item)=>item.Text == @"TotalIonCurrent");
             VerifyOrder(peakAreaGraph, chromSet=>chromSet.MSDataFileInfos.First().TicArea);
+
+            // Group by TotalIonCurrent annotation
+            RunUI(() => {
+                ShowContextMenu(peakAreaGraph);
+                Assert.IsTrue(SkylineWindow.ReplicateOrderContextMenuItem.Visible);
+                Assert.IsTrue(SkylineWindow.ReplicateGroupByContextMenuItem.Visible);
+                var ticMenuItem = SkylineWindow.ReplicateGroupByContextMenuItem.DropDownItems
+                    .OfType<ToolStripMenuItem>().FirstOrDefault(item => item.Text == @"TotalIonCurrent");
+                Assert.IsNotNull(ticMenuItem);
+                Assert.IsFalse(ticMenuItem.Checked);
+                ticMenuItem.PerformClick();
+            });
+            // The "Order By" menu item should hidden when grouping by anything
+            RunUI(() =>
+            {
+                ShowContextMenu(peakAreaGraph);
+                Assert.IsFalse(SkylineWindow.ReplicateOrderContextMenuItem.Visible);
+                var orderReplicatesByDocumentMenuItem = (ToolStripMenuItem)SkylineWindow.ReplicateOrderContextMenuItem.DropDownItems[0];
+                Assert.IsFalse(orderReplicatesByDocumentMenuItem.Checked);
+                var ticMenuItem = SkylineWindow.ReplicateGroupByContextMenuItem.DropDownItems
+                    .OfType<ToolStripMenuItem>().FirstOrDefault(item => item.Text == @"TotalIonCurrent");
+                Assert.IsNotNull(ticMenuItem);
+                Assert.IsTrue(ticMenuItem.Checked);
+                HideContextMenu(peakAreaGraph);
+            });
+            // Remove the TotalIonCurrent annotation from the document
+            RunDlg<DocumentSettingsDlg>(SkylineWindow.ShowDocumentSettingsDialog, dlg =>
+            {
+                int indexTotalIonCurrent = dlg.AnnotationsCheckedListBox.Items.IndexOf("TotalIonCurrent");
+                Assert.AreNotEqual(-1, indexTotalIonCurrent);
+                Assert.IsTrue(dlg.AnnotationsCheckedListBox.GetItemChecked(indexTotalIonCurrent));
+                dlg.AnnotationsCheckedListBox.SetItemChecked(indexTotalIonCurrent, false);
+                dlg.OkDialog();
+            });
+            // The "Order By" menu item should become visible again and the order should revert to document order
+            RunUI(() =>
+            {
+                ShowContextMenu(peakAreaGraph);
+                Assert.IsTrue(SkylineWindow.ReplicateOrderContextMenuItem.Visible,
+                    "ReplicateOrderContextMenuItem should be visible");
+                Assert.IsTrue(SkylineWindow.ReplicateGroupByContextMenuItem.Visible,
+                    "ReplicateGroupByContextMenuItem should be visible");
+                var groupByReplicateMenuItem = (ToolStripMenuItem) SkylineWindow.ReplicateGroupByContextMenuItem.DropDownItems[0];
+                Assert.IsTrue(groupByReplicateMenuItem.Checked);
+                var ticMenuItem = SkylineWindow.ReplicateGroupByContextMenuItem.DropDownItems
+                    .OfType<ToolStripMenuItem>().FirstOrDefault(item => item.Text == @"TotalIonCurrent");
+                Assert.IsNull(ticMenuItem);
+                HideContextMenu(peakAreaGraph);
+            });
         }
 
         /// <summary>
@@ -100,8 +149,9 @@ namespace pwiz.SkylineTestFunctional
         {
             RunUI(() =>
             {
-                graphSummary.GraphControl.ContextMenuStrip.Show(graphSummary.GraphControl, new Point(1, 1));
+                ShowContextMenu(graphSummary);
                 var orderByItem = SkylineWindow.ReplicateOrderContextMenuItem;
+                Assert.IsTrue(orderByItem.Visible);
                 for (int index = 0; index < orderByItem.DropDownItems.Count; index++)
                 {
                     var item = orderByItem.DropDownItems[index] as ToolStripMenuItem;
@@ -117,7 +167,7 @@ namespace pwiz.SkylineTestFunctional
                         return;
                     }
                 }
-                Assert.Fail();
+                Assert.Fail("Unable to find order by menu item {0}", menuItemPredicate);
             });
         }
 
@@ -148,6 +198,16 @@ namespace pwiz.SkylineTestFunctional
                 var comparison = Comparer<T>.Default.Compare(prevValue, curValue);
                 Assert.IsTrue(comparison <= 0);
             }
+        }
+
+        private void ShowContextMenu(GraphSummary graphSummary)
+        {
+            graphSummary.GraphControl.ContextMenuStrip.Show(graphSummary.GraphControl, new Point(1, 1));
+        }
+
+        private void HideContextMenu(GraphSummary graphSummary)
+        {
+            graphSummary.GraphControl.ContextMenuStrip.Hide();
         }
     }
 }

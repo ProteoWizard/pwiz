@@ -249,7 +249,7 @@ namespace TestPerf
                 if (useMsFragger)
                     importPeptideSearchDlg.SearchSettingsControl.SetAdditionalSetting("check_spectral_files", "0");
 
-                importPeptideSearchDlg.SearchControl.OnSearchFinished += (success) => searchSucceeded = success;
+                importPeptideSearchDlg.SearchControl.SearchFinished += (success) => searchSucceeded = success;
             });
             PauseForScreenShot<ImportPeptideSearchDlg.DDASearchSettingsPage>("Import Peptide Search - DDA Search Settings page", tutorialPage++);
 

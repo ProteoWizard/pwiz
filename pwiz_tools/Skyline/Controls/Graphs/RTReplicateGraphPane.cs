@@ -148,8 +148,7 @@ namespace pwiz.Skyline.Controls.Graphs
             int selectedReplicateIndex = SelectedIndex;
             double minRetentionTime = double.MaxValue;
             double maxRetentionTime = -double.MaxValue;
-            int iColor = 0, iCharge = -1;
-            var charge = Adduct.EMPTY;
+            int iColor = 0;
             int countLabelTypes = document.Settings.PeptideSettings.Modifications.CountLabelTypes;
             int colorOffset = 0;
             var transitionGroupDocNode = parentNode as TransitionGroupDocNode;
@@ -190,11 +189,11 @@ namespace pwiz.Skyline.Controls.Graphs
                             isSelected = true;
                         }
                     }
-                    else if (parentNode is PeptideDocNode)
+                    else if (parentNode is PeptideDocNode peptideDocNode)
                     {
                         // Resharper code inspection v9.0 on TC gets this one wrong
                         // ReSharper disable ExpressionIsAlwaysNull
-                        int iColorGroup = GetColorIndex(nodeGroup, countLabelTypes, ref charge, ref iCharge);
+                        int iColorGroup = GetColorIndex(peptideDocNode, nodeGroup, countLabelTypes);
                         // ReSharper restore ExpressionIsAlwaysNull
                         color = COLORS_GROUPS[iColorGroup % COLORS_GROUPS.Count];
                     }

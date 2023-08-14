@@ -1731,8 +1731,8 @@ namespace pwiz.Skyline.Model
                 if (RetentionTimesMeasured > 0)
                     retentionTime = (float) (RetentionTimeTotal/RetentionTimesMeasured);
                 var mods = Settings.PeptideSettings.Modifications;
-                var listRatios = mods.CalcPeptideRatios((l, h) => CalcTransitionGroupRatio(Adduct.EMPTY, l, h),
-                    l => CalcTransitionGroupGlobalRatio(Adduct.EMPTY, l));
+                var listRatios = mods.CalcPeptideRatios((l, h) => CalcTransitionGroupRatio(PrecursorKey.EMPTY, l, h),
+                    l => CalcTransitionGroupGlobalRatio(PrecursorKey.EMPTY, l));
                 return new PeptideChromInfo(FileId, peakCountRatio, retentionTime, listRatios);
             }
 
@@ -1771,11 +1771,11 @@ namespace pwiz.Skyline.Model
             public RatioValue CalcTransitionGroupGlobalRatio(TransitionGroupDocNode nodeGroup,
                                                              IsotopeLabelType labelTypeNum)
             {
-                return CalcTransitionGroupGlobalRatio(nodeGroup.TransitionGroup.PrecursorAdduct,
+                return CalcTransitionGroupGlobalRatio(nodeGroup.PrecursorKey,
                                                       labelTypeNum);
             }
 
-            private RatioValue CalcTransitionGroupGlobalRatio(Adduct precursorAdduct, IsotopeLabelType labelType)
+            private RatioValue CalcTransitionGroupGlobalRatio(PrecursorKey precursorKey, IsotopeLabelType labelType)
             {
                 if (GlobalStandardArea == 0)
                     return null;
@@ -1785,7 +1785,7 @@ namespace pwiz.Skyline.Model
                 foreach (var pair in GetAreaPairs(labelType))
                 {
                     var key = pair.Key;
-                    if (!key.IsMatchForRatioPurposes(precursorAdduct))
+                    if (!key.IsMatchForRatioPurposes(precursorKey))
                         continue;
                     num += pair.Value;
                     count++;
@@ -1801,11 +1801,11 @@ namespace pwiz.Skyline.Model
                                                        IsotopeLabelType labelTypeNum,
                                                        IsotopeLabelType labelTypeDenom)
             {
-                return CalcTransitionGroupRatio(nodeGroup.TransitionGroup.PrecursorAdduct,
+                return CalcTransitionGroupRatio(nodeGroup.PrecursorKey,
                                                 labelTypeNum, labelTypeDenom);
             }
 
-            private RatioValue CalcTransitionGroupRatio(Adduct precursorAdduct,
+            private RatioValue CalcTransitionGroupRatio(PrecursorKey precursorKey,
                                                         IsotopeLabelType labelTypeNum,
                                                         IsotopeLabelType labelTypeDenom)
             {
@@ -1834,7 +1834,7 @@ namespace pwiz.Skyline.Model
                 foreach (var pair in GetAreaPairs(labelTypeNum))
                 {
                     var key = pair.Key;
-                    if (!key.IsMatchForRatioPurposes(precursorAdduct))
+                    if (!key.IsMatchForRatioPurposes(precursorKey))
                         continue; // Match charge states if any specified (adduct may also contain isotope info, so look at charge specifically)
 
                     float areaNum = pair.Value;
@@ -1872,8 +1872,8 @@ namespace pwiz.Skyline.Model
             private readonly int _ionOrdinal;
             private readonly int _massIndex;
             private readonly int? _decoyMassShift;
-            private readonly Adduct _adduct; // We only care about charge and formula, other adduct details such as labels are intentionally not part of the comparison
-            private readonly Adduct _precursorAdduct; // We only care about charge and formula, other adduct details such as labels are intentionally not part of the comparison
+            private readonly Adduct _adduct;
+            private readonly PrecursorKey _precursorKey;
             private readonly TransitionLosses _losses;
             private readonly IsotopeLabelType _labelType;
 
@@ -1885,8 +1885,8 @@ namespace pwiz.Skyline.Model
                 _ionOrdinal = transition.Ordinal;
                 _massIndex = transition.MassIndex;
                 _decoyMassShift = transition.DecoyMassShift;
-                _adduct = transition.Adduct.Unlabeled; // Only interested in charge and formula, ignore any labels
-                _precursorAdduct = nodeGroup.TransitionGroup.PrecursorAdduct.Unlabeled; // Only interested in charge and formula, ignore any labels
+                _adduct = transition.Adduct.Unlabeled;
+                _precursorKey = nodeGroup.PrecursorKey.Unlabeled; // Only interested in charge and formula, ignore any labels
                 _losses = tranLossKey.Losses;
                 _labelType = labelType;
             }
@@ -1899,18 +1899,31 @@ namespace pwiz.Skyline.Model
                 _massIndex = key._massIndex;
                 _decoyMassShift = key._decoyMassShift;
                 _adduct = key._adduct;
-                _precursorAdduct = key._precursorAdduct;
+                _precursorKey = key._precursorKey;
                 _losses = key._losses;
                 _labelType = labelType;
             }
 
-            public Adduct PrecursorAdduct { get { return _precursorAdduct; } }
+            public PrecursorKey PrecursorKey
+            {
+                get { return _precursorKey; }
+            }
             public IsotopeLabelType LabelType { get { return _labelType; } }
 
             // Match charge states if any specified (adduct may also contain isotope info, so look at charge specifically)
-            internal bool IsMatchForRatioPurposes(Adduct other)
+            internal bool IsMatchForRatioPurposes(PrecursorKey other)
             {
-                return other.IsEmpty || Equals(PrecursorAdduct, other.Unlabeled);
+                if (!Equals(PrecursorKey.SpectrumClassFilter, other.SpectrumClassFilter))
+                {
+                    return false;
+                }
+
+                if (other.Adduct.IsEmpty)
+                {
+                    return true;
+                }
+
+                return Equals(PrecursorKey.Adduct, other.Adduct.Unlabeled);
             }
 
             #region object overrides
@@ -1923,7 +1936,7 @@ namespace pwiz.Skyline.Model
                        other._massIndex == _massIndex &&
                        Equals(other._decoyMassShift, _decoyMassShift) &&
                        Equals(other._adduct, _adduct) &&
-                       Equals(other._precursorAdduct, _precursorAdduct) &&
+                       Equals(other._precursorKey, _precursorKey) &&
                        Equals(other._losses, _losses) &&
                        Equals(other._labelType, _labelType);
             }
@@ -1945,7 +1958,7 @@ namespace pwiz.Skyline.Model
                     result = (result*397) ^ _massIndex;
                     result = (result*397) ^ (_decoyMassShift.HasValue ? _decoyMassShift.Value : 0);
                     result = (result*397) ^ _adduct.GetHashCode();
-                    result = (result*397) ^ _precursorAdduct.GetHashCode();
+                    result = (result*397) ^ _precursorKey.GetHashCode();
                     result = (result*397) ^ (_losses != null ? _losses.GetHashCode() : 0);
                     result = (result*397) ^ _labelType.GetHashCode();
                     return result;

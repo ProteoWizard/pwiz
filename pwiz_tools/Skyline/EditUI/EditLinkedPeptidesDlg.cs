@@ -673,7 +673,7 @@ namespace pwiz.Skyline.EditUI
             {
                 if (editPepModsDlg.ShowDialog(this) == DialogResult.OK)
                 {
-                    peptideRow.ExplicitMods = editPepModsDlg.ExplicitMods.ChangeCrosslinkStructure(null);
+                    peptideRow.ExplicitMods = editPepModsDlg.ExplicitMods?.ChangeCrosslinkStructure(null);
                 }
             }
         }

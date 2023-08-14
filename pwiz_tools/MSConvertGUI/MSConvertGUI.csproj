@@ -215,7 +215,7 @@
     </NativeReference>
   </ItemGroup>
   <ItemGroup>
-    <ProjectReference Include="..\Shared\Common\CommonUtil.csproj">
+    <ProjectReference Include="..\Shared\CommonUtil\CommonUtil.csproj">
       <Project>{13bf2ffb-50a1-4ab1-83a4-5733e36905ce}</Project>
       <Name>CommonUtil</Name>
     </ProjectReference>

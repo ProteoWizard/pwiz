@@ -293,12 +293,7 @@ double getPeptideMass(string& modifiedSeq, double* masses){
  * Delete any spaces or tabs at the end of the given string
  */
 void deleteTrailingWhitespace(string& str){
-    size_t last = str.size() - 1;
-    while( str.at(last) == ' ' || str.at(last) == '\t' ){
-        last--;
-    }
-    // last is now index position of last non-whitespace char
-    str.erase(last + 1);
+    bal::trim_right(str);
 }
 
 /**

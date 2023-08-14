@@ -203,15 +203,7 @@ namespace pwiz.Skyline.Model.Databinding
                 }
                 if (firstListener)
                 {
-                    var documentUiContainer = _documentContainer as IDocumentUIContainer;
-                    if (null == documentUiContainer)
-                    {
-                        _documentContainer.Listen(DocumentChangedEventHandler);
-                    }
-                    else
-                    {
-                        documentUiContainer.ListenUI(DocumentChangedEventHandler);
-                    }
+                    AttachDocumentChangeEventHandler(DocumentChangedEventHandler);
                 }
             }
         }
@@ -226,15 +218,7 @@ namespace pwiz.Skyline.Model.Databinding
                 }
                 if (_documentChangedEventHandlers.Count == 0)
                 {
-                    var documentUiContainer = _documentContainer as IDocumentUIContainer;
-                    if (null == documentUiContainer)
-                    {
-                        _documentContainer.Unlisten(DocumentChangedEventHandler);
-                    }
-                    else
-                    {
-                        documentUiContainer.UnlistenUI(DocumentChangedEventHandler);
-                    }
+                    DetachDocumentChangeEventHandler(DocumentChangedEventHandler);
                 }
             }
         }
@@ -582,6 +566,25 @@ namespace pwiz.Skyline.Model.Databinding
         public static bool EqualExceptAuditLog(SrmDocument document1, SrmDocument document2)
         {
             return document1.ChangeAuditLog(AuditLogEntry.ROOT).Equals(document2.ChangeAuditLog(AuditLogEntry.ROOT));
+        }
+
+        protected virtual void AttachDocumentChangeEventHandler(EventHandler<DocumentChangedEventArgs> handler)
+        {
+            _documentContainer.Listen(handler);
+        }
+
+        protected virtual void DetachDocumentChangeEventHandler(EventHandler<DocumentChangedEventArgs> handler)
+        {
+            _documentContainer.Unlisten(handler);
+        }
+
+        /// <summary>
+        /// Returns true if all listeners have been notified of any change to the document.
+        /// The base class implementation always returns true because listeners are notified immediately.
+        /// </summary>
+        public virtual bool IsDocumentUpToDate()
+        {
+            return true;
         }
 
         private class BatchChangesState

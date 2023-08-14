@@ -298,14 +298,14 @@ namespace pwiz.Skyline.FileUI.PeptideSearch
         }
         }
 
-        public void SetFastaContent(string fastaFilePath)
+        public void SetFastaContent(string fastaFilePath, bool forceFastaAsFilepath = false)
         {
             try
             {
                 FastaFile = fastaFilePath;
 
                 var fileInfo = new FileInfo(fastaFilePath);
-                if (IsDDASearch || fileInfo.Length > MAX_FASTA_TEXTBOX_LENGTH)
+                if (IsDDASearch || forceFastaAsFilepath || fileInfo.Length > MAX_FASTA_TEXTBOX_LENGTH)
                 {
                     _fastaFile = true;
                     tbxFasta.Text = fastaFilePath;

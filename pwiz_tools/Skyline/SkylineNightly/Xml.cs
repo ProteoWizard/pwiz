@@ -38,11 +38,26 @@ namespace SkylineNightly
             return _rootNode;
         }
 
+        // Caller isn't expected to handle this - these exceptions are rare, and this isn't
+        // user facing so writing a bunch of error recovery code isn't a good use of time.
+        public static void ShowXmlExceptionDetailsAndDie(Exception e, string hint)
+        {
+            var message = $@"XML exception while handling this text:\n{hint}";
+            throw new Exception(message, e); 
+        }
+
         // Load from XML string.
         public static Xml FromString(string xmlString)
         {
             var doc = new XmlDocument();
-            doc.LoadXml(xmlString);
+            try
+            {
+                doc.LoadXml(xmlString);
+            }
+            catch (Exception e)
+            {
+                ShowXmlExceptionDetailsAndDie(e, xmlString);
+            }
             return new Xml(doc.FirstChild);
         }
 
@@ -50,7 +65,14 @@ namespace SkylineNightly
         public Xml(string root)
         {
             var doc = new XmlDocument();
-            _rootNode = doc.CreateElement(root);
+            try
+            {
+                _rootNode = doc.CreateElement(root);
+            }
+            catch (Exception e)
+            {
+                ShowXmlExceptionDetailsAndDie(e, root);
+            }
             doc.AppendChild(GetRoot());
         }
 

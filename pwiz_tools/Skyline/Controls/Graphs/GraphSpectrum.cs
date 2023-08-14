@@ -933,8 +933,7 @@ namespace pwiz.Skyline.Controls.Graphs
 
             double? score = null;
             if(spectrum.SpectrumInfo is SpectrumInfoLibrary libInfo)
-                if (libInfo.SpectrumHeaderInfo is BiblioSpecSpectrumHeaderInfo biblioSpecInfo)
-                    score = biblioSpecInfo.Score;
+                score = libInfo.SpectrumHeaderInfo?.Score;
             var spectrumInfoR = LibraryRankedSpectrumInfo.NewLibraryRankedSpectrumInfo(spectrumPeaksOverride ?? spectrum.SpectrumPeaksInfo,
                 spectrum.LabelType,
                 precursor,
@@ -1672,8 +1671,8 @@ namespace pwiz.Skyline.Controls.Graphs
                 0, // compressedSize
                 0, // uncompressedsize
                 0,  //location
-                0, -1, -1, null, null, chromGroup.CCS, ionMobilityFilter.IonMobilityUnits);
-            var groupInfo = new ChromatogramGroupInfo(header,
+                0, null, null, chromGroup.CCS, ionMobilityFilter.IonMobilityUnits);
+            var groupInfo = new ChromatogramGroupInfo(header,null,
                 new[]
                 {
                     new ChromTransition(chromData.Mz, 0,

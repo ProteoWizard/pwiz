@@ -26,6 +26,8 @@ using System.Windows.Forms;
 using System.Xml;
 using System.Xml.Serialization;
 using pwiz.Common.Collections;
+using pwiz.Common.DataBinding;
+using pwiz.Common.DataBinding.Filtering;
 using pwiz.Skyline.Alerts;
 using pwiz.Skyline.Controls;
 using pwiz.Skyline.Controls.Graphs;
@@ -34,12 +36,14 @@ using pwiz.Skyline.EditUI;
 using pwiz.Skyline.FileUI;
 using pwiz.Skyline.Model;
 using pwiz.Skyline.Model.AuditLog;
+using pwiz.Skyline.Model.Databinding;
 using pwiz.Skyline.Model.DocSettings;
 using pwiz.Skyline.Model.DocSettings.Extensions;
 using pwiz.Skyline.Model.Find;
 using pwiz.Skyline.Model.Irt;
 using pwiz.Skyline.Model.Results;
 using pwiz.Skyline.Model.Results.Scoring;
+using pwiz.Skyline.Model.Results.Spectra;
 using pwiz.Skyline.Properties;
 using pwiz.Skyline.SettingsUI;
 using pwiz.Skyline.Util;
@@ -1632,6 +1636,7 @@ namespace pwiz.Skyline.Menus
             manageUniquePeptidesMenuItem.Enabled = UniquePeptidesDlg.PeptideSelection(SequenceTree).Any(); // Only works for peptide molecules, and only if selected
             var nodePepTree = SequenceTree.GetNodeOfType<PeptideTreeNode>();
             modifyPeptideMenuItem.Enabled = nodePepTree != null;
+            editSpectrumFilterMenuItem.Enabled = SequenceTree.GetNodeOfType<TransitionGroupTreeNode>() != null;
             setStandardTypeMenuItem.Enabled = SkylineWindow.HasSelectedTargetPeptides();
         }
 
@@ -1687,5 +1692,169 @@ namespace pwiz.Skyline.Menus
             menuStrip?.Items.Insert(iInsert++, item);
         }
 
+        private void editSpectrumFilterMenuItem_Click(object sender, EventArgs e)
+        {
+            EditSpectrumFilter();
+        }
+
+        public void EditSpectrumFilter()
+        {
+            var document = SkylineWindow.DocumentUI;
+            var transitionGroupPaths = SequenceTree.SelectedPaths.SelectMany(path =>
+                document.EnumeratePathsAtLevel(path, SrmDocument.Level.TransitionGroups)).ToHashSet();
+            if (transitionGroupPaths.Count == 0)
+            {
+                return;
+            }
+
+            var transitionGroupDocNodes = transitionGroupPaths
+                .Select(path => (TransitionGroupDocNode)document.FindNode(path)).ToList();
+            var filterPagesSet = transitionGroupDocNodes.Select(SpectrumClassFilter.GetFilterPages).ToHashSet();
+            FilterPages filterPages;
+            if (filterPagesSet.Count == 1)
+            {
+                filterPages = filterPagesSet.First();
+            }
+            else
+            {
+                filterPages = SpectrumClassFilter.GetBlankFilterPages(transitionGroupDocNodes);
+            }
+
+            var skylineDataSchema = new SkylineDataSchema(SkylineWindow, SkylineDataSchema.GetLocalizedSchemaLocalizer());
+            var rootColumn = ColumnDescriptor.RootColumn(skylineDataSchema, typeof(SpectrumClass));
+            using var autoComplete = new SpectrumFilterAutoComplete(SkylineWindow);
+            using var dlg = new EditSpectrumFilterDlg(rootColumn, filterPages)
+            {
+                AutoComplete = autoComplete
+            };
+            if (filterPagesSet.Count != 1)
+            {
+                dlg.CreateCopy = true;
+                dlg.CreateCopyEnabled = false;
+            }
+
+            dlg.Description =
+                GetEditSpectrumFilterDescription(document, transitionGroupPaths, filterPagesSet.Count == 1);
+            if (filterPages.Pages.Count == 2 && filterPages.Clauses[0].IsEmpty)
+            {
+                // When editing a blank filter with two pages, start with the "MS2" page selected 
+                dlg.SelectPage(1);
+            }
+            if (dlg.ShowDialog(this) != DialogResult.OK)
+            {
+                return;
+            }
+            ChangeSpectrumFilter(transitionGroupPaths, SpectrumClassFilter.FromFilterPages(dlg.FilterPages), dlg.CreateCopy);
+        }
+
+        public void ChangeSpectrumFilter(ICollection<IdentityPath> precursorIdentityPaths,
+            SpectrumClassFilter spectrumClassFilter, bool copy)
+        {
+            SkylineWindow.ModifyDocument(Resources.EditMenu_ChangeSpectrumFilter_Change_spectrum_filter, doc => ChangeSpectrumFilter(doc, precursorIdentityPaths, spectrumClassFilter, copy, out _),
+                docPair => AuditLogEntry.CreateSimpleEntry(MessageType.added_spectrum_filter, docPair.NewDocumentType));
+        }
+
+        private string GetEditSpectrumFilterDescription(SrmDocument document,
+            ICollection<IdentityPath> transitionGroupIdentityPaths, bool editing)
+        {
+            int precursorCount = 0;
+            foreach (var peptideGroup in transitionGroupIdentityPaths.GroupBy(path => path.Parent))
+            {
+                var peptideDocNode = (PeptideDocNode) document.FindNode(peptideGroup.Key);
+                precursorCount += peptideGroup.Select(path =>
+                    ((TransitionGroupDocNode)peptideDocNode.FindNode(path.Child)).PrecursorKey
+                    .ChangeSpectrumClassFilter(default)).Distinct().Count();
+            }
+
+            if (precursorCount == 1)
+            {
+                var transitionGroupDocNode = (TransitionGroupDocNode) document.FindNode(transitionGroupIdentityPaths.First());
+                var precursorDescription = TransitionGroupTreeNode.GetLabel(transitionGroupDocNode.TransitionGroup,
+                    transitionGroupDocNode.PrecursorMz, string.Empty);
+                if (editing)
+                {
+                    return string.Format(Resources.EditMenu_GetEditSpectrumFilterDescription_Editing_spectrum_filter_on__0_, precursorDescription);
+                }
+
+                return string.Format(Resources.EditMenu_GetEditSpectrumFilterDescription_Adding_spectrum_filter_to__0_, precursorDescription);
+            }
+
+            if (editing)
+            {
+                return string.Format(Resources.EditMenu_GetEditSpectrumFilterDescription_Editing_spectrum_filter_on__0__precursors, precursorCount);
+            }
+            return string.Format(Resources.EditMenu_GetEditSpectrumFilterDescription_Adding_spectrum_filter_to__0__precursors, precursorCount);
+        }
+
+        public SrmDocument ChangeSpectrumFilter(SrmDocument document, IEnumerable<IdentityPath> precursorIdentityPaths,
+            SpectrumClassFilter spectrumClassFilter, bool copy, out int changeCount)
+        {
+            changeCount = 0;
+            foreach (var peptidePathGroup in precursorIdentityPaths.GroupBy(path => path.Parent))
+            {
+                var peptideDocNode = (PeptideDocNode)document.FindNode(peptidePathGroup.Key);
+                if (peptideDocNode == null)
+                {
+                    continue;
+                }
+
+                bool changed = false;
+                var idPathSet = peptidePathGroup.ToHashSet();
+                var precursorGroups = peptideDocNode.TransitionGroups.GroupBy(tg =>
+                    tg.PrecursorKey.ChangeSpectrumClassFilter(default)).ToList();
+                var newTransitionGroups = new List<DocNode>();
+                foreach (var precursorGroup in precursorGroups)
+                {
+                    if (!precursorGroup.Any(tg =>
+                            idPathSet.Contains(new IdentityPath(peptidePathGroup.Key, tg.TransitionGroup)))
+                        || precursorGroup.Any(tg => Equals(tg.SpectrumClassFilter, spectrumClassFilter)))
+                    {
+                        newTransitionGroups.AddRange(precursorGroup);
+                        continue;
+                    }
+
+                    TransitionGroupDocNode transitionGroupToAdd;
+                    if (copy)
+                    {
+                        newTransitionGroups.AddRange(precursorGroup);
+                        transitionGroupToAdd = precursorGroup.First().CloneTransitionGroupId();
+                    }
+                    else
+                    {
+                        transitionGroupToAdd = null;
+                        foreach (var transitionGroup in precursorGroup)
+                        {
+                            var idPath = new IdentityPath(peptidePathGroup.Key, transitionGroup.TransitionGroup);
+                            if (idPathSet.Contains(idPath))
+                            {
+                                transitionGroupToAdd = transitionGroup;
+                            }
+                            else
+                            {
+                                newTransitionGroups.Add(transitionGroup);
+                            }
+                        }
+
+                        transitionGroupToAdd ??= precursorGroup.First().CloneTransitionGroupId();
+                    }
+
+                    transitionGroupToAdd = transitionGroupToAdd.ChangeSpectrumClassFilter(spectrumClassFilter);
+                    transitionGroupToAdd = transitionGroupToAdd.ChangeSettings(document.Settings, peptideDocNode,
+                        peptideDocNode.ExplicitMods, SrmSettingsDiff.ALL);
+                    newTransitionGroups.Add(transitionGroupToAdd);
+                    changed = true;
+                    changeCount++;
+                }
+
+                if (changed)
+                {
+                    newTransitionGroups.Sort(Peptide.CompareGroups);
+                    peptideDocNode = (PeptideDocNode)peptideDocNode.ChangeChildren(newTransitionGroups);
+                    document = (SrmDocument)document.ReplaceChild(peptidePathGroup.Key.Parent, peptideDocNode);
+                }
+            }
+
+            return document;
+        }
     }
 }

@@ -1,0 +1,170 @@
+Undo Redo : Added spectral library "20230123-abundant-proteins-z3_nce33.elib, 20230123-abundant-proteins-z3_nce33-quant.elib"
+Summary   : Added spectral library "20230123-abundant-proteins-z3_nce33.elib, 20230123-abundant-proteins-z3_nce33-quant.elib"
+All Info  :
+Added spectral library "20230123-abundant-proteins-z3_nce33.elib, 20230123-abundant-proteins-z3_nce33-quant.elib"
+EncyclopeDIA Search > FASTA settings > Max missed cleavages is "2"
+EncyclopeDIA Search > FASTA settings > FASTA file is "20230123-abundant-proteins.fasta"
+EncyclopeDIA Search > Prosit settings > Default NCE is "33"
+EncyclopeDIA Search > Prosit settings > Default charge is "3"
+EncyclopeDIA Search > Prosit settings > Min charge is "2"
+EncyclopeDIA Search > Prosit settings > Max charge is "3"
+EncyclopeDIA Search > Prosit settings > Max missed cleavages is "2"
+EncyclopeDIA Search > Narrow window results : contains "23aug2017_hela_serum_timecourse_4mz_narrow_1.mzML"
+EncyclopeDIA Search > Wide window results : contains "23aug2017_hela_serum_timecourse_wide_1a.mzML"
+EncyclopeDIA Search > Wide window results : contains "23aug2017_hela_serum_timecourse_wide_1b.mzML"
+EncyclopeDIA Search > EncyclopeDIA settings is { Enzyme = "Trypsin", Frag = "CID", Ptol = "10", PtolUnits = "PPM", Ftol = "10", FtolUnits = "PPM", Lftol = "10", LftolUnits = "PPM", Poffset = "0", Foffset = "0", PercolatorThreshold = "0,01", PercolatorTrainingSetSize = "500000", PercolatorTrainingFDR = "0", Acquisition = "DIA", NumberOfThreadsUsed = "32", ExpectedPeakWidth = "25", PrecursorWindowSize = "-1", NumberOfQuantitativePeaks = "5", MinNumOfQuantitativePeaks = "3", TopNTargetsUsed = "-1", QuantifyAcrossSamples = "False", NumberOfExtraDecoyLibrariesSearched = "0", VerifyModificationIons = "True", MinIntensity = "-1", RtWindowInMin = "-1", FilterPeaklists = "False", V2scoring = "True" }
+EncyclopeDIA Search > Chromatogram library is "20230123-abundant-proteins-z3_nce33.elib"
+EncyclopeDIA Search > Quantification library is "20230123-abundant-proteins-z3_nce33-quant.elib"
+Extra Info: FASTA settings = 
+{
+    Max missed cleavages = "2",
+    FASTA file = "20230123-abundant-proteins.fasta"
+},
+Prosit settings = 
+{
+    Default NCE = "33",
+    Default charge = "3",
+    Min charge = "2",
+    Max charge = "3",
+    Max missed cleavages = "2"
+},
+Narrow window results = 
+[
+    "23aug2017_hela_serum_timecourse_4mz_narrow_1.mzML"
+],
+Wide window results = 
+[
+    "23aug2017_hela_serum_timecourse_wide_1a.mzML",
+    "23aug2017_hela_serum_timecourse_wide_1b.mzML"
+],
+EncyclopeDIA settings = {
+Enzyme = "Trypsin",
+Frag = "CID",
+Ptol = "10",
+PtolUnits = "PPM",
+Ftol = "10",
+FtolUnits = "PPM",
+Lftol = "10",
+LftolUnits = "PPM",
+Poffset = "0",
+Foffset = "0",
+PercolatorThreshold = "0,01",
+PercolatorTrainingSetSize = "500000",
+PercolatorTrainingFDR = "0",
+Acquisition = "DIA",
+NumberOfThreadsUsed = "32",
+ExpectedPeakWidth = "25",
+PrecursorWindowSize = "-1",
+NumberOfQuantitativePeaks = "5",
+MinNumOfQuantitativePeaks = "3",
+TopNTargetsUsed = "-1",
+QuantifyAcrossSamples = "False",
+NumberOfExtraDecoyLibrariesSearched = "0",
+VerifyModificationIons = "True",
+MinIntensity = "-1",
+RtWindowInMin = "-1",
+FilterPeaklists = "False",
+V2scoring = "True"
+},
+Chromatogram library = "20230123-abundant-proteins-z3_nce33.elib",
+Quantification library = "20230123-abundant-proteins-z3_nce33-quant.elib"
+
+Undo Redo : Imported a peptide search
+Summary   : Imported a peptide search
+All Info  :
+Imported a peptide search
+Import Peptide Search > Extract Chromatograms > Found results files : contains "23aug2017_hela_serum_timecourse_wide_1a.mzML"
+Import Peptide Search > Extract Chromatograms > Found results files : contains "23aug2017_hela_serum_timecourse_wide_1b.mzML"
+Import Peptide Search > Extract Chromatograms > Files to import simultaneously is "Many"
+Import Peptide Search > Extract Chromatograms > Removed prefix is "23aug2017_hela_serum_timecourse_wide_1"
+Import Peptide Search > Configure Transition Settings > Precursor charges is "2, 3"
+Import Peptide Search > Configure Transition Settings > Ion charges is "1, 2"
+Import Peptide Search > Configure Transition Settings > Ion types is "y, b, p"
+Import Peptide Search > Configure Transition Settings > Ion match tolerance is "0,005" m/z
+Import Peptide Search > Configure Transition Settings > Pick min product ions is "3"
+Import Peptide Search > Configure Transition Settings > Pick product ions is "5"
+Import Peptide Search > Configure Transition Settings > Product ion selection start is "ion 3"
+Import Peptide Search > Configure Transition Settings > Product ion selection end is "last ion"
+Import Peptide Search > Configure Transition Settings > Max ion m/z is "2000"
+Import Peptide Search > Configure Full-Scan Settings > Acquisition method is "DIA"
+Import Peptide Search > Configure Full-Scan Settings > Isolation scheme is "Results only"
+Import Peptide Search > Configure Full-Scan Settings > Isolation scheme > Isolation width is "Results"
+Import Peptide Search > Configure Full-Scan Settings > Isolation scheme > Prespecified isolation windows is Empty
+Import Peptide Search > Configure Full-Scan Settings > Product mass analyzer is "Centroided"
+Import Peptide Search > Configure Full-Scan Settings > Mass accuracy is "10"
+Import Peptide Search > Configure Full-Scan Settings > Isotope peaks included is "Count"
+Import Peptide Search > Configure Full-Scan Settings > Peaks is "3"
+Import Peptide Search > Configure Full-Scan Settings > Precursor mass analyzer is "Centroided"
+Import Peptide Search > Configure Full-Scan Settings > Mass accuracy is "10"
+Import Peptide Search > Configure Full-Scan Settings > Isotope labeling enrichment is "Default"
+Import Peptide Search > Configure Full-Scan Settings > Retention time filter length is "2"
+Import Peptide Search > Import FASTA > Max missed cleavages is "2"
+Import Peptide Search > Import FASTA > FASTA file is "20230123-abundant-proteins.fasta"
+Import Peptide Search > Associate Proteins > Group proteins is False
+Import Peptide Search > Associate Proteins > Find minimal protein list is False
+Import Peptide Search > Associate Proteins > Remove subset proteins is False
+Import Peptide Search > Associate Proteins > Shared peptides option is "Duplicated between proteins"
+Import Peptide Search > Associate Proteins > Min peptides per protein is "1"
+Import Peptide Search > Associate Proteins > Proteins mapped is "557"
+Import Peptide Search > Associate Proteins > Peptides mapped is "5423"
+Import Peptide Search > Associate Proteins > Proteins unmapped is "1"
+Import Peptide Search > Associate Proteins > Protein targets is "557"
+Import Peptide Search > Associate Proteins > Peptide targets is "5733"
+Extra Info: Extract Chromatograms = 
+{
+    Found results files = 
+    [
+        "23aug2017_hela_serum_timecourse_wide_1a.mzML",
+        "23aug2017_hela_serum_timecourse_wide_1b.mzML"
+    ],
+    Files to import simultaneously = "Many",
+    Removed prefix = "23aug2017_hela_serum_timecourse_wide_1"
+},
+Configure Transition Settings = 
+{
+    Precursor charges = "2, 3",
+    Ion charges = "1, 2",
+    Ion types = "y, b, p",
+    Ion match tolerance = "0,005" m/z,
+    Pick min product ions = "3",
+    Pick product ions = "5",
+    Product ion selection start = "ion 3",
+    Product ion selection end = "last ion",
+    Max ion m/z = "2000"
+},
+Configure Full-Scan Settings = 
+{
+    Acquisition method = "DIA",
+    Isolation scheme = "Results only": 
+{
+        Isolation width = "Results",
+        Prespecified isolation windows = Empty
+    },
+    Product mass analyzer = "Centroided",
+    Mass accuracy = "10",
+    Isotope peaks included = "Count",
+    Peaks = "3",
+    Precursor mass analyzer = "Centroided",
+    Mass accuracy = "10",
+    Isotope labeling enrichment = "Default",
+    Retention time filter length = "2"
+},
+Import FASTA = 
+{
+    Max missed cleavages = "2",
+    FASTA file = "20230123-abundant-proteins.fasta"
+},
+Associate Proteins = 
+{
+    Group proteins = False,
+    Find minimal protein list = False,
+    Remove subset proteins = False,
+    Shared peptides option = "Duplicated between proteins",
+    Min peptides per protein = "1",
+    Proteins mapped = "557",
+    Peptides mapped = "5423",
+    Proteins unmapped = "1",
+    Protein targets = "557",
+    Peptide targets = "5733"
+}
+

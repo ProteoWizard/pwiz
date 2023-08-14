@@ -2732,6 +2732,11 @@ namespace pwiz.Skyline.Model.DocSettings
             return ChangeProp(ImClone(this), im => im.UseSelectiveExtraction = prop);
         }
 
+        public TransitionFullScan ChangeIgnoreSimScans(bool prop)
+        {
+            return ChangeProp(ImClone(this), im => im.IgnoreSimScans = prop);
+        }
+
         public TransitionFullScan ChangeRetentionTimeFilter(RetentionTimeFilterType retentionTimeFilterType,
             double retentionTimeFilterLength)
         {
