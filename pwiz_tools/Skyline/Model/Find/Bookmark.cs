@@ -18,10 +18,12 @@
  */
 
 using System;
+using System.Collections.Generic;
 using System.Linq;
 using JetBrains.Annotations;
 using pwiz.Common.SystemUtil;
 using pwiz.Skyline.Model.Results;
+using pwiz.Skyline.Util.Extensions;
 using SkylineTool;
 
 namespace pwiz.Skyline.Model.Find
@@ -153,6 +155,28 @@ namespace pwiz.Skyline.Model.Find
                 }
             }
             throw new ArgumentException(@"Unable to find file id " + documentLocation.ChromFileId);
+        }
+
+        public override string ToString()
+        {
+            List<string> parts = new List<string>();
+            parts.Add(string.Format(@"IdPath:{0}", IdentityPath));
+            if (ReplicateIndex.HasValue)
+            {
+                parts.Add(string.Format(@"ReplicateIndex:{0}", ReplicateIndex));
+            }
+
+            if (ChromFileInfoId != null)
+            {
+                parts.Add(string.Format(@"ChromFileInfoId:{0}", ChromFileInfoId));
+            }
+
+            if (OptStep != 0)
+            {
+                parts.Add(string.Format(@"OptStep:{0}", OptStep));
+            }
+
+            return TextUtil.SpaceSeparate(parts);
         }
     }
 }

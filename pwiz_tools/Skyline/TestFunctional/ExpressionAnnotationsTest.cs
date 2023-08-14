@@ -46,8 +46,7 @@ namespace pwiz.SkylineTestFunctional
         {
             RunUI(() => SkylineWindow.OpenFile(TestFilesDir.GetTestPath("ExpressionAnnotationsTest.sky")));
             var documentSettingsDlg = ShowDialog<DocumentSettingsDlg>(SkylineWindow.ShowDocumentSettingsDialog);
-            var defineAnnotationDlg = ShowDialog<DefineAnnotationDlg>(documentSettingsDlg.AddAnnotation);
-            RunUI(() =>
+            RunDlg<DefineAnnotationDlg>(documentSettingsDlg.AddAnnotation, defineAnnotationDlg=>
             {
                 defineAnnotationDlg.AnnotationName = "PeptideCount";
                 defineAnnotationDlg.IsCalculated = true;
@@ -56,8 +55,30 @@ namespace pwiz.SkylineTestFunctional
                 defineAnnotationDlg.SelectPropertyPath(PropertyPath.Root
                     .Property(nameof(Protein.Peptides)).LookupAllItems());
                 defineAnnotationDlg.AggregateOperation = AggregateOperation.Count;
+                defineAnnotationDlg.OkDialog();
             });
-            OkDialog(defineAnnotationDlg, defineAnnotationDlg.OkDialog);
+            RunDlg<DefineAnnotationDlg>(documentSettingsDlg.AddAnnotation, defineAnnotationDlg =>
+            {
+                defineAnnotationDlg.AnnotationName = "MaxProductMz";
+                defineAnnotationDlg.IsCalculated = true;
+                defineAnnotationDlg.AnnotationTargets = AnnotationDef.AnnotationTargetSet.Singleton(AnnotationDef.AnnotationTarget.peptide);
+                defineAnnotationDlg.SelectPropertyPath(PropertyPath.Root.Property(nameof(Peptide.Precursors))
+                    .LookupAllItems().Property(nameof(Precursor.Transitions))
+                    .LookupAllItems().Property(nameof(Transition.ProductMz)));
+                defineAnnotationDlg.AggregateOperation = AggregateOperation.Max;
+                defineAnnotationDlg.OkDialog();
+            });
+            // Verify that bringing up the annotation editor again has the correct things selected
+            RunLongDlg<EditListDlg<SettingsListBase<AnnotationDef>, AnnotationDef>>(documentSettingsDlg.EditAnnotationList,
+                editAnnotationListDlg =>
+                {
+                    editAnnotationListDlg.SelectItem("MaxProductMz");
+                    RunDlg<DefineAnnotationDlg>(editAnnotationListDlg.EditItem, defineAnnotationDlg =>
+                    {
+                        Assert.AreEqual(AggregateOperation.Max, defineAnnotationDlg.AggregateOperation);
+                        defineAnnotationDlg.OkDialog();
+                    });
+                }, editAnnotationListDlg=>editAnnotationListDlg.OkDialog());
             OkDialog(documentSettingsDlg, documentSettingsDlg.OkDialog);
             RunUI(() => SkylineWindow.ShowDocumentGrid(true));
             var documentGrid = FindOpenForm<DocumentGridForm>();

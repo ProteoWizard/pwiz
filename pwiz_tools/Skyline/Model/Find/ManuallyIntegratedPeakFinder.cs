@@ -38,17 +38,17 @@ namespace pwiz.Skyline.Model.Find
             get { return Resources.ManuallyIntegratedPeakFinder_DisplayName_Manually_integrated_peaks; }
         }
 
-        protected override FindMatch MatchTransition(TransitionChromInfo transitionChromInfo)
+        protected override FindMatch MatchTransition(Bookmark bookmark, TransitionChromInfo transitionChromInfo)
         {
             return transitionChromInfo.IsUserSetManual
-                       ? new FindMatch(Resources.ManuallyIntegratedPeakFinder_MatchTransition_Manually_integrated_peak)
+                       ? new FindMatch(bookmark, Resources.ManuallyIntegratedPeakFinder_MatchTransition_Manually_integrated_peak)
                        : null;
         }
 
-        protected override FindMatch MatchTransitionGroup(TransitionGroupChromInfo transitionGroupChromInfo)
+        protected override FindMatch MatchTransitionGroup(Bookmark bookmark, TransitionGroupChromInfo transitionGroupChromInfo)
         {
             return transitionGroupChromInfo.IsUserSetManual
-                       ? new FindMatch(Resources.ManuallyIntegratedPeakFinder_DisplayName_Manually_integrated_peaks)
+                       ? new FindMatch(bookmark, Resources.ManuallyIntegratedPeakFinder_DisplayName_Manually_integrated_peaks)
                        : null;
         }
     }

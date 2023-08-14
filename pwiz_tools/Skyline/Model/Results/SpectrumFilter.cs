@@ -281,7 +281,8 @@ namespace pwiz.Skyline.Model.Results
                             var ce = step.HasValue
                                 ? document.GetCollisionEnergy(nodePep, nodeGroup, null, step.Value)
                                 : (double?)null;
-                            var key = new PrecursorTextId(mz, step, ce, ionMobilityFilter, nodePep.ModifiedTarget, ChromExtractor.summed);
+                            var key = new PrecursorTextId(mz, step, ce, ionMobilityFilter,
+                                ChromatogramGroupId.ForPeptide(nodePep, nodeGroup), ChromExtractor.summed);
 
                             if (!dictPrecursorMzToFilter.TryGetValue(key, out var filter))
                             {
@@ -840,8 +841,18 @@ namespace pwiz.Skyline.Model.Results
             {
                 if (!filterPair.ContainsRetentionTime(retentionTime.Value))
                     continue;
+                var matchingSpectra = spectra;
+                if (false == filterPair.SpectrumClassFilter.IsEmpty)
+                {
+                    matchingSpectra = spectra.Where(spectrum => filterPair.MatchesSpectrum(spectrum.Metadata))
+                        .ToArray();
+                    if (matchingSpectra.Length == 0)
+                    {
+                        continue;
+                    }
+                }
 
-                var filteredSrmSpectrum = filterPair.FilterQ1SpectrumList(spectra, isSimSpectra);
+                var filteredSrmSpectrum = filterPair.FilterQ1SpectrumList(matchingSpectra, isSimSpectra);
                 if (filteredSrmSpectrum != null)
                     yield return filteredSrmSpectrum;
             }
@@ -881,8 +892,17 @@ namespace pwiz.Skyline.Model.Results
                         }
                     }
 
+                    var matchingSpectra = spectra;
+                    if (!filterPair.SpectrumClassFilter.IsEmpty)
+                    {
+                        matchingSpectra = spectra.Where(spectrum => filterPair.MatchesSpectrum(spectrum.Metadata))
+                            .ToArray();
+                        if (matchingSpectra.Length == 0)
+                            continue;
+                    }
+
                     // This line does the bulk of the work of pulling chromatogram points from spectra
-                    var filteredSrmSpectrum = filterPair.FilterQ3SpectrumList(spectra, UseDriftTimeHighEnergyOffset());
+                    var filteredSrmSpectrum = filterPair.FilterQ3SpectrumList(matchingSpectra, UseDriftTimeHighEnergyOffset());
 
                     filteredSrmSpectrum = pasefAwareFilter.Filter(filteredSrmSpectrum, filterPair, isoWin);
                     if (filteredSrmSpectrum != null)

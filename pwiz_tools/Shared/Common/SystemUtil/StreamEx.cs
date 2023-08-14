@@ -57,5 +57,18 @@ namespace pwiz.Common.SystemUtil
             if (count < stream.Read(buffer, offset, count))
                 throw new IOException(string.Format(Resources.StreamEx_ReadOrThrow_Failed_reading__0__bytes__Source_may_be_corrupted_, count));
         }
+
+        public static byte[] ReadBytes(this Stream inStream, int byteCount)
+        {
+            var buffer = new byte[byteCount];
+            int bytesRead = inStream.Read(buffer, 0, buffer.Length);
+            if (bytesRead != buffer.Length)
+            {
+                throw new InvalidDataException(string.Format(
+                    @"Tried to read {0} bytes, but actual byte count read was {1}", buffer.Length, bytesRead));
+            }
+
+            return buffer;
+        }
     }
 }

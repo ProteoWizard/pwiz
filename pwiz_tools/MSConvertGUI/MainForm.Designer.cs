@@ -214,6 +214,7 @@ namespace MSConvertGUI
             this.splitContainer1 = new System.Windows.Forms.SplitContainer();
             this.OptionsGB = new System.Windows.Forms.GroupBox();
             this.OptionsTableLayoutPanel = new System.Windows.Forms.TableLayoutPanel();
+            this.DemuxRemoveNonOverlappingEdgesCheckbox = new System.Windows.Forms.CheckBox();
             ((System.ComponentModel.ISupportInitialize)(this.FilterDGV)).BeginInit();
             this.FilterGB.SuspendLayout();
             this.SubsetPanel.SuspendLayout();
@@ -346,6 +347,7 @@ namespace MSConvertGUI
             // 
             this.FilterGB.Anchor = ((System.Windows.Forms.AnchorStyles)(((System.Windows.Forms.AnchorStyles.Top | System.Windows.Forms.AnchorStyles.Left) 
             | System.Windows.Forms.AnchorStyles.Right)));
+            this.FilterGB.Controls.Add(this.DemultiplexPanel);
             this.FilterGB.Controls.Add(this.SubsetPanel);
             this.FilterGB.Controls.Add(this.DiaUmpirePanel);
             this.FilterGB.Controls.Add(this.FilterBox);
@@ -354,7 +356,6 @@ namespace MSConvertGUI
             this.FilterGB.Controls.Add(this.ChargeStatePredictorPanel);
             this.FilterGB.Controls.Add(this.ScanSummingPanel);
             this.FilterGB.Controls.Add(this.LockmassRefinerPanel);
-            this.FilterGB.Controls.Add(this.DemultiplexPanel);
             this.FilterGB.Controls.Add(this.PeakPickingPanel);
             this.FilterGB.Controls.Add(this.ZeroSamplesPanel);
             this.FilterGB.Location = new System.Drawing.Point(3, 0);
@@ -1252,13 +1253,14 @@ namespace MSConvertGUI
             // 
             // DemultiplexPanel
             // 
+            this.DemultiplexPanel.Controls.Add(this.DemuxRemoveNonOverlappingEdgesCheckbox);
             this.DemultiplexPanel.Controls.Add(this.DemuxMassErrorTypeBox);
             this.DemultiplexPanel.Controls.Add(this.DemuxMassErrorValue);
             this.DemultiplexPanel.Controls.Add(this.DemuxMassErrorLabel);
             this.DemultiplexPanel.Controls.Add(this.DemuxTypeBox);
             this.DemultiplexPanel.Location = new System.Drawing.Point(22, 46);
             this.DemultiplexPanel.Name = "DemultiplexPanel";
-            this.DemultiplexPanel.Size = new System.Drawing.Size(283, 91);
+            this.DemultiplexPanel.Size = new System.Drawing.Size(298, 129);
             this.DemultiplexPanel.TabIndex = 18;
             this.DemultiplexPanel.Visible = false;
             // 
@@ -2039,6 +2041,16 @@ namespace MSConvertGUI
             this.OptionsTableLayoutPanel.Size = new System.Drawing.Size(302, 219);
             this.OptionsTableLayoutPanel.TabIndex = 8;
             // 
+            // DemuxRemoveNonOverlappingEdgesCheckbox
+            // 
+            this.DemuxRemoveNonOverlappingEdgesCheckbox.AutoSize = true;
+            this.DemuxRemoveNonOverlappingEdgesCheckbox.Location = new System.Drawing.Point(20, 83);
+            this.DemuxRemoveNonOverlappingEdgesCheckbox.Name = "DemuxRemoveNonOverlappingEdgesCheckbox";
+            this.DemuxRemoveNonOverlappingEdgesCheckbox.Size = new System.Drawing.Size(274, 17);
+            this.DemuxRemoveNonOverlappingEdgesCheckbox.TabIndex = 19;
+            this.DemuxRemoveNonOverlappingEdgesCheckbox.Text = "Remove non-overlapping isolation windows at edges";
+            this.DemuxRemoveNonOverlappingEdgesCheckbox.UseVisualStyleBackColor = true;
+            // 
             // MainForm
             // 
             this.AutoScaleDimensions = new System.Drawing.SizeF(6F, 13F);
@@ -2270,6 +2282,7 @@ namespace MSConvertGUI
         private System.Windows.Forms.SplitContainer splitContainer1;
         private System.Windows.Forms.TableLayoutPanel OptionsTableLayoutPanel;
         private System.Windows.Forms.GroupBox OptionsGB;
+        private System.Windows.Forms.CheckBox DemuxRemoveNonOverlappingEdgesCheckbox;
     }
 }
 

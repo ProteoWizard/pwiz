@@ -468,22 +468,6 @@ namespace pwiz.Skyline.EditUI
             if (_overrideFastaPath != null)
                 result = ImportPeptideSearch.AddStandardsToDocument(result, _irtStandard);
 
-            // Move iRT proteins to top
-            var irtPeptides = new HashSet<Target>(RCalcIrt.IrtPeptides(result));
-            var proteins = new List<PeptideGroupDocNode>(result.PeptideGroups);
-            var proteinsIrt = new List<PeptideGroupDocNode>();
-            for (var i = 0; i < proteins.Count; i++)
-            {
-                var nodePepGroup = proteins[i];
-                if (nodePepGroup.Peptides.All(nodePep => irtPeptides.Contains(new Target(nodePep.ModifiedSequence))))
-                {
-                    proteinsIrt.Add(nodePepGroup);
-                    proteins.RemoveAt(i--);
-                }
-            }
-            if (proteinsIrt.Any())
-                return (SrmDocument)result.ChangeChildrenChecked(proteinsIrt.Concat(proteins).Cast<DocNode>().ToArray());
-
             return result;
         }
 

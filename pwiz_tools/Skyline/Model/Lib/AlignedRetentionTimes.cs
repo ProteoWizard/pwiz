@@ -32,11 +32,11 @@ namespace pwiz.Skyline.Model.Lib
     /// </summary>
     public class AlignedRetentionTimes
     {
-        public IDictionary<Target, double> TargetTimes { get; private set; }
+        public IDictionary<Target, MeasuredRetentionTime> TargetTimes { get; private set; }
         /// <summary>
         /// The original times that were read out of the spectral library.
         /// </summary>
-        public IDictionary<Target, double> OriginalTimes { get; private set; }
+        public IDictionary<Target, MeasuredRetentionTime> OriginalTimes { get; private set; }
 
         public RetentionTimeRegression Regression { get; private set; }
         public RetentionTimeStatistics RegressionStatistics { get; private set; }
@@ -62,6 +62,15 @@ namespace pwiz.Skyline.Model.Lib
 
         public RetentionScoreCalculatorSpec Calculator { get; private set;}
 
+        public static AlignedRetentionTimes AlignLibraryRetentionTimes(
+            IDictionary<Target, double> target, IDictionary<Target, double> originalTimes,
+            double refinementThreshhold, RegressionMethodRT regressionMethod, CancellationToken token)
+        {
+            return AlignLibraryRetentionTimes(DocumentRetentionTimes.ConvertToMeasuredRetentionTimes(target),
+                DocumentRetentionTimes.ConvertToMeasuredRetentionTimes(originalTimes),
+                refinementThreshhold, regressionMethod, token);
+        }
+
         /// <summary>
         /// Align retention times with a target.
         /// For the MS2 Id's that are found in both the target and the timesToAlign, the MS2 id's 
@@ -70,28 +79,18 @@ namespace pwiz.Skyline.Model.Lib
         /// each file is used.
         /// </summary>
         public static AlignedRetentionTimes AlignLibraryRetentionTimes(
-            IDictionary<Target, double> target, IDictionary<Target, double> originalTimes, 
+            IDictionary<Target, MeasuredRetentionTime> target, IDictionary<Target, MeasuredRetentionTime> originalTimes, 
             double refinementThreshhold, RegressionMethodRT regressionMethod, CancellationToken token)
         {
             var calculator = new DictionaryRetentionScoreCalculator(@"alignment", originalTimes);
             var targetTimesList = new List<MeasuredRetentionTime>();
             foreach (var entry in calculator.RetentionTimes)
             {
-                double targetTime;
-                if (!target.TryGetValue(entry.Key, out targetTime))
+                if (!target.TryGetValue(entry.Key, out var targetTime))
                 {
                     continue;
                 }
-                MeasuredRetentionTime measuredRetentionTime;
-                try
-                {
-                    measuredRetentionTime = new MeasuredRetentionTime(entry.Key, targetTime);
-                }
-                catch
-                {
-                    continue;
-                }
-                targetTimesList.Add(measuredRetentionTime);
+                targetTimesList.Add(targetTime);
             }
 
             RetentionTimeStatistics regressionStatistics;
@@ -134,19 +133,18 @@ namespace pwiz.Skyline.Model.Lib
 
     internal class DictionaryRetentionScoreCalculator : RetentionScoreCalculatorSpec
     {
-        public DictionaryRetentionScoreCalculator(string name, IDictionary<Target, double> retentionTimes)
+        public DictionaryRetentionScoreCalculator(string name, IDictionary<Target, MeasuredRetentionTime> retentionTimes)
             : base(name)
         {
             RetentionTimes = retentionTimes;
         }
 
-        public IDictionary<Target, double> RetentionTimes { get; private set; }
+        public IDictionary<Target, MeasuredRetentionTime> RetentionTimes { get; private set; }
         public override double? ScoreSequence(Target modifiedSequence)
         {
-            double result;
-            if (RetentionTimes.TryGetValue(modifiedSequence, out result))
+            if (RetentionTimes.TryGetValue(modifiedSequence, out var result))
             {
-                return result;
+                return result.RetentionTime;
             }
             return null;
         }

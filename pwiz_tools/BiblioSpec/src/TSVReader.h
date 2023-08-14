@@ -78,6 +78,15 @@ public:
     static void insertRt(TSVLine& line, const std::string& value) {
         line.rt = value.empty() ? 0 : lexical_cast<double>(value) / 60;
     }
+    static void insertRtMinutes(TSVLine& line, const std::string& value) {
+        line.rt = value.empty() ? 0 : lexical_cast<double>(value);
+    }
+    static void insertRtStartMinutes(TSVLine& line, const std::string& value) {
+        line.leftWidth = value.empty() ? 0 : lexical_cast<double>(value);
+    }
+    static void insertRtEndMinutes(TSVLine& line, const std::string& value) {
+        line.rightWidth = value.empty() ? 0 : lexical_cast<double>(value);
+    }
     static void insertSequence(TSVLine& line, const std::string& value) {
         line.sequence = value;
     }
@@ -119,6 +128,8 @@ public:
     }
     static void insertIonMobility(TSVLine& line, const std::string& value) {
         line.ionMobility = lexical_cast<double>(value);
+    }
+    static void ignore(TSVLine& line, const std::string& value) {
     }
 };
 

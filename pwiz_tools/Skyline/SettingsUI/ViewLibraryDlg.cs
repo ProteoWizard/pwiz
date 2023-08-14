@@ -842,7 +842,7 @@ namespace pwiz.Skyline.SettingsUI
                         }
 
                         var spectrumInfoR = LibraryRankedSpectrumInfo.NewLibraryRankedSpectrumInfo(
-                            spectrumInfo.SpectrumPeaksInfo,
+                            spectrumInfo?.SpectrumPeaksInfo,
                             transitionGroupDocNode.TransitionGroup.LabelType,
                             transitionGroupDocNode,
                             settings,

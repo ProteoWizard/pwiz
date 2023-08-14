@@ -835,7 +835,7 @@ namespace pwiz.Skyline.Model
                         formulaText.Append(atomCount.Value);
                 }
                 var txt = formulaText.ToString();
-                txt += MoleculeMassOffset.FormatMassModification(mol.MonoMassOffset, mol.AverageMassOffset, 6);
+                txt += MoleculeMassOffset.FormatMassModification(mol.MonoMassOffset, mol.AverageMassOffset, BioMassCalc.MassPrecision);
                 return txt;
             }
         }

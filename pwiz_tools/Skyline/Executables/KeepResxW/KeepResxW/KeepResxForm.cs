@@ -21,7 +21,6 @@ namespace KeepResxW
             // ReSharper disable StringLiteralTypo
             @"msconvertgui\*",
             @"seems\*",
-            @"topograph\*",
             @"bumbershoot\*",
             @"shared\zedgraph\*",
             @"shared\proteomedb\forms\proteomedbform.resx",

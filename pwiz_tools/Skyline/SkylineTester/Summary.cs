@@ -174,7 +174,7 @@ namespace SkylineTester
         public void Load()
         {
             Runs = new List<Run>();
-            if (!File.Exists(SummaryFile))
+            if (Directory.Exists(Path.GetDirectoryName(SummaryFile)) && !File.Exists(SummaryFile))
             {
                 RegenerateSummaryFile();
             }

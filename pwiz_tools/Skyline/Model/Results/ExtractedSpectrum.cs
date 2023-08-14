@@ -25,7 +25,7 @@ namespace pwiz.Skyline.Model.Results
 {
     public sealed class ExtractedSpectrum
     {
-        public ExtractedSpectrum(Target target,
+        public ExtractedSpectrum(ChromatogramGroupId chromatogramGroupId,
                                  Color peptideColor,
                                  SignedMz precursorMz,
                                  IonMobilityFilter ionMobility,
@@ -35,7 +35,7 @@ namespace pwiz.Skyline.Model.Results
                                  float[] intensities,
                                  float[] massErrors)
         {
-            Target = target;
+            ChromatogramGroupId = chromatogramGroupId;
             PeptideColor = peptideColor;
             PrecursorMz = precursorMz;
             IonMobility = ionMobility;
@@ -46,7 +46,7 @@ namespace pwiz.Skyline.Model.Results
             MassErrors = massErrors;
         }
 
-        public Target Target { get; private set; } // Peptide modified sequence or custom ion id
+        public ChromatogramGroupId ChromatogramGroupId { get; private set; }
         public Color PeptideColor { get; private set; }
         public SignedMz PrecursorMz { get; private set; }
         public IonMobilityFilter IonMobility { get; private set; }

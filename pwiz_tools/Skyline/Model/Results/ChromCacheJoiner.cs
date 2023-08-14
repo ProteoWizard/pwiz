@@ -21,6 +21,7 @@ using System.Collections.Generic;
 using System.Linq;
 using System.IO;
 using pwiz.Common.SystemUtil;
+using pwiz.Skyline.Model.Results.Spectra;
 using pwiz.Skyline.Properties;
 using pwiz.Skyline.Util;
 
@@ -32,7 +33,6 @@ namespace pwiz.Skyline.Model.Results
         private int _scoreTypesCount = -1;
 
         private readonly byte[] _buffer = new byte[0x40000];  // 256K
-        private readonly Dictionary<Target, int> _dictTextIdToByteIndex = new Dictionary<Target, int>();
 
         public ChromCacheJoiner(string cachePath, IPooledStream streamDest, IList<string> cacheFilePaths,
             ILoadMonitor loader, IProgressStatus status, Action<ChromatogramCache, IProgressStatus> completed) : base(cachePath, loader, status, completed)
@@ -105,6 +105,14 @@ namespace pwiz.Skyline.Model.Results
                     // Scan ids
                     long offsetScanIds = _fsScans.Stream.Position;
                     _listCachedFiles.AddRange(rawData.ChromCacheFiles.Select(f => f.RelocateScanIds(f.LocationScanIds + offsetScanIds)));
+                    if (null != rawData.ResultFileDatas)
+                    {
+                        _listResultFileDatas.AddRange(rawData.ResultFileDatas);
+                    }
+                    else
+                    {
+                        _listResultFileDatas.AddRange(new ResultFileMetaData[rawData.ChromCacheFiles.Count]);
+                    }
                     if (rawData.CountBytesScanIds > 0)
                     {
                         inStream.Seek(rawData.LocationScanIds, SeekOrigin.Begin);
@@ -137,8 +145,7 @@ namespace pwiz.Skyline.Model.Results
                                             offsetPeaks,
                                             offsetScores,
                                             offsetPoints,
-                                            _dictTextIdToByteIndex,
-                                            _listTextIdBytes)));
+                                            _chromatogramGroupIds)));
                     }
 
                     inStream.Seek(0, SeekOrigin.Begin);

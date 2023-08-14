@@ -277,7 +277,7 @@
       <xs:element name="peptide_integration" minOccurs="0" maxOccurs="1">
         <xs:complexType>
           <xs:sequence>
-            <xs:any minOccurs="1" maxOccurs="1" processContents="skip"/>
+            <xs:any minOccurs="0" maxOccurs="1" processContents="skip"/>
           </xs:sequence>
           <xs:attribute name="auto_train" type="xs:string"/>
         </xs:complexType>

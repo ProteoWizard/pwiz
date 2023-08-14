@@ -17,7 +17,6 @@ for /d /r Shared\ProteomeDb %%d in (obj, bin) do @if exist "%%d" rmdir /s/q "%%d
 for /d /r Shared\ProteowizardWrapper %%d in (obj, bin) do @if exist "%%d" rmdir /s/q "%%d"
 for /d /r Shared\zedgraph %%d in (obj, bin) do @if exist "%%d" rmdir /s/q "%%d"
 for /d /r Skyline %%d in (obj, bin) do @if exist "%%d" rmdir /s/q "%%d"
-for /d /r Topograph %%d in (obj, bin) do @if exist "%%d" rmdir /s/q "%%d"
 for /d /r SeeMS %%d in (obj, bin) do @if exist "%%d" rmdir /s/q "%%d"
 for /d /r MSConvertGUI %%d in (obj, bin) do @if exist "%%d" rmdir /s/q "%%d"
 
@@ -25,7 +24,6 @@ IF EXIST Shared\CommonTest rmdir /s/q Shared\CommonTest
 
 IF EXIST SeeMS\CleanSeeMS.bat call SeeMS\CleanSeeMS.bat
 IF EXIST Skyline\CleanSkyline.bat call Skyline\CleanSkyline.bat
-IF EXIST Topograph\CleanTopograph.bat call Topograph\CleanTopograph.bat
 IF EXIST BiblioSpec\CleanBiblioSpec.bat call BiblioSpec\CleanBiblioSpec.bat
 
 popd

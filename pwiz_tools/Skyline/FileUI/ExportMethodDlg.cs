@@ -26,7 +26,6 @@ using System.Text;
 using System.Threading;
 using System.Windows.Forms;
 using NHibernate;
-using pwiz.Common.Controls;
 using pwiz.Common.SystemUtil;
 using pwiz.Skyline.Alerts;
 using pwiz.Skyline.Controls;

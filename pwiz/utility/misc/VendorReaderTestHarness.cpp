@@ -755,6 +755,7 @@ string ReaderTestConfig::resultFilename(const string& baseFilename) const
     if (!isolationMzAndMobilityFilter.empty()) bal::replace_all(result, ".mzML", "-mzMobilityFilter.mzML");
     if (globalChromatogramsAreMs1Only) bal::replace_all(result, ".mzML", "-globalChromatogramsAreMs1Only.mzML");
     if (ddaProcessing) bal::replace_all(result, ".mzML", "-ddaProcessing.mzML");
+    if (ignoreCalibrationScans) bal::replace_all(result, ".mzML", "-ignoreCalibrationScans.mzML");
     //if (thresholdCount > 0) bal::replace_all(result, ".mzML", "-top" + lexical_cast<string>(thresholdCount) + ".mzML");
     return result;
 }

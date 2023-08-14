@@ -41,7 +41,7 @@ namespace pwiz.Skyline.Util
         public class ModeUIExtender : Component, IExtenderProvider // Behaves like a ToolTip, in that its presence in a form allows us to tag components with ModeUI info in the designer
         {
             private Dictionary<IComponent, MODE_UI_HANDLING_TYPE> _handledComponents = new Dictionary<IComponent, MODE_UI_HANDLING_TYPE>();
-            private Dictionary<IComponent, string> _originalToolStripText = new Dictionary<IComponent, string>();
+            private Dictionary<IComponent, MenuTextAndToolTip> _originalToolStripText = new Dictionary<IComponent, MenuTextAndToolTip>();
             public ModeUIExtender(IContainer container)
             {
                 if (container != null)
@@ -95,7 +95,23 @@ namespace pwiz.Skyline.Util
                 return _handledComponents;
             }
 
-            public Dictionary<IComponent, string> GetOriginalToolStripText()
+            public struct MenuTextAndToolTip
+            {
+                public string Text;
+                public string ToolTipText;
+
+                public MenuTextAndToolTip(ToolStripMenuItem item) : this(item.Text, item.ToolTipText)
+                {
+                }
+
+                public MenuTextAndToolTip(string text, string toolTipText)
+                {
+                    Text = text;
+                    ToolTipText = toolTipText;
+                }
+            }
+
+            public Dictionary<IComponent, MenuTextAndToolTip> GetOriginalToolStripText()
             {
                 return _originalToolStripText;
             }
@@ -103,6 +119,11 @@ namespace pwiz.Skyline.Util
             public void AddHandledComponent(IComponent component, MODE_UI_HANDLING_TYPE type)
             {
                 _handledComponents[component] = type;
+            }
+
+            public bool ComponentsDisabledForModeUI(IComponent component)
+            {
+                return PeptideToMoleculeTextMapper.GetComponentsDisabledForModeUI(_handledComponents, Program.ModeUI).Contains(component);
             }
         }
 
@@ -227,12 +248,13 @@ namespace pwiz.Skyline.Util
                         if (!dictOriginalText.TryGetValue(menuItem, out var originalText))
                         {
                             // Preserve original text in case we need to restore later
-                            dictOriginalText[menuItem] = menuItem.Text;
+                            dictOriginalText[menuItem] = new ModeUIExtender.MenuTextAndToolTip(menuItem);
                         }
                         else
                         {
                             // Restore original text so translator has a clean start
-                            menuItem.Text = originalText;
+                            menuItem.Text = originalText.Text;
+                            menuItem.ToolTipText = originalText.ToolTipText;
                         }
                     }
                 }
@@ -257,15 +279,16 @@ namespace pwiz.Skyline.Util
                 }
             }
 
-            public bool MenuItemHasOriginalText(string name)
+            public bool MenuItemHasOriginalText(ToolStripMenuItem toolStripMenuItem)
             {
                 foreach (var item in _modeUIExtender.GetOriginalToolStripText().Keys)
                 {
                     if (item is ToolStripMenuItem menuItem)
                     {
-                        if (Equals(name, menuItem.Text))
+                        if (Equals(toolStripMenuItem.Text, menuItem.Text) && Equals(toolStripMenuItem.ToolTipText, menuItem.ToolTipText))
                         {
-                            return Equals(name, _modeUIExtender.GetOriginalToolStripText()[menuItem]);
+                            var menuTextAndToolTip = _modeUIExtender.GetOriginalToolStripText()[menuItem];
+                            return Equals(toolStripMenuItem.Text, menuTextAndToolTip.Text) && Equals(toolStripMenuItem.ToolTipText, menuTextAndToolTip.ToolTipText);
                         }
                     }
                 }

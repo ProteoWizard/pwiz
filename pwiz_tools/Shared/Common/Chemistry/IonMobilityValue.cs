@@ -25,7 +25,7 @@ namespace pwiz.Common.Chemistry
     //    enum IONMOBILITY_TYPE in pwiz_tools\BiblioSpec\src\BlibUtils.h
     // and
     //    enum IonMobilityUnits in pwiz\analysis\spectrum_processing\SpectrumList_IonMobility.hpp
-    public enum eIonMobilityUnits
+    public enum eIonMobilityUnits : sbyte
     {
         waters_sonar = -1, // Not really ion mobility, but SONAR uses IMS hardware for precursor isolation
         none,

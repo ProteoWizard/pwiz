@@ -1807,7 +1807,7 @@ namespace pwiz.Skyline.Model
             if (String.IsNullOrEmpty(name))
                 name = document.GetSmallMoleculeGroupId();
             var metadata = new ProteinMetadata(name, String.Empty).SetWebSearchCompleted();  // FUTURE: some kind of lookup for small molecules
-            return new PeptideGroupDocNode(pepGroup, metadata, new[] { pep });
+            return new PeptideGroupDocNode(pepGroup, metadata, new[] { pep }, false);
         }
 
         private PeptideDocNode GetMoleculePeptide(SrmDocument document, Row row, PeptideGroup group)
@@ -1848,7 +1848,7 @@ namespace pwiz.Skyline.Model
                 var tranGroup = GetMoleculeTransitionGroup(document, parsedIonInfo, row, pep);
                 if (tranGroup == null)
                     return null;
-                return new PeptideDocNode(pep, document.Settings, null, null, parsedIonInfo.ExplicitRetentionTime, new[] { tranGroup }, true);
+                return new PeptideDocNode(pep, document.Settings, null, null, parsedIonInfo.ExplicitRetentionTime, new[] { tranGroup }, false);
             }
             catch (InvalidOperationException e)
             {
@@ -1907,7 +1907,7 @@ namespace pwiz.Skyline.Model
                 if (tran == null)
                     return null;
                 return new TransitionGroupDocNode(group, document.Annotations, document.Settings, null,
-                    null, moleculeInfo.ExplicitTransitionGroupValues, null, new[] { tran }, true);
+                    null, moleculeInfo.ExplicitTransitionGroupValues, null, new[] { tran }, false);
             }
             catch (InvalidDataException x)
             {

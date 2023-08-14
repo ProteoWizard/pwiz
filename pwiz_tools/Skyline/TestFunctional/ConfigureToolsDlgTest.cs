@@ -785,7 +785,7 @@ namespace pwiz.SkylineTestFunctional
             });
             RunDlg<MessageDlg>(configureToolsDlg.OkDialog, messageDlg =>
             {
-                string supportedTypes = String.Join("; ", ConfigureToolsDlg.EXTENSIONS); // Not L10N
+                string supportedTypes = String.Join("; ", ToolDescription.EXTENSIONS); // Not L10N
                 supportedTypes = supportedTypes.Replace(".", "*."); // Not L10N
                 AssertEx.Contains(messageDlg.Message, string.Format(TextUtil.LineSeparate(
                             Resources.ConfigureToolsDlg_CheckPassTool_The_command_for__0__must_be_of_a_supported_type,
