@@ -2583,7 +2583,7 @@ namespace pwiz.Skyline.Model.Databinding.Entities {
         }
         
         /// <summary>
-        ///   Looks up a localized string similar to Number of spectra in the spectral library which match the peptide and Result File..
+        ///   Looks up a localized string similar to Number of spectra in the spectral library which match the peptide and result file..
         /// </summary>
         public static string PeptideSpectrumMatchCount {
             get {
