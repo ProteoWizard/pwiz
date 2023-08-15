@@ -6198,7 +6198,7 @@ namespace {
                                                                           Color::Green)
               << std::setw(passwidth) << p.numTestCasesPassingFilters - p.numTestCasesFailed << " passed"
               << Color::None << " | " << (p.numTestCasesFailed > 0 ? Color::Red : Color::None)
-              << std::setw(failwidth) << p.numTestCasesFailed << " failed" << Color::None << " |";
+              << std::setw(failwidth) << p.numTestCasesFailed << " failures" << Color::None << " |";
             if(opt.no_skipped_summary == false) {
                 const int numSkipped = p.numTestCases - p.numTestCasesPassingFilters;
                 s << " " << (numSkipped == 0 ? Color::None : Color::Yellow) << numSkipped
@@ -6210,7 +6210,7 @@ namespace {
               << ((p.numAsserts == 0 || anythingFailed) ? Color::None : Color::Green)
               << std::setw(passwidth) << (p.numAsserts - p.numAssertsFailed) << " passed" << Color::None
               << " | " << (p.numAssertsFailed > 0 ? Color::Red : Color::None) << std::setw(failwidth)
-              << p.numAssertsFailed << " failed" << Color::None << " |\n";
+              << p.numAssertsFailed << " failures" << Color::None << " |\n";
             s << Color::Cyan << "[doctest] " << Color::None
               << "Status: " << (p.numTestCasesFailed > 0 ? Color::Red : Color::Green)
               << ((p.numTestCasesFailed > 0) ? "FAILURE!" : "SUCCESS!") << Color::None << std::endl;

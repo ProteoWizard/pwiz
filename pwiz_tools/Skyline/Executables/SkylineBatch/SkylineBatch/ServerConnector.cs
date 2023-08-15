@@ -91,25 +91,28 @@ namespace SkylineBatch
                 if (_serverMap[server] != null || _serverExceptions[server] != null)
                     continue;
                 var folder = ((DataServerInfo) server).Folder;
-                if (server.URI.Host.Equals("panoramaweb.org"))
+                Uri uri = server.FileSource.URI;
+                UserState state = PanoramaUtil.ValidateServerAndUser(ref uri, server.FileSource.Username, server.FileSource.Password);
+                if (state == UserState.valid)
                 {
+                    var chosenServer = Uri.UnescapeDataString(uri.GetLeftPart(UriPartial.Authority));
                     Uri webdavUri;
                     var panoramaFolder = (Path.GetDirectoryName(server.URI.LocalPath) ?? string.Empty).Replace(@"\", "/");
                     JToken files;
                     Exception error;
                     if (panoramaFolder.StartsWith("/_webdav/"))
                     {
-                        webdavUri = new Uri("https://panoramaweb.org" + panoramaFolder + "?method=json");
+                        webdavUri = new Uri(chosenServer + panoramaFolder + "?method=json");
                         files = TryUri(webdavUri, server.FileSource.Username, server.FileSource.Password, cancelToken, out error);
                     }
                     else
                     {
                         panoramaFolder = "/_webdav" + panoramaFolder;
-                        webdavUri = new Uri("https://panoramaweb.org" + panoramaFolder + "/%40files/RawFiles?method=json");
+                        webdavUri = new Uri(chosenServer + panoramaFolder + "/%40files/RawFiles?method=json");
                         files = TryUri(webdavUri, server.FileSource.Username, server.FileSource.Password, cancelToken, out error);
                         if (files == null)
                         {
-                            webdavUri = new Uri("https://panoramaweb.org" + panoramaFolder + "/%40files?method=json");
+                            webdavUri = new Uri(chosenServer + panoramaFolder + "/%40files?method=json");
                             files = TryUri(webdavUri, server.FileSource.Username, server.FileSource.Password, cancelToken, out error);
                         }
                     }
@@ -127,8 +130,8 @@ namespace SkylineBatch
                             if (file.collection == false && file.leaf == true)
                             {
                                 var pathOnServer = (string)file["id"];
-                                var downloadUri = new Uri("https://panoramaweb.org" + pathOnServer);
-                                var panoramaServerUri = new Uri("https://panoramaweb.org/");
+                                var downloadUri = new Uri(chosenServer + pathOnServer);
+                                var panoramaServerUri = new Uri(chosenServer);
                                 var size = PanoramaServerConnector.GetSize(downloadUri, panoramaServerUri, new WebPanoramaClient(panoramaServerUri), server.FileSource.Username, server.FileSource.Password,
                                      cancelToken);
                                 fileInfos.Add(new ConnectedFileInfo(Path.GetFileName(pathOnServer),
@@ -203,7 +206,7 @@ namespace SkylineBatch
             JToken files = null;
             try
             {
-                var webClient = new WebPanoramaClient(new Uri("https://panoramaweb.org/"));
+                var webClient = new WebPanoramaClient(new Uri(Uri.UnescapeDataString(uri.GetLeftPart(UriPartial.Authority))));
                 var jsonAsString =
                     webClient.DownloadStringAsync(uri, username, password, cancelToken);
                 if (cancelToken.IsCancellationRequested) return null;
