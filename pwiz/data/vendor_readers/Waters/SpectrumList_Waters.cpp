@@ -793,9 +793,8 @@ PWIZ_API_DECL void SpectrumList_Waters::createDDAIndex()
 
         float setMass, precursorMass, retentionTime;
         int function, startScan, endScan;
-        vector<float> masses, intensities;
         bool isMS1;
-        rawdata_->GetDDAScan(i, retentionTime, function, startScan, endScan, isMS1, setMass, precursorMass, masses, intensities);
+        rawdata_->GetDDAScanInfo(i, retentionTime, function, startScan, endScan, isMS1, setMass, precursorMass);
 
         ie.function = function;
         ie.process = 0;
