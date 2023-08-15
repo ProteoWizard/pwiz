@@ -1753,7 +1753,7 @@ string SpectrumListFactory::usage(bool detailedHelp, const char *morehelp_prompt
         oss << "For example \'[0,3]\' and \'0-3\' both mean \'the set of integers from 0 to 3 inclusive\'.\n";
         oss << "\'1-\' means \'the set of integers from 1 to the largest allowable number\'.  \n";
         oss << "\'9\' is also an integer set, equivalent to \'[9,9]\'.\n";
-        oss << "\'[0,2] 5-7\' is the set \'0 1 2 5 6 7\'. \n";
+        oss << "\'[0,2] 5-7\' is the set \'0 1 2 5 6 7\'. \n\n";
     }
 
     for (JumpTableEntry* it=jumpTable_; it!=jumpTableEnd_; ++it)

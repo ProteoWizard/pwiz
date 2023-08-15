@@ -287,7 +287,7 @@ Config parseCommandLine(int argc, char** argv)
     bool showExamples = false;
 
     pair<int, int> consoleBounds = get_console_bounds(); // get platform-specific console bounds, or default values if an error occurs
-    int wrapWidth = min(80, consoleBounds.first); // Set this relatively narrow to get reasonable wrap even on wide screens and stdout piped to file
+    int wrapWidth = consoleBounds.first;
     po::options_description od_config("Options", wrapWidth);
     od_config.add_options()
         ("filelist,f",
@@ -494,7 +494,11 @@ Config parseCommandLine(int argc, char** argv)
         usage << od_config;
 
         // extra usage
-        usage << SpectrumListFactory::usage(detailedHelp, "(run this program with --help to see details for all filters)", wrapWidth);
+        if (writeDoc)
+        {
+            wrapWidth = 10000; // Let viewer handle wrapping
+        }
+        usage << SpectrumListFactory::usage(detailedHelp, detailedHelp ? nullptr : "(run this program with --help to see details for all filters)", wrapWidth);
         usage << ChromatogramListFactory::usage(detailedHelp, nullptr, wrapWidth) << endl;
         if (writeDoc)
         {
