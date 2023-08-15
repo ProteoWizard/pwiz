@@ -162,9 +162,7 @@ void testIntervalExtraction2()
     unit_assert(i.end == numeric_limits<int>::max());
 
     istringstream iss3(" \n 420-goober "); // goober is ignored, since it's not an int
-    iss3 >> i;
-    unit_assert(i.begin == 420);
-    unit_assert(i.end == numeric_limits<int>::max());
+    unit_assert_throws_what(iss3 >> i, runtime_error, "invalid syntax \"420-goober\" for IntegerSet interval; should be [Start,End], Start-End, Start- or just Start, where Start and End are integers");
 
     istringstream iss4(" \n 420-666");
     iss4 >> i;
@@ -189,7 +187,7 @@ void testParse()
 {
     IntegerSet a;
 
-    a.parse(" [-3,2] [5,5] [8,9] booger ");  // insert(-3,2); insert(5); insert(8,9);
+    a.parse(" [-3,2] [5,5] [8,9] ");  // insert(-3,2); insert(5); insert(8,9);
 
     unit_assert(a.intervalCount() == 3);
     unit_assert(a.size() == 9);

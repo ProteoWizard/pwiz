@@ -27,8 +27,6 @@
 
 #include "pwiz/data/msdata/MSData.hpp"
 #include "pwiz/utility/misc/IntegerSet.hpp"
-#include <boost/functional/hash.hpp>
-#include <boost/range/adaptor/map.hpp>
 #include <boost/make_shared.hpp>
 #include <stdexcept>
 #include <iostream>
@@ -58,7 +56,7 @@ class PWIZ_API_DECL ListBase
 class PWIZ_API_DECL SpectrumListBase : public SpectrumList
 {
     public:
-    SpectrumListBase() : MSLevelsNone(), spectrum_id_mismatch_hash_(impl_.hash("spectrum id mismatch")) {};
+    SpectrumListBase() : spectrum_id_mismatch_hash_(impl_.hash("spectrum id mismatch")) {}
 
     /// issues a warning once per list instance (based on string hash)
     void warn_once(const char* msg) const { impl_.warn_once(msg); }
@@ -80,8 +78,8 @@ class PWIZ_API_DECL SpectrumListBase : public SpectrumList
     DataProcessingPtr dp_;
 
     private:
-    size_t spectrum_id_mismatch_hash_;
     ListBase impl_;
+    size_t spectrum_id_mismatch_hash_;
 };
 
 

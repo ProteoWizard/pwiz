@@ -17,7 +17,7 @@
  */
 
 using Microsoft.VisualStudio.TestTools.UnitTesting;
-using System;
+using System.Collections.Generic;
 using System.IO;
 using System.Linq;
 using pwiz.Common.Database;
@@ -34,7 +34,7 @@ namespace pwiz.SkylineTest
     {
         const string TEST_ZIP_PATH = @"Test\EncyclopeDiaHelpersTest.zip";
 
-        [TestMethod]
+        [TestMethod, NoParallelTesting(TestExclusionReason.SHARED_DIRECTORY_WRITE)]
         public void TestConvertFastaToPrositInputCsv()
         {
             TestFilesDir = new TestFilesDir(TestContext, TEST_ZIP_PATH);
@@ -50,7 +50,7 @@ namespace pwiz.SkylineTest
                 MinMz = 690,
                 MaxMz = 705
             };
-            var pm = new CommandProgressMonitor(Console.Out, new ProgressStatus());
+            var pm = new CommandProgressMonitor(new StringWriter(), new ProgressStatus());
             IProgressStatus status = new ProgressStatus();
             EncyclopeDiaHelpers.ConvertFastaToPrositInputCsv(fastaFilepath, prositCsvOutputFilepath, pm, ref status, testConfig);
             Assert.IsTrue(File.Exists(prositCsvOutputFilepath));
@@ -68,19 +68,20 @@ namespace pwiz.SkylineTest
             string fastaFilepath = TestFilesDir.GetTestPath("pan_human_library_690to705.fasta");
             string dlibFilepath = TestFilesDir.GetTestPath("pan_human_library_690to705-z3_nce33.dlib");
             string elibFilepath = TestFilesDir.GetTestPath("pan_human_library_690to705-z3_nce33.elib");
+            var columnTolerances = new Dictionary<int, double>() { { -1, 0.0000000001 } };  // Allow some numerical wiggle in any column numerical column ("-1" means all columns)
             IProgressStatus status = new ProgressStatus();
 
             // test prosit output to dlib
             {
                 string prositBlibOutputFilepath = TestFilesDir.GetTestPath("pan_human_library_690to705-z3_nce33-output.blib");
                 string dlibExpectedTsvFilepath = TestFilesDir.GetTestPath("pan_human_library_690to705-z3_nce33-expected-dlib.tsv");
-                var pm = new CommandProgressMonitor(Console.Out, new ProgressStatus());
+                var pm = new CommandProgressMonitor(new StringWriter(), new ProgressStatus());
                 EncyclopeDiaHelpers.ConvertPrositOutputToDlib(prositBlibOutputFilepath, fastaFilepath, dlibFilepath, pm, ref status);
                 Assert.IsTrue(File.Exists(dlibFilepath));
                 var actual = SqliteOperations.DumpTable(dlibFilepath, "entries");
                 //string dlibActualTsvFilepath = TestFilesDir.GetTestPath("pan_human_library_690to705-z3_nce33-expected-dlib-actual.tsv");
                 //File.WriteAllLines(dlibActualTsvFilepath, actual);
-                AssertEx.NoDiff(File.ReadAllText(dlibExpectedTsvFilepath), string.Join("\n", actual));
+                AssertEx.NoDiff(File.ReadAllText(dlibExpectedTsvFilepath), string.Join("\n", actual), null, columnTolerances);
             }
 
             // test generate chromatogram library
@@ -91,7 +92,7 @@ namespace pwiz.SkylineTest
                     PercolatorTrainingFDR = 0.1,
                     PercolatorThreshold = 0.1,
                 };
-                var pm = new CommandProgressMonitor(Console.Out, new ProgressStatus());
+                var pm = new CommandProgressMonitor(new StringWriter(), new ProgressStatus());
                 EncyclopeDiaHelpers.GenerateChromatogramLibrary(dlibFilepath, elibFilepath, fastaFilepath,
                     new MsDataFileUri[]
                     {
@@ -103,7 +104,7 @@ namespace pwiz.SkylineTest
                     .Concat(SqliteOperations.DumpTable(elibFilepath, "peptidescores", sortColumns: new[] { "PeptideModSeq", "PrecursorCharge" }));
                 //string elibActualTsvFilepath = TestFilesDir.GetTestPath("pan_human_library_690to705-z3_nce33-expected-elib-actual.tsv");
                 //File.WriteAllLines(elibActualTsvFilepath, actual);
-                AssertEx.NoDiff(File.ReadAllText(elibExpectedTsvFilepath), string.Join("\n", actual));
+                AssertEx.NoDiff(File.ReadAllText(elibExpectedTsvFilepath), string.Join("\n", actual), null, columnTolerances);
             }
 
             // test generate quant library
@@ -118,7 +119,7 @@ namespace pwiz.SkylineTest
                     NumberOfQuantitativePeaks = 0,
                     V2scoring = false
                 };
-                var pm = new CommandProgressMonitor(Console.Out, new ProgressStatus());
+                var pm = new CommandProgressMonitor(new StringWriter(), new ProgressStatus());
                 EncyclopeDiaHelpers.GenerateQuantLibrary(elibFilepath, elibQuantFilepath, fastaFilepath,
                     new MsDataFileUri[]
                     {
@@ -131,7 +132,7 @@ namespace pwiz.SkylineTest
                     .Concat(SqliteOperations.DumpTable(elibQuantFilepath, "retentiontimes", sortColumns: new[] { "SourceFile", "Library" }));
                 //string elibActualTsvFilepath = TestFilesDir.GetTestPath("pan_human_library_690to705-z3_nce33-expected-quant-elib-actual.tsv");
                 //File.WriteAllLines(elibActualTsvFilepath, actual);
-                AssertEx.NoDiff(File.ReadAllText(elibExpectedTsvFilepath), string.Join("\n", actual));
+                AssertEx.NoDiff(File.ReadAllText(elibExpectedTsvFilepath), string.Join("\n", actual), null, columnTolerances);
             }
 
             TestFilesDir.Cleanup();

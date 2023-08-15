@@ -249,17 +249,19 @@ void ProteinPilotReader::parseMatchElement(const XML_Char** attr)
                             "Cannot find spectrum associated with match %s, "
                             "sequence %s.", getAttrValue("xml:id", attr),
                             getAttrValue("seq", attr));
-    } 
+    }
+    // find out what spectrum file this came from
+    string searchID = getRequiredAttrValue("searches", attr);
 
     // get confidence and skip if doesn't pass cutoff 
     // or if it is ranked higher than first
     double score = getDoubleRequiredAttrValue("confidence", attr);
     if( score < probCutOff_ || score < curPSM_->score ) {
         skipMods_ = true;
+        ++filteredOutPsmCount_;
+        searchIdPsmMap_.insert(make_pair(searchID, vector<PSM*>()));
         return;
     } 
-    // find out what spectrum file this came from
-    string searchID = getRequiredAttrValue("searches", attr);
     // create a vector of PSMs for this search/file if not present
     map<string, vector<PSM*> >::iterator mapAccess 
         = searchIdPsmMap_.find(searchID);

@@ -140,6 +140,11 @@ namespace pwiz.Skyline.Util
         public string InstallPath;
 
         /// <summary>
+        /// If not null, the path to a file or directory which if present indicates the file has been installed.
+        /// </summary>
+        public string CheckInstalledPath;
+
+        /// <summary>
         /// The online location of the file to download.
         /// </summary>
         public Uri DownloadUrl;
@@ -182,12 +187,12 @@ namespace pwiz.Skyline.Util
         /// This custom OpenJDK JRE was created with https://justinmahar.github.io/easyjre/
         /// </summary>
         static Uri JRE_URL = new Uri($@"https://ci.skyline.ms/skyline_tool_testing_mirror/{JRE_FILENAME}.zip");
-        public static string JavaDirectory => Path.Combine(ToolDescriptionHelpers.GetToolsDirectory(), JRE_FILENAME);
+        public static string JavaDirectory => Path.Combine(ToolDescriptionHelpers.GetToolsDirectory());
         public static string JavaBinary => Path.Combine(JavaDirectory, JRE_SUBDIRECTORY, @"bin", @"java.exe");
 
         public static FileDownloadInfo[] FilesToDownload => new[]
         {
-            new FileDownloadInfo {Filename = JRE_FILENAME, InstallPath = JavaDirectory, DownloadUrl = JRE_URL, OverwriteExisting = true, Unzip = true}
+            new FileDownloadInfo {Filename = JRE_FILENAME, InstallPath = JavaDirectory, CheckInstalledPath = JavaBinary, DownloadUrl = JRE_URL, OverwriteExisting = true, Unzip = true}
         }; // N.B. lazy evaluation so that JavaDirectory reflects current Tools directory, which may change from test to test
     }
 
@@ -197,9 +202,14 @@ namespace pwiz.Skyline.Util
 
         public static bool FileAlreadyDownloaded(FileDownloadInfo requiredFile)
         {
-            return requiredFile.Unzip
-                ? Directory.Exists(requiredFile.InstallPath)
-                : File.Exists(Path.Combine(requiredFile.InstallPath, requiredFile.Filename));
+            if (requiredFile.Unzip)
+            {
+                if (requiredFile.CheckInstalledPath != null)
+                    return File.Exists(requiredFile.CheckInstalledPath) || Directory.Exists(requiredFile.CheckInstalledPath);
+                return Directory.Exists(requiredFile.InstallPath);
+            }
+            else
+                return File.Exists(Path.Combine(requiredFile.InstallPath, requiredFile.Filename));
         }
 
         public static IEnumerable<FileDownloadInfo> FilesNotAlreadyDownloaded(IEnumerable<FileDownloadInfo> requiredFiles)

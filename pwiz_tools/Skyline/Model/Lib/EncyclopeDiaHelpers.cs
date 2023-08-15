@@ -51,6 +51,7 @@ namespace pwiz.Skyline.Model.Lib
             EncyclopeDiaDownloadInfo
         }).ToArray();
 
+        public static string JavaBinary => Java8DownloadInfo.JavaBinary;
 
         private static bool EnsureRequiredFilesDownloaded(IEnumerable<FileDownloadInfo> requiredFiles, IProgressMonitor progressMonitor)
         {
@@ -154,7 +155,7 @@ namespace pwiz.Skyline.Model.Lib
             const string csvToLibraryClasspath = "edu.washington.gs.maccoss.encyclopedia.cli.ConvertFastaToPrositCSV";
 
             var pr = new ProcessRunner();
-            var psi = new ProcessStartInfo(Java8DownloadInfo.JavaBinary,
+            var psi = new ProcessStartInfo(JavaBinary,
                 $" -Xmx{javaMaxHeapMB}M -cp {EncyclopeDiaBinary.Quote()} {csvToLibraryClasspath} {LOCALIZATION_PARAMS} {JAVA_TMPDIR} -i {fastaFilepath.Quote()} -o {prositCsvFilepath.Quote()} {config}")
             {
                 CreateNoWindow = true,
@@ -183,7 +184,7 @@ namespace pwiz.Skyline.Model.Lib
             const string csvToLibraryClasspath = "edu.washington.gs.maccoss.encyclopedia.cli.ConvertBLIBToLibrary";
 
             var pr = new ProcessRunner();
-            var psi = new ProcessStartInfo(Java8DownloadInfo.JavaBinary,
+            var psi = new ProcessStartInfo(JavaBinary,
                 $" -Xmx{javaMaxHeapMB}M -cp {EncyclopeDiaBinary.Quote()} {csvToLibraryClasspath} {LOCALIZATION_PARAMS} {JAVA_TMPDIR} -i {prositBlibFilepath.Quote()} -f {fastaFilepath.Quote()} -o {encyclopeDiaDlibFilepath.Quote()}")
             {
                 CreateNoWindow = true,
@@ -589,7 +590,7 @@ namespace pwiz.Skyline.Model.Lib
                     return;
                 ++step;
                 var pr = new ProcessRunner();
-                var psi = new ProcessStartInfo(Java8DownloadInfo.JavaBinary,
+                var psi = new ProcessStartInfo(JavaBinary,
                     $" -Xmx{javaMaxHeapMB}M -jar {EncyclopeDiaBinary.Quote()} {LOCALIZATION_PARAMS} {JAVA_TMPDIR} {extraParams} -i {diaDataFilepath.Quote()} -f {fastaFilepath.Quote()} -l {encyclopeDiaLibInputFilepath.Quote()}")
                 {
                     CreateNoWindow = true,
@@ -614,7 +615,7 @@ namespace pwiz.Skyline.Model.Lib
             string aParam = quantLibrary ? @"-a" : @"";
 
             var prMerge = new ProcessRunner();
-            var psiMerge = new ProcessStartInfo(Java8DownloadInfo.JavaBinary,
+            var psiMerge = new ProcessStartInfo(JavaBinary,
                 $" -Xmx{javaMaxHeapMB}M -jar {EncyclopeDiaBinary.Quote()} {LOCALIZATION_PARAMS} {JAVA_TMPDIR} {extraParams} -i {diaDataPath.Quote()} -libexport {aParam} -o {encyclopeDiaElibOutputFilepath.Quote()} -f {fastaFilepath.Quote()} -l {encyclopeDiaLibInputFilepath.Quote()}")
             {
                 CreateNoWindow = true,
