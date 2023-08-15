@@ -46,7 +46,7 @@ exe msconvert
 make msconvert-help.txt : msconvert : @make_msconvert_help : <location>$(PWIZ_ROOT_PATH)/pwiz_tools/commandline ;
     actions make_msconvert_help
     {
-        "$(>)" --help 2> "$(<)"
+        "$(>)" --doc > "$(<)"
     }
 
 exe msdir
